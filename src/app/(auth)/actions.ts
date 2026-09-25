@@ -20,7 +20,7 @@ function translate(code: string | undefined, fallback: string) {
 
 function safeNext(next: FormDataEntryValue | null) {
   const value = typeof next === "string" ? next : "";
-  return value.startsWith("/") && !value.startsWith("//") ? value : "/personajes";
+  return value.startsWith("/") && !value.startsWith("//") ? value : "/";
 }
 
 export async function signIn(_: AuthState, formData: FormData): Promise<AuthState> {
@@ -56,7 +56,7 @@ export async function signUp(_: AuthState, formData: FormData): Promise<AuthStat
   if (error) return { error: translate(error.code, error.message) };
 
   // Con la confirmación por correo desactivada, Supabase devuelve la sesión directamente.
-  if (data.session) redirect("/personajes");
+  if (data.session) redirect("/");
 
   return { message: `Te hemos enviado un correo a ${email}. Confírmalo para entrar.` };
 }

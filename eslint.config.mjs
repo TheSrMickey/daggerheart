@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // App original del artifact: se mantiene tal cual.
+    "src/components/DaggerheartApp.jsx",
   ]),
 ]);
 
