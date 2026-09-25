@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { supabaseKey, supabaseUrl } from "./env";
 
-const PUBLIC_PATHS = ["/login", "/register", "/auth"];
+const PUBLIC_PATHS = ["/login", "/register", "/auth", ...(process.env.NODE_ENV === "development" ? ["/dev-preview"] : [])];
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
