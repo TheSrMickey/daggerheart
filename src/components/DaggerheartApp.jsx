@@ -1479,6 +1479,7 @@ function DualityResult({ roll, size = 84 }) {
   const winner = !has ? null : crit ? "both" : roll.hope > roll.fear ? "hope" : "fear";
   const edge = has ? roll.edge || 0 : 0;
   const mod = has ? Number(roll.mod) || 0 : 0;
+  const wolf = has ? roll.wolfBonus || 0 : 0;
   const landed = has && !rolling;
   return (
     <div style={{ position: "relative", textAlign: "center" }}>
@@ -1493,6 +1494,12 @@ function DualityResult({ roll, size = 84 }) {
             <DieFace sides={6} value={Math.abs(edge)} color={edge > 0 ? "#7FB77A" : "#D9644E"} size={Math.round(size * 0.62)} rolling={rolling} label={edge > 0 ? "Ventaja" : "Desventaja"} delay={180} />
           </>
         )}
+        {wolf > 0 && (
+          <>
+            <span style={{ fontSize: 20, color: "#9C93AD", marginTop: size / 2 - 14 }}>+</span>
+            <DieFace sides={10} value={wolf} color="#E0544A" size={Math.round(size * 0.7)} rolling={rolling} highlight={landed && wolf === 10} label="Lobo" delay={240} />
+          </>
+        )}
       </div>
       <div className="mh-serif" style={{ fontSize: 46, fontWeight: 700, lineHeight: 1.1, marginTop: 10, minHeight: 52, color: "#ECE6DA", position: "relative" }}>
         {!has ? "–" : rolling ? <span className="mh-dots">···</span> : <CountUp value={roll.total} />}
@@ -1503,6 +1510,7 @@ function DualityResult({ roll, size = 84 }) {
             {roll.hope} + {roll.fear}
             {mod ? (mod > 0 ? " + " : " − ") + Math.abs(mod) : ""}
             {edge ? (edge > 0 ? " + " : " − ") + Math.abs(edge) : ""}
+            {wolf ? " + " + wolf + " (Lobo)" : ""}
             {roll.difficulty != null ? ` · Dificultad ${roll.difficulty}` : ""}
           </div>
           <div style={{ fontSize: 14.5, fontWeight: 600, color: roll.color, marginTop: 4 }}>{roll.text}</div>
@@ -1560,6 +1568,9 @@ function DamageResult({ roll }) {
         {rolls.map((v, i) => (
           <DieFace key={i} sides={roll.die} value={v} color={color} size={size} rolling={rolling} delay={i * 70} highlight={!rolling && v === roll.die} />
         ))}
+        {roll.wolfBonus > 0 && (
+          <DieFace sides={10} value={roll.wolfBonus} color="#E0544A" size={size} rolling={rolling} delay={rolls.length * 70} highlight={!rolling && roll.wolfBonus === 10} label="Lobo" />
+        )}
       </div>
       <div className="mh-serif" style={{ fontSize: 46, fontWeight: 700, lineHeight: 1.1, marginTop: 8, minHeight: 52, position: "relative" }}>
         {rolling ? <span className="mh-dots">···</span> : <CountUp value={roll.total} />}
@@ -1568,8 +1579,10 @@ function DamageResult({ roll }) {
         <div className="mh-pop" key={roll.key} style={{ fontFamily: "'Inter', system-ui, sans-serif", position: "relative" }}>
           <div style={{ fontSize: 12.5, color: "#B7AEC6" }}>
             {roll.dice || 1}d{roll.die} ({rolls.join(" + ")}){roll.bonus ? " + " + roll.bonus : ""}
+            {roll.wolfBonus ? ` + 1d10 (${roll.wolfBonus})` : ""}
             {roll.isCritical ? ` + ${roll.critBonus} (máx.)` : ""}
           </div>
+          {roll.wolfBonus > 0 && <div style={{ fontSize: 11, color: "#FF6B5E", marginTop: 2 }}>Incluye +1d10 de la Forma de Lobo</div>}
           {roll.isCritical && <div style={{ fontSize: 12.5, fontWeight: 700, color: "#7FB77A", marginTop: 3 }}>¡Crítico! Sumas el máximo de los dados</div>}
           {roll.levelBonus > 0 && <div style={{ fontSize: 11, color: "#9C93AD", marginTop: 2 }}>Incluye +{roll.levelBonus} de Entrenamiento de combate</div>}
           <div style={{ fontSize: 13.5, fontWeight: 600, color: "#D9644E", marginTop: 4 }}>daño {roll.damageType}</div>
@@ -2710,11 +2723,13 @@ export default function App({ onSignOut }) {
     const roll = rolls.reduce((a, b) => a + b, 0);
     // Crítico: sumas el valor máximo de los dados además de la tirada.
     const critBonus = isCritical ? die * dice : 0;
-    const total = roll + bonus + critBonus;
-    setDamageRollResult({ key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus });
+    // Hombre lobo: en Forma de Lobo sumas 1d10 al daño.
+    const wolfBonus = ch && ch.f_transformation_form_active === "Forma de Lobo" ? Math.floor(Math.random() * 10) + 1 : 0;
+    const total = roll + bonus + critBonus + wolfBonus;
+    setDamageRollResult({ key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus });
     const who = playerName || "Alguien en la mesa";
     const critLabel = isCritical ? ` · ¡Crítico! (+${critBonus} máx.)` : "";
-    const diceLabel = `${dice}d${die} (${rolls.join("+")})`;
+    const diceLabel = `${dice}d${die} (${rolls.join("+")})` + (wolfBonus ? ` + Lobo 1d10 (${wolfBonus})` : "");
     await pushRollLog(
       `**${who}** — Daño de ${weaponName}: ${diceLabel}${bonus ? " + " + bonus : ""}${critLabel} = **${total}** ${damageType}`
     );
@@ -3641,7 +3656,10 @@ export default function App({ onSignOut }) {
     const hope = Math.floor(Math.random() * 12) + 1;
     const fear = Math.floor(Math.random() * 12) + 1;
     const advantageRoll = advantage ? Math.floor(Math.random() * 6) + 1 : 0;
-    const total = hope + fear + traitValue + advantageRoll;
+    // Hombre lobo: en Forma de Lobo sumas 1d10 a las tiradas de ataque.
+    const inWolfForm = charsRef.current[charId]?.f_transformation_form_active === "Forma de Lobo";
+    const wolfBonus = weapon && inWolfForm ? Math.floor(Math.random() * 10) + 1 : 0;
+    const total = hope + fear + traitValue + advantageRoll + wolfBonus;
     let text, color;
     if (hope === fear) {
       text = "Crítico";
@@ -3656,7 +3674,7 @@ export default function App({ onSignOut }) {
     clearTimeout(traitRollTimer.current);
     const note =
       hope === fear ? "Ganas 1 Esperanza y te quitas 1 Estrés" : hope > fear ? "Ganas 1 Esperanza" : "El DJ gana 1 de Miedo";
-    setTraitRollResult({ key: Date.now(), traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, total, text: hope === fear ? "Éxito crítico" : text, color, note, weapon: weapon || null, charId });
+    setTraitRollResult({ key: Date.now(), traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, total, text: hope === fear ? "Éxito crítico" : text, color, note, weapon: weapon || null, charId });
 
     // Con Esperanza (o crítico) ganas 1 Esperanza; con crítico además te quitas 1 Estrés.
     if (hope >= fear) {
@@ -3676,7 +3694,7 @@ export default function App({ onSignOut }) {
 
     const who = playerName || "Alguien en la mesa";
     const modStr = traitValue > 0 ? "+" + traitValue : traitValue;
-    const advStr = advantage ? ` + Ventaja ${advantageRoll}` : "";
+    const advStr = (advantage ? ` + Ventaja ${advantageRoll}` : "") + (wolfBonus ? ` + Lobo ${wolfBonus}` : "");
     const line = `**${who}** — ${traitLabel}: Esperanza ${hope} + Miedo ${fear} ${modStr}${advStr} = **${total}** (${text})`;
     await pushRollLog(line);
     if (cardContext) {
