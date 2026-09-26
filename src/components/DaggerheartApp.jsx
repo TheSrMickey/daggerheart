@@ -1249,10 +1249,10 @@ const sharedStyles = `
     animation: mh-beast-in 1s ease both;
   }
   .mh-beast {
-    position: absolute; line-height: 1; user-select: none;
-    font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
-    color: transparent; text-shadow: 0 0 0 var(--beast);
-    opacity: var(--o, .1);
+    position: absolute; color: var(--beast); opacity: var(--o, .1);
+    filter: drop-shadow(0 0 22px color-mix(in srgb, var(--beast) 60%, transparent));
+    -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 60%, transparent 100%);
     animation: mh-beast-drift var(--d, 18s) ease-in-out infinite alternate;
   }
   .mh-beast-ring {
@@ -1278,67 +1278,55 @@ const sharedStyles = `
 
 /* ---------- Siluetas de Forma de Bestia ---------- */
 
-// Emojis de los animales de cada forma; se pintan como siluetas de un solo color.
-const BEAST_SILHOUETTES = {
-  "Explorador Ágil": ["🐁", "🦡", "🐿️"],
-  "Herbívoro Veloz": ["🦌", "🐐", "🦌"],
-  "Explorador Acuático": ["🐙", "🐟", "🐟"],
-  "Amigo del Hogar": ["🐈", "🐕", "🐇"],
-  "Depredador de Manada": ["🐕", "🐕", "🐕"],
-  "Arácnido Acechante": ["🕷️", "🕷️", "🕷️"],
-  "Centinela Acorazado": ["🐢", "🦔", "🐢"],
-  "Bestia Poderosa": ["🐂", "🦬", "🐂"],
-  "Zancada Poderosa": ["🐎", "🐫", "🦓"],
-  "Serpiente Fulminante": ["🐍", "🐍", "🐍"],
-  "Depredador Saltador": ["🐆", "🐅", "🐆"],
-  "Bestia Alada": ["🦅", "🦉", "🦅"],
-  "Gran Depredador": ["🐅", "🦖", "🐕"],
-  "Lagarto Colosal": ["🐊", "🦎", "🐊"],
-  "Gran Bestia Alada": ["🦅", "🦅", "🦅"],
-  "Depredador Acuático": ["🦈", "🐬", "🐋"],
-  "Bestia Legendaria": ["🐉", "🐅", "🦅"],
-  "Híbrido Legendario": ["🦅", "🐅", "🦅"],
-  "Behemot Masivo": ["🐘", "🦣", "🦏"],
-  "Lagarto Terrible": ["🦖", "🦕", "🦖"],
-  "Cazador Aéreo Mítico": ["🐉", "🦅", "🐉"],
-  "Bestia Acuática Épica": ["🐋", "🦑", "🐋"],
-  "Bestia Mítica": ["🐉", "🐅", "🐉"],
-  "Híbrido Mítico": ["🐅", "🐍", "🐐"],
-};
-
 const BEAST_SPOTS = [
-  { right: "-3%", bottom: "-7%", size: "min(58vh, 540px)", o: 0.3, d: "22s", flip: false, tx: "-26px", ty: "-10px" },
-  { left: "-5%", top: "32%", size: "min(34vh, 320px)", o: 0.22, d: "18s", flip: true, tx: "18px", ty: "12px" },
-  { left: "40%", bottom: "3%", size: "min(20vh, 180px)", o: 0.18, d: "15s", flip: false, tx: "30px", ty: "-8px" },
-  { right: "26%", top: "24%", size: "min(13vh, 120px)", o: 0.15, d: "13s", flip: true, tx: "-22px", ty: "10px" },
+  { right: "-3%", bottom: "-7%", size: "min(58vh, 540px)", o: 0.34, d: "22s", flip: false, tx: "-26px", ty: "-10px" },
+  { left: "-5%", top: "32%", size: "min(34vh, 320px)", o: 0.26, d: "18s", flip: true, tx: "18px", ty: "12px" },
+  { left: "40%", bottom: "3%", size: "min(20vh, 180px)", o: 0.2, d: "15s", flip: false, tx: "30px", ty: "-8px" },
+  { right: "26%", top: "24%", size: "min(13vh, 120px)", o: 0.16, d: "13s", flip: true, tx: "-22px", ty: "10px" },
 ];
 
+// Siluetas de game-icons.net (CC BY 3.0); se descargan solo cuando alguien usa una Forma de Bestia.
 function BeastBackdrop({ form }) {
-  const glyphs = BEAST_SILHOUETTES[form.key] || ["🐾"];
+  const [lib, setLib] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    import("./beastSilhouettes").then((m) => alive && setLib(m));
+    return () => {
+      alive = false;
+    };
+  }, []);
+  const names = lib?.BEAST_SILHOUETTES[form.key] || ["wolf-howl"];
   return (
     <div className="mh-beast-bg" style={{ "--beast": form.color }} aria-hidden="true">
       <div className="mh-beast-ring" />
-      {BEAST_SPOTS.map((p, i) => (
-        <span
-          key={i}
-          className="mh-beast"
-          style={{
-            left: p.left,
-            right: p.right,
-            top: p.top,
-            bottom: p.bottom,
-            fontSize: p.size,
-            transform: p.flip ? "scaleX(-1)" : undefined,
-            animationDelay: `${-i * 4}s`,
-            "--o": p.o,
-            "--d": p.d,
-            "--tx": p.tx,
-            "--ty": p.ty,
-          }}
-        >
-          {glyphs[i % glyphs.length]}
-        </span>
-      ))}
+      {lib &&
+        BEAST_SPOTS.map((p, i) => {
+          const d = lib.BEAST_ICON_PATHS[names[i % names.length]];
+          if (!d) return null;
+          return (
+            <svg
+              key={i}
+              className="mh-beast"
+              viewBox="0 0 512 512"
+              style={{
+                left: p.left,
+                right: p.right,
+                top: p.top,
+                bottom: p.bottom,
+                width: p.size,
+                height: p.size,
+                transform: p.flip ? "scaleX(-1)" : undefined,
+                animationDelay: `${-i * 4}s`,
+                "--o": p.o,
+                "--d": p.d,
+                "--tx": p.tx,
+                "--ty": p.ty,
+              }}
+            >
+              <path d={d} fill="currentColor" />
+            </svg>
+          );
+        })}
     </div>
   );
 }
@@ -4413,7 +4401,7 @@ export default function App({ onSignOut }) {
               overflow: "hidden",
               borderTop: "4px solid " + themeColor,
               filter: isDead ? "grayscale(1)" : "none",
-              "--panel-bg": beastformInfo ? "rgba(27,24,36,0.7)" : "#1B1824",
+              "--panel-bg": beastformInfo ? "rgba(27,24,36,0.58)" : "#1B1824",
             }}
           >
             {beastformInfo && <BeastBackdrop key={beastformInfo.key} form={beastformInfo} />}
@@ -6422,6 +6410,11 @@ export default function App({ onSignOut }) {
                               vulnerable={conditions.includes("Vulnerable")}
                               unconscious={conditions.includes("Inconsciente")}
                             >
+                              <div style={{ fontSize: 10.5, color: "#6E6580", marginBottom: 10, flexShrink: 0 }}>
+                                Siluetas de fondo:{" "}
+                                <a href="https://game-icons.net" target="_blank" rel="noreferrer" style={{ color: "#9C93AD" }}>game-icons.net</a>{" "}
+                                (Lorc, Delapouite y colaboradores), licencia CC BY 3.0.
+                              </div>
                               {stressFull && !c.f_beastform && (
                                 <div style={{ fontSize: 11.5, color: "#D9644E", marginBottom: 14, fontWeight: 600, flexShrink: 0 }}>
                                   Sin casillas de Estrés libres — no puedes activar ninguna forma hasta quitarte algo de Estrés.

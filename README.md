@@ -39,3 +39,7 @@ npm run dev
 - `src/components/CharacterSheet.tsx` – hoja editable con guardado automático.
 - `src/lib/daggerheart.ts` – datos del SRD (clases, dominios, ascendencias, armaduras…).
 - `supabase/migrations` – esquema y políticas RLS.
+
+## Créditos
+
+Siluetas de animales de las Formas de Bestia: [game-icons.net](https://game-icons.net) (Lorc, Delapouite y colaboradores), licencia [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/).
