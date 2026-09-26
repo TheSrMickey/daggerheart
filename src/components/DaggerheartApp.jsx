@@ -1874,7 +1874,7 @@ function FeatureCard({ accent, kicker, title, text, footer, footerColor, onClick
   );
 }
 
-function Panel({ span, title, children, hidden, restrained, vulnerable, unconscious }) {
+function Panel({ span, title, titleRight, children, hidden, restrained, vulnerable, unconscious }) {
   const borderColor = vulnerable ? "#D9644E" : restrained ? "#C08B5C" : unconscious ? "#A58BE8" : hidden ? "var(--mh-muted)" : "var(--mh-line)";
   return (
     <div
@@ -1890,8 +1890,9 @@ function Panel({ span, title, children, hidden, restrained, vulnerable, unconsci
         minHeight: 0,
       }}
     >
-      <div className="mh-serif" style={{ fontSize: 15, fontWeight: 700, color: "var(--mh-ink)", marginBottom: 14, letterSpacing: 0.2 }}>
-        {title}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 14, height: 20 }}>
+        <div className="mh-serif" title={titleRight ? title : undefined} style={{ fontSize: 15, fontWeight: 700, color: "var(--mh-ink)", letterSpacing: 0.2, minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{title}</div>
+        {titleRight && <div style={{ flexShrink: 0 }}>{titleRight}</div>}
       </div>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>{children}</div>
       {(hidden || restrained || vulnerable || unconscious) && (
@@ -4819,12 +4820,13 @@ export default function App({ onSignOut }) {
         const secondaryWeapon = SECONDARY_WEAPONS.find((w) => w.key === c.f_secondary_weapon);
         const armorEntry = ARMORS.find((a) => a.key === c.f_armor);
         const equipMods = getEquipmentMods(primaryWeapon, secondaryWeapon, armorEntry);
-        // "Armadura y estadísticas": el hueco que dejó el campo de daño se reparte haciendo los elementos
-        // algo más holgados y separándolos un poco más, para que la caja mantenga su altura.
+        // "Armadura y estadísticas": el hueco que dejaron el campo de daño y la Competencia (ahora junto a
+        // "Armas y armadura") se reparte haciendo los elementos más holgados y separándolos un poco más,
+        // para que la caja mantenga su altura.
         const statsSpacing = (() => {
           const extra = armorEntry ? 64 : 41;
-          const k = (extra - (6 + 10 + 9)) / 6;
-          return { boxPadY: 15, thrPadY: 13, stepLabelMb: 9, evMb: 16 + k, thrMb: 16 + k, compTop: 4, compMb: 14 + k, stepMb: 14 + k };
+          const k = (extra - (6 + 10 + 9)) / 6 + (armorEntry ? 51 : 47) / 5;
+          return { boxPadY: 15, thrPadY: 13, stepLabelMb: 9, evMb: 16 + k, thrMb: 16 + k, stepMb: 14 + k };
         })();
         const infoBlock = (icon, label, value) => {
           const Icon = icon;
@@ -5194,19 +5196,6 @@ export default function App({ onSignOut }) {
                               </div>
 
 
-                              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: statsSpacing.compTop + "px 0 " + statsSpacing.compMb + "px" }}>
-                                <span className="mh-label" style={{ margin: 0 }} title="Número de dados de daño que tiras">Competencia</span>
-                                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                  <button className="mh-btn-ghost" style={{ padding: "2px 7px" }} aria-label="Restar Competencia" onClick={() => updateCharacterField(viewingCharId, "f_proficiency", Math.max(1, proficiency - 1))}>
-                                    <Minus size={11} />
-                                  </button>
-                                  <span className="mh-serif" style={{ fontSize: 16, fontWeight: 700, color: "var(--mh-gold-ink)", minWidth: 18, textAlign: "center" }}>{proficiency}</span>
-                                  <button className="mh-btn-ghost" style={{ padding: "2px 7px" }} aria-label="Sumar Competencia" onClick={() => updateCharacterField(viewingCharId, "f_proficiency", Math.min(6, proficiency + 1))}>
-                                    <Plus size={11} />
-                                  </button>
-                                </div>
-                              </div>
-
                               <StepperRow gap={statsSpacing.stepMb} labelGap={statsSpacing.stepLabelMb} hitKey={hpHit && hpHit.id === viewingCharId ? hpHit.key : undefined} label="Puntos de vida" total={Number(c.r_hp || 0) + equipMods.hp} marked={Number(c.hp_marked || 0)} field="hp_marked" color="#D9644E" Icon={Heart} charId={viewingCharId} onDelta={adjustHp} onToggle={markHp} />
                               <StepperRow gap={statsSpacing.stepMb} labelGap={statsSpacing.stepLabelMb} label="Estrés" total={Number(c.r_stress || 0) + equipMods.stress} marked={Number(c.stress_marked || 0)} field="stress_marked" color="#A58BE8" Icon={Zap} charId={viewingCharId} onDelta={adjustStress} onToggle={markStressBox} allowOverflow />
                               <StepperRow gap={statsSpacing.stepMb} labelGap={statsSpacing.stepLabelMb} label="Esperanza" total={HOPE_MAX + equipMods.hope} marked={Number(c.hope_marked ?? HOPE_DEFAULT)} field="hope_marked" color="#E3B04B" Icon={Sparkles} charId={viewingCharId} onDelta={updateCharacterField} onToggle={toggleCharSlot} shape="diamond" scarCount={Number(c.f_scars || 0)} />
@@ -5313,6 +5302,18 @@ export default function App({ onSignOut }) {
                             <Panel
                               span={7}
                               title={activeBeastform ? `Forma de Bestia · ${activeBeastform.key}` : "Armas y armadura"}
+                              titleRight={
+                                <div style={{ display: "flex", alignItems: "center", gap: 6 }} title="Número de dados de daño que tiras">
+                                  <span className="mh-label" style={{ margin: 0 }}>Competencia</span>
+                                  <button className="mh-btn-ghost" style={{ padding: "1px 6px" }} aria-label="Restar Competencia" onClick={() => updateCharacterField(viewingCharId, "f_proficiency", Math.max(1, proficiency - 1))}>
+                                    <Minus size={11} />
+                                  </button>
+                                  <span className="mh-serif" style={{ fontSize: 16, fontWeight: 700, color: "var(--mh-gold-ink)", minWidth: 16, textAlign: "center", lineHeight: 1 }}>{proficiency}</span>
+                                  <button className="mh-btn-ghost" style={{ padding: "1px 6px" }} aria-label="Sumar Competencia" onClick={() => updateCharacterField(viewingCharId, "f_proficiency", Math.min(6, proficiency + 1))}>
+                                    <Plus size={11} />
+                                  </button>
+                                </div>
+                              }
                               hidden={conditions.includes("Escondido")}
                               restrained={conditions.includes("Inmovilizado")}
                               vulnerable={conditions.includes("Vulnerable")}
