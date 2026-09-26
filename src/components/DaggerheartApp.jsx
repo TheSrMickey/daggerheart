@@ -1279,7 +1279,54 @@ const sharedStyles = `
     100% { opacity: 0; scale: 1; rotate: 0deg; clip-path: inset(0 0 0 0); }
   }
 
+  /* Aullido Frenético */
+  .mh-rampage { background: radial-gradient(circle at 50% 50%, rgba(110,12,12,.45), rgba(8,4,6,.9) 72%) !important; }
+  .mh-rampage::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    box-shadow: inset 0 0 160px 40px rgba(196,40,40,.55);
+    animation: mh-red-pulse 1.1s ease-in-out infinite;
+  }
+  .mh-rampage-card { animation: mh-roll-pop .3s cubic-bezier(.2,1.3,.4,1) both, mh-shake .5s .1s ease 2; }
+  .mh-rampage-title {
+    font-size: 28px; font-weight: 700; color: #FF6B5E; letter-spacing: .06em;
+    text-shadow: 0 0 20px rgba(196,40,40,.9);
+    animation: mh-red-pulse 1.1s ease-in-out infinite;
+  }
+  .mh-burst-red { background: radial-gradient(circle, rgba(224,84,74,.6), rgba(120,10,10,.35) 40%, transparent 68%); }
+  @keyframes mh-red-pulse { 50% { opacity: .55; } }
+  @keyframes mh-shake {
+    0%, 100% { translate: 0 0; }
+    20% { translate: -9px 3px; }
+    40% { translate: 8px -4px; }
+    60% { translate: -6px 2px; }
+    80% { translate: 4px -1px; }
+  }
+
+  /* Pérdida de Puntos de vida */
+  .mh-hit-flash {
+    position: absolute; inset: 0; z-index: 5; pointer-events: none;
+    box-shadow: inset 0 0 140px 36px rgba(217,60,50,var(--hit, .5));
+    background: radial-gradient(circle at 50% 45%, transparent 50%, rgba(150,20,20,calc(var(--hit, .5) * .45)));
+    animation: mh-hit-flash .8s ease-out both;
+  }
+  @keyframes mh-hit-flash { 0% { opacity: 0; } 12% { opacity: 1; } 100% { opacity: 0; } }
+  .mh-hit-text {
+    position: absolute; left: 50%; top: 36%; z-index: 6; pointer-events: none;
+    font-family: 'Cinzel', Georgia, serif; font-size: 46px; font-weight: 700; color: #FF6B5E;
+    text-shadow: 0 0 22px rgba(217,60,50,.85), 0 2px 0 #000;
+    animation: mh-hit-text 1.2s cubic-bezier(.2,.8,.2,1) both;
+  }
+  @keyframes mh-hit-text {
+    0% { opacity: 0; translate: -50% 0; scale: .6; }
+    14% { opacity: 1; translate: -50% 0; scale: 1.18; }
+    30% { scale: 1; }
+    100% { opacity: 0; translate: -50% -70px; scale: 1; }
+  }
+  .mh-shake { animation: mh-shake .45s ease both; }
+
   @media (prefers-reduced-motion: reduce) {
+    .mh-rampage::before, .mh-rampage-card, .mh-rampage-title, .mh-hit-flash, .mh-hit-text, .mh-shake { animation: none !important; }
+    .mh-hit-flash, .mh-hit-text { display: none; }
     .mh-beast, .mh-beast-bg, .mh-beast-ring, .mh-claws { animation: none !important; }
     .mh-beast-ring, .mh-claws { display: none; }
     .mh-die, .mh-pop, .mh-roll-pop, .mh-appear-late, .mh-burst, .mh-dots { animation: none !important; }
@@ -1460,6 +1507,40 @@ function DualityResult({ roll, size = 84 }) {
           </div>
           <div style={{ fontSize: 14.5, fontWeight: 600, color: roll.color, marginTop: 4 }}>{roll.text}</div>
           {roll.note && <div style={{ fontSize: 11.5, color: "#B7AEC6", marginTop: 3 }}>{roll.note}</div>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Aullido Frenético: tantos d20 como tu Rango.
+function RampageResult({ roll }) {
+  const rolling = useRolling(roll?.key, 1100);
+  const size = roll.rolls.length > 2 ? 58 : 72;
+  return (
+    <div style={{ position: "relative", textAlign: "center" }}>
+      {!rolling && <div className="mh-burst mh-burst-red" key={"b" + roll.key} />}
+      <div className="mh-serif mh-rampage-title" style={{ position: "relative" }}>¡Aullido Frenético!</div>
+      <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 12.5, color: "#D6CFE0", margin: "4px 0 12px", position: "relative" }}>
+        {roll.who} marca su último Estrés en Forma de Lobo y entra en frenesí
+      </div>
+      <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", position: "relative" }}>
+        {roll.rolls.map((v, i) => (
+          <DieFace key={i} sides={20} value={v} color="#E0544A" size={size} rolling={rolling} delay={i * 90} highlight={!rolling && v === 20} />
+        ))}
+      </div>
+      <div className="mh-serif" style={{ fontSize: 50, fontWeight: 700, lineHeight: 1.1, marginTop: 10, minHeight: 56, color: "#ECE6DA", position: "relative" }}>
+        {rolling ? <span className="mh-dots">···</span> : <CountUp value={roll.total} />}
+      </div>
+      {!rolling && (
+        <div className="mh-pop" key={roll.key} style={{ fontFamily: "'Inter', system-ui, sans-serif", position: "relative" }}>
+          <div style={{ fontSize: 12.5, color: "#B7AEC6" }}>
+            {roll.rolls.length}d20 ({roll.rolls.join(" + ")})
+          </div>
+          <div style={{ fontSize: 13.5, fontWeight: 600, color: "#FF6B5E", marginTop: 4 }}>
+            daño físico a todas las criaturas en alcance Muy cercano
+          </div>
+          <div style={{ fontSize: 12, color: "#D6CFE0", marginTop: 6 }}>Sale de la Forma de Lobo.</div>
         </div>
       )}
     </div>
@@ -1769,10 +1850,10 @@ function CompactCard({ accent, kicker, title, description, onClick, disabled, fo
   );
 }
 
-function StepperRow({ label, total, marked, field, color, Icon, charId, onDelta, onToggle, allowOverflow, shape, scarCount }) {
+function StepperRow({ label, total, marked, field, color, Icon, charId, onDelta, onToggle, allowOverflow, shape, scarCount, hitKey }) {
   const effectiveMax = Math.max(0, total - (scarCount || 0));
   return (
-    <div style={{ marginBottom: 14 }}>
+    <div key={hitKey || "row"} className={hitKey ? "mh-shake" : undefined} style={{ marginBottom: 14 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
         <Icon size={13} color={color} />
         <span style={{ fontSize: 12, fontWeight: 600, color: "#ECE6DA" }}>{label}</span>
@@ -2330,7 +2411,39 @@ export default function App({ onSignOut }) {
     const next = { ...cur, [field]: String(value) };
     charsRef.current = { ...charsRef.current, [id]: next };
     setCharacters((prev) => ({ ...prev, [id]: next }));
+    afterCharacterChange(id, cur, next);
     await safeSet("character:" + id, JSON.stringify(next), false);
+  };
+
+  // Reacciones automáticas a cualquier cambio del personaje.
+  const afterCharacterChange = (id, prev, next) => {
+    // Animación al perder Puntos de vida.
+    const hpBefore = Number(prev.hp_marked || 0);
+    const hpAfter = Number(next.hp_marked || 0);
+    if (hpAfter > hpBefore) {
+      const key = Date.now() + Math.random();
+      setHpHit({ key, id, amount: hpAfter - hpBefore });
+      setTimeout(() => setHpHit((h) => (h && h.key === key ? null : h)), 1400);
+    }
+    // Hombre lobo: al ganar Esperanza en Forma de Lobo, marcas 1 Estrés.
+    const hopeBefore = Number(prev.hope_marked ?? HOPE_DEFAULT);
+    const hopeAfter = Number(next.hope_marked ?? HOPE_DEFAULT);
+    if (hopeAfter > hopeBefore && next.f_transformation_form_active === "Forma de Lobo") {
+      postCampaignEvent(id, "🐺 Gana Esperanza en Forma de Lobo y marca 1 Estrés.");
+      setTimeout(() => markStress(id, 1), 0);
+    }
+  };
+
+  // Aullido Frenético: tira tantos d20 como tu Rango y sales de la Forma de Lobo.
+  const triggerRampage = (id, c) => {
+    const tier = tierForLevel(c.f_level || 1);
+    const rolls = Array.from({ length: tier }, () => Math.floor(Math.random() * 20) + 1);
+    const total = rolls.reduce((a, b) => a + b, 0);
+    const who = c.f_name || "El personaje";
+    setRampageResult({ key: Date.now(), who, rolls, total });
+    const detail = `${tier}d20 (${rolls.join("+")}) = ${total}`;
+    pushRollLog(`**${who}** — ¡Aullido Frenético! ${detail} de daño físico a todo en alcance Muy cercano`);
+    postCampaignEvent(id, `🐺 ¡Aullido Frenético! ${detail} de daño físico a todas las criaturas en alcance Muy cercano. Sale de la Forma de Lobo.`);
   };
 
   const toggleCharSlot = (id, field, index, current) => {
@@ -2356,7 +2469,7 @@ export default function App({ onSignOut }) {
   };
 
   const markStress = (id, amount, extraPatch) => {
-    const c = characters[id];
+    const c = charsRef.current[id];
     if (!c) return;
     const stressTotal = Number(c.r_stress || 0);
     const stressCurrent = Number(c.stress_marked || 0);
@@ -2381,6 +2494,11 @@ export default function App({ onSignOut }) {
         patch.f_conditions = JSON.stringify([...conds, "Vulnerable"]);
         postCampaignEvent(id, "😰 Marca su última casilla de Estrés y queda Vulnerable.");
       }
+    }
+    // Hombre lobo: marcar el último Estrés en Forma de Lobo desata el Aullido Frenético.
+    if (stressToMark > 0 && stressCurrent + stressToMark >= stressTotal && c.f_transformation_form_active === "Forma de Lobo") {
+      patch.f_transformation_form_active = "";
+      triggerRampage(id, c);
     }
     const finalPatch = overflow > 0 ? withBeastformExitOnDeath(id, hpTotal, nextHp, patch) : patch;
     updateCharacterFields(id, finalPatch);
@@ -2488,6 +2606,7 @@ export default function App({ onSignOut }) {
     const next = { ...cur, ...patch };
     charsRef.current = { ...charsRef.current, [id]: next };
     setCharacters((prev) => ({ ...prev, [id]: next }));
+    afterCharacterChange(id, cur, next);
     await safeSet("character:" + id, JSON.stringify(next), false);
   };
 
@@ -2497,6 +2616,8 @@ export default function App({ onSignOut }) {
   const [newConditionDraft, setNewConditionDraft] = useState("");
   const [showAddCondition, setShowAddCondition] = useState(false);
   const [damageRollResult, setDamageRollResult] = useState(null);
+  const [rampageResult, setRampageResult] = useState(null);
+  const [hpHit, setHpHit] = useState(null);
   const [incomingDamage, setIncomingDamage] = useState("");
   const [incomingUseArmor, setIncomingUseArmor] = useState(false);
 
@@ -4433,6 +4554,12 @@ export default function App({ onSignOut }) {
               "--panel-bg": beastformInfo || TRANSFORM_THEMES[c.f_transformation_form_active] ? "rgba(27,24,36,0.58)" : "#1B1824",
             }}
           >
+            {hpHit && hpHit.id === viewingCharId && (
+              <>
+                <div key={"f" + hpHit.key} className="mh-hit-flash" style={{ "--hit": Math.min(0.85, 0.35 + hpHit.amount * 0.17) }} />
+                <div key={"t" + hpHit.key} className="mh-hit-text">−{hpHit.amount} PV</div>
+              </>
+            )}
             {beastformInfo ? (
               <BeastBackdrop key={beastformInfo.key} form={beastformInfo} />
             ) : (
@@ -4814,7 +4941,7 @@ export default function App({ onSignOut }) {
                                 </div>
                               </div>
 
-                              <StepperRow label="Puntos de vida" total={Number(c.r_hp || 0) + equipMods.hp} marked={Number(c.hp_marked || 0)} field="hp_marked" color="#D9644E" Icon={Heart} charId={viewingCharId} onDelta={adjustHp} onToggle={markHp} />
+                              <StepperRow hitKey={hpHit && hpHit.id === viewingCharId ? hpHit.key : undefined} label="Puntos de vida" total={Number(c.r_hp || 0) + equipMods.hp} marked={Number(c.hp_marked || 0)} field="hp_marked" color="#D9644E" Icon={Heart} charId={viewingCharId} onDelta={adjustHp} onToggle={markHp} />
                               <StepperRow label="Estrés" total={Number(c.r_stress || 0) + equipMods.stress} marked={Number(c.stress_marked || 0)} field="stress_marked" color="#A58BE8" Icon={Zap} charId={viewingCharId} onDelta={adjustStress} onToggle={markStressBox} allowOverflow />
                               <StepperRow label="Esperanza" total={HOPE_MAX + equipMods.hope} marked={Number(c.hope_marked ?? HOPE_DEFAULT)} field="hope_marked" color="#E3B04B" Icon={Sparkles} charId={viewingCharId} onDelta={updateCharacterField} onToggle={toggleCharSlot} shape="diamond" scarCount={Number(c.f_scars || 0)} />
 
@@ -6726,6 +6853,34 @@ export default function App({ onSignOut }) {
                       </div>
                     </div>
                   )}
+                </div>
+              </div>
+            )}
+
+            {rampageResult && (
+              <div
+                className="mh-overlay mh-rampage"
+                style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 35, padding: 20 }}
+                onClick={() => setRampageResult(null)}
+              >
+                <div
+                  className="mh-rampage-card"
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    position: "relative",
+                    overflow: "hidden",
+                    background: "#1E1216",
+                    border: "1px solid #C45050",
+                    borderRadius: 16,
+                    padding: "22px 30px 18px",
+                    minWidth: 300,
+                    boxShadow: "0 0 60px rgba(196,40,40,.45)",
+                  }}
+                >
+                  <RampageResult roll={rampageResult} />
+                  <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 10, color: "#9C93AD", marginTop: 12, textAlign: "center" }}>
+                    Pulsa fuera para cerrar
+                  </div>
                 </div>
               </div>
             )}
