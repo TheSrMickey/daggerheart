@@ -2055,11 +2055,11 @@ function CompactCard({ accent, kicker, title, description, onClick, disabled, fo
   );
 }
 
-function StepperRow({ label, total, marked, field, color, Icon, charId, onDelta, onToggle, allowOverflow, shape, scarCount, hitKey }) {
+function StepperRow({ label, total, marked, field, color, Icon, charId, onDelta, onToggle, allowOverflow, shape, scarCount, hitKey, gap = 14, labelGap = 6 }) {
   const effectiveMax = Math.max(0, total - (scarCount || 0));
   return (
-    <div key={hitKey || "row"} className={hitKey ? "mh-shake" : undefined} style={{ marginBottom: 14 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+    <div key={hitKey || "row"} className={hitKey ? "mh-shake" : undefined} style={{ marginBottom: gap }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: labelGap }}>
         <Icon size={13} color={color} />
         <span style={{ fontSize: 12, fontWeight: 600, color: "var(--mh-ink)" }}>{label}</span>
       </div>
@@ -4819,6 +4819,13 @@ export default function App({ onSignOut }) {
         const secondaryWeapon = SECONDARY_WEAPONS.find((w) => w.key === c.f_secondary_weapon);
         const armorEntry = ARMORS.find((a) => a.key === c.f_armor);
         const equipMods = getEquipmentMods(primaryWeapon, secondaryWeapon, armorEntry);
+        // "Armadura y estadísticas": el hueco que dejó el campo de daño se reparte haciendo los elementos
+        // algo más holgados y separándolos un poco más, para que la caja mantenga su altura.
+        const statsSpacing = (() => {
+          const extra = armorEntry ? 64 : 41;
+          const k = (extra - (6 + 10 + 9)) / 6;
+          return { boxPadY: 15, thrPadY: 13, stepLabelMb: 9, evMb: 16 + k, thrMb: 16 + k, compTop: 4, compMb: 14 + k, stepMb: 14 + k };
+        })();
         const infoBlock = (icon, label, value) => {
           const Icon = icon;
           if (!value) return null;
@@ -5121,14 +5128,14 @@ export default function App({ onSignOut }) {
                             unconscious={conditions.includes("Inconsciente")}
                             >
                               {/* El hueco del antiguo campo de daño se reparte entre las secciones para mantener la altura. */}
-                              <div style={{ display: "flex", gap: 12, marginBottom: 16 + (armorEntry ? 32 : 20) }}>
-                                <div style={{ flex: 1, textAlign: "center", border: "1px solid " + themeColor, background: alpha(themeColor, 8), borderRadius: 12, padding: "12px 6px" }}>
+                              <div style={{ display: "flex", gap: 12, marginBottom: statsSpacing.evMb }}>
+                                <div style={{ flex: 1, textAlign: "center", border: "1px solid " + themeColor, background: alpha(themeColor, 8), borderRadius: 12, padding: statsSpacing.boxPadY + "px 6px" }}>
                                   <div style={{ fontSize: 10, color: "var(--mh-muted)" }}>Evasión</div>
                                   <div className="mh-serif" style={{ fontSize: 26, fontWeight: 700, color: ink(themeColor) }}>
                                     {c.r_evasion ? Number(c.r_evasion) + (beastformInfo?.evasionBonus || 0) + equipMods.evasion : "—"}
                                   </div>
                                 </div>
-                                <div style={{ flex: 1.4, border: "1px solid var(--acc)", background: "color-mix(in srgb, var(--acc) 5%, transparent)", borderRadius: 12, padding: "12px 10px" }}>
+                                <div style={{ flex: 1.4, border: "1px solid var(--acc)", background: "color-mix(in srgb, var(--acc) 5%, transparent)", borderRadius: 12, padding: statsSpacing.boxPadY + "px 10px" }}>
                                   <div style={{ fontSize: 10, color: "var(--mh-muted)", textAlign: "center", marginBottom: 4 }}>Armadura</div>
                                   <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
                                     <div className="mh-serif" style={{ fontSize: 26, fontWeight: 700, color: "var(--mh-gold-ink)" }}>
@@ -5164,13 +5171,13 @@ export default function App({ onSignOut }) {
                                   </span>
                                 )}
                               </div>
-                              <div style={{ display: "flex", gap: 8, marginBottom: 16 + (armorEntry ? 16 : 11) }}>
-                                <div onClick={() => applyDamage(viewingCharId, 1)} className="mh-tip-anchor" style={{ flex: 1, textAlign: "center", border: "1px solid var(--mh-line)", background: "var(--mh-panel2)", borderRadius: 10, padding: "8px 4px", cursor: "pointer" }}>
+                              <div style={{ display: "flex", gap: 8, marginBottom: statsSpacing.thrMb }}>
+                                <div onClick={() => applyDamage(viewingCharId, 1)} className="mh-tip-anchor" style={{ flex: 1, textAlign: "center", border: "1px solid var(--mh-line)", background: "var(--mh-panel2)", borderRadius: 10, padding: statsSpacing.thrPadY + "px 4px", cursor: "pointer" }}>
                                   <span className="mh-tip">Pulsa para -1 PV</span>
                                   <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Menor</div>
                                   <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700 }}>{major > 1 ? major - 1 : "—"}</div>
                                 </div>
-                                <div onClick={() => applyDamage(viewingCharId, 2)} className="mh-tip-anchor" style={{ flex: 1, textAlign: "center", border: "1px solid var(--acc)", background: "color-mix(in srgb, var(--acc) 8%, transparent)", borderRadius: 10, padding: "8px 4px", cursor: "pointer" }}>
+                                <div onClick={() => applyDamage(viewingCharId, 2)} className="mh-tip-anchor" style={{ flex: 1, textAlign: "center", border: "1px solid var(--acc)", background: "color-mix(in srgb, var(--acc) 8%, transparent)", borderRadius: 10, padding: statsSpacing.thrPadY + "px 4px", cursor: "pointer" }}>
                                   <span className="mh-tip">Pulsa para -2 PV</span>
                                   <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Mayor</div>
                                   <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700, color: "var(--mh-gold-ink)" }}>{major}</div>
@@ -5178,7 +5185,7 @@ export default function App({ onSignOut }) {
                                 <div
                                   onClick={() => applyDamage(viewingCharId, 3, true)}
                                   className="mh-tip-anchor"
-                                  style={{ flex: 1, textAlign: "center", border: "1px solid #D9644E", background: "#D9644E14", borderRadius: 10, padding: "8px 4px", cursor: "pointer" }}
+                                  style={{ flex: 1, textAlign: "center", border: "1px solid #D9644E", background: "#D9644E14", borderRadius: 10, padding: statsSpacing.thrPadY + "px 4px", cursor: "pointer" }}
                                 >
                                   <span className="mh-tip">Pulsa para -3 PV</span>
                                   <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Grave</div>
@@ -5187,7 +5194,7 @@ export default function App({ onSignOut }) {
                               </div>
 
 
-                              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: (armorEntry ? 20 : 14) + "px 0 14px" }}>
+                              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: statsSpacing.compTop + "px 0 " + statsSpacing.compMb + "px" }}>
                                 <span className="mh-label" style={{ margin: 0 }} title="Número de dados de daño que tiras">Competencia</span>
                                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                                   <button className="mh-btn-ghost" style={{ padding: "2px 7px" }} aria-label="Restar Competencia" onClick={() => updateCharacterField(viewingCharId, "f_proficiency", Math.max(1, proficiency - 1))}>
@@ -5200,9 +5207,9 @@ export default function App({ onSignOut }) {
                                 </div>
                               </div>
 
-                              <StepperRow hitKey={hpHit && hpHit.id === viewingCharId ? hpHit.key : undefined} label="Puntos de vida" total={Number(c.r_hp || 0) + equipMods.hp} marked={Number(c.hp_marked || 0)} field="hp_marked" color="#D9644E" Icon={Heart} charId={viewingCharId} onDelta={adjustHp} onToggle={markHp} />
-                              <StepperRow label="Estrés" total={Number(c.r_stress || 0) + equipMods.stress} marked={Number(c.stress_marked || 0)} field="stress_marked" color="#A58BE8" Icon={Zap} charId={viewingCharId} onDelta={adjustStress} onToggle={markStressBox} allowOverflow />
-                              <StepperRow label="Esperanza" total={HOPE_MAX + equipMods.hope} marked={Number(c.hope_marked ?? HOPE_DEFAULT)} field="hope_marked" color="#E3B04B" Icon={Sparkles} charId={viewingCharId} onDelta={updateCharacterField} onToggle={toggleCharSlot} shape="diamond" scarCount={Number(c.f_scars || 0)} />
+                              <StepperRow gap={statsSpacing.stepMb} labelGap={statsSpacing.stepLabelMb} hitKey={hpHit && hpHit.id === viewingCharId ? hpHit.key : undefined} label="Puntos de vida" total={Number(c.r_hp || 0) + equipMods.hp} marked={Number(c.hp_marked || 0)} field="hp_marked" color="#D9644E" Icon={Heart} charId={viewingCharId} onDelta={adjustHp} onToggle={markHp} />
+                              <StepperRow gap={statsSpacing.stepMb} labelGap={statsSpacing.stepLabelMb} label="Estrés" total={Number(c.r_stress || 0) + equipMods.stress} marked={Number(c.stress_marked || 0)} field="stress_marked" color="#A58BE8" Icon={Zap} charId={viewingCharId} onDelta={adjustStress} onToggle={markStressBox} allowOverflow />
+                              <StepperRow gap={statsSpacing.stepMb} labelGap={statsSpacing.stepLabelMb} label="Esperanza" total={HOPE_MAX + equipMods.hope} marked={Number(c.hope_marked ?? HOPE_DEFAULT)} field="hope_marked" color="#E3B04B" Icon={Sparkles} charId={viewingCharId} onDelta={updateCharacterField} onToggle={toggleCharSlot} shape="diamond" scarCount={Number(c.f_scars || 0)} />
 
                               <div>
                                 <div className="mh-label" style={{ marginBottom: 6, marginTop: 4 }}>Condiciones</div>
