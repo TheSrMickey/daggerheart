@@ -2863,24 +2863,6 @@ export default function App({ onSignOut }) {
   const [damageRollResult, setDamageRollResult] = useState(null);
   const [rampageResult, setRampageResult] = useState(null);
   const [hpHit, setHpHit] = useState(null);
-  const [incomingDamage, setIncomingDamage] = useState("");
-  const [incomingUseArmor, setIncomingUseArmor] = useState(false);
-
-  // Convierte el daño recibido en PV según los umbrales; gastar 1 de Armadura baja un nivel de gravedad.
-  const applyIncomingDamage = (id, amount, major, severe, useArmor) => {
-    const c = charsRef.current[id];
-    if (!c || !(amount > 0)) return;
-    const raw = amount >= severe ? 3 : amount >= major ? 2 : 1;
-    const armorLeft = Number(c.armor_marked || 0);
-    const spendArmor = useArmor && armorLeft > 0;
-    const hp = spendArmor ? raw - 1 : raw;
-    if (spendArmor) {
-      updateCharacterFields(id, { armor_marked: String(armorLeft - 1) });
-      postCampaignEvent(id, `🛡️ Gasta 1 de Armadura contra ${amount} de daño (${raw} → ${hp} PV).`);
-    }
-    if (hp > 0) applyDamage(id, hp, hp === 3);
-  };
-
   const getExperiences = (c) => {
     try {
       return JSON.parse(c.f_experiences || "[]");
@@ -5138,7 +5120,8 @@ export default function App({ onSignOut }) {
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
                             >
-                              <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
+                              {/* El hueco del antiguo campo de daño se reparte entre las secciones para mantener la altura. */}
+                              <div style={{ display: "flex", gap: 12, marginBottom: 16 + (armorEntry ? 32 : 20) }}>
                                 <div style={{ flex: 1, textAlign: "center", border: "1px solid " + themeColor, background: alpha(themeColor, 8), borderRadius: 12, padding: "12px 6px" }}>
                                   <div style={{ fontSize: 10, color: "var(--mh-muted)" }}>Evasión</div>
                                   <div className="mh-serif" style={{ fontSize: 26, fontWeight: 700, color: ink(themeColor) }}>
@@ -5181,7 +5164,7 @@ export default function App({ onSignOut }) {
                                   </span>
                                 )}
                               </div>
-                              <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+                              <div style={{ display: "flex", gap: 8, marginBottom: 16 + (armorEntry ? 16 : 11) }}>
                                 <div onClick={() => applyDamage(viewingCharId, 1)} className="mh-tip-anchor" style={{ flex: 1, textAlign: "center", border: "1px solid var(--mh-line)", background: "var(--mh-panel2)", borderRadius: 10, padding: "8px 4px", cursor: "pointer" }}>
                                   <span className="mh-tip">Pulsa para -1 PV</span>
                                   <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Menor</div>
@@ -5203,52 +5186,8 @@ export default function App({ onSignOut }) {
                                 </div>
                               </div>
 
-                              <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
-                                <input
-                                  className="mh-input"
-                                  type="number"
-                                  min={0}
-                                  inputMode="numeric"
-                                  placeholder="Daño recibido"
-                                  style={{ flex: 1, minWidth: 0, fontSize: 12.5, padding: "6px 9px" }}
-                                  value={incomingDamage}
-                                  onChange={(e) => setIncomingDamage(e.target.value)}
-                                  onKeyDown={(e) => {
-                                    if (e.key !== "Enter") return;
-                                    applyIncomingDamage(viewingCharId, Number(incomingDamage), major, severe, incomingUseArmor);
-                                    setIncomingDamage("");
-                                  }}
-                                />
-                                <button
-                                  className="mh-btn"
-                                  style={{ fontSize: 12, padding: "6px 10px" }}
-                                  disabled={!(Number(incomingDamage) > 0)}
-                                  onClick={() => {
-                                    applyIncomingDamage(viewingCharId, Number(incomingDamage), major, severe, incomingUseArmor);
-                                    setIncomingDamage("");
-                                  }}
-                                >
-                                  Aplicar
-                                </button>
-                              </div>
-                              {armorEntry && (
-                                <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, color: "var(--mh-ink3)", marginBottom: 6, cursor: "pointer" }}>
-                                  <input type="checkbox" checked={incomingUseArmor} onChange={(e) => setIncomingUseArmor(e.target.checked)} />
-                                  Gastar 1 de Armadura (baja un nivel de gravedad)
-                                </label>
-                              )}
-                              {Number(incomingDamage) > 0 && (() => {
-                                const n = Number(incomingDamage);
-                                const raw = n >= severe ? 3 : n >= major ? 2 : 1;
-                                const hp = incomingUseArmor && armorEntry && Number(c.armor_marked || 0) > 0 ? raw - 1 : raw;
-                                return (
-                                  <div style={{ fontSize: 11.5, color: "#D9644E", marginBottom: 10 }}>
-                                    {raw === 3 ? "Grave" : raw === 2 ? "Mayor" : "Menor"}: marcarás {hp} PV
-                                  </div>
-                                );
-                              })()}
 
-                              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "4px 0 14px" }}>
+                              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: (armorEntry ? 20 : 14) + "px 0 14px" }}>
                                 <span className="mh-label" style={{ margin: 0 }} title="Número de dados de daño que tiras">Competencia</span>
                                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                                   <button className="mh-btn-ghost" style={{ padding: "2px 7px" }} aria-label="Restar Competencia" onClick={() => updateCharacterField(viewingCharId, "f_proficiency", Math.max(1, proficiency - 1))}>
