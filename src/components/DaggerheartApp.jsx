@@ -1176,6 +1176,28 @@ const sharedStyles = `
   .mh-root * { scrollbar-color: var(--mh-line2) transparent; scrollbar-width: thin; }
   .mh-root .mh-noscroll { scrollbar-width: none; }
   .mh-root .mh-noscroll::-webkit-scrollbar { display: none; }
+  .mh-hback { all: unset; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; color: var(--mh-ink3); flex-shrink: 0; }
+  .mh-hback:hover { background: var(--mh-panel3); color: var(--mh-ink); }
+  .mh-hback:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
+  .mh-lvl { flex-shrink: 0; display: flex; }
+  .mh-lvl path { fill: #E3B04B1A; stroke: #E3B04B; stroke-width: 1.5; stroke-linejoin: round; }
+  .mh-lvl text { text-anchor: middle; fill: var(--mh-gold-ink); }
+  .mh-lvl-label { font-family: 'Inter', system-ui, sans-serif; font-size: 7px; font-weight: 700; letter-spacing: .14em; }
+  .mh-lvl-num { font-family: 'Cinzel', Georgia, serif; font-size: 20px; font-weight: 700; }
+  .mh-exp-tag { font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-purple-ink); border: 1px solid #A58BE855; border-radius: 4px; padding: 1px 6px; }
+  .mh-htag {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; white-space: nowrap;
+    padding: 5px 11px 5px 9px; border-radius: 7px; border: 1px solid color-mix(in srgb, var(--tag) 35%, transparent);
+    background: color-mix(in srgb, var(--tag) 8%, transparent);
+    color: color-mix(in srgb, var(--tag) var(--mh-accent-keep, 100%), #000);
+  }
+  .mh-htag.is-active { border-color: var(--tag); background: color-mix(in srgb, var(--tag) 20%, transparent); font-weight: 600; }
+  .mh-htag-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--tag); animation: mh-tag-pulse 1.6s ease-out infinite; }
+  @keyframes mh-tag-pulse {
+    0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--tag) 60%, transparent); }
+    100% { box-shadow: 0 0 0 7px transparent; }
+  }
+  @media (prefers-reduced-motion: reduce) { .mh-htag-dot { animation: none; } }
   .mh-serif { font-family: 'Cinzel', Georgia, serif; letter-spacing: .03em; }
   .mh-btn { border: 1px solid #E3B04B; background: #E3B04B; color: #1F1606; padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: opacity .15s; }
   .mh-btn:hover { filter: brightness(1.08); }
@@ -1372,6 +1394,13 @@ const sharedStyles = `
 `;
 
 /* ---------- Siluetas de Forma de Bestia ---------- */
+
+const HEADER_ELEMENTS = {
+  Fuego: { Icon: Flame, color: "#D9644E" },
+  Tierra: { Icon: Mountain, color: "#C08B5C" },
+  Agua: { Icon: Droplets, color: "#5E93B3" },
+  Aire: { Icon: Wind, color: "#8FB8C9" },
+};
 
 const TRANSFORM_THEMES = {
   "Forma de Lobo": { key: "Forma de Lobo", color: "#C45050" },
@@ -4619,6 +4648,9 @@ export default function App({ onSignOut }) {
         const isExpansionClass = CLASSES.find((cl) => cl.key === c.f_class)?.expansion;
         const beastformInfo = BEASTFORMS.find((b) => b.key === c.f_beastform);
         const themeColor = beastformInfo?.color || "#E3B04B";
+        const headerCampaign = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(viewingCharId));
+        const activeTransformForm = c.f_transformation_form_active || "";
+        const headerAccent = beastformInfo?.color || TRANSFORM_THEMES[activeTransformForm]?.color || null;
         const primaryWeapon = PRIMARY_WEAPONS.find((w) => w.key === c.f_primary_weapon);
         const secondaryWeapon = SECONDARY_WEAPONS.find((w) => w.key === c.f_secondary_weapon);
         const armorEntry = ARMORS.find((a) => a.key === c.f_armor);
@@ -4669,7 +4701,8 @@ export default function App({ onSignOut }) {
               style={{
                 position: "relative",
                 zIndex: 1,
-                background: "var(--mh-nav)", borderBottom: "1px solid var(--mh-line)",
+                background: "var(--mh-nav)", borderBottom: "1px solid " + (headerAccent ? headerAccent + "99" : "var(--mh-line)"),
+                transition: "border-color .4s",
                 padding: "16px 24px",
                 display: "flex",
                 flexDirection: "column",
@@ -4678,62 +4711,66 @@ export default function App({ onSignOut }) {
               }}
             >
               <div style={{ maxWidth: 1100, width: "100%", margin: "0 auto", display: "flex", flexDirection: "column", gap: 14 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: isMobile ? "wrap" : "nowrap" }}>
                 <button
                   onClick={() => setViewingCharId(null)}
-                  style={{
-                    all: "unset",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    color: "var(--mh-ink3)",
-                    fontSize: 13,
-                    fontWeight: 500,
-                  }}
+                  className="mh-hback"
+                  title="Volver a Personajes"
+                  aria-label="Volver a Personajes"
                 >
-                  <ArrowLeft size={16} /> Personajes
+                  <ArrowLeft size={17} />
                 </button>
-                <div style={{ width: 1, height: 24, background: "var(--mh-panel3)" }} />
-                <div style={{ flex: 1 }}>
-                  <div className="mh-serif" style={{ color: "var(--mh-ink)", fontSize: 22, fontWeight: 700, display: "flex", alignItems: "center", gap: 8 }}>
+                {c.f_class && (
+                  <div className="mh-lvl" title={"Nivel " + (c.f_level || 1)}>
+                    <svg viewBox="0 0 52 58" width="46" height="52" aria-hidden="true">
+                      <path d="M4 4 H48 V31 C48 43 38 51 26 55 C14 51 4 43 4 31 Z" />
+                      <text x="26" y="17" className="mh-lvl-label">NIVEL</text>
+                      <text x="26" y="40" className="mh-lvl-num">{c.f_level || 1}</text>
+                    </svg>
+                  </div>
+                )}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="mh-serif" style={{ color: "var(--mh-ink)", fontSize: 22, fontWeight: 700, display: "flex", alignItems: "center", gap: 8, lineHeight: 1.15 }}>
                     {c.f_name || "Sin nombre"}
                     {isDead && <Skull size={19} color="currentColor" />}
                   </div>
-                  {c.f_pronouns && <div style={{ color: "var(--mh-muted)", fontSize: 12 }}>{c.f_pronouns}</div>}
+                  {(c.f_class || c.f_pronouns) && (
+                    <div style={{ color: "var(--mh-ink3)", fontSize: 13, marginTop: 4, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <span>{[c.f_class, c.f_subclass, c.f_pronouns].filter(Boolean).join(" · ")}</span>
+                      {isExpansionClass && <span className="mh-exp-tag">Hope & Fear</span>}
+                    </div>
+                  )}
                 </div>
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
-                  {c.f_class && (
-                    <span style={{ fontSize: 12, fontWeight: 600, color: "#1F1606", background: themeColor, padding: "4px 12px", borderRadius: 20 }}>
-                      Nivel {c.f_level || "1"} · {c.f_class}
-                      {c.f_subclass ? " · " + c.f_subclass : ""}
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: isMobile ? "flex-start" : "flex-end", marginLeft: "auto", flexBasis: isMobile ? "100%" : "auto" }}>
+                  {headerCampaign && (
+                    <span className="mh-htag" style={{ "--tag": "#E3B04B" }} title="Campaña">
+                      <BookOpen size={14} /> {headerCampaign.name}
                     </span>
                   )}
-                  {(() => {
-                    const camp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(viewingCharId));
+                  {c.f_transformation &&
+                    (activeTransformForm ? (
+                      <span className="mh-htag is-active" style={{ "--tag": TRANSFORM_THEMES[activeTransformForm]?.color || "#A58BE8" }} title={c.f_transformation + ": " + activeTransformForm + " activa"}>
+                        <span className="mh-htag-dot" /> {activeTransformForm}
+                        {activeTransformForm === "Forma de Lobo" ? " · +1d10" : ""}
+                      </span>
+                    ) : (
+                      <span className="mh-htag" style={{ "--tag": "#A58BE8" }} title="Transformación">
+                        <Moon size={14} /> {c.f_transformation}
+                      </span>
+                    ))}
+                  {beastformInfo && (
+                    <span className="mh-htag is-active" style={{ "--tag": beastformInfo.color }} title="Forma de Bestia">
+                      <PawPrint size={14} /> {beastformInfo.key}
+                    </span>
+                  )}
+                  {c.f_elemental_active && HEADER_ELEMENTS[c.f_elemental_active] && (() => {
+                    const el = HEADER_ELEMENTS[c.f_elemental_active];
                     return (
-                      camp && (
-                        <span style={{ fontSize: 11, fontWeight: 600, color: "#1F1606", background: "#E3B04B", padding: "4px 12px", borderRadius: 20 }}>
-                          Campaña: {camp.name}
-                        </span>
-                      )
+                      <span className="mh-htag" style={{ "--tag": el.color }} title="Encarnación Elemental">
+                        <el.Icon size={14} /> {c.f_elemental_active} canalizado
+                      </span>
                     );
                   })()}
-                  {isExpansionClass && (
-                    <span style={{ fontSize: 11, fontWeight: 600, color: "var(--mh-ink)", background: "#A58BE8", padding: "4px 12px", borderRadius: 20 }}>
-                      Hope & Fear
-                    </span>
-                  )}
-                  {c.f_transformation && (
-                    <span style={{ fontSize: 11, fontWeight: 600, color: "var(--mh-ink)", background: "#A58BE8", padding: "4px 12px", borderRadius: 20 }}>
-                      {c.f_transformation}
-                    </span>
-                  )}
-                  {beastformInfo && (
-                    <span style={{ fontSize: 11, fontWeight: 600, color: "var(--mh-ink)", background: beastformInfo.color, padding: "4px 12px", borderRadius: 20 }}>
-                      Forma: {beastformInfo.key}
-                    </span>
-                  )}
                 </div>
               </div>
 
