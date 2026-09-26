@@ -1208,11 +1208,188 @@ const sharedStyles = `
   .mh-dslot:active { scale: .98; }
   @keyframes mh-slot-in { from { opacity: 0; translate: 16px 0; } }
 
+  /* Dados */
+  .mh-die-wrap { display: inline-flex; flex-direction: column; align-items: center; gap: 7px; transition: opacity .35s ease, filter .35s ease; }
+  .mh-die-wrap.is-dim { opacity: .45; filter: saturate(.4); }
+  .mh-die { position: relative; display: flex; align-items: center; justify-content: center; }
+  .mh-die svg { position: absolute; inset: 0; overflow: visible; transition: filter .35s ease; }
+  .mh-die b { position: relative; font-family: 'Cinzel', Georgia, serif; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+  .mh-die.is-rolling { animation: mh-die-tumble .5s linear infinite; }
+  .mh-die.is-landed { animation: mh-die-land .55s cubic-bezier(.2,1.5,.4,1) both; }
+  .mh-die.is-high svg { filter: drop-shadow(0 0 6px var(--die)) drop-shadow(0 0 14px var(--die)); }
+  .mh-die-label { font-family: 'Inter', system-ui, sans-serif; font-size: 10px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--die); }
+  @keyframes mh-die-tumble {
+    0% { rotate: 0deg; translate: 0 0; scale: .92; }
+    25% { rotate: 95deg; translate: 3px -10px; }
+    50% { rotate: 185deg; translate: 0 0; scale: 1.06; }
+    75% { rotate: 270deg; translate: -3px -7px; }
+    100% { rotate: 360deg; translate: 0 0; scale: .92; }
+  }
+  @keyframes mh-die-land { 0% { scale: 1.3; rotate: -18deg; } 55% { scale: .94; rotate: 4deg; } 100% { scale: 1; rotate: 0deg; } }
+  .mh-pop { animation: mh-pop .4s cubic-bezier(.2,1.4,.4,1) both; }
+  @keyframes mh-pop { from { opacity: 0; translate: 0 8px; scale: .96; } }
+  .mh-roll-pop { animation: mh-roll-pop .3s cubic-bezier(.2,1.3,.4,1) both; }
+  @keyframes mh-roll-pop { from { opacity: 0; scale: .85; translate: 0 16px; } }
+  .mh-appear-late { animation: mh-pop .35s ease .85s both; }
+  .mh-burst {
+    position: absolute; left: 50%; top: 35%; width: 360px; height: 360px; margin: -180px 0 0 -180px; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(circle, rgba(227,176,75,.5), rgba(165,139,232,.28) 40%, transparent 68%);
+    animation: mh-burst 1.1s ease-out both;
+  }
+  @keyframes mh-burst { from { scale: .2; opacity: 1; } to { scale: 1.6; opacity: 0; } }
+  .mh-dots { display: inline-block; color: #9C93AD; letter-spacing: .15em; animation: mh-blink .9s ease-in-out infinite; }
+  @keyframes mh-blink { 50% { opacity: .3; } }
+
   @media (prefers-reduced-motion: reduce) {
+    .mh-die, .mh-pop, .mh-roll-pop, .mh-appear-late, .mh-burst, .mh-dots { animation: none !important; }
     .mh-overlay, .mh-card-anim, .mh-dslot, .mh-overlay.is-closing, .mh-overlay.is-closing .mh-card-anim { animation: none !important; }
     .mh-tilt { transform: none !important; transition: none; }
   }
 `;
+
+/* ---------- Dados animados ---------- */
+
+const DIE_SHAPES = {
+  4: "50,6 95,88 5,88",
+  6: "10,10 90,10 90,90 10,90",
+  8: "50,3 96,50 50,97 4,50",
+  10: "50,3 93,42 50,97 7,42",
+  12: "50,3 96,37 78,94 22,94 4,37",
+  20: "50,2 93,26 93,74 50,98 7,74 7,26",
+};
+
+const prefersReducedMotion = () =>
+  typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// Devuelve true durante la animación de "rodar" cada vez que cambia la clave de la tirada.
+function useRolling(key, ms = 850) {
+  const [rolling, setRolling] = useState(false);
+  useEffect(() => {
+    if (key == null || prefersReducedMotion()) return;
+    setRolling(true);
+    const t = setTimeout(() => setRolling(false), ms);
+    return () => clearTimeout(t);
+  }, [key, ms]);
+  return rolling;
+}
+
+function CountUp({ value, duration = 520 }) {
+  const [n, setN] = useState(prefersReducedMotion() ? value : 0);
+  useEffect(() => {
+    if (prefersReducedMotion()) return setN(value);
+    let raf;
+    const t0 = performance.now();
+    const from = Math.min(0, value);
+    const tick = (t) => {
+      const p = Math.min(1, (t - t0) / duration);
+      setN(Math.round(from + (value - from) * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [value, duration]);
+  return n;
+}
+
+function DieFace({ sides, value, color, size = 72, rolling, highlight, dim, label, delay = 0 }) {
+  const [shown, setShown] = useState(value);
+  useEffect(() => {
+    if (!rolling) return setShown(value);
+    const id = setInterval(() => setShown(1 + Math.floor(Math.random() * sides)), 55);
+    return () => clearInterval(id);
+  }, [rolling, value, sides]);
+  const points = DIE_SHAPES[sides] || DIE_SHAPES[12];
+  return (
+    <div className={"mh-die-wrap" + (dim ? " is-dim" : "")} style={{ "--die": color }}>
+      <div
+        className={"mh-die " + (rolling ? "is-rolling" : value != null ? "is-landed" : "") + (highlight ? " is-high" : "")}
+        style={{ width: size, height: size, animationDelay: delay + "ms" }}
+      >
+        <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
+          <polygon points={points} fill={color + "22"} stroke={color} strokeWidth="4" strokeLinejoin="round" />
+        </svg>
+        <b style={{ color, fontSize: Math.round(size * (sides === 4 ? 0.3 : 0.36)), marginTop: sides === 4 ? size * 0.18 : sides === 12 ? size * 0.06 : 0 }}>
+          {shown ?? "–"}
+        </b>
+      </div>
+      {label && <span className="mh-die-label">{label}</span>}
+    </div>
+  );
+}
+
+// Resultado de una tirada de Dualidad: dados que ruedan, total que cuenta y veredicto.
+function DualityResult({ roll, size = 84 }) {
+  const rolling = useRolling(roll?.key);
+  const has = !!roll;
+  const crit = has && roll.hope === roll.fear;
+  const winner = !has ? null : crit ? "both" : roll.hope > roll.fear ? "hope" : "fear";
+  const edge = has ? roll.edge || 0 : 0;
+  const mod = has ? Number(roll.mod) || 0 : 0;
+  const landed = has && !rolling;
+  return (
+    <div style={{ position: "relative", textAlign: "center" }}>
+      {crit && landed && <div className="mh-burst" key={"b" + roll.key} />}
+      <div style={{ display: "flex", gap: 16, alignItems: "flex-start", justifyContent: "center", padding: "8px 0 4px", position: "relative" }}>
+        <DieFace sides={12} value={has ? roll.hope : null} color="#E3B04B" size={size} rolling={rolling} highlight={landed && winner !== "fear"} dim={landed && winner === "fear"} label="Esperanza" />
+        <span style={{ fontSize: 20, color: "#9C93AD", marginTop: size / 2 - 14 }}>+</span>
+        <DieFace sides={12} value={has ? roll.fear : null} color="#A58BE8" size={size} rolling={rolling} highlight={landed && winner !== "hope"} dim={landed && winner === "hope"} label="Miedo" delay={90} />
+        {edge !== 0 && (
+          <>
+            <span style={{ fontSize: 20, color: "#9C93AD", marginTop: size / 2 - 14 }}>{edge > 0 ? "+" : "−"}</span>
+            <DieFace sides={6} value={Math.abs(edge)} color={edge > 0 ? "#7FB77A" : "#D9644E"} size={Math.round(size * 0.62)} rolling={rolling} label={edge > 0 ? "Ventaja" : "Desventaja"} delay={180} />
+          </>
+        )}
+      </div>
+      <div className="mh-serif" style={{ fontSize: 46, fontWeight: 700, lineHeight: 1.1, marginTop: 10, minHeight: 52, color: "#ECE6DA", position: "relative" }}>
+        {!has ? "–" : rolling ? <span className="mh-dots">···</span> : <CountUp value={roll.total} />}
+      </div>
+      {landed && (
+        <div className="mh-pop" key={roll.key} style={{ position: "relative", fontFamily: "'Inter', system-ui, sans-serif" }}>
+          <div style={{ fontSize: 12, color: "#9C93AD" }}>
+            {roll.hope} + {roll.fear}
+            {mod ? (mod > 0 ? " + " : " − ") + Math.abs(mod) : ""}
+            {edge ? (edge > 0 ? " + " : " − ") + Math.abs(edge) : ""}
+            {roll.difficulty != null ? ` · Dificultad ${roll.difficulty}` : ""}
+          </div>
+          <div style={{ fontSize: 14.5, fontWeight: 600, color: roll.color, marginTop: 4 }}>{roll.text}</div>
+          {roll.note && <div style={{ fontSize: 11.5, color: "#B7AEC6", marginTop: 3 }}>{roll.note}</div>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Resultado de una tirada de daño: un dado por punto de Competencia.
+function DamageResult({ roll }) {
+  const rolling = useRolling(roll?.key, 750);
+  const rolls = roll.rolls || [roll.roll];
+  const color = roll.isCritical ? "#7FB77A" : "#D9644E";
+  const size = rolls.length > 4 ? 44 : rolls.length > 2 ? 54 : 66;
+  return (
+    <div style={{ position: "relative" }}>
+      {roll.isCritical && !rolling && <div className="mh-burst" key={"b" + roll.key} />}
+      <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", padding: "6px 0", maxWidth: 320, margin: "0 auto", position: "relative" }}>
+        {rolls.map((v, i) => (
+          <DieFace key={i} sides={roll.die} value={v} color={color} size={size} rolling={rolling} delay={i * 70} highlight={!rolling && v === roll.die} />
+        ))}
+      </div>
+      <div className="mh-serif" style={{ fontSize: 46, fontWeight: 700, lineHeight: 1.1, marginTop: 8, minHeight: 52, position: "relative" }}>
+        {rolling ? <span className="mh-dots">···</span> : <CountUp value={roll.total} />}
+      </div>
+      {!rolling && (
+        <div className="mh-pop" key={roll.key} style={{ fontFamily: "'Inter', system-ui, sans-serif", position: "relative" }}>
+          <div style={{ fontSize: 12.5, color: "#B7AEC6" }}>
+            {roll.dice || 1}d{roll.die} ({rolls.join(" + ")}){roll.bonus ? " + " + roll.bonus : ""}
+            {roll.isCritical ? ` + ${roll.critBonus} (máx.)` : ""}
+          </div>
+          {roll.isCritical && <div style={{ fontSize: 12.5, fontWeight: 700, color: "#7FB77A", marginTop: 3 }}>¡Crítico! Sumas el máximo de los dados</div>}
+          {roll.levelBonus > 0 && <div style={{ fontSize: 11, color: "#9C93AD", marginTop: 2 }}>Incluye +{roll.levelBonus} de Entrenamiento de combate</div>}
+          <div style={{ fontSize: 13.5, fontWeight: 600, color: "#D9644E", marginTop: 4 }}>daño {roll.damageType}</div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function Card({ title, children }) {
   return (
@@ -1591,6 +1768,7 @@ export default function App({ onSignOut }) {
   const [rollDifficulty, setRollDifficulty] = useState("");
   const [rollEdge, setRollEdge] = useState("none");
   const [edgeVal, setEdgeVal] = useState(null);
+  const [pageRoll, setPageRoll] = useState(null);
   const [hopeVal, setHopeVal] = useState(null);
   const [fearVal, setFearVal] = useState(null);
   const [rollTotal, setRollTotal] = useState(null);
@@ -2028,6 +2206,7 @@ export default function App({ onSignOut }) {
       color = "#A58BE8";
     }
     setVerdict({ text, color });
+    setPageRoll({ key: Date.now(), hope, fear, mod, edge, total, difficulty: hasDifficulty ? difficulty : null, text: text.split(" · ")[0], note: text.split(" · ")[1] || "", color });
     if (fear > hope) addFear(1);
 
     const who = playerName || "Alguien en la mesa";
@@ -2304,7 +2483,7 @@ export default function App({ onSignOut }) {
     // Crítico: sumas el valor máximo de los dados además de la tirada.
     const critBonus = isCritical ? die * dice : 0;
     const total = roll + bonus + critBonus;
-    setDamageRollResult({ weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus });
+    setDamageRollResult({ key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus });
     const who = playerName || "Alguien en la mesa";
     const critLabel = isCritical ? ` · ¡Crítico! (+${critBonus} máx.)` : "";
     const diceLabel = `${dice}d${die} (${rolls.join("+")})`;
@@ -3243,7 +3422,7 @@ export default function App({ onSignOut }) {
     clearTimeout(traitRollTimer.current);
     const note =
       hope === fear ? "Ganas 1 Esperanza y te quitas 1 Estrés" : hope > fear ? "Ganas 1 Esperanza" : "El DJ gana 1 de Miedo";
-    setTraitRollResult({ traitLabel, hope, fear, mod: traitValue, advantageRoll, total, text, color, note, weapon: weapon || null, charId });
+    setTraitRollResult({ key: Date.now(), traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, total, text: hope === fear ? "Éxito crítico" : text, color, note, weapon: weapon || null, charId });
 
     // Con Esperanza (o crítico) ganas 1 Esperanza; con crítico además te quitas 1 Estrés.
     if (hope >= fear) {
@@ -4015,24 +4194,8 @@ export default function App({ onSignOut }) {
                   </button>
                 </div>
 
-                <div style={{ display: "flex", gap: 24, alignItems: "center", justifyContent: "center", padding: "24px 0 10px" }}>
-                  <div style={{ width: 92, height: 92, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, fontWeight: 700, position: "relative", background: "#E3B04B14", border: "2px solid #E3B04B", color: "#E3B04B", fontFamily: "'Cinzel', serif" }}>
-                    <small style={{ position: "absolute", top: 8, left: 0, right: 0, textAlign: "center", fontSize: 9.5, letterSpacing: 1, fontWeight: 600, opacity: 0.75 }}>ESPERANZA</small>
-                    {hopeVal ?? "–"}
-                  </div>
-                  <div style={{ fontSize: 20, color: "#9C93AD" }}>+</div>
-                  <div style={{ width: 92, height: 92, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, fontWeight: 700, position: "relative", background: "#A58BE814", border: "2px solid #A58BE8", color: "#A58BE8", fontFamily: "'Cinzel', serif" }}>
-                    <small style={{ position: "absolute", top: 8, left: 0, right: 0, textAlign: "center", fontSize: 9.5, letterSpacing: 1, fontWeight: 600, opacity: 0.85 }}>MIEDO</small>
-                    {fearVal ?? "–"}
-                  </div>
-                </div>
-
-                <div style={{ textAlign: "center" }}>
-                  <div className="mh-serif" style={{ fontSize: 36, fontWeight: 700 }}>{rollTotal ?? "–"}</div>
-                  {edgeVal !== null && (
-                    <div style={{ fontSize: 12, color: "#9C93AD" }}>{edgeVal > 0 ? `incluye +${edgeVal} de ventaja (d6)` : `incluye −${-edgeVal} de desventaja (d6)`}</div>
-                  )}
-                  <div style={{ fontSize: 13, marginTop: 2, fontWeight: 600, color: verdict.color }}>{verdict.text}</div>
+                <div style={{ padding: "18px 0 6px" }}>
+                  <DualityResult roll={pageRoll} size={92} />
                 </div>
               </Card>
 
@@ -6366,15 +6529,18 @@ export default function App({ onSignOut }) {
                 }}
                 onClick={() => setTraitRollResult(null)}
               >
-                <div style={{ display: "flex", gap: 16, alignItems: "stretch" }}>
+                <div style={{ display: "flex", gap: 16, alignItems: "stretch", flexWrap: "wrap", justifyContent: "center" }}>
                   <div
-                    className="mh-serif"
+                    className="mh-serif mh-roll-pop"
                     onClick={(e) => e.stopPropagation()}
                     style={{
                       background: "#2E2939",
                       color: "#ECE6DA",
                       borderRadius: 14,
-                      padding: "22px 36px",
+                      padding: "20px 30px",
+                      minWidth: 280,
+                      position: "relative",
+                      overflow: "hidden",
                       textAlign: "center",
                       boxShadow: "0 12px 30px rgba(0,0,0,0.35)",
                       border: "1px solid " + traitRollResult.color,
@@ -6383,18 +6549,7 @@ export default function App({ onSignOut }) {
                     <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 12, color: "#9C93AD", marginBottom: 6 }}>
                       {traitRollResult.traitLabel}
                     </div>
-                    <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 13, color: "#B7AEC6", marginBottom: 4 }}>
-                      Esperanza {traitRollResult.hope} + Miedo {traitRollResult.fear}{" "}
-                      {traitRollResult.mod > 0 ? "+" + traitRollResult.mod : traitRollResult.mod}
-                      {traitRollResult.advantageRoll > 0 && ` + Ventaja ${traitRollResult.advantageRoll}`}
-                    </div>
-                    <div style={{ fontSize: 44, fontWeight: 700 }}>{traitRollResult.total}</div>
-                    <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 13, fontWeight: 600, color: traitRollResult.color, marginTop: 2 }}>
-                      {traitRollResult.text}
-                    </div>
-                    {traitRollResult.note && (
-                      <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 11.5, color: "#B7AEC6", marginTop: 4 }}>{traitRollResult.note}</div>
-                    )}
+                    <DualityResult roll={traitRollResult} size={72} />
                     <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 10, color: "#9C93AD", marginTop: 10 }}>
                       Pulsa fuera para cerrar
                     </div>
@@ -6402,6 +6557,7 @@ export default function App({ onSignOut }) {
 
                   {traitRollResult.weapon && (
                     <div
+                      className="mh-appear-late"
                       onClick={(e) => e.stopPropagation()}
                       style={{
                         background: "#1B1824",
@@ -6418,7 +6574,7 @@ export default function App({ onSignOut }) {
                       }}
                     >
                       <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 12.5, color: "#B7AEC6", fontWeight: 600 }}>
-                        {traitRollResult.text === "Crítico" && (
+                        {traitRollResult.hope === traitRollResult.fear && (
                           <div style={{ color: "#7FB77A", fontWeight: 700, marginBottom: 4 }}>¡Crítico! Daño máximo + tirada</div>
                         )}
                         ¿Impactó el ataque con {traitRollResult.weapon.name}?
@@ -6429,7 +6585,7 @@ export default function App({ onSignOut }) {
                           onClick={() => {
                             const { name, damage } = traitRollResult.weapon;
                             const charId = traitRollResult.charId;
-                            const isCritical = traitRollResult.text === "Crítico";
+                            const isCritical = traitRollResult.hope === traitRollResult.fear;
                             setTraitRollResult(null);
                             rollWeaponDamage(name, damage, charId, isCritical);
                           }}
@@ -6460,14 +6616,17 @@ export default function App({ onSignOut }) {
                 onClick={() => setDamageRollResult(null)}
               >
                 <div
-                  className="mh-serif"
+                  className="mh-serif mh-roll-pop"
                   onClick={(e) => e.stopPropagation()}
                   style={{
                     background: "#2E2939",
                     color: "#ECE6DA",
                     borderRadius: 14,
-                    padding: "22px 36px",
+                    padding: "20px 30px",
+                    minWidth: 260,
                     textAlign: "center",
+                    position: "relative",
+                    overflow: "hidden",
                     boxShadow: "0 12px 30px rgba(0,0,0,0.35)",
                     border: "1px solid " + (damageRollResult.isCritical ? "#7FB77A" : "#D9644E"),
                   }}
@@ -6475,24 +6634,7 @@ export default function App({ onSignOut }) {
                   <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 12, color: "#9C93AD", marginBottom: 6 }}>
                     Daño · {damageRollResult.weaponName}
                   </div>
-                  {damageRollResult.isCritical && (
-                    <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 12.5, fontWeight: 700, color: "#7FB77A", marginBottom: 4 }}>
-                      ¡Crítico! +{damageRollResult.critBonus} de daño máximo
-                    </div>
-                  )}
-                  <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 13, color: "#B7AEC6", marginBottom: 4 }}>
-                    {damageRollResult.dice || 1}d{damageRollResult.die} ({(damageRollResult.rolls || [damageRollResult.roll]).join(" + ")}){damageRollResult.bonus ? " + " + damageRollResult.bonus : ""}
-                    {damageRollResult.isCritical ? ` + ${damageRollResult.critBonus} (máx.)` : ""}
-                  </div>
-                  <div style={{ fontSize: 44, fontWeight: 700 }}>{damageRollResult.total}</div>
-                  {damageRollResult.levelBonus > 0 && (
-                    <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 11, color: "#9C93AD" }}>
-                      Incluye +{damageRollResult.levelBonus} de Entrenamiento de combate
-                    </div>
-                  )}
-                  <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 13, fontWeight: 600, color: "#D9644E", marginTop: 2 }}>
-                    daño {damageRollResult.damageType}
-                  </div>
+                  <DamageResult roll={damageRollResult} />
                   <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 10, color: "#9C93AD", marginTop: 10 }}>
                     Pulsa fuera para cerrar
                   </div>
