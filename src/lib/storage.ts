@@ -13,6 +13,10 @@ let client: ReturnType<typeof createClient> | null = null;
 const sb = () => (client ??= createClient());
 const WRITE_DELAY_MS = 400;
 
+// En la vista previa local nada se guarda en Supabase (la base de datos es la real).
+const isDevPreview = () =>
+  process.env.NODE_ENV === "development" && typeof window !== "undefined" && window.location.pathname.startsWith("/dev-preview");
+
 let userIdPromise: Promise<string | null> | null = null;
 let privateCache: Promise<Map<string, string>> | null = null;
 const pendingWrites = new Map<string, { value: string; shared: boolean; timer: ReturnType<typeof setTimeout> }>();
@@ -27,8 +31,14 @@ function loadPrivate() {
   privateCache ??= (async () => {
     const map = new Map<string, string>();
     const { data, error } = await sb().from("kv_private").select("key, value");
-    if (error) throw error;
+    if (error && !isDevPreview()) throw error;
     for (const row of data ?? []) map.set(row.key, row.value);
+
+    // Vista previa local: personajes de ejemplo (en producción este bloque desaparece).
+    if (isDevPreview()) {
+      const { DEV_SEED } = await import("@/app/dev-preview/seed");
+      for (const [key, value] of Object.entries(DEV_SEED)) if (!map.has(key)) map.set(key, value);
+    }
 
     // Primera vez: usamos el nombre de registro como "Jugando como".
     if (!map.has("player-name")) {
@@ -64,6 +74,7 @@ export async function storageGet(key: string, shared = false): Promise<Entry | n
 
 export async function storageSet(key: string, value: string, shared = false): Promise<Entry> {
   if (!shared) (await loadPrivate()).set(key, value);
+  if (isDevPreview()) return { key, value };
 
   // La app guarda en cada pulsación: agrupamos las escrituras de una misma clave.
   const id = pendingKey(key, shared);
