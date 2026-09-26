@@ -4760,7 +4760,7 @@ export default function App({ onSignOut }) {
                     ))}
                   {beastformInfo && (
                     <span className="mh-htag is-active" style={{ "--tag": beastformInfo.color }} title="Forma de Bestia">
-                      <PawPrint size={14} /> {beastformInfo.key}
+                      <span className="mh-htag-dot" /> {beastformInfo.key}
                     </span>
                   )}
                   {c.f_elemental_active && HEADER_ELEMENTS[c.f_elemental_active] && (() => {
