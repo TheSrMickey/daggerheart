@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { LogOut, Sun, Moon } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
@@ -1671,6 +1671,31 @@ function DamageResult({ roll }) {
   );
 }
 
+// Título que prueba tamaños de mayor a menor hasta caber en `lines` líneas.
+function FitTitle({ text, max = 23, min = 14, lines = 2, lineHeight = 1.15, className, style }) {
+  const ref = useRef(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const fit = () => {
+      let size = max;
+      el.style.fontSize = size + "px";
+      while (size > min && el.scrollHeight > Math.ceil(size * lineHeight * lines) + 1) {
+        size -= 0.5;
+        el.style.fontSize = size + "px";
+      }
+    };
+    fit();
+    // Cinzel puede cargar después: vuelve a medir cuando esté lista.
+    document.fonts?.ready.then(fit);
+  }, [text, max, min, lines, lineHeight]);
+  return (
+    <div ref={ref} className={className} title={text} style={{ ...style, lineHeight, textWrap: "balance", overflowWrap: "break-word" }}>
+      {text}
+    </div>
+  );
+}
+
 function Card({ title, children }) {
   return (
     <div className="mh-card">
@@ -1889,13 +1914,17 @@ function CompactCard({ accent, kicker, title, description, onClick, disabled, fo
         {kicker}
       </div>
       <div
+        title={typeof title === "string" ? title : undefined}
         style={{
           fontSize: 13.5,
           fontWeight: 700,
           color: "var(--mh-ink)",
-          whiteSpace: "nowrap",
+          lineHeight: 1.25,
+          textWrap: "balance",
+          display: "-webkit-box",
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: "vertical",
           overflow: "hidden",
-          textOverflow: "ellipsis",
         }}
       >
         {title}
@@ -7789,21 +7818,7 @@ export default function App({ onSignOut }) {
                           {viewingCardDetail.tags[1]}
                         </div>
                       )}
-                      <div style={{ position: "absolute", bottom: 16, left: 20, right: 20, display: "flex", alignItems: "center", gap: 8 }}>
-                        <div
-                          className="mh-serif"
-                          style={{
-                            fontSize: viewingCardDetail.title.length > 20 ? 15 : viewingCardDetail.title.length > 14 ? 18 : 23,
-                            fontWeight: 700,
-                            color: "#FFFFFF",
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            minWidth: 0,
-                          }}
-                        >
-                          {viewingCardDetail.title}
-                        </div>
+                      <div style={{ position: "absolute", bottom: 14, left: 20, right: 20, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 6 }}>
                         {viewingCardDetail.tier && (
                           <span
                             style={{
@@ -7821,6 +7836,11 @@ export default function App({ onSignOut }) {
                             {TIER_COLORS[viewingCardDetail.tier].label}
                           </span>
                         )}
+                        <FitTitle
+                          text={viewingCardDetail.title}
+                          className="mh-serif"
+                          style={{ fontWeight: 700, color: "#FFFFFF", width: "100%", maxHeight: "2.4em", overflow: "hidden", textShadow: "0 1px 6px rgba(0,0,0,.5)" }}
+                        />
                       </div>
                     </div>
                     <div style={{ padding: "16px 20px", flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "center" }}>
