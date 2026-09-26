@@ -1155,6 +1155,14 @@ const sharedStyles = `
     --mh-accent-keep: 62%;
     --mh-chip: #FFFCF6;
   }
+  html[data-mh-theme="light"] .mh-holo {
+    mix-blend-mode: multiply;
+    background: linear-gradient(115deg, transparent 8%, rgba(255,60,170,.5) 24%, rgba(40,150,255,.5) 40%, rgba(255,190,20,.55) 55%, rgba(30,200,120,.5) 70%, transparent 88%);
+    background-size: 220% 220%; background-position: var(--mx, 50%) var(--my, 50%);
+    opacity: .4;
+  }
+  html[data-mh-theme="light"] .mh-tilt[data-active="1"] .mh-holo { opacity: .75; }
+  html[data-mh-theme="light"] .mh-glare { mix-blend-mode: soft-light; }
   html[data-mh-theme="light"] .mh-root .mh-card, html[data-mh-theme="light"] .mh-root .mh-dslot { box-shadow: 0 1px 3px rgba(60,40,20,.08); }
   .mh-keep-dark { color: var(--mh-ink); }
   .mh-theme-switch {
@@ -2003,11 +2011,11 @@ export default function App({ onSignOut }) {
   const [view, setView] = useState("ficha");
   const [playerName, setPlayerName] = useState("");
   const [isMobile, setIsMobile] = useState(false);
-  // Tema claro/oscuro: preferencia de este navegador (por defecto, oscuro).
+  // Tema claro/oscuro: preferencia de este navegador (por defecto, claro).
   // El script del layout lo aplica en <html> antes de pintar para que no parpadee.
-  const [theme, setTheme] = useState("dark");
+  const [theme, setTheme] = useState("light");
   useEffect(() => {
-    if (document.documentElement.dataset.mhTheme === "light") setTheme("light");
+    if (document.documentElement.dataset.mhTheme === "dark") setTheme("dark");
   }, []);
   const themeSwitch = (
     <button
@@ -3876,7 +3884,12 @@ export default function App({ onSignOut }) {
             return (
               <div
                 key={item.key}
-                onClick={() => setView(item.key)}
+                onClick={() => {
+                  // Salir de la hoja de personaje (y de la carta ampliada) al cambiar de sección.
+                  setViewingCharId(null);
+                  setViewingCardDetail(null);
+                  setView(item.key);
+                }}
                 title={item.label}
                 style={{
                   display: "flex",
