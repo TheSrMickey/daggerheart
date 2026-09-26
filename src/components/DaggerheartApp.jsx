@@ -1174,6 +1174,8 @@ const sharedStyles = `
   .mh-root ::placeholder { color: var(--mh-muted3); }
   .mh-root select option { background: var(--mh-panel); color: var(--mh-ink); }
   .mh-root * { scrollbar-color: var(--mh-line2) transparent; scrollbar-width: thin; }
+  .mh-root .mh-noscroll { scrollbar-width: none; }
+  .mh-root .mh-noscroll::-webkit-scrollbar { display: none; }
   .mh-serif { font-family: 'Cinzel', Georgia, serif; letter-spacing: .03em; }
   .mh-btn { border: 1px solid #E3B04B; background: #E3B04B; color: #1F1606; padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: opacity .15s; }
   .mh-btn:hover { filter: brightness(1.08); }
@@ -4866,7 +4868,7 @@ export default function App({ onSignOut }) {
                   return (
                     <div>
                       {/* Tabs */}
-                      <div style={{ display: "flex", alignItems: "flex-end", gap: 2, borderBottom: "1px solid var(--mh-line)", marginBottom: 22, overflowX: "auto" }}>
+                      <div className="mh-noscroll" style={{ display: "flex", alignItems: "flex-end", gap: 2, borderBottom: "1px solid var(--mh-line)", marginBottom: 22, overflowX: "auto", overflowY: "hidden" }}>
                         {[
                           ...tabs.map((t) => ({ ...t, tone: "#E3B04B" })),
                           { spacer: true, key: "_spacer" },
