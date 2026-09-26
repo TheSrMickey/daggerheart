@@ -35,9 +35,11 @@ npm run dev
 
 - `src/proxy.ts` – refresca la sesión y protege las rutas privadas.
 - `src/app/(auth)` – login, registro y sus server actions.
-- `src/app/personajes` – lista de personajes y hoja (`[id]`).
-- `src/components/CharacterSheet.tsx` – hoja editable con guardado automático.
-- `src/lib/daggerheart.ts` – datos del SRD (clases, dominios, ascendencias, armaduras…).
+- `src/app/page.tsx` – la app (solo con sesión iniciada).
+- `src/components/DaggerheartApp.jsx` – la app Marheim: personajes, campañas, dados y panel del DJ.
+- `src/components/beastSilhouettes.js` – siluetas de las Formas de Bestia (se cargan bajo demanda).
+- `src/lib/storage.ts` – guardado en Supabase (`kv_private` por jugador, `kv_shared` para la mesa).
+- `src/app/dev-preview` – vista previa local con personajes de ejemplo (no existe en producción ni guarda nada).
 - `supabase/migrations` – esquema y políticas RLS.
 
 ## Créditos
