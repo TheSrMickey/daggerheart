@@ -1163,6 +1163,55 @@ const sharedStyles = `
   .mh-tip-anchor { position: relative; }
   .mh-tip { display: none; position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); z-index: 60; white-space: nowrap; background: #3A3150; color: #ECE6DA; font-size: 11px; font-weight: 600; padding: 5px 10px; border-radius: 6px; box-shadow: 0 6px 14px rgba(0,0,0,0.22); pointer-events: none; }
   .mh-tip-anchor:hover .mh-tip { display: block; }
+
+  /* Vista ampliada de cartas */
+  .mh-overlay { animation: mh-fade-in .22s ease both; backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+  .mh-overlay.is-closing { animation: mh-fade-out .2s ease both; }
+  .mh-card-anim { animation: mh-card-draw .55s cubic-bezier(.2,.9,.25,1.15) both; }
+  .mh-overlay.is-closing .mh-card-anim { animation: mh-card-away .2s ease-in both; }
+  .mh-tilt {
+    transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+    transition: transform .5s cubic-bezier(.2,.8,.2,1), box-shadow .3s ease;
+    box-shadow: 0 18px 40px rgba(0,0,0,.55), 0 0 32px var(--glow, transparent);
+    will-change: transform;
+    touch-action: none;
+  }
+  .mh-tilt[data-active="1"] {
+    transition: transform .08s linear, box-shadow .3s ease;
+    box-shadow: 0 30px 60px rgba(0,0,0,.6), 0 0 48px var(--glow, transparent);
+  }
+  .mh-glare {
+    position: absolute; inset: 0; z-index: 25; pointer-events: none; border-radius: inherit;
+    background: radial-gradient(circle at var(--mx, 50%) var(--my, 30%), rgba(255,255,255,.28), rgba(255,255,255,.06) 30%, transparent 60%);
+    mix-blend-mode: overlay; opacity: 0; transition: opacity .35s ease;
+  }
+  .mh-tilt[data-active="1"] .mh-glare { opacity: 1; }
+  .mh-holo {
+    position: absolute; inset: 0; z-index: 30; pointer-events: none; border-radius: inherit; mix-blend-mode: color-dodge;
+    background: linear-gradient(115deg, transparent 10%, rgba(255,80,200,.55) 25%, rgba(120,200,255,.55) 40%, rgba(255,240,120,.55) 55%, rgba(150,255,180,.55) 70%, transparent 85%);
+    background-size: 220% 220%; background-position: var(--mx, 50%) var(--my, 50%);
+    opacity: .3; transition: opacity .35s ease;
+  }
+  .mh-tilt[data-active="1"] .mh-holo { opacity: .7; }
+  @keyframes mh-fade-in { from { background-color: rgba(8,6,12,0); backdrop-filter: blur(0); } }
+  @keyframes mh-fade-out { to { background-color: rgba(8,6,12,0); backdrop-filter: blur(0); } }
+  @keyframes mh-card-draw {
+    0% { opacity: 0; translate: 0 60px; scale: .75; rotate: y -80deg; }
+    55% { opacity: 1; }
+    100% { opacity: 1; translate: 0 0; scale: 1; rotate: y 0deg; }
+  }
+  @keyframes mh-card-away { to { opacity: 0; translate: 0 24px; scale: .9; } }
+
+  /* Cartas de dominio en la hoja */
+  .mh-dslot { animation: mh-slot-in .4s cubic-bezier(.2,.8,.2,1) backwards; transition: translate .2s ease, box-shadow .2s ease, border-color .2s ease, scale .1s ease; }
+  .mh-dslot:hover { translate: 0 -3px; border-color: var(--dc) !important; box-shadow: 0 10px 24px -10px var(--dc); }
+  .mh-dslot:active { scale: .98; }
+  @keyframes mh-slot-in { from { opacity: 0; translate: 16px 0; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mh-overlay, .mh-card-anim, .mh-dslot, .mh-overlay.is-closing, .mh-overlay.is-closing .mh-card-anim { animation: none !important; }
+    .mh-tilt { transform: none !important; transition: none; }
+  }
 `;
 
 function Card({ title, children }) {
@@ -2493,7 +2542,32 @@ export default function App({ onSignOut }) {
   const [restType, setRestType] = useState("short");
   const [showChangeDomainModal, setShowChangeDomainModal] = useState(false);
   const [viewingCardDetail, setViewingCardDetail] = useState(null);
-  const [cardTilt, setCardTilt] = useState({ x: 0, y: 0, active: false });
+  const [cardClosing, setCardClosing] = useState(false);
+  const closeCardDetail = () => {
+    if (cardClosing) return;
+    setCardClosing(true);
+    setTimeout(() => {
+      setViewingCardDetail(null);
+      setCardClosing(false);
+    }, 200);
+  };
+  // La inclinación se aplica con variables CSS directamente en el elemento (sin volver a pintar la app).
+  const tiltCard = (e) => {
+    const el = e.currentTarget;
+    const r = el.getBoundingClientRect();
+    const px = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+    const py = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
+    el.style.setProperty("--ry", `${(px - 0.5) * 20}deg`);
+    el.style.setProperty("--rx", `${(0.5 - py) * 16}deg`);
+    el.style.setProperty("--mx", `${px * 100}%`);
+    el.style.setProperty("--my", `${py * 100}%`);
+    el.dataset.active = "1";
+  };
+  const resetCardTilt = (e) => {
+    const el = e.currentTarget;
+    ["--rx", "--ry", "--mx", "--my"].forEach((p) => el.style.removeProperty(p));
+    delete el.dataset.active;
+  };
   const [equipPickerSlot, setEquipPickerSlot] = useState(null);
   const [pendingSpellRoll, setPendingSpellRoll] = useState(null);
   const [deathMoveCharId, setDeathMoveCharId] = useState(null);
@@ -5314,6 +5388,7 @@ export default function App({ onSignOut }) {
                                     return (
                                       <div
                                         key={i}
+                                        className="mh-dslot"
                                         onClick={() =>
                                           setViewingCardDetail({
                                             kicker: `${cardData.domain} · ${cardData.type} · Nivel ${cardData.level} · Recuperación ${cardData.recall}`,
@@ -5325,6 +5400,8 @@ export default function App({ onSignOut }) {
                                           })
                                         }
                                         style={{
+                                          "--dc": dColor,
+                                          animationDelay: i * 70 + "ms",
                                           border: "1px solid " + dColor + "66",
                                           background: "#1B1824",
                                           borderRadius: 10,
@@ -7033,6 +7110,7 @@ export default function App({ onSignOut }) {
 
             {viewingCardDetail && (
               <div
+                className={"mh-overlay" + (cardClosing ? " is-closing" : "")}
                 style={{
                   position: "absolute",
                   inset: 0,
@@ -7043,7 +7121,7 @@ export default function App({ onSignOut }) {
                   zIndex: 40,
                   padding: 20,
                 }}
-                onClick={() => setViewingCardDetail(null)}
+                onClick={closeCardDetail}
               >
                 {(viewingCardDetail.image || viewingCardDetail.bigStyle) ? (() => {
                   const totalChars =
@@ -7054,8 +7132,9 @@ export default function App({ onSignOut }) {
                   const compactImage = totalChars > 350;
                   return (
                   <div
-                    className="mh-card"
+                    className="mh-card mh-card-anim mh-tilt"
                     style={{
+                      "--glow": (viewingCardDetail.tier ? TIER_COLORS[viewingCardDetail.tier].color : viewingCardDetail.accent || "#E3B04B") + "55",
                       margin: 0,
                       width: "min(300px, 100%)",
                       height: "min(420px, 80vh)",
@@ -7065,38 +7144,15 @@ export default function App({ onSignOut }) {
                       display: "flex",
                       flexDirection: "column",
                       border: viewingCardDetail.tier ? "3px solid " + TIER_COLORS[viewingCardDetail.tier].color : viewingCardDetail.accent ? "2px solid " + viewingCardDetail.accent : undefined,
-                      transform: `perspective(900px) rotateX(${cardTilt.y}deg) rotateY(${cardTilt.x}deg) scale3d(1,1,1)`,
-                      transition: cardTilt.active ? "transform 0.05s linear" : "transform 0.35s ease",
-                      boxShadow: cardTilt.active ? "0 20px 40px rgba(0,0,0,0.35)" : "0 12px 30px rgba(0,0,0,0.5)",
-                      willChange: "transform",
                       position: "relative",
                     }}
                     onClick={(e) => e.stopPropagation()}
-                    onMouseMove={(e) => {
-                      const rect = e.currentTarget.getBoundingClientRect();
-                      const px = (e.clientX - rect.left) / rect.width - 0.5;
-                      const py = (e.clientY - rect.top) / rect.height - 0.5;
-                      setCardTilt({ x: px * 18, y: -py * 18, active: true });
-                    }}
-                    onMouseLeave={() => setCardTilt({ x: 0, y: 0, active: false })}
+                    onPointerMove={tiltCard}
+                    onPointerLeave={resetCardTilt}
+                    onPointerUp={(e) => e.pointerType !== "mouse" && resetCardTilt(e)}
                   >
-                    {viewingCardDetail.tier === 4 && (
-                      <div
-                        style={{
-                          position: "absolute",
-                          inset: 0,
-                          zIndex: 30,
-                          pointerEvents: "none",
-                          borderRadius: 22,
-                          mixBlendMode: "color-dodge",
-                          opacity: cardTilt.active ? 0.7 : 0.35,
-                          background: `linear-gradient(${115 + cardTilt.x * 3}deg, transparent 10%, rgba(255,80,200,0.55) 25%, rgba(120,200,255,0.55) 40%, rgba(255,240,120,0.55) 55%, rgba(150,255,180,0.55) 70%, transparent 85%)`,
-                          backgroundSize: "200% 200%",
-                          backgroundPosition: `${50 + cardTilt.x * 4}% ${50 + cardTilt.y * 4}%`,
-                          transition: cardTilt.active ? "none" : "opacity 0.35s ease",
-                        }}
-                      />
-                    )}
+                    <div className="mh-glare" />
+                    {viewingCardDetail.tier === 4 && <div className="mh-holo" />}
                     <div style={{ position: "relative", flexShrink: 0 }}>
                       {viewingCardDetail.image ? (
                         <img src={viewingCardDetail.image} alt={viewingCardDetail.title} style={{ width: "100%", height: imgHeight, objectFit: "cover", display: "block" }} />
@@ -7126,7 +7182,7 @@ export default function App({ onSignOut }) {
                         }}
                       />
                       <div
-                        onClick={() => setViewingCardDetail(null)}
+                        onClick={closeCardDetail}
                         style={{
                           position: "absolute",
                           top: 14,
@@ -7285,15 +7341,18 @@ export default function App({ onSignOut }) {
                   );
                 })() : (
                   <div
-                    className="mh-card"
-                    style={{ margin: 0, width: "min(420px, 100%)", padding: 0, overflow: "hidden" }}
+                    className="mh-card mh-card-anim mh-tilt"
+                    style={{ "--glow": (viewingCardDetail.accent || "#E3B04B") + "44", margin: 0, width: "min(420px, 100%)", padding: 0, overflow: "hidden", position: "relative" }}
                     onClick={(e) => e.stopPropagation()}
+                    onPointerMove={tiltCard}
+                    onPointerLeave={resetCardTilt}
                   >
+                    <div className="mh-glare" />
                     <div style={{ background: viewingCardDetail.accent || "#E3B04B", color: viewingCardDetail.accent ? "#FFFFFF" : "#1F1606", padding: "10px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4 }}>
                         {viewingCardDetail.kicker}
                       </span>
-                      <X size={16} style={{ cursor: "pointer" }} onClick={() => setViewingCardDetail(null)} />
+                      <X size={16} style={{ cursor: "pointer" }} onClick={closeCardDetail} />
                     </div>
                     <div style={{ padding: "20px 22px" }}>
                       <div className="mh-serif" style={{ fontSize: 19, fontWeight: 700, color: "#ECE6DA", marginBottom: 12 }}>
