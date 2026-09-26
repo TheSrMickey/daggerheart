@@ -1272,6 +1272,31 @@ const sharedStyles = `
   .mh-dslot { animation: mh-slot-in .4s cubic-bezier(.2,.8,.2,1) backwards; transition: translate .2s ease, box-shadow .2s ease, border-color .2s ease, scale .1s ease; }
   .mh-dslot:hover { translate: 0 -3px; border-color: var(--dc) !important; box-shadow: 0 10px 24px -10px var(--dc); }
   .mh-dslot:active { scale: .98; }
+  .mh-dslot {
+    position: relative; overflow: hidden; cursor: pointer; border-radius: 12px;
+    border: 2px solid var(--dc); background: #1B1824; color: #fff;
+  }
+  .mh-dslot-art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 35%; transition: scale .4s ease; }
+  .mh-dslot:hover .mh-dslot-art { scale: 1.05; }
+  .mh-dslot-noart {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: flex-end; padding-right: 18px;
+    color: color-mix(in srgb, var(--dc) 55%, #fff);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--dc) 55%, #1B1824), #1B1824);
+  }
+  .mh-dslot-shade { position: absolute; inset: 0; background: linear-gradient(0deg, rgba(12,9,16,.92) 0%, rgba(12,9,16,.55) 45%, rgba(12,9,16,0) 78%); }
+  .mh-dslot-gem {
+    position: absolute; top: 7px; left: 7px; z-index: 2; width: 22px; height: 22px; border-radius: 50%;
+    background: #FFFCF6; border: 1.5px solid #E3B04B; color: #97680F; box-shadow: 0 1px 3px rgba(0,0,0,.35);
+    font-family: 'Cinzel', Georgia, serif; font-weight: 700; font-size: 11.5px; display: flex; align-items: center; justify-content: center;
+  }
+  .mh-dslot-recall {
+    position: absolute; top: 7px; right: 7px; z-index: 2; display: flex; align-items: center; gap: 2px;
+    background: rgba(20,16,26,.72); color: #fff; font-size: 11px; font-weight: 600; padding: 2px 7px 2px 5px; border-radius: 20px;
+  }
+  .mh-dslot-txt { position: absolute; left: 12px; right: 12px; bottom: 9px; z-index: 1; }
+  .mh-dslot-kicker { font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: color-mix(in srgb, var(--dc) 55%, #fff); }
+  .mh-dslot-title { font-weight: 700; color: #fff; margin-top: 2px; text-shadow: 0 1px 4px rgba(0,0,0,.6); }
+  @media (prefers-reduced-motion: reduce) { .mh-dslot-art { transition: none; } }
   @keyframes mh-slot-in { from { opacity: 0; translate: 16px 0; } }
 
   /* Dados */
@@ -5988,51 +6013,26 @@ export default function App({ onSignOut }) {
                                             tags: [cardData.type, "Nivel " + cardData.level, "Recuperación " + cardData.recall],
                                           })
                                         }
-                                        style={{
-                                          "--dc": dColor,
-                                          animationDelay: i * 70 + "ms",
-                                          border: "1px solid " + dColor + "66",
-                                          background: "var(--mh-panel)",
-                                          borderRadius: 10,
-                                          overflow: "hidden",
-                                          flex: 1,
-                                          minHeight: 64,
-                                          display: "flex",
-                                          cursor: "pointer",
-                                        }}
+                                        style={{ "--dc": dColor, animationDelay: i * 70 + "ms", flex: "2 1 0", minHeight: 104 }}
                                       >
-                                        <div
-                                          style={{
-                                            width: 46,
-                                            flexShrink: 0,
-                                            position: "relative",
-                                            background: cardData.image ? `#000 url(${cardData.image}) center 30% / cover` : dColor + "22",
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            borderRight: "3px solid " + dColor,
-                                          }}
-                                        >
-                                          {!cardData.image && <DIcon size={20} color={dColor} />}
-                                          <div
-                                            className="mh-serif"
-                                            style={{ position: "absolute", top: 5, left: 5, width: 20, height: 20, borderRadius: "50%", border: "1.5px solid #E3B04B", background: "var(--mh-bg)", color: "var(--mh-gold-ink)", fontSize: 10.5, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}
-                                          >
-                                            {cardData.level}
+                                        {cardData.image ? (
+                                          <img className="mh-dslot-art" src={cardData.image} alt="" />
+                                        ) : (
+                                          <div className="mh-dslot-noart">
+                                            <DIcon size={86} strokeWidth={1.4} />
                                           </div>
-                                        </div>
-                                        <div style={{ flex: 1, minWidth: 0, padding: "8px 10px", display: "flex", flexDirection: "column", justifyContent: "center", gap: 2 }}>
-                                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                            <span style={{ fontSize: 9.5, color: ink(dColor), textTransform: "uppercase", letterSpacing: ".08em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flex: 1, minWidth: 0 }}>
-                                              {cardData.domain}
-                                            </span>
-                                            <span style={{ display: "flex", alignItems: "center", gap: 2, fontSize: 10.5, color: "var(--mh-ink)", flexShrink: 0 }} title="Coste de recuperación">
-                                              <Zap size={10} color="#E3B04B" />
-                                              {cardData.recall}
-                                            </span>
+                                        )}
+                                        <div className="mh-dslot-shade" />
+                                        <span className="mh-dslot-gem" title={"Nivel " + cardData.level}>{cardData.level}</span>
+                                        <span className="mh-dslot-recall" title="Coste de recuperación">
+                                          <Zap size={11} color="#E3B04B" />
+                                          {cardData.recall}
+                                        </span>
+                                        <div className="mh-dslot-txt">
+                                          <div className="mh-dslot-kicker">
+                                            {cardData.domain} · {cardData.type}
                                           </div>
-                                          <div className="mh-serif" style={{ fontSize: 12.5, fontWeight: 700, color: "var(--mh-ink)", lineHeight: 1.25, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{cardData.key}</div>
-                                          <div style={{ fontSize: 10, color: "var(--mh-muted2)" }}>{cardData.type}</div>
+                                          <FitTitle text={cardData.key} max={15} min={12} className="mh-serif mh-dslot-title" />
                                         </div>
                                       </div>
                                     );
@@ -6046,11 +6046,11 @@ export default function App({ onSignOut }) {
                                         justifyContent: "center",
                                         border: "1px dashed var(--mh-line2)",
                                         borderRadius: 10,
-                                        padding: "14px 14px",
+                                        padding: "10px 14px",
                                         color: "var(--mh-muted3)",
                                         fontSize: 12,
-                                        flex: 1,
-                                        minHeight: 64,
+                                        flex: "1 1 0",
+                                        minHeight: 44,
                                       }}
                                     >
                                       Espacio libre
