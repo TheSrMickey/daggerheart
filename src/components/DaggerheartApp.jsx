@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { LogOut } from "lucide-react";
+import { LogOut, Sun, Moon } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
 
@@ -491,7 +491,7 @@ const BEASTFORMS = [
   {
     key: "Herbívoro Veloz",
     tier: 1,
-    color: "#7FB77A",
+    color: "var(--mh-green-ink)",
     animals: "Ciervo, Gacela, Cabra, etc.",
     bonus: "Agilidad +1 · Evasión +3",
     traitBonus: { key: "t_agility", amount: 1 },
@@ -521,7 +521,7 @@ const BEASTFORMS = [
   {
     key: "Amigo del Hogar",
     tier: 1,
-    color: "#E3B04B",
+    color: "var(--mh-gold-ink)",
     animals: "Gato, Perro, Conejo, etc.",
     bonus: "Instinto +1 · Evasión +2",
     traitBonus: { key: "t_instinct", amount: 1 },
@@ -551,7 +551,7 @@ const BEASTFORMS = [
   {
     key: "Arácnido Acechante",
     tier: 1,
-    color: "#A58BE8",
+    color: "var(--mh-purple-ink)",
     animals: "Tarántula, Araña lobo, etc.",
     bonus: "Destreza +1 · Evasión +2",
     traitBonus: { key: "t_finesse", amount: 1 },
@@ -611,7 +611,7 @@ const BEASTFORMS = [
   {
     key: "Serpiente Fulminante",
     tier: 2,
-    color: "#7FB77A",
+    color: "var(--mh-green-ink)",
     animals: "Cobra, Serpiente de cascabel, Víbora, etc.",
     bonus: "Destreza +1 · Evasión +2",
     traitBonus: { key: "t_finesse", amount: 1 },
@@ -728,7 +728,7 @@ const BEASTFORMS = [
   {
     key: "Híbrido Legendario",
     tier: 3,
-    color: "#A58BE8",
+    color: "var(--mh-purple-ink)",
     animals: "Grifo, Esfinge, etc.",
     bonus: "Fuerza +2 · Evasión +3",
     traitBonus: { key: "t_strength", amount: 2 },
@@ -815,7 +815,7 @@ const BEASTFORMS = [
   {
     key: "Híbrido Mítico",
     tier: 4,
-    color: "#A58BE8",
+    color: "var(--mh-purple-ink)",
     animals: "Quimera, Cocatriz, Mantícora, etc.",
     bonus: "Fuerza +3 · Evasión +2",
     traitBonus: { key: "t_strength", amount: 3 },
@@ -1135,30 +1135,64 @@ async function safeSet(key, value, shared) {
 
 const sharedStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
-  .mh-root { color-scheme: dark; }
+  .mh-root, .mh-keep-dark {
+    color-scheme: dark;
+    --mh-bg: #121019; --mh-nav: #16131E; --mh-panel: #1B1824; --mh-panel2: #221E2C; --mh-panel3: #2A2436;
+    --mh-input: #14111B; --mh-sunk: #1E1A27; --mh-line: #2E2939; --mh-line2: #3A3448;
+    --mh-ink: #ECE6DA; --mh-ink2: #D6CFE0; --mh-ink3: #B7AEC6; --mh-muted: #9C93AD; --mh-muted2: #857C96; --mh-muted3: #6E6580;
+    --mh-gold-ink: #E3B04B; --mh-green-ink: #7FB77A; --mh-purple-ink: #A58BE8;
+    --mh-glass: rgba(27,24,36,0.58);
+    --mh-accent-keep: 100%;
+    --mh-chip: #2A2436;
+  }
+  html[data-mh-theme="light"] .mh-root {
+    color-scheme: light;
+    --mh-bg: #F3EEE4; --mh-nav: #EAE3D5; --mh-panel: #FFFCF6; --mh-panel2: #F4EEE3; --mh-panel3: #EAE2D3;
+    --mh-input: #FFFFFF; --mh-sunk: #F1EADD; --mh-line: #DCD2C1; --mh-line2: #CBBFA9;
+    --mh-ink: #221C2B; --mh-ink2: #2F2839; --mh-ink3: #4C4458; --mh-muted: #6A6177; --mh-muted2: #756C82; --mh-muted3: #857C90;
+    --mh-gold-ink: #97680F; --mh-green-ink: #3E7A39; --mh-purple-ink: #6A4DC2;
+    --mh-glass: rgba(255,252,246,0.62);
+    --mh-accent-keep: 62%;
+    --mh-chip: #FFFCF6;
+  }
+  html[data-mh-theme="light"] .mh-root .mh-card, html[data-mh-theme="light"] .mh-root .mh-dslot { box-shadow: 0 1px 3px rgba(60,40,20,.08); }
+  .mh-keep-dark { color: var(--mh-ink); }
+  .mh-theme-switch {
+    position: relative; width: 46px; height: 24px; border-radius: 999px; flex-shrink: 0; cursor: pointer;
+    border: 1px solid var(--mh-line2); background: var(--mh-panel3); padding: 0;
+    display: inline-flex; align-items: center; justify-content: space-between; padding: 0 5px; color: var(--mh-muted);
+  }
+  .mh-theme-switch .mh-knob {
+    position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%;
+    background: #E3B04B; box-shadow: 0 1px 3px rgba(0,0,0,.35); transition: translate .22s cubic-bezier(.3,1.4,.5,1);
+    display: flex; align-items: center; justify-content: center; color: #1F1606;
+  }
+  .mh-theme-switch[aria-checked="true"] .mh-knob { translate: 22px 0; }
+  .mh-theme-switch:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
+
   .mh-root ::selection { background: #E3B04B55; }
-  .mh-root ::placeholder { color: #6E6580; }
-  .mh-root select option { background: #1B1824; color: #ECE6DA; }
-  .mh-root * { scrollbar-color: #3A3448 transparent; scrollbar-width: thin; }
+  .mh-root ::placeholder { color: var(--mh-muted3); }
+  .mh-root select option { background: var(--mh-panel); color: var(--mh-ink); }
+  .mh-root * { scrollbar-color: var(--mh-line2) transparent; scrollbar-width: thin; }
   .mh-serif { font-family: 'Cinzel', Georgia, serif; letter-spacing: .03em; }
   .mh-btn { border: 1px solid #E3B04B; background: #E3B04B; color: #1F1606; padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: opacity .15s; }
   .mh-btn:hover { filter: brightness(1.08); }
   .mh-btn:disabled, .mh-btn-ghost:disabled { opacity: .45; cursor: default; }
-  .mh-btn-ghost { border: 1px solid #3A3448; background: transparent; color: #D6CFE0; padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
-  .mh-btn-ghost:hover { background: #2A2436; }
+  .mh-btn-ghost { border: 1px solid var(--mh-line2); background: transparent; color: var(--mh-ink2); padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .mh-btn-ghost:hover { background: var(--mh-panel3); }
   .mh-btn-danger { border: 1px solid #D9644E; background: transparent; color: #D9644E; padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
   .mh-btn-danger:hover { background: #D9644E18; }
-  .mh-input { border: 1px solid #3A3448; background: #14111B; border-radius: 6px; padding: 8px 10px; font-size: 13px; font-family: inherit; color: #ECE6DA; width: 100%; box-sizing: border-box; }
+  .mh-input { border: 1px solid var(--mh-line2); background: var(--mh-input); border-radius: 6px; padding: 8px 10px; font-size: 13px; font-family: inherit; color: var(--mh-ink); width: 100%; box-sizing: border-box; }
   .mh-input:focus { outline: none; border-color: #E3B04B; box-shadow: 0 0 0 3px #E3B04B33; }
-  .mh-label { font-size: 11px; color: #9C93AD; margin-bottom: 5px; display: block; text-transform: uppercase; letter-spacing: .08em; }
-  .mh-card { background: #1B1824; border: 1px solid #2E2939; border-radius: 12px; padding: 18px 20px; margin-bottom: 16px; }
-  .mh-nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-radius: 6px; cursor: pointer; color: #B7AEC6; font-size: 13px; font-weight: 500; }
-  .mh-nav-item:hover { background: #2A2436; color: #ECE6DA; }
+  .mh-label { font-size: 11px; color: var(--mh-muted); margin-bottom: 5px; display: block; text-transform: uppercase; letter-spacing: .08em; }
+  .mh-card { background: var(--mh-panel); border: 1px solid var(--mh-line); border-radius: 12px; padding: 18px 20px; margin-bottom: 16px; }
+  .mh-nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-radius: 6px; cursor: pointer; color: var(--mh-ink3); font-size: 13px; font-weight: 500; }
+  .mh-nav-item:hover { background: var(--mh-panel3); color: var(--mh-ink); }
   .mh-nav-item.active { background: #E3B04B; color: #1F1606; }
-  .mh-chip { display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 20px; border: 1px solid #3A3448; font-size: 13px; color: #B7AEC6; cursor: pointer; }
-  .mh-chip.active { border-color: #E3B04B; color: #E3B04B; background: #E3B04B14; }
+  .mh-chip { display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 20px; border: 1px solid var(--mh-line2); font-size: 13px; color: var(--mh-ink3); cursor: pointer; }
+  .mh-chip.active { border-color: #E3B04B; color: var(--mh-gold-ink); background: #E3B04B14; }
   .mh-bf-chip { position: relative; }
-  .mh-bf-detail { display: none; position: absolute; top: calc(100% + 6px); left: 0; z-index: 60; width: 260px; background: #1B1824; border: 1px solid #2E2939; border-radius: 10px; padding: 12px 14px; box-shadow: 0 10px 24px rgba(0,0,0,0.18); text-align: left; cursor: default; }
+  .mh-bf-detail { display: none; position: absolute; top: calc(100% + 6px); left: 0; z-index: 60; width: 260px; background: var(--mh-panel); border: 1px solid var(--mh-line); border-radius: 10px; padding: 12px 14px; box-shadow: 0 10px 24px rgba(0,0,0,0.18); text-align: left; cursor: default; }
   .mh-bf-chip:hover .mh-bf-detail { display: block; }
   .mh-tip-anchor { position: relative; }
   .mh-tip { display: none; position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); z-index: 60; white-space: nowrap; background: #3A3150; color: #ECE6DA; font-size: 11px; font-weight: 600; padding: 5px 10px; border-radius: 6px; box-shadow: 0 6px 14px rgba(0,0,0,0.22); pointer-events: none; }
@@ -1217,7 +1251,7 @@ const sharedStyles = `
   .mh-die.is-rolling { animation: mh-die-tumble .5s linear infinite; }
   .mh-die.is-landed { animation: mh-die-land .55s cubic-bezier(.2,1.5,.4,1) both; }
   .mh-die.is-high svg { filter: drop-shadow(0 0 6px var(--die)) drop-shadow(0 0 14px var(--die)); }
-  .mh-die-label { font-family: 'Inter', system-ui, sans-serif; font-size: 10px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--die); }
+  .mh-die-label { font-family: 'Inter', system-ui, sans-serif; font-size: 10px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: color-mix(in srgb, var(--die) var(--mh-accent-keep, 100%), #000); }
   @keyframes mh-die-tumble {
     0% { rotate: 0deg; translate: 0 0; scale: .92; }
     25% { rotate: 95deg; translate: 3px -10px; }
@@ -1237,7 +1271,7 @@ const sharedStyles = `
     animation: mh-burst 1.1s ease-out both;
   }
   @keyframes mh-burst { from { scale: .2; opacity: 1; } to { scale: 1.6; opacity: 0; } }
-  .mh-dots { display: inline-block; color: #9C93AD; letter-spacing: .15em; animation: mh-blink .9s ease-in-out infinite; }
+  .mh-dots { display: inline-block; color: var(--mh-muted); letter-spacing: .15em; animation: mh-blink .9s ease-in-out infinite; }
   @keyframes mh-blink { 50% { opacity: .3; } }
 
   /* Siluetas de Forma de Bestia */
@@ -1403,6 +1437,12 @@ function BeastBackdrop({ form, kind = "beast" }) {
 
 /* ---------- Dados animados ---------- */
 
+const INK_SKIP = new Set(["#FFFFFF", "#FFF", "#1F1606", "#1A1230"]);
+function ink(c) {
+  if (typeof c !== "string" || !c.startsWith("#") || INK_SKIP.has(c.toUpperCase())) return c;
+  return `color-mix(in srgb, ${c} var(--mh-accent-keep, 100%), #000)`;
+}
+
 const DIE_SHAPES = {
   4: "50,6 95,88 5,88",
   6: "10,10 90,10 90,90 10,90",
@@ -1462,7 +1502,7 @@ function DieFace({ sides, value, color, size = 72, rolling, highlight, dim, labe
         <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
           <polygon points={points} fill={color + "22"} stroke={color} strokeWidth="4" strokeLinejoin="round" />
         </svg>
-        <b style={{ color, fontSize: Math.round(size * (sides === 4 ? 0.3 : 0.36)), marginTop: sides === 4 ? size * 0.18 : sides === 12 ? size * 0.06 : 0 }}>
+        <b style={{ color: ink(color), fontSize: Math.round(size * (sides === 4 ? 0.3 : 0.36)), marginTop: sides === 4 ? size * 0.18 : sides === 12 ? size * 0.06 : 0 }}>
           {shown ?? "–"}
         </b>
       </div>
@@ -1486,35 +1526,35 @@ function DualityResult({ roll, size = 84 }) {
       {crit && landed && <div className="mh-burst" key={"b" + roll.key} />}
       <div style={{ display: "flex", gap: 16, alignItems: "flex-start", justifyContent: "center", padding: "8px 0 4px", position: "relative" }}>
         <DieFace sides={12} value={has ? roll.hope : null} color="#E3B04B" size={size} rolling={rolling} highlight={landed && winner !== "fear"} dim={landed && winner === "fear"} label="Esperanza" />
-        <span style={{ fontSize: 20, color: "#9C93AD", marginTop: size / 2 - 14 }}>+</span>
+        <span style={{ fontSize: 20, color: "var(--mh-muted)", marginTop: size / 2 - 14 }}>+</span>
         <DieFace sides={12} value={has ? roll.fear : null} color="#A58BE8" size={size} rolling={rolling} highlight={landed && winner !== "hope"} dim={landed && winner === "hope"} label="Miedo" delay={90} />
         {edge !== 0 && (
           <>
-            <span style={{ fontSize: 20, color: "#9C93AD", marginTop: size / 2 - 14 }}>{edge > 0 ? "+" : "−"}</span>
+            <span style={{ fontSize: 20, color: "var(--mh-muted)", marginTop: size / 2 - 14 }}>{edge > 0 ? "+" : "−"}</span>
             <DieFace sides={6} value={Math.abs(edge)} color={edge > 0 ? "#7FB77A" : "#D9644E"} size={Math.round(size * 0.62)} rolling={rolling} label={edge > 0 ? "Ventaja" : "Desventaja"} delay={180} />
           </>
         )}
         {wolf > 0 && (
           <>
-            <span style={{ fontSize: 20, color: "#9C93AD", marginTop: size / 2 - 14 }}>+</span>
+            <span style={{ fontSize: 20, color: "var(--mh-muted)", marginTop: size / 2 - 14 }}>+</span>
             <DieFace sides={10} value={wolf} color="#E0544A" size={Math.round(size * 0.7)} rolling={rolling} highlight={landed && wolf === 10} label="Lobo" delay={240} />
           </>
         )}
       </div>
-      <div className="mh-serif" style={{ fontSize: 46, fontWeight: 700, lineHeight: 1.1, marginTop: 10, minHeight: 52, color: "#ECE6DA", position: "relative" }}>
+      <div className="mh-serif" style={{ fontSize: 46, fontWeight: 700, lineHeight: 1.1, marginTop: 10, minHeight: 52, color: "var(--mh-ink)", position: "relative" }}>
         {!has ? "–" : rolling ? <span className="mh-dots">···</span> : <CountUp value={roll.total} />}
       </div>
       {landed && (
         <div className="mh-pop" key={roll.key} style={{ position: "relative", fontFamily: "'Inter', system-ui, sans-serif" }}>
-          <div style={{ fontSize: 12, color: "#9C93AD" }}>
+          <div style={{ fontSize: 12, color: "var(--mh-muted)" }}>
             {roll.hope} + {roll.fear}
             {mod ? (mod > 0 ? " + " : " − ") + Math.abs(mod) : ""}
             {edge ? (edge > 0 ? " + " : " − ") + Math.abs(edge) : ""}
             {wolf ? " + " + wolf + " (Lobo)" : ""}
             {roll.difficulty != null ? ` · Dificultad ${roll.difficulty}` : ""}
           </div>
-          <div style={{ fontSize: 14.5, fontWeight: 600, color: roll.color, marginTop: 4 }}>{roll.text}</div>
-          {roll.note && <div style={{ fontSize: 11.5, color: "#B7AEC6", marginTop: 3 }}>{roll.note}</div>}
+          <div style={{ fontSize: 14.5, fontWeight: 600, color: ink(roll.color), marginTop: 4 }}>{roll.text}</div>
+          {roll.note && <div style={{ fontSize: 11.5, color: "var(--mh-ink3)", marginTop: 3 }}>{roll.note}</div>}
         </div>
       )}
     </div>
@@ -1529,7 +1569,7 @@ function RampageResult({ roll }) {
     <div style={{ position: "relative", textAlign: "center" }}>
       {!rolling && <div className="mh-burst mh-burst-red" key={"b" + roll.key} />}
       <div className="mh-serif mh-rampage-title" style={{ position: "relative" }}>¡Aullido Frenético!</div>
-      <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 12.5, color: "#D6CFE0", margin: "4px 0 12px", position: "relative" }}>
+      <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 12.5, color: "var(--mh-ink2)", margin: "4px 0 12px", position: "relative" }}>
         {roll.who} marca su último Estrés en Forma de Lobo y entra en frenesí
       </div>
       <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", position: "relative" }}>
@@ -1537,18 +1577,18 @@ function RampageResult({ roll }) {
           <DieFace key={i} sides={20} value={v} color="#E0544A" size={size} rolling={rolling} delay={i * 90} highlight={!rolling && v === 20} />
         ))}
       </div>
-      <div className="mh-serif" style={{ fontSize: 50, fontWeight: 700, lineHeight: 1.1, marginTop: 10, minHeight: 56, color: "#ECE6DA", position: "relative" }}>
+      <div className="mh-serif" style={{ fontSize: 50, fontWeight: 700, lineHeight: 1.1, marginTop: 10, minHeight: 56, color: "var(--mh-ink)", position: "relative" }}>
         {rolling ? <span className="mh-dots">···</span> : <CountUp value={roll.total} />}
       </div>
       {!rolling && (
         <div className="mh-pop" key={roll.key} style={{ fontFamily: "'Inter', system-ui, sans-serif", position: "relative" }}>
-          <div style={{ fontSize: 12.5, color: "#B7AEC6" }}>
+          <div style={{ fontSize: 12.5, color: "var(--mh-ink3)" }}>
             {roll.rolls.length}d20 ({roll.rolls.join(" + ")})
           </div>
           <div style={{ fontSize: 13.5, fontWeight: 600, color: "#FF6B5E", marginTop: 4 }}>
             daño físico a todas las criaturas en alcance Muy cercano
           </div>
-          <div style={{ fontSize: 12, color: "#D6CFE0", marginTop: 6 }}>Sale de la Forma de Lobo.</div>
+          <div style={{ fontSize: 12, color: "var(--mh-ink2)", marginTop: 6 }}>Sale de la Forma de Lobo.</div>
         </div>
       )}
     </div>
@@ -1577,14 +1617,14 @@ function DamageResult({ roll }) {
       </div>
       {!rolling && (
         <div className="mh-pop" key={roll.key} style={{ fontFamily: "'Inter', system-ui, sans-serif", position: "relative" }}>
-          <div style={{ fontSize: 12.5, color: "#B7AEC6" }}>
+          <div style={{ fontSize: 12.5, color: "var(--mh-ink3)" }}>
             {roll.dice || 1}d{roll.die} ({rolls.join(" + ")}){roll.bonus ? " + " + roll.bonus : ""}
             {roll.wolfBonus ? ` + 1d10 (${roll.wolfBonus})` : ""}
             {roll.isCritical ? ` + ${roll.critBonus} (máx.)` : ""}
           </div>
           {roll.wolfBonus > 0 && <div style={{ fontSize: 11, color: "#FF6B5E", marginTop: 2 }}>Incluye +1d10 de la Forma de Lobo</div>}
-          {roll.isCritical && <div style={{ fontSize: 12.5, fontWeight: 700, color: "#7FB77A", marginTop: 3 }}>¡Crítico! Sumas el máximo de los dados</div>}
-          {roll.levelBonus > 0 && <div style={{ fontSize: 11, color: "#9C93AD", marginTop: 2 }}>Incluye +{roll.levelBonus} de Entrenamiento de combate</div>}
+          {roll.isCritical && <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--mh-green-ink)", marginTop: 3 }}>¡Crítico! Sumas el máximo de los dados</div>}
+          {roll.levelBonus > 0 && <div style={{ fontSize: 11, color: "var(--mh-muted)", marginTop: 2 }}>Incluye +{roll.levelBonus} de Entrenamiento de combate</div>}
           <div style={{ fontSize: 13.5, fontWeight: 600, color: "#D9644E", marginTop: 4 }}>daño {roll.damageType}</div>
         </div>
       )}
@@ -1596,7 +1636,7 @@ function Card({ title, children }) {
   return (
     <div className="mh-card">
       {title && (
-        <h2 className="mh-serif" style={{ margin: "0 0 14px", fontSize: 13, fontWeight: 700, color: "#E3B04B", textTransform: "uppercase", letterSpacing: ".14em" }}>
+        <h2 className="mh-serif" style={{ margin: "0 0 14px", fontSize: 13, fontWeight: 700, color: "var(--mh-gold-ink)", textTransform: "uppercase", letterSpacing: ".14em" }}>
           {title}
         </h2>
       )}
@@ -1624,7 +1664,7 @@ function FeatureCard({ accent, kicker, title, text, footer, footerColor, onClick
         border: "1px solid " + accent,
         borderRadius: 12,
         overflow: "hidden",
-        background: "#1B1824",
+        background: "var(--mh-panel)",
         cursor: onClick && !disabled ? "pointer" : "default",
         opacity: disabled ? 0.6 : 1,
         display: "flex",
@@ -1658,16 +1698,16 @@ function FeatureCard({ accent, kicker, title, text, footer, footerColor, onClick
         }}
       >
         <span>{kicker}</span>
-        <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#1B1824", opacity: 0.7 }} />
+        <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--mh-panel)", opacity: 0.7 }} />
       </div>
       <div style={{ padding: "12px 12px 14px", flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
-        <div className="mh-serif" style={{ fontSize: 14.5, fontWeight: 700, color: "#ECE6DA", marginBottom: 6, flexShrink: 0 }}>
+        <div className="mh-serif" style={{ fontSize: 14.5, fontWeight: 700, color: "var(--mh-ink)", marginBottom: 6, flexShrink: 0 }}>
           {title}
         </div>
         <div
           style={{
             fontSize: 12,
-            color: "#B7AEC6",
+            color: "var(--mh-ink3)",
             lineHeight: 1.4,
             flex: 1,
             display: "-webkit-box",
@@ -1679,7 +1719,7 @@ function FeatureCard({ accent, kicker, title, text, footer, footerColor, onClick
           {text}
         </div>
         {footer && (
-          <div style={{ fontSize: 10.5, color: footerColor || accent, fontWeight: 700, marginTop: 10, flexShrink: 0 }}>{footer}</div>
+          <div style={{ fontSize: 10.5, color: ink(footerColor || accent), fontWeight: 700, marginTop: 10, flexShrink: 0 }}>{footer}</div>
         )}
       </div>
     </div>
@@ -1687,12 +1727,12 @@ function FeatureCard({ accent, kicker, title, text, footer, footerColor, onClick
 }
 
 function Panel({ span, title, children, hidden, restrained, vulnerable, unconscious }) {
-  const borderColor = vulnerable ? "#D9644E" : restrained ? "#C08B5C" : unconscious ? "#A58BE8" : hidden ? "#9C93AD" : "#2E2939";
+  const borderColor = vulnerable ? "#D9644E" : restrained ? "#C08B5C" : unconscious ? "#A58BE8" : hidden ? "var(--mh-muted)" : "var(--mh-line)";
   return (
     <div
       style={{
         gridColumn: "span " + span,
-        background: "var(--panel-bg, #1B1824)",
+        background: "var(--panel-bg, var(--mh-panel))",
         border: "1px solid " + borderColor,
         borderRadius: 14,
         padding: "18px 20px",
@@ -1702,7 +1742,7 @@ function Panel({ span, title, children, hidden, restrained, vulnerable, unconsci
         minHeight: 0,
       }}
     >
-      <div className="mh-serif" style={{ fontSize: 15, fontWeight: 700, color: "#ECE6DA", marginBottom: 14, letterSpacing: 0.2 }}>
+      <div className="mh-serif" style={{ fontSize: 15, fontWeight: 700, color: "var(--mh-ink)", marginBottom: 14, letterSpacing: 0.2 }}>
         {title}
       </div>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>{children}</div>
@@ -1720,18 +1760,18 @@ function Panel({ span, title, children, hidden, restrained, vulnerable, unconsci
 
 function RichFeatureCard({ accent, kicker, title, blurb, features }) {
   return (
-    <div style={{ width: 300, height: 150, border: "1px solid " + accent, borderRadius: 12, overflow: "hidden", background: "#1B1824", boxShadow: "0 3px 8px rgba(0,0,0,0.30)", display: "flex", flexDirection: "column" }}>
+    <div style={{ width: 300, height: 150, border: "1px solid " + accent, borderRadius: 12, overflow: "hidden", background: "var(--mh-panel)", boxShadow: "0 3px 8px rgba(0,0,0,0.30)", display: "flex", flexDirection: "column" }}>
       <div style={{ background: accent, color: "#FFFFFF", fontSize: 10, fontWeight: 700, letterSpacing: 0.4, textTransform: "uppercase", padding: "7px 10px", flexShrink: 0 }}>
         {kicker}
       </div>
       <div style={{ padding: "10px 14px 12px", flex: 1, minHeight: 0, overflow: "hidden" }}>
-        <div className="mh-serif" style={{ fontSize: 14.5, fontWeight: 700, color: "#ECE6DA", marginBottom: 3 }}>
+        <div className="mh-serif" style={{ fontSize: 14.5, fontWeight: 700, color: "var(--mh-ink)", marginBottom: 3 }}>
           {title}
         </div>
         <div
           style={{
             fontSize: 11.5,
-            color: "#B7AEC6",
+            color: "var(--mh-ink3)",
             marginBottom: 6,
             display: "-webkit-box",
             WebkitLineClamp: 1,
@@ -1743,11 +1783,11 @@ function RichFeatureCard({ accent, kicker, title, blurb, features }) {
         </div>
         {features.slice(0, 2).map((f) => (
           <div key={f.name} style={{ marginBottom: 5 }}>
-            <div style={{ fontSize: 11.5, fontWeight: 700, color: "#ECE6DA" }}>{f.name}</div>
+            <div style={{ fontSize: 11.5, fontWeight: 700, color: "var(--mh-ink)" }}>{f.name}</div>
             <div
               style={{
                 fontSize: 11,
-                color: "#B7AEC6",
+                color: "var(--mh-ink3)",
                 lineHeight: 1.3,
                 display: "-webkit-box",
                 WebkitLineClamp: 1,
@@ -1781,7 +1821,7 @@ function CompactCard({ accent, kicker, title, description, onClick, disabled, fo
         border: "1px solid " + accent,
         borderRadius: 10,
         padding: "8px 12px",
-        background: "#1B1824",
+        background: "var(--mh-panel)",
         boxShadow: "0 2px 6px rgba(0,0,0,0.24)",
         opacity: disabled ? 0.55 : 1,
         cursor: onClick && !disabled ? "pointer" : "default",
@@ -1795,7 +1835,7 @@ function CompactCard({ accent, kicker, title, description, onClick, disabled, fo
             right: 10,
             fontSize: 9,
             fontWeight: 700,
-            color: accent,
+            color: ink(accent),
             border: "1px solid " + accent,
             borderRadius: 20,
             padding: "1px 8px",
@@ -1806,14 +1846,14 @@ function CompactCard({ accent, kicker, title, description, onClick, disabled, fo
           {badge}
         </span>
       )}
-      <div style={{ fontSize: 9, fontWeight: 700, color: accent, textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 2 }}>
+      <div style={{ fontSize: 9, fontWeight: 700, color: ink(accent), textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 2 }}>
         {kicker}
       </div>
       <div
         style={{
           fontSize: 13.5,
           fontWeight: 700,
-          color: "#ECE6DA",
+          color: "var(--mh-ink)",
           whiteSpace: "nowrap",
           overflow: "hidden",
           textOverflow: "ellipsis",
@@ -1825,7 +1865,7 @@ function CompactCard({ accent, kicker, title, description, onClick, disabled, fo
         <div
           style={{
             fontSize: 10.5,
-            color: "#B7AEC6",
+            color: "var(--mh-ink3)",
             lineHeight: 1.35,
             marginTop: 4,
             display: "-webkit-box",
@@ -1850,7 +1890,7 @@ function CompactCard({ accent, kicker, title, description, onClick, disabled, fo
           style={{
             fontSize: 10.5,
             fontWeight: 700,
-            color: footerColor || accent,
+            color: ink(footerColor || accent),
             marginTop: 6,
             textDecoration: onFooterClick ? "underline" : "none",
             cursor: onFooterClick ? "pointer" : "default",
@@ -1869,7 +1909,7 @@ function StepperRow({ label, total, marked, field, color, Icon, charId, onDelta,
     <div key={hitKey || "row"} className={hitKey ? "mh-shake" : undefined} style={{ marginBottom: 14 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
         <Icon size={13} color={color} />
-        <span style={{ fontSize: 12, fontWeight: 600, color: "#ECE6DA" }}>{label}</span>
+        <span style={{ fontSize: 12, fontWeight: 600, color: "var(--mh-ink)" }}>{label}</span>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <button
@@ -1914,7 +1954,7 @@ function StepperRow({ label, total, marked, field, color, Icon, charId, onDelta,
               </div>
             );
           })}
-          {total === 0 && <span style={{ fontSize: 10.5, color: "#9C93AD", fontStyle: "italic" }}>Sin casillas.</span>}
+          {total === 0 && <span style={{ fontSize: 10.5, color: "var(--mh-muted)", fontStyle: "italic" }}>Sin casillas.</span>}
         </div>
         <button
           className="mh-btn-ghost"
@@ -1932,6 +1972,35 @@ export default function App({ onSignOut }) {
   const [view, setView] = useState("ficha");
   const [playerName, setPlayerName] = useState("");
   const [isMobile, setIsMobile] = useState(false);
+  // Tema claro/oscuro: preferencia de este navegador (por defecto, oscuro).
+  // El script del layout lo aplica en <html> antes de pintar para que no parpadee.
+  const [theme, setTheme] = useState("dark");
+  useEffect(() => {
+    if (document.documentElement.dataset.mhTheme === "light") setTheme("light");
+  }, []);
+  const themeSwitch = (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={theme === "light"}
+      aria-label="Modo claro"
+      title={theme === "light" ? "Cambiar a modo oscuro" : "Cambiar a modo claro"}
+      className="mh-theme-switch"
+      onClick={() => toggleTheme()}
+    >
+      <Moon size={11} />
+      <Sun size={11} />
+      <span className="mh-knob">{theme === "light" ? <Sun size={11} strokeWidth={2.4} /> : <Moon size={11} strokeWidth={2.4} />}</span>
+    </button>
+  );
+  const toggleTheme = () => {
+    const next = theme === "light" ? "dark" : "light";
+    setTheme(next);
+    document.documentElement.dataset.mhTheme = next;
+    try {
+      localStorage.setItem("mh-theme", next);
+    } catch {}
+  };
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 820);
     onResize();
@@ -1973,7 +2042,7 @@ export default function App({ onSignOut }) {
   const [hopeVal, setHopeVal] = useState(null);
   const [fearVal, setFearVal] = useState(null);
   const [rollTotal, setRollTotal] = useState(null);
-  const [verdict, setVerdict] = useState({ text: "", color: "#B7AEC6" });
+  const [verdict, setVerdict] = useState({ text: "", color: "var(--mh-ink3)" });
   const [rollLog, setRollLog] = useState([]);
 
   const [fearCount, setFearCount] = useState(0);
@@ -3743,15 +3812,15 @@ export default function App({ onSignOut }) {
   };
 
   return (
-    <div className="mh-root" style={{ display: "flex", flexDirection: isMobile ? "column" : "row", height: "100dvh", background: "#121019", fontFamily: "'Inter', system-ui, sans-serif", color: "#ECE6DA", overflow: "hidden" }}>
+    <div className="mh-root" style={{ display: "flex", flexDirection: isMobile ? "column" : "row", height: "100dvh", background: "var(--mh-bg)", fontFamily: "'Inter', system-ui, sans-serif", color: "var(--mh-ink)", overflow: "hidden" }}>
       <style>{sharedStyles}</style>
 
       {/* Menú lateral (arriba en móvil) */}
       <nav
         style={{
-          background: "#16131E",
-          borderRight: isMobile ? "none" : "1px solid #2E2939",
-          borderBottom: isMobile ? "1px solid #2E2939" : "none",
+          background: "var(--mh-nav)",
+          borderRight: isMobile ? "none" : "1px solid var(--mh-line)",
+          borderBottom: isMobile ? "1px solid var(--mh-line)" : "none",
           width: isMobile ? "auto" : 208,
           padding: isMobile ? "10px 12px" : "20px 12px 14px",
           display: "flex",
@@ -3764,8 +3833,8 @@ export default function App({ onSignOut }) {
         <div style={{ display: "flex", alignItems: "center", gap: 9, padding: isMobile ? 0 : "0 8px 18px" }}>
           <Swords size={isMobile ? 18 : 20} color="#E3B04B" />
           <div>
-            <div className="mh-serif" style={{ color: "#E3B04B", fontSize: isMobile ? 15 : 18, fontWeight: 700, lineHeight: 1.1 }}>Marheim</div>
-            {!isMobile && <div style={{ color: "#857C96", fontSize: 10.5, marginTop: 2 }}>Mesa de Daggerheart</div>}
+            <div className="mh-serif" style={{ color: "var(--mh-gold-ink)", fontSize: isMobile ? 15 : 18, fontWeight: 700, lineHeight: 1.1 }}>Marheim</div>
+            {!isMobile && <div style={{ color: "var(--mh-muted2)", fontSize: 10.5, marginTop: 2 }}>Mesa de Daggerheart</div>}
           </div>
         </div>
 
@@ -3786,7 +3855,7 @@ export default function App({ onSignOut }) {
                   borderRadius: 8,
                   cursor: "pointer",
                   background: active ? "#E3B04B1F" : "transparent",
-                  color: active ? "#E3B04B" : "#B7AEC6",
+                  color: ink(active ? "#E3B04B" : "var(--mh-ink3)"),
                   fontSize: 13,
                   fontWeight: 500,
                   whiteSpace: "nowrap",
@@ -3801,13 +3870,20 @@ export default function App({ onSignOut }) {
 
         {!isMobile && <div style={{ flex: 1 }} />}
 
+        {!isMobile && (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 8px", fontSize: 12, color: "var(--mh-muted)" }}>
+            <span>{theme === "light" ? "Modo claro" : "Modo oscuro"}</span>
+            {themeSwitch}
+          </div>
+        )}
+
         <div
           style={{
             display: "flex",
             alignItems: "center",
             gap: 8,
             padding: isMobile ? 0 : "12px 6px 0",
-            borderTop: isMobile ? "none" : "1px solid #2E2939",
+            borderTop: isMobile ? "none" : "1px solid var(--mh-line)",
           }}
         >
           <div
@@ -3818,7 +3894,7 @@ export default function App({ onSignOut }) {
           </div>
           {!isMobile && (
             <div style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ fontSize: 10, color: "#857C96", textTransform: "uppercase", letterSpacing: ".08em" }}>Jugando como</span>
+              <span style={{ fontSize: 10, color: "var(--mh-muted2)", textTransform: "uppercase", letterSpacing: ".08em" }}>Jugando como</span>
               <input
                 className="mh-input"
                 style={{ fontSize: 12.5, padding: "4px 7px", marginTop: 2 }}
@@ -3829,9 +3905,10 @@ export default function App({ onSignOut }) {
               />
             </div>
           )}
+          {isMobile && themeSwitch}
           {onSignOut && (
             <form action={onSignOut}>
-              <button type="submit" className="mh-btn-ghost" style={{ padding: 7, border: "none", color: "#9C93AD" }} title="Cerrar sesión" aria-label="Cerrar sesión">
+              <button type="submit" className="mh-btn-ghost" style={{ padding: 7, border: "none", color: "var(--mh-muted)" }} title="Cerrar sesión" aria-label="Cerrar sesión">
                 <LogOut size={16} />
               </button>
             </form>
@@ -3843,7 +3920,7 @@ export default function App({ onSignOut }) {
       <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", inset: 0, overflowY: "auto", padding: "24px 28px" }}>
           <div style={{ maxWidth: 960, margin: "0 auto" }}>
-            <h1 className="mh-serif" style={{ fontSize: 26, fontWeight: 700, margin: "0 0 22px", color: "#ECE6DA" }}>
+            <h1 className="mh-serif" style={{ fontSize: 26, fontWeight: 700, margin: "0 0 22px", color: "var(--mh-ink)" }}>
               {NAV_ITEMS.find((n) => n.key === view)?.label}
             </h1>
 
@@ -3867,7 +3944,7 @@ export default function App({ onSignOut }) {
                       display: "flex",
                       flexDirection: "column",
                       gap: 10,
-                      borderColor: id === currentCharId ? "#E3B04B" : "#2E2939",
+                      borderColor: id === currentCharId ? "#E3B04B" : "var(--mh-line)",
                       cursor: "pointer",
                     }}
                   >
@@ -3878,7 +3955,7 @@ export default function App({ onSignOut }) {
                       <Trash2
                         size={15}
                         style={{
-                          color: pendingDeleteId === id ? "#FFFFFF" : "#D9644E",
+                          color: ink(pendingDeleteId === id ? "#FFFFFF" : "#D9644E"),
                           background: pendingDeleteId === id ? "#D9644E" : "transparent",
                           borderRadius: 4,
                           padding: pendingDeleteId === id ? 2 : 0,
@@ -3892,7 +3969,7 @@ export default function App({ onSignOut }) {
                         }}
                       />
                     </div>
-                    <div style={{ fontSize: 11.5, color: "#9C93AD", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                    <div style={{ fontSize: 11.5, color: "var(--mh-muted)", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                       {characters[id].f_class
                         ? "Nivel " + (characters[id].f_level || "1") + " · " + characters[id].f_class + (characters[id].f_subclass ? " · " + characters[id].f_subclass : "")
                         : "Sin clase asignada"}
@@ -3901,7 +3978,7 @@ export default function App({ onSignOut }) {
                           style={{
                             fontSize: 9.5,
                             fontWeight: 600,
-                            color: "#A58BE8",
+                            color: "var(--mh-purple-ink)",
                             background: "#A58BE822",
                             padding: "1px 7px",
                             borderRadius: 20,
@@ -3918,7 +3995,7 @@ export default function App({ onSignOut }) {
                               style={{
                                 fontSize: 9.5,
                                 fontWeight: 600,
-                                color: "#E3B04B",
+                                color: "var(--mh-gold-ink)",
                                 background: "#E3B04B1A",
                                 padding: "1px 7px",
                                 borderRadius: 20,
@@ -3931,7 +4008,7 @@ export default function App({ onSignOut }) {
                       })()}
                     </div>
                     {characters[id].f_pronouns && (
-                      <div style={{ fontSize: 11, color: "#9C93AD" }}>{characters[id].f_pronouns}</div>
+                      <div style={{ fontSize: 11, color: "var(--mh-muted)" }}>{characters[id].f_pronouns}</div>
                     )}
                     {(characters[id].f_ancestry || characters[id].f_community) && (
                       <div
@@ -3943,7 +4020,7 @@ export default function App({ onSignOut }) {
                               .some((k) => ANCESTRIES.find((a) => a.key === k)?.expansion) ||
                             COMMUNITIES.find((c) => c.key === characters[id].f_community)?.expansion
                               ? "#A58BE8"
-                              : "#9C93AD",
+                              : "var(--mh-muted)",
                         }}
                       >
                         {[characters[id].f_ancestry, characters[id].f_community].filter(Boolean).join(" · ")}
@@ -3954,7 +4031,7 @@ export default function App({ onSignOut }) {
                         style={{
                           fontSize: 10.5,
                           fontWeight: 600,
-                          color: "#A58BE8",
+                          color: "var(--mh-purple-ink)",
                           background: "#A58BE822",
                           padding: "1px 8px",
                           borderRadius: 20,
@@ -3981,7 +4058,7 @@ export default function App({ onSignOut }) {
                     gap: 8,
                     cursor: "pointer",
                     borderStyle: "dashed",
-                    color: "#B7AEC6",
+                    color: "var(--mh-ink3)",
                     minHeight: 84,
                   }}
                 >
@@ -3994,7 +4071,7 @@ export default function App({ onSignOut }) {
                 <div style={{ fontSize: 12.5, color: "#D9644E", marginTop: 10 }}>{charWarning}</div>
               )}
 
-              <div style={{ fontSize: 11.5, color: "#9C93AD", minHeight: 14, marginTop: 14 }}>{saveTick > 0 ? "Guardado" : "\u00a0"}</div>
+              <div style={{ fontSize: 11.5, color: "var(--mh-muted)", minHeight: 14, marginTop: 14 }}>{saveTick > 0 ? "Guardado" : "\u00a0"}</div>
             </div>
           )}
 
@@ -4025,7 +4102,7 @@ export default function App({ onSignOut }) {
                     <Trash2
                       size={16}
                       style={{
-                        color: pendingDeleteCampaignId === viewingCampaignId ? "#FFFFFF" : "#D9644E",
+                        color: ink(pendingDeleteCampaignId === viewingCampaignId ? "#FFFFFF" : "#D9644E"),
                         background: pendingDeleteCampaignId === viewingCampaignId ? "#D9644E" : "transparent",
                         borderRadius: 4,
                         padding: pendingDeleteCampaignId === viewingCampaignId ? 3 : 0,
@@ -4048,12 +4125,12 @@ export default function App({ onSignOut }) {
                     contentEditable
                     suppressContentEditableWarning
                     onBlur={(e) => updateCampaign(viewingCampaignId, { description: e.target.textContent })}
-                    style={{ fontSize: 13, color: "#B7AEC6", marginBottom: 20, minHeight: 20 }}
+                    style={{ fontSize: 13, color: "var(--mh-ink3)", marginBottom: 20, minHeight: 20 }}
                   >
                     {activeCampaign.description || "Añade una descripción para la campaña..."}
                   </div>
 
-                  <div style={{ display: "flex", gap: 4, background: "#1B1824", border: "1px solid #2E2939", borderRadius: 30, padding: 5, width: "fit-content", marginBottom: 22 }}>
+                  <div style={{ display: "flex", gap: 4, background: "var(--mh-panel)", border: "1px solid var(--mh-line)", borderRadius: 30, padding: 5, width: "fit-content", marginBottom: 22 }}>
                     {[
                       { key: "resumen", label: "Resumen", Icon: User },
                       { key: "chat", label: "Chat", Icon: MessageCircle },
@@ -4075,8 +4152,8 @@ export default function App({ onSignOut }) {
                             cursor: "pointer",
                             fontSize: 12.5,
                             fontWeight: 600,
-                            background: active ? "#2E2939" : "transparent",
-                            color: active ? "#ECE6DA" : "#B7AEC6",
+                            background: active ? "var(--mh-line)" : "transparent",
+                            color: ink(active ? "var(--mh-ink)" : "var(--mh-ink3)"),
                           }}
                         >
                           <TIcon size={14} />
@@ -4099,7 +4176,7 @@ export default function App({ onSignOut }) {
                             <div key={id} className="mh-card" style={{ margin: 0, padding: "14px 16px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
                               <div style={{ cursor: "pointer" }} onClick={() => openCharDetail(id)}>
                                 <div className="mh-serif" style={{ fontSize: 15, fontWeight: 600 }}>{ch.f_name || "Sin nombre"}</div>
-                                <div style={{ fontSize: 11.5, color: "#9C93AD" }}>
+                                <div style={{ fontSize: 11.5, color: "var(--mh-muted)" }}>
                                   {ch.f_class ? "Nivel " + (ch.f_level || "1") + " · " + ch.f_class : "Sin clase asignada"}
                                 </div>
                               </div>
@@ -4108,7 +4185,7 @@ export default function App({ onSignOut }) {
                           );
                         })}
                         {memberIds.length === 0 && (
-                          <div style={{ fontSize: 12.5, color: "#9C93AD", fontStyle: "italic" }}>Todavía no hay personajes en esta campaña.</div>
+                          <div style={{ fontSize: 12.5, color: "var(--mh-muted)", fontStyle: "italic" }}>Todavía no hay personajes en esta campaña.</div>
                         )}
                       </div>
 
@@ -4127,7 +4204,7 @@ export default function App({ onSignOut }) {
                           </div>
                         ))}
                         {availableIds.length === 0 && (
-                          <div style={{ fontSize: 12.5, color: "#9C93AD", fontStyle: "italic" }}>
+                          <div style={{ fontSize: 12.5, color: "var(--mh-muted)", fontStyle: "italic" }}>
                             {Object.keys(characters).length === 0 ? "Todavía no tienes personajes creados." : "No hay personajes disponibles (ya están en esta u otra campaña)."}
                           </div>
                         )}
@@ -4143,20 +4220,20 @@ export default function App({ onSignOut }) {
                         style={{ position: "absolute", top: 18, right: 20, color: "#D9644E", cursor: "pointer" }}
                         onClick={clearCampaignChat}
                       />
-                      <div style={{ fontSize: 11.5, color: "#9C93AD", marginBottom: 12, paddingRight: 24 }}>
+                      <div style={{ fontSize: 11.5, color: "var(--mh-muted)", marginBottom: 12, paddingRight: 24 }}>
                         Chat compartido de la campaña. Los mensajes llevan tu nombre de jugador (lo cambias en "Jugando como", en el menú).
                       </div>
                       <div ref={chatScrollRef} style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 360, overflowY: "auto", marginBottom: 14 }}>
                         {campaignChat.length === 0 && (
-                          <div style={{ fontSize: 12.5, color: "#9C93AD", fontStyle: "italic" }}>Todavía no hay mensajes.</div>
+                          <div style={{ fontSize: 12.5, color: "var(--mh-muted)", fontStyle: "italic" }}>Todavía no hay mensajes.</div>
                         )}
                         {campaignChat.map((m, i) => (
-                          <div key={i} style={{ border: "1px solid #2E2939", borderRadius: 8, padding: "8px 12px" }}>
+                          <div key={i} style={{ border: "1px solid var(--mh-line)", borderRadius: 8, padding: "8px 12px" }}>
                             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
-                              <span style={{ fontSize: 11.5, fontWeight: 700, color: "#E3B04B" }}>{m.author}</span>
-                              <span style={{ fontSize: 10, color: "#9C93AD" }}>{new Date(m.ts).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}</span>
+                              <span style={{ fontSize: 11.5, fontWeight: 700, color: "var(--mh-gold-ink)" }}>{m.author}</span>
+                              <span style={{ fontSize: 10, color: "var(--mh-muted)" }}>{new Date(m.ts).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}</span>
                             </div>
-                            <div style={{ fontSize: 13, color: "#ECE6DA", whiteSpace: "pre-wrap" }}>{m.text}</div>
+                            <div style={{ fontSize: 13, color: "var(--mh-ink)", whiteSpace: "pre-wrap" }}>{m.text}</div>
                           </div>
                         ))}
                       </div>
@@ -4176,7 +4253,7 @@ export default function App({ onSignOut }) {
 
                   {campaignDetailTab === "mapa" && (
                     <div className="mh-card" style={{ margin: 0, padding: "18px 20px" }}>
-                      <div style={{ fontSize: 11.5, color: "#9C93AD", marginBottom: 12 }}>
+                      <div style={{ fontSize: 11.5, color: "var(--mh-muted)", marginBottom: 12 }}>
                         Pulsa una casilla para pintarla con la herramienta elegida, o vuelve a pulsarla con la misma
                         herramienta para borrarla. Doble clic para ponerle un nombre.
                       </div>
@@ -4193,11 +4270,11 @@ export default function App({ onSignOut }) {
                               padding: "6px 12px",
                               borderRadius: 20,
                               cursor: "pointer",
-                              border: "1px solid " + (campaignGridTool === tool.key ? tool.color : "#2E2939"),
-                              background: campaignGridTool === tool.key ? tool.color + "22" : "#1B1824",
+                              border: "1px solid " + (campaignGridTool === tool.key ? tool.color : "var(--mh-line)"),
+                              background: campaignGridTool === tool.key ? tool.color + "22" : "var(--mh-panel)",
                               fontSize: 12,
                               fontWeight: 600,
-                              color: campaignGridTool === tool.key ? tool.color : "#B7AEC6",
+                              color: ink(campaignGridTool === tool.key ? tool.color : "var(--mh-ink3)"),
                             }}
                           >
                             <span style={{ width: 12, height: 12, borderRadius: 4, background: tool.color, flexShrink: 0 }} />
@@ -4217,10 +4294,10 @@ export default function App({ onSignOut }) {
                           gridTemplateRows: `repeat(${GRID_ROWS}, 32px)`,
                           gap: 2,
                           width: "fit-content",
-                          border: "1px solid #2E2939",
+                          border: "1px solid var(--mh-line)",
                           padding: 4,
                           borderRadius: 8,
-                          background: "#221E2C",
+                          background: "var(--mh-panel2)",
                         }}
                       >
                         {Array.from({ length: GRID_ROWS }, (_, y) => y).map((y) =>
@@ -4242,8 +4319,8 @@ export default function App({ onSignOut }) {
                                   position: "relative",
                                   width: 32,
                                   height: 32,
-                                  background: tool ? tool.color : "#1B1824",
-                                  border: "1px solid #2E2939",
+                                  background: tool ? tool.color : "var(--mh-panel)",
+                                  border: "1px solid var(--mh-line)",
                                   cursor: "pointer",
                                   display: "flex",
                                   alignItems: "center",
@@ -4275,7 +4352,7 @@ export default function App({ onSignOut }) {
 
                       {pendingCellLabel && (
                         <div style={{ display: "flex", gap: 6, marginTop: 12, alignItems: "center" }}>
-                          <span style={{ fontSize: 11.5, color: "#9C93AD" }}>
+                          <span style={{ fontSize: 11.5, color: "var(--mh-muted)" }}>
                             Nombre de la casilla ({pendingCellLabel.x + 1}, {pendingCellLabel.y + 1}):
                           </span>
                           <input
@@ -4301,10 +4378,10 @@ export default function App({ onSignOut }) {
                     <div className="mh-card" style={{ margin: 0, padding: "18px 20px", maxWidth: 700 }}>
                       <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
                         {campaignEncounters.length === 0 && (
-                          <div style={{ fontSize: 12.5, color: "#9C93AD", fontStyle: "italic" }}>Todavía no hay encuentros.</div>
+                          <div style={{ fontSize: 12.5, color: "var(--mh-muted)", fontStyle: "italic" }}>Todavía no hay encuentros.</div>
                         )}
                         {campaignEncounters.map((enc) => (
-                          <div key={enc.id} style={{ border: "1px solid #2E2939", borderRadius: 10, padding: "12px 14px" }}>
+                          <div key={enc.id} style={{ border: "1px solid var(--mh-line)", borderRadius: 10, padding: "12px 14px" }}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
                               <div className="mh-serif" style={{ fontSize: 14.5, fontWeight: 700 }}>{enc.name}</div>
                               <Trash2 size={14} style={{ color: "#D9644E", cursor: "pointer" }} onClick={() => removeEncounter(enc.id)} />
@@ -4313,7 +4390,7 @@ export default function App({ onSignOut }) {
                               contentEditable
                               suppressContentEditableWarning
                               onBlur={(e) => updateEncounterNotes(enc.id, e.target.textContent)}
-                              style={{ fontSize: 12.5, color: "#B7AEC6", minHeight: 20 }}
+                              style={{ fontSize: 12.5, color: "var(--mh-ink3)", minHeight: 20 }}
                             >
                               {enc.notes || "Notas del encuentro..."}
                             </div>
@@ -4359,11 +4436,11 @@ export default function App({ onSignOut }) {
                       >
                         <div className="mh-serif" style={{ fontSize: 17, fontWeight: 600 }}>{camp.name}</div>
                         {camp.description && (
-                          <div style={{ fontSize: 12, color: "#9C93AD", overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
+                          <div style={{ fontSize: 12, color: "var(--mh-muted)", overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
                             {camp.description}
                           </div>
                         )}
-                        <div style={{ fontSize: 11, color: "#E3B04B", fontWeight: 600 }}>
+                        <div style={{ fontSize: 11, color: "var(--mh-gold-ink)", fontWeight: 600 }}>
                           {memberCount} personaje{memberCount === 1 ? "" : "s"}
                         </div>
                       </div>
@@ -4407,7 +4484,7 @@ export default function App({ onSignOut }) {
                         gap: 8,
                         cursor: "pointer",
                         borderStyle: "dashed",
-                        color: "#B7AEC6",
+                        color: "var(--mh-ink3)",
                         minHeight: 84,
                       }}
                     >
@@ -4454,16 +4531,16 @@ export default function App({ onSignOut }) {
               <Card title="Registro de la mesa">
                 <div style={{ maxHeight: 220, overflowY: "auto", display: "flex", flexDirection: "column-reverse", gap: 6 }}>
                   {rollLog.length === 0 ? (
-                    <div style={{ color: "#9C93AD", fontSize: 13, fontStyle: "italic" }}>Aún no hay tiradas.</div>
+                    <div style={{ color: "var(--mh-muted)", fontSize: 13, fontStyle: "italic" }}>Aún no hay tiradas.</div>
                   ) : (
                     rollLog.map((l, i) => (
                       <div
                         key={i}
-                        style={{ fontSize: 12.5, color: "#B7AEC6", borderBottom: "1px dashed #2E2939", paddingBottom: 6 }}
+                        style={{ fontSize: 12.5, color: "var(--mh-ink3)", borderBottom: "1px dashed var(--mh-line)", paddingBottom: 6 }}
                       >
                         {String(l)
                           .split("**")
-                          .map((part, j) => (j % 2 ? <b key={j} style={{ color: "#ECE6DA" }}>{part}</b> : part))}
+                          .map((part, j) => (j % 2 ? <b key={j} style={{ color: "var(--mh-ink)" }}>{part}</b> : part))}
                       </div>
                     ))
                   )}
@@ -4479,11 +4556,11 @@ export default function App({ onSignOut }) {
                   <button className="mh-btn-ghost" style={{ padding: "4px 9px" }} aria-label="Quitar Miedo" onClick={() => addFear(-1)}>
                     <Minus size={13} />
                   </button>
-                  <span className="mh-serif" style={{ fontSize: 26, fontWeight: 700, color: "#A58BE8", minWidth: 60, textAlign: "center" }}>{fearCount} / 12</span>
+                  <span className="mh-serif" style={{ fontSize: 26, fontWeight: 700, color: "var(--mh-purple-ink)", minWidth: 60, textAlign: "center" }}>{fearCount} / 12</span>
                   <button className="mh-btn-ghost" style={{ padding: "4px 9px" }} aria-label="Añadir Miedo" onClick={() => addFear(1)}>
                     <Plus size={13} />
                   </button>
-                  <span style={{ fontSize: 11.5, color: "#9C93AD" }}>Sube solo cuando alguien saca Miedo en una tirada.</span>
+                  <span style={{ fontSize: 11.5, color: "var(--mh-muted)" }}>Sube solo cuando alguien saca Miedo en una tirada.</span>
                 </div>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                   {Array.from({ length: 12 }, (_, idx) => idx + 1).map((i) => (
@@ -4498,10 +4575,10 @@ export default function App({ onSignOut }) {
 
               <Card title="PNJ y encuentros">
                 {Object.keys(npcs).length === 0 ? (
-                  <div style={{ color: "#9C93AD", fontSize: 13, fontStyle: "italic", marginBottom: 12 }}>Sin PNJ todavía.</div>
+                  <div style={{ color: "var(--mh-muted)", fontSize: 13, fontStyle: "italic", marginBottom: 12 }}>Sin PNJ todavía.</div>
                 ) : (
                   Object.keys(npcs).map((id) => (
-                    <div key={id} style={{ border: "1px solid #2E2939", borderRadius: 6, padding: "12px 14px", marginBottom: 10 }}>
+                    <div key={id} style={{ border: "1px solid var(--mh-line)", borderRadius: 6, padding: "12px 14px", marginBottom: 10 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                         <b
                           className="mh-serif"
@@ -4518,7 +4595,7 @@ export default function App({ onSignOut }) {
                         contentEditable
                         suppressContentEditableWarning
                         onBlur={(e) => updateNpc(id, "notes", e.target.textContent)}
-                        style={{ fontSize: 13, color: "#B7AEC6", minHeight: 20 }}
+                        style={{ fontSize: 13, color: "var(--mh-ink3)", minHeight: 20 }}
                       >
                         {npcs[id].notes || "Notas, PV, motivación, tácticas..."}
                       </div>
@@ -4548,11 +4625,11 @@ export default function App({ onSignOut }) {
           const Icon = icon;
           if (!value) return null;
           return (
-            <div style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "10px 0", borderBottom: "1px solid #2E2939" }}>
+            <div style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "10px 0", borderBottom: "1px solid var(--mh-line)" }}>
               <Icon size={15} color="#E3B04B" style={{ marginTop: 1, flexShrink: 0 }} />
               <div>
-                <div style={{ fontSize: 10.5, color: "#9C93AD", textTransform: "uppercase", letterSpacing: 0.3 }}>{label}</div>
-                <div style={{ fontSize: 13.5, color: "#ECE6DA", fontWeight: 500 }}>{value}</div>
+                <div style={{ fontSize: 10.5, color: "var(--mh-muted)", textTransform: "uppercase", letterSpacing: 0.3 }}>{label}</div>
+                <div style={{ fontSize: 13.5, color: "var(--mh-ink)", fontWeight: 500 }}>{value}</div>
               </div>
             </div>
           );
@@ -4562,14 +4639,14 @@ export default function App({ onSignOut }) {
             style={{
               position: "absolute",
               inset: 0,
-              background: "#121019",
+              background: "var(--mh-bg)",
               zIndex: 20,
               display: "flex",
               flexDirection: "column",
               overflow: "hidden",
               borderTop: "4px solid " + themeColor,
               filter: isDead ? "grayscale(1)" : "none",
-              "--panel-bg": beastformInfo || TRANSFORM_THEMES[c.f_transformation_form_active] ? "rgba(27,24,36,0.58)" : "#1B1824",
+              "--panel-bg": beastformInfo || TRANSFORM_THEMES[c.f_transformation_form_active] ? "var(--mh-glass)" : "var(--mh-panel)",
             }}
           >
             {hpHit && hpHit.id === viewingCharId && (
@@ -4590,7 +4667,7 @@ export default function App({ onSignOut }) {
               style={{
                 position: "relative",
                 zIndex: 1,
-                background: "#16131E", borderBottom: "1px solid #2E2939",
+                background: "var(--mh-nav)", borderBottom: "1px solid var(--mh-line)",
                 padding: "16px 24px",
                 display: "flex",
                 flexDirection: "column",
@@ -4608,20 +4685,20 @@ export default function App({ onSignOut }) {
                     display: "flex",
                     alignItems: "center",
                     gap: 6,
-                    color: "#B7AEC6",
+                    color: "var(--mh-ink3)",
                     fontSize: 13,
                     fontWeight: 500,
                   }}
                 >
                   <ArrowLeft size={16} /> Personajes
                 </button>
-                <div style={{ width: 1, height: 24, background: "#2A2436" }} />
+                <div style={{ width: 1, height: 24, background: "var(--mh-panel3)" }} />
                 <div style={{ flex: 1 }}>
-                  <div className="mh-serif" style={{ color: "#ECE6DA", fontSize: 22, fontWeight: 700, display: "flex", alignItems: "center", gap: 8 }}>
+                  <div className="mh-serif" style={{ color: "var(--mh-ink)", fontSize: 22, fontWeight: 700, display: "flex", alignItems: "center", gap: 8 }}>
                     {c.f_name || "Sin nombre"}
-                    {isDead && <Skull size={19} color="#ECE6DA" />}
+                    {isDead && <Skull size={19} color="currentColor" />}
                   </div>
-                  {c.f_pronouns && <div style={{ color: "#9C93AD", fontSize: 12 }}>{c.f_pronouns}</div>}
+                  {c.f_pronouns && <div style={{ color: "var(--mh-muted)", fontSize: 12 }}>{c.f_pronouns}</div>}
                 </div>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
                   {c.f_class && (
@@ -4641,17 +4718,17 @@ export default function App({ onSignOut }) {
                     );
                   })()}
                   {isExpansionClass && (
-                    <span style={{ fontSize: 11, fontWeight: 600, color: "#ECE6DA", background: "#A58BE8", padding: "4px 12px", borderRadius: 20 }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: "var(--mh-ink)", background: "#A58BE8", padding: "4px 12px", borderRadius: 20 }}>
                       Hope & Fear
                     </span>
                   )}
                   {c.f_transformation && (
-                    <span style={{ fontSize: 11, fontWeight: 600, color: "#ECE6DA", background: "#A58BE8", padding: "4px 12px", borderRadius: 20 }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: "var(--mh-ink)", background: "#A58BE8", padding: "4px 12px", borderRadius: 20 }}>
                       {c.f_transformation}
                     </span>
                   )}
                   {beastformInfo && (
-                    <span style={{ fontSize: 11, fontWeight: 600, color: "#ECE6DA", background: beastformInfo.color, padding: "4px 12px", borderRadius: 20 }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: "var(--mh-ink)", background: beastformInfo.color, padding: "4px 12px", borderRadius: 20 }}>
                       Forma: {beastformInfo.key}
                     </span>
                   )}
@@ -4700,7 +4777,7 @@ export default function App({ onSignOut }) {
                         alignItems: "center",
                         justifyContent: "center",
                         gap: 7,
-                        background: formBoosted ? beastformInfo.color + "26" : "#2A2436",
+                        background: formBoosted ? beastformInfo.color + "26" : "var(--mh-chip)",
                         border: formBoosted
                           ? "1px solid " + beastformInfo.color
                           : isSpellcast
@@ -4715,18 +4792,18 @@ export default function App({ onSignOut }) {
                       }}
                     >
                       <Icon size={14} color={formBoosted ? beastformInfo.color : "#E3B04B"} style={{ flexShrink: 0 }} />
-                      <span style={{ fontSize: 11.5, color: "#B7AEC6", whiteSpace: "nowrap" }}>{t.label}</span>
+                      <span style={{ fontSize: 11.5, color: "var(--mh-ink3)", whiteSpace: "nowrap" }}>{t.label}</span>
                       <span style={{ display: "flex", alignItems: "center", gap: 3, marginLeft: "auto", paddingRight: 2, position: "relative" }}>
                         {formBoosted && (
-                          <span style={{ fontSize: 9, fontWeight: 700, color: beastformInfo.color }}>+{formBoost + evoBoost}</span>
+                          <span style={{ fontSize: 9, fontWeight: 700, color: ink(beastformInfo.color) }}>+{formBoost + evoBoost}</span>
                         )}
                         {equipBoost !== 0 && (
-                          <span style={{ fontSize: 9, fontWeight: 700, color: equipBoost > 0 ? "#7FB77A" : "#D9644E" }}>
+                          <span style={{ fontSize: 9, fontWeight: 700, color: ink(equipBoost > 0 ? "#7FB77A" : "#D9644E") }}>
                             {equipBoost > 0 ? "+" : ""}{equipBoost}
                           </span>
                         )}
                         {hasAdvantage && <ArrowUp size={11} color="#5E93B3" style={{ position: "relative", zIndex: 1 }} />}
-                        <span style={{ fontSize: 14, fontWeight: 700, color: "#ECE6DA", position: "relative", zIndex: 1 }}>{val > 0 ? "+" + val : val}</span>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: "var(--mh-ink)", position: "relative", zIndex: 1 }}>{val > 0 ? "+" + val : val}</span>
                       </span>
                     </div>
                   );
@@ -4789,7 +4866,7 @@ export default function App({ onSignOut }) {
                   return (
                     <div>
                       {/* Tabs */}
-                      <div style={{ display: "flex", alignItems: "flex-end", gap: 2, borderBottom: "1px solid #2E2939", marginBottom: 22, overflowX: "auto" }}>
+                      <div style={{ display: "flex", alignItems: "flex-end", gap: 2, borderBottom: "1px solid var(--mh-line)", marginBottom: 22, overflowX: "auto" }}>
                         {[
                           ...tabs.map((t) => ({ ...t, tone: "#E3B04B" })),
                           { spacer: true, key: "_spacer" },
@@ -4815,7 +4892,7 @@ export default function App({ onSignOut }) {
                                 fontSize: 13,
                                 fontWeight: 500,
                                 whiteSpace: "nowrap",
-                                color: active ? t.tone : t.key === "beastforms" || t.key === "campaign" ? t.tone + "B3" : "#9C93AD",
+                                color: ink(active ? t.tone : t.key === "beastforms" || t.key === "campaign" ? t.tone + "B3" : "var(--mh-muted)"),
                                 borderBottom: "2px solid " + (active ? t.tone : "transparent"),
                               }}
                             >
@@ -4838,15 +4915,15 @@ export default function App({ onSignOut }) {
                             >
                               <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
                                 <div style={{ flex: 1, textAlign: "center", border: "1px solid " + themeColor, background: themeColor + "14", borderRadius: 12, padding: "12px 6px" }}>
-                                  <div style={{ fontSize: 10, color: "#9C93AD" }}>Evasión</div>
-                                  <div className="mh-serif" style={{ fontSize: 26, fontWeight: 700, color: themeColor }}>
+                                  <div style={{ fontSize: 10, color: "var(--mh-muted)" }}>Evasión</div>
+                                  <div className="mh-serif" style={{ fontSize: 26, fontWeight: 700, color: ink(themeColor) }}>
                                     {c.r_evasion ? Number(c.r_evasion) + (beastformInfo?.evasionBonus || 0) + equipMods.evasion : "—"}
                                   </div>
                                 </div>
                                 <div style={{ flex: 1.4, border: "1px solid #E3B04B", background: "#E3B04B0D", borderRadius: 12, padding: "12px 10px" }}>
-                                  <div style={{ fontSize: 10, color: "#9C93AD", textAlign: "center", marginBottom: 4 }}>Armadura</div>
+                                  <div style={{ fontSize: 10, color: "var(--mh-muted)", textAlign: "center", marginBottom: 4 }}>Armadura</div>
                                   <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-                                    <div className="mh-serif" style={{ fontSize: 26, fontWeight: 700, color: "#E3B04B" }}>
+                                    <div className="mh-serif" style={{ fontSize: 26, fontWeight: 700, color: "var(--mh-gold-ink)" }}>
                                       {armorEntry ? armorEntry.score + equipMods.armor : "—"}
                                     </div>
                                     {armorEntry && (
@@ -4874,21 +4951,21 @@ export default function App({ onSignOut }) {
                               <div className="mh-label" style={{ marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
                                 Umbrales
                                 {earthBonus > 0 && (
-                                  <span style={{ fontSize: 9.5, fontWeight: 700, color: "#C08B5C", background: "#C08B5C1A", padding: "1px 7px", borderRadius: 20, textTransform: "none" }}>
+                                  <span style={{ fontSize: 9.5, fontWeight: 700, color: ink("#C08B5C"), background: "#C08B5C1A", padding: "1px 7px", borderRadius: 20, textTransform: "none" }}>
                                     +{earthBonus} por Tierra
                                   </span>
                                 )}
                               </div>
                               <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-                                <div onClick={() => applyDamage(viewingCharId, 1)} className="mh-tip-anchor" style={{ flex: 1, textAlign: "center", border: "1px solid #2E2939", background: "#221E2C", borderRadius: 10, padding: "8px 4px", cursor: "pointer" }}>
+                                <div onClick={() => applyDamage(viewingCharId, 1)} className="mh-tip-anchor" style={{ flex: 1, textAlign: "center", border: "1px solid var(--mh-line)", background: "var(--mh-panel2)", borderRadius: 10, padding: "8px 4px", cursor: "pointer" }}>
                                   <span className="mh-tip">Pulsa para -1 PV</span>
-                                  <div style={{ fontSize: 9.5, color: "#9C93AD" }}>Menor</div>
+                                  <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Menor</div>
                                   <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700 }}>{major > 1 ? major - 1 : "—"}</div>
                                 </div>
                                 <div onClick={() => applyDamage(viewingCharId, 2)} className="mh-tip-anchor" style={{ flex: 1, textAlign: "center", border: "1px solid #E3B04B", background: "#E3B04B14", borderRadius: 10, padding: "8px 4px", cursor: "pointer" }}>
                                   <span className="mh-tip">Pulsa para -2 PV</span>
-                                  <div style={{ fontSize: 9.5, color: "#9C93AD" }}>Mayor</div>
-                                  <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700, color: "#E3B04B" }}>{major}</div>
+                                  <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Mayor</div>
+                                  <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700, color: "var(--mh-gold-ink)" }}>{major}</div>
                                 </div>
                                 <div
                                   onClick={() => applyDamage(viewingCharId, 3, true)}
@@ -4896,7 +4973,7 @@ export default function App({ onSignOut }) {
                                   style={{ flex: 1, textAlign: "center", border: "1px solid #D9644E", background: "#D9644E14", borderRadius: 10, padding: "8px 4px", cursor: "pointer" }}
                                 >
                                   <span className="mh-tip">Pulsa para -3 PV</span>
-                                  <div style={{ fontSize: 9.5, color: "#9C93AD" }}>Grave</div>
+                                  <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Grave</div>
                                   <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700, color: "#D9644E" }}>{severe}</div>
                                 </div>
                               </div>
@@ -4930,7 +5007,7 @@ export default function App({ onSignOut }) {
                                 </button>
                               </div>
                               {armorEntry && (
-                                <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, color: "#B7AEC6", marginBottom: 6, cursor: "pointer" }}>
+                                <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, color: "var(--mh-ink3)", marginBottom: 6, cursor: "pointer" }}>
                                   <input type="checkbox" checked={incomingUseArmor} onChange={(e) => setIncomingUseArmor(e.target.checked)} />
                                   Gastar 1 de Armadura (baja un nivel de gravedad)
                                 </label>
@@ -4952,7 +5029,7 @@ export default function App({ onSignOut }) {
                                   <button className="mh-btn-ghost" style={{ padding: "2px 7px" }} aria-label="Restar Competencia" onClick={() => updateCharacterField(viewingCharId, "f_proficiency", Math.max(1, proficiency - 1))}>
                                     <Minus size={11} />
                                   </button>
-                                  <span className="mh-serif" style={{ fontSize: 16, fontWeight: 700, color: "#E3B04B", minWidth: 18, textAlign: "center" }}>{proficiency}</span>
+                                  <span className="mh-serif" style={{ fontSize: 16, fontWeight: 700, color: "var(--mh-gold-ink)", minWidth: 18, textAlign: "center" }}>{proficiency}</span>
                                   <button className="mh-btn-ghost" style={{ padding: "2px 7px" }} aria-label="Sumar Competencia" onClick={() => updateCharacterField(viewingCharId, "f_proficiency", Math.min(6, proficiency + 1))}>
                                     <Plus size={11} />
                                   </button>
@@ -4982,9 +5059,9 @@ export default function App({ onSignOut }) {
                                           fontSize: 11.5,
                                           padding: "5px 10px",
                                           borderRadius: 20,
-                                          border: "1px solid " + (active ? themeColor : "#3A3448"),
+                                          border: "1px solid " + (active ? themeColor : "var(--mh-line2)"),
                                           background: active ? themeColor + "22" : "transparent",
-                                          color: active ? themeColor : "#B7AEC6",
+                                          color: ink(active ? themeColor : "var(--mh-ink3)"),
                                           fontWeight: 600,
                                           cursor: "pointer",
                                         }}
@@ -5008,7 +5085,7 @@ export default function App({ onSignOut }) {
                                         borderRadius: 20,
                                         border: "1px solid #E3B04B",
                                         background: "#E3B04B22",
-                                        color: "#E3B04B",
+                                        color: "var(--mh-gold-ink)",
                                         fontWeight: 600,
                                         cursor: "pointer",
                                       }}
@@ -5028,8 +5105,8 @@ export default function App({ onSignOut }) {
                                         fontSize: 11.5,
                                         padding: "5px 10px",
                                         borderRadius: 20,
-                                        border: "1px dashed #3A3448",
-                                        color: "#B7AEC6",
+                                        border: "1px dashed var(--mh-line2)",
+                                        color: "var(--mh-ink3)",
                                         fontWeight: 600,
                                         cursor: "pointer",
                                       }}
@@ -5076,10 +5153,10 @@ export default function App({ onSignOut }) {
                                 return (
                                   <div style={{ display: "flex", flexDirection: "column", gap: 12, flex: 1, minHeight: 0 }}>
                                     <div style={{ border: "1px solid " + activeBeastform.color, background: activeBeastform.color + "14", borderRadius: 10, padding: "12px 14px", flexShrink: 0 }}>
-                                      <div style={{ fontSize: 10.5, fontWeight: 700, color: activeBeastform.color, textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 4 }}>
+                                      <div style={{ fontSize: 10.5, fontWeight: 700, color: ink(activeBeastform.color), textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 4 }}>
                                         Ataque · {activeBeastform.key}
                                       </div>
-                                      <div style={{ fontSize: 12.5, color: "#ECE6DA", marginBottom: 10 }}>
+                                      <div style={{ fontSize: 12.5, color: "var(--mh-ink)", marginBottom: 10 }}>
                                         {bfTrait} · {bfRange} · {bfDamage}
                                       </div>
                                       <div style={{ display: "flex", gap: 8 }}>
@@ -5124,10 +5201,10 @@ export default function App({ onSignOut }) {
                                               tier: activeBeastform.tier,
                                             })
                                           }
-                                          style={{ border: "1px solid #2E2939", borderRadius: 10, padding: "10px 14px", cursor: "pointer", flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}
+                                          style={{ border: "1px solid var(--mh-line)", borderRadius: 10, padding: "10px 14px", cursor: "pointer", flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}
                                         >
-                                          <div style={{ fontSize: 13, fontWeight: 700, color: "#ECE6DA", marginBottom: 3 }}>{f.name}</div>
-                                          <div style={{ fontSize: 11, color: "#9C93AD", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden", marginBottom: action ? 8 : 0 }}>
+                                          <div style={{ fontSize: 13, fontWeight: 700, color: "var(--mh-ink)", marginBottom: 3 }}>{f.name}</div>
+                                          <div style={{ fontSize: 11, color: "var(--mh-muted)", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden", marginBottom: action ? 8 : 0 }}>
                                             {f.text}
                                           </div>
                                           {action && (
@@ -5175,12 +5252,12 @@ export default function App({ onSignOut }) {
                                           flexDirection: "column",
                                           alignItems: "center",
                                           justifyContent: "center",
-                                          border: "1px dashed #3A3448",
+                                          border: "1px dashed var(--mh-line2)",
                                           borderRadius: 10,
                                           padding: "12px 14px",
                                           flex: 1,
-                                          color: "#6E6580",
-                                          background: "#221E2C",
+                                          color: "var(--mh-muted3)",
+                                          background: "var(--mh-panel2)",
                                         }}
                                       >
                                         <Lock size={14} style={{ marginBottom: 4 }} />
@@ -5206,11 +5283,11 @@ export default function App({ onSignOut }) {
                                           flexDirection: "column",
                                           alignItems: "center",
                                           justifyContent: "center",
-                                          border: "1px dashed #3A3448",
+                                          border: "1px dashed var(--mh-line2)",
                                           borderRadius: 10,
                                           padding: "12px 14px",
                                           flex: 1,
-                                          color: "#6E6580",
+                                          color: "var(--mh-muted3)",
                                         }}
                                       >
                                         <span style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 3 }}>{slot.label}</span>
@@ -5230,8 +5307,8 @@ export default function App({ onSignOut }) {
                                                   position: "absolute",
                                                   top: 32,
                                                   right: 10,
-                                                  background: "#1B1824",
-                                                  border: "1px solid #2E2939",
+                                                  background: "var(--mh-panel)",
+                                                  border: "1px solid var(--mh-line)",
                                                   borderRadius: 8,
                                                   boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
                                                   zIndex: 15,
@@ -5246,9 +5323,9 @@ export default function App({ onSignOut }) {
                                                     style={{
                                                       padding: "8px 12px",
                                                       fontSize: 12,
-                                                      color: "#ECE6DA",
+                                                      color: "var(--mh-ink)",
                                                       cursor: "pointer",
-                                                      borderBottom: i < matchingItems.length - 1 ? "1px solid #2E2939" : "none",
+                                                      borderBottom: i < matchingItems.length - 1 ? "1px solid var(--mh-line)" : "none",
                                                       textAlign: "left",
                                                     }}
                                                   >
@@ -5280,7 +5357,7 @@ export default function App({ onSignOut }) {
                                             tier: w.tier,
                                           })
                                         }
-                                        style={{ position: "relative", border: "1px solid #2E2939", borderRadius: 10, padding: "12px 14px", flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", cursor: "pointer" }}
+                                        style={{ position: "relative", border: "1px solid var(--mh-line)", borderRadius: 10, padding: "12px 14px", flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", cursor: "pointer" }}
                                       >
                                         <div className="mh-tip-anchor" style={{ position: "absolute", top: 10, right: 10 }}>
                                           {items.length >= ITEM_SLOTS && (
@@ -5297,8 +5374,8 @@ export default function App({ onSignOut }) {
                                             }}
                                           />
                                         </div>
-                                        <div style={{ fontSize: 13.5, fontWeight: 700, color: "#ECE6DA", marginBottom: 3 }}>{w.key}</div>
-                                        <div style={{ fontSize: 11, color: "#9C93AD" }}>Puntuación {w.score} · Umbrales base {w.major}/{w.severe}</div>
+                                        <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--mh-ink)", marginBottom: 3 }}>{w.key}</div>
+                                        <div style={{ fontSize: 11, color: "var(--mh-muted)" }}>Puntuación {w.score} · Umbrales base {w.major}/{w.severe}</div>
                                         {w.mods && (
                                           <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 6 }}>
                                             {Object.entries(w.mods).map(([key, val]) => (
@@ -5307,7 +5384,7 @@ export default function App({ onSignOut }) {
                                                 style={{
                                                   fontSize: 9.5,
                                                   fontWeight: 700,
-                                                  color: val > 0 ? "#7FB77A" : "#D9644E",
+                                                  color: ink(val > 0 ? "#7FB77A" : "#D9644E"),
                                                   background: (val > 0 ? "#7FB77A" : "#D9644E") + "1A",
                                                   padding: "2px 7px",
                                                   borderRadius: 20,
@@ -5344,7 +5421,7 @@ export default function App({ onSignOut }) {
                                             }
                                           : undefined
                                       }
-                                      style={{ position: "relative", border: "1px solid #2E2939", borderRadius: 10, padding: "12px 14px", flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", cursor: idx === 0 || idx === 1 ? "pointer" : "default" }}
+                                      style={{ position: "relative", border: "1px solid var(--mh-line)", borderRadius: 10, padding: "12px 14px", flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", cursor: idx === 0 || idx === 1 ? "pointer" : "default" }}
                                     >
                                       {(idx === 0 || idx === 1) && (
                                         <div className="mh-tip-anchor" style={{ position: "absolute", top: 10, right: 10 }}>
@@ -5365,8 +5442,8 @@ export default function App({ onSignOut }) {
                                           />
                                         </div>
                                       )}
-                                      <div style={{ fontSize: 13.5, fontWeight: 700, color: "#ECE6DA", marginBottom: 3 }}>{w.key}</div>
-                                      <div style={{ fontSize: 11, color: "#9C93AD", marginBottom: w.mods ? 4 : 10 }}>
+                                      <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--mh-ink)", marginBottom: 3 }}>{w.key}</div>
+                                      <div style={{ fontSize: 11, color: "var(--mh-muted)", marginBottom: w.mods ? 4 : 10 }}>
                                         {w.trait !== "—" ? `${w.trait} · ${w.range} · ${w.damage}` : w.damage}
                                       </div>
                                       {w.mods && (
@@ -5377,7 +5454,7 @@ export default function App({ onSignOut }) {
                                               style={{
                                                 fontSize: 9.5,
                                                 fontWeight: 700,
-                                                color: val > 0 ? "#7FB77A" : "#D9644E",
+                                                color: ink(val > 0 ? "#7FB77A" : "#D9644E"),
                                                 background: (val > 0 ? "#7FB77A" : "#D9644E") + "1A",
                                                 padding: "2px 7px",
                                                 borderRadius: 20,
@@ -5446,10 +5523,10 @@ export default function App({ onSignOut }) {
 
                                       if (exp) {
                                         return (
-                                          <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", border: "1px solid #2E2939", borderRadius: 8, padding: "14px 14px", flex: 1 }}>
-                                            <span style={{ fontSize: 12.5, color: "#ECE6DA" }}>{exp.text}</span>
+                                          <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", border: "1px solid var(--mh-line)", borderRadius: 8, padding: "14px 14px", flex: 1 }}>
+                                            <span style={{ fontSize: 12.5, color: "var(--mh-ink)" }}>{exp.text}</span>
                                             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                              <span style={{ fontSize: 12.5, fontWeight: 700, color: "#E3B04B" }}>+{exp.bonus}</span>
+                                              <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--mh-gold-ink)" }}>+{exp.bonus}</span>
                                               <X size={13} style={{ cursor: "pointer", color: "#D9644E" }} onClick={() => removeExperience(viewingCharId, i)} />
                                             </div>
                                           </div>
@@ -5464,11 +5541,11 @@ export default function App({ onSignOut }) {
                                               display: "flex",
                                               alignItems: "center",
                                               justifyContent: "center",
-                                              border: "1px solid #2E2939",
-                                              background: "#221E2C",
+                                              border: "1px solid var(--mh-line)",
+                                              background: "var(--mh-panel2)",
                                               borderRadius: 8,
                                               padding: "14px 14px",
-                                              color: "#6E6580",
+                                              color: "var(--mh-muted3)",
                                               fontSize: 12,
                                               fontStyle: "italic",
                                               flex: 1,
@@ -5502,7 +5579,7 @@ export default function App({ onSignOut }) {
                                             width: "100%",
                                             fontSize: 12,
                                             padding: "14px 14px",
-                                            border: "1px dashed #3A3448",
+                                            border: "1px dashed var(--mh-line2)",
                                             background: "transparent",
                                             flex: 1,
                                           }}
@@ -5567,7 +5644,7 @@ export default function App({ onSignOut }) {
                                     right: 10,
                                     fontSize: 9,
                                     fontWeight: 700,
-                                    color: "#E3B04B",
+                                    color: "var(--mh-gold-ink)",
                                     border: "1px solid #E3B04B",
                                     borderRadius: 20,
                                     padding: "1px 8px",
@@ -5578,9 +5655,9 @@ export default function App({ onSignOut }) {
                                 </span>
                                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
                                   <div style={{ minWidth: 0 }}>
-                                    <div style={{ fontSize: 9, fontWeight: 700, color: "#E3B04B", textTransform: "uppercase", letterSpacing: 0.3 }}>Subclase</div>
-                                    <div style={{ fontSize: 13.5, fontWeight: 700, color: "#ECE6DA" }}>{subclassEntry.key}</div>
-                                    <div style={{ fontSize: 10, color: activeElement ? ELEMENT_COLORS[activeElement] : "#9C93AD", marginTop: 1, fontWeight: activeElement ? 700 : 400 }}>
+                                    <div style={{ fontSize: 9, fontWeight: 700, color: "var(--mh-gold-ink)", textTransform: "uppercase", letterSpacing: 0.3 }}>Subclase</div>
+                                    <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--mh-ink)" }}>{subclassEntry.key}</div>
+                                    <div style={{ fontSize: 10, color: ink(activeElement ? ELEMENT_COLORS[activeElement] : "var(--mh-muted)"), marginTop: 1, fontWeight: activeElement ? 700 : 400 }}>
                                       {activeElement ? `Canalizando ${activeElement}` : "Ningún elemento canalizado"}
                                     </div>
                                   </div>
@@ -5601,8 +5678,8 @@ export default function App({ onSignOut }) {
                                             width: 26,
                                             height: 26,
                                             borderRadius: "50%",
-                                            border: "1px solid " + (active ? elColor : "#2E2939"),
-                                            background: active ? elColor : "#221E2C",
+                                            border: "1px solid " + (active ? elColor : "var(--mh-line)"),
+                                            background: active ? elColor : "var(--mh-panel2)",
                                             display: "flex",
                                             alignItems: "center",
                                             justifyContent: "center",
@@ -5648,7 +5725,7 @@ export default function App({ onSignOut }) {
                               return (
                                 <CompactCard
                                   key={f.name}
-                                  accent="#ECE6DA"
+                                  accent="var(--mh-ink3)"
                                   kicker="Característica de clase"
                                   title={f.name}
                                   description={f.text}
@@ -5784,7 +5861,7 @@ export default function App({ onSignOut }) {
                                       </div>
                                     ))
                                   ) : (
-                                    <div style={{ fontSize: 12.5, color: "#9C93AD", fontStyle: "italic" }}>Todavía no hay cartas para este personaje.</div>
+                                    <div style={{ fontSize: 12.5, color: "var(--mh-muted)", fontStyle: "italic" }}>Todavía no hay cartas para este personaje.</div>
                                   )}
                                 </div>
 
@@ -5792,7 +5869,7 @@ export default function App({ onSignOut }) {
                                   <button className="mh-btn-ghost" style={{ padding: "4px 8px" }} onClick={() => setActionPage((p) => Math.max(0, p - 1))}>
                                     <ChevronLeft size={14} />
                                   </button>
-                                  <span style={{ fontSize: 11.5, color: "#9C93AD" }}>
+                                  <span style={{ fontSize: 11.5, color: "var(--mh-muted)" }}>
                                     Página {page + 1} de {totalPages}
                                   </span>
                                   <button className="mh-btn-ghost" style={{ padding: "4px 8px" }} onClick={() => setActionPage((p) => Math.min(totalPages - 1, p + 1))}>
@@ -5834,7 +5911,7 @@ export default function App({ onSignOut }) {
                                           "--dc": dColor,
                                           animationDelay: i * 70 + "ms",
                                           border: "1px solid " + dColor + "66",
-                                          background: "#1B1824",
+                                          background: "var(--mh-panel)",
                                           borderRadius: 10,
                                           overflow: "hidden",
                                           flex: 1,
@@ -5858,23 +5935,23 @@ export default function App({ onSignOut }) {
                                           {!cardData.image && <DIcon size={20} color={dColor} />}
                                           <div
                                             className="mh-serif"
-                                            style={{ position: "absolute", top: 5, left: 5, width: 20, height: 20, borderRadius: "50%", border: "1.5px solid #E3B04B", background: "#121019", color: "#E3B04B", fontSize: 10.5, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}
+                                            style={{ position: "absolute", top: 5, left: 5, width: 20, height: 20, borderRadius: "50%", border: "1.5px solid #E3B04B", background: "var(--mh-bg)", color: "var(--mh-gold-ink)", fontSize: 10.5, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}
                                           >
                                             {cardData.level}
                                           </div>
                                         </div>
                                         <div style={{ flex: 1, minWidth: 0, padding: "8px 10px", display: "flex", flexDirection: "column", justifyContent: "center", gap: 2 }}>
                                           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                            <span style={{ fontSize: 9.5, color: dColor, textTransform: "uppercase", letterSpacing: ".08em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flex: 1, minWidth: 0 }}>
+                                            <span style={{ fontSize: 9.5, color: ink(dColor), textTransform: "uppercase", letterSpacing: ".08em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flex: 1, minWidth: 0 }}>
                                               {cardData.domain}
                                             </span>
-                                            <span style={{ display: "flex", alignItems: "center", gap: 2, fontSize: 10.5, color: "#ECE6DA", flexShrink: 0 }} title="Coste de recuperación">
+                                            <span style={{ display: "flex", alignItems: "center", gap: 2, fontSize: 10.5, color: "var(--mh-ink)", flexShrink: 0 }} title="Coste de recuperación">
                                               <Zap size={10} color="#E3B04B" />
                                               {cardData.recall}
                                             </span>
                                           </div>
-                                          <div className="mh-serif" style={{ fontSize: 12.5, fontWeight: 700, color: "#ECE6DA", lineHeight: 1.25, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{cardData.key}</div>
-                                          <div style={{ fontSize: 10, color: "#857C96" }}>{cardData.type}</div>
+                                          <div className="mh-serif" style={{ fontSize: 12.5, fontWeight: 700, color: "var(--mh-ink)", lineHeight: 1.25, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{cardData.key}</div>
+                                          <div style={{ fontSize: 10, color: "var(--mh-muted2)" }}>{cardData.type}</div>
                                         </div>
                                       </div>
                                     );
@@ -5886,10 +5963,10 @@ export default function App({ onSignOut }) {
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",
-                                        border: "1px dashed #3A3448",
+                                        border: "1px dashed var(--mh-line2)",
                                         borderRadius: 10,
                                         padding: "14px 14px",
-                                        color: "#6E6580",
+                                        color: "var(--mh-muted3)",
                                         fontSize: 12,
                                         flex: 1,
                                         minHeight: 64,
@@ -5917,7 +5994,7 @@ export default function App({ onSignOut }) {
                           >
                             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                               {(c.f_ancestry || "").split(" + ").includes("Elfo") && (
-                                <div style={{ fontSize: 12, color: "#9C93AD" }}>Tu Trance Celestial te permite elegir una acción adicional.</div>
+                                <div style={{ fontSize: 12, color: "var(--mh-muted)" }}>Tu Trance Celestial te permite elegir una acción adicional.</div>
                               )}
 
                               <div style={{ display: "flex", gap: 6 }}>
@@ -5964,7 +6041,7 @@ export default function App({ onSignOut }) {
                                 )}
                               </div>
                               {Number(c.f_short_rests || 0) > 0 && (
-                                <div style={{ fontSize: 11.5, color: Number(c.f_short_rests) >= 3 ? "#D9644E" : "#9C93AD" }}>
+                                <div style={{ fontSize: 11.5, color: ink(Number(c.f_short_rests) >= 3 ? "#D9644E" : "var(--mh-muted)") }}>
                                   Descansos cortos seguidos: {Number(c.f_short_rests)}/3
                                   {Number(c.f_short_rests) >= 3 && " — el próximo descanso tiene que ser largo."}
                                 </div>
@@ -5985,13 +6062,13 @@ export default function App({ onSignOut }) {
                               >
                                 Descansar
                               </button>
-                              {restMessage && <div style={{ fontSize: 12.5, color: "#7FB77A", fontWeight: 600 }}>{restMessage}</div>}
+                              {restMessage && <div style={{ fontSize: 12.5, color: "var(--mh-green-ink)", fontWeight: 600 }}>{restMessage}</div>}
 
-                              <div style={{ borderTop: "1px solid #2E2939", margin: "4px 0" }} />
+                              <div style={{ borderTop: "1px solid var(--mh-line)", margin: "4px 0" }} />
 
                               <div>
-                                <div className="mh-serif" style={{ fontSize: 13.5, fontWeight: 600, color: "#ECE6DA", marginBottom: 4 }}>Cartas de dominio</div>
-                                <div style={{ fontSize: 11.5, color: "#9C93AD", marginBottom: 10 }}>
+                                <div className="mh-serif" style={{ fontSize: 13.5, fontWeight: 600, color: "var(--mh-ink)", marginBottom: 4 }}>Cartas de dominio</div>
+                                <div style={{ fontSize: 11.5, color: "var(--mh-muted)", marginBottom: 10 }}>
                                   Puedes aprovechar tu tiempo libre para cambiar tus cartas de dominio elegidas.
                                 </div>
                                 <button
@@ -6020,16 +6097,16 @@ export default function App({ onSignOut }) {
                                 <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
                                   <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, overflowY: "auto", marginBottom: 12 }}>
                                     {projects.length === 0 && (
-                                      <div style={{ fontSize: 12, color: "#9C93AD", fontStyle: "italic" }}>Todavía no hay proyectos.</div>
+                                      <div style={{ fontSize: 12, color: "var(--mh-muted)", fontStyle: "italic" }}>Todavía no hay proyectos.</div>
                                     )}
                                     {projects.map((p, i) => (
-                                      <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", border: "1px solid #2E2939", borderRadius: 8, padding: "8px 10px" }}>
-                                        <span style={{ fontSize: 12.5, color: "#ECE6DA" }}>{p.name}</span>
+                                      <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", border: "1px solid var(--mh-line)", borderRadius: 8, padding: "8px 10px" }}>
+                                        <span style={{ fontSize: 12.5, color: "var(--mh-ink)" }}>{p.name}</span>
                                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                                           <button className="mh-btn-ghost" style={{ padding: "2px 7px" }} onClick={() => adjustProject(viewingCharId, i, -1)}>
                                             <Minus size={11} />
                                           </button>
-                                          <span style={{ fontSize: 13, fontWeight: 700, color: "#E3B04B", minWidth: 18, textAlign: "center" }}>{p.count}</span>
+                                          <span style={{ fontSize: 13, fontWeight: 700, color: "var(--mh-gold-ink)", minWidth: 18, textAlign: "center" }}>{p.count}</span>
                                           <button className="mh-btn-ghost" style={{ padding: "2px 7px" }} onClick={() => adjustProject(viewingCharId, i, 1)}>
                                             <Plus size={11} />
                                           </button>
@@ -6093,7 +6170,7 @@ export default function App({ onSignOut }) {
                                         alignItems: item.description ? "flex-start" : "center",
                                         justifyContent: "space-between",
                                         gap: 10,
-                                        border: "1px solid #2E2939",
+                                        border: "1px solid var(--mh-line)",
                                         borderRadius: 8,
                                         padding: "8px 12px",
                                         flex: 1,
@@ -6102,14 +6179,14 @@ export default function App({ onSignOut }) {
                                       }}
                                     >
                                       <div style={{ minWidth: 0, overflow: "hidden" }}>
-                                        <div style={{ fontSize: 13, fontWeight: 700, color: "#ECE6DA", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                        <div style={{ fontSize: 13, fontWeight: 700, color: "var(--mh-ink)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                                           {item.name}
                                         </div>
                                         {item.description && (
                                           <div
                                             style={{
                                               fontSize: 11.5,
-                                              color: "#9C93AD",
+                                              color: "var(--mh-muted)",
                                               marginTop: 2,
                                               whiteSpace: "nowrap",
                                               overflow: "hidden",
@@ -6125,7 +6202,7 @@ export default function App({ onSignOut }) {
                                           <button className="mh-btn-ghost" style={{ padding: "1px 6px" }} onClick={() => adjustItemCount(viewingCharId, i, -1)}>
                                             <Minus size={10} />
                                           </button>
-                                          <span style={{ fontSize: 12.5, fontWeight: 700, color: "#E3B04B", minWidth: 14, textAlign: "center" }}>
+                                          <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--mh-gold-ink)", minWidth: 14, textAlign: "center" }}>
                                             {item.count || 1}
                                           </span>
                                           <button className="mh-btn-ghost" style={{ padding: "1px 6px" }} onClick={() => adjustItemCount(viewingCharId, i, 1)}>
@@ -6147,7 +6224,7 @@ export default function App({ onSignOut }) {
                                     <button
                                       key={i}
                                       className="mh-btn-ghost"
-                                      style={{ width: "100%", fontSize: 12, border: "1px dashed #3A3448", background: "transparent", flex: 1, minHeight: 44 }}
+                                      style={{ width: "100%", fontSize: 12, border: "1px dashed var(--mh-line2)", background: "transparent", flex: 1, minHeight: 44 }}
                                       onClick={() => {
                                         setShowAddItemModal(true);
                                         setAddItemModalTab("catalog");
@@ -6165,10 +6242,10 @@ export default function App({ onSignOut }) {
                                       display: "flex",
                                       alignItems: "center",
                                       justifyContent: "center",
-                                      border: "1px dashed #2E2939",
+                                      border: "1px dashed var(--mh-line)",
                                       borderRadius: 8,
                                       padding: "8px 12px",
-                                      color: "#3A3448",
+                                      color: "var(--mh-line2)",
                                       fontSize: 11.5,
                                       fontStyle: "italic",
                                       flex: 1,
@@ -6185,7 +6262,7 @@ export default function App({ onSignOut }) {
                                         style={{
                                           position: "absolute",
                                           inset: 0,
-                                          background: "#1B1824",
+                                          background: "var(--mh-panel)",
                                           border: "1px solid #E3B04B",
                                           borderRadius: 10,
                                           padding: 10,
@@ -6196,7 +6273,7 @@ export default function App({ onSignOut }) {
                                           zIndex: 20,
                                         }}
                                       >
-                                          <div style={{ fontSize: 10, fontWeight: 700, color: "#E3B04B", textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 2, flexShrink: 0 }}>
+                                          <div style={{ fontSize: 10, fontWeight: 700, color: "var(--mh-gold-ink)", textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 2, flexShrink: 0 }}>
                                             Dentro de {backpack.name}
                                           </div>
                                           <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 8 }}>
@@ -6212,8 +6289,8 @@ export default function App({ onSignOut }) {
                                                     alignItems: bItem.description ? "flex-start" : "center",
                                                     justifyContent: "space-between",
                                                     gap: 10,
-                                                    border: "1px solid #2E2939",
-                                                    background: "#1E1A27",
+                                                    border: "1px solid var(--mh-line)",
+                                                    background: "var(--mh-sunk)",
                                                     borderRadius: 8,
                                                     padding: "8px 12px",
                                                     minHeight: 44,
@@ -6221,9 +6298,9 @@ export default function App({ onSignOut }) {
                                                   }}
                                                 >
                                                   <div>
-                                                    <div style={{ fontSize: 13, fontWeight: 700, color: "#ECE6DA" }}>{bItem.name}</div>
+                                                    <div style={{ fontSize: 13, fontWeight: 700, color: "var(--mh-ink)" }}>{bItem.name}</div>
                                                     {bItem.description && (
-                                                      <div style={{ fontSize: 11.5, color: "#9C93AD", marginTop: 2 }}>{bItem.description}</div>
+                                                      <div style={{ fontSize: 11.5, color: "var(--mh-muted)", marginTop: 2 }}>{bItem.description}</div>
                                                     )}
                                                   </div>
                                                   <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
@@ -6231,7 +6308,7 @@ export default function App({ onSignOut }) {
                                                       <button className="mh-btn-ghost" style={{ padding: "1px 6px" }} onClick={() => adjustBackpackItemCount(viewingCharId, i, -1)}>
                                                         <Minus size={10} />
                                                       </button>
-                                                      <span style={{ fontSize: 12.5, fontWeight: 700, color: "#E3B04B", minWidth: 14, textAlign: "center" }}>
+                                                      <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--mh-gold-ink)", minWidth: 14, textAlign: "center" }}>
                                                         {bItem.count || 1}
                                                       </span>
                                                       <button className="mh-btn-ghost" style={{ padding: "1px 6px" }} onClick={() => adjustBackpackItemCount(viewingCharId, i, 1)}>
@@ -6281,7 +6358,7 @@ export default function App({ onSignOut }) {
                                                 <button
                                                   key={"bp-" + i}
                                                   className="mh-btn-ghost"
-                                                  style={{ width: "100%", fontSize: 12, border: "1px dashed #3A3448", background: "transparent", minHeight: 44, flex: 1 }}
+                                                  style={{ width: "100%", fontSize: 12, border: "1px dashed var(--mh-line2)", background: "transparent", minHeight: 44, flex: 1 }}
                                                   onClick={() => setShowAddBackpackItemForm(true)}
                                                 >
                                                   + Añadir objeto a la mochila
@@ -6296,10 +6373,10 @@ export default function App({ onSignOut }) {
                                                   display: "flex",
                                                   alignItems: "center",
                                                   justifyContent: "center",
-                                                  border: "1px dashed #2E2939",
+                                                  border: "1px dashed var(--mh-line)",
                                                   borderRadius: 8,
                                                   padding: "8px 12px",
-                                                  color: "#3A3448",
+                                                  color: "var(--mh-line2)",
                                                   fontSize: 11.5,
                                                   fontStyle: "italic",
                                                   minHeight: 44,
@@ -6334,15 +6411,15 @@ export default function App({ onSignOut }) {
                                         }}
                                       >
                                         <div style={{ minWidth: 0, overflow: "hidden" }}>
-                                          <div style={{ fontSize: 10, fontWeight: 700, color: "#E3B04B", textTransform: "uppercase", letterSpacing: 0.3 }}>Mochila</div>
-                                          <div style={{ fontSize: 13, fontWeight: 700, color: "#ECE6DA", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                          <div style={{ fontSize: 10, fontWeight: 700, color: "var(--mh-gold-ink)", textTransform: "uppercase", letterSpacing: 0.3 }}>Mochila</div>
+                                          <div style={{ fontSize: 13, fontWeight: 700, color: "var(--mh-ink)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                                             {backpack.name}
                                           </div>
                                           {backpack.description && (
                                             <div
                                               style={{
                                                 fontSize: 11.5,
-                                                color: "#9C93AD",
+                                                color: "var(--mh-muted)",
                                                 marginTop: 2,
                                                 whiteSpace: "nowrap",
                                                 overflow: "hidden",
@@ -6368,7 +6445,7 @@ export default function App({ onSignOut }) {
                                   ) : (
                                   <button
                                     className="mh-btn-ghost"
-                                    style={{ gridRow: "6", width: "100%", fontSize: 12, border: "1px dashed #3A3448", background: "transparent" }}
+                                    style={{ gridRow: "6", width: "100%", fontSize: 12, border: "1px dashed var(--mh-line2)", background: "transparent" }}
                                     onClick={() => addBackpack(viewingCharId)}
                                   >
                                     + Añadir mochila
@@ -6399,7 +6476,7 @@ export default function App({ onSignOut }) {
                                       right: 20,
                                       fontSize: 12.5,
                                       fontWeight: 700,
-                                      color: "#E3B04B",
+                                      color: "var(--mh-gold-ink)",
                                       border: "1px solid #E3B04B",
                                       borderRadius: 20,
                                       padding: "3px 12px",
@@ -6410,7 +6487,7 @@ export default function App({ onSignOut }) {
                                   <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                                     {GOLD_TIERS.map((tier, idx) => (
                                       <div key={tier.field}>
-                                        <div style={{ fontSize: 10.5, fontWeight: 700, color: "#9C93AD", textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 6 }}>
+                                        <div style={{ fontSize: 10.5, fontWeight: 700, color: "var(--mh-muted)", textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 6 }}>
                                           {tier.label} (x{tier.value})
                                         </div>
                                         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -6433,10 +6510,10 @@ export default function App({ onSignOut }) {
                                       </div>
                                     ))}
 
-                                    <div style={{ borderTop: "1px solid #2E2939", margin: "2px 0" }} />
+                                    <div style={{ borderTop: "1px solid var(--mh-line)", margin: "2px 0" }} />
 
                                     <div>
-                                      <div style={{ fontSize: 10.5, fontWeight: 700, color: "#9C93AD", textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 6 }}>
+                                      <div style={{ fontSize: 10.5, fontWeight: 700, color: "var(--mh-muted)", textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 6 }}>
                                         Fijar cantidad exacta
                                       </div>
                                       <div style={{ display: "flex", gap: 8 }}>
@@ -6484,18 +6561,18 @@ export default function App({ onSignOut }) {
                             >
                               <div style={{ display: "flex", flexDirection: "column", gap: 14, flex: 1, overflowY: "auto" }}>
                                 {bgRows.length === 0 && (
-                                  <div style={{ fontSize: 11.5, color: "#9C93AD", fontStyle: "italic" }}>
+                                  <div style={{ fontSize: 11.5, color: "var(--mh-muted)", fontStyle: "italic" }}>
                                     Todavía no tenemos cargadas las preguntas de trasfondo de {c.f_class}. Puedes añadir las tuyas.
                                   </div>
                                 )}
                                 {bgRows.map((row, i) => (
-                                  <div key={i} style={{ border: "1px solid #2E2939", borderRadius: 8, padding: "10px 14px" }}>
+                                  <div key={i} style={{ border: "1px solid var(--mh-line)", borderRadius: 8, padding: "10px 14px" }}>
                                     <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
                                       <div
                                         contentEditable
                                         suppressContentEditableWarning
                                         onBlur={(e) => saveQARow(viewingCharId, "f_background_qa", bgRows, i, { question: e.target.textContent })}
-                                        style={{ fontSize: 12.5, fontWeight: 700, color: "#E3B04B", flex: 1 }}
+                                        style={{ fontSize: 12.5, fontWeight: 700, color: "var(--mh-gold-ink)", flex: 1 }}
                                       >
                                         {row.question}
                                       </div>
@@ -6505,7 +6582,7 @@ export default function App({ onSignOut }) {
                                       contentEditable
                                       suppressContentEditableWarning
                                       onBlur={(e) => saveQARow(viewingCharId, "f_background_qa", bgRows, i, { answer: e.target.textContent })}
-                                      style={{ minHeight: 50, fontSize: 13, color: "#ECE6DA" }}
+                                      style={{ minHeight: 50, fontSize: 13, color: "var(--mh-ink)" }}
                                     >
                                       {row.answer || "Escribe tu respuesta..."}
                                     </div>
@@ -6527,18 +6604,18 @@ export default function App({ onSignOut }) {
                             >
                               <div style={{ display: "flex", flexDirection: "column", gap: 14, flex: 1, overflowY: "auto" }}>
                                 {connRows.length === 0 && (
-                                  <div style={{ fontSize: 11.5, color: "#9C93AD", fontStyle: "italic" }}>
+                                  <div style={{ fontSize: 11.5, color: "var(--mh-muted)", fontStyle: "italic" }}>
                                     Todavía no tenemos cargadas las preguntas de conexión de {c.f_class}. Puedes añadir las tuyas.
                                   </div>
                                 )}
                                 {connRows.map((row, i) => (
-                                  <div key={i} style={{ border: "1px solid #2E2939", borderRadius: 8, padding: "10px 14px" }}>
+                                  <div key={i} style={{ border: "1px solid var(--mh-line)", borderRadius: 8, padding: "10px 14px" }}>
                                     <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
                                       <div
                                         contentEditable
                                         suppressContentEditableWarning
                                         onBlur={(e) => saveQARow(viewingCharId, "f_connection_qa", connRows, i, { question: e.target.textContent })}
-                                        style={{ fontSize: 12.5, fontWeight: 700, color: "#E3B04B", flex: 1 }}
+                                        style={{ fontSize: 12.5, fontWeight: 700, color: "var(--mh-gold-ink)", flex: 1 }}
                                       >
                                         {row.question}
                                       </div>
@@ -6548,7 +6625,7 @@ export default function App({ onSignOut }) {
                                       contentEditable
                                       suppressContentEditableWarning
                                       onBlur={(e) => saveQARow(viewingCharId, "f_connection_qa", connRows, i, { answer: e.target.textContent })}
-                                      style={{ minHeight: 50, fontSize: 13, color: "#ECE6DA" }}
+                                      style={{ minHeight: 50, fontSize: 13, color: "var(--mh-ink)" }}
                                     >
                                       {row.answer || "Escribe tu respuesta..."}
                                     </div>
@@ -6590,9 +6667,9 @@ export default function App({ onSignOut }) {
                               vulnerable={conditions.includes("Vulnerable")}
                               unconscious={conditions.includes("Inconsciente")}
                             >
-                              <div style={{ fontSize: 10.5, color: "#6E6580", marginBottom: 10, flexShrink: 0 }}>
+                              <div style={{ fontSize: 10.5, color: "var(--mh-muted3)", marginBottom: 10, flexShrink: 0 }}>
                                 Siluetas de fondo:{" "}
-                                <a href="https://game-icons.net" target="_blank" rel="noreferrer" style={{ color: "#9C93AD" }}>game-icons.net</a>{" "}
+                                <a href="https://game-icons.net" target="_blank" rel="noreferrer" style={{ color: "var(--mh-muted)" }}>game-icons.net</a>{" "}
                                 (Lorc, Delapouite y colaboradores), licencia CC BY 3.0.
                               </div>
                               {stressFull && !c.f_beastform && (
@@ -6603,7 +6680,7 @@ export default function App({ onSignOut }) {
 
                               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 10, flex: 1, minHeight: 0, overflow: "hidden" }}>
                                 {BEASTFORMS.filter((b) => b.tier === beastformTierFilter).length === 0 && (
-                                  <div style={{ fontSize: 12.5, color: "#9C93AD", fontStyle: "italic", gridColumn: "1 / -1" }}>
+                                  <div style={{ fontSize: 12.5, color: "var(--mh-muted)", fontStyle: "italic", gridColumn: "1 / -1" }}>
                                     Todavía no hay formas de bestia cargadas para el Rango {beastformTierFilter}.
                                   </div>
                                 )}
@@ -6617,8 +6694,8 @@ export default function App({ onSignOut }) {
                                       onClick={() => !locked && toggleBeastform(viewingCharId, b.key, selected)}
                                       title={tierLocked ? `Se desbloquea en Rango ${b.tier}` : !selected && stressFull ? "Sin Estrés disponible para activarla" : undefined}
                                       style={{
-                                        border: "1px solid " + (locked ? "#2E2939" : selected ? b.color : "#2E2939"),
-                                        background: locked ? "#221E2C" : selected ? b.color + "14" : "#1B1824",
+                                        border: "1px solid " + (locked ? "var(--mh-line)" : selected ? b.color : "var(--mh-line)"),
+                                        background: locked ? "var(--mh-panel2)" : selected ? b.color + "14" : "var(--mh-panel)",
                                         borderRadius: 10,
                                         padding: "8px 12px",
                                         cursor: locked ? "not-allowed" : "pointer",
@@ -6629,20 +6706,20 @@ export default function App({ onSignOut }) {
                                       <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 1 }}>
                                         {locked && <Lock size={10} color="#9C93AD" />}
                                         {selected && <Check size={11} color={b.color} />}
-                                        <span style={{ fontSize: 12, fontWeight: 700, color: selected ? b.color : "#ECE6DA" }}>{b.key}</span>
-                                        <span style={{ fontSize: 8.5, color: "#9C93AD", marginLeft: "auto" }}>
+                                        <span style={{ fontSize: 12, fontWeight: 700, color: ink(selected ? b.color : "var(--mh-ink)") }}>{b.key}</span>
+                                        <span style={{ fontSize: 8.5, color: "var(--mh-muted)", marginLeft: "auto" }}>
                                           {tierLocked ? `Se desbloquea en Rango ${b.tier}` : `Rango ${b.tier}`}
                                         </span>
                                       </div>
-                                      <div style={{ fontSize: 9.5, color: "#9C93AD", fontStyle: "italic", marginBottom: 4 }}>{b.animals}</div>
-                                      <div style={{ fontSize: 10, color: "#ECE6DA", marginBottom: 1 }}>{b.bonus}</div>
-                                      <div style={{ fontSize: 10, color: "#ECE6DA", marginBottom: 4 }}>{b.attack}</div>
-                                      <div style={{ fontSize: 9.5, color: "#B7AEC6", marginBottom: 4 }}>
+                                      <div style={{ fontSize: 9.5, color: "var(--mh-muted)", fontStyle: "italic", marginBottom: 4 }}>{b.animals}</div>
+                                      <div style={{ fontSize: 10, color: "var(--mh-ink)", marginBottom: 1 }}>{b.bonus}</div>
+                                      <div style={{ fontSize: 10, color: "var(--mh-ink)", marginBottom: 4 }}>{b.attack}</div>
+                                      <div style={{ fontSize: 9.5, color: "var(--mh-ink3)", marginBottom: 4 }}>
                                         <b>Ventaja en:</b> {b.advantage}
                                       </div>
                                       {b.features.map((f) => (
-                                        <div key={f.name} style={{ fontSize: 9.5, color: "#B7AEC6", marginBottom: 2, lineHeight: 1.3 }}>
-                                          <b style={{ color: "#ECE6DA" }}>{f.name}:</b> {f.text}
+                                        <div key={f.name} style={{ fontSize: 9.5, color: "var(--mh-ink3)", marginBottom: 2, lineHeight: 1.3 }}>
+                                          <b style={{ color: "var(--mh-ink)" }}>{f.name}:</b> {f.text}
                                         </div>
                                       ))}
                                     </div>
@@ -6666,7 +6743,7 @@ export default function App({ onSignOut }) {
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
                             >
-                              <div style={{ fontSize: 13, color: "#B7AEC6", marginBottom: 18 }}>
+                              <div style={{ fontSize: 13, color: "var(--mh-ink3)", marginBottom: 18 }}>
                                 {charCampaign.description || "Esta campaña todavía no tiene descripción."}
                               </div>
 
@@ -6684,7 +6761,7 @@ export default function App({ onSignOut }) {
                                   );
                                 })}
                                 {partyIds.length === 0 && (
-                                  <div style={{ fontSize: 12.5, color: "#9C93AD", fontStyle: "italic" }}>De momento eres el único personaje en esta campaña.</div>
+                                  <div style={{ fontSize: 12.5, color: "var(--mh-muted)", fontStyle: "italic" }}>De momento eres el único personaje en esta campaña.</div>
                                 )}
                               </div>
 
@@ -6711,15 +6788,15 @@ export default function App({ onSignOut }) {
                               <div style={{ display: "flex", flexDirection: "column" }}>
                                 <div ref={chatScrollRef} style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 320, overflowY: "auto", marginBottom: 12 }}>
                                   {campaignChat.length === 0 && (
-                                    <div style={{ fontSize: 12.5, color: "#9C93AD", fontStyle: "italic" }}>Todavía no hay mensajes.</div>
+                                    <div style={{ fontSize: 12.5, color: "var(--mh-muted)", fontStyle: "italic" }}>Todavía no hay mensajes.</div>
                                   )}
                                   {campaignChat.map((m, i) => (
-                                    <div key={i} style={{ border: "1px solid #2E2939", borderRadius: 8, padding: "8px 12px" }}>
+                                    <div key={i} style={{ border: "1px solid var(--mh-line)", borderRadius: 8, padding: "8px 12px" }}>
                                       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
-                                        <span style={{ fontSize: 11.5, fontWeight: 700, color: "#E3B04B" }}>{m.author}</span>
-                                        <span style={{ fontSize: 10, color: "#9C93AD" }}>{new Date(m.ts).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}</span>
+                                        <span style={{ fontSize: 11.5, fontWeight: 700, color: "var(--mh-gold-ink)" }}>{m.author}</span>
+                                        <span style={{ fontSize: 10, color: "var(--mh-muted)" }}>{new Date(m.ts).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}</span>
                                       </div>
-                                      <div style={{ fontSize: 13, color: "#ECE6DA", whiteSpace: "pre-wrap" }}>{m.text}</div>
+                                      <div style={{ fontSize: 13, color: "var(--mh-ink)", whiteSpace: "pre-wrap" }}>{m.text}</div>
                                     </div>
                                   ))}
                                 </div>
@@ -6763,16 +6840,16 @@ export default function App({ onSignOut }) {
                               </button>
                             </div>
                             {entries.length === 0 ? (
-                              <div style={{ fontSize: 12.5, color: "#9C93AD", fontStyle: "italic" }}>Todavía no hay entradas.</div>
+                              <div style={{ fontSize: 12.5, color: "var(--mh-muted)", fontStyle: "italic" }}>Todavía no hay entradas.</div>
                             ) : (
                               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 12 }}>
                                 {entries.map((entry, i) => (
-                                  <div key={i} style={{ border: "1px solid #2E2939", borderRadius: 10, padding: "12px 14px" }}>
+                                  <div key={i} style={{ border: "1px solid var(--mh-line)", borderRadius: 10, padding: "12px 14px" }}>
                                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                                      <span style={{ fontSize: 11, color: "#9C93AD" }}>{entry.date}</span>
+                                      <span style={{ fontSize: 11, color: "var(--mh-muted)" }}>{entry.date}</span>
                                       <Trash2 size={13} style={{ color: "#D9644E", cursor: "pointer" }} onClick={() => removeJournalEntry(viewingCharId, i)} />
                                     </div>
-                                    <div style={{ fontSize: 13.5, color: "#ECE6DA", whiteSpace: "pre-wrap" }}>{entry.text}</div>
+                                    <div style={{ fontSize: 13.5, color: "var(--mh-ink)", whiteSpace: "pre-wrap" }}>{entry.text}</div>
                                   </div>
                                 ))}
                               </div>
@@ -6807,8 +6884,8 @@ export default function App({ onSignOut }) {
                     className="mh-serif mh-roll-pop"
                     onClick={(e) => e.stopPropagation()}
                     style={{
-                      background: "#2E2939",
-                      color: "#ECE6DA",
+                      background: "var(--mh-line)",
+                      color: "var(--mh-ink)",
                       borderRadius: 14,
                       padding: "20px 30px",
                       minWidth: 280,
@@ -6819,11 +6896,11 @@ export default function App({ onSignOut }) {
                       border: "1px solid " + traitRollResult.color,
                     }}
                   >
-                    <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 12, color: "#9C93AD", marginBottom: 6 }}>
+                    <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 12, color: "var(--mh-muted)", marginBottom: 6 }}>
                       {traitRollResult.traitLabel}
                     </div>
                     <DualityResult roll={traitRollResult} size={72} />
-                    <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 10, color: "#9C93AD", marginTop: 10 }}>
+                    <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 10, color: "var(--mh-muted)", marginTop: 10 }}>
                       Pulsa fuera para cerrar
                     </div>
                   </div>
@@ -6833,12 +6910,12 @@ export default function App({ onSignOut }) {
                       className="mh-appear-late"
                       onClick={(e) => e.stopPropagation()}
                       style={{
-                        background: "#1B1824",
+                        background: "var(--mh-panel)",
                         borderRadius: 14,
                         padding: "20px 24px",
                         textAlign: "center",
                         boxShadow: "0 12px 30px rgba(0,0,0,0.35)",
-                        border: "1px solid #2E2939",
+                        border: "1px solid var(--mh-line)",
                         display: "flex",
                         flexDirection: "column",
                         justifyContent: "center",
@@ -6846,9 +6923,9 @@ export default function App({ onSignOut }) {
                         minWidth: 180,
                       }}
                     >
-                      <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 12.5, color: "#B7AEC6", fontWeight: 600 }}>
+                      <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 12.5, color: "var(--mh-ink3)", fontWeight: 600 }}>
                         {traitRollResult.hope === traitRollResult.fear && (
-                          <div style={{ color: "#7FB77A", fontWeight: 700, marginBottom: 4 }}>¡Crítico! Daño máximo + tirada</div>
+                          <div style={{ color: "var(--mh-green-ink)", fontWeight: 700, marginBottom: 4 }}>¡Crítico! Daño máximo + tirada</div>
                         )}
                         ¿Impactó el ataque con {traitRollResult.weapon.name}?
                       </div>
@@ -6882,7 +6959,7 @@ export default function App({ onSignOut }) {
                 onClick={() => setRampageResult(null)}
               >
                 <div
-                  className="mh-rampage-card"
+                  className="mh-rampage-card mh-keep-dark"
                   onClick={(e) => e.stopPropagation()}
                   style={{
                     position: "relative",
@@ -6896,7 +6973,7 @@ export default function App({ onSignOut }) {
                   }}
                 >
                   <RampageResult roll={rampageResult} />
-                  <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 10, color: "#9C93AD", marginTop: 12, textAlign: "center" }}>
+                  <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 10, color: "var(--mh-muted)", marginTop: 12, textAlign: "center" }}>
                     Pulsa fuera para cerrar
                   </div>
                 </div>
@@ -6920,8 +6997,8 @@ export default function App({ onSignOut }) {
                   className="mh-serif mh-roll-pop"
                   onClick={(e) => e.stopPropagation()}
                   style={{
-                    background: "#2E2939",
-                    color: "#ECE6DA",
+                    background: "var(--mh-line)",
+                    color: "var(--mh-ink)",
                     borderRadius: 14,
                     padding: "20px 30px",
                     minWidth: 260,
@@ -6932,11 +7009,11 @@ export default function App({ onSignOut }) {
                     border: "1px solid " + (damageRollResult.isCritical ? "#7FB77A" : "#D9644E"),
                   }}
                 >
-                  <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 12, color: "#9C93AD", marginBottom: 6 }}>
+                  <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 12, color: "var(--mh-muted)", marginBottom: 6 }}>
                     Daño · {damageRollResult.weaponName}
                   </div>
                   <DamageResult roll={damageRollResult} />
-                  <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 10, color: "#9C93AD", marginTop: 10 }}>
+                  <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 10, color: "var(--mh-muted)", marginTop: 10 }}>
                     Pulsa fuera para cerrar
                   </div>
                 </div>
@@ -6957,11 +7034,11 @@ export default function App({ onSignOut }) {
                 onClick={() => setAvoidDeathRollResult(null)}
               >
                 <div
-                  className="mh-serif"
+                  className="mh-serif mh-keep-dark"
                   onClick={(e) => e.stopPropagation()}
                   style={{
                     background: "#1A1A1A",
-                    color: "#ECE6DA",
+                    color: "var(--mh-ink)",
                     borderRadius: 14,
                     padding: "24px 38px",
                     textAlign: "center",
@@ -6969,10 +7046,10 @@ export default function App({ onSignOut }) {
                     border: "1px solid " + (avoidDeathRollResult.scarred ? "#D9644E" : "#7FB77A"),
                   }}
                 >
-                  <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 12, color: "#857C96", marginBottom: 6 }}>
+                  <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 12, color: "var(--mh-muted2)", marginBottom: 6 }}>
                     {avoidDeathRollResult.who} evita la muerte · Dado de Esperanza
                   </div>
-                  <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 13, color: "#B7AEC6", marginBottom: 4 }}>
+                  <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 13, color: "var(--mh-ink3)", marginBottom: 4 }}>
                     d12 ({avoidDeathRollResult.roll}) vs Nivel {avoidDeathRollResult.level}
                   </div>
                   <div style={{ fontSize: 44, fontWeight: 700 }}>{avoidDeathRollResult.roll}</div>
@@ -6981,7 +7058,7 @@ export default function App({ onSignOut }) {
                       fontFamily: "'Inter', system-ui, sans-serif",
                       fontSize: 13,
                       fontWeight: 700,
-                      color: avoidDeathRollResult.scarred ? "#D9644E" : "#7FB77A",
+                      color: ink(avoidDeathRollResult.scarred ? "#D9644E" : "#7FB77A"),
                       marginTop: 4,
                     }}
                   >
@@ -6992,7 +7069,7 @@ export default function App({ onSignOut }) {
                       Se han tachado todas las casillas de Esperanza. Es hora de despedirse de este personaje.
                     </div>
                   )}
-                  <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 10, color: "#9C93AD", marginTop: 10 }}>
+                  <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 10, color: "var(--mh-muted)", marginTop: 10 }}>
                     Pulsa fuera para cerrar
                   </div>
                 </div>
@@ -7013,11 +7090,11 @@ export default function App({ onSignOut }) {
                 onClick={() => riskItAllResult.outcome !== "hope" && setRiskItAllResult(null)}
               >
                 <div
-                  className="mh-serif"
+                  className="mh-serif mh-keep-dark"
                   onClick={(e) => e.stopPropagation()}
                   style={{
                     background: "#1A1A1A",
-                    color: "#ECE6DA",
+                    color: "var(--mh-ink)",
                     borderRadius: 14,
                     padding: "24px 38px",
                     textAlign: "center",
@@ -7026,22 +7103,22 @@ export default function App({ onSignOut }) {
                     minWidth: 260,
                   }}
                 >
-                  <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 12, color: "#857C96", marginBottom: 6 }}>
+                  <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 12, color: "var(--mh-muted2)", marginBottom: 6 }}>
                     {riskItAllResult.who} lo arriesga todo · Dados de Dualidad
                   </div>
                   <div style={{ display: "flex", justifyContent: "center", gap: 22, marginBottom: 6 }}>
                     <div>
-                      <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 10.5, color: "#9C93AD" }}>Esperanza</div>
-                      <div style={{ fontSize: 32, fontWeight: 700, color: "#E3B04B" }}>{riskItAllResult.hopeDie}</div>
+                      <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 10.5, color: "var(--mh-muted)" }}>Esperanza</div>
+                      <div style={{ fontSize: 32, fontWeight: 700, color: "var(--mh-gold-ink)" }}>{riskItAllResult.hopeDie}</div>
                     </div>
                     <div>
-                      <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 10.5, color: "#9C93AD" }}>Miedo</div>
-                      <div style={{ fontSize: 32, fontWeight: 700, color: "#A58BE8" }}>{riskItAllResult.fearDie}</div>
+                      <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 10.5, color: "var(--mh-muted)" }}>Miedo</div>
+                      <div style={{ fontSize: 32, fontWeight: 700, color: "var(--mh-purple-ink)" }}>{riskItAllResult.fearDie}</div>
                     </div>
                   </div>
 
                   {riskItAllResult.outcome === "critical" && (
-                    <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 13, fontWeight: 700, color: "#7FB77A", marginTop: 6 }}>
+                    <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 13, fontWeight: 700, color: "var(--mh-green-ink)", marginTop: 6 }}>
                       ¡Crítico! Se mantiene en pie, recupera todos sus PV y se quita todo el Estrés.
                     </div>
                   )}
@@ -7060,15 +7137,15 @@ export default function App({ onSignOut }) {
                     const isComplete = remaining <= 0 || totalCleared >= totalAvailable;
                     return (
                       <div style={{ marginTop: 10 }}>
-                        <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 12.5, fontWeight: 700, color: "#7FB77A", marginBottom: 4 }}>
+                        <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 12.5, fontWeight: 700, color: "var(--mh-green-ink)", marginBottom: 4 }}>
                           Se mantiene en pie. Pulsa hasta {hopeDie} casillas de Vida o Estrés para liberarlas, como prefieras.
                         </div>
-                        <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 11.5, color: isComplete ? "#7FB77A" : "#B7AEC6", marginBottom: 14 }}>
+                        <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 11.5, color: ink(isComplete ? "#7FB77A" : "var(--mh-ink3)"), marginBottom: 14 }}>
                           {remaining > 0 ? `Puntos por usar: ${remaining}` : "¡Completado!"}
                         </div>
 
                         <div style={{ marginBottom: 14 }}>
-                          <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 10.5, color: "#9C93AD", marginBottom: 6 }}>
+                          <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 10.5, color: "var(--mh-muted)", marginBottom: 6 }}>
                             Vida ({hpMarkedAtStart - hpClear}/{hpMarkedAtStart} marcada)
                           </div>
                           {hpMarkedAtStart > 0 ? (
@@ -7094,12 +7171,12 @@ export default function App({ onSignOut }) {
                               })}
                             </div>
                           ) : (
-                            <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 11, color: "#B7AEC6", fontStyle: "italic" }}>Sin Vida marcada.</div>
+                            <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 11, color: "var(--mh-ink3)", fontStyle: "italic" }}>Sin Vida marcada.</div>
                           )}
                         </div>
 
                         <div style={{ marginBottom: 16 }}>
-                          <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 10.5, color: "#9C93AD", marginBottom: 6 }}>
+                          <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 10.5, color: "var(--mh-muted)", marginBottom: 6 }}>
                             Estrés ({stressMarkedAtStart - stressClear}/{stressMarkedAtStart} marcado)
                           </div>
                           {stressMarkedAtStart > 0 ? (
@@ -7125,7 +7202,7 @@ export default function App({ onSignOut }) {
                               })}
                             </div>
                           ) : (
-                            <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 11, color: "#B7AEC6", fontStyle: "italic" }}>Sin Estrés marcado.</div>
+                            <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 11, color: "var(--mh-ink3)", fontStyle: "italic" }}>Sin Estrés marcado.</div>
                           )}
                         </div>
 
@@ -7142,7 +7219,7 @@ export default function App({ onSignOut }) {
                   })()}
 
                   {riskItAllResult.outcome !== "hope" && (
-                    <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 10, color: "#9C93AD", marginTop: 10 }}>
+                    <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 10, color: "var(--mh-muted)", marginTop: 10 }}>
                       Pulsa fuera para cerrar
                     </div>
                   )}
@@ -7169,11 +7246,11 @@ export default function App({ onSignOut }) {
                   style={{ margin: 0, width: "min(560px, 100%)", maxHeight: "82%", overflowY: "auto", padding: "22px 24px" }}
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <div style={{ fontSize: 11.5, color: "#9C93AD", marginBottom: 2 }}>Característica de Esperanza · 3 de Esperanza</div>
+                  <div style={{ fontSize: 11.5, color: "var(--mh-muted)", marginBottom: 2 }}>Característica de Esperanza · 3 de Esperanza</div>
                   <h2 className="mh-serif" style={{ margin: "0 0 4px", fontSize: 19, fontWeight: 600 }}>
                     Evolución
                   </h2>
-                  <div style={{ fontSize: 12.5, color: "#B7AEC6", marginBottom: 18 }}>
+                  <div style={{ fontSize: 12.5, color: "var(--mh-ink3)", marginBottom: 18 }}>
                     Te transformas en una Forma de Bestia sin marcar Estrés. Elige un rasgo para subirlo +1 mientras
                     mantengas esa forma.
                   </div>
@@ -7187,9 +7264,9 @@ export default function App({ onSignOut }) {
                         style={{
                           padding: "7px 13px",
                           borderRadius: 20,
-                          border: "1px solid " + (evoBeastform === b.key ? b.color : "#3A3448"),
-                          background: evoBeastform === b.key ? b.color + "1A" : "#1B1824",
-                          color: evoBeastform === b.key ? b.color : "#ECE6DA",
+                          border: "1px solid " + (evoBeastform === b.key ? b.color : "var(--mh-line2)"),
+                          background: evoBeastform === b.key ? b.color + "1A" : "var(--mh-panel)",
+                          color: ink(evoBeastform === b.key ? b.color : "var(--mh-ink)"),
                           fontSize: 13,
                           fontWeight: evoBeastform === b.key ? 600 : 500,
                           cursor: "pointer",
@@ -7209,9 +7286,9 @@ export default function App({ onSignOut }) {
                         style={{
                           padding: "7px 13px",
                           borderRadius: 20,
-                          border: "1px solid " + (evoTrait === t.key ? "#7FB77A" : "#3A3448"),
-                          background: evoTrait === t.key ? "#7FB77A14" : "#1B1824",
-                          color: evoTrait === t.key ? "#7FB77A" : "#ECE6DA",
+                          border: "1px solid " + (evoTrait === t.key ? "#7FB77A" : "var(--mh-line2)"),
+                          background: evoTrait === t.key ? "#7FB77A14" : "var(--mh-panel)",
+                          color: ink(evoTrait === t.key ? "#7FB77A" : "var(--mh-ink)"),
                           fontSize: 13,
                           fontWeight: evoTrait === t.key ? 600 : 500,
                           cursor: "pointer",
@@ -7253,6 +7330,7 @@ export default function App({ onSignOut }) {
                 }}
               >
                 <div
+                  className="mh-keep-dark"
                   style={{
                     margin: 0,
                     width: "min(720px, 100%)",
@@ -7267,27 +7345,27 @@ export default function App({ onSignOut }) {
                 >
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", marginBottom: 6 }}>
                     <Skull size={34} color="#857C96" style={{ marginBottom: 10 }} />
-                    <div className="mh-serif" style={{ fontSize: 21, fontWeight: 700, color: "#ECE6DA", letterSpacing: 0.3 }}>
+                    <div className="mh-serif" style={{ fontSize: 21, fontWeight: 700, color: "var(--mh-ink)", letterSpacing: 0.3 }}>
                       {c.f_name || "Tu personaje"} ha caído
                     </div>
                   </div>
-                  <div style={{ fontSize: 13, color: "#857C96", marginBottom: 24, textAlign: "center" }}>
+                  <div style={{ fontSize: 13, color: "var(--mh-muted2)", marginBottom: 24, textAlign: "center" }}>
                     Ha marcado su último Punto de vida. Elige un movimiento de muerte:
                   </div>
 
                   <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 14, marginBottom: 20 }}>
                     <div style={{ border: "1px solid #5A5A5A", background: "#232323", borderRadius: 10, padding: "16px 14px", display: "flex", flexDirection: "column" }}>
-                      <div className="mh-serif" style={{ fontSize: 14.5, fontWeight: 700, color: "#ECE6DA", marginBottom: 8 }}>
+                      <div className="mh-serif" style={{ fontSize: 14.5, fontWeight: 700, color: "var(--mh-ink)", marginBottom: 8 }}>
                         Muerte Gloriosa
                       </div>
-                      <div style={{ fontSize: 12, color: "#857C96", lineHeight: 1.5, flex: 1, marginBottom: 12 }}>
+                      <div style={{ fontSize: 12, color: "var(--mh-muted2)", lineHeight: 1.5, flex: 1, marginBottom: 12 }}>
                         Tu personaje acepta la muerte y se despide con una última gran hazaña. Realiza una acción (a
                         discreción del DJ) que consigue un éxito crítico automático, y después cruza el velo de la
                         muerte.
                       </div>
                       <button
                         className="mh-btn"
-                        style={{ width: "100%", justifyContent: "center", fontSize: 11, padding: "8px 6px", whiteSpace: "nowrap", background: "#2E2939", color: "#ECE6DA", border: "1px solid #5A5A5A" }}
+                        style={{ width: "100%", justifyContent: "center", fontSize: 11, padding: "8px 6px", whiteSpace: "nowrap", background: "var(--mh-line)", color: "var(--mh-ink)", border: "1px solid #5A5A5A" }}
                         onClick={() => confirmBlazeOfGlory(viewingCharId)}
                       >
                         Describe tu acción y muere
@@ -7295,10 +7373,10 @@ export default function App({ onSignOut }) {
                     </div>
 
                     <div style={{ border: "1px solid #5A5A5A", background: "#232323", borderRadius: 10, padding: "16px 14px", display: "flex", flexDirection: "column" }}>
-                      <div className="mh-serif" style={{ fontSize: 14.5, fontWeight: 700, color: "#ECE6DA", marginBottom: 8 }}>
+                      <div className="mh-serif" style={{ fontSize: 14.5, fontWeight: 700, color: "var(--mh-ink)", marginBottom: 8 }}>
                         Evitar la muerte
                       </div>
-                      <div style={{ fontSize: 12, color: "#857C96", lineHeight: 1.5, flex: 1, marginBottom: 12 }}>
+                      <div style={{ fontSize: 12, color: "var(--mh-muted2)", lineHeight: 1.5, flex: 1, marginBottom: 12 }}>
                         Tu personaje evita la muerte, pero sufre las consecuencias. Cae inconsciente: no puede
                         moverse, actuar, ni ser objetivo de ataques. Vuelve en sí cuando un aliado le cure algún Punto
                         de vida o al terminar un descanso largo. Después, tira tu Dado de Esperanza — si su valor es
@@ -7306,7 +7384,7 @@ export default function App({ onSignOut }) {
                       </div>
                       <button
                         className="mh-btn"
-                        style={{ width: "100%", justifyContent: "center", fontSize: 11, padding: "8px 6px", whiteSpace: "nowrap", background: "#2E2939", color: "#ECE6DA", border: "1px solid #5A5A5A" }}
+                        style={{ width: "100%", justifyContent: "center", fontSize: 11, padding: "8px 6px", whiteSpace: "nowrap", background: "var(--mh-line)", color: "var(--mh-ink)", border: "1px solid #5A5A5A" }}
                         onClick={() => confirmAvoidDeath(viewingCharId)}
                       >
                         Evitar la muerte
@@ -7314,10 +7392,10 @@ export default function App({ onSignOut }) {
                     </div>
 
                     <div style={{ border: "1px solid #5A5A5A", background: "#232323", borderRadius: 10, padding: "16px 14px", display: "flex", flexDirection: "column" }}>
-                      <div className="mh-serif" style={{ fontSize: 14.5, fontWeight: 700, color: "#ECE6DA", marginBottom: 8 }}>
+                      <div className="mh-serif" style={{ fontSize: 14.5, fontWeight: 700, color: "var(--mh-ink)", marginBottom: 8 }}>
                         Arriesgarlo todo
                       </div>
-                      <div style={{ fontSize: 12, color: "#857C96", lineHeight: 1.5, flex: 1, marginBottom: 12 }}>
+                      <div style={{ fontSize: 12, color: "var(--mh-muted2)", lineHeight: 1.5, flex: 1, marginBottom: 12 }}>
                         Tira tus Dados de Dualidad. Si el de Esperanza es mayor, te mantienes en pie y liberas tantas
                         casillas de Puntos de vida o Estrés como marque ese dado (repartidas como prefieras). Si el de
                         Miedo es mayor, cruzas el velo de la muerte. Con un crítico, te mantienes en pie, recuperas
@@ -7325,7 +7403,7 @@ export default function App({ onSignOut }) {
                       </div>
                       <button
                         className="mh-btn"
-                        style={{ width: "100%", justifyContent: "center", fontSize: 11, padding: "8px 6px", whiteSpace: "nowrap", background: "#2E2939", color: "#ECE6DA", border: "1px solid #5A5A5A" }}
+                        style={{ width: "100%", justifyContent: "center", fontSize: 11, padding: "8px 6px", whiteSpace: "nowrap", background: "var(--mh-line)", color: "var(--mh-ink)", border: "1px solid #5A5A5A" }}
                         onClick={() => confirmRiskItAll(viewingCharId)}
                       >
                         Arriesgarlo todo
@@ -7355,10 +7433,10 @@ export default function App({ onSignOut }) {
                   style={{ margin: 0, width: "min(380px, 100%)" }}
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <div className="mh-serif" style={{ fontSize: 16, fontWeight: 700, color: "#ECE6DA", marginBottom: 10 }}>
+                  <div className="mh-serif" style={{ fontSize: 16, fontWeight: 700, color: "var(--mh-ink)", marginBottom: 10 }}>
                     Arma de dos manos
                   </div>
-                  <div style={{ fontSize: 13, color: "#ECE6DA", lineHeight: 1.5, marginBottom: 18 }}>
+                  <div style={{ fontSize: 13, color: "var(--mh-ink)", lineHeight: 1.5, marginBottom: 18 }}>
                     {pendingTwoHandedSwap.itemName} se empuña con las dos manos. Si te la equipas, no podrás seguir
                     usando tu arma secundaria — se guardará automáticamente en tu inventario.
                   </div>
@@ -7394,13 +7472,13 @@ export default function App({ onSignOut }) {
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-                    <div className="mh-serif" style={{ fontSize: 17, fontWeight: 700, color: "#ECE6DA" }}>
+                    <div className="mh-serif" style={{ fontSize: 17, fontWeight: 700, color: "var(--mh-ink)" }}>
                       Añadir objeto
                     </div>
                     <X size={16} style={{ cursor: "pointer" }} onClick={() => setShowAddItemModal(false)} />
                   </div>
 
-                  <div style={{ display: "flex", gap: 4, background: "#221E2C", border: "1px solid #2E2939", borderRadius: 30, padding: 4, width: "fit-content", marginBottom: 16 }}>
+                  <div style={{ display: "flex", gap: 4, background: "var(--mh-panel2)", border: "1px solid var(--mh-line)", borderRadius: 30, padding: 4, width: "fit-content", marginBottom: 16 }}>
                     {[
                       { key: "catalog", label: "Del juego" },
                       { key: "custom", label: "Personalizado" },
@@ -7414,8 +7492,8 @@ export default function App({ onSignOut }) {
                           cursor: "pointer",
                           fontSize: 12.5,
                           fontWeight: 600,
-                          background: addItemModalTab === t.key ? "#2E2939" : "transparent",
-                          color: addItemModalTab === t.key ? "#ECE6DA" : "#B7AEC6",
+                          background: addItemModalTab === t.key ? "var(--mh-line)" : "transparent",
+                          color: ink(addItemModalTab === t.key ? "var(--mh-ink)" : "var(--mh-ink3)"),
                         }}
                       >
                         {t.label}
@@ -7432,7 +7510,7 @@ export default function App({ onSignOut }) {
                         { label: "Armaduras", data: ARMORS.map((a) => ({ name: a.key, description: `Puntuación ${a.score} · Umbrales ${a.major}/${a.severe}` })) },
                       ].map((group) => (
                         <div key={group.label}>
-                          <div style={{ fontSize: 10.5, fontWeight: 700, color: "#E3B04B", textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 6 }}>
+                          <div style={{ fontSize: 10.5, fontWeight: 700, color: "var(--mh-gold-ink)", textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 6 }}>
                             {group.label}
                           </div>
                           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -7445,14 +7523,14 @@ export default function App({ onSignOut }) {
                                   justifyContent: "space-between",
                                   alignItems: "center",
                                   gap: 8,
-                                  border: "1px solid #2E2939",
+                                  border: "1px solid var(--mh-line)",
                                   borderRadius: 8,
                                   padding: "8px 12px",
                                   cursor: "pointer",
                                 }}
                               >
-                                <span style={{ fontSize: 13, fontWeight: 600, color: "#ECE6DA" }}>{entry.name}</span>
-                                <span style={{ fontSize: 11, color: "#9C93AD", textAlign: "right" }}>{entry.description}</span>
+                                <span style={{ fontSize: 13, fontWeight: 600, color: "var(--mh-ink)" }}>{entry.name}</span>
+                                <span style={{ fontSize: 11, color: "var(--mh-muted)", textAlign: "right" }}>{entry.description}</span>
                               </div>
                             ))}
                           </div>
@@ -7503,10 +7581,10 @@ export default function App({ onSignOut }) {
                   style={{ margin: 0, width: "min(400px, 100%)" }}
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <div className="mh-serif" style={{ fontSize: 16, fontWeight: 700, color: "#ECE6DA", marginBottom: 10 }}>
+                  <div className="mh-serif" style={{ fontSize: 16, fontWeight: 700, color: "var(--mh-ink)", marginBottom: 10 }}>
                     Lengua de la Naturaleza
                   </div>
-                  <div style={{ fontSize: 13.5, color: "#ECE6DA", lineHeight: 1.5, marginBottom: 18 }}>
+                  <div style={{ fontSize: 13.5, color: "var(--mh-ink)", lineHeight: 1.5, marginBottom: 18 }}>
                     Si estás en un entorno natural, gracias a la carta Lengua de la Naturaleza puedes gastar una Esperanza
                     para ganar +2 a esta tirada de conjuro.
                   </div>
@@ -7604,7 +7682,7 @@ export default function App({ onSignOut }) {
                           style={{
                             width: "100%",
                             height: imgHeight,
-                            background: "linear-gradient(160deg, #2A2436 0%, #3A3150 100%)",
+                            background: "linear-gradient(160deg, var(--mh-panel3) 0%, #3A3150 100%)",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
@@ -7701,14 +7779,14 @@ export default function App({ onSignOut }) {
                         const textLine = Math.round((1.55 - textScale * 0.3) * 100) / 100;
                         return (
                           <>
-                            <div style={{ fontSize: textSize, color: "#ECE6DA", lineHeight: textLine, marginBottom: viewingCardDetail.features ? (compact ? 8 : 14) : 16 }}>
+                            <div style={{ fontSize: textSize, color: "var(--mh-ink)", lineHeight: textLine, marginBottom: viewingCardDetail.features ? (compact ? 8 : 14) : 16 }}>
                               {viewingCardDetail.text}
                             </div>
                             {viewingCardDetail.features && (
                               <div style={{ display: "flex", flexDirection: "column", gap: compact ? 4 : 10, marginBottom: compact ? 8 : 16 }}>
                                 {viewingCardDetail.features.map((f) => (
-                                  <div key={f.name} style={{ fontSize: compact ? 10.5 : 13, color: "#ECE6DA", lineHeight: compact ? 1.3 : 1.5 }}>
-                                    <span style={{ fontWeight: 700, color: "#E3B04B" }}>{f.name}:</span> {f.text}
+                                  <div key={f.name} style={{ fontSize: compact ? 10.5 : 13, color: "var(--mh-ink)", lineHeight: compact ? 1.3 : 1.5 }}>
+                                    <span style={{ fontWeight: 700, color: "var(--mh-gold-ink)" }}>{f.name}:</span> {f.text}
                                   </div>
                                 ))}
                               </div>
@@ -7718,11 +7796,11 @@ export default function App({ onSignOut }) {
                       })()}
                       {viewingCardDetail.showCharacteristic && (
                         <>
-                          <div style={{ borderTop: "1px solid #2E2939", margin: "2px 0 12px" }} />
-                          <div style={{ fontSize: 10.5, fontWeight: 700, color: "#E3B04B", textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 4 }}>
+                          <div style={{ borderTop: "1px solid var(--mh-line)", margin: "2px 0 12px" }} />
+                          <div style={{ fontSize: 10.5, fontWeight: 700, color: "var(--mh-gold-ink)", textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 4 }}>
                             Característica
                           </div>
-                          <div style={{ fontSize: 13, color: "#ECE6DA", lineHeight: 1.5, marginBottom: 16 }}>
+                          <div style={{ fontSize: 13, color: "var(--mh-ink)", lineHeight: 1.5, marginBottom: 16 }}>
                             {viewingCardDetail.characteristic || "—"}
                           </div>
                         </>
@@ -7735,7 +7813,7 @@ export default function App({ onSignOut }) {
                               style={{
                                 fontSize: 11.5,
                                 fontWeight: 600,
-                                color: "#E3B04B",
+                                color: "var(--mh-gold-ink)",
                                 background: "#E3B04B14",
                                 padding: "5px 12px",
                                 borderRadius: 20,
@@ -7791,25 +7869,25 @@ export default function App({ onSignOut }) {
                     onPointerLeave={resetCardTilt}
                   >
                     <div className="mh-glare" />
-                    <div style={{ background: viewingCardDetail.accent || "#E3B04B", color: viewingCardDetail.accent ? "#FFFFFF" : "#1F1606", padding: "10px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ background: viewingCardDetail.accent || "#E3B04B", color: ink(viewingCardDetail.accent ? "#FFFFFF" : "#1F1606"), padding: "10px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4 }}>
                         {viewingCardDetail.kicker}
                       </span>
                       <X size={16} style={{ cursor: "pointer" }} onClick={closeCardDetail} />
                     </div>
                     <div style={{ padding: "20px 22px" }}>
-                      <div className="mh-serif" style={{ fontSize: 19, fontWeight: 700, color: "#ECE6DA", marginBottom: 12 }}>
+                      <div className="mh-serif" style={{ fontSize: 19, fontWeight: 700, color: "var(--mh-ink)", marginBottom: 12 }}>
                         {viewingCardDetail.title}
                       </div>
-                      <div style={{ fontSize: 14, color: "#ECE6DA", lineHeight: 1.55, marginBottom: viewingCardDetail.features ? 14 : 0 }}>
+                      <div style={{ fontSize: 14, color: "var(--mh-ink)", lineHeight: 1.55, marginBottom: viewingCardDetail.features ? 14 : 0 }}>
                         {viewingCardDetail.text}
                       </div>
                       {viewingCardDetail.features && (
                         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                           {viewingCardDetail.features.map((f) => (
                             <div key={f.name}>
-                              <div style={{ fontSize: 13.5, fontWeight: 700, color: "#E3B04B", marginBottom: 2 }}>{f.name}</div>
-                              <div style={{ fontSize: 13.5, color: "#ECE6DA", lineHeight: 1.5 }}>{f.text}</div>
+                              <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--mh-gold-ink)", marginBottom: 2 }}>{f.name}</div>
+                              <div style={{ fontSize: 13.5, color: "var(--mh-ink)", lineHeight: 1.5 }}>{f.text}</div>
                             </div>
                           ))}
                         </div>
@@ -7843,10 +7921,10 @@ export default function App({ onSignOut }) {
                     style={{ margin: 0, width: "min(680px, 100%)", maxHeight: "82%", overflowY: "auto", padding: "22px 24px" }}
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <div className="mh-serif" style={{ fontSize: 17, fontWeight: 700, color: "#ECE6DA", marginBottom: 4 }}>
+                    <div className="mh-serif" style={{ fontSize: 17, fontWeight: 700, color: "var(--mh-ink)", marginBottom: 4 }}>
                       Cambiar cartas de dominio
                     </div>
-                    <div style={{ fontSize: 12.5, color: "#9C93AD", marginBottom: 16 }}>
+                    <div style={{ fontSize: 12.5, color: "var(--mh-muted)", marginBottom: 16 }}>
                       Elige hasta {tempCardLimit} cartas de nivel {charLevel} o inferior entre {domains.join(" y ")}. Seleccionadas: {tempDomainCards.length}/{tempCardLimit}.
                     </div>
 
@@ -7865,8 +7943,8 @@ export default function App({ onSignOut }) {
                                     key={card.key}
                                     onClick={() => !disabled && toggleTempDomainCard(card.key)}
                                     style={{
-                                      border: "1px solid " + (selected ? "#E3B04B" : "#2E2939"),
-                                      background: selected ? "#E3B04B14" : "#221E2C",
+                                      border: "1px solid " + (selected ? "#E3B04B" : "var(--mh-line)"),
+                                      background: selected ? "#E3B04B14" : "var(--mh-panel2)",
                                       borderRadius: 8,
                                       padding: "10px 12px",
                                       cursor: disabled ? "not-allowed" : "pointer",
@@ -7875,12 +7953,12 @@ export default function App({ onSignOut }) {
                                   >
                                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
                                       {selected && <Check size={13} color="#E3B04B" />}
-                                      <span style={{ fontSize: 13.5, fontWeight: 700, color: "#ECE6DA" }}>{card.key}</span>
-                                      <span style={{ fontSize: 10.5, color: "#9C93AD", marginLeft: "auto" }}>
+                                      <span style={{ fontSize: 13.5, fontWeight: 700, color: "var(--mh-ink)" }}>{card.key}</span>
+                                      <span style={{ fontSize: 10.5, color: "var(--mh-muted)", marginLeft: "auto" }}>
                                         Nivel {card.level} · {card.type} · Recuperación {card.recall}
                                       </span>
                                     </div>
-                                    <div style={{ fontSize: 11.5, color: "#B7AEC6", lineHeight: 1.4 }}>{card.text}</div>
+                                    <div style={{ fontSize: 11.5, color: "var(--mh-ink3)", lineHeight: 1.4 }}>{card.text}</div>
                                   </div>
                                 );
                               })}
@@ -7935,7 +8013,7 @@ export default function App({ onSignOut }) {
               style={{ margin: 0, width: "min(720px, 100%)", maxHeight: "82%", overflowY: "auto", padding: "22px 24px" }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div style={{ fontSize: 11.5, color: "#9C93AD", marginBottom: 2 }}>
+              <div style={{ fontSize: 11.5, color: "var(--mh-muted)", marginBottom: 2 }}>
                 {wizardStep === "class" && "Paso 1 de 12 · Elige tu clase"}
                 {wizardStep === "subclass" && `Paso 2 de 12 · Elige tu subclase de ${CLASSES[carouselIndex].key}`}
                 {wizardStep === "level" && "Paso 3 de 12 · Elige tu nivel"}
@@ -7986,7 +8064,7 @@ export default function App({ onSignOut }) {
                             fontSize: 10.5,
                             fontWeight: 600,
                             letterSpacing: 0.2,
-                            color: "#A58BE8",
+                            color: "var(--mh-purple-ink)",
                             background: "#A58BE822",
                             padding: "2px 9px",
                             borderRadius: 20,
@@ -7995,13 +8073,13 @@ export default function App({ onSignOut }) {
                           Expansión · {current.expansion}
                         </span>
                       )}
-                      <div className="mh-serif" style={{ fontSize: 22, fontWeight: 700, color: current.expansion ? "#A58BE8" : "#E3B04B" }}>
+                      <div className="mh-serif" style={{ fontSize: 22, fontWeight: 700, color: ink(current.expansion ? "#A58BE8" : "#E3B04B") }}>
                         {current.key}
                       </div>
                       <div
                         style={{
                           fontSize: 13,
-                          color: "#B7AEC6",
+                          color: "var(--mh-ink3)",
                           display: "-webkit-box",
                           WebkitLineClamp: 2,
                           WebkitBoxOrient: "vertical",
@@ -8032,7 +8110,7 @@ export default function App({ onSignOut }) {
                           height: 7,
                           borderRadius: "50%",
                           cursor: "pointer",
-                          background: i === stepIndex ? "#E3B04B" : "#2E2939",
+                          background: i === stepIndex ? "#E3B04B" : "var(--mh-line)",
                         }}
                       />
                     ))}
@@ -8050,10 +8128,10 @@ export default function App({ onSignOut }) {
                       marginBottom: 18,
                     }}
                   >
-                    <div className="mh-serif" style={{ fontSize: 30, fontWeight: 700, color: "#E3B04B" }}>
+                    <div className="mh-serif" style={{ fontSize: 30, fontWeight: 700, color: "var(--mh-gold-ink)" }}>
                       Nivel {levelChoice}
                     </div>
-                    <div style={{ fontSize: 12.5, color: "#B7AEC6", marginTop: 2 }}>
+                    <div style={{ fontSize: 12.5, color: "var(--mh-ink3)", marginTop: 2 }}>
                       {TIERS.find((t) => t.levels.includes(levelChoice))?.label} ·{" "}
                       {TIERS.find((t) => t.levels.includes(levelChoice))?.sub}
                     </div>
@@ -8083,8 +8161,8 @@ export default function App({ onSignOut }) {
                             background: active ? "#E3B04B14" : "transparent",
                           }}
                         >
-                          <div style={{ fontSize: 11, fontWeight: 600, color: active ? "#E3B04B" : "#9C93AD" }}>{t.label}</div>
-                          <div style={{ fontSize: 9.5, color: "#9C93AD" }}>
+                          <div style={{ fontSize: 11, fontWeight: 600, color: ink(active ? "#E3B04B" : "var(--mh-muted)") }}>{t.label}</div>
+                          <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>
                             {t.levels.length === 1 ? `Nv. ${t.levels[0]}` : `Nv. ${t.levels[0]}-${t.levels[t.levels.length - 1]}`}
                           </div>
                         </div>
@@ -8148,8 +8226,8 @@ export default function App({ onSignOut }) {
                             textAlign: "center",
                             padding: "10px 6px",
                             borderRadius: 8,
-                            border: "1px solid " + (active ? "#E3B04B" : "#2E2939"),
-                            background: active ? "#E3B04B14" : "#221E2C",
+                            border: "1px solid " + (active ? "#E3B04B" : "var(--mh-line)"),
+                            background: active ? "#E3B04B14" : "var(--mh-panel2)",
                             display: "flex",
                             flexDirection: "column",
                             alignItems: "center",
@@ -8158,10 +8236,10 @@ export default function App({ onSignOut }) {
                         >
                           <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                             <Icon size={14} color={active ? "#E3B04B" : "#B7AEC6"} />
-                            <span style={{ fontSize: 12.5, fontWeight: 600, color: active ? "#E3B04B" : "#ECE6DA" }}>{t.label}</span>
+                            <span style={{ fontSize: 12.5, fontWeight: 600, color: ink(active ? "#E3B04B" : "var(--mh-ink)") }}>{t.label}</span>
                           </div>
                           {t.done && (
-                            <span style={{ display: "inline-flex", alignItems: "center", gap: 2, fontSize: 10, color: "#7FB77A" }}>
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 2, fontSize: 10, color: "var(--mh-green-ink)" }}>
                               <Check size={10} /> listo
                             </span>
                           )}
@@ -8180,8 +8258,8 @@ export default function App({ onSignOut }) {
                           gap: 10,
                           marginBottom: 14,
                           cursor: "pointer",
-                          border: "1px solid " + (mixAncestry ? "#E3B04B" : "#2E2939"),
-                          background: mixAncestry ? "#E3B04B14" : "#221E2C",
+                          border: "1px solid " + (mixAncestry ? "#E3B04B" : "var(--mh-line)"),
+                          background: mixAncestry ? "#E3B04B14" : "var(--mh-panel2)",
                           borderRadius: 8,
                           padding: "10px 12px",
                         }}
@@ -8191,7 +8269,7 @@ export default function App({ onSignOut }) {
                             width: 36,
                             height: 20,
                             borderRadius: 20,
-                            background: mixAncestry ? "#E3B04B" : "#3A3448",
+                            background: mixAncestry ? "#E3B04B" : "var(--mh-line2)",
                             position: "relative",
                             flexShrink: 0,
                             transition: "background .15s",
@@ -8205,24 +8283,24 @@ export default function App({ onSignOut }) {
                               width: 16,
                               height: 16,
                               borderRadius: "50%",
-                              background: "#1B1824",
+                              background: "var(--mh-panel)",
                               transition: "left .15s",
                             }}
                           />
                         </div>
                         <div>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: "#ECE6DA" }}>Ascendencia mixta</div>
-                          <div style={{ fontSize: 11, color: "#9C93AD" }}>Combina rasgos de dos ascendencias distintas.</div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: "var(--mh-ink)" }}>Ascendencia mixta</div>
+                          <div style={{ fontSize: 11, color: "var(--mh-muted)" }}>Combina rasgos de dos ascendencias distintas.</div>
                         </div>
                       </div>
 
                       {mixAncestry && (
                         <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-                          <div style={{ flex: 1, textAlign: "center", fontSize: 11.5, color: "#9C93AD" }}>
-                            1ª: <b style={{ color: "#ECE6DA" }}>{draftAncestries[0] || "—"}</b>
+                          <div style={{ flex: 1, textAlign: "center", fontSize: 11.5, color: "var(--mh-muted)" }}>
+                            1ª: <b style={{ color: "var(--mh-ink)" }}>{draftAncestries[0] || "—"}</b>
                           </div>
-                          <div style={{ flex: 1, textAlign: "center", fontSize: 11.5, color: "#9C93AD" }}>
-                            2ª: <b style={{ color: "#ECE6DA" }}>{draftAncestries[1] || "—"}</b>
+                          <div style={{ flex: 1, textAlign: "center", fontSize: 11.5, color: "var(--mh-muted)" }}>
+                            2ª: <b style={{ color: "var(--mh-ink)" }}>{draftAncestries[1] || "—"}</b>
                           </div>
                         </div>
                       )}
@@ -8242,8 +8320,8 @@ export default function App({ onSignOut }) {
                                 gap: 5,
                                 padding: "6px 12px",
                                 borderRadius: 20,
-                                border: "1px solid " + (selected ? (purple ? "#A58BE8" : "#E3B04B") : purple ? "#A58BE866" : "#3A3448"),
-                                color: selected ? (purple ? "#A58BE8" : "#E3B04B") : purple ? "#A58BE8" : "#B7AEC6",
+                                border: "1px solid " + (selected ? (purple ? "#A58BE8" : "#E3B04B") : purple ? "#A58BE866" : "var(--mh-line2)"),
+                                color: ink(selected ? (purple ? "#A58BE8" : "#E3B04B") : purple ? "#A58BE8" : "var(--mh-ink3)"),
                                 background: selected ? (purple ? "#A58BE814" : "#E3B04B14") : "transparent",
                                 fontSize: 13,
                                 cursor: "pointer",
@@ -8255,7 +8333,7 @@ export default function App({ onSignOut }) {
                           );
                         })}
                       </div>
-                      <div style={{ fontSize: 10.5, color: "#9C93AD", marginTop: 6 }}>
+                      <div style={{ fontSize: 10.5, color: "var(--mh-muted)", marginTop: 6 }}>
                         Las ascendencias en morado son de la expansión Hope & Fear.
                       </div>
                     </div>
@@ -8278,8 +8356,8 @@ export default function App({ onSignOut }) {
                                 gap: 5,
                                 padding: "6px 12px",
                                 borderRadius: 20,
-                                border: "1px solid " + (selected ? (purple ? "#A58BE8" : "#E3B04B") : purple ? "#A58BE866" : "#3A3448"),
-                                color: selected ? (purple ? "#A58BE8" : "#E3B04B") : purple ? "#A58BE8" : "#B7AEC6",
+                                border: "1px solid " + (selected ? (purple ? "#A58BE8" : "#E3B04B") : purple ? "#A58BE866" : "var(--mh-line2)"),
+                                color: ink(selected ? (purple ? "#A58BE8" : "#E3B04B") : purple ? "#A58BE8" : "var(--mh-ink3)"),
                                 background: selected ? (purple ? "#A58BE814" : "#E3B04B14") : "transparent",
                                 fontSize: 13,
                                 cursor: "pointer",
@@ -8291,7 +8369,7 @@ export default function App({ onSignOut }) {
                           );
                         })}
                       </div>
-                      <div style={{ fontSize: 10.5, color: "#9C93AD", marginTop: 6 }}>
+                      <div style={{ fontSize: 10.5, color: "var(--mh-muted)", marginTop: 6 }}>
                         Las comunidades en morado son de la expansión Hope & Fear.
                       </div>
                     </div>
@@ -8319,8 +8397,8 @@ export default function App({ onSignOut }) {
                                 gap: 5,
                                 padding: "6px 12px",
                                 borderRadius: 20,
-                                border: "1px solid " + (selected ? "#A58BE8" : "#3A3448"),
-                                color: selected ? "#A58BE8" : "#B7AEC6",
+                                border: "1px solid " + (selected ? "#A58BE8" : "var(--mh-line2)"),
+                                color: ink(selected ? "#A58BE8" : "var(--mh-ink3)"),
                                 background: selected ? "#A58BE814" : "transparent",
                                 fontSize: 13,
                                 cursor: "pointer",
@@ -8332,7 +8410,7 @@ export default function App({ onSignOut }) {
                           );
                         })}
                       </div>
-                      <div style={{ fontSize: 10.5, color: "#9C93AD", marginTop: 6 }}>
+                      <div style={{ fontSize: 10.5, color: "var(--mh-muted)", marginTop: 6 }}>
                         Las transformaciones son de la expansión Hope & Fear.
                       </div>
                     </div>
@@ -8353,7 +8431,7 @@ export default function App({ onSignOut }) {
                     }}
                   >
                     <Languages size={16} color="#E3B04B" />
-                    <div style={{ fontSize: 12.5, color: "#ECE6DA" }}>
+                    <div style={{ fontSize: 12.5, color: "var(--mh-ink)" }}>
                       Todo el mundo habla <b>Común</b> por defecto. Añade otros idiomas si tu personaje los conoce.
                     </div>
                   </div>
@@ -8386,7 +8464,7 @@ export default function App({ onSignOut }) {
                       <Sparkles size={14} /> Recomendados para {CLASSES[carouselIndex]?.key}
                     </button>
                   </div>
-                  <div style={{ fontSize: 12, color: "#B7AEC6", marginBottom: 14 }}>
+                  <div style={{ fontSize: 12, color: "var(--mh-ink3)", marginBottom: 14 }}>
                     Arrastra cada modificador a un rasgo. Puedes arrastrar uno ya colocado a otro rasgo para intercambiarlos, o
                     devolverlo a la bandeja.
                   </div>
@@ -8404,13 +8482,13 @@ export default function App({ onSignOut }) {
                       justifyContent: "center",
                       marginBottom: 20,
                       minHeight: 44,
-                      border: "1px dashed #3A3448",
+                      border: "1px dashed var(--mh-line2)",
                       borderRadius: 8,
                       padding: 10,
                     }}
                   >
                     {traitPool.length === 0 && (
-                      <div style={{ fontSize: 11.5, color: "#9C93AD", alignSelf: "center" }}>
+                      <div style={{ fontSize: 11.5, color: "var(--mh-muted)", alignSelf: "center" }}>
                         Bandeja vacía — todos los modificadores están asignados.
                       </div>
                     )}
@@ -8457,8 +8535,8 @@ export default function App({ onSignOut }) {
                             if (draggedModifier) assignModifierToTrait(draggedModifier.id, t.key);
                           }}
                           style={{
-                            border: "1px solid " + (mod ? "#E3B04B" : "#2E2939"),
-                            background: mod ? "#E3B04B14" : "#221E2C",
+                            border: "1px solid " + (mod ? "#E3B04B" : "var(--mh-line)"),
+                            background: mod ? "#E3B04B14" : "var(--mh-panel2)",
                             borderRadius: 8,
                             padding: "12px 8px",
                             textAlign: "center",
@@ -8469,7 +8547,7 @@ export default function App({ onSignOut }) {
                           }}
                         >
                           <Icon size={18} color={mod ? "#E3B04B" : "#B7AEC6"} />
-                          <div style={{ fontSize: 12, fontWeight: 600, color: "#ECE6DA" }}>{t.label}</div>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: "var(--mh-ink)" }}>{t.label}</div>
                           <div
                             draggable={!!mod}
                             onDragStart={() => mod && setDraggedModifier({ id: modId, fromTrait: t.key })}
@@ -8484,9 +8562,9 @@ export default function App({ onSignOut }) {
                               justifyContent: "center",
                               fontWeight: 700,
                               fontSize: 15,
-                              border: "1px dashed " + (mod ? "#E3B04B" : "#3A3448"),
+                              border: "1px dashed " + (mod ? "#E3B04B" : "var(--mh-line2)"),
                               background: mod ? "#E3B04B" : "transparent",
-                              color: mod ? "#1F1606" : "#3A3448",
+                              color: ink(mod ? "#1F1606" : "var(--mh-line2)"),
                               cursor: mod ? "grab" : "default",
                             }}
                           >
@@ -8504,7 +8582,7 @@ export default function App({ onSignOut }) {
                 </div>
               ) : wizardStep === "stats" ? (
                 <div style={{ marginBottom: 20, textAlign: "center" }}>
-                  <div style={{ fontSize: 12.5, color: "#B7AEC6", marginBottom: 16 }}>
+                  <div style={{ fontSize: 12.5, color: "var(--mh-ink3)", marginBottom: 16 }}>
                     Estas estadísticas se calculan automáticamente según tu clase ({CLASSES[carouselIndex].key}). El
                     Estrés es siempre igual para todo el mundo al empezar.
                   </div>
@@ -8522,8 +8600,8 @@ export default function App({ onSignOut }) {
                       }}
                     >
                       <ShieldCheck size={20} color="#E3B04B" />
-                      <div style={{ fontSize: 11, color: "#9C93AD" }}>Evasión</div>
-                      <div className="mh-serif" style={{ fontSize: 34, fontWeight: 700, color: "#E3B04B" }}>
+                      <div style={{ fontSize: 11, color: "var(--mh-muted)" }}>Evasión</div>
+                      <div className="mh-serif" style={{ fontSize: 34, fontWeight: 700, color: "var(--mh-gold-ink)" }}>
                         {CLASS_EVASION[CLASSES[carouselIndex].key] ?? 10}
                       </div>
                     </div>
@@ -8540,7 +8618,7 @@ export default function App({ onSignOut }) {
                       }}
                     >
                       <Heart size={20} color="#D9644E" />
-                      <div style={{ fontSize: 11, color: "#9C93AD" }}>Puntos de vida</div>
+                      <div style={{ fontSize: 11, color: "var(--mh-muted)" }}>Puntos de vida</div>
                       <div className="mh-serif" style={{ fontSize: 34, fontWeight: 700, color: "#D9644E" }}>
                         {CLASS_HP[CLASSES[carouselIndex].key] ?? 6}
                       </div>
@@ -8558,8 +8636,8 @@ export default function App({ onSignOut }) {
                       }}
                     >
                       <Zap size={20} color="#6FA3C0" />
-                      <div style={{ fontSize: 11, color: "#9C93AD" }}>Estrés</div>
-                      <div className="mh-serif" style={{ fontSize: 34, fontWeight: 700, color: "#6FA3C0" }}>
+                      <div style={{ fontSize: 11, color: "var(--mh-muted)" }}>Estrés</div>
+                      <div className="mh-serif" style={{ fontSize: 34, fontWeight: 700, color: ink("#6FA3C0") }}>
                         {STRESS_SLOTS}
                       </div>
                     </div>
@@ -8567,7 +8645,7 @@ export default function App({ onSignOut }) {
                 </div>
               ) : wizardStep === "experiences" ? (
                 <div style={{ marginBottom: 20 }}>
-                  <div style={{ fontSize: 12.5, color: "#B7AEC6", marginBottom: 16, textAlign: "center" }}>
+                  <div style={{ fontSize: 12.5, color: "var(--mh-ink3)", marginBottom: 16, textAlign: "center" }}>
                     Elige dos Experiencias iniciales de tu personaje — cosas que se le dan bien, gracias a su pasado.
                     Cada una empieza con un bono de +2.
                   </div>
@@ -8612,8 +8690,8 @@ export default function App({ onSignOut }) {
                             textAlign: "center",
                             padding: "10px 6px",
                             borderRadius: 8,
-                            border: "1px solid " + (active ? "#E3B04B" : "#2E2939"),
-                            background: active ? "#E3B04B14" : "#221E2C",
+                            border: "1px solid " + (active ? "#E3B04B" : "var(--mh-line)"),
+                            background: active ? "#E3B04B14" : "var(--mh-panel2)",
                             display: "flex",
                             flexDirection: "column",
                             alignItems: "center",
@@ -8622,10 +8700,10 @@ export default function App({ onSignOut }) {
                         >
                           <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                             <Icon size={14} color={active ? "#E3B04B" : "#B7AEC6"} />
-                            <span style={{ fontSize: 12, fontWeight: 600, color: active ? "#E3B04B" : "#ECE6DA" }}>{t.label}</span>
+                            <span style={{ fontSize: 12, fontWeight: 600, color: ink(active ? "#E3B04B" : "var(--mh-ink)") }}>{t.label}</span>
                           </div>
                           {t.done && (
-                            <span style={{ display: "inline-flex", alignItems: "center", gap: 2, fontSize: 10, color: "#7FB77A" }}>
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 2, fontSize: 10, color: "var(--mh-green-ink)" }}>
                               <Check size={10} /> listo
                             </span>
                           )}
@@ -8650,8 +8728,8 @@ export default function App({ onSignOut }) {
                               display: "flex",
                               justifyContent: "space-between",
                               alignItems: "center",
-                              border: "1px solid " + (selected ? "#E3B04B" : "#2E2939"),
-                              background: selected ? "#E3B04B14" : "#221E2C",
+                              border: "1px solid " + (selected ? "#E3B04B" : "var(--mh-line)"),
+                              background: selected ? "#E3B04B14" : "var(--mh-panel2)",
                               borderRadius: 8,
                               padding: "9px 14px",
                               cursor: "pointer",
@@ -8659,9 +8737,9 @@ export default function App({ onSignOut }) {
                           >
                             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                               {selected && <Check size={13} color="#E3B04B" />}
-                              <span style={{ fontSize: 13.5, fontWeight: 600, color: "#ECE6DA" }}>{w.key}</span>
+                              <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--mh-ink)" }}>{w.key}</span>
                             </div>
-                            <span style={{ fontSize: 11.5, color: "#9C93AD" }}>
+                            <span style={{ fontSize: 11.5, color: "var(--mh-muted)" }}>
                               {w.trait} · {w.range} · {w.damage}
                             </span>
                           </div>
@@ -8680,10 +8758,10 @@ export default function App({ onSignOut }) {
                             flexDirection: "column",
                             alignItems: "center",
                             gap: 8,
-                            border: "1px dashed #3A3448",
+                            border: "1px dashed var(--mh-line2)",
                             borderRadius: 10,
                             padding: "20px 16px",
-                            color: "#9C93AD",
+                            color: "var(--mh-muted)",
                             textAlign: "center",
                           }}
                         >
@@ -8703,15 +8781,15 @@ export default function App({ onSignOut }) {
                           display: "flex",
                           alignItems: "center",
                           gap: 8,
-                          border: "1px solid " + (draftSecondaryWeapon === "Ninguna" ? "#E3B04B" : "#2E2939"),
-                          background: draftSecondaryWeapon === "Ninguna" ? "#E3B04B14" : "#221E2C",
+                          border: "1px solid " + (draftSecondaryWeapon === "Ninguna" ? "#E3B04B" : "var(--mh-line)"),
+                          background: draftSecondaryWeapon === "Ninguna" ? "#E3B04B14" : "var(--mh-panel2)",
                           borderRadius: 8,
                           padding: "9px 14px",
                           cursor: "pointer",
                         }}
                       >
                         {draftSecondaryWeapon === "Ninguna" && <Check size={13} color="#E3B04B" />}
-                        <span style={{ fontSize: 13.5, fontWeight: 600, color: "#ECE6DA" }}>Ninguna</span>
+                        <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--mh-ink)" }}>Ninguna</span>
                       </div>
                       {SECONDARY_WEAPONS.map((w) => {
                         const selected = draftSecondaryWeapon === w.key;
@@ -8723,8 +8801,8 @@ export default function App({ onSignOut }) {
                               display: "flex",
                               justifyContent: "space-between",
                               alignItems: "center",
-                              border: "1px solid " + (selected ? "#E3B04B" : "#2E2939"),
-                              background: selected ? "#E3B04B14" : "#221E2C",
+                              border: "1px solid " + (selected ? "#E3B04B" : "var(--mh-line)"),
+                              background: selected ? "#E3B04B14" : "var(--mh-panel2)",
                               borderRadius: 8,
                               padding: "9px 14px",
                               cursor: "pointer",
@@ -8732,9 +8810,9 @@ export default function App({ onSignOut }) {
                           >
                             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                               {selected && <Check size={13} color="#E3B04B" />}
-                              <span style={{ fontSize: 13.5, fontWeight: 600, color: "#ECE6DA" }}>{w.key}</span>
+                              <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--mh-ink)" }}>{w.key}</span>
                             </div>
-                            <span style={{ fontSize: 11.5, color: "#9C93AD" }}>
+                            <span style={{ fontSize: 11.5, color: "var(--mh-muted)" }}>
                               {w.trait !== "—" ? w.trait + " · " + w.range + " · " + w.damage : w.damage}
                             </span>
                           </div>
@@ -8752,15 +8830,15 @@ export default function App({ onSignOut }) {
                           display: "flex",
                           alignItems: "center",
                           gap: 8,
-                          border: "1px solid " + (draftArmor === "Ninguna" ? "#E3B04B" : "#2E2939"),
-                          background: draftArmor === "Ninguna" ? "#E3B04B14" : "#221E2C",
+                          border: "1px solid " + (draftArmor === "Ninguna" ? "#E3B04B" : "var(--mh-line)"),
+                          background: draftArmor === "Ninguna" ? "#E3B04B14" : "var(--mh-panel2)",
                           borderRadius: 8,
                           padding: "9px 14px",
                           cursor: "pointer",
                         }}
                       >
                         {draftArmor === "Ninguna" && <Check size={13} color="#E3B04B" />}
-                        <span style={{ fontSize: 13.5, fontWeight: 600, color: "#ECE6DA" }}>Ninguna</span>
+                        <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--mh-ink)" }}>Ninguna</span>
                       </div>
                       {ARMORS.filter((a) => a.tier <= tierForLevel(levelChoice)).map((a) => {
                         const selected = draftArmor === a.key;
@@ -8772,8 +8850,8 @@ export default function App({ onSignOut }) {
                               display: "flex",
                               justifyContent: "space-between",
                               alignItems: "center",
-                              border: "1px solid " + (selected ? "#E3B04B" : "#2E2939"),
-                              background: selected ? "#E3B04B14" : "#221E2C",
+                              border: "1px solid " + (selected ? "#E3B04B" : "var(--mh-line)"),
+                              background: selected ? "#E3B04B14" : "var(--mh-panel2)",
                               borderRadius: 8,
                               padding: "9px 14px",
                               cursor: "pointer",
@@ -8781,9 +8859,9 @@ export default function App({ onSignOut }) {
                           >
                             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                               {selected && <Check size={13} color="#E3B04B" />}
-                              <span style={{ fontSize: 13.5, fontWeight: 600, color: "#ECE6DA" }}>{a.key}</span>
+                              <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--mh-ink)" }}>{a.key}</span>
                             </div>
-                            <span style={{ fontSize: 11.5, color: "#9C93AD" }}>Puntuación {a.score}</span>
+                            <span style={{ fontSize: 11.5, color: "var(--mh-muted)" }}>Puntuación {a.score}</span>
                           </div>
                         );
                       })}
@@ -8805,7 +8883,7 @@ export default function App({ onSignOut }) {
                     }}
                   >
                     <Backpack size={16} color="#E3B04B" />
-                    <div style={{ fontSize: 12.5, color: "#ECE6DA" }}>Elige los objetos con los que empieza tu aventura.</div>
+                    <div style={{ fontSize: 12.5, color: "var(--mh-ink)" }}>Elige los objetos con los que empieza tu aventura.</div>
                   </div>
 
                   {(CLASS_ITEMS[CLASSES[carouselIndex]?.key] || []).length > 0 && (() => {
@@ -8896,7 +8974,7 @@ export default function App({ onSignOut }) {
                     const domains = (CLASS_DOMAINS[chosenClassKey] || []).filter((d) => (DOMAIN_CARDS[d] || []).length > 0);
                     if (domains.length === 0) {
                       return (
-                        <div style={{ fontSize: 13, color: "#9C93AD", fontStyle: "italic" }}>
+                        <div style={{ fontSize: 13, color: "var(--mh-muted)", fontStyle: "italic" }}>
                           Todavía no están cargadas en la app las cartas de {(CLASS_DOMAINS[chosenClassKey] || []).join(" y ")}. Puedes
                           crear el personaje igualmente y añadirlas más adelante.
                         </div>
@@ -8909,18 +8987,18 @@ export default function App({ onSignOut }) {
                           const cards = (DOMAIN_CARDS[domainName] || []).filter((card) => card.level <= levelChoice);
                           const selectedInDomain = cards.filter((c) => draftDomainCards.includes(c.key)).length;
                           return (
-                            <div key={domainName} style={{ background: "#221E2C", border: "1px solid #2E2939", borderRadius: 12, padding: "16px 16px 18px" }}>
+                            <div key={domainName} style={{ background: "var(--mh-panel2)", border: "1px solid var(--mh-line)", borderRadius: 12, padding: "16px 16px 18px" }}>
                               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
                                 <DomainIcon size={17} color="#E3B04B" />
-                                <span className="mh-serif" style={{ fontSize: 16, fontWeight: 700, color: "#ECE6DA", letterSpacing: 0.4, textTransform: "uppercase" }}>
+                                <span className="mh-serif" style={{ fontSize: 16, fontWeight: 700, color: "var(--mh-ink)", letterSpacing: 0.4, textTransform: "uppercase" }}>
                                   {domainName}
                                 </span>
                               </div>
 
-                              <div style={{ fontSize: 10.5, fontWeight: 700, color: "#E3B04B", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 3 }}>
+                              <div style={{ fontSize: 10.5, fontWeight: 700, color: "var(--mh-gold-ink)", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 3 }}>
                                 Cartas disponibles
                               </div>
-                              <div style={{ fontSize: 11, color: "#9C93AD", marginBottom: 12 }}>
+                              <div style={{ fontSize: 11, color: "var(--mh-muted)", marginBottom: 12 }}>
                                 {cards.length} disponibles, {selectedInDomain} elegidas ({draftDomainCards.length}/{wizardCardLimit} en total).
                               </div>
 
@@ -8933,8 +9011,8 @@ export default function App({ onSignOut }) {
                                     <div
                                       key={card.key}
                                       style={{
-                                        border: "1px solid " + (selected ? "#E3B04B" : "#2E2939"),
-                                        background: selected ? "#E3B04B14" : "#1B1824",
+                                        border: "1px solid " + (selected ? "#E3B04B" : "var(--mh-line)"),
+                                        background: selected ? "#E3B04B14" : "var(--mh-panel)",
                                         borderRadius: 8,
                                         padding: "10px 12px",
                                         opacity: disabled ? 0.5 : 1,
@@ -8948,7 +9026,7 @@ export default function App({ onSignOut }) {
                                             height: 16,
                                             flexShrink: 0,
                                             borderRadius: 4,
-                                            border: "1px solid " + (selected ? "#E3B04B" : "#3A3448"),
+                                            border: "1px solid " + (selected ? "#E3B04B" : "var(--mh-line2)"),
                                             background: selected ? "#E3B04B" : "transparent",
                                             display: "flex",
                                             alignItems: "center",
@@ -8961,7 +9039,7 @@ export default function App({ onSignOut }) {
                                         <span
                                           onClick={() => !disabled && toggleDomainCard(card.key)}
                                           className="mh-serif"
-                                          style={{ fontSize: 13, fontWeight: 700, color: "#ECE6DA", letterSpacing: 0.3, cursor: disabled ? "not-allowed" : "pointer" }}
+                                          style={{ fontSize: 13, fontWeight: 700, color: "var(--mh-ink)", letterSpacing: 0.3, cursor: disabled ? "not-allowed" : "pointer" }}
                                         >
                                           {card.key.toUpperCase()}
                                         </span>
@@ -8969,7 +9047,7 @@ export default function App({ onSignOut }) {
                                           style={{
                                             fontSize: 9.5,
                                             fontWeight: 700,
-                                            color: "#E3B04B",
+                                            color: "var(--mh-gold-ink)",
                                             border: "1px solid #6B5A2E",
                                             borderRadius: 20,
                                             padding: "1px 8px",
@@ -8980,13 +9058,13 @@ export default function App({ onSignOut }) {
                                       </div>
                                       <div
                                         onClick={() => setExpandedDomainCard(expanded ? null : card.key)}
-                                        style={{ fontSize: 11, color: "#9C93AD", fontStyle: "italic", marginTop: 4, marginLeft: 26, cursor: "pointer" }}
+                                        style={{ fontSize: 11, color: "var(--mh-muted)", fontStyle: "italic", marginTop: 4, marginLeft: 26, cursor: "pointer" }}
                                       >
                                         {expanded ? "Ocultar detalles" : "Ver detalles..."}
                                       </div>
                                       {expanded && (
-                                        <div style={{ fontSize: 11.5, color: "#B7AEC6", lineHeight: 1.4, marginTop: 6, marginLeft: 26 }}>
-                                          <span style={{ color: "#9C93AD" }}>
+                                        <div style={{ fontSize: 11.5, color: "var(--mh-ink3)", lineHeight: 1.4, marginTop: 6, marginLeft: 26 }}>
+                                          <span style={{ color: "var(--mh-muted)" }}>
                                             {card.type} · Recuperación {card.recall}
                                             <br />
                                           </span>
