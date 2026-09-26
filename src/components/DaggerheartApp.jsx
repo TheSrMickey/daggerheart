@@ -1240,12 +1240,108 @@ const sharedStyles = `
   .mh-dots { display: inline-block; color: #9C93AD; letter-spacing: .15em; animation: mh-blink .9s ease-in-out infinite; }
   @keyframes mh-blink { 50% { opacity: .3; } }
 
+  /* Siluetas de Forma de Bestia */
+  .mh-beast-bg {
+    position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(circle at 82% 86%, color-mix(in srgb, var(--beast) 16%, transparent), transparent 55%),
+      radial-gradient(circle at 8% 42%, color-mix(in srgb, var(--beast) 10%, transparent), transparent 45%);
+    animation: mh-beast-in 1s ease both;
+  }
+  .mh-beast {
+    position: absolute; line-height: 1; user-select: none;
+    font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
+    color: transparent; text-shadow: 0 0 0 var(--beast);
+    opacity: var(--o, .1);
+    animation: mh-beast-drift var(--d, 18s) ease-in-out infinite alternate;
+  }
+  .mh-beast-ring {
+    position: absolute; left: 50%; top: 55%; width: 40vmax; height: 40vmax; margin: -20vmax 0 0 -20vmax; border-radius: 50%;
+    border: 2px solid var(--beast); box-shadow: 0 0 40px var(--beast), inset 0 0 40px var(--beast);
+    animation: mh-beast-ring 1.3s cubic-bezier(.2,.7,.3,1) both;
+  }
+  @keyframes mh-beast-in { from { opacity: 0; filter: blur(8px); } }
+  @keyframes mh-beast-drift {
+    from { translate: 0 0; rotate: -3deg; }
+    to { translate: var(--tx, 20px) var(--ty, -14px); rotate: 3deg; }
+  }
+  @keyframes mh-beast-ring { from { scale: .05; opacity: .9; } to { scale: 2.4; opacity: 0; } }
+
   @media (prefers-reduced-motion: reduce) {
+    .mh-beast, .mh-beast-bg, .mh-beast-ring { animation: none !important; }
+    .mh-beast-ring { display: none; }
     .mh-die, .mh-pop, .mh-roll-pop, .mh-appear-late, .mh-burst, .mh-dots { animation: none !important; }
     .mh-overlay, .mh-card-anim, .mh-dslot, .mh-overlay.is-closing, .mh-overlay.is-closing .mh-card-anim { animation: none !important; }
     .mh-tilt { transform: none !important; transition: none; }
   }
 `;
+
+/* ---------- Siluetas de Forma de Bestia ---------- */
+
+// Emojis de los animales de cada forma; se pintan como siluetas de un solo color.
+const BEAST_SILHOUETTES = {
+  "Explorador Ágil": ["🐁", "🦡", "🐿️"],
+  "Herbívoro Veloz": ["🦌", "🐐", "🦌"],
+  "Explorador Acuático": ["🐙", "🐟", "🐟"],
+  "Amigo del Hogar": ["🐈", "🐕", "🐇"],
+  "Depredador de Manada": ["🐕", "🐕", "🐕"],
+  "Arácnido Acechante": ["🕷️", "🕷️", "🕷️"],
+  "Centinela Acorazado": ["🐢", "🦔", "🐢"],
+  "Bestia Poderosa": ["🐂", "🦬", "🐂"],
+  "Zancada Poderosa": ["🐎", "🐫", "🦓"],
+  "Serpiente Fulminante": ["🐍", "🐍", "🐍"],
+  "Depredador Saltador": ["🐆", "🐅", "🐆"],
+  "Bestia Alada": ["🦅", "🦉", "🦅"],
+  "Gran Depredador": ["🐅", "🦖", "🐕"],
+  "Lagarto Colosal": ["🐊", "🦎", "🐊"],
+  "Gran Bestia Alada": ["🦅", "🦅", "🦅"],
+  "Depredador Acuático": ["🦈", "🐬", "🐋"],
+  "Bestia Legendaria": ["🐉", "🐅", "🦅"],
+  "Híbrido Legendario": ["🦅", "🐅", "🦅"],
+  "Behemot Masivo": ["🐘", "🦣", "🦏"],
+  "Lagarto Terrible": ["🦖", "🦕", "🦖"],
+  "Cazador Aéreo Mítico": ["🐉", "🦅", "🐉"],
+  "Bestia Acuática Épica": ["🐋", "🦑", "🐋"],
+  "Bestia Mítica": ["🐉", "🐅", "🐉"],
+  "Híbrido Mítico": ["🐅", "🐍", "🐐"],
+};
+
+const BEAST_SPOTS = [
+  { right: "-3%", bottom: "-7%", size: "min(58vh, 540px)", o: 0.3, d: "22s", flip: false, tx: "-26px", ty: "-10px" },
+  { left: "-5%", top: "32%", size: "min(34vh, 320px)", o: 0.22, d: "18s", flip: true, tx: "18px", ty: "12px" },
+  { left: "40%", bottom: "3%", size: "min(20vh, 180px)", o: 0.18, d: "15s", flip: false, tx: "30px", ty: "-8px" },
+  { right: "26%", top: "24%", size: "min(13vh, 120px)", o: 0.15, d: "13s", flip: true, tx: "-22px", ty: "10px" },
+];
+
+function BeastBackdrop({ form }) {
+  const glyphs = BEAST_SILHOUETTES[form.key] || ["🐾"];
+  return (
+    <div className="mh-beast-bg" style={{ "--beast": form.color }} aria-hidden="true">
+      <div className="mh-beast-ring" />
+      {BEAST_SPOTS.map((p, i) => (
+        <span
+          key={i}
+          className="mh-beast"
+          style={{
+            left: p.left,
+            right: p.right,
+            top: p.top,
+            bottom: p.bottom,
+            fontSize: p.size,
+            transform: p.flip ? "scaleX(-1)" : undefined,
+            animationDelay: `${-i * 4}s`,
+            "--o": p.o,
+            "--d": p.d,
+            "--tx": p.tx,
+            "--ty": p.ty,
+          }}
+        >
+          {glyphs[i % glyphs.length]}
+        </span>
+      ))}
+    </div>
+  );
+}
 
 /* ---------- Dados animados ---------- */
 
@@ -1491,7 +1587,7 @@ function Panel({ span, title, children, hidden, restrained, vulnerable, unconsci
     <div
       style={{
         gridColumn: "span " + span,
-        background: "#1B1824",
+        background: "var(--panel-bg, #1B1824)",
         border: "1px solid " + borderColor,
         borderRadius: 14,
         padding: "18px 20px",
@@ -4317,11 +4413,15 @@ export default function App({ onSignOut }) {
               overflow: "hidden",
               borderTop: "4px solid " + themeColor,
               filter: isDead ? "grayscale(1)" : "none",
+              "--panel-bg": beastformInfo ? "rgba(27,24,36,0.7)" : "#1B1824",
             }}
           >
+            {beastformInfo && <BeastBackdrop key={beastformInfo.key} form={beastformInfo} />}
             {/* Header */}
             <div
               style={{
+                position: "relative",
+                zIndex: 1,
                 background: "#16131E", borderBottom: "1px solid #2E2939",
                 padding: "16px 24px",
                 display: "flex",
@@ -4468,7 +4568,7 @@ export default function App({ onSignOut }) {
             </div>
 
             {/* Body */}
-            <div style={{ flex: 1, overflowY: "auto", padding: "22px 26px", scrollbarGutter: "stable" }}>
+            <div style={{ position: "relative", zIndex: 1, flex: 1, overflowY: "auto", padding: "22px 26px", scrollbarGutter: "stable" }}>
               <div style={{ maxWidth: 1300, margin: "0 auto" }}>
                 {evolutionWarning && (
                   <div style={{ fontSize: 12.5, color: "#D9644E", marginBottom: 14, fontWeight: 600 }}>{evolutionWarning}</div>
