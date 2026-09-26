@@ -1279,7 +1279,7 @@ const sharedStyles = `
   .mh-dslot-art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 35%; transition: scale .4s ease; }
   .mh-dslot:hover .mh-dslot-art { scale: 1.05; }
   .mh-dslot-noart {
-    position: absolute; inset: 0; display: flex; align-items: center; justify-content: flex-end; padding-right: 18px;
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: flex-end; padding: 22px 18px 0 0;
     color: color-mix(in srgb, var(--dc) 55%, #fff);
     background: linear-gradient(135deg, color-mix(in srgb, var(--dc) 55%, #1B1824), #1B1824);
   }
@@ -6019,7 +6019,7 @@ export default function App({ onSignOut }) {
                                           <img className="mh-dslot-art" src={cardData.image} alt="" />
                                         ) : (
                                           <div className="mh-dslot-noart">
-                                            <DIcon size={86} strokeWidth={1.4} />
+                                            <DIcon size={58} strokeWidth={1.4} />
                                           </div>
                                         )}
                                         <div className="mh-dslot-shade" />
