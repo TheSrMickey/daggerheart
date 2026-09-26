@@ -38,6 +38,10 @@ function loadPrivate() {
     if (isDevPreview()) {
       const { DEV_SEED } = await import("@/app/dev-preview/seed");
       for (const [key, value] of Object.entries(DEV_SEED)) if (!map.has(key)) map.set(key, value);
+      // Con sesión iniciada en local, añadimos los de ejemplo a la lista de personajes del jugador.
+      const index = JSON.parse(map.get("character-index") || "[]") as string[];
+      const seedIndex = JSON.parse(DEV_SEED["character-index"]) as string[];
+      map.set("character-index", JSON.stringify([...index, ...seedIndex.filter((id) => !index.includes(id))]));
     }
 
     // Primera vez: usamos el nombre de registro como "Jugando como".

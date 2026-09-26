@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useLayoutEffect, useRef } from "react";
-import { LogOut, Sun, Moon } from "lucide-react";
+import { LogOut, Sun, Moon, Settings, Palette } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
 
@@ -11,6 +11,24 @@ const NAV_ITEMS = [
   { key: "dados", label: "Dados de Dualidad", icon: Dices },
   { key: "dj", label: "Panel del Director", icon: ShieldHalf },
 ];
+
+// Color propio de cada clase (ajuste "Colores por clase").
+const CLASS_COLORS = {
+  Bardo: "#E07FB0",
+  Druida: "#6FBF73",
+  Guardián: "#5E93C9",
+  Explorador: "#9FB35A",
+  Pícaro: "#6C7AC9",
+  Serafín: "#E8C547",
+  Hechicero: "#E0823A",
+  Guerrero: "#C0504A",
+  Mago: "#3FB0AE",
+  Bruja: "#9B7FD6",
+  Brujo: "#B55FA0",
+  Camorrista: "#C08B5C",
+  Asesino: "#7D8BA3",
+};
+const DEFAULT_SETTINGS = { classColors: true };
 
 const CLASSES = [
   { key: "Bardo", blurb: "Encanta, inspira y teje historias que cambian el rumbo de la partida." },
@@ -1188,8 +1206,21 @@ const sharedStyles = `
   .mh-hback:hover { background: var(--mh-panel3); color: var(--mh-ink); }
   .mh-hback:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
   .mh-lvl { flex-shrink: 0; display: flex; }
-  .mh-lvl path { fill: #E3B04B1A; stroke: #E3B04B; stroke-width: 1.5; stroke-linejoin: round; }
-  .mh-lvl text { text-anchor: middle; fill: var(--mh-gold-ink); }
+  .mh-lvl path { fill: color-mix(in srgb, var(--lvl, #E3B04B) 10%, transparent); stroke: var(--lvl, #E3B04B); stroke-width: 1.5; stroke-linejoin: round; }
+  .mh-lvl text { text-anchor: middle; fill: color-mix(in srgb, var(--lvl, #E3B04B) var(--mh-accent-keep, 100%), #000); }
+  .mh-gear { color: var(--mh-muted); }
+  .mh-gear:hover, .mh-gear.is-active { color: var(--mh-gold-ink); }
+  .mh-switch {
+    position: relative; width: 40px; height: 22px; border-radius: 999px; flex-shrink: 0; cursor: pointer; padding: 0;
+    border: 1px solid var(--mh-line2); background: var(--mh-panel3); transition: background .2s, border-color .2s;
+  }
+  .mh-switch[aria-checked="true"] { background: #E3B04B; border-color: #E3B04B; }
+  .mh-switch-knob {
+    position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,.35); transition: translate .2s cubic-bezier(.3,1.4,.5,1);
+  }
+  .mh-switch[aria-checked="true"] .mh-switch-knob { translate: 18px 0; }
+  .mh-switch:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
   .mh-lvl-label { font-family: 'Inter', system-ui, sans-serif; font-size: 7px; font-weight: 700; letter-spacing: .14em; }
   .mh-lvl-num { font-family: 'Cinzel', Georgia, serif; font-size: 20px; font-weight: 700; }
   .mh-exp-tag { font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-purple-ink); border: 1px solid #A58BE855; border-radius: 4px; padding: 1px 6px; }
@@ -2064,6 +2095,7 @@ function StepperRow({ label, total, marked, field, color, Icon, charId, onDelta,
 export default function App({ onSignOut }) {
   const [view, setView] = useState("ficha");
   const [playerName, setPlayerName] = useState("");
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [isMobile, setIsMobile] = useState(false);
   // Tema claro/oscuro: preferencia de este navegador (por defecto, claro).
   // El script del layout lo aplica en <html> antes de pintar para que no parpadee.
@@ -2145,8 +2177,23 @@ export default function App({ onSignOut }) {
     (async () => {
       const r = await safeGet("player-name", false);
       if (r) setPlayerName(r.value);
+      const st = await safeGet("settings", false);
+      if (st) {
+        try {
+          setSettings({ ...DEFAULT_SETTINGS, ...JSON.parse(st.value) });
+        } catch {}
+      }
     })();
   }, []);
+
+  const updateSetting = (key, value) => {
+    setSettings((prev) => {
+      const next = { ...prev, [key]: value };
+      safeSet("settings", JSON.stringify(next), false);
+      return next;
+    });
+  };
+  const classColor = (cls) => (settings.classColors && CLASS_COLORS[cls]) || "#E3B04B";
 
   useEffect(() => {
     (async () => {
@@ -2221,11 +2268,6 @@ export default function App({ onSignOut }) {
       }
     })();
   }, []);
-
-  const updatePlayerName = (val) => {
-    setPlayerName(val);
-    safeSet("player-name", val, false);
-  };
 
   const switchChar = (id) => {
     setCurrentCharId(id);
@@ -3992,18 +4034,27 @@ export default function App({ onSignOut }) {
           </div>
           {!isMobile && (
             <div style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ fontSize: 10, color: "var(--mh-muted2)", textTransform: "uppercase", letterSpacing: ".08em" }}>Jugando como</span>
-              <input
-                className="mh-input"
-                style={{ fontSize: 12.5, padding: "4px 7px", marginTop: 2 }}
-                type="text"
-                placeholder="Tu nombre"
-                value={playerName}
-                onChange={(e) => updatePlayerName(e.target.value)}
-              />
+              <div style={{ fontSize: 10, color: "var(--mh-muted2)", textTransform: "uppercase", letterSpacing: ".08em" }}>Jugando como</div>
+              <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--mh-ink)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={playerName}>
+                {playerName || "—"}
+              </div>
             </div>
           )}
           {isMobile && themeSwitch}
+          <button
+            type="button"
+            className={"mh-btn-ghost mh-gear" + (view === "ajustes" ? " is-active" : "")}
+            style={{ padding: 7, border: "none" }}
+            title="Ajustes"
+            aria-label="Ajustes"
+            onClick={() => {
+              setViewingCharId(null);
+              setViewingCardDetail(null);
+              setView("ajustes");
+            }}
+          >
+            <Settings size={16} />
+          </button>
           {onSignOut && (
             <form action={onSignOut}>
               <button type="submit" className="mh-btn-ghost" style={{ padding: 7, border: "none", color: "var(--mh-muted)" }} title="Cerrar sesión" aria-label="Cerrar sesión">
@@ -4019,7 +4070,7 @@ export default function App({ onSignOut }) {
         <div style={{ position: "absolute", inset: 0, overflowY: "auto", padding: "24px 28px" }}>
           <div style={{ maxWidth: 960, margin: "0 auto" }}>
             <h1 className="mh-serif" style={{ fontSize: 26, fontWeight: 700, margin: "0 0 22px", color: "var(--mh-ink)" }}>
-              {NAV_ITEMS.find((n) => n.key === view)?.label}
+              {view === "ajustes" ? "Ajustes" : NAV_ITEMS.find((n) => n.key === view)?.label}
             </h1>
 
           {view === "ficha" && (
@@ -4043,6 +4094,7 @@ export default function App({ onSignOut }) {
                       flexDirection: "column",
                       gap: 10,
                       borderColor: id === currentCharId ? "#E3B04B" : "var(--mh-line)",
+                      borderTop: "4px solid " + (characters[id].f_class ? classColor(characters[id].f_class) : "var(--mh-line)"),
                       cursor: "pointer",
                     }}
                   >
@@ -4319,7 +4371,7 @@ export default function App({ onSignOut }) {
                         onClick={clearCampaignChat}
                       />
                       <div style={{ fontSize: 11.5, color: "var(--mh-muted)", marginBottom: 12, paddingRight: 24 }}>
-                        Chat compartido de la campaña. Los mensajes llevan tu nombre de jugador (lo cambias en "Jugando como", en el menú).
+                        Chat compartido de la campaña. Los mensajes llevan tu nombre de jugador.
                       </div>
                       <div ref={chatScrollRef} style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 360, overflowY: "auto", marginBottom: 14 }}>
                         {campaignChat.length === 0 && (
@@ -4595,6 +4647,41 @@ export default function App({ onSignOut }) {
             );
           })()}
 
+          {view === "ajustes" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 14, maxWidth: 640 }}>
+              <div className="mh-card" style={{ margin: 0 }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--mh-panel3)", color: "var(--mh-gold-ink)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Palette size={18} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14.5, fontWeight: 600, color: "var(--mh-ink)" }}>Colores por clase</div>
+                    <div style={{ fontSize: 12.5, color: "var(--mh-muted)", marginTop: 3, lineHeight: 1.5 }}>
+                      Cada clase tiene su propio color en la lista de personajes y en la hoja. Si lo desactivas, todas usan el dorado.
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={settings.classColors}
+                    aria-label="Colores por clase"
+                    className="mh-switch"
+                    onClick={() => updateSetting("classColors", !settings.classColors)}
+                  >
+                    <span className="mh-switch-knob" />
+                  </button>
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 14, paddingLeft: 50, opacity: settings.classColors ? 1 : 0.45, transition: "opacity .2s" }}>
+                  {Object.entries(CLASS_COLORS).map(([cls, col]) => (
+                    <span key={cls} className="mh-htag" style={{ "--tag": settings.classColors ? col : "#E3B04B", fontSize: 11.5, padding: "3px 9px" }}>
+                      {cls}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
           {view === "dados" && (
             <div>
               <Card>
@@ -4714,7 +4801,7 @@ export default function App({ onSignOut }) {
         const isDead = c.f_is_dead === "1";
         const isExpansionClass = CLASSES.find((cl) => cl.key === c.f_class)?.expansion;
         const beastformInfo = BEASTFORMS.find((b) => b.key === c.f_beastform);
-        const themeColor = beastformInfo?.color || "#E3B04B";
+        const themeColor = beastformInfo?.color || classColor(c.f_class);
         const headerCampaign = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(viewingCharId));
         const activeTransformForm = c.f_transformation_form_active || "";
         const headerAccent = beastformInfo?.color || TRANSFORM_THEMES[activeTransformForm]?.color || null;
@@ -4788,7 +4875,7 @@ export default function App({ onSignOut }) {
                   <ArrowLeft size={17} />
                 </button>
                 {c.f_class && (
-                  <div className="mh-lvl" title={"Nivel " + (c.f_level || 1)}>
+                  <div className="mh-lvl" title={"Nivel " + (c.f_level || 1)} style={{ "--lvl": classColor(c.f_class) }}>
                     <svg viewBox="0 0 52 58" width="46" height="52" aria-hidden="true">
                       <path d="M4 4 H48 V31 C48 43 38 51 26 55 C14 51 4 43 4 31 Z" />
                       <text x="26" y="17" className="mh-lvl-label">NIVEL</text>
