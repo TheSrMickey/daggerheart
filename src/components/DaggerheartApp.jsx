@@ -29,6 +29,15 @@ const CLASS_COLORS = {
   Asesino: "#7D8BA3",
 };
 const DEFAULT_SETTINGS = { classColors: true };
+// Texto oscuro o blanco según lo claro que sea el color.
+function onColor(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => {
+    v /= 255;
+    return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.3 ? "#1F1606" : "#FFFFFF";
+}
 
 const CLASSES = [
   { key: "Bardo", blurb: "Encanta, inspira y teje historias que cambian el rumbo de la partida." },
@@ -1153,6 +1162,17 @@ async function safeSet(key, value, shared) {
 
 const sharedStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+  .mh-sheet { --mh-gold-ink: color-mix(in srgb, var(--acc) var(--mh-accent-keep, 100%), #000); }
+  .mh-sheet.is-tinted {
+    --mh-bg: color-mix(in srgb, var(--acc) 6%, var(--mh-bg-base));
+    --mh-nav: color-mix(in srgb, var(--acc) 11%, var(--mh-nav-base));
+    --mh-panel: color-mix(in srgb, var(--acc) 3%, var(--mh-panel-base));
+    --mh-panel2: color-mix(in srgb, var(--acc) 6%, var(--mh-panel2-base));
+    --mh-panel3: color-mix(in srgb, var(--acc) 10%, var(--mh-panel3-base));
+    --mh-chip: color-mix(in srgb, var(--acc) 5%, var(--mh-chip-base));
+    --mh-line: color-mix(in srgb, var(--acc) 24%, var(--mh-line-base));
+    --mh-line2: color-mix(in srgb, var(--acc) 32%, var(--mh-line2-base));
+  }
   .mh-root, .mh-keep-dark {
     color-scheme: dark;
     --mh-bg: #121019; --mh-nav: #16131E; --mh-panel: #1B1824; --mh-panel2: #221E2C; --mh-panel3: #2A2436;
@@ -1162,6 +1182,8 @@ const sharedStyles = `
     --mh-glass: rgba(27,24,36,0.58);
     --mh-accent-keep: 100%;
     --mh-chip: #2A2436;
+    --mh-bg-base: #121019; --mh-nav-base: #16131E; --mh-panel-base: #1B1824; --mh-panel2-base: #221E2C; --mh-panel3-base: #2A2436;
+    --mh-chip-base: #2A2436; --mh-line-base: #2E2939; --mh-line2-base: #3A3448;
   }
   html[data-mh-theme="light"] .mh-root {
     color-scheme: light;
@@ -1172,6 +1194,8 @@ const sharedStyles = `
     --mh-glass: rgba(255,252,246,0.62);
     --mh-accent-keep: 62%;
     --mh-chip: #FFFCF6;
+    --mh-bg-base: #F3EEE4; --mh-nav-base: #EAE3D5; --mh-panel-base: #FFFCF6; --mh-panel2-base: #F4EEE3; --mh-panel3-base: #EAE2D3;
+    --mh-chip-base: #FFFCF6; --mh-line-base: #DCD2C1; --mh-line2-base: #CBBFA9;
   }
   html[data-mh-theme="light"] .mh-holo {
     mix-blend-mode: multiply;
@@ -1238,7 +1262,7 @@ const sharedStyles = `
   }
   @media (prefers-reduced-motion: reduce) { .mh-htag-dot { animation: none; } }
   .mh-serif { font-family: 'Cinzel', Georgia, serif; letter-spacing: .03em; }
-  .mh-btn { border: 1px solid #E3B04B; background: #E3B04B; color: #1F1606; padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: opacity .15s; }
+  .mh-btn { border: 1px solid var(--acc, #E3B04B); background: var(--acc, #E3B04B); color: var(--acc-on, #1F1606); padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: opacity .15s; }
   .mh-btn:hover { filter: brightness(1.08); }
   .mh-btn:disabled, .mh-btn-ghost:disabled { opacity: .45; cursor: default; }
   .mh-btn-ghost { border: 1px solid var(--mh-line2); background: transparent; color: var(--mh-ink2); padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
@@ -1533,8 +1557,12 @@ function BeastBackdrop({ form, kind = "beast" }) {
 /* ---------- Dados animados ---------- */
 
 const INK_SKIP = new Set(["#FFFFFF", "#FFF", "#1F1606", "#1A1230"]);
+// Color con transparencia; vale para hex y para var(--...).
+function alpha(c, pct) {
+  return `color-mix(in srgb, ${c} ${pct}%, transparent)`;
+}
 function ink(c) {
-  if (typeof c !== "string" || !c.startsWith("#") || INK_SKIP.has(c.toUpperCase())) return c;
+  if (typeof c !== "string" || !(c.startsWith("#") || c.startsWith("var(")) || INK_SKIP.has(c.toUpperCase())) return c;
   return `color-mix(in srgb, ${c} var(--mh-accent-keep, 100%), #000)`;
 }
 
@@ -1595,7 +1623,7 @@ function DieFace({ sides, value, color, size = 72, rolling, highlight, dim, labe
         style={{ width: size, height: size, animationDelay: delay + "ms" }}
       >
         <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
-          <polygon points={points} fill={color + "22"} stroke={color} strokeWidth="4" strokeLinejoin="round" />
+          <polygon points={points} fill={alpha(color, 13)} stroke={color} strokeWidth="4" strokeLinejoin="round" />
         </svg>
         <b style={{ color: ink(color), fontSize: Math.round(size * (sides === 4 ? 0.3 : 0.36)), marginTop: sides === 4 ? size * 0.18 : sides === 12 ? size * 0.06 : 0 }}>
           {shown ?? "–"}
@@ -4421,7 +4449,7 @@ export default function App({ onSignOut }) {
                               borderRadius: 20,
                               cursor: "pointer",
                               border: "1px solid " + (campaignGridTool === tool.key ? tool.color : "var(--mh-line)"),
-                              background: campaignGridTool === tool.key ? tool.color + "22" : "var(--mh-panel)",
+                              background: campaignGridTool === tool.key ? alpha(tool.color, 13) : "var(--mh-panel)",
                               fontSize: 12,
                               fontWeight: 600,
                               color: ink(campaignGridTool === tool.key ? tool.color : "var(--mh-ink3)"),
@@ -4814,7 +4842,7 @@ export default function App({ onSignOut }) {
           if (!value) return null;
           return (
             <div style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "10px 0", borderBottom: "1px solid var(--mh-line)" }}>
-              <Icon size={15} color="#E3B04B" style={{ marginTop: 1, flexShrink: 0 }} />
+              <Icon size={15} color="var(--acc)" style={{ marginTop: 1, flexShrink: 0 }} />
               <div>
                 <div style={{ fontSize: 10.5, color: "var(--mh-muted)", textTransform: "uppercase", letterSpacing: 0.3 }}>{label}</div>
                 <div style={{ fontSize: 13.5, color: "var(--mh-ink)", fontWeight: 500 }}>{value}</div>
@@ -4822,9 +4850,13 @@ export default function App({ onSignOut }) {
             </div>
           );
         };
+        const accent = classColor(c.f_class);
         return (
           <div
+            className={"mh-sheet" + (settings.classColors && CLASS_COLORS[c.f_class] ? " is-tinted" : "")}
             style={{
+              "--acc": accent,
+              "--acc-on": onColor(accent),
               position: "absolute",
               inset: 0,
               background: "var(--mh-bg)",
@@ -4855,7 +4887,7 @@ export default function App({ onSignOut }) {
               style={{
                 position: "relative",
                 zIndex: 1,
-                background: "var(--mh-nav)", borderBottom: "1px solid " + (headerAccent ? headerAccent + "99" : "var(--mh-line)"),
+                background: "var(--mh-nav)", borderBottom: "1px solid " + (headerAccent ? alpha(headerAccent, 60) : "var(--mh-line)"),
                 transition: "border-color .4s",
                 padding: "16px 24px",
                 display: "flex",
@@ -4897,7 +4929,7 @@ export default function App({ onSignOut }) {
                 </div>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: isMobile ? "flex-start" : "flex-end", marginLeft: "auto", flexBasis: isMobile ? "100%" : "auto" }}>
                   {headerCampaign && (
-                    <span className="mh-htag" style={{ "--tag": "#E3B04B" }} title="Campaña">
+                    <span className="mh-htag" style={{ "--tag": "var(--acc)" }} title="Campaña">
                       <BookOpen size={14} /> {headerCampaign.name}
                     </span>
                   )}
@@ -4970,11 +5002,11 @@ export default function App({ onSignOut }) {
                         alignItems: "center",
                         justifyContent: "center",
                         gap: 7,
-                        background: formBoosted ? beastformInfo.color + "26" : "var(--mh-chip)",
+                        background: formBoosted ? alpha(beastformInfo.color, 15) : "var(--mh-chip)",
                         border: formBoosted
                           ? "1px solid " + beastformInfo.color
                           : isSpellcast
-                          ? "1px dashed #E3B04B"
+                          ? "1px dashed var(--acc)"
                           : equipBoost !== 0
                           ? "1px solid " + (equipBoost > 0 ? "#7FB77A" : "#D9644E")
                           : "1px solid transparent",
@@ -4984,7 +5016,7 @@ export default function App({ onSignOut }) {
                         position: "relative",
                       }}
                     >
-                      <Icon size={14} color={formBoosted ? beastformInfo.color : "#E3B04B"} style={{ flexShrink: 0 }} />
+                      <Icon size={14} color={formBoosted ? beastformInfo.color : "var(--acc)"} style={{ flexShrink: 0 }} />
                       <span style={{ fontSize: 11.5, color: "var(--mh-ink3)", whiteSpace: "nowrap" }}>{t.label}</span>
                       <span style={{ display: "flex", alignItems: "center", gap: 3, marginLeft: "auto", paddingRight: 2, position: "relative" }}>
                         {formBoosted && (
@@ -5061,7 +5093,7 @@ export default function App({ onSignOut }) {
                       {/* Tabs */}
                       <div className="mh-noscroll" style={{ display: "flex", alignItems: "flex-end", gap: 2, borderBottom: "1px solid var(--mh-line)", marginBottom: 22, overflowX: "auto", overflowY: "hidden" }}>
                         {[
-                          ...tabs.map((t) => ({ ...t, tone: "#E3B04B" })),
+                          ...tabs.map((t) => ({ ...t, tone: "var(--acc)" })),
                           { spacer: true, key: "_spacer" },
                           ...(c.f_class === "Druida" ? [{ key: "beastforms", label: "Formas de Bestia", Icon: PawPrint, tone: "#7FB77A" }] : []),
                           ...(charCampaign ? [{ key: "campaign", label: charCampaign.name, Icon: BookOpen, tone: "#A58BE8" }] : []),
@@ -5085,7 +5117,7 @@ export default function App({ onSignOut }) {
                                 fontSize: 13,
                                 fontWeight: 500,
                                 whiteSpace: "nowrap",
-                                color: ink(active ? t.tone : t.key === "beastforms" || t.key === "campaign" ? t.tone + "B3" : "var(--mh-muted)"),
+                                color: ink(active ? t.tone : t.key === "beastforms" || t.key === "campaign" ? alpha(t.tone, 70) : "var(--mh-muted)"),
                                 borderBottom: "2px solid " + (active ? t.tone : "transparent"),
                               }}
                             >
@@ -5107,13 +5139,13 @@ export default function App({ onSignOut }) {
                             unconscious={conditions.includes("Inconsciente")}
                             >
                               <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
-                                <div style={{ flex: 1, textAlign: "center", border: "1px solid " + themeColor, background: themeColor + "14", borderRadius: 12, padding: "12px 6px" }}>
+                                <div style={{ flex: 1, textAlign: "center", border: "1px solid " + themeColor, background: alpha(themeColor, 8), borderRadius: 12, padding: "12px 6px" }}>
                                   <div style={{ fontSize: 10, color: "var(--mh-muted)" }}>Evasión</div>
                                   <div className="mh-serif" style={{ fontSize: 26, fontWeight: 700, color: ink(themeColor) }}>
                                     {c.r_evasion ? Number(c.r_evasion) + (beastformInfo?.evasionBonus || 0) + equipMods.evasion : "—"}
                                   </div>
                                 </div>
-                                <div style={{ flex: 1.4, border: "1px solid #E3B04B", background: "#E3B04B0D", borderRadius: 12, padding: "12px 10px" }}>
+                                <div style={{ flex: 1.4, border: "1px solid var(--acc)", background: "color-mix(in srgb, var(--acc) 5%, transparent)", borderRadius: 12, padding: "12px 10px" }}>
                                   <div style={{ fontSize: 10, color: "var(--mh-muted)", textAlign: "center", marginBottom: 4 }}>Armadura</div>
                                   <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
                                     <div className="mh-serif" style={{ fontSize: 26, fontWeight: 700, color: "var(--mh-gold-ink)" }}>
@@ -5129,8 +5161,8 @@ export default function App({ onSignOut }) {
                                               size={22}
                                               onClick={() => toggleCharSlot(viewingCharId, "armor_marked", i, Number(c.armor_marked || 0))}
                                               title={filled ? "Armadura disponible — clic para gastarla" : "Armadura gastada — clic para recuperarla"}
-                                              color="#E3B04B"
-                                              fill={filled ? "#E3B04B" : "transparent"}
+                                              color="var(--acc)"
+                                              fill={filled ? "var(--acc)" : "transparent"}
                                               style={{ cursor: "pointer" }}
                                             />
                                           );
@@ -5155,7 +5187,7 @@ export default function App({ onSignOut }) {
                                   <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Menor</div>
                                   <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700 }}>{major > 1 ? major - 1 : "—"}</div>
                                 </div>
-                                <div onClick={() => applyDamage(viewingCharId, 2)} className="mh-tip-anchor" style={{ flex: 1, textAlign: "center", border: "1px solid #E3B04B", background: "#E3B04B14", borderRadius: 10, padding: "8px 4px", cursor: "pointer" }}>
+                                <div onClick={() => applyDamage(viewingCharId, 2)} className="mh-tip-anchor" style={{ flex: 1, textAlign: "center", border: "1px solid var(--acc)", background: "color-mix(in srgb, var(--acc) 8%, transparent)", borderRadius: 10, padding: "8px 4px", cursor: "pointer" }}>
                                   <span className="mh-tip">Pulsa para -2 PV</span>
                                   <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Mayor</div>
                                   <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700, color: "var(--mh-gold-ink)" }}>{major}</div>
@@ -5253,7 +5285,7 @@ export default function App({ onSignOut }) {
                                           padding: "5px 10px",
                                           borderRadius: 20,
                                           border: "1px solid " + (active ? themeColor : "var(--mh-line2)"),
-                                          background: active ? themeColor + "22" : "transparent",
+                                          background: active ? alpha(themeColor, 13) : "transparent",
                                           color: ink(active ? themeColor : "var(--mh-ink3)"),
                                           fontWeight: 600,
                                           cursor: "pointer",
@@ -5276,8 +5308,8 @@ export default function App({ onSignOut }) {
                                         fontSize: 11.5,
                                         padding: "5px 10px",
                                         borderRadius: 20,
-                                        border: "1px solid #E3B04B",
-                                        background: "#E3B04B22",
+                                        border: "1px solid var(--acc)",
+                                        background: "color-mix(in srgb, var(--acc) 13%, transparent)",
                                         color: "var(--mh-gold-ink)",
                                         fontWeight: 600,
                                         cursor: "pointer",
@@ -5345,7 +5377,7 @@ export default function App({ onSignOut }) {
                                 const bfTraitKey = TRAITS.find((t) => t.label === bfTrait)?.key;
                                 return (
                                   <div style={{ display: "flex", flexDirection: "column", gap: 12, flex: 1, minHeight: 0 }}>
-                                    <div style={{ border: "1px solid " + activeBeastform.color, background: activeBeastform.color + "14", borderRadius: 10, padding: "12px 14px", flexShrink: 0 }}>
+                                    <div style={{ border: "1px solid " + activeBeastform.color, background: alpha(activeBeastform.color, 8), borderRadius: 10, padding: "12px 14px", flexShrink: 0 }}>
                                       <div style={{ fontSize: 10.5, fontWeight: 700, color: ink(activeBeastform.color), textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 4 }}>
                                         Ataque · {activeBeastform.key}
                                       </div>
@@ -5489,7 +5521,7 @@ export default function App({ onSignOut }) {
                                           <>
                                             <ArrowLeft
                                               size={15}
-                                              color="#E3B04B"
+                                              color="var(--acc)"
                                               title="Equipar desde el inventario"
                                               style={{ position: "absolute", top: 10, right: 10, cursor: "pointer", transform: "rotate(180deg)" }}
                                               onClick={() => setEquipPickerSlot(pickerOpen ? null : slotKind)}
@@ -5578,7 +5610,7 @@ export default function App({ onSignOut }) {
                                                   fontSize: 9.5,
                                                   fontWeight: 700,
                                                   color: ink(val > 0 ? "#7FB77A" : "#D9644E"),
-                                                  background: (val > 0 ? "#7FB77A" : "#D9644E") + "1A",
+                                                  background: alpha((val > 0 ? "#7FB77A" : "#D9644E"), 10),
                                                   padding: "2px 7px",
                                                   borderRadius: 20,
                                                 }}
@@ -5648,7 +5680,7 @@ export default function App({ onSignOut }) {
                                                 fontSize: 9.5,
                                                 fontWeight: 700,
                                                 color: ink(val > 0 ? "#7FB77A" : "#D9644E"),
-                                                background: (val > 0 ? "#7FB77A" : "#D9644E") + "1A",
+                                                background: alpha((val > 0 ? "#7FB77A" : "#D9644E"), 10),
                                                 padding: "2px 7px",
                                                 borderRadius: 20,
                                               }}
@@ -5752,7 +5784,7 @@ export default function App({ onSignOut }) {
                                       // unlocked but empty — next slot to fill
                                       if (showAddExperience && i === experiences.length) {
                                         return (
-                                          <div key={i} style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: 8, border: "1px solid #E3B04B", borderRadius: 8, padding: "12px 14px", flex: 1 }}>
+                                          <div key={i} style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: 8, border: "1px solid var(--acc)", borderRadius: 8, padding: "12px 14px", flex: 1 }}>
                                             <input className="mh-input" style={{ fontSize: 12 }} placeholder="Descripción..." value={expDraftText} onChange={(e) => setExpDraftText(e.target.value)} autoFocus />
                                             <div style={{ display: "flex", gap: 6 }}>
                                               <input className="mh-input" type="number" style={{ fontSize: 12, width: 60 }} value={expDraftBonus} onChange={(e) => setExpDraftBonus(e.target.value)} />
@@ -5802,7 +5834,7 @@ export default function App({ onSignOut }) {
 
                           if (isElemental) {
                             const activeElement = c.f_elemental_active;
-                            const boxColor = activeElement ? ELEMENT_COLORS[activeElement] : "#E3B04B";
+                            const boxColor = activeElement ? ELEMENT_COLORS[activeElement] : "var(--acc)";
                             page1Rows.push([
                               <div
                                 key="subclass"
@@ -5823,7 +5855,7 @@ export default function App({ onSignOut }) {
                                   border: "1px solid " + boxColor,
                                   borderRadius: 10,
                                   padding: "8px 12px",
-                                  background: boxColor + "14",
+                                  background: alpha(boxColor, 8),
                                   display: "flex",
                                   flexDirection: "column",
                                   justifyContent: "center",
@@ -5838,7 +5870,7 @@ export default function App({ onSignOut }) {
                                     fontSize: 9,
                                     fontWeight: 700,
                                     color: "var(--mh-gold-ink)",
-                                    border: "1px solid #E3B04B",
+                                    border: "1px solid var(--acc)",
                                     borderRadius: 20,
                                     padding: "1px 8px",
                                     textTransform: "uppercase",
@@ -5891,7 +5923,7 @@ export default function App({ onSignOut }) {
                             page1Rows.push([
                               <CompactCard
                                 key="subclass"
-                                accent="#E3B04B"
+                                accent="var(--acc)"
                                 kicker="Subclase"
                                 title={subclassEntry.key}
                                 description={subclassEntry.blurb}
@@ -5953,13 +5985,13 @@ export default function App({ onSignOut }) {
                           page1Rows.push([
                             <CompactCard
                               key="hope"
-                              accent="#E3B04B"
+                              accent="var(--acc)"
                               kicker="Característica de Esperanza"
                               title={hopeFeature.name}
                               description={hopeFeature.text}
                               disabled={!canAfford}
                               footer={canAfford ? `Pulsa para usarla (-${hopeFeature.cost} Esperanza)` : "Esperanza insuficiente"}
-                              footerColor={canAfford ? "#E3B04B" : "#D9644E"}
+                              footerColor={canAfford ? "var(--acc)" : "#D9644E"}
                               onClick={() => {
                                 if (!canAfford) return;
                                 if (isDruida) openEvolutionModal(viewingCharId);
@@ -6084,7 +6116,7 @@ export default function App({ onSignOut }) {
                                 {Array.from({ length: 5 }, (_, i) => i).map((i) => {
                                   const cardData = domainCardKeys[i] ? findDomainCard(domainCardKeys[i]) : null;
                                   if (cardData) {
-                                    const dColor = DOMAIN_COLORS[cardData.domain] || "#E3B04B";
+                                    const dColor = DOMAIN_COLORS[cardData.domain] || "var(--acc)";
                                     const DIcon = DOMAIN_ICONS[cardData.domain] || Sparkles;
                                     return (
                                       <div
@@ -6112,7 +6144,7 @@ export default function App({ onSignOut }) {
                                         <div className="mh-dslot-shade" />
                                         <span className="mh-dslot-gem" title={"Nivel " + cardData.level}>{cardData.level}</span>
                                         <span className="mh-dslot-recall" title="Coste de recuperación">
-                                          <Zap size={11} color="#E3B04B" />
+                                          <Zap size={11} color="var(--acc)" />
                                           {cardData.recall}
                                         </span>
                                         <div className="mh-dslot-txt">
@@ -6431,7 +6463,7 @@ export default function App({ onSignOut }) {
                                           position: "absolute",
                                           inset: 0,
                                           background: "var(--mh-panel)",
-                                          border: "1px solid #E3B04B",
+                                          border: "1px solid var(--acc)",
                                           borderRadius: 10,
                                           padding: 10,
                                           display: "flex",
@@ -6495,7 +6527,7 @@ export default function App({ onSignOut }) {
 
                                             if (showAddBackpackItemForm && i === backpackItems.length) {
                                               return (
-                                                <div key={"bp-" + i} style={{ display: "flex", flexDirection: "column", gap: 6, border: "1px solid #E3B04B", borderRadius: 8, padding: "8px 12px", minHeight: 44, flex: 1 }}>
+                                                <div key={"bp-" + i} style={{ display: "flex", flexDirection: "column", gap: 6, border: "1px solid var(--acc)", borderRadius: 8, padding: "8px 12px", minHeight: 44, flex: 1 }}>
                                                   <input
                                                     className="mh-input"
                                                     style={{ fontSize: 12 }}
@@ -6570,8 +6602,8 @@ export default function App({ onSignOut }) {
                                           alignItems: backpack.description ? "flex-start" : "center",
                                           justifyContent: "space-between",
                                           gap: 10,
-                                          border: "1px solid #E3B04B",
-                                          background: "#E3B04B0D",
+                                          border: "1px solid var(--acc)",
+                                          background: "color-mix(in srgb, var(--acc) 5%, transparent)",
                                           borderRadius: 8,
                                           padding: "8px 12px",
                                           cursor: "pointer",
@@ -6599,7 +6631,7 @@ export default function App({ onSignOut }) {
                                           )}
                                         </div>
                                         <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-                                          {showBackpackSlots ? <ChevronDown size={14} color="#E3B04B" /> : <ChevronRight size={14} color="#E3B04B" />}
+                                          {showBackpackSlots ? <ChevronDown size={14} color="var(--acc)" /> : <ChevronRight size={14} color="var(--acc)" />}
                                           <X
                                             size={13}
                                             style={{ cursor: "pointer", color: "#D9644E", marginTop: backpack.description ? 2 : 0 }}
@@ -6645,7 +6677,7 @@ export default function App({ onSignOut }) {
                                       fontSize: 12.5,
                                       fontWeight: 700,
                                       color: "var(--mh-gold-ink)",
-                                      border: "1px solid #E3B04B",
+                                      border: "1px solid var(--acc)",
                                       borderRadius: 20,
                                       padding: "3px 12px",
                                     }}
@@ -6668,8 +6700,8 @@ export default function App({ onSignOut }) {
                                                 width: tier.shape === "circle" ? 22 : 26,
                                                 height: 22,
                                                 borderRadius: tier.shape === "circle" ? "50%" : 6,
-                                                border: "1px solid #E3B04B",
-                                                background: i < counts[idx] ? "#E3B04B" : "transparent",
+                                                border: "1px solid var(--acc)",
+                                                background: i < counts[idx] ? "var(--acc)" : "transparent",
                                                 cursor: "pointer",
                                               }}
                                             />
@@ -6863,7 +6895,7 @@ export default function App({ onSignOut }) {
                                       title={tierLocked ? `Se desbloquea en Rango ${b.tier}` : !selected && stressFull ? "Sin Estrés disponible para activarla" : undefined}
                                       style={{
                                         border: "1px solid " + (locked ? "var(--mh-line)" : selected ? b.color : "var(--mh-line)"),
-                                        background: locked ? "var(--mh-panel2)" : selected ? b.color + "14" : "var(--mh-panel)",
+                                        background: locked ? "var(--mh-panel2)" : selected ? alpha(b.color, 8) : "var(--mh-panel)",
                                         borderRadius: 10,
                                         padding: "8px 12px",
                                         cursor: locked ? "not-allowed" : "pointer",
@@ -7433,7 +7465,7 @@ export default function App({ onSignOut }) {
                           padding: "7px 13px",
                           borderRadius: 20,
                           border: "1px solid " + (evoBeastform === b.key ? b.color : "var(--mh-line2)"),
-                          background: evoBeastform === b.key ? b.color + "1A" : "var(--mh-panel)",
+                          background: evoBeastform === b.key ? alpha(b.color, 10) : "var(--mh-panel)",
                           color: ink(evoBeastform === b.key ? b.color : "var(--mh-ink)"),
                           fontSize: 13,
                           fontWeight: evoBeastform === b.key ? 600 : 500,
@@ -7823,7 +7855,7 @@ export default function App({ onSignOut }) {
                   <div
                     className="mh-card mh-card-anim mh-tilt"
                     style={{
-                      "--glow": (viewingCardDetail.tier ? TIER_COLORS[viewingCardDetail.tier].color : viewingCardDetail.accent || "#E3B04B") + "55",
+                      "--glow": alpha((viewingCardDetail.tier ? TIER_COLORS[viewingCardDetail.tier].color : viewingCardDetail.accent || "var(--acc)"), 33),
                       margin: 0,
                       width: "min(300px, 100%)",
                       height: "min(420px, 80vh)",
@@ -7973,7 +8005,7 @@ export default function App({ onSignOut }) {
                                 fontSize: 11.5,
                                 fontWeight: 600,
                                 color: "var(--mh-gold-ink)",
-                                background: "#E3B04B14",
+                                background: "color-mix(in srgb, var(--acc) 8%, transparent)",
                                 padding: "5px 12px",
                                 borderRadius: 20,
                               }}
@@ -8022,13 +8054,13 @@ export default function App({ onSignOut }) {
                 })() : (
                   <div
                     className="mh-card mh-card-anim mh-tilt"
-                    style={{ "--glow": (viewingCardDetail.accent || "#E3B04B") + "44", margin: 0, width: "min(420px, 100%)", padding: 0, overflow: "hidden", position: "relative" }}
+                    style={{ "--glow": alpha((viewingCardDetail.accent || "var(--acc)"), 27), margin: 0, width: "min(420px, 100%)", padding: 0, overflow: "hidden", position: "relative" }}
                     onClick={(e) => e.stopPropagation()}
                     onPointerMove={tiltCard}
                     onPointerLeave={resetCardTilt}
                   >
                     <div className="mh-glare" />
-                    <div style={{ background: viewingCardDetail.accent || "#E3B04B", color: ink(viewingCardDetail.accent ? "#FFFFFF" : "#1F1606"), padding: "10px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ background: viewingCardDetail.accent || "var(--acc)", color: ink(viewingCardDetail.accent ? "#FFFFFF" : "#1F1606"), padding: "10px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4 }}>
                         {viewingCardDetail.kicker}
                       </span>
@@ -8102,8 +8134,8 @@ export default function App({ onSignOut }) {
                                     key={card.key}
                                     onClick={() => !disabled && toggleTempDomainCard(card.key)}
                                     style={{
-                                      border: "1px solid " + (selected ? "#E3B04B" : "var(--mh-line)"),
-                                      background: selected ? "#E3B04B14" : "var(--mh-panel2)",
+                                      border: "1px solid " + (selected ? "var(--acc)" : "var(--mh-line)"),
+                                      background: selected ? "color-mix(in srgb, var(--acc) 8%, transparent)" : "var(--mh-panel2)",
                                       borderRadius: 8,
                                       padding: "10px 12px",
                                       cursor: disabled ? "not-allowed" : "pointer",
@@ -8111,7 +8143,7 @@ export default function App({ onSignOut }) {
                                     }}
                                   >
                                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                                      {selected && <Check size={13} color="#E3B04B" />}
+                                      {selected && <Check size={13} color="var(--acc)" />}
                                       <span style={{ fontSize: 13.5, fontWeight: 700, color: "var(--mh-ink)" }}>{card.key}</span>
                                       <span style={{ fontSize: 10.5, color: "var(--mh-muted)", marginLeft: "auto" }}>
                                         Nivel {card.level} · {card.type} · Recuperación {card.recall}
