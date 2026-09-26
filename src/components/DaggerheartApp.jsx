@@ -1266,10 +1266,22 @@ const sharedStyles = `
     to { translate: var(--tx, 20px) var(--ty, -14px); rotate: 3deg; }
   }
   @keyframes mh-beast-ring { from { scale: .05; opacity: .9; } to { scale: 2.4; opacity: 0; } }
+  .mh-claws {
+    position: absolute; left: 50%; top: 48%; width: min(70vmin, 620px); height: min(70vmin, 620px);
+    translate: -50% -50%; color: var(--beast); pointer-events: none;
+    filter: drop-shadow(0 0 18px var(--beast));
+    animation: mh-claws 1.1s cubic-bezier(.2,.8,.2,1) both;
+  }
+  @keyframes mh-claws {
+    0% { opacity: 0; scale: 1.25; rotate: -8deg; clip-path: inset(0 100% 0 0); }
+    25% { opacity: .95; clip-path: inset(0 0 0 0); }
+    60% { opacity: .75; }
+    100% { opacity: 0; scale: 1; rotate: 0deg; clip-path: inset(0 0 0 0); }
+  }
 
   @media (prefers-reduced-motion: reduce) {
-    .mh-beast, .mh-beast-bg, .mh-beast-ring { animation: none !important; }
-    .mh-beast-ring { display: none; }
+    .mh-beast, .mh-beast-bg, .mh-beast-ring, .mh-claws { animation: none !important; }
+    .mh-beast-ring, .mh-claws { display: none; }
     .mh-die, .mh-pop, .mh-roll-pop, .mh-appear-late, .mh-burst, .mh-dots { animation: none !important; }
     .mh-overlay, .mh-card-anim, .mh-dslot, .mh-overlay.is-closing, .mh-overlay.is-closing .mh-card-anim { animation: none !important; }
     .mh-tilt { transform: none !important; transition: none; }
@@ -1277,6 +1289,10 @@ const sharedStyles = `
 `;
 
 /* ---------- Siluetas de Forma de Bestia ---------- */
+
+const TRANSFORM_THEMES = {
+  "Forma de Lobo": { key: "Forma de Lobo", color: "#C45050" },
+};
 
 const BEAST_SPOTS = [
   { right: "-3%", bottom: "-7%", size: "min(58vh, 540px)", o: 0.34, d: "22s", flip: false, tx: "-26px", ty: "-10px" },
@@ -1286,7 +1302,7 @@ const BEAST_SPOTS = [
 ];
 
 // Siluetas de game-icons.net (CC BY 3.0); se descargan solo cuando alguien usa una Forma de Bestia.
-function BeastBackdrop({ form }) {
+function BeastBackdrop({ form, kind = "beast" }) {
   const [lib, setLib] = useState(null);
   useEffect(() => {
     let alive = true;
@@ -1295,13 +1311,20 @@ function BeastBackdrop({ form }) {
       alive = false;
     };
   }, []);
-  const names = lib?.BEAST_SILHOUETTES[form.key] || ["wolf-howl"];
+  const isTransform = kind === "transform";
+  const names = (isTransform ? lib?.TRANSFORM_SILHOUETTES[form.key] : lib?.BEAST_SILHOUETTES[form.key]) || ["wolf-howl"];
+  const pathFor = (name) => lib?.BEAST_ICON_PATHS[name] || lib?.TRANSFORM_ICON_PATHS?.[name];
   return (
     <div className="mh-beast-bg" style={{ "--beast": form.color }} aria-hidden="true">
       <div className="mh-beast-ring" />
+      {isTransform && lib?.TRANSFORM_ICON_PATHS?.["triple-scratches"] && (
+        <svg className="mh-claws" viewBox="0 0 512 512">
+          <path d={lib.TRANSFORM_ICON_PATHS["triple-scratches"]} fill="currentColor" />
+        </svg>
+      )}
       {lib &&
         BEAST_SPOTS.map((p, i) => {
-          const d = lib.BEAST_ICON_PATHS[names[i % names.length]];
+          const d = pathFor(names[i % names.length]);
           if (!d) return null;
           return (
             <svg
@@ -2597,7 +2620,9 @@ export default function App({ onSignOut }) {
       updateCharacterField(id, "f_transformation_form_active", "");
       return;
     }
-    markStress(id, 1, { f_transformation_form_active: formName });
+    const leaveBeastform = c.f_beastform ? { f_beastform: "", f_evolution_trait: "" } : {};
+    markStress(id, 1, { f_transformation_form_active: formName, ...leaveBeastform });
+    if (c.f_beastform) postCampaignEvent(id, `🐾 Sale de su Forma de Bestia (${c.f_beastform}) al activar ${formName}.`);
     postCampaignEvent(id, `✨ Activa ${formName}`);
   };
 
@@ -3322,6 +3347,10 @@ export default function App({ onSignOut }) {
     if (c.f_elemental_active) {
       postCampaignEvent(id, `🌪️ Deja de canalizar ${c.f_elemental_active} (${isLong ? "descanso largo" : "descanso corto"})`);
       restPatch = { ...restPatch, f_elemental_active: "" };
+    }
+    if (c.f_transformation_form_active) {
+      postCampaignEvent(id, `🌙 Sale de ${c.f_transformation_form_active} al descansar.`);
+      restPatch = { ...restPatch, f_transformation_form_active: "" };
     }
     updateCharacterFields(id, restPatch);
     clearTimeout(restMsgTimer.current);
@@ -4401,10 +4430,16 @@ export default function App({ onSignOut }) {
               overflow: "hidden",
               borderTop: "4px solid " + themeColor,
               filter: isDead ? "grayscale(1)" : "none",
-              "--panel-bg": beastformInfo ? "rgba(27,24,36,0.58)" : "#1B1824",
+              "--panel-bg": beastformInfo || TRANSFORM_THEMES[c.f_transformation_form_active] ? "rgba(27,24,36,0.58)" : "#1B1824",
             }}
           >
-            {beastformInfo && <BeastBackdrop key={beastformInfo.key} form={beastformInfo} />}
+            {beastformInfo ? (
+              <BeastBackdrop key={beastformInfo.key} form={beastformInfo} />
+            ) : (
+              TRANSFORM_THEMES[c.f_transformation_form_active] && (
+                <BeastBackdrop key={"t-" + c.f_transformation_form_active} form={TRANSFORM_THEMES[c.f_transformation_form_active]} kind="transform" />
+              )
+            )}
             {/* Header */}
             <div
               style={{

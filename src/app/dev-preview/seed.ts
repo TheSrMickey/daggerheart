@@ -38,6 +38,7 @@ const characters: Record<string, Record<string, string>> = {
     f_proficiency: "1",
     f_ancestry: "Elfo",
     f_community: "Salvaje",
+    f_transformation: "Hombre Lobo",
     t_agility: "1",
     t_strength: "-1",
     t_finesse: "0",
