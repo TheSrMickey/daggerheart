@@ -1062,6 +1062,19 @@ const SCENE_PRESETS = [
 const stageScenesOf = (st) => st.scenes || (st.scene?.title || st.scene?.image ? [{ id: "s-legacy", title: st.scene.title || "", image: st.scene.image || "" }] : []);
 const activeSceneIdOf = (st) => (st.activeSceneId !== undefined ? st.activeSceneId : stageScenesOf(st)[0]?.id || null);
 
+// Expresiones de los personajes del reparto. Si falta una, se usa la tranquila.
+const EXPRESSIONS = [
+  { key: "tranquila", label: "Tranquila" },
+  { key: "feliz", label: "Feliz" },
+  { key: "enfadada", label: "Enfadada" },
+];
+// Los personajes antiguos tenían una sola imagen (imgId): cuenta como la tranquila.
+const castExprImgs = (m) => ({ ...(m?.imgId ? { tranquila: m.imgId } : {}), ...(m?.imgs || {}) });
+const castImgIdFor = (m, expr) => {
+  const imgs = castExprImgs(m);
+  return imgs[expr] || imgs.tranquila || Object.values(imgs)[0] || null;
+};
+
 const STAGE_TABS = [
   { key: "escena", label: "Escena", Icon: Clapperboard },
   { key: "mapa", label: "Mapa", Icon: MapPinned },
@@ -1825,6 +1838,19 @@ const sharedStyles = `
   .mh-gm-castadd-f { flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
   .mh-gm-castadd-f .mh-btn-ghost { align-self: flex-start; font-size: 12px; display: inline-flex; align-items: center; gap: 5px; }
   .mh-gm-err { font-size: 11.5px; color: #D9644E; }
+  .mh-gm-exprs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .mh-gm-expr { position: relative; }
+  .mh-gm-expr-pick { width: 100%; display: flex; align-items: center; gap: 8px; padding: 5px 8px 5px 5px; border-radius: 10px; border: 1px solid var(--mh-line); background: var(--mh-panel); cursor: pointer; font: inherit; color: inherit; text-align: left; }
+  .mh-gm-expr.is-on .mh-gm-expr-pick { border-color: #C9A24A; box-shadow: 0 0 0 3px color-mix(in srgb, #C9A24A 25%, transparent); }
+  .mh-gm-expr-img { width: 38px; height: 38px; flex-shrink: 0; border-radius: 7px; overflow: hidden; display: flex; align-items: center; justify-content: center; color: var(--mh-muted); background: radial-gradient(circle at 50% 35%, #6E7F8C, #2B3A4F); }
+  .mh-gm-expr.is-empty .mh-gm-expr-img { background: var(--mh-panel2); border: 1.5px dashed var(--mh-line2); box-sizing: border-box; }
+  .mh-gm-expr-img img { width: 100%; height: 100%; object-fit: cover; object-position: center 15%; }
+  .mh-gm-expr-l { font-size: 12px; font-weight: 600; color: var(--mh-ink2); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mh-gm-expr.is-empty .mh-gm-expr-l { color: var(--mh-muted); }
+  .mh-gm-expr-up { position: absolute; top: -6px; right: -6px; width: 22px; height: 22px; border-radius: 50%; background: var(--mh-ink); color: var(--mh-panel); display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.25); }
+  .mh-gm-expr-up:hover { background: #C9A24A; color: #1B130B; }
+  .mh-gm-expr-up:focus-within { outline: 2px solid #C9A24A; outline-offset: 2px; }
+  .mh-gm-expr-up input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
   .mh-gm-dlg-prev { position: relative; aspect-ratio: 16 / 9; border-radius: 10px; overflow: hidden; background: #2B3A4F center / cover no-repeat; }
   .mh-gm-dlg-prev.is-blank { background-image: linear-gradient(#2B3A4F, #6E7F8C 58%, #C9A879); }
   .mh-gm-dlg-hint { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,.8); font-size: 12.5px; }
@@ -2761,7 +2787,7 @@ export default function App({ onSignOut }) {
   const castImgFetching = useRef(new Set());
   const [castDraft, setCastDraft] = useState({ name: "", img: "" });
   const [castError, setCastError] = useState("");
-  const [dialogueDraft, setDialogueDraft] = useState({ castId: null, text: "" });
+  const [dialogueDraft, setDialogueDraft] = useState({ castId: null, text: "", expr: "tranquila" });
   const [hiddenDialogue, setHiddenDialogue] = useState(null);
   const [handoutsSeen, setHandoutsSeen] = useState([]);
   const [handoutDraft, setHandoutDraft] = useState({ kind: "imagen", title: "", image: "", text: "" });
@@ -2848,8 +2874,8 @@ export default function App({ onSignOut }) {
         castList = cast ? JSON.parse(cast.value) : [];
       } catch (e) {}
       setCampaignCast(castList);
-      castList.forEach((m) => ensureCastImg(m.imgId));
-      setDialogueDraft({ castId: castList[0]?.id || null, text: "" });
+      castList.forEach((m) => Object.values(castExprImgs(m)).forEach(ensureCastImg));
+      setDialogueDraft({ castId: castList[0]?.id || null, text: "", expr: "tranquila" });
       setCampaignDetailTab("mesa");
       setPendingCellLabel(null);
     })();
@@ -4550,24 +4576,46 @@ export default function App({ onSignOut }) {
       castImgFetching.current.add(imgId);
       await safeSet("campaign-img:" + imgId, castDraft.img, true);
     }
-    await saveCast([...campaignCast, { id, name, imgId }]);
+    await saveCast([...campaignCast, { id, name, imgs: imgId ? { tranquila: imgId } : {} }]);
     setCastDraft({ name: "", img: "" });
-    setDialogueDraft((d) => ({ ...d, castId: id }));
+    setDialogueDraft((d) => ({ ...d, castId: id, expr: "tranquila" }));
   };
 
   const removeCastMember = async (id) => {
     const m = campaignCast.find((x) => x.id === id);
-    // La tabla compartida no permite borrar filas: vaciamos la imagen.
-    if (m?.imgId) safeSet("campaign-img:" + m.imgId, "", true);
+    // La tabla compartida no permite borrar filas: vaciamos sus imágenes.
+    Object.values(castExprImgs(m)).forEach((imgId) => safeSet("campaign-img:" + imgId, "", true));
     await saveCast(campaignCast.filter((x) => x.id !== id));
     if (dialogueDraft.castId === id) setDialogueDraft((d) => ({ ...d, castId: null }));
+  };
+
+  const uploadExpression = async (memberId, expr, file) => {
+    if (!file || !viewingCampaignId) return;
+    setCastError("");
+    if (!/^image\//.test(file.type)) return setCastError("Ese archivo no es una imagen.");
+    let data;
+    try {
+      data = await readCastImage(file);
+    } catch (e) {
+      return setCastError("No se pudo leer la imagen.");
+    }
+    const imgId = viewingCampaignId + "-" + memberId + "-" + expr + "-" + Date.now();
+    setCastImgs((m) => ({ ...m, [imgId]: data }));
+    castImgFetching.current.add(imgId);
+    await safeSet("campaign-img:" + imgId, data, true);
+    const old = castExprImgs(campaignCast.find((m) => m.id === memberId))[expr];
+    if (old) safeSet("campaign-img:" + old, "", true);
+    await saveCast(campaignCast.map((m) => (m.id === memberId ? { ...m, imgId: undefined, imgs: { ...castExprImgs(m), [expr]: imgId } } : m)));
+    setDialogueDraft((d) => ({ ...d, expr }));
   };
 
   const sendDialogue = async () => {
     const m = campaignCast.find((x) => x.id === dialogueDraft.castId);
     const text = dialogueDraft.text.trim();
     if (!m || !text || !viewingCampaignId) return;
-    await saveStage(viewingCampaignId, { dialogue: { id: "d" + Date.now(), name: m.name, imgId: m.imgId || null, text }, live: "escena" });
+    const expr = dialogueDraft.expr || "tranquila";
+    await saveStage(viewingCampaignId, { dialogue: { id: "d" + Date.now(), castId: m.id, name: m.name, expr, imgId: castImgIdFor(m, expr), text }, live: "escena" });
+    // La expresión se mantiene para la siguiente frase: suele encadenarse el mismo tono.
     setDialogueDraft((d) => ({ ...d, text: "" }));
     postChat(viewingCampaignId, { kind: "msg", author: m.name, gm: true, npc: true, text });
   };
@@ -5427,15 +5475,15 @@ export default function App({ onSignOut }) {
                           <div className="mh-gm-h">
                             <MessageSquareQuote size={15} /> Diálogos
                           </div>
-                          <div className="mh-gm-sub">Crea el reparto con la imagen de cada personaje (un PNG con fondo transparente queda mejor) y envía lo que dice. Aparece sobre la escena de los jugadores.</div>
+                          <div className="mh-gm-sub">Crea el reparto con la imagen de cada personaje (un PNG con fondo transparente queda mejor), añade sus expresiones y envía lo que dice con la cara que toque. Aparece sobre la escena de los jugadores.</div>
                           <div className="mh-gm-dlg">
                             <div className="mh-gm-dlg-col">
                               <div className="mh-gm-h2">Reparto</div>
                               <div className="mh-gm-cast">
                                 {campaignCast.map((m) => (
                                   <div key={m.id} className={"mh-gm-castm" + (dialogueDraft.castId === m.id ? " is-on" : "")}>
-                                    <button type="button" className="mh-gm-castm-pick" aria-pressed={dialogueDraft.castId === m.id} onClick={() => setDialogueDraft((d) => ({ ...d, castId: m.id }))}>
-                                      <span className="mh-gm-castm-img">{castImgs[m.imgId] ? <img src={castImgs[m.imgId]} alt="" /> : <User size={22} />}</span>
+                                    <button type="button" className="mh-gm-castm-pick" aria-pressed={dialogueDraft.castId === m.id} onClick={() => setDialogueDraft((d) => (d.castId === m.id ? d : { ...d, castId: m.id, expr: "tranquila" }))}>
+                                      <span className="mh-gm-castm-img">{castImgs[castImgIdFor(m, "tranquila")] ? <img src={castImgs[castImgIdFor(m, "tranquila")]} alt="" /> : <User size={22} />}</span>
                                       <span className="mh-gm-castm-n">{m.name}</span>
                                     </button>
                                     <button type="button" className="mh-gm-castm-x" aria-label={"Quitar a " + m.name} title="Quitar del reparto" onClick={() => removeCastMember(m.id)}>
@@ -5471,12 +5519,46 @@ export default function App({ onSignOut }) {
                               <div className="mh-gm-h2">Qué dice</div>
                               {(() => {
                                 const who = campaignCast.find((m) => m.id === dialogueDraft.castId);
+                                if (!who) return null;
+                                const imgs = castExprImgs(who);
+                                return (
+                                  <div className="mh-gm-exprs" role="radiogroup" aria-label="Expresión">
+                                    {EXPRESSIONS.map((ex) => {
+                                      const own = imgs[ex.key];
+                                      const on = (dialogueDraft.expr || "tranquila") === ex.key;
+                                      return (
+                                        <div key={ex.key} className={"mh-gm-expr" + (on ? " is-on" : "") + (own ? "" : " is-empty")}>
+                                          <button type="button" role="radio" aria-checked={on} className="mh-gm-expr-pick" onClick={() => setDialogueDraft((d) => ({ ...d, expr: ex.key }))} title={own ? ex.label : ex.label + " (sin imagen: se usará la tranquila)"}>
+                                            <span className="mh-gm-expr-img">{castImgs[own] ? <img src={castImgs[own]} alt="" /> : <Upload size={16} />}</span>
+                                            <span className="mh-gm-expr-l">{ex.label}</span>
+                                          </button>
+                                          <label className="mh-gm-expr-up" title={own ? "Cambiar la imagen de " + ex.label.toLowerCase() : "Subir la imagen de " + ex.label.toLowerCase()}>
+                                            {own ? <PenLine size={11} /> : <Plus size={11} />}
+                                            <input
+                                              type="file"
+                                              accept="image/png,image/webp,image/jpeg,image/gif"
+                                              aria-label={(own ? "Cambiar" : "Subir") + " expresión " + ex.label.toLowerCase()}
+                                              onChange={(e) => {
+                                                uploadExpression(who.id, ex.key, e.target.files?.[0]);
+                                                e.target.value = "";
+                                              }}
+                                            />
+                                          </label>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                );
+                              })()}
+                              {(() => {
+                                const who = campaignCast.find((m) => m.id === dialogueDraft.castId);
                                 const sceneBg = stage.scene?.image;
+                                const figId = who ? castImgIdFor(who, dialogueDraft.expr || "tranquila") : null;
                                 return (
                                   <div className={"mh-gm-dlg-prev" + (sceneBg ? "" : " is-blank")} style={sceneBg ? { backgroundImage: `url("${sceneBg.replace(/"/g, "%22")}")` } : undefined}>
                                     {who ? (
                                       <div className="mh-dlg is-mini">
-                                        {castImgs[who.imgId] && <img className="mh-dlg-fig" src={castImgs[who.imgId]} alt="" />}
+                                        {castImgs[figId] && <img className="mh-dlg-fig" src={castImgs[figId]} alt="" />}
                                         <div className="mh-dlg-box">
                                           <span className="mh-dlg-name">{who.name}</span>
                                           <div className="mh-dlg-t">{dialogueDraft.text || "Escribe lo que dice…"}</div>
@@ -8155,8 +8237,8 @@ export default function App({ onSignOut }) {
                         const renderDialogue = (big) =>
                           dlg && (
                             <div className={"mh-dlg" + (big ? " is-big" : "")} onClick={(e) => e.stopPropagation()}>
-                              {castImgs[dlg.imgId] && <img className="mh-dlg-fig" src={castImgs[dlg.imgId]} alt={dlg.name} />}
-                              <div className="mh-dlg-box" role="status" aria-live="polite">
+                              {castImgs[dlg.imgId] && <img key={dlg.castId || dlg.name} className="mh-dlg-fig" src={castImgs[dlg.imgId]} alt={dlg.name} />}
+                              <div key={dlg.id} className="mh-dlg-box" role="status" aria-live="polite">
                                 <span className="mh-dlg-name">{dlg.name}</span>
                                 <div className="mh-dlg-t">{dlg.text}</div>
                                 <button type="button" className="mh-dlg-hide" aria-label="Ocultar el diálogo" title="Ocultar" onClick={() => setHiddenDialogue(dlg.id)}>
