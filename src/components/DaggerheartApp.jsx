@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2 } from "lucide-react";
+import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
 import { Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
@@ -1073,6 +1073,17 @@ const SCENE_PRESETS = [
 ].map((sc) => ({ ...sc, image: "/escenas/" + sc.key + ".svg" }));
 
 // Escenas guardadas por el DJ. Las campañas anteriores tenían una sola escena suelta: la tratamos como la primera.
+// campaign-lines guarda { convs: [{ id, sceneId, title, lines: [...] }] }. Antes era una lista suelta de frases.
+const parseConvs = (raw) => {
+  let v;
+  try {
+    v = raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return [];
+  }
+  if (Array.isArray(v)) return v.length ? [{ id: "c-legacy", sceneId: "", title: "Conversación", lines: v }] : [];
+  return Array.isArray(v?.convs) ? v.convs : [];
+};
 const stageScenesOf = (st) => st.scenes || (st.scene?.title || st.scene?.image ? [{ id: "s-legacy", title: st.scene.title || "", image: st.scene.image || "" }] : []);
 const activeSceneIdOf = (st) => (st.activeSceneId !== undefined ? st.activeSceneId : stageScenesOf(st)[0]?.id || null);
 
@@ -1953,6 +1964,35 @@ const sharedStyles = `
   .mh-gm-lines-h .mh-gm-h2 { display: flex; align-items: center; gap: 8px; margin: 0; }
   .mh-gm-lines-acts { display: flex; gap: 8px; }
   .mh-gm-lines-acts button { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; }
+  .mh-gm-cv-end { font-size: 12px; color: var(--mh-muted); align-self: center; }
+  .mh-gm-cvscenes { display: flex; gap: 6px; flex-wrap: wrap; }
+  .mh-gm-cvscene { display: inline-flex; align-items: center; gap: 7px; max-width: 230px; padding: 4px 8px 4px 4px; border-radius: 9px; border: 1px solid var(--mh-line); background: var(--mh-panel); color: var(--mh-ink3); font: 600 12px 'Inter', system-ui, sans-serif; cursor: pointer; }
+  .mh-gm-cvscene:hover { border-color: var(--mh-line2); }
+  .mh-gm-cvscene.is-on { border-color: var(--mh-ink); color: var(--mh-ink); background: var(--mh-panel2); }
+  .mh-gm-cvscene-img { width: 36px; height: 24px; flex-shrink: 0; border-radius: 5px; background: #2B3A4F center / cover no-repeat; }
+  .mh-gm-cvscene-img.is-blank { background-image: linear-gradient(#2B3A4F, #6E7F8C 58%, #C9A879); }
+  .mh-gm-cvscene-t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mh-gm-cvscene .mh-gm-count { padding: 0 6px; }
+  .mh-gm-cv { display: grid; grid-template-columns: minmax(180px, 230px) 1fr; gap: 12px; align-items: start; }
+  @media (max-width: 720px) { .mh-gm-cv { grid-template-columns: 1fr; } }
+  .mh-gm-cvlist { display: flex; flex-direction: column; gap: 5px; }
+  .mh-gm-cvi { display: flex; align-items: center; gap: 2px; border: 1px solid var(--mh-line); border-radius: 9px; background: var(--mh-panel); padding-right: 3px; }
+  .mh-gm-cvi.is-on { border-color: #C9A24A; background: color-mix(in srgb, #C9A24A 9%, var(--mh-panel)); }
+  .mh-gm-cvi .mh-input { margin: 3px; padding: 5px 8px; font-size: 12.5px; }
+  .mh-gm-cvi-pick { flex: 1; min-width: 0; display: flex; align-items: center; gap: 7px; padding: 8px 9px; border: 0; background: transparent; color: var(--mh-ink2); font: 600 12.5px 'Inter', system-ui, sans-serif; cursor: pointer; text-align: left; }
+  .mh-gm-cvi-pick svg { flex-shrink: 0; color: var(--mh-muted); }
+  .mh-gm-cvi.is-on .mh-gm-cvi-pick { color: var(--mh-ink); }
+  .mh-gm-cvi.is-on .mh-gm-cvi-pick svg { color: #C9A24A; }
+  .mh-gm-cvi-t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mh-gm-cvi-n { font-size: 11px; font-weight: 700; color: var(--mh-muted); }
+  .mh-gm-cvi-acts { display: flex; gap: 2px; }
+  .mh-gm-cvi-acts .mh-gm-ib { width: 26px; height: 26px; }
+  .mh-gm-cvadd { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; border: 1px dashed var(--mh-line2); border-radius: 9px; background: transparent; color: var(--mh-ink3); font: 600 12.5px 'Inter', system-ui, sans-serif; cursor: pointer; }
+  .mh-gm-cvadd:hover { color: var(--mh-ink); border-color: var(--mh-ink3); }
+  .mh-gm-cvbody { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .mh-gm-cvbody-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .mh-gm-cvbody-h .mh-serif { font-size: 15px; color: var(--mh-ink); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mh-gm-cvbody-h .mh-btn { font-size: 12px; padding: 6px 11px; display: inline-flex; align-items: center; gap: 5px; }
   .mh-gm-linelist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
   .mh-gm-line { display: flex; align-items: center; gap: 10px; padding: 7px 8px; border: 1px solid var(--mh-line); border-radius: 10px; background: var(--mh-panel); }
   .mh-gm-line.is-live { border-color: color-mix(in srgb, #D9644E 60%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, #D9644E 12%, transparent); }
@@ -3202,8 +3242,11 @@ export default function App({ onSignOut }) {
   const [dialogueDraft, setDialogueDraft] = useState({ castId: null, text: "", expr: "tranquila" });
   const [hiddenDialogue, setHiddenDialogue] = useState(null);
   // Diálogos preparados por el DJ: se guardan en orden y se muestran cuando toca.
-  const [dialogueLines, setDialogueLines] = useState([]);
+  const [dialogueConvs, setDialogueConvs] = useState([]);
   const [editingLineId, setEditingLineId] = useState(null);
+  const [convSceneId, setConvSceneId] = useState(null); // escena elegida en «Conversaciones»
+  const [convId, setConvId] = useState(null);
+  const [editingConvId, setEditingConvId] = useState(null);
   const [handoutsSeen, setHandoutsSeen] = useState([]);
   const [handoutDraft, setHandoutDraft] = useState({ kind: "imagen", title: "", image: "", text: "" });
 
@@ -3290,12 +3333,11 @@ export default function App({ onSignOut }) {
       castList.forEach((m) => Object.values(castExprImgs(m)).forEach(ensureCastImg));
       setDialogueDraft({ castId: castList[0]?.id || null, text: "", expr: "tranquila" });
       const lines = await safeGet("campaign-lines:" + viewingCampaignId, true);
-      let lineList = [];
-      try {
-        lineList = lines ? JSON.parse(lines.value) : [];
-      } catch (e) {}
-      setDialogueLines(lineList);
+      setDialogueConvs(parseConvs(lines?.value));
       setEditingLineId(null);
+      setConvSceneId(null);
+      setConvId(null);
+      setEditingConvId(null);
       setCampaignDetailTab("mesa");
       setMapSel(null);
     })();
@@ -4982,6 +5024,7 @@ export default function App({ onSignOut }) {
     const wasActive = activeSceneIdOf(campaignStage) === id;
     saveStage(viewingCampaignId, { scenes, activeSceneId: wasActive ? null : activeSceneIdOf(campaignStage), ...(wasActive ? { scene: { title: "", image: "" } } : {}) });
     if (editingSceneId === id) setEditingSceneId(null);
+    if (dialogueConvs.some((c) => c.sceneId === id)) saveConvs(dialogueConvs.filter((c) => c.sceneId !== id));
   };
 
   const showScene = async (id) => {
@@ -5087,17 +5130,65 @@ export default function App({ onSignOut }) {
     postChat(viewingCampaignId, { kind: "msg", author: m.name, gm: true, npc: true, text });
   };
 
-  const saveLines = async (next) => {
-    setDialogueLines(next);
-    await safeSet("campaign-lines:" + viewingCampaignId, JSON.stringify(next), true);
+  function saveConvs(next) {
+    setDialogueConvs(next);
+    return safeSet("campaign-lines:" + viewingCampaignId, JSON.stringify({ convs: next }), true);
+  }
+
+  // Escena y conversación elegidas en el DJ. Las conversaciones de escenas borradas (o del formato antiguo) van a «Sin escena».
+  const convTarget = () => {
+    const scenes = stageScenesOf(campaignStage);
+    const ids = new Set(scenes.map((sc) => sc.id));
+    const sceneKey = (c) => (ids.has(c.sceneId) ? c.sceneId : "__none");
+    const hasOrphans = dialogueConvs.some((c) => sceneKey(c) === "__none");
+    const valid = (id) => ids.has(id) || (id === "__none" && hasOrphans);
+    const active = activeSceneIdOf(campaignStage);
+    const sceneId = valid(convSceneId) ? convSceneId : valid(active) ? active : scenes[0]?.id || (hasOrphans ? "__none" : null);
+    const convs = dialogueConvs.filter((c) => sceneKey(c) === sceneId);
+    const conv = convs.find((c) => c.id === convId) || convs[0] || null;
+    return { scenes, sceneId, convs, conv, hasOrphans, sceneKey };
+  };
+
+  const newConv = (sceneId, n) => ({ id: "c" + Date.now(), sceneId, title: "Conversación " + n, lines: [] });
+
+  const addConv = () => {
+    const t = convTarget();
+    if (!t.sceneId || t.sceneId === "__none") return;
+    const c = newConv(t.sceneId, t.convs.length + 1);
+    saveConvs([...dialogueConvs, c]);
+    setConvSceneId(t.sceneId);
+    setConvId(c.id);
+    setEditingConvId(c.id);
+  };
+
+  const renameConv = (id, title) => saveConvs(dialogueConvs.map((c) => (c.id === id ? { ...c, title } : c)));
+
+  const removeConv = (id) => {
+    const c = dialogueConvs.find((x) => x.id === id);
+    if (c?.lines.some((l) => l.id === editingLineId)) cancelEditLine();
+    if (editingConvId === id) setEditingConvId(null);
+    saveConvs(dialogueConvs.filter((x) => x.id !== id));
   };
 
   const saveLineDraft = async () => {
     const text = dialogueDraft.text.trim();
     if (!dialogueDraft.castId || !text || !viewingCampaignId) return;
     const line = { castId: dialogueDraft.castId, expr: dialogueDraft.expr || "tranquila", text };
-    if (editingLineId) await saveLines(dialogueLines.map((l) => (l.id === editingLineId ? { ...l, ...line } : l)));
-    else await saveLines([...dialogueLines, { id: "l" + Date.now(), ...line }]);
+    if (editingLineId) {
+      await saveConvs(dialogueConvs.map((c) => ({ ...c, lines: c.lines.map((l) => (l.id === editingLineId ? { ...l, ...line } : l)) })));
+    } else {
+      const t = convTarget();
+      let next = dialogueConvs;
+      let conv = t.conv;
+      // Sin conversación todavía en esta escena: se crea la primera al añadir la frase.
+      if (!conv) {
+        if (!t.sceneId || t.sceneId === "__none") return;
+        conv = newConv(t.sceneId, 1);
+        next = [...next, conv];
+        setConvId(conv.id);
+      }
+      await saveConvs(next.map((c) => (c.id === conv.id ? { ...c, lines: [...c.lines, { id: "l" + Date.now(), ...line }] } : c)));
+    }
     setEditingLineId(null);
     setDialogueDraft((d) => ({ ...d, text: "" }));
   };
@@ -5113,24 +5204,38 @@ export default function App({ onSignOut }) {
   };
 
   const removeLine = (id) => {
-    saveLines(dialogueLines.filter((l) => l.id !== id));
+    saveConvs(dialogueConvs.map((c) => ({ ...c, lines: c.lines.filter((l) => l.id !== id) })));
     if (editingLineId === id) cancelEditLine();
   };
 
   const moveLine = (id, dir) => {
-    const i = dialogueLines.findIndex((l) => l.id === id);
-    const j = i + dir;
-    if (i < 0 || j < 0 || j >= dialogueLines.length) return;
-    const next = [...dialogueLines];
-    [next[i], next[j]] = [next[j], next[i]];
-    saveLines(next);
+    saveConvs(
+      dialogueConvs.map((c) => {
+        const i = c.lines.findIndex((l) => l.id === id);
+        const j = i + dir;
+        if (i < 0 || j < 0 || j >= c.lines.length) return c;
+        const lines = [...c.lines];
+        [lines[i], lines[j]] = [lines[j], lines[i]];
+        return { ...c, lines };
+      })
+    );
   };
 
+  // Mostrar una frase también pone en pantalla la escena de su conversación, si no lo estaba.
   const showLine = async (line) => {
     const m = campaignCast.find((x) => x.id === line.castId);
     if (!m || !viewingCampaignId) return;
     const expr = line.expr || "tranquila";
-    await saveStage(viewingCampaignId, { dialogue: { id: "d" + Date.now(), lineId: line.id, castId: m.id, name: m.name, expr, imgId: castImgIdFor(m, expr), text: line.text }, live: "escena" });
+    const conv = dialogueConvs.find((c) => c.lines.some((l) => l.id === line.id));
+    const scenes = stageScenesOf(campaignStage);
+    const sc = conv && scenes.find((x) => x.id === conv.sceneId);
+    const switchScene = sc && activeSceneIdOf(campaignStage) !== sc.id;
+    await saveStage(viewingCampaignId, {
+      dialogue: { id: "d" + Date.now(), lineId: line.id, castId: m.id, name: m.name, expr, imgId: castImgIdFor(m, expr), text: line.text },
+      live: "escena",
+      ...(switchScene ? { scenes, activeSceneId: sc.id, scene: { title: sc.title, image: sc.image } } : {}),
+    });
+    if (switchScene) postChat(viewingCampaignId, { kind: "event", author: "El DJ", gm: true, icon: "escena", text: "muestra la escena «" + (sc.title || "Sin título") + "»" });
     postChat(viewingCampaignId, { kind: "msg", author: m.name, gm: true, npc: true, text: line.text });
   };
 
@@ -5989,7 +6094,7 @@ export default function App({ onSignOut }) {
                           <div className="mh-gm-h">
                             <MessageSquareQuote size={15} /> Diálogos
                           </div>
-                          <div className="mh-gm-sub">Crea el reparto con la imagen de cada personaje (un PNG con fondo transparente queda mejor), añade sus expresiones y envía lo que dice con la cara que toque. Aparece sobre la escena de los jugadores.</div>
+                          <div className="mh-gm-sub">Crea el reparto con la imagen de cada personaje (un PNG con fondo transparente queda mejor), añade sus expresiones y prepara conversaciones para cada escena. Aparecen sobre la escena de los jugadores.</div>
                           <div className="mh-gm-dlg">
                             <div className="mh-gm-dlg-col">
                               <div className="mh-gm-h2">Reparto</div>
@@ -6093,9 +6198,15 @@ export default function App({ onSignOut }) {
                                 onKeyDown={(e) => e.key === "Enter" && (e.ctrlKey || e.metaKey) && saveLineDraft()}
                               />
                               <div className="mh-gm-dlg-acts">
-                                <button type="button" className="mh-btn" disabled={!dialogueDraft.castId || !dialogueDraft.text.trim()} onClick={saveLineDraft}>
-                                  {editingLineId ? <Check size={14} /> : <Plus size={14} />} {editingLineId ? "Guardar cambios" : "Añadir a la lista"}
-                                </button>
+                                {(() => {
+                                  const t = convTarget();
+                                  const noTarget = !editingLineId && !t.conv && (!t.sceneId || t.sceneId === "__none");
+                                  return (
+                                    <button type="button" className="mh-btn" disabled={!dialogueDraft.castId || !dialogueDraft.text.trim() || noTarget} onClick={saveLineDraft} title={noTarget ? "Crea antes una escena" : undefined}>
+                                      {editingLineId ? <Check size={14} /> : <Plus size={14} />} {editingLineId ? "Guardar cambios" : "Añadir a «" + (t.conv?.title || "Conversación 1") + "»"}
+                                    </button>
+                                  );
+                                })()}
                                 {editingLineId ? (
                                   <button type="button" className="mh-btn-ghost" onClick={cancelEditLine}>
                                     Cancelar
@@ -6110,20 +6221,24 @@ export default function App({ onSignOut }) {
                           </div>
 
                           {(() => {
-                            const liveLineIdx = stage.dialogue?.lineId ? dialogueLines.findIndex((l) => l.id === stage.dialogue.lineId) : -1;
-                            const nextLine = liveLineIdx >= 0 ? dialogueLines[liveLineIdx + 1] : null;
+                            const t = convTarget();
+                            const liveId = stage.dialogue?.lineId;
+                            const liveConv = liveId ? dialogueConvs.find((c) => c.lines.some((l) => l.id === liveId)) : null;
+                            const liveIdx = liveConv ? liveConv.lines.findIndex((l) => l.id === liveId) : -1;
+                            const nextLine = liveConv ? liveConv.lines[liveIdx + 1] : null;
+                            const conv = t.conv;
+                            const pills = [...t.scenes.map((sc) => ({ id: sc.id, title: sc.title || "Sin título", image: sc.image })), ...(t.hasOrphans ? [{ id: "__none", title: "Sin escena", image: "" }] : [])];
                             return (
                               <div className="mh-gm-lines">
                                 <div className="mh-gm-lines-h">
-                                  <div className="mh-gm-h2">
-                                    Diálogos preparados {dialogueLines.length > 0 && <span className="mh-gm-count">{dialogueLines.length}</span>}
-                                  </div>
+                                  <div className="mh-gm-h2">Conversaciones preparadas</div>
                                   <div className="mh-gm-lines-acts">
                                     {nextLine && (
                                       <button type="button" className="mh-btn" onClick={() => showLine(nextLine)} title={"Mostrar: «" + nextLine.text + "»"}>
                                         <SkipForward size={14} /> Siguiente
                                       </button>
                                     )}
+                                    {liveConv && !nextLine && <span className="mh-gm-cv-end">Fin de «{liveConv.title}»</span>}
                                     {stage.dialogue && (
                                       <button type="button" className="mh-btn-ghost" onClick={clearDialogue}>
                                         <EyeOff size={14} /> Retirar diálogo
@@ -6131,7 +6246,7 @@ export default function App({ onSignOut }) {
                                     )}
                                   </div>
                                 </div>
-                                {stage.dialogue && liveLineIdx < 0 && (
+                                {stage.dialogue && !liveConv && (
                                   <div className="mh-gm-dlg-now">
                                     <span className="mh-stg-live is-soft">
                                       <i />
@@ -6140,55 +6255,144 @@ export default function App({ onSignOut }) {
                                     <b>{stage.dialogue.name}:</b> «{stage.dialogue.text}»
                                   </div>
                                 )}
-                                {dialogueLines.length === 0 ? (
-                                  <div className="mh-chat-empty">Escribe una frase arriba y pulsa «Añadir a la lista». Luego podrás mostrarlas cuando toque, en el orden que quieras.</div>
+                                {pills.length === 0 ? (
+                                  <div className="mh-chat-empty">Crea una escena arriba y aquí podrás prepararle sus conversaciones.</div>
                                 ) : (
-                                  <ol className="mh-gm-linelist">
-                                    {dialogueLines.map((l, i) => {
-                                      const m = campaignCast.find((x) => x.id === l.castId);
-                                      const ex = EXPRESSIONS.find((e) => e.key === (l.expr || "tranquila"));
-                                      const img = m ? castImgs[castImgIdFor(m, l.expr || "tranquila")] : null;
-                                      const isLive = stage.dialogue?.lineId === l.id;
-                                      return (
-                                        <li key={l.id} className={"mh-gm-line" + (isLive ? " is-live" : "") + (editingLineId === l.id ? " is-editing" : "")}>
-                                          <span className="mh-gm-line-n">{i + 1}</span>
-                                          <span className="mh-gm-line-img">{img ? <img src={img} alt="" /> : <User size={16} />}</span>
-                                          <div className="mh-gm-line-b">
-                                            <div className="mh-gm-line-who">
-                                              <b>{m ? m.name : "Personaje eliminado"}</b>
-                                              <span>{ex?.label}</span>
-                                              {isLive && (
-                                                <span className="mh-stg-live is-soft">
-                                                  <i />
-                                                  En pantalla
+                                  <>
+                                    <div className="mh-gm-cvscenes" role="tablist" aria-label="Escena">
+                                      {pills.map((sc) => {
+                                        const n = dialogueConvs.filter((c) => t.sceneKey(c) === sc.id).length;
+                                        const on = t.sceneId === sc.id;
+                                        return (
+                                          <button
+                                            key={sc.id}
+                                            type="button"
+                                            role="tab"
+                                            aria-selected={on}
+                                            className={"mh-gm-cvscene" + (on ? " is-on" : "")}
+                                            onClick={() => {
+                                              setConvSceneId(sc.id);
+                                              setConvId(null);
+                                              setEditingConvId(null);
+                                            }}
+                                          >
+                                            <span className={"mh-gm-cvscene-img" + (sc.image ? "" : " is-blank")} style={sc.image ? { backgroundImage: `url("${sc.image.replace(/"/g, "%22")}")` } : undefined} />
+                                            <span className="mh-gm-cvscene-t">{sc.title}</span>
+                                            {sc.id === activeSceneIdOf(stage) && <i className="mh-stg-dot" title="En pantalla" />}
+                                            <span className="mh-gm-count">{n}</span>
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                    <div className="mh-gm-cv">
+                                      <div className="mh-gm-cvlist">
+                                        {t.convs.map((c) => {
+                                          const on = conv?.id === c.id;
+                                          const isLiveConv = liveConv?.id === c.id;
+                                          return (
+                                            <div key={c.id} className={"mh-gm-cvi" + (on ? " is-on" : "")}>
+                                              {editingConvId === c.id ? (
+                                                <input
+                                                  className="mh-input"
+                                                  aria-label="Nombre de la conversación"
+                                                  value={c.title}
+                                                  autoFocus
+                                                  onFocus={(e) => e.target.select()}
+                                                  onChange={(e) => renameConv(c.id, e.target.value)}
+                                                  onBlur={() => setEditingConvId(null)}
+                                                  onKeyDown={(e) => (e.key === "Enter" || e.key === "Escape") && setEditingConvId(null)}
+                                                />
+                                              ) : (
+                                                <button type="button" className="mh-gm-cvi-pick" aria-pressed={on} onClick={() => setConvId(c.id)} onDoubleClick={() => setEditingConvId(c.id)}>
+                                                  <MessagesSquare size={14} />
+                                                  <span className="mh-gm-cvi-t">{c.title || "Sin nombre"}</span>
+                                                  {isLiveConv && <i className="mh-stg-dot" title="En pantalla" />}
+                                                  <span className="mh-gm-cvi-n">{c.lines.length}</span>
+                                                </button>
+                                              )}
+                                              {on && editingConvId !== c.id && (
+                                                <span className="mh-gm-cvi-acts">
+                                                  <button type="button" className="mh-gm-ib" aria-label={"Renombrar " + c.title} title="Renombrar" onClick={() => setEditingConvId(c.id)}>
+                                                    <PenLine size={13} />
+                                                  </button>
+                                                  <button type="button" className="mh-gm-ib is-del" aria-label={"Borrar " + c.title} title="Borrar la conversación" onClick={() => removeConv(c.id)}>
+                                                    <Trash2 size={13} />
+                                                  </button>
                                                 </span>
                                               )}
                                             </div>
-                                            <div className="mh-gm-line-t">{l.text}</div>
-                                          </div>
-                                          <div className="mh-gm-line-acts">
-                                            {!isLive && (
-                                              <button type="button" className="mh-btn" disabled={!m} onClick={() => showLine(l)}>
-                                                <Eye size={13} /> Mostrar
+                                          );
+                                        })}
+                                        {t.sceneId !== "__none" && (
+                                          <button type="button" className="mh-gm-cvadd" onClick={addConv}>
+                                            <Plus size={14} /> Nueva conversación
+                                          </button>
+                                        )}
+                                      </div>
+                                      <div className="mh-gm-cvbody">
+                                        {conv && (
+                                          <div className="mh-gm-cvbody-h">
+                                            <span className="mh-serif">{conv.title || "Sin nombre"}</span>
+                                            {conv.lines.length > 0 && liveConv?.id !== conv.id && (
+                                              <button type="button" className="mh-btn" disabled={!campaignCast.some((m) => m.id === conv.lines[0].castId)} onClick={() => showLine(conv.lines[0])} title="Mostrar la primera frase">
+                                                <Play size={13} /> Empezar
                                               </button>
                                             )}
-                                            <button type="button" className="mh-gm-ib" aria-label="Subir" title="Subir" disabled={i === 0} onClick={() => moveLine(l.id, -1)}>
-                                              <ChevronUp size={14} />
-                                            </button>
-                                            <button type="button" className="mh-gm-ib" aria-label="Bajar" title="Bajar" disabled={i === dialogueLines.length - 1} onClick={() => moveLine(l.id, 1)}>
-                                              <ChevronDown size={14} />
-                                            </button>
-                                            <button type="button" className="mh-gm-ib" aria-label="Editar" title="Editar" onClick={() => editLine(l)}>
-                                              <PenLine size={14} />
-                                            </button>
-                                            <button type="button" className="mh-gm-ib is-del" aria-label="Borrar" title="Borrar" onClick={() => removeLine(l.id)}>
-                                              <Trash2 size={14} />
-                                            </button>
                                           </div>
-                                        </li>
-                                      );
-                                    })}
-                                  </ol>
+                                        )}
+                                        {!conv || conv.lines.length === 0 ? (
+                                          <div className="mh-chat-empty">{conv ? "Escribe una frase arriba y pulsa «Añadir». Se mostrarán en este orden con «Siguiente»." : "Esta escena aún no tiene conversaciones. Escribe una frase arriba y se creará la primera, o pulsa «Nueva conversación»."}</div>
+                                        ) : (
+                                          <ol className="mh-gm-linelist">
+                                            {conv.lines.map((l, i) => {
+                                              const m = campaignCast.find((x) => x.id === l.castId);
+                                              const ex = EXPRESSIONS.find((e) => e.key === (l.expr || "tranquila"));
+                                              const img = m ? castImgs[castImgIdFor(m, l.expr || "tranquila")] : null;
+                                              const isLive = liveId === l.id;
+                                              return (
+                                                <li key={l.id} className={"mh-gm-line" + (isLive ? " is-live" : "") + (editingLineId === l.id ? " is-editing" : "")}>
+                                                  <span className="mh-gm-line-n">{i + 1}</span>
+                                                  <span className="mh-gm-line-img">{img ? <img src={img} alt="" /> : <User size={16} />}</span>
+                                                  <div className="mh-gm-line-b">
+                                                    <div className="mh-gm-line-who">
+                                                      <b>{m ? m.name : "Personaje eliminado"}</b>
+                                                      <span>{ex?.label}</span>
+                                                      {isLive && (
+                                                        <span className="mh-stg-live is-soft">
+                                                          <i />
+                                                          En pantalla
+                                                        </span>
+                                                      )}
+                                                    </div>
+                                                    <div className="mh-gm-line-t">{l.text}</div>
+                                                  </div>
+                                                  <div className="mh-gm-line-acts">
+                                                    {!isLive && (
+                                                      <button type="button" className="mh-btn" disabled={!m} onClick={() => showLine(l)}>
+                                                        <Eye size={13} /> Mostrar
+                                                      </button>
+                                                    )}
+                                                    <button type="button" className="mh-gm-ib" aria-label="Subir" title="Subir" disabled={i === 0} onClick={() => moveLine(l.id, -1)}>
+                                                      <ChevronUp size={14} />
+                                                    </button>
+                                                    <button type="button" className="mh-gm-ib" aria-label="Bajar" title="Bajar" disabled={i === conv.lines.length - 1} onClick={() => moveLine(l.id, 1)}>
+                                                      <ChevronDown size={14} />
+                                                    </button>
+                                                    <button type="button" className="mh-gm-ib" aria-label="Editar" title="Editar" onClick={() => editLine(l)}>
+                                                      <PenLine size={14} />
+                                                    </button>
+                                                    <button type="button" className="mh-gm-ib is-del" aria-label="Borrar" title="Borrar" onClick={() => removeLine(l.id)}>
+                                                      <Trash2 size={14} />
+                                                    </button>
+                                                  </div>
+                                                </li>
+                                              );
+                                            })}
+                                          </ol>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </>
                                 )}
                               </div>
                             );
