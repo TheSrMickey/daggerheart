@@ -1036,6 +1036,19 @@ const CARD_ACTIONS = {
 const MAP_COLS = 16;
 const MAP_ROWS = 9;
 const MAP_REACH = 2; // casillas que se iluminan alrededor de la ficha elegida
+// Decorados que el DJ estampa en el mapa: una casilla cada uno.
+const MAP_PROPS = [
+  { key: "arbol", label: "Árbol", svg: '<ellipse cx="54" cy="58" rx="40" ry="36" fill="#000" opacity=".25"/><circle cx="50" cy="50" r="40" fill="#3E6B34"/><circle cx="38" cy="40" r="20" fill="#4F8442"/><circle cx="62" cy="46" r="18" fill="#4A7D3E"/><circle cx="48" cy="64" r="17" fill="#457638"/><circle cx="40" cy="36" r="8" fill="#6FA25C" opacity=".7"/>' },
+  { key: "pino", label: "Pino", svg: '<ellipse cx="54" cy="58" rx="36" ry="34" fill="#000" opacity=".25"/><path d="M50 8 62 34 90 38 68 56 76 86 50 70 24 86 32 56 10 38 38 34Z" fill="#2F5A3A"/><path d="M50 22 58 40 76 44 62 54 66 74 50 62 34 74 38 54 24 44 42 40Z" fill="#3F7449"/><circle cx="50" cy="50" r="5" fill="#5E3B22"/>' },
+  { key: "arbusto", label: "Arbusto", svg: '<ellipse cx="52" cy="58" rx="34" ry="26" fill="#000" opacity=".22"/><circle cx="36" cy="52" r="18" fill="#5C8F3E"/><circle cx="60" cy="48" r="20" fill="#6BA34A"/><circle cx="52" cy="64" r="16" fill="#588A3B"/><circle cx="62" cy="42" r="6" fill="#C0504A"/><circle cx="40" cy="48" r="5" fill="#C0504A"/>' },
+  { key: "roca", label: "Roca", svg: '<ellipse cx="54" cy="60" rx="38" ry="30" fill="#000" opacity=".25"/><path d="M18 58 28 30 52 20 78 30 86 56 70 78 40 80Z" fill="#7C7F86"/><path d="M28 32 52 22 70 30 60 44 36 46Z" fill="#9A9DA4"/><path d="M40 80 70 78 86 56 72 62Z" fill="#5F626A"/>' },
+  { key: "tronco", label: "Tronco", svg: '<rect x="8" y="36" width="84" height="30" rx="15" fill="#000" opacity=".22"/><rect x="6" y="30" width="84" height="30" rx="15" fill="#7A5230"/><ellipse cx="82" cy="45" rx="8" ry="15" fill="#B08560"/><path d="M20 38h40M26 50h44" stroke="#5E3D22" stroke-width="3"/>' },
+  { key: "barril", label: "Barril", svg: '<ellipse cx="54" cy="58" rx="30" ry="30" fill="#000" opacity=".25"/><circle cx="50" cy="50" r="32" fill="#8A5A2E"/><circle cx="50" cy="50" r="26" fill="none" stroke="#4B3018" stroke-width="4"/><circle cx="50" cy="50" r="12" fill="none" stroke="#4B3018" stroke-width="3"/><path d="M50 18v64M18 50h64" stroke="#6E4623" stroke-width="2"/>' },
+  { key: "caja", label: "Caja", svg: '<rect x="20" y="22" width="64" height="64" fill="#000" opacity=".22"/><rect x="16" y="16" width="64" height="64" rx="4" fill="#A0703E"/><rect x="16" y="16" width="64" height="64" rx="4" fill="none" stroke="#5C3E1E" stroke-width="5"/><path d="M16 16 80 80M80 16 16 80" stroke="#5C3E1E" stroke-width="5"/>' },
+  { key: "hoguera", label: "Hoguera", svg: '<circle cx="50" cy="50" r="40" fill="#FF9A3D" opacity=".25"/><path d="M26 60 74 40M26 40 74 60" stroke="#4B3018" stroke-width="9" stroke-linecap="round"/><path d="M50 22 C62 38 66 50 50 66 C34 50 38 38 50 22Z" fill="#FF8A2A"/><path d="M50 36 C57 46 58 54 50 62 C42 54 43 46 50 36Z" fill="#FFE08A"/>' },
+];
+const propSvg = (key) => MAP_PROPS.find((p) => p.key === key)?.svg || "";
+
 // Rangos de Daggerheart en cuadrícula (casillas desde la ficha, contando diagonales).
 const MAP_RANGES = [
   { key: "melee", label: "Cuerpo a cuerpo", max: 1, color: "#D9644E" },
@@ -1705,6 +1718,17 @@ const sharedStyles = `
   .mh-map-menu { position: absolute; z-index: 8; min-width: 160px; padding: 4px; border-radius: 10px; background: var(--mh-panel); border: 1px solid var(--mh-line2); box-shadow: 0 10px 28px rgba(0,0,0,.35); }
   .mh-map-menu button { width: 100%; display: flex; align-items: center; gap: 8px; padding: 7px 10px; border: 0; border-radius: 7px; background: transparent; color: var(--mh-ink); font: 600 12.5px 'Inter', system-ui, sans-serif; cursor: pointer; text-align: left; }
   .mh-map-menu button:hover, .mh-map-menu button:focus-visible { background: var(--mh-panel2); outline: none; }
+  .mh-map-prop { position: absolute; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+  .mh-map-prop svg { width: 92%; height: 92%; }
+  .mh-map-prop.is-ghost { opacity: .55; box-shadow: inset 0 0 0 2px #F3C24A; border-radius: 6px; }
+  .mh-map.is-stamping { cursor: copy; }
+  .mh-map-props { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .mh-map-props .mh-gm-h2 { margin: 0 4px 0 0; }
+  .mh-map-props .mh-btn-ghost { font-size: 12px; margin-left: auto; }
+  .mh-map-chip.is-on { border-color: #C9A24A; box-shadow: 0 0 0 3px color-mix(in srgb, #C9A24A 25%, transparent); }
+  .mh-map-chip i.is-prop { background: var(--mh-panel2); }
+  .mh-map-chip i.is-prop svg { width: 90%; height: 90%; color: inherit; }
+  .mh-map-stamphint { font-size: 12px; color: var(--mh-ink3); margin-top: -4px; }
   .mh-map-reach { position: absolute; background: rgba(111,191,115,.26); box-shadow: inset 0 0 0 1px rgba(111,191,115,.6); pointer-events: none; }
   .mh-map-drop { position: absolute; box-shadow: inset 0 0 0 2px #F3C24A; border-radius: 6px; pointer-events: none; }
   .mh-map-drop.is-bad { box-shadow: inset 0 0 0 2px #D9644E; }
@@ -1750,7 +1774,7 @@ const sharedStyles = `
   .mh-map-tray-g .mh-gm-h2 { width: 88px; margin: 0; }
   .mh-map-tray-g .mh-btn-ghost { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; }
   .mh-map-tray-e { font-size: 12px; color: var(--mh-muted); font-style: italic; }
-  .mh-map-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 3px; border-radius: 20px; border: 1px solid var(--mh-line); background: var(--mh-panel); color: var(--mh-ink); font: 600 12px 'Inter', system-ui, sans-serif; cursor: pointer; }
+  .mh-map-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 3px; border-radius: 9px; border: 1px solid var(--mh-line); background: var(--mh-panel); color: var(--mh-ink); font: 600 12px 'Inter', system-ui, sans-serif; cursor: pointer; }
   .mh-map-chip:hover { border-color: var(--mh-line2); }
   .mh-map-chip i { width: 24px; height: 24px; border-radius: 6px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #221C2B; color: #fff; font: 700 11px 'Cinzel', Georgia, serif; font-style: normal; }
   .mh-map-chip i img { width: 100%; height: 100%; object-fit: cover; object-position: center 12%; }
@@ -2558,12 +2582,15 @@ const HAPPY_SPARKS = [
 const HAPPY_MOTES = [[14, 0], [50, 0.8], [80, 1.6], [34, 2.2], [66, 2.9]];
 
 // Tablero con fichas cuadradas. Se arrastran, o se elige una y se pulsa la casilla; también con las flechas.
-function MapBoard({ bg, tokens, canMove, onMove, selectedId, onSelect, onPick, compact }) {
+function MapBoard({ bg, tokens, props = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
   const ref = useRef(null);
   const dragRef = useRef(null);
   const [drag, setDrag] = useState(null);
   const [menu, setMenu] = useState(null); // menú del clic derecho: { id, x, y } en px dentro del tablero
   const [rangeId, setRangeId] = useState(null);
+  const [hover, setHover] = useState(null); // casilla bajo el ratón mientras hay un sello elegido
+  const painting = useRef(null);
+  const propAt = (x, y) => props.find((pr) => pr.x === x && pr.y === y);
   useEffect(() => {
     if (!menu) return;
     const close = (e) => (e.type !== "keydown" || e.key === "Escape") && setMenu(null);
@@ -2620,8 +2647,34 @@ function MapBoard({ bg, tokens, canMove, onMove, selectedId, onSelect, onPick, c
     window.addEventListener("pointerup", up, { once: true });
   };
 
+  // Con un sello elegido, pulsar o arrastrar sobre el tablero lo va poniendo en cada casilla.
+  const stampDown = (e) => {
+    if (!stampTool || e.button > 0 || e.target.closest(".mh-map-tk")) return;
+    e.preventDefault();
+    const c = cellAt(e);
+    painting.current = new Set([c.x + "," + c.y]);
+    if (!propAt(c.x, c.y)) onStamp(c.x, c.y);
+    const move = (ev) => {
+      const d = cellAt(ev);
+      const k = d.x + "," + d.y;
+      if (painting.current && !painting.current.has(k)) {
+        painting.current.add(k);
+        if (!propAt(d.x, d.y)) onStamp(d.x, d.y);
+      }
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", () => { window.removeEventListener("pointermove", move); painting.current = null; }, { once: true });
+  };
+  const boardContext = (e) => {
+    if (!onUnstamp || e.target.closest(".mh-map-tk")) return;
+    const c = cellAt(e);
+    if (!propAt(c.x, c.y)) return;
+    e.preventDefault();
+    onUnstamp(c.x, c.y);
+  };
+
   const boardClick = (e) => {
-    if (!selected || e.target.closest(".mh-map-tk")) return;
+    if (stampTool || !selected || e.target.closest(".mh-map-tk")) return;
     const c = cellAt(e);
     if (!occupied(c.x, c.y, selected.id)) onMove(selected.id, c.x, c.y);
   };
@@ -2654,12 +2707,30 @@ function MapBoard({ bg, tokens, canMove, onMove, selectedId, onSelect, onPick, c
   const at = (x, y) => ({ left: (x * 100) / MAP_COLS + "%", top: (y * 100) / MAP_ROWS + "%", width: 100 / MAP_COLS + "%", height: 100 / MAP_ROWS + "%" });
 
   return (
-    <div ref={ref} className={"mh-map" + (bg ? "" : " is-blank") + (compact ? " is-compact" : "")} onClick={boardClick}>
+    <div
+      ref={ref}
+      className={"mh-map" + (bg ? "" : " is-blank") + (compact ? " is-compact" : "") + (stampTool ? " is-stamping" : "")}
+      onClick={boardClick}
+      onPointerDown={stampDown}
+      onContextMenu={boardContext}
+      onPointerMove={stampTool ? (e) => setHover(cellAt(e)) : undefined}
+      onPointerLeave={stampTool ? () => setHover(null) : undefined}
+    >
       {/* La escena va difuminada para que destaquen la cuadrícula y las fichas */}
       {bg && <div className="mh-map-bg" style={{ backgroundImage: `url("${bg.replace(/"/g, "%22")}")` }} />}
       {rangeCells.map(([x, y, band]) => (
         <div key={"r" + x + "," + y} className="mh-map-range" style={{ ...at(x, y), "--rc": band.color }} />
       ))}
+      {props.map((pr) => (
+        <div key={pr.id} className="mh-map-prop" style={at(pr.x, pr.y)} title={MAP_PROPS.find((m) => m.key === pr.kind)?.label}>
+          <svg viewBox="0 0 100 100" dangerouslySetInnerHTML={{ __html: propSvg(pr.kind) }} />
+        </div>
+      ))}
+      {stampTool && hover && !propAt(hover.x, hover.y) && (
+        <div className="mh-map-prop is-ghost" style={at(hover.x, hover.y)}>
+          <svg viewBox="0 0 100 100" dangerouslySetInnerHTML={{ __html: propSvg(stampTool) }} />
+        </div>
+      )}
       <div className="mh-map-grid" />
       {reach.map(([x, y]) => (
         <div key={x + "," + y} className="mh-map-reach" style={at(x, y)} />
@@ -3110,6 +3181,7 @@ export default function App({ onSignOut }) {
   const [campaignMap, setCampaignMap] = useState({ tokens: [] });
   const [mapSel, setMapSel] = useState(null);
   const [foeDraft, setFoeDraft] = useState("");
+  const [stampTool, setStampTool] = useState(null);
   const mapBusy = useRef(0);
   const [campaignEncounters, setCampaignEncounters] = useState([]);
   const [encounterNameDraft, setEncounterNameDraft] = useState("");
@@ -4793,21 +4865,21 @@ export default function App({ onSignOut }) {
   // Cambia el tablero partiendo de lo último guardado (otro jugador puede haber movido su ficha).
   // Los cambios se encadenan: si se hacen dos seguidos, el segundo parte de lo que guardó el primero.
   const mapQueue = useRef(Promise.resolve());
-  const mutateMap = (campaignId, fn) => {
+  const mutateMap = (campaignId, fn, field = "tokens") => {
     if (!campaignId) return Promise.resolve();
     mapBusy.current++;
-    setCampaignMap((m) => ({ ...m, tokens: fn(m.tokens || []) }));
-    mapQueue.current = mapQueue.current.then(() => saveMapChange(campaignId, fn));
+    setCampaignMap((m) => ({ ...m, [field]: fn(m[field] || []) }));
+    mapQueue.current = mapQueue.current.then(() => saveMapChange(campaignId, fn, field));
     return mapQueue.current;
   };
-  const saveMapChange = async (campaignId, fn) => {
+  const saveMapChange = async (campaignId, fn, field) => {
     try {
       let base = null;
       try {
         const r = await safeGet("campaign-map:" + campaignId, true);
         if (r) base = JSON.parse(r.value);
       } catch (e) {}
-      const next = { ...(base || {}), tokens: fn(base?.tokens || campaignMap.tokens || []) };
+      const next = { ...(base || {}), [field]: fn(base?.[field] || campaignMap[field] || []) };
       setCampaignMap(next);
       await safeSet("campaign-map:" + campaignId, JSON.stringify(next), true);
     } finally {
@@ -4835,6 +4907,11 @@ export default function App({ onSignOut }) {
     mutateMap(campaignId, (tokens) => tokens.filter((t) => t.id !== id));
     if (mapSel === id) setMapSel(null);
   };
+
+  const stampProp = (kind, x, y) =>
+    mutateMap(viewingCampaignId, (props) => (props.some((pr) => pr.x === x && pr.y === y) ? props : [...props, { id: "p" + Date.now() + Math.random().toString(36).slice(2, 5), kind, x, y }]), "props");
+  const unstampProp = (x, y) => mutateMap(viewingCampaignId, (props) => props.filter((pr) => !(pr.x === x && pr.y === y)), "props");
+  const clearProps = () => mutateMap(viewingCampaignId, () => [], "props");
 
   const clearMap = () => {
     mutateMap(viewingCampaignId, () => []);
@@ -6264,8 +6341,29 @@ export default function App({ onSignOut }) {
                         <div className="mh-gm-sub" style={{ marginTop: 0 }}>
                           El fondo es la escena que está en pantalla ({campaignStage.scene?.title || "ninguna"}). Coloca a tu reparto y a los enemigos y muévelos arrastrando, o elige uno y pulsa una casilla. Los jugadores colocan y mueven sus propias fichas desde su hoja.
                         </div>
+                        <div className="mh-map-props" role="toolbar" aria-label="Decorados">
+                          <span className="mh-gm-h2">Decorados</span>
+                          {MAP_PROPS.map((pr) => (
+                            <button key={pr.key} type="button" className={"mh-map-chip" + (stampTool === pr.key ? " is-on" : "")} aria-pressed={stampTool === pr.key} onClick={() => setStampTool(stampTool === pr.key ? null : pr.key)}>
+                              <i className="is-prop">
+                                <svg viewBox="0 0 100 100" dangerouslySetInnerHTML={{ __html: pr.svg }} />
+                              </i>
+                              {pr.label}
+                            </button>
+                          ))}
+                          {(campaignMap.props || []).length > 0 && (
+                            <button type="button" className="mh-btn-ghost" onClick={clearProps}>
+                              Quitar decorados
+                            </button>
+                          )}
+                        </div>
+                        {stampTool && <div className="mh-map-stamphint">Pulsa o arrastra por las casillas para poner {MAP_PROPS.find((m) => m.key === stampTool)?.label.toLowerCase()}s. Clic derecho sobre un decorado para quitarlo. Vuelve a pulsar el sello para dejar de estampar.</div>}
                         <MapBoard
                           bg={campaignStage.scene?.image}
+                          props={campaignMap.props || []}
+                          stampTool={stampTool}
+                          onStamp={(x, y) => stampProp(stampTool, x, y)}
+                          onUnstamp={unstampProp}
                           tokens={mapTokensView(tokens)}
                           canMove={(t) => t.kind === "npc" || t.kind === "foe"}
                           onMove={(id, x, y) => moveToken(viewingCampaignId, id, x, y)}
@@ -8855,6 +8953,7 @@ export default function App({ onSignOut }) {
                                         <MapViewport focus={myToken ? { x: myToken.x, y: myToken.y } : null}>
                                           <MapBoard
                                             bg={scene.image}
+                                            props={campaignMap.props || []}
                                             tokens={mapTokens}
                                             canMove={(t) => (t.kind === "pc" && t.charId === viewingCharId) || (t.kind === "pet" && t.ownerCharId === viewingCharId)}
                                             onMove={(id, x, y) => moveToken(charCampaign.id, id, x, y)}
