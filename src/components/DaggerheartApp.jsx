@@ -1408,6 +1408,42 @@ const sharedStyles = `
     color: color-mix(in srgb, var(--ac) var(--mh-accent-keep, 100%), #000); padding: 3px 7px; border-radius: 6px; border: 1px solid color-mix(in srgb, var(--ac) 45%, transparent);
   }
   .mh-arow-link:hover, .mh-arow-link:focus-visible { background: color-mix(in srgb, var(--ac) 12%, transparent); outline: none; }
+  .mh-camp {
+    display: flex; align-items: center; gap: 12px; border-radius: 12px; padding: 12px 14px; flex-shrink: 0;
+    background: linear-gradient(135deg, color-mix(in srgb, #E0823A 20%, var(--mh-panel)), color-mix(in srgb, #E0823A 5%, var(--mh-panel)));
+    border: 1px solid color-mix(in srgb, #E0823A 35%, transparent);
+  }
+  .mh-seg { display: flex; gap: 3px; padding: 3px; border-radius: 10px; background: var(--mh-panel3); flex-shrink: 0; }
+  .mh-seg button {
+    all: unset; cursor: pointer; flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 7px;
+    border-radius: 8px; font-size: 12.5px; font-weight: 600; color: var(--mh-muted);
+  }
+  .mh-seg button.on { background: var(--mh-panel); color: var(--mh-gold-ink); box-shadow: 0 1px 3px rgba(0,0,0,.14); }
+  .mh-seg button:focus-visible { outline: 2px solid var(--acc); }
+  .mh-rest-row {
+    --rc: var(--acc); flex: 1 1 0; min-height: 0; max-height: 92px; display: flex; align-items: center; gap: 11px; padding: 9px 12px;
+    border: 1.5px solid var(--mh-line); border-radius: 12px; background: var(--mh-panel); cursor: pointer; transition: border-color .15s, background .15s;
+  }
+  .mh-rest-row:hover, .mh-rest-row:focus-visible { border-color: color-mix(in srgb, var(--rc) 60%, transparent); outline: none; }
+  .mh-rest-row.sel { border-color: var(--rc); background: color-mix(in srgb, var(--rc) 6%, var(--mh-panel)); }
+  .mh-rest-ico {
+    width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    background: color-mix(in srgb, var(--rc) 15%, transparent); color: color-mix(in srgb, var(--rc) var(--mh-accent-keep, 100%), #000);
+  }
+  .mh-rest-rec { font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--mh-green-ink); background: #6FBF7322; border-radius: 20px; padding: 1px 7px; white-space: nowrap; }
+  .mh-rest-box { display: inline-block; width: 14px; height: 8px; border-radius: 2px; border: 1px solid var(--rc); }
+  .mh-rest-tick {
+    width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    background: var(--acc); color: var(--acc-on, #fff);
+  }
+  .mh-rest-tick.off { background: transparent; border: 1.5px solid var(--mh-line2); }
+  .mh-rest-x2 { font-size: 11px; font-weight: 700; color: color-mix(in srgb, var(--rc) var(--mh-accent-keep, 100%), #000); }
+  .mh-rest-dl {
+    all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 8px; width: 100%; flex-shrink: 0;
+    font-size: 12.5px; font-weight: 600; color: var(--mh-ink2); border: 1px solid var(--mh-line); border-radius: 10px; padding: 10px 12px; background: var(--mh-panel);
+  }
+  .mh-rest-dl:hover:not(:disabled) { border-color: var(--acc); }
+  .mh-rest-dl:disabled { opacity: .5; cursor: not-allowed; }
   .mh-holo {
     position: absolute; inset: 0; z-index: 30; pointer-events: none; border-radius: inherit; mix-blend-mode: color-dodge;
     background: linear-gradient(115deg, transparent 10%, rgba(255,80,200,.55) 25%, rgba(120,200,255,.55) 40%, rgba(255,240,120,.55) 55%, rgba(150,255,180,.55) 70%, transparent 85%);
@@ -3300,9 +3336,11 @@ export default function App({ onSignOut }) {
   const [detailTab, setDetailTab] = useState("general");
   const [actionPage, setActionPage] = useState(0);
   const [restMessage, setRestMessage] = useState("");
-  const [restPick1, setRestPick1] = useState("heal");
-  const [restPick2, setRestPick2] = useState("clearmind");
-  const [restPick3, setRestPick3] = useState("prepare");
+  const [restPicks, setRestPicks] = useState(null);
+  useEffect(() => {
+    setRestPicks(null);
+    setRestType("short");
+  }, [viewingCharId]);
   const [restType, setRestType] = useState("short");
   const [showChangeDomainModal, setShowChangeDomainModal] = useState(false);
   const [viewingCardDetail, setViewingCardDetail] = useState(null);
@@ -6196,95 +6234,146 @@ export default function App({ onSignOut }) {
                             vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
                           >
-                            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                              {(c.f_ancestry || "").split(" + ").includes("Elfo") && (
-                                <div style={{ fontSize: 12, color: "var(--mh-muted)" }}>Tu Trance Celestial te permite elegir una acción adicional.</div>
-                              )}
-
-                              <div style={{ display: "flex", gap: 6 }}>
-                                <div
-                                  onClick={() => setRestType("short")}
-                                  className={"mh-chip" + (restType === "short" ? " active" : "")}
-                                >
-                                  Descanso corto
-                                </div>
-                                <div
-                                  onClick={() => setRestType("long")}
-                                  className={"mh-chip" + (restType === "long" ? " active" : "")}
-                                >
-                                  Descanso largo
-                                </div>
-                              </div>
-
-                              <div style={{ display: "flex", gap: 10 }}>
-                                <div style={{ flex: 1 }}>
-                                  <label className="mh-label">Acción 1</label>
-                                  <select className="mh-input" style={{ width: "100%" }} value={restPick1} onChange={(e) => setRestPick1(e.target.value)}>
-                                    {REST_ACTIONS.map((a) => (
-                                      <option key={a.key} value={a.key}>{a.label}</option>
-                                    ))}
-                                  </select>
-                                </div>
-                                <div style={{ flex: 1 }}>
-                                  <label className="mh-label">Acción 2</label>
-                                  <select className="mh-input" style={{ width: "100%" }} value={restPick2} onChange={(e) => setRestPick2(e.target.value)}>
-                                    {REST_ACTIONS.map((a) => (
-                                      <option key={a.key} value={a.key}>{a.label}</option>
-                                    ))}
-                                  </select>
-                                </div>
-                                {(c.f_ancestry || "").split(" + ").includes("Elfo") && (
-                                  <div style={{ flex: 1 }}>
-                                    <label className="mh-label">Acción 3 (Trance Celestial)</label>
-                                    <select className="mh-input" style={{ width: "100%" }} value={restPick3} onChange={(e) => setRestPick3(e.target.value)}>
-                                      {REST_ACTIONS.map((a) => (
-                                        <option key={a.key} value={a.key}>{a.label}</option>
-                                      ))}
-                                    </select>
+                            {(() => {
+                              // Junto a la hoguera: cómo estás, qué te conviene y qué recupera cada acción.
+                              const isElf = (c.f_ancestry || "").split(" + ").includes("Elfo");
+                              const slots = isElf ? 3 : 2;
+                              const isLong = restType === "long";
+                              const tier = tierForLevel(c.f_level || 1);
+                              const hpTotal = Number(c.r_hp || 0) + equipMods.hp;
+                              const stressTotal = Number(c.r_stress || 0) + equipMods.stress;
+                              const armorTotal = armorEntry ? armorEntry.score + equipMods.armor : 0;
+                              const hopeTotal = getHopeMax(c) + equipMods.hope;
+                              const hpMarked = Number(c.hp_marked || 0);
+                              const stressMarked = Number(c.stress_marked || 0);
+                              const armorLeft = Number(c.armor_marked || 0);
+                              const hope = Number(c.hope_marked ?? HOPE_DEFAULT);
+                              const roll = `1d4+${tier}`;
+                              const acts = [
+                                { key: "heal", label: "Curar heridas", Icon: Heart, color: "#D9644E", boxes: hpTotal, filled: hpMarked, need: hpTotal ? hpMarked / hpTotal : 0, text: isLong ? "Recupera todos los PV" : `Recupera ${roll} PV` },
+                                { key: "clearmind", label: "Quitarse el Estrés", Icon: Zap, color: "#A58BE8", boxes: stressTotal, filled: stressMarked, need: stressTotal ? stressMarked / stressTotal : 0, text: isLong ? "Quita todo el Estrés" : `Quita ${roll} Estrés` },
+                                { key: "repair", label: "Reparar la armadura", Icon: Shield, color: "var(--acc)", boxes: armorTotal, filled: armorLeft, need: armorTotal ? (armorTotal - armorLeft) / armorTotal : 0, text: !armorTotal ? "No llevas armadura" : isLong ? "Repara toda la Armadura" : `Repara ${roll} casillas` },
+                                { key: "prepare", label: "Prepararse", Icon: Sparkles, color: "#E3B04B", boxes: hopeTotal, filled: hope, need: hopeTotal ? ((hopeTotal - hope) / hopeTotal) * 0.8 : 0, text: "+1 Esperanza" },
+                              ];
+                              // Recomendadas: lo que más te falta; si sobra hueco, prepararse.
+                              const recommended = acts
+                                .filter((ac) => ac.need > 0)
+                                .sort((x, y) => y.need - x.need)
+                                .slice(0, slots)
+                                .map((ac) => ac.key);
+                              while (recommended.length < slots) recommended.push("prepare");
+                              const picks = restPicks || recommended;
+                              const countOf = (key) => picks.filter((p) => p === key).length;
+                              const togglePick = (key) => {
+                                const n = countOf(key);
+                                const without = picks.filter((p) => p !== key);
+                                // Pulsar otra vez la elige dos veces si queda hueco; si no, la quita.
+                                if (n === 0 && picks.length < slots) setRestPicks([...picks, key]);
+                                else if (n > 0 && picks.length < slots) setRestPicks([...picks, key]);
+                                else if (n > 0) setRestPicks(without);
+                                else setRestPicks([...picks.slice(1), key]);
+                              };
+                              const shortRests = Number(c.f_short_rests || 0);
+                              const blocked = !isLong && shortRests >= 3;
+                              return (
+                                <div style={{ display: "flex", flexDirection: "column", gap: 11, flex: 1, minHeight: 0 }}>
+                                  <div className="mh-camp">
+                                    <Flame size={30} strokeWidth={1.6} color="#E0823A" />
+                                    <div style={{ minWidth: 0 }}>
+                                      <div className="mh-serif" style={{ fontWeight: 700, fontSize: 15, color: "var(--mh-ink)" }}>Junto a la hoguera</div>
+                                      <div style={{ fontSize: 11.5, color: "var(--mh-muted)" }}>
+                                        {(c.f_name || "Tu personaje").split(" ")[0]} puede descansar. Te recomendamos lo que más necesitas.
+                                        {isElf && " Trance Celestial: eliges 3 acciones."}
+                                      </div>
+                                    </div>
                                   </div>
-                                )}
-                              </div>
-                              {Number(c.f_short_rests || 0) > 0 && (
-                                <div style={{ fontSize: 11.5, color: ink(Number(c.f_short_rests) >= 3 ? "#D9644E" : "var(--mh-muted)") }}>
-                                  Descansos cortos seguidos: {Number(c.f_short_rests)}/3
-                                  {Number(c.f_short_rests) >= 3 && " — el próximo descanso tiene que ser largo."}
-                                </div>
-                              )}
-                              <button
-                                className="mh-btn"
-                                style={{ width: "fit-content" }}
-                                disabled={restType === "short" && Number(c.f_short_rests || 0) >= 3}
-                                onClick={() =>
-                                  performRest(
-                                    viewingCharId,
-                                    restType,
-                                    restPick1,
-                                    restPick2,
-                                    (c.f_ancestry || "").split(" + ").includes("Elfo") ? restPick3 : undefined
-                                  )
-                                }
-                              >
-                                Descansar
-                              </button>
-                              {restMessage && <div style={{ fontSize: 12.5, color: "var(--mh-green-ink)", fontWeight: 600 }}>{restMessage}</div>}
 
-                              <div style={{ borderTop: "1px solid var(--mh-line)", margin: "4px 0" }} />
+                                  <div className="mh-seg" role="tablist">
+                                    {[["short", "Descanso corto", Sun], ["long", "Descanso largo", Moon]].map(([key, label, Ico]) => (
+                                      <button
+                                        key={key}
+                                        type="button"
+                                        role="tab"
+                                        aria-selected={restType === key}
+                                        className={restType === key ? "on" : ""}
+                                        onClick={() => setRestType(key)}
+                                      >
+                                        <Ico size={14} /> {label}
+                                      </button>
+                                    ))}
+                                  </div>
 
-                              <div>
-                                <div className="mh-serif" style={{ fontSize: 13.5, fontWeight: 600, color: "var(--mh-ink)", marginBottom: 4 }}>Cartas de dominio</div>
-                                <div style={{ fontSize: 11.5, color: "var(--mh-muted)", marginBottom: 10 }}>
-                                  Puedes aprovechar tu tiempo libre para cambiar tus cartas de dominio elegidas.
+                                  <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, minHeight: 0 }}>
+                                    {acts.map((ac) => {
+                                      const n = countOf(ac.key);
+                                      return (
+                                        <div
+                                          key={ac.key}
+                                          role="checkbox"
+                                          aria-checked={n > 0}
+                                          tabIndex={0}
+                                          className={"mh-rest-row" + (n > 0 ? " sel" : "")}
+                                          style={{ "--rc": ac.color }}
+                                          title={n > 0 && picks.length < slots ? "Pulsa otra vez para elegirla dos veces" : undefined}
+                                          onClick={() => togglePick(ac.key)}
+                                          onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), togglePick(ac.key))}
+                                        >
+                                          <span className="mh-rest-ico">
+                                            <ac.Icon size={17} />
+                                          </span>
+                                          <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                              <span style={{ fontSize: 13, fontWeight: 700, color: "var(--mh-ink)" }}>{ac.label}</span>
+                                              {recommended.includes(ac.key) && ac.need > 0 && <span className="mh-rest-rec">Recomendado</span>}
+                                            </div>
+                                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4, flexWrap: "wrap" }}>
+                                              {ac.boxes > 0 && (
+                                                <span style={{ display: "flex", gap: 3 }}>
+                                                  {Array.from({ length: ac.boxes }, (_, i) => (
+                                                    <i key={i} className="mh-rest-box" style={{ background: i < ac.filled ? ac.color : "transparent" }} />
+                                                  ))}
+                                                </span>
+                                              )}
+                                              <span style={{ fontSize: 10.5, color: "var(--mh-muted)" }}>{ac.text}</span>
+                                            </div>
+                                          </div>
+                                          {n > 1 && <span className="mh-rest-x2">×{n}</span>}
+                                          <span className={"mh-rest-tick" + (n > 0 ? "" : " off")}>{n > 0 && <Check size={12} strokeWidth={3} />}</span>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+
+                                  <button
+                                    className="mh-btn"
+                                    style={{ width: "100%", justifyContent: "center", padding: "10px 14px", fontSize: 13.5 }}
+                                    disabled={blocked || picks.length === 0}
+                                    onClick={() => {
+                                      performRest(viewingCharId, restType, picks[0], picks[1], picks[2]);
+                                      setRestPicks(null);
+                                    }}
+                                  >
+                                    <Flame size={15} /> Descansar
+                                  </button>
+                                  <div style={{ fontSize: 11, color: restMessage ? "var(--mh-green-ink)" : blocked ? "#D9644E" : "var(--mh-purple-ink)", fontWeight: restMessage || blocked ? 600 : 400, display: "flex", alignItems: "center", gap: 5, minHeight: 16 }}>
+                                    {restMessage ? (
+                                      restMessage
+                                    ) : blocked ? (
+                                      "Llevas 3 descansos cortos seguidos: el próximo tiene que ser largo."
+                                    ) : (
+                                      <>
+                                        <Skull size={13} />
+                                        {isLong ? "El DJ gana 1d4 + nº de PJ de Miedo" : `El DJ gana 1d4 de Miedo · ${shortRests} de 3 descansos cortos`}
+                                      </>
+                                    )}
+                                  </div>
+                                  <button type="button" className="mh-rest-dl" disabled={!hasDomainCards(c.f_class)} onClick={() => openChangeDomainModal(viewingCharId)}>
+                                    <BookOpen size={15} /> Cambiar cartas de dominio
+                                    <ChevronRight size={14} style={{ marginLeft: "auto", opacity: 0.6 }} />
+                                  </button>
                                 </div>
-                                <button
-                                  className="mh-btn-ghost"
-                                  style={{ width: "fit-content" }}
-                                  disabled={!hasDomainCards(c.f_class)}
-                                  onClick={() => openChangeDomainModal(viewingCharId)}
-                                >
-                                  Cambiar cartas de dominio
-                                </button>
-                              </div>
-                            </div>
+                              );
+                            })()}
                           </Panel>
 
                           <Panel
