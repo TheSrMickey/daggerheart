@@ -1648,6 +1648,10 @@ const sharedStyles = `
   .mh-dlg { position: absolute; inset: 0; pointer-events: none; }
   .mh-dlg > * { pointer-events: auto; }
   .mh-dlg-figwrap { position: absolute; left: 0; bottom: 0; height: 78%; max-width: 70%; display: flex; align-items: flex-end; animation: mh-dlg-fig .45s cubic-bezier(.2,.8,.2,1) both; }
+  /* En la caja de la hoja el personaje va centrado; ampliada (y en la vista previa del DJ) se queda a la izquierda */
+  .mh-dlg:not(.is-big):not(.is-mini) .mh-dlg-figwrap { left: 0; right: 0; margin: 0 auto; width: fit-content; max-width: 86%; animation-name: mh-dlg-fig-up; }
+  .mh-dlg:not(.is-big):not(.is-mini) .mh-dlg-fig { object-position: center bottom; }
+  @keyframes mh-dlg-fig-up { from { opacity: 0; translate: 0 18px; } to { opacity: 1; translate: 0 0; } }
   .mh-dlg-fig { position: relative; z-index: 1; display: block; height: 100%; width: auto; max-width: 100%; object-fit: contain; object-position: left bottom; filter: drop-shadow(0 6px 18px rgba(0,0,0,.45)); }
   /* Feliz: halo cálido, destellos que titilan y motas que suben */
   .mh-dlg-figwrap.is-feliz::before { content: ""; position: absolute; left: -12%; right: -12%; top: -6%; height: 70%; border-radius: 50%; background: radial-gradient(closest-side, rgba(255,214,120,.42), rgba(255,214,120,0)); animation: mh-dlg-halo 2.6s ease-in-out infinite; }
