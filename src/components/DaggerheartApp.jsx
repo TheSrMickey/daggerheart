@@ -1307,6 +1307,40 @@ const sharedStyles = `
     mix-blend-mode: overlay; opacity: 0; transition: opacity .35s ease;
   }
   .mh-tilt[data-active="1"] .mh-glare { opacity: 1; }
+  .mh-cardc { background: linear-gradient(color-mix(in srgb, var(--cc) 12%, transparent), color-mix(in srgb, var(--cc) 4%, transparent)), var(--mh-panel) !important; }
+  .mh-cardc-art {
+    position: relative; margin: 10px 10px 0; border-radius: 13px; overflow: hidden; flex-shrink: 0;
+    border: 1px solid color-mix(in srgb, var(--cc) 55%, transparent);
+  }
+  .mh-cardc-art img { width: 100%; height: 100%; object-fit: cover; object-position: center 30%; display: block; }
+  .mh-cardc-noart {
+    width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(160deg, var(--mh-panel3) 0%, #3A3150 100%); color: rgba(236,230,218,.45);
+  }
+  .mh-cardc-close {
+    all: unset; cursor: pointer; position: absolute; top: 9px; left: 9px; width: 26px; height: 26px; border-radius: 50%;
+    background: rgba(0,0,0,.42); color: #fff; display: flex; align-items: center; justify-content: center;
+  }
+  .mh-cardc-close:focus-visible { outline: 2px solid #fff; }
+  .mh-cardc-badge { position: relative; height: 0; display: flex; justify-content: center; z-index: 3; }
+  .mh-cardc-gem {
+    translate: 0 -14px; width: 26px; height: 26px; border-radius: 50%; background: #FFFCF6; border: 1.5px solid #E3B04B;
+    color: #97680F; font-family: 'Cinzel', Georgia, serif; font-weight: 700; font-size: 13px;
+    display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 4px rgba(0,0,0,.35);
+  }
+  .mh-cardc-tier {
+    translate: 0 -10px; height: 19px; display: inline-flex; align-items: center; padding: 0 10px; border-radius: 20px;
+    color: #fff; font-size: 9.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; box-shadow: 0 1px 4px rgba(0,0,0,.3);
+  }
+  .mh-cardc-sub { margin-top: 3px; font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: color-mix(in srgb, var(--cc) var(--mh-accent-keep, 100%), #000); }
+  .mh-cardc-orn { height: 1px; width: 120px; margin: 8px auto 0; background: linear-gradient(90deg, transparent, var(--cc), transparent); }
+  .mh-cardc-label { font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--mh-muted2); }
+  .mh-cardc-big { font-size: 30px; font-weight: 700; line-height: 1.1; color: color-mix(in srgb, var(--cc) var(--mh-accent-keep, 100%), #000); }
+  .mh-cardc-foot {
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 16px;
+    border-top: 1px solid color-mix(in srgb, var(--cc) 35%, transparent); font-size: 12px; color: var(--mh-ink3);
+  }
+  .mh-cardc-foot b { color: var(--mh-ink); }
   .mh-holo {
     position: absolute; inset: 0; z-index: 30; pointer-events: none; border-radius: inherit; mix-blend-mode: color-dodge;
     background: linear-gradient(115deg, transparent 10%, rgba(255,80,200,.55) 25%, rgba(120,200,255,.55) 40%, rgba(255,240,120,.55) 55%, rgba(150,255,180,.55) 70%, transparent 85%);
@@ -1776,6 +1810,30 @@ function FitTitle({ text, max = 23, min = 14, lines = 2, lineHeight = 1.15, clas
   return (
     <div ref={ref} className={className} title={text} style={{ ...style, lineHeight, textWrap: "balance", overflowWrap: "break-word" }}>
       {text}
+    </div>
+  );
+}
+
+// Contenedor que reduce su tamaño de letra hasta que el contenido cabe sin cortarse.
+function FitBox({ children, max = 13, min = 9, fitKey, style }) {
+  const ref = useRef(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const fit = () => {
+      let size = max;
+      el.style.fontSize = size + "px";
+      while (size > min && el.scrollHeight > el.clientHeight + 1) {
+        size -= 0.25;
+        el.style.fontSize = size + "px";
+      }
+    };
+    fit();
+    document.fonts?.ready.then(fit);
+  }, [fitKey, max, min]);
+  return (
+    <div ref={ref} style={style}>
+      {children}
     </div>
   );
 }
@@ -5523,6 +5581,7 @@ export default function App({ onSignOut }) {
                                             kicker: "Armadura",
                                             title: w.key,
                                             text: `Puntuación ${w.score} · Umbrales base ${w.major}/${w.severe}`,
+                                            armor: { score: w.score, major: w.major, severe: w.severe },
                                             showCharacteristic: true,
                                             characteristic: w.feature,
                                             bigStyle: true,
@@ -5585,6 +5644,7 @@ export default function App({ onSignOut }) {
                                                   w.trait !== "—"
                                                     ? `${w.trait} · ${w.range} · ${w.damage} · ${handsLabel}`
                                                     : `${w.damage} · ${handsLabel}`,
+                                                weapon: { damage: w.damage, trait: w.trait, range: w.range, hands: handsLabel },
                                                 showCharacteristic: true,
                                                 characteristic: w.feature,
                                                 bigStyle: true,
@@ -6076,6 +6136,8 @@ export default function App({ onSignOut }) {
                                             text: cardData.text,
                                             image: cardData.image,
                                             accent: dColor,
+                                            domain: { name: cardData.domain, type: cardData.type, level: cardData.level, recall: cardData.recall },
+                                            bigStyle: true,
                                             tags: [cardData.type, "Nivel " + cardData.level, "Recuperación " + cardData.recall],
                                           })
                                         }
@@ -7792,17 +7854,27 @@ export default function App({ onSignOut }) {
                 onClick={closeCardDetail}
               >
                 {(viewingCardDetail.image || viewingCardDetail.bigStyle) ? (() => {
-                  const totalChars =
-                    (viewingCardDetail.text?.length || 0) +
-                    (viewingCardDetail.features || []).reduce((sum, f) => sum + (f.name?.length || 0) + (f.text?.length || 0), 0);
-                  const density = Math.min(1, Math.max(0, (totalChars - 200) / 900));
-                  const imgHeight = Math.round(170 - density * 15);
-                  const compactImage = totalChars > 350;
+                  // Carta enmarcada: arte en un marco, título centrado y datos al pie.
+                  const d = viewingCardDetail;
+                  const cardColor = d.tier ? TIER_COLORS[d.tier].color : d.accent || "var(--acc)";
+                  const totalChars = (d.text?.length || 0) + (d.characteristic?.length || 0) + (d.features || []).reduce((sum, f) => sum + (f.name?.length || 0) + (f.text?.length || 0), 0);
+                  const long = totalChars > 320;
+                  const artHeight = d.weapon || d.armor ? 128 : totalChars > 600 ? 84 : long ? 100 : 124;
+                  const dmg = d.weapon ? d.weapon.damage.match(/^(\S+)\s*(.*)$/) : null;
+                  const subtitle = d.weapon ? [d.kicker, d.weapon.hands].join(" · ") : d.domain ? d.domain.name + " · " + d.domain.type : d.kicker?.replace(/ · Nivel .*$/, "");
+                  const ArtIcon = d.armor ? Shield : d.weapon ? Sword : d.domain ? DOMAIN_ICONS[d.domain.name] || Sparkles : Sparkles;
+                  const action = !d.features && (d.navigateAction || CARD_ACTIONS[d.title]);
+                  const footer = d.weapon
+                    ? [d.weapon.trait !== "—" && d.weapon.trait, d.weapon.range].filter(Boolean).join(" · ")
+                    : d.armor
+                    ? `Umbrales base ${d.armor.major} / ${d.armor.severe}`
+                    : null;
                   return (
                   <div
-                    className="mh-card mh-card-anim mh-tilt"
+                    className="mh-card mh-card-anim mh-tilt mh-cardc"
                     style={{
-                      "--glow": alpha((viewingCardDetail.tier ? TIER_COLORS[viewingCardDetail.tier].color : viewingCardDetail.accent || "var(--acc)"), 33),
+                      "--glow": alpha(cardColor, 33),
+                      "--cc": cardColor,
                       margin: 0,
                       width: "min(300px, 100%)",
                       height: "min(420px, 80vh)",
@@ -7811,7 +7883,7 @@ export default function App({ onSignOut }) {
                       borderRadius: 22,
                       display: "flex",
                       flexDirection: "column",
-                      border: viewingCardDetail.tier ? "3px solid " + TIER_COLORS[viewingCardDetail.tier].color : viewingCardDetail.accent ? "2px solid " + viewingCardDetail.accent : undefined,
+                      border: (d.tier ? "3px" : "2px") + " solid " + cardColor,
                       position: "relative",
                     }}
                     onClick={(e) => e.stopPropagation()}
@@ -7820,182 +7892,99 @@ export default function App({ onSignOut }) {
                     onPointerUp={(e) => e.pointerType !== "mouse" && resetCardTilt(e)}
                   >
                     <div className="mh-glare" />
-                    {viewingCardDetail.tier === 4 && <div className="mh-holo" />}
-                    <div style={{ position: "relative", flexShrink: 0 }}>
-                      {viewingCardDetail.image ? (
-                        <img src={viewingCardDetail.image} alt={viewingCardDetail.title} style={{ width: "100%", height: imgHeight, objectFit: "cover", display: "block" }} />
+                    {d.tier === 4 && <div className="mh-holo" />}
+                    <div className="mh-cardc-art" style={{ height: artHeight }}>
+                      {d.image ? (
+                        <img src={d.image} alt={d.title} />
                       ) : (
-                        <div
-                          style={{
-                            width: "100%",
-                            height: imgHeight,
-                            background: "linear-gradient(160deg, var(--mh-panel3) 0%, #3A3150 100%)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          {viewingCardDetail.kicker === "Armadura" ? (
-                            <Shield size={compactImage ? 44 : 48} color="rgba(236,230,218,0.35)" />
-                          ) : (
-                            <Sword size={compactImage ? 44 : 48} color="rgba(236,230,218,0.35)" />
-                          )}
+                        <div className="mh-cardc-noart">
+                          <ArtIcon size={50} strokeWidth={1.5} />
                         </div>
                       )}
-                      <div
-                        style={{
-                          position: "absolute",
-                          inset: 0,
-                          background: "linear-gradient(to top, rgba(20,20,20,0.85) 0%, rgba(20,20,20,0.05) 42%, rgba(0,0,0,0) 60%)",
-                        }}
-                      />
-                      <div
-                        onClick={closeCardDetail}
-                        style={{
-                          position: "absolute",
-                          top: 14,
-                          left: 14,
-                          width: 28,
-                          height: 28,
-                          borderRadius: "50%",
-                          background: "rgba(0,0,0,0.4)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          cursor: "pointer",
-                        }}
-                      >
-                        <X size={15} color="#FFFFFF" />
-                      </div>
-                      {viewingCardDetail.tags?.[1] && (
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: 14,
-                            right: 14,
-                            background: "rgba(0,0,0,0.45)",
-                            color: "#FFFFFF",
-                            fontSize: 11,
-                            fontWeight: 700,
-                            padding: "5px 12px",
-                            borderRadius: 20,
-                          }}
-                        >
-                          {viewingCardDetail.tags[1]}
-                        </div>
-                      )}
-                      <div style={{ position: "absolute", bottom: 14, left: 20, right: 20, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 6 }}>
-                        {viewingCardDetail.tier && (
-                          <span
-                            style={{
-                              fontSize: 9.5,
-                              fontWeight: 700,
-                              color: "#FFFFFF",
-                              background: TIER_COLORS[viewingCardDetail.tier].color,
-                              padding: "3px 9px",
-                              borderRadius: 20,
-                              textTransform: "uppercase",
-                              letterSpacing: 0.3,
-                              flexShrink: 0,
-                            }}
-                          >
-                            {TIER_COLORS[viewingCardDetail.tier].label}
-                          </span>
-                        )}
-                        <FitTitle
-                          text={viewingCardDetail.title}
-                          className="mh-serif"
-                          style={{ fontWeight: 700, color: "#FFFFFF", width: "100%", maxHeight: "2.4em", overflow: "hidden", textShadow: "0 1px 6px rgba(0,0,0,.5)" }}
-                        />
-                      </div>
+                      <button type="button" className="mh-cardc-close" onClick={closeCardDetail} aria-label="Cerrar">
+                        <X size={14} />
+                      </button>
                     </div>
-                    <div style={{ padding: "16px 20px", flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                      {(() => {
-                        const compact = compactImage;
-                        const textScale = Math.min(1, Math.max(0, (totalChars - 150) / 700));
-                        const textSize = Math.round((13.5 - textScale * 3.2) * 10) / 10;
-                        const textLine = Math.round((1.55 - textScale * 0.3) * 100) / 100;
-                        return (
-                          <>
-                            <div style={{ fontSize: textSize, color: "var(--mh-ink)", lineHeight: textLine, marginBottom: viewingCardDetail.features ? (compact ? 8 : 14) : 16 }}>
-                              {viewingCardDetail.text}
-                            </div>
-                            {viewingCardDetail.features && (
-                              <div style={{ display: "flex", flexDirection: "column", gap: compact ? 4 : 10, marginBottom: compact ? 8 : 16 }}>
-                                {viewingCardDetail.features.map((f) => (
-                                  <div key={f.name} style={{ fontSize: compact ? 10.5 : 13, color: "var(--mh-ink)", lineHeight: compact ? 1.3 : 1.5 }}>
-                                    <span style={{ fontWeight: 700, color: "var(--mh-gold-ink)" }}>{f.name}:</span> {f.text}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </>
-                        );
-                      })()}
-                      {viewingCardDetail.showCharacteristic && (
-                        <>
-                          <div style={{ borderTop: "1px solid var(--mh-line)", margin: "2px 0 12px" }} />
-                          <div style={{ fontSize: 10.5, fontWeight: 700, color: "var(--mh-gold-ink)", textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 4 }}>
-                            Característica
-                          </div>
-                          <div style={{ fontSize: 13, color: "var(--mh-ink)", lineHeight: 1.5, marginBottom: 16 }}>
-                            {viewingCardDetail.characteristic || "—"}
-                          </div>
-                        </>
+                    <div className="mh-cardc-badge">
+                      {d.domain ? (
+                        <span className="mh-cardc-gem" title={"Nivel " + d.domain.level}>{d.domain.level}</span>
+                      ) : d.tier ? (
+                        <span className="mh-cardc-tier" style={{ background: TIER_COLORS[d.tier].color }}>{TIER_COLORS[d.tier].label}</span>
+                      ) : null}
+                    </div>
+                    <div style={{ padding: "0 18px", textAlign: "center", flexShrink: 0, marginTop: d.domain || d.tier ? 16 : 8 }}>
+                      <FitTitle text={d.title} max={19} min={14} className="mh-serif" style={{ fontWeight: 700, color: "var(--mh-ink)", maxHeight: "2.4em", overflow: "hidden" }} />
+                      {subtitle && <div className="mh-cardc-sub">{subtitle}</div>}
+                      <div className="mh-cardc-orn" />
+                    </div>
+                    <FitBox
+                      fitKey={d.title + totalChars}
+                      max={13}
+                      min={9}
+                      style={{ flex: 1, minHeight: 0, overflow: "hidden", padding: "10px 18px 12px", display: "flex", flexDirection: "column", justifyContent: d.weapon || d.armor ? "center" : "flex-start", textAlign: d.features ? "left" : "center", gap: "0.7em", lineHeight: 1.5 }}
+                    >
+                      {(d.weapon || d.armor) && (
+                        <div>
+                          <div className="mh-cardc-label">{d.weapon ? "Daño" : "Puntuación"}</div>
+                          <div className="mh-cardc-big">{d.weapon ? dmg?.[1] || d.weapon.damage : d.armor.score}</div>
+                          {d.weapon && dmg?.[2] && <div style={{ fontSize: "0.88em", color: "var(--mh-muted)" }}>{dmg[2]}</div>}
+                        </div>
                       )}
-                      {viewingCardDetail.tags && (
-                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 18 }}>
-                          {viewingCardDetail.tags.map((tag) => (
-                            <span
-                              key={tag}
-                              style={{
-                                fontSize: 11.5,
-                                fontWeight: 600,
-                                color: "var(--mh-gold-ink)",
-                                background: "color-mix(in srgb, var(--acc) 8%, transparent)",
-                                padding: "5px 12px",
-                                borderRadius: 20,
-                              }}
-                            >
-                              {tag}
-                            </span>
+                      {!d.weapon && !d.armor && d.text && (
+                        <div style={{ color: "var(--mh-ink)" }}>{d.text}</div>
+                      )}
+                      {d.features && (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.55em" }}>
+                          {d.features.map((f) => (
+                            <div key={f.name} style={{ fontSize: "0.95em", color: "var(--mh-ink)", lineHeight: 1.4 }}>
+                              <span style={{ fontWeight: 700, color: "var(--mh-gold-ink)" }}>{f.name}:</span> {f.text}
+                            </div>
                           ))}
                         </div>
                       )}
-                      {!viewingCardDetail.features && (
-                        <div style={{ height: 44 }}>
-                          {viewingCardDetail.navigateAction ? (
+                      {d.showCharacteristic &&
+                        (d.characteristic ? (
+                          <div style={{ color: "var(--mh-ink)" }}>{d.characteristic}</div>
+                        ) : (
+                          <div style={{ fontSize: "0.93em", color: "var(--mh-muted2)", fontStyle: "italic" }}>Sin característica especial.</div>
+                        ))}
+                    </FitBox>
+                    {(footer || d.domain || action) && (
+                      <div className="mh-cardc-foot">
+                        {action ? (
+                          d.navigateAction ? (
                             <button
                               className="mh-btn"
                               style={{ width: "100%", justifyContent: "center" }}
                               onClick={() => {
-                                setDetailTab(viewingCardDetail.navigateAction.tab);
+                                setDetailTab(d.navigateAction.tab);
                                 setActionPage(0);
                                 setViewingCardDetail(null);
                               }}
                             >
-                              {viewingCardDetail.navigateAction.label}
+                              {d.navigateAction.label}
                             </button>
                           ) : (
-                            CARD_ACTIONS[viewingCardDetail.title] && (() => {
-                              const action = CARD_ACTIONS[viewingCardDetail.title];
-                              return (
-                                <button
-                                  className="mh-btn"
-                                  style={{ width: "100%", justifyContent: "center" }}
-                                  onClick={() => {
-                                    rollTraitCheck(viewingCharId, action.traitLabel, Number(c[action.traitKey] || 0), null, { name: viewingCardDetail.title, dc: action.dc });
-                                    setViewingCardDetail(null);
-                                  }}
-                                >
-                                  <Dices size={13} /> Tirar {action.traitLabel} (Dificultad {action.dc})
-                                </button>
-                              );
-                            })()
-                          )}
-                        </div>
-                      )}
-                    </div>
+                            <button
+                              className="mh-btn"
+                              style={{ width: "100%", justifyContent: "center" }}
+                              onClick={() => {
+                                rollTraitCheck(viewingCharId, action.traitLabel, Number(c[action.traitKey] || 0), null, { name: d.title, dc: action.dc });
+                                setViewingCardDetail(null);
+                              }}
+                            >
+                              <Dices size={13} /> Tirar {action.traitLabel} (Dificultad {action.dc})
+                            </button>
+                          )
+                        ) : d.domain ? (
+                          <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                            <Zap size={12} color="#E3B04B" /> Recuperación <b>{d.domain.recall}</b>
+                          </span>
+                        ) : (
+                          <span>{footer}</span>
+                        )}
+                      </div>
+                    )}
                   </div>
                   );
                 })() : (
