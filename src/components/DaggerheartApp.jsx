@@ -3997,11 +3997,14 @@ export default function App({ onSignOut }) {
   const restMsgTimer = useRef(null);
   const armaduraRef = useRef(null);
   const [armaduraHeight, setArmaduraHeight] = useState(null);
+  const [armaduraWidth, setArmaduraWidth] = useState(null);
 
   useEffect(() => {
     if (armaduraRef.current) {
       const h = armaduraRef.current.offsetHeight;
       if (h && h !== armaduraHeight) setArmaduraHeight(h);
+      const w = armaduraRef.current.offsetWidth;
+      if (w && w !== armaduraWidth) setArmaduraWidth(w);
     }
   });
 
@@ -8469,7 +8472,8 @@ export default function App({ onSignOut }) {
                           <div
                             style={{
                               display: "grid",
-                              gridTemplateColumns: isMobile ? "1fr" : wide ? "minmax(0, 1fr) clamp(300px, 27.5%, 440px)" : "repeat(12, 1fr)",
+                              // Ampliada, el chat mide lo mismo que en la rejilla normal: 5 de 12 columnas del hueco que queda sin las estadísticas.
+                              gridTemplateColumns: isMobile ? "1fr" : wide ? `minmax(0, 1fr) calc((100% - ${(armaduraWidth || 320) + 18 + 11 * 18}px) * 5 / 12 + ${4 * 18}px)` : "repeat(12, 1fr)",
                               gap: 18,
                               flex: wide && armaduraHeight ? "0 0 auto" : 1,
                               minHeight: 0,
