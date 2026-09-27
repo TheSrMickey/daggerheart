@@ -1695,6 +1695,7 @@ const sharedStyles = `
   /* Tablero: escena de fondo, cuadrícula fina y fichas cuadradas */
   .mh-map { position: relative; aspect-ratio: ${MAP_COLS} / ${MAP_ROWS}; border-radius: 12px; overflow: hidden; background: #2B3A4F center / cover no-repeat; flex-shrink: 0; touch-action: none; user-select: none; }
   .mh-map.is-blank { background-image: linear-gradient(#3F4B5E, #2B3A4F); }
+  .mh-map-bg { position: absolute; inset: -8px; background: center / cover no-repeat; filter: blur(3px); pointer-events: none; }
   .mh-map-grid { position: absolute; inset: 0; pointer-events: none; background-image: linear-gradient(rgba(255,255,255,.28) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.28) 1px, transparent 1px); background-size: calc(100% / ${MAP_COLS}) calc(100% / ${MAP_ROWS}); }
   .mh-map-range { position: absolute; background: color-mix(in srgb, var(--rc) 24%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rc) 45%, transparent); pointer-events: none; }
   .mh-map-legend { position: absolute; left: 8px; bottom: 8px; z-index: 6; display: flex; align-items: center; gap: 4px 10px; flex-wrap: wrap; max-width: calc(100% - 16px); padding: 5px 8px; border-radius: 8px; background: rgba(20,14,18,.78); color: #F4EEE2; font: 600 10.5px 'Inter', system-ui, sans-serif; }
@@ -2653,7 +2654,9 @@ function MapBoard({ bg, tokens, canMove, onMove, selectedId, onSelect, onPick, c
   const at = (x, y) => ({ left: (x * 100) / MAP_COLS + "%", top: (y * 100) / MAP_ROWS + "%", width: 100 / MAP_COLS + "%", height: 100 / MAP_ROWS + "%" });
 
   return (
-    <div ref={ref} className={"mh-map" + (bg ? "" : " is-blank") + (compact ? " is-compact" : "")} style={bg ? { backgroundImage: `url("${bg.replace(/"/g, "%22")}")` } : undefined} onClick={boardClick}>
+    <div ref={ref} className={"mh-map" + (bg ? "" : " is-blank") + (compact ? " is-compact" : "")} onClick={boardClick}>
+      {/* La escena va difuminada para que destaquen la cuadrícula y las fichas */}
+      {bg && <div className="mh-map-bg" style={{ backgroundImage: `url("${bg.replace(/"/g, "%22")}")` }} />}
       {rangeCells.map(([x, y, band]) => (
         <div key={"r" + x + "," + y} className="mh-map-range" style={{ ...at(x, y), "--rc": band.color }} />
       ))}
