@@ -1716,6 +1716,16 @@ const sharedStyles = `
   .mh-map-fit .mh-map { border-radius: 0; }
   .mh-map-top { position: absolute; top: 0; right: 0; z-index: 5; pointer-events: none; }
   .mh-map-top > * { pointer-events: auto; }
+  .mh-map-ptray { flex-shrink: 0; display: flex; align-items: center; gap: 6px 8px; flex-wrap: wrap; padding: 8px 10px; border: 1px solid var(--mh-line); border-radius: 10px; background: var(--mh-panel2); }
+  .mh-map-ptray .mh-gm-h2 { margin: 0 4px 0 0; }
+  .mh-map-ptray-h { width: 100%; font-size: 11px; color: var(--mh-muted); }
+  .mh-map-chip.is-placed { cursor: default; opacity: .75; }
+  .mh-map-chip.is-placed > svg { color: #6FBF73; }
+  .mh-map-chip.is-remove { padding: 5px 10px; color: #C0504A; }
+  .mh-map-chip.is-remove > svg { color: #C0504A; }
+  .mh-map-petadd { display: inline-flex; align-items: center; gap: 6px; }
+  .mh-map-petadd .mh-input { width: 150px; font-size: 12px; padding: 5px 9px; }
+  .mh-map-tk.is-pet .mh-map-face { width: 66%; height: 66%; border-radius: 50%; background: color-mix(in srgb, var(--tc) 35%, #221C2B); }
   .mh-map-hint { flex-shrink: 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--mh-ink3); }
   .mh-map-hint .mh-stg-live { margin-left: auto; }
   .mh-map-gm { gap: 12px; }
@@ -1731,7 +1741,7 @@ const sharedStyles = `
   .mh-map-chip:hover { border-color: var(--mh-line2); }
   .mh-map-chip i { width: 24px; height: 24px; border-radius: 6px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #221C2B; color: #fff; font: 700 11px 'Cinzel', Georgia, serif; font-style: normal; }
   .mh-map-chip i img { width: 100%; height: 100%; object-fit: cover; object-position: center 12%; }
-  .mh-map-chip svg { color: var(--mh-muted); }
+  .mh-map-chip > svg { color: var(--mh-muted); }
   .mh-stg-hgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-content: start; }
   .mh-stg-hand { display: flex; flex-direction: column; height: 150px; padding: 0; border: 1px solid var(--mh-line); border-radius: 12px; overflow: hidden; background: var(--mh-panel); cursor: pointer; text-align: left; font: inherit; color: inherit; box-shadow: 0 2px 6px rgba(80,60,30,.08); transition: transform .15s, box-shadow .15s; }
   .mh-stg-hand:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(80,60,30,.16); }
@@ -2535,7 +2545,7 @@ const HAPPY_SPARKS = [
 const HAPPY_MOTES = [[14, 0], [50, 0.8], [80, 1.6], [34, 2.2], [66, 2.9]];
 
 // Tablero con fichas cuadradas. Se arrastran, o se elige una y se pulsa la casilla; también con las flechas.
-function MapBoard({ bg, tokens, canMove, onMove, selectedId, onSelect, compact }) {
+function MapBoard({ bg, tokens, canMove, onMove, selectedId, onSelect, onPick, compact }) {
   const ref = useRef(null);
   const dragRef = useRef(null);
   const [drag, setDrag] = useState(null);
@@ -2548,7 +2558,11 @@ function MapBoard({ bg, tokens, canMove, onMove, selectedId, onSelect, compact }
   const selected = tokens.find((t) => t.id === selectedId && canMove(t));
 
   const startDrag = (e, t) => {
-    if (!canMove(t) || e.button > 0) return;
+    if (e.button > 0) return;
+    if (!canMove(t)) {
+      if (onPick) onPick(selectedId === t.id ? null : t.id);
+      return;
+    }
     e.preventDefault();
     dragRef.current = { id: t.id, x: t.x, y: t.y, moved: false };
     setDrag(dragRef.current);
@@ -2615,9 +2629,9 @@ function MapBoard({ bg, tokens, canMove, onMove, selectedId, onSelect, compact }
             onKeyDown={(e) => keyMove(e, t)}
             aria-label={t.name + (movable ? ". Arrástrala o usa las flechas para moverla" : "")}
             title={t.name}
-            tabIndex={movable ? 0 : -1}
+            tabIndex={movable || onPick ? 0 : -1}
           >
-            <span className="mh-map-face">{t.img ? <img src={t.img} alt="" draggable={false} /> : t.kind === "foe" ? <Skull size="55%" /> : <span>{(t.name || "?").trim().charAt(0).toUpperCase()}</span>}</span>
+            <span className="mh-map-face">{t.img ? <img src={t.img} alt="" draggable={false} /> : t.kind === "foe" ? <Skull size="55%" /> : t.kind === "pet" ? <PawPrint size="52%" /> : <span>{(t.name || "?").trim().charAt(0).toUpperCase()}</span>}</span>
             {t.hp && t.hp[1] > 0 && (
               <span className="mh-map-hp" title={`Vida: ${t.hp[1] - t.hp[0]} de ${t.hp[1]}`}>
                 <i style={{ width: Math.max(0, ((t.hp[1] - t.hp[0]) / t.hp[1]) * 100) + "%" }} />
@@ -3017,6 +3031,7 @@ export default function App({ onSignOut }) {
   const [campaignMap, setCampaignMap] = useState({ tokens: [] });
   const [mapSel, setMapSel] = useState(null);
   const [foeDraft, setFoeDraft] = useState("");
+  const [petDraft, setPetDraft] = useState("");
   const mapBusy = useRef(0);
   const [campaignEncounters, setCampaignEncounters] = useState([]);
   const [encounterNameDraft, setEncounterNameDraft] = useState("");
@@ -4726,14 +4741,14 @@ export default function App({ onSignOut }) {
     return cells.find(([x, y]) => !tokens.some((t) => t.x === x && t.y === y)) || [0, 0];
   };
 
-  const placeToken = (token) =>
-    mutateMap(viewingCampaignId, (tokens) => {
+  const placeToken = (token, campaignId = viewingCampaignId) =>
+    mutateMap(campaignId, (tokens) => {
       const [x, y] = freeCell(tokens);
       return [...tokens, { id: "t" + Date.now() + Math.random().toString(36).slice(2, 5), x, y, ...token }];
     });
 
-  const removeToken = (id) => {
-    mutateMap(viewingCampaignId, (tokens) => tokens.filter((t) => t.id !== id));
+  const removeToken = (id, campaignId = viewingCampaignId) => {
+    mutateMap(campaignId, (tokens) => tokens.filter((t) => t.id !== id));
     if (mapSel === id) setMapSel(null);
   };
 
@@ -4749,6 +4764,7 @@ export default function App({ onSignOut }) {
         const ch = characters[t.charId];
         return { ...t, name: ch?.f_name || t.name || "Personaje", color: classColor(ch?.f_class), hp: ch ? [Number(ch.hp_marked || 0), Number(ch.r_hp || 0)] : null };
       }
+      if (t.kind === "pet") return { ...t, color: classColor(characters[t.ownerCharId]?.f_class) };
       return { ...t, color: t.kind === "foe" ? "#C0504A" : "#C9A24A", img: t.imgId ? castImgs[t.imgId] : null };
     });
 
@@ -6150,7 +6166,6 @@ export default function App({ onSignOut }) {
                   {campaignDetailTab === "mapa" && (() => {
                     const tokens = campaignMap.tokens || [];
                     const onMap = (fn) => tokens.some(fn);
-                    const partyOff = (activeCampaign.characterIds || []).filter((id) => characters[id] && !onMap((t) => t.kind === "pc" && t.charId === id));
                     const castOff = campaignCast.filter((m) => !onMap((t) => t.kind === "npc" && t.castId === m.id));
                     const sel = tokens.find((t) => t.id === mapSel);
                     const chip = (key, label, face, onClick) => (
@@ -6163,15 +6178,16 @@ export default function App({ onSignOut }) {
                     return (
                       <div className="mh-card mh-gm-box mh-map-gm" style={{ margin: 0 }}>
                         <div className="mh-gm-sub" style={{ marginTop: 0 }}>
-                          El fondo es la escena que está en pantalla ({campaignStage.scene?.title || "ninguna"}). Coloca las fichas y muévelas arrastrando, o elige una y pulsa una casilla. Cada jugador puede mover la suya desde su hoja.
+                          El fondo es la escena que está en pantalla ({campaignStage.scene?.title || "ninguna"}). Coloca a tu reparto y a los enemigos y muévelos arrastrando, o elige uno y pulsa una casilla. Los jugadores colocan y mueven sus propias fichas desde su hoja.
                         </div>
                         <MapBoard
                           bg={campaignStage.scene?.image}
                           tokens={mapTokensView(tokens)}
-                          canMove={() => true}
+                          canMove={(t) => t.kind === "npc" || t.kind === "foe"}
                           onMove={(id, x, y) => moveToken(viewingCampaignId, id, x, y)}
                           selectedId={mapSel}
                           onSelect={setMapSel}
+                          onPick={setMapSel}
                         />
                         <div className="mh-map-bar">
                           {sel ? (
@@ -6196,11 +6212,6 @@ export default function App({ onSignOut }) {
                           )}
                         </div>
                         <div className="mh-map-tray">
-                          <div className="mh-map-tray-g">
-                            <span className="mh-gm-h2">Jugadores</span>
-                            {partyOff.map((id) => chip(id, characters[id].f_name || "Sin nombre", (characters[id].f_name || "?").charAt(0).toUpperCase(), () => placeToken({ kind: "pc", charId: id, name: characters[id].f_name || "" })))}
-                            {partyOff.length === 0 && <span className="mh-map-tray-e">Todos colocados</span>}
-                          </div>
                           <div className="mh-map-tray-g">
                             <span className="mh-gm-h2">Reparto</span>
                             {castOff.map((m) => {
@@ -8761,7 +8772,7 @@ export default function App({ onSignOut }) {
                                           <MapBoard
                                             bg={scene.image}
                                             tokens={mapTokens}
-                                            canMove={(t) => t.kind === "pc" && t.charId === viewingCharId}
+                                            canMove={(t) => (t.kind === "pc" && t.charId === viewingCharId) || (t.kind === "pet" && t.ownerCharId === viewingCharId)}
                                             onMove={(id, x, y) => moveToken(charCampaign.id, id, x, y)}
                                             selectedId={mapSel}
                                             onSelect={setMapSel}
@@ -8788,15 +8799,60 @@ export default function App({ onSignOut }) {
                                           </button>
                                         </div>
                                       </div>
-                                      <div className="mh-map-hint">
-                                        {myToken ? (
-                                          <span>
-                                            Arrastra tu ficha (<b>{myToken.name}</b>) o elígela y pulsa una casilla. Arrastra el fondo para recorrer el mapa.
-                                          </span>
-                                        ) : (
-                                          "El DJ todavía no ha colocado tu ficha en el mapa."
-                                        )}
-                                      </div>
+                                      {(() => {
+                                        const me = characters[viewingCharId];
+                                        const myPets = mapTokens.filter((t) => t.kind === "pet" && t.ownerCharId === viewingCharId);
+                                        const mineSel = mapTokens.find((t) => t.id === mapSel && ((t.kind === "pc" && t.charId === viewingCharId) || (t.kind === "pet" && t.ownerCharId === viewingCharId)));
+                                        const col = classColor(me?.f_class);
+                                        const addPet = () => {
+                                          const name = petDraft.trim();
+                                          if (!name) return;
+                                          placeToken({ kind: "pet", ownerCharId: viewingCharId, name }, charCampaign.id);
+                                          setPetDraft("");
+                                        };
+                                        return (
+                                          <div className="mh-map-ptray">
+                                            <span className="mh-gm-h2">Tus fichas</span>
+                                            {myToken ? (
+                                              <span className="mh-map-chip is-placed" title="Ya está en el mapa">
+                                                <i style={{ background: col }}>{(me?.f_name || "?").charAt(0).toUpperCase()}</i>
+                                                {me?.f_name || "Tu personaje"}
+                                                <Check size={12} />
+                                              </span>
+                                            ) : (
+                                              <button type="button" className="mh-map-chip" onClick={() => placeToken({ kind: "pc", charId: viewingCharId, name: me?.f_name || "" }, charCampaign.id)} title="Colocar tu ficha en el mapa">
+                                                <i style={{ background: col }}>{(me?.f_name || "?").charAt(0).toUpperCase()}</i>
+                                                {me?.f_name || "Tu personaje"}
+                                                <Plus size={12} />
+                                              </button>
+                                            )}
+                                            {myPets.map((t) => (
+                                              <span key={t.id} className="mh-map-chip is-placed" title="Ya está en el mapa">
+                                                <i style={{ background: col }}>
+                                                  <PawPrint size={13} />
+                                                </i>
+                                                {t.name}
+                                                <Check size={12} />
+                                              </span>
+                                            ))}
+                                            <span className="mh-map-petadd">
+                                              <input className="mh-input" placeholder="Mascota o compañero…" aria-label="Nombre de la mascota o compañero" value={petDraft} onChange={(e) => setPetDraft(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addPet()} />
+                                              <button type="button" className="mh-map-chip" onClick={addPet} title="Añadir una ficha de mascota o compañero">
+                                                <i style={{ background: col }}>
+                                                  <PawPrint size={13} />
+                                                </i>
+                                                Añadir
+                                              </button>
+                                            </span>
+                                            {mineSel && (
+                                              <button type="button" className="mh-map-chip is-remove" onClick={() => removeToken(mineSel.id, charCampaign.id)}>
+                                                <Trash2 size={12} /> Quitar {mineSel.name}
+                                              </button>
+                                            )}
+                                            <span className="mh-map-ptray-h">Arrastra tus fichas para moverlas y el fondo para recorrer el mapa.</span>
+                                          </div>
+                                        );
+                                      })()}
                                     </>
                                   ) : (
                                     empty(MapPinned, "El DJ todavía no ha preparado el mapa.")
