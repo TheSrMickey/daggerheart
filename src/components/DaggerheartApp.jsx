@@ -1036,6 +1036,13 @@ const CARD_ACTIONS = {
 const MAP_COLS = 16;
 const MAP_ROWS = 9;
 const MAP_REACH = 2; // casillas que se iluminan alrededor de la ficha elegida
+// Rangos de Daggerheart en cuadrícula (casillas desde la ficha, contando diagonales).
+const MAP_RANGES = [
+  { key: "melee", label: "Cuerpo a cuerpo", max: 1, color: "#D9644E" },
+  { key: "vclose", label: "Muy cercano", max: 3, color: "#E3B04B" },
+  { key: "close", label: "Cercano", max: 6, color: "#7FB77A" },
+  { key: "far", label: "Lejano", max: 12, color: "#5B8FD9" },
+];
 
 const EMPTY_STAGE = { live: "escena", scene: { title: "", image: "" }, handouts: [] };
 // Plantillas de escena con ilustración propia (public/escenas, generadas con scripts/generate-scene-presets.mjs).
@@ -1689,6 +1696,14 @@ const sharedStyles = `
   .mh-map { position: relative; aspect-ratio: ${MAP_COLS} / ${MAP_ROWS}; border-radius: 12px; overflow: hidden; background: #2B3A4F center / cover no-repeat; flex-shrink: 0; touch-action: none; user-select: none; }
   .mh-map.is-blank { background-image: linear-gradient(#3F4B5E, #2B3A4F); }
   .mh-map-grid { position: absolute; inset: 0; pointer-events: none; background-image: linear-gradient(rgba(255,255,255,.28) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.28) 1px, transparent 1px); background-size: calc(100% / ${MAP_COLS}) calc(100% / ${MAP_ROWS}); }
+  .mh-map-range { position: absolute; background: color-mix(in srgb, var(--rc) 24%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rc) 45%, transparent); pointer-events: none; }
+  .mh-map-legend { position: absolute; left: 8px; bottom: 8px; z-index: 6; display: flex; align-items: center; gap: 4px 10px; flex-wrap: wrap; max-width: calc(100% - 16px); padding: 5px 8px; border-radius: 8px; background: rgba(20,14,18,.78); color: #F4EEE2; font: 600 10.5px 'Inter', system-ui, sans-serif; }
+  .mh-map-legend span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+  .mh-map-legend i { width: 10px; height: 10px; border-radius: 3px; }
+  .mh-map-legend button { width: 18px; height: 18px; border: 0; border-radius: 50%; background: rgba(255,255,255,.14); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .mh-map-menu { position: absolute; z-index: 8; min-width: 160px; padding: 4px; border-radius: 10px; background: var(--mh-panel); border: 1px solid var(--mh-line2); box-shadow: 0 10px 28px rgba(0,0,0,.35); }
+  .mh-map-menu button { width: 100%; display: flex; align-items: center; gap: 8px; padding: 7px 10px; border: 0; border-radius: 7px; background: transparent; color: var(--mh-ink); font: 600 12.5px 'Inter', system-ui, sans-serif; cursor: pointer; text-align: left; }
+  .mh-map-menu button:hover, .mh-map-menu button:focus-visible { background: var(--mh-panel2); outline: none; }
   .mh-map-reach { position: absolute; background: rgba(111,191,115,.26); box-shadow: inset 0 0 0 1px rgba(111,191,115,.6); pointer-events: none; }
   .mh-map-drop { position: absolute; box-shadow: inset 0 0 0 2px #F3C24A; border-radius: 6px; pointer-events: none; }
   .mh-map-drop.is-bad { box-shadow: inset 0 0 0 2px #D9644E; }
@@ -1718,7 +1733,6 @@ const sharedStyles = `
   .mh-map-top > * { pointer-events: auto; }
   .mh-map-ptray { flex-shrink: 0; display: flex; align-items: center; gap: 6px 8px; flex-wrap: wrap; padding: 8px 10px; border: 1px solid var(--mh-line); border-radius: 10px; background: var(--mh-panel2); }
   .mh-map-ptray .mh-gm-h2 { margin: 0 4px 0 0; }
-  .mh-map-ptray-h { width: 100%; font-size: 11px; color: var(--mh-muted); }
   .mh-map-chip.is-placed { cursor: default; opacity: .75; }
   .mh-map-chip.is-placed > svg { color: #6FBF73; }
   .mh-map-chip.is-remove { padding: 5px 10px; color: #C0504A; }
@@ -2547,6 +2561,26 @@ function MapBoard({ bg, tokens, canMove, onMove, selectedId, onSelect, onPick, c
   const ref = useRef(null);
   const dragRef = useRef(null);
   const [drag, setDrag] = useState(null);
+  const [menu, setMenu] = useState(null); // menú del clic derecho: { id, x, y } en px dentro del tablero
+  const [rangeId, setRangeId] = useState(null);
+  useEffect(() => {
+    if (!menu) return;
+    const close = (e) => (e.type !== "keydown" || e.key === "Escape") && setMenu(null);
+    window.addEventListener("pointerdown", close);
+    window.addEventListener("keydown", close);
+    window.addEventListener("wheel", close, { passive: true });
+    return () => {
+      window.removeEventListener("pointerdown", close);
+      window.removeEventListener("keydown", close);
+      window.removeEventListener("wheel", close);
+    };
+  }, [menu]);
+  const openMenu = (e, t) => {
+    if (!canMove(t)) return;
+    e.preventDefault();
+    const r = ref.current.getBoundingClientRect();
+    setMenu({ id: t.id, x: Math.min(e.clientX - r.left, r.width - 170), y: Math.min(e.clientY - r.top, r.height - 50) });
+  };
   const clamp = (v, max) => Math.max(0, Math.min(max - 1, v));
   const cellAt = (e) => {
     const r = ref.current.getBoundingClientRect();
@@ -2605,10 +2639,24 @@ function MapBoard({ bg, tokens, canMove, onMove, selectedId, onSelect, onPick, c
       for (let x = selected.x - MAP_REACH; x <= selected.x + MAP_REACH; x++)
         if (x >= 0 && y >= 0 && x < MAP_COLS && y < MAP_ROWS && !(x === selected.x && y === selected.y) && !occupied(x, y)) reach.push([x, y]);
   }
+  // Casillas coloreadas por rango alrededor de la ficha elegida en el menú.
+  const rangeTok = tokens.find((t) => t.id === rangeId);
+  const rangeCells = [];
+  if (rangeTok) {
+    for (let y = 0; y < MAP_ROWS; y++)
+      for (let x = 0; x < MAP_COLS; x++) {
+        const d = Math.max(Math.abs(x - rangeTok.x), Math.abs(y - rangeTok.y));
+        const band = d > 0 && MAP_RANGES.find((r) => d <= r.max);
+        if (band) rangeCells.push([x, y, band]);
+      }
+  }
   const at = (x, y) => ({ left: (x * 100) / MAP_COLS + "%", top: (y * 100) / MAP_ROWS + "%", width: 100 / MAP_COLS + "%", height: 100 / MAP_ROWS + "%" });
 
   return (
     <div ref={ref} className={"mh-map" + (bg ? "" : " is-blank") + (compact ? " is-compact" : "")} style={bg ? { backgroundImage: `url("${bg.replace(/"/g, "%22")}")` } : undefined} onClick={boardClick}>
+      {rangeCells.map(([x, y, band]) => (
+        <div key={"r" + x + "," + y} className="mh-map-range" style={{ ...at(x, y), "--rc": band.color }} />
+      ))}
       <div className="mh-map-grid" />
       {reach.map(([x, y]) => (
         <div key={x + "," + y} className="mh-map-reach" style={at(x, y)} />
@@ -2624,6 +2672,7 @@ function MapBoard({ bg, tokens, canMove, onMove, selectedId, onSelect, onPick, c
             className={"mh-map-tk is-" + t.kind + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "")}
             style={{ ...at(pos.x, pos.y), "--tc": t.color }}
             onPointerDown={(e) => startDrag(e, t)}
+            onContextMenu={(e) => openMenu(e, t)}
             onKeyDown={(e) => keyMove(e, t)}
             aria-label={t.name + (movable ? ". Arrástrala o usa las flechas para moverla" : "")}
             title={t.name}
@@ -2639,6 +2688,35 @@ function MapBoard({ bg, tokens, canMove, onMove, selectedId, onSelect, onPick, c
           </button>
         );
       })}
+      {rangeTok && (
+        <div className="mh-map-legend" onPointerDown={(e) => e.stopPropagation()}>
+          {MAP_RANGES.map((r) => (
+            <span key={r.key}>
+              <i style={{ background: r.color }} />
+              {r.label}
+            </span>
+          ))}
+          <button type="button" aria-label="Ocultar rango" title="Ocultar rango" onClick={() => setRangeId(null)}>
+            <X size={11} />
+          </button>
+        </div>
+      )}
+      {menu && (
+        <div className="mh-map-menu" role="menu" style={{ left: Math.max(4, menu.x), top: Math.max(4, menu.y) }} onPointerDown={(e) => e.stopPropagation()} onContextMenu={(e) => e.preventDefault()}>
+          <button
+            type="button"
+            role="menuitem"
+            autoFocus
+            onClick={(e) => {
+              e.stopPropagation();
+              setRangeId(rangeId === menu.id ? null : menu.id);
+              setMenu(null);
+            }}
+          >
+            <Crosshair size={13} /> {rangeId === menu.id ? "Ocultar rango" : "Mostrar rango"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -8849,7 +8927,6 @@ export default function App({ onSignOut }) {
                                                 <Trash2 size={12} /> Quitar {mineSel.name}
                                               </button>
                                             )}
-                                            <span className="mh-map-ptray-h">Arrastra tus fichas para moverlas y el fondo para recorrer el mapa.</span>
                                           </div>
                                         );
                                       })()}
