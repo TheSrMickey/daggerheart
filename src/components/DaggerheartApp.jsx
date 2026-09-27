@@ -1032,16 +1032,10 @@ const CARD_ACTIONS = {
   "Lengua de la Naturaleza": { traitKey: "t_instinct", traitLabel: "Instinto", dc: 12 },
 };
 
-const GRID_COLS = 16;
-const GRID_ROWS = 9;
-const GRID_TOOLS = [
-  { key: "pared", label: "Pared", color: "#B7AEC6" },
-  { key: "agua", label: "Agua", color: "#6FA3C0" },
-  { key: "bosque", label: "Bosque", color: "#7FB77A" },
-  { key: "peligro", label: "Peligro", color: "#D9644E" },
-  { key: "objetivo", label: "Objetivo", color: "#E3B04B" },
-  { key: "niebla", label: "Niebla", color: "#ECE6DA" },
-];
+// Tablero de la campaña: la escena de fondo dividida en 16 × 9 casillas.
+const MAP_COLS = 16;
+const MAP_ROWS = 9;
+const MAP_REACH = 2; // casillas que se iluminan alrededor de la ficha elegida
 
 const EMPTY_STAGE = { live: "escena", scene: { title: "", image: "" }, handouts: [] };
 // Plantillas de escena con ilustración propia (public/escenas, generadas con scripts/generate-scene-presets.mjs).
@@ -1691,15 +1685,43 @@ const sharedStyles = `
   .mh-stg-reduce { align-self: flex-end; margin: -4px 0 8px; display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 8px; border: 1px solid var(--mh-line); background: var(--mh-panel); color: var(--mh-ink3); font: 600 11.5px 'Inter', system-ui, sans-serif; cursor: pointer; flex-shrink: 0; }
   .mh-stg-reduce:hover { color: var(--mh-ink); border-color: var(--mh-line2); }
   .mh-stg-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; color: var(--mh-muted); font-size: 13px; padding: 30px; border: 1.5px dashed var(--mh-line2); border-radius: 12px; }
-  .mh-stg-map { display: grid; gap: 2px; padding: 4px; border-radius: 10px; background: var(--mh-line); border: 1px solid var(--mh-line); flex-shrink: 0; }
-  .mh-stg-cell { background: var(--mh-panel); border-radius: 2px; display: flex; align-items: center; justify-content: center; overflow: hidden; min-width: 0; }
-  .mh-stg-cell.is-fog { background: #2A2433; }
-  .mh-stg-cell span { font-size: 8px; font-weight: 700; color: #fff; text-shadow: 0 0 3px rgba(0,0,0,.9); text-align: center; line-height: 1; padding: 1px; word-break: break-word; }
-  .mh-stg-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; font-size: 11.5px; color: var(--mh-ink3); }
-  .mh-stg-legend > span { display: inline-flex; align-items: center; gap: 5px; }
-  .mh-stg-legend > span > i { width: 11px; height: 11px; border-radius: 3px; }
-  .mh-stg-legend > span > i.is-fog { background: #2A2433; }
-  .mh-stg-legend .mh-stg-live { margin-left: auto; }
+  /* Tablero: escena de fondo, cuadrícula fina y fichas cuadradas */
+  .mh-map { position: relative; aspect-ratio: ${MAP_COLS} / ${MAP_ROWS}; border-radius: 12px; overflow: hidden; background: #2B3A4F center / cover no-repeat; flex-shrink: 0; touch-action: none; user-select: none; }
+  .mh-map.is-blank { background-image: linear-gradient(#3F4B5E, #2B3A4F); }
+  .mh-map-grid { position: absolute; inset: 0; pointer-events: none; background-image: linear-gradient(rgba(255,255,255,.28) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.28) 1px, transparent 1px); background-size: calc(100% / ${MAP_COLS}) calc(100% / ${MAP_ROWS}); }
+  .mh-map-reach { position: absolute; background: rgba(111,191,115,.26); box-shadow: inset 0 0 0 1px rgba(111,191,115,.6); pointer-events: none; }
+  .mh-map-drop { position: absolute; box-shadow: inset 0 0 0 2px #F3C24A; border-radius: 6px; pointer-events: none; }
+  .mh-map-drop.is-bad { box-shadow: inset 0 0 0 2px #D9644E; }
+  .mh-map-tk { position: absolute; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; background: none; cursor: default; transition: left .18s ease, top .18s ease; }
+  .mh-map-tk.is-movable { cursor: grab; }
+  .mh-map-tk.is-drag { cursor: grabbing; transition: none; z-index: 3; opacity: .85; }
+  .mh-map-tk:focus-visible { outline: none; }
+  .mh-map-tk:focus-visible .mh-map-face { box-shadow: 0 0 0 3px #fff, 0 3px 8px rgba(0,0,0,.5); }
+  .mh-map-face { position: relative; z-index: 2; width: 80%; height: 80%; border-radius: 22%; border: 3px solid var(--tc); box-sizing: border-box; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--tc); color: #fff; font-family: 'Cinzel', Georgia, serif; font-weight: 700; font-size: clamp(10px, 1.6vw, 17px); box-shadow: 0 3px 8px rgba(0,0,0,.5); }
+  .mh-map-tk.is-npc .mh-map-face, .mh-map-tk.is-foe .mh-map-face { background: #221C2B; }
+  .mh-map-tk.is-foe .mh-map-face { background: #6B2F2F; }
+  .mh-map-face img { width: 100%; height: 100%; object-fit: cover; object-position: center 12%; pointer-events: none; }
+  .mh-map-tk.is-sel .mh-map-face { box-shadow: 0 0 0 2px #F3C24A, 0 3px 10px rgba(0,0,0,.55); }
+  .mh-map-hp { position: absolute; z-index: 3; left: 20%; right: 20%; bottom: 6%; height: 9%; min-height: 3px; border-radius: 3px; background: #2a1f25; overflow: hidden; box-shadow: 0 0 0 1px rgba(0,0,0,.5); }
+  .mh-map-hp i { display: block; height: 100%; background: #E24B4A; }
+  .mh-map-nm { position: absolute; z-index: 1; top: 92%; left: 50%; translate: -50% 0; font-size: 10px; font-weight: 700; color: #fff; text-shadow: 0 1px 3px #000, 0 0 2px #000; white-space: nowrap; pointer-events: none; }
+  .mh-map.is-compact .mh-map-nm { display: none; }
+  .mh-map-hint { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--mh-ink3); }
+  .mh-map-hint .mh-stg-live { margin-left: auto; }
+  .mh-map-gm { gap: 12px; }
+  .mh-map-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 12.5px; color: var(--mh-ink3); }
+  .mh-map-bar b { color: var(--mh-ink); }
+  .mh-map-bar button { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; }
+  .mh-map-tray { display: flex; flex-direction: column; gap: 10px; padding-top: 12px; border-top: 1px solid var(--mh-line); }
+  .mh-map-tray-g { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .mh-map-tray-g .mh-gm-h2 { width: 88px; margin: 0; }
+  .mh-map-tray-g .mh-btn-ghost { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; }
+  .mh-map-tray-e { font-size: 12px; color: var(--mh-muted); font-style: italic; }
+  .mh-map-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 3px; border-radius: 20px; border: 1px solid var(--mh-line); background: var(--mh-panel); color: var(--mh-ink); font: 600 12px 'Inter', system-ui, sans-serif; cursor: pointer; }
+  .mh-map-chip:hover { border-color: var(--mh-line2); }
+  .mh-map-chip i { width: 24px; height: 24px; border-radius: 6px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #221C2B; color: #fff; font: 700 11px 'Cinzel', Georgia, serif; font-style: normal; }
+  .mh-map-chip i img { width: 100%; height: 100%; object-fit: cover; object-position: center 12%; }
+  .mh-map-chip svg { color: var(--mh-muted); }
   .mh-stg-hgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-content: start; }
   .mh-stg-hand { display: flex; flex-direction: column; height: 150px; padding: 0; border: 1px solid var(--mh-line); border-radius: 12px; overflow: hidden; background: var(--mh-panel); cursor: pointer; text-align: left; font: inherit; color: inherit; box-shadow: 0 2px 6px rgba(80,60,30,.08); transition: transform .15s, box-shadow .15s; }
   .mh-stg-hand:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(80,60,30,.16); }
@@ -2502,6 +2524,103 @@ const HAPPY_SPARKS = [
 ];
 const HAPPY_MOTES = [[14, 0], [50, 0.8], [80, 1.6], [34, 2.2], [66, 2.9]];
 
+// Tablero con fichas cuadradas. Se arrastran, o se elige una y se pulsa la casilla; también con las flechas.
+function MapBoard({ bg, tokens, canMove, onMove, selectedId, onSelect, compact }) {
+  const ref = useRef(null);
+  const dragRef = useRef(null);
+  const [drag, setDrag] = useState(null);
+  const clamp = (v, max) => Math.max(0, Math.min(max - 1, v));
+  const cellAt = (e) => {
+    const r = ref.current.getBoundingClientRect();
+    return { x: clamp(Math.floor(((e.clientX - r.left) / r.width) * MAP_COLS), MAP_COLS), y: clamp(Math.floor(((e.clientY - r.top) / r.height) * MAP_ROWS), MAP_ROWS) };
+  };
+  const occupied = (x, y, exceptId) => tokens.some((t) => t.id !== exceptId && t.x === x && t.y === y);
+  const selected = tokens.find((t) => t.id === selectedId && canMove(t));
+
+  const startDrag = (e, t) => {
+    if (!canMove(t) || e.button > 0) return;
+    e.preventDefault();
+    dragRef.current = { id: t.id, x: t.x, y: t.y, moved: false };
+    setDrag(dragRef.current);
+    const move = (ev) => {
+      const c = cellAt(ev);
+      const d = dragRef.current;
+      if (d && (c.x !== d.x || c.y !== d.y)) {
+        dragRef.current = { ...d, ...c, moved: true };
+        setDrag(dragRef.current);
+      }
+    };
+    const up = () => {
+      window.removeEventListener("pointermove", move);
+      const d = dragRef.current;
+      dragRef.current = null;
+      setDrag(null);
+      if (!d) return;
+      if (!d.moved) onSelect(selectedId === d.id ? null : d.id);
+      else if (!occupied(d.x, d.y, d.id)) onMove(d.id, d.x, d.y);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up, { once: true });
+  };
+
+  const boardClick = (e) => {
+    if (!selected || e.target.closest(".mh-map-tk")) return;
+    const c = cellAt(e);
+    if (!occupied(c.x, c.y, selected.id)) onMove(selected.id, c.x, c.y);
+  };
+
+  const keyMove = (e, t) => {
+    const d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
+    if (!d || !canMove(t)) return;
+    e.preventDefault();
+    const x = clamp(t.x + d[0], MAP_COLS), y = clamp(t.y + d[1], MAP_ROWS);
+    if (!occupied(x, y, t.id)) onMove(t.id, x, y);
+  };
+
+  const reach = [];
+  if (selected && !drag) {
+    for (let y = selected.y - MAP_REACH; y <= selected.y + MAP_REACH; y++)
+      for (let x = selected.x - MAP_REACH; x <= selected.x + MAP_REACH; x++)
+        if (x >= 0 && y >= 0 && x < MAP_COLS && y < MAP_ROWS && !(x === selected.x && y === selected.y) && !occupied(x, y)) reach.push([x, y]);
+  }
+  const at = (x, y) => ({ left: (x * 100) / MAP_COLS + "%", top: (y * 100) / MAP_ROWS + "%", width: 100 / MAP_COLS + "%", height: 100 / MAP_ROWS + "%" });
+
+  return (
+    <div ref={ref} className={"mh-map" + (bg ? "" : " is-blank") + (compact ? " is-compact" : "")} style={bg ? { backgroundImage: `url("${bg.replace(/"/g, "%22")}")` } : undefined} onClick={boardClick}>
+      <div className="mh-map-grid" />
+      {reach.map(([x, y]) => (
+        <div key={x + "," + y} className="mh-map-reach" style={at(x, y)} />
+      ))}
+      {drag?.moved && <div className={"mh-map-drop" + (occupied(drag.x, drag.y, drag.id) ? " is-bad" : "")} style={at(drag.x, drag.y)} />}
+      {tokens.map((t) => {
+        const pos = drag && drag.id === t.id ? drag : t;
+        const movable = canMove(t);
+        return (
+          <button
+            key={t.id}
+            type="button"
+            className={"mh-map-tk is-" + t.kind + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "")}
+            style={{ ...at(pos.x, pos.y), "--tc": t.color }}
+            onPointerDown={(e) => startDrag(e, t)}
+            onKeyDown={(e) => keyMove(e, t)}
+            aria-label={t.name + (movable ? ". Arrástrala o usa las flechas para moverla" : "")}
+            title={t.name}
+            tabIndex={movable ? 0 : -1}
+          >
+            <span className="mh-map-face">{t.img ? <img src={t.img} alt="" draggable={false} /> : t.kind === "foe" ? <Skull size="55%" /> : <span>{(t.name || "?").trim().charAt(0).toUpperCase()}</span>}</span>
+            {t.hp && t.hp[1] > 0 && (
+              <span className="mh-map-hp" title={`Vida: ${t.hp[1] - t.hp[0]} de ${t.hp[1]}`}>
+                <i style={{ width: Math.max(0, ((t.hp[1] - t.hp[0]) / t.hp[1]) * 100) + "%" }} />
+              </span>
+            )}
+            <span className="mh-map-nm">{t.name}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function DialogueFigure({ src, alt, expr }) {
   if (!src) return null;
   return (
@@ -2828,10 +2947,11 @@ export default function App({ onSignOut }) {
   const [campaignChat, setCampaignChat] = useState([]);
   const [campaignChatDraft, setCampaignChatDraft] = useState("");
   const [showShareTray, setShowShareTray] = useState(false);
-  const [campaignGrid, setCampaignGrid] = useState({ cells: {} });
-  const [campaignGridTool, setCampaignGridTool] = useState("pared");
-  const [pendingCellLabel, setPendingCellLabel] = useState(null);
-  const [pendingCellLabelDraft, setPendingCellLabelDraft] = useState("");
+  // Tablero de la campaña: fichas colocadas sobre la escena (clave compartida aparte de la mesa).
+  const [campaignMap, setCampaignMap] = useState({ tokens: [] });
+  const [mapSel, setMapSel] = useState(null);
+  const [foeDraft, setFoeDraft] = useState("");
+  const mapBusy = useRef(0);
   const [campaignEncounters, setCampaignEncounters] = useState([]);
   const [encounterNameDraft, setEncounterNameDraft] = useState("");
   const [encounterNotesDraft, setEncounterNotesDraft] = useState("");
@@ -2928,8 +3048,6 @@ export default function App({ onSignOut }) {
     (async () => {
       const chat = await safeGet("campaign-chat:" + viewingCampaignId, true);
       setCampaignChat(chat ? JSON.parse(chat.value) : []);
-      const grid = await safeGet("campaign-grid:" + viewingCampaignId, true);
-      setCampaignGrid(grid ? JSON.parse(grid.value) : { cells: {} });
       const enc = await safeGet("campaign-encounters:" + viewingCampaignId, true);
       setCampaignEncounters(enc ? JSON.parse(enc.value) : []);
       const cast = await safeGet("campaign-cast:" + viewingCampaignId, true);
@@ -2948,7 +3066,7 @@ export default function App({ onSignOut }) {
       setDialogueLines(lineList);
       setEditingLineId(null);
       setCampaignDetailTab("mesa");
-      setPendingCellLabel(null);
+      setMapSel(null);
     })();
   }, [viewingCampaignId]);
 
@@ -3091,14 +3209,26 @@ export default function App({ onSignOut }) {
       if (!alive) return;
       setCampaignStage(s);
       if (!isPlayer) return;
-      const g = await safeGet("campaign-grid:" + stageCampaignId, true);
-      if (alive) setCampaignGrid(g ? JSON.parse(g.value) : { cells: {} });
       const f = await safeGet("fear-track", true);
       if (alive && f) setFearCount(parseInt(f.value, 10) || 0);
     };
+    // Mientras alguien mueve una ficha no pisamos su cambio con lo que llega del servidor.
+    const loadMap = async () => {
+      const mp = await safeGet("campaign-map:" + stageCampaignId, true);
+      if (!alive || mapBusy.current) return;
+      let m = { tokens: [] };
+      try {
+        if (mp) m = JSON.parse(mp.value);
+      } catch (e) {}
+      (m.tokens || []).forEach((t) => t.imgId && ensureCastImg(t.imgId));
+      setCampaignMap(m);
+    };
+    setCampaignMap({ tokens: [] });
+    setMapSel(null);
     load();
     loadChat();
-    const timer = setInterval(() => (isPlayer ? load().then(loadChat) : loadChat()), 6000);
+    loadMap();
+    const timer = setInterval(() => (isPlayer ? load().then(loadChat).then(loadMap) : Promise.all([loadChat(), loadMap()])), 6000);
     return () => {
       alive = false;
       clearInterval(timer);
@@ -4501,44 +4631,60 @@ export default function App({ onSignOut }) {
     await postChat(camp.id, { kind: "event", author: ch?.f_name || "Un personaje", charId, cls: ch?.f_class || "", text, ...extra });
   };
 
-  const paintCell = async (x, y) => {
-    if (!viewingCampaignId) return;
-    const key = x + "," + y;
-    const cells = { ...(campaignGrid.cells || {}) };
-    cells[key] = { tool: campaignGridTool, label: cells[key]?.label || "" };
-    const next = { ...campaignGrid, cells };
-    setCampaignGrid(next);
-    await safeSet("campaign-grid:" + viewingCampaignId, JSON.stringify(next), true);
+  // Cambia el tablero partiendo de lo último guardado (otro jugador puede haber movido su ficha).
+  const mutateMap = async (campaignId, fn) => {
+    if (!campaignId) return;
+    mapBusy.current++;
+    setCampaignMap((m) => ({ ...m, tokens: fn(m.tokens || []) }));
+    try {
+      let base = null;
+      try {
+        const r = await safeGet("campaign-map:" + campaignId, true);
+        if (r) base = JSON.parse(r.value);
+      } catch (e) {}
+      const next = { ...(base || {}), tokens: fn(base?.tokens || campaignMap.tokens || []) };
+      setCampaignMap(next);
+      await safeSet("campaign-map:" + campaignId, JSON.stringify(next), true);
+    } finally {
+      mapBusy.current--;
+    }
   };
 
-  const clearCell = async (x, y) => {
-    if (!viewingCampaignId) return;
-    const key = x + "," + y;
-    const cells = { ...(campaignGrid.cells || {}) };
-    delete cells[key];
-    const next = { ...campaignGrid, cells };
-    setCampaignGrid(next);
-    await safeSet("campaign-grid:" + viewingCampaignId, JSON.stringify(next), true);
+  const moveToken = (campaignId, id, x, y) => mutateMap(campaignId, (tokens) => tokens.map((t) => (t.id === id ? { ...t, x, y } : t)));
+
+  // Primera casilla libre, empezando cerca del borde izquierdo y del centro.
+  const freeCell = (tokens) => {
+    const cells = [];
+    for (let y = 0; y < MAP_ROWS; y++) for (let x = 0; x < MAP_COLS; x++) cells.push([x, y]);
+    cells.sort((a, b) => Math.hypot(a[0] - 2, a[1] - 4) - Math.hypot(b[0] - 2, b[1] - 4));
+    return cells.find(([x, y]) => !tokens.some((t) => t.x === x && t.y === y)) || [0, 0];
   };
 
-  const confirmCellLabel = async () => {
-    if (!pendingCellLabel || !viewingCampaignId) return;
-    const key = pendingCellLabel.x + "," + pendingCellLabel.y;
-    const cells = { ...(campaignGrid.cells || {}) };
-    cells[key] = { tool: cells[key]?.tool || campaignGridTool, label: pendingCellLabelDraft.trim() };
-    const next = { ...campaignGrid, cells };
-    setCampaignGrid(next);
-    setPendingCellLabel(null);
-    setPendingCellLabelDraft("");
-    await safeSet("campaign-grid:" + viewingCampaignId, JSON.stringify(next), true);
+  const placeToken = (token) =>
+    mutateMap(viewingCampaignId, (tokens) => {
+      const [x, y] = freeCell(tokens);
+      return [...tokens, { id: "t" + Date.now() + Math.random().toString(36).slice(2, 5), x, y, ...token }];
+    });
+
+  const removeToken = (id) => {
+    mutateMap(viewingCampaignId, (tokens) => tokens.filter((t) => t.id !== id));
+    if (mapSel === id) setMapSel(null);
   };
 
-  const clearCampaignGrid = async () => {
-    if (!viewingCampaignId) return;
-    const next = { cells: {} };
-    setCampaignGrid(next);
-    await safeSet("campaign-grid:" + viewingCampaignId, JSON.stringify(next), true);
+  const clearMap = () => {
+    mutateMap(viewingCampaignId, () => []);
+    setMapSel(null);
   };
+
+  // Datos para pintar cada ficha: nombre, color, retrato y vida (los jugadores, desde su hoja).
+  const mapTokensView = (tokens) =>
+    (tokens || []).map((t) => {
+      if (t.kind === "pc") {
+        const ch = characters[t.charId];
+        return { ...t, name: ch?.f_name || t.name || "Personaje", color: classColor(ch?.f_class), hp: ch ? [Number(ch.hp_marked || 0), Number(ch.r_hp || 0)] : null };
+      }
+      return { ...t, color: t.kind === "foe" ? "#C0504A" : "#C9A24A", img: t.imgId ? castImgs[t.imgId] : null };
+    });
 
   const addEncounter = async () => {
     const name = encounterNameDraft.trim();
@@ -5935,128 +6081,97 @@ export default function App({ onSignOut }) {
                     </div>
                   )}
 
-                  {campaignDetailTab === "mapa" && (
-                    <div className="mh-card" style={{ margin: 0, padding: "18px 20px" }}>
-                      <div style={{ fontSize: 11.5, color: "var(--mh-muted)", marginBottom: 12 }}>
-                        Pulsa una casilla para pintarla con la herramienta elegida, o vuelve a pulsarla con la misma
-                        herramienta para borrarla. Doble clic para ponerle un nombre.
-                      </div>
-
-                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 14 }}>
-                        {GRID_TOOLS.map((tool) => (
-                          <div
-                            key={tool.key}
-                            onClick={() => setCampaignGridTool(tool.key)}
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 6,
-                              padding: "6px 12px",
-                              borderRadius: 20,
-                              cursor: "pointer",
-                              border: "1px solid " + (campaignGridTool === tool.key ? tool.color : "var(--mh-line)"),
-                              background: campaignGridTool === tool.key ? alpha(tool.color, 13) : "var(--mh-panel)",
-                              fontSize: 12,
-                              fontWeight: 600,
-                              color: ink(campaignGridTool === tool.key ? tool.color : "var(--mh-ink3)"),
-                            }}
-                          >
-                            <span style={{ width: 12, height: 12, borderRadius: 4, background: tool.color, flexShrink: 0 }} />
-                            {tool.label}
-                          </div>
-                        ))}
-                        <button className="mh-btn-ghost" style={{ fontSize: 12 }} onClick={clearCampaignGrid}>
-                          Vaciar mapa
-                        </button>
-                      </div>
-
-                      <div style={{ overflowX: "auto", maxWidth: "100%" }}>
-                      <div
-                        style={{
-                          display: "grid",
-                          gridTemplateColumns: `repeat(${GRID_COLS}, 32px)`,
-                          gridTemplateRows: `repeat(${GRID_ROWS}, 32px)`,
-                          gap: 2,
-                          width: "fit-content",
-                          border: "1px solid var(--mh-line)",
-                          padding: 4,
-                          borderRadius: 8,
-                          background: "var(--mh-panel2)",
-                        }}
-                      >
-                        {Array.from({ length: GRID_ROWS }, (_, y) => y).map((y) =>
-                          Array.from({ length: GRID_COLS }, (_, x) => x).map((x) => {
-                            const key = x + "," + y;
-                            const cell = (campaignGrid.cells || {})[key];
-                            const tool = cell ? GRID_TOOLS.find((t) => t.key === cell.tool) : null;
-                            return (
-                              <div
-                                key={key}
-                                onClick={() => (cell && cell.tool === campaignGridTool ? clearCell(x, y) : paintCell(x, y))}
-                                onDoubleClick={(e) => {
-                                  e.stopPropagation();
-                                  setPendingCellLabel({ x, y });
-                                  setPendingCellLabelDraft(cell?.label || "");
-                                }}
-                                title={cell?.label || ""}
-                                style={{
-                                  position: "relative",
-                                  width: 32,
-                                  height: 32,
-                                  background: tool ? tool.color : "var(--mh-panel)",
-                                  border: "1px solid var(--mh-line)",
-                                  cursor: "pointer",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                }}
-                              >
-                                {cell?.label && (
-                                  <span
-                                    style={{
-                                      fontSize: 8,
-                                      fontWeight: 700,
-                                      color: "#FFFFFF",
-                                      textShadow: "0 0 3px rgba(0,0,0,0.9)",
-                                      textAlign: "center",
-                                      lineHeight: 1,
-                                      padding: 1,
-                                      wordBreak: "break-word",
-                                    }}
-                                  >
-                                    {cell.label}
-                                  </span>
-                                )}
-                              </div>
-                            );
-                          })
-                        )}
-                      </div>
-                      </div>
-
-                      {pendingCellLabel && (
-                        <div style={{ display: "flex", gap: 6, marginTop: 12, alignItems: "center" }}>
-                          <span style={{ fontSize: 11.5, color: "var(--mh-muted)" }}>
-                            Nombre de la casilla ({pendingCellLabel.x + 1}, {pendingCellLabel.y + 1}):
-                          </span>
-                          <input
-                            className="mh-input"
-                            style={{ fontSize: 12, width: 160 }}
-                            value={pendingCellLabelDraft}
-                            onChange={(e) => setPendingCellLabelDraft(e.target.value)}
-                            onKeyDown={(e) => e.key === "Enter" && confirmCellLabel()}
-                            autoFocus
-                          />
-                          <button className="mh-btn-ghost" style={{ fontSize: 11.5 }} onClick={confirmCellLabel}>
-                            Aceptar
-                          </button>
-                          <button className="mh-btn-ghost" style={{ fontSize: 11.5 }} onClick={() => setPendingCellLabel(null)}>
-                            Cancelar
-                          </button>
+                  {campaignDetailTab === "mapa" && (() => {
+                    const tokens = campaignMap.tokens || [];
+                    const onMap = (fn) => tokens.some(fn);
+                    const partyOff = (activeCampaign.characterIds || []).filter((id) => characters[id] && !onMap((t) => t.kind === "pc" && t.charId === id));
+                    const castOff = campaignCast.filter((m) => !onMap((t) => t.kind === "npc" && t.castId === m.id));
+                    const sel = tokens.find((t) => t.id === mapSel);
+                    const chip = (key, label, face, onClick) => (
+                      <button key={key} type="button" className="mh-map-chip" onClick={onClick} title={"Colocar a " + label}>
+                        <i>{face}</i>
+                        {label}
+                        <Plus size={12} />
+                      </button>
+                    );
+                    return (
+                      <div className="mh-card mh-gm-box mh-map-gm" style={{ margin: 0 }}>
+                        <div className="mh-gm-sub" style={{ marginTop: 0 }}>
+                          El fondo es la escena que está en pantalla ({campaignStage.scene?.title || "ninguna"}). Coloca las fichas y muévelas arrastrando, o elige una y pulsa una casilla. Cada jugador puede mover la suya desde su hoja.
                         </div>
-                      )}
-                    </div>
-                  )}
+                        <MapBoard
+                          bg={campaignStage.scene?.image}
+                          tokens={mapTokensView(tokens)}
+                          canMove={() => true}
+                          onMove={(id, x, y) => moveToken(viewingCampaignId, id, x, y)}
+                          selectedId={mapSel}
+                          onSelect={setMapSel}
+                        />
+                        <div className="mh-map-bar">
+                          {sel ? (
+                            <>
+                              <span className="mh-map-bar-t">
+                                Seleccionada: <b>{mapTokensView([sel])[0].name}</b>
+                              </span>
+                              <button type="button" className="mh-btn-ghost" onClick={() => removeToken(sel.id)}>
+                                <Trash2 size={13} /> Quitar del mapa
+                              </button>
+                              <button type="button" className="mh-btn-ghost" onClick={() => setMapSel(null)}>
+                                Deseleccionar
+                              </button>
+                            </>
+                          ) : (
+                            <span className="mh-map-bar-t">{tokens.length ? tokens.length + " ficha" + (tokens.length === 1 ? "" : "s") + " en el mapa" : "El mapa está vacío"}</span>
+                          )}
+                          {tokens.length > 0 && (
+                            <button type="button" className="mh-btn-ghost" style={{ marginLeft: "auto" }} onClick={clearMap}>
+                              Vaciar mapa
+                            </button>
+                          )}
+                        </div>
+                        <div className="mh-map-tray">
+                          <div className="mh-map-tray-g">
+                            <span className="mh-gm-h2">Jugadores</span>
+                            {partyOff.map((id) => chip(id, characters[id].f_name || "Sin nombre", (characters[id].f_name || "?").charAt(0).toUpperCase(), () => placeToken({ kind: "pc", charId: id, name: characters[id].f_name || "" })))}
+                            {partyOff.length === 0 && <span className="mh-map-tray-e">Todos colocados</span>}
+                          </div>
+                          <div className="mh-map-tray-g">
+                            <span className="mh-gm-h2">Reparto</span>
+                            {castOff.map((m) => {
+                              const imgId = castImgIdFor(m, "tranquila");
+                              return chip(m.id, m.name, castImgs[imgId] ? <img src={castImgs[imgId]} alt="" /> : m.name.charAt(0).toUpperCase(), () => placeToken({ kind: "npc", castId: m.id, name: m.name, imgId }));
+                            })}
+                            {castOff.length === 0 && <span className="mh-map-tray-e">{campaignCast.length ? "Todos colocados" : "Añade personajes al reparto en la Mesa"}</span>}
+                          </div>
+                          <div className="mh-map-tray-g">
+                            <span className="mh-gm-h2">Enemigos</span>
+                            <input
+                              className="mh-input"
+                              style={{ width: 170, fontSize: 12.5 }}
+                              placeholder="Bandido, lobo…"
+                              value={foeDraft}
+                              onChange={(e) => setFoeDraft(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key !== "Enter") return;
+                                placeToken({ kind: "foe", name: foeDraft.trim() || "Enemigo" });
+                                setFoeDraft("");
+                              }}
+                            />
+                            <button
+                              type="button"
+                              className="mh-btn-ghost"
+                              onClick={() => {
+                                placeToken({ kind: "foe", name: foeDraft.trim() || "Enemigo" });
+                                setFoeDraft("");
+                              }}
+                            >
+                              <Skull size={13} /> Añadir enemigo
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {campaignDetailTab === "encuentros" && (
                     <div className="mh-card" style={{ margin: 0, padding: "18px 20px", maxWidth: 700 }}>
@@ -8458,9 +8573,8 @@ export default function App({ onSignOut }) {
                             </div>
                           );
                         const newHandouts = handouts.filter((h) => !handoutsSeen.includes(h.id)).length;
-                        const cells = campaignGrid.cells || {};
-                        const hasMap = Object.keys(cells).length > 0;
-                        const usedTools = GRID_TOOLS.filter((t) => t.key !== "niebla" && Object.values(cells).some((cl) => cl.tool === t.key));
+                        const mapTokens = mapTokensView(campaignMap.tokens);
+                        const myToken = mapTokens.find((t) => t.kind === "pc" && t.charId === viewingCharId);
                         const kindOf = (k) => HANDOUT_KINDS.find((x) => x.key === k) || HANDOUT_KINDS[0];
                         const empty = (Icon, text) => (
                           <div className="mh-stg-empty">
@@ -8573,33 +8687,24 @@ export default function App({ onSignOut }) {
                                   ))}
 
                                 {stTab === "mapa" &&
-                                  (hasMap ? (
+                                  (mapTokens.length || scene.image ? (
                                     <>
-                                      <div className="mh-stg-map" style={{ gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`, aspectRatio: `${GRID_COLS} / ${GRID_ROWS}` }}>
-                                        {Array.from({ length: GRID_ROWS * GRID_COLS }, (_, n) => {
-                                          const key = (n % GRID_COLS) + "," + Math.floor(n / GRID_COLS);
-                                          const cell = cells[key];
-                                          const fog = cell?.tool === "niebla";
-                                          const tool = cell && !fog ? GRID_TOOLS.find((t) => t.key === cell.tool) : null;
-                                          return (
-                                            <div key={key} className={"mh-stg-cell" + (fog ? " is-fog" : "")} style={tool ? { background: tool.color } : undefined} title={!fog && cell?.label ? cell.label : undefined}>
-                                              {!fog && cell?.label && <span>{cell.label}</span>}
-                                            </div>
-                                          );
-                                        })}
-                                      </div>
-                                      <div className="mh-stg-legend">
-                                        {usedTools.map((t) => (
-                                          <span key={t.key}>
-                                            <i style={{ background: t.color }} />
-                                            {t.label}
-                                          </span>
-                                        ))}
-                                        {Object.values(cells).some((cl) => cl.tool === "niebla") && (
+                                      <MapBoard
+                                        bg={scene.image}
+                                        tokens={mapTokens}
+                                        canMove={(t) => t.kind === "pc" && t.charId === viewingCharId}
+                                        onMove={(id, x, y) => moveToken(charCampaign.id, id, x, y)}
+                                        selectedId={mapSel}
+                                        onSelect={setMapSel}
+                                        compact={!wide}
+                                      />
+                                      <div className="mh-map-hint">
+                                        {myToken ? (
                                           <span>
-                                            <i className="is-fog" />
-                                            Sin explorar
+                                            Arrastra tu ficha (<b>{myToken.name}</b>) o elígela y pulsa una casilla.
                                           </span>
+                                        ) : (
+                                          "El DJ todavía no ha colocado tu ficha en el mapa."
                                         )}
                                         {live === "mapa" && (
                                           <span className="mh-stg-live is-soft">
@@ -8610,7 +8715,7 @@ export default function App({ onSignOut }) {
                                       </div>
                                     </>
                                   ) : (
-                                    empty(MapPinned, "El DJ todavía no ha compartido ningún mapa.")
+                                    empty(MapPinned, "El DJ todavía no ha preparado el mapa.")
                                   ))}
 
                                 {stTab === "pistas" &&
