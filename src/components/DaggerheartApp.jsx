@@ -1373,6 +1373,41 @@ const sharedStyles = `
     border-radius: 12px; background: var(--mh-panel2); color: var(--mh-muted2); font-size: 11.5px;
   }
   .mh-exp-locked small { font-size: 10.5px; }
+  .mh-arow {
+    --ac: var(--acc); flex: 1 1 0; min-height: 0; max-height: 96px; display: flex; align-items: center; gap: 11px; padding: 8px 12px;
+    border: 1px solid var(--mh-line); border-radius: 11px; background: var(--mh-panel); cursor: pointer;
+    transition: border-color .15s, background .15s, translate .15s;
+  }
+  .mh-arow:hover, .mh-arow:focus-visible { border-color: var(--ac); background: color-mix(in srgb, var(--ac) 5%, var(--mh-panel)); outline: none; }
+  .mh-arow.is-active { border-color: var(--ac); background: color-mix(in srgb, var(--ac) 10%, var(--mh-panel)); }
+  .mh-arow.is-dim { cursor: default; }
+  .mh-arow.is-dim .mh-arow-ico, .mh-arow.is-dim .mh-arow-title { opacity: .6; }
+  .mh-arow-ico {
+    width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    background: color-mix(in srgb, var(--ac) 16%, transparent); color: color-mix(in srgb, var(--ac) var(--mh-accent-keep, 100%), #000);
+  }
+  .mh-arow-main { flex: 1; min-width: 0; }
+  .mh-arow-kicker { font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: color-mix(in srgb, var(--ac) var(--mh-accent-keep, 100%), #000); }
+  .mh-arow-title { font-size: 13.5px; font-weight: 700; color: var(--mh-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mh-arow-sum { font-size: 11.5px; color: var(--mh-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mh-arow-cost {
+    flex-shrink: 0; display: inline-flex; align-items: center; gap: 3px; font-size: 10.5px; font-weight: 600; white-space: nowrap;
+    border-radius: 20px; padding: 2px 8px; border: 1px solid;
+  }
+  .mh-arow-cost.is-hope { color: color-mix(in srgb, #E3B04B var(--mh-accent-keep, 100%), #000); background: #E3B04B1F; border-color: #E3B04B66; }
+  .mh-arow-cost.is-stress { color: color-mix(in srgb, #A58BE8 var(--mh-accent-keep, 100%), #000); background: #A58BE81F; border-color: #A58BE866; }
+  .mh-arow-cost.is-free { color: var(--mh-muted); background: var(--mh-panel2); border-color: var(--mh-line2); }
+  .mh-arow-cost.is-active { color: #fff; background: var(--ac); border-color: var(--ac); }
+  .mh-arow-chev { color: var(--mh-muted3); flex-shrink: 0; }
+  .mh-arow-el {
+    all: unset; cursor: pointer; width: 22px; height: 22px; border-radius: 50%; border: 1px solid; display: flex; align-items: center; justify-content: center;
+  }
+  .mh-arow-el:focus-visible { outline: 2px solid var(--ac); outline-offset: 1px; }
+  .mh-arow-link {
+    all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 1px; font-size: 11px; font-weight: 600; flex-shrink: 0;
+    color: var(--mh-gold-ink); padding: 3px 7px; border-radius: 6px; border: 1px solid color-mix(in srgb, var(--acc) 40%, transparent);
+  }
+  .mh-arow-link:hover { background: color-mix(in srgb, var(--acc) 10%, transparent); }
   .mh-holo {
     position: absolute; inset: 0; z-index: 30; pointer-events: none; border-radius: inherit; mix-blend-mode: color-dodge;
     background: linear-gradient(115deg, transparent 10%, rgba(255,80,200,.55) 25%, rgba(120,200,255,.55) 40%, rgba(255,240,120,.55) 55%, rgba(150,255,180,.55) 70%, transparent 85%);
@@ -5847,222 +5882,129 @@ export default function App({ onSignOut }) {
 
 
                       {activeTab === "actions" && (() => {
-                        const page1Rows = [];
-                        const page2Rows = [];
+                        // Lista de acciones: cada fila con icono, tipo, nombre, resumen y coste.
+                        const items = [];
+                        const openDetail = (detail) => () => setViewingCardDetail(detail);
 
                         if (subclassEntry) {
                           const subclassBadge = currentTier <= 1 ? "Fundación" : currentTier === 2 ? "Especialización" : "Maestría";
                           const ELEMENT_ICONS = { Fuego: Flame, Tierra: Mountain, Agua: Droplets, Aire: Wind };
                           const ELEMENT_COLORS = { Fuego: "#D9644E", Tierra: "#C08B5C", Agua: "#5E93B3", Aire: "#8FB8C9" };
                           const isElemental = subclassEntry.key === "Guardián de los Elementos" && subclassEntry.features;
+                          const activeElement = isElemental ? c.f_elemental_active : null;
+                          items.push({
+                            key: "subclass",
+                            Icon: ShieldHalf,
+                            color: activeElement ? ELEMENT_COLORS[activeElement] : "var(--acc)",
+                            kicker: "Subclase · " + subclassBadge,
+                            title: subclassEntry.key,
+                            summary: isElemental ? (activeElement ? "Canalizando " + activeElement : "Ningún elemento canalizado") : subclassEntry.blurb,
+                            costText: isElemental ? subclassEntry.blurb : null,
+                            extraBelow: isElemental,
+                            onClick: openDetail({ kicker: `Subclase · ${subclassBadge}`, title: subclassEntry.key, text: subclassEntry.blurb, features: subclassEntry.features, image: subclassEntry.image, bigStyle: true }),
+                            extra: isElemental && (
+                              <div style={{ display: "flex", gap: 4 }}>
+                                {["Fuego", "Tierra", "Agua", "Aire"].map((el) => {
+                                  const ElIcon = ELEMENT_ICONS[el];
+                                  const elColor = ELEMENT_COLORS[el];
+                                  const active = activeElement === el;
+                                  return (
+                                    <button
+                                      key={el}
+                                      type="button"
+                                      title={(active ? "Dejar de canalizar " : "Canalizar ") + el}
+                                      aria-label={el}
+                                      className="mh-arow-el"
+                                      style={{ borderColor: active ? elColor : "var(--mh-line2)", background: active ? elColor : "transparent", color: active ? "#FFFFFF" : ink(elColor) }}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleElemental(viewingCharId, el, active);
+                                      }}
+                                    >
+                                      <ElIcon size={12} />
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            ),
+                          });
+                        }
 
-                          if (isElemental) {
-                            const activeElement = c.f_elemental_active;
-                            const boxColor = activeElement ? ELEMENT_COLORS[activeElement] : "var(--acc)";
-                            page1Rows.push([
-                              <div
-                                key="subclass"
-                                onClick={() =>
-                                  setViewingCardDetail({
-                                    kicker: `Subclase · ${subclassBadge}`,
-                                    title: subclassEntry.key,
-                                    text: subclassEntry.blurb,
-                                    features: subclassEntry.features,
-                                    image: subclassEntry.image,
-                                  })
-                                }
-                                style={{
-                                  position: "relative",
-                                  flex: 1,
-                                  minHeight: 0,
-                                  overflow: "hidden",
-                                  border: "1px solid " + boxColor,
-                                  borderRadius: 10,
-                                  padding: "8px 12px",
-                                  background: alpha(boxColor, 8),
-                                  display: "flex",
-                                  flexDirection: "column",
-                                  justifyContent: "center",
-                                  cursor: "pointer",
+                        classFeatures.forEach((f) => {
+                          const isBeastformLink = f.name === "Forma de Bestia";
+                          items.push({
+                            key: "cf-" + f.name,
+                            Icon: isBeastformLink ? PawPrint : Swords,
+                            color: "var(--acc)",
+                            kicker: "Característica de clase",
+                            title: f.name,
+                            summary: f.text,
+                            onClick: openDetail({ kicker: "Característica de clase", title: f.name, text: f.text, image: f.image, bigStyle: true }),
+                            extra: isBeastformLink && (
+                              <button
+                                type="button"
+                                className="mh-arow-link"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setDetailTab("beastforms");
                                 }}
                               >
-                                <span
-                                  style={{
-                                    position: "absolute",
-                                    top: 8,
-                                    right: 10,
-                                    fontSize: 9,
-                                    fontWeight: 700,
-                                    color: "var(--mh-gold-ink)",
-                                    border: "1px solid var(--acc)",
-                                    borderRadius: 20,
-                                    padding: "1px 8px",
-                                    textTransform: "uppercase",
-                                  }}
-                                >
-                                  {subclassBadge}
-                                </span>
-                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-                                  <div style={{ minWidth: 0 }}>
-                                    <div style={{ fontSize: 9, fontWeight: 700, color: "var(--mh-gold-ink)", textTransform: "uppercase", letterSpacing: 0.3 }}>Subclase</div>
-                                    <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--mh-ink)" }}>{subclassEntry.key}</div>
-                                    <div style={{ fontSize: 10, color: ink(activeElement ? ELEMENT_COLORS[activeElement] : "var(--mh-muted)"), marginTop: 1, fontWeight: activeElement ? 700 : 400 }}>
-                                      {activeElement ? `Canalizando ${activeElement}` : "Ningún elemento canalizado"}
-                                    </div>
-                                  </div>
-                                  <div style={{ display: "flex", gap: 5, flexShrink: 0 }}>
-                                    {["Fuego", "Tierra", "Agua", "Aire"].map((el) => {
-                                      const ElIcon = ELEMENT_ICONS[el];
-                                      const elColor = ELEMENT_COLORS[el];
-                                      const active = activeElement === el;
-                                      return (
-                                        <div
-                                          key={el}
-                                          title={el}
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            toggleElemental(viewingCharId, el, active);
-                                          }}
-                                          style={{
-                                            width: 26,
-                                            height: 26,
-                                            borderRadius: "50%",
-                                            border: "1px solid " + (active ? elColor : "var(--mh-line)"),
-                                            background: active ? elColor : "var(--mh-panel2)",
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            cursor: "pointer",
-                                          }}
-                                        >
-                                          <ElIcon size={13} color={active ? "#FFFFFF" : "#B7AEC6"} />
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                </div>
-                              </div>,
-                            ]);
-                          } else {
-                            page1Rows.push([
-                              <CompactCard
-                                key="subclass"
-                                accent="var(--acc)"
-                                kicker="Subclase"
-                                title={subclassEntry.key}
-                                description={subclassEntry.blurb}
-                                badge={subclassBadge}
-                                onClick={() =>
-                                  setViewingCardDetail({
-                                    kicker: `Subclase · ${subclassBadge}`,
-                                    title: subclassEntry.key,
-                                    text: subclassEntry.blurb,
-                                    features: subclassEntry.features,
-                                    image: subclassEntry.image,
-                                    bigStyle: true,
-                                  })
-                                }
-                              />,
-                            ]);
-                          }
-                        }
-
-                        if (classFeatures.length > 0) {
-                          page1Rows.push(
-                            classFeatures.map((f) => {
-                              const isBeastformLink = f.name === "Forma de Bestia";
-                              return (
-                                <CompactCard
-                                  key={f.name}
-                                  accent="var(--mh-ink3)"
-                                  kicker="Característica de clase"
-                                  title={f.name}
-                                  description={f.text}
-                                  footer={isBeastformLink ? "Ir a Formas de Bestia" : undefined}
-                                  onFooterClick={
-                                    isBeastformLink
-                                      ? () => {
-                                          setDetailTab("beastforms");
-                                          setActionPage(0);
-                                        }
-                                      : undefined
-                                  }
-                                  onClick={() =>
-                                    setViewingCardDetail({
-                                      kicker: "Característica de clase",
-                                      title: f.name,
-                                      text: f.text,
-                                      image: f.image,
-                                      bigStyle: true,
-                                    })
-                                  }
-                                />
-                              );
-                            })
-                          );
-                        }
+                                Formas
+                                <ChevronRight size={12} />
+                              </button>
+                            ),
+                          });
+                        });
 
                         if (hopeFeature) {
                           const currentHope = Number(c.hope_marked ?? HOPE_DEFAULT);
-                          const canAfford = currentHope >= hopeFeature.cost;
+                          const missing = Math.max(0, hopeFeature.cost - currentHope);
                           const isDruida = c.f_class === "Druida";
-                          page1Rows.push([
-                            <CompactCard
-                              key="hope"
-                              accent="var(--acc)"
-                              kicker="Característica de Esperanza"
-                              title={hopeFeature.name}
-                              description={hopeFeature.text}
-                              disabled={!canAfford}
-                              footer={canAfford ? `Pulsa para usarla (-${hopeFeature.cost} Esperanza)` : "Esperanza insuficiente"}
-                              footerColor={canAfford ? "var(--acc)" : "#D9644E"}
-                              onClick={() => {
-                                if (!canAfford) return;
-                                if (isDruida) openEvolutionModal(viewingCharId);
-                                else spendHopeFeature(viewingCharId, hopeFeature.cost);
-                              }}
-                            />,
-                          ]);
+                          items.push({
+                            key: "hope",
+                            Icon: Sparkles,
+                            color: "#E3B04B",
+                            kicker: "Característica de Esperanza",
+                            title: hopeFeature.name,
+                            summary: hopeFeature.text,
+                            cost: { label: hopeFeature.cost + " Esperanza", kind: "hope" },
+                            warning: missing > 0 ? `Te faltan ${missing} de Esperanza` : null,
+                            hint: missing > 0 ? undefined : "Pulsa para usarla",
+                            dim: missing > 0,
+                            onClick: () => {
+                              if (missing > 0) return;
+                              if (isDruida) openEvolutionModal(viewingCharId);
+                              else spendHopeFeature(viewingCharId, hopeFeature.cost);
+                            },
+                          });
                         }
 
                         if (c.f_ancestry) {
-                          const ancestryNames = c.f_ancestry.split(" + ");
-                          page2Rows.push(
-                            ancestryNames.map((name) => {
-                              const ancEntry = ANCESTRIES.find((a) => a.key === name);
-                              return (
-                                <CompactCard
-                                  key={"anc-" + name}
-                                  accent="#6FA3C0"
-                                  kicker="Ascendencia"
-                                  title={name}
-                                  description={ancEntry?.blurb || ""}
-                                  onClick={() =>
-                                    setViewingCardDetail({
-                                      kicker: "Ascendencia",
-                                      title: name,
-                                      text: ancEntry?.blurb || "",
-                                      features: ancEntry?.features,
-                                      image: ancEntry?.image,
-                                      tags: ["Ascendencia"],
-                                    })
-                                  }
-                                />
-                              );
-                            })
-                          );
+                          c.f_ancestry.split(" + ").forEach((name) => {
+                            const ancEntry = ANCESTRIES.find((an) => an.key === name);
+                            items.push({
+                              key: "anc-" + name,
+                              Icon: User,
+                              color: "#6FA3C0",
+                              kicker: "Ascendencia",
+                              title: name,
+                              summary: ancEntry?.blurb || "",
+                              onClick: openDetail({ kicker: "Ascendencia", title: name, text: ancEntry?.blurb || "", features: ancEntry?.features, image: ancEntry?.image, bigStyle: true }),
+                            });
+                          });
                         }
 
                         if (c.f_community) {
-                          page2Rows.push([
-                            <CompactCard
-                              key="community"
-                              accent="#7FB77A"
-                              kicker="Comunidad"
-                              title={c.f_community}
-                              description={COMMUNITIES.find((cm) => cm.key === c.f_community)?.blurb || ""}
-                            />,
-                          ]);
+                          const blurb = COMMUNITIES.find((cm) => cm.key === c.f_community)?.blurb || "";
+                          items.push({
+                            key: "community",
+                            Icon: Home,
+                            color: "#C08B5C",
+                            kicker: "Comunidad",
+                            title: c.f_community,
+                            summary: blurb,
+                            onClick: openDetail({ kicker: "Comunidad", title: c.f_community, text: blurb, bigStyle: true }),
+                          });
                         }
 
                         if (c.f_transformation) {
@@ -6070,26 +6012,34 @@ export default function App({ onSignOut }) {
                           if (transEntry) {
                             const activatableFeature = transEntry.features?.find((f) => f.activatable);
                             const isActive = activatableFeature && c.f_transformation_form_active === activatableFeature.name;
-                            page2Rows.push([
-                              <CompactCard
-                                key="transformation"
-                                accent="#A58BE8"
-                                kicker="Transformación"
-                                title={transEntry.key}
-                                description={transEntry.blurb}
-                                onClick={activatableFeature ? () => toggleTransformationForm(viewingCharId, activatableFeature.name, isActive) : undefined}
-                                footer={activatableFeature ? (isActive ? "Activa · pulsa para salir" : `Activar ${activatableFeature.name}`) : undefined}
-                                footerColor={isActive ? "#7FB77A" : undefined}
-                              />,
-                            ]);
+                            items.push({
+                              key: "transformation",
+                              Icon: Moon,
+                              color: TRANSFORM_THEMES[activatableFeature?.name]?.color || "#A58BE8",
+                              kicker: "Transformación",
+                              title: transEntry.key,
+                              summary: isActive ? activatableFeature.name + " activa" : transEntry.blurb,
+                              active: isActive,
+                              hint: activatableFeature ? (isActive ? "Pulsa para salir de la forma" : "Pulsa para activar " + activatableFeature.name) : undefined,
+                              cost: activatableFeature ? { label: isActive ? "Activa" : "1 Estrés", kind: isActive ? "active" : "stress" } : null,
+                              onClick: activatableFeature
+                                ? () => toggleTransformationForm(viewingCharId, activatableFeature.name, isActive)
+                                : openDetail({ kicker: "Transformación", title: transEntry.key, text: transEntry.blurb, features: transEntry.features, bigStyle: true }),
+                            });
                           }
                         }
 
-                        const pages = [page1Rows, page2Rows].filter((p) => p.length > 0);
-                        const totalPages = Math.max(1, pages.length);
-                        const page = Math.min(actionPage, totalPages - 1);
-                        const pageRows = pages[page] || [];
-                        const maxRows = Math.max(page1Rows.length, page2Rows.length, 1);
+                        // Coste detectado en el texto: "marca un Estrés", "gasta 2 de Esperanza", "a voluntad".
+                        const NUM = { un: 1, una: 1, dos: 2, tres: 3 };
+                        const detectCost = (text) => {
+                          const t = (text || "").toLowerCase();
+                          const st = t.match(/marca(?:r|s)? (un|una|dos|tres|\d+) (?:de )?estrés/);
+                          if (st) return { label: (NUM[st[1]] || st[1]) + " Estrés", kind: "stress" };
+                          const hp = t.match(/gasta(?:r|s)? (un|una|dos|tres|\d+) (?:de )?esperanza/);
+                          if (hp) return { label: (NUM[hp[1]] || hp[1]) + " Esperanza", kind: "hope" };
+                          if (/a voluntad/.test(t)) return { label: "A voluntad", kind: "free" };
+                          return null;
+                        };
 
                         return (
                           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(12, 1fr)", gap: 18, flex: 1 }}>
@@ -6101,30 +6051,48 @@ export default function App({ onSignOut }) {
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
                             >
-                              <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", flex: 1 }}>
-                                <div style={{ display: "flex", flexDirection: "column", gap: 12, flex: 1, minHeight: 0 }}>
-                                  {pageRows.length > 0 ? (
-                                    Array.from({ length: maxRows }, (_, i) => i).map((i) => (
-                                      <div key={i} style={{ display: "flex", gap: 12, flex: 1, minHeight: 0 }}>
-                                        {pageRows[i] || <div style={{ flex: 1 }} />}
+                              <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, minHeight: 0 }}>
+                                {items.length === 0 && <div style={{ fontSize: 12.5, color: "var(--mh-muted)", fontStyle: "italic" }}>Todavía no hay acciones para este personaje.</div>}
+                                {items.map((it) => {
+                                  const cost = it.cost === undefined ? detectCost(it.costText || it.summary) : it.cost;
+                                  return (
+                                    <div
+                                      key={it.key}
+                                      role="button"
+                                      tabIndex={0}
+                                      title={it.hint}
+                                      className={"mh-arow" + (it.dim ? " is-dim" : "") + (it.active ? " is-active" : "")}
+                                      style={{ "--ac": it.color }}
+                                      onClick={it.onClick}
+                                      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), it.onClick())}
+                                    >
+                                      <span className="mh-arow-ico">
+                                        <it.Icon size={17} />
+                                      </span>
+                                      <div className="mh-arow-main">
+                                        <div className="mh-arow-kicker">{it.kicker}</div>
+                                        <div className="mh-arow-title">{it.title}</div>
+                                        {it.extraBelow ? (
+                                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 3 }}>
+                                            {it.extra}
+                                            <span className="mh-arow-sum">{it.summary}</span>
+                                          </div>
+                                        ) : (
+                                          <div className="mh-arow-sum">{it.warning ? <span style={{ color: "#D9644E", fontWeight: 600 }}>{it.warning}</span> : it.summary}</div>
+                                        )}
                                       </div>
-                                    ))
-                                  ) : (
-                                    <div style={{ fontSize: 12.5, color: "var(--mh-muted)", fontStyle: "italic" }}>Todavía no hay cartas para este personaje.</div>
-                                  )}
-                                </div>
-
-                                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginTop: 16, flexShrink: 0, visibility: totalPages > 1 ? "visible" : "hidden" }}>
-                                  <button className="mh-btn-ghost" style={{ padding: "4px 8px" }} onClick={() => setActionPage((p) => Math.max(0, p - 1))}>
-                                    <ChevronLeft size={14} />
-                                  </button>
-                                  <span style={{ fontSize: 11.5, color: "var(--mh-muted)" }}>
-                                    Página {page + 1} de {totalPages}
-                                  </span>
-                                  <button className="mh-btn-ghost" style={{ padding: "4px 8px" }} onClick={() => setActionPage((p) => Math.min(totalPages - 1, p + 1))}>
-                                    <ChevronRight size={14} />
-                                  </button>
-                                </div>
+                                      {!it.extraBelow && it.extra}
+                                      {cost && (
+                                        <span className={"mh-arow-cost is-" + cost.kind}>
+                                          {cost.kind === "hope" && <Sparkles size={11} />}
+                                          {cost.kind === "stress" && <Zap size={11} />}
+                                          {cost.label}
+                                        </span>
+                                      )}
+                                      <ChevronRight size={14} className="mh-arow-chev" />
+                                    </div>
+                                  );
+                                })}
                               </div>
                             </Panel>
 
