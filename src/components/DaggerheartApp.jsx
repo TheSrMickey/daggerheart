@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useLayoutEffect, useRef } from "react";
-import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight } from "lucide-react";
+import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
 import { Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
@@ -1489,6 +1489,47 @@ const sharedStyles = `
     background: color-mix(in srgb, #E3B04B 18%, transparent); color: color-mix(in srgb, #E3B04B var(--mh-accent-keep, 100%), #000);
   }
   .mh-gold-n { font-size: 15px; min-width: 20px; text-align: center; color: color-mix(in srgb, #E3B04B var(--mh-accent-keep, 100%), #000); }
+  .mh-qa-prog { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--mh-muted); flex-shrink: 0; }
+  .mh-qa-prog i { display: inline-block; width: 18px; height: 6px; border-radius: 3px; }
+  .mh-qa { display: flex; gap: 10px; padding: 12px 14px; border: 1px solid var(--mh-line); border-radius: 12px; background: var(--mh-panel); flex-shrink: 0; }
+  .mh-qa.pending { border-style: dashed; }
+  .mh-qa-num {
+    width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: var(--mh-muted); border: 1.5px solid var(--mh-line2);
+  }
+  .mh-qa-num.done { background: var(--acc); border-color: var(--acc); color: var(--acc-on, #fff); }
+  .mh-qa-q-row { display: flex; align-items: flex-start; gap: 6px; }
+  .mh-qa-q { flex: 1; font-size: 12.5px; font-weight: 700; line-height: 1.4; color: var(--mh-gold-ink); outline: none; border-radius: 4px; }
+  .mh-qa-q:focus { box-shadow: 0 0 0 2px color-mix(in srgb, var(--acc) 35%, transparent); }
+  .mh-qa-del { all: unset; cursor: pointer; color: var(--mh-muted3); display: flex; padding: 2px; border-radius: 5px; opacity: 0; transition: opacity .15s; }
+  .mh-qa:hover .mh-qa-del, .mh-qa-del:focus-visible { opacity: 1; }
+  .mh-qa-del:hover { color: #D9644E; }
+  @media (hover: none) { .mh-qa-del { opacity: 1; } }
+  .mh-qa-answer { margin-top: 5px; font-size: 12.5px; line-height: 1.5; color: var(--mh-ink); white-space: pre-wrap; cursor: text; border-radius: 6px; }
+  .mh-qa-answer:hover { background: var(--mh-panel2); }
+  .mh-qa-text { margin-top: 6px; font-size: 12.5px; line-height: 1.5; resize: vertical; min-height: 64px; }
+  .mh-qa-reply {
+    all: unset; cursor: pointer; margin-top: 8px; display: inline-flex; align-self: flex-start; width: fit-content; align-items: center; gap: 5px; font-size: 12px; font-weight: 600;
+    color: var(--mh-gold-ink); border: 1px solid color-mix(in srgb, var(--acc) 50%, transparent); border-radius: 7px; padding: 5px 10px;
+  }
+  .mh-qa-reply:hover, .mh-qa-reply:focus-visible { background: color-mix(in srgb, var(--acc) 10%, transparent); }
+  .mh-qa-av { border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-family: 'Cinzel', Georgia, serif; font-weight: 700; }
+  .mh-qa-av.empty { border: 1.5px dashed var(--mh-line2); color: var(--mh-muted3); background: transparent; }
+  .mh-qa-who {
+    flex: 1; min-width: 0; font: inherit; font-size: 12.5px; font-weight: 700; color: var(--mh-ink); background: transparent;
+    border: 1px solid transparent; border-radius: 6px; padding: 3px 4px; cursor: pointer;
+  }
+  .mh-qa-who:hover, .mh-qa-who:focus { border-color: var(--mh-line2); outline: none; }
+  .mh-qa-net-btn {
+    all: unset; cursor: pointer; width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    color: var(--mh-gold-ink); border: 1px solid color-mix(in srgb, var(--acc) 45%, transparent);
+  }
+  .mh-qa-net-btn:hover, .mh-qa-net-btn:focus-visible { background: color-mix(in srgb, var(--acc) 12%, transparent); }
+  .mh-relnet { margin: 0; width: min(560px, 100%); max-height: 88%; overflow-y: auto; padding: 18px 20px; border-radius: 18px; }
+  .mh-relnet-lbl { fill: var(--mh-panel); stroke: var(--mh-line2); }
+  .mh-relnet-lbl-t { font-size: 10.5px; fill: var(--mh-ink3); font-family: 'Inter', system-ui, sans-serif; }
+  .mh-relnet-ini { fill: #fff; font-family: 'Cinzel', Georgia, serif; font-weight: 700; }
+  .mh-relnet-name { font-size: 12px; font-weight: 700; fill: var(--mh-ink); font-family: 'Inter', system-ui, sans-serif; }
   .mh-holo {
     position: absolute; inset: 0; z-index: 30; pointer-events: none; border-radius: inherit; mix-blend-mode: color-dodge;
     background: linear-gradient(115deg, transparent 10%, rgba(255,80,200,.55) 25%, rgba(120,200,255,.55) 40%, rgba(255,240,120,.55) 55%, rgba(150,255,180,.55) 70%, transparent 85%);
@@ -3671,6 +3712,15 @@ export default function App({ onSignOut }) {
   const addQARow = (id, field, rows) => {
     updateCharacterField(id, field, JSON.stringify([...rows, { question: "Nueva pregunta...", answer: "" }]));
   };
+
+  const [qaEdit, setQaEdit] = useState(null);
+  const [qaDraft, setQaDraft] = useState("");
+  const [qaWithOther, setQaWithOther] = useState(null);
+  const [showRelNet, setShowRelNet] = useState(false);
+  useEffect(() => {
+    setQaEdit(null);
+    setShowRelNet(false);
+  }, [viewingCharId]);
 
   const removeQARow = (id, field, rows, index) => {
     const next = rows.filter((_, i) => i !== index);
@@ -6827,6 +6877,80 @@ export default function App({ onSignOut }) {
                       {activeTab === "background" && (() => {
                         const bgRows = getQAList(c, "f_background_qa", CLASS_BACKGROUND_QUESTIONS[c.f_class]);
                         const connRows = getQAList(c, "f_connection_qa", CLASS_CONNECTION_QUESTIONS[c.f_class]);
+                        // Compañeros posibles: primero los de la campaña, luego el resto de tus personajes.
+                        const partyIds = charCampaign ? (charCampaign.characterIds || []).filter((cid) => cid !== viewingCharId) : [];
+                        const companionIds = [...partyIds, ...Object.keys(characters).filter((cid) => cid !== viewingCharId && !partyIds.includes(cid))];
+                        const companions = companionIds.map((cid) => characters[cid]).filter(Boolean).map((pc) => ({ name: pc.f_name || "Sin nombre", cls: pc.f_class || "" }));
+                        const answered = (rows) => rows.filter((r) => (r.answer || "").trim()).length;
+                        const progress = (rows) => (
+                          <div className="mh-qa-prog">
+                            <span style={{ display: "flex", gap: 3 }}>
+                              {rows.map((r, i) => (
+                                <i key={i} style={{ background: (r.answer || "").trim() ? "var(--acc)" : "var(--mh-line)" }} />
+                              ))}
+                            </span>
+                            {answered(rows)} de {rows.length} respondidas
+                          </div>
+                        );
+                        const answerBlock = (field, rows, i, row) => {
+                          const editing = qaEdit && qaEdit.field === field && qaEdit.index === i;
+                          if (editing) {
+                            return (
+                              <textarea
+                                className="mh-input mh-qa-text"
+                                autoFocus
+                                rows={3}
+                                value={qaDraft}
+                                placeholder="Escribe tu respuesta…"
+                                onChange={(e) => setQaDraft(e.target.value)}
+                                onBlur={() => {
+                                  saveQARow(viewingCharId, field, rows, i, { answer: qaDraft.trim() });
+                                  setQaEdit(null);
+                                }}
+                                onKeyDown={(e) => e.key === "Escape" && e.currentTarget.blur()}
+                              />
+                            );
+                          }
+                          const open = () => {
+                            setQaDraft(row.answer || "");
+                            setQaEdit({ field, index: i });
+                          };
+                          return (row.answer || "").trim() ? (
+                            <div className="mh-qa-answer" role="button" tabIndex={0} title="Pulsa para editar" onClick={open} onKeyDown={(e) => e.key === "Enter" && open()}>
+                              {row.answer}
+                            </div>
+                          ) : (
+                            <button type="button" className="mh-qa-reply" onClick={open}>
+                              <PenLine size={12} /> Responder
+                            </button>
+                          );
+                        };
+                        const questionBlock = (field, rows, i, row) => (
+                          <div className="mh-qa-q-row">
+                            <div
+                              className="mh-qa-q"
+                              contentEditable
+                              suppressContentEditableWarning
+                              title="Pulsa para cambiar la pregunta"
+                              onBlur={(e) => e.target.textContent !== row.question && saveQARow(viewingCharId, field, rows, i, { question: e.target.textContent })}
+                            >
+                              {row.question}
+                            </div>
+                            <button type="button" className="mh-qa-del" title="Quitar pregunta" aria-label="Quitar pregunta" onClick={() => removeQARow(viewingCharId, field, rows, i)}>
+                              <X size={12} />
+                            </button>
+                          </div>
+                        );
+                        const avatar = (w, size = 28) =>
+                          w && w.name ? (
+                            <span className="mh-qa-av" style={{ width: size, height: size, fontSize: size * 0.45, background: classColor(w.cls) }}>
+                              {w.name.trim().charAt(0).toUpperCase()}
+                            </span>
+                          ) : (
+                            <span className="mh-qa-av empty" style={{ width: size, height: size }}>
+                              <User size={size * 0.48} />
+                            </span>
+                          );
 
                         return (
                           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(12, 1fr)", gap: 18, flex: 1 }}>
@@ -6838,37 +6962,28 @@ export default function App({ onSignOut }) {
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
                             >
-                              <div style={{ display: "flex", flexDirection: "column", gap: 14, flex: 1, overflowY: "auto" }}>
-                                {bgRows.length === 0 && (
+                              <div className="mh-noscroll" style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1, minHeight: 0, overflowY: "auto" }}>
+                                {bgRows.length === 0 ? (
                                   <div style={{ fontSize: 11.5, color: "var(--mh-muted)", fontStyle: "italic" }}>
                                     Todavía no tenemos cargadas las preguntas de trasfondo de {c.f_class}. Puedes añadir las tuyas.
                                   </div>
+                                ) : (
+                                  progress(bgRows)
                                 )}
-                                {bgRows.map((row, i) => (
-                                  <div key={i} style={{ border: "1px solid var(--mh-line)", borderRadius: 8, padding: "10px 14px" }}>
-                                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
-                                      <div
-                                        contentEditable
-                                        suppressContentEditableWarning
-                                        onBlur={(e) => saveQARow(viewingCharId, "f_background_qa", bgRows, i, { question: e.target.textContent })}
-                                        style={{ fontSize: 12.5, fontWeight: 700, color: "var(--mh-gold-ink)", flex: 1 }}
-                                      >
-                                        {row.question}
+                                {bgRows.map((row, i) => {
+                                  const done = (row.answer || "").trim();
+                                  return (
+                                    <div key={i} className={"mh-qa" + (done ? "" : " pending")}>
+                                      <span className={"mh-qa-num" + (done ? " done" : "")}>{done ? <Check size={12} strokeWidth={3} /> : i + 1}</span>
+                                      <div style={{ flex: 1, minWidth: 0 }}>
+                                        {questionBlock("f_background_qa", bgRows, i, row)}
+                                        {answerBlock("f_background_qa", bgRows, i, row)}
                                       </div>
-                                      <X size={13} style={{ cursor: "pointer", color: "#D9644E", flexShrink: 0 }} onClick={() => removeQARow(viewingCharId, "f_background_qa", bgRows, i)} />
                                     </div>
-                                    <div
-                                      contentEditable
-                                      suppressContentEditableWarning
-                                      onBlur={(e) => saveQARow(viewingCharId, "f_background_qa", bgRows, i, { answer: e.target.textContent })}
-                                      style={{ minHeight: 50, fontSize: 13, color: "var(--mh-ink)" }}
-                                    >
-                                      {row.answer || "Escribe tu respuesta..."}
-                                    </div>
-                                  </div>
-                                ))}
-                                <button className="mh-btn-ghost" style={{ width: "fit-content" }} onClick={() => addQARow(viewingCharId, "f_background_qa", bgRows)}>
-                                  + Añadir pregunta
+                                  );
+                                })}
+                                <button type="button" className="mh-exp-add" style={{ flex: "0 0 auto", padding: 11 }} onClick={() => addQARow(viewingCharId, "f_background_qa", bgRows)}>
+                                  <Plus size={14} /> Añadir pregunta
                                 </button>
                               </div>
                             </Panel>
@@ -6876,45 +6991,149 @@ export default function App({ onSignOut }) {
                             <Panel
                               span={5}
                               title="Conexiones"
+                              titleRight={
+                                <button type="button" className="mh-qa-net-btn" title="Ver la red de relaciones" aria-label="Ver la red de relaciones" onClick={() => setShowRelNet(true)}>
+                                  <Network size={16} />
+                                </button>
+                              }
                               hidden={conditions.includes("Escondido")}
                               restrained={conditions.includes("Inmovilizado")}
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
                             >
-                              <div style={{ display: "flex", flexDirection: "column", gap: 14, flex: 1, overflowY: "auto" }}>
+                              <div className="mh-noscroll" style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1, minHeight: 0, overflowY: "auto" }}>
                                 {connRows.length === 0 && (
                                   <div style={{ fontSize: 11.5, color: "var(--mh-muted)", fontStyle: "italic" }}>
                                     Todavía no tenemos cargadas las preguntas de conexión de {c.f_class}. Puedes añadir las tuyas.
                                   </div>
                                 )}
-                                {connRows.map((row, i) => (
-                                  <div key={i} style={{ border: "1px solid var(--mh-line)", borderRadius: 8, padding: "10px 14px" }}>
-                                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
-                                      <div
-                                        contentEditable
-                                        suppressContentEditableWarning
-                                        onBlur={(e) => saveQARow(viewingCharId, "f_connection_qa", connRows, i, { question: e.target.textContent })}
-                                        style={{ fontSize: 12.5, fontWeight: 700, color: "var(--mh-gold-ink)", flex: 1 }}
-                                      >
-                                        {row.question}
+                                {connRows.map((row, i) => {
+                                  const w = row.with;
+                                  const typing = qaWithOther && qaWithOther.index === i;
+                                  return (
+                                    <div key={i} className="mh-qa" style={{ flexDirection: "column", gap: 8 }}>
+                                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                        {avatar(w)}
+                                        {typing ? (
+                                          <input
+                                            className="mh-input"
+                                            style={{ fontSize: 12, padding: "4px 8px" }}
+                                            autoFocus
+                                            placeholder="Nombre del compañero…"
+                                            value={qaWithOther.name}
+                                            onChange={(e) => setQaWithOther({ index: i, name: e.target.value })}
+                                            onBlur={() => {
+                                              const name = qaWithOther.name.trim();
+                                              if (name) saveQARow(viewingCharId, "f_connection_qa", connRows, i, { with: { name, cls: "" } });
+                                              setQaWithOther(null);
+                                            }}
+                                            onKeyDown={(e) => (e.key === "Enter" || e.key === "Escape") && e.currentTarget.blur()}
+                                          />
+                                        ) : (
+                                          <select
+                                            className="mh-qa-who"
+                                            aria-label="Compañero de esta conexión"
+                                            value={w?.name || ""}
+                                            onChange={(e) => {
+                                              const v = e.target.value;
+                                              if (v === "__otro") return setQaWithOther({ index: i, name: "" });
+                                              const comp = companions.find((cp) => cp.name === v);
+                                              saveQARow(viewingCharId, "f_connection_qa", connRows, i, { with: v ? comp || { name: v, cls: w?.cls || "" } : null });
+                                            }}
+                                          >
+                                            <option value="">Elige a quién…</option>
+                                            {companions.map((cp) => (
+                                              <option key={cp.name} value={cp.name}>
+                                                {cp.name}
+                                              </option>
+                                            ))}
+                                            {w?.name && !companions.some((cp) => cp.name === w.name) && <option value={w.name}>{w.name}</option>}
+                                            <option value="__otro">Escribir otro nombre…</option>
+                                          </select>
+                                        )}
                                       </div>
-                                      <X size={13} style={{ cursor: "pointer", color: "#D9644E", flexShrink: 0 }} onClick={() => removeQARow(viewingCharId, "f_connection_qa", connRows, i)} />
+                                      {questionBlock("f_connection_qa", connRows, i, row)}
+                                      {answerBlock("f_connection_qa", connRows, i, row)}
                                     </div>
-                                    <div
-                                      contentEditable
-                                      suppressContentEditableWarning
-                                      onBlur={(e) => saveQARow(viewingCharId, "f_connection_qa", connRows, i, { answer: e.target.textContent })}
-                                      style={{ minHeight: 50, fontSize: 13, color: "var(--mh-ink)" }}
-                                    >
-                                      {row.answer || "Escribe tu respuesta..."}
-                                    </div>
-                                  </div>
-                                ))}
-                                <button className="mh-btn-ghost" style={{ width: "fit-content" }} onClick={() => addQARow(viewingCharId, "f_connection_qa", connRows)}>
-                                  + Añadir pregunta
+                                  );
+                                })}
+                                <button type="button" className="mh-exp-add" style={{ flex: "0 0 auto", padding: 11 }} onClick={() => addQARow(viewingCharId, "f_connection_qa", connRows)}>
+                                  <Plus size={14} /> Añadir conexión
                                 </button>
                               </div>
                             </Panel>
+
+                            {showRelNet && (() => {
+                              // Red de relaciones: tu personaje en el centro y una línea hacia cada compañero.
+                              const groups = [];
+                              connRows.forEach((r) => {
+                                if (!r.with || !r.with.name) return;
+                                let g = groups.find((x) => x.name === r.with.name);
+                                if (!g) groups.push((g = { name: r.with.name, cls: r.with.cls, rows: [] }));
+                                g.rows.push(r);
+                              });
+                              const W = 460, H = groups.length <= 2 ? 190 : 330, cx = W / 2, cy = groups.length <= 2 ? 80 : H / 2 - 10, R = 112;
+                              const nodes = groups.map((g, k) => {
+                                // Con 1 o 2 compañeros, a los lados; con más, en círculo empezando arriba.
+                                const ang = (groups.length <= 2 ? Math.PI : -Math.PI / 2) + (k * 2 * Math.PI) / Math.max(1, groups.length);
+                                return { ...g, x: cx + Math.cos(ang) * R * 1.3, y: cy + Math.sin(ang) * R };
+                              });
+                              const short = (t) => (t.length > 22 ? t.slice(0, 21).trimEnd() + "…" : t);
+                              return (
+                                <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 40, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.62)" }} onClick={() => setShowRelNet(false)}>
+                                  <div className="mh-card mh-card-anim mh-relnet" onClick={(e) => e.stopPropagation()}>
+                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                                      <div>
+                                        <div className="mh-serif" style={{ fontSize: 17, fontWeight: 700, color: "var(--mh-ink)" }}>Red de relaciones</div>
+                                        <div style={{ fontSize: 12, color: "var(--mh-muted)" }}>{c.f_name || "Tu personaje"} y sus compañeros</div>
+                                      </div>
+                                      <button type="button" className="mh-inv-x" aria-label="Cerrar" onClick={() => setShowRelNet(false)}>
+                                        <X size={16} />
+                                      </button>
+                                    </div>
+                                    {nodes.length === 0 ? (
+                                      <div style={{ padding: "40px 10px", textAlign: "center", fontSize: 13, color: "var(--mh-muted)" }}>
+                                        Todavía no hay compañeros asignados. Elige con quién es cada conexión y aparecerán aquí.
+                                      </div>
+                                    ) : (
+                                      <>
+                                        <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: "block", maxHeight: 320 }} role="img" aria-label="Mapa de relaciones">
+                                          {nodes.map((n) => (
+                                            <line key={"l" + n.name} x1={cx} y1={cy} x2={n.x} y2={n.y} stroke={classColor(n.cls)} strokeWidth="2" opacity=".7" />
+                                          ))}
+                                          <circle cx={cx} cy={cy} r="30" fill={classColor(c.f_class)} />
+                                          <text x={cx} y={cy + 7} textAnchor="middle" className="mh-relnet-ini" style={{ fontSize: 20 }}>{(c.f_name || "?").trim().charAt(0).toUpperCase()}</text>
+                                          {nodes.map((n) => (
+                                            <g key={"n" + n.name}>
+                                              <circle cx={n.x} cy={n.y} r="21" fill={classColor(n.cls)} />
+                                              <text x={n.x} y={n.y + 5} textAnchor="middle" className="mh-relnet-ini" style={{ fontSize: 15 }}>{n.name.trim().charAt(0).toUpperCase()}</text>
+                                              <text x={n.x} y={n.y + 38} textAnchor="middle" className="mh-relnet-name">{n.name}</text>
+                                              <text x={n.x} y={n.y + 54} textAnchor="middle" className="mh-relnet-lbl-t">{short((n.rows[0].answer || n.rows[0].question || "").trim())}</text>
+                                            </g>
+                                          ))}
+                                        </svg>
+                                        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 6 }}>
+                                          {nodes.map((n) => (
+                                            <div key={"d" + n.name} className="mh-qa" style={{ padding: "10px 12px", gap: 10 }}>
+                                              {avatar(n, 26)}
+                                              <div style={{ flex: 1, minWidth: 0 }}>
+                                                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--mh-ink)" }}>{n.name}</div>
+                                                {n.rows.map((r, k) => (
+                                                  <div key={k} style={{ marginTop: 4 }}>
+                                                    <div className="mh-qa-q" style={{ fontSize: 11.5 }}>{r.question}</div>
+                                                    <div style={{ fontSize: 12.5, color: "var(--mh-ink)", lineHeight: 1.45 }}>{r.answer || <i style={{ color: "var(--mh-muted)" }}>Sin responder</i>}</div>
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })()}
                           </div>
                         );
                       })()}
