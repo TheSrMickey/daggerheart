@@ -1342,6 +1342,37 @@ const sharedStyles = `
     border-top: 1px solid color-mix(in srgb, var(--cc) 35%, transparent); font-size: 12px; color: var(--mh-ink3);
   }
   .mh-cardc-foot b { color: var(--mh-ink); }
+  .mh-exp {
+    position: relative; flex: 1; min-height: 0; display: flex; overflow: hidden; border-radius: 12px;
+    border: 1px solid color-mix(in srgb, var(--acc) 40%, transparent); background: var(--mh-panel);
+  }
+  .mh-exp-bar { width: 5px; flex-shrink: 0; background: var(--acc); }
+  .mh-exp-body { flex: 1; min-width: 0; padding: 0 14px; display: flex; flex-direction: column; justify-content: center; }
+  .mh-exp-kicker { font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-gold-ink); margin-bottom: 2px; }
+  .mh-exp-bonus {
+    width: 62px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    border-left: 1px solid color-mix(in srgb, var(--acc) 22%, transparent); background: color-mix(in srgb, var(--acc) 6%, transparent);
+  }
+  .mh-exp-bonus span { font-size: 23px; font-weight: 700; line-height: 1; color: var(--mh-gold-ink); }
+  .mh-exp-bonus small { font-size: 9.5px; color: var(--mh-muted2); margin-top: 3px; }
+  .mh-exp-del {
+    all: unset; cursor: pointer; position: absolute; top: 6px; right: 68px; width: 20px; height: 20px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; color: var(--mh-muted3); opacity: 0; transition: opacity .15s, color .15s;
+  }
+  .mh-exp:hover .mh-exp-del, .mh-exp-del:focus-visible { opacity: 1; }
+  .mh-exp-del:hover { color: #D9644E; }
+  @media (hover: none) { .mh-exp-del { opacity: 1; } }
+  .mh-exp-add {
+    all: unset; box-sizing: border-box; cursor: pointer; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; gap: 9px;
+    border: 1.5px dashed var(--mh-line2); border-radius: 12px; color: var(--mh-ink3); font-size: 12.5px; font-weight: 500; transition: border-color .15s, color .15s;
+  }
+  .mh-exp-add:hover, .mh-exp-add:focus-visible { border-color: var(--acc); color: var(--mh-gold-ink); }
+  .mh-exp-add-ico { width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid currentColor; display: flex; align-items: center; justify-content: center; opacity: .7; }
+  .mh-exp-locked {
+    flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    border-radius: 12px; background: var(--mh-panel2); color: var(--mh-muted2); font-size: 11.5px;
+  }
+  .mh-exp-locked small { font-size: 10.5px; }
   .mh-holo {
     position: absolute; inset: 0; z-index: 30; pointer-events: none; border-radius: inherit; mix-blend-mode: color-dodge;
     background: linear-gradient(115deg, transparent 10%, rgba(255,80,200,.55) 25%, rgba(120,200,255,.55) 40%, rgba(255,240,120,.55) 55%, rgba(150,255,180,.55) 70%, transparent 85%);
@@ -5754,35 +5785,31 @@ export default function App({ onSignOut }) {
 
                                       if (exp) {
                                         return (
-                                          <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", border: "1px solid var(--mh-line)", borderRadius: 8, padding: "14px 14px", flex: 1 }}>
-                                            <span style={{ fontSize: 12.5, color: "var(--mh-ink)" }}>{exp.text}</span>
-                                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                              <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--mh-gold-ink)" }}>+{exp.bonus}</span>
-                                              <X size={13} style={{ cursor: "pointer", color: "#D9644E" }} onClick={() => removeExperience(viewingCharId, i)} />
+                                          <div key={i} className="mh-exp">
+                                            <div className="mh-exp-bar" />
+                                            <div className="mh-exp-body">
+                                              <div className="mh-exp-kicker">Experiencia</div>
+                                              <FitTitle text={exp.text} max={15} min={11.5} lineHeight={1.2} className="mh-serif" style={{ fontWeight: 700, color: "var(--mh-ink)", maxHeight: "2.4em", overflow: "hidden" }} />
                                             </div>
+                                            <div className="mh-exp-bonus">
+                                              <span className="mh-serif">{Number(exp.bonus) >= 0 ? "+" : ""}{exp.bonus}</span>
+                                              <small>bono</small>
+                                            </div>
+                                            <button type="button" className="mh-exp-del" title="Quitar experiencia" aria-label="Quitar experiencia" onClick={() => removeExperience(viewingCharId, i)}>
+                                              <X size={12} />
+                                            </button>
                                           </div>
                                         );
                                       }
 
                                       if (!isUnlocked) {
+                                        // El hueco i se abre al llegar al Rango i (niveles 2, 5 y 8).
+                                        const unlockLevel = { 2: 2, 3: 5, 4: 8 }[i];
                                         return (
-                                          <div
-                                            key={i}
-                                            style={{
-                                              display: "flex",
-                                              alignItems: "center",
-                                              justifyContent: "center",
-                                              border: "1px solid var(--mh-line)",
-                                              background: "var(--mh-panel2)",
-                                              borderRadius: 8,
-                                              padding: "14px 14px",
-                                              color: "var(--mh-muted3)",
-                                              fontSize: 12,
-                                              fontStyle: "italic",
-                                              flex: 1,
-                                            }}
-                                          >
-                                            No disponible
+                                          <div key={i} className="mh-exp-locked">
+                                            <Lock size={14} />
+                                            <span>Se desbloquea en Rango {i}</span>
+                                            {unlockLevel && <small>(nivel {unlockLevel})</small>}
                                           </div>
                                         );
                                       }
@@ -5790,7 +5817,7 @@ export default function App({ onSignOut }) {
                                       // unlocked but empty — next slot to fill
                                       if (showAddExperience && i === experiences.length) {
                                         return (
-                                          <div key={i} style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: 8, border: "1px solid var(--acc)", borderRadius: 8, padding: "12px 14px", flex: 1 }}>
+                                          <div key={i} style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: 8, border: "1px solid var(--acc)", borderRadius: 12, padding: "12px 14px", flex: 1, minHeight: 0 }}>
                                             <input className="mh-input" style={{ fontSize: 12 }} placeholder="Descripción..." value={expDraftText} onChange={(e) => setExpDraftText(e.target.value)} autoFocus />
                                             <div style={{ display: "flex", gap: 6 }}>
                                               <input className="mh-input" type="number" style={{ fontSize: 12, width: 60 }} value={expDraftBonus} onChange={(e) => setExpDraftBonus(e.target.value)} />
@@ -5803,20 +5830,11 @@ export default function App({ onSignOut }) {
                                       }
 
                                       return (
-                                        <button
-                                          key={i}
-                                          className="mh-btn-ghost"
-                                          style={{
-                                            width: "100%",
-                                            fontSize: 12,
-                                            padding: "14px 14px",
-                                            border: "1px dashed var(--mh-line2)",
-                                            background: "transparent",
-                                            flex: 1,
-                                          }}
-                                          onClick={() => setShowAddExperience(true)}
-                                        >
-                                          + Añadir experiencia
+                                        <button key={i} type="button" className="mh-exp-add" onClick={() => setShowAddExperience(true)}>
+                                          <span className="mh-exp-add-ico">
+                                            <Plus size={14} />
+                                          </span>
+                                          Añadir experiencia
                                         </button>
                                       );
                                     })}
