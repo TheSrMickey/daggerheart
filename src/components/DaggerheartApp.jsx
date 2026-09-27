@@ -1044,6 +1044,24 @@ const GRID_TOOLS = [
 ];
 
 const EMPTY_STAGE = { live: "escena", scene: { title: "", image: "" }, handouts: [] };
+// Plantillas de escena con ilustración propia (public/escenas, generadas con scripts/generate-scene-presets.mjs).
+const SCENE_PRESETS = [
+  { key: "bosque", title: "Bosque" },
+  { key: "camino", title: "Camino" },
+  { key: "ciudad", title: "Ciudad amurallada" },
+  { key: "posada", title: "La posada" },
+  { key: "puerto", title: "Puerto" },
+  { key: "montanas", title: "Montañas nevadas" },
+  { key: "campamento", title: "Campamento" },
+  { key: "castillo", title: "Castillo" },
+  { key: "ruinas", title: "Ruinas" },
+  { key: "mazmorra", title: "Mazmorra" },
+].map((sc) => ({ ...sc, image: "/escenas/" + sc.key + ".svg" }));
+
+// Escenas guardadas por el DJ. Las campañas anteriores tenían una sola escena suelta: la tratamos como la primera.
+const stageScenesOf = (st) => st.scenes || (st.scene?.title || st.scene?.image ? [{ id: "s-legacy", title: st.scene.title || "", image: st.scene.image || "" }] : []);
+const activeSceneIdOf = (st) => (st.activeSceneId !== undefined ? st.activeSceneId : stageScenesOf(st)[0]?.id || null);
+
 const STAGE_TABS = [
   { key: "escena", label: "Escena", Icon: Clapperboard },
   { key: "mapa", label: "Mapa", Icon: MapPinned },
@@ -1724,19 +1742,40 @@ const sharedStyles = `
   /* Mesa del DJ (vista del DJ) */
   .mh-gm { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; max-width: 1100px; align-items: start; }
   .mh-gm-box { margin: 0; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; }
-  .mh-gm-box:first-child { grid-column: 1 / -1; }
+  .mh-gm-box:first-child, .mh-gm-box.is-wide { grid-column: 1 / -1; }
+  .mh-gm-count { font-family: 'Inter', system-ui, sans-serif; font-size: 11px; font-weight: 700; color: var(--mh-muted); background: var(--mh-panel2); border: 1px solid var(--mh-line); border-radius: 20px; padding: 0 8px; }
+  .mh-gm-h2 { font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-muted); margin-top: 4px; }
+  .mh-gm-scenes { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; align-items: start; }
+  .mh-gm-sc { display: flex; flex-direction: column; gap: 8px; padding: 8px; border: 1px solid var(--mh-line); border-radius: 12px; background: var(--mh-panel); }
+  .mh-gm-sc.is-live { border-color: color-mix(in srgb, #D9644E 60%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, #D9644E 14%, transparent); }
+  .mh-gm-sc-img { position: relative; aspect-ratio: 16 / 9; border-radius: 8px; background: #2B3A4F center / cover no-repeat; display: flex; align-items: flex-start; justify-content: flex-end; padding: 7px; }
+  .mh-gm-sc-img.is-blank { background-image: radial-gradient(circle at 78% 22%, #F3E3B8 0 12px, transparent 13px), linear-gradient(#2B3A4F, #6E7F8C 58%, #C9A879); }
+  .mh-gm-sc-t { font-size: 14px; font-weight: 700; color: var(--mh-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 2px; }
+  .mh-gm-sc-acts { display: flex; align-items: center; gap: 6px; }
+  .mh-gm-sc-acts .mh-btn, .mh-gm-sc-acts .mh-btn-ghost { flex: 1; justify-content: center; font-size: 12px; padding: 6px 10px; display: inline-flex; align-items: center; gap: 5px; }
+  .mh-gm-ib { width: 32px; height: 32px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid var(--mh-line); background: var(--mh-panel); color: var(--mh-ink3); cursor: pointer; }
+  .mh-gm-ib:hover { color: var(--mh-ink); border-color: var(--mh-line2); }
+  .mh-gm-ib.is-del:hover { color: #D9644E; border-color: color-mix(in srgb, #D9644E 50%, transparent); }
+  .mh-gm-sc-edit { display: flex; flex-direction: column; gap: 6px; }
+  .mh-gm-sc-edit .mh-input { font-size: 12.5px; }
+  .mh-gm-sc-edit .mh-btn-ghost { font-size: 12px; justify-content: center; display: inline-flex; align-items: center; gap: 5px; }
+  .mh-gm-sc-add { min-height: 170px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 1.5px dashed var(--mh-line2); border-radius: 12px; background: transparent; color: var(--mh-ink3); font: 600 13px 'Inter', system-ui, sans-serif; cursor: pointer; }
+  .mh-gm-sc-add small { font-size: 11px; font-weight: 500; color: var(--mh-muted); }
+  .mh-gm-sc-add:hover { color: var(--mh-ink); border-color: var(--mh-ink3); }
+  .mh-gm-presets { display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 10px; }
+  .mh-gm-preset { display: flex; flex-direction: column; gap: 5px; padding: 0; border: 0; background: transparent; cursor: pointer; font: inherit; color: inherit; text-align: left; }
+  .mh-gm-preset-img { position: relative; aspect-ratio: 16 / 9; border-radius: 9px; background: center / cover no-repeat; border: 1px solid var(--mh-line); display: flex; align-items: center; justify-content: center; color: #fff; overflow: hidden; }
+  .mh-gm-preset-img svg { opacity: 0; transform: scale(.8); transition: opacity .15s, transform .15s; background: rgba(0,0,0,.45); border-radius: 50%; padding: 6px; box-sizing: content-box; }
+  .mh-gm-preset:hover .mh-gm-preset-img svg, .mh-gm-preset:focus-visible .mh-gm-preset-img svg { opacity: 1; transform: none; }
+  .mh-gm-preset:hover .mh-gm-preset-img { border-color: var(--mh-ink3); }
+  .mh-gm-preset-t { font-size: 12px; font-weight: 600; color: var(--mh-ink2); padding: 0 2px; }
   .mh-gm-h { display: flex; align-items: center; gap: 8px; font-family: 'Cinzel', Georgia, serif; font-weight: 700; font-size: 15px; color: var(--mh-ink); }
   .mh-gm-sub { font-size: 12px; color: var(--mh-muted); margin-top: -6px; }
   .mh-gm-live { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
   .mh-gm-live button { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 8px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel); color: var(--mh-ink3); font: 600 13px 'Inter', system-ui, sans-serif; cursor: pointer; }
   .mh-gm-live button:hover { color: var(--mh-ink); border-color: var(--mh-line2); }
   .mh-gm-live button.is-on { color: var(--mh-ink); border-color: #D9644E; background: color-mix(in srgb, #D9644E 9%, var(--mh-panel)); }
-  .mh-gm-scene { display: grid; grid-template-columns: minmax(0, 1fr) 190px; gap: 12px; }
-  .mh-gm-fields { display: flex; flex-direction: column; gap: 8px; }
-  .mh-gm-lbl { display: flex; flex-direction: column; gap: 4px; font-size: 11.5px; font-weight: 600; color: var(--mh-ink3); }
-  .mh-gm-lbl textarea, .mh-gm-form textarea { resize: vertical; font-family: inherit; }
-  .mh-gm-thumb { flex: none; height: 100%; min-height: 170px; max-height: none; justify-content: flex-end; }
-  .mh-gm-thumb .mh-stg-scene-title { font-size: 14px; }
+  .mh-gm-form textarea { resize: vertical; font-family: inherit; }
   .mh-gm-kinds { display: flex; flex-wrap: wrap; gap: 6px; }
   .mh-gm-kinds button { display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 20px; border: 1px solid var(--mh-line); background: var(--mh-panel); color: var(--mh-ink3); font: 600 12px 'Inter', system-ui, sans-serif; cursor: pointer; }
   .mh-gm-kinds button.is-on { background: var(--mh-ink); color: var(--mh-panel); border-color: var(--mh-ink); }
@@ -1747,7 +1786,6 @@ const sharedStyles = `
   @media (max-width: 760px) {
     .mh-gm { grid-template-columns: 1fr; }
     .mh-gm-live { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .mh-gm-scene { grid-template-columns: 1fr; }
     .mh-stg-seg button span { display: none; }
   }
   .mh-relnet { margin: 0; width: min(560px, 100%); max-height: 88%; overflow-y: auto; padding: 18px 20px; border-radius: 18px; }
@@ -2665,6 +2703,7 @@ export default function App({ onSignOut }) {
   const [stageTab, setStageTab] = useState(null); // null = sigue lo que muestra el DJ
   const [openHandout, setOpenHandout] = useState(null);
   const [sceneZoom, setSceneZoom] = useState(null);
+  const [editingSceneId, setEditingSceneId] = useState(null);
   const [handoutsSeen, setHandoutsSeen] = useState([]);
   const [handoutDraft, setHandoutDraft] = useState({ kind: "imagen", title: "", image: "", text: "" });
 
@@ -4348,6 +4387,37 @@ export default function App({ onSignOut }) {
     postChat(viewingCampaignId, { kind: "share", author: "El DJ", gm: true, text: "", share: { type: "handout", name: handout.title, sub: "Pista · " + (HANDOUT_KINDS.find((k) => k.key === handout.kind)?.label || ""), handout } });
   };
 
+  const addScene = (preset) => {
+    if (!viewingCampaignId) return;
+    const sc = { id: "s" + Date.now(), title: preset?.title || "Nueva escena", image: preset?.image || "" };
+    saveStage(viewingCampaignId, { scenes: [...stageScenesOf(campaignStage), sc], activeSceneId: activeSceneIdOf(campaignStage) });
+    setEditingSceneId(preset ? null : sc.id);
+  };
+
+  const updateScene = (id, patch) => {
+    const scenes = stageScenesOf(campaignStage).map((sc) => (sc.id === id ? { ...sc, ...patch } : sc));
+    const active = activeSceneIdOf(campaignStage) === id ? scenes.find((sc) => sc.id === id) : null;
+    // La escena en pantalla se copia también en stage.scene, que es lo que leen los jugadores.
+    saveStage(viewingCampaignId, { scenes, activeSceneId: activeSceneIdOf(campaignStage), ...(active ? { scene: { title: active.title, image: active.image } } : {}) });
+  };
+
+  const removeScene = (id) => {
+    const scenes = stageScenesOf(campaignStage).filter((sc) => sc.id !== id);
+    const wasActive = activeSceneIdOf(campaignStage) === id;
+    saveStage(viewingCampaignId, { scenes, activeSceneId: wasActive ? null : activeSceneIdOf(campaignStage), ...(wasActive ? { scene: { title: "", image: "" } } : {}) });
+    if (editingSceneId === id) setEditingSceneId(null);
+  };
+
+  const showScene = async (id) => {
+    const scenes = stageScenesOf(campaignStage);
+    const sc = scenes.find((x) => x.id === id);
+    if (!sc || !viewingCampaignId) return;
+    await saveStage(viewingCampaignId, { scenes, activeSceneId: id, scene: { title: sc.title, image: sc.image }, live: "escena" });
+    postChat(viewingCampaignId, { kind: "event", author: "El DJ", gm: true, icon: "escena", text: "muestra la escena «" + (sc.title || "Sin título") + "»" });
+  };
+
+  const hideScene = () => saveStage(viewingCampaignId, { scenes: stageScenesOf(campaignStage), activeSceneId: null, scene: { title: "", image: "" } });
+
   const showOnStage = async (key) => {
     if (!viewingCampaignId || (campaignStage.live || "escena") === key) return;
     await saveStage(viewingCampaignId, { live: key });
@@ -5098,9 +5168,9 @@ export default function App({ onSignOut }) {
 
                   {campaignDetailTab === "mesa" && (() => {
                     const stage = campaignStage;
-                    const scene = stage.scene || {};
                     const handouts = stage.handouts || [];
-                    const setScene = (patch) => saveStage(viewingCampaignId, { scene: { ...scene, ...patch } });
+                    const scenes = stageScenesOf(stage);
+                    const activeSceneId = activeSceneIdOf(stage);
                     return (
                       <div className="mh-gm">
                         <div className="mh-card mh-gm-box">
@@ -5123,39 +5193,79 @@ export default function App({ onSignOut }) {
                           </div>
                         </div>
 
-                        <div className="mh-card mh-gm-box">
+                        <div className="mh-card mh-gm-box is-wide">
                           <div className="mh-gm-h">
-                            <Clapperboard size={15} /> Escena
+                            <Clapperboard size={15} /> Escenas
+                            {scenes.length > 0 && <span className="mh-gm-count">{scenes.length}</span>}
                           </div>
-                          <div className="mh-gm-scene">
-                            <div className="mh-gm-fields">
-                              <label className="mh-gm-lbl">
-                                Título
-                                <input className="mh-input" placeholder="Las ruinas de Carn Dûr" value={scene.title || ""} onChange={(e) => setScene({ title: e.target.value })} />
-                              </label>
-                              <label className="mh-gm-lbl">
-                                Imagen (enlace)
-                                <input className="mh-input" placeholder="https://…" value={scene.image || ""} onChange={(e) => setScene({ image: e.target.value })} />
-                              </label>
-                            </div>
-                            <div className={"mh-gm-thumb mh-stg-scene" + (scene.image ? "" : " is-blank")} style={scene.image ? { backgroundImage: `url("${scene.image.replace(/"/g, "%22")}")` } : undefined}>
-                              <div className="mh-stg-scene-cap">
-                                <div className="mh-stg-kick">Vista previa</div>
-                                <div className="mh-stg-scene-title">{scene.title || "Sin título"}</div>
-                              </div>
-                            </div>
+                          <div className="mh-gm-sub">Prepara las escenas de la sesión y pulsa «Mostrar» en la que quieras que vean los jugadores.</div>
+                          <div className="mh-gm-scenes">
+                            {scenes.map((sc) => {
+                              const isLive = sc.id === activeSceneId;
+                              const editing = editingSceneId === sc.id;
+                              return (
+                                <div key={sc.id} className={"mh-gm-sc" + (isLive ? " is-live" : "")}>
+                                  <div className={"mh-gm-sc-img" + (sc.image ? "" : " is-blank")} style={sc.image ? { backgroundImage: `url("${sc.image.replace(/"/g, "%22")}")` } : undefined}>
+                                    {isLive && (
+                                      <span className="mh-stg-live">
+                                        <i />
+                                        En pantalla
+                                      </span>
+                                    )}
+                                  </div>
+                                  {editing ? (
+                                    <div className="mh-gm-sc-edit">
+                                      <input className="mh-input" aria-label="Título de la escena" placeholder="Título" value={sc.title} onChange={(e) => updateScene(sc.id, { title: e.target.value })} autoFocus />
+                                      <input className="mh-input" aria-label="Enlace de la imagen" placeholder="Imagen (enlace https://…)" value={sc.image} onChange={(e) => updateScene(sc.id, { image: e.target.value })} />
+                                      <button type="button" className="mh-btn-ghost" onClick={() => setEditingSceneId(null)}>
+                                        <Check size={13} /> Listo
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <div className="mh-gm-sc-t mh-serif" title={sc.title}>{sc.title || "Sin título"}</div>
+                                  )}
+                                  {!editing && (
+                                    <div className="mh-gm-sc-acts">
+                                      {isLive ? (
+                                        <button type="button" className="mh-btn-ghost" onClick={hideScene}>
+                                          <EyeOff size={13} /> Quitar
+                                        </button>
+                                      ) : (
+                                        <button type="button" className="mh-btn" onClick={() => showScene(sc.id)}>
+                                          <Eye size={13} /> Mostrar
+                                        </button>
+                                      )}
+                                      <button type="button" className="mh-gm-ib" aria-label={"Editar " + sc.title} title="Editar" onClick={() => setEditingSceneId(sc.id)}>
+                                        <PenLine size={14} />
+                                      </button>
+                                      <button type="button" className="mh-gm-ib is-del" aria-label={"Borrar " + sc.title} title="Borrar" onClick={() => removeScene(sc.id)}>
+                                        <Trash2 size={14} />
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                            <button type="button" className="mh-gm-sc-add" onClick={() => addScene()}>
+                              <Plus size={18} />
+                              Escena en blanco
+                              <small>con tu propia imagen</small>
+                            </button>
                           </div>
-                          <button
-                            type="button"
-                            className="mh-btn-ghost"
-                            style={{ fontSize: 12, alignSelf: "flex-start" }}
-                            onClick={() => saveStage(viewingCampaignId, { scene: { title: "", image: "" } })}
-                          >
-                            Vaciar escena
-                          </button>
+                          <div className="mh-gm-h2">Plantillas</div>
+                          <div className="mh-gm-presets">
+                            {SCENE_PRESETS.map((pr) => (
+                              <button key={pr.key} type="button" className="mh-gm-preset" title={"Añadir «" + pr.title + "» a tus escenas"} onClick={() => addScene(pr)}>
+                                <span className="mh-gm-preset-img" style={{ backgroundImage: `url("${pr.image}")` }}>
+                                  <Plus size={16} />
+                                </span>
+                                <span className="mh-gm-preset-t">{pr.title}</span>
+                              </button>
+                            ))}
+                          </div>
                         </div>
 
-                        <div className="mh-card mh-gm-box">
+                        <div className="mh-card mh-gm-box is-wide">
                           <div className="mh-gm-h">
                             <ScrollText size={15} /> Pistas para los jugadores
                           </div>
