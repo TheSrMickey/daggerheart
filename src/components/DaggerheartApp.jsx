@@ -1723,8 +1723,6 @@ const sharedStyles = `
   .mh-map-chip.is-placed > svg { color: #6FBF73; }
   .mh-map-chip.is-remove { padding: 5px 10px; color: #C0504A; }
   .mh-map-chip.is-remove > svg { color: #C0504A; }
-  .mh-map-petadd { display: inline-flex; align-items: center; gap: 6px; }
-  .mh-map-petadd .mh-input { width: 150px; font-size: 12px; padding: 5px 9px; }
   .mh-map-tk.is-pet .mh-map-face { width: 66%; height: 66%; border-radius: 50%; background: color-mix(in srgb, var(--tc) 35%, #221C2B); }
   .mh-map-hint { flex-shrink: 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--mh-ink3); }
   .mh-map-hint .mh-stg-live { margin-left: auto; }
@@ -3031,7 +3029,6 @@ export default function App({ onSignOut }) {
   const [campaignMap, setCampaignMap] = useState({ tokens: [] });
   const [mapSel, setMapSel] = useState(null);
   const [foeDraft, setFoeDraft] = useState("");
-  const [petDraft, setPetDraft] = useState("");
   const mapBusy = useRef(0);
   const [campaignEncounters, setCampaignEncounters] = useState([]);
   const [encounterNameDraft, setEncounterNameDraft] = useState("");
@@ -4713,10 +4710,16 @@ export default function App({ onSignOut }) {
   };
 
   // Cambia el tablero partiendo de lo último guardado (otro jugador puede haber movido su ficha).
-  const mutateMap = async (campaignId, fn) => {
-    if (!campaignId) return;
+  // Los cambios se encadenan: si se hacen dos seguidos, el segundo parte de lo que guardó el primero.
+  const mapQueue = useRef(Promise.resolve());
+  const mutateMap = (campaignId, fn) => {
+    if (!campaignId) return Promise.resolve();
     mapBusy.current++;
     setCampaignMap((m) => ({ ...m, tokens: fn(m.tokens || []) }));
+    mapQueue.current = mapQueue.current.then(() => saveMapChange(campaignId, fn));
+    return mapQueue.current;
+  };
+  const saveMapChange = async (campaignId, fn) => {
     try {
       let base = null;
       try {
@@ -8804,12 +8807,9 @@ export default function App({ onSignOut }) {
                                         const myPets = mapTokens.filter((t) => t.kind === "pet" && t.ownerCharId === viewingCharId);
                                         const mineSel = mapTokens.find((t) => t.id === mapSel && ((t.kind === "pc" && t.charId === viewingCharId) || (t.kind === "pet" && t.ownerCharId === viewingCharId)));
                                         const col = classColor(me?.f_class);
-                                        const addPet = () => {
-                                          const name = petDraft.trim();
-                                          if (!name) return;
-                                          placeToken({ kind: "pet", ownerCharId: viewingCharId, name }, charCampaign.id);
-                                          setPetDraft("");
-                                        };
+                                        // Solo el Explorador de Vínculo Bestial tiene compañero animal.
+                                        const hasCompanion = me?.f_class === "Explorador" && me?.f_subclass === "Vínculo Bestial";
+                                        const companionOn = myPets.length > 0;
                                         return (
                                           <div className="mh-map-ptray">
                                             <span className="mh-gm-h2">Tus fichas</span>
@@ -8826,24 +8826,24 @@ export default function App({ onSignOut }) {
                                                 <Plus size={12} />
                                               </button>
                                             )}
-                                            {myPets.map((t) => (
-                                              <span key={t.id} className="mh-map-chip is-placed" title="Ya está en el mapa">
-                                                <i style={{ background: col }}>
-                                                  <PawPrint size={13} />
-                                                </i>
-                                                {t.name}
-                                                <Check size={12} />
-                                              </span>
-                                            ))}
-                                            <span className="mh-map-petadd">
-                                              <input className="mh-input" placeholder="Mascota o compañero…" aria-label="Nombre de la mascota o compañero" value={petDraft} onChange={(e) => setPetDraft(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addPet()} />
-                                              <button type="button" className="mh-map-chip" onClick={addPet} title="Añadir una ficha de mascota o compañero">
-                                                <i style={{ background: col }}>
-                                                  <PawPrint size={13} />
-                                                </i>
-                                                Añadir
-                                              </button>
-                                            </span>
+                                            {hasCompanion &&
+                                              (companionOn ? (
+                                                <span className="mh-map-chip is-placed" title="Ya está en el mapa">
+                                                  <i style={{ background: col }}>
+                                                    <PawPrint size={13} />
+                                                  </i>
+                                                  Compañero animal
+                                                  <Check size={12} />
+                                                </span>
+                                              ) : (
+                                                <button type="button" className="mh-map-chip" onClick={() => placeToken({ kind: "pet", ownerCharId: viewingCharId, name: "Compañero animal" }, charCampaign.id)} title="Colocar a tu compañero animal en el mapa">
+                                                  <i style={{ background: col }}>
+                                                    <PawPrint size={13} />
+                                                  </i>
+                                                  Compañero animal
+                                                  <Plus size={12} />
+                                                </button>
+                                              ))}
                                             {mineSel && (
                                               <button type="button" className="mh-map-chip is-remove" onClick={() => removeToken(mineSel.id, charCampaign.id)}>
                                                 <Trash2 size={12} /> Quitar {mineSel.name}
