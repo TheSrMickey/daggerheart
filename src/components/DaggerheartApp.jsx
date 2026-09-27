@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward } from "lucide-react";
+import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2 } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
 import { Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
@@ -1675,26 +1675,21 @@ const sharedStyles = `
   .mh-dlg-t { font-size: 14px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 9.3em; overflow-y: auto; }
   .mh-dlg-hide { position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: 50%; border: 0; background: rgba(255,255,255,.1); color: #E8D4A0; display: flex; align-items: center; justify-content: center; cursor: pointer; }
   .mh-dlg-hide:hover { background: rgba(255,255,255,.2); }
-  .mh-dlg.is-big .mh-dlg-box { left: 4%; right: 4%; bottom: 4%; padding: 30px 26px 22px; }
-  .mh-dlg.is-big .mh-dlg-name { font-size: 16px; top: -17px; left: 22px; padding: 5px 16px; }
-  .mh-dlg.is-big .mh-dlg-t { font-size: 19px; }
+  .mh-dlg.is-big .mh-dlg-box { left: 3%; right: 3%; bottom: 3.5%; padding: 24px 22px 18px; }
+  .mh-dlg.is-big .mh-dlg-name { font-size: 14px; top: -15px; left: 20px; padding: 5px 14px; }
+  .mh-dlg.is-big .mh-dlg-t { font-size: 16.5px; }
   .mh-dlg.is-mini .mh-dlg-box { left: 8px; right: 8px; bottom: 8px; padding: 16px 12px 10px; }
   .mh-dlg.is-mini .mh-dlg-t { font-size: 12.5px; max-height: 4.7em; }
   .mh-dlg.is-mini .mh-dlg-name { font-size: 11px; top: -11px; }
   @keyframes mh-dlg-fig { from { opacity: 0; translate: -24px 0; } to { opacity: 1; translate: 0 0; } }
   @keyframes mh-dlg-box { from { opacity: 0; translate: 0 10px; } to { opacity: 1; translate: 0 0; } }
-  .mh-stg-zoom-frame { position: relative; display: inline-block; line-height: 0; overflow: hidden; }
-  .mh-stg-zoom-frame .mh-dlg { line-height: normal; }
-  /* Escena ampliada y pistas abiertas: sobre toda la plataforma, no dentro de la caja */
+
+  /* Pistas abiertas: sobre toda la plataforma, no dentro de la caja */
   .mh-stg-fixed { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; padding: 24px; background: rgba(8,6,12,0.62); }
-  .mh-stg-zoom { background: rgba(8,6,12,0.88); cursor: zoom-out; }
-  .mh-stg-zoom figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 14px; cursor: default; max-width: 100%; }
-  .mh-stg-zoom-frame > img { display: block; height: 82vh; width: auto; max-width: min(1600px, 94vw); object-fit: contain; filter: drop-shadow(0 24px 50px rgba(0,0,0,.55)); }
-  .mh-stg-zoom figcaption { display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
-  .mh-stg-zoom figcaption .mh-stg-kick { color: #E8D4A0; }
-  .mh-stg-zoom-t { font-family: 'Cinzel', Georgia, serif; font-weight: 700; font-size: 24px; color: #fff; }
-  .mh-stg-zoom-x { position: absolute; top: 18px; right: 18px; width: 40px; height: 40px; border-radius: 50%; border: 0; background: rgba(255,255,255,.14); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-  .mh-stg-zoom-x:hover { background: rgba(255,255,255,.26); }
+  .mh-stg-scene.is-wide { cursor: default; }
+  .mh-stg-ibtn.is-label { width: auto; padding: 0 10px; gap: 6px; font: 600 11.5px 'Inter', system-ui, sans-serif; }
+  .mh-stg-reduce { align-self: flex-end; margin: -4px 0 8px; display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 8px; border: 1px solid var(--mh-line); background: var(--mh-panel); color: var(--mh-ink3); font: 600 11.5px 'Inter', system-ui, sans-serif; cursor: pointer; flex-shrink: 0; }
+  .mh-stg-reduce:hover { color: var(--mh-ink); border-color: var(--mh-line2); }
   .mh-stg-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; color: var(--mh-muted); font-size: 13px; padding: 30px; border: 1.5px dashed var(--mh-line2); border-radius: 12px; }
   .mh-stg-map { display: grid; gap: 2px; padding: 4px; border-radius: 10px; background: var(--mh-line); border: 1px solid var(--mh-line); flex-shrink: 0; }
   .mh-stg-cell { background: var(--mh-panel); border-radius: 2px; display: flex; align-items: center; justify-content: center; overflow: hidden; min-width: 0; }
@@ -2844,7 +2839,8 @@ export default function App({ onSignOut }) {
   const [campaignStage, setCampaignStage] = useState(EMPTY_STAGE);
   const [stageTab, setStageTab] = useState(null); // null = sigue lo que muestra el DJ
   const [openHandout, setOpenHandout] = useState(null);
-  const [sceneZoom, setSceneZoom] = useState(null);
+  // Escena ampliada dentro de la hoja: ocupa el sitio de las estadísticas y deja el chat a la derecha.
+  const [stageWide, setStageWide] = useState(false);
   const [editingSceneId, setEditingSceneId] = useState(null);
   // Diálogos: reparto de personajes del DJ (nombre + imagen) y la frase que se envía a los jugadores.
   const [campaignCast, setCampaignCast] = useState([]);
@@ -3109,17 +3105,13 @@ export default function App({ onSignOut }) {
     };
   }, [stageCampaignId, gmViewing]);
 
-  // Escape cierra la escena ampliada o la pista abierta.
+  // Escape cierra la pista abierta.
   useEffect(() => {
-    if (!sceneZoom && !openHandout) return;
-    const onKey = (e) => {
-      if (e.key !== "Escape") return;
-      setSceneZoom(null);
-      setOpenHandout(null);
-    };
+    if (!openHandout) return;
+    const onKey = (e) => e.key === "Escape" && setOpenHandout(null);
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [sceneZoom, openHandout]);
+  }, [openHandout]);
 
   // Una pista deja de ser "nueva" cuando el jugador la abre.
   const openHandoutFor = (campaignId, h) => {
@@ -4260,6 +4252,7 @@ export default function App({ onSignOut }) {
   useEffect(() => {
     setQaEdit(null);
     setShowRelNet(false);
+    setStageWide(false);
   }, [viewingCharId]);
 
   const removeQARow = (id, field, rows, index) => {
@@ -6645,7 +6638,7 @@ export default function App({ onSignOut }) {
                       </div>
 
                       <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 18, alignItems: isMobile ? "stretch" : "stretch" }}>
-                        <div style={{ flex: isMobile ? "1 1 auto" : "0 0 320px" }} ref={armaduraRef}>
+                        <div style={{ flex: isMobile ? "1 1 auto" : "0 0 320px", display: stageWide && activeTab === "campaign" && !isMobile ? "none" : undefined }} ref={armaduraRef}>
                             <Panel
                               span={12}
                               title="Armadura y estadísticas"
@@ -8437,6 +8430,7 @@ export default function App({ onSignOut }) {
 
                       {activeTab === "campaign" && charCampaign && (() => {
                         const partyIds = charCampaign.characterIds || [];
+                        const wide = stageWide && !isMobile;
                         const stage = campaignStage;
                         const live = stage.live || "escena";
                         const stTab = stageTab || live;
@@ -8472,9 +8466,19 @@ export default function App({ onSignOut }) {
                           </div>
                         );
                         return (
-                          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(12, 1fr)", gap: 18, flex: 1, minHeight: 0, gridTemplateRows: isMobile ? undefined : "minmax(0, 1fr)" }}>
+                          <div
+                            style={{
+                              display: "grid",
+                              gridTemplateColumns: isMobile ? "1fr" : wide ? "minmax(0, 1fr) clamp(300px, 27.5%, 440px)" : "repeat(12, 1fr)",
+                              gap: 18,
+                              flex: wide && armaduraHeight ? "0 0 auto" : 1,
+                              minHeight: 0,
+                              gridTemplateRows: isMobile ? undefined : "minmax(0, 1fr)",
+                              height: wide && armaduraHeight ? armaduraHeight : undefined,
+                            }}
+                          >
                             <Panel
-                              span={7}
+                              span={wide ? 1 : 7}
                               title={charCampaign.name}
                               titleRight={
                                 <div className="mh-stg-fear" title={`Miedo del DJ: ${fearCount} de 12`}>
@@ -8514,14 +8518,19 @@ export default function App({ onSignOut }) {
                                 })}
                               </div>
 
+                              {wide && stTab !== "escena" && (
+                                <button type="button" className="mh-stg-reduce" onClick={() => setStageWide(false)} title="Reducir y volver a ver las estadísticas">
+                                  <Minimize2 size={13} /> Reducir
+                                </button>
+                              )}
                               <div className="mh-stg-body">
                                 {stTab === "escena" &&
                                   (scene.title || scene.image || dlg ? (
                                     <>
                                       <div
-                                        className={"mh-stg-scene" + (scene.image ? " is-zoomable" : " is-blank")}
+                                        className={"mh-stg-scene" + (scene.image ? "" : " is-blank") + (wide ? " is-wide" : " is-zoomable")}
                                         style={scene.image ? { backgroundImage: `url("${scene.image.replace(/"/g, "%22")}")` } : undefined}
-                                        onClick={scene.image ? () => setSceneZoom({ title: scene.title, image: scene.image }) : undefined}
+                                        onClick={wide ? undefined : () => setStageWide(true)}
                                       >
                                         <div className="mh-stg-scene-top">
                                           {live === "escena" && (
@@ -8530,23 +8539,23 @@ export default function App({ onSignOut }) {
                                               En directo
                                             </span>
                                           )}
-                                          {scene.image && (
-                                            <button
-                                              type="button"
-                                              className="mh-stg-ibtn"
-                                              aria-label="Ver la escena en grande"
-                                              title="Ver en grande"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                setSceneZoom({ title: scene.title, image: scene.image });
-                                              }}
-                                            >
-                                              <Maximize2 size={13} />
-                                            </button>
-                                          )}
+                                          <button
+                                            type="button"
+                                            className={"mh-stg-ibtn" + (wide ? " is-label" : "")}
+                                            aria-label={wide ? "Reducir la escena" : "Ampliar la escena"}
+                                            title={wide ? "Reducir y volver a ver las estadísticas" : "Ampliar la escena"}
+                                            aria-pressed={wide}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setStageWide((v) => !v);
+                                            }}
+                                          >
+                                            {wide ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+                                            {wide && <span>Reducir</span>}
+                                          </button>
                                         </div>
                                         {dlg ? (
-                                          renderDialogue(false)
+                                          renderDialogue(wide)
                                         ) : (
                                           <div className="mh-stg-scene-cap">
                                             <div className="mh-stg-kick">Escena actual</div>
@@ -8702,30 +8711,10 @@ export default function App({ onSignOut }) {
                                 </div>,
                                 document.querySelector(".mh-root") || document.body
                               )}
-                              {sceneZoom && createPortal(
-                                <div className="mh-overlay mh-stg-fixed mh-stg-zoom" role="dialog" aria-label={sceneZoom.title || "Escena"} onClick={() => setSceneZoom(null)}>
-                                  <button type="button" className="mh-stg-zoom-x" aria-label="Cerrar" onClick={() => setSceneZoom(null)}>
-                                    <X size={18} />
-                                  </button>
-                                  <figure className="mh-card-anim" onClick={(e) => e.stopPropagation()}>
-                                    <div className="mh-stg-zoom-frame">
-                                      <img src={sceneZoom.image} alt={sceneZoom.title || "Escena"} />
-                                      {renderDialogue(true)}
-                                    </div>
-                                    {sceneZoom.title && (
-                                      <figcaption>
-                                        <span className="mh-stg-kick">Escena actual</span>
-                                        <span className="mh-stg-zoom-t">{sceneZoom.title}</span>
-                                      </figcaption>
-                                    )}
-                                  </figure>
-                                </div>,
-                                document.querySelector(".mh-root") || document.body
-                              )}
                             </Panel>
 
                             <Panel
-                              span={5}
+                              span={wide ? 1 : 5}
                               title="Chat"
                               hidden={conditions.includes("Escondido")}
                               restrained={conditions.includes("Inmovilizado")}
