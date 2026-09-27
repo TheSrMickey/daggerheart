@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useLayoutEffect, useRef } from "react";
-import { LogOut, Sun, Moon, Settings, Palette } from "lucide-react";
+import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { weaponIcon, armorIcon } from "./gearIcons";
 import { Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
@@ -1444,6 +1444,15 @@ const sharedStyles = `
   }
   .mh-rest-dl:hover:not(:disabled) { border-color: var(--acc); }
   .mh-rest-dl:disabled { opacity: .5; cursor: not-allowed; }
+  .mh-proj {
+    --pc: var(--acc); display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; flex-shrink: 0;
+    border: 1px solid var(--mh-line); border-radius: 12px; background: var(--mh-panel);
+  }
+  .mh-proj.done { --pc: #6FBF73; border-color: color-mix(in srgb, #6FBF73 45%, transparent); background: color-mix(in srgb, #6FBF73 6%, var(--mh-panel)); }
+  .mh-proj-seg { flex: 1; height: 9px; border-radius: 3px; border: 1px solid var(--pc); }
+  .mh-proj-menu-btn { all: unset; cursor: pointer; color: var(--mh-muted3); padding: 2px; border-radius: 6px; display: flex; flex-shrink: 0; }
+  .mh-proj-menu-btn:hover, .mh-proj-menu-btn:focus-visible, .mh-proj-menu-btn[aria-expanded="true"] { color: var(--mh-ink); background: var(--mh-panel3); }
+  .mh-proj-menu { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; border-top: 1px dashed var(--mh-line); font-size: 12px; color: var(--mh-ink3); }
   .mh-holo {
     position: absolute; inset: 0; z-index: 30; pointer-events: none; border-radius: inherit; mix-blend-mode: color-dodge;
     background: linear-gradient(115deg, transparent 10%, rgba(255,80,200,.55) 25%, rgba(120,200,255,.55) 40%, rgba(255,240,120,.55) 55%, rgba(150,255,180,.55) 70%, transparent 85%);
@@ -3931,7 +3940,9 @@ export default function App({ onSignOut }) {
   };
 
   const [projectNameDraft, setProjectNameDraft] = useState("");
-  const [projectCountDraft, setProjectCountDraft] = useState(0);
+  const [projectCountDraft, setProjectCountDraft] = useState(4);
+  const [showProjectForm, setShowProjectForm] = useState(false);
+  const [projectMenu, setProjectMenu] = useState(null);
 
   const getProjects = (c) => {
     try {
@@ -3946,10 +3957,30 @@ export default function App({ onSignOut }) {
     const c = characters[id];
     if (!c) return;
     const list = getProjects(c);
-    list.push({ name, count: Number(projectCountDraft) || 0 });
+    list.push({ name, count: 0, goal: Math.max(1, Number(projectCountDraft) || 4) });
     updateCharacterField(id, "f_projects", JSON.stringify(list));
     setProjectNameDraft("");
-    setProjectCountDraft(0);
+    setProjectCountDraft(4);
+    setShowProjectForm(false);
+  };
+  const setProjectGoal = (id, index, goal) => {
+    const c = characters[id];
+    if (!c) return;
+    const list = getProjects(c);
+    if (!list[index]) return;
+    list[index] = { ...list[index], goal: Math.max(1, Math.min(12, goal)) };
+    updateCharacterField(id, "f_projects", JSON.stringify(list));
+  };
+  // Trabajar en un proyecto: avanza 1 y lo anota en la campaña.
+  const workOnProject = (id, index) => {
+    const c = characters[id];
+    if (!c) return;
+    const p = getProjects(c)[index];
+    if (!p) return;
+    const next = (p.count || 0) + 1;
+    adjustProject(id, index, 1);
+    const done = p.goal && next >= p.goal;
+    postCampaignEvent(id, done ? `🔨 Termina su proyecto «${p.name}».` : `🔨 Trabaja en «${p.name}» (${next}${p.goal ? "/" + p.goal : ""}).`);
   };
   const removeProject = (id, index) => {
     const c = characters[id];
@@ -6387,47 +6418,126 @@ export default function App({ onSignOut }) {
                             {(() => {
                               const projects = getProjects(c);
                               return (
-                                <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
-                                  <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, overflowY: "auto", marginBottom: 12 }}>
-                                    {projects.length === 0 && (
-                                      <div style={{ fontSize: 12, color: "var(--mh-muted)", fontStyle: "italic" }}>Todavía no hay proyectos.</div>
-                                    )}
-                                    {projects.map((p, i) => (
-                                      <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", border: "1px solid var(--mh-line)", borderRadius: 8, padding: "8px 10px" }}>
-                                        <span style={{ fontSize: 12.5, color: "var(--mh-ink)" }}>{p.name}</span>
-                                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                          <button className="mh-btn-ghost" style={{ padding: "2px 7px" }} onClick={() => adjustProject(viewingCharId, i, -1)}>
+                                <div style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1, minHeight: 0, overflowY: "auto" }} className="mh-noscroll">
+                                  {projects.map((p, i) => {
+                                    const goal = Number(p.goal) || 0;
+                                    const count = Number(p.count) || 0;
+                                    const done = goal > 0 && count >= goal;
+                                    const menuOpen = projectMenu === viewingCharId + ":" + i;
+                                    return (
+                                      <div key={i} className={"mh-proj" + (done ? " done" : "")}>
+                                        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+                                          <div style={{ fontSize: 13, fontWeight: 700, color: "var(--mh-ink)", lineHeight: 1.3 }}>{p.name}</div>
+                                          <button
+                                            type="button"
+                                            className="mh-proj-menu-btn"
+                                            aria-label="Opciones del proyecto"
+                                            aria-expanded={menuOpen}
+                                            onClick={() => setProjectMenu(menuOpen ? null : viewingCharId + ":" + i)}
+                                          >
+                                            <MoreVertical size={14} />
+                                          </button>
+                                        </div>
+                                        {goal > 0 && (
+                                          <div style={{ display: "flex", gap: 3 }}>
+                                            {Array.from({ length: goal }, (_, k) => (
+                                              <i key={k} className="mh-proj-seg" style={{ background: k < count ? "var(--pc)" : "transparent" }} />
+                                            ))}
+                                          </div>
+                                        )}
+                                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: 26 }}>
+                                          {done ? (
+                                            <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11.5, fontWeight: 700, color: "var(--mh-green-ink)" }}>
+                                              <Check size={13} strokeWidth={3} /> Terminado
+                                            </span>
+                                          ) : (
+                                            <span style={{ fontSize: 11.5, color: "var(--mh-muted)" }}>{goal ? `${count}/${goal}` : `${count} avances`}</span>
+                                          )}
+                                          {!done && (
+                                            <button type="button" className="mh-btn" style={{ fontSize: 11.5, padding: "5px 10px" }} onClick={() => workOnProject(viewingCharId, i)}>
+                                              <Hammer size={12} /> Trabajar +1
+                                            </button>
+                                          )}
+                                        </div>
+                                        {menuOpen && (
+                                          <div className="mh-proj-menu">
+                                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                              <span>Objetivo</span>
+                                              <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                                <button className="mh-btn-ghost" style={{ padding: "2px 7px" }} aria-label="Menos segmentos" onClick={() => setProjectGoal(viewingCharId, i, (goal || count || 1) - 1)}>
+                                                  <Minus size={11} />
+                                                </button>
+                                                <b style={{ minWidth: 16, textAlign: "center" }}>{goal || "—"}</b>
+                                                <button className="mh-btn-ghost" style={{ padding: "2px 7px" }} aria-label="Más segmentos" onClick={() => setProjectGoal(viewingCharId, i, (goal || count) + 1)}>
+                                                  <Plus size={11} />
+                                                </button>
+                                              </span>
+                                            </div>
+                                            <div style={{ display: "flex", gap: 6 }}>
+                                              <button className="mh-btn-ghost" style={{ flex: 1, justifyContent: "center", fontSize: 11.5 }} disabled={count === 0} onClick={() => adjustProject(viewingCharId, i, -1)}>
+                                                Deshacer 1
+                                              </button>
+                                              <button
+                                                className="mh-btn-ghost"
+                                                style={{ flex: 1, justifyContent: "center", fontSize: 11.5, color: "#D9644E" }}
+                                                onClick={() => {
+                                                  setProjectMenu(null);
+                                                  removeProject(viewingCharId, i);
+                                                }}
+                                              >
+                                                <Trash2 size={12} /> Eliminar
+                                              </button>
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+
+                                  {showProjectForm ? (
+                                    <div className="mh-proj" style={{ gap: 8 }}>
+                                      <input
+                                        className="mh-input"
+                                        placeholder="Nombre del proyecto…"
+                                        value={projectNameDraft}
+                                        autoFocus
+                                        onChange={(e) => setProjectNameDraft(e.target.value)}
+                                        onKeyDown={(e) => {
+                                          if (e.key === "Enter") addProject(viewingCharId);
+                                          if (e.key === "Escape") setShowProjectForm(false);
+                                        }}
+                                      />
+                                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 12, color: "var(--mh-ink3)" }}>
+                                        <span>Segmentos para terminarlo</span>
+                                        <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                          <button className="mh-btn-ghost" style={{ padding: "2px 7px" }} aria-label="Menos segmentos" onClick={() => setProjectCountDraft((v) => Math.max(1, Number(v) - 1))}>
                                             <Minus size={11} />
                                           </button>
-                                          <span style={{ fontSize: 13, fontWeight: 700, color: "var(--mh-gold-ink)", minWidth: 18, textAlign: "center" }}>{p.count}</span>
-                                          <button className="mh-btn-ghost" style={{ padding: "2px 7px" }} onClick={() => adjustProject(viewingCharId, i, 1)}>
+                                          <b style={{ minWidth: 16, textAlign: "center", color: "var(--mh-ink)" }}>{projectCountDraft}</b>
+                                          <button className="mh-btn-ghost" style={{ padding: "2px 7px" }} aria-label="Más segmentos" onClick={() => setProjectCountDraft((v) => Math.min(12, Number(v) + 1))}>
                                             <Plus size={11} />
                                           </button>
-                                          <X size={13} style={{ cursor: "pointer", color: "#D9644E", marginLeft: 4 }} onClick={() => removeProject(viewingCharId, i)} />
-                                        </div>
+                                        </span>
                                       </div>
-                                    ))}
-                                  </div>
-                                  <div style={{ display: "flex", gap: 6 }}>
-                                    <input
-                                      className="mh-input"
-                                      style={{ flex: 1 }}
-                                      placeholder="Nombre del proyecto..."
-                                      value={projectNameDraft}
-                                      onChange={(e) => setProjectNameDraft(e.target.value)}
-                                      onKeyDown={(e) => e.key === "Enter" && addProject(viewingCharId)}
-                                    />
-                                    <input
-                                      className="mh-input"
-                                      type="number"
-                                      style={{ width: 56 }}
-                                      value={projectCountDraft}
-                                      onChange={(e) => setProjectCountDraft(e.target.value)}
-                                    />
-                                    <button className="mh-btn-ghost" onClick={() => addProject(viewingCharId)}>
-                                      Añadir
+                                      <div style={{ display: "flex", gap: 6 }}>
+                                        <button className="mh-btn" style={{ flex: 1, justifyContent: "center" }} disabled={!projectNameDraft.trim()} onClick={() => addProject(viewingCharId)}>
+                                          Añadir proyecto
+                                        </button>
+                                        <button className="mh-btn-ghost" onClick={() => setShowProjectForm(false)}>
+                                          Cancelar
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <button type="button" className="mh-exp-add" style={{ flex: "0 0 auto", padding: 12 }} onClick={() => setShowProjectForm(true)}>
+                                      <Plus size={14} /> Nuevo proyecto
                                     </button>
-                                  </div>
+                                  )}
+                                  {projects.length === 0 && !showProjectForm && (
+                                    <div style={{ fontSize: 11.5, color: "var(--mh-muted)", textAlign: "center", lineHeight: 1.5, padding: "0 6px" }}>
+                                      Durante un descanso largo puedes trabajar en un proyecto: forjar un arma, investigar, reparar algo…
+                                    </div>
+                                  )}
                                 </div>
                               );
                             })()}
