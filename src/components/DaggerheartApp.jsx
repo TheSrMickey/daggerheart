@@ -1647,7 +1647,21 @@ const sharedStyles = `
   /* Diálogo sobre la escena (estilo novela visual) */
   .mh-dlg { position: absolute; inset: 0; pointer-events: none; }
   .mh-dlg > * { pointer-events: auto; }
-  .mh-dlg-fig { position: absolute; left: 0; bottom: 0; height: 78%; max-width: 70%; object-fit: contain; object-position: left bottom; filter: drop-shadow(0 6px 18px rgba(0,0,0,.45)); animation: mh-dlg-fig .45s cubic-bezier(.2,.8,.2,1) both; }
+  .mh-dlg-figwrap { position: absolute; left: 0; bottom: 0; height: 78%; max-width: 70%; display: flex; align-items: flex-end; animation: mh-dlg-fig .45s cubic-bezier(.2,.8,.2,1) both; }
+  .mh-dlg-fig { position: relative; z-index: 1; display: block; height: 100%; width: auto; max-width: 100%; object-fit: contain; object-position: left bottom; filter: drop-shadow(0 6px 18px rgba(0,0,0,.45)); }
+  /* Feliz: halo cálido, destellos que titilan y motas que suben */
+  .mh-dlg-figwrap.is-feliz::before { content: ""; position: absolute; left: -12%; right: -12%; top: -6%; height: 70%; border-radius: 50%; background: radial-gradient(closest-side, rgba(255,214,120,.42), rgba(255,214,120,0)); animation: mh-dlg-halo 2.6s ease-in-out infinite; }
+  .mh-dlg-fx { position: absolute; inset: -8% -14% 28% -14%; z-index: 2; pointer-events: none; }
+  .mh-dlg-fx i {
+    position: absolute; width: calc(18px * var(--k, 1)); height: calc(18px * var(--k, 1)); margin: calc(-9px * var(--k, 1));
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 0 C13 8 16 11 24 12 C16 13 13 16 12 24 C11 16 8 13 0 12 C8 11 11 8 12 0Z' fill='%23FFE6A0'/%3E%3C/svg%3E") center / contain no-repeat;
+    filter: drop-shadow(0 0 4px rgba(255,210,110,.95)); opacity: 0; animation: mh-dlg-spark 1.9s ease-in-out infinite;
+  }
+  .mh-dlg-fx b { position: absolute; bottom: 0; width: 6px; height: 6px; border-radius: 50%; background: #FFE3A0; box-shadow: 0 0 8px 2px rgba(255,200,100,.7); opacity: 0; animation: mh-dlg-mote 3.4s ease-out infinite; }
+  @keyframes mh-dlg-spark { 0%, 100% { opacity: 0; transform: scale(.2) rotate(0deg); } 45% { opacity: 1; transform: scale(1) rotate(35deg); } 70% { opacity: .8; transform: scale(.85) rotate(55deg); } }
+  @keyframes mh-dlg-mote { 0% { opacity: 0; transform: translateY(0) scale(.6); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-120px) scale(1); } }
+  @keyframes mh-dlg-halo { 0%, 100% { opacity: .75; transform: scale(.96); } 50% { opacity: 1; transform: scale(1.04); } }
+  @media (prefers-reduced-motion: reduce) { .mh-dlg-fx, .mh-dlg-figwrap { animation: none !important; } .mh-dlg-fx i, .mh-dlg-fx b { animation: none; opacity: .8; } }
   .mh-dlg-box {
     position: absolute; left: 10px; right: 10px; bottom: 10px; padding: 20px 16px 14px; border-radius: 12px; color: #F4EEE2;
     background: linear-gradient(rgba(20,14,18,.88), rgba(20,14,18,.95)); border: 1px solid rgba(232,212,160,.45); box-shadow: 0 8px 24px rgba(0,0,0,.4);
@@ -1665,7 +1679,7 @@ const sharedStyles = `
   .mh-dlg.is-mini .mh-dlg-name { font-size: 11px; top: -11px; }
   @keyframes mh-dlg-fig { from { opacity: 0; translate: -24px 0; } to { opacity: 1; translate: 0 0; } }
   @keyframes mh-dlg-box { from { opacity: 0; translate: 0 10px; } to { opacity: 1; translate: 0 0; } }
-  .mh-stg-zoom-frame { position: relative; display: inline-block; line-height: 0; }
+  .mh-stg-zoom-frame { position: relative; display: inline-block; line-height: 0; overflow: hidden; }
   .mh-stg-zoom-frame .mh-dlg { line-height: normal; }
   /* Escena ampliada y pistas abiertas: sobre toda la plataforma, no dentro de la caja */
   .mh-stg-fixed { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; padding: 24px; background: rgba(8,6,12,0.62); }
@@ -2482,6 +2496,32 @@ function FeatureCard({ accent, kicker, title, text, footer, footerColor, onClick
   );
 }
 
+// Destellos alrededor del personaje cuando está feliz: [x %, y %, retraso s, tamaño].
+const HAPPY_SPARKS = [
+  [6, 14, 0, 1], [84, 8, 0.45, 0.8], [94, 36, 0.9, 1.1], [0, 44, 1.3, 0.7],
+  [68, 24, 0.2, 0.6], [22, 2, 0.7, 0.9], [98, 62, 1.1, 0.7], [-4, 70, 0.55, 0.85],
+];
+const HAPPY_MOTES = [[14, 0], [50, 0.8], [80, 1.6], [34, 2.2], [66, 2.9]];
+
+function DialogueFigure({ src, alt, expr }) {
+  if (!src) return null;
+  return (
+    <div className={"mh-dlg-figwrap is-" + (expr || "tranquila")}>
+      <img className="mh-dlg-fig" src={src} alt={alt} />
+      {expr === "feliz" && (
+        <span className="mh-dlg-fx" aria-hidden="true">
+          {HAPPY_SPARKS.map(([x, y, d, k], i) => (
+            <i key={i} style={{ left: x + "%", top: y + "%", animationDelay: d + "s", "--k": k }} />
+          ))}
+          {HAPPY_MOTES.map(([x, d], i) => (
+            <b key={i} style={{ left: x + "%", animationDelay: d + "s" }} />
+          ))}
+        </span>
+      )}
+    </div>
+  );
+}
+
 function Panel({ span, title, titleRight, children, hidden, restrained, vulnerable, unconscious }) {
   const borderColor = vulnerable ? "#D9644E" : restrained ? "#C08B5C" : unconscious ? "#A58BE8" : hidden ? "var(--mh-muted)" : "var(--mh-line)";
   return (
@@ -2805,7 +2845,7 @@ export default function App({ onSignOut }) {
   // Diálogos: reparto de personajes del DJ (nombre + imagen) y la frase que se envía a los jugadores.
   const [campaignCast, setCampaignCast] = useState([]);
   const [castImgs, setCastImgs] = useState({});
-  const castImgFetching = useRef(new Set());
+  const castImgFetching = useRef(new Map());
   const [castDraft, setCastDraft] = useState({ name: "", img: "" });
   const [castError, setCastError] = useState("");
   const [dialogueDraft, setDialogueDraft] = useState({ castId: null, text: "", expr: "tranquila" });
@@ -2995,13 +3035,18 @@ export default function App({ onSignOut }) {
   const stageCampaignId = gmViewing ? viewingCampaignId : sheetCampaignId;
   const stageLiveRef = useRef(null);
   const dialogueRef = useRef(undefined);
+  // Última imagen mostrada de cada personaje: si la nueva expresión aún no ha llegado, se mantiene la anterior.
+  const lastFigRef = useRef({ key: null, src: null });
 
   // Las imágenes de los personajes van cada una en su clave: se descargan una sola vez.
-  const ensureCastImg = async (imgId) => {
-    if (!imgId || castImgFetching.current.has(imgId)) return;
-    castImgFetching.current.add(imgId);
-    const r = await safeGet("campaign-img:" + imgId, true);
-    if (r?.value) setCastImgs((m) => ({ ...m, [imgId]: r.value }));
+  const ensureCastImg = (imgId) => {
+    if (!imgId) return Promise.resolve();
+    if (castImgFetching.current.has(imgId)) return castImgFetching.current.get(imgId);
+    const job = safeGet("campaign-img:" + imgId, true).then((r) => {
+      if (r?.value) setCastImgs((m) => ({ ...m, [imgId]: r.value }));
+    });
+    castImgFetching.current.set(imgId, job);
+    return job;
   };
   useEffect(() => {
     if (!stageCampaignId) return;
@@ -3041,7 +3086,9 @@ export default function App({ onSignOut }) {
         if (dialogueRef.current !== undefined && dlgId) setStageTab(null);
         dialogueRef.current = dlgId;
       }
-      if (s.dialogue?.imgId) ensureCastImg(s.dialogue.imgId);
+      // Primero la imagen y luego el diálogo: así el cambio de expresión es un corte limpio.
+      if (s.dialogue?.imgId) await ensureCastImg(s.dialogue.imgId);
+      if (!alive) return;
       setCampaignStage(s);
       if (!isPlayer) return;
       const g = await safeGet("campaign-grid:" + stageCampaignId, true);
@@ -4604,7 +4651,7 @@ export default function App({ onSignOut }) {
     if (castDraft.img) {
       imgId = viewingCampaignId + "-" + id;
       setCastImgs((m) => ({ ...m, [imgId]: castDraft.img }));
-      castImgFetching.current.add(imgId);
+      castImgFetching.current.set(imgId, Promise.resolve());
       await safeSet("campaign-img:" + imgId, castDraft.img, true);
     }
     await saveCast([...campaignCast, { id, name, imgs: imgId ? { tranquila: imgId } : {} }]);
@@ -4632,7 +4679,7 @@ export default function App({ onSignOut }) {
     }
     const imgId = viewingCampaignId + "-" + memberId + "-" + expr + "-" + Date.now();
     setCastImgs((m) => ({ ...m, [imgId]: data }));
-    castImgFetching.current.add(imgId);
+    castImgFetching.current.set(imgId, Promise.resolve());
     await safeSet("campaign-img:" + imgId, data, true);
     const old = castExprImgs(campaignCast.find((m) => m.id === memberId))[expr];
     if (old) safeSet("campaign-img:" + old, "", true);
@@ -5636,7 +5683,7 @@ export default function App({ onSignOut }) {
                                   <div className={"mh-gm-dlg-prev" + (sceneBg ? "" : " is-blank")} style={sceneBg ? { backgroundImage: `url("${sceneBg.replace(/"/g, "%22")}")` } : undefined}>
                                     {who ? (
                                       <div className="mh-dlg is-mini">
-                                        {castImgs[figId] && <img className="mh-dlg-fig" src={castImgs[figId]} alt="" />}
+                                        <DialogueFigure key={who.id} src={castImgs[figId]} alt="" expr={dialogueDraft.expr || "tranquila"} />
                                         <div className="mh-dlg-box">
                                           <span className="mh-dlg-name">{who.name}</span>
                                           <div className="mh-dlg-t">{dialogueDraft.text || "Escribe lo que dice…"}</div>
@@ -8392,10 +8439,14 @@ export default function App({ onSignOut }) {
                         const scene = stage.scene || {};
                         const handouts = stage.handouts || [];
                         const dlg = stage.dialogue && hiddenDialogue !== stage.dialogue.id ? stage.dialogue : null;
+                        const dlgKey = dlg ? dlg.castId || dlg.name : null;
+                        let dlgFig = dlg ? castImgs[dlg.imgId] : null;
+                        if (dlg && !dlgFig && lastFigRef.current.key === dlgKey) dlgFig = lastFigRef.current.src;
+                        if (dlg && dlgFig) lastFigRef.current = { key: dlgKey, src: dlgFig };
                         const renderDialogue = (big) =>
                           dlg && (
                             <div className={"mh-dlg" + (big ? " is-big" : "")} onClick={(e) => e.stopPropagation()}>
-                              {castImgs[dlg.imgId] && <img key={dlg.castId || dlg.name} className="mh-dlg-fig" src={castImgs[dlg.imgId]} alt={dlg.name} />}
+                              <DialogueFigure key={dlg.castId || dlg.name} src={dlgFig} alt={dlg.name} expr={dlg.expr} />
                               <div key={dlg.id} className="mh-dlg-box" role="status" aria-live="polite">
                                 <span className="mh-dlg-name">{dlg.name}</span>
                                 <div className="mh-dlg-t">{dlg.text}</div>
