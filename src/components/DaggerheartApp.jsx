@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useLayoutEffect, useRef } from "react";
-import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio } from "lucide-react";
+import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
 import { Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
@@ -1056,6 +1056,10 @@ const HANDOUT_KINDS = [
   { key: "objeto", label: "Objeto", Icon: Gem },
 ];
 
+// Las acciones automáticas del chat empiezan por un emoji (🎲, 💥, 🐾…): lo usamos como icono.
+const CHAT_EMOJI_RE = /^\s*\p{Extended_Pictographic}(?:️|‍\p{Extended_Pictographic})*\s*/u;
+const CHAT_STAGE_ICONS = { escena: Clapperboard, mapa: MapPinned, pistas: ScrollText, personajes: Users };
+
 const REST_ACTIONS = [
   { key: "heal", label: "Curar heridas" },
   { key: "clearmind", label: "Quitarse el Estrés" },
@@ -1615,6 +1619,60 @@ const sharedStyles = `
   .mh-stg-modal-img { display: block; width: 100%; max-height: 360px; object-fit: cover; background: #1A1620; }
   .mh-stg-modal-text { margin-top: 10px; font-size: 13.5px; line-height: 1.6; color: var(--mh-ink2); white-space: pre-wrap; }
   .mh-stg-modal-text.is-note { font-family: Georgia, serif; font-style: italic; padding: 12px 14px; border-radius: 10px; background: color-mix(in srgb, #E8D4A0 28%, var(--mh-panel)); }
+  /* Chat de campaña: registro unificado */
+  .mh-chat { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; }
+  /* El historial no empuja la altura de la caja: ocupa el hueco que queda y se desplaza dentro. */
+  .mh-chat-box { position: relative; flex: 1; min-height: 160px; }
+  .mh-chat-box > .mh-chat-feed { position: absolute; inset: 0; }
+  .mh-chat-feed { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 9px; padding-right: 2px; }
+  .mh-chat-empty { font-size: 12.5px; color: var(--mh-muted); font-style: italic; }
+  .mh-chat-grow { flex: 1; min-width: 0; }
+  .mh-chat-feed time { font-size: 10px; color: var(--mh-muted); flex-shrink: 0; font-variant-numeric: tabular-nums; }
+  .mh-chat-av { border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-family: 'Cinzel', Georgia, serif; font-weight: 700; }
+  .mh-chat-msg { display: flex; gap: 8px; align-items: flex-start; }
+  .mh-chat-bub { flex: 1; min-width: 0; border: 1px solid var(--mh-line); border-radius: 10px; padding: 7px 11px; background: var(--mh-panel); }
+  .mh-chat-msg.is-me .mh-chat-bub { margin-left: 34px; background: color-mix(in srgb, var(--acc, #C9A24A) 10%, var(--mh-panel)); border-color: color-mix(in srgb, var(--acc, #C9A24A) 40%, var(--mh-line)); }
+  .mh-chat-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 11.5px; }
+  .mh-chat-t { font-size: 13px; color: var(--mh-ink); margin-top: 1px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .mh-chat-ev { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; line-height: 1.45; color: var(--mh-ink2); padding: 1px 2px; }
+  .mh-chat-ev-i { width: 16px; flex-shrink: 0; display: flex; justify-content: center; font-size: 12px; line-height: 17px; padding-top: 1px; }
+  .mh-chat-ev time { padding-top: 2px; }
+  .mh-chat-roll { border: 1px solid var(--mh-line); border-radius: 12px; background: var(--mh-panel); overflow: hidden; flex-shrink: 0; }
+  .mh-chat-roll-h { display: flex; align-items: center; gap: 7px; padding: 7px 11px; font-size: 12px; color: var(--mh-ink3); border-bottom: 1px solid var(--mh-line); }
+  .mh-chat-dc { font-size: 10.5px; color: var(--mh-muted); flex-shrink: 0; }
+  .mh-chat-roll-b { display: flex; align-items: center; gap: 8px; padding: 9px 11px; }
+  .mh-chat-die { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 50px; height: 40px; border: 2px solid; border-radius: 9px; box-sizing: border-box; }
+  .mh-chat-die b { font: 700 16px/1 'Inter', system-ui, sans-serif; }
+  .mh-chat-die small { font-size: 7.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+  .mh-chat-die.is-hope { border-color: #E3B04B; color: color-mix(in srgb, #C8961F var(--mh-accent-keep), #000); }
+  .mh-chat-die.is-fear { border-color: #A58BE8; color: var(--mh-purple-ink); }
+  .mh-chat-mod { font-size: 13px; font-weight: 700; color: var(--mh-muted); }
+  .mh-chat-tot { margin-left: auto; font: 700 26px/1 'Inter', system-ui, sans-serif; color: var(--mh-ink); }
+  .mh-chat-roll-f { font-size: 11.5px; font-weight: 700; padding: 6px 11px; color: color-mix(in srgb, var(--rc) var(--mh-accent-keep), #000); background: color-mix(in srgb, var(--rc) 12%, var(--mh-panel)); }
+  .mh-chat-share-wrap { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+  .mh-chat-share { display: flex; align-items: center; gap: 10px; border: 1px solid var(--mh-line); border-radius: 12px; padding: 9px 10px; background: var(--mh-panel); box-shadow: 0 2px 6px rgba(80,60,30,.08); }
+  .mh-chat-share-art { width: 38px; height: 50px; border-radius: 7px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--sc); background: color-mix(in srgb, var(--sc) 14%, var(--mh-panel)) center / cover no-repeat; }
+  .mh-chat-share-k { font-size: 10.5px; color: var(--mh-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mh-chat-share-t { font-family: 'Cinzel', Georgia, serif; font-weight: 700; font-size: 13.5px; color: var(--mh-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mh-chat-share-s { font-size: 11px; color: var(--mh-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mh-chat-share-c { font-size: 12px; font-style: italic; color: var(--mh-ink3); padding-left: 12px; }
+  .mh-chat-open { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; font: 700 11px 'Inter', system-ui, sans-serif; color: var(--mh-gold-ink); background: transparent; border: 1px solid color-mix(in srgb, #C9A24A 45%, transparent); border-radius: 8px; padding: 5px 8px; cursor: pointer; }
+  .mh-chat-open:hover { background: color-mix(in srgb, #C9A24A 12%, transparent); }
+  .mh-chat-inp { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .mh-chat-plus, .mh-chat-send { width: 38px; height: 38px; flex-shrink: 0; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .mh-chat-plus { border: 1px solid var(--mh-line2); background: var(--mh-panel); color: var(--mh-ink3); }
+  .mh-chat-plus svg { transition: transform .18s; }
+  .mh-chat-plus:hover { color: var(--mh-ink); }
+  .mh-chat-plus.is-on { color: var(--mh-ink); border-color: var(--mh-ink3); }
+  .mh-chat-plus.is-on svg { transform: rotate(45deg); }
+  .mh-chat-send { border: 0; background: var(--mh-ink); color: var(--mh-panel); }
+  .mh-chat-tray { border: 1px solid var(--mh-line); border-radius: 12px; padding: 10px; background: var(--mh-panel2); flex-shrink: 0; animation: mh-fade-in .18s ease both; }
+  .mh-chat-tray-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-muted); }
+  .mh-chat-tray-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 6px; max-height: 176px; overflow-y: auto; }
+  .mh-chat-tile { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 5px; border: 1px solid var(--mh-line); border-radius: 9px; background: var(--mh-panel); cursor: pointer; font: inherit; color: inherit; }
+  .mh-chat-tile:hover { border-color: var(--sc); box-shadow: 0 0 0 2px color-mix(in srgb, var(--sc) 25%, transparent); }
+  .mh-chat-tile-art { width: 100%; height: 40px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--sc); background: color-mix(in srgb, var(--sc) 14%, var(--mh-panel)) center / cover no-repeat; }
+  .mh-chat-tile-t { width: 100%; font-size: 10px; font-weight: 600; color: var(--mh-ink2); text-align: center; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   /* Mesa del DJ (vista del DJ) */
   .mh-gm { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; max-width: 1100px; align-items: start; }
   .mh-gm-box { margin: 0; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; }
@@ -2546,6 +2604,7 @@ export default function App({ onSignOut }) {
   const [campaignDetailTab, setCampaignDetailTab] = useState("mesa");
   const [campaignChat, setCampaignChat] = useState([]);
   const [campaignChatDraft, setCampaignChatDraft] = useState("");
+  const [showShareTray, setShowShareTray] = useState(false);
   const [campaignGrid, setCampaignGrid] = useState({ cells: {} });
   const [campaignGridTool, setCampaignGridTool] = useState("pared");
   const [pendingCellLabel, setPendingCellLabel] = useState(null);
@@ -2718,12 +2777,15 @@ export default function App({ onSignOut }) {
   }, [viewingCharId, campaigns]);
 
   // Mesa del DJ: el DJ la carga una vez al abrir la campaña; el jugador la consulta cada pocos segundos desde su hoja.
-  const stageCampaignId = viewingCampaignId || Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(viewingCharId))?.id || null;
+  // Quién mira: el DJ desde la campaña abierta o el jugador desde la hoja de su personaje.
+  const gmViewing = view === "campaigns" && !!viewingCampaignId;
+  const sheetCampaignId = view === "ficha" && viewingCharId ? Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(viewingCharId))?.id || null : null;
+  const stageCampaignId = gmViewing ? viewingCampaignId : sheetCampaignId;
   const stageLiveRef = useRef(null);
   useEffect(() => {
     if (!stageCampaignId) return;
     let alive = true;
-    const isPlayer = !viewingCampaignId && !!viewingCharId;
+    const isPlayer = !gmViewing;
     stageLiveRef.current = null;
     setOpenHandout(null);
     try {
@@ -2731,6 +2793,15 @@ export default function App({ onSignOut }) {
     } catch (e) {
       setHandoutsSeen([]);
     }
+    // El chat se refresca en las dos vistas; la mesa, solo en la del jugador (el DJ es quien la edita).
+    const loadChat = async () => {
+      const ch = await safeGet("campaign-chat:" + stageCampaignId, true);
+      if (!alive || !ch) return;
+      try {
+        const list = JSON.parse(ch.value);
+        setCampaignChat((prev) => (prev.length === list.length && prev[prev.length - 1]?.ts === list[list.length - 1]?.ts ? prev : list));
+      } catch (e) {}
+    };
     const load = async () => {
       const r = await safeGet("campaign-stage:" + stageCampaignId, true);
       let s = EMPTY_STAGE;
@@ -2751,12 +2822,13 @@ export default function App({ onSignOut }) {
       if (alive && f) setFearCount(parseInt(f.value, 10) || 0);
     };
     load();
-    const timer = isPlayer ? setInterval(load, 8000) : null;
+    loadChat();
+    const timer = setInterval(() => (isPlayer ? load().then(loadChat) : loadChat()), 6000);
     return () => {
       alive = false;
-      if (timer) clearInterval(timer);
+      clearInterval(timer);
     };
-  }, [stageCampaignId, viewingCampaignId, !!viewingCharId]);
+  }, [stageCampaignId, gmViewing]);
 
   // Una pista deja de ser "nueva" cuando el jugador la abre.
   const openHandoutFor = (campaignId, h) => {
@@ -3952,24 +4024,181 @@ export default function App({ onSignOut }) {
     updateCampaign(campaignId, { characterIds: camp.characterIds.filter((cid) => cid !== charId) });
   };
 
-  const getActiveCampaignIdForChat = () => {
-    if (viewingCampaignId) return viewingCampaignId;
-    if (viewingCharId) {
-      const camp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(viewingCharId));
-      return camp ? camp.id : null;
+  const getActiveCampaignIdForChat = () => stageCampaignId;
+
+  // Chat de campaña: mensajes (msg), acciones (event), tiradas (roll) y cartas u objetos compartidos (share).
+  const CHAT_LIMIT = 150;
+  const postChat = async (campaignId, entry) => {
+    if (!campaignId) return;
+    let list = [];
+    try {
+      const existing = await safeGet("campaign-chat:" + campaignId, true);
+      list = existing ? JSON.parse(existing.value) : [];
+    } catch (e) {
+      list = [];
     }
-    return null;
+    const next = [...list, { ts: Date.now(), ...entry }].slice(-CHAT_LIMIT);
+    await safeSet("campaign-chat:" + campaignId, JSON.stringify(next), true);
+    if (getActiveCampaignIdForChat() === campaignId) setCampaignChat(next);
+  };
+
+  // Autor de lo que se escribe: el personaje si estás en su hoja; si no, el jugador (o el DJ desde la campaña).
+  const chatAuthor = () => {
+    const ch = !gmViewing && viewingCharId ? characters[viewingCharId] : null;
+    return ch
+      ? { author: ch.f_name || "Un personaje", charId: viewingCharId, cls: ch.f_class || "", player: playerName || "" }
+      : gmViewing
+      ? { author: "El DJ", gm: true, player: playerName || "" }
+      : { author: playerName || "Alguien en la mesa", player: playerName || "" };
   };
 
   const sendCampaignChat = async () => {
     const text = campaignChatDraft.trim();
     const campaignId = getActiveCampaignIdForChat();
     if (!text || !campaignId) return;
-    const who = playerName || "Alguien en la mesa";
-    const next = [...campaignChat, { author: who, text, ts: Date.now() }].slice(-80);
-    setCampaignChat(next);
     setCampaignChatDraft("");
-    await safeSet("campaign-chat:" + campaignId, JSON.stringify(next), true);
+    await postChat(campaignId, { kind: "msg", text, ...chatAuthor() });
+  };
+
+  const chatColor = (m) => (m.gm ? "#6A4DC2" : m.cls ? classColor(m.cls) : "#C9A24A");
+  const chatInitial = (m) => (m.gm ? "DJ" : (m.author || "?").trim().charAt(0).toUpperCase());
+  const shareVisual = (sh) => {
+    if (sh.type === "domain") return { Icon: DOMAIN_ICONS[sh.detail?.domain?.name] || Sparkles, color: sh.color || "#C9A24A" };
+    if (sh.type === "weapon") return { Icon: weaponIcon(sh.name), color: "var(--acc, #C9A24A)" };
+    if (sh.type === "armor") return { Icon: armorIcon(sh.name), color: "var(--acc, #C9A24A)" };
+    if (sh.type === "handout") return { Icon: (HANDOUT_KINDS.find((k) => k.key === sh.handout?.kind) || HANDOUT_KINDS[0]).Icon, color: "#B8862E" };
+    const v = itemVisual(sh.name);
+    return { Icon: v.Icon, color: v.color };
+  };
+
+  // Una sola línea de tiempo: mensajes, acciones, tiradas y cartas compartidas.
+  const renderChatFeed = (list, meCharId) =>
+    list.map((m, i) => {
+      const kind = m.kind || (CHAT_EMOJI_RE.test(m.text || "") ? "event" : "msg");
+      const col = chatColor(m);
+      const time = new Date(m.ts).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+      const key = (m.ts || 0) + "-" + i;
+      const avatar = (size) => (
+        <span className="mh-chat-av" style={{ width: size, height: size, fontSize: m.gm ? size * 0.36 : size * 0.45, background: col, color: m.gm ? "#fff" : onColor(col.startsWith("#") ? col : "#C9A24A") }}>
+          {chatInitial(m)}
+        </span>
+      );
+
+      if (kind === "roll" && m.roll) {
+        const r = m.roll;
+        const crit = r.hope === r.fear;
+        const withHope = r.hope > r.fear;
+        const success = r.dc ? crit || r.total >= r.dc : null;
+        const base = crit ? "Éxito crítico" : (success === null ? "Con " : success ? "Éxito con " : "Fallo con ") + (withHope ? "Esperanza" : "Miedo");
+        const note = crit ? "+1 Esperanza y −1 Estrés" : withHope ? "+1 Esperanza" : "el DJ gana 1 Miedo";
+        const vcol = crit ? "#7FB77A" : withHope ? "#E3B04B" : "#A58BE8";
+        const extra = (r.adv ? ` + ${r.adv} ventaja` : "") + (r.wolf ? ` + ${r.wolf} lobo` : "");
+        return (
+          <div key={key} className="mh-chat-roll" style={{ "--rc": vcol }}>
+            <div className="mh-chat-roll-h">
+              <Dices size={13} />
+              <span className="mh-chat-grow">
+                <b style={{ color: ink(col) }}>{m.author}</b> tira {r.trait}
+                {r.card ? " · " + r.card : r.weapon ? " · " + r.weapon : ""}
+              </span>
+              {r.dc ? <span className="mh-chat-dc">Dificultad {r.dc}</span> : null}
+              <time>{time}</time>
+            </div>
+            <div className="mh-chat-roll-b">
+              <span className="mh-chat-die is-hope">
+                <b>{r.hope}</b>
+                <small>Esperanza</small>
+              </span>
+              <span className="mh-chat-die is-fear">
+                <b>{r.fear}</b>
+                <small>Miedo</small>
+              </span>
+              <span className="mh-chat-mod">
+                {(r.mod >= 0 ? "+" : "−") + Math.abs(r.mod || 0)}
+                {extra}
+              </span>
+              <span className="mh-chat-tot">{r.total}</span>
+            </div>
+            <div className="mh-chat-roll-f">
+              {base} · {note}
+            </div>
+          </div>
+        );
+      }
+
+      if (kind === "share" && m.share) {
+        const sh = m.share;
+        const vis = shareVisual(sh);
+        const VIcon = vis.Icon;
+        const img = sh.type === "handout" ? sh.handout?.image : sh.image;
+        const canOpen = sh.type !== "handout" || !gmViewing;
+        return (
+          <div key={key} className="mh-chat-share-wrap">
+            <div className="mh-chat-share" style={{ "--sc": vis.color }}>
+              <span className="mh-chat-share-art" style={img ? { backgroundImage: `url("${img.replace(/"/g, "%22")}")` } : undefined}>
+                {!img && <VIcon size={20} strokeWidth={1.8} />}
+              </span>
+              <div className="mh-chat-grow" style={{ minWidth: 0 }}>
+                <div className="mh-chat-share-k">
+                  <b style={{ color: ink(col) }}>{m.author}</b> {sh.type === "handout" ? "entrega una pista" : "muestra"} · {time}
+                </div>
+                <div className="mh-chat-share-t">{sh.name}</div>
+                {sh.sub && <div className="mh-chat-share-s">{sh.sub}</div>}
+              </div>
+              {canOpen && (
+                <button type="button" className="mh-chat-open" title={sh.type === "handout" ? "Ver la pista" : "Ver la carta"} onClick={() => (sh.type === "handout" ? setOpenHandout(sh.handout) : setViewingCardDetail(sh.detail))}>
+                  <Eye size={12} /> Ver
+                </button>
+              )}
+            </div>
+            {m.text && <div className="mh-chat-share-c">«{m.text}»</div>}
+          </div>
+        );
+      }
+
+      if (kind === "event") {
+        const match = (m.text || "").match(CHAT_EMOJI_RE);
+        const body = match ? m.text.slice(match[0].length) : m.text || "";
+        const SIcon = m.gm ? CHAT_STAGE_ICONS[m.icon] || Clapperboard : null;
+        const named = body.startsWith(m.author);
+        return (
+          <div key={key} className="mh-chat-ev">
+            <span className="mh-chat-ev-i" style={{ color: ink(col) }}>
+              {SIcon ? <SIcon size={13} /> : match ? match[0].trim() : "•"}
+            </span>
+            <span className="mh-chat-grow">
+              {!named && <b style={{ color: ink(col) }}>{m.author} </b>}
+              {body}
+            </span>
+            <time>{time}</time>
+          </div>
+        );
+      }
+
+      const mine = meCharId ? m.charId === meCharId : !!m.gm;
+      return (
+        <div key={key} className={"mh-chat-msg" + (mine ? " is-me" : "")}>
+          {!mine && avatar(26)}
+          <div className="mh-chat-bub">
+            <div className="mh-chat-h">
+              <b style={{ color: ink(col) }} title={m.player && m.player !== m.author ? "Jugador: " + m.player : undefined}>
+                {m.author}
+              </b>
+              <time>{time}</time>
+            </div>
+            <div className="mh-chat-t">{m.text}</div>
+          </div>
+        </div>
+      );
+    });
+
+  const shareToChat = async (share) => {
+    const campaignId = getActiveCampaignIdForChat();
+    if (!campaignId) return;
+    const text = campaignChatDraft.trim();
+    setCampaignChatDraft("");
+    setShowShareTray(false);
+    await postChat(campaignId, { kind: "share", text, share, ...chatAuthor() });
   };
 
   const clearCampaignChat = async () => {
@@ -3978,20 +4207,11 @@ export default function App({ onSignOut }) {
     await safeSet("campaign-chat:" + viewingCampaignId, JSON.stringify([]), true);
   };
 
-  const postCampaignEvent = async (charId, text) => {
+  const postCampaignEvent = async (charId, text, extra) => {
     const camp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(charId));
     if (!camp) return;
-    const author = characters[charId]?.f_name || "Un personaje";
-    let list = [];
-    try {
-      const existing = await safeGet("campaign-chat:" + camp.id, true);
-      list = existing ? JSON.parse(existing.value) : [];
-    } catch (e) {
-      list = [];
-    }
-    const next = [...list, { author, text, ts: Date.now() }].slice(-80);
-    await safeSet("campaign-chat:" + camp.id, JSON.stringify(next), true);
-    if (viewingCampaignId === camp.id || getActiveCampaignIdForChat() === camp.id) setCampaignChat(next);
+    const ch = characters[charId];
+    await postChat(camp.id, { kind: "event", author: ch?.f_name || "Un personaje", charId, cls: ch?.f_class || "", text, ...extra });
   };
 
   const paintCell = async (x, y) => {
@@ -4064,6 +4284,15 @@ export default function App({ onSignOut }) {
     const handout = { id: "h" + Date.now(), kind: d.kind, title: d.title.trim(), image: d.image.trim(), text: d.text.trim(), ts: Date.now() };
     await saveStage(viewingCampaignId, { handouts: [handout, ...(campaignStage.handouts || [])] });
     setHandoutDraft({ kind: d.kind, title: "", image: "", text: "" });
+    postChat(viewingCampaignId, { kind: "share", author: "El DJ", gm: true, text: "", share: { type: "handout", name: handout.title, sub: "Pista · " + (HANDOUT_KINDS.find((k) => k.key === handout.kind)?.label || ""), handout } });
+  };
+
+  const showOnStage = async (key) => {
+    if (!viewingCampaignId || (campaignStage.live || "escena") === key) return;
+    await saveStage(viewingCampaignId, { live: key });
+    const title = campaignStage.scene?.title;
+    const what = { escena: title ? "la escena «" + title + "»" : "la escena", mapa: "el mapa", pistas: "las pistas", personajes: "los personajes" }[key];
+    postChat(viewingCampaignId, { kind: "event", author: "El DJ", gm: true, icon: key, text: "muestra " + what });
   };
 
   const removeHandout = (id) => saveStage(viewingCampaignId, { handouts: (campaignStage.handouts || []).filter((h) => h.id !== id) });
@@ -4393,10 +4622,14 @@ export default function App({ onSignOut }) {
       const success = total >= cardContext.dc;
       await postCampaignEvent(
         charId,
-        `🃏 ${cardContext.name}: ${success ? "Éxito" : "Fracaso"} (${total} vs Dificultad ${cardContext.dc})`
+        `🃏 ${cardContext.name}: ${success ? "Éxito" : "Fracaso"} (${total} vs Dificultad ${cardContext.dc})`,
+        { kind: "roll", roll: { trait: traitLabel, card: cardContext.name, hope, fear, mod: traitValue, adv: advantageRoll, wolf: wolfBonus, total, dc: cardContext.dc } }
       );
     } else {
-      await postCampaignEvent(charId, `🎲 Tirada de ${traitLabel}: ${hope} + ${fear} ${modStr}${advStr} = ${total} (${text})`);
+      await postCampaignEvent(charId, `🎲 Tirada de ${traitLabel}: ${hope} + ${fear} ${modStr}${advStr} = ${total} (${text})`, {
+        kind: "roll",
+        roll: { trait: traitLabel, weapon: weapon?.name || "", hope, fear, mod: traitValue, adv: advantageRoll, wolf: wolfBonus, total },
+      });
     }
   };
 
@@ -4819,7 +5052,7 @@ export default function App({ onSignOut }) {
                               const TIcon = t.Icon;
                               const on = (stage.live || "escena") === t.key;
                               return (
-                                <button key={t.key} type="button" className={on ? "is-on" : ""} aria-pressed={on} onClick={() => saveStage(viewingCampaignId, { live: t.key })}>
+                                <button key={t.key} type="button" className={on ? "is-on" : ""} aria-pressed={on} onClick={() => showOnStage(t.key)}>
                                   <TIcon size={15} />
                                   {t.label}
                                   {on && <i className="mh-stg-dot" />}
@@ -4974,21 +5207,11 @@ export default function App({ onSignOut }) {
                         onClick={clearCampaignChat}
                       />
                       <div style={{ fontSize: 11.5, color: "var(--mh-muted)", marginBottom: 12, paddingRight: 24 }}>
-                        Chat compartido de la campaña. Los mensajes llevan tu nombre de jugador.
+                        Chat de la campaña: mensajes, tiradas y acciones de la mesa. Lo que escribas aquí sale como el DJ.
                       </div>
-                      <div ref={chatScrollRef} style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 360, overflowY: "auto", marginBottom: 14 }}>
-                        {campaignChat.length === 0 && (
-                          <div style={{ fontSize: 12.5, color: "var(--mh-muted)", fontStyle: "italic" }}>Todavía no hay mensajes.</div>
-                        )}
-                        {campaignChat.map((m, i) => (
-                          <div key={i} style={{ border: "1px solid var(--mh-line)", borderRadius: 8, padding: "8px 12px" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
-                              <span style={{ fontSize: 11.5, fontWeight: 700, color: "var(--mh-gold-ink)" }}>{m.author}</span>
-                              <span style={{ fontSize: 10, color: "var(--mh-muted)" }}>{new Date(m.ts).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}</span>
-                            </div>
-                            <div style={{ fontSize: 13, color: "var(--mh-ink)", whiteSpace: "pre-wrap" }}>{m.text}</div>
-                          </div>
-                        ))}
+                      <div ref={chatScrollRef} className="mh-chat-feed" style={{ maxHeight: 460, marginBottom: 14 }}>
+                        {campaignChat.length === 0 && <div className="mh-chat-empty">Todavía no hay mensajes.</div>}
+                        {renderChatFeed(campaignChat, null)}
                       </div>
                       <div style={{ display: "flex", gap: 8 }}>
                         <input
@@ -7558,7 +7781,7 @@ export default function App({ onSignOut }) {
                           </div>
                         );
                         return (
-                          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(12, 1fr)", gap: 18, flex: 1 }}>
+                          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(12, 1fr)", gap: 18, flex: 1, minHeight: 0, gridTemplateRows: isMobile ? undefined : "minmax(0, 1fr)" }}>
                             <Panel
                               span={7}
                               title={charCampaign.name}
@@ -7786,31 +8009,137 @@ export default function App({ onSignOut }) {
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
                             >
-                              <div style={{ display: "flex", flexDirection: "column" }}>
-                                <div ref={chatScrollRef} style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 320, overflowY: "auto", marginBottom: 12 }}>
-                                  {campaignChat.length === 0 && (
-                                    <div style={{ fontSize: 12.5, color: "var(--mh-muted)", fontStyle: "italic" }}>Todavía no hay mensajes.</div>
-                                  )}
-                                  {campaignChat.map((m, i) => (
-                                    <div key={i} style={{ border: "1px solid var(--mh-line)", borderRadius: 8, padding: "8px 12px" }}>
-                                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
-                                        <span style={{ fontSize: 11.5, fontWeight: 700, color: "var(--mh-gold-ink)" }}>{m.author}</span>
-                                        <span style={{ fontSize: 10, color: "var(--mh-muted)" }}>{new Date(m.ts).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}</span>
-                                      </div>
-                                      <div style={{ fontSize: 13, color: "var(--mh-ink)", whiteSpace: "pre-wrap" }}>{m.text}</div>
-                                    </div>
-                                  ))}
+                              <div className="mh-chat">
+                                <div className="mh-chat-box">
+                                  <div ref={chatScrollRef} className="mh-chat-feed">
+                                    {campaignChat.length === 0 && <div className="mh-chat-empty">Todavía no hay mensajes. Aquí aparecerán también las tiradas y acciones de la mesa.</div>}
+                                    {renderChatFeed(campaignChat, viewingCharId)}
+                                  </div>
                                 </div>
-                                <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                                {showShareTray && (() => {
+                                  const shareables = [];
+                                  domainCardKeys.forEach((k) => {
+                                    const cd = findDomainCard(k);
+                                    if (!cd) return;
+                                    shareables.push({
+                                      type: "domain",
+                                      name: cd.key,
+                                      sub: `Carta de dominio · ${cd.domain} · Nivel ${cd.level}`,
+                                      color: DOMAIN_COLORS[cd.domain] || "#C9A24A",
+                                      image: cd.image || "",
+                                      detail: {
+                                        kicker: `${cd.domain} · ${cd.type} · Nivel ${cd.level} · Recuperación ${cd.recall}`,
+                                        title: cd.key,
+                                        text: cd.text,
+                                        image: cd.image,
+                                        accent: DOMAIN_COLORS[cd.domain] || "#C9A24A",
+                                        domain: { name: cd.domain, type: cd.type, level: cd.level, recall: cd.recall },
+                                        bigStyle: true,
+                                        tags: [cd.type, "Nivel " + cd.level, "Recuperación " + cd.recall],
+                                      },
+                                    });
+                                  });
+                                  const weaponShare = (w, label) => {
+                                    const handsLabel = w.hands === 2 ? "Dos manos" : "Una mano";
+                                    return {
+                                      type: "weapon",
+                                      name: w.key,
+                                      sub: `${label} · ${w.damage}`,
+                                      detail: {
+                                        kicker: label,
+                                        title: w.key,
+                                        text: w.trait !== "—" ? `${w.trait} · ${w.range} · ${w.damage} · ${handsLabel}` : `${w.damage} · ${handsLabel}`,
+                                        weapon: { damage: w.damage, trait: w.trait, range: w.range, hands: handsLabel },
+                                        showCharacteristic: true,
+                                        characteristic: w.feature,
+                                        bigStyle: true,
+                                        tier: w.tier,
+                                      },
+                                    };
+                                  };
+                                  const armorShare = (a) => ({
+                                    type: "armor",
+                                    name: a.key,
+                                    sub: `Armadura · Puntuación ${a.score}`,
+                                    detail: {
+                                      kicker: "Armadura",
+                                      title: a.key,
+                                      text: `Puntuación ${a.score} · Umbrales base ${a.major}/${a.severe}`,
+                                      armor: { score: a.score, major: a.major, severe: a.severe },
+                                      showCharacteristic: true,
+                                      characteristic: a.feature,
+                                      bigStyle: true,
+                                      tier: a.tier,
+                                    },
+                                  });
+                                  if (primaryWeapon) shareables.push(weaponShare(primaryWeapon, "Arma principal"));
+                                  if (secondaryWeapon) shareables.push(weaponShare(secondaryWeapon, "Arma secundaria"));
+                                  if (armorEntry) shareables.push(armorShare(armorEntry));
+                                  items.forEach((it) => {
+                                    const pw = PRIMARY_WEAPONS.find((w) => w.key === it.name);
+                                    const sw = SECONDARY_WEAPONS.find((w) => w.key === it.name);
+                                    const ar = ARMORS.find((a) => a.key === it.name);
+                                    if (pw || sw) return shareables.push(weaponShare(pw || sw, pw ? "Arma principal" : "Arma secundaria"));
+                                    if (ar) return shareables.push(armorShare(ar));
+                                    const v = itemVisual(it.name);
+                                    shareables.push({
+                                      type: "item",
+                                      name: it.name,
+                                      sub: v.kind + (it.count > 1 ? ` · x${it.count}` : ""),
+                                      detail: { kicker: v.kind, title: it.name, text: it.count > 1 ? `Cantidad: ${it.count}` : "Un objeto del inventario de " + (c.f_name || "este personaje") + ".", bigStyle: true },
+                                    });
+                                  });
+                                  return (
+                                    <div className="mh-chat-tray">
+                                      <div className="mh-chat-tray-h">
+                                        <span>Elige qué enseñar a la mesa</span>
+                                        <button type="button" className="mh-inv-x" aria-label="Cerrar" onClick={() => setShowShareTray(false)}>
+                                          <X size={14} />
+                                        </button>
+                                      </div>
+                                      {shareables.length === 0 ? (
+                                        <div className="mh-chat-empty" style={{ padding: 10 }}>No tienes cartas ni objetos que compartir.</div>
+                                      ) : (
+                                        <div className="mh-chat-tray-grid">
+                                          {shareables.map((sh, k) => {
+                                            const vis = shareVisual(sh);
+                                            const VIcon = vis.Icon;
+                                            return (
+                                              <button key={sh.type + sh.name + k} type="button" className="mh-chat-tile" style={{ "--sc": vis.color }} title={sh.sub} onClick={() => shareToChat(sh)}>
+                                                <span className="mh-chat-tile-art" style={sh.image ? { backgroundImage: `url("${sh.image}")` } : undefined}>
+                                                  {!sh.image && <VIcon size={18} strokeWidth={1.8} />}
+                                                </span>
+                                                <span className="mh-chat-tile-t">{sh.name}</span>
+                                              </button>
+                                            );
+                                          })}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })()}
+                                <div className="mh-chat-inp">
+                                  <button
+                                    type="button"
+                                    className={"mh-chat-plus" + (showShareTray ? " is-on" : "")}
+                                    aria-label="Compartir una carta u objeto"
+                                    title="Compartir una carta u objeto"
+                                    aria-expanded={showShareTray}
+                                    onClick={() => setShowShareTray((v) => !v)}
+                                  >
+                                    <Plus size={16} />
+                                  </button>
                                   <input
                                     className="mh-input"
-                                    style={{ flex: 1 }}
-                                    placeholder="Escribe un mensaje..."
+                                    style={{ flex: 1, minWidth: 0 }}
+                                    placeholder={showShareTray ? "Añade un comentario (opcional)…" : "Escribe un mensaje…"}
                                     value={campaignChatDraft}
                                     onChange={(e) => setCampaignChatDraft(e.target.value)}
                                     onKeyDown={(e) => e.key === "Enter" && sendCampaignChat()}
                                   />
-                                  <button className="mh-btn" onClick={sendCampaignChat}>Enviar</button>
+                                  <button type="button" className="mh-chat-send" aria-label="Enviar" onClick={sendCampaignChat}>
+                                    <Send size={15} />
+                                  </button>
                                 </div>
                               </div>
                             </Panel>
