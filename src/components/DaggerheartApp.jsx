@@ -1362,12 +1362,12 @@ const sharedStyles = `
   .mh-cardc-foot b { color: var(--mh-ink); }
   /* Armas y armadura: cada pieza es su carta en pequeño (mismo arte, color de rareza y cifra principal) */
   .mh-eq {
-    position: relative; flex: 1; min-height: 0; display: flex; cursor: pointer; overflow: hidden; border-radius: 14px;
-    border: 2px solid var(--cc);
+    position: relative; flex: 1; min-height: 0; display: flex; cursor: pointer; overflow: hidden; border-radius: 12px;
+    border: 1px solid color-mix(in srgb, var(--cc) 45%, transparent);
     background: linear-gradient(color-mix(in srgb, var(--cc) 10%, transparent), color-mix(in srgb, var(--cc) 3%, transparent)), var(--mh-panel);
     transition: transform .15s, box-shadow .15s;
   }
-  .mh-eq:hover { transform: translateY(-1px); box-shadow: 0 6px 16px color-mix(in srgb, var(--cc) 22%, transparent); }
+  .mh-eq:hover { transform: translateY(-1px); border-color: color-mix(in srgb, var(--cc) 70%, transparent); box-shadow: 0 6px 16px color-mix(in srgb, var(--cc) 22%, transparent); }
   .mh-eq:focus-visible { outline: 2px solid var(--cc); outline-offset: 2px; }
   .mh-eq-art {
     position: relative; width: 96px; flex-shrink: 0; margin: 6px 0 6px 6px; border-radius: 10px;
