@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote } from "lucide-react";
+import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
 import { Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
@@ -1856,6 +1856,27 @@ const sharedStyles = `
   .mh-gm-dlg-hint { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,.8); font-size: 12.5px; }
   .mh-gm-dlg-acts { display: flex; gap: 8px; flex-wrap: wrap; }
   .mh-gm-dlg-acts button { display: inline-flex; align-items: center; gap: 6px; }
+  .mh-gm-lines { display: flex; flex-direction: column; gap: 10px; padding-top: 14px; border-top: 1px solid var(--mh-line); }
+  .mh-gm-lines-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .mh-gm-lines-h .mh-gm-h2 { display: flex; align-items: center; gap: 8px; margin: 0; }
+  .mh-gm-lines-acts { display: flex; gap: 8px; }
+  .mh-gm-lines-acts button { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; }
+  .mh-gm-linelist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .mh-gm-line { display: flex; align-items: center; gap: 10px; padding: 7px 8px; border: 1px solid var(--mh-line); border-radius: 10px; background: var(--mh-panel); }
+  .mh-gm-line.is-live { border-color: color-mix(in srgb, #D9644E 60%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, #D9644E 12%, transparent); }
+  .mh-gm-line.is-editing { border-color: #C9A24A; border-style: dashed; }
+  .mh-gm-line-n { width: 20px; flex-shrink: 0; text-align: center; font-size: 11px; font-weight: 700; color: var(--mh-muted); }
+  .mh-gm-line-img { width: 40px; height: 40px; flex-shrink: 0; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; color: var(--mh-muted); background: radial-gradient(circle at 50% 35%, #6E7F8C, #2B3A4F); }
+  .mh-gm-line-img img { width: 100%; height: 100%; object-fit: cover; object-position: center 15%; }
+  .mh-gm-line-b { flex: 1; min-width: 0; }
+  .mh-gm-line-who { display: flex; align-items: center; gap: 8px; font-size: 12px; flex-wrap: wrap; }
+  .mh-gm-line-who b { color: var(--mh-ink); }
+  .mh-gm-line-who > span:not(.mh-stg-live) { font-size: 10.5px; font-weight: 600; color: var(--mh-muted); border: 1px solid var(--mh-line2); border-radius: 10px; padding: 0 6px; }
+  .mh-gm-line-t { font-size: 12.5px; color: var(--mh-ink2); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mh-gm-line-acts { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+  .mh-gm-line-acts .mh-btn { font-size: 12px; padding: 6px 10px; display: inline-flex; align-items: center; gap: 5px; margin-right: 4px; }
+  .mh-gm-line-acts .mh-gm-ib { width: 28px; height: 28px; }
+  .mh-gm-ib:disabled { opacity: .35; cursor: default; }
   .mh-gm-dlg-now { font-size: 12px; color: var(--mh-ink3); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .mh-gm-dlg-now b { color: var(--mh-ink); }
   .mh-gm-item-art { flex: none; width: 38px; height: 38px; border-radius: 8px; }
@@ -2789,6 +2810,9 @@ export default function App({ onSignOut }) {
   const [castError, setCastError] = useState("");
   const [dialogueDraft, setDialogueDraft] = useState({ castId: null, text: "", expr: "tranquila" });
   const [hiddenDialogue, setHiddenDialogue] = useState(null);
+  // Diálogos preparados por el DJ: se guardan en orden y se muestran cuando toca.
+  const [dialogueLines, setDialogueLines] = useState([]);
+  const [editingLineId, setEditingLineId] = useState(null);
   const [handoutsSeen, setHandoutsSeen] = useState([]);
   const [handoutDraft, setHandoutDraft] = useState({ kind: "imagen", title: "", image: "", text: "" });
 
@@ -2876,6 +2900,13 @@ export default function App({ onSignOut }) {
       setCampaignCast(castList);
       castList.forEach((m) => Object.values(castExprImgs(m)).forEach(ensureCastImg));
       setDialogueDraft({ castId: castList[0]?.id || null, text: "", expr: "tranquila" });
+      const lines = await safeGet("campaign-lines:" + viewingCampaignId, true);
+      let lineList = [];
+      try {
+        lineList = lines ? JSON.parse(lines.value) : [];
+      } catch (e) {}
+      setDialogueLines(lineList);
+      setEditingLineId(null);
       setCampaignDetailTab("mesa");
       setPendingCellLabel(null);
     })();
@@ -4620,6 +4651,53 @@ export default function App({ onSignOut }) {
     postChat(viewingCampaignId, { kind: "msg", author: m.name, gm: true, npc: true, text });
   };
 
+  const saveLines = async (next) => {
+    setDialogueLines(next);
+    await safeSet("campaign-lines:" + viewingCampaignId, JSON.stringify(next), true);
+  };
+
+  const saveLineDraft = async () => {
+    const text = dialogueDraft.text.trim();
+    if (!dialogueDraft.castId || !text || !viewingCampaignId) return;
+    const line = { castId: dialogueDraft.castId, expr: dialogueDraft.expr || "tranquila", text };
+    if (editingLineId) await saveLines(dialogueLines.map((l) => (l.id === editingLineId ? { ...l, ...line } : l)));
+    else await saveLines([...dialogueLines, { id: "l" + Date.now(), ...line }]);
+    setEditingLineId(null);
+    setDialogueDraft((d) => ({ ...d, text: "" }));
+  };
+
+  const editLine = (line) => {
+    setEditingLineId(line.id);
+    setDialogueDraft({ castId: line.castId, expr: line.expr || "tranquila", text: line.text });
+  };
+
+  const cancelEditLine = () => {
+    setEditingLineId(null);
+    setDialogueDraft((d) => ({ ...d, text: "" }));
+  };
+
+  const removeLine = (id) => {
+    saveLines(dialogueLines.filter((l) => l.id !== id));
+    if (editingLineId === id) cancelEditLine();
+  };
+
+  const moveLine = (id, dir) => {
+    const i = dialogueLines.findIndex((l) => l.id === id);
+    const j = i + dir;
+    if (i < 0 || j < 0 || j >= dialogueLines.length) return;
+    const next = [...dialogueLines];
+    [next[i], next[j]] = [next[j], next[i]];
+    saveLines(next);
+  };
+
+  const showLine = async (line) => {
+    const m = campaignCast.find((x) => x.id === line.castId);
+    if (!m || !viewingCampaignId) return;
+    const expr = line.expr || "tranquila";
+    await saveStage(viewingCampaignId, { dialogue: { id: "d" + Date.now(), lineId: line.id, castId: m.id, name: m.name, expr, imgId: castImgIdFor(m, expr), text: line.text }, live: "escena" });
+    postChat(viewingCampaignId, { kind: "msg", author: m.name, gm: true, npc: true, text: line.text });
+  };
+
   const clearDialogue = () => saveStage(viewingCampaignId, { dialogue: null });
 
   const hideScene = () => saveStage(viewingCampaignId, { scenes: stageScenesOf(campaignStage), activeSceneId: null, scene: { title: "", image: "" } });
@@ -5576,29 +5654,109 @@ export default function App({ onSignOut }) {
                                 placeholder="¿Otra ronda? La casa invita… si me contáis qué buscabais en las ruinas."
                                 value={dialogueDraft.text}
                                 onChange={(e) => setDialogueDraft((d) => ({ ...d, text: e.target.value }))}
-                                onKeyDown={(e) => e.key === "Enter" && (e.ctrlKey || e.metaKey) && sendDialogue()}
+                                onKeyDown={(e) => e.key === "Enter" && (e.ctrlKey || e.metaKey) && saveLineDraft()}
                               />
                               <div className="mh-gm-dlg-acts">
-                                <button type="button" className="mh-btn" disabled={!dialogueDraft.castId || !dialogueDraft.text.trim()} onClick={sendDialogue}>
-                                  <Send size={14} /> Enviar a los jugadores
+                                <button type="button" className="mh-btn" disabled={!dialogueDraft.castId || !dialogueDraft.text.trim()} onClick={saveLineDraft}>
+                                  {editingLineId ? <Check size={14} /> : <Plus size={14} />} {editingLineId ? "Guardar cambios" : "Añadir a la lista"}
                                 </button>
-                                {stage.dialogue && (
-                                  <button type="button" className="mh-btn-ghost" onClick={clearDialogue}>
-                                    <EyeOff size={14} /> Retirar diálogo
+                                {editingLineId ? (
+                                  <button type="button" className="mh-btn-ghost" onClick={cancelEditLine}>
+                                    Cancelar
+                                  </button>
+                                ) : (
+                                  <button type="button" className="mh-btn-ghost" disabled={!dialogueDraft.castId || !dialogueDraft.text.trim()} onClick={sendDialogue} title="Enviar sin guardarlo en la lista">
+                                    <Send size={14} /> Enviar ya
                                   </button>
                                 )}
                               </div>
-                              {stage.dialogue && (
-                                <div className="mh-gm-dlg-now">
-                                  <span className="mh-stg-live is-soft">
-                                    <i />
-                                    En pantalla
-                                  </span>
-                                  <b>{stage.dialogue.name}:</b> «{stage.dialogue.text}»
-                                </div>
-                              )}
                             </div>
                           </div>
+
+                          {(() => {
+                            const liveLineIdx = stage.dialogue?.lineId ? dialogueLines.findIndex((l) => l.id === stage.dialogue.lineId) : -1;
+                            const nextLine = liveLineIdx >= 0 ? dialogueLines[liveLineIdx + 1] : null;
+                            return (
+                              <div className="mh-gm-lines">
+                                <div className="mh-gm-lines-h">
+                                  <div className="mh-gm-h2">
+                                    Diálogos preparados {dialogueLines.length > 0 && <span className="mh-gm-count">{dialogueLines.length}</span>}
+                                  </div>
+                                  <div className="mh-gm-lines-acts">
+                                    {nextLine && (
+                                      <button type="button" className="mh-btn" onClick={() => showLine(nextLine)} title={"Mostrar: «" + nextLine.text + "»"}>
+                                        <SkipForward size={14} /> Siguiente
+                                      </button>
+                                    )}
+                                    {stage.dialogue && (
+                                      <button type="button" className="mh-btn-ghost" onClick={clearDialogue}>
+                                        <EyeOff size={14} /> Retirar diálogo
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                                {stage.dialogue && liveLineIdx < 0 && (
+                                  <div className="mh-gm-dlg-now">
+                                    <span className="mh-stg-live is-soft">
+                                      <i />
+                                      En pantalla
+                                    </span>
+                                    <b>{stage.dialogue.name}:</b> «{stage.dialogue.text}»
+                                  </div>
+                                )}
+                                {dialogueLines.length === 0 ? (
+                                  <div className="mh-chat-empty">Escribe una frase arriba y pulsa «Añadir a la lista». Luego podrás mostrarlas cuando toque, en el orden que quieras.</div>
+                                ) : (
+                                  <ol className="mh-gm-linelist">
+                                    {dialogueLines.map((l, i) => {
+                                      const m = campaignCast.find((x) => x.id === l.castId);
+                                      const ex = EXPRESSIONS.find((e) => e.key === (l.expr || "tranquila"));
+                                      const img = m ? castImgs[castImgIdFor(m, l.expr || "tranquila")] : null;
+                                      const isLive = stage.dialogue?.lineId === l.id;
+                                      return (
+                                        <li key={l.id} className={"mh-gm-line" + (isLive ? " is-live" : "") + (editingLineId === l.id ? " is-editing" : "")}>
+                                          <span className="mh-gm-line-n">{i + 1}</span>
+                                          <span className="mh-gm-line-img">{img ? <img src={img} alt="" /> : <User size={16} />}</span>
+                                          <div className="mh-gm-line-b">
+                                            <div className="mh-gm-line-who">
+                                              <b>{m ? m.name : "Personaje eliminado"}</b>
+                                              <span>{ex?.label}</span>
+                                              {isLive && (
+                                                <span className="mh-stg-live is-soft">
+                                                  <i />
+                                                  En pantalla
+                                                </span>
+                                              )}
+                                            </div>
+                                            <div className="mh-gm-line-t">{l.text}</div>
+                                          </div>
+                                          <div className="mh-gm-line-acts">
+                                            {!isLive && (
+                                              <button type="button" className="mh-btn" disabled={!m} onClick={() => showLine(l)}>
+                                                <Eye size={13} /> Mostrar
+                                              </button>
+                                            )}
+                                            <button type="button" className="mh-gm-ib" aria-label="Subir" title="Subir" disabled={i === 0} onClick={() => moveLine(l.id, -1)}>
+                                              <ChevronUp size={14} />
+                                            </button>
+                                            <button type="button" className="mh-gm-ib" aria-label="Bajar" title="Bajar" disabled={i === dialogueLines.length - 1} onClick={() => moveLine(l.id, 1)}>
+                                              <ChevronDown size={14} />
+                                            </button>
+                                            <button type="button" className="mh-gm-ib" aria-label="Editar" title="Editar" onClick={() => editLine(l)}>
+                                              <PenLine size={14} />
+                                            </button>
+                                            <button type="button" className="mh-gm-ib is-del" aria-label="Borrar" title="Borrar" onClick={() => removeLine(l.id)}>
+                                              <Trash2 size={14} />
+                                            </button>
+                                          </div>
+                                        </li>
+                                      );
+                                    })}
+                                  </ol>
+                                )}
+                              </div>
+                            );
+                          })()}
                         </div>
 
                         <div className="mh-card mh-gm-box is-wide">
