@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useLayoutEffect, useRef } from "react";
-import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine } from "lucide-react";
+import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
 import { Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
@@ -1042,6 +1042,20 @@ const GRID_TOOLS = [
   { key: "niebla", label: "Niebla", color: "#ECE6DA" },
 ];
 
+const EMPTY_STAGE = { live: "escena", scene: { title: "", image: "", narration: "" }, handouts: [] };
+const STAGE_TABS = [
+  { key: "escena", label: "Escena", Icon: Clapperboard },
+  { key: "mapa", label: "Mapa", Icon: MapPinned },
+  { key: "pistas", label: "Pistas", Icon: ScrollText },
+  { key: "personajes", label: "Personajes", Icon: Users },
+];
+const HANDOUT_KINDS = [
+  { key: "imagen", label: "Imagen", Icon: ImageIcon },
+  { key: "nota", label: "Nota", Icon: ScrollText },
+  { key: "personaje", label: "Personaje", Icon: User },
+  { key: "objeto", label: "Objeto", Icon: Gem },
+];
+
 const REST_ACTIONS = [
   { key: "heal", label: "Curar heridas" },
   { key: "clearmind", label: "Quitarse el Estrés" },
@@ -1525,6 +1539,111 @@ const sharedStyles = `
     color: var(--mh-gold-ink); border: 1px solid color-mix(in srgb, var(--acc) 45%, transparent);
   }
   .mh-qa-net-btn:hover, .mh-qa-net-btn:focus-visible { background: color-mix(in srgb, var(--acc) 12%, transparent); }
+  /* Mesa del DJ (vista del jugador) */
+  .mh-stg-fear { display: flex; align-items: center; gap: 7px; font-family: 'Inter', system-ui, sans-serif; }
+  .mh-stg-fear > span:first-child { font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-purple-ink); }
+  .mh-stg-fear-pips { display: flex; gap: 3px; }
+  .mh-stg-fear-pips i { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid color-mix(in srgb, #A58BE8 45%, transparent); box-sizing: border-box; }
+  .mh-stg-fear-pips i.on { background: #A58BE8; border-color: #A58BE8; }
+  .mh-stg-fear b { font-size: 12px; color: var(--mh-purple-ink); min-width: 14px; text-align: right; }
+  .mh-stg-seg { display: flex; gap: 3px; padding: 3px; border-radius: 11px; background: var(--mh-panel2); border: 1px solid var(--mh-line); flex-shrink: 0; margin-bottom: 12px; }
+  .mh-stg-seg button { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 4px; border: 0; border-radius: 8px; background: transparent; color: var(--mh-ink3); font: 600 12px 'Inter', system-ui, sans-serif; cursor: pointer; transition: background .15s, color .15s; }
+  .mh-stg-seg button span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mh-stg-seg button:hover { color: var(--mh-ink); }
+  .mh-stg-seg button.is-on { background: var(--mh-panel); color: var(--mh-ink); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+  .mh-stg-dot { width: 7px; height: 7px; border-radius: 50%; background: #D9644E; flex-shrink: 0; animation: mh-stg-pulse 1.6s ease-in-out infinite; }
+  @keyframes mh-stg-pulse { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, #D9644E 55%, transparent); } 50% { box-shadow: 0 0 0 4px color-mix(in srgb, #D9644E 0%, transparent); } }
+  .mh-stg-cnt { font-size: 9.5px; font-weight: 700; color: #fff; background: #B8862E; border-radius: 10px; padding: 0 5px; line-height: 15px; }
+  .mh-stg-body { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+  .mh-stg-kick { font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+  .mh-stg-scene { position: relative; flex: 1 0 240px; max-height: 380px; border-radius: 12px; overflow: hidden; background: #2B3A4F center / cover no-repeat; display: flex; flex-direction: column; justify-content: space-between; }
+  .mh-stg-scene.is-blank { background-image: radial-gradient(circle at 78% 22%, #F3E3B8 0 22px, transparent 23px), linear-gradient(#2B3A4F, #6E7F8C 58%, #C9A879); }
+  .mh-stg-scene-top { display: flex; justify-content: flex-end; gap: 6px; padding: 10px; }
+  .mh-stg-live { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #fff; background: rgba(192,80,74,.92); border-radius: 20px; padding: 3px 9px; }
+  .mh-stg-live i { width: 7px; height: 7px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 3px rgba(255,255,255,.3); }
+  .mh-stg-live.is-soft { background: color-mix(in srgb, #D9644E 14%, transparent); color: color-mix(in srgb, #C0504A var(--mh-accent-keep), #000); }
+  .mh-stg-live.is-soft i { background: #D9644E; box-shadow: none; }
+  .mh-stg-ibtn { width: 26px; height: 26px; border-radius: 7px; border: 0; background: rgba(0,0,0,.4); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .mh-stg-ibtn:hover { background: rgba(0,0,0,.6); }
+  .mh-stg-scene-cap { padding: 26px 16px 14px; background: linear-gradient(transparent, rgba(10,8,14,.85)); }
+  .mh-stg-scene-cap .mh-stg-kick { color: #E8D4A0; }
+  .mh-stg-scene-title { font-family: 'Cinzel', Georgia, serif; font-weight: 700; font-size: 19px; color: #fff; line-height: 1.2; }
+  .mh-stg-narr { border-left: 3px solid #C9A24A; padding: 7px 12px; border-radius: 0 8px 8px 0; background: color-mix(in srgb, #C9A24A 10%, var(--mh-panel)); flex-shrink: 0; }
+  .mh-stg-narr .mh-stg-kick { color: var(--mh-gold-ink); }
+  .mh-stg-narr-t { font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 13.5px; line-height: 1.55; color: var(--mh-ink2); margin-top: 2px; white-space: pre-wrap; }
+  .mh-stg-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; color: var(--mh-muted); font-size: 13px; padding: 30px; border: 1.5px dashed var(--mh-line2); border-radius: 12px; }
+  .mh-stg-map { display: grid; gap: 2px; padding: 4px; border-radius: 10px; background: var(--mh-line); border: 1px solid var(--mh-line); flex-shrink: 0; }
+  .mh-stg-cell { background: var(--mh-panel); border-radius: 2px; display: flex; align-items: center; justify-content: center; overflow: hidden; min-width: 0; }
+  .mh-stg-cell.is-fog { background: #2A2433; }
+  .mh-stg-cell span { font-size: 8px; font-weight: 700; color: #fff; text-shadow: 0 0 3px rgba(0,0,0,.9); text-align: center; line-height: 1; padding: 1px; word-break: break-word; }
+  .mh-stg-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; font-size: 11.5px; color: var(--mh-ink3); }
+  .mh-stg-legend > span { display: inline-flex; align-items: center; gap: 5px; }
+  .mh-stg-legend > span > i { width: 11px; height: 11px; border-radius: 3px; }
+  .mh-stg-legend > span > i.is-fog { background: #2A2433; }
+  .mh-stg-legend .mh-stg-live { margin-left: auto; }
+  .mh-stg-hgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-content: start; }
+  .mh-stg-hand { display: flex; flex-direction: column; height: 150px; padding: 0; border: 1px solid var(--mh-line); border-radius: 12px; overflow: hidden; background: var(--mh-panel); cursor: pointer; text-align: left; font: inherit; color: inherit; box-shadow: 0 2px 6px rgba(80,60,30,.08); transition: transform .15s, box-shadow .15s; }
+  .mh-stg-hand:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(80,60,30,.16); }
+  .mh-stg-hand.is-wide { grid-column: span 2; height: 200px; }
+  .mh-stg-hand-art { position: relative; }
+  .mh-stg-hand-art .mh-stg-new { position: absolute; top: 8px; right: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.25); }
+  .mh-stg-hand-art { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; background: color-mix(in srgb, #C9A24A 14%, var(--mh-panel2)) center / cover no-repeat; color: var(--mh-gold-ink); overflow: hidden; }
+  .mh-stg-hand-art.is-nota { background-color: color-mix(in srgb, #E8D4A0 32%, var(--mh-panel)); align-items: flex-start; justify-content: flex-start; }
+  .mh-stg-hand-art.is-personaje { background-color: color-mix(in srgb, #8C6A3F 18%, var(--mh-panel)); }
+  .mh-stg-hand-art.is-imagen { background-color: color-mix(in srgb, #6E7F8C 22%, var(--mh-panel)); }
+  .mh-stg-hand-note { font-family: Georgia, serif; font-style: italic; font-size: 11.5px; line-height: 1.45; color: var(--mh-ink2); padding: 36px 12px 10px; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  .mh-stg-hand-foot { display: flex; align-items: center; gap: 7px; padding: 8px 10px; border-top: 1px solid var(--mh-line); color: var(--mh-gold-ink); flex-shrink: 0; }
+  .mh-stg-hand-meta { flex: 1; min-width: 0; }
+  .mh-stg-hand-title { font-size: 12px; font-weight: 700; color: var(--mh-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mh-stg-hand-kind { font-size: 10.5px; color: var(--mh-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mh-stg-new { font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #fff; background: #B8862E; border-radius: 20px; padding: 2px 7px; flex-shrink: 0; }
+  .mh-stg-party { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; }
+  .mh-stg-pc { display: flex; gap: 10px; align-items: flex-start; padding: 10px 11px; border: 1px solid var(--mh-line); border-radius: 12px; background: var(--mh-panel); cursor: pointer; text-align: left; font: inherit; color: inherit; }
+  .mh-stg-pc:hover { border-color: var(--mh-line2); }
+  .mh-stg-pc.is-me { cursor: default; border-color: color-mix(in srgb, var(--acc, #E3B04B) 55%, var(--mh-line)); }
+  .mh-stg-av { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-family: 'Cinzel', Georgia, serif; font-weight: 700; font-size: 14px; background-size: cover; background-position: center; }
+  .mh-stg-av.is-npc { background-color: #8C6A3F; color: #fff; }
+  .mh-stg-pc-name { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; color: var(--mh-ink); }
+  .mh-stg-me { font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--mh-muted); border: 1px solid var(--mh-line2); border-radius: 10px; padding: 0 5px; }
+  .mh-stg-pc-sub { font-size: 11px; color: var(--mh-muted); margin: 1px 0 5px; }
+  .mh-stg-clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 0; }
+  .mh-stg-pips { display: flex; flex-wrap: wrap; gap: 2px; margin-top: 3px; }
+  .mh-stg-pips i { width: 8px; height: 8px; border-radius: 2px; background: var(--mh-line); }
+  .mh-stg-pips i.is-hp { background: #D9644E; }
+  .mh-stg-pips i.is-st { background: #7C6BD6; }
+  .mh-stg-modal { margin: 0; padding: 0; width: min(560px, 100%); max-height: 90%; overflow-y: auto; border-radius: 18px; }
+  .mh-stg-modal-img { display: block; width: 100%; max-height: 360px; object-fit: cover; background: #1A1620; }
+  .mh-stg-modal-text { margin-top: 10px; font-size: 13.5px; line-height: 1.6; color: var(--mh-ink2); white-space: pre-wrap; }
+  .mh-stg-modal-text.is-note { font-family: Georgia, serif; font-style: italic; padding: 12px 14px; border-radius: 10px; background: color-mix(in srgb, #E8D4A0 28%, var(--mh-panel)); }
+  /* Mesa del DJ (vista del DJ) */
+  .mh-gm { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; max-width: 1100px; align-items: start; }
+  .mh-gm-box { margin: 0; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; }
+  .mh-gm-box:first-child { grid-column: 1 / -1; }
+  .mh-gm-h { display: flex; align-items: center; gap: 8px; font-family: 'Cinzel', Georgia, serif; font-weight: 700; font-size: 15px; color: var(--mh-ink); }
+  .mh-gm-sub { font-size: 12px; color: var(--mh-muted); margin-top: -6px; }
+  .mh-gm-live { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .mh-gm-live button { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 8px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel); color: var(--mh-ink3); font: 600 13px 'Inter', system-ui, sans-serif; cursor: pointer; }
+  .mh-gm-live button:hover { color: var(--mh-ink); border-color: var(--mh-line2); }
+  .mh-gm-live button.is-on { color: var(--mh-ink); border-color: #D9644E; background: color-mix(in srgb, #D9644E 9%, var(--mh-panel)); }
+  .mh-gm-scene { display: grid; grid-template-columns: minmax(0, 1fr) 190px; gap: 12px; }
+  .mh-gm-fields { display: flex; flex-direction: column; gap: 8px; }
+  .mh-gm-lbl { display: flex; flex-direction: column; gap: 4px; font-size: 11.5px; font-weight: 600; color: var(--mh-ink3); }
+  .mh-gm-lbl textarea, .mh-gm-form textarea { resize: vertical; font-family: inherit; }
+  .mh-gm-thumb { flex: none; height: 100%; min-height: 170px; max-height: none; justify-content: flex-end; }
+  .mh-gm-thumb .mh-stg-scene-title { font-size: 14px; }
+  .mh-gm-kinds { display: flex; flex-wrap: wrap; gap: 6px; }
+  .mh-gm-kinds button { display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 20px; border: 1px solid var(--mh-line); background: var(--mh-panel); color: var(--mh-ink3); font: 600 12px 'Inter', system-ui, sans-serif; cursor: pointer; }
+  .mh-gm-kinds button.is-on { background: var(--mh-ink); color: var(--mh-panel); border-color: var(--mh-ink); }
+  .mh-gm-form { display: flex; flex-direction: column; gap: 8px; }
+  .mh-gm-list { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--mh-line); padding-top: 12px; }
+  .mh-gm-item { display: flex; align-items: center; gap: 10px; }
+  .mh-gm-item-art { flex: none; width: 38px; height: 38px; border-radius: 8px; }
+  @media (max-width: 760px) {
+    .mh-gm { grid-template-columns: 1fr; }
+    .mh-gm-live { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .mh-gm-scene { grid-template-columns: 1fr; }
+    .mh-stg-seg button span { display: none; }
+  }
   .mh-relnet { margin: 0; width: min(560px, 100%); max-height: 88%; overflow-y: auto; padding: 18px 20px; border-radius: 18px; }
   .mh-relnet-lbl { fill: var(--mh-panel); stroke: var(--mh-line2); }
   .mh-relnet-lbl-t { font-size: 10.5px; fill: var(--mh-ink3); font-family: 'Inter', system-ui, sans-serif; }
@@ -2424,7 +2543,7 @@ export default function App({ onSignOut }) {
   const [newCampaignDesc, setNewCampaignDesc] = useState("");
   const [showNewCampaignForm, setShowNewCampaignForm] = useState(false);
   const [pendingDeleteCampaignId, setPendingDeleteCampaignId] = useState(null);
-  const [campaignDetailTab, setCampaignDetailTab] = useState("resumen");
+  const [campaignDetailTab, setCampaignDetailTab] = useState("mesa");
   const [campaignChat, setCampaignChat] = useState([]);
   const [campaignChatDraft, setCampaignChatDraft] = useState("");
   const [campaignGrid, setCampaignGrid] = useState({ cells: {} });
@@ -2434,6 +2553,12 @@ export default function App({ onSignOut }) {
   const [campaignEncounters, setCampaignEncounters] = useState([]);
   const [encounterNameDraft, setEncounterNameDraft] = useState("");
   const [encounterNotesDraft, setEncounterNotesDraft] = useState("");
+  // Mesa del DJ: lo que el DJ enseña a los jugadores (escena, mapa, pistas, personajes).
+  const [campaignStage, setCampaignStage] = useState(EMPTY_STAGE);
+  const [stageTab, setStageTab] = useState(null); // null = sigue lo que muestra el DJ
+  const [openHandout, setOpenHandout] = useState(null);
+  const [handoutsSeen, setHandoutsSeen] = useState([]);
+  const [handoutDraft, setHandoutDraft] = useState({ kind: "imagen", title: "", image: "", text: "" });
 
   const [rollMod, setRollMod] = useState(0);
   const [rollDifficulty, setRollDifficulty] = useState("");
@@ -2511,7 +2636,7 @@ export default function App({ onSignOut }) {
       setCampaignGrid(grid ? JSON.parse(grid.value) : { cells: {} });
       const enc = await safeGet("campaign-encounters:" + viewingCampaignId, true);
       setCampaignEncounters(enc ? JSON.parse(enc.value) : []);
-      setCampaignDetailTab("resumen");
+      setCampaignDetailTab("mesa");
       setPendingCellLabel(null);
     })();
   }, [viewingCampaignId]);
@@ -2591,6 +2716,58 @@ export default function App({ onSignOut }) {
       setCampaignChat(chat ? JSON.parse(chat.value) : []);
     })();
   }, [viewingCharId, campaigns]);
+
+  // Mesa del DJ: el DJ la carga una vez al abrir la campaña; el jugador la consulta cada pocos segundos desde su hoja.
+  const stageCampaignId = viewingCampaignId || Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(viewingCharId))?.id || null;
+  const stageLiveRef = useRef(null);
+  useEffect(() => {
+    if (!stageCampaignId) return;
+    let alive = true;
+    const isPlayer = !viewingCampaignId && !!viewingCharId;
+    stageLiveRef.current = null;
+    setOpenHandout(null);
+    try {
+      setHandoutsSeen(JSON.parse(localStorage.getItem("mh-seen:" + stageCampaignId) || "[]"));
+    } catch (e) {
+      setHandoutsSeen([]);
+    }
+    const load = async () => {
+      const r = await safeGet("campaign-stage:" + stageCampaignId, true);
+      let s = EMPTY_STAGE;
+      try {
+        if (r) s = { ...EMPTY_STAGE, ...JSON.parse(r.value) };
+      } catch (e) {}
+      if (!alive) return;
+      // Si el DJ cambia lo que muestra, la caja del jugador vuelve a seguirle.
+      if (stageLiveRef.current !== s.live) {
+        stageLiveRef.current = s.live;
+        setStageTab(null);
+      }
+      setCampaignStage(s);
+      if (!isPlayer) return;
+      const g = await safeGet("campaign-grid:" + stageCampaignId, true);
+      if (alive) setCampaignGrid(g ? JSON.parse(g.value) : { cells: {} });
+      const f = await safeGet("fear-track", true);
+      if (alive && f) setFearCount(parseInt(f.value, 10) || 0);
+    };
+    load();
+    const timer = isPlayer ? setInterval(load, 8000) : null;
+    return () => {
+      alive = false;
+      if (timer) clearInterval(timer);
+    };
+  }, [stageCampaignId, viewingCampaignId, !!viewingCharId]);
+
+  // Una pista deja de ser "nueva" cuando el jugador la abre.
+  const openHandoutFor = (campaignId, h) => {
+    setOpenHandout(h);
+    if (!h.id || handoutsSeen.includes(h.id)) return;
+    const next = [...handoutsSeen, h.id].slice(-200);
+    setHandoutsSeen(next);
+    try {
+      localStorage.setItem("mh-seen:" + campaignId, JSON.stringify(next));
+    } catch (e) {}
+  };
 
   const openNewCharModal = () => {
     setCarouselIndex(0);
@@ -3873,6 +4050,24 @@ export default function App({ onSignOut }) {
     await safeSet("campaign-encounters:" + viewingCampaignId, JSON.stringify(next), true);
   };
 
+  // Mesa del DJ: el DJ la edita desde la campaña y los jugadores la ven desde su hoja.
+  const saveStage = async (campaignId, patch) => {
+    if (!campaignId) return;
+    const next = { ...campaignStage, ...patch, updatedAt: Date.now() };
+    setCampaignStage(next);
+    await safeSet("campaign-stage:" + campaignId, JSON.stringify(next), true);
+  };
+
+  const addHandout = async () => {
+    const d = handoutDraft;
+    if (!d.title.trim() || !viewingCampaignId) return;
+    const handout = { id: "h" + Date.now(), kind: d.kind, title: d.title.trim(), image: d.image.trim(), text: d.text.trim(), ts: Date.now() };
+    await saveStage(viewingCampaignId, { handouts: [handout, ...(campaignStage.handouts || [])] });
+    setHandoutDraft({ kind: d.kind, title: "", image: "", text: "" });
+  };
+
+  const removeHandout = (id) => saveStage(viewingCampaignId, { handouts: (campaignStage.handouts || []).filter((h) => h.id !== id) });
+
   const updateEncounterNotes = async (id, notes) => {
     if (!viewingCampaignId) return;
     const next = campaignEncounters.map((e) => (e.id === id ? { ...e, notes } : e));
@@ -4575,6 +4770,7 @@ export default function App({ onSignOut }) {
 
                   <div style={{ display: "flex", gap: 4, background: "var(--mh-panel)", border: "1px solid var(--mh-line)", borderRadius: 30, padding: 5, width: "fit-content", marginBottom: 22 }}>
                     {[
+                      { key: "mesa", label: "Mesa", Icon: Radio },
                       { key: "resumen", label: "Resumen", Icon: User },
                       { key: "chat", label: "Chat", Icon: MessageCircle },
                       { key: "mapa", label: "Mapa", Icon: MapPinned },
@@ -4605,6 +4801,120 @@ export default function App({ onSignOut }) {
                       );
                     })}
                   </div>
+
+                  {campaignDetailTab === "mesa" && (() => {
+                    const stage = campaignStage;
+                    const scene = stage.scene || {};
+                    const handouts = stage.handouts || [];
+                    const setScene = (patch) => saveStage(viewingCampaignId, { scene: { ...scene, ...patch } });
+                    return (
+                      <div className="mh-gm">
+                        <div className="mh-card mh-gm-box">
+                          <div className="mh-gm-h">
+                            <Radio size={15} /> Qué ven ahora los jugadores
+                          </div>
+                          <div className="mh-gm-sub">Los jugadores de la campaña lo ven en la pestaña «Campaña» de su hoja. Si cambias lo que muestras, se les abre solo.</div>
+                          <div className="mh-gm-live">
+                            {STAGE_TABS.map((t) => {
+                              const TIcon = t.Icon;
+                              const on = (stage.live || "escena") === t.key;
+                              return (
+                                <button key={t.key} type="button" className={on ? "is-on" : ""} aria-pressed={on} onClick={() => saveStage(viewingCampaignId, { live: t.key })}>
+                                  <TIcon size={15} />
+                                  {t.label}
+                                  {on && <i className="mh-stg-dot" />}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        <div className="mh-card mh-gm-box">
+                          <div className="mh-gm-h">
+                            <Clapperboard size={15} /> Escena
+                          </div>
+                          <div className="mh-gm-scene">
+                            <div className="mh-gm-fields">
+                              <label className="mh-gm-lbl">
+                                Título
+                                <input className="mh-input" placeholder="Las ruinas de Carn Dûr" value={scene.title || ""} onChange={(e) => setScene({ title: e.target.value })} />
+                              </label>
+                              <label className="mh-gm-lbl">
+                                Imagen (enlace)
+                                <input className="mh-input" placeholder="https://…" value={scene.image || ""} onChange={(e) => setScene({ image: e.target.value })} />
+                              </label>
+                              <label className="mh-gm-lbl">
+                                Narración
+                                <textarea className="mh-input" rows={3} placeholder="Lo que el DJ lee en voz alta…" value={scene.narration || ""} onChange={(e) => setScene({ narration: e.target.value })} />
+                              </label>
+                            </div>
+                            <div className={"mh-gm-thumb mh-stg-scene" + (scene.image ? "" : " is-blank")} style={scene.image ? { backgroundImage: `url("${scene.image.replace(/"/g, "%22")}")` } : undefined}>
+                              <div className="mh-stg-scene-cap">
+                                <div className="mh-stg-kick">Vista previa</div>
+                                <div className="mh-stg-scene-title">{scene.title || "Sin título"}</div>
+                              </div>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            className="mh-btn-ghost"
+                            style={{ fontSize: 12, alignSelf: "flex-start" }}
+                            onClick={() => saveStage(viewingCampaignId, { scene: { title: "", image: "", narration: "" } })}
+                          >
+                            Vaciar escena
+                          </button>
+                        </div>
+
+                        <div className="mh-card mh-gm-box">
+                          <div className="mh-gm-h">
+                            <ScrollText size={15} /> Pistas para los jugadores
+                          </div>
+                          <div className="mh-gm-sub">Imágenes, notas, personajes u objetos. Aparecen como «Nuevo» hasta que cada jugador los abre.</div>
+                          <div className="mh-gm-kinds">
+                            {HANDOUT_KINDS.map((k) => {
+                              const KIcon = k.Icon;
+                              return (
+                                <button key={k.key} type="button" className={handoutDraft.kind === k.key ? "is-on" : ""} onClick={() => setHandoutDraft({ ...handoutDraft, kind: k.key })}>
+                                  <KIcon size={13} />
+                                  {k.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <div className="mh-gm-form">
+                            <input className="mh-input" placeholder="Título (p. ej. Carta sellada)" value={handoutDraft.title} onChange={(e) => setHandoutDraft({ ...handoutDraft, title: e.target.value })} />
+                            <input className="mh-input" placeholder="Imagen (enlace, opcional)" value={handoutDraft.image} onChange={(e) => setHandoutDraft({ ...handoutDraft, image: e.target.value })} />
+                            <textarea className="mh-input" rows={2} placeholder="Texto o descripción (opcional)" value={handoutDraft.text} onChange={(e) => setHandoutDraft({ ...handoutDraft, text: e.target.value })} />
+                          </div>
+                          <button type="button" className="mh-btn" style={{ alignSelf: "flex-start" }} disabled={!handoutDraft.title.trim()} onClick={addHandout}>
+                            <Plus size={14} /> Entregar a los jugadores
+                          </button>
+                          {handouts.length > 0 && (
+                            <div className="mh-gm-list">
+                              {handouts.map((h) => {
+                                const kind = HANDOUT_KINDS.find((x) => x.key === h.kind) || HANDOUT_KINDS[0];
+                                const KIcon = kind.Icon;
+                                return (
+                                  <div key={h.id} className="mh-gm-item">
+                                    <span className={"mh-gm-item-art mh-stg-hand-art is-" + h.kind} style={h.image ? { backgroundImage: `url("${h.image.replace(/"/g, "%22")}")` } : undefined}>
+                                      {!h.image && <KIcon size={16} />}
+                                    </span>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                      <div className="mh-stg-hand-title">{h.title}</div>
+                                      <div className="mh-stg-hand-kind">{kind.label}{h.text ? " · " + h.text : ""}</div>
+                                    </div>
+                                    <button type="button" className="mh-inv-x" aria-label={"Quitar " + h.title} title="Quitar" onClick={() => removeHandout(h.id)}>
+                                      <Trash2 size={14} />
+                                    </button>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {campaignDetailTab === "resumen" && (
                     <div>
@@ -7230,49 +7540,242 @@ export default function App({ onSignOut }) {
                       })()}
 
                       {activeTab === "campaign" && charCampaign && (() => {
-                        const partyIds = (charCampaign.characterIds || []).filter((cid) => cid !== viewingCharId);
+                        const partyIds = charCampaign.characterIds || [];
+                        const stage = campaignStage;
+                        const live = stage.live || "escena";
+                        const stTab = stageTab || live;
+                        const scene = stage.scene || {};
+                        const handouts = stage.handouts || [];
+                        const newHandouts = handouts.filter((h) => !handoutsSeen.includes(h.id)).length;
+                        const cells = campaignGrid.cells || {};
+                        const hasMap = Object.keys(cells).length > 0;
+                        const usedTools = GRID_TOOLS.filter((t) => t.key !== "niebla" && Object.values(cells).some((cl) => cl.tool === t.key));
+                        const kindOf = (k) => HANDOUT_KINDS.find((x) => x.key === k) || HANDOUT_KINDS[0];
+                        const empty = (Icon, text) => (
+                          <div className="mh-stg-empty">
+                            <Icon size={26} strokeWidth={1.6} />
+                            <div>{text}</div>
+                          </div>
+                        );
                         return (
                           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(12, 1fr)", gap: 18, flex: 1 }}>
                             <Panel
                               span={7}
                               title={charCampaign.name}
+                              titleRight={
+                                <div className="mh-stg-fear" title={`Miedo del DJ: ${fearCount} de 12`}>
+                                  <span>Miedo</span>
+                                  <span className="mh-stg-fear-pips">
+                                    {Array.from({ length: 12 }, (_, i) => (
+                                      <i key={i} className={i < fearCount ? "on" : ""} />
+                                    ))}
+                                  </span>
+                                  <b>{fearCount}</b>
+                                </div>
+                              }
                               hidden={conditions.includes("Escondido")}
                               restrained={conditions.includes("Inmovilizado")}
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
                             >
-                              <div style={{ fontSize: 13, color: "var(--mh-ink3)", marginBottom: 18 }}>
-                                {charCampaign.description || "Esta campaña todavía no tiene descripción."}
-                              </div>
-
-                              <div className="mh-serif" style={{ fontSize: 15, fontWeight: 700, marginBottom: 10 }}>
-                                Compañeros de mesa
-                              </div>
-                              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 20 }}>
-                                {partyIds.map((pid) => {
-                                  const pc = characters[pid];
-                                  if (!pc) return null;
+                              <div className="mh-stg-seg" role="tablist">
+                                {STAGE_TABS.map((t) => {
+                                  const TIcon = t.Icon;
                                   return (
-                                    <div key={pid} onClick={() => openCharDetail(pid)} className="mh-chip" style={{ cursor: "pointer" }}>
-                                      {pc.f_name || "Sin nombre"} {pc.f_class ? `· Nivel ${pc.f_level || 1} · ${pc.f_class}` : ""}
-                                    </div>
+                                    <button
+                                      key={t.key}
+                                      type="button"
+                                      role="tab"
+                                      aria-selected={stTab === t.key}
+                                      className={stTab === t.key ? "is-on" : ""}
+                                      onClick={() => setStageTab(t.key)}
+                                      title={live === t.key ? "El DJ está mostrando esto ahora" : undefined}
+                                    >
+                                      <TIcon size={13} />
+                                      <span>{t.label}</span>
+                                      {live === t.key && <i className="mh-stg-dot" />}
+                                      {t.key === "pistas" && newHandouts > 0 && <b className="mh-stg-cnt">{newHandouts}</b>}
+                                    </button>
                                   );
                                 })}
-                                {partyIds.length === 0 && (
-                                  <div style={{ fontSize: 12.5, color: "var(--mh-muted)", fontStyle: "italic" }}>De momento eres el único personaje en esta campaña.</div>
+                              </div>
+
+                              <div className="mh-stg-body">
+                                {stTab === "escena" &&
+                                  (scene.title || scene.image || scene.narration ? (
+                                    <>
+                                      <div className={"mh-stg-scene" + (scene.image ? "" : " is-blank")} style={scene.image ? { backgroundImage: `url("${scene.image.replace(/"/g, "%22")}")` } : undefined}>
+                                        <div className="mh-stg-scene-top">
+                                          {live === "escena" && (
+                                            <span className="mh-stg-live">
+                                              <i />
+                                              En directo
+                                            </span>
+                                          )}
+                                          {scene.image && (
+                                            <button type="button" className="mh-stg-ibtn" aria-label="Ampliar" onClick={() => setOpenHandout({ kind: "imagen", title: scene.title, image: scene.image, text: scene.narration })}>
+                                              <Maximize2 size={13} />
+                                            </button>
+                                          )}
+                                        </div>
+                                        <div className="mh-stg-scene-cap">
+                                          <div className="mh-stg-kick">Escena actual</div>
+                                          <div className="mh-stg-scene-title">{scene.title || "Sin título"}</div>
+                                        </div>
+                                      </div>
+                                      {scene.narration && (
+                                        <div className="mh-stg-narr">
+                                          <div className="mh-stg-kick">El DJ narra</div>
+                                          <div className="mh-stg-narr-t">{scene.narration}</div>
+                                        </div>
+                                      )}
+                                    </>
+                                  ) : (
+                                    empty(Clapperboard, "El DJ todavía no ha mostrado ninguna escena.")
+                                  ))}
+
+                                {stTab === "mapa" &&
+                                  (hasMap ? (
+                                    <>
+                                      <div className="mh-stg-map" style={{ gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`, aspectRatio: `${GRID_COLS} / ${GRID_ROWS}` }}>
+                                        {Array.from({ length: GRID_ROWS * GRID_COLS }, (_, n) => {
+                                          const key = (n % GRID_COLS) + "," + Math.floor(n / GRID_COLS);
+                                          const cell = cells[key];
+                                          const fog = cell?.tool === "niebla";
+                                          const tool = cell && !fog ? GRID_TOOLS.find((t) => t.key === cell.tool) : null;
+                                          return (
+                                            <div key={key} className={"mh-stg-cell" + (fog ? " is-fog" : "")} style={tool ? { background: tool.color } : undefined} title={!fog && cell?.label ? cell.label : undefined}>
+                                              {!fog && cell?.label && <span>{cell.label}</span>}
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                      <div className="mh-stg-legend">
+                                        {usedTools.map((t) => (
+                                          <span key={t.key}>
+                                            <i style={{ background: t.color }} />
+                                            {t.label}
+                                          </span>
+                                        ))}
+                                        {Object.values(cells).some((cl) => cl.tool === "niebla") && (
+                                          <span>
+                                            <i className="is-fog" />
+                                            Sin explorar
+                                          </span>
+                                        )}
+                                        {live === "mapa" && (
+                                          <span className="mh-stg-live is-soft">
+                                            <i />
+                                            El DJ lo está mostrando
+                                          </span>
+                                        )}
+                                      </div>
+                                    </>
+                                  ) : (
+                                    empty(MapPinned, "El DJ todavía no ha compartido ningún mapa.")
+                                  ))}
+
+                                {stTab === "pistas" &&
+                                  (handouts.length ? (
+                                    <div className="mh-stg-hgrid">
+                                      {handouts.map((h, i) => {
+                                        const kind = kindOf(h.kind);
+                                        const KIcon = kind.Icon;
+                                        const isNew = !handoutsSeen.includes(h.id);
+                                        return (
+                                          <button key={h.id} type="button" className={"mh-stg-hand" + (i === 0 && h.image ? " is-wide" : "")} onClick={() => openHandoutFor(charCampaign.id, h)}>
+                                            <div className={"mh-stg-hand-art is-" + h.kind} style={h.image ? { backgroundImage: `url("${h.image.replace(/"/g, "%22")}")` } : undefined}>
+                                              {!h.image && (h.kind === "nota" && h.text ? <span className="mh-stg-hand-note">«{h.text}»</span> : <KIcon size={34} strokeWidth={1.4} />)}
+                                              {isNew && <span className="mh-stg-new">Nuevo</span>}
+                                            </div>
+                                            <div className="mh-stg-hand-foot">
+                                              <KIcon size={13} />
+                                              <div className="mh-stg-hand-meta">
+                                                <div className="mh-stg-hand-title">{h.title}</div>
+                                                <div className="mh-stg-hand-kind">{kind.label}</div>
+                                              </div>
+                                            </div>
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  ) : (
+                                    empty(ScrollText, "Aquí aparecerán las imágenes, notas y objetos que os entregue el DJ.")
+                                  ))}
+
+                                {stTab === "personajes" && (
+                                  <>
+                                    <div className="mh-stg-kick" style={{ color: "var(--mh-muted)" }}>El grupo</div>
+                                    <div className="mh-stg-party">
+                                      {partyIds.map((pid) => {
+                                        const pc = characters[pid];
+                                        if (!pc) return null;
+                                        const col = classColor(pc.f_class);
+                                        const hpT = Number(pc.r_hp || 0);
+                                        const stT = Number(pc.r_stress || 0);
+                                        return (
+                                          <button key={pid} type="button" className={"mh-stg-pc" + (pid === viewingCharId ? " is-me" : "")} onClick={() => pid !== viewingCharId && openCharDetail(pid)}>
+                                            <span className="mh-stg-av" style={{ background: col, color: onColor(col) }}>{(pc.f_name || "?").trim().charAt(0).toUpperCase()}</span>
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                              <div className="mh-stg-pc-name">
+                                                {pc.f_name || "Sin nombre"}
+                                                {pid === viewingCharId && <span className="mh-stg-me">Tú</span>}
+                                              </div>
+                                              <div className="mh-stg-pc-sub">{pc.f_class ? `Nivel ${pc.f_level || 1} · ${pc.f_class}` : "Sin clase"}</div>
+                                              <div className="mh-stg-pips" title={`Vida marcada: ${pc.hp_marked || 0} de ${hpT}`}>
+                                                {Array.from({ length: hpT }, (_, k) => <i key={k} className={k < Number(pc.hp_marked || 0) ? "is-hp" : ""} />)}
+                                              </div>
+                                              <div className="mh-stg-pips" title={`Estrés marcado: ${pc.stress_marked || 0} de ${stT}`}>
+                                                {Array.from({ length: stT }, (_, k) => <i key={k} className={k < Number(pc.stress_marked || 0) ? "is-st" : ""} />)}
+                                              </div>
+                                            </div>
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                    {handouts.some((h) => h.kind === "personaje") && (
+                                      <>
+                                        <div className="mh-stg-kick" style={{ color: "var(--mh-muted)", marginTop: 6 }}>Personajes que habéis conocido</div>
+                                        <div className="mh-stg-party">
+                                          {handouts
+                                            .filter((h) => h.kind === "personaje")
+                                            .map((h) => (
+                                              <button key={h.id} type="button" className="mh-stg-pc" onClick={() => openHandoutFor(charCampaign.id, h)}>
+                                                <span className="mh-stg-av is-npc" style={h.image ? { backgroundImage: `url("${h.image.replace(/"/g, "%22")}")` } : undefined}>
+                                                  {!h.image && (h.title || "?").trim().charAt(0).toUpperCase()}
+                                                </span>
+                                                <div style={{ flex: 1, minWidth: 0 }}>
+                                                  <div className="mh-stg-pc-name">{h.title}</div>
+                                                  <div className="mh-stg-pc-sub mh-stg-clamp">{h.text || "Personaje no jugador"}</div>
+                                                </div>
+                                              </button>
+                                            ))}
+                                        </div>
+                                      </>
+                                    )}
+                                  </>
                                 )}
                               </div>
 
-                              <button
-                                className="mh-btn"
-                                onClick={() => {
-                                  setViewingCampaignId(charCampaign.id);
-                                  setViewingCharId(null);
-                                  setView("campaigns");
-                                }}
-                              >
-                                Ir a la campaña (mapa y encuentros)
-                              </button>
+                              {openHandout && (
+                                <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 40, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.62)" }} onClick={() => setOpenHandout(null)}>
+                                  <div className="mh-card mh-card-anim mh-stg-modal" onClick={(e) => e.stopPropagation()}>
+                                    {openHandout.image && <img src={openHandout.image} alt={openHandout.title || ""} className="mh-stg-modal-img" />}
+                                    <div style={{ padding: "14px 18px 18px" }}>
+                                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
+                                        <div>
+                                          <div className="mh-stg-kick" style={{ color: "var(--mh-gold-ink)" }}>{kindOf(openHandout.kind).label}</div>
+                                          <div className="mh-serif" style={{ fontSize: 18, fontWeight: 700, color: "var(--mh-ink)" }}>{openHandout.title || "Sin título"}</div>
+                                        </div>
+                                        <button type="button" className="mh-inv-x" aria-label="Cerrar" onClick={() => setOpenHandout(null)}>
+                                          <X size={16} />
+                                        </button>
+                                      </div>
+                                      {openHandout.text && <div className={"mh-stg-modal-text" + (openHandout.kind === "nota" ? " is-note" : "")}>{openHandout.text}</div>}
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
                             </Panel>
 
                             <Panel

@@ -19,6 +19,8 @@ const isDevPreview = () =>
 
 let userIdPromise: Promise<string | null> | null = null;
 let privateCache: Promise<Map<string, string>> | null = null;
+// Vista previa: lo compartido se guarda solo en memoria para poder probar sin tocar la base de datos.
+const devShared = new Map<string, string>();
 const pendingWrites = new Map<string, { value: string; shared: boolean; timer: ReturnType<typeof setTimeout> }>();
 
 function getUserId() {
@@ -66,6 +68,8 @@ export async function storageGet(key: string, shared = false): Promise<Entry | n
   const pending = pendingWrites.get(pendingKey(key, shared));
   if (pending) return { key, value: pending.value };
 
+  if (shared && isDevPreview() && devShared.has(key)) return { key, value: devShared.get(key)! };
+
   if (!shared) {
     const value = (await loadPrivate()).get(key);
     return value === undefined ? null : { key, value };
@@ -78,7 +82,10 @@ export async function storageGet(key: string, shared = false): Promise<Entry | n
 
 export async function storageSet(key: string, value: string, shared = false): Promise<Entry> {
   if (!shared) (await loadPrivate()).set(key, value);
-  if (isDevPreview()) return { key, value };
+  if (isDevPreview()) {
+    if (shared) devShared.set(key, value);
+    return { key, value };
+  }
 
   // La app guarda en cada pulsación: agrupamos las escrituras de una misma clave.
   const id = pendingKey(key, shared);
