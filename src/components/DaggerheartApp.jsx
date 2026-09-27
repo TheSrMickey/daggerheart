@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send } from "lucide-react";
+import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
 import { Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
@@ -1631,11 +1631,34 @@ const sharedStyles = `
   .mh-stg-scene-cap .mh-stg-kick { color: #E8D4A0; }
   .mh-stg-scene-title { font-family: 'Cinzel', Georgia, serif; font-weight: 700; font-size: 19px; color: #fff; line-height: 1.2; }
   .mh-stg-scene.is-zoomable { cursor: zoom-in; }
+  /* Diálogo sobre la escena (estilo novela visual) */
+  .mh-dlg { position: absolute; inset: 0; pointer-events: none; }
+  .mh-dlg > * { pointer-events: auto; }
+  .mh-dlg-fig { position: absolute; left: 0; bottom: 0; height: 78%; max-width: 70%; object-fit: contain; object-position: left bottom; filter: drop-shadow(0 6px 18px rgba(0,0,0,.45)); animation: mh-dlg-fig .45s cubic-bezier(.2,.8,.2,1) both; }
+  .mh-dlg-box {
+    position: absolute; left: 10px; right: 10px; bottom: 10px; padding: 20px 16px 14px; border-radius: 12px; color: #F4EEE2;
+    background: linear-gradient(rgba(20,14,18,.88), rgba(20,14,18,.95)); border: 1px solid rgba(232,212,160,.45); box-shadow: 0 8px 24px rgba(0,0,0,.4);
+    animation: mh-dlg-box .35s ease both;
+  }
+  .mh-dlg-name { position: absolute; top: -13px; left: 14px; max-width: calc(100% - 60px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: #C9A24A; color: #1B130B; font-family: 'Cinzel', Georgia, serif; font-weight: 700; font-size: 12.5px; padding: 4px 12px; border-radius: 7px; box-shadow: 0 2px 6px rgba(0,0,0,.35); }
+  .mh-dlg-t { font-size: 14px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 9.3em; overflow-y: auto; }
+  .mh-dlg-hide { position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: 50%; border: 0; background: rgba(255,255,255,.1); color: #E8D4A0; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .mh-dlg-hide:hover { background: rgba(255,255,255,.2); }
+  .mh-dlg.is-big .mh-dlg-box { left: 4%; right: 4%; bottom: 4%; padding: 30px 26px 22px; }
+  .mh-dlg.is-big .mh-dlg-name { font-size: 16px; top: -17px; left: 22px; padding: 5px 16px; }
+  .mh-dlg.is-big .mh-dlg-t { font-size: 19px; }
+  .mh-dlg.is-mini .mh-dlg-box { left: 8px; right: 8px; bottom: 8px; padding: 16px 12px 10px; }
+  .mh-dlg.is-mini .mh-dlg-t { font-size: 12.5px; max-height: 4.7em; }
+  .mh-dlg.is-mini .mh-dlg-name { font-size: 11px; top: -11px; }
+  @keyframes mh-dlg-fig { from { opacity: 0; translate: -24px 0; } to { opacity: 1; translate: 0 0; } }
+  @keyframes mh-dlg-box { from { opacity: 0; translate: 0 10px; } to { opacity: 1; translate: 0 0; } }
+  .mh-stg-zoom-frame { position: relative; display: inline-block; line-height: 0; }
+  .mh-stg-zoom-frame .mh-dlg { line-height: normal; }
   /* Escena ampliada y pistas abiertas: sobre toda la plataforma, no dentro de la caja */
   .mh-stg-fixed { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; padding: 24px; background: rgba(8,6,12,0.62); }
   .mh-stg-zoom { background: rgba(8,6,12,0.88); cursor: zoom-out; }
   .mh-stg-zoom figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 14px; cursor: default; max-width: 100%; }
-  .mh-stg-zoom img { display: block; height: 82vh; width: auto; max-width: min(1600px, 94vw); object-fit: contain; filter: drop-shadow(0 24px 50px rgba(0,0,0,.55)); }
+  .mh-stg-zoom-frame > img { display: block; height: 82vh; width: auto; max-width: min(1600px, 94vw); object-fit: contain; filter: drop-shadow(0 24px 50px rgba(0,0,0,.55)); }
   .mh-stg-zoom figcaption { display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
   .mh-stg-zoom figcaption .mh-stg-kick { color: #E8D4A0; }
   .mh-stg-zoom-t { font-family: 'Cinzel', Georgia, serif; font-weight: 700; font-size: 24px; color: #fff; }
@@ -1782,9 +1805,37 @@ const sharedStyles = `
   .mh-gm-form { display: flex; flex-direction: column; gap: 8px; }
   .mh-gm-list { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--mh-line); padding-top: 12px; }
   .mh-gm-item { display: flex; align-items: center; gap: 10px; }
+  .mh-gm-dlg { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 20px; }
+  .mh-gm-dlg-col { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .mh-gm-cast { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+  .mh-gm-castm { position: relative; }
+  .mh-gm-castm-pick { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 6px 6px 8px; border-radius: 10px; border: 1px solid var(--mh-line); background: var(--mh-panel); cursor: pointer; font: inherit; color: inherit; }
+  .mh-gm-castm.is-on .mh-gm-castm-pick { border-color: #C9A24A; box-shadow: 0 0 0 3px color-mix(in srgb, #C9A24A 25%, transparent); }
+  .mh-gm-castm-img { width: 100%; aspect-ratio: 1; border-radius: 7px; overflow: hidden; display: flex; align-items: flex-end; justify-content: center; color: var(--mh-muted); background: radial-gradient(circle at 50% 35%, #6E7F8C, #2B3A4F); }
+  .mh-gm-castm-img img { width: 100%; height: 100%; object-fit: contain; object-position: center bottom; }
+  .mh-gm-castm-n { font-size: 11.5px; font-weight: 600; color: var(--mh-ink2); text-align: center; line-height: 1.2; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mh-gm-castm-x { position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; border-radius: 50%; border: 0; background: rgba(0,0,0,.5); color: #fff; display: none; align-items: center; justify-content: center; cursor: pointer; }
+  .mh-gm-castm:hover .mh-gm-castm-x, .mh-gm-castm-x:focus-visible { display: flex; }
+  .mh-gm-castadd { display: flex; gap: 10px; align-items: stretch; padding-top: 10px; border-top: 1px solid var(--mh-line); }
+  .mh-gm-upload { width: 86px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 1.5px dashed var(--mh-line2); border-radius: 10px; color: var(--mh-ink3); font-size: 11px; font-weight: 600; cursor: pointer; overflow: hidden; padding: 6px; }
+  .mh-gm-upload:hover { border-color: var(--mh-ink3); color: var(--mh-ink); }
+  .mh-gm-upload img { width: 100%; height: 54px; object-fit: contain; }
+  .mh-gm-upload input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  .mh-gm-upload:focus-within { outline: 2px solid #C9A24A; outline-offset: 2px; }
+  .mh-gm-castadd-f { flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .mh-gm-castadd-f .mh-btn-ghost { align-self: flex-start; font-size: 12px; display: inline-flex; align-items: center; gap: 5px; }
+  .mh-gm-err { font-size: 11.5px; color: #D9644E; }
+  .mh-gm-dlg-prev { position: relative; aspect-ratio: 16 / 9; border-radius: 10px; overflow: hidden; background: #2B3A4F center / cover no-repeat; }
+  .mh-gm-dlg-prev.is-blank { background-image: linear-gradient(#2B3A4F, #6E7F8C 58%, #C9A879); }
+  .mh-gm-dlg-hint { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,.8); font-size: 12.5px; }
+  .mh-gm-dlg-acts { display: flex; gap: 8px; flex-wrap: wrap; }
+  .mh-gm-dlg-acts button { display: inline-flex; align-items: center; gap: 6px; }
+  .mh-gm-dlg-now { font-size: 12px; color: var(--mh-ink3); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .mh-gm-dlg-now b { color: var(--mh-ink); }
   .mh-gm-item-art { flex: none; width: 38px; height: 38px; border-radius: 8px; }
   @media (max-width: 760px) {
     .mh-gm { grid-template-columns: 1fr; }
+    .mh-gm-dlg { grid-template-columns: 1fr; }
     .mh-gm-live { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .mh-stg-seg button span { display: none; }
   }
@@ -2704,6 +2755,14 @@ export default function App({ onSignOut }) {
   const [openHandout, setOpenHandout] = useState(null);
   const [sceneZoom, setSceneZoom] = useState(null);
   const [editingSceneId, setEditingSceneId] = useState(null);
+  // Diálogos: reparto de personajes del DJ (nombre + imagen) y la frase que se envía a los jugadores.
+  const [campaignCast, setCampaignCast] = useState([]);
+  const [castImgs, setCastImgs] = useState({});
+  const castImgFetching = useRef(new Set());
+  const [castDraft, setCastDraft] = useState({ name: "", img: "" });
+  const [castError, setCastError] = useState("");
+  const [dialogueDraft, setDialogueDraft] = useState({ castId: null, text: "" });
+  const [hiddenDialogue, setHiddenDialogue] = useState(null);
   const [handoutsSeen, setHandoutsSeen] = useState([]);
   const [handoutDraft, setHandoutDraft] = useState({ kind: "imagen", title: "", image: "", text: "" });
 
@@ -2783,6 +2842,14 @@ export default function App({ onSignOut }) {
       setCampaignGrid(grid ? JSON.parse(grid.value) : { cells: {} });
       const enc = await safeGet("campaign-encounters:" + viewingCampaignId, true);
       setCampaignEncounters(enc ? JSON.parse(enc.value) : []);
+      const cast = await safeGet("campaign-cast:" + viewingCampaignId, true);
+      let castList = [];
+      try {
+        castList = cast ? JSON.parse(cast.value) : [];
+      } catch (e) {}
+      setCampaignCast(castList);
+      castList.forEach((m) => ensureCastImg(m.imgId));
+      setDialogueDraft({ castId: castList[0]?.id || null, text: "" });
       setCampaignDetailTab("mesa");
       setPendingCellLabel(null);
     })();
@@ -2870,11 +2937,21 @@ export default function App({ onSignOut }) {
   const sheetCampaignId = view === "ficha" && viewingCharId ? Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(viewingCharId))?.id || null : null;
   const stageCampaignId = gmViewing ? viewingCampaignId : sheetCampaignId;
   const stageLiveRef = useRef(null);
+  const dialogueRef = useRef(undefined);
+
+  // Las imágenes de los personajes van cada una en su clave: se descargan una sola vez.
+  const ensureCastImg = async (imgId) => {
+    if (!imgId || castImgFetching.current.has(imgId)) return;
+    castImgFetching.current.add(imgId);
+    const r = await safeGet("campaign-img:" + imgId, true);
+    if (r?.value) setCastImgs((m) => ({ ...m, [imgId]: r.value }));
+  };
   useEffect(() => {
     if (!stageCampaignId) return;
     let alive = true;
     const isPlayer = !gmViewing;
     stageLiveRef.current = null;
+    dialogueRef.current = undefined;
     setOpenHandout(null);
     try {
       setHandoutsSeen(JSON.parse(localStorage.getItem("mh-seen:" + stageCampaignId) || "[]"));
@@ -2902,6 +2979,12 @@ export default function App({ onSignOut }) {
         stageLiveRef.current = s.live;
         setStageTab(null);
       }
+      const dlgId = s.dialogue?.id || null;
+      if (dialogueRef.current !== dlgId) {
+        if (dialogueRef.current !== undefined && dlgId) setStageTab(null);
+        dialogueRef.current = dlgId;
+      }
+      if (s.dialogue?.imgId) ensureCastImg(s.dialogue.imgId);
       setCampaignStage(s);
       if (!isPlayer) return;
       const g = await safeGet("campaign-grid:" + stageCampaignId, true);
@@ -4161,7 +4244,7 @@ export default function App({ onSignOut }) {
   };
 
   const chatColor = (m) => (m.gm ? "#6A4DC2" : m.cls ? classColor(m.cls) : "#C9A24A");
-  const chatInitial = (m) => (m.gm ? "DJ" : (m.author || "?").trim().charAt(0).toUpperCase());
+  const chatInitial = (m) => (m.gm && !m.npc ? "DJ" : (m.author || "?").trim().charAt(0).toUpperCase());
   const shareVisual = (sh) => {
     if (sh.type === "domain") return { Icon: DOMAIN_ICONS[sh.detail?.domain?.name] || Sparkles, color: sh.color || "#C9A24A" };
     if (sh.type === "weapon") return { Icon: weaponIcon(sh.name), color: "var(--acc, #C9A24A)" };
@@ -4415,6 +4498,81 @@ export default function App({ onSignOut }) {
     await saveStage(viewingCampaignId, { scenes, activeSceneId: id, scene: { title: sc.title, image: sc.image }, live: "escena" });
     postChat(viewingCampaignId, { kind: "event", author: "El DJ", gm: true, icon: "escena", text: "muestra la escena «" + (sc.title || "Sin título") + "»" });
   };
+
+  // Reduce la imagen en el navegador (máx. 720 px) conservando la transparencia, para que pese poco.
+  const readCastImage = (file) =>
+    new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const k = Math.min(1, 720 / Math.max(img.width, img.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(img.width * k));
+        canvas.height = Math.max(1, Math.round(img.height * k));
+        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url);
+        const webp = canvas.toDataURL("image/webp", 0.86);
+        resolve(webp.startsWith("data:image/webp") ? webp : canvas.toDataURL("image/png"));
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("imagen"));
+      };
+      img.src = url;
+    });
+
+  const pickCastImage = async (file) => {
+    if (!file) return;
+    setCastError("");
+    if (!/^image\//.test(file.type)) return setCastError("Ese archivo no es una imagen.");
+    try {
+      setCastDraft((d) => ({ ...d, img: "" }));
+      const img = await readCastImage(file);
+      setCastDraft((d) => ({ ...d, img }));
+    } catch (e) {
+      setCastError("No se pudo leer la imagen.");
+    }
+  };
+
+  const saveCast = async (next) => {
+    setCampaignCast(next);
+    await safeSet("campaign-cast:" + viewingCampaignId, JSON.stringify(next), true);
+  };
+
+  const addCastMember = async () => {
+    const name = castDraft.name.trim();
+    if (!name || !viewingCampaignId) return;
+    const id = "c" + Date.now();
+    let imgId = null;
+    if (castDraft.img) {
+      imgId = viewingCampaignId + "-" + id;
+      setCastImgs((m) => ({ ...m, [imgId]: castDraft.img }));
+      castImgFetching.current.add(imgId);
+      await safeSet("campaign-img:" + imgId, castDraft.img, true);
+    }
+    await saveCast([...campaignCast, { id, name, imgId }]);
+    setCastDraft({ name: "", img: "" });
+    setDialogueDraft((d) => ({ ...d, castId: id }));
+  };
+
+  const removeCastMember = async (id) => {
+    const m = campaignCast.find((x) => x.id === id);
+    // La tabla compartida no permite borrar filas: vaciamos la imagen.
+    if (m?.imgId) safeSet("campaign-img:" + m.imgId, "", true);
+    await saveCast(campaignCast.filter((x) => x.id !== id));
+    if (dialogueDraft.castId === id) setDialogueDraft((d) => ({ ...d, castId: null }));
+  };
+
+  const sendDialogue = async () => {
+    const m = campaignCast.find((x) => x.id === dialogueDraft.castId);
+    const text = dialogueDraft.text.trim();
+    if (!m || !text || !viewingCampaignId) return;
+    await saveStage(viewingCampaignId, { dialogue: { id: "d" + Date.now(), name: m.name, imgId: m.imgId || null, text }, live: "escena" });
+    setDialogueDraft((d) => ({ ...d, text: "" }));
+    postChat(viewingCampaignId, { kind: "msg", author: m.name, gm: true, npc: true, text });
+  };
+
+  const clearDialogue = () => saveStage(viewingCampaignId, { dialogue: null });
 
   const hideScene = () => saveStage(viewingCampaignId, { scenes: stageScenesOf(campaignStage), activeSceneId: null, scene: { title: "", image: "" } });
 
@@ -5262,6 +5420,102 @@ export default function App({ onSignOut }) {
                                 <span className="mh-gm-preset-t">{pr.title}</span>
                               </button>
                             ))}
+                          </div>
+                        </div>
+
+                        <div className="mh-card mh-gm-box is-wide">
+                          <div className="mh-gm-h">
+                            <MessageSquareQuote size={15} /> Diálogos
+                          </div>
+                          <div className="mh-gm-sub">Crea el reparto con la imagen de cada personaje (un PNG con fondo transparente queda mejor) y envía lo que dice. Aparece sobre la escena de los jugadores.</div>
+                          <div className="mh-gm-dlg">
+                            <div className="mh-gm-dlg-col">
+                              <div className="mh-gm-h2">Reparto</div>
+                              <div className="mh-gm-cast">
+                                {campaignCast.map((m) => (
+                                  <div key={m.id} className={"mh-gm-castm" + (dialogueDraft.castId === m.id ? " is-on" : "")}>
+                                    <button type="button" className="mh-gm-castm-pick" aria-pressed={dialogueDraft.castId === m.id} onClick={() => setDialogueDraft((d) => ({ ...d, castId: m.id }))}>
+                                      <span className="mh-gm-castm-img">{castImgs[m.imgId] ? <img src={castImgs[m.imgId]} alt="" /> : <User size={22} />}</span>
+                                      <span className="mh-gm-castm-n">{m.name}</span>
+                                    </button>
+                                    <button type="button" className="mh-gm-castm-x" aria-label={"Quitar a " + m.name} title="Quitar del reparto" onClick={() => removeCastMember(m.id)}>
+                                      <X size={12} />
+                                    </button>
+                                  </div>
+                                ))}
+                                {campaignCast.length === 0 && <div className="mh-chat-empty">Todavía no hay personajes. Añade el primero abajo.</div>}
+                              </div>
+                              <div className="mh-gm-castadd">
+                                <label className="mh-gm-upload" title="Subir imagen del personaje">
+                                  {castDraft.img ? <img src={castDraft.img} alt="Vista previa" /> : <Upload size={18} />}
+                                  <span>{castDraft.img ? "Cambiar" : "Subir PNG"}</span>
+                                  <input
+                                    type="file"
+                                    accept="image/png,image/webp,image/jpeg,image/gif"
+                                    onChange={(e) => {
+                                      pickCastImage(e.target.files?.[0]);
+                                      e.target.value = "";
+                                    }}
+                                  />
+                                </label>
+                                <div className="mh-gm-castadd-f">
+                                  <input className="mh-input" placeholder="Nombre (p. ej. Marta, la posadera)" value={castDraft.name} onChange={(e) => setCastDraft((d) => ({ ...d, name: e.target.value }))} onKeyDown={(e) => e.key === "Enter" && addCastMember()} />
+                                  <button type="button" className="mh-btn-ghost" disabled={!castDraft.name.trim()} onClick={addCastMember}>
+                                    <Plus size={14} /> Añadir al reparto
+                                  </button>
+                                  {castError && <div className="mh-gm-err">{castError}</div>}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="mh-gm-dlg-col">
+                              <div className="mh-gm-h2">Qué dice</div>
+                              {(() => {
+                                const who = campaignCast.find((m) => m.id === dialogueDraft.castId);
+                                const sceneBg = stage.scene?.image;
+                                return (
+                                  <div className={"mh-gm-dlg-prev" + (sceneBg ? "" : " is-blank")} style={sceneBg ? { backgroundImage: `url("${sceneBg.replace(/"/g, "%22")}")` } : undefined}>
+                                    {who ? (
+                                      <div className="mh-dlg is-mini">
+                                        {castImgs[who.imgId] && <img className="mh-dlg-fig" src={castImgs[who.imgId]} alt="" />}
+                                        <div className="mh-dlg-box">
+                                          <span className="mh-dlg-name">{who.name}</span>
+                                          <div className="mh-dlg-t">{dialogueDraft.text || "Escribe lo que dice…"}</div>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <div className="mh-gm-dlg-hint">Elige un personaje del reparto</div>
+                                    )}
+                                  </div>
+                                );
+                              })()}
+                              <textarea
+                                className="mh-input"
+                                rows={3}
+                                placeholder="¿Otra ronda? La casa invita… si me contáis qué buscabais en las ruinas."
+                                value={dialogueDraft.text}
+                                onChange={(e) => setDialogueDraft((d) => ({ ...d, text: e.target.value }))}
+                                onKeyDown={(e) => e.key === "Enter" && (e.ctrlKey || e.metaKey) && sendDialogue()}
+                              />
+                              <div className="mh-gm-dlg-acts">
+                                <button type="button" className="mh-btn" disabled={!dialogueDraft.castId || !dialogueDraft.text.trim()} onClick={sendDialogue}>
+                                  <Send size={14} /> Enviar a los jugadores
+                                </button>
+                                {stage.dialogue && (
+                                  <button type="button" className="mh-btn-ghost" onClick={clearDialogue}>
+                                    <EyeOff size={14} /> Retirar diálogo
+                                  </button>
+                                )}
+                              </div>
+                              {stage.dialogue && (
+                                <div className="mh-gm-dlg-now">
+                                  <span className="mh-stg-live is-soft">
+                                    <i />
+                                    En pantalla
+                                  </span>
+                                  <b>{stage.dialogue.name}:</b> «{stage.dialogue.text}»
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
 
@@ -7897,6 +8151,20 @@ export default function App({ onSignOut }) {
                         const stTab = stageTab || live;
                         const scene = stage.scene || {};
                         const handouts = stage.handouts || [];
+                        const dlg = stage.dialogue && hiddenDialogue !== stage.dialogue.id ? stage.dialogue : null;
+                        const renderDialogue = (big) =>
+                          dlg && (
+                            <div className={"mh-dlg" + (big ? " is-big" : "")} onClick={(e) => e.stopPropagation()}>
+                              {castImgs[dlg.imgId] && <img className="mh-dlg-fig" src={castImgs[dlg.imgId]} alt={dlg.name} />}
+                              <div className="mh-dlg-box" role="status" aria-live="polite">
+                                <span className="mh-dlg-name">{dlg.name}</span>
+                                <div className="mh-dlg-t">{dlg.text}</div>
+                                <button type="button" className="mh-dlg-hide" aria-label="Ocultar el diálogo" title="Ocultar" onClick={() => setHiddenDialogue(dlg.id)}>
+                                  <X size={13} />
+                                </button>
+                              </div>
+                            </div>
+                          );
                         const newHandouts = handouts.filter((h) => !handoutsSeen.includes(h.id)).length;
                         const cells = campaignGrid.cells || {};
                         const hasMap = Object.keys(cells).length > 0;
@@ -7953,7 +8221,7 @@ export default function App({ onSignOut }) {
 
                               <div className="mh-stg-body">
                                 {stTab === "escena" &&
-                                  (scene.title || scene.image ? (
+                                  (scene.title || scene.image || dlg ? (
                                     <>
                                       <div
                                         className={"mh-stg-scene" + (scene.image ? " is-zoomable" : " is-blank")}
@@ -7982,10 +8250,14 @@ export default function App({ onSignOut }) {
                                             </button>
                                           )}
                                         </div>
-                                        <div className="mh-stg-scene-cap">
-                                          <div className="mh-stg-kick">Escena actual</div>
-                                          <div className="mh-stg-scene-title">{scene.title || "Sin título"}</div>
-                                        </div>
+                                        {dlg ? (
+                                          renderDialogue(false)
+                                        ) : (
+                                          <div className="mh-stg-scene-cap">
+                                            <div className="mh-stg-kick">Escena actual</div>
+                                            <div className="mh-stg-scene-title">{scene.title || "Sin título"}</div>
+                                          </div>
+                                        )}
                                       </div>
                                     </>
                                   ) : (
@@ -8141,7 +8413,10 @@ export default function App({ onSignOut }) {
                                     <X size={18} />
                                   </button>
                                   <figure className="mh-card-anim" onClick={(e) => e.stopPropagation()}>
-                                    <img src={sceneZoom.image} alt={sceneZoom.title || "Escena"} />
+                                    <div className="mh-stg-zoom-frame">
+                                      <img src={sceneZoom.image} alt={sceneZoom.title || "Escena"} />
+                                      {renderDialogue(true)}
+                                    </div>
                                     {sceneZoom.title && (
                                       <figcaption>
                                         <span className="mh-stg-kick">Escena actual</span>
