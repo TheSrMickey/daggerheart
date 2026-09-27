@@ -4879,12 +4879,10 @@ export default function App({ onSignOut }) {
         const secondaryWeapon = SECONDARY_WEAPONS.find((w) => w.key === c.f_secondary_weapon);
         const armorEntry = ARMORS.find((a) => a.key === c.f_armor);
         const equipMods = getEquipmentMods(primaryWeapon, secondaryWeapon, armorEntry);
-        // "Armadura y estadísticas": el hueco que dejaron el campo de daño y la Competencia (ahora junto a
-        // "Armas y armadura") se reparte haciendo los elementos más holgados y separándolos un poco más,
-        // para que la caja mantenga su altura.
+        // "Armadura y estadísticas": espaciado fijo y fila de Evasión/Armadura de altura fija, para que la caja
+        // (y con ella toda la fila de paneles) mida lo mismo con o sin armadura y con cualquier número de escudos.
         const statsSpacing = (() => {
-          const extra = armorEntry ? 64 : 41;
-          const k = (extra - (6 + 10 + 9)) / 6 + (armorEntry ? 51 : 47) / 5;
+          const k = (64 - (6 + 10 + 9)) / 6 + 51 / 5;
           return { boxPadY: 15, thrPadY: 13, stepLabelMb: 9, evMb: 16 + k, thrMb: 16 + k, stepMb: 14 + k };
         })();
         const infoBlock = (icon, label, value) => {
@@ -5189,14 +5187,14 @@ export default function App({ onSignOut }) {
                             unconscious={conditions.includes("Inconsciente")}
                             >
                               {/* El hueco del antiguo campo de daño se reparte entre las secciones para mantener la altura. */}
-                              <div style={{ display: "flex", gap: 12, marginBottom: statsSpacing.evMb }}>
-                                <div style={{ flex: 1, textAlign: "center", border: "1px solid " + themeColor, background: alpha(themeColor, 8), borderRadius: 12, padding: statsSpacing.boxPadY + "px 6px" }}>
+                              <div style={{ display: "flex", gap: 12, marginBottom: statsSpacing.evMb, height: 100 }}>
+                                <div style={{ flex: 1, textAlign: "center", border: "1px solid " + themeColor, background: alpha(themeColor, 8), borderRadius: 12, padding: statsSpacing.boxPadY + "px 6px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
                                   <div style={{ fontSize: 10, color: "var(--mh-muted)" }}>Evasión</div>
                                   <div className="mh-serif" style={{ fontSize: 26, fontWeight: 700, color: ink(themeColor) }}>
                                     {c.r_evasion ? Number(c.r_evasion) + (beastformInfo?.evasionBonus || 0) + equipMods.evasion : "—"}
                                   </div>
                                 </div>
-                                <div style={{ flex: 1.4, border: "1px solid var(--acc)", background: "color-mix(in srgb, var(--acc) 5%, transparent)", borderRadius: 12, padding: statsSpacing.boxPadY + "px 10px" }}>
+                                <div style={{ flex: 1.4, border: "1px solid var(--acc)", background: "color-mix(in srgb, var(--acc) 5%, transparent)", borderRadius: 12, padding: statsSpacing.boxPadY + "px 10px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
                                   <div style={{ fontSize: 10, color: "var(--mh-muted)", textAlign: "center", marginBottom: 4 }}>Armadura</div>
                                   <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
                                     <div className="mh-serif" style={{ fontSize: 26, fontWeight: 700, color: "var(--mh-gold-ink)" }}>
