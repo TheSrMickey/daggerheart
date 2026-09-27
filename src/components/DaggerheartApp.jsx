@@ -1706,7 +1706,13 @@ const sharedStyles = `
   .mh-map-hp i { display: block; height: 100%; background: #E24B4A; }
   .mh-map-nm { position: absolute; z-index: 1; top: 92%; left: 50%; translate: -50% 0; font-size: 10px; font-weight: 700; color: #fff; text-shadow: 0 1px 3px #000, 0 0 2px #000; white-space: nowrap; pointer-events: none; }
   .mh-map.is-compact .mh-map-nm { display: none; }
-  .mh-map-hint { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--mh-ink3); }
+  .mh-map-stage { position: relative; flex: 1 1 auto; min-height: 200px; border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #1B1824; container-type: size; }
+  .mh-map-backdrop { position: absolute; inset: -24px; background: #2B3A4F center / cover no-repeat; filter: blur(14px) brightness(.5) saturate(.9); }
+  .mh-map-fit { position: relative; width: min(100cqw, 100cqh * ${MAP_COLS} / ${MAP_ROWS}); }
+  .mh-map-fit .mh-map { border-radius: 0; box-shadow: 0 0 0 1px rgba(255,255,255,.08), 0 8px 30px rgba(0,0,0,.45); }
+  .mh-map-top { position: absolute; top: 0; right: 0; z-index: 5; pointer-events: none; }
+  .mh-map-top > * { pointer-events: auto; }
+  .mh-map-hint { flex-shrink: 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--mh-ink3); }
   .mh-map-hint .mh-stg-live { margin-left: auto; }
   .mh-map-gm { gap: 12px; }
   .mh-map-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 12.5px; color: var(--mh-ink3); }
@@ -8636,7 +8642,7 @@ export default function App({ onSignOut }) {
                                 })}
                               </div>
 
-                              {wide && stTab !== "escena" && (
+                              {wide && stTab !== "escena" && stTab !== "mapa" && (
                                 <button type="button" className="mh-stg-reduce" onClick={() => setStageWide(false)} title="Reducir y volver a ver las estadísticas">
                                   <Minimize2 size={13} /> Reducir
                                 </button>
@@ -8689,15 +8695,40 @@ export default function App({ onSignOut }) {
                                 {stTab === "mapa" &&
                                   (mapTokens.length || scene.image ? (
                                     <>
-                                      <MapBoard
-                                        bg={scene.image}
-                                        tokens={mapTokens}
-                                        canMove={(t) => t.kind === "pc" && t.charId === viewingCharId}
-                                        onMove={(id, x, y) => moveToken(charCampaign.id, id, x, y)}
-                                        selectedId={mapSel}
-                                        onSelect={setMapSel}
-                                        compact={!wide}
-                                      />
+                                      {/* La escena llena la caja (difuminada por detrás) y el tablero, con casillas cuadradas, se ajusta dentro */}
+                                      <div className="mh-map-stage">
+                                        <div className="mh-map-backdrop" style={scene.image ? { backgroundImage: `url("${scene.image.replace(/"/g, "%22")}")` } : undefined} />
+                                        <div className="mh-map-fit">
+                                          <MapBoard
+                                            bg={scene.image}
+                                            tokens={mapTokens}
+                                            canMove={(t) => t.kind === "pc" && t.charId === viewingCharId}
+                                            onMove={(id, x, y) => moveToken(charCampaign.id, id, x, y)}
+                                            selectedId={mapSel}
+                                            onSelect={setMapSel}
+                                            compact={!wide}
+                                          />
+                                        </div>
+                                        <div className="mh-stg-scene-top mh-map-top">
+                                          {live === "mapa" && (
+                                            <span className="mh-stg-live">
+                                              <i />
+                                              En directo
+                                            </span>
+                                          )}
+                                          <button
+                                            type="button"
+                                            className={"mh-stg-ibtn" + (wide ? " is-label" : "")}
+                                            aria-label={wide ? "Reducir el mapa" : "Ampliar el mapa"}
+                                            title={wide ? "Reducir y volver a ver las estadísticas" : "Ampliar el mapa"}
+                                            aria-pressed={wide}
+                                            onClick={() => setStageWide((v) => !v)}
+                                          >
+                                            {wide ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+                                            {wide && <span>Reducir</span>}
+                                          </button>
+                                        </div>
+                                      </div>
                                       <div className="mh-map-hint">
                                         {myToken ? (
                                           <span>
@@ -8705,12 +8736,6 @@ export default function App({ onSignOut }) {
                                           </span>
                                         ) : (
                                           "El DJ todavía no ha colocado tu ficha en el mapa."
-                                        )}
-                                        {live === "mapa" && (
-                                          <span className="mh-stg-live is-soft">
-                                            <i />
-                                            El DJ lo está mostrando
-                                          </span>
                                         )}
                                       </div>
                                     </>
