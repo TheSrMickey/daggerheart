@@ -1706,10 +1706,14 @@ const sharedStyles = `
   .mh-map-hp i { display: block; height: 100%; background: #E24B4A; }
   .mh-map-nm { position: absolute; z-index: 1; top: 92%; left: 50%; translate: -50% 0; font-size: 10px; font-weight: 700; color: #fff; text-shadow: 0 1px 3px #000, 0 0 2px #000; white-space: nowrap; pointer-events: none; }
   .mh-map.is-compact .mh-map-nm { display: none; }
-  .mh-map-stage { position: relative; flex: 1 1 auto; min-height: 200px; border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #1B1824; container-type: size; }
-  .mh-map-backdrop { position: absolute; inset: -24px; background: #2B3A4F center / cover no-repeat; filter: blur(14px) brightness(.5) saturate(.9); }
-  .mh-map-fit { position: relative; width: min(100cqw, 100cqh * ${MAP_COLS} / ${MAP_ROWS}); }
-  .mh-map-fit .mh-map { border-radius: 0; box-shadow: 0 0 0 1px rgba(255,255,255,.08), 0 8px 30px rgba(0,0,0,.45); }
+  .mh-map-stage { position: relative; flex: 1 1 auto; min-height: 200px; border-radius: 12px; overflow: hidden; background: #1B1824; }
+  .mh-map-view { position: absolute; inset: 0; overflow: auto; scrollbar-width: none; container-type: size; }
+  .mh-map-view::-webkit-scrollbar { display: none; }
+  .mh-map-view.is-pannable { cursor: grab; }
+  .mh-map-view.is-pannable:active { cursor: grabbing; }
+  /* Cubre la caja: el lado que sobra se recorre desplazando */
+  .mh-map-fit { position: relative; width: max(100cqw, 100cqh * ${MAP_COLS} / ${MAP_ROWS}); }
+  .mh-map-fit .mh-map { border-radius: 0; }
   .mh-map-top { position: absolute; top: 0; right: 0; z-index: 5; pointer-events: none; }
   .mh-map-top > * { pointer-events: auto; }
   .mh-map-hint { flex-shrink: 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--mh-ink3); }
@@ -2623,6 +2627,62 @@ function MapBoard({ bg, tokens, canMove, onMove, selectedId, onSelect, compact }
           </button>
         );
       })}
+    </div>
+  );
+}
+
+// Ventana del tablero: lo escala para cubrir toda la caja (como la imagen de la escena) y deja
+// desplazarse por lo que no cabe arrastrando el fondo o con la rueda. Al abrirse se centra en "focus".
+function MapViewport({ focus, children }) {
+  const ref = useRef(null);
+  const pan = useRef(null);
+  const [overflow, setOverflow] = useState(false);
+  const center = () => {
+    const el = ref.current;
+    if (!el) return;
+    const fx = focus ? (focus.x + 0.5) / MAP_COLS : 0.5;
+    const fy = focus ? (focus.y + 0.5) / MAP_ROWS : 0.5;
+    el.scrollLeft = fx * el.scrollWidth - el.clientWidth / 2;
+    el.scrollTop = fy * el.scrollHeight - el.clientHeight / 2;
+    setOverflow(el.scrollWidth > el.clientWidth + 2 || el.scrollHeight > el.clientHeight + 2);
+  };
+  useLayoutEffect(() => {
+    center();
+    const ro = new ResizeObserver(center);
+    if (ref.current) ro.observe(ref.current);
+    return () => ro.disconnect();
+  }, [focus?.x, focus?.y]);
+  const down = (e) => {
+    if (e.button > 0 || e.target.closest(".mh-map-tk")) return;
+    pan.current = { x: e.clientX, y: e.clientY, l: ref.current.scrollLeft, t: ref.current.scrollTop, moved: false };
+  };
+  const move = (e) => {
+    const p = pan.current;
+    if (!p) return;
+    const dx = e.clientX - p.x, dy = e.clientY - p.y;
+    if (!p.moved && Math.hypot(dx, dy) < 6) return;
+    p.moved = true;
+    ref.current.scrollLeft = p.l - dx;
+    ref.current.scrollTop = p.t - dy;
+  };
+  const up = () => {
+    // Si se ha arrastrado para desplazar, el clic que sigue no mueve fichas.
+    if (pan.current?.moved) ref.current.dataset.panned = "1";
+    pan.current = null;
+  };
+  const clickCapture = (e) => {
+    if (ref.current.dataset.panned) {
+      delete ref.current.dataset.panned;
+      e.stopPropagation();
+    }
+  };
+  const wheel = (e) => {
+    const el = ref.current;
+    if (el.scrollHeight <= el.clientHeight + 2 && Math.abs(e.deltaY) > Math.abs(e.deltaX)) el.scrollLeft += e.deltaY;
+  };
+  return (
+    <div ref={ref} className={"mh-map-view" + (overflow ? " is-pannable" : "")} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerLeave={up} onClickCapture={clickCapture} onWheel={wheel}>
+      <div className="mh-map-fit">{children}</div>
     </div>
   );
 }
@@ -8697,8 +8757,7 @@ export default function App({ onSignOut }) {
                                     <>
                                       {/* La escena llena la caja (difuminada por detrás) y el tablero, con casillas cuadradas, se ajusta dentro */}
                                       <div className="mh-map-stage">
-                                        <div className="mh-map-backdrop" style={scene.image ? { backgroundImage: `url("${scene.image.replace(/"/g, "%22")}")` } : undefined} />
-                                        <div className="mh-map-fit">
+                                        <MapViewport focus={myToken ? { x: myToken.x, y: myToken.y } : null}>
                                           <MapBoard
                                             bg={scene.image}
                                             tokens={mapTokens}
@@ -8708,7 +8767,7 @@ export default function App({ onSignOut }) {
                                             onSelect={setMapSel}
                                             compact={!wide}
                                           />
-                                        </div>
+                                        </MapViewport>
                                         <div className="mh-stg-scene-top mh-map-top">
                                           {live === "mapa" && (
                                             <span className="mh-stg-live">
@@ -8732,7 +8791,7 @@ export default function App({ onSignOut }) {
                                       <div className="mh-map-hint">
                                         {myToken ? (
                                           <span>
-                                            Arrastra tu ficha (<b>{myToken.name}</b>) o elígela y pulsa una casilla.
+                                            Arrastra tu ficha (<b>{myToken.name}</b>) o elígela y pulsa una casilla. Arrastra el fondo para recorrer el mapa.
                                           </span>
                                         ) : (
                                           "El DJ todavía no ha colocado tu ficha en el mapa."
