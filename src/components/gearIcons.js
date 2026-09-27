@@ -1,7 +1,7 @@
 // Iconos de armas y armaduras para la carta abierta.
 // Los que existen en lucide se usan tal cual; el resto se dibuja con el mismo estilo (24×24, trazo redondeado).
 import { createElement as h } from "react";
-import { Axe, BowArrow, Hammer, HandFist, Sword, WandSparkles } from "lucide-react";
+import { Axe, BowArrow, Coins, FlaskConical, Flame, Hammer, HandCoins, HandFist, Package, Sword, WandSparkles } from "lucide-react";
 
 const CUSTOM = {
   estoque: [
@@ -89,6 +89,16 @@ const CUSTOM = {
     ["path", { d: "M5 4.5Q12 1.8 19 4.5V19.5Q12 22.2 5 19.5Z" }],
     ["path", { d: "M12 3.2V20.8M5 9.5Q12 7.5 19 9.5M5 14.5Q12 12.5 19 14.5" }],
   ],
+  // Oro
+  bolsa: [
+    ["path", { d: "M8 5h8l-2 3c3 1.5 5 4.5 5 8a5 5 0 0 1-5 5h-4a5 5 0 0 1-5-5c0-3.5 2-6.5 5-8Z" }],
+    ["path", { d: "M9.5 8h5" }],
+  ],
+  cofre: [
+    ["rect", { x: 3, y: 9, width: 18, height: 11, rx: 1.5 }],
+    ["path", { d: "M3 9a5 5 0 0 1 5-5h8a5 5 0 0 1 5 5M3 13h18" }],
+    ["rect", { x: 10.5, y: 11.5, width: 3, height: 3.5, rx: 0.6 }],
+  ],
   // Armaduras
   gambeson: [
     ["path", { d: "M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" }],
@@ -163,3 +173,15 @@ export function armorIcon(name) {
   return ARMOR_RULES.find(([re]) => re.test(name || ""))?.[1] || ICONS.placas;
 }
 export const GEAR_ICON_LIST = { ...ICONS, espada: Sword, hacha: Axe, martillo: Hammer, guantelete: HandFist, arco: BowArrow, varita: WandSparkles };
+
+// Monedas de oro, de mayor a menor valor.
+export const GOLD_ICONS = { f_gold_thousands: ICONS.cofre, f_gold_hundreds: ICONS.bolsa, f_gold_tens: HandCoins, f_gold_units: Coins };
+
+// Icono y color para un objeto del inventario, según su nombre.
+export function itemVisual(name, { isWeapon, isArmor } = {}) {
+  if (isArmor) return { Icon: armorIcon(name), color: "var(--acc)", kind: "Armadura" };
+  if (isWeapon) return { Icon: weaponIcon(name), color: "var(--acc)", kind: "Arma" };
+  if (/poci|elixir|t[oó]nico|frasco|brebaje|ung[uü]ento/i.test(name || "")) return { Icon: FlaskConical, color: "#D9644E", kind: "Consumible" };
+  if (/antorcha|vela|farol|linterna/i.test(name || "")) return { Icon: Flame, color: "#E0823A", kind: "Equipo" };
+  return { Icon: Package, color: "#C08B5C", kind: "Objeto" };
+}

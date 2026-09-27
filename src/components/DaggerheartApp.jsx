@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect, useLayoutEffect, useRef } from "react";
-import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical } from "lucide-react";
+import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
-import { weaponIcon, armorIcon } from "./gearIcons";
+import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
 import { Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -1453,6 +1453,42 @@ const sharedStyles = `
   .mh-proj-menu-btn { all: unset; cursor: pointer; color: var(--mh-muted3); padding: 2px; border-radius: 6px; display: flex; flex-shrink: 0; }
   .mh-proj-menu-btn:hover, .mh-proj-menu-btn:focus-visible, .mh-proj-menu-btn[aria-expanded="true"] { color: var(--mh-ink); background: var(--mh-panel3); }
   .mh-proj-menu { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; border-top: 1px dashed var(--mh-line); font-size: 12px; color: var(--mh-ink3); }
+  .mh-inv-head { display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; color: var(--mh-muted); flex-shrink: 0; }
+  .mh-inv-head b { color: var(--mh-gold-ink); font-weight: 700; }
+  .mh-inv-grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: 86px; gap: 10px; flex-shrink: 0; }
+  .mh-islot {
+    all: unset; box-sizing: border-box; cursor: pointer; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 6px; padding: 6px 8px; text-align: center; border-radius: 12px;
+    border: 1.5px solid color-mix(in srgb, var(--ic, var(--acc)) 40%, transparent); background: color-mix(in srgb, var(--ic, var(--acc)) 6%, var(--mh-panel));
+    transition: border-color .15s, translate .15s;
+  }
+  .mh-islot:hover, .mh-islot:focus-visible { border-color: var(--ic, var(--acc)); translate: 0 -2px; }
+  .mh-islot.on { border-color: var(--ic); box-shadow: 0 0 0 2px color-mix(in srgb, var(--ic) 35%, transparent); }
+  .mh-islot.empty { border: 1.5px dashed var(--mh-line2); background: transparent; color: var(--mh-muted3); }
+  .mh-islot.empty:hover { translate: none; border-color: var(--acc); color: var(--mh-gold-ink); }
+  .mh-islot-ico { display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: color-mix(in srgb, var(--ic, var(--acc)) var(--mh-accent-keep, 100%), #000); }
+  .mh-islot-name { font-size: 11px; font-weight: 600; color: var(--mh-ink); line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .mh-islot-qty { position: absolute; top: 5px; right: 6px; font-size: 10.5px; color: #fff; background: var(--acc); border-radius: 20px; padding: 0 6px; line-height: 16px; }
+  .mh-inv-x { all: unset; cursor: pointer; color: var(--mh-muted3); display: flex; padding: 3px; border-radius: 6px; }
+  .mh-inv-x:hover, .mh-inv-x:focus-visible { color: #D9644E; background: var(--mh-panel3); }
+  .mh-inv-detail {
+    margin-top: auto; min-height: 64px; display: flex; align-items: center; gap: 10px; padding: 10px 12px; flex-shrink: 0;
+    border: 1px solid var(--mh-line); border-radius: 12px; background: var(--mh-panel2);
+  }
+  .mh-gold-total {
+    display: flex; align-items: baseline; justify-content: center; gap: 8px; padding: 14px; border-radius: 12px; flex-shrink: 0;
+    background: linear-gradient(135deg, color-mix(in srgb, #E3B04B 22%, var(--mh-panel)), color-mix(in srgb, #E3B04B 6%, var(--mh-panel)));
+    border: 1px solid color-mix(in srgb, #E3B04B 45%, transparent); color: color-mix(in srgb, #E3B04B var(--mh-accent-keep, 100%), #000);
+  }
+  .mh-gold-total svg { align-self: center; }
+  .mh-gold-total b { font-size: 30px; line-height: 1; }
+  .mh-gold-total span { font-size: 12px; color: var(--mh-muted); }
+  .mh-gold-row { display: flex; align-items: center; gap: 9px; padding: 9px 10px; border: 1px solid var(--mh-line); border-radius: 11px; background: var(--mh-panel); flex-shrink: 0; }
+  .mh-gold-ico {
+    width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    background: color-mix(in srgb, #E3B04B 18%, transparent); color: color-mix(in srgb, #E3B04B var(--mh-accent-keep, 100%), #000);
+  }
+  .mh-gold-n { font-size: 15px; min-width: 20px; text-align: center; color: color-mix(in srgb, #E3B04B var(--mh-accent-keep, 100%), #000); }
   .mh-holo {
     position: absolute; inset: 0; z-index: 30; pointer-events: none; border-radius: inherit; mix-blend-mode: color-dodge;
     background: linear-gradient(115deg, transparent 10%, rgba(255,80,200,.55) 25%, rgba(120,200,255,.55) 40%, rgba(255,240,120,.55) 55%, rgba(150,255,180,.55) 70%, transparent 85%);
@@ -3571,6 +3607,8 @@ export default function App({ onSignOut }) {
   };
 
   const [showBackpackSlots, setShowBackpackSlots] = useState(false);
+  const [selectedItemSlot, setSelectedItemSlot] = useState(null);
+  useEffect(() => setSelectedItemSlot(null), [viewingCharId]);
   const [newBackpackItemDraft, setNewBackpackItemDraft] = useState("");
   const [newBackpackItemDescDraft, setNewBackpackItemDescDraft] = useState("");
   const [showAddBackpackItemForm, setShowAddBackpackItemForm] = useState(false);
@@ -6558,302 +6596,152 @@ export default function App({ onSignOut }) {
                             {(() => {
                               const backpack = getBackpack(c)[0];
                               const backpackItems = backpack ? getBackpackItems(c) : [];
-                              return (
-                                <div style={{ display: "grid", gridTemplateRows: "repeat(6, 1fr)", rowGap: 10, flex: 1 }}>
-                                  <div style={{ gridRow: "1 / 6", position: "relative", display: "flex", flexDirection: "column", gap: 10 }}>
-                              {Array.from({ length: ITEM_SLOTS }, (_, i) => i).map((i) => {
-                                const item = items[i];
-
-                                if (item) {
-                                  return (
-                                    <div
-                                      key={i}
-                                      style={{
-                                        display: "flex",
-                                        alignItems: item.description ? "flex-start" : "center",
-                                        justifyContent: "space-between",
-                                        gap: 10,
-                                        border: "1px solid var(--mh-line)",
-                                        borderRadius: 8,
-                                        padding: "8px 12px",
-                                        flex: 1,
-                                        minHeight: 44,
-                                        overflow: "hidden",
-                                      }}
-                                    >
-                                      <div style={{ minWidth: 0, overflow: "hidden" }}>
-                                        <div style={{ fontSize: 13, fontWeight: 700, color: "var(--mh-ink)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                                          {item.name}
-                                        </div>
-                                        {item.description && (
-                                          <div
-                                            style={{
-                                              fontSize: 11.5,
-                                              color: "var(--mh-muted)",
-                                              marginTop: 2,
-                                              whiteSpace: "nowrap",
-                                              overflow: "hidden",
-                                              textOverflow: "ellipsis",
-                                            }}
-                                          >
-                                            {item.description}
-                                          </div>
-                                        )}
-                                      </div>
-                                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-                                        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                                          <button className="mh-btn-ghost" style={{ padding: "1px 6px" }} onClick={() => adjustItemCount(viewingCharId, i, -1)}>
-                                            <Minus size={10} />
-                                          </button>
-                                          <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--mh-gold-ink)", minWidth: 14, textAlign: "center" }}>
-                                            {item.count || 1}
-                                          </span>
-                                          <button className="mh-btn-ghost" style={{ padding: "1px 6px" }} onClick={() => adjustItemCount(viewingCharId, i, 1)}>
-                                            <Plus size={10} />
-                                          </button>
-                                        </div>
-                                        <X
-                                          size={13}
-                                          style={{ cursor: "pointer", color: "#D9644E", marginTop: item.description ? 2 : 0 }}
-                                          onClick={() => removeInventoryItem(viewingCharId, i)}
-                                        />
-                                      </div>
-                                    </div>
-                                  );
-                                }
-
-                                if (i === items.length) {
-                                  return (
-                                    <button
-                                      key={i}
-                                      className="mh-btn-ghost"
-                                      style={{ width: "100%", fontSize: 12, border: "1px dashed var(--mh-line2)", background: "transparent", flex: 1, minHeight: 44 }}
-                                      onClick={() => {
-                                        setShowAddItemModal(true);
-                                        setAddItemModalTab("catalog");
-                                      }}
-                                    >
-                                      + Añadir objeto
-                                    </button>
-                                  );
-                                }
-
+                              const equipKind = (name) =>
+                                PRIMARY_WEAPONS.some((w) => w.key === name) ? "primary" : SECONDARY_WEAPONS.some((w) => w.key === name) ? "secondary" : ARMORS.some((a) => a.key === name) ? "armor" : null;
+                              const visualOf = (it) => {
+                                const kind = equipKind(it.name);
+                                return itemVisual(it.name, { isWeapon: kind === "primary" || kind === "secondary", isArmor: kind === "armor" });
+                              };
+                              const sel = selectedItemSlot;
+                              const selItem = sel ? (sel.zone === "belt" ? items[sel.index] : backpackItems[sel.index]) : null;
+                              const slotCell = (zone, it, i) => {
+                                if (!it) return null;
+                                const v = visualOf(it);
+                                const active = sel && sel.zone === zone && sel.index === i;
                                 return (
-                                  <div
-                                    key={i}
-                                    style={{
-                                      display: "flex",
-                                      alignItems: "center",
-                                      justifyContent: "center",
-                                      border: "1px dashed var(--mh-line)",
-                                      borderRadius: 8,
-                                      padding: "8px 12px",
-                                      color: "var(--mh-line2)",
-                                      fontSize: 11.5,
-                                      fontStyle: "italic",
-                                      flex: 1,
-                                      minHeight: 44,
-                                    }}
+                                  <button
+                                    key={zone + i}
+                                    type="button"
+                                    className={"mh-islot" + (active ? " on" : "")}
+                                    style={{ "--ic": v.color }}
+                                    title={it.name}
+                                    onClick={() => setSelectedItemSlot(active ? null : { zone, index: i })}
                                   >
-                                    Hueco vacío
-                                  </div>
+                                    <span className="mh-islot-ico">
+                                      <v.Icon size={26} strokeWidth={1.6} />
+                                    </span>
+                                    <span className="mh-islot-name">{it.name}</span>
+                                    {(it.count || 1) > 1 && <b className="mh-islot-qty">×{it.count}</b>}
+                                  </button>
                                 );
-                              })}
-
-                                    {backpack && showBackpackSlots && (
-                                      <div
-                                        style={{
-                                          position: "absolute",
-                                          inset: 0,
-                                          background: "var(--mh-panel)",
-                                          border: "1px solid var(--acc)",
-                                          borderRadius: 10,
-                                          padding: 10,
-                                          display: "flex",
-                                          flexDirection: "column",
-                                          gap: 8,
-                                          boxShadow: "0 12px 28px rgba(0,0,0,0.66)",
-                                          zIndex: 20,
-                                        }}
-                                      >
-                                          <div style={{ fontSize: 10, fontWeight: 700, color: "var(--mh-gold-ink)", textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 2, flexShrink: 0 }}>
-                                            Dentro de {backpack.name}
-                                          </div>
-                                          <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 8 }}>
-                                          {Array.from({ length: ITEM_SLOTS }, (_, i) => i).map((i) => {
-                                            const bItem = backpackItems[i];
-
-                                            if (bItem) {
-                                              return (
-                                                <div
-                                                  key={"bp-" + i}
-                                                  style={{
-                                                    display: "flex",
-                                                    alignItems: bItem.description ? "flex-start" : "center",
-                                                    justifyContent: "space-between",
-                                                    gap: 10,
-                                                    border: "1px solid var(--mh-line)",
-                                                    background: "var(--mh-sunk)",
-                                                    borderRadius: 8,
-                                                    padding: "8px 12px",
-                                                    minHeight: 44,
-                                                    flex: 1,
-                                                  }}
-                                                >
-                                                  <div>
-                                                    <div style={{ fontSize: 13, fontWeight: 700, color: "var(--mh-ink)" }}>{bItem.name}</div>
-                                                    {bItem.description && (
-                                                      <div style={{ fontSize: 11.5, color: "var(--mh-muted)", marginTop: 2 }}>{bItem.description}</div>
-                                                    )}
-                                                  </div>
-                                                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-                                                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                                                      <button className="mh-btn-ghost" style={{ padding: "1px 6px" }} onClick={() => adjustBackpackItemCount(viewingCharId, i, -1)}>
-                                                        <Minus size={10} />
-                                                      </button>
-                                                      <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--mh-gold-ink)", minWidth: 14, textAlign: "center" }}>
-                                                        {bItem.count || 1}
-                                                      </span>
-                                                      <button className="mh-btn-ghost" style={{ padding: "1px 6px" }} onClick={() => adjustBackpackItemCount(viewingCharId, i, 1)}>
-                                                        <Plus size={10} />
-                                                      </button>
-                                                    </div>
-                                                    <X
-                                                      size={13}
-                                                      style={{ cursor: "pointer", color: "#D9644E" }}
-                                                      onClick={() => removeBackpackItem(viewingCharId, i)}
-                                                    />
-                                                  </div>
-                                                </div>
-                                              );
-                                            }
-
-                                            if (showAddBackpackItemForm && i === backpackItems.length) {
-                                              return (
-                                                <div key={"bp-" + i} style={{ display: "flex", flexDirection: "column", gap: 6, border: "1px solid var(--acc)", borderRadius: 8, padding: "8px 12px", minHeight: 44, flex: 1 }}>
-                                                  <input
-                                                    className="mh-input"
-                                                    style={{ fontSize: 12 }}
-                                                    placeholder="Nombre del objeto..."
-                                                    value={newBackpackItemDraft}
-                                                    onChange={(e) => setNewBackpackItemDraft(e.target.value)}
-                                                    autoFocus
-                                                  />
-                                                  <div style={{ display: "flex", gap: 6 }}>
-                                                    <input
-                                                      className="mh-input"
-                                                      style={{ fontSize: 12, flex: 1 }}
-                                                      placeholder="Descripción (opcional)..."
-                                                      value={newBackpackItemDescDraft}
-                                                      onChange={(e) => setNewBackpackItemDescDraft(e.target.value)}
-                                                      onKeyDown={(e) => e.key === "Enter" && addBackpackItem()}
-                                                    />
-                                                    <button className="mh-btn-ghost" style={{ fontSize: 11.5 }} onClick={addBackpackItem}>
-                                                      Añadir
-                                                    </button>
-                                                  </div>
-                                                </div>
-                                              );
-                                            }
-
-                                            if (i === backpackItems.length) {
-                                              return (
-                                                <button
-                                                  key={"bp-" + i}
-                                                  className="mh-btn-ghost"
-                                                  style={{ width: "100%", fontSize: 12, border: "1px dashed var(--mh-line2)", background: "transparent", minHeight: 44, flex: 1 }}
-                                                  onClick={() => setShowAddBackpackItemForm(true)}
-                                                >
-                                                  + Añadir objeto a la mochila
-                                                </button>
-                                              );
-                                            }
-
-                                            return (
-                                              <div
-                                                key={"bp-" + i}
-                                                style={{
-                                                  display: "flex",
-                                                  alignItems: "center",
-                                                  justifyContent: "center",
-                                                  border: "1px dashed var(--mh-line)",
-                                                  borderRadius: 8,
-                                                  padding: "8px 12px",
-                                                  color: "var(--mh-line2)",
-                                                  fontSize: 11.5,
-                                                  fontStyle: "italic",
-                                                  minHeight: 44,
-                                                  flex: 1,
-                                                }}
-                                              >
-                                                Hueco vacío
-                                              </div>
-                                            );
-                                          })}
-                                          </div>
-                                      </div>
+                              };
+                              const emptyCell = (key, onClick, label) => (
+                                <button key={key} type="button" className="mh-islot empty" title={label} aria-label={label} onClick={onClick}>
+                                  <Plus size={16} />
+                                </button>
+                              );
+                              return (
+                                <div style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1, minHeight: 0 }}>
+                                  <div className="mh-inv-head">
+                                    <span>Cinturón</span>
+                                    <b>{items.length} / {ITEM_SLOTS} huecos</b>
+                                  </div>
+                                  <div className="mh-inv-grid">
+                                    {Array.from({ length: ITEM_SLOTS }, (_, i) =>
+                                      items[i]
+                                        ? slotCell("belt", items[i], i)
+                                        : emptyCell("be" + i, () => {
+                                            setShowAddItemModal(true);
+                                            setAddItemModalTab("catalog");
+                                          }, "Añadir objeto")
                                     )}
                                   </div>
 
-                                  {backpack ? (
-                                      <div
-                                        onClick={() => setShowBackpackSlots((v) => !v)}
-                                        style={{
-                                          gridRow: "6",
-                                          position: "relative",
-                                          display: "flex",
-                                          alignItems: backpack.description ? "flex-start" : "center",
-                                          justifyContent: "space-between",
-                                          gap: 10,
-                                          border: "1px solid var(--acc)",
-                                          background: "color-mix(in srgb, var(--acc) 5%, transparent)",
-                                          borderRadius: 8,
-                                          padding: "8px 12px",
-                                          cursor: "pointer",
-                                          overflow: "hidden",
-                                        }}
-                                      >
-                                        <div style={{ minWidth: 0, overflow: "hidden" }}>
-                                          <div style={{ fontSize: 10, fontWeight: 700, color: "var(--mh-gold-ink)", textTransform: "uppercase", letterSpacing: 0.3 }}>Mochila</div>
-                                          <div style={{ fontSize: 13, fontWeight: 700, color: "var(--mh-ink)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                                            {backpack.name}
-                                          </div>
-                                          {backpack.description && (
-                                            <div
-                                              style={{
-                                                fontSize: 11.5,
-                                                color: "var(--mh-muted)",
-                                                marginTop: 2,
-                                                whiteSpace: "nowrap",
-                                                overflow: "hidden",
-                                                textOverflow: "ellipsis",
-                                              }}
-                                            >
-                                              {backpack.description}
-                                            </div>
-                                          )}
+                                  <div className="mh-inv-head" style={{ marginTop: 4 }}>
+                                    <span>Mochila</span>
+                                    {backpack ? (
+                                      <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                        <b>{backpackItems.length} / {ITEM_SLOTS}</b>
+                                        <button type="button" className="mh-inv-x" title="Quitar la mochila" aria-label="Quitar la mochila" onClick={() => removeBackpack(viewingCharId)}>
+                                          <X size={12} />
+                                        </button>
+                                      </span>
+                                    ) : (
+                                      <span>sin mochila</span>
+                                    )}
+                                  </div>
+                                  <div className="mh-inv-grid" style={{ opacity: backpack ? 1 : 0.45 }}>
+                                    {Array.from({ length: ITEM_SLOTS }, (_, i) =>
+                                      backpack && backpackItems[i] ? (
+                                        slotCell("pack", backpackItems[i], i)
+                                      ) : backpack ? (
+                                        emptyCell("pe" + i, () => {
+                                          setSelectedItemSlot(null);
+                                          setShowAddBackpackItemForm(true);
+                                        }, "Añadir a la mochila")
+                                      ) : (
+                                        <div key={"pd" + i} className="mh-islot empty" style={{ borderStyle: "dotted", cursor: "default" }}>
+                                          <Backpack size={15} />
                                         </div>
-                                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-                                          {showBackpackSlots ? <ChevronDown size={14} color="var(--acc)" /> : <ChevronRight size={14} color="var(--acc)" />}
-                                          <X
-                                            size={13}
-                                            style={{ cursor: "pointer", color: "#D9644E", marginTop: backpack.description ? 2 : 0 }}
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              removeBackpack(viewingCharId);
-                                            }}
-                                          />
-                                        </div>
-                                    </div>
-                                  ) : (
-                                  <button
-                                    className="mh-btn-ghost"
-                                    style={{ gridRow: "6", width: "100%", fontSize: 12, border: "1px dashed var(--mh-line2)", background: "transparent" }}
-                                    onClick={() => addBackpack(viewingCharId)}
-                                  >
-                                    + Añadir mochila
-                                  </button>
+                                      )
+                                    )}
+                                  </div>
+                                  {!backpack && (
+                                    <button type="button" className="mh-exp-add" style={{ flex: "0 0 auto", padding: 11 }} onClick={() => addBackpack(viewingCharId)}>
+                                      <Plus size={14} /> Añadir mochila (+{ITEM_SLOTS} huecos)
+                                    </button>
                                   )}
+
+                                  <div className="mh-inv-detail">
+                                    {showAddBackpackItemForm && backpack ? (
+                                      <div style={{ display: "flex", flexDirection: "column", gap: 6, width: "100%" }}>
+                                        <input className="mh-input" style={{ fontSize: 12 }} placeholder="Nombre del objeto…" value={newBackpackItemDraft} autoFocus onChange={(e) => setNewBackpackItemDraft(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addBackpackItem()} />
+                                        <div style={{ display: "flex", gap: 6 }}>
+                                          <input className="mh-input" style={{ fontSize: 12, flex: 1 }} placeholder="Descripción (opcional)…" value={newBackpackItemDescDraft} onChange={(e) => setNewBackpackItemDescDraft(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addBackpackItem()} />
+                                          <button className="mh-btn" style={{ fontSize: 11.5 }} onClick={addBackpackItem}>Añadir</button>
+                                          <button className="mh-btn-ghost" style={{ fontSize: 11.5 }} onClick={() => setShowAddBackpackItemForm(false)}>Cancelar</button>
+                                        </div>
+                                      </div>
+                                    ) : selItem ? (
+                                      (() => {
+                                        const v = visualOf(selItem);
+                                        const kind = sel.zone === "belt" ? equipKind(selItem.name) : null;
+                                        const adjust = (d) => (sel.zone === "belt" ? adjustItemCount(viewingCharId, sel.index, d) : adjustBackpackItemCount(viewingCharId, sel.index, d));
+                                        const remove = () => {
+                                          setSelectedItemSlot(null);
+                                          sel.zone === "belt" ? removeInventoryItem(viewingCharId, sel.index) : removeBackpackItem(viewingCharId, sel.index);
+                                        };
+                                        return (
+                                          <>
+                                            <span className="mh-islot-ico" style={{ "--ic": v.color, width: 38, height: 38, borderRadius: 10, background: "color-mix(in srgb, var(--ic) 14%, transparent)" }}>
+                                              <v.Icon size={20} />
+                                            </span>
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                              <div className="mh-arow-kicker" style={{ "--ac": v.color }}>{v.kind}{sel.zone === "pack" ? " · en la mochila" : ""}</div>
+                                              <div className="mh-arow-title">{selItem.name}</div>
+                                              {selItem.description && <div className="mh-arow-sum">{selItem.description}</div>}
+                                            </div>
+                                            <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                                              <button className="mh-btn-ghost" style={{ padding: "2px 6px" }} aria-label="Quitar uno" onClick={() => adjust(-1)}>
+                                                <Minus size={11} />
+                                              </button>
+                                              <b style={{ fontSize: 13, minWidth: 14, textAlign: "center", color: "var(--mh-ink)" }}>{selItem.count || 1}</b>
+                                              <button className="mh-btn-ghost" style={{ padding: "2px 6px" }} aria-label="Añadir uno" onClick={() => adjust(1)}>
+                                                <Plus size={11} />
+                                              </button>
+                                            </span>
+                                            {kind && (
+                                              <button
+                                                className="mh-btn"
+                                                style={{ fontSize: 11.5, padding: "6px 10px" }}
+                                                onClick={() => {
+                                                  setSelectedItemSlot(null);
+                                                  equipFromInventory(viewingCharId, kind, selItem.name);
+                                                }}
+                                              >
+                                                Equipar
+                                              </button>
+                                            )}
+                                            <button className="mh-inv-x" title="Eliminar objeto" aria-label="Eliminar objeto" onClick={remove}>
+                                              <Trash2 size={14} />
+                                            </button>
+                                          </>
+                                        );
+                                      })()
+                                    ) : (
+                                      <span style={{ fontSize: 12, color: "var(--mh-muted)", width: "100%", textAlign: "center" }}>Pulsa un objeto para ver sus opciones.</span>
+                                    )}
+                                  </div>
                                 </div>
                               );
                             })()}
@@ -6870,78 +6758,66 @@ export default function App({ onSignOut }) {
                             {(() => {
                               const counts = GOLD_TIERS.map((t) => Math.min(10, Number(c[t.field] || 0)));
                               const total = GOLD_TIERS.reduce((sum, t, idx) => sum + t.value * counts[idx], 0);
+                              const MAX_GOLD = 10999;
+                              // Se suma o resta en oro y se reparte solo: 10 puñados pasan a ser 1 bolsa, etc.
+                              const changeGold = (delta) => setGoldTotal(viewingCharId, Math.max(0, Math.min(MAX_GOLD, total + delta)));
                               return (
-                                <>
-                                  <span
-                                    style={{
-                                      position: "absolute",
-                                      top: 18,
-                                      right: 20,
-                                      fontSize: 12.5,
-                                      fontWeight: 700,
-                                      color: "var(--mh-gold-ink)",
-                                      border: "1px solid var(--acc)",
-                                      borderRadius: 20,
-                                      padding: "3px 12px",
-                                    }}
-                                  >
-                                    {total} de oro
-                                  </span>
-                                  <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                                    {GOLD_TIERS.map((tier, idx) => (
-                                      <div key={tier.field}>
-                                        <div style={{ fontSize: 10.5, fontWeight: 700, color: "var(--mh-muted)", textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 6 }}>
-                                          {tier.label} (x{tier.value})
+                                <div style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1, minHeight: 0 }}>
+                                  <div className="mh-gold-total">
+                                    <Coins size={22} />
+                                    <b className="mh-serif">{total}</b>
+                                    <span>de oro</span>
+                                  </div>
+                                  {[...GOLD_TIERS].reverse().map((tier) => {
+                                    const idx = GOLD_TIERS.indexOf(tier);
+                                    const Ico = GOLD_ICONS[tier.field];
+                                    return (
+                                      <div key={tier.field} className="mh-gold-row">
+                                        <span className="mh-gold-ico">
+                                          <Ico size={18} />
+                                        </span>
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                          <div style={{ fontSize: 13, fontWeight: 700, color: "var(--mh-ink)" }}>{tier.label}</div>
+                                          <div style={{ fontSize: 10.5, color: "var(--mh-muted)" }}>×{tier.value}</div>
                                         </div>
-                                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                                          {Array.from({ length: 10 }, (_, i) => i).map((i) => (
-                                            <div
-                                              key={i}
-                                              onClick={() => toggleGoldCoin(viewingCharId, idx, i)}
-                                              title={`${tier.value} de oro`}
-                                              style={{
-                                                width: tier.shape === "circle" ? 22 : 26,
-                                                height: 22,
-                                                borderRadius: tier.shape === "circle" ? "50%" : 6,
-                                                border: "1px solid var(--acc)",
-                                                background: i < counts[idx] ? "var(--acc)" : "transparent",
-                                                cursor: "pointer",
-                                              }}
-                                            />
-                                          ))}
-                                        </div>
-                                      </div>
-                                    ))}
-
-                                    <div style={{ borderTop: "1px solid var(--mh-line)", margin: "2px 0" }} />
-
-                                    <div>
-                                      <div style={{ fontSize: 10.5, fontWeight: 700, color: "var(--mh-muted)", textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 6 }}>
-                                        Fijar cantidad exacta
-                                      </div>
-                                      <div style={{ display: "flex", gap: 8 }}>
-                                        <input
-                                          className="mh-input"
-                                          type="number"
-                                          placeholder="Ej. 235"
-                                          value={goldSetDraft}
-                                          onChange={(e) => setGoldSetDraft(e.target.value)}
-                                          onKeyDown={(e) => e.key === "Enter" && goldSetDraft !== "" && (setGoldTotal(viewingCharId, goldSetDraft), setGoldSetDraft(""))}
-                                        />
-                                        <button
-                                          className="mh-btn-ghost"
-                                          onClick={() => {
-                                            if (goldSetDraft === "") return;
-                                            setGoldTotal(viewingCharId, goldSetDraft);
-                                            setGoldSetDraft("");
-                                          }}
-                                        >
-                                          Fijar
+                                        <button className="mh-btn-ghost" style={{ padding: "2px 7px" }} aria-label={"Quitar " + tier.label.toLowerCase()} disabled={total < tier.value} onClick={() => changeGold(-tier.value)}>
+                                          <Minus size={11} />
+                                        </button>
+                                        <b className="mh-serif mh-gold-n">{counts[idx]}</b>
+                                        <button className="mh-btn-ghost" style={{ padding: "2px 7px" }} aria-label={"Añadir " + tier.label.toLowerCase()} disabled={total + tier.value > MAX_GOLD} onClick={() => changeGold(tier.value)}>
+                                          <Plus size={11} />
                                         </button>
                                       </div>
+                                    );
+                                  })}
+                                  <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "var(--mh-muted)" }}>
+                                    <ArrowLeftRight size={13} /> 10 monedas forman 1 puñado, 10 puñados 1 bolsa y 10 bolsas 1 cofre.
+                                  </div>
+                                  <div style={{ flex: 1 }} />
+                                  <div>
+                                    <div className="mh-label" style={{ marginBottom: 6 }}>Fijar cantidad exacta</div>
+                                    <div style={{ display: "flex", gap: 8 }}>
+                                      <input
+                                        className="mh-input"
+                                        type="number"
+                                        placeholder="Ej. 235"
+                                        value={goldSetDraft}
+                                        onChange={(e) => setGoldSetDraft(e.target.value)}
+                                        onKeyDown={(e) => e.key === "Enter" && goldSetDraft !== "" && (setGoldTotal(viewingCharId, goldSetDraft), setGoldSetDraft(""))}
+                                      />
+                                      <button
+                                        className="mh-btn-ghost"
+                                        onClick={() => {
+                                          if (goldSetDraft === "") return;
+                                          setGoldTotal(viewingCharId, goldSetDraft);
+                                          setGoldSetDraft("");
+                                        }}
+                                      >
+                                        Fijar
+                                      </button>
                                     </div>
                                   </div>
-                                </>
+                                </div>
                               );
                             })()}
                           </Panel>
