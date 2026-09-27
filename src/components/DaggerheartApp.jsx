@@ -1405,9 +1405,9 @@ const sharedStyles = `
   .mh-arow-el:focus-visible { outline: 2px solid var(--ac); outline-offset: 1px; }
   .mh-arow-link {
     all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 1px; font-size: 11px; font-weight: 600; flex-shrink: 0;
-    color: var(--mh-gold-ink); padding: 3px 7px; border-radius: 6px; border: 1px solid color-mix(in srgb, var(--acc) 40%, transparent);
+    color: color-mix(in srgb, var(--ac) var(--mh-accent-keep, 100%), #000); padding: 3px 7px; border-radius: 6px; border: 1px solid color-mix(in srgb, var(--ac) 45%, transparent);
   }
-  .mh-arow-link:hover { background: color-mix(in srgb, var(--acc) 10%, transparent); }
+  .mh-arow-link:hover, .mh-arow-link:focus-visible { background: color-mix(in srgb, var(--ac) 12%, transparent); outline: none; }
   .mh-holo {
     position: absolute; inset: 0; z-index: 30; pointer-events: none; border-radius: inherit; mix-blend-mode: color-dodge;
     background: linear-gradient(115deg, transparent 10%, rgba(255,80,200,.55) 25%, rgba(120,200,255,.55) 40%, rgba(255,240,120,.55) 55%, rgba(150,255,180,.55) 70%, transparent 85%);
@@ -6020,11 +6020,21 @@ export default function App({ onSignOut }) {
                               title: transEntry.key,
                               summary: isActive ? activatableFeature.name + " activa" : transEntry.blurb,
                               active: isActive,
-                              hint: activatableFeature ? (isActive ? "Pulsa para salir de la forma" : "Pulsa para activar " + activatableFeature.name) : undefined,
                               cost: activatableFeature ? { label: isActive ? "Activa" : "1 Estrés", kind: isActive ? "active" : "stress" } : null,
-                              onClick: activatableFeature
-                                ? () => toggleTransformationForm(viewingCharId, activatableFeature.name, isActive)
-                                : openDetail({ kicker: "Transformación", title: transEntry.key, text: transEntry.blurb, features: transEntry.features, bigStyle: true }),
+                              onClick: openDetail({ kicker: "Transformación", title: transEntry.key, text: transEntry.blurb, features: transEntry.features, bigStyle: true, accent: "#A58BE8", transformForm: activatableFeature?.name }),
+                              extra: activatableFeature && (
+                                <button
+                                  type="button"
+                                  className="mh-arow-link"
+                                  title={isActive ? "Salir de " + activatableFeature.name : "Activar " + activatableFeature.name + " (marca 1 Estrés)"}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleTransformationForm(viewingCharId, activatableFeature.name, isActive);
+                                  }}
+                                >
+                                  {isActive ? "Salir" : "Activar"}
+                                </button>
+                              ),
                             });
                           }
                         }
@@ -7851,6 +7861,8 @@ export default function App({ onSignOut }) {
                     ? armorIcon(d.title)
                     : d.weapon
                     ? weaponIcon(d.title)
+                    : d.transformForm
+                    ? Moon
                     : d.domain ? DOMAIN_ICONS[d.domain.name] || Sparkles : Sparkles;
                   const action = !d.features && (d.navigateAction || CARD_ACTIONS[d.title]);
                   const footer = d.weapon
@@ -7938,9 +7950,23 @@ export default function App({ onSignOut }) {
                           <div style={{ fontSize: "0.93em", color: "var(--mh-muted2)", fontStyle: "italic" }}>Sin característica especial.</div>
                         ))}
                     </FitBox>
-                    {(footer || d.domain || action) && (
+                    {(footer || d.domain || action || d.transformForm) && (
                       <div className="mh-cardc-foot">
-                        {action ? (
+                        {d.transformForm ? (() => {
+                          const formActive = c.f_transformation_form_active === d.transformForm;
+                          return (
+                            <button
+                              className={formActive ? "mh-btn-ghost" : "mh-btn"}
+                              style={{ width: "100%", justifyContent: "center" }}
+                              onClick={() => {
+                                toggleTransformationForm(viewingCharId, d.transformForm, formActive);
+                                closeCardDetail();
+                              }}
+                            >
+                              {formActive ? `Salir de ${d.transformForm}` : `Activar ${d.transformForm} (1 Estrés)`}
+                            </button>
+                          );
+                        })() : action ? (
                           d.navigateAction ? (
                             <button
                               className="mh-btn"
