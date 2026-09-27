@@ -1360,6 +1360,45 @@ const sharedStyles = `
     border-top: 1px solid color-mix(in srgb, var(--cc) 35%, transparent); font-size: 12px; color: var(--mh-ink3);
   }
   .mh-cardc-foot b { color: var(--mh-ink); }
+  /* Armas y armadura: cada pieza es su carta en pequeño (mismo arte, color de rareza y cifra principal) */
+  .mh-eq {
+    position: relative; flex: 1; min-height: 0; display: flex; cursor: pointer; overflow: hidden; border-radius: 14px;
+    border: 2px solid var(--cc);
+    background: linear-gradient(color-mix(in srgb, var(--cc) 10%, transparent), color-mix(in srgb, var(--cc) 3%, transparent)), var(--mh-panel);
+    transition: transform .15s, box-shadow .15s;
+  }
+  .mh-eq:hover { transform: translateY(-1px); box-shadow: 0 6px 16px color-mix(in srgb, var(--cc) 22%, transparent); }
+  .mh-eq:focus-visible { outline: 2px solid var(--cc); outline-offset: 2px; }
+  .mh-eq-art {
+    position: relative; width: 96px; flex-shrink: 0; margin: 6px 0 6px 6px; border-radius: 10px;
+    border: 1px solid color-mix(in srgb, var(--cc) 55%, transparent);
+    background: linear-gradient(160deg, var(--mh-panel3) 0%, #3A3150 100%); color: rgba(236,230,218,.5);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .mh-eq-tier {
+    position: absolute; bottom: 0; left: 50%; translate: -50% 50%; height: 17px; display: inline-flex; align-items: center; padding: 0 8px;
+    border-radius: 20px; color: #fff; font-size: 8.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap;
+    box-shadow: 0 1px 4px rgba(0,0,0,.3);
+  }
+  .mh-eq-body { flex: 1; min-width: 0; padding: 9px 30px 9px 13px; display: flex; flex-direction: column; justify-content: center; }
+  .mh-eq-sub { font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: color-mix(in srgb, var(--cc) var(--mh-accent-keep, 100%), #000); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mh-eq-title { font-size: 15px; font-weight: 700; color: var(--mh-ink); line-height: 1.25; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mh-eq-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; margin-top: 4px; margin-right: -18px; }
+  .mh-eq-lbl { font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--mh-muted2); }
+  .mh-eq-big { font-size: 21px; font-weight: 700; line-height: 1.05; color: color-mix(in srgb, var(--cc) var(--mh-accent-keep, 100%), #000); white-space: nowrap; }
+  .mh-eq-big small { font-size: 11px; font-weight: 500; color: var(--mh-muted); }
+  .mh-eq-foot { font-size: 11px; color: var(--mh-ink3); text-align: right; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mh-eq-feat {
+    margin: 6px -18px 0 0; padding: 4px 8px; border-radius: 6px; font-size: 11px; line-height: 1.4; color: var(--mh-ink2);
+    background: color-mix(in srgb, var(--cc) 10%, transparent);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .mh-eq-feat.is-pos { background: color-mix(in srgb, #7FB77A 14%, transparent); }
+  .mh-eq-feat.is-neg { background: color-mix(in srgb, #D9644E 12%, transparent); }
+  .mh-eq-feat b { color: var(--mh-ink); margin-right: 3px; }
+  .mh-eq-acts { display: flex; gap: 6px; margin-top: 8px; }
+  .mh-eq-acts button { font-size: 11.5px; padding: 5px 11px; display: inline-flex; align-items: center; gap: 5px; }
+  .mh-eq-stash { position: absolute; top: 9px; right: 9px; }
   .mh-exp {
     position: relative; flex: 1; min-height: 0; display: flex; overflow: hidden; border-radius: 12px;
     border: 1px solid color-mix(in srgb, var(--acc) 40%, transparent); background: var(--mh-panel);
@@ -6237,8 +6276,8 @@ export default function App({ onSignOut }) {
                                           flexDirection: "column",
                                           alignItems: "center",
                                           justifyContent: "center",
-                                          border: "1px dashed var(--mh-line2)",
-                                          borderRadius: 10,
+                                          border: "1.5px dashed var(--mh-line2)",
+                                          borderRadius: 14,
                                           padding: "12px 14px",
                                           flex: 1,
                                           color: "var(--mh-muted3)",
@@ -6268,8 +6307,8 @@ export default function App({ onSignOut }) {
                                           flexDirection: "column",
                                           alignItems: "center",
                                           justifyContent: "center",
-                                          border: "1px dashed var(--mh-line2)",
-                                          borderRadius: 10,
+                                          border: "1.5px dashed var(--mh-line2)",
+                                          borderRadius: 14,
                                           padding: "12px 14px",
                                           flex: 1,
                                           color: "var(--mh-muted3)",
@@ -6326,163 +6365,124 @@ export default function App({ onSignOut }) {
                                   }
 
                                   const w = slot.w;
-
-                                  if (slot.kind === "armor") {
-                                    return (
-                                      <div
-                                        key={idx}
-                                        onClick={() =>
-                                          setViewingCardDetail({
-                                            kicker: "Armadura",
+                                  // Tarjeta = la carta abierta en pequeño: mismo arte, color de rareza, título y cifra principal.
+                                  const isArmor = slot.kind === "armor";
+                                  const tier = TIER_COLORS[w.tier] ? w.tier : 1;
+                                  const handsLabel = w.hands === 2 ? "Dos manos" : "Una mano";
+                                  const dmgParts = !isArmor ? (w.damage || "").match(/^(\S+)\s*(.*)$/) : null;
+                                  const hasDice = !isArmor && /d\d/.test(w.damage || "");
+                                  const profDamage = hasDice ? String(proficiency) + (dmgParts?.[1] || w.damage).replace(/^\d*/, "") : "";
+                                  const [featName, ...featRest] = (w.feature || "").split(":");
+                                  const featTone = w.mods && Object.values(w.mods).some((v) => v < 0) ? " is-neg" : w.mods ? " is-pos" : "";
+                                  const TileIcon = isArmor ? armorIcon(w.key) : weaponIcon(w.key);
+                                  const desc = isArmor
+                                    ? `Puntuación ${w.score} · Umbrales base ${w.major}/${w.severe}`
+                                    : w.trait !== "—"
+                                    ? `${w.trait} · ${w.range} · ${w.damage} · ${handsLabel}`
+                                    : `${w.damage} · ${handsLabel}`;
+                                  const openCard = () =>
+                                    setViewingCardDetail(
+                                      isArmor
+                                        ? { kicker: "Armadura", title: w.key, text: desc, armor: { score: w.score, major: w.major, severe: w.severe }, showCharacteristic: true, characteristic: w.feature, bigStyle: true, tier: w.tier }
+                                        : {
+                                            kicker: slot.label,
                                             title: w.key,
-                                            text: `Puntuación ${w.score} · Umbrales base ${w.major}/${w.severe}`,
-                                            armor: { score: w.score, major: w.major, severe: w.severe },
+                                            text: desc,
+                                            weapon: { damage: w.damage, trait: w.trait, range: w.range, hands: handsLabel },
                                             showCharacteristic: true,
                                             characteristic: w.feature,
                                             bigStyle: true,
                                             tier: w.tier,
-                                          })
-                                        }
-                                        style={{ position: "relative", border: "1px solid var(--mh-line)", borderRadius: 10, padding: "12px 14px", flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", cursor: "pointer" }}
-                                      >
-                                        <div className="mh-tip-anchor" style={{ position: "absolute", top: 10, right: 10 }}>
-                                          {items.length >= ITEM_SLOTS && (
-                                            <span className="mh-tip" style={{ bottom: "auto", top: "calc(100% + 6px)" }}>Inventario lleno</span>
-                                          )}
-                                          <Backpack
-                                            size={15}
-                                            color="#9C93AD"
-                                            title={items.length >= ITEM_SLOTS ? undefined : "Guardar en el inventario"}
-                                            style={{ cursor: "pointer" }}
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              stashEquippedItem(viewingCharId, "armor", w.key, `Puntuación ${w.score} · Umbrales base ${w.major}/${w.severe}`);
-                                            }}
-                                          />
-                                        </div>
-                                        <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--mh-ink)", marginBottom: 3 }}>{w.key}</div>
-                                        <div style={{ fontSize: 11, color: "var(--mh-muted)" }}>Puntuación {w.score} · Umbrales base {w.major}/{w.severe}</div>
-                                        {w.mods && (
-                                          <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 6 }}>
-                                            {Object.entries(w.mods).map(([key, val]) => (
-                                              <span
-                                                key={key}
-                                                style={{
-                                                  fontSize: 9.5,
-                                                  fontWeight: 700,
-                                                  color: ink(val > 0 ? "#7FB77A" : "#D9644E"),
-                                                  background: alpha((val > 0 ? "#7FB77A" : "#D9644E"), 10),
-                                                  padding: "2px 7px",
-                                                  borderRadius: 20,
-                                                }}
-                                              >
-                                                {MOD_LABELS[key] || key} {val > 0 ? "+" : ""}{val}
-                                              </span>
-                                            ))}
-                                          </div>
-                                        )}
-                                      </div>
+                                          }
                                     );
-                                  }
-
                                   return (
                                     <div
                                       key={idx}
-                                      onClick={
-                                        idx === 0 || idx === 1
-                                          ? () => {
-                                              const handsLabel = w.hands === 2 ? "Dos manos" : "Una mano";
-                                              setViewingCardDetail({
-                                                kicker: idx === 0 ? "Arma principal" : "Arma secundaria",
-                                                title: w.key,
-                                                text:
-                                                  w.trait !== "—"
-                                                    ? `${w.trait} · ${w.range} · ${w.damage} · ${handsLabel}`
-                                                    : `${w.damage} · ${handsLabel}`,
-                                                weapon: { damage: w.damage, trait: w.trait, range: w.range, hands: handsLabel },
-                                                showCharacteristic: true,
-                                                characteristic: w.feature,
-                                                bigStyle: true,
-                                                tier: w.tier,
-                                              });
-                                            }
-                                          : undefined
-                                      }
-                                      style={{ position: "relative", border: "1px solid var(--mh-line)", borderRadius: 10, padding: "12px 14px", flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", cursor: idx === 0 || idx === 1 ? "pointer" : "default" }}
+                                      className="mh-eq"
+                                      style={{ "--cc": TIER_COLORS[tier].color }}
+                                      role="button"
+                                      tabIndex={0}
+                                      aria-label={`Ver la carta de ${w.key}`}
+                                      onClick={openCard}
+                                      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && e.target === e.currentTarget && (e.preventDefault(), openCard())}
                                     >
-                                      {(idx === 0 || idx === 1) && (
-                                        <div className="mh-tip-anchor" style={{ position: "absolute", top: 10, right: 10 }}>
-                                          {items.length >= ITEM_SLOTS && (
-                                            <span className="mh-tip" style={{ bottom: "auto", top: "calc(100% + 6px)" }}>Inventario lleno</span>
-                                          )}
-                                          <Backpack
-                                            size={15}
-                                            color="#9C93AD"
-                                            title={items.length >= ITEM_SLOTS ? undefined : "Guardar en el inventario"}
-                                            style={{ cursor: "pointer" }}
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              const handsLabel = w.hands === 2 ? "Dos manos" : "Una mano";
-                                              const desc = w.trait !== "—" ? `${w.trait} · ${w.range} · ${w.damage} · ${handsLabel}` : `${w.damage} · ${handsLabel}`;
-                                              stashEquippedItem(viewingCharId, idx === 0 ? "primary" : "secondary", w.key, desc);
-                                            }}
-                                          />
-                                        </div>
-                                      )}
-                                      <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--mh-ink)", marginBottom: 3 }}>{w.key}</div>
-                                      <div style={{ fontSize: 11, color: "var(--mh-muted)", marginBottom: w.mods ? 4 : 10 }}>
-                                        {w.trait !== "—" ? `${w.trait} · ${w.range} · ${w.damage}` : w.damage}
+                                      <div className="mh-eq-art">
+                                        <TileIcon size={40} strokeWidth={1.5} />
+                                        <span className="mh-eq-tier" style={{ background: TIER_COLORS[tier].color }}>{TIER_COLORS[tier].label}</span>
                                       </div>
-                                      {w.mods && (
-                                        <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 10 }}>
-                                          {Object.entries(w.mods).map(([key, val]) => (
-                                            <span
-                                              key={key}
-                                              style={{
-                                                fontSize: 9.5,
-                                                fontWeight: 700,
-                                                color: ink(val > 0 ? "#7FB77A" : "#D9644E"),
-                                                background: alpha((val > 0 ? "#7FB77A" : "#D9644E"), 10),
-                                                padding: "2px 7px",
-                                                borderRadius: 20,
-                                              }}
-                                            >
-                                              {MOD_LABELS[key] || key} {val > 0 ? "+" : ""}{val}
-                                            </span>
-                                          ))}
+                                      <div className="mh-eq-body">
+                                        <div className="mh-eq-sub">{isArmor ? "Armadura" : `${slot.label} · ${handsLabel}`}</div>
+                                        <div className="mh-eq-title mh-serif" title={w.key}>{w.key}</div>
+                                        <div className="mh-eq-row">
+                                          <div>
+                                            <div className="mh-eq-lbl">{isArmor ? "Puntuación" : "Daño"}</div>
+                                            <div className="mh-eq-big">
+                                              {isArmor ? w.score : dmgParts?.[1] || w.damage}
+                                              {!isArmor && dmgParts?.[2] && <small> {dmgParts[2]}</small>}
+                                            </div>
+                                          </div>
+                                          <div className="mh-eq-foot">{isArmor ? `Umbrales ${w.major} / ${w.severe}` : w.trait !== "—" ? `${w.trait} · ${w.range}` : w.range}</div>
                                         </div>
-                                      )}
-                                      <div style={{ display: "flex", gap: 8 }}>
-                                        {w.trait !== "—" && (
-                                          <button
-                                            className="mh-btn"
-                                            style={{ fontSize: 11.5, padding: "6px 12px" }}
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              rollTraitCheck(
-                                                viewingCharId,
-                                                w.trait,
-                                                Number(c[TRAITS.find((t) => t.label === w.trait)?.key] || 0) +
-                                                  (equipMods[TRAITS.find((t) => t.label === w.trait)?.key] || 0),
-                                                /d\d/.test(w.damage) ? { name: w.key, damage: w.damage } : null
-                                              );
-                                            }}
-                                          >
-                                            <Dices size={12} /> Tirar ataque
-                                          </button>
+                                        {w.feature && (
+                                          <div className={"mh-eq-feat" + featTone} title={w.feature}>
+                                            {featRest.length ? (
+                                              <>
+                                                <b>{featName}:</b>
+                                                {featRest.join(":")}
+                                              </>
+                                            ) : (
+                                              w.feature
+                                            )}
+                                          </div>
                                         )}
-                                        {/d\d/.test(w.damage) && (
-                                          <button
-                                            className="mh-btn-ghost"
-                                            style={{ fontSize: 11.5, padding: "6px 12px" }}
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              rollWeaponDamage(w.key, w.damage, viewingCharId);
-                                            }}
-                                          >
-                                            Tirar daño
-                                          </button>
+                                        {!isArmor && (w.trait !== "—" || hasDice) && (
+                                          <div className="mh-eq-acts">
+                                            {w.trait !== "—" && (
+                                              <button
+                                                className="mh-btn"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  rollTraitCheck(
+                                                    viewingCharId,
+                                                    w.trait,
+                                                    Number(c[TRAITS.find((t) => t.label === w.trait)?.key] || 0) +
+                                                      (equipMods[TRAITS.find((t) => t.label === w.trait)?.key] || 0),
+                                                    hasDice ? { name: w.key, damage: w.damage } : null
+                                                  );
+                                                }}
+                                              >
+                                                <Dices size={13} /> Atacar
+                                              </button>
+                                            )}
+                                            {hasDice && (
+                                              <button
+                                                className="mh-btn-ghost"
+                                                title={`Tirar daño (Competencia ${proficiency})`}
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  rollWeaponDamage(w.key, w.damage, viewingCharId);
+                                                }}
+                                              >
+                                                <Flame size={13} /> {profDamage}
+                                              </button>
+                                            )}
+                                          </div>
                                         )}
+                                      </div>
+                                      <div className="mh-tip-anchor mh-eq-stash">
+                                        {items.length >= ITEM_SLOTS && (
+                                          <span className="mh-tip" style={{ bottom: "auto", top: "calc(100% + 6px)" }}>Inventario lleno</span>
+                                        )}
+                                        <Backpack
+                                          size={15}
+                                          color="#9C93AD"
+                                          title={items.length >= ITEM_SLOTS ? undefined : "Guardar en el inventario"}
+                                          style={{ cursor: "pointer" }}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            stashEquippedItem(viewingCharId, isArmor ? "armor" : idx === 0 ? "primary" : "secondary", w.key, desc);
+                                          }}
+                                        />
                                       </div>
                                     </div>
                                   );
