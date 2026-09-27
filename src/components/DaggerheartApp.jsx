@@ -1838,6 +1838,30 @@ function FitBox({ children, max = 13, min = 9, fitKey, style }) {
   );
 }
 
+// Iconos propios de los escudos (con la misma firma que los de lucide).
+function RoundShieldIcon({ size = 24, strokeWidth = 1.5 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="9.5" />
+      <circle cx="12" cy="12" r="6.5" />
+      <circle cx="12" cy="12" r="2.2" fill="currentColor" fillOpacity=".8" />
+      {[[12, 4], [12, 20], [4, 12], [20, 12]].map(([x, y]) => (
+        <circle key={x + "-" + y} cx={x} cy={y} r=".6" fill="currentColor" />
+      ))}
+    </svg>
+  );
+}
+function TowerShieldIcon({ size = 24, strokeWidth = 1.5 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M5 4.5Q12 1.8 19 4.5V19.5Q12 22.2 5 19.5Z" />
+      <path d="M12 3.2V20.8" />
+      <path d="M5 9.5Q12 7.5 19 9.5" />
+      <path d="M5 14.5Q12 12.5 19 14.5" />
+    </svg>
+  );
+}
+
 function Card({ title, children }) {
   return (
     <div className="mh-card">
@@ -7862,7 +7886,15 @@ export default function App({ onSignOut }) {
                   const artHeight = d.weapon || d.armor ? 128 : totalChars > 600 ? 84 : long ? 100 : 124;
                   const dmg = d.weapon ? d.weapon.damage.match(/^(\S+)\s*(.*)$/) : null;
                   const subtitle = d.weapon ? [d.kicker, d.weapon.hands].join(" · ") : d.domain ? d.domain.name + " · " + d.domain.type : d.kicker?.replace(/ · Nivel .*$/, "");
-                  const ArtIcon = d.armor ? Shield : d.weapon ? Sword : d.domain ? DOMAIN_ICONS[d.domain.name] || Sparkles : Sparkles;
+                  const ArtIcon = d.armor
+                    ? Shield
+                    : d.weapon && d.title.startsWith("Escudo redondo")
+                    ? RoundShieldIcon
+                    : d.weapon && d.title.startsWith("Escudo de torre")
+                    ? TowerShieldIcon
+                    : d.weapon
+                    ? Sword
+                    : d.domain ? DOMAIN_ICONS[d.domain.name] || Sparkles : Sparkles;
                   const action = !d.features && (d.navigateAction || CARD_ACTIONS[d.title]);
                   const footer = d.weapon
                     ? [d.weapon.trait !== "—" && d.weapon.trait, d.weapon.range].filter(Boolean).join(" · ")
