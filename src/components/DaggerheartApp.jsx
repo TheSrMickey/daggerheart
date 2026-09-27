@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useLayoutEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
@@ -1042,7 +1043,7 @@ const GRID_TOOLS = [
   { key: "niebla", label: "Niebla", color: "#ECE6DA" },
 ];
 
-const EMPTY_STAGE = { live: "escena", scene: { title: "", image: "", narration: "" }, handouts: [] };
+const EMPTY_STAGE = { live: "escena", scene: { title: "", image: "" }, handouts: [] };
 const STAGE_TABS = [
   { key: "escena", label: "Escena", Icon: Clapperboard },
   { key: "mapa", label: "Mapa", Icon: MapPinned },
@@ -1599,7 +1600,7 @@ const sharedStyles = `
   .mh-stg-cnt { font-size: 9.5px; font-weight: 700; color: #fff; background: #B8862E; border-radius: 10px; padding: 0 5px; line-height: 15px; }
   .mh-stg-body { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
   .mh-stg-kick { font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
-  .mh-stg-scene { position: relative; flex: 1 0 240px; max-height: 380px; border-radius: 12px; overflow: hidden; background: #2B3A4F center / cover no-repeat; display: flex; flex-direction: column; justify-content: space-between; }
+  .mh-stg-scene { position: relative; flex: 1 1 auto; min-height: 240px; border-radius: 12px; overflow: hidden; background: #2B3A4F center / cover no-repeat; display: flex; flex-direction: column; justify-content: space-between; }
   .mh-stg-scene.is-blank { background-image: radial-gradient(circle at 78% 22%, #F3E3B8 0 22px, transparent 23px), linear-gradient(#2B3A4F, #6E7F8C 58%, #C9A879); }
   .mh-stg-scene-top { display: flex; justify-content: flex-end; gap: 6px; padding: 10px; }
   .mh-stg-live { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #fff; background: rgba(192,80,74,.92); border-radius: 20px; padding: 3px 9px; }
@@ -1611,9 +1612,17 @@ const sharedStyles = `
   .mh-stg-scene-cap { padding: 26px 16px 14px; background: linear-gradient(transparent, rgba(10,8,14,.85)); }
   .mh-stg-scene-cap .mh-stg-kick { color: #E8D4A0; }
   .mh-stg-scene-title { font-family: 'Cinzel', Georgia, serif; font-weight: 700; font-size: 19px; color: #fff; line-height: 1.2; }
-  .mh-stg-narr { border-left: 3px solid #C9A24A; padding: 7px 12px; border-radius: 0 8px 8px 0; background: color-mix(in srgb, #C9A24A 10%, var(--mh-panel)); flex-shrink: 0; }
-  .mh-stg-narr .mh-stg-kick { color: var(--mh-gold-ink); }
-  .mh-stg-narr-t { font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 13.5px; line-height: 1.55; color: var(--mh-ink2); margin-top: 2px; white-space: pre-wrap; }
+  .mh-stg-scene.is-zoomable { cursor: zoom-in; }
+  /* Escena ampliada y pistas abiertas: sobre toda la plataforma, no dentro de la caja */
+  .mh-stg-fixed { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; padding: 24px; background: rgba(8,6,12,0.62); }
+  .mh-stg-zoom { background: rgba(8,6,12,0.88); cursor: zoom-out; }
+  .mh-stg-zoom figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 14px; cursor: default; max-width: 100%; }
+  .mh-stg-zoom img { display: block; height: 82vh; width: auto; max-width: min(1600px, 94vw); object-fit: contain; filter: drop-shadow(0 24px 50px rgba(0,0,0,.55)); }
+  .mh-stg-zoom figcaption { display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
+  .mh-stg-zoom figcaption .mh-stg-kick { color: #E8D4A0; }
+  .mh-stg-zoom-t { font-family: 'Cinzel', Georgia, serif; font-weight: 700; font-size: 24px; color: #fff; }
+  .mh-stg-zoom-x { position: absolute; top: 18px; right: 18px; width: 40px; height: 40px; border-radius: 50%; border: 0; background: rgba(255,255,255,.14); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .mh-stg-zoom-x:hover { background: rgba(255,255,255,.26); }
   .mh-stg-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; color: var(--mh-muted); font-size: 13px; padding: 30px; border: 1.5px dashed var(--mh-line2); border-radius: 12px; }
   .mh-stg-map { display: grid; gap: 2px; padding: 4px; border-radius: 10px; background: var(--mh-line); border: 1px solid var(--mh-line); flex-shrink: 0; }
   .mh-stg-cell { background: var(--mh-panel); border-radius: 2px; display: flex; align-items: center; justify-content: center; overflow: hidden; min-width: 0; }
@@ -2655,6 +2664,7 @@ export default function App({ onSignOut }) {
   const [campaignStage, setCampaignStage] = useState(EMPTY_STAGE);
   const [stageTab, setStageTab] = useState(null); // null = sigue lo que muestra el DJ
   const [openHandout, setOpenHandout] = useState(null);
+  const [sceneZoom, setSceneZoom] = useState(null);
   const [handoutsSeen, setHandoutsSeen] = useState([]);
   const [handoutDraft, setHandoutDraft] = useState({ kind: "imagen", title: "", image: "", text: "" });
 
@@ -2868,6 +2878,18 @@ export default function App({ onSignOut }) {
       clearInterval(timer);
     };
   }, [stageCampaignId, gmViewing]);
+
+  // Escape cierra la escena ampliada o la pista abierta.
+  useEffect(() => {
+    if (!sceneZoom && !openHandout) return;
+    const onKey = (e) => {
+      if (e.key !== "Escape") return;
+      setSceneZoom(null);
+      setOpenHandout(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [sceneZoom, openHandout]);
 
   // Una pista deja de ser "nueva" cuando el jugador la abre.
   const openHandoutFor = (campaignId, h) => {
@@ -5115,10 +5137,6 @@ export default function App({ onSignOut }) {
                                 Imagen (enlace)
                                 <input className="mh-input" placeholder="https://…" value={scene.image || ""} onChange={(e) => setScene({ image: e.target.value })} />
                               </label>
-                              <label className="mh-gm-lbl">
-                                Narración
-                                <textarea className="mh-input" rows={3} placeholder="Lo que el DJ lee en voz alta…" value={scene.narration || ""} onChange={(e) => setScene({ narration: e.target.value })} />
-                              </label>
                             </div>
                             <div className={"mh-gm-thumb mh-stg-scene" + (scene.image ? "" : " is-blank")} style={scene.image ? { backgroundImage: `url("${scene.image.replace(/"/g, "%22")}")` } : undefined}>
                               <div className="mh-stg-scene-cap">
@@ -5131,7 +5149,7 @@ export default function App({ onSignOut }) {
                             type="button"
                             className="mh-btn-ghost"
                             style={{ fontSize: 12, alignSelf: "flex-start" }}
-                            onClick={() => saveStage(viewingCampaignId, { scene: { title: "", image: "", narration: "" } })}
+                            onClick={() => saveStage(viewingCampaignId, { scene: { title: "", image: "" } })}
                           >
                             Vaciar escena
                           </button>
@@ -7825,9 +7843,13 @@ export default function App({ onSignOut }) {
 
                               <div className="mh-stg-body">
                                 {stTab === "escena" &&
-                                  (scene.title || scene.image || scene.narration ? (
+                                  (scene.title || scene.image ? (
                                     <>
-                                      <div className={"mh-stg-scene" + (scene.image ? "" : " is-blank")} style={scene.image ? { backgroundImage: `url("${scene.image.replace(/"/g, "%22")}")` } : undefined}>
+                                      <div
+                                        className={"mh-stg-scene" + (scene.image ? " is-zoomable" : " is-blank")}
+                                        style={scene.image ? { backgroundImage: `url("${scene.image.replace(/"/g, "%22")}")` } : undefined}
+                                        onClick={scene.image ? () => setSceneZoom({ title: scene.title, image: scene.image }) : undefined}
+                                      >
                                         <div className="mh-stg-scene-top">
                                           {live === "escena" && (
                                             <span className="mh-stg-live">
@@ -7836,7 +7858,16 @@ export default function App({ onSignOut }) {
                                             </span>
                                           )}
                                           {scene.image && (
-                                            <button type="button" className="mh-stg-ibtn" aria-label="Ampliar" onClick={() => setOpenHandout({ kind: "imagen", title: scene.title, image: scene.image, text: scene.narration })}>
+                                            <button
+                                              type="button"
+                                              className="mh-stg-ibtn"
+                                              aria-label="Ver la escena en grande"
+                                              title="Ver en grande"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSceneZoom({ title: scene.title, image: scene.image });
+                                              }}
+                                            >
                                               <Maximize2 size={13} />
                                             </button>
                                           )}
@@ -7846,12 +7877,6 @@ export default function App({ onSignOut }) {
                                           <div className="mh-stg-scene-title">{scene.title || "Sin título"}</div>
                                         </div>
                                       </div>
-                                      {scene.narration && (
-                                        <div className="mh-stg-narr">
-                                          <div className="mh-stg-kick">El DJ narra</div>
-                                          <div className="mh-stg-narr-t">{scene.narration}</div>
-                                        </div>
-                                      )}
                                     </>
                                   ) : (
                                     empty(Clapperboard, "El DJ todavía no ha mostrado ninguna escena.")
@@ -7980,8 +8005,8 @@ export default function App({ onSignOut }) {
                                 )}
                               </div>
 
-                              {openHandout && (
-                                <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 40, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.62)" }} onClick={() => setOpenHandout(null)}>
+                              {openHandout && createPortal(
+                                <div className="mh-overlay mh-stg-fixed" onClick={() => setOpenHandout(null)}>
                                   <div className="mh-card mh-card-anim mh-stg-modal" onClick={(e) => e.stopPropagation()}>
                                     {openHandout.image && <img src={openHandout.image} alt={openHandout.title || ""} className="mh-stg-modal-img" />}
                                     <div style={{ padding: "14px 18px 18px" }}>
@@ -7997,7 +8022,25 @@ export default function App({ onSignOut }) {
                                       {openHandout.text && <div className={"mh-stg-modal-text" + (openHandout.kind === "nota" ? " is-note" : "")}>{openHandout.text}</div>}
                                     </div>
                                   </div>
-                                </div>
+                                </div>,
+                                document.querySelector(".mh-root") || document.body
+                              )}
+                              {sceneZoom && createPortal(
+                                <div className="mh-overlay mh-stg-fixed mh-stg-zoom" role="dialog" aria-label={sceneZoom.title || "Escena"} onClick={() => setSceneZoom(null)}>
+                                  <button type="button" className="mh-stg-zoom-x" aria-label="Cerrar" onClick={() => setSceneZoom(null)}>
+                                    <X size={18} />
+                                  </button>
+                                  <figure className="mh-card-anim" onClick={(e) => e.stopPropagation()}>
+                                    <img src={sceneZoom.image} alt={sceneZoom.title || "Escena"} />
+                                    {sceneZoom.title && (
+                                      <figcaption>
+                                        <span className="mh-stg-kick">Escena actual</span>
+                                        <span className="mh-stg-zoom-t">{sceneZoom.title}</span>
+                                      </figcaption>
+                                    )}
+                                  </figure>
+                                </div>,
+                                document.querySelector(".mh-root") || document.body
                               )}
                             </Panel>
 
