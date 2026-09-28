@@ -4740,6 +4740,16 @@ export default function App({ onSignOut }) {
     if (el) el.scrollTop = el.scrollHeight;
   }, [campaignChat]);
 
+  // Al abrir el chat (cambia de pestaña o se monta de nuevo), empieza por el último mensaje.
+  const chatElSeen = useRef(null);
+  useEffect(() => {
+    const el = chatScrollRef.current;
+    if (!el || el === chatElSeen.current) return;
+    chatElSeen.current = el;
+    el.scrollTop = el.scrollHeight;
+    requestAnimationFrame(() => (el.scrollTop = el.scrollHeight));
+  });
+
   const [journalSelId, setJournalSelId] = useState(null);
   const [journalEditing, setJournalEditing] = useState(false);
   const [journalSearch, setJournalSearch] = useState("");
