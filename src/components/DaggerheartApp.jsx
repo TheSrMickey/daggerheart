@@ -294,6 +294,30 @@ const TRAITS = [
   { key: "t_knowledge", label: "Conocimiento", Icon: BookOpen },
 ];
 
+// Pasos del asistente de creación, agrupados para la barra de progreso.
+const WIZARD_STEPS = [
+  { key: "class", title: "Elige tu clase", group: "Identidad" },
+  { key: "subclass", title: "Elige tu subclase", group: "Identidad" },
+  { key: "level", title: "Elige tu nivel", group: "Identidad" },
+  { key: "name", title: "Nombre y pronombres", group: "Identidad" },
+  { key: "origin", title: "Ascendencia y comunidad", group: "Origen" },
+  { key: "languages", title: "Idiomas", group: "Origen" },
+  { key: "traits", title: "Reparte tus rasgos", group: "Atributos" },
+  { key: "stats", title: "Estadísticas iniciales", group: "Atributos" },
+  { key: "experiences", title: "Experiencias", group: "Atributos" },
+  { key: "gear", title: "Armas y armadura", group: "Equipo" },
+  { key: "items", title: "Objetos iniciales", group: "Equipo" },
+  { key: "domain", title: "Cartas de dominio", group: "Equipo" },
+];
+const TRAIT_HINTS = {
+  t_agility: "Correr, saltar, maniobrar",
+  t_strength: "Levantar, aplastar, agarrar",
+  t_finesse: "Controlar, ocultar, trastear",
+  t_instinct: "Percibir, sentir, orientarse",
+  t_presence: "Encantar, actuar, engañar",
+  t_knowledge: "Recordar, analizar, comprender",
+};
+
 const TRAIT_MODIFIER_POOL = [
   { id: "m_2", value: 2 },
   { id: "m_1a", value: 1 },
@@ -2120,6 +2144,85 @@ const sharedStyles = `
   .mh-relnet-legend i { width: 10px; height: 10px; border-radius: 50%; }
   .mh-relnet-sec { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--rl); }
   .mh-relnet-sec::after { content: ""; flex: 1; height: 1px; background: color-mix(in srgb, var(--rl) 35%, transparent); }
+  .mh-wz { margin: 0; width: min(1020px, 100%); height: min(640px, 92%); padding: 0; display: flex; flex-direction: column; overflow: hidden; }
+  .mh-wz-top { padding: 16px 22px 12px; border-bottom: 1px solid var(--mh-line); flex-shrink: 0; }
+  .mh-wz-title { display: flex; align-items: baseline; gap: 10px; }
+  .mh-wz-title .mh-serif { font-size: 18px; font-weight: 700; color: var(--mh-ink); }
+  .mh-wz-title small { font-size: 12px; color: var(--mh-muted); }
+  .mh-wz-x { margin-left: auto; align-self: center; width: 28px; height: 28px; border: 0; border-radius: 50%; background: transparent; color: var(--mh-muted); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .mh-wz-x:hover { background: var(--mh-panel2); color: var(--mh-ink); }
+  .mh-wz-steps { display: flex; gap: 14px; margin-top: 10px; }
+  .mh-wz-grp { flex: 1; min-width: 0; }
+  .mh-wz-grp > span { display: block; font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-muted); margin-bottom: 5px; }
+  .mh-wz-grp > div { display: flex; gap: 3px; }
+  .mh-wz-grp button { flex: 1; height: 5px; padding: 0; border: 0; border-radius: 3px; background: var(--mh-line); cursor: default; }
+  .mh-wz-grp button.is-done { background: #6FBF73; cursor: pointer; }
+  .mh-wz-grp button.is-done:hover { background: #4E9E52; }
+  .mh-wz-grp button.is-on { background: #E3B04B; }
+  .mh-wz-body { flex: 1; min-height: 0; overflow-y: auto; padding: 18px 22px; }
+  .mh-wz-body.is-split { display: flex; padding: 0; overflow: hidden; }
+  .mh-wz-list { width: 310px; flex-shrink: 0; border-right: 1px solid var(--mh-line); padding: 12px; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 3px; }
+  .mh-wz-it { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border: 0; border-radius: 9px; background: transparent; color: var(--mh-ink); font: 600 13px 'Inter', system-ui, sans-serif; text-align: left; cursor: pointer; }
+  .mh-wz-it:hover { background: var(--mh-panel2); }
+  .mh-wz-it.is-on, .mh-wz-it.is-focus { background: color-mix(in srgb, var(--wc, #6FBF73) 12%, var(--mh-panel)); box-shadow: inset 3px 0 0 var(--wc, #6FBF73); }
+  .mh-wz-it.is-focus:not(.is-on) { --wc: var(--mh-line2); }
+  .mh-wz-it > i { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .mh-wz-it-n { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mh-wz-it small { margin-left: auto; font-size: 10.5px; font-weight: 500; color: var(--mh-muted); white-space: nowrap; }
+  .mh-wz-it em { font-style: normal; font-size: 9px; font-weight: 700; color: var(--mh-purple-ink, #8A6FD0); border: 1px solid #A58BE866; border-radius: 10px; padding: 0 5px; }
+  .mh-wz-it small + em { margin-left: 4px; }
+  .mh-wz-it:not(:has(small)) em { margin-left: auto; }
+  .mh-wz-ck { margin-left: auto; color: #4E9E52; flex-shrink: 0; }
+  .mh-wz-it em + .mh-wz-ck { margin-left: 4px; }
+  .mh-wz-tabs { display: flex; gap: 3px; margin-bottom: 6px; }
+  .mh-wz-tabs button { flex: 1 1 auto; min-width: 0; display: inline-flex; align-items: center; justify-content: center; gap: 3px; padding: 5px 7px; border-radius: 20px; border: 1px solid var(--mh-line2); background: transparent; color: var(--mh-ink3); white-space: nowrap; font: 600 11px 'Inter', system-ui, sans-serif; cursor: pointer; }
+  .mh-wz-tabs button.is-on { background: var(--mh-ink); color: var(--mh-panel); border-color: var(--mh-ink); }
+  .mh-wz-tabs svg { color: #6FBF73; }
+  .mh-wz-mix { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 7px 10px; margin-bottom: 4px; border: 1px dashed var(--mh-line2); border-radius: 9px; background: transparent; color: var(--mh-ink3); font: 600 12px 'Inter', system-ui, sans-serif; cursor: pointer; text-align: left; }
+  .mh-wz-mix i { width: 26px; height: 15px; border-radius: 10px; background: var(--mh-line2); position: relative; flex-shrink: 0; }
+  .mh-wz-mix i::after { content: ""; position: absolute; top: 2px; left: 2px; width: 11px; height: 11px; border-radius: 50%; background: var(--mh-panel); transition: left .15s; }
+  .mh-wz-mix.is-on { border-style: solid; border-color: #E3B04B; color: var(--mh-ink); }
+  .mh-wz-mix.is-on i { background: #E3B04B; }
+  .mh-wz-mix.is-on i::after { left: 13px; }
+  .mh-wz-mix small { width: 100%; font-weight: 500; color: var(--mh-muted); padding-left: 34px; }
+  .mh-wz-det { flex: 1; min-width: 0; padding: 20px 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+  .mh-wz-dh { display: flex; align-items: center; gap: 14px; }
+  .mh-wz-badge { width: 48px; height: 48px; flex-shrink: 0; border-radius: 12px; color: #fff; font: 700 22px 'Cinzel', Georgia, serif; display: flex; align-items: center; justify-content: center; }
+  .mh-wz-img { width: 64px; height: 64px; flex-shrink: 0; border-radius: 12px; object-fit: cover; border: 1px solid var(--mh-line); }
+  .mh-wz-dn { font-size: 22px; font-weight: 700; color: var(--mh-ink); line-height: 1.15; }
+  .mh-wz-dm { font-size: 12px; color: var(--mh-muted); }
+  .mh-wz-blurb { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--mh-ink2); }
+  .mh-wz-feats { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+  .mh-wz-feats > div { border: 1px solid var(--mh-line); border-radius: 10px; padding: 10px 12px; background: var(--mh-panel); display: flex; flex-direction: column; gap: 3px; }
+  .mh-wz-feats b { font-size: 12.5px; color: var(--mh-ink); }
+  .mh-wz-feats span { font-size: 11.5px; line-height: 1.45; color: var(--mh-ink3); }
+  .mh-wz-trtop { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .mh-wz-trtop button { display: inline-flex; align-items: center; gap: 6px; }
+  .mh-wz-trtop .mh-wz-dm { margin-left: auto; }
+  .mh-wz-traits { border: 1px solid var(--mh-line); border-radius: 12px; overflow: hidden; }
+  .mh-wz-tr { display: flex; align-items: center; gap: 12px; padding: 9px 14px; }
+  .mh-wz-tr + .mh-wz-tr { border-top: 1px solid var(--mh-line); }
+  .mh-wz-tr > svg { color: var(--mh-muted); flex-shrink: 0; }
+  .mh-wz-tr > b { width: 120px; flex-shrink: 0; font-size: 13px; color: var(--mh-ink); }
+  .mh-wz-tr > span { flex: 1; min-width: 0; font-size: 11.5px; color: var(--mh-muted); }
+  .mh-wz-tr > div { display: flex; gap: 6px; }
+  .mh-wz-tr > div button { width: 42px; height: 30px; border-radius: 8px; border: 1px solid var(--mh-line2); background: var(--mh-panel); color: var(--mh-ink3); font: 700 13px 'Inter', system-ui, sans-serif; cursor: pointer; }
+  .mh-wz-tr > div button:hover { border-color: var(--mh-ink3); color: var(--mh-ink); }
+  .mh-wz-tr > div button.is-used { opacity: .45; }
+  .mh-wz-tr > div button.is-on { background: var(--mh-ink); border-color: var(--mh-ink); color: var(--mh-panel); opacity: 1; }
+  .mh-wz-foot { flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 11px 22px; border-top: 1px solid var(--mh-line); background: var(--mh-panel2); }
+  .mh-wz-sum { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; overflow: hidden; }
+  .mh-wz-sum > span { font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-muted); white-space: nowrap; margin-right: 2px; }
+  .mh-wz-sum em { font-style: normal; font-size: 11px; color: var(--mh-ink3); border: 1px solid var(--mh-line2); background: var(--mh-panel); border-radius: 20px; padding: 2px 9px; white-space: nowrap; max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+  .mh-wz-btns { display: flex; gap: 10px; flex-shrink: 0; }
+  @media (max-width: 760px) {
+    .mh-wz { height: 94%; }
+    .mh-wz-body.is-split { flex-direction: column; overflow-y: auto; }
+    .mh-wz-list { width: auto; max-height: 220px; border-right: 0; border-bottom: 1px solid var(--mh-line); }
+    .mh-wz-det { overflow: visible; }
+    .mh-wz-tr { flex-wrap: wrap; } .mh-wz-tr > span { flex-basis: 100%; order: 3; }
+    .mh-wz-sum { display: none; }
+  }
   .mh-jl { flex: 1; min-height: 0; display: flex; gap: 16px; }
   .mh-jl-side { width: 260px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; min-height: 0; padding-right: 14px; border-right: 1px solid var(--mh-line); }
   .mh-jl-search { position: relative; display: flex; align-items: center; }
@@ -3547,6 +3650,7 @@ export default function App({ onSignOut }) {
   const [showNewCharModal, setShowNewCharModal] = useState(false);
   const [wizardStep, setWizardStep] = useState("class");
   const [originTab, setOriginTab] = useState("ancestry");
+  const [originFocus, setOriginFocus] = useState(null);
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [subclassIndex, setSubclassIndex] = useState(0);
   const [levelChoice, setLevelChoice] = useState(1);
@@ -3846,6 +3950,30 @@ export default function App({ onSignOut }) {
       setTraitPool((prevPool) => [...prevPool, modId]);
       return nextAssign;
     });
+  };
+
+  const pickTraitValue = (traitKey, value) => {
+    const valOf = (id) => TRAIT_MODIFIER_POOL.find((m) => m.id === id)?.value;
+    const next = { ...traitAssign };
+    const cur = next[traitKey];
+    if (cur && valOf(cur) === value) delete next[traitKey];
+    else {
+      const used = new Set(Object.values(next));
+      const free = TRAIT_MODIFIER_POOL.find((m) => m.value === value && !used.has(m.id));
+      if (free) next[traitKey] = free.id;
+      else {
+        // Ese valor ya lo tiene otro rasgo: se intercambian.
+        const other = Object.keys(next).find((k) => k !== traitKey && valOf(next[k]) === value);
+        if (!other) return;
+        const mod = next[other];
+        if (cur) next[other] = cur;
+        else delete next[other];
+        next[traitKey] = mod;
+      }
+    }
+    const used = new Set(Object.values(next));
+    setTraitAssign(next);
+    setTraitPool(TRAIT_MODIFIER_POOL.map((m) => m.id).filter((id) => !used.has(id)));
   };
 
   const randomizeTraits = () => {
@@ -11119,112 +11247,121 @@ export default function App({ onSignOut }) {
             }}
             onClick={() => setShowNewCharModal(false)}
           >
-            <div
-              className="mh-card"
-              style={{ margin: 0, width: "min(720px, 100%)", maxHeight: "82%", overflowY: "auto", padding: "22px 24px" }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div style={{ fontSize: 11.5, color: "var(--mh-muted)", marginBottom: 2 }}>
-                {wizardStep === "class" && "Paso 1 de 12 · Elige tu clase"}
-                {wizardStep === "subclass" && `Paso 2 de 12 · Elige tu subclase de ${CLASSES[carouselIndex].key}`}
-                {wizardStep === "level" && "Paso 3 de 12 · Elige tu nivel"}
-                {wizardStep === "name" && "Paso 4 de 12 · Nombre y pronombres"}
-                {wizardStep === "origin" && "Paso 5 de 12 · Ascendencia, comunidad y transformación"}
-                {wizardStep === "languages" && "Paso 6 de 12 · Idiomas"}
-                {wizardStep === "traits" && "Paso 7 de 12 · Rasgos"}
-                {wizardStep === "stats" && "Paso 8 de 12 · Estadísticas iniciales"}
-                {wizardStep === "experiences" && "Paso 9 de 12 · Experiencias"}
-                {wizardStep === "gear" && "Paso 10 de 12 · Armas y armadura"}
-                {wizardStep === "items" && "Paso 11 de 12 · Objetos iniciales"}
-                {wizardStep === "domain" && "Paso 12 de 12 · Cartas de dominio"}
-              </div>
-              <h2 className="mh-serif" style={{ margin: "0 0 18px", fontSize: 19, fontWeight: 600 }}>
-                Crea tu personaje
-              </h2>
+            <div className="mh-card mh-wz" onClick={(e) => e.stopPropagation()}>
+              {(() => {
+                const idx = WIZARD_STEPS.findIndex((st) => st.key === wizardStep);
+                const groups = [...new Set(WIZARD_STEPS.map((st) => st.group))];
+                return (
+                  <div className="mh-wz-top">
+                    <div className="mh-wz-title">
+                      <span className="mh-serif">{wizardStep === "subclass" ? "Elige tu subclase de " + CLASSES[carouselIndex].key : WIZARD_STEPS[idx].title}</span>
+                      <small>Paso {idx + 1} de {WIZARD_STEPS.length}</small>
+                      <button type="button" className="mh-wz-x" aria-label="Cerrar" onClick={() => setShowNewCharModal(false)}>
+                        <X size={16} />
+                      </button>
+                    </div>
+                    <div className="mh-wz-steps">
+                      {groups.map((g) => (
+                        <div key={g} className="mh-wz-grp">
+                          <span>{g}</span>
+                          <div>
+                            {WIZARD_STEPS.map((st, k) =>
+                              st.group !== g ? null : (
+                                <button
+                                  key={st.key}
+                                  type="button"
+                                  title={st.title + (k < idx ? " · volver a este paso" : "")}
+                                  aria-label={st.title}
+                                  disabled={k >= idx}
+                                  className={k < idx ? "is-done" : k === idx ? "is-on" : ""}
+                                  onClick={() => k < idx && setWizardStep(st.key)}
+                                />
+                              )
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+              <div className={"mh-wz-body" + (["class", "subclass", "origin"].includes(wizardStep) ? " is-split" : "")}>
 
               {wizardStep === "class" || wizardStep === "subclass" ? (
                 <>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-                    <button
-                      className="mh-btn-ghost"
-                      style={{ padding: 8, borderRadius: "50%" }}
-                      onClick={() => setStepIndex((i) => (i - 1 + stepItems.length) % stepItems.length)}
-                    >
-                      <ChevronLeft size={18} />
-                    </button>
-
-                    <div
-                      style={{
-                        flex: 1,
-                        border: "1px solid " + (current.expansion ? "#A58BE8" : "#E3B04B"),
-                        background: current.expansion ? "#A58BE814" : "#E3B04B14",
-                        borderRadius: 8,
-                        padding: "20px 20px",
-                        textAlign: "center",
-                        height: 150,
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 8,
-                      }}
-                    >
-                      {current.expansion && (
-                        <span
-                          style={{
-                            fontSize: 10.5,
-                            fontWeight: 600,
-                            letterSpacing: 0.2,
-                            color: "var(--mh-purple-ink)",
-                            background: "#A58BE822",
-                            padding: "2px 9px",
-                            borderRadius: 20,
-                          }}
-                        >
-                          Expansión · {current.expansion}
-                        </span>
-                      )}
-                      <div className="mh-serif" style={{ fontSize: 22, fontWeight: 700, color: ink(current.expansion ? "#A58BE8" : "#E3B04B") }}>
-                        {current.key}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 13,
-                          color: "var(--mh-ink3)",
-                          display: "-webkit-box",
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: "vertical",
-                          overflow: "hidden",
-                          maxWidth: 360,
-                        }}
-                      >
-                        {current.blurb}
-                      </div>
-                    </div>
-
-                    <button
-                      className="mh-btn-ghost"
-                      style={{ padding: 8, borderRadius: "50%" }}
-                      onClick={() => setStepIndex((i) => (i + 1) % stepItems.length)}
-                    >
-                      <ChevronRight size={18} />
-                    </button>
+                  <div className="mh-wz-list" role="listbox" aria-label={wizardStep === "class" ? "Clases" : "Subclases"}>
+                    {stepItems.map((it, i) => {
+                      const col = CLASS_COLORS[wizardStep === "class" ? it.key : CLASSES[carouselIndex].key] || "#E3B04B";
+                      return (
+                        <button key={it.key} type="button" role="option" aria-selected={i === stepIndex} className={"mh-wz-it" + (i === stepIndex ? " is-on" : "")} style={{ "--wc": col }} onClick={() => setStepIndex(i)}>
+                          <i style={{ background: col }} />
+                          <span className="mh-wz-it-n">{it.key}</span>
+                          {wizardStep === "class" && <small>{(CLASS_DOMAINS[it.key] || []).join(" · ")}</small>}
+                          {it.expansion && <em>H&F</em>}
+                        </button>
+                      );
+                    })}
                   </div>
-
-                  <div style={{ display: "flex", justifyContent: "center", gap: 6, marginBottom: 20 }}>
-                    {stepItems.map((c, i) => (
-                      <div
-                        key={c.key}
-                        onClick={() => setStepIndex(i)}
-                        style={{
-                          width: 7,
-                          height: 7,
-                          borderRadius: "50%",
-                          cursor: "pointer",
-                          background: i === stepIndex ? "#E3B04B" : "var(--mh-line)",
-                        }}
-                      />
-                    ))}
+                  <div className="mh-wz-det">
+                    {(() => {
+                      const cls = CLASSES[carouselIndex].key;
+                      const col = CLASS_COLORS[cls] || "#E3B04B";
+                      if (wizardStep === "class") {
+                        const hope = CLASS_HOPE_FEATURE[cls];
+                        return (
+                          <>
+                            <div className="mh-wz-dh">
+                              <span className="mh-wz-badge" style={{ background: col }}>{cls.charAt(0)}</span>
+                              <div>
+                                <div className="mh-serif mh-wz-dn">{cls}</div>
+                                <div className="mh-wz-dm">
+                                  Dominios {(CLASS_DOMAINS[cls] || []).join(" y ")} · Evasión {CLASS_EVASION[cls] ?? 10} · PV {CLASS_HP[cls] ?? 6}
+                                  {current.expansion && " · Expansión " + current.expansion}
+                                </div>
+                              </div>
+                            </div>
+                            <p className="mh-wz-blurb">{current.blurb}</p>
+                            <div className="mh-wz-feats">
+                              {hope && (
+                                <div>
+                                  <b>Esperanza: {hope.name}</b>
+                                  <span>
+                                    Gasta {hope.cost} Esperanza. {hope.text}
+                                  </span>
+                                </div>
+                              )}
+                              {(CLASS_FEATURES[cls] || []).map((f) => (
+                                <div key={f.name}>
+                                  <b>{f.name}</b>
+                                  <span>{f.text}</span>
+                                </div>
+                              ))}
+                            </div>
+                            {(SUBCLASSES[cls] || []).length > 0 && <div className="mh-wz-dm">Subclases: {(SUBCLASSES[cls] || []).map((sc) => sc.key).join(" · ")}</div>}
+                          </>
+                        );
+                      }
+                      return (
+                        <>
+                          <div className="mh-wz-dh">
+                            <span className="mh-wz-badge" style={{ background: col }}>{current.key.charAt(0)}</span>
+                            <div>
+                              <div className="mh-serif mh-wz-dn">{current.key}</div>
+                              <div className="mh-wz-dm">Subclase de {cls}</div>
+                            </div>
+                          </div>
+                          <p className="mh-wz-blurb">{current.blurb}</p>
+                          <div className="mh-wz-feats">
+                            {(current.features || []).map((f) => (
+                              <div key={f.name}>
+                                <b>{f.name}</b>
+                                <span>{f.text}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
                 </>
               ) : wizardStep === "level" ? (
@@ -11318,215 +11455,93 @@ export default function App({ onSignOut }) {
                   </div>
                 </div>
               ) : wizardStep === "origin" ? (
-                <div style={{ marginBottom: 20 }}>
-                  <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
-                    {[
-                      { key: "ancestry", label: "Ascendencia", icon: Users, done: draftAncestries.length > 0 },
-                      { key: "community", label: "Comunidad", icon: MapPinned, done: !!draftCommunity },
-                      { key: "transformation", label: "Transformación", icon: Sparkles, done: draftTransformation !== "Ninguna" },
-                    ].map((t) => {
-                      const Icon = t.icon;
-                      const active = originTab === t.key;
-                      return (
-                        <div
-                          key={t.key}
-                          onClick={() => setOriginTab(t.key)}
-                          style={{
-                            flex: 1,
-                            cursor: "pointer",
-                            textAlign: "center",
-                            padding: "10px 6px",
-                            borderRadius: 8,
-                            border: "1px solid " + (active ? "#E3B04B" : "var(--mh-line)"),
-                            background: active ? "#E3B04B14" : "var(--mh-panel2)",
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                            gap: 4,
-                          }}
-                        >
-                          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                            <Icon size={14} color={active ? "#E3B04B" : "#B7AEC6"} />
-                            <span style={{ fontSize: 12.5, fontWeight: 600, color: ink(active ? "#E3B04B" : "var(--mh-ink)") }}>{t.label}</span>
-                          </div>
-                          {t.done && (
-                            <span style={{ display: "inline-flex", alignItems: "center", gap: 2, fontSize: 10, color: "var(--mh-green-ink)" }}>
-                              <Check size={10} /> listo
-                            </span>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {originTab === "ancestry" && (
-                    <div>
-                      <div
-                        onClick={toggleMixAncestry}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 10,
-                          marginBottom: 14,
-                          cursor: "pointer",
-                          border: "1px solid " + (mixAncestry ? "#E3B04B" : "var(--mh-line)"),
-                          background: mixAncestry ? "#E3B04B14" : "var(--mh-panel2)",
-                          borderRadius: 8,
-                          padding: "10px 12px",
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: 36,
-                            height: 20,
-                            borderRadius: 20,
-                            background: mixAncestry ? "#E3B04B" : "var(--mh-line2)",
-                            position: "relative",
-                            flexShrink: 0,
-                            transition: "background .15s",
-                          }}
-                        >
-                          <div
-                            style={{
-                              position: "absolute",
-                              top: 2,
-                              left: mixAncestry ? 18 : 2,
-                              width: 16,
-                              height: 16,
-                              borderRadius: "50%",
-                              background: "var(--mh-panel)",
-                              transition: "left .15s",
-                            }}
-                          />
-                        </div>
-                        <div>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: "var(--mh-ink)" }}>Ascendencia mixta</div>
-                          <div style={{ fontSize: 11, color: "var(--mh-muted)" }}>Combina rasgos de dos ascendencias distintas.</div>
-                        </div>
-                      </div>
-
-                      {mixAncestry && (
-                        <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-                          <div style={{ flex: 1, textAlign: "center", fontSize: 11.5, color: "var(--mh-muted)" }}>
-                            1ª: <b style={{ color: "var(--mh-ink)" }}>{draftAncestries[0] || "—"}</b>
-                          </div>
-                          <div style={{ flex: 1, textAlign: "center", fontSize: 11.5, color: "var(--mh-muted)" }}>
-                            2ª: <b style={{ color: "var(--mh-ink)" }}>{draftAncestries[1] || "—"}</b>
-                          </div>
-                        </div>
-                      )}
-
-                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                        {ANCESTRIES.map((a) => {
-                          const selected = draftAncestries.includes(a.key);
-                          const purple = a.expansion;
-                          return (
-                            <div
-                              key={a.key}
-                              title={a.blurb}
-                              onClick={() => toggleAncestryChoice(a.key)}
-                              style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: 5,
-                                padding: "6px 12px",
-                                borderRadius: 20,
-                                border: "1px solid " + (selected ? (purple ? "#A58BE8" : "#E3B04B") : purple ? "#A58BE866" : "var(--mh-line2)"),
-                                color: ink(selected ? (purple ? "#A58BE8" : "#E3B04B") : purple ? "#A58BE8" : "var(--mh-ink3)"),
-                                background: selected ? (purple ? "#A58BE814" : "#E3B04B14") : "transparent",
-                                fontSize: 13,
-                                cursor: "pointer",
-                              }}
-                            >
-                              {selected && <Check size={12} />}
-                              {a.key}
-                            </div>
-                          );
-                        })}
-                      </div>
-                      <div style={{ fontSize: 10.5, color: "var(--mh-muted)", marginTop: 6 }}>
-                        Las ascendencias en morado son de la expansión Hope & Fear.
-                      </div>
-                    </div>
-                  )}
-
-                  {originTab === "community" && (
-                    <div>
-                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                        {COMMUNITIES.map((c) => {
-                          const selected = draftCommunity === c.key;
-                          const purple = c.expansion;
-                          return (
-                            <div
-                              key={c.key}
-                              title={c.blurb}
-                              onClick={() => setDraftCommunity(c.key)}
-                              style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: 5,
-                                padding: "6px 12px",
-                                borderRadius: 20,
-                                border: "1px solid " + (selected ? (purple ? "#A58BE8" : "#E3B04B") : purple ? "#A58BE866" : "var(--mh-line2)"),
-                                color: ink(selected ? (purple ? "#A58BE8" : "#E3B04B") : purple ? "#A58BE8" : "var(--mh-ink3)"),
-                                background: selected ? (purple ? "#A58BE814" : "#E3B04B14") : "transparent",
-                                fontSize: 13,
-                                cursor: "pointer",
-                              }}
-                            >
-                              {selected && <Check size={12} />}
-                              {c.key}
-                            </div>
-                          );
-                        })}
-                      </div>
-                      <div style={{ fontSize: 10.5, color: "var(--mh-muted)", marginTop: 6 }}>
-                        Las comunidades en morado son de la expansión Hope & Fear.
-                      </div>
-                    </div>
-                  )}
-
-                  {originTab === "transformation" && (
-                    <div>
-                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                        <div
-                          onClick={() => setDraftTransformation("Ninguna")}
-                          className={"mh-chip" + (draftTransformation === "Ninguna" ? " active" : "")}
-                        >
-                          Ninguna
-                        </div>
-                        {TRANSFORMATIONS.map((t) => {
-                          const selected = draftTransformation === t.key;
-                          return (
-                            <div
+                (() => {
+                  const tabs = [
+                    { key: "ancestry", label: "Ascendencia", done: draftAncestries.length > 0 },
+                    { key: "community", label: "Comunidad", done: !!draftCommunity },
+                    { key: "transformation", label: "Transformación", done: draftTransformation !== "Ninguna" },
+                  ];
+                  const list = originTab === "ancestry" ? ANCESTRIES : originTab === "community" ? COMMUNITIES : [{ key: "Ninguna", blurb: "Tu personaje no tiene ninguna transformación." }, ...TRANSFORMATIONS];
+                  const isSel = (k) => (originTab === "ancestry" ? draftAncestries.includes(k) : originTab === "community" ? draftCommunity === k : draftTransformation === k);
+                  const pick = (k) => {
+                    setOriginFocus(k);
+                    if (originTab === "ancestry") toggleAncestryChoice(k);
+                    else if (originTab === "community") setDraftCommunity(k);
+                    else setDraftTransformation(k);
+                  };
+                  const focus = list.find((x) => x.key === originFocus) || list.find((x) => isSel(x.key)) || list[0];
+                  return (
+                    <>
+                      <div className="mh-wz-list">
+                        <div className="mh-wz-tabs" role="tablist">
+                          {tabs.map((t) => (
+                            <button
                               key={t.key}
-                              title={t.blurb}
-                              onClick={() => setDraftTransformation(t.key)}
-                              style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: 5,
-                                padding: "6px 12px",
-                                borderRadius: 20,
-                                border: "1px solid " + (selected ? "#A58BE8" : "var(--mh-line2)"),
-                                color: ink(selected ? "#A58BE8" : "var(--mh-ink3)"),
-                                background: selected ? "#A58BE814" : "transparent",
-                                fontSize: 13,
-                                cursor: "pointer",
+                              type="button"
+                              role="tab"
+                              aria-selected={originTab === t.key}
+                              className={originTab === t.key ? "is-on" : ""}
+                              onClick={() => {
+                                setOriginTab(t.key);
+                                setOriginFocus(null);
                               }}
                             >
-                              {selected && <Check size={12} />}
-                              {t.key}
+                              {t.label}
+                              {t.done && <Check size={11} />}
+                            </button>
+                          ))}
+                        </div>
+                        {originTab === "ancestry" && (
+                          <button type="button" className={"mh-wz-mix" + (mixAncestry ? " is-on" : "")} aria-pressed={mixAncestry} onClick={toggleMixAncestry}>
+                            <i />
+                            Ascendencia mixta
+                            {mixAncestry && <small>{draftAncestries.join(" + ") || "elige dos"}</small>}
+                          </button>
+                        )}
+                        {list.map((it) => (
+                          <button key={it.key} type="button" aria-pressed={isSel(it.key)} className={"mh-wz-it" + (focus?.key === it.key ? " is-focus" : "") + (isSel(it.key) ? " is-on" : "")} onClick={() => pick(it.key)}>
+                            <span className="mh-wz-it-n">{it.key}</span>
+                            {it.expansion && <em>H&F</em>}
+                            {isSel(it.key) && <Check size={13} className="mh-wz-ck" />}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="mh-wz-det">
+                        {focus && (
+                          <>
+                            <div className="mh-wz-dh">
+                              {focus.image ? <img className="mh-wz-img" src={focus.image} alt="" /> : null}
+                              <div>
+                                <div className="mh-serif mh-wz-dn">{focus.key}</div>
+                                <div className="mh-wz-dm">
+                                  {tabs.find((t) => t.key === originTab).label}
+                                  {focus.expansion && " · Expansión " + focus.expansion}
+                                </div>
+                              </div>
                             </div>
-                          );
-                        })}
+                            <p className="mh-wz-blurb">{focus.blurb}</p>
+                            {(focus.features || []).length > 0 && (
+                              <div className="mh-wz-feats">
+                                {focus.features.map((f) => (
+                                  <div key={f.name}>
+                                    <b>{f.name}</b>
+                                    <span>{f.text}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            {!isSel(focus.key) && (
+                              <button type="button" className="mh-btn" style={{ alignSelf: "flex-start" }} onClick={() => pick(focus.key)}>
+                                <Check size={14} /> Elegir {focus.key}
+                              </button>
+                            )}
+                            {originTab === "ancestry" && mixAncestry && <div className="mh-wz-dm">Con ascendencia mixta eliges dos y combinas sus rasgos.</div>}
+                          </>
+                        )}
                       </div>
-                      <div style={{ fontSize: 10.5, color: "var(--mh-muted)", marginTop: 6 }}>
-                        Las transformaciones son de la expansión Hope & Fear.
-                      </div>
-                    </div>
-                  )}
-                </div>
+                    </>
+                  );
+                })()
               ) : wizardStep === "languages" ? (
                 <div style={{ marginBottom: 20 }}>
                   <div
@@ -11566,130 +11581,52 @@ export default function App({ onSignOut }) {
                   </div>
                 </div>
               ) : wizardStep === "traits" ? (
-                <div style={{ marginBottom: 20 }}>
-                  <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+                <div>
+                  <div className="mh-wz-trtop">
                     <button className="mh-btn-ghost" onClick={randomizeTraits}>
-                      <Dices size={14} /> Repartir al azar
+                      <Dices size={14} /> Al azar
                     </button>
                     <button className="mh-btn-ghost" onClick={applyRecommendedTraits}>
                       <Sparkles size={14} /> Recomendados para {CLASSES[carouselIndex]?.key}
                     </button>
+                    <span className="mh-wz-dm">
+                      {traitPool.length === 0
+                        ? "Todos los valores repartidos ✓"
+                        : "Por repartir: " +
+                          traitPool
+                            .map((id) => TRAIT_MODIFIER_POOL.find((m) => m.id === id).value)
+                            .sort((a, b) => b - a)
+                            .map((v) => (v > 0 ? "+" + v : v))
+                            .join(", ")}
+                    </span>
                   </div>
-                  <div style={{ fontSize: 12, color: "var(--mh-ink3)", marginBottom: 14 }}>
-                    Arrastra cada modificador a un rasgo. Puedes arrastrar uno ya colocado a otro rasgo para intercambiarlos, o
-                    devolverlo a la bandeja.
-                  </div>
-
-                  <div
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      if (draggedModifier) unassignTrait(draggedModifier.fromTrait);
-                    }}
-                    style={{
-                      display: "flex",
-                      gap: 8,
-                      flexWrap: "wrap",
-                      justifyContent: "center",
-                      marginBottom: 20,
-                      minHeight: 44,
-                      border: "1px dashed var(--mh-line2)",
-                      borderRadius: 8,
-                      padding: 10,
-                    }}
-                  >
-                    {traitPool.length === 0 && (
-                      <div style={{ fontSize: 11.5, color: "var(--mh-muted)", alignSelf: "center" }}>
-                        Bandeja vacía — todos los modificadores están asignados.
-                      </div>
-                    )}
-                    {traitPool.map((modId) => {
-                      const mod = TRAIT_MODIFIER_POOL.find((m) => m.id === modId);
-                      return (
-                        <div
-                          key={modId}
-                          draggable
-                          onDragStart={() => setDraggedModifier({ id: modId, fromTrait: null })}
-                          onDragEnd={() => setDraggedModifier(null)}
-                          style={{
-                            width: 44,
-                            height: 44,
-                            borderRadius: 8,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontWeight: 700,
-                            fontSize: 15,
-                            cursor: "grab",
-                            border: "1px solid #E3B04B",
-                            background: "#E3B04B",
-                            color: "#1F1606",
-                          }}
-                        >
-                          {mod.value > 0 ? "+" + mod.value : mod.value}
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap: 12 }}>
+                  <div className="mh-wz-traits">
                     {TRAITS.map((t) => {
-                      const modId = traitAssign[t.key];
-                      const mod = TRAIT_MODIFIER_POOL.find((m) => m.id === modId);
+                      const mod = TRAIT_MODIFIER_POOL.find((m) => m.id === traitAssign[t.key]);
                       const Icon = t.Icon;
                       return (
-                        <div
-                          key={t.key}
-                          onDragOver={(e) => e.preventDefault()}
-                          onDrop={(e) => {
-                            e.preventDefault();
-                            if (draggedModifier) assignModifierToTrait(draggedModifier.id, t.key);
-                          }}
-                          style={{
-                            border: "1px solid " + (mod ? "#E3B04B" : "var(--mh-line)"),
-                            background: mod ? "#E3B04B14" : "var(--mh-panel2)",
-                            borderRadius: 8,
-                            padding: "12px 8px",
-                            textAlign: "center",
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                            gap: 6,
-                          }}
-                        >
-                          <Icon size={18} color={mod ? "#E3B04B" : "#B7AEC6"} />
-                          <div style={{ fontSize: 12, fontWeight: 600, color: "var(--mh-ink)" }}>{t.label}</div>
-                          <div
-                            draggable={!!mod}
-                            onDragStart={() => mod && setDraggedModifier({ id: modId, fromTrait: t.key })}
-                            onDragEnd={() => setDraggedModifier(null)}
-                            onClick={() => mod && unassignTrait(t.key)}
-                            style={{
-                              width: 40,
-                              height: 40,
-                              borderRadius: 8,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontWeight: 700,
-                              fontSize: 15,
-                              border: "1px dashed " + (mod ? "#E3B04B" : "var(--mh-line2)"),
-                              background: mod ? "#E3B04B" : "transparent",
-                              color: ink(mod ? "#1F1606" : "var(--mh-line2)"),
-                              cursor: mod ? "grab" : "default",
-                            }}
-                          >
-                            {mod ? (mod.value > 0 ? "+" + mod.value : mod.value) : "—"}
+                        <div key={t.key} className="mh-wz-tr">
+                          <Icon size={16} />
+                          <b>{t.label}</b>
+                          <span>{TRAIT_HINTS[t.key]}</span>
+                          <div role="radiogroup" aria-label={t.label}>
+                            {[2, 1, 0, -1].map((v) => {
+                              const on = mod?.value === v;
+                              const left = traitPool.some((id) => TRAIT_MODIFIER_POOL.find((m) => m.id === id).value === v);
+                              return (
+                                <button key={v} type="button" role="radio" aria-checked={on} className={on ? "is-on" : left ? "" : "is-used"} title={on ? "Quitar" : left ? undefined : "Ya asignado: se intercambia"} onClick={() => pickTraitValue(t.key, v)}>
+                                  {v > 0 ? "+" + v : v}
+                                </button>
+                              );
+                            })}
                           </div>
                         </div>
                       );
                     })}
                   </div>
-                  {traitPool.length > 0 && (
-                    <div style={{ fontSize: 11, color: "#D9644E", marginTop: 12 }}>
-                      Asigna los {traitPool.length} modificadores restantes para continuar.
-                    </div>
-                  )}
+                  <div className="mh-wz-dm" style={{ marginTop: 10 }}>
+                    Cada valor (+2, +1, +1, 0, 0 y −1) se usa una vez. Si eliges uno que ya tiene otro rasgo, se intercambian.
+                  </div>
                 </div>
               ) : wizardStep === "stats" ? (
                 <div style={{ marginBottom: 20, textAlign: "center" }}>
@@ -12195,8 +12132,31 @@ export default function App({ onSignOut }) {
                 </div>
               )}
 
+              </div>
 
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+              <div className="mh-wz-foot">
+                {(() => {
+                  const idx = WIZARD_STEPS.findIndex((st) => st.key === wizardStep);
+                  const cls = CLASSES[carouselIndex].key;
+                  const chips = [];
+                  if (idx >= 0) chips.push(cls);
+                  if (idx >= 1) chips.push((SUBCLASSES[cls] || [])[subclassIndex]?.key);
+                  if (idx >= 3) chips.push("Nivel " + levelChoice);
+                  if (idx >= 4 && draftName.trim()) chips.push(draftName.trim());
+                  if (idx >= 5) chips.push([draftAncestries.join(" + "), draftCommunity].filter(Boolean).join(" · "));
+                  if (idx >= 6) chips.push(["Común", ...draftLanguages].join(", "));
+                  if (idx >= 9 && (draftExp1.trim() || draftExp2.trim())) chips.push([draftExp1, draftExp2].map((x) => x.trim()).filter(Boolean).join(", "));
+                  if (idx >= 10 && draftPrimaryWeapon) chips.push(draftPrimaryWeapon);
+                  return (
+                    <div className="mh-wz-sum">
+                      <span>Tu personaje</span>
+                      {chips.filter(Boolean).map((t, k) => (
+                        <em key={k} title={t}>{t}</em>
+                      ))}
+                    </div>
+                  );
+                })()}
+              <div className="mh-wz-btns">
                 {wizardStep === "class" && (
                   <>
                     <button className="mh-btn-ghost" onClick={() => setShowNewCharModal(false)}>
@@ -12330,6 +12290,7 @@ export default function App({ onSignOut }) {
                     </>
                   );
                 })()}
+              </div>
               </div>
             </div>
           </div>
