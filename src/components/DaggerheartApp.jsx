@@ -1521,15 +1521,15 @@ const sharedStyles = `
   .mh-eq:hover { transform: translateY(-1px); border-color: color-mix(in srgb, var(--cc) 70%, transparent); box-shadow: 0 6px 16px color-mix(in srgb, var(--cc) 22%, transparent); }
   .mh-eq:focus-visible { outline: 2px solid var(--cc); outline-offset: 2px; }
   .mh-eq-art {
-    position: relative; width: 96px; flex-shrink: 0; margin: 6px 0 6px 6px; border-radius: 10px;
-    border: 1px solid color-mix(in srgb, var(--cc) 55%, transparent);
-    background: linear-gradient(160deg, var(--mh-panel3) 0%, #3A3150 100%); color: rgba(236,230,218,.5);
+    position: relative; width: 96px; flex-shrink: 0; margin: 7px 0 7px 7px; border-radius: 9px;
+    background: radial-gradient(120% 90% at 50% 30%, color-mix(in srgb, var(--cc) 35%, #3A3150), #2A2436); color: rgba(236,230,218,.7);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cc) 70%, transparent), inset 0 0 0 3px rgba(255,255,255,.06);
     display: flex; align-items: center; justify-content: center;
   }
   .mh-eq-tier {
-    position: absolute; bottom: 0; left: 50%; translate: -50% 50%; height: 17px; display: inline-flex; align-items: center; padding: 0 8px;
+    position: absolute; bottom: 7px; left: 50%; translate: -50% 0; height: 17px; display: inline-flex; align-items: center; padding: 0 8px;
     border-radius: 20px; color: #fff; font-size: 8.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap;
-    box-shadow: 0 1px 4px rgba(0,0,0,.3);
+    box-shadow: 0 1px 3px rgba(0,0,0,.35);
   }
   .mh-eq-body { flex: 1; min-width: 0; padding: 9px 30px 9px 13px; display: flex; flex-direction: column; justify-content: center; }
   .mh-eq-sub { font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: color-mix(in srgb, var(--cc) var(--mh-accent-keep, 100%), #000); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
