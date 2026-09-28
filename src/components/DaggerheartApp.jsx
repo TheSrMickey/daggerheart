@@ -1084,6 +1084,15 @@ const parseConvs = (raw) => {
   if (Array.isArray(v)) return v.length ? [{ id: "c-legacy", sceneId: "", title: "Conversación", lines: v }] : [];
   return Array.isArray(v?.convs) ? v.convs : [];
 };
+// Título de cada persona en las conexiones; ordena y colorea la red de relaciones.
+const REL_TITLES = [
+  { key: "familiar", label: "Familiar", group: "Familia", color: "#E3B04B" },
+  { key: "companero", label: "Compañero", group: "Compañeros", color: "#5B8FD9" },
+  { key: "amigo", label: "Amigo", group: "Amigos", color: "#6FB27A" },
+  { key: "amante", label: "Amante", group: "Amantes", color: "#D9648A" },
+];
+const REL_NONE = { key: "", label: "Sin título", group: "Sin título", color: "#9C93AD" };
+const relOf = (key) => REL_TITLES.find((r) => r.key === key) || REL_NONE;
 const stageScenesOf = (st) => st.scenes || (st.scene?.title || st.scene?.image ? [{ id: "s-legacy", title: st.scene.title || "", image: st.scene.image || "" }] : []);
 const activeSceneIdOf = (st) => (st.activeSceneId !== undefined ? st.activeSceneId : stageScenesOf(st)[0]?.id || null);
 
@@ -2020,6 +2029,17 @@ const sharedStyles = `
   .mh-relnet { margin: 0; width: min(560px, 100%); max-height: 88%; overflow-y: auto; padding: 18px 20px; border-radius: 18px; }
   .mh-relnet-lbl { fill: var(--mh-panel); stroke: var(--mh-line2); }
   .mh-relnet-lbl-t { font-size: 10.5px; fill: var(--mh-ink3); font-family: 'Inter', system-ui, sans-serif; }
+  .mh-relnet-rel { font-size: 10.5px; font-weight: 700; font-family: 'Inter', system-ui, sans-serif; letter-spacing: .02em; }
+  .mh-relnet-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; margin-top: 2px; font-size: 11.5px; font-weight: 600; color: var(--mh-ink3); }
+  .mh-relnet-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .mh-relnet-legend i { width: 10px; height: 10px; border-radius: 50%; }
+  .mh-relnet-sec { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--rl); }
+  .mh-relnet-sec::after { content: ""; flex: 1; height: 1px; background: color-mix(in srgb, var(--rl) 35%, transparent); }
+  .mh-qa-rel { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+  .mh-qa-rel-l { font-size: 11px; color: var(--mh-muted); margin-right: 2px; }
+  .mh-qa-rel-b { padding: 3px 10px; border-radius: 20px; border: 1px solid var(--mh-line2); background: transparent; color: var(--mh-ink3); font: 600 11px 'Inter', system-ui, sans-serif; cursor: pointer; }
+  .mh-qa-rel-b:hover { border-color: var(--rl); color: var(--mh-ink); }
+  .mh-qa-rel-b.is-on { background: color-mix(in srgb, var(--rl) 18%, transparent); border-color: var(--rl); color: var(--mh-ink); }
   .mh-relnet-ini { fill: #fff; font-family: 'Cinzel', Georgia, serif; font-weight: 700; }
   .mh-relnet-name { font-size: 12px; font-weight: 700; fill: var(--mh-ink); font-family: 'Inter', system-ui, sans-serif; }
   .mh-holo {
@@ -8824,6 +8844,31 @@ export default function App({ onSignOut }) {
                                       </div>
                                       {questionBlock("f_connection_qa", connRows, i, row)}
                                       {answerBlock("f_connection_qa", connRows, i, row)}
+                                      {w?.name && (
+                                        <div className="mh-qa-rel" role="radiogroup" aria-label={"Qué es " + w.name + " para " + (c.f_name || "tu personaje")}>
+                                          <span className="mh-qa-rel-l">{w.name} es</span>
+                                          {REL_TITLES.map((rt) => {
+                                            const on = row.rel === rt.key;
+                                            return (
+                                              <button
+                                                key={rt.key}
+                                                type="button"
+                                                role="radio"
+                                                aria-checked={on}
+                                                className={"mh-qa-rel-b" + (on ? " is-on" : "")}
+                                                style={{ "--rl": rt.color }}
+                                                onClick={() => {
+                                                  // El título es de la persona: se aplica a todas sus conexiones.
+                                                  const rel = on ? "" : rt.key;
+                                                  updateCharacterField(viewingCharId, "f_connection_qa", JSON.stringify(connRows.map((r, k) => (k === i || (r.with?.name && r.with.name === w.name) ? { ...r, rel } : r))));
+                                                }}
+                                              >
+                                                {rt.label}
+                                              </button>
+                                            );
+                                          })}
+                                        </div>
+                                      )}
                                     </div>
                                   );
                                 })}
@@ -8839,9 +8884,14 @@ export default function App({ onSignOut }) {
                               connRows.forEach((r) => {
                                 if (!r.with || !r.with.name) return;
                                 let g = groups.find((x) => x.name === r.with.name);
-                                if (!g) groups.push((g = { name: r.with.name, cls: r.with.cls, rows: [] }));
+                                if (!g) groups.push((g = { name: r.with.name, cls: r.with.cls, rows: [], rel: "" }));
                                 g.rows.push(r);
+                                if (!g.rel && r.rel) g.rel = r.rel;
                               });
+                              // Mismo título, juntos en el círculo y en la lista.
+                              const relRank = (k) => (REL_TITLES.findIndex((rt) => rt.key === k) + REL_TITLES.length + 1) % (REL_TITLES.length + 1);
+                              groups.sort((a, b) => relRank(a.rel) - relRank(b.rel));
+                              const usedRels = [...REL_TITLES, REL_NONE].filter((rt) => groups.some((g) => (g.rel || "") === rt.key));
                               const W = 460, H = groups.length <= 2 ? 190 : 330, cx = W / 2, cy = groups.length <= 2 ? 80 : H / 2 - 10, R = 112;
                               const nodes = groups.map((g, k) => {
                                 // Con 1 o 2 compañeros, a los lados; con más, en círculo empezando arriba.
@@ -8869,22 +8919,39 @@ export default function App({ onSignOut }) {
                                       <>
                                         <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: "block", maxHeight: 320 }} role="img" aria-label="Mapa de relaciones">
                                           {nodes.map((n) => (
-                                            <line key={"l" + n.name} x1={cx} y1={cy} x2={n.x} y2={n.y} stroke={classColor(n.cls)} strokeWidth="2" opacity=".7" />
+                                            <line key={"l" + n.name} x1={cx} y1={cy} x2={n.x} y2={n.y} stroke={relOf(n.rel).color} strokeWidth={n.rel ? 2.5 : 1.5} strokeDasharray={n.rel ? undefined : "4 4"} opacity=".85" />
                                           ))}
                                           <circle cx={cx} cy={cy} r="30" fill={classColor(c.f_class)} />
                                           <text x={cx} y={cy + 7} textAnchor="middle" className="mh-relnet-ini" style={{ fontSize: 20 }}>{(c.f_name || "?").trim().charAt(0).toUpperCase()}</text>
                                           {nodes.map((n) => (
                                             <g key={"n" + n.name}>
+                                              <circle cx={n.x} cy={n.y} r="25" fill="none" stroke={relOf(n.rel).color} strokeWidth="2.5" opacity={n.rel ? 1 : 0.5} />
                                               <circle cx={n.x} cy={n.y} r="21" fill={classColor(n.cls)} />
                                               <text x={n.x} y={n.y + 5} textAnchor="middle" className="mh-relnet-ini" style={{ fontSize: 15 }}>{n.name.trim().charAt(0).toUpperCase()}</text>
-                                              <text x={n.x} y={n.y + 38} textAnchor="middle" className="mh-relnet-name">{n.name}</text>
-                                              <text x={n.x} y={n.y + 54} textAnchor="middle" className="mh-relnet-lbl-t">{short((n.rows[0].answer || n.rows[0].question || "").trim())}</text>
+                                              <text x={n.x} y={n.y + 42} textAnchor="middle" className="mh-relnet-name">{n.name}</text>
+                                              <text x={n.x} y={n.y + 57} textAnchor="middle" className="mh-relnet-rel" style={{ fill: relOf(n.rel).color }}>{n.rel ? relOf(n.rel).label : short((n.rows[0].answer || n.rows[0].question || "").trim())}</text>
                                             </g>
                                           ))}
                                         </svg>
+                                        {usedRels.length > 0 && (
+                                          <div className="mh-relnet-legend">
+                                            {usedRels.map((rt) => (
+                                              <span key={rt.key || "none"}>
+                                                <i style={{ background: rt.color }} />
+                                                {rt.group} · {groups.filter((g) => (g.rel || "") === rt.key).length}
+                                              </span>
+                                            ))}
+                                          </div>
+                                        )}
                                         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 6 }}>
-                                          {nodes.map((n) => (
-                                            <div key={"d" + n.name} className="mh-qa" style={{ padding: "10px 12px", gap: 10 }}>
+                                          {nodes.map((n, k) => (
+                                            <div key={"d" + n.name} style={{ display: "contents" }}>
+                                            {(k === 0 || (nodes[k - 1].rel || "") !== (n.rel || "")) && (
+                                              <div className="mh-relnet-sec" style={{ "--rl": relOf(n.rel).color }}>
+                                                {relOf(n.rel).group}
+                                              </div>
+                                            )}
+                                            <div className="mh-qa" style={{ padding: "10px 12px", gap: 10, borderLeft: "3px solid " + relOf(n.rel).color }}>
                                               {avatar(n, 26)}
                                               <div style={{ flex: 1, minWidth: 0 }}>
                                                 <div style={{ fontSize: 13, fontWeight: 700, color: "var(--mh-ink)" }}>{n.name}</div>
@@ -8895,6 +8962,7 @@ export default function App({ onSignOut }) {
                                                   </div>
                                                 ))}
                                               </div>
+                                            </div>
                                             </div>
                                           ))}
                                         </div>
