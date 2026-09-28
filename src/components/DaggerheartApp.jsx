@@ -1992,6 +1992,24 @@ const sharedStyles = `
   .mh-chat-tot { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; }
   .mh-chat-tot small { font-size: 9.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--mh-muted); }
   .mh-chat-tot b { font: 800 28px/1 'Inter', system-ui, sans-serif; color: var(--mh-ink); }
+  .mh-chat-c .mh-chat-roll-h { padding-bottom: 2px; }
+  .mh-chat-c-t { padding: 3px 12px 10px; font-size: 12.5px; line-height: 1.45; color: var(--mh-ink); overflow-wrap: anywhere; }
+  .mh-chat-c-t.is-msg { font-size: 13px; }
+  .mh-chat-c.is-me { background: color-mix(in srgb, var(--rc) 7%, var(--mh-panel)); border-color: color-mix(in srgb, var(--rc) 35%, var(--mh-line)); }
+  .mh-chat-me { font-size: 11px; color: var(--mh-muted); font-weight: 500; }
+  .mh-chat-c-scene { margin: 4px 12px 10px; height: 64px; border-radius: 9px; background: #2B1B12 center / cover no-repeat; position: relative; overflow: hidden; display: flex; align-items: flex-end; }
+  .mh-chat-c-scene.is-blank { background-image: linear-gradient(170deg, #6B4526, #2B1B12); }
+  .mh-chat-c-scene::before { content: ""; position: absolute; inset: 0; background: linear-gradient(transparent 35%, rgba(0,0,0,.6)); }
+  .mh-chat-c-scene span { position: relative; padding: 6px 10px; color: #F4E6CC; font: 700 13px 'Cinzel', Georgia, serif; }
+  .mh-chat-c-hp { display: flex; flex-wrap: wrap; gap: 4px; padding: 5px 12px 10px; }
+  .mh-chat-c-hp i { width: 18px; height: 10px; border-radius: 3px; border: 1.5px solid #D9644E; box-sizing: border-box; }
+  .mh-chat-c-hp i.is-old { background: #D9644E; }
+  .mh-chat-c-hp i.is-new { background: #F2A493; border-color: #E07A63; animation: mh-hp-new 1s ease-out 2; }
+  @keyframes mh-hp-new { 50% { background: #D9644E; } }
+  .mh-chat-c-share { display: flex; align-items: center; gap: 10px; padding: 5px 12px 10px; }
+  .mh-chat-c .mh-chat-roll-f { align-items: center; }
+  .mh-chat-c .mh-chat-open { margin: -3px -4px -3px 0; }
+  .mh-chat-c-share .mh-chat-share-c { padding-left: 0; margin-top: 3px; }
   .mh-chat-roll.is-join-next { border-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
   .mh-chat-roll.is-join-prev { border-top: 0; border-top-left-radius: 0; border-top-right-radius: 0; margin-top: -9px; }
   .mh-chat-join { display: flex; align-items: center; gap: 8px; padding: 0 12px; font-size: 9.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: color-mix(in srgb, var(--rc) 75%, var(--mh-ink)); }
@@ -5278,69 +5296,146 @@ export default function App({ onSignOut }) {
         );
       }
 
+      // Tarjeta común (misma anatomía que las tiradas): cabecera con etiqueta, contenido y pie de color.
+      const chatCard = (tone, head, tag, body, foot, cls = "") => (
+        <div key={key} className={"mh-chat-roll mh-chat-c" + cls} style={{ "--rc": tone }}>
+          <div className="mh-chat-roll-h">
+            <span className="mh-chat-grow">{head}</span>
+            <time>{time}</time>
+            {tag && <span className="mh-chat-tag">{tag}</span>}
+          </div>
+          {body}
+          {foot && <div className="mh-chat-roll-f">{foot}</div>}
+        </div>
+      );
+      const whoB = (
+        <b style={{ color: ink(col) }} title={m.player && m.player !== m.author ? "Jugador: " + m.player : undefined}>
+          {m.author}
+        </b>
+      );
+
       if (kind === "share" && m.share) {
         const sh = m.share;
         const vis = shareVisual(sh);
         const VIcon = vis.Icon;
         const img = sh.type === "handout" ? sh.handout?.image : sh.image;
         const canOpen = sh.type !== "handout" || !gmViewing;
-        return (
-          <div key={key} className="mh-chat-share-wrap">
-            <div className="mh-chat-share" style={{ "--sc": vis.color }}>
-              <span className="mh-chat-share-art" style={img ? { backgroundImage: `url("${img.replace(/"/g, "%22")}")` } : undefined}>
-                {!img && <VIcon size={20} strokeWidth={1.8} />}
-              </span>
-              <div className="mh-chat-grow" style={{ minWidth: 0 }}>
-                <div className="mh-chat-share-k">
-                  <b style={{ color: ink(col) }}>{m.author}</b> {sh.type === "handout" ? "entrega una pista" : "muestra"} · {time}
-                </div>
-                <div className="mh-chat-share-t">{sh.name}</div>
-                {sh.sub && <div className="mh-chat-share-s">{sh.sub}</div>}
-              </div>
-              {canOpen && (
-                <button type="button" className="mh-chat-open" title={sh.type === "handout" ? "Ver la pista" : "Ver la carta"} onClick={() => (sh.type === "handout" ? setOpenHandout(sh.handout) : setViewingCardDetail({ ...sh.detail, fromChat: true }))}>
-                  <Eye size={12} /> Ver
-                </button>
-              )}
+        const tag = { handout: "Pista", weapon: "Arma", armor: "Armadura", item: "Objeto" }[sh.type] || "Carta";
+        const tone = String(vis.color || "").startsWith("#") ? vis.color : "#2FA6A8";
+        return chatCard(
+          tone,
+          <>
+            {whoB} {sh.type === "handout" ? "entrega una pista" : "muestra " + (tag === "Carta" ? "una carta" : tag === "Objeto" ? "un objeto" : tag === "Pista" ? "una pista" : "su " + tag.toLowerCase())}
+          </>,
+          tag,
+          <div className="mh-chat-c-share">
+            <span className="mh-chat-share-art" style={{ "--sc": vis.color, ...(img ? { backgroundImage: `url("${img.replace(/"/g, "%22")}")` } : {}) }}>
+              {!img && <VIcon size={20} strokeWidth={1.8} />}
+            </span>
+            <div className="mh-chat-grow" style={{ minWidth: 0 }}>
+              <div className="mh-chat-share-t">{sh.name}</div>
+              {sh.sub && <div className="mh-chat-share-s">{sh.sub}</div>}
+              {m.text && <div className="mh-chat-share-c">«{m.text}»</div>}
             </div>
-            {m.text && <div className="mh-chat-share-c">«{m.text}»</div>}
-          </div>
+          </div>,
+          canOpen ? (
+            <>
+              <span>{sh.type === "handout" ? "Pista de la mesa" : "Ábrela en grande"}</span>
+              <button type="button" className="mh-chat-open" title={sh.type === "handout" ? "Ver la pista" : "Ver la carta"} onClick={() => (sh.type === "handout" ? setOpenHandout(sh.handout) : setViewingCardDetail({ ...sh.detail, fromChat: true }))}>
+                <Eye size={12} /> Ver
+              </button>
+            </>
+          ) : null
         );
       }
 
       if (kind === "event") {
         const match = (m.text || "").match(CHAT_EMOJI_RE);
+        const emoji = match ? match[0].trim() : "";
         const body = match ? m.text.slice(match[0].length) : m.text || "";
-        const SIcon = m.gm ? CHAT_STAGE_ICONS[m.icon] || Clapperboard : null;
         const named = body.startsWith(m.author);
-        return (
-          <div key={key} className="mh-chat-ev">
-            <span className="mh-chat-ev-i" style={{ color: ink(col) }}>
-              {SIcon ? <SIcon size={13} /> : match ? match[0].trim() : "•"}
-            </span>
-            <span className="mh-chat-grow">
-              {!named && <b style={{ color: ink(col) }}>{m.author} </b>}
-              {body}
-            </span>
-            <time>{time}</time>
-          </div>
+        // Eventos del DJ en la mesa (escena, mapa, pistas, personajes).
+        if (m.gm) {
+          const label = { escena: "Escena", mapa: "Mapa", pistas: "Pistas", personajes: "Personajes" }[m.icon] || "Mesa";
+          const sceneTitle = m.icon === "escena" ? (body.match(/«(.+)»/) || [])[1] : null;
+          const sc = sceneTitle ? stageScenesOf(campaignStage).find((x) => x.title === sceneTitle) : null;
+          return chatCard(
+            "#C9A24A",
+            <>
+              {whoB} {sceneTitle ? "cambia de escena" : body}
+            </>,
+            label,
+            sceneTitle ? (
+              <div className={"mh-chat-c-scene" + (sc?.image ? "" : " is-blank")} style={sc?.image ? { backgroundImage: `url("${sc.image.replace(/"/g, "%22")}")` } : undefined}>
+                <span>{sceneTitle}</span>
+              </div>
+            ) : null,
+            sceneTitle ? <span>Todos la ven ahora</span> : null
+          );
+        }
+        // Golpes: casillas de vida marcadas.
+        const hit = body.match(/marca (\d+) de Vida.*\((\d+)\/(\d+)\)/);
+        if (hit) {
+          const got = Number(hit[1]);
+          const now = Number(hit[2]);
+          const tot = Number(hit[3]);
+          const stressFull = /Estrés lleno/.test(body);
+          return chatCard(
+            "#D9644E",
+            <>
+              {whoB} {stressFull ? "tiene el Estrés lleno" : "recibe un golpe"}
+            </>,
+            "Golpe",
+            <div className="mh-chat-c-hp" aria-label={"Puntos de vida " + now + " de " + tot}>
+              {Array.from({ length: tot }, (_, k) => (
+                <i key={k} className={k < now - got ? "is-old" : k < now ? "is-new" : ""} />
+              ))}
+            </div>,
+            <>
+              <span>Marca {got} de Vida</span>
+              <span>
+                {now} / {tot}
+              </span>
+            </>
+          );
+        }
+        const type =
+          emoji === "🐾" || emoji === "🌙" || emoji === "🐺" || emoji === "🌪️" || /Forma|forma|Activa|transforma/.test(body)
+            ? ["Forma", "#8A6FD0"]
+            : emoji === "🎒"
+            ? ["Equipo", "#9A7B4F"]
+            : emoji === "🔨"
+            ? ["Proyecto", "#B8862E"]
+            : emoji === "☠️" || emoji === "😵"
+            ? ["Muerte", "#4C4458"]
+            : emoji === "✨" || emoji === "💫"
+            ? ["Esperanza", "#E3B04B"]
+            : emoji === "😰" || emoji === "⚠️"
+            ? ["Estrés", "#6FA3C0"]
+            : emoji === "🎲" || emoji === "🃏" || emoji === "🗡️"
+            ? ["Tirada", "#857C90"]
+            : ["Suceso", "#857C90"];
+        return chatCard(
+          type[1],
+          <>{whoB}</>,
+          type[0],
+          <div className="mh-chat-c-t">{named ? body.slice(m.author.length).trim() : body}</div>,
+          null,
+          " is-event"
         );
       }
 
       const mine = meCharId ? m.charId === meCharId : !!m.gm;
-      return (
-        <div key={key} className={"mh-chat-msg" + (mine ? " is-me" : "")}>
-          {!mine && avatar(26)}
-          <div className="mh-chat-bub">
-            <div className="mh-chat-h">
-              <b style={{ color: ink(col) }} title={m.player && m.player !== m.author ? "Jugador: " + m.player : undefined}>
-                {m.author}
-              </b>
-              <time>{time}</time>
-            </div>
-            <div className="mh-chat-t">{m.text}</div>
-          </div>
-        </div>
+      return chatCard(
+        col.startsWith("#") ? col : "#C9A24A",
+        <>
+          {whoB}
+          {mine && <span className="mh-chat-me"> · tú</span>}
+        </>,
+        null,
+        <div className="mh-chat-c-t is-msg">{m.text}</div>,
+        null,
+        " is-msg" + (mine ? " is-me" : "")
       );
     });
 
