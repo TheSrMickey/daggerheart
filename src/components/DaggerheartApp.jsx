@@ -322,6 +322,19 @@ const TRANSFORMATION_ART = {
   Semidiós: { src: "/transformaciones/semidios.webp", color: "#E0A93A" },
 };
 
+// Ilustración de cada clase del manual básico (el halo usa el color de la clase).
+const CLASS_ART = {
+  Bardo: "/clases/bardo.webp",
+  Druida: "/clases/druida.webp",
+  Guardián: "/clases/guardian.webp",
+  Explorador: "/clases/explorador.webp",
+  Pícaro: "/clases/picaro.webp",
+  Serafín: "/clases/serafin.webp",
+  Hechicero: "/clases/hechicero.webp",
+  Guerrero: "/clases/guerrero.webp",
+  Mago: "/clases/mago.webp",
+};
+
 const TRAIT_HINTS = {
   t_agility: "Correr, saltar, maniobrar",
   t_strength: "Levantar, aplastar, agarrar",
@@ -11658,7 +11671,12 @@ export default function App({ onSignOut }) {
                       );
                     })}
                   </div>
-                  <div className="mh-wz-det">
+                  <div className={"mh-wz-det" + (wizardStep === "class" && CLASS_ART[CLASSES[carouselIndex].key] ? " has-art" : "")}>
+                    {wizardStep === "class" && CLASS_ART[CLASSES[carouselIndex].key] && (
+                      <div className="mh-wz-art" style={{ "--tc": CLASS_COLORS[CLASSES[carouselIndex].key] || "#E3B04B" }} aria-hidden="true">
+                        <img key={CLASSES[carouselIndex].key} src={CLASS_ART[CLASSES[carouselIndex].key]} alt="" />
+                      </div>
+                    )}
                     {(() => {
                       const cls = CLASSES[carouselIndex].key;
                       const col = CLASS_COLORS[cls] || "#E3B04B";
