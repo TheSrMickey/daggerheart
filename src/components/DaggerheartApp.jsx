@@ -339,6 +339,13 @@ const CLASS_ART = {
   Asesino: "/clases/asesino.webp",
 };
 
+// Canciones del Trovador: cada una se toca una vez por descanso largo (dos con Virtuoso, en Maestría).
+const TROVADOR_SONGS = [
+  { key: "relajante", name: "Canción Relajante", icon: "♪", text: "Tú y tus aliados en alcance Cercano recuperáis 1 Punto de vida." },
+  { key: "epica", name: "Canción Épica", icon: "⚔", text: "Un objetivo en alcance Cercano queda Vulnerable temporalmente." },
+  { key: "desgarradora", name: "Canción Desgarradora", icon: "♥", text: "Tú y tus aliados en alcance Cercano ganáis 1 de Esperanza." },
+];
+
 const TRAIT_HINTS = {
   t_agility: "Correr, saltar, maniobrar",
   t_strength: "Levantar, aplastar, agarrar",
@@ -2236,6 +2243,24 @@ const sharedStyles = `
     .mh-cardc-dock { position: relative; left: auto; top: auto; translate: none; flex-direction: row; margin-top: -18px; padding: 26px 10px 10px; border: 2px solid var(--cc); border-top: 0; border-radius: 0 0 18px 18px; }
     .mh-cardc-tip { left: 50%; top: auto; bottom: calc(100% + 30px); translate: -50% 0; }
   }
+  .mh-rest-row { flex: 1 0 auto; }
+  .mh-trov { --tb: #E07FB0; border: 1px solid color-mix(in srgb, var(--tb) 45%, var(--mh-line)); border-radius: 12px; padding: 10px 11px; background: linear-gradient(color-mix(in srgb, var(--tb) 8%, var(--mh-panel)), var(--mh-panel)); display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
+  .mh-trov-h { display: flex; align-items: center; gap: 8px; }
+  .mh-trov-h b { font-size: 13px; color: var(--mh-ink); }
+  .mh-trov-lute { font-size: 16px; }
+  .mh-trov-tag { margin-left: auto; font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; padding: 2px 8px; border-radius: 10px; color: #fff; background: var(--tb); }
+  .mh-trov-songs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+  .mh-trov-s { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 4px; border-radius: 10px; border: 1px solid color-mix(in srgb, var(--tb) 40%, var(--mh-line)); background: var(--mh-panel); color: var(--mh-ink); font: inherit; cursor: pointer; transition: transform .12s, box-shadow .12s; }
+  .mh-trov-s:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 12px color-mix(in srgb, var(--tb) 25%, transparent); }
+  .mh-trov-s b { font-size: 11.5px; line-height: 1.2; text-align: center; }
+  .mh-trov-s.is-used { opacity: .5; cursor: default; }
+  .mh-trov-i { font-size: 16px; color: color-mix(in srgb, var(--tb) 80%, var(--mh-ink)); }
+  .mh-trov-dots { display: flex; gap: 4px; margin-top: 2px; }
+  .mh-trov-dots i { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--tb); box-sizing: border-box; }
+  .mh-trov-dots i.is-f { background: var(--tb); }
+  .mh-trov-f { font-size: 10.5px; color: var(--mh-muted); }
+  .mh-trov.is-flash .mh-trov-s { animation: mh-trov-glow 1.2s ease-out; }
+  @keyframes mh-trov-glow { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--tb) 70%, transparent); } 40% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--tb) 30%, transparent); } 100% { box-shadow: 0 0 0 0 transparent; } }
   .mh-wz { margin: 0; width: min(1020px, 100%); height: min(640px, 92%); padding: 0; display: flex; flex-direction: column; overflow: hidden; }
   .mh-wz-top { padding: 16px 22px 12px; border-bottom: 1px solid var(--mh-line); flex-shrink: 0; }
   .mh-wz-title { display: flex; align-items: baseline; gap: 10px; }
@@ -5898,6 +5923,25 @@ export default function App({ onSignOut }) {
     restMsgTimer.current = setTimeout(() => setRestMessage(""), 3500);
   };
 
+  const [songsFlash, setSongsFlash] = useState(0);
+  const getSongsUsed = (c) => {
+    try {
+      return JSON.parse(c.f_songs_used || "{}") || {};
+    } catch (e) {
+      return {};
+    }
+  };
+  const playSong = (id, song) => {
+    const c = characters[id];
+    if (!c) return;
+    const used = getSongsUsed(c);
+    const patch = { f_songs_used: JSON.stringify({ ...used, [song.key]: (used[song.key] || 0) + 1 }) };
+    if (song.key === "relajante") patch.hp_marked = String(Math.max(0, Number(c.hp_marked || 0) - 1));
+    if (song.key === "desgarradora") patch.hope_marked = String(Math.min(getHopeMax(c), Number(c.hope_marked ?? HOPE_DEFAULT) + 1));
+    updateCharacterFields(id, patch);
+    postCampaignEvent(id, `🎵 Toca la ${song.name}: ${song.text}`);
+  };
+
   const performRest = (id, restType, key1, key2, key3) => {
     const c = characters[id];
     if (!c) return;
@@ -5948,6 +5992,12 @@ export default function App({ onSignOut }) {
       // Máximo 3 descansos cortos seguidos: el siguiente tiene que ser largo.
       f_short_rests: isLong ? "0" : String(Number(c.f_short_rests || 0) + 1),
     };
+    // Trovador: el descanso largo recupera sus canciones.
+    if (isLong && c.f_subclass === "Trovador" && c.f_songs_used && c.f_songs_used !== "{}") {
+      restPatch.f_songs_used = "{}";
+      messages.push("Recuperas tus canciones");
+      setSongsFlash(Date.now());
+    }
     restPatch = reviveIfHealedPatch(id, Number(c.hp_marked || 0), Math.min(hpTotal, hp), restPatch);
     if (c.f_elemental_active) {
       postCampaignEvent(id, `🌪️ Deja de canalizar ${c.f_elemental_active} (${isLong ? "descanso largo" : "descanso corto"})`);
@@ -8565,7 +8615,14 @@ export default function App({ onSignOut }) {
                             summary: isElemental ? (activeElement ? "Canalizando " + activeElement : "Ningún elemento canalizado") : subclassEntry.blurb,
                             costText: isElemental ? subclassEntry.blurb : null,
                             extraBelow: isElemental,
-                            onClick: openDetail({ kicker: `Subclase · ${subclassBadge}`, title: subclassEntry.key, text: subclassEntry.blurb, features: subclassEntry.features, image: subclassEntry.image, bigStyle: true }),
+                            onClick: openDetail({
+                              kicker: `Subclase · ${subclassBadge}`,
+                              title: subclassEntry.key,
+                              text: subclassEntry.blurb,
+                              features: subclassEntry.key === "Trovador" ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
+                              image: subclassEntry.image,
+                              bigStyle: true,
+                            }),
                             extra: isElemental && (
                               <div style={{ display: "flex", gap: 4 }}>
                                 {["Fuego", "Tierra", "Agua", "Aire"].map((el) => {
@@ -8960,6 +9017,38 @@ export default function App({ onSignOut }) {
                                       );
                                     })}
                                   </div>
+
+                                  {c.f_subclass === "Trovador" && (() => {
+                                    const used = getSongsUsed(c);
+                                    const uses = currentTier >= 3 ? 2 : 1;
+                                    return (
+                                      <div className={"mh-trov" + (songsFlash && Date.now() - songsFlash < 3000 ? " is-flash" : "")} key={"trov-" + songsFlash}>
+                                        <div className="mh-trov-h">
+                                          <span className="mh-trov-lute">🪕</span>
+                                          <b className="mh-serif">Intérprete dotado</b>
+                                          <span className="mh-trov-tag">{uses === 2 ? "Virtuoso" : "Trovador"}</span>
+                                        </div>
+                                        <div className="mh-trov-songs">
+                                          {TROVADOR_SONGS.map((sg) => {
+                                            const n = Math.min(uses, used[sg.key] || 0);
+                                            const left = uses - n;
+                                            return (
+                                              <button key={sg.key} type="button" className={"mh-trov-s" + (left ? "" : " is-used")} disabled={!left} title={left ? "Tocar: " + sg.text : "Ya la has tocado: se recupera en el descanso largo"} onClick={() => playSong(viewingCharId, sg)}>
+                                                <span className="mh-trov-i">{sg.icon}</span>
+                                                <b>{sg.name}</b>
+                                                <span className="mh-trov-dots">
+                                                  {Array.from({ length: uses }, (_, k) => (
+                                                    <i key={k} className={k < left ? "is-f" : ""} />
+                                                  ))}
+                                                </span>
+                                              </button>
+                                            );
+                                          })}
+                                        </div>
+                                        <div className="mh-trov-f">Pulsa una canción para tocarla. {isLong ? "Este descanso largo las recupera todas." : "Se recuperan en el descanso largo."}</div>
+                                      </div>
+                                    );
+                                  })()}
 
                                   <button
                                     className="mh-btn"
