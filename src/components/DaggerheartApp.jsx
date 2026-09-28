@@ -7207,7 +7207,7 @@ export default function App({ onSignOut }) {
                                 fontSize: 13,
                                 fontWeight: 500,
                                 whiteSpace: "nowrap",
-                                color: ink(active ? t.tone : t.key === "beastforms" || t.key === "campaign" ? alpha(t.tone, 70) : "var(--mh-muted)"),
+                                color: ink(active ? t.tone : "var(--mh-muted)"),
                                 borderBottom: "2px solid " + (active ? t.tone : "transparent"),
                               }}
                             >
