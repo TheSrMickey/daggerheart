@@ -333,6 +333,10 @@ const CLASS_ART = {
   Hechicero: "/clases/hechicero.webp",
   Guerrero: "/clases/guerrero.webp",
   Mago: "/clases/mago.webp",
+  Bruja: "/clases/bruja.webp",
+  Brujo: "/clases/brujo.webp",
+  Camorrista: "/clases/camorrista.webp",
+  Asesino: "/clases/asesino.webp",
 };
 
 const TRAIT_HINTS = {
@@ -2313,7 +2317,7 @@ const sharedStyles = `
   .mh-wz-det.has-art .mh-wz-feats { grid-template-columns: 1fr; }
   .mh-wz-art { position: absolute; top: 0; right: 0; bottom: 0; width: 50%; pointer-events: none; background: radial-gradient(90% 70% at 55% 45%, color-mix(in srgb, var(--tc) 22%, transparent), transparent 70%); }
   .mh-wz-art img {
-    position: absolute; right: 24px; bottom: 0; height: 94%; max-width: 92%; object-fit: contain; object-position: bottom right;
+    position: absolute; right: 16px; bottom: 0; height: 96%; max-width: 100%; object-fit: contain; object-position: bottom right;
     -webkit-mask-image: linear-gradient(to right, transparent 0, #000 22%, #000 80%, transparent 100%), linear-gradient(to bottom, transparent 0, #000 12%, #000 78%, transparent 100%);
     -webkit-mask-composite: source-in;
     mask-image: linear-gradient(to right, transparent 0, #000 22%, #000 80%, transparent 100%), linear-gradient(to bottom, transparent 0, #000 12%, #000 78%, transparent 100%);
