@@ -1545,7 +1545,6 @@ const sharedStyles = `
     background: color-mix(in srgb, var(--rc) 15%, transparent); color: color-mix(in srgb, var(--rc) var(--mh-accent-keep, 100%), #000);
   }
   .mh-rest-rec { font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--mh-green-ink); background: #6FBF7322; border-radius: 20px; padding: 1px 7px; white-space: nowrap; }
-  .mh-rest-box { display: inline-block; width: 14px; height: 8px; border-radius: 2px; border: 1px solid var(--rc); }
   .mh-rest-tick {
     width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
     background: var(--acc); color: var(--acc-on, #fff);
@@ -8149,10 +8148,10 @@ export default function App({ onSignOut }) {
                               const hope = Number(c.hope_marked ?? HOPE_DEFAULT);
                               const roll = `1d4+${tier}`;
                               const acts = [
-                                { key: "heal", label: "Curar heridas", Icon: Heart, color: "#D9644E", boxes: hpTotal, filled: hpMarked, need: hpTotal ? hpMarked / hpTotal : 0, text: isLong ? "Recupera todos los PV" : `Recupera ${roll} PV` },
-                                { key: "clearmind", label: "Quitarse el Estrés", Icon: Zap, color: "#A58BE8", boxes: stressTotal, filled: stressMarked, need: stressTotal ? stressMarked / stressTotal : 0, text: isLong ? "Quita todo el Estrés" : `Quita ${roll} Estrés` },
-                                { key: "repair", label: "Reparar la armadura", Icon: Shield, color: "var(--acc)", boxes: armorTotal, filled: armorLeft, need: armorTotal ? (armorTotal - armorLeft) / armorTotal : 0, text: !armorTotal ? "No llevas armadura" : isLong ? "Repara toda la Armadura" : `Repara ${roll} casillas` },
-                                { key: "prepare", label: "Prepararse", Icon: Sparkles, color: "#E3B04B", boxes: hopeTotal, filled: hope, need: hopeTotal ? ((hopeTotal - hope) / hopeTotal) * 0.8 : 0, text: "+1 Esperanza" },
+                                { key: "heal", label: "Curar heridas", Icon: Heart, color: "#D9644E", need: hpTotal ? hpMarked / hpTotal : 0, text: isLong ? "Recupera todos los PV" : `Recupera ${roll} PV` },
+                                { key: "clearmind", label: "Quitarse el Estrés", Icon: Zap, color: "#A58BE8", need: stressTotal ? stressMarked / stressTotal : 0, text: isLong ? "Quita todo el Estrés" : `Quita ${roll} Estrés` },
+                                { key: "repair", label: "Reparar la armadura", Icon: Shield, color: "var(--acc)", need: armorTotal ? (armorTotal - armorLeft) / armorTotal : 0, text: !armorTotal ? "No llevas armadura" : isLong ? "Repara toda la Armadura" : `Repara ${roll} casillas` },
+                                { key: "prepare", label: "Prepararse", Icon: Sparkles, color: "#E3B04B", need: hopeTotal ? ((hopeTotal - hope) / hopeTotal) * 0.8 : 0, text: "+1 Esperanza" },
                               ];
                               // Recomendadas: lo que más te falta; si sobra hueco, prepararse.
                               const recommended = acts
@@ -8225,16 +8224,7 @@ export default function App({ onSignOut }) {
                                               <span style={{ fontSize: 13, fontWeight: 700, color: "var(--mh-ink)" }}>{ac.label}</span>
                                               {recommended.includes(ac.key) && ac.need > 0 && <span className="mh-rest-rec">Recomendado</span>}
                                             </div>
-                                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4, flexWrap: "wrap" }}>
-                                              {ac.boxes > 0 && (
-                                                <span style={{ display: "flex", gap: 3 }}>
-                                                  {Array.from({ length: ac.boxes }, (_, i) => (
-                                                    <i key={i} className="mh-rest-box" style={{ background: i < ac.filled ? ac.color : "transparent" }} />
-                                                  ))}
-                                                </span>
-                                              )}
-                                              <span style={{ fontSize: 10.5, color: "var(--mh-muted)" }}>{ac.text}</span>
-                                            </div>
+                                            <div style={{ fontSize: 10.5, color: "var(--mh-muted)", marginTop: 2 }}>{ac.text}</div>
                                           </div>
                                           {n > 1 && <span className="mh-rest-x2">×{n}</span>}
                                           <span className={"mh-rest-tick" + (n > 0 ? "" : " off")}>{n > 0 && <Check size={12} strokeWidth={3} />}</span>
