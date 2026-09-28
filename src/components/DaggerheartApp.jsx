@@ -5086,6 +5086,7 @@ export default function App({ onSignOut }) {
     if (sh.type === "weapon") return { Icon: weaponIcon(sh.name), color: "var(--acc, #C9A24A)" };
     if (sh.type === "armor") return { Icon: armorIcon(sh.name), color: "var(--acc, #C9A24A)" };
     if (sh.type === "handout") return { Icon: (HANDOUT_KINDS.find((k) => k.key === sh.handout?.kind) || HANDOUT_KINDS[0]).Icon, color: "#B8862E" };
+    if (sh.type === "card") return { Icon: sh.detail?.transformForm || /Transformación/.test(sh.detail?.kicker || "") ? Moon : Sparkles, color: sh.color || "var(--acc, #C9A24A)" };
     const v = itemVisual(sh.name);
     return { Icon: v.Icon, color: v.color };
   };
@@ -5165,7 +5166,7 @@ export default function App({ onSignOut }) {
                 {sh.sub && <div className="mh-chat-share-s">{sh.sub}</div>}
               </div>
               {canOpen && (
-                <button type="button" className="mh-chat-open" title={sh.type === "handout" ? "Ver la pista" : "Ver la carta"} onClick={() => (sh.type === "handout" ? setOpenHandout(sh.handout) : setViewingCardDetail(sh.detail))}>
+                <button type="button" className="mh-chat-open" title={sh.type === "handout" ? "Ver la pista" : "Ver la carta"} onClick={() => (sh.type === "handout" ? setOpenHandout(sh.handout) : setViewingCardDetail({ ...sh.detail, fromChat: true }))}>
                   <Eye size={12} /> Ver
                 </button>
               )}
@@ -8296,7 +8297,7 @@ export default function App({ onSignOut }) {
                             kicker: "Característica de clase",
                             title: f.name,
                             summary: f.text,
-                            onClick: openDetail({ kicker: "Característica de clase", title: f.name, text: f.text, image: f.image, bigStyle: true }),
+                            onClick: openDetail({ kicker: "Característica de clase", title: f.name, text: f.text, image: f.image, bigStyle: true, ...(c.f_class === "Druida" && /forma de bestia/i.test(f.name) ? { navigateAction: { tab: "beastforms", label: "Ver Formas de Bestia" } } : {}) }),
                             extra: isBeastformLink && (
                               <button
                                 type="button"
@@ -11027,6 +11028,26 @@ export default function App({ onSignOut }) {
                       run: () => {
                         rollTraitCheck(viewingCharId, action.traitLabel, Number(c[action.traitKey] || 0), null, { name: d.title, dc: action.dc });
                         setViewingCardDetail(null);
+                      },
+                    });
+                  }
+                  // Una carta abierta desde el chat es solo para verla: sin acciones.
+                  if (d.fromChat) cardActs.length = 0;
+                  // Mostrar la carta en el chat de la campaña del personaje (solo si está en una).
+                  const shareCamp = !gmViewing && viewingCharId && !d.fromChat ? Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(viewingCharId)) : null;
+                  if (shareCamp) {
+                    cardActs.push({
+                      key: "share",
+                      Icon: Send,
+                      label: "Mostrar en la campaña",
+                      sub: shareCamp.name,
+                      run: () => {
+                        const { fromChat, navigateAction, transformForm, ...detail } = d;
+                        // Las imágenes incrustadas muy grandes no se copian al chat.
+                        if (typeof detail.image === "string" && detail.image.startsWith("data:") && detail.image.length > 30000) delete detail.image;
+                        const type = d.domain ? "domain" : d.weapon ? "weapon" : d.armor ? "armor" : "card";
+                        postChat(shareCamp.id, { kind: "share", text: "", share: { type, name: d.title, sub: subtitle || d.kicker || "", color: cardColor.startsWith("var(") ? "" : cardColor, image: detail.image || "", detail }, ...chatAuthor() });
+                        closeCardDetail();
                       },
                     });
                   }
