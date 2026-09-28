@@ -300,12 +300,15 @@ const WIZARD_STEPS = [
   { key: "subclass", title: "Elige tu subclase", group: "Identidad" },
   { key: "level", title: "Elige tu nivel", group: "Identidad" },
   { key: "name", title: "Nombre y pronombres", group: "Identidad" },
-  { key: "origin", title: "Ascendencia y comunidad", group: "Origen" },
-  { key: "languages", title: "Idiomas", group: "Origen" },
+  { key: "ancestry", title: "Elige tu ascendencia", group: "Origen" },
+  { key: "community", title: "Elige tu comunidad", group: "Origen" },
+  { key: "transformation", title: "Transformación", group: "Origen" },
   { key: "traits", title: "Reparte tus rasgos", group: "Atributos" },
   { key: "stats", title: "Estadísticas iniciales", group: "Atributos" },
   { key: "experiences", title: "Experiencias", group: "Atributos" },
-  { key: "gear", title: "Armas y armadura", group: "Equipo" },
+  { key: "primary", title: "Arma principal", group: "Equipo" },
+  { key: "secondary", title: "Arma secundaria", group: "Equipo" },
+  { key: "armor", title: "Armadura", group: "Equipo" },
   { key: "items", title: "Objetos iniciales", group: "Equipo" },
   { key: "domain", title: "Cartas de dominio", group: "Equipo" },
 ];
@@ -2211,6 +2214,16 @@ const sharedStyles = `
   .mh-wz-tr > div button:hover { border-color: var(--mh-ink3); color: var(--mh-ink); }
   .mh-wz-tr > div button.is-used { opacity: .45; }
   .mh-wz-tr > div button.is-on { background: var(--mh-ink); border-color: var(--mh-ink); color: var(--mh-panel); opacity: 1; }
+  .mh-wz-note { display: flex; align-items: flex-start; gap: 7px; padding: 9px 11px; margin-bottom: 6px; border-radius: 9px; background: color-mix(in srgb, #A58BE8 12%, transparent); border: 1px solid #A58BE855; font-size: 11.5px; line-height: 1.45; color: var(--mh-ink2); }
+  .mh-wz-note svg { flex-shrink: 0; margin-top: 2px; color: #8A6FD0; }
+  .mh-wz-body:has(.mh-wz-trwrap), .mh-wz-body:has(.mh-wz-stats) { display: flex; flex-direction: column; }
+  .mh-wz-trwrap { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .mh-wz-trwrap .mh-wz-traits { flex: 1; display: flex; flex-direction: column; }
+  .mh-wz-trwrap .mh-wz-tr { flex: 1; }
+  .mh-wz-stats { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 4px; }
+  .mh-wz-stats > div:last-child { display: grid !important; grid-template-columns: repeat(3, 170px); gap: 14px !important; justify-content: center; }
+  .mh-wz-stats > div:last-child > div { width: 170px; box-sizing: border-box; padding: 18px 10px !important; }
+  .mh-wz-block { align-self: center; font-size: 11.5px; color: #D9644E; margin-right: 4px; }
   .mh-wz-foot { flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 11px 22px; border-top: 1px solid var(--mh-line); background: var(--mh-panel2); }
   .mh-wz-sum { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; overflow: hidden; }
   .mh-wz-sum > span { font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-muted); white-space: nowrap; margin-right: 2px; }
@@ -2223,6 +2236,7 @@ const sharedStyles = `
     .mh-wz-det { overflow: visible; }
     .mh-wz-tr { flex-wrap: wrap; } .mh-wz-tr > span { flex-basis: 100%; order: 3; }
     .mh-wz-sum { display: none; }
+    .mh-wz-stats > div:last-child { grid-template-columns: 1fr; }
   }
   .mh-jl { flex: 1; min-height: 0; display: flex; gap: 16px; }
   .mh-jl-side { width: 260px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; min-height: 0; padding-right: 14px; border-right: 1px solid var(--mh-line); }
@@ -3668,8 +3682,8 @@ export default function App({ onSignOut }) {
   const [draggedModifier, setDraggedModifier] = useState(null);
   const [gearTab, setGearTab] = useState("primary");
   const [draftPrimaryWeapon, setDraftPrimaryWeapon] = useState("");
-  const [draftSecondaryWeapon, setDraftSecondaryWeapon] = useState("Ninguna");
-  const [draftArmor, setDraftArmor] = useState("Ninguna");
+  const [draftSecondaryWeapon, setDraftSecondaryWeapon] = useState("");
+  const [draftArmor, setDraftArmor] = useState("");
   const [draftItems, setDraftItems] = useState([]);
   const [customItem, setCustomItem] = useState("");
   const [draftExp1, setDraftExp1] = useState("");
@@ -3814,8 +3828,8 @@ export default function App({ onSignOut }) {
     setTraitPool(TRAIT_MODIFIER_POOL.map((m) => m.id));
     setGearTab("primary");
     setDraftPrimaryWeapon("");
-    setDraftSecondaryWeapon("Ninguna");
-    setDraftArmor("Ninguna");
+    setDraftSecondaryWeapon("");
+    setDraftArmor("");
     setDraftItems([]);
     setCustomItem("");
     setDraftDomainCards([]);
@@ -3834,40 +3848,6 @@ export default function App({ onSignOut }) {
   const goToLevelStep = () => {
     setLevelChoice(1);
     setWizardStep("level");
-  };
-
-  const goToNameStep = () => {
-    setWizardStep("name");
-  };
-
-  const goToOriginStep = () => {
-    setOriginTab("ancestry");
-    setWizardStep("origin");
-  };
-
-  const goToLanguagesStep = () => {
-    setWizardStep("languages");
-  };
-
-  const goToTraitsStep = () => {
-    setWizardStep("traits");
-  };
-
-  const goToStatsStep = () => {
-    setWizardStep("stats");
-  };
-
-  const goToExperiencesStep = () => {
-    setWizardStep("experiences");
-  };
-
-  const goToGearStep = () => {
-    setGearTab("primary");
-    setWizardStep("gear");
-  };
-
-  const goToItemsStep = () => {
-    setWizardStep("items");
   };
 
   const goToDomainStep = () => {
@@ -4033,7 +4013,7 @@ export default function App({ onSignOut }) {
         PRIMARY_WEAPONS.find((w) => w.key === draftPrimaryWeapon)?.hands === 2 || draftSecondaryWeapon === "Ninguna"
           ? ""
           : draftSecondaryWeapon,
-      f_armor: draftArmor === "Ninguna" ? "" : draftArmor,
+      f_armor: draftArmor === "Ninguna" ? "" : draftArmor || "",
       armor_marked: String(draftArmor === "Ninguna" ? 0 : ARMORS.find((a) => a.key === draftArmor)?.score || 0),
       f_items: JSON.stringify(
         draftItems.map((name) => ({ name, description: STARTER_ITEMS.find((si) => si.name === name)?.description || "", count: 1 }))
@@ -11286,7 +11266,7 @@ export default function App({ onSignOut }) {
                   </div>
                 );
               })()}
-              <div className={"mh-wz-body" + (["class", "subclass", "origin"].includes(wizardStep) ? " is-split" : "")}>
+              <div className={"mh-wz-body" + (["class", "subclass", "ancestry", "community", "transformation"].includes(wizardStep) ? " is-split" : "")}>
 
               {wizardStep === "class" || wizardStep === "subclass" ? (
                 <>
@@ -11455,8 +11435,9 @@ export default function App({ onSignOut }) {
                     )}
                   </div>
                 </div>
-              ) : wizardStep === "origin" ? (
+              ) : ["ancestry", "community", "transformation"].includes(wizardStep) ? (
                 (() => {
+                  const originTab = wizardStep;
                   const tabs = [
                     { key: "ancestry", label: "Ascendencia", done: draftAncestries.length > 0 },
                     { key: "community", label: "Comunidad", done: !!draftCommunity },
@@ -11474,24 +11455,14 @@ export default function App({ onSignOut }) {
                   return (
                     <>
                       <div className="mh-wz-list">
-                        <div className="mh-wz-tabs" role="tablist">
-                          {tabs.map((t) => (
-                            <button
-                              key={t.key}
-                              type="button"
-                              role="tab"
-                              aria-selected={originTab === t.key}
-                              className={originTab === t.key ? "is-on" : ""}
-                              onClick={() => {
-                                setOriginTab(t.key);
-                                setOriginFocus(null);
-                              }}
-                            >
-                              {t.label}
-                              {t.done && <Check size={11} />}
-                            </button>
-                          ))}
-                        </div>
+                        {originTab === "transformation" && (
+                          <div className="mh-wz-note">
+                            <Sparkles size={14} />
+                            <span>
+                              Las transformaciones son una característica de la expansión <b>Hope &amp; Fear</b>. Es opcional: puedes seguir sin ninguna.
+                            </span>
+                          </div>
+                        )}
                         {originTab === "ancestry" && (
                           <button type="button" className={"mh-wz-mix" + (mixAncestry ? " is-on" : "")} aria-pressed={mixAncestry} onClick={toggleMixAncestry}>
                             <i />
@@ -11502,7 +11473,7 @@ export default function App({ onSignOut }) {
                         {list.map((it) => (
                           <button key={it.key} type="button" aria-pressed={isSel(it.key)} className={"mh-wz-it" + (focus?.key === it.key ? " is-focus" : "") + (isSel(it.key) ? " is-on" : "")} onClick={() => pick(it.key)}>
                             <span className="mh-wz-it-n">{it.key}</span>
-                            {it.expansion && <em>H&F</em>}
+                            {it.expansion && originTab !== "transformation" && <em>H&F</em>}
                             {isSel(it.key) && <Check size={13} className="mh-wz-ck" />}
                           </button>
                         ))}
@@ -11543,46 +11514,8 @@ export default function App({ onSignOut }) {
                     </>
                   );
                 })()
-              ) : wizardStep === "languages" ? (
-                <div style={{ marginBottom: 20 }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                      marginBottom: 16,
-                      border: "1px solid #E3B04B",
-                      background: "#E3B04B14",
-                      borderRadius: 8,
-                      padding: "10px 12px",
-                    }}
-                  >
-                    <Languages size={16} color="#E3B04B" />
-                    <div style={{ fontSize: 12.5, color: "var(--mh-ink)" }}>
-                      Todo el mundo habla <b>Común</b> por defecto. Añade otros idiomas si tu personaje los conoce.
-                    </div>
-                  </div>
-
-                  <label className="mh-label">Idiomas adicionales</label>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    {LANGUAGES.map((lang) => {
-                      const selected = draftLanguages.includes(lang);
-                      return (
-                        <div
-                          key={lang}
-                          onClick={() => toggleLanguage(lang)}
-                          className={"mh-chip" + (selected ? " active" : "")}
-                          style={{ display: "inline-flex", alignItems: "center", gap: 5 }}
-                        >
-                          {selected && <Check size={12} />}
-                          {lang}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
               ) : wizardStep === "traits" ? (
-                <div>
+                <div className="mh-wz-trwrap">
                   <div className="mh-wz-trtop">
                     <button className="mh-btn-ghost" onClick={randomizeTraits}>
                       <Dices size={14} /> Al azar
@@ -11630,7 +11563,7 @@ export default function App({ onSignOut }) {
                   </div>
                 </div>
               ) : wizardStep === "stats" ? (
-                <div style={{ marginBottom: 20, textAlign: "center" }}>
+                <div className="mh-wz-stats">
                   <div style={{ fontSize: 12.5, color: "var(--mh-ink3)", marginBottom: 16 }}>
                     Estas estadísticas se calculan automáticamente según tu clase ({CLASSES[carouselIndex].key}). El
                     Estrés es siempre igual para todo el mundo al empezar.
@@ -11719,49 +11652,12 @@ export default function App({ onSignOut }) {
                     </div>
                   </div>
                 </div>
-              ) : wizardStep === "gear" ? (
-                <div style={{ marginBottom: 20 }}>
-                  <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
-                    {[
-                      { key: "primary", label: "Arma principal", icon: Sword, done: !!draftPrimaryWeapon },
-                      { key: "secondary", label: "Arma secundaria", icon: Sword, done: draftSecondaryWeapon !== "Ninguna" },
-                      { key: "armor", label: "Armadura", icon: ShieldHalf, done: draftArmor !== "Ninguna" },
-                    ].map((t) => {
-                      const Icon = t.icon;
-                      const active = gearTab === t.key;
-                      return (
-                        <div
-                          key={t.key}
-                          onClick={() => setGearTab(t.key)}
-                          style={{
-                            flex: 1,
-                            cursor: "pointer",
-                            textAlign: "center",
-                            padding: "10px 6px",
-                            borderRadius: 8,
-                            border: "1px solid " + (active ? "#E3B04B" : "var(--mh-line)"),
-                            background: active ? "#E3B04B14" : "var(--mh-panel2)",
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                            gap: 4,
-                          }}
-                        >
-                          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                            <Icon size={14} color={active ? "#E3B04B" : "#B7AEC6"} />
-                            <span style={{ fontSize: 12, fontWeight: 600, color: ink(active ? "#E3B04B" : "var(--mh-ink)") }}>{t.label}</span>
-                          </div>
-                          {t.done && (
-                            <span style={{ display: "inline-flex", alignItems: "center", gap: 2, fontSize: 10, color: "var(--mh-green-ink)" }}>
-                              <Check size={10} /> listo
-                            </span>
-                          )}
-                        </div>
-                      );
-                    })}
+              ) : ["primary", "secondary", "armor"].includes(wizardStep) ? (
+                <div>
+                  <div className="mh-wz-dm" style={{ marginBottom: 12 }}>
+                    {wizardStep === "primary" ? "Elige el arma con la que empiezas." : wizardStep === "secondary" ? (PRIMARY_WEAPONS.find((w) => w.key === draftPrimaryWeapon)?.hands === 2 ? "Con un arma a dos manos no hay arma secundaria: puedes seguir." : "Elige un arma secundaria o «Ninguna».") : "Elige tu armadura o «Ninguna»."}
                   </div>
-
-                  {gearTab === "primary" && (
+                  {wizardStep === "primary" && (
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       {PRIMARY_WEAPONS.filter(
                         (w) =>
@@ -11797,7 +11693,7 @@ export default function App({ onSignOut }) {
                     </div>
                   )}
 
-                  {gearTab === "secondary" && (() => {
+                  {wizardStep === "secondary" && (() => {
                     const primaryIsTwoHanded = PRIMARY_WEAPONS.find((w) => w.key === draftPrimaryWeapon)?.hands === 2;
                     if (primaryIsTwoHanded) {
                       return (
@@ -11871,7 +11767,7 @@ export default function App({ onSignOut }) {
                     );
                   })()}
 
-                  {gearTab === "armor" && (
+                  {wizardStep === "armor" && (
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       <div
                         onClick={() => setDraftArmor("Ninguna")}
@@ -12144,10 +12040,12 @@ export default function App({ onSignOut }) {
                   if (idx >= 1) chips.push((SUBCLASSES[cls] || [])[subclassIndex]?.key);
                   if (idx >= 3) chips.push("Nivel " + levelChoice);
                   if (idx >= 4 && draftName.trim()) chips.push(draftName.trim());
-                  if (idx >= 5) chips.push([draftAncestries.join(" + "), draftCommunity].filter(Boolean).join(" · "));
-                  if (idx >= 6) chips.push(["Común", ...draftLanguages].join(", "));
-                  if (idx >= 9 && (draftExp1.trim() || draftExp2.trim())) chips.push([draftExp1, draftExp2].map((x) => x.trim()).filter(Boolean).join(", "));
-                  if (idx >= 10 && draftPrimaryWeapon) chips.push(draftPrimaryWeapon);
+                  if (idx >= 5) chips.push([draftAncestries.join(" + "), idx >= 6 && draftCommunity].filter(Boolean).join(" · "));
+                  if (idx >= 7 && draftTransformation !== "Ninguna") chips.push(draftTransformation);
+                  if (idx >= 10 && (draftExp1.trim() || draftExp2.trim())) chips.push([draftExp1, draftExp2].map((x) => x.trim()).filter(Boolean).join(", "));
+                  if (idx >= 11 && draftPrimaryWeapon) chips.push(draftPrimaryWeapon);
+                  if (idx >= 12 && draftSecondaryWeapon && draftSecondaryWeapon !== "Ninguna") chips.push(draftSecondaryWeapon);
+                  if (idx >= 13 && draftArmor && draftArmor !== "Ninguna") chips.push(draftArmor);
                   return (
                     <div className="mh-wz-sum">
                       <span>Tu personaje</span>
@@ -12157,141 +12055,36 @@ export default function App({ onSignOut }) {
                     </div>
                   );
                 })()}
-              <div className="mh-wz-btns">
-                {wizardStep === "class" && (
-                  <>
-                    <button className="mh-btn-ghost" onClick={() => setShowNewCharModal(false)}>
-                      Cancelar
+              {(() => {
+                const idx = WIZARD_STEPS.findIndex((st) => st.key === wizardStep);
+                const prev = WIZARD_STEPS[idx - 1];
+                const nextStep = WIZARD_STEPS[idx + 1];
+                const twoHanded = PRIMARY_WEAPONS.find((w) => w.key === draftPrimaryWeapon)?.hands === 2;
+                const block = {
+                  traits: traitPool.length > 0 && "Reparte todos los valores para continuar.",
+                  primary: !draftPrimaryWeapon && "Elige un arma principal para continuar.",
+                  secondary: !twoHanded && !draftSecondaryWeapon && "Elige un arma secundaria o «Ninguna».",
+                  armor: !draftArmor && "Elige una armadura o «Ninguna».",
+                  domain: !(wizardCardLimit === 0 || draftDomainCards.length === wizardCardLimit) && "Elige tus cartas de dominio.",
+                }[wizardStep];
+                const go = (key) => {
+                  if (key === "subclass") goToSubclassStep();
+                  else if (key === "level") goToLevelStep();
+                  else if (key === "domain") goToDomainStep();
+                  else setWizardStep(key);
+                };
+                return (
+                  <div className="mh-wz-btns">
+                    {block && <span className="mh-wz-block">{block}</span>}
+                    <button className="mh-btn-ghost" onClick={() => (prev ? setWizardStep(prev.key) : setShowNewCharModal(false))}>
+                      {prev ? "Atrás" : "Cancelar"}
                     </button>
-                    <button className="mh-btn" onClick={goToSubclassStep}>
-                      Siguiente
+                    <button className="mh-btn" disabled={!!block} style={{ opacity: block ? 0.5 : 1, cursor: block ? "not-allowed" : "pointer" }} onClick={() => (nextStep ? go(nextStep.key) : confirmNewChar())}>
+                      {nextStep ? "Siguiente" : "Crear personaje"}
                     </button>
-                  </>
-                )}
-                {wizardStep === "subclass" && (
-                  <>
-                    <button className="mh-btn-ghost" onClick={() => setWizardStep("class")}>
-                      Atrás
-                    </button>
-                    <button className="mh-btn" onClick={goToLevelStep}>
-                      Siguiente
-                    </button>
-                  </>
-                )}
-                {wizardStep === "level" && (
-                  <>
-                    <button className="mh-btn-ghost" onClick={() => setWizardStep("subclass")}>
-                      Atrás
-                    </button>
-                    <button className="mh-btn" onClick={goToNameStep}>
-                      Siguiente
-                    </button>
-                  </>
-                )}
-                {wizardStep === "name" && (
-                  <>
-                    <button className="mh-btn-ghost" onClick={() => setWizardStep("level")}>
-                      Atrás
-                    </button>
-                    <button className="mh-btn" onClick={goToOriginStep}>
-                      Siguiente
-                    </button>
-                  </>
-                )}
-                {wizardStep === "origin" && (
-                  <>
-                    <button className="mh-btn-ghost" onClick={() => setWizardStep("name")}>
-                      Atrás
-                    </button>
-                    <button className="mh-btn" onClick={goToLanguagesStep}>
-                      Siguiente
-                    </button>
-                  </>
-                )}
-                {wizardStep === "languages" && (
-                  <>
-                    <button className="mh-btn-ghost" onClick={() => setWizardStep("origin")}>
-                      Atrás
-                    </button>
-                    <button className="mh-btn" onClick={goToTraitsStep}>
-                      Siguiente
-                    </button>
-                  </>
-                )}
-                {wizardStep === "traits" && (
-                  <>
-                    <button className="mh-btn-ghost" onClick={() => setWizardStep("languages")}>
-                      Atrás
-                    </button>
-                    <button
-                      className="mh-btn"
-                      disabled={traitPool.length > 0}
-                      style={{ opacity: traitPool.length > 0 ? 0.5 : 1, cursor: traitPool.length > 0 ? "not-allowed" : "pointer" }}
-                      onClick={goToStatsStep}
-                    >
-                      Siguiente
-                    </button>
-                  </>
-                )}
-                {wizardStep === "stats" && (
-                  <>
-                    <button className="mh-btn-ghost" onClick={() => setWizardStep("traits")}>
-                      Atrás
-                    </button>
-                    <button className="mh-btn" onClick={goToExperiencesStep}>
-                      Siguiente
-                    </button>
-                  </>
-                )}
-                {wizardStep === "experiences" && (
-                  <>
-                    <button className="mh-btn-ghost" onClick={() => setWizardStep("stats")}>
-                      Atrás
-                    </button>
-                    <button className="mh-btn" onClick={goToGearStep}>
-                      Siguiente
-                    </button>
-                  </>
-                )}
-                {wizardStep === "gear" && (
-                  <>
-                    <button className="mh-btn-ghost" onClick={() => setWizardStep("experiences")}>
-                      Atrás
-                    </button>
-                    <button className="mh-btn" onClick={goToItemsStep}>
-                      Siguiente
-                    </button>
-                  </>
-                )}
-                {wizardStep === "items" && (
-                  <>
-                    <button className="mh-btn-ghost" onClick={() => setWizardStep("gear")}>
-                      Atrás
-                    </button>
-                    <button className="mh-btn" onClick={goToDomainStep}>
-                      Siguiente
-                    </button>
-                  </>
-                )}
-                {wizardStep === "domain" && (() => {
-                  const canFinish = wizardCardLimit === 0 || draftDomainCards.length === wizardCardLimit;
-                  return (
-                    <>
-                      <button className="mh-btn-ghost" onClick={() => setWizardStep("items")}>
-                        Atrás
-                      </button>
-                      <button
-                        className="mh-btn"
-                        disabled={!canFinish}
-                        style={{ opacity: canFinish ? 1 : 0.5, cursor: canFinish ? "pointer" : "not-allowed" }}
-                        onClick={confirmNewChar}
-                      >
-                        Crear personaje
-                      </button>
-                    </>
-                  );
-                })()}
-              </div>
+                  </div>
+                );
+              })()}
               </div>
             </div>
           </div>
