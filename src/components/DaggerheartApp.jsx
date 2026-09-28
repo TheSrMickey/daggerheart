@@ -2011,7 +2011,10 @@ const sharedStyles = `
   .mh-chat-c .mh-chat-open { margin: -3px -4px -3px 0; }
   .mh-chat-c-share .mh-chat-share-c { padding-left: 0; margin-top: 3px; }
   .mh-chat-roll.is-join-next { border-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
-  .mh-chat-roll.is-join-prev { border-top: 0; border-top-left-radius: 0; border-top-right-radius: 0; margin-top: -9px; }
+  /* En la tarjeta unida el resultado del ataque va como una línea de texto, sin franja, para no chocar con el separador «Daño». */
+  .mh-chat-roll.is-join-next > .mh-chat-roll-f { background: transparent; padding: 0 12px 8px; }
+  .mh-chat-roll.is-join-next > .mh-chat-roll-f span:first-child::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 6px; border-radius: 50%; background: var(--rc); vertical-align: 0; }
+  .mh-chat-roll.is-join-prev { border-top: 0; border-top-left-radius: 0; border-top-right-radius: 0; margin-top: -10px; }
   .mh-chat-join { display: flex; align-items: center; gap: 8px; padding: 0 12px; font-size: 9.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: color-mix(in srgb, var(--rc) 75%, var(--mh-ink)); }
   .mh-chat-join::before, .mh-chat-join::after { content: ""; flex: 1; height: 1px; background: color-mix(in srgb, var(--rc) 30%, var(--mh-line)); }
   .mh-chat-roll.is-join-prev .mh-chat-roll-h { padding-top: 6px; }
