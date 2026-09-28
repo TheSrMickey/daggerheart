@@ -312,6 +312,16 @@ const WIZARD_STEPS = [
   { key: "items", title: "Objetos iniciales", group: "Equipo" },
   { key: "domain", title: "Cartas de dominio", group: "Equipo" },
 ];
+// Ilustración de cada transformación (manual de Hope & Fear) y su color de halo.
+const TRANSFORMATION_ART = {
+  Vampiro: { src: "/transformaciones/vampiro.webp", color: "#B3263A" },
+  "Hombre Lobo": { src: "/transformaciones/lobo.webp", color: "#5E7FA3" },
+  Reanimado: { src: "/transformaciones/reanimado.webp", color: "#6E9A5B" },
+  Cambiaformas: { src: "/transformaciones/cambiaformas.webp", color: "#3FB0AE" },
+  Fantasma: { src: "/transformaciones/fantasma.webp", color: "#7FA6CF" },
+  Semidiós: { src: "/transformaciones/semidios.webp", color: "#E0A93A" },
+};
+
 const TRAIT_HINTS = {
   t_agility: "Correr, saltar, maniobrar",
   t_strength: "Levantar, aplastar, agarrar",
@@ -2224,6 +2234,19 @@ const sharedStyles = `
   .mh-wz-stats > div:last-child { display: grid !important; grid-template-columns: repeat(3, 170px); gap: 14px !important; justify-content: center; }
   .mh-wz-stats > div:last-child > div { width: 170px; box-sizing: border-box; padding: 18px 10px !important; }
   .mh-wz-block { align-self: center; font-size: 11.5px; color: #D9644E; margin-right: 4px; }
+  .mh-wz-det.has-art { position: relative; overflow-x: hidden; }
+  .mh-wz-det.has-art > :not(.mh-wz-art) { position: relative; max-width: 54%; }
+  .mh-wz-det.has-art .mh-wz-feats { grid-template-columns: 1fr; }
+  .mh-wz-art { position: absolute; top: 0; right: 0; bottom: 0; width: 50%; pointer-events: none; background: radial-gradient(90% 70% at 55% 45%, color-mix(in srgb, var(--tc) 22%, transparent), transparent 70%); }
+  .mh-wz-art img {
+    position: absolute; right: 24px; bottom: 0; height: 94%; max-width: 92%; object-fit: contain; object-position: bottom right;
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 22%, #000 80%, transparent 100%), linear-gradient(to bottom, transparent 0, #000 12%, #000 78%, transparent 100%);
+    -webkit-mask-composite: source-in;
+    mask-image: linear-gradient(to right, transparent 0, #000 22%, #000 80%, transparent 100%), linear-gradient(to bottom, transparent 0, #000 12%, #000 78%, transparent 100%);
+    mask-composite: intersect;
+    animation: mh-wz-art-in .35s ease-out;
+  }
+  @keyframes mh-wz-art-in { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
   .mh-wz-foot { flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 11px 22px; border-top: 1px solid var(--mh-line); background: var(--mh-panel2); }
   .mh-wz-sum { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; overflow: hidden; }
   .mh-wz-sum > span { font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-muted); white-space: nowrap; margin-right: 2px; }
@@ -2236,6 +2259,7 @@ const sharedStyles = `
     .mh-wz-det { overflow: visible; }
     .mh-wz-tr { flex-wrap: wrap; } .mh-wz-tr > span { flex-basis: 100%; order: 3; }
     .mh-wz-sum { display: none; }
+    .mh-wz-art { display: none; } .mh-wz-det.has-art > :not(.mh-wz-art) { max-width: none; }
     .mh-wz-stats > div:last-child { grid-template-columns: 1fr; }
   }
   .mh-jl { flex: 1; min-height: 0; display: flex; gap: 16px; }
@@ -11478,7 +11502,12 @@ export default function App({ onSignOut }) {
                           </button>
                         ))}
                       </div>
-                      <div className="mh-wz-det">
+                      <div className={"mh-wz-det" + (originTab === "transformation" && TRANSFORMATION_ART[focus?.key] ? " has-art" : "")}>
+                        {originTab === "transformation" && TRANSFORMATION_ART[focus?.key] && (
+                          <div className="mh-wz-art" style={{ "--tc": TRANSFORMATION_ART[focus.key].color }} aria-hidden="true">
+                            <img key={focus.key} src={TRANSFORMATION_ART[focus.key].src} alt="" />
+                          </div>
+                        )}
                         {focus && (
                           <>
                             <div className="mh-wz-dh">
