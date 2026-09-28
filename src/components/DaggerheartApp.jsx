@@ -1977,21 +1977,26 @@ const sharedStyles = `
   .mh-chat-roll-h { display: flex; align-items: center; gap: 7px; padding: 8px 12px 4px; font-size: 12px; color: var(--mh-ink3); }
   .mh-chat-roll-h time { margin-left: 2px; }
   .mh-chat-tag { flex-shrink: 0; font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; padding: 2px 8px; border-radius: 10px; color: #fff; background: var(--rc); }
-  .mh-chat-roll-b { display: flex; align-items: flex-end; gap: 12px; padding: 8px 14px 12px; }
+  .mh-chat-roll-b { display: flex; align-items: flex-end; gap: 10px; padding: 8px 12px 12px; }
   .mh-chat-d { --dc: #E3B04B; --di: color-mix(in srgb, #C8961F var(--mh-accent-keep), #000); display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; }
   .mh-chat-d.is-fear { --dc: #A58BE8; --di: var(--mh-purple-ink); }
-  .mh-chat-d i { width: 38px; height: 38px; margin: 5px; display: flex; align-items: center; justify-content: center; border: 2.5px solid var(--dc); border-radius: 10px; background: color-mix(in srgb, var(--dc) 12%, var(--mh-panel)); transform: rotate(45deg); }
+  .mh-chat-d i { width: 36px; height: 36px; margin: 5px; display: flex; align-items: center; justify-content: center; border: 2.5px solid var(--dc); border-radius: 10px; background: color-mix(in srgb, var(--dc) 12%, var(--mh-panel)); transform: rotate(45deg); }
   .mh-chat-d i b { transform: rotate(-45deg); font: 800 17px/1 'Inter', system-ui, sans-serif; color: var(--di); }
   .mh-chat-d small { font-size: 10px; font-weight: 700; color: var(--mh-muted); }
   .mh-chat-sqs { display: flex; flex-wrap: wrap; gap: 6px; }
   .mh-chat-sq { min-width: 30px; height: 30px; padding: 0 4px; border-radius: 8px; border: 2px solid var(--rc); background: color-mix(in srgb, var(--rc) 12%, var(--mh-panel)); display: flex; align-items: center; justify-content: center; font: 800 13px 'Inter', system-ui, sans-serif; color: color-mix(in srgb, var(--rc) 70%, var(--mh-ink)); box-sizing: border-box; }
   .mh-chat-sq.is-wolf { --rc: #5E7FA3; }
-  .mh-chat-mod { display: flex; flex-direction: column; gap: 2px; padding-bottom: 22px; font-size: 12.5px; font-weight: 700; color: var(--mh-muted); white-space: nowrap; }
+  .mh-chat-mod { display: flex; flex-direction: column; gap: 2px; padding-bottom: 22px; font-size: 12.5px; font-weight: 700; color: var(--mh-muted); min-width: 0; }
   .mh-chat-sqs + .mh-chat-mod { padding-bottom: 6px; }
   .mh-chat-mod em { font-style: normal; font-size: 11px; font-weight: 600; }
   .mh-chat-tot { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; }
   .mh-chat-tot small { font-size: 9.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--mh-muted); }
   .mh-chat-tot b { font: 800 28px/1 'Inter', system-ui, sans-serif; color: var(--mh-ink); }
+  .mh-chat-roll.is-join-next { border-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+  .mh-chat-roll.is-join-prev { border-top: 0; border-top-left-radius: 0; border-top-right-radius: 0; margin-top: -9px; }
+  .mh-chat-join { display: flex; align-items: center; gap: 8px; padding: 0 12px; font-size: 9.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: color-mix(in srgb, var(--rc) 75%, var(--mh-ink)); }
+  .mh-chat-join::before, .mh-chat-join::after { content: ""; flex: 1; height: 1px; background: color-mix(in srgb, var(--rc) 30%, var(--mh-line)); }
+  .mh-chat-roll.is-join-prev .mh-chat-roll-h { padding-top: 6px; }
   .mh-chat-roll-f { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 12px; font-weight: 700; padding: 7px 12px; color: color-mix(in srgb, var(--rc) var(--mh-accent-keep), #000); background: color-mix(in srgb, var(--rc) 13%, var(--mh-panel)); }
   .mh-chat-roll-f span + span { font-weight: 600; opacity: .85; }
   .mh-chat-share-wrap { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
@@ -5115,6 +5120,19 @@ export default function App({ onSignOut }) {
   };
 
   // Una sola línea de tiempo: mensajes, acciones, tiradas y cartas compartidas.
+  // Tiradas encadenadas: el ataque con un arma y el daño de esa arma justo después, del mismo personaje.
+  const chatRollsLinked = (a, b) =>
+    !!a &&
+    !!b &&
+    a.kind === "roll" &&
+    b.kind === "roll" &&
+    a.roll &&
+    b.roll &&
+    b.roll.type === "damage" &&
+    (a.charId || a.author) === (b.charId || b.author) &&
+    ((!a.roll.type && a.roll.weapon === b.roll.weapon) || (a.roll.type === "damage" && a.roll.weapon === b.roll.weapon)) &&
+    Math.abs((b.ts || 0) - (a.ts || 0)) < 10 * 60 * 1000;
+
   const renderChatFeed = (list, meCharId) =>
     list.map((m, i) => {
       const kind = m.kind || (CHAT_EMOJI_RE.test(m.text || "") ? "event" : "msg");
@@ -5135,11 +5153,15 @@ export default function App({ onSignOut }) {
             {v}
           </span>
         );
+        const linkPrev = chatRollsLinked(list[i - 1], m);
+        const linkNext = chatRollsLinked(m, list[i + 1]);
+        // Ataque y daño seguidos se pegan en una sola tarjeta, separados por una línea «Daño».
         const card = (tone, tag, head, body, left, right) => (
-          <div key={key} className="mh-chat-roll" style={{ "--rc": tone }}>
+          <div key={key} className={"mh-chat-roll" + (linkNext ? " is-join-next" : "") + (linkPrev ? " is-join-prev" : "")} style={{ "--rc": tone }}>
+            {linkPrev && <div className="mh-chat-join">{tag}</div>}
             <div className="mh-chat-roll-h">
               <span className="mh-chat-grow">{head}</span>
-              <time>{time}</time>
+              {!linkPrev && <time>{time}</time>}
               <span className="mh-chat-tag">{tag}</span>
             </div>
             <div className="mh-chat-roll-b">{body}</div>
@@ -5161,7 +5183,7 @@ export default function App({ onSignOut }) {
             "#D9644E",
             "Daño",
             <>
-              {who} hace daño con {r.weapon}
+              {linkPrev ? <b>Daño</b> : who} {linkPrev ? "con" : "hace daño con"} {r.weapon}
             </>,
             <>
               <span className="mh-chat-sqs">
