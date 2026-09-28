@@ -1588,6 +1588,9 @@ const sharedStyles = `
   .mh-eq-acts { display: flex; gap: 6px; margin-top: 8px; }
   .mh-eq-acts button { font-size: 11.5px; padding: 5px 11px; display: inline-flex; align-items: center; gap: 5px; }
   .mh-eq-stash { position: absolute; top: 9px; right: 9px; }
+  .mh-exp.is-open { cursor: pointer; transition: transform .15s, box-shadow .15s; }
+  .mh-exp.is-open:hover { transform: translateY(-1px); box-shadow: 0 6px 16px color-mix(in srgb, var(--acc) 20%, transparent); }
+  .mh-exp.is-open:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
   .mh-exp {
     position: relative; flex: 1; min-height: 0; display: flex; overflow: hidden; border-radius: 12px;
     border: 1px solid color-mix(in srgb, var(--acc) 40%, transparent); background: var(--mh-panel);
@@ -6168,6 +6171,19 @@ export default function App({ onSignOut }) {
     requestAnimationFrame(() => ta.setSelectionRange(pos + 1 + pre.length, pos + 1 + pre.length));
   };
 
+  // Experiencia como carta: el bono en grande y cómo se usa.
+  const openExperienceCard = (exp) => {
+    const bonus = (Number(exp.bonus) >= 0 ? "+" : "") + exp.bonus;
+    setViewingCardDetail({
+      kicker: "Experiencia",
+      title: exp.text,
+      stat: { label: "Bono", value: bonus },
+      showCharacteristic: true,
+      characteristic: "Si esta experiencia encaja con lo que haces, puedes gastar 1 Esperanza para sumar " + bonus + " a una tirada de acción o de reacción.",
+      bigStyle: true,
+    });
+  };
+
   const [traitRollResult, setTraitRollResult] = useState(null);
   const [bfAboveKey, setBfAboveKey] = useState(null);
   const [beastformTierFilter, setBeastformTierFilter] = useState(1);
@@ -8408,7 +8424,15 @@ export default function App({ onSignOut }) {
 
                                       if (exp) {
                                         return (
-                                          <div key={i} className="mh-exp">
+                                          <div
+                                            key={i}
+                                            className="mh-exp is-open"
+                                            role="button"
+                                            tabIndex={0}
+                                            aria-label={"Ver la carta de la experiencia " + exp.text}
+                                            onClick={() => openExperienceCard(exp)}
+                                            onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && e.target === e.currentTarget && (e.preventDefault(), openExperienceCard(exp))}
+                                          >
                                             <div className="mh-exp-bar" />
                                             <div className="mh-exp-body">
                                               <div className="mh-exp-kicker">Experiencia</div>
@@ -8418,7 +8442,10 @@ export default function App({ onSignOut }) {
                                               <span className="mh-serif">{Number(exp.bonus) >= 0 ? "+" : ""}{exp.bonus}</span>
                                               <small>bono</small>
                                             </div>
-                                            <button type="button" className="mh-exp-del" title="Quitar experiencia" aria-label="Quitar experiencia" onClick={() => removeExperience(viewingCharId, i)}>
+                                            <button type="button" className="mh-exp-del" title="Quitar experiencia" aria-label="Quitar experiencia" onClick={(e) => {
+                                                e.stopPropagation();
+                                                removeExperience(viewingCharId, i);
+                                              }}>
                                               <X size={12} />
                                             </button>
                                           </div>
@@ -11221,6 +11248,8 @@ export default function App({ onSignOut }) {
                     ? weaponIcon(d.title)
                     : d.transformForm
                     ? Moon
+                    : d.stat
+                    ? NotebookPen
                     : d.domain ? DOMAIN_ICONS[d.domain.name] || Sparkles : Sparkles;
                   const action = !d.features && (d.navigateAction || CARD_ACTIONS[d.title]);
                   // Acciones de la carta: van en una barra adosada fuera de la carta.
@@ -11339,12 +11368,12 @@ export default function App({ onSignOut }) {
                       fitKey={d.title + totalChars}
                       max={13}
                       min={9}
-                      style={{ flex: 1, minHeight: 0, overflow: "hidden", padding: "10px 18px 12px", display: "flex", flexDirection: "column", justifyContent: d.weapon || d.armor ? "center" : "flex-start", textAlign: d.features ? "left" : "center", gap: "0.7em", lineHeight: 1.5 }}
+                      style={{ flex: 1, minHeight: 0, overflow: "hidden", padding: "10px 18px 12px", display: "flex", flexDirection: "column", justifyContent: d.weapon || d.armor || d.stat ? "center" : "flex-start", textAlign: d.features ? "left" : "center", gap: "0.7em", lineHeight: 1.5 }}
                     >
-                      {(d.weapon || d.armor) && (
+                      {(d.weapon || d.armor || d.stat) && (
                         <div>
-                          <div className="mh-cardc-label">{d.weapon ? "Daño" : "Puntuación"}</div>
-                          <div className="mh-cardc-big">{d.weapon ? dmg?.[1] || d.weapon.damage : d.armor.score}</div>
+                          <div className="mh-cardc-label">{d.weapon ? "Daño" : d.armor ? "Puntuación" : d.stat.label}</div>
+                          <div className="mh-cardc-big">{d.weapon ? dmg?.[1] || d.weapon.damage : d.armor ? d.armor.score : d.stat.value}</div>
                           {d.weapon && dmg?.[2] && <div style={{ fontSize: "0.88em", color: "var(--mh-muted)" }}>{dmg[2]}</div>}
                         </div>
                       )}
