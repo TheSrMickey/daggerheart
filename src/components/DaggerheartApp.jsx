@@ -2498,13 +2498,15 @@ const sharedStyles = `
   }
   @keyframes mh-beast-ring { from { scale: .05; opacity: .9; } to { scale: 2.4; opacity: 0; } }
   /* Al salir de la forma: el círculo vuelve de fuera a dentro y el fondo se desvanece. */
+  .mh-beast-layer { position: absolute; inset: 0; transform-origin: 50% 55%; }
+  /* Las siluetas se recogen hacia el centro a la vez que se cierra el círculo (mismo ritmo). */
   .mh-beast-bg.is-leaving { animation: mh-beast-out 1.3s ease both; }
-  .mh-beast-bg.is-leaving .mh-beast-ring { animation: mh-beast-ring-out 1.2s cubic-bezier(.6,0,.8,.3) both; }
-  .mh-beast-bg.is-leaving .mh-beast { animation: mh-beast-fade 1s ease both; }
+  .mh-beast-bg.is-leaving .mh-beast-ring { animation: mh-beast-ring-out 1.2s cubic-bezier(.55,0,.7,.4) both; }
+  .mh-beast-bg.is-leaving .mh-beast-layer { animation: mh-beast-gather 1.2s cubic-bezier(.55,0,.7,.4) both; }
   .mh-beast-bg.is-leaving .mh-claws { display: none; }
   @keyframes mh-beast-ring-out { from { scale: 2.4; opacity: 0; } 70% { opacity: .85; } to { scale: .05; opacity: 0; } }
-  @keyframes mh-beast-out { 0%, 55% { opacity: 1; filter: blur(0); } 100% { opacity: 0; filter: blur(8px); } }
-  @keyframes mh-beast-fade { to { opacity: 0; scale: .92; } }
+  @keyframes mh-beast-out { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }
+  @keyframes mh-beast-gather { from { opacity: 1; scale: 1; filter: blur(0); } 35% { opacity: .9; } to { opacity: 0; scale: .55; filter: blur(6px); } }
   .mh-claws {
     position: absolute; left: 50%; top: 48%; width: min(70vmin, 620px); height: min(70vmin, 620px);
     translate: -50% -50%; color: var(--beast); pointer-events: none;
@@ -2566,7 +2568,7 @@ const sharedStyles = `
   @media (prefers-reduced-motion: reduce) {
     .mh-rampage::before, .mh-rampage-card, .mh-rampage-title, .mh-hit-flash, .mh-hit-text, .mh-shake { animation: none !important; }
     .mh-hit-flash, .mh-hit-text { display: none; }
-    .mh-beast, .mh-beast-bg, .mh-beast-ring, .mh-claws { animation: none !important; }
+    .mh-beast, .mh-beast-bg, .mh-beast-ring, .mh-claws, .mh-beast-layer { animation: none !important; }
     .mh-beast-ring, .mh-claws { display: none; }
     .mh-die, .mh-pop, .mh-roll-pop, .mh-appear-late, .mh-burst, .mh-dots { animation: none !important; }
     .mh-overlay, .mh-card-anim, .mh-dslot, .mh-overlay.is-closing, .mh-overlay.is-closing .mh-card-anim { animation: none !important; }
@@ -2637,6 +2639,7 @@ function BeastBackdrop({ form, kind = "beast", leaving = false }) {
           <path d={lib.TRANSFORM_ICON_PATHS["triple-scratches"]} fill="currentColor" />
         </svg>
       )}
+      <div className="mh-beast-layer">
       {lib &&
         BEAST_SPOTS.map((p, i) => {
           const d = pathFor(names[i % names.length]);
@@ -2665,6 +2668,7 @@ function BeastBackdrop({ form, kind = "beast", leaving = false }) {
             </svg>
           );
         })}
+      </div>
     </div>
   );
 }
