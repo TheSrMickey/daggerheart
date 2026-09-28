@@ -1093,6 +1093,16 @@ const REL_TITLES = [
 ];
 const REL_NONE = { key: "", label: "Sin título", group: "Sin título", color: "#9C93AD" };
 const relOf = (key) => REL_TITLES.find((r) => r.key === key) || REL_NONE;
+// Parentesco dentro de «Familiar»: gen -1 padres, 0 hermanos, 1 hijos (fila del árbol).
+const KIN = [
+  { key: "padre", label: "Padre", gen: -1 },
+  { key: "madre", label: "Madre", gen: -1 },
+  { key: "hijo", label: "Hijo", gen: 1 },
+  { key: "hija", label: "Hija", gen: 1 },
+  { key: "hermano", label: "Hermano", gen: 0 },
+  { key: "hermana", label: "Hermana", gen: 0 },
+];
+const kinOf = (key) => KIN.find((k) => k.key === key) || null;
 const stageScenesOf = (st) => st.scenes || (st.scene?.title || st.scene?.image ? [{ id: "s-legacy", title: st.scene.title || "", image: st.scene.image || "" }] : []);
 const activeSceneIdOf = (st) => (st.activeSceneId !== undefined ? st.activeSceneId : stageScenesOf(st)[0]?.id || null);
 
@@ -2026,7 +2036,7 @@ const sharedStyles = `
     .mh-gm-live { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .mh-stg-seg button span { display: none; }
   }
-  .mh-relnet { margin: 0; width: min(560px, 100%); max-height: 88%; overflow-y: auto; padding: 18px 20px; border-radius: 18px; }
+  .mh-relnet { margin: 0; width: min(760px, 100%); max-height: 88%; overflow-y: auto; padding: 18px 20px; border-radius: 18px; }
   .mh-relnet-lbl { fill: var(--mh-panel); stroke: var(--mh-line2); }
   .mh-relnet-lbl-t { font-size: 10.5px; fill: var(--mh-ink3); font-family: 'Inter', system-ui, sans-serif; }
   .mh-relnet-rel { font-size: 10.5px; font-weight: 700; font-family: 'Inter', system-ui, sans-serif; letter-spacing: .02em; }
@@ -2035,6 +2045,15 @@ const sharedStyles = `
   .mh-relnet-legend i { width: 10px; height: 10px; border-radius: 50%; }
   .mh-relnet-sec { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--rl); }
   .mh-relnet-sec::after { content: ""; flex: 1; height: 1px; background: color-mix(in srgb, var(--rl) 35%, transparent); }
+  .mh-relnet-card { fill: var(--mh-panel); stroke: var(--mh-line2); stroke-width: 1.3; }
+  .mh-relnet-card.is-me { fill: color-mix(in srgb, var(--mh-panel) 88%, #6FB86A); stroke-width: 2; }
+  .mh-relnet-kin { fill: none; stroke: var(--mh-ink3); stroke-width: 2; stroke-linejoin: round; }
+  .mh-relnet-trunk { fill: none; stroke: #9C93AD; stroke-width: 2; stroke-dasharray: 5 5; stroke-linecap: round; opacity: .8; }
+  .mh-relnet-kintag { margin-left: 8px; font-size: 10.5px; font-weight: 600; color: var(--mh-muted); border: 1px solid var(--mh-line2); border-radius: 10px; padding: 0 7px; }
+  .mh-qa-kin { width: 100%; display: flex; align-items: center; gap: 5px; flex-wrap: wrap; margin-top: 3px; padding-left: 10px; border-left: 2px solid #E3B04B; }
+  .mh-qa-kin-b { padding: 3px 10px; border-radius: 20px; border: 1px solid var(--mh-line2); background: transparent; color: var(--mh-ink3); font: 600 11px 'Inter', system-ui, sans-serif; cursor: pointer; }
+  .mh-qa-kin-b:hover { border-color: var(--mh-ink3); color: var(--mh-ink); }
+  .mh-qa-kin-b.is-on { background: var(--mh-ink); border-color: var(--mh-ink); color: var(--mh-panel); }
   .mh-qa-rel { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
   .mh-qa-rel-l { font-size: 11px; color: var(--mh-muted); margin-right: 2px; }
   .mh-qa-rel-b { padding: 3px 10px; border-radius: 20px; border: 1px solid var(--mh-line2); background: transparent; color: var(--mh-ink3); font: 600 11px 'Inter', system-ui, sans-serif; cursor: pointer; }
@@ -8799,6 +8818,9 @@ export default function App({ onSignOut }) {
                                 )}
                                 {connRows.map((row, i) => {
                                   const w = row.with;
+                                  // Título y parentesco son de la persona: se copian a todas sus conexiones.
+                                  const setPersonRel = (idx, name, patch) =>
+                                    updateCharacterField(viewingCharId, "f_connection_qa", JSON.stringify(connRows.map((r, k) => (k === idx || (r.with?.name && r.with.name === name) ? { ...r, ...patch } : r))));
                                   const typing = qaWithOther && qaWithOther.index === i;
                                   return (
                                     <div key={i} className="mh-qa" style={{ flexDirection: "column", gap: 8 }}>
@@ -8860,13 +8882,26 @@ export default function App({ onSignOut }) {
                                                 onClick={() => {
                                                   // El título es de la persona: se aplica a todas sus conexiones.
                                                   const rel = on ? "" : rt.key;
-                                                  updateCharacterField(viewingCharId, "f_connection_qa", JSON.stringify(connRows.map((r, k) => (k === i || (r.with?.name && r.with.name === w.name) ? { ...r, rel } : r))));
+                                                  setPersonRel(i, w.name, { rel, ...(rel === "familiar" ? {} : { kin: "" }) });
                                                 }}
                                               >
                                                 {rt.label}
                                               </button>
                                             );
                                           })}
+                                          {row.rel === "familiar" && (
+                                            <div className="mh-qa-kin" role="radiogroup" aria-label="Parentesco">
+                                              <span className="mh-qa-rel-l">¿Qué parentesco?</span>
+                                              {KIN.map((k) => {
+                                                const on = row.kin === k.key;
+                                                return (
+                                                  <button key={k.key} type="button" role="radio" aria-checked={on} className={"mh-qa-kin-b" + (on ? " is-on" : "")} onClick={() => setPersonRel(i, w.name, { kin: on ? "" : k.key })}>
+                                                    {k.label}
+                                                  </button>
+                                                );
+                                              })}
+                                            </div>
+                                          )}
                                         </div>
                                       )}
                                     </div>
@@ -8884,20 +8919,85 @@ export default function App({ onSignOut }) {
                               connRows.forEach((r) => {
                                 if (!r.with || !r.with.name) return;
                                 let g = groups.find((x) => x.name === r.with.name);
-                                if (!g) groups.push((g = { name: r.with.name, cls: r.with.cls, rows: [], rel: "" }));
+                                if (!g) groups.push((g = { name: r.with.name, cls: r.with.cls, rows: [], rel: "", kin: "" }));
                                 g.rows.push(r);
                                 if (!g.rel && r.rel) g.rel = r.rel;
+                                if (!g.kin && r.kin) g.kin = r.kin;
                               });
                               // Mismo título, juntos en el círculo y en la lista.
                               const relRank = (k) => (REL_TITLES.findIndex((rt) => rt.key === k) + REL_TITLES.length + 1) % (REL_TITLES.length + 1);
                               groups.sort((a, b) => relRank(a.rel) - relRank(b.rel));
                               const usedRels = [...REL_TITLES, REL_NONE].filter((rt) => groups.some((g) => (g.rel || "") === rt.key));
-                              const W = 460, H = groups.length <= 2 ? 190 : 330, cx = W / 2, cy = groups.length <= 2 ? 80 : H / 2 - 10, R = 112;
-                              const nodes = groups.map((g, k) => {
-                                // Con 1 o 2 compañeros, a los lados; con más, en círculo empezando arriba.
-                                const ang = (groups.length <= 2 ? Math.PI : -Math.PI / 2) + (k * 2 * Math.PI) / Math.max(1, groups.length);
-                                return { ...g, x: cx + Math.cos(ang) * R * 1.3, y: cy + Math.sin(ang) * R };
-                              });
+                              // Árbol: padres arriba, tus hermanos a tu lado y tus hijos debajo, con línea continua.
+                              // Los demás vínculos van en una columna aparte, con línea discontinua.
+                              const CW = 138, CH = 46, GX = 16, PITCH = CW + GX, RG = 92, OS = CH + 14;
+                              const fam = groups.filter((g) => g.rel === "familiar");
+                              const others = groups.filter((g) => g.rel !== "familiar");
+                              const genOf = (g) => kinOf(g.kin)?.gen ?? 0;
+                              const parents = fam.filter((g) => genOf(g) === -1);
+                              const kids = fam.filter((g) => genOf(g) === 1);
+                              const me = { name: c.f_name || "Tu personaje", cls: c.f_class, me: true };
+                              const row1 = [...fam.filter((g) => genOf(g) === 0), me];
+                              const pos = new Map();
+                              const famW = Math.max(parents.length, row1.length, kids.length, 1) * PITCH - GX;
+                              const py = CH / 2 + 4;
+                              const ry = parents.length ? py + RG : py;
+                              const ky = ry + RG;
+                              row1.forEach((g, k) => pos.set(g, { x: famW - (row1.length - k) * PITCH + GX + CW / 2, y: ry }));
+                              const meX = pos.get(me).x;
+                              const rowCenter = (pos.get(row1[0]).x + meX) / 2;
+                              parents.forEach((g, k) => pos.set(g, { x: rowCenter + (k - (parents.length - 1) / 2) * PITCH, y: py }));
+                              kids.forEach((g, k) => pos.set(g, { x: meX + (k - (kids.length - 1) / 2) * PITCH, y: ky }));
+                              const famNodes = [...parents, ...row1, ...kids];
+                              const shiftX = Math.max(0, CW / 2 + 2 - Math.min(...famNodes.map((g) => pos.get(g).x)));
+                              famNodes.forEach((g) => (pos.get(g).x += shiftX));
+                              const famRight = Math.max(...famNodes.map((g) => pos.get(g).x)) + CW / 2;
+                              const trunkX = famRight + 30;
+                              const ox = trunkX + 26 + CW / 2;
+                              const oTop = ry - ((others.length - 1) * OS) / 2;
+                              others.forEach((g, k) => pos.set(g, { x: ox, y: oTop + k * OS }));
+                              const allNodes = [...famNodes, ...others];
+                              const shiftY = Math.max(0, CH / 2 + 4 - Math.min(...allNodes.map((g) => pos.get(g).y)));
+                              allNodes.forEach((g) => (pos.get(g).y += shiftY));
+                              const W = (others.length ? ox + CW / 2 : famRight) + 4;
+                              const H = Math.max(...allNodes.map((g) => pos.get(g).y)) + CH / 2 + 4;
+                              const P = (g) => pos.get(g);
+                              const famPaths = [];
+                              const meP = P(me);
+                              const barY = meP.y - CH / 2 - 18;
+                              if (parents.length) {
+                                const xs = parents.map((g) => P(g).x);
+                                const dx = (Math.min(...xs) + Math.max(...xs)) / 2;
+                                if (parents.length > 1) famPaths.push(`M${Math.min(...xs)} ${P(parents[0]).y} H${Math.max(...xs)}`);
+                                famPaths.push(`M${dx} ${P(parents[0]).y + (parents.length > 1 ? 0 : CH / 2)} V${barY}`);
+                                const bx = [...row1.map((g) => P(g).x), dx];
+                                famPaths.push(`M${Math.min(...bx)} ${barY} H${Math.max(...bx)}`);
+                              } else if (row1.length > 1) {
+                                famPaths.push(`M${P(row1[0]).x} ${barY} H${meP.x}`);
+                              }
+                              if (parents.length || row1.length > 1) row1.forEach((g) => famPaths.push(`M${P(g).x} ${barY} V${P(g).y - CH / 2}`));
+                              if (kids.length) {
+                                const kb = P(kids[0]).y - CH / 2 - 18;
+                                const kx = [...kids.map((g) => P(g).x), meP.x];
+                                famPaths.push(`M${meP.x} ${meP.y + CH / 2} V${kb}`, `M${Math.min(...kx)} ${kb} H${Math.max(...kx)}`);
+                                kids.forEach((g) => famPaths.push(`M${P(g).x} ${kb} V${P(g).y - CH / 2}`));
+                              }
+                              const nodes = [...fam.sort((x, y) => genOf(x) - genOf(y)), ...others];
+                              const cut = (t, n) => (t.length > n ? t.slice(0, n - 1).trimEnd() + "…" : t);
+                              const card = (g, label, color, dashed) => {
+                                const { x, y } = P(g);
+                                const L = x - CW / 2;
+                                return (
+                                  <g key={"c" + g.name + (g.me ? "-me" : "")}>
+                                    <title>{g.name}</title>
+                                    <rect x={L} y={y - CH / 2} width={CW} height={CH} rx="9" className={"mh-relnet-card" + (g.me ? " is-me" : "")} style={dashed ? { stroke: color, strokeDasharray: "4 4" } : g.me ? { stroke: classColor(c.f_class) } : undefined} />
+                                    <circle cx={L + 22} cy={y} r="13" fill={classColor(g.cls)} />
+                                    <text x={L + 22} y={y + 4.5} textAnchor="middle" className="mh-relnet-ini" style={{ fontSize: 12 }}>{(g.name || "?").trim().charAt(0).toUpperCase()}</text>
+                                    <text x={L + 42} y={y - 2} className="mh-relnet-name">{cut(g.name, 14)}</text>
+                                    <text x={L + 42} y={y + 13} className="mh-relnet-rel" style={{ fill: color }}>{label}</text>
+                                  </g>
+                                );
+                              };
                               const short = (t) => (t.length > 22 ? t.slice(0, 21).trimEnd() + "…" : t);
                               return (
                                 <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 40, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.62)" }} onClick={() => setShowRelNet(false)}>
@@ -8917,21 +9017,16 @@ export default function App({ onSignOut }) {
                                       </div>
                                     ) : (
                                       <>
-                                        <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: "block", maxHeight: 320 }} role="img" aria-label="Mapa de relaciones">
-                                          {nodes.map((n) => (
-                                            <line key={"l" + n.name} x1={cx} y1={cy} x2={n.x} y2={n.y} stroke={relOf(n.rel).color} strokeWidth={n.rel ? 2.5 : 1.5} strokeDasharray={n.rel ? undefined : "4 4"} opacity=".85" />
+                                        <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: "block", maxWidth: W * 1.15, maxHeight: 460, margin: "6px auto 0" }} role="img" aria-label="Árbol de relaciones">
+                                          {famPaths.map((d, k) => (
+                                            <path key={"f" + k} d={d} className="mh-relnet-kin" />
                                           ))}
-                                          <circle cx={cx} cy={cy} r="30" fill={classColor(c.f_class)} />
-                                          <text x={cx} y={cy + 7} textAnchor="middle" className="mh-relnet-ini" style={{ fontSize: 20 }}>{(c.f_name || "?").trim().charAt(0).toUpperCase()}</text>
-                                          {nodes.map((n) => (
-                                            <g key={"n" + n.name}>
-                                              <circle cx={n.x} cy={n.y} r="25" fill="none" stroke={relOf(n.rel).color} strokeWidth="2.5" opacity={n.rel ? 1 : 0.5} />
-                                              <circle cx={n.x} cy={n.y} r="21" fill={classColor(n.cls)} />
-                                              <text x={n.x} y={n.y + 5} textAnchor="middle" className="mh-relnet-ini" style={{ fontSize: 15 }}>{n.name.trim().charAt(0).toUpperCase()}</text>
-                                              <text x={n.x} y={n.y + 42} textAnchor="middle" className="mh-relnet-name">{n.name}</text>
-                                              <text x={n.x} y={n.y + 57} textAnchor="middle" className="mh-relnet-rel" style={{ fill: relOf(n.rel).color }}>{n.rel ? relOf(n.rel).label : short((n.rows[0].answer || n.rows[0].question || "").trim())}</text>
-                                            </g>
+                                          {others.length > 0 && <path d={`M${meP.x + CW / 2} ${meP.y} H${trunkX}` + (others.length > 1 ? ` M${trunkX} ${P(others[0]).y} V${P(others[others.length - 1]).y}` : "")} className="mh-relnet-trunk" />}
+                                          {others.map((g) => (
+                                            <path key={"o" + g.name} d={`M${trunkX} ${P(g).y} H${P(g).x - CW / 2}`} className="mh-relnet-trunk" style={{ stroke: relOf(g.rel).color, opacity: 1 }} />
                                           ))}
+                                          {famNodes.map((g) => card(g, g.me ? "Tú" : kinOf(g.kin)?.label || "Familiar", g.me ? "var(--mh-muted)" : "var(--mh-ink3)", false))}
+                                          {others.map((g) => card(g, g.rel ? relOf(g.rel).label : cut((g.rows[0].answer || g.rows[0].question || "").trim(), 18), relOf(g.rel).color, true))}
                                         </svg>
                                         {usedRels.length > 0 && (
                                           <div className="mh-relnet-legend">
@@ -8954,7 +9049,10 @@ export default function App({ onSignOut }) {
                                             <div className="mh-qa" style={{ padding: "10px 12px", gap: 10, borderLeft: "3px solid " + relOf(n.rel).color }}>
                                               {avatar(n, 26)}
                                               <div style={{ flex: 1, minWidth: 0 }}>
-                                                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--mh-ink)" }}>{n.name}</div>
+                                                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--mh-ink)" }}>
+                                                  {n.name}
+                                                  {n.rel === "familiar" && kinOf(n.kin) && <span className="mh-relnet-kintag">{kinOf(n.kin).label}</span>}
+                                                </div>
                                                 {n.rows.map((r, k) => (
                                                   <div key={k} style={{ marginTop: 4 }}>
                                                     <div className="mh-qa-q" style={{ fontSize: 11.5 }}>{r.question}</div>
