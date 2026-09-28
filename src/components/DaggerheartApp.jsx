@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare } from "lucide-react";
+import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2 } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
 import { Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
@@ -1084,6 +1084,81 @@ const parseConvs = (raw) => {
   if (Array.isArray(v)) return v.length ? [{ id: "c-legacy", sceneId: "", title: "Conversación", lines: v }] : [];
   return Array.isArray(v?.convs) ? v.convs : [];
 };
+// Diario: cada entrada es una sesión { id, title, date (ISO), pinned, body }.
+// El texto usa un formato sencillo: **negrita**, _cursiva_, ~~tachado~~, "## " título, "- " lista, "1. " numerada, "[ ] " casilla.
+const parseJournal = (raw) => {
+  let list;
+  try {
+    list = JSON.parse(raw || "[]");
+  } catch (e) {
+    return [];
+  }
+  if (!Array.isArray(list)) return [];
+  // Las entradas antiguas eran { date, text }: cada una pasa a ser una sesión.
+  return list.map((e, i) => (e && e.id ? e : { id: "jold" + i, title: "Nota", date: e?.date || "", pinned: false, body: e?.text || "" }));
+};
+const journalDate = (d) => {
+  if (!d) return "";
+  const t = Date.parse(d);
+  if (!/^\d{4}-/.test(d) || isNaN(t)) return d;
+  return new Date(t).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" });
+};
+const foldText = (t) => (t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+const LIST_RE = /^(\s*)(- |\* |(\d+)\. |\[[ xX]\] )/;
+function journalInline(text, key) {
+  const out = [];
+  const re = /(\*\*[^*]+\*\*|~~[^~]+~~|_[^_]+_)/g;
+  let last = 0;
+  let m;
+  let k = 0;
+  while ((m = re.exec(text))) {
+    if (m.index > last) out.push(text.slice(last, m.index));
+    const t = m[0];
+    if (t.startsWith("**")) out.push(<b key={key + "-" + k++}>{t.slice(2, -2)}</b>);
+    else if (t.startsWith("~~")) out.push(<s key={key + "-" + k++}>{t.slice(2, -2)}</s>);
+    else out.push(<i key={key + "-" + k++}>{t.slice(1, -1)}</i>);
+    last = m.index + t.length;
+  }
+  if (last < text.length) out.push(text.slice(last));
+  return out;
+}
+function JournalText({ text, onToggle }) {
+  const lines = (text || "").split("\n");
+  const blocks = [];
+  lines.forEach((ln, i) => {
+    const prev = blocks[blocks.length - 1];
+    let m;
+    if ((m = ln.match(/^\[([ xX])\] (.*)$/))) {
+      const done = m[1] !== " ";
+      blocks.push(
+        <label key={i} className={"mh-jr-check" + (done ? " is-done" : "")} onClick={(e) => e.stopPropagation()}>
+          <input type="checkbox" checked={done} onChange={() => onToggle && onToggle(i)} />
+          <span>{journalInline(m[2], i)}</span>
+        </label>
+      );
+    } else if ((m = ln.match(/^[-*] (.*)$/))) {
+      const li = <li key={i}>{journalInline(m[1], i)}</li>;
+      if (prev && prev.type === "ul" && prev.open) prev.items.push(li);
+      else blocks.push({ type: "ul", open: true, items: [li], key: i });
+    } else if ((m = ln.match(/^(\d+)\. (.*)$/))) {
+      const li = <li key={i}>{journalInline(m[2], i)}</li>;
+      if (prev && prev.type === "ol" && prev.open) prev.items.push(li);
+      else blocks.push({ type: "ol", open: true, items: [li], key: i, start: Number(m[1]) });
+    } else if ((m = ln.match(/^#{1,3} (.*)$/))) {
+      blocks.push(<div key={i} className="mh-jr-h">{journalInline(m[1], i)}</div>);
+    } else if (!ln.trim()) {
+      blocks.push(<div key={i} className="mh-jr-gap" />);
+    } else {
+      blocks.push(<p key={i}>{journalInline(ln, i)}</p>);
+    }
+  });
+  return (
+    <div className="mh-jr">
+      {blocks.map((b) => (b && b.type === "ul" ? <ul key={"u" + b.key}>{b.items}</ul> : b && b.type === "ol" ? <ol key={"o" + b.key} start={b.start}>{b.items}</ol> : b))}
+    </div>
+  );
+}
+
 // Título de cada persona en las conexiones; ordena y colorea la red de relaciones.
 const REL_TITLES = [
   { key: "familiar", label: "Familiar", group: "Familia", color: "#E3B04B" },
@@ -2045,6 +2120,59 @@ const sharedStyles = `
   .mh-relnet-legend i { width: 10px; height: 10px; border-radius: 50%; }
   .mh-relnet-sec { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--rl); }
   .mh-relnet-sec::after { content: ""; flex: 1; height: 1px; background: color-mix(in srgb, var(--rl) 35%, transparent); }
+  .mh-jl { flex: 1; min-height: 0; display: flex; gap: 16px; }
+  .mh-jl-side { width: 260px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; min-height: 0; padding-right: 14px; border-right: 1px solid var(--mh-line); }
+  .mh-jl-search { position: relative; display: flex; align-items: center; }
+  .mh-jl-search > svg { position: absolute; left: 10px; color: var(--mh-muted); pointer-events: none; }
+  .mh-jl-search .mh-input { padding-left: 31px; padding-right: 28px; font-size: 12.5px; }
+  .mh-jl-search button { position: absolute; right: 6px; width: 20px; height: 20px; border: 0; border-radius: 50%; background: var(--mh-panel2); color: var(--mh-ink3); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .mh-jl-new { justify-content: center; display: inline-flex; align-items: center; gap: 6px; }
+  .mh-jl-list { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding: 2px 2px 4px 0; }
+  .mh-jl-list > .mh-gm-h2 { margin: 6px 0 0; }
+  .mh-jl-count { font-size: 11px; font-weight: 600; color: var(--mh-muted); }
+  .mh-jl-line { position: relative; display: flex; flex-direction: column; gap: 6px; padding-left: 16px; }
+  .mh-jl-line::before { content: ""; position: absolute; left: 4px; top: 10px; bottom: 10px; width: 2px; background: var(--mh-line); }
+  .mh-jl-item { position: relative; display: grid; grid-template-columns: 1fr auto; gap: 1px 6px; text-align: left; padding: 8px 10px; border: 1px solid var(--mh-line); border-radius: 9px; background: var(--mh-panel); color: var(--mh-ink); cursor: pointer; font-family: inherit; }
+  .mh-jl-item:hover { border-color: var(--mh-line2); }
+  .mh-jl-item.is-on { border-color: var(--acc); background: color-mix(in srgb, var(--acc) 9%, var(--mh-panel)); }
+  .mh-jl-dot { display: none; }
+  .mh-jl-line .mh-jl-dot { display: block; position: absolute; left: -16px; top: 12px; width: 10px; height: 10px; border-radius: 50%; background: var(--mh-line2); }
+  .mh-jl-line .mh-jl-item.is-on .mh-jl-dot { background: var(--acc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--acc) 22%, transparent); }
+  .mh-jl-t { font-size: 12.5px; font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mh-jl-d { grid-column: 1 / -1; font-size: 11px; color: var(--mh-muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mh-jl-pin { color: var(--acc); grid-row: 1; grid-column: 2; }
+  .mh-jl-empty { font-size: 12px; color: var(--mh-muted); font-style: italic; padding: 6px 2px; }
+  .mh-jl-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+  .mh-jl-blank { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--mh-muted); font-size: 13px; }
+  .mh-jl-head { display: flex; align-items: flex-start; gap: 6px; }
+  .mh-jl-title { width: 100%; border: 1px solid transparent; border-radius: 7px; background: transparent; padding: 2px 6px; margin-left: -6px; font-size: 19px; font-weight: 700; color: var(--mh-ink); }
+  .mh-jl-title:hover { border-color: var(--mh-line); }
+  .mh-jl-title:focus { outline: none; border-color: var(--mh-line2); background: var(--mh-input); }
+  .mh-jl-date { font-size: 11.5px; color: var(--mh-muted); }
+  .mh-jl-pinb.is-on { color: var(--acc); border-color: var(--acc); background: color-mix(in srgb, var(--acc) 12%, transparent); }
+  .mh-jl-del { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #D9644E; }
+  .mh-jl-del .mh-btn-ghost { padding: 4px 10px; font-size: 12px; }
+  .mh-jl-tools { display: flex; align-items: center; gap: 3px; flex-wrap: wrap; padding: 4px; border: 1px solid var(--mh-line); border-radius: 9px; background: var(--mh-panel2); }
+  .mh-jl-tools > button:not(.mh-btn):not(.mh-btn-ghost) { width: 30px; height: 28px; border: 0; border-radius: 6px; background: transparent; color: var(--mh-ink3); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .mh-jl-tools > button:not(.mh-btn):not(.mh-btn-ghost):hover { background: var(--mh-panel); color: var(--mh-ink); }
+  .mh-jl-tools > button.mh-btn, .mh-jl-tools > button.mh-btn-ghost { display: inline-flex; align-items: center; gap: 5px; }
+  .mh-jl-state { margin-left: auto; margin-right: 6px; font-size: 11px; color: var(--mh-muted); }
+  .mh-jl-ta { flex: 1; min-height: 220px; resize: none; font-size: 13.5px; line-height: 1.6; padding: 12px 14px; }
+  .mh-jl-read { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 2px; }
+  .mh-jl-ph { font-size: 13px; color: var(--mh-muted); font-style: italic; cursor: text; }
+  .mh-jr { font-size: 13.5px; line-height: 1.6; color: var(--mh-ink); }
+  .mh-jr p { margin: 0; }
+  .mh-jr .mh-jr-gap { height: 10px; }
+  .mh-jr .mh-jr-h { font-family: 'Cinzel', Georgia, serif; font-weight: 700; font-size: 14.5px; margin: 6px 0 2px; }
+  .mh-jr ul, .mh-jr ol { margin: 2px 0; padding-left: 22px; }
+  .mh-jr ul { list-style: disc; }
+  .mh-jr ol { list-style: decimal; }
+  .mh-jr li::marker { color: var(--mh-muted); }
+  .mh-jr li { margin: 1px 0; }
+  .mh-jr-check { display: flex; align-items: flex-start; gap: 8px; cursor: pointer; }
+  .mh-jr-check input { margin-top: 5px; accent-color: var(--acc); width: 14px; height: 14px; flex-shrink: 0; cursor: pointer; }
+  .mh-jr-check.is-done span { color: var(--mh-muted); text-decoration: line-through; }
+  @media (max-width: 760px) { .mh-jl { flex-direction: column; } .mh-jl-side { width: auto; border-right: 0; padding-right: 0; max-height: 260px; } }
   .mh-relnet-card { fill: var(--mh-panel); stroke: var(--mh-line2); stroke-width: 1.3; }
   .mh-relnet-card.is-me { fill: color-mix(in srgb, var(--mh-panel) 88%, #6FB86A); stroke-width: 2; }
   .mh-relnet-kin { fill: none; stroke: var(--mh-ink3); stroke-width: 2; stroke-linejoin: round; }
@@ -4456,7 +4584,12 @@ export default function App({ onSignOut }) {
     if (el) el.scrollTop = el.scrollHeight;
   }, [campaignChat]);
 
-  const [journalDraft, setJournalDraft] = useState("");
+  const [journalSelId, setJournalSelId] = useState(null);
+  const [journalEditing, setJournalEditing] = useState(false);
+  const [journalSearch, setJournalSearch] = useState("");
+  const [journalDraft, setJournalDraft] = useState(null); // { charId, id, title, body } sin guardar todavía
+  const [journalDelId, setJournalDelId] = useState(null);
+  const journalRef = useRef(null);
   const [newItemDraft, setNewItemDraft] = useState("");
   const [newItemDescDraft, setNewItemDescDraft] = useState("");
   const [showAddItemModal, setShowAddItemModal] = useState(false);
@@ -5528,31 +5661,122 @@ export default function App({ onSignOut }) {
     setShowChangeDomainModal(false);
   };
 
-  const getJournal = (c) => {
-    try {
-      return JSON.parse(c.f_journal || "[]");
-    } catch (e) {
-      return [];
+  const getJournal = (c) => parseJournal(c.f_journal);
+
+  const patchJournal = (charId, sid, patch) => {
+    const c = charsRef.current[charId];
+    if (!c) return;
+    updateCharacterField(charId, "f_journal", JSON.stringify(parseJournal(c.f_journal).map((e) => (e.id === sid ? { ...e, ...patch } : e))));
+  };
+
+  // Guarda lo escrito un momento después de dejar de teclear.
+  const flushJournal = () => {
+    const d = journalDraft;
+    if (!d) return;
+    const cur = parseJournal(charsRef.current[d.charId]?.f_journal).find((e) => e.id === d.id);
+    if (cur && (cur.title !== d.title || cur.body !== d.body)) patchJournal(d.charId, d.id, { title: d.title, body: d.body });
+  };
+  useEffect(() => {
+    if (!journalDraft) return;
+    const t = setTimeout(flushJournal, 700);
+    return () => clearTimeout(t);
+  }, [journalDraft]);
+
+  const editJournal = (charId, e, patch) => setJournalDraft((d) => ({ ...(d && d.id === e.id ? d : { charId, id: e.id, title: e.title, body: e.body }), ...patch }));
+
+  const selectJournal = (sid) => {
+    flushJournal();
+    setJournalDraft(null);
+    setJournalSelId(sid);
+    setJournalEditing(false);
+    setJournalDelId(null);
+  };
+
+  const addJournalSession = (charId) => {
+    const c = characters[charId];
+    if (!c) return;
+    flushJournal();
+    const list = parseJournal(c.f_journal);
+    const n = list.filter((e) => /^Sesión \d+/.test(e.title || "")).length + 1;
+    const e = { id: "j" + Date.now(), title: "Sesión " + n, date: new Date().toISOString(), pinned: false, body: "" };
+    updateCharacterField(charId, "f_journal", JSON.stringify([e, ...list]));
+    setJournalDraft(null);
+    setJournalSelId(e.id);
+    setJournalEditing(true);
+    setJournalSearch("");
+  };
+
+  const removeJournalSession = (charId, sid) => {
+    const c = characters[charId];
+    if (!c) return;
+    setJournalDraft(null);
+    updateCharacterField(charId, "f_journal", JSON.stringify(parseJournal(c.f_journal).filter((e) => e.id !== sid)));
+    setJournalSelId(null);
+    setJournalDelId(null);
+    setJournalEditing(false);
+  };
+
+  // Barra de formato: envuelve la selección o pone un prefijo a las líneas elegidas.
+  const formatJournal = (charId, e, kind) => {
+    const ta = journalRef.current;
+    if (!ta) return;
+    const body = ta.value;
+    let a = ta.selectionStart;
+    let b = ta.selectionEnd;
+    let next;
+    let selA;
+    let selB;
+    const wrap = { bold: "**", italic: "_", strike: "~~" }[kind];
+    if (wrap) {
+      const inner = body.slice(a, b) || "texto";
+      next = body.slice(0, a) + wrap + inner + wrap + body.slice(b);
+      selA = a + wrap.length;
+      selB = selA + inner.length;
+    } else {
+      const ls = body.lastIndexOf("\n", a - 1) + 1;
+      let le = body.indexOf("\n", b);
+      if (le < 0) le = body.length;
+      const lines = body.slice(ls, le).split("\n");
+      const pre = { h: "## ", ul: "- ", ol: null, check: "[ ] " }[kind];
+      const clean = (l) => l.replace(/^#{1,3} /, "").replace(LIST_RE, "$1");
+      const already = lines.every((l) => (kind === "ol" ? /^\d+\. /.test(l) : l.startsWith(pre)));
+      const out = lines.map((l, k) => (already ? clean(l) : (kind === "ol" ? k + 1 + ". " : pre) + clean(l)));
+      next = body.slice(0, ls) + out.join("\n") + body.slice(le);
+      selA = ls;
+      selB = ls + out.join("\n").length;
     }
+    editJournal(charId, e, { body: next });
+    requestAnimationFrame(() => {
+      ta.focus();
+      ta.setSelectionRange(selA, selB);
+    });
   };
 
-  const addJournalEntry = (id) => {
-    const text = journalDraft.trim();
-    if (!text) return;
-    const c = characters[id];
-    if (!c) return;
-    const entries = getJournal(c);
-    entries.unshift({ date: new Date().toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" }), text });
-    updateCharacterField(id, "f_journal", JSON.stringify(entries));
-    setJournalDraft("");
-  };
-
-  const removeJournalEntry = (id, index) => {
-    const c = characters[id];
-    if (!c) return;
-    const entries = getJournal(c);
-    entries.splice(index, 1);
-    updateCharacterField(id, "f_journal", JSON.stringify(entries));
+  // Enter en una lista sigue la lista; en una línea vacía de lista, la termina.
+  const journalKeyDown = (charId, e, ev) => {
+    const ta = ev.currentTarget;
+    if ((ev.ctrlKey || ev.metaKey) && ["b", "i"].includes(ev.key.toLowerCase())) {
+      ev.preventDefault();
+      return formatJournal(charId, e, ev.key.toLowerCase() === "b" ? "bold" : "italic");
+    }
+    if (ev.key !== "Enter" || ev.shiftKey || ta.selectionStart !== ta.selectionEnd) return;
+    const body = ta.value;
+    const pos = ta.selectionStart;
+    const ls = body.lastIndexOf("\n", pos - 1) + 1;
+    const line = body.slice(ls, pos);
+    const m = line.match(LIST_RE);
+    if (!m) return;
+    ev.preventDefault();
+    if (line.trim() === m[0].trim()) {
+      const next = body.slice(0, ls) + body.slice(pos);
+      editJournal(charId, e, { body: next });
+      requestAnimationFrame(() => ta.setSelectionRange(ls, ls));
+      return;
+    }
+    const pre = m[1] + (m[3] ? Number(m[3]) + 1 + ". " : m[2].startsWith("[") ? "[ ] " : m[2]);
+    const next = body.slice(0, pos) + "\n" + pre + body.slice(pos);
+    editJournal(charId, e, { body: next });
+    requestAnimationFrame(() => ta.setSelectionRange(pos + 1 + pre.length, pos + 1 + pre.length));
   };
 
   const [traitRollResult, setTraitRollResult] = useState(null);
@@ -9648,7 +9872,7 @@ export default function App({ onSignOut }) {
                       })()}
 
                       {activeTab === "journal" && (
-                        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(12, 1fr)", gap: 18, flex: 1 }}>
+                        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(12, 1fr)", gap: 18, flex: 1, height: isMobile ? undefined : armaduraHeight || undefined }}>
                           <Panel
                             span={12}
                             title="Diario"
@@ -9657,33 +9881,152 @@ export default function App({ onSignOut }) {
                             vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
                           >
-                            <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-                              <textarea
-                                className="mh-input"
-                                style={{ minHeight: 60, resize: "vertical", flex: 1 }}
-                                placeholder="Escribe una nueva entrada..."
-                                value={journalDraft}
-                                onChange={(e) => setJournalDraft(e.target.value)}
-                              />
-                              <button className="mh-btn" style={{ alignSelf: "flex-end" }} onClick={() => addJournalEntry(viewingCharId)}>
-                                Añadir entrada
-                              </button>
-                            </div>
-                            {entries.length === 0 ? (
-                              <div style={{ fontSize: 12.5, color: "var(--mh-muted)", fontStyle: "italic" }}>Todavía no hay entradas.</div>
-                            ) : (
-                              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 12 }}>
-                                {entries.map((entry, i) => (
-                                  <div key={i} style={{ border: "1px solid var(--mh-line)", borderRadius: 10, padding: "12px 14px" }}>
-                                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                                      <span style={{ fontSize: 11, color: "var(--mh-muted)" }}>{entry.date}</span>
-                                      <Trash2 size={13} style={{ color: "#D9644E", cursor: "pointer" }} onClick={() => removeJournalEntry(viewingCharId, i)} />
+                            {(() => {
+                              const q = foldText(journalSearch.trim());
+                              const view = entries.map((e) => (journalDraft && journalDraft.id === e.id && journalDraft.charId === viewingCharId ? { ...e, title: journalDraft.title, body: journalDraft.body } : e));
+                              const hits = q ? view.filter((e) => foldText(e.title + "\n" + e.body).includes(q)) : view;
+                              const pinned = hits.filter((e) => e.pinned);
+                              const rest = hits.filter((e) => !e.pinned);
+                              const sel = view.find((e) => e.id === journalSelId) || pinned[0] || rest[0] || null;
+                              const snippet = (e) => {
+                                const plain = (e.body || "").replace(/\*\*|~~|_|^#{1,3} |^\[[ xX]\] |^[-*] |^\d+\. /gm, "").replace(/\s+/g, " ").trim();
+                                if (!q) return plain.slice(0, 60);
+                                const at = foldText(plain).indexOf(q);
+                                return at < 0 ? plain.slice(0, 60) : (at > 20 ? "…" : "") + plain.slice(Math.max(0, at - 20), at + 40);
+                              };
+                              const item = (e) => (
+                                <button key={e.id} type="button" className={"mh-jl-item" + (sel?.id === e.id ? " is-on" : "")} onClick={() => selectJournal(e.id)}>
+                                  <i className="mh-jl-dot" />
+                                  <span className="mh-jl-t">{e.title || "Sin título"}</span>
+                                  <span className="mh-jl-d">
+                                    {journalDate(e.date)}
+                                    {snippet(e) && " · " + snippet(e)}
+                                  </span>
+                                  {e.pinned && <Pin size={12} className="mh-jl-pin" />}
+                                </button>
+                              );
+                              const toggleCheck = (lineIdx) => {
+                                const lines = sel.body.split("\n");
+                                lines[lineIdx] = lines[lineIdx].replace(/^\[([ xX])\]/, (_, v) => (v === " " ? "[x]" : "[ ]"));
+                                setJournalDraft(null);
+                                patchJournal(viewingCharId, sel.id, { body: lines.join("\n"), title: sel.title });
+                              };
+                              const tools = [
+                                ["bold", Bold, "Negrita (Ctrl+B)"],
+                                ["italic", Italic, "Cursiva (Ctrl+I)"],
+                                ["strike", Strikethrough, "Tachado"],
+                                ["h", Heading2, "Título"],
+                                ["ul", List, "Lista"],
+                                ["ol", ListOrdered, "Lista numerada"],
+                                ["check", ListChecks, "Casillas"],
+                              ];
+                              return (
+                                <div className="mh-jl">
+                                  <div className="mh-jl-side">
+                                    <div className="mh-jl-search">
+                                      <Search size={14} />
+                                      <input className="mh-input" placeholder="Buscar en el diario…" aria-label="Buscar en el diario" value={journalSearch} onChange={(ev) => setJournalSearch(ev.target.value)} />
+                                      {journalSearch && (
+                                        <button type="button" aria-label="Borrar búsqueda" onClick={() => setJournalSearch("")}>
+                                          <X size={12} />
+                                        </button>
+                                      )}
                                     </div>
-                                    <div style={{ fontSize: 13.5, color: "var(--mh-ink)", whiteSpace: "pre-wrap" }}>{entry.text}</div>
+                                    <button type="button" className="mh-btn mh-jl-new" onClick={() => addJournalSession(viewingCharId)}>
+                                      <Plus size={14} /> Nueva sesión
+                                    </button>
+                                    <div className="mh-jl-list">
+                                      {q && <div className="mh-jl-count">{hits.length === 1 ? "1 resultado" : hits.length + " resultados"}</div>}
+                                      {pinned.length > 0 && (
+                                        <>
+                                          <div className="mh-gm-h2">Fijadas</div>
+                                          {pinned.map(item)}
+                                        </>
+                                      )}
+                                      {rest.length > 0 && (
+                                        <>
+                                          <div className="mh-gm-h2">Sesiones</div>
+                                          <div className="mh-jl-line">{rest.map(item)}</div>
+                                        </>
+                                      )}
+                                      {entries.length === 0 && <div className="mh-jl-empty">Todavía no hay sesiones. Crea la primera para apuntar lo que pase en la partida.</div>}
+                                      {entries.length > 0 && q && hits.length === 0 && <div className="mh-jl-empty">Nada coincide con «{journalSearch.trim()}».</div>}
+                                    </div>
                                   </div>
-                                ))}
-                              </div>
-                            )}
+                                  <div className="mh-jl-main">
+                                    {!sel ? (
+                                      <div className="mh-jl-blank">
+                                        <NotebookPen size={26} />
+                                        <span>Elige una sesión o crea una nueva.</span>
+                                      </div>
+                                    ) : (
+                                      <>
+                                        <div className="mh-jl-head">
+                                          <div style={{ flex: 1, minWidth: 0 }}>
+                                            <input className="mh-jl-title mh-serif" aria-label="Título de la sesión" value={sel.title} placeholder="Título de la sesión" onChange={(ev) => editJournal(viewingCharId, sel, { title: ev.target.value })} onBlur={flushJournal} />
+                                            <div className="mh-jl-date">{journalDate(sel.date)}</div>
+                                          </div>
+                                          <button type="button" className={"mh-gm-ib mh-jl-pinb" + (sel.pinned ? " is-on" : "")} aria-pressed={!!sel.pinned} title={sel.pinned ? "Desfijar" : "Fijar arriba"} aria-label={sel.pinned ? "Desfijar" : "Fijar arriba"} onClick={() => patchJournal(viewingCharId, sel.id, { pinned: !sel.pinned })}>
+                                            <Pin size={14} />
+                                          </button>
+                                          {journalDelId === sel.id ? (
+                                            <span className="mh-jl-del">
+                                              ¿Borrar?
+                                              <button type="button" className="mh-btn-ghost" onClick={() => removeJournalSession(viewingCharId, sel.id)}>Sí</button>
+                                              <button type="button" className="mh-btn-ghost" onClick={() => setJournalDelId(null)}>No</button>
+                                            </span>
+                                          ) : (
+                                            <button type="button" className="mh-gm-ib is-del" title="Borrar la sesión" aria-label="Borrar la sesión" onClick={() => setJournalDelId(sel.id)}>
+                                              <Trash2 size={14} />
+                                            </button>
+                                          )}
+                                        </div>
+                                        <div className="mh-jl-tools" role="toolbar" aria-label="Formato">
+                                          {tools.map(([k, TI, label]) => (
+                                            <button
+                                              key={k}
+                                              type="button"
+                                              title={label}
+                                              aria-label={label}
+                                              onMouseDown={(ev) => ev.preventDefault()}
+                                              onClick={() => {
+                                                if (!journalEditing) {
+                                                  setJournalEditing(true);
+                                                  requestAnimationFrame(() => formatJournal(viewingCharId, sel, k));
+                                                } else formatJournal(viewingCharId, sel, k);
+                                              }}
+                                            >
+                                              <TI size={15} />
+                                            </button>
+                                          ))}
+                                          <span className="mh-jl-state">{(() => { const saved = entries.find((x) => x.id === sel.id); return saved && (saved.title !== sel.title || saved.body !== sel.body) ? "Guardando…" : "Guardado"; })()}</span>
+                                          <button type="button" className={journalEditing ? "mh-btn" : "mh-btn-ghost"} style={{ padding: "5px 11px", fontSize: 12 }} onClick={() => (journalEditing ? (flushJournal(), setJournalEditing(false)) : setJournalEditing(true))}>
+                                            {journalEditing ? <Check size={13} /> : <PenLine size={13} />} {journalEditing ? "Listo" : "Editar"}
+                                          </button>
+                                        </div>
+                                        {journalEditing ? (
+                                          <textarea
+                                            ref={journalRef}
+                                            className="mh-input mh-jl-ta"
+                                            autoFocus
+                                            aria-label="Texto de la sesión"
+                                            placeholder={"¿Qué ha pasado en esta sesión?\n\n- Usa la barra para listas, casillas y negrita\n[ ] Algo pendiente"}
+                                            value={sel.body}
+                                            onChange={(ev) => editJournal(viewingCharId, sel, { body: ev.target.value })}
+                                            onKeyDown={(ev) => journalKeyDown(viewingCharId, sel, ev)}
+                                            onBlur={flushJournal}
+                                          />
+                                        ) : (
+                                          <div className="mh-jl-read" onDoubleClick={() => setJournalEditing(true)} title="Doble clic para editar">
+                                            {sel.body.trim() ? <JournalText text={sel.body} onToggle={toggleCheck} /> : <span className="mh-jl-ph" onClick={() => setJournalEditing(true)}>Pulsa para escribir lo que ha pasado en esta sesión…</span>}
+                                          </div>
+                                        )}
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })()}
                           </Panel>
                         </div>
                       )}
