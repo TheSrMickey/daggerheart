@@ -2497,6 +2497,14 @@ const sharedStyles = `
     to { translate: var(--tx, 20px) var(--ty, -14px); rotate: 3deg; }
   }
   @keyframes mh-beast-ring { from { scale: .05; opacity: .9; } to { scale: 2.4; opacity: 0; } }
+  /* Al salir de la forma: el círculo vuelve de fuera a dentro y el fondo se desvanece. */
+  .mh-beast-bg.is-leaving { animation: mh-beast-out 1.3s ease both; }
+  .mh-beast-bg.is-leaving .mh-beast-ring { animation: mh-beast-ring-out 1.2s cubic-bezier(.6,0,.8,.3) both; }
+  .mh-beast-bg.is-leaving .mh-beast { animation: mh-beast-fade 1s ease both; }
+  .mh-beast-bg.is-leaving .mh-claws { display: none; }
+  @keyframes mh-beast-ring-out { from { scale: 2.4; opacity: 0; } 70% { opacity: .85; } to { scale: .05; opacity: 0; } }
+  @keyframes mh-beast-out { 0%, 55% { opacity: 1; filter: blur(0); } 100% { opacity: 0; filter: blur(8px); } }
+  @keyframes mh-beast-fade { to { opacity: 0; scale: .92; } }
   .mh-claws {
     position: absolute; left: 50%; top: 48%; width: min(70vmin, 620px); height: min(70vmin, 620px);
     translate: -50% -50%; color: var(--beast); pointer-events: none;
@@ -2587,7 +2595,29 @@ const BEAST_SPOTS = [
 ];
 
 // Siluetas de game-icons.net (CC BY 3.0); se descargan solo cuando alguien usa una Forma de Bestia.
-function BeastBackdrop({ form, kind = "beast" }) {
+// Muestra el fondo de la forma activa y, al salir de ella, lo repite al revés (el círculo se cierra) antes de quitarlo.
+function FormFx({ form, kind }) {
+  const [shown, setShown] = useState(form ? { form, kind } : null);
+  const [leaving, setLeaving] = useState(false);
+  useEffect(() => {
+    if (form) {
+      setShown({ form, kind });
+      setLeaving(false);
+      return;
+    }
+    if (!shown) return;
+    setLeaving(true);
+    const t = setTimeout(() => {
+      setShown(null);
+      setLeaving(false);
+    }, 1300);
+    return () => clearTimeout(t);
+  }, [form?.key, kind]);
+  if (!shown) return null;
+  return <BeastBackdrop key={shown.kind + "-" + shown.form.key} form={shown.form} kind={shown.kind} leaving={leaving} />;
+}
+
+function BeastBackdrop({ form, kind = "beast", leaving = false }) {
   const [lib, setLib] = useState(null);
   useEffect(() => {
     let alive = true;
@@ -2600,8 +2630,8 @@ function BeastBackdrop({ form, kind = "beast" }) {
   const names = (isTransform ? lib?.TRANSFORM_SILHOUETTES[form.key] : lib?.BEAST_SILHOUETTES[form.key]) || ["wolf-howl"];
   const pathFor = (name) => lib?.BEAST_ICON_PATHS[name] || lib?.TRANSFORM_ICON_PATHS?.[name];
   return (
-    <div className="mh-beast-bg" style={{ "--beast": form.color }} aria-hidden="true">
-      <div className="mh-beast-ring" />
+    <div className={"mh-beast-bg" + (leaving ? " is-leaving" : "")} style={{ "--beast": form.color }} aria-hidden="true">
+      <div key={leaving ? "out" : "in"} className="mh-beast-ring" />
       {isTransform && lib?.TRANSFORM_ICON_PATHS?.["triple-scratches"] && (
         <svg className="mh-claws" viewBox="0 0 512 512">
           <path d={lib.TRANSFORM_ICON_PATHS["triple-scratches"]} fill="currentColor" />
@@ -7632,13 +7662,11 @@ export default function App({ onSignOut }) {
                 <div key={"t" + hpHit.key} className="mh-hit-text">−{hpHit.amount} PV</div>
               </>
             )}
-            {beastformInfo ? (
-              <BeastBackdrop key={beastformInfo.key} form={beastformInfo} />
-            ) : (
-              TRANSFORM_THEMES[c.f_transformation_form_active] && (
-                <BeastBackdrop key={"t-" + c.f_transformation_form_active} form={TRANSFORM_THEMES[c.f_transformation_form_active]} kind="transform" />
-              )
-            )}
+            <FormFx
+              key={"fx-" + viewingCharId}
+              form={beastformInfo || TRANSFORM_THEMES[c.f_transformation_form_active] || null}
+              kind={beastformInfo ? "beast" : "transform"}
+            />
             {/* Header */}
             <div
               style={{
