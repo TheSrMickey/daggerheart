@@ -2158,6 +2158,31 @@ const sharedStyles = `
   .mh-relnet-legend i { width: 10px; height: 10px; border-radius: 50%; }
   .mh-relnet-sec { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--rl); }
   .mh-relnet-sec::after { content: ""; flex: 1; height: 1px; background: color-mix(in srgb, var(--rl) 35%, transparent); }
+  .mh-cardc-wrap { position: relative; display: flex; align-items: center; justify-content: center; width: min(300px, 100%); }
+  .mh-cardc-wrap > .mh-cardc { z-index: 2; }
+  .mh-cardc-dock {
+    position: absolute; z-index: 1; left: calc(100% - 18px); top: 50%; translate: 0 -50%;
+    display: flex; flex-direction: column; gap: 8px; padding: 10px 9px 10px 26px;
+    border: 2px solid var(--cc); border-left: 0; border-radius: 0 18px 18px 0;
+    background: linear-gradient(90deg, color-mix(in srgb, var(--cc) 22%, var(--mh-panel)), var(--mh-panel));
+    box-shadow: 0 12px 26px rgba(0,0,0,.35);
+    animation: mh-dock-in .35s .18s ease-out both;
+  }
+  @keyframes mh-dock-in { from { opacity: 0; transform: translateX(-26px); } to { opacity: 1; transform: none; } }
+  .mh-cardc-dk { position: relative; width: 42px; height: 42px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--cc) 35%, var(--mh-line)); background: var(--mh-panel); color: color-mix(in srgb, var(--cc) 75%, var(--mh-ink)); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform .12s, background .12s; }
+  .mh-cardc-dk:hover { transform: translateX(2px); }
+  .mh-cardc-dk.is-pri { background: var(--cc); border-color: var(--cc); color: #fff; }
+  .mh-cardc-dk:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  .mh-cardc-tip { position: absolute; left: calc(100% + 12px); top: 50%; translate: 0 -50%; white-space: nowrap; padding: 6px 10px; border-radius: 8px; background: rgba(20,16,26,.9); color: #fff; font: 600 12px 'Inter', system-ui, sans-serif; pointer-events: none; opacity: 0; transform: translateX(-4px); transition: opacity .12s, transform .12s; display: flex; gap: 8px; align-items: baseline; }
+  .mh-cardc-tip small { font-weight: 500; opacity: .7; font-size: 11px; }
+  .mh-cardc-dk:hover .mh-cardc-tip, .mh-cardc-dk:focus-visible .mh-cardc-tip { opacity: 1; transform: none; }
+  .mh-cardc-dock:not(:hover) .mh-cardc-dk.is-pri .mh-cardc-tip { opacity: 1; transform: none; }
+  @media (hover: none) { .mh-cardc-dk.is-pri .mh-cardc-tip { opacity: 1; transform: none; } }
+  @media (max-width: 560px) {
+    .mh-cardc-wrap { flex-direction: column; }
+    .mh-cardc-dock { position: relative; left: auto; top: auto; translate: none; flex-direction: row; margin-top: -18px; padding: 26px 10px 10px; border: 2px solid var(--cc); border-top: 0; border-radius: 0 0 18px 18px; }
+    .mh-cardc-tip { left: 50%; top: auto; bottom: calc(100% + 30px); translate: -50% 0; }
+  }
   .mh-wz { margin: 0; width: min(1020px, 100%); height: min(640px, 92%); padding: 0; display: flex; flex-direction: column; overflow: hidden; }
   .mh-wz-top { padding: 16px 22px 12px; border-bottom: 1px solid var(--mh-line); flex-shrink: 0; }
   .mh-wz-title { display: flex; align-items: baseline; gap: 10px; }
@@ -10967,12 +10992,51 @@ export default function App({ onSignOut }) {
                     ? Moon
                     : d.domain ? DOMAIN_ICONS[d.domain.name] || Sparkles : Sparkles;
                   const action = !d.features && (d.navigateAction || CARD_ACTIONS[d.title]);
+                  // Acciones de la carta: van en una barra adosada fuera de la carta.
+                  const cardActs = [];
+                  if (d.transformForm) {
+                    const formActive = c.f_transformation_form_active === d.transformForm;
+                    cardActs.push({
+                      key: "form",
+                      Icon: formActive ? X : Moon,
+                      label: formActive ? "Salir de " + d.transformForm : "Activar " + d.transformForm,
+                      sub: formActive ? "" : "1 Estrés",
+                      run: () => {
+                        toggleTransformationForm(viewingCharId, d.transformForm, formActive);
+                        closeCardDetail();
+                      },
+                    });
+                  } else if (action && d.navigateAction) {
+                    cardActs.push({
+                      key: "nav",
+                      Icon: ChevronRight,
+                      label: d.navigateAction.label,
+                      sub: "",
+                      run: () => {
+                        setDetailTab(d.navigateAction.tab);
+                        setActionPage(0);
+                        setViewingCardDetail(null);
+                      },
+                    });
+                  } else if (action) {
+                    cardActs.push({
+                      key: "roll",
+                      Icon: Dices,
+                      label: "Tirar " + action.traitLabel,
+                      sub: "Dificultad " + action.dc,
+                      run: () => {
+                        rollTraitCheck(viewingCharId, action.traitLabel, Number(c[action.traitKey] || 0), null, { name: d.title, dc: action.dc });
+                        setViewingCardDetail(null);
+                      },
+                    });
+                  }
                   const footer = d.weapon
                     ? [d.weapon.trait !== "—" && d.weapon.trait, d.weapon.range].filter(Boolean).join(" · ")
                     : d.armor
                     ? `Umbrales base ${d.armor.major} / ${d.armor.severe}`
                     : null;
                   return (
+                  <div className="mh-cardc-wrap" onClick={(e) => e.stopPropagation()}>
                   <div
                     className="mh-card mh-card-anim mh-tilt mh-cardc"
                     style={{
@@ -11052,48 +11116,9 @@ export default function App({ onSignOut }) {
                           <div style={{ fontSize: "0.93em", color: "var(--mh-muted2)", fontStyle: "italic" }}>Sin característica especial.</div>
                         ))}
                     </FitBox>
-                    {(footer || d.domain || action || d.transformForm) && (
+                    {(footer || d.domain) && (
                       <div className="mh-cardc-foot">
-                        {d.transformForm ? (() => {
-                          const formActive = c.f_transformation_form_active === d.transformForm;
-                          return (
-                            <button
-                              className={formActive ? "mh-btn-ghost" : "mh-btn"}
-                              style={{ width: "100%", justifyContent: "center" }}
-                              onClick={() => {
-                                toggleTransformationForm(viewingCharId, d.transformForm, formActive);
-                                closeCardDetail();
-                              }}
-                            >
-                              {formActive ? `Salir de ${d.transformForm}` : `Activar ${d.transformForm} (1 Estrés)`}
-                            </button>
-                          );
-                        })() : action ? (
-                          d.navigateAction ? (
-                            <button
-                              className="mh-btn"
-                              style={{ width: "100%", justifyContent: "center" }}
-                              onClick={() => {
-                                setDetailTab(d.navigateAction.tab);
-                                setActionPage(0);
-                                setViewingCardDetail(null);
-                              }}
-                            >
-                              {d.navigateAction.label}
-                            </button>
-                          ) : (
-                            <button
-                              className="mh-btn"
-                              style={{ width: "100%", justifyContent: "center" }}
-                              onClick={() => {
-                                rollTraitCheck(viewingCharId, action.traitLabel, Number(c[action.traitKey] || 0), null, { name: d.title, dc: action.dc });
-                                setViewingCardDetail(null);
-                              }}
-                            >
-                              <Dices size={13} /> Tirar {action.traitLabel} (Dificultad {action.dc})
-                            </button>
-                          )
-                        ) : d.domain ? (
+                        {d.domain ? (
                           <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
                             <Zap size={12} color="#E3B04B" /> Recuperación <b>{d.domain.recall}</b>
                           </span>
@@ -11102,6 +11127,20 @@ export default function App({ onSignOut }) {
                         )}
                       </div>
                     )}
+                  </div>
+                  {cardActs.length > 0 && (
+                    <div className="mh-cardc-dock" style={{ "--cc": cardColor }} role="toolbar" aria-label="Acciones de la carta">
+                      {cardActs.map((ac, k) => (
+                        <button key={ac.key} type="button" className={"mh-cardc-dk" + (k === 0 ? " is-pri" : "")} aria-label={ac.label + (ac.sub ? " (" + ac.sub + ")" : "")} onClick={ac.run}>
+                          <ac.Icon size={18} />
+                          <span className="mh-cardc-tip">
+                            {ac.label}
+                            {ac.sub && <small>{ac.sub}</small>}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                   </div>
                   );
                 })() : (
