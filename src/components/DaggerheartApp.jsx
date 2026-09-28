@@ -2176,8 +2176,6 @@ const sharedStyles = `
   .mh-cardc-tip { position: absolute; left: calc(100% + 12px); top: 50%; translate: 0 -50%; white-space: nowrap; padding: 6px 10px; border-radius: 8px; background: rgba(20,16,26,.9); color: #fff; font: 600 12px 'Inter', system-ui, sans-serif; pointer-events: none; opacity: 0; transform: translateX(-4px); transition: opacity .12s, transform .12s; display: flex; gap: 8px; align-items: baseline; }
   .mh-cardc-tip small { font-weight: 500; opacity: .7; font-size: 11px; }
   .mh-cardc-dk:hover .mh-cardc-tip, .mh-cardc-dk:focus-visible .mh-cardc-tip { opacity: 1; transform: none; }
-  .mh-cardc-dock:not(:hover) .mh-cardc-dk.is-pri .mh-cardc-tip { opacity: 1; transform: none; }
-  @media (hover: none) { .mh-cardc-dk.is-pri .mh-cardc-tip { opacity: 1; transform: none; } }
   @media (max-width: 560px) {
     .mh-cardc-wrap { flex-direction: column; }
     .mh-cardc-dock { position: relative; left: auto; top: auto; translate: none; flex-direction: row; margin-top: -18px; padding: 26px 10px 10px; border: 2px solid var(--cc); border-top: 0; border-radius: 0 0 18px 18px; }
