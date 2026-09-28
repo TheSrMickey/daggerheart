@@ -1973,18 +1973,27 @@ const sharedStyles = `
   .mh-chat-ev { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; line-height: 1.45; color: var(--mh-ink2); padding: 1px 2px; }
   .mh-chat-ev-i { width: 16px; flex-shrink: 0; display: flex; justify-content: center; font-size: 12px; line-height: 17px; padding-top: 1px; }
   .mh-chat-ev time { padding-top: 2px; }
-  .mh-chat-roll { border: 1px solid var(--mh-line); border-radius: 12px; background: var(--mh-panel); overflow: hidden; flex-shrink: 0; }
-  .mh-chat-roll-h { display: flex; align-items: center; gap: 7px; padding: 7px 11px; font-size: 12px; color: var(--mh-ink3); border-bottom: 1px solid var(--mh-line); }
-  .mh-chat-dc { font-size: 10.5px; color: var(--mh-muted); flex-shrink: 0; }
-  .mh-chat-roll-b { display: flex; align-items: center; gap: 8px; padding: 9px 11px; }
-  .mh-chat-die { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 50px; height: 40px; border: 2px solid; border-radius: 9px; box-sizing: border-box; }
-  .mh-chat-die b { font: 700 16px/1 'Inter', system-ui, sans-serif; }
-  .mh-chat-die small { font-size: 7.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
-  .mh-chat-die.is-hope { border-color: #E3B04B; color: color-mix(in srgb, #C8961F var(--mh-accent-keep), #000); }
-  .mh-chat-die.is-fear { border-color: #A58BE8; color: var(--mh-purple-ink); }
-  .mh-chat-mod { font-size: 13px; font-weight: 700; color: var(--mh-muted); }
-  .mh-chat-tot { margin-left: auto; font: 700 26px/1 'Inter', system-ui, sans-serif; color: var(--mh-ink); }
-  .mh-chat-roll-f { font-size: 11.5px; font-weight: 700; padding: 6px 11px; color: color-mix(in srgb, var(--rc) var(--mh-accent-keep), #000); background: color-mix(in srgb, var(--rc) 12%, var(--mh-panel)); }
+  .mh-chat-roll { border: 1px solid var(--mh-line); border-radius: 14px; background: var(--mh-panel); overflow: hidden; flex-shrink: 0; }
+  .mh-chat-roll-h { display: flex; align-items: center; gap: 7px; padding: 8px 12px 4px; font-size: 12px; color: var(--mh-ink3); }
+  .mh-chat-roll-h time { margin-left: 2px; }
+  .mh-chat-tag { flex-shrink: 0; font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; padding: 2px 8px; border-radius: 10px; color: #fff; background: var(--rc); }
+  .mh-chat-roll-b { display: flex; align-items: flex-end; gap: 12px; padding: 8px 14px 12px; }
+  .mh-chat-d { --dc: #E3B04B; --di: color-mix(in srgb, #C8961F var(--mh-accent-keep), #000); display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; }
+  .mh-chat-d.is-fear { --dc: #A58BE8; --di: var(--mh-purple-ink); }
+  .mh-chat-d i { width: 38px; height: 38px; margin: 5px; display: flex; align-items: center; justify-content: center; border: 2.5px solid var(--dc); border-radius: 10px; background: color-mix(in srgb, var(--dc) 12%, var(--mh-panel)); transform: rotate(45deg); }
+  .mh-chat-d i b { transform: rotate(-45deg); font: 800 17px/1 'Inter', system-ui, sans-serif; color: var(--di); }
+  .mh-chat-d small { font-size: 10px; font-weight: 700; color: var(--mh-muted); }
+  .mh-chat-sqs { display: flex; flex-wrap: wrap; gap: 6px; }
+  .mh-chat-sq { min-width: 30px; height: 30px; padding: 0 4px; border-radius: 8px; border: 2px solid var(--rc); background: color-mix(in srgb, var(--rc) 12%, var(--mh-panel)); display: flex; align-items: center; justify-content: center; font: 800 13px 'Inter', system-ui, sans-serif; color: color-mix(in srgb, var(--rc) 70%, var(--mh-ink)); box-sizing: border-box; }
+  .mh-chat-sq.is-wolf { --rc: #5E7FA3; }
+  .mh-chat-mod { display: flex; flex-direction: column; gap: 2px; padding-bottom: 22px; font-size: 12.5px; font-weight: 700; color: var(--mh-muted); white-space: nowrap; }
+  .mh-chat-sqs + .mh-chat-mod { padding-bottom: 6px; }
+  .mh-chat-mod em { font-style: normal; font-size: 11px; font-weight: 600; }
+  .mh-chat-tot { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; }
+  .mh-chat-tot small { font-size: 9.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--mh-muted); }
+  .mh-chat-tot b { font: 800 28px/1 'Inter', system-ui, sans-serif; color: var(--mh-ink); }
+  .mh-chat-roll-f { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 12px; font-weight: 700; padding: 7px 12px; color: color-mix(in srgb, var(--rc) var(--mh-accent-keep), #000); background: color-mix(in srgb, var(--rc) 13%, var(--mh-panel)); }
+  .mh-chat-roll-f span + span { font-weight: 600; opacity: .85; }
   .mh-chat-share-wrap { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
   .mh-chat-share { display: flex; align-items: center; gap: 10px; border: 1px solid var(--mh-line); border-radius: 12px; padding: 9px 10px; background: var(--mh-panel); box-shadow: 0 2px 6px rgba(80,60,30,.08); }
   .mh-chat-share-art { width: 38px; height: 50px; border-radius: 7px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--sc); background: color-mix(in srgb, var(--sc) 14%, var(--mh-panel)) center / cover no-repeat; }
@@ -4193,7 +4202,10 @@ export default function App({ onSignOut }) {
     setRampageResult({ key: Date.now(), who, rolls, total });
     const detail = `${tier}d20 (${rolls.join("+")}) = ${total}`;
     pushRollLog(`**${who}** — ¡Aullido Frenético! ${detail} de daño físico a todo en alcance Muy cercano`);
-    postCampaignEvent(id, `🐺 ¡Aullido Frenético! ${detail} de daño físico a todas las criaturas en alcance Muy cercano. Sale de la Forma de Lobo.`);
+    postCampaignEvent(id, `🐺 ¡Aullido Frenético! ${detail} de daño físico a todas las criaturas en alcance Muy cercano. Sale de la Forma de Lobo.`, {
+      kind: "roll",
+      roll: { type: "howl", dice: rolls, dieLabel: tier + "d20", total },
+    });
   };
 
   const toggleCharSlot = (id, field, index, current) => {
@@ -4453,7 +4465,10 @@ export default function App({ onSignOut }) {
       `**${who}** — Daño de ${weaponName}: ${diceLabel}${bonus ? " + " + bonus : ""}${critLabel} = **${total}** ${damageType}`
     );
     if (charId) {
-      await postCampaignEvent(charId, `🗡️ Daño de ${weaponName}: ${diceLabel}${bonus ? " + " + bonus : ""}${critLabel} = ${total} ${damageType}`);
+      await postCampaignEvent(charId, `🗡️ Daño de ${weaponName}: ${diceLabel}${bonus ? " + " + bonus : ""}${critLabel} = ${total} ${damageType}`, {
+        kind: "roll",
+        roll: { type: "damage", weapon: weaponName, dice: rolls, dieLabel: dice + "d" + die, bonus, crit: critBonus, wolf: wolfBonus, total, dmgType: damageType },
+      });
     }
   };
 
@@ -4612,7 +4627,7 @@ export default function App({ onSignOut }) {
       const sides = parseInt(action.die.slice(1), 10);
       const roll = Math.floor(Math.random() * sides) + 1;
       pushRollLog(`**${who}** — ${featureName}: ${action.die} = **${roll}**`);
-      postCampaignEvent(id, `🎲 ${featureName}: ${action.die} = ${roll}`);
+      postCampaignEvent(id, `🎲 ${featureName}: ${action.die} = ${roll}`, { kind: "roll", roll: { type: "die", name: featureName, dice: [roll], dieLabel: action.die, total: roll } });
     }
   };
 
@@ -5114,43 +5129,130 @@ export default function App({ onSignOut }) {
 
       if (kind === "roll" && m.roll) {
         const r = m.roll;
+        const who = <b style={{ color: ink(col) }}>{m.author}</b>;
+        const square = (v, k, cls = "") => (
+          <span key={k} className={"mh-chat-sq" + cls}>
+            {v}
+          </span>
+        );
+        const card = (tone, tag, head, body, left, right) => (
+          <div key={key} className="mh-chat-roll" style={{ "--rc": tone }}>
+            <div className="mh-chat-roll-h">
+              <span className="mh-chat-grow">{head}</span>
+              <time>{time}</time>
+              <span className="mh-chat-tag">{tag}</span>
+            </div>
+            <div className="mh-chat-roll-b">{body}</div>
+            <div className="mh-chat-roll-f">
+              <span>{left}</span>
+              {right && <span>{right}</span>}
+            </div>
+          </div>
+        );
+        const total = (label, v) => (
+          <span className="mh-chat-tot">
+            <small>{label}</small>
+            <b>{v}</b>
+          </span>
+        );
+        if (r.type === "damage") {
+          const extra = [r.bonus ? "+" + r.bonus : "", r.crit ? "+" + r.crit + " crítico" : ""].filter(Boolean).join(" ");
+          return card(
+            "#D9644E",
+            "Daño",
+            <>
+              {who} hace daño con {r.weapon}
+            </>,
+            <>
+              <span className="mh-chat-sqs">
+                {(r.dice || []).map((v, k) => square(v, k))}
+                {r.wolf ? square(r.wolf, "w", " is-wolf") : null}
+              </span>
+              {extra && <span className="mh-chat-mod">{extra}</span>}
+              {total(r.dmgType === "mágico" ? "Mágico" : "Físico", r.total)}
+            </>,
+            r.dieLabel + (r.bonus ? " + " + r.bonus : "") + (r.wolf ? " + lobo 1d10" : ""),
+            r.crit ? "¡Crítico!" : "Competencia " + (r.dice || []).length
+          );
+        }
+        if (r.type === "howl") {
+          return card(
+            "#5E7FA3",
+            "Lobo",
+            <>
+              {who} · Aullido Frenético
+            </>,
+            <>
+              <span className="mh-chat-sqs">{(r.dice || []).map((v, k) => square(v, k))}</span>
+              {total("Daño físico", r.total)}
+            </>,
+            "Todos en alcance Muy cercano",
+            "Sale de la forma"
+          );
+        }
+        if (r.type === "die") {
+          return card(
+            "#C9A24A",
+            "Habilidad",
+            <>
+              {who} · {r.name}
+            </>,
+            <>
+              <span className="mh-chat-sqs">{(r.dice || []).map((v, k) => square(v, k))}</span>
+              {total(r.dieLabel, r.total)}
+            </>,
+            r.dieLabel,
+            ""
+          );
+        }
+        // Tirada de dualidad (rasgo, ataque o habilidad con dificultad).
         const crit = r.hope === r.fear;
         const withHope = r.hope > r.fear;
         const success = r.dc ? crit || r.total >= r.dc : null;
         const base = crit ? "Éxito crítico" : (success === null ? "Con " : success ? "Éxito con " : "Fallo con ") + (withHope ? "Esperanza" : "Miedo");
-        const note = crit ? "+1 Esperanza y −1 Estrés" : withHope ? "+1 Esperanza" : "el DJ gana 1 Miedo";
-        const vcol = crit ? "#7FB77A" : withHope ? "#E3B04B" : "#A58BE8";
-        const extra = (r.adv ? ` + ${r.adv} ventaja` : "") + (r.wolf ? ` + ${r.wolf} lobo` : "");
-        return (
-          <div key={key} className="mh-chat-roll" style={{ "--rc": vcol }}>
-            <div className="mh-chat-roll-h">
-              <Dices size={13} />
-              <span className="mh-chat-grow">
-                <b style={{ color: ink(col) }}>{m.author}</b> tira {r.trait}
-                {r.card ? " · " + r.card : r.weapon ? " · " + r.weapon : ""}
-              </span>
-              {r.dc ? <span className="mh-chat-dc">Dificultad {r.dc}</span> : null}
-              <time>{time}</time>
-            </div>
-            <div className="mh-chat-roll-b">
-              <span className="mh-chat-die is-hope">
+        const note = crit ? "+1 Esperanza y −1 Estrés" : withHope ? "+1 Esperanza" : "El DJ gana 1 Miedo";
+        const vcol = crit ? "#6FBF73" : withHope ? "#E3B04B" : "#A58BE8";
+        const tag = r.weapon ? "Ataque" : r.card ? "Habilidad" : "Rasgo";
+        const head = r.weapon ? (
+          <>
+            {who} ataca con {r.weapon}
+          </>
+        ) : r.card ? (
+          <>
+            {who} · {r.card}
+          </>
+        ) : (
+          <>
+            {who} tira {r.trait}
+          </>
+        );
+        const mod = (r.mod >= 0 ? "+" : "−") + Math.abs(r.mod || 0) + " " + (r.trait || "");
+        return card(
+          vcol,
+          tag,
+          head,
+          <>
+            <span className="mh-chat-d is-hope">
+              <i>
                 <b>{r.hope}</b>
-                <small>Esperanza</small>
-              </span>
-              <span className="mh-chat-die is-fear">
+              </i>
+              <small>Esperanza</small>
+            </span>
+            <span className="mh-chat-d is-fear">
+              <i>
                 <b>{r.fear}</b>
-                <small>Miedo</small>
-              </span>
-              <span className="mh-chat-mod">
-                {(r.mod >= 0 ? "+" : "−") + Math.abs(r.mod || 0)}
-                {extra}
-              </span>
-              <span className="mh-chat-tot">{r.total}</span>
-            </div>
-            <div className="mh-chat-roll-f">
-              {base} · {note}
-            </div>
-          </div>
+              </i>
+              <small>Miedo</small>
+            </span>
+            <span className="mh-chat-mod">
+              {mod}
+              {r.adv ? <em>+{r.adv} ventaja</em> : null}
+              {r.wolf ? <em>+{r.wolf} lobo</em> : null}
+            </span>
+            {total(r.dc ? "vs " + r.dc : "Total", r.total)}
+          </>,
+          base,
+          note
         );
       }
 
