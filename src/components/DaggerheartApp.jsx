@@ -2284,7 +2284,10 @@ const sharedStyles = `
   .mh-pre-dice .mh-die-wrap { min-width: 0; }
   .mh-pre-dice .mh-die-label { font-size: 8.5px; letter-spacing: .04em; }
   .mh-pre-lines { display: flex; flex-direction: column; gap: 5px; font-size: 12px; color: var(--mh-ink3); }
-  .mh-pre-lines > div { display: flex; justify-content: space-between; gap: 10px; }
+  .mh-pre-lines > div { display: flex; justify-content: space-between; gap: 10px; height: 18px; align-items: center; }
+  .mh-pre-lines > .is-pad { visibility: hidden; }
+  .mh-pre-lines > .is-cost { height: auto; }
+  .mh-pre-dice { min-height: 64px; }
   .mh-pre-lines span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .mh-pre-lines b { color: var(--mh-ink); white-space: nowrap; display: inline-flex; align-items: center; gap: 3px; }
   .mh-pre-lines .is-cost { border-top: 1px dashed var(--mh-line2); padding-top: 6px; margin-top: 1px; }
@@ -10992,6 +10995,10 @@ export default function App({ onSignOut }) {
                 edgeNet ? [edgeNet > 0 ? "Ventaja" + (preRoll.privilege ? " (Privilegio)" : "") : "Desventaja", edgeNet > 0 ? "+1d6" : "−1d6"] : (preRoll.advantage || preRoll.privilege) && preRoll.disadvantage ? ["Ventaja y desventaja", "se anulan"] : null,
               ].filter(Boolean);
               const DS = 40;
+              // Altura fija: se reserva hueco para todas las líneas que este personaje puede llegar a tener.
+              const maxLines = 1 + exps.length + (ch.f_rally_die ? 1 : 0) + (poetOk ? 1 : 0) + (wolf ? 1 : 0) + 1;
+              const canSpendHope = exps.length > 0 || poetOk;
+              const anyAdded = preRoll.exps.length > 0 || preRoll.rally || preRoll.poet || preRoll.privilege || edgePos !== "none";
               return (
                 <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 45, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)" }} onClick={() => setPreRoll(null)}>
                   <div className="mh-card mh-card-anim mh-pre" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={"Tirada de " + preRoll.traitLabel}>
@@ -11059,8 +11066,13 @@ export default function App({ onSignOut }) {
                               <b>{v}</b>
                             </div>
                           ))}
-                          {hopeUsed > 0 && (
-                            <div className="is-cost">
+                          {Array.from({ length: Math.max(0, maxLines - lines.length) }, (_, k) => (
+                            <div key={"pad" + k} className="is-pad" aria-hidden="true">
+                              <span>·</span>
+                            </div>
+                          ))}
+                          {canSpendHope && (
+                            <div className="is-cost" style={hopeUsed > 0 ? undefined : { visibility: "hidden" }} aria-hidden={hopeUsed > 0 ? undefined : "true"}>
                               <span>Esperanza que gastas</span>
                               <b>
                                 {hopeUsed} <Sparkles size={11} />
@@ -11074,11 +11086,15 @@ export default function App({ onSignOut }) {
                         <button type="button" className="mh-btn mh-pre-go" autoFocus onClick={confirmPreRoll}>
                           <Dices size={15} /> Tirar
                         </button>
-                        {(preRoll.exps.length > 0 || preRoll.rally || preRoll.poet || preRoll.privilege || edgePos !== "none") && (
-                          <button type="button" className="mh-pre-plain" onClick={() => setPreRoll((p) => ({ ...p, exps: [], rally: false, poet: false, privilege: false, advantage: false, disadvantage: false }))}>
-                            Quitar lo añadido
-                          </button>
-                        )}
+                        <button
+                          type="button"
+                          className="mh-pre-plain"
+                          style={anyAdded ? undefined : { visibility: "hidden" }}
+                          tabIndex={anyAdded ? undefined : -1}
+                          onClick={() => setPreRoll((p) => ({ ...p, exps: [], rally: false, poet: false, privilege: false, advantage: false, disadvantage: false }))}
+                        >
+                          Quitar lo añadido
+                        </button>
                       </div>
                     </div>
                   </div>
