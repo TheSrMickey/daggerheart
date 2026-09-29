@@ -341,9 +341,9 @@ const CLASS_ART = {
 
 // Canciones del Trovador: cada una se toca una vez por descanso largo (dos con Virtuoso, en Maestría).
 const TROVADOR_SONGS = [
-  { key: "relajante", name: "Canción Relajante", icon: "♪", text: "Tú y tus aliados en alcance Cercano recuperáis 1 Punto de vida." },
-  { key: "epica", name: "Canción Épica", icon: "⚔", text: "Un objetivo en alcance Cercano queda Vulnerable temporalmente." },
-  { key: "desgarradora", name: "Canción Desgarradora", icon: "♥", text: "Tú y tus aliados en alcance Cercano ganáis 1 de Esperanza." },
+  { key: "relajante", name: "Canción Relajante", icon: "♪", short: "+1 PV a ti y aliados", text: "Tú y tus aliados en alcance Cercano recuperáis 1 Punto de vida." },
+  { key: "epica", name: "Canción Épica", icon: "⚔", short: "Un objetivo Vulnerable", text: "Un objetivo en alcance Cercano queda Vulnerable temporalmente." },
+  { key: "desgarradora", name: "Canción Desgarradora", icon: "♥", short: "+1 Esperanza a todos", text: "Tú y tus aliados en alcance Cercano ganáis 1 de Esperanza." },
 ];
 
 const TRAIT_HINTS = {
@@ -2246,7 +2246,6 @@ const sharedStyles = `
     .mh-cardc-dock { position: relative; left: auto; top: auto; translate: none; flex-direction: row; margin-top: -18px; padding: 26px 10px 10px; border: 2px solid var(--cc); border-top: 0; border-radius: 0 0 18px 18px; }
     .mh-cardc-tip { left: 50%; top: auto; bottom: calc(100% + 30px); translate: -50% 0; }
   }
-  .mh-rest-row { flex: 1 0 auto; }
   .mh-pre { margin: 0; width: min(380px, 100%); max-height: 90%; overflow-y: auto; padding: 16px; border-radius: 16px; display: flex; flex-direction: column; }
   .mh-pre-h { display: flex; align-items: center; gap: 10px; }
   .mh-pre-h b { display: block; font-size: 16px; color: var(--mh-ink); }
@@ -2308,9 +2307,22 @@ const sharedStyles = `
   .mh-trov-lute { font-size: 16px; }
   .mh-trov-tag { margin-left: auto; font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; padding: 2px 8px; border-radius: 10px; color: #fff; background: var(--tb); }
   .mh-trov-songs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
-  .mh-trov-s { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 4px; border-radius: 10px; border: 1px solid color-mix(in srgb, var(--tb) 40%, var(--mh-line)); background: var(--mh-panel); color: var(--mh-ink); font: inherit; cursor: pointer; transition: transform .12s, box-shadow .12s; }
+  .mh-rest-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: minmax(0, 1fr); gap: 8px; }
+  .mh-rest-grid .mh-rest-row { position: relative; max-height: none; min-height: 52px; gap: 9px; padding: 8px 30px 8px 10px; }
+  .mh-rest-grid .mh-rest-ico { width: 30px; height: 30px; }
+  .mh-rest-grid .mh-rest-tick { position: absolute; top: 8px; right: 8px; width: 18px; height: 18px; }
+  .mh-rest-grid .mh-rest-x2 { position: absolute; bottom: 7px; right: 10px; }
+  .mh-rest-grid .mh-rest-rec { display: inline-block; margin-top: 3px; font-size: 8.5px; padding: 0 6px; }
+  .mh-rest-foot { flex-shrink: 0; display: flex; align-items: center; gap: 10px; }
+  .mh-rest-foot .mh-rest-dl { width: auto; flex-shrink: 0; padding: 7px 11px; font-size: 12px; gap: 6px; }
+  .mh-trov-s { display: flex; flex-direction: column; align-items: stretch; gap: 3px; padding: 8px 9px; text-align: left; border-radius: 10px; border: 1px solid color-mix(in srgb, var(--tb) 40%, var(--mh-line)); background: var(--mh-panel); color: var(--mh-ink); font: inherit; cursor: pointer; transition: transform .12s, box-shadow .12s; }
   .mh-trov-s:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 12px color-mix(in srgb, var(--tb) 25%, transparent); }
-  .mh-trov-s b { font-size: 11.5px; line-height: 1.2; text-align: center; }
+  .mh-trov-top { display: flex; align-items: center; gap: 6px; }
+  .mh-trov-s b { font-size: 12px; line-height: 1.2; }
+  .mh-trov-n { margin-left: auto; font-size: 10px; font-weight: 700; color: var(--mh-muted); }
+  .mh-trov-s small { font-size: 10.5px; line-height: 1.3; color: var(--mh-muted); }
+  .mh-trov-go { align-self: flex-start; margin-top: 3px; display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 20px; background: var(--tb); color: #fff; font: 700 10.5px 'Inter', system-ui, sans-serif; }
+  .mh-trov-go.is-done { background: var(--mh-panel2); color: var(--mh-muted); }
   .mh-trov-s.is-used { opacity: .5; cursor: default; }
   .mh-trov-i { font-size: 16px; color: color-mix(in srgb, var(--tb) 80%, var(--mh-ink)); }
   .mh-trov-dots { display: flex; gap: 4px; margin-top: 2px; }
@@ -9057,7 +9069,7 @@ export default function App({ onSignOut }) {
                       })()}
 
                       {activeTab === "rests" && (
-                        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(12, 1fr)", gap: 18, flex: 1 }}>
+                        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(12, 1fr)", gap: 18, flex: 1, height: isMobile ? undefined : armaduraHeight || undefined }}>
                           <Panel
                             span={7}
                             title="Descansos"
@@ -9125,7 +9137,7 @@ export default function App({ onSignOut }) {
                                     ))}
                                   </div>
 
-                                  <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, minHeight: 0 }}>
+                                  <div className="mh-rest-grid">
                                     {acts.map((ac) => {
                                       const n = countOf(ac.key);
                                       return (
@@ -9144,11 +9156,9 @@ export default function App({ onSignOut }) {
                                             <ac.Icon size={17} />
                                           </span>
                                           <div style={{ flex: 1, minWidth: 0 }}>
-                                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                              <span style={{ fontSize: 13, fontWeight: 700, color: "var(--mh-ink)" }}>{ac.label}</span>
-                                              {recommended.includes(ac.key) && ac.need > 0 && <span className="mh-rest-rec">Recomendado</span>}
-                                            </div>
-                                            <div style={{ fontSize: 10.5, color: "var(--mh-muted)", marginTop: 2 }}>{ac.text}</div>
+                                            <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--mh-ink)", lineHeight: 1.25 }}>{ac.label}</div>
+                                            <div style={{ fontSize: 10.5, color: "var(--mh-muted)", marginTop: 1 }}>{ac.text}</div>
+                                            {recommended.includes(ac.key) && ac.need > 0 && <span className="mh-rest-rec">Recomendado</span>}
                                           </div>
                                           {n > 1 && <span className="mh-rest-x2">×{n}</span>}
                                           <span className={"mh-rest-tick" + (n > 0 ? "" : " off")}>{n > 0 && <Check size={12} strokeWidth={3} />}</span>
@@ -9173,18 +9183,18 @@ export default function App({ onSignOut }) {
                                             const left = uses - n;
                                             return (
                                               <button key={sg.key} type="button" className={"mh-trov-s" + (left ? "" : " is-used")} disabled={!left} title={left ? "Tocar: " + sg.text : "Ya la has tocado: se recupera en el descanso largo"} onClick={() => playSong(viewingCharId, sg)}>
-                                                <span className="mh-trov-i">{sg.icon}</span>
-                                                <b>{sg.name}</b>
-                                                <span className="mh-trov-dots">
-                                                  {Array.from({ length: uses }, (_, k) => (
-                                                    <i key={k} className={k < left ? "is-f" : ""} />
-                                                  ))}
+                                                <span className="mh-trov-top">
+                                                  <span className="mh-trov-i">{sg.icon}</span>
+                                                  <b>{sg.name.replace("Canción ", "")}</b>
+                                                  {uses > 1 && <span className="mh-trov-n">{left}/{uses}</span>}
                                                 </span>
+                                                <small>{sg.short}</small>
+                                                <span className={"mh-trov-go" + (left ? "" : " is-done")}>{left ? <><Play size={10} /> Tocar</> : <><Check size={11} /> Tocada</>}</span>
                                               </button>
                                             );
                                           })}
                                         </div>
-                                        <div className="mh-trov-f">Pulsa una canción para tocarla. {isLong ? "Este descanso largo las recupera todas." : "Se recuperan en el descanso largo."}</div>
+                                        <div className="mh-trov-f">{isLong ? "Este descanso largo recupera todas las canciones." : "Las tocadas se recuperan en el descanso largo."}</div>
                                       </div>
                                     );
                                   })()}
@@ -9229,7 +9239,8 @@ export default function App({ onSignOut }) {
                                   >
                                     <Flame size={15} /> Descansar
                                   </button>
-                                  <div style={{ fontSize: 11, color: restMessage ? "var(--mh-green-ink)" : blocked ? "#D9644E" : "var(--mh-purple-ink)", fontWeight: restMessage || blocked ? 600 : 400, display: "flex", alignItems: "center", gap: 5, minHeight: 16 }}>
+                                  <div className="mh-rest-foot">
+                                  <div style={{ flex: 1, minWidth: 0, fontSize: 11, color: restMessage ? "var(--mh-green-ink)" : blocked ? "#D9644E" : "var(--mh-purple-ink)", fontWeight: restMessage || blocked ? 600 : 400, display: "flex", alignItems: "center", gap: 5, minHeight: 16 }}>
                                     {restMessage ? (
                                       restMessage
                                     ) : blocked ? (
@@ -9237,14 +9248,15 @@ export default function App({ onSignOut }) {
                                     ) : (
                                       <>
                                         <Skull size={13} />
-                                        {isLong ? "El DJ gana 1d4 + nº de PJ de Miedo" : `El DJ gana 1d4 de Miedo · ${shortRests} de 3 descansos cortos`}
+                                        {isLong ? "El DJ gana 1d4 + nº de PJ de Miedo" : `El DJ gana 1d4 de Miedo · ${shortRests}/3 cortos`}
                                       </>
                                     )}
                                   </div>
                                   <button type="button" className="mh-rest-dl" disabled={!hasDomainCards(c.f_class)} onClick={() => openChangeDomainModal(viewingCharId)}>
-                                    <BookOpen size={15} /> Cambiar cartas de dominio
-                                    <ChevronRight size={14} style={{ marginLeft: "auto", opacity: 0.6 }} />
+                                    <BookOpen size={14} /> Cartas de dominio
+                                    <ChevronRight size={13} style={{ opacity: 0.6 }} />
                                   </button>
+                                  </div>
                                 </div>
                               );
                             })()}
