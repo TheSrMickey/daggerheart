@@ -10021,8 +10021,10 @@ export default function App({ onSignOut }) {
                                 );
                               };
                               const short = (t) => (t.length > 22 ? t.slice(0, 21).trimEnd() + "…" : t);
-                              return (
-                                <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 40, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.62)" }} onClick={() => setShowRelNet(false)}>
+                              // Como las cartas: cubre toda la ficha (también la cabecera con los rasgos).
+                              const host = typeof document !== "undefined" ? document.querySelector(".mh-sheet") : null;
+                              const overlay = (
+                                <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 40, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.70)" }} onClick={() => setShowRelNet(false)}>
                                   <div className="mh-card mh-card-anim mh-relnet" onClick={(e) => e.stopPropagation()}>
                                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
                                       <div>
@@ -10091,6 +10093,7 @@ export default function App({ onSignOut }) {
                                   </div>
                                 </div>
                               );
+                              return host ? createPortal(overlay, host) : overlay;
                             })()}
                           </div>
                         );
