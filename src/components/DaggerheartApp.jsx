@@ -2234,6 +2234,7 @@ const sharedStyles = `
   .mh-cardc-dk { position: relative; width: 42px; height: 42px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--cc) 35%, var(--mh-line)); background: var(--mh-panel); color: color-mix(in srgb, var(--cc) 75%, var(--mh-ink)); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform .12s, background .12s; }
   .mh-cardc-dk:hover { transform: translateX(2px); }
   .mh-cardc-dk.is-pri { background: var(--cc); border-color: var(--cc); color: #fff; }
+  .mh-cardc-dk:disabled { opacity: .5; cursor: not-allowed; transform: none; }
   .mh-cardc-dk:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
   .mh-cardc-tip { position: absolute; left: calc(100% + 12px); top: 50%; translate: 0 -50%; white-space: nowrap; padding: 6px 10px; border-radius: 8px; background: rgba(20,16,26,.9); color: #fff; font: 600 12px 'Inter', system-ui, sans-serif; pointer-events: none; opacity: 0; transform: translateX(-4px); transition: opacity .12s, transform .12s; display: flex; gap: 8px; align-items: baseline; }
   .mh-cardc-tip small { font-weight: 500; opacity: .7; font-size: 11px; }
@@ -8780,13 +8781,8 @@ export default function App({ onSignOut }) {
                             summary: hopeFeature.text,
                             cost: { label: hopeFeature.cost + " Esperanza", kind: "hope" },
                             warning: missing > 0 ? `Te faltan ${missing} de Esperanza` : null,
-                            hint: missing > 0 ? undefined : "Pulsa para usarla",
                             dim: missing > 0,
-                            onClick: () => {
-                              if (missing > 0) return;
-                              if (isDruida) openEvolutionModal(viewingCharId);
-                              else spendHopeFeature(viewingCharId, hopeFeature.cost);
-                            },
+                            onClick: openDetail({ kicker: "Característica de Esperanza", title: hopeFeature.name, text: hopeFeature.text, bigStyle: true, accent: "#E3B04B", stat: { label: "Coste en Esperanza", value: hopeFeature.cost }, hopeAction: { cost: hopeFeature.cost } }),
                           });
                         }
 
@@ -11570,6 +11566,8 @@ export default function App({ onSignOut }) {
                     ? weaponIcon(d.title)
                     : d.transformForm
                     ? Moon
+                    : d.hopeAction
+                    ? Sparkles
                     : d.stat
                     ? NotebookPen
                     : d.domain ? DOMAIN_ICONS[d.domain.name] || Sparkles : Sparkles;
@@ -11609,6 +11607,22 @@ export default function App({ onSignOut }) {
                       run: () => {
                         rollTraitCheck(viewingCharId, action.traitLabel, Number(c[action.traitKey] || 0), null, { name: d.title, dc: action.dc });
                         setViewingCardDetail(null);
+                      },
+                    });
+                  }
+                  // Característica de Esperanza: se usa desde la barra de la carta.
+                  if (d.hopeAction && !d.fromChat) {
+                    const missingHope = Math.max(0, d.hopeAction.cost - Number(c.hope_marked ?? HOPE_DEFAULT));
+                    cardActs.unshift({
+                      key: "hope",
+                      Icon: Sparkles,
+                      label: missingHope ? "Te faltan " + missingHope + " de Esperanza" : "Usar " + d.title,
+                      sub: d.hopeAction.cost + " Esperanza",
+                      disabled: missingHope > 0,
+                      run: () => {
+                        closeCardDetail();
+                        if (c.f_class === "Druida") openEvolutionModal(viewingCharId);
+                        else spendHopeFeature(viewingCharId, d.hopeAction.cost);
                       },
                     });
                   }
@@ -11749,7 +11763,7 @@ export default function App({ onSignOut }) {
                   {cardActs.length > 0 && (
                     <div className="mh-cardc-dock" style={{ "--cc": cardColor }} role="toolbar" aria-label="Acciones de la carta">
                       {cardActs.map((ac, k) => (
-                        <button key={ac.key} type="button" className={"mh-cardc-dk" + (k === 0 ? " is-pri" : "")} aria-label={ac.label + (ac.sub ? " (" + ac.sub + ")" : "")} onClick={ac.run}>
+                        <button key={ac.key} type="button" className={"mh-cardc-dk" + (k === 0 ? " is-pri" : "")} disabled={ac.disabled} aria-label={ac.label + (ac.sub ? " (" + ac.sub + ")" : "")} onClick={ac.run}>
                           <ac.Icon size={18} />
                           <span className="mh-cardc-tip">
                             {ac.label}
