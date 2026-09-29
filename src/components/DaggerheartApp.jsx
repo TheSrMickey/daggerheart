@@ -70,7 +70,16 @@ const SUBCLASSES = {
         { name: "Virtuoso (Maestría)", text: "Puedes interpretar cada canción anterior dos veces en vez de una por descanso largo." },
       ],
     },
-    { key: "Orador", blurb: "Teje palabras e ingenio como si fueran hechizos." },
+    {
+      key: "Orador",
+      blurb: "Teje palabras e ingenio como si fueran hechizos: sus discursos animan a los aliados y sus versos hacen mella en quien los escucha.",
+      features: [
+        { name: "Discurso Conmovedor", text: "Una vez por descanso largo, puedes dar un discurso sincero e inspirador. Todos los aliados en alcance Lejano se quitan 2 de Estrés." },
+        { name: "Corazón de Poeta", text: "Tras hacer una tirada de acción para impresionar, persuadir u ofender a alguien, puedes gastar 1 de Esperanza para sumar un d4 a la tirada." },
+        { name: "Elocuente (Especialización)", text: "Una vez por sesión, cuando animas a un aliado, puedes: encontrar un objeto o herramienta corriente que necesite, Ayudar a un Aliado sin gastar Esperanza, o darle un movimiento de descanso adicional en su próximo descanso." },
+        { name: "Poesía Épica (Maestría)", text: "Tu Dado de Arenga pasa a ser un d10. Además, cuando Ayudas a un Aliado, puedes narrar el momento como si escribieras la crónica de su heroísmo; si lo haces, tira un d10 como dado de ventaja." },
+      ],
+    },
   ],
   Druida: [
     {
@@ -8851,7 +8860,7 @@ export default function App({ onSignOut }) {
                               kicker: `Subclase · ${subclassBadge}`,
                               title: subclassEntry.key,
                               text: subclassEntry.blurb,
-                              features: subclassEntry.key === "Trovador" ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
+                              features: subclassEntry.key === "Trovador" || subclassEntry.key === "Orador" ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
                               image: subclassEntry.image,
                               bigStyle: true,
                             }),
