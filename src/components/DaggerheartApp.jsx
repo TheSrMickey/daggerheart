@@ -2291,6 +2291,9 @@ const sharedStyles = `
   .mh-pre-go { margin-top: 10px; justify-content: center; display: inline-flex; align-items: center; gap: 6px; padding: 10px 14px; font-size: 14px; }
   .mh-pre-plain { margin-top: 6px; border: 0; background: transparent; color: var(--mh-muted); font: 500 12px 'Inter', system-ui, sans-serif; cursor: pointer; }
   .mh-qa-scroll { padding-bottom: 18px; mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent); -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent); }
+  .mh-pre-opt.is-poet.is-on { border-color: #C77DBA; background: color-mix(in srgb, #C77DBA 12%, var(--mh-panel)); }
+  .mh-pre-opt.is-poet.is-on .mh-pre-bx { background: #C77DBA; border-color: #C77DBA; }
+  .mh-pre-cost.is-poet { color: color-mix(in srgb, #C77DBA var(--mh-accent-keep, 100%), #000); }
   .mh-qa-sub { margin-top: 6px; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--mh-muted); }
   .mh-wz-purpose { display: flex; flex-direction: column; gap: 6px; padding: 11px 12px; border-radius: 11px; border: 1px solid color-mix(in srgb, #9A7B4F 45%, var(--mh-line)); background: color-mix(in srgb, #9A7B4F 8%, var(--mh-panel)); }
   .mh-wz-purpose label { font-size: 12px; font-weight: 600; color: var(--mh-ink2); margin-top: 2px; }
@@ -2896,6 +2899,7 @@ function DualityResult({ roll, size = 84 }) {
   const wolf = has ? roll.wolfBonus || 0 : 0;
   const expB = has ? roll.expBonus || 0 : 0;
   const rally = has ? roll.rallyRoll || 0 : 0;
+  const poet = has ? roll.poetRoll || 0 : 0;
   const landed = has && !rolling;
   return (
     <div style={{ position: "relative", textAlign: "center" }}>
@@ -2922,6 +2926,12 @@ function DualityResult({ roll, size = 84 }) {
             <DieFace sides={parseInt(String(roll.rallyDie || "d6").slice(1), 10) || 6} value={rally} color="#E07FB0" size={Math.round(size * 0.66)} rolling={rolling} label="Arenga" delay={300} />
           </>
         )}
+        {poet > 0 && (
+          <>
+            <span style={{ fontSize: 20, color: "var(--mh-muted)", marginTop: size / 2 - 14 }}>+</span>
+            <DieFace sides={4} value={poet} color="#C77DBA" size={Math.round(size * 0.6)} rolling={rolling} label="Poeta" delay={340} />
+          </>
+        )}
       </div>
       <div className="mh-serif" style={{ fontSize: 46, fontWeight: 700, lineHeight: 1.1, marginTop: 10, minHeight: 52, color: "var(--mh-ink)", position: "relative" }}>
         {!has ? "–" : rolling ? <span className="mh-dots">···</span> : <CountUp value={roll.total} />}
@@ -2935,6 +2945,7 @@ function DualityResult({ roll, size = 84 }) {
             {wolf ? " + " + wolf + " (Lobo)" : ""}
             {expB ? " + " + expB + " (Experiencia)" : ""}
             {rally ? " + " + rally + " (Arenga)" : ""}
+            {poet ? " + " + poet + " (Poeta)" : ""}
             {roll.difficulty != null ? ` · Dificultad ${roll.difficulty}` : ""}
           </div>
           <div style={{ fontSize: 14.5, fontWeight: 600, color: ink(roll.color), marginTop: 4 }}>{roll.text}</div>
@@ -5546,6 +5557,7 @@ export default function App({ onSignOut }) {
               {r.wolf ? <em>+{r.wolf} lobo</em> : null}
               {r.exp ? <em title={(r.expNames || []).join(", ")}>+{r.exp} experiencia</em> : null}
               {r.rally ? <em>+{r.rally} arenga ({r.rallyDie})</em> : null}
+              {r.poet ? <em title="Corazón de Poeta">+{r.poet} poeta</em> : null}
             </span>
             {total(r.dc ? "vs " + r.dc : "Total", r.total)}
           </>,
@@ -5588,6 +5600,34 @@ export default function App({ onSignOut }) {
             {canTake && (
               <button type="button" className="mh-chat-open" onClick={() => updateCharacterField(meCharId, "f_rally_die", m.die)}>
                 <Plus size={12} /> Recoger dado
+              </button>
+            )}
+          </>
+        );
+      }
+
+      if (kind === "speech") {
+        const me = meCharId ? characters[meCharId] : null;
+        const inCamp = me && m.campId && (campaigns[m.campId]?.characterIds || []).includes(meCharId);
+        const mine = m.charId === meCharId;
+        const got = me && me.f_speech_got === m.sid;
+        const canTake = inCamp && !mine && !got;
+        return chatCard(
+          "#C77DBA",
+          <>
+            {whoB} da un Discurso Conmovedor
+          </>,
+          "Orador",
+          <div className="mh-chat-c-t">Todos los aliados en alcance Lejano se quitan 2 de Estrés.</div>,
+          <>
+            <span>{got ? "Te has quitado 2 de Estrés" : mine ? "Tus aliados lo reciben desde aquí" : "Aliados en alcance Lejano"}</span>
+            {canTake && (
+              <button
+                type="button"
+                className="mh-chat-open"
+                onClick={() => updateCharacterFields(meCharId, { stress_marked: String(Math.max(0, Number(me.stress_marked || 0) - 2)), f_speech_got: m.sid })}
+              >
+                <Check size={12} /> Quitarme 2 de Estrés
               </button>
             )}
           </>
@@ -6140,6 +6180,14 @@ export default function App({ onSignOut }) {
     postCampaignEvent(id, `🎵 Toca la ${song.name}: ${song.text}`);
   };
 
+  const giveSpeech = (id) => {
+    const c = characters[id];
+    if (!c || c.f_speech_used) return;
+    updateCharacterField(id, "f_speech_used", "1");
+    const camp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(id));
+    if (camp) postChat(camp.id, { kind: "speech", sid: String(Date.now()), campId: camp.id, author: c.f_name || "El Orador", charId: id, cls: c.f_class });
+  };
+
   const performRest = (id, restType, key1, key2, key3, efficientKey) => {
     let efficientLeft = restType === "short" && efficientKey ? 1 : 0;
     const c = characters[id];
@@ -6201,6 +6249,7 @@ export default function App({ onSignOut }) {
       f_short_rests: isLong ? "0" : String(Number(c.f_short_rests || 0) + 1),
     };
     // Trovador: el descanso largo recupera sus canciones.
+    if (isLong && c.f_speech_used) restPatch.f_speech_used = "";
     if (isLong && c.f_subclass === "Trovador" && c.f_songs_used && c.f_songs_used !== "{}") {
       restPatch.f_songs_used = "{}";
       messages.push("Recuperas tus canciones");
@@ -6508,7 +6557,7 @@ export default function App({ onSignOut }) {
   // Antes de tirar: ventana para añadir Experiencias, el dado de Arenga o Ventaja.
   const [preRoll, setPreRoll] = useState(null);
   const rollTraitCheck = (charId, traitLabel, traitValue, weapon, cardContext, advantage) => {
-    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage, exps: [], rally: false, privilege: false, disadvantage: false });
+    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage, exps: [], rally: false, privilege: false, disadvantage: false, poet: false });
   };
   const confirmPreRoll = () => {
     const pr = preRoll;
@@ -6516,7 +6565,8 @@ export default function App({ onSignOut }) {
     const ch = charsRef.current[pr.charId];
     const exps = ch ? getExperiences(ch).filter((_, i) => pr.exps.includes(i)) : [];
     const patch = {};
-    if (exps.length && ch) patch.hope_marked = String(Math.max(0, Number(ch.hope_marked ?? HOPE_DEFAULT) - exps.length));
+    const hopeCost = exps.length + (pr.poet ? 1 : 0);
+    if (hopeCost && ch) patch.hope_marked = String(Math.max(0, Number(ch.hope_marked ?? HOPE_DEFAULT) - hopeCost));
     const rallyDie = pr.rally && ch?.f_rally_die ? ch.f_rally_die : "";
     if (rallyDie) patch.f_rally_die = "";
     if (Object.keys(patch).length) updateCharacterFields(pr.charId, patch);
@@ -6525,6 +6575,7 @@ export default function App({ onSignOut }) {
       exps: exps.map((e) => ({ text: e.text, bonus: Number(e.bonus) || 0 })),
       rallyDie,
       disadvantage: pr.disadvantage,
+      poet: pr.poet,
     });
   };
 
@@ -6540,7 +6591,9 @@ export default function App({ onSignOut }) {
     const expBonus = (extras.exps || []).reduce((a, e) => a + e.bonus, 0);
     const rallySides = extras.rallyDie ? parseInt(extras.rallyDie.slice(1), 10) : 0;
     const rallyRoll = rallySides ? Math.floor(Math.random() * rallySides) + 1 : 0;
-    const total = hope + fear + traitValue + advantageRoll + wolfBonus + expBonus + rallyRoll;
+    // Orador · Corazón de Poeta: 1d4 más.
+    const poetRoll = extras.poet ? Math.floor(Math.random() * 4) + 1 : 0;
+    const total = hope + fear + traitValue + advantageRoll + wolfBonus + expBonus + rallyRoll + poetRoll;
     let text, color;
     if (hope === fear) {
       text = "Crítico";
@@ -6555,7 +6608,7 @@ export default function App({ onSignOut }) {
     clearTimeout(traitRollTimer.current);
     const note =
       hope === fear ? "Ganas 1 Esperanza y te quitas 1 Estrés" : hope > fear ? "Ganas 1 Esperanza" : "El DJ gana 1 de Miedo";
-    setTraitRollResult({ key: Date.now(), traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", total, text: hope === fear ? "Éxito crítico" : text, color, note, weapon: weapon || null, charId });
+    setTraitRollResult({ key: Date.now(), traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, total, text: hope === fear ? "Éxito crítico" : text, color, note, weapon: weapon || null, charId });
 
     // Con Esperanza (o crítico) ganas 1 Esperanza; con crítico además te quitas 1 Estrés.
     if (hope >= fear) {
@@ -6579,8 +6632,9 @@ export default function App({ onSignOut }) {
       (advantageRoll > 0 ? ` + Ventaja ${advantageRoll}` : advantageRoll < 0 ? ` − Desventaja ${-advantageRoll}` : "") +
       (wolfBonus ? ` + Lobo ${wolfBonus}` : "") +
       (expBonus ? ` + Experiencia ${expBonus}` : "") +
-      (rallyRoll ? ` + Arenga ${rallyRoll}` : "");
-    const rollExtra = { exp: expBonus, expNames: (extras.exps || []).map((e) => e.text), rally: rallyRoll, rallyDie: extras.rallyDie || "" };
+      (rallyRoll ? ` + Arenga ${rallyRoll}` : "") +
+      (poetRoll ? ` + Poeta ${poetRoll}` : "");
+    const rollExtra = { exp: expBonus, expNames: (extras.exps || []).map((e) => e.text), rally: rallyRoll, rallyDie: extras.rallyDie || "", poet: poetRoll };
     const line = `**${who}** — ${traitLabel}: Esperanza ${hope} + Miedo ${fear} ${modStr}${advStr} = **${total}** (${text})`;
     await pushRollLog(line);
     if (cardContext) {
@@ -10860,11 +10914,14 @@ export default function App({ onSignOut }) {
                 preRoll.traitLabel + " " + (preRoll.traitValue >= 0 ? "+" : "") + preRoll.traitValue,
                 ...exps.filter((_, i) => preRoll.exps.includes(i)).map((e) => e.text + " +" + e.bonus),
                 preRoll.rally && ch.f_rally_die ? "Arenga " + ch.f_rally_die : "",
+                preRoll.poet ? "Corazón de Poeta d4" : "",
                 (preRoll.advantage || preRoll.privilege) && preRoll.disadvantage ? "Ventaja y desventaja se anulan" : preRoll.advantage || preRoll.privilege ? "Ventaja d6" + (preRoll.privilege ? " (Privilegio)" : "") : preRoll.disadvantage ? "Desventaja d6" : "",
               ].filter(Boolean);
               const edgeNet = (preRoll.advantage || preRoll.privilege ? 1 : 0) - (preRoll.disadvantage ? 1 : 0);
               const highborne = ch.f_community === "De Alta Cuna";
-              const formula = "2d12 " + (mod >= 0 ? "+ " : "− ") + Math.abs(mod) + (preRoll.rally && ch.f_rally_die ? " + 1" + ch.f_rally_die : "") + (edgeNet > 0 ? " + 1d6" : edgeNet < 0 ? " − 1d6" : "");
+              const poetOk = ch.f_subclass === "Orador" && preRoll.traitLabel === "Presencia";
+              const hopeUsed = preRoll.exps.length + (preRoll.poet ? 1 : 0);
+              const formula = "2d12 " + (mod >= 0 ? "+ " : "− ") + Math.abs(mod) + (preRoll.rally && ch.f_rally_die ? " + 1" + ch.f_rally_die : "") + (preRoll.poet ? " + 1d4" : "") + (edgeNet > 0 ? " + 1d6" : edgeNet < 0 ? " − 1d6" : "");
               const toggleExp = (i) =>
                 setPreRoll((p) => ({ ...p, exps: p.exps.includes(i) ? p.exps.filter((x) => x !== i) : [...p.exps, i] }));
               return (
@@ -10889,7 +10946,7 @@ export default function App({ onSignOut }) {
                         <div className="mh-pre-sec">Experiencias · 1 Esperanza cada una</div>
                         {exps.map((e, i) => {
                           const on = preRoll.exps.includes(i);
-                          const cant = !on && preRoll.exps.length >= hopeNow;
+                          const cant = !on && hopeUsed >= hopeNow;
                           return (
                             <button key={i} type="button" className={"mh-pre-opt" + (on ? " is-on" : "")} disabled={cant} aria-pressed={on} onClick={() => toggleExp(i)} title={cant ? "No te queda Esperanza" : undefined}>
                               <span className="mh-pre-bx">{on && <Check size={12} strokeWidth={3} />}</span>
@@ -10916,6 +10973,28 @@ export default function App({ onSignOut }) {
                             <small>Lo gastas: se suma a la tirada</small>
                           </span>
                           <span className="mh-pre-cost is-rally">+1{ch.f_rally_die}</span>
+                        </button>
+                      </>
+                    )}
+                    {poetOk && (
+                      <>
+                        <div className="mh-pre-sec">Orador · 1 Esperanza</div>
+                        <button
+                          type="button"
+                          className={"mh-pre-opt is-poet" + (preRoll.poet ? " is-on" : "")}
+                          aria-pressed={preRoll.poet}
+                          disabled={!preRoll.poet && hopeUsed >= hopeNow}
+                          title={!preRoll.poet && hopeUsed >= hopeNow ? "No te queda Esperanza" : undefined}
+                          onClick={() => setPreRoll((p) => ({ ...p, poet: !p.poet }))}
+                        >
+                          <span className="mh-pre-bx">{preRoll.poet && <Check size={12} strokeWidth={3} />}</span>
+                          <span className="mh-pre-t">
+                            <b>Corazón de Poeta</b>
+                            <small>Si quieres impresionar, persuadir u ofender a alguien</small>
+                          </span>
+                          <span className="mh-pre-cost is-poet">
+                            +1d4 · 1 <Sparkles size={10} />
+                          </span>
                         </button>
                       </>
                     )}
@@ -10956,8 +11035,8 @@ export default function App({ onSignOut }) {
                     <button type="button" className="mh-btn mh-pre-go" autoFocus onClick={confirmPreRoll}>
                       <Dices size={15} /> Tirar
                     </button>
-                    {(preRoll.exps.length > 0 || preRoll.rally) && (
-                      <button type="button" className="mh-pre-plain" onClick={() => setPreRoll((p) => ({ ...p, exps: [], rally: false }))}>
+                    {(preRoll.exps.length > 0 || preRoll.rally || preRoll.poet) && (
+                      <button type="button" className="mh-pre-plain" onClick={() => setPreRoll((p) => ({ ...p, exps: [], rally: false, poet: false }))}>
                         Quitar lo añadido
                       </button>
                     )}
@@ -11870,6 +11949,21 @@ export default function App({ onSignOut }) {
                         updateCharacterField(viewingCharId, "f_rally_die", die);
                         const camp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(viewingCharId));
                         if (camp) postChat(camp.id, { kind: "rally", die, campId: camp.id, author: c.f_name || "El Bardo", charId: viewingCharId, cls: c.f_class });
+                        closeCardDetail();
+                      },
+                    });
+                  }
+                  // Orador · Discurso Conmovedor, desde la carta de la subclase.
+                  if (d.title === "Orador" && c?.f_subclass === "Orador" && !d.fromChat) {
+                    const used = !!c.f_speech_used;
+                    cardActs.unshift({
+                      key: "speech",
+                      Icon: MessageSquareQuote,
+                      label: used ? "Discurso ya dado" : "Dar un Discurso Conmovedor",
+                      sub: used ? "Vuelve con el descanso largo" : "Aliados: −2 Estrés",
+                      disabled: used,
+                      run: () => {
+                        giveSpeech(viewingCharId);
                         closeCardDetail();
                       },
                     });
