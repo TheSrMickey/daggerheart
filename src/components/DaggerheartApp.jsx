@@ -1237,6 +1237,8 @@ const KIN = [
   { key: "hija", label: "Hija", gen: 1 },
   { key: "hermano", label: "Hermano", gen: 0 },
   { key: "hermana", label: "Hermana", gen: 0 },
+  // Solo para Autómatas: quien lo creó ocupa el lugar de los padres en el árbol.
+  { key: "creador", label: "Creador", gen: -1, automaton: true },
 ];
 const kinOf = (key) => KIN.find((k) => k.key === key) || null;
 const stageScenesOf = (st) => st.scenes || (st.scene?.title || st.scene?.image ? [{ id: "s-legacy", title: st.scene.title || "", image: st.scene.image || "" }] : []);
@@ -2272,7 +2274,8 @@ const sharedStyles = `
   .mh-pre-go { margin-top: 10px; justify-content: center; display: inline-flex; align-items: center; gap: 6px; padding: 10px 14px; font-size: 14px; }
   .mh-pre-plain { margin-top: 6px; border: 0; background: transparent; color: var(--mh-muted); font: 500 12px 'Inter', system-ui, sans-serif; cursor: pointer; }
   .mh-wz-purpose { display: flex; flex-direction: column; gap: 6px; padding: 11px 12px; border-radius: 11px; border: 1px solid color-mix(in srgb, #9A7B4F 45%, var(--mh-line)); background: color-mix(in srgb, #9A7B4F 8%, var(--mh-panel)); }
-  .mh-wz-purpose label { font-size: 12.5px; color: var(--mh-ink2); }
+  .mh-wz-purpose label { font-size: 12px; font-weight: 600; color: var(--mh-ink2); margin-top: 2px; }
+  .mh-wz-purpose-t { font-size: 13px; color: var(--mh-ink); }
   .mh-wz-purpose label b { color: var(--mh-ink); }
   .mh-wz-purpose textarea { resize: vertical; font-size: 13px; }
   .mh-wz-purpose small { font-size: 11px; color: var(--mh-muted); }
@@ -3888,6 +3891,7 @@ export default function App({ onSignOut }) {
   const [mixAncestry, setMixAncestry] = useState(false);
   const [draftAncestries, setDraftAncestries] = useState([]);
   // Autómata · Diseño con Propósito: quién te creó y qué Experiencia encaja (+1 permanente).
+  const [draftCreator, setDraftCreator] = useState("");
   const [draftPurpose, setDraftPurpose] = useState("");
   const [draftPurposeExp, setDraftPurposeExp] = useState(null);
   const [draftCommunity, setDraftCommunity] = useState("");
@@ -4037,6 +4041,7 @@ export default function App({ onSignOut }) {
     setDraftPronounCustom("");
     setMixAncestry(false);
     setDraftAncestries([]);
+    setDraftCreator("");
     setDraftPurpose("");
     setDraftPurposeExp(null);
     setDraftCommunity("");
@@ -4221,6 +4226,7 @@ export default function App({ onSignOut }) {
       f_pronouns: finalPronoun,
       f_ancestry: draftAncestries.join(" + "),
       f_purpose: isAutomaton ? draftPurpose.trim() : "",
+      f_creator: isAutomaton ? draftCreator.trim() : "",
       f_community: draftCommunity,
       f_transformation: draftTransformation === "Ninguna" ? "" : draftTransformation,
       f_languages: ["Común", ...draftLanguages].join(", "),
@@ -4247,8 +4253,14 @@ export default function App({ onSignOut }) {
       ...(isAutomaton && draftPurpose.trim()
         ? {
             f_background_qa: JSON.stringify([
-              { question: "¿Quién te creó y con qué propósito?", answer: draftPurpose.trim(), fixed: "purpose" },
+              { question: "¿Quién te creó?", answer: draftCreator.trim(), fixed: "creator" },
+              { question: "¿Con qué propósito te creó?", answer: draftPurpose.trim(), fixed: "purpose" },
               ...(CLASS_BACKGROUND_QUESTIONS[CLASSES[carouselIndex].key] || []).map((q) => ({ question: q, answer: "" })),
+            ]),
+            // El creador entra en la red de relaciones como «Creador» (en lugar de padre o madre).
+            f_connection_qa: JSON.stringify([
+              { question: "¿Quién te creó y para qué?", answer: draftPurpose.trim(), with: { name: draftCreator.trim(), cls: "" }, rel: "familiar", kin: "creador" },
+              ...(CLASS_CONNECTION_QUESTIONS[CLASSES[carouselIndex].key] || []).map((q) => ({ question: q, answer: "" })),
             ]),
           }
         : {}),
@@ -9780,7 +9792,7 @@ export default function App({ onSignOut }) {
                                           {row.rel === "familiar" && (
                                             <div className="mh-qa-kin" role="radiogroup" aria-label="Parentesco">
                                               <span className="mh-qa-rel-l">¿Qué parentesco?</span>
-                                              {KIN.map((k) => {
+                                              {KIN.filter((k) => !k.automaton || (c.f_ancestry || "").split(" + ").includes("Autómata")).map((k) => {
                                                 const on = row.kin === k.key;
                                                 return (
                                                   <button key={k.key} type="button" role="radio" aria-checked={on} className={"mh-qa-kin-b" + (on ? " is-on" : "")} onClick={() => setPersonRel(i, w.name, { kin: on ? "" : k.key })}>
@@ -12239,18 +12251,19 @@ export default function App({ onSignOut }) {
                             {originTab === "ancestry" && mixAncestry && <div className="mh-wz-dm">Con ascendencia mixta eliges dos y combinas sus rasgos.</div>}
                             {originTab === "ancestry" && draftAncestries.includes("Autómata") && (
                               <div className="mh-wz-purpose">
-                                <label htmlFor="mh-purpose">
-                                  <b>Diseño con Propósito</b> · ¿Quién te creó y con qué propósito?
-                                </label>
+                                <b className="mh-wz-purpose-t">Diseño con Propósito</b>
+                                <label htmlFor="mh-creator">¿Quién te creó?</label>
+                                <input id="mh-creator" className="mh-input" placeholder="Ej. La maestra relojera Ilsabet" value={draftCreator} onChange={(e) => setDraftCreator(e.target.value)} />
+                                <label htmlFor="mh-purpose">¿Con qué propósito?</label>
                                 <textarea
                                   id="mh-purpose"
                                   className="mh-input"
-                                  rows={3}
-                                  placeholder="Ej. Me forjó la maestra relojera Ilsabet para custodiar la biblioteca de Velmora."
+                                  rows={2}
+                                  placeholder="Ej. Custodiar la gran biblioteca de Velmora."
                                   value={draftPurpose}
                                   onChange={(e) => setDraftPurpose(e.target.value)}
                                 />
-                                <small>Al elegir tus Experiencias, la que mejor encaje con este propósito ganará un +1 permanente.</small>
+                                <small>Tu creador aparecerá en la red de relaciones como «Creador». Al elegir tus Experiencias, la que mejor encaje con este propósito ganará un +1 permanente.</small>
                               </div>
                             )}
                           </>
@@ -12398,7 +12411,7 @@ export default function App({ onSignOut }) {
                     {draftAncestries.includes("Autómata") && (
                       <div className="mh-wz-purpose is-pick">
                         <div className="mh-wz-purpose-q">
-                          <b>¿Quién te creó y con qué propósito?</b>
+                          <b>Te creó {draftCreator.trim() || "…"}</b>
                           <span>{draftPurpose.trim() || "Sin responder"}</span>
                         </div>
                         <div className="mh-wz-dm">¿Qué Experiencia encaja con ese propósito? Gana un +1 permanente.</div>
@@ -12824,7 +12837,7 @@ export default function App({ onSignOut }) {
                 const twoHanded = PRIMARY_WEAPONS.find((w) => w.key === draftPrimaryWeapon)?.hands === 2;
                 const block = {
                   traits: traitPool.length > 0 && "Reparte todos los valores para continuar.",
-                  ancestry: draftAncestries.includes("Autómata") && !draftPurpose.trim() && "Responde quién te creó y con qué propósito.",
+                  ancestry: draftAncestries.includes("Autómata") && (!draftCreator.trim() ? "Escribe quién te creó." : !draftPurpose.trim() ? "Escribe con qué propósito te creó." : false),
                   experiences: !draftExp1.trim() || !draftExp2.trim() ? "Escribe tus dos Experiencias." : draftAncestries.includes("Autómata") && draftPurposeExp == null ? "Elige la Experiencia que encaja con tu propósito." : false,
                   primary: !draftPrimaryWeapon && "Elige un arma principal para continuar.",
                   secondary: !twoHanded && !draftSecondaryWeapon && "Elige un arma secundaria o «Ninguna».",
