@@ -2430,7 +2430,9 @@ const sharedStyles = `
   .mh-wz-grp button.is-done:hover { background: #4E9E52; }
   .mh-wz-grp button.is-on { background: #E3B04B; }
   .mh-wz-body { flex: 1; min-height: 0; overflow-y: auto; padding: 18px 22px; }
-  .mh-wz-body.is-split { display: flex; padding: 0; overflow: hidden; }
+  .mh-wz-body.is-split { display: flex; padding: 0; overflow: hidden; position: relative; }
+  .mh-wz-body.is-split > .mh-wz-art { width: calc((100% - 310px) / 2); }
+  .mh-wz-det.mh-noscroll { padding-bottom: 30px; -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 30px), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 30px), transparent); }
   .mh-wz-list { width: 310px; flex-shrink: 0; border-right: 1px solid var(--mh-line); padding: 12px; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 3px; }
   .mh-wz-it { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border: 0; border-radius: 9px; background: transparent; color: var(--mh-ink); font: 600 13px 'Inter', system-ui, sans-serif; text-align: left; cursor: pointer; }
   .mh-wz-it:hover { background: var(--mh-panel2); }
@@ -12390,17 +12392,17 @@ export default function App({ onSignOut }) {
                       );
                     })}
                   </div>
-                  <div className={"mh-wz-det" + ((wizardStep === "class" && CLASS_ART[CLASSES[carouselIndex].key]) || (wizardStep === "subclass" && SUBCLASS_ART[current?.key]) ? " has-art" : "")}>
-                    {wizardStep === "class" && CLASS_ART[CLASSES[carouselIndex].key] && (
-                      <div className="mh-wz-art" style={{ "--tc": CLASS_COLORS[CLASSES[carouselIndex].key] || "#E3B04B" }} aria-hidden="true">
-                        <img key={CLASSES[carouselIndex].key} src={CLASS_ART[CLASSES[carouselIndex].key]} alt="" />
-                      </div>
-                    )}
-                    {wizardStep === "subclass" && SUBCLASS_ART[current?.key] && (
-                      <div className="mh-wz-art" style={{ "--tc": CLASS_COLORS[CLASSES[carouselIndex].key] || "#E3B04B" }} aria-hidden="true">
-                        <img key={current.key} src={SUBCLASS_ART[current.key]} alt="" />
-                      </div>
-                    )}
+                  {wizardStep === "class" && CLASS_ART[CLASSES[carouselIndex].key] && (
+                    <div className="mh-wz-art" style={{ "--tc": CLASS_COLORS[CLASSES[carouselIndex].key] || "#E3B04B" }} aria-hidden="true">
+                      <img key={CLASSES[carouselIndex].key} src={CLASS_ART[CLASSES[carouselIndex].key]} alt="" />
+                    </div>
+                  )}
+                  {wizardStep === "subclass" && SUBCLASS_ART[current?.key] && (
+                    <div className="mh-wz-art" style={{ "--tc": CLASS_COLORS[CLASSES[carouselIndex].key] || "#E3B04B" }} aria-hidden="true">
+                      <img key={current.key} src={SUBCLASS_ART[current.key]} alt="" />
+                    </div>
+                  )}
+                  <div className={"mh-wz-det mh-noscroll" + ((wizardStep === "class" && CLASS_ART[CLASSES[carouselIndex].key]) || (wizardStep === "subclass" && SUBCLASS_ART[current?.key]) ? " has-art" : "")}>
                     {(() => {
                       const cls = CLASSES[carouselIndex].key;
                       const col = CLASS_COLORS[cls] || "#E3B04B";
@@ -12595,12 +12597,12 @@ export default function App({ onSignOut }) {
                           </button>
                         ))}
                       </div>
-                      <div className={"mh-wz-det" + (originTab === "transformation" && TRANSFORMATION_ART[focus?.key] ? " has-art" : "")}>
-                        {originTab === "transformation" && TRANSFORMATION_ART[focus?.key] && (
-                          <div className="mh-wz-art" style={{ "--tc": TRANSFORMATION_ART[focus.key].color }} aria-hidden="true">
-                            <img key={focus.key} src={TRANSFORMATION_ART[focus.key].src} alt="" />
-                          </div>
-                        )}
+                      {originTab === "transformation" && TRANSFORMATION_ART[focus?.key] && (
+                        <div className="mh-wz-art" style={{ "--tc": TRANSFORMATION_ART[focus.key].color }} aria-hidden="true">
+                          <img key={focus.key} src={TRANSFORMATION_ART[focus.key].src} alt="" />
+                        </div>
+                      )}
+                      <div className={"mh-wz-det mh-noscroll" + (originTab === "transformation" && TRANSFORMATION_ART[focus?.key] ? " has-art" : "")}>
                         {focus && (
                           <>
                             <div className="mh-wz-dh">
