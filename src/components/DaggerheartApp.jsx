@@ -2244,6 +2244,32 @@ const sharedStyles = `
     .mh-cardc-tip { left: 50%; top: auto; bottom: calc(100% + 30px); translate: -50% 0; }
   }
   .mh-rest-row { flex: 1 0 auto; }
+  .mh-pre { margin: 0; width: min(380px, 100%); max-height: 90%; overflow-y: auto; padding: 16px; border-radius: 16px; display: flex; flex-direction: column; }
+  .mh-pre-h { display: flex; align-items: center; gap: 10px; }
+  .mh-pre-h b { display: block; font-size: 16px; color: var(--mh-ink); }
+  .mh-pre-h small { font-size: 11.5px; color: var(--mh-muted); }
+  .mh-pre-ic { width: 34px; height: 34px; flex-shrink: 0; border-radius: 10px; background: color-mix(in srgb, var(--acc) 15%, var(--mh-panel)); color: var(--acc); display: flex; align-items: center; justify-content: center; }
+  .mh-pre-sec { font-size: 9.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-muted); margin: 12px 0 6px; }
+  .mh-pre-opt { --pc: #6FBF73; width: 100%; display: flex; align-items: center; gap: 10px; padding: 9px 10px; margin-bottom: 6px; border: 1.5px solid var(--mh-line); border-radius: 11px; background: var(--mh-panel); color: var(--mh-ink); font: inherit; text-align: left; cursor: pointer; }
+  .mh-pre-opt.is-rally { --pc: #E07FB0; }
+  .mh-pre-opt.is-adv { --pc: #5B8FD9; }
+  .mh-pre-opt:hover:not(:disabled) { border-color: color-mix(in srgb, var(--pc) 60%, var(--mh-line)); }
+  .mh-pre-opt.is-on { border-color: var(--pc); background: color-mix(in srgb, var(--pc) 9%, var(--mh-panel)); }
+  .mh-pre-opt:disabled { opacity: .45; cursor: not-allowed; }
+  .mh-pre-bx { width: 18px; height: 18px; flex-shrink: 0; border-radius: 5px; border: 1.5px solid var(--mh-line2); display: flex; align-items: center; justify-content: center; color: #fff; }
+  .mh-pre-opt.is-on .mh-pre-bx { background: var(--pc); border-color: var(--pc); }
+  .mh-pre-t { flex: 1; min-width: 0; }
+  .mh-pre-t b { display: block; font-size: 12.5px; }
+  .mh-pre-t small { font-size: 10.5px; color: var(--mh-muted); }
+  .mh-pre-cost { display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0; font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 10px; background: color-mix(in srgb, #E3B04B 22%, var(--mh-panel)); color: var(--mh-gold-ink); white-space: nowrap; }
+  .mh-pre-cost.is-rally { background: color-mix(in srgb, #E07FB0 20%, var(--mh-panel)); color: color-mix(in srgb, #E07FB0 60%, var(--mh-ink)); }
+  .mh-pre-cost.is-adv { background: color-mix(in srgb, #5B8FD9 18%, var(--mh-panel)); color: color-mix(in srgb, #5B8FD9 65%, var(--mh-ink)); }
+  .mh-pre-note { font-size: 11px; color: #D9644E; margin: -2px 0 4px; }
+  .mh-pre-sum { display: flex; align-items: center; gap: 10px; margin-top: 8px; padding: 9px 11px; border-radius: 10px; background: var(--mh-panel2); font-size: 11.5px; color: var(--mh-ink3); }
+  .mh-pre-sum span { flex: 1; min-width: 0; }
+  .mh-pre-sum b { font-size: 16px; color: var(--mh-ink); white-space: nowrap; }
+  .mh-pre-go { margin-top: 10px; justify-content: center; display: inline-flex; align-items: center; gap: 6px; padding: 10px 14px; font-size: 14px; }
+  .mh-pre-plain { margin-top: 6px; border: 0; background: transparent; color: var(--mh-muted); font: 500 12px 'Inter', system-ui, sans-serif; cursor: pointer; }
   .mh-trov { --tb: #E07FB0; border: 1px solid color-mix(in srgb, var(--tb) 45%, var(--mh-line)); border-radius: 12px; padding: 10px 11px; background: linear-gradient(color-mix(in srgb, var(--tb) 8%, var(--mh-panel)), var(--mh-panel)); display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
   .mh-trov-h { display: flex; align-items: center; gap: 8px; }
   .mh-trov-h b { font-size: 13px; color: var(--mh-ink); }
@@ -2804,6 +2830,8 @@ function DualityResult({ roll, size = 84 }) {
   const edge = has ? roll.edge || 0 : 0;
   const mod = has ? Number(roll.mod) || 0 : 0;
   const wolf = has ? roll.wolfBonus || 0 : 0;
+  const expB = has ? roll.expBonus || 0 : 0;
+  const rally = has ? roll.rallyRoll || 0 : 0;
   const landed = has && !rolling;
   return (
     <div style={{ position: "relative", textAlign: "center" }}>
@@ -2824,6 +2852,12 @@ function DualityResult({ roll, size = 84 }) {
             <DieFace sides={10} value={wolf} color="#E0544A" size={Math.round(size * 0.7)} rolling={rolling} highlight={landed && wolf === 10} label="Lobo" delay={240} />
           </>
         )}
+        {rally > 0 && (
+          <>
+            <span style={{ fontSize: 20, color: "var(--mh-muted)", marginTop: size / 2 - 14 }}>+</span>
+            <DieFace sides={parseInt(String(roll.rallyDie || "d6").slice(1), 10) || 6} value={rally} color="#E07FB0" size={Math.round(size * 0.66)} rolling={rolling} label="Arenga" delay={300} />
+          </>
+        )}
       </div>
       <div className="mh-serif" style={{ fontSize: 46, fontWeight: 700, lineHeight: 1.1, marginTop: 10, minHeight: 52, color: "var(--mh-ink)", position: "relative" }}>
         {!has ? "–" : rolling ? <span className="mh-dots">···</span> : <CountUp value={roll.total} />}
@@ -2835,6 +2869,8 @@ function DualityResult({ roll, size = 84 }) {
             {mod ? (mod > 0 ? " + " : " − ") + Math.abs(mod) : ""}
             {edge ? (edge > 0 ? " + " : " − ") + Math.abs(edge) : ""}
             {wolf ? " + " + wolf + " (Lobo)" : ""}
+            {expB ? " + " + expB + " (Experiencia)" : ""}
+            {rally ? " + " + rally + " (Arenga)" : ""}
             {roll.difficulty != null ? ` · Dificultad ${roll.difficulty}` : ""}
           </div>
           <div style={{ fontSize: 14.5, fontWeight: 600, color: ink(roll.color), marginTop: 4 }}>{roll.text}</div>
@@ -5370,6 +5406,8 @@ export default function App({ onSignOut }) {
               {mod}
               {r.adv ? <em>+{r.adv} ventaja</em> : null}
               {r.wolf ? <em>+{r.wolf} lobo</em> : null}
+              {r.exp ? <em title={(r.expNames || []).join(", ")}>+{r.exp} experiencia</em> : null}
+              {r.rally ? <em>+{r.rally} arenga ({r.rallyDie})</em> : null}
             </span>
             {total(r.dc ? "vs " + r.dc : "Total", r.total)}
           </>,
@@ -5395,6 +5433,28 @@ export default function App({ onSignOut }) {
           {m.author}
         </b>
       );
+
+      if (kind === "rally") {
+        const me = meCharId ? characters[meCharId] : null;
+        const inCamp = me && m.campId && (campaigns[m.campId]?.characterIds || []).includes(meCharId);
+        const canTake = inCamp && m.charId !== meCharId && !me.f_rally_die;
+        return chatCard(
+          "#E07FB0",
+          <>
+            {whoB} arenga al grupo
+          </>,
+          "Arenga",
+          <div className="mh-chat-c-t">Cada aliado recibe un dado de Arenga ({m.die}) para sumarlo a una tirada.</div>,
+          <>
+            <span>{me?.f_rally_die ? "Tienes un dado de Arenga (" + me.f_rally_die + ")" : "Dado de Arenga " + m.die}</span>
+            {canTake && (
+              <button type="button" className="mh-chat-open" onClick={() => updateCharacterField(meCharId, "f_rally_die", m.die)}>
+                <Plus size={12} /> Recoger dado
+              </button>
+            )}
+          </>
+        );
+      }
 
       if (kind === "share" && m.share) {
         const sh = m.share;
@@ -6297,14 +6357,39 @@ export default function App({ onSignOut }) {
   };
   const traitRollTimer = useRef(null);
 
-  const rollTraitCheck = async (charId, traitLabel, traitValue, weapon, cardContext, advantage) => {
+  // Antes de tirar: ventana para añadir Experiencias, el dado de Arenga o Ventaja.
+  const [preRoll, setPreRoll] = useState(null);
+  const rollTraitCheck = (charId, traitLabel, traitValue, weapon, cardContext, advantage) => {
+    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage, exps: [], rally: false });
+  };
+  const confirmPreRoll = () => {
+    const pr = preRoll;
+    if (!pr) return;
+    const ch = charsRef.current[pr.charId];
+    const exps = ch ? getExperiences(ch).filter((_, i) => pr.exps.includes(i)) : [];
+    const patch = {};
+    if (exps.length && ch) patch.hope_marked = String(Math.max(0, Number(ch.hope_marked ?? HOPE_DEFAULT) - exps.length));
+    const rallyDie = pr.rally && ch?.f_rally_die ? ch.f_rally_die : "";
+    if (rallyDie) patch.f_rally_die = "";
+    if (Object.keys(patch).length) updateCharacterFields(pr.charId, patch);
+    setPreRoll(null);
+    doTraitRoll(pr.charId, pr.traitLabel, pr.traitValue, pr.weapon, pr.cardContext, pr.advantage, {
+      exps: exps.map((e) => ({ text: e.text, bonus: Number(e.bonus) || 0 })),
+      rallyDie,
+    });
+  };
+
+  const doTraitRoll = async (charId, traitLabel, traitValue, weapon, cardContext, advantage, extras = {}) => {
     const hope = Math.floor(Math.random() * 12) + 1;
     const fear = Math.floor(Math.random() * 12) + 1;
     const advantageRoll = advantage ? Math.floor(Math.random() * 6) + 1 : 0;
     // Hombre lobo: en Forma de Lobo sumas 1d10 a las tiradas de ataque.
     const inWolfForm = charsRef.current[charId]?.f_transformation_form_active === "Forma de Lobo";
     const wolfBonus = weapon && inWolfForm ? Math.floor(Math.random() * 10) + 1 : 0;
-    const total = hope + fear + traitValue + advantageRoll + wolfBonus;
+    const expBonus = (extras.exps || []).reduce((a, e) => a + e.bonus, 0);
+    const rallySides = extras.rallyDie ? parseInt(extras.rallyDie.slice(1), 10) : 0;
+    const rallyRoll = rallySides ? Math.floor(Math.random() * rallySides) + 1 : 0;
+    const total = hope + fear + traitValue + advantageRoll + wolfBonus + expBonus + rallyRoll;
     let text, color;
     if (hope === fear) {
       text = "Crítico";
@@ -6319,7 +6404,7 @@ export default function App({ onSignOut }) {
     clearTimeout(traitRollTimer.current);
     const note =
       hope === fear ? "Ganas 1 Esperanza y te quitas 1 Estrés" : hope > fear ? "Ganas 1 Esperanza" : "El DJ gana 1 de Miedo";
-    setTraitRollResult({ key: Date.now(), traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, total, text: hope === fear ? "Éxito crítico" : text, color, note, weapon: weapon || null, charId });
+    setTraitRollResult({ key: Date.now(), traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", total, text: hope === fear ? "Éxito crítico" : text, color, note, weapon: weapon || null, charId });
 
     // Con Esperanza (o crítico) ganas 1 Esperanza; con crítico además te quitas 1 Estrés.
     if (hope >= fear) {
@@ -6339,7 +6424,12 @@ export default function App({ onSignOut }) {
 
     const who = playerName || "Alguien en la mesa";
     const modStr = traitValue > 0 ? "+" + traitValue : traitValue;
-    const advStr = (advantage ? ` + Ventaja ${advantageRoll}` : "") + (wolfBonus ? ` + Lobo ${wolfBonus}` : "");
+    const advStr =
+      (advantage ? ` + Ventaja ${advantageRoll}` : "") +
+      (wolfBonus ? ` + Lobo ${wolfBonus}` : "") +
+      (expBonus ? ` + Experiencia ${expBonus}` : "") +
+      (rallyRoll ? ` + Arenga ${rallyRoll}` : "");
+    const rollExtra = { exp: expBonus, expNames: (extras.exps || []).map((e) => e.text), rally: rallyRoll, rallyDie: extras.rallyDie || "" };
     const line = `**${who}** — ${traitLabel}: Esperanza ${hope} + Miedo ${fear} ${modStr}${advStr} = **${total}** (${text})`;
     await pushRollLog(line);
     if (cardContext) {
@@ -6347,12 +6437,12 @@ export default function App({ onSignOut }) {
       await postCampaignEvent(
         charId,
         `🃏 ${cardContext.name}: ${success ? "Éxito" : "Fracaso"} (${total} vs Dificultad ${cardContext.dc})`,
-        { kind: "roll", roll: { trait: traitLabel, card: cardContext.name, hope, fear, mod: traitValue, adv: advantageRoll, wolf: wolfBonus, total, dc: cardContext.dc } }
+        { kind: "roll", roll: { trait: traitLabel, card: cardContext.name, hope, fear, mod: traitValue, adv: advantageRoll, wolf: wolfBonus, ...rollExtra, total, dc: cardContext.dc } }
       );
     } else {
       await postCampaignEvent(charId, `🎲 Tirada de ${traitLabel}: ${hope} + ${fear} ${modStr}${advStr} = ${total} (${text})`, {
         kind: "roll",
-        roll: { trait: traitLabel, weapon: weapon?.name || "", hope, fear, mod: traitValue, adv: advantageRoll, wolf: wolfBonus, total },
+        roll: { trait: traitLabel, weapon: weapon?.name || "", hope, fear, mod: traitValue, adv: advantageRoll, wolf: wolfBonus, ...rollExtra, total },
       });
     }
   };
@@ -10593,6 +10683,100 @@ export default function App({ onSignOut }) {
               </div>
             </div>
 
+            {preRoll && (() => {
+              const ch = characters[preRoll.charId];
+              if (!ch) return null;
+              const exps = getExperiences(ch);
+              const hopeNow = Number(ch.hope_marked ?? HOPE_DEFAULT);
+              const expSum = exps.filter((_, i) => preRoll.exps.includes(i)).reduce((a, e) => a + (Number(e.bonus) || 0), 0);
+              const mod = preRoll.traitValue + expSum;
+              const parts = [
+                preRoll.traitLabel + " " + (preRoll.traitValue >= 0 ? "+" : "") + preRoll.traitValue,
+                ...exps.filter((_, i) => preRoll.exps.includes(i)).map((e) => e.text + " +" + e.bonus),
+                preRoll.rally && ch.f_rally_die ? "Arenga " + ch.f_rally_die : "",
+                preRoll.advantage ? "Ventaja d6" : "",
+              ].filter(Boolean);
+              const formula = "2d12 " + (mod >= 0 ? "+ " : "− ") + Math.abs(mod) + (preRoll.rally && ch.f_rally_die ? " + 1" + ch.f_rally_die : "") + (preRoll.advantage ? " + 1d6" : "");
+              const toggleExp = (i) =>
+                setPreRoll((p) => ({ ...p, exps: p.exps.includes(i) ? p.exps.filter((x) => x !== i) : [...p.exps, i] }));
+              return (
+                <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 45, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)" }} onClick={() => setPreRoll(null)}>
+                  <div className="mh-card mh-card-anim mh-pre" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={"Tirada de " + preRoll.traitLabel}>
+                    <div className="mh-pre-h">
+                      <span className="mh-pre-ic">
+                        <Dices size={17} />
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <b className="mh-serif">{preRoll.cardContext ? preRoll.cardContext.name : preRoll.weapon ? "Ataque con " + preRoll.weapon.name : "Tirada de " + preRoll.traitLabel}</b>
+                        <small>
+                          {preRoll.traitLabel} · Esperanza y Miedo{preRoll.cardContext ? " · Dificultad " + preRoll.cardContext.dc : ""}
+                        </small>
+                      </div>
+                      <button type="button" className="mh-inv-x" aria-label="Cerrar" onClick={() => setPreRoll(null)}>
+                        <X size={16} />
+                      </button>
+                    </div>
+                    {exps.length > 0 && (
+                      <>
+                        <div className="mh-pre-sec">Experiencias · 1 Esperanza cada una</div>
+                        {exps.map((e, i) => {
+                          const on = preRoll.exps.includes(i);
+                          const cant = !on && preRoll.exps.length >= hopeNow;
+                          return (
+                            <button key={i} type="button" className={"mh-pre-opt" + (on ? " is-on" : "")} disabled={cant} aria-pressed={on} onClick={() => toggleExp(i)} title={cant ? "No te queda Esperanza" : undefined}>
+                              <span className="mh-pre-bx">{on && <Check size={12} strokeWidth={3} />}</span>
+                              <span className="mh-pre-t">
+                                <b>{e.text}</b>
+                                <small>Si encaja con lo que haces</small>
+                              </span>
+                              <span className="mh-pre-cost">
+                                +{e.bonus} · 1 <Sparkles size={10} />
+                              </span>
+                            </button>
+                          );
+                        })}
+                        {hopeNow === 0 && <div className="mh-pre-note">No te queda Esperanza para usar experiencias.</div>}
+                      </>
+                    )}
+                    {ch.f_rally_die && (
+                      <>
+                        <div className="mh-pre-sec">Arenga</div>
+                        <button type="button" className={"mh-pre-opt is-rally" + (preRoll.rally ? " is-on" : "")} aria-pressed={preRoll.rally} onClick={() => setPreRoll((p) => ({ ...p, rally: !p.rally }))}>
+                          <span className="mh-pre-bx">{preRoll.rally && <Check size={12} strokeWidth={3} />}</span>
+                          <span className="mh-pre-t">
+                            <b>Dado de Arenga</b>
+                            <small>Lo gastas: se suma a la tirada</small>
+                          </span>
+                          <span className="mh-pre-cost is-rally">+1{ch.f_rally_die}</span>
+                        </button>
+                      </>
+                    )}
+                    <div className="mh-pre-sec">Otros</div>
+                    <button type="button" className={"mh-pre-opt is-adv" + (preRoll.advantage ? " is-on" : "")} aria-pressed={preRoll.advantage} onClick={() => setPreRoll((p) => ({ ...p, advantage: !p.advantage }))}>
+                      <span className="mh-pre-bx">{preRoll.advantage && <Check size={12} strokeWidth={3} />}</span>
+                      <span className="mh-pre-t">
+                        <b>Ventaja</b>
+                        <small>Si el DJ te la concede o una carta te la da</small>
+                      </span>
+                      <span className="mh-pre-cost is-adv">+1d6</span>
+                    </button>
+                    <div className="mh-pre-sum">
+                      <span>{parts.join(" · ")}</span>
+                      <b>{formula}</b>
+                    </div>
+                    <button type="button" className="mh-btn mh-pre-go" autoFocus onClick={confirmPreRoll}>
+                      <Dices size={15} /> Tirar
+                    </button>
+                    {(preRoll.exps.length > 0 || preRoll.rally) && (
+                      <button type="button" className="mh-pre-plain" onClick={() => setPreRoll((p) => ({ ...p, exps: [], rally: false }))}>
+                        Quitar lo añadido
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
             {traitRollResult && (
               <div
                 style={{
@@ -11425,6 +11609,22 @@ export default function App({ onSignOut }) {
                       run: () => {
                         rollTraitCheck(viewingCharId, action.traitLabel, Number(c[action.traitKey] || 0), null, { name: d.title, dc: action.dc });
                         setViewingCardDetail(null);
+                      },
+                    });
+                  }
+                  // Bardo · Arenga: te da tu dado y avisa al grupo para que recojan el suyo.
+                  if (d.title === "Arenga" && c?.f_class === "Bardo" && !d.fromChat) {
+                    const die = Number(c.f_level || 1) >= 5 ? "d8" : "d6";
+                    cardActs.unshift({
+                      key: "rally",
+                      Icon: Sparkles,
+                      label: "Arengar al grupo",
+                      sub: "Dado " + die,
+                      run: () => {
+                        updateCharacterField(viewingCharId, "f_rally_die", die);
+                        const camp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(viewingCharId));
+                        if (camp) postChat(camp.id, { kind: "rally", die, campId: camp.id, author: c.f_name || "El Bardo", charId: viewingCharId, cls: c.f_class });
+                        closeCardDetail();
                       },
                     });
                   }
