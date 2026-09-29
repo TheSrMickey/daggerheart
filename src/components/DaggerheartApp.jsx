@@ -2257,6 +2257,8 @@ const sharedStyles = `
   .mh-pre-opt.is-rally { --pc: #E07FB0; }
   .mh-pre-opt.is-adv { --pc: #5B8FD9; }
   .mh-pre-opt.is-priv { --pc: #B8862E; }
+  .mh-pre-opt.is-dis { --pc: #D9644E; }
+  .mh-pre-cost.is-dis { background: color-mix(in srgb, #D9644E 16%, var(--mh-panel)); color: color-mix(in srgb, #D9644E 70%, var(--mh-ink)); }
   .mh-pre-cost.is-priv { background: color-mix(in srgb, #B8862E 18%, var(--mh-panel)); color: color-mix(in srgb, #B8862E 70%, var(--mh-ink)); }
   .mh-pre-opt:hover:not(:disabled) { border-color: color-mix(in srgb, var(--pc) 60%, var(--mh-line)); }
   .mh-pre-opt.is-on { border-color: var(--pc); background: color-mix(in srgb, var(--pc) 9%, var(--mh-panel)); }
@@ -5458,7 +5460,7 @@ export default function App({ onSignOut }) {
             </span>
             <span className="mh-chat-mod">
               {mod}
-              {r.adv ? <em>+{r.adv} ventaja</em> : null}
+              {r.adv > 0 ? <em>+{r.adv} ventaja</em> : r.adv < 0 ? <em>−{-r.adv} desventaja</em> : null}
               {r.wolf ? <em>+{r.wolf} lobo</em> : null}
               {r.exp ? <em title={(r.expNames || []).join(", ")}>+{r.exp} experiencia</em> : null}
               {r.rally ? <em>+{r.rally} arenga ({r.rallyDie})</em> : null}
@@ -6424,7 +6426,7 @@ export default function App({ onSignOut }) {
   // Antes de tirar: ventana para añadir Experiencias, el dado de Arenga o Ventaja.
   const [preRoll, setPreRoll] = useState(null);
   const rollTraitCheck = (charId, traitLabel, traitValue, weapon, cardContext, advantage) => {
-    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage, exps: [], rally: false, privilege: false });
+    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage, exps: [], rally: false, privilege: false, disadvantage: false });
   };
   const confirmPreRoll = () => {
     const pr = preRoll;
@@ -6440,13 +6442,16 @@ export default function App({ onSignOut }) {
     doTraitRoll(pr.charId, pr.traitLabel, pr.traitValue, pr.weapon, pr.cardContext, pr.advantage || pr.privilege, {
       exps: exps.map((e) => ({ text: e.text, bonus: Number(e.bonus) || 0 })),
       rallyDie,
+      disadvantage: pr.disadvantage,
     });
   };
 
   const doTraitRoll = async (charId, traitLabel, traitValue, weapon, cardContext, advantage, extras = {}) => {
     const hope = Math.floor(Math.random() * 12) + 1;
     const fear = Math.floor(Math.random() * 12) + 1;
-    const advantageRoll = advantage ? Math.floor(Math.random() * 6) + 1 : 0;
+    // Ventaja suma 1d6 y desventaja lo resta; si hay las dos, se anulan.
+    const edgeSign = (advantage ? 1 : 0) - (extras.disadvantage ? 1 : 0);
+    const advantageRoll = edgeSign ? edgeSign * (Math.floor(Math.random() * 6) + 1) : 0;
     // Hombre lobo: en Forma de Lobo sumas 1d10 a las tiradas de ataque.
     const inWolfForm = charsRef.current[charId]?.f_transformation_form_active === "Forma de Lobo";
     const wolfBonus = weapon && inWolfForm ? Math.floor(Math.random() * 10) + 1 : 0;
@@ -6489,7 +6494,7 @@ export default function App({ onSignOut }) {
     const who = playerName || "Alguien en la mesa";
     const modStr = traitValue > 0 ? "+" + traitValue : traitValue;
     const advStr =
-      (advantage ? ` + Ventaja ${advantageRoll}` : "") +
+      (advantageRoll > 0 ? ` + Ventaja ${advantageRoll}` : advantageRoll < 0 ? ` − Desventaja ${-advantageRoll}` : "") +
       (wolfBonus ? ` + Lobo ${wolfBonus}` : "") +
       (expBonus ? ` + Experiencia ${expBonus}` : "") +
       (rallyRoll ? ` + Arenga ${rallyRoll}` : "");
@@ -10767,10 +10772,11 @@ export default function App({ onSignOut }) {
                 preRoll.traitLabel + " " + (preRoll.traitValue >= 0 ? "+" : "") + preRoll.traitValue,
                 ...exps.filter((_, i) => preRoll.exps.includes(i)).map((e) => e.text + " +" + e.bonus),
                 preRoll.rally && ch.f_rally_die ? "Arenga " + ch.f_rally_die : "",
-                preRoll.advantage || preRoll.privilege ? "Ventaja d6" + (preRoll.privilege && !preRoll.advantage ? " (Privilegio)" : "") : "",
+                (preRoll.advantage || preRoll.privilege) && preRoll.disadvantage ? "Ventaja y desventaja se anulan" : preRoll.advantage || preRoll.privilege ? "Ventaja d6" + (preRoll.privilege ? " (Privilegio)" : "") : preRoll.disadvantage ? "Desventaja d6" : "",
               ].filter(Boolean);
+              const edgeNet = (preRoll.advantage || preRoll.privilege ? 1 : 0) - (preRoll.disadvantage ? 1 : 0);
               const highborne = ch.f_community === "De Alta Cuna";
-              const formula = "2d12 " + (mod >= 0 ? "+ " : "− ") + Math.abs(mod) + (preRoll.rally && ch.f_rally_die ? " + 1" + ch.f_rally_die : "") + (preRoll.advantage || preRoll.privilege ? " + 1d6" : "");
+              const formula = "2d12 " + (mod >= 0 ? "+ " : "− ") + Math.abs(mod) + (preRoll.rally && ch.f_rally_die ? " + 1" + ch.f_rally_die : "") + (edgeNet > 0 ? " + 1d6" : edgeNet < 0 ? " − 1d6" : "");
               const toggleExp = (i) =>
                 setPreRoll((p) => ({ ...p, exps: p.exps.includes(i) ? p.exps.filter((x) => x !== i) : [...p.exps, i] }));
               return (
@@ -10828,7 +10834,7 @@ export default function App({ onSignOut }) {
                     {highborne && (
                       <>
                         <div className="mh-pre-sec">Comunidad · De Alta Cuna</div>
-                        <button type="button" className={"mh-pre-opt is-priv" + (preRoll.privilege ? " is-on" : "")} aria-pressed={preRoll.privilege} onClick={() => setPreRoll((p) => ({ ...p, privilege: !p.privilege }))}>
+                        <button type="button" className={"mh-pre-opt is-priv" + (preRoll.privilege ? " is-on" : "")} aria-pressed={preRoll.privilege} onClick={() => setPreRoll((p) => ({ ...p, privilege: !p.privilege, advantage: p.privilege ? p.advantage : false }))}>
                           <span className="mh-pre-bx">{preRoll.privilege && <Check size={12} strokeWidth={3} />}</span>
                           <span className="mh-pre-t">
                             <b>Privilegio</b>
@@ -10839,13 +10845,21 @@ export default function App({ onSignOut }) {
                       </>
                     )}
                     <div className="mh-pre-sec">Otros</div>
-                    <button type="button" className={"mh-pre-opt is-adv" + (preRoll.advantage ? " is-on" : "")} aria-pressed={preRoll.advantage} onClick={() => setPreRoll((p) => ({ ...p, advantage: !p.advantage }))}>
+                    <button type="button" className={"mh-pre-opt is-adv" + (preRoll.advantage ? " is-on" : "")} aria-pressed={preRoll.advantage} onClick={() => setPreRoll((p) => ({ ...p, advantage: !p.advantage, privilege: p.advantage ? p.privilege : false }))}>
                       <span className="mh-pre-bx">{preRoll.advantage && <Check size={12} strokeWidth={3} />}</span>
                       <span className="mh-pre-t">
                         <b>Ventaja</b>
                         <small>Si el DJ te la concede o una carta te la da</small>
                       </span>
                       <span className="mh-pre-cost is-adv">+1d6</span>
+                    </button>
+                    <button type="button" className={"mh-pre-opt is-dis" + (preRoll.disadvantage ? " is-on" : "")} aria-pressed={preRoll.disadvantage} onClick={() => setPreRoll((p) => ({ ...p, disadvantage: !p.disadvantage }))}>
+                      <span className="mh-pre-bx">{preRoll.disadvantage && <Check size={12} strokeWidth={3} />}</span>
+                      <span className="mh-pre-t">
+                        <b>Desventaja</b>
+                        <small>Si el DJ te la impone o una condición te la da</small>
+                      </span>
+                      <span className="mh-pre-cost is-dis">−1d6</span>
                     </button>
                     <div className="mh-pre-sum">
                       <span>{parts.join(" · ")}</span>
