@@ -196,9 +196,9 @@ const FICHA_DEFAULTS = {
 const PRONOUN_OPTIONS = ["Él", "Ella", "Elle", "Otro"];
 
 const ANCESTRIES = [
-  { key: "Autómata", blurb: "Un ser mecánico animado por un núcleo interior." },
-  { key: "Dracona", blurb: "Desciende de los dragones, con aliento elemental propio." },
-  { key: "Enano", blurb: "Bajo y robusto, resistente como la roca de sus montañas." },
+  { key: "Autómata", blurb: "Un ser mecánico animado por un núcleo interior.", features: [{ name: "Diseño con Propósito", text: "Decide quién te creó y para qué. Al crear el personaje, elige la Experiencia que mejor encaje con ese propósito: gana un +1 permanente." }, { name: "Eficiente", text: "En un descanso corto puedes elegir una acción de descanso largo en lugar de una de descanso corto." }] },
+  { key: "Dracona", blurb: "Desciende de los dragones, con aliento elemental propio.", features: [{ name: "Escamas", text: "Tus escamas te protegen. Cuando fueras a recibir daño Grave, puedes marcar 1 Estrés para marcar 1 Punto de vida menos." }, { name: "Aliento Elemental", text: "Elige un elemento para tu aliento (electricidad, fuego, hielo…). Puedes usarlo contra objetivos en alcance Muy cercano como un arma de Instinto que hace d8 de daño mágico usando tu Competencia." }] },
+  { key: "Enano", blurb: "Bajo y robusto, resistente como la roca de sus montañas.", features: [{ name: "Piel Gruesa", text: "Cuando recibas daño Menor, puedes marcar 2 Estrés en vez de 1 Punto de vida." }, { name: "Fortaleza Aumentada", text: "Gasta 3 Esperanza para reducir a la mitad el daño físico que recibes." }] },
   {
     key: "Elfo",
     blurb: "Los elfos suelen ser humanoides altos, de orejas puntiagudas y sentidos muy agudos.",
@@ -208,44 +208,44 @@ const ANCESTRIES = [
       { name: "Trance Celestial", text: "Durante un descanso, puedes sumirte en un trance para elegir un movimiento de tiempo libre adicional." },
     ],
   },
-  { key: "Hada", blurb: "Pequeña y alada, ligada a la magia feérica." },
-  { key: "Fauno", blurb: "Mitad humano, mitad cabra, ágil y de espíritu libre." },
-  { key: "Firbolg", blurb: "Gigante gentil, en sintonía con los animales y la naturaleza." },
-  { key: "Fungril", blurb: "Humanoide fúngico surgido de las cavernas subterráneas." },
-  { key: "Galapa", blurb: "Humanoide con caparazón, paciente y protegido por naturaleza." },
-  { key: "Gigante", blurb: "De estatura descomunal y fuerza a la par." },
-  { key: "Goblin", blurb: "Pequeño, rápido e ingenioso, difícil de atrapar." },
-  { key: "Mediano", blurb: "Bajo de estatura pero grande en suerte y sigilo." },
-  { key: "Humano", blurb: "Adaptable y ambicioso, el más versátil de los pueblos." },
-  { key: "Infernal", blurb: "Desciende de linajes infernales, con cuernos y cola propios." },
-  { key: "Katari", blurb: "Felino humanoide de reflejos rápidos y gracia natural." },
-  { key: "Orco", blurb: "Fuerte y resistente, forjado por una cultura guerrera." },
-  { key: "Ribbet", blurb: "Humanoide anfibio, cómodo tanto en el agua como en tierra." },
-  { key: "Simiah", blurb: "Humanoide simiesco, ágil trepador de reflejos veloces." },
-  { key: "Gnomo", blurb: "Pequeño e inquieto, con una curiosidad natural por inventar." , expansion: "Hope & Fear" },
-  { key: "Aetheris", blurb: "Ser etéreo ligado a un plano más allá de lo material.", expansion: "Hope & Fear" },
-  { key: "Estirpe del Cielo", blurb: "Vinculado a las corrientes de aire y las alturas.", expansion: "Hope & Fear" },
-  { key: "Estirpe de la Marea", blurb: "Vinculado al mar y al ritmo de las mareas.", expansion: "Hope & Fear" },
-  { key: "Estirpe de la Tierra", blurb: "Vinculado a la roca y a las profundidades del suelo.", expansion: "Hope & Fear" },
-  { key: "Estirpe de la Brasa", blurb: "Vinculado al fuego y al calor de las brasas.", expansion: "Hope & Fear" },
+  { key: "Hada", blurb: "Pequeña y alada, ligada a la magia feérica.", features: [{ name: "Doblega la Suerte", text: "Una vez por sesión, después de que tú o un aliado dispuesto en alcance Cercano hagáis una tirada de acción, puedes gastar 3 Esperanza para repetir los Dados de Dualidad." }, { name: "Alas", text: "Puedes volar. Mientras vuelas, después de que un adversario te ataque puedes marcar 1 Estrés para ganar +2 a tu Evasión contra ese ataque." }] },
+  { key: "Fauno", blurb: "Mitad humano, mitad cabra, ágil y de espíritu libre.", features: [{ name: "Salto Caprino", text: "Puedes saltar a cualquier punto en alcance Cercano como si fuera un movimiento normal, superando obstáculos, huecos o barreras." }, { name: "Coz", text: "Cuando aciertas un ataque contra un objetivo Cuerpo a cuerpo, puedes marcar 1 Estrés para darle una coz: +2d6 de daño y os alejáis tú o él hasta alcance Muy cercano." }] },
+  { key: "Firbolg", blurb: "Gigante gentil, en sintonía con los animales y la naturaleza.", features: [{ name: "Carga", text: "Si superas una tirada de Agilidad para moverte desde alcance Lejano o Muy lejano hasta Cuerpo a cuerpo, puedes marcar 1 Estrés para hacer 1d12 de daño físico a todos los objetivos Cuerpo a cuerpo." }, { name: "Inquebrantable", text: "Cuando fueras a marcar Estrés, tira 1d6. Con un 6, no lo marcas." }] },
+  { key: "Fungril", blurb: "Humanoide fúngico surgido de las cavernas subterráneas.", features: [{ name: "Red Fúngica", text: "Haz una tirada de Instinto (12) para usar tu red de micelio y hablar con otros de tu ascendencia. Con éxito, os comunicáis a cualquier distancia." }, { name: "Conexión con la Muerte", text: "Tocando un cadáver reciente, puedes marcar 1 Estrés para extraerle un recuerdo ligado a una emoción o sensación que elijas." }] },
+  { key: "Galapa", blurb: "Humanoide con caparazón, paciente y protegido por naturaleza.", features: [{ name: "Caparazón", text: "Suma tu Competencia a tus umbrales de daño." }, { name: "Retraerse", text: "Marca 1 Estrés para meterte en tu caparazón: tienes resistencia al daño físico, desventaja en las tiradas de acción y no puedes moverte." }] },
+  { key: "Gigante", blurb: "De estatura descomunal y fuerza a la par.", features: [{ name: "Aguante", text: "Ganas una casilla adicional de Punto de vida al crear el personaje." }, { name: "Alcance", text: "Todo lo que tenga alcance Cuerpo a cuerpo (armas, habilidades, hechizos…) cuenta como si tuviera alcance Muy cercano." }] },
+  { key: "Goblin", blurb: "Pequeño, rápido e ingenioso, difícil de atrapar.", features: [{ name: "Pie Firme", text: "Ignoras la desventaja en las tiradas de Agilidad." }, { name: "Sentido del Peligro", text: "Una vez por descanso, marca 1 Estrés para obligar a un adversario a repetir un ataque contra ti o un aliado en alcance Muy cercano." }] },
+  { key: "Mediano", blurb: "Bajo de estatura pero grande en suerte y sigilo.", features: [{ name: "Trae Suerte", text: "Al empezar cada sesión, todo tu grupo gana 1 Esperanza." }, { name: "Brújula Interior", text: "Cuando saques un 1 en tu Dado de Esperanza, puedes repetirlo." }] },
+  { key: "Humano", blurb: "Adaptable y ambicioso, el más versátil de los pueblos.", features: [{ name: "Gran Resistencia", text: "Ganas una casilla adicional de Estrés al crear el personaje." }, { name: "Adaptabilidad", text: "Cuando falles una tirada en la que usaste una Experiencia, puedes marcar 1 Estrés para repetirla." }] },
+  { key: "Infernal", blurb: "Desciende de linajes infernales, con cuernos y cola propios.", features: [{ name: "Sin Miedo", text: "Cuando saques una tirada con Miedo, puedes marcar 2 Estrés para convertirla en una tirada con Esperanza." }, { name: "Rostro Temible", text: "Tienes ventaja en las tiradas para intimidar a criaturas hostiles." }] },
+  { key: "Katari", blurb: "Felino humanoide de reflejos rápidos y gracia natural.", features: [{ name: "Instinto Felino", text: "Cuando hagas una tirada de Agilidad, puedes gastar 2 Esperanza para repetir tu Dado de Esperanza." }, { name: "Garras Retráctiles", text: "Haz una tirada de Agilidad para arañar a un objetivo Cuerpo a cuerpo. Con éxito, queda temporalmente Vulnerable." }] },
+  { key: "Orco", blurb: "Fuerte y resistente, forjado por una cultura guerrera.", features: [{ name: "Robusto", text: "Cuando te quede 1 Punto de vida, los ataques contra ti tienen desventaja." }, { name: "Colmillos", text: "Cuando aciertas un ataque Cuerpo a cuerpo, puedes gastar 1 Esperanza para cornearle con tus colmillos: +1d6 de daño." }] },
+  { key: "Ribbet", blurb: "Humanoide anfibio, cómodo tanto en el agua como en tierra.", features: [{ name: "Anfibio", text: "Puedes respirar y moverte con normalidad bajo el agua." }, { name: "Lengua Larga", text: "Puedes agarrar cosas en alcance Cercano con tu lengua. Marca 1 Estrés para usarla como un arma de Destreza a alcance Cercano que hace d12 de daño físico con tu Competencia." }] },
+  { key: "Simiah", blurb: "Humanoide simiesco, ágil trepador de reflejos veloces.", features: [{ name: "Trepador Nato", text: "Tienes ventaja en las tiradas de Agilidad para mantener el equilibrio y trepar." }, { name: "Ágil", text: "Ganas un +1 permanente a tu Evasión al crear el personaje." }] },
+  { key: "Gnomo", blurb: "Pequeño e inquieto, con una curiosidad natural por inventar.", expansion: "Hope & Fear", features: [{ name: "Dedos Ágiles", text: "Cuando hagas una tirada de Destreza, puedes gastar 2 Esperanza para repetir tu Dado de Esperanza." }, { name: "Paso Fugaz", text: "Una vez por escena, puedes teletransportarte a un punto que veas en alcance Lejano." }] },
+  { key: "Aetheris", blurb: "Ser etéreo ligado a un plano más allá de lo material.", expansion: "Hope & Fear", features: [{ name: "Aura Sagrada", text: "Una vez por descanso largo, cuando un aliado en alcance Cercano saque una tirada con Miedo, puedes convertirla en una tirada con Esperanza." }, { name: "Alas Celestiales", text: "Tienes alas y puedes volar. Una vez por escena mientras vuelas, puedes gastar 1 Esperanza en lugar de marcar una casilla de Armadura." }] },
+  { key: "Estirpe del Cielo", blurb: "Vinculado a las corrientes de aire y las alturas.", expansion: "Hope & Fear", features: [{ name: "Fuerza del Vendaval", text: "Marca 1 Estrés para invocar una ráfaga que te lleva a ti o a un aliado Muy cercano hasta alcance Muy lejano. Además, siempre controlas la velocidad de tus caídas." }, { name: "Ojo de la Tormenta", text: "Gasta 2 Esperanza para darte a ti o a un aliado Cuerpo a cuerpo +1 a la Evasión hasta que recibáis daño Grave o vuelvas a usarlo." }] },
+  { key: "Estirpe de la Marea", blurb: "Vinculado al mar y al ritmo de las mareas.", expansion: "Hope & Fear", features: [{ name: "Anfibio", text: "Puedes respirar y moverte con normalidad bajo el agua." }, { name: "Manantial de Vida", text: "Una vez por descanso, si tienes acceso a un poco de agua, puedes marcar 1 Estrés para quitar 1 Punto de vida a ti o a un aliado en alcance Muy cercano." }] },
+  { key: "Estirpe de la Tierra", blurb: "Vinculado a la roca y a las profundidades del suelo.", expansion: "Hope & Fear", features: [{ name: "Piel de Piedra", text: "Ganas un +1 permanente a tu Puntuación de Armadura y a tus umbrales de daño al crear el personaje." }, { name: "Inamovible", text: "Mientras toques el suelo, no pueden levantarte ni moverte contra tu voluntad." }] },
+  { key: "Estirpe de la Brasa", blurb: "Vinculado al fuego y al calor de las brasas.", expansion: "Hope & Fear", features: [{ name: "Ignífugo", text: "Eres inmune al daño de fuego, mágico o normal." }, { name: "Ignición", text: "Marca 1 Estrés para envolver tu arma principal en llamas hasta el final de la escena: da luz brillante y +1d6 a las tiradas de daño con esa arma." }] },
 ];
 
 const COMMUNITIES = [
-  { key: "De Alta Cuna", blurb: "Creciste entre privilegios y expectativas de la nobleza." },
-  { key: "Del Saber", blurb: "Te formaste rodeado de libros, archivos y conocimiento acumulado." },
-  { key: "Del Orden", blurb: "Creciste bajo una disciplina estricta, militar o religiosa." },
-  { key: "De las Cumbres", blurb: "Tu hogar fueron las montañas y sus caminos escarpados." },
-  { key: "Del Mar", blurb: "Creciste entre puertos, barcos y el vaivén de las mareas." },
-  { key: "De las Sombras", blurb: "Tu cuna fue el bajo mundo, entre secretos y contactos turbios." },
-  { key: "De las Profundidades", blurb: "Naciste bajo tierra, en túneles y ciudades subterráneas." },
-  { key: "Errante", blurb: "Nunca tuviste un hogar fijo; el camino te crió." },
-  { key: "Salvaje", blurb: "Te criaste en plena naturaleza, lejos de la civilización." },
-  { key: "De las Dunas", blurb: "Creciste en tierras áridas, entre caravanas y arena.", expansion: "Hope & Fear" },
-  { key: "Del Hogar", blurb: "Tu vida giró en torno al fuego del hogar y la comunidad cercana.", expansion: "Hope & Fear" },
-  { key: "De la Escarcha", blurb: "Te criaste en tierras heladas, curtido por el frío.", expansion: "Hope & Fear" },
-  { key: "De la Guerra", blurb: "Creciste entre conflictos, formado para el combate.", expansion: "Hope & Fear" },
-  { key: "Libre", blurb: "Naciste sin ataduras a ninguna autoridad ni institución.", expansion: "Hope & Fear" },
-  { key: "Renacido", blurb: "Tu vida actual comenzó tras dejar atrás una anterior.", expansion: "Hope & Fear" },
+  { key: "De Alta Cuna", blurb: "Creciste entre privilegios y expectativas de la nobleza.", features: [{ name: "Privilegio", text: "Tienes ventaja en las tiradas para tratar con nobles, negociar precios o aprovechar tu reputación para conseguir lo que quieres." }] },
+  { key: "Del Saber", blurb: "Te formaste rodeado de libros, archivos y conocimiento acumulado.", features: [{ name: "Leído", text: "Tienes ventaja en las tiradas sobre la historia, la cultura o la política de una persona o un lugar importantes." }] },
+  { key: "Del Orden", blurb: "Creciste bajo una disciplina estricta, militar o religiosa.", features: [{ name: "Entregado", text: "Apunta tres dichos o valores que te inculcaron. Una vez por descanso, si describes cómo encarnas uno de ellos en lo que haces, puedes tirar un d20 como Dado de Esperanza." }] },
+  { key: "De las Cumbres", blurb: "Tu hogar fueron las montañas y sus caminos escarpados.", features: [{ name: "Firme", text: "Tienes ventaja en las tiradas para cruzar precipicios y cornisas peligrosos, orientarte en entornos duros y usar tus conocimientos de supervivencia." }] },
+  { key: "Del Mar", blurb: "Creciste entre puertos, barcos y el vaivén de las mareas.", features: [{ name: "Conocer la Marea", text: "Cuando saques una tirada con Miedo, pon una ficha en tu carta de comunidad (máximo tu nivel). Antes de una tirada de acción, puedes gastar fichas: +1 por cada una. Al final de la sesión se pierden las que queden." }] },
+  { key: "De las Sombras", blurb: "Tu cuna fue el bajo mundo, entre secretos y contactos turbios.", features: [{ name: "Granuja", text: "Tienes ventaja en las tiradas para negociar con criminales, detectar mentiras o encontrar un escondite seguro." }] },
+  { key: "De las Profundidades", blurb: "Naciste bajo tierra, en túneles y ciudades subterráneas.", features: [{ name: "Vida en la Penumbra", text: "En zonas con poca luz o sombras densas, tienes ventaja en las tiradas para esconderte, investigar o percibir detalles." }] },
+  { key: "Errante", blurb: "Nunca tuviste un hogar fijo; el camino te crió.", features: [{ name: "Petate Nómada", text: "Añade un Petate Nómada a tu inventario. Una vez por sesión, puedes gastar 1 Esperanza para sacar de él un objeto normal que te venga bien (lo acordáis con el DJ)." }] },
+  { key: "Salvaje", blurb: "Te criaste en plena naturaleza, lejos de la civilización.", features: [{ name: "Pies Ligeros", text: "Te mueves en silencio de forma natural. Tienes ventaja en las tiradas para moverte sin que te oigan." }] },
+  { key: "De las Dunas", blurb: "Creciste en tierras áridas, entre caravanas y arena.", expansion: "Hope & Fear", features: [{ name: "Oasis", text: "Durante un descanso corto, tú o un aliado podéis repetir un dado de una acción de descanso y quedaros con el mayor." }] },
+  { key: "Del Hogar", blurb: "Tu vida giró en torno al fuego del hogar y la comunidad cercana.", expansion: "Hope & Fear", features: [{ name: "Muy Unidos", text: "Una vez por descanso largo, puedes gastar cualquier cantidad de Esperanza para dársela a un aliado en alcance Lejano." }] },
+  { key: "De la Escarcha", blurb: "Te criaste en tierras heladas, curtido por el frío.", expansion: "Hope & Fear", features: [{ name: "Curtido", text: "Cuando descansas, te quitas 1 Punto de vida." }] },
+  { key: "De la Guerra", blurb: "Creciste entre conflictos, formado para el combate.", expansion: "Hope & Fear", features: [{ name: "Cara Valiente", text: "Una vez por sesión, cuando te obliguen a marcar Estrés, puedes gastar 1 Esperanza en su lugar." }] },
+  { key: "Libre", blurb: "Naciste sin ataduras a ninguna autoridad ni institución.", expansion: "Hope & Fear", features: [{ name: "Sin Ataduras", text: "Una vez por sesión, cuando saques una tirada con Miedo, puedes convertirla en una tirada con Esperanza." }] },
+  { key: "Renacido", blurb: "Tu vida actual comenzó tras dejar atrás una anterior.", expansion: "Hope & Fear", features: [{ name: "Familia Elegida", text: "Una vez por descanso, puedes gastar 1 Esperanza para usar una Experiencia de un aliado como si fuera tuya, contando cómo te preparó para este momento." }] },
 ];
 
 const TRANSFORMATIONS = [
@@ -8769,9 +8769,6 @@ export default function App({ onSignOut }) {
                         });
 
                         if (hopeFeature) {
-                          const currentHope = Number(c.hope_marked ?? HOPE_DEFAULT);
-                          const missing = Math.max(0, hopeFeature.cost - currentHope);
-                          const isDruida = c.f_class === "Druida";
                           items.push({
                             key: "hope",
                             Icon: Sparkles,
@@ -8780,8 +8777,6 @@ export default function App({ onSignOut }) {
                             title: hopeFeature.name,
                             summary: hopeFeature.text,
                             cost: { label: hopeFeature.cost + " Esperanza", kind: "hope" },
-                            warning: missing > 0 ? `Te faltan ${missing} de Esperanza` : null,
-                            dim: missing > 0,
                             onClick: openDetail({ kicker: "Característica de Esperanza", title: hopeFeature.name, text: hopeFeature.text, bigStyle: true, accent: "#E3B04B", stat: { label: "Coste en Esperanza", value: hopeFeature.cost }, hopeAction: { cost: hopeFeature.cost } }),
                           });
                         }
@@ -8810,7 +8805,7 @@ export default function App({ onSignOut }) {
                             kicker: "Comunidad",
                             title: c.f_community,
                             summary: blurb,
-                            onClick: openDetail({ kicker: "Comunidad", title: c.f_community, text: blurb, bigStyle: true }),
+                            onClick: openDetail({ kicker: "Comunidad", title: c.f_community, text: blurb, features: COMMUNITIES.find((cm) => cm.key === c.f_community)?.features, bigStyle: true }),
                           });
                         }
 
