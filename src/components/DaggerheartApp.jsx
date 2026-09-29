@@ -2301,6 +2301,9 @@ const sharedStyles = `
   .mh-eff-opts button { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 20px; border: 1.5px solid var(--mh-line2); background: var(--mh-panel); color: var(--mh-ink2); font: 600 12px 'Inter', system-ui, sans-serif; cursor: pointer; }
   .mh-eff-opts button.is-on { border-color: var(--rc); background: color-mix(in srgb, var(--rc) 12%, var(--mh-panel)); color: var(--mh-ink); }
   .mh-eff-opts button em { font-style: normal; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--rc); }
+  .mh-islot[draggable="true"] { cursor: grab; }
+  .mh-islot.is-drag { opacity: .4; }
+  .mh-islot.is-over { outline: 2px dashed var(--acc); outline-offset: 2px; }
   .mh-trov { --tb: #E07FB0; border: 1px solid color-mix(in srgb, var(--tb) 45%, var(--mh-line)); border-radius: 12px; padding: 10px 11px; background: linear-gradient(color-mix(in srgb, var(--tb) 8%, var(--mh-panel)), var(--mh-panel)); display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
   .mh-trov-h { display: flex; align-items: center; gap: 8px; }
   .mh-trov-h b { font-size: 13px; color: var(--mh-ink); }
@@ -5152,6 +5155,28 @@ export default function App({ onSignOut }) {
   const [newBackpackItemDraft, setNewBackpackItemDraft] = useState("");
   const [newBackpackItemDescDraft, setNewBackpackItemDescDraft] = useState("");
   const [showAddBackpackItemForm, setShowAddBackpackItemForm] = useState(false);
+
+  // Arrastrar un objeto a otro hueco: si está ocupado se intercambian; si está vacío, se mueve allí.
+  const [invDrag, setInvDrag] = useState(null);
+  const [invOver, setInvOver] = useState(null);
+  const moveInventoryItem = (id, from, to) => {
+    const c = charsRef.current[id];
+    if (!c || !from || !to || (from.zone === to.zone && from.index === to.index)) return;
+    const lists = { belt: [...getItems(c)], pack: [...getBackpackItems(c)] };
+    const item = lists[from.zone][from.index];
+    if (!item) return;
+    const target = lists[to.zone][to.index];
+    if (to.zone !== from.zone && !target && lists[to.zone].length >= ITEM_SLOTS) return;
+    if (target) {
+      lists[from.zone][from.index] = target;
+      lists[to.zone][to.index] = item;
+    } else {
+      lists[from.zone].splice(from.index, 1);
+      const at = Math.min(to.index, lists[to.zone].length);
+      lists[to.zone].splice(at, 0, item);
+    }
+    updateCharacterFields(id, { f_items: JSON.stringify(lists.belt), f_backpack_items: JSON.stringify(lists.pack) });
+  };
 
   const getBackpackItems = (c) => {
     try {
@@ -9429,10 +9454,24 @@ export default function App({ onSignOut }) {
                                   <button
                                     key={zone + i}
                                     type="button"
-                                    className={"mh-islot" + (active ? " on" : "")}
+                                    draggable
+                                    className={"mh-islot" + (active ? " on" : "") + (invOver && invOver.zone === zone && invOver.index === i ? " is-over" : "") + (invDrag && invDrag.zone === zone && invDrag.index === i ? " is-drag" : "")}
                                     style={{ "--ic": v.color }}
-                                    title={it.name}
-                                    onClick={() => setSelectedItemSlot(active ? null : { zone, index: i })}
+                                    title={it.name + " · arrástralo a otro hueco"}
+                                    onClick={() => {
+                                      setSelectedItemSlot({ zone, index: i });
+                                      openItemCard(zone, it, i);
+                                    }}
+                                    onDragStart={(e) => {
+                                      e.dataTransfer.effectAllowed = "move";
+                                      e.dataTransfer.setData("text/plain", zone + ":" + i);
+                                      setInvDrag({ zone, index: i });
+                                    }}
+                                    onDragEnd={() => {
+                                      setInvDrag(null);
+                                      setInvOver(null);
+                                    }}
+                                    {...dropProps(zone, i)}
                                   >
                                     <span className="mh-islot-ico">
                                       <v.Icon size={26} strokeWidth={1.6} />
@@ -9442,8 +9481,44 @@ export default function App({ onSignOut }) {
                                   </button>
                                 );
                               };
-                              const emptyCell = (key, onClick, label) => (
-                                <button key={key} type="button" className="mh-islot empty" title={label} aria-label={label} onClick={onClick}>
+                              const dropProps = (zone, i) => ({
+                                onDragOver: (e) => {
+                                  if (!invDrag) return;
+                                  e.preventDefault();
+                                  if (!invOver || invOver.zone !== zone || invOver.index !== i) setInvOver({ zone, index: i });
+                                },
+                                onDragLeave: () => setInvOver((o) => (o && o.zone === zone && o.index === i ? null : o)),
+                                onDrop: (e) => {
+                                  e.preventDefault();
+                                  if (invDrag) moveInventoryItem(viewingCharId, invDrag, { zone, index: i });
+                                  setInvDrag(null);
+                                  setInvOver(null);
+                                  setSelectedItemSlot(null);
+                                },
+                              });
+                              const openItemCard = (zone, it, i) => {
+                                const kind = equipKind(it.name);
+                                const v = visualOf(it);
+                                const w = kind === "primary" ? PRIMARY_WEAPONS.find((x) => x.key === it.name) : kind === "secondary" ? SECONDARY_WEAPONS.find((x) => x.key === it.name) : null;
+                                const a = kind === "armor" ? ARMORS.find((x) => x.key === it.name) : null;
+                                const hands = w ? (w.hands === 2 ? "Dos manos" : "Una mano") : "";
+                                const where = zone === "pack" ? " · en la mochila" : "";
+                                const equip = zone === "belt" && kind ? { kind, name: it.name } : null;
+                                if (w)
+                                  return setViewingCardDetail({ kicker: (kind === "primary" ? "Arma principal" : "Arma secundaria") + where, title: w.key, text: w.trait !== "—" ? `${w.trait} · ${w.range} · ${w.damage} · ${hands}` : `${w.damage} · ${hands}`, weapon: { damage: w.damage, trait: w.trait, range: w.range, hands }, showCharacteristic: true, characteristic: w.feature, bigStyle: true, tier: w.tier, equipAction: equip });
+                                if (a)
+                                  return setViewingCardDetail({ kicker: "Armadura" + where, title: a.key, text: `Puntuación ${a.score} · Umbrales base ${a.major}/${a.severe}`, armor: { score: a.score, major: a.major, severe: a.severe }, showCharacteristic: true, characteristic: a.feature, bigStyle: true, tier: a.tier, equipAction: equip });
+                                setViewingCardDetail({
+                                  kicker: v.kind + where,
+                                  title: it.name,
+                                  text: it.description || "Un objeto del inventario de " + (c.f_name || "este personaje") + ".",
+                                  ...((it.count || 1) > 1 ? { stat: { label: "Cantidad", value: "×" + it.count } } : {}),
+                                  bigStyle: true,
+                                  itemIcon: v.Icon,
+                                });
+                              };
+                              const emptyCell = (key, onClick, label, zone, i) => (
+                                <button key={key} type="button" className={"mh-islot empty" + (zone && invOver && invOver.zone === zone && invOver.index === i ? " is-over" : "")} title={label} aria-label={label} onClick={onClick} {...(zone ? dropProps(zone, i) : {})}>
                                   <Plus size={16} />
                                 </button>
                               );
@@ -9460,7 +9535,7 @@ export default function App({ onSignOut }) {
                                         : emptyCell("be" + i, () => {
                                             setShowAddItemModal(true);
                                             setAddItemModalTab("catalog");
-                                          }, "Añadir objeto")
+                                          }, "Añadir objeto", "belt", i)
                                     )}
                                   </div>
 
@@ -9485,7 +9560,7 @@ export default function App({ onSignOut }) {
                                         emptyCell("pe" + i, () => {
                                           setSelectedItemSlot(null);
                                           setShowAddBackpackItemForm(true);
-                                        }, "Añadir a la mochila")
+                                        }, "Añadir a la mochila", "pack", i)
                                       ) : (
                                         <div key={"pd" + i} className="mh-islot empty" style={{ borderStyle: "dotted", cursor: "default" }}>
                                           <Backpack size={15} />
@@ -9556,7 +9631,7 @@ export default function App({ onSignOut }) {
                                         );
                                       })()
                                     ) : (
-                                      <span style={{ fontSize: 12, color: "var(--mh-muted)", width: "100%", textAlign: "center" }}>Pulsa un objeto para ver sus opciones.</span>
+                                      <span style={{ fontSize: 12, color: "var(--mh-muted)", width: "100%", textAlign: "center" }}>Pulsa un objeto para verlo o arrástralo a otro hueco.</span>
                                     )}
                                   </div>
                                 </div>
@@ -11683,6 +11758,8 @@ export default function App({ onSignOut }) {
                     ? weaponIcon(d.title)
                     : d.transformForm
                     ? Moon
+                    : d.itemIcon
+                    ? d.itemIcon
                     : d.hopeAction
                     ? Sparkles
                     : d.stat
@@ -11724,6 +11801,20 @@ export default function App({ onSignOut }) {
                       run: () => {
                         rollTraitCheck(viewingCharId, action.traitLabel, Number(c[action.traitKey] || 0), null, { name: d.title, dc: action.dc });
                         setViewingCardDetail(null);
+                      },
+                    });
+                  }
+                  // Objeto del cinturón que se puede equipar.
+                  if (d.equipAction && !d.fromChat) {
+                    cardActs.unshift({
+                      key: "equip",
+                      Icon: ShieldHalf,
+                      label: "Equipar " + d.equipAction.name,
+                      sub: "",
+                      run: () => {
+                        closeCardDetail();
+                        setSelectedItemSlot(null);
+                        equipFromInventory(viewingCharId, d.equipAction.kind, d.equipAction.name);
                       },
                     });
                   }
@@ -11770,7 +11861,7 @@ export default function App({ onSignOut }) {
                       label: "Mostrar en la campaña",
                       sub: shareCamp.name,
                       run: () => {
-                        const { fromChat, navigateAction, transformForm, ...detail } = d;
+                        const { fromChat, navigateAction, transformForm, itemIcon, equipAction, hopeAction, ...detail } = d;
                         // Las imágenes incrustadas muy grandes no se copian al chat.
                         if (typeof detail.image === "string" && detail.image.startsWith("data:") && detail.image.length > 30000) delete detail.image;
                         const type = d.domain ? "domain" : d.weapon ? "weapon" : d.armor ? "armor" : "card";
