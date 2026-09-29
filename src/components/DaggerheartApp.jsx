@@ -332,7 +332,7 @@ const TRANSFORMATION_ART = {
 };
 
 // Ilustración de cada clase del manual básico (el halo usa el color de la clase).
-// Ilustraciones de las cartas de subclase (manual básico y Hope & Fear).
+// Ilustraciones de subclase recortadas (páginas de clase del manual básico y de Hope & Fear).
 const SUBCLASS_ART = {
   "Trovador": "/subclases/trovador.webp",
   "Orador": "/subclases/orador.webp",
@@ -2502,8 +2502,6 @@ const sharedStyles = `
     mask-composite: intersect;
     animation: mh-wz-art-in .35s ease-out;
   }
-  /* Subclases: escenas a sangre, con un difuminado más amplio en los bordes */
-  .mh-wz-art.is-sub img { -webkit-mask-image: linear-gradient(to right, transparent 0, #000 30%, #000 64%, transparent 94%), linear-gradient(to bottom, transparent 0, #000 16%, #000 74%, transparent 100%); -webkit-mask-composite: source-in; mask-image: linear-gradient(to right, transparent 0, #000 30%, #000 64%, transparent 94%), linear-gradient(to bottom, transparent 0, #000 16%, #000 74%, transparent 100%); mask-composite: intersect; }
   @keyframes mh-wz-art-in { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
   .mh-wz-foot { flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 11px 22px; border-top: 1px solid var(--mh-line); background: var(--mh-panel2); }
   .mh-wz-sum { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; overflow: hidden; }
@@ -12399,7 +12397,7 @@ export default function App({ onSignOut }) {
                       </div>
                     )}
                     {wizardStep === "subclass" && SUBCLASS_ART[current?.key] && (
-                      <div className="mh-wz-art is-sub" style={{ "--tc": CLASS_COLORS[CLASSES[carouselIndex].key] || "#E3B04B" }} aria-hidden="true">
+                      <div className="mh-wz-art" style={{ "--tc": CLASS_COLORS[CLASSES[carouselIndex].key] || "#E3B04B" }} aria-hidden="true">
                         <img key={current.key} src={SUBCLASS_ART[current.key]} alt="" />
                       </div>
                     )}
