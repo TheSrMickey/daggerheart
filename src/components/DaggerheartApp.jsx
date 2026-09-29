@@ -2502,13 +2502,8 @@ const sharedStyles = `
     mask-composite: intersect;
     animation: mh-wz-art-in .35s ease-out;
   }
-  /* Subclases: ilustración apaisada en cabecera, con los bordes difuminados */
-  .mh-wz-det.has-hero { position: relative; }
-  .mh-wz-hero { position: relative; flex-shrink: 0; margin: -20px -24px -64px; height: 250px; pointer-events: none; background: radial-gradient(70% 90% at 50% 40%, color-mix(in srgb, var(--tc) 18%, transparent), transparent 75%); }
-  .mh-wz-hero img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 35%; -webkit-mask-image: linear-gradient(to right, transparent 0, #000 14%, #000 86%, transparent 100%), linear-gradient(to bottom, #000 0, #000 45%, transparent 100%); -webkit-mask-composite: source-in; mask-image: linear-gradient(to right, transparent 0, #000 14%, #000 86%, transparent 100%), linear-gradient(to bottom, #000 0, #000 45%, transparent 100%); mask-composite: intersect; animation: mh-wz-art-in .35s ease-out; }
-  .mh-wz-det.has-hero > :not(.mh-wz-hero) { position: relative; }
-  @media (max-width: 760px) { .mh-wz-hero { height: 170px; margin-bottom: -44px; } }
-  .mh-wz-art.is-wide img { top: 4%; right: 8px; bottom: auto; height: 92%; width: calc(100% - 8px); max-width: none; object-fit: cover; object-position: center; -webkit-mask-image: linear-gradient(to right, transparent 0, #000 20%, #000 84%, transparent 100%), linear-gradient(to bottom, transparent 0, #000 12%, #000 84%, transparent 100%); mask-image: linear-gradient(to right, transparent 0, #000 20%, #000 84%, transparent 100%), linear-gradient(to bottom, transparent 0, #000 12%, #000 84%, transparent 100%); }
+  /* Subclases: escenas a sangre, con un difuminado más amplio en los bordes */
+  .mh-wz-art.is-sub img { -webkit-mask-image: linear-gradient(to right, transparent 0, #000 30%, #000 64%, transparent 94%), linear-gradient(to bottom, transparent 0, #000 16%, #000 74%, transparent 100%); -webkit-mask-composite: source-in; mask-image: linear-gradient(to right, transparent 0, #000 30%, #000 64%, transparent 94%), linear-gradient(to bottom, transparent 0, #000 16%, #000 74%, transparent 100%); mask-composite: intersect; }
   @keyframes mh-wz-art-in { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
   .mh-wz-foot { flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 11px 22px; border-top: 1px solid var(--mh-line); background: var(--mh-panel2); }
   .mh-wz-sum { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; overflow: hidden; }
@@ -12397,14 +12392,14 @@ export default function App({ onSignOut }) {
                       );
                     })}
                   </div>
-                  <div className={"mh-wz-det" + ((wizardStep === "class" && CLASS_ART[CLASSES[carouselIndex].key]) ? " has-art" : "") + (wizardStep === "subclass" && SUBCLASS_ART[current?.key] ? " has-hero" : "")}>
+                  <div className={"mh-wz-det" + ((wizardStep === "class" && CLASS_ART[CLASSES[carouselIndex].key]) || (wizardStep === "subclass" && SUBCLASS_ART[current?.key]) ? " has-art" : "")}>
                     {wizardStep === "class" && CLASS_ART[CLASSES[carouselIndex].key] && (
                       <div className="mh-wz-art" style={{ "--tc": CLASS_COLORS[CLASSES[carouselIndex].key] || "#E3B04B" }} aria-hidden="true">
                         <img key={CLASSES[carouselIndex].key} src={CLASS_ART[CLASSES[carouselIndex].key]} alt="" />
                       </div>
                     )}
                     {wizardStep === "subclass" && SUBCLASS_ART[current?.key] && (
-                      <div className="mh-wz-hero" style={{ "--tc": CLASS_COLORS[CLASSES[carouselIndex].key] || "#E3B04B" }} aria-hidden="true">
+                      <div className="mh-wz-art is-sub" style={{ "--tc": CLASS_COLORS[CLASSES[carouselIndex].key] || "#E3B04B" }} aria-hidden="true">
                         <img key={current.key} src={SUBCLASS_ART[current.key]} alt="" />
                       </div>
                     )}
