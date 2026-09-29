@@ -2256,6 +2256,8 @@ const sharedStyles = `
   .mh-pre-opt { --pc: #6FBF73; width: 100%; display: flex; align-items: center; gap: 10px; padding: 9px 10px; margin-bottom: 6px; border: 1.5px solid var(--mh-line); border-radius: 11px; background: var(--mh-panel); color: var(--mh-ink); font: inherit; text-align: left; cursor: pointer; }
   .mh-pre-opt.is-rally { --pc: #E07FB0; }
   .mh-pre-opt.is-adv { --pc: #5B8FD9; }
+  .mh-pre-opt.is-priv { --pc: #B8862E; }
+  .mh-pre-cost.is-priv { background: color-mix(in srgb, #B8862E 18%, var(--mh-panel)); color: color-mix(in srgb, #B8862E 70%, var(--mh-ink)); }
   .mh-pre-opt:hover:not(:disabled) { border-color: color-mix(in srgb, var(--pc) 60%, var(--mh-line)); }
   .mh-pre-opt.is-on { border-color: var(--pc); background: color-mix(in srgb, var(--pc) 9%, var(--mh-panel)); }
   .mh-pre-opt:disabled { opacity: .45; cursor: not-allowed; }
@@ -6422,7 +6424,7 @@ export default function App({ onSignOut }) {
   // Antes de tirar: ventana para añadir Experiencias, el dado de Arenga o Ventaja.
   const [preRoll, setPreRoll] = useState(null);
   const rollTraitCheck = (charId, traitLabel, traitValue, weapon, cardContext, advantage) => {
-    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage, exps: [], rally: false });
+    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage, exps: [], rally: false, privilege: false });
   };
   const confirmPreRoll = () => {
     const pr = preRoll;
@@ -6435,7 +6437,7 @@ export default function App({ onSignOut }) {
     if (rallyDie) patch.f_rally_die = "";
     if (Object.keys(patch).length) updateCharacterFields(pr.charId, patch);
     setPreRoll(null);
-    doTraitRoll(pr.charId, pr.traitLabel, pr.traitValue, pr.weapon, pr.cardContext, pr.advantage, {
+    doTraitRoll(pr.charId, pr.traitLabel, pr.traitValue, pr.weapon, pr.cardContext, pr.advantage || pr.privilege, {
       exps: exps.map((e) => ({ text: e.text, bonus: Number(e.bonus) || 0 })),
       rallyDie,
     });
@@ -10765,9 +10767,10 @@ export default function App({ onSignOut }) {
                 preRoll.traitLabel + " " + (preRoll.traitValue >= 0 ? "+" : "") + preRoll.traitValue,
                 ...exps.filter((_, i) => preRoll.exps.includes(i)).map((e) => e.text + " +" + e.bonus),
                 preRoll.rally && ch.f_rally_die ? "Arenga " + ch.f_rally_die : "",
-                preRoll.advantage ? "Ventaja d6" : "",
+                preRoll.advantage || preRoll.privilege ? "Ventaja d6" + (preRoll.privilege && !preRoll.advantage ? " (Privilegio)" : "") : "",
               ].filter(Boolean);
-              const formula = "2d12 " + (mod >= 0 ? "+ " : "− ") + Math.abs(mod) + (preRoll.rally && ch.f_rally_die ? " + 1" + ch.f_rally_die : "") + (preRoll.advantage ? " + 1d6" : "");
+              const highborne = ch.f_community === "De Alta Cuna";
+              const formula = "2d12 " + (mod >= 0 ? "+ " : "− ") + Math.abs(mod) + (preRoll.rally && ch.f_rally_die ? " + 1" + ch.f_rally_die : "") + (preRoll.advantage || preRoll.privilege ? " + 1d6" : "");
               const toggleExp = (i) =>
                 setPreRoll((p) => ({ ...p, exps: p.exps.includes(i) ? p.exps.filter((x) => x !== i) : [...p.exps, i] }));
               return (
@@ -10819,6 +10822,19 @@ export default function App({ onSignOut }) {
                             <small>Lo gastas: se suma a la tirada</small>
                           </span>
                           <span className="mh-pre-cost is-rally">+1{ch.f_rally_die}</span>
+                        </button>
+                      </>
+                    )}
+                    {highborne && (
+                      <>
+                        <div className="mh-pre-sec">Comunidad · De Alta Cuna</div>
+                        <button type="button" className={"mh-pre-opt is-priv" + (preRoll.privilege ? " is-on" : "")} aria-pressed={preRoll.privilege} onClick={() => setPreRoll((p) => ({ ...p, privilege: !p.privilege }))}>
+                          <span className="mh-pre-bx">{preRoll.privilege && <Check size={12} strokeWidth={3} />}</span>
+                          <span className="mh-pre-t">
+                            <b>Privilegio</b>
+                            <small>Si tratas con nobles, negocias un precio o usas tu reputación</small>
+                          </span>
+                          <span className="mh-pre-cost is-priv">Ventaja</span>
                         </button>
                       </>
                     )}
