@@ -2260,7 +2260,35 @@ const sharedStyles = `
     .mh-cardc-dock { position: relative; left: auto; top: auto; translate: none; flex-direction: row; margin-top: -18px; padding: 26px 10px 10px; border: 2px solid var(--cc); border-top: 0; border-radius: 0 0 18px 18px; }
     .mh-cardc-tip { left: 50%; top: auto; bottom: calc(100% + 30px); translate: -50% 0; }
   }
-  .mh-pre { margin: 0; width: min(380px, 100%); max-height: 90%; overflow-y: auto; padding: 16px; border-radius: 16px; display: flex; flex-direction: column; }
+  .mh-pre { margin: 0; width: min(820px, 100%); max-height: 90%; overflow-y: auto; padding: 18px 20px; border-radius: 18px; display: flex; flex-direction: column; }
+  .mh-pre-body { display: grid; grid-template-columns: minmax(0, 1fr) 290px; gap: 20px; margin-top: 4px; }
+  .mh-pre-opts { min-width: 0; }
+  .mh-pre-side { display: flex; flex-direction: column; gap: 10px; padding-left: 20px; border-left: 1px solid var(--mh-line); }
+  @media (max-width: 720px) { .mh-pre-body { grid-template-columns: 1fr; } .mh-pre-side { padding-left: 0; border-left: 0; border-top: 1px solid var(--mh-line); padding-top: 12px; } }
+  .mh-pre-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+  .mh-pre-grid.is-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .mh-pre-tile { --pc: #E3B04B; position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; padding: 9px 11px; border: 1.5px solid var(--mh-line); border-radius: 11px; background: var(--mh-panel); color: var(--mh-ink); font: inherit; text-align: left; cursor: pointer; transition: border-color .15s, background .15s; }
+  .mh-pre-tile b { font-size: 12.5px; line-height: 1.25; padding-right: 44px; overflow-wrap: anywhere; }
+  .mh-pre-tile small { font-size: 10.5px; color: var(--mh-muted); line-height: 1.3; }
+  .mh-pre-tile em { position: absolute; top: 9px; right: 10px; font-style: normal; font-size: 11px; font-weight: 800; color: color-mix(in srgb, var(--pc) 70%, var(--mh-ink)); }
+  .mh-pre-tile:hover:not(:disabled) { border-color: color-mix(in srgb, var(--pc) 60%, var(--mh-line)); }
+  .mh-pre-tile.is-on { border-color: var(--pc); background: color-mix(in srgb, var(--pc) 12%, var(--mh-panel)); }
+  .mh-pre-tile:disabled { opacity: .45; cursor: not-allowed; }
+  .mh-pre-seg { display: inline-flex; padding: 3px; gap: 2px; border: 1.5px solid var(--mh-line); border-radius: 30px; background: var(--mh-panel); }
+  .mh-pre-seg button { border: 0; background: transparent; padding: 6px 13px; border-radius: 30px; font: 600 12px 'Inter', system-ui, sans-serif; color: var(--mh-muted); cursor: pointer; }
+  .mh-pre-seg button.is-on { background: var(--mh-panel3); color: var(--mh-ink); }
+  .mh-pre-seg button.is-adv.is-on { background: color-mix(in srgb, #5B8FD9 16%, var(--mh-panel)); color: color-mix(in srgb, #5B8FD9 75%, var(--mh-ink)); }
+  .mh-pre-seg button.is-dis.is-on { background: color-mix(in srgb, #D9644E 15%, var(--mh-panel)); color: color-mix(in srgb, #D9644E 75%, var(--mh-ink)); }
+  .mh-pre-dice { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 6px 8px; padding: 4px 0 2px; }
+  .mh-pre-dice { gap: 6px 4px; }
+  .mh-pre-dice .mh-die-wrap { min-width: 0; }
+  .mh-pre-dice .mh-die-label { font-size: 8.5px; letter-spacing: .04em; }
+  .mh-pre-lines { display: flex; flex-direction: column; gap: 5px; font-size: 12px; color: var(--mh-ink3); }
+  .mh-pre-lines > div { display: flex; justify-content: space-between; gap: 10px; }
+  .mh-pre-lines span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mh-pre-lines b { color: var(--mh-ink); white-space: nowrap; display: inline-flex; align-items: center; gap: 3px; }
+  .mh-pre-lines .is-cost { border-top: 1px dashed var(--mh-line2); padding-top: 6px; margin-top: 1px; }
+  .mh-pre-lines .is-cost b { color: var(--mh-gold-ink); }
   .mh-pre-h { display: flex; align-items: center; gap: 10px; }
   .mh-pre-h b { display: block; font-size: 16px; color: var(--mh-ink); }
   .mh-pre-h small { font-size: 11.5px; color: var(--mh-muted); }
@@ -2285,10 +2313,10 @@ const sharedStyles = `
   .mh-pre-cost.is-rally { background: color-mix(in srgb, #E07FB0 20%, var(--mh-panel)); color: color-mix(in srgb, #E07FB0 60%, var(--mh-ink)); }
   .mh-pre-cost.is-adv { background: color-mix(in srgb, #5B8FD9 18%, var(--mh-panel)); color: color-mix(in srgb, #5B8FD9 65%, var(--mh-ink)); }
   .mh-pre-note { font-size: 11px; color: #D9644E; margin: -2px 0 4px; }
-  .mh-pre-sum { display: flex; align-items: center; gap: 10px; margin-top: 8px; padding: 9px 11px; border-radius: 10px; background: var(--mh-panel2); font-size: 11.5px; color: var(--mh-ink3); }
+  .mh-pre-sum { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 2px; padding: 10px 11px; border-radius: 10px; background: var(--mh-panel2); font-size: 11.5px; color: var(--mh-ink3); }
   .mh-pre-sum span { flex: 1; min-width: 0; }
-  .mh-pre-sum b { font-size: 16px; color: var(--mh-ink); white-space: nowrap; }
-  .mh-pre-go { margin-top: 10px; justify-content: center; display: inline-flex; align-items: center; gap: 6px; padding: 10px 14px; font-size: 14px; }
+  .mh-pre-sum b { font-size: 18px; color: var(--mh-ink); white-space: nowrap; }
+  .mh-pre-go { margin-top: 0; justify-content: center; display: inline-flex; align-items: center; gap: 6px; padding: 10px 14px; font-size: 14px; }
   .mh-pre-plain { margin-top: 6px; border: 0; background: transparent; color: var(--mh-muted); font: 500 12px 'Inter', system-ui, sans-serif; cursor: pointer; }
   .mh-qa-scroll { padding-bottom: 18px; mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent); -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent); }
   .mh-pre-opt.is-poet.is-on { border-color: #C77DBA; background: color-mix(in srgb, #C77DBA 12%, var(--mh-panel)); }
@@ -10910,20 +10938,60 @@ export default function App({ onSignOut }) {
               const hopeNow = Number(ch.hope_marked ?? HOPE_DEFAULT);
               const expSum = exps.filter((_, i) => preRoll.exps.includes(i)).reduce((a, e) => a + (Number(e.bonus) || 0), 0);
               const mod = preRoll.traitValue + expSum;
-              const parts = [
-                preRoll.traitLabel + " " + (preRoll.traitValue >= 0 ? "+" : "") + preRoll.traitValue,
-                ...exps.filter((_, i) => preRoll.exps.includes(i)).map((e) => e.text + " +" + e.bonus),
-                preRoll.rally && ch.f_rally_die ? "Arenga " + ch.f_rally_die : "",
-                preRoll.poet ? "Corazón de Poeta d4" : "",
-                (preRoll.advantage || preRoll.privilege) && preRoll.disadvantage ? "Ventaja y desventaja se anulan" : preRoll.advantage || preRoll.privilege ? "Ventaja d6" + (preRoll.privilege ? " (Privilegio)" : "") : preRoll.disadvantage ? "Desventaja d6" : "",
-              ].filter(Boolean);
               const edgeNet = (preRoll.advantage || preRoll.privilege ? 1 : 0) - (preRoll.disadvantage ? 1 : 0);
               const highborne = ch.f_community === "De Alta Cuna";
               const poetOk = ch.f_subclass === "Orador" && preRoll.traitLabel === "Presencia";
               const hopeUsed = preRoll.exps.length + (preRoll.poet ? 1 : 0);
-              const formula = "2d12 " + (mod >= 0 ? "+ " : "− ") + Math.abs(mod) + (preRoll.rally && ch.f_rally_die ? " + 1" + ch.f_rally_die : "") + (preRoll.poet ? " + 1d4" : "") + (edgeNet > 0 ? " + 1d6" : edgeNet < 0 ? " − 1d6" : "");
+              const formula = "2d12 " + (mod >= 0 ? "+ " : "− ") + Math.abs(mod) + (preRoll.rally && ch.f_rally_die ? " + 1" + ch.f_rally_die : "") + (preRoll.poet ? " + 1d4" : "") + (preRoll.weapon && ch.f_transformation_form_active === "Forma de Lobo" ? " + 1d10" : "") + (edgeNet > 0 ? " + 1d6" : edgeNet < 0 ? " − 1d6" : "");
               const toggleExp = (i) =>
                 setPreRoll((p) => ({ ...p, exps: p.exps.includes(i) ? p.exps.filter((x) => x !== i) : [...p.exps, i] }));
+              const wolf = preRoll.weapon && ch.f_transformation_form_active === "Forma de Lobo";
+              const rallyOn = preRoll.rally && ch.f_rally_die;
+              // Posición del selector: la Ventaja de Privilegio se cuenta aparte.
+              const edgePos = preRoll.disadvantage ? "dis" : preRoll.advantage ? "adv" : "none";
+              const setEdge = (pos) => setPreRoll((p) => ({ ...p, disadvantage: pos === "dis", advantage: pos === "adv", privilege: pos === "adv" ? false : p.privilege }));
+              const tile = (key, { on, disabled, title, sub, cost, color, onClick, hint }) => (
+                <button key={key} type="button" className={"mh-pre-tile" + (on ? " is-on" : "")} style={{ "--pc": color }} disabled={disabled} aria-pressed={!!on} title={hint} onClick={onClick}>
+                  <b>{title}</b>
+                  <em>{cost}</em>
+                  <small>{sub}</small>
+                </button>
+              );
+              const bonusTiles = [
+                rallyOn || ch.f_rally_die ? tile("rally", { on: preRoll.rally, title: "Arenga", sub: "Gastas tu dado", cost: "+1" + ch.f_rally_die, color: "#E07FB0", onClick: () => setPreRoll((p) => ({ ...p, rally: !p.rally })) }) : null,
+                poetOk
+                  ? tile("poet", {
+                      on: preRoll.poet,
+                      disabled: !preRoll.poet && hopeUsed >= hopeNow,
+                      title: "Corazón de Poeta",
+                      sub: "Orador · 1 Esperanza",
+                      cost: "+1d4",
+                      color: "#C77DBA",
+                      hint: !preRoll.poet && hopeUsed >= hopeNow ? "No te queda Esperanza" : "Si quieres impresionar, persuadir u ofender a alguien",
+                      onClick: () => setPreRoll((p) => ({ ...p, poet: !p.poet })),
+                    })
+                  : null,
+                highborne
+                  ? tile("priv", {
+                      on: preRoll.privilege,
+                      title: "Privilegio",
+                      sub: "De Alta Cuna",
+                      cost: "Ventaja",
+                      color: "#B8862E",
+                      hint: "Si tratas con nobles, negocias un precio o usas tu reputación",
+                      onClick: () => setPreRoll((p) => ({ ...p, privilege: !p.privilege, advantage: p.privilege ? p.advantage : false })),
+                    })
+                  : null,
+              ].filter(Boolean);
+              const lines = [
+                [preRoll.traitLabel, (preRoll.traitValue >= 0 ? "+" : "−") + Math.abs(preRoll.traitValue)],
+                ...exps.filter((_, i) => preRoll.exps.includes(i)).map((e) => [e.text, "+" + e.bonus]),
+                rallyOn ? ["Arenga", "+1" + ch.f_rally_die] : null,
+                preRoll.poet ? ["Corazón de Poeta", "+1d4"] : null,
+                wolf ? ["Forma de Lobo", "+1d10"] : null,
+                edgeNet ? [edgeNet > 0 ? "Ventaja" + (preRoll.privilege ? " (Privilegio)" : "") : "Desventaja", edgeNet > 0 ? "+1d6" : "−1d6"] : (preRoll.advantage || preRoll.privilege) && preRoll.disadvantage ? ["Ventaja y desventaja", "se anulan"] : null,
+              ].filter(Boolean);
+              const DS = 40;
               return (
                 <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 45, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)" }} onClick={() => setPreRoll(null)}>
                   <div className="mh-card mh-card-anim mh-pre" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={"Tirada de " + preRoll.traitLabel}>
@@ -10934,112 +11002,85 @@ export default function App({ onSignOut }) {
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <b className="mh-serif">{preRoll.cardContext ? preRoll.cardContext.name : preRoll.weapon ? "Ataque con " + preRoll.weapon.name : "Tirada de " + preRoll.traitLabel}</b>
                         <small>
-                          {preRoll.traitLabel} · Esperanza y Miedo{preRoll.cardContext ? " · Dificultad " + preRoll.cardContext.dc : ""}
+                          {preRoll.traitLabel} {(preRoll.traitValue >= 0 ? "+" : "−") + Math.abs(preRoll.traitValue)} · Esperanza y Miedo{preRoll.cardContext ? " · Dificultad " + preRoll.cardContext.dc : ""}
                         </small>
                       </div>
                       <button type="button" className="mh-inv-x" aria-label="Cerrar" onClick={() => setPreRoll(null)}>
                         <X size={16} />
                       </button>
                     </div>
-                    {exps.length > 0 && (
-                      <>
-                        <div className="mh-pre-sec">Experiencias · 1 Esperanza cada una</div>
-                        {exps.map((e, i) => {
-                          const on = preRoll.exps.includes(i);
-                          const cant = !on && hopeUsed >= hopeNow;
-                          return (
-                            <button key={i} type="button" className={"mh-pre-opt" + (on ? " is-on" : "")} disabled={cant} aria-pressed={on} onClick={() => toggleExp(i)} title={cant ? "No te queda Esperanza" : undefined}>
-                              <span className="mh-pre-bx">{on && <Check size={12} strokeWidth={3} />}</span>
-                              <span className="mh-pre-t">
-                                <b>{e.text}</b>
-                                <small>Si encaja con lo que haces</small>
-                              </span>
-                              <span className="mh-pre-cost">
-                                +{e.bonus} · 1 <Sparkles size={10} />
-                              </span>
+                    <div className="mh-pre-body">
+                      <div className="mh-pre-opts">
+                        {exps.length > 0 && (
+                          <>
+                            <div className="mh-pre-sec">Experiencias · 1 Esperanza cada una</div>
+                            <div className="mh-pre-grid">
+                              {exps.map((e, i) => {
+                                const on = preRoll.exps.includes(i);
+                                const cant = !on && hopeUsed >= hopeNow;
+                                return tile(i, { on, disabled: cant, title: e.text, sub: "Si encaja con lo que haces", cost: "+" + e.bonus, color: "#E3B04B", hint: cant ? "No te queda Esperanza" : undefined, onClick: () => toggleExp(i) });
+                              })}
+                            </div>
+                            {hopeNow === 0 && <div className="mh-pre-note">No te queda Esperanza para usar experiencias.</div>}
+                          </>
+                        )}
+                        {bonusTiles.length > 0 && (
+                          <>
+                            <div className="mh-pre-sec">Bonificaciones</div>
+                            <div className="mh-pre-grid is-3">{bonusTiles}</div>
+                          </>
+                        )}
+                        <div className="mh-pre-sec">Ventaja</div>
+                        <div className="mh-pre-seg" role="radiogroup" aria-label="Ventaja o desventaja">
+                          {[
+                            ["dis", "Desventaja −1d6"],
+                            ["none", "Normal"],
+                            ["adv", "Ventaja +1d6"],
+                          ].map(([k, l]) => (
+                            <button key={k} type="button" role="radio" aria-checked={edgePos === k} className={"is-" + k + (edgePos === k ? " is-on" : "")} onClick={() => setEdge(k)}>
+                              {l}
                             </button>
-                          );
-                        })}
-                        {hopeNow === 0 && <div className="mh-pre-note">No te queda Esperanza para usar experiencias.</div>}
-                      </>
-                    )}
-                    {ch.f_rally_die && (
-                      <>
-                        <div className="mh-pre-sec">Arenga</div>
-                        <button type="button" className={"mh-pre-opt is-rally" + (preRoll.rally ? " is-on" : "")} aria-pressed={preRoll.rally} onClick={() => setPreRoll((p) => ({ ...p, rally: !p.rally }))}>
-                          <span className="mh-pre-bx">{preRoll.rally && <Check size={12} strokeWidth={3} />}</span>
-                          <span className="mh-pre-t">
-                            <b>Dado de Arenga</b>
-                            <small>Lo gastas: se suma a la tirada</small>
-                          </span>
-                          <span className="mh-pre-cost is-rally">+1{ch.f_rally_die}</span>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="mh-pre-side">
+                        <div className="mh-pre-dice">
+                          <DieFace sides={12} value={"d12"} color="#E3B04B" size={DS} label="Esperanza" />
+                          <DieFace sides={12} value={"d12"} color="#A58BE8" size={DS} label="Miedo" />
+                          {edgeNet !== 0 && <DieFace sides={6} value={"d6"} color={edgeNet > 0 ? "#7FB77A" : "#D9644E"} size={Math.round(DS * 0.8)} label={edgeNet > 0 ? "Ventaja" : "Desventaja"} />}
+                          {wolf && <DieFace sides={10} value={"d10"} color="#E0544A" size={Math.round(DS * 0.85)} label="Lobo" />}
+                          {rallyOn && <DieFace sides={parseInt(ch.f_rally_die.slice(1), 10) || 6} value={ch.f_rally_die} color="#E07FB0" size={Math.round(DS * 0.8)} label="Arenga" />}
+                          {preRoll.poet && <DieFace sides={4} value={"d4"} color="#C77DBA" size={Math.round(DS * 0.78)} label="Poeta" />}
+                        </div>
+                        <div className="mh-pre-lines">
+                          {lines.map(([l, v], k) => (
+                            <div key={k}>
+                              <span>{l}</span>
+                              <b>{v}</b>
+                            </div>
+                          ))}
+                          {hopeUsed > 0 && (
+                            <div className="is-cost">
+                              <span>Esperanza que gastas</span>
+                              <b>
+                                {hopeUsed} <Sparkles size={11} />
+                              </b>
+                            </div>
+                          )}
+                        </div>
+                        <div className="mh-pre-sum">
+                          <b>{formula}</b>
+                        </div>
+                        <button type="button" className="mh-btn mh-pre-go" autoFocus onClick={confirmPreRoll}>
+                          <Dices size={15} /> Tirar
                         </button>
-                      </>
-                    )}
-                    {poetOk && (
-                      <>
-                        <div className="mh-pre-sec">Orador · 1 Esperanza</div>
-                        <button
-                          type="button"
-                          className={"mh-pre-opt is-poet" + (preRoll.poet ? " is-on" : "")}
-                          aria-pressed={preRoll.poet}
-                          disabled={!preRoll.poet && hopeUsed >= hopeNow}
-                          title={!preRoll.poet && hopeUsed >= hopeNow ? "No te queda Esperanza" : undefined}
-                          onClick={() => setPreRoll((p) => ({ ...p, poet: !p.poet }))}
-                        >
-                          <span className="mh-pre-bx">{preRoll.poet && <Check size={12} strokeWidth={3} />}</span>
-                          <span className="mh-pre-t">
-                            <b>Corazón de Poeta</b>
-                            <small>Si quieres impresionar, persuadir u ofender a alguien</small>
-                          </span>
-                          <span className="mh-pre-cost is-poet">
-                            +1d4 · 1 <Sparkles size={10} />
-                          </span>
-                        </button>
-                      </>
-                    )}
-                    {highborne && (
-                      <>
-                        <div className="mh-pre-sec">Comunidad · De Alta Cuna</div>
-                        <button type="button" className={"mh-pre-opt is-priv" + (preRoll.privilege ? " is-on" : "")} aria-pressed={preRoll.privilege} onClick={() => setPreRoll((p) => ({ ...p, privilege: !p.privilege, advantage: p.privilege ? p.advantage : false }))}>
-                          <span className="mh-pre-bx">{preRoll.privilege && <Check size={12} strokeWidth={3} />}</span>
-                          <span className="mh-pre-t">
-                            <b>Privilegio</b>
-                            <small>Si tratas con nobles, negocias un precio o usas tu reputación</small>
-                          </span>
-                          <span className="mh-pre-cost is-priv">Ventaja</span>
-                        </button>
-                      </>
-                    )}
-                    <div className="mh-pre-sec">Otros</div>
-                    <button type="button" className={"mh-pre-opt is-adv" + (preRoll.advantage ? " is-on" : "")} aria-pressed={preRoll.advantage} onClick={() => setPreRoll((p) => ({ ...p, advantage: !p.advantage, privilege: p.advantage ? p.privilege : false }))}>
-                      <span className="mh-pre-bx">{preRoll.advantage && <Check size={12} strokeWidth={3} />}</span>
-                      <span className="mh-pre-t">
-                        <b>Ventaja</b>
-                        <small>Si el DJ te la concede o una carta te la da</small>
-                      </span>
-                      <span className="mh-pre-cost is-adv">+1d6</span>
-                    </button>
-                    <button type="button" className={"mh-pre-opt is-dis" + (preRoll.disadvantage ? " is-on" : "")} aria-pressed={preRoll.disadvantage} onClick={() => setPreRoll((p) => ({ ...p, disadvantage: !p.disadvantage }))}>
-                      <span className="mh-pre-bx">{preRoll.disadvantage && <Check size={12} strokeWidth={3} />}</span>
-                      <span className="mh-pre-t">
-                        <b>Desventaja</b>
-                        <small>Si el DJ te la impone o una condición te la da</small>
-                      </span>
-                      <span className="mh-pre-cost is-dis">−1d6</span>
-                    </button>
-                    <div className="mh-pre-sum">
-                      <span>{parts.join(" · ")}</span>
-                      <b>{formula}</b>
+                        {(preRoll.exps.length > 0 || preRoll.rally || preRoll.poet || preRoll.privilege || edgePos !== "none") && (
+                          <button type="button" className="mh-pre-plain" onClick={() => setPreRoll((p) => ({ ...p, exps: [], rally: false, poet: false, privilege: false, advantage: false, disadvantage: false }))}>
+                            Quitar lo añadido
+                          </button>
+                        )}
+                      </div>
                     </div>
-                    <button type="button" className="mh-btn mh-pre-go" autoFocus onClick={confirmPreRoll}>
-                      <Dices size={15} /> Tirar
-                    </button>
-                    {(preRoll.exps.length > 0 || preRoll.rally || preRoll.poet) && (
-                      <button type="button" className="mh-pre-plain" onClick={() => setPreRoll((p) => ({ ...p, exps: [], rally: false, poet: false }))}>
-                        Quitar lo añadido
-                      </button>
-                    )}
                   </div>
                 </div>
               );
