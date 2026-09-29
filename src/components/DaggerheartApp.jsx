@@ -2281,6 +2281,8 @@ const sharedStyles = `
   .mh-pre-sum b { font-size: 16px; color: var(--mh-ink); white-space: nowrap; }
   .mh-pre-go { margin-top: 10px; justify-content: center; display: inline-flex; align-items: center; gap: 6px; padding: 10px 14px; font-size: 14px; }
   .mh-pre-plain { margin-top: 6px; border: 0; background: transparent; color: var(--mh-muted); font: 500 12px 'Inter', system-ui, sans-serif; cursor: pointer; }
+  .mh-qa-scroll { padding-bottom: 18px; mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent); -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent); }
+  .mh-qa-sub { margin-top: 6px; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--mh-muted); }
   .mh-wz-purpose { display: flex; flex-direction: column; gap: 6px; padding: 11px 12px; border-radius: 11px; border: 1px solid color-mix(in srgb, #9A7B4F 45%, var(--mh-line)); background: color-mix(in srgb, #9A7B4F 8%, var(--mh-panel)); }
   .mh-wz-purpose label { font-size: 12px; font-weight: 600; color: var(--mh-ink2); margin-top: 2px; }
   .mh-wz-purpose-t { font-size: 13px; color: var(--mh-ink); }
@@ -4959,7 +4961,8 @@ export default function App({ onSignOut }) {
 
   useEffect(() => {
     if (armaduraRef.current) {
-      const h = armaduraRef.current.offsetHeight;
+      // El panel, no el envoltorio: el envoltorio se estira con la columna vecina.
+      const h = (armaduraRef.current.firstElementChild || armaduraRef.current).offsetHeight;
       if (h && h !== armaduraHeight) setArmaduraHeight(h);
       const w = armaduraRef.current.offsetWidth;
       if (w && w !== armaduraWidth) setArmaduraWidth(w);
@@ -9756,7 +9759,7 @@ export default function App({ onSignOut }) {
                           );
 
                         return (
-                          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(12, 1fr)", gap: 18, flex: 1 }}>
+                          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(12, 1fr)", gap: 18, flex: isMobile || !armaduraHeight ? 1 : "0 0 auto", height: isMobile ? undefined : armaduraHeight || undefined, gridTemplateRows: isMobile ? undefined : "minmax(0, 1fr)" }}>
                             <Panel
                               span={7}
                               title="Trasfondo"
@@ -9765,19 +9768,44 @@ export default function App({ onSignOut }) {
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
                             >
-                              <div className="mh-noscroll" style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1, minHeight: 0, overflowY: "auto" }}>
+                              <div className="mh-noscroll mh-qa-scroll" style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1, minHeight: 0, overflowY: "auto" }}>
                                 {bgRows.length === 0 ? (
                                   <div style={{ fontSize: 11.5, color: "var(--mh-muted)", fontStyle: "italic" }}>
                                     Todavía no tenemos cargadas las preguntas de trasfondo de {c.f_class}. Puedes añadir las tuyas.
                                   </div>
                                 ) : (
-                                  progress(bgRows)
+                                  progress(bgRows.filter((r) => r.fixed !== "purpose" || !bgRows.some((x) => x.fixed === "creator")))
                                 )}
                                 {bgRows.map((row, i) => {
+                                  const pi = bgRows.findIndex((r) => r.fixed === "purpose");
+                                  const ci = bgRows.findIndex((r) => r.fixed === "creator");
+                                  if (row.fixed === "purpose" && ci >= 0) return null;
+                                  const num = bgRows.slice(0, i).filter((r) => r.fixed !== "purpose" || ci < 0).length + 1;
+                                  if (row.fixed === "creator" && pi >= 0) {
+                                    const pRow = bgRows[pi];
+                                    const both = (row.answer || "").trim() && (pRow.answer || "").trim();
+                                    return (
+                                      <div key={i} className={"mh-qa" + (both ? "" : " pending")}>
+                                        <span className={"mh-qa-num" + (both ? " done" : "")}>{both ? <Check size={12} strokeWidth={3} /> : num}</span>
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                          <div className="mh-qa-q-row">
+                                            <div className="mh-qa-q">¿Quién te creó y con qué propósito?</div>
+                                            <button type="button" className="mh-qa-del" title="Quitar pregunta" aria-label="Quitar pregunta" onClick={() => updateCharacterField(viewingCharId, "f_background_qa", JSON.stringify(bgRows.filter((_, k) => k !== i && k !== pi)))}>
+                                              <X size={12} />
+                                            </button>
+                                          </div>
+                                          <div className="mh-qa-sub">Creador</div>
+                                          {answerBlock("f_background_qa", bgRows, i, row)}
+                                          <div className="mh-qa-sub">Propósito</div>
+                                          {answerBlock("f_background_qa", bgRows, pi, pRow)}
+                                        </div>
+                                      </div>
+                                    );
+                                  }
                                   const done = (row.answer || "").trim();
                                   return (
                                     <div key={i} className={"mh-qa" + (done ? "" : " pending")}>
-                                      <span className={"mh-qa-num" + (done ? " done" : "")}>{done ? <Check size={12} strokeWidth={3} /> : i + 1}</span>
+                                      <span className={"mh-qa-num" + (done ? " done" : "")}>{done ? <Check size={12} strokeWidth={3} /> : num}</span>
                                       <div style={{ flex: 1, minWidth: 0 }}>
                                         {questionBlock("f_background_qa", bgRows, i, row)}
                                         {answerBlock("f_background_qa", bgRows, i, row)}
@@ -9804,7 +9832,7 @@ export default function App({ onSignOut }) {
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
                             >
-                              <div className="mh-noscroll" style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1, minHeight: 0, overflowY: "auto" }}>
+                              <div className="mh-noscroll mh-qa-scroll" style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1, minHeight: 0, overflowY: "auto" }}>
                                 {connRows.length === 0 && (
                                   <div style={{ fontSize: 11.5, color: "var(--mh-muted)", fontStyle: "italic" }}>
                                     Todavía no tenemos cargadas las preguntas de conexión de {c.f_class}. Puedes añadir las tuyas.
