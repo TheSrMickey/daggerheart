@@ -1758,6 +1758,11 @@ const sharedStyles = `
   .mh-gold-total b { font-size: 30px; line-height: 1; }
   .mh-gold-total span { font-size: 12px; color: var(--mh-muted); }
   .mh-gold-row { display: flex; align-items: center; gap: 9px; padding: 9px 10px; border: 1px solid var(--mh-line); border-radius: 11px; background: var(--mh-panel); flex-shrink: 0; }
+  .mh-gold-fill { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; }
+  .mh-gold-fill .mh-gold-total { flex: 1.4 1 0; align-items: center; min-height: 64px; }
+  .mh-gold-fill .mh-gold-total b { font-size: 40px; }
+  .mh-gold-fill .mh-gold-row { flex: 1 1 0; min-height: 52px; padding: 10px 14px; gap: 12px; }
+  .mh-gold-fill .mh-gold-ico { width: 40px; height: 40px; }
   .mh-gold-ico {
     width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
     background: color-mix(in srgb, #E3B04B 18%, transparent); color: color-mix(in srgb, #E3B04B var(--mh-accent-keep, 100%), #000);
@@ -9637,7 +9642,7 @@ export default function App({ onSignOut }) {
                               // Se suma o resta en oro y se reparte solo: 10 puñados pasan a ser 1 bolsa, etc.
                               const changeGold = (delta) => setGoldTotal(viewingCharId, Math.max(0, Math.min(MAX_GOLD, total + delta)));
                               return (
-                                <div style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1, minHeight: 0 }}>
+                                <div className="mh-gold-fill">
                                   <div className="mh-gold-total">
                                     <Coins size={22} />
                                     <b className="mh-serif">{total}</b>
@@ -9665,33 +9670,6 @@ export default function App({ onSignOut }) {
                                       </div>
                                     );
                                   })}
-                                  <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "var(--mh-muted)" }}>
-                                    <ArrowLeftRight size={13} /> 10 monedas forman 1 puñado, 10 puñados 1 bolsa y 10 bolsas 1 cofre.
-                                  </div>
-                                  <div style={{ flex: 1 }} />
-                                  <div>
-                                    <div className="mh-label" style={{ marginBottom: 6 }}>Fijar cantidad exacta</div>
-                                    <div style={{ display: "flex", gap: 8 }}>
-                                      <input
-                                        className="mh-input"
-                                        type="number"
-                                        placeholder="Ej. 235"
-                                        value={goldSetDraft}
-                                        onChange={(e) => setGoldSetDraft(e.target.value)}
-                                        onKeyDown={(e) => e.key === "Enter" && goldSetDraft !== "" && (setGoldTotal(viewingCharId, goldSetDraft), setGoldSetDraft(""))}
-                                      />
-                                      <button
-                                        className="mh-btn-ghost"
-                                        onClick={() => {
-                                          if (goldSetDraft === "") return;
-                                          setGoldTotal(viewingCharId, goldSetDraft);
-                                          setGoldSetDraft("");
-                                        }}
-                                      >
-                                        Fijar
-                                      </button>
-                                    </div>
-                                  </div>
                                 </div>
                               );
                             })()}
