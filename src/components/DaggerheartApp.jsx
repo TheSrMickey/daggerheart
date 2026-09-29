@@ -1729,7 +1729,7 @@ const sharedStyles = `
   .mh-proj-menu { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; border-top: 1px dashed var(--mh-line); font-size: 12px; color: var(--mh-ink3); }
   .mh-inv-head { display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; color: var(--mh-muted); flex-shrink: 0; }
   .mh-inv-head b { color: var(--mh-gold-ink); font-weight: 700; }
-  .mh-inv-grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: 86px; gap: 10px; flex-shrink: 0; }
+  .mh-inv-grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: minmax(86px, 1fr); gap: 10px; flex: 1 1 0; }
   .mh-islot {
     all: unset; box-sizing: border-box; cursor: pointer; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;
     gap: 6px; padding: 6px 8px; text-align: center; border-radius: 12px;
@@ -1746,7 +1746,7 @@ const sharedStyles = `
   .mh-inv-x { all: unset; cursor: pointer; color: var(--mh-muted3); display: flex; padding: 3px; border-radius: 6px; }
   .mh-inv-x:hover, .mh-inv-x:focus-visible { color: #D9644E; background: var(--mh-panel3); }
   .mh-inv-detail {
-    margin-top: auto; min-height: 64px; display: flex; align-items: center; gap: 10px; padding: 10px 12px; flex-shrink: 0;
+    min-height: 64px; display: flex; align-items: center; gap: 10px; padding: 10px 12px; flex-shrink: 0;
     border: 1px solid var(--mh-line); border-radius: 12px; background: var(--mh-panel2);
   }
   .mh-gold-total {
@@ -2301,7 +2301,8 @@ const sharedStyles = `
   .mh-eff-opts button { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 20px; border: 1.5px solid var(--mh-line2); background: var(--mh-panel); color: var(--mh-ink2); font: 600 12px 'Inter', system-ui, sans-serif; cursor: pointer; }
   .mh-eff-opts button.is-on { border-color: var(--rc); background: color-mix(in srgb, var(--rc) 12%, var(--mh-panel)); color: var(--mh-ink); }
   .mh-eff-opts button em { font-style: normal; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--rc); }
-  .mh-islot[draggable="true"] { cursor: grab; }
+  .mh-islot[draggable="true"] { cursor: grab; -webkit-user-drag: element; user-select: none; }
+  .mh-islot[draggable="true"] > * { pointer-events: none; }
   .mh-islot.is-drag { opacity: .4; }
   .mh-islot.is-over { outline: 2px dashed var(--acc); outline-offset: 2px; }
   .mh-trov { --tb: #E07FB0; border: 1px solid color-mix(in srgb, var(--tb) 45%, var(--mh-line)); border-radius: 12px; padding: 10px 11px; background: linear-gradient(color-mix(in srgb, var(--tb) 8%, var(--mh-panel)), var(--mh-panel)); display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
@@ -9444,24 +9445,18 @@ export default function App({ onSignOut }) {
                                 const kind = equipKind(it.name);
                                 return itemVisual(it.name, { isWeapon: kind === "primary" || kind === "secondary", isArmor: kind === "armor" });
                               };
-                              const sel = selectedItemSlot;
-                              const selItem = sel ? (sel.zone === "belt" ? items[sel.index] : backpackItems[sel.index]) : null;
                               const slotCell = (zone, it, i) => {
                                 if (!it) return null;
                                 const v = visualOf(it);
-                                const active = sel && sel.zone === zone && sel.index === i;
                                 return (
                                   <button
                                     key={zone + i}
                                     type="button"
                                     draggable
-                                    className={"mh-islot" + (active ? " on" : "") + (invOver && invOver.zone === zone && invOver.index === i ? " is-over" : "") + (invDrag && invDrag.zone === zone && invDrag.index === i ? " is-drag" : "")}
+                                    className={"mh-islot" + (invOver && invOver.zone === zone && invOver.index === i ? " is-over" : "") + (invDrag && invDrag.zone === zone && invDrag.index === i ? " is-drag" : "")}
                                     style={{ "--ic": v.color }}
                                     title={it.name + " · arrástralo a otro hueco"}
-                                    onClick={() => {
-                                      setSelectedItemSlot({ zone, index: i });
-                                      openItemCard(zone, it, i);
-                                    }}
+                                    onClick={() => openItemCard(zone, it, i)}
                                     onDragStart={(e) => {
                                       e.dataTransfer.effectAllowed = "move";
                                       e.dataTransfer.setData("text/plain", zone + ":" + i);
@@ -9493,7 +9488,6 @@ export default function App({ onSignOut }) {
                                   if (invDrag) moveInventoryItem(viewingCharId, invDrag, { zone, index: i });
                                   setInvDrag(null);
                                   setInvOver(null);
-                                  setSelectedItemSlot(null);
                                 },
                               });
                               const openItemCard = (zone, it, i) => {
@@ -9504,10 +9498,11 @@ export default function App({ onSignOut }) {
                                 const hands = w ? (w.hands === 2 ? "Dos manos" : "Una mano") : "";
                                 const where = zone === "pack" ? " · en la mochila" : "";
                                 const equip = zone === "belt" && kind ? { kind, name: it.name } : null;
+                                const invItem = { zone, index: i, count: it.count || 1 };
                                 if (w)
-                                  return setViewingCardDetail({ kicker: (kind === "primary" ? "Arma principal" : "Arma secundaria") + where, title: w.key, text: w.trait !== "—" ? `${w.trait} · ${w.range} · ${w.damage} · ${hands}` : `${w.damage} · ${hands}`, weapon: { damage: w.damage, trait: w.trait, range: w.range, hands }, showCharacteristic: true, characteristic: w.feature, bigStyle: true, tier: w.tier, equipAction: equip });
+                                  return setViewingCardDetail({ kicker: (kind === "primary" ? "Arma principal" : "Arma secundaria") + where, title: w.key, text: w.trait !== "—" ? `${w.trait} · ${w.range} · ${w.damage} · ${hands}` : `${w.damage} · ${hands}`, weapon: { damage: w.damage, trait: w.trait, range: w.range, hands }, showCharacteristic: true, characteristic: w.feature, bigStyle: true, tier: w.tier, equipAction: equip, invItem });
                                 if (a)
-                                  return setViewingCardDetail({ kicker: "Armadura" + where, title: a.key, text: `Puntuación ${a.score} · Umbrales base ${a.major}/${a.severe}`, armor: { score: a.score, major: a.major, severe: a.severe }, showCharacteristic: true, characteristic: a.feature, bigStyle: true, tier: a.tier, equipAction: equip });
+                                  return setViewingCardDetail({ kicker: "Armadura" + where, title: a.key, text: `Puntuación ${a.score} · Umbrales base ${a.major}/${a.severe}`, armor: { score: a.score, major: a.major, severe: a.severe }, showCharacteristic: true, characteristic: a.feature, bigStyle: true, tier: a.tier, equipAction: equip, invItem });
                                 setViewingCardDetail({
                                   kicker: v.kind + where,
                                   title: it.name,
@@ -9515,6 +9510,7 @@ export default function App({ onSignOut }) {
                                   ...((it.count || 1) > 1 ? { stat: { label: "Cantidad", value: "×" + it.count } } : {}),
                                   bigStyle: true,
                                   itemIcon: v.Icon,
+                                  invItem,
                                 });
                               };
                               const emptyCell = (key, onClick, label, zone, i) => (
@@ -9574,8 +9570,8 @@ export default function App({ onSignOut }) {
                                     </button>
                                   )}
 
-                                  <div className="mh-inv-detail">
-                                    {showAddBackpackItemForm && backpack ? (
+                                  {showAddBackpackItemForm && backpack && (
+                                    <div className="mh-inv-detail">
                                       <div style={{ display: "flex", flexDirection: "column", gap: 6, width: "100%" }}>
                                         <input className="mh-input" style={{ fontSize: 12 }} placeholder="Nombre del objeto…" value={newBackpackItemDraft} autoFocus onChange={(e) => setNewBackpackItemDraft(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addBackpackItem()} />
                                         <div style={{ display: "flex", gap: 6 }}>
@@ -9584,56 +9580,8 @@ export default function App({ onSignOut }) {
                                           <button className="mh-btn-ghost" style={{ fontSize: 11.5 }} onClick={() => setShowAddBackpackItemForm(false)}>Cancelar</button>
                                         </div>
                                       </div>
-                                    ) : selItem ? (
-                                      (() => {
-                                        const v = visualOf(selItem);
-                                        const kind = sel.zone === "belt" ? equipKind(selItem.name) : null;
-                                        const adjust = (d) => (sel.zone === "belt" ? adjustItemCount(viewingCharId, sel.index, d) : adjustBackpackItemCount(viewingCharId, sel.index, d));
-                                        const remove = () => {
-                                          setSelectedItemSlot(null);
-                                          sel.zone === "belt" ? removeInventoryItem(viewingCharId, sel.index) : removeBackpackItem(viewingCharId, sel.index);
-                                        };
-                                        return (
-                                          <>
-                                            <span className="mh-islot-ico" style={{ "--ic": v.color, width: 38, height: 38, borderRadius: 10, background: "color-mix(in srgb, var(--ic) 14%, transparent)" }}>
-                                              <v.Icon size={20} />
-                                            </span>
-                                            <div style={{ flex: 1, minWidth: 0 }}>
-                                              <div className="mh-arow-kicker" style={{ "--ac": v.color }}>{v.kind}{sel.zone === "pack" ? " · en la mochila" : ""}</div>
-                                              <div className="mh-arow-title">{selItem.name}</div>
-                                              {selItem.description && <div className="mh-arow-sum">{selItem.description}</div>}
-                                            </div>
-                                            <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                                              <button className="mh-btn-ghost" style={{ padding: "2px 6px" }} aria-label="Quitar uno" onClick={() => adjust(-1)}>
-                                                <Minus size={11} />
-                                              </button>
-                                              <b style={{ fontSize: 13, minWidth: 14, textAlign: "center", color: "var(--mh-ink)" }}>{selItem.count || 1}</b>
-                                              <button className="mh-btn-ghost" style={{ padding: "2px 6px" }} aria-label="Añadir uno" onClick={() => adjust(1)}>
-                                                <Plus size={11} />
-                                              </button>
-                                            </span>
-                                            {kind && (
-                                              <button
-                                                className="mh-btn"
-                                                style={{ fontSize: 11.5, padding: "6px 10px" }}
-                                                onClick={() => {
-                                                  setSelectedItemSlot(null);
-                                                  equipFromInventory(viewingCharId, kind, selItem.name);
-                                                }}
-                                              >
-                                                Equipar
-                                              </button>
-                                            )}
-                                            <button className="mh-inv-x" title="Eliminar objeto" aria-label="Eliminar objeto" onClick={remove}>
-                                              <Trash2 size={14} />
-                                            </button>
-                                          </>
-                                        );
-                                      })()
-                                    ) : (
-                                      <span style={{ fontSize: 12, color: "var(--mh-muted)", width: "100%", textAlign: "center" }}>Pulsa un objeto para verlo o arrástralo a otro hueco.</span>
-                                    )}
-                                  </div>
+                                    </div>
+                                  )}
                                 </div>
                               );
                             })()}
@@ -11818,6 +11766,29 @@ export default function App({ onSignOut }) {
                       },
                     });
                   }
+                  // Objeto del inventario: cantidad y eliminar.
+                  if (d.invItem && !d.fromChat) {
+                    const { zone, index, count } = d.invItem;
+                    const setCount = (delta) => {
+                      const n = Math.max(1, count + delta);
+                      zone === "belt" ? adjustItemCount(viewingCharId, index, delta) : adjustBackpackItemCount(viewingCharId, index, delta);
+                      setViewingCardDetail((prev) => (prev ? { ...prev, invItem: { ...prev.invItem, count: n }, ...(prev.itemIcon ? { stat: n > 1 ? { label: "Cantidad", value: "×" + n } : undefined } : {}) } : prev));
+                    };
+                    cardActs.push(
+                      { key: "inv-plus", Icon: Plus, label: "Añadir uno", sub: "Tienes " + count, run: () => setCount(1) },
+                      { key: "inv-minus", Icon: Minus, label: "Quitar uno", sub: "Tienes " + count, disabled: count <= 1, run: () => setCount(-1) },
+                      {
+                        key: "inv-del",
+                        Icon: Trash2,
+                        label: "Eliminar objeto",
+                        sub: "",
+                        run: () => {
+                          closeCardDetail();
+                          zone === "belt" ? removeInventoryItem(viewingCharId, index) : removeBackpackItem(viewingCharId, index);
+                        },
+                      }
+                    );
+                  }
                   // Característica de Esperanza: se usa desde la barra de la carta.
                   if (d.hopeAction && !d.fromChat) {
                     const missingHope = Math.max(0, d.hopeAction.cost - Number(c.hope_marked ?? HOPE_DEFAULT));
@@ -11861,7 +11832,7 @@ export default function App({ onSignOut }) {
                       label: "Mostrar en la campaña",
                       sub: shareCamp.name,
                       run: () => {
-                        const { fromChat, navigateAction, transformForm, itemIcon, equipAction, hopeAction, ...detail } = d;
+                        const { fromChat, navigateAction, transformForm, itemIcon, equipAction, hopeAction, invItem, ...detail } = d;
                         // Las imágenes incrustadas muy grandes no se copian al chat.
                         if (typeof detail.image === "string" && detail.image.startsWith("data:") && detail.image.length > 30000) delete detail.image;
                         const type = d.domain ? "domain" : d.weapon ? "weapon" : d.armor ? "armor" : "card";
