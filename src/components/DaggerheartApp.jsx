@@ -2271,6 +2271,21 @@ const sharedStyles = `
   .mh-pre-sum b { font-size: 16px; color: var(--mh-ink); white-space: nowrap; }
   .mh-pre-go { margin-top: 10px; justify-content: center; display: inline-flex; align-items: center; gap: 6px; padding: 10px 14px; font-size: 14px; }
   .mh-pre-plain { margin-top: 6px; border: 0; background: transparent; color: var(--mh-muted); font: 500 12px 'Inter', system-ui, sans-serif; cursor: pointer; }
+  .mh-wz-purpose { display: flex; flex-direction: column; gap: 6px; padding: 11px 12px; border-radius: 11px; border: 1px solid color-mix(in srgb, #9A7B4F 45%, var(--mh-line)); background: color-mix(in srgb, #9A7B4F 8%, var(--mh-panel)); }
+  .mh-wz-purpose label { font-size: 12.5px; color: var(--mh-ink2); }
+  .mh-wz-purpose label b { color: var(--mh-ink); }
+  .mh-wz-purpose textarea { resize: vertical; font-size: 13px; }
+  .mh-wz-purpose small { font-size: 11px; color: var(--mh-muted); }
+  .mh-wz-purpose-q { display: flex; flex-direction: column; gap: 2px; }
+  .mh-wz-purpose-q b { font-size: 12px; color: var(--mh-ink); }
+  .mh-wz-purpose-q span { font-size: 12.5px; font-style: italic; color: var(--mh-ink3); }
+  .mh-wz-purpose-opts { display: flex; gap: 8px; }
+  .mh-wz-purpose-opts button { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 9px; border: 1.5px solid var(--mh-line2); background: var(--mh-panel); color: var(--mh-ink); font: 600 12.5px 'Inter', system-ui, sans-serif; cursor: pointer; text-align: left; }
+  .mh-wz-purpose-opts button span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mh-wz-purpose-opts button em { font-style: normal; font-weight: 800; color: var(--mh-muted); }
+  .mh-wz-purpose-opts button.is-on { border-color: #9A7B4F; background: color-mix(in srgb, #9A7B4F 14%, var(--mh-panel)); }
+  .mh-wz-purpose-opts button.is-on em { color: #7A5A2C; }
+  .mh-wz-purpose-opts button:disabled { opacity: .45; cursor: not-allowed; }
   .mh-trov { --tb: #E07FB0; border: 1px solid color-mix(in srgb, var(--tb) 45%, var(--mh-line)); border-radius: 12px; padding: 10px 11px; background: linear-gradient(color-mix(in srgb, var(--tb) 8%, var(--mh-panel)), var(--mh-panel)); display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
   .mh-trov-h { display: flex; align-items: center; gap: 8px; }
   .mh-trov-h b { font-size: 13px; color: var(--mh-ink); }
@@ -3872,6 +3887,9 @@ export default function App({ onSignOut }) {
   const [draftPronounCustom, setDraftPronounCustom] = useState("");
   const [mixAncestry, setMixAncestry] = useState(false);
   const [draftAncestries, setDraftAncestries] = useState([]);
+  // Autómata · Diseño con Propósito: quién te creó y qué Experiencia encaja (+1 permanente).
+  const [draftPurpose, setDraftPurpose] = useState("");
+  const [draftPurposeExp, setDraftPurposeExp] = useState(null);
   const [draftCommunity, setDraftCommunity] = useState("");
   const [draftTransformation, setDraftTransformation] = useState("Ninguna");
   const [draftLanguages, setDraftLanguages] = useState([]);
@@ -4019,6 +4037,8 @@ export default function App({ onSignOut }) {
     setDraftPronounCustom("");
     setMixAncestry(false);
     setDraftAncestries([]);
+    setDraftPurpose("");
+    setDraftPurposeExp(null);
     setDraftCommunity("");
     setDraftTransformation("Ninguna");
     setDraftLanguages([]);
@@ -4179,6 +4199,7 @@ export default function App({ onSignOut }) {
   };
 
   const confirmNewChar = async () => {
+    const isAutomaton = draftAncestries.includes("Autómata");
     const chosenClass = CLASSES[carouselIndex];
     const subclasses = SUBCLASSES[chosenClass.key] || [];
     const chosenSubclass = subclasses[subclassIndex];
@@ -4199,6 +4220,7 @@ export default function App({ onSignOut }) {
       f_proficiency: String(proficiencyForLevel(levelChoice)),
       f_pronouns: finalPronoun,
       f_ancestry: draftAncestries.join(" + "),
+      f_purpose: isAutomaton ? draftPurpose.trim() : "",
       f_community: draftCommunity,
       f_transformation: draftTransformation === "Ninguna" ? "" : draftTransformation,
       f_languages: ["Común", ...draftLanguages].join(", "),
@@ -4219,10 +4241,17 @@ export default function App({ onSignOut }) {
       f_domain_cards: JSON.stringify(draftDomainCards),
       f_experiences: JSON.stringify(
         [draftExp1, draftExp2]
-          .map((t) => t.trim())
-          .filter(Boolean)
-          .map((text) => ({ text, bonus: 2 }))
+          .map((t, i) => ({ text: t.trim(), bonus: 2 + (isAutomaton && draftPurposeExp === i ? 1 : 0) }))
+          .filter((e) => e.text)
       ),
+      ...(isAutomaton && draftPurpose.trim()
+        ? {
+            f_background_qa: JSON.stringify([
+              { question: "¿Quién te creó y con qué propósito?", answer: draftPurpose.trim(), fixed: "purpose" },
+              ...(CLASS_BACKGROUND_QUESTIONS[CLASSES[carouselIndex].key] || []).map((q) => ({ question: q, answer: "" })),
+            ]),
+          }
+        : {}),
     };
     const nextChars = { ...characters, [id]: created };
     setCharacters(nextChars);
@@ -12208,6 +12237,22 @@ export default function App({ onSignOut }) {
                               </button>
                             )}
                             {originTab === "ancestry" && mixAncestry && <div className="mh-wz-dm">Con ascendencia mixta eliges dos y combinas sus rasgos.</div>}
+                            {originTab === "ancestry" && draftAncestries.includes("Autómata") && (
+                              <div className="mh-wz-purpose">
+                                <label htmlFor="mh-purpose">
+                                  <b>Diseño con Propósito</b> · ¿Quién te creó y con qué propósito?
+                                </label>
+                                <textarea
+                                  id="mh-purpose"
+                                  className="mh-input"
+                                  rows={3}
+                                  placeholder="Ej. Me forjó la maestra relojera Ilsabet para custodiar la biblioteca de Velmora."
+                                  value={draftPurpose}
+                                  onChange={(e) => setDraftPurpose(e.target.value)}
+                                />
+                                <small>Al elegir tus Experiencias, la que mejor encaje con este propósito ganará un +1 permanente.</small>
+                              </div>
+                            )}
                           </>
                         )}
                       </div>
@@ -12328,7 +12373,7 @@ export default function App({ onSignOut }) {
               ) : wizardStep === "experiences" ? (
                 <div style={{ marginBottom: 20 }}>
                   <div style={{ fontSize: 12.5, color: "var(--mh-ink3)", marginBottom: 16, textAlign: "center" }}>
-                    Elige dos Experiencias iniciales de tu personaje — cosas que se le dan bien, gracias a su pasado.
+                    Escribe las dos Experiencias iniciales de tu personaje — cosas que se le dan bien, gracias a su pasado.
                     Cada una empieza con un bono de +2.
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 420, margin: "0 auto" }}>
@@ -12350,6 +12395,23 @@ export default function App({ onSignOut }) {
                         onChange={(e) => setDraftExp2(e.target.value)}
                       />
                     </div>
+                    {draftAncestries.includes("Autómata") && (
+                      <div className="mh-wz-purpose is-pick">
+                        <div className="mh-wz-purpose-q">
+                          <b>¿Quién te creó y con qué propósito?</b>
+                          <span>{draftPurpose.trim() || "Sin responder"}</span>
+                        </div>
+                        <div className="mh-wz-dm">¿Qué Experiencia encaja con ese propósito? Gana un +1 permanente.</div>
+                        <div className="mh-wz-purpose-opts" role="radiogroup" aria-label="Experiencia del propósito">
+                          {[draftExp1, draftExp2].map((t, i) => (
+                            <button key={i} type="button" role="radio" aria-checked={draftPurposeExp === i} disabled={!t.trim()} className={draftPurposeExp === i ? "is-on" : ""} onClick={() => setDraftPurposeExp(i)}>
+                              <span>{t.trim() || "Experiencia " + (i + 1)}</span>
+                              <em>+{draftPurposeExp === i ? 3 : 2}</em>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : ["primary", "secondary", "armor"].includes(wizardStep) ? (
@@ -12762,6 +12824,8 @@ export default function App({ onSignOut }) {
                 const twoHanded = PRIMARY_WEAPONS.find((w) => w.key === draftPrimaryWeapon)?.hands === 2;
                 const block = {
                   traits: traitPool.length > 0 && "Reparte todos los valores para continuar.",
+                  ancestry: draftAncestries.includes("Autómata") && !draftPurpose.trim() && "Responde quién te creó y con qué propósito.",
+                  experiences: !draftExp1.trim() || !draftExp2.trim() ? "Escribe tus dos Experiencias." : draftAncestries.includes("Autómata") && draftPurposeExp == null ? "Elige la Experiencia que encaja con tu propósito." : false,
                   primary: !draftPrimaryWeapon && "Elige un arma principal para continuar.",
                   secondary: !twoHanded && !draftSecondaryWeapon && "Elige un arma secundaria o «Ninguna».",
                   armor: !draftArmor && "Elige una armadura o «Ninguna».",
