@@ -332,6 +332,35 @@ const TRANSFORMATION_ART = {
 };
 
 // Ilustración de cada clase del manual básico (el halo usa el color de la clase).
+// Ilustraciones de las cartas de subclase (manual básico y Hope & Fear).
+const SUBCLASS_ART = {
+  "Trovador": "/subclases/trovador.webp",
+  "Orador": "/subclases/orador.webp",
+  "Guardián de los Elementos": "/subclases/guardian-de-los-elementos.webp",
+  "Guardián de la Renovación": "/subclases/guardian-de-la-renovacion.webp",
+  "Inquebrantable": "/subclases/inquebrantable.webp",
+  "Vengador": "/subclases/vengador.webp",
+  "Vínculo Bestial": "/subclases/vinculo-bestial.webp",
+  "Rastreador": "/subclases/rastreador.webp",
+  "Caminante Nocturno": "/subclases/caminante-nocturno.webp",
+  "Sindicato": "/subclases/sindicato.webp",
+  "Portador Divino": "/subclases/portador-divino.webp",
+  "Centinela Alado": "/subclases/centinela-alado.webp",
+  "Origen Elemental": "/subclases/origen-elemental.webp",
+  "Origen Primigenio": "/subclases/origen-primigenio.webp",
+  "Llamado del Valiente": "/subclases/llamado-del-valiente.webp",
+  "Llamado del Cazador": "/subclases/llamado-del-cazador.webp",
+  "Escuela del Conocimiento": "/subclases/escuela-del-conocimiento.webp",
+  "Escuela de la Guerra": "/subclases/escuela-de-la-guerra.webp",
+  "Bruja Lunar": "/subclases/bruja-lunar.webp",
+  "Bruja del Seto": "/subclases/bruja-del-seto.webp",
+  "Pacto del Eterno": "/subclases/pacto-del-eterno.webp",
+  "Pacto del Iracundo": "/subclases/pacto-del-iracundo.webp",
+  "Titán": "/subclases/titan.webp",
+  "Artista Marcial": "/subclases/artista-marcial.webp",
+  "Gremio del Verdugo": "/subclases/gremio-del-verdugo.webp",
+  "Gremio del Envenenador": "/subclases/gremio-del-envenenador.webp",
+};
 const CLASS_ART = {
   Bardo: "/clases/bardo.webp",
   Druida: "/clases/druida.webp",
@@ -2473,6 +2502,13 @@ const sharedStyles = `
     mask-composite: intersect;
     animation: mh-wz-art-in .35s ease-out;
   }
+  /* Subclases: ilustración apaisada en cabecera, con los bordes difuminados */
+  .mh-wz-det.has-hero { position: relative; }
+  .mh-wz-hero { position: relative; flex-shrink: 0; margin: -20px -24px -64px; height: 250px; pointer-events: none; background: radial-gradient(70% 90% at 50% 40%, color-mix(in srgb, var(--tc) 18%, transparent), transparent 75%); }
+  .mh-wz-hero img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 35%; -webkit-mask-image: linear-gradient(to right, transparent 0, #000 14%, #000 86%, transparent 100%), linear-gradient(to bottom, #000 0, #000 45%, transparent 100%); -webkit-mask-composite: source-in; mask-image: linear-gradient(to right, transparent 0, #000 14%, #000 86%, transparent 100%), linear-gradient(to bottom, #000 0, #000 45%, transparent 100%); mask-composite: intersect; animation: mh-wz-art-in .35s ease-out; }
+  .mh-wz-det.has-hero > :not(.mh-wz-hero) { position: relative; }
+  @media (max-width: 760px) { .mh-wz-hero { height: 170px; margin-bottom: -44px; } }
+  .mh-wz-art.is-wide img { top: 4%; right: 8px; bottom: auto; height: 92%; width: calc(100% - 8px); max-width: none; object-fit: cover; object-position: center; -webkit-mask-image: linear-gradient(to right, transparent 0, #000 20%, #000 84%, transparent 100%), linear-gradient(to bottom, transparent 0, #000 12%, #000 84%, transparent 100%); mask-image: linear-gradient(to right, transparent 0, #000 20%, #000 84%, transparent 100%), linear-gradient(to bottom, transparent 0, #000 12%, #000 84%, transparent 100%); }
   @keyframes mh-wz-art-in { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
   .mh-wz-foot { flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 11px 22px; border-top: 1px solid var(--mh-line); background: var(--mh-panel2); }
   .mh-wz-sum { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; overflow: hidden; }
@@ -12361,10 +12397,15 @@ export default function App({ onSignOut }) {
                       );
                     })}
                   </div>
-                  <div className={"mh-wz-det" + (wizardStep === "class" && CLASS_ART[CLASSES[carouselIndex].key] ? " has-art" : "")}>
+                  <div className={"mh-wz-det" + ((wizardStep === "class" && CLASS_ART[CLASSES[carouselIndex].key]) ? " has-art" : "") + (wizardStep === "subclass" && SUBCLASS_ART[current?.key] ? " has-hero" : "")}>
                     {wizardStep === "class" && CLASS_ART[CLASSES[carouselIndex].key] && (
                       <div className="mh-wz-art" style={{ "--tc": CLASS_COLORS[CLASSES[carouselIndex].key] || "#E3B04B" }} aria-hidden="true">
                         <img key={CLASSES[carouselIndex].key} src={CLASS_ART[CLASSES[carouselIndex].key]} alt="" />
+                      </div>
+                    )}
+                    {wizardStep === "subclass" && SUBCLASS_ART[current?.key] && (
+                      <div className="mh-wz-hero" style={{ "--tc": CLASS_COLORS[CLASSES[carouselIndex].key] || "#E3B04B" }} aria-hidden="true">
+                        <img key={current.key} src={SUBCLASS_ART[current.key]} alt="" />
                       </div>
                     )}
                     {(() => {
