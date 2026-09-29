@@ -2302,7 +2302,7 @@ const sharedStyles = `
   .mh-eff-opts button.is-on { border-color: var(--rc); background: color-mix(in srgb, var(--rc) 12%, var(--mh-panel)); color: var(--mh-ink); }
   .mh-eff-opts button em { font-style: normal; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--rc); }
   .mh-islot[draggable="true"] { cursor: grab; -webkit-user-drag: element; user-select: none; }
-  .mh-islot[draggable="true"] > * { pointer-events: none; }
+  .mh-islot[draggable="true"] > *, .mh-islot.empty > * { pointer-events: none; }
   .mh-islot.is-drag { opacity: .4; }
   .mh-islot.is-over { outline: 2px dashed var(--acc); outline-offset: 2px; }
   .mh-trov { --tb: #E07FB0; border: 1px solid color-mix(in srgb, var(--tb) 45%, var(--mh-line)); border-radius: 12px; padding: 10px 11px; background: linear-gradient(color-mix(in srgb, var(--tb) 8%, var(--mh-panel)), var(--mh-panel)); display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
@@ -5160,21 +5160,48 @@ export default function App({ onSignOut }) {
   // Arrastrar un objeto a otro hueco: si está ocupado se intercambian; si está vacío, se mueve allí.
   const [invDrag, setInvDrag] = useState(null);
   const [invOver, setInvOver] = useState(null);
+  // Cada objeto puede guardar su hueco (slot); los que no lo tienen ocupan el primer hueco libre.
+  const layoutSlots = (list) => {
+    const cells = Array(ITEM_SLOTS).fill(null);
+    const rest = [];
+    list.forEach((it, idx) => {
+      const sl = Number.isInteger(it.slot) && it.slot >= 0 && it.slot < ITEM_SLOTS ? it.slot : -1;
+      if (sl >= 0 && !cells[sl]) cells[sl] = idx;
+      else rest.push(idx);
+    });
+    rest.forEach((idx) => {
+      const free = cells.indexOf(null);
+      if (free >= 0) cells[free] = idx;
+    });
+    return cells;
+  };
+  // from = { zone, index } (posición en la lista); to = { zone, cell } (hueco de destino)
   const moveInventoryItem = (id, from, to) => {
     const c = charsRef.current[id];
-    if (!c || !from || !to || (from.zone === to.zone && from.index === to.index)) return;
-    const lists = { belt: [...getItems(c)], pack: [...getBackpackItems(c)] };
+    if (!c || !from || !to) return;
+    const fix = (list) => {
+      const cells = layoutSlots(list);
+      const out = list.map((it) => ({ ...it }));
+      cells.forEach((idx, cell) => idx !== null && (out[idx].slot = cell));
+      return out;
+    };
+    const lists = { belt: fix(getItems(c)), pack: fix(getBackpackItems(c)) };
     const item = lists[from.zone][from.index];
     if (!item) return;
-    const target = lists[to.zone][to.index];
-    if (to.zone !== from.zone && !target && lists[to.zone].length >= ITEM_SLOTS) return;
-    if (target) {
-      lists[from.zone][from.index] = target;
-      lists[to.zone][to.index] = item;
+    const fromCell = item.slot;
+    if (from.zone === to.zone && fromCell === to.cell) return;
+    const targetIdx = lists[to.zone].findIndex((it) => it.slot === to.cell);
+    if (from.zone === to.zone) {
+      if (targetIdx >= 0) lists[to.zone][targetIdx].slot = fromCell;
+      item.slot = to.cell;
+    } else if (targetIdx >= 0) {
+      const target = lists[to.zone][targetIdx];
+      lists[to.zone][targetIdx] = { ...item, slot: to.cell };
+      lists[from.zone][from.index] = { ...target, slot: fromCell };
     } else {
+      if (lists[to.zone].length >= ITEM_SLOTS) return;
       lists[from.zone].splice(from.index, 1);
-      const at = Math.min(to.index, lists[to.zone].length);
-      lists[to.zone].splice(at, 0, item);
+      lists[to.zone].push({ ...item, slot: to.cell });
     }
     updateCharacterFields(id, { f_items: JSON.stringify(lists.belt), f_backpack_items: JSON.stringify(lists.pack) });
   };
@@ -9445,15 +9472,18 @@ export default function App({ onSignOut }) {
                                 const kind = equipKind(it.name);
                                 return itemVisual(it.name, { isWeapon: kind === "primary" || kind === "secondary", isArmor: kind === "armor" });
                               };
-                              const slotCell = (zone, it, i) => {
+                              const beltCells = layoutSlots(items);
+                              const packCells = layoutSlots(backpackItems);
+                              // i = posición en la lista; cell = hueco en la rejilla
+                              const slotCell = (zone, it, i, cell) => {
                                 if (!it) return null;
                                 const v = visualOf(it);
                                 return (
                                   <button
-                                    key={zone + i}
+                                    key={zone + cell}
                                     type="button"
                                     draggable
-                                    className={"mh-islot" + (invOver && invOver.zone === zone && invOver.index === i ? " is-over" : "") + (invDrag && invDrag.zone === zone && invDrag.index === i ? " is-drag" : "")}
+                                    className={"mh-islot" + (invOver && invOver.zone === zone && invOver.cell === cell ? " is-over" : "") + (invDrag && invDrag.zone === zone && invDrag.index === i ? " is-drag" : "")}
                                     style={{ "--ic": v.color }}
                                     title={it.name + " · arrástralo a otro hueco"}
                                     onClick={() => openItemCard(zone, it, i)}
@@ -9466,7 +9496,7 @@ export default function App({ onSignOut }) {
                                       setInvDrag(null);
                                       setInvOver(null);
                                     }}
-                                    {...dropProps(zone, i)}
+                                    {...dropProps(zone, cell)}
                                   >
                                     <span className="mh-islot-ico">
                                       <v.Icon size={26} strokeWidth={1.6} />
@@ -9476,16 +9506,21 @@ export default function App({ onSignOut }) {
                                   </button>
                                 );
                               };
-                              const dropProps = (zone, i) => ({
+                              const dropProps = (zone, cell) => ({
+                                onDragEnter: (e) => invDrag && e.preventDefault(),
                                 onDragOver: (e) => {
                                   if (!invDrag) return;
                                   e.preventDefault();
-                                  if (!invOver || invOver.zone !== zone || invOver.index !== i) setInvOver({ zone, index: i });
+                                  e.dataTransfer.dropEffect = "move";
+                                  if (!invOver || invOver.zone !== zone || invOver.cell !== cell) setInvOver({ zone, cell });
                                 },
-                                onDragLeave: () => setInvOver((o) => (o && o.zone === zone && o.index === i ? null : o)),
+                                onDragLeave: (e) => {
+                                  if (e.currentTarget.contains(e.relatedTarget)) return;
+                                  setInvOver((o) => (o && o.zone === zone && o.cell === cell ? null : o));
+                                },
                                 onDrop: (e) => {
                                   e.preventDefault();
-                                  if (invDrag) moveInventoryItem(viewingCharId, invDrag, { zone, index: i });
+                                  if (invDrag) moveInventoryItem(viewingCharId, invDrag, { zone, cell });
                                   setInvDrag(null);
                                   setInvOver(null);
                                 },
@@ -9514,7 +9549,7 @@ export default function App({ onSignOut }) {
                                 });
                               };
                               const emptyCell = (key, onClick, label, zone, i) => (
-                                <button key={key} type="button" className={"mh-islot empty" + (zone && invOver && invOver.zone === zone && invOver.index === i ? " is-over" : "")} title={label} aria-label={label} onClick={onClick} {...(zone ? dropProps(zone, i) : {})}>
+                                <button key={key} type="button" className={"mh-islot empty" + (zone && invOver && invOver.zone === zone && invOver.cell === i ? " is-over" : "")} title={label} aria-label={label} onClick={onClick} {...(zone ? dropProps(zone, i) : {})}>
                                   <Plus size={16} />
                                 </button>
                               );
@@ -9525,9 +9560,9 @@ export default function App({ onSignOut }) {
                                     <b>{items.length} / {ITEM_SLOTS} huecos</b>
                                   </div>
                                   <div className="mh-inv-grid">
-                                    {Array.from({ length: ITEM_SLOTS }, (_, i) =>
-                                      items[i]
-                                        ? slotCell("belt", items[i], i)
+                                    {beltCells.map((idx, i) =>
+                                      idx !== null
+                                        ? slotCell("belt", items[idx], idx, i)
                                         : emptyCell("be" + i, () => {
                                             setShowAddItemModal(true);
                                             setAddItemModalTab("catalog");
@@ -9550,8 +9585,8 @@ export default function App({ onSignOut }) {
                                   </div>
                                   <div className="mh-inv-grid" style={{ opacity: backpack ? 1 : 0.45 }}>
                                     {Array.from({ length: ITEM_SLOTS }, (_, i) =>
-                                      backpack && backpackItems[i] ? (
-                                        slotCell("pack", backpackItems[i], i)
+                                      backpack && packCells[i] !== null ? (
+                                        slotCell("pack", backpackItems[packCells[i]], packCells[i], i)
                                       ) : backpack ? (
                                         emptyCell("pe" + i, () => {
                                           setSelectedItemSlot(null);
