@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2 } from "lucide-react";
+import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
 import { Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
@@ -360,6 +360,22 @@ const SUBCLASS_ART = {
   "Artista Marcial": "/subclases/artista-marcial.webp",
   "Gremio del Verdugo": "/subclases/gremio-del-verdugo.webp",
   "Gremio del Envenenador": "/subclases/gremio-del-envenenador.webp",
+};
+// Emblema de cada clase (tarjetas de la lista de personajes).
+const CLASS_EMBLEMS = {
+  Bardo: Music,
+  Druida: Leaf,
+  Guardián: Shield,
+  Explorador: BowArrow,
+  Pícaro: VenetianMask,
+  Serafín: Feather,
+  Hechicero: Flame,
+  Guerrero: Swords,
+  Mago: WandSparkles,
+  Bruja: Moon,
+  Brujo: Eye,
+  Camorrista: HandFist,
+  Asesino: Skull,
 };
 const CLASS_ART = {
   Bardo: "/clases/bardo.webp",
@@ -2430,6 +2446,32 @@ const sharedStyles = `
   .mh-wz-grp button.is-done:hover { background: #4E9E52; }
   .mh-wz-grp button.is-on { background: #E3B04B; }
   .mh-wz-body { flex: 1; min-height: 0; overflow-y: auto; padding: 18px 22px; }
+  .mh-hero { margin: 0; padding: 0; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; border: 1.5px solid color-mix(in srgb, var(--hc) 40%, var(--mh-line)); transition: transform .15s, box-shadow .15s, border-color .15s; }
+  .mh-hero:hover, .mh-hero:focus-visible { transform: translateY(-3px); border-color: var(--hc); box-shadow: 0 10px 24px rgba(0,0,0,.12); outline: none; }
+  .mh-hero.is-current { border-color: #E3B04B; box-shadow: 0 0 0 2px color-mix(in srgb, #E3B04B 45%, transparent); }
+  .mh-hero.is-dead { filter: grayscale(.7); opacity: .8; }
+  .mh-hero-top { position: relative; height: 150px; display: flex; align-items: center; justify-content: center; background: radial-gradient(70% 80% at 50% 45%, color-mix(in srgb, var(--hc) 30%, var(--mh-panel)), color-mix(in srgb, var(--hc) 10%, var(--mh-panel)) 75%); }
+  .mh-hero-emb { width: 88px; height: 88px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: color-mix(in srgb, var(--hc) var(--mh-accent-keep, 100%), #000); background: var(--mh-panel); border: 2px solid var(--hc); box-shadow: 0 0 0 6px color-mix(in srgb, var(--hc) 16%, transparent), 0 8px 18px color-mix(in srgb, var(--hc) 30%, transparent); transition: transform .2s; }
+  .mh-hero:hover .mh-hero-emb { transform: scale(1.06); }
+  .mh-hero-lv { position: absolute; top: 10px; left: 10px; min-width: 30px; height: 34px; padding: 0 5px 6px; display: flex; align-items: center; justify-content: center; background: var(--hc); color: #fff; font: 800 14px 'Inter', system-ui, sans-serif; clip-path: polygon(0 0, 100% 0, 100% 74%, 50% 100%, 0 74%); }
+  .mh-hero-del { all: unset; position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #C0504A; background: color-mix(in srgb, var(--mh-panel) 80%, transparent); opacity: 0; transition: opacity .15s; }
+  .mh-hero:hover .mh-hero-del, .mh-hero:focus-within .mh-hero-del, .mh-hero-del.is-armed { opacity: 1; }
+  .mh-hero-del.is-armed { background: #D9644E; color: #fff; }
+  .mh-hero-del:focus-visible { opacity: 1; outline: 2px solid #D9644E; }
+  @media (hover: none) { .mh-hero-del { opacity: 1; } }
+  .mh-hero-inf { flex: 1; display: flex; flex-direction: column; gap: 4px; padding: 12px 14px 14px; }
+  .mh-hero-nm { font-size: 17px; font-weight: 700; color: var(--mh-ink); line-height: 1.2; }
+  .mh-hero-cl { font-size: 11.5px; color: var(--mh-ink3); line-height: 1.35; }
+  .mh-hero-or { font-size: 11px; color: var(--mh-muted); }
+  .mh-hero-tags { display: flex; flex-wrap: wrap; gap: 4px; margin: 3px 0 2px; min-height: 18px; }
+  .mh-hero-tags span { font-size: 10px; font-weight: 700; padding: 1px 8px; border-radius: 20px; }
+  .mh-hero-tags .is-tf { color: var(--mh-purple-ink); background: #A58BE822; }
+  .mh-hero-tags .is-camp { color: var(--mh-gold-ink); background: #E3B04B22; }
+  .mh-hero-tags .is-dead { color: #fff; background: #6A6177; }
+  .mh-hero-bars { margin-top: auto; display: flex; gap: 5px; padding-top: 6px; }
+  .mh-hero-bars span { flex: 1; height: 5px; border-radius: 3px; background: var(--mh-line); overflow: hidden; }
+  .mh-hero-bars i { display: block; height: 100%; border-radius: 3px; }
+  .mh-hero-nums { display: flex; justify-content: space-between; gap: 4px; font-size: 10px; color: var(--mh-muted); }
   .mh-wz-body.is-split { display: flex; padding: 0; overflow: hidden; position: relative; }
   .mh-wz-body.is-split > .mh-wz-art { width: calc((100% - 310px) / 2); }
   .mh-wz-det.mh-noscroll { padding-bottom: 30px; -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 30px), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 30px), transparent); }
@@ -6884,118 +6926,84 @@ export default function App({ onSignOut }) {
                   gap: 14,
                 }}
               >
-                {Object.keys(characters).map((id) => (
-                  <div
-                    key={id}
-                    className="mh-card"
-                    onClick={() => openCharDetail(id)}
-                    style={{
-                      margin: 0,
-                      padding: "18px 16px",
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 10,
-                      borderColor: id === currentCharId ? "#E3B04B" : "var(--mh-line)",
-                      borderTop: "4px solid " + (characters[id].f_class ? classColor(characters[id].f_class) : "var(--mh-line)"),
-                      cursor: "pointer",
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
-                      <div className="mh-serif" style={{ fontSize: 17, fontWeight: 600, flex: 1 }}>
-                        {characters[id].f_name || "Sin nombre"}
-                      </div>
-                      <Trash2
-                        size={15}
-                        style={{
-                          color: ink(pendingDeleteId === id ? "#FFFFFF" : "#D9644E"),
-                          background: pendingDeleteId === id ? "#D9644E" : "transparent",
-                          borderRadius: 4,
-                          padding: pendingDeleteId === id ? 2 : 0,
-                          cursor: "pointer",
-                          flexShrink: 0,
-                        }}
-                        title={pendingDeleteId === id ? "Vuelve a pulsar para confirmar" : "Eliminar personaje"}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          delChar(id);
-                        }}
-                      />
-                    </div>
-                    <div style={{ fontSize: 11.5, color: "var(--mh-muted)", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                      {characters[id].f_class
-                        ? "Nivel " + (characters[id].f_level || "1") + " · " + characters[id].f_class + (characters[id].f_subclass ? " · " + characters[id].f_subclass : "")
-                        : "Sin clase asignada"}
-                      {CLASSES.find((c) => c.key === characters[id].f_class)?.expansion && (
-                        <span
-                          style={{
-                            fontSize: 9.5,
-                            fontWeight: 600,
-                            color: "var(--mh-purple-ink)",
-                            background: "#A58BE822",
-                            padding: "1px 7px",
-                            borderRadius: 20,
+                {Object.keys(characters).map((id) => {
+                  const ch = characters[id];
+                  const col = ch.f_class ? classColor(ch.f_class) : "#9A8F80";
+                  const Emblem = CLASS_EMBLEMS[ch.f_class] || User;
+                  const camp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(id));
+                  const mods = getEquipmentMods(PRIMARY_WEAPONS.find((w) => w.key === ch.f_primary_weapon), SECONDARY_WEAPONS.find((w) => w.key === ch.f_secondary_weapon), ARMORS.find((a) => a.key === ch.f_armor));
+                  const hpT = Number(ch.r_hp || 0) + (mods.hp || 0);
+                  const stT = Number(ch.r_stress || 0) + (mods.stress || 0);
+                  const hpLeft = Math.max(0, hpT - Number(ch.hp_marked || 0));
+                  const st = Number(ch.stress_marked || 0);
+                  const hope = Number(ch.hope_marked ?? HOPE_DEFAULT);
+                  const hopeMax = getHopeMax(ch);
+                  const dead = ch.f_is_dead === "1";
+                  const isExp = CLASSES.find((c) => c.key === ch.f_class)?.expansion;
+                  const origin = [ch.f_ancestry, ch.f_community].filter(Boolean).join(" · ");
+                  const pct = (a, b) => (b > 0 ? Math.max(0, Math.min(100, (a / b) * 100)) : 0) + "%";
+                  return (
+                    <div
+                      key={id}
+                      className={"mh-card mh-hero" + (id === currentCharId ? " is-current" : "") + (dead ? " is-dead" : "")}
+                      style={{ "--hc": col }}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => openCharDetail(id)}
+                      onKeyDown={(e) => e.key === "Enter" && e.target === e.currentTarget && openCharDetail(id)}
+                    >
+                      <div className="mh-hero-top">
+                        {ch.f_class && <span className="mh-hero-lv" title={"Nivel " + (ch.f_level || "1")}>{ch.f_level || "1"}</span>}
+                        <button
+                          type="button"
+                          className={"mh-hero-del" + (pendingDeleteId === id ? " is-armed" : "")}
+                          title={pendingDeleteId === id ? "Vuelve a pulsar para confirmar" : "Eliminar personaje"}
+                          aria-label={pendingDeleteId === id ? "Confirmar eliminar personaje" : "Eliminar personaje"}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            delChar(id);
                           }}
                         >
-                          Hope & Fear
+                          <Trash2 size={14} />
+                        </button>
+                        <span className="mh-hero-emb" aria-hidden="true">
+                          <Emblem size={40} strokeWidth={1.6} />
                         </span>
-                      )}
-                      {(() => {
-                        const camp = Object.values(campaigns).find((c) => (c.characterIds || []).includes(id));
-                        return (
-                          camp && (
-                            <span
-                              style={{
-                                fontSize: 9.5,
-                                fontWeight: 600,
-                                color: "var(--mh-gold-ink)",
-                                background: "#E3B04B1A",
-                                padding: "1px 7px",
-                                borderRadius: 20,
-                              }}
-                            >
-                              Campaña: {camp.name}
-                            </span>
-                          )
-                        );
-                      })()}
+                      </div>
+                      <div className="mh-hero-inf">
+                        <div className="mh-serif mh-hero-nm">{ch.f_name || "Sin nombre"}</div>
+                        <div className="mh-hero-cl">{ch.f_class ? ch.f_class + (ch.f_subclass ? " · " + ch.f_subclass : "") : "Sin clase asignada"}</div>
+                        {origin && <div className="mh-hero-or">{origin}</div>}
+                        <div className="mh-hero-tags">
+                          {dead && <span className="is-dead">Caído</span>}
+                          {ch.f_transformation && <span className="is-tf">{ch.f_transformation}</span>}
+                          {camp && <span className="is-camp">{camp.name}</span>}
+                          {isExp && <span className="is-tf">Hope &amp; Fear</span>}
+                        </div>
+                        {ch.f_class && (
+                          <>
+                            <div className="mh-hero-bars">
+                              <span title={"Puntos de vida " + hpLeft + " / " + hpT}>
+                                <i style={{ width: pct(hpLeft, hpT), background: "#E0544A" }} />
+                              </span>
+                              <span title={"Estrés " + st + " / " + stT}>
+                                <i style={{ width: pct(st, stT), background: "#A58BE8" }} />
+                              </span>
+                              <span title={"Esperanza " + hope + " / " + hopeMax}>
+                                <i style={{ width: pct(hope, hopeMax), background: "#E3B04B" }} />
+                              </span>
+                            </div>
+                            <div className="mh-hero-nums">
+                              <span>PV {hpLeft}/{hpT}</span>
+                              <span>Estrés {st}/{stT}</span>
+                              <span>Esperanza {hope}</span>
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </div>
-                    {characters[id].f_pronouns && (
-                      <div style={{ fontSize: 11, color: "var(--mh-muted)" }}>{characters[id].f_pronouns}</div>
-                    )}
-                    {(characters[id].f_ancestry || characters[id].f_community) && (
-                      <div
-                        style={{
-                          fontSize: 11,
-                          color:
-                            (characters[id].f_ancestry || "")
-                              .split(" + ")
-                              .some((k) => ANCESTRIES.find((a) => a.key === k)?.expansion) ||
-                            COMMUNITIES.find((c) => c.key === characters[id].f_community)?.expansion
-                              ? "#A58BE8"
-                              : "var(--mh-muted)",
-                        }}
-                      >
-                        {[characters[id].f_ancestry, characters[id].f_community].filter(Boolean).join(" · ")}
-                      </div>
-                    )}
-                    {characters[id].f_transformation && (
-                      <div
-                        style={{
-                          fontSize: 10.5,
-                          fontWeight: 600,
-                          color: "var(--mh-purple-ink)",
-                          background: "#A58BE822",
-                          padding: "1px 8px",
-                          borderRadius: 20,
-                          display: "inline-block",
-                          width: "fit-content",
-                        }}
-                      >
-                        {characters[id].f_transformation}
-                      </div>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
 
                 <div
                   className="mh-card"
@@ -7011,7 +7019,7 @@ export default function App({ onSignOut }) {
                     cursor: "pointer",
                     borderStyle: "dashed",
                     color: "var(--mh-ink3)",
-                    minHeight: 84,
+                    minHeight: 300,
                   }}
                 >
                   <Plus size={18} />
