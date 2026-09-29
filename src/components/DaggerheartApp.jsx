@@ -1649,7 +1649,7 @@ const sharedStyles = `
   }
   .mh-exp-locked small { font-size: 10.5px; }
   .mh-arow {
-    --ac: var(--acc); flex: 1 1 0; min-height: 0; max-height: 96px; display: flex; align-items: center; gap: 11px; padding: 8px 12px;
+    --ac: var(--acc); flex: 1 1 0; min-height: 0; display: flex; align-items: center; gap: 11px; padding: 8px 12px;
     border: 1px solid var(--mh-line); border-radius: 11px; background: var(--mh-panel); cursor: pointer;
     transition: border-color .15s, background .15s, translate .15s;
   }
@@ -2289,6 +2289,15 @@ const sharedStyles = `
   .mh-wz-purpose-opts button.is-on { border-color: #9A7B4F; background: color-mix(in srgb, #9A7B4F 14%, var(--mh-panel)); }
   .mh-wz-purpose-opts button.is-on em { color: #7A5A2C; }
   .mh-wz-purpose-opts button:disabled { opacity: .45; cursor: not-allowed; }
+  .mh-eff { flex-shrink: 0; display: flex; flex-direction: column; gap: 7px; padding: 10px 11px; border-radius: 12px; border: 1px solid color-mix(in srgb, #9A7B4F 45%, var(--mh-line)); background: color-mix(in srgb, #9A7B4F 7%, var(--mh-panel)); }
+  .mh-eff-h { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .mh-eff-h b { font-size: 12.5px; color: var(--mh-ink); }
+  .mh-eff-h span { font-size: 11px; color: var(--mh-muted); }
+  .mh-eff-e { font-size: 11px; color: var(--mh-muted); font-style: italic; }
+  .mh-eff-opts { display: flex; gap: 6px; flex-wrap: wrap; }
+  .mh-eff-opts button { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 20px; border: 1.5px solid var(--mh-line2); background: var(--mh-panel); color: var(--mh-ink2); font: 600 12px 'Inter', system-ui, sans-serif; cursor: pointer; }
+  .mh-eff-opts button.is-on { border-color: var(--rc); background: color-mix(in srgb, var(--rc) 12%, var(--mh-panel)); color: var(--mh-ink); }
+  .mh-eff-opts button em { font-style: normal; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--rc); }
   .mh-trov { --tb: #E07FB0; border: 1px solid color-mix(in srgb, var(--tb) 45%, var(--mh-line)); border-radius: 12px; padding: 10px 11px; background: linear-gradient(color-mix(in srgb, var(--tb) 8%, var(--mh-panel)), var(--mh-panel)); display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
   .mh-trov-h { display: flex; align-items: center; gap: 8px; }
   .mh-trov-h b { font-size: 13px; color: var(--mh-ink); }
@@ -4878,6 +4887,7 @@ export default function App({ onSignOut }) {
   const [actionPage, setActionPage] = useState(0);
   const [restMessage, setRestMessage] = useState("");
   const [restPicks, setRestPicks] = useState(null);
+  const [restEfficient, setRestEfficient] = useState(null); // Autómata: acción corta que cuenta como de descanso largo
   useEffect(() => {
     setRestPicks(null);
     setRestType("short");
@@ -6044,7 +6054,8 @@ export default function App({ onSignOut }) {
     postCampaignEvent(id, `🎵 Toca la ${song.name}: ${song.text}`);
   };
 
-  const performRest = (id, restType, key1, key2, key3) => {
+  const performRest = (id, restType, key1, key2, key3, efficientKey) => {
+    let efficientLeft = restType === "short" && efficientKey ? 1 : 0;
     const c = characters[id];
     if (!c) return;
     let hp = Number(c.hp_marked || 0);
@@ -6065,6 +6076,15 @@ export default function App({ onSignOut }) {
       if (key === "prepare") {
         hope = Math.min(getHopeMax(c), hope + 1);
         messages.push(`${entry.label}: +1 Esperanza`);
+        return;
+      }
+      // Autómata · Eficiente: una acción del descanso corto se resuelve como la del descanso largo.
+      if (!isLong && efficientLeft && key === efficientKey) {
+        efficientLeft = 0;
+        if (key === "heal") hp = 0;
+        else if (key === "clearmind") stress = 0;
+        else if (key === "repair") armor = armorTotal;
+        messages.push(`${entry.label}: recuperación completa (Eficiente)`);
         return;
       }
       if (isLong) {
@@ -9044,6 +9064,7 @@ export default function App({ onSignOut }) {
                               const isElf = (c.f_ancestry || "").split(" + ").includes("Elfo");
                               const slots = isElf ? 3 : 2;
                               const isLong = restType === "long";
+                              const isAutomatonRest = (c.f_ancestry || "").split(" + ").includes("Autómata");
                               const tier = tierForLevel(c.f_level || 1);
                               const hpTotal = Number(c.r_hp || 0) + equipMods.hp;
                               const stressTotal = Number(c.r_stress || 0) + equipMods.stress;
@@ -9082,17 +9103,6 @@ export default function App({ onSignOut }) {
                               const blocked = !isLong && shortRests >= 3;
                               return (
                                 <div style={{ display: "flex", flexDirection: "column", gap: 11, flex: 1, minHeight: 0 }}>
-                                  <div className="mh-camp">
-                                    <Flame size={30} strokeWidth={1.6} color="#E0823A" />
-                                    <div style={{ minWidth: 0 }}>
-                                      <div className="mh-serif" style={{ fontWeight: 700, fontSize: 15, color: "var(--mh-ink)" }}>Junto a la hoguera</div>
-                                      <div style={{ fontSize: 11.5, color: "var(--mh-muted)" }}>
-                                        {(c.f_name || "Tu personaje").split(" ")[0]} puede descansar. Te recomendamos lo que más necesitas.
-                                        {isElf && " Trance Celestial: eliges 3 acciones."}
-                                      </div>
-                                    </div>
-                                  </div>
-
                                   <div className="mh-seg" role="tablist">
                                     {[["short", "Descanso corto", Sun], ["long", "Descanso largo", Moon]].map(([key, label, Ico]) => (
                                       <button
@@ -9172,13 +9182,42 @@ export default function App({ onSignOut }) {
                                     );
                                   })()}
 
+                                  {isAutomatonRest && !isLong && (() => {
+                                    const opts = [...new Set(picks)].filter((k) => k !== "prepare");
+                                    return (
+                                      <div className="mh-eff">
+                                        <div className="mh-eff-h">
+                                          <b>Eficiente</b>
+                                          <span>Autómata · una acción recupera como en un descanso largo</span>
+                                        </div>
+                                        {opts.length === 0 ? (
+                                          <div className="mh-eff-e">Elige curar, quitarte el Estrés o reparar la armadura para usarlo.</div>
+                                        ) : (
+                                          <div className="mh-eff-opts" role="radiogroup" aria-label="Acción eficiente">
+                                            {opts.map((k) => {
+                                              const ac = acts.find((a) => a.key === k);
+                                              const on = restEfficient === k;
+                                              return (
+                                                <button key={k} type="button" role="radio" aria-checked={on} className={on ? "is-on" : ""} style={{ "--rc": ac.color }} onClick={() => setRestEfficient(on ? null : k)}>
+                                                  <ac.Icon size={13} /> {ac.label}
+                                                  {on && <em>completo</em>}
+                                                </button>
+                                              );
+                                            })}
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })()}
+
                                   <button
                                     className="mh-btn"
                                     style={{ width: "100%", justifyContent: "center", padding: "10px 14px", fontSize: 13.5 }}
                                     disabled={blocked || picks.length === 0}
                                     onClick={() => {
-                                      performRest(viewingCharId, restType, picks[0], picks[1], picks[2]);
+                                      performRest(viewingCharId, restType, picks[0], picks[1], picks[2], isAutomatonRest && !isLong && picks.includes(restEfficient) ? restEfficient : null);
                                       setRestPicks(null);
+                                      setRestEfficient(null);
                                     }}
                                   >
                                     <Flame size={15} /> Descansar
