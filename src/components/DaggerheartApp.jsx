@@ -12419,7 +12419,7 @@ export default function App({ onSignOut }) {
                         return (
                           <>
                             <div className="mh-wz-dh">
-                              <span className="mh-wz-badge" style={{ background: col }}>{cls.charAt(0)}</span>
+                              <span className="mh-wz-badge" style={{ background: col }} aria-hidden="true">{(() => { const Em = CLASS_EMBLEMS[cls] || User; return <Em size={26} strokeWidth={1.8} />; })()}</span>
                               <div>
                                 <div className="mh-serif mh-wz-dn">{cls}</div>
                                 <div className="mh-wz-dm">
@@ -12452,7 +12452,7 @@ export default function App({ onSignOut }) {
                       return (
                         <>
                           <div className="mh-wz-dh">
-                            <span className="mh-wz-badge" style={{ background: col }}>{current.key.charAt(0)}</span>
+                            <span className="mh-wz-badge" style={{ background: col }} aria-hidden="true">{(() => { const Em = CLASS_EMBLEMS[cls] || User; return <Em size={26} strokeWidth={1.8} />; })()}</span>
                             <div>
                               <div className="mh-serif mh-wz-dn">{current.key}</div>
                               <div className="mh-wz-dm">Subclase de {cls}</div>
