@@ -9784,7 +9784,7 @@ export default function App({ onSignOut }) {
                                     <b className="mh-serif">{total}</b>
                                     <span>de oro</span>
                                   </div>
-                                  {[...GOLD_TIERS].reverse().map((tier) => {
+                                  {GOLD_TIERS.map((tier) => {
                                     const idx = GOLD_TIERS.indexOf(tier);
                                     const Ico = GOLD_ICONS[tier.field];
                                     return (
