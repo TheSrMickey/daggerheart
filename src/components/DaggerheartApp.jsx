@@ -11041,6 +11041,9 @@ export default function App({ onSignOut }) {
               const mod = preRoll.traitValue + expSum;
               const edgeNet = (preRoll.advantage || preRoll.privilege ? 1 : 0) - (preRoll.disadvantage ? 1 : 0);
               const highborne = ch.f_community === "De Alta Cuna";
+              // Del Saber · Leído: ventaja en tiradas de Conocimiento sobre historia, cultura o política.
+              const loreborne = ch.f_community === "Del Saber" && preRoll.traitLabel === "Conocimiento";
+              const edgeSource = highborne ? "Privilegio" : loreborne ? "Leído" : "";
               const poetOk = ch.f_subclass === "Orador" && preRoll.traitLabel === "Presencia";
               const hopeUsed = preRoll.exps.length + (preRoll.poet ? 1 : 0);
               const formula = "2d12 " + (mod >= 0 ? "+ " : "− ") + Math.abs(mod) + (preRoll.rally && ch.f_rally_die ? " + 1" + ch.f_rally_die : "") + (preRoll.poet ? " + 1d4" : "") + (preRoll.weapon && ch.f_transformation_form_active === "Forma de Lobo" ? " + 1d10" : "") + (edgeNet > 0 ? " + 1d6" : edgeNet < 0 ? " − 1d6" : "");
@@ -11072,14 +11075,14 @@ export default function App({ onSignOut }) {
                       onClick: () => setPreRoll((p) => ({ ...p, poet: !p.poet })),
                     })
                   : null,
-                highborne
+                edgeSource
                   ? tile("priv", {
                       on: preRoll.privilege,
-                      title: "Privilegio",
-                      sub: "De Alta Cuna",
+                      title: edgeSource,
+                      sub: highborne ? "De Alta Cuna" : "Del Saber",
                       cost: "Ventaja",
-                      color: "#B8862E",
-                      hint: "Si tratas con nobles, negocias un precio o usas tu reputación",
+                      color: highborne ? "#B8862E" : "#5E8FC9",
+                      hint: highborne ? "Si tratas con nobles, negocias un precio o usas tu reputación" : "Si la tirada trata sobre la historia, la cultura o la política de una persona o un lugar importantes",
                       onClick: () => setPreRoll((p) => ({ ...p, privilege: !p.privilege, advantage: p.privilege ? p.advantage : false })),
                     })
                   : null,
@@ -11090,7 +11093,7 @@ export default function App({ onSignOut }) {
                 rallyOn ? ["Arenga", "+1" + ch.f_rally_die] : null,
                 preRoll.poet ? ["Corazón de Poeta", "+1d4"] : null,
                 wolf ? ["Forma de Lobo", "+1d10"] : null,
-                edgeNet ? [edgeNet > 0 ? "Ventaja" + (preRoll.privilege ? " (Privilegio)" : "") : "Desventaja", edgeNet > 0 ? "+1d6" : "−1d6"] : (preRoll.advantage || preRoll.privilege) && preRoll.disadvantage ? ["Ventaja y desventaja", "se anulan"] : null,
+                edgeNet ? [edgeNet > 0 ? "Ventaja" + (preRoll.privilege ? " (" + edgeSource + ")" : "") : "Desventaja", edgeNet > 0 ? "+1d6" : "−1d6"] : (preRoll.advantage || preRoll.privilege) && preRoll.disadvantage ? ["Ventaja y desventaja", "se anulan"] : null,
               ].filter(Boolean);
               const DS = 40;
               // Altura fija: se reserva hueco para todas las líneas que este personaje puede llegar a tener.
