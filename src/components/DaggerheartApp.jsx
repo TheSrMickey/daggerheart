@@ -2432,11 +2432,9 @@ const sharedStyles = `
   .mh-minor-opt b { display: block; font-size: 12.5px; }
   .mh-minor-opt small { font-size: 11px; color: var(--mh-muted); }
   .mh-minor-opt em { margin-left: auto; font-style: normal; font-size: 10px; font-weight: 700; white-space: nowrap; padding: 2px 7px; border-radius: 20px; color: #6B4FB8; background: color-mix(in srgb, #A58BE8 18%, var(--mh-panel)); }
-  /* Enano · Fortaleza Aumentada: umbrales en azul con un escudo de fondo */
-  .mh-thr-fort { position: relative; overflow: hidden; border-color: #5E93C9 !important; background: color-mix(in srgb, #5E93C9 12%, var(--mh-panel)) !important; }
-  .mh-thr-fort > div { position: relative; }
-  .mh-thr-fort .mh-serif { color: color-mix(in srgb, #5E93C9 70%, var(--mh-ink)) !important; }
-  .mh-thr-shield { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; transform: translate(-50%, -50%); color: #5E93C9; opacity: .18; pointer-events: none; }
+  /* Enano · Fortaleza Aumentada: umbrales en azul */
+  .mh-thr-fort { border-color: #5E93C9 !important; background: color-mix(in srgb, #5E93C9 12%, var(--mh-panel)) !important; }
+  .mh-thr-fort > .mh-serif { color: color-mix(in srgb, #5E93C9 70%, var(--mh-ink)) !important; }
   .mh-fort-note { display: flex; align-items: center; gap: 6px; margin: -4px 0 10px; font-size: 11.5px; line-height: 1.35; color: var(--mh-ink2); padding: 6px 9px; border-radius: 9px; background: color-mix(in srgb, #5E93C9 12%, var(--mh-panel)); border: 1px solid color-mix(in srgb, #5E93C9 40%, var(--mh-line)); }
   .mh-fort-note svg { flex-shrink: 0; color: #5E93C9; }
   .mh-wz-breath { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -8613,7 +8611,6 @@ export default function App({ onSignOut }) {
                                   style={{ position: "relative", flex: 1, textAlign: "center", border: "1px solid " + (minorPop ? "var(--mh-ink)" : "var(--mh-line)"), background: "var(--mh-panel2)", borderRadius: 10, padding: statsSpacing.thrPadY + "px 4px", cursor: "pointer" }}
                                 >
                                   {!minorPop && <span className="mh-tip">{isDwarf ? "Pulsa para elegir: 1 PV o Piel Gruesa" : "Pulsa para -1 PV"}</span>}
-                                  {fortOn && <Shield className="mh-thr-shield" aria-hidden="true" />}
                                   <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Menor</div>
                                   <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700 }}>{fortMajor > 1 ? fortMajor - 1 : "—"}</div>
                                   {isDwarf && minorPop && (() => {
@@ -8671,7 +8668,6 @@ export default function App({ onSignOut }) {
                                 </div>
                                 <div onClick={() => applyDamage(viewingCharId, 2)} title={fortOn ? "Fortaleza Aumentada: umbrales ×2" : undefined} className={"mh-tip-anchor" + (fortOn ? " mh-thr-fort" : "")} style={{ flex: 1, textAlign: "center", border: "1px solid var(--acc)", background: "color-mix(in srgb, var(--acc) 8%, transparent)", borderRadius: 10, padding: statsSpacing.thrPadY + "px 4px", cursor: "pointer" }}>
                                   <span className="mh-tip">Pulsa para -2 PV</span>
-                                  {fortOn && <Shield className="mh-thr-shield" aria-hidden="true" />}
                                   <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Mayor</div>
                                   <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700, color: "var(--mh-gold-ink)" }}>{fortMajor}</div>
                                 </div>
@@ -8682,7 +8678,6 @@ export default function App({ onSignOut }) {
                                   style={{ flex: 1, textAlign: "center", border: "1px solid #D9644E", background: "#D9644E14", borderRadius: 10, padding: statsSpacing.thrPadY + "px 4px", cursor: "pointer" }}
                                 >
                                   <span className="mh-tip">{c.f_scales_ready === "1" ? "Escamas activas: pulsa para -2 PV" : "Pulsa para -3 PV"}</span>
-                                  {fortOn && <Shield className="mh-thr-shield" aria-hidden="true" />}
                                   <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Grave{c.f_scales_ready === "1" && <span title="Escamas activas: marcarás 2 PV" style={{ marginLeft: 4, color: "#D9644E", fontWeight: 700 }}>· Escamas</span>}</div>
                                   <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700, color: "#D9644E" }}>{fortSevere}</div>
                                 </div>
