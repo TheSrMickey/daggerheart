@@ -1704,6 +1704,17 @@ const sharedStyles = `
     border-radius: 12px; background: var(--mh-panel2); color: var(--mh-muted2); font-size: 11.5px;
   }
   .mh-exp-locked small { font-size: 10.5px; }
+  /* ── Móvil: la ficha entera se desplaza y nada se aplasta ── */
+  .mh-sheet-scroll { display: contents; }
+  .mh-root.is-mobile .mh-sheet-scroll { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; }
+  .mh-root.is-mobile .mh-sheet-head { padding: 12px 14px !important; }
+  .mh-root.is-mobile .mh-sheet-body { flex: none !important; overflow: visible !important; padding: 16px 12px 28px !important; }
+  .mh-root.is-mobile .mh-camp-tabs { max-width: 100%; overflow-x: auto; flex-wrap: nowrap; }
+  .mh-root.is-mobile .mh-camp-tabs > div { flex-shrink: 0; padding: 8px 12px !important; }
+  .mh-root.is-mobile .mh-panel-box { grid-column: 1 / -1 !important; min-width: 0; max-width: 100%; }
+  .mh-root.is-mobile .mh-arow { flex: none; min-height: 56px; }
+  .mh-root.is-mobile .mh-arow-title { white-space: normal; line-height: 1.25; }
+  .mh-root.is-mobile .mh-arow-sum { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
   .mh-arow {
     --ac: var(--acc); flex: 1 1 0; min-height: 0; display: flex; align-items: center; gap: 11px; padding: 8px 12px;
     border: 1px solid var(--mh-line); border-radius: 11px; background: var(--mh-panel); cursor: pointer;
@@ -3598,6 +3609,7 @@ function Panel({ span, title, titleRight, children, hidden, restrained, vulnerab
   const borderColor = vulnerable ? "#D9644E" : restrained ? "#C08B5C" : unconscious ? "#A58BE8" : hidden ? "var(--mh-muted)" : "var(--mh-line)";
   return (
     <div
+      className="mh-panel-box"
       style={{
         gridColumn: "span " + span,
         background: "var(--panel-bg, var(--mh-panel))",
@@ -6815,7 +6827,7 @@ export default function App({ onSignOut }) {
   };
 
   return (
-    <div className="mh-root" style={{ display: "flex", flexDirection: isMobile ? "column" : "row", height: "100dvh", background: "var(--mh-bg)", fontFamily: "'Inter', system-ui, sans-serif", color: "var(--mh-ink)", overflow: "hidden" }}>
+    <div className={"mh-root" + (isMobile ? " is-mobile" : "")} style={{ display: "flex", flexDirection: isMobile ? "column" : "row", height: "100dvh", background: "var(--mh-bg)", fontFamily: "'Inter', system-ui, sans-serif", color: "var(--mh-ink)", overflow: "hidden" }}>
       <style>{sharedStyles}</style>
 
       {/* Menú lateral (arriba en móvil) */}
@@ -6836,7 +6848,7 @@ export default function App({ onSignOut }) {
         <div style={{ display: "flex", alignItems: "center", gap: 9, padding: isMobile ? 0 : "0 8px 18px" }}>
           <Swords size={isMobile ? 18 : 20} color="#E3B04B" />
           <div>
-            <div className="mh-serif" style={{ color: "var(--mh-gold-ink)", fontSize: isMobile ? 15 : 18, fontWeight: 700, lineHeight: 1.1 }}>Marheim</div>
+            {!isMobile && <div className="mh-serif" style={{ color: "var(--mh-gold-ink)", fontSize: 18, fontWeight: 700, lineHeight: 1.1 }}>Marheim</div>}
             {!isMobile && <div style={{ color: "var(--mh-muted2)", fontSize: 10.5, marginTop: 2 }}>Mesa de Daggerheart</div>}
           </div>
         </div>
@@ -6935,7 +6947,7 @@ export default function App({ onSignOut }) {
 
       {/* Body */}
       <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
-        <div style={{ position: "absolute", inset: 0, overflowY: "auto", padding: "24px 28px" }}>
+        <div style={{ position: "absolute", inset: 0, overflowY: "auto", padding: isMobile ? "18px 14px" : "24px 28px" }}>
           <div style={{ maxWidth: 960, margin: "0 auto" }}>
             <h1 className="mh-serif" style={{ fontSize: 26, fontWeight: 700, margin: "0 0 22px", color: "var(--mh-ink)" }}>
               {view === "ajustes" ? "Ajustes" : NAV_ITEMS.find((n) => n.key === view)?.label}
@@ -7114,7 +7126,7 @@ export default function App({ onSignOut }) {
                     {activeCampaign.description || "Añade una descripción para la campaña..."}
                   </div>
 
-                  <div style={{ display: "flex", gap: 4, background: "var(--mh-panel)", border: "1px solid var(--mh-line)", borderRadius: 30, padding: 5, width: "fit-content", marginBottom: 22 }}>
+                  <div className="mh-camp-tabs mh-noscroll" style={{ display: "flex", gap: 4, background: "var(--mh-panel)", border: "1px solid var(--mh-line)", borderRadius: 30, padding: 5, width: "fit-content", marginBottom: 22 }}>
                     {[
                       { key: "mesa", label: "Mesa", Icon: Radio },
                       { key: "resumen", label: "Resumen", Icon: User },
@@ -8101,6 +8113,7 @@ export default function App({ onSignOut }) {
         return (
           <div
             className={"mh-sheet" + (settings.classColors && CLASS_COLORS[c.f_class] ? " is-tinted" : "")}
+            data-scroll="sheet"
             style={{
               "--acc": accent,
               "--acc-on": onColor(accent),
@@ -8127,8 +8140,11 @@ export default function App({ onSignOut }) {
               form={beastformInfo || TRANSFORM_THEMES[c.f_transformation_form_active] || null}
               kind={beastformInfo ? "beast" : "transform"}
             />
+            {/* Cabecera y contenido: en el móvil se desplazan juntos */}
+            <div className="mh-sheet-scroll">
             {/* Header */}
             <div
+              className="mh-sheet-head"
               style={{
                 position: "relative",
                 zIndex: 1,
@@ -8283,7 +8299,7 @@ export default function App({ onSignOut }) {
             </div>
 
             {/* Body */}
-            <div style={{ position: "relative", zIndex: 1, flex: 1, overflowY: "auto", padding: "22px 26px", scrollbarGutter: "stable" }}>
+            <div className="mh-sheet-body" style={{ position: "relative", zIndex: 1, flex: 1, overflowY: "auto", padding: "22px 26px", scrollbarGutter: "stable" }}>
               <div style={{ maxWidth: 1300, margin: "0 auto" }}>
                 {evolutionWarning && (
                   <div style={{ fontSize: 12.5, color: "#D9644E", marginBottom: 14, fontWeight: 600 }}>{evolutionWarning}</div>
@@ -8374,7 +8390,7 @@ export default function App({ onSignOut }) {
                       </div>
 
                       <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 18, alignItems: isMobile ? "stretch" : "stretch" }}>
-                        <div style={{ flex: isMobile ? "1 1 auto" : "0 0 320px", display: stageWide && activeTab === "campaign" && !isMobile ? "none" : undefined }} ref={armaduraRef}>
+                        <div style={{ flex: isMobile ? "1 1 auto" : "0 0 320px", display: (stageWide && activeTab === "campaign" && !isMobile) || (isMobile && activeTab !== "general") ? "none" : undefined }} ref={armaduraRef}>
                             <Panel
                               span={12}
                               title="Armadura y estadísticas"
@@ -10995,6 +11011,7 @@ export default function App({ onSignOut }) {
                   );
                 })()}
               </div>
+            </div>
             </div>
 
             {preRoll && (() => {
