@@ -8496,7 +8496,8 @@ export default function App({ onSignOut }) {
                   const severe = baseThresholds.severe + equipMods.severe + earthBonus;
                   // Enano · Fortaleza Aumentada: la mitad del daño equivale a umbrales dobles.
                   const fortMajor = c.f_fortitude_ready === "1" ? major * 2 : major;
-                  const isDwarf = (c.f_ancestry || "").split(" + ").includes("Enano");
+                  // Enano · Piel Gruesa: el menú solo sale si quedan 2 de Estrés libres para usarla.
+                  const isDwarf = (c.f_ancestry || "").split(" + ").includes("Enano") && Number(c.r_stress || 0) + equipMods.stress - Number(c.stress_marked || 0) >= 2;
                   const fortSevere = c.f_fortitude_ready === "1" ? severe * 2 : severe;
                   const experiences = getExperiences(c);
                   const conditions = getConditions(c);
