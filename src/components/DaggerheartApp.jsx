@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist } from "lucide-react";
+import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
 import { Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
@@ -206,7 +206,7 @@ const PRONOUN_OPTIONS = ["Él", "Ella", "Elle", "Otro"];
 
 const ANCESTRIES = [
   { key: "Autómata", blurb: "Un ser mecánico animado por un núcleo interior.", features: [{ name: "Diseño con Propósito", text: "Decide quién te creó y para qué. Al crear el personaje, elige la Experiencia que mejor encaje con ese propósito: gana un +1 permanente." }, { name: "Eficiente", text: "En un descanso corto puedes elegir una acción de descanso largo en lugar de una de descanso corto." }] },
-  { key: "Dracona", blurb: "Desciende de los dragones, con aliento elemental propio.", features: [{ name: "Escamas", text: "Tus escamas te protegen. Cuando fueras a recibir daño Grave, puedes marcar 1 Estrés para marcar 1 Punto de vida menos." }, { name: "Aliento Elemental", text: "Elige un elemento para tu aliento (electricidad, fuego, hielo…). Puedes usarlo contra objetivos en alcance Muy cercano como un arma de Instinto que hace d8 de daño mágico usando tu Competencia." }] },
+  { key: "Dracona", blurb: "Desciende de los dragones, con aliento elemental propio.", features: [{ name: "Escamas", text: "Tus escamas te protegen. Cuando fueras a recibir daño Grave, puedes marcar 1 Estrés para marcar 1 Punto de vida menos." }, { name: "Aliento Elemental", text: "Elige un elemento para tu aliento (electricidad, fuego, hielo…). Puedes usarlo contra objetivos en alcance Muy Cercano como un arma de Instinto que hace d8 de daño mágico usando tu Competencia." }] },
   { key: "Enano", blurb: "Bajo y robusto, resistente como la roca de sus montañas.", features: [{ name: "Piel Gruesa", text: "Cuando recibas daño Menor, puedes marcar 2 Estrés en vez de 1 Punto de vida." }, { name: "Fortaleza Aumentada", text: "Gasta 3 Esperanza para reducir a la mitad el daño físico que recibes." }] },
   {
     key: "Elfo",
@@ -379,6 +379,14 @@ const CLASS_EMBLEMS = {
 };
 // Ilustraciones encuadradas para las cartas del paso de subclase (600×500).
 const SUBCLASS_CARD_ART = Object.fromEntries(Object.entries(SUBCLASS_ART).map(([k, v]) => [k, v.replace("/subclases/", "/subclases/cartas/")]));
+// Dracona · Aliento Elemental: elementos a elegir.
+const BREATH_ELEMENTS = [
+  { key: "Fuego", Icon: Flame, color: "#E0823A" },
+  { key: "Hielo", Icon: Snowflake, color: "#6FA8D6" },
+  { key: "Electricidad", Icon: Zap, color: "#D8B434" },
+  { key: "Ácido", Icon: FlaskConical, color: "#7FB36A" },
+  { key: "Veneno", Icon: Skull, color: "#8E6FB8" },
+];
 const CLASS_ART = {
   Bardo: "/clases/bardo.webp",
   Druida: "/clases/druida.webp",
@@ -2384,6 +2392,10 @@ const sharedStyles = `
   .mh-pre-opt.is-poet.is-on .mh-pre-bx { background: #C77DBA; border-color: #C77DBA; }
   .mh-pre-cost.is-poet { color: color-mix(in srgb, #C77DBA var(--mh-accent-keep, 100%), #000); }
   .mh-qa-sub { margin-top: 6px; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--mh-muted); }
+  .mh-wz-breath { display: flex; flex-wrap: wrap; gap: 6px; }
+  .mh-wz-breath button { display: inline-flex; align-items: center; gap: 6px; padding: 7px 11px; border-radius: 9px; border: 1.5px solid var(--mh-line2); background: var(--mh-panel); color: var(--mh-ink); font: 600 12.5px 'Inter', system-ui, sans-serif; cursor: pointer; }
+  .mh-wz-breath button svg { color: color-mix(in srgb, var(--be) 85%, #000); }
+  .mh-wz-breath button.is-on { border-color: var(--be); background: color-mix(in srgb, var(--be) 16%, var(--mh-panel)); }
   .mh-wz-purpose { display: flex; flex-direction: column; gap: 6px; padding: 11px 12px; border-radius: 11px; border: 1px solid color-mix(in srgb, #9A7B4F 45%, var(--mh-line)); background: color-mix(in srgb, #9A7B4F 8%, var(--mh-panel)); }
   .mh-wz-purpose label { font-size: 12px; font-weight: 600; color: var(--mh-ink2); margin-top: 2px; }
   .mh-wz-purpose-t { font-size: 13px; color: var(--mh-ink); }
@@ -4093,6 +4105,7 @@ export default function App({ onSignOut }) {
   const [draftAncestries, setDraftAncestries] = useState([]);
   // Autómata · Diseño con Propósito: quién te creó y qué Experiencia encaja (+1 permanente).
   const [draftCreator, setDraftCreator] = useState("");
+  const [draftBreath, setDraftBreath] = useState("");
   const [draftPurpose, setDraftPurpose] = useState("");
   const [draftPurposeExp, setDraftPurposeExp] = useState(null);
   const [draftCommunity, setDraftCommunity] = useState("");
@@ -4243,6 +4256,7 @@ export default function App({ onSignOut }) {
     setMixAncestry(false);
     setDraftAncestries([]);
     setDraftCreator("");
+    setDraftBreath("");
     setDraftPurpose("");
     setDraftPurposeExp(null);
     setDraftCommunity("");
@@ -4428,6 +4442,7 @@ export default function App({ onSignOut }) {
       f_ancestry: draftAncestries.join(" + "),
       f_purpose: isAutomaton ? draftPurpose.trim() : "",
       f_creator: isAutomaton ? draftCreator.trim() : "",
+      f_breath_element: draftAncestries.includes("Dracona") ? draftBreath : "",
       f_community: draftCommunity,
       f_transformation: draftTransformation === "Ninguna" ? "" : draftTransformation,
       f_languages: ["Común", ...draftLanguages].join(", "),
@@ -9085,7 +9100,7 @@ export default function App({ onSignOut }) {
                               kicker: "Ascendencia",
                               title: name,
                               summary: ancEntry?.blurb || "",
-                              onClick: openDetail({ kicker: "Ascendencia", title: name, text: ancEntry?.blurb || "", features: ancEntry?.features, image: ancEntry?.image, bigStyle: true }),
+                              onClick: openDetail({ kicker: "Ascendencia", title: name, text: ancEntry?.blurb || "", features: ancEntry?.features, image: ancEntry?.image, bigStyle: true, ancestryKey: name, ...(name === "Dracona" && c.f_breath_element ? { stat: { label: "Aliento", value: c.f_breath_element } } : {}) }),
                             });
                           });
                         }
@@ -12122,6 +12137,48 @@ export default function App({ onSignOut }) {
                     cardActs.length = 0;
                     cardActs.push({ key: "beast-lock", Icon: Lock, label: "No puedes lanzar hechizos en " + d.beastLocked, sub: "Sal de la forma para usarlo", disabled: true });
                   }
+                  // Dracona: Aliento Elemental (ataque de Instinto) y Escamas (marcar 1 Estrés).
+                  if (d.ancestryKey === "Dracona" && !d.fromChat) {
+                    const el = BREATH_ELEMENTS.find((b) => b.key === c.f_breath_element);
+                    if (el) {
+                      cardActs.push({
+                        key: "breath",
+                        Icon: el.Icon,
+                        label: "Aliento Elemental · " + el.key,
+                        sub: "Instinto · d8 mágico",
+                        run: () => {
+                          closeCardDetail();
+                          rollTraitCheck(viewingCharId, "Instinto", Number(c.t_instinct || 0), { name: "Aliento de " + el.key, damage: "d8 mágico" });
+                        },
+                      });
+                    } else {
+                      BREATH_ELEMENTS.forEach((b) =>
+                        cardActs.push({
+                          key: "breath-" + b.key,
+                          Icon: b.Icon,
+                          label: "Elegir aliento de " + b.key,
+                          sub: "Aliento Elemental",
+                          run: () => {
+                            updateCharacterField(viewingCharId, "f_breath_element", b.key);
+                            setViewingCardDetail((prev) => (prev ? { ...prev, stat: { label: "Aliento", value: b.key } } : prev));
+                          },
+                        })
+                      );
+                    }
+                    const stressFull = Number(c.stress_marked || 0) >= Number(c.r_stress || 0);
+                    cardActs.push({
+                      key: "scales",
+                      Icon: Shield,
+                      label: stressFull ? "Escamas · no te queda Estrés" : "Escamas · marcar 1 Estrés",
+                      sub: "Marca 1 PV menos ante daño Grave",
+                      disabled: stressFull,
+                      run: () => {
+                        closeCardDetail();
+                        markStress(viewingCharId, 1);
+                        postCampaignEvent(viewingCharId, "🐉 Escamas: marca 1 Estrés para recibir 1 PV menos del daño Grave");
+                      },
+                    });
+                  }
                   // Una carta abierta desde el chat es solo para verla: sin acciones.
                   if (d.fromChat) cardActs.length = 0;
                   // Mostrar la carta en el chat de la campaña del personaje (solo si está en una).
@@ -12133,7 +12190,7 @@ export default function App({ onSignOut }) {
                       label: "Mostrar en la campaña",
                       sub: shareCamp.name,
                       run: () => {
-                        const { fromChat, navigateAction, transformForm, itemIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ...detail } = d;
+                        const { fromChat, navigateAction, transformForm, itemIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, ...detail } = d;
                         // Las imágenes incrustadas muy grandes no se copian al chat.
                         if (typeof detail.image === "string" && detail.image.startsWith("data:") && detail.image.length > 30000) delete detail.image;
                         const type = d.domain ? "domain" : d.weapon ? "weapon" : d.armor ? "armor" : "card";
@@ -12740,6 +12797,20 @@ export default function App({ onSignOut }) {
                               </button>
                             )}
                             {originTab === "ancestry" && mixAncestry && <div className="mh-wz-dm">Con ascendencia mixta eliges dos y combinas sus rasgos.</div>}
+                            {originTab === "ancestry" && draftAncestries.includes("Dracona") && (
+                              <div className="mh-wz-purpose">
+                                <b className="mh-wz-purpose-t">Aliento Elemental</b>
+                                <label>¿De qué elemento es tu aliento?</label>
+                                <div className="mh-wz-breath" role="radiogroup" aria-label="Elemento del aliento">
+                                  {BREATH_ELEMENTS.map((el) => (
+                                    <button key={el.key} type="button" role="radio" aria-checked={draftBreath === el.key} className={draftBreath === el.key ? "is-on" : ""} style={{ "--be": el.color }} onClick={() => setDraftBreath(el.key)}>
+                                      <el.Icon size={15} /> {el.key}
+                                    </button>
+                                  ))}
+                                </div>
+                                <small>Lo usarás como un ataque de Instinto en alcance Muy Cercano: d8 de daño mágico por cada punto de Competencia.</small>
+                              </div>
+                            )}
                             {originTab === "ancestry" && draftAncestries.includes("Autómata") && (
                               <div className="mh-wz-purpose">
                                 <b className="mh-wz-purpose-t">Diseño con Propósito</b>
@@ -13328,7 +13399,15 @@ export default function App({ onSignOut }) {
                 const twoHanded = PRIMARY_WEAPONS.find((w) => w.key === draftPrimaryWeapon)?.hands === 2;
                 const block = {
                   traits: traitPool.length > 0 && "Reparte todos los valores para continuar.",
-                  ancestry: draftAncestries.includes("Autómata") && (!draftCreator.trim() ? "Escribe quién te creó." : !draftPurpose.trim() ? "Escribe con qué propósito te creó." : false),
+                  ancestry:
+                    draftAncestries.length === 0
+                      ? "Elige una ascendencia para continuar."
+                      : mixAncestry && draftAncestries.length < 2
+                      ? "Elige dos ascendencias o quita la mixta."
+                      : draftAncestries.includes("Dracona") && !draftBreath
+                      ? "Elige el elemento de tu aliento."
+                      : draftAncestries.includes("Autómata") && (!draftCreator.trim() ? "Escribe quién te creó." : !draftPurpose.trim() ? "Escribe con qué propósito te creó." : false),
+                  community: !draftCommunity && "Elige una comunidad para continuar.",
                   experiences: !draftExp1.trim() || !draftExp2.trim() ? "Escribe tus dos Experiencias." : draftAncestries.includes("Autómata") && draftPurposeExp == null ? "Elige la Experiencia que encaja con tu propósito." : false,
                   primary: !draftPrimaryWeapon && "Elige un arma principal para continuar.",
                   secondary: !twoHanded && !draftSecondaryWeapon && "Elige un arma secundaria o «Ninguna».",
