@@ -9404,6 +9404,11 @@ export default function App({ onSignOut }) {
                                 {items.length === 0 && <div style={{ fontSize: 12.5, color: "var(--mh-muted)", fontStyle: "italic" }}>Todavía no hay acciones para este personaje.</div>}
                                 {items.map((it) => {
                                   const cost = it.cost === undefined ? detectCost(it.costText || it.summary) : it.cost;
+                                  // La carta usa el mismo icono que la fila cuando no tiene imagen.
+                                  const openRow = () => {
+                                    it.onClick();
+                                    setViewingCardDetail((d) => (d && !d.rowIcon ? { ...d, rowIcon: it.Icon } : d));
+                                  };
                                   return (
                                     <div
                                       key={it.key}
@@ -9412,8 +9417,8 @@ export default function App({ onSignOut }) {
                                       title={it.hint}
                                       className={"mh-arow" + (it.dim ? " is-dim" : "") + (it.active ? " is-active" : "")}
                                       style={{ "--ac": it.color }}
-                                      onClick={it.onClick}
-                                      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), it.onClick())}
+                                      onClick={openRow}
+                                      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), openRow())}
                                     >
                                       <span className="mh-arow-ico">
                                         <it.Icon size={17} />
@@ -12337,6 +12342,8 @@ export default function App({ onSignOut }) {
                     ? Moon
                     : d.itemIcon
                     ? d.itemIcon
+                    : d.rowIcon
+                    ? d.rowIcon
                     : d.hopeAction
                     ? Sparkles
                     : d.stat
@@ -12598,7 +12605,7 @@ export default function App({ onSignOut }) {
                       label: "Mostrar en la campaña",
                       sub: shareCamp.name,
                       run: () => {
-                        const { fromChat, navigateAction, transformForm, itemIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, ...detail } = d;
+                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, ...detail } = d;
                         // Las imágenes incrustadas muy grandes no se copian al chat.
                         if (typeof detail.image === "string" && detail.image.startsWith("data:") && detail.image.length > 30000) delete detail.image;
                         const type = d.domain ? "domain" : d.weapon ? "weapon" : d.armor ? "armor" : "card";
