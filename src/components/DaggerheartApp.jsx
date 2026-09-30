@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical } from "lucide-react";
+import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
 import { Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
@@ -2403,6 +2403,23 @@ const sharedStyles = `
   .mh-pre-cost.is-poet { color: color-mix(in srgb, #C77DBA var(--mh-accent-keep, 100%), #000); }
   .mh-qa-sub { margin-top: 6px; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--mh-muted); }
   .mh-feat-el { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; margin-left: 5px; border-radius: 50%; vertical-align: -3px; color: #fff; background: var(--be); }
+  .mh-renew { margin: 0; width: min(440px, 100%); max-height: 90%; overflow-y: auto; padding: 18px 20px; border-radius: 18px; display: flex; flex-direction: column; }
+  .mh-renew-list { display: flex; flex-direction: column; gap: 7px; margin-top: 14px; }
+  .mh-renew-row { display: flex; align-items: center; gap: 10px; padding: 9px 11px; border-radius: 11px; border: 1.5px solid var(--mh-line); background: var(--mh-panel); color: var(--mh-ink); font: inherit; text-align: left; }
+  .mh-renew-row.is-pick { cursor: pointer; }
+  .mh-renew-row.is-pick:disabled { opacity: .45; cursor: not-allowed; }
+  .mh-renew-row.is-on { border-color: #6FBF73; background: color-mix(in srgb, #6FBF73 10%, var(--mh-panel)); }
+  .mh-renew-row.is-on .mh-pre-bx { background: #6FBF73; border-color: #6FBF73; }
+  .mh-renew-av { width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 13px; }
+  .mh-renew-t { flex: 1; min-width: 0; }
+  .mh-renew-t b { display: block; font-size: 13px; }
+  .mh-renew-t small { font-size: 11px; color: var(--mh-muted); }
+  .mh-renew-step { display: inline-flex; align-items: center; gap: 8px; }
+  .mh-renew-step button { width: 26px; height: 26px; border-radius: 7px; border: 1px solid var(--mh-line2); background: var(--mh-panel); color: var(--mh-ink); cursor: pointer; font-size: 15px; }
+  .mh-renew-step button:disabled { opacity: .4; cursor: not-allowed; }
+  .mh-renew-step b { min-width: 14px; text-align: center; }
+  .mh-renew-pool { margin-top: 10px; font-size: 12px; color: var(--mh-ink3); text-align: right; }
+  .mh-renew-hint { margin-top: 8px; font-size: 11px; color: var(--mh-muted); text-align: center; }
   .mh-wz-breath { display: flex; flex-wrap: wrap; gap: 6px; }
   .mh-wz-breath button { display: inline-flex; align-items: center; gap: 6px; padding: 7px 11px; border-radius: 9px; border: 1.5px solid var(--mh-line2); background: var(--mh-panel); color: var(--mh-ink); font: 600 12.5px 'Inter', system-ui, sans-serif; cursor: pointer; }
   .mh-wz-breath button svg { color: color-mix(in srgb, var(--be) 85%, #000); }
@@ -5781,6 +5798,51 @@ export default function App({ onSignOut }) {
         );
       }
 
+      if (kind === "gift" && m.targets) {
+        const me = meCharId ? characters[meCharId] : null;
+        const mineT = me && m.targets[meCharId];
+        const got = me && getGiftsGot(me).includes(m.sid);
+        const desc = (t) => [t.hp ? t.hp + " PV" : "", t.stress ? t.stress + " de Estrés" : ""].filter(Boolean).join(" y ");
+        return chatCard(
+          "#6FBF73",
+          <>
+            {whoB} usa {m.title}
+          </>,
+          "Renovación",
+          <div className="mh-chat-c-t">
+            {m.text}
+            <div style={{ marginTop: 4 }}>
+              {Object.entries(m.targets).map(([cid, t]) => (
+                <div key={cid}>
+                  <b>{characters[cid]?.f_name || "Aliado"}</b>: {t.hp ? "recupera " : "se quita "}
+                  {desc(t)}
+                </div>
+              ))}
+            </div>
+          </div>,
+          <>
+            <span>{got ? "Ya lo has recibido" : mineT ? "Te toca a ti" : "Cada aliado lo recibe desde aquí"}</span>
+            {mineT && !got && (
+              <button
+                type="button"
+                className="mh-chat-open"
+                onClick={() => {
+                  const cur = charsRef.current[meCharId] || me;
+                  if (getGiftsGot(cur).includes(m.sid)) return;
+                  updateCharacterFields(meCharId, {
+                    ...(mineT.hp ? { hp_marked: String(Math.max(0, Number(cur.hp_marked || 0) - mineT.hp)) } : {}),
+                    ...(mineT.stress ? { stress_marked: String(Math.max(0, Number(cur.stress_marked || 0) - mineT.stress)) } : {}),
+                    f_gifts_got: JSON.stringify([...getGiftsGot(cur), m.sid].slice(-40)),
+                  });
+                }}
+              >
+                <Check size={12} /> Recibir {desc(mineT)}
+              </button>
+            )}
+          </>
+        );
+      }
+
       if (kind === "speech") {
         const me = meCharId ? characters[meCharId] : null;
         const inCamp = me && m.campId && (campaigns[m.campId]?.characterIds || []).includes(meCharId);
@@ -6363,6 +6425,34 @@ export default function App({ onSignOut }) {
     if (camp) postChat(camp.id, { kind: "speech", sid: String(Date.now()), campId: camp.id, author: c.f_name || "El Orador", charId: id, cls: c.f_class });
   };
 
+  // Guardián de la Renovación: ventana para elegir a quién curar o quitar Estrés.
+  const [renewDlg, setRenewDlg] = useState(null);
+  const getGiftsGot = (c) => {
+    try {
+      return JSON.parse(c?.f_gifts_got || "[]");
+    } catch (e) {
+      return [];
+    }
+  };
+  // targets: { charId: { hp, stress } }. Tu personaje lo recibe al momento; los aliados, desde el chat.
+  const giveToParty = (fromId, targets, title, text) => {
+    const c = charsRef.current[fromId];
+    if (!c) return;
+    const mine = targets[fromId];
+    if (mine) {
+      const patch = {};
+      if (mine.hp) patch.hp_marked = String(Math.max(0, Number(c.hp_marked || 0) - mine.hp));
+      if (mine.stress) patch.stress_marked = String(Math.max(0, Number(c.stress_marked || 0) - mine.stress));
+      if (Object.keys(patch).length) updateCharacterFields(fromId, patch);
+    }
+    const others = Object.fromEntries(Object.entries(targets).filter(([k, v]) => k !== fromId && (v.hp || v.stress)));
+    const camp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(fromId));
+    if (camp && Object.keys(others).length) {
+      postChat(camp.id, { kind: "gift", sid: String(Date.now()), campId: camp.id, author: c.f_name || "El Druida", charId: fromId, cls: c.f_class, title, text, targets: others });
+    }
+    if (mine && (mine.hp || mine.stress)) postCampaignEvent(fromId, `🌿 ${title}: ${mine.hp ? "recupera " + mine.hp + " PV" : ""}${mine.hp && mine.stress ? " y " : ""}${mine.stress ? "se quita " + mine.stress + " de Estrés" : ""}`);
+  };
+
   const performRest = (id, restType, key1, key2, key3, efficientKey) => {
     let efficientLeft = restType === "short" && efficientKey ? 1 : 0;
     const c = characters[id];
@@ -6426,6 +6516,8 @@ export default function App({ onSignOut }) {
     // Trovador: el descanso largo recupera sus canciones.
     if (isLong && c.f_speech_used) restPatch.f_speech_used = "";
     if (c.f_scales_ready) restPatch.f_scales_ready = "";
+    if (isLong && c.f_clarity_used) restPatch.f_clarity_used = "";
+    if (isLong && c.f_wardprot_used) restPatch.f_wardprot_used = "";
     if (isLong && c.f_subclass === "Trovador" && c.f_songs_used && c.f_songs_used !== "{}") {
       restPatch.f_songs_used = "{}";
       messages.push("Recuperas tus canciones");
@@ -9063,6 +9155,7 @@ export default function App({ onSignOut }) {
                               image: subclassEntry.image,
                               bigStyle: true,
                               ...(isElemental ? { elementalAction: true } : {}),
+                              ...(subclassEntry.key === "Guardián de la Renovación" ? { renewalAction: true } : {}),
                             }),
                           });
                         }
@@ -11042,6 +11135,102 @@ export default function App({ onSignOut }) {
             </div>
             </div>
 
+            {renewDlg && (() => {
+              const me = characters[viewingCharId];
+              if (!me) return null;
+              const camp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(viewingCharId));
+              const allies = camp ? (camp.characterIds || []).filter((cid) => cid !== viewingCharId && characters[cid]) : [];
+              const all = [viewingCharId, ...allies];
+              const nameOf = (cid) => (cid === viewingCharId ? (me.f_name || "Tú") + " (tú)" : characters[cid]?.f_name || "Aliado");
+              const R = renewDlg;
+              const close = () => setRenewDlg(null);
+              const pool = Math.max(0, Number(me.t_instinct || 0));
+              const used = Object.values(R.picks || {}).reduce((a, b) => a + b, 0);
+              const chosen = Object.keys(R.picks || {}).filter((k) => R.picks[k]);
+              const meta = {
+                regen: { title: "Regeneración", sub: "Gasta 3 de Esperanza: la criatura que toques recupera 1d4 PV.", list: all, go: "Curar 1d4 PV" },
+                clarity: { title: "Claridad de la Naturaleza", sub: `Reparte hasta ${pool} de Estrés (tu Instinto) entre tú y tus aliados.`, list: all, go: "Crear el espacio" },
+                ward: { title: "Protección del Guardián", sub: `Gasta 2 de Esperanza: hasta ${R.n} aliado${R.n === 1 ? "" : "s"} (1d4 = ${R.n}) recuperan 2 PV.`, list: allies, go: "Proteger" },
+                defender: { title: "Defensor", sub: "Marca 1 Estrés: el aliado que acaba de marcar 2 o más PV marca 1 menos.", list: allies, go: "Defender" },
+              }[R.mode];
+              const canGo =
+                R.mode === "regen" ? !!R.pick : R.mode === "clarity" ? used > 0 : R.mode === "ward" ? chosen.length > 0 : !!R.pick;
+              const confirm = () => {
+                if (R.mode === "regen") {
+                  const n = Math.floor(Math.random() * 4) + 1;
+                  updateCharacterField(viewingCharId, "hope_marked", String(Number(me.hope_marked ?? HOPE_DEFAULT) - 3));
+                  giveToParty(viewingCharId, { [R.pick]: { hp: n } }, "Regeneración", `Tira 1d4: ${n}.`);
+                } else if (R.mode === "clarity") {
+                  updateCharacterField(viewingCharId, "f_clarity_used", "1");
+                  giveToParty(viewingCharId, Object.fromEntries(Object.entries(R.picks).filter(([, v]) => v).map(([k, v]) => [k, { stress: v }])), "Claridad de la Naturaleza", "Un espacio de serenidad natural en alcance Cercano.");
+                } else if (R.mode === "ward") {
+                  updateCharacterFields(viewingCharId, { hope_marked: String(Number(me.hope_marked ?? HOPE_DEFAULT) - 2), f_wardprot_used: "1" });
+                  giveToParty(viewingCharId, Object.fromEntries(chosen.map((k) => [k, { hp: 2 }])), "Protección del Guardián", `1d4 = ${R.n} aliados en alcance Cercano.`);
+                } else if (R.mode === "defender") {
+                  markStress(viewingCharId, 1);
+                  giveToParty(viewingCharId, { [R.pick]: { hp: 1 } }, "Defensor", "Su espíritu guardián reduce el daño en 1 PV.");
+                }
+                close();
+                closeCardDetail();
+              };
+              return (
+                <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 46, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)" }} onClick={close}>
+                  <div className="mh-card mh-card-anim mh-renew" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={meta.title}>
+                    <div className="mh-pre-h">
+                      <span className="mh-pre-ic" style={{ background: "color-mix(in srgb, #6FBF73 18%, var(--mh-panel))", color: "#4E8A55" }}>
+                        <Leaf size={17} />
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <b className="mh-serif">{meta.title}</b>
+                        <small>{meta.sub}</small>
+                      </div>
+                      <button type="button" className="mh-inv-x" aria-label="Cerrar" onClick={close}>
+                        <X size={16} />
+                      </button>
+                    </div>
+                    <div className="mh-renew-list">
+                      {meta.list.length === 0 && <div className="mh-pre-note" style={{ color: "var(--mh-muted)" }}>No hay aliados en tu campaña.</div>}
+                      {meta.list.map((cid) => {
+                        const pc = characters[cid];
+                        const hpT = Number(pc.r_hp || 0), stT = Number(pc.r_stress || 0);
+                        const info = `PV ${Math.max(0, hpT - Number(pc.hp_marked || 0))}/${hpT} · Estrés ${pc.stress_marked || 0}/${stT}`;
+                        if (R.mode === "clarity") {
+                          const v = R.picks[cid] || 0;
+                          return (
+                            <div key={cid} className="mh-renew-row">
+                              <span className="mh-renew-av" style={{ background: classColor(pc.f_class) }}>{(pc.f_name || "?").charAt(0)}</span>
+                              <div className="mh-renew-t"><b>{nameOf(cid)}</b><small>{info}</small></div>
+                              <span className="mh-renew-step">
+                                <button type="button" disabled={v === 0} onClick={() => setRenewDlg((p) => ({ ...p, picks: { ...p.picks, [cid]: v - 1 } }))}>−</button>
+                                <b>{v}</b>
+                                <button type="button" disabled={used >= pool || v >= Number(pc.stress_marked || 0)} onClick={() => setRenewDlg((p) => ({ ...p, picks: { ...p.picks, [cid]: v + 1 } }))}>+</button>
+                              </span>
+                            </div>
+                          );
+                        }
+                        const multi = R.mode === "ward";
+                        const on = multi ? !!R.picks[cid] : R.pick === cid;
+                        const full = multi && !on && chosen.length >= R.n;
+                        return (
+                          <button key={cid} type="button" disabled={full} className={"mh-renew-row is-pick" + (on ? " is-on" : "")} onClick={() => setRenewDlg((p) => (multi ? { ...p, picks: { ...p.picks, [cid]: !p.picks[cid] } } : { ...p, pick: cid }))}>
+                            <span className="mh-renew-av" style={{ background: classColor(pc.f_class) }}>{(pc.f_name || "?").charAt(0)}</span>
+                            <div className="mh-renew-t"><b>{nameOf(cid)}</b><small>{info}</small></div>
+                            <span className="mh-pre-bx">{on && <Check size={12} strokeWidth={3} />}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {R.mode === "clarity" && <div className="mh-renew-pool">Repartido {used} de {pool}</div>}
+                    {!camp && R.mode !== "regen" && R.mode !== "clarity" && <div className="mh-pre-note" style={{ color: "var(--mh-muted)" }}>Únete a una campaña para aplicarlo a tus aliados.</div>}
+                    <button type="button" className="mh-btn mh-pre-go" disabled={!canGo} onClick={confirm} style={{ marginTop: 12 }}>
+                      <Leaf size={15} /> {meta.go}
+                    </button>
+                    {allies.length > 0 && <div className="mh-renew-hint">Tus aliados lo recibirán desde el chat de la campaña.</div>}
+                  </div>
+                </div>
+              );
+            })()}
+
             {preRoll && (() => {
               const ch = characters[preRoll.charId];
               if (!ch) return null;
@@ -12136,6 +12325,48 @@ export default function App({ onSignOut }) {
                       },
                     });
                   }
+                  // Guardián de la Renovación: Regeneración, Claridad de la Naturaleza y, según el rango, Protección y Defensor.
+                  if (d.renewalAction && !d.fromChat) {
+                    const hopeNow = Number(c.hope_marked ?? HOPE_DEFAULT);
+                    const tierNow = tierForLevel(c.f_level || 1);
+                    const stressFullR = Number(c.stress_marked || 0) >= Number(c.r_stress || 0);
+                    cardActs.push({
+                      key: "regen",
+                      Icon: HeartPulse,
+                      label: hopeNow < 3 ? "Regeneración · te falta Esperanza" : "Regeneración",
+                      sub: "3 Esperanza · 1d4 PV",
+                      disabled: hopeNow < 3,
+                      run: () => setRenewDlg({ mode: "regen", pick: viewingCharId }),
+                    });
+                    cardActs.push({
+                      key: "clarity",
+                      Icon: Leaf,
+                      label: c.f_clarity_used ? "Claridad de la Naturaleza ya usada" : "Claridad de la Naturaleza",
+                      sub: c.f_clarity_used ? "Vuelve con el descanso largo" : "Reparte " + Math.max(0, Number(c.t_instinct || 0)) + " de Estrés",
+                      disabled: !!c.f_clarity_used || Number(c.t_instinct || 0) <= 0,
+                      run: () => setRenewDlg({ mode: "clarity", picks: {} }),
+                    });
+                    if (tierNow >= 2) {
+                      cardActs.push({
+                        key: "wardprot",
+                        Icon: ShieldPlus,
+                        label: c.f_wardprot_used ? "Protección del Guardián ya usada" : hopeNow < 2 ? "Protección del Guardián · te falta Esperanza" : "Protección del Guardián",
+                        sub: "2 Esperanza · 1d4 aliados +2 PV",
+                        disabled: !!c.f_wardprot_used || hopeNow < 2,
+                        run: () => setRenewDlg({ mode: "ward", n: Math.floor(Math.random() * 4) + 1, picks: {} }),
+                      });
+                    }
+                    if (tierNow >= 3) {
+                      cardActs.push({
+                        key: "defender",
+                        Icon: ShieldHalf,
+                        label: !c.f_beastform ? "Defensor · solo en Forma de Bestia" : stressFullR ? "Defensor · no te queda Estrés" : "Defensor",
+                        sub: "1 Estrés · el aliado marca 1 PV menos",
+                        disabled: !c.f_beastform || stressFullR,
+                        run: () => setRenewDlg({ mode: "defender", pick: null }),
+                      });
+                    }
+                  }
                   // Guardián de los Elementos: canalizar cada elemento desde la carta.
                   if (d.elementalAction && !d.fromChat) {
                     const EL = [["Fuego", Flame], ["Tierra", Mountain], ["Agua", Droplets], ["Aire", Wind]];
@@ -12210,7 +12441,7 @@ export default function App({ onSignOut }) {
                       label: "Mostrar en la campaña",
                       sub: shareCamp.name,
                       run: () => {
-                        const { fromChat, navigateAction, transformForm, itemIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, ...detail } = d;
+                        const { fromChat, navigateAction, transformForm, itemIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, ...detail } = d;
                         // Las imágenes incrustadas muy grandes no se copian al chat.
                         if (typeof detail.image === "string" && detail.image.startsWith("data:") && detail.image.length > 30000) delete detail.image;
                         const type = d.domain ? "domain" : d.weapon ? "weapon" : d.armor ? "armor" : "card";
