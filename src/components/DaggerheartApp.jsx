@@ -2420,6 +2420,18 @@ const sharedStyles = `
   .mh-renew-step b { min-width: 14px; text-align: center; }
   .mh-renew-pool { margin-top: 10px; font-size: 12px; color: var(--mh-ink3); text-align: right; }
   .mh-renew-hint { margin-top: 8px; font-size: 11px; color: var(--mh-muted); text-align: center; }
+  .mh-minor-back { position: fixed; inset: 0; z-index: 30; cursor: default; }
+  .mh-minor-pop { position: absolute; left: 0; top: calc(100% + 6px); z-index: 31; width: 250px; padding: 7px; border-radius: 12px; text-align: left; cursor: default; background: var(--mh-panel); border: 1px solid var(--mh-line); box-shadow: 0 12px 26px rgba(0,0,0,.18); animation: mh-wz-art-in .15s ease-out; }
+  .mh-minor-h { font-size: 9.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-muted); padding: 3px 7px 6px; }
+  .mh-minor-opt { width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 9px; border: 0; border-radius: 9px; background: transparent; color: var(--mh-ink); font: inherit; text-align: left; cursor: pointer; }
+  .mh-minor-opt:hover:not(:disabled) { background: var(--mh-panel2); }
+  .mh-minor-opt svg { flex-shrink: 0; color: #D9644E; }
+  .mh-minor-opt.is-skin svg { color: #8A6FD0; }
+  .mh-minor-opt.is-skin:hover:not(:disabled) { background: color-mix(in srgb, #A58BE8 14%, var(--mh-panel)); }
+  .mh-minor-opt:disabled { opacity: .45; cursor: not-allowed; }
+  .mh-minor-opt b { display: block; font-size: 12.5px; }
+  .mh-minor-opt small { font-size: 11px; color: var(--mh-muted); }
+  .mh-minor-opt em { margin-left: auto; font-style: normal; font-size: 10px; font-weight: 700; white-space: nowrap; padding: 2px 7px; border-radius: 20px; color: #6B4FB8; background: color-mix(in srgb, #A58BE8 18%, var(--mh-panel)); }
   .mh-fort-note { display: flex; align-items: center; gap: 6px; margin: -4px 0 10px; font-size: 11.5px; line-height: 1.35; color: var(--mh-ink2); padding: 6px 9px; border-radius: 9px; background: color-mix(in srgb, #5E93C9 12%, var(--mh-panel)); border: 1px solid color-mix(in srgb, #5E93C9 40%, var(--mh-line)); }
   .mh-fort-note svg { flex-shrink: 0; color: #5E93C9; }
   .mh-wz-breath { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -5499,6 +5511,7 @@ export default function App({ onSignOut }) {
     setQaEdit(null);
     setShowRelNet(false);
     setStageWide(false);
+    setMinorPop(false);
   }, [viewingCharId]);
 
   const removeQARow = (id, field, rows, index) => {
@@ -6433,6 +6446,8 @@ export default function App({ onSignOut }) {
 
   // Guardián de la Renovación: ventana para elegir a quién curar o quitar Estrés.
   const [renewDlg, setRenewDlg] = useState(null);
+  // Enano · Piel Gruesa: menú al pulsar daño Menor.
+  const [minorPop, setMinorPop] = useState(false);
   const getGiftsGot = (c) => {
     try {
       return JSON.parse(c?.f_gifts_got || "[]");
@@ -8481,6 +8496,7 @@ export default function App({ onSignOut }) {
                   const severe = baseThresholds.severe + equipMods.severe + earthBonus;
                   // Enano · Fortaleza Aumentada: la mitad del daño equivale a umbrales dobles.
                   const fortMajor = c.f_fortitude_ready === "1" ? major * 2 : major;
+                  const isDwarf = (c.f_ancestry || "").split(" + ").includes("Enano");
                   const fortSevere = c.f_fortitude_ready === "1" ? severe * 2 : severe;
                   const experiences = getExperiences(c);
                   const conditions = getConditions(c);
@@ -8583,10 +8599,66 @@ export default function App({ onSignOut }) {
                                 )}
                               </div>
                               <div style={{ display: "flex", gap: 8, marginBottom: statsSpacing.thrMb }}>
-                                <div onClick={() => applyDamage(viewingCharId, 1)} className="mh-tip-anchor" style={{ flex: 1, textAlign: "center", border: "1px solid var(--mh-line)", background: "var(--mh-panel2)", borderRadius: 10, padding: statsSpacing.thrPadY + "px 4px", cursor: "pointer" }}>
-                                  <span className="mh-tip">{c.f_thickskin_ready === "1" ? "Piel Gruesa: pulsa y no marcas PV" : "Pulsa para -1 PV"}</span>
-                                  <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Menor{c.f_thickskin_ready === "1" && <span style={{ marginLeft: 4, color: "#8A6A2A", fontWeight: 700 }}>· Piel</span>}</div>
+                                <div
+                                  onClick={() => (isDwarf ? setMinorPop((v) => !v) : applyDamage(viewingCharId, 1))}
+                                  className="mh-tip-anchor"
+                                  style={{ position: "relative", flex: 1, textAlign: "center", border: "1px solid " + (minorPop ? "var(--mh-ink)" : "var(--mh-line)"), background: "var(--mh-panel2)", borderRadius: 10, padding: statsSpacing.thrPadY + "px 4px", cursor: "pointer" }}
+                                >
+                                  {!minorPop && <span className="mh-tip">{isDwarf ? "Pulsa para elegir: 1 PV o Piel Gruesa" : "Pulsa para -1 PV"}</span>}
+                                  <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Menor</div>
                                   <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700 }}>{fortMajor > 1 ? fortMajor - 1 : "—"}</div>
+                                  {isDwarf && minorPop && (() => {
+                                    const freeStress = Number(c.r_stress || 0) + equipMods.stress - Number(c.stress_marked || 0);
+                                    const canSkin = freeStress >= 2;
+                                    return (
+                                      <>
+                                        <div
+                                          className="mh-minor-back"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setMinorPop(false);
+                                          }}
+                                        />
+                                        <div className="mh-minor-pop" role="menu" onClick={(e) => e.stopPropagation()}>
+                                          <div className="mh-minor-h">Daño Menor</div>
+                                          <button
+                                            type="button"
+                                            role="menuitem"
+                                            className="mh-minor-opt"
+                                            onClick={() => {
+                                              setMinorPop(false);
+                                              applyDamage(viewingCharId, 1);
+                                            }}
+                                          >
+                                            <Heart size={15} />
+                                            <span>
+                                              <b>Recibir daño</b>
+                                              <small>Marcar 1 Punto de vida</small>
+                                            </span>
+                                          </button>
+                                          <button
+                                            type="button"
+                                            role="menuitem"
+                                            className="mh-minor-opt is-skin"
+                                            disabled={!canSkin}
+                                            title={canSkin ? undefined : "Necesitas 2 de Estrés libres"}
+                                            onClick={() => {
+                                              setMinorPop(false);
+                                              markStress(viewingCharId, 2);
+                                              postCampaignEvent(viewingCharId, "⛰️ Piel Gruesa: marca 2 de Estrés en vez de 1 Punto de vida");
+                                            }}
+                                          >
+                                            <Mountain size={15} />
+                                            <span>
+                                              <b>Piel Gruesa</b>
+                                              <small>{canSkin ? "Marcar 2 de Estrés en su lugar" : "Necesitas 2 de Estrés libres"}</small>
+                                            </span>
+                                            <em>{Math.max(0, freeStress)} libres</em>
+                                          </button>
+                                        </div>
+                                      </>
+                                    );
+                                  })()}
                                 </div>
                                 <div onClick={() => applyDamage(viewingCharId, 2)} className="mh-tip-anchor" style={{ flex: 1, textAlign: "center", border: "1px solid var(--acc)", background: "color-mix(in srgb, var(--acc) 8%, transparent)", borderRadius: 10, padding: statsSpacing.thrPadY + "px 4px", cursor: "pointer" }}>
                                   <span className="mh-tip">Pulsa para -2 PV</span>
@@ -12403,22 +12475,8 @@ export default function App({ onSignOut }) {
                     cardActs.length = 0;
                     cardActs.push({ key: "beast-lock", Icon: Lock, label: "No puedes lanzar hechizos en " + d.beastLocked, sub: "Sal de la forma para usarlo", disabled: true });
                   }
-                  // Enano: Piel Gruesa (2 Estrés en vez de 1 PV ante daño Menor) y Fortaleza Aumentada (3 Esperanza, daño físico a la mitad).
+                  // Enano: Fortaleza Aumentada (3 Esperanza, daño físico a la mitad). Piel Gruesa se elige al pulsar daño Menor.
                   if (d.ancestryKey === "Enano" && !d.fromChat) {
-                    const freeStress = Number(c.r_stress || 0) - Number(c.stress_marked || 0);
-                    const thickReady = c.f_thickskin_ready === "1";
-                    cardActs.push({
-                      key: "thick",
-                      Icon: Mountain,
-                      label: thickReady ? "Piel Gruesa ya preparada" : freeStress < 2 ? "Piel Gruesa · no te queda Estrés" : "Piel Gruesa · marcar 2 Estrés",
-                      sub: thickReady ? "El próximo daño Menor no marca PV" : "En vez de 1 PV por daño Menor",
-                      disabled: thickReady || freeStress < 2,
-                      run: () => {
-                        closeCardDetail();
-                        markStress(viewingCharId, 2, { f_thickskin_ready: "1" });
-                        postCampaignEvent(viewingCharId, "⛰️ Piel Gruesa: marca 2 Estrés; el próximo daño Menor no marcará PV");
-                      },
-                    });
                     const hopeNowE = Number(c.hope_marked ?? HOPE_DEFAULT);
                     const fortReady = c.f_fortitude_ready === "1";
                     cardActs.push({
