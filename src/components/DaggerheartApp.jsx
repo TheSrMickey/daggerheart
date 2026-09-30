@@ -9019,7 +9019,6 @@ export default function App({ onSignOut }) {
                             title: subclassEntry.key,
                             summary: isElemental ? (activeElement ? "Canalizando " + activeElement : "Ningún elemento canalizado") : subclassEntry.blurb,
                             costText: isElemental ? subclassEntry.blurb : null,
-                            extraBelow: isElemental,
                             onClick: openDetail({
                               kicker: `Subclase · ${subclassBadge}`,
                               title: subclassEntry.key,
@@ -9027,32 +9026,8 @@ export default function App({ onSignOut }) {
                               features: subclassEntry.key === "Trovador" || subclassEntry.key === "Orador" ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
                               image: subclassEntry.image,
                               bigStyle: true,
+                              ...(isElemental ? { elementalAction: true } : {}),
                             }),
-                            extra: isElemental && (
-                              <div style={{ display: "flex", gap: 4 }}>
-                                {["Fuego", "Tierra", "Agua", "Aire"].map((el) => {
-                                  const ElIcon = ELEMENT_ICONS[el];
-                                  const elColor = ELEMENT_COLORS[el];
-                                  const active = activeElement === el;
-                                  return (
-                                    <button
-                                      key={el}
-                                      type="button"
-                                      title={(active ? "Dejar de canalizar " : "Canalizar ") + el}
-                                      aria-label={el}
-                                      className="mh-arow-el"
-                                      style={{ borderColor: active ? elColor : "var(--mh-line2)", background: active ? elColor : "transparent", color: active ? "#FFFFFF" : ink(elColor) }}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        toggleElemental(viewingCharId, el, active);
-                                      }}
-                                    >
-                                      <ElIcon size={12} />
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            ),
                           });
                         }
 
@@ -12105,6 +12080,21 @@ export default function App({ onSignOut }) {
                       },
                     });
                   }
+                  // Guardián de los Elementos: canalizar cada elemento desde la carta.
+                  if (d.elementalAction && !d.fromChat) {
+                    const EL = [["Fuego", Flame], ["Tierra", Mountain], ["Agua", Droplets], ["Aire", Wind]];
+                    const cur = c.f_elemental_active || "";
+                    EL.forEach(([el, ElIcon]) => {
+                      const on = cur === el;
+                      cardActs.push({
+                        key: "el-" + el,
+                        Icon: on ? X : ElIcon,
+                        label: on ? "Dejar de canalizar " + el : "Canalizar " + el,
+                        sub: on ? "" : "1 Estrés",
+                        run: () => toggleElemental(viewingCharId, el, on),
+                      });
+                    });
+                  }
                   // Una carta abierta desde el chat es solo para verla: sin acciones.
                   if (d.fromChat) cardActs.length = 0;
                   // Mostrar la carta en el chat de la campaña del personaje (solo si está en una).
@@ -12116,7 +12106,7 @@ export default function App({ onSignOut }) {
                       label: "Mostrar en la campaña",
                       sub: shareCamp.name,
                       run: () => {
-                        const { fromChat, navigateAction, transformForm, itemIcon, equipAction, hopeAction, invItem, ...detail } = d;
+                        const { fromChat, navigateAction, transformForm, itemIcon, equipAction, hopeAction, invItem, elementalAction, ...detail } = d;
                         // Las imágenes incrustadas muy grandes no se copian al chat.
                         if (typeof detail.image === "string" && detail.image.startsWith("data:") && detail.image.length > 30000) delete detail.image;
                         const type = d.domain ? "domain" : d.weapon ? "weapon" : d.armor ? "armor" : "card";
