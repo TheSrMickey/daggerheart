@@ -2420,6 +2420,8 @@ const sharedStyles = `
   .mh-renew-step b { min-width: 14px; text-align: center; }
   .mh-renew-pool { margin-top: 10px; font-size: 12px; color: var(--mh-ink3); text-align: right; }
   .mh-renew-hint { margin-top: 8px; font-size: 11px; color: var(--mh-muted); text-align: center; }
+  .mh-fort-note { display: flex; align-items: center; gap: 6px; margin: -4px 0 10px; font-size: 11.5px; line-height: 1.35; color: var(--mh-ink2); padding: 6px 9px; border-radius: 9px; background: color-mix(in srgb, #5E93C9 12%, var(--mh-panel)); border: 1px solid color-mix(in srgb, #5E93C9 40%, var(--mh-line)); }
+  .mh-fort-note svg { flex-shrink: 0; color: #5E93C9; }
   .mh-wz-breath { display: flex; flex-wrap: wrap; gap: 6px; }
   .mh-wz-breath button { display: inline-flex; align-items: center; gap: 6px; padding: 7px 11px; border-radius: 9px; border: 1.5px solid var(--mh-line2); background: var(--mh-panel); color: var(--mh-ink); font: 600 12.5px 'Inter', system-ui, sans-serif; cursor: pointer; }
   .mh-wz-breath button svg { color: color-mix(in srgb, var(--be) 85%, #000); }
@@ -4733,11 +4735,15 @@ export default function App({ onSignOut }) {
     // Dracona · Escamas: si se activaron antes, el siguiente daño Grave marca 1 PV menos.
     const scales = amount === 3 && c.f_scales_ready === "1";
     if (scales) amount = 2;
+    // Enano · Piel Gruesa: ya marcó 2 Estrés, así que el daño Menor no marca PV.
+    const thick = amount === 1 && c.f_thickskin_ready === "1";
+    if (thick) amount = 0;
     const total = Number(c.r_hp || 0);
     const current = Number(c.hp_marked || 0);
     const next = Math.min(total, current + amount);
-    let patch = { hp_marked: String(next), ...(scales ? { f_scales_ready: "" } : {}) };
+    let patch = { hp_marked: String(next), ...(scales ? { f_scales_ready: "" } : {}), ...(thick ? { f_thickskin_ready: "" } : {}), ...(c.f_fortitude_ready ? { f_fortitude_ready: "" } : {}) };
     if (scales) postCampaignEvent(id, "🐉 Escamas: el daño Grave marca 2 PV en vez de 3");
+    if (thick) postCampaignEvent(id, "⛰️ Piel Gruesa: el daño Menor no marca PV (marcó 2 de Estrés)");
     if (clearElemental && c.f_elemental_active) {
       postCampaignEvent(id, `🌪️ Deja de canalizar ${c.f_elemental_active} (daño Grave)`);
       patch = { ...patch, f_elemental_active: "" };
@@ -6516,6 +6522,8 @@ export default function App({ onSignOut }) {
     // Trovador: el descanso largo recupera sus canciones.
     if (isLong && c.f_speech_used) restPatch.f_speech_used = "";
     if (c.f_scales_ready) restPatch.f_scales_ready = "";
+    if (c.f_thickskin_ready) restPatch.f_thickskin_ready = "";
+    if (c.f_fortitude_ready) restPatch.f_fortitude_ready = "";
     if (isLong && c.f_clarity_used) restPatch.f_clarity_used = "";
     if (isLong && c.f_wardprot_used) restPatch.f_wardprot_used = "";
     if (isLong && c.f_subclass === "Trovador" && c.f_songs_used && c.f_songs_used !== "{}") {
@@ -8471,6 +8479,9 @@ export default function App({ onSignOut }) {
                   const earthBonus = c.f_elemental_active === "Tierra" ? proficiency : 0;
                   const major = baseThresholds.major + equipMods.major + earthBonus;
                   const severe = baseThresholds.severe + equipMods.severe + earthBonus;
+                  // Enano · Fortaleza Aumentada: la mitad del daño equivale a umbrales dobles.
+                  const fortMajor = c.f_fortitude_ready === "1" ? major * 2 : major;
+                  const fortSevere = c.f_fortitude_ready === "1" ? severe * 2 : severe;
                   const experiences = getExperiences(c);
                   const conditions = getConditions(c);
                   const entries = getJournal(c);
@@ -8573,14 +8584,14 @@ export default function App({ onSignOut }) {
                               </div>
                               <div style={{ display: "flex", gap: 8, marginBottom: statsSpacing.thrMb }}>
                                 <div onClick={() => applyDamage(viewingCharId, 1)} className="mh-tip-anchor" style={{ flex: 1, textAlign: "center", border: "1px solid var(--mh-line)", background: "var(--mh-panel2)", borderRadius: 10, padding: statsSpacing.thrPadY + "px 4px", cursor: "pointer" }}>
-                                  <span className="mh-tip">Pulsa para -1 PV</span>
-                                  <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Menor</div>
-                                  <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700 }}>{major > 1 ? major - 1 : "—"}</div>
+                                  <span className="mh-tip">{c.f_thickskin_ready === "1" ? "Piel Gruesa: pulsa y no marcas PV" : "Pulsa para -1 PV"}</span>
+                                  <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Menor{c.f_thickskin_ready === "1" && <span style={{ marginLeft: 4, color: "#8A6A2A", fontWeight: 700 }}>· Piel</span>}</div>
+                                  <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700 }}>{fortMajor > 1 ? fortMajor - 1 : "—"}</div>
                                 </div>
                                 <div onClick={() => applyDamage(viewingCharId, 2)} className="mh-tip-anchor" style={{ flex: 1, textAlign: "center", border: "1px solid var(--acc)", background: "color-mix(in srgb, var(--acc) 8%, transparent)", borderRadius: 10, padding: statsSpacing.thrPadY + "px 4px", cursor: "pointer" }}>
                                   <span className="mh-tip">Pulsa para -2 PV</span>
                                   <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Mayor</div>
-                                  <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700, color: "var(--mh-gold-ink)" }}>{major}</div>
+                                  <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700, color: "var(--mh-gold-ink)" }}>{fortMajor}</div>
                                 </div>
                                 <div
                                   onClick={() => applyDamage(viewingCharId, 3, true)}
@@ -8589,9 +8600,14 @@ export default function App({ onSignOut }) {
                                 >
                                   <span className="mh-tip">{c.f_scales_ready === "1" ? "Escamas activas: pulsa para -2 PV" : "Pulsa para -3 PV"}</span>
                                   <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Grave{c.f_scales_ready === "1" && <span title="Escamas activas: marcarás 2 PV" style={{ marginLeft: 4, color: "#D9644E", fontWeight: 700 }}>· Escamas</span>}</div>
-                                  <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700, color: "#D9644E" }}>{severe}</div>
+                                  <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700, color: "#D9644E" }}>{fortSevere}</div>
                                 </div>
                               </div>
+                              {c.f_fortitude_ready === "1" && (
+                                <div className="mh-fort-note">
+                                  <Shield size={13} /> Fortaleza Aumentada: el próximo daño físico se reduce a la mitad (umbrales ×2).
+                                </div>
+                              )}
 
 
                               <StepperRow gap={statsSpacing.stepMb} labelGap={statsSpacing.stepLabelMb} hitKey={hpHit && hpHit.id === viewingCharId ? hpHit.key : undefined} label="Puntos de vida" total={Number(c.r_hp || 0) + equipMods.hp} marked={Number(c.hp_marked || 0)} field="hp_marked" color="#D9644E" Icon={Heart} charId={viewingCharId} onDelta={adjustHp} onToggle={markHp} />
@@ -12386,6 +12402,37 @@ export default function App({ onSignOut }) {
                   if (d.beastLocked && !d.fromChat) {
                     cardActs.length = 0;
                     cardActs.push({ key: "beast-lock", Icon: Lock, label: "No puedes lanzar hechizos en " + d.beastLocked, sub: "Sal de la forma para usarlo", disabled: true });
+                  }
+                  // Enano: Piel Gruesa (2 Estrés en vez de 1 PV ante daño Menor) y Fortaleza Aumentada (3 Esperanza, daño físico a la mitad).
+                  if (d.ancestryKey === "Enano" && !d.fromChat) {
+                    const freeStress = Number(c.r_stress || 0) - Number(c.stress_marked || 0);
+                    const thickReady = c.f_thickskin_ready === "1";
+                    cardActs.push({
+                      key: "thick",
+                      Icon: Mountain,
+                      label: thickReady ? "Piel Gruesa ya preparada" : freeStress < 2 ? "Piel Gruesa · no te queda Estrés" : "Piel Gruesa · marcar 2 Estrés",
+                      sub: thickReady ? "El próximo daño Menor no marca PV" : "En vez de 1 PV por daño Menor",
+                      disabled: thickReady || freeStress < 2,
+                      run: () => {
+                        closeCardDetail();
+                        markStress(viewingCharId, 2, { f_thickskin_ready: "1" });
+                        postCampaignEvent(viewingCharId, "⛰️ Piel Gruesa: marca 2 Estrés; el próximo daño Menor no marcará PV");
+                      },
+                    });
+                    const hopeNowE = Number(c.hope_marked ?? HOPE_DEFAULT);
+                    const fortReady = c.f_fortitude_ready === "1";
+                    cardActs.push({
+                      key: "fortitude",
+                      Icon: Shield,
+                      label: fortReady ? "Fortaleza Aumentada activa" : hopeNowE < 3 ? "Fortaleza Aumentada · te falta Esperanza" : "Fortaleza Aumentada",
+                      sub: fortReady ? "El próximo daño físico a la mitad" : "3 Esperanza · daño físico a la mitad",
+                      disabled: fortReady || hopeNowE < 3,
+                      run: () => {
+                        closeCardDetail();
+                        updateCharacterFields(viewingCharId, { hope_marked: String(hopeNowE - 3), f_fortitude_ready: "1" });
+                        postCampaignEvent(viewingCharId, "⛰️ Fortaleza Aumentada: el próximo daño físico se reduce a la mitad");
+                      },
+                    });
                   }
                   // Dracona: Aliento Elemental (ataque de Instinto) y Escamas (marcar 1 Estrés).
                   if (d.ancestryKey === "Dracona" && !d.fromChat) {
