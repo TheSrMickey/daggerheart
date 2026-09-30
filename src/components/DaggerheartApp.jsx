@@ -4702,10 +4702,14 @@ export default function App({ onSignOut }) {
   const applyDamage = (id, amount, clearElemental) => {
     const c = characters[id];
     if (!c) return;
+    // Dracona · Escamas: si se activaron antes, el siguiente daño Grave marca 1 PV menos.
+    const scales = amount === 3 && c.f_scales_ready === "1";
+    if (scales) amount = 2;
     const total = Number(c.r_hp || 0);
     const current = Number(c.hp_marked || 0);
     const next = Math.min(total, current + amount);
-    let patch = { hp_marked: String(next) };
+    let patch = { hp_marked: String(next), ...(scales ? { f_scales_ready: "" } : {}) };
+    if (scales) postCampaignEvent(id, "🐉 Escamas: el daño Grave marca 2 PV en vez de 3");
     if (clearElemental && c.f_elemental_active) {
       postCampaignEvent(id, `🌪️ Deja de canalizar ${c.f_elemental_active} (daño Grave)`);
       patch = { ...patch, f_elemental_active: "" };
@@ -6410,6 +6414,7 @@ export default function App({ onSignOut }) {
     };
     // Trovador: el descanso largo recupera sus canciones.
     if (isLong && c.f_speech_used) restPatch.f_speech_used = "";
+    if (c.f_scales_ready) restPatch.f_scales_ready = "";
     if (isLong && c.f_subclass === "Trovador" && c.f_songs_used && c.f_songs_used !== "{}") {
       restPatch.f_songs_used = "{}";
       messages.push("Recuperas tus canciones");
@@ -8479,8 +8484,8 @@ export default function App({ onSignOut }) {
                                   className="mh-tip-anchor"
                                   style={{ flex: 1, textAlign: "center", border: "1px solid #D9644E", background: "#D9644E14", borderRadius: 10, padding: statsSpacing.thrPadY + "px 4px", cursor: "pointer" }}
                                 >
-                                  <span className="mh-tip">Pulsa para -3 PV</span>
-                                  <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Grave</div>
+                                  <span className="mh-tip">{c.f_scales_ready === "1" ? "Escamas activas: pulsa para -2 PV" : "Pulsa para -3 PV"}</span>
+                                  <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Grave{c.f_scales_ready === "1" && <span title="Escamas activas: marcarás 2 PV" style={{ marginLeft: 4, color: "#D9644E", fontWeight: 700 }}>· Escamas</span>}</div>
                                   <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700, color: "#D9644E" }}>{severe}</div>
                                 </div>
                               </div>
@@ -12166,16 +12171,17 @@ export default function App({ onSignOut }) {
                       );
                     }
                     const stressFull = Number(c.stress_marked || 0) >= Number(c.r_stress || 0);
+                    const scalesReady = c.f_scales_ready === "1";
                     cardActs.push({
                       key: "scales",
                       Icon: Shield,
-                      label: stressFull ? "Escamas · no te queda Estrés" : "Escamas · marcar 1 Estrés",
-                      sub: "Marca 1 PV menos ante daño Grave",
-                      disabled: stressFull,
+                      label: scalesReady ? "Escamas ya activadas" : stressFull ? "Escamas · no te queda Estrés" : "Escamas · marcar 1 Estrés",
+                      sub: scalesReady ? "El próximo daño Grave marca 2 PV" : "Marca 1 PV menos ante daño Grave",
+                      disabled: stressFull || scalesReady,
                       run: () => {
                         closeCardDetail();
-                        markStress(viewingCharId, 1);
-                        postCampaignEvent(viewingCharId, "🐉 Escamas: marca 1 Estrés para recibir 1 PV menos del daño Grave");
+                        markStress(viewingCharId, 1, { f_scales_ready: "1" });
+                        postCampaignEvent(viewingCharId, "🐉 Escamas: marca 1 Estrés; el próximo daño Grave marcará 1 PV menos");
                       },
                     });
                   }
