@@ -8716,8 +8716,8 @@ export default function App({ onSignOut }) {
                                   style={{ position: "relative", flex: 1, textAlign: "center", border: "1px solid " + (minorPop ? "var(--mh-ink)" : "var(--mh-line)"), background: "var(--mh-panel2)", borderRadius: 10, padding: statsSpacing.thrPadY + "px 4px", cursor: "pointer" }}
                                 >
                                   {!minorPop && <span className="mh-tip">{unstopOn ? "Imparable: el daño Menor no marca PV" : isDwarf ? "Pulsa para elegir: 1 PV o Piel Gruesa" : "Pulsa para -1 PV"}</span>}
-                                  <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Menor{unstopOn ? " · " + (fortMajor > 1 ? fortMajor - 1 : "—") : ""}</div>
-                                  <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700 }}>{unstopOn ? "0 PV" : fortMajor > 1 ? fortMajor - 1 : "—"}</div>
+                                  <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Menor{unstopOn ? " · 0 PV" : ""}</div>
+                                  <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700 }}>{fortMajor > 1 ? fortMajor - 1 : "—"}</div>
                                   {isDwarf && minorPop && (() => {
                                     const freeStress = Number(c.r_stress || 0) + equipMods.stress - Number(c.stress_marked || 0);
                                     const canSkin = freeStress >= 2;
@@ -8773,8 +8773,8 @@ export default function App({ onSignOut }) {
                                 </div>
                                 <div onClick={() => applyDamage(viewingCharId, 2)} title={fortOn ? "Fortaleza Aumentada: umbrales ×2" : undefined} className={"mh-tip-anchor" + (fortOn ? " mh-thr-fort" : "")} style={{ flex: 1, textAlign: "center", border: "1px solid var(--acc)", background: "color-mix(in srgb, var(--acc) 8%, transparent)", borderRadius: 10, padding: statsSpacing.thrPadY + "px 4px", cursor: "pointer" }}>
                                   <span className="mh-tip">{unstopOn ? "Imparable: pulsa para -1 PV" : "Pulsa para -2 PV"}</span>
-                                  <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Mayor{unstopOn ? " · " + fortMajor : ""}</div>
-                                  <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700, color: "var(--mh-gold-ink)" }}>{unstopOn ? "1 PV" : fortMajor}</div>
+                                  <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Mayor{unstopOn ? " · 1 PV" : ""}</div>
+                                  <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700, color: "var(--mh-gold-ink)" }}>{fortMajor}</div>
                                 </div>
                                 <div
                                   onClick={() => applyDamage(viewingCharId, 3, true)}
@@ -8783,8 +8783,8 @@ export default function App({ onSignOut }) {
                                   style={{ flex: 1, textAlign: "center", border: "1px solid #D9644E", background: "#D9644E14", borderRadius: 10, padding: statsSpacing.thrPadY + "px 4px", cursor: "pointer" }}
                                 >
                                   <span className="mh-tip">{unstopOn ? "Imparable: pulsa para -2 PV" : c.f_scales_ready === "1" ? "Escamas activas: pulsa para -2 PV" : "Pulsa para -3 PV"}</span>
-                                  <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Grave{unstopOn ? " · " + fortSevere : ""}{c.f_scales_ready === "1" && <span title="Escamas activas: marcarás 2 PV" style={{ marginLeft: 4, color: "#D9644E", fontWeight: 700 }}>· Escamas</span>}</div>
-                                  <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700, color: "#D9644E" }}>{unstopOn ? "2 PV" : fortSevere}</div>
+                                  <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Grave{unstopOn ? " · 2 PV" : ""}{c.f_scales_ready === "1" && <span title="Escamas activas: marcarás 2 PV" style={{ marginLeft: 4, color: "#D9644E", fontWeight: 700 }}>· Escamas</span>}</div>
+                                  <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700, color: "#D9644E" }}>{fortSevere}</div>
                                 </div>
                               </div>
 
