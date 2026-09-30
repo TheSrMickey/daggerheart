@@ -252,7 +252,7 @@ const ANCESTRIES = [
 const COMMUNITIES = [
   { key: "De Alta Cuna", blurb: "Creciste entre privilegios y expectativas de la nobleza.", features: [{ name: "Privilegio", text: "Tienes ventaja en las tiradas para tratar con nobles, negociar precios o aprovechar tu reputación para conseguir lo que quieres." }] },
   { key: "Del Saber", blurb: "Vienes de una sociedad que valora el saber académico y la habilidad política: la historia, la ciencia, la política o la recopilación de mitos y leyendas.", features: [{ name: "Leído", text: "Tienes ventaja en las tiradas sobre la historia, la cultura o la política de una persona o un lugar importantes." }] },
-  { key: "Del Orden", blurb: "Creciste bajo una disciplina estricta, militar o religiosa.", features: [{ name: "Entregado", text: "Apunta tres dichos o valores que te inculcaron. Una vez por descanso, si describes cómo encarnas uno de ellos en lo que haces, puedes tirar un d20 como Dado de Esperanza." }] },
+  { key: "Del Orden", blurb: "Creciste bajo una disciplina estricta, militar o religiosa.", features: [{ name: "Entregado", text: "Apunta tres dichos o valores que te inculcó tu educación. Una vez por descanso, cuando describas cómo encarnas uno de estos principios con lo que estás haciendo, puedes tirar un d20 como Dado de Esperanza." }] },
   { key: "De las Cumbres", blurb: "Tu hogar fueron las montañas y sus caminos escarpados.", features: [{ name: "Firme", text: "Tienes ventaja en las tiradas para cruzar precipicios y cornisas peligrosos, orientarte en entornos duros y usar tus conocimientos de supervivencia." }] },
   { key: "Del Mar", blurb: "Creciste entre puertos, barcos y el vaivén de las mareas.", features: [{ name: "Conocer la Marea", text: "Cuando saques una tirada con Miedo, pon una ficha en tu carta de comunidad (máximo tu nivel). Antes de una tirada de acción, puedes gastar fichas: +1 por cada una. Al final de la sesión se pierden las que queden." }] },
   { key: "De las Sombras", blurb: "Tu cuna fue el bajo mundo, entre secretos y contactos turbios.", features: [{ name: "Granuja", text: "Tienes ventaja en las tiradas para negociar con criminales, detectar mentiras o encontrar un escondite seguro." }] },
@@ -2437,6 +2437,11 @@ const sharedStyles = `
   .mh-thr-fort > .mh-serif { color: color-mix(in srgb, #5E93C9 70%, var(--mh-ink)) !important; }
   .mh-fort-note { display: flex; align-items: center; gap: 6px; margin: -4px 0 10px; font-size: 11.5px; line-height: 1.35; color: var(--mh-ink2); padding: 6px 9px; border-radius: 9px; background: color-mix(in srgb, #5E93C9 12%, var(--mh-panel)); border: 1px solid color-mix(in srgb, #5E93C9 40%, var(--mh-line)); }
   .mh-fort-note svg { flex-shrink: 0; color: #5E93C9; }
+  .mh-wz-princ { display: flex; gap: 8px; align-items: center; }
+  .mh-wz-princ .mh-input { flex: 1; min-width: 0; font-size: 13px; }
+  .mh-wz-princ-kind { display: inline-flex; padding: 3px; gap: 2px; border-radius: 9px; background: var(--mh-panel3); flex-shrink: 0; }
+  .mh-wz-princ-kind button { border: 0; background: transparent; padding: 5px 10px; border-radius: 7px; font: 600 12px 'Inter', system-ui, sans-serif; color: var(--mh-muted); cursor: pointer; }
+  .mh-wz-princ-kind button.is-on { background: var(--mh-panel); color: var(--mh-ink); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
   .mh-wz-breath { display: flex; flex-wrap: wrap; gap: 6px; }
   .mh-wz-breath button { display: inline-flex; align-items: center; gap: 6px; padding: 7px 11px; border-radius: 9px; border: 1.5px solid var(--mh-line2); background: var(--mh-panel); color: var(--mh-ink); font: 600 12.5px 'Inter', system-ui, sans-serif; cursor: pointer; }
   .mh-wz-breath button svg { color: color-mix(in srgb, var(--be) 85%, #000); }
@@ -3106,7 +3111,7 @@ function DualityResult({ roll, size = 84 }) {
     <div style={{ position: "relative", textAlign: "center" }}>
       {crit && landed && <div className="mh-burst" key={"b" + roll.key} />}
       <div style={{ display: "flex", gap: 16, alignItems: "flex-start", justifyContent: "center", padding: "8px 0 4px", position: "relative" }}>
-        <DieFace sides={12} value={has ? roll.hope : null} color="#E3B04B" size={size} rolling={rolling} highlight={landed && winner !== "fear"} dim={landed && winner === "fear"} label="Esperanza" />
+        <DieFace sides={has && roll.hopeSides ? roll.hopeSides : 12} value={has ? roll.hope : null} color="#E3B04B" size={size} rolling={rolling} highlight={landed && winner !== "fear"} dim={landed && winner === "fear"} label="Esperanza" />
         <span style={{ fontSize: 20, color: "var(--mh-muted)", marginTop: size / 2 - 14 }}>+</span>
         <DieFace sides={12} value={has ? roll.fear : null} color="#A58BE8" size={size} rolling={rolling} highlight={landed && winner !== "hope"} dim={landed && winner === "hope"} label="Miedo" delay={90} />
         {edge !== 0 && (
@@ -4151,6 +4156,8 @@ export default function App({ onSignOut }) {
   // Autómata · Diseño con Propósito: quién te creó y qué Experiencia encaja (+1 permanente).
   const [draftCreator, setDraftCreator] = useState("");
   const [draftBreath, setDraftBreath] = useState("");
+  // Del Orden · Entregado: tres valores o dichos.
+  const [draftPrinciples, setDraftPrinciples] = useState([{ kind: "Valor", text: "" }, { kind: "Valor", text: "" }, { kind: "Dicho", text: "" }]);
   const [draftPurpose, setDraftPurpose] = useState("");
   const [draftPurposeExp, setDraftPurposeExp] = useState(null);
   const [draftCommunity, setDraftCommunity] = useState("");
@@ -4302,6 +4309,7 @@ export default function App({ onSignOut }) {
     setDraftAncestries([]);
     setDraftCreator("");
     setDraftBreath("");
+    setDraftPrinciples([{ kind: "Valor", text: "" }, { kind: "Valor", text: "" }, { kind: "Dicho", text: "" }]);
     setDraftPurpose("");
     setDraftPurposeExp(null);
     setDraftCommunity("");
@@ -4489,6 +4497,7 @@ export default function App({ onSignOut }) {
       f_creator: isAutomaton ? draftCreator.trim() : "",
       f_breath_element: draftAncestries.includes("Dracona") ? draftBreath : "",
       f_community: draftCommunity,
+      f_principles: draftCommunity === "Del Orden" ? JSON.stringify(draftPrinciples.map((x) => ({ kind: x.kind, text: x.text.trim() }))) : "",
       f_transformation: draftTransformation === "Ninguna" ? "" : draftTransformation,
       f_languages: ["Común", ...draftLanguages].join(", "),
       ...traitValues,
@@ -6540,6 +6549,7 @@ export default function App({ onSignOut }) {
     // Trovador: el descanso largo recupera sus canciones.
     if (isLong && c.f_speech_used) restPatch.f_speech_used = "";
     if (c.f_scales_ready) restPatch.f_scales_ready = "";
+    if (c.f_dedicated_used) restPatch.f_dedicated_used = "";
     if (c.f_thickskin_ready) restPatch.f_thickskin_ready = "";
     if (c.f_fortitude_ready) restPatch.f_fortitude_ready = "";
     if (isLong && c.f_clarity_used) restPatch.f_clarity_used = "";
@@ -6851,7 +6861,7 @@ export default function App({ onSignOut }) {
   // Antes de tirar: ventana para añadir Experiencias, el dado de Arenga o Ventaja.
   const [preRoll, setPreRoll] = useState(null);
   const rollTraitCheck = (charId, traitLabel, traitValue, weapon, cardContext, advantage) => {
-    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage, exps: [], rally: false, privilege: false, disadvantage: false, poet: false });
+    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage, exps: [], rally: false, privilege: false, disadvantage: false, poet: false, dedicated: false });
   };
   const confirmPreRoll = () => {
     const pr = preRoll;
@@ -6863,6 +6873,7 @@ export default function App({ onSignOut }) {
     if (hopeCost && ch) patch.hope_marked = String(Math.max(0, Number(ch.hope_marked ?? HOPE_DEFAULT) - hopeCost));
     const rallyDie = pr.rally && ch?.f_rally_die ? ch.f_rally_die : "";
     if (rallyDie) patch.f_rally_die = "";
+    if (pr.dedicated) patch.f_dedicated_used = "1";
     if (Object.keys(patch).length) updateCharacterFields(pr.charId, patch);
     setPreRoll(null);
     doTraitRoll(pr.charId, pr.traitLabel, pr.traitValue, pr.weapon, pr.cardContext, pr.advantage || pr.privilege, {
@@ -6870,11 +6881,14 @@ export default function App({ onSignOut }) {
       rallyDie,
       disadvantage: pr.disadvantage,
       poet: pr.poet,
+      hopeD20: pr.dedicated,
     });
   };
 
   const doTraitRoll = async (charId, traitLabel, traitValue, weapon, cardContext, advantage, extras = {}) => {
-    const hope = Math.floor(Math.random() * 12) + 1;
+    // Del Orden · Entregado: el Dado de Esperanza pasa a ser un d20.
+    const hopeSides = extras.hopeD20 ? 20 : 12;
+    const hope = Math.floor(Math.random() * hopeSides) + 1;
     const fear = Math.floor(Math.random() * 12) + 1;
     // Ventaja suma 1d6 y desventaja lo resta; si hay las dos, se anulan.
     const edgeSign = (advantage ? 1 : 0) - (extras.disadvantage ? 1 : 0);
@@ -6902,7 +6916,7 @@ export default function App({ onSignOut }) {
     clearTimeout(traitRollTimer.current);
     const note =
       hope === fear ? "Ganas 1 Esperanza y te quitas 1 Estrés" : hope > fear ? "Ganas 1 Esperanza" : "El DJ gana 1 de Miedo";
-    setTraitRollResult({ key: Date.now(), traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, total, text: hope === fear ? "Éxito crítico" : text, color, note, weapon: weapon || null, charId });
+    setTraitRollResult({ key: Date.now(), hopeSides, traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, total, text: hope === fear ? "Éxito crítico" : text, color, note, weapon: weapon || null, charId });
 
     // Con Esperanza (o crítico) ganas 1 Esperanza; con crítico además te quitas 1 Estrés.
     if (hope >= fear) {
@@ -6941,7 +6955,7 @@ export default function App({ onSignOut }) {
     } else {
       await postCampaignEvent(charId, `🎲 Tirada de ${traitLabel}: ${hope} + ${fear} ${modStr}${advStr} = ${total} (${text})`, {
         kind: "roll",
-        roll: { trait: traitLabel, weapon: weapon?.name || "", hope, fear, mod: traitValue, adv: advantageRoll, wolf: wolfBonus, ...rollExtra, total },
+        roll: { trait: traitLabel, weapon: weapon?.name || "", hopeSides, hope, fear, mod: traitValue, adv: advantageRoll, wolf: wolfBonus, ...rollExtra, total },
       });
     }
   };
@@ -9313,7 +9327,22 @@ export default function App({ onSignOut }) {
                             kicker: "Comunidad",
                             title: c.f_community,
                             summary: blurb,
-                            onClick: openDetail({ kicker: "Comunidad", title: c.f_community, text: blurb, features: COMMUNITIES.find((cm) => cm.key === c.f_community)?.features, bigStyle: true }),
+                            onClick: openDetail({
+                              kicker: "Comunidad",
+                              title: c.f_community,
+                              text: blurb,
+                              features: [
+                                ...(COMMUNITIES.find((cm) => cm.key === c.f_community)?.features || []),
+                                ...(() => {
+                                  try {
+                                    return JSON.parse(c.f_principles || "[]").filter((x) => x.text).map((x) => ({ name: x.kind, text: x.text }));
+                                  } catch (e) {
+                                    return [];
+                                  }
+                                })(),
+                              ],
+                              bigStyle: true,
+                            }),
                           });
                         }
 
@@ -11330,12 +11359,20 @@ export default function App({ onSignOut }) {
               const mod = preRoll.traitValue + expSum;
               const edgeNet = (preRoll.advantage || preRoll.privilege ? 1 : 0) - (preRoll.disadvantage ? 1 : 0);
               const highborne = ch.f_community === "De Alta Cuna";
+              const dedicatedOk = ch.f_community === "Del Orden";
+              const principles = (() => {
+                try {
+                  return JSON.parse(ch.f_principles || "[]").filter((x) => x.text);
+                } catch (e) {
+                  return [];
+                }
+              })();
               // Del Saber · Leído: ventaja en tiradas de Conocimiento sobre historia, cultura o política.
               const loreborne = ch.f_community === "Del Saber" && preRoll.traitLabel === "Conocimiento";
               const edgeSource = highborne ? "Privilegio" : loreborne ? "Leído" : "";
               const poetOk = ch.f_subclass === "Orador" && preRoll.traitLabel === "Presencia";
               const hopeUsed = preRoll.exps.length + (preRoll.poet ? 1 : 0);
-              const formula = "2d12 " + (mod >= 0 ? "+ " : "− ") + Math.abs(mod) + (preRoll.rally && ch.f_rally_die ? " + 1" + ch.f_rally_die : "") + (preRoll.poet ? " + 1d4" : "") + (preRoll.weapon && ch.f_transformation_form_active === "Forma de Lobo" ? " + 1d10" : "") + (edgeNet > 0 ? " + 1d6" : edgeNet < 0 ? " − 1d6" : "");
+              const formula = (preRoll.dedicated ? "1d20 + 1d12 " : "2d12 ") + (mod >= 0 ? "+ " : "− ") + Math.abs(mod) + (preRoll.rally && ch.f_rally_die ? " + 1" + ch.f_rally_die : "") + (preRoll.poet ? " + 1d4" : "") + (preRoll.weapon && ch.f_transformation_form_active === "Forma de Lobo" ? " + 1d10" : "") + (edgeNet > 0 ? " + 1d6" : edgeNet < 0 ? " − 1d6" : "");
               const toggleExp = (i) =>
                 setPreRoll((p) => ({ ...p, exps: p.exps.includes(i) ? p.exps.filter((x) => x !== i) : [...p.exps, i] }));
               const wolf = preRoll.weapon && ch.f_transformation_form_active === "Forma de Lobo";
@@ -11364,6 +11401,18 @@ export default function App({ onSignOut }) {
                       onClick: () => setPreRoll((p) => ({ ...p, poet: !p.poet })),
                     })
                   : null,
+                dedicatedOk
+                  ? tile("dedicated", {
+                      on: preRoll.dedicated,
+                      disabled: !!ch.f_dedicated_used && !preRoll.dedicated,
+                      title: "Entregado",
+                      sub: ch.f_dedicated_used ? "Ya usado en este descanso" : "Del Orden · 1 por descanso",
+                      cost: "d20",
+                      color: "#E3B04B",
+                      hint: ch.f_dedicated_used ? "Vuelve al descansar" : "Si encarnas uno de tus principios: " + (principles.map((x) => x.text).join(" · ") || "apúntalos en tu comunidad"),
+                      onClick: () => setPreRoll((p) => ({ ...p, dedicated: !p.dedicated })),
+                    })
+                  : null,
                 edgeSource
                   ? tile("priv", {
                       on: preRoll.privilege,
@@ -11381,14 +11430,15 @@ export default function App({ onSignOut }) {
                 ...exps.filter((_, i) => preRoll.exps.includes(i)).map((e) => [e.text, "+" + e.bonus]),
                 rallyOn ? ["Arenga", "+1" + ch.f_rally_die] : null,
                 preRoll.poet ? ["Corazón de Poeta", "+1d4"] : null,
+                preRoll.dedicated ? ["Entregado", "Esperanza d20"] : null,
                 wolf ? ["Forma de Lobo", "+1d10"] : null,
                 edgeNet ? [edgeNet > 0 ? "Ventaja" + (preRoll.privilege ? " (" + edgeSource + ")" : "") : "Desventaja", edgeNet > 0 ? "+1d6" : "−1d6"] : (preRoll.advantage || preRoll.privilege) && preRoll.disadvantage ? ["Ventaja y desventaja", "se anulan"] : null,
               ].filter(Boolean);
               const DS = 40;
               // Altura fija: se reserva hueco para todas las líneas que este personaje puede llegar a tener.
-              const maxLines = 1 + exps.length + (ch.f_rally_die ? 1 : 0) + (poetOk ? 1 : 0) + (wolf ? 1 : 0) + 1;
+              const maxLines = 1 + exps.length + (ch.f_rally_die ? 1 : 0) + (poetOk ? 1 : 0) + (dedicatedOk ? 1 : 0) + (wolf ? 1 : 0) + 1;
               const canSpendHope = exps.length > 0 || poetOk;
-              const anyAdded = preRoll.exps.length > 0 || preRoll.rally || preRoll.poet || preRoll.privilege || edgePos !== "none";
+              const anyAdded = preRoll.exps.length > 0 || preRoll.rally || preRoll.poet || preRoll.dedicated || preRoll.privilege || edgePos !== "none";
               return (
                 <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 45, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)" }} onClick={() => setPreRoll(null)}>
                   <div className="mh-card mh-card-anim mh-pre" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={"Tirada de " + preRoll.traitLabel}>
@@ -11442,7 +11492,7 @@ export default function App({ onSignOut }) {
                       </div>
                       <div className="mh-pre-side">
                         <div className="mh-pre-dice">
-                          <DieFace sides={12} value={"d12"} color="#E3B04B" size={DS} label="Esperanza" />
+                          <DieFace sides={preRoll.dedicated ? 20 : 12} value={preRoll.dedicated ? "d20" : "d12"} color="#E3B04B" size={DS} label="Esperanza" />
                           <DieFace sides={12} value={"d12"} color="#A58BE8" size={DS} label="Miedo" />
                           {edgeNet !== 0 && <DieFace sides={6} value={"d6"} color={edgeNet > 0 ? "#7FB77A" : "#D9644E"} size={Math.round(DS * 0.8)} label={edgeNet > 0 ? "Ventaja" : "Desventaja"} />}
                           {wolf && <DieFace sides={10} value={"d10"} color="#E0544A" size={Math.round(DS * 0.85)} label="Lobo" />}
@@ -11481,7 +11531,7 @@ export default function App({ onSignOut }) {
                           className="mh-pre-plain"
                           style={anyAdded ? undefined : { visibility: "hidden" }}
                           tabIndex={anyAdded ? undefined : -1}
-                          onClick={() => setPreRoll((p) => ({ ...p, exps: [], rally: false, poet: false, privilege: false, advantage: false, disadvantage: false }))}
+                          onClick={() => setPreRoll((p) => ({ ...p, exps: [], rally: false, poet: false, dedicated: false, privilege: false, advantage: false, disadvantage: false }))}
                         >
                           Quitar lo añadido
                         </button>
@@ -13164,6 +13214,30 @@ export default function App({ onSignOut }) {
                               </button>
                             )}
                             {originTab === "ancestry" && mixAncestry && <div className="mh-wz-dm">Con ascendencia mixta eliges dos y combinas sus rasgos.</div>}
+                            {originTab === "community" && draftCommunity === "Del Orden" && (
+                              <div className="mh-wz-purpose">
+                                <b className="mh-wz-purpose-t">Entregado</b>
+                                <label>¿Qué tres principios te inculcó tu educación?</label>
+                                {draftPrinciples.map((pr, k) => (
+                                  <div key={k} className="mh-wz-princ">
+                                    <div className="mh-wz-princ-kind" role="radiogroup" aria-label={"Principio " + (k + 1)}>
+                                      {["Valor", "Dicho"].map((kind) => (
+                                        <button key={kind} type="button" role="radio" aria-checked={pr.kind === kind} className={pr.kind === kind ? "is-on" : ""} onClick={() => setDraftPrinciples((list) => list.map((x, j) => (j === k ? { ...x, kind } : x)))}>
+                                          {kind}
+                                        </button>
+                                      ))}
+                                    </div>
+                                    <input
+                                      className="mh-input"
+                                      placeholder={pr.kind === "Valor" ? "Ej. La disciplina forja el carácter" : "Ej. «Quien obedece, aprende a mandar»"}
+                                      value={pr.text}
+                                      onChange={(e) => setDraftPrinciples((list) => list.map((x, j) => (j === k ? { ...x, text: e.target.value } : x)))}
+                                    />
+                                  </div>
+                                ))}
+                                <small>Una vez por descanso, si encarnas uno de ellos en lo que haces, podrás tirar un d20 como Dado de Esperanza.</small>
+                              </div>
+                            )}
                             {originTab === "ancestry" && draftAncestries.includes("Dracona") && (
                               <div className="mh-wz-purpose">
                                 <b className="mh-wz-purpose-t">Aliento Elemental</b>
@@ -13774,7 +13848,7 @@ export default function App({ onSignOut }) {
                       : draftAncestries.includes("Dracona") && !draftBreath
                       ? "Elige el elemento de tu aliento."
                       : draftAncestries.includes("Autómata") && (!draftCreator.trim() ? "Escribe quién te creó." : !draftPurpose.trim() ? "Escribe con qué propósito te creó." : false),
-                  community: !draftCommunity && "Elige una comunidad para continuar.",
+                  community: !draftCommunity ? "Elige una comunidad para continuar." : draftCommunity === "Del Orden" && draftPrinciples.some((x) => !x.text.trim()) ? "Escribe tus tres principios." : false,
                   experiences: !draftExp1.trim() || !draftExp2.trim() ? "Escribe tus dos Experiencias." : draftAncestries.includes("Autómata") && draftPurposeExp == null ? "Elige la Experiencia que encaja con tu propósito." : false,
                   primary: !draftPrimaryWeapon && "Elige un arma principal para continuar.",
                   secondary: !twoHanded && !draftSecondaryWeapon && "Elige un arma secundaria o «Ninguna».",
