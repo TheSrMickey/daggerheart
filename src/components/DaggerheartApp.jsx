@@ -2447,6 +2447,7 @@ const sharedStyles = `
   .mh-thr-fort { border-color: #5E93C9 !important; background: color-mix(in srgb, #5E93C9 12%, var(--mh-panel)) !important; }
   .mh-thr-fort > .mh-serif { color: color-mix(in srgb, #5E93C9 70%, var(--mh-ink)) !important; }
   .mh-iron-will { margin-left: 2px; font-size: 13px; font-weight: 800; color: var(--mh-gold-ink); cursor: help; }
+  .mh-tip.mh-tip-wrap { white-space: normal; width: 220px; text-align: center; line-height: 1.35; }
   .mh-fort-note { display: flex; align-items: center; gap: 6px; margin: -4px 0 10px; font-size: 11.5px; line-height: 1.35; color: var(--mh-ink2); padding: 6px 9px; border-radius: 9px; background: color-mix(in srgb, #5E93C9 12%, var(--mh-panel)); border: 1px solid color-mix(in srgb, #5E93C9 40%, var(--mh-line)); }
   .mh-fort-note svg { flex-shrink: 0; color: #5E93C9; }
   .mh-wz-princ { display: flex; gap: 8px; align-items: center; }
@@ -8600,8 +8601,9 @@ export default function App({ onSignOut }) {
                                   <div style={{ fontSize: 10, color: "var(--mh-muted)", textAlign: "center", marginBottom: 4 }}>
                                     Armadura
                                     {stalwart && (
-                                      <span className="mh-iron-will" title="Voluntad de Hierro: cuando recibas daño físico, puedes marcar una casilla de Armadura adicional (2 de una vez) para reducir su gravedad">
+                                      <span className="mh-iron-will mh-tip-anchor" aria-label="Voluntad de Hierro: puedes marcar 2 casillas de Armadura de una vez ante daño físico">
                                         *
+                                        <span className="mh-tip mh-tip-wrap">Voluntad de Hierro: ante daño físico puedes marcar 2 casillas de Armadura de una vez</span>
                                       </span>
                                     )}
                                   </div>
