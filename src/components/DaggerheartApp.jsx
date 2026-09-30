@@ -2683,6 +2683,11 @@ const sharedStyles = `
   @keyframes mh-card-away { to { opacity: 0; translate: 0 24px; scale: .9; } }
 
   /* Cartas de dominio en la hoja */
+  .mh-dlock-note { display: flex; align-items: center; gap: 8px; padding: 8px 11px; border-radius: 10px; font-size: 12px; line-height: 1.35; color: var(--mh-ink2); background: color-mix(in srgb, var(--acc) 12%, var(--mh-panel)); border: 1px solid color-mix(in srgb, var(--acc) 40%, var(--mh-line)); flex-shrink: 0; }
+  .mh-dlock-note svg { flex-shrink: 0; color: var(--acc); }
+  .mh-dslot.is-locked { filter: grayscale(.85) brightness(.9); opacity: .7; }
+  .mh-dslot.is-locked:hover { opacity: .85; }
+  .mh-dslot-lock { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -70%); z-index: 2; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(20,16,28,.72); color: #fff; }
   .mh-dslot { animation: mh-slot-in .4s cubic-bezier(.2,.8,.2,1) backwards; transition: translate .2s ease, box-shadow .2s ease, border-color .2s ease, scale .1s ease; }
   .mh-dslot:hover { translate: 0 -3px; border-color: var(--dc) !important; box-shadow: 0 10px 24px -10px var(--dc); }
   .mh-dslot:active { scale: .98; }
@@ -8245,7 +8250,7 @@ export default function App({ onSignOut }) {
                     <div
                       key={t.key}
                       onClick={() => {
-                        if (isSpellcast && hasNaturesTongue) {
+                        if (isSpellcast && hasNaturesTongue && !c.f_beastform) {
                           setPendingSpellRoll({ charId: viewingCharId, traitLabel: t.label, traitValue: val, advantage: hasAdvantage });
                         } else {
                           rollTraitCheck(viewingCharId, t.label, val, undefined, undefined, hasAdvantage);
@@ -9206,6 +9211,14 @@ export default function App({ onSignOut }) {
                             unconscious={conditions.includes("Inconsciente")}
                             >
                               <div style={{ display: "flex", flexDirection: "column", gap: 12, flex: 1 }}>
+                                {c.f_beastform && (
+                                  <div className="mh-dlock-note">
+                                    <PawPrint size={14} />
+                                    <span>
+                                      En <b>{c.f_beastform}</b> no puedes usar tus cartas de dominio.
+                                    </span>
+                                  </div>
+                                )}
                                 {Array.from({ length: 5 }, (_, i) => i).map((i) => {
                                   const cardData = domainCardKeys[i] ? findDomainCard(domainCardKeys[i]) : null;
                                   if (cardData) {
@@ -9214,9 +9227,11 @@ export default function App({ onSignOut }) {
                                     return (
                                       <div
                                         key={i}
-                                        className="mh-dslot"
+                                        className={"mh-dslot" + (c.f_beastform ? " is-locked" : "")}
+                                        title={c.f_beastform ? "Bloqueada mientras estés en Forma de Bestia" : undefined}
                                         onClick={() =>
                                           setViewingCardDetail({
+                                            ...(c.f_beastform ? { beastLocked: c.f_beastform } : {}),
                                             kicker: `${cardData.domain} · ${cardData.type} · Nivel ${cardData.level} · Recuperación ${cardData.recall}`,
                                             title: cardData.key,
                                             text: cardData.text,
@@ -9238,6 +9253,11 @@ export default function App({ onSignOut }) {
                                         )}
                                         <div className="mh-dslot-shade" />
                                         <span className="mh-dslot-gem" title={"Nivel " + cardData.level}>{cardData.level}</span>
+                                        {c.f_beastform && (
+                                          <span className="mh-dslot-lock" aria-hidden="true">
+                                            <Lock size={14} />
+                                          </span>
+                                        )}
                                         <span className="mh-dslot-recall" title="Coste de recuperación">
                                           <Zap size={11} color="var(--acc)" />
                                           {cardData.recall}
@@ -12095,6 +12115,11 @@ export default function App({ onSignOut }) {
                       });
                     });
                   }
+                  // Druida en Forma de Bestia: la carta de dominio no se puede usar.
+                  if (d.beastLocked && !d.fromChat) {
+                    cardActs.length = 0;
+                    cardActs.push({ key: "beast-lock", Icon: Lock, label: "No disponible en " + d.beastLocked, sub: "Sal de la forma para usarla", disabled: true });
+                  }
                   // Una carta abierta desde el chat es solo para verla: sin acciones.
                   if (d.fromChat) cardActs.length = 0;
                   // Mostrar la carta en el chat de la campaña del personaje (solo si está en una).
@@ -12106,7 +12131,7 @@ export default function App({ onSignOut }) {
                       label: "Mostrar en la campaña",
                       sub: shareCamp.name,
                       run: () => {
-                        const { fromChat, navigateAction, transformForm, itemIcon, equipAction, hopeAction, invItem, elementalAction, ...detail } = d;
+                        const { fromChat, navigateAction, transformForm, itemIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ...detail } = d;
                         // Las imágenes incrustadas muy grandes no se copian al chat.
                         if (typeof detail.image === "string" && detail.image.startsWith("data:") && detail.image.length > 30000) delete detail.image;
                         const type = d.domain ? "domain" : d.weapon ? "weapon" : d.armor ? "armor" : "card";
