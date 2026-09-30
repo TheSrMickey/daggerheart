@@ -505,7 +505,7 @@ function getEquipmentMods(primaryWeapon, secondaryWeapon, armorEntry) {
 
 const CLASS_HOPE_FEATURE = {
   Bardo: { name: "Montar una Escena", cost: 3, text: "Distrae temporalmente a un objetivo en alcance Cercano: sufre un −2 a su Dificultad." },
-  Druida: { name: "Evolución", cost: 3, text: "Adopta una Forma de Bestia sin marcar Estrés y sube un rasgo +1 mientras la mantengas." },
+  Druida: { name: "Evolución", cost: 3, text: "Transfórmate en una Forma de Bestia sin marcar Estrés. Al hacerlo, elige un rasgo y súbelo +1 hasta que abandones esa Forma de Bestia." },
   Guardián: { name: "Primera Línea", cost: 3, text: "Recupera 2 casillas de Armadura." },
   Explorador: { name: "Contenerlos", cost: 3, text: "Cuando aciertes un ataque con un arma, usa esa misma tirada contra otros dos adversarios dentro de su alcance." },
   Pícaro: { name: "Esquiva del Pícaro", cost: 3, text: "Ganas +2 a la Evasión hasta que te alcance un ataque o, si no, hasta tu próximo descanso." },
