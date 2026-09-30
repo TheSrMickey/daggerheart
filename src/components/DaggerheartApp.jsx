@@ -8250,7 +8250,7 @@ export default function App({ onSignOut }) {
                     <div
                       key={t.key}
                       onClick={() => {
-                        if (isSpellcast && hasNaturesTongue && !c.f_beastform) {
+                        if (isSpellcast && hasNaturesTongue) {
                           setPendingSpellRoll({ charId: viewingCharId, traitLabel: t.label, traitValue: val, advantage: hasAdvantage });
                         } else {
                           rollTraitCheck(viewingCharId, t.label, val, undefined, undefined, hasAdvantage);
@@ -9215,7 +9215,7 @@ export default function App({ onSignOut }) {
                                   <div className="mh-dlock-note">
                                     <PawPrint size={14} />
                                     <span>
-                                      En <b>{c.f_beastform}</b> no puedes usar tus cartas de dominio.
+                                      En <b>{c.f_beastform}</b> no puedes lanzar hechizos; las habilidades sí se pueden usar.
                                     </span>
                                   </div>
                                 )}
@@ -9223,15 +9223,17 @@ export default function App({ onSignOut }) {
                                   const cardData = domainCardKeys[i] ? findDomainCard(domainCardKeys[i]) : null;
                                   if (cardData) {
                                     const dColor = DOMAIN_COLORS[cardData.domain] || "var(--acc)";
+                                    // En Forma de Bestia no se lanzan hechizos (las habilidades siguen disponibles).
+                                    const spellLocked = !!c.f_beastform && cardData.type === "Hechizo";
                                     const DIcon = DOMAIN_ICONS[cardData.domain] || Sparkles;
                                     return (
                                       <div
                                         key={i}
-                                        className={"mh-dslot" + (c.f_beastform ? " is-locked" : "")}
-                                        title={c.f_beastform ? "Bloqueada mientras estés en Forma de Bestia" : undefined}
+                                        className={"mh-dslot" + (spellLocked ? " is-locked" : "")}
+                                        title={spellLocked ? "No puedes lanzar hechizos en Forma de Bestia" : undefined}
                                         onClick={() =>
                                           setViewingCardDetail({
-                                            ...(c.f_beastform ? { beastLocked: c.f_beastform } : {}),
+                                            ...(spellLocked ? { beastLocked: c.f_beastform } : {}),
                                             kicker: `${cardData.domain} · ${cardData.type} · Nivel ${cardData.level} · Recuperación ${cardData.recall}`,
                                             title: cardData.key,
                                             text: cardData.text,
@@ -9253,7 +9255,7 @@ export default function App({ onSignOut }) {
                                         )}
                                         <div className="mh-dslot-shade" />
                                         <span className="mh-dslot-gem" title={"Nivel " + cardData.level}>{cardData.level}</span>
-                                        {c.f_beastform && (
+                                        {spellLocked && (
                                           <span className="mh-dslot-lock" aria-hidden="true">
                                             <Lock size={14} />
                                           </span>
@@ -12115,10 +12117,10 @@ export default function App({ onSignOut }) {
                       });
                     });
                   }
-                  // Druida en Forma de Bestia: la carta de dominio no se puede usar.
+                  // Druida en Forma de Bestia: los hechizos no se pueden lanzar.
                   if (d.beastLocked && !d.fromChat) {
                     cardActs.length = 0;
-                    cardActs.push({ key: "beast-lock", Icon: Lock, label: "No disponible en " + d.beastLocked, sub: "Sal de la forma para usarla", disabled: true });
+                    cardActs.push({ key: "beast-lock", Icon: Lock, label: "No puedes lanzar hechizos en " + d.beastLocked, sub: "Sal de la forma para usarlo", disabled: true });
                   }
                   // Una carta abierta desde el chat es solo para verla: sin acciones.
                   if (d.fromChat) cardActs.length = 0;
