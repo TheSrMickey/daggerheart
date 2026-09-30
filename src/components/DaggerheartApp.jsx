@@ -377,6 +377,8 @@ const CLASS_EMBLEMS = {
   Camorrista: HandFist,
   Asesino: Skull,
 };
+// Ilustraciones encuadradas para las cartas del paso de subclase (600×500).
+const SUBCLASS_CARD_ART = Object.fromEntries(Object.entries(SUBCLASS_ART).map(([k, v]) => [k, v.replace("/subclases/", "/subclases/cartas/")]));
 const CLASS_ART = {
   Bardo: "/clases/bardo.webp",
   Druida: "/clases/druida.webp",
@@ -2472,6 +2474,28 @@ const sharedStyles = `
   .mh-hero-bars span { flex: 1; height: 5px; border-radius: 3px; background: var(--mh-line); overflow: hidden; }
   .mh-hero-bars i { display: block; height: 100%; border-radius: 3px; }
   .mh-hero-nums { display: flex; justify-content: space-between; gap: 4px; font-size: 10px; color: var(--mh-muted); }
+  .mh-wz-body:has(> .mh-sc) { display: flex; }
+  .mh-sc { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 4px 0 8px; background: radial-gradient(60% 70% at 50% 45%, color-mix(in srgb, var(--tc) 11%, transparent), transparent 75%); }
+  .mh-sc-row { display: grid; grid-auto-flow: column; grid-auto-columns: 300px; align-items: stretch; gap: 26px; max-height: 100%; }
+  .mh-sc-card { all: unset; box-sizing: border-box; position: relative; width: 300px; display: flex; flex-direction: column; border-radius: 18px; overflow: hidden; cursor: pointer; background: var(--mh-panel); border: 2px solid var(--mh-line); box-shadow: 0 6px 18px rgba(0,0,0,.08); transition: transform .18s, box-shadow .18s, border-color .18s, opacity .18s; }
+  .mh-sc-card:not(.is-on) { opacity: .88; }
+  .mh-sc-card:hover, .mh-sc-card:focus-visible { opacity: 1; transform: translateY(-3px); border-color: color-mix(in srgb, var(--tc) 60%, var(--mh-line)); }
+  .mh-sc-card.is-on { opacity: 1; transform: translateY(-4px); border-color: var(--tc); box-shadow: 0 0 0 4px color-mix(in srgb, var(--tc) 22%, transparent), 0 14px 28px rgba(0,0,0,.14); }
+  .mh-sc-art { position: relative; flex: none; aspect-ratio: 6 / 5; display: flex; align-items: flex-end; justify-content: center; overflow: hidden; color: color-mix(in srgb, var(--tc) var(--mh-accent-keep, 100%), #000); background: linear-gradient(to bottom, transparent 70%, var(--mh-panel)), radial-gradient(70% 75% at 50% 42%, color-mix(in srgb, var(--tc) 28%, var(--mh-panel)), color-mix(in srgb, var(--tc) 7%, var(--mh-panel)) 80%); }
+  .mh-sc-art svg { align-self: center; }
+  .mh-sc-art img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: center bottom;
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 6%, #000 94%, transparent 100%), linear-gradient(to bottom, #000 78%, transparent 100%); -webkit-mask-composite: source-in;
+    mask-image: linear-gradient(to right, transparent 0, #000 6%, #000 94%, transparent 100%), linear-gradient(to bottom, #000 78%, transparent 100%); mask-composite: intersect;
+    transition: transform .3s; }
+  .mh-sc-card:hover .mh-sc-art img { transform: scale(1.03); }
+  .mh-sc-ck { position: absolute; top: 10px; right: 10px; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; background: var(--tc); box-shadow: 0 2px 6px rgba(0,0,0,.2); }
+  .mh-sc-txt { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 10px 16px 16px; text-align: center; }
+  .mh-sc-n { font-size: 20px; font-weight: 700; color: var(--mh-ink); line-height: 1.15; }
+  .mh-sc-k { font-size: 10.5px; color: var(--mh-muted); letter-spacing: .02em; }
+  .mh-sc-b { font-size: 12.5px; line-height: 1.45; color: var(--mh-ink3); }
+  .mh-sc-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; margin-top: auto; padding-top: 4px; }
+  .mh-sc-chips span { font-size: 10.5px; font-weight: 600; padding: 2px 9px; border-radius: 20px; color: color-mix(in srgb, var(--tc) 60%, var(--mh-ink)); background: color-mix(in srgb, var(--tc) 15%, var(--mh-panel)); }
+  @media (max-width: 760px) { .mh-sc { align-items: flex-start; overflow-y: auto; } .mh-sc-row { grid-auto-flow: row; grid-auto-columns: auto; justify-items: center; gap: 14px; max-height: none; } .mh-sc-card { width: min(320px, 100%); max-height: none; flex: none; } }
   .mh-wz-body.is-split { display: flex; padding: 0; overflow: hidden; position: relative; }
   .mh-wz-body.is-split > .mh-wz-art { width: calc((100% - 310px) / 2); }
   .mh-wz-det.mh-noscroll { padding-bottom: 30px; -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 30px), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 30px), transparent); }
@@ -12383,9 +12407,51 @@ export default function App({ onSignOut }) {
                   </div>
                 );
               })()}
-              <div className={"mh-wz-body" + (["class", "subclass", "ancestry", "community", "transformation"].includes(wizardStep) ? " is-split" : "")}>
+              <div className={"mh-wz-body" + (["class", "ancestry", "community", "transformation"].includes(wizardStep) ? " is-split" : "")}>
 
-              {wizardStep === "class" || wizardStep === "subclass" ? (
+              {wizardStep === "subclass" ? (
+                (() => {
+                  // Subclases como cartas centradas: ilustración arriba, nombre, frase y rasgos de Fundación.
+                  const cls = CLASSES[carouselIndex].key;
+                  const col = CLASS_COLORS[cls] || "#E3B04B";
+                  return (
+                    <div className="mh-sc" style={{ "--tc": col }}>
+                      <div className="mh-sc-row" role="radiogroup" aria-label={"Subclases de " + cls}>
+                      {stepItems.map((it, i) => {
+                        const on = i === stepIndex;
+                        const feats = (it.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name));
+                        return (
+                          <button key={it.key} type="button" role="radio" aria-checked={on} className={"mh-sc-card" + (on ? " is-on" : "")} onClick={() => setStepIndex(i)}>
+                            <span className="mh-sc-art" aria-hidden="true">
+                              {SUBCLASS_CARD_ART[it.key] ? <img src={SUBCLASS_CARD_ART[it.key]} alt="" /> : (() => { const Em = CLASS_EMBLEMS[cls] || User; return <Em size={64} strokeWidth={1.4} />; })()}
+                            </span>
+                            {on && (
+                              <span className="mh-sc-ck" aria-hidden="true">
+                                <Check size={15} strokeWidth={3} />
+                              </span>
+                            )}
+                            <span className="mh-sc-txt">
+                              <span className="mh-serif mh-sc-n">{it.key}</span>
+                              <span className="mh-sc-k">Subclase de {cls}{it.expansion ? " · " + it.expansion : ""}</span>
+                              <span className="mh-sc-b">{it.blurb}</span>
+                              {feats.length > 0 && (
+                                <span className="mh-sc-chips">
+                                  {feats.map((f) => (
+                                    <span key={f.name} title={f.text}>
+                                      {f.name}
+                                    </span>
+                                  ))}
+                                </span>
+                              )}
+                            </span>
+                          </button>
+                        );
+                      })}
+                      </div>
+                    </div>
+                  );
+                })()
+              ) : wizardStep === "class" ? (
                 <>
                   <div className="mh-wz-list" role="listbox" aria-label={wizardStep === "class" ? "Clases" : "Subclases"}>
                     {stepItems.map((it, i) => {
