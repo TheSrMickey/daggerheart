@@ -93,7 +93,17 @@ const SUBCLASSES = {
         { name: "Aire", text: "Puedes flotar en el aire, con ventaja en las tiradas de Agilidad." },
       ],
     },
-    { key: "Guardián de la Renovación", blurb: "Se transforma para sanar y proteger a sus aliados." },
+    {
+      key: "Guardián de la Renovación",
+      blurb: "Usa una magia poderosa para sanar a su grupo. Rasgo de conjuro: Instinto.",
+      features: [
+        { name: "Claridad de la Naturaleza", text: "Una vez por descanso largo, puedes crear un espacio de serenidad natural en alcance Cercano. Si pasáis unos minutos descansando en él, quita tanto Estrés como tu Instinto, repartido como quieras entre tú y tus aliados." },
+        { name: "Regeneración", text: "Toca a una criatura y gasta 3 de Esperanza: esa criatura recupera 1d4 Puntos de vida." },
+        { name: "Alcance Regenerativo (Especialización)", text: "Puedes usar tu «Regeneración» sobre criaturas en alcance Muy Cercano." },
+        { name: "Protección del Guardián (Especialización)", text: "Una vez por descanso largo, gasta 2 de Esperanza para que 1d4 aliados en alcance Cercano recuperen 2 Puntos de vida." },
+        { name: "Defensor (Maestría)", text: "Tu transformación animal encarna un espíritu guardián sanador. Cuando estés en Forma de Bestia y un aliado en alcance Cercano marque 2 o más Puntos de vida, puedes marcar 1 Estrés para reducir en 1 los Puntos de vida que marca." },
+      ],
+    },
   ],
   Guardián: [
     { key: "Inquebrantable", blurb: "Resiste el castigo y absorbe el daño por sus compañeros." },
@@ -9049,7 +9059,7 @@ export default function App({ onSignOut }) {
                               kicker: `Subclase · ${subclassBadge}`,
                               title: subclassEntry.key,
                               text: subclassEntry.blurb,
-                              features: subclassEntry.key === "Trovador" || subclassEntry.key === "Orador" ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
+                              features: ["Trovador", "Orador", "Guardián de la Renovación"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
                               image: subclassEntry.image,
                               bigStyle: true,
                               ...(isElemental ? { elementalAction: true } : {}),
