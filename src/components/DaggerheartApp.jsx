@@ -106,7 +106,18 @@ const SUBCLASSES = {
     },
   ],
   Guardián: [
-    { key: "Inquebrantable", blurb: "Resiste el castigo y absorbe el daño por sus compañeros." },
+    {
+      key: "Inquebrantable",
+      blurb: "Aguanta golpes durísimos y sigue luchando, protegiendo a sus compañeros.",
+      features: [
+        { name: "Firme", text: "Obtienes un +1 permanente a tus umbrales de daño." },
+        { name: "Voluntad de Hierro", text: "Cuando recibas daño físico, puedes marcar una casilla de Armadura adicional para reducir su gravedad." },
+        { name: "Implacable (Especialización)", text: "Obtienes un +2 permanente a tus umbrales de daño." },
+        { name: "Compañeros de Armas (Especialización)", text: "Cuando un aliado en alcance Muy Cercano reciba daño, puedes marcar una casilla de Armadura para reducir su gravedad en un umbral." },
+        { name: "Impávido (Maestría)", text: "Obtienes un +3 permanente a tus umbrales de daño." },
+        { name: "Protector Leal (Maestría)", text: "Cuando un aliado en alcance Cercano tenga 2 o menos Puntos de vida y fuera a recibir daño, puedes marcar 1 Estrés para correr a su lado y recibir tú el daño." },
+      ],
+    },
     { key: "Vengador", blurb: "Devuelve cada golpe con más fuerza de la que recibe." },
   ],
   Explorador: [
@@ -9255,7 +9266,7 @@ export default function App({ onSignOut }) {
                               kicker: `Subclase · ${subclassBadge}`,
                               title: subclassEntry.key,
                               text: subclassEntry.blurb,
-                              features: ["Trovador", "Orador", "Guardián de la Renovación"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
+                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
                               image: subclassEntry.image,
                               bigStyle: true,
                               ...(isElemental ? { elementalAction: true } : {}),
