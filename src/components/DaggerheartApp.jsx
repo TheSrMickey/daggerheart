@@ -2448,6 +2448,13 @@ const sharedStyles = `
   .mh-thr-fort > .mh-serif { color: color-mix(in srgb, #5E93C9 70%, var(--mh-ink)) !important; }
   .mh-iron-will { margin-left: 2px; font-size: 13px; font-weight: 800; color: var(--mh-gold-ink); cursor: help; }
   .mh-tip.mh-tip-wrap { white-space: normal; width: 220px; text-align: center; line-height: 1.35; }
+  .mh-unstop { display: inline-flex; align-items: center; gap: 4px; font-family: 'Inter', system-ui, sans-serif; }
+  .mh-unstop-die { position: relative; width: 22px; height: 22px; display: inline-flex; }
+  .mh-unstop-die b { position: absolute; left: 0; right: 0; bottom: 1px; text-align: center; font-size: 10.5px; font-weight: 800; color: #2F5E8E; }
+  .mh-unstop-of { font-size: 11px; font-weight: 700; color: #5E93C9; margin-right: 2px; }
+  .mh-unstop-b { height: 20px; min-width: 22px; padding: 0 5px; border-radius: 6px; border: 1px solid #5E93C999; background: color-mix(in srgb, #5E93C9 12%, var(--mh-panel)); color: color-mix(in srgb, #5E93C9 75%, var(--mh-ink)); font: 700 10.5px 'Inter', system-ui, sans-serif; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+  .mh-unstop-b:hover { background: #5E93C9; color: #fff; }
+  .mh-unstop-up { justify-content: center; display: inline-flex; align-items: center; gap: 6px; background: #5E93C9 !important; border-color: #5E93C9 !important; }
   .mh-fort-note { display: flex; align-items: center; gap: 6px; margin: -4px 0 10px; font-size: 11.5px; line-height: 1.35; color: var(--mh-ink2); padding: 6px 9px; border-radius: 9px; background: color-mix(in srgb, #5E93C9 12%, var(--mh-panel)); border: 1px solid color-mix(in srgb, #5E93C9 40%, var(--mh-line)); }
   .mh-fort-note svg { flex-shrink: 0; color: #5E93C9; }
   .mh-wz-princ { display: flex; gap: 8px; align-items: center; }
@@ -3225,6 +3232,7 @@ function DamageResult({ roll }) {
         {roll.wolfBonus > 0 && (
           <DieFace sides={10} value={roll.wolfBonus} color="#E0544A" size={size} rolling={rolling} delay={rolls.length * 70} highlight={!rolling && roll.wolfBonus === 10} label="Lobo" />
         )}
+        {roll.unstopBonus > 0 && <DieFace sides={roll.unstopMax || 4} value={roll.unstopBonus} color="#5E93C9" size={size} rolling={false} label="Imparable" />}
       </div>
       <div className="mh-serif" style={{ fontSize: 46, fontWeight: 700, lineHeight: 1.1, marginTop: 8, minHeight: 52, position: "relative" }}>
         {rolling ? <span className="mh-dots">···</span> : <CountUp value={roll.total} />}
@@ -3234,6 +3242,7 @@ function DamageResult({ roll }) {
           <div style={{ fontSize: 12.5, color: "var(--mh-ink3)" }}>
             {roll.dice || 1}d{roll.die} ({rolls.join(" + ")}){roll.bonus ? " + " + roll.bonus : ""}
             {roll.wolfBonus ? ` + 1d10 (${roll.wolfBonus})` : ""}
+            {roll.unstopBonus ? ` + ${roll.unstopBonus} (Imparable)` : ""}
             {roll.isCritical ? ` + ${roll.critBonus} (máx.)` : ""}
           </div>
           {roll.wolfBonus > 0 && <div style={{ fontSize: 11, color: "#FF6B5E", marginTop: 2 }}>Incluye +1d10 de la Forma de Lobo</div>}
@@ -3685,8 +3694,8 @@ function DialogueFigure({ src, alt, expr }) {
   );
 }
 
-function Panel({ span, title, titleRight, children, hidden, restrained, vulnerable, unconscious }) {
-  const borderColor = vulnerable ? "#D9644E" : restrained ? "#C08B5C" : unconscious ? "#A58BE8" : hidden ? "var(--mh-muted)" : "var(--mh-line)";
+function Panel({ span, title, titleRight, children, hidden, restrained, vulnerable, unconscious, glow }) {
+  const borderColor = glow || (vulnerable ? "#D9644E" : restrained ? "#C08B5C" : unconscious ? "#A58BE8" : hidden ? "var(--mh-muted)" : "var(--mh-line)");
   return (
     <div
       className="mh-panel-box"
@@ -3700,6 +3709,7 @@ function Panel({ span, title, titleRight, children, hidden, restrained, vulnerab
         display: "flex",
         flexDirection: "column",
         minHeight: 0,
+        ...(glow ? { boxShadow: "0 0 0 3px " + glow + "33, 0 0 22px " + glow + "33" } : {}),
       }}
     >
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 14, height: 20 }}>
@@ -4769,6 +4779,9 @@ export default function App({ onSignOut }) {
   const applyDamage = (id, amount, clearElemental) => {
     const c = characters[id];
     if (!c) return;
+    // Guardián · Imparable: la gravedad baja un umbral (Grave→Mayor, Mayor→Menor, Menor→nada).
+    const unstop = Number(c.f_unstop_value || 0) > 0 && amount > 0;
+    if (unstop) amount -= 1;
     // Dracona · Escamas: si se activaron antes, el siguiente daño Grave marca 1 PV menos.
     const scales = amount === 3 && c.f_scales_ready === "1";
     if (scales) amount = 2;
@@ -4781,6 +4794,7 @@ export default function App({ onSignOut }) {
     let patch = { hp_marked: String(next), ...(scales ? { f_scales_ready: "" } : {}), ...(thick ? { f_thickskin_ready: "" } : {}), ...(c.f_fortitude_ready ? { f_fortitude_ready: "" } : {}) };
     if (scales) postCampaignEvent(id, "🐉 Escamas: el daño Grave marca 2 PV en vez de 3");
     if (thick) postCampaignEvent(id, "⛰️ Piel Gruesa: el daño Menor no marca PV (marcó 2 de Estrés)");
+    if (unstop && amount === 0) postCampaignEvent(id, "🛡️ Imparable: el daño Menor no marca PV");
     if (clearElemental && c.f_elemental_active) {
       postCampaignEvent(id, `🌪️ Deja de canalizar ${c.f_elemental_active} (daño Grave)`);
       patch = { ...patch, f_elemental_active: "" };
@@ -4891,9 +4905,37 @@ export default function App({ onSignOut }) {
       return [];
     }
   };
+  // Guardián · Imparable: valor del dado (vacío = inactivo) y su máximo.
+  const unstopMax = (c) => (Number(c?.f_level || 1) >= 5 ? 6 : 4);
+  const unstopValue = (c) => Number(c?.f_unstop_value || 0);
+  const startUnstoppable = (id) => {
+    const c = characters[id];
+    if (!c || c.f_unstop_used) return;
+    const conds = getConditions(c).filter((n) => n !== "Inmovilizado" && n !== "Vulnerable");
+    updateCharacterFields(id, { f_unstop_value: "1", f_unstop_used: "1", f_conditions: JSON.stringify(conds) });
+    postCampaignEvent(id, `🛡️ Se vuelve Imparable (d${unstopMax(c)} en 1)`);
+  };
+  const raiseUnstoppable = (id) => {
+    const c = charsRef.current[id];
+    if (!c || !unstopValue(c)) return;
+    const next = unstopValue(c) + 1;
+    if (next > unstopMax(c)) {
+      updateCharacterField(id, "f_unstop_value", "");
+      postCampaignEvent(id, "🛡️ Deja de ser Imparable (el dado supera su máximo)");
+    } else {
+      updateCharacterField(id, "f_unstop_value", String(next));
+      postCampaignEvent(id, `🛡️ Imparable sube a ${next} de ${unstopMax(c)}`);
+    }
+  };
+  const endUnstoppable = (id) => {
+    if (!unstopValue(charsRef.current[id])) return;
+    updateCharacterField(id, "f_unstop_value", "");
+    postCampaignEvent(id, "🛡️ Deja de ser Imparable");
+  };
   const toggleCondition = (id, name) => {
     const c = characters[id];
     if (!c) return;
+    if (unstopValue(c) && (name === "Inmovilizado" || name === "Vulnerable")) return;
     const list = getConditions(c);
     const next = list.includes(name) ? list.filter((n) => n !== name) : [...list, name];
     updateCharacterField(id, "f_conditions", JSON.stringify(next));
@@ -4930,11 +4972,13 @@ export default function App({ onSignOut }) {
     const critBonus = isCritical ? die * dice : 0;
     // Hombre lobo: en Forma de Lobo sumas 1d10 al daño.
     const wolfBonus = ch && ch.f_transformation_form_active === "Forma de Lobo" ? Math.floor(Math.random() * 10) + 1 : 0;
-    const total = roll + bonus + critBonus + wolfBonus;
-    setDamageRollResult({ key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus });
+    // Guardián · Imparable: suma el valor actual del dado.
+    const unstopBonus = ch ? Number(ch.f_unstop_value || 0) : 0;
+    const total = roll + bonus + critBonus + wolfBonus + unstopBonus;
+    setDamageRollResult({ key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId });
     const who = playerName || "Alguien en la mesa";
     const critLabel = isCritical ? ` · ¡Crítico! (+${critBonus} máx.)` : "";
-    const diceLabel = `${dice}d${die} (${rolls.join("+")})` + (wolfBonus ? ` + Lobo 1d10 (${wolfBonus})` : "");
+    const diceLabel = `${dice}d${die} (${rolls.join("+")})` + (wolfBonus ? ` + Lobo 1d10 (${wolfBonus})` : "") + (unstopBonus ? ` + Imparable ${unstopBonus}` : "");
     await pushRollLog(
       `**${who}** — Daño de ${weaponName}: ${diceLabel}${bonus ? " + " + bonus : ""}${critLabel} = **${total}** ${damageType}`
     );
@@ -6562,6 +6606,8 @@ export default function App({ onSignOut }) {
     // Trovador: el descanso largo recupera sus canciones.
     if (isLong && c.f_speech_used) restPatch.f_speech_used = "";
     if (c.f_scales_ready) restPatch.f_scales_ready = "";
+    if (c.f_unstop_value) restPatch.f_unstop_value = "";
+    if (isLong && c.f_unstop_used) restPatch.f_unstop_used = "";
     if (c.f_dedicated_used) restPatch.f_dedicated_used = "";
     if (c.f_thickskin_ready) restPatch.f_thickskin_ready = "";
     if (c.f_fortitude_ready) restPatch.f_fortitude_ready = "";
@@ -8529,6 +8575,7 @@ export default function App({ onSignOut }) {
                   const severe = baseThresholds.severe + equipMods.severe + earthBonus + firmBonus;
                   // Enano · Fortaleza Aumentada: la mitad del daño equivale a umbrales dobles.
                   const fortOn = c.f_fortitude_ready === "1";
+                  const unstopOn = unstopValue(c) > 0;
                   const fortMajor = c.f_fortitude_ready === "1" ? major * 2 : major;
                   // Enano · Piel Gruesa: el menú solo sale si quedan 2 de Estrés libres para usarla.
                   const isDwarf = (c.f_ancestry || "").split(" + ").includes("Enano") && Number(c.r_stress || 0) + equipMods.stress - Number(c.stress_marked || 0) >= 2;
@@ -8584,6 +8631,26 @@ export default function App({ onSignOut }) {
                             <Panel
                               span={12}
                               title="Armadura y estadísticas"
+                              glow={unstopValue(c) ? "#5E93C9" : undefined}
+                              titleRight={
+                                unstopValue(c) ? (
+                                  <span className="mh-unstop" title={`Imparable · dado d${unstopMax(c)} en ${unstopValue(c)}. Termina al pasar de ${unstopMax(c)} o al acabar la escena.`}>
+                                    <span className="mh-unstop-die">
+                                      <svg viewBox="0 0 100 100" width="22" height="22" aria-hidden="true">
+                                        <polygon points="50,8 94,88 6,88" fill="#5E93C933" stroke="#5E93C9" strokeWidth="7" strokeLinejoin="round" />
+                                      </svg>
+                                      <b>{unstopValue(c)}</b>
+                                    </span>
+                                    <span className="mh-unstop-of">/{unstopMax(c)}</span>
+                                    <button type="button" className="mh-unstop-b" title="Subir el dado (tu daño hizo marcar PV)" aria-label="Subir el dado de Imparable" onClick={() => raiseUnstoppable(viewingCharId)}>
+                                      +1
+                                    </button>
+                                    <button type="button" className="mh-unstop-b" title="Terminar Imparable (acaba la escena)" aria-label="Terminar Imparable" onClick={() => endUnstoppable(viewingCharId)}>
+                                      <X size={11} />
+                                    </button>
+                                  </span>
+                                ) : undefined
+                              }
                               hidden={conditions.includes("Escondido")}
                               restrained={conditions.includes("Inmovilizado")}
                               vulnerable={conditions.includes("Vulnerable")}
@@ -8648,9 +8715,9 @@ export default function App({ onSignOut }) {
                                   title={fortOn ? "Fortaleza Aumentada: el próximo daño físico se reduce a la mitad (umbrales ×2)" : undefined}
                                   style={{ position: "relative", flex: 1, textAlign: "center", border: "1px solid " + (minorPop ? "var(--mh-ink)" : "var(--mh-line)"), background: "var(--mh-panel2)", borderRadius: 10, padding: statsSpacing.thrPadY + "px 4px", cursor: "pointer" }}
                                 >
-                                  {!minorPop && <span className="mh-tip">{isDwarf ? "Pulsa para elegir: 1 PV o Piel Gruesa" : "Pulsa para -1 PV"}</span>}
-                                  <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Menor</div>
-                                  <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700 }}>{fortMajor > 1 ? fortMajor - 1 : "—"}</div>
+                                  {!minorPop && <span className="mh-tip">{unstopOn ? "Imparable: el daño Menor no marca PV" : isDwarf ? "Pulsa para elegir: 1 PV o Piel Gruesa" : "Pulsa para -1 PV"}</span>}
+                                  <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Menor{unstopOn ? " · " + (fortMajor > 1 ? fortMajor - 1 : "—") : ""}</div>
+                                  <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700 }}>{unstopOn ? "0 PV" : fortMajor > 1 ? fortMajor - 1 : "—"}</div>
                                   {isDwarf && minorPop && (() => {
                                     const freeStress = Number(c.r_stress || 0) + equipMods.stress - Number(c.stress_marked || 0);
                                     const canSkin = freeStress >= 2;
@@ -8705,9 +8772,9 @@ export default function App({ onSignOut }) {
                                   })()}
                                 </div>
                                 <div onClick={() => applyDamage(viewingCharId, 2)} title={fortOn ? "Fortaleza Aumentada: umbrales ×2" : undefined} className={"mh-tip-anchor" + (fortOn ? " mh-thr-fort" : "")} style={{ flex: 1, textAlign: "center", border: "1px solid var(--acc)", background: "color-mix(in srgb, var(--acc) 8%, transparent)", borderRadius: 10, padding: statsSpacing.thrPadY + "px 4px", cursor: "pointer" }}>
-                                  <span className="mh-tip">Pulsa para -2 PV</span>
-                                  <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Mayor</div>
-                                  <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700, color: "var(--mh-gold-ink)" }}>{fortMajor}</div>
+                                  <span className="mh-tip">{unstopOn ? "Imparable: pulsa para -1 PV" : "Pulsa para -2 PV"}</span>
+                                  <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Mayor{unstopOn ? " · " + fortMajor : ""}</div>
+                                  <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700, color: "var(--mh-gold-ink)" }}>{unstopOn ? "1 PV" : fortMajor}</div>
                                 </div>
                                 <div
                                   onClick={() => applyDamage(viewingCharId, 3, true)}
@@ -8715,9 +8782,9 @@ export default function App({ onSignOut }) {
                                   className={"mh-tip-anchor" + (fortOn ? " mh-thr-fort" : "")}
                                   style={{ flex: 1, textAlign: "center", border: "1px solid #D9644E", background: "#D9644E14", borderRadius: 10, padding: statsSpacing.thrPadY + "px 4px", cursor: "pointer" }}
                                 >
-                                  <span className="mh-tip">{c.f_scales_ready === "1" ? "Escamas activas: pulsa para -2 PV" : "Pulsa para -3 PV"}</span>
-                                  <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Grave{c.f_scales_ready === "1" && <span title="Escamas activas: marcarás 2 PV" style={{ marginLeft: 4, color: "#D9644E", fontWeight: 700 }}>· Escamas</span>}</div>
-                                  <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700, color: "#D9644E" }}>{fortSevere}</div>
+                                  <span className="mh-tip">{unstopOn ? "Imparable: pulsa para -2 PV" : c.f_scales_ready === "1" ? "Escamas activas: pulsa para -2 PV" : "Pulsa para -3 PV"}</span>
+                                  <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Grave{unstopOn ? " · " + fortSevere : ""}{c.f_scales_ready === "1" && <span title="Escamas activas: marcarás 2 PV" style={{ marginLeft: 4, color: "#D9644E", fontWeight: 700 }}>· Escamas</span>}</div>
+                                  <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700, color: "#D9644E" }}>{unstopOn ? "2 PV" : fortSevere}</div>
                                 </div>
                               </div>
 
@@ -8731,13 +8798,16 @@ export default function App({ onSignOut }) {
                                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6, marginBottom: 8 }}>
                                   {CONDITION_PRESETS.map((name) => {
                                     const active = conditions.includes(name);
+                                    const blockedByUnstop = unstopValue(c) > 0 && (name === "Inmovilizado" || name === "Vulnerable");
                                     const themeColor = CONDITION_THEME_COLOR[name];
                                     const CondIcon = CONDITION_ICONS[name];
                                     return (
                                       <div
                                         key={name}
                                         onClick={() => toggleCondition(viewingCharId, name)}
+                                        title={blockedByUnstop ? "No puedes quedar " + name + " mientras seas Imparable" : undefined}
                                         style={{
+                                          ...(blockedByUnstop ? { opacity: 0.4, textDecoration: "line-through", cursor: "not-allowed" } : {}),
                                           display: "flex",
                                           alignItems: "center",
                                           justifyContent: "center",
@@ -11718,6 +11788,23 @@ export default function App({ onSignOut }) {
                     Daño · {damageRollResult.weaponName}
                   </div>
                   <DamageResult roll={damageRollResult} />
+                  {damageRollResult.unstopBonus > 0 && damageRollResult.charId && !damageRollResult.unstopDone && (
+                    <div style={{ fontFamily: "'Inter', system-ui, sans-serif", marginTop: 12, display: "flex", flexDirection: "column", gap: 6, alignItems: "center" }}>
+                      <button
+                        type="button"
+                        className="mh-btn mh-unstop-up"
+                        onClick={() => {
+                          raiseUnstoppable(damageRollResult.charId);
+                          setDamageRollResult((r) => (r ? { ...r, unstopDone: true } : r));
+                        }}
+                      >
+                        <ArrowUp size={14} /> {damageRollResult.unstopBonus + 1 > damageRollResult.unstopMax ? "Ha marcado PV · termina Imparable" : "Ha marcado PV · subir el dado a " + (damageRollResult.unstopBonus + 1)}
+                      </button>
+                      <button type="button" className="mh-pre-plain" style={{ marginTop: 0 }} onClick={() => setDamageRollResult((r) => (r ? { ...r, unstopDone: true } : r))}>
+                        No ha hecho daño
+                      </button>
+                    </div>
+                  )}
                   <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 10, color: "var(--mh-muted)", marginTop: 10 }}>
                     Pulsa fuera para cerrar
                   </div>
@@ -12492,6 +12579,22 @@ export default function App({ onSignOut }) {
                       disabled: used,
                       run: () => {
                         giveSpeech(viewingCharId);
+                        closeCardDetail();
+                      },
+                    });
+                  }
+                  // Guardián · Imparable: una vez por descanso largo.
+                  if (d.title === "Imparable" && c?.f_class === "Guardián" && !d.fromChat) {
+                    const on = unstopValue(c) > 0;
+                    cardActs.unshift({
+                      key: "unstop",
+                      Icon: on ? X : Zap,
+                      label: on ? "Terminar Imparable" : c.f_unstop_used ? "Imparable ya usado" : "Volverse Imparable · d" + unstopMax(c),
+                      sub: on ? "Dado en " + unstopValue(c) + " de " + unstopMax(c) : c.f_unstop_used ? "Vuelve con el descanso largo" : "Una vez por descanso largo",
+                      disabled: !on && !!c.f_unstop_used,
+                      run: () => {
+                        if (on) endUnstoppable(viewingCharId);
+                        else startUnstoppable(viewingCharId);
                         closeCardDetail();
                       },
                     });
