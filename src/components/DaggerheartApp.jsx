@@ -206,7 +206,7 @@ const PRONOUN_OPTIONS = ["Él", "Ella", "Elle", "Otro"];
 
 const ANCESTRIES = [
   { key: "Autómata", blurb: "Un ser mecánico animado por un núcleo interior.", features: [{ name: "Diseño con Propósito", text: "Decide quién te creó y para qué. Al crear el personaje, elige la Experiencia que mejor encaje con ese propósito: gana un +1 permanente." }, { name: "Eficiente", text: "En un descanso corto puedes elegir una acción de descanso largo en lugar de una de descanso corto." }] },
-  { key: "Dracona", blurb: "Desciende de los dragones, con aliento elemental propio.", features: [{ name: "Escamas", text: "Tus escamas te protegen. Cuando fueras a recibir daño Grave, puedes marcar 1 Estrés para marcar 1 Punto de vida menos." }, { name: "Aliento Elemental", text: "Elige un elemento para tu aliento (electricidad, fuego, hielo…). Puedes usarlo contra objetivos en alcance Muy Cercano como un arma de Instinto que hace d8 de daño mágico usando tu Competencia." }] },
+  { key: "Dracona", blurb: "Parecen dragones sin alas de forma humanoide, con gruesas escamas y un poderoso aliento elemental que se hereda de generación en generación.", features: [{ name: "Escamas", text: "Tus escamas te sirven de protección natural. Cuando fueras a recibir daño Grave, puedes marcar 1 Estrés para marcar 1 Punto de vida menos." }, { name: "Aliento Elemental", text: "Elige un elemento para tu aliento (como electricidad, fuego o hielo). Puedes usarlo contra un objetivo o un grupo de objetivos en alcance Muy Cercano como un arma de Instinto que hace d8 de daño mágico usando tu Competencia." }] },
   { key: "Enano", blurb: "Bajo y robusto, resistente como la roca de sus montañas.", features: [{ name: "Piel Gruesa", text: "Cuando recibas daño Menor, puedes marcar 2 Estrés en vez de 1 Punto de vida." }, { name: "Fortaleza Aumentada", text: "Gasta 3 Esperanza para reducir a la mitad el daño físico que recibes." }] },
   {
     key: "Elfo",
@@ -241,7 +241,7 @@ const ANCESTRIES = [
 
 const COMMUNITIES = [
   { key: "De Alta Cuna", blurb: "Creciste entre privilegios y expectativas de la nobleza.", features: [{ name: "Privilegio", text: "Tienes ventaja en las tiradas para tratar con nobles, negociar precios o aprovechar tu reputación para conseguir lo que quieres." }] },
-  { key: "Del Saber", blurb: "Te formaste rodeado de libros, archivos y conocimiento acumulado.", features: [{ name: "Leído", text: "Tienes ventaja en las tiradas sobre la historia, la cultura o la política de una persona o un lugar importantes." }] },
+  { key: "Del Saber", blurb: "Vienes de una sociedad que valora el saber académico y la habilidad política: la historia, la ciencia, la política o la recopilación de mitos y leyendas.", features: [{ name: "Leído", text: "Tienes ventaja en las tiradas sobre la historia, la cultura o la política de una persona o un lugar importantes." }] },
   { key: "Del Orden", blurb: "Creciste bajo una disciplina estricta, militar o religiosa.", features: [{ name: "Entregado", text: "Apunta tres dichos o valores que te inculcaron. Una vez por descanso, si describes cómo encarnas uno de ellos en lo que haces, puedes tirar un d20 como Dado de Esperanza." }] },
   { key: "De las Cumbres", blurb: "Tu hogar fueron las montañas y sus caminos escarpados.", features: [{ name: "Firme", text: "Tienes ventaja en las tiradas para cruzar precipicios y cornisas peligrosos, orientarte en entornos duros y usar tus conocimientos de supervivencia." }] },
   { key: "Del Mar", blurb: "Creciste entre puertos, barcos y el vaivén de las mareas.", features: [{ name: "Conocer la Marea", text: "Cuando saques una tirada con Miedo, pon una ficha en tu carta de comunidad (máximo tu nivel). Antes de una tirada de acción, puedes gastar fichas: +1 por cada una. Al final de la sesión se pierden las que queden." }] },
@@ -2392,6 +2392,7 @@ const sharedStyles = `
   .mh-pre-opt.is-poet.is-on .mh-pre-bx { background: #C77DBA; border-color: #C77DBA; }
   .mh-pre-cost.is-poet { color: color-mix(in srgb, #C77DBA var(--mh-accent-keep, 100%), #000); }
   .mh-qa-sub { margin-top: 6px; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--mh-muted); }
+  .mh-feat-el { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; margin-left: 5px; border-radius: 50%; vertical-align: -3px; color: #fff; background: var(--be); }
   .mh-wz-breath { display: flex; flex-wrap: wrap; gap: 6px; }
   .mh-wz-breath button { display: inline-flex; align-items: center; gap: 6px; padding: 7px 11px; border-radius: 9px; border: 1.5px solid var(--mh-line2); background: var(--mh-panel); color: var(--mh-ink); font: 600 12.5px 'Inter', system-ui, sans-serif; cursor: pointer; }
   .mh-wz-breath button svg { color: color-mix(in srgb, var(--be) 85%, #000); }
@@ -9105,7 +9106,7 @@ export default function App({ onSignOut }) {
                               kicker: "Ascendencia",
                               title: name,
                               summary: ancEntry?.blurb || "",
-                              onClick: openDetail({ kicker: "Ascendencia", title: name, text: ancEntry?.blurb || "", features: ancEntry?.features, image: ancEntry?.image, bigStyle: true, ancestryKey: name, ...(name === "Dracona" && c.f_breath_element ? { stat: { label: "Aliento", value: c.f_breath_element } } : {}) }),
+                              onClick: openDetail({ kicker: "Ascendencia", title: name, text: ancEntry?.blurb || "", features: name === "Dracona" && c.f_breath_element ? (ancEntry?.features || []).map((f) => (f.name === "Aliento Elemental" ? { ...f, element: c.f_breath_element } : f)) : ancEntry?.features, image: ancEntry?.image, bigStyle: true, ancestryKey: name }),
                             });
                           });
                         }
@@ -12165,7 +12166,7 @@ export default function App({ onSignOut }) {
                           sub: "Aliento Elemental",
                           run: () => {
                             updateCharacterField(viewingCharId, "f_breath_element", b.key);
-                            setViewingCardDetail((prev) => (prev ? { ...prev, stat: { label: "Aliento", value: b.key } } : prev));
+                            setViewingCardDetail((prev) => (prev ? { ...prev, features: (prev.features || []).map((f) => (f.name === "Aliento Elemental" ? { ...f, element: b.key } : f)) } : prev));
                           },
                         })
                       );
@@ -12279,7 +12280,16 @@ export default function App({ onSignOut }) {
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.55em" }}>
                           {d.features.map((f) => (
                             <div key={f.name} style={{ fontSize: "0.95em", color: "var(--mh-ink)", lineHeight: 1.4 }}>
-                              <span style={{ fontWeight: 700, color: "var(--mh-gold-ink)" }}>{f.name}:</span> {f.text}
+                              <span style={{ fontWeight: 700, color: "var(--mh-gold-ink)" }}>{f.name}</span>
+                              {f.element && (() => {
+                                const be = BREATH_ELEMENTS.find((b) => b.key === f.element);
+                                return be ? (
+                                  <span className="mh-feat-el" title={"Aliento de " + be.key} style={{ "--be": be.color }}>
+                                    <be.Icon size={12} />
+                                  </span>
+                                ) : null;
+                              })()}
+                              <span style={{ fontWeight: 700, color: "var(--mh-gold-ink)" }}>:</span> {f.text}
                             </div>
                           ))}
                         </div>
