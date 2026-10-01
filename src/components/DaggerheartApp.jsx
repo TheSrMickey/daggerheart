@@ -2454,6 +2454,10 @@ const sharedStyles = `
   .mh-luck-btn:disabled { background: var(--mh-panel3); color: var(--mh-muted); cursor: not-allowed; }
   .mh-kick-btn { margin-top: 12px; display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 10px; padding: 8px 14px; font: 700 12.5px 'Inter', system-ui, sans-serif; color: #fff; background: #9A6B3C; cursor: pointer; }
   .mh-kick-btn:hover { background: #855a30; }
+  .mh-pred { display: flex; flex-direction: column; align-items: center; }
+  .mh-pred-btn { background: #7E9B3E; }
+  .mh-pred-btn:hover { background: #6B8633; }
+  .mh-pred-note { margin-top: 6px; font: 500 11px 'Inter', system-ui, sans-serif; color: var(--mh-muted); }
   .mh-kick-done { margin-top: 10px; font: 600 11.5px 'Inter', system-ui, sans-serif; color: #7A5530; }
   .mh-focus-chip { display: inline-flex; align-items: center; gap: 5px; min-width: 0; font: 700 11px 'Inter', system-ui, sans-serif; letter-spacing: 0; text-transform: none; color: #fff; background: #C0504A; padding: 3px 5px 3px 8px; border-radius: 20px; white-space: nowrap; overflow: hidden; flex-shrink: 1; }
   .mh-focus-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
@@ -12733,6 +12737,35 @@ export default function App({ onSignOut }) {
                     Daño · {damageRollResult.weaponName}
                   </div>
                   <DamageResult roll={damageRollResult} />
+                  {(() => {
+                    // Rastreador · Depredador Implacable: 1 Estrés para +1 a la Competencia (un dado más).
+                    const dr = damageRollResult;
+                    const pc = dr.charId ? characters[dr.charId] : null;
+                    if (!pc || pc.f_subclass !== "Rastreador") return null;
+                    return (
+                      <div className="mh-pred">
+                        {dr.predator ? (
+                          <div className="mh-kick-done" style={{ color: "#7E9B3E" }}>Depredador Implacable: +1 a la Competencia</div>
+                        ) : (
+                          <button
+                            type="button"
+                            className="mh-kick-btn mh-pred-btn"
+                            title="Marca 1 Estrés: tiras un dado de daño más"
+                            onClick={() => {
+                              const v = Math.floor(Math.random() * dr.die) + 1;
+                              const crit = dr.isCritical ? dr.die : 0;
+                              setDamageRollResult((r) => (r ? { ...r, predator: true, dice: (r.dice || 1) + 1, rolls: [...(r.rolls || [r.roll]), v], roll: r.roll + v, critBonus: (r.critBonus || 0) + crit, total: r.total + v + crit } : r));
+                              markStress(dr.charId, 1);
+                              postCampaignEvent(dr.charId, `🏹 Depredador Implacable: marca 1 Estrés y tira un dado más (${v}${crit ? " + " + crit + " del crítico" : ""}). Daño total ${dr.total + v + crit}`);
+                            }}
+                          >
+                            <Crosshair size={14} /> Depredador Implacable · 1 Estrés · +1 Competencia
+                          </button>
+                        )}
+                        <div className="mh-pred-note">Si haces daño Grave, el adversario marca 1 de Estrés</div>
+                      </div>
+                    );
+                  })()}
                   {(() => {
                     // Fauno · Coz: tras acertar un ataque Cuerpo a cuerpo, 1 Estrés para +2d6 y empujar hasta Muy cercano.
                     const dr = damageRollResult;
