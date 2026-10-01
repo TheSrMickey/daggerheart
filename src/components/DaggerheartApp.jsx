@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
-import { Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
+import { Compass, Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
 
 const NAV_ITEMS = [
   { key: "ficha", label: "Personajes", icon: User },
@@ -2468,19 +2468,27 @@ const sharedStyles = `
   .mh-luck-btn:hover:not(:disabled) { background: #9C68B3; }
   .mh-luck-btn:disabled { background: var(--mh-panel3); color: var(--mh-muted); cursor: not-allowed; }
   .mh-pack { width: min(380px, 100%); padding: 22px 22px 20px; text-align: center; overflow: hidden; }
-  .mh-pack-stage { position: relative; height: 150px; display: flex; align-items: flex-end; justify-content: center; }
-  .mh-pack-bag { position: relative; z-index: 2; color: #9A6B3C; transform-origin: 50% 100%; animation: mh-pack-shake .5s ease-in-out 0s 3, mh-pack-pop .35s ease-out 1.5s both; }
-  .mh-pack-item { position: absolute; left: 50%; bottom: 40px; z-index: 1; width: 52px; height: 52px; margin-left: -26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; background: radial-gradient(circle at 35% 30%, #F6D98A, #E3B04B 60%, #B8862E); box-shadow: 0 0 24px rgba(227,176,75,.75); opacity: 0; animation: mh-pack-rise .8s cubic-bezier(.2,1.4,.4,1) 1.55s both; }
-  .mh-pack-rays { position: absolute; left: 50%; bottom: 20px; width: 220px; height: 220px; margin-left: -110px; border-radius: 50%; background: repeating-conic-gradient(rgba(227,176,75,.28) 0 10deg, transparent 10deg 30deg); opacity: 0; animation: mh-pack-rays 2.4s linear 1.6s both; }
-  .mh-pack-spark { position: absolute; left: 50%; bottom: 64px; width: 7px; height: 7px; margin-left: -3px; border-radius: 50%; background: #E3B04B; opacity: 0; transform: rotate(var(--a)) translateY(0); animation: mh-pack-spark .7s ease-out 1.6s both; }
-  .mh-pack.is-open .mh-pack-bag, .mh-pack.is-open .mh-pack-item, .mh-pack.is-open .mh-pack-rays, .mh-pack.is-open .mh-pack-spark { animation-delay: 0s; animation-duration: .01s; }
-  .mh-pack.is-open .mh-pack-item { opacity: 1; transform: translateY(-58px) scale(1); }
-  .mh-pack.is-open .mh-pack-rays { opacity: .55; }
-  @keyframes mh-pack-shake { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-8deg); } 75% { transform: rotate(8deg); } }
-  @keyframes mh-pack-pop { 0% { transform: scale(1); } 50% { transform: scale(1.12, .9); } 100% { transform: scale(1); } }
-  @keyframes mh-pack-rise { 0% { opacity: 0; transform: translateY(0) scale(.3); } 100% { opacity: 1; transform: translateY(-58px) scale(1); } }
-  @keyframes mh-pack-rays { 0% { opacity: 0; transform: rotate(0); } 20% { opacity: .55; } 100% { opacity: .55; transform: rotate(90deg); } }
-  @keyframes mh-pack-spark { 0% { opacity: 1; transform: rotate(var(--a)) translateY(0); } 100% { opacity: 0; transform: rotate(var(--a)) translateY(-70px); } }
+  .mh-pack-stage { position: relative; height: 176px; display: flex; align-items: flex-end; justify-content: center; perspective: 600px; }
+  .mh-pack-ground { position: absolute; bottom: 8px; left: 22%; right: 22%; height: 3px; border-radius: 2px; background: color-mix(in srgb, #C9AE86 60%, transparent); }
+  .mh-pack-bag { position: absolute; bottom: 12px; left: 50%; margin-left: -29px; color: #9A6B3C; transform-origin: 50% 100%; animation: mh-pack-drop .6s cubic-bezier(.5,0,.75,0) both, mh-pack-bounce .35s ease-out .6s both, mh-pack-empty .5s ease-in 1s both; }
+  .mh-pack-dust { position: absolute; inset: 0; pointer-events: none; }
+  .mh-pack-dust i { position: absolute; left: 50%; bottom: 10px; width: 90px; height: 90px; margin-left: -45px; border-radius: 50%; background: radial-gradient(circle, rgba(201,174,134,.8), rgba(201,174,134,0) 68%); opacity: 0; animation: mh-pack-puff 1.2s ease-out calc(1s + var(--i) * .06s) both; --dx: calc((var(--i) - 2.5) * 34px); }
+  .mh-pack-card { position: absolute; left: 50%; bottom: 14px; width: 104px; height: 146px; margin-left: -52px; transform-style: preserve-3d; opacity: 0; animation: mh-pack-card-in .45s cubic-bezier(.2,1.3,.4,1) 1.45s both, mh-pack-flip .55s ease-in-out 2.05s forwards; }
+  .mh-pack-face { position: absolute; inset: 0; border-radius: 13px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; backface-visibility: hidden; box-shadow: 0 10px 22px rgba(0,0,0,.22); }
+  .mh-pack-face.is-back { background: linear-gradient(160deg, #B58A56, #7A5530); color: #F6E7CF; border: 3px solid #E9D8BF; }
+  .mh-pack-face.is-front { background: var(--mh-panel); border: 2px solid #9A6B3C; transform: rotateY(180deg); padding: 10px; text-align: center; }
+  .mh-pack-face small { font: 800 9px 'Inter', system-ui, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: #9A6B3C; }
+  .mh-pack-face b { font-size: 32px; font-weight: 700; color: #B8862E; line-height: 1.1; }
+  .mh-pack-face b.is-name { font-size: 14px; color: var(--mh-ink); overflow-wrap: anywhere; }
+  .mh-pack.is-open .mh-pack-bag { animation: none; opacity: 0; }
+  .mh-pack.is-open .mh-pack-dust i { animation: none; opacity: 0; }
+  .mh-pack.is-open .mh-pack-card { animation: none; opacity: 1; transform: rotateY(180deg); }
+  @keyframes mh-pack-drop { 0% { transform: translateY(-120px) rotate(-14deg); opacity: 0; } 30% { opacity: 1; } 100% { transform: translateY(0) rotate(6deg); opacity: 1; } }
+  @keyframes mh-pack-bounce { 0% { transform: translateY(0) scale(1.15, .82) rotate(6deg); } 55% { transform: translateY(-16px) scale(.95, 1.06) rotate(-4deg); } 100% { transform: translateY(0) scale(1) rotate(0); } }
+  @keyframes mh-pack-empty { 0% { transform: rotate(0); opacity: 1; } 60% { transform: rotate(70deg) translateX(10px); opacity: .85; } 100% { transform: rotate(80deg) translateX(14px); opacity: 0; } }
+  @keyframes mh-pack-puff { 0% { opacity: 0; transform: translate(0, 0) scale(.3); } 25% { opacity: .95; } 100% { opacity: 0; transform: translate(var(--dx), -46px) scale(1.5); } }
+  @keyframes mh-pack-card-in { 0% { opacity: 0; transform: translateY(26px) scale(.6) rotateY(0); } 100% { opacity: 1; transform: translateY(0) scale(1) rotateY(0); } }
+  @keyframes mh-pack-flip { 0% { transform: rotateY(0); } 100% { transform: rotateY(180deg); } }
   .mh-pack-t b, .mh-pack-form b { display: block; font-size: 17px; color: var(--mh-ink); }
   .mh-pack-t small, .mh-pack-form small { display: block; font-size: 12px; color: var(--mh-muted); margin-top: 3px; }
   .mh-pack-t { margin-top: 10px; }
@@ -6902,7 +6910,7 @@ export default function App({ onSignOut }) {
   const [packDlg, setPackDlg] = useState(null);
   useEffect(() => {
     if (packDlg?.phase !== "anim") return;
-    const t = setTimeout(() => setPackDlg((d) => (d ? { ...d, phase: "name" } : d)), 2300);
+    const t = setTimeout(() => setPackDlg((d) => (d ? { ...d, phase: "name" } : d)), 2700);
     return () => clearTimeout(t);
   }, [packDlg?.phase]);
   const pullFromPack = (id, name, description) => {
@@ -12280,21 +12288,29 @@ export default function App({ onSignOut }) {
                 <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 46, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.62)" }} onClick={close}>
                   <div className={"mh-card mh-card-anim mh-pack" + (packDlg.phase === "name" ? " is-open" : "")} onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Petate Nómada">
                     <div className="mh-pack-stage" aria-hidden="true">
-                      <span className="mh-pack-rays" />
-                      <span className="mh-pack-item">
-                        <Sparkles size={26} />
-                      </span>
+                      <span className="mh-pack-ground" />
                       <span className="mh-pack-bag">
-                        <Backpack size={64} strokeWidth={1.4} />
+                        <Backpack size={58} strokeWidth={1.4} />
                       </span>
-                      {[0, 1, 2, 3, 4, 5].map((k) => (
-                        <i key={k} className="mh-pack-spark" style={{ "--a": k * 60 + "deg" }} />
-                      ))}
+                      <span className="mh-pack-dust">
+                        {[0, 1, 2, 3, 4, 5].map((k) => (
+                          <i key={k} style={{ "--i": k }} />
+                        ))}
+                      </span>
+                      <span className="mh-pack-card">
+                        <span className="mh-pack-face is-back">
+                          <Compass size={30} strokeWidth={1.5} />
+                        </span>
+                        <span className="mh-pack-face is-front">
+                          <small>Objeto</small>
+                          {packDlg.name.trim() ? <b className="mh-serif is-name">{packDlg.name.trim()}</b> : <b className="mh-serif">?</b>}
+                        </span>
+                      </span>
                     </div>
                     {packDlg.phase === "anim" ? (
                       <div className="mh-pack-t">
-                        <b className="mh-serif">Rebuscas en el petate…</b>
-                        <small>Algo útil tiene que haber aquí dentro</small>
+                        <b className="mh-serif">Vacías el petate…</b>
+                        <small>Algo útil tiene que haber entre el polvo del camino</small>
                       </div>
                     ) : (
                       <div className="mh-pack-form">
