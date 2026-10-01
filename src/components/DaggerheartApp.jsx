@@ -308,7 +308,7 @@ const ANCESTRIES = [
   { key: "Fungril", blurb: "Humanoide con aspecto de seta, de formas y colores muy variados, que se comunica sin palabras e intercambia información con otros fungril a través de su red de micelio.", features: [{ name: "Red Fúngica", text: "Haz una tirada de Instinto (12) para usar tu red de micelio y hablar con otros de tu ascendencia. Si tienes éxito, podéis comunicaros a cualquier distancia." }, { name: "Conexión con la Muerte", text: "Mientras toques el cadáver de alguien que haya muerto hace poco, puedes marcar 1 Estrés para extraerle un recuerdo relacionado con una emoción o sensación concreta que elijas." }] },
   { key: "Galapa", blurb: "Tortuga humanoide con un gran caparazón abombado en el que puede retraerse para protegerse.", features: [{ name: "Caparazón", text: "Obtienes un bonificador a tus umbrales de daño igual a tu Competencia." }, { name: "Retraerse", text: "Marca 1 Estrés para retraerte en tu caparazón. Mientras estés dentro, tienes resistencia al daño físico, desventaja en las tiradas de acción y no puedes moverte." }] },
   { key: "Gigante", blurb: "Humanoide altísimo, de hombros anchos y brazos y cuello alargados, con entre uno y tres ojos.", features: [{ name: "Aguante", text: "Ganas una casilla adicional de Punto de vida al crear el personaje." }, { name: "Alcance", text: "Todo lo que tenga alcance Cuerpo a cuerpo (armas, habilidades, hechizos…) cuenta como si tuviera alcance Muy cercano." }] },
-  { key: "Goblin", blurb: "Pequeño, rápido e ingenioso, difícil de atrapar.", features: [{ name: "Pie Firme", text: "Ignoras la desventaja en las tiradas de Agilidad." }, { name: "Sentido del Peligro", text: "Una vez por descanso, marca 1 Estrés para obligar a un adversario a repetir un ataque contra ti o un aliado en alcance Muy cercano." }] },
+  { key: "Goblin", blurb: "Humanoide pequeño de ojos grandes y enormes orejas membranosas, con un oído y una vista agudísimos, incluso a oscuras.", features: [{ name: "Pie Firme", text: "Ignoras la desventaja en las tiradas de Agilidad." }, { name: "Sentido del Peligro", text: "Una vez por descanso, marca 1 Estrés para obligar a un adversario a repetir un ataque contra ti o un aliado en alcance Muy cercano." }] },
   { key: "Mediano", blurb: "Bajo de estatura pero grande en suerte y sigilo.", features: [{ name: "Trae Suerte", text: "Al empezar cada sesión, todo tu grupo gana 1 Esperanza." }, { name: "Brújula Interior", text: "Cuando saques un 1 en tu Dado de Esperanza, puedes repetirlo." }] },
   { key: "Humano", blurb: "Adaptable y ambicioso, el más versátil de los pueblos.", features: [{ name: "Gran Resistencia", text: "Ganas una casilla adicional de Estrés al crear el personaje." }, { name: "Adaptabilidad", text: "Cuando falles una tirada en la que usaste una Experiencia, puedes marcar 1 Estrés para repetirla." }] },
   { key: "Infernal", blurb: "Desciende de linajes infernales, con cuernos y cola propios.", features: [{ name: "Sin Miedo", text: "Cuando saques una tirada con Miedo, puedes marcar 2 Estrés para convertirla en una tirada con Esperanza." }, { name: "Rostro Temible", text: "Tienes ventaja en las tiradas para intimidar a criaturas hostiles." }] },
@@ -7183,6 +7183,7 @@ export default function App({ onSignOut }) {
     if (c.f_dedicated_used) restPatch.f_dedicated_used = "";
     if (c.f_wings_evade) restPatch.f_wings_evade = "";
     if (c.f_dodge) restPatch.f_dodge = "";
+    if (c.f_danger_used) restPatch.f_danger_used = "";
     // Compañero animal: se quita tanto Estrés como tú; en el descanso largo vuelve a la escena con 1 menos.
     const comp = getCompanion(c);
     if (comp) {
@@ -7549,7 +7550,7 @@ export default function App({ onSignOut }) {
     doTraitRoll(pr.charId, pr.traitLabel, pr.traitValue, pr.weapon, pr.cardContext, pr.advantage || pr.privilege || pr.quick, {
       exps: exps.map((e) => ({ text: e.text, bonus: Number(e.bonus) || 0 })),
       rallyDie,
-      disadvantage: pr.disadvantage || (pr.shellOn && !pr.reaction),
+      disadvantage: (ch?.f_ancestry || "").split(" + ").includes("Goblin") && pr.traitLabel === "Agilidad" ? false : pr.disadvantage || (pr.shellOn && !pr.reaction),
       poet: pr.poet,
       hopeD20: pr.dedicated,
       tide: tideSpent,
@@ -12822,8 +12823,10 @@ export default function App({ onSignOut }) {
               const tideUse = tideOk ? Math.min(preRoll.tide || 0, tideHave) : 0;
               const mod = preRoll.traitValue + expSum + tideUse;
               // Galapa retraída: la desventaja en las tiradas de acción no se puede quitar.
-              const shellLock = preRoll.shellOn && !preRoll.reaction;
-              const edgeNet = (preRoll.advantage || preRoll.privilege || preRoll.quick ? 1 : 0) - (preRoll.disadvantage || shellLock ? 1 : 0);
+              // Goblin · Pie Firme: ignora la desventaja en las tiradas de Agilidad.
+              const sureFoot = (ch.f_ancestry || "").split(" + ").includes("Goblin") && preRoll.traitLabel === "Agilidad";
+              const shellLock = preRoll.shellOn && !preRoll.reaction && !sureFoot;
+              const edgeNet = (preRoll.advantage || preRoll.privilege || preRoll.quick ? 1 : 0) - ((preRoll.disadvantage || shellLock) && !sureFoot ? 1 : 0);
               // Las tiradas de rasgo sueltas pueden ser de reacción; los ataques y las habilidades no.
               const canReact = !preRoll.weapon && !preRoll.cardContext;
               const quickOk = canReact && (ch.f_ancestry || "").split(" + ").includes("Elfo");
@@ -12857,7 +12860,7 @@ export default function App({ onSignOut }) {
               const wolf = preRoll.weapon && ch.f_transformation_form_active === "Forma de Lobo";
               const rallyOn = preRoll.rally && ch.f_rally_die;
               // Posición del selector: la Ventaja de Privilegio se cuenta aparte.
-              const edgePos = preRoll.disadvantage || shellLock ? "dis" : preRoll.advantage ? "adv" : "none";
+              const edgePos = (preRoll.disadvantage || shellLock) && !sureFoot ? "dis" : preRoll.advantage ? "adv" : "none";
               const setEdge = (pos) => setPreRoll((p) => ({ ...p, disadvantage: pos === "dis", advantage: pos === "adv", privilege: pos === "adv" ? false : p.privilege, quick: pos === "adv" ? false : p.quick }));
               const tile = (key, { on, disabled, title, sub, cost, color, onClick, hint }) => (
                 <button key={key} type="button" className={"mh-pre-tile" + (on ? " is-on" : "")} style={{ "--pc": color }} disabled={disabled} aria-pressed={!!on} title={hint} onClick={onClick}>
@@ -13007,14 +13010,14 @@ export default function App({ onSignOut }) {
                             <div className="mh-pre-grid is-3">{bonusTiles}</div>
                           </>
                         )}
-                        <div className="mh-pre-sec">Ventaja{shellLock ? " · Retraído: desventaja obligatoria" : ""}</div>
+                        <div className="mh-pre-sec">Ventaja{shellLock ? " · Retraído: desventaja obligatoria" : sureFoot ? " · Pie Firme: ignoras la desventaja" : ""}</div>
                         <div className="mh-pre-seg" role="radiogroup" aria-label="Ventaja o desventaja">
                           {[
                             ["dis", "Desventaja −1d6"],
                             ["none", "Normal"],
                             ["adv", "Ventaja +1d6"],
                           ].map(([k, l]) => (
-                            <button key={k} type="button" role="radio" aria-checked={edgePos === k} disabled={shellLock && k !== "dis"} title={shellLock && k !== "dis" ? "Dentro del caparazón tienes desventaja en las tiradas de acción" : undefined} className={"is-" + k + (edgePos === k ? " is-on" : "")} onClick={() => setEdge(k)}>
+                            <button key={k} type="button" role="radio" aria-checked={edgePos === k} disabled={(shellLock && k !== "dis") || (sureFoot && k === "dis")} title={shellLock && k !== "dis" ? "Dentro del caparazón tienes desventaja en las tiradas de acción" : sureFoot && k === "dis" ? "Pie Firme: ignoras la desventaja en las tiradas de Agilidad" : undefined} className={"is-" + k + (edgePos === k ? " is-on" : "")} onClick={() => setEdge(k)}>
                               {l}
                             </button>
                           ))}
@@ -14558,6 +14561,20 @@ export default function App({ onSignOut }) {
                     });
                   }
                   // Dracona: Aliento Elemental (ataque de Instinto) y Escamas (marcar 1 Estrés).
+                  if (d.ancestryKey === "Goblin" && !d.fromChat) {
+                    cardActs.push({
+                      key: "danger",
+                      Icon: Eye,
+                      label: c.f_danger_used ? "Sentido del Peligro · vuelve al descansar" : "Sentido del Peligro",
+                      sub: "1 Estrés · un adversario repite su ataque",
+                      disabled: !!c.f_danger_used,
+                      run: () => {
+                        closeCardDetail();
+                        markStress(viewingCharId, 1, { f_danger_used: "1" });
+                        postCampaignEvent(viewingCharId, "👂 Sentido del Peligro: marca 1 Estrés y obliga a un adversario a repetir su ataque contra él o un aliado en alcance Muy cercano");
+                      },
+                    });
+                  }
                   if (d.ancestryKey === "Galapa" && !d.fromChat) {
                     const inShell = getConditions(c).includes("Retraído");
                     cardActs.push({
