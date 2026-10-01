@@ -298,7 +298,7 @@ const ANCESTRIES = [
   { key: "Firbolg", blurb: "Humanoide bovino de gran fuerza, con nariz ancha, orejas largas y caídas, y a menudo cuernos con los que embiste.", features: [{ name: "Carga", text: "Cuando tengas éxito en una tirada de Agilidad para moverte desde alcance Lejano o Muy lejano hasta alcance Cuerpo a cuerpo de uno o más objetivos, puedes marcar 1 Estrés para hacer 1d12 de daño físico a todos los objetivos en alcance Cuerpo a cuerpo." }, { name: "Inquebrantable", text: "Cuando fueras a marcar Estrés, tira 1d6. Con un 6, no lo marcas." }] },
   { key: "Fungril", blurb: "Humanoide con aspecto de seta, de formas y colores muy variados, que se comunica sin palabras e intercambia información con otros fungril a través de su red de micelio.", features: [{ name: "Red Fúngica", text: "Haz una tirada de Instinto (12) para usar tu red de micelio y hablar con otros de tu ascendencia. Si tienes éxito, podéis comunicaros a cualquier distancia." }, { name: "Conexión con la Muerte", text: "Mientras toques el cadáver de alguien que haya muerto hace poco, puedes marcar 1 Estrés para extraerle un recuerdo relacionado con una emoción o sensación concreta que elijas." }] },
   { key: "Galapa", blurb: "Tortuga humanoide con un gran caparazón abombado en el que puede retraerse para protegerse.", features: [{ name: "Caparazón", text: "Obtienes un bonificador a tus umbrales de daño igual a tu Competencia." }, { name: "Retraerse", text: "Marca 1 Estrés para retraerte en tu caparazón. Mientras estés dentro, tienes resistencia al daño físico, desventaja en las tiradas de acción y no puedes moverte." }] },
-  { key: "Gigante", blurb: "De estatura descomunal y fuerza a la par.", features: [{ name: "Aguante", text: "Ganas una casilla adicional de Punto de vida al crear el personaje." }, { name: "Alcance", text: "Todo lo que tenga alcance Cuerpo a cuerpo (armas, habilidades, hechizos…) cuenta como si tuviera alcance Muy cercano." }] },
+  { key: "Gigante", blurb: "Humanoide altísimo, de hombros anchos y brazos y cuello alargados, con entre uno y tres ojos.", features: [{ name: "Aguante", text: "Ganas una casilla adicional de Punto de vida al crear el personaje." }, { name: "Alcance", text: "Todo lo que tenga alcance Cuerpo a cuerpo (armas, habilidades, hechizos…) cuenta como si tuviera alcance Muy cercano." }] },
   { key: "Goblin", blurb: "Pequeño, rápido e ingenioso, difícil de atrapar.", features: [{ name: "Pie Firme", text: "Ignoras la desventaja en las tiradas de Agilidad." }, { name: "Sentido del Peligro", text: "Una vez por descanso, marca 1 Estrés para obligar a un adversario a repetir un ataque contra ti o un aliado en alcance Muy cercano." }] },
   { key: "Mediano", blurb: "Bajo de estatura pero grande en suerte y sigilo.", features: [{ name: "Trae Suerte", text: "Al empezar cada sesión, todo tu grupo gana 1 Esperanza." }, { name: "Brújula Interior", text: "Cuando saques un 1 en tu Dado de Esperanza, puedes repetirlo." }] },
   { key: "Humano", blurb: "Adaptable y ambicioso, el más versátil de los pueblos.", features: [{ name: "Gran Resistencia", text: "Ganas una casilla adicional de Estrés al crear el personaje." }, { name: "Adaptabilidad", text: "Cuando falles una tirada en la que usaste una Experiencia, puedes marcar 1 Estrés para repetirla." }] },
@@ -422,6 +422,10 @@ const getContacts = (c) => {
     return [];
   }
 };
+
+// Gigante · Alcance: lo que tenga alcance Cuerpo a cuerpo cuenta como Muy cercano.
+const isGiant = (c) => (c?.f_ancestry || "").split(" + ").includes("Gigante");
+const reachFor = (c, range) => (range === "Cuerpo a cuerpo" && isGiant(c) ? "Muy cercano" : range);
 
 const WIZARD_STEPS = [
   { key: "class", title: "Elige tu clase", group: "Identidad" },
@@ -4822,7 +4826,9 @@ export default function App({ onSignOut }) {
       f_languages: ["Común", ...draftLanguages].join(", "),
       ...traitValues,
       r_evasion: String(CLASS_EVASION[chosenClass.key] ?? 10),
-      r_hp: String(CLASS_HP[chosenClass.key] ?? 6),
+      // Gigante · Aguante: una casilla de Punto de vida más al crear el personaje.
+      r_hp: String((CLASS_HP[chosenClass.key] ?? 6) + (draftAncestries.includes("Gigante") ? 1 : 0)),
+      f_endurance: draftAncestries.includes("Gigante") ? "1" : "",
       r_stress: String(STRESS_SLOTS + (chosenSubclass?.key === "Vengador" ? 1 : 0)),
       f_atease: chosenSubclass?.key === "Vengador" ? "1" : "",
       f_primary_weapon: draftPrimaryWeapon,
@@ -5648,6 +5654,15 @@ export default function App({ onSignOut }) {
     setRestPicks(null);
     setRestType("short");
   }, [viewingCharId]);
+  // Gigante · Aguante en personajes ya creados: se suma la casilla una sola vez.
+  const viewingGiant = viewingCharId ? isGiant(characters[viewingCharId]) : false;
+  const viewingEndurance = viewingCharId ? characters[viewingCharId]?.f_endurance : "";
+  useEffect(() => {
+    if (!viewingCharId || !viewingGiant || viewingEndurance) return;
+    const c = characters[viewingCharId];
+    updateCharacterFields(viewingCharId, { r_hp: String(Number(c.r_hp || 0) + 1), f_endurance: "1" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewingCharId, viewingGiant, viewingEndurance]);
   const viewingCommunity = viewingCharId ? characters[viewingCharId]?.f_community : "";
   const viewingPackAdded = viewingCharId ? characters[viewingCharId]?.f_pack_added : "";
   useEffect(() => {
@@ -9636,7 +9651,7 @@ export default function App({ onSignOut }) {
                                         Ataque · {activeBeastform.key}
                                       </div>
                                       <div style={{ fontSize: 12.5, color: "var(--mh-ink)", marginBottom: 10 }}>
-                                        {bfTrait} · {bfRange} · {bfDamage}
+                                        {bfTrait} · {reachFor(c, bfRange)} · {bfDamage}
                                       </div>
                                       <div style={{ display: "flex", gap: 8 }}>
                                         <button
@@ -9833,7 +9848,7 @@ export default function App({ onSignOut }) {
                                   const desc = isArmor
                                     ? `Puntuación ${w.score} · Umbrales base ${w.major}/${w.severe}`
                                     : w.trait !== "—"
-                                    ? `${w.trait} · ${w.range} · ${w.damage} · ${handsLabel}`
+                                    ? `${w.trait} · ${reachFor(c, w.range)} · ${w.damage} · ${handsLabel}`
                                     : `${w.damage} · ${handsLabel}`;
                                   const openCard = () =>
                                     setViewingCardDetail(
@@ -9843,7 +9858,7 @@ export default function App({ onSignOut }) {
                                             kicker: slot.label,
                                             title: w.key,
                                             text: desc,
-                                            weapon: { damage: w.damage, trait: w.trait, range: w.range, hands: handsLabel },
+                                            weapon: { damage: w.damage, trait: w.trait, range: reachFor(c, w.range), hands: handsLabel },
                                             showCharacteristic: true,
                                             characteristic: w.feature,
                                             bigStyle: true,
@@ -9876,7 +9891,7 @@ export default function App({ onSignOut }) {
                                               {!isArmor && dmgParts?.[2] && <small> {dmgParts[2]}</small>}
                                             </div>
                                           </div>
-                                          <div className="mh-eq-foot">{isArmor ? `Umbrales ${w.major} / ${w.severe}` : w.trait !== "—" ? `${w.trait} · ${w.range}` : w.range}</div>
+                                          <div className="mh-eq-foot">{isArmor ? `Umbrales ${w.major} / ${w.severe}` : w.trait !== "—" ? `${w.trait} · ${reachFor(c, w.range)}` : reachFor(c, w.range)}</div>
                                         </div>
                                         {w.feature && (
                                           <div className={"mh-eq-feat" + featTone} title={w.feature}>
@@ -10783,7 +10798,7 @@ export default function App({ onSignOut }) {
                                 const equip = zone === "belt" && kind ? { kind, name: it.name } : null;
                                 const invItem = { zone, index: i, count: it.count || 1 };
                                 if (w)
-                                  return setViewingCardDetail({ kicker: (kind === "primary" ? "Arma principal" : "Arma secundaria") + where, title: w.key, text: w.trait !== "—" ? `${w.trait} · ${w.range} · ${w.damage} · ${hands}` : `${w.damage} · ${hands}`, weapon: { damage: w.damage, trait: w.trait, range: w.range, hands }, showCharacteristic: true, characteristic: w.feature, bigStyle: true, tier: w.tier, equipAction: equip, invItem });
+                                  return setViewingCardDetail({ kicker: (kind === "primary" ? "Arma principal" : "Arma secundaria") + where, title: w.key, text: w.trait !== "—" ? `${w.trait} · ${reachFor(c, w.range)} · ${w.damage} · ${hands}` : `${w.damage} · ${hands}`, weapon: { damage: w.damage, trait: w.trait, range: w.range, hands }, showCharacteristic: true, characteristic: w.feature, bigStyle: true, tier: w.tier, equipAction: equip, invItem });
                                 if (a)
                                   return setViewingCardDetail({ kicker: "Armadura" + where, title: a.key, text: `Puntuación ${a.score} · Umbrales base ${a.major}/${a.severe}`, armor: { score: a.score, major: a.major, severe: a.severe }, showCharacteristic: true, characteristic: a.feature, bigStyle: true, tier: a.tier, equipAction: equip, invItem });
                                 setViewingCardDetail({
@@ -15376,8 +15391,9 @@ export default function App({ onSignOut }) {
                       <Heart size={20} color="#D9644E" />
                       <div style={{ fontSize: 11, color: "var(--mh-muted)" }}>Puntos de vida</div>
                       <div className="mh-serif" style={{ fontSize: 34, fontWeight: 700, color: "#D9644E" }}>
-                        {CLASS_HP[CLASSES[carouselIndex].key] ?? 6}
+                        {(CLASS_HP[CLASSES[carouselIndex].key] ?? 6) + (draftAncestries.includes("Gigante") ? 1 : 0)}
                       </div>
+                      {draftAncestries.includes("Gigante") && <div style={{ fontSize: 10.5, color: "var(--mh-muted)" }}>+1 por Aguante</div>}
                     </div>
                     <div
                       style={{
