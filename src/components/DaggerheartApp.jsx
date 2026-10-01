@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
-import { RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
+import { Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
 
 const NAV_ITEMS = [
   { key: "ficha", label: "Personajes", icon: User },
@@ -258,7 +258,7 @@ const ANCESTRIES = [
     ],
   },
   { key: "Hada", blurb: "Pequeña y alada, ligada a la magia feérica.", features: [{ name: "Doblega la Suerte", text: "Una vez por sesión, después de que tú o un aliado dispuesto en alcance Cercano hagáis una tirada de acción, puedes gastar 3 Esperanza para repetir los Dados de Dualidad." }, { name: "Alas", text: "Puedes volar. Mientras vuelas, después de que un adversario te ataque puedes marcar 1 Estrés para ganar +2 a tu Evasión contra ese ataque." }] },
-  { key: "Fauno", blurb: "Mitad humano, mitad cabra, ágil y de espíritu libre.", features: [{ name: "Salto Caprino", text: "Puedes saltar a cualquier punto en alcance Cercano como si fuera un movimiento normal, superando obstáculos, huecos o barreras." }, { name: "Coz", text: "Cuando aciertas un ataque contra un objetivo Cuerpo a cuerpo, puedes marcar 1 Estrés para darle una coz: +2d6 de daño y os alejáis tú o él hasta alcance Muy cercano." }] },
+  { key: "Fauno", blurb: "Humanoide con rasgos de cabra: cuernos curvos, pupilas cuadradas y pezuñas hendidas con las que da golpes poderosos.", features: [{ name: "Salto Caprino", text: "Puedes saltar a cualquier punto dentro de alcance Cercano como si usaras tu movimiento normal, lo que te permite saltar obstáculos, cruzar huecos o escalar barreras con facilidad." }, { name: "Coz", text: "Cuando tengas éxito en un ataque contra un objetivo en alcance Cuerpo a cuerpo, puedes marcar 1 Estrés para impulsarte contra él de una coz: haces 2d6 de daño adicional y lo empujas a él, o te empujas a ti, hasta alcance Muy cercano." }] },
   { key: "Firbolg", blurb: "Gigante gentil, en sintonía con los animales y la naturaleza.", features: [{ name: "Carga", text: "Si superas una tirada de Agilidad para moverte desde alcance Lejano o Muy lejano hasta Cuerpo a cuerpo, puedes marcar 1 Estrés para hacer 1d12 de daño físico a todos los objetivos Cuerpo a cuerpo." }, { name: "Inquebrantable", text: "Cuando fueras a marcar Estrés, tira 1d6. Con un 6, no lo marcas." }] },
   { key: "Fungril", blurb: "Humanoide fúngico surgido de las cavernas subterráneas.", features: [{ name: "Red Fúngica", text: "Haz una tirada de Instinto (12) para usar tu red de micelio y hablar con otros de tu ascendencia. Con éxito, os comunicáis a cualquier distancia." }, { name: "Conexión con la Muerte", text: "Tocando un cadáver reciente, puedes marcar 1 Estrés para extraerle un recuerdo ligado a una emoción o sensación que elijas." }] },
   { key: "Galapa", blurb: "Humanoide con caparazón, paciente y protegido por naturaleza.", features: [{ name: "Caparazón", text: "Suma tu Competencia a tus umbrales de daño." }, { name: "Retraerse", text: "Marca 1 Estrés para meterte en tu caparazón: tienes resistencia al daño físico, desventaja en las tiradas de acción y no puedes moverte." }] },
@@ -2443,6 +2443,9 @@ const sharedStyles = `
   .mh-luck-btn small { font-weight: 500; font-size: 11px; opacity: .88; }
   .mh-luck-btn:hover:not(:disabled) { background: #9C68B3; }
   .mh-luck-btn:disabled { background: var(--mh-panel3); color: var(--mh-muted); cursor: not-allowed; }
+  .mh-kick-btn { margin-top: 12px; display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 10px; padding: 8px 14px; font: 700 12.5px 'Inter', system-ui, sans-serif; color: #fff; background: #9A6B3C; cursor: pointer; }
+  .mh-kick-btn:hover { background: #855a30; }
+  .mh-kick-done { margin-top: 10px; font: 600 11.5px 'Inter', system-ui, sans-serif; color: #7A5530; }
   .mh-focus-chip { display: inline-flex; align-items: center; gap: 5px; min-width: 0; font: 700 11px 'Inter', system-ui, sans-serif; letter-spacing: 0; text-transform: none; color: #fff; background: #C0504A; padding: 3px 5px 3px 8px; border-radius: 20px; white-space: nowrap; overflow: hidden; flex-shrink: 1; }
   .mh-focus-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   .mh-focus-chip button { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; border: 0; padding: 0; background: rgba(255,255,255,.22); color: #fff; cursor: pointer; flex-shrink: 0; }
@@ -3354,6 +3357,9 @@ function DamageResult({ roll }) {
           <DieFace sides={10} value={roll.wolfBonus} color="#E0544A" size={size} rolling={rolling} delay={rolls.length * 70} highlight={!rolling && roll.wolfBonus === 10} label="Lobo" />
         )}
         {roll.unstopBonus > 0 && <DieFace sides={roll.unstopMax || 4} value={roll.unstopBonus} color="#5E93C9" size={size} rolling={false} label="Imparable" />}
+        {(roll.kickRolls || []).map((v, i) => (
+          <DieFace key={"k" + i} sides={6} value={v} color="#9A6B3C" size={size} rolling={false} highlight={v === 6} label={i === 0 ? "Coz" : undefined} />
+        ))}
       </div>
       <div className="mh-serif" style={{ fontSize: 46, fontWeight: 700, lineHeight: 1.1, marginTop: 8, minHeight: 52, position: "relative" }}>
         {rolling ? <span className="mh-dots">···</span> : <CountUp value={roll.total} />}
@@ -3364,6 +3370,7 @@ function DamageResult({ roll }) {
             {roll.dice || 1}d{roll.die} ({rolls.join(" + ")}){roll.bonus ? " + " + roll.bonus : ""}
             {roll.wolfBonus ? ` + 1d10 (${roll.wolfBonus})` : ""}
             {roll.unstopBonus ? ` + ${roll.unstopBonus} (Imparable)` : ""}
+            {roll.kickRolls ? ` + 2d6 (${roll.kickRolls.join(" + ")}) (Coz)` : ""}
             {roll.isCritical ? ` + ${roll.critBonus} (máx.)` : ""}
           </div>
           {roll.wolfBonus > 0 && <div style={{ fontSize: 11, color: "#FF6B5E", marginTop: 2 }}>Incluye +1d10 de la Forma de Lobo</div>}
@@ -12715,6 +12722,34 @@ export default function App({ onSignOut }) {
                     Daño · {damageRollResult.weaponName}
                   </div>
                   <DamageResult roll={damageRollResult} />
+                  {(() => {
+                    // Fauno · Coz: tras acertar un ataque Cuerpo a cuerpo, 1 Estrés para +2d6 y empujar hasta Muy cercano.
+                    const dr = damageRollResult;
+                    const kc = dr.charId ? characters[dr.charId] : null;
+                    if (!kc || !(kc.f_ancestry || "").split(" + ").includes("Fauno")) return null;
+                    const wpn = [...PRIMARY_WEAPONS, ...SECONDARY_WEAPONS].find((w) => w.key === dr.weaponName);
+                    const bf = BEASTFORMS.find((b) => b.key === dr.weaponName);
+                    const melee = wpn ? wpn.range === "Cuerpo a cuerpo" : bf ? bf.attack.startsWith("Cuerpo a cuerpo") : false;
+                    if (!melee) return null;
+                    if (dr.kickRolls) return <div className="mh-kick-done">Coz: empujas al objetivo, o te empujas tú, hasta alcance Muy cercano</div>;
+                    const freeS = Number(kc.r_stress || 0) - Number(kc.stress_marked || 0);
+                    return (
+                      <button
+                        type="button"
+                        className="mh-kick-btn"
+                        title={freeS < 1 ? "Sin Estrés libre: marcarás 1 Punto de vida" : "Marca 1 Estrés: +2d6 de daño y empujas hasta alcance Muy cercano"}
+                        onClick={() => {
+                          const k = [1, 2].map(() => Math.floor(Math.random() * 6) + 1);
+                          const extra = k[0] + k[1];
+                          setDamageRollResult((r) => (r ? { ...r, kickRolls: k, total: r.total + extra } : r));
+                          markStress(dr.charId, 1);
+                          postCampaignEvent(dr.charId, `🐐 Coz: marca 1 Estrés y suma 2d6 (${k.join(" + ")} = ${extra}). Daño total ${dr.total + extra}; empuja hasta alcance Muy cercano`);
+                        }}
+                      >
+                        <Footprints size={14} /> Coz · 1 Estrés · +2d6
+                      </button>
+                    );
+                  })()}
                   {damageRollResult.charId && characters[damageRollResult.charId]?.f_focus && (
                     <div className="mh-focus-note">
                       <Crosshair size={12} /> Si es tu Foco ({characters[damageRollResult.charId].f_focus}), marca 1 de Estrés
