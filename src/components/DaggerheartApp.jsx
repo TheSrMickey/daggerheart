@@ -2465,6 +2465,7 @@ const sharedStyles = `
   .mh-pre-seg { display: inline-flex; padding: 3px; gap: 2px; border: 1.5px solid var(--mh-line); border-radius: 30px; background: var(--mh-panel); }
   .mh-pre-seg button { border: 0; background: transparent; padding: 6px 13px; border-radius: 30px; font: 600 12px 'Inter', system-ui, sans-serif; color: var(--mh-muted); cursor: pointer; }
   .mh-pre-seg button.is-on { background: var(--mh-panel3); color: var(--mh-ink); }
+  .mh-pre-seg button:disabled { opacity: .4; cursor: not-allowed; }
   .mh-pre-seg button.is-adv.is-on { background: color-mix(in srgb, #5B8FD9 16%, var(--mh-panel)); color: color-mix(in srgb, #5B8FD9 75%, var(--mh-ink)); }
   .mh-pre-seg button.is-dis.is-on { background: color-mix(in srgb, #D9644E 15%, var(--mh-panel)); color: color-mix(in srgb, #D9644E 75%, var(--mh-ink)); }
   .mh-pre-dice { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 6px 8px; padding: 4px 0 2px; }
@@ -7432,7 +7433,7 @@ export default function App({ onSignOut }) {
     doTraitRoll(pr.charId, pr.traitLabel, pr.traitValue, pr.weapon, pr.cardContext, pr.advantage || pr.privilege || pr.quick, {
       exps: exps.map((e) => ({ text: e.text, bonus: Number(e.bonus) || 0 })),
       rallyDie,
-      disadvantage: pr.disadvantage,
+      disadvantage: pr.disadvantage || (pr.shellOn && !pr.reaction),
       poet: pr.poet,
       hopeD20: pr.dedicated,
       tide: tideSpent,
@@ -9308,12 +9309,14 @@ export default function App({ onSignOut }) {
                                   </span>
                                 )}
                                 {shellBonus > 0 && (
-                                  <span style={{ fontSize: 9.5, fontWeight: 700, color: ink("#6E8B5A"), background: "#6E8B5A1A", padding: "1px 7px", borderRadius: 20, textTransform: "none" }} title="Caparazón: tu Competencia se suma a los umbrales">
+                                  <span className="mh-tip-anchor" style={{ fontSize: 9.5, fontWeight: 700, color: ink("#6E8B5A"), background: "#6E8B5A1A", padding: "1px 7px", borderRadius: 20, textTransform: "none", letterSpacing: 0 }}>
+                                    <span className="mh-tip mh-tip-wrap">Caparazón: tu Competencia se suma a los umbrales</span>
                                     +{shellBonus} Caparazón
                                   </span>
                                 )}
                                 {conditions.includes("Retraído") && (
-                                  <span style={{ fontSize: 9.5, fontWeight: 700, color: "#fff", background: "#6E8B5A", padding: "1px 7px", borderRadius: 20, textTransform: "none" }} title="Resistencia al daño físico: el daño físico se reduce a la mitad antes de compararlo con los umbrales">
+                                  <span className="mh-tip-anchor" style={{ fontSize: 9.5, fontWeight: 700, color: "#fff", background: "#6E8B5A", padding: "1px 7px", borderRadius: 20, textTransform: "none", letterSpacing: 0 }}>
+                                    <span className="mh-tip mh-tip-wrap">Resistencia al daño físico: el daño físico se reduce a la mitad antes de compararlo con los umbrales</span>
                                     Resistencia física
                                   </span>
                                 )}
@@ -12669,7 +12672,9 @@ export default function App({ onSignOut }) {
               const tideOk = ch.f_community === "Del Mar" && !preRoll.reaction;
               const tideUse = tideOk ? Math.min(preRoll.tide || 0, tideHave) : 0;
               const mod = preRoll.traitValue + expSum + tideUse;
-              const edgeNet = (preRoll.advantage || preRoll.privilege || preRoll.quick ? 1 : 0) - (preRoll.disadvantage ? 1 : 0);
+              // Galapa retraída: la desventaja en las tiradas de acción no se puede quitar.
+              const shellLock = preRoll.shellOn && !preRoll.reaction;
+              const edgeNet = (preRoll.advantage || preRoll.privilege || preRoll.quick ? 1 : 0) - (preRoll.disadvantage || shellLock ? 1 : 0);
               // Las tiradas de rasgo sueltas pueden ser de reacción; los ataques y las habilidades no.
               const canReact = !preRoll.weapon && !preRoll.cardContext;
               const quickOk = canReact && (ch.f_ancestry || "").split(" + ").includes("Elfo");
@@ -12699,7 +12704,7 @@ export default function App({ onSignOut }) {
               const wolf = preRoll.weapon && ch.f_transformation_form_active === "Forma de Lobo";
               const rallyOn = preRoll.rally && ch.f_rally_die;
               // Posición del selector: la Ventaja de Privilegio se cuenta aparte.
-              const edgePos = preRoll.disadvantage ? "dis" : preRoll.advantage ? "adv" : "none";
+              const edgePos = preRoll.disadvantage || shellLock ? "dis" : preRoll.advantage ? "adv" : "none";
               const setEdge = (pos) => setPreRoll((p) => ({ ...p, disadvantage: pos === "dis", advantage: pos === "adv", privilege: pos === "adv" ? false : p.privilege, quick: pos === "adv" ? false : p.quick }));
               const tile = (key, { on, disabled, title, sub, cost, color, onClick, hint }) => (
                 <button key={key} type="button" className={"mh-pre-tile" + (on ? " is-on" : "")} style={{ "--pc": color }} disabled={disabled} aria-pressed={!!on} title={hint} onClick={onClick}>
@@ -12849,14 +12854,14 @@ export default function App({ onSignOut }) {
                             <div className="mh-pre-grid is-3">{bonusTiles}</div>
                           </>
                         )}
-                        <div className="mh-pre-sec">Ventaja</div>
+                        <div className="mh-pre-sec">Ventaja{shellLock ? " · Retraído: desventaja obligatoria" : ""}</div>
                         <div className="mh-pre-seg" role="radiogroup" aria-label="Ventaja o desventaja">
                           {[
                             ["dis", "Desventaja −1d6"],
                             ["none", "Normal"],
                             ["adv", "Ventaja +1d6"],
                           ].map(([k, l]) => (
-                            <button key={k} type="button" role="radio" aria-checked={edgePos === k} className={"is-" + k + (edgePos === k ? " is-on" : "")} onClick={() => setEdge(k)}>
+                            <button key={k} type="button" role="radio" aria-checked={edgePos === k} disabled={shellLock && k !== "dis"} title={shellLock && k !== "dis" ? "Dentro del caparazón tienes desventaja en las tiradas de acción" : undefined} className={"is-" + k + (edgePos === k ? " is-on" : "")} onClick={() => setEdge(k)}>
                               {l}
                             </button>
                           ))}
