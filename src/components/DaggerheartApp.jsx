@@ -175,7 +175,16 @@ const SUBCLASSES = {
     },
   ],
   Serafín: [
-    { key: "Portador Divino", blurb: "Blande un arma imbuida de poder sagrado." },
+    {
+      key: "Portador Divino",
+      blurb: "Domina el campo de batalla con un arma legendaria.",
+      features: [
+        { name: "Arma Espiritual", text: "Cuando tengas equipada un arma de alcance Cuerpo a cuerpo o Muy cercano, puede salir volando de tu mano para atacar a un adversario dentro de alcance Cercano y luego volver a ti. Puedes marcar 1 Estrés para alcanzar a un adversario adicional dentro del alcance con la misma tirada de ataque." },
+        { name: "Toque Clemente", text: "Una vez por descanso largo, toca a una criatura y quítale 2 Puntos de vida o 2 de Estrés." },
+        { name: "Devoto (Especialización)", text: "Cuando tires tus Dados de Oración, puedes tirar un dado adicional y descartar el resultado más bajo. Además, puedes usar «Toque Clemente» dos veces en lugar de una por descanso largo." },
+        { name: "Resonancia Sagrada (Maestría)", text: "Cuando tires el daño de tu «Arma Espiritual», si algunos de los dados coinciden, duplica el valor de cada dado que coincida. Por ejemplo, si sacas dos 5, cuentan como dos 10." },
+      ],
+    },
     { key: "Centinela Alado", blurb: "Protege a los suyos desde el cielo con gracia celestial." },
   ],
   Hechicero: [
@@ -9990,7 +9999,7 @@ export default function App({ onSignOut }) {
                               kicker: `Subclase · ${subclassBadge}`,
                               title: subclassEntry.key,
                               text: subclassEntry.blurb,
-                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
+                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
                               image: subclassEntry.image,
                               bigStyle: true,
                               ...(isElemental ? { elementalAction: true } : {}),
