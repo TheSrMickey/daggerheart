@@ -3720,8 +3720,8 @@ function DialogueFigure({ src, alt, expr }) {
   );
 }
 
-function Panel({ span, title, titleRight, children, hidden, restrained, vulnerable, unconscious, glow }) {
-  const borderColor = glow || (vulnerable ? "#D9644E" : restrained ? "#C08B5C" : unconscious ? "#A58BE8" : hidden ? "var(--mh-muted)" : "var(--mh-line)");
+function Panel({ span, title, titleRight, children, hidden, restrained, vulnerable, unconscious, flying, glow }) {
+  const borderColor = glow || (vulnerable ? "#D9644E" : restrained ? "#C08B5C" : unconscious ? "#A58BE8" : flying ? "#5FA77A" : hidden ? "var(--mh-muted)" : "var(--mh-line)");
   return (
     <div
       className="mh-panel-box"
@@ -3743,12 +3743,13 @@ function Panel({ span, title, titleRight, children, hidden, restrained, vulnerab
         {titleRight && <div style={{ flexShrink: 0 }}>{titleRight}</div>}
       </div>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>{children}</div>
-      {(hidden || restrained || vulnerable || unconscious) && (
+      {(hidden || restrained || vulnerable || unconscious || flying) && (
         <div style={{ position: "absolute", top: 10, right: 12, display: "flex", gap: 4, pointerEvents: "none" }}>
           {hidden && <EyeOff size={14} color="#9C93AD" />}
           {restrained && <Lock size={14} color="#C08B5C" />}
           {vulnerable && <ShieldOff size={14} color="#D9644E" />}
           {unconscious && <ZapOff size={14} color="#A58BE8" />}
+          {flying && <Feather size={14} color="#5FA77A" />}
         </div>
       )}
     </div>
@@ -8828,6 +8829,7 @@ export default function App({ onSignOut }) {
                               restrained={conditions.includes("Inmovilizado")}
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
+                            flying={conditions.includes("Volando")}
                             >
                               {/* El hueco del antiguo campo de daño se reparte entre las secciones para mantener la altura. */}
                               <div style={{ display: "flex", gap: 12, marginBottom: statsSpacing.evMb, height: 100 }}>
@@ -9102,6 +9104,7 @@ export default function App({ onSignOut }) {
                               restrained={conditions.includes("Inmovilizado")}
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
+                            flying={conditions.includes("Volando")}
                             >
                               {activeBeastform ? (() => {
                                 const [bfRange, bfTrait, bfDamage] = activeBeastform.attack.split(" · ");
@@ -9431,6 +9434,7 @@ export default function App({ onSignOut }) {
                               restrained={conditions.includes("Inmovilizado")}
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
+                            flying={conditions.includes("Volando")}
                             >
                               {(() => {
                                 const unlocked = Math.min(EXPERIENCE_MAX, 1 + currentTier);
@@ -9682,6 +9686,7 @@ export default function App({ onSignOut }) {
                               restrained={conditions.includes("Inmovilizado")}
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
+                            flying={conditions.includes("Volando")}
                             >
                               <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, minHeight: 0 }}>
                                 {items.length === 0 && <div style={{ fontSize: 12.5, color: "var(--mh-muted)", fontStyle: "italic" }}>Todavía no hay acciones para este personaje.</div>}
@@ -9740,6 +9745,7 @@ export default function App({ onSignOut }) {
                               restrained={conditions.includes("Inmovilizado")}
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
+                            flying={conditions.includes("Volando")}
                             >
                               <div style={{ display: "flex", flexDirection: "column", gap: 12, flex: 1 }}>
                                 {c.f_beastform && (
@@ -9839,6 +9845,7 @@ export default function App({ onSignOut }) {
                             restrained={conditions.includes("Inmovilizado")}
                             vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
+                            flying={conditions.includes("Volando")}
                           >
                             {(() => {
                               // Junto a la hoguera: cómo estás, qué te conviene y qué recupera cada acción.
@@ -10031,6 +10038,7 @@ export default function App({ onSignOut }) {
                             restrained={conditions.includes("Inmovilizado")}
                             vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
+                            flying={conditions.includes("Volando")}
                           >
                             {(() => {
                               const projects = getProjects(c);
@@ -10171,6 +10179,7 @@ export default function App({ onSignOut }) {
                             restrained={conditions.includes("Inmovilizado")}
                             vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
+                            flying={conditions.includes("Volando")}
                           >
                             {(() => {
                               const backpack = getBackpack(c)[0];
@@ -10338,6 +10347,7 @@ export default function App({ onSignOut }) {
                             restrained={conditions.includes("Inmovilizado")}
                             vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
+                            flying={conditions.includes("Volando")}
                           >
                             {(() => {
                               const counts = GOLD_TIERS.map((t) => Math.min(10, Number(c[t.field] || 0)));
@@ -10468,6 +10478,7 @@ export default function App({ onSignOut }) {
                               restrained={conditions.includes("Inmovilizado")}
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
+                            flying={conditions.includes("Volando")}
                             >
                               <div className="mh-noscroll mh-qa-scroll" style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1, minHeight: 0, overflowY: "auto" }}>
                                 {bgRows.length === 0 ? (
@@ -10532,6 +10543,7 @@ export default function App({ onSignOut }) {
                               restrained={conditions.includes("Inmovilizado")}
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
+                            flying={conditions.includes("Volando")}
                             >
                               <div className="mh-noscroll mh-qa-scroll" style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1, minHeight: 0, overflowY: "auto" }}>
                                 {connRows.length === 0 && (
@@ -10826,6 +10838,7 @@ export default function App({ onSignOut }) {
                               restrained={conditions.includes("Inmovilizado")}
                               vulnerable={conditions.includes("Vulnerable")}
                               unconscious={conditions.includes("Inconsciente")}
+                              flying={conditions.includes("Volando")}
                             >
                               <div style={{ fontSize: 10.5, color: "var(--mh-muted3)", marginBottom: 10, flexShrink: 0 }}>
                                 Siluetas de fondo:{" "}
@@ -10958,6 +10971,7 @@ export default function App({ onSignOut }) {
                               restrained={conditions.includes("Inmovilizado")}
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
+                            flying={conditions.includes("Volando")}
                             >
                               <div className="mh-stg-seg" role="tablist">
                                 {STAGE_TABS.map((t) => {
@@ -11234,6 +11248,7 @@ export default function App({ onSignOut }) {
                               restrained={conditions.includes("Inmovilizado")}
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
+                            flying={conditions.includes("Volando")}
                             >
                               <div className="mh-chat">
                                 <div className="mh-chat-box">
@@ -11382,6 +11397,7 @@ export default function App({ onSignOut }) {
                             restrained={conditions.includes("Inmovilizado")}
                             vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
+                            flying={conditions.includes("Volando")}
                           >
                             {(() => {
                               const q = foldText(journalSearch.trim());
