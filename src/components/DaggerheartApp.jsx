@@ -2380,6 +2380,9 @@ const sharedStyles = `
   .mh-pre-lines .is-cost { border-top: 1px dashed var(--mh-line2); padding-top: 6px; margin-top: 1px; }
   .mh-pre-lines .is-cost b { color: var(--mh-gold-ink); }
   .mh-pre-h { display: flex; align-items: center; gap: 10px; }
+  .mh-pre-kind { flex-shrink: 0; }
+  .mh-pre-kind button { padding: 5px 11px; }
+  .mh-pre-seg button.is-react.is-on { background: color-mix(in srgb, #5E8FC9 16%, var(--mh-panel)); color: color-mix(in srgb, #5E8FC9 75%, var(--mh-ink)); }
   .mh-pre-h b { display: block; font-size: 16px; color: var(--mh-ink); }
   .mh-pre-h small { font-size: 11.5px; color: var(--mh-muted); }
   .mh-pre-ic { width: 34px; height: 34px; flex-shrink: 0; border-radius: 10px; background: color-mix(in srgb, var(--acc) 15%, var(--mh-panel)); color: var(--acc); display: flex; align-items: center; justify-content: center; }
@@ -5817,10 +5820,10 @@ export default function App({ onSignOut }) {
         const crit = r.hope === r.fear;
         const withHope = r.hope > r.fear;
         const success = r.dc ? crit || r.total >= r.dc : null;
-        const base = crit ? "Éxito crítico" : (success === null ? "Con " : success ? "Éxito con " : "Fallo con ") + (withHope ? "Esperanza" : "Miedo");
-        const note = crit ? "+1 Esperanza y −1 Estrés" : withHope ? "+1 Esperanza" : "El DJ gana 1 Miedo";
-        const vcol = crit ? "#6FBF73" : withHope ? "#E3B04B" : "#A58BE8";
-        const tag = r.weapon ? "Ataque" : r.card ? "Habilidad" : "Rasgo";
+        const base = crit ? "Éxito crítico" : r.reaction ? "Tirada de reacción" : (success === null ? "Con " : success ? "Éxito con " : "Fallo con ") + (withHope ? "Esperanza" : "Miedo");
+        const note = r.reaction ? (crit ? "Ignora los efectos" : "Sin Esperanza ni Miedo") : crit ? "+1 Esperanza y −1 Estrés" : withHope ? "+1 Esperanza" : "El DJ gana 1 Miedo";
+        const vcol = crit ? "#6FBF73" : r.reaction ? "#5E8FC9" : withHope ? "#E3B04B" : "#A58BE8";
+        const tag = r.weapon ? "Ataque" : r.card ? "Habilidad" : r.reaction ? "Reacción" : "Rasgo";
         const head = r.weapon ? (
           <>
             {who} ataca con {r.weapon}
@@ -5831,7 +5834,7 @@ export default function App({ onSignOut }) {
           </>
         ) : (
           <>
-            {who} tira {r.trait}
+            {who} {r.reaction ? "reacciona con" : "tira"} {r.trait}
           </>
         );
         const mod = (r.mod >= 0 ? "+" : "−") + Math.abs(r.mod || 0) + " " + (r.trait || "");
@@ -6941,7 +6944,7 @@ export default function App({ onSignOut }) {
   // Antes de tirar: ventana para añadir Experiencias, el dado de Arenga o Ventaja.
   const [preRoll, setPreRoll] = useState(null);
   const rollTraitCheck = (charId, traitLabel, traitValue, weapon, cardContext, advantage) => {
-    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage, exps: [], rally: false, privilege: false, disadvantage: false, poet: false, dedicated: false, quick: false });
+    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage, exps: [], rally: false, privilege: false, disadvantage: false, poet: false, dedicated: false, quick: false, reaction: false });
   };
   const confirmPreRoll = () => {
     const pr = preRoll;
@@ -6966,6 +6969,7 @@ export default function App({ onSignOut }) {
       disadvantage: pr.disadvantage,
       poet: pr.poet,
       hopeD20: pr.dedicated,
+      reaction: pr.reaction,
     });
   };
 
@@ -6997,13 +7001,24 @@ export default function App({ onSignOut }) {
       text = "Con Miedo";
       color = "#A58BE8";
     }
+    // Tirada de reacción: no genera Esperanza ni Miedo; el crítico no da Esperanza ni quita Estrés.
+    const reaction = !!extras.reaction;
+    if (reaction) {
+      text = hope === fear ? "Crítico" : "Reacción";
+      color = hope === fear ? "#7FB77A" : "#5E8FC9";
+    }
     clearTimeout(traitRollTimer.current);
-    const note =
-      hope === fear ? "Ganas 1 Esperanza y te quitas 1 Estrés" : hope > fear ? "Ganas 1 Esperanza" : "El DJ gana 1 de Miedo";
-    setTraitRollResult({ key: Date.now(), hopeSides, traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, total, text: hope === fear ? "Éxito crítico" : text, color, note, weapon: weapon || null, charId });
+    const note = reaction
+      ? hope === fear
+        ? "Ignoras los efectos que te afectarían aun con éxito"
+        : "Las reacciones no generan Esperanza ni Miedo"
+      : hope === fear ? "Ganas 1 Esperanza y te quitas 1 Estrés" : hope > fear ? "Ganas 1 Esperanza" : "El DJ gana 1 de Miedo";
+    setTraitRollResult({ key: Date.now(), hopeSides, traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, total, text: hope === fear ? "Éxito crítico" : reaction ? "Tirada de reacción" : text, color, note, reaction, weapon: weapon || null, charId });
 
     // Con Esperanza (o crítico) ganas 1 Esperanza; con crítico además te quitas 1 Estrés.
-    if (hope >= fear) {
+    if (reaction) {
+      // Nada que ganar ni que dar al DJ.
+    } else if (hope >= fear) {
       const ch = charsRef.current[charId];
       if (ch) {
         const patch = {};
@@ -7027,7 +7042,7 @@ export default function App({ onSignOut }) {
       (rallyRoll ? ` + Arenga ${rallyRoll}` : "") +
       (poetRoll ? ` + Poeta ${poetRoll}` : "");
     const rollExtra = { exp: expBonus, expNames: (extras.exps || []).map((e) => e.text), rally: rallyRoll, rallyDie: extras.rallyDie || "", poet: poetRoll };
-    const line = `**${who}** — ${traitLabel}: Esperanza ${hope} + Miedo ${fear} ${modStr}${advStr} = **${total}** (${text})`;
+    const line = `**${who}** — ${reaction ? "Reacción de " : ""}${traitLabel}: Esperanza ${hope} + Miedo ${fear} ${modStr}${advStr} = **${total}** (${text})`;
     await pushRollLog(line);
     if (cardContext) {
       const success = total >= cardContext.dc;
@@ -7037,9 +7052,9 @@ export default function App({ onSignOut }) {
         { kind: "roll", roll: { trait: traitLabel, card: cardContext.name, hope, fear, mod: traitValue, adv: advantageRoll, wolf: wolfBonus, ...rollExtra, total, dc: cardContext.dc } }
       );
     } else {
-      await postCampaignEvent(charId, `🎲 Tirada de ${traitLabel}: ${hope} + ${fear} ${modStr}${advStr} = ${total} (${text})`, {
+      await postCampaignEvent(charId, `🎲 ${reaction ? "Reacción" : "Tirada"} de ${traitLabel}: ${hope} + ${fear} ${modStr}${advStr} = ${total} (${text})`, {
         kind: "roll",
-        roll: { trait: traitLabel, weapon: weapon?.name || "", hopeSides, hope, fear, mod: traitValue, adv: advantageRoll, wolf: wolfBonus, ...rollExtra, total },
+        roll: { trait: traitLabel, weapon: weapon?.name || "", reaction, hopeSides, hope, fear, mod: traitValue, adv: advantageRoll, wolf: wolfBonus, ...rollExtra, total },
       });
     }
   };
@@ -11482,7 +11497,9 @@ export default function App({ onSignOut }) {
               const expSum = exps.filter((_, i) => preRoll.exps.includes(i)).reduce((a, e) => a + (Number(e.bonus) || 0), 0);
               const mod = preRoll.traitValue + expSum;
               const edgeNet = (preRoll.advantage || preRoll.privilege || preRoll.quick ? 1 : 0) - (preRoll.disadvantage ? 1 : 0);
-              const quickOk = (ch.f_ancestry || "").split(" + ").includes("Elfo");
+              // Las tiradas de rasgo sueltas pueden ser de reacción; los ataques y las habilidades no.
+              const canReact = !preRoll.weapon && !preRoll.cardContext;
+              const quickOk = canReact && (ch.f_ancestry || "").split(" + ").includes("Elfo");
               const highborne = ch.f_community === "De Alta Cuna";
               const dedicatedOk = ch.f_community === "Del Orden";
               const principles = (() => {
@@ -11545,8 +11562,8 @@ export default function App({ onSignOut }) {
                       sub: "Elfo · marca 1 Estrés",
                       cost: "Ventaja",
                       color: "#5FA77A",
-                      hint: "Solo en una tirada de reacción: cuando reaccionas a un ataque o a un peligro para esquivarlo o resistirlo",
-                      onClick: () => setPreRoll((p) => ({ ...p, quick: !p.quick, advantage: p.quick ? p.advantage : false })),
+                      hint: "Solo en tiradas de reacción: al activarla, la tirada pasa a ser de reacción",
+                      onClick: () => setPreRoll((p) => ({ ...p, quick: !p.quick, reaction: p.quick ? p.reaction : true, advantage: p.quick ? p.advantage : false })),
                     })
                   : null,
                 edgeSource
@@ -11585,9 +11602,29 @@ export default function App({ onSignOut }) {
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <b className="mh-serif">{preRoll.cardContext ? preRoll.cardContext.name : preRoll.weapon ? "Ataque con " + preRoll.weapon.name : "Tirada de " + preRoll.traitLabel}</b>
                         <small>
-                          {preRoll.traitLabel} {(preRoll.traitValue >= 0 ? "+" : "−") + Math.abs(preRoll.traitValue)} · Esperanza y Miedo{preRoll.cardContext ? " · Dificultad " + preRoll.cardContext.dc : ""}
+                          {preRoll.traitLabel} {(preRoll.traitValue >= 0 ? "+" : "−") + Math.abs(preRoll.traitValue)} · {preRoll.reaction ? "Sin Esperanza ni Miedo" : "Esperanza y Miedo"}{preRoll.cardContext ? " · Dificultad " + preRoll.cardContext.dc : ""}
                         </small>
                       </div>
+                      {canReact && (
+                        <div className="mh-pre-seg mh-pre-kind" role="radiogroup" aria-label="Tipo de tirada">
+                          {[
+                            [false, "Acción", "Genera Esperanza o Miedo"],
+                            [true, "Reacción", "Para esquivar o resistir un ataque o un peligro: no genera Esperanza ni Miedo"],
+                          ].map(([val, label, hint]) => (
+                            <button
+                              key={label}
+                              type="button"
+                              role="radio"
+                              aria-checked={preRoll.reaction === val}
+                              title={hint}
+                              className={(preRoll.reaction === val ? "is-on" : "") + (val ? " is-react" : "")}
+                              onClick={() => setPreRoll((p) => ({ ...p, reaction: val, quick: val ? p.quick : false }))}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                       <button type="button" className="mh-inv-x" aria-label="Cerrar" onClick={() => setPreRoll(null)}>
                         <X size={16} />
                       </button>
