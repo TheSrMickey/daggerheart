@@ -606,7 +606,7 @@ const CLASS_FEATURES = {
     { name: "Imparable", text: "Una vez por descanso largo puedes volverte Imparable. Coloca un dado de Imparable (d4; d6 desde el nivel 5) con el 1 hacia arriba y súbelo en 1 cada vez que tu tirada de daño haga marcar Puntos de vida. Mientras dure, reduces en un umbral la gravedad del daño físico que recibes, sumas el valor del dado a tus tiradas de daño y no puedes quedar Inmovilizado ni Vulnerable. Termina al acabar la escena o cuando el dado fuera a superar su valor máximo." },
   ],
   Explorador: [
-    { name: "Foco del Explorador", text: "Gasta 1 Esperanza y ataca a un objetivo. Si aciertas, haces el daño normal y pasa a ser tu Foco: sabes en todo momento en qué dirección está, marca 1 Estrés cada vez que le haces daño y, si fallas un ataque contra él, puedes terminar el Foco para repetir los Dados de Dualidad." },
+    { name: "Foco del Explorador", text: "Gasta 1 Esperanza y haz un ataque contra un objetivo. Si tienes éxito, haces el daño normal del ataque y conviertes temporalmente al objetivo en tu Foco. Hasta que esta característica termine o conviertas a otra criatura en tu Foco, obtienes estos beneficios contra tu Foco: sabes con exactitud en qué dirección está; cuando le hagas daño, debe marcar 1 Estrés; y cuando falles un ataque contra él, puedes terminar tu Foco del Explorador para repetir tus Dados de Dualidad." },
   ],
   Pícaro: [
     { name: "Oculto", text: "Siempre que fueras a quedar Escondido, quedas Oculto: además de las ventajas de estar Escondido, si te quedas quieto sigues sin ser visto aunque un adversario se mueva a donde normalmente te vería. Dejas de estar Oculto al atacar o al terminar un movimiento a la vista de un adversario." },
@@ -3808,7 +3808,7 @@ function DialogueFigure({ src, alt, expr }) {
   );
 }
 
-function Panel({ span, title, titleRight, children, hidden, restrained, vulnerable, unconscious, flying, glow, fill }) {
+function Panel({ span, title, titleRight, children, hidden, restrained, vulnerable, unconscious, flying, glow, fill, link }) {
   const borderColor = glow || (vulnerable ? "#D9644E" : restrained ? "#C08B5C" : unconscious ? "#A58BE8" : flying ? "#5FA77A" : hidden ? "var(--mh-muted)" : "var(--mh-line)");
   return (
     <div
@@ -3832,6 +3832,8 @@ function Panel({ span, title, titleRight, children, hidden, restrained, vulnerab
         {titleRight && <div style={{ flexShrink: 0 }}>{titleRight}</div>}
       </div>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>{children}</div>
+      {/* Línea que une esta caja con la de la izquierda (a la altura de la Evasión). */}
+      {link && <span aria-hidden="true" style={{ position: "absolute", left: -20, top: 101, width: 20, height: 2, borderRadius: 2, background: link }} />}
       {(hidden || restrained || vulnerable || unconscious || flying) && (
         <div style={{ position: "absolute", top: 10, right: 12, display: "flex", gap: 4, pointerEvents: "none" }}>
           {hidden && <EyeOff size={14} color="#9C93AD" />}
@@ -7136,6 +7138,17 @@ export default function App({ onSignOut }) {
   };
 
   // Experiencia como carta: el bono en grande y cómo se usa.
+  const openCompanionExpCard = (exp, comp) => {
+    const bonus = (Number(exp.bonus) >= 0 ? "+" : "") + exp.bonus;
+    setViewingCardDetail({
+      kicker: "Experiencia de " + (comp?.name || "tu compañero"),
+      title: exp.text,
+      stat: { label: "Bono", value: bonus },
+      showCharacteristic: true,
+      characteristic: "Si esta experiencia encaja con lo que hace tu compañero, puedes gastar 1 Esperanza para sumar " + bonus + " a la tirada de Lanzamiento con la que le das órdenes.",
+      bigStyle: true,
+    });
+  };
   const openExperienceCard = (exp) => {
     const bonus = (Number(exp.bonus) >= 0 ? "+" : "") + exp.bonus;
     setViewingCardDetail({
@@ -9684,6 +9697,7 @@ export default function App({ onSignOut }) {
                               ...(isElemental ? { elementalAction: true } : {}),
                               ...(subclassEntry.key === "Guardián de la Renovación" ? { renewalAction: true } : {}),
                               ...(subclassEntry.key === "Vengador" ? { vengeAction: true } : {}),
+                              ...(subclassEntry.key === "Vínculo Bestial" ? { companionNav: true } : {}),
                             }),
                           });
                         }
@@ -10970,6 +10984,7 @@ export default function App({ onSignOut }) {
                             <Panel
                               span={12}
                               fill={!comp || !!ed}
+                              link={!isMobile && comp && !ed ? themeColor : null}
                               title={
                                 comp && comp.name ? (
                                   <>
@@ -11211,7 +11226,15 @@ export default function App({ onSignOut }) {
                                   const exp = comp?.exps?.[i];
                                   if (exp) {
                                     return (
-                                      <div key={i} className="mh-exp is-open mh-exp-comp">
+                                      <div
+                                        key={i}
+                                        className="mh-exp is-open mh-exp-comp"
+                                        role="button"
+                                        tabIndex={0}
+                                        aria-label={"Ver la carta de la experiencia " + exp.text}
+                                        onClick={() => openCompanionExpCard(exp, comp)}
+                                        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && e.target === e.currentTarget && (e.preventDefault(), openCompanionExpCard(exp, comp))}
+                                      >
                                         <div className="mh-exp-bar" />
                                         <div className="mh-exp-body">
                                           <div className="mh-exp-kicker">Experiencia del compañero</div>
@@ -11224,7 +11247,10 @@ export default function App({ onSignOut }) {
                                           </span>
                                           <small>bono</small>
                                         </div>
-                                        <button type="button" className="mh-exp-del" title="Quitar experiencia" aria-label="Quitar experiencia" onClick={() => saveCompanion(viewingCharId, { exps: comp.exps.filter((_, k) => k !== i) })}>
+                                        <button type="button" className="mh-exp-del" title="Quitar experiencia" aria-label="Quitar experiencia" onClick={(e) => {
+                                            e.stopPropagation();
+                                            saveCompanion(viewingCharId, { exps: comp.exps.filter((_, k) => k !== i) });
+                                          }}>
                                           <X size={12} />
                                         </button>
                                       </div>
@@ -13373,6 +13399,20 @@ export default function App({ onSignOut }) {
                     });
                   }
                   // Guardián de la Renovación: Regeneración, Claridad de la Naturaleza y, según el rango, Protección y Defensor.
+                  // Vínculo Bestial: lleva a la pestaña del compañero.
+                  if (d.companionNav && !d.fromChat) {
+                    cardActs.push({
+                      key: "companion",
+                      Icon: Dog,
+                      label: "Ver Compañero Animal",
+                      sub: "",
+                      run: () => {
+                        setDetailTab("companion");
+                        setActionPage(0);
+                        setViewingCardDetail(null);
+                      },
+                    });
+                  }
                   // Vengador · Venganza: marca 2 de Estrés y el atacante marca 1 PV.
                   if (d.vengeAction && !d.fromChat) {
                     const freeStressV = Number(c.r_stress || 0) - Number(c.stress_marked || 0);
@@ -13521,7 +13561,7 @@ export default function App({ onSignOut }) {
                       label: "Mostrar en la campaña",
                       sub: shareCamp.name,
                       run: () => {
-                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, ...detail } = d;
+                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, ...detail } = d;
                         // Las imágenes incrustadas muy grandes no se copian al chat.
                         if (typeof detail.image === "string" && detail.image.startsWith("data:") && detail.image.length > 30000) delete detail.image;
                         const type = d.domain ? "domain" : d.weapon ? "weapon" : d.armor ? "armor" : "card";
