@@ -715,7 +715,7 @@ const CLASS_FEATURES = {
   ],
   Hechicero: [
     { name: "Sentido Arcano", text: "Puedes percibir la presencia de personas y objetos mágicos dentro de alcance Cercano." },
-    { name: "Ilusión Menor", text: "Haz una tirada de conjuro (10). Si tienes éxito, creas una ilusión visual menor, no más grande que tú, en alcance Cercano. Resulta convincente para cualquiera que esté en alcance Cercano o más lejos." },
+    { name: "Ilusión Menor", text: "Haz una tirada de Lanzamiento (10). Si tienes éxito, creas una ilusión visual menor, no más grande que tú, dentro de alcance Cercano. La ilusión resulta convincente para cualquiera que esté en alcance Cercano o más lejos." },
     { name: "Canalizar Poder en Bruto", text: "Una vez por descanso largo, pasa una carta de dominio de tu equipo a la bóveda y elige: ganas tanta Esperanza como el nivel de la carta, o potencias un hechizo de daño sumando el doble del nivel de la carta a la tirada de daño." },
   ],
   Guerrero: [
@@ -1316,6 +1316,8 @@ const TIER_COLORS = {
 
 const CARD_ACTIONS = {
   "Lengua de la Naturaleza": { traitKey: "t_instinct", traitLabel: "Instinto", dc: 12 },
+  // Hechicero · Ilusión Menor: tirada de Lanzamiento (Instinto en sus dos subclases) contra 10.
+  "Ilusión Menor": { traitKey: "t_instinct", traitLabel: "Instinto", dc: 10 },
 };
 
 // Tablero de la campaña: la escena de fondo dividida en 16 × 9 casillas.
