@@ -118,7 +118,16 @@ const SUBCLASSES = {
         { name: "Protector Leal (Maestría)", text: "Cuando un aliado en alcance Cercano tenga 2 o menos Puntos de vida y fuera a recibir daño, puedes marcar 1 Estrés para correr a su lado y recibir tú el daño." },
       ],
     },
-    { key: "Vengador", blurb: "Devuelve cada golpe con más fuerza de la que recibe." },
+    {
+      key: "Vengador",
+      blurb: "Abate a los enemigos que os hacen daño a ti o a tus aliados.",
+      features: [
+        { name: "Sereno", text: "Obtienes una casilla de Estrés adicional." },
+        { name: "Venganza", text: "Cuando un adversario en alcance Cuerpo a cuerpo tenga éxito en un ataque contra ti, puedes marcar 2 de Estrés para obligar al atacante a marcar 1 Punto de vida." },
+        { name: "Represalia (Especialización)", text: "Cuando un adversario dañe a un aliado en alcance Cuerpo a cuerpo, obtienes un +1 a tu Competencia en el siguiente ataque con éxito que hagas contra ese adversario." },
+        { name: "Némesis (Maestría)", text: "Gasta 2 de Esperanza para Priorizar a un adversario hasta tu próximo descanso. Cuando ataques a tu adversario Priorizado, puedes intercambiar los resultados de tus Dados de Esperanza y de Miedo. Solo puedes Priorizar a un adversario a la vez." },
+      ],
+    },
   ],
   Explorador: [
     { key: "Vínculo Bestial", blurb: "Lucha codo con codo con un compañero animal." },
@@ -9389,7 +9398,7 @@ export default function App({ onSignOut }) {
                               kicker: `Subclase · ${subclassBadge}`,
                               title: subclassEntry.key,
                               text: subclassEntry.blurb,
-                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
+                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
                               image: subclassEntry.image,
                               bigStyle: true,
                               ...(isElemental ? { elementalAction: true } : {}),
