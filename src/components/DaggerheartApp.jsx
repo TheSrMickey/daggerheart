@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
-import { Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
+import { ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
 
 const NAV_ITEMS = [
   { key: "ficha", label: "Personajes", icon: User },
@@ -268,7 +268,7 @@ const ANCESTRIES = [
   },
   { key: "Hada", blurb: "Pequeña y alada, ligada a la magia feérica.", features: [{ name: "Doblega la Suerte", text: "Una vez por sesión, después de que tú o un aliado dispuesto en alcance Cercano hagáis una tirada de acción, puedes gastar 3 Esperanza para repetir los Dados de Dualidad." }, { name: "Alas", text: "Puedes volar. Mientras vuelas, después de que un adversario te ataque puedes marcar 1 Estrés para ganar +2 a tu Evasión contra ese ataque." }] },
   { key: "Fauno", blurb: "Humanoide con rasgos de cabra: cuernos curvos, pupilas cuadradas y pezuñas hendidas con las que da golpes poderosos.", features: [{ name: "Salto Caprino", text: "Puedes saltar a cualquier punto dentro de alcance Cercano como si usaras tu movimiento normal, lo que te permite saltar obstáculos, cruzar huecos o escalar barreras con facilidad." }, { name: "Coz", text: "Cuando tengas éxito en un ataque contra un objetivo en alcance Cuerpo a cuerpo, puedes marcar 1 Estrés para impulsarte contra él de una coz: haces 2d6 de daño adicional y lo empujas a él, o te empujas a ti, hasta alcance Muy cercano." }] },
-  { key: "Firbolg", blurb: "Gigante gentil, en sintonía con los animales y la naturaleza.", features: [{ name: "Carga", text: "Si superas una tirada de Agilidad para moverte desde alcance Lejano o Muy lejano hasta Cuerpo a cuerpo, puedes marcar 1 Estrés para hacer 1d12 de daño físico a todos los objetivos Cuerpo a cuerpo." }, { name: "Inquebrantable", text: "Cuando fueras a marcar Estrés, tira 1d6. Con un 6, no lo marcas." }] },
+  { key: "Firbolg", blurb: "Humanoide bovino de gran fuerza, con nariz ancha, orejas largas y caídas, y a menudo cuernos con los que embiste.", features: [{ name: "Carga", text: "Cuando tengas éxito en una tirada de Agilidad para moverte desde alcance Lejano o Muy lejano hasta alcance Cuerpo a cuerpo de uno o más objetivos, puedes marcar 1 Estrés para hacer 1d12 de daño físico a todos los objetivos en alcance Cuerpo a cuerpo." }, { name: "Inquebrantable", text: "Cuando fueras a marcar Estrés, tira 1d6. Con un 6, no lo marcas." }] },
   { key: "Fungril", blurb: "Humanoide fúngico surgido de las cavernas subterráneas.", features: [{ name: "Red Fúngica", text: "Haz una tirada de Instinto (12) para usar tu red de micelio y hablar con otros de tu ascendencia. Con éxito, os comunicáis a cualquier distancia." }, { name: "Conexión con la Muerte", text: "Tocando un cadáver reciente, puedes marcar 1 Estrés para extraerle un recuerdo ligado a una emoción o sensación que elijas." }] },
   { key: "Galapa", blurb: "Humanoide con caparazón, paciente y protegido por naturaleza.", features: [{ name: "Caparazón", text: "Suma tu Competencia a tus umbrales de daño." }, { name: "Retraerse", text: "Marca 1 Estrés para meterte en tu caparazón: tienes resistencia al daño físico, desventaja en las tiradas de acción y no puedes moverte." }] },
   { key: "Gigante", blurb: "De estatura descomunal y fuerza a la par.", features: [{ name: "Aguante", text: "Ganas una casilla adicional de Punto de vida al crear el personaje." }, { name: "Alcance", text: "Todo lo que tenga alcance Cuerpo a cuerpo (armas, habilidades, hechizos…) cuenta como si tuviera alcance Muy cercano." }] },
@@ -2452,6 +2452,14 @@ const sharedStyles = `
   .mh-luck-btn small { font-weight: 500; font-size: 11px; opacity: .88; }
   .mh-luck-btn:hover:not(:disabled) { background: #9C68B3; }
   .mh-luck-btn:disabled { background: var(--mh-panel3); color: var(--mh-muted); cursor: not-allowed; }
+  .mh-unshake { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 80; display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 14px; background: #2A2440; color: #fff; box-shadow: 0 10px 26px rgba(0,0,0,.3); font-family: 'Inter', system-ui, sans-serif; animation: mh-wz-art-in .2s ease-out; }
+  .mh-unshake.is-saved { background: #3F6E3A; }
+  .mh-unshake-dice { display: flex; gap: 5px; }
+  .mh-unshake-dice b { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #fff; color: #221C2B; font: 700 15px Georgia, serif; }
+  .mh-unshake-dice b.is-six { background: #F3E3B8; box-shadow: 0 0 0 2px #E3B04B; }
+  .mh-unshake strong { display: block; font-size: 12.5px; }
+  .mh-unshake small { font-size: 11px; opacity: .88; }
+  .mh-charge-go { background: #9A6B3C; display: inline-flex; align-items: center; gap: 5px; }
   .mh-kick-btn { margin-top: 12px; display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 10px; padding: 8px 14px; font: 700 12.5px 'Inter', system-ui, sans-serif; color: #fff; background: #9A6B3C; cursor: pointer; }
   .mh-kick-btn:hover { background: #855a30; }
   .mh-pred { display: flex; flex-direction: column; align-items: center; }
@@ -3389,6 +3397,7 @@ function DamageResult({ roll }) {
           {roll.wolfBonus > 0 && <div style={{ fontSize: 11, color: "#FF6B5E", marginTop: 2 }}>Incluye +1d10 de la Forma de Lobo</div>}
           {roll.isCritical && <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--mh-green-ink)", marginTop: 3 }}>¡Crítico! Sumas el máximo de los dados</div>}
           {roll.levelBonus > 0 && <div style={{ fontSize: 11, color: "var(--mh-muted)", marginTop: 2 }}>Incluye +{roll.levelBonus} de Entrenamiento de combate</div>}
+          {roll.note && <div style={{ fontSize: 11.5, color: "var(--mh-ink3)", marginTop: 3 }}>{roll.note}</div>}
           <div style={{ fontSize: 13.5, fontWeight: 600, color: "#D9644E", marginTop: 4 }}>daño {roll.damageType}</div>
         </div>
       )}
@@ -4875,9 +4884,20 @@ export default function App({ onSignOut }) {
     return patch;
   };
 
-  const markStress = (id, amount, extraPatch) => {
+  const markStress = (id, amountIn, extraPatch) => {
     const c = charsRef.current[id];
     if (!c) return;
+    let amount = amountIn;
+    // Firbolg · Inquebrantable: antes de marcar cada Estrés tira 1d6; con un 6 no lo marcas.
+    if (amount > 0 && (c.f_ancestry || "").split(" + ").includes("Firbolg")) {
+      const dice = Array.from({ length: amount }, () => Math.floor(Math.random() * 6) + 1);
+      const saved = dice.filter((v) => v === 6).length;
+      amount -= saved;
+      clearTimeout(unshakeTimer.current);
+      setUnshakeToast({ key: Date.now(), dice, saved });
+      unshakeTimer.current = setTimeout(() => setUnshakeToast(null), 4000);
+      if (saved) postCampaignEvent(id, `🐂 Inquebrantable: saca un 6 y no marca ${saved === 1 ? "el Estrés" : saved + " de Estrés"}`);
+    }
     const stressTotal = Number(c.r_stress || 0);
     const stressCurrent = Number(c.stress_marked || 0);
     const room = Math.max(0, stressTotal - stressCurrent);
@@ -5136,28 +5156,28 @@ export default function App({ onSignOut }) {
     setShowAddCondition(false);
   };
 
-  const rollWeaponDamage = async (weaponName, damageStr, charId, isCritical) => {
+  const rollWeaponDamage = async (weaponName, damageStr, charId, isCritical, opts = {}) => {
     const m = damageStr.match(/d(\d+)(?:\+(\d+))?/);
     if (!m) return;
     const die = parseInt(m[1], 10);
     const flat = m[2] ? parseInt(m[2], 10) : 0;
     const ch = charId ? charsRef.current[charId] : null;
     // Tiras tantos dados de daño como tu Competencia.
-    const dice = ch ? getProficiency(ch) : 1;
+    const dice = opts.fixedDice || (ch ? getProficiency(ch) : 1);
     const damageType = damageStr.includes("mágico") ? "mágico" : "físico";
     // Guerrero · Entrenamiento de combate: suma su nivel al daño físico.
-    const levelBonus = ch && ch.f_class === "Guerrero" && damageType === "físico" ? Number(ch.f_level || 1) : 0;
+    const levelBonus = !opts.plain && ch && ch.f_class === "Guerrero" && damageType === "físico" ? Number(ch.f_level || 1) : 0;
     const bonus = flat + levelBonus;
     const rolls = Array.from({ length: dice }, () => Math.floor(Math.random() * die) + 1);
     const roll = rolls.reduce((a, b) => a + b, 0);
     // Crítico: sumas el valor máximo de los dados además de la tirada.
     const critBonus = isCritical ? die * dice : 0;
     // Hombre lobo: en Forma de Lobo sumas 1d10 al daño.
-    const wolfBonus = ch && ch.f_transformation_form_active === "Forma de Lobo" ? Math.floor(Math.random() * 10) + 1 : 0;
+    const wolfBonus = !opts.plain && ch && ch.f_transformation_form_active === "Forma de Lobo" ? Math.floor(Math.random() * 10) + 1 : 0;
     // Guardián · Imparable: suma el valor actual del dado.
-    const unstopBonus = ch ? Number(ch.f_unstop_value || 0) : 0;
+    const unstopBonus = !opts.plain && ch ? Number(ch.f_unstop_value || 0) : 0;
     const total = roll + bonus + critBonus + wolfBonus + unstopBonus;
-    setDamageRollResult({ key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId });
+    setDamageRollResult({ key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, note: opts.note || "" });
     const who = playerName || "Alguien en la mesa";
     const critLabel = isCritical ? ` · ¡Crítico! (+${critBonus} máx.)` : "";
     const diceLabel = `${dice}d${die} (${rolls.join("+")})` + (wolfBonus ? ` + Lobo 1d10 (${wolfBonus})` : "") + (unstopBonus ? ` + Imparable ${unstopBonus}` : "");
@@ -6776,6 +6796,9 @@ export default function App({ onSignOut }) {
 
   // Guardián de la Renovación: ventana para elegir a quién curar o quitar Estrés.
   const [renewDlg, setRenewDlg] = useState(null);
+  // Firbolg · Inquebrantable: aviso con el d6.
+  const [unshakeToast, setUnshakeToast] = useState(null);
+  const unshakeTimer = useRef(null);
   // Explorador · Foco del Explorador: ventana para escribir el objetivo.
   const [focusDlg, setFocusDlg] = useState(null);
   // Enano · Piel Gruesa: menú al pulsar daño Menor.
@@ -7289,7 +7312,7 @@ export default function App({ onSignOut }) {
     const advantageRoll = edgeSign ? edgeSign * (Math.floor(Math.random() * 6) + 1) : 0;
     // Hombre lobo: en Forma de Lobo sumas 1d10 a las tiradas de ataque.
     const inWolfForm = charsRef.current[charId]?.f_transformation_form_active === "Forma de Lobo";
-    const wolfBonus = weapon && inWolfForm ? Math.floor(Math.random() * 10) + 1 : 0;
+    const wolfBonus = weapon && !weapon.charge && inWolfForm ? Math.floor(Math.random() * 10) + 1 : 0;
     const expBonus = (extras.exps || []).reduce((a, e) => a + e.bonus, 0);
     const rallySides = extras.rallyDie ? parseInt(extras.rallyDie.slice(1), 10) : 0;
     const rallyRoll = rallySides ? Math.floor(Math.random() * rallySides) + 1 : 0;
@@ -12106,6 +12129,28 @@ export default function App({ onSignOut }) {
             </div>
             </div>
 
+            {unshakeToast && (
+              <div className={"mh-unshake" + (unshakeToast.saved ? " is-saved" : "")} key={unshakeToast.key} role="status">
+                <span className="mh-unshake-dice">
+                  {unshakeToast.dice.map((v, k) => (
+                    <b key={k} className={v === 6 ? "is-six" : ""}>
+                      {v}
+                    </b>
+                  ))}
+                </span>
+                <span>
+                  <strong>Inquebrantable · d6</strong>
+                  <small>
+                    {unshakeToast.saved === unshakeToast.dice.length
+                      ? "¡Un 6! No marcas el Estrés"
+                      : unshakeToast.saved
+                      ? "Un 6: te ahorras " + unshakeToast.saved + " de Estrés"
+                      : "Marcas el Estrés"}
+                  </small>
+                </span>
+              </div>
+            )}
+
             {focusDlg && (() => {
               const me = characters[viewingCharId];
               if (!me) return null;
@@ -12395,7 +12440,7 @@ export default function App({ onSignOut }) {
                         <Dices size={17} />
                       </span>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <b className="mh-serif">{preRoll.cardContext ? preRoll.cardContext.name : preRoll.weapon ? "Ataque con " + preRoll.weapon.name : "Tirada de " + preRoll.traitLabel}</b>
+                        <b className="mh-serif">{preRoll.cardContext ? preRoll.cardContext.name : preRoll.weapon?.charge ? "Carga · tirada de Agilidad" : preRoll.weapon ? "Ataque con " + preRoll.weapon.name : "Tirada de " + preRoll.traitLabel}</b>
                         <small>
                           {preRoll.traitLabel} {(preRoll.traitValue >= 0 ? "+" : "−") + Math.abs(preRoll.traitValue)} · {preRoll.reaction ? "Sin Esperanza ni Miedo" : "Esperanza y Miedo"}{preRoll.cardContext ? " · Dificultad " + preRoll.cardContext.dc : ""}
                         </small>
@@ -12611,6 +12656,34 @@ export default function App({ onSignOut }) {
                         minWidth: 180,
                       }}
                     >
+                      {traitRollResult.weapon.charge ? (
+                        <>
+                          <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 12.5, color: "var(--mh-ink3)", fontWeight: 600, maxWidth: 230 }}>
+                            ¿Has superado la tirada?
+                            <div style={{ fontWeight: 400, fontSize: 11.5, color: "var(--mh-muted)", marginTop: 4, lineHeight: 1.4 }}>
+                              Si igualas o superas la Dificultad que diga el DJ, llegas hasta alcance Cuerpo a cuerpo de tus objetivos y puedes embestir.
+                            </div>
+                          </div>
+                          <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+                            <button
+                              className="mh-btn mh-charge-go"
+                              onClick={() => {
+                                const charId = traitRollResult.charId;
+                                setTraitRollResult(null);
+                                markStress(charId, 1);
+                                rollWeaponDamage("Carga", "d12", charId, false, { fixedDice: 1, plain: true, note: "A todos los objetivos en alcance Cuerpo a cuerpo" });
+                              }}
+                            >
+                              <ChevronsRight size={14} /> Sí, cargar · 1 Estrés
+                            </button>
+                            <button className="mh-btn-ghost" onClick={() => setTraitRollResult(null)}>
+                              No
+                            </button>
+                          </div>
+                          <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 10.5, color: "var(--mh-muted)" }}>1d12 de daño físico, sin Competencia</div>
+                        </>
+                      ) : (
+                      <>
                       <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 12.5, color: "var(--mh-ink3)", fontWeight: 600 }}>
                         {traitRollResult.hope === traitRollResult.fear && (
                           <div style={{ color: "var(--mh-green-ink)", fontWeight: 700, marginBottom: 4 }}>¡Crítico! Daño máximo + tirada</div>
@@ -12640,7 +12713,7 @@ export default function App({ onSignOut }) {
                       </div>
                       {(() => {
                         const rc = characters[traitRollResult.charId];
-                        if (!rc?.f_focus || traitRollResult.weapon.focusTarget || traitRollResult.luck || traitRollResult.reaction) return null;
+                        if (!rc?.f_focus || traitRollResult.weapon.focusTarget || traitRollResult.weapon.charge || traitRollResult.luck || traitRollResult.reaction) return null;
                         const r = traitRollResult;
                         return (
                           <button
@@ -12670,6 +12743,8 @@ export default function App({ onSignOut }) {
                           </button>
                         );
                       })()}
+                      </>
+                      )}
                     </div>
                   )}
                 </div>
@@ -13740,6 +13815,18 @@ export default function App({ onSignOut }) {
                     });
                   }
                   // Dracona: Aliento Elemental (ataque de Instinto) y Escamas (marcar 1 Estrés).
+                  if (d.ancestryKey === "Firbolg" && !d.fromChat) {
+                    cardActs.push({
+                      key: "charge",
+                      Icon: ChevronsRight,
+                      label: "Cargar",
+                      sub: "Tirada de Agilidad · 1 Estrés si la superas",
+                      run: () => {
+                        closeCardDetail();
+                        rollTraitCheck(viewingCharId, "Agilidad", Number(c.t_agility || 0), { name: "Carga", damage: "d12", charge: true });
+                      },
+                    });
+                  }
                   if (d.ancestryKey === "Dracona" && !d.fromChat) {
                     const el = BREATH_ELEMENTS.find((b) => b.key === c.f_breath_element);
                     if (el) {
