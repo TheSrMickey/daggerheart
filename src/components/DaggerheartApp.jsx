@@ -197,7 +197,15 @@ const SUBCLASSES = {
     },
   ],
   Hechicero: [
-    { key: "Origen Elemental", blurb: "Su magia brota de un vínculo con las fuerzas elementales." },
+    {
+      key: "Origen Elemental",
+      blurb: "Canaliza la magia en bruto para darle la forma de un elemento.",
+      features: [
+        { name: "Elementalista", text: "Al crear el personaje, elige uno de estos elementos: aire, tierra, fuego, rayo o agua. Puedes moldear tu elemento para crear efectos inofensivos. Además, gasta 1 Esperanza y describe cómo tu control sobre el elemento ayuda en una tirada de acción que vas a hacer: obtienes un +2 a la tirada o un +3 a su daño." },
+        { name: "Evasión Natural (Especialización)", text: "Puedes invocar tu elemento para que te proteja. Cuando una tirada de ataque contra ti tenga éxito, puedes marcar 1 Estrés y describir cómo usas tu elemento para defenderte. Al hacerlo, tira 1d6 y suma el resultado a tu Evasión contra ese ataque." },
+        { name: "Trascendencia (Maestría)", text: "Una vez por descanso largo, puedes transformarte en una manifestación física de tu elemento. Describe tu transformación y elige dos de estos beneficios hasta tu próximo descanso: +4 a tu umbral Grave; +1 a un rasgo que elijas; +1 a tu Competencia; o +2 a tu Evasión." },
+      ],
+    },
     { key: "Origen Primigenio", blurb: "Su magia brota de un poder ancestral e instintivo." },
   ],
   Guerrero: [
@@ -519,6 +527,27 @@ const BREATH_ELEMENTS = [
   { key: "Ácido", Icon: FlaskConical, color: "#7FB36A" },
   { key: "Veneno", Icon: Skull, color: "#8E6FB8" },
 ];
+// Hechicero · Origen Elemental
+const ORIGIN_ELEMENTS = [
+  { key: "Aire", Icon: Wind, color: "#8FB8C9" },
+  { key: "Tierra", Icon: Mountain, color: "#C08B5C" },
+  { key: "Fuego", Icon: Flame, color: "#E0823A" },
+  { key: "Rayo", Icon: Zap, color: "#D8B434" },
+  { key: "Agua", Icon: Droplets, color: "#5E93B3" },
+];
+const TRANSCEND_OPTS = [
+  { key: "severe", label: "+4 al umbral Grave" },
+  { key: "trait", label: "+1 a un rasgo" },
+  { key: "prof", label: "+1 a la Competencia" },
+  { key: "evasion", label: "+2 a la Evasión" },
+];
+const getTranscend = (c) => {
+  try {
+    return c?.f_transcend ? JSON.parse(c.f_transcend) : null;
+  } catch (e) {
+    return null;
+  }
+};
 const CLASS_ART = {
   Bardo: "/clases/bardo.webp",
   Druida: "/clases/druida.webp",
@@ -750,7 +779,7 @@ const CLASS_ITEMS = {
 
 // Competencia = número de dados de daño. Empieza en 1 y sube en los niveles 2, 5 y 8.
 const proficiencyForLevel = (level) => 1 + (level >= 2) + (level >= 5) + (level >= 8);
-const getProficiency = (c) => Math.max(1, Number(c?.f_proficiency || proficiencyForLevel(Number(c?.f_level || 1))));
+const getProficiency = (c) => Math.max(1, Number(c?.f_proficiency || proficiencyForLevel(Number(c?.f_level || 1)))) + ((getTranscend(c)?.picks || []).includes("prof") ? 1 : 0);
 
 const STRESS_SLOTS = 6;
 const HOPE_MAX = 6;
@@ -2487,6 +2516,12 @@ const sharedStyles = `
   .mh-pre-tile.is-on { border-color: var(--pc); background: color-mix(in srgb, var(--pc) 12%, var(--mh-panel)); }
   .mh-pre-tile:disabled { opacity: .45; cursor: not-allowed; }
   .mh-pre-tide { cursor: default; }
+  .mh-pre-elem { display: inline-flex; gap: 4px; flex-shrink: 0; }
+  .mh-pre-elem button { border: 1px solid color-mix(in srgb, var(--pc) 50%, var(--mh-line)); background: var(--mh-panel); border-radius: 7px; padding: 3px 7px; font: 700 10.5px 'Inter', system-ui, sans-serif; color: color-mix(in srgb, var(--pc) 75%, var(--mh-ink)); cursor: pointer; white-space: nowrap; }
+  .mh-pre-elem button.is-on { background: var(--pc); color: #fff; border-color: var(--pc); }
+  .mh-pre-elem button:disabled { opacity: .4; cursor: not-allowed; }
+  .mh-sc-elem { margin-top: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .mh-sc-elem b { font-size: 14px; color: var(--mh-ink); }
   .mh-pre-tide > b { padding-right: 0; }
   .mh-pre-tide-row { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
   .mh-pre-step { flex-shrink: 0; display: inline-flex; align-items: center; gap: 5px; }
@@ -2821,7 +2856,7 @@ const sharedStyles = `
   .mh-hero-bars i { display: block; height: 100%; border-radius: 3px; }
   .mh-hero-nums { display: flex; justify-content: space-between; gap: 4px; font-size: 10px; color: var(--mh-muted); }
   .mh-wz-body:has(> .mh-sc) { display: flex; }
-  .mh-sc { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 4px 0 8px; background: radial-gradient(60% 70% at 50% 45%, color-mix(in srgb, var(--tc) 11%, transparent), transparent 75%); }
+  .mh-sc { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px 0 8px; background: radial-gradient(60% 70% at 50% 45%, color-mix(in srgb, var(--tc) 11%, transparent), transparent 75%); }
   .mh-sc-row { display: grid; grid-auto-flow: column; grid-auto-columns: 300px; align-items: stretch; gap: 26px; max-height: 100%; }
   .mh-sc-card { all: unset; box-sizing: border-box; position: relative; width: 300px; display: flex; flex-direction: column; border-radius: 18px; overflow: hidden; cursor: pointer; background: var(--mh-panel); border: 2px solid var(--mh-line); box-shadow: 0 6px 18px rgba(0,0,0,.08); transition: transform .18s, box-shadow .18s, border-color .18s, opacity .18s; }
   .mh-sc-card:not(.is-on) { opacity: .88; }
@@ -4449,6 +4484,7 @@ export default function App({ onSignOut }) {
   // Autómata · Diseño con Propósito: quién te creó y qué Experiencia encaja (+1 permanente).
   const [draftCreator, setDraftCreator] = useState("");
   const [draftBreath, setDraftBreath] = useState("");
+  const [draftOriginElement, setDraftOriginElement] = useState("");
   // Del Orden · Entregado: tres valores o dichos.
   const [draftPrinciples, setDraftPrinciples] = useState([{ kind: "Valor", text: "" }, { kind: "Valor", text: "" }, { kind: "Dicho", text: "" }]);
   // Vínculo Bestial: el compañero animal se crea junto a las Experiencias.
@@ -4633,6 +4669,7 @@ export default function App({ onSignOut }) {
     setDraftAncestries([]);
     setDraftCreator("");
     setDraftBreath("");
+    setDraftOriginElement("");
     setDraftPrinciples([{ kind: "Valor", text: "" }, { kind: "Valor", text: "" }, { kind: "Dicho", text: "" }]);
     setDraftCompanion(COMPANION_DRAFT);
     setDraftPurpose("");
@@ -4821,6 +4858,7 @@ export default function App({ onSignOut }) {
       f_purpose: isAutomaton ? draftPurpose.trim() : "",
       f_creator: isAutomaton ? draftCreator.trim() : "",
       f_breath_element: draftAncestries.includes("Dracona") ? draftBreath : "",
+      f_origin_element: chosenSubclass?.key === "Origen Elemental" ? draftOriginElement : "",
       f_community: draftCommunity,
       f_companion:
         chosenSubclass?.key === "Vínculo Bestial"
@@ -5334,7 +5372,7 @@ export default function App({ onSignOut }) {
     const damageType = damageStr.includes("mágico") ? "mágico" : "físico";
     // Guerrero · Entrenamiento de combate: suma su nivel al daño físico.
     const levelBonus = !opts.plain && ch && ch.f_class === "Guerrero" && damageType === "físico" ? Number(ch.f_level || 1) : 0;
-    const bonus = flat + levelBonus;
+    const bonus = flat + levelBonus + (opts.extraFlat || 0);
     const rolls = Array.from({ length: dice }, () => Math.floor(Math.random() * die) + 1);
     // Portador Divino · Resonancia Sagrada: en el daño del Arma Espiritual, los dados repetidos valen el doble.
     const resonance = !!opts.resonance && rolls.some((v, i) => rolls.indexOf(v) !== i);
@@ -5352,7 +5390,7 @@ export default function App({ onSignOut }) {
     const sneakRolls = rogueTier && (opts.cloaked || cloakedNow) ? Array.from({ length: rogueTier }, () => Math.floor(Math.random() * 6) + 1) : null;
     const sneakBonus = sneakRolls ? sneakRolls.reduce((a, b) => a + b, 0) + (isCritical ? 6 * sneakRolls.length : 0) : 0;
     const total = roll + bonus + critBonus + wolfBonus + unstopBonus + sneakBonus;
-    setDamageRollResult({ sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, note: resonance ? "Resonancia Sagrada: los dados repetidos valen el doble" : opts.note || "", spirit: !!opts.spirit });
+    setDamageRollResult({ sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, note: resonance ? "Resonancia Sagrada: los dados repetidos valen el doble" : opts.extraFlat ? "Incluye +" + opts.extraFlat + " de Elementalista" : opts.note || "", spirit: !!opts.spirit });
     const who = playerName || "Alguien en la mesa";
     const critLabel = isCritical ? ` · ¡Crítico! (+${critBonus} máx.)` : "";
     const diceLabel = `${dice}d${die} (${rolls.join("+")})` + (wolfBonus ? ` + Lobo 1d10 (${wolfBonus})` : "") + (unstopBonus ? ` + Imparable ${unstopBonus}` : "") + (sneakRolls ? ` + Furtivo ${sneakRolls.length}d6 (${sneakRolls.join("+")})` : "");
@@ -7053,6 +7091,8 @@ export default function App({ onSignOut }) {
   const unshakeTimer = useRef(null);
   // Explorador · Foco del Explorador: ventana para escribir el objetivo.
   const [focusDlg, setFocusDlg] = useState(null);
+  // Origen Elemental · Trascendencia: elegir dos beneficios.
+  const [transcendDlg, setTranscendDlg] = useState(null);
   // Dados de Oración: dado elegido en la carta.
   const [prayerPick, setPrayerPick] = useState(null);
   // Errante · Petate Nómada: animación y nombre del objeto que se saca.
@@ -7184,6 +7224,9 @@ export default function App({ onSignOut }) {
     if (c.f_dedicated_used) restPatch.f_dedicated_used = "";
     if (c.f_wings_evade) restPatch.f_wings_evade = "";
     if (c.f_dodge) restPatch.f_dodge = "";
+    if (c.f_natural_evade) restPatch.f_natural_evade = "";
+    if (c.f_transcend) restPatch.f_transcend = "";
+    if (isLong && c.f_transcend_used) restPatch.f_transcend_used = "";
     if (c.f_danger_used) restPatch.f_danger_used = "";
     // Compañero animal: se quita tanto Estrés como tú; en el descanso largo vuelve a la escena con 1 menos.
     const comp = getCompanion(c);
@@ -7527,7 +7570,7 @@ export default function App({ onSignOut }) {
   const rollTraitCheck = (charId, traitLabel, traitValue, weapon, cardContext, advantage) => {
     // Galapa · Retraerse: desventaja en las tiradas de acción mientras está en el caparazón.
     const shellOn = getConditions(charsRef.current[charId] || {}).includes("Retraído");
-    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage && !shellOn, exps: [], rally: false, privilege: false, disadvantage: shellOn, shellOn, poet: false, dedicated: false, quick: false, reaction: false, tide: 0, dc: "" });
+    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage && !shellOn, exps: [], rally: false, privilege: false, disadvantage: shellOn, shellOn, poet: false, dedicated: false, quick: false, reaction: false, tide: 0, dc: "", elem: "" });
   };
   const confirmPreRoll = () => {
     const pr = preRoll;
@@ -7535,7 +7578,9 @@ export default function App({ onSignOut }) {
     const ch = charsRef.current[pr.charId];
     const exps = ch ? getExperiences(ch).filter((_, i) => pr.exps.includes(i)) : [];
     const patch = {};
-    const hopeCost = exps.length + (pr.poet ? 1 : 0);
+    const elemOk = ch && ch.f_subclass === "Origen Elemental" && !pr.reaction;
+    const elemUse = elemOk ? pr.elem : "";
+    const hopeCost = exps.length + (pr.poet ? 1 : 0) + (elemUse ? 1 : 0);
     if (hopeCost && ch) patch.hope_marked = String(Math.max(0, Number(ch.hope_marked ?? HOPE_DEFAULT) - hopeCost));
     const rallyDie = pr.rally && ch?.f_rally_die ? ch.f_rally_die : "";
     if (rallyDie) patch.f_rally_die = "";
@@ -7549,13 +7594,15 @@ export default function App({ onSignOut }) {
       postCampaignEvent(pr.charId, "🍃 Reacciones Rápidas: marca 1 Estrés para tener ventaja en una tirada de reacción");
     } else if (Object.keys(patch).length) updateCharacterFields(pr.charId, patch);
     setPreRoll(null);
-    doTraitRoll(pr.charId, pr.traitLabel, pr.traitValue, pr.weapon, pr.cardContext, pr.advantage || pr.privilege || pr.quick, {
+    if (elemUse) postCampaignEvent(pr.charId, `${"🌀"} Elementalista: gasta 1 Esperanza y usa su ${ch.f_origin_element || "elemento"} para ${elemUse === "roll" ? "sumar +2 a la tirada" : "sumar +3 al daño"}`);
+    doTraitRoll(pr.charId, pr.traitLabel, pr.traitValue, pr.weapon ? { ...pr.weapon, ...(elemUse === "dmg" ? { elemDmg: 3 } : {}) } : pr.weapon, pr.cardContext, pr.advantage || pr.privilege || pr.quick, {
       exps: exps.map((e) => ({ text: e.text, bonus: Number(e.bonus) || 0 })),
       rallyDie,
       disadvantage: (ch?.f_ancestry || "").split(" + ").includes("Goblin") && pr.traitLabel === "Agilidad" ? false : pr.disadvantage || (pr.shellOn && !pr.reaction),
       poet: pr.poet,
       hopeD20: pr.dedicated,
       tide: tideSpent,
+      elemRoll: elemUse === "roll" ? 2 : 0,
       dc: pr.cardContext?.dc ?? (Number(pr.dc) > 0 ? Number(pr.dc) : null),
       tideLeft: ch ? Number(ch.f_tide_tokens || 0) - tideSpent : 0,
       reaction: pr.reaction,
@@ -7628,7 +7675,7 @@ export default function App({ onSignOut }) {
     const rallyRoll = rallySides ? Math.floor(Math.random() * rallySides) + 1 : 0;
     // Orador · Corazón de Poeta: 1d4 más.
     const poetRoll = extras.poet ? Math.floor(Math.random() * 4) + 1 : 0;
-    const tideBonus = extras.tide || 0;
+    const tideBonus = (extras.tide || 0) + (extras.elemRoll || 0);
     // Dificultad: la de la carta o la que haya puesto el jugador.
     const dcVal = cardContext?.dc ?? extras.dc ?? null;
     const total = hope + fear + traitValue + advantageRoll + wolfBonus + expBonus + rallyRoll + poetRoll + tideBonus;
@@ -9007,7 +9054,14 @@ export default function App({ onSignOut }) {
         const primaryWeapon = PRIMARY_WEAPONS.find((w) => w.key === c.f_primary_weapon);
         const secondaryWeapon = SECONDARY_WEAPONS.find((w) => w.key === c.f_secondary_weapon);
         const armorEntry = ARMORS.find((a) => a.key === c.f_armor);
-        const equipMods = getEquipmentMods(primaryWeapon, secondaryWeapon, armorEntry);
+        const equipMods = { ...getEquipmentMods(primaryWeapon, secondaryWeapon, armorEntry) };
+        // Origen Elemental · Trascendencia: beneficios hasta el próximo descanso.
+        const transc = getTranscend(c);
+        if (transc) {
+          if (transc.picks.includes("severe")) equipMods.severe = (equipMods.severe || 0) + 4;
+          if (transc.picks.includes("evasion")) equipMods.evasion = (equipMods.evasion || 0) + 2;
+          if (transc.picks.includes("trait") && transc.trait) equipMods[transc.trait] = (equipMods[transc.trait] || 0) + 1;
+        }
         // "Armadura y estadísticas": espaciado fijo y fila de Evasión/Armadura de altura fija, para que la caja
         // (y con ella toda la fila de paneles) mida lo mismo con o sin armadura y con cualquier número de escudos.
         const statsSpacing = (() => {
@@ -9366,8 +9420,13 @@ export default function App({ onSignOut }) {
                                 >
                                   <div style={{ fontSize: 10, color: "var(--mh-muted)" }}>Evasión</div>
                                   <div className="mh-serif" style={{ fontSize: 26, fontWeight: 700, color: ink(wingsOn ? "#5FA77A" : themeColor) }}>
-                                    {c.r_evasion ? Number(c.r_evasion) + (beastformInfo?.evasionBonus || 0) + equipMods.evasion + (wingsOn ? 2 : 0) + (dodgeOn ? 2 : 0) : "—"}
+                                    {c.r_evasion ? Number(c.r_evasion) + (beastformInfo?.evasionBonus || 0) + equipMods.evasion + (wingsOn ? 2 : 0) + (dodgeOn ? 2 : 0) + Number(c.f_natural_evade || 0) : "—"}
                                   </div>
+                                  {Number(c.f_natural_evade || 0) > 0 && (
+                                    <button type="button" className="mh-wing-chip" style={{ background: (ORIGIN_ELEMENTS.find((e) => e.key === c.f_origin_element) || {}).color || "#5FA77A" }} title="Evasión Natural: solo contra este ataque. Pulsa para quitarla." onClick={() => updateCharacterField(viewingCharId, "f_natural_evade", "")}>
+                                      +{c.f_natural_evade} este ataque <X size={9} strokeWidth={2.6} />
+                                    </button>
+                                  )}
                                   {dodgeOn && (
                                     <button type="button" className="mh-dodge-chip" title="Esquiva del Pícaro: termina cuando un ataque tenga éxito contra ti o al descansar. Pulsa para quitarla." onClick={() => updateCharacterField(viewingCharId, "f_dodge", "")}>
                                       +2 Esquiva <X size={9} strokeWidth={2.6} />
@@ -10111,7 +10170,7 @@ export default function App({ onSignOut }) {
                               kicker: `Subclase · ${subclassBadge}`,
                               title: subclassEntry.key,
                               text: subclassEntry.blurb,
-                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
+                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
                               image: subclassEntry.image,
                               bigStyle: true,
                               ...(isElemental ? { elementalAction: true } : {}),
@@ -10121,6 +10180,7 @@ export default function App({ onSignOut }) {
                               ...(subclassEntry.key === "Caminante Nocturno" ? { shadowStep: true } : {}),
                               ...(subclassEntry.key === "Portador Divino" ? { divineActs: true } : {}),
                               ...(subclassEntry.key === "Centinela Alado" ? { sentinelActs: true } : {}),
+                              ...(subclassEntry.key === "Origen Elemental" ? { originActs: true } : {}),
                             }),
                           });
                         }
@@ -12590,6 +12650,68 @@ export default function App({ onSignOut }) {
             </div>
             </div>
 
+            {transcendDlg && (() => {
+              const me = characters[viewingCharId];
+              if (!me) return null;
+              const T = transcendDlg;
+              const close = () => setTranscendDlg(null);
+              const el = ORIGIN_ELEMENTS.find((e) => e.key === me.f_origin_element);
+              const toggle = (k) => setTranscendDlg((d) => ({ ...d, picks: d.picks.includes(k) ? d.picks.filter((x) => x !== k) : d.picks.length >= 2 ? d.picks : [...d.picks, k] }));
+              const ok = T.picks.length === 2 && (!T.picks.includes("trait") || T.trait);
+              const go = () => {
+                if (!ok) return;
+                updateCharacterFields(viewingCharId, { f_transcend: JSON.stringify({ picks: T.picks, trait: T.picks.includes("trait") ? T.trait : "" }), f_transcend_used: "1" });
+                const lbl = T.picks.map((k) => (k === "trait" ? "+1 a " + (TRAITS.find((t) => t.key === T.trait)?.label || "un rasgo") : TRANSCEND_OPTS.find((o) => o.key === k)?.label)).join(" y ");
+                postCampaignEvent(viewingCharId, `🌀 Trascendencia: se transforma en una manifestación de ${el?.key || "su elemento"} (${lbl})`);
+                close();
+                closeCardDetail();
+              };
+              return (
+                <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 46, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)" }} onClick={close}>
+                  <div className="mh-card mh-renew" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Trascendencia">
+                    <div className="mh-pre-h">
+                      <span className="mh-pre-ic" style={{ background: "color-mix(in srgb, " + (el?.color || "#8FB8C9") + " 18%, var(--mh-panel))", color: el?.color || "#8FB8C9" }}>
+                        {el ? <el.Icon size={17} /> : <Sparkles size={17} />}
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <b className="mh-serif">Trascendencia</b>
+                        <small>Elige dos beneficios hasta tu próximo descanso.</small>
+                      </div>
+                      <button type="button" className="mh-inv-x" aria-label="Cerrar" onClick={close}>
+                        <X size={16} />
+                      </button>
+                    </div>
+                    <div className="mh-renew-list">
+                      {TRANSCEND_OPTS.map((o) => {
+                        const on = T.picks.includes(o.key);
+                        return (
+                          <button key={o.key} type="button" disabled={!on && T.picks.length >= 2} className={"mh-renew-row is-pick" + (on ? " is-on" : "")} onClick={() => toggle(o.key)}>
+                            <div className="mh-renew-t">
+                              <b>{o.label}</b>
+                            </div>
+                            <span className="mh-pre-bx">{on && <Check size={12} strokeWidth={3} />}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {T.picks.includes("trait") && (
+                      <div className="mh-wz-breath" style={{ justifyContent: "center", marginTop: 10 }} role="radiogroup" aria-label="Rasgo">
+                        {TRAITS.map((t) => (
+                          <button key={t.key} type="button" role="radio" aria-checked={T.trait === t.key} className={T.trait === t.key ? "is-on" : ""} style={{ "--be": el?.color || "#8FB8C9" }} onClick={() => setTranscendDlg((d) => ({ ...d, trait: t.key }))}>
+                            <t.Icon size={14} />
+                            {t.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <button type="button" className="mh-btn mh-pre-go" disabled={!ok} onClick={go} style={{ marginTop: 12 }}>
+                      <Sparkles size={15} /> Transformarse
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+
             {packDlg && (() => {
               const close = () => setPackDlg(null);
               const go = () => {
@@ -12847,7 +12969,7 @@ export default function App({ onSignOut }) {
               const tideHave = ch.f_community === "Del Mar" ? Number(ch.f_tide_tokens || 0) : 0;
               const tideOk = ch.f_community === "Del Mar" && !preRoll.reaction;
               const tideUse = tideOk ? Math.min(preRoll.tide || 0, tideHave) : 0;
-              const mod = preRoll.traitValue + expSum + tideUse;
+              const mod = preRoll.traitValue + expSum + tideUse + (ch.f_subclass === "Origen Elemental" && !preRoll.reaction && preRoll.elem === "roll" ? 2 : 0);
               // Galapa retraída: la desventaja en las tiradas de acción no se puede quitar.
               // Goblin · Pie Firme: ignora la desventaja en las tiradas de Agilidad.
               const sureFoot = (ch.f_ancestry || "").split(" + ").includes("Goblin") && preRoll.traitLabel === "Agilidad";
@@ -12879,7 +13001,10 @@ export default function App({ onSignOut }) {
               const etherealOk = ch.f_subclass === "Centinela Alado" && tierForLevel(ch.f_level || 1) >= 2 && getConditions(ch).includes("Volando") && preRoll.traitLabel === "Presencia";
               const edgeSource = etherealOk ? "Rostro Etéreo" : highborne ? "Privilegio" : loreborne ? "Leído" : ridgeborne ? "Firme" : slyborne ? "Granuja" : underborne ? "Vida en la Penumbra" : wildborne ? "Pies Ligeros" : "";
               const poetOk = ch.f_subclass === "Orador" && preRoll.traitLabel === "Presencia";
-              const hopeUsed = preRoll.exps.length + (preRoll.poet ? 1 : 0);
+              // Origen Elemental · Elementalista: 1 Esperanza para +2 a la tirada o +3 al daño.
+              const elemOk = ch.f_subclass === "Origen Elemental" && !preRoll.reaction;
+              const elemEl = ORIGIN_ELEMENTS.find((e) => e.key === ch.f_origin_element);
+              const hopeUsed = preRoll.exps.length + (preRoll.poet ? 1 : 0) + (elemOk && preRoll.elem ? 1 : 0);
               const formula = (preRoll.dedicated ? "1d20 + 1d12 " : "2d12 ") + (mod >= 0 ? "+ " : "− ") + Math.abs(mod) + (preRoll.rally && ch.f_rally_die ? " + 1" + ch.f_rally_die : "") + (preRoll.poet ? " + 1d4" : "") + (preRoll.weapon && ch.f_transformation_form_active === "Forma de Lobo" ? " + 1d10" : "") + (edgeNet > 0 ? " + 1d6" : edgeNet < 0 ? " − 1d6" : "");
               const toggleExp = (i) =>
                 setPreRoll((p) => ({ ...p, exps: p.exps.includes(i) ? p.exps.filter((x) => x !== i) : [...p.exps, i] }));
@@ -12897,6 +13022,24 @@ export default function App({ onSignOut }) {
               );
               const setTide = (n) => setPreRoll((p) => ({ ...p, tide: Math.max(0, Math.min(tideHave, n)) }));
               const bonusTiles = [
+                elemOk ? (
+                  <div key="elem" className={"mh-pre-tile mh-pre-tide" + (preRoll.elem ? " is-on" : "")} style={{ "--pc": elemEl?.color || "#8FB8C9" }} title="Describe cómo tu elemento te ayuda en esta tirada">
+                    <b>Elementalista{elemEl ? " · " + elemEl.key : ""}</b>
+                    <span className="mh-pre-tide-row">
+                      <small>1 Esperanza</small>
+                      <span className="mh-pre-elem">
+                        {[
+                          ["roll", "+2 tirada"],
+                          ["dmg", "+3 daño"],
+                        ].map(([k, l]) => (
+                          <button key={k} type="button" className={preRoll.elem === k ? "is-on" : ""} disabled={!preRoll.elem && hopeUsed >= hopeNow} onClick={() => setPreRoll((p) => ({ ...p, elem: p.elem === k ? "" : k }))}>
+                            {l}
+                          </button>
+                        ))}
+                      </span>
+                    </span>
+                  </div>
+                ) : null,
                 tideOk ? (
                   <div key="tide" className={"mh-pre-tile mh-pre-tide" + (tideUse ? " is-on" : "")} style={{ "--pc": "#3E8FB0", opacity: tideHave ? 1 : 0.5 }} title="Gasta fichas de tu carta de comunidad: +1 por cada una">
                     <b>Conocer la Marea</b>
@@ -12969,14 +13112,15 @@ export default function App({ onSignOut }) {
                 preRoll.poet ? ["Corazón de Poeta", "+1d4"] : null,
                 preRoll.dedicated ? ["Entregado", "Esperanza d20"] : null,
                 tideUse ? ["Conocer la Marea", "+" + tideUse] : null,
+                elemOk && preRoll.elem ? ["Elementalista", preRoll.elem === "roll" ? "+2" : "+3 al daño"] : null,
                 wolf ? ["Forma de Lobo", "+1d10"] : null,
                 edgeNet ? [edgeNet > 0 ? "Ventaja" + (preRoll.quick ? " (Reacciones Rápidas)" : preRoll.privilege ? " (" + edgeSource + ")" : "") : "Desventaja", edgeNet > 0 ? "+1d6" : "−1d6"] : (preRoll.advantage || preRoll.privilege || preRoll.quick) && preRoll.disadvantage ? ["Ventaja y desventaja", "se anulan"] : null,
               ].filter(Boolean);
               const DS = 40;
               // Altura fija: se reserva hueco para todas las líneas que este personaje puede llegar a tener.
-              const maxLines = 1 + exps.length + (ch.f_rally_die ? 1 : 0) + (poetOk ? 1 : 0) + (dedicatedOk ? 1 : 0) + (tideOk ? 1 : 0) + (wolf ? 1 : 0) + 1;
+              const maxLines = 1 + exps.length + (ch.f_rally_die ? 1 : 0) + (poetOk ? 1 : 0) + (dedicatedOk ? 1 : 0) + (tideOk ? 1 : 0) + (elemOk ? 1 : 0) + (wolf ? 1 : 0) + 1;
               const canSpendHope = exps.length > 0 || poetOk;
-              const anyAdded = preRoll.exps.length > 0 || preRoll.rally || preRoll.poet || preRoll.dedicated || preRoll.privilege || preRoll.quick || tideUse > 0 || edgePos !== "none";
+              const anyAdded = preRoll.exps.length > 0 || preRoll.rally || preRoll.poet || preRoll.dedicated || preRoll.privilege || preRoll.quick || tideUse > 0 || !!preRoll.elem || edgePos !== "none";
               return (
                 <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 45, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)" }} onClick={() => setPreRoll(null)}>
                   <div className="mh-card mh-card-anim mh-pre" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={"Tirada de " + preRoll.traitLabel}>
@@ -13111,7 +13255,7 @@ export default function App({ onSignOut }) {
                           className="mh-pre-plain"
                           style={anyAdded ? undefined : { visibility: "hidden" }}
                           tabIndex={anyAdded ? undefined : -1}
-                          onClick={() => setPreRoll((p) => ({ ...p, exps: [], rally: false, poet: false, dedicated: false, privilege: false, quick: false, tide: 0, advantage: false, disadvantage: false }))}
+                          onClick={() => setPreRoll((p) => ({ ...p, exps: [], rally: false, poet: false, dedicated: false, privilege: false, quick: false, tide: 0, elem: "", advantage: false, disadvantage: false }))}
                         >
                           Quitar lo añadido
                         </button>
@@ -13303,7 +13447,7 @@ export default function App({ onSignOut }) {
                             }
                             const spirit = !!traitRollResult.weapon.spirit;
                             const rc = characters[charId];
-                            rollWeaponDamage(name, damage, charId, isCritical, { cloaked: wasCloaked, spirit, resonance: spirit && rc && tierForLevel(rc.f_level || 1) >= 3 });
+                            rollWeaponDamage(name, damage, charId, isCritical, { cloaked: wasCloaked, spirit, resonance: spirit && rc && tierForLevel(rc.f_level || 1) >= 3, extraFlat: traitRollResult.weapon.elemDmg || 0 });
                           }}
                         >
                           Sí
@@ -14407,6 +14551,56 @@ export default function App({ onSignOut }) {
                       },
                     });
                   }
+                  // Origen Elemental: elemento, Evasión Natural y Trascendencia.
+                  if (d.originActs && !d.fromChat) {
+                    const el = ORIGIN_ELEMENTS.find((e) => e.key === c.f_origin_element);
+                    const tierO = tierForLevel(c.f_level || 1);
+                    if (!el) {
+                      ORIGIN_ELEMENTS.forEach((e) =>
+                        cardActs.push({
+                          key: "oel-" + e.key,
+                          Icon: e.Icon,
+                          label: "Elegir elemento: " + e.key,
+                          sub: "Elementalista",
+                          run: () => updateCharacterField(viewingCharId, "f_origin_element", e.key),
+                        })
+                      );
+                    } else {
+                      if (tierO >= 2) {
+                        cardActs.push({
+                          key: "natevade",
+                          Icon: el.Icon,
+                          label: c.f_natural_evade ? "Evasión Natural activa (+" + c.f_natural_evade + ")" : "Evasión Natural",
+                          sub: "1 Estrés · +1d6 a la Evasión contra un ataque",
+                          disabled: !!c.f_natural_evade,
+                          run: () => {
+                            closeCardDetail();
+                            const v = Math.floor(Math.random() * 6) + 1;
+                            markStress(viewingCharId, 1, { f_natural_evade: String(v) });
+                            postCampaignEvent(viewingCharId, `🌀 Evasión Natural: marca 1 Estrés, usa su ${el.key} para defenderse y suma ${v} a su Evasión contra el ataque`);
+                          },
+                        });
+                      }
+                      if (tierO >= 3) {
+                        const tr = getTranscend(c);
+                        cardActs.push({
+                          key: "transcend",
+                          Icon: Sparkles,
+                          label: tr ? "Terminar Trascendencia" : c.f_transcend_used ? "Trascendencia · vuelve al descanso largo" : "Trascendencia",
+                          sub: tr ? tr.picks.map((k) => TRANSCEND_OPTS.find((o) => o.key === k)?.label).join(" · ") : "Elige dos beneficios hasta tu próximo descanso",
+                          disabled: !tr && !!c.f_transcend_used,
+                          run: () => {
+                            if (tr) {
+                              updateCharacterField(viewingCharId, "f_transcend", "");
+                              postCampaignEvent(viewingCharId, "🌀 Termina su Trascendencia");
+                              return;
+                            }
+                            setTranscendDlg({ picks: [], trait: "" });
+                          },
+                        });
+                      }
+                    }
+                  }
                   // Centinela Alado · Alas de Luz: volar y llevar a otra criatura.
                   if (d.sentinelActs && !d.fromChat) {
                     const flyingS = getConditions(c).includes("Volando");
@@ -14713,7 +14907,7 @@ export default function App({ onSignOut }) {
                       label: "Mostrar en la campaña",
                       sub: shareCamp.name,
                       run: () => {
-                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, divineActs, sentinelActs, ...detail } = d;
+                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, divineActs, sentinelActs, originActs, ...detail } = d;
                         // Las imágenes incrustadas muy grandes no se copian al chat.
                         if (typeof detail.image === "string" && detail.image.startsWith("data:") && detail.image.length > 30000) delete detail.image;
                         const type = d.domain ? "domain" : d.weapon ? "weapon" : d.armor ? "armor" : "card";
@@ -15145,6 +15339,19 @@ export default function App({ onSignOut }) {
                         );
                       })}
                       </div>
+                      {stepItems[stepIndex]?.key === "Origen Elemental" && (
+                        <div className="mh-sc-elem">
+                          <b className="mh-serif">Elige tu elemento</b>
+                          <div className="mh-wz-breath" role="radiogroup" aria-label="Elemento">
+                            {ORIGIN_ELEMENTS.map((el) => (
+                              <button key={el.key} type="button" role="radio" aria-checked={draftOriginElement === el.key} className={draftOriginElement === el.key ? "is-on" : ""} style={{ "--be": el.color }} onClick={() => setDraftOriginElement(el.key)}>
+                                <el.Icon size={15} />
+                                {el.key}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })()
@@ -16073,6 +16280,7 @@ export default function App({ onSignOut }) {
                 const nextStep = WIZARD_STEPS[idx + 1];
                 const twoHanded = PRIMARY_WEAPONS.find((w) => w.key === draftPrimaryWeapon)?.hands === 2;
                 const block = {
+                  subclass: (SUBCLASSES[CLASSES[carouselIndex]?.key] || [])[subclassIndex]?.key === "Origen Elemental" && !draftOriginElement && "Elige tu elemento para continuar.",
                   traits: traitPool.length > 0 && "Reparte todos los valores para continuar.",
                   ancestry:
                     draftAncestries.length === 0
