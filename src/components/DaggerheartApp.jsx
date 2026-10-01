@@ -279,7 +279,7 @@ const ANCESTRIES = [
   { key: "Hada", blurb: "Pequeña y alada, ligada a la magia feérica.", features: [{ name: "Doblega la Suerte", text: "Una vez por sesión, después de que tú o un aliado dispuesto en alcance Cercano hagáis una tirada de acción, puedes gastar 3 Esperanza para repetir los Dados de Dualidad." }, { name: "Alas", text: "Puedes volar. Mientras vuelas, después de que un adversario te ataque puedes marcar 1 Estrés para ganar +2 a tu Evasión contra ese ataque." }] },
   { key: "Fauno", blurb: "Humanoide con rasgos de cabra: cuernos curvos, pupilas cuadradas y pezuñas hendidas con las que da golpes poderosos.", features: [{ name: "Salto Caprino", text: "Puedes saltar a cualquier punto dentro de alcance Cercano como si usaras tu movimiento normal, lo que te permite saltar obstáculos, cruzar huecos o escalar barreras con facilidad." }, { name: "Coz", text: "Cuando tengas éxito en un ataque contra un objetivo en alcance Cuerpo a cuerpo, puedes marcar 1 Estrés para impulsarte contra él de una coz: haces 2d6 de daño adicional y lo empujas a él, o te empujas a ti, hasta alcance Muy cercano." }] },
   { key: "Firbolg", blurb: "Humanoide bovino de gran fuerza, con nariz ancha, orejas largas y caídas, y a menudo cuernos con los que embiste.", features: [{ name: "Carga", text: "Cuando tengas éxito en una tirada de Agilidad para moverte desde alcance Lejano o Muy lejano hasta alcance Cuerpo a cuerpo de uno o más objetivos, puedes marcar 1 Estrés para hacer 1d12 de daño físico a todos los objetivos en alcance Cuerpo a cuerpo." }, { name: "Inquebrantable", text: "Cuando fueras a marcar Estrés, tira 1d6. Con un 6, no lo marcas." }] },
-  { key: "Fungril", blurb: "Humanoide fúngico surgido de las cavernas subterráneas.", features: [{ name: "Red Fúngica", text: "Haz una tirada de Instinto (12) para usar tu red de micelio y hablar con otros de tu ascendencia. Con éxito, os comunicáis a cualquier distancia." }, { name: "Conexión con la Muerte", text: "Tocando un cadáver reciente, puedes marcar 1 Estrés para extraerle un recuerdo ligado a una emoción o sensación que elijas." }] },
+  { key: "Fungril", blurb: "Humanoide con aspecto de seta, de formas y colores muy variados, que se comunica sin palabras e intercambia información con otros fungril a través de su red de micelio.", features: [{ name: "Red Fúngica", text: "Haz una tirada de Instinto (12) para usar tu red de micelio y hablar con otros de tu ascendencia. Si tienes éxito, podéis comunicaros a cualquier distancia." }, { name: "Conexión con la Muerte", text: "Mientras toques el cadáver de alguien que haya muerto hace poco, puedes marcar 1 Estrés para extraerle un recuerdo relacionado con una emoción o sensación concreta que elijas." }] },
   { key: "Galapa", blurb: "Humanoide con caparazón, paciente y protegido por naturaleza.", features: [{ name: "Caparazón", text: "Suma tu Competencia a tus umbrales de daño." }, { name: "Retraerse", text: "Marca 1 Estrés para meterte en tu caparazón: tienes resistencia al daño físico, desventaja en las tiradas de acción y no puedes moverte." }] },
   { key: "Gigante", blurb: "De estatura descomunal y fuerza a la par.", features: [{ name: "Aguante", text: "Ganas una casilla adicional de Punto de vida al crear el personaje." }, { name: "Alcance", text: "Todo lo que tenga alcance Cuerpo a cuerpo (armas, habilidades, hechizos…) cuenta como si tuviera alcance Muy cercano." }] },
   { key: "Goblin", blurb: "Pequeño, rápido e ingenioso, difícil de atrapar.", features: [{ name: "Pie Firme", text: "Ignoras la desventaja en las tiradas de Agilidad." }, { name: "Sentido del Peligro", text: "Una vez por descanso, marca 1 Estrés para obligar a un adversario a repetir un ataque contra ti o un aliado en alcance Muy cercano." }] },
@@ -2487,6 +2487,8 @@ const sharedStyles = `
   .mh-focus-reroll { display: inline-flex; align-items: center; justify-content: center; gap: 5px; border: 1.5px dashed color-mix(in srgb, #C0504A 60%, transparent); border-radius: 9px; padding: 6px 10px; background: transparent; font: 700 11.5px 'Inter', system-ui, sans-serif; color: #B0453F; cursor: pointer; }
   .mh-focus-reroll:hover { background: color-mix(in srgb, #C0504A 9%, transparent); }
   .mh-focus-note { margin-top: 10px; display: inline-flex; align-items: center; gap: 5px; font: 700 11.5px 'Inter', system-ui, sans-serif; color: #B0453F; background: color-mix(in srgb, #C0504A 12%, var(--mh-panel)); padding: 4px 10px; border-radius: 20px; }
+  .mh-dc-verdict { margin-top: 10px; display: inline-block; padding: 5px 14px; border-radius: 20px; font: 800 12.5px 'Inter', system-ui, sans-serif; color: #fff; background: #C0504A; }
+  .mh-dc-verdict.is-ok { background: #5E9E5A; }
   .mh-luck-done { margin-top: 10px; display: inline-flex; align-items: center; gap: 5px; font: 700 11.5px 'Inter', system-ui, sans-serif; color: #8A5AA0; }
   .mh-chat-luck { display: flex; align-items: center; gap: 6px; width: calc(100% - 20px); margin: 8px 10px 10px; padding: 6px 9px; border: 1.5px dashed #B07CC6; border-radius: 9px; background: transparent; font: 700 11.5px 'Inter', system-ui, sans-serif; color: #8A5AA0; cursor: pointer; text-align: left; }
   .mh-chat-luck small { margin-left: auto; font-weight: 500; color: var(--mh-muted); }
@@ -12655,6 +12657,14 @@ export default function App({ onSignOut }) {
                       {traitRollResult.traitLabel}
                     </div>
                     <DualityResult roll={traitRollResult} size={72} />
+                    {traitRollResult.card?.dc != null && (() => {
+                      const ok = traitRollResult.hope === traitRollResult.fear || traitRollResult.total >= traitRollResult.card.dc;
+                      return (
+                        <div className={"mh-dc-verdict mh-appear-late" + (ok ? " is-ok" : "")} key={traitRollResult.key}>
+                          {ok ? "Éxito" : "Fracaso"} · {traitRollResult.total} contra Dificultad {traitRollResult.card.dc}
+                        </div>
+                      );
+                    })()}
                     {(() => {
                       const rc = characters[traitRollResult.charId];
                       if (!rc || !isFaerie(rc) || traitRollResult.reaction || traitRollResult.luck) return null;
@@ -13925,6 +13935,29 @@ export default function App({ onSignOut }) {
                     });
                   }
                   // Dracona: Aliento Elemental (ataque de Instinto) y Escamas (marcar 1 Estrés).
+                  if (d.ancestryKey === "Fungril" && !d.fromChat) {
+                    cardActs.push({
+                      key: "network",
+                      Icon: Network,
+                      label: "Red Fúngica",
+                      sub: "Tirada de Instinto (12)",
+                      run: () => {
+                        closeCardDetail();
+                        rollTraitCheck(viewingCharId, "Instinto", Number(c.t_instinct || 0), null, { name: "Red Fúngica", dc: 12 });
+                      },
+                    });
+                    cardActs.push({
+                      key: "death",
+                      Icon: Skull,
+                      label: "Conexión con la Muerte",
+                      sub: "Marca 1 Estrés · un recuerdo del cadáver",
+                      run: () => {
+                        closeCardDetail();
+                        markStress(viewingCharId, 1);
+                        postCampaignEvent(viewingCharId, "🍄 Conexión con la Muerte: marca 1 Estrés y extrae un recuerdo de un cadáver reciente");
+                      },
+                    });
+                  }
                   if (d.ancestryKey === "Firbolg" && !d.fromChat) {
                     cardActs.push({
                       key: "charge",
