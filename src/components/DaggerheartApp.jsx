@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
-import { Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
+import { Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
 
 const NAV_ITEMS = [
   { key: "ficha", label: "Personajes", icon: User },
@@ -2390,6 +2390,20 @@ const sharedStyles = `
   .mh-pre-lines .is-cost b { color: var(--mh-gold-ink); }
   .mh-pre-h { display: flex; align-items: center; gap: 10px; }
   .mh-pre-kind { flex-shrink: 0; }
+  .mh-wing-btn { position: absolute; top: 6px; right: 6px; display: inline-flex; align-items: center; gap: 2px; border: 0; border-radius: 20px; padding: 2px 7px; font: 700 10.5px 'Inter', system-ui, sans-serif; color: #fff; background: #5FA77A; cursor: pointer; }
+  .mh-wing-btn:hover { background: #4E9469; }
+  .mh-wing-btn .mh-tip { width: 190px; }
+  .mh-wing-chip { position: absolute; left: 50%; bottom: 5px; transform: translateX(-50%); white-space: nowrap; display: inline-flex; align-items: center; gap: 3px; border: 0; border-radius: 20px; padding: 2px 7px; font: 700 9.5px 'Inter', system-ui, sans-serif; color: #fff; background: #5FA77A; cursor: pointer; }
+  .mh-luck-btn { margin-top: 12px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 7px; flex-wrap: wrap; border: 0; border-radius: 11px; padding: 9px 12px; font: 700 13px 'Inter', system-ui, sans-serif; color: #fff; background: #B07CC6; cursor: pointer; }
+  .mh-luck-btn small { font-weight: 500; font-size: 11px; opacity: .88; }
+  .mh-luck-btn:hover:not(:disabled) { background: #9C68B3; }
+  .mh-luck-btn:disabled { background: var(--mh-panel3); color: var(--mh-muted); cursor: not-allowed; }
+  .mh-luck-done { margin-top: 10px; display: inline-flex; align-items: center; gap: 5px; font: 700 11.5px 'Inter', system-ui, sans-serif; color: #8A5AA0; }
+  .mh-chat-luck { display: flex; align-items: center; gap: 6px; width: calc(100% - 20px); margin: 8px 10px 10px; padding: 6px 9px; border: 1.5px dashed #B07CC6; border-radius: 9px; background: transparent; font: 700 11.5px 'Inter', system-ui, sans-serif; color: #8A5AA0; cursor: pointer; text-align: left; }
+  .mh-chat-luck small { margin-left: auto; font-weight: 500; color: var(--mh-muted); }
+  .mh-chat-luck:hover:not(:disabled) { background: color-mix(in srgb, #B07CC6 10%, transparent); }
+  .mh-chat-luck:disabled { opacity: .5; cursor: not-allowed; }
+  .mh-chat-luck-adj { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 12px; font-size: 12px; font-weight: 600; color: var(--mh-ink3); border-top: 1px solid var(--mh-line); }
   .mh-pre-kind button { padding: 5px 11px; }
   .mh-pre-seg button.is-react.is-on { background: color-mix(in srgb, #5E8FC9 16%, var(--mh-panel)); color: color-mix(in srgb, #5E8FC9 75%, var(--mh-ink)); }
   .mh-pre-h b { display: block; font-size: 16px; color: var(--mh-ink); }
@@ -4909,8 +4923,11 @@ export default function App({ onSignOut }) {
   };
 
   const CONDITION_PRESETS = ["Escondido", "Inmovilizado", "Vulnerable", "Inconsciente"];
-  const CONDITION_THEME_COLOR = { Escondido: "#7D8BA3", Inmovilizado: "#C08B5C", Vulnerable: "#D9644E", Inconsciente: "#A58BE8" };
-  const CONDITION_ICONS = { Escondido: EyeOff, Inmovilizado: Lock, Vulnerable: ShieldOff, Inconsciente: ZapOff };
+  const CONDITION_THEME_COLOR = { Escondido: "#7D8BA3", Inmovilizado: "#C08B5C", Vulnerable: "#D9644E", Inconsciente: "#A58BE8", Volando: "#5FA77A" };
+  const CONDITION_ICONS = { Escondido: EyeOff, Inmovilizado: Lock, Vulnerable: ShieldOff, Inconsciente: ZapOff, Volando: Feather };
+  // Hada: Alas (puede volar) y Doblega la Suerte.
+  const isFaerie = (c) => (c?.f_ancestry || "").split(" + ").includes("Hada");
+  const conditionPresetsFor = (c) => (isFaerie(c) ? [...CONDITION_PRESETS, "Volando"] : CONDITION_PRESETS);
   const getConditions = (c) => {
     try {
       return JSON.parse(c.f_conditions || "[]");
@@ -4951,7 +4968,17 @@ export default function App({ onSignOut }) {
     if (unstopValue(c) && (name === "Inmovilizado" || name === "Vulnerable")) return;
     const list = getConditions(c);
     const next = list.includes(name) ? list.filter((n) => n !== name) : [...list, name];
-    updateCharacterField(id, "f_conditions", JSON.stringify(next));
+    // Al aterrizar se pierde el +2 de Alas.
+    if (name === "Volando" && !next.includes("Volando")) updateCharacterFields(id, { f_conditions: JSON.stringify(next), f_wings_evade: "" });
+    else updateCharacterField(id, "f_conditions", JSON.stringify(next));
+    if (name === "Volando") postCampaignEvent(id, next.includes("Volando") ? "🪽 Despliega las alas y echa a volar" : "🪽 Aterriza");
+  };
+  // Hada · Alas: marca 1 Estrés para +2 a la Evasión contra un ataque.
+  const applyWings = (id) => {
+    const c = charsRef.current[id];
+    if (!c || c.f_wings_evade === "1") return;
+    markStress(id, 1, { f_wings_evade: "1" });
+    postCampaignEvent(id, "🪽 Alas: marca 1 Estrés y gana +2 a la Evasión contra este ataque");
   };
   const addCustomCondition = (id) => {
     const name = newConditionDraft.trim();
@@ -4959,7 +4986,7 @@ export default function App({ onSignOut }) {
     const c = characters[id];
     if (!c) return;
     const list = getConditions(c);
-    const customCount = list.filter((n) => !CONDITION_PRESETS.includes(n)).length;
+    const customCount = list.filter((n) => !conditionPresetsFor(c).includes(n)).length;
     if (customCount >= 2) return;
     if (!list.includes(name)) list.push(name);
     updateCharacterField(id, "f_conditions", JSON.stringify(list));
@@ -5763,7 +5790,7 @@ export default function App({ onSignOut }) {
         const linkPrev = chatRollsLinked(list[i - 1], m);
         const linkNext = chatRollsLinked(m, list[i + 1]);
         // Ataque y daño seguidos se pegan en una sola tarjeta, separados por una línea «Daño».
-        const card = (tone, tag, head, body, left, right) => (
+        const card = (tone, tag, head, body, left, right, extra) => (
           <div key={key} className={"mh-chat-roll" + (linkNext ? " is-join-next" : "") + (linkPrev ? " is-join-prev" : "")} style={{ "--rc": tone }}>
             {linkPrev && <div className="mh-chat-join">{tag}</div>}
             <div className="mh-chat-roll-h">
@@ -5776,6 +5803,7 @@ export default function App({ onSignOut }) {
               <span>{left}</span>
               {right && <span>{right}</span>}
             </div>
+            {extra}
           </div>
         );
         const total = (label, v) => (
@@ -5841,8 +5869,49 @@ export default function App({ onSignOut }) {
         const base = crit ? "Éxito crítico" : r.reaction ? "Tirada de reacción" : (success === null ? "Con " : success ? "Éxito con " : "Fallo con ") + (withHope ? "Esperanza" : "Miedo");
         const note = r.reaction ? (crit ? "Ignora los efectos" : "Sin Esperanza ni Miedo") : crit ? "+1 Esperanza y −1 Estrés" : withHope ? "+1 Esperanza" : "El DJ gana 1 Miedo";
         const vcol = crit ? "#6FBF73" : r.reaction ? "#5E8FC9" : withHope ? "#E3B04B" : "#A58BE8";
-        const tag = r.weapon ? "Ataque" : r.card ? "Habilidad" : r.reaction ? "Reacción" : "Rasgo";
-        const head = r.weapon ? (
+        const tag = r.luck ? "Suerte" : r.weapon ? "Ataque" : r.card ? "Habilidad" : r.reaction ? "Reacción" : "Rasgo";
+        // Hada · Doblega la Suerte: botón bajo las tiradas de acción recientes (tuyas o de aliados).
+        const meC = meCharId ? characters[meCharId] : null;
+        const luckable = meC && isFaerie(meC) && !r.reaction && !r.luck && m.charId && Date.now() - (m.ts || 0) < 10 * 60 * 1000;
+        const meHope = meC ? Number(meC.hope_marked ?? HOPE_DEFAULT) : 0;
+        const luckBtn = luckable ? (
+          <button type="button" className="mh-chat-luck" disabled={!!meC.f_luck_used || meHope < 3} onClick={() => bendLuck(meCharId, m.charId, r)}>
+            <Clover size={13} />
+            {m.charId === meCharId ? "Doblega la Suerte" : "Doblega la Suerte para " + m.author}
+            <small>{meC.f_luck_used ? "Ya usada" : meHope < 3 ? "Necesitas 3 Esperanza" : "3 Esperanza"}</small>
+          </button>
+        ) : null;
+        // El aliado al que le repitieron la tirada aplica el cambio de Esperanza y Estrés desde aquí.
+        const adj = r.adjust;
+        const adjMine = adj && meC && adj.charId === meCharId;
+        const adjGot = adjMine && getGiftsGot(meC).includes(m.sid);
+        const adjDesc = adj ? [adj.hope ? (adj.hope > 0 ? "+" : "−") + Math.abs(adj.hope) + " Esperanza" : "", adj.stress ? (adj.stress > 0 ? "+" : "−") + Math.abs(adj.stress) + " Estrés" : ""].filter(Boolean).join(" y ") : "";
+        const adjRow = adjMine ? (
+          <div className="mh-chat-luck-adj">
+            <span>{adjGot ? "Ya aplicado: " + adjDesc : "Tu tirada cambia: " + adjDesc}</span>
+            {!adjGot && (
+              <button
+                type="button"
+                className="mh-chat-open"
+                onClick={() => {
+                  const cur = charsRef.current[meCharId] || meC;
+                  if (getGiftsGot(cur).includes(m.sid)) return;
+                  const patch = { f_gifts_got: JSON.stringify([...getGiftsGot(cur), m.sid].slice(-40)) };
+                  if (adj.hope) patch.hope_marked = String(Math.max(0, Math.min(getHopeMax(cur), Number(cur.hope_marked ?? HOPE_DEFAULT) + adj.hope)));
+                  if (adj.stress) patch.stress_marked = String(Math.max(0, Math.min(Number(cur.r_stress || 0), Number(cur.stress_marked || 0) + adj.stress)));
+                  updateCharacterFields(meCharId, patch);
+                }}
+              >
+                <Check size={12} /> Aplicar
+              </button>
+            )}
+          </div>
+        ) : null;
+        const head = r.luck ? (
+          <>
+            {who} doblega la suerte{r.luck.forId && r.luck.forId !== m.charId ? " de " + r.luck.forName : ""} · {r.weapon ? "ataque con " + r.weapon : r.card || r.trait}
+          </>
+        ) : r.weapon ? (
           <>
             {who} ataca con {r.weapon}
           </>
@@ -5884,7 +5953,13 @@ export default function App({ onSignOut }) {
             {total(r.dc ? "vs " + r.dc : "Total", r.total)}
           </>,
           base,
-          note
+          r.luck ? "Antes: " + r.luck.prevHope + " y " + r.luck.prevFear : note,
+          luckBtn || adjRow ? (
+            <>
+              {adjRow}
+              {luckBtn}
+            </>
+          ) : null
         );
       }
 
@@ -6651,6 +6726,9 @@ export default function App({ onSignOut }) {
     if (c.f_unstop_value) restPatch.f_unstop_value = "";
     if (isLong && c.f_unstop_used) restPatch.f_unstop_used = "";
     if (c.f_dedicated_used) restPatch.f_dedicated_used = "";
+    if (c.f_wings_evade) restPatch.f_wings_evade = "";
+    // Doblega la Suerte es una vez por sesión: la app lo recupera con el descanso largo.
+    if (isLong && c.f_luck_used) restPatch.f_luck_used = "";
     if (c.f_thickskin_ready) restPatch.f_thickskin_ready = "";
     if (c.f_fortitude_ready) restPatch.f_fortitude_ready = "";
     if (isLong && c.f_clarity_used) restPatch.f_clarity_used = "";
@@ -6991,6 +7069,41 @@ export default function App({ onSignOut }) {
     });
   };
 
+  // Hada · Doblega la Suerte: 3 Esperanza para repetir los Dados de Dualidad de una tirada de acción
+  // tuya o de un aliado. Se deshace lo que dio la tirada anterior y se aplica lo de la nueva.
+  const rollGains = (h, f) => ({ hope: h >= f ? 1 : 0, stress: h === f ? -1 : 0, fear: f > h ? 1 : 0 });
+  const bendLuck = (myId, rollerId, roll) => {
+    const me = charsRef.current[myId];
+    if (!me || me.f_luck_used || Number(me.hope_marked ?? HOPE_DEFAULT) < 3) return;
+    const sides = roll.hopeSides || 12;
+    const nh = Math.floor(Math.random() * sides) + 1;
+    const nf = Math.floor(Math.random() * 12) + 1;
+    const total = roll.total - roll.hope - roll.fear + nh + nf;
+    const a = rollGains(roll.hope, roll.fear);
+    const b = rollGains(nh, nf);
+    const delta = { hope: b.hope - a.hope, stress: b.stress - a.stress, fear: b.fear - a.fear };
+    const own = rollerId === myId;
+    const hopeNow = Number(me.hope_marked ?? HOPE_DEFAULT) - 3 + (own ? delta.hope : 0);
+    const patch = { f_luck_used: "1", hope_marked: String(Math.max(0, Math.min(getHopeMax(me), hopeNow))) };
+    if (own && delta.stress) patch.stress_marked = String(Math.max(0, Math.min(Number(me.r_stress || 0), Number(me.stress_marked || 0) + delta.stress)));
+    updateCharacterFields(myId, patch);
+    if (delta.fear) addFear(delta.fear);
+    const crit = nh === nf;
+    const text = crit ? "Éxito crítico" : nh > nf ? "Con Esperanza" : "Con Miedo";
+    const color = crit ? "#7FB77A" : nh > nf ? "#E3B04B" : "#A58BE8";
+    const note = crit ? "Ganas 1 Esperanza y te quitas 1 Estrés" : nh > nf ? "Ganas 1 Esperanza" : "El DJ gana 1 de Miedo";
+    if (own) setTraitRollResult((prev) => (prev && prev.charId === myId ? { ...prev, key: Date.now(), hope: nh, fear: nf, total, text, color, note, luck: true } : prev));
+    const roller = charsRef.current[rollerId];
+    const forName = roller?.f_name || "un aliado";
+    const sid = String(Date.now());
+    const { luck, adjust, ...base } = roll;
+    postCampaignEvent(myId, `🍀 Doblega la Suerte${own ? "" : " para " + forName}: ${nh} + ${nf} = ${total} (${text})`, {
+      kind: "roll",
+      sid,
+      roll: { ...base, hope: nh, fear: nf, total, luck: { forId: rollerId, forName, prevHope: roll.hope, prevFear: roll.fear }, adjust: !own && (delta.hope || delta.stress) ? { charId: rollerId, hope: delta.hope, stress: delta.stress } : null },
+    });
+  };
+
   const doTraitRoll = async (charId, traitLabel, traitValue, weapon, cardContext, advantage, extras = {}) => {
     // Del Orden · Entregado: el Dado de Esperanza pasa a ser un d20.
     const hopeSides = extras.hopeD20 ? 20 : 12;
@@ -7031,7 +7144,7 @@ export default function App({ onSignOut }) {
         ? "Ignoras los efectos que te afectarían aun con éxito"
         : "Las reacciones no generan Esperanza ni Miedo"
       : hope === fear ? "Ganas 1 Esperanza y te quitas 1 Estrés" : hope > fear ? "Ganas 1 Esperanza" : "El DJ gana 1 de Miedo";
-    setTraitRollResult({ key: Date.now(), hopeSides, traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, total, text: hope === fear ? "Éxito crítico" : reaction ? "Tirada de reacción" : text, color, note, reaction, weapon: weapon || null, charId });
+    setTraitRollResult({ key: Date.now(), hopeSides, traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, total, text: hope === fear ? "Éxito crítico" : reaction ? "Tirada de reacción" : text, color, note, reaction, card: cardContext ? { name: cardContext.name, dc: cardContext.dc } : null, exps: extras.exps || [], weapon: weapon || null, charId });
 
     // Con Esperanza (o crítico) ganas 1 Esperanza; con crítico además te quitas 1 Estrés.
     if (reaction) {
@@ -8640,6 +8753,8 @@ export default function App({ onSignOut }) {
                   const fortSevere = c.f_fortitude_ready === "1" ? severe * 2 : severe;
                   const experiences = getExperiences(c);
                   const conditions = getConditions(c);
+                  const flying = isFaerie(c) && conditions.includes("Volando");
+                  const wingsOn = flying && c.f_wings_evade === "1";
                   const entries = getJournal(c);
                   const spellTraitKey = spellcastTraitFor(c.f_class, c.f_subclass);
                   const spellTraitInfo = TRAITS.find((t) => t.key === spellTraitKey);
@@ -8716,11 +8831,26 @@ export default function App({ onSignOut }) {
                             >
                               {/* El hueco del antiguo campo de daño se reparte entre las secciones para mantener la altura. */}
                               <div style={{ display: "flex", gap: 12, marginBottom: statsSpacing.evMb, height: 100 }}>
-                                <div style={{ flex: 1, textAlign: "center", border: "1px solid " + themeColor, background: alpha(themeColor, 8), borderRadius: 12, padding: statsSpacing.boxPadY + "px 6px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                                <div
+                                  className={wingsOn ? "mh-eva-wings" : undefined}
+                                  style={{ position: "relative", flex: 1, textAlign: "center", border: "1px solid " + (wingsOn ? "#5FA77A" : themeColor), background: alpha(wingsOn ? "#5FA77A" : themeColor, wingsOn ? 14 : 8), borderRadius: 12, padding: statsSpacing.boxPadY + "px 6px", display: "flex", flexDirection: "column", justifyContent: "center" }}
+                                >
                                   <div style={{ fontSize: 10, color: "var(--mh-muted)" }}>Evasión</div>
-                                  <div className="mh-serif" style={{ fontSize: 26, fontWeight: 700, color: ink(themeColor) }}>
-                                    {c.r_evasion ? Number(c.r_evasion) + (beastformInfo?.evasionBonus || 0) + equipMods.evasion : "—"}
+                                  <div className="mh-serif" style={{ fontSize: 26, fontWeight: 700, color: ink(wingsOn ? "#5FA77A" : themeColor) }}>
+                                    {c.r_evasion ? Number(c.r_evasion) + (beastformInfo?.evasionBonus || 0) + equipMods.evasion + (wingsOn ? 2 : 0) : "—"}
                                   </div>
+                                  {flying && !wingsOn && (
+                                    <button type="button" className="mh-wing-btn mh-tip-anchor" aria-label="Alas: marca 1 Estrés para +2 a la Evasión contra este ataque" onClick={() => applyWings(viewingCharId)}>
+                                      <span className="mh-tip mh-tip-wrap">Alas: marca 1 Estrés para +2 a la Evasión contra este ataque</span>
+                                      <Feather size={11} />
+                                      +2
+                                    </button>
+                                  )}
+                                  {wingsOn && (
+                                    <button type="button" className="mh-wing-chip" title="Quitar el +2 cuando termine el ataque" onClick={() => updateCharacterField(viewingCharId, "f_wings_evade", "")}>
+                                      +2 este ataque <X size={9} strokeWidth={2.6} />
+                                    </button>
+                                  )}
                                 </div>
                                 <div style={{ flex: 1.4, border: "1px solid var(--acc)", background: "color-mix(in srgb, var(--acc) 5%, transparent)", borderRadius: 12, padding: statsSpacing.boxPadY + "px 10px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
                                   <div style={{ fontSize: 10, color: "var(--mh-muted)", textAlign: "center", marginBottom: 4 }}>
@@ -8854,7 +8984,7 @@ export default function App({ onSignOut }) {
                               <div>
                                 <div className="mh-label" style={{ marginBottom: 6, marginTop: 4 }}>Condiciones</div>
                                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6, marginBottom: 8 }}>
-                                  {CONDITION_PRESETS.map((name) => {
+                                  {conditionPresetsFor(c).map((name) => {
                                     const active = conditions.includes(name);
                                     const blockedByUnstop = unstopValue(c) > 0 && (name === "Inmovilizado" || name === "Vulnerable");
                                     const themeColor = CONDITION_THEME_COLOR[name];
@@ -8885,7 +9015,7 @@ export default function App({ onSignOut }) {
                                       </div>
                                     );
                                   })}
-                                  {conditions.filter((n) => !CONDITION_PRESETS.includes(n)).map((name) => (
+                                  {conditions.filter((n) => !conditionPresetsFor(c).includes(n)).map((name) => (
                                     <div
                                       key={name}
                                       onClick={() => toggleCondition(viewingCharId, name)}
@@ -8908,7 +9038,7 @@ export default function App({ onSignOut }) {
                                       {name} <X size={10} />
                                     </div>
                                   ))}
-                                  {conditions.filter((n) => !CONDITION_PRESETS.includes(n)).length < 2 && (
+                                  {conditions.filter((n) => !conditionPresetsFor(c).includes(n)).length < 2 && (
                                     <div
                                       onClick={() => setShowAddCondition(true)}
                                       style={{
@@ -11770,6 +11900,45 @@ export default function App({ onSignOut }) {
                       {traitRollResult.traitLabel}
                     </div>
                     <DualityResult roll={traitRollResult} size={72} />
+                    {(() => {
+                      const rc = characters[traitRollResult.charId];
+                      if (!rc || !isFaerie(rc) || traitRollResult.reaction || traitRollResult.luck) return null;
+                      const hopeR = Number(rc.hope_marked ?? HOPE_DEFAULT);
+                      const used = !!rc.f_luck_used;
+                      const r = traitRollResult;
+                      return (
+                        <button
+                          type="button"
+                          className="mh-luck-btn"
+                          disabled={used || hopeR < 3}
+                          onClick={() =>
+                            bendLuck(r.charId, r.charId, {
+                              trait: r.traitLabel,
+                              weapon: r.weapon?.name || "",
+                              card: r.card?.name || "",
+                              dc: r.card?.dc,
+                              hopeSides: r.hopeSides || 12,
+                              hope: r.hope,
+                              fear: r.fear,
+                              mod: r.mod,
+                              adv: r.advantageRoll,
+                              wolf: r.wolfBonus,
+                              exp: r.expBonus,
+                              expNames: (r.exps || []).map((e) => e.text),
+                              rally: r.rallyRoll,
+                              rallyDie: r.rallyDie,
+                              poet: r.poetRoll,
+                              total: r.total,
+                            })
+                          }
+                        >
+                          <Clover size={15} />
+                          Doblega la Suerte
+                          <small>{used ? "Ya usada · vuelve al descanso largo" : hopeR < 3 ? "Necesitas 3 Esperanza" : "3 Esperanza · repetir"}</small>
+                        </button>
+                      );
+                    })()}
+                    {traitRollResult.luck && <div className="mh-luck-done"><Clover size={12} /> Repetida con Doblega la Suerte</div>}
                     <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 10, color: "var(--mh-muted)", marginTop: 10 }}>
                       Pulsa fuera para cerrar
                     </div>
