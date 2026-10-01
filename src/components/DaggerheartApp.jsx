@@ -714,7 +714,7 @@ const CLASS_FEATURES = {
     { name: "Dados de Oración", text: "Al comienzo de cada sesión, tira tantos d4 como el rasgo de lanzamiento de tu subclase y colócalos en tu ficha: son tus Dados de Oración. Puedes gastar los que quieras para ayudarte a ti o a un aliado dentro de alcance Lejano. Puedes usar el valor de un dado gastado para reducir el daño que se recibe, sumarlo al resultado de una tirada después de hacerla o ganar tanta Esperanza como su resultado. Al final de cada sesión, retira todos los Dados de Oración que no hayas gastado." },
   ],
   Hechicero: [
-    { name: "Sentido Arcano", text: "Percibes la presencia de personas y objetos mágicos en alcance Cercano." },
+    { name: "Sentido Arcano", text: "Puedes percibir la presencia de personas y objetos mágicos dentro de alcance Cercano." },
     { name: "Ilusión Menor", text: "Haz una tirada de conjuro (10). Si tienes éxito, creas una ilusión visual menor, no más grande que tú, en alcance Cercano. Resulta convincente para cualquiera que esté en alcance Cercano o más lejos." },
     { name: "Canalizar Poder en Bruto", text: "Una vez por descanso largo, pasa una carta de dominio de tu equipo a la bóveda y elige: ganas tanta Esperanza como el nivel de la carta, o potencias un hechizo de daño sumando el doble del nivel de la carta a la tirada de daño." },
   ],
@@ -9187,6 +9187,19 @@ export default function App({ onSignOut }) {
                     return (
                       <span className="mh-htag" style={{ "--tag": el.color }} title="Encarnación Elemental">
                         <el.Icon size={14} /> {c.f_elemental_active} canalizado
+                      </span>
+                    );
+                  })()}
+                  {c.f_subclass === "Origen Elemental" && ORIGIN_ELEMENTS.find((e) => e.key === c.f_origin_element) && (() => {
+                    // Origen Elemental: el elemento que domina; con Trascendencia, su manifestación activa.
+                    const el = ORIGIN_ELEMENTS.find((e) => e.key === c.f_origin_element);
+                    return getTranscend(c) ? (
+                      <span className="mh-htag is-active" style={{ "--tag": el.color }} title={"Trascendencia: " + getTranscend(c).picks.map((k) => TRANSCEND_OPTS.find((o) => o.key === k)?.label).join(" · ")}>
+                        <span className="mh-htag-dot" /> Manifestación de {el.key}
+                      </span>
+                    ) : (
+                      <span className="mh-htag" style={{ "--tag": el.color }} title="Elementalista: tu elemento">
+                        <el.Icon size={14} /> {el.key}
                       </span>
                     );
                   })()}
