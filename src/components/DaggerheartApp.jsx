@@ -153,7 +153,17 @@ const SUBCLASSES = {
     },
   ],
   Pícaro: [
-    { key: "Caminante Nocturno", blurb: "Se mueve entre las sombras para golpear sin ser visto." },
+    {
+      key: "Caminante Nocturno",
+      blurb: "Manipula las sombras para moverse por el entorno.",
+      features: [
+        { name: "Paso de Sombra", text: "Puedes moverte de sombra en sombra. Cuando entres en una zona de oscuridad o en la sombra que proyecta otra criatura u objeto, puedes marcar 1 Estrés para desaparecer de donde estás y reaparecer dentro de otra sombra en alcance Lejano. Al reaparecer, quedas Oculto." },
+        { name: "Nube Oscura (Especialización)", text: "Haz una tirada de Lanzamiento (15). Si tienes éxito, creas una nube oscura temporal que cubre cualquier zona dentro de alcance Cercano. Quien esté dentro de la nube no puede ver fuera de ella, y quien esté fuera no puede ver dentro. Se te considera Oculto ante cualquier adversario al que la nube le bloquee la línea de visión." },
+        { name: "Adrenalina (Especialización)", text: "Mientras estés Vulnerable, suma tu nivel a tus tiradas de daño." },
+        { name: "Sombra Fugaz (Maestría)", text: "Obtienes un +1 permanente a tu Evasión. Puedes usar tu característica «Paso de Sombra» para moverte dentro de alcance Muy lejano." },
+        { name: "Acto de Desaparición (Maestría)", text: "Marca 1 Estrés para quedar Oculto en cualquier momento. Mientras estés Oculto por esta característica, te quitas automáticamente la condición Inmovilizado si la tienes. Sigues Oculto de esta forma hasta que saques una tirada con Miedo o hasta tu próximo descanso." },
+      ],
+    },
     { key: "Sindicato", blurb: "Tira de contactos e influencia para ganar ventaja." },
   ],
   Serafín: [
@@ -9772,7 +9782,7 @@ export default function App({ onSignOut }) {
                               kicker: `Subclase · ${subclassBadge}`,
                               title: subclassEntry.key,
                               text: subclassEntry.blurb,
-                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
+                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
                               image: subclassEntry.image,
                               bigStyle: true,
                               ...(isElemental ? { elementalAction: true } : {}),
