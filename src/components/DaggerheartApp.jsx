@@ -4538,7 +4538,8 @@ export default function App({ onSignOut }) {
       ...traitValues,
       r_evasion: String(CLASS_EVASION[chosenClass.key] ?? 10),
       r_hp: String(CLASS_HP[chosenClass.key] ?? 6),
-      r_stress: String(STRESS_SLOTS),
+      r_stress: String(STRESS_SLOTS + (chosenSubclass?.key === "Vengador" ? 1 : 0)),
+      f_atease: chosenSubclass?.key === "Vengador" ? "1" : "",
       f_primary_weapon: draftPrimaryWeapon,
       f_secondary_weapon:
         PRIMARY_WEAPONS.find((w) => w.key === draftPrimaryWeapon)?.hands === 2 || draftSecondaryWeapon === "Ninguna"
@@ -5251,6 +5252,14 @@ export default function App({ onSignOut }) {
     setRestPicks(null);
     setRestType("short");
   }, [viewingCharId]);
+  const viewingSubclass = viewingCharId ? characters[viewingCharId]?.f_subclass : "";
+  const viewingAtEase = viewingCharId ? characters[viewingCharId]?.f_atease : "";
+  useEffect(() => {
+    if (!viewingCharId || viewingSubclass !== "Vengador" || viewingAtEase) return;
+    const c = characters[viewingCharId];
+    updateCharacterFields(viewingCharId, { r_stress: String(Number(c.r_stress || 0) + 1), f_atease: "1" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewingCharId, viewingSubclass, viewingAtEase]);
   const [restType, setRestType] = useState("short");
   const [showChangeDomainModal, setShowChangeDomainModal] = useState(false);
   const [viewingCardDetail, setViewingCardDetail] = useState(null);
@@ -9403,6 +9412,7 @@ export default function App({ onSignOut }) {
                               bigStyle: true,
                               ...(isElemental ? { elementalAction: true } : {}),
                               ...(subclassEntry.key === "Guardián de la Renovación" ? { renewalAction: true } : {}),
+                              ...(subclassEntry.key === "Vengador" ? { vengeAction: true } : {}),
                             }),
                           });
                         }
@@ -12690,6 +12700,22 @@ export default function App({ onSignOut }) {
                     });
                   }
                   // Guardián de la Renovación: Regeneración, Claridad de la Naturaleza y, según el rango, Protección y Defensor.
+                  // Vengador · Venganza: marca 2 de Estrés y el atacante marca 1 PV.
+                  if (d.vengeAction && !d.fromChat) {
+                    const freeStressV = Number(c.r_stress || 0) - Number(c.stress_marked || 0);
+                    cardActs.push({
+                      key: "venge",
+                      Icon: Swords,
+                      label: freeStressV < 2 ? "Venganza · necesitas 2 de Estrés libres" : "Venganza",
+                      sub: "2 Estrés · el atacante marca 1 PV",
+                      disabled: freeStressV < 2,
+                      run: () => {
+                        closeCardDetail();
+                        markStress(viewingCharId, 2);
+                        postCampaignEvent(viewingCharId, "⚔️ Venganza: marca 2 de Estrés y obliga a su atacante a marcar 1 Punto de vida");
+                      },
+                    });
+                  }
                   if (d.renewalAction && !d.fromChat) {
                     const hopeNow = Number(c.hope_marked ?? HOPE_DEFAULT);
                     const tierNow = tierForLevel(c.f_level || 1);
@@ -12822,7 +12848,7 @@ export default function App({ onSignOut }) {
                       label: "Mostrar en la campaña",
                       sub: shareCamp.name,
                       run: () => {
-                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, ...detail } = d;
+                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, ...detail } = d;
                         // Las imágenes incrustadas muy grandes no se copian al chat.
                         if (typeof detail.image === "string" && detail.image.startsWith("data:") && detail.image.length > 30000) delete detail.image;
                         const type = d.domain ? "domain" : d.weapon ? "weapon" : d.armor ? "armor" : "card";
@@ -13605,7 +13631,7 @@ export default function App({ onSignOut }) {
                       <Zap size={20} color="#6FA3C0" />
                       <div style={{ fontSize: 11, color: "var(--mh-muted)" }}>Estrés</div>
                       <div className="mh-serif" style={{ fontSize: 34, fontWeight: 700, color: ink("#6FA3C0") }}>
-                        {STRESS_SLOTS}
+                        {STRESS_SLOTS + ((SUBCLASSES[CLASSES[carouselIndex]?.key] || [])[subclassIndex]?.key === "Vengador" ? 1 : 0)}
                       </div>
                     </div>
                   </div>
