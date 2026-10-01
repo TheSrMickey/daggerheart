@@ -669,7 +669,7 @@ const CLASS_FEATURES = {
     { name: "Ataque Furtivo", text: "Cuando aciertas un ataque estando Oculto, o con un aliado en alcance Cuerpo a cuerpo de tu objetivo, suma tantos d6 como tu Rango a la tirada de daño." },
   ],
   Serafín: [
-    { name: "Dados de Oración", text: "Al empezar cada sesión, tira tantos d4 como tu rasgo de conjuro: son tus dados de oración. Puedes gastar los que quieras para ayudarte a ti o a un aliado en alcance Lejano: reducir el daño recibido en su valor, sumarlo a una tirada ya hecha o ganar esa cantidad de Esperanza. Los que no uses se pierden al acabar la sesión." },
+    { name: "Dados de Oración", text: "Al comienzo de cada sesión, tira tantos d4 como el rasgo de lanzamiento de tu subclase y colócalos en tu ficha: son tus Dados de Oración. Puedes gastar los que quieras para ayudarte a ti o a un aliado dentro de alcance Lejano. Puedes usar el valor de un dado gastado para reducir el daño que se recibe, sumarlo al resultado de una tirada después de hacerla o ganar tanta Esperanza como su resultado. Al final de cada sesión, retira todos los Dados de Oración que no hayas gastado." },
   ],
   Hechicero: [
     { name: "Sentido Arcano", text: "Percibes la presencia de personas y objetos mágicos en alcance Cercano." },
@@ -1758,6 +1758,15 @@ const sharedStyles = `
   }
   .mh-cardc-foot b { color: var(--mh-ink); }
   .mh-tide-foot { gap: 10px; flex-wrap: wrap; }
+  .mh-prayer-foot { gap: 10px; flex-wrap: wrap; padding-left: 8px; padding-right: 8px; }
+  .mh-prayer-dice { display: inline-flex; gap: 6px; }
+  .mh-prayer-dice button { width: 28px; height: 28px; padding: 0; border: 0; cursor: pointer; clip-path: polygon(50% 0, 100% 100%, 0 100%); background: #D8A84A; color: #fff; font: 700 12px 'Cinzel', Georgia, serif; padding-top: 9px; }
+  .mh-prayer-dice button:hover { background: #B8862E; }
+  .mh-prayer-use { display: inline-flex; align-items: center; gap: 4px; flex-wrap: nowrap; justify-content: center; }
+  .mh-prayer-use b { font-size: 18px; color: #B8862E; margin-right: 2px; }
+  .mh-prayer-use button { border: 1px solid color-mix(in srgb, #D8A84A 55%, var(--mh-line)); background: var(--mh-panel); border-radius: 8px; padding: 4px 6px; white-space: nowrap; font: 600 10.5px 'Inter', system-ui, sans-serif; color: var(--mh-ink); cursor: pointer; }
+  .mh-prayer-use button:hover { background: color-mix(in srgb, #D8A84A 14%, var(--mh-panel)); }
+  .mh-prayer-use button.is-x { padding: 4px 6px; color: var(--mh-muted); }
   .mh-tide-pips { display: inline-flex; gap: 5px; }
   .mh-tide-pips button { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid #3E8FB0; background: transparent; color: #fff; display: inline-flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; }
   .mh-tide-pips button.is-on { background: #3E8FB0; }
@@ -5568,6 +5577,48 @@ export default function App({ onSignOut }) {
     postCampaignEvent(id, `🛡️ Primera Línea: recupera ${gain} casilla${gain > 1 ? "s" : ""} de Armadura`);
   };
 
+  // Serafín · Dados de Oración
+  const getPrayerDice = (c) => {
+    try {
+      return JSON.parse(c?.f_prayer || "[]");
+    } catch (e) {
+      return [];
+    }
+  };
+  const prayerCountFor = (c) => {
+    const key = spellcastTraitFor(c.f_class, c.f_subclass);
+    const mods = getEquipmentMods(PRIMARY_WEAPONS.find((x) => x.key === c.f_primary_weapon), SECONDARY_WEAPONS.find((x) => x.key === c.f_secondary_weapon), ARMORS.find((x) => x.key === c.f_armor));
+    return Math.max(0, Number(c[key] || 0) + (mods[key] || 0));
+  };
+  const rollPrayerDice = (id) => {
+    const c = charsRef.current[id];
+    if (!c) return;
+    const n = prayerCountFor(c);
+    // Portador Divino · Devoto: un dado más y se descarta el más bajo.
+    const devout = c.f_subclass === "Portador Divino" && tierForLevel(c.f_level || 1) >= 2;
+    let dice = Array.from({ length: n + (devout && n > 0 ? 1 : 0) }, () => Math.floor(Math.random() * 4) + 1);
+    let dropped = null;
+    if (devout && n > 0) {
+      const lo = Math.min(...dice);
+      dropped = lo;
+      dice.splice(dice.indexOf(lo), 1);
+    }
+    updateCharacterFields(id, { f_prayer: JSON.stringify(dice), f_prayer_rolled: "1" });
+    postCampaignEvent(id, `🙏 Tira sus Dados de Oración: ${dice.join(", ") || "ninguno"}${dropped != null ? " (Devoto: descarta un " + dropped + ")" : ""}`);
+  };
+  const spendPrayerDie = (id, index, use) => {
+    const c = charsRef.current[id];
+    if (!c) return;
+    const dice = getPrayerDice(c);
+    const v = dice[index];
+    if (v == null) return;
+    const next = dice.filter((_, k) => k !== index);
+    const patch = { f_prayer: JSON.stringify(next) };
+    if (use === "hope") patch.hope_marked = String(Math.min(getHopeMax(c), Number(c.hope_marked ?? HOPE_DEFAULT) + v));
+    updateCharacterFields(id, patch);
+    const txt = { hope: `gana ${v} de Esperanza`, damage: `reduce en ${v} el daño que se recibe`, roll: `suma ${v} al resultado de una tirada`, ally: `ayuda a un aliado con un ${v}` }[use];
+    postCampaignEvent(id, `🙏 Gasta un Dado de Oración (${v}): ${txt}`);
+  };
   const doRogueDodge = (id) => {
     const c = charsRef.current[id];
     if (!c || c.f_dodge) return;
@@ -6974,6 +7025,8 @@ export default function App({ onSignOut }) {
   const unshakeTimer = useRef(null);
   // Explorador · Foco del Explorador: ventana para escribir el objetivo.
   const [focusDlg, setFocusDlg] = useState(null);
+  // Dados de Oración: dado elegido en la carta.
+  const [prayerPick, setPrayerPick] = useState(null);
   // Errante · Petate Nómada: animación y nombre del objeto que se saca.
   const [packDlg, setPackDlg] = useState(null);
   const pullFromPack = (id, name, description) => {
@@ -7098,6 +7151,10 @@ export default function App({ onSignOut }) {
     if (isLong && c.f_luck_used) restPatch.f_luck_used = "";
     if (isLong && c.f_pack_used) restPatch.f_pack_used = "";
     if (isLong && c.f_sparing_used) restPatch.f_sparing_used = "";
+    if (isLong && (c.f_prayer || c.f_prayer_rolled)) {
+      restPatch.f_prayer = "";
+      restPatch.f_prayer_rolled = "";
+    }
     if (isLong && c.f_tide_tokens) restPatch.f_tide_tokens = "";
     if (c.f_thickskin_ready) restPatch.f_thickskin_ready = "";
     if (c.f_fortitude_ready) restPatch.f_fortitude_ready = "";
@@ -10027,6 +10084,7 @@ export default function App({ onSignOut }) {
                             kicker: "Característica de clase",
                             title: f.name,
                             summary: f.text,
+                            ...(f.name === "Dados de Oración" && c.f_class === "Serafín" ? { summary: getPrayerDice(c).length ? "Te quedan: " + getPrayerDice(c).join(" · ") + " (d4)" : c.f_prayer_rolled ? "Has gastado tus dados · vuelven al descanso largo" : "Sin tirar: tíralos al empezar la sesión", cost: null } : {}),
                             onClick: openDetail({ kicker: "Característica de clase", title: f.name, text: f.text, image: f.image, bigStyle: true, ...(c.f_class === "Druida" && /forma de bestia/i.test(f.name) ? { navigateAction: { tab: "beastforms", label: "Ver Formas de Bestia" } } : {}) }),
                             extra: isBeastformLink && (
                               <button
@@ -14184,6 +14242,22 @@ export default function App({ onSignOut }) {
                     });
                   }
                   // Guardián de la Renovación: Regeneración, Claridad de la Naturaleza y, según el rango, Protección y Defensor.
+                  // Serafín · Dados de Oración: se tiran al empezar la sesión.
+                  if (d.title === "Dados de Oración" && c?.f_class === "Serafín" && !d.fromChat) {
+                    const nP = prayerCountFor(c);
+                    const haveP = getPrayerDice(c).length;
+                    cardActs.unshift({
+                      key: "prayer",
+                      Icon: Dices,
+                      label: c.f_prayer_rolled ? (haveP ? "Ya tienes tus Dados de Oración" : "Dados gastados · vuelven al descanso largo") : nP ? "Tirar " + nP + "d4 de Oración" : "Tu rasgo de lanzamiento no te da dados",
+                      sub: "Al empezar la sesión",
+                      disabled: !!c.f_prayer_rolled || nP <= 0,
+                      run: () => {
+                        rollPrayerDice(viewingCharId);
+                        setPrayerPick(null);
+                      },
+                    });
+                  }
                   // Explorador · Foco del Explorador: escribe el objetivo y ataca con tu arma.
                   if (d.title === "Foco del Explorador" && c?.f_class === "Explorador" && !d.fromChat) {
                     const hopeF = Number(c.hope_marked ?? HOPE_DEFAULT);
@@ -14465,6 +14539,7 @@ export default function App({ onSignOut }) {
                   }
                   // Del Mar: las fichas de Conocer la Marea se ven y se marcan en el pie de la carta.
                   const tideCard = !d.fromChat && d.kicker === "Comunidad" && d.title === "Del Mar" && c?.f_community === "Del Mar";
+                  const prayerCard = !d.fromChat && d.title === "Dados de Oración" && c?.f_class === "Serafín";
                   const tideMax = Number(c?.f_level || 1);
                   const footer = d.weapon
                     ? [d.weapon.trait !== "—" && d.weapon.trait, d.weapon.range].filter(Boolean).join(" · ")
@@ -14561,6 +14636,52 @@ export default function App({ onSignOut }) {
                           <div style={{ fontSize: "0.93em", color: "var(--mh-muted2)", fontStyle: "italic" }}>Sin característica especial.</div>
                         ))}
                     </FitBox>
+                    {prayerCard && (() => {
+                      const dice = getPrayerDice(c);
+                      const pick = prayerPick != null && prayerPick < dice.length ? prayerPick : null;
+                      return (
+                        <div className="mh-cardc-foot mh-prayer-foot">
+                          {dice.length === 0 ? (
+                            <span>{c.f_prayer_rolled ? "Has gastado todos tus dados" : "Tíralos al empezar la sesión"}</span>
+                          ) : pick == null ? (
+                            <>
+                              <span className="mh-prayer-dice">
+                                {dice.map((v, k) => (
+                                  <button key={k} type="button" title="Gastar este dado" onClick={() => setPrayerPick(k)}>
+                                    {v}
+                                  </button>
+                                ))}
+                              </span>
+                              <span>Pulsa un dado para gastarlo</span>
+                            </>
+                          ) : (
+                            <span className="mh-prayer-use">
+                              {[
+                                ["damage", "−" + dice[pick] + " daño", "Reduce en " + dice[pick] + " el daño que se recibe"],
+                                ["roll", "+" + dice[pick] + " a tirada", "Suma " + dice[pick] + " al resultado de una tirada ya hecha"],
+                                ["hope", "+" + dice[pick] + " Esperanza", "Ganas " + dice[pick] + " de Esperanza"],
+                                ["ally", "Aliado", "Ayudas a un aliado en alcance Lejano con este dado"],
+                              ].map(([k, l, t]) => (
+                                <button
+                                  key={k}
+                                  type="button"
+                                  title={t}
+                                  onClick={() => {
+                                    spendPrayerDie(viewingCharId, pick, k);
+                                    setPrayerPick(null);
+                                  }}
+                                >
+                                  {l}
+                                </button>
+                              ))}
+                              <button type="button" className="is-x" aria-label="Cancelar" onClick={() => setPrayerPick(null)}>
+                                <X size={11} />
+                              </button>
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
                     {tideCard && (() => {
                       const have = Math.min(Number(c.f_tide_tokens || 0), tideMax);
                       return (
@@ -14585,7 +14706,7 @@ export default function App({ onSignOut }) {
                         </div>
                       );
                     })()}
-                    {!tideCard && (footer || d.domain) && (
+                    {!tideCard && !prayerCard && (footer || d.domain) && (
                       <div className="mh-cardc-foot">
                         {d.domain ? (
                           <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
