@@ -325,7 +325,7 @@ const COMMUNITIES = [
   { key: "De las Profundidades", blurb: "Vienes de una sociedad subterránea, famosa por su audacia y por sus grandes obras de arquitectura e ingeniería.", features: [{ name: "Vida en la Penumbra", text: "Cuando estés en una zona con poca luz o sombras densas, tienes ventaja en las tiradas para esconderte, investigar o percibir detalles dentro de esa zona." }] },
   { key: "Errante", blurb: "Has vivido como nómada, sin un hogar fijo y conociendo culturas muy distintas; valoras más el saber, las habilidades y los contactos que las posesiones.", features: [{ name: "Petate Nómada", text: "Añade un Petate Nómada a tu inventario. Una vez por sesión, puedes gastar 1 Esperanza para meter la mano en el petate y sacar un objeto corriente que te sea útil en tu situación. Decide con el DJ qué objeto sacas." }] },
   { key: "Salvaje", blurb: "Vienes de lo más profundo del bosque, de una comunidad que integra sus hogares en la naturaleza y se dedica a protegerla.", features: [{ name: "Pies Ligeros", text: "Te mueves en silencio de forma natural. Tienes ventaja en las tiradas para moverte sin que te oigan." }] },
-  { key: "De las Dunas", blurb: "Creciste en tierras áridas, entre caravanas y arena.", expansion: "Hope & Fear", features: [{ name: "Oasis", text: "Durante un descanso corto, tú o un aliado podéis repetir un dado de una acción de descanso y quedaros con el mayor." }] },
+  { key: "De las Dunas", blurb: "Has hecho tu hogar entre las arenas cambiantes y el clima árido del desierto, donde la familia y la colaboración lo son todo.", expansion: "Hope & Fear", features: [{ name: "Oasis", text: "Durante un descanso corto, tú o un aliado podéis repetir un dado usado en una acción de descanso y quedaros con el resultado más alto." }] },
   { key: "Del Hogar", blurb: "Tu vida giró en torno al fuego del hogar y la comunidad cercana.", expansion: "Hope & Fear", features: [{ name: "Muy Unidos", text: "Una vez por descanso largo, puedes gastar cualquier cantidad de Esperanza para dársela a un aliado en alcance Lejano." }] },
   { key: "De la Escarcha", blurb: "Te criaste en tierras heladas, curtido por el frío.", expansion: "Hope & Fear", features: [{ name: "Curtido", text: "Cuando descansas, te quitas 1 Punto de vida." }] },
   { key: "De la Guerra", blurb: "Creciste entre conflictos, formado para el combate.", expansion: "Hope & Fear", features: [{ name: "Cara Valiente", text: "Una vez por sesión, cuando te obliguen a marcar Estrés, puedes gastar 1 Esperanza en su lugar." }] },
@@ -7100,6 +7100,7 @@ export default function App({ onSignOut }) {
     const isLong = restType === "long";
     const tier = tierForLevel(c.f_level || 1);
     const messages = [];
+    const shortDice = [];
 
     [key1, key2, key3].forEach((key) => {
       if (!key) return;
@@ -7127,7 +7128,9 @@ export default function App({ onSignOut }) {
         return;
       }
       // Descanso corto: 1d4 + tu Rango.
-      const roll = 1 + Math.floor(Math.random() * 4) + tier;
+      const d4 = 1 + Math.floor(Math.random() * 4);
+      const roll = d4 + tier;
+      shortDice.push({ key, d4, label: entry.label, idx: messages.length });
       if (key === "heal") {
         hp = Math.max(0, hp - roll);
       } else if (key === "clearmind") {
@@ -7137,6 +7140,20 @@ export default function App({ onSignOut }) {
       }
       messages.push(`${entry.label}: ${roll} (1d4+${tier})`);
     });
+    // De las Dunas · Oasis: repite el dado más bajo del descanso corto y se queda con el mayor.
+    if (!isLong && c.f_community === "De las Dunas" && shortDice.length) {
+      const low = shortDice.reduce((a, b) => (b.d4 < a.d4 ? b : a));
+      const nd = 1 + Math.floor(Math.random() * 4);
+      if (nd > low.d4) {
+        const delta = nd - low.d4;
+        if (low.key === "heal") hp = Math.max(0, hp - delta);
+        else if (low.key === "clearmind") stress = Math.max(0, stress - delta);
+        else if (low.key === "repair") armor = Math.min(armorTotal, armor + delta);
+        messages[low.idx] = `${low.label}: ${nd + tier} (1d4+${tier}; Oasis: ${low.d4} → ${nd})`;
+      } else {
+        messages.push(`Oasis: repites el ${low.d4} y sacas ${nd}; te quedas con el ${low.d4}`);
+      }
+    }
 
     let restPatch = {
       hp_marked: String(Math.min(hpTotal, hp)),
