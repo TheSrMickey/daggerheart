@@ -306,7 +306,7 @@ const COMMUNITIES = [
   { key: "Del Mar", blurb: "Creciste entre puertos, barcos y el vaivén de las mareas.", features: [{ name: "Conocer la Marea", text: "Percibes el flujo y el reflujo de la vida. Cuando saques una tirada con Miedo, pon una ficha en tu carta de comunidad. Puedes tener tantas fichas como tu nivel. Antes de hacer una tirada de acción, puedes gastar las fichas que quieras para ganar un +1 a la tirada por cada ficha gastada. Al final de cada sesión, retira todas las fichas que no hayas gastado." }] },
   { key: "De las Sombras", blurb: "Vienes de un grupo que actúa al margen de la ley: criminales, timadores y estafadores unidos por un estricto código de honor.", features: [{ name: "Granuja", text: "Tienes ventaja en las tiradas para negociar con criminales, detectar mentiras o encontrar un escondite seguro." }] },
   { key: "De las Profundidades", blurb: "Vienes de una sociedad subterránea, famosa por su audacia y por sus grandes obras de arquitectura e ingeniería.", features: [{ name: "Vida en la Penumbra", text: "Cuando estés en una zona con poca luz o sombras densas, tienes ventaja en las tiradas para esconderte, investigar o percibir detalles dentro de esa zona." }] },
-  { key: "Errante", blurb: "Nunca tuviste un hogar fijo; el camino te crió.", features: [{ name: "Petate Nómada", text: "Añade un Petate Nómada a tu inventario. Una vez por sesión, puedes gastar 1 Esperanza para sacar de él un objeto normal que te venga bien (lo acordáis con el DJ)." }] },
+  { key: "Errante", blurb: "Has vivido como nómada, sin un hogar fijo y conociendo culturas muy distintas; valoras más el saber, las habilidades y los contactos que las posesiones.", features: [{ name: "Petate Nómada", text: "Añade un Petate Nómada a tu inventario. Una vez por sesión, puedes gastar 1 Esperanza para meter la mano en el petate y sacar un objeto corriente que te sea útil en tu situación. Decide con el DJ qué objeto sacas." }] },
   { key: "Salvaje", blurb: "Te criaste en plena naturaleza, lejos de la civilización.", features: [{ name: "Pies Ligeros", text: "Te mueves en silencio de forma natural. Tienes ventaja en las tiradas para moverte sin que te oigan." }] },
   { key: "De las Dunas", blurb: "Creciste en tierras áridas, entre caravanas y arena.", expansion: "Hope & Fear", features: [{ name: "Oasis", text: "Durante un descanso corto, tú o un aliado podéis repetir un dado de una acción de descanso y quedaros con el mayor." }] },
   { key: "Del Hogar", blurb: "Tu vida giró en torno al fuego del hogar y la comunidad cercana.", expansion: "Hope & Fear", features: [{ name: "Muy Unidos", text: "Una vez por descanso largo, puedes gastar cualquier cantidad de Esperanza para dársela a un aliado en alcance Lejano." }] },
@@ -385,6 +385,10 @@ const getCompanion = (c) => {
     return null;
   }
 };
+
+// Errante · Petate Nómada
+const PACK_NAME = "Petate Nómada";
+const PACK_DESC = "Una vez por sesión, gasta 1 Esperanza para sacar de él un objeto corriente que te sea útil (lo decides con el DJ).";
 
 const WIZARD_STEPS = [
   { key: "class", title: "Elige tu clase", group: "Identidad" },
@@ -2463,6 +2467,26 @@ const sharedStyles = `
   .mh-luck-btn small { font-weight: 500; font-size: 11px; opacity: .88; }
   .mh-luck-btn:hover:not(:disabled) { background: #9C68B3; }
   .mh-luck-btn:disabled { background: var(--mh-panel3); color: var(--mh-muted); cursor: not-allowed; }
+  .mh-pack { width: min(380px, 100%); padding: 22px 22px 20px; text-align: center; overflow: hidden; }
+  .mh-pack-stage { position: relative; height: 150px; display: flex; align-items: flex-end; justify-content: center; }
+  .mh-pack-bag { position: relative; z-index: 2; color: #9A6B3C; transform-origin: 50% 100%; animation: mh-pack-shake .5s ease-in-out 0s 3, mh-pack-pop .35s ease-out 1.5s both; }
+  .mh-pack-item { position: absolute; left: 50%; bottom: 40px; z-index: 1; width: 52px; height: 52px; margin-left: -26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; background: radial-gradient(circle at 35% 30%, #F6D98A, #E3B04B 60%, #B8862E); box-shadow: 0 0 24px rgba(227,176,75,.75); opacity: 0; animation: mh-pack-rise .8s cubic-bezier(.2,1.4,.4,1) 1.55s both; }
+  .mh-pack-rays { position: absolute; left: 50%; bottom: 20px; width: 220px; height: 220px; margin-left: -110px; border-radius: 50%; background: repeating-conic-gradient(rgba(227,176,75,.28) 0 10deg, transparent 10deg 30deg); opacity: 0; animation: mh-pack-rays 2.4s linear 1.6s both; }
+  .mh-pack-spark { position: absolute; left: 50%; bottom: 64px; width: 7px; height: 7px; margin-left: -3px; border-radius: 50%; background: #E3B04B; opacity: 0; transform: rotate(var(--a)) translateY(0); animation: mh-pack-spark .7s ease-out 1.6s both; }
+  .mh-pack.is-open .mh-pack-bag, .mh-pack.is-open .mh-pack-item, .mh-pack.is-open .mh-pack-rays, .mh-pack.is-open .mh-pack-spark { animation-delay: 0s; animation-duration: .01s; }
+  .mh-pack.is-open .mh-pack-item { opacity: 1; transform: translateY(-58px) scale(1); }
+  .mh-pack.is-open .mh-pack-rays { opacity: .55; }
+  @keyframes mh-pack-shake { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-8deg); } 75% { transform: rotate(8deg); } }
+  @keyframes mh-pack-pop { 0% { transform: scale(1); } 50% { transform: scale(1.12, .9); } 100% { transform: scale(1); } }
+  @keyframes mh-pack-rise { 0% { opacity: 0; transform: translateY(0) scale(.3); } 100% { opacity: 1; transform: translateY(-58px) scale(1); } }
+  @keyframes mh-pack-rays { 0% { opacity: 0; transform: rotate(0); } 20% { opacity: .55; } 100% { opacity: .55; transform: rotate(90deg); } }
+  @keyframes mh-pack-spark { 0% { opacity: 1; transform: rotate(var(--a)) translateY(0); } 100% { opacity: 0; transform: rotate(var(--a)) translateY(-70px); } }
+  .mh-pack-t b, .mh-pack-form b { display: block; font-size: 17px; color: var(--mh-ink); }
+  .mh-pack-t small, .mh-pack-form small { display: block; font-size: 12px; color: var(--mh-muted); margin-top: 3px; }
+  .mh-pack-t { margin-top: 10px; }
+  .mh-pack-form { margin-top: 6px; display: flex; flex-direction: column; gap: 8px; text-align: left; }
+  .mh-pack-form b, .mh-pack-form small { text-align: center; }
+  .mh-pack-form small { margin-bottom: 4px; }
   .mh-unshake { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 80; display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 14px; background: #2A2440; color: #fff; box-shadow: 0 10px 26px rgba(0,0,0,.3); font-family: 'Inter', system-ui, sans-serif; animation: mh-wz-art-in .2s ease-out; }
   .mh-unshake.is-saved { background: #3F6E3A; }
   .mh-unshake-dice { display: flex; gap: 5px; }
@@ -4738,9 +4762,11 @@ export default function App({ onSignOut }) {
           : draftSecondaryWeapon,
       f_armor: draftArmor === "Ninguna" ? "" : draftArmor || "",
       armor_marked: String(draftArmor === "Ninguna" ? 0 : ARMORS.find((a) => a.key === draftArmor)?.score || 0),
-      f_items: JSON.stringify(
-        draftItems.map((name) => ({ name, description: STARTER_ITEMS.find((si) => si.name === name)?.description || "", count: 1 }))
-      ),
+      f_items: JSON.stringify([
+        ...(draftCommunity === "Errante" ? [{ name: PACK_NAME, description: PACK_DESC, count: 1 }] : []),
+        ...draftItems.map((name) => ({ name, description: STARTER_ITEMS.find((si) => si.name === name)?.description || "", count: 1 })),
+      ]),
+      f_pack_added: draftCommunity === "Errante" ? "1" : "",
       f_domain_cards: JSON.stringify(draftDomainCards),
       f_experiences: JSON.stringify(
         [draftExp1, draftExp2]
@@ -5495,6 +5521,23 @@ export default function App({ onSignOut }) {
     setRestPicks(null);
     setRestType("short");
   }, [viewingCharId]);
+  const viewingCommunity = viewingCharId ? characters[viewingCharId]?.f_community : "";
+  const viewingPackAdded = viewingCharId ? characters[viewingCharId]?.f_pack_added : "";
+  useEffect(() => {
+    if (!viewingCharId || viewingCommunity !== "Errante" || viewingPackAdded) return;
+    const c = characters[viewingCharId];
+    const belt = getItems(c);
+    const pack = getBackpackItems(c);
+    const has = [...belt, ...pack].some((it) => it.name === PACK_NAME);
+    const patch = { f_pack_added: "1" };
+    if (!has) {
+      const item = { name: PACK_NAME, description: PACK_DESC, count: 1 };
+      if (belt.length < ITEM_SLOTS) patch.f_items = JSON.stringify([...belt, item]);
+      else if (pack.length < ITEM_SLOTS) patch.f_backpack_items = JSON.stringify([...pack, item]);
+    }
+    updateCharacterFields(viewingCharId, patch);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewingCharId, viewingCommunity, viewingPackAdded]);
   const viewingSubclass = viewingCharId ? characters[viewingCharId]?.f_subclass : "";
   const viewingAtEase = viewingCharId ? characters[viewingCharId]?.f_atease : "";
   useEffect(() => {
@@ -6855,6 +6898,27 @@ export default function App({ onSignOut }) {
   const unshakeTimer = useRef(null);
   // Explorador · Foco del Explorador: ventana para escribir el objetivo.
   const [focusDlg, setFocusDlg] = useState(null);
+  // Errante · Petate Nómada: animación y nombre del objeto que se saca.
+  const [packDlg, setPackDlg] = useState(null);
+  useEffect(() => {
+    if (packDlg?.phase !== "anim") return;
+    const t = setTimeout(() => setPackDlg((d) => (d ? { ...d, phase: "name" } : d)), 2300);
+    return () => clearTimeout(t);
+  }, [packDlg?.phase]);
+  const pullFromPack = (id, name, description) => {
+    const c = charsRef.current[id];
+    if (!c || !name.trim()) return false;
+    const belt = getItems(c);
+    const pack = getBackpackItems(c);
+    const item = { name: name.trim(), description: description.trim(), count: 1 };
+    const patch = { hope_marked: String(Math.max(0, Number(c.hope_marked ?? HOPE_DEFAULT) - 1)), f_pack_used: "1" };
+    if (belt.length < ITEM_SLOTS) patch.f_items = JSON.stringify([...belt, item]);
+    else if (pack.length < ITEM_SLOTS) patch.f_backpack_items = JSON.stringify([...pack, item]);
+    else return false;
+    updateCharacterFields(id, patch);
+    postCampaignEvent(id, `🎒 Petate Nómada: gasta 1 Esperanza y saca ${item.name}`);
+    return true;
+  };
   // Enano · Piel Gruesa: menú al pulsar daño Menor.
   const [minorPop, setMinorPop] = useState(false);
   const getGiftsGot = (c) => {
@@ -6961,6 +7025,7 @@ export default function App({ onSignOut }) {
     }
     // Doblega la Suerte es una vez por sesión: la app lo recupera con el descanso largo.
     if (isLong && c.f_luck_used) restPatch.f_luck_used = "";
+    if (isLong && c.f_pack_used) restPatch.f_pack_used = "";
     if (isLong && c.f_tide_tokens) restPatch.f_tide_tokens = "";
     if (c.f_thickskin_ready) restPatch.f_thickskin_ready = "";
     if (c.f_fortitude_ready) restPatch.f_fortitude_ready = "";
@@ -12206,6 +12271,47 @@ export default function App({ onSignOut }) {
             </div>
             </div>
 
+            {packDlg && (() => {
+              const close = () => setPackDlg(null);
+              const go = () => {
+                if (pullFromPack(viewingCharId, packDlg.name, packDlg.desc)) close();
+              };
+              return (
+                <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 46, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.62)" }} onClick={close}>
+                  <div className={"mh-card mh-card-anim mh-pack" + (packDlg.phase === "name" ? " is-open" : "")} onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Petate Nómada">
+                    <div className="mh-pack-stage" aria-hidden="true">
+                      <span className="mh-pack-rays" />
+                      <span className="mh-pack-item">
+                        <Sparkles size={26} />
+                      </span>
+                      <span className="mh-pack-bag">
+                        <Backpack size={64} strokeWidth={1.4} />
+                      </span>
+                      {[0, 1, 2, 3, 4, 5].map((k) => (
+                        <i key={k} className="mh-pack-spark" style={{ "--a": k * 60 + "deg" }} />
+                      ))}
+                    </div>
+                    {packDlg.phase === "anim" ? (
+                      <div className="mh-pack-t">
+                        <b className="mh-serif">Rebuscas en el petate…</b>
+                        <small>Algo útil tiene que haber aquí dentro</small>
+                      </div>
+                    ) : (
+                      <div className="mh-pack-form">
+                        <b className="mh-serif">¿Qué sacas del petate?</b>
+                        <small>Un objeto corriente que te sirva ahora. Decidlo con el DJ.</small>
+                        <input className="mh-input" autoFocus placeholder="Ej. Cuerda de cáñamo" value={packDlg.name} onChange={(e) => setPackDlg((d) => ({ ...d, name: e.target.value }))} onKeyDown={(e) => e.key === "Enter" && go()} />
+                        <input className="mh-input" placeholder="Descripción (opcional)" value={packDlg.desc} onChange={(e) => setPackDlg((d) => ({ ...d, desc: e.target.value }))} onKeyDown={(e) => e.key === "Enter" && go()} />
+                        <button type="button" className="mh-btn mh-pre-go" disabled={!packDlg.name.trim()} onClick={go}>
+                          <Backpack size={15} /> Guardar en el inventario · 1 Esperanza
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
             {unshakeToast && (
               <div className={"mh-unshake" + (unshakeToast.saved ? " is-saved" : "")} key={unshakeToast.key} role="status">
                 <span className="mh-unshake-dice">
@@ -13733,6 +13839,21 @@ export default function App({ onSignOut }) {
                     });
                   }
                   // Objeto del inventario: cantidad y eliminar.
+                  if (d.invItem && !d.fromChat && d.title === PACK_NAME) {
+                    const hopeP = Number(c.hope_marked ?? HOPE_DEFAULT);
+                    const full = getItems(c).length >= ITEM_SLOTS && getBackpackItems(c).length >= ITEM_SLOTS;
+                    cardActs.push({
+                      key: "pack",
+                      Icon: Sparkles,
+                      label: c.f_pack_used ? "Ya lo has abierto · vuelve al descanso largo" : hopeP < 1 ? "Abrir el petate · te falta Esperanza" : full ? "Abrir el petate · no te queda sitio" : "Abrir el petate",
+                      sub: "1 Esperanza · saca un objeto útil",
+                      disabled: !!c.f_pack_used || hopeP < 1 || full,
+                      run: () => {
+                        closeCardDetail();
+                        setPackDlg({ phase: "anim", name: "", desc: "" });
+                      },
+                    });
+                  }
                   if (d.invItem && !d.fromChat) {
                     const { zone, index, count } = d.invItem;
                     const setCount = (delta) => {

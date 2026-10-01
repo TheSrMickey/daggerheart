@@ -1,7 +1,7 @@
 // Iconos de armas y armaduras para la carta abierta.
 // Los que existen en lucide se usan tal cual; el resto se dibuja con el mismo estilo (24×24, trazo redondeado).
 import { createElement as h } from "react";
-import { Axe, BowArrow, Coins, FlaskConical, Flame, Hammer, HandCoins, HandFist, Package, Sword, WandSparkles } from "lucide-react";
+import { Backpack, Axe, BowArrow, Coins, FlaskConical, Flame, Hammer, HandCoins, HandFist, Package, Sword, WandSparkles } from "lucide-react";
 
 const CUSTOM = {
   estoque: [
@@ -181,6 +181,7 @@ export const GOLD_ICONS = { f_gold_thousands: ICONS.cofre, f_gold_hundreds: ICON
 export function itemVisual(name, { isWeapon, isArmor } = {}) {
   if (isArmor) return { Icon: armorIcon(name), color: "var(--acc)", kind: "Armadura" };
   if (isWeapon) return { Icon: weaponIcon(name), color: "var(--acc)", kind: "Arma" };
+  if (/petate/i.test(name || "")) return { Icon: Backpack, color: "#9A6B3C", kind: "Petate Nómada" };
   if (/poci|elixir|t[oó]nico|frasco|brebaje|ung[uü]ento/i.test(name || "")) return { Icon: FlaskConical, color: "#D9644E", kind: "Consumible" };
   if (/antorcha|vela|farol|linterna/i.test(name || "")) return { Icon: Flame, color: "#E0823A", kind: "Equipo" };
   return { Icon: Package, color: "#C08B5C", kind: "Objeto" };
