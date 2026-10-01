@@ -185,7 +185,16 @@ const SUBCLASSES = {
         { name: "Resonancia Sagrada (Maestría)", text: "Cuando tires el daño de tu «Arma Espiritual», si algunos de los dados coinciden, duplica el valor de cada dado que coincida. Por ejemplo, si sacas dos 5, cuentan como dos 10." },
       ],
     },
-    { key: "Centinela Alado", blurb: "Protege a los suyos desde el cielo con gracia celestial." },
+    {
+      key: "Centinela Alado",
+      blurb: "Alza el vuelo y asesta golpes demoledores desde el cielo.",
+      features: [
+        { name: "Alas de Luz", text: "Puedes volar. Mientras vuelas, puedes hacer lo siguiente: marcar 1 Estrés para levantar y llevar a otra criatura dispuesta de tu tamaño aproximado o menor; o gastar 1 Esperanza para hacer 1d8 de daño adicional en un ataque con éxito." },
+        { name: "Rostro Etéreo (Especialización)", text: "Tu rostro sobrenatural infunde asombro y miedo. Mientras vuelas, tienes ventaja en las tiradas de Presencia. Cuando tengas éxito con Esperanza en una tirada de Presencia, puedes retirar 1 de Miedo de la reserva del DJ en lugar de ganar Esperanza." },
+        { name: "Ascendente (Maestría)", text: "Obtienes un +4 permanente a tu umbral de daño Grave." },
+        { name: "Poder de los Dioses (Maestría)", text: "Mientras vuelas, haces 1d12 de daño adicional en lugar de 1d8 con tu característica «Alas de Luz»." },
+      ],
+    },
   ],
   Hechicero: [
     { key: "Origen Elemental", blurb: "Su magia brota de un vínculo con las fuerzas elementales." },
@@ -2535,6 +2544,8 @@ const sharedStyles = `
   .mh-pred-btn { background: #7E9B3E; }
   .mh-sneak-btn { background: #4F5D78; }
   .mh-spirit-btn { background: #B8862E; }
+  .mh-ethereal-btn { background: #B8862E; }
+  .mh-ethereal-btn:hover:not(:disabled) { background: #A07424; }
   .mh-spirit-btn:hover { background: #A07424; }
   .mh-sneak-btn:hover { background: #414D65; }
   .mh-pred-btn:hover { background: #6B8633; }
@@ -3494,6 +3505,7 @@ function DamageResult({ roll }) {
             {roll.wolfBonus ? ` + 1d10 (${roll.wolfBonus})` : ""}
             {roll.unstopBonus ? ` + ${roll.unstopBonus} (Imparable)` : ""}
             {roll.kickRolls ? ` + 2d6 (${roll.kickRolls.join(" + ")}) (Coz)` : ""}
+            {roll.wingRoll ? ` + 1d${roll.wingSides} (${roll.wingRoll}) (Alas de Luz)` : ""}
             {roll.sneakRolls ? ` + ${roll.sneakRolls.length}d6 (${roll.sneakRolls.join(" + ")}) (Furtivo)` : ""}
             {roll.isCritical ? ` + ${roll.critBonus} (máx.)` : ""}
           </div>
@@ -5232,7 +5244,7 @@ export default function App({ onSignOut }) {
   const conditionPresetsFor = (c) => {
     const base = isRogue(c) ? CONDITION_PRESETS.map((n) => (n === "Escondido" ? "Oculto" : n)) : CONDITION_PRESETS;
     const isGalapa = (c?.f_ancestry || "").split(" + ").includes("Galapa");
-    return [...base, ...(isFaerie(c) ? ["Volando"] : []), ...(isGalapa ? ["Retraído"] : [])];
+    return [...base, ...(isFaerie(c) || c?.f_subclass === "Centinela Alado" ? ["Volando"] : []), ...(isGalapa ? ["Retraído"] : [])];
   };
   const getConditions = (c) => {
     try {
@@ -9250,7 +9262,9 @@ export default function App({ onSignOut }) {
                   // Galapa · Caparazón: + Competencia a los umbrales.
                   const shellBonus = (c.f_ancestry || "").split(" + ").includes("Galapa") ? proficiency : 0;
                   const major = baseThresholds.major + equipMods.major + earthBonus + firmBonus + shellBonus;
-                  const severe = baseThresholds.severe + equipMods.severe + earthBonus + firmBonus + shellBonus;
+                  // Centinela Alado · Ascendente (Maestría): +4 al umbral Grave.
+                  const ascendBonus = c.f_subclass === "Centinela Alado" && tierForLevel(c.f_level || 1) >= 3 ? 4 : 0;
+                  const severe = baseThresholds.severe + equipMods.severe + earthBonus + firmBonus + shellBonus + ascendBonus;
                   // Enano · Fortaleza Aumentada: la mitad del daño equivale a umbrales dobles.
                   const fortOn = c.f_fortitude_ready === "1";
                   const unstopOn = unstopValue(c) > 0;
@@ -9260,8 +9274,8 @@ export default function App({ onSignOut }) {
                   const fortSevere = c.f_fortitude_ready === "1" ? severe * 2 : severe;
                   const experiences = getExperiences(c);
                   const conditions = isRogue(c) ? getConditions(c).map((n) => (n === "Escondido" ? "Oculto" : n)) : getConditions(c);
-                  const flying = isFaerie(c) && conditions.includes("Volando");
-                  const wingsOn = flying && c.f_wings_evade === "1";
+                  const flying = (isFaerie(c) || c.f_subclass === "Centinela Alado") && conditions.includes("Volando");
+                  const wingsOn = flying && isFaerie(c) && c.f_wings_evade === "1";
                   const dodgeOn = c.f_class === "Pícaro" && c.f_dodge === "1";
                   const entries = getJournal(c);
                   const spellTraitKey = spellcastTraitFor(c.f_class, c.f_subclass);
@@ -9356,7 +9370,7 @@ export default function App({ onSignOut }) {
                                       +2 Esquiva <X size={9} strokeWidth={2.6} />
                                     </button>
                                   )}
-                                  {flying && !wingsOn && (
+                                  {flying && isFaerie(c) && !wingsOn && (
                                     <button type="button" className="mh-wing-btn mh-tip-anchor" aria-label="Alas: marca 1 Estrés para +2 a la Evasión contra este ataque" onClick={() => applyWings(viewingCharId)}>
                                       <span className="mh-tip mh-tip-wrap">Alas: marca 1 Estrés para +2 a la Evasión contra este ataque</span>
                                       <Feather size={11} />
@@ -10094,7 +10108,7 @@ export default function App({ onSignOut }) {
                               kicker: `Subclase · ${subclassBadge}`,
                               title: subclassEntry.key,
                               text: subclassEntry.blurb,
-                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
+                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
                               image: subclassEntry.image,
                               bigStyle: true,
                               ...(isElemental ? { elementalAction: true } : {}),
@@ -10103,6 +10117,7 @@ export default function App({ onSignOut }) {
                               ...(subclassEntry.key === "Vínculo Bestial" ? { companionNav: true } : {}),
                               ...(subclassEntry.key === "Caminante Nocturno" ? { shadowStep: true } : {}),
                               ...(subclassEntry.key === "Portador Divino" ? { divineActs: true } : {}),
+                              ...(subclassEntry.key === "Centinela Alado" ? { sentinelActs: true } : {}),
                             }),
                           });
                         }
@@ -12831,7 +12846,9 @@ export default function App({ onSignOut }) {
               const underborne = ch.f_community === "De las Profundidades" && ["Destreza", "Agilidad", "Instinto", "Conocimiento"].includes(preRoll.traitLabel);
               // Salvaje · Pies Ligeros: ventaja para moverse sin que te oigan.
               const wildborne = ch.f_community === "Salvaje" && ["Agilidad", "Destreza"].includes(preRoll.traitLabel);
-              const edgeSource = highborne ? "Privilegio" : loreborne ? "Leído" : ridgeborne ? "Firme" : slyborne ? "Granuja" : underborne ? "Vida en la Penumbra" : wildborne ? "Pies Ligeros" : "";
+              // Centinela Alado · Rostro Etéreo (Especialización): ventaja en Presencia mientras vuela.
+              const etherealOk = ch.f_subclass === "Centinela Alado" && tierForLevel(ch.f_level || 1) >= 2 && getConditions(ch).includes("Volando") && preRoll.traitLabel === "Presencia";
+              const edgeSource = etherealOk ? "Rostro Etéreo" : highborne ? "Privilegio" : loreborne ? "Leído" : ridgeborne ? "Firme" : slyborne ? "Granuja" : underborne ? "Vida en la Penumbra" : wildborne ? "Pies Ligeros" : "";
               const poetOk = ch.f_subclass === "Orador" && preRoll.traitLabel === "Presencia";
               const hopeUsed = preRoll.exps.length + (preRoll.poet ? 1 : 0);
               const formula = (preRoll.dedicated ? "1d20 + 1d12 " : "2d12 ") + (mod >= 0 ? "+ " : "− ") + Math.abs(mod) + (preRoll.rally && ch.f_rally_die ? " + 1" + ch.f_rally_die : "") + (preRoll.poet ? " + 1d4" : "") + (preRoll.weapon && ch.f_transformation_form_active === "Forma de Lobo" ? " + 1d10" : "") + (edgeNet > 0 ? " + 1d6" : edgeNet < 0 ? " − 1d6" : "");
@@ -12908,10 +12925,10 @@ export default function App({ onSignOut }) {
                   ? tile("priv", {
                       on: preRoll.privilege,
                       title: edgeSource,
-                      sub: highborne ? "De Alta Cuna" : loreborne ? "Del Saber" : slyborne ? "De las Sombras" : underborne ? "De las Profundidades" : wildborne ? "Salvaje" : "De las Cumbres",
+                      sub: etherealOk ? "Centinela Alado · volando" : highborne ? "De Alta Cuna" : loreborne ? "Del Saber" : slyborne ? "De las Sombras" : underborne ? "De las Profundidades" : wildborne ? "Salvaje" : "De las Cumbres",
                       cost: "Ventaja",
-                      color: highborne ? "#B8862E" : loreborne ? "#5E8FC9" : slyborne ? "#6E5A8A" : underborne ? "#5A6B7A" : wildborne ? "#5E8A4E" : "#7E8C6A",
-                      hint: highborne ? "Si tratas con nobles, negocias un precio o usas tu reputación" : loreborne ? "Si la tirada trata sobre la historia, la cultura o la política de una persona o un lugar importantes" : slyborne ? "Si negocias con criminales, intentas detectar una mentira o buscas un escondite seguro" : underborne ? "Si estás en una zona con poca luz o sombras densas y te escondes, investigas o percibes detalles en ella" : wildborne ? "Si intentas moverte sin que te oigan" : "Si cruzas precipicios y cornisas peligrosos, te orientas en un entorno duro o usas tus conocimientos de supervivencia",
+                      color: etherealOk ? "#D8A84A" : highborne ? "#B8862E" : loreborne ? "#5E8FC9" : slyborne ? "#6E5A8A" : underborne ? "#5A6B7A" : wildborne ? "#5E8A4E" : "#7E8C6A",
+                      hint: etherealOk ? "Mientras vuelas, tienes ventaja en las tiradas de Presencia" : highborne ? "Si tratas con nobles, negocias un precio o usas tu reputación" : loreborne ? "Si la tirada trata sobre la historia, la cultura o la política de una persona o un lugar importantes" : slyborne ? "Si negocias con criminales, intentas detectar una mentira o buscas un escondite seguro" : underborne ? "Si estás en una zona con poca luz o sombras densas y te escondes, investigas o percibes detalles en ella" : wildborne ? "Si intentas moverte sin que te oigan" : "Si cruzas precipicios y cornisas peligrosos, te orientas en un entorno duro o usas tus conocimientos de supervivencia",
                       onClick: () => setPreRoll((p) => ({ ...p, privilege: !p.privilege, advantage: p.privilege ? p.advantage : false })),
                     })
                   : null,
@@ -13110,6 +13127,29 @@ export default function App({ onSignOut }) {
                       {traitRollResult.traitLabel}
                     </div>
                     <DualityResult roll={traitRollResult} size={72} />
+                    {(() => {
+                      // Rostro Etéreo: con éxito y Esperanza en Presencia, puedes quitar 1 Miedo al DJ en vez de ganar Esperanza.
+                      const r = traitRollResult;
+                      const rc = characters[r.charId];
+                      if (!rc || rc.f_subclass !== "Centinela Alado" || tierForLevel(rc.f_level || 1) < 2 || r.traitLabel !== "Presencia" || r.reaction || r.hope < r.fear || r.ethereal) return null;
+                      return (
+                        <button
+                          type="button"
+                          className="mh-luck-btn mh-ethereal-btn"
+                          title="Solo si la tirada ha tenido éxito"
+                          onClick={() => {
+                            updateCharacterField(r.charId, "hope_marked", String(Math.max(0, Number(rc.hope_marked ?? HOPE_DEFAULT) - 1)));
+                            addFear(-1);
+                            setTraitRollResult((prev) => (prev ? { ...prev, ethereal: true } : prev));
+                            postCampaignEvent(r.charId, "👁️ Rostro Etéreo: en lugar de ganar Esperanza, retira 1 de Miedo de la reserva del DJ");
+                          }}
+                        >
+                          <Sparkles size={15} /> Rostro Etéreo
+                          <small>Si tuviste éxito: −1 Miedo al DJ en vez de +1 Esperanza</small>
+                        </button>
+                      );
+                    })()}
+                    {traitRollResult.ethereal && <div className="mh-luck-done" style={{ color: "#B8862E" }}>Rostro Etéreo: el DJ pierde 1 de Miedo</div>}
                     {traitRollResult.card?.dc != null && (() => {
                       const ok = traitRollResult.hope === traitRollResult.fear || traitRollResult.total >= traitRollResult.card.dc;
                       return (
@@ -13344,6 +13384,30 @@ export default function App({ onSignOut }) {
                     Daño · {damageRollResult.weaponName}
                   </div>
                   <DamageResult roll={damageRollResult} />
+                  {(() => {
+                    // Centinela Alado · Alas de Luz: volando, 1 Esperanza para +1d8 (1d12 con Poder de los Dioses).
+                    const dr = damageRollResult;
+                    const sc = dr.charId ? characters[dr.charId] : null;
+                    if (!sc || sc.f_subclass !== "Centinela Alado" || !getConditions(sc).includes("Volando")) return null;
+                    const sides = tierForLevel(sc.f_level || 1) >= 3 ? 12 : 8;
+                    if (dr.wingRoll) return <div className="mh-kick-done" style={{ color: "#B8862E" }}>Alas de Luz: +1d{dr.wingSides} ({dr.wingRoll})</div>;
+                    const hopeW = Number(sc.hope_marked ?? HOPE_DEFAULT);
+                    return (
+                      <button
+                        type="button"
+                        className="mh-kick-btn mh-spirit-btn"
+                        disabled={hopeW < 1}
+                        onClick={() => {
+                          const v = Math.floor(Math.random() * sides) + 1;
+                          setDamageRollResult((r) => (r ? { ...r, wingRoll: v, wingSides: sides, total: r.total + v } : r));
+                          updateCharacterField(dr.charId, "hope_marked", String(Math.max(0, hopeW - 1)));
+                          postCampaignEvent(dr.charId, `🪽 Alas de Luz: gasta 1 Esperanza y suma 1d${sides} (${v}). Daño total ${dr.total + v}`);
+                        }}
+                      >
+                        <Feather size={14} /> Alas de Luz · 1 Esperanza · +1d{sides}
+                      </button>
+                    );
+                  })()}
                   {(() => {
                     // Portador Divino · Arma Espiritual: 1 Estrés para alcanzar a otro adversario con la misma tirada.
                     const dr = damageRollResult;
@@ -14314,6 +14378,32 @@ export default function App({ onSignOut }) {
                       },
                     });
                   }
+                  // Centinela Alado · Alas de Luz: volar y llevar a otra criatura.
+                  if (d.sentinelActs && !d.fromChat) {
+                    const flyingS = getConditions(c).includes("Volando");
+                    cardActs.push({
+                      key: "fly",
+                      Icon: Feather,
+                      label: flyingS ? "Aterrizar" : "Volar",
+                      sub: flyingS ? "Dejas de volar" : "Despliegas tus Alas de Luz",
+                      run: () => {
+                        closeCardDetail();
+                        toggleCondition(viewingCharId, "Volando");
+                      },
+                    });
+                    cardActs.push({
+                      key: "carry",
+                      Icon: Users,
+                      label: flyingS ? "Llevar a una criatura" : "Llevar a una criatura · tienes que estar volando",
+                      sub: "1 Estrés · dispuesta, de tu tamaño o menor",
+                      disabled: !flyingS,
+                      run: () => {
+                        closeCardDetail();
+                        markStress(viewingCharId, 1);
+                        postCampaignEvent(viewingCharId, "🪽 Alas de Luz: marca 1 Estrés y levanta a otra criatura para llevarla volando");
+                      },
+                    });
+                  }
                   // Portador Divino: Arma Espiritual y Toque Clemente.
                   if (d.divineActs && !d.fromChat) {
                     const w = PRIMARY_WEAPONS.find((x) => x.key === c.f_primary_weapon) || SECONDARY_WEAPONS.find((x) => x.key === c.f_secondary_weapon && x.trait !== "—");
@@ -14569,7 +14659,7 @@ export default function App({ onSignOut }) {
                       label: "Mostrar en la campaña",
                       sub: shareCamp.name,
                       run: () => {
-                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, divineActs, ...detail } = d;
+                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, divineActs, sentinelActs, ...detail } = d;
                         // Las imágenes incrustadas muy grandes no se copian al chat.
                         if (typeof detail.image === "string" && detail.image.startsWith("data:") && detail.image.length > 30000) delete detail.image;
                         const type = d.domain ? "domain" : d.weapon ? "weapon" : d.armor ? "armor" : "card";
