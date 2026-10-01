@@ -398,6 +398,22 @@ const getCompanion = (c) => {
 const PACK_NAME = "Petate Nómada";
 const PACK_DESC = "Una vez por sesión, gasta 1 Esperanza para sacar de él un objeto corriente que te sea útil (lo decides con el DJ).";
 
+// Sindicato · Bien Relacionado: hechos para cada contacto.
+const CONTACT_FACTS = [
+  "Me debe un favor, pero será difícil de encontrar",
+  "Me pedirá algo a cambio",
+  "Siempre está metido en un buen lío",
+  "Estuvimos juntos. Es una larga historia",
+  "No nos separamos en buenos términos",
+];
+const getContacts = (c) => {
+  try {
+    return JSON.parse(c?.f_contacts || "[]");
+  } catch (e) {
+    return [];
+  }
+};
+
 const WIZARD_STEPS = [
   { key: "class", title: "Elige tu clase", group: "Identidad" },
   { key: "subclass", title: "Elige tu subclase", group: "Identidad" },
@@ -2630,6 +2646,23 @@ const sharedStyles = `
   .mh-comp-atk button { align-self: flex-start; margin-top: 4px; font-size: 11.5px; padding: 4px 9px; display: inline-flex; align-items: center; gap: 5px; }
   .mh-comp-rules { margin-top: auto; font-size: 12px; line-height: 1.5; color: var(--mh-ink3); padding: 10px 12px; border-radius: 10px; background: var(--mh-panel2); }
   .mh-exp-comp .mh-exp-bar { background: #7FB77A; }
+  .mh-contacts { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+  .mh-contact { position: relative; display: flex; gap: 12px; align-items: flex-start; padding: 12px 34px 12px 12px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel2); cursor: pointer; text-align: left; }
+  .mh-contact:hover { border-color: color-mix(in srgb, #6E5A8A 50%, var(--mh-line)); }
+  .mh-contact.is-on { border-color: #6E5A8A; background: color-mix(in srgb, #6E5A8A 8%, var(--mh-panel)); }
+  .mh-contact-av { width: 38px; height: 38px; flex-shrink: 0; border-radius: 11px; display: flex; align-items: center; justify-content: center; font: 700 17px 'Cinzel', Georgia, serif; color: #fff; background: #6E5A8A; }
+  .mh-contact-t { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .mh-contact-t b { font-size: 15px; color: var(--mh-ink); }
+  .mh-contact-t small { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--mh-muted); }
+  .mh-contact-t span { font-size: 12px; color: var(--mh-ink3); }
+  .mh-contact-t em { align-self: flex-start; margin-top: 3px; font-style: normal; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px; color: color-mix(in srgb, #6E5A8A 80%, var(--mh-ink)); background: color-mix(in srgb, #6E5A8A 13%, var(--mh-panel)); }
+  .mh-contact-t .mh-contact-notes { font-style: italic; color: var(--mh-muted); }
+  .mh-contact .mh-exp-del { position: absolute; top: 8px; right: 8px; }
+  .mh-contact:hover .mh-exp-del { opacity: 1; }
+  .mh-contact-form { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; }
+  .mh-contact-facts { display: flex; flex-direction: column; gap: 5px; }
+  .mh-contact-facts button { text-align: left; padding: 7px 10px; border-radius: 9px; border: 1px solid var(--mh-line); background: var(--mh-panel); font: 500 12px 'Inter', system-ui, sans-serif; color: var(--mh-ink3); cursor: pointer; }
+  .mh-contact-facts button.is-on { border-color: #6E5A8A; background: color-mix(in srgb, #6E5A8A 12%, var(--mh-panel)); color: var(--mh-ink); font-weight: 600; }
   .mh-train { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex: 1; min-height: 0; align-content: stretch; }
   .mh-train-o { display: flex; flex-direction: column; justify-content: center; gap: 3px; padding: 7px 10px; border-radius: 10px; border: 1px solid var(--mh-line); background: var(--mh-panel2); min-width: 0; }
   .mh-train-o.is-on { border-color: color-mix(in srgb, #7FB77A 60%, var(--mh-line)); background: color-mix(in srgb, #7FB77A 9%, var(--mh-panel)); }
@@ -4387,6 +4420,26 @@ export default function App({ onSignOut }) {
   // Ficha: edición de la hoja del compañero y Experiencia nueva.
   const [companionEdit, setCompanionEdit] = useState(null);
   const [companionExpDraft, setCompanionExpDraft] = useState(null);
+  // Sindicato: contacto que se está creando o editando.
+  const CONTACT_EMPTY = { id: "", name: "", place: "", use: "", fact: CONTACT_FACTS[0], notes: "" };
+  const [contactDraft, setContactDraft] = useState(CONTACT_EMPTY);
+  const saveContact = (charId) => {
+    const c = charsRef.current[charId];
+    if (!c || !contactDraft.name.trim()) return;
+    const list = getContacts(c);
+    const item = { ...contactDraft, id: contactDraft.id || "k" + Date.now(), name: contactDraft.name.trim(), place: contactDraft.place.trim(), use: contactDraft.use.trim(), notes: contactDraft.notes.trim() };
+    const idx = list.findIndex((x) => x.id === item.id);
+    const next = idx >= 0 ? list.map((x, k) => (k === idx ? item : x)) : [...list, item];
+    updateCharacterField(charId, "f_contacts", JSON.stringify(next));
+    if (idx < 0) postCampaignEvent(charId, `🕸️ Conoce a alguien en ${item.place || "este lugar"}: ${item.name}`);
+    setContactDraft(CONTACT_EMPTY);
+  };
+  const removeContact = (charId, id) => {
+    const c = charsRef.current[charId];
+    if (!c) return;
+    updateCharacterField(charId, "f_contacts", JSON.stringify(getContacts(c).filter((x) => x.id !== id)));
+    if (contactDraft.id === id) setContactDraft(CONTACT_EMPTY);
+  };
   const saveCompanion = (id, patch) => {
     const cur = getCompanion(charsRef.current[id]) || COMPANION_DEFAULT;
     updateCharacterField(id, "f_companion", JSON.stringify({ ...cur, ...patch }));
@@ -9043,7 +9096,7 @@ export default function App({ onSignOut }) {
                     { key: "background", label: "Trasfondo y Conexiones", Icon: MessageCircle },
                     { key: "journal", label: "Diario", Icon: NotebookPen },
                   ];
-                  const validKeys = [...tabs.map((t) => t.key), ...(c.f_class === "Druida" ? ["beastforms"] : []), ...(c.f_subclass === "Vínculo Bestial" ? ["companion"] : []), ...(Object.values(campaigns).some((cp) => (cp.characterIds || []).includes(viewingCharId)) ? ["campaign"] : [])];
+                  const validKeys = [...tabs.map((t) => t.key), ...(c.f_class === "Druida" ? ["beastforms"] : []), ...(c.f_subclass === "Vínculo Bestial" ? ["companion"] : []), ...(c.f_subclass === "Sindicato" ? ["contacts"] : []), ...(Object.values(campaigns).some((cp) => (cp.characterIds || []).includes(viewingCharId)) ? ["campaign"] : [])];
                   const charCampaign = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(viewingCharId));
                   const activeTab = validKeys.includes(detailTab) ? detailTab : "general";
                   const currentTier = tierForLevel(c.f_level || 1);
@@ -9101,6 +9154,7 @@ export default function App({ onSignOut }) {
                           { spacer: true, key: "_spacer" },
                           ...(c.f_class === "Druida" ? [{ key: "beastforms", label: "Formas de Bestia", Icon: PawPrint, tone: "#7FB77A" }] : []),
                           ...(c.f_subclass === "Vínculo Bestial" ? [{ key: "companion", label: "Compañero Animal", Icon: Dog, tone: "#7FB77A" }] : []),
+                          ...(c.f_subclass === "Sindicato" ? [{ key: "contacts", label: "Red de Contactos", Icon: Network, tone: "#6E5A8A" }] : []),
                           ...(charCampaign ? [{ key: "campaign", label: charCampaign.name, Icon: BookOpen, tone: "#A58BE8" }] : []),
                         ].map((t) => {
                           if (t.spacer) return <div key={t.key} style={{ flex: 1, minWidth: 12 }} />;
@@ -11172,6 +11226,111 @@ export default function App({ onSignOut }) {
                               );
                               return host ? createPortal(overlay, host) : overlay;
                             })()}
+                          </div>
+                        );
+                      })()}
+
+                      {activeTab === "contacts" && c.f_subclass === "Sindicato" && (() => {
+                        const contacts = getContacts(c);
+                        const ed = contactDraft;
+                        const setEd = (k, v) => setContactDraft((d) => ({ ...d, [k]: v }));
+                        const cond = {
+                          hidden: conditions.includes("Escondido") || conditions.includes("Oculto"),
+                          restrained: conditions.includes("Inmovilizado"),
+                          vulnerable: conditions.includes("Vulnerable"),
+                          unconscious: conditions.includes("Inconsciente"),
+                          flying: conditions.includes("Volando"),
+                        };
+                        return (
+                          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(12, 1fr)", gap: 18, flex: 1, maxHeight: isMobile ? undefined : armaduraHeight || undefined }}>
+                            <Panel span={7} title="Red de Contactos" titleRight={<span className="mh-train-count">{contacts.length}</span>} {...cond}>
+                              <div className="mh-contacts mh-noscroll">
+                                {contacts.length === 0 && (
+                                  <div className="mh-comp-empty">
+                                    <Network size={28} />
+                                    <b className="mh-serif">Aún no has apuntado a nadie</b>
+                                    <span>Cuando llegues a una población o un entorno importante, conoces a alguien que vive allí. Apúntalo a la derecha.</span>
+                                  </div>
+                                )}
+                                {contacts.map((k) => (
+                                  <div
+                                    key={k.id}
+                                    className={"mh-contact" + (ed.id === k.id ? " is-on" : "")}
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={() => setContactDraft({ ...CONTACT_EMPTY, ...k })}
+                                    onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && e.target === e.currentTarget && (e.preventDefault(), setContactDraft({ ...CONTACT_EMPTY, ...k }))}
+                                  >
+                                    <span className="mh-contact-av">{(k.name || "?").charAt(0).toUpperCase()}</span>
+                                    <div className="mh-contact-t">
+                                      <b className="mh-serif">{k.name}</b>
+                                      {k.place && (
+                                        <small>
+                                          <MapPinned size={11} /> {k.place}
+                                        </small>
+                                      )}
+                                      {k.use && <span>{k.use}</span>}
+                                      <em>{k.fact}</em>
+                                      {k.notes && <span className="mh-contact-notes">{k.notes}</span>}
+                                    </div>
+                                    <button
+                                      type="button"
+                                      className="mh-exp-del"
+                                      title="Quitar contacto"
+                                      aria-label={"Quitar a " + k.name}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        removeContact(viewingCharId, k.id);
+                                      }}
+                                    >
+                                      <X size={12} />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            </Panel>
+                            <Panel span={5} title={ed.id ? "Editar contacto" : "Nuevo contacto"} {...cond}>
+                              <div className="mh-contact-form">
+                                <div className="mh-wz-comp-2">
+                                  <div>
+                                    <label className="mh-label">Nombre</label>
+                                    <input className="mh-input" placeholder="Ej. Varo el Tuerto" value={ed.name} onChange={(e) => setEd("name", e.target.value)} />
+                                  </div>
+                                  <div>
+                                    <label className="mh-label">Dónde vive</label>
+                                    <input className="mh-input" placeholder="Ej. Puerto Ceniza" value={ed.place} onChange={(e) => setEd("place", e.target.value)} />
+                                  </div>
+                                </div>
+                                <div>
+                                  <label className="mh-label">Cómo podría serte útil</label>
+                                  <input className="mh-input" placeholder="Ej. Conoce a los contrabandistas del puerto" value={ed.use} onChange={(e) => setEd("use", e.target.value)} />
+                                </div>
+                                <div>
+                                  <label className="mh-label">Un hecho sobre él o ella</label>
+                                  <div className="mh-contact-facts" role="radiogroup" aria-label="Hecho">
+                                    {CONTACT_FACTS.map((f) => (
+                                      <button key={f} type="button" role="radio" aria-checked={ed.fact === f} className={ed.fact === f ? "is-on" : ""} onClick={() => setEd("fact", f)}>
+                                        {f}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                                <div>
+                                  <label className="mh-label">Notas (opcional)</label>
+                                  <input className="mh-input" placeholder="Lo que quieras recordar" value={ed.notes} onChange={(e) => setEd("notes", e.target.value)} />
+                                </div>
+                                <div style={{ display: "flex", gap: 8, marginTop: "auto" }}>
+                                  {ed.id && (
+                                    <button type="button" className="mh-btn-ghost" onClick={() => setContactDraft(CONTACT_EMPTY)}>
+                                      Cancelar
+                                    </button>
+                                  )}
+                                  <button type="button" className="mh-btn" style={{ flex: 1 }} disabled={!ed.name.trim()} onClick={() => saveContact(viewingCharId)}>
+                                    {ed.id ? "Guardar cambios" : "Añadir a la red"}
+                                  </button>
+                                </div>
+                              </div>
+                            </Panel>
                           </div>
                         );
                       })()}
