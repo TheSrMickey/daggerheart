@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
-import { Compass, Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
+import { Shell, Compass, Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
 
 const NAV_ITEMS = [
   { key: "ficha", label: "Personajes", icon: User },
@@ -288,7 +288,7 @@ const ANCESTRIES = [
   { key: "Fauno", blurb: "Humanoide con rasgos de cabra: cuernos curvos, pupilas cuadradas y pezuñas hendidas con las que da golpes poderosos.", features: [{ name: "Salto Caprino", text: "Puedes saltar a cualquier punto dentro de alcance Cercano como si usaras tu movimiento normal, lo que te permite saltar obstáculos, cruzar huecos o escalar barreras con facilidad." }, { name: "Coz", text: "Cuando tengas éxito en un ataque contra un objetivo en alcance Cuerpo a cuerpo, puedes marcar 1 Estrés para impulsarte contra él de una coz: haces 2d6 de daño adicional y lo empujas a él, o te empujas a ti, hasta alcance Muy cercano." }] },
   { key: "Firbolg", blurb: "Humanoide bovino de gran fuerza, con nariz ancha, orejas largas y caídas, y a menudo cuernos con los que embiste.", features: [{ name: "Carga", text: "Cuando tengas éxito en una tirada de Agilidad para moverte desde alcance Lejano o Muy lejano hasta alcance Cuerpo a cuerpo de uno o más objetivos, puedes marcar 1 Estrés para hacer 1d12 de daño físico a todos los objetivos en alcance Cuerpo a cuerpo." }, { name: "Inquebrantable", text: "Cuando fueras a marcar Estrés, tira 1d6. Con un 6, no lo marcas." }] },
   { key: "Fungril", blurb: "Humanoide con aspecto de seta, de formas y colores muy variados, que se comunica sin palabras e intercambia información con otros fungril a través de su red de micelio.", features: [{ name: "Red Fúngica", text: "Haz una tirada de Instinto (12) para usar tu red de micelio y hablar con otros de tu ascendencia. Si tienes éxito, podéis comunicaros a cualquier distancia." }, { name: "Conexión con la Muerte", text: "Mientras toques el cadáver de alguien que haya muerto hace poco, puedes marcar 1 Estrés para extraerle un recuerdo relacionado con una emoción o sensación concreta que elijas." }] },
-  { key: "Galapa", blurb: "Humanoide con caparazón, paciente y protegido por naturaleza.", features: [{ name: "Caparazón", text: "Suma tu Competencia a tus umbrales de daño." }, { name: "Retraerse", text: "Marca 1 Estrés para meterte en tu caparazón: tienes resistencia al daño físico, desventaja en las tiradas de acción y no puedes moverte." }] },
+  { key: "Galapa", blurb: "Tortuga humanoide con un gran caparazón abombado en el que puede retraerse para protegerse.", features: [{ name: "Caparazón", text: "Obtienes un bonificador a tus umbrales de daño igual a tu Competencia." }, { name: "Retraerse", text: "Marca 1 Estrés para retraerte en tu caparazón. Mientras estés dentro, tienes resistencia al daño físico, desventaja en las tiradas de acción y no puedes moverte." }] },
   { key: "Gigante", blurb: "De estatura descomunal y fuerza a la par.", features: [{ name: "Aguante", text: "Ganas una casilla adicional de Punto de vida al crear el personaje." }, { name: "Alcance", text: "Todo lo que tenga alcance Cuerpo a cuerpo (armas, habilidades, hechizos…) cuenta como si tuviera alcance Muy cercano." }] },
   { key: "Goblin", blurb: "Pequeño, rápido e ingenioso, difícil de atrapar.", features: [{ name: "Pie Firme", text: "Ignoras la desventaja en las tiradas de Agilidad." }, { name: "Sentido del Peligro", text: "Una vez por descanso, marca 1 Estrés para obligar a un adversario a repetir un ataque contra ti o un aliado en alcance Muy cercano." }] },
   { key: "Mediano", blurb: "Bajo de estatura pero grande en suerte y sigilo.", features: [{ name: "Trae Suerte", text: "Al empezar cada sesión, todo tu grupo gana 1 Esperanza." }, { name: "Brújula Interior", text: "Cuando saques un 1 en tu Dado de Esperanza, puedes repetirlo." }] },
@@ -3922,8 +3922,8 @@ function DialogueFigure({ src, alt, expr }) {
   );
 }
 
-function Panel({ span, title, titleRight, children, hidden, restrained, vulnerable, unconscious, flying, glow, fill, link }) {
-  const borderColor = glow || (vulnerable ? "#D9644E" : restrained ? "#C08B5C" : unconscious ? "#A58BE8" : flying ? "#5FA77A" : hidden ? "var(--mh-muted)" : "var(--mh-line)");
+function Panel({ span, title, titleRight, children, hidden, restrained, vulnerable, unconscious, flying, retracted, glow, fill, link }) {
+  const borderColor = glow || (vulnerable ? "#D9644E" : restrained ? "#C08B5C" : unconscious ? "#A58BE8" : retracted ? "#6E8B5A" : flying ? "#5FA77A" : hidden ? "var(--mh-muted)" : "var(--mh-line)");
   return (
     <div
       className="mh-panel-box"
@@ -3948,13 +3948,14 @@ function Panel({ span, title, titleRight, children, hidden, restrained, vulnerab
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>{children}</div>
       {/* Línea que une esta caja con la de la izquierda (a la altura de la Evasión). */}
       {link && <span aria-hidden="true" style={{ position: "absolute", left: -20, top: 101, width: 20, height: 2, borderRadius: 2, background: link }} />}
-      {(hidden || restrained || vulnerable || unconscious || flying) && (
+      {(hidden || restrained || vulnerable || unconscious || flying || retracted) && (
         <div style={{ position: "absolute", top: 10, right: 12, display: "flex", gap: 4, pointerEvents: "none" }}>
           {hidden && <EyeOff size={14} color="#9C93AD" />}
           {restrained && <Lock size={14} color="#C08B5C" />}
           {vulnerable && <ShieldOff size={14} color="#D9644E" />}
           {unconscious && <ZapOff size={14} color="#A58BE8" />}
           {flying && <Feather size={14} color="#5FA77A" />}
+          {retracted && <Shell size={14} color="#6E8B5A" />}
         </div>
       )}
     </div>
@@ -5195,15 +5196,16 @@ export default function App({ onSignOut }) {
   };
 
   const CONDITION_PRESETS = ["Escondido", "Inmovilizado", "Vulnerable", "Inconsciente"];
-  const CONDITION_THEME_COLOR = { Escondido: "#7D8BA3", Inmovilizado: "#C08B5C", Vulnerable: "#D9644E", Inconsciente: "#A58BE8", Volando: "#5FA77A", Oculto: "#4F5D78" };
-  const CONDITION_ICONS = { Escondido: EyeOff, Inmovilizado: Lock, Vulnerable: ShieldOff, Inconsciente: ZapOff, Volando: Feather, Oculto: Ghost };
+  const CONDITION_THEME_COLOR = { Escondido: "#7D8BA3", Inmovilizado: "#C08B5C", Vulnerable: "#D9644E", Inconsciente: "#A58BE8", Volando: "#5FA77A", Oculto: "#4F5D78", Retraído: "#6E8B5A" };
+  const CONDITION_ICONS = { Escondido: EyeOff, Inmovilizado: Lock, Vulnerable: ShieldOff, Inconsciente: ZapOff, Volando: Feather, Oculto: Ghost, Retraído: Shell };
   // Hada: Alas (puede volar) y Doblega la Suerte.
   const isFaerie = (c) => (c?.f_ancestry || "").split(" + ").includes("Hada");
   // Pícaro · Oculto: siempre que fuera a quedar Escondido, queda Oculto.
   const isRogue = (c) => c?.f_class === "Pícaro";
   const conditionPresetsFor = (c) => {
     const base = isRogue(c) ? CONDITION_PRESETS.map((n) => (n === "Escondido" ? "Oculto" : n)) : CONDITION_PRESETS;
-    return isFaerie(c) ? [...base, "Volando"] : base;
+    const isGalapa = (c?.f_ancestry || "").split(" + ").includes("Galapa");
+    return [...base, ...(isFaerie(c) ? ["Volando"] : []), ...(isGalapa ? ["Retraído"] : [])];
   };
   const getConditions = (c) => {
     try {
@@ -5245,6 +5247,17 @@ export default function App({ onSignOut }) {
     if (unstopValue(c) && (name === "Inmovilizado" || name === "Vulnerable")) return;
     const list = isRogue(c) ? getConditions(c).map((n) => (n === "Escondido" ? "Oculto" : n)) : getConditions(c);
     const next = list.includes(name) ? list.filter((n) => n !== name) : [...list, name];
+    // Galapa · Retraerse: meterse en el caparazón marca 1 Estrés.
+    if (name === "Retraído") {
+      if (next.includes("Retraído")) {
+        markStress(id, 1, { f_conditions: JSON.stringify(next) });
+        postCampaignEvent(id, "🐢 Retraerse: marca 1 Estrés y se mete en su caparazón (resistencia al daño físico, desventaja en las tiradas de acción, no puede moverse)");
+      } else {
+        updateCharacterField(id, "f_conditions", JSON.stringify(next));
+        postCampaignEvent(id, "🐢 Sale de su caparazón");
+      }
+      return;
+    }
     // Al aterrizar se pierde el +2 de Alas.
     if (name === "Volando" && !next.includes("Volando")) updateCharacterFields(id, { f_conditions: JSON.stringify(next), f_wings_evade: "" });
     else updateCharacterField(id, "f_conditions", JSON.stringify(next));
@@ -7392,7 +7405,9 @@ export default function App({ onSignOut }) {
   // Antes de tirar: ventana para añadir Experiencias, el dado de Arenga o Ventaja.
   const [preRoll, setPreRoll] = useState(null);
   const rollTraitCheck = (charId, traitLabel, traitValue, weapon, cardContext, advantage) => {
-    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage, exps: [], rally: false, privilege: false, disadvantage: false, poet: false, dedicated: false, quick: false, reaction: false, tide: 0, dc: "" });
+    // Galapa · Retraerse: desventaja en las tiradas de acción mientras está en el caparazón.
+    const shellOn = getConditions(charsRef.current[charId] || {}).includes("Retraído");
+    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage && !shellOn, exps: [], rally: false, privilege: false, disadvantage: shellOn, shellOn, poet: false, dedicated: false, quick: false, reaction: false, tide: 0, dc: "" });
   };
   const confirmPreRoll = () => {
     const pr = preRoll;
@@ -9127,8 +9142,10 @@ export default function App({ onSignOut }) {
                   // Inquebrantable · Firme: +1 permanente a los umbrales.
                   const stalwart = c.f_subclass === "Inquebrantable";
                   const firmBonus = stalwart ? 1 : 0;
-                  const major = baseThresholds.major + equipMods.major + earthBonus + firmBonus;
-                  const severe = baseThresholds.severe + equipMods.severe + earthBonus + firmBonus;
+                  // Galapa · Caparazón: + Competencia a los umbrales.
+                  const shellBonus = (c.f_ancestry || "").split(" + ").includes("Galapa") ? proficiency : 0;
+                  const major = baseThresholds.major + equipMods.major + earthBonus + firmBonus + shellBonus;
+                  const severe = baseThresholds.severe + equipMods.severe + earthBonus + firmBonus + shellBonus;
                   // Enano · Fortaleza Aumentada: la mitad del daño equivale a umbrales dobles.
                   const fortOn = c.f_fortitude_ready === "1";
                   const unstopOn = unstopValue(c) > 0;
@@ -9217,6 +9234,7 @@ export default function App({ onSignOut }) {
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
                             flying={conditions.includes("Volando")}
+                            retracted={conditions.includes("Retraído")}
                             >
                               {/* El hueco del antiguo campo de daño se reparte entre las secciones para mantener la altura. */}
                               <div style={{ display: "flex", gap: 12, marginBottom: statsSpacing.evMb, height: 100 }}>
@@ -9287,6 +9305,16 @@ export default function App({ onSignOut }) {
                                 {earthBonus > 0 && (
                                   <span style={{ fontSize: 9.5, fontWeight: 700, color: ink("#C08B5C"), background: "#C08B5C1A", padding: "1px 7px", borderRadius: 20, textTransform: "none" }}>
                                     +{earthBonus} por Tierra
+                                  </span>
+                                )}
+                                {shellBonus > 0 && (
+                                  <span style={{ fontSize: 9.5, fontWeight: 700, color: ink("#6E8B5A"), background: "#6E8B5A1A", padding: "1px 7px", borderRadius: 20, textTransform: "none" }} title="Caparazón: tu Competencia se suma a los umbrales">
+                                    +{shellBonus} Caparazón
+                                  </span>
+                                )}
+                                {conditions.includes("Retraído") && (
+                                  <span style={{ fontSize: 9.5, fontWeight: 700, color: "#fff", background: "#6E8B5A", padding: "1px 7px", borderRadius: 20, textTransform: "none" }} title="Resistencia al daño físico: el daño físico se reduce a la mitad antes de compararlo con los umbrales">
+                                    Resistencia física
                                   </span>
                                 )}
                               </div>
@@ -9521,6 +9549,7 @@ export default function App({ onSignOut }) {
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
                             flying={conditions.includes("Volando")}
+                            retracted={conditions.includes("Retraído")}
                             >
                               {activeBeastform ? (() => {
                                 const [bfRange, bfTrait, bfDamage] = activeBeastform.attack.split(" · ");
@@ -9851,6 +9880,7 @@ export default function App({ onSignOut }) {
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
                             flying={conditions.includes("Volando")}
+                            retracted={conditions.includes("Retraído")}
                             >
                               {(() => {
                                 const unlocked = Math.min(EXPERIENCE_MAX, 1 + currentTier);
@@ -10105,6 +10135,7 @@ export default function App({ onSignOut }) {
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
                             flying={conditions.includes("Volando")}
+                            retracted={conditions.includes("Retraído")}
                             >
                               <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, minHeight: 0 }}>
                                 {items.length === 0 && <div style={{ fontSize: 12.5, color: "var(--mh-muted)", fontStyle: "italic" }}>Todavía no hay acciones para este personaje.</div>}
@@ -10164,6 +10195,7 @@ export default function App({ onSignOut }) {
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
                             flying={conditions.includes("Volando")}
+                            retracted={conditions.includes("Retraído")}
                             >
                               <div style={{ display: "flex", flexDirection: "column", gap: 12, flex: 1 }}>
                                 {c.f_beastform && (
@@ -10264,6 +10296,7 @@ export default function App({ onSignOut }) {
                             vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
                             flying={conditions.includes("Volando")}
+                            retracted={conditions.includes("Retraído")}
                           >
                             {(() => {
                               // Junto a la hoguera: cómo estás, qué te conviene y qué recupera cada acción.
@@ -10457,6 +10490,7 @@ export default function App({ onSignOut }) {
                             vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
                             flying={conditions.includes("Volando")}
+                            retracted={conditions.includes("Retraído")}
                           >
                             {(() => {
                               const projects = getProjects(c);
@@ -10598,6 +10632,7 @@ export default function App({ onSignOut }) {
                             vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
                             flying={conditions.includes("Volando")}
+                            retracted={conditions.includes("Retraído")}
                           >
                             {(() => {
                               const backpack = getBackpack(c)[0];
@@ -10766,6 +10801,7 @@ export default function App({ onSignOut }) {
                             vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
                             flying={conditions.includes("Volando")}
+                            retracted={conditions.includes("Retraído")}
                           >
                             {(() => {
                               const counts = GOLD_TIERS.map((t) => Math.min(10, Number(c[t.field] || 0)));
@@ -10897,6 +10933,7 @@ export default function App({ onSignOut }) {
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
                             flying={conditions.includes("Volando")}
+                            retracted={conditions.includes("Retraído")}
                             >
                               <div className="mh-noscroll mh-qa-scroll" style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1, minHeight: 0, overflowY: "auto" }}>
                                 {bgRows.length === 0 ? (
@@ -10962,6 +10999,7 @@ export default function App({ onSignOut }) {
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
                             flying={conditions.includes("Volando")}
+                            retracted={conditions.includes("Retraído")}
                             >
                               <div className="mh-noscroll mh-qa-scroll" style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1, minHeight: 0, overflowY: "auto" }}>
                                 {connRows.length === 0 && (
@@ -11240,6 +11278,7 @@ export default function App({ onSignOut }) {
                           vulnerable: conditions.includes("Vulnerable"),
                           unconscious: conditions.includes("Inconsciente"),
                           flying: conditions.includes("Volando"),
+                          retracted: conditions.includes("Retraído"),
                         };
                         return (
                           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(12, 1fr)", gap: 18, flex: 1, maxHeight: isMobile ? undefined : armaduraHeight || undefined }}>
@@ -11701,6 +11740,7 @@ export default function App({ onSignOut }) {
                               vulnerable={conditions.includes("Vulnerable")}
                               unconscious={conditions.includes("Inconsciente")}
                               flying={conditions.includes("Volando")}
+                              retracted={conditions.includes("Retraído")}
                             >
                               <div style={{ fontSize: 10.5, color: "var(--mh-muted3)", marginBottom: 10, flexShrink: 0 }}>
                                 Siluetas de fondo:{" "}
@@ -11834,6 +11874,7 @@ export default function App({ onSignOut }) {
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
                             flying={conditions.includes("Volando")}
+                            retracted={conditions.includes("Retraído")}
                             >
                               <div className="mh-stg-seg" role="tablist">
                                 {STAGE_TABS.map((t) => {
@@ -12111,6 +12152,7 @@ export default function App({ onSignOut }) {
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
                             flying={conditions.includes("Volando")}
+                            retracted={conditions.includes("Retraído")}
                             >
                               <div className="mh-chat">
                                 <div className="mh-chat-box">
@@ -12260,6 +12302,7 @@ export default function App({ onSignOut }) {
                             vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
                             flying={conditions.includes("Volando")}
+                            retracted={conditions.includes("Retraído")}
                           >
                             {(() => {
                               const q = foldText(journalSearch.trim());
@@ -12757,7 +12800,8 @@ export default function App({ onSignOut }) {
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <b className="mh-serif">{preRoll.cardContext ? preRoll.cardContext.name : preRoll.weapon?.charge ? "Carga · tirada de Agilidad" : preRoll.weapon ? "Ataque con " + preRoll.weapon.name : "Tirada de " + preRoll.traitLabel}</b>
                         <small>
-                          {preRoll.traitLabel} {(preRoll.traitValue >= 0 ? "+" : "−") + Math.abs(preRoll.traitValue)} · {preRoll.reaction ? "Sin Esperanza ni Miedo" : "Esperanza y Miedo"}{preRoll.cardContext ? " · Dificultad " + preRoll.cardContext.dc : ""}
+                          {preRoll.traitLabel} {(preRoll.traitValue >= 0 ? "+" : "−") + Math.abs(preRoll.traitValue)} · {preRoll.reaction ? "Sin Esperanza ni Miedo" : "Esperanza y Miedo"}
+                          {preRoll.shellOn && !preRoll.reaction ? " · Retraído: desventaja" : ""}{preRoll.cardContext ? " · Dificultad " + preRoll.cardContext.dc : ""}
                         </small>
                       </div>
                       {canReact && (
@@ -14218,6 +14262,19 @@ export default function App({ onSignOut }) {
                     });
                   }
                   // Dracona: Aliento Elemental (ataque de Instinto) y Escamas (marcar 1 Estrés).
+                  if (d.ancestryKey === "Galapa" && !d.fromChat) {
+                    const inShell = getConditions(c).includes("Retraído");
+                    cardActs.push({
+                      key: "retract",
+                      Icon: Shell,
+                      label: inShell ? "Salir del caparazón" : "Retraerse",
+                      sub: inShell ? "" : "1 Estrés · resistencia física, desventaja y no te mueves",
+                      run: () => {
+                        closeCardDetail();
+                        toggleCondition(viewingCharId, "Retraído");
+                      },
+                    });
+                  }
                   if (d.ancestryKey === "Fungril" && !d.fromChat) {
                     cardActs.push({
                       key: "network",
