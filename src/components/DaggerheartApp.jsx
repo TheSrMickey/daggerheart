@@ -578,7 +578,7 @@ const CLASS_HOPE_FEATURE = {
   Bardo: { name: "Montar una Escena", cost: 3, text: "Distrae temporalmente a un objetivo en alcance Cercano: sufre un −2 a su Dificultad." },
   Druida: { name: "Evolución", cost: 3, text: "Transfórmate en una Forma de Bestia sin marcar Estrés. Al hacerlo, elige un rasgo y súbelo +1 hasta que abandones esa Forma de Bestia." },
   Guardián: { name: "Primera Línea", cost: 3, text: "Gasta 3 de Esperanza para recuperar 2 casillas de Armadura." },
-  Explorador: { name: "Contenerlos", cost: 3, text: "Cuando aciertes un ataque con un arma, usa esa misma tirada contra otros dos adversarios dentro de su alcance." },
+  Explorador: { name: "Contenerlos", cost: 3, text: "Gasta 3 de Esperanza cuando tengas éxito en un ataque con un arma para usar esa misma tirada contra otros dos adversarios dentro del alcance del ataque." },
   Pícaro: { name: "Esquiva del Pícaro", cost: 3, text: "Ganas +2 a la Evasión hasta que te alcance un ataque o, si no, hasta tu próximo descanso." },
   Serafín: { name: "Soporte Vital", cost: 3, text: "Un aliado en alcance Cercano recupera 1 Punto de vida." },
   Hechicero: { name: "Magia Volátil", cost: 3, text: "Repite cualquier número de tus dados de daño en un ataque que haga daño mágico." },
