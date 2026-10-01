@@ -2521,6 +2521,8 @@ const sharedStyles = `
   .mh-pred { display: flex; flex-direction: column; align-items: center; }
   .mh-pred-btn { background: #7E9B3E; }
   .mh-sneak-btn { background: #4F5D78; }
+  .mh-spirit-btn { background: #B8862E; }
+  .mh-spirit-btn:hover { background: #A07424; }
   .mh-sneak-btn:hover { background: #414D65; }
   .mh-pred-btn:hover { background: #6B8633; }
   .mh-pred-note { margin-top: 6px; font: 500 11px 'Inter', system-ui, sans-serif; color: var(--mh-muted); }
@@ -5307,7 +5309,10 @@ export default function App({ onSignOut }) {
     const levelBonus = !opts.plain && ch && ch.f_class === "Guerrero" && damageType === "físico" ? Number(ch.f_level || 1) : 0;
     const bonus = flat + levelBonus;
     const rolls = Array.from({ length: dice }, () => Math.floor(Math.random() * die) + 1);
-    const roll = rolls.reduce((a, b) => a + b, 0);
+    // Portador Divino · Resonancia Sagrada: en el daño del Arma Espiritual, los dados repetidos valen el doble.
+    const resonance = !!opts.resonance && rolls.some((v, i) => rolls.indexOf(v) !== i);
+    const doubled = opts.resonance ? rolls.map((v) => (rolls.filter((x) => x === v).length > 1 ? v * 2 : v)) : rolls;
+    const roll = doubled.reduce((a, b) => a + b, 0);
     // Crítico: sumas el valor máximo de los dados además de la tirada.
     const critBonus = isCritical ? die * dice : 0;
     // Hombre lobo: en Forma de Lobo sumas 1d10 al daño.
@@ -5320,7 +5325,7 @@ export default function App({ onSignOut }) {
     const sneakRolls = rogueTier && (opts.cloaked || cloakedNow) ? Array.from({ length: rogueTier }, () => Math.floor(Math.random() * 6) + 1) : null;
     const sneakBonus = sneakRolls ? sneakRolls.reduce((a, b) => a + b, 0) + (isCritical ? 6 * sneakRolls.length : 0) : 0;
     const total = roll + bonus + critBonus + wolfBonus + unstopBonus + sneakBonus;
-    setDamageRollResult({ sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, note: opts.note || "" });
+    setDamageRollResult({ sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, note: resonance ? "Resonancia Sagrada: los dados repetidos valen el doble" : opts.note || "", spirit: !!opts.spirit });
     const who = playerName || "Alguien en la mesa";
     const critLabel = isCritical ? ` · ¡Crítico! (+${critBonus} máx.)` : "";
     const diceLabel = `${dice}d${die} (${rolls.join("+")})` + (wolfBonus ? ` + Lobo 1d10 (${wolfBonus})` : "") + (unstopBonus ? ` + Imparable ${unstopBonus}` : "") + (sneakRolls ? ` + Furtivo ${sneakRolls.length}d6 (${sneakRolls.join("+")})` : "");
@@ -6345,7 +6350,7 @@ export default function App({ onSignOut }) {
           <>
             {whoB} usa {m.title}
           </>,
-          "Renovación",
+          m.tag || "Renovación",
           <div className="mh-chat-c-t">
             {m.text}
             <div style={{ marginTop: 4 }}>
@@ -6995,7 +7000,7 @@ export default function App({ onSignOut }) {
     }
   };
   // targets: { charId: { hp, stress } }. Tu personaje lo recibe al momento; los aliados, desde el chat.
-  const giveToParty = (fromId, targets, title, text) => {
+  const giveToParty = (fromId, targets, title, text, tag) => {
     const c = charsRef.current[fromId];
     if (!c) return;
     const mine = targets[fromId];
@@ -7008,7 +7013,7 @@ export default function App({ onSignOut }) {
     const others = Object.fromEntries(Object.entries(targets).filter(([k, v]) => k !== fromId && (v.hp || v.stress)));
     const camp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(fromId));
     if (camp && Object.keys(others).length) {
-      postChat(camp.id, { kind: "gift", sid: String(Date.now()), campId: camp.id, author: c.f_name || "El Druida", charId: fromId, cls: c.f_class, title, text, targets: others });
+      postChat(camp.id, { kind: "gift", sid: String(Date.now()), campId: camp.id, author: c.f_name || "El Druida", charId: fromId, cls: c.f_class, title, text, targets: others, ...(tag ? { tag } : {}) });
     }
     if (mine && (mine.hp || mine.stress)) postCampaignEvent(fromId, `🌿 ${title}: ${mine.hp ? "recupera " + mine.hp + " PV" : ""}${mine.hp && mine.stress ? " y " : ""}${mine.stress ? "se quita " + mine.stress + " de Estrés" : ""}`);
   };
@@ -7092,6 +7097,7 @@ export default function App({ onSignOut }) {
     // Doblega la Suerte es una vez por sesión: la app lo recupera con el descanso largo.
     if (isLong && c.f_luck_used) restPatch.f_luck_used = "";
     if (isLong && c.f_pack_used) restPatch.f_pack_used = "";
+    if (isLong && c.f_sparing_used) restPatch.f_sparing_used = "";
     if (isLong && c.f_tide_tokens) restPatch.f_tide_tokens = "";
     if (c.f_thickskin_ready) restPatch.f_thickskin_ready = "";
     if (c.f_fortitude_ready) restPatch.f_fortitude_ready = "";
@@ -10007,6 +10013,7 @@ export default function App({ onSignOut }) {
                               ...(subclassEntry.key === "Vengador" ? { vengeAction: true } : {}),
                               ...(subclassEntry.key === "Vínculo Bestial" ? { companionNav: true } : {}),
                               ...(subclassEntry.key === "Caminante Nocturno" ? { shadowStep: true } : {}),
+                              ...(subclassEntry.key === "Portador Divino" ? { divineActs: true } : {}),
                             }),
                           });
                         }
@@ -12591,10 +12598,18 @@ export default function App({ onSignOut }) {
                 clarity: { title: "Claridad de la Naturaleza", sub: `Reparte hasta ${pool} de Estrés (tu Instinto) entre tú y tus aliados.`, list: all, go: "Crear el espacio" },
                 ward: { title: "Protección del Guardián", sub: `Gasta 2 de Esperanza: hasta ${R.n} aliado${R.n === 1 ? "" : "s"} (1d4 = ${R.n}) recuperan 2 PV.`, list: allies, go: "Proteger" },
                 defender: { title: "Defensor", sub: "Marca 1 Estrés: el aliado que acaba de marcar 2 o más PV marca 1 menos.", list: allies, go: "Defender" },
+                sparing: { title: "Toque Clemente", sub: "Toca a una criatura y quítale 2 Puntos de vida o 2 de Estrés.", list: all, go: "Tocar" },
               }[R.mode];
               const canGo =
                 R.mode === "regen" ? !!R.pick : R.mode === "clarity" ? used > 0 : R.mode === "ward" ? chosen.length > 0 : !!R.pick;
               const confirm = () => {
+                if (R.mode === "sparing") {
+                  updateCharacterField(viewingCharId, "f_sparing_used", String(Number(me.f_sparing_used || 0) + 1));
+                  giveToParty(viewingCharId, { [R.pick]: R.kind === "stress" ? { stress: 2 } : { hp: 2 } }, "Toque Clemente", "Un toque sagrado que alivia las heridas.", "Portador Divino");
+                  close();
+                  closeCardDetail();
+                  return;
+                }
                 if (R.mode === "regen") {
                   const n = Math.floor(Math.random() * 4) + 1;
                   updateCharacterField(viewingCharId, "hope_marked", String(Number(me.hope_marked ?? HOPE_DEFAULT) - 3));
@@ -12627,6 +12642,18 @@ export default function App({ onSignOut }) {
                         <X size={16} />
                       </button>
                     </div>
+                    {R.mode === "sparing" && (
+                      <div className="mh-pre-seg" role="radiogroup" aria-label="Qué quitas" style={{ marginTop: 12, alignSelf: "center" }}>
+                        {[
+                          ["hp", "2 Puntos de vida"],
+                          ["stress", "2 de Estrés"],
+                        ].map(([k, l]) => (
+                          <button key={k} type="button" role="radio" aria-checked={(R.kind || "hp") === k} className={(R.kind || "hp") === k ? "is-on" : ""} onClick={() => setRenewDlg((p) => ({ ...p, kind: k }))}>
+                            {l}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                     <div className="mh-renew-list">
                       {meta.list.length === 0 && <div className="mh-pre-note" style={{ color: "var(--mh-muted)" }}>No hay aliados en tu campaña.</div>}
                       {meta.list.map((cid) => {
@@ -12660,7 +12687,7 @@ export default function App({ onSignOut }) {
                       })}
                     </div>
                     {R.mode === "clarity" && <div className="mh-renew-pool">Repartido {used} de {pool}</div>}
-                    {!camp && R.mode !== "regen" && R.mode !== "clarity" && <div className="mh-pre-note" style={{ color: "var(--mh-muted)" }}>Únete a una campaña para aplicarlo a tus aliados.</div>}
+                    {!camp && R.mode !== "regen" && R.mode !== "clarity" && R.mode !== "sparing" && <div className="mh-pre-note" style={{ color: "var(--mh-muted)" }}>Únete a una campaña para aplicarlo a tus aliados.</div>}
                     <button type="button" className="mh-btn mh-pre-go" disabled={!canGo} onClick={confirm} style={{ marginTop: 12 }}>
                       <Leaf size={15} /> {meta.go}
                     </button>
@@ -13107,7 +13134,9 @@ export default function App({ onSignOut }) {
                               updateCharacterField(charId, "f_focus", focusTarget);
                               postCampaignEvent(charId, "🎯 " + focusTarget + " pasa a ser su Foco");
                             }
-                            rollWeaponDamage(name, damage, charId, isCritical, { cloaked: wasCloaked });
+                            const spirit = !!traitRollResult.weapon.spirit;
+                            const rc = characters[charId];
+                            rollWeaponDamage(name, damage, charId, isCritical, { cloaked: wasCloaked, spirit, resonance: spirit && rc && tierForLevel(rc.f_level || 1) >= 3 });
                           }}
                         >
                           Sí
@@ -13217,6 +13246,25 @@ export default function App({ onSignOut }) {
                     Daño · {damageRollResult.weaponName}
                   </div>
                   <DamageResult roll={damageRollResult} />
+                  {(() => {
+                    // Portador Divino · Arma Espiritual: 1 Estrés para alcanzar a otro adversario con la misma tirada.
+                    const dr = damageRollResult;
+                    if (!dr.spirit) return null;
+                    if (dr.spiritExtra) return <div className="mh-kick-done" style={{ color: "#B8862E" }}>Arma Espiritual: alcanza también a otro adversario</div>;
+                    return (
+                      <button
+                        type="button"
+                        className="mh-kick-btn mh-spirit-btn"
+                        onClick={() => {
+                          setDamageRollResult((r) => (r ? { ...r, spiritExtra: true } : r));
+                          markStress(dr.charId, 1);
+                          postCampaignEvent(dr.charId, "✨ Arma Espiritual: marca 1 Estrés y alcanza a otro adversario con la misma tirada de ataque");
+                        }}
+                      >
+                        <Sparkles size={14} /> Otro adversario · 1 Estrés
+                      </button>
+                    );
+                  })()}
                   {(() => {
                     // Pícaro · Ataque Furtivo con un aliado en Cuerpo a cuerpo del objetivo.
                     const dr = damageRollResult;
@@ -14151,6 +14199,33 @@ export default function App({ onSignOut }) {
                       },
                     });
                   }
+                  // Portador Divino: Arma Espiritual y Toque Clemente.
+                  if (d.divineActs && !d.fromChat) {
+                    const w = PRIMARY_WEAPONS.find((x) => x.key === c.f_primary_weapon) || SECONDARY_WEAPONS.find((x) => x.key === c.f_secondary_weapon && x.trait !== "—");
+                    const okRange = w && ["Cuerpo a cuerpo", "Muy cercano"].includes(w.range) && w.trait !== "—";
+                    const traitKeyW = okRange ? TRAITS.find((t) => t.label === w.trait)?.key : null;
+                    cardActs.push({
+                      key: "spirit",
+                      Icon: Sparkles,
+                      label: okRange ? "Arma Espiritual · " + w.key : "Arma Espiritual · necesitas un arma Cuerpo a cuerpo o Muy cercano",
+                      sub: "Ataque a un adversario en alcance Cercano",
+                      disabled: !okRange,
+                      run: () => {
+                        closeCardDetail();
+                        rollTraitCheck(viewingCharId, w.trait, Number(c[traitKeyW] || 0) + (getEquipmentMods(PRIMARY_WEAPONS.find((x) => x.key === c.f_primary_weapon), SECONDARY_WEAPONS.find((x) => x.key === c.f_secondary_weapon), ARMORS.find((a) => a.key === c.f_armor))[traitKeyW] || 0), { name: w.key, damage: w.damage, spirit: true });
+                      },
+                    });
+                    const sparingMax = tierForLevel(c.f_level || 1) >= 2 ? 2 : 1;
+                    const sparingLeft = sparingMax - Number(c.f_sparing_used || 0);
+                    cardActs.push({
+                      key: "sparing",
+                      Icon: HeartPulse,
+                      label: sparingLeft > 0 ? "Toque Clemente" : "Toque Clemente · vuelve al descanso largo",
+                      sub: "Quita 2 PV o 2 Estrés · " + Math.max(0, sparingLeft) + " de " + sparingMax + " por descanso largo",
+                      disabled: sparingLeft <= 0,
+                      run: () => setRenewDlg({ mode: "sparing", pick: viewingCharId, kind: "hp" }),
+                    });
+                  }
                   // Caminante Nocturno · Paso de Sombra: 1 Estrés y quedas Oculto.
                   if (d.shadowStep && !d.fromChat) {
                     const condsS = getConditions(c);
@@ -14379,7 +14454,7 @@ export default function App({ onSignOut }) {
                       label: "Mostrar en la campaña",
                       sub: shareCamp.name,
                       run: () => {
-                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, ...detail } = d;
+                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, divineActs, ...detail } = d;
                         // Las imágenes incrustadas muy grandes no se copian al chat.
                         if (typeof detail.image === "string" && detail.image.startsWith("data:") && detail.image.length > 30000) delete detail.image;
                         const type = d.domain ? "domain" : d.weapon ? "weapon" : d.armor ? "armor" : "card";
