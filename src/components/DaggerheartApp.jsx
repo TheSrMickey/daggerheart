@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
-import { Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
+import { RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
 
 const NAV_ITEMS = [
   { key: "ficha", label: "Personajes", icon: User },
@@ -2443,6 +2443,13 @@ const sharedStyles = `
   .mh-luck-btn small { font-weight: 500; font-size: 11px; opacity: .88; }
   .mh-luck-btn:hover:not(:disabled) { background: #9C68B3; }
   .mh-luck-btn:disabled { background: var(--mh-panel3); color: var(--mh-muted); cursor: not-allowed; }
+  .mh-focus-chip { display: inline-flex; align-items: center; gap: 5px; min-width: 0; font: 700 11px 'Inter', system-ui, sans-serif; letter-spacing: 0; text-transform: none; color: #fff; background: #C0504A; padding: 3px 5px 3px 8px; border-radius: 20px; white-space: nowrap; overflow: hidden; flex-shrink: 1; }
+  .mh-focus-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .mh-focus-chip button { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; border: 0; padding: 0; background: rgba(255,255,255,.22); color: #fff; cursor: pointer; flex-shrink: 0; }
+  .mh-focus-chip button:hover { background: rgba(255,255,255,.4); }
+  .mh-focus-reroll { display: inline-flex; align-items: center; justify-content: center; gap: 5px; border: 1.5px dashed color-mix(in srgb, #C0504A 60%, transparent); border-radius: 9px; padding: 6px 10px; background: transparent; font: 700 11.5px 'Inter', system-ui, sans-serif; color: #B0453F; cursor: pointer; }
+  .mh-focus-reroll:hover { background: color-mix(in srgb, #C0504A 9%, transparent); }
+  .mh-focus-note { margin-top: 10px; display: inline-flex; align-items: center; gap: 5px; font: 700 11.5px 'Inter', system-ui, sans-serif; color: #B0453F; background: color-mix(in srgb, #C0504A 12%, var(--mh-panel)); padding: 4px 10px; border-radius: 20px; }
   .mh-luck-done { margin-top: 10px; display: inline-flex; align-items: center; gap: 5px; font: 700 11.5px 'Inter', system-ui, sans-serif; color: #8A5AA0; }
   .mh-chat-luck { display: flex; align-items: center; gap: 6px; width: calc(100% - 20px); margin: 8px 10px 10px; padding: 6px 9px; border: 1.5px dashed #B07CC6; border-radius: 9px; background: transparent; font: 700 11.5px 'Inter', system-ui, sans-serif; color: #8A5AA0; cursor: pointer; text-align: left; }
   .mh-chat-luck small { margin-left: auto; font-weight: 500; color: var(--mh-muted); }
@@ -5984,7 +5991,7 @@ export default function App({ onSignOut }) {
         const base = crit ? "Éxito crítico" : r.reaction ? "Tirada de reacción" : (success === null ? "Con " : success ? "Éxito con " : "Fallo con ") + (withHope ? "Esperanza" : "Miedo");
         const note = r.reaction ? (crit ? "Ignora los efectos" : "Sin Esperanza ni Miedo") : crit ? "+1 Esperanza y −1 Estrés" : withHope ? "+1 Esperanza" : "El DJ gana 1 Miedo";
         const vcol = crit ? "#6FBF73" : r.reaction ? "#5E8FC9" : withHope ? "#E3B04B" : "#A58BE8";
-        const tag = r.luck ? "Suerte" : r.weapon ? "Ataque" : r.card ? "Habilidad" : r.reaction ? "Reacción" : "Rasgo";
+        const tag = r.luck ? (r.luck.kind === "focus" ? "Foco" : "Suerte") : r.weapon ? "Ataque" : r.card ? "Habilidad" : r.reaction ? "Reacción" : "Rasgo";
         // Hada · Doblega la Suerte: botón bajo las tiradas de acción recientes (tuyas o de aliados).
         const meC = meCharId ? characters[meCharId] : null;
         const luckable = meC && isFaerie(meC) && !r.reaction && !r.luck && m.charId && Date.now() - (m.ts || 0) < 10 * 60 * 1000;
@@ -6024,7 +6031,8 @@ export default function App({ onSignOut }) {
         ) : null;
         const head = r.luck ? (
           <>
-            {who} doblega la suerte{r.luck.forId && r.luck.forId !== m.charId ? " de " + r.luck.forName : ""} · {r.weapon ? "ataque con " + r.weapon : r.card || r.trait}
+            {who} {r.luck.kind === "focus" ? "termina su Foco y repite" : "doblega la suerte"}
+            {r.luck.forId && r.luck.forId !== m.charId ? " de " + r.luck.forName : ""} · {r.weapon ? "ataque con " + r.weapon : r.card || r.trait}
           </>
         ) : r.weapon ? (
           <>
@@ -6748,6 +6756,8 @@ export default function App({ onSignOut }) {
 
   // Guardián de la Renovación: ventana para elegir a quién curar o quitar Estrés.
   const [renewDlg, setRenewDlg] = useState(null);
+  // Explorador · Foco del Explorador: ventana para escribir el objetivo.
+  const [focusDlg, setFocusDlg] = useState(null);
   // Enano · Piel Gruesa: menú al pulsar daño Menor.
   const [minorPop, setMinorPop] = useState(false);
   const getGiftsGot = (c) => {
@@ -7213,9 +7223,11 @@ export default function App({ onSignOut }) {
   // Hada · Doblega la Suerte: 3 Esperanza para repetir los Dados de Dualidad de una tirada de acción
   // tuya o de un aliado. Se deshace lo que dio la tirada anterior y se aplica lo de la nueva.
   const rollGains = (h, f) => ({ hope: h >= f ? 1 : 0, stress: h === f ? -1 : 0, fear: f > h ? 1 : 0 });
-  const bendLuck = (myId, rollerId, roll) => {
+  const bendLuck = (myId, rollerId, roll, opts = {}) => {
     const me = charsRef.current[myId];
-    if (!me || me.f_luck_used || Number(me.hope_marked ?? HOPE_DEFAULT) < 3) return;
+    const focus = opts.kind === "focus";
+    if (!me) return;
+    if (!focus && (me.f_luck_used || Number(me.hope_marked ?? HOPE_DEFAULT) < 3)) return;
     const sides = roll.hopeSides || 12;
     const nh = Math.floor(Math.random() * sides) + 1;
     const nf = Math.floor(Math.random() * 12) + 1;
@@ -7224,8 +7236,10 @@ export default function App({ onSignOut }) {
     const b = rollGains(nh, nf);
     const delta = { hope: b.hope - a.hope, stress: b.stress - a.stress, fear: b.fear - a.fear };
     const own = rollerId === myId;
-    const hopeNow = Number(me.hope_marked ?? HOPE_DEFAULT) - 3 + (own ? delta.hope : 0);
-    const patch = { f_luck_used: "1", hope_marked: String(Math.max(0, Math.min(getHopeMax(me), hopeNow))) };
+    const hopeNow = Number(me.hope_marked ?? HOPE_DEFAULT) - (focus ? 0 : 3) + (own ? delta.hope : 0);
+    const patch = { hope_marked: String(Math.max(0, Math.min(getHopeMax(me), hopeNow))) };
+    if (focus) patch.f_focus = "";
+    else patch.f_luck_used = "1";
     if (own && delta.stress) patch.stress_marked = String(Math.max(0, Math.min(Number(me.r_stress || 0), Number(me.stress_marked || 0) + delta.stress)));
     updateCharacterFields(myId, patch);
     if (delta.fear) addFear(delta.fear);
@@ -7233,15 +7247,15 @@ export default function App({ onSignOut }) {
     const text = crit ? "Éxito crítico" : nh > nf ? "Con Esperanza" : "Con Miedo";
     const color = crit ? "#7FB77A" : nh > nf ? "#E3B04B" : "#A58BE8";
     const note = crit ? "Ganas 1 Esperanza y te quitas 1 Estrés" : nh > nf ? "Ganas 1 Esperanza" : "El DJ gana 1 de Miedo";
-    if (own) setTraitRollResult((prev) => (prev && prev.charId === myId ? { ...prev, key: Date.now(), hope: nh, fear: nf, total, text, color, note, luck: true } : prev));
+    if (own) setTraitRollResult((prev) => (prev && prev.charId === myId ? { ...prev, key: Date.now(), hope: nh, fear: nf, total, text, color, note, luck: focus ? "focus" : true } : prev));
     const roller = charsRef.current[rollerId];
     const forName = roller?.f_name || "un aliado";
     const sid = String(Date.now());
     const { luck, adjust, ...base } = roll;
-    postCampaignEvent(myId, `🍀 Doblega la Suerte${own ? "" : " para " + forName}: ${nh} + ${nf} = ${total} (${text})`, {
+    postCampaignEvent(myId, focus ? `🎯 Termina su Foco (${me.f_focus}) y repite los dados: ${nh} + ${nf} = ${total} (${text})` : `🍀 Doblega la Suerte${own ? "" : " para " + forName}: ${nh} + ${nf} = ${total} (${text})`, {
       kind: "roll",
       sid,
-      roll: { ...base, hope: nh, fear: nf, total, luck: { forId: rollerId, forName, prevHope: roll.hope, prevFear: roll.fear }, adjust: !own && (delta.hope || delta.stress) ? { charId: rollerId, hope: delta.hope, stress: delta.stress } : null },
+      roll: { ...base, hope: nh, fear: nf, total, luck: { forId: rollerId, forName, prevHope: roll.hope, prevFear: roll.fear, kind: focus ? "focus" : "luck" }, adjust: !own && (delta.hope || delta.stress) ? { charId: rollerId, hope: delta.hope, stress: delta.stress } : null },
     });
   };
 
@@ -9237,10 +9251,34 @@ export default function App({ onSignOut }) {
                         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(12, 1fr)", gap: 18, flex: 1 }}>
                             <Panel
                               span={7}
-                              title={activeBeastform ? `Forma de Bestia · ${activeBeastform.key}` : "Armas y armadura"}
+                              title={
+                                c.f_focus ? (
+                                  <span style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                                    <span style={{ flexShrink: 0 }}>{activeBeastform ? `Forma de Bestia · ${activeBeastform.key}` : "Armas y armadura"}</span>
+                                    <span className="mh-focus-chip" title={"Tu Foco: " + c.f_focus + ". Sabes en qué dirección está, marca 1 Estrés cuando le haces daño y puedes terminar el Foco para repetir un ataque fallado"}>
+                                      <Crosshair size={12} style={{ flexShrink: 0 }} />
+                                      <span className="mh-focus-name">{c.f_focus}</span>
+                                      <button
+                                        type="button"
+                                        aria-label="Terminar el Foco"
+                                        onClick={() => {
+                                          updateCharacterField(viewingCharId, "f_focus", "");
+                                          postCampaignEvent(viewingCharId, "🎯 Termina su Foco (" + c.f_focus + ")");
+                                        }}
+                                      >
+                                        <X size={10} strokeWidth={2.6} />
+                                      </button>
+                                    </span>
+                                  </span>
+                                ) : activeBeastform ? (
+                                  `Forma de Bestia · ${activeBeastform.key}`
+                                ) : (
+                                  "Armas y armadura"
+                                )
+                              }
                               titleRight={
                                 <div style={{ display: "flex", alignItems: "center", gap: 6 }} title="Número de dados de daño que tiras">
-                                  <span className="mh-label" style={{ margin: 0 }}>Competencia</span>
+                                  {!c.f_focus && <span className="mh-label" style={{ margin: 0 }}>Competencia</span>}
                                   <button className="mh-btn-ghost" style={{ padding: "1px 6px" }} aria-label="Restar Competencia" onClick={() => updateCharacterField(viewingCharId, "f_proficiency", Math.max(1, proficiency - 1))}>
                                     <Minus size={11} />
                                   </button>
@@ -12048,6 +12086,61 @@ export default function App({ onSignOut }) {
             </div>
             </div>
 
+            {focusDlg && (() => {
+              const me = characters[viewingCharId];
+              if (!me) return null;
+              const close = () => setFocusDlg(null);
+              const w = PRIMARY_WEAPONS.find((x) => x.key === me.f_primary_weapon && x.trait !== "—") || SECONDARY_WEAPONS.find((x) => x.key === me.f_secondary_weapon && x.trait !== "—");
+              const traitKey = w ? TRAITS.find((t) => t.label === w.trait)?.key : null;
+              const name = focusDlg.name.trim();
+              const go = () => {
+                if (!w || !name) return;
+                updateCharacterField(viewingCharId, "hope_marked", String(Math.max(0, Number(me.hope_marked ?? HOPE_DEFAULT) - 1)));
+                close();
+                const mods = getEquipmentMods(PRIMARY_WEAPONS.find((x) => x.key === me.f_primary_weapon), SECONDARY_WEAPONS.find((x) => x.key === me.f_secondary_weapon), ARMORS.find((a) => a.key === me.f_armor));
+                rollTraitCheck(viewingCharId, w.trait, Number(me[traitKey] || 0) + (mods[traitKey] || 0), { name: w.key, damage: w.damage, focusTarget: name });
+              };
+              return (
+                <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 46, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)" }} onClick={close}>
+                  <div className="mh-card mh-card-anim mh-renew" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Foco del Explorador">
+                    <div className="mh-pre-h">
+                      <span className="mh-pre-ic" style={{ background: "color-mix(in srgb, #C0504A 16%, var(--mh-panel))", color: "#B0453F" }}>
+                        <Crosshair size={17} />
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <b className="mh-serif">¿Quién será tu Foco?</b>
+                        <small>Gastas 1 Esperanza y atacas. Si aciertas, el objetivo pasa a ser tu Foco.</small>
+                      </div>
+                      <button type="button" className="mh-inv-x" aria-label="Cerrar" onClick={close}>
+                        <X size={16} />
+                      </button>
+                    </div>
+                    <input
+                      className="mh-input"
+                      style={{ marginTop: 14 }}
+                      placeholder="Ej. Ogro de las cavernas"
+                      value={focusDlg.name}
+                      autoFocus
+                      onChange={(e) => setFocusDlg({ name: e.target.value })}
+                      onKeyDown={(e) => e.key === "Enter" && go()}
+                    />
+                    <div className="mh-pre-note" style={{ color: "var(--mh-muted)", marginTop: 8 }}>
+                      {w ? (
+                        <>
+                          Atacas con <b>{w.key}</b> ({w.trait} · {w.damage}).
+                        </>
+                      ) : (
+                        "Necesitas un arma equipada para atacar."
+                      )}
+                    </div>
+                    <button type="button" className="mh-btn mh-pre-go" disabled={!w || !name} onClick={go} style={{ marginTop: 12 }}>
+                      <Crosshair size={15} /> Atacar · 1 Esperanza
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+
             {renewDlg && (() => {
               const me = characters[viewingCharId];
               if (!me) return null;
@@ -12468,7 +12561,11 @@ export default function App({ onSignOut }) {
                         </button>
                       );
                     })()}
-                    {traitRollResult.luck && <div className="mh-luck-done"><Clover size={12} /> Repetida con Doblega la Suerte</div>}
+                    {traitRollResult.luck && (
+                      <div className="mh-luck-done">
+                        {traitRollResult.luck === "focus" ? <Crosshair size={12} /> : <Clover size={12} />} Repetida con {traitRollResult.luck === "focus" ? "Foco del Explorador" : "Doblega la Suerte"}
+                      </div>
+                    )}
                     <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 10, color: "var(--mh-muted)", marginTop: 10 }}>
                       Pulsa fuera para cerrar
                     </div>
@@ -12502,10 +12599,14 @@ export default function App({ onSignOut }) {
                         <button
                           className="mh-btn"
                           onClick={() => {
-                            const { name, damage } = traitRollResult.weapon;
+                            const { name, damage, focusTarget } = traitRollResult.weapon;
                             const charId = traitRollResult.charId;
                             const isCritical = traitRollResult.hope === traitRollResult.fear;
                             setTraitRollResult(null);
+                            if (focusTarget) {
+                              updateCharacterField(charId, "f_focus", focusTarget);
+                              postCampaignEvent(charId, "🎯 " + focusTarget + " pasa a ser su Foco");
+                            }
                             rollWeaponDamage(name, damage, charId, isCritical);
                           }}
                         >
@@ -12515,6 +12616,38 @@ export default function App({ onSignOut }) {
                           No
                         </button>
                       </div>
+                      {(() => {
+                        const rc = characters[traitRollResult.charId];
+                        if (!rc?.f_focus || traitRollResult.weapon.focusTarget || traitRollResult.luck || traitRollResult.reaction) return null;
+                        const r = traitRollResult;
+                        return (
+                          <button
+                            type="button"
+                            className="mh-focus-reroll"
+                            title="Si has fallado un ataque contra tu Foco, puedes terminarlo para repetir los Dados de Dualidad"
+                            onClick={() =>
+                              bendLuck(r.charId, r.charId, {
+                                trait: r.traitLabel,
+                                weapon: r.weapon?.name || "",
+                                hopeSides: r.hopeSides || 12,
+                                hope: r.hope,
+                                fear: r.fear,
+                                mod: r.mod,
+                                adv: r.advantageRoll,
+                                wolf: r.wolfBonus,
+                                exp: r.expBonus,
+                                rally: r.rallyRoll,
+                                rallyDie: r.rallyDie,
+                                poet: r.poetRoll,
+                                tide: r.tideBonus,
+                                total: r.total,
+                              }, { kind: "focus" })
+                            }
+                          >
+                            <RotateCcw size={13} /> Falló contra {rc.f_focus}: terminar Foco y repetir
+                          </button>
+                        );
+                      })()}
                     </div>
                   )}
                 </div>
@@ -12582,6 +12715,11 @@ export default function App({ onSignOut }) {
                     Daño · {damageRollResult.weaponName}
                   </div>
                   <DamageResult roll={damageRollResult} />
+                  {damageRollResult.charId && characters[damageRollResult.charId]?.f_focus && (
+                    <div className="mh-focus-note">
+                      <Crosshair size={12} /> Si es tu Foco ({characters[damageRollResult.charId].f_focus}), marca 1 de Estrés
+                    </div>
+                  )}
                   {damageRollResult.unstopBonus > 0 && damageRollResult.charId && !damageRollResult.unstopDone && (
                     <div style={{ fontFamily: "'Inter', system-ui, sans-serif", marginTop: 12, display: "flex", flexDirection: "column", gap: 6, alignItems: "center" }}>
                       <button
@@ -13399,6 +13537,21 @@ export default function App({ onSignOut }) {
                     });
                   }
                   // Guardián de la Renovación: Regeneración, Claridad de la Naturaleza y, según el rango, Protección y Defensor.
+                  // Explorador · Foco del Explorador: escribe el objetivo y ataca con tu arma.
+                  if (d.title === "Foco del Explorador" && c?.f_class === "Explorador" && !d.fromChat) {
+                    const hopeF = Number(c.hope_marked ?? HOPE_DEFAULT);
+                    cardActs.unshift({
+                      key: "focus",
+                      Icon: Crosshair,
+                      label: hopeF < 1 ? "Marcar Foco · te falta Esperanza" : c.f_focus ? "Cambiar de Foco (ahora: " + c.f_focus + ")" : "Marcar Foco",
+                      sub: "1 Esperanza · ataque con tu arma",
+                      disabled: hopeF < 1,
+                      run: () => {
+                        closeCardDetail();
+                        setFocusDlg({ name: "" });
+                      },
+                    });
+                  }
                   // Vínculo Bestial: lleva a la pestaña del compañero.
                   if (d.companionNav && !d.fromChat) {
                     cardActs.push({
