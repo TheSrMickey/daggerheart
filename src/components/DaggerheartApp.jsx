@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
-import { Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
+import { Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
 
 const NAV_ITEMS = [
   { key: "ficha", label: "Personajes", icon: User },
@@ -274,7 +274,7 @@ const COMMUNITIES = [
   { key: "Del Saber", blurb: "Vienes de una sociedad que valora el saber académico y la habilidad política: la historia, la ciencia, la política o la recopilación de mitos y leyendas.", features: [{ name: "Leído", text: "Tienes ventaja en las tiradas sobre la historia, la cultura o la política de una persona o un lugar importantes." }] },
   { key: "Del Orden", blurb: "Creciste bajo una disciplina estricta, militar o religiosa.", features: [{ name: "Entregado", text: "Apunta tres dichos o valores que te inculcó tu educación. Una vez por descanso, cuando describas cómo encarnas uno de estos principios con lo que estás haciendo, puedes tirar un d20 como Dado de Esperanza." }] },
   { key: "De las Cumbres", blurb: "Tu hogar fueron las montañas y sus caminos escarpados.", features: [{ name: "Firme", text: "Tienes ventaja en las tiradas para cruzar precipicios y cornisas peligrosos, orientarte en entornos duros y usar tus conocimientos de supervivencia." }] },
-  { key: "Del Mar", blurb: "Creciste entre puertos, barcos y el vaivén de las mareas.", features: [{ name: "Conocer la Marea", text: "Cuando saques una tirada con Miedo, pon una ficha en tu carta de comunidad (máximo tu nivel). Antes de una tirada de acción, puedes gastar fichas: +1 por cada una. Al final de la sesión se pierden las que queden." }] },
+  { key: "Del Mar", blurb: "Creciste entre puertos, barcos y el vaivén de las mareas.", features: [{ name: "Conocer la Marea", text: "Percibes el flujo y el reflujo de la vida. Cuando saques una tirada con Miedo, pon una ficha en tu carta de comunidad. Puedes tener tantas fichas como tu nivel. Antes de hacer una tirada de acción, puedes gastar las fichas que quieras para ganar un +1 a la tirada por cada ficha gastada. Al final de cada sesión, retira todas las fichas que no hayas gastado." }] },
   { key: "De las Sombras", blurb: "Tu cuna fue el bajo mundo, entre secretos y contactos turbios.", features: [{ name: "Granuja", text: "Tienes ventaja en las tiradas para negociar con criminales, detectar mentiras o encontrar un escondite seguro." }] },
   { key: "De las Profundidades", blurb: "Naciste bajo tierra, en túneles y ciudades subterráneas.", features: [{ name: "Vida en la Penumbra", text: "En zonas con poca luz o sombras densas, tienes ventaja en las tiradas para esconderte, investigar o percibir detalles." }] },
   { key: "Errante", blurb: "Nunca tuviste un hogar fijo; el camino te crió.", features: [{ name: "Petate Nómada", text: "Añade un Petate Nómada a tu inventario. Una vez por sesión, puedes gastar 1 Esperanza para sacar de él un objeto normal que te venga bien (lo acordáis con el DJ)." }] },
@@ -1668,6 +1668,11 @@ const sharedStyles = `
     border-top: 1px solid color-mix(in srgb, var(--cc) 35%, transparent); font-size: 12px; color: var(--mh-ink3);
   }
   .mh-cardc-foot b { color: var(--mh-ink); }
+  .mh-tide-foot { gap: 10px; flex-wrap: wrap; }
+  .mh-tide-pips { display: inline-flex; gap: 5px; }
+  .mh-tide-pips button { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid #3E8FB0; background: transparent; color: #fff; display: inline-flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; }
+  .mh-tide-pips button.is-on { background: #3E8FB0; }
+  .mh-tide-pips button:hover { box-shadow: 0 0 0 3px color-mix(in srgb, #3E8FB0 22%, transparent); }
   /* Armas y armadura: cada pieza es su carta en pequeño (mismo arte, color de rareza y cifra principal) */
   .mh-eq {
     position: relative; flex: 1; min-height: 0; display: flex; cursor: pointer; overflow: hidden; border-radius: 12px;
@@ -2370,6 +2375,13 @@ const sharedStyles = `
   .mh-pre-tile:hover:not(:disabled) { border-color: color-mix(in srgb, var(--pc) 60%, var(--mh-line)); }
   .mh-pre-tile.is-on { border-color: var(--pc); background: color-mix(in srgb, var(--pc) 12%, var(--mh-panel)); }
   .mh-pre-tile:disabled { opacity: .45; cursor: not-allowed; }
+  .mh-pre-tide { cursor: default; }
+  .mh-pre-tide > b { padding-right: 0; }
+  .mh-pre-tide-row { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+  .mh-pre-step { flex-shrink: 0; display: inline-flex; align-items: center; gap: 5px; }
+  .mh-pre-step b { padding: 0; font-size: 12px; min-width: 18px; text-align: center; color: color-mix(in srgb, var(--pc) 70%, var(--mh-ink)); }
+  .mh-pre-step button { width: 20px; height: 20px; border-radius: 6px; border: 1px solid color-mix(in srgb, var(--pc) 50%, var(--mh-line)); background: var(--mh-panel); color: color-mix(in srgb, var(--pc) 70%, var(--mh-ink)); display: inline-flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; }
+  .mh-pre-step button:disabled { opacity: .35; cursor: not-allowed; }
   .mh-pre-seg { display: inline-flex; padding: 3px; gap: 2px; border: 1.5px solid var(--mh-line); border-radius: 30px; background: var(--mh-panel); }
   .mh-pre-seg button { border: 0; background: transparent; padding: 6px 13px; border-radius: 30px; font: 600 12px 'Inter', system-ui, sans-serif; color: var(--mh-muted); cursor: pointer; }
   .mh-pre-seg button.is-on { background: var(--mh-panel3); color: var(--mh-ink); }
@@ -3152,6 +3164,7 @@ function DualityResult({ roll, size = 84 }) {
   const expB = has ? roll.expBonus || 0 : 0;
   const rally = has ? roll.rallyRoll || 0 : 0;
   const poet = has ? roll.poetRoll || 0 : 0;
+  const tide = has ? roll.tideBonus || 0 : 0;
   const landed = has && !rolling;
   return (
     <div style={{ position: "relative", textAlign: "center" }}>
@@ -3198,6 +3211,7 @@ function DualityResult({ roll, size = 84 }) {
             {expB ? " + " + expB + " (Experiencia)" : ""}
             {rally ? " + " + rally + " (Arenga)" : ""}
             {poet ? " + " + poet + " (Poeta)" : ""}
+            {tide ? " + " + tide + " (Marea)" : ""}
             {roll.difficulty != null ? ` · Dificultad ${roll.difficulty}` : ""}
           </div>
           <div style={{ fontSize: 14.5, fontWeight: 600, color: ink(roll.color), marginTop: 4 }}>{roll.text}</div>
@@ -5950,6 +5964,7 @@ export default function App({ onSignOut }) {
               {r.exp ? <em title={(r.expNames || []).join(", ")}>+{r.exp} experiencia</em> : null}
               {r.rally ? <em>+{r.rally} arenga ({r.rallyDie})</em> : null}
               {r.poet ? <em title="Corazón de Poeta">+{r.poet} poeta</em> : null}
+              {r.tide ? <em title="Conocer la Marea">+{r.tide} marea</em> : null}
             </span>
             {total(r.dc ? "vs " + r.dc : "Total", r.total)}
           </>,
@@ -6730,6 +6745,7 @@ export default function App({ onSignOut }) {
     if (c.f_wings_evade) restPatch.f_wings_evade = "";
     // Doblega la Suerte es una vez por sesión: la app lo recupera con el descanso largo.
     if (isLong && c.f_luck_used) restPatch.f_luck_used = "";
+    if (isLong && c.f_tide_tokens) restPatch.f_tide_tokens = "";
     if (c.f_thickskin_ready) restPatch.f_thickskin_ready = "";
     if (c.f_fortitude_ready) restPatch.f_fortitude_ready = "";
     if (isLong && c.f_clarity_used) restPatch.f_clarity_used = "";
@@ -7041,7 +7057,7 @@ export default function App({ onSignOut }) {
   // Antes de tirar: ventana para añadir Experiencias, el dado de Arenga o Ventaja.
   const [preRoll, setPreRoll] = useState(null);
   const rollTraitCheck = (charId, traitLabel, traitValue, weapon, cardContext, advantage) => {
-    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage, exps: [], rally: false, privilege: false, disadvantage: false, poet: false, dedicated: false, quick: false, reaction: false });
+    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage, exps: [], rally: false, privilege: false, disadvantage: false, poet: false, dedicated: false, quick: false, reaction: false, tide: 0 });
   };
   const confirmPreRoll = () => {
     const pr = preRoll;
@@ -7054,6 +7070,9 @@ export default function App({ onSignOut }) {
     const rallyDie = pr.rally && ch?.f_rally_die ? ch.f_rally_die : "";
     if (rallyDie) patch.f_rally_die = "";
     if (pr.dedicated) patch.f_dedicated_used = "1";
+    // Del Mar · Conocer la Marea: las fichas gastadas suman +1 cada una.
+    const tideSpent = pr.tide && !pr.reaction ? Math.min(pr.tide, Number(ch?.f_tide_tokens || 0)) : 0;
+    if (tideSpent) patch.f_tide_tokens = String(Number(ch.f_tide_tokens || 0) - tideSpent);
     // Elfo · Reacciones Rápidas: marca 1 Estrés (si no cabe, pasa a PV) para tener ventaja.
     if (pr.quick && ch) {
       markStress(pr.charId, 1, patch);
@@ -7066,6 +7085,8 @@ export default function App({ onSignOut }) {
       disadvantage: pr.disadvantage,
       poet: pr.poet,
       hopeD20: pr.dedicated,
+      tide: tideSpent,
+      tideLeft: ch ? Number(ch.f_tide_tokens || 0) - tideSpent : 0,
       reaction: pr.reaction,
     });
   };
@@ -7121,7 +7142,8 @@ export default function App({ onSignOut }) {
     const rallyRoll = rallySides ? Math.floor(Math.random() * rallySides) + 1 : 0;
     // Orador · Corazón de Poeta: 1d4 más.
     const poetRoll = extras.poet ? Math.floor(Math.random() * 4) + 1 : 0;
-    const total = hope + fear + traitValue + advantageRoll + wolfBonus + expBonus + rallyRoll + poetRoll;
+    const tideBonus = extras.tide || 0;
+    const total = hope + fear + traitValue + advantageRoll + wolfBonus + expBonus + rallyRoll + poetRoll + tideBonus;
     let text, color;
     if (hope === fear) {
       text = "Crítico";
@@ -7145,7 +7167,7 @@ export default function App({ onSignOut }) {
         ? "Ignoras los efectos que te afectarían aun con éxito"
         : "Las reacciones no generan Esperanza ni Miedo"
       : hope === fear ? "Ganas 1 Esperanza y te quitas 1 Estrés" : hope > fear ? "Ganas 1 Esperanza" : "El DJ gana 1 de Miedo";
-    setTraitRollResult({ key: Date.now(), hopeSides, traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, total, text: hope === fear ? "Éxito crítico" : reaction ? "Tirada de reacción" : text, color, note, reaction, card: cardContext ? { name: cardContext.name, dc: cardContext.dc } : null, exps: extras.exps || [], weapon: weapon || null, charId });
+    setTraitRollResult({ key: Date.now(), hopeSides, traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, tideBonus, total, text: hope === fear ? "Éxito crítico" : reaction ? "Tirada de reacción" : text, color, note, reaction, card: cardContext ? { name: cardContext.name, dc: cardContext.dc } : null, exps: extras.exps || [], weapon: weapon || null, charId });
 
     // Con Esperanza (o crítico) ganas 1 Esperanza; con crítico además te quitas 1 Estrés.
     if (reaction) {
@@ -7163,6 +7185,13 @@ export default function App({ onSignOut }) {
       }
     } else {
       addFear(1);
+      // Del Mar: cada tirada con Miedo pone una ficha en la carta de comunidad (máximo tu nivel).
+      const chT = charsRef.current[charId];
+      if (chT && chT.f_community === "Del Mar") {
+        const now = extras.tideLeft ?? Number(chT.f_tide_tokens || 0);
+        const max = Number(chT.f_level || 1);
+        if (now < max) updateCharacterField(charId, "f_tide_tokens", String(now + 1));
+      }
     }
 
     const who = playerName || "Alguien en la mesa";
@@ -7172,8 +7201,9 @@ export default function App({ onSignOut }) {
       (wolfBonus ? ` + Lobo ${wolfBonus}` : "") +
       (expBonus ? ` + Experiencia ${expBonus}` : "") +
       (rallyRoll ? ` + Arenga ${rallyRoll}` : "") +
-      (poetRoll ? ` + Poeta ${poetRoll}` : "");
-    const rollExtra = { exp: expBonus, expNames: (extras.exps || []).map((e) => e.text), rally: rallyRoll, rallyDie: extras.rallyDie || "", poet: poetRoll };
+      (poetRoll ? ` + Poeta ${poetRoll}` : "") +
+      (tideBonus ? ` + Marea ${tideBonus}` : "");
+    const rollExtra = { exp: expBonus, expNames: (extras.exps || []).map((e) => e.text), rally: rallyRoll, rallyDie: extras.rallyDie || "", poet: poetRoll, tide: tideBonus };
     const line = `**${who}** — ${reaction ? "Reacción de " : ""}${traitLabel}: Esperanza ${hope} + Miedo ${fear} ${modStr}${advStr} = **${total}** (${text})`;
     await pushRollLog(line);
     if (cardContext) {
@@ -11660,7 +11690,11 @@ export default function App({ onSignOut }) {
               const exps = getExperiences(ch);
               const hopeNow = Number(ch.hope_marked ?? HOPE_DEFAULT);
               const expSum = exps.filter((_, i) => preRoll.exps.includes(i)).reduce((a, e) => a + (Number(e.bonus) || 0), 0);
-              const mod = preRoll.traitValue + expSum;
+              // Del Mar · Conocer la Marea: fichas que se pueden gastar en una tirada de acción.
+              const tideHave = ch.f_community === "Del Mar" ? Number(ch.f_tide_tokens || 0) : 0;
+              const tideOk = ch.f_community === "Del Mar" && !preRoll.reaction;
+              const tideUse = tideOk ? Math.min(preRoll.tide || 0, tideHave) : 0;
+              const mod = preRoll.traitValue + expSum + tideUse;
               const edgeNet = (preRoll.advantage || preRoll.privilege || preRoll.quick ? 1 : 0) - (preRoll.disadvantage ? 1 : 0);
               // Las tiradas de rasgo sueltas pueden ser de reacción; los ataques y las habilidades no.
               const canReact = !preRoll.weapon && !preRoll.cardContext;
@@ -11696,7 +11730,25 @@ export default function App({ onSignOut }) {
                   <small>{sub}</small>
                 </button>
               );
+              const setTide = (n) => setPreRoll((p) => ({ ...p, tide: Math.max(0, Math.min(tideHave, n)) }));
               const bonusTiles = [
+                tideOk ? (
+                  <div key="tide" className={"mh-pre-tile mh-pre-tide" + (tideUse ? " is-on" : "")} style={{ "--pc": "#3E8FB0", opacity: tideHave ? 1 : 0.5 }} title="Gasta fichas de tu carta de comunidad: +1 por cada una">
+                    <b>Conocer la Marea</b>
+                    <span className="mh-pre-tide-row">
+                    <small>{tideHave ? tideHave + (tideHave === 1 ? " ficha" : " fichas") : "Sin fichas"}</small>
+                    <span className="mh-pre-step">
+                      <button type="button" aria-label="Gastar una ficha menos" disabled={!tideUse} onClick={() => setTide(tideUse - 1)}>
+                        <Minus size={11} />
+                      </button>
+                      <b>+{tideUse}</b>
+                      <button type="button" aria-label="Gastar una ficha más" disabled={tideUse >= tideHave} onClick={() => setTide(tideUse + 1)}>
+                        <Plus size={11} />
+                      </button>
+                    </span>
+                    </span>
+                  </div>
+                ) : null,
                 rallyOn || ch.f_rally_die ? tile("rally", { on: preRoll.rally, title: "Arenga", sub: "Gastas tu dado", cost: "+1" + ch.f_rally_die, color: "#E07FB0", onClick: () => setPreRoll((p) => ({ ...p, rally: !p.rally })) }) : null,
                 poetOk
                   ? tile("poet", {
@@ -11751,14 +11803,15 @@ export default function App({ onSignOut }) {
                 rallyOn ? ["Arenga", "+1" + ch.f_rally_die] : null,
                 preRoll.poet ? ["Corazón de Poeta", "+1d4"] : null,
                 preRoll.dedicated ? ["Entregado", "Esperanza d20"] : null,
+                tideUse ? ["Conocer la Marea", "+" + tideUse] : null,
                 wolf ? ["Forma de Lobo", "+1d10"] : null,
                 edgeNet ? [edgeNet > 0 ? "Ventaja" + (preRoll.quick ? " (Reacciones Rápidas)" : preRoll.privilege ? " (" + edgeSource + ")" : "") : "Desventaja", edgeNet > 0 ? "+1d6" : "−1d6"] : (preRoll.advantage || preRoll.privilege || preRoll.quick) && preRoll.disadvantage ? ["Ventaja y desventaja", "se anulan"] : null,
               ].filter(Boolean);
               const DS = 40;
               // Altura fija: se reserva hueco para todas las líneas que este personaje puede llegar a tener.
-              const maxLines = 1 + exps.length + (ch.f_rally_die ? 1 : 0) + (poetOk ? 1 : 0) + (dedicatedOk ? 1 : 0) + (wolf ? 1 : 0) + 1;
+              const maxLines = 1 + exps.length + (ch.f_rally_die ? 1 : 0) + (poetOk ? 1 : 0) + (dedicatedOk ? 1 : 0) + (tideOk ? 1 : 0) + (wolf ? 1 : 0) + 1;
               const canSpendHope = exps.length > 0 || poetOk;
-              const anyAdded = preRoll.exps.length > 0 || preRoll.rally || preRoll.poet || preRoll.dedicated || preRoll.privilege || preRoll.quick || edgePos !== "none";
+              const anyAdded = preRoll.exps.length > 0 || preRoll.rally || preRoll.poet || preRoll.dedicated || preRoll.privilege || preRoll.quick || tideUse > 0 || edgePos !== "none";
               return (
                 <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 45, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)" }} onClick={() => setPreRoll(null)}>
                   <div className="mh-card mh-card-anim mh-pre" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={"Tirada de " + preRoll.traitLabel}>
@@ -11871,7 +11924,7 @@ export default function App({ onSignOut }) {
                           className="mh-pre-plain"
                           style={anyAdded ? undefined : { visibility: "hidden" }}
                           tabIndex={anyAdded ? undefined : -1}
-                          onClick={() => setPreRoll((p) => ({ ...p, exps: [], rally: false, poet: false, dedicated: false, privilege: false, quick: false, advantage: false, disadvantage: false }))}
+                          onClick={() => setPreRoll((p) => ({ ...p, exps: [], rally: false, poet: false, dedicated: false, privilege: false, quick: false, tide: 0, advantage: false, disadvantage: false }))}
                         >
                           Quitar lo añadido
                         </button>
@@ -11944,6 +11997,7 @@ export default function App({ onSignOut }) {
                               rally: r.rallyRoll,
                               rallyDie: r.rallyDie,
                               poet: r.poetRoll,
+                              tide: r.tideBonus,
                               total: r.total,
                             })
                           }
@@ -13042,6 +13096,9 @@ export default function App({ onSignOut }) {
                       },
                     });
                   }
+                  // Del Mar: las fichas de Conocer la Marea se ven y se marcan en el pie de la carta.
+                  const tideCard = !d.fromChat && d.kicker === "Comunidad" && d.title === "Del Mar" && c?.f_community === "Del Mar";
+                  const tideMax = Number(c?.f_level || 1);
                   const footer = d.weapon
                     ? [d.weapon.trait !== "—" && d.weapon.trait, d.weapon.range].filter(Boolean).join(" · ")
                     : d.armor
@@ -13137,7 +13194,31 @@ export default function App({ onSignOut }) {
                           <div style={{ fontSize: "0.93em", color: "var(--mh-muted2)", fontStyle: "italic" }}>Sin característica especial.</div>
                         ))}
                     </FitBox>
-                    {(footer || d.domain) && (
+                    {tideCard && (() => {
+                      const have = Math.min(Number(c.f_tide_tokens || 0), tideMax);
+                      return (
+                        <div className="mh-cardc-foot mh-tide-foot">
+                          <span className="mh-tide-pips" role="group" aria-label="Fichas de marea">
+                            {Array.from({ length: tideMax }, (_, k) => (
+                              <button
+                                key={k}
+                                type="button"
+                                className={k < have ? "is-on" : ""}
+                                aria-label={k < have ? "Quitar ficha" : "Poner ficha"}
+                                title={k < have ? "Quitar ficha" : "Poner ficha"}
+                                onClick={() => updateCharacterField(viewingCharId, "f_tide_tokens", String(k + 1 === have ? k : k + 1))}
+                              >
+                                {k < have && <Waves size={11} strokeWidth={2.4} />}
+                              </button>
+                            ))}
+                          </span>
+                          <span>
+                            <b>{have}</b> de {tideMax} fichas
+                          </span>
+                        </div>
+                      );
+                    })()}
+                    {!tideCard && (footer || d.domain) && (
                       <div className="mh-cardc-foot">
                         {d.domain ? (
                           <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
