@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
-import { ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
+import { Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
 
 const NAV_ITEMS = [
   { key: "ficha", label: "Personajes", icon: User },
@@ -4926,7 +4926,7 @@ export default function App({ onSignOut }) {
 
     // Al marcar tu última casilla de Estrés quedas Vulnerable.
     if (stressToMark > 0 && stressCurrent + stressToMark >= stressTotal) {
-      const conds = getConditions(c);
+      const conds = patch.f_conditions ? JSON.parse(patch.f_conditions) : getConditions(c);
       if (!conds.includes("Vulnerable")) {
         patch.f_conditions = JSON.stringify([...conds, "Vulnerable"]);
         postCampaignEvent(id, "😰 Marca su última casilla de Estrés y queda Vulnerable.");
@@ -5095,11 +5095,16 @@ export default function App({ onSignOut }) {
   };
 
   const CONDITION_PRESETS = ["Escondido", "Inmovilizado", "Vulnerable", "Inconsciente"];
-  const CONDITION_THEME_COLOR = { Escondido: "#7D8BA3", Inmovilizado: "#C08B5C", Vulnerable: "#D9644E", Inconsciente: "#A58BE8", Volando: "#5FA77A" };
-  const CONDITION_ICONS = { Escondido: EyeOff, Inmovilizado: Lock, Vulnerable: ShieldOff, Inconsciente: ZapOff, Volando: Feather };
+  const CONDITION_THEME_COLOR = { Escondido: "#7D8BA3", Inmovilizado: "#C08B5C", Vulnerable: "#D9644E", Inconsciente: "#A58BE8", Volando: "#5FA77A", Oculto: "#4F5D78" };
+  const CONDITION_ICONS = { Escondido: EyeOff, Inmovilizado: Lock, Vulnerable: ShieldOff, Inconsciente: ZapOff, Volando: Feather, Oculto: Ghost };
   // Hada: Alas (puede volar) y Doblega la Suerte.
   const isFaerie = (c) => (c?.f_ancestry || "").split(" + ").includes("Hada");
-  const conditionPresetsFor = (c) => (isFaerie(c) ? [...CONDITION_PRESETS, "Volando"] : CONDITION_PRESETS);
+  // Pícaro · Oculto: siempre que fuera a quedar Escondido, queda Oculto.
+  const isRogue = (c) => c?.f_class === "Pícaro";
+  const conditionPresetsFor = (c) => {
+    const base = isRogue(c) ? CONDITION_PRESETS.map((n) => (n === "Escondido" ? "Oculto" : n)) : CONDITION_PRESETS;
+    return isFaerie(c) ? [...base, "Volando"] : base;
+  };
   const getConditions = (c) => {
     try {
       return JSON.parse(c.f_conditions || "[]");
@@ -5138,7 +5143,7 @@ export default function App({ onSignOut }) {
     const c = characters[id];
     if (!c) return;
     if (unstopValue(c) && (name === "Inmovilizado" || name === "Vulnerable")) return;
-    const list = getConditions(c);
+    const list = isRogue(c) ? getConditions(c).map((n) => (n === "Escondido" ? "Oculto" : n)) : getConditions(c);
     const next = list.includes(name) ? list.filter((n) => n !== name) : [...list, name];
     // Al aterrizar se pierde el +2 de Alas.
     if (name === "Volando" && !next.includes("Volando")) updateCharacterFields(id, { f_conditions: JSON.stringify(next), f_wings_evade: "" });
@@ -7313,6 +7318,15 @@ export default function App({ onSignOut }) {
   };
 
   const doTraitRoll = async (charId, traitLabel, traitValue, weapon, cardContext, advantage, extras = {}) => {
+    if (weapon && !weapon.charge) {
+      const chH = charsRef.current[charId];
+      const condsH = chH ? getConditions(chH) : [];
+      const lost = condsH.filter((n) => n === "Oculto" || n === "Escondido");
+      if (lost.length) {
+        updateCharacterField(charId, "f_conditions", JSON.stringify(condsH.filter((n) => !lost.includes(n))));
+        postCampaignEvent(charId, `👁️ Al atacar deja de estar ${lost.includes("Oculto") ? "Oculto" : "Escondido"}`);
+      }
+    }
     // Del Orden · Entregado: el Dado de Esperanza pasa a ser un d20.
     const hopeSides = extras.hopeD20 ? 20 : 12;
     const hope = Math.floor(Math.random() * hopeSides) + 1;
@@ -8969,7 +8983,7 @@ export default function App({ onSignOut }) {
                   const isDwarf = (c.f_ancestry || "").split(" + ").includes("Enano") && Number(c.r_stress || 0) + equipMods.stress - Number(c.stress_marked || 0) >= 2;
                   const fortSevere = c.f_fortitude_ready === "1" ? severe * 2 : severe;
                   const experiences = getExperiences(c);
-                  const conditions = getConditions(c);
+                  const conditions = isRogue(c) ? getConditions(c).map((n) => (n === "Escondido" ? "Oculto" : n)) : getConditions(c);
                   const flying = isFaerie(c) && conditions.includes("Volando");
                   const wingsOn = flying && c.f_wings_evade === "1";
                   const entries = getJournal(c);
@@ -9042,7 +9056,7 @@ export default function App({ onSignOut }) {
                                   </span>
                                 ) : undefined
                               }
-                              hidden={conditions.includes("Escondido")}
+                              hidden={conditions.includes("Escondido") || conditions.includes("Oculto")}
                               restrained={conditions.includes("Inmovilizado")}
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
@@ -9341,7 +9355,7 @@ export default function App({ onSignOut }) {
                                   </button>
                                 </div>
                               }
-                              hidden={conditions.includes("Escondido")}
+                              hidden={conditions.includes("Escondido") || conditions.includes("Oculto")}
                               restrained={conditions.includes("Inmovilizado")}
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
@@ -9671,7 +9685,7 @@ export default function App({ onSignOut }) {
                             <Panel
                               span={5}
                               title="Experiencias"
-                              hidden={conditions.includes("Escondido")}
+                              hidden={conditions.includes("Escondido") || conditions.includes("Oculto")}
                               restrained={conditions.includes("Inmovilizado")}
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
@@ -9789,6 +9803,7 @@ export default function App({ onSignOut }) {
                               ...(subclassEntry.key === "Guardián de la Renovación" ? { renewalAction: true } : {}),
                               ...(subclassEntry.key === "Vengador" ? { vengeAction: true } : {}),
                               ...(subclassEntry.key === "Vínculo Bestial" ? { companionNav: true } : {}),
+                              ...(subclassEntry.key === "Caminante Nocturno" ? { shadowStep: true } : {}),
                             }),
                           });
                         }
@@ -9924,7 +9939,7 @@ export default function App({ onSignOut }) {
                             <Panel
                               span={7}
                               title="Acciones"
-                              hidden={conditions.includes("Escondido")}
+                              hidden={conditions.includes("Escondido") || conditions.includes("Oculto")}
                               restrained={conditions.includes("Inmovilizado")}
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
@@ -9983,7 +9998,7 @@ export default function App({ onSignOut }) {
                             <Panel
                               span={5}
                               title="Cartas de Dominio"
-                              hidden={conditions.includes("Escondido")}
+                              hidden={conditions.includes("Escondido") || conditions.includes("Oculto")}
                               restrained={conditions.includes("Inmovilizado")}
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
@@ -10083,7 +10098,7 @@ export default function App({ onSignOut }) {
                           <Panel
                             span={7}
                             title="Descansos"
-                            hidden={conditions.includes("Escondido")}
+                            hidden={conditions.includes("Escondido") || conditions.includes("Oculto")}
                             restrained={conditions.includes("Inmovilizado")}
                             vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
@@ -10276,7 +10291,7 @@ export default function App({ onSignOut }) {
                           <Panel
                             span={5}
                             title="Proyectos"
-                            hidden={conditions.includes("Escondido")}
+                            hidden={conditions.includes("Escondido") || conditions.includes("Oculto")}
                             restrained={conditions.includes("Inmovilizado")}
                             vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
@@ -10417,7 +10432,7 @@ export default function App({ onSignOut }) {
                           <Panel
                             span={7}
                             title="Objetos"
-                            hidden={conditions.includes("Escondido")}
+                            hidden={conditions.includes("Escondido") || conditions.includes("Oculto")}
                             restrained={conditions.includes("Inmovilizado")}
                             vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
@@ -10585,7 +10600,7 @@ export default function App({ onSignOut }) {
                           <Panel
                             span={5}
                             title="Oro"
-                            hidden={conditions.includes("Escondido")}
+                            hidden={conditions.includes("Escondido") || conditions.includes("Oculto")}
                             restrained={conditions.includes("Inmovilizado")}
                             vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
@@ -10716,7 +10731,7 @@ export default function App({ onSignOut }) {
                             <Panel
                               span={7}
                               title="Trasfondo"
-                              hidden={conditions.includes("Escondido")}
+                              hidden={conditions.includes("Escondido") || conditions.includes("Oculto")}
                               restrained={conditions.includes("Inmovilizado")}
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
@@ -10781,7 +10796,7 @@ export default function App({ onSignOut }) {
                                   <Network size={16} />
                                 </button>
                               }
-                              hidden={conditions.includes("Escondido")}
+                              hidden={conditions.includes("Escondido") || conditions.includes("Oculto")}
                               restrained={conditions.includes("Inmovilizado")}
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
@@ -11063,7 +11078,7 @@ export default function App({ onSignOut }) {
                         const charExps = experiences.length;
                         const expSlots = Math.max(2, Math.min(EXPERIENCE_MAX, charExps));
                         const cond = {
-                          hidden: conditions.includes("Escondido"),
+                          hidden: conditions.includes("Escondido") || conditions.includes("Oculto"),
                           restrained: conditions.includes("Inmovilizado"),
                           vulnerable: conditions.includes("Vulnerable"),
                           unconscious: conditions.includes("Inconsciente"),
@@ -11415,7 +11430,7 @@ export default function App({ onSignOut }) {
                                   </div>
                                 </div>
                               }
-                              hidden={conditions.includes("Escondido")}
+                              hidden={conditions.includes("Escondido") || conditions.includes("Oculto")}
                               restrained={conditions.includes("Inmovilizado")}
                               vulnerable={conditions.includes("Vulnerable")}
                               unconscious={conditions.includes("Inconsciente")}
@@ -11548,7 +11563,7 @@ export default function App({ onSignOut }) {
                                   <b>{fearCount}</b>
                                 </div>
                               }
-                              hidden={conditions.includes("Escondido")}
+                              hidden={conditions.includes("Escondido") || conditions.includes("Oculto")}
                               restrained={conditions.includes("Inmovilizado")}
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
@@ -11825,7 +11840,7 @@ export default function App({ onSignOut }) {
                             <Panel
                               span={wide ? 1 : 5}
                               title="Chat"
-                              hidden={conditions.includes("Escondido")}
+                              hidden={conditions.includes("Escondido") || conditions.includes("Oculto")}
                               restrained={conditions.includes("Inmovilizado")}
                               vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
@@ -11974,7 +11989,7 @@ export default function App({ onSignOut }) {
                           <Panel
                             span={12}
                             title="Diario"
-                            hidden={conditions.includes("Escondido")}
+                            hidden={conditions.includes("Escondido") || conditions.includes("Oculto")}
                             restrained={conditions.includes("Inmovilizado")}
                             vulnerable={conditions.includes("Vulnerable")}
                             unconscious={conditions.includes("Inconsciente")}
@@ -13718,6 +13733,24 @@ export default function App({ onSignOut }) {
                       },
                     });
                   }
+                  // Caminante Nocturno · Paso de Sombra: 1 Estrés y quedas Oculto.
+                  if (d.shadowStep && !d.fromChat) {
+                    const condsS = getConditions(c);
+                    const cloaked = condsS.includes("Oculto");
+                    cardActs.push({
+                      key: "shadow",
+                      Icon: Ghost,
+                      label: cloaked ? "Ya estás Oculto" : "Paso de Sombra",
+                      sub: "1 Estrés · reapareces Oculto en otra sombra",
+                      disabled: cloaked,
+                      run: () => {
+                        closeCardDetail();
+                        const next = [...condsS.filter((n) => n !== "Escondido"), "Oculto"];
+                        markStress(viewingCharId, 1, { f_conditions: JSON.stringify(next) });
+                        postCampaignEvent(viewingCharId, "👤 Paso de Sombra: marca 1 Estrés, desaparece y reaparece Oculto en otra sombra");
+                      },
+                    });
+                  }
                   // Vínculo Bestial: lleva a la pestaña del compañero.
                   if (d.companionNav && !d.fromChat) {
                     cardActs.push({
@@ -13892,7 +13925,7 @@ export default function App({ onSignOut }) {
                       label: "Mostrar en la campaña",
                       sub: shareCamp.name,
                       run: () => {
-                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, ...detail } = d;
+                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, ...detail } = d;
                         // Las imágenes incrustadas muy grandes no se copian al chat.
                         if (typeof detail.image === "string" && detail.image.startsWith("data:") && detail.image.length > 30000) delete detail.image;
                         const type = d.domain ? "domain" : d.weapon ? "weapon" : d.armor ? "armor" : "card";
