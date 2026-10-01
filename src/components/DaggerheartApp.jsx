@@ -2474,6 +2474,8 @@ const sharedStyles = `
   .mh-kick-btn:hover { background: #855a30; }
   .mh-pred { display: flex; flex-direction: column; align-items: center; }
   .mh-pred-btn { background: #7E9B3E; }
+  .mh-sneak-btn { background: #4F5D78; }
+  .mh-sneak-btn:hover { background: #414D65; }
   .mh-pred-btn:hover { background: #6B8633; }
   .mh-pred-note { margin-top: 6px; font: 500 11px 'Inter', system-ui, sans-serif; color: var(--mh-muted); }
   .mh-kick-done { margin-top: 10px; font: 600 11.5px 'Inter', system-ui, sans-serif; color: #7A5530; }
@@ -3388,6 +3390,9 @@ function DamageResult({ roll }) {
           <DieFace sides={10} value={roll.wolfBonus} color="#E0544A" size={size} rolling={rolling} delay={rolls.length * 70} highlight={!rolling && roll.wolfBonus === 10} label="Lobo" />
         )}
         {roll.unstopBonus > 0 && <DieFace sides={roll.unstopMax || 4} value={roll.unstopBonus} color="#5E93C9" size={size} rolling={false} label="Imparable" />}
+        {(roll.sneakRolls || []).map((v, i) => (
+          <DieFace key={"s" + i} sides={6} value={v} color="#4F5D78" size={size} rolling={false} highlight={v === 6} label={i === 0 ? "Furtivo" : undefined} />
+        ))}
         {(roll.kickRolls || []).map((v, i) => (
           <DieFace key={"k" + i} sides={6} value={v} color="#9A6B3C" size={size} rolling={false} highlight={v === 6} label={i === 0 ? "Coz" : undefined} />
         ))}
@@ -3402,6 +3407,7 @@ function DamageResult({ roll }) {
             {roll.wolfBonus ? ` + 1d10 (${roll.wolfBonus})` : ""}
             {roll.unstopBonus ? ` + ${roll.unstopBonus} (Imparable)` : ""}
             {roll.kickRolls ? ` + 2d6 (${roll.kickRolls.join(" + ")}) (Coz)` : ""}
+            {roll.sneakRolls ? ` + ${roll.sneakRolls.length}d6 (${roll.sneakRolls.join(" + ")}) (Furtivo)` : ""}
             {roll.isCritical ? ` + ${roll.critBonus} (máx.)` : ""}
           </div>
           {roll.wolfBonus > 0 && <div style={{ fontSize: 11, color: "#FF6B5E", marginTop: 2 }}>Incluye +1d10 de la Forma de Lobo</div>}
@@ -5191,11 +5197,16 @@ export default function App({ onSignOut }) {
     const wolfBonus = !opts.plain && ch && ch.f_transformation_form_active === "Forma de Lobo" ? Math.floor(Math.random() * 10) + 1 : 0;
     // Guardián · Imparable: suma el valor actual del dado.
     const unstopBonus = !opts.plain && ch ? Number(ch.f_unstop_value || 0) : 0;
-    const total = roll + bonus + critBonus + wolfBonus + unstopBonus;
-    setDamageRollResult({ key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, note: opts.note || "" });
+    // Pícaro · Ataque Furtivo: estando Oculto suma tantos d6 como tu Rango (con crítico, también su máximo).
+    const rogueTier = ch && ch.f_class === "Pícaro" && !opts.plain ? tierForLevel(ch.f_level || 1) : 0;
+    const cloakedNow = ch ? getConditions(ch).includes("Oculto") : false;
+    const sneakRolls = rogueTier && (opts.cloaked || cloakedNow) ? Array.from({ length: rogueTier }, () => Math.floor(Math.random() * 6) + 1) : null;
+    const sneakBonus = sneakRolls ? sneakRolls.reduce((a, b) => a + b, 0) + (isCritical ? 6 * sneakRolls.length : 0) : 0;
+    const total = roll + bonus + critBonus + wolfBonus + unstopBonus + sneakBonus;
+    setDamageRollResult({ sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, note: opts.note || "" });
     const who = playerName || "Alguien en la mesa";
     const critLabel = isCritical ? ` · ¡Crítico! (+${critBonus} máx.)` : "";
-    const diceLabel = `${dice}d${die} (${rolls.join("+")})` + (wolfBonus ? ` + Lobo 1d10 (${wolfBonus})` : "") + (unstopBonus ? ` + Imparable ${unstopBonus}` : "");
+    const diceLabel = `${dice}d${die} (${rolls.join("+")})` + (wolfBonus ? ` + Lobo 1d10 (${wolfBonus})` : "") + (unstopBonus ? ` + Imparable ${unstopBonus}` : "") + (sneakRolls ? ` + Furtivo ${sneakRolls.length}d6 (${sneakRolls.join("+")})` : "");
     await pushRollLog(
       `**${who}** — Daño de ${weaponName}: ${diceLabel}${bonus ? " + " + bonus : ""}${critLabel} = **${total}** ${damageType}`
     );
@@ -7318,10 +7329,12 @@ export default function App({ onSignOut }) {
   };
 
   const doTraitRoll = async (charId, traitLabel, traitValue, weapon, cardContext, advantage, extras = {}) => {
+    let wasCloaked = false;
     if (weapon && !weapon.charge) {
       const chH = charsRef.current[charId];
       const condsH = chH ? getConditions(chH) : [];
       const lost = condsH.filter((n) => n === "Oculto" || n === "Escondido");
+      wasCloaked = lost.includes("Oculto");
       if (lost.length) {
         updateCharacterField(charId, "f_conditions", JSON.stringify(condsH.filter((n) => !lost.includes(n))));
         postCampaignEvent(charId, `👁️ Al atacar deja de estar ${lost.includes("Oculto") ? "Oculto" : "Escondido"}`);
@@ -7367,7 +7380,7 @@ export default function App({ onSignOut }) {
         ? "Ignoras los efectos que te afectarían aun con éxito"
         : "Las reacciones no generan Esperanza ni Miedo"
       : hope === fear ? "Ganas 1 Esperanza y te quitas 1 Estrés" : hope > fear ? "Ganas 1 Esperanza" : "El DJ gana 1 de Miedo";
-    setTraitRollResult({ key: Date.now(), hopeSides, traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, tideBonus, total, text: hope === fear ? "Éxito crítico" : reaction ? "Tirada de reacción" : text, color, note, reaction, card: cardContext ? { name: cardContext.name, dc: cardContext.dc } : null, exps: extras.exps || [], weapon: weapon || null, charId });
+    setTraitRollResult({ key: Date.now(), hopeSides, traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, tideBonus, total, text: hope === fear ? "Éxito crítico" : reaction ? "Tirada de reacción" : text, color, note, reaction, card: cardContext ? { name: cardContext.name, dc: cardContext.dc } : null, exps: extras.exps || [], wasCloaked, weapon: weapon || null, charId });
 
     // Con Esperanza (o crítico) ganas 1 Esperanza; con crítico además te quitas 1 Estrés.
     if (reaction) {
@@ -12725,11 +12738,12 @@ export default function App({ onSignOut }) {
                             const charId = traitRollResult.charId;
                             const isCritical = traitRollResult.hope === traitRollResult.fear;
                             setTraitRollResult(null);
+                            const wasCloaked = traitRollResult.wasCloaked;
                             if (focusTarget) {
                               updateCharacterField(charId, "f_focus", focusTarget);
                               postCampaignEvent(charId, "🎯 " + focusTarget + " pasa a ser su Foco");
                             }
-                            rollWeaponDamage(name, damage, charId, isCritical);
+                            rollWeaponDamage(name, damage, charId, isCritical, { cloaked: wasCloaked });
                           }}
                         >
                           Sí
@@ -12839,6 +12853,30 @@ export default function App({ onSignOut }) {
                     Daño · {damageRollResult.weaponName}
                   </div>
                   <DamageResult roll={damageRollResult} />
+                  {(() => {
+                    // Pícaro · Ataque Furtivo con un aliado en Cuerpo a cuerpo del objetivo.
+                    const dr = damageRollResult;
+                    if (!dr.rogueTier) return null;
+                    if (dr.sneakRolls) return <div className="mh-kick-done" style={{ color: "#4F5D78" }}>Ataque Furtivo ({dr.sneakWhy === "Oculto" ? "estabas Oculto" : "aliado junto al objetivo"}): +{dr.sneakRolls.length}d6</div>;
+                    return (
+                      <div className="mh-pred">
+                        <div className="mh-pred-note" style={{ marginTop: 10, color: "var(--mh-ink3)", fontWeight: 600 }}>¿Hay un aliado en alcance Cuerpo a cuerpo de tu objetivo?</div>
+                        <button
+                          type="button"
+                          className="mh-kick-btn mh-sneak-btn"
+                          style={{ marginTop: 6 }}
+                          onClick={() => {
+                            const k = Array.from({ length: dr.rogueTier }, () => Math.floor(Math.random() * 6) + 1);
+                            const extra = k.reduce((a, b) => a + b, 0) + (dr.isCritical ? 6 * k.length : 0);
+                            setDamageRollResult((r) => (r ? { ...r, sneakRolls: k, sneakWhy: "aliado", total: r.total + extra } : r));
+                            postCampaignEvent(dr.charId, `🗡️ Ataque Furtivo (aliado junto al objetivo): +${k.length}d6 (${k.join(" + ")}). Daño total ${dr.total + extra}`);
+                          }}
+                        >
+                          <Swords size={14} /> Sí, Ataque Furtivo · +{dr.rogueTier}d6
+                        </button>
+                      </div>
+                    );
+                  })()}
                   {(() => {
                     // Rastreador · Depredador Implacable: 1 Estrés para +1 a la Competencia (un dado más).
                     const dr = damageRollResult;
