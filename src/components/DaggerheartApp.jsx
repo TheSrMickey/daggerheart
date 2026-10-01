@@ -2468,31 +2468,10 @@ const sharedStyles = `
   .mh-luck-btn:hover:not(:disabled) { background: #9C68B3; }
   .mh-luck-btn:disabled { background: var(--mh-panel3); color: var(--mh-muted); cursor: not-allowed; }
   .mh-pack { width: min(380px, 100%); padding: 22px 22px 20px; text-align: center; overflow: hidden; }
-  .mh-pack-stage { position: relative; height: 176px; display: flex; align-items: flex-end; justify-content: center; perspective: 600px; }
-  .mh-pack-ground { position: absolute; bottom: 8px; left: 22%; right: 22%; height: 3px; border-radius: 2px; background: color-mix(in srgb, #C9AE86 60%, transparent); }
-  .mh-pack-bag { position: absolute; bottom: 12px; left: 50%; margin-left: -29px; color: #9A6B3C; transform-origin: 50% 100%; animation: mh-pack-drop .6s cubic-bezier(.5,0,.75,0) both, mh-pack-bounce .35s ease-out .6s both, mh-pack-empty .5s ease-in 1s both; }
-  .mh-pack-dust { position: absolute; inset: 0; pointer-events: none; }
-  .mh-pack-dust i { position: absolute; left: 50%; bottom: 10px; width: 90px; height: 90px; margin-left: -45px; border-radius: 50%; background: radial-gradient(circle, rgba(201,174,134,.8), rgba(201,174,134,0) 68%); opacity: 0; animation: mh-pack-puff 1.2s ease-out calc(1s + var(--i) * .06s) both; --dx: calc((var(--i) - 2.5) * 34px); }
-  .mh-pack-card { position: absolute; left: 50%; bottom: 14px; width: 104px; height: 146px; margin-left: -52px; transform-style: preserve-3d; opacity: 0; animation: mh-pack-card-in .45s cubic-bezier(.2,1.3,.4,1) 1.45s both, mh-pack-flip .55s ease-in-out 2.05s forwards; }
-  .mh-pack-face { position: absolute; inset: 0; border-radius: 13px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; backface-visibility: hidden; box-shadow: 0 10px 22px rgba(0,0,0,.22); }
-  .mh-pack-face.is-back { background: linear-gradient(160deg, #B58A56, #7A5530); color: #F6E7CF; border: 3px solid #E9D8BF; }
-  .mh-pack-face.is-front { background: var(--mh-panel); border: 2px solid #9A6B3C; transform: rotateY(180deg); padding: 10px; text-align: center; }
-  .mh-pack-face small { font: 800 9px 'Inter', system-ui, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: #9A6B3C; }
-  .mh-pack-face b { font-size: 32px; font-weight: 700; color: #B8862E; line-height: 1.1; }
-  .mh-pack-face b.is-name { font-size: 14px; color: var(--mh-ink); overflow-wrap: anywhere; }
-  .mh-pack.is-open .mh-pack-bag { animation: none; opacity: 0; }
-  .mh-pack.is-open .mh-pack-dust i { animation: none; opacity: 0; }
-  .mh-pack.is-open .mh-pack-card { animation: none; opacity: 1; transform: rotateY(180deg); }
-  @keyframes mh-pack-drop { 0% { transform: translateY(-120px) rotate(-14deg); opacity: 0; } 30% { opacity: 1; } 100% { transform: translateY(0) rotate(6deg); opacity: 1; } }
-  @keyframes mh-pack-bounce { 0% { transform: translateY(0) scale(1.15, .82) rotate(6deg); } 55% { transform: translateY(-16px) scale(.95, 1.06) rotate(-4deg); } 100% { transform: translateY(0) scale(1) rotate(0); } }
-  @keyframes mh-pack-empty { 0% { transform: rotate(0); opacity: 1; } 60% { transform: rotate(70deg) translateX(10px); opacity: .85; } 100% { transform: rotate(80deg) translateX(14px); opacity: 0; } }
-  @keyframes mh-pack-puff { 0% { opacity: 0; transform: translate(0, 0) scale(.3); } 25% { opacity: .95; } 100% { opacity: 0; transform: translate(var(--dx), -46px) scale(1.5); } }
-  @keyframes mh-pack-card-in { 0% { opacity: 0; transform: translateY(26px) scale(.6) rotateY(0); } 100% { opacity: 1; transform: translateY(0) scale(1) rotateY(0); } }
-  @keyframes mh-pack-flip { 0% { transform: rotateY(0); } 100% { transform: rotateY(180deg); } }
   .mh-pack-t b, .mh-pack-form b { display: block; font-size: 17px; color: var(--mh-ink); }
   .mh-pack-t small, .mh-pack-form small { display: block; font-size: 12px; color: var(--mh-muted); margin-top: 3px; }
   .mh-pack-t { margin-top: 10px; }
-  .mh-pack-form { margin-top: 6px; display: flex; flex-direction: column; gap: 8px; text-align: left; }
+  .mh-pack-form { margin-top: 0; display: flex; flex-direction: column; gap: 8px; text-align: left; }
   .mh-pack-form b, .mh-pack-form small { text-align: center; }
   .mh-pack-form small { margin-bottom: 4px; }
   .mh-unshake { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 80; display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 14px; background: #2A2440; color: #fff; box-shadow: 0 10px 26px rgba(0,0,0,.3); font-family: 'Inter', system-ui, sans-serif; animation: mh-wz-art-in .2s ease-out; }
@@ -6908,11 +6887,6 @@ export default function App({ onSignOut }) {
   const [focusDlg, setFocusDlg] = useState(null);
   // Errante · Petate Nómada: animación y nombre del objeto que se saca.
   const [packDlg, setPackDlg] = useState(null);
-  useEffect(() => {
-    if (packDlg?.phase !== "anim") return;
-    const t = setTimeout(() => setPackDlg((d) => (d ? { ...d, phase: "name" } : d)), 2700);
-    return () => clearTimeout(t);
-  }, [packDlg?.phase]);
   const pullFromPack = (id, name, description) => {
     const c = charsRef.current[id];
     if (!c || !name.trim()) return false;
@@ -12286,33 +12260,7 @@ export default function App({ onSignOut }) {
               };
               return (
                 <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 46, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.62)" }} onClick={close}>
-                  <div className={"mh-card mh-card-anim mh-pack" + (packDlg.phase === "name" ? " is-open" : "")} onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Petate Nómada">
-                    <div className="mh-pack-stage" aria-hidden="true">
-                      <span className="mh-pack-ground" />
-                      <span className="mh-pack-bag">
-                        <Backpack size={58} strokeWidth={1.4} />
-                      </span>
-                      <span className="mh-pack-dust">
-                        {[0, 1, 2, 3, 4, 5].map((k) => (
-                          <i key={k} style={{ "--i": k }} />
-                        ))}
-                      </span>
-                      <span className="mh-pack-card">
-                        <span className="mh-pack-face is-back">
-                          <Compass size={30} strokeWidth={1.5} />
-                        </span>
-                        <span className="mh-pack-face is-front">
-                          <small>Objeto</small>
-                          {packDlg.name.trim() ? <b className="mh-serif is-name">{packDlg.name.trim()}</b> : <b className="mh-serif">?</b>}
-                        </span>
-                      </span>
-                    </div>
-                    {packDlg.phase === "anim" ? (
-                      <div className="mh-pack-t">
-                        <b className="mh-serif">Vacías el petate…</b>
-                        <small>Algo útil tiene que haber entre el polvo del camino</small>
-                      </div>
-                    ) : (
+                  <div className="mh-card mh-pack" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Petate Nómada">
                       <div className="mh-pack-form">
                         <b className="mh-serif">¿Qué sacas del petate?</b>
                         <small>Un objeto corriente que te sirva ahora. Decidlo con el DJ.</small>
@@ -12322,7 +12270,6 @@ export default function App({ onSignOut }) {
                           <Backpack size={15} /> Guardar en el inventario · 1 Esperanza
                         </button>
                       </div>
-                    )}
                   </div>
                 </div>
               );
@@ -13866,7 +13813,7 @@ export default function App({ onSignOut }) {
                       disabled: !!c.f_pack_used || hopeP < 1 || full,
                       run: () => {
                         closeCardDetail();
-                        setPackDlg({ phase: "anim", name: "", desc: "" });
+                        setPackDlg({ name: "", desc: "" });
                       },
                     });
                   }
