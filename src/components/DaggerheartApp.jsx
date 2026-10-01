@@ -335,7 +335,7 @@ const COMMUNITIES = [
   { key: "Errante", blurb: "Has vivido como nómada, sin un hogar fijo y conociendo culturas muy distintas; valoras más el saber, las habilidades y los contactos que las posesiones.", features: [{ name: "Petate Nómada", text: "Añade un Petate Nómada a tu inventario. Una vez por sesión, puedes gastar 1 Esperanza para meter la mano en el petate y sacar un objeto corriente que te sea útil en tu situación. Decide con el DJ qué objeto sacas." }] },
   { key: "Salvaje", blurb: "Vienes de lo más profundo del bosque, de una comunidad que integra sus hogares en la naturaleza y se dedica a protegerla.", features: [{ name: "Pies Ligeros", text: "Te mueves en silencio de forma natural. Tienes ventaja en las tiradas para moverte sin que te oigan." }] },
   { key: "De las Dunas", blurb: "Has hecho tu hogar entre las arenas cambiantes y el clima árido del desierto, donde la familia y la colaboración lo son todo.", expansion: "Hope & Fear", features: [{ name: "Oasis", text: "Durante un descanso corto, tú o un aliado podéis repetir un dado usado en una acción de descanso y quedaros con el resultado más alto." }] },
-  { key: "Del Hogar", blurb: "Tu vida giró en torno al fuego del hogar y la comunidad cercana.", expansion: "Hope & Fear", features: [{ name: "Muy Unidos", text: "Una vez por descanso largo, puedes gastar cualquier cantidad de Esperanza para dársela a un aliado en alcance Lejano." }] },
+  { key: "Del Hogar", blurb: "Vienes de orígenes humildes, de un pueblo modesto o del campo, donde familias y vecinos forjan lazos muy estrechos.", expansion: "Hope & Fear", features: [{ name: "Muy Unidos", text: "Una vez por descanso largo, puedes gastar cualquier cantidad de Esperanza para dar a un aliado dentro de alcance Lejano esa misma cantidad de Esperanza." }] },
   { key: "De la Escarcha", blurb: "Te criaste en tierras heladas, curtido por el frío.", expansion: "Hope & Fear", features: [{ name: "Curtido", text: "Cuando descansas, te quitas 1 Punto de vida." }] },
   { key: "De la Guerra", blurb: "Creciste entre conflictos, formado para el combate.", expansion: "Hope & Fear", features: [{ name: "Cara Valiente", text: "Una vez por sesión, cuando te obliguen a marcar Estrés, puedes gastar 1 Esperanza en su lugar." }] },
   { key: "Libre", blurb: "Naciste sin ataduras a ninguna autoridad ni institución.", expansion: "Hope & Fear", features: [{ name: "Sin Ataduras", text: "Una vez por sesión, cuando saques una tirada con Miedo, puedes convertirla en una tirada con Esperanza." }] },
@@ -6422,7 +6422,7 @@ export default function App({ onSignOut }) {
         const me = meCharId ? characters[meCharId] : null;
         const mineT = me && m.targets[meCharId];
         const got = me && getGiftsGot(me).includes(m.sid);
-        const desc = (t) => [t.hp ? t.hp + " PV" : "", t.stress ? t.stress + " de Estrés" : ""].filter(Boolean).join(" y ");
+        const desc = (t) => [t.hp ? t.hp + " PV" : "", t.stress ? t.stress + " de Estrés" : "", t.hope ? t.hope + " de Esperanza" : ""].filter(Boolean).join(" y ");
         return chatCard(
           "#6FBF73",
           <>
@@ -6434,7 +6434,7 @@ export default function App({ onSignOut }) {
             <div style={{ marginTop: 4 }}>
               {Object.entries(m.targets).map(([cid, t]) => (
                 <div key={cid}>
-                  <b>{characters[cid]?.f_name || "Aliado"}</b>: {t.hp ? "recupera " : "se quita "}
+                  <b>{characters[cid]?.f_name || "Aliado"}</b>: {t.hope ? "gana " : t.hp ? "recupera " : "se quita "}
                   {desc(t)}
                 </div>
               ))}
@@ -6452,6 +6452,7 @@ export default function App({ onSignOut }) {
                   updateCharacterFields(meCharId, {
                     ...(mineT.hp ? { hp_marked: String(Math.max(0, Number(cur.hp_marked || 0) - mineT.hp)) } : {}),
                     ...(mineT.stress ? { stress_marked: String(Math.max(0, Number(cur.stress_marked || 0) - mineT.stress)) } : {}),
+                    ...(mineT.hope ? { hope_marked: String(Math.min(getHopeMax(cur), Number(cur.hope_marked ?? HOPE_DEFAULT) + mineT.hope)) } : {}),
                     f_gifts_got: JSON.stringify([...getGiftsGot(cur), m.sid].slice(-40)),
                   });
                 }}
@@ -7090,7 +7091,7 @@ export default function App({ onSignOut }) {
       if (mine.stress) patch.stress_marked = String(Math.max(0, Number(c.stress_marked || 0) - mine.stress));
       if (Object.keys(patch).length) updateCharacterFields(fromId, patch);
     }
-    const others = Object.fromEntries(Object.entries(targets).filter(([k, v]) => k !== fromId && (v.hp || v.stress)));
+    const others = Object.fromEntries(Object.entries(targets).filter(([k, v]) => k !== fromId && (v.hp || v.stress || v.hope)));
     const camp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(fromId));
     if (camp && Object.keys(others).length) {
       postChat(camp.id, { kind: "gift", sid: String(Date.now()), campId: camp.id, author: c.f_name || "El Druida", charId: fromId, cls: c.f_class, title, text, targets: others, ...(tag ? { tag } : {}) });
@@ -7196,6 +7197,7 @@ export default function App({ onSignOut }) {
     if (isLong && c.f_luck_used) restPatch.f_luck_used = "";
     if (isLong && c.f_pack_used) restPatch.f_pack_used = "";
     if (isLong && c.f_sparing_used) restPatch.f_sparing_used = "";
+    if (isLong && c.f_closeknit_used) restPatch.f_closeknit_used = "";
     if (isLong && (c.f_prayer || c.f_prayer_rolled)) {
       restPatch.f_prayer = "";
       restPatch.f_prayer_rolled = "";
@@ -12704,12 +12706,21 @@ export default function App({ onSignOut }) {
                 clarity: { title: "Claridad de la Naturaleza", sub: `Reparte hasta ${pool} de Estrés (tu Instinto) entre tú y tus aliados.`, list: all, go: "Crear el espacio" },
                 ward: { title: "Protección del Guardián", sub: `Gasta 2 de Esperanza: hasta ${R.n} aliado${R.n === 1 ? "" : "s"} (1d4 = ${R.n}) recuperan 2 PV.`, list: allies, go: "Proteger" },
                 defender: { title: "Defensor", sub: "Marca 1 Estrés: el aliado que acaba de marcar 2 o más PV marca 1 menos.", list: allies, go: "Defender" },
+                closeknit: { title: "Muy Unidos", sub: "Gasta la Esperanza que quieras: un aliado en alcance Lejano gana esa misma cantidad.", list: allies, go: "Dar " + (R.n || 1) + " de Esperanza" },
                 life: { title: "Soporte Vital", sub: "Gasta 3 de Esperanza: un aliado en alcance Cercano se quita 1 Punto de vida.", list: allies, go: "Dar Soporte Vital" },
                 sparing: { title: "Toque Clemente", sub: "Toca a una criatura y quítale 2 Puntos de vida o 2 de Estrés.", list: all, go: "Tocar" },
               }[R.mode];
               const canGo =
                 R.mode === "regen" ? !!R.pick : R.mode === "clarity" ? used > 0 : R.mode === "ward" ? chosen.length > 0 : !!R.pick;
               const confirm = () => {
+                if (R.mode === "closeknit") {
+                  const n = Math.max(1, Math.min(R.n || 1, Number(me.hope_marked ?? HOPE_DEFAULT)));
+                  updateCharacterFields(viewingCharId, { hope_marked: String(Number(me.hope_marked ?? HOPE_DEFAULT) - n), f_closeknit_used: "1" });
+                  giveToParty(viewingCharId, { [R.pick]: { hope: n } }, "Muy Unidos", `Gasta ${n} de Esperanza para dársela a un aliado.`, "Del Hogar");
+                  close();
+                  closeCardDetail();
+                  return;
+                }
                 if (R.mode === "life") {
                   updateCharacterField(viewingCharId, "hope_marked", String(Math.max(0, Number(me.hope_marked ?? HOPE_DEFAULT) - 3)));
                   giveToParty(viewingCharId, { [R.pick]: { hp: 1 } }, "Soporte Vital", "Gasta 3 de Esperanza para sostener la vida de un aliado.", "Serafín");
@@ -12756,6 +12767,21 @@ export default function App({ onSignOut }) {
                         <X size={16} />
                       </button>
                     </div>
+                    {R.mode === "closeknit" && (() => {
+                      const myHope = Number(me.hope_marked ?? HOPE_DEFAULT);
+                      const n = Math.max(1, Math.min(R.n || 1, myHope));
+                      return (
+                        <div className="mh-renew-pool" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginTop: 12 }}>
+                          <span>Esperanza que das</span>
+                          <span className="mh-renew-step">
+                            <button type="button" disabled={n <= 1} onClick={() => setRenewDlg((p) => ({ ...p, n: n - 1 }))}>−</button>
+                            <b>{n}</b>
+                            <button type="button" disabled={n >= myHope} onClick={() => setRenewDlg((p) => ({ ...p, n: n + 1 }))}>+</button>
+                          </span>
+                          <small style={{ color: "var(--mh-muted)" }}>de {myHope}</small>
+                        </div>
+                      );
+                    })()}
                     {R.mode === "sparing" && (
                       <div className="mh-pre-seg" role="radiogroup" aria-label="Qué quitas" style={{ marginTop: 12, alignSelf: "center" }}>
                         {[
@@ -14561,6 +14587,17 @@ export default function App({ onSignOut }) {
                     });
                   }
                   // Dracona: Aliento Elemental (ataque de Instinto) y Escamas (marcar 1 Estrés).
+                  if (d.kicker === "Comunidad" && d.title === "Del Hogar" && c?.f_community === "Del Hogar" && !d.fromChat) {
+                    const hopeH = Number(c.hope_marked ?? HOPE_DEFAULT);
+                    cardActs.push({
+                      key: "closeknit",
+                      Icon: Users,
+                      label: c.f_closeknit_used ? "Muy Unidos · vuelve al descanso largo" : hopeH < 1 ? "Muy Unidos · no te queda Esperanza" : "Muy Unidos",
+                      sub: "Da tu Esperanza a un aliado en alcance Lejano",
+                      disabled: !!c.f_closeknit_used || hopeH < 1,
+                      run: () => setRenewDlg({ mode: "closeknit", n: 1 }),
+                    });
+                  }
                   if (d.ancestryKey === "Goblin" && !d.fromChat) {
                     cardActs.push({
                       key: "danger",
