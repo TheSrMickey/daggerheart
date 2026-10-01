@@ -535,7 +535,7 @@ function getEquipmentMods(primaryWeapon, secondaryWeapon, armorEntry) {
 const CLASS_HOPE_FEATURE = {
   Bardo: { name: "Montar una Escena", cost: 3, text: "Distrae temporalmente a un objetivo en alcance Cercano: sufre un −2 a su Dificultad." },
   Druida: { name: "Evolución", cost: 3, text: "Transfórmate en una Forma de Bestia sin marcar Estrés. Al hacerlo, elige un rasgo y súbelo +1 hasta que abandones esa Forma de Bestia." },
-  Guardián: { name: "Primera Línea", cost: 3, text: "Recupera 2 casillas de Armadura." },
+  Guardián: { name: "Primera Línea", cost: 3, text: "Gasta 3 de Esperanza para recuperar 2 casillas de Armadura." },
   Explorador: { name: "Contenerlos", cost: 3, text: "Cuando aciertes un ataque con un arma, usa esa misma tirada contra otros dos adversarios dentro de su alcance." },
   Pícaro: { name: "Esquiva del Pícaro", cost: 3, text: "Ganas +2 a la Evasión hasta que te alcance un ataque o, si no, hasta tu próximo descanso." },
   Serafín: { name: "Soporte Vital", cost: 3, text: "Un aliado en alcance Cercano recupera 1 Punto de vida." },
@@ -5195,6 +5195,27 @@ export default function App({ onSignOut }) {
     });
     setShowEvolutionModal(false);
     postCampaignEvent(viewingCharId, `🌙 Usa Evolución: adopta la forma de ${evoBeastform}`);
+  };
+
+  const armorMaxFor = (c) => {
+    const armorEntry = ARMORS.find((a) => a.key === c.f_armor);
+    if (!armorEntry) return 0;
+    const mods = getEquipmentMods(PRIMARY_WEAPONS.find((w) => w.key === c.f_primary_weapon), SECONDARY_WEAPONS.find((w) => w.key === c.f_secondary_weapon), armorEntry);
+    return armorEntry.score + (mods.armor || 0);
+  };
+  const doFrontline = (id) => {
+    const c = characters[id];
+    if (!c) return;
+    const hope = Number(c.hope_marked ?? HOPE_DEFAULT);
+    const max = armorMaxFor(c);
+    const armor = Number(c.armor_marked || 0);
+    const gain = Math.min(2, max - armor);
+    if (hope < 3 || gain <= 0) return;
+    updateCharacterFields(id, { hope_marked: String(hope - 3), armor_marked: String(armor + gain) });
+    clearTimeout(restMsgTimer.current);
+    setRestMessage(`Primera Línea: recuperas ${gain} casilla${gain > 1 ? "s" : ""} de Armadura (-3 Esperanza).`);
+    restMsgTimer.current = setTimeout(() => setRestMessage(""), 3500);
+    postCampaignEvent(id, `🛡️ Primera Línea: recupera ${gain} casilla${gain > 1 ? "s" : ""} de Armadura`);
   };
 
   const spendHopeFeature = (id, cost) => {
@@ -12539,15 +12560,20 @@ export default function App({ onSignOut }) {
                   // Característica de Esperanza: se usa desde la barra de la carta.
                   if (d.hopeAction && !d.fromChat) {
                     const missingHope = Math.max(0, d.hopeAction.cost - Number(c.hope_marked ?? HOPE_DEFAULT));
+                    const isFrontline = c.f_class === "Guardián";
+                    const armorMax = isFrontline ? armorMaxFor(c) : 0;
+                    const armorSpent = isFrontline ? Math.max(0, armorMax - Number(c.armor_marked || 0)) : 0;
+                    const frontlineBlock = isFrontline && !missingHope ? (!armorMax ? "No llevas armadura" : !armorSpent ? "Tu Armadura está completa" : "") : "";
                     cardActs.unshift({
                       key: "hope",
-                      Icon: Sparkles,
-                      label: missingHope ? "Te faltan " + missingHope + " de Esperanza" : "Usar " + d.title,
+                      Icon: isFrontline ? Shield : Sparkles,
+                      label: missingHope ? "Te faltan " + missingHope + " de Esperanza" : frontlineBlock || (isFrontline ? "Recuperar " + Math.min(2, armorSpent) + " de Armadura" : "Usar " + d.title),
                       sub: d.hopeAction.cost + " Esperanza",
-                      disabled: missingHope > 0,
+                      disabled: missingHope > 0 || !!frontlineBlock,
                       run: () => {
                         closeCardDetail();
                         if (c.f_class === "Druida") openEvolutionModal(viewingCharId);
+                        else if (isFrontline) doFrontline(viewingCharId);
                         else spendHopeFeature(viewingCharId, d.hopeAction.cost);
                       },
                     });
