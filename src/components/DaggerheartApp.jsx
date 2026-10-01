@@ -598,7 +598,7 @@ const CLASS_HOPE_FEATURE = {
   Druida: { name: "Evolución", cost: 3, text: "Transfórmate en una Forma de Bestia sin marcar Estrés. Al hacerlo, elige un rasgo y súbelo +1 hasta que abandones esa Forma de Bestia." },
   Guardián: { name: "Primera Línea", cost: 3, text: "Gasta 3 de Esperanza para recuperar 2 casillas de Armadura." },
   Explorador: { name: "Contenerlos", cost: 3, text: "Gasta 3 de Esperanza cuando tengas éxito en un ataque con un arma para usar esa misma tirada contra otros dos adversarios dentro del alcance del ataque." },
-  Pícaro: { name: "Esquiva del Pícaro", cost: 3, text: "Ganas +2 a la Evasión hasta que te alcance un ataque o, si no, hasta tu próximo descanso." },
+  Pícaro: { name: "Esquiva del Pícaro", cost: 3, text: "Gasta 3 de Esperanza para ganar un +2 a tu Evasión hasta la próxima vez que un ataque tenga éxito contra ti. Si no, dura hasta tu próximo descanso." },
   Serafín: { name: "Soporte Vital", cost: 3, text: "Un aliado en alcance Cercano recupera 1 Punto de vida." },
   Hechicero: { name: "Magia Volátil", cost: 3, text: "Repite cualquier número de tus dados de daño en un ataque que haga daño mágico." },
   Guerrero: { name: "Sin Piedad", cost: 3, text: "Ganas +1 a tus tiradas de ataque hasta tu próximo descanso." },
@@ -2457,6 +2457,7 @@ const sharedStyles = `
   .mh-wing-btn { position: absolute; top: 6px; right: 6px; display: inline-flex; align-items: center; gap: 2px; border: 0; border-radius: 20px; padding: 2px 7px; font: 700 10.5px 'Inter', system-ui, sans-serif; color: #fff; background: #5FA77A; cursor: pointer; }
   .mh-wing-btn:hover { background: #4E9469; }
   .mh-wing-btn .mh-tip { width: 190px; }
+  .mh-dodge-chip { position: absolute; left: 6px; top: 6px; white-space: nowrap; display: inline-flex; align-items: center; gap: 3px; border: 0; border-radius: 20px; padding: 2px 7px; font: 700 9.5px 'Inter', system-ui, sans-serif; color: #fff; background: #4F5D78; cursor: pointer; }
   .mh-wing-chip { position: absolute; left: 50%; bottom: 5px; transform: translateX(-50%); white-space: nowrap; display: inline-flex; align-items: center; gap: 3px; border: 0; border-radius: 20px; padding: 2px 7px; font: 700 9.5px 'Inter', system-ui, sans-serif; color: #fff; background: #5FA77A; cursor: pointer; }
   .mh-luck-btn { margin-top: 12px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 7px; flex-wrap: wrap; border: 0; border-radius: 11px; padding: 9px 12px; font: 700 13px 'Inter', system-ui, sans-serif; color: #fff; background: #B07CC6; cursor: pointer; }
   .mh-luck-btn small { font-weight: 500; font-size: 11px; opacity: .88; }
@@ -4838,6 +4839,11 @@ export default function App({ onSignOut }) {
     const cur = charsRef.current[id];
     if (!cur) return;
     const next = { ...cur, [field]: String(value) };
+    // Pícaro · Esquiva: el +2 a la Evasión termina en cuanto marca Puntos de vida.
+    if (cur.f_dodge && Number(next.hp_marked || 0) > Number(cur.hp_marked || 0)) {
+      next.f_dodge = "";
+      postCampaignEvent(id, "🌀 Le alcanzan: termina su Esquiva del Pícaro");
+    }
     charsRef.current = { ...charsRef.current, [id]: next };
     setCharacters((prev) => ({ ...prev, [id]: next }));
     afterCharacterChange(id, cur, next);
@@ -5059,6 +5065,11 @@ export default function App({ onSignOut }) {
     const cur = charsRef.current[id];
     if (!cur) return;
     const next = { ...cur, ...patch };
+    // Pícaro · Esquiva: el +2 a la Evasión termina en cuanto marca Puntos de vida.
+    if (cur.f_dodge && Number(next.hp_marked || 0) > Number(cur.hp_marked || 0)) {
+      next.f_dodge = "";
+      postCampaignEvent(id, "🌀 Le alcanzan: termina su Esquiva del Pícaro");
+    }
     charsRef.current = { ...charsRef.current, [id]: next };
     setCharacters((prev) => ({ ...prev, [id]: next }));
     afterCharacterChange(id, cur, next);
@@ -5446,6 +5457,14 @@ export default function App({ onSignOut }) {
     postCampaignEvent(id, `🛡️ Primera Línea: recupera ${gain} casilla${gain > 1 ? "s" : ""} de Armadura`);
   };
 
+  const doRogueDodge = (id) => {
+    const c = charsRef.current[id];
+    if (!c || c.f_dodge) return;
+    const hope = Number(c.hope_marked ?? HOPE_DEFAULT);
+    if (hope < 3) return;
+    updateCharacterFields(id, { hope_marked: String(hope - 3), f_dodge: "1" });
+    postCampaignEvent(id, "🌀 Esquiva del Pícaro: +2 a la Evasión hasta que le alcance un ataque");
+  };
   const spendHopeFeature = (id, cost) => {
     const c = characters[id];
     if (!c) return;
@@ -6922,6 +6941,7 @@ export default function App({ onSignOut }) {
     if (isLong && c.f_unstop_used) restPatch.f_unstop_used = "";
     if (c.f_dedicated_used) restPatch.f_dedicated_used = "";
     if (c.f_wings_evade) restPatch.f_wings_evade = "";
+    if (c.f_dodge) restPatch.f_dodge = "";
     // Compañero animal: se quita tanto Estrés como tú; en el descanso largo vuelve a la escena con 1 menos.
     const comp = getCompanion(c);
     if (comp) {
@@ -8999,6 +9019,7 @@ export default function App({ onSignOut }) {
                   const conditions = isRogue(c) ? getConditions(c).map((n) => (n === "Escondido" ? "Oculto" : n)) : getConditions(c);
                   const flying = isFaerie(c) && conditions.includes("Volando");
                   const wingsOn = flying && c.f_wings_evade === "1";
+                  const dodgeOn = c.f_class === "Pícaro" && c.f_dodge === "1";
                   const entries = getJournal(c);
                   const spellTraitKey = spellcastTraitFor(c.f_class, c.f_subclass);
                   const spellTraitInfo = TRAITS.find((t) => t.key === spellTraitKey);
@@ -9083,8 +9104,13 @@ export default function App({ onSignOut }) {
                                 >
                                   <div style={{ fontSize: 10, color: "var(--mh-muted)" }}>Evasión</div>
                                   <div className="mh-serif" style={{ fontSize: 26, fontWeight: 700, color: ink(wingsOn ? "#5FA77A" : themeColor) }}>
-                                    {c.r_evasion ? Number(c.r_evasion) + (beastformInfo?.evasionBonus || 0) + equipMods.evasion + (wingsOn ? 2 : 0) : "—"}
+                                    {c.r_evasion ? Number(c.r_evasion) + (beastformInfo?.evasionBonus || 0) + equipMods.evasion + (wingsOn ? 2 : 0) + (dodgeOn ? 2 : 0) : "—"}
                                   </div>
+                                  {dodgeOn && (
+                                    <button type="button" className="mh-dodge-chip" title="Esquiva del Pícaro: termina cuando un ataque tenga éxito contra ti o al descansar. Pulsa para quitarla." onClick={() => updateCharacterField(viewingCharId, "f_dodge", "")}>
+                                      +2 Esquiva <X size={9} strokeWidth={2.6} />
+                                    </button>
+                                  )}
                                   {flying && !wingsOn && (
                                     <button type="button" className="mh-wing-btn mh-tip-anchor" aria-label="Alas: marca 1 Estrés para +2 a la Evasión contra este ataque" onClick={() => applyWings(viewingCharId)}>
                                       <span className="mh-tip mh-tip-wrap">Alas: marca 1 Estrés para +2 a la Evasión contra este ataque</span>
@@ -13693,7 +13719,7 @@ export default function App({ onSignOut }) {
                     const isFrontline = c.f_class === "Guardián";
                     const armorMax = isFrontline ? armorMaxFor(c) : 0;
                     const armorSpent = isFrontline ? Math.max(0, armorMax - Number(c.armor_marked || 0)) : 0;
-                    const frontlineBlock = isFrontline && !missingHope ? (!armorMax ? "No llevas armadura" : !armorSpent ? "Tu Armadura está completa" : "") : "";
+                    const frontlineBlock = isFrontline && !missingHope ? (!armorMax ? "No llevas armadura" : !armorSpent ? "Tu Armadura está completa" : "") : c.f_class === "Pícaro" && c.f_dodge ? "Esquiva ya activa (+2 Evasión)" : "";
                     cardActs.unshift({
                       key: "hope",
                       Icon: isFrontline ? Shield : Sparkles,
@@ -13704,6 +13730,7 @@ export default function App({ onSignOut }) {
                         closeCardDetail();
                         if (c.f_class === "Druida") openEvolutionModal(viewingCharId);
                         else if (isFrontline) doFrontline(viewingCharId);
+                        else if (c.f_class === "Pícaro") doRogueDodge(viewingCharId);
                         else spendHopeFeature(viewingCharId, d.hopeAction.cost);
                       },
                     });
