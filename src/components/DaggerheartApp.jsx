@@ -315,7 +315,7 @@ const COMMUNITIES = [
   { key: "De las Sombras", blurb: "Vienes de un grupo que actúa al margen de la ley: criminales, timadores y estafadores unidos por un estricto código de honor.", features: [{ name: "Granuja", text: "Tienes ventaja en las tiradas para negociar con criminales, detectar mentiras o encontrar un escondite seguro." }] },
   { key: "De las Profundidades", blurb: "Vienes de una sociedad subterránea, famosa por su audacia y por sus grandes obras de arquitectura e ingeniería.", features: [{ name: "Vida en la Penumbra", text: "Cuando estés en una zona con poca luz o sombras densas, tienes ventaja en las tiradas para esconderte, investigar o percibir detalles dentro de esa zona." }] },
   { key: "Errante", blurb: "Has vivido como nómada, sin un hogar fijo y conociendo culturas muy distintas; valoras más el saber, las habilidades y los contactos que las posesiones.", features: [{ name: "Petate Nómada", text: "Añade un Petate Nómada a tu inventario. Una vez por sesión, puedes gastar 1 Esperanza para meter la mano en el petate y sacar un objeto corriente que te sea útil en tu situación. Decide con el DJ qué objeto sacas." }] },
-  { key: "Salvaje", blurb: "Te criaste en plena naturaleza, lejos de la civilización.", features: [{ name: "Pies Ligeros", text: "Te mueves en silencio de forma natural. Tienes ventaja en las tiradas para moverte sin que te oigan." }] },
+  { key: "Salvaje", blurb: "Vienes de lo más profundo del bosque, de una comunidad que integra sus hogares en la naturaleza y se dedica a protegerla.", features: [{ name: "Pies Ligeros", text: "Te mueves en silencio de forma natural. Tienes ventaja en las tiradas para moverte sin que te oigan." }] },
   { key: "De las Dunas", blurb: "Creciste en tierras áridas, entre caravanas y arena.", expansion: "Hope & Fear", features: [{ name: "Oasis", text: "Durante un descanso corto, tú o un aliado podéis repetir un dado de una acción de descanso y quedaros con el mayor." }] },
   { key: "Del Hogar", blurb: "Tu vida giró en torno al fuego del hogar y la comunidad cercana.", expansion: "Hope & Fear", features: [{ name: "Muy Unidos", text: "Una vez por descanso largo, puedes gastar cualquier cantidad de Esperanza para dársela a un aliado en alcance Lejano." }] },
   { key: "De la Escarcha", blurb: "Te criaste en tierras heladas, curtido por el frío.", expansion: "Hope & Fear", features: [{ name: "Curtido", text: "Cuando descansas, te quitas 1 Punto de vida." }] },
@@ -12695,7 +12695,9 @@ export default function App({ onSignOut }) {
               const slyborne = ch.f_community === "De las Sombras" && ["Presencia", "Instinto", "Destreza", "Conocimiento"].includes(preRoll.traitLabel);
               // De las Profundidades · Vida en la Penumbra: ventaja para esconderse, investigar o percibir con poca luz.
               const underborne = ch.f_community === "De las Profundidades" && ["Destreza", "Agilidad", "Instinto", "Conocimiento"].includes(preRoll.traitLabel);
-              const edgeSource = highborne ? "Privilegio" : loreborne ? "Leído" : ridgeborne ? "Firme" : slyborne ? "Granuja" : underborne ? "Vida en la Penumbra" : "";
+              // Salvaje · Pies Ligeros: ventaja para moverse sin que te oigan.
+              const wildborne = ch.f_community === "Salvaje" && ["Agilidad", "Destreza"].includes(preRoll.traitLabel);
+              const edgeSource = highborne ? "Privilegio" : loreborne ? "Leído" : ridgeborne ? "Firme" : slyborne ? "Granuja" : underborne ? "Vida en la Penumbra" : wildborne ? "Pies Ligeros" : "";
               const poetOk = ch.f_subclass === "Orador" && preRoll.traitLabel === "Presencia";
               const hopeUsed = preRoll.exps.length + (preRoll.poet ? 1 : 0);
               const formula = (preRoll.dedicated ? "1d20 + 1d12 " : "2d12 ") + (mod >= 0 ? "+ " : "− ") + Math.abs(mod) + (preRoll.rally && ch.f_rally_die ? " + 1" + ch.f_rally_die : "") + (preRoll.poet ? " + 1d4" : "") + (preRoll.weapon && ch.f_transformation_form_active === "Forma de Lobo" ? " + 1d10" : "") + (edgeNet > 0 ? " + 1d6" : edgeNet < 0 ? " − 1d6" : "");
@@ -12772,10 +12774,10 @@ export default function App({ onSignOut }) {
                   ? tile("priv", {
                       on: preRoll.privilege,
                       title: edgeSource,
-                      sub: highborne ? "De Alta Cuna" : loreborne ? "Del Saber" : slyborne ? "De las Sombras" : underborne ? "De las Profundidades" : "De las Cumbres",
+                      sub: highborne ? "De Alta Cuna" : loreborne ? "Del Saber" : slyborne ? "De las Sombras" : underborne ? "De las Profundidades" : wildborne ? "Salvaje" : "De las Cumbres",
                       cost: "Ventaja",
-                      color: highborne ? "#B8862E" : loreborne ? "#5E8FC9" : slyborne ? "#6E5A8A" : underborne ? "#5A6B7A" : "#7E8C6A",
-                      hint: highborne ? "Si tratas con nobles, negocias un precio o usas tu reputación" : loreborne ? "Si la tirada trata sobre la historia, la cultura o la política de una persona o un lugar importantes" : slyborne ? "Si negocias con criminales, intentas detectar una mentira o buscas un escondite seguro" : underborne ? "Si estás en una zona con poca luz o sombras densas y te escondes, investigas o percibes detalles en ella" : "Si cruzas precipicios y cornisas peligrosos, te orientas en un entorno duro o usas tus conocimientos de supervivencia",
+                      color: highborne ? "#B8862E" : loreborne ? "#5E8FC9" : slyborne ? "#6E5A8A" : underborne ? "#5A6B7A" : wildborne ? "#5E8A4E" : "#7E8C6A",
+                      hint: highborne ? "Si tratas con nobles, negocias un precio o usas tu reputación" : loreborne ? "Si la tirada trata sobre la historia, la cultura o la política de una persona o un lugar importantes" : slyborne ? "Si negocias con criminales, intentas detectar una mentira o buscas un escondite seguro" : underborne ? "Si estás en una zona con poca luz o sombras densas y te escondes, investigas o percibes detalles en ella" : wildborne ? "Si intentas moverte sin que te oigan" : "Si cruzas precipicios y cornisas peligrosos, te orientas en un entorno duro o usas tus conocimientos de supervivencia",
                       onClick: () => setPreRoll((p) => ({ ...p, privilege: !p.privilege, advantage: p.privilege ? p.advantage : false })),
                     })
                   : null,
