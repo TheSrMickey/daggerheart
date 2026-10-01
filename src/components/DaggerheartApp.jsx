@@ -636,7 +636,7 @@ const CLASS_HOPE_FEATURE = {
   Guardián: { name: "Primera Línea", cost: 3, text: "Gasta 3 de Esperanza para recuperar 2 casillas de Armadura." },
   Explorador: { name: "Contenerlos", cost: 3, text: "Gasta 3 de Esperanza cuando tengas éxito en un ataque con un arma para usar esa misma tirada contra otros dos adversarios dentro del alcance del ataque." },
   Pícaro: { name: "Esquiva del Pícaro", cost: 3, text: "Gasta 3 de Esperanza para ganar un +2 a tu Evasión hasta la próxima vez que un ataque tenga éxito contra ti. Si no, dura hasta tu próximo descanso." },
-  Serafín: { name: "Soporte Vital", cost: 3, text: "Un aliado en alcance Cercano recupera 1 Punto de vida." },
+  Serafín: { name: "Soporte Vital", cost: 3, text: "Gasta 3 de Esperanza para quitar 1 Punto de vida a un aliado dentro de alcance Cercano." },
   Hechicero: { name: "Magia Volátil", cost: 3, text: "Repite cualquier número de tus dados de daño en un ataque que haga daño mágico." },
   Guerrero: { name: "Sin Piedad", cost: 3, text: "Ganas +1 a tus tiradas de ataque hasta tu próximo descanso." },
   Mago: { name: "Esta Vez No", cost: 3, text: "Obliga a un adversario en alcance Lejano a repetir una tirada de ataque o de daño." },
@@ -12656,11 +12656,19 @@ export default function App({ onSignOut }) {
                 clarity: { title: "Claridad de la Naturaleza", sub: `Reparte hasta ${pool} de Estrés (tu Instinto) entre tú y tus aliados.`, list: all, go: "Crear el espacio" },
                 ward: { title: "Protección del Guardián", sub: `Gasta 2 de Esperanza: hasta ${R.n} aliado${R.n === 1 ? "" : "s"} (1d4 = ${R.n}) recuperan 2 PV.`, list: allies, go: "Proteger" },
                 defender: { title: "Defensor", sub: "Marca 1 Estrés: el aliado que acaba de marcar 2 o más PV marca 1 menos.", list: allies, go: "Defender" },
+                life: { title: "Soporte Vital", sub: "Gasta 3 de Esperanza: un aliado en alcance Cercano se quita 1 Punto de vida.", list: allies, go: "Dar Soporte Vital" },
                 sparing: { title: "Toque Clemente", sub: "Toca a una criatura y quítale 2 Puntos de vida o 2 de Estrés.", list: all, go: "Tocar" },
               }[R.mode];
               const canGo =
                 R.mode === "regen" ? !!R.pick : R.mode === "clarity" ? used > 0 : R.mode === "ward" ? chosen.length > 0 : !!R.pick;
               const confirm = () => {
+                if (R.mode === "life") {
+                  updateCharacterField(viewingCharId, "hope_marked", String(Math.max(0, Number(me.hope_marked ?? HOPE_DEFAULT) - 3)));
+                  giveToParty(viewingCharId, { [R.pick]: { hp: 1 } }, "Soporte Vital", "Gasta 3 de Esperanza para sostener la vida de un aliado.", "Serafín");
+                  close();
+                  closeCardDetail();
+                  return;
+                }
                 if (R.mode === "sparing") {
                   updateCharacterField(viewingCharId, "f_sparing_used", String(Number(me.f_sparing_used || 0) + 1));
                   giveToParty(viewingCharId, { [R.pick]: R.kind === "stress" ? { stress: 2 } : { hp: 2 } }, "Toque Clemente", "Un toque sagrado que alivia las heridas.", "Portador Divino");
@@ -14190,6 +14198,7 @@ export default function App({ onSignOut }) {
                         if (c.f_class === "Druida") openEvolutionModal(viewingCharId);
                         else if (isFrontline) doFrontline(viewingCharId);
                         else if (c.f_class === "Pícaro") doRogueDodge(viewingCharId);
+                        else if (c.f_class === "Serafín") setRenewDlg({ mode: "life" });
                         else spendHopeFeature(viewingCharId, d.hopeAction.cost);
                       },
                     });
