@@ -11511,7 +11511,9 @@ export default function App({ onSignOut }) {
               })();
               // Del Saber · Leído: ventaja en tiradas de Conocimiento sobre historia, cultura o política.
               const loreborne = ch.f_community === "Del Saber" && preRoll.traitLabel === "Conocimiento";
-              const edgeSource = highborne ? "Privilegio" : loreborne ? "Leído" : "";
+              // De las Cumbres · Firme: ventaja al trepar, orientarse en entornos duros o sobrevivir.
+              const ridgeborne = ch.f_community === "De las Cumbres" && ["Agilidad", "Fuerza", "Instinto", "Conocimiento"].includes(preRoll.traitLabel);
+              const edgeSource = highborne ? "Privilegio" : loreborne ? "Leído" : ridgeborne ? "Firme" : "";
               const poetOk = ch.f_subclass === "Orador" && preRoll.traitLabel === "Presencia";
               const hopeUsed = preRoll.exps.length + (preRoll.poet ? 1 : 0);
               const formula = (preRoll.dedicated ? "1d20 + 1d12 " : "2d12 ") + (mod >= 0 ? "+ " : "− ") + Math.abs(mod) + (preRoll.rally && ch.f_rally_die ? " + 1" + ch.f_rally_die : "") + (preRoll.poet ? " + 1d4" : "") + (preRoll.weapon && ch.f_transformation_form_active === "Forma de Lobo" ? " + 1d10" : "") + (edgeNet > 0 ? " + 1d6" : edgeNet < 0 ? " − 1d6" : "");
@@ -11570,10 +11572,10 @@ export default function App({ onSignOut }) {
                   ? tile("priv", {
                       on: preRoll.privilege,
                       title: edgeSource,
-                      sub: highborne ? "De Alta Cuna" : "Del Saber",
+                      sub: highborne ? "De Alta Cuna" : loreborne ? "Del Saber" : "De las Cumbres",
                       cost: "Ventaja",
-                      color: highborne ? "#B8862E" : "#5E8FC9",
-                      hint: highborne ? "Si tratas con nobles, negocias un precio o usas tu reputación" : "Si la tirada trata sobre la historia, la cultura o la política de una persona o un lugar importantes",
+                      color: highborne ? "#B8862E" : loreborne ? "#5E8FC9" : "#7E8C6A",
+                      hint: highborne ? "Si tratas con nobles, negocias un precio o usas tu reputación" : loreborne ? "Si la tirada trata sobre la historia, la cultura o la política de una persona o un lugar importantes" : "Si cruzas precipicios y cornisas peligrosos, te orientas en un entorno duro o usas tus conocimientos de supervivencia",
                       onClick: () => setPreRoll((p) => ({ ...p, privilege: !p.privilege, advantage: p.privilege ? p.advantage : false })),
                     })
                   : null,
