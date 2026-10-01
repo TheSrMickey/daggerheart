@@ -6941,7 +6941,7 @@ export default function App({ onSignOut }) {
   // Antes de tirar: ventana para añadir Experiencias, el dado de Arenga o Ventaja.
   const [preRoll, setPreRoll] = useState(null);
   const rollTraitCheck = (charId, traitLabel, traitValue, weapon, cardContext, advantage) => {
-    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage, exps: [], rally: false, privilege: false, disadvantage: false, poet: false, dedicated: false });
+    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage, exps: [], rally: false, privilege: false, disadvantage: false, poet: false, dedicated: false, quick: false });
   };
   const confirmPreRoll = () => {
     const pr = preRoll;
@@ -6954,9 +6954,13 @@ export default function App({ onSignOut }) {
     const rallyDie = pr.rally && ch?.f_rally_die ? ch.f_rally_die : "";
     if (rallyDie) patch.f_rally_die = "";
     if (pr.dedicated) patch.f_dedicated_used = "1";
-    if (Object.keys(patch).length) updateCharacterFields(pr.charId, patch);
+    // Elfo · Reacciones Rápidas: marca 1 Estrés (si no cabe, pasa a PV) para tener ventaja.
+    if (pr.quick && ch) {
+      markStress(pr.charId, 1, patch);
+      postCampaignEvent(pr.charId, "🍃 Reacciones Rápidas: marca 1 Estrés para tener ventaja en una tirada de reacción");
+    } else if (Object.keys(patch).length) updateCharacterFields(pr.charId, patch);
     setPreRoll(null);
-    doTraitRoll(pr.charId, pr.traitLabel, pr.traitValue, pr.weapon, pr.cardContext, pr.advantage || pr.privilege, {
+    doTraitRoll(pr.charId, pr.traitLabel, pr.traitValue, pr.weapon, pr.cardContext, pr.advantage || pr.privilege || pr.quick, {
       exps: exps.map((e) => ({ text: e.text, bonus: Number(e.bonus) || 0 })),
       rallyDie,
       disadvantage: pr.disadvantage,
@@ -11477,7 +11481,8 @@ export default function App({ onSignOut }) {
               const hopeNow = Number(ch.hope_marked ?? HOPE_DEFAULT);
               const expSum = exps.filter((_, i) => preRoll.exps.includes(i)).reduce((a, e) => a + (Number(e.bonus) || 0), 0);
               const mod = preRoll.traitValue + expSum;
-              const edgeNet = (preRoll.advantage || preRoll.privilege ? 1 : 0) - (preRoll.disadvantage ? 1 : 0);
+              const edgeNet = (preRoll.advantage || preRoll.privilege || preRoll.quick ? 1 : 0) - (preRoll.disadvantage ? 1 : 0);
+              const quickOk = (ch.f_ancestry || "").split(" + ").includes("Elfo");
               const highborne = ch.f_community === "De Alta Cuna";
               const dedicatedOk = ch.f_community === "Del Orden";
               const principles = (() => {
@@ -11499,7 +11504,7 @@ export default function App({ onSignOut }) {
               const rallyOn = preRoll.rally && ch.f_rally_die;
               // Posición del selector: la Ventaja de Privilegio se cuenta aparte.
               const edgePos = preRoll.disadvantage ? "dis" : preRoll.advantage ? "adv" : "none";
-              const setEdge = (pos) => setPreRoll((p) => ({ ...p, disadvantage: pos === "dis", advantage: pos === "adv", privilege: pos === "adv" ? false : p.privilege }));
+              const setEdge = (pos) => setPreRoll((p) => ({ ...p, disadvantage: pos === "dis", advantage: pos === "adv", privilege: pos === "adv" ? false : p.privilege, quick: pos === "adv" ? false : p.quick }));
               const tile = (key, { on, disabled, title, sub, cost, color, onClick, hint }) => (
                 <button key={key} type="button" className={"mh-pre-tile" + (on ? " is-on" : "")} style={{ "--pc": color }} disabled={disabled} aria-pressed={!!on} title={hint} onClick={onClick}>
                   <b>{title}</b>
@@ -11533,6 +11538,17 @@ export default function App({ onSignOut }) {
                       onClick: () => setPreRoll((p) => ({ ...p, dedicated: !p.dedicated })),
                     })
                   : null,
+                quickOk
+                  ? tile("quick", {
+                      on: preRoll.quick,
+                      title: "Reacciones Rápidas",
+                      sub: "Elfo · marca 1 Estrés",
+                      cost: "Ventaja",
+                      color: "#5FA77A",
+                      hint: "Solo en una tirada de reacción: cuando reaccionas a un ataque o a un peligro para esquivarlo o resistirlo",
+                      onClick: () => setPreRoll((p) => ({ ...p, quick: !p.quick, advantage: p.quick ? p.advantage : false })),
+                    })
+                  : null,
                 edgeSource
                   ? tile("priv", {
                       on: preRoll.privilege,
@@ -11552,13 +11568,13 @@ export default function App({ onSignOut }) {
                 preRoll.poet ? ["Corazón de Poeta", "+1d4"] : null,
                 preRoll.dedicated ? ["Entregado", "Esperanza d20"] : null,
                 wolf ? ["Forma de Lobo", "+1d10"] : null,
-                edgeNet ? [edgeNet > 0 ? "Ventaja" + (preRoll.privilege ? " (" + edgeSource + ")" : "") : "Desventaja", edgeNet > 0 ? "+1d6" : "−1d6"] : (preRoll.advantage || preRoll.privilege) && preRoll.disadvantage ? ["Ventaja y desventaja", "se anulan"] : null,
+                edgeNet ? [edgeNet > 0 ? "Ventaja" + (preRoll.quick ? " (Reacciones Rápidas)" : preRoll.privilege ? " (" + edgeSource + ")" : "") : "Desventaja", edgeNet > 0 ? "+1d6" : "−1d6"] : (preRoll.advantage || preRoll.privilege || preRoll.quick) && preRoll.disadvantage ? ["Ventaja y desventaja", "se anulan"] : null,
               ].filter(Boolean);
               const DS = 40;
               // Altura fija: se reserva hueco para todas las líneas que este personaje puede llegar a tener.
               const maxLines = 1 + exps.length + (ch.f_rally_die ? 1 : 0) + (poetOk ? 1 : 0) + (dedicatedOk ? 1 : 0) + (wolf ? 1 : 0) + 1;
               const canSpendHope = exps.length > 0 || poetOk;
-              const anyAdded = preRoll.exps.length > 0 || preRoll.rally || preRoll.poet || preRoll.dedicated || preRoll.privilege || edgePos !== "none";
+              const anyAdded = preRoll.exps.length > 0 || preRoll.rally || preRoll.poet || preRoll.dedicated || preRoll.privilege || preRoll.quick || edgePos !== "none";
               return (
                 <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 45, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)" }} onClick={() => setPreRoll(null)}>
                   <div className="mh-card mh-card-anim mh-pre" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={"Tirada de " + preRoll.traitLabel}>
@@ -11651,7 +11667,7 @@ export default function App({ onSignOut }) {
                           className="mh-pre-plain"
                           style={anyAdded ? undefined : { visibility: "hidden" }}
                           tabIndex={anyAdded ? undefined : -1}
-                          onClick={() => setPreRoll((p) => ({ ...p, exps: [], rally: false, poet: false, dedicated: false, privilege: false, advantage: false, disadvantage: false }))}
+                          onClick={() => setPreRoll((p) => ({ ...p, exps: [], rally: false, poet: false, dedicated: false, privilege: false, quick: false, advantage: false, disadvantage: false }))}
                         >
                           Quitar lo añadido
                         </button>
