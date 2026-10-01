@@ -164,7 +164,15 @@ const SUBCLASSES = {
         { name: "Acto de Desaparición (Maestría)", text: "Marca 1 Estrés para quedar Oculto en cualquier momento. Mientras estés Oculto por esta característica, te quitas automáticamente la condición Inmovilizado si la tienes. Sigues Oculto de esta forma hasta que saques una tirada con Miedo o hasta tu próximo descanso." },
       ],
     },
-    { key: "Sindicato", blurb: "Tira de contactos e influencia para ganar ventaja." },
+    {
+      key: "Sindicato",
+      blurb: "Tiene una red de contactos allá donde va.",
+      features: [
+        { name: "Bien Relacionado", text: "Cuando llegues a una población o un entorno importante, conoces a alguien que vive allí. Ponle nombre, apunta cómo crees que podría serte útil y elige un hecho de esta lista: te debe un favor, pero será difícil de encontrar; te pedirá algo a cambio; siempre está metido en un buen lío; estuvisteis juntos, es una larga historia; o no os separasteis en buenos términos." },
+        { name: "Contactos en Todas Partes (Especialización)", text: "Una vez por sesión, puedes recurrir brevemente a un contacto turbio. Elige uno de estos beneficios y describe qué lo ha traído hasta aquí para ayudarte: te da un puñado de oro, una herramienta única o un objeto corriente que la situación requiera; en tu próxima tirada de acción, su ayuda da un +3 al resultado de tu Dado de Esperanza o de Miedo; o la próxima vez que hagas daño, dispara desde las sombras y suma 2d8 a tu tirada de daño." },
+        { name: "Refuerzo Fiable (Maestría)", text: "Puedes usar «Contactos en Todas Partes» tres veces por sesión. Se añaden estos beneficios a la lista: cuando marques 1 o más Puntos de vida, puede salir corriendo a protegerte y reducir en 1 los Puntos de vida que marcas; o cuando hagas una tirada de Presencia en una conversación, te respalda y puedes tirar un d20 como Dado de Esperanza." },
+      ],
+    },
   ],
   Serafín: [
     { key: "Portador Divino", blurb: "Blande un arma imbuida de poder sagrado." },
@@ -9895,7 +9903,7 @@ export default function App({ onSignOut }) {
                               kicker: `Subclase · ${subclassBadge}`,
                               title: subclassEntry.key,
                               text: subclassEntry.blurb,
-                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
+                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
                               image: subclassEntry.image,
                               bigStyle: true,
                               ...(isElemental ? { elementalAction: true } : {}),
