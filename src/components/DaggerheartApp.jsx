@@ -348,6 +348,16 @@ const TRAITS = [
 const COMPANION_RANGES = ["Cuerpo a cuerpo", "Muy cercano", "Cercano", "Lejano", "Muy lejano"];
 const COMPANION_DICE = ["d6", "d8", "d10", "d12"];
 const COMPANION_DEFAULT = { name: "", animal: "", evasion: 10, attack: "", range: "Cuerpo a cuerpo", die: "d6", dmgType: "físico", exps: [], stress: 0, stressMax: 3 };
+const COMPANION_TRAINING = [
+  { key: "intelligent", name: "Inteligente", max: 3, short: "+1 a una de sus Experiencias", text: "Tu compañero obtiene un +1 permanente a una Experiencia de compañero que elijas." },
+  { key: "light", name: "Luz en la Oscuridad", max: 1, short: "+1 casilla de Esperanza para ti", text: "Úsala como una casilla de Esperanza adicional que tu personaje puede marcar." },
+  { key: "comfort", name: "Consuelo", max: 1, short: "1/descanso: +1 Esperanza o −1 Estrés", text: "Una vez por descanso, cuando dediques un momento tranquilo a darle cariño y atención a tu compañero, puedes ganar 1 Esperanza o ambos podéis quitaros 1 Estrés." },
+  { key: "armored", name: "Acorazado", max: 1, short: "Tu Armadura en vez de su Estrés", text: "Cuando tu compañero reciba daño, puedes marcar una de tus casillas de Armadura en lugar de una de sus casillas de Estrés." },
+  { key: "vicious", name: "Feroz", max: 3, short: "Sube un paso su dado o su alcance", text: "Aumenta un paso los dados de daño o el alcance de tu compañero (de d6 a d8, de Cercano a Lejano, etc.)." },
+  { key: "resilient", name: "Resistente", max: 3, short: "+1 casilla de Estrés", text: "Tu compañero obtiene una casilla de Estrés adicional." },
+  { key: "bonded", name: "Unidos", max: 1, short: "Te levanta al marcar tu último PV", text: "Cuando marques tu último Punto de vida, tu compañero corre a tu lado para consolarte. Tira tantos d6 como casillas de Estrés sin marcar tenga y márcalas. Si sale algún 6, tu compañero te ayuda a levantarte: quítate el último Punto de vida y vuelve a la escena." },
+  { key: "aware", name: "Atento", max: 3, short: "+2 a su Evasión", text: "Tu compañero obtiene un +2 permanente a su Evasión." },
+];
 const getCompanion = (c) => {
   if (!c?.f_companion) return null;
   try {
@@ -677,7 +687,7 @@ const STRESS_SLOTS = 6;
 const HOPE_MAX = 6;
 const EXPERIENCE_MAX = 5;
 const HOPE_DEFAULT = 2;
-const getHopeMax = (c) => Math.max(0, HOPE_MAX - Number(c?.f_scars || 0));
+const getHopeMax = (c) => Math.max(0, HOPE_MAX + (getCompanion(c)?.training?.light ? 1 : 0) - Number(c?.f_scars || 0));
 
 const BEASTFORMS = [
   {
@@ -2535,6 +2545,7 @@ const sharedStyles = `
   .mh-comp-av { width: 46px; height: 46px; border-radius: 14px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: color-mix(in srgb, #7FB77A 75%, var(--mh-ink)); background: color-mix(in srgb, #7FB77A 16%, var(--mh-panel)); border: 1px solid color-mix(in srgb, #7FB77A 45%, transparent); }
   .mh-comp-id b { display: block; font-size: 19px; color: var(--mh-ink); }
   .mh-comp-id small { font-size: 12px; color: var(--mh-muted); }
+  .mh-comp-kind { font-family: 'Inter', system-ui, sans-serif; font-size: 13px; font-weight: 500; color: var(--mh-muted); letter-spacing: 0; }
   .mh-comp-out { margin-left: auto; font-size: 10.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: 3px 9px; border-radius: 20px; color: #fff; background: #A58BE8; }
   .mh-comp-row { display: grid; grid-template-columns: 120px 1fr; gap: 12px; }
   .mh-comp-eva { display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 12px; border: 1px solid var(--acc); background: color-mix(in srgb, var(--acc) 6%, transparent); padding: 10px; }
@@ -2547,6 +2558,18 @@ const sharedStyles = `
   .mh-comp-atk button { align-self: flex-start; margin-top: 4px; font-size: 11.5px; padding: 4px 9px; display: inline-flex; align-items: center; gap: 5px; }
   .mh-comp-rules { margin-top: auto; font-size: 12px; line-height: 1.5; color: var(--mh-ink3); padding: 10px 12px; border-radius: 10px; background: var(--mh-panel2); }
   .mh-exp-comp .mh-exp-bar { background: #7FB77A; }
+  .mh-train { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex: 1; min-height: 0; align-content: stretch; }
+  .mh-train-o { display: flex; flex-direction: column; justify-content: center; gap: 3px; padding: 7px 10px; border-radius: 10px; border: 1px solid var(--mh-line); background: var(--mh-panel2); min-width: 0; }
+  .mh-train-o.is-on { border-color: color-mix(in srgb, #7FB77A 60%, var(--mh-line)); background: color-mix(in srgb, #7FB77A 9%, var(--mh-panel)); }
+  .mh-train-h { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+  .mh-train-h b { font-size: 12.5px; color: var(--mh-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mh-train-o small { font-size: 11px; color: var(--mh-muted); line-height: 1.3; }
+  .mh-train-bx { display: inline-flex; gap: 4px; flex-shrink: 0; }
+  .mh-train-bx button { width: 16px; height: 16px; border-radius: 4px; padding: 0; border: 1.5px solid #7FB77A; background: transparent; color: #fff; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+  .mh-train-bx button.is-on { background: #7FB77A; }
+  .mh-train-bx button:disabled { opacity: .35; cursor: not-allowed; }
+  .mh-train-count { font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 20px; color: color-mix(in srgb, #7FB77A 75%, var(--mh-ink)); background: color-mix(in srgb, #7FB77A 15%, var(--mh-panel)); }
+  .mh-train-count.is-full { color: var(--mh-muted); background: var(--mh-panel3); }
   .mh-wz-princ .mh-input { flex: 1; min-width: 0; font-size: 13px; }
   .mh-wz-princ-kind { display: inline-flex; padding: 3px; gap: 2px; border-radius: 9px; background: var(--mh-panel3); flex-shrink: 0; }
   .mh-wz-princ-kind button { border: 0; background: transparent; padding: 5px 10px; border-radius: 7px; font: 600 12px 'Inter', system-ui, sans-serif; color: var(--mh-muted); cursor: pointer; }
@@ -3785,13 +3808,14 @@ function DialogueFigure({ src, alt, expr }) {
   );
 }
 
-function Panel({ span, title, titleRight, children, hidden, restrained, vulnerable, unconscious, flying, glow }) {
+function Panel({ span, title, titleRight, children, hidden, restrained, vulnerable, unconscious, flying, glow, fill }) {
   const borderColor = glow || (vulnerable ? "#D9644E" : restrained ? "#C08B5C" : unconscious ? "#A58BE8" : flying ? "#5FA77A" : hidden ? "var(--mh-muted)" : "var(--mh-line)");
   return (
     <div
       className="mh-panel-box"
       style={{
         gridColumn: "span " + span,
+        ...(fill ? { flex: 1 } : {}),
         background: "var(--panel-bg, var(--mh-panel))",
         border: "1px solid " + borderColor,
         borderRadius: 14,
@@ -3804,7 +3828,7 @@ function Panel({ span, title, titleRight, children, hidden, restrained, vulnerab
       }}
     >
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 14, height: 20 }}>
-        <div className="mh-serif" title={titleRight ? title : undefined} style={{ fontSize: 15, fontWeight: 700, color: "var(--mh-ink)", letterSpacing: 0.2, minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{title}</div>
+        <div className="mh-serif" title={titleRight && typeof title === "string" ? title : undefined} style={{ fontSize: 15, fontWeight: 700, color: "var(--mh-ink)", letterSpacing: 0.2, minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{title}</div>
         {titleRight && <div style={{ flexShrink: 0 }}>{titleRight}</div>}
       </div>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>{children}</div>
@@ -8947,7 +8971,7 @@ export default function App({ onSignOut }) {
                               {/* El hueco del antiguo campo de daño se reparte entre las secciones para mantener la altura. */}
                               <div style={{ display: "flex", gap: 12, marginBottom: statsSpacing.evMb, height: 100 }}>
                                 <div
-                                  className={wingsOn ? "mh-eva-wings" : undefined}
+                                  className={"mh-eva-box" + (wingsOn ? " mh-eva-wings" : "")}
                                   style={{ position: "relative", flex: 1, textAlign: "center", border: "1px solid " + (wingsOn ? "#5FA77A" : themeColor), background: alpha(wingsOn ? "#5FA77A" : themeColor, wingsOn ? 14 : 8), borderRadius: 12, padding: statsSpacing.boxPadY + "px 6px", display: "flex", flexDirection: "column", justifyContent: "center" }}
                                 >
                                   <div style={{ fontSize: 10, color: "var(--mh-muted)" }}>Evasión</div>
@@ -9094,7 +9118,7 @@ export default function App({ onSignOut }) {
 
                               <StepperRow gap={statsSpacing.stepMb} labelGap={statsSpacing.stepLabelMb} hitKey={hpHit && hpHit.id === viewingCharId ? hpHit.key : undefined} label="Puntos de vida" total={Number(c.r_hp || 0) + equipMods.hp} marked={Number(c.hp_marked || 0)} field="hp_marked" color="#D9644E" Icon={Heart} charId={viewingCharId} onDelta={adjustHp} onToggle={markHp} />
                               <StepperRow gap={statsSpacing.stepMb} labelGap={statsSpacing.stepLabelMb} label="Estrés" total={Number(c.r_stress || 0) + equipMods.stress} marked={Number(c.stress_marked || 0)} field="stress_marked" color="#A58BE8" Icon={Zap} charId={viewingCharId} onDelta={adjustStress} onToggle={markStressBox} allowOverflow />
-                              <StepperRow gap={statsSpacing.stepMb} labelGap={statsSpacing.stepLabelMb} label="Esperanza" total={HOPE_MAX + equipMods.hope} marked={Number(c.hope_marked ?? HOPE_DEFAULT)} field="hope_marked" color="#E3B04B" Icon={Sparkles} charId={viewingCharId} onDelta={updateCharacterField} onToggle={toggleCharSlot} shape="diamond" scarCount={Number(c.f_scars || 0)} />
+                              <StepperRow gap={statsSpacing.stepMb} labelGap={statsSpacing.stepLabelMb} label="Esperanza" total={HOPE_MAX + equipMods.hope + (getCompanion(c)?.training?.light ? 1 : 0)} marked={Number(c.hope_marked ?? HOPE_DEFAULT)} field="hope_marked" color="#E3B04B" Icon={Sparkles} charId={viewingCharId} onDelta={updateCharacterField} onToggle={toggleCharSlot} shape="diamond" scarCount={Number(c.f_scars || 0)} />
 
                               <div>
                                 <div className="mh-label" style={{ marginBottom: 6, marginTop: 4 }}>Condiciones</div>
@@ -10930,6 +10954,7 @@ export default function App({ onSignOut }) {
                         const ed = companionEdit;
                         const setEd = (k, v) => setCompanionEdit((d) => ({ ...d, [k]: v }));
                         const out = comp && comp.stress >= comp.stressMax;
+                        const compEvaW = armaduraRef.current?.querySelector(".mh-eva-box")?.offsetWidth;
                         const charExps = experiences.length;
                         const expSlots = Math.max(2, Math.min(EXPERIENCE_MAX, charExps));
                         const cond = {
@@ -10941,14 +10966,28 @@ export default function App({ onSignOut }) {
                         };
                         return (
                           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(12, 1fr)", gap: 18, flex: 1, maxHeight: isMobile ? undefined : armaduraHeight || undefined }}>
+                            <div style={{ gridColumn: isMobile ? undefined : "span 7", display: "flex", flexDirection: "column", gap: 18, minHeight: 0 }}>
                             <Panel
-                              span={7}
-                              title="Estadísticas compañero"
+                              span={12}
+                              fill={!comp || !!ed}
+                              title={
+                                comp && comp.name ? (
+                                  <>
+                                    {comp.name}
+                                    {comp.animal && <span className="mh-comp-kind"> · {comp.animal}</span>}
+                                  </>
+                                ) : (
+                                  "Estadísticas compañero"
+                                )
+                              }
                               titleRight={
                                 comp && !ed ? (
-                                  <button type="button" className="mh-btn-ghost" style={{ padding: "2px 8px", fontSize: 11.5 }} onClick={() => setCompanionEdit({ ...comp })}>
-                                    <PenLine size={12} /> Editar
-                                  </button>
+                                  <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                    {out && <span className="mh-comp-out">Fuera de escena</span>}
+                                    <button type="button" className="mh-btn-ghost" style={{ padding: "2px 8px", fontSize: 11.5 }} onClick={() => setCompanionEdit({ ...comp })}>
+                                      <PenLine size={12} /> Editar
+                                    </button>
+                                  </span>
                                 ) : undefined
                               }
                               {...cond}
@@ -11035,37 +11074,47 @@ export default function App({ onSignOut }) {
                                 </div>
                               ) : comp ? (
                                 <div className="mh-comp">
-                                  <div className="mh-comp-id">
-                                    <span className="mh-comp-av">
-                                      <Dog size={22} />
-                                    </span>
-                                    <div style={{ minWidth: 0 }}>
-                                      <b className="mh-serif">{comp.name || "Sin nombre"}</b>
-                                      <small>{comp.animal || "Compañero animal"}</small>
+                                  <div style={{ display: "flex", gap: 12, height: 100, flexShrink: 0 }}>
+                                    <div style={{ width: compEvaW || 112, flexShrink: 0, textAlign: "center", border: "1px solid " + themeColor, background: alpha(themeColor, 8), borderRadius: 12, padding: statsSpacing.boxPadY + "px 6px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                                      <div style={{ fontSize: 10, color: "var(--mh-muted)" }}>Evasión</div>
+                                      <div className="mh-serif" style={{ fontSize: 26, fontWeight: 700, color: ink(themeColor) }}>
+                                        {comp.evasion}
+                                      </div>
                                     </div>
-                                    {out && <span className="mh-comp-out">Fuera de escena</span>}
-                                  </div>
-                                  <div className="mh-comp-row">
-                                    <div className="mh-comp-eva">
-                                      <small>Evasión</small>
-                                      <b className="mh-serif">{comp.evasion}</b>
-                                    </div>
-                                    <div className="mh-comp-atk">
-                                      <small>Ataque y daño</small>
-                                      <b>{comp.attack || "Ataque estándar"}</b>
-                                      <span>
-                                        <em className="mh-serif">{comp.die}</em> {comp.dmgType} · {comp.range}
-                                      </span>
-                                      <button
-                                        type="button"
-                                        className="mh-btn-ghost"
-                                        disabled={out}
-                                        title="Usa tu Competencia y el dado del compañero"
-                                        onClick={() => rollWeaponDamage(comp.name + (comp.attack ? " · " + comp.attack : ""), comp.die + (comp.dmgType === "mágico" ? " mágico" : ""), viewingCharId)}
-                                      >
-                                        <Dices size={12} /> Tirar daño · {proficiency}
-                                        {comp.die}
-                                      </button>
+                                    <div style={{ flex: 1, minWidth: 0, border: "1px solid #7FB77A", background: alpha("#7FB77A", 8), borderRadius: 10, padding: "8px 14px", display: "flex", flexDirection: "column", justifyContent: "center", opacity: out ? 0.55 : 1 }}>
+                                      <div style={{ fontSize: 10.5, fontWeight: 700, color: ink("#7FB77A"), textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                        Ataque · {comp.attack || "Ataque estándar"}
+                                      </div>
+                                      <div style={{ fontSize: 12.5, color: "var(--mh-ink)", marginBottom: 8 }}>
+                                        {spellTraitInfo?.label || "Agilidad"} · {comp.range} · {comp.die} {comp.dmgType}
+                                      </div>
+                                      <div style={{ display: "flex", gap: 8 }}>
+                                        <button
+                                          className="mh-btn"
+                                          style={{ fontSize: 11.5, padding: "6px 12px" }}
+                                          disabled={out}
+                                          title="Tirada de Lanzamiento para ordenarle que ataque"
+                                          onClick={() =>
+                                            rollTraitCheck(
+                                              viewingCharId,
+                                              spellTraitInfo?.label || "Agilidad",
+                                              Number(c[spellTraitKey] || 0) + (equipMods[spellTraitKey] || 0),
+                                              { name: comp.name || "Compañero", damage: comp.die + (comp.dmgType === "mágico" ? " mágico" : "") }
+                                            )
+                                          }
+                                        >
+                                          <Dices size={12} /> Tirar ataque
+                                        </button>
+                                        <button
+                                          className="mh-btn-ghost"
+                                          style={{ fontSize: 11.5, padding: "6px 12px" }}
+                                          disabled={out}
+                                          title="Usa tu Competencia y el dado del compañero"
+                                          onClick={() => rollWeaponDamage(comp.name || "Compañero", comp.die + (comp.dmgType === "mágico" ? " mágico" : ""), viewingCharId)}
+                                        >
+                                          Tirar daño
+                                        </button>
+                                      </div>
                                     </div>
                                   </div>
                                   <StepperRow
@@ -11088,20 +11137,74 @@ export default function App({ onSignOut }) {
                                       if (n >= comp.stressMax && comp.stress < comp.stressMax) postCampaignEvent(id, "🐾 " + (comp.name || "El compañero") + " marca su último Estrés y sale de la escena");
                                     }}
                                   />
-                                  <div className="mh-comp-rules">
-                                    {out ? (
-                                      <span>
-                                        <b>Fuera de escena.</b> Vuelve al empezar tu próximo descanso largo, con 1 de Estrés recuperado.
-                                      </span>
-                                    ) : (
-                                      <span>
-                                        Cualquier daño que reciba le hace marcar <b>1 de Estrés</b>. Para darle órdenes haz una tirada de <b>Lanzamiento ({spellTraitInfo?.label || "Agilidad"})</b>; gasta 1 Esperanza para sumar una de sus Experiencias.
-                                      </span>
-                                    )}
-                                  </div>
                                 </div>
                               ) : null}
                             </Panel>
+                            {comp && !ed && (() => {
+                              const tr = comp.training || {};
+                              const used = COMPANION_TRAINING.reduce((a, o) => a + (tr[o.key] || 0), 0);
+                              const lvl = Number(c.f_level || 1);
+                              const tierC = tierForLevel(lvl);
+                              // Una opción por cada subida de nivel, más Adiestramiento Experto (+1) y Avanzado (+2).
+                              const allowed = Math.max(0, lvl - 1) + (tierC >= 2 ? 1 : 0) + (tierC >= 3 ? 2 : 0);
+                              const setTraining = (o, k) => {
+                                const cur = tr[o.key] || 0;
+                                const next = k + 1 === cur ? k : k + 1;
+                                const delta = next - cur;
+                                if (delta > 0 && used + delta > allowed) return;
+                                const patch = { training: { ...tr, [o.key]: next } };
+                                // Lo que cambia la hoja se aplica solo.
+                                if (o.key === "resilient") patch.stressMax = Math.max(1, comp.stressMax + delta);
+                                if (o.key === "aware") patch.evasion = comp.evasion + 2 * delta;
+                                if (o.key === "vicious") {
+                                  const di = COMPANION_DICE.indexOf(comp.die);
+                                  patch.die = COMPANION_DICE[Math.max(0, Math.min(COMPANION_DICE.length - 1, (di < 0 ? 0 : di) + delta))];
+                                }
+                                saveCompanion(viewingCharId, patch);
+                              };
+                              return (
+                                <Panel
+                                  span={12}
+                                  fill
+                                  title="Entrenamiento"
+                                  titleRight={
+                                    <span className={"mh-train-count" + (used >= allowed ? " is-full" : "")} title="Eliges una opción cada vez que subes de nivel">
+                                      {used} de {allowed}
+                                    </span>
+                                  }
+                                  {...cond}
+                                >
+                                  <div className="mh-train">
+                                    {COMPANION_TRAINING.map((o) => {
+                                      const n = tr[o.key] || 0;
+                                      return (
+                                        <div key={o.key} className={"mh-train-o" + (n ? " is-on" : "")} title={o.text}>
+                                          <div className="mh-train-h">
+                                            <b>{o.name}</b>
+                                            <span className="mh-train-bx">
+                                              {Array.from({ length: o.max }, (_, k) => (
+                                                <button
+                                                  key={k}
+                                                  type="button"
+                                                  className={k < n ? "is-on" : ""}
+                                                  disabled={k >= n && used >= allowed}
+                                                  aria-label={o.name + " " + (k + 1)}
+                                                  onClick={() => setTraining(o, k)}
+                                                >
+                                                  {k < n && <Check size={10} strokeWidth={3} />}
+                                                </button>
+                                              ))}
+                                            </span>
+                                          </div>
+                                          <small>{o.short}</small>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </Panel>
+                              );
+                            })()}
+                            </div>
                             <Panel span={5} title="Experiencias del compañero" {...cond}>
                               <div style={{ display: "flex", flexDirection: "column", gap: 12, flex: 1, minHeight: 0 }}>
                                 {Array.from({ length: EXPERIENCE_MAX }, (_, i) => i).map((i) => {
