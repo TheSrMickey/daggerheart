@@ -130,7 +130,17 @@ const SUBCLASSES = {
     },
   ],
   Explorador: [
-    { key: "Vínculo Bestial", blurb: "Lucha codo con codo con un compañero animal." },
+    {
+      key: "Vínculo Bestial",
+      blurb: "Forja un vínculo profundo con un aliado animal.",
+      features: [
+        { name: "Compañero", text: "Tienes un compañero animal de tu elección (a discreción del DJ). Se queda a tu lado salvo que le digas lo contrario. Toma la hoja de Compañero del Explorador: cada vez que subas de nivel a tu personaje, elige también una opción de subida de nivel para tu compañero." },
+        { name: "Adiestramiento Experto (Especialización)", text: "Elige una opción de subida de nivel adicional para tu compañero." },
+        { name: "Vínculo de Batalla (Especialización)", text: "Cuando un adversario te ataque mientras está en alcance Cuerpo a cuerpo de tu compañero, obtienes un +2 a tu Evasión contra ese ataque." },
+        { name: "Adiestramiento Avanzado (Maestría)", text: "Elige dos opciones de subida de nivel adicionales para tu compañero." },
+        { name: "Amigo Leal (Maestría)", text: "Una vez por descanso largo, cuando el daño de un ataque fuera a marcar el último Estrés de tu compañero o tu último Punto de vida y estéis en alcance Cercano el uno del otro, tú o tu compañero podéis correr al lado del otro y recibir ese daño en su lugar." },
+      ],
+    },
     { key: "Rastreador", blurb: "Domina el terreno y golpea a distancia con precisión." },
   ],
   Pícaro: [
@@ -9571,7 +9581,7 @@ export default function App({ onSignOut }) {
                               kicker: `Subclase · ${subclassBadge}`,
                               title: subclassEntry.key,
                               text: subclassEntry.blurb,
-                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
+                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
                               image: subclassEntry.image,
                               bigStyle: true,
                               ...(isElemental ? { elementalAction: true } : {}),
