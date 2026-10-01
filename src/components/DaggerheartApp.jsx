@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
-import { Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
+import { Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
 
 const NAV_ITEMS = [
   { key: "ficha", label: "Personajes", icon: User },
@@ -344,6 +344,19 @@ const TRAITS = [
 ];
 
 // Pasos del asistente de creación, agrupados para la barra de progreso.
+// Vínculo Bestial: hoja de Compañero del Explorador.
+const COMPANION_RANGES = ["Cuerpo a cuerpo", "Muy cercano", "Cercano", "Lejano", "Muy lejano"];
+const COMPANION_DICE = ["d6", "d8", "d10", "d12"];
+const COMPANION_DEFAULT = { name: "", animal: "", evasion: 10, attack: "", range: "Cuerpo a cuerpo", die: "d6", dmgType: "físico", exps: [], stress: 0, stressMax: 3 };
+const getCompanion = (c) => {
+  if (!c?.f_companion) return null;
+  try {
+    return { ...COMPANION_DEFAULT, ...JSON.parse(c.f_companion) };
+  } catch (e) {
+    return null;
+  }
+};
+
 const WIZARD_STEPS = [
   { key: "class", title: "Elige tu clase", group: "Identidad" },
   { key: "subclass", title: "Elige tu subclase", group: "Identidad" },
@@ -2506,6 +2519,34 @@ const sharedStyles = `
   .mh-fort-note { display: flex; align-items: center; gap: 6px; margin: -4px 0 10px; font-size: 11.5px; line-height: 1.35; color: var(--mh-ink2); padding: 6px 9px; border-radius: 9px; background: color-mix(in srgb, #5E93C9 12%, var(--mh-panel)); border: 1px solid color-mix(in srgb, #5E93C9 40%, var(--mh-line)); }
   .mh-fort-note svg { flex-shrink: 0; color: #5E93C9; }
   .mh-wz-princ { display: flex; gap: 8px; align-items: center; }
+  .mh-wz-exprow { display: flex; gap: 28px; justify-content: center; align-items: flex-start; flex-wrap: wrap; }
+  .mh-wz-comp { flex: 1; min-width: 280px; max-width: 460px; display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; border-radius: 14px; border: 1px solid color-mix(in srgb, #7FB77A 45%, var(--mh-line)); background: color-mix(in srgb, #7FB77A 7%, var(--mh-panel)); }
+  .mh-wz-comp-h { display: flex; align-items: center; gap: 8px; color: color-mix(in srgb, #7FB77A 70%, var(--mh-ink)); }
+  .mh-wz-comp-h b { font-size: 15px; color: var(--mh-ink); }
+  .mh-wz-comp-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .mh-wz-comp-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .mh-wz-comp-foot small { font-size: 11px; color: var(--mh-muted); }
+  .mh-comp-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; color: var(--mh-muted); }
+  .mh-comp-empty b { font-size: 16px; color: var(--mh-ink); }
+  .mh-comp-empty span { font-size: 12.5px; max-width: 280px; }
+  .mh-comp-edit { display: flex; flex-direction: column; gap: 10px; }
+  .mh-comp { display: flex; flex-direction: column; gap: 16px; flex: 1; min-height: 0; }
+  .mh-comp-id { display: flex; align-items: center; gap: 12px; }
+  .mh-comp-av { width: 46px; height: 46px; border-radius: 14px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: color-mix(in srgb, #7FB77A 75%, var(--mh-ink)); background: color-mix(in srgb, #7FB77A 16%, var(--mh-panel)); border: 1px solid color-mix(in srgb, #7FB77A 45%, transparent); }
+  .mh-comp-id b { display: block; font-size: 19px; color: var(--mh-ink); }
+  .mh-comp-id small { font-size: 12px; color: var(--mh-muted); }
+  .mh-comp-out { margin-left: auto; font-size: 10.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: 3px 9px; border-radius: 20px; color: #fff; background: #A58BE8; }
+  .mh-comp-row { display: grid; grid-template-columns: 120px 1fr; gap: 12px; }
+  .mh-comp-eva { display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 12px; border: 1px solid var(--acc); background: color-mix(in srgb, var(--acc) 6%, transparent); padding: 10px; }
+  .mh-comp-eva small, .mh-comp-atk small { font-size: 10px; color: var(--mh-muted); }
+  .mh-comp-eva b { font-size: 30px; font-weight: 700; color: var(--mh-ink); }
+  .mh-comp-atk { display: flex; flex-direction: column; gap: 3px; border-radius: 12px; border: 1px solid color-mix(in srgb, #D9644E 45%, var(--mh-line)); background: color-mix(in srgb, #D9644E 6%, var(--mh-panel)); padding: 10px 12px; min-width: 0; }
+  .mh-comp-atk b { font-size: 14px; color: var(--mh-ink); }
+  .mh-comp-atk span { font-size: 12px; color: var(--mh-ink3); }
+  .mh-comp-atk em { font-style: normal; font-weight: 700; font-size: 18px; color: #C0504A; }
+  .mh-comp-atk button { align-self: flex-start; margin-top: 4px; font-size: 11.5px; padding: 4px 9px; display: inline-flex; align-items: center; gap: 5px; }
+  .mh-comp-rules { margin-top: auto; font-size: 12px; line-height: 1.5; color: var(--mh-ink3); padding: 10px 12px; border-radius: 10px; background: var(--mh-panel2); }
+  .mh-exp-comp .mh-exp-bar { background: #7FB77A; }
   .mh-wz-princ .mh-input { flex: 1; min-width: 0; font-size: 13px; }
   .mh-wz-princ-kind { display: inline-flex; padding: 3px; gap: 2px; border-radius: 9px; background: var(--mh-panel3); flex-shrink: 0; }
   .mh-wz-princ-kind button { border: 0; background: transparent; padding: 5px 10px; border-radius: 7px; font: 600 12px 'Inter', system-ui, sans-serif; color: var(--mh-muted); cursor: pointer; }
@@ -4232,6 +4273,17 @@ export default function App({ onSignOut }) {
   const [draftBreath, setDraftBreath] = useState("");
   // Del Orden · Entregado: tres valores o dichos.
   const [draftPrinciples, setDraftPrinciples] = useState([{ kind: "Valor", text: "" }, { kind: "Valor", text: "" }, { kind: "Dicho", text: "" }]);
+  // Vínculo Bestial: el compañero animal se crea junto a las Experiencias.
+  const COMPANION_DRAFT = { name: "", animal: "", exp1: "", exp2: "", attack: "", dmgType: "físico" };
+  const [draftCompanion, setDraftCompanion] = useState(COMPANION_DRAFT);
+  const setCompanionDraft = (k, v) => setDraftCompanion((d) => ({ ...d, [k]: v }));
+  // Ficha: edición de la hoja del compañero y Experiencia nueva.
+  const [companionEdit, setCompanionEdit] = useState(null);
+  const [companionExpDraft, setCompanionExpDraft] = useState(null);
+  const saveCompanion = (id, patch) => {
+    const cur = getCompanion(charsRef.current[id]) || COMPANION_DEFAULT;
+    updateCharacterField(id, "f_companion", JSON.stringify({ ...cur, ...patch }));
+  };
   const [draftPurpose, setDraftPurpose] = useState("");
   const [draftPurposeExp, setDraftPurposeExp] = useState(null);
   const [draftCommunity, setDraftCommunity] = useState("");
@@ -4384,6 +4436,7 @@ export default function App({ onSignOut }) {
     setDraftCreator("");
     setDraftBreath("");
     setDraftPrinciples([{ kind: "Valor", text: "" }, { kind: "Valor", text: "" }, { kind: "Dicho", text: "" }]);
+    setDraftCompanion(COMPANION_DRAFT);
     setDraftPurpose("");
     setDraftPurposeExp(null);
     setDraftCommunity("");
@@ -4571,6 +4624,17 @@ export default function App({ onSignOut }) {
       f_creator: isAutomaton ? draftCreator.trim() : "",
       f_breath_element: draftAncestries.includes("Dracona") ? draftBreath : "",
       f_community: draftCommunity,
+      f_companion:
+        chosenSubclass?.key === "Vínculo Bestial"
+          ? JSON.stringify({
+              ...COMPANION_DEFAULT,
+              name: draftCompanion.name.trim(),
+              animal: draftCompanion.animal.trim(),
+              attack: draftCompanion.attack.trim(),
+              dmgType: draftCompanion.dmgType,
+              exps: [draftCompanion.exp1, draftCompanion.exp2].map((t) => ({ text: t.trim(), bonus: 2 })),
+            })
+          : "",
       f_principles: draftCommunity === "Del Orden" ? JSON.stringify(draftPrinciples.map((x) => ({ kind: x.kind, text: x.text.trim() }))) : "",
       f_transformation: draftTransformation === "Ninguna" ? "" : draftTransformation,
       f_languages: ["Común", ...draftLanguages].join(", "),
@@ -6753,6 +6817,14 @@ export default function App({ onSignOut }) {
     if (isLong && c.f_unstop_used) restPatch.f_unstop_used = "";
     if (c.f_dedicated_used) restPatch.f_dedicated_used = "";
     if (c.f_wings_evade) restPatch.f_wings_evade = "";
+    // Compañero animal: se quita tanto Estrés como tú; en el descanso largo vuelve a la escena con 1 menos.
+    const comp = getCompanion(c);
+    if (comp) {
+      const cleared = Math.max(0, Number(c.stress_marked || 0) - Math.min(stressTotal, stress));
+      let cs = Math.max(0, comp.stress - cleared);
+      if (isLong && comp.stress >= comp.stressMax) cs = Math.min(cs, comp.stressMax - 1);
+      if (cs !== comp.stress) restPatch.f_companion = JSON.stringify({ ...comp, stress: cs });
+    }
     // Doblega la Suerte es una vez por sesión: la app lo recupera con el descanso largo.
     if (isLong && c.f_luck_used) restPatch.f_luck_used = "";
     if (isLong && c.f_tide_tokens) restPatch.f_tide_tokens = "";
@@ -8752,7 +8824,7 @@ export default function App({ onSignOut }) {
                     { key: "background", label: "Trasfondo y Conexiones", Icon: MessageCircle },
                     { key: "journal", label: "Diario", Icon: NotebookPen },
                   ];
-                  const validKeys = [...tabs.map((t) => t.key), ...(c.f_class === "Druida" ? ["beastforms"] : []), ...(Object.values(campaigns).some((cp) => (cp.characterIds || []).includes(viewingCharId)) ? ["campaign"] : [])];
+                  const validKeys = [...tabs.map((t) => t.key), ...(c.f_class === "Druida" ? ["beastforms"] : []), ...(c.f_subclass === "Vínculo Bestial" ? ["companion"] : []), ...(Object.values(campaigns).some((cp) => (cp.characterIds || []).includes(viewingCharId)) ? ["campaign"] : [])];
                   const charCampaign = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(viewingCharId));
                   const activeTab = validKeys.includes(detailTab) ? detailTab : "general";
                   const currentTier = tierForLevel(c.f_level || 1);
@@ -8808,6 +8880,7 @@ export default function App({ onSignOut }) {
                           ...tabs.map((t) => ({ ...t, tone: "var(--acc)" })),
                           { spacer: true, key: "_spacer" },
                           ...(c.f_class === "Druida" ? [{ key: "beastforms", label: "Formas de Bestia", Icon: PawPrint, tone: "#7FB77A" }] : []),
+                          ...(c.f_subclass === "Vínculo Bestial" ? [{ key: "companion", label: "Compañero Animal", Icon: Dog, tone: "#7FB77A" }] : []),
                           ...(charCampaign ? [{ key: "campaign", label: charCampaign.name, Icon: BookOpen, tone: "#A58BE8" }] : []),
                         ].map((t) => {
                           if (t.spacer) return <div key={t.key} style={{ flex: 1, minWidth: 12 }} />;
@@ -10848,6 +10921,254 @@ export default function App({ onSignOut }) {
                               );
                               return host ? createPortal(overlay, host) : overlay;
                             })()}
+                          </div>
+                        );
+                      })()}
+
+                      {activeTab === "companion" && c.f_subclass === "Vínculo Bestial" && (() => {
+                        const comp = getCompanion(c);
+                        const ed = companionEdit;
+                        const setEd = (k, v) => setCompanionEdit((d) => ({ ...d, [k]: v }));
+                        const out = comp && comp.stress >= comp.stressMax;
+                        const charExps = experiences.length;
+                        const expSlots = Math.max(2, Math.min(EXPERIENCE_MAX, charExps));
+                        const cond = {
+                          hidden: conditions.includes("Escondido"),
+                          restrained: conditions.includes("Inmovilizado"),
+                          vulnerable: conditions.includes("Vulnerable"),
+                          unconscious: conditions.includes("Inconsciente"),
+                          flying: conditions.includes("Volando"),
+                        };
+                        return (
+                          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(12, 1fr)", gap: 18, flex: 1, maxHeight: isMobile ? undefined : armaduraHeight || undefined }}>
+                            <Panel
+                              span={7}
+                              title="Estadísticas compañero"
+                              titleRight={
+                                comp && !ed ? (
+                                  <button type="button" className="mh-btn-ghost" style={{ padding: "2px 8px", fontSize: 11.5 }} onClick={() => setCompanionEdit({ ...comp })}>
+                                    <PenLine size={12} /> Editar
+                                  </button>
+                                ) : undefined
+                              }
+                              {...cond}
+                            >
+                              {!comp ? (
+                                <div className="mh-comp-empty">
+                                  <Dog size={30} />
+                                  <b className="mh-serif">Aún no tienes compañero</b>
+                                  <span>Decide con el DJ qué animal te acompaña y apunta su hoja.</span>
+                                  <button type="button" className="mh-btn" onClick={() => setCompanionEdit({ ...COMPANION_DEFAULT })}>
+                                    Crear compañero
+                                  </button>
+                                </div>
+                              ) : null}
+                              {ed ? (
+                                <div className="mh-comp-edit">
+                                  <div className="mh-wz-comp-2">
+                                    <div>
+                                      <label className="mh-label">Nombre</label>
+                                      <input className="mh-input" value={ed.name} onChange={(e) => setEd("name", e.target.value)} />
+                                    </div>
+                                    <div>
+                                      <label className="mh-label">Animal</label>
+                                      <input className="mh-input" value={ed.animal} onChange={(e) => setEd("animal", e.target.value)} />
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <label className="mh-label">Ataque estándar</label>
+                                    <input className="mh-input" value={ed.attack} onChange={(e) => setEd("attack", e.target.value)} />
+                                  </div>
+                                  <div className="mh-wz-comp-2">
+                                    <div>
+                                      <label className="mh-label">Alcance</label>
+                                      <select className="mh-input" value={ed.range} onChange={(e) => setEd("range", e.target.value)}>
+                                        {COMPANION_RANGES.map((r) => (
+                                          <option key={r}>{r}</option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                    <div>
+                                      <label className="mh-label">Dado de daño</label>
+                                      <select className="mh-input" value={ed.die} onChange={(e) => setEd("die", e.target.value)}>
+                                        {COMPANION_DICE.map((r) => (
+                                          <option key={r}>{r}</option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                  </div>
+                                  <div className="mh-wz-comp-2">
+                                    <div>
+                                      <label className="mh-label">Evasión</label>
+                                      <input className="mh-input" type="number" value={ed.evasion} onChange={(e) => setEd("evasion", Number(e.target.value) || 0)} />
+                                    </div>
+                                    <div>
+                                      <label className="mh-label">Casillas de Estrés</label>
+                                      <input className="mh-input" type="number" min={1} max={6} value={ed.stressMax} onChange={(e) => setEd("stressMax", Math.max(1, Math.min(6, Number(e.target.value) || 1)))} />
+                                    </div>
+                                  </div>
+                                  <div className="mh-wz-comp-foot">
+                                    <div className="mh-wz-princ-kind" role="radiogroup" aria-label="Tipo de daño">
+                                      {["físico", "mágico"].map((t) => (
+                                        <button key={t} type="button" role="radio" aria-checked={ed.dmgType === t} className={ed.dmgType === t ? "is-on" : ""} onClick={() => setEd("dmgType", t)}>
+                                          {t === "físico" ? "Físico" : "Mágico"}
+                                        </button>
+                                      ))}
+                                    </div>
+                                    <span style={{ display: "flex", gap: 6 }}>
+                                      <button type="button" className="mh-btn-ghost" onClick={() => setCompanionEdit(null)}>
+                                        Cancelar
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="mh-btn"
+                                        disabled={!ed.name.trim()}
+                                        onClick={() => {
+                                          saveCompanion(viewingCharId, { ...ed, name: ed.name.trim(), animal: ed.animal.trim(), attack: ed.attack.trim(), stress: Math.min(ed.stress || 0, ed.stressMax) });
+                                          setCompanionEdit(null);
+                                        }}
+                                      >
+                                        Guardar
+                                      </button>
+                                    </span>
+                                  </div>
+                                </div>
+                              ) : comp ? (
+                                <div className="mh-comp">
+                                  <div className="mh-comp-id">
+                                    <span className="mh-comp-av">
+                                      <Dog size={22} />
+                                    </span>
+                                    <div style={{ minWidth: 0 }}>
+                                      <b className="mh-serif">{comp.name || "Sin nombre"}</b>
+                                      <small>{comp.animal || "Compañero animal"}</small>
+                                    </div>
+                                    {out && <span className="mh-comp-out">Fuera de escena</span>}
+                                  </div>
+                                  <div className="mh-comp-row">
+                                    <div className="mh-comp-eva">
+                                      <small>Evasión</small>
+                                      <b className="mh-serif">{comp.evasion}</b>
+                                    </div>
+                                    <div className="mh-comp-atk">
+                                      <small>Ataque y daño</small>
+                                      <b>{comp.attack || "Ataque estándar"}</b>
+                                      <span>
+                                        <em className="mh-serif">{comp.die}</em> {comp.dmgType} · {comp.range}
+                                      </span>
+                                      <button
+                                        type="button"
+                                        className="mh-btn-ghost"
+                                        disabled={out}
+                                        title="Usa tu Competencia y el dado del compañero"
+                                        onClick={() => rollWeaponDamage(comp.name + (comp.attack ? " · " + comp.attack : ""), comp.die + (comp.dmgType === "mágico" ? " mágico" : ""), viewingCharId)}
+                                      >
+                                        <Dices size={12} /> Tirar daño · {proficiency}
+                                        {comp.die}
+                                      </button>
+                                    </div>
+                                  </div>
+                                  <StepperRow
+                                    gap={8}
+                                    label="Estrés del compañero"
+                                    total={comp.stressMax}
+                                    marked={Math.min(comp.stress, comp.stressMax)}
+                                    field="stress"
+                                    color="#A58BE8"
+                                    Icon={Zap}
+                                    charId={viewingCharId}
+                                    onDelta={(id, f, v) => {
+                                      const n = Math.max(0, Math.min(comp.stressMax, v));
+                                      saveCompanion(id, { stress: n });
+                                      if (n >= comp.stressMax && comp.stress < comp.stressMax) postCampaignEvent(id, "🐾 " + (comp.name || "El compañero") + " marca su último Estrés y sale de la escena");
+                                    }}
+                                    onToggle={(id, f, i, cur) => {
+                                      const n = cur === i + 1 ? i : i + 1;
+                                      saveCompanion(id, { stress: n });
+                                      if (n >= comp.stressMax && comp.stress < comp.stressMax) postCampaignEvent(id, "🐾 " + (comp.name || "El compañero") + " marca su último Estrés y sale de la escena");
+                                    }}
+                                  />
+                                  <div className="mh-comp-rules">
+                                    {out ? (
+                                      <span>
+                                        <b>Fuera de escena.</b> Vuelve al empezar tu próximo descanso largo, con 1 de Estrés recuperado.
+                                      </span>
+                                    ) : (
+                                      <span>
+                                        Cualquier daño que reciba le hace marcar <b>1 de Estrés</b>. Para darle órdenes haz una tirada de <b>Lanzamiento ({spellTraitInfo?.label || "Agilidad"})</b>; gasta 1 Esperanza para sumar una de sus Experiencias.
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              ) : null}
+                            </Panel>
+                            <Panel span={5} title="Experiencias del compañero" {...cond}>
+                              <div style={{ display: "flex", flexDirection: "column", gap: 12, flex: 1, minHeight: 0 }}>
+                                {Array.from({ length: EXPERIENCE_MAX }, (_, i) => i).map((i) => {
+                                  const exp = comp?.exps?.[i];
+                                  if (exp) {
+                                    return (
+                                      <div key={i} className="mh-exp is-open mh-exp-comp">
+                                        <div className="mh-exp-bar" />
+                                        <div className="mh-exp-body">
+                                          <div className="mh-exp-kicker">Experiencia del compañero</div>
+                                          <FitTitle text={exp.text} max={15} min={11.5} lineHeight={1.2} className="mh-serif" style={{ fontWeight: 700, color: "var(--mh-ink)", maxHeight: "2.4em", overflow: "hidden" }} />
+                                        </div>
+                                        <div className="mh-exp-bonus">
+                                          <span className="mh-serif">
+                                            {Number(exp.bonus) >= 0 ? "+" : ""}
+                                            {exp.bonus}
+                                          </span>
+                                          <small>bono</small>
+                                        </div>
+                                        <button type="button" className="mh-exp-del" title="Quitar experiencia" aria-label="Quitar experiencia" onClick={() => saveCompanion(viewingCharId, { exps: comp.exps.filter((_, k) => k !== i) })}>
+                                          <X size={12} />
+                                        </button>
+                                      </div>
+                                    );
+                                  }
+                                  if (!comp || i >= expSlots) {
+                                    return (
+                                      <div key={i} className="mh-exp-locked">
+                                        <Lock size={14} />
+                                        <span>{!comp ? "Crea a tu compañero primero" : "Gana una cuando tú ganes una Experiencia"}</span>
+                                      </div>
+                                    );
+                                  }
+                                  if (companionExpDraft != null && i === (comp.exps || []).length) {
+                                    return (
+                                      <div key={i} style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: 8, border: "1px solid var(--acc)", borderRadius: 12, padding: "12px 14px", flex: 1, minHeight: 0 }}>
+                                        <input className="mh-input" style={{ fontSize: 12 }} placeholder="Ej. Siempre alerta" value={companionExpDraft} onChange={(e) => setCompanionExpDraft(e.target.value)} autoFocus />
+                                        <div style={{ display: "flex", gap: 6 }}>
+                                          <button
+                                            className="mh-btn-ghost"
+                                            style={{ fontSize: 11.5 }}
+                                            disabled={!companionExpDraft.trim()}
+                                            onClick={() => {
+                                              saveCompanion(viewingCharId, { exps: [...(comp.exps || []), { text: companionExpDraft.trim(), bonus: 2 }] });
+                                              setCompanionExpDraft(null);
+                                            }}
+                                          >
+                                            Añadir · +2
+                                          </button>
+                                          <button className="mh-btn-ghost" style={{ fontSize: 11.5 }} onClick={() => setCompanionExpDraft(null)}>
+                                            Cancelar
+                                          </button>
+                                        </div>
+                                      </div>
+                                    );
+                                  }
+                                  return (
+                                    <button key={i} type="button" className="mh-exp-add" onClick={() => setCompanionExpDraft("")}>
+                                      <span className="mh-exp-add-ico">
+                                        <Plus size={14} />
+                                      </span>
+                                      Añadir experiencia
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </Panel>
                           </div>
                         );
                       })()}
@@ -13918,7 +14239,8 @@ export default function App({ onSignOut }) {
                     Escribe las dos Experiencias iniciales de tu personaje — cosas que se le dan bien, gracias a su pasado.
                     Cada una empieza con un bono de +2.
                   </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 420, margin: "0 auto" }}>
+                  <div className="mh-wz-exprow">
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 420, flex: 1, minWidth: 0 }}>
                     <div>
                       <label className="mh-label">Experiencia 1</label>
                       <input
@@ -13954,6 +14276,49 @@ export default function App({ onSignOut }) {
                         </div>
                       </div>
                     )}
+                  </div>
+                  {(SUBCLASSES[CLASSES[carouselIndex]?.key] || [])[subclassIndex]?.key === "Vínculo Bestial" && (
+                    <div className="mh-wz-comp">
+                      <div className="mh-wz-comp-h">
+                        <Dog size={16} />
+                        <b className="mh-serif">Tu compañero animal</b>
+                      </div>
+                      <div className="mh-wz-comp-2">
+                        <div>
+                          <label className="mh-label">Nombre</label>
+                          <input className="mh-input" placeholder="Ej. Ceniza" value={draftCompanion.name} onChange={(e) => setCompanionDraft("name", e.target.value)} />
+                        </div>
+                        <div>
+                          <label className="mh-label">Animal</label>
+                          <input className="mh-input" placeholder="Ej. Lobo gris" value={draftCompanion.animal} onChange={(e) => setCompanionDraft("animal", e.target.value)} />
+                        </div>
+                      </div>
+                      <div className="mh-wz-comp-2">
+                        <div>
+                          <label className="mh-label">Experiencia 1 · +2</label>
+                          <input className="mh-input" placeholder="Ej. Siempre alerta" value={draftCompanion.exp1} onChange={(e) => setCompanionDraft("exp1", e.target.value)} />
+                        </div>
+                        <div>
+                          <label className="mh-label">Experiencia 2 · +2</label>
+                          <input className="mh-input" placeholder="Ej. Leal hasta el final" value={draftCompanion.exp2} onChange={(e) => setCompanionDraft("exp2", e.target.value)} />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="mh-label">Ataque estándar</label>
+                        <input className="mh-input" placeholder="Ej. Mordisco a las piernas" value={draftCompanion.attack} onChange={(e) => setCompanionDraft("attack", e.target.value)} />
+                      </div>
+                      <div className="mh-wz-comp-foot">
+                        <div className="mh-wz-princ-kind" role="radiogroup" aria-label="Tipo de daño del compañero">
+                          {["físico", "mágico"].map((t) => (
+                            <button key={t} type="button" role="radio" aria-checked={draftCompanion.dmgType === t} className={draftCompanion.dmgType === t ? "is-on" : ""} onClick={() => setCompanionDraft("dmgType", t)}>
+                              {t === "físico" ? "Físico" : "Mágico"}
+                            </button>
+                          ))}
+                        </div>
+                        <small>Evasión 10 · daño d6 · Cuerpo a cuerpo · 3 de Estrés</small>
+                      </div>
+                    </div>
+                  )}
                   </div>
                 </div>
               ) : ["primary", "secondary", "armor"].includes(wizardStep) ? (
@@ -14375,7 +14740,7 @@ export default function App({ onSignOut }) {
                       ? "Elige el elemento de tu aliento."
                       : draftAncestries.includes("Autómata") && (!draftCreator.trim() ? "Escribe quién te creó." : !draftPurpose.trim() ? "Escribe con qué propósito te creó." : false),
                   community: !draftCommunity ? "Elige una comunidad para continuar." : draftCommunity === "Del Orden" && draftPrinciples.some((x) => !x.text.trim()) ? "Escribe tus tres principios." : false,
-                  experiences: !draftExp1.trim() || !draftExp2.trim() ? "Escribe tus dos Experiencias." : draftAncestries.includes("Autómata") && draftPurposeExp == null ? "Elige la Experiencia que encaja con tu propósito." : false,
+                  experiences: !draftExp1.trim() || !draftExp2.trim() ? "Escribe tus dos Experiencias." : (SUBCLASSES[CLASSES[carouselIndex]?.key] || [])[subclassIndex]?.key === "Vínculo Bestial" && (!draftCompanion.name.trim() || !draftCompanion.exp1.trim() || !draftCompanion.exp2.trim() || !draftCompanion.attack.trim()) ? "Completa a tu compañero: nombre, dos Experiencias y su ataque." : draftAncestries.includes("Autómata") && draftPurposeExp == null ? "Elige la Experiencia que encaja con tu propósito." : false,
                   primary: !draftPrimaryWeapon && "Elige un arma principal para continuar.",
                   secondary: !twoHanded && !draftSecondaryWeapon && "Elige un arma secundaria o «Ninguna».",
                   armor: !draftArmor && "Elige una armadura o «Ninguna».",
