@@ -2522,7 +2522,14 @@ const sharedStyles = `
   .mh-pre-note { font-size: 11px; color: #D9644E; margin: -2px 0 4px; }
   .mh-pre-sum { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 2px; padding: 10px 11px; border-radius: 10px; background: var(--mh-panel2); font-size: 11.5px; color: var(--mh-ink3); }
   .mh-pre-sum span { flex: 1; min-width: 0; }
-  .mh-pre-sum b { font-size: 18px; color: var(--mh-ink); white-space: nowrap; }
+  .mh-pre-sum b { font-size: 18px; color: var(--mh-ink); white-space: nowrap; flex: 1; text-align: center; }
+  .mh-pre-dc { flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; padding: 4px 6px 4px 9px; border-radius: 8px; border: 1px solid var(--mh-line); background: var(--mh-panel); cursor: text; }
+  .mh-pre-dc small { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--mh-muted); }
+  .mh-pre-dc input { width: 38px; border: 0; background: transparent; font: 700 16px 'Cinzel', Georgia, serif; color: var(--mh-ink); text-align: center; padding: 0; outline: none; -moz-appearance: textfield; }
+  .mh-pre-dc input::-webkit-outer-spin-button, .mh-pre-dc input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .mh-pre-dc:focus-within { border-color: var(--acc); }
+  .mh-pre-dc.is-fixed { cursor: default; padding-right: 9px; color: var(--mh-muted); }
+  .mh-pre-dc.is-fixed em { font: 700 16px 'Cinzel', Georgia, serif; font-style: normal; color: var(--mh-ink); }
   .mh-pre-go { margin-top: 0; justify-content: center; display: inline-flex; align-items: center; gap: 6px; padding: 10px 14px; font-size: 14px; }
   .mh-pre-plain { margin-top: 6px; border: 0; background: transparent; color: var(--mh-muted); font: 500 12px 'Inter', system-ui, sans-serif; cursor: pointer; }
   .mh-qa-scroll { padding-bottom: 18px; mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent); -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent); }
@@ -7277,7 +7284,7 @@ export default function App({ onSignOut }) {
   // Antes de tirar: ventana para añadir Experiencias, el dado de Arenga o Ventaja.
   const [preRoll, setPreRoll] = useState(null);
   const rollTraitCheck = (charId, traitLabel, traitValue, weapon, cardContext, advantage) => {
-    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage, exps: [], rally: false, privilege: false, disadvantage: false, poet: false, dedicated: false, quick: false, reaction: false, tide: 0 });
+    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage, exps: [], rally: false, privilege: false, disadvantage: false, poet: false, dedicated: false, quick: false, reaction: false, tide: 0, dc: "" });
   };
   const confirmPreRoll = () => {
     const pr = preRoll;
@@ -7306,6 +7313,7 @@ export default function App({ onSignOut }) {
       poet: pr.poet,
       hopeD20: pr.dedicated,
       tide: tideSpent,
+      dc: pr.cardContext?.dc ?? (Number(pr.dc) > 0 ? Number(pr.dc) : null),
       tideLeft: ch ? Number(ch.f_tide_tokens || 0) - tideSpent : 0,
       reaction: pr.reaction,
     });
@@ -7378,6 +7386,8 @@ export default function App({ onSignOut }) {
     // Orador · Corazón de Poeta: 1d4 más.
     const poetRoll = extras.poet ? Math.floor(Math.random() * 4) + 1 : 0;
     const tideBonus = extras.tide || 0;
+    // Dificultad: la de la carta o la que haya puesto el jugador.
+    const dcVal = cardContext?.dc ?? extras.dc ?? null;
     const total = hope + fear + traitValue + advantageRoll + wolfBonus + expBonus + rallyRoll + poetRoll + tideBonus;
     let text, color;
     if (hope === fear) {
@@ -7402,7 +7412,7 @@ export default function App({ onSignOut }) {
         ? "Ignoras los efectos que te afectarían aun con éxito"
         : "Las reacciones no generan Esperanza ni Miedo"
       : hope === fear ? "Ganas 1 Esperanza y te quitas 1 Estrés" : hope > fear ? "Ganas 1 Esperanza" : "El DJ gana 1 de Miedo";
-    setTraitRollResult({ key: Date.now(), hopeSides, traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, tideBonus, total, text: hope === fear ? "Éxito crítico" : reaction ? "Tirada de reacción" : text, color, note, reaction, card: cardContext ? { name: cardContext.name, dc: cardContext.dc } : null, exps: extras.exps || [], wasCloaked, weapon: weapon || null, charId });
+    setTraitRollResult({ key: Date.now(), hopeSides, traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, tideBonus, total, text: hope === fear ? "Éxito crítico" : reaction ? "Tirada de reacción" : text, color, note, reaction, card: cardContext ? { name: cardContext.name, dc: cardContext.dc } : dcVal ? { name: "", dc: dcVal } : null, exps: extras.exps || [], wasCloaked, weapon: weapon || null, charId });
 
     // Con Esperanza (o crítico) ganas 1 Esperanza; con crítico además te quitas 1 Estrés.
     if (reaction) {
@@ -7449,9 +7459,10 @@ export default function App({ onSignOut }) {
         { kind: "roll", roll: { trait: traitLabel, card: cardContext.name, hope, fear, mod: traitValue, adv: advantageRoll, wolf: wolfBonus, ...rollExtra, total, dc: cardContext.dc } }
       );
     } else {
-      await postCampaignEvent(charId, `🎲 ${reaction ? "Reacción" : "Tirada"} de ${traitLabel}: ${hope} + ${fear} ${modStr}${advStr} = ${total} (${text})`, {
+      const dcStr = dcVal ? ` vs Dificultad ${dcVal}: ${hope === fear || total >= dcVal ? "Éxito" : "Fracaso"}` : "";
+      await postCampaignEvent(charId, `🎲 ${reaction ? "Reacción" : "Tirada"} de ${traitLabel}: ${hope} + ${fear} ${modStr}${advStr} = ${total} (${text})${dcStr}`, {
         kind: "roll",
-        roll: { trait: traitLabel, weapon: weapon?.name || "", reaction, hopeSides, hope, fear, mod: traitValue, adv: advantageRoll, wolf: wolfBonus, ...rollExtra, total },
+        roll: { trait: traitLabel, weapon: weapon?.name || "", reaction, hopeSides, ...(dcVal ? { dc: dcVal } : {}), hope, fear, mod: traitValue, adv: advantageRoll, wolf: wolfBonus, ...rollExtra, total },
       });
     }
   };
@@ -12603,6 +12614,27 @@ export default function App({ onSignOut }) {
                         </div>
                         <div className="mh-pre-sum">
                           <b>{formula}</b>
+                          {preRoll.cardContext?.dc != null ? (
+                            <span className="mh-pre-dc is-fixed" title="La Dificultad la marca la habilidad">
+                              <small>Dificultad</small>
+                              <em>{preRoll.cardContext.dc}</em>
+                              <Lock size={11} />
+                            </span>
+                          ) : (
+                            <label className="mh-pre-dc" title="Opcional: si la pones, el resultado dirá si es un éxito o un fracaso">
+                              <small>Dificultad</small>
+                              <input
+                                type="number"
+                                min={1}
+                                max={40}
+                                inputMode="numeric"
+                                placeholder="—"
+                                value={preRoll.dc}
+                                onChange={(e) => setPreRoll((p) => ({ ...p, dc: e.target.value.replace(/[^0-9]/g, "").slice(0, 2) }))}
+                                onKeyDown={(e) => e.key === "Enter" && confirmPreRoll()}
+                              />
+                            </label>
+                          )}
                         </div>
                         <button type="button" className="mh-btn mh-pre-go" autoFocus onClick={confirmPreRoll}>
                           <Dices size={15} /> Tirar
