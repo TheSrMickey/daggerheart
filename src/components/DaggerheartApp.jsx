@@ -3017,6 +3017,10 @@ const sharedStyles = `
   .mh-mark-btn { background: #6B7891; }
   .mh-necro-btn { background: #5B6B5E; }
   .mh-blood-btn { background: #A8323E; }
+  .mh-toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 60; max-width: min(560px, calc(100vw - 32px)); padding: 10px 16px; border-radius: 12px; background: var(--mh-ink); color: var(--mh-panel); font: 600 12.5px "Inter", system-ui, sans-serif; box-shadow: 0 10px 30px rgba(0,0,0,.25); animation: mh-toast-in .25s ease-out both; pointer-events: none; }
+  @keyframes mh-toast-in { from { opacity: 0; transform: translate(-50%, 8px); } }
+  .mh-specter-btn { background: #5B6B7E; }
+  .mh-specter-btn:hover:not(:disabled) { background: #4A5868; }
   .mh-psy { display: flex; flex-direction: column; gap: 6px; }
   .mh-mutagen { max-width: 520px; }
   .mh-mutagen .mh-label { margin: 10px 0 5px; }
@@ -5723,6 +5727,19 @@ export default function App({ onSignOut }) {
       next.f_hybrid = "";
       postCampaignEvent(id, "🐺 Tiene todo el Estrés marcado y abandona su Forma Híbrida");
     }
+    // Orden del Espectro · Forma Espectral: termina al marcar el último Estrés o quitarse un PV.
+    if (cur.f_spectral === "1" && next.f_spectral_skip !== "1" && ((Number(next.stress_marked || 0) >= Number(next.r_stress || 0) && Number(next.stress_marked || 0) > Number(cur.stress_marked || 0)) || Number(next.hp_marked || 0) < Number(cur.hp_marked || 0))) {
+      next.f_spectral = "";
+      postCampaignEvent(id, "👻 Abandona su Forma Espectral");
+    }
+    if (next.f_spectral_skip) {
+      // Al convertir PV en Estrés, solo termina si el Estrés queda lleno.
+      if (Number(next.stress_marked || 0) >= Number(next.r_stress || 0)) {
+        next.f_spectral = "";
+        postCampaignEvent(id, "👻 Marca su último Estrés y abandona su Forma Espectral");
+      }
+      next.f_spectral_skip = "";
+    }
     // Estirpe del Cielo · Ojo de la Tormenta: termina al recibir daño Grave.
     if (cur.f_storm_eye === "1" && Number(next.hp_marked || 0) - Number(cur.hp_marked || 0) >= 3) {
       next.f_storm_eye = "";
@@ -5757,6 +5774,19 @@ export default function App({ onSignOut }) {
           updateCharacterFields(id, { hp_marked: String(Math.max(0, Number(cur.hp_marked || 0) - 1)), f_summons: JSON.stringify({ ...getSummons(cur), knight: 0 }) });
           postCampaignEvent(id, "🛡️ Baluarte del Caballero: su Caballero de la Muerte recibe uno de los Puntos de Vida y desaparece");
         }, 0);
+      }
+      // Orden del Espectro · Forma Espectral (Maestría): en la forma, los PV se marcan como Estrés.
+      if (next.f_subclass === "Orden del Espectro" && next.f_spectral === "1") {
+        const delta = hpAfter - hpBefore;
+        setTimeout(() => {
+          const cur = charsRef.current[id];
+          if (!cur) return;
+          updateCharacterFields(id, { hp_marked: String(Math.max(0, Number(cur.hp_marked || 0) - delta)), stress_marked: String(Math.min(Number(cur.r_stress || 0), Number(cur.stress_marked || 0) + delta)), f_spectral_skip: "1" });
+          postCampaignEvent(id, `👻 Forma Espectral: marca ${delta} de Estrés en lugar de ${delta} Punto${delta > 1 ? "s" : ""} de Vida`);
+        }, 0);
+      } else if (next.f_subclass === "Orden del Espectro" && tierForLevel(next.f_level || 1) >= 3 && !next.f_spectral_used && hpAfter >= Number(next.r_hp || 0)) {
+        // Al ir a marcar el último PV, se ofrece entrar en la Forma Espectral.
+        setSpectralAsk({ id, before: hpBefore });
       }
       // Titán: Ojo por Ojo (Especialización) y Aún No He Terminado (Maestría, con daño Grave).
       if (next.f_subclass === "Titán") {
@@ -6010,6 +6040,19 @@ export default function App({ onSignOut }) {
       next.f_hybrid = "";
       postCampaignEvent(id, "🐺 Tiene todo el Estrés marcado y abandona su Forma Híbrida");
     }
+    // Orden del Espectro · Forma Espectral: termina al marcar el último Estrés o quitarse un PV.
+    if (cur.f_spectral === "1" && next.f_spectral_skip !== "1" && ((Number(next.stress_marked || 0) >= Number(next.r_stress || 0) && Number(next.stress_marked || 0) > Number(cur.stress_marked || 0)) || Number(next.hp_marked || 0) < Number(cur.hp_marked || 0))) {
+      next.f_spectral = "";
+      postCampaignEvent(id, "👻 Abandona su Forma Espectral");
+    }
+    if (next.f_spectral_skip) {
+      // Al convertir PV en Estrés, solo termina si el Estrés queda lleno.
+      if (Number(next.stress_marked || 0) >= Number(next.r_stress || 0)) {
+        next.f_spectral = "";
+        postCampaignEvent(id, "👻 Marca su último Estrés y abandona su Forma Espectral");
+      }
+      next.f_spectral_skip = "";
+    }
     // Estirpe del Cielo · Ojo de la Tormenta: termina al recibir daño Grave.
     if (cur.f_storm_eye === "1" && Number(next.hp_marked || 0) - Number(cur.hp_marked || 0) >= 3) {
       next.f_storm_eye = "";
@@ -6114,6 +6157,13 @@ export default function App({ onSignOut }) {
     const c = characters[id];
     if (!c) return;
     if (unstopValue(c) && (name === "Inmovilizado" || name === "Vulnerable")) return;
+    // Orden del Espectro · Curtido en el Horror (Maestría).
+    if (name === "Vulnerable" && c.f_subclass === "Orden del Espectro" && tierForLevel(c.f_level || 1) >= 3 && !getConditions(c).includes("Vulnerable") && Number(c.stress_marked || 0) < Number(c.r_stress || 0)) {
+      clearTimeout(restMsgTimer.current);
+      setRestMessage("Curtido en el Horror: no pueden dejarte Vulnerable mientras te quede Estrés sin marcar.");
+      restMsgTimer.current = setTimeout(() => setRestMessage(""), 3500);
+      return;
+    }
     const list = isRogue(c) ? getConditions(c).map((n) => (n === "Escondido" ? "Oculto" : n)) : getConditions(c);
     const next = list.includes(name) ? list.filter((n) => n !== name) : [...list, name];
     // Galapa · Retraerse: meterse en el caparazón marca 1 Estrés.
@@ -8065,7 +8115,8 @@ export default function App({ onSignOut }) {
   const [stanceEdit, setStanceEdit] = useState(null);
   const [summonDlg, setSummonDlg] = useState(null); // Invocador · Invocar Entidad
   const [bestialDlg, setBestialDlg] = useState(false); // Licántropo · Concentración Bestial
-  const [mutagenDlg, setMutagenDlg] = useState(null); // Mutante · beber un mutágeno // Artista Marcial · elegir posturas conocidas // Titán · Ojo por Ojo / Aún No He Terminado // Pacto del Iracundo · Venganza Letal / Ira de Otro Mundo
+  const [mutagenDlg, setMutagenDlg] = useState(null); // Mutante · beber un mutágeno
+  const [spectralAsk, setSpectralAsk] = useState(null); // Espectro · Forma Espectral // Artista Marcial · elegir posturas conocidas // Titán · Ojo por Ojo / Aún No He Terminado // Pacto del Iracundo · Venganza Letal / Ira de Otro Mundo
   const getVault = (c) => {
     try {
       return JSON.parse(c?.f_domain_vault || "[]");
@@ -8268,6 +8319,9 @@ export default function App({ onSignOut }) {
     if (c.f_ignite) restPatch.f_ignite = "";
     if (c.f_hybrid) restPatch.f_hybrid = "";
     if (c.f_mutagen) restPatch.f_mutagen = "";
+    if (c.f_veil_adv) restPatch.f_veil_adv = "";
+    if (c.f_spectral) restPatch.f_spectral = "";
+    if (isLong && c.f_spectral_used) restPatch.f_spectral_used = "";
     if (c.f_crimson) restPatch.f_crimson = "";
     if (isLong && c.f_psychometry) restPatch.f_psychometry = "";
     if (c.f_bestial_used) restPatch.f_bestial_used = "";
@@ -8658,6 +8712,10 @@ export default function App({ onSignOut }) {
     const rallyDie = pr.rally && ch?.f_rally_die ? ch.f_rally_die : "";
     if (rallyDie) patch.f_rally_die = "";
     if (pr.dedicated) patch.f_dedicated_used = "1";
+    if (ch && ch.f_subclass === "Orden del Espectro" && ch.f_veil_adv === "1" && !pr.reaction) {
+      // La ventaja se gasta en la siguiente tirada de acción, la uses o no.
+      patch.f_veil_adv = "";
+    }
     if (ch && ch.f_class === "Asesino" && ch.f_inout === "1" && pr.privilege && !pr.reaction) {
       patch.f_inout = "";
       postCampaignEvent(pr.charId, "🚪 Entrar y Salir: aprovecha la información del DJ y tira con ventaja");
@@ -10404,6 +10462,11 @@ export default function App({ onSignOut }) {
                 </Fragment>
               );
             })}
+            {restMessage && detailTab !== "rests" && (
+              <div className="mh-toast" role="status" key={restMessage}>
+                {restMessage}
+              </div>
+            )}
             <FormFx
               key={"fx-" + viewingCharId}
               form={beastformInfo || TRANSFORM_THEMES[c.f_transformation_form_active] || hybridThemeOf(c) || null}
@@ -10500,6 +10563,16 @@ export default function App({ onSignOut }) {
                   {c.f_subclass === "Gremio del Envenenador" && Number(c.f_toxins || 0) > 0 && (
                     <span className="mh-htag" style={{ "--tag": "#5E8A4E" }} title="Brebajes Tóxicos: fichas de veneno preparadas">
                       <FlaskConical size={11} /> Venenos · {c.f_toxins}
+                    </span>
+                  )}
+                  {c.f_spectral === "1" && (
+                    <span className="mh-htag is-active" style={{ "--tag": "#5B6B7E" }} title="Forma Espectral: atraviesas la materia física, resistes el daño físico y marcas Estrés en lugar de Puntos de Vida">
+                      <span className="mh-htag-dot" /> Forma Espectral
+                    </span>
+                  )}
+                  {c.f_subclass === "Orden del Espectro" && c.f_veil_adv === "1" && (
+                    <span className="mh-htag is-active" style={{ "--tag": "#5B6B7E" }} title="Acechador del Velo: ventaja en tu siguiente tirada de acción de esta escena">
+                      <span className="mh-htag-dot" /> Acechador · ventaja
                     </span>
                   )}
                   {getMutagen(c) && (
@@ -11750,7 +11823,7 @@ export default function App({ onSignOut }) {
                               kicker: `Subclase · ${subclassBadge}`,
                               title: subclassEntry.key,
                               text: subclassEntry.blurb,
-                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento", "Escuela de la Guerra", "Bruja Lunar", "Bruja del Seto", "Pacto del Eterno", "Pacto del Iracundo", "Titán", "Artista Marcial", "Gremio del Verdugo", "Gremio del Envenenador", "Nigromancia", "Teúrgia", "Orden del Licántropo", "Orden del Mutante"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
+                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento", "Escuela de la Guerra", "Bruja Lunar", "Bruja del Seto", "Pacto del Eterno", "Pacto del Iracundo", "Titán", "Artista Marcial", "Gremio del Verdugo", "Gremio del Envenenador", "Nigromancia", "Teúrgia", "Orden del Licántropo", "Orden del Mutante", "Orden del Espectro"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
                               image: subclassEntry.image,
                               bigStyle: true,
                               ...(isElemental ? { elementalAction: true } : {}),
@@ -11774,6 +11847,7 @@ export default function App({ onSignOut }) {
                               ...(subclassEntry.key === "Teúrgia" ? { theurgyActs: true } : {}),
                               ...(subclassEntry.key === "Orden del Licántropo" ? { lycanActs: true } : {}),
                               ...(subclassEntry.key === "Orden del Mutante" ? { mutantActs: true } : {}),
+                              ...(subclassEntry.key === "Orden del Espectro" ? { specterActs: true } : {}),
                             }),
                           });
                         }
@@ -14534,6 +14608,41 @@ export default function App({ onSignOut }) {
               );
             })()}
 
+            {spectralAsk && characters[spectralAsk.id] && (() => {
+              const me = characters[spectralAsk.id];
+              const close = () => setSpectralAsk(null);
+              const go = () => {
+                const lastFree = Number(me.r_hp || 0) - 1;
+                updateCharacterFields(spectralAsk.id, { hp_marked: String(Math.max(spectralAsk.before, Math.min(Number(me.hp_marked || 0), lastFree))), f_spectral: "1", f_spectral_used: "1" });
+                setTimeout(() => markStress(spectralAsk.id, 1), 0);
+                postCampaignEvent(spectralAsk.id, "👻 Forma Espectral: en lugar de marcar su último Punto de Vida, marca 1 Estrés y entra en su Forma Espectral (atraviesa la materia y resiste el daño físico)");
+                close();
+              };
+              return (
+                <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 47, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)" }}>
+                  <div className="mh-card mh-renew" role="dialog" aria-label="Forma Espectral">
+                    <div className="mh-pre-h">
+                      <span className="mh-pre-ic" style={{ background: "color-mix(in srgb, #5B6B7E 16%, var(--mh-panel))", color: "#5B6B7E" }}>
+                        <Ghost size={17} />
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <b className="mh-serif">Forma Espectral</b>
+                        <small>Vas a marcar tu último Punto de Vida. Una vez por descanso largo, puedes marcar 1 Estrés y entrar en tu Forma Espectral en su lugar.</small>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                      <button type="button" className="mh-btn" style={{ flex: 1 }} onClick={go}>
+                        Entrar en la Forma Espectral · 1 Estrés
+                      </button>
+                      <button type="button" className="mh-btn-ghost" style={{ flex: 1 }} onClick={close}>
+                        Marcar el último PV
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             {mutagenDlg && characters[viewingCharId] && (() => {
               const me = characters[viewingCharId];
               const close = () => setMutagenDlg(null);
@@ -15579,6 +15688,8 @@ export default function App({ onSignOut }) {
               const climberOk = !(ch.f_class === "Asesino" && ch.f_inout === "1" && !preRoll.reaction) && (ch.f_ancestry || "").split(" + ").includes("Simiah") && preRoll.traitLabel === "Agilidad" && !etherealOk && !dreadOk && !glamourOk;
               // Bruja del Seto · Maldición Irritante: ventaja al atacar a criaturas con Maleficio.
               // Pacto del Eterno · Manto del Patrón: ventaja para intimidar.
+              // Orden del Espectro · Acechador del Velo: ventaja en la siguiente tirada de acción de la escena.
+              const veilOk = ch.f_subclass === "Orden del Espectro" && ch.f_veil_adv === "1" && !preRoll.reaction;
               // Orden del Mutante · Sentidos de Cazador: ventaja para rastrear a una criatura.
               const sensesOk = hasMutagen(ch, "sentidos") && !preRoll.reaction;
               // Cazador de Sangre · Psicometría Siniestra: ventaja para rastrear o recordar a la criatura de la visión.
@@ -15591,7 +15702,7 @@ export default function App({ onSignOut }) {
               const isolOk = !inoutOk && activeStance(ch) === "aislante" && !!preRoll.weapon;
               const mantleOk = !isolOk && ch.f_mantle === "1" && preRoll.traitLabel === "Presencia" && !etherealOk && !dreadOk && !glamourOk && !climberOk;
               const vexOk = !mantleOk && ch.f_subclass === "Bruja del Seto" && tierForLevel(ch.f_level || 1) >= 2 && !!preRoll.weapon && (ch.f_hexes || "[]") !== "[]" && !etherealOk && !dreadOk && !glamourOk && !climberOk;
-              const edgeSource = inoutOk ? "Entrar y Salir" : psyOk ? "Psicometría Siniestra" : sensesOk ? "Sentidos de Cazador" : angelicOk ? "Presencia Angelical" : etherealOk ? "Rostro Etéreo" : dreadOk ? "Rostro Temible" : glamourOk ? "Glamour Nocturno" : climberOk ? "Trepador Nato" : inoutOk ? "Entrar y Salir" : isolOk ? "Aislante" : mantleOk ? "Manto del Patrón" : vexOk ? "Maldición Irritante" : highborne ? "Privilegio" : loreborne ? "Leído" : ridgeborne ? "Firme" : slyborne ? "Granuja" : underborne ? "Vida en la Penumbra" : wildborne ? "Pies Ligeros" : "";
+              const edgeSource = veilOk ? "Acechador del Velo" : inoutOk ? "Entrar y Salir" : psyOk ? "Psicometría Siniestra" : sensesOk ? "Sentidos de Cazador" : angelicOk ? "Presencia Angelical" : etherealOk ? "Rostro Etéreo" : dreadOk ? "Rostro Temible" : glamourOk ? "Glamour Nocturno" : climberOk ? "Trepador Nato" : inoutOk ? "Entrar y Salir" : isolOk ? "Aislante" : mantleOk ? "Manto del Patrón" : vexOk ? "Maldición Irritante" : highborne ? "Privilegio" : loreborne ? "Leído" : ridgeborne ? "Firme" : slyborne ? "Granuja" : underborne ? "Vida en la Penumbra" : wildborne ? "Pies Ligeros" : "";
               const poetOk = ch.f_subclass === "Orador" && preRoll.traitLabel === "Presencia";
               // Origen Elemental · Elementalista: 1 Esperanza para +2 a la tirada o +3 al daño.
               const elemOk = ch.f_subclass === "Origen Elemental" && !preRoll.reaction;
@@ -15795,10 +15906,10 @@ export default function App({ onSignOut }) {
                   ? tile("priv", {
                       on: preRoll.privilege,
                       title: edgeSource,
-                      sub: etherealOk ? "Centinela Alado · volando" : dreadOk ? "Infernal" : glamourOk ? "Bruja Lunar" : climberOk ? "Simiah" : inoutOk ? "Asesino" : !psyOk && sensesOk ? "Mutágeno" : psyOk ? (ch.f_psychometry !== "1" ? ch.f_psychometry : "Cazador de Sangre") : angelicOk ? "Teúrgia" : isolOk ? "Postura marcial" : mantleOk ? "Pacto del Eterno" : vexOk ? "Bruja del Seto" : highborne ? "De Alta Cuna" : loreborne ? "Del Saber" : slyborne ? "De las Sombras" : underborne ? "De las Profundidades" : wildborne ? "Salvaje" : "De las Cumbres",
+                      sub: etherealOk ? "Centinela Alado · volando" : dreadOk ? "Infernal" : glamourOk ? "Bruja Lunar" : climberOk ? "Simiah" : veilOk ? "Orden del Espectro" : inoutOk ? "Asesino" : !psyOk && sensesOk ? "Mutágeno" : psyOk ? (ch.f_psychometry !== "1" ? ch.f_psychometry : "Cazador de Sangre") : angelicOk ? "Teúrgia" : isolOk ? "Postura marcial" : mantleOk ? "Pacto del Eterno" : vexOk ? "Bruja del Seto" : highborne ? "De Alta Cuna" : loreborne ? "Del Saber" : slyborne ? "De las Sombras" : underborne ? "De las Profundidades" : wildborne ? "Salvaje" : "De las Cumbres",
                       cost: "Ventaja",
-                      color: etherealOk ? "#D8A84A" : dreadOk ? "#A33A3A" : glamourOk ? "#8C7FD0" : climberOk ? "#A0784A" : inoutOk ? "#7D8BA3" : psyOk || sensesOk ? "#A8323E" : angelicOk ? "#D8A84A" : isolOk ? "#C08B5C" : mantleOk ? "#B55FA0" : vexOk ? "#9B7FD6" : highborne ? "#B8862E" : loreborne ? "#5E8FC9" : slyborne ? "#6E5A8A" : underborne ? "#5A6B7A" : wildborne ? "#5E8A4E" : "#7E8C6A",
-                      hint: etherealOk ? "Mientras vuelas, tienes ventaja en las tiradas de Presencia" : dreadOk ? "Si intentas intimidar a una criatura hostil" : glamourOk ? "Si la tirada aprovecha tu apariencia ilusoria" : climberOk ? "Si la tirada implica mantener el equilibrio o trepar" : inoutOk ? "Si la tirada aprovecha la forma de entrar o salir que te dio el DJ (se gasta al tirar)" : psyOk ? "Si la tirada es para rastrear o recordar información sobre la criatura de tu visión" : sensesOk ? "Si la tirada es para rastrear a una criatura" : angelicOk ? "Si intentas influir en otros: el poder angelical inspira asombro y temor" : isolOk ? "Si no hay otras criaturas en alcance Muy cercano de ti o de tu objetivo" : mantleOk ? "Si intentas intimidar a un objetivo" : vexOk ? "Si atacas a una criatura con tu Maleficio" : highborne ? "Si tratas con nobles, negocias un precio o usas tu reputación" : loreborne ? "Si la tirada trata sobre la historia, la cultura o la política de una persona o un lugar importantes" : slyborne ? "Si negocias con criminales, intentas detectar una mentira o buscas un escondite seguro" : underborne ? "Si estás en una zona con poca luz o sombras densas y te escondes, investigas o percibes detalles en ella" : wildborne ? "Si intentas moverte sin que te oigan" : "Si cruzas precipicios y cornisas peligrosos, te orientas en un entorno duro o usas tus conocimientos de supervivencia",
+                      color: etherealOk ? "#D8A84A" : dreadOk ? "#A33A3A" : glamourOk ? "#8C7FD0" : climberOk ? "#A0784A" : veilOk ? "#5B6B7E" : inoutOk ? "#7D8BA3" : psyOk || sensesOk ? "#A8323E" : angelicOk ? "#D8A84A" : isolOk ? "#C08B5C" : mantleOk ? "#B55FA0" : vexOk ? "#9B7FD6" : highborne ? "#B8862E" : loreborne ? "#5E8FC9" : slyborne ? "#6E5A8A" : underborne ? "#5A6B7A" : wildborne ? "#5E8A4E" : "#7E8C6A",
+                      hint: etherealOk ? "Mientras vuelas, tienes ventaja en las tiradas de Presencia" : dreadOk ? "Si intentas intimidar a una criatura hostil" : glamourOk ? "Si la tirada aprovecha tu apariencia ilusoria" : climberOk ? "Si la tirada implica mantener el equilibrio o trepar" : veilOk ? "Tu siguiente tirada de acción de la escena tras cruzar el velo (se gasta al tirar)" : inoutOk ? "Si la tirada aprovecha la forma de entrar o salir que te dio el DJ (se gasta al tirar)" : psyOk ? "Si la tirada es para rastrear o recordar información sobre la criatura de tu visión" : sensesOk ? "Si la tirada es para rastrear a una criatura" : angelicOk ? "Si intentas influir en otros: el poder angelical inspira asombro y temor" : isolOk ? "Si no hay otras criaturas en alcance Muy cercano de ti o de tu objetivo" : mantleOk ? "Si intentas intimidar a un objetivo" : vexOk ? "Si atacas a una criatura con tu Maleficio" : highborne ? "Si tratas con nobles, negocias un precio o usas tu reputación" : loreborne ? "Si la tirada trata sobre la historia, la cultura o la política de una persona o un lugar importantes" : slyborne ? "Si negocias con criminales, intentas detectar una mentira o buscas un escondite seguro" : underborne ? "Si estás en una zona con poca luz o sombras densas y te escondes, investigas o percibes detalles en ella" : wildborne ? "Si intentas moverte sin que te oigan" : "Si cruzas precipicios y cornisas peligrosos, te orientas en un entorno duro o usas tus conocimientos de supervivencia",
                       onClick: () => setPreRoll((p) => ({ ...p, privilege: !p.privilege, advantage: p.privilege ? p.advantage : false })),
                     })
                   : null,
@@ -16180,6 +16291,32 @@ export default function App({ onSignOut }) {
                         <button type="button" className="mh-luck-btn mh-feline-btn" disabled={hopeK < 2} onClick={() => bendLuck(r.charId, r.charId, rollForReroll(r), { kind: "feline" })}>
                           <PawPrint size={15} /> Instinto Felino · 2 Esperanza
                           <small>{hopeK < 2 ? "Necesitas 2 de Esperanza" : "Repite tu Dado de Esperanza"}</small>
+                        </button>
+                      );
+                    })()}
+                    {(() => {
+                      // Orden del Espectro · Temple Sombrío: éxito con Miedo, 1 Esperanza para quitarte 1 Estrés.
+                      const r = traitRollResult;
+                      const rc = characters[r.charId];
+                      if (!rc || rc.f_subclass !== "Orden del Espectro" || r.reaction || !(r.fear > r.hope) || r.charmed) return null;
+                      const okS = r.card?.dc != null ? r.total >= r.card.dc : null;
+                      if (okS === false) return null;
+                      if (r.grit) return <div className="mh-luck-done" style={{ color: "#5B6B7E" }}>Temple Sombrío: te quitas 1 Estrés</div>;
+                      const hopeS = Number(rc.hope_marked ?? HOPE_DEFAULT);
+                      return (
+                        <button
+                          type="button"
+                          className="mh-luck-btn mh-specter-btn"
+                          disabled={hopeS < 1 || !Number(rc.stress_marked || 0)}
+                          onClick={() => {
+                            const cur = charsRef.current[r.charId];
+                            updateCharacterFields(r.charId, { hope_marked: String(Number(cur.hope_marked ?? HOPE_DEFAULT) - 1), stress_marked: String(Math.max(0, Number(cur.stress_marked || 0) - 1)) });
+                            setTraitRollResult((prev) => (prev ? { ...prev, grit: true } : prev));
+                            postCampaignEvent(r.charId, "🌑 Temple Sombrío: tiene éxito con Miedo, gasta 1 Esperanza y se quita 1 Estrés");
+                          }}
+                        >
+                          <Ghost size={15} /> Temple Sombrío · 1 Esperanza
+                          <small>{okS ? "Éxito con Miedo" : "Si has tenido éxito"} · te quitas 1 Estrés</small>
                         </button>
                       );
                     })()}
@@ -18536,6 +18673,23 @@ export default function App({ onSignOut }) {
                         },
                       });
                   }
+                  // Orden del Espectro · Caminante del Velo (y Acechador del Velo en Especialización).
+                  if (d.specterActs && !d.fromChat) {
+                    const stalker = tierForLevel(c.f_level || 1) >= 2;
+                    cardActs.push({
+                      key: "veil",
+                      Icon: Ghost,
+                      label: "Caminante del Velo · 1 Estrés",
+                      sub: stalker ? "Hasta alcance Lejano atravesando criaturas y objetos · ventaja en tu siguiente tirada" : "Hasta alcance Cercano atravesando criaturas y objetos",
+                      run: () => {
+                        closeCardDetail();
+                        markStress(viewingCharId, 1, stalker ? { f_veil_adv: "1" } : {});
+                        postCampaignEvent(viewingCharId, stalker ? "👻 Acechador del Velo: marca 1 Estrés, cruza el velo hasta alcance Lejano y tendrá ventaja en su siguiente tirada de acción" : "👻 Caminante del Velo: marca 1 Estrés y se desliza hasta alcance Cercano atravesando criaturas y objetos");
+                      },
+                    });
+                    if (c.f_spectral === "1")
+                      cardActs.push({ key: "spectral-off", Icon: X, label: "Salir de la Forma Espectral", sub: "", run: () => { closeCardDetail(); updateCharacterField(viewingCharId, "f_spectral", ""); postCampaignEvent(viewingCharId, "👻 Abandona su Forma Espectral"); } });
+                  }
                   // Orden del Mutante: beber un mutágeno y usar sus beneficios.
                   if (d.mutantActs && !d.fromChat) {
                     const mut = getMutagen(c);
@@ -19612,7 +19766,7 @@ export default function App({ onSignOut }) {
                       label: "Mostrar en la campaña",
                       sub: shareCamp.name,
                       run: () => {
-                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, divineActs, sentinelActs, originActs, primalActs, braveActs, slayerCard, moonActs, hedgeActs, endlessActs, wrathActs, brawlerStrike: _bs, comboCard: _cc, martialActs: _ma, poisonActs: _pa, necroActs: _na, theurgyActs: _ta, lycanActs: _la, mutantActs: _mu, ...detail } = d;
+                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, divineActs, sentinelActs, originActs, primalActs, braveActs, slayerCard, moonActs, hedgeActs, endlessActs, wrathActs, brawlerStrike: _bs, comboCard: _cc, martialActs: _ma, poisonActs: _pa, necroActs: _na, theurgyActs: _ta, lycanActs: _la, mutantActs: _mu, specterActs: _sp, ...detail } = d;
                         // Las imágenes incrustadas muy grandes no se copian al chat.
                         if (typeof detail.image === "string" && detail.image.startsWith("data:") && detail.image.length > 30000) delete detail.image;
                         const type = d.domain ? "domain" : d.weapon ? "weapon" : d.armor ? "armor" : "card";
