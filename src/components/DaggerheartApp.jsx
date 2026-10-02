@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useLayoutEffect, useRef } from "react";
+import { Fragment, useState, useEffect, useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
@@ -3442,8 +3442,33 @@ const sharedStyles = `
   }
   .mh-shake { animation: mh-shake .45s ease both; }
 
+  /* Ganar Estrés, Esperanza o Favor */
+  .mh-res-flash {
+    position: absolute; inset: 0; z-index: 5; pointer-events: none;
+    box-shadow: inset 0 0 120px 26px color-mix(in srgb, var(--rc) 55%, transparent);
+    animation: mh-hit-flash .8s ease-out both;
+  }
+  .mh-res-hope.mh-res-flash, .mh-res-favor.mh-res-flash { background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--rc) 22%, transparent), transparent 60%); }
+  .mh-res-text {
+    position: absolute; left: 50%; z-index: 6; pointer-events: none; white-space: nowrap;
+    font-family: "Cinzel", Georgia, serif; font-size: 42px; font-weight: 700; color: var(--rc);
+    -webkit-text-stroke: 1.2px color-mix(in srgb, var(--rc) 45%, #000);
+    text-shadow: 0 0 18px color-mix(in srgb, var(--rc) 90%, transparent), 0 0 4px rgba(255,255,255,.9), 0 3px 0 color-mix(in srgb, var(--rc) 40%, #000);
+    animation: mh-hit-text 1.2s cubic-bezier(.2,.8,.2,1) both;
+  }
+  .mh-res-stress.mh-res-text { animation: mh-hit-text 1.2s cubic-bezier(.2,.8,.2,1) both, mh-res-jitter .3s ease 2; }
+  @keyframes mh-res-jitter { 25% { margin-left: -4px; } 75% { margin-left: 4px; } }
+  .mh-row-stress { animation: mh-row-jitter .4s ease both; }
+  @keyframes mh-row-jitter { 0%, 100% { translate: 0 0; } 25% { translate: -4px 0; } 50% { translate: 4px 0; } 75% { translate: -2px 0; } }
+  .mh-row-glow { animation: mh-row-glow .9s ease-out both; border-radius: 10px; }
+  @keyframes mh-row-glow {
+    0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--rc) 0%, transparent); scale: 1; }
+    25% { box-shadow: 0 0 18px 4px color-mix(in srgb, var(--rc) 55%, transparent); scale: 1.03; }
+    100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--rc) 0%, transparent); scale: 1; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
-    .mh-rampage::before, .mh-rampage-card, .mh-rampage-title, .mh-hit-flash, .mh-hit-text, .mh-shake { animation: none !important; }
+    .mh-rampage::before, .mh-rampage-card, .mh-rampage-title, .mh-hit-flash, .mh-hit-text, .mh-shake, .mh-res-flash, .mh-res-text, .mh-row-stress, .mh-row-glow { animation: none !important; }
     .mh-hit-flash, .mh-hit-text { display: none; }
     .mh-beast, .mh-beast-bg, .mh-beast-ring, .mh-claws, .mh-beast-layer { animation: none !important; }
     .mh-beast-ring, .mh-claws { display: none; }
@@ -4426,10 +4451,10 @@ function CompactCard({ accent, kicker, title, description, onClick, disabled, fo
   );
 }
 
-function StepperRow({ label, total, marked, field, color, Icon, charId, onDelta, onToggle, allowOverflow, shape, scarCount, hitKey, gap = 14, labelGap = 6 }) {
+function StepperRow({ label, total, marked, field, color, Icon, charId, onDelta, onToggle, allowOverflow, shape, scarCount, hitKey, pulseKey, pulseClass, gap = 14, labelGap = 6 }) {
   const effectiveMax = Math.max(0, total - (scarCount || 0));
   return (
-    <div key={hitKey || "row"} className={hitKey ? "mh-shake" : undefined} style={{ marginBottom: gap }}>
+    <div key={hitKey || pulseKey || "row"} className={hitKey ? "mh-shake" : pulseKey ? pulseClass : undefined} style={{ marginBottom: gap, "--rc": color }}>
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: labelGap }}>
         <Icon size={13} color={color} />
         <span style={{ fontSize: 12, fontWeight: 600, color: "var(--mh-ink)" }}>{label}</span>
@@ -5279,6 +5304,17 @@ export default function App({ onSignOut }) {
       setHpHit({ key, id, amount: hpAfter - hpBefore });
       setTimeout(() => setHpHit((h) => (h && h.key === key ? null : h)), 1400);
     }
+    const gains = {
+      stress: Number(next.stress_marked || 0) - Number(prev.stress_marked || 0),
+      hope: Number(next.hope_marked ?? HOPE_DEFAULT) - Number(prev.hope_marked ?? HOPE_DEFAULT),
+      favor: next.f_class === "Brujo" ? getFavor(next) - getFavor(prev) : 0,
+    };
+    Object.entries(gains).forEach(([kind, amount]) => {
+      if (amount <= 0) return;
+      const key = Date.now() + Math.random();
+      setResFx((fx) => ({ ...fx, [kind]: { key, id, amount } }));
+      setTimeout(() => setResFx((fx) => (fx[kind] && fx[kind].key === key ? { ...fx, [kind]: null } : fx)), 1400);
+    });
     // Hombre lobo: al ganar Esperanza en Forma de Lobo, marcas 1 Estrés.
     const hopeBefore = Number(prev.hope_marked ?? HOPE_DEFAULT);
     const hopeAfter = Number(next.hope_marked ?? HOPE_DEFAULT);
@@ -5515,6 +5551,8 @@ export default function App({ onSignOut }) {
   const [damageRollResult, setDamageRollResult] = useState(null);
   const [rampageResult, setRampageResult] = useState(null);
   const [hpHit, setHpHit] = useState(null);
+  // Animaciones al ganar Estrés, Esperanza o Favor: { stress: {key, id, amount}, hope: …, favor: … }.
+  const [resFx, setResFx] = useState({});
   const getExperiences = (c) => {
     try {
       return JSON.parse(c.f_experiences || "[]");
@@ -9675,6 +9713,22 @@ export default function App({ onSignOut }) {
                 <div key={"t" + hpHit.key} className="mh-hit-text">−{hpHit.amount} PV</div>
               </>
             )}
+            {[
+              ["stress", "Estrés", "#A58BE8", "mh-res-stress"],
+              ["hope", "Esperanza", "#E3B04B", "mh-res-hope"],
+              ["favor", "Favor", "#B55FA0", "mh-res-favor"],
+            ].map(([kind, label, col, cls], i) => {
+              const fx = resFx[kind];
+              if (!fx || fx.id !== viewingCharId) return null;
+              return (
+                <Fragment key={kind}>
+                  <div key={"f" + fx.key} className={"mh-res-flash " + cls} style={{ "--rc": col }} />
+                  <div key={"t" + fx.key} className={"mh-res-text " + cls} style={{ "--rc": col, top: 30 + i * 9 + "%" }}>
+                    +{fx.amount} {label}
+                  </div>
+                </Fragment>
+              );
+            })}
             <FormFx
               key={"fx-" + viewingCharId}
               form={beastformInfo || TRANSFORM_THEMES[c.f_transformation_form_active] || null}
@@ -10207,13 +10261,15 @@ export default function App({ onSignOut }) {
 
 
                               <StepperRow gap={statsSpacing.stepMb} labelGap={statsSpacing.stepLabelMb} hitKey={hpHit && hpHit.id === viewingCharId ? hpHit.key : undefined} label="Puntos de vida" total={Number(c.r_hp || 0) + equipMods.hp} marked={Number(c.hp_marked || 0)} field="hp_marked" color="#D9644E" Icon={Heart} charId={viewingCharId} onDelta={adjustHp} onToggle={markHp} />
-                              <StepperRow gap={statsSpacing.stepMb} labelGap={statsSpacing.stepLabelMb} label="Estrés" total={Number(c.r_stress || 0) + equipMods.stress} marked={Number(c.stress_marked || 0)} field="stress_marked" color="#A58BE8" Icon={Zap} charId={viewingCharId} onDelta={adjustStress} onToggle={markStressBox} allowOverflow />
-                              <StepperRow gap={statsSpacing.stepMb} labelGap={statsSpacing.stepLabelMb} label="Esperanza" total={HOPE_MAX + equipMods.hope + (getCompanion(c)?.training?.light ? 1 : 0)} marked={Number(c.hope_marked ?? HOPE_DEFAULT)} field="hope_marked" color="#E3B04B" Icon={Sparkles} charId={viewingCharId} onDelta={updateCharacterField} onToggle={toggleCharSlot} shape="diamond" scarCount={Number(c.f_scars || 0)} />
+                              <StepperRow gap={statsSpacing.stepMb} labelGap={statsSpacing.stepLabelMb} pulseKey={resFx.stress && resFx.stress.id === viewingCharId ? resFx.stress.key : undefined} pulseClass="mh-row-stress" label="Estrés" total={Number(c.r_stress || 0) + equipMods.stress} marked={Number(c.stress_marked || 0)} field="stress_marked" color="#A58BE8" Icon={Zap} charId={viewingCharId} onDelta={adjustStress} onToggle={markStressBox} allowOverflow />
+                              <StepperRow gap={statsSpacing.stepMb} labelGap={statsSpacing.stepLabelMb} pulseKey={resFx.hope && resFx.hope.id === viewingCharId ? resFx.hope.key : undefined} pulseClass="mh-row-glow" label="Esperanza" total={HOPE_MAX + equipMods.hope + (getCompanion(c)?.training?.light ? 1 : 0)} marked={Number(c.hope_marked ?? HOPE_DEFAULT)} field="hope_marked" color="#E3B04B" Icon={Sparkles} charId={viewingCharId} onDelta={updateCharacterField} onToggle={toggleCharSlot} shape="diamond" scarCount={Number(c.f_scars || 0)} />
                               {favorRow && (
                                 <StepperRow
                                   gap={statsSpacing.stepMb}
                                   labelGap={statsSpacing.stepLabelMb}
                                   label="Favor"
+                                  pulseKey={resFx.favor && resFx.favor.id === viewingCharId ? resFx.favor.key : undefined}
+                                  pulseClass="mh-row-glow"
                                   total={Math.max(6, getFavor(c))}
                                   marked={getFavor(c)}
                                   field="f_favor"
