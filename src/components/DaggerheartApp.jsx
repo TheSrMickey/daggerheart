@@ -405,7 +405,7 @@ const ANCESTRIES = [
   { key: "Ribbet", blurb: "Humanoide parecido a una rana, de ojos saltones a ambos lados de la cabeza, manos y pies palmeados y piel lisa (a veces verrugosa) y húmeda.", features: [{ name: "Anfibio", text: "Puedes respirar y moverte con normalidad bajo el agua." }, { name: "Lengua Larga", text: "Puedes usar tu larga lengua para agarrar cosas dentro de alcance Cercano. Marca 1 Estrés para usar tu lengua como un arma de Destreza a alcance Cercano que hace d12 de daño físico usando tu Competencia." }] },
   { key: "Simiah", blurb: "Humanoide parecido a un mono o un simio, de extremidades largas y pies prensiles con los que se comunica, trabaja y lucha; un trepador excelente.", features: [{ name: "Trepador Nato", text: "Tienes ventaja en las tiradas de Agilidad que impliquen mantener el equilibrio y trepar." }, { name: "Ágil", text: "Ganas un bonificador permanente de +1 a tu Evasión al crear el personaje." }] },
   { key: "Gnomo", blurb: "Humanoide pequeño de cabeza cónica, orejas suavemente puntiagudas, ojos grandes y brazos y manos proporcionalmente largos, capaz de teletransportarse a distancias cortas.", expansion: "Hope & Fear", features: [{ name: "Dedos Ágiles", text: "Cuando hagas una tirada de Destreza, puedes gastar 2 Esperanza para repetir tu Dado de Esperanza." }, { name: "Paso Fugaz", text: "Una vez por escena, puedes teletransportarte a otro punto que puedas ver dentro de alcance Lejano." }] },
-  { key: "Aetheris", blurb: "Ser etéreo ligado a un plano más allá de lo material.", expansion: "Hope & Fear", features: [{ name: "Aura Sagrada", text: "Una vez por descanso largo, cuando un aliado en alcance Cercano saque una tirada con Miedo, puedes convertirla en una tirada con Esperanza." }, { name: "Alas Celestiales", text: "Tienes alas y puedes volar. Una vez por escena mientras vuelas, puedes gastar 1 Esperanza en lugar de marcar una casilla de Armadura." }] },
+  { key: "Aetheris", blurb: "Humanoide descendiente de los ángeles de los Cielos Sagrados, reconocible por sus alas y sus marcas sagradas, que emana un aura bendita.", expansion: "Hope & Fear", features: [{ name: "Aura Sagrada", text: "Una vez por descanso largo, cuando un aliado en alcance Cercano saque una tirada con Miedo, puedes convertirla en una tirada con Esperanza." }, { name: "Alas Celestiales", text: "Tienes alas que te permiten volar. Una vez por escena mientras vuelas, puedes gastar 1 Esperanza en lugar de marcar una casilla de Armadura." }] },
   { key: "Estirpe del Cielo", blurb: "Vinculado a las corrientes de aire y las alturas.", expansion: "Hope & Fear", features: [{ name: "Fuerza del Vendaval", text: "Marca 1 Estrés para invocar una ráfaga que te lleva a ti o a un aliado Muy cercano hasta alcance Muy lejano. Además, siempre controlas la velocidad de tus caídas." }, { name: "Ojo de la Tormenta", text: "Gasta 2 Esperanza para darte a ti o a un aliado Cuerpo a cuerpo +1 a la Evasión hasta que recibáis daño Grave o vuelvas a usarlo." }] },
   { key: "Estirpe de la Marea", blurb: "Vinculado al mar y al ritmo de las mareas.", expansion: "Hope & Fear", features: [{ name: "Anfibio", text: "Puedes respirar y moverte con normalidad bajo el agua." }, { name: "Manantial de Vida", text: "Una vez por descanso, si tienes acceso a un poco de agua, puedes marcar 1 Estrés para quitar 1 Punto de vida a ti o a un aliado en alcance Muy cercano." }] },
   { key: "Estirpe de la Tierra", blurb: "Vinculado a la roca y a las profundidades del suelo.", expansion: "Hope & Fear", features: [{ name: "Piel de Piedra", text: "Ganas un +1 permanente a tu Puntuación de Armadura y a tus umbrales de daño al crear el personaje." }, { name: "Inamovible", text: "Mientras toques el suelo, no pueden levantarte ni moverte contra tu voluntad." }] },
@@ -619,6 +619,7 @@ const REROLL_META = {
   adapt: { tag: "Adaptabilidad", head: "repite con Adaptabilidad", done: "Adaptabilidad" },
   feline: { tag: "Felino", head: "repite su Dado de Esperanza", done: "Instinto Felino" },
   nimble: { tag: "Dedos Ágiles", head: "repite su Dado de Esperanza", done: "Dedos Ágiles" },
+  aura: { tag: "Aura", head: "convierte en Esperanza la tirada", done: "Aura Sagrada" },
   charm: { tag: "Encanto", head: "convierte en éxito con Miedo la tirada", done: "Encanto de Bruja" },
 };
 
@@ -2734,11 +2735,6 @@ const sharedStyles = `
   .mh-favor-btn { background: #B55FA0; }
   .mh-favor-btn:hover:not(:disabled) { background: #9C4D89; }
   .mh-favor-btn.is-alt { background: #7E4A8C; }
-  .mh-favor-foot { gap: 14px; }
-  .mh-favor-foot span { font: 600 12.5px 'Inter', system-ui, sans-serif; }
-  .mh-favor-foot b { font: 700 20px 'Cinzel', Georgia, serif; color: #B55FA0; margin-right: 3px; }
-  .mh-favor-foot button { width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid #B55FA0; background: var(--mh-panel); color: #B55FA0; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
-  .mh-favor-foot button:disabled { opacity: .35; cursor: not-allowed; }
   .mh-patron-foot { flex-direction: column; gap: 6px; padding: 9px 12px; }
   .mh-patron-foot input { width: 100%; border: 1px solid var(--mh-line); border-radius: 8px; padding: 6px 9px; font: 500 12px 'Inter', system-ui, sans-serif; background: var(--mh-panel); color: var(--mh-ink); }
   .mh-patron-foot small { font-size: 10.5px; color: var(--mh-muted); }
@@ -2801,6 +2797,9 @@ const sharedStyles = `
   .mh-charge-btn.is-alt { background: var(--mh-panel); color: #6B4FB8; border: 1px solid #8A6FD088; }
   .mh-chat-enchant { border-color: #8A6FD0; color: #6B4FB8; }
   .mh-chat-charm { border-color: #9B7FD6; color: #7A5BC2; }
+  .mh-chat-aura { border-color: #E3B04B; color: #97680F; }
+  .mh-celestial-btn { position: absolute; left: 50%; bottom: 5px; transform: translateX(-50%); white-space: nowrap; display: inline-flex; align-items: center; gap: 3px; border: 0; border-radius: 20px; padding: 2px 8px; font: 700 9.5px "Inter", system-ui, sans-serif; color: #fff; background: #E3B04B; cursor: pointer; }
+  .mh-celestial-btn:disabled { background: var(--mh-panel2); color: var(--mh-muted); cursor: default; }
   .mh-charm-btn { background: #9B7FD6; }
   .mh-charm-btn:hover:not(:disabled) { background: #8366C4; }
   .mh-brave { position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%); z-index: 80; display: flex; align-items: center; gap: 10px; padding: 10px 12px 10px 16px; border-radius: 14px; background: #4A3F2E; color: #fff; box-shadow: 0 10px 26px rgba(0,0,0,.3); font-family: 'Inter', system-ui, sans-serif; animation: mh-wz-art-in .2s ease-out; }
@@ -5591,12 +5590,13 @@ export default function App({ onSignOut }) {
   const CONDITION_ICONS = { Escondido: EyeOff, Inmovilizado: Lock, Vulnerable: ShieldOff, Inconsciente: ZapOff, Volando: Feather, Oculto: Ghost, Retraído: Shell };
   // Hada: Alas (puede volar) y Doblega la Suerte.
   const isFaerie = (c) => (c?.f_ancestry || "").split(" + ").includes("Hada");
+  const isAetheris = (c) => (c?.f_ancestry || "").split(" + ").includes("Aetheris");
   // Pícaro · Oculto: siempre que fuera a quedar Escondido, queda Oculto.
   const isRogue = (c) => c?.f_class === "Pícaro";
   const conditionPresetsFor = (c) => {
     const base = isRogue(c) ? CONDITION_PRESETS.map((n) => (n === "Escondido" ? "Oculto" : n)) : CONDITION_PRESETS;
     const isGalapa = (c?.f_ancestry || "").split(" + ").includes("Galapa");
-    return [...base, ...(isFaerie(c) || c?.f_subclass === "Centinela Alado" ? ["Volando"] : []), ...(isGalapa ? ["Retraído"] : [])];
+    return [...base, ...(isFaerie(c) || isAetheris(c) || c?.f_subclass === "Centinela Alado" ? ["Volando"] : []), ...(isGalapa ? ["Retraído"] : [])];
   };
   const getConditions = (c) => {
     try {
@@ -6712,9 +6712,10 @@ export default function App({ onSignOut }) {
         const crit = r.hope === r.fear;
         const withHope = r.hope > r.fear;
         const success = r.charm ? true : r.dc ? crit || r.total >= r.dc : null;
-        const base = r.charm ? "Éxito con Miedo" : crit ? "Éxito crítico" : r.reaction ? "Tirada de reacción" : (success === null ? "Con " : success ? "Éxito con " : "Fallo con ") + (withHope ? "Esperanza" : "Miedo");
-        const note = r.charm ? "El DJ gana 1 Miedo" : r.reaction ? (crit ? "Ignora los efectos" : "Sin Esperanza ni Miedo") : crit ? "+1 Esperanza y −1 Estrés" : withHope ? "+1 Esperanza" : "El DJ gana 1 Miedo";
-        const vcol = r.charm ? "#A58BE8" : crit ? "#6FBF73" : r.reaction ? "#5E8FC9" : withHope ? "#E3B04B" : "#A58BE8";
+        const hopeSide = withHope || !!r.aura;
+        const base = r.charm ? "Éxito con Miedo" : crit ? "Éxito crítico" : r.reaction ? "Tirada de reacción" : (success === null ? "Con " : success ? "Éxito con " : "Fallo con ") + (hopeSide ? "Esperanza" : "Miedo");
+        const note = r.aura ? "+1 Esperanza (el DJ no gana Miedo)" : r.charm ? "El DJ gana 1 Miedo" : r.reaction ? (crit ? "Ignora los efectos" : "Sin Esperanza ni Miedo") : crit ? "+1 Esperanza y −1 Estrés" : withHope ? "+1 Esperanza" : "El DJ gana 1 Miedo";
+        const vcol = r.aura ? "#E3B04B" : r.charm ? "#A58BE8" : crit ? "#6FBF73" : r.reaction ? "#5E8FC9" : withHope ? "#E3B04B" : "#A58BE8";
         const tag = r.luck ? (REROLL_META[r.luck.kind] || REROLL_META.luck).tag : r.weapon ? "Ataque" : r.card ? "Habilidad" : r.reaction ? "Reacción" : "Rasgo";
         // Hada · Doblega la Suerte: botón bajo las tiradas de acción recientes (tuyas o de aliados).
         const meC = meCharId ? characters[meCharId] : null;
@@ -6733,6 +6734,14 @@ export default function App({ onSignOut }) {
         const meHope = meC ? Number(meC.hope_marked ?? HOPE_DEFAULT) : 0;
         // Bruja · Encanto de Bruja: sobre la tirada de acción fallida (o sin dificultad conocida) de un aliado.
         const charmable = meC && meC.f_class === "Bruja" && m.charId && m.charId !== meCharId && !r.reaction && !r.luck && !r.charm && !crit && success !== true && Date.now() - (m.ts || 0) < 10 * 60 * 1000;
+        const auraable = meC && isAetheris(meC) && m.charId && m.charId !== meCharId && !r.reaction && !r.luck && !r.aura && !crit && !withHope && Date.now() - (m.ts || 0) < 10 * 60 * 1000;
+        const auraBtn = auraable ? (
+          <button type="button" className="mh-chat-luck mh-chat-aura" disabled={!!meC.f_aura_used} onClick={() => hallowedAura(meCharId, m.charId, r)}>
+            <Sun size={13} />
+            Aura Sagrada para {m.author}
+            <small>{meC.f_aura_used ? "Ya usada · vuelve al descanso largo" : "Pasa a ser con Esperanza · 1 por descanso largo"}</small>
+          </button>
+        ) : null;
         const charmBtn = charmable ? (
           <button type="button" className="mh-chat-luck mh-chat-charm" disabled={meHope < 3} onClick={() => witchCharm(meCharId, m.charId, r)}>
             <Moon size={13} />
@@ -6821,13 +6830,14 @@ export default function App({ onSignOut }) {
             {total(r.dc ? "vs " + r.dc : "Total", r.total)}
           </>,
           base,
-          r.luck && !r.charm ? "Antes: " + r.luck.prevHope + " y " + r.luck.prevFear : note,
-          luckBtn || adjRow || enchantBtn || charmBtn ? (
+          r.luck && !r.charm && !r.aura ? "Antes: " + r.luck.prevHope + " y " + r.luck.prevFear : note,
+          luckBtn || adjRow || enchantBtn || charmBtn || auraBtn ? (
             <>
               {adjRow}
               {luckBtn}
               {enchantBtn}
               {charmBtn}
+              {auraBtn}
             </>
           ) : null
         );
@@ -7713,6 +7723,8 @@ export default function App({ onSignOut }) {
     if (c.f_phase_bump_used) restPatch.f_phase_bump_used = "";
     if (isLong && c.f_commune_used) restPatch.f_commune_used = "";
     if (c.f_mantle) restPatch.f_mantle = "";
+    if (c.f_celestial_used) restPatch.f_celestial_used = "";
+    if (isLong && c.f_aura_used) restPatch.f_aura_used = "";
     if (c.f_embrace_used) restPatch.f_embrace_used = "";
     if (c.f_sink_used) restPatch.f_sink_used = "";
     if (isLong && c.f_aegis_used) restPatch.f_aegis_used = "";
@@ -8190,6 +8202,21 @@ export default function App({ onSignOut }) {
       kind: "roll",
       sid,
       roll: { ...base, hope: nh, fear: nf, total, luck: { forId: rollerId, forName, prevHope: roll.hope, prevFear: roll.fear, kind }, adjust: !own && (delta.hope || delta.stress) ? { charId: rollerId, hope: delta.hope, stress: delta.stress } : null },
+    });
+  };
+  // Aetheris · Aura Sagrada: una vez por descanso largo, la tirada con Miedo de un aliado pasa a ser con Esperanza.
+  const hallowedAura = (myId, rollerId, roll) => {
+    const me = charsRef.current[myId];
+    if (!me || me.f_aura_used) return;
+    updateCharacterField(myId, "f_aura_used", "1");
+    addFear(-1);
+    const roller = charsRef.current[rollerId];
+    const forName = roller?.f_name || "un aliado";
+    const { luck, adjust, ...base } = roll;
+    postCampaignEvent(myId, `😇 Aura Sagrada: la tirada con Miedo de ${forName} pasa a ser con Esperanza (el DJ no gana el Miedo)`, {
+      kind: "roll",
+      sid: String(Date.now()),
+      roll: { ...base, aura: true, luck: { forId: rollerId, forName, prevHope: roll.hope, prevFear: roll.fear, kind: "aura" }, adjust: { charId: rollerId, hope: 1, stress: 0 } },
     });
   };
   // Bruja · Encanto de Bruja: 3 Esperanza para que una tirada de acción fallida (tuya o de un aliado) sea un éxito con Miedo.
@@ -10020,7 +10047,7 @@ export default function App({ onSignOut }) {
                   const fortSevere = c.f_fortitude_ready === "1" ? severe * 2 : severe;
                   const experiences = getExperiences(c);
                   const conditions = isRogue(c) ? getConditions(c).map((n) => (n === "Escondido" ? "Oculto" : n)) : getConditions(c);
-                  const flying = (isFaerie(c) || c.f_subclass === "Centinela Alado") && conditions.includes("Volando");
+                  const flying = (isFaerie(c) || isAetheris(c) || c.f_subclass === "Centinela Alado") && conditions.includes("Volando");
                   const wingsOn = flying && isFaerie(c) && c.f_wings_evade === "1";
                   const dodgeOn = c.f_class === "Pícaro" && c.f_dodge === "1";
                   // Escuela de la Guerra · Conjurar Escudo: con 2+ Esperanza, Competencia a la Evasión.
@@ -10142,7 +10169,22 @@ export default function App({ onSignOut }) {
                                     </button>
                                   )}
                                 </div>
-                                <div style={{ flex: 1.4, border: "1px solid var(--acc)", background: "color-mix(in srgb, var(--acc) 5%, transparent)", borderRadius: 12, padding: statsSpacing.boxPadY + "px 10px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                                <div style={{ position: "relative", flex: 1.4, border: "1px solid var(--acc)", background: "color-mix(in srgb, var(--acc) 5%, transparent)", borderRadius: 12, padding: statsSpacing.boxPadY + "px 10px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                                  {flying && isAetheris(c) && (
+                                    <button
+                                      type="button"
+                                      className="mh-celestial-btn mh-tip-anchor"
+                                      disabled={!!c.f_celestial_used || Number(c.hope_marked ?? HOPE_DEFAULT) < 1}
+                                      aria-label="Alas Celestiales: gasta 1 Esperanza en lugar de marcar una casilla de Armadura"
+                                      onClick={() => {
+                                        updateCharacterFields(viewingCharId, { hope_marked: String(Number(c.hope_marked ?? HOPE_DEFAULT) - 1), f_celestial_used: "1" });
+                                        postCampaignEvent(viewingCharId, "🪽 Alas Celestiales: gasta 1 Esperanza en lugar de marcar una casilla de Armadura");
+                                      }}
+                                    >
+                                      <span className="mh-tip mh-tip-wrap">{c.f_celestial_used ? "Ya usadas en esta escena: vuelven al descansar o con «Nueva escena» en la carta de ascendencia" : "Alas Celestiales: gasta 1 Esperanza en lugar de marcar una casilla de Armadura"}</span>
+                                      <Feather size={10} /> {c.f_celestial_used ? "Alas usadas" : "1 Esperanza en vez de Armadura"}
+                                    </button>
+                                  )}
                                   <div style={{ fontSize: 10, color: "var(--mh-muted)", textAlign: "center", marginBottom: 4 }}>
                                     Armadura
                                     {stalwart && (
@@ -16578,6 +16620,16 @@ export default function App({ onSignOut }) {
                         },
                       });
                   }
+                  // Aetheris · Alas Celestiales: una vez por escena.
+                  if (d.ancestryKey === "Aetheris" && !d.fromChat && c.f_celestial_used) {
+                    cardActs.push({
+                      key: "celestial-reset",
+                      Icon: RotateCcw,
+                      label: "Nueva escena: recuperar Alas Celestiales",
+                      sub: "Ya usadas en esta escena",
+                      run: () => updateCharacterField(viewingCharId, "f_celestial_used", ""),
+                    });
+                  }
                   // Gnomo · Paso Fugaz: una vez por escena.
                   if (d.ancestryKey === "Gnomo" && !d.fromChat) {
                     cardActs.push(
@@ -17178,7 +17230,6 @@ export default function App({ onSignOut }) {
                   const slayerCard = !d.fromChat && d.slayerCard;
                   const patternCard = !d.fromChat && d.title === "Patrones Extraños" && c?.f_class === "Mago";
                   const hexCard = !d.fromChat && d.title === "Maleficio" && c?.f_class === "Bruja";
-                  const favorCard = !d.fromChat && d.title === "Favor" && c?.f_class === "Brujo";
                   const patronCard = !d.fromChat && d.title === "Pacto con el Patrón" && c?.f_class === "Brujo";
                   const hedgeCard = !d.fromChat && d.hedgeActs && (Number(c?.f_talisman || 0) > 0 || Number(c?.f_walk || 0) > 0 || Number(c?.f_circle || 0) > 0);
                   const tideMax = Number(c?.f_level || 1);
@@ -17277,19 +17328,6 @@ export default function App({ onSignOut }) {
                           <div style={{ fontSize: "0.93em", color: "var(--mh-muted2)", fontStyle: "italic" }}>Sin característica especial.</div>
                         ))}
                     </FitBox>
-                    {favorCard && (
-                      <div className="mh-cardc-foot mh-favor-foot">
-                        <button type="button" aria-label="Quitar 1 Favor" disabled={getFavor(c) < 1} onClick={() => updateCharacterField(viewingCharId, "f_favor", String(getFavor(c) - 1))}>
-                          <Minus size={13} />
-                        </button>
-                        <span>
-                          <b>{getFavor(c)}</b> de Favor
-                        </span>
-                        <button type="button" aria-label="Añadir 1 Favor" onClick={() => updateCharacterField(viewingCharId, "f_favor", String(getFavor(c) + 1))}>
-                          <Plus size={13} />
-                        </button>
-                      </div>
-                    )}
                     {patronCard && (
                       <div className="mh-cardc-foot mh-patron-foot">
                         <input key={"pn" + viewingCharId} defaultValue={c.f_patron || ""} placeholder="Nombre de tu patrón" maxLength={40} onBlur={(e) => e.target.value.trim() !== (c.f_patron || "") && updateCharacterField(viewingCharId, "f_patron", e.target.value.trim())} />
@@ -17495,7 +17533,7 @@ export default function App({ onSignOut }) {
                         </div>
                       );
                     })()}
-                    {!tideCard && !prayerCard && !slayerCard && !patternCard && !hexCard && !hedgeCard && !favorCard && !patronCard && (footer || d.domain) && (
+                    {!tideCard && !prayerCard && !slayerCard && !patternCard && !hexCard && !hedgeCard && !patronCard && (footer || d.domain) && (
                       <div className="mh-cardc-foot">
                         {d.domain ? (
                           <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
