@@ -656,6 +656,30 @@ const getContacts = (c) => {
 // Gigante · Alcance: lo que tenga alcance Cuerpo a cuerpo cuenta como Muy cercano.
 const isGiant = (c) => (c?.f_ancestry || "").split(" + ").includes("Gigante");
 const reachFor = (c, range) => (range === "Cuerpo a cuerpo" && isGiant(c) ? "Muy cercano" : range);
+// Invocador · círculos de invocación. El primero (Espíritus del Destino) es de la clase; el resto, de la subclase.
+const SUMMON_CIRCLES = {
+  Nigromancia: [
+    { key: "fate", name: "Espíritu del Destino", plural: "Espíritus del Destino", tier: 1 },
+    { key: "corpse", name: "Cadáver Errante", plural: "Cadáveres Errantes", tier: 1 },
+    { key: "ghost", name: "Fantasma", plural: "Fantasmas", tier: 2 },
+    { key: "knight", name: "Caballero de la Muerte", plural: "Caballero de la Muerte", tier: 3, max: 1 },
+  ],
+  Teúrgia: [
+    { key: "fate", name: "Espíritu del Destino", plural: "Espíritus del Destino", tier: 1 },
+    { key: "angel", name: "Ángel", plural: "Ángeles", tier: 1 },
+    { key: "archangel", name: "Arcángel", plural: "Arcángeles", tier: 2 },
+    { key: "manifest", name: "Manifestación Divina", plural: "Manifestación Divina", tier: 3, max: 1 },
+  ],
+};
+const circlesFor = (c) => SUMMON_CIRCLES[c?.f_subclass] || [SUMMON_CIRCLES.Nigromancia[0]];
+const getSummons = (c) => {
+  try {
+    return JSON.parse(c?.f_summons || "{}");
+  } catch (e) {
+    return {};
+  }
+};
+const summonTotal = (c) => Object.values(getSummons(c)).reduce((a, b) => a + (Number(b) || 0), 0);
 // Gremio del Envenenador · venenos que conoces por Rango.
 const POISONS = [
   { key: "petalo", tier: 1, name: "Pétalo Fantasma", effect: "el objetivo queda temporalmente Vulnerable" },
@@ -2960,6 +2984,19 @@ const sharedStyles = `
   .mh-fury-btn { background: #B55FA0; }
   .mh-combo-btn { background: #C08B5C; }
   .mh-mark-btn { background: #6B7891; }
+  .mh-necro-btn { background: #5B6B5E; }
+  .mh-necro-btn:hover:not(:disabled) { background: #4A584D; }
+  .mh-circles-foot { flex-direction: column; gap: 6px; padding: 10px 10px 8px; }
+  .mh-circles-foot > small { font-size: 10.5px; color: var(--mh-muted); text-align: center; }
+  .mh-circles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .mh-circle { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
+  .mh-circle-ring { width: 38px; height: 38px; border-radius: 50%; border: 2px solid color-mix(in srgb, #8E6FC4 50%, var(--mh-line)); display: inline-flex; align-items: center; justify-content: center; color: var(--mh-muted); }
+  .mh-circle.is-on .mh-circle-ring { border-color: #8E6FC4; background: color-mix(in srgb, #8E6FC4 16%, var(--mh-panel)); color: #6B4FB8; box-shadow: 0 0 10px color-mix(in srgb, #8E6FC4 35%, transparent); }
+  .mh-circle-ring b { font: 700 16px "Cinzel", Georgia, serif; }
+  .mh-circle small { font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--mh-muted); }
+  .mh-circle em { font-style: normal; font-size: 10px; line-height: 1.2; color: var(--mh-ink); }
+  .mh-circle.is-locked { opacity: .45; }
+  .mh-circle button { position: absolute; top: -4px; right: 6px; width: 16px; height: 16px; border-radius: 50%; border: 0; background: #8E6FC4; color: #fff; display: inline-flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; }
   .mh-poison { display: flex; flex-direction: column; align-items: center; gap: 6px; }
   .mh-poison small { font-size: 11px; color: #4E7340; font-weight: 600; }
   .mh-poison-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; }
@@ -4081,6 +4118,9 @@ function DamageResult({ roll }) {
         {(roll.rolls2 || []).map((v, i) => (
           <DieFace key={"r2" + i} sides={roll.die2} value={v} color={color} size={size} rolling={false} highlight={v === roll.die2} />
         ))}
+        {(roll.knightRolls || []).map((v, i) => (
+          <DieFace key={"kn" + i} sides={12} value={v} color="#5B6B5E" size={Math.round(size * 0.8)} rolling={false} highlight={v === 12} label={i === 0 ? "Caballero" : undefined} />
+        ))}
         {roll.igniteRoll > 0 && <DieFace sides={6} value={roll.igniteRoll} color="#E0823A" size={Math.round(size * 0.8)} rolling={false} highlight={roll.igniteRoll === 6} label="Llamas" />}
         {(roll.markedRolls || []).map((v, i) => (
           <DieFace key={"mk" + i} sides={roll.markedDie || 4} value={v} color="#7D8BA3" size={Math.round(size * 0.8)} rolling={false} label={i === 0 ? "Marcado" : undefined} />
@@ -4107,6 +4147,7 @@ function DamageResult({ roll }) {
           <div style={{ fontSize: 12.5, color: "var(--mh-ink3)" }}>
             {roll.dice || 1}d{roll.die} ({rolls.join(" + ")}){roll.rolls2 ? ` + ${roll.rolls2.length}d${roll.die2} (${roll.rolls2.join(" + ")})` : ""}{roll.bonus ? " + " + roll.bonus : ""}
             {roll.comboRolls ? ` + ${roll.comboRolls.join(" + ")} (Combo d${roll.comboDie})` : ""}
+            {roll.knightRolls ? ` + 2d12 (${roll.knightRolls.join(" + ")}) (Caballero de la Muerte)` : ""}
             {roll.igniteRoll ? ` + 1d6 (${roll.igniteRoll}) (Ignición)` : ""}
             {roll.poisonDmg ? ` + ${roll.poisonDmg} (Veneno)` : ""}
             {roll.markedRolls ? ` + ${roll.markedRolls.join(" + ")} (Marcado para Morir)` : ""}
@@ -5626,6 +5667,15 @@ export default function App({ onSignOut }) {
       setHpHit({ key, id, amount: hpAfter - hpBefore });
       // Pacto del Iracundo · Venganza Letal (e Ira de Otro Mundo en Maestría): se ofrece al marcar PV.
       if (next.f_subclass === "Pacto del Iracundo" && getFavor(next) > 0) setVengeAsk({ id, n: hpAfter - hpBefore, rolls: null, ire: null });
+      // Nigromancia · Baluarte del Caballero: con daño Grave, el Caballero de la Muerte recibe un PV y desaparece.
+      if (next.f_subclass === "Nigromancia" && hpAfter - hpBefore >= 3 && Number(getSummons(next).knight || 0) > 0) {
+        setTimeout(() => {
+          const cur = charsRef.current[id];
+          if (!cur) return;
+          updateCharacterFields(id, { hp_marked: String(Math.max(0, Number(cur.hp_marked || 0) - 1)), f_summons: JSON.stringify({ ...getSummons(cur), knight: 0 }) });
+          postCampaignEvent(id, "🛡️ Baluarte del Caballero: su Caballero de la Muerte recibe uno de los Puntos de Vida y desaparece");
+        }, 0);
+      }
       // Titán: Ojo por Ojo (Especialización) y Aún No He Terminado (Maestría, con daño Grave).
       if (next.f_subclass === "Titán") {
         const tT = tierForLevel(next.f_level || 1);
@@ -6059,6 +6109,9 @@ export default function App({ onSignOut }) {
     // Hechicero · Canalizar Poder en Bruto: bono guardado para el próximo daño mágico.
     const rawBonus = ch && damageType === "mágico" ? Number(ch.f_raw_dmg || 0) : 0;
     if (rawBonus) updateCharacterField(charId, "f_raw_dmg", "");
+    // Nigromancia · Guerrero Mortal: el Caballero de la Muerte suma 2d12.
+    const knightRolls = opts.knight ? [1, 2].map(() => Math.floor(Math.random() * 12) + 1) : null;
+    const knightBonus = knightRolls ? knightRolls[0] + knightRolls[1] : 0;
     // Estirpe de la Brasa · Ignición: +1d6 con el arma principal en llamas.
     const igniteRoll = !opts.plain && ch && ch.f_ignite === "1" && (weaponName === ch.f_primary_weapon || (weaponName === BRAWLER_STRIKE && brawlerArmed(ch))) ? Math.floor(Math.random() * 6) + 1 : 0;
     // Pacto del Iracundo · Furia del Patrón: tantos Dados de Patrón como tu Rango.
@@ -6066,9 +6119,9 @@ export default function App({ onSignOut }) {
     const furyBonus = furyRolls ? furyRolls.reduce((a, b) => a + b, 0) : 0;
     const fearRolls = opts.fearDice ? Array.from({ length: opts.fearDice }, () => Math.floor(Math.random() * 10) + 1) : null;
     const fearBonus = fearRolls ? fearRolls.reduce((a, b) => a + b, 0) : 0;
-    const total = igniteRoll + roll + sum2 + bonus + critBonus + wolfBonus + unstopBonus + sneakBonus + rawBonus + fearBonus + furyBonus;
+    const total = knightBonus + igniteRoll + roll + sum2 + bonus + critBonus + wolfBonus + unstopBonus + sneakBonus + rawBonus + fearBonus + furyBonus;
     if (stanceNow === "aterradora") postCampaignEvent(charId, "😨 Postura Aterradora: el objetivo marca 1 Estrés");
-    setDamageRollResult({ attackFear: opts.attackFear || 0, igniteRoll, stanceNow, droppedRoll, favoredBonus, rolls2, die2, comboBase: total, furyRolls, furySides: ch ? patronSides(ch) : 6, fearRolls, rawBonus, sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, doublePick: !!opts.doublePick, charged: ch && ch.f_subclass === "Origen Primigenio" && ch.f_charged === "1" && damageType === "mágico", note: resonance ? "Resonancia Sagrada: los dados repetidos valen el doble" : opts.extraFlat ? "Incluye +" + opts.extraFlat + " de Elementalista" : waxBonus ? "Incluye +2 de la Luna Creciente" : opts.note || "", spirit: !!opts.spirit });
+    setDamageRollResult({ knightRolls, attackFear: opts.attackFear || 0, igniteRoll, stanceNow, droppedRoll, favoredBonus, rolls2, die2, comboBase: total, furyRolls, furySides: ch ? patronSides(ch) : 6, fearRolls, rawBonus, sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, doublePick: !!opts.doublePick, charged: ch && ch.f_subclass === "Origen Primigenio" && ch.f_charged === "1" && damageType === "mágico", note: resonance ? "Resonancia Sagrada: los dados repetidos valen el doble" : opts.extraFlat ? "Incluye +" + opts.extraFlat + " de Elementalista" : waxBonus ? "Incluye +2 de la Luna Creciente" : opts.note || "", spirit: !!opts.spirit });
     const who = playerName || "Alguien en la mesa";
     const critLabel = isCritical ? ` · ¡Crítico! (+${critBonus} máx.)` : "";
     const diceLabel = `${dice}d${die} (${rolls.join("+")})` + (rolls2 ? ` + ${dice}d${die2} (${rolls2.join("+")})` : "") + (furyRolls ? ` + Furia ${furyRolls.length}d${patronSides(ch)} (${furyRolls.join("+")})` : "") + (fearRolls ? ` + Enfrenta tu Miedo ${fearRolls.length}d10 (${fearRolls.join("+")}) mágico` : "") + (wolfBonus ? ` + Lobo 1d10 (${wolfBonus})` : "") + (unstopBonus ? ` + Imparable ${unstopBonus}` : "") + (sneakRolls ? ` + Furtivo ${sneakRolls.length}d6 (${sneakRolls.join("+")})` : "");
@@ -7910,7 +7963,8 @@ export default function App({ onSignOut }) {
   const [embraceDlg, setEmbraceDlg] = useState(null); // Pacto del Eterno · Abrazo Inmortal
   const [vengeAsk, setVengeAsk] = useState(null);
   const [titanAsk, setTitanAsk] = useState(null);
-  const [stanceEdit, setStanceEdit] = useState(null); // Artista Marcial · elegir posturas conocidas // Titán · Ojo por Ojo / Aún No He Terminado // Pacto del Iracundo · Venganza Letal / Ira de Otro Mundo
+  const [stanceEdit, setStanceEdit] = useState(null);
+  const [summonDlg, setSummonDlg] = useState(null); // Invocador · Invocar Entidad // Artista Marcial · elegir posturas conocidas // Titán · Ojo por Ojo / Aún No He Terminado // Pacto del Iracundo · Venganza Letal / Ira de Otro Mundo
   const getVault = (c) => {
     try {
       return JSON.parse(c?.f_domain_vault || "[]");
@@ -8628,6 +8682,14 @@ export default function App({ onSignOut }) {
       sid: String(Date.now()),
       roll: { ...base, aura: true, luck: { forId: rollerId, forName, prevHope: roll.hope, prevFear: roll.fear, kind: "aura" }, adjust: { charId: rollerId, hope: 1, stress: 0 } },
     });
+  };
+  // Invocador: cambia el número de entidades de un círculo.
+  const setSummon = (id, key, n, msg) => {
+    const c = charsRef.current[id];
+    if (!c) return;
+    const sm = getSummons(c);
+    updateCharacterField(id, "f_summons", JSON.stringify({ ...sm, [key]: Math.max(0, n) }));
+    if (msg) postCampaignEvent(id, msg);
   };
   // Bruja · Encanto de Bruja: 3 Esperanza para que una tirada de acción fallida (tuya o de un aliado) sea un éxito con Miedo.
   const witchCharm = (myId, rollerId, roll) => {
@@ -10111,6 +10173,8 @@ export default function App({ onSignOut }) {
         if (phaseC && phaseC.name === "Menguante") equipMods.evasion = (equipMods.evasion || 0) + 1;
         // Estirpe del Cielo · Ojo de la Tormenta.
         if (c.f_storm_eye === "1") equipMods.evasion = (equipMods.evasion || 0) + 1;
+        // Nigromancia · Protectores Fantasmales: +1 a la Evasión con algún Fantasma invocado.
+        if (c.f_subclass === "Nigromancia" && tierForLevel(c.f_level || 1) >= 2 && Number(getSummons(c).ghost || 0) > 0) equipMods.evasion = (equipMods.evasion || 0) + 1;
         // Camorrista · Yo Soy el Arma: +1 a la Evasión con el Golpe de Camorrista.
         if (brawlerArmed(c)) equipMods.evasion = (equipMods.evasion || 0) + 1;
         // Estirpe de la Tierra · Piel de Piedra: +1 a la Armadura y a los umbrales.
@@ -10289,6 +10353,11 @@ export default function App({ onSignOut }) {
                   {activeStance(c) && (
                     <span className="mh-htag is-active" style={{ "--tag": "#C08B5C" }} title={MARTIAL_STANCES.find((x) => x.key === c.f_stance)?.text}>
                       <span className="mh-htag-dot" /> Postura {MARTIAL_STANCES.find((x) => x.key === c.f_stance)?.name} · {getMFocus(c)} Conc.
+                    </span>
+                  )}
+                  {c.f_class === "Invocador" && summonTotal(c) > 0 && (
+                    <span className="mh-htag" style={{ "--tag": "#8E6FC4" }} title={circlesFor(c).filter((ci) => Number(getSummons(c)[ci.key] || 0)).map((ci) => getSummons(c)[ci.key] + " " + ci.plural).join(" · ")}>
+                      <Ghost size={11} /> Entidades · {summonTotal(c)}/{Number(c.f_level || 1)}
                     </span>
                   )}
                   {c.f_subclass === "Gremio del Envenenador" && Number(c.f_toxins || 0) > 0 && (
@@ -11485,7 +11554,7 @@ export default function App({ onSignOut }) {
                               kicker: `Subclase · ${subclassBadge}`,
                               title: subclassEntry.key,
                               text: subclassEntry.blurb,
-                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento", "Escuela de la Guerra", "Bruja Lunar", "Bruja del Seto", "Pacto del Eterno", "Pacto del Iracundo", "Titán", "Artista Marcial", "Gremio del Verdugo", "Gremio del Envenenador"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
+                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento", "Escuela de la Guerra", "Bruja Lunar", "Bruja del Seto", "Pacto del Eterno", "Pacto del Iracundo", "Titán", "Artista Marcial", "Gremio del Verdugo", "Gremio del Envenenador", "Nigromancia"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
                               image: subclassEntry.image,
                               bigStyle: true,
                               ...(isElemental ? { elementalAction: true } : {}),
@@ -11505,6 +11574,7 @@ export default function App({ onSignOut }) {
                               ...(subclassEntry.key === "Pacto del Iracundo" ? { wrathActs: true } : {}),
                               ...(subclassEntry.key === "Artista Marcial" ? { martialActs: true } : {}),
                               ...(subclassEntry.key === "Gremio del Envenenador" ? { poisonActs: true } : {}),
+                              ...(subclassEntry.key === "Nigromancia" ? { necroActs: true } : {}),
                             }),
                           });
                         }
@@ -14265,6 +14335,68 @@ export default function App({ onSignOut }) {
               );
             })()}
 
+            {summonDlg && characters[viewingCharId] && (() => {
+              const me = characters[viewingCharId];
+              const close = () => setSummonDlg(null);
+              const tierS = tierForLevel(me.f_level || 1);
+              const cap = Number(me.f_level || 1);
+              const sm = getSummons(me);
+              const picks = summonDlg.picks || {};
+              const added = Object.values(picks).reduce((a, b) => a + b, 0);
+              const room = Math.min(tierS, cap - summonTotal(me));
+              const go = () => {
+                if (!added) return;
+                const next = { ...sm };
+                Object.entries(picks).forEach(([k, v]) => (next[k] = Number(next[k] || 0) + v));
+                markStress(viewingCharId, 1, { f_summons: JSON.stringify(next) });
+                const list = circlesFor(me).filter((ci) => picks[ci.key]).map((ci) => picks[ci.key] + " " + (picks[ci.key] > 1 ? ci.plural : ci.name)).join(", ");
+                postCampaignEvent(viewingCharId, `🔮 Invocar Entidad: marca 1 Estrés e invoca ${list}`);
+                close();
+              };
+              return (
+                <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 46, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)" }} onClick={close}>
+                  <div className="mh-card mh-renew mh-commune" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Invocar Entidad">
+                    <div className="mh-pre-h">
+                      <span className="mh-pre-ic" style={{ background: "color-mix(in srgb, #8E6FC4 16%, var(--mh-panel))", color: "#8E6FC4" }}>
+                        <Ghost size={17} />
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <b className="mh-serif">Invocar Entidad</b>
+                        <small>Marca 1 Estrés para invocar hasta {tierS} entidad{tierS > 1 ? "es" : ""} (tu Rango). Tienes {summonTotal(me)} de {cap}.</small>
+                      </div>
+                      <button type="button" className="mh-inv-x" aria-label="Cerrar" onClick={close}>
+                        <X size={16} />
+                      </button>
+                    </div>
+                    <div className="mh-renew-list">
+                      {circlesFor(me).map((ci, k) => {
+                        const locked = ci.tier > tierS;
+                        const n = picks[ci.key] || 0;
+                        const maxHere = ci.max ? Math.max(0, ci.max - Number(sm[ci.key] || 0)) : Infinity;
+                        return (
+                          <div key={ci.key} className="mh-renew-row" style={{ opacity: locked ? 0.45 : 1 }}>
+                            <span className="mh-renew-av" style={{ background: "#8E6FC4" }}>{k + 1}</span>
+                            <div className="mh-renew-t">
+                              <b>{ci.plural}</b>
+                              <small>{locked ? "Se desbloquea en Rango " + ci.tier : "Tienes " + Number(sm[ci.key] || 0) + (ci.max ? " · máximo " + ci.max : "")}</small>
+                            </div>
+                            <span className="mh-renew-step">
+                              <button type="button" disabled={locked || n <= 0} onClick={() => setSummonDlg((x) => ({ ...x, picks: { ...x.picks, [ci.key]: n - 1 } }))}>−</button>
+                              <b>{n}</b>
+                              <button type="button" disabled={locked || added >= room || n >= maxHere} onClick={() => setSummonDlg((x) => ({ ...x, picks: { ...x.picks, [ci.key]: n + 1 } }))}>+</button>
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <button type="button" className="mh-btn" style={{ marginTop: 12, width: "100%" }} disabled={!added} onClick={go}>
+                      <Ghost size={15} /> Invocar {added || ""} · 1 Estrés
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+
             {titanAsk && characters[titanAsk.id] && (() => {
               const T = titanAsk;
               const me = characters[T.id];
@@ -15689,6 +15821,31 @@ export default function App({ onSignOut }) {
                       );
                     })()}
                     {(() => {
+                      // Nigromancia · Guerrero Mortal (Maestría): un éxito con Esperanza en un ataque pasa a ser con Miedo y el Caballero suma 2d12.
+                      const r = traitRollResult;
+                      const rc = characters[r.charId];
+                      if (!rc || rc.f_subclass !== "Nigromancia" || tierForLevel(rc.f_level || 1) < 3 || !r.weapon || r.reaction || !(r.hope > r.fear) || !Number(getSummons(rc).knight || 0)) return null;
+                      const okK = r.card?.dc != null ? r.total >= r.card.dc : null;
+                      if (okK === false) return null;
+                      if (r.weapon.knight) return <div className="mh-luck-done" style={{ color: "#5B6B5E" }}>Guerrero Mortal: éxito con Miedo · el Caballero suma 2d12 al daño</div>;
+                      return (
+                        <button
+                          type="button"
+                          className="mh-luck-btn mh-necro-btn"
+                          onClick={() => {
+                            const cur = charsRef.current[r.charId];
+                            updateCharacterField(r.charId, "hope_marked", String(Math.max(0, Number(cur.hope_marked ?? HOPE_DEFAULT) - (r.hopeGained ?? 1))));
+                            addFear(1);
+                            setTraitRollResult((prev) => (prev ? { ...prev, weapon: { ...prev.weapon, knight: true }, text: "Éxito con Miedo", color: "#A58BE8", note: "Guerrero Mortal: el DJ gana 1 de Miedo y tu Caballero de la Muerte embiste al objetivo" } : prev));
+                            postCampaignEvent(r.charId, "⚔️ Guerrero Mortal: su éxito con Esperanza pasa a ser con Miedo y el Caballero de la Muerte embiste al objetivo (+2d12 al daño)");
+                          }}
+                        >
+                          <Skull size={15} /> Guerrero Mortal: +2d12 al daño
+                          <small>{okK ? "Éxito con Esperanza" : "Si has tenido éxito"} · pasa a ser con Miedo</small>
+                        </button>
+                      );
+                    })()}
+                    {(() => {
                       // Gremio del Verdugo · Golpe Certero (Maestría): una vez por descanso largo, 1 Esperanza para acertar un ataque fallido.
                       const r = traitRollResult;
                       const rc = characters[r.charId];
@@ -15830,6 +15987,30 @@ export default function App({ onSignOut }) {
                         >
                           <Ghost size={15} /> Cruzar el velo · 1 Estrés
                           <small>{rc.f_walk_used ? "Ya usado · vuelve al descansar" : n + " fichas: una por pregunta respondida"}</small>
+                        </button>
+                      );
+                    })()}
+                    {(traitRollResult.card?.name === "Hambre de la Tumba" || traitRollResult.card?.name === "Terror Espectral") && (() => {
+                      const r = traitRollResult;
+                      const rc = characters[r.charId];
+                      if (!rc) return null;
+                      const sm = getSummons(rc);
+                      const hunger = r.card.name === "Hambre de la Tumba";
+                      if (r.necroDone) return <div className="mh-luck-done" style={{ color: "#5B6B5E" }}>{r.necroDone}</div>;
+                      const n = Number(hunger ? sm.corpse || 0 : sm.ghost || 0);
+                      if (!n) return <div className="mh-luck-done" style={{ color: "var(--mh-muted)" }}>No tienes {hunger ? "Cadáveres Errantes" : "Fantasmas"} invocados</div>;
+                      return (
+                        <button
+                          type="button"
+                          className="mh-luck-btn mh-necro-btn"
+                          onClick={() => {
+                            const msg = hunger ? (n > 1 ? `Tus ${n} Cadáveres Errantes hacen ${5 * n} de daño físico; uno desaparece` : "Tu Cadáver Errante hace 5 de daño físico y desaparece") : "Un Fantasma asusta al objetivo, que marca 1 Estrés; el Fantasma desaparece";
+                            setSummon(r.charId, hunger ? "corpse" : "ghost", n - 1, hunger ? `🧟 Hambre de la Tumba: sus ${n} Cadáveres Errantes atacan y hacen ${5 * n} de daño físico; uno desaparece` : "👻 Terror Espectral: un Fantasma asusta al objetivo, que marca 1 Estrés, y desaparece");
+                            setTraitRollResult((prev) => (prev ? { ...prev, necroDone: msg } : prev));
+                          }}
+                        >
+                          {hunger ? <Skull size={15} /> : <Ghost size={15} />} {hunger ? "Atacan: " + 5 * n + " de daño físico" : "El objetivo marca 1 Estrés"}
+                          <small>Si has tenido éxito · {hunger ? "después desaparece un Cadáver" : "después el Fantasma desaparece"}</small>
                         </button>
                       );
                     })()}
@@ -16116,7 +16297,7 @@ export default function App({ onSignOut }) {
                               updateCharacterFields(charId, { hope_marked: String(Math.min(getHopeMax(cur), Number(cur.hope_marked ?? HOPE_DEFAULT) + 1)), stress_marked: String(Math.max(0, Number(cur.stress_marked || 0) - 1)) });
                               postCampaignEvent(charId, "🥊 Gozo del Golpe: gana 1 Esperanza más, se quita 1 Estrés más y su Competencia sube en 1 en este ataque");
                             }
-                            rollWeaponDamage(name, damage, charId, isCritical, { attackFear: traitRollResult.fear, ...(pummel || honedHit ? { fixedDice: getProficiency(rc) + (pummel ? 1 : 0) + (honedHit ? 1 : 0) } : {}), fearDice, cloaked: wasCloaked, spirit, resonance: spirit && rc && tierForLevel(rc.f_level || 1) >= 3, extraFlat: traitRollResult.weapon.elemDmg || 0, doublePick: !!traitRollResult.weapon.manipDouble });
+                            rollWeaponDamage(name, damage, charId, isCritical, { knight: !!traitRollResult.weapon.knight, attackFear: traitRollResult.fear, ...(pummel || honedHit ? { fixedDice: getProficiency(rc) + (pummel ? 1 : 0) + (honedHit ? 1 : 0) } : {}), fearDice, cloaked: wasCloaked, spirit, resonance: spirit && rc && tierForLevel(rc.f_level || 1) >= 3, extraFlat: traitRollResult.weapon.elemDmg || 0, doublePick: !!traitRollResult.weapon.manipDouble });
                           }}
                         >
                           Sí
@@ -17877,6 +18058,79 @@ export default function App({ onSignOut }) {
                     });
                   }
                   // Llamado del Valiente · Ritual de Batalla.
+                  // Invocador · Invocar Entidad y Espíritu del Destino.
+                  if ((d.title === "Invocar Entidad" || d.title === "Primer Círculo: Espíritu del Destino") && c?.f_class === "Invocador" && !d.fromChat) {
+                    const sm = getSummons(c);
+                    const cap = Number(c.f_level || 1);
+                    const total = summonTotal(c);
+                    if (d.title === "Invocar Entidad")
+                      cardActs.push({
+                        key: "summon",
+                        Icon: Ghost,
+                        label: total >= cap ? "Tienes el máximo de entidades (" + cap + ")" : "Invocar entidades · 1 Estrés",
+                        sub: "Hasta " + tierForLevel(c.f_level || 1) + " a la vez · tienes " + total + "/" + cap,
+                        disabled: total >= cap,
+                        run: () => {
+                          closeCardDetail();
+                          setSummonDlg({ picks: {} });
+                        },
+                      });
+                    if (Number(sm.fate || 0) > 0)
+                      cardActs.push({
+                        key: "fate",
+                        Icon: RotateCcw,
+                        label: "Espíritu del Destino: repetir su ataque",
+                        sub: "Un adversario en alcance Muy cercano repite su ataque con éxito",
+                        run: () => {
+                          closeCardDetail();
+                          setSummon(viewingCharId, "fate", Number(sm.fate || 0) - 1, "🌀 Espíritu del Destino: obliga a un adversario en alcance Muy cercano a repetir su ataque, y el espíritu desaparece");
+                        },
+                      });
+                  }
+                  // Nigromancia: Hambre de la Tumba, Cosecha Macabra y Terror Espectral.
+                  if (d.necroActs && !d.fromChat) {
+                    const sm = getSummons(c);
+                    const tierN = tierForLevel(c.f_level || 1);
+                    const spellKeyN = spellcastTraitFor(c.f_class, c.f_subclass);
+                    const spellLabelN = TRAITS.find((t) => t.key === spellKeyN)?.label || "Conocimiento";
+                    const cap = Number(c.f_level || 1);
+                    cardActs.push(
+                      {
+                        key: "hunger",
+                        Icon: Skull,
+                        label: Number(sm.corpse || 0) ? "Hambre de la Tumba (" + sm.corpse + " Cadáveres)" : "Hambre de la Tumba · sin Cadáveres",
+                        sub: "Tirada de " + spellLabelN + " contra un objetivo en alcance Lejano",
+                        disabled: !Number(sm.corpse || 0),
+                        run: () => {
+                          closeCardDetail();
+                          rollTraitCheck(viewingCharId, spellLabelN, Number(c[spellKeyN] || 0), null, { name: "Hambre de la Tumba" });
+                        },
+                      },
+                      {
+                        key: "harvest",
+                        Icon: Plus,
+                        label: summonTotal(c) >= cap ? "Cosecha Macabra · sin hueco" : "Cosecha Macabra: invocar un Cadáver",
+                        sub: "Un adversario en alcance Lejano ha caído · sin Estrés",
+                        disabled: summonTotal(c) >= cap,
+                        run: () => {
+                          closeCardDetail();
+                          setSummon(viewingCharId, "corpse", Number(sm.corpse || 0) + 1, "🧟 Cosecha Macabra: un adversario cae y se alza como Cadáver Errante a su servicio");
+                        },
+                      }
+                    );
+                    if (tierN >= 2)
+                      cardActs.push({
+                        key: "terror",
+                        Icon: Ghost,
+                        label: Number(sm.ghost || 0) ? "Terror Espectral (" + sm.ghost + " Fantasmas)" : "Terror Espectral · sin Fantasmas",
+                        sub: "Tirada de " + spellLabelN + " contra un objetivo en alcance Lejano",
+                        disabled: !Number(sm.ghost || 0),
+                        run: () => {
+                          closeCardDetail();
+                          rollTraitCheck(viewingCharId, spellLabelN, Number(c[spellKeyN] || 0), null, { name: "Terror Espectral" });
+                        },
+                      });
+                  }
                   if (d.poisonActs && !d.fromChat) {
                     cardActs.push({
                       key: "toxins",
@@ -18780,7 +19034,7 @@ export default function App({ onSignOut }) {
                       label: "Mostrar en la campaña",
                       sub: shareCamp.name,
                       run: () => {
-                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, divineActs, sentinelActs, originActs, primalActs, braveActs, slayerCard, moonActs, hedgeActs, endlessActs, wrathActs, brawlerStrike: _bs, comboCard: _cc, martialActs: _ma, poisonActs: _pa, ...detail } = d;
+                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, divineActs, sentinelActs, originActs, primalActs, braveActs, slayerCard, moonActs, hedgeActs, endlessActs, wrathActs, brawlerStrike: _bs, comboCard: _cc, martialActs: _ma, poisonActs: _pa, necroActs: _na, ...detail } = d;
                         // Las imágenes incrustadas muy grandes no se copian al chat.
                         if (typeof detail.image === "string" && detail.image.startsWith("data:") && detail.image.length > 30000) delete detail.image;
                         const type = d.domain ? "domain" : d.weapon ? "weapon" : d.armor ? "armor" : "card";
@@ -18797,6 +19051,7 @@ export default function App({ onSignOut }) {
                   const hexCard = !d.fromChat && d.title === "Maleficio" && c?.f_class === "Bruja";
                   const patronCard = !d.fromChat && d.title === "Pacto con el Patrón" && c?.f_class === "Brujo";
                   const poisonCard = !d.fromChat && d.poisonActs && Number(c?.f_toxins || 0) > 0;
+                  const summonCard = !d.fromChat && (d.title === "Invocar Entidad" || d.necroActs) && c?.f_class === "Invocador";
                   const hedgeCard = !d.fromChat && d.hedgeActs && (Number(c?.f_talisman || 0) > 0 || Number(c?.f_walk || 0) > 0 || Number(c?.f_circle || 0) > 0);
                   const tideMax = Number(c?.f_level || 1);
                   const footer = d.weapon
@@ -18908,6 +19163,35 @@ export default function App({ onSignOut }) {
                         <small>Dado de Patrón: d{patronSides(c)} · {getFavor(c)} de Favor</small>
                       </div>
                     )}
+                    {summonCard && (() => {
+                      const sm = getSummons(c);
+                      const tierS = tierForLevel(c.f_level || 1);
+                      return (
+                        <div className="mh-cardc-foot mh-circles-foot">
+                          <div className="mh-circles">
+                            {circlesFor(c).map((ci, k) => {
+                              const n = Number(sm[ci.key] || 0);
+                              const locked = ci.tier > tierS;
+                              return (
+                                <div key={ci.key} className={"mh-circle" + (n ? " is-on" : "") + (locked ? " is-locked" : "")} title={locked ? "Se desbloquea en Rango " + ci.tier : ci.plural}>
+                                  <span className="mh-circle-ring">{locked ? <Lock size={12} /> : <b>{n}</b>}</span>
+                                  <small>{["1.º", "2.º", "3.º", "4.º"][k]} círculo</small>
+                                  <em>{ci.name}</em>
+                                  {n > 0 && (
+                                    <button type="button" aria-label={"Desaparece un " + ci.name} title="Desaparece una" onClick={() => setSummon(viewingCharId, ci.key, n - 1)}>
+                                      <Minus size={10} />
+                                    </button>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                          <small>
+                            {summonTotal(c)}/{Number(c.f_level || 1)} entidades · permanecen en alcance Muy cercano y no pueden ser objetivo
+                          </small>
+                        </div>
+                      );
+                    })()}
                     {poisonCard && (
                       <div className="mh-cardc-foot mh-hedge-foot">
                         <div className="mh-hedge-row" style={{ "--hc": "#5E8A4E" }}>
@@ -19116,7 +19400,7 @@ export default function App({ onSignOut }) {
                         </div>
                       );
                     })()}
-                    {!tideCard && !prayerCard && !slayerCard && !patternCard && !hexCard && !hedgeCard && !poisonCard && !patronCard && (footer || d.domain) && (
+                    {!tideCard && !prayerCard && !slayerCard && !patternCard && !hexCard && !hedgeCard && !poisonCard && !summonCard && !patronCard && (footer || d.domain) && (
                       <div className="mh-cardc-foot">
                         {d.domain ? (
                           <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
