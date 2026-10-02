@@ -656,6 +656,27 @@ const getContacts = (c) => {
 // Gigante · Alcance: lo que tenga alcance Cuerpo a cuerpo cuenta como Muy cercano.
 const isGiant = (c) => (c?.f_ancestry || "").split(" + ").includes("Gigante");
 const reachFor = (c, range) => (range === "Cuerpo a cuerpo" && isGiant(c) ? "Muy cercano" : range);
+// Orden del Mutante · beneficios de los mutágenos por Rango.
+const MUTAGEN_BENEFITS = [
+  { key: "celeridad", tier: 1, name: "Celeridad", text: "Si estás Inmovilizado o Vulnerable, puedes marcar 1 Estrés para terminar esa condición" },
+  { key: "resistente", tier: 1, name: "Resistente", text: "Tu Puntuación de Armadura aumenta en 2" },
+  { key: "sentidos", tier: 1, name: "Sentidos de Cazador", text: "Ventaja para rastrear a una criatura y ves en la oscuridad total" },
+  { key: "nervios", tier: 2, name: "Nervios de Acero", text: "Cuando tengas que marcar Estrés, puedes gastar 2 Esperanza en su lugar" },
+  { key: "rapidez", tier: 2, name: "Rapidez", text: "Tu Evasión aumenta en 1" },
+  { key: "pielhierro", tier: 2, name: "Piel de Hierro", text: "Tu umbral Grave aumenta tanto como tu Competencia" },
+  { key: "eterea", tier: 3, name: "Sangre Etérea", text: "Ves lo invisible, las ilusiones te parecen transparentes y ves la forma verdadera de lo transformado por la magia" },
+  { key: "furia", tier: 3, name: "Furia", text: "Al atacar, puedes marcar 1 Estrés para sumar tu Competencia a la tirada" },
+  { key: "carneacero", tier: 3, name: "Carne de Acero", text: "Tu umbral Mayor aumenta tanto como tu Competencia" },
+];
+const getMutagen = (c) => {
+  if (c?.f_subclass !== "Orden del Mutante" || !c.f_mutagen) return null;
+  try {
+    return JSON.parse(c.f_mutagen);
+  } catch (e) {
+    return null;
+  }
+};
+const hasMutagen = (c, k) => (getMutagen(c)?.benefits || []).includes(k);
 // Cazador de Sangre · Rito Carmesí: 1d4 (2d4 al nivel 2, 3d4 al 5 y 4d4 al 8).
 const crimsonDice = (c) => {
   const l = Number(c?.f_level || 1);
@@ -2997,6 +3018,19 @@ const sharedStyles = `
   .mh-necro-btn { background: #5B6B5E; }
   .mh-blood-btn { background: #A8323E; }
   .mh-psy { display: flex; flex-direction: column; gap: 6px; }
+  .mh-mutagen { max-width: 520px; }
+  .mh-mutagen .mh-label { margin: 10px 0 5px; }
+  .mh-mut-traits { display: flex; flex-wrap: wrap; gap: 5px; }
+  .mh-mut-traits button { border: 1px solid var(--mh-line); background: var(--mh-panel); border-radius: 20px; padding: 4px 10px; font: 600 11.5px "Inter", system-ui, sans-serif; color: var(--mh-ink); cursor: pointer; }
+  .mh-mut-traits button.is-up { background: #5E8A4E; border-color: #5E8A4E; color: #fff; }
+  .mh-mut-traits button.is-down { background: #A8323E; border-color: #A8323E; color: #fff; }
+  .mh-mut-traits button:disabled { opacity: .35; cursor: not-allowed; }
+  .mh-mut-benefits { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+  .mh-mut-benefits button { text-align: left; border: 1px solid var(--mh-line); background: var(--mh-panel); border-radius: 10px; padding: 7px 9px; cursor: pointer; display: flex; flex-direction: column; gap: 2px; font: inherit; color: var(--mh-ink); }
+  .mh-mut-benefits button b { font-size: 12px; }
+  .mh-mut-benefits button small { font-size: 10.5px; color: var(--mh-muted); line-height: 1.3; }
+  .mh-mut-benefits button.is-on { border-color: #A8323E; background: color-mix(in srgb, #A8323E 10%, var(--mh-panel)); box-shadow: 0 0 0 1px #A8323E inset; }
+  .mh-mut-benefits button:disabled { opacity: .4; cursor: not-allowed; }
   .mh-blood-btn:hover:not(:disabled) { background: #8E2A34; }
   .mh-eq.mh-eq-crimson { border-color: #A8323E !important; box-shadow: 0 0 0 1px #A8323E, 0 0 14px color-mix(in srgb, #A8323E 35%, transparent); }
   .mh-angel-btn { background: #C9A24A; }
@@ -8030,7 +8064,8 @@ export default function App({ onSignOut }) {
   const [titanAsk, setTitanAsk] = useState(null);
   const [stanceEdit, setStanceEdit] = useState(null);
   const [summonDlg, setSummonDlg] = useState(null); // Invocador · Invocar Entidad
-  const [bestialDlg, setBestialDlg] = useState(false); // Licántropo · Concentración Bestial // Artista Marcial · elegir posturas conocidas // Titán · Ojo por Ojo / Aún No He Terminado // Pacto del Iracundo · Venganza Letal / Ira de Otro Mundo
+  const [bestialDlg, setBestialDlg] = useState(false); // Licántropo · Concentración Bestial
+  const [mutagenDlg, setMutagenDlg] = useState(null); // Mutante · beber un mutágeno // Artista Marcial · elegir posturas conocidas // Titán · Ojo por Ojo / Aún No He Terminado // Pacto del Iracundo · Venganza Letal / Ira de Otro Mundo
   const getVault = (c) => {
     try {
       return JSON.parse(c?.f_domain_vault || "[]");
@@ -8232,6 +8267,7 @@ export default function App({ onSignOut }) {
     if (c.f_marked) restPatch.f_marked = "";
     if (c.f_ignite) restPatch.f_ignite = "";
     if (c.f_hybrid) restPatch.f_hybrid = "";
+    if (c.f_mutagen) restPatch.f_mutagen = "";
     if (c.f_crimson) restPatch.f_crimson = "";
     if (isLong && c.f_psychometry) restPatch.f_psychometry = "";
     if (c.f_bestial_used) restPatch.f_bestial_used = "";
@@ -8592,7 +8628,7 @@ export default function App({ onSignOut }) {
   const rollTraitCheck = (charId, traitLabel, traitValue, weapon, cardContext, advantage) => {
     // Galapa · Retraerse: desventaja en las tiradas de acción mientras está en el caparazón.
     const shellOn = getConditions(charsRef.current[charId] || {}).includes("Retraído");
-    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage && !shellOn, exps: [], rally: false, privilege: false, disadvantage: shellOn, shellOn, poet: false, dedicated: false, quick: false, reaction: false, tide: 0, dc: "", elem: "", slayer: 0, found: "", adept: false, patron: false, surround: 0, honed: false, hallow: false });
+    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage && !shellOn, exps: [], rally: false, privilege: false, disadvantage: shellOn, shellOn, poet: false, dedicated: false, quick: false, reaction: false, tide: 0, dc: "", elem: "", slayer: 0, found: "", adept: false, patron: false, surround: 0, honed: false, hallow: false, fury: false });
   };
   const confirmPreRoll = () => {
     const pr = preRoll;
@@ -8666,7 +8702,12 @@ export default function App({ onSignOut }) {
       postCampaignEvent(pr.charId, `👁️ Pacto con el Patrón: gasta 1 Favor y pide la ayuda de ${ch.f_patron || "su patrón"} (+1d${patronUse})`);
     }
     const circleN = ch && ch.f_subclass === "Bruja del Seto" ? Number(ch.f_circle || 0) : 0;
-    const circleAtk = (circleN > 0 && pr.weapon ? 2 : 0) + (activeStance(ch) === "fiable" && pr.weapon ? 1 : 0);
+    const furyUse = hasMutagen(ch, "furia") && pr.weapon && pr.fury;
+    if (furyUse) {
+      markStress(pr.charId, 1);
+      postCampaignEvent(pr.charId, `🧪 Furia: marca 1 Estrés y suma su Competencia (+${getProficiency(ch)}) al ataque`);
+    }
+    const circleAtk = (circleN > 0 && pr.weapon ? 2 : 0) + (activeStance(ch) === "fiable" && pr.weapon ? 1 : 0) + (furyUse ? getProficiency(ch) : 0);
     // Artista Marcial · Afinada: 1 de Concentración para +1 a la Competencia en este ataque.
     const honedUse = activeStance(ch) === "afinada" && pr.weapon && pr.honed && getMFocus(ch) > 0;
     if (honedUse) {
@@ -10258,6 +10299,18 @@ export default function App({ onSignOut }) {
         if (c.f_storm_eye === "1") equipMods.evasion = (equipMods.evasion || 0) + 1;
         // Nigromancia · Protectores Fantasmales: +1 a la Evasión con algún Fantasma invocado.
         if (c.f_subclass === "Nigromancia" && tierForLevel(c.f_level || 1) >= 2 && Number(getSummons(c).ghost || 0) > 0) equipMods.evasion = (equipMods.evasion || 0) + 1;
+        // Orden del Mutante · Mutágenos: rasgos y beneficios hasta el próximo descanso.
+        const mut = getMutagen(c);
+        if (mut) {
+          const step = tierForLevel(c.f_level || 1) >= 3 ? 2 : 1;
+          if (mut.up) equipMods[mut.up] = (equipMods[mut.up] || 0) + step;
+          if (mut.down) equipMods[mut.down] = (equipMods[mut.down] || 0) - step;
+          const profM = getProficiency(c);
+          if (hasMutagen(c, "resistente")) equipMods.armor = (equipMods.armor || 0) + 2;
+          if (hasMutagen(c, "rapidez")) equipMods.evasion = (equipMods.evasion || 0) + 1;
+          if (hasMutagen(c, "pielhierro")) equipMods.severe = (equipMods.severe || 0) + profM;
+          if (hasMutagen(c, "carneacero")) equipMods.major = (equipMods.major || 0) + profM;
+        }
         // Camorrista · Yo Soy el Arma: +1 a la Evasión con el Golpe de Camorrista.
         if (brawlerArmed(c)) equipMods.evasion = (equipMods.evasion || 0) + 1;
         // Estirpe de la Tierra · Piel de Piedra: +1 a la Armadura y a los umbrales.
@@ -10447,6 +10500,11 @@ export default function App({ onSignOut }) {
                   {c.f_subclass === "Gremio del Envenenador" && Number(c.f_toxins || 0) > 0 && (
                     <span className="mh-htag" style={{ "--tag": "#5E8A4E" }} title="Brebajes Tóxicos: fichas de veneno preparadas">
                       <FlaskConical size={11} /> Venenos · {c.f_toxins}
+                    </span>
+                  )}
+                  {getMutagen(c) && (
+                    <span className="mh-htag is-active" style={{ "--tag": "#A8323E" }} title={"Mutágeno: " + (getMutagen(c).benefits || []).map((k) => MUTAGEN_BENEFITS.find((x) => x.key === k)?.text).join(" · ")}>
+                      <span className="mh-htag-dot" /> Mutágeno · {(getMutagen(c).benefits || []).map((k) => MUTAGEN_BENEFITS.find((x) => x.key === k)?.name).join(" + ")}
                     </span>
                   )}
                   {c.f_hybrid === "1" && (
@@ -11692,7 +11750,7 @@ export default function App({ onSignOut }) {
                               kicker: `Subclase · ${subclassBadge}`,
                               title: subclassEntry.key,
                               text: subclassEntry.blurb,
-                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento", "Escuela de la Guerra", "Bruja Lunar", "Bruja del Seto", "Pacto del Eterno", "Pacto del Iracundo", "Titán", "Artista Marcial", "Gremio del Verdugo", "Gremio del Envenenador", "Nigromancia", "Teúrgia", "Orden del Licántropo"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
+                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento", "Escuela de la Guerra", "Bruja Lunar", "Bruja del Seto", "Pacto del Eterno", "Pacto del Iracundo", "Titán", "Artista Marcial", "Gremio del Verdugo", "Gremio del Envenenador", "Nigromancia", "Teúrgia", "Orden del Licántropo", "Orden del Mutante"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
                               image: subclassEntry.image,
                               bigStyle: true,
                               ...(isElemental ? { elementalAction: true } : {}),
@@ -11715,6 +11773,7 @@ export default function App({ onSignOut }) {
                               ...(subclassEntry.key === "Nigromancia" ? { necroActs: true } : {}),
                               ...(subclassEntry.key === "Teúrgia" ? { theurgyActs: true } : {}),
                               ...(subclassEntry.key === "Orden del Licántropo" ? { lycanActs: true } : {}),
+                              ...(subclassEntry.key === "Orden del Mutante" ? { mutantActs: true } : {}),
                             }),
                           });
                         }
@@ -14475,6 +14534,77 @@ export default function App({ onSignOut }) {
               );
             })()}
 
+            {mutagenDlg && characters[viewingCharId] && (() => {
+              const me = characters[viewingCharId];
+              const close = () => setMutagenDlg(null);
+              const M = mutagenDlg;
+              const tierM = tierForLevel(me.f_level || 1);
+              const step = tierM >= 3 ? 2 : 1;
+              const maxB = tierM >= 2 ? 2 : 1;
+              const known = MUTAGEN_BENEFITS.filter((b) => b.tier <= tierM);
+              const ok = M.up && M.down && M.up !== M.down && M.benefits.length > 0;
+              const go = () => {
+                if (!ok) return;
+                const volatile = M.benefits.length > 1;
+                const patch = { f_mutagen: JSON.stringify({ up: M.up, down: M.down, benefits: M.benefits }) };
+                if (volatile) patch.hp_marked = String(Number(me.hp_marked || 0) + 1);
+                updateCharacterFields(viewingCharId, patch);
+                const tl = (k) => TRAITS.find((t) => t.key === k)?.label;
+                postCampaignEvent(viewingCharId, `🧪 Bebe un mutágeno: +${step} ${tl(M.up)}, −${step} ${tl(M.down)} y ${M.benefits.map((k) => MUTAGEN_BENEFITS.find((x) => x.key === k)?.name).join(" + ")}${volatile ? " (Toxinas Volátiles: marca 1 Punto de Vida que no puede quitarse hasta su próximo descanso)" : ""}`);
+                close();
+              };
+              const pickTrait = (field, k) => setMutagenDlg((x) => ({ ...x, [field]: x[field] === k ? "" : k }));
+              const toggleB = (k) => setMutagenDlg((x) => ({ ...x, benefits: x.benefits.includes(k) ? x.benefits.filter((y) => y !== k) : x.benefits.length < maxB ? [...x.benefits, k] : x.benefits }));
+              return (
+                <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 46, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)" }} onClick={close}>
+                  <div className="mh-card mh-renew mh-mutagen" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Mutágeno">
+                    <div className="mh-pre-h">
+                      <span className="mh-pre-ic" style={{ background: "color-mix(in srgb, #A8323E 16%, var(--mh-panel))", color: "#A8323E" }}>
+                        <FlaskConical size={17} />
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <b className="mh-serif">Beber un mutágeno</b>
+                        <small>Sus efectos duran hasta que termines tu siguiente descanso.</small>
+                      </div>
+                      <button type="button" className="mh-inv-x" aria-label="Cerrar" onClick={close}>
+                        <X size={16} />
+                      </button>
+                    </div>
+                    <div className="mh-label">+{step} a un rasgo</div>
+                    <div className="mh-mut-traits">
+                      {TRAITS.map((t) => (
+                        <button key={t.key} type="button" className={M.up === t.key ? "is-up" : ""} disabled={M.down === t.key} onClick={() => pickTrait("up", t.key)}>
+                          {t.label}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="mh-label">−{step} a otro rasgo</div>
+                    <div className="mh-mut-traits">
+                      {TRAITS.map((t) => (
+                        <button key={t.key} type="button" className={M.down === t.key ? "is-down" : ""} disabled={M.up === t.key} onClick={() => pickTrait("down", t.key)}>
+                          {t.label}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="mh-label">
+                      Beneficio{maxB > 1 ? " (puedes elegir dos con Toxinas Volátiles: marcas 1 PV)" : ""}
+                    </div>
+                    <div className="mh-mut-benefits">
+                      {known.map((b) => (
+                        <button key={b.key} type="button" className={M.benefits.includes(b.key) ? "is-on" : ""} disabled={!M.benefits.includes(b.key) && M.benefits.length >= maxB} onClick={() => toggleB(b.key)}>
+                          <b>{b.name}</b>
+                          <small>{b.text}</small>
+                        </button>
+                      ))}
+                    </div>
+                    <button type="button" className="mh-btn" style={{ marginTop: 12, width: "100%" }} disabled={!ok} onClick={go}>
+                      <FlaskConical size={15} /> Beber{M.benefits.length > 1 ? " · marca 1 PV" : ""}
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+
             {bestialDlg && characters[viewingCharId] && (() => {
               const me = characters[viewingCharId];
               const close = () => setBestialDlg(false);
@@ -15411,7 +15541,7 @@ export default function App({ onSignOut }) {
               const circleOn = ch.f_subclass === "Bruja del Seto" && Number(ch.f_circle || 0) > 0 && !!preRoll.weapon;
               // Artista Marcial · Fiable: +1 a las tiradas de ataque.
               const reliableOn = activeStance(ch) === "fiable" && !!preRoll.weapon;
-              const mod = preRoll.traitValue + (noMercyOn ? 1 : 0) + (moonbeamOn ? 1 : 0) + (circleOn ? 2 : 0) + (reliableOn ? 1 : 0) + expSum + tideUse + (foundPick && !ch.f_found_used ? foundPick.bonus : 0) + (ch.f_subclass === "Origen Elemental" && !preRoll.reaction && preRoll.elem === "roll" ? 2 : 0);
+              const mod = preRoll.traitValue + (noMercyOn ? 1 : 0) + (moonbeamOn ? 1 : 0) + (circleOn ? 2 : 0) + (reliableOn ? 1 : 0) + (hasMutagen(ch, "furia") && preRoll.weapon && preRoll.fury ? getProficiency(ch) : 0) + expSum + tideUse + (foundPick && !ch.f_found_used ? foundPick.bonus : 0) + (ch.f_subclass === "Origen Elemental" && !preRoll.reaction && preRoll.elem === "roll" ? 2 : 0);
               // Galapa retraída: la desventaja en las tiradas de acción no se puede quitar.
               // Goblin · Pie Firme: ignora la desventaja en las tiradas de Agilidad.
               const sureFoot = (ch.f_ancestry || "").split(" + ").includes("Goblin") && preRoll.traitLabel === "Agilidad";
@@ -15449,6 +15579,8 @@ export default function App({ onSignOut }) {
               const climberOk = !(ch.f_class === "Asesino" && ch.f_inout === "1" && !preRoll.reaction) && (ch.f_ancestry || "").split(" + ").includes("Simiah") && preRoll.traitLabel === "Agilidad" && !etherealOk && !dreadOk && !glamourOk;
               // Bruja del Seto · Maldición Irritante: ventaja al atacar a criaturas con Maleficio.
               // Pacto del Eterno · Manto del Patrón: ventaja para intimidar.
+              // Orden del Mutante · Sentidos de Cazador: ventaja para rastrear a una criatura.
+              const sensesOk = hasMutagen(ch, "sentidos") && !preRoll.reaction;
               // Cazador de Sangre · Psicometría Siniestra: ventaja para rastrear o recordar a la criatura de la visión.
               const psyOk = ch.f_class === "Cazador de Sangre" && !!ch.f_psychometry && !preRoll.reaction;
               // Teúrgia · Presencia Angelical: con algún Ángel invocado, ventaja en Presencia para influir.
@@ -15459,7 +15591,7 @@ export default function App({ onSignOut }) {
               const isolOk = !inoutOk && activeStance(ch) === "aislante" && !!preRoll.weapon;
               const mantleOk = !isolOk && ch.f_mantle === "1" && preRoll.traitLabel === "Presencia" && !etherealOk && !dreadOk && !glamourOk && !climberOk;
               const vexOk = !mantleOk && ch.f_subclass === "Bruja del Seto" && tierForLevel(ch.f_level || 1) >= 2 && !!preRoll.weapon && (ch.f_hexes || "[]") !== "[]" && !etherealOk && !dreadOk && !glamourOk && !climberOk;
-              const edgeSource = inoutOk ? "Entrar y Salir" : psyOk ? "Psicometría Siniestra" : angelicOk ? "Presencia Angelical" : etherealOk ? "Rostro Etéreo" : dreadOk ? "Rostro Temible" : glamourOk ? "Glamour Nocturno" : climberOk ? "Trepador Nato" : inoutOk ? "Entrar y Salir" : isolOk ? "Aislante" : mantleOk ? "Manto del Patrón" : vexOk ? "Maldición Irritante" : highborne ? "Privilegio" : loreborne ? "Leído" : ridgeborne ? "Firme" : slyborne ? "Granuja" : underborne ? "Vida en la Penumbra" : wildborne ? "Pies Ligeros" : "";
+              const edgeSource = inoutOk ? "Entrar y Salir" : psyOk ? "Psicometría Siniestra" : sensesOk ? "Sentidos de Cazador" : angelicOk ? "Presencia Angelical" : etherealOk ? "Rostro Etéreo" : dreadOk ? "Rostro Temible" : glamourOk ? "Glamour Nocturno" : climberOk ? "Trepador Nato" : inoutOk ? "Entrar y Salir" : isolOk ? "Aislante" : mantleOk ? "Manto del Patrón" : vexOk ? "Maldición Irritante" : highborne ? "Privilegio" : loreborne ? "Leído" : ridgeborne ? "Firme" : slyborne ? "Granuja" : underborne ? "Vida en la Penumbra" : wildborne ? "Pies Ligeros" : "";
               const poetOk = ch.f_subclass === "Orador" && preRoll.traitLabel === "Presencia";
               // Origen Elemental · Elementalista: 1 Esperanza para +2 a la tirada o +3 al daño.
               const elemOk = ch.f_subclass === "Origen Elemental" && !preRoll.reaction;
@@ -15486,6 +15618,17 @@ export default function App({ onSignOut }) {
               const setTide = (n) => setPreRoll((p) => ({ ...p, tide: Math.max(0, Math.min(tideHave, n)) }));
               const setSlayer = (n) => setPreRoll((p) => ({ ...p, slayer: Math.max(0, Math.min(slayerHave, n)) }));
               const bonusTiles = [
+                hasMutagen(ch, "furia") && preRoll.weapon
+                  ? tile("mfury", {
+                      on: preRoll.fury,
+                      title: "Furia",
+                      sub: "Mutágeno · 1 Estrés",
+                      cost: "+" + getProficiency(ch),
+                      color: "#A8323E",
+                      hint: "Marca 1 Estrés para sumar tu Competencia a la tirada de ataque",
+                      onClick: () => setPreRoll((p) => ({ ...p, fury: !p.fury })),
+                    })
+                  : null,
                 ch.f_subclass === "Teúrgia" && Number(ch.f_hallow_dice || 0) > 0
                   ? tile("hallow", {
                       on: preRoll.hallow,
@@ -15652,10 +15795,10 @@ export default function App({ onSignOut }) {
                   ? tile("priv", {
                       on: preRoll.privilege,
                       title: edgeSource,
-                      sub: etherealOk ? "Centinela Alado · volando" : dreadOk ? "Infernal" : glamourOk ? "Bruja Lunar" : climberOk ? "Simiah" : inoutOk ? "Asesino" : psyOk ? (ch.f_psychometry !== "1" ? ch.f_psychometry : "Cazador de Sangre") : angelicOk ? "Teúrgia" : isolOk ? "Postura marcial" : mantleOk ? "Pacto del Eterno" : vexOk ? "Bruja del Seto" : highborne ? "De Alta Cuna" : loreborne ? "Del Saber" : slyborne ? "De las Sombras" : underborne ? "De las Profundidades" : wildborne ? "Salvaje" : "De las Cumbres",
+                      sub: etherealOk ? "Centinela Alado · volando" : dreadOk ? "Infernal" : glamourOk ? "Bruja Lunar" : climberOk ? "Simiah" : inoutOk ? "Asesino" : !psyOk && sensesOk ? "Mutágeno" : psyOk ? (ch.f_psychometry !== "1" ? ch.f_psychometry : "Cazador de Sangre") : angelicOk ? "Teúrgia" : isolOk ? "Postura marcial" : mantleOk ? "Pacto del Eterno" : vexOk ? "Bruja del Seto" : highborne ? "De Alta Cuna" : loreborne ? "Del Saber" : slyborne ? "De las Sombras" : underborne ? "De las Profundidades" : wildborne ? "Salvaje" : "De las Cumbres",
                       cost: "Ventaja",
-                      color: etherealOk ? "#D8A84A" : dreadOk ? "#A33A3A" : glamourOk ? "#8C7FD0" : climberOk ? "#A0784A" : inoutOk ? "#7D8BA3" : psyOk ? "#A8323E" : angelicOk ? "#D8A84A" : isolOk ? "#C08B5C" : mantleOk ? "#B55FA0" : vexOk ? "#9B7FD6" : highborne ? "#B8862E" : loreborne ? "#5E8FC9" : slyborne ? "#6E5A8A" : underborne ? "#5A6B7A" : wildborne ? "#5E8A4E" : "#7E8C6A",
-                      hint: etherealOk ? "Mientras vuelas, tienes ventaja en las tiradas de Presencia" : dreadOk ? "Si intentas intimidar a una criatura hostil" : glamourOk ? "Si la tirada aprovecha tu apariencia ilusoria" : climberOk ? "Si la tirada implica mantener el equilibrio o trepar" : inoutOk ? "Si la tirada aprovecha la forma de entrar o salir que te dio el DJ (se gasta al tirar)" : psyOk ? "Si la tirada es para rastrear o recordar información sobre la criatura de tu visión" : angelicOk ? "Si intentas influir en otros: el poder angelical inspira asombro y temor" : isolOk ? "Si no hay otras criaturas en alcance Muy cercano de ti o de tu objetivo" : mantleOk ? "Si intentas intimidar a un objetivo" : vexOk ? "Si atacas a una criatura con tu Maleficio" : highborne ? "Si tratas con nobles, negocias un precio o usas tu reputación" : loreborne ? "Si la tirada trata sobre la historia, la cultura o la política de una persona o un lugar importantes" : slyborne ? "Si negocias con criminales, intentas detectar una mentira o buscas un escondite seguro" : underborne ? "Si estás en una zona con poca luz o sombras densas y te escondes, investigas o percibes detalles en ella" : wildborne ? "Si intentas moverte sin que te oigan" : "Si cruzas precipicios y cornisas peligrosos, te orientas en un entorno duro o usas tus conocimientos de supervivencia",
+                      color: etherealOk ? "#D8A84A" : dreadOk ? "#A33A3A" : glamourOk ? "#8C7FD0" : climberOk ? "#A0784A" : inoutOk ? "#7D8BA3" : psyOk || sensesOk ? "#A8323E" : angelicOk ? "#D8A84A" : isolOk ? "#C08B5C" : mantleOk ? "#B55FA0" : vexOk ? "#9B7FD6" : highborne ? "#B8862E" : loreborne ? "#5E8FC9" : slyborne ? "#6E5A8A" : underborne ? "#5A6B7A" : wildborne ? "#5E8A4E" : "#7E8C6A",
+                      hint: etherealOk ? "Mientras vuelas, tienes ventaja en las tiradas de Presencia" : dreadOk ? "Si intentas intimidar a una criatura hostil" : glamourOk ? "Si la tirada aprovecha tu apariencia ilusoria" : climberOk ? "Si la tirada implica mantener el equilibrio o trepar" : inoutOk ? "Si la tirada aprovecha la forma de entrar o salir que te dio el DJ (se gasta al tirar)" : psyOk ? "Si la tirada es para rastrear o recordar información sobre la criatura de tu visión" : sensesOk ? "Si la tirada es para rastrear a una criatura" : angelicOk ? "Si intentas influir en otros: el poder angelical inspira asombro y temor" : isolOk ? "Si no hay otras criaturas en alcance Muy cercano de ti o de tu objetivo" : mantleOk ? "Si intentas intimidar a un objetivo" : vexOk ? "Si atacas a una criatura con tu Maleficio" : highborne ? "Si tratas con nobles, negocias un precio o usas tu reputación" : loreborne ? "Si la tirada trata sobre la historia, la cultura o la política de una persona o un lugar importantes" : slyborne ? "Si negocias con criminales, intentas detectar una mentira o buscas un escondite seguro" : underborne ? "Si estás en una zona con poca luz o sombras densas y te escondes, investigas o percibes detalles en ella" : wildborne ? "Si intentas moverte sin que te oigan" : "Si cruzas precipicios y cornisas peligrosos, te orientas en un entorno duro o usas tus conocimientos de supervivencia",
                       onClick: () => setPreRoll((p) => ({ ...p, privilege: !p.privilege, advantage: p.privilege ? p.advantage : false })),
                     })
                   : null,
@@ -15671,6 +15814,7 @@ export default function App({ onSignOut }) {
                 moonbeamOn ? ["Rayo de Luna", "+1"] : null,
                 circleOn ? ["Círculo de Poder", "+2"] : null,
                 reliableOn ? ["Postura Fiable", "+1"] : null,
+                hasMutagen(ch, "furia") && preRoll.weapon && preRoll.fury ? ["Furia (1 Estrés)", "+" + getProficiency(ch)] : null,
                 patronOk && preRoll.patron ? ["Dado de Patrón", "+1d" + patronSides(ch)] : null,
                 hybridSides(ch) && !preRoll.reaction ? ["Forma Híbrida", "+1d" + hybridSides(ch)] : null,
                 slayerUse ? ["Dados de Cazador", "+" + slayerUse + "d6"] : null,
@@ -18392,6 +18536,46 @@ export default function App({ onSignOut }) {
                         },
                       });
                   }
+                  // Orden del Mutante: beber un mutágeno y usar sus beneficios.
+                  if (d.mutantActs && !d.fromChat) {
+                    const mut = getMutagen(c);
+                    cardActs.push({
+                      key: "mutagen",
+                      Icon: FlaskConical,
+                      label: mut ? "Mutágeno activo · vuelve al descansar" : "Beber un mutágeno",
+                      sub: mut ? (mut.benefits || []).map((k) => MUTAGEN_BENEFITS.find((x) => x.key === k)?.name).join(" + ") : "Al terminar un descanso: hasta el siguiente",
+                      disabled: !!mut,
+                      run: () => {
+                        closeCardDetail();
+                        setMutagenDlg({ up: "", down: "", benefits: [] });
+                      },
+                    });
+                    const conds = getConditions(c);
+                    if (hasMutagen(c, "celeridad") && (conds.includes("Inmovilizado") || conds.includes("Vulnerable")))
+                      cardActs.push({
+                        key: "celerity",
+                        Icon: Wind,
+                        label: "Celeridad: librarte · 1 Estrés",
+                        sub: "Termina Inmovilizado o Vulnerable",
+                        run: () => {
+                          closeCardDetail();
+                          markStress(viewingCharId, 1, { f_conditions: JSON.stringify(conds.filter((n) => n !== "Inmovilizado" && n !== "Vulnerable")) });
+                          postCampaignEvent(viewingCharId, "🧪 Celeridad: marca 1 Estrés y se libra de su condición");
+                        },
+                      });
+                    if (hasMutagen(c, "nervios"))
+                      cardActs.push({
+                        key: "nerves",
+                        Icon: Zap,
+                        label: "Nervios de Acero: 2 Esperanza en vez de 1 Estrés",
+                        sub: "Quita el último Estrés que has marcado",
+                        disabled: Number(c.hope_marked ?? HOPE_DEFAULT) < 2 || !Number(c.stress_marked || 0),
+                        run: () => {
+                          updateCharacterFields(viewingCharId, { hope_marked: String(Number(c.hope_marked ?? HOPE_DEFAULT) - 2), stress_marked: String(Number(c.stress_marked || 0) - 1) });
+                          postCampaignEvent(viewingCharId, "🧪 Nervios de Acero: gasta 2 Esperanza en lugar de marcar 1 Estrés");
+                        },
+                      });
+                  }
                   // Orden del Licántropo: Forma Híbrida y Concentración Bestial.
                   if (d.lycanActs && !d.fromChat) {
                     cardActs.push(
@@ -19428,7 +19612,7 @@ export default function App({ onSignOut }) {
                       label: "Mostrar en la campaña",
                       sub: shareCamp.name,
                       run: () => {
-                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, divineActs, sentinelActs, originActs, primalActs, braveActs, slayerCard, moonActs, hedgeActs, endlessActs, wrathActs, brawlerStrike: _bs, comboCard: _cc, martialActs: _ma, poisonActs: _pa, necroActs: _na, theurgyActs: _ta, lycanActs: _la, ...detail } = d;
+                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, divineActs, sentinelActs, originActs, primalActs, braveActs, slayerCard, moonActs, hedgeActs, endlessActs, wrathActs, brawlerStrike: _bs, comboCard: _cc, martialActs: _ma, poisonActs: _pa, necroActs: _na, theurgyActs: _ta, lycanActs: _la, mutantActs: _mu, ...detail } = d;
                         // Las imágenes incrustadas muy grandes no se copian al chat.
                         if (typeof detail.image === "string" && detail.image.startsWith("data:") && detail.image.length > 30000) delete detail.image;
                         const type = d.domain ? "domain" : d.weapon ? "weapon" : d.armor ? "armor" : "card";
