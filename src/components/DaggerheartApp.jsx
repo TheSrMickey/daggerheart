@@ -2941,6 +2941,11 @@ const sharedStyles = `
   .mh-mark-btn:hover:not(:disabled) { background: #5A6680; }
   .mh-mark-btn.is-alt { background: transparent; color: #4F5B73; border: 1.5px solid #7D8BA3; }
   .mh-mark-btn:disabled { opacity: .5; cursor: not-allowed; }
+  .mh-eq.mh-eq-ablaze { border-color: #E0823A !important; box-shadow: 0 0 0 1px #E0823A, 0 0 18px color-mix(in srgb, #E0823A 45%, transparent); animation: mh-ablaze 1.6s ease-in-out infinite; }
+  .mh-eq.mh-eq-ablaze .mh-eq-art { background: radial-gradient(circle at 50% 75%, color-mix(in srgb, #E0823A 45%, transparent), color-mix(in srgb, #E8C547 12%, var(--mh-panel2)) 70%); color: #B5531C; }
+  .mh-eq-flame { position: absolute; top: 6px; left: 50%; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 20px; background: #E0823A; color: #fff; font: 700 10px "Inter", system-ui, sans-serif; white-space: nowrap; }
+  @keyframes mh-ablaze { 50% { box-shadow: 0 0 0 1px #E0823A, 0 0 26px color-mix(in srgb, #E8A23A 60%, transparent); } }
+  @media (prefers-reduced-motion: reduce) { .mh-eq.mh-eq-ablaze { animation: none; } }
   .mh-eq.mh-eq-bare { border-style: dashed; background: color-mix(in srgb, #C08B5C 5%, var(--mh-panel)); }
   .mh-eq.mh-eq-bare .mh-eq-art { background: color-mix(in srgb, #C08B5C 14%, var(--mh-panel2)); color: #8A5F33; }
   .mh-brawl-pick { position: absolute; top: 22px; right: 0; background: var(--mh-panel); border: 1px solid var(--mh-line); border-radius: 8px; box-shadow: 0 8px 20px rgba(0,0,0,.15); z-index: 15; min-width: 170px; overflow: hidden; }
@@ -11212,7 +11217,7 @@ export default function App({ onSignOut }) {
                                   return (
                                     <div
                                       key={idx}
-                                      className={"mh-eq" + (w.virtual ? " mh-eq-bare" : "")}
+                                      className={"mh-eq" + (w.virtual ? " mh-eq-bare" : "") + (!isArmor && slot.label === "Arma principal" && c.f_ignite === "1" ? " mh-eq-ablaze" : "")}
                                       style={{ "--cc": w.virtual ? "#C08B5C" : TIER_COLORS[tier].color }}
                                       role="button"
                                       tabIndex={0}
@@ -11222,6 +11227,11 @@ export default function App({ onSignOut }) {
                                     >
                                       <div className="mh-eq-art">
                                         <TileIcon size={40} strokeWidth={1.5} />
+                                        {!isArmor && slot.label === "Arma principal" && c.f_ignite === "1" && (
+                                          <span className="mh-eq-flame" title="Ignición: el arma arde, da luz brillante y suma 1d6 al daño hasta el final de la escena">
+                                            <Flame size={11} /> +1d6
+                                          </span>
+                                        )}
                                         <span className="mh-eq-tier" style={{ background: w.virtual ? "#C08B5C" : TIER_COLORS[tier].color }}>{w.virtual ? "Sin arma" : TIER_COLORS[tier].label}</span>
                                       </div>
                                       <div className="mh-eq-body">
@@ -11277,7 +11287,7 @@ export default function App({ onSignOut }) {
                                                   rollWeaponDamage(w.key, w.damage, viewingCharId);
                                                 }}
                                               >
-                                                <Flame size={13} /> {profDamage}
+                                                <Flame size={13} /> {profDamage}{!isArmor && slot.label === "Arma principal" && c.f_ignite === "1" ? "+1d6" : ""}
                                               </button>
                                             )}
                                           </div>
