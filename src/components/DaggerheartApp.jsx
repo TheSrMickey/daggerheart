@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
-import { Shell, Compass, Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
+import { Archive, Shell, Compass, Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
 
 const NAV_ITEMS = [
   { key: "ficha", label: "Personajes", icon: User },
@@ -679,7 +679,7 @@ const CLASS_HOPE_FEATURE = {
   Explorador: { name: "Contenerlos", cost: 3, text: "Gasta 3 de Esperanza cuando tengas éxito en un ataque con un arma para usar esa misma tirada contra otros dos adversarios dentro del alcance del ataque." },
   Pícaro: { name: "Esquiva del Pícaro", cost: 3, text: "Gasta 3 de Esperanza para ganar un +2 a tu Evasión hasta la próxima vez que un ataque tenga éxito contra ti. Si no, dura hasta tu próximo descanso." },
   Serafín: { name: "Soporte Vital", cost: 3, text: "Gasta 3 de Esperanza para quitar 1 Punto de vida a un aliado dentro de alcance Cercano." },
-  Hechicero: { name: "Magia Volátil", cost: 3, text: "Repite cualquier número de tus dados de daño en un ataque que haga daño mágico." },
+  Hechicero: { name: "Magia Volátil", cost: 3, text: "Gasta 3 de Esperanza para repetir los dados de daño que quieras en un ataque que haga daño mágico." },
   Guerrero: { name: "Sin Piedad", cost: 3, text: "Ganas +1 a tus tiradas de ataque hasta tu próximo descanso." },
   Mago: { name: "Esta Vez No", cost: 3, text: "Obliga a un adversario en alcance Lejano a repetir una tirada de ataque o de daño." },
   Bruja: { name: "Encanto de Bruja", cost: 3, text: "Cuando tú o un aliado en alcance Lejano falléis una tirada de acción, conviértela en un éxito con Miedo." },
@@ -2581,6 +2581,28 @@ const sharedStyles = `
   .mh-pred-btn { background: #7E9B3E; }
   .mh-sneak-btn { background: #4F5D78; }
   .mh-spirit-btn { background: #B8862E; }
+  .mh-volatile-btn { background: #C0504A; }
+  .mh-volatile-btn:hover:not(:disabled) { background: #A8443F; }
+  .mh-volatile { margin-top: 12px; display: flex; flex-direction: column; align-items: center; gap: 6px; font-family: 'Inter', system-ui, sans-serif; }
+  .mh-volatile small { font-size: 11px; color: var(--mh-muted); }
+  .mh-volatile-dice { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+  .mh-volatile-dice button { width: 34px; height: 34px; border-radius: 9px; border: 2px solid #D9644E; background: var(--mh-panel); color: #8E3A34; font: 700 14px 'Cinzel', Georgia, serif; cursor: pointer; }
+  .mh-volatile-dice button.is-on { background: #D9644E; color: #fff; }
+  .mh-vault-chip { display: inline-flex; align-items: center; gap: 4px; border: 0; cursor: pointer; font: 700 11px 'Inter', system-ui, sans-serif; color: #6E5A8A; background: color-mix(in srgb, #6E5A8A 14%, var(--mh-panel)); padding: 3px 9px; border-radius: 20px; }
+  .mh-raw { width: min(460px, 100%); }
+  .mh-raw-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 7px; }
+  .mh-raw-card { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 9px 10px; border-radius: 10px; border: 1.5px solid var(--mh-line); background: var(--mh-panel); text-align: left; cursor: pointer; font: inherit; color: var(--mh-ink); }
+  .mh-raw-card.is-on { border-color: var(--dc); background: color-mix(in srgb, var(--dc) 10%, var(--mh-panel)); }
+  .mh-raw-card em { position: absolute; top: 7px; right: 8px; font-style: normal; font-size: 10px; font-weight: 800; color: color-mix(in srgb, var(--dc) 80%, var(--mh-ink)); }
+  .mh-raw-card b { font-size: 12px; padding-right: 28px; }
+  .mh-raw-card small { font-size: 10.5px; color: var(--mh-muted); }
+  .mh-raw-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+  .mh-raw-opt { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 9px 10px; border-radius: 10px; border: 1.5px solid var(--mh-line); background: var(--mh-panel); text-align: left; cursor: pointer; font: inherit; color: var(--mh-ink); }
+  .mh-raw-opt svg { color: #B8862E; }
+  .mh-raw-opt.is-on { border-color: #C0504A; background: color-mix(in srgb, #C0504A 9%, var(--mh-panel)); }
+  .mh-raw-opt.is-on svg { color: #C0504A; }
+  .mh-raw-opt b { font-size: 13px; }
+  .mh-raw-opt small { font-size: 10.5px; color: var(--mh-muted); }
   .mh-ethereal-btn { background: #B8862E; }
   .mh-ethereal-btn:hover:not(:disabled) { background: #A07424; }
   .mh-spirit-btn:hover { background: #A07424; }
@@ -3543,6 +3565,7 @@ function DamageResult({ roll }) {
             {roll.unstopBonus ? ` + ${roll.unstopBonus} (Imparable)` : ""}
             {roll.kickRolls ? ` + 2d6 (${roll.kickRolls.join(" + ")}) (Coz)` : ""}
             {roll.wingRoll ? ` + 1d${roll.wingSides} (${roll.wingRoll}) (Alas de Luz)` : ""}
+            {roll.rawBonus ? ` + ${roll.rawBonus} (Poder en Bruto)` : ""}
             {roll.sneakRolls ? ` + ${roll.sneakRolls.length}d6 (${roll.sneakRolls.join(" + ")}) (Furtivo)` : ""}
             {roll.isCritical ? ` + ${roll.critBonus} (máx.)` : ""}
           </div>
@@ -5391,8 +5414,11 @@ export default function App({ onSignOut }) {
     const cloakedNow = ch ? getConditions(ch).includes("Oculto") : false;
     const sneakRolls = rogueTier && (opts.cloaked || cloakedNow) ? Array.from({ length: rogueTier }, () => Math.floor(Math.random() * 6) + 1) : null;
     const sneakBonus = sneakRolls ? sneakRolls.reduce((a, b) => a + b, 0) + (isCritical ? 6 * sneakRolls.length : 0) : 0;
-    const total = roll + bonus + critBonus + wolfBonus + unstopBonus + sneakBonus;
-    setDamageRollResult({ sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, note: resonance ? "Resonancia Sagrada: los dados repetidos valen el doble" : opts.extraFlat ? "Incluye +" + opts.extraFlat + " de Elementalista" : opts.note || "", spirit: !!opts.spirit });
+    // Hechicero · Canalizar Poder en Bruto: bono guardado para el próximo daño mágico.
+    const rawBonus = ch && damageType === "mágico" ? Number(ch.f_raw_dmg || 0) : 0;
+    if (rawBonus) updateCharacterField(charId, "f_raw_dmg", "");
+    const total = roll + bonus + critBonus + wolfBonus + unstopBonus + sneakBonus + rawBonus;
+    setDamageRollResult({ rawBonus, sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, note: resonance ? "Resonancia Sagrada: los dados repetidos valen el doble" : opts.extraFlat ? "Incluye +" + opts.extraFlat + " de Elementalista" : opts.note || "", spirit: !!opts.spirit });
     const who = playerName || "Alguien en la mesa";
     const critLabel = isCritical ? ` · ¡Crítico! (+${critBonus} máx.)` : "";
     const diceLabel = `${dice}d${die} (${rolls.join("+")})` + (wolfBonus ? ` + Lobo 1d10 (${wolfBonus})` : "") + (unstopBonus ? ` + Imparable ${unstopBonus}` : "") + (sneakRolls ? ` + Furtivo ${sneakRolls.length}d6 (${sneakRolls.join("+")})` : "");
@@ -7093,6 +7119,23 @@ export default function App({ onSignOut }) {
   const unshakeTimer = useRef(null);
   // Explorador · Foco del Explorador: ventana para escribir el objetivo.
   const [focusDlg, setFocusDlg] = useState(null);
+  // Hechicero · Canalizar Poder en Bruto y bóveda de cartas de dominio.
+  const [rawDlg, setRawDlg] = useState(null);
+  const [vaultDlg, setVaultDlg] = useState(false);
+  const getVault = (c) => {
+    try {
+      return JSON.parse(c?.f_domain_vault || "[]");
+    } catch (e) {
+      return [];
+    }
+  };
+  const findDomainCardAny = (key) => {
+    for (const [domain, list] of Object.entries(DOMAIN_CARDS)) {
+      const found = list.find((dc) => dc.key === key);
+      if (found) return { ...found, domain };
+    }
+    return null;
+  };
   // Origen Elemental · Trascendencia: elegir dos beneficios.
   const [transcendDlg, setTranscendDlg] = useState(null);
   // Dados de Oración: dado elegido en la carta.
@@ -7243,6 +7286,7 @@ export default function App({ onSignOut }) {
     if (isLong && c.f_pack_used) restPatch.f_pack_used = "";
     if (isLong && c.f_sparing_used) restPatch.f_sparing_used = "";
     if (isLong && c.f_closeknit_used) restPatch.f_closeknit_used = "";
+    if (isLong && c.f_raw_used) restPatch.f_raw_used = "";
     if (isLong && (c.f_prayer || c.f_prayer_rolled)) {
       restPatch.f_prayer = "";
       restPatch.f_prayer_rolled = "";
@@ -10392,6 +10436,13 @@ export default function App({ onSignOut }) {
                             <Panel
                               span={5}
                               title="Cartas de Dominio"
+                              titleRight={
+                                getVault(c).length ? (
+                                  <button type="button" className="mh-vault-chip" onClick={() => setVaultDlg(true)} title="Cartas guardadas en tu bóveda">
+                                    <Archive size={12} /> Bóveda · {getVault(c).length}
+                                  </button>
+                                ) : undefined
+                              }
                               hidden={conditions.includes("Escondido") || conditions.includes("Oculto")}
                               restrained={conditions.includes("Inmovilizado")}
                               vulnerable={conditions.includes("Vulnerable")}
@@ -12665,6 +12716,146 @@ export default function App({ onSignOut }) {
             </div>
             </div>
 
+            {rawDlg && (() => {
+              const me = characters[viewingCharId];
+              if (!me) return null;
+              const close = () => setRawDlg(null);
+              const keys = (() => {
+                try {
+                  return JSON.parse(me.f_domain_cards || "[]");
+                } catch (e) {
+                  return [];
+                }
+              })();
+              const picked = rawDlg.pick ? findDomainCardAny(rawDlg.pick) : null;
+              const lvl = picked?.level || 0;
+              const go = () => {
+                if (!picked) return;
+                const patch = {
+                  f_domain_cards: JSON.stringify(keys.filter((k) => k !== rawDlg.pick)),
+                  f_domain_vault: JSON.stringify([...getVault(me), rawDlg.pick]),
+                  f_raw_used: "1",
+                };
+                if (rawDlg.mode === "hope") patch.hope_marked = String(Math.min(getHopeMax(me), Number(me.hope_marked ?? HOPE_DEFAULT) + lvl));
+                else patch.f_raw_dmg = String(lvl * 2);
+                updateCharacterFields(viewingCharId, patch);
+                postCampaignEvent(viewingCharId, `⚡ Canalizar Poder en Bruto: pasa «${picked.key}» a la bóveda y ${rawDlg.mode === "hope" ? "gana " + lvl + " de Esperanza" : "suma +" + lvl * 2 + " al daño de su próximo hechizo"}`);
+                close();
+                closeCardDetail();
+              };
+              return (
+                <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 46, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)" }} onClick={close}>
+                  <div className="mh-card mh-renew mh-raw" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Canalizar Poder en Bruto">
+                    <div className="mh-pre-h">
+                      <span className="mh-pre-ic" style={{ background: "color-mix(in srgb, #C0504A 16%, var(--mh-panel))", color: "#B0453F" }}>
+                        <Zap size={17} />
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <b className="mh-serif">Canalizar Poder en Bruto</b>
+                        <small>Pasa una carta de tu equipo a la bóveda.</small>
+                      </div>
+                      <button type="button" className="mh-inv-x" aria-label="Cerrar" onClick={close}>
+                        <X size={16} />
+                      </button>
+                    </div>
+                    <div className="mh-pre-sec">1 · Elige la carta</div>
+                    <div className="mh-raw-cards">
+                      {keys.map((k) => {
+                        const cd = findDomainCardAny(k);
+                        if (!cd) return null;
+                        return (
+                          <button key={k} type="button" className={"mh-raw-card" + (rawDlg.pick === k ? " is-on" : "")} style={{ "--dc": DOMAIN_COLORS[cd.domain] || "var(--acc)" }} onClick={() => setRawDlg((d) => ({ ...d, pick: k }))}>
+                            <em>Nv {cd.level}</em>
+                            <b>{cd.key}</b>
+                            <small>{cd.domain}</small>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="mh-pre-sec">2 · Elige el efecto</div>
+                    <div className="mh-raw-opts">
+                      {[
+                        ["hope", Sparkles, lvl ? "+" + lvl + " Esperanza" : "+Esperanza", "El nivel de la carta"],
+                        ["dmg", Flame, lvl ? "+" + lvl * 2 + " al daño" : "+daño", "Tu próximo hechizo de daño"],
+                      ].map(([k, Ic, t, sub]) => (
+                        <button key={k} type="button" className={"mh-raw-opt" + (rawDlg.mode === k ? " is-on" : "")} onClick={() => setRawDlg((d) => ({ ...d, mode: k }))}>
+                          <Ic size={15} />
+                          <b>{t}</b>
+                          <small>{sub}</small>
+                        </button>
+                      ))}
+                    </div>
+                    <button type="button" className="mh-btn mh-pre-go" disabled={!picked} onClick={go} style={{ marginTop: 12 }}>
+                      <Zap size={15} /> {picked ? "Canalizar · " + picked.key + " pasa a la bóveda" : "Elige una carta"}
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {vaultDlg && (() => {
+              const me = characters[viewingCharId];
+              if (!me) return null;
+              const close = () => setVaultDlg(false);
+              const vault = getVault(me);
+              const keys = (() => {
+                try {
+                  return JSON.parse(me.f_domain_cards || "[]");
+                } catch (e) {
+                  return [];
+                }
+              })();
+              const full = keys.length >= 5;
+              const recover = (k, cost) => {
+                const patch = { f_domain_vault: JSON.stringify(vault.filter((x) => x !== k)), f_domain_cards: JSON.stringify([...keys, k]) };
+                if (cost) markStress(viewingCharId, cost, patch);
+                else updateCharacterFields(viewingCharId, patch);
+                postCampaignEvent(viewingCharId, `📚 Recupera «${k}» de la bóveda${cost ? " (marca " + cost + " de Estrés)" : ""}`);
+                if (vault.length <= 1) close();
+              };
+              return (
+                <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 46, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)" }} onClick={close}>
+                  <div className="mh-card mh-renew" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Bóveda">
+                    <div className="mh-pre-h">
+                      <span className="mh-pre-ic" style={{ background: "color-mix(in srgb, #6E5A8A 16%, var(--mh-panel))", color: "#6E5A8A" }}>
+                        <Archive size={17} />
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <b className="mh-serif">Bóveda</b>
+                        <small>Durante un descanso puedes recuperar cartas gratis; fuera de él, cuesta tanto Estrés como su Recuperación.</small>
+                      </div>
+                      <button type="button" className="mh-inv-x" aria-label="Cerrar" onClick={close}>
+                        <X size={16} />
+                      </button>
+                    </div>
+                    <div className="mh-renew-list">
+                      {vault.map((k) => {
+                        const cd = findDomainCardAny(k);
+                        return (
+                          <div key={k} className="mh-renew-row">
+                            <span className="mh-renew-av" style={{ background: DOMAIN_COLORS[cd?.domain] || "#6E5A8A" }}>{cd?.level ?? "?"}</span>
+                            <div className="mh-renew-t">
+                              <b>{k}</b>
+                              <small>{cd ? cd.domain + " · " + cd.type + " · Recuperación " + cd.recall : ""}</small>
+                            </div>
+                            <span style={{ display: "flex", gap: 5 }}>
+                              <button type="button" className="mh-btn-ghost" style={{ fontSize: 11, padding: "4px 8px" }} disabled={full} onClick={() => recover(k, 0)} title="En un descanso">
+                                En descanso
+                              </button>
+                              <button type="button" className="mh-btn-ghost" style={{ fontSize: 11, padding: "4px 8px" }} disabled={full} onClick={() => recover(k, cd?.recall || 0)} title="Fuera de un descanso">
+                                Ahora · {cd?.recall || 0} Estrés
+                              </button>
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {full && <div className="mh-pre-note" style={{ color: "var(--mh-muted)" }}>Tu equipo está completo (5 cartas): haz hueco antes de recuperar una.</div>}
+                  </div>
+                </div>
+              );
+            })()}
+
             {transcendDlg && (() => {
               const me = characters[viewingCharId];
               if (!me) return null;
@@ -13573,6 +13764,49 @@ export default function App({ onSignOut }) {
                   </div>
                   <DamageResult roll={damageRollResult} />
                   {(() => {
+                    // Hechicero · Magia Volátil: 3 Esperanza para repetir los dados de daño que quieras (daño mágico).
+                    const dr = damageRollResult;
+                    const hc = dr.charId ? characters[dr.charId] : null;
+                    if (!hc || hc.f_class !== "Hechicero" || dr.damageType !== "mágico") return null;
+                    if (dr.volatileDone) return <div className="mh-kick-done" style={{ color: "#C0504A" }}>Magia Volátil: dados repetidos</div>;
+                    const hopeV = Number(hc.hope_marked ?? HOPE_DEFAULT);
+                    const rolls = dr.rolls || [dr.roll];
+                    const pick = dr.volPick;
+                    if (!pick)
+                      return (
+                        <button type="button" className="mh-kick-btn mh-volatile-btn" disabled={hopeV < 3} onClick={() => setDamageRollResult((r) => (r ? { ...r, volPick: [] } : r))}>
+                          <Zap size={14} /> Magia Volátil · 3 Esperanza
+                        </button>
+                      );
+                    return (
+                      <div className="mh-volatile">
+                        <small>Elige los dados que repites</small>
+                        <span className="mh-volatile-dice">
+                          {rolls.map((v, k) => (
+                            <button key={k} type="button" className={pick.includes(k) ? "is-on" : ""} onClick={() => setDamageRollResult((r) => (r ? { ...r, volPick: r.volPick.includes(k) ? r.volPick.filter((x) => x !== k) : [...r.volPick, k] } : r))}>
+                              {v}
+                            </button>
+                          ))}
+                        </span>
+                        <button
+                          type="button"
+                          className="mh-kick-btn mh-volatile-btn"
+                          disabled={!pick.length}
+                          onClick={() => {
+                            const next = rolls.map((v, k) => (pick.includes(k) ? Math.floor(Math.random() * dr.die) + 1 : v));
+                            const sumOld = rolls.reduce((a, b) => a + b, 0);
+                            const sumNew = next.reduce((a, b) => a + b, 0);
+                            setDamageRollResult((r) => (r ? { ...r, rolls: next, roll: sumNew, total: r.total - sumOld + sumNew, volPick: null, volatileDone: true } : r));
+                            updateCharacterField(dr.charId, "hope_marked", String(Math.max(0, hopeV - 3)));
+                            postCampaignEvent(dr.charId, `✨ Magia Volátil: gasta 3 Esperanza y repite ${pick.length} dado${pick.length > 1 ? "s" : ""} de daño (${pick.map((k) => rolls[k]).join(", ")} → ${pick.map((k) => next[k]).join(", ")}). Daño total ${dr.total - sumOld + sumNew}`);
+                          }}
+                        >
+                          Repetir {pick.length || ""} · 3 Esperanza
+                        </button>
+                      </div>
+                    );
+                  })()}
+                  {(() => {
                     // Centinela Alado · Alas de Luz: volando, 1 Esperanza para +1d8 (1d12 con Poder de los Dioses).
                     const dr = damageRollResult;
                     const sc = dr.charId ? characters[dr.charId] : null;
@@ -14470,7 +14704,7 @@ export default function App({ onSignOut }) {
                     const isFrontline = c.f_class === "Guardián";
                     const armorMax = isFrontline ? armorMaxFor(c) : 0;
                     const armorSpent = isFrontline ? Math.max(0, armorMax - Number(c.armor_marked || 0)) : 0;
-                    const frontlineBlock = isFrontline && !missingHope ? (!armorMax ? "No llevas armadura" : !armorSpent ? "Tu Armadura está completa" : "") : c.f_class === "Pícaro" && c.f_dodge ? "Esquiva ya activa (+2 Evasión)" : "";
+                    const frontlineBlock = isFrontline && !missingHope ? (!armorMax ? "No llevas armadura" : !armorSpent ? "Tu Armadura está completa" : "") : c.f_class === "Pícaro" && c.f_dodge ? "Esquiva ya activa (+2 Evasión)" : c.f_class === "Hechicero" ? "Se usa al tirar daño mágico" : "";
                     cardActs.unshift({
                       key: "hope",
                       Icon: isFrontline ? Shield : Sparkles,
@@ -14535,6 +14769,24 @@ export default function App({ onSignOut }) {
                     });
                   }
                   // Guardián de la Renovación: Regeneración, Claridad de la Naturaleza y, según el rango, Protección y Defensor.
+                  // Hechicero · Canalizar Poder en Bruto.
+                  if (d.title === "Canalizar Poder en Bruto" && c?.f_class === "Hechicero" && !d.fromChat) {
+                    const loadout = (() => {
+                      try {
+                        return JSON.parse(c.f_domain_cards || "[]");
+                      } catch (e) {
+                        return [];
+                      }
+                    })();
+                    cardActs.unshift({
+                      key: "raw",
+                      Icon: Zap,
+                      label: c.f_raw_used ? "Ya lo has usado · vuelve al descanso largo" : !loadout.length ? "No tienes cartas en tu equipo" : "Canalizar Poder en Bruto",
+                      sub: c.f_raw_dmg ? "Guardado: +" + c.f_raw_dmg + " a tu próximo daño mágico" : "Una carta de tu equipo pasa a la bóveda",
+                      disabled: !!c.f_raw_used || !loadout.length,
+                      run: () => setRawDlg({ pick: "", mode: "hope" }),
+                    });
+                  }
                   // Serafín · Dados de Oración: se tiran al empezar la sesión.
                   if (d.title === "Dados de Oración" && c?.f_class === "Serafín" && !d.fromChat) {
                     const nP = prayerCountFor(c);
