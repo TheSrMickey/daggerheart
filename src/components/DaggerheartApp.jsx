@@ -461,6 +461,9 @@ const getContacts = (c) => {
 const isGiant = (c) => (c?.f_ancestry || "").split(" + ").includes("Gigante");
 const reachFor = (c, range) => (range === "Cuerpo a cuerpo" && isGiant(c) ? "Muy cercano" : range);
 
+// Guerrero · Entrenamiento de Combate: ignora la carga (puede llevar arma a dos manos y secundaria).
+const ignoresBurden = (cls) => cls === "Guerrero";
+
 const WIZARD_STEPS = [
   { key: "class", title: "Elige tu clase", group: "Identidad" },
   { key: "subclass", title: "Elige tu subclase", group: "Identidad" },
@@ -706,7 +709,7 @@ const CLASS_HOPE_FEATURE = {
   Pícaro: { name: "Esquiva del Pícaro", cost: 3, text: "Gasta 3 de Esperanza para ganar un +2 a tu Evasión hasta la próxima vez que un ataque tenga éxito contra ti. Si no, dura hasta tu próximo descanso." },
   Serafín: { name: "Soporte Vital", cost: 3, text: "Gasta 3 de Esperanza para quitar 1 Punto de vida a un aliado dentro de alcance Cercano." },
   Hechicero: { name: "Magia Volátil", cost: 3, text: "Gasta 3 de Esperanza para repetir los dados de daño que quieras en un ataque que haga daño mágico." },
-  Guerrero: { name: "Sin Piedad", cost: 3, text: "Ganas +1 a tus tiradas de ataque hasta tu próximo descanso." },
+  Guerrero: { name: "Sin Piedad", cost: 3, text: "Gasta 3 de Esperanza para obtener un +1 a tus tiradas de ataque hasta tu próximo descanso." },
   Mago: { name: "Esta Vez No", cost: 3, text: "Obliga a un adversario en alcance Lejano a repetir una tirada de ataque o de daño." },
   Bruja: { name: "Encanto de Bruja", cost: 3, text: "Cuando tú o un aliado en alcance Lejano falléis una tirada de acción, conviértela en un éxito con Miedo." },
   Brujo: { name: "Don del Patrón", cost: 3, text: "Cuando falles una tirada, repítela con ventaja." },
@@ -746,7 +749,7 @@ const CLASS_FEATURES = {
   ],
   Guerrero: [
     { name: "Ataque de Oportunidad", text: "Si un adversario en alcance Cuerpo a cuerpo intenta salir de ese alcance, haz una tirada de reacción con el rasgo que elijas contra su Dificultad. Si tienes éxito, elige un efecto (dos si es un éxito crítico): no puede moverse de donde está; le haces tanto daño como el de tu arma principal; o te mueves con él." },
-    { name: "Entrenamiento de Combate", text: "Ignoras la carga al equiparte armas. Cuando haces daño físico, sumas tu nivel a la tirada de daño (la app lo suma sola)." },
+    { name: "Entrenamiento de Combate", text: "Ignoras la carga al equiparte armas. Cuando hagas daño físico, obtienes un bonificador a tu tirada de daño igual a tu nivel." },
   ],
   Mago: [
     { name: "Prestidigitación", text: "Haces pequeños efectos mágicos inofensivos a voluntad: cambiar el color de un objeto, crear un olor, encender una vela, hacer flotar algo diminuto, iluminar una sala o reparar un objeto pequeño." },
@@ -4956,7 +4959,7 @@ export default function App({ onSignOut }) {
       f_atease: chosenSubclass?.key === "Vengador" ? "1" : "",
       f_primary_weapon: draftPrimaryWeapon,
       f_secondary_weapon:
-        PRIMARY_WEAPONS.find((w) => w.key === draftPrimaryWeapon)?.hands === 2 || draftSecondaryWeapon === "Ninguna"
+        (PRIMARY_WEAPONS.find((w) => w.key === draftPrimaryWeapon)?.hands === 2 && !ignoresBurden(chosenClass.key)) || draftSecondaryWeapon === "Ninguna"
           ? ""
           : draftSecondaryWeapon,
       f_armor: draftArmor === "Ninguna" ? "" : draftArmor || "",
@@ -5756,6 +5759,14 @@ export default function App({ onSignOut }) {
     const txt = { hope: `gana ${v} de Esperanza`, damage: `reduce en ${v} el daño que se recibe`, roll: `suma ${v} al resultado de una tirada`, ally: `ayuda a un aliado con un ${v}` }[use];
     postCampaignEvent(id, `🙏 Gasta un Dado de Oración (${v}): ${txt}`);
   };
+  const doNoMercy = (id) => {
+    const c = charsRef.current[id];
+    if (!c || c.f_no_mercy) return;
+    const hope = Number(c.hope_marked ?? HOPE_DEFAULT);
+    if (hope < 3) return;
+    updateCharacterFields(id, { hope_marked: String(hope - 3), f_no_mercy: "1" });
+    postCampaignEvent(id, "🗡️ Sin Piedad: gasta 3 Esperanza y gana +1 a sus tiradas de ataque hasta su próximo descanso");
+  };
   const doRogueDodge = (id) => {
     const c = charsRef.current[id];
     if (!c || c.f_dodge) return;
@@ -5981,7 +5992,7 @@ export default function App({ onSignOut }) {
   const equipFromInventory = (id, slotKind, itemName) => {
     const c = characters[id];
     if (!c) return;
-    if (slotKind === "primary" && c.f_secondary_weapon) {
+    if (slotKind === "primary" && c.f_secondary_weapon && !ignoresBurden(c.f_class)) {
       const weaponData = PRIMARY_WEAPONS.find((w) => w.key === itemName);
       if (weaponData?.hands === 2) {
         setEquipPickerSlot(null);
@@ -7388,6 +7399,7 @@ export default function App({ onSignOut }) {
     if (c.f_dedicated_used) restPatch.f_dedicated_used = "";
     if (c.f_wings_evade) restPatch.f_wings_evade = "";
     if (c.f_dodge) restPatch.f_dodge = "";
+    if (c.f_no_mercy) restPatch.f_no_mercy = "";
     if (c.f_natural_evade) restPatch.f_natural_evade = "";
     if (c.f_transcend) restPatch.f_transcend = "";
     if (isLong && c.f_transcend_used) restPatch.f_transcend_used = "";
@@ -7771,7 +7783,8 @@ export default function App({ onSignOut }) {
     } else if (Object.keys(patch).length) updateCharacterFields(pr.charId, patch);
     setPreRoll(null);
     if (elemUse) postCampaignEvent(pr.charId, `${"🌀"} Elementalista: gasta 1 Esperanza y usa su ${ch.f_origin_element || "elemento"} para ${elemUse === "roll" ? "sumar +2 a la tirada" : "sumar +3 al daño"}`);
-    doTraitRoll(pr.charId, pr.traitLabel, pr.traitValue, pr.weapon ? { ...pr.weapon, ...(elemUse === "dmg" ? { elemDmg: 3 } : {}) } : pr.weapon, pr.cardContext, pr.advantage || pr.privilege || pr.quick, {
+    const noMercy = ch && ch.f_class === "Guerrero" && ch.f_no_mercy === "1" && pr.weapon && !pr.weapon.charge ? 1 : 0;
+    doTraitRoll(pr.charId, pr.traitLabel, pr.traitValue + noMercy, pr.weapon ? { ...pr.weapon, ...(elemUse === "dmg" ? { elemDmg: 3 } : {}) } : pr.weapon, pr.cardContext, pr.advantage || pr.privilege || pr.quick, {
       exps: exps.map((e) => ({ text: e.text, bonus: Number(e.bonus) || 0 })),
       rallyDie,
       disadvantage: (ch?.f_ancestry || "").split(" + ").includes("Goblin") && pr.traitLabel === "Agilidad" ? false : pr.disadvantage || (pr.shellOn && !pr.reaction),
@@ -9397,6 +9410,11 @@ export default function App({ onSignOut }) {
                       </span>
                     );
                   })()}
+                  {c.f_class === "Guerrero" && c.f_no_mercy === "1" && (
+                    <span className="mh-htag is-active" style={{ "--tag": "#C0504A" }} title="Sin Piedad: +1 a tus tiradas de ataque hasta tu próximo descanso">
+                      <span className="mh-htag-dot" /> Sin Piedad · +1 ataque
+                    </span>
+                  )}
                   {c.f_subclass === "Origen Primigenio" && c.f_charged === "1" && (
                     <span className="mh-htag is-active" style={{ "--tag": "#8A6FD0" }} title="Carga Arcana: gástala en un ataque mágico con éxito (+10 al daño o +3 a la Dificultad de la reacción). Se pierde en el descanso largo.">
                       <span className="mh-htag-dot" /> Cargado
@@ -10048,7 +10066,7 @@ export default function App({ onSignOut }) {
                               })() : (
                               <div style={{ display: "flex", flexDirection: "column", gap: 12, flex: 1 }}>
                                 {(() => {
-                                  const primaryIsTwoHanded = primaryWeapon?.hands === 2;
+                                  const primaryIsTwoHanded = primaryWeapon?.hands === 2 && !ignoresBurden(c.f_class);
                                   return [
                                     { kind: "weapon", label: "Arma principal", w: primaryWeapon },
                                     { kind: "weapon", label: "Arma secundaria", w: secondaryWeapon },
@@ -13375,7 +13393,8 @@ export default function App({ onSignOut }) {
               const tideHave = ch.f_community === "Del Mar" ? Number(ch.f_tide_tokens || 0) : 0;
               const tideOk = ch.f_community === "Del Mar" && !preRoll.reaction;
               const tideUse = tideOk ? Math.min(preRoll.tide || 0, tideHave) : 0;
-              const mod = preRoll.traitValue + expSum + tideUse + (ch.f_subclass === "Origen Elemental" && !preRoll.reaction && preRoll.elem === "roll" ? 2 : 0);
+              const noMercyOn = ch.f_class === "Guerrero" && ch.f_no_mercy === "1" && preRoll.weapon && !preRoll.weapon.charge;
+              const mod = preRoll.traitValue + (noMercyOn ? 1 : 0) + expSum + tideUse + (ch.f_subclass === "Origen Elemental" && !preRoll.reaction && preRoll.elem === "roll" ? 2 : 0);
               // Galapa retraída: la desventaja en las tiradas de acción no se puede quitar.
               // Goblin · Pie Firme: ignora la desventaja en las tiradas de Agilidad.
               const sureFoot = (ch.f_ancestry || "").split(" + ").includes("Goblin") && preRoll.traitLabel === "Agilidad";
@@ -13519,6 +13538,7 @@ export default function App({ onSignOut }) {
                 preRoll.poet ? ["Corazón de Poeta", "+1d4"] : null,
                 preRoll.dedicated ? ["Entregado", "Esperanza d20"] : null,
                 riseOk && !preRoll.dedicated ? ["Estar a la Altura", "Esperanza d20"] : null,
+                noMercyOn ? ["Sin Piedad", "+1"] : null,
                 tideUse ? ["Conocer la Marea", "+" + tideUse] : null,
                 elemOk && preRoll.elem ? ["Elementalista", preRoll.elem === "roll" ? "+2" : "+3 al daño"] : null,
                 wolf ? ["Forma de Lobo", "+1d10"] : null,
@@ -13526,7 +13546,7 @@ export default function App({ onSignOut }) {
               ].filter(Boolean);
               const DS = 40;
               // Altura fija: se reserva hueco para todas las líneas que este personaje puede llegar a tener.
-              const maxLines = 1 + exps.length + (ch.f_rally_die ? 1 : 0) + (poetOk ? 1 : 0) + (dedicatedOk ? 1 : 0) + (riseOk ? 1 : 0) + (tideOk ? 1 : 0) + (elemOk ? 1 : 0) + (wolf ? 1 : 0) + 1;
+              const maxLines = 1 + exps.length + (ch.f_rally_die ? 1 : 0) + (poetOk ? 1 : 0) + (dedicatedOk ? 1 : 0) + (riseOk ? 1 : 0) + (noMercyOn ? 1 : 0) + (tideOk ? 1 : 0) + (elemOk ? 1 : 0) + (wolf ? 1 : 0) + 1;
               const canSpendHope = exps.length > 0 || poetOk;
               const anyAdded = preRoll.exps.length > 0 || preRoll.rally || preRoll.poet || preRoll.dedicated || preRoll.privilege || preRoll.quick || tideUse > 0 || !!preRoll.elem || edgePos !== "none";
               return (
@@ -15111,7 +15131,7 @@ export default function App({ onSignOut }) {
                     const isFrontline = c.f_class === "Guardián";
                     const armorMax = isFrontline ? armorMaxFor(c) : 0;
                     const armorSpent = isFrontline ? Math.max(0, armorMax - Number(c.armor_marked || 0)) : 0;
-                    const frontlineBlock = isFrontline && !missingHope ? (!armorMax ? "No llevas armadura" : !armorSpent ? "Tu Armadura está completa" : "") : c.f_class === "Pícaro" && c.f_dodge ? "Esquiva ya activa (+2 Evasión)" : c.f_class === "Hechicero" ? "Se usa al tirar daño mágico" : "";
+                    const frontlineBlock = isFrontline && !missingHope ? (!armorMax ? "No llevas armadura" : !armorSpent ? "Tu Armadura está completa" : "") : c.f_class === "Pícaro" && c.f_dodge ? "Esquiva ya activa (+2 Evasión)" : c.f_class === "Hechicero" ? "Se usa al tirar daño mágico" : c.f_class === "Guerrero" && c.f_no_mercy ? "Sin Piedad ya activo (+1 al ataque)" : "";
                     cardActs.unshift({
                       key: "hope",
                       Icon: isFrontline ? Shield : Sparkles,
@@ -15123,6 +15143,7 @@ export default function App({ onSignOut }) {
                         if (c.f_class === "Druida") openEvolutionModal(viewingCharId);
                         else if (isFrontline) doFrontline(viewingCharId);
                         else if (c.f_class === "Pícaro") doRogueDodge(viewingCharId);
+                        else if (c.f_class === "Guerrero") doNoMercy(viewingCharId);
                         else if (c.f_class === "Serafín") setRenewDlg({ mode: "life" });
                         else spendHopeFeature(viewingCharId, d.hopeAction.cost);
                       },
@@ -16613,7 +16634,7 @@ export default function App({ onSignOut }) {
               ) : ["primary", "secondary", "armor"].includes(wizardStep) ? (
                 <div>
                   <div className="mh-wz-dm" style={{ marginBottom: 12 }}>
-                    {wizardStep === "primary" ? "Elige el arma con la que empiezas." : wizardStep === "secondary" ? (PRIMARY_WEAPONS.find((w) => w.key === draftPrimaryWeapon)?.hands === 2 ? "Con un arma a dos manos no hay arma secundaria: puedes seguir." : "Elige un arma secundaria o «Ninguna».") : "Elige tu armadura o «Ninguna»."}
+                    {wizardStep === "primary" ? "Elige el arma con la que empiezas." : wizardStep === "secondary" ? (PRIMARY_WEAPONS.find((w) => w.key === draftPrimaryWeapon)?.hands === 2 && !ignoresBurden(CLASSES[carouselIndex]?.key) ? "Con un arma a dos manos no hay arma secundaria: puedes seguir." : PRIMARY_WEAPONS.find((w) => w.key === draftPrimaryWeapon)?.hands === 2 ? "Entrenamiento de Combate: ignoras la carga, así que puedes llevar también un arma secundaria." : "Elige un arma secundaria o «Ninguna».") : "Elige tu armadura o «Ninguna»."}
                   </div>
                   {wizardStep === "primary" && (
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -16652,7 +16673,7 @@ export default function App({ onSignOut }) {
                   )}
 
                   {wizardStep === "secondary" && (() => {
-                    const primaryIsTwoHanded = PRIMARY_WEAPONS.find((w) => w.key === draftPrimaryWeapon)?.hands === 2;
+                    const primaryIsTwoHanded = PRIMARY_WEAPONS.find((w) => w.key === draftPrimaryWeapon)?.hands === 2 && !ignoresBurden(CLASSES[carouselIndex]?.key);
                     if (primaryIsTwoHanded) {
                       return (
                         <div
@@ -17017,7 +17038,7 @@ export default function App({ onSignOut }) {
                 const idx = WIZARD_STEPS.findIndex((st) => st.key === wizardStep);
                 const prev = WIZARD_STEPS[idx - 1];
                 const nextStep = WIZARD_STEPS[idx + 1];
-                const twoHanded = PRIMARY_WEAPONS.find((w) => w.key === draftPrimaryWeapon)?.hands === 2;
+                const twoHanded = PRIMARY_WEAPONS.find((w) => w.key === draftPrimaryWeapon)?.hands === 2 && !ignoresBurden(CLASSES[carouselIndex]?.key);
                 const block = {
                   subclass: (SUBCLASSES[CLASSES[carouselIndex]?.key] || [])[subclassIndex]?.key === "Origen Elemental" && !draftOriginElement && "Elige tu elemento para continuar.",
                   traits: traitPool.length > 0 && "Reparte todos los valores para continuar.",
