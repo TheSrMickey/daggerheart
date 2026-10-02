@@ -432,7 +432,18 @@ const SUBCLASSES = {
         { name: "Puñalada por la Espalda (Maestría)", text: "Tu característica «Marcado para Morir» usa d8 en lugar de d6." },
       ],
     },
-    { key: "Gremio del Envenenador", blurb: "Debilita a sus objetivos con afecciones despiadadas.", expansion: "Hope & Fear" },
+    {
+      key: "Gremio del Envenenador",
+      blurb: "Debilita a tus objetivos con afecciones despiadadas.",
+      expansion: "Hope & Fear",
+      features: [
+        { name: "Brebajes Tóxicos", text: "Marca 1 Estrés para colocar 1d4+1 fichas en esta carta. Cuando tengas éxito en un ataque con arma, puedes gastar una ficha para envenenar al objetivo con un veneno que conozcas. Conoces estos venenos: Pétalo Fantasma (el objetivo queda temporalmente Vulnerable), Espora Sepulcral (el objetivo también debe marcar 1 Estrés) e Hierba Sanguijuela (haces 1d6 de daño adicional en este ataque). Cuando hagas un descanso largo, retira todas las fichas que no hayas gastado." },
+        { name: "Compendio de Venenos (Especialización)", text: "También conoces estos venenos: Enredadera de Medianoche (el objetivo tiene desventaja en las tiradas de ataque hasta que marque 1 Estrés para quitarse esta condición) y Raíz de Gorgona (el objetivo queda temporalmente Inmovilizado)." },
+        { name: "Colmillo Gemelo (Especialización)", text: "Cuando envenenes con un veneno que conozcas a un objetivo que hayas Marcado para Morir, puedes gastar una ficha adicional para infligirle también el efecto de un segundo veneno que conozcas." },
+        { name: "Venenomante (Maestría)", text: "También conoces estos venenos: Semilla de Plaga (el objetivo sufre −3 a sus umbrales de daño hasta el final de la escena; no se acumula), Hoja del Miedo (haces tanto daño adicional como el resultado de tu Dado de Miedo en este ataque) y Espina de Cadáver (el objetivo tiene desventaja en las tiradas de reacción hasta el final de la escena)." },
+        { name: "Bendición de la Víbora (Maestría)", text: "Eres inmune a los venenos y otras toxinas." },
+      ],
+    },
   ],
 };
 
@@ -645,6 +656,17 @@ const getContacts = (c) => {
 // Gigante · Alcance: lo que tenga alcance Cuerpo a cuerpo cuenta como Muy cercano.
 const isGiant = (c) => (c?.f_ancestry || "").split(" + ").includes("Gigante");
 const reachFor = (c, range) => (range === "Cuerpo a cuerpo" && isGiant(c) ? "Muy cercano" : range);
+// Gremio del Envenenador · venenos que conoces por Rango.
+const POISONS = [
+  { key: "petalo", tier: 1, name: "Pétalo Fantasma", effect: "el objetivo queda temporalmente Vulnerable" },
+  { key: "espora", tier: 1, name: "Espora Sepulcral", effect: "el objetivo marca 1 Estrés" },
+  { key: "sanguijuela", tier: 1, name: "Hierba Sanguijuela", effect: "+1d6 de daño en este ataque", dmg: "d6" },
+  { key: "enredadera", tier: 2, name: "Enredadera de Medianoche", effect: "desventaja en sus ataques hasta que marque 1 Estrés" },
+  { key: "gorgona", tier: 2, name: "Raíz de Gorgona", effect: "el objetivo queda temporalmente Inmovilizado" },
+  { key: "plaga", tier: 3, name: "Semilla de Plaga", effect: "−3 a sus umbrales hasta el final de la escena" },
+  { key: "miedo", tier: 3, name: "Hoja del Miedo", effect: "daño extra igual a tu Dado de Miedo", dmg: "fear" },
+  { key: "cadaver", tier: 3, name: "Espina de Cadáver", effect: "desventaja en sus tiradas de reacción hasta el final de la escena" },
+];
 // Asesino · Marcado para Morir: d4 (d6 con Emboscada, d8 con Puñalada por la Espalda).
 const markedDie = (c) => (c?.f_subclass === "Gremio del Verdugo" ? (tierForLevel(c.f_level || 1) >= 3 ? 8 : 6) : 4);
 // Artista Marcial · Posturas Marciales.
@@ -2938,6 +2960,11 @@ const sharedStyles = `
   .mh-fury-btn { background: #B55FA0; }
   .mh-combo-btn { background: #C08B5C; }
   .mh-mark-btn { background: #6B7891; }
+  .mh-poison { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .mh-poison small { font-size: 11px; color: #4E7340; font-weight: 600; }
+  .mh-poison-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; }
+  .mh-poison-list button { border: 1px solid #5E8A4E; background: color-mix(in srgb, #5E8A4E 10%, var(--mh-panel)); color: #3F6334; border-radius: 20px; padding: 4px 10px; font: 700 11px "Inter", system-ui, sans-serif; cursor: pointer; }
+  .mh-poison-list button:hover { background: #5E8A4E; color: #fff; }
   .mh-mark-btn:hover:not(:disabled) { background: #5A6680; }
   .mh-mark-btn.is-alt { background: transparent; color: #4F5B73; border: 1.5px solid #7D8BA3; }
   .mh-mark-btn:disabled { opacity: .5; cursor: not-allowed; }
@@ -4081,6 +4108,7 @@ function DamageResult({ roll }) {
             {roll.dice || 1}d{roll.die} ({rolls.join(" + ")}){roll.rolls2 ? ` + ${roll.rolls2.length}d${roll.die2} (${roll.rolls2.join(" + ")})` : ""}{roll.bonus ? " + " + roll.bonus : ""}
             {roll.comboRolls ? ` + ${roll.comboRolls.join(" + ")} (Combo d${roll.comboDie})` : ""}
             {roll.igniteRoll ? ` + 1d6 (${roll.igniteRoll}) (Ignición)` : ""}
+            {roll.poisonDmg ? ` + ${roll.poisonDmg} (Veneno)` : ""}
             {roll.markedRolls ? ` + ${roll.markedRolls.join(" + ")} (Marcado para Morir)` : ""}
             {roll.firstStrike ? " · ×2 (Primer Golpe)" : ""}
             {roll.droppedRoll != null ? ` · descartas un ${roll.droppedRoll} (Agresiva)` : ""}
@@ -6040,7 +6068,7 @@ export default function App({ onSignOut }) {
     const fearBonus = fearRolls ? fearRolls.reduce((a, b) => a + b, 0) : 0;
     const total = igniteRoll + roll + sum2 + bonus + critBonus + wolfBonus + unstopBonus + sneakBonus + rawBonus + fearBonus + furyBonus;
     if (stanceNow === "aterradora") postCampaignEvent(charId, "😨 Postura Aterradora: el objetivo marca 1 Estrés");
-    setDamageRollResult({ igniteRoll, stanceNow, droppedRoll, favoredBonus, rolls2, die2, comboBase: total, furyRolls, furySides: ch ? patronSides(ch) : 6, fearRolls, rawBonus, sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, doublePick: !!opts.doublePick, charged: ch && ch.f_subclass === "Origen Primigenio" && ch.f_charged === "1" && damageType === "mágico", note: resonance ? "Resonancia Sagrada: los dados repetidos valen el doble" : opts.extraFlat ? "Incluye +" + opts.extraFlat + " de Elementalista" : waxBonus ? "Incluye +2 de la Luna Creciente" : opts.note || "", spirit: !!opts.spirit });
+    setDamageRollResult({ attackFear: opts.attackFear || 0, igniteRoll, stanceNow, droppedRoll, favoredBonus, rolls2, die2, comboBase: total, furyRolls, furySides: ch ? patronSides(ch) : 6, fearRolls, rawBonus, sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, doublePick: !!opts.doublePick, charged: ch && ch.f_subclass === "Origen Primigenio" && ch.f_charged === "1" && damageType === "mágico", note: resonance ? "Resonancia Sagrada: los dados repetidos valen el doble" : opts.extraFlat ? "Incluye +" + opts.extraFlat + " de Elementalista" : waxBonus ? "Incluye +2 de la Luna Creciente" : opts.note || "", spirit: !!opts.spirit });
     const who = playerName || "Alguien en la mesa";
     const critLabel = isCritical ? ` · ¡Crítico! (+${critBonus} máx.)` : "";
     const diceLabel = `${dice}d${die} (${rolls.join("+")})` + (rolls2 ? ` + ${dice}d${die2} (${rolls2.join("+")})` : "") + (furyRolls ? ` + Furia ${furyRolls.length}d${patronSides(ch)} (${furyRolls.join("+")})` : "") + (fearRolls ? ` + Enfrenta tu Miedo ${fearRolls.length}d10 (${fearRolls.join("+")}) mágico` : "") + (wolfBonus ? ` + Lobo 1d10 (${wolfBonus})` : "") + (unstopBonus ? ` + Imparable ${unstopBonus}` : "") + (sneakRolls ? ` + Furtivo ${sneakRolls.length}d6 (${sneakRolls.join("+")})` : "");
@@ -8083,6 +8111,7 @@ export default function App({ onSignOut }) {
     if (c.f_stance) restPatch.f_stance = "";
     if (c.f_marked) restPatch.f_marked = "";
     if (c.f_ignite) restPatch.f_ignite = "";
+    if (isLong && c.f_toxins) restPatch.f_toxins = "";
     if (c.f_first_strike_used) restPatch.f_first_strike_used = "";
     if (isLong && c.f_truestrike_used) restPatch.f_truestrike_used = "";
     if (c.f_refocus_used) restPatch.f_refocus_used = "";
@@ -10262,6 +10291,11 @@ export default function App({ onSignOut }) {
                       <span className="mh-htag-dot" /> Postura {MARTIAL_STANCES.find((x) => x.key === c.f_stance)?.name} · {getMFocus(c)} Conc.
                     </span>
                   )}
+                  {c.f_subclass === "Gremio del Envenenador" && Number(c.f_toxins || 0) > 0 && (
+                    <span className="mh-htag" style={{ "--tag": "#5E8A4E" }} title="Brebajes Tóxicos: fichas de veneno preparadas">
+                      <FlaskConical size={11} /> Venenos · {c.f_toxins}
+                    </span>
+                  )}
                   {c.f_ignite === "1" && (
                     <span className="mh-htag is-active" style={{ "--tag": "#E0823A" }} title="Ignición: tu arma principal arde, da luz brillante y suma 1d6 al daño hasta el final de la escena">
                       <span className="mh-htag-dot" /> Arma en llamas · +1d6
@@ -11451,7 +11485,7 @@ export default function App({ onSignOut }) {
                               kicker: `Subclase · ${subclassBadge}`,
                               title: subclassEntry.key,
                               text: subclassEntry.blurb,
-                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento", "Escuela de la Guerra", "Bruja Lunar", "Bruja del Seto", "Pacto del Eterno", "Pacto del Iracundo", "Titán", "Artista Marcial", "Gremio del Verdugo"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
+                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento", "Escuela de la Guerra", "Bruja Lunar", "Bruja del Seto", "Pacto del Eterno", "Pacto del Iracundo", "Titán", "Artista Marcial", "Gremio del Verdugo", "Gremio del Envenenador"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
                               image: subclassEntry.image,
                               bigStyle: true,
                               ...(isElemental ? { elementalAction: true } : {}),
@@ -11470,6 +11504,7 @@ export default function App({ onSignOut }) {
                               ...(subclassEntry.key === "Pacto del Eterno" ? { endlessActs: true } : {}),
                               ...(subclassEntry.key === "Pacto del Iracundo" ? { wrathActs: true } : {}),
                               ...(subclassEntry.key === "Artista Marcial" ? { martialActs: true } : {}),
+                              ...(subclassEntry.key === "Gremio del Envenenador" ? { poisonActs: true } : {}),
                             }),
                           });
                         }
@@ -16081,7 +16116,7 @@ export default function App({ onSignOut }) {
                               updateCharacterFields(charId, { hope_marked: String(Math.min(getHopeMax(cur), Number(cur.hope_marked ?? HOPE_DEFAULT) + 1)), stress_marked: String(Math.max(0, Number(cur.stress_marked || 0) - 1)) });
                               postCampaignEvent(charId, "🥊 Gozo del Golpe: gana 1 Esperanza más, se quita 1 Estrés más y su Competencia sube en 1 en este ataque");
                             }
-                            rollWeaponDamage(name, damage, charId, isCritical, { ...(pummel || honedHit ? { fixedDice: getProficiency(rc) + (pummel ? 1 : 0) + (honedHit ? 1 : 0) } : {}), fearDice, cloaked: wasCloaked, spirit, resonance: spirit && rc && tierForLevel(rc.f_level || 1) >= 3, extraFlat: traitRollResult.weapon.elemDmg || 0, doublePick: !!traitRollResult.weapon.manipDouble });
+                            rollWeaponDamage(name, damage, charId, isCritical, { attackFear: traitRollResult.fear, ...(pummel || honedHit ? { fixedDice: getProficiency(rc) + (pummel ? 1 : 0) + (honedHit ? 1 : 0) } : {}), fearDice, cloaked: wasCloaked, spirit, resonance: spirit && rc && tierForLevel(rc.f_level || 1) >= 3, extraFlat: traitRollResult.weapon.elemDmg || 0, doublePick: !!traitRollResult.weapon.manipDouble });
                           }}
                         >
                           Sí
@@ -16362,6 +16397,47 @@ export default function App({ onSignOut }) {
                       >
                         <HandFist size={14} /> Golpe Combinado · 1 Concentración
                       </button>
+                    );
+                  })()}
+                  {(() => {
+                    // Gremio del Envenenador · Brebajes Tóxicos: 1 ficha para envenenar tras acertar con arma.
+                    const dr = damageRollResult;
+                    const pc = dr.charId ? characters[dr.charId] : null;
+                    if (!pc || pc.f_subclass !== "Gremio del Envenenador" || !dr.weaponName) return null;
+                    const tokens = Number(pc.f_toxins || 0);
+                    const tierP = tierForLevel(pc.f_level || 1);
+                    const known = POISONS.filter((x) => x.tier <= tierP);
+                    const used = dr.poisons || [];
+                    const twinOk = tierP >= 2 && pc.f_marked === "1" && used.length === 1;
+                    const canPick = tokens > 0 && (used.length === 0 || twinOk);
+                    const apply = (po) => {
+                      const extra = po.dmg === "d6" ? Math.floor(Math.random() * 6) + 1 : po.dmg === "fear" ? dr.attackFear || 0 : 0;
+                      setDamageRollResult((r) => (r ? { ...r, poisons: [...(r.poisons || []), po.key], poisonDmg: (r.poisonDmg || 0) + extra, total: r.total + extra } : r));
+                      updateCharacterField(dr.charId, "f_toxins", String(tokens - 1));
+                      postCampaignEvent(dr.charId, `🧪 ${used.length ? "Colmillo Gemelo · " : ""}${po.name}: gasta 1 ficha y envenena al objetivo (${po.effect}${extra ? ": +" + extra + " de daño" : ""})`);
+                    };
+                    return (
+                      <div className="mh-poison">
+                        {used.length > 0 && (
+                          <div className="mh-kick-done" style={{ color: "#5E8A4E" }}>
+                            Envenenado: {used.map((k) => POISONS.find((x) => x.key === k)?.name).join(" + ")}
+                            {dr.poisonDmg ? " (+" + dr.poisonDmg + " de daño)" : ""}
+                          </div>
+                        )}
+                        {canPick && (
+                          <>
+                            <small>{used.length ? "Colmillo Gemelo: segundo veneno (1 ficha más)" : "Envenenar · 1 ficha"} · te quedan {tokens}</small>
+                            <span className="mh-poison-list">
+                              {known.filter((x) => !used.includes(x.key)).map((po) => (
+                                <button key={po.key} type="button" title={po.effect} onClick={() => apply(po)}>
+                                  {po.name}
+                                </button>
+                              ))}
+                            </span>
+                          </>
+                        )}
+                        {tokens === 0 && used.length === 0 && <small style={{ color: "var(--mh-muted)" }}>Sin brebajes: prepáralos desde la carta de subclase (1 Estrés).</small>}
+                      </div>
                     );
                   })()}
                   {(() => {
@@ -17801,6 +17877,19 @@ export default function App({ onSignOut }) {
                     });
                   }
                   // Llamado del Valiente · Ritual de Batalla.
+                  if (d.poisonActs && !d.fromChat) {
+                    cardActs.push({
+                      key: "toxins",
+                      Icon: FlaskConical,
+                      label: "Preparar brebajes · 1 Estrés",
+                      sub: "Coloca 1d4+1 fichas en la carta" + (Number(c.f_toxins || 0) ? " · tienes " + c.f_toxins : ""),
+                      run: () => {
+                        const n = Math.floor(Math.random() * 4) + 2;
+                        markStress(viewingCharId, 1, { f_toxins: String(Number(c.f_toxins || 0) + n) });
+                        postCampaignEvent(viewingCharId, `🧪 Brebajes Tóxicos: marca 1 Estrés y prepara ${n} dosis de veneno (1d4+1)`);
+                      },
+                    });
+                  }
                   if (d.martialActs && !d.fromChat) {
                     cardActs.push({
                       key: "stances",
@@ -18691,7 +18780,7 @@ export default function App({ onSignOut }) {
                       label: "Mostrar en la campaña",
                       sub: shareCamp.name,
                       run: () => {
-                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, divineActs, sentinelActs, originActs, primalActs, braveActs, slayerCard, moonActs, hedgeActs, endlessActs, wrathActs, brawlerStrike: _bs, comboCard: _cc, martialActs: _ma, ...detail } = d;
+                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, divineActs, sentinelActs, originActs, primalActs, braveActs, slayerCard, moonActs, hedgeActs, endlessActs, wrathActs, brawlerStrike: _bs, comboCard: _cc, martialActs: _ma, poisonActs: _pa, ...detail } = d;
                         // Las imágenes incrustadas muy grandes no se copian al chat.
                         if (typeof detail.image === "string" && detail.image.startsWith("data:") && detail.image.length > 30000) delete detail.image;
                         const type = d.domain ? "domain" : d.weapon ? "weapon" : d.armor ? "armor" : "card";
@@ -18707,6 +18796,7 @@ export default function App({ onSignOut }) {
                   const patternCard = !d.fromChat && d.title === "Patrones Extraños" && c?.f_class === "Mago";
                   const hexCard = !d.fromChat && d.title === "Maleficio" && c?.f_class === "Bruja";
                   const patronCard = !d.fromChat && d.title === "Pacto con el Patrón" && c?.f_class === "Brujo";
+                  const poisonCard = !d.fromChat && d.poisonActs && Number(c?.f_toxins || 0) > 0;
                   const hedgeCard = !d.fromChat && d.hedgeActs && (Number(c?.f_talisman || 0) > 0 || Number(c?.f_walk || 0) > 0 || Number(c?.f_circle || 0) > 0);
                   const tideMax = Number(c?.f_level || 1);
                   const footer = d.weapon
@@ -18816,6 +18906,21 @@ export default function App({ onSignOut }) {
                           ))}
                         </datalist>
                         <small>Dado de Patrón: d{patronSides(c)} · {getFavor(c)} de Favor</small>
+                      </div>
+                    )}
+                    {poisonCard && (
+                      <div className="mh-cardc-foot mh-hedge-foot">
+                        <div className="mh-hedge-row" style={{ "--hc": "#5E8A4E" }}>
+                          <b>Brebajes Tóxicos</b>
+                          <span className="mh-hedge-pips">
+                            {Array.from({ length: Number(c.f_toxins || 0) }, (_, k) => (
+                              <button key={k} type="button" title="Quitar una ficha" aria-label="Quitar una ficha" onClick={() => updateCharacterField(viewingCharId, "f_toxins", String(Number(c.f_toxins || 0) - 1))}>
+                                <FlaskConical size={10} strokeWidth={2.6} />
+                              </button>
+                            ))}
+                          </span>
+                          <small>Gasta una al acertar un ataque con arma, desde el resultado del daño. Se pierden en el descanso largo.</small>
+                        </div>
                       </div>
                     )}
                     {hedgeCard && (() => {
@@ -19011,7 +19116,7 @@ export default function App({ onSignOut }) {
                         </div>
                       );
                     })()}
-                    {!tideCard && !prayerCard && !slayerCard && !patternCard && !hexCard && !hedgeCard && !patronCard && (footer || d.domain) && (
+                    {!tideCard && !prayerCard && !slayerCard && !patternCard && !hexCard && !hedgeCard && !poisonCard && !patronCard && (footer || d.domain) && (
                       <div className="mh-cardc-foot">
                         {d.domain ? (
                           <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
