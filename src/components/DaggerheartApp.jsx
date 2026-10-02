@@ -419,7 +419,19 @@ const SUBCLASSES = {
     },
   ],
   Asesino: [
-    { key: "Gremio del Verdugo", blurb: "Abate a sus objetivos con precisión letal.", expansion: "Hope & Fear" },
+    {
+      key: "Gremio del Verdugo",
+      blurb: "Abate a tus objetivos con precisión letal.",
+      expansion: "Hope & Fear",
+      features: [
+        { name: "Primer Golpe", text: "La primera vez en una escena que tengas éxito en un ataque, haces el doble de daño." },
+        { name: "Emboscada", text: "Tu característica «Marcado para Morir» usa d6 en lugar de d4." },
+        { name: "Golpe Mortal (Especialización)", text: "Cuando hagas daño Grave a una criatura, puedes marcar 1 Estrés para obligarla a marcar 1 Punto de Vida adicional." },
+        { name: "Pose del Escorpión (Especialización)", text: "Ganas +2 a tu Evasión contra los ataques de una criatura que hayas Marcado para Morir." },
+        { name: "Golpe Certero (Maestría)", text: "Una vez por descanso largo, cuando falles un ataque, puedes gastar 1 Esperanza para convertirlo en un éxito." },
+        { name: "Puñalada por la Espalda (Maestría)", text: "Tu característica «Marcado para Morir» usa d8 en lugar de d6." },
+      ],
+    },
     { key: "Gremio del Envenenador", blurb: "Debilita a sus objetivos con afecciones despiadadas.", expansion: "Hope & Fear" },
   ],
 };
@@ -633,6 +645,8 @@ const getContacts = (c) => {
 // Gigante · Alcance: lo que tenga alcance Cuerpo a cuerpo cuenta como Muy cercano.
 const isGiant = (c) => (c?.f_ancestry || "").split(" + ").includes("Gigante");
 const reachFor = (c, range) => (range === "Cuerpo a cuerpo" && isGiant(c) ? "Muy cercano" : range);
+// Asesino · Marcado para Morir: d4 (d6 con Emboscada, d8 con Puñalada por la Espalda).
+const markedDie = (c) => (c?.f_subclass === "Gremio del Verdugo" ? (tierForLevel(c.f_level || 1) >= 3 ? 8 : 6) : 4);
 // Artista Marcial · Posturas Marciales.
 const MARTIAL_STANCES = [
   { key: "predilecta", tier: 1, name: "Predilecta", text: "Ganas un bonificador a tus tiradas de daño igual a un rasgo que elijas." },
@@ -1031,7 +1045,7 @@ const CLASS_FEATURES = {
     { name: "Psicometría Siniestra", text: "Haz una tirada de Lanzamiento de Conjuros (12) para examinar un lugar en alcance Muy cercano. Si tienes éxito, tienes una visión de la última criatura que cometió un acto violento allí. Hasta que hagas un descanso largo o vuelvas a usar esta característica, tienes ventaja en las tiradas de acción para rastrearla o recordar información sobre ella." },
   ],
   Asesino: [
-    { name: "Marcado para Morir", text: "Tras acertar un ataque con arma, puedes marcar 1 Estrés para dejar al objetivo Marcado para morir: cuando le hagas daño, suma tantos d4 como tu Rango. Solo puedes marcar a un adversario a la vez; dura hasta que descanses, hasta que caiga o hasta que el DJ gaste tanto Miedo como tu Rango." },
+    { name: "Marcado para Morir", text: "Cuando tengas éxito en un ataque con arma, puedes marcar 1 Estrés para que el objetivo quede Marcado para Morir. Cuando hagas daño a un objetivo que hayas Marcado para Morir, suma a la tirada de daño tantos d4 como tu Rango. Solo puedes tener a un adversario Marcado para Morir a la vez. Esta condición dura hasta que hagas un descanso, hasta que el adversario marcado sea derrotado o hasta que el DJ gaste tanto Miedo como tu Rango para quitarla." },
     { name: "Entrar y Salir", text: "Gasta 1 Esperanza para preguntar al DJ por una forma rápida o discreta de entrar o salir de un lugar que puedas ver. Tu siguiente tirada que aproveche esa información tiene ventaja." },
   ],
 };
@@ -2923,6 +2937,10 @@ const sharedStyles = `
   .mh-favor-btn { background: #B55FA0; }
   .mh-fury-btn { background: #B55FA0; }
   .mh-combo-btn { background: #C08B5C; }
+  .mh-mark-btn { background: #6B7891; }
+  .mh-mark-btn:hover:not(:disabled) { background: #5A6680; }
+  .mh-mark-btn.is-alt { background: transparent; color: #4F5B73; border: 1.5px solid #7D8BA3; }
+  .mh-mark-btn:disabled { opacity: .5; cursor: not-allowed; }
   .mh-eq.mh-eq-bare { border-style: dashed; background: color-mix(in srgb, #C08B5C 5%, var(--mh-panel)); }
   .mh-eq.mh-eq-bare .mh-eq-art { background: color-mix(in srgb, #C08B5C 14%, var(--mh-panel2)); color: #8A5F33; }
   .mh-brawl-pick { position: absolute; top: 22px; right: 0; background: var(--mh-panel); border: 1px solid var(--mh-line); border-radius: 8px; box-shadow: 0 8px 20px rgba(0,0,0,.15); z-index: 15; min-width: 170px; overflow: hidden; }
@@ -4031,6 +4049,9 @@ function DamageResult({ roll }) {
         {(roll.rolls2 || []).map((v, i) => (
           <DieFace key={"r2" + i} sides={roll.die2} value={v} color={color} size={size} rolling={false} highlight={v === roll.die2} />
         ))}
+        {(roll.markedRolls || []).map((v, i) => (
+          <DieFace key={"mk" + i} sides={roll.markedDie || 4} value={v} color="#7D8BA3" size={Math.round(size * 0.8)} rolling={false} label={i === 0 ? "Marcado" : undefined} />
+        ))}
         {(roll.comboRolls || []).map((v, i) => (
           <DieFace key={"cb" + i} sides={roll.comboDie || 4} value={v} color="#C08B5C" size={Math.round(size * 0.8)} rolling={false} highlight={v === roll.comboDie} label={i === 0 ? "Combo" : undefined} />
         ))}
@@ -4053,6 +4074,8 @@ function DamageResult({ roll }) {
           <div style={{ fontSize: 12.5, color: "var(--mh-ink3)" }}>
             {roll.dice || 1}d{roll.die} ({rolls.join(" + ")}){roll.rolls2 ? ` + ${roll.rolls2.length}d${roll.die2} (${roll.rolls2.join(" + ")})` : ""}{roll.bonus ? " + " + roll.bonus : ""}
             {roll.comboRolls ? ` + ${roll.comboRolls.join(" + ")} (Combo d${roll.comboDie})` : ""}
+            {roll.markedRolls ? ` + ${roll.markedRolls.join(" + ")} (Marcado para Morir)` : ""}
+            {roll.firstStrike ? " · ×2 (Primer Golpe)" : ""}
             {roll.droppedRoll != null ? ` · descartas un ${roll.droppedRoll} (Agresiva)` : ""}
             {roll.favoredBonus ? ` · incluye +${roll.favoredBonus} (Predilecta)` : ""}
             {roll.wolfBonus ? ` + 1d10 (${roll.wolfBonus})` : ""}
@@ -8049,6 +8072,9 @@ export default function App({ onSignOut }) {
     if (c.f_eye_used) restPatch.f_eye_used = "";
     if (c.f_lifespring_used) restPatch.f_lifespring_used = "";
     if (c.f_stance) restPatch.f_stance = "";
+    if (c.f_marked) restPatch.f_marked = "";
+    if (c.f_first_strike_used) restPatch.f_first_strike_used = "";
+    if (isLong && c.f_truestrike_used) restPatch.f_truestrike_used = "";
     if (c.f_refocus_used) restPatch.f_refocus_used = "";
     if (c.f_limit_used) restPatch.f_limit_used = "";
     if (c.f_ire_used) restPatch.f_ire_used = "";
@@ -10222,6 +10248,11 @@ export default function App({ onSignOut }) {
                       <span className="mh-htag-dot" /> Postura {MARTIAL_STANCES.find((x) => x.key === c.f_stance)?.name} · {getMFocus(c)} Conc.
                     </span>
                   )}
+                  {c.f_class === "Asesino" && c.f_marked === "1" && (
+                    <button type="button" className="mh-htag is-active" style={{ "--tag": "#7D8BA3", cursor: "pointer" }} title="Tienes a un adversario Marcado para Morir. Pulsa si ha sido derrotado o el DJ ha quitado la marca." onClick={() => { updateCharacterField(viewingCharId, "f_marked", ""); postCampaignEvent(viewingCharId, "💀 Su objetivo deja de estar Marcado para Morir"); }}>
+                      <span className="mh-htag-dot" /> Marcado para Morir · +{tierForLevel(c.f_level || 1)}d{markedDie(c)} <X size={10} />
+                    </button>
+                  )}
                   {c.f_fury === "1" && (
                     <span className="mh-htag is-active" style={{ "--tag": "#B55FA0" }} title="Furia del Patrón: tus tiradas de daño suman tantos Dados de Patrón como tu Rango, hasta hacer daño Grave o terminar la escena">
                       <span className="mh-htag-dot" /> Furia del Patrón
@@ -10555,6 +10586,21 @@ export default function App({ onSignOut }) {
                                           Vig. +1d6
                                         </button>
                                       )}
+                                    </span>
+                                  )}
+                                  {c.f_subclass === "Gremio del Verdugo" && tierForLevel(c.f_level || 1) >= 2 && c.f_marked === "1" && (
+                                    <span className="mh-evade-acts" style={{ right: "auto", left: 6 }}>
+                                      <button
+                                        type="button"
+                                        style={{ background: "#7D8BA3" }}
+                                        title="Pose del Escorpión: +2 a la Evasión contra los ataques de la criatura que tienes Marcada para Morir"
+                                        onClick={() => {
+                                          updateCharacterField(viewingCharId, "f_natural_evade", String(Number(c.f_natural_evade || 0) + 2));
+                                          postCampaignEvent(viewingCharId, "🦂 Pose del Escorpión: +2 a la Evasión contra el ataque de su objetivo Marcado para Morir");
+                                        }}
+                                      >
+                                        Escorpión +2
+                                      </button>
                                     </span>
                                   )}
                                   {c.f_storm_eye === "1" && (
@@ -11376,7 +11422,7 @@ export default function App({ onSignOut }) {
                               kicker: `Subclase · ${subclassBadge}`,
                               title: subclassEntry.key,
                               text: subclassEntry.blurb,
-                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento", "Escuela de la Guerra", "Bruja Lunar", "Bruja del Seto", "Pacto del Eterno", "Pacto del Iracundo", "Titán", "Artista Marcial"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
+                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento", "Escuela de la Guerra", "Bruja Lunar", "Bruja del Seto", "Pacto del Eterno", "Pacto del Iracundo", "Titán", "Artista Marcial", "Gremio del Verdugo"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
                               image: subclassEntry.image,
                               bigStyle: true,
                               ...(isElemental ? { elementalAction: true } : {}),
@@ -15577,6 +15623,31 @@ export default function App({ onSignOut }) {
                       );
                     })()}
                     {(() => {
+                      // Gremio del Verdugo · Golpe Certero (Maestría): una vez por descanso largo, 1 Esperanza para acertar un ataque fallido.
+                      const r = traitRollResult;
+                      const rc = characters[r.charId];
+                      if (!rc || rc.f_subclass !== "Gremio del Verdugo" || tierForLevel(rc.f_level || 1) < 3 || !r.weapon || r.hope === r.fear) return null;
+                      if (r.trueStrike) return <div className="mh-luck-done" style={{ color: "#7D8BA3" }}>Golpe Certero: el ataque tiene éxito</div>;
+                      const failed = r.card?.dc != null ? r.total < r.card.dc : null;
+                      if (failed === false) return null;
+                      const hopeA = Number(rc.hope_marked ?? HOPE_DEFAULT);
+                      return (
+                        <button
+                          type="button"
+                          className="mh-luck-btn mh-mark-btn"
+                          disabled={!!rc.f_truestrike_used || hopeA < 1}
+                          onClick={() => {
+                            updateCharacterFields(r.charId, { hope_marked: String(hopeA - 1), f_truestrike_used: "1" });
+                            setTraitRollResult((prev) => (prev ? { ...prev, trueStrike: true, charmed: true, text: "Éxito (Golpe Certero)" } : prev));
+                            postCampaignEvent(r.charId, "🎯 Golpe Certero: gasta 1 Esperanza y su ataque fallido pasa a ser un éxito");
+                          }}
+                        >
+                          <Crosshair size={15} /> Golpe Certero · 1 Esperanza
+                          <small>{rc.f_truestrike_used ? "Ya usado · vuelve al descanso largo" : failed ? "Has fallado: conviértelo en un éxito" : "Si has fallado: conviértelo en un éxito"}</small>
+                        </button>
+                      );
+                    })()}
+                    {(() => {
                       // Brujo · Favor: con éxito con Esperanza, 1 Favor en lugar de 1 Esperanza.
                       const r = traitRollResult;
                       const rc = characters[r.charId];
@@ -15808,7 +15879,7 @@ export default function App({ onSignOut }) {
                       const ok = traitRollResult.charmed || traitRollResult.hope === traitRollResult.fear || traitRollResult.total >= traitRollResult.card.dc;
                       return (
                         <div className={"mh-dc-verdict mh-appear-late" + (ok ? " is-ok" : "")} key={traitRollResult.key}>
-                          {traitRollResult.charmed ? "Éxito con Miedo (Encanto de Bruja)" : (ok ? "Éxito" : "Fracaso") + " · " + traitRollResult.total + " contra Dificultad " + traitRollResult.card.dc}
+                          {traitRollResult.trueStrike ? "Éxito (Golpe Certero)" : traitRollResult.charmed ? "Éxito con Miedo (Encanto de Bruja)" : (ok ? "Éxito" : "Fracaso") + " · " + traitRollResult.total + " contra Dificultad " + traitRollResult.card.dc}
                         </div>
                       );
                     })()}
@@ -16260,6 +16331,92 @@ export default function App({ onSignOut }) {
                       >
                         <HandFist size={14} /> Golpe Combinado · 1 Concentración
                       </button>
+                    );
+                  })()}
+                  {(() => {
+                    // Asesino · Marcado para Morir y Gremio del Verdugo.
+                    const dr = damageRollResult;
+                    const ac = dr.charId ? characters[dr.charId] : null;
+                    if (!ac || ac.f_class !== "Asesino" || !dr.weaponName) return null;
+                    const tierA = tierForLevel(ac.f_level || 1);
+                    const die = markedDie(ac);
+                    const exec = ac.f_subclass === "Gremio del Verdugo";
+                    const addDice = (key, rolls, msg, extra = {}) => {
+                      const sum = rolls.reduce((a, b) => a + b, 0);
+                      setDamageRollResult((r) => (r ? { ...r, [key]: rolls, total: r.total + sum, ...extra } : r));
+                      postCampaignEvent(dr.charId, msg(sum));
+                    };
+                    return (
+                      <div className="mh-stance-dmg">
+                        {ac.f_marked === "1" && !dr.markedNow ? (
+                          dr.markedRolls ? (
+                            <div className="mh-kick-done" style={{ color: "#7D8BA3" }}>Marcado para Morir: +{dr.markedRolls.reduce((a, b) => a + b, 0)} ({dr.markedRolls.join(" + ")})</div>
+                          ) : (
+                            <button
+                              type="button"
+                              className="mh-kick-btn mh-mark-btn"
+                              title="Si el objetivo es el que tienes Marcado para Morir"
+                              onClick={() => {
+                                const rolls = Array.from({ length: tierA }, () => Math.floor(Math.random() * die) + 1);
+                                addDice("markedRolls", rolls, (sum) => `💀 Marcado para Morir: suma ${tierA}d${die} (${rolls.join(" + ")}) = ${sum} al daño`, { markedDie: die });
+                              }}
+                            >
+                              <Skull size={14} /> ¿Es tu objetivo Marcado? +{tierA}d{die}
+                            </button>
+                          )
+                        ) : (
+                          !dr.markedNow && (
+                            <button
+                              type="button"
+                              className="mh-kick-btn mh-mark-btn is-alt"
+                              onClick={() => {
+                                setDamageRollResult((r) => (r ? { ...r, markedNow: true } : r));
+                                markStress(dr.charId, 1, { f_marked: "1" });
+                                postCampaignEvent(dr.charId, "💀 Marcado para Morir: marca 1 Estrés y deja al objetivo Marcado para Morir");
+                              }}
+                            >
+                              <Crosshair size={14} /> Marcar para Morir · 1 Estrés
+                            </button>
+                          )
+                        )}
+                        {dr.markedNow && <div className="mh-kick-done" style={{ color: "#7D8BA3" }}>Objetivo Marcado para Morir: tus próximos daños contra él suman {tierA}d{die}</div>}
+                        {exec &&
+                          (dr.firstStrike ? (
+                            <div className="mh-kick-done" style={{ color: "#7D8BA3" }}>Primer Golpe: daño doble</div>
+                          ) : (
+                            !ac.f_first_strike_used && (
+                              <button
+                                type="button"
+                                className="mh-kick-btn mh-mark-btn"
+                                title="La primera vez en la escena que aciertas un ataque, haces el doble de daño"
+                                onClick={() => {
+                                  setDamageRollResult((r) => (r ? { ...r, firstStrike: true, total: r.total * 2 } : r));
+                                  updateCharacterField(dr.charId, "f_first_strike_used", "1");
+                                  postCampaignEvent(dr.charId, `🗡️ Primer Golpe: su primer ataque con éxito de la escena hace el doble de daño (${dr.total * 2})`);
+                                }}
+                              >
+                                <Zap size={14} /> Primer Golpe: daño doble
+                              </button>
+                            )
+                          ))}
+                        {exec &&
+                          tierA >= 2 &&
+                          (dr.deathStrike ? (
+                            <div className="mh-kick-done" style={{ color: "#7D8BA3" }}>Golpe Mortal: el objetivo marca 1 PV más</div>
+                          ) : (
+                            <button
+                              type="button"
+                              className="mh-kick-btn mh-mark-btn is-alt"
+                              onClick={() => {
+                                setDamageRollResult((r) => (r ? { ...r, deathStrike: true } : r));
+                                markStress(dr.charId, 1);
+                                postCampaignEvent(dr.charId, "☠️ Golpe Mortal: hace daño Grave, marca 1 Estrés y el objetivo marca 1 Punto de Vida adicional");
+                              }}
+                            >
+                              ¿Daño Grave? Golpe Mortal · 1 Estrés: +1 PV
+                            </button>
+                          ))}
+                      </div>
                     );
                   })()}
                   {(() => {
@@ -17740,6 +17897,24 @@ export default function App({ onSignOut }) {
                           postCampaignEvent(viewingCharId, `⭕ Círculo de Poder: traza un círculo en alcance Muy cercano. Dentro, el grupo gana +2 a los umbrales de daño, a las tiradas de ataque y a la Evasión (${nH} fichas; se retira una por cada tirada de acción o ataque evitado)`);
                         },
                       });
+                  }
+                  // Asesino · Marcado para Morir: quitar la marca.
+                  if (d.title === "Marcado para Morir" && c?.f_class === "Asesino" && !d.fromChat && c.f_marked === "1") {
+                    cardActs.push({
+                      key: "unmark",
+                      Icon: X,
+                      label: "Quitar la marca",
+                      sub: "El objetivo ha caído o el DJ ha gastado Miedo",
+                      run: () => {
+                        closeCardDetail();
+                        updateCharacterField(viewingCharId, "f_marked", "");
+                        postCampaignEvent(viewingCharId, "💀 Su objetivo deja de estar Marcado para Morir");
+                      },
+                    });
+                  }
+                  // Gremio del Verdugo · Primer Golpe: una vez por escena.
+                  if (d.title === "Gremio del Verdugo" && !d.fromChat && c.f_first_strike_used) {
+                    cardActs.push({ key: "fs-reset", Icon: RotateCcw, label: "Nueva escena: recuperar Primer Golpe", sub: "Ya usado en esta escena", run: () => updateCharacterField(viewingCharId, "f_first_strike_used", "") });
                   }
                   // Camorrista · Golpe de Camorrista: el rasgo que elijas.
                   if (d.brawlerStrike && !d.fromChat) {
