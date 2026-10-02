@@ -317,7 +317,19 @@ const SUBCLASSES = {
     },
   ],
   Camorrista: [
-    { key: "Titán", blurb: "Aplasta a sus rivales a base de golpes contundentes.", expansion: "Hope & Fear" },
+    {
+      key: "Titán",
+      blurb: "Pulveriza a tus rivales con golpes demoledores.",
+      expansion: "Hope & Fear",
+      features: [
+        { name: "Robusto", text: "Ganas un bonificador permanente de +3 a tu umbral de daño Grave." },
+        { name: "Arrollar", text: "Cuando tengas éxito en un ataque contra un objetivo, puedes gastar 1 Esperanza para lanzarlo a un punto dentro de alcance Cercano u obligarle a marcar 1 Estrés." },
+        { name: "Rodeado (Especialización)", text: "Cuando hagas un ataque con un arma Cuerpo a cuerpo, puedes gastar cualquier cantidad de Esperanza para atacar al mismo número de criaturas adicionales dentro de alcance Cuerpo a cuerpo." },
+        { name: "Ojo por Ojo (Especialización)", text: "Una vez por descanso, cuando un adversario en alcance Cuerpo a cuerpo te obligue a marcar Puntos de Vida, puedes marcar 1 Estrés para obligarle a marcar el mismo número de Puntos de Vida." },
+        { name: "Gozo del Golpe (Maestría)", text: "Cuando consigas un éxito crítico en un ataque con un arma Cuerpo a cuerpo, ganas 1 Esperanza adicional, te quitas 1 Estrés adicional y obtienes +1 a tu Competencia en ese ataque." },
+        { name: "Aún No He Terminado (Maestría)", text: "Cuando recibas daño Grave, puedes ganar 1 Esperanza o quitarte 1 Estrés." },
+      ],
+    },
     { key: "Artista Marcial", blurb: "Combina estilos de lucha para acabar con cualquier rival.", expansion: "Hope & Fear" },
   ],
   Asesino: [
@@ -535,6 +547,21 @@ const getContacts = (c) => {
 // Gigante · Alcance: lo que tenga alcance Cuerpo a cuerpo cuenta como Muy cercano.
 const isGiant = (c) => (c?.f_ancestry || "").split(" + ").includes("Gigante");
 const reachFor = (c, range) => (range === "Cuerpo a cuerpo" && isGiant(c) ? "Muy cercano" : range);
+// Camorrista · Yo Soy el Arma: arma principal a mano desnuda mientras no lleve otras armas.
+const BRAWLER_STRIKE = "Golpe de Camorrista";
+const brawlerArmed = (c) => c?.f_class === "Camorrista" && !c.f_primary_weapon && !c.f_secondary_weapon;
+const brawlerStrike = (c) => ({ key: BRAWLER_STRIKE, trait: c?.f_brawl_trait || "Fuerza", range: "Cuerpo a cuerpo", damage: "d8+d6 físico", hands: 2, tier: 1, feature: "Yo Soy el Arma: +1 a tu Evasión mientras la uses", virtual: true });
+// Dado de Combo del Camorrista (d4 → d12, un paso por Rango como mejora).
+const COMBO_DICE = [4, 6, 8, 10, 12];
+const comboDie = (c) => (COMBO_DICE.includes(Number(c?.f_combo_die)) ? Number(c.f_combo_die) : 4);
+// ¿El arma es Cuerpo a cuerpo?
+function isMeleeWeapon(name) {
+  if (name === BRAWLER_STRIKE) return true;
+  const w = [...PRIMARY_WEAPONS, ...SECONDARY_WEAPONS].find((x) => x.key === name);
+  if (w) return w.range === "Cuerpo a cuerpo";
+  const bf = BEASTFORMS.find((b) => b.key === name);
+  return bf ? bf.attack.startsWith("Cuerpo a cuerpo") : false;
+}
 // Pacto del Iracundo · Alcance Amenazador: el arma principal sube un paso de alcance (máximo Muy lejano).
 const RANGE_STEPS = ["Cuerpo a cuerpo", "Muy cercano", "Cercano", "Lejano", "Muy lejano"];
 const reachStep = (range) => {
@@ -865,8 +892,8 @@ const CLASS_FEATURES = {
     { name: "Favor", text: "Empiezas con 3 de Favor. Puedes usar un movimiento de descanso para rendir tributo a tu patrón: describe cómo lo haces y gana tanto Favor como tu rasgo de Lanzamiento de Conjuros. Además, cuando tengas éxito en una tirada de acción con Esperanza, puedes elegir ganar 1 Favor en lugar de 1 Esperanza." },
   ],
   Camorrista: [
-    { name: "Yo Soy el Arma", text: "Mientras no tengas otras armas activas, tienes equipada el arma principal Golpe de Camorrista: rasgo a tu elección, alcance Cuerpo a cuerpo y d8+d6 de daño físico (los dos dados escalan con tu Competencia). Mientras la uses, ganas +1 a la Evasión." },
-    { name: "Golpe Combinado", text: "Tras tirar el daño de un ataque cuerpo a cuerpo con éxito, puedes marcar 1 Estrés para encadenar un combo: tira tu dado de combo (empieza en d4) y sigue tirándolo hasta que salga un resultado menor que el anterior. Sumas todos los resultados como daño extra." },
+    { name: "Yo Soy el Arma", text: "Tus ataques a mano desnuda son tan fuertes como cualquier hoja. Mientras no tengas otras armas activas, tienes equipada un arma principal llamada Golpe de Camorrista. Usa el rasgo que elijas, tiene alcance Cuerpo a cuerpo y hace d8+d6 de daño físico usando tu Competencia (tanto el d8 como el d6 escalan con tu Competencia). Mientras esta arma esté activa, ganas +1 a tu Evasión." },
+    { name: "Golpe Combinado", text: "Después de tirar el daño de un ataque con éxito con un arma Cuerpo a cuerpo, puedes marcar 1 Estrés para empezar un golpe combinado. Tira tu Dado de Combo y anota el resultado; sigue tirándolo hasta que el último resultado sea menor que el anterior. Haces tanto daño adicional como el total de todos los resultados del Dado de Combo en este ataque, y no se pueden modificar de ninguna forma. Tu Dado de Combo empieza siendo un d4. Una vez por Rango, puedes aumentarlo un paso como opción de mejora de nivel." },
   ],
   Asesino: [
     { name: "Marcado para Morir", text: "Tras acertar un ataque con arma, puedes marcar 1 Estrés para dejar al objetivo Marcado para morir: cuando le hagas daño, suma tantos d4 como tu Rango. Solo puedes marcar a un adversario a la vez; dura hasta que descanses, hasta que caiga o hasta que el DJ gaste tanto Miedo como tu Rango." },
@@ -2752,6 +2779,8 @@ const sharedStyles = `
   .mh-walk-btn { background: #6E8A6A; }
   .mh-favor-btn { background: #B55FA0; }
   .mh-fury-btn { background: #B55FA0; }
+  .mh-combo-btn { background: #C08B5C; }
+  .mh-combo-btn:hover { background: #A57446; }
   .mh-fury-btn:hover:not(:disabled) { background: #9C4D89; }
   .mh-fury-btn.is-alt { background: transparent; color: #9C4D89; border: 1.5px solid #B55FA0; }
   .mh-fury-btn:disabled { opacity: .5; cursor: not-allowed; }
@@ -3817,6 +3846,12 @@ function DamageResult({ roll }) {
         {(roll.sneakRolls || []).map((v, i) => (
           <DieFace key={"s" + i} sides={6} value={v} color="#4F5D78" size={size} rolling={false} highlight={v === 6} label={i === 0 ? "Furtivo" : undefined} />
         ))}
+        {(roll.rolls2 || []).map((v, i) => (
+          <DieFace key={"r2" + i} sides={roll.die2} value={v} color={color} size={size} rolling={false} highlight={v === roll.die2} />
+        ))}
+        {(roll.comboRolls || []).map((v, i) => (
+          <DieFace key={"cb" + i} sides={roll.comboDie || 4} value={v} color="#C08B5C" size={Math.round(size * 0.8)} rolling={false} highlight={v === roll.comboDie} label={i === 0 ? "Combo" : undefined} />
+        ))}
         {(roll.furyRolls || []).map((v, i) => (
           <DieFace key={"fu" + i} sides={roll.furySides || 6} value={v} color="#B55FA0" size={size} rolling={false} highlight={v === (roll.furySides || 6)} label={i === 0 ? "Furia" : undefined} />
         ))}
@@ -3834,7 +3869,8 @@ function DamageResult({ roll }) {
       {!rolling && (
         <div className="mh-pop" key={roll.key} style={{ fontFamily: "'Inter', system-ui, sans-serif", position: "relative" }}>
           <div style={{ fontSize: 12.5, color: "var(--mh-ink3)" }}>
-            {roll.dice || 1}d{roll.die} ({rolls.join(" + ")}){roll.bonus ? " + " + roll.bonus : ""}
+            {roll.dice || 1}d{roll.die} ({rolls.join(" + ")}){roll.rolls2 ? ` + ${roll.rolls2.length}d${roll.die2} (${roll.rolls2.join(" + ")})` : ""}{roll.bonus ? " + " + roll.bonus : ""}
+            {roll.comboRolls ? ` + ${roll.comboRolls.join(" + ")} (Combo d${roll.comboDie})` : ""}
             {roll.wolfBonus ? ` + 1d10 (${roll.wolfBonus})` : ""}
             {roll.unstopBonus ? ` + ${roll.unstopBonus} (Imparable)` : ""}
             {roll.kickRolls ? ` + 2d6 (${roll.kickRolls.join(" + ")}) (Coz)` : ""}
@@ -5343,6 +5379,13 @@ export default function App({ onSignOut }) {
       setHpHit({ key, id, amount: hpAfter - hpBefore });
       // Pacto del Iracundo · Venganza Letal (e Ira de Otro Mundo en Maestría): se ofrece al marcar PV.
       if (next.f_subclass === "Pacto del Iracundo" && getFavor(next) > 0) setVengeAsk({ id, n: hpAfter - hpBefore, rolls: null, ire: null });
+      // Titán: Ojo por Ojo (Especialización) y Aún No He Terminado (Maestría, con daño Grave).
+      if (next.f_subclass === "Titán") {
+        const tT = tierForLevel(next.f_level || 1);
+        const eye = tT >= 2 && !next.f_eye_used;
+        const notDone = tT >= 3 && hpAfter - hpBefore >= 3;
+        if (eye || notDone) setTitanAsk({ id, n: hpAfter - hpBefore, eye, notDone, done: {} });
+      }
       setTimeout(() => setHpHit((h) => (h && h.key === key ? null : h)), 1400);
     }
     const gains = {
@@ -5733,12 +5776,17 @@ export default function App({ onSignOut }) {
     const bonus = flat + levelBonus + (opts.extraFlat || 0) + waxBonus;
     if (ch && ch.f_glamour === "1") setGlamourAsk({ id: charId, why: "Has hecho daño" });
     const rolls = Array.from({ length: dice }, () => Math.floor(Math.random() * die) + 1);
+    // Golpe de Camorrista: «d8+d6», los dos dados escalan con la Competencia.
+    const m2 = damageStr.match(/d\d+\+d(\d+)/);
+    const die2 = m2 ? parseInt(m2[1], 10) : 0;
+    const rolls2 = die2 ? Array.from({ length: dice }, () => Math.floor(Math.random() * die2) + 1) : null;
+    const sum2 = rolls2 ? rolls2.reduce((a, b) => a + b, 0) : 0;
     // Portador Divino · Resonancia Sagrada: en el daño del Arma Espiritual, los dados repetidos valen el doble.
     const resonance = !!opts.resonance && rolls.some((v, i) => rolls.indexOf(v) !== i);
     const doubled = opts.resonance ? rolls.map((v) => (rolls.filter((x) => x === v).length > 1 ? v * 2 : v)) : rolls;
     const roll = doubled.reduce((a, b) => a + b, 0);
     // Crítico: sumas el valor máximo de los dados además de la tirada.
-    const critBonus = isCritical ? die * dice : 0;
+    const critBonus = isCritical ? die * dice + die2 * dice : 0;
     // Hombre lobo: en Forma de Lobo sumas 1d10 al daño.
     const wolfBonus = !opts.plain && ch && ch.f_transformation_form_active === "Forma de Lobo" ? Math.floor(Math.random() * 10) + 1 : 0;
     // Guardián · Imparable: suma el valor actual del dado.
@@ -5756,11 +5804,11 @@ export default function App({ onSignOut }) {
     const furyBonus = furyRolls ? furyRolls.reduce((a, b) => a + b, 0) : 0;
     const fearRolls = opts.fearDice ? Array.from({ length: opts.fearDice }, () => Math.floor(Math.random() * 10) + 1) : null;
     const fearBonus = fearRolls ? fearRolls.reduce((a, b) => a + b, 0) : 0;
-    const total = roll + bonus + critBonus + wolfBonus + unstopBonus + sneakBonus + rawBonus + fearBonus + furyBonus;
-    setDamageRollResult({ furyRolls, furySides: ch ? patronSides(ch) : 6, fearRolls, rawBonus, sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, doublePick: !!opts.doublePick, charged: ch && ch.f_subclass === "Origen Primigenio" && ch.f_charged === "1" && damageType === "mágico", note: resonance ? "Resonancia Sagrada: los dados repetidos valen el doble" : opts.extraFlat ? "Incluye +" + opts.extraFlat + " de Elementalista" : waxBonus ? "Incluye +2 de la Luna Creciente" : opts.note || "", spirit: !!opts.spirit });
+    const total = roll + sum2 + bonus + critBonus + wolfBonus + unstopBonus + sneakBonus + rawBonus + fearBonus + furyBonus;
+    setDamageRollResult({ rolls2, die2, comboBase: total, furyRolls, furySides: ch ? patronSides(ch) : 6, fearRolls, rawBonus, sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, doublePick: !!opts.doublePick, charged: ch && ch.f_subclass === "Origen Primigenio" && ch.f_charged === "1" && damageType === "mágico", note: resonance ? "Resonancia Sagrada: los dados repetidos valen el doble" : opts.extraFlat ? "Incluye +" + opts.extraFlat + " de Elementalista" : waxBonus ? "Incluye +2 de la Luna Creciente" : opts.note || "", spirit: !!opts.spirit });
     const who = playerName || "Alguien en la mesa";
     const critLabel = isCritical ? ` · ¡Crítico! (+${critBonus} máx.)` : "";
-    const diceLabel = `${dice}d${die} (${rolls.join("+")})` + (furyRolls ? ` + Furia ${furyRolls.length}d${patronSides(ch)} (${furyRolls.join("+")})` : "") + (fearRolls ? ` + Enfrenta tu Miedo ${fearRolls.length}d10 (${fearRolls.join("+")}) mágico` : "") + (wolfBonus ? ` + Lobo 1d10 (${wolfBonus})` : "") + (unstopBonus ? ` + Imparable ${unstopBonus}` : "") + (sneakRolls ? ` + Furtivo ${sneakRolls.length}d6 (${sneakRolls.join("+")})` : "");
+    const diceLabel = `${dice}d${die} (${rolls.join("+")})` + (rolls2 ? ` + ${dice}d${die2} (${rolls2.join("+")})` : "") + (furyRolls ? ` + Furia ${furyRolls.length}d${patronSides(ch)} (${furyRolls.join("+")})` : "") + (fearRolls ? ` + Enfrenta tu Miedo ${fearRolls.length}d10 (${fearRolls.join("+")}) mágico` : "") + (wolfBonus ? ` + Lobo 1d10 (${wolfBonus})` : "") + (unstopBonus ? ` + Imparable ${unstopBonus}` : "") + (sneakRolls ? ` + Furtivo ${sneakRolls.length}d6 (${sneakRolls.join("+")})` : "");
     await pushRollLog(
       `**${who}** — Daño de ${weaponName}: ${diceLabel}${bonus ? " + " + bonus : ""}${critLabel} = **${total}** ${damageType}`
     );
@@ -7573,7 +7621,8 @@ export default function App({ onSignOut }) {
   const [hexDraft, setHexDraft] = useState("");
   const [talismanDlg, setTalismanDlg] = useState(null); // Bruja del Seto · Talismán Encantado
   const [embraceDlg, setEmbraceDlg] = useState(null); // Pacto del Eterno · Abrazo Inmortal
-  const [vengeAsk, setVengeAsk] = useState(null); // Pacto del Iracundo · Venganza Letal / Ira de Otro Mundo
+  const [vengeAsk, setVengeAsk] = useState(null);
+  const [titanAsk, setTitanAsk] = useState(null); // Titán · Ojo por Ojo / Aún No He Terminado // Pacto del Iracundo · Venganza Letal / Ira de Otro Mundo
   const getVault = (c) => {
     try {
       return JSON.parse(c?.f_domain_vault || "[]");
@@ -7769,6 +7818,7 @@ export default function App({ onSignOut }) {
     if (isLong && c.f_commune_used) restPatch.f_commune_used = "";
     if (c.f_mantle) restPatch.f_mantle = "";
     if (c.f_fury) restPatch.f_fury = "";
+    if (c.f_eye_used) restPatch.f_eye_used = "";
     if (c.f_ire_used) restPatch.f_ire_used = "";
     if (c.f_celestial_used) restPatch.f_celestial_used = "";
     if (isLong && c.f_aura_used) restPatch.f_aura_used = "";
@@ -8121,7 +8171,7 @@ export default function App({ onSignOut }) {
   const rollTraitCheck = (charId, traitLabel, traitValue, weapon, cardContext, advantage) => {
     // Galapa · Retraerse: desventaja en las tiradas de acción mientras está en el caparazón.
     const shellOn = getConditions(charsRef.current[charId] || {}).includes("Retraído");
-    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage && !shellOn, exps: [], rally: false, privilege: false, disadvantage: shellOn, shellOn, poet: false, dedicated: false, quick: false, reaction: false, tide: 0, dc: "", elem: "", slayer: 0, found: "", adept: false, patron: false });
+    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage && !shellOn, exps: [], rally: false, privilege: false, disadvantage: shellOn, shellOn, poet: false, dedicated: false, quick: false, reaction: false, tide: 0, dc: "", elem: "", slayer: 0, found: "", adept: false, patron: false, surround: 0 });
   };
   const confirmPreRoll = () => {
     const pr = preRoll;
@@ -8156,6 +8206,12 @@ export default function App({ onSignOut }) {
       patch.stress_marked = String(Number(ch.stress_marked || 0) + Math.min(room, exps.length));
     }
     if (slayerSpent) patch.f_slayer = String(Number(ch.f_slayer || 0) - slayerSpent);
+    // Titán · Rodeado: 1 Esperanza por cada objetivo adicional.
+    const surroundN = ch && ch.f_subclass === "Titán" && pr.weapon ? Math.min(pr.surround || 0, Math.max(0, Number(ch.hope_marked ?? HOPE_DEFAULT) - hopeCost)) : 0;
+    if (surroundN) {
+      patch.hope_marked = String(Math.max(0, Number(patch.hope_marked ?? ch.hope_marked ?? HOPE_DEFAULT) - surroundN));
+      postCampaignEvent(pr.charId, `🌀 Rodeado: gasta ${surroundN} Esperanza y ataca a ${surroundN} criatura${surroundN > 1 ? "s" : ""} más en alcance Cuerpo a cuerpo`);
+    }
     if (adeptOn) postCampaignEvent(pr.charId, `📘 Diestro: marca ${exps.length} de Estrés en lugar de gastar Esperanza y duplica el modificador de su Experiencia`);
     if (foundExp) patch.f_found_used = "1";
     // Del Mar · Conocer la Marea: las fichas gastadas suman +1 cada una.
@@ -9748,6 +9804,10 @@ export default function App({ onSignOut }) {
         if (phaseC && phaseC.name === "Menguante") equipMods.evasion = (equipMods.evasion || 0) + 1;
         // Estirpe del Cielo · Ojo de la Tormenta.
         if (c.f_storm_eye === "1") equipMods.evasion = (equipMods.evasion || 0) + 1;
+        // Camorrista · Yo Soy el Arma: +1 a la Evasión con el Golpe de Camorrista.
+        if (brawlerArmed(c)) equipMods.evasion = (equipMods.evasion || 0) + 1;
+        // Titán · Robusto: +3 permanente al umbral Grave.
+        if (c.f_subclass === "Titán") equipMods.severe = (equipMods.severe || 0) + 3;
         // Pacto del Eterno · Manto del Patrón: +Rango a los umbrales.
         if (c.f_mantle === "1") {
           const tM = tierForLevel(c.f_level || 1);
@@ -10647,7 +10707,7 @@ export default function App({ onSignOut }) {
                                 {(() => {
                                   const primaryIsTwoHanded = primaryWeapon?.hands === 2 && !ignoresBurden(c.f_class);
                                   return [
-                                    { kind: "weapon", label: "Arma principal", w: primaryWeapon },
+                                    { kind: "weapon", label: "Arma principal", w: primaryWeapon || (brawlerArmed(c) ? brawlerStrike(c) : null) },
                                     { kind: "weapon", label: "Arma secundaria", w: secondaryWeapon },
                                     { kind: "armor", label: "Armadura", w: armorEntry },
                                   ].map((slot, idx) => {
@@ -10753,10 +10813,10 @@ export default function App({ onSignOut }) {
                                   // Tarjeta = la carta abierta en pequeño: mismo arte, color de rareza, título y cifra principal.
                                   const isArmor = slot.kind === "armor";
                                   const tier = TIER_COLORS[w.tier] ? w.tier : 1;
-                                  const handsLabel = w.hands === 2 ? "Dos manos" : "Una mano";
+                                  const handsLabel = w.virtual ? "A mano desnuda" : w.hands === 2 ? "Dos manos" : "Una mano";
                                   const dmgParts = !isArmor ? (w.damage || "").match(/^(\S+)\s*(.*)$/) : null;
                                   const hasDice = !isArmor && /d\d/.test(w.damage || "");
-                                  const profDamage = hasDice ? String(proficiency) + (dmgParts?.[1] || w.damage).replace(/^\d*/, "") : "";
+                                  const profDamage = hasDice ? (w.virtual ? proficiency + "d8+" + proficiency + "d6" : String(proficiency) + (dmgParts?.[1] || w.damage).replace(/^\d*/, "")) : "";
                                   const [featName, ...featRest] = (w.feature || "").split(":");
                                   const featTone = w.mods && Object.values(w.mods).some((v) => v < 0) ? " is-neg" : w.mods ? " is-pos" : "";
                                   const TileIcon = isArmor ? armorIcon(w.key) : weaponIcon(w.key);
@@ -10779,6 +10839,7 @@ export default function App({ onSignOut }) {
                                             characteristic: w.feature,
                                             bigStyle: true,
                                             tier: w.tier,
+                                            ...(w.virtual ? { brawlerStrike: true, kicker: "Arma principal · Yo Soy el Arma", text: w.trait + " · Cuerpo a cuerpo · " + proficiency + "d8+" + proficiency + "d6 físico · +1 a la Evasión" } : {}),
                                           }
                                     );
                                   return (
@@ -10993,7 +11054,7 @@ export default function App({ onSignOut }) {
                               kicker: `Subclase · ${subclassBadge}`,
                               title: subclassEntry.key,
                               text: subclassEntry.blurb,
-                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento", "Escuela de la Guerra", "Bruja Lunar", "Bruja del Seto", "Pacto del Eterno", "Pacto del Iracundo"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
+                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento", "Escuela de la Guerra", "Bruja Lunar", "Bruja del Seto", "Pacto del Eterno", "Pacto del Iracundo", "Titán"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
                               image: subclassEntry.image,
                               bigStyle: true,
                               ...(isElemental ? { elementalAction: true } : {}),
@@ -13595,6 +13656,59 @@ export default function App({ onSignOut }) {
               );
             })()}
 
+            {titanAsk && characters[titanAsk.id] && (() => {
+              const T = titanAsk;
+              const me = characters[T.id];
+              const close = () => setTitanAsk(null);
+              const mark = (k, patch, msg) => {
+                setTitanAsk((x) => ({ ...x, done: { ...x.done, [k]: true } }));
+                if (k === "eye") markStress(T.id, 1, patch);
+                else updateCharacterFields(T.id, patch);
+                postCampaignEvent(T.id, msg);
+              };
+              return (
+                <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 47, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)" }} onClick={close}>
+                  <div className="mh-card mh-renew mh-commune" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Titán">
+                    <div className="mh-pre-h">
+                      <span className="mh-pre-ic" style={{ background: "color-mix(in srgb, #9A6B3C 16%, var(--mh-panel))", color: "#9A6B3C" }}>
+                        <HandFist size={17} />
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <b className="mh-serif">Has marcado {T.n} Punto{T.n === 1 ? "" : "s"} de Vida</b>
+                        <small>{T.notDone ? "Daño Grave: aún no has terminado." : "Si te lo ha hecho un adversario Cuerpo a cuerpo, puedes devolvérselo."}</small>
+                      </div>
+                      <button type="button" className="mh-inv-x" aria-label="Cerrar" onClick={close}>
+                        <X size={16} />
+                      </button>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {T.eye &&
+                        (T.done.eye ? (
+                          <div className="mh-commune-res">Ojo por Ojo: el adversario marca {T.n} Punto{T.n === 1 ? "" : "s"} de Vida</div>
+                        ) : (
+                          <button type="button" className="mh-btn" onClick={() => mark("eye", { f_eye_used: "1" }, `👁️ Ojo por Ojo: marca 1 Estrés y el adversario marca ${T.n} Punto${T.n === 1 ? "" : "s"} de Vida`)}>
+                            <Swords size={15} /> Ojo por Ojo · 1 Estrés · el adversario marca {T.n} PV
+                          </button>
+                        ))}
+                      {T.notDone &&
+                        (T.done.nd ? (
+                          <div className="mh-commune-res">Aún No He Terminado: aplicado</div>
+                        ) : (
+                          <div style={{ display: "flex", gap: 8 }}>
+                            <button type="button" className="mh-btn-ghost" style={{ flex: 1 }} onClick={() => mark("nd", { hope_marked: String(Math.min(getHopeMax(me), Number(me.hope_marked ?? HOPE_DEFAULT) + 1)) }, "💪 Aún No He Terminado: recibe daño Grave y gana 1 Esperanza")}>
+                              <Sparkles size={14} /> +1 Esperanza
+                            </button>
+                            <button type="button" className="mh-btn-ghost" style={{ flex: 1 }} onClick={() => mark("nd", { stress_marked: String(Math.max(0, Number(me.stress_marked || 0) - 1)) }, "💪 Aún No He Terminado: recibe daño Grave y se quita 1 Estrés")}>
+                              <Zap size={14} /> −1 Estrés
+                            </button>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             {vengeAsk && characters[vengeAsk.id] && (() => {
               const me = characters[vengeAsk.id];
               const V = vengeAsk;
@@ -14432,6 +14546,23 @@ export default function App({ onSignOut }) {
                       onClick: () => setPreRoll((p) => ({ ...p, adept: !p.adept })),
                     })
                   : null,
+                ch.f_subclass === "Titán" && tierForLevel(ch.f_level || 1) >= 2 && preRoll.weapon && isMeleeWeapon(preRoll.weapon.name) ? (
+                  <div key="surround" className={"mh-pre-tile mh-pre-tide" + (preRoll.surround ? " is-on" : "")} style={{ "--pc": "#9A6B3C" }} title="Gasta Esperanza: una criatura adicional en alcance Cuerpo a cuerpo por cada una">
+                    <b>Rodeado</b>
+                    <span className="mh-pre-tide-row">
+                      <small>1 Esperanza por objetivo</small>
+                      <span className="mh-pre-step">
+                        <button type="button" aria-label="Uno menos" disabled={!preRoll.surround} onClick={() => setPreRoll((p) => ({ ...p, surround: Math.max(0, (p.surround || 0) - 1) }))}>
+                          <Minus size={11} />
+                        </button>
+                        <b>+{preRoll.surround || 0}</b>
+                        <button type="button" aria-label="Uno más" disabled={(preRoll.surround || 0) + hopeUsed >= hopeNow} onClick={() => setPreRoll((p) => ({ ...p, surround: (p.surround || 0) + 1 }))}>
+                          <Plus size={11} />
+                        </button>
+                      </span>
+                    </span>
+                  </div>
+                ) : null,
                 slayerHave > 0 ? (
                   <div key="slayer" className={"mh-pre-tile mh-pre-tide" + (slayerUse ? " is-on" : "")} style={{ "--pc": "#C0504A" }} title="Tiras los dados gastados y sumas su resultado al ataque">
                     <b>Dados de Cazador</b>
@@ -15317,7 +15448,14 @@ export default function App({ onSignOut }) {
                             // Escuela de la Guerra · Enfrenta tu Miedo: éxito con Miedo = +1d10/2d10/3d10 de daño mágico.
                             const fearHit = rc && rc.f_subclass === "Escuela de la Guerra" && !traitRollResult.reaction && !traitRollResult.flipped && traitRollResult.fear > traitRollResult.hope;
                             const fearDice = fearHit ? tierForLevel(rc.f_level || 1) : 0;
-                            rollWeaponDamage(name, damage, charId, isCritical, { fearDice, cloaked: wasCloaked, spirit, resonance: spirit && rc && tierForLevel(rc.f_level || 1) >= 3, extraFlat: traitRollResult.weapon.elemDmg || 0, doublePick: !!traitRollResult.weapon.manipDouble });
+                            // Titán · Gozo del Golpe (Maestría): crítico Cuerpo a cuerpo = +1 Esperanza, −1 Estrés y +1 Competencia.
+                            const pummel = isCritical && rc && rc.f_subclass === "Titán" && tierForLevel(rc.f_level || 1) >= 3 && isMeleeWeapon(name);
+                            if (pummel) {
+                              const cur = charsRef.current[charId];
+                              updateCharacterFields(charId, { hope_marked: String(Math.min(getHopeMax(cur), Number(cur.hope_marked ?? HOPE_DEFAULT) + 1)), stress_marked: String(Math.max(0, Number(cur.stress_marked || 0) - 1)) });
+                              postCampaignEvent(charId, "🥊 Gozo del Golpe: gana 1 Esperanza más, se quita 1 Estrés más y su Competencia sube en 1 en este ataque");
+                            }
+                            rollWeaponDamage(name, damage, charId, isCritical, { ...(pummel ? { fixedDice: getProficiency(rc) + 1 } : {}), fearDice, cloaked: wasCloaked, spirit, resonance: spirit && rc && tierForLevel(rc.f_level || 1) >= 3, extraFlat: traitRollResult.weapon.elemDmg || 0, doublePick: !!traitRollResult.weapon.manipDouble });
                           }}
                         >
                           Sí
@@ -15539,6 +15677,58 @@ export default function App({ onSignOut }) {
                             +3 Dificultad de la reacción
                           </button>
                         </span>
+                      </div>
+                    );
+                  })()}
+                  {(() => {
+                    // Camorrista · Golpe Combinado: 1 Estrés para tirar el Dado de Combo hasta que baje.
+                    const dr = damageRollResult;
+                    const bc = dr.charId ? characters[dr.charId] : null;
+                    if (!bc || bc.f_class !== "Camorrista" || !isMeleeWeapon(dr.weaponName)) return null;
+                    if (dr.comboRolls) return <div className="mh-kick-done" style={{ color: "#9A6B3C" }}>Golpe Combinado: +{dr.comboRolls.reduce((a, b) => a + b, 0)} ({dr.comboRolls.length} golpes)</div>;
+                    const cd = comboDie(bc);
+                    return (
+                      <button
+                        type="button"
+                        className="mh-kick-btn mh-combo-btn"
+                        title="Marca 1 Estrés: tira el Dado de Combo hasta que salga un resultado menor que el anterior"
+                        onClick={() => {
+                          const seq = [Math.floor(Math.random() * cd) + 1];
+                          for (let g = 0; g < 50; g++) {
+                            const nx = Math.floor(Math.random() * cd) + 1;
+                            seq.push(nx);
+                            if (nx < seq[seq.length - 2]) break;
+                          }
+                          const extra = seq.reduce((a, b) => a + b, 0);
+                          setDamageRollResult((r) => (r ? { ...r, comboRolls: seq, comboDie: cd, total: r.total + extra } : r));
+                          markStress(dr.charId, 1);
+                          postCampaignEvent(dr.charId, `👊 Golpe Combinado: marca 1 Estrés y encadena ${seq.length} golpes con su d${cd} (${seq.join(", ")}): +${extra} de daño. Daño total ${dr.total + extra}`);
+                        }}
+                      >
+                        <HandFist size={14} /> Golpe Combinado · 1 Estrés · d{cd}
+                      </button>
+                    );
+                  })()}
+                  {(() => {
+                    // Titán · Arrollar: tras acertar, 1 Esperanza para lanzar al objetivo o que marque 1 Estrés.
+                    const dr = damageRollResult;
+                    const tc = dr.charId ? characters[dr.charId] : null;
+                    if (!tc || tc.f_subclass !== "Titán" || dr.overwhelm === "plain") return null;
+                    if (dr.overwhelm) return <div className="mh-kick-done" style={{ color: "#9A6B3C" }}>Arrollar: {dr.overwhelm === "throw" ? "lanzas al objetivo dentro de alcance Cercano" : "el objetivo marca 1 Estrés"}</div>;
+                    const hopeT = Number(tc.hope_marked ?? HOPE_DEFAULT);
+                    const go = (k) => {
+                      setDamageRollResult((r) => (r ? { ...r, overwhelm: k } : r));
+                      updateCharacterField(dr.charId, "hope_marked", String(hopeT - 1));
+                      postCampaignEvent(dr.charId, k === "throw" ? "💥 Arrollar: gasta 1 Esperanza y lanza al objetivo a un punto dentro de alcance Cercano" : "💥 Arrollar: gasta 1 Esperanza y el objetivo marca 1 Estrés");
+                    };
+                    return (
+                      <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
+                        <button type="button" className="mh-kick-btn" disabled={hopeT < 1} onClick={() => go("throw")}>
+                          <Wind size={14} /> Arrollar: lanzarlo · 1 Esperanza
+                        </button>
+                        <button type="button" className="mh-kick-btn" disabled={hopeT < 1} onClick={() => go("stress")}>
+                          <Zap size={14} /> Arrollar: +1 Estrés · 1 Esperanza
+                        </button>
                       </div>
                     );
                   })()}
@@ -16906,6 +17096,32 @@ export default function App({ onSignOut }) {
                         },
                       });
                   }
+                  // Camorrista · Golpe de Camorrista: el rasgo que elijas.
+                  if (d.brawlerStrike && !d.fromChat) {
+                    TRAITS.forEach((t) =>
+                      cardActs.push({
+                        key: "bt-" + t.key,
+                        Icon: t.Icon || Dices,
+                        label: (c.f_brawl_trait || "Fuerza") === t.label ? t.label + " (en uso)" : "Usar " + t.label,
+                        sub: (Number(c[t.key] || 0) >= 0 ? "+" : "") + Number(c[t.key] || 0),
+                        disabled: (c.f_brawl_trait || "Fuerza") === t.label,
+                        run: () => {
+                          updateCharacterField(viewingCharId, "f_brawl_trait", t.label);
+                          setViewingCardDetail((prev) => (prev ? { ...prev, text: t.label + " · Cuerpo a cuerpo · " + getProficiency(c) + "d8+" + getProficiency(c) + "d6 físico · +1 a la Evasión" } : prev));
+                        },
+                      })
+                    );
+                  }
+                  // Camorrista · Golpe Combinado: el Dado de Combo sube un paso por Rango como mejora de nivel.
+                  if (d.title === "Golpe Combinado" && c?.f_class === "Camorrista" && !d.fromChat) {
+                    const cur = comboDie(c);
+                    const maxIdx = Math.min(COMBO_DICE.length - 1, tierForLevel(c.f_level || 1) - 1);
+                    const idx = COMBO_DICE.indexOf(cur);
+                    cardActs.push(
+                      { key: "combo-up", Icon: ChevronUp, label: idx >= maxIdx ? "Dado de Combo d" + cur + " (máximo de tu Rango)" : "Subir a d" + COMBO_DICE[idx + 1], sub: "Mejora de nivel · uno por Rango", disabled: idx >= maxIdx, run: () => updateCharacterField(viewingCharId, "f_combo_die", String(COMBO_DICE[idx + 1])) },
+                      { key: "combo-down", Icon: ChevronDown, label: "Bajar a d" + (COMBO_DICE[idx - 1] || 4), sub: "Dado de Combo actual: d" + cur, disabled: idx <= 0, run: () => updateCharacterField(viewingCharId, "f_combo_die", String(COMBO_DICE[idx - 1])) }
+                    );
+                  }
                   // Estirpe del Cielo · Fuerza del Vendaval y Ojo de la Tormenta.
                   if (d.ancestryKey === "Estirpe del Cielo" && !d.fromChat) {
                     const hopeS = Number(c.hope_marked ?? HOPE_DEFAULT);
@@ -17543,7 +17759,7 @@ export default function App({ onSignOut }) {
                       label: "Mostrar en la campaña",
                       sub: shareCamp.name,
                       run: () => {
-                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, divineActs, sentinelActs, originActs, primalActs, braveActs, slayerCard, moonActs, hedgeActs, endlessActs, wrathActs, ...detail } = d;
+                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, divineActs, sentinelActs, originActs, primalActs, braveActs, slayerCard, moonActs, hedgeActs, endlessActs, wrathActs, brawlerStrike: _bs, comboCard: _cc, ...detail } = d;
                         // Las imágenes incrustadas muy grandes no se copian al chat.
                         if (typeof detail.image === "string" && detail.image.startsWith("data:") && detail.image.length > 30000) delete detail.image;
                         const type = d.domain ? "domain" : d.weapon ? "weapon" : d.armor ? "armor" : "card";
