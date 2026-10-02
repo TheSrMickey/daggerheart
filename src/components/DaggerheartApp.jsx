@@ -656,6 +656,16 @@ const getContacts = (c) => {
 // Gigante · Alcance: lo que tenga alcance Cuerpo a cuerpo cuenta como Muy cercano.
 const isGiant = (c) => (c?.f_ancestry || "").split(" + ").includes("Gigante");
 const reachFor = (c, range) => (range === "Cuerpo a cuerpo" && isGiant(c) ? "Muy cercano" : range);
+// Cazador de Sangre · Rito Carmesí: 1d4 (2d4 al nivel 2, 3d4 al 5 y 4d4 al 8).
+const crimsonDice = (c) => {
+  const l = Number(c?.f_level || 1);
+  return l >= 8 ? 4 : l >= 5 ? 3 : l >= 2 ? 2 : 1;
+};
+// Orden del Licántropo · Forma Híbrida: 1d4 (1d6 con Poder Feral, 1d8 con Cazador Supremo).
+const hybridSides = (c) => {
+  const t = tierForLevel(c?.f_level || 1);
+  return c?.f_subclass === "Orden del Licántropo" && c?.f_hybrid === "1" ? (t >= 3 ? 8 : t >= 2 ? 6 : 4) : 0;
+};
 // Invocador · círculos de invocación. El primero (Espíritus del Destino) es de la clase; el resto, de la subclase.
 const SUMMON_CIRCLES = {
   Nigromancia: [
@@ -2985,6 +2995,9 @@ const sharedStyles = `
   .mh-combo-btn { background: #C08B5C; }
   .mh-mark-btn { background: #6B7891; }
   .mh-necro-btn { background: #5B6B5E; }
+  .mh-blood-btn { background: #A8323E; }
+  .mh-blood-btn:hover:not(:disabled) { background: #8E2A34; }
+  .mh-eq.mh-eq-crimson { border-color: #A8323E !important; box-shadow: 0 0 0 1px #A8323E, 0 0 14px color-mix(in srgb, #A8323E 35%, transparent); }
   .mh-angel-btn { background: #C9A24A; }
   .mh-angel-btn:hover:not(:disabled) { background: #B08A36; }
   .mh-stat-circles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
@@ -4032,6 +4045,12 @@ function DualityResult({ roll, size = 84 }) {
             <DieFace sides={parseInt(String(roll.rallyDie || "d6").slice(1), 10) || 6} value={rally} color="#E07FB0" size={Math.round(size * 0.66)} rolling={rolling} label="Arenga" delay={300} />
           </>
         )}
+        {roll?.hybridRoll > 0 && !rolling && (
+          <>
+            <span style={{ fontSize: 20, color: "var(--mh-muted)", marginTop: size / 2 - 14 }}>+</span>
+            <DieFace sides={roll.hybridSidesR || 4} value={roll.hybridRoll} color="#A8323E" size={Math.round(size * 0.6)} rolling={false} label="Híbrida" />
+          </>
+        )}
         {roll?.patronRoll > 0 && !rolling && (
           <>
             <span style={{ fontSize: 20, color: "var(--mh-muted)", marginTop: size / 2 - 14 }}>+</span>
@@ -4060,6 +4079,7 @@ function DualityResult({ roll, size = 84 }) {
             {poet ? " + " + poet + " (Poeta)" : ""}
             {tide - (roll.slayerRoll || 0) - (roll.patronRoll || 0) > 0 ? " + " + (tide - (roll.slayerRoll || 0) - (roll.patronRoll || 0)) + " (Marea)" : ""}
             {roll.patronRoll ? " + " + roll.patronRoll + " (Patrón)" : ""}
+            {roll.hybridRoll ? " + " + roll.hybridRoll + " (Forma Híbrida)" : ""}
             {roll.slayerRoll ? " + " + (roll.slayerRolls || []).join(" + ") + " (Cazador)" : ""}
             {roll.difficulty != null ? ` · Dificultad ${roll.difficulty}` : ""}
           </div>
@@ -4129,6 +4149,10 @@ function DamageResult({ roll }) {
         {(roll.rolls2 || []).map((v, i) => (
           <DieFace key={"r2" + i} sides={roll.die2} value={v} color={color} size={size} rolling={false} highlight={v === roll.die2} />
         ))}
+        {roll.hybridDmg > 0 && <DieFace sides={roll.hybridDmgSides || 4} value={roll.hybridDmg} color="#A8323E" size={Math.round(size * 0.8)} rolling={false} label="Híbrida" />}
+        {(roll.crimsonRolls || []).map((v, i) => (
+          <DieFace key={"cr" + i} sides={4} value={v} color="#A8323E" size={Math.round(size * 0.7)} rolling={false} highlight={v === 4} label={i === 0 ? "Carmesí" : undefined} />
+        ))}
         {roll.angelRoll > 0 && <DieFace sides={roll.angelSides} value={roll.angelRoll} color="#D8A84A" size={Math.round(size * 0.8)} rolling={false} highlight={roll.angelRoll === roll.angelSides} label="Ángel" />}
         {(roll.knightRolls || []).map((v, i) => (
           <DieFace key={"kn" + i} sides={12} value={v} color="#5B6B5E" size={Math.round(size * 0.8)} rolling={false} highlight={v === 12} label={i === 0 ? "Caballero" : undefined} />
@@ -4159,6 +4183,8 @@ function DamageResult({ roll }) {
           <div style={{ fontSize: 12.5, color: "var(--mh-ink3)" }}>
             {roll.dice || 1}d{roll.die} ({rolls.join(" + ")}){roll.rolls2 ? ` + ${roll.rolls2.length}d${roll.die2} (${roll.rolls2.join(" + ")})` : ""}{roll.bonus ? " + " + roll.bonus : ""}
             {roll.comboRolls ? ` + ${roll.comboRolls.join(" + ")} (Combo d${roll.comboDie})` : ""}
+            {roll.hybridDmg ? ` + 1d${roll.hybridDmgSides} (${roll.hybridDmg}) (Forma Híbrida)` : ""}
+            {roll.crimsonRolls ? ` + ${roll.crimsonRolls.length}d4 (${roll.crimsonRolls.join(" + ")}) mágico (Rito Carmesí)` : ""}
             {roll.angelRoll ? ` + 1d${roll.angelSides} (${roll.angelRoll}) mágico (Ángel)` : ""}
             {roll.knightRolls ? ` + 2d12 (${roll.knightRolls.join(" + ")}) (Caballero de la Muerte)` : ""}
             {roll.igniteRoll ? ` + 1d6 (${roll.igniteRoll}) (Ignición)` : ""}
@@ -5654,6 +5680,11 @@ export default function App({ onSignOut }) {
       next.f_stance = "";
       postCampaignEvent(id, "🥋 Pierde su postura marcial");
     }
+    // Orden del Licántropo · Forma Híbrida: termina al tener todo el Estrés marcado.
+    if (cur.f_hybrid === "1" && Number(next.stress_marked || 0) >= Number(next.r_stress || 0) && Number(next.stress_marked || 0) > Number(cur.stress_marked || 0)) {
+      next.f_hybrid = "";
+      postCampaignEvent(id, "🐺 Tiene todo el Estrés marcado y abandona su Forma Híbrida");
+    }
     // Estirpe del Cielo · Ojo de la Tormenta: termina al recibir daño Grave.
     if (cur.f_storm_eye === "1" && Number(next.hp_marked || 0) - Number(cur.hp_marked || 0) >= 3) {
       next.f_storm_eye = "";
@@ -5712,6 +5743,11 @@ export default function App({ onSignOut }) {
     // Hombre lobo: al ganar Esperanza en Forma de Lobo, marcas 1 Estrés.
     const hopeBefore = Number(prev.hope_marked ?? HOPE_DEFAULT);
     const hopeAfter = Number(next.hope_marked ?? HOPE_DEFAULT);
+    // Orden del Licántropo · La Bestia Interior: al ganar Esperanza en Forma Híbrida, marca 1 Estrés.
+    if (hopeAfter > hopeBefore && next.f_subclass === "Orden del Licántropo" && next.f_hybrid === "1") {
+      postCampaignEvent(id, "🐺 La Bestia Interior: gana Esperanza en Forma Híbrida y marca 1 Estrés");
+      setTimeout(() => markStress(id, 1), 0);
+    }
     if (hopeAfter > hopeBefore && next.f_transformation_form_active === "Forma de Lobo") {
       postCampaignEvent(id, "🐺 Gana Esperanza en Forma de Lobo y marca 1 Estrés.");
       setTimeout(() => markStress(id, 1), 0);
@@ -5931,6 +5967,11 @@ export default function App({ onSignOut }) {
       next.f_stance = "";
       postCampaignEvent(id, "🥋 Pierde su postura marcial");
     }
+    // Orden del Licántropo · Forma Híbrida: termina al tener todo el Estrés marcado.
+    if (cur.f_hybrid === "1" && Number(next.stress_marked || 0) >= Number(next.r_stress || 0) && Number(next.stress_marked || 0) > Number(cur.stress_marked || 0)) {
+      next.f_hybrid = "";
+      postCampaignEvent(id, "🐺 Tiene todo el Estrés marcado y abandona su Forma Híbrida");
+    }
     // Estirpe del Cielo · Ojo de la Tormenta: termina al recibir daño Grave.
     if (cur.f_storm_eye === "1" && Number(next.hp_marked || 0) - Number(cur.hp_marked || 0) >= 3) {
       next.f_storm_eye = "";
@@ -6122,6 +6163,11 @@ export default function App({ onSignOut }) {
     // Hechicero · Canalizar Poder en Bruto: bono guardado para el próximo daño mágico.
     const rawBonus = ch && damageType === "mágico" ? Number(ch.f_raw_dmg || 0) : 0;
     if (rawBonus) updateCharacterField(charId, "f_raw_dmg", "");
+    // Orden del Licántropo · Forma Híbrida: también suma su dado al daño.
+    const hybridDmg = !opts.plain && ch && hybridSides(ch) ? Math.floor(Math.random() * hybridSides(ch)) + 1 : 0;
+    // Cazador de Sangre · Rito Carmesí: el arma encantada suma Nd4 mágico.
+    const crimsonRolls = !opts.plain && ch && ch.f_crimson && ch.f_crimson === weaponName ? Array.from({ length: crimsonDice(ch) }, () => Math.floor(Math.random() * 4) + 1) : null;
+    const crimsonBonus = crimsonRolls ? crimsonRolls.reduce((a, b) => a + b, 0) : 0;
     // Teúrgia · Golpe Esperanzador: un Ángel suma 1d10 (1d12) de daño mágico.
     const angelRoll = opts.angel ? Math.floor(Math.random() * opts.angel) + 1 : 0;
     // Nigromancia · Guerrero Mortal: el Caballero de la Muerte suma 2d12.
@@ -6134,9 +6180,9 @@ export default function App({ onSignOut }) {
     const furyBonus = furyRolls ? furyRolls.reduce((a, b) => a + b, 0) : 0;
     const fearRolls = opts.fearDice ? Array.from({ length: opts.fearDice }, () => Math.floor(Math.random() * 10) + 1) : null;
     const fearBonus = fearRolls ? fearRolls.reduce((a, b) => a + b, 0) : 0;
-    const total = angelRoll + knightBonus + igniteRoll + roll + sum2 + bonus + critBonus + wolfBonus + unstopBonus + sneakBonus + rawBonus + fearBonus + furyBonus;
+    const total = hybridDmg + crimsonBonus + angelRoll + knightBonus + igniteRoll + roll + sum2 + bonus + critBonus + wolfBonus + unstopBonus + sneakBonus + rawBonus + fearBonus + furyBonus;
     if (stanceNow === "aterradora") postCampaignEvent(charId, "😨 Postura Aterradora: el objetivo marca 1 Estrés");
-    setDamageRollResult({ angelRoll, angelSides: opts.angel || 0, knightRolls, attackFear: opts.attackFear || 0, igniteRoll, stanceNow, droppedRoll, favoredBonus, rolls2, die2, comboBase: total, furyRolls, furySides: ch ? patronSides(ch) : 6, fearRolls, rawBonus, sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, doublePick: !!opts.doublePick, charged: ch && ch.f_subclass === "Origen Primigenio" && ch.f_charged === "1" && damageType === "mágico", note: resonance ? "Resonancia Sagrada: los dados repetidos valen el doble" : opts.extraFlat ? "Incluye +" + opts.extraFlat + " de Elementalista" : waxBonus ? "Incluye +2 de la Luna Creciente" : opts.note || "", spirit: !!opts.spirit });
+    setDamageRollResult({ hybridDmg, hybridDmgSides: ch ? hybridSides(ch) : 0, crimsonRolls, angelRoll, angelSides: opts.angel || 0, knightRolls, attackFear: opts.attackFear || 0, igniteRoll, stanceNow, droppedRoll, favoredBonus, rolls2, die2, comboBase: total, furyRolls, furySides: ch ? patronSides(ch) : 6, fearRolls, rawBonus, sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, doublePick: !!opts.doublePick, charged: ch && ch.f_subclass === "Origen Primigenio" && ch.f_charged === "1" && damageType === "mágico", note: resonance ? "Resonancia Sagrada: los dados repetidos valen el doble" : opts.extraFlat ? "Incluye +" + opts.extraFlat + " de Elementalista" : waxBonus ? "Incluye +2 de la Luna Creciente" : opts.note || "", spirit: !!opts.spirit });
     const who = playerName || "Alguien en la mesa";
     const critLabel = isCritical ? ` · ¡Crítico! (+${critBonus} máx.)` : "";
     const diceLabel = `${dice}d${die} (${rolls.join("+")})` + (rolls2 ? ` + ${dice}d${die2} (${rolls2.join("+")})` : "") + (furyRolls ? ` + Furia ${furyRolls.length}d${patronSides(ch)} (${furyRolls.join("+")})` : "") + (fearRolls ? ` + Enfrenta tu Miedo ${fearRolls.length}d10 (${fearRolls.join("+")}) mágico` : "") + (wolfBonus ? ` + Lobo 1d10 (${wolfBonus})` : "") + (unstopBonus ? ` + Imparable ${unstopBonus}` : "") + (sneakRolls ? ` + Furtivo ${sneakRolls.length}d6 (${sneakRolls.join("+")})` : "");
@@ -7979,7 +8025,8 @@ export default function App({ onSignOut }) {
   const [vengeAsk, setVengeAsk] = useState(null);
   const [titanAsk, setTitanAsk] = useState(null);
   const [stanceEdit, setStanceEdit] = useState(null);
-  const [summonDlg, setSummonDlg] = useState(null); // Invocador · Invocar Entidad // Artista Marcial · elegir posturas conocidas // Titán · Ojo por Ojo / Aún No He Terminado // Pacto del Iracundo · Venganza Letal / Ira de Otro Mundo
+  const [summonDlg, setSummonDlg] = useState(null); // Invocador · Invocar Entidad
+  const [bestialDlg, setBestialDlg] = useState(false); // Licántropo · Concentración Bestial // Artista Marcial · elegir posturas conocidas // Titán · Ojo por Ojo / Aún No He Terminado // Pacto del Iracundo · Venganza Letal / Ira de Otro Mundo
   const getVault = (c) => {
     try {
       return JSON.parse(c?.f_domain_vault || "[]");
@@ -8180,6 +8227,9 @@ export default function App({ onSignOut }) {
     if (c.f_stance) restPatch.f_stance = "";
     if (c.f_marked) restPatch.f_marked = "";
     if (c.f_ignite) restPatch.f_ignite = "";
+    if (c.f_hybrid) restPatch.f_hybrid = "";
+    if (c.f_crimson) restPatch.f_crimson = "";
+    if (c.f_bestial_used) restPatch.f_bestial_used = "";
     if (isLong && c.f_toxins) restPatch.f_toxins = "";
     if (c.f_first_strike_used) restPatch.f_first_strike_used = "";
     if (isLong && c.f_truestrike_used) restPatch.f_truestrike_used = "";
@@ -8627,6 +8677,7 @@ export default function App({ onSignOut }) {
       slayer: slayerSpent,
       patronSides: patronUse,
       hallow: hallowUse,
+      hybridSides: pr.reaction ? 0 : hybridSides(ch),
       honed,
       rallyDie,
       disadvantage: (ch?.f_ancestry || "").split(" + ").includes("Goblin") && pr.traitLabel === "Agilidad" ? false : pr.disadvantage || (pr.shellOn && !pr.reaction),
@@ -8800,10 +8851,11 @@ export default function App({ onSignOut }) {
     const slayerRolls = extras.slayer ? Array.from({ length: extras.slayer }, () => Math.floor(Math.random() * 6) + 1) : [];
     const slayerRoll = slayerRolls.reduce((a, b) => a + b, 0);
     const patronRoll = extras.patronSides ? Math.floor(Math.random() * extras.patronSides) + 1 : 0;
+    const hybridRoll = extras.hybridSides ? Math.floor(Math.random() * extras.hybridSides) + 1 : 0;
     const tideBonus = (extras.tide || 0) + (extras.elemRoll || 0) + slayerRoll + patronRoll;
     // Dificultad: la de la carta o la que haya puesto el jugador.
     const dcVal = cardContext?.dc ?? extras.dc ?? null;
-    const total = hope + fear + traitValue + advantageRoll + wolfBonus + expBonus + rallyRoll + poetRoll + tideBonus;
+    const total = hope + fear + traitValue + advantageRoll + wolfBonus + expBonus + rallyRoll + poetRoll + tideBonus + hybridRoll;
     let text, color;
     if (hope === fear) {
       text = "Crítico";
@@ -8827,7 +8879,7 @@ export default function App({ onSignOut }) {
         ? "Ignoras los efectos que te afectarían aun con éxito"
         : "Las reacciones no generan Esperanza ni Miedo"
       : hope === fear ? "Ganas 1 Esperanza y te quitas 1 Estrés" : hope > fear ? "Ganas 1 Esperanza" : "El DJ gana 1 de Miedo";
-    setTraitRollResult({ key: Date.now(), hopeSides, traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, tideBonus, hallowRoll, hallowFirst: hopeA, patronRoll, patronSides: extras.patronSides || 0, slayerRoll, slayerRolls, total, text: hope === fear ? "Éxito crítico" : reaction ? "Tirada de reacción" : text, color, note, reaction, card: cardContext ? { name: cardContext.name, dc: cardContext.dc } : dcVal ? { name: "", dc: dcVal } : null, exps: extras.exps || [], honed: extras.honed || [], wasCloaked, weapon: weapon || null, charId });
+    setTraitRollResult({ key: Date.now(), hopeSides, traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, tideBonus, hybridRoll, hybridSidesR: extras.hybridSides || 0, hallowRoll, hallowFirst: hopeA, patronRoll, patronSides: extras.patronSides || 0, slayerRoll, slayerRolls, total, text: hope === fear ? "Éxito crítico" : reaction ? "Tirada de reacción" : text, color, note, reaction, card: cardContext ? { name: cardContext.name, dc: cardContext.dc } : dcVal ? { name: "", dc: dcVal } : null, exps: extras.exps || [], honed: extras.honed || [], wasCloaked, weapon: weapon || null, charId });
 
     // Con Esperanza (o crítico) ganas 1 Esperanza; con crítico además te quitas 1 Estrés.
     let hopeGained = 0;
@@ -10392,6 +10444,16 @@ export default function App({ onSignOut }) {
                       <FlaskConical size={11} /> Venenos · {c.f_toxins}
                     </span>
                   )}
+                  {c.f_hybrid === "1" && (
+                    <span className="mh-htag is-active" style={{ "--tag": "#A8323E" }} title="Forma Híbrida: +1d de bonificador a tus tiradas de acción y de daño hasta tener todo el Estrés marcado o terminar la escena">
+                      <span className="mh-htag-dot" /> Forma Híbrida · +1d{hybridSides(c)}
+                    </span>
+                  )}
+                  {c.f_crimson && (
+                    <span className="mh-htag" style={{ "--tag": "#A8323E" }} title={"Rito Carmesí: " + c.f_crimson + " suma " + crimsonDice(c) + "d4 de daño mágico al acertar"}>
+                      <Droplets size={11} /> Rito Carmesí
+                    </span>
+                  )}
                   {c.f_ignite === "1" && (
                     <span className="mh-htag is-active" style={{ "--tag": "#E0823A" }} title="Ignición: tu arma principal arde, da luz brillante y suma 1d6 al daño hasta el final de la escena">
                       <span className="mh-htag-dot" /> Arma en llamas · +1d6
@@ -11381,7 +11443,7 @@ export default function App({ onSignOut }) {
                                   return (
                                     <div
                                       key={idx}
-                                      className={"mh-eq" + (w.virtual ? " mh-eq-bare" : "") + (!isArmor && slot.label === "Arma principal" && c.f_ignite === "1" ? " mh-eq-ablaze" : "")}
+                                      className={"mh-eq" + (w.virtual ? " mh-eq-bare" : "") + (!isArmor && slot.label === "Arma principal" && c.f_ignite === "1" ? " mh-eq-ablaze" : "") + (!isArmor && c.f_crimson && c.f_crimson === w.key ? " mh-eq-crimson" : "")}
                                       style={{ "--cc": w.virtual ? "#C08B5C" : TIER_COLORS[tier].color }}
                                       role="button"
                                       tabIndex={0}
@@ -11391,6 +11453,11 @@ export default function App({ onSignOut }) {
                                     >
                                       <div className="mh-eq-art">
                                         <TileIcon size={40} strokeWidth={1.5} />
+                                        {!isArmor && c.f_crimson && c.f_crimson === w.key && !(slot.label === "Arma principal" && c.f_ignite === "1") && (
+                                          <span className="mh-eq-flame" style={{ background: "#A8323E" }} title="Rito Carmesí: el arma suma daño mágico al acertar hasta tu próximo descanso">
+                                            <Droplets size={11} /> +{crimsonDice(c)}d4
+                                          </span>
+                                        )}
                                         {!isArmor && slot.label === "Arma principal" && c.f_ignite === "1" && (
                                           <span className="mh-eq-flame" title="Ignición: el arma arde, da luz brillante y suma 1d6 al daño hasta el final de la escena">
                                             <Flame size={11} /> +1d6
@@ -11615,7 +11682,7 @@ export default function App({ onSignOut }) {
                               kicker: `Subclase · ${subclassBadge}`,
                               title: subclassEntry.key,
                               text: subclassEntry.blurb,
-                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento", "Escuela de la Guerra", "Bruja Lunar", "Bruja del Seto", "Pacto del Eterno", "Pacto del Iracundo", "Titán", "Artista Marcial", "Gremio del Verdugo", "Gremio del Envenenador", "Nigromancia", "Teúrgia"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
+                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento", "Escuela de la Guerra", "Bruja Lunar", "Bruja del Seto", "Pacto del Eterno", "Pacto del Iracundo", "Titán", "Artista Marcial", "Gremio del Verdugo", "Gremio del Envenenador", "Nigromancia", "Teúrgia", "Orden del Licántropo"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
                               image: subclassEntry.image,
                               bigStyle: true,
                               ...(isElemental ? { elementalAction: true } : {}),
@@ -11637,6 +11704,7 @@ export default function App({ onSignOut }) {
                               ...(subclassEntry.key === "Gremio del Envenenador" ? { poisonActs: true } : {}),
                               ...(subclassEntry.key === "Nigromancia" ? { necroActs: true } : {}),
                               ...(subclassEntry.key === "Teúrgia" ? { theurgyActs: true } : {}),
+                              ...(subclassEntry.key === "Orden del Licántropo" ? { lycanActs: true } : {}),
                             }),
                           });
                         }
@@ -14397,6 +14465,59 @@ export default function App({ onSignOut }) {
               );
             })()}
 
+            {bestialDlg && characters[viewingCharId] && (() => {
+              const me = characters[viewingCharId];
+              const close = () => setBestialDlg(false);
+              const keys = (() => {
+                try {
+                  return JSON.parse(me.f_domain_cards || "[]");
+                } catch (e) {
+                  return [];
+                }
+              })();
+              const vault = getVault(me);
+              const go = (k, cost) => {
+                const clear = Math.min(cost, Number(me.stress_marked || 0));
+                updateCharacterFields(viewingCharId, { f_domain_cards: JSON.stringify(keys.filter((x) => x !== k)), f_domain_vault: JSON.stringify([...vault, k]), stress_marked: String(Number(me.stress_marked || 0) - clear), f_bestial_used: "1" });
+                postCampaignEvent(viewingCharId, `🐺 Concentración Bestial: guarda «${k}» en la bóveda y se quita ${clear} de Estrés`);
+                close();
+              };
+              return (
+                <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 46, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)" }} onClick={close}>
+                  <div className="mh-card mh-renew" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Concentración Bestial">
+                    <div className="mh-pre-h">
+                      <span className="mh-pre-ic" style={{ background: "color-mix(in srgb, #A8323E 16%, var(--mh-panel))", color: "#A8323E" }}>
+                        <PawPrint size={17} />
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <b className="mh-serif">Concentración Bestial</b>
+                        <small>Guarda una carta de tu equipo en la bóveda y te quitas tanto Estrés como su coste de Recuperación.</small>
+                      </div>
+                      <button type="button" className="mh-inv-x" aria-label="Cerrar" onClick={close}>
+                        <X size={16} />
+                      </button>
+                    </div>
+                    <div className="mh-renew-list">
+                      {keys.length === 0 && <div className="mh-pre-note" style={{ color: "var(--mh-muted)" }}>No tienes cartas en tu equipo.</div>}
+                      {keys.map((k) => {
+                        const cd = findDomainCardAny(k);
+                        const cost = cd?.recall || 0;
+                        return (
+                          <button key={k} type="button" className="mh-renew-row is-pick" onClick={() => go(k, cost)}>
+                            <span className="mh-renew-av" style={{ background: DOMAIN_COLORS[cd?.domain] || "#A8323E" }}>{cd?.level ?? "?"}</span>
+                            <div className="mh-renew-t">
+                              <b>{k}</b>
+                              <small>Recuperación {cost} · te quitas {Math.min(cost, Number(me.stress_marked || 0))} de Estrés</small>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             {summonDlg && characters[viewingCharId] && (() => {
               const me = characters[viewingCharId];
               const close = () => setSummonDlg(null);
@@ -15335,7 +15456,7 @@ export default function App({ onSignOut }) {
               const adeptOnUI = adeptOk && preRoll.adept;
               const hopeUsed = (adeptOnUI ? 0 : preRoll.exps.length) + (preRoll.poet ? 1 : 0) + (elemOk && preRoll.elem ? 1 : 0);
               const riseOk = riseToChallenge(ch);
-              const formula = (slayerUse ? "" : "") + (preRoll.dedicated || riseOk ? "1d20 + 1d12 " : "2d12 ") + (mod >= 0 ? "+ " : "− ") + Math.abs(mod) + (preRoll.rally && ch.f_rally_die ? " + 1" + ch.f_rally_die : "") + (preRoll.poet ? " + 1d4" : "") + (preRoll.weapon && ch.f_transformation_form_active === "Forma de Lobo" ? " + 1d10" : "") + (edgeNet > 0 ? " + 1d6" : edgeNet < 0 ? " − 1d6" : "") + (slayerUse ? " + " + slayerUse + "d6" : "") + (patronOk && preRoll.patron ? " + 1d" + patronSides(ch) : "");
+              const formula = (slayerUse ? "" : "") + (preRoll.dedicated || riseOk ? "1d20 + 1d12 " : "2d12 ") + (mod >= 0 ? "+ " : "− ") + Math.abs(mod) + (preRoll.rally && ch.f_rally_die ? " + 1" + ch.f_rally_die : "") + (preRoll.poet ? " + 1d4" : "") + (preRoll.weapon && ch.f_transformation_form_active === "Forma de Lobo" ? " + 1d10" : "") + (edgeNet > 0 ? " + 1d6" : edgeNet < 0 ? " − 1d6" : "") + (slayerUse ? " + " + slayerUse + "d6" : "") + (patronOk && preRoll.patron ? " + 1d" + patronSides(ch) : "") + (hybridSides(ch) && !preRoll.reaction ? " + 1d" + hybridSides(ch) : "");
               const toggleExp = (i) =>
                 setPreRoll((p) => ({ ...p, exps: p.exps.includes(i) ? p.exps.filter((x) => x !== i) : [...p.exps, i] }));
               const wolf = preRoll.weapon && ch.f_transformation_form_active === "Forma de Lobo";
@@ -15539,6 +15660,7 @@ export default function App({ onSignOut }) {
                 circleOn ? ["Círculo de Poder", "+2"] : null,
                 reliableOn ? ["Postura Fiable", "+1"] : null,
                 patronOk && preRoll.patron ? ["Dado de Patrón", "+1d" + patronSides(ch)] : null,
+                hybridSides(ch) && !preRoll.reaction ? ["Forma Híbrida", "+1d" + hybridSides(ch)] : null,
                 slayerUse ? ["Dados de Cazador", "+" + slayerUse + "d6"] : null,
                 foundPick && !ch.f_found_used ? ["Familia Elegida", "+" + foundPick.bonus] : null,
                 tideUse ? ["Conocer la Marea", "+" + tideUse] : null,
@@ -15548,7 +15670,7 @@ export default function App({ onSignOut }) {
               ].filter(Boolean);
               const DS = 40;
               // Altura fija: se reserva hueco para todas las líneas que este personaje puede llegar a tener.
-              const maxLines = 1 + exps.length + (ch.f_rally_die ? 1 : 0) + (poetOk ? 1 : 0) + (dedicatedOk ? 1 : 0) + (riseOk ? 1 : 0) + (noMercyOn ? 1 : 0) + (moonbeamOn ? 1 : 0) + (circleOn ? 1 : 0) + (reliableOn ? 1 : 0) + (patronOk ? 1 : 0) + (slayerHave ? 1 : 0) + (foundOk ? 1 : 0) + (tideOk ? 1 : 0) + (elemOk ? 1 : 0) + (wolf ? 1 : 0) + 1;
+              const maxLines = 1 + exps.length + (ch.f_rally_die ? 1 : 0) + (poetOk ? 1 : 0) + (dedicatedOk ? 1 : 0) + (riseOk ? 1 : 0) + (noMercyOn ? 1 : 0) + (moonbeamOn ? 1 : 0) + (circleOn ? 1 : 0) + (reliableOn ? 1 : 0) + (patronOk ? 1 : 0) + (hybridSides(ch) ? 1 : 0) + (slayerHave ? 1 : 0) + (foundOk ? 1 : 0) + (tideOk ? 1 : 0) + (elemOk ? 1 : 0) + (wolf ? 1 : 0) + 1;
               const canSpendHope = exps.length > 0 || poetOk;
               const anyAdded = preRoll.exps.length > 0 || preRoll.rally || preRoll.poet || preRoll.dedicated || preRoll.privilege || preRoll.quick || tideUse > 0 || !!preRoll.elem || slayerUse > 0 || !!foundPick || !!preRoll.adept || !!preRoll.patron || edgePos !== "none";
               return (
@@ -15902,6 +16024,34 @@ export default function App({ onSignOut }) {
                         <button type="button" className="mh-luck-btn mh-feline-btn" disabled={hopeK < 2} onClick={() => bendLuck(r.charId, r.charId, rollForReroll(r), { kind: "feline" })}>
                           <PawPrint size={15} /> Instinto Felino · 2 Esperanza
                           <small>{hopeK < 2 ? "Necesitas 2 de Esperanza" : "Repite tu Dado de Esperanza"}</small>
+                        </button>
+                      );
+                    })()}
+                    {(() => {
+                      // Orden del Licántropo · Regeneración (Maestría): éxito con Esperanza en Forma Híbrida, 1d4 > PV sin marcar → −1 PV.
+                      const r = traitRollResult;
+                      const rc = characters[r.charId];
+                      if (!rc || rc.f_subclass !== "Orden del Licántropo" || tierForLevel(rc.f_level || 1) < 3 || rc.f_hybrid !== "1" || r.reaction || !(r.hope > r.fear)) return null;
+                      const okR = r.card?.dc != null ? r.total >= r.card.dc : null;
+                      if (okR === false) return null;
+                      if (r.regen) return <div className="mh-luck-done" style={{ color: "#A8323E" }}>{r.regen}</div>;
+                      return (
+                        <button
+                          type="button"
+                          className="mh-luck-btn mh-blood-btn"
+                          onClick={() => {
+                            const cur = charsRef.current[r.charId];
+                            const free = Number(cur.r_hp || 0) - Number(cur.hp_marked || 0);
+                            const d = Math.floor(Math.random() * 4) + 1;
+                            const heal = d > free && Number(cur.hp_marked || 0) > 0;
+                            if (heal) updateCharacterField(r.charId, "hp_marked", String(Number(cur.hp_marked || 0) - 1));
+                            const msg = `Regeneración: 1d4 = ${d} contra ${free} PV sin marcar${heal ? " · te quitas 1 Punto de Vida" : " · no te curas"}`;
+                            setTraitRollResult((prev) => (prev ? { ...prev, regen: msg } : prev));
+                            postCampaignEvent(r.charId, "🐺 " + msg.replace("te quitas", "se quita").replace("no te curas", "no se cura"));
+                          }}
+                        >
+                          <HeartPulse size={15} /> Regeneración · tirar 1d4
+                          <small>{okR ? "Éxito con Esperanza" : "Si has tenido éxito"} · cura si supera tus PV sin marcar</small>
                         </button>
                       );
                     })()}
@@ -18196,6 +18346,58 @@ export default function App({ onSignOut }) {
                         },
                       });
                   }
+                  // Orden del Licántropo: Forma Híbrida y Concentración Bestial.
+                  if (d.lycanActs && !d.fromChat) {
+                    cardActs.push(
+                      c.f_hybrid === "1"
+                        ? { key: "hybrid-off", Icon: X, label: "Salir de la Forma Híbrida", sub: "Fin de la escena", run: () => { closeCardDetail(); updateCharacterField(viewingCharId, "f_hybrid", ""); postCampaignEvent(viewingCharId, "🐺 Vuelve a su forma normal"); } }
+                        : {
+                            key: "hybrid",
+                            Icon: PawPrint,
+                            label: "Forma Híbrida · 1 Estrés",
+                            sub: "+1d" + (tierForLevel(c.f_level || 1) >= 3 ? 8 : tierForLevel(c.f_level || 1) >= 2 ? 6 : 4) + " a tus tiradas de acción y de daño",
+                            run: () => {
+                              closeCardDetail();
+                              markStress(viewingCharId, 1, { f_hybrid: "1" });
+                              postCampaignEvent(viewingCharId, "🐺 Forma Híbrida: marca 1 Estrés y adopta su forma lupina");
+                            },
+                          }
+                    );
+                    if (tierForLevel(c.f_level || 1) >= 2)
+                      cardActs.push({
+                        key: "bestial",
+                        Icon: Archive,
+                        label: c.f_bestial_used ? "Concentración Bestial · vuelve al descansar" : "Concentración Bestial",
+                        sub: "Guarda una carta en la bóveda y quítate su Recuperación en Estrés",
+                        disabled: !!c.f_bestial_used,
+                        run: () => {
+                          closeCardDetail();
+                          setBestialDlg(true);
+                        },
+                      });
+                  }
+                  // Cazador de Sangre · Rito Carmesí: 1 PV para encantar un arma activa.
+                  if (d.title === "Rito Carmesí" && c?.f_class === "Cazador de Sangre" && !d.fromChat) {
+                    const weapons = [c.f_primary_weapon || (brawlerArmed(c) ? BRAWLER_STRIKE : ""), c.f_secondary_weapon].filter(Boolean);
+                    if (c.f_crimson)
+                      cardActs.push({ key: "crimson-off", Icon: X, label: "Romper el Rito (" + c.f_crimson + ")", sub: "El arma deja de estar encantada", run: () => { closeCardDetail(); updateCharacterField(viewingCharId, "f_crimson", ""); } });
+                    weapons.forEach((wn) =>
+                      cardActs.push({
+                        key: "crimson-" + wn,
+                        Icon: Droplets,
+                        label: c.f_crimson === wn ? wn + " (encantada)" : "Encantar " + wn + " · 1 PV",
+                        sub: "+" + crimsonDice(c) + "d4 de daño mágico al acertar",
+                        disabled: c.f_crimson === wn,
+                        run: () => {
+                          closeCardDetail();
+                          const cur = charsRef.current[viewingCharId];
+                          updateCharacterFields(viewingCharId, { f_crimson: wn, hp_marked: String(Number(cur.hp_marked || 0) + 1) });
+                          postCampaignEvent(viewingCharId, `🩸 Rito Carmesí: marca 1 Punto de Vida y encanta su ${wn} con un poder sediento de sangre (+${crimsonDice(c)}d4 de daño mágico)`);
+                        },
+                      })
+                    );
+                    if (!weapons.length) cardActs.push({ key: "crimson-none", Icon: Droplets, label: "Sin armas activas", sub: "", disabled: true, run: () => {} });
+                  }
                   // Teúrgia · Ayuda Celestial (Especialización): órdenes al Arcángel.
                   if (d.theurgyActs && !d.fromChat && tierForLevel(c.f_level || 1) >= 2) {
                     const arch = Number(getSummons(c).archangel || 0);
@@ -19163,7 +19365,7 @@ export default function App({ onSignOut }) {
                       label: "Mostrar en la campaña",
                       sub: shareCamp.name,
                       run: () => {
-                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, divineActs, sentinelActs, originActs, primalActs, braveActs, slayerCard, moonActs, hedgeActs, endlessActs, wrathActs, brawlerStrike: _bs, comboCard: _cc, martialActs: _ma, poisonActs: _pa, necroActs: _na, theurgyActs: _ta, ...detail } = d;
+                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, divineActs, sentinelActs, originActs, primalActs, braveActs, slayerCard, moonActs, hedgeActs, endlessActs, wrathActs, brawlerStrike: _bs, comboCard: _cc, martialActs: _ma, poisonActs: _pa, necroActs: _na, theurgyActs: _ta, lycanActs: _la, ...detail } = d;
                         // Las imágenes incrustadas muy grandes no se copian al chat.
                         if (typeof detail.image === "string" && detail.image.startsWith("data:") && detail.image.length > 30000) delete detail.image;
                         const type = d.domain ? "domain" : d.weapon ? "weapon" : d.armor ? "armor" : "card";
