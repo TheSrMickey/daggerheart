@@ -227,7 +227,15 @@ const SUBCLASSES = {
         { name: "Camaradería (Maestría)", text: "Tu valentía inquebrantable es un punto de reunión para tus aliados. Puedes iniciar una Tirada en Equipo una vez más por sesión. Además, cuando un aliado inicie una Tirada en Equipo contigo, solo tiene que gastar 2 de Esperanza para hacerlo." },
       ],
     },
-    { key: "Llamado del Cazador", blurb: "Se especializa en abatir a las amenazas más peligrosas." },
+    {
+      key: "Llamado del Cazador",
+      blurb: "Abate a sus adversarios con una fuerza descomunal.",
+      features: [
+        { name: "Cazador", text: "Obtienes una reserva de dados llamados Dados de Cazador. En una tirada con Esperanza, puedes poner un d6 en esta carta en lugar de ganar Esperanza, añadiéndolo a la reserva. Puedes guardar tantos Dados de Cazador como tu Competencia. Cuando hagas una tirada de ataque o de daño, puedes gastar los Dados de Cazador que quieras: tíralos y suma su resultado a la tirada. Al final de cada sesión, retira los Dados de Cazador que no hayas gastado y gana 1 Esperanza por cada uno." },
+        { name: "Especialista en Armas (Especialización)", text: "Manejas varias armas con una soltura peligrosa. Cuando tengas éxito en un ataque, puedes gastar 1 Esperanza para sumar a la tirada de daño uno de los dados de daño de tu arma secundaria. Además, una vez por descanso largo, cuando tires tus Dados de Cazador, repite los 1." },
+        { name: "Preparación Marcial (Maestría)", text: "Eres un guerrero que inspira a todos los que viajan contigo. Tu grupo obtiene acceso a la acción de descanso Preparación Marcial. Para usarla durante un descanso, describe cómo instruyes y entrenas a tu grupo. Tú y cada aliado que elija esta acción ganáis un Dado de Cazador d6. Un PJ con un Dado de Cazador puede gastarlo para tirarlo y sumar el resultado a una tirada de ataque o de daño que elija." },
+      ],
+    },
   ],
   Mago: [
     { key: "Escuela del Conocimiento", blurb: "Estudia lo arcano para dominar la información y el control." },
@@ -337,7 +345,7 @@ const ANCESTRIES = [
   { key: "Mediano", blurb: "Humanoide pequeño de grandes pies peludos y orejas redondeadas, con un oído y un olfato muy finos y una brújula interior innata.", features: [{ name: "Trae Suerte", text: "Al comienzo de cada sesión, todos los miembros de tu grupo ganan 1 Esperanza." }, { name: "Brújula Interior", text: "Cuando saques un 1 en tu Dado de Esperanza, puedes volver a tirarlo." }] },
   { key: "Humano", blurb: "De manos hábiles, orejas redondeadas y cuerpos hechos para aguantar, se adaptan con facilidad a los climas más duros.", features: [{ name: "Gran Resistencia", text: "Ganas una casilla de Estrés adicional al crear el personaje." }, { name: "Adaptabilidad", text: "Cuando falles una tirada en la que hayas usado una de tus Experiencias, puedes marcar 1 Estrés para repetirla." }] },
   { key: "Infernal", blurb: "Humanoide de colmillos afilados, orejas puntiagudas y cuernos, descendiente de los demonios de los Círculos Inferiores.", features: [{ name: "Sin Miedo", text: "Cuando saques una tirada con Miedo, puedes marcar 2 Estrés para convertirla en una tirada con Esperanza." }, { name: "Rostro Temible", text: "Tienes ventaja en las tiradas para intimidar a criaturas hostiles." }] },
-  { key: "Katari", blurb: "Felino humanoide de reflejos rápidos y gracia natural.", features: [{ name: "Instinto Felino", text: "Cuando hagas una tirada de Agilidad, puedes gastar 2 Esperanza para repetir tu Dado de Esperanza." }, { name: "Garras Retráctiles", text: "Haz una tirada de Agilidad para arañar a un objetivo Cuerpo a cuerpo. Con éxito, queda temporalmente Vulnerable." }] },
+  { key: "Katari", blurb: "Humanoide felino de garras retráctiles, pupilas rasgadas y orejas triangulares que puede girar casi por completo.", features: [{ name: "Instinto Felino", text: "Cuando hagas una tirada de Agilidad, puedes gastar 2 de Esperanza para repetir tu Dado de Esperanza." }, { name: "Garras Retráctiles", text: "Haz una tirada de Agilidad para arañar a un objetivo dentro de alcance Cuerpo a cuerpo. Si tienes éxito, queda temporalmente Vulnerable." }] },
   { key: "Orco", blurb: "Fuerte y resistente, forjado por una cultura guerrera.", features: [{ name: "Robusto", text: "Cuando te quede 1 Punto de vida, los ataques contra ti tienen desventaja." }, { name: "Colmillos", text: "Cuando aciertas un ataque Cuerpo a cuerpo, puedes gastar 1 Esperanza para cornearle con tus colmillos: +1d6 de daño." }] },
   { key: "Ribbet", blurb: "Humanoide anfibio, cómodo tanto en el agua como en tierra.", features: [{ name: "Anfibio", text: "Puedes respirar y moverte con normalidad bajo el agua." }, { name: "Lengua Larga", text: "Puedes agarrar cosas en alcance Cercano con tu lengua. Marca 1 Estrés para usarla como un arma de Destreza a alcance Cercano que hace d12 de daño físico con tu Competencia." }] },
   { key: "Simiah", blurb: "Humanoide simiesco, ágil trepador de reflejos veloces.", features: [{ name: "Trepador Nato", text: "Tienes ventaja en las tiradas de Agilidad para mantener el equilibrio y trepar." }, { name: "Ágil", text: "Ganas un +1 permanente a tu Evasión al crear el personaje." }] },
@@ -364,7 +372,7 @@ const COMMUNITIES = [
   { key: "De la Escarcha", blurb: "Vienes de un lugar de nieve y hielo, donde tu comunidad aprendió a sobrevivir en las condiciones más duras.", expansion: "Hope & Fear", features: [{ name: "Curtido", text: "Cuando haces un descanso, te quitas 1 Punto de vida." }] },
   { key: "De la Guerra", blurb: "Vienes de un lugar que está, o estuvo, arrasado por la guerra; sabes defenderte y sacar partido de lo que tengas a mano.", expansion: "Hope & Fear", features: [{ name: "Cara Valiente", text: "Una vez por sesión, cuando te veas obligado a marcar 1 Estrés, puedes gastar 1 Esperanza en su lugar." }] },
   { key: "Libre", blurb: "Vienes de una comunidad que vivió bajo un régimen tiránico y que hoy es libre, unida por la lucha por conservar su cultura.", expansion: "Hope & Fear", features: [{ name: "Sin Ataduras", text: "Una vez por sesión, cuando saques una tirada con Miedo, puedes convertirla en una tirada con Esperanza." }] },
-  { key: "Renacido", blurb: "Tu vida actual comenzó tras dejar atrás una anterior.", expansion: "Hope & Fear", features: [{ name: "Familia Elegida", text: "Una vez por descanso, puedes gastar 1 Esperanza para usar una Experiencia de un aliado como si fuera tuya, contando cómo te preparó para este momento." }] },
+  { key: "Renacido", blurb: "Antes pertenecías a otra comunidad de la que ya no formas parte; ahora te toca redefinirte junto a quienes llegas a querer.", expansion: "Hope & Fear", features: [{ name: "Familia Elegida", text: "Una vez por descanso, puedes gastar 1 Esperanza para usar una Experiencia de un aliado como si fuera tuya. Al hacerlo, describe cómo el tiempo con ese aliado te preparó para este momento." }] },
 ];
 
 const TRANSFORMATIONS = [
@@ -554,6 +562,7 @@ const REROLL_META = {
   compass: { tag: "Brújula", head: "repite su Dado de Esperanza", done: "Brújula Interior" },
   swap: { tag: "Ayuda", head: "intercambia los dados", done: "Ayuda Encantada" },
   adapt: { tag: "Adaptabilidad", head: "repite con Adaptabilidad", done: "Adaptabilidad" },
+  feline: { tag: "Felino", head: "repite su Dado de Esperanza", done: "Instinto Felino" },
 };
 
 // Hechicero · Origen Elemental
@@ -1347,6 +1356,8 @@ const CARD_ACTIONS = {
   "Lengua de la Naturaleza": { traitKey: "t_instinct", traitLabel: "Instinto", dc: 12 },
   // Hechicero · Ilusión Menor: tirada de Lanzamiento (Instinto en sus dos subclases) contra 10.
   "Ilusión Menor": { traitKey: "t_instinct", traitLabel: "Instinto", dc: 10 },
+  // Katari · Garras Retráctiles: tirada de Agilidad contra la Dificultad del objetivo.
+  "Garras Retráctiles": { traitKey: "t_agility", traitLabel: "Agilidad" },
 };
 
 // Tablero de la campaña: la escena de fondo dividida en 16 × 9 casillas.
@@ -2637,6 +2648,12 @@ const sharedStyles = `
   .mh-adapt-btn { background: #6A7E95; }
   .mh-courage-btn { background: #B8862E; }
   .mh-fearless-btn { background: #A33A3A; }
+  .mh-slayer-btn { background: #C0504A; }
+  .mh-slayer-btn.is-alt { background: var(--mh-panel); color: #A8443F; border: 1px solid #C0504A88; }
+  .mh-feline-btn { background: #B8862E; }
+  .mh-slayer-pips i { width: 20px; height: 20px; border-radius: 6px; border: 1.5px solid #C0504A; display: inline-flex; align-items: center; justify-content: center; color: #fff; }
+  .mh-slayer-pips i.is-on { background: #C0504A; }
+  .mh-pre-found { width: 100%; margin-top: 3px; border: 1px solid var(--mh-line); border-radius: 7px; background: var(--mh-panel); padding: 3px 6px; font: 500 11px 'Inter', system-ui, sans-serif; color: var(--mh-ink); }
   .mh-fearless-btn:hover:not(:disabled) { background: #8E3030; }
   .mh-unbound-btn { background: #5E8FC9; }
   .mh-unbound-btn:hover:not(:disabled) { background: #4C7AB0; }
@@ -3540,7 +3557,8 @@ function DualityResult({ roll, size = 84 }) {
             {expB ? " + " + expB + " (Experiencia)" : ""}
             {rally ? " + " + rally + " (Arenga)" : ""}
             {poet ? " + " + poet + " (Poeta)" : ""}
-            {tide ? " + " + tide + " (Marea)" : ""}
+            {tide - (roll.slayerRoll || 0) > 0 ? " + " + (tide - (roll.slayerRoll || 0)) + " (Marea)" : ""}
+            {roll.slayerRoll ? " + " + (roll.slayerRolls || []).join(" + ") + " (Cazador)" : ""}
             {roll.difficulty != null ? ` · Dificultad ${roll.difficulty}` : ""}
           </div>
           <div style={{ fontSize: 14.5, fontWeight: 600, color: ink(roll.color), marginTop: 4 }}>{roll.text}</div>
@@ -7426,6 +7444,15 @@ export default function App({ onSignOut }) {
     if (isLong && c.f_brave_used) restPatch.f_brave_used = "";
     if (isLong && c.f_ritual_used) restPatch.f_ritual_used = "";
     if (isLong && c.f_unbound_used) restPatch.f_unbound_used = "";
+    if (c.f_found_used) restPatch.f_found_used = "";
+    if (isLong && c.f_slayer_reroll) restPatch.f_slayer_reroll = "";
+    // Fin de la «sesión»: los Dados de Cazador sin gastar se cambian por Esperanza.
+    if (isLong && Number(c.f_slayer || 0) > 0) {
+      hope = Math.min(getHopeMax(c), hope + Number(c.f_slayer));
+      restPatch.hope_marked = String(hope);
+      restPatch.f_slayer = "";
+      messages.push(`Dados de Cazador: +${c.f_slayer} Esperanza`);
+    }
     if (isLong && c.f_enchant_used) restPatch.f_enchant_used = "";
     if (isLong && c.f_charged) restPatch.f_charged = "";
     // Trae Suerte vuelve a repartirse en la «sesión» siguiente.
@@ -7764,7 +7791,7 @@ export default function App({ onSignOut }) {
   const rollTraitCheck = (charId, traitLabel, traitValue, weapon, cardContext, advantage) => {
     // Galapa · Retraerse: desventaja en las tiradas de acción mientras está en el caparazón.
     const shellOn = getConditions(charsRef.current[charId] || {}).includes("Retraído");
-    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage && !shellOn, exps: [], rally: false, privilege: false, disadvantage: shellOn, shellOn, poet: false, dedicated: false, quick: false, reaction: false, tide: 0, dc: "", elem: "" });
+    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage && !shellOn, exps: [], rally: false, privilege: false, disadvantage: shellOn, shellOn, poet: false, dedicated: false, quick: false, reaction: false, tide: 0, dc: "", elem: "", slayer: 0, found: "" });
   };
   const confirmPreRoll = () => {
     const pr = preRoll;
@@ -7772,13 +7799,24 @@ export default function App({ onSignOut }) {
     const ch = charsRef.current[pr.charId];
     const exps = ch ? getExperiences(ch).filter((_, i) => pr.exps.includes(i)) : [];
     const patch = {};
+    // Llamado del Cazador: Dados de Cazador gastados en un ataque.
+    const slayerSpent = pr.weapon && ch && ch.f_subclass === "Llamado del Cazador" ? Math.min(pr.slayer || 0, Number(ch.f_slayer || 0)) : 0;
+    // Renacido · Familia Elegida: Experiencia de un aliado (1 Esperanza, una vez por descanso).
+    const foundExp = pr.found && ch && ch.f_community === "Renacido" && !ch.f_found_used ? (() => {
+      const [cid, idx] = pr.found.split("|");
+      const ally = charsRef.current[cid];
+      const e = ally ? getExperiences(ally)[Number(idx)] : null;
+      return e ? { text: e.text + " (de " + (ally.f_name || "un aliado") + ")", bonus: Number(e.bonus) || 0 } : null;
+    })() : null;
     const elemOk = ch && ch.f_subclass === "Origen Elemental" && !pr.reaction;
     const elemUse = elemOk ? pr.elem : "";
-    const hopeCost = exps.length + (pr.poet ? 1 : 0) + (elemUse ? 1 : 0);
+    const hopeCost = exps.length + (pr.poet ? 1 : 0) + (elemUse ? 1 : 0) + (foundExp ? 1 : 0);
     if (hopeCost && ch) patch.hope_marked = String(Math.max(0, Number(ch.hope_marked ?? HOPE_DEFAULT) - hopeCost));
     const rallyDie = pr.rally && ch?.f_rally_die ? ch.f_rally_die : "";
     if (rallyDie) patch.f_rally_die = "";
     if (pr.dedicated) patch.f_dedicated_used = "1";
+    if (slayerSpent) patch.f_slayer = String(Number(ch.f_slayer || 0) - slayerSpent);
+    if (foundExp) patch.f_found_used = "1";
     // Del Mar · Conocer la Marea: las fichas gastadas suman +1 cada una.
     const tideSpent = pr.tide && !pr.reaction ? Math.min(pr.tide, Number(ch?.f_tide_tokens || 0)) : 0;
     if (tideSpent) patch.f_tide_tokens = String(Number(ch.f_tide_tokens || 0) - tideSpent);
@@ -7791,7 +7829,8 @@ export default function App({ onSignOut }) {
     if (elemUse) postCampaignEvent(pr.charId, `${"🌀"} Elementalista: gasta 1 Esperanza y usa su ${ch.f_origin_element || "elemento"} para ${elemUse === "roll" ? "sumar +2 a la tirada" : "sumar +3 al daño"}`);
     const noMercy = ch && ch.f_class === "Guerrero" && ch.f_no_mercy === "1" && pr.weapon && !pr.weapon.charge ? 1 : 0;
     doTraitRoll(pr.charId, pr.traitLabel, pr.traitValue + noMercy, pr.weapon ? { ...pr.weapon, ...(elemUse === "dmg" ? { elemDmg: 3 } : {}) } : pr.weapon, pr.cardContext, pr.advantage || pr.privilege || pr.quick, {
-      exps: exps.map((e) => ({ text: e.text, bonus: Number(e.bonus) || 0 })),
+      exps: [...exps.map((e) => ({ text: e.text, bonus: Number(e.bonus) || 0 })), ...(foundExp ? [foundExp] : [])],
+      slayer: slayerSpent,
       rallyDie,
       disadvantage: (ch?.f_ancestry || "").split(" + ").includes("Goblin") && pr.traitLabel === "Agilidad" ? false : pr.disadvantage || (pr.shellOn && !pr.reaction),
       poet: pr.poet,
@@ -7815,14 +7854,14 @@ export default function App({ onSignOut }) {
     const sides = roll.hopeSides || 12;
     // Ayuda Encantada intercambia los dados; Brújula Interior solo repite el de Esperanza.
     const nh = kind === "swap" ? roll.fear : Math.floor(Math.random() * sides) + 1;
-    const nf = kind === "swap" ? roll.hope : kind === "compass" ? roll.fear : Math.floor(Math.random() * 12) + 1;
+    const nf = kind === "swap" ? roll.hope : kind === "compass" || kind === "feline" ? roll.fear : Math.floor(Math.random() * 12) + 1;
     const total = roll.total - roll.hope - roll.fear + nh + nf;
     const ga = rollGains(roll.hope, roll.fear);
     const gb = rollGains(nh, nf);
     // Las tiradas de reacción no generan Esperanza ni Miedo: repetirlas no cambia nada de eso.
     const delta = roll.reaction ? { hope: 0, stress: 0, fear: 0 } : { hope: gb.hope - ga.hope, stress: gb.stress - ga.stress, fear: gb.fear - ga.fear };
     const own = rollerId === myId;
-    const hopeNow = Number(me.hope_marked ?? HOPE_DEFAULT) - (kind === "luck" ? 3 : 0) + (own ? delta.hope : 0);
+    const hopeNow = Number(me.hope_marked ?? HOPE_DEFAULT) - (kind === "luck" ? 3 : kind === "feline" ? 2 : 0) + (own ? delta.hope : 0);
     const patch = { hope_marked: String(Math.max(0, Math.min(getHopeMax(me), hopeNow))) };
     if (kind === "focus") patch.f_focus = "";
     if (kind === "luck") patch.f_luck_used = "1";
@@ -7846,6 +7885,7 @@ export default function App({ onSignOut }) {
       compass: `🧭 Brújula Interior: repite el 1 de su Dado de Esperanza y saca ${nh} (${nh} + ${nf} = ${total}, ${text})`,
       swap: `✨ Ayuda Encantada: intercambia los Dados de Dualidad de ${forName} (${nh} + ${nf} = ${total}, ${text})`,
       adapt: `🔁 Adaptabilidad: marca 1 Estrés y repite la tirada (${nh} + ${nf} = ${total}, ${text})`,
+      feline: `🐈 Instinto Felino: gasta 2 Esperanza y repite su Dado de Esperanza (${nh} + ${nf} = ${total}, ${text})`,
     }[kind];
     postCampaignEvent(myId, msg, {
       kind: "roll",
@@ -7913,7 +7953,9 @@ export default function App({ onSignOut }) {
     const rallyRoll = rallySides ? Math.floor(Math.random() * rallySides) + 1 : 0;
     // Orador · Corazón de Poeta: 1d4 más.
     const poetRoll = extras.poet ? Math.floor(Math.random() * 4) + 1 : 0;
-    const tideBonus = (extras.tide || 0) + (extras.elemRoll || 0);
+    const slayerRolls = extras.slayer ? Array.from({ length: extras.slayer }, () => Math.floor(Math.random() * 6) + 1) : [];
+    const slayerRoll = slayerRolls.reduce((a, b) => a + b, 0);
+    const tideBonus = (extras.tide || 0) + (extras.elemRoll || 0) + slayerRoll;
     // Dificultad: la de la carta o la que haya puesto el jugador.
     const dcVal = cardContext?.dc ?? extras.dc ?? null;
     const total = hope + fear + traitValue + advantageRoll + wolfBonus + expBonus + rallyRoll + poetRoll + tideBonus;
@@ -7940,7 +7982,7 @@ export default function App({ onSignOut }) {
         ? "Ignoras los efectos que te afectarían aun con éxito"
         : "Las reacciones no generan Esperanza ni Miedo"
       : hope === fear ? "Ganas 1 Esperanza y te quitas 1 Estrés" : hope > fear ? "Ganas 1 Esperanza" : "El DJ gana 1 de Miedo";
-    setTraitRollResult({ key: Date.now(), hopeSides, traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, tideBonus, total, text: hope === fear ? "Éxito crítico" : reaction ? "Tirada de reacción" : text, color, note, reaction, card: cardContext ? { name: cardContext.name, dc: cardContext.dc } : dcVal ? { name: "", dc: dcVal } : null, exps: extras.exps || [], wasCloaked, weapon: weapon || null, charId });
+    setTraitRollResult({ key: Date.now(), hopeSides, traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, tideBonus, slayerRoll, slayerRolls, total, text: hope === fear ? "Éxito crítico" : reaction ? "Tirada de reacción" : text, color, note, reaction, card: cardContext ? { name: cardContext.name, dc: cardContext.dc } : dcVal ? { name: "", dc: dcVal } : null, exps: extras.exps || [], wasCloaked, weapon: weapon || null, charId });
 
     // Con Esperanza (o crítico) ganas 1 Esperanza; con crítico además te quitas 1 Estrés.
     if (reaction) {
@@ -10431,7 +10473,7 @@ export default function App({ onSignOut }) {
                               kicker: `Subclase · ${subclassBadge}`,
                               title: subclassEntry.key,
                               text: subclassEntry.blurb,
-                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
+                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
                               image: subclassEntry.image,
                               bigStyle: true,
                               ...(isElemental ? { elementalAction: true } : {}),
@@ -10444,6 +10486,7 @@ export default function App({ onSignOut }) {
                               ...(subclassEntry.key === "Origen Elemental" ? { originActs: true } : {}),
                               ...(subclassEntry.key === "Origen Primigenio" ? { primalActs: true } : {}),
                               ...(subclassEntry.key === "Llamado del Valiente" ? { braveActs: true } : {}),
+                              ...(subclassEntry.key === "Llamado del Cazador" ? { slayerCard: true } : {}),
                             }),
                           });
                         }
@@ -13411,8 +13454,15 @@ export default function App({ onSignOut }) {
               const tideHave = ch.f_community === "Del Mar" ? Number(ch.f_tide_tokens || 0) : 0;
               const tideOk = ch.f_community === "Del Mar" && !preRoll.reaction;
               const tideUse = tideOk ? Math.min(preRoll.tide || 0, tideHave) : 0;
+              const slayerHave = preRoll.weapon && ch.f_subclass === "Llamado del Cazador" ? Number(ch.f_slayer || 0) : 0;
+              const slayerUse = Math.min(preRoll.slayer || 0, slayerHave);
+              // Familia Elegida: Experiencias de los aliados de la campaña.
+              const foundOk = ch.f_community === "Renacido";
+              const foundCamp = foundOk ? Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(preRoll.charId)) : null;
+              const foundOpts = foundCamp ? (foundCamp.characterIds || []).filter((cid) => cid !== preRoll.charId && characters[cid]).flatMap((cid) => getExperiences(characters[cid]).map((e, i) => ({ v: cid + "|" + i, label: e.text + " +" + e.bonus + " · " + (characters[cid].f_name || "Aliado"), bonus: Number(e.bonus) || 0 }))) : [];
+              const foundPick = foundOpts.find((o) => o.v === preRoll.found);
               const noMercyOn = ch.f_class === "Guerrero" && ch.f_no_mercy === "1" && preRoll.weapon && !preRoll.weapon.charge;
-              const mod = preRoll.traitValue + (noMercyOn ? 1 : 0) + expSum + tideUse + (ch.f_subclass === "Origen Elemental" && !preRoll.reaction && preRoll.elem === "roll" ? 2 : 0);
+              const mod = preRoll.traitValue + (noMercyOn ? 1 : 0) + expSum + tideUse + (foundPick && !ch.f_found_used ? foundPick.bonus : 0) + (ch.f_subclass === "Origen Elemental" && !preRoll.reaction && preRoll.elem === "roll" ? 2 : 0);
               // Galapa retraída: la desventaja en las tiradas de acción no se puede quitar.
               // Goblin · Pie Firme: ignora la desventaja en las tiradas de Agilidad.
               const sureFoot = (ch.f_ancestry || "").split(" + ").includes("Goblin") && preRoll.traitLabel === "Agilidad";
@@ -13451,7 +13501,7 @@ export default function App({ onSignOut }) {
               const elemEl = ORIGIN_ELEMENTS.find((e) => e.key === ch.f_origin_element);
               const hopeUsed = preRoll.exps.length + (preRoll.poet ? 1 : 0) + (elemOk && preRoll.elem ? 1 : 0);
               const riseOk = riseToChallenge(ch);
-              const formula = (preRoll.dedicated || riseOk ? "1d20 + 1d12 " : "2d12 ") + (mod >= 0 ? "+ " : "− ") + Math.abs(mod) + (preRoll.rally && ch.f_rally_die ? " + 1" + ch.f_rally_die : "") + (preRoll.poet ? " + 1d4" : "") + (preRoll.weapon && ch.f_transformation_form_active === "Forma de Lobo" ? " + 1d10" : "") + (edgeNet > 0 ? " + 1d6" : edgeNet < 0 ? " − 1d6" : "");
+              const formula = (slayerUse ? "" : "") + (preRoll.dedicated || riseOk ? "1d20 + 1d12 " : "2d12 ") + (mod >= 0 ? "+ " : "− ") + Math.abs(mod) + (preRoll.rally && ch.f_rally_die ? " + 1" + ch.f_rally_die : "") + (preRoll.poet ? " + 1d4" : "") + (preRoll.weapon && ch.f_transformation_form_active === "Forma de Lobo" ? " + 1d10" : "") + (edgeNet > 0 ? " + 1d6" : edgeNet < 0 ? " − 1d6" : "") + (slayerUse ? " + " + slayerUse + "d6" : "");
               const toggleExp = (i) =>
                 setPreRoll((p) => ({ ...p, exps: p.exps.includes(i) ? p.exps.filter((x) => x !== i) : [...p.exps, i] }));
               const wolf = preRoll.weapon && ch.f_transformation_form_active === "Forma de Lobo";
@@ -13467,7 +13517,38 @@ export default function App({ onSignOut }) {
                 </button>
               );
               const setTide = (n) => setPreRoll((p) => ({ ...p, tide: Math.max(0, Math.min(tideHave, n)) }));
+              const setSlayer = (n) => setPreRoll((p) => ({ ...p, slayer: Math.max(0, Math.min(slayerHave, n)) }));
               const bonusTiles = [
+                slayerHave > 0 ? (
+                  <div key="slayer" className={"mh-pre-tile mh-pre-tide" + (slayerUse ? " is-on" : "")} style={{ "--pc": "#C0504A" }} title="Tiras los dados gastados y sumas su resultado al ataque">
+                    <b>Dados de Cazador</b>
+                    <span className="mh-pre-tide-row">
+                      <small>{slayerHave} d6</small>
+                      <span className="mh-pre-step">
+                        <button type="button" aria-label="Uno menos" disabled={!slayerUse} onClick={() => setSlayer(slayerUse - 1)}>
+                          <Minus size={11} />
+                        </button>
+                        <b>{slayerUse}d6</b>
+                        <button type="button" aria-label="Uno más" disabled={slayerUse >= slayerHave} onClick={() => setSlayer(slayerUse + 1)}>
+                          <Plus size={11} />
+                        </button>
+                      </span>
+                    </span>
+                  </div>
+                ) : null,
+                foundOk ? (
+                  <div key="found" className={"mh-pre-tile mh-pre-tide" + (foundPick ? " is-on" : "")} style={{ "--pc": "#C77DBA", opacity: ch.f_found_used ? 0.5 : 1 }} title="Describe cómo el tiempo con ese aliado te preparó para este momento">
+                    <b>Familia Elegida · 1 Esperanza</b>
+                    <select className="mh-pre-found" disabled={!!ch.f_found_used || !foundOpts.length || (!foundPick && hopeUsed >= hopeNow)} value={preRoll.found} onChange={(e) => setPreRoll((p) => ({ ...p, found: e.target.value }))}>
+                      <option value="">{ch.f_found_used ? "Ya usada en este descanso" : foundOpts.length ? "Experiencia de un aliado…" : "Sin aliados en la campaña"}</option>
+                      {foundOpts.map((o) => (
+                        <option key={o.v} value={o.v}>
+                          {o.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : null,
                 elemOk ? (
                   <div key="elem" className={"mh-pre-tile mh-pre-tide" + (preRoll.elem ? " is-on" : "")} style={{ "--pc": elemEl?.color || "#8FB8C9" }} title="Describe cómo tu elemento te ayuda en esta tirada">
                     <b>Elementalista{elemEl ? " · " + elemEl.key : ""}</b>
@@ -13559,6 +13640,8 @@ export default function App({ onSignOut }) {
                 preRoll.dedicated ? ["Entregado", "Esperanza d20"] : null,
                 riseOk && !preRoll.dedicated ? ["Estar a la Altura", "Esperanza d20"] : null,
                 noMercyOn ? ["Sin Piedad", "+1"] : null,
+                slayerUse ? ["Dados de Cazador", "+" + slayerUse + "d6"] : null,
+                foundPick && !ch.f_found_used ? ["Familia Elegida", "+" + foundPick.bonus] : null,
                 tideUse ? ["Conocer la Marea", "+" + tideUse] : null,
                 elemOk && preRoll.elem ? ["Elementalista", preRoll.elem === "roll" ? "+2" : "+3 al daño"] : null,
                 wolf ? ["Forma de Lobo", "+1d10"] : null,
@@ -13566,9 +13649,9 @@ export default function App({ onSignOut }) {
               ].filter(Boolean);
               const DS = 40;
               // Altura fija: se reserva hueco para todas las líneas que este personaje puede llegar a tener.
-              const maxLines = 1 + exps.length + (ch.f_rally_die ? 1 : 0) + (poetOk ? 1 : 0) + (dedicatedOk ? 1 : 0) + (riseOk ? 1 : 0) + (noMercyOn ? 1 : 0) + (tideOk ? 1 : 0) + (elemOk ? 1 : 0) + (wolf ? 1 : 0) + 1;
+              const maxLines = 1 + exps.length + (ch.f_rally_die ? 1 : 0) + (poetOk ? 1 : 0) + (dedicatedOk ? 1 : 0) + (riseOk ? 1 : 0) + (noMercyOn ? 1 : 0) + (slayerHave ? 1 : 0) + (foundOk ? 1 : 0) + (tideOk ? 1 : 0) + (elemOk ? 1 : 0) + (wolf ? 1 : 0) + 1;
               const canSpendHope = exps.length > 0 || poetOk;
-              const anyAdded = preRoll.exps.length > 0 || preRoll.rally || preRoll.poet || preRoll.dedicated || preRoll.privilege || preRoll.quick || tideUse > 0 || !!preRoll.elem || edgePos !== "none";
+              const anyAdded = preRoll.exps.length > 0 || preRoll.rally || preRoll.poet || preRoll.dedicated || preRoll.privilege || preRoll.quick || tideUse > 0 || !!preRoll.elem || slayerUse > 0 || !!foundPick || edgePos !== "none";
               return (
                 <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 45, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)" }} onClick={() => setPreRoll(null)}>
                   <div className="mh-card mh-card-anim mh-pre" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={"Tirada de " + preRoll.traitLabel}>
@@ -13703,7 +13786,7 @@ export default function App({ onSignOut }) {
                           className="mh-pre-plain"
                           style={anyAdded ? undefined : { visibility: "hidden" }}
                           tabIndex={anyAdded ? undefined : -1}
-                          onClick={() => setPreRoll((p) => ({ ...p, exps: [], rally: false, poet: false, dedicated: false, privilege: false, quick: false, tide: 0, elem: "", advantage: false, disadvantage: false }))}
+                          onClick={() => setPreRoll((p) => ({ ...p, exps: [], rally: false, poet: false, dedicated: false, privilege: false, quick: false, tide: 0, elem: "", slayer: 0, found: "", advantage: false, disadvantage: false }))}
                         >
                           Quitar lo añadido
                         </button>
@@ -13835,6 +13918,49 @@ export default function App({ onSignOut }) {
                         </div>
                       );
                     })()}
+                    {(() => {
+                      // Llamado del Cazador: con Esperanza, guardar un d6 en vez de ganar Esperanza.
+                      const r = traitRollResult;
+                      const rc = characters[r.charId];
+                      if (!rc || rc.f_subclass !== "Llamado del Cazador" || r.reaction || !(r.hope > r.fear)) return null;
+                      if (r.slayerKept) return <div className="mh-luck-done" style={{ color: "#C0504A" }}>Dado de Cazador guardado ({rc.f_slayer || 0}/{getProficiency(rc)})</div>;
+                      const have = Number(rc.f_slayer || 0);
+                      const cap = getProficiency(rc);
+                      return (
+                        <button
+                          type="button"
+                          className="mh-luck-btn mh-slayer-btn"
+                          disabled={have >= cap}
+                          onClick={() => {
+                            const cur = charsRef.current[r.charId];
+                            updateCharacterFields(r.charId, { f_slayer: String(Number(cur.f_slayer || 0) + 1), hope_marked: String(Math.max(0, Number(cur.hope_marked ?? HOPE_DEFAULT) - 1)) });
+                            setTraitRollResult((prev) => (prev ? { ...prev, slayerKept: true } : prev));
+                            postCampaignEvent(r.charId, "🎯 Cazador: guarda un d6 de Cazador en lugar de ganar Esperanza");
+                          }}
+                        >
+                          <Dices size={15} /> Guardar un Dado de Cazador
+                          <small>{have >= cap ? "Reserva llena (" + cap + ")" : "En lugar de +1 Esperanza · " + have + "/" + cap}</small>
+                        </button>
+                      );
+                    })()}
+                    {(() => {
+                      // Katari · Instinto Felino: en Agilidad, 2 Esperanza para repetir el Dado de Esperanza.
+                      const r = traitRollResult;
+                      const rc = characters[r.charId];
+                      if (!rc || !(rc.f_ancestry || "").split(" + ").includes("Katari") || r.traitLabel !== "Agilidad" || r.luck) return null;
+                      const hopeK = Number(rc.hope_marked ?? HOPE_DEFAULT);
+                      return (
+                        <button type="button" className="mh-luck-btn mh-feline-btn" disabled={hopeK < 2} onClick={() => bendLuck(r.charId, r.charId, rollForReroll(r), { kind: "feline" })}>
+                          <PawPrint size={15} /> Instinto Felino · 2 Esperanza
+                          <small>{hopeK < 2 ? "Necesitas 2 de Esperanza" : "Repite tu Dado de Esperanza"}</small>
+                        </button>
+                      );
+                    })()}
+                    {traitRollResult.card?.name === "Garras Retráctiles" && (traitRollResult.card?.dc == null || traitRollResult.hope === traitRollResult.fear || traitRollResult.total >= traitRollResult.card.dc) && (
+                      <div className="mh-luck-done" style={{ color: "#C0504A" }}>
+                        {traitRollResult.card?.dc != null ? "Éxito:" : "Si tienes éxito:"} el objetivo queda temporalmente Vulnerable
+                      </div>
+                    )}
                     {(() => {
                       // Humano · Adaptabilidad: si falla una tirada con Experiencia, 1 Estrés para repetirla.
                       const r = traitRollResult;
@@ -14186,6 +14312,72 @@ export default function App({ onSignOut }) {
                     Daño · {damageRollResult.weaponName}
                   </div>
                   <DamageResult roll={damageRollResult} />
+                  {(() => {
+                    // Llamado del Cazador: gastar Dados de Cazador en el daño; Especialista en Armas: dado del arma secundaria.
+                    const dr = damageRollResult;
+                    const sc = dr.charId ? characters[dr.charId] : null;
+                    if (!sc || sc.f_subclass !== "Llamado del Cazador") return null;
+                    const have = Number(sc.f_slayer || 0);
+                    const n = Math.min(dr.slayerN ?? (have ? 1 : 0), have);
+                    const sec = SECONDARY_WEAPONS.find((w) => w.key === sc.f_secondary_weapon);
+                    const secDie = sec ? (sec.damage.match(/d(\d+)/) || [])[1] : null;
+                    const specialist = tierForLevel(sc.f_level || 1) >= 2 && secDie && !dr.specDone;
+                    const hopeS = Number(sc.hope_marked ?? HOPE_DEFAULT);
+                    return (
+                      <div className="mh-pred">
+                        {dr.slayerDmg ? (
+                          <div className="mh-kick-done" style={{ color: "#C0504A" }}>Dados de Cazador: +{dr.slayerDmg.join(" + ")}</div>
+                        ) : have > 0 ? (
+                          <span style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 10 }}>
+                            <span className="mh-pre-step" style={{ "--pc": "#C0504A" }}>
+                              <button type="button" disabled={n <= 1} onClick={() => setDamageRollResult((r) => (r ? { ...r, slayerN: n - 1 } : r))}>
+                                <Minus size={11} />
+                              </button>
+                              <b>{n}d6</b>
+                              <button type="button" disabled={n >= have} onClick={() => setDamageRollResult((r) => (r ? { ...r, slayerN: n + 1 } : r))}>
+                                <Plus size={11} />
+                              </button>
+                            </span>
+                            <button
+                              type="button"
+                              className="mh-kick-btn mh-slayer-btn"
+                              style={{ marginTop: 0 }}
+                              onClick={() => {
+                                let rolls = Array.from({ length: n }, () => Math.floor(Math.random() * 6) + 1);
+                                const patch = { f_slayer: String(have - n) };
+                                // Especialista en Armas: una vez por descanso largo, repite los 1.
+                                if (tierForLevel(sc.f_level || 1) >= 2 && !sc.f_slayer_reroll && rolls.includes(1)) {
+                                  rolls = rolls.map((v) => (v === 1 ? Math.floor(Math.random() * 6) + 1 : v));
+                                  patch.f_slayer_reroll = "1";
+                                }
+                                const add = rolls.reduce((a, b) => a + b, 0);
+                                updateCharacterFields(dr.charId, patch);
+                                setDamageRollResult((r) => (r ? { ...r, slayerDmg: rolls, total: r.total + add } : r));
+                                postCampaignEvent(dr.charId, `🎯 Gasta ${n} Dado${n > 1 ? "s" : ""} de Cazador en el daño: +${rolls.join(" + ")}${patch.f_slayer_reroll ? " (repite los 1)" : ""}. Daño total ${dr.total + add}`);
+                              }}
+                            >
+                              <Dices size={14} /> Dados de Cazador ({have})
+                            </button>
+                          </span>
+                        ) : null}
+                        {specialist && (
+                          <button
+                            type="button"
+                            className="mh-kick-btn mh-slayer-btn is-alt"
+                            disabled={hopeS < 1}
+                            onClick={() => {
+                              const v = Math.floor(Math.random() * Number(secDie)) + 1;
+                              updateCharacterField(dr.charId, "hope_marked", String(Math.max(0, hopeS - 1)));
+                              setDamageRollResult((r) => (r ? { ...r, specDone: true, total: r.total + v } : r));
+                              postCampaignEvent(dr.charId, `⚔️ Especialista en Armas: gasta 1 Esperanza y suma 1d${secDie} de ${sec.key} (${v}). Daño total ${dr.total + v}`);
+                            }}
+                          >
+                            Especialista en Armas · 1 Esperanza · +1d{secDie}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })()}
                   {(() => {
                     // Manipular la Magia · duplicar un dado de daño.
                     const dr = damageRollResult;
@@ -15113,7 +15305,7 @@ export default function App({ onSignOut }) {
                       label: "Tirar " + action.traitLabel,
                       sub: "Dificultad " + action.dc,
                       run: () => {
-                        rollTraitCheck(viewingCharId, action.traitLabel, Number(c[action.traitKey] || 0), null, { name: d.title, dc: action.dc });
+                        rollTraitCheck(viewingCharId, action.traitLabel, Number(c[action.traitKey] || 0), null, { name: action.cardName || d.title, dc: action.dc });
                         setViewingCardDetail(null);
                       },
                     });
@@ -15597,6 +15789,18 @@ export default function App({ onSignOut }) {
                       run: () => setRenewDlg({ mode: "closeknit", n: 1 }),
                     });
                   }
+                  if (d.ancestryKey === "Katari" && !d.fromChat) {
+                    cardActs.push({
+                      key: "claws",
+                      Icon: PawPrint,
+                      label: "Garras Retráctiles",
+                      sub: "Tirada de Agilidad · el objetivo queda Vulnerable",
+                      run: () => {
+                        closeCardDetail();
+                        rollTraitCheck(viewingCharId, "Agilidad", Number(c.t_agility || 0), null, { name: "Garras Retráctiles" });
+                      },
+                    });
+                  }
                   if (d.ancestryKey === "Goblin" && !d.fromChat) {
                     cardActs.push({
                       key: "danger",
@@ -15712,7 +15916,7 @@ export default function App({ onSignOut }) {
                       label: "Mostrar en la campaña",
                       sub: shareCamp.name,
                       run: () => {
-                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, divineActs, sentinelActs, originActs, primalActs, braveActs, ...detail } = d;
+                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, divineActs, sentinelActs, originActs, primalActs, braveActs, slayerCard, ...detail } = d;
                         // Las imágenes incrustadas muy grandes no se copian al chat.
                         if (typeof detail.image === "string" && detail.image.startsWith("data:") && detail.image.length > 30000) delete detail.image;
                         const type = d.domain ? "domain" : d.weapon ? "weapon" : d.armor ? "armor" : "card";
@@ -15724,6 +15928,7 @@ export default function App({ onSignOut }) {
                   // Del Mar: las fichas de Conocer la Marea se ven y se marcan en el pie de la carta.
                   const tideCard = !d.fromChat && d.kicker === "Comunidad" && d.title === "Del Mar" && c?.f_community === "Del Mar";
                   const prayerCard = !d.fromChat && d.title === "Dados de Oración" && c?.f_class === "Serafín";
+                  const slayerCard = !d.fromChat && d.slayerCard;
                   const tideMax = Number(c?.f_level || 1);
                   const footer = d.weapon
                     ? [d.weapon.trait !== "—" && d.weapon.trait, d.weapon.range].filter(Boolean).join(" · ")
@@ -15820,6 +16025,20 @@ export default function App({ onSignOut }) {
                           <div style={{ fontSize: "0.93em", color: "var(--mh-muted2)", fontStyle: "italic" }}>Sin característica especial.</div>
                         ))}
                     </FitBox>
+                    {slayerCard && (
+                      <div className="mh-cardc-foot mh-tide-foot">
+                        <span className="mh-tide-pips mh-slayer-pips">
+                          {Array.from({ length: getProficiency(c) }, (_, k) => (
+                            <i key={k} className={k < Number(c.f_slayer || 0) ? "is-on" : ""}>
+                              {k < Number(c.f_slayer || 0) && <Dices size={11} />}
+                            </i>
+                          ))}
+                        </span>
+                        <span>
+                          <b>{c.f_slayer || 0}</b> de {getProficiency(c)} Dados de Cazador
+                        </span>
+                      </div>
+                    )}
                     {prayerCard && (() => {
                       const dice = getPrayerDice(c);
                       const pick = prayerPick != null && prayerPick < dice.length ? prayerPick : null;
@@ -15890,7 +16109,7 @@ export default function App({ onSignOut }) {
                         </div>
                       );
                     })()}
-                    {!tideCard && !prayerCard && (footer || d.domain) && (
+                    {!tideCard && !prayerCard && !slayerCard && (footer || d.domain) && (
                       <div className="mh-cardc-foot">
                         {d.domain ? (
                           <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
