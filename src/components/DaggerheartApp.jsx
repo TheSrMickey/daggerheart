@@ -357,7 +357,7 @@ const ANCESTRIES = [
   { key: "Humano", blurb: "De manos hábiles, orejas redondeadas y cuerpos hechos para aguantar, se adaptan con facilidad a los climas más duros.", features: [{ name: "Gran Resistencia", text: "Ganas una casilla de Estrés adicional al crear el personaje." }, { name: "Adaptabilidad", text: "Cuando falles una tirada en la que hayas usado una de tus Experiencias, puedes marcar 1 Estrés para repetirla." }] },
   { key: "Infernal", blurb: "Humanoide de colmillos afilados, orejas puntiagudas y cuernos, descendiente de los demonios de los Círculos Inferiores.", features: [{ name: "Sin Miedo", text: "Cuando saques una tirada con Miedo, puedes marcar 2 Estrés para convertirla en una tirada con Esperanza." }, { name: "Rostro Temible", text: "Tienes ventaja en las tiradas para intimidar a criaturas hostiles." }] },
   { key: "Katari", blurb: "Humanoide felino de garras retráctiles, pupilas rasgadas y orejas triangulares que puede girar casi por completo.", features: [{ name: "Instinto Felino", text: "Cuando hagas una tirada de Agilidad, puedes gastar 2 de Esperanza para repetir tu Dado de Esperanza." }, { name: "Garras Retráctiles", text: "Haz una tirada de Agilidad para arañar a un objetivo dentro de alcance Cuerpo a cuerpo. Si tienes éxito, queda temporalmente Vulnerable." }] },
-  { key: "Orco", blurb: "Fuerte y resistente, forjado por una cultura guerrera.", features: [{ name: "Robusto", text: "Cuando te quede 1 Punto de vida, los ataques contra ti tienen desventaja." }, { name: "Colmillos", text: "Cuando aciertas un ataque Cuerpo a cuerpo, puedes gastar 1 Esperanza para cornearle con tus colmillos: +1d6 de daño." }] },
+  { key: "Orco", blurb: "Humanoide de rasgos cuadrados, fácil de reconocer por los colmillos de jabalí que le sobresalen de la mandíbula inferior.", features: [{ name: "Robusto", text: "Cuando te quede 1 Punto de Vida, los ataques contra ti tienen desventaja." }, { name: "Colmillos", text: "Cuando tengas éxito en un ataque contra un adversario en alcance Cuerpo a cuerpo, puedes gastar 1 Esperanza para cornearlo con tus colmillos y hacerle 1d6 de daño adicional." }] },
   { key: "Ribbet", blurb: "Humanoide anfibio, cómodo tanto en el agua como en tierra.", features: [{ name: "Anfibio", text: "Puedes respirar y moverte con normalidad bajo el agua." }, { name: "Lengua Larga", text: "Puedes agarrar cosas en alcance Cercano con tu lengua. Marca 1 Estrés para usarla como un arma de Destreza a alcance Cercano que hace d12 de daño físico con tu Competencia." }] },
   { key: "Simiah", blurb: "Humanoide simiesco, ágil trepador de reflejos veloces.", features: [{ name: "Trepador Nato", text: "Tienes ventaja en las tiradas de Agilidad para mantener el equilibrio y trepar." }, { name: "Ágil", text: "Ganas un +1 permanente a tu Evasión al crear el personaje." }] },
   { key: "Gnomo", blurb: "Pequeño e inquieto, con una curiosidad natural por inventar.", expansion: "Hope & Fear", features: [{ name: "Dedos Ágiles", text: "Cuando hagas una tirada de Destreza, puedes gastar 2 Esperanza para repetir tu Dado de Esperanza." }, { name: "Paso Fugaz", text: "Una vez por escena, puedes teletransportarte a un punto que veas en alcance Lejano." }] },
@@ -730,7 +730,7 @@ const CLASS_HOPE_FEATURE = {
   Serafín: { name: "Soporte Vital", cost: 3, text: "Gasta 3 de Esperanza para quitar 1 Punto de vida a un aliado dentro de alcance Cercano." },
   Hechicero: { name: "Magia Volátil", cost: 3, text: "Gasta 3 de Esperanza para repetir los dados de daño que quieras en un ataque que haga daño mágico." },
   Guerrero: { name: "Sin Piedad", cost: 3, text: "Gasta 3 de Esperanza para obtener un +1 a tus tiradas de ataque hasta tu próximo descanso." },
-  Mago: { name: "Esta Vez No", cost: 3, text: "Obliga a un adversario en alcance Lejano a repetir una tirada de ataque o de daño." },
+  Mago: { name: "Esta Vez No", cost: 3, text: "Gasta 3 Esperanza para obligar a un adversario en alcance Lejano a repetir una tirada de ataque o de daño." },
   Bruja: { name: "Encanto de Bruja", cost: 3, text: "Cuando tú o un aliado en alcance Lejano falléis una tirada de acción, conviértela en un éxito con Miedo." },
   Brujo: { name: "Don del Patrón", cost: 3, text: "Cuando falles una tirada, repítela con ventaja." },
   Camorrista: { name: "Plantar Cara", cost: 3, text: "Intimida a un objetivo en alcance Cercano y déjalo temporalmente Vulnerable." },
@@ -2628,6 +2628,9 @@ const sharedStyles = `
   .mh-charge-go { background: #9A6B3C; display: inline-flex; align-items: center; gap: 5px; }
   .mh-kick-btn { margin-top: 12px; display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 10px; padding: 8px 14px; font: 700 12.5px 'Inter', system-ui, sans-serif; color: #fff; background: #9A6B3C; cursor: pointer; }
   .mh-kick-btn:hover { background: #855a30; }
+  .mh-tusk-btn { background: #6E7F3A; }
+  .mh-tusk-btn:hover:not(:disabled) { background: #5C6B30; }
+  .mh-tusk-btn:disabled { opacity: .5; cursor: not-allowed; }
   .mh-pred { display: flex; flex-direction: column; align-items: center; }
   .mh-pred-btn { background: #7E9B3E; }
   .mh-sneak-btn { background: #4F5D78; }
@@ -2662,7 +2665,7 @@ const sharedStyles = `
   .mh-slayer-btn { background: #C0504A; }
   .mh-pattern-foot { flex-direction: column; gap: 6px; padding: 8px 10px; }
   .mh-pattern-foot small { font-size: 10.5px; color: var(--mh-muted); }
-  .mh-pattern-nums { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
+  .mh-pattern-nums { display: grid; grid-template-columns: repeat(6, 26px); justify-content: center; gap: 5px; }
   .mh-pattern-nums button { width: 24px; height: 24px; border-radius: 7px; border: 1.5px solid color-mix(in srgb, #5E8FC9 55%, var(--mh-line)); background: var(--mh-panel); padding: 0; font: 700 11px 'Inter', system-ui, sans-serif; color: var(--mh-ink); cursor: pointer; }
   .mh-pattern-nums button.is-on { background: #5E8FC9; border-color: #5E8FC9; color: #fff; }
   .mh-pattern-nums button:disabled { opacity: .35; cursor: not-allowed; }
@@ -3640,6 +3643,7 @@ function DamageResult({ roll }) {
         {(roll.sneakRolls || []).map((v, i) => (
           <DieFace key={"s" + i} sides={6} value={v} color="#4F5D78" size={size} rolling={false} highlight={v === 6} label={i === 0 ? "Furtivo" : undefined} />
         ))}
+        {roll.tuskRoll > 0 && <DieFace sides={6} value={roll.tuskRoll} color="#6E7F3A" size={size} rolling={false} highlight={roll.tuskRoll === 6} label="Colmillos" />}
         {(roll.kickRolls || []).map((v, i) => (
           <DieFace key={"k" + i} sides={6} value={v} color="#9A6B3C" size={size} rolling={false} highlight={v === 6} label={i === 0 ? "Coz" : undefined} />
         ))}
@@ -3654,6 +3658,7 @@ function DamageResult({ roll }) {
             {roll.wolfBonus ? ` + 1d10 (${roll.wolfBonus})` : ""}
             {roll.unstopBonus ? ` + ${roll.unstopBonus} (Imparable)` : ""}
             {roll.kickRolls ? ` + 2d6 (${roll.kickRolls.join(" + ")}) (Coz)` : ""}
+            {roll.tuskRoll ? ` + 1d6 (${roll.tuskRoll}) (Colmillos)` : ""}
             {roll.wingRoll ? ` + 1d${roll.wingSides} (${roll.wingRoll}) (Alas de Luz)` : ""}
             {roll.rawBonus ? ` + ${roll.rawBonus} (Poder en Bruto)` : ""}
             {roll.sneakRolls ? ` + ${roll.sneakRolls.length}d6 (${roll.sneakRolls.join(" + ")}) (Furtivo)` : ""}
@@ -9507,6 +9512,11 @@ export default function App({ onSignOut }) {
                       </span>
                     );
                   })()}
+                  {(c.f_ancestry || "").split(" + ").includes("Orco") && Number(c.r_hp || 0) - Number(c.hp_marked || 0) === 1 && (
+                    <span className="mh-htag is-active" style={{ "--tag": "#6E7F3A" }} title="Robusto: te queda 1 Punto de Vida, los ataques contra ti tienen desventaja">
+                      <span className="mh-htag-dot" /> Robusto · ataques con desventaja
+                    </span>
+                  )}
                   {c.f_class === "Guerrero" && c.f_no_mercy === "1" && (
                     <span className="mh-htag is-active" style={{ "--tag": "#C0504A" }} title="Sin Piedad: +1 a tus tiradas de ataque hasta tu próximo descanso">
                       <span className="mh-htag-dot" /> Sin Piedad · +1 ataque
@@ -14684,6 +14694,34 @@ export default function App({ onSignOut }) {
                       </button>
                     );
                   })()}
+                  {(() => {
+                    // Orco · Colmillos: tras acertar Cuerpo a cuerpo, 1 Esperanza para +1d6.
+                    const dr = damageRollResult;
+                    const oc = dr.charId ? characters[dr.charId] : null;
+                    if (!oc || !(oc.f_ancestry || "").split(" + ").includes("Orco")) return null;
+                    const wpn = [...PRIMARY_WEAPONS, ...SECONDARY_WEAPONS].find((w) => w.key === dr.weaponName);
+                    const bf = BEASTFORMS.find((b) => b.key === dr.weaponName);
+                    const melee = wpn ? wpn.range === "Cuerpo a cuerpo" : bf ? bf.attack.startsWith("Cuerpo a cuerpo") : false;
+                    if (!melee) return null;
+                    if (dr.tuskRoll) return <div className="mh-kick-done" style={{ color: "#6E7F3A" }}>Colmillos: +1d6 ({dr.tuskRoll})</div>;
+                    const hopeO = Number(oc.hope_marked ?? HOPE_DEFAULT);
+                    return (
+                      <button
+                        type="button"
+                        className="mh-kick-btn mh-tusk-btn"
+                        disabled={hopeO < 1}
+                        title={hopeO < 1 ? "No te queda Esperanza" : "Gasta 1 Esperanza: corneas al objetivo, +1d6 de daño"}
+                        onClick={() => {
+                          const t = Math.floor(Math.random() * 6) + 1;
+                          setDamageRollResult((r) => (r ? { ...r, tuskRoll: t, total: r.total + t } : r));
+                          updateCharacterField(dr.charId, "hope_marked", String(Number(charsRef.current[dr.charId]?.hope_marked ?? HOPE_DEFAULT) - 1));
+                          postCampaignEvent(dr.charId, `🐗 Colmillos: gasta 1 Esperanza y suma 1d6 (${t}). Daño total ${dr.total + t}`);
+                        }}
+                      >
+                        <Swords size={14} /> Colmillos · 1 Esperanza · +1d6
+                      </button>
+                    );
+                  })()}
                   {damageRollResult.charId && characters[damageRollResult.charId]?.f_focus && (
                     <div className="mh-focus-note">
                       <Crosshair size={12} /> Si es tu Foco ({characters[damageRollResult.charId].f_focus}), marca 1 de Estrés
@@ -15459,7 +15497,27 @@ export default function App({ onSignOut }) {
                     const armorMax = isFrontline ? armorMaxFor(c) : 0;
                     const armorSpent = isFrontline ? Math.max(0, armorMax - Number(c.armor_marked || 0)) : 0;
                     const frontlineBlock = isFrontline && !missingHope ? (!armorMax ? "No llevas armadura" : !armorSpent ? "Tu Armadura está completa" : "") : c.f_class === "Pícaro" && c.f_dodge ? "Esquiva ya activa (+2 Evasión)" : c.f_class === "Hechicero" ? "Se usa al tirar daño mágico" : c.f_class === "Guerrero" && c.f_no_mercy ? "Sin Piedad ya activo (+1 al ataque)" : "";
-                    cardActs.unshift({
+                    // Mago · Esta Vez No: el adversario repite su ataque o su daño.
+                    if (c.f_class === "Mago")
+                      [["dmg", "Repetir su daño", "una tirada de daño", Flame], ["atk", "Repetir su ataque", "una tirada de ataque", Swords]].forEach(([k, label, what, Ic]) =>
+                        cardActs.unshift({
+                          key: "notnow-" + k,
+                          Icon: Ic,
+                          label: missingHope ? "Te faltan " + missingHope + " de Esperanza" : label,
+                          sub: "Esta Vez No · 3 Esperanza",
+                          disabled: missingHope > 0,
+                          run: () => {
+                            closeCardDetail();
+                            const cur = Number(c.hope_marked ?? HOPE_DEFAULT);
+                            updateCharacterField(viewingCharId, "hope_marked", String(cur - d.hopeAction.cost));
+                            clearTimeout(restMsgTimer.current);
+                            setRestMessage("Esta Vez No: el adversario repite " + what + " (-3 Esperanza).");
+                            restMsgTimer.current = setTimeout(() => setRestMessage(""), 3500);
+                            postCampaignEvent(viewingCharId, "✋ Esta Vez No: gasta 3 Esperanza y obliga a un adversario en alcance Lejano a repetir " + what);
+                          },
+                        })
+                      );
+                    else cardActs.unshift({
                       key: "hope",
                       Icon: isFrontline ? Shield : Sparkles,
                       label: missingHope ? "Te faltan " + missingHope + " de Esperanza" : frontlineBlock || (isFrontline ? "Recuperar " + Math.min(2, armorSpent) + " de Armadura" : "Usar " + d.title),
