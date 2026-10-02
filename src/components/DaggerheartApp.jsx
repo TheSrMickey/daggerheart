@@ -317,7 +317,7 @@ const ANCESTRIES = [
   { key: "Galapa", blurb: "Tortuga humanoide con un gran caparazón abombado en el que puede retraerse para protegerse.", features: [{ name: "Caparazón", text: "Obtienes un bonificador a tus umbrales de daño igual a tu Competencia." }, { name: "Retraerse", text: "Marca 1 Estrés para retraerte en tu caparazón. Mientras estés dentro, tienes resistencia al daño físico, desventaja en las tiradas de acción y no puedes moverte." }] },
   { key: "Gigante", blurb: "Humanoide altísimo, de hombros anchos y brazos y cuello alargados, con entre uno y tres ojos.", features: [{ name: "Aguante", text: "Ganas una casilla adicional de Punto de vida al crear el personaje." }, { name: "Alcance", text: "Todo lo que tenga alcance Cuerpo a cuerpo (armas, habilidades, hechizos…) cuenta como si tuviera alcance Muy cercano." }] },
   { key: "Goblin", blurb: "Humanoide pequeño de ojos grandes y enormes orejas membranosas, con un oído y una vista agudísimos, incluso a oscuras.", features: [{ name: "Pie Firme", text: "Ignoras la desventaja en las tiradas de Agilidad." }, { name: "Sentido del Peligro", text: "Una vez por descanso, marca 1 Estrés para obligar a un adversario a repetir un ataque contra ti o un aliado en alcance Muy cercano." }] },
-  { key: "Mediano", blurb: "Bajo de estatura pero grande en suerte y sigilo.", features: [{ name: "Trae Suerte", text: "Al empezar cada sesión, todo tu grupo gana 1 Esperanza." }, { name: "Brújula Interior", text: "Cuando saques un 1 en tu Dado de Esperanza, puedes repetirlo." }] },
+  { key: "Mediano", blurb: "Humanoide pequeño de grandes pies peludos y orejas redondeadas, con un oído y un olfato muy finos y una brújula interior innata.", features: [{ name: "Trae Suerte", text: "Al comienzo de cada sesión, todos los miembros de tu grupo ganan 1 Esperanza." }, { name: "Brújula Interior", text: "Cuando saques un 1 en tu Dado de Esperanza, puedes volver a tirarlo." }] },
   { key: "Humano", blurb: "Adaptable y ambicioso, el más versátil de los pueblos.", features: [{ name: "Gran Resistencia", text: "Ganas una casilla adicional de Estrés al crear el personaje." }, { name: "Adaptabilidad", text: "Cuando falles una tirada en la que usaste una Experiencia, puedes marcar 1 Estrés para repetirla." }] },
   { key: "Infernal", blurb: "Desciende de linajes infernales, con cuernos y cola propios.", features: [{ name: "Sin Miedo", text: "Cuando saques una tirada con Miedo, puedes marcar 2 Estrés para convertirla en una tirada con Esperanza." }, { name: "Rostro Temible", text: "Tienes ventaja en las tiradas para intimidar a criaturas hostiles." }] },
   { key: "Katari", blurb: "Felino humanoide de reflejos rápidos y gracia natural.", features: [{ name: "Instinto Felino", text: "Cuando hagas una tirada de Agilidad, puedes gastar 2 Esperanza para repetir tu Dado de Esperanza." }, { name: "Garras Retráctiles", text: "Haz una tirada de Agilidad para arañar a un objetivo Cuerpo a cuerpo. Con éxito, queda temporalmente Vulnerable." }] },
@@ -2604,6 +2604,8 @@ const sharedStyles = `
   .mh-raw-opt b { font-size: 13px; }
   .mh-raw-opt small { font-size: 10.5px; color: var(--mh-muted); }
   .mh-ethereal-btn { background: #B8862E; }
+  .mh-compass-btn { background: #6E8B5A; }
+  .mh-compass-btn:hover:not(:disabled) { background: #5E7A4C; }
   .mh-ethereal-btn:hover:not(:disabled) { background: #A07424; }
   .mh-spirit-btn:hover { background: #A07424; }
   .mh-sneak-btn:hover { background: #414D65; }
@@ -5741,6 +5743,43 @@ export default function App({ onSignOut }) {
     updateCharacterFields(viewingCharId, { r_hp: String(Number(c.r_hp || 0) + 1), f_endurance: "1" });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewingCharId, viewingGiant, viewingEndurance]);
+  // Mediano · Trae Suerte: al empezar la sesión (aquí, tras cada descanso largo) el mediano gana 1 Esperanza
+  // y, si está en una campaña, el grupo recibe en el chat 1 Esperanza para recoger.
+  const viewingHalfling = viewingCharId ? (characters[viewingCharId]?.f_ancestry || "").split(" + ").includes("Mediano") : false;
+  const viewingLuckGiven = viewingCharId ? characters[viewingCharId]?.f_luck_given : "";
+  const viewingLuckPosted = viewingCharId ? characters[viewingCharId]?.f_luck_posted : "";
+  const viewingCampId = viewingCharId ? Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(viewingCharId))?.id || "" : "";
+  useEffect(() => {
+    if (!viewingCharId || !viewingHalfling) return;
+    const c = characters[viewingCharId];
+    const patch = {};
+    if (!viewingLuckGiven) {
+      patch.f_luck_given = "1";
+      patch.hope_marked = String(Math.min(getHopeMax(c), Number(c.hope_marked ?? HOPE_DEFAULT) + 1));
+    }
+    const camp = viewingCampId ? campaigns[viewingCampId] : null;
+    const allies = camp ? (camp.characterIds || []).filter((cid) => cid !== viewingCharId && characters[cid]) : [];
+    if (camp && !viewingLuckPosted && allies.length) {
+      patch.f_luck_posted = "1";
+      postChat(camp.id, {
+        kind: "gift",
+        sid: String(Date.now()),
+        campId: camp.id,
+        author: c.f_name || "El mediano",
+        charId: viewingCharId,
+        cls: c.f_class,
+        title: "Trae Suerte",
+        text: "Al comienzo de la sesión, todo el grupo gana 1 Esperanza.",
+        targets: Object.fromEntries(allies.map((cid) => [cid, { hope: 1 }])),
+        tag: "Mediano",
+      });
+    }
+    if (Object.keys(patch).length) {
+      updateCharacterFields(viewingCharId, patch);
+      if (patch.f_luck_given) postCampaignEvent(viewingCharId, "🍀 Trae Suerte: empieza la sesión con 1 Esperanza más");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewingCharId, viewingHalfling, viewingLuckGiven, viewingLuckPosted, viewingCampId]);
   const viewingCommunity = viewingCharId ? characters[viewingCharId]?.f_community : "";
   const viewingPackAdded = viewingCharId ? characters[viewingCharId]?.f_pack_added : "";
   useEffect(() => {
@@ -6348,7 +6387,7 @@ export default function App({ onSignOut }) {
         const base = crit ? "Éxito crítico" : r.reaction ? "Tirada de reacción" : (success === null ? "Con " : success ? "Éxito con " : "Fallo con ") + (withHope ? "Esperanza" : "Miedo");
         const note = r.reaction ? (crit ? "Ignora los efectos" : "Sin Esperanza ni Miedo") : crit ? "+1 Esperanza y −1 Estrés" : withHope ? "+1 Esperanza" : "El DJ gana 1 Miedo";
         const vcol = crit ? "#6FBF73" : r.reaction ? "#5E8FC9" : withHope ? "#E3B04B" : "#A58BE8";
-        const tag = r.luck ? (r.luck.kind === "focus" ? "Foco" : "Suerte") : r.weapon ? "Ataque" : r.card ? "Habilidad" : r.reaction ? "Reacción" : "Rasgo";
+        const tag = r.luck ? (r.luck.kind === "focus" ? "Foco" : r.luck.kind === "compass" ? "Brújula" : "Suerte") : r.weapon ? "Ataque" : r.card ? "Habilidad" : r.reaction ? "Reacción" : "Rasgo";
         // Hada · Doblega la Suerte: botón bajo las tiradas de acción recientes (tuyas o de aliados).
         const meC = meCharId ? characters[meCharId] : null;
         const luckable = meC && isFaerie(meC) && !r.reaction && !r.luck && m.charId && Date.now() - (m.ts || 0) < 10 * 60 * 1000;
@@ -6388,7 +6427,7 @@ export default function App({ onSignOut }) {
         ) : null;
         const head = r.luck ? (
           <>
-            {who} {r.luck.kind === "focus" ? "termina su Foco y repite" : "doblega la suerte"}
+            {who} {r.luck.kind === "focus" ? "termina su Foco y repite" : r.luck.kind === "compass" ? "repite su Dado de Esperanza" : "doblega la suerte"}
             {r.luck.forId && r.luck.forId !== m.charId ? " de " + r.luck.forName : ""} · {r.weapon ? "ataque con " + r.weapon : r.card || r.trait}
           </>
         ) : r.weapon ? (
@@ -7287,6 +7326,11 @@ export default function App({ onSignOut }) {
     if (isLong && c.f_sparing_used) restPatch.f_sparing_used = "";
     if (isLong && c.f_closeknit_used) restPatch.f_closeknit_used = "";
     if (isLong && c.f_raw_used) restPatch.f_raw_used = "";
+    // Trae Suerte vuelve a repartirse en la «sesión» siguiente.
+    if (isLong && (c.f_luck_given || c.f_luck_posted)) {
+      restPatch.f_luck_given = "";
+      restPatch.f_luck_posted = "";
+    }
     if (isLong && (c.f_prayer || c.f_prayer_rolled)) {
       restPatch.f_prayer = "";
       restPatch.f_prayer_rolled = "";
@@ -7661,20 +7705,22 @@ export default function App({ onSignOut }) {
   const bendLuck = (myId, rollerId, roll, opts = {}) => {
     const me = charsRef.current[myId];
     const focus = opts.kind === "focus";
+    const compass = opts.kind === "compass";
     if (!me) return;
-    if (!focus && (me.f_luck_used || Number(me.hope_marked ?? HOPE_DEFAULT) < 3)) return;
+    if (!focus && !compass && (me.f_luck_used || Number(me.hope_marked ?? HOPE_DEFAULT) < 3)) return;
     const sides = roll.hopeSides || 12;
     const nh = Math.floor(Math.random() * sides) + 1;
-    const nf = Math.floor(Math.random() * 12) + 1;
+    const nf = compass ? roll.fear : Math.floor(Math.random() * 12) + 1;
     const total = roll.total - roll.hope - roll.fear + nh + nf;
     const a = rollGains(roll.hope, roll.fear);
     const b = rollGains(nh, nf);
-    const delta = { hope: b.hope - a.hope, stress: b.stress - a.stress, fear: b.fear - a.fear };
+    // Las tiradas de reacción no generan Esperanza ni Miedo: repetirlas no cambia nada de eso.
+    const delta = roll.reaction ? { hope: 0, stress: 0, fear: 0 } : { hope: b.hope - a.hope, stress: b.stress - a.stress, fear: b.fear - a.fear };
     const own = rollerId === myId;
-    const hopeNow = Number(me.hope_marked ?? HOPE_DEFAULT) - (focus ? 0 : 3) + (own ? delta.hope : 0);
+    const hopeNow = Number(me.hope_marked ?? HOPE_DEFAULT) - (focus || compass ? 0 : 3) + (own ? delta.hope : 0);
     const patch = { hope_marked: String(Math.max(0, Math.min(getHopeMax(me), hopeNow))) };
     if (focus) patch.f_focus = "";
-    else patch.f_luck_used = "1";
+    else if (!compass) patch.f_luck_used = "1";
     if (own && delta.stress) patch.stress_marked = String(Math.max(0, Math.min(Number(me.r_stress || 0), Number(me.stress_marked || 0) + delta.stress)));
     updateCharacterFields(myId, patch);
     if (delta.fear) addFear(delta.fear);
@@ -7682,15 +7728,15 @@ export default function App({ onSignOut }) {
     const text = crit ? "Éxito crítico" : nh > nf ? "Con Esperanza" : "Con Miedo";
     const color = crit ? "#7FB77A" : nh > nf ? "#E3B04B" : "#A58BE8";
     const note = crit ? "Ganas 1 Esperanza y te quitas 1 Estrés" : nh > nf ? "Ganas 1 Esperanza" : "El DJ gana 1 de Miedo";
-    if (own) setTraitRollResult((prev) => (prev && prev.charId === myId ? { ...prev, key: Date.now(), hope: nh, fear: nf, total, text, color, note, luck: focus ? "focus" : true } : prev));
+    if (own) setTraitRollResult((prev) => (prev && prev.charId === myId ? { ...prev, key: Date.now(), hope: nh, fear: nf, total, text, color, note, luck: focus ? "focus" : compass ? "compass" : true } : prev));
     const roller = charsRef.current[rollerId];
     const forName = roller?.f_name || "un aliado";
     const sid = String(Date.now());
     const { luck, adjust, ...base } = roll;
-    postCampaignEvent(myId, focus ? `🎯 Termina su Foco (${me.f_focus}) y repite los dados: ${nh} + ${nf} = ${total} (${text})` : `🍀 Doblega la Suerte${own ? "" : " para " + forName}: ${nh} + ${nf} = ${total} (${text})`, {
+    postCampaignEvent(myId, compass ? `🧭 Brújula Interior: repite el 1 de su Dado de Esperanza y saca ${nh} (${nh} + ${nf} = ${total}, ${text})` : focus ? `🎯 Termina su Foco (${me.f_focus}) y repite los dados: ${nh} + ${nf} = ${total} (${text})` : `🍀 Doblega la Suerte${own ? "" : " para " + forName}: ${nh} + ${nf} = ${total} (${text})`, {
       kind: "roll",
       sid,
-      roll: { ...base, hope: nh, fear: nf, total, luck: { forId: rollerId, forName, prevHope: roll.hope, prevFear: roll.fear, kind: focus ? "focus" : "luck" }, adjust: !own && (delta.hope || delta.stress) ? { charId: rollerId, hope: delta.hope, stress: delta.stress } : null },
+      roll: { ...base, hope: nh, fear: nf, total, luck: { forId: rollerId, forName, prevHope: roll.hope, prevFear: roll.fear, kind: focus ? "focus" : compass ? "compass" : "luck" }, adjust: !own && (delta.hope || delta.stress) ? { charId: rollerId, hope: delta.hope, stress: delta.stress } : null },
     });
   };
 
@@ -13576,9 +13622,44 @@ export default function App({ onSignOut }) {
                         </button>
                       );
                     })()}
+                    {(() => {
+                      const r = traitRollResult;
+                      const rc = characters[r.charId];
+                      if (!rc || !(rc.f_ancestry || "").split(" + ").includes("Mediano") || r.hope !== 1 || r.luck) return null;
+                      return (
+                        <button
+                          type="button"
+                          className="mh-luck-btn mh-compass-btn"
+                          onClick={() =>
+                            bendLuck(r.charId, r.charId, {
+                              trait: r.traitLabel,
+                              weapon: r.weapon?.name || "",
+                              card: r.card?.name || "",
+                              dc: r.card?.dc,
+                              hopeSides: r.hopeSides || 12,
+                              hope: r.hope,
+                              fear: r.fear,
+                              mod: r.mod,
+                              adv: r.advantageRoll,
+                              wolf: r.wolfBonus,
+                              exp: r.expBonus,
+                              rally: r.rallyRoll,
+                              rallyDie: r.rallyDie,
+                              poet: r.poetRoll,
+                              tide: r.tideBonus,
+                              total: r.total,
+                              reaction: r.reaction,
+                            }, { kind: "compass" })
+                          }
+                        >
+                          <Compass size={15} /> Brújula Interior
+                          <small>Has sacado un 1: repite tu Dado de Esperanza</small>
+                        </button>
+                      );
+                    })()}
                     {traitRollResult.luck && (
                       <div className="mh-luck-done">
-                        {traitRollResult.luck === "focus" ? <Crosshair size={12} /> : <Clover size={12} />} Repetida con {traitRollResult.luck === "focus" ? "Foco del Explorador" : "Doblega la Suerte"}
+                        {traitRollResult.luck === "focus" ? <Crosshair size={12} /> : traitRollResult.luck === "compass" ? <Compass size={12} /> : <Clover size={12} />} Repetida con {traitRollResult.luck === "focus" ? "Foco del Explorador" : traitRollResult.luck === "compass" ? "Brújula Interior" : "Doblega la Suerte"}
                       </div>
                     )}
                     <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 10, color: "var(--mh-muted)", marginTop: 10 }}>
