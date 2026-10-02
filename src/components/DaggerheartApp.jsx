@@ -983,7 +983,7 @@ const CLASS_HOPE_FEATURE = {
   Camorrista: { name: "Plantar Cara", cost: 3, text: "Gasta 3 Esperanza para intimidar a un objetivo en alcance Cercano y dejarlo temporalmente Vulnerable." },
   Invocador: { name: "Ayuda de los Espíritus", cost: 3, text: "Gasta 3 Esperanza para conjurar ayuda de otro mundo. Reparte 2 Esperanza entre uno o más PJ en alcance Lejano y te quitas 1 Estrés." },
   "Cazador de Sangre": { name: "Maldición de Sangre", cost: 3, text: "Gasta 3 Esperanza cuando un adversario tenga éxito en una tirada de ataque dentro de alcance Cercano para obligarle a repetirla con desventaja." },
-  Asesino: { name: "Determinación Letal", cost: 3, text: "Quítate 2 de Estrés." },
+  Asesino: { name: "Determinación Letal", cost: 3, text: "Gasta 3 Esperanza para quitarte 2 de Estrés." },
 };
 
 const CLASS_FEATURES = {
@@ -1046,7 +1046,7 @@ const CLASS_FEATURES = {
   ],
   Asesino: [
     { name: "Marcado para Morir", text: "Cuando tengas éxito en un ataque con arma, puedes marcar 1 Estrés para que el objetivo quede Marcado para Morir. Cuando hagas daño a un objetivo que hayas Marcado para Morir, suma a la tirada de daño tantos d4 como tu Rango. Solo puedes tener a un adversario Marcado para Morir a la vez. Esta condición dura hasta que hagas un descanso, hasta que el adversario marcado sea derrotado o hasta que el DJ gaste tanto Miedo como tu Rango para quitarla." },
-    { name: "Entrar y Salir", text: "Gasta 1 Esperanza para preguntar al DJ por una forma rápida o discreta de entrar o salir de un lugar que puedas ver. Tu siguiente tirada que aproveche esa información tiene ventaja." },
+    { name: "Entrar y Salir", text: "Gasta 1 Esperanza para pedir al DJ una forma rápida o discreta de entrar en un lugar que puedas ver o de salir de él. La siguiente tirada que hagas aprovechando esa información tiene ventaja." },
   ],
 };
 
@@ -8459,6 +8459,10 @@ export default function App({ onSignOut }) {
     const rallyDie = pr.rally && ch?.f_rally_die ? ch.f_rally_die : "";
     if (rallyDie) patch.f_rally_die = "";
     if (pr.dedicated) patch.f_dedicated_used = "1";
+    if (ch && ch.f_class === "Asesino" && ch.f_inout === "1" && pr.privilege && !pr.reaction) {
+      patch.f_inout = "";
+      postCampaignEvent(pr.charId, "🚪 Entrar y Salir: aprovecha la información del DJ y tira con ventaja");
+    }
     if (ch && ch.f_subclass === "Escuela del Conocimiento" && pr.adept && exps.length) {
       const room = Number(ch.r_stress || 0) - Number(ch.stress_marked || 0);
       patch.stress_marked = String(Number(ch.stress_marked || 0) + Math.min(room, exps.length));
@@ -10246,6 +10250,11 @@ export default function App({ onSignOut }) {
                   {activeStance(c) && (
                     <span className="mh-htag is-active" style={{ "--tag": "#C08B5C" }} title={MARTIAL_STANCES.find((x) => x.key === c.f_stance)?.text}>
                       <span className="mh-htag-dot" /> Postura {MARTIAL_STANCES.find((x) => x.key === c.f_stance)?.name} · {getMFocus(c)} Conc.
+                    </span>
+                  )}
+                  {c.f_class === "Asesino" && c.f_inout === "1" && (
+                    <span className="mh-htag is-active" style={{ "--tag": "#7D8BA3" }} title="Entrar y Salir: tu próxima tirada que aproveche la información del DJ tiene ventaja">
+                      <span className="mh-htag-dot" /> Entrar y Salir · ventaja
                     </span>
                   )}
                   {c.f_class === "Asesino" && c.f_marked === "1" && (
@@ -15041,20 +15050,22 @@ export default function App({ onSignOut }) {
               // Salvaje · Pies Ligeros: ventaja para moverse sin que te oigan.
               const wildborne = ch.f_community === "Salvaje" && ["Agilidad", "Destreza"].includes(preRoll.traitLabel);
               // Centinela Alado · Rostro Etéreo (Especialización): ventaja en Presencia mientras vuela.
-              const etherealOk = ch.f_subclass === "Centinela Alado" && tierForLevel(ch.f_level || 1) >= 2 && getConditions(ch).includes("Volando") && preRoll.traitLabel === "Presencia";
+              const etherealOk = !(ch.f_class === "Asesino" && ch.f_inout === "1" && !preRoll.reaction) && ch.f_subclass === "Centinela Alado" && tierForLevel(ch.f_level || 1) >= 2 && getConditions(ch).includes("Volando") && preRoll.traitLabel === "Presencia";
               // Infernal · Rostro Temible: ventaja para intimidar a criaturas hostiles.
-              const dreadOk = (ch.f_ancestry || "").split(" + ").includes("Infernal") && preRoll.traitLabel === "Presencia" && !etherealOk;
+              const dreadOk = !(ch.f_class === "Asesino" && ch.f_inout === "1" && !preRoll.reaction) && (ch.f_ancestry || "").split(" + ").includes("Infernal") && preRoll.traitLabel === "Presencia" && !etherealOk;
               // Bruja Lunar · Glamour Nocturno: ventaja en tiradas que aprovechen tu apariencia ilusoria.
-              const glamourOk = ch.f_subclass === "Bruja Lunar" && ch.f_glamour === "1" && !etherealOk && !dreadOk;
+              const glamourOk = !(ch.f_class === "Asesino" && ch.f_inout === "1" && !preRoll.reaction) && ch.f_subclass === "Bruja Lunar" && ch.f_glamour === "1" && !etherealOk && !dreadOk;
               // Simiah · Trepador Nato: ventaja en Agilidad para mantener el equilibrio y trepar.
-              const climberOk = (ch.f_ancestry || "").split(" + ").includes("Simiah") && preRoll.traitLabel === "Agilidad" && !etherealOk && !dreadOk && !glamourOk;
+              const climberOk = !(ch.f_class === "Asesino" && ch.f_inout === "1" && !preRoll.reaction) && (ch.f_ancestry || "").split(" + ").includes("Simiah") && preRoll.traitLabel === "Agilidad" && !etherealOk && !dreadOk && !glamourOk;
               // Bruja del Seto · Maldición Irritante: ventaja al atacar a criaturas con Maleficio.
               // Pacto del Eterno · Manto del Patrón: ventaja para intimidar.
+              // Asesino · Entrar y Salir: ventaja en la siguiente tirada que aproveche la información.
+              const inoutOk = ch.f_class === "Asesino" && ch.f_inout === "1" && !preRoll.reaction;
               // Artista Marcial · Aislante: ventaja si no hay más criaturas en alcance Muy cercano.
-              const isolOk = activeStance(ch) === "aislante" && !!preRoll.weapon;
+              const isolOk = !inoutOk && activeStance(ch) === "aislante" && !!preRoll.weapon;
               const mantleOk = !isolOk && ch.f_mantle === "1" && preRoll.traitLabel === "Presencia" && !etherealOk && !dreadOk && !glamourOk && !climberOk;
               const vexOk = !mantleOk && ch.f_subclass === "Bruja del Seto" && tierForLevel(ch.f_level || 1) >= 2 && !!preRoll.weapon && (ch.f_hexes || "[]") !== "[]" && !etherealOk && !dreadOk && !glamourOk && !climberOk;
-              const edgeSource = etherealOk ? "Rostro Etéreo" : dreadOk ? "Rostro Temible" : glamourOk ? "Glamour Nocturno" : climberOk ? "Trepador Nato" : isolOk ? "Aislante" : mantleOk ? "Manto del Patrón" : vexOk ? "Maldición Irritante" : highborne ? "Privilegio" : loreborne ? "Leído" : ridgeborne ? "Firme" : slyborne ? "Granuja" : underborne ? "Vida en la Penumbra" : wildborne ? "Pies Ligeros" : "";
+              const edgeSource = inoutOk ? "Entrar y Salir" : etherealOk ? "Rostro Etéreo" : dreadOk ? "Rostro Temible" : glamourOk ? "Glamour Nocturno" : climberOk ? "Trepador Nato" : inoutOk ? "Entrar y Salir" : isolOk ? "Aislante" : mantleOk ? "Manto del Patrón" : vexOk ? "Maldición Irritante" : highborne ? "Privilegio" : loreborne ? "Leído" : ridgeborne ? "Firme" : slyborne ? "Granuja" : underborne ? "Vida en la Penumbra" : wildborne ? "Pies Ligeros" : "";
               const poetOk = ch.f_subclass === "Orador" && preRoll.traitLabel === "Presencia";
               // Origen Elemental · Elementalista: 1 Esperanza para +2 a la tirada o +3 al daño.
               const elemOk = ch.f_subclass === "Origen Elemental" && !preRoll.reaction;
@@ -15236,10 +15247,10 @@ export default function App({ onSignOut }) {
                   ? tile("priv", {
                       on: preRoll.privilege,
                       title: edgeSource,
-                      sub: etherealOk ? "Centinela Alado · volando" : dreadOk ? "Infernal" : glamourOk ? "Bruja Lunar" : climberOk ? "Simiah" : isolOk ? "Postura marcial" : mantleOk ? "Pacto del Eterno" : vexOk ? "Bruja del Seto" : highborne ? "De Alta Cuna" : loreborne ? "Del Saber" : slyborne ? "De las Sombras" : underborne ? "De las Profundidades" : wildborne ? "Salvaje" : "De las Cumbres",
+                      sub: etherealOk ? "Centinela Alado · volando" : dreadOk ? "Infernal" : glamourOk ? "Bruja Lunar" : climberOk ? "Simiah" : inoutOk ? "Asesino" : isolOk ? "Postura marcial" : mantleOk ? "Pacto del Eterno" : vexOk ? "Bruja del Seto" : highborne ? "De Alta Cuna" : loreborne ? "Del Saber" : slyborne ? "De las Sombras" : underborne ? "De las Profundidades" : wildborne ? "Salvaje" : "De las Cumbres",
                       cost: "Ventaja",
-                      color: etherealOk ? "#D8A84A" : dreadOk ? "#A33A3A" : glamourOk ? "#8C7FD0" : climberOk ? "#A0784A" : isolOk ? "#C08B5C" : mantleOk ? "#B55FA0" : vexOk ? "#9B7FD6" : highborne ? "#B8862E" : loreborne ? "#5E8FC9" : slyborne ? "#6E5A8A" : underborne ? "#5A6B7A" : wildborne ? "#5E8A4E" : "#7E8C6A",
-                      hint: etherealOk ? "Mientras vuelas, tienes ventaja en las tiradas de Presencia" : dreadOk ? "Si intentas intimidar a una criatura hostil" : glamourOk ? "Si la tirada aprovecha tu apariencia ilusoria" : climberOk ? "Si la tirada implica mantener el equilibrio o trepar" : isolOk ? "Si no hay otras criaturas en alcance Muy cercano de ti o de tu objetivo" : mantleOk ? "Si intentas intimidar a un objetivo" : vexOk ? "Si atacas a una criatura con tu Maleficio" : highborne ? "Si tratas con nobles, negocias un precio o usas tu reputación" : loreborne ? "Si la tirada trata sobre la historia, la cultura o la política de una persona o un lugar importantes" : slyborne ? "Si negocias con criminales, intentas detectar una mentira o buscas un escondite seguro" : underborne ? "Si estás en una zona con poca luz o sombras densas y te escondes, investigas o percibes detalles en ella" : wildborne ? "Si intentas moverte sin que te oigan" : "Si cruzas precipicios y cornisas peligrosos, te orientas en un entorno duro o usas tus conocimientos de supervivencia",
+                      color: etherealOk ? "#D8A84A" : dreadOk ? "#A33A3A" : glamourOk ? "#8C7FD0" : climberOk ? "#A0784A" : inoutOk ? "#7D8BA3" : isolOk ? "#C08B5C" : mantleOk ? "#B55FA0" : vexOk ? "#9B7FD6" : highborne ? "#B8862E" : loreborne ? "#5E8FC9" : slyborne ? "#6E5A8A" : underborne ? "#5A6B7A" : wildborne ? "#5E8A4E" : "#7E8C6A",
+                      hint: etherealOk ? "Mientras vuelas, tienes ventaja en las tiradas de Presencia" : dreadOk ? "Si intentas intimidar a una criatura hostil" : glamourOk ? "Si la tirada aprovecha tu apariencia ilusoria" : climberOk ? "Si la tirada implica mantener el equilibrio o trepar" : inoutOk ? "Si la tirada aprovecha la forma de entrar o salir que te dio el DJ (se gasta al tirar)" : isolOk ? "Si no hay otras criaturas en alcance Muy cercano de ti o de tu objetivo" : mantleOk ? "Si intentas intimidar a un objetivo" : vexOk ? "Si atacas a una criatura con tu Maleficio" : highborne ? "Si tratas con nobles, negocias un precio o usas tu reputación" : loreborne ? "Si la tirada trata sobre la historia, la cultura o la política de una persona o un lugar importantes" : slyborne ? "Si negocias con criminales, intentas detectar una mentira o buscas un escondite seguro" : underborne ? "Si estás en una zona con poca luz o sombras densas y te escondes, investigas o percibes detalles en ella" : wildborne ? "Si intentas moverte sin que te oigan" : "Si cruzas precipicios y cornisas peligrosos, te orientas en un entorno duro o usas tus conocimientos de supervivencia",
                       onClick: () => setPreRoll((p) => ({ ...p, privilege: !p.privilege, advantage: p.privilege ? p.advantage : false })),
                     })
                   : null,
@@ -17599,7 +17610,7 @@ export default function App({ onSignOut }) {
                     const isFrontline = c.f_class === "Guardián";
                     const armorMax = isFrontline ? armorMaxFor(c) : 0;
                     const armorSpent = isFrontline ? Math.max(0, armorMax - Number(c.armor_marked || 0)) : 0;
-                    const frontlineBlock = isFrontline && !missingHope ? (!armorMax ? "No llevas armadura" : !armorSpent ? "Tu Armadura está completa" : "") : c.f_class === "Pícaro" && c.f_dodge ? "Esquiva ya activa (+2 Evasión)" : c.f_class === "Hechicero" ? "Se usa al tirar daño mágico" : c.f_class === "Bruja" ? "Se usa sobre una tirada fallida (resultado o chat)" : c.f_class === "Brujo" ? "Se usa desde el resultado de una tirada fallida" : c.f_class === "Guerrero" && c.f_no_mercy ? "Sin Piedad ya activo (+1 al ataque)" : "";
+                    const frontlineBlock = isFrontline && !missingHope ? (!armorMax ? "No llevas armadura" : !armorSpent ? "Tu Armadura está completa" : "") : c.f_class === "Pícaro" && c.f_dodge ? "Esquiva ya activa (+2 Evasión)" : c.f_class === "Hechicero" ? "Se usa al tirar daño mágico" : c.f_class === "Bruja" ? "Se usa sobre una tirada fallida (resultado o chat)" : c.f_class === "Brujo" ? "Se usa desde el resultado de una tirada fallida" : c.f_class === "Asesino" && !Number(c.stress_marked || 0) ? "No tienes Estrés marcado" : c.f_class === "Guerrero" && c.f_no_mercy ? "Sin Piedad ya activo (+1 al ataque)" : "";
                     // Mago · Esta Vez No: el adversario repite su ataque o su daño.
                     if (c.f_class === "Mago")
                       [["dmg", "Repetir su daño", "una tirada de daño", Flame], ["atk", "Repetir su ataque", "una tirada de ataque", Swords]].forEach(([k, label, what, Ic]) =>
@@ -17623,7 +17634,7 @@ export default function App({ onSignOut }) {
                     else cardActs.unshift({
                       key: "hope",
                       Icon: isFrontline ? Shield : Sparkles,
-                      label: missingHope ? "Te faltan " + missingHope + " de Esperanza" : frontlineBlock || (isFrontline ? "Recuperar " + Math.min(2, armorSpent) + " de Armadura" : c.f_class === "Camorrista" ? "Plantar Cara: dejar Vulnerable al objetivo" : "Usar " + d.title),
+                      label: missingHope ? "Te faltan " + missingHope + " de Esperanza" : frontlineBlock || (isFrontline ? "Recuperar " + Math.min(2, armorSpent) + " de Armadura" : c.f_class === "Camorrista" ? "Plantar Cara: dejar Vulnerable al objetivo" : c.f_class === "Asesino" ? "Quitarte 2 de Estrés" : "Usar " + d.title),
                       sub: d.hopeAction.cost + " Esperanza",
                       disabled: missingHope > 0 || !!frontlineBlock,
                       run: () => {
@@ -17633,7 +17644,13 @@ export default function App({ onSignOut }) {
                         else if (c.f_class === "Pícaro") doRogueDodge(viewingCharId);
                         else if (c.f_class === "Guerrero") doNoMercy(viewingCharId);
                         else if (c.f_class === "Serafín") setRenewDlg({ mode: "life" });
-                        else if (c.f_class === "Camorrista") {
+                        else if (c.f_class === "Asesino") {
+                          updateCharacterFields(viewingCharId, { hope_marked: String(Number(c.hope_marked ?? HOPE_DEFAULT) - d.hopeAction.cost), stress_marked: String(Math.max(0, Number(c.stress_marked || 0) - 2)) });
+                          clearTimeout(restMsgTimer.current);
+                          setRestMessage("Determinación Letal: te quitas 2 de Estrés (-3 Esperanza).");
+                          restMsgTimer.current = setTimeout(() => setRestMessage(""), 3500);
+                          postCampaignEvent(viewingCharId, "🗡️ Determinación Letal: gasta 3 Esperanza y se quita 2 de Estrés");
+                        } else if (c.f_class === "Camorrista") {
                           updateCharacterField(viewingCharId, "hope_marked", String(Number(c.hope_marked ?? HOPE_DEFAULT) - d.hopeAction.cost));
                           clearTimeout(restMsgTimer.current);
                           setRestMessage("Plantar Cara: el objetivo queda temporalmente Vulnerable (-3 Esperanza).");
@@ -17897,6 +17914,26 @@ export default function App({ onSignOut }) {
                           postCampaignEvent(viewingCharId, `⭕ Círculo de Poder: traza un círculo en alcance Muy cercano. Dentro, el grupo gana +2 a los umbrales de daño, a las tiradas de ataque y a la Evasión (${nH} fichas; se retira una por cada tirada de acción o ataque evitado)`);
                         },
                       });
+                  }
+                  // Asesino · Entrar y Salir: 1 Esperanza; la siguiente tirada que lo aproveche tiene ventaja.
+                  if (d.title === "Entrar y Salir" && c?.f_class === "Asesino" && !d.fromChat) {
+                    const hopeI = Number(c.hope_marked ?? HOPE_DEFAULT);
+                    cardActs.push(
+                      c.f_inout === "1"
+                        ? { key: "inout-off", Icon: X, label: "Descartar la ventaja", sub: "Tienes ventaja pendiente en la próxima tirada que lo aproveche", run: () => updateCharacterField(viewingCharId, "f_inout", "") }
+                        : {
+                            key: "inout",
+                            Icon: MoveUpRight,
+                            label: hopeI < 1 ? "Te falta Esperanza" : "Preguntar al DJ · 1 Esperanza",
+                            sub: "Una forma rápida o discreta de entrar o salir",
+                            disabled: hopeI < 1,
+                            run: () => {
+                              closeCardDetail();
+                              updateCharacterFields(viewingCharId, { hope_marked: String(hopeI - 1), f_inout: "1" });
+                              postCampaignEvent(viewingCharId, "🚪 Entrar y Salir: gasta 1 Esperanza y pide al DJ una forma rápida o discreta de entrar o salir de un lugar que ve");
+                            },
+                          }
+                    );
                   }
                   // Asesino · Marcado para Morir: quitar la marca.
                   if (d.title === "Marcado para Morir" && c?.f_class === "Asesino" && !d.fromChat && c.f_marked === "1") {
