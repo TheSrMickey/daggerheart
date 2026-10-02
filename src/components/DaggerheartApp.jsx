@@ -29,6 +29,8 @@ const CLASS_COLORS = {
   Brujo: "#B55FA0",
   Camorrista: "#C08B5C",
   Asesino: "#7D8BA3",
+  Invocador: "#8E6FC4",
+  "Cazador de Sangre": "#A8323E",
 };
 const DEFAULT_SETTINGS = { classColors: true };
 // Texto oscuro o blanco según lo claro que sea el color.
@@ -55,6 +57,8 @@ const CLASSES = [
   { key: "Brujo", blurb: "Sella un pacto oscuro y paga el precio de un poder prestado.", expansion: "Hope & Fear" },
   { key: "Camorrista", blurb: "Golpea con los puños y la fuerza bruta, sin dar un paso atrás.", expansion: "Hope & Fear" },
   { key: "Asesino", blurb: "Convierte la muerte en oficio con golpes precisos y letales.", expansion: "Hope & Fear" },
+  { key: "Invocador", blurb: "Aprovecha ritos ocultos y tu propia sangre para invocar y dirigir entidades de otros planos de existencia.", expansion: "The Void" },
+  { key: "Cazador de Sangre", blurb: "Domina la hemocracia, la magia de la sangre, en tu persecución implacable de las criaturas malignas.", expansion: "The Void" },
 ];
 
 const SUBCLASSES = {
@@ -340,6 +344,77 @@ const SUBCLASSES = {
         { name: "Cañón de Concentración (Especialización)", text: "Gasta 1 de Concentración para hacer una tirada de Instinto contra un adversario en alcance Lejano. Si tienes éxito, haces d20+3 de daño mágico usando tu Competencia." },
         { name: "Rompelímites (Maestría)", text: "Una vez por descanso, puedes realizar una proeza atlética increíble sin necesidad de tirar, como correr sobre el agua, saltar entre tejados lejanos o escalar un edificio. Cuando lo hagas, ganas 1 Esperanza y te quitas 1 Estrés." },
         { name: "Estado de Flujo (Maestría)", text: "Puedes marcar 1 Estrés en lugar de gastar 1 de Concentración para cambiar a otra postura. Además, puedes gastar 1 de Concentración en lugar de marcar 1 Estrés para empezar un golpe combinado." },
+      ],
+    },
+  ],
+  Invocador: [
+    {
+      key: "Nigromancia",
+      blurb: "Invoca a los muertos para que luchen y te protejan.",
+      expansion: "The Void",
+      features: [
+        { name: "Segundo Círculo: Cadáver Errante", text: "Puedes invocar Cadáveres Errantes usando tu Segundo Círculo." },
+        { name: "Hambre de la Tumba", text: "Haz una tirada de Lanzamiento de Conjuros contra un objetivo en alcance Lejano. Si tienes éxito, tus Cadáveres Errantes avanzan para atacarlo y hacen 5 de daño físico por cada Cadáver Errante antes de volver contigo. Después, uno de los Cadáveres Errantes desaparece." },
+        { name: "Cosecha Macabra", text: "Cuando un adversario en alcance Lejano marque su último Punto de Vida, puedes invocar un Cadáver Errante sin marcar Estrés." },
+        { name: "Tercer Círculo: Fantasmas (Especialización)", text: "Puedes invocar Fantasmas usando tu Tercer Círculo." },
+        { name: "Protectores Fantasmales (Especialización)", text: "Mientras tengas algún Fantasma invocado, ganas +1 a tu Evasión, porque giran a tu alrededor para protegerte." },
+        { name: "Terror Espectral (Especialización)", text: "Haz una tirada de Lanzamiento de Conjuros contra un objetivo en alcance Lejano. Si tienes éxito, uno de tus Fantasmas vuela hasta el objetivo para asustarlo y le hace marcar 1 Estrés. Después, ese Fantasma desaparece." },
+        { name: "Cuarto Círculo: Caballero de la Muerte (Maestría)", text: "Puedes invocar a un único Caballero de la Muerte a la vez usando tu Cuarto Círculo." },
+        { name: "Guerrero Mortal (Maestría)", text: "Cuando tengas éxito con Esperanza en una tirada de ataque, puedes tener éxito con Miedo en su lugar: tu Caballero de la Muerte embiste al objetivo, suma 2d12 al daño del ataque y vuelve contigo." },
+        { name: "Baluarte del Caballero (Maestría)", text: "Cuando recibas daño Grave, el Caballero de la Muerte recibe uno de los Puntos de Vida en tu lugar y luego desaparece." },
+      ],
+    },
+    {
+      key: "Teúrgia",
+      blurb: "Invoca a seres celestiales que inspiran asombro y protegen a tus aliados.",
+      expansion: "The Void",
+      features: [
+        { name: "Segundo Círculo: Ángel", text: "Puedes invocar Ángeles usando tu Segundo Círculo." },
+        { name: "Presencia Angelical", text: "Mientras tengas algún Ángel invocado, tienes ventaja en las tiradas de Presencia para influir en otros, porque el poder angelical que te rodea inspira asombro y temor." },
+        { name: "Golpe Esperanzador", text: "Cuando tengas éxito con Esperanza en una tirada de ataque, puedes ordenar a un Ángel que haga 1d10 de daño mágico adicional al objetivo. Después, ese Ángel desaparece." },
+        { name: "Tercer Círculo: Arcángel (Especialización)", text: "Puedes invocar Arcángeles usando tu Tercer Círculo." },
+        { name: "Comandante Divino (Especialización)", text: "Mientras tengas algún Arcángel invocado, el daño adicional de tu Golpe Esperanzador es 1d12 en lugar de 1d10." },
+        { name: "Ayuda Celestial (Especialización)", text: "Puedes ordenar a un Arcángel que haga una de estas cosas: llevarte volando a ti o a un aliado en alcance Muy cercano a un lugar en alcance Lejano, o ayudar a un aliado en alcance Cercano sin gastar Esperanza. Después, el Arcángel desaparece." },
+        { name: "Cuarto Círculo: Manifestación Divina (Maestría)", text: "Puedes invocar a una única Manifestación Divina a la vez usando tu Cuarto Círculo." },
+        { name: "Esperanza Consagrada (Maestría)", text: "Cuando invoques una Manifestación Divina, coloca tres Dados de Esperanza adicionales en esta carta. Cuando hagas una tirada de acción o de reacción, puedes tirar y gastar uno de estos dados junto con tu Dado de Esperanza normal y quedarte con el resultado más alto. Cuando no queden dados en esta carta, la Manifestación Divina desaparece." },
+      ],
+    },
+  ],
+  "Cazador de Sangre": [
+    {
+      key: "Orden del Licántropo",
+      blurb: "Libera la bestia que llevas dentro con una forma híbrida de lobo.",
+      expansion: "The Void",
+      features: [
+        { name: "Forma Híbrida", text: "Puedes adoptar una Forma Híbrida lupina. Marca 1 Estrés para entrar en ella hasta que tengas todo el Estrés marcado o termine la escena. Mientras estés en esta forma, ganas 1d4 de bonificador a tus tiradas de acción y de daño." },
+        { name: "La Bestia Interior", text: "Cuando ganes Esperanza estando en Forma Híbrida, también marcas 1 Estrés." },
+        { name: "Concentración Bestial (Especialización)", text: "Una vez por descanso, puedes guardar una carta de dominio en tu bóveda y quitarte tanto Estrés como su coste de Recuperación." },
+        { name: "Poder Feral (Especialización)", text: "El dado de bonificador de tu Forma Híbrida pasa a ser un 1d6." },
+        { name: "Cazador Supremo (Maestría)", text: "El dado de bonificador de tu Forma Híbrida pasa a ser un 1d8." },
+        { name: "Regeneración (Maestría)", text: "Cuando tengas éxito con Esperanza estando en tu Forma Híbrida, tira 1d4. Si el resultado es mayor que tu número actual de Puntos de Vida sin marcar, te quitas 1 Punto de Vida." },
+      ],
+    },
+    {
+      key: "Orden del Mutante",
+      blurb: "Bebe toxinas mutagénicas que llevan tu cuerpo más allá de sus límites.",
+      expansion: "The Void",
+      features: [
+        { name: "Mutágenos", text: "Usas toxinas mutagénicas creadas para potenciar tus capacidades. Al terminar un descanso, puedes beber una para obtener sus efectos hasta que termines tu siguiente descanso: +1 a un rasgo que elijas, −1 a otro rasgo distinto que elijas y uno de estos beneficios: Celeridad (si estás Inmovilizado o Vulnerable, puedes marcar 1 Estrés para terminar esa condición), Resistente (tu Puntuación de Armadura aumenta en 2) o Sentidos de Cazador (tienes ventaja en las tiradas de acción para rastrear a una criatura y puedes ver en la oscuridad total)." },
+        { name: "Mutágenos Mejorados (Especialización)", text: "Al elegir el beneficio de un mutágeno, también puedes elegir: Nervios de Acero (cuando tengas que marcar Estrés, puedes gastar 2 Esperanza en su lugar), Rapidez (tu Evasión aumenta en 1) o Piel de Hierro (tu umbral Grave aumenta tanto como tu Competencia)." },
+        { name: "Toxinas Volátiles (Especialización)", text: "Puedes elegir dos beneficios de mutágeno en lugar de uno. Si lo haces, marca 1 Punto de Vida que no puedes quitarte hasta que termines tu siguiente descanso." },
+        { name: "Mutágenos Dominados (Maestría)", text: "El bonificador y la penalización a los rasgos de tus Mutágenos pasan a ser +2 y −2. Al elegir el beneficio, también puedes elegir: Sangre Etérea (ves criaturas y objetos invisibles en tu línea de visión, las ilusiones visuales te parecen transparentes y ves la forma verdadera de lo que haya transformado la magia), Furia (al hacer una tirada de ataque, puedes marcar 1 Estrés para sumar tu Competencia) o Carne de Acero (tu umbral Mayor aumenta tanto como tu Competencia)." },
+      ],
+    },
+    {
+      key: "Orden del Espectro",
+      blurb: "Camina entre el reino de los vivos y el de los muertos.",
+      expansion: "The Void",
+      features: [
+        { name: "Temple Sombrío", text: "Cuando tengas éxito con Miedo en una tirada de acción, puedes gastar 1 Esperanza para quitarte 1 Estrés." },
+        { name: "Caminante del Velo", text: "Puedes deslizarte un instante al reino que hay entre los vivos y los muertos. Marca 1 Estrés para moverte hasta alcance Cercano atravesando criaturas y objetos." },
+        { name: "Acechador del Velo (Especialización)", text: "Cuando uses tu Caminante del Velo, ahora puedes moverte a un lugar en alcance Lejano y tienes ventaja en la siguiente tirada de acción que hagas en esta escena." },
+        { name: "Curtido en el Horror (Maestría)", text: "No pueden dejarte Vulnerable a menos que tengas todo tu Estrés marcado." },
+        { name: "Forma Espectral (Maestría)", text: "Una vez por descanso largo, cuando fueras a marcar tu último Punto de Vida, puedes marcar 1 Estrés y entrar en tu Forma Espectral. En esta forma puedes atravesar la materia física y tienes resistencia al daño físico. Además, cuando fueras a marcar un Punto de Vida, marcas 1 Estrés en su lugar. Sales de esta forma si marcas tu último Estrés o te quitas un Punto de Vida." },
       ],
     },
   ],
@@ -684,6 +759,8 @@ const CLASS_EMBLEMS = {
   Brujo: Eye,
   Camorrista: HandFist,
   Asesino: Skull,
+  Invocador: Ghost,
+  "Cazador de Sangre": Droplets,
 };
 // Ilustraciones encuadradas para las cartas del paso de subclase (600×500).
 const SUBCLASS_CARD_ART = Object.fromEntries(Object.entries(SUBCLASS_ART).map(([k, v]) => [k, v.replace("/subclases/", "/subclases/cartas/")]));
@@ -784,6 +861,8 @@ const CLASS_EVASION = {
   Brujo: 11,
   Camorrista: 10,
   Asesino: 12,
+  Invocador: 10,
+  "Cazador de Sangre": 11,
 };
 
 // Guardián, Guerrero y Camorrista no tienen rasgo de conjuro.
@@ -797,6 +876,7 @@ const CLASS_SPELLCAST_TRAIT = {
   Mago: "t_knowledge",
   Bruja: "t_instinct",
   Brujo: "t_presence",
+  Invocador: "t_knowledge",
 };
 
 const CLASS_TRAIT_PRIORITY = {
@@ -813,6 +893,8 @@ const CLASS_TRAIT_PRIORITY = {
   Brujo: ["t_presence", "t_instinct", "t_knowledge", "t_agility", "t_finesse", "t_strength"],
   Camorrista: ["t_strength", "t_agility", "t_instinct", "t_finesse", "t_presence", "t_knowledge"],
   Asesino: ["t_finesse", "t_agility", "t_instinct", "t_presence", "t_knowledge", "t_strength"],
+  Invocador: ["t_knowledge", "t_finesse", "t_instinct", "t_agility", "t_presence", "t_strength"],
+  "Cazador de Sangre": ["t_agility", "t_strength", "t_instinct", "t_finesse", "t_presence", "t_knowledge"],
 };
 
 const SUBCLASS_SPELLCAST_OVERRIDE = {
@@ -820,6 +902,9 @@ const SUBCLASS_SPELLCAST_OVERRIDE = {
   "Bruja del Seto": "t_knowledge",
   "Gremio del Verdugo": "t_agility",
   "Gremio del Envenenador": "t_knowledge",
+  "Orden del Licántropo": "t_strength",
+  "Orden del Mutante": "t_agility",
+  "Orden del Espectro": "t_agility",
 };
 
 // Brujo · Favor (empieza en 3) y Dado de Patrón (d6; d8 desde el nivel 5).
@@ -882,6 +967,8 @@ const CLASS_HOPE_FEATURE = {
   Bruja: { name: "Encanto de Bruja", cost: 3, text: "Cuando tú o un aliado en alcance Lejano falléis una tirada de acción, puedes gastar 3 Esperanza para convertirla en un éxito con Miedo." },
   Brujo: { name: "Don del Patrón", cost: 3, text: "Cuando falles una tirada, puedes gastar 3 Esperanza para repetirla con ventaja." },
   Camorrista: { name: "Plantar Cara", cost: 3, text: "Gasta 3 Esperanza para intimidar a un objetivo en alcance Cercano y dejarlo temporalmente Vulnerable." },
+  Invocador: { name: "Ayuda de los Espíritus", cost: 3, text: "Gasta 3 Esperanza para conjurar ayuda de otro mundo. Reparte 2 Esperanza entre uno o más PJ en alcance Lejano y te quitas 1 Estrés." },
+  "Cazador de Sangre": { name: "Maldición de Sangre", cost: 3, text: "Gasta 3 Esperanza cuando un adversario tenga éxito en una tirada de ataque dentro de alcance Cercano para obligarle a repetirla con desventaja." },
   Asesino: { name: "Determinación Letal", cost: 3, text: "Quítate 2 de Estrés." },
 };
 
@@ -935,6 +1022,14 @@ const CLASS_FEATURES = {
     { name: "Yo Soy el Arma", text: "Tus ataques a mano desnuda son tan fuertes como cualquier hoja. Mientras no tengas otras armas activas, tienes equipada un arma principal llamada Golpe de Camorrista. Usa el rasgo que elijas, tiene alcance Cuerpo a cuerpo y hace d8+d6 de daño físico usando tu Competencia (tanto el d8 como el d6 escalan con tu Competencia). Mientras esta arma esté activa, ganas +1 a tu Evasión." },
     { name: "Golpe Combinado", text: "Después de tirar el daño de un ataque con éxito con un arma Cuerpo a cuerpo, puedes marcar 1 Estrés para empezar un golpe combinado. Tira tu Dado de Combo y anota el resultado; sigue tirándolo hasta que el último resultado sea menor que el anterior. Haces tanto daño adicional como el total de todos los resultados del Dado de Combo en este ataque, y no se pueden modificar de ninguna forma. Tu Dado de Combo empieza siendo un d4. Una vez por Rango, puedes aumentarlo un paso como opción de mejora de nivel." },
   ],
+  Invocador: [
+    { name: "Invocar Entidad", text: "Puedes invocar Entidades de otro mundo: Espíritus del Destino y otras Entidades de tu subclase. Cada Entidad está asociada a uno de tus círculos de invocación. Marca 1 Estrés para invocar tantas de tus Entidades como tu Rango y colocarlas en los círculos correspondientes. Puedes tener a la vez tantas Entidades como tu nivel. Las Entidades invocadas permanecen en alcance Muy cercano, pueden hacer tareas inofensivas dentro de ese alcance y no pueden ser objetivo de ataques. Si una tarea requiere una tirada de acción, haz una tirada de Lanzamiento de Conjuros para dar la orden a la Entidad." },
+    { name: "Primer Círculo: Espíritu del Destino", text: "Después de que un adversario en alcance Muy cercano tenga éxito en una tirada de ataque, puedes ordenar a un Espíritu del Destino que le obligue a repetir el ataque. Después, el espíritu desaparece." },
+  ],
+  "Cazador de Sangre": [
+    { name: "Rito Carmesí", text: "Marca 1 Punto de Vida para encantar una de tus armas activas con un poder sediento de sangre hasta el final de tu siguiente descanso o hasta que vuelvas a usar esta característica. Cuando tengas éxito en un ataque con el arma encantada, hace 1d4 de daño mágico adicional. Este daño aumenta a 2d4 al nivel 2, 3d4 al nivel 5 y 4d4 al nivel 8." },
+    { name: "Psicometría Siniestra", text: "Haz una tirada de Lanzamiento de Conjuros (12) para examinar un lugar en alcance Muy cercano. Si tienes éxito, tienes una visión de la última criatura que cometió un acto violento allí. Hasta que hagas un descanso largo o vuelvas a usar esta característica, tienes ventaja en las tiradas de acción para rastrearla o recordar información sobre ella." },
+  ],
   Asesino: [
     { name: "Marcado para Morir", text: "Tras acertar un ataque con arma, puedes marcar 1 Estrés para dejar al objetivo Marcado para morir: cuando le hagas daño, suma tantos d4 como tu Rango. Solo puedes marcar a un adversario a la vez; dura hasta que descanses, hasta que caiga o hasta que el DJ gaste tanto Miedo como tu Rango." },
     { name: "Entrar y Salir", text: "Gasta 1 Esperanza para preguntar al DJ por una forma rápida o discreta de entrar o salir de un lugar que puedas ver. Tu siguiente tirada que aproveche esa información tiene ventaja." },
@@ -955,6 +1050,8 @@ const CLASS_HP = {
   Brujo: 5,
   Camorrista: 6,
   Asesino: 5,
+  Invocador: 6,
+  "Cazador de Sangre": 6,
 };
 
 // Objetos de clase: se elige uno al crear el personaje.
@@ -972,6 +1069,8 @@ const CLASS_ITEMS = {
   Brujo: ["Una talla que simboliza a tu patrón", "Un anillo que no te puedes quitar"],
   Camorrista: ["Unas vendas de mano de tu mentor", "Un libro sobre tu afición secreta"],
   Asesino: ["Una lista de nombres con varios tachados", "Una hoja oxidada grabada con una insignia"],
+  Invocador: ["Un espíritu inofensivo atrapado en una botella de cristal", "Un par de monedas misteriosas"],
+  "Cazador de Sangre": ["Una aguja de acero", "Un vial con la sangre de un enemigo"],
 };
 
 // Competencia = número de dados de daño. Empieza en 1 y sube en los niveles 2, 5 y 8.
@@ -1735,6 +1834,8 @@ const CLASS_DOMAINS = {
   Brujo: ["Pavor", "Gracia"],
   Camorrista: ["Valor", "Hueso"],
   Asesino: ["Filo", "Medianoche"],
+  Invocador: ["Sangre", "Esplendor"],
+  "Cazador de Sangre": ["Sangre", "Hueso"],
 };
 
 // Solo algunos dominios tienen cartas cargadas en la app.
@@ -1743,11 +1844,13 @@ const hasDomainCards = (className) => (CLASS_DOMAINS[className] || []).some((d) 
 const maxLoadoutCards = (level) => Math.min(5, Number(level || 1) + 1);
 
 const DOMAIN_COLORS = {
+  Sangre: "#A8323E",
   Arcano: "#C77DDB",
   Sabio: "#7FB77A",
 };
 
 const DOMAIN_ICONS = {
+  Sangre: Droplets,
   Arcano: Sparkles,
   Sabio: Leaf,
 };
@@ -8847,7 +8950,7 @@ export default function App({ onSignOut }) {
                           {dead && <span className="is-dead">Caído</span>}
                           {ch.f_transformation && <span className="is-tf">{ch.f_transformation}</span>}
                           {camp && <span className="is-camp">{camp.name}</span>}
-                          {isExp && <span className="is-tf">Hope &amp; Fear</span>}
+                          {isExp && <span className="is-tf">{isExp}</span>}
                         </div>
                         {ch.f_class && (
                           <>
@@ -10080,7 +10183,7 @@ export default function App({ onSignOut }) {
                   {(c.f_class || c.f_pronouns) && (
                     <div style={{ color: "var(--mh-ink3)", fontSize: 13, marginTop: 4, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                       <span>{[c.f_class, c.f_subclass, c.f_pronouns].filter(Boolean).join(" · ")}</span>
-                      {isExpansionClass && <span className="mh-exp-tag">Hope & Fear</span>}
+                      {isExpansionClass && <span className="mh-exp-tag">{isExpansionClass}</span>}
                     </div>
                   )}
                 </div>
@@ -11692,36 +11795,6 @@ export default function App({ onSignOut }) {
                                     })}
                                   </div>
 
-                                  {isMartial(c) && (() => {
-                                    const n = Math.max(1, Number(c.t_instinct || 0));
-                                    const focus = getMFocus(c);
-                                    const refocus = () => {
-                                      const rolls = Array.from({ length: n }, () => Math.floor(Math.random() * 6) + 1);
-                                      const top = Math.min(6, Math.max(...rolls));
-                                      updateCharacterFields(viewingCharId, { f_mfocus: String(top), f_refocus_used: "1" });
-                                      postCampaignEvent(viewingCharId, `🧘 Se concentra: vacía su Concentración, tira ${rolls.join(", ")} y queda con ${top}`);
-                                    };
-                                    return (
-                                      <div className="mh-trov mh-tribute" style={{ "--tb": "#C08B5C" }}>
-                                        <div className="mh-trov-h">
-                                          <HandFist size={15} color="#C08B5C" />
-                                          <b className="mh-serif">Concentración</b>
-                                          <span className="mh-trov-tag">{focus} de 6</span>
-                                        </div>
-                                        <button type="button" className={"mh-tribute-go" + (c.f_refocus_used ? " sel" : "")} disabled={!!c.f_refocus_used} onClick={refocus}>
-                                          <span className="mh-rest-ico" style={{ "--rc": "#C08B5C" }}>
-                                            <Sparkles size={16} />
-                                          </span>
-                                          <span style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
-                                            <b>{c.f_refocus_used ? "Ya te has concentrado" : "Concentrarse · " + n + "d6"}</b>
-                                            <small>{c.f_refocus_used ? "Vuelve a estar disponible en el próximo descanso" : "Vacías tu Concentración, tiras " + n + "d6 (tu Instinto) y te quedas con el más alto"}</small>
-                                          </span>
-                                        </button>
-                                        <div className="mh-trov-f">Una vez por descanso, en un momento de calma. No ocupa una acción de descanso.</div>
-                                      </div>
-                                    );
-                                  })()}
-
                                   {c.f_class === "Brujo" && (() => {
                                     const gain = Math.max(1, Number(c[spellcastTraitFor(c.f_class, c.f_subclass)] || 0));
                                     const n = countOf("tribute");
@@ -12655,6 +12728,13 @@ export default function App({ onSignOut }) {
                           const next = known.includes(k) ? known.filter((x) => x !== k) : known.length < maxKnown ? [...known, k] : known;
                           updateCharacterField(viewingCharId, "f_stances_known", JSON.stringify(next));
                         };
+                        const refocus = () => {
+                          const n = Math.max(1, Number(c.t_instinct || 0));
+                          const rolls = Array.from({ length: n }, () => Math.floor(Math.random() * 6) + 1);
+                          const top = Math.min(6, Math.max(...rolls));
+                          updateCharacterFields(viewingCharId, { f_mfocus: String(top), f_refocus_used: "1" });
+                          postCampaignEvent(viewingCharId, `🧘 Se concentra: vacía su Concentración, tira ${rolls.join(", ")} y queda con ${top}`);
+                        };
                         const shift = (st, how) => {
                           const patch = { f_stance: st.key };
                           if (how === "focus") patch.f_mfocus = String(focus - 1);
@@ -12745,10 +12825,10 @@ export default function App({ onSignOut }) {
                                 <div className="mh-mfocus-n">
                                   <b className="mh-serif">{focus}</b> de 6
                                 </div>
-                                <button type="button" className="mh-btn-ghost" onClick={() => setDetailTab("rests")}>
-                                  <BedDouble size={14} /> {c.f_refocus_used ? "Ya te has concentrado en este descanso" : "Concentrarse en la pestaña Descanso"}
+                                <button type="button" className="mh-btn" disabled={!!c.f_refocus_used} onClick={refocus}>
+                                  <Sparkles size={14} /> {c.f_refocus_used ? "Ya te has concentrado · vuelve al descansar" : "Concentrarse · " + Math.max(1, Number(c.t_instinct || 0)) + "d6"}
                                 </button>
-                                <small className="mh-mfocus-note">Una vez por descanso, en un momento de calma, recuperas Concentración desde la pestaña Descanso.</small>
+                                <small className="mh-mfocus-note">Una vez por descanso, en un momento de calma: vacías tu Concentración, tiras tantos d6 como tu Instinto y te quedas con el más alto.</small>
                                 <div className="mh-mfocus-active">
                                   <span className="mh-label">Postura activa</span>
                                   {act ? (
@@ -17209,7 +17289,7 @@ export default function App({ onSignOut }) {
                 {(viewingCardDetail.image || viewingCardDetail.bigStyle) ? (() => {
                   // Carta enmarcada: arte en un marco, título centrado y datos al pie.
                   const d = viewingCardDetail;
-                  const cardColor = d.tier ? TIER_COLORS[d.tier].color : d.accent || "var(--acc)";
+                  const cardColor = d.brawlerStrike ? "#C08B5C" : d.tier ? TIER_COLORS[d.tier].color : d.accent || "var(--acc)";
                   const totalChars = (d.text?.length || 0) + (d.characteristic?.length || 0) + (d.features || []).reduce((sum, f) => sum + (f.name?.length || 0) + (f.text?.length || 0), 0);
                   const long = totalChars > 320;
                   const artHeight = d.weapon || d.armor ? 128 : totalChars > 600 ? 84 : long ? 100 : 124;
@@ -17217,6 +17297,8 @@ export default function App({ onSignOut }) {
                   const subtitle = d.weapon ? [d.kicker, d.weapon.hands].join(" · ") : d.domain ? d.domain.name + " · " + d.domain.type : d.kicker?.replace(/ · Nivel .*$/, "");
                   const ArtIcon = d.armor
                     ? armorIcon(d.title)
+                    : d.brawlerStrike
+                    ? HandFist
                     : d.weapon
                     ? weaponIcon(d.title)
                     : d.transformForm
@@ -17661,6 +17743,30 @@ export default function App({ onSignOut }) {
                   }
                   // Camorrista · Golpe de Camorrista: el rasgo que elijas.
                   if (d.brawlerStrike && !d.fromChat) {
+                    const bTrait = TRAITS.find((t) => t.label === (c.f_brawl_trait || "Fuerza")) || TRAITS[1];
+                    const bMods = getEquipmentMods(null, null, ARMORS.find((a) => a.key === c.f_armor));
+                    cardActs.push(
+                      {
+                        key: "bs-attack",
+                        Icon: Dices,
+                        label: "Atacar con " + bTrait.label,
+                        sub: "Cuerpo a cuerpo · " + getProficiency(c) + "d8+" + getProficiency(c) + "d6 físico",
+                        run: () => {
+                          closeCardDetail();
+                          rollTraitCheck(viewingCharId, bTrait.label, Number(c[bTrait.key] || 0) + (bMods[bTrait.key] || 0), { name: BRAWLER_STRIKE, damage: "d8+d6 físico" });
+                        },
+                      },
+                      {
+                        key: "bs-dmg",
+                        Icon: Flame,
+                        label: "Tirar daño",
+                        sub: getProficiency(c) + "d8+" + getProficiency(c) + "d6 físico",
+                        run: () => {
+                          closeCardDetail();
+                          rollWeaponDamage(BRAWLER_STRIKE, "d8+d6 físico", viewingCharId);
+                        },
+                      }
+                    );
                     TRAITS.forEach((t) =>
                       cardActs.push({
                         key: "bt-" + t.key,
@@ -18396,6 +18502,8 @@ export default function App({ onSignOut }) {
                     <div className="mh-cardc-badge">
                       {d.domain ? (
                         <span className="mh-cardc-gem" title={"Nivel " + d.domain.level}>{d.domain.level}</span>
+                      ) : d.brawlerStrike ? (
+                        <span className="mh-cardc-tier" style={{ background: "#C08B5C" }}>Sin arma</span>
                       ) : d.tier ? (
                         <span className="mh-cardc-tier" style={{ background: TIER_COLORS[d.tier].color }}>{TIER_COLORS[d.tier].label}</span>
                       ) : null}
@@ -18931,7 +19039,7 @@ export default function App({ onSignOut }) {
                           <i style={{ background: col }} />
                           <span className="mh-wz-it-n">{it.key}</span>
                           {wizardStep === "class" && <small>{(CLASS_DOMAINS[it.key] || []).join(" · ")}</small>}
-                          {it.expansion && <em>H&F</em>}
+                          {it.expansion && <em>{it.expansion === "The Void" ? "Void" : "H&F"}</em>}
                         </button>
                       );
                     })}
@@ -19136,7 +19244,7 @@ export default function App({ onSignOut }) {
                         {list.map((it) => (
                           <button key={it.key} type="button" aria-pressed={isSel(it.key)} className={"mh-wz-it" + (focus?.key === it.key ? " is-focus" : "") + (isSel(it.key) ? " is-on" : "")} onClick={() => pick(it.key)}>
                             <span className="mh-wz-it-n">{it.key}</span>
-                            {it.expansion && originTab !== "transformation" && <em>H&F</em>}
+                            {it.expansion && originTab !== "transformation" && <em>{it.expansion === "The Void" ? "Void" : "H&F"}</em>}
                             {isSel(it.key) && <Check size={13} className="mh-wz-ck" />}
                           </button>
                         ))}
