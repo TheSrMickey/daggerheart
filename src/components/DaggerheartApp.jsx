@@ -302,7 +302,19 @@ const SUBCLASSES = {
         { name: "Perdición Drenante (Maestría)", text: "Cuando un adversario te ataque a ti o a un aliado en alcance Muy cercano, puedes gastar 1 Favor para Drenarlo. Si lo haces, debe marcar 1 Estrés y tú puedes quitarte 1 Estrés. Mientras esté Drenado, el objetivo usa un d12 en lugar de un d20 en sus tiradas de ataque (también para la ventaja o la desventaja) hasta que falle una tirada." },
       ],
     },
-    { key: "Pacto del Iracundo", blurb: "Destruye a quien se atreva a enfrentarlo.", expansion: "Hope & Fear" },
+    {
+      key: "Pacto del Iracundo",
+      blurb: "Destruye a quienes actúan contra ti.",
+      expansion: "Hope & Fear",
+      features: [
+        { name: "Furia del Patrón", text: "Gasta 1 Favor para imbuir tus ataques con el poder de tu Patrón hasta que hagas daño Grave o termine la escena. Mientras este efecto esté activo, cuando tires daño también tiras tantos Dados de Patrón como tu Rango y sumas su total al daño." },
+        { name: "Venganza Letal", text: "Cuando marques Puntos de Vida por un ataque, puedes gastar 1 Favor para tirar tantos Dados de Patrón como Puntos de Vida hayas marcado. Por cada resultado de 4 o más, el atacante marca 1 Punto de Vida." },
+        { name: "Alcance Amenazador (Especialización)", text: "Gasta 1 Favor para aumentar en un paso el alcance de tu arma principal (por ejemplo, de Cuerpo a cuerpo a Muy cercano, o de Muy cercano a Cercano), hasta un máximo de Muy lejano. El efecto termina cuando aciertas un ataque con esa arma." },
+        { name: "Merma a mis Enemigos (Especialización)", text: "Cuando tengas éxito con Esperanza en una tirada de acción contra un objetivo, puedes gastar cualquier cantidad de Favor para obligarle a marcar el mismo número de Estrés." },
+        { name: "Ataque Temible (Maestría)", text: "Gasta 1 Favor para repetir los dados de daño que quieras. Puedes seguir gastando Favor para usar esta característica en la misma tirada de daño." },
+        { name: "Ira de Otro Mundo (Maestría)", text: "Una vez por descanso, cuando recibas daño, puedes gastar cualquier cantidad de Favor para tirar ese número de Dados de Patrón y elegir como objetivo a tantas criaturas en alcance Cercano como el resultado más alto. Cada objetivo debe marcar 1 Punto de Vida." },
+      ],
+    },
   ],
   Camorrista: [
     { key: "Titán", blurb: "Aplasta a sus rivales a base de golpes contundentes.", expansion: "Hope & Fear" },
@@ -406,7 +418,7 @@ const ANCESTRIES = [
   { key: "Simiah", blurb: "Humanoide parecido a un mono o un simio, de extremidades largas y pies prensiles con los que se comunica, trabaja y lucha; un trepador excelente.", features: [{ name: "Trepador Nato", text: "Tienes ventaja en las tiradas de Agilidad que impliquen mantener el equilibrio y trepar." }, { name: "Ágil", text: "Ganas un bonificador permanente de +1 a tu Evasión al crear el personaje." }] },
   { key: "Gnomo", blurb: "Humanoide pequeño de cabeza cónica, orejas suavemente puntiagudas, ojos grandes y brazos y manos proporcionalmente largos, capaz de teletransportarse a distancias cortas.", expansion: "Hope & Fear", features: [{ name: "Dedos Ágiles", text: "Cuando hagas una tirada de Destreza, puedes gastar 2 Esperanza para repetir tu Dado de Esperanza." }, { name: "Paso Fugaz", text: "Una vez por escena, puedes teletransportarte a otro punto que puedas ver dentro de alcance Lejano." }] },
   { key: "Aetheris", blurb: "Humanoide descendiente de los ángeles de los Cielos Sagrados, reconocible por sus alas y sus marcas sagradas, que emana un aura bendita.", expansion: "Hope & Fear", features: [{ name: "Aura Sagrada", text: "Una vez por descanso largo, cuando un aliado en alcance Cercano saque una tirada con Miedo, puedes convertirla en una tirada con Esperanza." }, { name: "Alas Celestiales", text: "Tienes alas que te permiten volar. Una vez por escena mientras vuelas, puedes gastar 1 Esperanza en lugar de marcar una casilla de Armadura." }] },
-  { key: "Estirpe del Cielo", blurb: "Vinculado a las corrientes de aire y las alturas.", expansion: "Hope & Fear", features: [{ name: "Fuerza del Vendaval", text: "Marca 1 Estrés para invocar una ráfaga que te lleva a ti o a un aliado Muy cercano hasta alcance Muy lejano. Además, siempre controlas la velocidad de tus caídas." }, { name: "Ojo de la Tormenta", text: "Gasta 2 Esperanza para darte a ti o a un aliado Cuerpo a cuerpo +1 a la Evasión hasta que recibáis daño Grave o vuelvas a usarlo." }] },
+  { key: "Estirpe del Cielo", blurb: "Humanoide de carne y aire descendiente de los elementales del aire, de piel que cambia de color como el cielo y cabello que flota como humo o nubes.", expansion: "Hope & Fear", features: [{ name: "Fuerza del Vendaval", text: "Marca 1 Estrés para invocar una ráfaga que te lleva a ti o a un aliado Muy cercano hasta alcance Muy lejano. Además, siempre controlas la velocidad de tus caídas." }, { name: "Ojo de la Tormenta", text: "Gasta 2 Esperanza para darte a ti o a un aliado Cuerpo a cuerpo +1 a la Evasión hasta que recibáis daño Grave o vuelvas a usarlo." }] },
   { key: "Estirpe de la Marea", blurb: "Vinculado al mar y al ritmo de las mareas.", expansion: "Hope & Fear", features: [{ name: "Anfibio", text: "Puedes respirar y moverte con normalidad bajo el agua." }, { name: "Manantial de Vida", text: "Una vez por descanso, si tienes acceso a un poco de agua, puedes marcar 1 Estrés para quitar 1 Punto de vida a ti o a un aliado en alcance Muy cercano." }] },
   { key: "Estirpe de la Tierra", blurb: "Vinculado a la roca y a las profundidades del suelo.", expansion: "Hope & Fear", features: [{ name: "Piel de Piedra", text: "Ganas un +1 permanente a tu Puntuación de Armadura y a tus umbrales de daño al crear el personaje." }, { name: "Inamovible", text: "Mientras toques el suelo, no pueden levantarte ni moverte contra tu voluntad." }] },
   { key: "Estirpe de la Brasa", blurb: "Vinculado al fuego y al calor de las brasas.", expansion: "Hope & Fear", features: [{ name: "Ignífugo", text: "Eres inmune al daño de fuego, mágico o normal." }, { name: "Ignición", text: "Marca 1 Estrés para envolver tu arma principal en llamas hasta el final de la escena: da luz brillante y +1d6 a las tiradas de daño con esa arma." }] },
@@ -523,6 +535,12 @@ const getContacts = (c) => {
 // Gigante · Alcance: lo que tenga alcance Cuerpo a cuerpo cuenta como Muy cercano.
 const isGiant = (c) => (c?.f_ancestry || "").split(" + ").includes("Gigante");
 const reachFor = (c, range) => (range === "Cuerpo a cuerpo" && isGiant(c) ? "Muy cercano" : range);
+// Pacto del Iracundo · Alcance Amenazador: el arma principal sube un paso de alcance (máximo Muy lejano).
+const RANGE_STEPS = ["Cuerpo a cuerpo", "Muy cercano", "Cercano", "Lejano", "Muy lejano"];
+const reachStep = (range) => {
+  const i = RANGE_STEPS.indexOf(range);
+  return i < 0 ? range : RANGE_STEPS[Math.min(RANGE_STEPS.length - 1, i + 1)];
+};
 
 // Guerrero · Entrenamiento de Combate: ignora la carga (puede llevar arma a dos manos y secundaria).
 const ignoresBurden = (cls) => cls === "Guerrero";
@@ -2733,6 +2751,13 @@ const sharedStyles = `
   .mh-glamour-btn { background: #8C7FD0; }
   .mh-walk-btn { background: #6E8A6A; }
   .mh-favor-btn { background: #B55FA0; }
+  .mh-fury-btn { background: #B55FA0; }
+  .mh-fury-btn:hover:not(:disabled) { background: #9C4D89; }
+  .mh-fury-btn.is-alt { background: transparent; color: #9C4D89; border: 1.5px solid #B55FA0; }
+  .mh-fury-btn:disabled { opacity: .5; cursor: not-allowed; }
+  .mh-ire { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--mh-line); display: flex; flex-direction: column; gap: 6px; }
+  .mh-ire b { font: 700 13px "Cinzel", Georgia, serif; color: #9C4D89; }
+  .mh-ire small { font-size: 11px; color: var(--mh-muted); line-height: 1.4; }
   .mh-favor-btn:hover:not(:disabled) { background: #9C4D89; }
   .mh-favor-btn.is-alt { background: #7E4A8C; }
   .mh-patron-foot { flex-direction: column; gap: 6px; padding: 9px 12px; }
@@ -3792,6 +3817,9 @@ function DamageResult({ roll }) {
         {(roll.sneakRolls || []).map((v, i) => (
           <DieFace key={"s" + i} sides={6} value={v} color="#4F5D78" size={size} rolling={false} highlight={v === 6} label={i === 0 ? "Furtivo" : undefined} />
         ))}
+        {(roll.furyRolls || []).map((v, i) => (
+          <DieFace key={"fu" + i} sides={roll.furySides || 6} value={v} color="#B55FA0" size={size} rolling={false} highlight={v === (roll.furySides || 6)} label={i === 0 ? "Furia" : undefined} />
+        ))}
         {(roll.fearRolls || []).map((v, i) => (
           <DieFace key={"f" + i} sides={10} value={v} color="#7A5BC2" size={size} rolling={false} highlight={v === 10} label={i === 0 ? "Miedo" : undefined} />
         ))}
@@ -3812,6 +3840,7 @@ function DamageResult({ roll }) {
             {roll.kickRolls ? ` + 2d6 (${roll.kickRolls.join(" + ")}) (Coz)` : ""}
             {roll.tuskRoll ? ` + 1d6 (${roll.tuskRoll}) (Colmillos)` : ""}
             {roll.fearRolls ? ` + ${roll.fearRolls.length}d10 (${roll.fearRolls.join(" + ")}) (Enfrenta tu Miedo)` : ""}
+            {roll.furyRolls ? ` + ${roll.furyRolls.length}d${roll.furySides} (${roll.furyRolls.join(" + ")}) (Furia del Patrón)` : ""}
             {roll.wingRoll ? ` + 1d${roll.wingSides} (${roll.wingRoll}) (Alas de Luz)` : ""}
             {roll.rawBonus ? ` + ${roll.rawBonus} (Poder en Bruto)` : ""}
             {roll.sneakRolls ? ` + ${roll.sneakRolls.length}d6 (${roll.sneakRolls.join(" + ")}) (Furtivo)` : ""}
@@ -5288,6 +5317,11 @@ export default function App({ onSignOut }) {
     }
     // Bruja Lunar · Glamour Nocturno: al marcar Puntos de vida se pregunta si se mantiene.
     if (cur.f_glamour === "1" && Number(next.hp_marked || 0) > Number(cur.hp_marked || 0)) setGlamourAsk({ id, why: "Has marcado Puntos de Vida" });
+    // Estirpe del Cielo · Ojo de la Tormenta: termina al recibir daño Grave.
+    if (cur.f_storm_eye === "1" && Number(next.hp_marked || 0) - Number(cur.hp_marked || 0) >= 3) {
+      next.f_storm_eye = "";
+      postCampaignEvent(id, "🌪️ Recibe daño Grave: pierde el +1 a la Evasión del Ojo de la Tormenta");
+    }
     // Pacto del Eterno · Manto del Patrón: termina al recibir daño Grave.
     if (cur.f_mantle === "1" && Number(next.hp_marked || 0) - Number(cur.hp_marked || 0) >= 3) {
       next.f_mantle = "";
@@ -5307,6 +5341,8 @@ export default function App({ onSignOut }) {
     if (hpAfter > hpBefore) {
       const key = Date.now() + Math.random();
       setHpHit({ key, id, amount: hpAfter - hpBefore });
+      // Pacto del Iracundo · Venganza Letal (e Ira de Otro Mundo en Maestría): se ofrece al marcar PV.
+      if (next.f_subclass === "Pacto del Iracundo" && getFavor(next) > 0) setVengeAsk({ id, n: hpAfter - hpBefore, rolls: null, ire: null });
       setTimeout(() => setHpHit((h) => (h && h.key === key ? null : h)), 1400);
     }
     const gains = {
@@ -5537,6 +5573,11 @@ export default function App({ onSignOut }) {
     }
     // Bruja Lunar · Glamour Nocturno: al marcar Puntos de vida se pregunta si se mantiene.
     if (cur.f_glamour === "1" && Number(next.hp_marked || 0) > Number(cur.hp_marked || 0)) setGlamourAsk({ id, why: "Has marcado Puntos de Vida" });
+    // Estirpe del Cielo · Ojo de la Tormenta: termina al recibir daño Grave.
+    if (cur.f_storm_eye === "1" && Number(next.hp_marked || 0) - Number(cur.hp_marked || 0) >= 3) {
+      next.f_storm_eye = "";
+      postCampaignEvent(id, "🌪️ Recibe daño Grave: pierde el +1 a la Evasión del Ojo de la Tormenta");
+    }
     // Pacto del Eterno · Manto del Patrón: termina al recibir daño Grave.
     if (cur.f_mantle === "1" && Number(next.hp_marked || 0) - Number(cur.hp_marked || 0) >= 3) {
       next.f_mantle = "";
@@ -5710,13 +5751,16 @@ export default function App({ onSignOut }) {
     // Hechicero · Canalizar Poder en Bruto: bono guardado para el próximo daño mágico.
     const rawBonus = ch && damageType === "mágico" ? Number(ch.f_raw_dmg || 0) : 0;
     if (rawBonus) updateCharacterField(charId, "f_raw_dmg", "");
+    // Pacto del Iracundo · Furia del Patrón: tantos Dados de Patrón como tu Rango.
+    const furyRolls = !opts.plain && ch && ch.f_fury === "1" ? Array.from({ length: tierForLevel(ch.f_level || 1) }, () => Math.floor(Math.random() * patronSides(ch)) + 1) : null;
+    const furyBonus = furyRolls ? furyRolls.reduce((a, b) => a + b, 0) : 0;
     const fearRolls = opts.fearDice ? Array.from({ length: opts.fearDice }, () => Math.floor(Math.random() * 10) + 1) : null;
     const fearBonus = fearRolls ? fearRolls.reduce((a, b) => a + b, 0) : 0;
-    const total = roll + bonus + critBonus + wolfBonus + unstopBonus + sneakBonus + rawBonus + fearBonus;
-    setDamageRollResult({ fearRolls, rawBonus, sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, doublePick: !!opts.doublePick, charged: ch && ch.f_subclass === "Origen Primigenio" && ch.f_charged === "1" && damageType === "mágico", note: resonance ? "Resonancia Sagrada: los dados repetidos valen el doble" : opts.extraFlat ? "Incluye +" + opts.extraFlat + " de Elementalista" : waxBonus ? "Incluye +2 de la Luna Creciente" : opts.note || "", spirit: !!opts.spirit });
+    const total = roll + bonus + critBonus + wolfBonus + unstopBonus + sneakBonus + rawBonus + fearBonus + furyBonus;
+    setDamageRollResult({ furyRolls, furySides: ch ? patronSides(ch) : 6, fearRolls, rawBonus, sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, doublePick: !!opts.doublePick, charged: ch && ch.f_subclass === "Origen Primigenio" && ch.f_charged === "1" && damageType === "mágico", note: resonance ? "Resonancia Sagrada: los dados repetidos valen el doble" : opts.extraFlat ? "Incluye +" + opts.extraFlat + " de Elementalista" : waxBonus ? "Incluye +2 de la Luna Creciente" : opts.note || "", spirit: !!opts.spirit });
     const who = playerName || "Alguien en la mesa";
     const critLabel = isCritical ? ` · ¡Crítico! (+${critBonus} máx.)` : "";
-    const diceLabel = `${dice}d${die} (${rolls.join("+")})` + (fearRolls ? ` + Enfrenta tu Miedo ${fearRolls.length}d10 (${fearRolls.join("+")}) mágico` : "") + (wolfBonus ? ` + Lobo 1d10 (${wolfBonus})` : "") + (unstopBonus ? ` + Imparable ${unstopBonus}` : "") + (sneakRolls ? ` + Furtivo ${sneakRolls.length}d6 (${sneakRolls.join("+")})` : "");
+    const diceLabel = `${dice}d${die} (${rolls.join("+")})` + (furyRolls ? ` + Furia ${furyRolls.length}d${patronSides(ch)} (${furyRolls.join("+")})` : "") + (fearRolls ? ` + Enfrenta tu Miedo ${fearRolls.length}d10 (${fearRolls.join("+")}) mágico` : "") + (wolfBonus ? ` + Lobo 1d10 (${wolfBonus})` : "") + (unstopBonus ? ` + Imparable ${unstopBonus}` : "") + (sneakRolls ? ` + Furtivo ${sneakRolls.length}d6 (${sneakRolls.join("+")})` : "");
     await pushRollLog(
       `**${who}** — Daño de ${weaponName}: ${diceLabel}${bonus ? " + " + bonus : ""}${critLabel} = **${total}** ${damageType}`
     );
@@ -7529,6 +7573,7 @@ export default function App({ onSignOut }) {
   const [hexDraft, setHexDraft] = useState("");
   const [talismanDlg, setTalismanDlg] = useState(null); // Bruja del Seto · Talismán Encantado
   const [embraceDlg, setEmbraceDlg] = useState(null); // Pacto del Eterno · Abrazo Inmortal
+  const [vengeAsk, setVengeAsk] = useState(null); // Pacto del Iracundo · Venganza Letal / Ira de Otro Mundo
   const getVault = (c) => {
     try {
       return JSON.parse(c?.f_domain_vault || "[]");
@@ -7723,6 +7768,8 @@ export default function App({ onSignOut }) {
     if (c.f_phase_bump_used) restPatch.f_phase_bump_used = "";
     if (isLong && c.f_commune_used) restPatch.f_commune_used = "";
     if (c.f_mantle) restPatch.f_mantle = "";
+    if (c.f_fury) restPatch.f_fury = "";
+    if (c.f_ire_used) restPatch.f_ire_used = "";
     if (c.f_celestial_used) restPatch.f_celestial_used = "";
     if (isLong && c.f_aura_used) restPatch.f_aura_used = "";
     if (c.f_embrace_used) restPatch.f_embrace_used = "";
@@ -9699,6 +9746,8 @@ export default function App({ onSignOut }) {
           equipMods.severe = (equipMods.severe || 0) + 3;
         }
         if (phaseC && phaseC.name === "Menguante") equipMods.evasion = (equipMods.evasion || 0) + 1;
+        // Estirpe del Cielo · Ojo de la Tormenta.
+        if (c.f_storm_eye === "1") equipMods.evasion = (equipMods.evasion || 0) + 1;
         // Pacto del Eterno · Manto del Patrón: +Rango a los umbrales.
         if (c.f_mantle === "1") {
           const tM = tierForLevel(c.f_level || 1);
@@ -9858,6 +9907,16 @@ export default function App({ onSignOut }) {
                       </span>
                     );
                   })()}
+                  {c.f_fury === "1" && (
+                    <span className="mh-htag is-active" style={{ "--tag": "#B55FA0" }} title="Furia del Patrón: tus tiradas de daño suman tantos Dados de Patrón como tu Rango, hasta hacer daño Grave o terminar la escena">
+                      <span className="mh-htag-dot" /> Furia del Patrón
+                    </span>
+                  )}
+                  {c.f_reach === "1" && (
+                    <span className="mh-htag is-active" style={{ "--tag": "#B55FA0" }} title="Alcance Amenazador: tu arma principal alcanza un paso más lejos hasta que aciertes con ella">
+                      <span className="mh-htag-dot" /> Alcance Amenazador
+                    </span>
+                  )}
                   {c.f_mantle === "1" && (
                     <span className="mh-htag is-active" style={{ "--tag": "#B55FA0" }} title="Manto del Patrón: +Rango a tus umbrales y ventaja para intimidar, hasta recibir daño Grave o terminar la escena">
                       <span className="mh-htag-dot" /> Manto del Patrón
@@ -10149,6 +10208,11 @@ export default function App({ onSignOut }) {
                                   {Number(c.f_natural_evade || 0) > 0 && (
                                     <button type="button" className="mh-wing-chip" style={{ background: (ORIGIN_ELEMENTS.find((e) => e.key === c.f_origin_element) || {}).color || "#5FA77A" }} title="Evasión Natural: solo contra este ataque. Pulsa para quitarla." onClick={() => updateCharacterField(viewingCharId, "f_natural_evade", "")}>
                                       +{c.f_natural_evade} este ataque <X size={9} strokeWidth={2.6} />
+                                    </button>
+                                  )}
+                                  {c.f_storm_eye === "1" && (
+                                    <button type="button" className="mh-dodge-chip" style={{ top: "auto", bottom: 6, background: "#6F9FC4" }} title="Ojo de la Tormenta: +1 a la Evasión hasta recibir daño Grave o volver a usarlo. Pulsa para quitarlo." onClick={() => updateCharacterField(viewingCharId, "f_storm_eye", "")}>
+                                      +1 Tormenta <X size={9} strokeWidth={2.6} />
                                     </button>
                                   )}
                                   {dodgeOn && (
@@ -10696,10 +10760,11 @@ export default function App({ onSignOut }) {
                                   const [featName, ...featRest] = (w.feature || "").split(":");
                                   const featTone = w.mods && Object.values(w.mods).some((v) => v < 0) ? " is-neg" : w.mods ? " is-pos" : "";
                                   const TileIcon = isArmor ? armorIcon(w.key) : weaponIcon(w.key);
+                                  const rng = !isArmor && slot.label === "Arma principal" && c.f_reach === "1" ? reachStep(reachFor(c, w.range)) : reachFor(c, w.range);
                                   const desc = isArmor
                                     ? `Puntuación ${w.score} · Umbrales base ${w.major}/${w.severe}`
                                     : w.trait !== "—"
-                                    ? `${w.trait} · ${reachFor(c, w.range)} · ${w.damage} · ${handsLabel}`
+                                    ? `${w.trait} · ${rng} · ${w.damage} · ${handsLabel}`
                                     : `${w.damage} · ${handsLabel}`;
                                   const openCard = () =>
                                     setViewingCardDetail(
@@ -10709,7 +10774,7 @@ export default function App({ onSignOut }) {
                                             kicker: slot.label,
                                             title: w.key,
                                             text: desc,
-                                            weapon: { damage: w.damage, trait: w.trait, range: reachFor(c, w.range), hands: handsLabel },
+                                            weapon: { damage: w.damage, trait: w.trait, range: rng, hands: handsLabel },
                                             showCharacteristic: true,
                                             characteristic: w.feature,
                                             bigStyle: true,
@@ -10742,7 +10807,7 @@ export default function App({ onSignOut }) {
                                               {!isArmor && dmgParts?.[2] && <small> {dmgParts[2]}</small>}
                                             </div>
                                           </div>
-                                          <div className="mh-eq-foot">{isArmor ? `Umbrales ${w.major} / ${w.severe}` : w.trait !== "—" ? `${w.trait} · ${reachFor(c, w.range)}` : reachFor(c, w.range)}</div>
+                                          <div className="mh-eq-foot">{isArmor ? `Umbrales ${w.major} / ${w.severe}` : w.trait !== "—" ? `${w.trait} · ${rng}` : rng}</div>
                                         </div>
                                         {w.feature && (
                                           <div className={"mh-eq-feat" + featTone} title={w.feature}>
@@ -10928,7 +10993,7 @@ export default function App({ onSignOut }) {
                               kicker: `Subclase · ${subclassBadge}`,
                               title: subclassEntry.key,
                               text: subclassEntry.blurb,
-                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento", "Escuela de la Guerra", "Bruja Lunar", "Bruja del Seto", "Pacto del Eterno"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
+                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento", "Escuela de la Guerra", "Bruja Lunar", "Bruja del Seto", "Pacto del Eterno", "Pacto del Iracundo"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
                               image: subclassEntry.image,
                               bigStyle: true,
                               ...(isElemental ? { elementalAction: true } : {}),
@@ -10945,6 +11010,7 @@ export default function App({ onSignOut }) {
                               ...(subclassEntry.key === "Bruja Lunar" ? { moonActs: true } : {}),
                               ...(subclassEntry.key === "Bruja del Seto" ? { hedgeActs: true } : {}),
                               ...(subclassEntry.key === "Pacto del Eterno" ? { endlessActs: true } : {}),
+                              ...(subclassEntry.key === "Pacto del Iracundo" ? { wrathActs: true } : {}),
                             }),
                           });
                         }
@@ -13529,6 +13595,96 @@ export default function App({ onSignOut }) {
               );
             })()}
 
+            {vengeAsk && characters[vengeAsk.id] && (() => {
+              const me = characters[vengeAsk.id];
+              const V = vengeAsk;
+              const close = () => setVengeAsk(null);
+              const fav = getFavor(me);
+              const sides = patronSides(me);
+              const ireOk = tierForLevel(me.f_level || 1) >= 3 && !me.f_ire_used;
+              const ireN = Math.min(V.ireN || 1, Math.max(1, fav));
+              const venge = () => {
+                const rolls = Array.from({ length: V.n }, () => Math.floor(Math.random() * sides) + 1);
+                const hits = rolls.filter((v) => v >= 4).length;
+                updateCharacterField(V.id, "f_favor", String(fav - 1));
+                setVengeAsk((x) => ({ ...x, rolls, hits }));
+                postCampaignEvent(V.id, `⚔️ Venganza Letal: gasta 1 Favor y tira ${rolls.join(", ")}: el atacante marca ${hits} Punto${hits === 1 ? "" : "s"} de Vida`);
+              };
+              const ire = () => {
+                const rolls = Array.from({ length: ireN }, () => Math.floor(Math.random() * sides) + 1);
+                const top = Math.max(...rolls);
+                updateCharacterFields(V.id, { f_favor: String(getFavor(charsRef.current[V.id]) - ireN), f_ire_used: "1" });
+                setVengeAsk((x) => ({ ...x, ire: { rolls, top } }));
+                postCampaignEvent(V.id, `🌩️ Ira de Otro Mundo: gasta ${ireN} Favor y tira ${rolls.join(", ")}: hasta ${top} criatura${top === 1 ? "" : "s"} en alcance Cercano marcan 1 Punto de Vida`);
+              };
+              return (
+                <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 47, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)" }} onClick={close}>
+                  <div className="mh-card mh-renew mh-commune" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Venganza Letal">
+                    <div className="mh-pre-h">
+                      <span className="mh-pre-ic" style={{ background: "color-mix(in srgb, #B55FA0 16%, var(--mh-panel))", color: "#B55FA0" }}>
+                        <Swords size={17} />
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <b className="mh-serif">Has marcado {V.n} Punto{V.n === 1 ? "" : "s"} de Vida</b>
+                        <small>Si ha sido por un ataque, tu patrón puede vengarte. Tienes {fav} de Favor.</small>
+                      </div>
+                      <button type="button" className="mh-inv-x" aria-label="Cerrar" onClick={close}>
+                        <X size={16} />
+                      </button>
+                    </div>
+                    {!V.rolls ? (
+                      <button type="button" className="mh-btn" style={{ width: "100%" }} disabled={fav < 1} onClick={venge}>
+                        <Dices size={15} /> Venganza Letal · 1 Favor · {V.n}d{sides}
+                      </button>
+                    ) : (
+                      <>
+                        <div className="mh-commune-dice">
+                          {V.rolls.map((v, k) => (
+                            <button key={k} type="button" className={v >= 4 ? "is-on" : ""} disabled>
+                              {v}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="mh-commune-res">El atacante marca {V.hits} Punto{V.hits === 1 ? "" : "s"} de Vida</div>
+                      </>
+                    )}
+                    {ireOk && !V.ire && getFavor(me) > 0 && (
+                      <div className="mh-ire">
+                        <b>Ira de Otro Mundo</b>
+                        <small>Una vez por descanso: gasta Favor, tira ese número de Dados de Patrón y tantas criaturas en alcance Cercano como el resultado más alto marcan 1 PV.</small>
+                        <div className="mh-talisman-step">
+                          <button type="button" aria-label="Menos" disabled={ireN <= 1} onClick={() => setVengeAsk((x) => ({ ...x, ireN: Math.max(1, (x.ireN || 1) - 1) }))}>
+                            <Minus size={14} />
+                          </button>
+                          <span>
+                            <b>{ireN}</b> Favor
+                          </span>
+                          <button type="button" aria-label="Más" disabled={ireN >= getFavor(me)} onClick={() => setVengeAsk((x) => ({ ...x, ireN: Math.min(getFavor(me), (x.ireN || 1) + 1) }))}>
+                            <Plus size={14} />
+                          </button>
+                        </div>
+                        <button type="button" className="mh-btn-ghost" style={{ width: "100%" }} disabled={getFavor(me) < 1} onClick={ire}>
+                          <Dices size={14} /> Tirar {ireN}d{sides}
+                        </button>
+                      </div>
+                    )}
+                    {V.ire && (
+                      <>
+                        <div className="mh-commune-dice">
+                          {V.ire.rolls.map((v, k) => (
+                            <button key={k} type="button" className={v === V.ire.top ? "is-on" : ""} disabled>
+                              {v}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="mh-commune-res">Hasta {V.ire.top} criatura{V.ire.top === 1 ? "" : "s"} en alcance Cercano marcan 1 Punto de Vida</div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
             {embraceDlg && (() => {
               const me = characters[viewingCharId];
               if (!me) return null;
@@ -14792,6 +14948,32 @@ export default function App({ onSignOut }) {
                       );
                     })()}
                     {(() => {
+                      // Pacto del Iracundo · Merma a mis Enemigos: éxito con Esperanza, Favor para que el objetivo marque Estrés.
+                      const r = traitRollResult;
+                      const rc = characters[r.charId];
+                      if (!rc || rc.f_subclass !== "Pacto del Iracundo" || tierForLevel(rc.f_level || 1) < 2 || r.reaction || !(r.hope >= r.fear)) return null;
+                      const okD = r.hope === r.fear ? true : r.card?.dc != null ? r.total >= r.card.dc : null;
+                      if (okD === false) return null;
+                      const fav = getFavor(rc);
+                      return (
+                        <button
+                          type="button"
+                          className="mh-luck-btn mh-favor-btn is-alt"
+                          disabled={fav < 1}
+                          onClick={() => {
+                            const cur = charsRef.current[r.charId];
+                            const n = (r.diminish || 0) + 1;
+                            updateCharacterField(r.charId, "f_favor", String(Math.max(0, getFavor(cur) - 1)));
+                            setTraitRollResult((prev) => (prev ? { ...prev, diminish: n } : prev));
+                            postCampaignEvent(r.charId, `😈 Merma a mis Enemigos: gasta 1 Favor y el objetivo marca 1 Estrés${n > 1 ? " (" + n + " en total)" : ""}`);
+                          }}
+                        >
+                          <Zap size={15} /> Merma a mis Enemigos · 1 Favor
+                          <small>{r.diminish ? "El objetivo marca " + r.diminish + " Estrés · puedes seguir" : (okD ? "Éxito con Esperanza" : "Si has tenido éxito") + " · el objetivo marca 1 Estrés"}</small>
+                        </button>
+                      );
+                    })()}
+                    {(() => {
                       // Brujo · Don del Patrón: al fallar, 3 Esperanza para repetir con ventaja.
                       const r = traitRollResult;
                       const rc = characters[r.charId];
@@ -15127,6 +15309,11 @@ export default function App({ onSignOut }) {
                             }
                             const spirit = !!traitRollResult.weapon.spirit;
                             const rc = characters[charId];
+                            // Alcance Amenazador termina al acertar con el arma principal.
+                            if (rc && rc.f_reach === "1" && name === rc.f_primary_weapon) {
+                              updateCharacterField(charId, "f_reach", "");
+                              postCampaignEvent(charId, "🗡️ Acierta con su arma principal: termina su Alcance Amenazador");
+                            }
                             // Escuela de la Guerra · Enfrenta tu Miedo: éxito con Miedo = +1d10/2d10/3d10 de daño mágico.
                             const fearHit = rc && rc.f_subclass === "Escuela de la Guerra" && !traitRollResult.reaction && !traitRollResult.flipped && traitRollResult.fear > traitRollResult.hope;
                             const fearDice = fearHit ? tierForLevel(rc.f_level || 1) : 0;
@@ -15352,6 +15539,67 @@ export default function App({ onSignOut }) {
                             +3 Dificultad de la reacción
                           </button>
                         </span>
+                      </div>
+                    );
+                  })()}
+                  {(() => {
+                    // Pacto del Iracundo · Furia del Patrón: termina al hacer daño Grave.
+                    const dr = damageRollResult;
+                    const wc = dr.charId ? characters[dr.charId] : null;
+                    if (!wc || !dr.furyRolls) return null;
+                    if (wc.f_fury !== "1") return <div className="mh-kick-done" style={{ color: "#B55FA0" }}>Furia del Patrón terminada</div>;
+                    return (
+                      <button
+                        type="button"
+                        className="mh-kick-btn mh-fury-btn is-alt"
+                        onClick={() => {
+                          updateCharacterField(dr.charId, "f_fury", "");
+                          postCampaignEvent(dr.charId, "🔥 Hace daño Grave: termina su Furia del Patrón");
+                        }}
+                      >
+                        <Flame size={14} /> ¿Daño Grave? Termina la Furia
+                      </button>
+                    );
+                  })()}
+                  {(() => {
+                    // Pacto del Iracundo · Ataque Temible (Maestría): 1 Favor para repetir dados de daño, tantas veces como quieras.
+                    const dr = damageRollResult;
+                    const wc = dr.charId ? characters[dr.charId] : null;
+                    if (!wc || wc.f_subclass !== "Pacto del Iracundo" || tierForLevel(wc.f_level || 1) < 3) return null;
+                    const fav = getFavor(wc);
+                    const rolls = dr.rolls || [dr.roll];
+                    const pick = dr.fearsomePick;
+                    if (!pick)
+                      return (
+                        <button type="button" className="mh-kick-btn mh-fury-btn" disabled={fav < 1} onClick={() => setDamageRollResult((r) => (r ? { ...r, fearsomePick: [] } : r))}>
+                          <Skull size={14} /> Ataque Temible · 1 Favor{dr.fearsomeN ? " (" + dr.fearsomeN + " usado" + (dr.fearsomeN > 1 ? "s" : "") + ")" : ""}
+                        </button>
+                      );
+                    return (
+                      <div className="mh-volatile">
+                        <small>Elige los dados que repites</small>
+                        <span className="mh-volatile-dice">
+                          {rolls.map((v, k) => (
+                            <button key={k} type="button" className={pick.includes(k) ? "is-on" : ""} onClick={() => setDamageRollResult((r) => (r ? { ...r, fearsomePick: r.fearsomePick.includes(k) ? r.fearsomePick.filter((x) => x !== k) : [...r.fearsomePick, k] } : r))}>
+                              {v}
+                            </button>
+                          ))}
+                        </span>
+                        <button
+                          type="button"
+                          className="mh-kick-btn mh-fury-btn"
+                          disabled={!pick.length}
+                          onClick={() => {
+                            const next = rolls.map((v, k) => (pick.includes(k) ? Math.floor(Math.random() * dr.die) + 1 : v));
+                            const sumOld = rolls.reduce((a, b) => a + b, 0);
+                            const sumNew = next.reduce((a, b) => a + b, 0);
+                            setDamageRollResult((r) => (r ? { ...r, rolls: next, roll: sumNew, total: r.total - sumOld + sumNew, fearsomePick: null, fearsomeN: (r.fearsomeN || 0) + 1 } : r));
+                            updateCharacterField(dr.charId, "f_favor", String(Math.max(0, fav - 1)));
+                            postCampaignEvent(dr.charId, `💀 Ataque Temible: gasta 1 Favor y repite ${pick.length} dado${pick.length > 1 ? "s" : ""} de daño (${pick.map((k) => rolls[k]).join(", ")} → ${pick.map((k) => next[k]).join(", ")}). Daño total ${dr.total - sumOld + sumNew}`);
+                          }}
+                        >
+                          Repetir {pick.length || ""} · 1 Favor
+                        </button>
                       </div>
                     );
                   })()}
@@ -16536,6 +16784,44 @@ export default function App({ onSignOut }) {
                     });
                   }
                   // Llamado del Valiente · Ritual de Batalla.
+                  if (d.wrathActs && !d.fromChat) {
+                    const tierW = tierForLevel(c.f_level || 1);
+                    const fav = getFavor(c);
+                    const favSub = (t) => "1 Favor (tienes " + fav + ")" + (t ? " · " + t : "");
+                    cardActs.push(
+                      c.f_fury === "1"
+                        ? { key: "fury-off", Icon: Flame, label: "Terminar Furia del Patrón", sub: "Daño Grave o fin de la escena", run: () => { closeCardDetail(); updateCharacterField(viewingCharId, "f_fury", ""); postCampaignEvent(viewingCharId, "🔥 Su Furia del Patrón se apaga"); } }
+                        : {
+                            key: "fury",
+                            Icon: Flame,
+                            label: fav < 1 ? "Sin Favor" : "Furia del Patrón",
+                            sub: favSub("+" + tierW + "d" + patronSides(c) + " al daño"),
+                            disabled: fav < 1,
+                            run: () => {
+                              closeCardDetail();
+                              updateCharacterFields(viewingCharId, { f_favor: String(fav - 1), f_fury: "1" });
+                              postCampaignEvent(viewingCharId, `🔥 Furia del Patrón: gasta 1 Favor e imbuye sus ataques con el poder de su patrón (+${tierW}d${patronSides(c)} al daño)`);
+                            },
+                          }
+                    );
+                    if (tierW >= 2)
+                      cardActs.push(
+                        c.f_reach === "1"
+                          ? { key: "reach-off", Icon: MoveUpRight, label: "Terminar Alcance Amenazador", sub: "Termina al acertar con el arma principal", run: () => { closeCardDetail(); updateCharacterField(viewingCharId, "f_reach", ""); } }
+                          : {
+                              key: "reach",
+                              Icon: MoveUpRight,
+                              label: fav < 1 ? "Sin Favor" : !c.f_primary_weapon ? "Sin arma principal" : "Alcance Amenazador",
+                              sub: favSub("+1 paso de alcance al arma principal"),
+                              disabled: fav < 1 || !c.f_primary_weapon,
+                              run: () => {
+                                closeCardDetail();
+                                updateCharacterFields(viewingCharId, { f_favor: String(fav - 1), f_reach: "1" });
+                                postCampaignEvent(viewingCharId, `🗡️ Alcance Amenazador: gasta 1 Favor y su ${c.f_primary_weapon} alcanza un paso más lejos`);
+                              },
+                            }
+                      );
+                  }
                   if (d.endlessActs && !d.fromChat) {
                     const tierE = tierForLevel(c.f_level || 1);
                     const fav = getFavor(c);
@@ -16619,6 +16905,48 @@ export default function App({ onSignOut }) {
                           postCampaignEvent(viewingCharId, `⭕ Círculo de Poder: traza un círculo en alcance Muy cercano. Dentro, el grupo gana +2 a los umbrales de daño, a las tiradas de ataque y a la Evasión (${nH} fichas; se retira una por cada tirada de acción o ataque evitado)`);
                         },
                       });
+                  }
+                  // Estirpe del Cielo · Fuerza del Vendaval y Ojo de la Tormenta.
+                  if (d.ancestryKey === "Estirpe del Cielo" && !d.fromChat) {
+                    const hopeS = Number(c.hope_marked ?? HOPE_DEFAULT);
+                    cardActs.push(
+                      {
+                        key: "gale",
+                        Icon: Wind,
+                        label: "Fuerza del Vendaval",
+                        sub: "1 Estrés · una ráfaga te lleva a ti o a un aliado hasta alcance Muy lejano",
+                        run: () => {
+                          closeCardDetail();
+                          markStress(viewingCharId, 1);
+                          postCampaignEvent(viewingCharId, "🌬️ Fuerza del Vendaval: marca 1 Estrés y conjura una ráfaga que lleva a alguien hasta alcance Muy lejano");
+                        },
+                      },
+                      {
+                        key: "storm-self",
+                        Icon: Wind,
+                        label: hopeS < 2 ? "Te faltan " + (2 - hopeS) + " de Esperanza" : "Ojo de la Tormenta · para ti",
+                        sub: "2 Esperanza · +1 a tu Evasión",
+                        disabled: hopeS < 2,
+                        run: () => {
+                          closeCardDetail();
+                          updateCharacterFields(viewingCharId, { hope_marked: String(hopeS - 2), f_storm_eye: "1" });
+                          postCampaignEvent(viewingCharId, "🌪️ Ojo de la Tormenta: gasta 2 Esperanza y gana +1 a la Evasión hasta recibir daño Grave");
+                        },
+                      },
+                      {
+                        key: "storm-ally",
+                        Icon: Users,
+                        label: hopeS < 2 ? "Te faltan " + (2 - hopeS) + " de Esperanza" : "Ojo de la Tormenta · para un aliado",
+                        sub: "2 Esperanza · un aliado Cuerpo a cuerpo gana +1 a la Evasión",
+                        disabled: hopeS < 2,
+                        run: () => {
+                          closeCardDetail();
+                          // Usarlo de nuevo termina el efecto anterior.
+                          updateCharacterFields(viewingCharId, { hope_marked: String(hopeS - 2), f_storm_eye: "" });
+                          postCampaignEvent(viewingCharId, "🌪️ Ojo de la Tormenta: gasta 2 Esperanza y un aliado en alcance Cuerpo a cuerpo gana +1 a la Evasión hasta recibir daño Grave");
+                        },
+                      }
+                    );
                   }
                   // Aetheris · Alas Celestiales: una vez por escena.
                   if (d.ancestryKey === "Aetheris" && !d.fromChat && c.f_celestial_used) {
@@ -17215,7 +17543,7 @@ export default function App({ onSignOut }) {
                       label: "Mostrar en la campaña",
                       sub: shareCamp.name,
                       run: () => {
-                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, divineActs, sentinelActs, originActs, primalActs, braveActs, slayerCard, moonActs, hedgeActs, endlessActs, ...detail } = d;
+                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, divineActs, sentinelActs, originActs, primalActs, braveActs, slayerCard, moonActs, hedgeActs, endlessActs, wrathActs, ...detail } = d;
                         // Las imágenes incrustadas muy grandes no se copian al chat.
                         if (typeof detail.image === "string" && detail.image.startsWith("data:") && detail.image.length > 30000) delete detail.image;
                         const type = d.domain ? "domain" : d.weapon ? "weapon" : d.armor ? "armor" : "card";
