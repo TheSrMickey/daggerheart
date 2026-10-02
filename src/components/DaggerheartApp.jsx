@@ -380,7 +380,7 @@ const ANCESTRIES = [
   { key: "Katari", blurb: "Humanoide felino de garras retráctiles, pupilas rasgadas y orejas triangulares que puede girar casi por completo.", features: [{ name: "Instinto Felino", text: "Cuando hagas una tirada de Agilidad, puedes gastar 2 de Esperanza para repetir tu Dado de Esperanza." }, { name: "Garras Retráctiles", text: "Haz una tirada de Agilidad para arañar a un objetivo dentro de alcance Cuerpo a cuerpo. Si tienes éxito, queda temporalmente Vulnerable." }] },
   { key: "Orco", blurb: "Humanoide de rasgos cuadrados, fácil de reconocer por los colmillos de jabalí que le sobresalen de la mandíbula inferior.", features: [{ name: "Robusto", text: "Cuando te quede 1 Punto de Vida, los ataques contra ti tienen desventaja." }, { name: "Colmillos", text: "Cuando tengas éxito en un ataque contra un adversario en alcance Cuerpo a cuerpo, puedes gastar 1 Esperanza para cornearlo con tus colmillos y hacerle 1d6 de daño adicional." }] },
   { key: "Ribbet", blurb: "Humanoide parecido a una rana, de ojos saltones a ambos lados de la cabeza, manos y pies palmeados y piel lisa (a veces verrugosa) y húmeda.", features: [{ name: "Anfibio", text: "Puedes respirar y moverte con normalidad bajo el agua." }, { name: "Lengua Larga", text: "Puedes usar tu larga lengua para agarrar cosas dentro de alcance Cercano. Marca 1 Estrés para usar tu lengua como un arma de Destreza a alcance Cercano que hace d12 de daño físico usando tu Competencia." }] },
-  { key: "Simiah", blurb: "Humanoide simiesco, ágil trepador de reflejos veloces.", features: [{ name: "Trepador Nato", text: "Tienes ventaja en las tiradas de Agilidad para mantener el equilibrio y trepar." }, { name: "Ágil", text: "Ganas un +1 permanente a tu Evasión al crear el personaje." }] },
+  { key: "Simiah", blurb: "Humanoide parecido a un mono o un simio, de extremidades largas y pies prensiles con los que se comunica, trabaja y lucha; un trepador excelente.", features: [{ name: "Trepador Nato", text: "Tienes ventaja en las tiradas de Agilidad que impliquen mantener el equilibrio y trepar." }, { name: "Ágil", text: "Ganas un bonificador permanente de +1 a tu Evasión al crear el personaje." }] },
   { key: "Gnomo", blurb: "Pequeño e inquieto, con una curiosidad natural por inventar.", expansion: "Hope & Fear", features: [{ name: "Dedos Ágiles", text: "Cuando hagas una tirada de Destreza, puedes gastar 2 Esperanza para repetir tu Dado de Esperanza." }, { name: "Paso Fugaz", text: "Una vez por escena, puedes teletransportarte a un punto que veas en alcance Lejano." }] },
   { key: "Aetheris", blurb: "Ser etéreo ligado a un plano más allá de lo material.", expansion: "Hope & Fear", features: [{ name: "Aura Sagrada", text: "Una vez por descanso largo, cuando un aliado en alcance Cercano saque una tirada con Miedo, puedes convertirla en una tirada con Esperanza." }, { name: "Alas Celestiales", text: "Tienes alas y puedes volar. Una vez por escena mientras vuelas, puedes gastar 1 Esperanza en lugar de marcar una casilla de Armadura." }] },
   { key: "Estirpe del Cielo", blurb: "Vinculado a las corrientes de aire y las alturas.", expansion: "Hope & Fear", features: [{ name: "Fuerza del Vendaval", text: "Marca 1 Estrés para invocar una ráfaga que te lleva a ti o a un aliado Muy cercano hasta alcance Muy lejano. Además, siempre controlas la velocidad de tus caídas." }, { name: "Ojo de la Tormenta", text: "Gasta 2 Esperanza para darte a ti o a un aliado Cuerpo a cuerpo +1 a la Evasión hasta que recibáis daño Grave o vuelvas a usarlo." }] },
@@ -595,6 +595,7 @@ const REROLL_META = {
   swap: { tag: "Ayuda", head: "intercambia los dados", done: "Ayuda Encantada" },
   adapt: { tag: "Adaptabilidad", head: "repite con Adaptabilidad", done: "Adaptabilidad" },
   feline: { tag: "Felino", head: "repite su Dado de Esperanza", done: "Instinto Felino" },
+  charm: { tag: "Encanto", head: "convierte en éxito con Miedo la tirada", done: "Encanto de Bruja" },
 };
 
 // Hechicero · Origen Elemental
@@ -765,7 +766,7 @@ const CLASS_HOPE_FEATURE = {
   Hechicero: { name: "Magia Volátil", cost: 3, text: "Gasta 3 de Esperanza para repetir los dados de daño que quieras en un ataque que haga daño mágico." },
   Guerrero: { name: "Sin Piedad", cost: 3, text: "Gasta 3 de Esperanza para obtener un +1 a tus tiradas de ataque hasta tu próximo descanso." },
   Mago: { name: "Esta Vez No", cost: 3, text: "Gasta 3 Esperanza para obligar a un adversario en alcance Lejano a repetir una tirada de ataque o de daño." },
-  Bruja: { name: "Encanto de Bruja", cost: 3, text: "Cuando tú o un aliado en alcance Lejano falléis una tirada de acción, conviértela en un éxito con Miedo." },
+  Bruja: { name: "Encanto de Bruja", cost: 3, text: "Cuando tú o un aliado en alcance Lejano falléis una tirada de acción, puedes gastar 3 Esperanza para convertirla en un éxito con Miedo." },
   Brujo: { name: "Don del Patrón", cost: 3, text: "Cuando falles una tirada, repítela con ventaja." },
   Camorrista: { name: "Plantar Cara", cost: 3, text: "Intimida a un objetivo en alcance Cercano y déjalo temporalmente Vulnerable." },
   Asesino: { name: "Determinación Letal", cost: 3, text: "Quítate 2 de Estrés." },
@@ -2745,6 +2746,9 @@ const sharedStyles = `
   .mh-charge-btn { background: #8A6FD0; }
   .mh-charge-btn.is-alt { background: var(--mh-panel); color: #6B4FB8; border: 1px solid #8A6FD088; }
   .mh-chat-enchant { border-color: #8A6FD0; color: #6B4FB8; }
+  .mh-chat-charm { border-color: #9B7FD6; color: #7A5BC2; }
+  .mh-charm-btn { background: #9B7FD6; }
+  .mh-charm-btn:hover:not(:disabled) { background: #8366C4; }
   .mh-brave { position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%); z-index: 80; display: flex; align-items: center; gap: 10px; padding: 10px 12px 10px 16px; border-radius: 14px; background: #4A3F2E; color: #fff; box-shadow: 0 10px 26px rgba(0,0,0,.3); font-family: 'Inter', system-ui, sans-serif; animation: mh-wz-art-in .2s ease-out; }
   .mh-brave strong { display: block; font-size: 12.5px; }
   .mh-brave small { font-size: 11px; opacity: .88; }
@@ -5058,7 +5062,8 @@ export default function App({ onSignOut }) {
       f_transformation: draftTransformation === "Ninguna" ? "" : draftTransformation,
       f_languages: ["Común", ...draftLanguages].join(", "),
       ...traitValues,
-      r_evasion: String(CLASS_EVASION[chosenClass.key] ?? 10),
+      r_evasion: String((CLASS_EVASION[chosenClass.key] ?? 10) + (draftAncestries.includes("Simiah") ? 1 : 0)),
+      f_nimble: draftAncestries.includes("Simiah") ? "1" : "",
       // Gigante · Aguante: una casilla de Punto de vida más al crear el personaje.
       r_hp: String((CLASS_HP[chosenClass.key] ?? 6) + (draftAncestries.includes("Gigante") ? 1 : 0)),
       f_endurance: draftAncestries.includes("Gigante") ? "1" : "",
@@ -5934,6 +5939,15 @@ export default function App({ onSignOut }) {
     updateCharacterFields(viewingCharId, { r_hp: String(Number(c.r_hp || 0) + 1), f_endurance: "1" });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewingCharId, viewingGiant, viewingEndurance]);
+  // Simiah · Ágil en personajes ya creados: +1 a la Evasión, una sola vez.
+  const viewingSimiah = viewingCharId ? (characters[viewingCharId]?.f_ancestry || "").split(" + ").includes("Simiah") : false;
+  const viewingNimble = viewingCharId ? characters[viewingCharId]?.f_nimble : "";
+  useEffect(() => {
+    if (!viewingCharId || !viewingSimiah || viewingNimble) return;
+    const c = characters[viewingCharId];
+    updateCharacterFields(viewingCharId, { r_evasion: String(Number(c.r_evasion || 10) + 1), f_nimble: "1" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewingCharId, viewingSimiah, viewingNimble]);
   // Escuela de la Guerra · Mago de Batalla: una casilla de Punto de Vida más, una sola vez.
   const viewingBattlemage = viewingCharId ? characters[viewingCharId]?.f_subclass === "Escuela de la Guerra" : false;
   const viewingBattlemageDone = viewingCharId ? characters[viewingCharId]?.f_battlemage : "";
@@ -6583,10 +6597,10 @@ export default function App({ onSignOut }) {
         // Tirada de dualidad (rasgo, ataque o habilidad con dificultad).
         const crit = r.hope === r.fear;
         const withHope = r.hope > r.fear;
-        const success = r.dc ? crit || r.total >= r.dc : null;
-        const base = crit ? "Éxito crítico" : r.reaction ? "Tirada de reacción" : (success === null ? "Con " : success ? "Éxito con " : "Fallo con ") + (withHope ? "Esperanza" : "Miedo");
-        const note = r.reaction ? (crit ? "Ignora los efectos" : "Sin Esperanza ni Miedo") : crit ? "+1 Esperanza y −1 Estrés" : withHope ? "+1 Esperanza" : "El DJ gana 1 Miedo";
-        const vcol = crit ? "#6FBF73" : r.reaction ? "#5E8FC9" : withHope ? "#E3B04B" : "#A58BE8";
+        const success = r.charm ? true : r.dc ? crit || r.total >= r.dc : null;
+        const base = r.charm ? "Éxito con Miedo" : crit ? "Éxito crítico" : r.reaction ? "Tirada de reacción" : (success === null ? "Con " : success ? "Éxito con " : "Fallo con ") + (withHope ? "Esperanza" : "Miedo");
+        const note = r.charm ? "El DJ gana 1 Miedo" : r.reaction ? (crit ? "Ignora los efectos" : "Sin Esperanza ni Miedo") : crit ? "+1 Esperanza y −1 Estrés" : withHope ? "+1 Esperanza" : "El DJ gana 1 Miedo";
+        const vcol = r.charm ? "#A58BE8" : crit ? "#6FBF73" : r.reaction ? "#5E8FC9" : withHope ? "#E3B04B" : "#A58BE8";
         const tag = r.luck ? (REROLL_META[r.luck.kind] || REROLL_META.luck).tag : r.weapon ? "Ataque" : r.card ? "Habilidad" : r.reaction ? "Reacción" : "Rasgo";
         // Hada · Doblega la Suerte: botón bajo las tiradas de acción recientes (tuyas o de aliados).
         const meC = meCharId ? characters[meCharId] : null;
@@ -6603,6 +6617,15 @@ export default function App({ onSignOut }) {
           </button>
         ) : null;
         const meHope = meC ? Number(meC.hope_marked ?? HOPE_DEFAULT) : 0;
+        // Bruja · Encanto de Bruja: sobre la tirada de acción fallida (o sin dificultad conocida) de un aliado.
+        const charmable = meC && meC.f_class === "Bruja" && m.charId && m.charId !== meCharId && !r.reaction && !r.luck && !r.charm && !crit && success !== true && Date.now() - (m.ts || 0) < 10 * 60 * 1000;
+        const charmBtn = charmable ? (
+          <button type="button" className="mh-chat-luck mh-chat-charm" disabled={meHope < 3} onClick={() => witchCharm(meCharId, m.charId, r)}>
+            <Moon size={13} />
+            Encanto de Bruja para {m.author}
+            <small>{meHope < 3 ? "Necesitas 3 Esperanza" : success === false ? "3 Esperanza · éxito con Miedo" : "Si ha fallado · 3 Esperanza"}</small>
+          </button>
+        ) : null;
         const luckBtn = luckable ? (
           <button type="button" className="mh-chat-luck" disabled={!!meC.f_luck_used || meHope < 3} onClick={() => bendLuck(meCharId, m.charId, r)}>
             <Clover size={13} />
@@ -6684,12 +6707,13 @@ export default function App({ onSignOut }) {
             {total(r.dc ? "vs " + r.dc : "Total", r.total)}
           </>,
           base,
-          r.luck ? "Antes: " + r.luck.prevHope + " y " + r.luck.prevFear : note,
-          luckBtn || adjRow || enchantBtn ? (
+          r.luck && !r.charm ? "Antes: " + r.luck.prevHope + " y " + r.luck.prevFear : note,
+          luckBtn || adjRow || enchantBtn || charmBtn ? (
             <>
               {adjRow}
               {luckBtn}
               {enchantBtn}
+              {charmBtn}
             </>
           ) : null
         );
@@ -8020,6 +8044,26 @@ export default function App({ onSignOut }) {
       kind: "roll",
       sid,
       roll: { ...base, hope: nh, fear: nf, total, luck: { forId: rollerId, forName, prevHope: roll.hope, prevFear: roll.fear, kind }, adjust: !own && (delta.hope || delta.stress) ? { charId: rollerId, hope: delta.hope, stress: delta.stress } : null },
+    });
+  };
+  // Bruja · Encanto de Bruja: 3 Esperanza para que una tirada de acción fallida (tuya o de un aliado) sea un éxito con Miedo.
+  const witchCharm = (myId, rollerId, roll) => {
+    const me = charsRef.current[myId];
+    if (!me || Number(me.hope_marked ?? HOPE_DEFAULT) < 3) return;
+    const ga = rollGains(roll.hope, roll.fear);
+    const delta = { hope: -ga.hope, stress: -ga.stress, fear: 1 - ga.fear };
+    const own = rollerId === myId;
+    const hopeNow = Number(me.hope_marked ?? HOPE_DEFAULT) - 3 + (own ? delta.hope : 0);
+    updateCharacterField(myId, "hope_marked", String(Math.max(0, Math.min(getHopeMax(me), hopeNow))));
+    if (delta.fear) addFear(delta.fear);
+    if (own) setTraitRollResult((prev) => (prev && prev.charId === myId ? { ...prev, charmed: true, text: "Éxito con Miedo", color: "#A58BE8", note: "Encanto de Bruja: tu fallo pasa a ser un éxito con Miedo" + (ga.hope ? " (pierdes la Esperanza ganada y el DJ gana 1 de Miedo)" : "") } : prev));
+    const roller = charsRef.current[rollerId];
+    const forName = roller?.f_name || "un aliado";
+    const { luck, adjust, ...base } = roll;
+    postCampaignEvent(myId, `🔮 Encanto de Bruja${own ? "" : " para " + forName}: gasta 3 Esperanza y la tirada fallida pasa a ser un éxito con Miedo`, {
+      kind: "roll",
+      sid: String(Date.now()),
+      roll: { ...base, charm: true, luck: { forId: rollerId, forName, prevHope: roll.hope, prevFear: roll.fear, kind: "charm" }, adjust: !own && delta.hope ? { charId: rollerId, hope: delta.hope, stress: 0 } : null },
     });
   };
   // Datos de la tirada del resultado, en el formato del chat, para poder repetirla.
@@ -13773,7 +13817,9 @@ export default function App({ onSignOut }) {
               const dreadOk = (ch.f_ancestry || "").split(" + ").includes("Infernal") && preRoll.traitLabel === "Presencia" && !etherealOk;
               // Bruja Lunar · Glamour Nocturno: ventaja en tiradas que aprovechen tu apariencia ilusoria.
               const glamourOk = ch.f_subclass === "Bruja Lunar" && ch.f_glamour === "1" && !etherealOk && !dreadOk;
-              const edgeSource = etherealOk ? "Rostro Etéreo" : dreadOk ? "Rostro Temible" : glamourOk ? "Glamour Nocturno" : highborne ? "Privilegio" : loreborne ? "Leído" : ridgeborne ? "Firme" : slyborne ? "Granuja" : underborne ? "Vida en la Penumbra" : wildborne ? "Pies Ligeros" : "";
+              // Simiah · Trepador Nato: ventaja en Agilidad para mantener el equilibrio y trepar.
+              const climberOk = (ch.f_ancestry || "").split(" + ").includes("Simiah") && preRoll.traitLabel === "Agilidad" && !etherealOk && !dreadOk && !glamourOk;
+              const edgeSource = etherealOk ? "Rostro Etéreo" : dreadOk ? "Rostro Temible" : glamourOk ? "Glamour Nocturno" : climberOk ? "Trepador Nato" : highborne ? "Privilegio" : loreborne ? "Leído" : ridgeborne ? "Firme" : slyborne ? "Granuja" : underborne ? "Vida en la Penumbra" : wildborne ? "Pies Ligeros" : "";
               const poetOk = ch.f_subclass === "Orador" && preRoll.traitLabel === "Presencia";
               // Origen Elemental · Elementalista: 1 Esperanza para +2 a la tirada o +3 al daño.
               const elemOk = ch.f_subclass === "Origen Elemental" && !preRoll.reaction;
@@ -13916,10 +13962,10 @@ export default function App({ onSignOut }) {
                   ? tile("priv", {
                       on: preRoll.privilege,
                       title: edgeSource,
-                      sub: etherealOk ? "Centinela Alado · volando" : dreadOk ? "Infernal" : glamourOk ? "Bruja Lunar" : highborne ? "De Alta Cuna" : loreborne ? "Del Saber" : slyborne ? "De las Sombras" : underborne ? "De las Profundidades" : wildborne ? "Salvaje" : "De las Cumbres",
+                      sub: etherealOk ? "Centinela Alado · volando" : dreadOk ? "Infernal" : glamourOk ? "Bruja Lunar" : climberOk ? "Simiah" : highborne ? "De Alta Cuna" : loreborne ? "Del Saber" : slyborne ? "De las Sombras" : underborne ? "De las Profundidades" : wildborne ? "Salvaje" : "De las Cumbres",
                       cost: "Ventaja",
-                      color: etherealOk ? "#D8A84A" : dreadOk ? "#A33A3A" : glamourOk ? "#8C7FD0" : highborne ? "#B8862E" : loreborne ? "#5E8FC9" : slyborne ? "#6E5A8A" : underborne ? "#5A6B7A" : wildborne ? "#5E8A4E" : "#7E8C6A",
-                      hint: etherealOk ? "Mientras vuelas, tienes ventaja en las tiradas de Presencia" : dreadOk ? "Si intentas intimidar a una criatura hostil" : glamourOk ? "Si la tirada aprovecha tu apariencia ilusoria" : highborne ? "Si tratas con nobles, negocias un precio o usas tu reputación" : loreborne ? "Si la tirada trata sobre la historia, la cultura o la política de una persona o un lugar importantes" : slyborne ? "Si negocias con criminales, intentas detectar una mentira o buscas un escondite seguro" : underborne ? "Si estás en una zona con poca luz o sombras densas y te escondes, investigas o percibes detalles en ella" : wildborne ? "Si intentas moverte sin que te oigan" : "Si cruzas precipicios y cornisas peligrosos, te orientas en un entorno duro o usas tus conocimientos de supervivencia",
+                      color: etherealOk ? "#D8A84A" : dreadOk ? "#A33A3A" : glamourOk ? "#8C7FD0" : climberOk ? "#A0784A" : highborne ? "#B8862E" : loreborne ? "#5E8FC9" : slyborne ? "#6E5A8A" : underborne ? "#5A6B7A" : wildborne ? "#5E8A4E" : "#7E8C6A",
+                      hint: etherealOk ? "Mientras vuelas, tienes ventaja en las tiradas de Presencia" : dreadOk ? "Si intentas intimidar a una criatura hostil" : glamourOk ? "Si la tirada aprovecha tu apariencia ilusoria" : climberOk ? "Si la tirada implica mantener el equilibrio o trepar" : highborne ? "Si tratas con nobles, negocias un precio o usas tu reputación" : loreborne ? "Si la tirada trata sobre la historia, la cultura o la política de una persona o un lugar importantes" : slyborne ? "Si negocias con criminales, intentas detectar una mentira o buscas un escondite seguro" : underborne ? "Si estás en una zona con poca luz o sombras densas y te escondes, investigas o percibes detalles en ella" : wildborne ? "Si intentas moverte sin que te oigan" : "Si cruzas precipicios y cornisas peligrosos, te orientas en un entorno duro o usas tus conocimientos de supervivencia",
                       onClick: () => setPreRoll((p) => ({ ...p, privilege: !p.privilege, advantage: p.privilege ? p.advantage : false })),
                     })
                   : null,
@@ -14286,11 +14332,27 @@ export default function App({ onSignOut }) {
                         </button>
                       );
                     })()}
+                    {(() => {
+                      // Bruja · Encanto de Bruja en tu propia tirada fallida.
+                      const r = traitRollResult;
+                      const rc = characters[r.charId];
+                      if (!rc || rc.f_class !== "Bruja" || r.reaction || r.hope === r.fear) return null;
+                      if (r.charmed) return null;
+                      const failed = r.card?.dc != null ? r.total < r.card.dc : null;
+                      if (failed === false) return null;
+                      const hopeB = Number(rc.hope_marked ?? HOPE_DEFAULT);
+                      return (
+                        <button type="button" className="mh-luck-btn mh-charm-btn" disabled={hopeB < 3} onClick={() => witchCharm(r.charId, r.charId, rollForReroll(r))}>
+                          <Moon size={15} /> Encanto de Bruja · 3 Esperanza
+                          <small>{hopeB < 3 ? "Necesitas 3 Esperanza" : failed ? "Has fallado: conviértela en un éxito con Miedo" : "Si has fallado: conviértela en un éxito con Miedo"}</small>
+                        </button>
+                      );
+                    })()}
                     {traitRollResult.card?.name === "Glamour Nocturno" && (() => {
                       const r = traitRollResult;
                       const rc = characters[r.charId];
                       if (!rc) return null;
-                      const ok = r.hope === r.fear || r.total >= 13;
+                      const ok = r.charmed || r.hope === r.fear || r.total >= 13;
                       if (rc.f_glamour === "1") return <div className="mh-luck-done" style={{ color: "#8C7FD0" }}>Glamour Nocturno activo</div>;
                       if (!ok) return <div className="mh-luck-done" style={{ color: "var(--mh-muted)" }}>No consigues envolverte en el Glamour</div>;
                       return (
@@ -14395,10 +14457,10 @@ export default function App({ onSignOut }) {
                     })()}
                     {traitRollResult.ethereal && <div className="mh-luck-done" style={{ color: "#B8862E" }}>Rostro Etéreo: el DJ pierde 1 de Miedo</div>}
                     {traitRollResult.card?.dc != null && (() => {
-                      const ok = traitRollResult.hope === traitRollResult.fear || traitRollResult.total >= traitRollResult.card.dc;
+                      const ok = traitRollResult.charmed || traitRollResult.hope === traitRollResult.fear || traitRollResult.total >= traitRollResult.card.dc;
                       return (
                         <div className={"mh-dc-verdict mh-appear-late" + (ok ? " is-ok" : "")} key={traitRollResult.key}>
-                          {ok ? "Éxito" : "Fracaso"} · {traitRollResult.total} contra Dificultad {traitRollResult.card.dc}
+                          {traitRollResult.charmed ? "Éxito con Miedo (Encanto de Bruja)" : (ok ? "Éxito" : "Fracaso") + " · " + traitRollResult.total + " contra Dificultad " + traitRollResult.card.dc}
                         </div>
                       );
                     })()}
@@ -15771,7 +15833,7 @@ export default function App({ onSignOut }) {
                     const isFrontline = c.f_class === "Guardián";
                     const armorMax = isFrontline ? armorMaxFor(c) : 0;
                     const armorSpent = isFrontline ? Math.max(0, armorMax - Number(c.armor_marked || 0)) : 0;
-                    const frontlineBlock = isFrontline && !missingHope ? (!armorMax ? "No llevas armadura" : !armorSpent ? "Tu Armadura está completa" : "") : c.f_class === "Pícaro" && c.f_dodge ? "Esquiva ya activa (+2 Evasión)" : c.f_class === "Hechicero" ? "Se usa al tirar daño mágico" : c.f_class === "Guerrero" && c.f_no_mercy ? "Sin Piedad ya activo (+1 al ataque)" : "";
+                    const frontlineBlock = isFrontline && !missingHope ? (!armorMax ? "No llevas armadura" : !armorSpent ? "Tu Armadura está completa" : "") : c.f_class === "Pícaro" && c.f_dodge ? "Esquiva ya activa (+2 Evasión)" : c.f_class === "Hechicero" ? "Se usa al tirar daño mágico" : c.f_class === "Bruja" ? "Se usa sobre una tirada fallida (resultado o chat)" : c.f_class === "Guerrero" && c.f_no_mercy ? "Sin Piedad ya activo (+1 al ataque)" : "";
                     // Mago · Esta Vez No: el adversario repite su ataque o su daño.
                     if (c.f_class === "Mago")
                       [["dmg", "Repetir su daño", "una tirada de daño", Flame], ["atk", "Repetir su ataque", "una tirada de ataque", Swords]].forEach(([k, label, what, Ic]) =>
