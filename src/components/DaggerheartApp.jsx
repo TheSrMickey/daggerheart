@@ -589,7 +589,7 @@ const getStancesKnown = (c) => {
 const activeStance = (c) => (isMartial(c) && c.f_stance ? c.f_stance : "");
 // Camorrista · Yo Soy el Arma: arma principal a mano desnuda mientras no lleve otras armas.
 const BRAWLER_STRIKE = "Golpe de Camorrista";
-const brawlerArmed = (c) => c?.f_class === "Camorrista" && !c.f_primary_weapon && !c.f_secondary_weapon;
+const brawlerArmed = (c) => c?.f_class === "Camorrista" && (!c.f_primary_weapon || c.f_primary_weapon === BRAWLER_STRIKE) && (!c.f_secondary_weapon || c.f_secondary_weapon === BRAWLER_STRIKE);
 const brawlerStrike = (c) => ({ key: BRAWLER_STRIKE, trait: c?.f_brawl_trait || "Fuerza", range: "Cuerpo a cuerpo", damage: "d8+d6 físico", hands: 2, tier: 1, feature: "Yo Soy el Arma: +1 a tu Evasión mientras la uses", virtual: true });
 // Dado de Combo del Camorrista (d4 → d12, un paso por Rango como mejora).
 const COMBO_DICE = [4, 6, 8, 10, 12];
@@ -2820,6 +2820,13 @@ const sharedStyles = `
   .mh-favor-btn { background: #B55FA0; }
   .mh-fury-btn { background: #B55FA0; }
   .mh-combo-btn { background: #C08B5C; }
+  .mh-eq.mh-eq-bare { border-style: dashed; background: color-mix(in srgb, #C08B5C 5%, var(--mh-panel)); }
+  .mh-eq.mh-eq-bare .mh-eq-art { background: color-mix(in srgb, #C08B5C 14%, var(--mh-panel2)); color: #8A5F33; }
+  .mh-brawl-pick { position: absolute; top: 22px; right: 0; background: var(--mh-panel); border: 1px solid var(--mh-line); border-radius: 8px; box-shadow: 0 8px 20px rgba(0,0,0,.15); z-index: 15; min-width: 170px; overflow: hidden; }
+  .mh-brawl-pick div { padding: 8px 12px; font-size: 12px; color: var(--mh-ink); cursor: pointer; border-bottom: 1px solid var(--mh-line); text-align: left; }
+  .mh-brawl-pick div:last-child { border-bottom: 0; }
+  .mh-brawl-pick div:hover { background: var(--mh-panel2); }
+  .mh-tribute-go:disabled { cursor: default; opacity: .7; }
   .mh-combo-btn:disabled { opacity: .5; cursor: not-allowed; }
   .mh-stance-dmg { display: flex; flex-direction: column; align-items: center; gap: 6px; }
   .mh-stances { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
@@ -6238,6 +6245,30 @@ export default function App({ onSignOut }) {
     updateCharacterFields(viewingCharId, { r_hp: String(Number(c.r_hp || 0) + 1), f_endurance: "1" });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewingCharId, viewingGiant, viewingEndurance]);
+  // Camorrista: quita las copias del Golpe de Camorrista que se hubieran guardado como objeto.
+  const viewingBrawlJunk = viewingCharId
+    ? (() => {
+        const c = characters[viewingCharId];
+        if (!c) return false;
+        return [c.f_items, c.f_backpack_items].some((raw) => (raw || "").includes('"' + BRAWLER_STRIKE + '"')) || c.f_primary_weapon === BRAWLER_STRIKE || c.f_secondary_weapon === BRAWLER_STRIKE;
+      })()
+    : false;
+  useEffect(() => {
+    if (!viewingCharId || !viewingBrawlJunk) return;
+    const c = characters[viewingCharId];
+    const clean = (raw) => {
+      try {
+        return JSON.stringify(JSON.parse(raw || "[]").filter((it) => it && it.name !== BRAWLER_STRIKE));
+      } catch (e) {
+        return raw || "[]";
+      }
+    };
+    const patch = { f_items: clean(c.f_items), f_backpack_items: clean(c.f_backpack_items) };
+    if (c.f_primary_weapon === BRAWLER_STRIKE) patch.f_primary_weapon = "";
+    if (c.f_secondary_weapon === BRAWLER_STRIKE) patch.f_secondary_weapon = "";
+    updateCharacterFields(viewingCharId, patch);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewingCharId, viewingBrawlJunk]);
   // Simiah · Ágil en personajes ya creados: +1 a la Evasión, una sola vez.
   const viewingSimiah = viewingCharId ? (characters[viewingCharId]?.f_ancestry || "").split(" + ").includes("Simiah") : false;
   const viewingNimble = viewingCharId ? characters[viewingCharId]?.f_nimble : "";
@@ -6478,7 +6509,7 @@ export default function App({ onSignOut }) {
 
   const stashEquippedItem = (id, slotKind, name, description) => {
     const c = characters[id];
-    if (!c) return;
+    if (!c || name === BRAWLER_STRIKE) return;
     const list = getItems(c);
     if (list.length >= ITEM_SLOTS) return;
     list.push({ name, description: description || "", count: 1 });
@@ -10987,7 +11018,7 @@ export default function App({ onSignOut }) {
                                   const profDamage = hasDice ? (w.virtual ? proficiency + "d8+" + proficiency + "d6" : String(proficiency) + (dmgParts?.[1] || w.damage).replace(/^\d*/, "")) : "";
                                   const [featName, ...featRest] = (w.feature || "").split(":");
                                   const featTone = w.mods && Object.values(w.mods).some((v) => v < 0) ? " is-neg" : w.mods ? " is-pos" : "";
-                                  const TileIcon = isArmor ? armorIcon(w.key) : weaponIcon(w.key);
+                                  const TileIcon = w.virtual ? HandFist : isArmor ? armorIcon(w.key) : weaponIcon(w.key);
                                   const rng = !isArmor && slot.label === "Arma principal" && c.f_reach === "1" ? reachStep(reachFor(c, w.range)) : reachFor(c, w.range);
                                   const desc = isArmor
                                     ? `Puntuación ${w.score} · Umbrales base ${w.major}/${w.severe}`
@@ -11013,8 +11044,8 @@ export default function App({ onSignOut }) {
                                   return (
                                     <div
                                       key={idx}
-                                      className="mh-eq"
-                                      style={{ "--cc": TIER_COLORS[tier].color }}
+                                      className={"mh-eq" + (w.virtual ? " mh-eq-bare" : "")}
+                                      style={{ "--cc": w.virtual ? "#C08B5C" : TIER_COLORS[tier].color }}
                                       role="button"
                                       tabIndex={0}
                                       aria-label={`Ver la carta de ${w.key}`}
@@ -11023,7 +11054,7 @@ export default function App({ onSignOut }) {
                                     >
                                       <div className="mh-eq-art">
                                         <TileIcon size={40} strokeWidth={1.5} />
-                                        <span className="mh-eq-tier" style={{ background: TIER_COLORS[tier].color }}>{TIER_COLORS[tier].label}</span>
+                                        <span className="mh-eq-tier" style={{ background: w.virtual ? "#C08B5C" : TIER_COLORS[tier].color }}>{w.virtual ? "Sin arma" : TIER_COLORS[tier].label}</span>
                                       </div>
                                       <div className="mh-eq-body">
                                         <div className="mh-eq-sub">{isArmor ? "Armadura" : `${slot.label} · ${handsLabel}`}</div>
@@ -11084,6 +11115,25 @@ export default function App({ onSignOut }) {
                                           </div>
                                         )}
                                       </div>
+                                      {w.virtual ? (() => {
+                                        const matching = items.filter((it) => PRIMARY_WEAPONS.some((pw) => pw.key === it.name) || SECONDARY_WEAPONS.some((sw) => sw.key === it.name));
+                                        const open = equipPickerSlot === "brawl";
+                                        if (!matching.length) return null;
+                                        return (
+                                          <div className="mh-eq-stash" onClick={(e) => e.stopPropagation()}>
+                                            <ArrowLeft size={15} color="var(--acc)" title="Equipar un arma del inventario" style={{ cursor: "pointer", transform: "rotate(180deg)" }} onClick={() => setEquipPickerSlot(open ? null : "brawl")} />
+                                            {open && (
+                                              <div className="mh-brawl-pick">
+                                                {matching.map((it, i) => (
+                                                  <div key={i} onClick={() => { equipFromInventory(viewingCharId, PRIMARY_WEAPONS.some((pw) => pw.key === it.name) ? "primary" : "secondary", it.name); setEquipPickerSlot(null); }}>
+                                                    {it.name} {it.count > 1 ? `(x${it.count})` : ""}
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            )}
+                                          </div>
+                                        );
+                                      })() : (
                                       <div className="mh-tip-anchor mh-eq-stash">
                                         {items.length >= ITEM_SLOTS && (
                                           <span className="mh-tip" style={{ bottom: "auto", top: "calc(100% + 6px)" }}>Inventario lleno</span>
@@ -11099,6 +11149,7 @@ export default function App({ onSignOut }) {
                                           }}
                                         />
                                       </div>
+                                      )}
                                     </div>
                                   );
                                 });
@@ -11640,6 +11691,36 @@ export default function App({ onSignOut }) {
                                       );
                                     })}
                                   </div>
+
+                                  {isMartial(c) && (() => {
+                                    const n = Math.max(1, Number(c.t_instinct || 0));
+                                    const focus = getMFocus(c);
+                                    const refocus = () => {
+                                      const rolls = Array.from({ length: n }, () => Math.floor(Math.random() * 6) + 1);
+                                      const top = Math.min(6, Math.max(...rolls));
+                                      updateCharacterFields(viewingCharId, { f_mfocus: String(top), f_refocus_used: "1" });
+                                      postCampaignEvent(viewingCharId, `🧘 Se concentra: vacía su Concentración, tira ${rolls.join(", ")} y queda con ${top}`);
+                                    };
+                                    return (
+                                      <div className="mh-trov mh-tribute" style={{ "--tb": "#C08B5C" }}>
+                                        <div className="mh-trov-h">
+                                          <HandFist size={15} color="#C08B5C" />
+                                          <b className="mh-serif">Concentración</b>
+                                          <span className="mh-trov-tag">{focus} de 6</span>
+                                        </div>
+                                        <button type="button" className={"mh-tribute-go" + (c.f_refocus_used ? " sel" : "")} disabled={!!c.f_refocus_used} onClick={refocus}>
+                                          <span className="mh-rest-ico" style={{ "--rc": "#C08B5C" }}>
+                                            <Sparkles size={16} />
+                                          </span>
+                                          <span style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
+                                            <b>{c.f_refocus_used ? "Ya te has concentrado" : "Concentrarse · " + n + "d6"}</b>
+                                            <small>{c.f_refocus_used ? "Vuelve a estar disponible en el próximo descanso" : "Vacías tu Concentración, tiras " + n + "d6 (tu Instinto) y te quedas con el más alto"}</small>
+                                          </span>
+                                        </button>
+                                        <div className="mh-trov-f">Una vez por descanso, en un momento de calma. No ocupa una acción de descanso.</div>
+                                      </div>
+                                    );
+                                  })()}
 
                                   {c.f_class === "Brujo" && (() => {
                                     const gain = Math.max(1, Number(c[spellcastTraitFor(c.f_class, c.f_subclass)] || 0));
@@ -12581,13 +12662,6 @@ export default function App({ onSignOut }) {
                           else updateCharacterFields(viewingCharId, patch);
                           postCampaignEvent(viewingCharId, `🥋 Adopta la postura ${st.name}${how === "stress" ? " (Estado de Flujo: marca 1 Estrés)" : " (gasta 1 de Concentración)"}`);
                         };
-                        const refocus = () => {
-                          const n = Math.max(1, Number(c.t_instinct || 0));
-                          const rolls = Array.from({ length: n }, () => Math.floor(Math.random() * 6) + 1);
-                          const top = Math.min(6, Math.max(...rolls));
-                          updateCharacterFields(viewingCharId, { f_mfocus: String(top), f_refocus_used: "1" });
-                          postCampaignEvent(viewingCharId, `🧘 Se concentra: tira ${rolls.join(", ")} y queda con ${top} de Concentración`);
-                        };
                         return (
                           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(12, 1fr)", gap: 18, flex: 1, maxHeight: isMobile ? undefined : armaduraHeight || undefined }}>
                             <Panel
@@ -12671,10 +12745,10 @@ export default function App({ onSignOut }) {
                                 <div className="mh-mfocus-n">
                                   <b className="mh-serif">{focus}</b> de 6
                                 </div>
-                                <button type="button" className="mh-btn" disabled={!!c.f_refocus_used} onClick={refocus}>
-                                  <Sparkles size={14} /> {c.f_refocus_used ? "Ya te has concentrado · vuelve al descansar" : "Concentrarse · " + Math.max(1, Number(c.t_instinct || 0)) + "d6"}
+                                <button type="button" className="mh-btn-ghost" onClick={() => setDetailTab("rests")}>
+                                  <BedDouble size={14} /> {c.f_refocus_used ? "Ya te has concentrado en este descanso" : "Concentrarse en la pestaña Descanso"}
                                 </button>
-                                <small className="mh-mfocus-note">Una vez por descanso, en un momento de calma: vacías tu Concentración, tiras tantos d6 como tu Instinto y te quedas con el más alto.</small>
+                                <small className="mh-mfocus-note">Una vez por descanso, en un momento de calma, recuperas Concentración desde la pestaña Descanso.</small>
                                 <div className="mh-mfocus-active">
                                   <span className="mh-label">Postura activa</span>
                                   {act ? (
