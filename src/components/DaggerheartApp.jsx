@@ -238,7 +238,18 @@ const SUBCLASSES = {
     },
   ],
   Mago: [
-    { key: "Escuela del Conocimiento", blurb: "Estudia lo arcano para dominar la información y el control." },
+    {
+      key: "Escuela del Conocimiento",
+      blurb: "Comprende a fondo el mundo que le rodea.",
+      features: [
+        { name: "Preparado", text: "Toma una carta de dominio adicional de tu nivel o inferior de un dominio al que tengas acceso." },
+        { name: "Diestro", text: "Cuando uses una Experiencia, puedes marcar 1 Estrés en lugar de gastar 1 Esperanza. Si lo haces, duplica el modificador de esa Experiencia en la tirada." },
+        { name: "Consumado (Especialización)", text: "Toma una carta de dominio adicional de tu nivel o inferior de un dominio al que tengas acceso." },
+        { name: "Memoria Perfecta (Especialización)", text: "Una vez por descanso, cuando recuperes una carta de dominio de tu bóveda, puedes reducir en 1 su coste de Recuperación." },
+        { name: "Brillante (Maestría)", text: "Toma una carta de dominio adicional de tu nivel o inferior de un dominio al que tengas acceso." },
+        { name: "Pericia (Maestría)", text: "Cuando uses una Experiencia, tira 1d6. Con un 5 o más, puedes usarla sin gastar Esperanza." },
+      ],
+    },
     { key: "Escuela de la Guerra", blurb: "Convierte la magia en un arma de combate directo." },
   ],
   Bruja: [
@@ -761,8 +772,8 @@ const CLASS_FEATURES = {
     { name: "Entrenamiento de Combate", text: "Ignoras la carga al equiparte armas. Cuando hagas daño físico, obtienes un bonificador a tu tirada de daño igual a tu nivel." },
   ],
   Mago: [
-    { name: "Prestidigitación", text: "Haces pequeños efectos mágicos inofensivos a voluntad: cambiar el color de un objeto, crear un olor, encender una vela, hacer flotar algo diminuto, iluminar una sala o reparar un objeto pequeño." },
-    { name: "Patrones Extraños", text: "Elige un número del 1 al 12. Cuando lo saques en un Dado de Dualidad, ganas 1 Esperanza o te quitas 1 Estrés. Puedes cambiarlo en cada descanso largo." },
+    { name: "Prestidigitación", text: "Puedes realizar a voluntad efectos mágicos sutiles e inofensivos. Por ejemplo, puedes cambiar el color de un objeto, crear un olor, encender una vela, hacer flotar un objeto diminuto, iluminar una sala o reparar un objeto pequeño." },
+    { name: "Patrones Extraños", text: "Elige un número entre 1 y 12. Cuando saques ese número en un Dado de Dualidad, ganas 1 Esperanza o te quitas 1 Estrés. Puedes cambiar este número cuando hagas un descanso largo." },
   ],
   Bruja: [
     { name: "Maleficio", text: "Marca 1 Estrés para echar un Maleficio temporal a un objetivo en alcance Lejano: sufre una penalización igual a tu Rango en sus tiradas de daño y en su Dificultad. Puedes tener a la vez tantos objetivos con Maleficio como tu rasgo de conjuro." },
@@ -2649,6 +2660,12 @@ const sharedStyles = `
   .mh-courage-btn { background: #B8862E; }
   .mh-fearless-btn { background: #A33A3A; }
   .mh-slayer-btn { background: #C0504A; }
+  .mh-pattern-foot { flex-direction: column; gap: 6px; padding: 8px 10px; }
+  .mh-pattern-foot small { font-size: 10.5px; color: var(--mh-muted); }
+  .mh-pattern-nums { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
+  .mh-pattern-nums button { width: 24px; height: 24px; border-radius: 7px; border: 1.5px solid color-mix(in srgb, #5E8FC9 55%, var(--mh-line)); background: var(--mh-panel); padding: 0; font: 700 11px 'Inter', system-ui, sans-serif; color: var(--mh-ink); cursor: pointer; }
+  .mh-pattern-nums button.is-on { background: #5E8FC9; border-color: #5E8FC9; color: #fff; }
+  .mh-pattern-nums button:disabled { opacity: .35; cursor: not-allowed; }
   .mh-slayer-btn.is-alt { background: var(--mh-panel); color: #A8443F; border: 1px solid #C0504A88; }
   .mh-feline-btn { background: #B8862E; }
   .mh-slayer-pips i { width: 20px; height: 20px; border-radius: 6px; border: 1.5px solid #C0504A; display: inline-flex; align-items: center; justify-content: center; color: #fff; }
@@ -4811,7 +4828,11 @@ export default function App({ onSignOut }) {
   const wizardCardLimit = (() => {
     const cls = CLASSES[carouselIndex]?.key;
     const pool = (CLASS_DOMAINS[cls] || []).flatMap((d) => (DOMAIN_CARDS[d] || []).filter((card) => card.level <= levelChoice));
-    return Math.min(maxLoadoutCards(levelChoice), pool.length);
+    // Escuela del Conocimiento: Preparado (+1), Consumado (+1 en Rango 2) y Brillante (+1 en Rango 3).
+    const sub = (SUBCLASSES[cls] || [])[subclassIndex]?.key;
+    const tierW = tierForLevel(levelChoice);
+    const extra = sub === "Escuela del Conocimiento" ? 1 + (tierW >= 2 ? 1 : 0) + (tierW >= 3 ? 1 : 0) : 0;
+    return Math.min(maxLoadoutCards(levelChoice) + extra, pool.length);
   })();
 
   const toggleDomainCard = (cardKey) => {
@@ -4992,7 +5013,9 @@ export default function App({ onSignOut }) {
         ...draftItems.map((name) => ({ name, description: STARTER_ITEMS.find((si) => si.name === name)?.description || "", count: 1 })),
       ]),
       f_pack_added: draftCommunity === "Errante" ? "1" : "",
-      f_domain_cards: JSON.stringify(draftDomainCards),
+      // Tu equipo admite 5 cartas; el resto va a la bóveda.
+      f_domain_cards: JSON.stringify(draftDomainCards.slice(0, 5)),
+      f_domain_vault: draftDomainCards.length > 5 ? JSON.stringify(draftDomainCards.slice(5)) : "",
       f_experiences: JSON.stringify(
         [draftExp1, draftExp2]
           .map((t, i) => ({ text: t.trim(), bonus: 2 + (isAutomaton && draftPurposeExp === i ? 1 : 0) }))
@@ -7446,6 +7469,8 @@ export default function App({ onSignOut }) {
     if (isLong && c.f_unbound_used) restPatch.f_unbound_used = "";
     if (c.f_found_used) restPatch.f_found_used = "";
     if (isLong && c.f_slayer_reroll) restPatch.f_slayer_reroll = "";
+    if (c.f_recall_used) restPatch.f_recall_used = "";
+    if (isLong && c.f_pattern_lock) restPatch.f_pattern_lock = "";
     // Fin de la «sesión»: los Dados de Cazador sin gastar se cambian por Esperanza.
     if (isLong && Number(c.f_slayer || 0) > 0) {
       hope = Math.min(getHopeMax(c), hope + Number(c.f_slayer));
@@ -7791,7 +7816,7 @@ export default function App({ onSignOut }) {
   const rollTraitCheck = (charId, traitLabel, traitValue, weapon, cardContext, advantage) => {
     // Galapa · Retraerse: desventaja en las tiradas de acción mientras está en el caparazón.
     const shellOn = getConditions(charsRef.current[charId] || {}).includes("Retraído");
-    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage && !shellOn, exps: [], rally: false, privilege: false, disadvantage: shellOn, shellOn, poet: false, dedicated: false, quick: false, reaction: false, tide: 0, dc: "", elem: "", slayer: 0, found: "" });
+    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage && !shellOn, exps: [], rally: false, privilege: false, disadvantage: shellOn, shellOn, poet: false, dedicated: false, quick: false, reaction: false, tide: 0, dc: "", elem: "", slayer: 0, found: "", adept: false });
   };
   const confirmPreRoll = () => {
     const pr = preRoll;
@@ -7810,12 +7835,23 @@ export default function App({ onSignOut }) {
     })() : null;
     const elemOk = ch && ch.f_subclass === "Origen Elemental" && !pr.reaction;
     const elemUse = elemOk ? pr.elem : "";
-    const hopeCost = exps.length + (pr.poet ? 1 : 0) + (elemUse ? 1 : 0) + (foundExp ? 1 : 0);
+    // Escuela del Conocimiento · Diestro: Estrés en lugar de Esperanza y el modificador se duplica.
+    const adeptOn = ch && ch.f_subclass === "Escuela del Conocimiento" && pr.adept && exps.length > 0;
+    // Pericia (Maestría): 1d6 por Experiencia; con 5 o más no cuesta Esperanza.
+    const honed = ch && ch.f_subclass === "Escuela del Conocimiento" && tierForLevel(ch.f_level || 1) >= 3 && !adeptOn && exps.length ? exps.map(() => Math.floor(Math.random() * 6) + 1) : [];
+    const honedFree = honed.filter((v) => v >= 5).length;
+    if (honed.length) postCampaignEvent(pr.charId, `📘 Pericia: tira ${honed.join(", ")}${honedFree ? " y usa " + honedFree + " Experiencia" + (honedFree > 1 ? "s" : "") + " sin gastar Esperanza" : ""}`);
+    const hopeCost = (adeptOn ? 0 : exps.length - honedFree) + (pr.poet ? 1 : 0) + (elemUse ? 1 : 0) + (foundExp ? 1 : 0);
     if (hopeCost && ch) patch.hope_marked = String(Math.max(0, Number(ch.hope_marked ?? HOPE_DEFAULT) - hopeCost));
     const rallyDie = pr.rally && ch?.f_rally_die ? ch.f_rally_die : "";
     if (rallyDie) patch.f_rally_die = "";
     if (pr.dedicated) patch.f_dedicated_used = "1";
+    if (ch && ch.f_subclass === "Escuela del Conocimiento" && pr.adept && exps.length) {
+      const room = Number(ch.r_stress || 0) - Number(ch.stress_marked || 0);
+      patch.stress_marked = String(Number(ch.stress_marked || 0) + Math.min(room, exps.length));
+    }
     if (slayerSpent) patch.f_slayer = String(Number(ch.f_slayer || 0) - slayerSpent);
+    if (adeptOn) postCampaignEvent(pr.charId, `📘 Diestro: marca ${exps.length} de Estrés en lugar de gastar Esperanza y duplica el modificador de su Experiencia`);
     if (foundExp) patch.f_found_used = "1";
     // Del Mar · Conocer la Marea: las fichas gastadas suman +1 cada una.
     const tideSpent = pr.tide && !pr.reaction ? Math.min(pr.tide, Number(ch?.f_tide_tokens || 0)) : 0;
@@ -7829,8 +7865,9 @@ export default function App({ onSignOut }) {
     if (elemUse) postCampaignEvent(pr.charId, `${"🌀"} Elementalista: gasta 1 Esperanza y usa su ${ch.f_origin_element || "elemento"} para ${elemUse === "roll" ? "sumar +2 a la tirada" : "sumar +3 al daño"}`);
     const noMercy = ch && ch.f_class === "Guerrero" && ch.f_no_mercy === "1" && pr.weapon && !pr.weapon.charge ? 1 : 0;
     doTraitRoll(pr.charId, pr.traitLabel, pr.traitValue + noMercy, pr.weapon ? { ...pr.weapon, ...(elemUse === "dmg" ? { elemDmg: 3 } : {}) } : pr.weapon, pr.cardContext, pr.advantage || pr.privilege || pr.quick, {
-      exps: [...exps.map((e) => ({ text: e.text, bonus: Number(e.bonus) || 0 })), ...(foundExp ? [foundExp] : [])],
+      exps: [...exps.map((e, i) => ({ text: e.text + (adeptOn ? " ×2" : honed.length ? " · Pericia " + honed[i] + (honed[i] >= 5 ? " (gratis)" : "") : ""), bonus: (Number(e.bonus) || 0) * (adeptOn ? 2 : 1) })), ...(foundExp ? [foundExp] : [])],
       slayer: slayerSpent,
+      honed,
       rallyDie,
       disadvantage: (ch?.f_ancestry || "").split(" + ").includes("Goblin") && pr.traitLabel === "Agilidad" ? false : pr.disadvantage || (pr.shellOn && !pr.reaction),
       poet: pr.poet,
@@ -7982,7 +8019,7 @@ export default function App({ onSignOut }) {
         ? "Ignoras los efectos que te afectarían aun con éxito"
         : "Las reacciones no generan Esperanza ni Miedo"
       : hope === fear ? "Ganas 1 Esperanza y te quitas 1 Estrés" : hope > fear ? "Ganas 1 Esperanza" : "El DJ gana 1 de Miedo";
-    setTraitRollResult({ key: Date.now(), hopeSides, traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, tideBonus, slayerRoll, slayerRolls, total, text: hope === fear ? "Éxito crítico" : reaction ? "Tirada de reacción" : text, color, note, reaction, card: cardContext ? { name: cardContext.name, dc: cardContext.dc } : dcVal ? { name: "", dc: dcVal } : null, exps: extras.exps || [], wasCloaked, weapon: weapon || null, charId });
+    setTraitRollResult({ key: Date.now(), hopeSides, traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, tideBonus, slayerRoll, slayerRolls, total, text: hope === fear ? "Éxito crítico" : reaction ? "Tirada de reacción" : text, color, note, reaction, card: cardContext ? { name: cardContext.name, dc: cardContext.dc } : dcVal ? { name: "", dc: dcVal } : null, exps: extras.exps || [], honed: extras.honed || [], wasCloaked, weapon: weapon || null, charId });
 
     // Con Esperanza (o crítico) ganas 1 Esperanza; con crítico además te quitas 1 Estrés.
     if (reaction) {
@@ -10473,7 +10510,7 @@ export default function App({ onSignOut }) {
                               kicker: `Subclase · ${subclassBadge}`,
                               title: subclassEntry.key,
                               text: subclassEntry.blurb,
-                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
+                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
                               image: subclassEntry.image,
                               bigStyle: true,
                               ...(isElemental ? { elementalAction: true } : {}),
@@ -13053,8 +13090,11 @@ export default function App({ onSignOut }) {
                 }
               })();
               const full = keys.length >= 5;
+              // Memoria Perfecta: una vez por descanso, -1 al coste de Recuperación.
+              const perfect = me.f_subclass === "Escuela del Conocimiento" && tierForLevel(me.f_level || 1) >= 2 && !me.f_recall_used;
               const recover = (k, cost) => {
                 const patch = { f_domain_vault: JSON.stringify(vault.filter((x) => x !== k)), f_domain_cards: JSON.stringify([...keys, k]) };
+                if (perfect && cost) patch.f_recall_used = "1";
                 if (cost) markStress(viewingCharId, cost, patch);
                 else updateCharacterFields(viewingCharId, patch);
                 postCampaignEvent(viewingCharId, `📚 Recupera «${k}» de la bóveda${cost ? " (marca " + cost + " de Estrés)" : ""}`);
@@ -13089,8 +13129,8 @@ export default function App({ onSignOut }) {
                               <button type="button" className="mh-btn-ghost" style={{ fontSize: 11, padding: "4px 8px" }} disabled={full} onClick={() => recover(k, 0)} title="En un descanso">
                                 En descanso
                               </button>
-                              <button type="button" className="mh-btn-ghost" style={{ fontSize: 11, padding: "4px 8px" }} disabled={full} onClick={() => recover(k, cd?.recall || 0)} title="Fuera de un descanso">
-                                Ahora · {cd?.recall || 0} Estrés
+                              <button type="button" className="mh-btn-ghost" style={{ fontSize: 11, padding: "4px 8px" }} disabled={full} onClick={() => recover(k, Math.max(0, (cd?.recall || 0) - (perfect ? 1 : 0)))} title={perfect ? "Memoria Perfecta: −1 al coste" : "Fuera de un descanso"}>
+                                Ahora · {Math.max(0, (cd?.recall || 0) - (perfect ? 1 : 0))} Estrés{perfect ? " (Memoria Perfecta)" : ""}
                               </button>
                             </span>
                           </div>
@@ -13449,7 +13489,7 @@ export default function App({ onSignOut }) {
               if (!ch) return null;
               const exps = getExperiences(ch);
               const hopeNow = Number(ch.hope_marked ?? HOPE_DEFAULT);
-              const expSum = exps.filter((_, i) => preRoll.exps.includes(i)).reduce((a, e) => a + (Number(e.bonus) || 0), 0);
+              const expSum = exps.filter((_, i) => preRoll.exps.includes(i)).reduce((a, e) => a + (Number(e.bonus) || 0), 0) * (ch.f_subclass === "Escuela del Conocimiento" && preRoll.adept ? 2 : 1);
               // Del Mar · Conocer la Marea: fichas que se pueden gastar en una tirada de acción.
               const tideHave = ch.f_community === "Del Mar" ? Number(ch.f_tide_tokens || 0) : 0;
               const tideOk = ch.f_community === "Del Mar" && !preRoll.reaction;
@@ -13499,7 +13539,9 @@ export default function App({ onSignOut }) {
               // Origen Elemental · Elementalista: 1 Esperanza para +2 a la tirada o +3 al daño.
               const elemOk = ch.f_subclass === "Origen Elemental" && !preRoll.reaction;
               const elemEl = ORIGIN_ELEMENTS.find((e) => e.key === ch.f_origin_element);
-              const hopeUsed = preRoll.exps.length + (preRoll.poet ? 1 : 0) + (elemOk && preRoll.elem ? 1 : 0);
+              const adeptOk = ch.f_subclass === "Escuela del Conocimiento";
+              const adeptOnUI = adeptOk && preRoll.adept;
+              const hopeUsed = (adeptOnUI ? 0 : preRoll.exps.length) + (preRoll.poet ? 1 : 0) + (elemOk && preRoll.elem ? 1 : 0);
               const riseOk = riseToChallenge(ch);
               const formula = (slayerUse ? "" : "") + (preRoll.dedicated || riseOk ? "1d20 + 1d12 " : "2d12 ") + (mod >= 0 ? "+ " : "− ") + Math.abs(mod) + (preRoll.rally && ch.f_rally_die ? " + 1" + ch.f_rally_die : "") + (preRoll.poet ? " + 1d4" : "") + (preRoll.weapon && ch.f_transformation_form_active === "Forma de Lobo" ? " + 1d10" : "") + (edgeNet > 0 ? " + 1d6" : edgeNet < 0 ? " − 1d6" : "") + (slayerUse ? " + " + slayerUse + "d6" : "");
               const toggleExp = (i) =>
@@ -13519,6 +13561,17 @@ export default function App({ onSignOut }) {
               const setTide = (n) => setPreRoll((p) => ({ ...p, tide: Math.max(0, Math.min(tideHave, n)) }));
               const setSlayer = (n) => setPreRoll((p) => ({ ...p, slayer: Math.max(0, Math.min(slayerHave, n)) }));
               const bonusTiles = [
+                adeptOk && exps.length > 0
+                  ? tile("adept", {
+                      on: preRoll.adept,
+                      title: "Diestro",
+                      sub: "Estrés en vez de Esperanza",
+                      cost: "×2",
+                      color: "#5E8FC9",
+                      hint: "Marcas 1 Estrés por Experiencia en lugar de gastar Esperanza, y su modificador se duplica",
+                      onClick: () => setPreRoll((p) => ({ ...p, adept: !p.adept })),
+                    })
+                  : null,
                 slayerHave > 0 ? (
                   <div key="slayer" className={"mh-pre-tile mh-pre-tide" + (slayerUse ? " is-on" : "")} style={{ "--pc": "#C0504A" }} title="Tiras los dados gastados y sumas su resultado al ataque">
                     <b>Dados de Cazador</b>
@@ -13634,7 +13687,7 @@ export default function App({ onSignOut }) {
               ].filter(Boolean);
               const lines = [
                 [preRoll.traitLabel, (preRoll.traitValue >= 0 ? "+" : "−") + Math.abs(preRoll.traitValue)],
-                ...exps.filter((_, i) => preRoll.exps.includes(i)).map((e) => [e.text, "+" + e.bonus]),
+                ...exps.filter((_, i) => preRoll.exps.includes(i)).map((e) => [e.text + (adeptOnUI ? " (Diestro)" : ""), "+" + (Number(e.bonus) || 0) * (adeptOnUI ? 2 : 1)]),
                 rallyOn ? ["Arenga", "+1" + ch.f_rally_die] : null,
                 preRoll.poet ? ["Corazón de Poeta", "+1d4"] : null,
                 preRoll.dedicated ? ["Entregado", "Esperanza d20"] : null,
@@ -13651,7 +13704,7 @@ export default function App({ onSignOut }) {
               // Altura fija: se reserva hueco para todas las líneas que este personaje puede llegar a tener.
               const maxLines = 1 + exps.length + (ch.f_rally_die ? 1 : 0) + (poetOk ? 1 : 0) + (dedicatedOk ? 1 : 0) + (riseOk ? 1 : 0) + (noMercyOn ? 1 : 0) + (slayerHave ? 1 : 0) + (foundOk ? 1 : 0) + (tideOk ? 1 : 0) + (elemOk ? 1 : 0) + (wolf ? 1 : 0) + 1;
               const canSpendHope = exps.length > 0 || poetOk;
-              const anyAdded = preRoll.exps.length > 0 || preRoll.rally || preRoll.poet || preRoll.dedicated || preRoll.privilege || preRoll.quick || tideUse > 0 || !!preRoll.elem || slayerUse > 0 || !!foundPick || edgePos !== "none";
+              const anyAdded = preRoll.exps.length > 0 || preRoll.rally || preRoll.poet || preRoll.dedicated || preRoll.privilege || preRoll.quick || tideUse > 0 || !!preRoll.elem || slayerUse > 0 || !!foundPick || !!preRoll.adept || edgePos !== "none";
               return (
                 <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 45, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)" }} onClick={() => setPreRoll(null)}>
                   <div className="mh-card mh-card-anim mh-pre" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={"Tirada de " + preRoll.traitLabel}>
@@ -13694,7 +13747,7 @@ export default function App({ onSignOut }) {
                       <div className="mh-pre-opts">
                         {exps.length > 0 && (
                           <>
-                            <div className="mh-pre-sec">Experiencias · 1 Esperanza cada una</div>
+                            <div className="mh-pre-sec">Experiencias · {adeptOnUI ? "1 Estrés cada una (Diestro)" : "1 Esperanza cada una"}</div>
                             <div className="mh-pre-grid">
                               {exps.map((e, i) => {
                                 const on = preRoll.exps.includes(i);
@@ -13786,7 +13839,7 @@ export default function App({ onSignOut }) {
                           className="mh-pre-plain"
                           style={anyAdded ? undefined : { visibility: "hidden" }}
                           tabIndex={anyAdded ? undefined : -1}
-                          onClick={() => setPreRoll((p) => ({ ...p, exps: [], rally: false, poet: false, dedicated: false, privilege: false, quick: false, tide: 0, elem: "", slayer: 0, found: "", advantage: false, disadvantage: false }))}
+                          onClick={() => setPreRoll((p) => ({ ...p, exps: [], rally: false, poet: false, dedicated: false, privilege: false, quick: false, tide: 0, elem: "", slayer: 0, found: "", adept: false, advantage: false, disadvantage: false }))}
                         >
                           Quitar lo añadido
                         </button>
@@ -13913,6 +13966,43 @@ export default function App({ onSignOut }) {
                             </button>
                             <button type="button" disabled={picked.includes("move") || picked.length >= max} onClick={() => pick("move")}>
                               <MoveUpRight size={12} /> Te mueves con él
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                    {(traitRollResult.honed || []).length > 0 && (
+                      <div className="mh-luck-done" style={{ color: "#5E8FC9" }}>
+                        Pericia: {traitRollResult.honed.join(", ")} · {traitRollResult.honed.filter((v) => v >= 5).length ? "Experiencia sin gastar Esperanza" : "pagas la Esperanza"}
+                      </div>
+                    )}
+                    {(() => {
+                      // Mago · Patrones Extraños: si sale tu número en un Dado de Dualidad, +1 Esperanza o −1 Estrés.
+                      const r = traitRollResult;
+                      const rc = characters[r.charId];
+                      const n = rc && rc.f_class === "Mago" ? Number(rc.f_pattern || 0) : 0;
+                      if (!n) return null;
+                      const hits = (r.hope === n ? 1 : 0) + (r.fear === n ? 1 : 0);
+                      if (!hits) return null;
+                      const used = r.patternUsed || 0;
+                      if (used >= hits) return <div className="mh-luck-done" style={{ color: "#5E8FC9" }}>Patrones Extraños aplicado</div>;
+                      const apply = (k) => {
+                        const cur = charsRef.current[r.charId];
+                        updateCharacterField(r.charId, k === "hope" ? "hope_marked" : "stress_marked", k === "hope" ? String(Math.min(getHopeMax(cur), Number(cur.hope_marked ?? HOPE_DEFAULT) + 1)) : String(Math.max(0, Number(cur.stress_marked || 0) - 1)));
+                        setTraitRollResult((prev) => (prev ? { ...prev, patternUsed: (prev.patternUsed || 0) + 1 } : prev));
+                        postCampaignEvent(r.charId, `🔢 Patrones Extraños: sale su ${n} y ${k === "hope" ? "gana 1 Esperanza" : "se quita 1 Estrés"}`);
+                      };
+                      return (
+                        <div className="mh-manip">
+                          <div className="mh-manip-h">
+                            <Sparkles size={13} /> Patrones Extraños: ¡ha salido tu {n}!{hits > 1 ? " (×2)" : ""}
+                          </div>
+                          <div className="mh-manip-o">
+                            <button type="button" onClick={() => apply("hope")}>
+                              <Sparkles size={12} /> +1 Esperanza
+                            </button>
+                            <button type="button" onClick={() => apply("stress")}>
+                              <Zap size={12} /> −1 Estrés
                             </button>
                           </div>
                         </div>
@@ -15452,6 +15542,28 @@ export default function App({ onSignOut }) {
                       run: () => setRawDlg({ pick: "", mode: "hope" }),
                     });
                   }
+                  // Mago · Prestidigitación: anuncia un efecto mágico menor.
+                  if (d.title === "Prestidigitación" && c?.f_class === "Mago" && !d.fromChat) {
+                    [
+                      ["Cambiar el color de un objeto", Palette],
+                      ["Crear un olor", Wind],
+                      ["Encender una vela", Flame],
+                      ["Hacer flotar un objeto diminuto", Feather],
+                      ["Iluminar una sala", Sun],
+                      ["Reparar un objeto pequeño", Hammer],
+                    ].forEach(([t, Ic]) =>
+                      cardActs.push({
+                        key: "presti-" + t,
+                        Icon: Ic,
+                        label: t,
+                        sub: "Prestidigitación",
+                        run: () => {
+                          closeCardDetail();
+                          postCampaignEvent(viewingCharId, "✨ Prestidigitación: " + t.charAt(0).toLowerCase() + t.slice(1));
+                        },
+                      })
+                    );
+                  }
                   // Serafín · Dados de Oración: se tiran al empezar la sesión.
                   if (d.title === "Dados de Oración" && c?.f_class === "Serafín" && !d.fromChat) {
                     const nP = prayerCountFor(c);
@@ -15929,6 +16041,7 @@ export default function App({ onSignOut }) {
                   const tideCard = !d.fromChat && d.kicker === "Comunidad" && d.title === "Del Mar" && c?.f_community === "Del Mar";
                   const prayerCard = !d.fromChat && d.title === "Dados de Oración" && c?.f_class === "Serafín";
                   const slayerCard = !d.fromChat && d.slayerCard;
+                  const patternCard = !d.fromChat && d.title === "Patrones Extraños" && c?.f_class === "Mago";
                   const tideMax = Number(c?.f_level || 1);
                   const footer = d.weapon
                     ? [d.weapon.trait !== "—" && d.weapon.trait, d.weapon.range].filter(Boolean).join(" · ")
@@ -16025,6 +16138,30 @@ export default function App({ onSignOut }) {
                           <div style={{ fontSize: "0.93em", color: "var(--mh-muted2)", fontStyle: "italic" }}>Sin característica especial.</div>
                         ))}
                     </FitBox>
+                    {patternCard && (
+                      <div className="mh-cardc-foot mh-pattern-foot">
+                        <span className="mh-pattern-nums" role="radiogroup" aria-label="Tu número">
+                          {Array.from({ length: 12 }, (_, k) => k + 1).map((n) => (
+                            <button
+                              key={n}
+                              type="button"
+                              role="radio"
+                              aria-checked={Number(c.f_pattern) === n}
+                              className={Number(c.f_pattern) === n ? "is-on" : ""}
+                              disabled={!!c.f_pattern_lock && Number(c.f_pattern) !== n}
+                              onClick={() => {
+                                if (c.f_pattern_lock) return;
+                                updateCharacterFields(viewingCharId, { f_pattern: String(n), f_pattern_lock: "1" });
+                                postCampaignEvent(viewingCharId, "🔢 Patrones Extraños: su número es el " + n);
+                              }}
+                            >
+                              {n}
+                            </button>
+                          ))}
+                        </span>
+                        <small>{c.f_pattern ? (c.f_pattern_lock ? "Puedes cambiarlo en el próximo descanso largo" : "Elige tu número") : "Elige tu número"}</small>
+                      </div>
+                    )}
                     {slayerCard && (
                       <div className="mh-cardc-foot mh-tide-foot">
                         <span className="mh-tide-pips mh-slayer-pips">
@@ -16109,7 +16246,7 @@ export default function App({ onSignOut }) {
                         </div>
                       );
                     })()}
-                    {!tideCard && !prayerCard && !slayerCard && (footer || d.domain) && (
+                    {!tideCard && !prayerCard && !slayerCard && !patternCard && (footer || d.domain) && (
                       <div className="mh-cardc-foot">
                         {d.domain ? (
                           <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
