@@ -1619,6 +1619,7 @@ const REST_ACTIONS = [
   { key: "clearmind", label: "Quitarse el Estrés" },
   { key: "repair", label: "Reparar la armadura" },
   { key: "prepare", label: "Prepararse" },
+  { key: "tribute", label: "Rendir tributo" },
 ];
 
 const STARTER_ITEMS = [
@@ -3039,6 +3040,11 @@ const sharedStyles = `
   .mh-trov-dots i { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--tb); box-sizing: border-box; }
   .mh-trov-dots i.is-f { background: var(--tb); }
   .mh-trov-f { font-size: 10.5px; color: var(--mh-muted); }
+  .mh-tribute-go { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 10px; border: 1px solid color-mix(in srgb, var(--tb) 40%, var(--mh-line)); background: var(--mh-panel); color: var(--mh-ink); font: inherit; cursor: pointer; position: relative; }
+  .mh-tribute-go.sel { border-color: var(--tb); background: color-mix(in srgb, var(--tb) 10%, var(--mh-panel)); }
+  .mh-tribute-go b { display: block; font-size: 12.5px; }
+  .mh-tribute-go small { display: block; font-size: 10.5px; color: var(--mh-muted); margin-top: 1px; }
+  .mh-tribute-go .mh-rest-ico { width: 30px; height: 30px; }
   .mh-trov.is-flash .mh-trov-s { animation: mh-trov-glow 1.2s ease-out; }
   @keyframes mh-trov-glow { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--tb) 70%, transparent); } 40% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--tb) 30%, transparent); } 100% { box-shadow: 0 0 0 0 transparent; } }
   .mh-wz { margin: 0; width: min(1020px, 100%); height: min(640px, 92%); padding: 0; display: flex; flex-direction: column; overflow: hidden; }
@@ -7591,10 +7597,19 @@ export default function App({ onSignOut }) {
     const messages = [];
     const shortDice = [];
 
+    // Brujo · Favor: rendir tributo al patrón como movimiento de descanso.
+    let favorGain = 0;
+    const tributeGain = Math.max(1, Number(c[spellcastTraitFor(c.f_class, c.f_subclass)] || 0));
     [key1, key2, key3].forEach((key) => {
       if (!key) return;
       const entry = REST_ACTIONS.find((a) => a.key === key);
       if (!entry) return;
+      if (key === "tribute") {
+        if (c.f_class !== "Brujo") return;
+        favorGain += tributeGain;
+        messages.push(`Rinde tributo a ${c.f_patron || "su patrón"}: +${tributeGain} Favor`);
+        return;
+      }
       if (key === "prepare") {
         hope = Math.min(getHopeMax(c), hope + 1);
         messages.push(`${entry.label}: +1 Esperanza`);
@@ -7657,6 +7672,7 @@ export default function App({ onSignOut }) {
       // Máximo 3 descansos cortos seguidos: el siguiente tiene que ser largo.
       f_short_rests: isLong ? "0" : String(Number(c.f_short_rests || 0) + 1),
     };
+    if (favorGain) restPatch.f_favor = String(getFavor(c) + favorGain);
     // Trovador: el descanso largo recupera sus canciones.
     if (isLong && c.f_speech_used) restPatch.f_speech_used = "";
     if (c.f_scales_ready) restPatch.f_scales_ready = "";
@@ -8289,6 +8305,7 @@ export default function App({ onSignOut }) {
     setTraitRollResult({ key: Date.now(), hopeSides, traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, tideBonus, patronRoll, patronSides: extras.patronSides || 0, slayerRoll, slayerRolls, total, text: hope === fear ? "Éxito crítico" : reaction ? "Tirada de reacción" : text, color, note, reaction, card: cardContext ? { name: cardContext.name, dc: cardContext.dc } : dcVal ? { name: "", dc: dcVal } : null, exps: extras.exps || [], honed: extras.honed || [], wasCloaked, weapon: weapon || null, charId });
 
     // Con Esperanza (o crítico) ganas 1 Esperanza; con crítico además te quitas 1 Estrés.
+    let hopeGained = 0;
     if (reaction) {
       // Nada que ganar ni que dar al DJ.
     } else if (hope >= fear) {
@@ -8298,6 +8315,8 @@ export default function App({ onSignOut }) {
         const currentHope = Number(ch.hope_marked ?? HOPE_DEFAULT);
         const nextHope = Math.min(getHopeMax(ch), currentHope + 1);
         if (nextHope !== currentHope) patch.hope_marked = String(nextHope);
+        hopeGained = nextHope - currentHope;
+        setTraitRollResult((prev) => (prev && prev.charId === charId ? { ...prev, hopeGained } : prev));
         const stress = Number(ch.stress_marked || 0);
         if (hope === fear && stress > 0) patch.stress_marked = String(stress - 1);
         if (Object.keys(patch).length) updateCharacterFields(charId, patch);
@@ -11283,6 +11302,37 @@ export default function App({ onSignOut }) {
                                       );
                                     })}
                                   </div>
+
+                                  {c.f_class === "Brujo" && (() => {
+                                    const gain = Math.max(1, Number(c[spellcastTraitFor(c.f_class, c.f_subclass)] || 0));
+                                    const n = countOf("tribute");
+                                    return (
+                                      <div className="mh-trov mh-tribute" style={{ "--tb": "#B55FA0" }}>
+                                        <div className="mh-trov-h">
+                                          <Eye size={15} color="#B55FA0" />
+                                          <b className="mh-serif">Pacto con {c.f_patron || "tu patrón"}</b>
+                                          <span className="mh-trov-tag">Favor · {getFavor(c)}</span>
+                                        </div>
+                                        <button
+                                          type="button"
+                                          role="checkbox"
+                                          aria-checked={n > 0}
+                                          className={"mh-tribute-go" + (n > 0 ? " sel" : "")}
+                                          onClick={() => togglePick("tribute")}
+                                        >
+                                          <span className="mh-rest-ico" style={{ "--rc": "#B55FA0" }}>
+                                            <Flame size={16} />
+                                          </span>
+                                          <span style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
+                                            <b>Rendir tributo{n > 1 ? " ×" + n : ""}</b>
+                                            <small>Describe cómo honras a tu patrón · +{gain} Favor{c.f_patron_sphere ? " · " + c.f_patron_sphere : ""}</small>
+                                          </span>
+                                          <span className={"mh-rest-tick" + (n > 0 ? "" : " off")}>{n > 0 && <Check size={12} strokeWidth={3} />}</span>
+                                        </button>
+                                        <div className="mh-trov-f">Ocupa una de tus acciones de descanso.</div>
+                                      </div>
+                                    );
+                                  })()}
 
                                   {c.f_subclass === "Trovador" && (() => {
                                     const used = getSongsUsed(c);
@@ -14678,8 +14728,8 @@ export default function App({ onSignOut }) {
                       // Brujo · Favor: con éxito con Esperanza, 1 Favor en lugar de 1 Esperanza.
                       const r = traitRollResult;
                       const rc = characters[r.charId];
-                      if (!rc || rc.f_class !== "Brujo" || r.reaction || !(r.hope > r.fear) || r.boonRetry) return null;
-                      const okW = r.card?.dc != null ? r.total >= r.card.dc : null;
+                      if (!rc || rc.f_class !== "Brujo" || r.reaction || !(r.hope >= r.fear)) return null;
+                      const okW = r.hope === r.fear ? true : r.card?.dc != null ? r.total >= r.card.dc : null;
                       if (okW === false) return null;
                       if (r.favorKept) return <div className="mh-luck-done" style={{ color: "#B55FA0" }}>Ganas 1 Favor en lugar de Esperanza ({getFavor(rc)})</div>;
                       return (
@@ -14688,7 +14738,8 @@ export default function App({ onSignOut }) {
                           className="mh-luck-btn mh-favor-btn"
                           onClick={() => {
                             const cur = charsRef.current[r.charId];
-                            updateCharacterFields(r.charId, { f_favor: String(getFavor(cur) + 1), hope_marked: String(Math.max(0, Number(cur.hope_marked ?? HOPE_DEFAULT) - 1)) });
+                            // Solo se devuelve la Esperanza que la tirada dio de verdad (si ya estabas al máximo, no hay nada que devolver).
+                            updateCharacterFields(r.charId, { f_favor: String(getFavor(cur) + 1), hope_marked: String(Math.max(0, Number(cur.hope_marked ?? HOPE_DEFAULT) - (r.hopeGained ?? 1))) });
                             setTraitRollResult((prev) => (prev ? { ...prev, favorKept: true } : prev));
                             postCampaignEvent(r.charId, "👁️ Favor: gana 1 Favor de su patrón en lugar de 1 Esperanza");
                           }}
@@ -16475,11 +16526,12 @@ export default function App({ onSignOut }) {
                     cardActs.push({
                       key: "tribute",
                       Icon: Flame,
-                      label: "Rendir tributo · +" + gain + " Favor",
-                      sub: "Movimiento de descanso",
+                      label: "Rendir tributo en un descanso",
+                      sub: "+" + gain + " Favor · ocupa una acción de descanso",
                       run: () => {
-                        updateCharacterField(viewingCharId, "f_favor", String(getFavor(c) + gain));
-                        postCampaignEvent(viewingCharId, `🕯️ Rinde tributo a ${c.f_patron || "su patrón"} y gana ${gain} de Favor`);
+                        setDetailTab("rests");
+                        setRestPicks(null);
+                        setViewingCardDetail(null);
                       },
                     });
                   }
