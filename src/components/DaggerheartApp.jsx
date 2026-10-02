@@ -217,7 +217,16 @@ const SUBCLASSES = {
     },
   ],
   Guerrero: [
-    { key: "Llamado del Valiente", blurb: "Lidera desde el frente con coraje inquebrantable." },
+    {
+      key: "Llamado del Valiente",
+      blurb: "Usa el poder de sus enemigos para alimentar el suyo propio.",
+      features: [
+        { name: "Coraje", text: "Cuando falles una tirada con Miedo, ganas 1 Esperanza." },
+        { name: "Ritual de Batalla", text: "Una vez por descanso largo, antes de intentar algo increíblemente peligroso o de enfrentarte a un enemigo que claramente te supera, describe qué ritual haces o qué preparativos llevas a cabo. Al hacerlo, te quitas 2 de Estrés y ganas 2 de Esperanza." },
+        { name: "Estar a la Altura (Especialización)", text: "Estás alerta ante un peligro creciente. Mientras te queden 2 o menos Puntos de vida sin marcar, puedes tirar un d20 como Dado de Esperanza." },
+        { name: "Camaradería (Maestría)", text: "Tu valentía inquebrantable es un punto de reunión para tus aliados. Puedes iniciar una Tirada en Equipo una vez más por sesión. Además, cuando un aliado inicie una Tirada en Equipo contigo, solo tiene que gastar 2 de Esperanza para hacerlo." },
+      ],
+    },
     { key: "Llamado del Cazador", blurb: "Se especializa en abatir a las amenazas más peligrosas." },
   ],
   Mago: [
@@ -736,7 +745,7 @@ const CLASS_FEATURES = {
     { name: "Canalizar Poder en Bruto", text: "Una vez por descanso largo, puedes pasar una carta de dominio de tu equipo a tu bóveda y elegir una de estas opciones: ganar tanta Esperanza como el nivel de la carta, o potenciar un hechizo que haga daño, obteniendo un bonificador a tu tirada de daño igual al doble del nivel de la carta." },
   ],
   Guerrero: [
-    { name: "Ataque de Oportunidad", text: "Si un adversario en alcance Cuerpo a cuerpo intenta alejarse, haz una tirada de reacción con el rasgo que quieras contra su Dificultad. Si tienes éxito, elige un efecto (dos con un crítico): no puede moverse, le haces el daño de tu arma principal o te mueves con él." },
+    { name: "Ataque de Oportunidad", text: "Si un adversario en alcance Cuerpo a cuerpo intenta salir de ese alcance, haz una tirada de reacción con el rasgo que elijas contra su Dificultad. Si tienes éxito, elige un efecto (dos si es un éxito crítico): no puede moverse de donde está; le haces tanto daño como el de tu arma principal; o te mueves con él." },
     { name: "Entrenamiento de Combate", text: "Ignoras la carga al equiparte armas. Cuando haces daño físico, sumas tu nivel a la tirada de daño (la app lo suma sola)." },
   ],
   Mago: [
@@ -2623,6 +2632,9 @@ const sharedStyles = `
   .mh-ethereal-btn { background: #B8862E; }
   .mh-compass-btn { background: #6E8B5A; }
   .mh-adapt-btn { background: #6A7E95; }
+  .mh-courage-btn { background: #B8862E; }
+  .mh-courage-btn:hover:not(:disabled) { background: #A07424; }
+  .mh-manip-o.is-3 { grid-template-columns: repeat(3, 1fr); }
   .mh-adapt-btn:hover:not(:disabled) { background: #5A6D82; }
   .mh-manip { margin-top: 12px; border: 1.5px solid color-mix(in srgb, #8A6FD0 45%, transparent); border-radius: 12px; padding: 9px; background: color-mix(in srgb, #8A6FD0 7%, transparent); font-family: 'Inter', system-ui, sans-serif; }
   .mh-manip-h { display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 12px; font-weight: 700; color: #6B4FB8; }
@@ -7395,6 +7407,7 @@ export default function App({ onSignOut }) {
     if (isLong && c.f_closeknit_used) restPatch.f_closeknit_used = "";
     if (isLong && c.f_raw_used) restPatch.f_raw_used = "";
     if (isLong && c.f_brave_used) restPatch.f_brave_used = "";
+    if (isLong && c.f_ritual_used) restPatch.f_ritual_used = "";
     if (isLong && c.f_enchant_used) restPatch.f_enchant_used = "";
     if (isLong && c.f_charged) restPatch.f_charged = "";
     // Trae Suerte vuelve a repartirse en la «sesión» siguiente.
@@ -7728,6 +7741,8 @@ export default function App({ onSignOut }) {
 
   // Antes de tirar: ventana para añadir Experiencias, el dado de Arenga o Ventaja.
   const [preRoll, setPreRoll] = useState(null);
+  // Llamado del Valiente · Estar a la Altura (Especialización): con 2 o menos PV sin marcar, d20 como Dado de Esperanza.
+  const riseToChallenge = (c) => !!c && c.f_subclass === "Llamado del Valiente" && tierForLevel(c.f_level || 1) >= 2 && Number(c.r_hp || 0) - Number(c.hp_marked || 0) <= 2;
   const rollTraitCheck = (charId, traitLabel, traitValue, weapon, cardContext, advantage) => {
     // Galapa · Retraerse: desventaja en las tiradas de acción mientras está en el caparazón.
     const shellOn = getConditions(charsRef.current[charId] || {}).includes("Retraído");
@@ -7761,7 +7776,7 @@ export default function App({ onSignOut }) {
       rallyDie,
       disadvantage: (ch?.f_ancestry || "").split(" + ").includes("Goblin") && pr.traitLabel === "Agilidad" ? false : pr.disadvantage || (pr.shellOn && !pr.reaction),
       poet: pr.poet,
-      hopeD20: pr.dedicated,
+      hopeD20: pr.dedicated || riseToChallenge(ch),
       tide: tideSpent,
       elemRoll: elemUse === "roll" ? 2 : 0,
       dc: pr.cardContext?.dc ?? (Number(pr.dc) > 0 ? Number(pr.dc) : null),
@@ -7934,11 +7949,11 @@ export default function App({ onSignOut }) {
     const line = `**${who}** — ${reaction ? "Reacción de " : ""}${traitLabel}: Esperanza ${hope} + Miedo ${fear} ${modStr}${advStr} = **${total}** (${text})`;
     await pushRollLog(line);
     if (cardContext) {
-      const success = total >= cardContext.dc;
+      const success = dcVal ? hope === fear || total >= dcVal : null;
       await postCampaignEvent(
         charId,
-        `🃏 ${cardContext.name}: ${success ? "Éxito" : "Fracaso"} (${total} vs Dificultad ${cardContext.dc})`,
-        { kind: "roll", roll: { trait: traitLabel, card: cardContext.name, hope, fear, mod: traitValue, adv: advantageRoll, wolf: wolfBonus, ...rollExtra, total, dc: cardContext.dc } }
+        dcVal ? `🃏 ${cardContext.name}: ${success ? "Éxito" : "Fracaso"} (${total} vs Dificultad ${dcVal})` : `🃏 ${cardContext.name}: ${total} (${text})`,
+        { kind: "roll", roll: { trait: traitLabel, card: cardContext.name, reaction, hope, fear, mod: traitValue, adv: advantageRoll, wolf: wolfBonus, ...rollExtra, total, ...(dcVal ? { dc: dcVal } : {}) } }
       );
     } else {
       const dcStr = dcVal ? ` vs Dificultad ${dcVal}: ${hope === fear || total >= dcVal ? "Éxito" : "Fracaso"}` : "";
@@ -10380,7 +10395,7 @@ export default function App({ onSignOut }) {
                               kicker: `Subclase · ${subclassBadge}`,
                               title: subclassEntry.key,
                               text: subclassEntry.blurb,
-                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
+                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
                               image: subclassEntry.image,
                               bigStyle: true,
                               ...(isElemental ? { elementalAction: true } : {}),
@@ -10392,6 +10407,7 @@ export default function App({ onSignOut }) {
                               ...(subclassEntry.key === "Centinela Alado" ? { sentinelActs: true } : {}),
                               ...(subclassEntry.key === "Origen Elemental" ? { originActs: true } : {}),
                               ...(subclassEntry.key === "Origen Primigenio" ? { primalActs: true } : {}),
+                              ...(subclassEntry.key === "Llamado del Valiente" ? { braveActs: true } : {}),
                             }),
                           });
                         }
@@ -13395,7 +13411,8 @@ export default function App({ onSignOut }) {
               const elemOk = ch.f_subclass === "Origen Elemental" && !preRoll.reaction;
               const elemEl = ORIGIN_ELEMENTS.find((e) => e.key === ch.f_origin_element);
               const hopeUsed = preRoll.exps.length + (preRoll.poet ? 1 : 0) + (elemOk && preRoll.elem ? 1 : 0);
-              const formula = (preRoll.dedicated ? "1d20 + 1d12 " : "2d12 ") + (mod >= 0 ? "+ " : "− ") + Math.abs(mod) + (preRoll.rally && ch.f_rally_die ? " + 1" + ch.f_rally_die : "") + (preRoll.poet ? " + 1d4" : "") + (preRoll.weapon && ch.f_transformation_form_active === "Forma de Lobo" ? " + 1d10" : "") + (edgeNet > 0 ? " + 1d6" : edgeNet < 0 ? " − 1d6" : "");
+              const riseOk = riseToChallenge(ch);
+              const formula = (preRoll.dedicated || riseOk ? "1d20 + 1d12 " : "2d12 ") + (mod >= 0 ? "+ " : "− ") + Math.abs(mod) + (preRoll.rally && ch.f_rally_die ? " + 1" + ch.f_rally_die : "") + (preRoll.poet ? " + 1d4" : "") + (preRoll.weapon && ch.f_transformation_form_active === "Forma de Lobo" ? " + 1d10" : "") + (edgeNet > 0 ? " + 1d6" : edgeNet < 0 ? " − 1d6" : "");
               const toggleExp = (i) =>
                 setPreRoll((p) => ({ ...p, exps: p.exps.includes(i) ? p.exps.filter((x) => x !== i) : [...p.exps, i] }));
               const wolf = preRoll.weapon && ch.f_transformation_form_active === "Forma de Lobo";
@@ -13501,6 +13518,7 @@ export default function App({ onSignOut }) {
                 rallyOn ? ["Arenga", "+1" + ch.f_rally_die] : null,
                 preRoll.poet ? ["Corazón de Poeta", "+1d4"] : null,
                 preRoll.dedicated ? ["Entregado", "Esperanza d20"] : null,
+                riseOk && !preRoll.dedicated ? ["Estar a la Altura", "Esperanza d20"] : null,
                 tideUse ? ["Conocer la Marea", "+" + tideUse] : null,
                 elemOk && preRoll.elem ? ["Elementalista", preRoll.elem === "roll" ? "+2" : "+3 al daño"] : null,
                 wolf ? ["Forma de Lobo", "+1d10"] : null,
@@ -13508,7 +13526,7 @@ export default function App({ onSignOut }) {
               ].filter(Boolean);
               const DS = 40;
               // Altura fija: se reserva hueco para todas las líneas que este personaje puede llegar a tener.
-              const maxLines = 1 + exps.length + (ch.f_rally_die ? 1 : 0) + (poetOk ? 1 : 0) + (dedicatedOk ? 1 : 0) + (tideOk ? 1 : 0) + (elemOk ? 1 : 0) + (wolf ? 1 : 0) + 1;
+              const maxLines = 1 + exps.length + (ch.f_rally_die ? 1 : 0) + (poetOk ? 1 : 0) + (dedicatedOk ? 1 : 0) + (riseOk ? 1 : 0) + (tideOk ? 1 : 0) + (elemOk ? 1 : 0) + (wolf ? 1 : 0) + 1;
               const canSpendHope = exps.length > 0 || poetOk;
               const anyAdded = preRoll.exps.length > 0 || preRoll.rally || preRoll.poet || preRoll.dedicated || preRoll.privilege || preRoll.quick || tideUse > 0 || !!preRoll.elem || edgePos !== "none";
               return (
@@ -13522,7 +13540,7 @@ export default function App({ onSignOut }) {
                         <b className="mh-serif">{preRoll.cardContext ? preRoll.cardContext.name : preRoll.weapon?.charge ? "Carga · tirada de Agilidad" : preRoll.weapon ? "Ataque con " + preRoll.weapon.name : "Tirada de " + preRoll.traitLabel}</b>
                         <small>
                           {preRoll.traitLabel} {(preRoll.traitValue >= 0 ? "+" : "−") + Math.abs(preRoll.traitValue)} · {preRoll.reaction ? "Sin Esperanza ni Miedo" : "Esperanza y Miedo"}
-                          {preRoll.shellOn && !preRoll.reaction ? " · Retraído: desventaja" : ""}{preRoll.cardContext ? " · Dificultad " + preRoll.cardContext.dc : ""}
+                          {preRoll.shellOn && !preRoll.reaction ? " · Retraído: desventaja" : ""}{preRoll.cardContext?.dc != null ? " · Dificultad " + preRoll.cardContext.dc : ""}
                         </small>
                       </div>
                       {canReact && (
@@ -13585,7 +13603,7 @@ export default function App({ onSignOut }) {
                       </div>
                       <div className="mh-pre-side">
                         <div className="mh-pre-dice">
-                          <DieFace sides={preRoll.dedicated ? 20 : 12} value={preRoll.dedicated ? "d20" : "d12"} color="#E3B04B" size={DS} label="Esperanza" />
+                          <DieFace sides={preRoll.dedicated || riseOk ? 20 : 12} value={preRoll.dedicated || riseOk ? "d20" : "d12"} color="#E3B04B" size={DS} label="Esperanza" />
                           <DieFace sides={12} value={"d12"} color="#A58BE8" size={DS} label="Miedo" />
                           {edgeNet !== 0 && <DieFace sides={6} value={"d6"} color={edgeNet > 0 ? "#7FB77A" : "#D9644E"} size={Math.round(DS * 0.8)} label={edgeNet > 0 ? "Ventaja" : "Desventaja"} />}
                           {wolf && <DieFace sides={10} value={"d10"} color="#E0544A" size={Math.round(DS * 0.85)} label="Lobo" />}
@@ -13690,6 +13708,68 @@ export default function App({ onSignOut }) {
                       {traitRollResult.traitLabel}
                     </div>
                     <DualityResult roll={traitRollResult} size={72} />
+                    {(() => {
+                      // Llamado del Valiente · Coraje: al fallar una tirada con Miedo, +1 Esperanza.
+                      const r = traitRollResult;
+                      const rc = characters[r.charId];
+                      if (!rc || rc.f_subclass !== "Llamado del Valiente" || !(r.fear > r.hope)) return null;
+                      if (r.courage) return <div className="mh-luck-done" style={{ color: "#B8862E" }}>Coraje: +1 Esperanza</div>;
+                      const failed = r.card?.dc != null ? r.total < r.card.dc : null;
+                      if (failed === false) return null;
+                      return (
+                        <button
+                          type="button"
+                          className="mh-luck-btn mh-courage-btn"
+                          onClick={() => {
+                            const cur = charsRef.current[r.charId];
+                            updateCharacterField(r.charId, "hope_marked", String(Math.min(getHopeMax(cur), Number(cur.hope_marked ?? HOPE_DEFAULT) + 1)));
+                            setTraitRollResult((prev) => (prev ? { ...prev, courage: true } : prev));
+                            postCampaignEvent(r.charId, "🦁 Coraje: falla con Miedo y gana 1 Esperanza");
+                          }}
+                        >
+                          <Sparkles size={15} /> Coraje · +1 Esperanza
+                          <small>{failed ? "Has fallado con Miedo" : "Si has fallado la tirada con Miedo"}</small>
+                        </button>
+                      );
+                    })()}
+                    {(() => {
+                      // Guerrero · Ataque de Oportunidad: si tiene éxito, uno o dos efectos (dos con crítico).
+                      const r = traitRollResult;
+                      if (r.card?.name !== "Ataque de Oportunidad") return null;
+                      const rc = characters[r.charId];
+                      const crit = r.hope === r.fear;
+                      const max = crit ? 2 : 1;
+                      const picked = r.oppPicks || [];
+                      const failed = r.card?.dc != null && !crit && r.total < r.card.dc;
+                      if (failed) return null;
+                      const w = rc ? PRIMARY_WEAPONS.find((x) => x.key === rc.f_primary_weapon) : null;
+                      const pick = (k) => {
+                        setTraitRollResult((prev) => (prev ? { ...prev, oppPicks: [...(prev.oppPicks || []), k] } : prev));
+                        if (k === "dmg" && w) {
+                          setTraitRollResult(null);
+                          rollWeaponDamage(w.key, w.damage, r.charId, false);
+                        }
+                        postCampaignEvent(r.charId, "⚔️ Ataque de Oportunidad: " + { stay: "el adversario no puede moverse de donde está", dmg: "le hace el daño de su arma principal", move: "se mueve con el adversario" }[k]);
+                      };
+                      return (
+                        <div className="mh-manip">
+                          <div className="mh-manip-h">
+                            <Swords size={13} /> {r.card?.dc != null ? "Éxito: elige" : "Si tienes éxito, elige"} {max === 2 ? "dos efectos" : "un efecto"} ({picked.length}/{max})
+                          </div>
+                          <div className="mh-manip-o is-3">
+                            <button type="button" disabled={picked.includes("stay") || picked.length >= max} onClick={() => pick("stay")}>
+                              <Lock size={12} /> No puede moverse
+                            </button>
+                            <button type="button" disabled={!w || picked.includes("dmg") || picked.length >= max} title={w ? w.key + " · " + w.damage : "No tienes arma principal"} onClick={() => pick("dmg")}>
+                              <Swords size={12} /> Daño del arma
+                            </button>
+                            <button type="button" disabled={picked.includes("move") || picked.length >= max} onClick={() => pick("move")}>
+                              <MoveUpRight size={12} /> Te mueves con él
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })()}
                     {(() => {
                       // Humano · Adaptabilidad: si falla una tirada con Experiencia, 1 Estrés para repetirla.
                       const r = traitRollResult;
@@ -15145,6 +15225,42 @@ export default function App({ onSignOut }) {
                       },
                     });
                   }
+                  // Llamado del Valiente · Ritual de Batalla.
+                  if (d.braveActs && !d.fromChat) {
+                    cardActs.push({
+                      key: "ritual",
+                      Icon: Flame,
+                      label: c.f_ritual_used ? "Ritual de Batalla · vuelve al descanso largo" : "Ritual de Batalla",
+                      sub: "Te quitas 2 de Estrés y ganas 2 de Esperanza",
+                      disabled: !!c.f_ritual_used,
+                      run: () => {
+                        closeCardDetail();
+                        updateCharacterFields(viewingCharId, {
+                          stress_marked: String(Math.max(0, Number(c.stress_marked || 0) - 2)),
+                          hope_marked: String(Math.min(getHopeMax(c), Number(c.hope_marked ?? HOPE_DEFAULT) + 2)),
+                          f_ritual_used: "1",
+                        });
+                        postCampaignEvent(viewingCharId, "🔥 Ritual de Batalla: se prepara para el peligro, se quita 2 de Estrés y gana 2 de Esperanza");
+                      },
+                    });
+                  }
+                  // Guerrero · Ataque de Oportunidad: tirada de reacción con el rasgo que elijas.
+                  if (d.title === "Ataque de Oportunidad" && c?.f_class === "Guerrero" && !d.fromChat) {
+                    TRAITS.forEach((t) => {
+                      const v = Number(c[t.key] || 0);
+                      cardActs.push({
+                        key: "opp-" + t.key,
+                        Icon: t.Icon,
+                        label: "Reacción con " + t.label + " (" + (v >= 0 ? "+" : "") + v + ")",
+                        sub: "Contra la Dificultad del adversario",
+                        run: () => {
+                          closeCardDetail();
+                          rollTraitCheck(viewingCharId, t.label, v, null, { name: "Ataque de Oportunidad" });
+                          setPreRoll((pr) => (pr ? { ...pr, reaction: true } : pr));
+                        },
+                      });
+                    });
+                  }
                   // Origen Primigenio · Carga Arcana (Maestría).
                   if (d.primalActs && !d.fromChat && tierForLevel(c.f_level || 1) >= 3) {
                     const charged = c.f_charged === "1";
@@ -15530,7 +15646,7 @@ export default function App({ onSignOut }) {
                       label: "Mostrar en la campaña",
                       sub: shareCamp.name,
                       run: () => {
-                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, divineActs, sentinelActs, originActs, primalActs, ...detail } = d;
+                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, divineActs, sentinelActs, originActs, primalActs, braveActs, ...detail } = d;
                         // Las imágenes incrustadas muy grandes no se copian al chat.
                         if (typeof detail.image === "string" && detail.image.startsWith("data:") && detail.image.length > 30000) delete detail.image;
                         const type = d.domain ? "domain" : d.weapon ? "weapon" : d.armor ? "armor" : "card";
