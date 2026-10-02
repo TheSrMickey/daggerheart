@@ -344,7 +344,7 @@ const COMMUNITIES = [
   { key: "Salvaje", blurb: "Vienes de lo más profundo del bosque, de una comunidad que integra sus hogares en la naturaleza y se dedica a protegerla.", features: [{ name: "Pies Ligeros", text: "Te mueves en silencio de forma natural. Tienes ventaja en las tiradas para moverte sin que te oigan." }] },
   { key: "De las Dunas", blurb: "Has hecho tu hogar entre las arenas cambiantes y el clima árido del desierto, donde la familia y la colaboración lo son todo.", expansion: "Hope & Fear", features: [{ name: "Oasis", text: "Durante un descanso corto, tú o un aliado podéis repetir un dado usado en una acción de descanso y quedaros con el resultado más alto." }] },
   { key: "Del Hogar", blurb: "Vienes de orígenes humildes, de un pueblo modesto o del campo, donde familias y vecinos forjan lazos muy estrechos.", expansion: "Hope & Fear", features: [{ name: "Muy Unidos", text: "Una vez por descanso largo, puedes gastar cualquier cantidad de Esperanza para dar a un aliado dentro de alcance Lejano esa misma cantidad de Esperanza." }] },
-  { key: "De la Escarcha", blurb: "Te criaste en tierras heladas, curtido por el frío.", expansion: "Hope & Fear", features: [{ name: "Curtido", text: "Cuando descansas, te quitas 1 Punto de vida." }] },
+  { key: "De la Escarcha", blurb: "Vienes de un lugar de nieve y hielo, donde tu comunidad aprendió a sobrevivir en las condiciones más duras.", expansion: "Hope & Fear", features: [{ name: "Curtido", text: "Cuando haces un descanso, te quitas 1 Punto de vida." }] },
   { key: "De la Guerra", blurb: "Creciste entre conflictos, formado para el combate.", expansion: "Hope & Fear", features: [{ name: "Cara Valiente", text: "Una vez por sesión, cuando te obliguen a marcar Estrés, puedes gastar 1 Esperanza en su lugar." }] },
   { key: "Libre", blurb: "Naciste sin ataduras a ninguna autoridad ni institución.", expansion: "Hope & Fear", features: [{ name: "Sin Ataduras", text: "Una vez por sesión, cuando saques una tirada con Miedo, puedes convertirla en una tirada con Esperanza." }] },
   { key: "Renacido", blurb: "Tu vida actual comenzó tras dejar atrás una anterior.", expansion: "Hope & Fear", features: [{ name: "Familia Elegida", text: "Una vez por descanso, puedes gastar 1 Esperanza para usar una Experiencia de un aliado como si fuera tuya, contando cómo te preparó para este momento." }] },
@@ -7277,6 +7277,11 @@ export default function App({ onSignOut }) {
       }
       messages.push(`${entry.label}: ${roll} (1d4+${tier})`);
     });
+    // De la Escarcha · Curtido: cada descanso quita 1 Punto de vida más.
+    if (c.f_community === "De la Escarcha" && hp > 0) {
+      hp = Math.max(0, hp - 1);
+      messages.push("Curtido: te quitas 1 Punto de vida");
+    }
     // De las Dunas · Oasis: repite el dado más bajo del descanso corto y se queda con el mayor.
     if (!isLong && c.f_community === "De las Dunas" && shortDice.length) {
       const low = shortDice.reduce((a, b) => (b.d4 < a.d4 ? b : a));
