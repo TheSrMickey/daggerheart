@@ -531,7 +531,7 @@ const ANCESTRIES = [
   { key: "Estirpe del Cielo", blurb: "Humanoide de carne y aire descendiente de los elementales del aire, de piel que cambia de color como el cielo y cabello que flota como humo o nubes.", expansion: "Hope & Fear", features: [{ name: "Fuerza del Vendaval", text: "Marca 1 Estrés para invocar una ráfaga que te lleva a ti o a un aliado Muy cercano hasta alcance Muy lejano. Además, siempre controlas la velocidad de tus caídas." }, { name: "Ojo de la Tormenta", text: "Gasta 2 Esperanza para darte a ti o a un aliado Cuerpo a cuerpo +1 a la Evasión hasta que recibáis daño Grave o vuelvas a usarlo." }] },
   { key: "Estirpe de la Marea", blurb: "Humanoide de carne y agua descendiente de los elementales del agua, con orejas como aletas, membranas entre los dedos y colores que cambian como el agua.", expansion: "Hope & Fear", features: [{ name: "Anfibio", text: "Puedes respirar y moverte con normalidad bajo el agua." }, { name: "Manantial de Vida", text: "Una vez por descanso, cuando tengas acceso a un poco de agua, puedes marcar 1 Estrés para quitarte 1 Punto de Vida a ti o a un aliado en alcance Muy cercano." }] },
   { key: "Estirpe de la Tierra", blurb: "Humanoide de carne y tierra descendiente de los elementales de la tierra, formado de roca, cristal, arcilla, tierra o arena.", expansion: "Hope & Fear", features: [{ name: "Piel de Piedra", text: "Ganas un bonificador permanente de +1 a tu Puntuación de Armadura y a tus umbrales de daño al crear el personaje." }, { name: "Inamovible", text: "Mientras toques el suelo, no pueden levantarte ni moverte contra tu voluntad." }] },
-  { key: "Estirpe de la Brasa", blurb: "Vinculado al fuego y al calor de las brasas.", expansion: "Hope & Fear", features: [{ name: "Ignífugo", text: "Eres inmune al daño de fuego, mágico o normal." }, { name: "Ignición", text: "Marca 1 Estrés para envolver tu arma principal en llamas hasta el final de la escena: da luz brillante y +1d6 a las tiradas de daño con esa arma." }] },
+  { key: "Estirpe de la Brasa", blurb: "Humanoide de carne y fuego descendiente de los elementales del fuego, de cabello en llamas, ojos como ascuas y un brillo que recorre su cuerpo y cambia con sus emociones.", expansion: "Hope & Fear", features: [{ name: "Ignífugo", text: "Eres inmune al daño de las llamas, sean mágicas o normales." }, { name: "Ignición", text: "Marca 1 Estrés para envolver tu arma principal en llamas hasta el final de la escena. Mientras el arma arda, da una luz brillante y ganas 1d6 de bonificador a las tiradas de daño con ella." }] },
 ];
 
 const COMMUNITIES = [
@@ -4049,6 +4049,7 @@ function DamageResult({ roll }) {
         {(roll.rolls2 || []).map((v, i) => (
           <DieFace key={"r2" + i} sides={roll.die2} value={v} color={color} size={size} rolling={false} highlight={v === roll.die2} />
         ))}
+        {roll.igniteRoll > 0 && <DieFace sides={6} value={roll.igniteRoll} color="#E0823A" size={Math.round(size * 0.8)} rolling={false} highlight={roll.igniteRoll === 6} label="Llamas" />}
         {(roll.markedRolls || []).map((v, i) => (
           <DieFace key={"mk" + i} sides={roll.markedDie || 4} value={v} color="#7D8BA3" size={Math.round(size * 0.8)} rolling={false} label={i === 0 ? "Marcado" : undefined} />
         ))}
@@ -4074,6 +4075,7 @@ function DamageResult({ roll }) {
           <div style={{ fontSize: 12.5, color: "var(--mh-ink3)" }}>
             {roll.dice || 1}d{roll.die} ({rolls.join(" + ")}){roll.rolls2 ? ` + ${roll.rolls2.length}d${roll.die2} (${roll.rolls2.join(" + ")})` : ""}{roll.bonus ? " + " + roll.bonus : ""}
             {roll.comboRolls ? ` + ${roll.comboRolls.join(" + ")} (Combo d${roll.comboDie})` : ""}
+            {roll.igniteRoll ? ` + 1d6 (${roll.igniteRoll}) (Ignición)` : ""}
             {roll.markedRolls ? ` + ${roll.markedRolls.join(" + ")} (Marcado para Morir)` : ""}
             {roll.firstStrike ? " · ×2 (Primer Golpe)" : ""}
             {roll.droppedRoll != null ? ` · descartas un ${roll.droppedRoll} (Agresiva)` : ""}
@@ -6024,14 +6026,16 @@ export default function App({ onSignOut }) {
     // Hechicero · Canalizar Poder en Bruto: bono guardado para el próximo daño mágico.
     const rawBonus = ch && damageType === "mágico" ? Number(ch.f_raw_dmg || 0) : 0;
     if (rawBonus) updateCharacterField(charId, "f_raw_dmg", "");
+    // Estirpe de la Brasa · Ignición: +1d6 con el arma principal en llamas.
+    const igniteRoll = !opts.plain && ch && ch.f_ignite === "1" && (weaponName === ch.f_primary_weapon || (weaponName === BRAWLER_STRIKE && brawlerArmed(ch))) ? Math.floor(Math.random() * 6) + 1 : 0;
     // Pacto del Iracundo · Furia del Patrón: tantos Dados de Patrón como tu Rango.
     const furyRolls = !opts.plain && ch && ch.f_fury === "1" ? Array.from({ length: tierForLevel(ch.f_level || 1) }, () => Math.floor(Math.random() * patronSides(ch)) + 1) : null;
     const furyBonus = furyRolls ? furyRolls.reduce((a, b) => a + b, 0) : 0;
     const fearRolls = opts.fearDice ? Array.from({ length: opts.fearDice }, () => Math.floor(Math.random() * 10) + 1) : null;
     const fearBonus = fearRolls ? fearRolls.reduce((a, b) => a + b, 0) : 0;
-    const total = roll + sum2 + bonus + critBonus + wolfBonus + unstopBonus + sneakBonus + rawBonus + fearBonus + furyBonus;
+    const total = igniteRoll + roll + sum2 + bonus + critBonus + wolfBonus + unstopBonus + sneakBonus + rawBonus + fearBonus + furyBonus;
     if (stanceNow === "aterradora") postCampaignEvent(charId, "😨 Postura Aterradora: el objetivo marca 1 Estrés");
-    setDamageRollResult({ stanceNow, droppedRoll, favoredBonus, rolls2, die2, comboBase: total, furyRolls, furySides: ch ? patronSides(ch) : 6, fearRolls, rawBonus, sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, doublePick: !!opts.doublePick, charged: ch && ch.f_subclass === "Origen Primigenio" && ch.f_charged === "1" && damageType === "mágico", note: resonance ? "Resonancia Sagrada: los dados repetidos valen el doble" : opts.extraFlat ? "Incluye +" + opts.extraFlat + " de Elementalista" : waxBonus ? "Incluye +2 de la Luna Creciente" : opts.note || "", spirit: !!opts.spirit });
+    setDamageRollResult({ igniteRoll, stanceNow, droppedRoll, favoredBonus, rolls2, die2, comboBase: total, furyRolls, furySides: ch ? patronSides(ch) : 6, fearRolls, rawBonus, sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, doublePick: !!opts.doublePick, charged: ch && ch.f_subclass === "Origen Primigenio" && ch.f_charged === "1" && damageType === "mágico", note: resonance ? "Resonancia Sagrada: los dados repetidos valen el doble" : opts.extraFlat ? "Incluye +" + opts.extraFlat + " de Elementalista" : waxBonus ? "Incluye +2 de la Luna Creciente" : opts.note || "", spirit: !!opts.spirit });
     const who = playerName || "Alguien en la mesa";
     const critLabel = isCritical ? ` · ¡Crítico! (+${critBonus} máx.)` : "";
     const diceLabel = `${dice}d${die} (${rolls.join("+")})` + (rolls2 ? ` + ${dice}d${die2} (${rolls2.join("+")})` : "") + (furyRolls ? ` + Furia ${furyRolls.length}d${patronSides(ch)} (${furyRolls.join("+")})` : "") + (fearRolls ? ` + Enfrenta tu Miedo ${fearRolls.length}d10 (${fearRolls.join("+")}) mágico` : "") + (wolfBonus ? ` + Lobo 1d10 (${wolfBonus})` : "") + (unstopBonus ? ` + Imparable ${unstopBonus}` : "") + (sneakRolls ? ` + Furtivo ${sneakRolls.length}d6 (${sneakRolls.join("+")})` : "");
@@ -8073,6 +8077,7 @@ export default function App({ onSignOut }) {
     if (c.f_lifespring_used) restPatch.f_lifespring_used = "";
     if (c.f_stance) restPatch.f_stance = "";
     if (c.f_marked) restPatch.f_marked = "";
+    if (c.f_ignite) restPatch.f_ignite = "";
     if (c.f_first_strike_used) restPatch.f_first_strike_used = "";
     if (isLong && c.f_truestrike_used) restPatch.f_truestrike_used = "";
     if (c.f_refocus_used) restPatch.f_refocus_used = "";
@@ -10250,6 +10255,11 @@ export default function App({ onSignOut }) {
                   {activeStance(c) && (
                     <span className="mh-htag is-active" style={{ "--tag": "#C08B5C" }} title={MARTIAL_STANCES.find((x) => x.key === c.f_stance)?.text}>
                       <span className="mh-htag-dot" /> Postura {MARTIAL_STANCES.find((x) => x.key === c.f_stance)?.name} · {getMFocus(c)} Conc.
+                    </span>
+                  )}
+                  {c.f_ignite === "1" && (
+                    <span className="mh-htag is-active" style={{ "--tag": "#E0823A" }} title="Ignición: tu arma principal arde, da luz brillante y suma 1d6 al daño hasta el final de la escena">
+                      <span className="mh-htag-dot" /> Arma en llamas · +1d6
                     </span>
                   )}
                   {c.f_class === "Asesino" && c.f_inout === "1" && (
@@ -18001,6 +18011,26 @@ export default function App({ onSignOut }) {
                     cardActs.push(
                       { key: "combo-up", Icon: ChevronUp, label: idx >= maxIdx ? "Dado de Combo d" + cur + " (máximo de tu Rango)" : "Subir a d" + COMBO_DICE[idx + 1], sub: "Mejora de nivel · uno por Rango", disabled: idx >= maxIdx, run: () => updateCharacterField(viewingCharId, "f_combo_die", String(COMBO_DICE[idx + 1])) },
                       { key: "combo-down", Icon: ChevronDown, label: "Bajar a d" + (COMBO_DICE[idx - 1] || 4), sub: "Dado de Combo actual: d" + cur, disabled: idx <= 0, run: () => updateCharacterField(viewingCharId, "f_combo_die", String(COMBO_DICE[idx - 1])) }
+                    );
+                  }
+                  // Estirpe de la Brasa · Ignición: arma principal en llamas hasta el final de la escena.
+                  if (d.ancestryKey === "Estirpe de la Brasa" && !d.fromChat) {
+                    const wName = c.f_primary_weapon || (brawlerArmed(c) ? BRAWLER_STRIKE : "");
+                    cardActs.push(
+                      c.f_ignite === "1"
+                        ? { key: "ignite-off", Icon: X, label: "Apagar las llamas", sub: "Fin de la escena", run: () => { closeCardDetail(); updateCharacterField(viewingCharId, "f_ignite", ""); postCampaignEvent(viewingCharId, "🔥 Las llamas de su arma se apagan"); } }
+                        : {
+                            key: "ignite",
+                            Icon: Flame,
+                            label: wName ? "Ignición: " + wName + " en llamas" : "Sin arma principal",
+                            sub: "1 Estrés · +1d6 al daño con esa arma",
+                            disabled: !wName,
+                            run: () => {
+                              closeCardDetail();
+                              markStress(viewingCharId, 1, { f_ignite: "1" });
+                              postCampaignEvent(viewingCharId, `🔥 Ignición: marca 1 Estrés y envuelve su ${wName} en llamas (+1d6 al daño hasta el final de la escena)`);
+                            },
+                          }
                     );
                   }
                   // Estirpe de la Marea · Manantial de Vida: una vez por descanso.
