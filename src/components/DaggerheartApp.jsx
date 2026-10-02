@@ -654,7 +654,15 @@ const getContacts = (c) => {
 };
 
 // Gigante · Alcance: lo que tenga alcance Cuerpo a cuerpo cuenta como Muy cercano.
-const isGiant = (c) => (c?.f_ancestry || "").split(" + ").includes("Gigante");
+// Ascendencia mixta (manual, «Mixed Ancestry»): la primera característica viene de una ascendencia y la segunda, de la otra.
+// En f_ancestry «A + B», A aporta su 1.ª característica y B su 2.ª. Con una sola ascendencia se tienen las dos.
+const ancList = (c) => (c?.f_ancestry || "").split(" + ").filter(Boolean);
+const ancFeat = (c, name, idx) => {
+  const l = ancList(c);
+  return l.length < 2 ? l[0] === name : l[idx] === name;
+};
+// Gigante · Alcance (2.ª característica).
+const isGiant = (c) => ancFeat(c, "Gigante", 1);
 const reachFor = (c, range) => (range === "Cuerpo a cuerpo" && isGiant(c) ? "Muy cercano" : range);
 // Orden del Mutante · beneficios de los mutágenos por Rango.
 const MUTAGEN_BENEFITS = [
@@ -3058,6 +3066,14 @@ const sharedStyles = `
   .mh-mark-btn { background: #6B7891; }
   .mh-necro-btn { background: #5B6B5E; }
   .mh-blood-btn { background: #A8323E; }
+  .mh-wz-mixpick { display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid var(--mh-line); border-radius: 12px; background: var(--mh-panel2); }
+  .mh-wz-mixrow { display: flex; gap: 10px; align-items: flex-start; }
+  .mh-wz-mixrow b { font-size: 13px; }
+  .mh-wz-mixrow small { font-size: 11px; color: var(--mh-muted); }
+  .mh-wz-mixrow span:not(.mh-wz-mixn) { display: block; font-size: 12px; color: var(--mh-ink3); line-height: 1.4; margin-top: 2px; }
+  .mh-wz-mixn { flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; background: var(--acc, #C9A24A); color: #fff; display: inline-flex; align-items: center; justify-content: center; font: 700 11px "Inter", system-ui, sans-serif; }
+  .mh-wz-mixpick .mh-btn-ghost { align-self: flex-start; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; }
+  .mh-wz-mixnote { font-size: 10.5px; color: var(--mh-muted); }
   .mh-wz-sep { display: flex; align-items: center; gap: 8px; margin: 6px 4px 2px; color: var(--mh-muted); font: 700 9.5px "Inter", system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
   .mh-wz-sep::before, .mh-wz-sep::after { content: ""; flex: 1; height: 1px; background: var(--mh-line); }
   .mh-toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 60; max-width: min(560px, calc(100vw - 32px)); padding: 10px 16px; border-radius: 12px; background: var(--mh-ink); color: var(--mh-panel); font: 600 12.5px "Inter", system-ui, sans-serif; box-shadow: 0 10px 30px rgba(0,0,0,.25); animation: mh-toast-in .25s ease-out both; pointer-events: none; }
@@ -5728,6 +5744,8 @@ export default function App({ onSignOut }) {
     setCustomItem("");
   };
 
+  // Ascendencia mixta en la creación: la primera elegida aporta la 1.ª característica y la segunda, la 2.ª.
+  const draftFeat = (name, idx) => (draftAncestries.length < 2 ? draftAncestries[0] === name : draftAncestries[idx] === name);
   const toggleAncestryChoice = (key) => {
     setDraftAncestries((prev) => {
       if (prev.includes(key)) return prev.filter((k) => k !== key);
@@ -5827,7 +5845,7 @@ export default function App({ onSignOut }) {
   };
 
   const confirmNewChar = async () => {
-    const isAutomaton = draftAncestries.includes("Autómata");
+    const isAutomaton = draftFeat("Autómata", 0);
     const chosenClass = CLASSES[carouselIndex];
     const subclasses = SUBCLASSES[chosenClass.key] || [];
     const chosenSubclass = subclasses[subclassIndex];
@@ -5850,7 +5868,7 @@ export default function App({ onSignOut }) {
       f_ancestry: draftAncestries.join(" + "),
       f_purpose: isAutomaton ? draftPurpose.trim() : "",
       f_creator: isAutomaton ? draftCreator.trim() : "",
-      f_breath_element: draftAncestries.includes("Dracona") ? draftBreath : "",
+      f_breath_element: draftFeat("Dracona", 1) ? draftBreath : "",
       f_origin_element: chosenSubclass?.key === "Origen Elemental" ? draftOriginElement : "",
       f_community: draftCommunity,
       f_companion:
@@ -5868,13 +5886,13 @@ export default function App({ onSignOut }) {
       f_transformation: draftTransformation === "Ninguna" ? "" : draftTransformation,
       f_languages: ["Común", ...draftLanguages].join(", "),
       ...traitValues,
-      r_evasion: String((CLASS_EVASION[chosenClass.key] ?? 10) + (draftAncestries.includes("Simiah") ? 1 : 0)),
-      f_nimble: draftAncestries.includes("Simiah") ? "1" : "",
+      r_evasion: String((CLASS_EVASION[chosenClass.key] ?? 10) + (draftFeat("Simiah", 1) ? 1 : 0)),
+      f_nimble: draftFeat("Simiah", 1) ? "1" : "",
       // Gigante · Aguante: una casilla de Punto de vida más al crear el personaje.
-      r_hp: String((CLASS_HP[chosenClass.key] ?? 6) + (draftAncestries.includes("Gigante") ? 1 : 0)),
-      f_endurance: draftAncestries.includes("Gigante") ? "1" : "",
-      r_stress: String(STRESS_SLOTS + (chosenSubclass?.key === "Vengador" ? 1 : 0) + (draftAncestries.includes("Humano") ? 1 : 0)),
-      f_stamina: draftAncestries.includes("Humano") ? "1" : "",
+      r_hp: String((CLASS_HP[chosenClass.key] ?? 6) + (draftFeat("Gigante", 0) ? 1 : 0)),
+      f_endurance: draftFeat("Gigante", 0) ? "1" : "",
+      r_stress: String(STRESS_SLOTS + (chosenSubclass?.key === "Vengador" ? 1 : 0) + (draftFeat("Humano", 0) ? 1 : 0)),
+      f_stamina: draftFeat("Humano", 0) ? "1" : "",
       f_atease: chosenSubclass?.key === "Vengador" ? "1" : "",
       f_primary_weapon: draftPrimaryWeapon,
       f_secondary_weapon:
@@ -6151,7 +6169,7 @@ export default function App({ onSignOut }) {
     if (!c) return;
     let amount = amountIn;
     // Firbolg · Inquebrantable: antes de marcar cada Estrés tira 1d6; con un 6 no lo marcas.
-    if (amount > 0 && (c.f_ancestry || "").split(" + ").includes("Firbolg")) {
+    if (amount > 0 && ancFeat(c, "Firbolg", 1)) {
       const dice = Array.from({ length: amount }, () => Math.floor(Math.random() * 6) + 1);
       const saved = dice.filter((v) => v === 6).length;
       amount -= saved;
@@ -6397,13 +6415,14 @@ export default function App({ onSignOut }) {
   const CONDITION_THEME_COLOR = { Escondido: "#7D8BA3", Inmovilizado: "#C08B5C", Vulnerable: "#D9644E", Inconsciente: "#A58BE8", Volando: "#5FA77A", Oculto: "#4F5D78", Retraído: "#6E8B5A" };
   const CONDITION_ICONS = { Escondido: EyeOff, Inmovilizado: Lock, Vulnerable: ShieldOff, Inconsciente: ZapOff, Volando: Feather, Oculto: Ghost, Retraído: Shell };
   // Hada: Alas (puede volar) y Doblega la Suerte.
-  const isFaerie = (c) => (c?.f_ancestry || "").split(" + ").includes("Hada");
-  const isAetheris = (c) => (c?.f_ancestry || "").split(" + ").includes("Aetheris");
+  // Hada · Alas (2.ª) y Aetheris · Alas Celestiales (2.ª).
+  const isFaerie = (c) => ancFeat(c, "Hada", 1);
+  const isAetheris = (c) => ancFeat(c, "Aetheris", 1);
   // Pícaro · Oculto: siempre que fuera a quedar Escondido, queda Oculto.
   const isRogue = (c) => c?.f_class === "Pícaro";
   const conditionPresetsFor = (c) => {
     const base = isRogue(c) ? CONDITION_PRESETS.map((n) => (n === "Escondido" ? "Oculto" : n)) : CONDITION_PRESETS;
-    const isGalapa = (c?.f_ancestry || "").split(" + ").includes("Galapa");
+    const isGalapa = ancFeat(c, "Galapa", 1);
     return [...base, ...(isFaerie(c) || isAetheris(c) || c?.f_subclass === "Centinela Alado" ? ["Volando"] : []), ...(isGalapa ? ["Retraído"] : [])];
   };
   const getConditions = (c) => {
@@ -6880,7 +6899,7 @@ export default function App({ onSignOut }) {
     setRestType("short");
   }, [viewingCharId]);
   // Humano · Gran Resistencia en personajes ya creados: una casilla de Estrés más, una sola vez.
-  const viewingHuman = viewingCharId ? (characters[viewingCharId]?.f_ancestry || "").split(" + ").includes("Humano") : false;
+  const viewingHuman = viewingCharId ? ancFeat(characters[viewingCharId], "Humano", 0) : false;
   const viewingStamina = viewingCharId ? characters[viewingCharId]?.f_stamina : "";
   useEffect(() => {
     if (!viewingCharId || !viewingHuman || viewingStamina) return;
@@ -6889,7 +6908,7 @@ export default function App({ onSignOut }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewingCharId, viewingHuman, viewingStamina]);
   // Gigante · Aguante en personajes ya creados: se suma la casilla una sola vez.
-  const viewingGiant = viewingCharId ? isGiant(characters[viewingCharId]) : false;
+  const viewingGiant = viewingCharId ? ancFeat(characters[viewingCharId], "Gigante", 0) : false;
   const viewingEndurance = viewingCharId ? characters[viewingCharId]?.f_endurance : "";
   useEffect(() => {
     if (!viewingCharId || !viewingGiant || viewingEndurance) return;
@@ -6922,7 +6941,7 @@ export default function App({ onSignOut }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewingCharId, viewingBrawlJunk]);
   // Simiah · Ágil en personajes ya creados: +1 a la Evasión, una sola vez.
-  const viewingSimiah = viewingCharId ? (characters[viewingCharId]?.f_ancestry || "").split(" + ").includes("Simiah") : false;
+  const viewingSimiah = viewingCharId ? ancFeat(characters[viewingCharId], "Simiah", 1) : false;
   const viewingNimble = viewingCharId ? characters[viewingCharId]?.f_nimble : "";
   useEffect(() => {
     if (!viewingCharId || !viewingSimiah || viewingNimble) return;
@@ -6941,7 +6960,7 @@ export default function App({ onSignOut }) {
   }, [viewingCharId, viewingBattlemage, viewingBattlemageDone]);
   // Mediano · Trae Suerte: al empezar la sesión (aquí, tras cada descanso largo) el mediano gana 1 Esperanza
   // y, si está en una campaña, el grupo recibe en el chat 1 Esperanza para recoger.
-  const viewingHalfling = viewingCharId ? (characters[viewingCharId]?.f_ancestry || "").split(" + ").includes("Mediano") : false;
+  const viewingHalfling = viewingCharId ? ancFeat(characters[viewingCharId], "Mediano", 0) : false;
   const viewingLuckGiven = viewingCharId ? characters[viewingCharId]?.f_luck_given : "";
   const viewingLuckPosted = viewingCharId ? characters[viewingCharId]?.f_luck_posted : "";
   const viewingCampId = viewingCharId ? Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(viewingCharId))?.id || "" : "";
@@ -7587,7 +7606,7 @@ export default function App({ onSignOut }) {
         const tag = r.luck ? (REROLL_META[r.luck.kind] || REROLL_META.luck).tag : r.weapon ? "Ataque" : r.card ? "Habilidad" : r.reaction ? "Reacción" : "Rasgo";
         // Hada · Doblega la Suerte: botón bajo las tiradas de acción recientes (tuyas o de aliados).
         const meC = meCharId ? characters[meCharId] : null;
-        const luckable = meC && isFaerie(meC) && !r.reaction && !r.luck && m.charId && Date.now() - (m.ts || 0) < 10 * 60 * 1000;
+        const luckable = meC && ancFeat(meC, "Hada", 0) && !r.reaction && !r.luck && m.charId && Date.now() - (m.ts || 0) < 10 * 60 * 1000;
         // Origen Primigenio · Ayuda Encantada: intercambiar los dados de la tirada de Lanzamiento de un aliado.
         const allyC = m.charId ? characters[m.charId] : null;
         const allySpell = allyC ? TRAITS.find((t) => t.key === spellcastTraitFor(allyC.f_class, allyC.f_subclass))?.label : "";
@@ -7602,7 +7621,7 @@ export default function App({ onSignOut }) {
         const meHope = meC ? Number(meC.hope_marked ?? HOPE_DEFAULT) : 0;
         // Bruja · Encanto de Bruja: sobre la tirada de acción fallida (o sin dificultad conocida) de un aliado.
         const charmable = meC && meC.f_class === "Bruja" && m.charId && m.charId !== meCharId && !r.reaction && !r.luck && !r.charm && !crit && success !== true && Date.now() - (m.ts || 0) < 10 * 60 * 1000;
-        const auraable = meC && isAetheris(meC) && m.charId && m.charId !== meCharId && !r.reaction && !r.luck && !r.aura && !crit && !withHope && Date.now() - (m.ts || 0) < 10 * 60 * 1000;
+        const auraable = meC && ancFeat(meC, "Aetheris", 0) && m.charId && m.charId !== meCharId && !r.reaction && !r.luck && !r.aura && !crit && !withHope && Date.now() - (m.ts || 0) < 10 * 60 * 1000;
         const auraBtn = auraable ? (
           <button type="button" className="mh-chat-luck mh-chat-aura" disabled={!!meC.f_aura_used} onClick={() => hallowedAura(meCharId, m.charId, r)}>
             <Sun size={13} />
@@ -9080,7 +9099,7 @@ export default function App({ onSignOut }) {
       hybridSides: pr.reaction ? 0 : hybridSides(ch),
       honed,
       rallyDie,
-      disadvantage: (ch?.f_ancestry || "").split(" + ").includes("Goblin") && pr.traitLabel === "Agilidad" ? false : pr.disadvantage || (pr.shellOn && !pr.reaction),
+      disadvantage: ancFeat(ch, "Goblin", 0) && pr.traitLabel === "Agilidad" ? false : pr.disadvantage || (pr.shellOn && !pr.reaction),
       poet: pr.poet,
       hopeD20: pr.dedicated || riseToChallenge(ch),
       tide: tideSpent,
@@ -10676,7 +10695,7 @@ export default function App({ onSignOut }) {
         // Camorrista · Yo Soy el Arma: +1 a la Evasión con el Golpe de Camorrista.
         if (brawlerArmed(c)) equipMods.evasion = (equipMods.evasion || 0) + 1;
         // Estirpe de la Tierra · Piel de Piedra: +1 a la Armadura y a los umbrales.
-        if ((c.f_ancestry || "").split(" + ").includes("Estirpe de la Tierra")) {
+        if (ancFeat(c, "Estirpe de la Tierra", 0)) {
           equipMods.armor = (equipMods.armor || 0) + 1;
           equipMods.major = (equipMods.major || 0) + 1;
           equipMods.severe = (equipMods.severe || 0) + 1;
@@ -10944,7 +10963,7 @@ export default function App({ onSignOut }) {
                       <Moon size={11} /> {moonPhaseOf(c).name} · {moonPhaseOf(c).value}
                     </span>
                   )}
-                  {(c.f_ancestry || "").split(" + ").includes("Orco") && Number(c.r_hp || 0) - Number(c.hp_marked || 0) === 1 && (
+                  {ancFeat(c, "Orco", 0) && Number(c.r_hp || 0) - Number(c.hp_marked || 0) === 1 && (
                     <span className="mh-htag is-active" style={{ "--tag": "#6E7F3A" }} title="Robusto: te queda 1 Punto de Vida, los ataques contra ti tienen desventaja">
                       <span className="mh-htag-dot" /> Robusto · ataques con desventaja
                     </span>
@@ -11099,7 +11118,7 @@ export default function App({ onSignOut }) {
                   const stalwart = c.f_subclass === "Inquebrantable";
                   const firmBonus = stalwart ? 1 : 0;
                   // Galapa · Caparazón: + Competencia a los umbrales.
-                  const shellBonus = (c.f_ancestry || "").split(" + ").includes("Galapa") ? proficiency : 0;
+                  const shellBonus = ancFeat(c, "Galapa", 0) ? proficiency : 0;
                   const major = baseThresholds.major + equipMods.major + earthBonus + firmBonus + shellBonus;
                   // Centinela Alado · Ascendente (Maestría): +4 al umbral Grave.
                   const ascendBonus = c.f_subclass === "Centinela Alado" && tierForLevel(c.f_level || 1) >= 3 ? 4 : 0;
@@ -11109,7 +11128,7 @@ export default function App({ onSignOut }) {
                   const unstopOn = unstopValue(c) > 0;
                   const fortMajor = c.f_fortitude_ready === "1" ? major * 2 : major;
                   // Enano · Piel Gruesa: el menú solo sale si quedan 2 de Estrés libres para usarla.
-                  const isDwarf = (c.f_ancestry || "").split(" + ").includes("Enano") && Number(c.r_stress || 0) + equipMods.stress - Number(c.stress_marked || 0) >= 2;
+                  const isDwarf = ancFeat(c, "Enano", 0) && Number(c.r_stress || 0) + equipMods.stress - Number(c.stress_marked || 0) >= 2;
                   const fortSevere = c.f_fortitude_ready === "1" ? severe * 2 : severe;
                   const experiences = getExperiences(c);
                   const conditions = isRogue(c) ? getConditions(c).map((n) => (n === "Escondido" ? "Oculto" : n)) : getConditions(c);
@@ -12206,7 +12225,7 @@ export default function App({ onSignOut }) {
                               kicker: "Ascendencia",
                               title: name,
                               summary: ancEntry?.blurb || "",
-                              onClick: openDetail({ kicker: "Ascendencia", title: name, text: ancEntry?.blurb || "", features: name === "Dracona" && c.f_breath_element ? (ancEntry?.features || []).map((f) => (f.name === "Aliento Elemental" ? { ...f, element: c.f_breath_element } : f)) : ancEntry?.features, image: ancEntry?.image, bigStyle: true, ancestryKey: name }),
+                              onClick: openDetail({ kicker: "Ascendencia" + (ancList(c).length > 1 ? " · " + (ancList(c).indexOf(name) === 0 ? "1.ª" : "2.ª") + " característica" : ""), title: name, text: ancEntry?.blurb || "", features: (name === "Dracona" && c.f_breath_element ? (ancEntry?.features || []).map((f) => (f.name === "Aliento Elemental" ? { ...f, element: c.f_breath_element } : f)) : ancEntry?.features || []).filter((f, fi) => ancFeat(c, name, fi)), image: ancEntry?.image, bigStyle: true, ancestryKey: name }),
                             });
                           });
                         }
@@ -12465,10 +12484,10 @@ export default function App({ onSignOut }) {
                           >
                             {(() => {
                               // Junto a la hoguera: cómo estás, qué te conviene y qué recupera cada acción.
-                              const isElf = (c.f_ancestry || "").split(" + ").includes("Elfo");
+                              const isElf = ancFeat(c, "Elfo", 1);
                               const slots = isElf ? 3 : 2;
                               const isLong = restType === "long";
-                              const isAutomatonRest = (c.f_ancestry || "").split(" + ").includes("Autómata");
+                              const isAutomatonRest = ancFeat(c, "Autómata", 1);
                               const tier = tierForLevel(c.f_level || 1);
                               const hpTotal = Number(c.r_hp || 0) + equipMods.hp;
                               const stressTotal = Number(c.r_stress || 0) + equipMods.stress;
@@ -15958,12 +15977,12 @@ export default function App({ onSignOut }) {
               const mod = preRoll.traitValue + (noMercyOn ? 1 : 0) + (moonbeamOn ? 1 : 0) + (circleOn ? 2 : 0) + (reliableOn ? 1 : 0) + (hasMutagen(ch, "furia") && preRoll.weapon && preRoll.fury ? getProficiency(ch) : 0) + expSum + tideUse + (foundPick && !ch.f_found_used ? foundPick.bonus : 0) + (ch.f_subclass === "Origen Elemental" && !preRoll.reaction && preRoll.elem === "roll" ? 2 : 0);
               // Galapa retraída: la desventaja en las tiradas de acción no se puede quitar.
               // Goblin · Pie Firme: ignora la desventaja en las tiradas de Agilidad.
-              const sureFoot = (ch.f_ancestry || "").split(" + ").includes("Goblin") && preRoll.traitLabel === "Agilidad";
+              const sureFoot = ancFeat(ch, "Goblin", 0) && preRoll.traitLabel === "Agilidad";
               const shellLock = preRoll.shellOn && !preRoll.reaction && !sureFoot;
               const edgeNet = (preRoll.advantage || preRoll.privilege || preRoll.quick ? 1 : 0) - ((preRoll.disadvantage || shellLock) && !sureFoot ? 1 : 0);
               // Las tiradas de rasgo sueltas pueden ser de reacción; los ataques y las habilidades no.
               const canReact = !preRoll.weapon && !preRoll.cardContext;
-              const quickOk = canReact && (ch.f_ancestry || "").split(" + ").includes("Elfo");
+              const quickOk = canReact && ancFeat(ch, "Elfo", 0);
               const highborne = ch.f_community === "De Alta Cuna";
               const dedicatedOk = ch.f_community === "Del Orden";
               const principles = (() => {
@@ -15986,11 +16005,11 @@ export default function App({ onSignOut }) {
               // Centinela Alado · Rostro Etéreo (Especialización): ventaja en Presencia mientras vuela.
               const etherealOk = !(ch.f_class === "Asesino" && ch.f_inout === "1" && !preRoll.reaction) && ch.f_subclass === "Centinela Alado" && tierForLevel(ch.f_level || 1) >= 2 && getConditions(ch).includes("Volando") && preRoll.traitLabel === "Presencia";
               // Infernal · Rostro Temible: ventaja para intimidar a criaturas hostiles.
-              const dreadOk = !(ch.f_class === "Asesino" && ch.f_inout === "1" && !preRoll.reaction) && (ch.f_ancestry || "").split(" + ").includes("Infernal") && preRoll.traitLabel === "Presencia" && !etherealOk;
+              const dreadOk = !(ch.f_class === "Asesino" && ch.f_inout === "1" && !preRoll.reaction) && ancFeat(ch, "Infernal", 1) && preRoll.traitLabel === "Presencia" && !etherealOk;
               // Bruja Lunar · Glamour Nocturno: ventaja en tiradas que aprovechen tu apariencia ilusoria.
               const glamourOk = !(ch.f_class === "Asesino" && ch.f_inout === "1" && !preRoll.reaction) && ch.f_subclass === "Bruja Lunar" && ch.f_glamour === "1" && !etherealOk && !dreadOk;
               // Simiah · Trepador Nato: ventaja en Agilidad para mantener el equilibrio y trepar.
-              const climberOk = !(ch.f_class === "Asesino" && ch.f_inout === "1" && !preRoll.reaction) && (ch.f_ancestry || "").split(" + ").includes("Simiah") && preRoll.traitLabel === "Agilidad" && !etherealOk && !dreadOk && !glamourOk;
+              const climberOk = !(ch.f_class === "Asesino" && ch.f_inout === "1" && !preRoll.reaction) && ancFeat(ch, "Simiah", 0) && preRoll.traitLabel === "Agilidad" && !etherealOk && !dreadOk && !glamourOk;
               // Bruja del Seto · Maldición Irritante: ventaja al atacar a criaturas con Maleficio.
               // Pacto del Eterno · Manto del Patrón: ventaja para intimidar.
               // Orden del Espectro · Acechador del Velo: ventaja en la siguiente tirada de acción de la escena.
@@ -16429,7 +16448,7 @@ export default function App({ onSignOut }) {
                       const rc = characters[r.charId];
                       if (!rc || r.reaction || !(r.fear > r.hope)) return r.flipped ? <div className="mh-luck-done" style={{ color: "#B8862E" }}>{r.flipped === "fearless" ? "Sin Miedo" : "Sin Ataduras"}: ahora es con Esperanza</div> : null;
                       if (r.flipped) return <div className="mh-luck-done" style={{ color: "#B8862E" }}>{r.flipped === "fearless" ? "Sin Miedo" : "Sin Ataduras"}: ahora es con Esperanza</div>;
-                      const infernal = (rc.f_ancestry || "").split(" + ").includes("Infernal");
+                      const infernal = ancFeat(rc, "Infernal", 0);
                       const freeborne = rc.f_community === "Libre";
                       if (!infernal && !freeborne) return null;
                       return (
@@ -16577,7 +16596,7 @@ export default function App({ onSignOut }) {
                       // Gnomo · Dedos Ágiles: en Destreza, 2 Esperanza para repetir el Dado de Esperanza.
                       const r = traitRollResult;
                       const rc = characters[r.charId];
-                      if (!rc || !(rc.f_ancestry || "").split(" + ").includes("Gnomo") || r.traitLabel !== "Destreza" || r.luck) return null;
+                      if (!rc || !ancFeat(rc, "Gnomo", 0) || r.traitLabel !== "Destreza" || r.luck) return null;
                       const hopeG = Number(rc.hope_marked ?? HOPE_DEFAULT);
                       return (
                         <button type="button" className="mh-luck-btn mh-nimble-btn" disabled={hopeG < 2} onClick={() => bendLuck(r.charId, r.charId, rollForReroll(r), { kind: "nimble" })}>
@@ -16590,7 +16609,7 @@ export default function App({ onSignOut }) {
                       // Katari · Instinto Felino: en Agilidad, 2 Esperanza para repetir el Dado de Esperanza.
                       const r = traitRollResult;
                       const rc = characters[r.charId];
-                      if (!rc || !(rc.f_ancestry || "").split(" + ").includes("Katari") || r.traitLabel !== "Agilidad" || r.luck) return null;
+                      if (!rc || !ancFeat(rc, "Katari", 0) || r.traitLabel !== "Agilidad" || r.luck) return null;
                       const hopeK = Number(rc.hope_marked ?? HOPE_DEFAULT);
                       return (
                         <button type="button" className="mh-luck-btn mh-feline-btn" disabled={hopeK < 2} onClick={() => bendLuck(r.charId, r.charId, rollForReroll(r), { kind: "feline" })}>
@@ -16927,7 +16946,7 @@ export default function App({ onSignOut }) {
                       // Humano · Adaptabilidad: si falla una tirada con Experiencia, 1 Estrés para repetirla.
                       const r = traitRollResult;
                       const rc = characters[r.charId];
-                      if (!rc || !(rc.f_ancestry || "").split(" + ").includes("Humano") || !(r.exps || []).length || r.luck) return null;
+                      if (!rc || !ancFeat(rc, "Humano", 1) || !(r.exps || []).length || r.luck) return null;
                       const failed = r.card?.dc != null ? !(r.hope === r.fear || r.total >= r.card.dc) : null;
                       if (failed === false) return null;
                       return (
@@ -17015,7 +17034,7 @@ export default function App({ onSignOut }) {
                     })()}
                     {(() => {
                       const rc = characters[traitRollResult.charId];
-                      if (!rc || !isFaerie(rc) || traitRollResult.reaction || traitRollResult.luck) return null;
+                      if (!rc || !ancFeat(rc, "Hada", 0) || traitRollResult.reaction || traitRollResult.luck) return null;
                       const hopeR = Number(rc.hope_marked ?? HOPE_DEFAULT);
                       const used = !!rc.f_luck_used;
                       const r = traitRollResult;
@@ -17055,7 +17074,7 @@ export default function App({ onSignOut }) {
                     {(() => {
                       const r = traitRollResult;
                       const rc = characters[r.charId];
-                      if (!rc || !(rc.f_ancestry || "").split(" + ").includes("Mediano") || r.hope !== 1 || r.luck) return null;
+                      if (!rc || !ancFeat(rc, "Mediano", 1) || r.hope !== 1 || r.luck) return null;
                       return (
                         <button
                           type="button"
@@ -17888,7 +17907,7 @@ export default function App({ onSignOut }) {
                     // Fauno · Coz: tras acertar un ataque Cuerpo a cuerpo, 1 Estrés para +2d6 y empujar hasta Muy cercano.
                     const dr = damageRollResult;
                     const kc = dr.charId ? characters[dr.charId] : null;
-                    if (!kc || !(kc.f_ancestry || "").split(" + ").includes("Fauno")) return null;
+                    if (!kc || !ancFeat(kc, "Fauno", 1)) return null;
                     const wpn = [...PRIMARY_WEAPONS, ...SECONDARY_WEAPONS].find((w) => w.key === dr.weaponName);
                     const bf = BEASTFORMS.find((b) => b.key === dr.weaponName);
                     const melee = wpn ? wpn.range === "Cuerpo a cuerpo" : bf ? bf.attack.startsWith("Cuerpo a cuerpo") : false;
@@ -17937,7 +17956,7 @@ export default function App({ onSignOut }) {
                     // Orco · Colmillos: tras acertar Cuerpo a cuerpo, 1 Esperanza para +1d6.
                     const dr = damageRollResult;
                     const oc = dr.charId ? characters[dr.charId] : null;
-                    if (!oc || !(oc.f_ancestry || "").split(" + ").includes("Orco")) return null;
+                    if (!oc || !ancFeat(oc, "Orco", 1)) return null;
                     const wpn = [...PRIMARY_WEAPONS, ...SECONDARY_WEAPONS].find((w) => w.key === dr.weaponName);
                     const bf = BEASTFORMS.find((b) => b.key === dr.weaponName);
                     const melee = wpn ? wpn.range === "Cuerpo a cuerpo" : bf ? bf.attack.startsWith("Cuerpo a cuerpo") : false;
@@ -20060,6 +20079,29 @@ export default function App({ onSignOut }) {
                       },
                     });
                   }
+                  // Ascendencia mixta: solo quedan las acciones de la característica que aporta esa ascendencia.
+                  if (d.ancestryKey && ancList(c).length > 1) {
+                    const [l1, l2] = ancList(c);
+                    const f1b = ANCESTRIES.find((x) => x.key === l2)?.features?.[0]?.name;
+                    const f2b = ANCESTRIES.find((x) => x.key === l1)?.features?.[1]?.name;
+                    cardActs.push({
+                      key: "anc-swap",
+                      Icon: ArrowLeftRight,
+                      label: "Intercambiar características",
+                      sub: "Pasar a " + f1b + " (" + l2 + ") y " + f2b + " (" + l1 + ")",
+                      run: () => {
+                        closeCardDetail();
+                        updateCharacterField(viewingCharId, "f_ancestry", l2 + " + " + l1);
+                        postCampaignEvent(viewingCharId, "🧬 Ascendencia mixta: ahora tiene " + f1b + " (" + l2 + ") y " + f2b + " (" + l1 + ")");
+                      },
+                    });
+                    const ACT_FEAT = { fortitude: 1, retract: 1, network: 0, death: 1, charge: 0, breath: 1, danger: 1, claws: 1, tongue: 1, flicker: 1, "flicker-reset": 1, "celestial-reset": 1, gale: 0, "storm-self": 1, "storm-ally": 1, lifespring: 1, ignite: 1, "ignite-off": 1 };
+                    for (let k = cardActs.length - 1; k >= 0; k--) {
+                      const base = String(cardActs[k].key || "").replace(/-\d+$/, "");
+                      const idx = ACT_FEAT[cardActs[k].key] ?? ACT_FEAT[base];
+                      if (idx != null && !ancFeat(c, d.ancestryKey, idx)) cardActs.splice(k, 1);
+                    }
+                  }
                   // Una carta abierta desde el chat es solo para verla: sin acciones.
                   if (d.fromChat) cardActs.length = 0;
                   // Mostrar la carta en el chat de la campaña del personaje (solo si está en una).
@@ -20970,7 +21012,36 @@ export default function App({ onSignOut }) {
                                 <Check size={14} /> Elegir {focus.key}
                               </button>
                             )}
-                            {originTab === "ancestry" && mixAncestry && <div className="mh-wz-dm">Con ascendencia mixta eliges dos y combinas sus rasgos.</div>}
+                            {originTab === "ancestry" && mixAncestry && (draftAncestries.length < 2 ? (
+                              <div className="mh-wz-dm">Con ascendencia mixta eliges dos: tomas la 1.ª característica de una y la 2.ª de la otra.</div>
+                            ) : (() => {
+                              const [a1, a2] = draftAncestries.map((k) => ANCESTRIES.find((x) => x.key === k));
+                              const f1 = a1?.features?.[0];
+                              const f2 = a2?.features?.[1];
+                              return (
+                                <div className="mh-wz-mixpick">
+                                  <b className="mh-wz-purpose-t">Tus características</b>
+                                  <div className="mh-wz-mixrow">
+                                    <span className="mh-wz-mixn">1.ª</span>
+                                    <div>
+                                      <b>{f1?.name}</b> <small>de {a1?.key}</small>
+                                      <span>{f1?.text}</span>
+                                    </div>
+                                  </div>
+                                  <div className="mh-wz-mixrow">
+                                    <span className="mh-wz-mixn">2.ª</span>
+                                    <div>
+                                      <b>{f2?.name}</b> <small>de {a2?.key}</small>
+                                      <span>{f2?.text}</span>
+                                    </div>
+                                  </div>
+                                  <button type="button" className="mh-btn-ghost" onClick={() => setDraftAncestries((l) => [l[1], l[0]])}>
+                                    <ArrowLeftRight size={13} /> Intercambiar: {a2?.features?.[0]?.name} y {a1?.features?.[1]?.name}
+                                  </button>
+                                  <small className="mh-wz-mixnote">Según el manual, la 1.ª característica sale de una ascendencia y la 2.ª de la otra.</small>
+                                </div>
+                              );
+                            })())}
                             {originTab === "community" && draftCommunity === "Del Orden" && (
                               <div className="mh-wz-purpose">
                                 <b className="mh-wz-purpose-t">Entregado</b>
@@ -20995,7 +21066,7 @@ export default function App({ onSignOut }) {
                                 <small>Una vez por descanso, si encarnas uno de ellos en lo que haces, podrás tirar un d20 como Dado de Esperanza.</small>
                               </div>
                             )}
-                            {originTab === "ancestry" && draftAncestries.includes("Dracona") && (
+                            {originTab === "ancestry" && draftFeat("Dracona", 1) && (
                               <div className="mh-wz-purpose">
                                 <b className="mh-wz-purpose-t">Aliento Elemental</b>
                                 <label>¿De qué elemento es tu aliento?</label>
@@ -21009,7 +21080,7 @@ export default function App({ onSignOut }) {
                                 <small>Lo usarás como un ataque de Instinto en alcance Muy Cercano: d8 de daño mágico por cada punto de Competencia.</small>
                               </div>
                             )}
-                            {originTab === "ancestry" && draftAncestries.includes("Autómata") && (
+                            {originTab === "ancestry" && draftFeat("Autómata", 0) && (
                               <div className="mh-wz-purpose">
                                 <b className="mh-wz-purpose-t">Diseño con Propósito</b>
                                 <label htmlFor="mh-creator">¿Quién te creó?</label>
@@ -21120,9 +21191,9 @@ export default function App({ onSignOut }) {
                       <Heart size={20} color="#D9644E" />
                       <div style={{ fontSize: 11, color: "var(--mh-muted)" }}>Puntos de vida</div>
                       <div className="mh-serif" style={{ fontSize: 34, fontWeight: 700, color: "#D9644E" }}>
-                        {(CLASS_HP[CLASSES[carouselIndex].key] ?? 6) + (draftAncestries.includes("Gigante") ? 1 : 0)}
+                        {(CLASS_HP[CLASSES[carouselIndex].key] ?? 6) + (draftFeat("Gigante", 0) ? 1 : 0)}
                       </div>
-                      {draftAncestries.includes("Gigante") && <div style={{ fontSize: 10.5, color: "var(--mh-muted)" }}>+1 por Aguante</div>}
+                      {draftFeat("Gigante", 0) && <div style={{ fontSize: 10.5, color: "var(--mh-muted)" }}>+1 por Aguante</div>}
                     </div>
                     <div
                       style={{
@@ -21139,7 +21210,7 @@ export default function App({ onSignOut }) {
                       <Zap size={20} color="#6FA3C0" />
                       <div style={{ fontSize: 11, color: "var(--mh-muted)" }}>Estrés</div>
                       <div className="mh-serif" style={{ fontSize: 34, fontWeight: 700, color: ink("#6FA3C0") }}>
-                        {STRESS_SLOTS + ((SUBCLASSES[CLASSES[carouselIndex]?.key] || [])[subclassIndex]?.key === "Vengador" ? 1 : 0) + (draftAncestries.includes("Humano") ? 1 : 0)}
+                        {STRESS_SLOTS + ((SUBCLASSES[CLASSES[carouselIndex]?.key] || [])[subclassIndex]?.key === "Vengador" ? 1 : 0) + (draftFeat("Humano", 0) ? 1 : 0)}
                       </div>
                     </div>
                   </div>
@@ -21170,7 +21241,7 @@ export default function App({ onSignOut }) {
                         onChange={(e) => setDraftExp2(e.target.value)}
                       />
                     </div>
-                    {draftAncestries.includes("Autómata") && (
+                    {draftFeat("Autómata", 0) && (
                       <div className="mh-wz-purpose is-pick">
                         <div className="mh-wz-purpose-q">
                           <b>Te creó {draftCreator.trim() || "…"}</b>
@@ -21648,9 +21719,9 @@ export default function App({ onSignOut }) {
                       ? "Elige una ascendencia para continuar."
                       : mixAncestry && draftAncestries.length < 2
                       ? "Elige dos ascendencias o quita la mixta."
-                      : draftAncestries.includes("Dracona") && !draftBreath
+                      : draftFeat("Dracona", 1) && !draftBreath
                       ? "Elige el elemento de tu aliento."
-                      : draftAncestries.includes("Autómata") && (!draftCreator.trim() ? "Escribe quién te creó." : !draftPurpose.trim() ? "Escribe con qué propósito te creó." : false),
+                      : draftFeat("Autómata", 0) && (!draftCreator.trim() ? "Escribe quién te creó." : !draftPurpose.trim() ? "Escribe con qué propósito te creó." : false),
                   community: !draftCommunity ? "Elige una comunidad para continuar." : draftCommunity === "Del Orden" && draftPrinciples.some((x) => !x.text.trim()) ? "Escribe tus tres principios." : false,
                   experiences: !draftExp1.trim() || !draftExp2.trim() ? "Escribe tus dos Experiencias." : (SUBCLASSES[CLASSES[carouselIndex]?.key] || [])[subclassIndex]?.key === "Vínculo Bestial" && (!draftCompanion.name.trim() || !draftCompanion.exp1.trim() || !draftCompanion.exp2.trim() || !draftCompanion.attack.trim()) ? "Completa a tu compañero: nombre, dos Experiencias y su ataque." : draftAncestries.includes("Autómata") && draftPurposeExp == null ? "Elige la Experiencia que encaja con tu propósito." : false,
                   primary: !draftPrimaryWeapon && "Elige un arma principal para continuar.",
