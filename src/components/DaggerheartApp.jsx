@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
-import { Archive, Shell, Compass, Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
+import { Wand, MoveUpRight, Archive, Shell, Compass, Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
 
 const NAV_ITEMS = [
   { key: "ficha", label: "Personajes", icon: User },
@@ -326,7 +326,7 @@ const ANCESTRIES = [
   { key: "Gigante", blurb: "Humanoide altísimo, de hombros anchos y brazos y cuello alargados, con entre uno y tres ojos.", features: [{ name: "Aguante", text: "Ganas una casilla adicional de Punto de vida al crear el personaje." }, { name: "Alcance", text: "Todo lo que tenga alcance Cuerpo a cuerpo (armas, habilidades, hechizos…) cuenta como si tuviera alcance Muy cercano." }] },
   { key: "Goblin", blurb: "Humanoide pequeño de ojos grandes y enormes orejas membranosas, con un oído y una vista agudísimos, incluso a oscuras.", features: [{ name: "Pie Firme", text: "Ignoras la desventaja en las tiradas de Agilidad." }, { name: "Sentido del Peligro", text: "Una vez por descanso, marca 1 Estrés para obligar a un adversario a repetir un ataque contra ti o un aliado en alcance Muy cercano." }] },
   { key: "Mediano", blurb: "Humanoide pequeño de grandes pies peludos y orejas redondeadas, con un oído y un olfato muy finos y una brújula interior innata.", features: [{ name: "Trae Suerte", text: "Al comienzo de cada sesión, todos los miembros de tu grupo ganan 1 Esperanza." }, { name: "Brújula Interior", text: "Cuando saques un 1 en tu Dado de Esperanza, puedes volver a tirarlo." }] },
-  { key: "Humano", blurb: "Adaptable y ambicioso, el más versátil de los pueblos.", features: [{ name: "Gran Resistencia", text: "Ganas una casilla adicional de Estrés al crear el personaje." }, { name: "Adaptabilidad", text: "Cuando falles una tirada en la que usaste una Experiencia, puedes marcar 1 Estrés para repetirla." }] },
+  { key: "Humano", blurb: "De manos hábiles, orejas redondeadas y cuerpos hechos para aguantar, se adaptan con facilidad a los climas más duros.", features: [{ name: "Gran Resistencia", text: "Ganas una casilla de Estrés adicional al crear el personaje." }, { name: "Adaptabilidad", text: "Cuando falles una tirada en la que hayas usado una de tus Experiencias, puedes marcar 1 Estrés para repetirla." }] },
   { key: "Infernal", blurb: "Desciende de linajes infernales, con cuernos y cola propios.", features: [{ name: "Sin Miedo", text: "Cuando saques una tirada con Miedo, puedes marcar 2 Estrés para convertirla en una tirada con Esperanza." }, { name: "Rostro Temible", text: "Tienes ventaja en las tiradas para intimidar a criaturas hostiles." }] },
   { key: "Katari", blurb: "Felino humanoide de reflejos rápidos y gracia natural.", features: [{ name: "Instinto Felino", text: "Cuando hagas una tirada de Agilidad, puedes gastar 2 Esperanza para repetir tu Dado de Esperanza." }, { name: "Garras Retráctiles", text: "Haz una tirada de Agilidad para arañar a un objetivo Cuerpo a cuerpo. Con éxito, queda temporalmente Vulnerable." }] },
   { key: "Orco", blurb: "Fuerte y resistente, forjado por una cultura guerrera.", features: [{ name: "Robusto", text: "Cuando te quede 1 Punto de vida, los ataques contra ti tienen desventaja." }, { name: "Colmillos", text: "Cuando aciertas un ataque Cuerpo a cuerpo, puedes gastar 1 Esperanza para cornearle con tus colmillos: +1d6 de daño." }] },
@@ -353,7 +353,7 @@ const COMMUNITIES = [
   { key: "De las Dunas", blurb: "Has hecho tu hogar entre las arenas cambiantes y el clima árido del desierto, donde la familia y la colaboración lo son todo.", expansion: "Hope & Fear", features: [{ name: "Oasis", text: "Durante un descanso corto, tú o un aliado podéis repetir un dado usado en una acción de descanso y quedaros con el resultado más alto." }] },
   { key: "Del Hogar", blurb: "Vienes de orígenes humildes, de un pueblo modesto o del campo, donde familias y vecinos forjan lazos muy estrechos.", expansion: "Hope & Fear", features: [{ name: "Muy Unidos", text: "Una vez por descanso largo, puedes gastar cualquier cantidad de Esperanza para dar a un aliado dentro de alcance Lejano esa misma cantidad de Esperanza." }] },
   { key: "De la Escarcha", blurb: "Vienes de un lugar de nieve y hielo, donde tu comunidad aprendió a sobrevivir en las condiciones más duras.", expansion: "Hope & Fear", features: [{ name: "Curtido", text: "Cuando haces un descanso, te quitas 1 Punto de vida." }] },
-  { key: "De la Guerra", blurb: "Creciste entre conflictos, formado para el combate.", expansion: "Hope & Fear", features: [{ name: "Cara Valiente", text: "Una vez por sesión, cuando te obliguen a marcar Estrés, puedes gastar 1 Esperanza en su lugar." }] },
+  { key: "De la Guerra", blurb: "Vienes de un lugar que está, o estuvo, arrasado por la guerra; sabes defenderte y sacar partido de lo que tengas a mano.", expansion: "Hope & Fear", features: [{ name: "Cara Valiente", text: "Una vez por sesión, cuando te veas obligado a marcar 1 Estrés, puedes gastar 1 Esperanza en su lugar." }] },
   { key: "Libre", blurb: "Naciste sin ataduras a ninguna autoridad ni institución.", expansion: "Hope & Fear", features: [{ name: "Sin Ataduras", text: "Una vez por sesión, cuando saques una tirada con Miedo, puedes convertirla en una tirada con Esperanza." }] },
   { key: "Renacido", blurb: "Tu vida actual comenzó tras dejar atrás una anterior.", expansion: "Hope & Fear", features: [{ name: "Familia Elegida", text: "Una vez por descanso, puedes gastar 1 Esperanza para usar una Experiencia de un aliado como si fuera tuya, contando cómo te preparó para este momento." }] },
 ];
@@ -535,6 +535,15 @@ const BREATH_ELEMENTS = [
   { key: "Ácido", Icon: FlaskConical, color: "#7FB36A" },
   { key: "Veneno", Icon: Skull, color: "#8E6FB8" },
 ];
+// Repeticiones de una tirada de dualidad (Doblega la Suerte, Foco, Brújula, Ayuda Encantada, Adaptabilidad).
+const REROLL_META = {
+  luck: { tag: "Suerte", head: "doblega la suerte", done: "Doblega la Suerte" },
+  focus: { tag: "Foco", head: "termina su Foco y repite", done: "Foco del Explorador" },
+  compass: { tag: "Brújula", head: "repite su Dado de Esperanza", done: "Brújula Interior" },
+  swap: { tag: "Ayuda", head: "intercambia los dados", done: "Ayuda Encantada" },
+  adapt: { tag: "Adaptabilidad", head: "repite con Adaptabilidad", done: "Adaptabilidad" },
+};
+
 // Hechicero · Origen Elemental
 const ORIGIN_ELEMENTS = [
   { key: "Aire", Icon: Wind, color: "#8FB8C9" },
@@ -2613,6 +2622,22 @@ const sharedStyles = `
   .mh-raw-opt small { font-size: 10.5px; color: var(--mh-muted); }
   .mh-ethereal-btn { background: #B8862E; }
   .mh-compass-btn { background: #6E8B5A; }
+  .mh-adapt-btn { background: #6A7E95; }
+  .mh-adapt-btn:hover:not(:disabled) { background: #5A6D82; }
+  .mh-manip { margin-top: 12px; border: 1.5px solid color-mix(in srgb, #8A6FD0 45%, transparent); border-radius: 12px; padding: 9px; background: color-mix(in srgb, #8A6FD0 7%, transparent); font-family: 'Inter', system-ui, sans-serif; }
+  .mh-manip-h { display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 12px; font-weight: 700; color: #6B4FB8; }
+  .mh-manip-o { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 7px; }
+  .mh-manip-o button { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px; border-radius: 8px; border: 1px solid color-mix(in srgb, #8A6FD0 40%, var(--mh-line)); background: var(--mh-panel); font: 600 11px 'Inter', system-ui, sans-serif; color: var(--mh-ink); cursor: pointer; }
+  .mh-manip-o button:hover:not(:disabled) { background: #8A6FD0; color: #fff; }
+  .mh-manip-o button:disabled { opacity: .45; cursor: not-allowed; }
+  .mh-charge-btn { background: #8A6FD0; }
+  .mh-charge-btn.is-alt { background: var(--mh-panel); color: #6B4FB8; border: 1px solid #8A6FD088; }
+  .mh-chat-enchant { border-color: #8A6FD0; color: #6B4FB8; }
+  .mh-brave { position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%); z-index: 80; display: flex; align-items: center; gap: 10px; padding: 10px 12px 10px 16px; border-radius: 14px; background: #4A3F2E; color: #fff; box-shadow: 0 10px 26px rgba(0,0,0,.3); font-family: 'Inter', system-ui, sans-serif; animation: mh-wz-art-in .2s ease-out; }
+  .mh-brave strong { display: block; font-size: 12.5px; }
+  .mh-brave small { font-size: 11px; opacity: .88; }
+  .mh-brave button { border: 0; border-radius: 9px; padding: 7px 11px; font: 700 12px 'Inter', system-ui, sans-serif; color: #4A3F2E; background: #E3B04B; cursor: pointer; white-space: nowrap; }
+  .mh-brave button.is-x { background: rgba(255,255,255,.15); color: #fff; padding: 7px; }
   .mh-compass-btn:hover:not(:disabled) { background: #5E7A4C; }
   .mh-ethereal-btn:hover:not(:disabled) { background: #A07424; }
   .mh-spirit-btn:hover { background: #A07424; }
@@ -4914,7 +4939,8 @@ export default function App({ onSignOut }) {
       // Gigante · Aguante: una casilla de Punto de vida más al crear el personaje.
       r_hp: String((CLASS_HP[chosenClass.key] ?? 6) + (draftAncestries.includes("Gigante") ? 1 : 0)),
       f_endurance: draftAncestries.includes("Gigante") ? "1" : "",
-      r_stress: String(STRESS_SLOTS + (chosenSubclass?.key === "Vengador" ? 1 : 0)),
+      r_stress: String(STRESS_SLOTS + (chosenSubclass?.key === "Vengador" ? 1 : 0) + (draftAncestries.includes("Humano") ? 1 : 0)),
+      f_stamina: draftAncestries.includes("Humano") ? "1" : "",
       f_atease: chosenSubclass?.key === "Vengador" ? "1" : "",
       f_primary_weapon: draftPrimaryWeapon,
       f_secondary_weapon:
@@ -5147,6 +5173,11 @@ export default function App({ onSignOut }) {
     }
     const finalPatch = overflow > 0 ? withBeastformExitOnDeath(id, hpTotal, nextHp, patch) : patch;
     updateCharacterFields(id, finalPatch);
+    if (stressToMark > 0 && c.f_community === "De la Guerra" && !c.f_brave_used && Number(c.hope_marked ?? HOPE_DEFAULT) >= 1) {
+      clearTimeout(braveTimer.current);
+      setBraveToast({ key: Date.now(), id });
+      braveTimer.current = setTimeout(() => setBraveToast(null), 8000);
+    }
     if (overflow > 0) {
       postCampaignEvent(id, `⚠️ Estrés lleno: marca ${overflow} de Vida en su lugar (${nextHp}/${hpTotal})`);
       checkForDeath(id, hpTotal, nextHp);
@@ -5428,7 +5459,7 @@ export default function App({ onSignOut }) {
     const rawBonus = ch && damageType === "mágico" ? Number(ch.f_raw_dmg || 0) : 0;
     if (rawBonus) updateCharacterField(charId, "f_raw_dmg", "");
     const total = roll + bonus + critBonus + wolfBonus + unstopBonus + sneakBonus + rawBonus;
-    setDamageRollResult({ rawBonus, sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, note: resonance ? "Resonancia Sagrada: los dados repetidos valen el doble" : opts.extraFlat ? "Incluye +" + opts.extraFlat + " de Elementalista" : opts.note || "", spirit: !!opts.spirit });
+    setDamageRollResult({ rawBonus, sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, doublePick: !!opts.doublePick, charged: ch && ch.f_subclass === "Origen Primigenio" && ch.f_charged === "1" && damageType === "mágico", note: resonance ? "Resonancia Sagrada: los dados repetidos valen el doble" : opts.extraFlat ? "Incluye +" + opts.extraFlat + " de Elementalista" : opts.note || "", spirit: !!opts.spirit });
     const who = playerName || "Alguien en la mesa";
     const critLabel = isCritical ? ` · ¡Crítico! (+${critBonus} máx.)` : "";
     const diceLabel = `${dice}d${die} (${rolls.join("+")})` + (wolfBonus ? ` + Lobo 1d10 (${wolfBonus})` : "") + (unstopBonus ? ` + Imparable ${unstopBonus}` : "") + (sneakRolls ? ` + Furtivo ${sneakRolls.length}d6 (${sneakRolls.join("+")})` : "");
@@ -5742,6 +5773,15 @@ export default function App({ onSignOut }) {
     setRestPicks(null);
     setRestType("short");
   }, [viewingCharId]);
+  // Humano · Gran Resistencia en personajes ya creados: una casilla de Estrés más, una sola vez.
+  const viewingHuman = viewingCharId ? (characters[viewingCharId]?.f_ancestry || "").split(" + ").includes("Humano") : false;
+  const viewingStamina = viewingCharId ? characters[viewingCharId]?.f_stamina : "";
+  useEffect(() => {
+    if (!viewingCharId || !viewingHuman || viewingStamina) return;
+    const c = characters[viewingCharId];
+    updateCharacterFields(viewingCharId, { r_stress: String(Number(c.r_stress || 0) + 1), f_stamina: "1" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewingCharId, viewingHuman, viewingStamina]);
   // Gigante · Aguante en personajes ya creados: se suma la casilla una sola vez.
   const viewingGiant = viewingCharId ? isGiant(characters[viewingCharId]) : false;
   const viewingEndurance = viewingCharId ? characters[viewingCharId]?.f_endurance : "";
@@ -6395,10 +6435,21 @@ export default function App({ onSignOut }) {
         const base = crit ? "Éxito crítico" : r.reaction ? "Tirada de reacción" : (success === null ? "Con " : success ? "Éxito con " : "Fallo con ") + (withHope ? "Esperanza" : "Miedo");
         const note = r.reaction ? (crit ? "Ignora los efectos" : "Sin Esperanza ni Miedo") : crit ? "+1 Esperanza y −1 Estrés" : withHope ? "+1 Esperanza" : "El DJ gana 1 Miedo";
         const vcol = crit ? "#6FBF73" : r.reaction ? "#5E8FC9" : withHope ? "#E3B04B" : "#A58BE8";
-        const tag = r.luck ? (r.luck.kind === "focus" ? "Foco" : r.luck.kind === "compass" ? "Brújula" : "Suerte") : r.weapon ? "Ataque" : r.card ? "Habilidad" : r.reaction ? "Reacción" : "Rasgo";
+        const tag = r.luck ? (REROLL_META[r.luck.kind] || REROLL_META.luck).tag : r.weapon ? "Ataque" : r.card ? "Habilidad" : r.reaction ? "Reacción" : "Rasgo";
         // Hada · Doblega la Suerte: botón bajo las tiradas de acción recientes (tuyas o de aliados).
         const meC = meCharId ? characters[meCharId] : null;
         const luckable = meC && isFaerie(meC) && !r.reaction && !r.luck && m.charId && Date.now() - (m.ts || 0) < 10 * 60 * 1000;
+        // Origen Primigenio · Ayuda Encantada: intercambiar los dados de la tirada de Lanzamiento de un aliado.
+        const allyC = m.charId ? characters[m.charId] : null;
+        const allySpell = allyC ? TRAITS.find((t) => t.key === spellcastTraitFor(allyC.f_class, allyC.f_subclass))?.label : "";
+        const enchantable = meC && meC.f_subclass === "Origen Primigenio" && tierForLevel(meC.f_level || 1) >= 2 && m.charId && m.charId !== meCharId && !r.luck && !r.weapon && r.trait && r.trait === allySpell && Date.now() - (m.ts || 0) < 10 * 60 * 1000;
+        const enchantBtn = enchantable ? (
+          <button type="button" className="mh-chat-luck mh-chat-enchant" disabled={!!meC.f_enchant_used} onClick={() => bendLuck(meCharId, m.charId, r, { kind: "swap" })}>
+            <Sparkles size={13} />
+            Ayuda Encantada: intercambiar sus dados
+            <small>{meC.f_enchant_used ? "Ya usada" : "1 por descanso largo"}</small>
+          </button>
+        ) : null;
         const meHope = meC ? Number(meC.hope_marked ?? HOPE_DEFAULT) : 0;
         const luckBtn = luckable ? (
           <button type="button" className="mh-chat-luck" disabled={!!meC.f_luck_used || meHope < 3} onClick={() => bendLuck(meCharId, m.charId, r)}>
@@ -6435,7 +6486,7 @@ export default function App({ onSignOut }) {
         ) : null;
         const head = r.luck ? (
           <>
-            {who} {r.luck.kind === "focus" ? "termina su Foco y repite" : r.luck.kind === "compass" ? "repite su Dado de Esperanza" : "doblega la suerte"}
+            {who} {(REROLL_META[r.luck.kind] || REROLL_META.luck).head}
             {r.luck.forId && r.luck.forId !== m.charId ? " de " + r.luck.forName : ""} · {r.weapon ? "ataque con " + r.weapon : r.card || r.trait}
           </>
         ) : r.weapon ? (
@@ -6482,10 +6533,11 @@ export default function App({ onSignOut }) {
           </>,
           base,
           r.luck ? "Antes: " + r.luck.prevHope + " y " + r.luck.prevFear : note,
-          luckBtn || adjRow ? (
+          luckBtn || adjRow || enchantBtn ? (
             <>
               {adjRow}
               {luckBtn}
+              {enchantBtn}
             </>
           ) : null
         );
@@ -7163,6 +7215,9 @@ export default function App({ onSignOut }) {
   const [renewDlg, setRenewDlg] = useState(null);
   // Firbolg · Inquebrantable: aviso con el d6.
   const [unshakeToast, setUnshakeToast] = useState(null);
+  // De la Guerra · Cara Valiente: aviso para cambiar el Estrés recién marcado por 1 Esperanza.
+  const [braveToast, setBraveToast] = useState(null);
+  const braveTimer = useRef(null);
   const unshakeTimer = useRef(null);
   // Explorador · Foco del Explorador: ventana para escribir el objetivo.
   const [focusDlg, setFocusDlg] = useState(null);
@@ -7339,6 +7394,9 @@ export default function App({ onSignOut }) {
     if (isLong && c.f_sparing_used) restPatch.f_sparing_used = "";
     if (isLong && c.f_closeknit_used) restPatch.f_closeknit_used = "";
     if (isLong && c.f_raw_used) restPatch.f_raw_used = "";
+    if (isLong && c.f_brave_used) restPatch.f_brave_used = "";
+    if (isLong && c.f_enchant_used) restPatch.f_enchant_used = "";
+    if (isLong && c.f_charged) restPatch.f_charged = "";
     // Trae Suerte vuelve a repartirse en la «sesión» siguiente.
     if (isLong && (c.f_luck_given || c.f_luck_posted)) {
       restPatch.f_luck_given = "";
@@ -7717,41 +7775,70 @@ export default function App({ onSignOut }) {
   const rollGains = (h, f) => ({ hope: h >= f ? 1 : 0, stress: h === f ? -1 : 0, fear: f > h ? 1 : 0 });
   const bendLuck = (myId, rollerId, roll, opts = {}) => {
     const me = charsRef.current[myId];
-    const focus = opts.kind === "focus";
-    const compass = opts.kind === "compass";
+    const kind = opts.kind || "luck";
     if (!me) return;
-    if (!focus && !compass && (me.f_luck_used || Number(me.hope_marked ?? HOPE_DEFAULT) < 3)) return;
+    if (kind === "luck" && (me.f_luck_used || Number(me.hope_marked ?? HOPE_DEFAULT) < 3)) return;
     const sides = roll.hopeSides || 12;
-    const nh = Math.floor(Math.random() * sides) + 1;
-    const nf = compass ? roll.fear : Math.floor(Math.random() * 12) + 1;
+    // Ayuda Encantada intercambia los dados; Brújula Interior solo repite el de Esperanza.
+    const nh = kind === "swap" ? roll.fear : Math.floor(Math.random() * sides) + 1;
+    const nf = kind === "swap" ? roll.hope : kind === "compass" ? roll.fear : Math.floor(Math.random() * 12) + 1;
     const total = roll.total - roll.hope - roll.fear + nh + nf;
-    const a = rollGains(roll.hope, roll.fear);
-    const b = rollGains(nh, nf);
+    const ga = rollGains(roll.hope, roll.fear);
+    const gb = rollGains(nh, nf);
     // Las tiradas de reacción no generan Esperanza ni Miedo: repetirlas no cambia nada de eso.
-    const delta = roll.reaction ? { hope: 0, stress: 0, fear: 0 } : { hope: b.hope - a.hope, stress: b.stress - a.stress, fear: b.fear - a.fear };
+    const delta = roll.reaction ? { hope: 0, stress: 0, fear: 0 } : { hope: gb.hope - ga.hope, stress: gb.stress - ga.stress, fear: gb.fear - ga.fear };
     const own = rollerId === myId;
-    const hopeNow = Number(me.hope_marked ?? HOPE_DEFAULT) - (focus || compass ? 0 : 3) + (own ? delta.hope : 0);
+    const hopeNow = Number(me.hope_marked ?? HOPE_DEFAULT) - (kind === "luck" ? 3 : 0) + (own ? delta.hope : 0);
     const patch = { hope_marked: String(Math.max(0, Math.min(getHopeMax(me), hopeNow))) };
-    if (focus) patch.f_focus = "";
-    else if (!compass) patch.f_luck_used = "1";
+    if (kind === "focus") patch.f_focus = "";
+    if (kind === "luck") patch.f_luck_used = "1";
+    if (kind === "swap") patch.f_enchant_used = "1";
     if (own && delta.stress) patch.stress_marked = String(Math.max(0, Math.min(Number(me.r_stress || 0), Number(me.stress_marked || 0) + delta.stress)));
     updateCharacterFields(myId, patch);
+    if (kind === "adapt") markStress(myId, 1);
     if (delta.fear) addFear(delta.fear);
     const crit = nh === nf;
     const text = crit ? "Éxito crítico" : nh > nf ? "Con Esperanza" : "Con Miedo";
     const color = crit ? "#7FB77A" : nh > nf ? "#E3B04B" : "#A58BE8";
     const note = crit ? "Ganas 1 Esperanza y te quitas 1 Estrés" : nh > nf ? "Ganas 1 Esperanza" : "El DJ gana 1 de Miedo";
-    if (own) setTraitRollResult((prev) => (prev && prev.charId === myId ? { ...prev, key: Date.now(), hope: nh, fear: nf, total, text, color, note, luck: focus ? "focus" : compass ? "compass" : true } : prev));
+    if (own) setTraitRollResult((prev) => (prev && prev.charId === myId ? { ...prev, key: Date.now(), hope: nh, fear: nf, total, text, color, note, luck: kind } : prev));
     const roller = charsRef.current[rollerId];
     const forName = roller?.f_name || "un aliado";
     const sid = String(Date.now());
     const { luck, adjust, ...base } = roll;
-    postCampaignEvent(myId, compass ? `🧭 Brújula Interior: repite el 1 de su Dado de Esperanza y saca ${nh} (${nh} + ${nf} = ${total}, ${text})` : focus ? `🎯 Termina su Foco (${me.f_focus}) y repite los dados: ${nh} + ${nf} = ${total} (${text})` : `🍀 Doblega la Suerte${own ? "" : " para " + forName}: ${nh} + ${nf} = ${total} (${text})`, {
+    const msg = {
+      luck: `🍀 Doblega la Suerte${own ? "" : " para " + forName}: ${nh} + ${nf} = ${total} (${text})`,
+      focus: `🎯 Termina su Foco (${me.f_focus}) y repite los dados: ${nh} + ${nf} = ${total} (${text})`,
+      compass: `🧭 Brújula Interior: repite el 1 de su Dado de Esperanza y saca ${nh} (${nh} + ${nf} = ${total}, ${text})`,
+      swap: `✨ Ayuda Encantada: intercambia los Dados de Dualidad de ${forName} (${nh} + ${nf} = ${total}, ${text})`,
+      adapt: `🔁 Adaptabilidad: marca 1 Estrés y repite la tirada (${nh} + ${nf} = ${total}, ${text})`,
+    }[kind];
+    postCampaignEvent(myId, msg, {
       kind: "roll",
       sid,
-      roll: { ...base, hope: nh, fear: nf, total, luck: { forId: rollerId, forName, prevHope: roll.hope, prevFear: roll.fear, kind: focus ? "focus" : compass ? "compass" : "luck" }, adjust: !own && (delta.hope || delta.stress) ? { charId: rollerId, hope: delta.hope, stress: delta.stress } : null },
+      roll: { ...base, hope: nh, fear: nf, total, luck: { forId: rollerId, forName, prevHope: roll.hope, prevFear: roll.fear, kind }, adjust: !own && (delta.hope || delta.stress) ? { charId: rollerId, hope: delta.hope, stress: delta.stress } : null },
     });
   };
+  // Datos de la tirada del resultado, en el formato del chat, para poder repetirla.
+  const rollForReroll = (r) => ({
+    trait: r.traitLabel,
+    weapon: r.weapon?.name || "",
+    card: r.card?.name || "",
+    dc: r.card?.dc,
+    hopeSides: r.hopeSides || 12,
+    hope: r.hope,
+    fear: r.fear,
+    mod: r.mod,
+    adv: r.advantageRoll,
+    wolf: r.wolfBonus,
+    exp: r.expBonus,
+    rally: r.rallyRoll,
+    rallyDie: r.rallyDie,
+    poet: r.poetRoll,
+    tide: r.tideBonus,
+    total: r.total,
+    reaction: r.reaction,
+  });
 
   const doTraitRoll = async (charId, traitLabel, traitValue, weapon, cardContext, advantage, extras = {}) => {
     let wasCloaked = false;
@@ -9295,6 +9382,11 @@ export default function App({ onSignOut }) {
                       </span>
                     );
                   })()}
+                  {c.f_subclass === "Origen Primigenio" && c.f_charged === "1" && (
+                    <span className="mh-htag is-active" style={{ "--tag": "#8A6FD0" }} title="Carga Arcana: gástala en un ataque mágico con éxito (+10 al daño o +3 a la Dificultad de la reacción). Se pierde en el descanso largo.">
+                      <span className="mh-htag-dot" /> Cargado
+                    </span>
+                  )}
                   {c.f_subclass === "Origen Elemental" && ORIGIN_ELEMENTS.find((e) => e.key === c.f_origin_element) && (() => {
                     // Origen Elemental: el elemento que domina; con Trascendencia, su manifestación activa.
                     const el = ORIGIN_ELEMENTS.find((e) => e.key === c.f_origin_element);
@@ -10299,6 +10391,7 @@ export default function App({ onSignOut }) {
                               ...(subclassEntry.key === "Portador Divino" ? { divineActs: true } : {}),
                               ...(subclassEntry.key === "Centinela Alado" ? { sentinelActs: true } : {}),
                               ...(subclassEntry.key === "Origen Elemental" ? { originActs: true } : {}),
+                              ...(subclassEntry.key === "Origen Primigenio" ? { primalActs: true } : {}),
                             }),
                           });
                         }
@@ -12999,6 +13092,38 @@ export default function App({ onSignOut }) {
               );
             })()}
 
+            {braveToast && (() => {
+              const bc = characters[braveToast.id];
+              if (!bc) return null;
+              return (
+                <div className="mh-brave" key={braveToast.key} role="status">
+                  <span>
+                    <strong>Cara Valiente</strong>
+                    <small>¿Gastas 1 Esperanza en lugar de este Estrés? Una vez por sesión.</small>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const cur = charsRef.current[braveToast.id];
+                      if (!cur) return;
+                      updateCharacterFields(braveToast.id, {
+                        stress_marked: String(Math.max(0, Number(cur.stress_marked || 0) - 1)),
+                        hope_marked: String(Math.max(0, Number(cur.hope_marked ?? HOPE_DEFAULT) - 1)),
+                        f_brave_used: "1",
+                      });
+                      postCampaignEvent(braveToast.id, "🪖 Cara Valiente: gasta 1 Esperanza en lugar de marcar 1 Estrés");
+                      setBraveToast(null);
+                    }}
+                  >
+                    Sí, 1 Esperanza
+                  </button>
+                  <button type="button" className="is-x" aria-label="No" onClick={() => setBraveToast(null)}>
+                    <X size={12} />
+                  </button>
+                </div>
+              );
+            })()}
+
             {unshakeToast && (
               <div className={"mh-unshake" + (unshakeToast.saved ? " is-saved" : "")} key={unshakeToast.key} role="status">
                 <span className="mh-unshake-dice">
@@ -13566,6 +13691,65 @@ export default function App({ onSignOut }) {
                     </div>
                     <DualityResult roll={traitRollResult} size={72} />
                     {(() => {
+                      // Humano · Adaptabilidad: si falla una tirada con Experiencia, 1 Estrés para repetirla.
+                      const r = traitRollResult;
+                      const rc = characters[r.charId];
+                      if (!rc || !(rc.f_ancestry || "").split(" + ").includes("Humano") || !(r.exps || []).length || r.luck) return null;
+                      const failed = r.card?.dc != null ? !(r.hope === r.fear || r.total >= r.card.dc) : null;
+                      if (failed === false) return null;
+                      return (
+                        <button type="button" className="mh-luck-btn mh-adapt-btn" onClick={() => bendLuck(r.charId, r.charId, rollForReroll(r), { kind: "adapt" })}>
+                          <RotateCcw size={15} /> Adaptabilidad · 1 Estrés
+                          <small>{failed ? "Has fallado: repite la tirada" : "Si has fallado, repite la tirada"}</small>
+                        </button>
+                      );
+                    })()}
+                    {(() => {
+                      // Origen Primigenio · Manipular la Magia: tras un ataque mágico o una tirada de Lanzamiento, 1 Estrés para una de 4 mejoras.
+                      const r = traitRollResult;
+                      const rc = characters[r.charId];
+                      if (!rc || rc.f_subclass !== "Origen Primigenio" || r.reaction) return null;
+                      const spellLabel = TRAITS.find((t) => t.key === spellcastTraitFor(rc.f_class, rc.f_subclass))?.label;
+                      const magicAttack = r.weapon && /mágico/.test(r.weapon.damage || "");
+                      if (!magicAttack && !(r.traitLabel === spellLabel && !r.weapon)) return null;
+                      if (r.manip) return <div className="mh-luck-done" style={{ color: "#6B4FB8" }}>Manipular la Magia: {r.manip}</div>;
+                      const use = (k, label) => {
+                        markStress(r.charId, 1);
+                        setTraitRollResult((prev) =>
+                          prev
+                            ? {
+                                ...prev,
+                                manip: label,
+                                ...(k === "roll" ? { total: prev.total + 2, key: prev.key } : {}),
+                                ...(k === "die" && prev.weapon ? { weapon: { ...prev.weapon, manipDouble: true } } : {}),
+                              }
+                            : prev
+                        );
+                        postCampaignEvent(r.charId, "🪄 Manipular la Magia: marca 1 Estrés y " + { range: "amplía un paso el alcance", roll: "suma +2 al resultado de la tirada", die: "duplicará un dado de daño", target: "alcanza a un objetivo adicional" }[k]);
+                      };
+                      return (
+                        <div className="mh-manip">
+                          <div className="mh-manip-h">
+                            <Wand size={13} /> Manipular la Magia · 1 Estrés
+                          </div>
+                          <div className="mh-manip-o">
+                            <button type="button" onClick={() => use("range", "+1 alcance")}>
+                              <MoveUpRight size={12} /> +1 alcance
+                            </button>
+                            <button type="button" onClick={() => use("roll", "+2 al resultado")}>
+                              <Plus size={12} /> +2 al resultado
+                            </button>
+                            <button type="button" disabled={!magicAttack} title={magicAttack ? undefined : "Solo en un ataque que haga daño"} onClick={() => use("die", "duplicas un dado de daño")}>
+                              <Dices size={12} /> Duplicar un dado
+                            </button>
+                            <button type="button" onClick={() => use("target", "otro objetivo")}>
+                              <Users size={12} /> Otro objetivo
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                    {(() => {
                       // Rostro Etéreo: con éxito y Esperanza en Presencia, puedes quitar 1 Miedo al DJ en vez de ganar Esperanza.
                       const r = traitRollResult;
                       const rc = characters[r.charId];
@@ -13672,7 +13856,7 @@ export default function App({ onSignOut }) {
                     })()}
                     {traitRollResult.luck && (
                       <div className="mh-luck-done">
-                        {traitRollResult.luck === "focus" ? <Crosshair size={12} /> : traitRollResult.luck === "compass" ? <Compass size={12} /> : <Clover size={12} />} Repetida con {traitRollResult.luck === "focus" ? "Foco del Explorador" : traitRollResult.luck === "compass" ? "Brújula Interior" : "Doblega la Suerte"}
+                        {traitRollResult.luck === "focus" ? <Crosshair size={12} /> : traitRollResult.luck === "compass" ? <Compass size={12} /> : <Clover size={12} />} Repetida con {(REROLL_META[traitRollResult.luck] || REROLL_META.luck).done}
                       </div>
                     )}
                     <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 10, color: "var(--mh-muted)", marginTop: 10 }}>
@@ -13747,7 +13931,7 @@ export default function App({ onSignOut }) {
                             }
                             const spirit = !!traitRollResult.weapon.spirit;
                             const rc = characters[charId];
-                            rollWeaponDamage(name, damage, charId, isCritical, { cloaked: wasCloaked, spirit, resonance: spirit && rc && tierForLevel(rc.f_level || 1) >= 3, extraFlat: traitRollResult.weapon.elemDmg || 0 });
+                            rollWeaponDamage(name, damage, charId, isCritical, { cloaked: wasCloaked, spirit, resonance: spirit && rc && tierForLevel(rc.f_level || 1) >= 3, extraFlat: traitRollResult.weapon.elemDmg || 0, doublePick: !!traitRollResult.weapon.manipDouble });
                           }}
                         >
                           Sí
@@ -13857,6 +14041,55 @@ export default function App({ onSignOut }) {
                     Daño · {damageRollResult.weaponName}
                   </div>
                   <DamageResult roll={damageRollResult} />
+                  {(() => {
+                    // Manipular la Magia · duplicar un dado de daño.
+                    const dr = damageRollResult;
+                    if (!dr.doublePick) return dr.doubled != null ? <div className="mh-kick-done" style={{ color: "#6B4FB8" }}>Manipular la Magia: un {dr.doubled} cuenta doble</div> : null;
+                    const rolls = dr.rolls || [dr.roll];
+                    return (
+                      <div className="mh-volatile">
+                        <small>Manipular la Magia: elige el dado que duplicas</small>
+                        <span className="mh-volatile-dice">
+                          {rolls.map((v, k) => (
+                            <button
+                              key={k}
+                              type="button"
+                              onClick={() => {
+                                setDamageRollResult((r) => (r ? { ...r, doublePick: false, doubled: v, total: r.total + v } : r));
+                                postCampaignEvent(dr.charId, `🪄 Manipular la Magia: duplica un ${v} del daño. Daño total ${dr.total + v}`);
+                              }}
+                            >
+                              {v}
+                            </button>
+                          ))}
+                        </span>
+                      </div>
+                    );
+                  })()}
+                  {(() => {
+                    // Origen Primigenio · Carga Arcana: gastar la Carga en un ataque mágico con éxito.
+                    const dr = damageRollResult;
+                    const pc = dr.charId ? characters[dr.charId] : null;
+                    if (!dr.charged || !pc || pc.f_charged !== "1") return dr.chargeUsed ? <div className="mh-kick-done" style={{ color: "#6B4FB8" }}>Carga Arcana: {dr.chargeUsed}</div> : null;
+                    const spend = (k) => {
+                      updateCharacterField(dr.charId, "f_charged", "");
+                      setDamageRollResult((r) => (r ? { ...r, charged: false, chargeUsed: k === "dmg" ? "+10 al daño" : "+3 a la Dificultad de la reacción", total: k === "dmg" ? r.total + 10 : r.total } : r));
+                      postCampaignEvent(dr.charId, k === "dmg" ? `⚡ Carga Arcana: gasta su Carga y suma +10 al daño (total ${dr.total + 10})` : "⚡ Carga Arcana: gasta su Carga; la reacción que provoca el hechizo tiene +3 a la Dificultad");
+                    };
+                    return (
+                      <div className="mh-pred">
+                        <div className="mh-pred-note" style={{ marginTop: 10, color: "var(--mh-ink3)", fontWeight: 600 }}>Estás Cargado: ¿gastas la Carga?</div>
+                        <span style={{ display: "flex", gap: 6, marginTop: 6 }}>
+                          <button type="button" className="mh-kick-btn mh-charge-btn" style={{ marginTop: 0 }} onClick={() => spend("dmg")}>
+                            <Zap size={14} /> +10 al daño
+                          </button>
+                          <button type="button" className="mh-kick-btn mh-charge-btn is-alt" style={{ marginTop: 0 }} onClick={() => spend("dc")}>
+                            +3 Dificultad de la reacción
+                          </button>
+                        </span>
+                      </div>
+                    );
+                  })()}
                   {(() => {
                     // Hechicero · Magia Volátil: 3 Esperanza para repetir los dados de daño que quieras (daño mágico).
                     const dr = damageRollResult;
@@ -14912,6 +15145,35 @@ export default function App({ onSignOut }) {
                       },
                     });
                   }
+                  // Origen Primigenio · Carga Arcana (Maestría).
+                  if (d.primalActs && !d.fromChat && tierForLevel(c.f_level || 1) >= 3) {
+                    const charged = c.f_charged === "1";
+                    const hopeC = Number(c.hope_marked ?? HOPE_DEFAULT);
+                    cardActs.push({
+                      key: "charge-hope",
+                      Icon: Zap,
+                      label: charged ? "Ya estás Cargado" : hopeC < 2 ? "Cargarse · te falta Esperanza" : "Cargarse",
+                      sub: "2 Esperanza",
+                      disabled: charged || hopeC < 2,
+                      run: () => {
+                        closeCardDetail();
+                        updateCharacterFields(viewingCharId, { hope_marked: String(hopeC - 2), f_charged: "1" });
+                        postCampaignEvent(viewingCharId, "⚡ Carga Arcana: gasta 2 Esperanza y queda Cargado");
+                      },
+                    });
+                    cardActs.push({
+                      key: "charge-dmg",
+                      Icon: Flame,
+                      label: charged ? "Ya estás Cargado" : "He recibido daño mágico",
+                      sub: "Quedas Cargado sin coste",
+                      disabled: charged,
+                      run: () => {
+                        closeCardDetail();
+                        updateCharacterField(viewingCharId, "f_charged", "1");
+                        postCampaignEvent(viewingCharId, "⚡ Carga Arcana: recibe daño mágico y queda Cargado");
+                      },
+                    });
+                  }
                   // Origen Elemental: elemento, Evasión Natural y Trascendencia.
                   if (d.originActs && !d.fromChat) {
                     const el = ORIGIN_ELEMENTS.find((e) => e.key === c.f_origin_element);
@@ -15268,7 +15530,7 @@ export default function App({ onSignOut }) {
                       label: "Mostrar en la campaña",
                       sub: shareCamp.name,
                       run: () => {
-                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, divineActs, sentinelActs, originActs, ...detail } = d;
+                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, divineActs, sentinelActs, originActs, primalActs, ...detail } = d;
                         // Las imágenes incrustadas muy grandes no se copian al chat.
                         if (typeof detail.image === "string" && detail.image.startsWith("data:") && detail.image.length > 30000) delete detail.image;
                         const type = d.domain ? "domain" : d.weapon ? "weapon" : d.armor ? "armor" : "card";
@@ -16139,7 +16401,7 @@ export default function App({ onSignOut }) {
                       <Zap size={20} color="#6FA3C0" />
                       <div style={{ fontSize: 11, color: "var(--mh-muted)" }}>Estrés</div>
                       <div className="mh-serif" style={{ fontSize: 34, fontWeight: 700, color: ink("#6FA3C0") }}>
-                        {STRESS_SLOTS + ((SUBCLASSES[CLASSES[carouselIndex]?.key] || [])[subclassIndex]?.key === "Vengador" ? 1 : 0)}
+                        {STRESS_SLOTS + ((SUBCLASSES[CLASSES[carouselIndex]?.key] || [])[subclassIndex]?.key === "Vengador" ? 1 : 0) + (draftAncestries.includes("Humano") ? 1 : 0)}
                       </div>
                     </div>
                   </div>
