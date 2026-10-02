@@ -2551,6 +2551,27 @@ const sharedStyles = `
   .mh-map-chip i.is-prop { background: var(--mh-panel2); }
   .mh-map-chip i.is-prop svg { width: 90%; height: 90%; color: inherit; }
   .mh-map-stamphint { font-size: 12px; color: var(--mh-ink3); margin-top: -4px; }
+  .mh-map-flat { position: absolute; inset: 0; }
+  .mh-map-iso-btn { position: absolute; right: 8px; bottom: 8px; z-index: 7; border: 0; border-radius: 20px; padding: 4px 10px; background: rgba(20,14,18,.72); color: #F4EEE2; font: 700 10.5px 'Inter', system-ui, sans-serif; cursor: pointer; }
+  .mh-map-iso-btn:hover { background: rgba(20,14,18,.9); }
+  .mh-map.is-iso { background: radial-gradient(120% 90% at 50% 30%, #4A5A6E, #1F2734); perspective: none; }
+  .mh-map.is-iso .mh-map-plane {
+    position: absolute; left: 7%; top: 9%; width: 86%; height: 86%;
+    transform-origin: 50% 50%; transform: rotateX(60deg) rotateZ(-45deg) scale(.9); transform-style: preserve-3d;
+    background: #6E8F55; border-radius: 4px;
+    box-shadow: 1px 1px 0 #5B4632, 2px 2px 0 #5B4632, 3px 3px 0 #54402D, 4px 4px 0 #54402D, 5px 5px 0 #4C3A29, 6px 6px 0 #4C3A29, 7px 7px 0 #443424, 8px 8px 0 #443424, 9px 9px 0 #3B2D1F, 10px 10px 0 #3B2D1F, 14px 14px 18px rgba(0,0,0,.45);
+  }
+  .mh-map.is-iso .mh-map-cell { position: absolute; background: #8DB36F; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
+  .mh-map.is-iso .mh-map-cell.is-alt { background: #84AA66; }
+  .mh-map.is-iso .mh-map-bg { inset: 0; filter: none; opacity: .9; }
+  .mh-map.is-iso .mh-map-grid { background-image: linear-gradient(rgba(255,255,255,.22) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.22) 1px, transparent 1px); }
+  .mh-map.is-iso .mh-map-tk, .mh-map.is-iso .mh-map-prop { transform-origin: 50% 85%; transform: rotateZ(45deg) rotateX(-60deg) translateY(-26%); }
+  .mh-map.is-iso .mh-map-prop { pointer-events: none; }
+  .mh-map.is-iso .mh-map-prop svg { width: 120%; height: 120%; filter: drop-shadow(0 4px 2px rgba(0,0,0,.35)); }
+  .mh-map.is-iso .mh-map-face { border-radius: 50% 50% 22% 22%; box-shadow: 0 6px 4px -2px rgba(0,0,0,.55); }
+  .mh-map.is-iso .mh-map-tk::before { content: ""; position: absolute; left: 18%; right: 18%; bottom: 2%; height: 14%; border-radius: 50%; background: rgba(0,0,0,.35); }
+  .mh-map.is-iso .mh-map-tk.is-sel::before { background: #F3C24A; box-shadow: 0 0 10px #F3C24A; }
+  .mh-map.is-iso .mh-map-nm { top: 96%; }
   .mh-map-reach { position: absolute; background: rgba(111,191,115,.26); box-shadow: inset 0 0 0 1px rgba(111,191,115,.6); pointer-events: none; }
   .mh-map-drop { position: absolute; box-shadow: inset 0 0 0 2px #F3C24A; border-radius: 6px; pointer-events: none; }
   .mh-map-drop.is-bad { box-shadow: inset 0 0 0 2px #D9644E; }
@@ -4409,6 +4430,14 @@ const HAPPY_SPARKS = [
 ];
 const HAPPY_MOTES = [[14, 0], [50, 0.8], [80, 1.6], [34, 2.2], [66, 2.9]];
 
+// Vista del tablero: plana (por defecto) o isométrica. Es una preferencia de cada navegador.
+const readIsoPref = () => {
+  try {
+    return localStorage.getItem("mh-map-iso") === "1";
+  } catch (e) {
+    return false;
+  }
+};
 // Tablero con fichas cuadradas. Se arrastran, o se elige una y se pulsa la casilla; también con las flechas.
 function MapBoard({ bg, tokens, props = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
   const ref = useRef(null);
@@ -4418,6 +4447,14 @@ function MapBoard({ bg, tokens, props = [], stampTool, onStamp, onUnstamp, canMo
   const [rangeId, setRangeId] = useState(null);
   const [hover, setHover] = useState(null); // casilla bajo el ratón mientras hay un sello elegido
   const painting = useRef(null);
+  const [iso, setIso] = useState(readIsoPref);
+  const toggleIso = () => {
+    const v = !iso;
+    setIso(v);
+    try {
+      localStorage.setItem("mh-map-iso", v ? "1" : "0");
+    } catch (e) {}
+  };
   const propAt = (x, y) => props.find((pr) => pr.x === x && pr.y === y);
   useEffect(() => {
     if (!menu) return;
@@ -4439,6 +4476,10 @@ function MapBoard({ bg, tokens, props = [], stampTool, onStamp, onUnstamp, canMo
   };
   const clamp = (v, max) => Math.max(0, Math.min(max - 1, v));
   const cellAt = (e) => {
+    if (iso) {
+      const el = document.elementsFromPoint(e.clientX, e.clientY).find((n) => n.dataset && n.dataset.cell);
+      return el ? { x: Number(el.dataset.x), y: Number(el.dataset.y) } : null;
+    }
     const r = ref.current.getBoundingClientRect();
     return { x: clamp(Math.floor(((e.clientX - r.left) / r.width) * MAP_COLS), MAP_COLS), y: clamp(Math.floor(((e.clientY - r.top) / r.height) * MAP_ROWS), MAP_ROWS) };
   };
@@ -4457,7 +4498,7 @@ function MapBoard({ bg, tokens, props = [], stampTool, onStamp, onUnstamp, canMo
     const move = (ev) => {
       const c = cellAt(ev);
       const d = dragRef.current;
-      if (d && (c.x !== d.x || c.y !== d.y)) {
+      if (c && d && (c.x !== d.x || c.y !== d.y)) {
         dragRef.current = { ...d, ...c, moved: true };
         setDrag(dragRef.current);
       }
@@ -4480,10 +4521,12 @@ function MapBoard({ bg, tokens, props = [], stampTool, onStamp, onUnstamp, canMo
     if (!stampTool || e.button > 0 || e.target.closest(".mh-map-tk")) return;
     e.preventDefault();
     const c = cellAt(e);
+    if (!c) return;
     painting.current = new Set([c.x + "," + c.y]);
     if (!propAt(c.x, c.y)) onStamp(c.x, c.y);
     const move = (ev) => {
       const d = cellAt(ev);
+      if (!d) return;
       const k = d.x + "," + d.y;
       if (painting.current && !painting.current.has(k)) {
         painting.current.add(k);
@@ -4496,15 +4539,15 @@ function MapBoard({ bg, tokens, props = [], stampTool, onStamp, onUnstamp, canMo
   const boardContext = (e) => {
     if (!onUnstamp || e.target.closest(".mh-map-tk")) return;
     const c = cellAt(e);
-    if (!propAt(c.x, c.y)) return;
+    if (!c || !propAt(c.x, c.y)) return;
     e.preventDefault();
     onUnstamp(c.x, c.y);
   };
 
   const boardClick = (e) => {
-    if (stampTool || !selected || e.target.closest(".mh-map-tk")) return;
+    if (stampTool || !selected || e.target.closest(".mh-map-tk") || e.target.closest(".mh-map-iso-btn")) return;
     const c = cellAt(e);
-    if (!occupied(c.x, c.y, selected.id)) onMove(selected.id, c.x, c.y);
+    if (c && !occupied(c.x, c.y, selected.id)) onMove(selected.id, c.x, c.y);
   };
 
   const keyMove = (e, t) => {
@@ -4537,13 +4580,19 @@ function MapBoard({ bg, tokens, props = [], stampTool, onStamp, onUnstamp, canMo
   return (
     <div
       ref={ref}
-      className={"mh-map" + (bg ? "" : " is-blank") + (compact ? " is-compact" : "") + (stampTool ? " is-stamping" : "")}
+      className={"mh-map" + (bg ? "" : " is-blank") + (compact ? " is-compact" : "") + (stampTool ? " is-stamping" : "") + (iso ? " is-iso" : "")}
       onClick={boardClick}
       onPointerDown={stampDown}
       onContextMenu={boardContext}
-      onPointerMove={stampTool ? (e) => setHover(cellAt(e)) : undefined}
+      onPointerMove={stampTool ? (e) => { const c = cellAt(e); if (c) setHover(c); } : undefined}
       onPointerLeave={stampTool ? () => setHover(null) : undefined}
     >
+      <div className={iso ? "mh-map-plane" : "mh-map-flat"}>
+      {iso &&
+        Array.from({ length: MAP_COLS * MAP_ROWS }, (_, i) => {
+          const x = i % MAP_COLS, y = Math.floor(i / MAP_COLS);
+          return <div key={"c" + i} className={"mh-map-cell" + ((x + y) % 2 ? " is-alt" : "")} data-cell="1" data-x={x} data-y={y} style={at(x, y)} />;
+        })}
       {/* La escena va difuminada para que destaquen la cuadrícula y las fichas */}
       {bg && <div className="mh-map-bg" style={{ backgroundImage: `url("${bg.replace(/"/g, "%22")}")` }} />}
       {rangeCells.map(([x, y, band]) => (
@@ -4590,6 +4639,10 @@ function MapBoard({ bg, tokens, props = [], stampTool, onStamp, onUnstamp, canMo
           </button>
         );
       })}
+      </div>
+      <button type="button" className="mh-map-iso-btn" onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); toggleIso(); }} title={iso ? "Cambiar a la vista plana" : "Cambiar a la vista isométrica"}>
+        {iso ? "Vista plana" : "Vista isométrica"}
+      </button>
       {rangeTok && (
         <div className="mh-map-legend" onPointerDown={(e) => e.stopPropagation()}>
           {MAP_RANGES.map((r) => (
