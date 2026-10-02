@@ -10953,9 +10953,9 @@ export default function App({ onSignOut }) {
                                             key={ci.key}
                                             type="button"
                                             className={"mh-stat-circle" + (n ? " is-on" : "") + (locked ? " is-locked" : "")}
-                                            title={locked ? "Se desbloquea en Rango " + ci.tier : ci.plural + ": " + n + (n ? " · pulsa para que desaparezca una" : "")}
+                                            title={locked ? "Se desbloquea en Rango " + ci.tier : ci.plural + ": " + n + (n ? (ci.key === "fate" ? " · pulsa para que un adversario repita su ataque" : " · pulsa para que desaparezca una") : "")}
                                             disabled={locked || !n}
-                                            onClick={() => setSummon(viewingCharId, ci.key, n - 1, "🔮 " + ci.name + ": una entidad desaparece")}
+                                            onClick={() => setSummon(viewingCharId, ci.key, n - 1, ci.key === "fate" ? "🌀 Espíritu del Destino: obliga a un adversario en alcance Muy cercano a repetir su ataque, y el espíritu desaparece" : "🔮 " + ci.name + ": una entidad desaparece")}
                                           >
                                             <i>{locked ? <Lock size={10} /> : n}</i>
                                             <span>{ci.short || ci.name}</span>
@@ -15078,7 +15078,7 @@ export default function App({ onSignOut }) {
               const nameOf = (cid) => (cid === viewingCharId ? (me.f_name || "Tú") + " (tú)" : characters[cid]?.f_name || "Aliado");
               const R = renewDlg;
               const close = () => setRenewDlg(null);
-              const pool = Math.max(0, Number(me.t_instinct || 0));
+              const pool = R.mode === "spirits" ? 2 : Math.max(0, Number(me.t_instinct || 0));
               const used = Object.values(R.picks || {}).reduce((a, b) => a + b, 0);
               const chosen = Object.keys(R.picks || {}).filter((k) => R.picks[k]);
               const meta = {
@@ -15087,12 +15087,13 @@ export default function App({ onSignOut }) {
                 ward: { title: "Protección del Guardián", sub: `Gasta 2 de Esperanza: hasta ${R.n} aliado${R.n === 1 ? "" : "s"} (1d4 = ${R.n}) recuperan 2 PV.`, list: allies, go: "Proteger" },
                 defender: { title: "Defensor", sub: "Marca 1 Estrés: el aliado que acaba de marcar 2 o más PV marca 1 menos.", list: allies, go: "Defender" },
                 closeknit: { title: "Muy Unidos", sub: "Gasta la Esperanza que quieras: un aliado en alcance Lejano gana esa misma cantidad.", list: allies, go: "Dar " + (R.n || 1) + " de Esperanza" },
+                spirits: { title: "Ayuda de los Espíritus", sub: "Gasta 3 Esperanza: reparte 2 de Esperanza entre uno o más aliados en alcance Lejano y te quitas 1 Estrés.", list: allies, go: "Conjurar la ayuda · 3 Esperanza" },
                 life: { title: "Soporte Vital", sub: "Gasta 3 de Esperanza: un aliado en alcance Cercano se quita 1 Punto de vida.", list: allies, go: "Dar Soporte Vital" },
                 lifespring: { title: "Manantial de Vida", sub: "Con un poco de agua, marca 1 Estrés: tú o un aliado en alcance Muy cercano os quitáis 1 Punto de Vida.", list: all, go: "Curar 1 PV · 1 Estrés" },
                 sparing: { title: "Toque Clemente", sub: "Toca a una criatura y quítale 2 Puntos de vida o 2 de Estrés.", list: all, go: "Tocar" },
               }[R.mode];
               const canGo =
-                R.mode === "regen" ? !!R.pick : R.mode === "clarity" ? used > 0 : R.mode === "ward" ? chosen.length > 0 : !!R.pick;
+                R.mode === "regen" ? !!R.pick : R.mode === "clarity" || R.mode === "spirits" ? used > 0 : R.mode === "ward" ? chosen.length > 0 : !!R.pick;
               const confirm = () => {
                 if (R.mode === "closeknit") {
                   const n = Math.max(1, Math.min(R.n || 1, Number(me.hope_marked ?? HOPE_DEFAULT)));
@@ -15105,6 +15106,14 @@ export default function App({ onSignOut }) {
                 if (R.mode === "life") {
                   updateCharacterField(viewingCharId, "hope_marked", String(Math.max(0, Number(me.hope_marked ?? HOPE_DEFAULT) - 3)));
                   giveToParty(viewingCharId, { [R.pick]: { hp: 1 } }, "Soporte Vital", "Gasta 3 de Esperanza para sostener la vida de un aliado.", "Serafín");
+                  close();
+                  closeCardDetail();
+                  return;
+                }
+                if (R.mode === "spirits") {
+                  updateCharacterFields(viewingCharId, { hope_marked: String(Math.max(0, Number(me.hope_marked ?? HOPE_DEFAULT) - 3)), stress_marked: String(Math.max(0, Number(me.stress_marked || 0) - 1)) });
+                  giveToParty(viewingCharId, Object.fromEntries(Object.entries(R.picks).filter(([, v]) => v).map(([k, v]) => [k, { hope: v }])), "Ayuda de los Espíritus", "Los espíritus del otro mundo acuden en vuestra ayuda.", "Invocador");
+                  postCampaignEvent(viewingCharId, "👻 Ayuda de los Espíritus: gasta 3 Esperanza, reparte 2 de Esperanza entre sus aliados y se quita 1 Estrés");
                   close();
                   closeCardDetail();
                   return;
@@ -15187,9 +15196,10 @@ export default function App({ onSignOut }) {
                       {meta.list.map((cid) => {
                         const pc = characters[cid];
                         const hpT = Number(pc.r_hp || 0), stT = Number(pc.r_stress || 0);
-                        const info = `PV ${Math.max(0, hpT - Number(pc.hp_marked || 0))}/${hpT} · Estrés ${pc.stress_marked || 0}/${stT}`;
-                        if (R.mode === "clarity") {
+                        const info = R.mode === "spirits" ? `Esperanza ${pc.hope_marked ?? HOPE_DEFAULT}/${getHopeMax(pc)}` : `PV ${Math.max(0, hpT - Number(pc.hp_marked || 0))}/${hpT} · Estrés ${pc.stress_marked || 0}/${stT}`;
+                        if (R.mode === "clarity" || R.mode === "spirits") {
                           const v = R.picks[cid] || 0;
+                          const capHere = R.mode === "spirits" ? Math.max(0, getHopeMax(pc) - Number(pc.hope_marked ?? HOPE_DEFAULT)) : Number(pc.stress_marked || 0);
                           return (
                             <div key={cid} className="mh-renew-row">
                               <span className="mh-renew-av" style={{ background: classColor(pc.f_class) }}>{(pc.f_name || "?").charAt(0)}</span>
@@ -15197,7 +15207,7 @@ export default function App({ onSignOut }) {
                               <span className="mh-renew-step">
                                 <button type="button" disabled={v === 0} onClick={() => setRenewDlg((p) => ({ ...p, picks: { ...p.picks, [cid]: v - 1 } }))}>−</button>
                                 <b>{v}</b>
-                                <button type="button" disabled={used >= pool || v >= Number(pc.stress_marked || 0)} onClick={() => setRenewDlg((p) => ({ ...p, picks: { ...p.picks, [cid]: v + 1 } }))}>+</button>
+                                <button type="button" disabled={used >= pool || v >= capHere} onClick={() => setRenewDlg((p) => ({ ...p, picks: { ...p.picks, [cid]: v + 1 } }))}>+</button>
                               </span>
                             </div>
                           );
@@ -15214,7 +15224,7 @@ export default function App({ onSignOut }) {
                         );
                       })}
                     </div>
-                    {R.mode === "clarity" && <div className="mh-renew-pool">Repartido {used} de {pool}</div>}
+                    {(R.mode === "clarity" || R.mode === "spirits") && <div className="mh-renew-pool">Repartido {used} de {pool}</div>}
                     {!camp && R.mode !== "regen" && R.mode !== "clarity" && R.mode !== "sparing" && <div className="mh-pre-note" style={{ color: "var(--mh-muted)" }}>Únete a una campaña para aplicarlo a tus aliados.</div>}
                     <button type="button" className="mh-btn mh-pre-go" disabled={!canGo} onClick={confirm} style={{ marginTop: 12 }}>
                       <Leaf size={15} /> {meta.go}
@@ -17954,7 +17964,7 @@ export default function App({ onSignOut }) {
                     else cardActs.unshift({
                       key: "hope",
                       Icon: isFrontline ? Shield : Sparkles,
-                      label: missingHope ? "Te faltan " + missingHope + " de Esperanza" : frontlineBlock || (isFrontline ? "Recuperar " + Math.min(2, armorSpent) + " de Armadura" : c.f_class === "Camorrista" ? "Plantar Cara: dejar Vulnerable al objetivo" : c.f_class === "Asesino" ? "Quitarte 2 de Estrés" : "Usar " + d.title),
+                      label: missingHope ? "Te faltan " + missingHope + " de Esperanza" : frontlineBlock || (isFrontline ? "Recuperar " + Math.min(2, armorSpent) + " de Armadura" : c.f_class === "Camorrista" ? "Plantar Cara: dejar Vulnerable al objetivo" : c.f_class === "Asesino" ? "Quitarte 2 de Estrés" : c.f_class === "Invocador" ? "Repartir 2 Esperanza y quitarte 1 Estrés" : "Usar " + d.title),
                       sub: d.hopeAction.cost + " Esperanza",
                       disabled: missingHope > 0 || !!frontlineBlock,
                       run: () => {
@@ -17964,6 +17974,7 @@ export default function App({ onSignOut }) {
                         else if (c.f_class === "Pícaro") doRogueDodge(viewingCharId);
                         else if (c.f_class === "Guerrero") doNoMercy(viewingCharId);
                         else if (c.f_class === "Serafín") setRenewDlg({ mode: "life" });
+                        else if (c.f_class === "Invocador") setRenewDlg({ mode: "spirits", picks: {} });
                         else if (c.f_class === "Asesino") {
                           updateCharacterFields(viewingCharId, { hope_marked: String(Number(c.hope_marked ?? HOPE_DEFAULT) - d.hopeAction.cost), stress_marked: String(Math.max(0, Number(c.stress_marked || 0) - 2)) });
                           clearTimeout(restMsgTimer.current);
