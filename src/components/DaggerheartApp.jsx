@@ -289,7 +289,19 @@ const SUBCLASSES = {
     },
   ],
   Brujo: [
-    { key: "Pacto del Eterno", blurb: "Resiste a sus enemigos y esquiva la muerte misma.", expansion: "Hope & Fear" },
+    {
+      key: "Pacto del Eterno",
+      blurb: "Mantente firme ante tus enemigos y evita la muerte.",
+      expansion: "Hope & Fear",
+      features: [
+        { name: "Manto del Patrón", text: "Gasta 1 Favor para envolverte en un aspecto aterrador de tu Patrón, que dura hasta que recibas daño Grave o termine la escena. Mientras este efecto esté activo, ganas un bonificador a tus umbrales de daño igual a tu Rango y tienes ventaja en las tiradas de acción para intimidar a un objetivo." },
+        { name: "Abrazo Inmortal", text: "Una vez por descanso, gasta cualquier cantidad de Favor para tirar el mismo número de Dados de Patrón. Por cada resultado de 4 o más, te quitas 1 Punto de Vida." },
+        { name: "Invocación Angustiosa (Especialización)", text: "Cuando un adversario te ataque a ti o a un aliado en alcance Muy cercano, puedes gastar 1 Favor para que tenga desventaja en la tirada. Si el adversario falla la tirada, además debe marcar 1 Estrés." },
+        { name: "Sumidero de Daño (Especialización)", text: "Una vez por descanso, puedes gastar 1 Favor para reducir a la mitad el daño que recibes." },
+        { name: "Égida Oscura (Maestría)", text: "Una vez por descanso largo, cuando fueras a recibir daño, puedes gastar 1 Favor en lugar de marcar Puntos de Vida." },
+        { name: "Perdición Drenante (Maestría)", text: "Cuando un adversario te ataque a ti o a un aliado en alcance Muy cercano, puedes gastar 1 Favor para Drenarlo. Si lo haces, debe marcar 1 Estrés y tú puedes quitarte 1 Estrés. Mientras esté Drenado, el objetivo usa un d12 en lugar de un d20 en sus tiradas de ataque (también para la ventaja o la desventaja) hasta que falle una tirada." },
+      ],
+    },
     { key: "Pacto del Iracundo", blurb: "Destruye a quien se atreva a enfrentarlo.", expansion: "Hope & Fear" },
   ],
   Camorrista: [
@@ -724,6 +736,9 @@ const SUBCLASS_SPELLCAST_OVERRIDE = {
   "Gremio del Envenenador": "t_knowledge",
 };
 
+// Brujo · Favor (empieza en 3) y Dado de Patrón (d6; d8 desde el nivel 5).
+const getFavor = (c) => (c?.f_favor == null || c.f_favor === "" ? 3 : Math.max(0, Number(c.f_favor) || 0));
+const patronSides = (c) => (Number(c?.f_level || 1) >= 5 ? 8 : 6);
 // Bruja Lunar · Fases Lunares (Maestría).
 const MOON_PHASES = [
   { min: 1, max: 1, name: "Luna Nueva", effect: "1 Esperanza para anular daño Menor" },
@@ -779,7 +794,7 @@ const CLASS_HOPE_FEATURE = {
   Guerrero: { name: "Sin Piedad", cost: 3, text: "Gasta 3 de Esperanza para obtener un +1 a tus tiradas de ataque hasta tu próximo descanso." },
   Mago: { name: "Esta Vez No", cost: 3, text: "Gasta 3 Esperanza para obligar a un adversario en alcance Lejano a repetir una tirada de ataque o de daño." },
   Bruja: { name: "Encanto de Bruja", cost: 3, text: "Cuando tú o un aliado en alcance Lejano falléis una tirada de acción, puedes gastar 3 Esperanza para convertirla en un éxito con Miedo." },
-  Brujo: { name: "Don del Patrón", cost: 3, text: "Cuando falles una tirada, repítela con ventaja." },
+  Brujo: { name: "Don del Patrón", cost: 3, text: "Cuando falles una tirada, puedes gastar 3 Esperanza para repetirla con ventaja." },
   Camorrista: { name: "Plantar Cara", cost: 3, text: "Intimida a un objetivo en alcance Cercano y déjalo temporalmente Vulnerable." },
   Asesino: { name: "Determinación Letal", cost: 3, text: "Quítate 2 de Estrés." },
 };
@@ -827,8 +842,8 @@ const CLASS_FEATURES = {
     { name: "Comunión", text: "Una vez por descanso largo, en un momento de calma, puedes comulgar con un ancestro, una deidad, un espíritu o un ser de otro mundo. Hazle una pregunta y tira tantos d6 como tu rasgo de Lanzamiento de Conjuros. Elige uno de los resultados y consulta su efecto: con 1–3 notas un sabor, un olor o una sensación relacionados con la respuesta; con 4–5 oyes sonidos o ves una visión relacionados con la respuesta; con un 6 vives psíquicamente una escena relacionada con la respuesta como si estuvieras allí." },
   ],
   Brujo: [
-    { name: "Pacto con el Patrón", text: "Te has comprometido con una entidad sobrenatural (un dios, un ser feérico, un demonio...). Anota su nombre y decide con el DJ su esfera de influencia. Antes de una tirada de acción relacionada con esa esfera, puedes gastar 1 Favor para sumar tu dado de patrón (d6; d8 desde el nivel 5)." },
-    { name: "Favor", text: "Empiezas con 3 de Favor. Con un movimiento de descanso puedes rendir tributo a tu patrón y ganar tanto Favor como tu rasgo de conjuro. Además, cuando tengas éxito con Esperanza, puedes ganar 1 Favor en lugar de 1 Esperanza." },
+    { name: "Pacto con el Patrón", text: "Te has comprometido con una entidad sobrenatural, como un dios, un ser feérico o un demonio, a cambio de poder. Escribe su nombre en tu hoja de personaje y decide con el DJ su esfera de influencia (como Naturaleza, Caos, Sabiduría, Travesuras, Amor, Guerra, Justicia o Muerte). Antes de hacer una tirada de acción relacionada con la esfera de influencia de tu patrón, puedes gastar 1 Favor para pedir su ayuda: tira tu Dado de Patrón y suma el resultado al total. Tu Dado de Patrón empieza siendo un d6 y pasa a ser un d8 al nivel 5." },
+    { name: "Favor", text: "Empiezas con 3 de Favor. Puedes usar un movimiento de descanso para rendir tributo a tu patrón: describe cómo lo haces y gana tanto Favor como tu rasgo de Lanzamiento de Conjuros. Además, cuando tengas éxito en una tirada de acción con Esperanza, puedes elegir ganar 1 Favor en lugar de 1 Esperanza." },
   ],
   Camorrista: [
     { name: "Yo Soy el Arma", text: "Mientras no tengas otras armas activas, tienes equipada el arma principal Golpe de Camorrista: rasgo a tu elección, alcance Cuerpo a cuerpo y d8+d6 de daño físico (los dos dados escalan con tu Competencia). Mientras la uses, ganas +1 a la Evasión." },
@@ -2715,6 +2730,17 @@ const sharedStyles = `
   .mh-slayer-btn { background: #C0504A; }
   .mh-glamour-btn { background: #8C7FD0; }
   .mh-walk-btn { background: #6E8A6A; }
+  .mh-favor-btn { background: #B55FA0; }
+  .mh-favor-btn:hover:not(:disabled) { background: #9C4D89; }
+  .mh-favor-btn.is-alt { background: #7E4A8C; }
+  .mh-favor-foot { gap: 14px; }
+  .mh-favor-foot span { font: 600 12.5px 'Inter', system-ui, sans-serif; }
+  .mh-favor-foot b { font: 700 20px 'Cinzel', Georgia, serif; color: #B55FA0; margin-right: 3px; }
+  .mh-favor-foot button { width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid #B55FA0; background: var(--mh-panel); color: #B55FA0; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+  .mh-favor-foot button:disabled { opacity: .35; cursor: not-allowed; }
+  .mh-patron-foot { flex-direction: column; gap: 6px; padding: 9px 12px; }
+  .mh-patron-foot input { width: 100%; border: 1px solid var(--mh-line); border-radius: 8px; padding: 6px 9px; font: 500 12px 'Inter', system-ui, sans-serif; background: var(--mh-panel); color: var(--mh-ink); }
+  .mh-patron-foot small { font-size: 10.5px; color: var(--mh-muted); }
   .mh-walk-btn:hover:not(:disabled) { background: #5C7659; }
   .mh-nimble-btn { background: #5E8FC9; }
   .mh-nimble-btn:hover:not(:disabled) { background: #4C7AB0; }
@@ -3643,6 +3669,12 @@ function DualityResult({ roll, size = 84 }) {
             <DieFace sides={parseInt(String(roll.rallyDie || "d6").slice(1), 10) || 6} value={rally} color="#E07FB0" size={Math.round(size * 0.66)} rolling={rolling} label="Arenga" delay={300} />
           </>
         )}
+        {roll?.patronRoll > 0 && !rolling && (
+          <>
+            <span style={{ fontSize: 20, color: "var(--mh-muted)", marginTop: size / 2 - 14 }}>+</span>
+            <DieFace sides={roll.patronSides || 6} value={roll.patronRoll} color="#B55FA0" size={Math.round(size * 0.6)} rolling={false} label="Patrón" />
+          </>
+        )}
         {poet > 0 && (
           <>
             <span style={{ fontSize: 20, color: "var(--mh-muted)", marginTop: size / 2 - 14 }}>+</span>
@@ -3663,7 +3695,8 @@ function DualityResult({ roll, size = 84 }) {
             {expB ? " + " + expB + " (Experiencia)" : ""}
             {rally ? " + " + rally + " (Arenga)" : ""}
             {poet ? " + " + poet + " (Poeta)" : ""}
-            {tide - (roll.slayerRoll || 0) > 0 ? " + " + (tide - (roll.slayerRoll || 0)) + " (Marea)" : ""}
+            {tide - (roll.slayerRoll || 0) - (roll.patronRoll || 0) > 0 ? " + " + (tide - (roll.slayerRoll || 0) - (roll.patronRoll || 0)) + " (Marea)" : ""}
+            {roll.patronRoll ? " + " + roll.patronRoll + " (Patrón)" : ""}
             {roll.slayerRoll ? " + " + (roll.slayerRolls || []).join(" + ") + " (Cazador)" : ""}
             {roll.difficulty != null ? ` · Dificultad ${roll.difficulty}` : ""}
           </div>
@@ -5225,6 +5258,11 @@ export default function App({ onSignOut }) {
     }
     // Bruja Lunar · Glamour Nocturno: al marcar Puntos de vida se pregunta si se mantiene.
     if (cur.f_glamour === "1" && Number(next.hp_marked || 0) > Number(cur.hp_marked || 0)) setGlamourAsk({ id, why: "Has marcado Puntos de Vida" });
+    // Pacto del Eterno · Manto del Patrón: termina al recibir daño Grave.
+    if (cur.f_mantle === "1" && Number(next.hp_marked || 0) - Number(cur.hp_marked || 0) >= 3) {
+      next.f_mantle = "";
+      postCampaignEvent(id, "🕯️ Recibe daño Grave: su Manto del Patrón se desvanece");
+    }
     charsRef.current = { ...charsRef.current, [id]: next };
     setCharacters((prev) => ({ ...prev, [id]: next }));
     afterCharacterChange(id, cur, next);
@@ -5458,6 +5496,11 @@ export default function App({ onSignOut }) {
     }
     // Bruja Lunar · Glamour Nocturno: al marcar Puntos de vida se pregunta si se mantiene.
     if (cur.f_glamour === "1" && Number(next.hp_marked || 0) > Number(cur.hp_marked || 0)) setGlamourAsk({ id, why: "Has marcado Puntos de Vida" });
+    // Pacto del Eterno · Manto del Patrón: termina al recibir daño Grave.
+    if (cur.f_mantle === "1" && Number(next.hp_marked || 0) - Number(cur.hp_marked || 0) >= 3) {
+      next.f_mantle = "";
+      postCampaignEvent(id, "🕯️ Recibe daño Grave: su Manto del Patrón se desvanece");
+    }
     charsRef.current = { ...charsRef.current, [id]: next };
     setCharacters((prev) => ({ ...prev, [id]: next }));
     afterCharacterChange(id, cur, next);
@@ -7431,6 +7474,7 @@ export default function App({ onSignOut }) {
   const [glamourAsk, setGlamourAsk] = useState(null); // Bruja Lunar · ¿mantener el Glamour?
   const [hexDraft, setHexDraft] = useState("");
   const [talismanDlg, setTalismanDlg] = useState(null); // Bruja del Seto · Talismán Encantado
+  const [embraceDlg, setEmbraceDlg] = useState(null); // Pacto del Eterno · Abrazo Inmortal
   const getVault = (c) => {
     try {
       return JSON.parse(c?.f_domain_vault || "[]");
@@ -7614,6 +7658,10 @@ export default function App({ onSignOut }) {
     if (isLong && c.f_moon_phase) restPatch.f_moon_phase = "";
     if (c.f_phase_bump_used) restPatch.f_phase_bump_used = "";
     if (isLong && c.f_commune_used) restPatch.f_commune_used = "";
+    if (c.f_mantle) restPatch.f_mantle = "";
+    if (c.f_embrace_used) restPatch.f_embrace_used = "";
+    if (c.f_sink_used) restPatch.f_sink_used = "";
+    if (isLong && c.f_aegis_used) restPatch.f_aegis_used = "";
     for (const k of ["f_talisman", "f_talisman_used", "f_talisman_holder", "f_walk", "f_walk_used", "f_circle", "f_circle_used", "f_flicker_used"]) if (c[k]) restPatch[k] = "";
     // Fin de la «sesión»: los Dados de Cazador sin gastar se cambian por Esperanza.
     if (isLong && Number(c.f_slayer || 0) > 0) {
@@ -7960,7 +8008,7 @@ export default function App({ onSignOut }) {
   const rollTraitCheck = (charId, traitLabel, traitValue, weapon, cardContext, advantage) => {
     // Galapa · Retraerse: desventaja en las tiradas de acción mientras está en el caparazón.
     const shellOn = getConditions(charsRef.current[charId] || {}).includes("Retraído");
-    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage && !shellOn, exps: [], rally: false, privilege: false, disadvantage: shellOn, shellOn, poet: false, dedicated: false, quick: false, reaction: false, tide: 0, dc: "", elem: "", slayer: 0, found: "", adept: false });
+    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage && !shellOn, exps: [], rally: false, privilege: false, disadvantage: shellOn, shellOn, poet: false, dedicated: false, quick: false, reaction: false, tide: 0, dc: "", elem: "", slayer: 0, found: "", adept: false, patron: false });
   };
   const confirmPreRoll = () => {
     const pr = preRoll;
@@ -8010,6 +8058,12 @@ export default function App({ onSignOut }) {
     const noMercy = ch && ch.f_class === "Guerrero" && ch.f_no_mercy === "1" && pr.weapon && !pr.weapon.charge ? 1 : 0;
     const moonbeam = ch && ch.f_moonbeam === "1" && pr.traitLabel === TRAITS.find((t) => t.key === spellcastTraitFor(ch.f_class, ch.f_subclass))?.label ? 1 : 0;
     // Bruja del Seto · Círculo de Poder: +2 al ataque y cada tirada de acción retira una ficha.
+    // Brujo · Pacto con el Patrón: se gasta 1 Favor y se tira el Dado de Patrón.
+    const patronUse = ch && ch.f_class === "Brujo" && pr.patron && !pr.reaction && getFavor(ch) > 0 ? patronSides(ch) : 0;
+    if (patronUse) {
+      updateCharacterField(pr.charId, "f_favor", String(getFavor(ch) - 1));
+      postCampaignEvent(pr.charId, `👁️ Pacto con el Patrón: gasta 1 Favor y pide la ayuda de ${ch.f_patron || "su patrón"} (+1d${patronUse})`);
+    }
     const circleN = ch && ch.f_subclass === "Bruja del Seto" ? Number(ch.f_circle || 0) : 0;
     const circleAtk = circleN > 0 && pr.weapon ? 2 : 0;
     if (circleN > 0 && !pr.reaction) {
@@ -8019,6 +8073,7 @@ export default function App({ onSignOut }) {
     doTraitRoll(pr.charId, pr.traitLabel, pr.traitValue + noMercy + moonbeam + circleAtk, pr.weapon ? { ...pr.weapon, ...(elemUse === "dmg" ? { elemDmg: 3 } : {}) } : pr.weapon, pr.cardContext, pr.advantage || pr.privilege || pr.quick, {
       exps: [...exps.map((e, i) => ({ text: e.text + (adeptOn ? " ×2" : honed.length ? " · Pericia " + honed[i] + (honed[i] >= 5 ? " (gratis)" : "") : ""), bonus: (Number(e.bonus) || 0) * (adeptOn ? 2 : 1) })), ...(foundExp ? [foundExp] : [])],
       slayer: slayerSpent,
+      patronSides: patronUse,
       honed,
       rallyDie,
       disadvantage: (ch?.f_ancestry || "").split(" + ").includes("Goblin") && pr.traitLabel === "Agilidad" ? false : pr.disadvantage || (pr.shellOn && !pr.reaction),
@@ -8165,7 +8220,8 @@ export default function App({ onSignOut }) {
     const poetRoll = extras.poet ? Math.floor(Math.random() * 4) + 1 : 0;
     const slayerRolls = extras.slayer ? Array.from({ length: extras.slayer }, () => Math.floor(Math.random() * 6) + 1) : [];
     const slayerRoll = slayerRolls.reduce((a, b) => a + b, 0);
-    const tideBonus = (extras.tide || 0) + (extras.elemRoll || 0) + slayerRoll;
+    const patronRoll = extras.patronSides ? Math.floor(Math.random() * extras.patronSides) + 1 : 0;
+    const tideBonus = (extras.tide || 0) + (extras.elemRoll || 0) + slayerRoll + patronRoll;
     // Dificultad: la de la carta o la que haya puesto el jugador.
     const dcVal = cardContext?.dc ?? extras.dc ?? null;
     const total = hope + fear + traitValue + advantageRoll + wolfBonus + expBonus + rallyRoll + poetRoll + tideBonus;
@@ -8192,7 +8248,7 @@ export default function App({ onSignOut }) {
         ? "Ignoras los efectos que te afectarían aun con éxito"
         : "Las reacciones no generan Esperanza ni Miedo"
       : hope === fear ? "Ganas 1 Esperanza y te quitas 1 Estrés" : hope > fear ? "Ganas 1 Esperanza" : "El DJ gana 1 de Miedo";
-    setTraitRollResult({ key: Date.now(), hopeSides, traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, tideBonus, slayerRoll, slayerRolls, total, text: hope === fear ? "Éxito crítico" : reaction ? "Tirada de reacción" : text, color, note, reaction, card: cardContext ? { name: cardContext.name, dc: cardContext.dc } : dcVal ? { name: "", dc: dcVal } : null, exps: extras.exps || [], honed: extras.honed || [], wasCloaked, weapon: weapon || null, charId });
+    setTraitRollResult({ key: Date.now(), hopeSides, traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, tideBonus, patronRoll, patronSides: extras.patronSides || 0, slayerRoll, slayerRolls, total, text: hope === fear ? "Éxito crítico" : reaction ? "Tirada de reacción" : text, color, note, reaction, card: cardContext ? { name: cardContext.name, dc: cardContext.dc } : dcVal ? { name: "", dc: dcVal } : null, exps: extras.exps || [], honed: extras.honed || [], wasCloaked, weapon: weapon || null, charId });
 
     // Con Esperanza (o crítico) ganas 1 Esperanza; con crítico además te quitas 1 Estrés.
     if (reaction) {
@@ -9559,6 +9615,12 @@ export default function App({ onSignOut }) {
           equipMods.severe = (equipMods.severe || 0) + 3;
         }
         if (phaseC && phaseC.name === "Menguante") equipMods.evasion = (equipMods.evasion || 0) + 1;
+        // Pacto del Eterno · Manto del Patrón: +Rango a los umbrales.
+        if (c.f_mantle === "1") {
+          const tM = tierForLevel(c.f_level || 1);
+          equipMods.major = (equipMods.major || 0) + tM;
+          equipMods.severe = (equipMods.severe || 0) + tM;
+        }
         // Bruja del Seto · Círculo de Poder: +2 a umbrales y Evasión dentro del círculo.
         if (c.f_subclass === "Bruja del Seto" && Number(c.f_circle || 0) > 0) {
           equipMods.major = (equipMods.major || 0) + 2;
@@ -9693,6 +9755,16 @@ export default function App({ onSignOut }) {
                       </span>
                     );
                   })()}
+                  {c.f_class === "Brujo" && (
+                    <span className="mh-htag" style={{ "--tag": "#B55FA0" }} title={"Favor de " + (c.f_patron || "tu patrón") + (c.f_patron_sphere ? " (" + c.f_patron_sphere + ")" : "")}>
+                      <Eye size={11} /> Favor · {getFavor(c)}
+                    </span>
+                  )}
+                  {c.f_mantle === "1" && (
+                    <span className="mh-htag is-active" style={{ "--tag": "#B55FA0" }} title="Manto del Patrón: +Rango a tus umbrales y ventaja para intimidar, hasta recibir daño Grave o terminar la escena">
+                      <span className="mh-htag-dot" /> Manto del Patrón
+                    </span>
+                  )}
                   {c.f_subclass === "Bruja Lunar" && c.f_glamour === "1" && (
                     <span className="mh-htag is-active" style={{ "--tag": "#8C7FD0" }} title="Glamour Nocturno: ventaja al aprovechar tu apariencia; los adversarios en alcance Cercano marcan 1 Estrés para atacarte">
                       <span className="mh-htag-dot" /> Glamour
@@ -10724,7 +10796,7 @@ export default function App({ onSignOut }) {
                               kicker: `Subclase · ${subclassBadge}`,
                               title: subclassEntry.key,
                               text: subclassEntry.blurb,
-                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento", "Escuela de la Guerra", "Bruja Lunar", "Bruja del Seto"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
+                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento", "Escuela de la Guerra", "Bruja Lunar", "Bruja del Seto", "Pacto del Eterno"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
                               image: subclassEntry.image,
                               bigStyle: true,
                               ...(isElemental ? { elementalAction: true } : {}),
@@ -10740,6 +10812,7 @@ export default function App({ onSignOut }) {
                               ...(subclassEntry.key === "Llamado del Cazador" ? { slayerCard: true } : {}),
                               ...(subclassEntry.key === "Bruja Lunar" ? { moonActs: true } : {}),
                               ...(subclassEntry.key === "Bruja del Seto" ? { hedgeActs: true } : {}),
+                              ...(subclassEntry.key === "Pacto del Eterno" ? { endlessActs: true } : {}),
                             }),
                           });
                         }
@@ -13293,6 +13366,71 @@ export default function App({ onSignOut }) {
               );
             })()}
 
+            {embraceDlg && (() => {
+              const me = characters[viewingCharId];
+              if (!me) return null;
+              const close = () => setEmbraceDlg(null);
+              const fav = getFavor(me);
+              const E = embraceDlg;
+              const sides = patronSides(me);
+              const n = Math.min(E.n, Math.max(1, fav));
+              const go = () => {
+                if (fav < 1) return;
+                const rolls = Array.from({ length: n }, () => Math.floor(Math.random() * sides) + 1);
+                const healed = Math.min(rolls.filter((v) => v >= 4).length, Number(me.hp_marked || 0));
+                updateCharacterFields(viewingCharId, { f_favor: String(fav - n), f_embrace_used: "1", hp_marked: String(Math.max(0, Number(me.hp_marked || 0) - healed)) });
+                setEmbraceDlg((x) => ({ ...x, rolls, healed }));
+                postCampaignEvent(viewingCharId, `💀 Abrazo Inmortal: gasta ${n} Favor, tira ${rolls.join(", ")} y se quita ${healed} Punto${healed === 1 ? "" : "s"} de Vida`);
+              };
+              return (
+                <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 46, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)" }} onClick={close}>
+                  <div className="mh-card mh-renew mh-commune" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Abrazo Inmortal">
+                    <div className="mh-pre-h">
+                      <span className="mh-pre-ic" style={{ background: "color-mix(in srgb, #B55FA0 16%, var(--mh-panel))", color: "#B55FA0" }}>
+                        <HeartPulse size={17} />
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <b className="mh-serif">Abrazo Inmortal</b>
+                        <small>Cada Favor es un d{sides}: con 4 o más te quitas 1 Punto de Vida.</small>
+                      </div>
+                      <button type="button" className="mh-inv-x" aria-label="Cerrar" onClick={close}>
+                        <X size={16} />
+                      </button>
+                    </div>
+                    {!E.rolls ? (
+                      <>
+                        <div className="mh-talisman-step" style={{ "--ts": "#B55FA0" }}>
+                          <button type="button" aria-label="Menos" disabled={n <= 1} onClick={() => setEmbraceDlg((x) => ({ ...x, n: Math.max(1, x.n - 1) }))}>
+                            <Minus size={14} />
+                          </button>
+                          <span>
+                            <b>{n}</b> Favor
+                          </span>
+                          <button type="button" aria-label="Más" disabled={n >= fav} onClick={() => setEmbraceDlg((x) => ({ ...x, n: Math.min(fav, x.n + 1) }))}>
+                            <Plus size={14} />
+                          </button>
+                        </div>
+                        <button type="button" className="mh-btn" style={{ width: "100%" }} disabled={fav < 1} onClick={go}>
+                          <Dices size={15} /> Tirar {n}d{sides}
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <div className="mh-commune-dice">
+                          {E.rolls.map((v, k) => (
+                            <button key={k} type="button" className={v >= 4 ? "is-on" : ""} disabled>
+                              {v}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="mh-commune-res">Te quitas {E.healed} Punto{E.healed === 1 ? "" : "s"} de Vida</div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
             {talismanDlg && (() => {
               const me = characters[viewingCharId];
               if (!me) return null;
@@ -13875,6 +14013,8 @@ export default function App({ onSignOut }) {
               const noMercyOn = ch.f_class === "Guerrero" && ch.f_no_mercy === "1" && preRoll.weapon && !preRoll.weapon.charge;
               // Bruja Lunar · Rayo de Luna: +1 a las tiradas de Lanzamiento de Conjuros bajo la luz.
               const moonbeamOn = ch.f_moonbeam === "1" && preRoll.traitLabel === TRAITS.find((t) => t.key === spellcastTraitFor(ch.f_class, ch.f_subclass))?.label;
+              // Brujo · Pacto con el Patrón: 1 Favor para sumar el Dado de Patrón.
+              const patronOk = ch.f_class === "Brujo" && !preRoll.reaction && getFavor(ch) > 0;
               // Bruja del Seto · Círculo de Poder: +2 a las tiradas de ataque dentro del círculo.
               const circleOn = ch.f_subclass === "Bruja del Seto" && Number(ch.f_circle || 0) > 0 && !!preRoll.weapon;
               const mod = preRoll.traitValue + (noMercyOn ? 1 : 0) + (moonbeamOn ? 1 : 0) + (circleOn ? 2 : 0) + expSum + tideUse + (foundPick && !ch.f_found_used ? foundPick.bonus : 0) + (ch.f_subclass === "Origen Elemental" && !preRoll.reaction && preRoll.elem === "roll" ? 2 : 0);
@@ -13914,8 +14054,10 @@ export default function App({ onSignOut }) {
               // Simiah · Trepador Nato: ventaja en Agilidad para mantener el equilibrio y trepar.
               const climberOk = (ch.f_ancestry || "").split(" + ").includes("Simiah") && preRoll.traitLabel === "Agilidad" && !etherealOk && !dreadOk && !glamourOk;
               // Bruja del Seto · Maldición Irritante: ventaja al atacar a criaturas con Maleficio.
-              const vexOk = ch.f_subclass === "Bruja del Seto" && tierForLevel(ch.f_level || 1) >= 2 && !!preRoll.weapon && (ch.f_hexes || "[]") !== "[]" && !etherealOk && !dreadOk && !glamourOk && !climberOk;
-              const edgeSource = etherealOk ? "Rostro Etéreo" : dreadOk ? "Rostro Temible" : glamourOk ? "Glamour Nocturno" : climberOk ? "Trepador Nato" : vexOk ? "Maldición Irritante" : highborne ? "Privilegio" : loreborne ? "Leído" : ridgeborne ? "Firme" : slyborne ? "Granuja" : underborne ? "Vida en la Penumbra" : wildborne ? "Pies Ligeros" : "";
+              // Pacto del Eterno · Manto del Patrón: ventaja para intimidar.
+              const mantleOk = ch.f_mantle === "1" && preRoll.traitLabel === "Presencia" && !etherealOk && !dreadOk && !glamourOk && !climberOk;
+              const vexOk = !mantleOk && ch.f_subclass === "Bruja del Seto" && tierForLevel(ch.f_level || 1) >= 2 && !!preRoll.weapon && (ch.f_hexes || "[]") !== "[]" && !etherealOk && !dreadOk && !glamourOk && !climberOk;
+              const edgeSource = etherealOk ? "Rostro Etéreo" : dreadOk ? "Rostro Temible" : glamourOk ? "Glamour Nocturno" : climberOk ? "Trepador Nato" : mantleOk ? "Manto del Patrón" : vexOk ? "Maldición Irritante" : highborne ? "Privilegio" : loreborne ? "Leído" : ridgeborne ? "Firme" : slyborne ? "Granuja" : underborne ? "Vida en la Penumbra" : wildborne ? "Pies Ligeros" : "";
               const poetOk = ch.f_subclass === "Orador" && preRoll.traitLabel === "Presencia";
               // Origen Elemental · Elementalista: 1 Esperanza para +2 a la tirada o +3 al daño.
               const elemOk = ch.f_subclass === "Origen Elemental" && !preRoll.reaction;
@@ -13924,7 +14066,7 @@ export default function App({ onSignOut }) {
               const adeptOnUI = adeptOk && preRoll.adept;
               const hopeUsed = (adeptOnUI ? 0 : preRoll.exps.length) + (preRoll.poet ? 1 : 0) + (elemOk && preRoll.elem ? 1 : 0);
               const riseOk = riseToChallenge(ch);
-              const formula = (slayerUse ? "" : "") + (preRoll.dedicated || riseOk ? "1d20 + 1d12 " : "2d12 ") + (mod >= 0 ? "+ " : "− ") + Math.abs(mod) + (preRoll.rally && ch.f_rally_die ? " + 1" + ch.f_rally_die : "") + (preRoll.poet ? " + 1d4" : "") + (preRoll.weapon && ch.f_transformation_form_active === "Forma de Lobo" ? " + 1d10" : "") + (edgeNet > 0 ? " + 1d6" : edgeNet < 0 ? " − 1d6" : "") + (slayerUse ? " + " + slayerUse + "d6" : "");
+              const formula = (slayerUse ? "" : "") + (preRoll.dedicated || riseOk ? "1d20 + 1d12 " : "2d12 ") + (mod >= 0 ? "+ " : "− ") + Math.abs(mod) + (preRoll.rally && ch.f_rally_die ? " + 1" + ch.f_rally_die : "") + (preRoll.poet ? " + 1d4" : "") + (preRoll.weapon && ch.f_transformation_form_active === "Forma de Lobo" ? " + 1d10" : "") + (edgeNet > 0 ? " + 1d6" : edgeNet < 0 ? " − 1d6" : "") + (slayerUse ? " + " + slayerUse + "d6" : "") + (patronOk && preRoll.patron ? " + 1d" + patronSides(ch) : "");
               const toggleExp = (i) =>
                 setPreRoll((p) => ({ ...p, exps: p.exps.includes(i) ? p.exps.filter((x) => x !== i) : [...p.exps, i] }));
               const wolf = preRoll.weapon && ch.f_transformation_form_active === "Forma de Lobo";
@@ -13942,6 +14084,17 @@ export default function App({ onSignOut }) {
               const setTide = (n) => setPreRoll((p) => ({ ...p, tide: Math.max(0, Math.min(tideHave, n)) }));
               const setSlayer = (n) => setPreRoll((p) => ({ ...p, slayer: Math.max(0, Math.min(slayerHave, n)) }));
               const bonusTiles = [
+                patronOk
+                  ? tile("patron", {
+                      on: preRoll.patron,
+                      title: "Dado de Patrón",
+                      sub: ch.f_patron ? ch.f_patron + (ch.f_patron_sphere ? " · " + ch.f_patron_sphere : "") : "Tu patrón",
+                      cost: "+1d" + patronSides(ch),
+                      color: "#B55FA0",
+                      hint: "Gasta 1 Favor (tienes " + getFavor(ch) + ") si la tirada se relaciona con la esfera de tu patrón" + (ch.f_patron_sphere ? " (" + ch.f_patron_sphere + ")" : ""),
+                      onClick: () => setPreRoll((p) => ({ ...p, patron: !p.patron })),
+                    })
+                  : null,
                 adeptOk && exps.length > 0
                   ? tile("adept", {
                       on: preRoll.adept,
@@ -14058,10 +14211,10 @@ export default function App({ onSignOut }) {
                   ? tile("priv", {
                       on: preRoll.privilege,
                       title: edgeSource,
-                      sub: etherealOk ? "Centinela Alado · volando" : dreadOk ? "Infernal" : glamourOk ? "Bruja Lunar" : climberOk ? "Simiah" : vexOk ? "Bruja del Seto" : highborne ? "De Alta Cuna" : loreborne ? "Del Saber" : slyborne ? "De las Sombras" : underborne ? "De las Profundidades" : wildborne ? "Salvaje" : "De las Cumbres",
+                      sub: etherealOk ? "Centinela Alado · volando" : dreadOk ? "Infernal" : glamourOk ? "Bruja Lunar" : climberOk ? "Simiah" : mantleOk ? "Pacto del Eterno" : vexOk ? "Bruja del Seto" : highborne ? "De Alta Cuna" : loreborne ? "Del Saber" : slyborne ? "De las Sombras" : underborne ? "De las Profundidades" : wildborne ? "Salvaje" : "De las Cumbres",
                       cost: "Ventaja",
-                      color: etherealOk ? "#D8A84A" : dreadOk ? "#A33A3A" : glamourOk ? "#8C7FD0" : climberOk ? "#A0784A" : vexOk ? "#9B7FD6" : highborne ? "#B8862E" : loreborne ? "#5E8FC9" : slyborne ? "#6E5A8A" : underborne ? "#5A6B7A" : wildborne ? "#5E8A4E" : "#7E8C6A",
-                      hint: etherealOk ? "Mientras vuelas, tienes ventaja en las tiradas de Presencia" : dreadOk ? "Si intentas intimidar a una criatura hostil" : glamourOk ? "Si la tirada aprovecha tu apariencia ilusoria" : climberOk ? "Si la tirada implica mantener el equilibrio o trepar" : vexOk ? "Si atacas a una criatura con tu Maleficio" : highborne ? "Si tratas con nobles, negocias un precio o usas tu reputación" : loreborne ? "Si la tirada trata sobre la historia, la cultura o la política de una persona o un lugar importantes" : slyborne ? "Si negocias con criminales, intentas detectar una mentira o buscas un escondite seguro" : underborne ? "Si estás en una zona con poca luz o sombras densas y te escondes, investigas o percibes detalles en ella" : wildborne ? "Si intentas moverte sin que te oigan" : "Si cruzas precipicios y cornisas peligrosos, te orientas en un entorno duro o usas tus conocimientos de supervivencia",
+                      color: etherealOk ? "#D8A84A" : dreadOk ? "#A33A3A" : glamourOk ? "#8C7FD0" : climberOk ? "#A0784A" : mantleOk ? "#B55FA0" : vexOk ? "#9B7FD6" : highborne ? "#B8862E" : loreborne ? "#5E8FC9" : slyborne ? "#6E5A8A" : underborne ? "#5A6B7A" : wildborne ? "#5E8A4E" : "#7E8C6A",
+                      hint: etherealOk ? "Mientras vuelas, tienes ventaja en las tiradas de Presencia" : dreadOk ? "Si intentas intimidar a una criatura hostil" : glamourOk ? "Si la tirada aprovecha tu apariencia ilusoria" : climberOk ? "Si la tirada implica mantener el equilibrio o trepar" : mantleOk ? "Si intentas intimidar a un objetivo" : vexOk ? "Si atacas a una criatura con tu Maleficio" : highborne ? "Si tratas con nobles, negocias un precio o usas tu reputación" : loreborne ? "Si la tirada trata sobre la historia, la cultura o la política de una persona o un lugar importantes" : slyborne ? "Si negocias con criminales, intentas detectar una mentira o buscas un escondite seguro" : underborne ? "Si estás en una zona con poca luz o sombras densas y te escondes, investigas o percibes detalles en ella" : wildborne ? "Si intentas moverte sin que te oigan" : "Si cruzas precipicios y cornisas peligrosos, te orientas en un entorno duro o usas tus conocimientos de supervivencia",
                       onClick: () => setPreRoll((p) => ({ ...p, privilege: !p.privilege, advantage: p.privilege ? p.advantage : false })),
                     })
                   : null,
@@ -14076,6 +14229,7 @@ export default function App({ onSignOut }) {
                 noMercyOn ? ["Sin Piedad", "+1"] : null,
                 moonbeamOn ? ["Rayo de Luna", "+1"] : null,
                 circleOn ? ["Círculo de Poder", "+2"] : null,
+                patronOk && preRoll.patron ? ["Dado de Patrón", "+1d" + patronSides(ch)] : null,
                 slayerUse ? ["Dados de Cazador", "+" + slayerUse + "d6"] : null,
                 foundPick && !ch.f_found_used ? ["Familia Elegida", "+" + foundPick.bonus] : null,
                 tideUse ? ["Conocer la Marea", "+" + tideUse] : null,
@@ -14085,9 +14239,9 @@ export default function App({ onSignOut }) {
               ].filter(Boolean);
               const DS = 40;
               // Altura fija: se reserva hueco para todas las líneas que este personaje puede llegar a tener.
-              const maxLines = 1 + exps.length + (ch.f_rally_die ? 1 : 0) + (poetOk ? 1 : 0) + (dedicatedOk ? 1 : 0) + (riseOk ? 1 : 0) + (noMercyOn ? 1 : 0) + (moonbeamOn ? 1 : 0) + (circleOn ? 1 : 0) + (slayerHave ? 1 : 0) + (foundOk ? 1 : 0) + (tideOk ? 1 : 0) + (elemOk ? 1 : 0) + (wolf ? 1 : 0) + 1;
+              const maxLines = 1 + exps.length + (ch.f_rally_die ? 1 : 0) + (poetOk ? 1 : 0) + (dedicatedOk ? 1 : 0) + (riseOk ? 1 : 0) + (noMercyOn ? 1 : 0) + (moonbeamOn ? 1 : 0) + (circleOn ? 1 : 0) + (patronOk ? 1 : 0) + (slayerHave ? 1 : 0) + (foundOk ? 1 : 0) + (tideOk ? 1 : 0) + (elemOk ? 1 : 0) + (wolf ? 1 : 0) + 1;
               const canSpendHope = exps.length > 0 || poetOk;
-              const anyAdded = preRoll.exps.length > 0 || preRoll.rally || preRoll.poet || preRoll.dedicated || preRoll.privilege || preRoll.quick || tideUse > 0 || !!preRoll.elem || slayerUse > 0 || !!foundPick || !!preRoll.adept || edgePos !== "none";
+              const anyAdded = preRoll.exps.length > 0 || preRoll.rally || preRoll.poet || preRoll.dedicated || preRoll.privilege || preRoll.quick || tideUse > 0 || !!preRoll.elem || slayerUse > 0 || !!foundPick || !!preRoll.adept || !!preRoll.patron || edgePos !== "none";
               return (
                 <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 45, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)" }} onClick={() => setPreRoll(null)}>
                   <div className="mh-card mh-card-anim mh-pre" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={"Tirada de " + preRoll.traitLabel}>
@@ -14222,7 +14376,7 @@ export default function App({ onSignOut }) {
                           className="mh-pre-plain"
                           style={anyAdded ? undefined : { visibility: "hidden" }}
                           tabIndex={anyAdded ? undefined : -1}
-                          onClick={() => setPreRoll((p) => ({ ...p, exps: [], rally: false, poet: false, dedicated: false, privilege: false, quick: false, tide: 0, elem: "", slayer: 0, found: "", adept: false, advantage: false, disadvantage: false }))}
+                          onClick={() => setPreRoll((p) => ({ ...p, exps: [], rally: false, poet: false, dedicated: false, privilege: false, quick: false, tide: 0, elem: "", slayer: 0, found: "", adept: false, patron: false, advantage: false, disadvantage: false }))}
                         >
                           Quitar lo añadido
                         </button>
@@ -14439,6 +14593,60 @@ export default function App({ onSignOut }) {
                         <button type="button" className="mh-luck-btn mh-feline-btn" disabled={hopeK < 2} onClick={() => bendLuck(r.charId, r.charId, rollForReroll(r), { kind: "feline" })}>
                           <PawPrint size={15} /> Instinto Felino · 2 Esperanza
                           <small>{hopeK < 2 ? "Necesitas 2 de Esperanza" : "Repite tu Dado de Esperanza"}</small>
+                        </button>
+                      );
+                    })()}
+                    {(() => {
+                      // Brujo · Favor: con éxito con Esperanza, 1 Favor en lugar de 1 Esperanza.
+                      const r = traitRollResult;
+                      const rc = characters[r.charId];
+                      if (!rc || rc.f_class !== "Brujo" || r.reaction || !(r.hope > r.fear) || r.boonRetry) return null;
+                      const okW = r.card?.dc != null ? r.total >= r.card.dc : null;
+                      if (okW === false) return null;
+                      if (r.favorKept) return <div className="mh-luck-done" style={{ color: "#B55FA0" }}>Ganas 1 Favor en lugar de Esperanza ({getFavor(rc)})</div>;
+                      return (
+                        <button
+                          type="button"
+                          className="mh-luck-btn mh-favor-btn"
+                          onClick={() => {
+                            const cur = charsRef.current[r.charId];
+                            updateCharacterFields(r.charId, { f_favor: String(getFavor(cur) + 1), hope_marked: String(Math.max(0, Number(cur.hope_marked ?? HOPE_DEFAULT) - 1)) });
+                            setTraitRollResult((prev) => (prev ? { ...prev, favorKept: true } : prev));
+                            postCampaignEvent(r.charId, "👁️ Favor: gana 1 Favor de su patrón en lugar de 1 Esperanza");
+                          }}
+                        >
+                          <Eye size={15} /> Ganar 1 Favor en vez de Esperanza
+                          <small>{okW ? "Éxito con Esperanza" : "Si has tenido éxito"} · tienes {getFavor(rc)} de Favor</small>
+                        </button>
+                      );
+                    })()}
+                    {(() => {
+                      // Brujo · Don del Patrón: al fallar, 3 Esperanza para repetir con ventaja.
+                      const r = traitRollResult;
+                      const rc = characters[r.charId];
+                      if (!rc || rc.f_class !== "Brujo" || r.hope === r.fear || r.boonRetry) return null;
+                      const failed = r.card?.dc != null ? r.total < r.card.dc : null;
+                      if (failed === false) return null;
+                      const hopeW = Number(rc.hope_marked ?? HOPE_DEFAULT);
+                      return (
+                        <button
+                          type="button"
+                          className="mh-luck-btn mh-favor-btn is-alt"
+                          disabled={hopeW < 3}
+                          onClick={async () => {
+                            const cur = charsRef.current[r.charId];
+                            // Se deshace lo que dio la tirada fallida y se repite con ventaja.
+                            const ga = r.reaction ? { hope: 0, stress: 0, fear: 0 } : rollGains(r.hope, r.fear);
+                            updateCharacterField(r.charId, "hope_marked", String(Math.max(0, Number(cur.hope_marked ?? HOPE_DEFAULT) - 3 - ga.hope)));
+                            if (ga.fear) addFear(-ga.fear);
+                            postCampaignEvent(r.charId, "👁️ Don del Patrón: gasta 3 Esperanza y repite la tirada fallida con ventaja");
+                            setTraitRollResult(null);
+                            await doTraitRoll(r.charId, r.traitLabel, r.mod, r.weapon, r.card?.name ? r.card : null, true, { exps: r.exps, reaction: r.reaction, dc: r.card?.dc ?? null });
+                            setTraitRollResult((prev) => (prev ? { ...prev, boonRetry: true } : prev));
+                          }}
+                        >
+                          <RotateCcw size={15} /> Don del Patrón · 3 Esperanza
+                          <small>{hopeW < 3 ? "Necesitas 3 Esperanza" : failed ? "Has fallado: repite con ventaja" : "Si has fallado: repite con ventaja"}</small>
                         </button>
                       );
                     })()}
@@ -15945,6 +16153,39 @@ export default function App({ onSignOut }) {
                       zone === "belt" ? adjustItemCount(viewingCharId, index, delta) : adjustBackpackItemCount(viewingCharId, index, delta);
                       setViewingCardDetail((prev) => (prev ? { ...prev, invItem: { ...prev.invItem, count: n }, ...(prev.itemIcon ? { stat: n > 1 ? { label: "Cantidad", value: "×" + n } : undefined } : {}) } : prev));
                     };
+                    // Consumibles: «recuperas XdY Puntos de vida» / «te quitas XdY de Estrés».
+                    const cm = /(recuperas|te quitas)\s+(\d*d\d+|\d+)\s+(?:de\s+)?(Puntos? de [Vv]ida|Estrés)/i.exec(d.text || "");
+                    if (cm) {
+                      const isHp = /vida/i.test(cm[3]);
+                      // Bruja del Seto · Remedios Herbales: +1 si tú o alguien de tu campaña es Bruja del Seto.
+                      const camp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(viewingCharId));
+                      const hedge = c.f_subclass === "Bruja del Seto" ? c : (camp?.characterIds || []).map((id) => characters[id]).find((x) => x && x.f_subclass === "Bruja del Seto");
+                      cardActs.unshift({
+                        key: "inv-use",
+                        Icon: isHp ? HeartPulse : Zap,
+                        label: "Usar",
+                        sub: (isHp ? "Recuperas " : "Te quitas ") + cm[2] + (isHp ? " Puntos de Vida" : " de Estrés") + (hedge ? " +1 (Remedios Herbales)" : ""),
+                        run: () => {
+                          const dm = /^(\d*)d(\d+)$/.exec(cm[2]);
+                          const rolls = dm ? Array.from({ length: Number(dm[1] || 1) }, () => Math.floor(Math.random() * Number(dm[2])) + 1) : [];
+                          const amount = (dm ? rolls.reduce((a, b) => a + b, 0) : Number(cm[2])) + (hedge ? 1 : 0);
+                          const cur = charsRef.current[viewingCharId];
+                          const field = isHp ? "hp_marked" : "stress_marked";
+                          const had = Number(cur[field] || 0);
+                          const cleared = Math.min(had, amount);
+                          updateCharacterField(viewingCharId, field, String(had - cleared));
+                          if (count > 1) setCount(-1);
+                          else {
+                            closeCardDetail();
+                            zone === "belt" ? removeInventoryItem(viewingCharId, index) : removeBackpackItem(viewingCharId, index);
+                          }
+                          clearTimeout(restMsgTimer.current);
+                          setRestMessage(`${d.title}: ${isHp ? "recuperas" : "te quitas"} ${cleared}${isHp ? " Puntos de Vida" : " de Estrés"}${hedge ? " (+1 por Remedios Herbales)" : ""}.`);
+                          restMsgTimer.current = setTimeout(() => setRestMessage(""), 3500);
+                          postCampaignEvent(viewingCharId, `🧪 Usa ${d.title}${rolls.length ? " (" + rolls.join(" + ") + ")" : ""}${hedge ? " +1 por los Remedios Herbales de " + (hedge.f_name || "la Bruja del Seto") : ""} y ${isHp ? "se quita " + cleared + " Punto" + (cleared === 1 ? "" : "s") + " de Vida" : "se quita " + cleared + " de Estrés"}`);
+                        },
+                      });
+                    }
                     cardActs.push(
                       { key: "inv-plus", Icon: Plus, label: "Añadir uno", sub: "Tienes " + count, run: () => setCount(1) },
                       { key: "inv-minus", Icon: Minus, label: "Quitar uno", sub: "Tienes " + count, disabled: count <= 1, run: () => setCount(-1) },
@@ -15966,7 +16207,7 @@ export default function App({ onSignOut }) {
                     const isFrontline = c.f_class === "Guardián";
                     const armorMax = isFrontline ? armorMaxFor(c) : 0;
                     const armorSpent = isFrontline ? Math.max(0, armorMax - Number(c.armor_marked || 0)) : 0;
-                    const frontlineBlock = isFrontline && !missingHope ? (!armorMax ? "No llevas armadura" : !armorSpent ? "Tu Armadura está completa" : "") : c.f_class === "Pícaro" && c.f_dodge ? "Esquiva ya activa (+2 Evasión)" : c.f_class === "Hechicero" ? "Se usa al tirar daño mágico" : c.f_class === "Bruja" ? "Se usa sobre una tirada fallida (resultado o chat)" : c.f_class === "Guerrero" && c.f_no_mercy ? "Sin Piedad ya activo (+1 al ataque)" : "";
+                    const frontlineBlock = isFrontline && !missingHope ? (!armorMax ? "No llevas armadura" : !armorSpent ? "Tu Armadura está completa" : "") : c.f_class === "Pícaro" && c.f_dodge ? "Esquiva ya activa (+2 Evasión)" : c.f_class === "Hechicero" ? "Se usa al tirar daño mágico" : c.f_class === "Bruja" ? "Se usa sobre una tirada fallida (resultado o chat)" : c.f_class === "Brujo" ? "Se usa desde el resultado de una tirada fallida" : c.f_class === "Guerrero" && c.f_no_mercy ? "Sin Piedad ya activo (+1 al ataque)" : "";
                     // Mago · Esta Vez No: el adversario repite su ataque o su daño.
                     if (c.f_class === "Mago")
                       [["dmg", "Repetir su daño", "una tirada de daño", Flame], ["atk", "Repetir su ataque", "una tirada de ataque", Swords]].forEach(([k, label, what, Ic]) =>
@@ -16124,6 +16365,46 @@ export default function App({ onSignOut }) {
                     });
                   }
                   // Llamado del Valiente · Ritual de Batalla.
+                  if (d.endlessActs && !d.fromChat) {
+                    const tierE = tierForLevel(c.f_level || 1);
+                    const fav = getFavor(c);
+                    const spend = (patch, msg) => {
+                      closeCardDetail();
+                      updateCharacterFields(viewingCharId, { f_favor: String(getFavor(charsRef.current[viewingCharId]) - 1), ...patch });
+                      postCampaignEvent(viewingCharId, msg);
+                    };
+                    const favSub = (t) => "1 Favor (tienes " + fav + ")" + (t ? " · " + t : "");
+                    cardActs.push(
+                      c.f_mantle === "1"
+                        ? { key: "mantle-off", Icon: VenetianMask, label: "Terminar Manto del Patrón", sub: "Fin de la escena", run: () => { closeCardDetail(); updateCharacterField(viewingCharId, "f_mantle", ""); postCampaignEvent(viewingCharId, "🕯️ Su Manto del Patrón se desvanece"); } }
+                        : { key: "mantle", Icon: VenetianMask, label: fav < 1 ? "Sin Favor" : "Manto del Patrón", sub: favSub("+" + tierE + " a umbrales"), disabled: fav < 1, run: () => spend({ f_mantle: "1" }, `🕯️ Manto del Patrón: gasta 1 Favor y se envuelve en un aspecto aterrador de su patrón (+${tierE} a sus umbrales y ventaja para intimidar)`) },
+                      { key: "embrace", Icon: HeartPulse, label: c.f_embrace_used ? "Abrazo Inmortal · vuelve al descansar" : fav < 1 ? "Sin Favor" : "Abrazo Inmortal", sub: "Gasta Favor: un Dado de Patrón por cada uno", disabled: !!c.f_embrace_used || fav < 1, run: () => { closeCardDetail(); setEmbraceDlg({ n: 1, rolls: null }); } }
+                    );
+                    if (tierE >= 2)
+                      cardActs.push(
+                        { key: "harrow", Icon: Skull, label: fav < 1 ? "Sin Favor" : "Invocación Angustiosa", sub: favSub("desventaja al atacante"), disabled: fav < 1, run: () => spend({}, "😱 Invocación Angustiosa: gasta 1 Favor y el adversario ataca con desventaja (si falla, marca 1 Estrés)") },
+                        { key: "sink", Icon: ShieldHalf, label: c.f_sink_used ? "Sumidero de Daño · vuelve al descansar" : fav < 1 ? "Sin Favor" : "Sumidero de Daño", sub: favSub("daño a la mitad"), disabled: !!c.f_sink_used || fav < 1, run: () => spend({ f_sink_used: "1" }, "🕳️ Sumidero de Daño: gasta 1 Favor y reduce a la mitad el daño que recibe") }
+                      );
+                    if (tierE >= 3)
+                      cardActs.push(
+                        { key: "aegis", Icon: Shield, label: c.f_aegis_used ? "Égida Oscura · vuelve al descanso largo" : fav < 1 ? "Sin Favor" : "Égida Oscura", sub: favSub("no marcas Puntos de Vida"), disabled: !!c.f_aegis_used || fav < 1, run: () => spend({ f_aegis_used: "1" }, "🛡️ Égida Oscura: gasta 1 Favor en lugar de marcar Puntos de Vida") },
+                        { key: "drain", Icon: Droplets, label: fav < 1 ? "Sin Favor" : "Perdición Drenante", sub: favSub("el atacante marca 1 Estrés y tú te quitas 1"), disabled: fav < 1, run: () => spend({ stress_marked: String(Math.max(0, Number(c.stress_marked || 0) - 1)) }, "🩸 Perdición Drenante: gasta 1 Favor y Drena al adversario (marca 1 Estrés y ataca con d12 hasta que falle); se quita 1 Estrés") }
+                      );
+                  }
+                  // Brujo · Favor: rendir tributo (movimiento de descanso).
+                  if (d.title === "Favor" && c?.f_class === "Brujo" && !d.fromChat) {
+                    const gain = Math.max(1, Number(c[spellcastTraitFor(c.f_class, c.f_subclass)] || 0));
+                    cardActs.push({
+                      key: "tribute",
+                      Icon: Flame,
+                      label: "Rendir tributo · +" + gain + " Favor",
+                      sub: "Movimiento de descanso",
+                      run: () => {
+                        updateCharacterField(viewingCharId, "f_favor", String(getFavor(c) + gain));
+                        postCampaignEvent(viewingCharId, `🕯️ Rinde tributo a ${c.f_patron || "su patrón"} y gana ${gain} de Favor`);
+                      },
+                    });
+                  }
                   if (d.hedgeActs && !d.fromChat) {
                     const tierH = tierForLevel(c.f_level || 1);
                     const spellKeyH = spellcastTraitFor(c.f_class, c.f_subclass);
@@ -16752,7 +17033,7 @@ export default function App({ onSignOut }) {
                       label: "Mostrar en la campaña",
                       sub: shareCamp.name,
                       run: () => {
-                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, divineActs, sentinelActs, originActs, primalActs, braveActs, slayerCard, moonActs, hedgeActs, ...detail } = d;
+                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, divineActs, sentinelActs, originActs, primalActs, braveActs, slayerCard, moonActs, hedgeActs, endlessActs, ...detail } = d;
                         // Las imágenes incrustadas muy grandes no se copian al chat.
                         if (typeof detail.image === "string" && detail.image.startsWith("data:") && detail.image.length > 30000) delete detail.image;
                         const type = d.domain ? "domain" : d.weapon ? "weapon" : d.armor ? "armor" : "card";
@@ -16767,6 +17048,8 @@ export default function App({ onSignOut }) {
                   const slayerCard = !d.fromChat && d.slayerCard;
                   const patternCard = !d.fromChat && d.title === "Patrones Extraños" && c?.f_class === "Mago";
                   const hexCard = !d.fromChat && d.title === "Maleficio" && c?.f_class === "Bruja";
+                  const favorCard = !d.fromChat && d.title === "Favor" && c?.f_class === "Brujo";
+                  const patronCard = !d.fromChat && d.title === "Pacto con el Patrón" && c?.f_class === "Brujo";
                   const hedgeCard = !d.fromChat && d.hedgeActs && (Number(c?.f_talisman || 0) > 0 || Number(c?.f_walk || 0) > 0 || Number(c?.f_circle || 0) > 0);
                   const tideMax = Number(c?.f_level || 1);
                   const footer = d.weapon
@@ -16864,6 +17147,31 @@ export default function App({ onSignOut }) {
                           <div style={{ fontSize: "0.93em", color: "var(--mh-muted2)", fontStyle: "italic" }}>Sin característica especial.</div>
                         ))}
                     </FitBox>
+                    {favorCard && (
+                      <div className="mh-cardc-foot mh-favor-foot">
+                        <button type="button" aria-label="Quitar 1 Favor" disabled={getFavor(c) < 1} onClick={() => updateCharacterField(viewingCharId, "f_favor", String(getFavor(c) - 1))}>
+                          <Minus size={13} />
+                        </button>
+                        <span>
+                          <b>{getFavor(c)}</b> de Favor
+                        </span>
+                        <button type="button" aria-label="Añadir 1 Favor" onClick={() => updateCharacterField(viewingCharId, "f_favor", String(getFavor(c) + 1))}>
+                          <Plus size={13} />
+                        </button>
+                      </div>
+                    )}
+                    {patronCard && (
+                      <div className="mh-cardc-foot mh-patron-foot">
+                        <input key={"pn" + viewingCharId} defaultValue={c.f_patron || ""} placeholder="Nombre de tu patrón" maxLength={40} onBlur={(e) => e.target.value.trim() !== (c.f_patron || "") && updateCharacterField(viewingCharId, "f_patron", e.target.value.trim())} />
+                        <input key={"ps" + viewingCharId} defaultValue={c.f_patron_sphere || ""} placeholder="Esfera de influencia" maxLength={30} list="mh-spheres" onBlur={(e) => e.target.value.trim() !== (c.f_patron_sphere || "") && updateCharacterField(viewingCharId, "f_patron_sphere", e.target.value.trim())} />
+                        <datalist id="mh-spheres">
+                          {["Ambición", "Artistas", "Caos", "Oscuridad", "Muerte", "Apostadores", "Honor", "Justicia", "Líderes", "Amor", "Piedad", "Travesuras", "Naturaleza", "Protectores", "Venganza", "Eruditos", "Secretos", "Soldados", "Fuerza", "Viajeros", "Embaucadores", "Verdad", "Guerra", "Sabiduría"].map((x) => (
+                            <option key={x} value={x} />
+                          ))}
+                        </datalist>
+                        <small>Dado de Patrón: d{patronSides(c)} · {getFavor(c)} de Favor</small>
+                      </div>
+                    )}
                     {hedgeCard && (() => {
                       const tokenRow = (field, label, color, Ic, spendText, onLast) => {
                         const have = Number(c[field] || 0);
@@ -17057,7 +17365,7 @@ export default function App({ onSignOut }) {
                         </div>
                       );
                     })()}
-                    {!tideCard && !prayerCard && !slayerCard && !patternCard && !hexCard && !hedgeCard && (footer || d.domain) && (
+                    {!tideCard && !prayerCard && !slayerCard && !patternCard && !hexCard && !hedgeCard && !favorCard && !patronCard && (footer || d.domain) && (
                       <div className="mh-cardc-foot">
                         {d.domain ? (
                           <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
