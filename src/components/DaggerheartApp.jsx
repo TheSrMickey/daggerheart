@@ -431,7 +431,7 @@ const ANCESTRIES = [
   { key: "Gnomo", blurb: "Humanoide pequeño de cabeza cónica, orejas suavemente puntiagudas, ojos grandes y brazos y manos proporcionalmente largos, capaz de teletransportarse a distancias cortas.", expansion: "Hope & Fear", features: [{ name: "Dedos Ágiles", text: "Cuando hagas una tirada de Destreza, puedes gastar 2 Esperanza para repetir tu Dado de Esperanza." }, { name: "Paso Fugaz", text: "Una vez por escena, puedes teletransportarte a otro punto que puedas ver dentro de alcance Lejano." }] },
   { key: "Aetheris", blurb: "Humanoide descendiente de los ángeles de los Cielos Sagrados, reconocible por sus alas y sus marcas sagradas, que emana un aura bendita.", expansion: "Hope & Fear", features: [{ name: "Aura Sagrada", text: "Una vez por descanso largo, cuando un aliado en alcance Cercano saque una tirada con Miedo, puedes convertirla en una tirada con Esperanza." }, { name: "Alas Celestiales", text: "Tienes alas que te permiten volar. Una vez por escena mientras vuelas, puedes gastar 1 Esperanza en lugar de marcar una casilla de Armadura." }] },
   { key: "Estirpe del Cielo", blurb: "Humanoide de carne y aire descendiente de los elementales del aire, de piel que cambia de color como el cielo y cabello que flota como humo o nubes.", expansion: "Hope & Fear", features: [{ name: "Fuerza del Vendaval", text: "Marca 1 Estrés para invocar una ráfaga que te lleva a ti o a un aliado Muy cercano hasta alcance Muy lejano. Además, siempre controlas la velocidad de tus caídas." }, { name: "Ojo de la Tormenta", text: "Gasta 2 Esperanza para darte a ti o a un aliado Cuerpo a cuerpo +1 a la Evasión hasta que recibáis daño Grave o vuelvas a usarlo." }] },
-  { key: "Estirpe de la Marea", blurb: "Vinculado al mar y al ritmo de las mareas.", expansion: "Hope & Fear", features: [{ name: "Anfibio", text: "Puedes respirar y moverte con normalidad bajo el agua." }, { name: "Manantial de Vida", text: "Una vez por descanso, si tienes acceso a un poco de agua, puedes marcar 1 Estrés para quitar 1 Punto de vida a ti o a un aliado en alcance Muy cercano." }] },
+  { key: "Estirpe de la Marea", blurb: "Humanoide de carne y agua descendiente de los elementales del agua, con orejas como aletas, membranas entre los dedos y colores que cambian como el agua.", expansion: "Hope & Fear", features: [{ name: "Anfibio", text: "Puedes respirar y moverte con normalidad bajo el agua." }, { name: "Manantial de Vida", text: "Una vez por descanso, cuando tengas acceso a un poco de agua, puedes marcar 1 Estrés para quitarte 1 Punto de Vida a ti o a un aliado en alcance Muy cercano." }] },
   { key: "Estirpe de la Tierra", blurb: "Vinculado a la roca y a las profundidades del suelo.", expansion: "Hope & Fear", features: [{ name: "Piel de Piedra", text: "Ganas un +1 permanente a tu Puntuación de Armadura y a tus umbrales de daño al crear el personaje." }, { name: "Inamovible", text: "Mientras toques el suelo, no pueden levantarte ni moverte contra tu voluntad." }] },
   { key: "Estirpe de la Brasa", blurb: "Vinculado al fuego y al calor de las brasas.", expansion: "Hope & Fear", features: [{ name: "Ignífugo", text: "Eres inmune al daño de fuego, mágico o normal." }, { name: "Ignición", text: "Marca 1 Estrés para envolver tu arma principal en llamas hasta el final de la escena: da luz brillante y +1d6 a las tiradas de daño con esa arma." }] },
 ];
@@ -841,7 +841,7 @@ const CLASS_HOPE_FEATURE = {
   Mago: { name: "Esta Vez No", cost: 3, text: "Gasta 3 Esperanza para obligar a un adversario en alcance Lejano a repetir una tirada de ataque o de daño." },
   Bruja: { name: "Encanto de Bruja", cost: 3, text: "Cuando tú o un aliado en alcance Lejano falléis una tirada de acción, puedes gastar 3 Esperanza para convertirla en un éxito con Miedo." },
   Brujo: { name: "Don del Patrón", cost: 3, text: "Cuando falles una tirada, puedes gastar 3 Esperanza para repetirla con ventaja." },
-  Camorrista: { name: "Plantar Cara", cost: 3, text: "Intimida a un objetivo en alcance Cercano y déjalo temporalmente Vulnerable." },
+  Camorrista: { name: "Plantar Cara", cost: 3, text: "Gasta 3 Esperanza para intimidar a un objetivo en alcance Cercano y dejarlo temporalmente Vulnerable." },
   Asesino: { name: "Determinación Letal", cost: 3, text: "Quítate 2 de Estrés." },
 };
 
@@ -7819,6 +7819,7 @@ export default function App({ onSignOut }) {
     if (c.f_mantle) restPatch.f_mantle = "";
     if (c.f_fury) restPatch.f_fury = "";
     if (c.f_eye_used) restPatch.f_eye_used = "";
+    if (c.f_lifespring_used) restPatch.f_lifespring_used = "";
     if (c.f_ire_used) restPatch.f_ire_used = "";
     if (c.f_celestial_used) restPatch.f_celestial_used = "";
     if (isLong && c.f_aura_used) restPatch.f_aura_used = "";
@@ -14304,6 +14305,7 @@ export default function App({ onSignOut }) {
                 defender: { title: "Defensor", sub: "Marca 1 Estrés: el aliado que acaba de marcar 2 o más PV marca 1 menos.", list: allies, go: "Defender" },
                 closeknit: { title: "Muy Unidos", sub: "Gasta la Esperanza que quieras: un aliado en alcance Lejano gana esa misma cantidad.", list: allies, go: "Dar " + (R.n || 1) + " de Esperanza" },
                 life: { title: "Soporte Vital", sub: "Gasta 3 de Esperanza: un aliado en alcance Cercano se quita 1 Punto de vida.", list: allies, go: "Dar Soporte Vital" },
+                lifespring: { title: "Manantial de Vida", sub: "Con un poco de agua, marca 1 Estrés: tú o un aliado en alcance Muy cercano os quitáis 1 Punto de Vida.", list: all, go: "Curar 1 PV · 1 Estrés" },
                 sparing: { title: "Toque Clemente", sub: "Toca a una criatura y quítale 2 Puntos de vida o 2 de Estrés.", list: all, go: "Tocar" },
               }[R.mode];
               const canGo =
@@ -14320,6 +14322,13 @@ export default function App({ onSignOut }) {
                 if (R.mode === "life") {
                   updateCharacterField(viewingCharId, "hope_marked", String(Math.max(0, Number(me.hope_marked ?? HOPE_DEFAULT) - 3)));
                   giveToParty(viewingCharId, { [R.pick]: { hp: 1 } }, "Soporte Vital", "Gasta 3 de Esperanza para sostener la vida de un aliado.", "Serafín");
+                  close();
+                  closeCardDetail();
+                  return;
+                }
+                if (R.mode === "lifespring") {
+                  markStress(viewingCharId, 1, { f_lifespring_used: "1" });
+                  giveToParty(viewingCharId, { [R.pick]: { hp: 1 } }, "Manantial de Vida", "Un poco de agua que cierra las heridas.", "Estirpe de la Marea");
                   close();
                   closeCardDetail();
                   return;
@@ -16840,7 +16849,7 @@ export default function App({ onSignOut }) {
                     else cardActs.unshift({
                       key: "hope",
                       Icon: isFrontline ? Shield : Sparkles,
-                      label: missingHope ? "Te faltan " + missingHope + " de Esperanza" : frontlineBlock || (isFrontline ? "Recuperar " + Math.min(2, armorSpent) + " de Armadura" : "Usar " + d.title),
+                      label: missingHope ? "Te faltan " + missingHope + " de Esperanza" : frontlineBlock || (isFrontline ? "Recuperar " + Math.min(2, armorSpent) + " de Armadura" : c.f_class === "Camorrista" ? "Plantar Cara: dejar Vulnerable al objetivo" : "Usar " + d.title),
                       sub: d.hopeAction.cost + " Esperanza",
                       disabled: missingHope > 0 || !!frontlineBlock,
                       run: () => {
@@ -16850,6 +16859,13 @@ export default function App({ onSignOut }) {
                         else if (c.f_class === "Pícaro") doRogueDodge(viewingCharId);
                         else if (c.f_class === "Guerrero") doNoMercy(viewingCharId);
                         else if (c.f_class === "Serafín") setRenewDlg({ mode: "life" });
+                        else if (c.f_class === "Camorrista") {
+                          updateCharacterField(viewingCharId, "hope_marked", String(Number(c.hope_marked ?? HOPE_DEFAULT) - d.hopeAction.cost));
+                          clearTimeout(restMsgTimer.current);
+                          setRestMessage("Plantar Cara: el objetivo queda temporalmente Vulnerable (-3 Esperanza).");
+                          restMsgTimer.current = setTimeout(() => setRestMessage(""), 3500);
+                          postCampaignEvent(viewingCharId, "😤 Plantar Cara: gasta 3 Esperanza e intimida a un objetivo en alcance Cercano, que queda temporalmente Vulnerable");
+                        }
                         else spendHopeFeature(viewingCharId, d.hopeAction.cost);
                       },
                     });
@@ -17121,6 +17137,17 @@ export default function App({ onSignOut }) {
                       { key: "combo-up", Icon: ChevronUp, label: idx >= maxIdx ? "Dado de Combo d" + cur + " (máximo de tu Rango)" : "Subir a d" + COMBO_DICE[idx + 1], sub: "Mejora de nivel · uno por Rango", disabled: idx >= maxIdx, run: () => updateCharacterField(viewingCharId, "f_combo_die", String(COMBO_DICE[idx + 1])) },
                       { key: "combo-down", Icon: ChevronDown, label: "Bajar a d" + (COMBO_DICE[idx - 1] || 4), sub: "Dado de Combo actual: d" + cur, disabled: idx <= 0, run: () => updateCharacterField(viewingCharId, "f_combo_die", String(COMBO_DICE[idx - 1])) }
                     );
+                  }
+                  // Estirpe de la Marea · Manantial de Vida: una vez por descanso.
+                  if (d.ancestryKey === "Estirpe de la Marea" && !d.fromChat) {
+                    cardActs.push({
+                      key: "lifespring",
+                      Icon: Droplets,
+                      label: c.f_lifespring_used ? "Manantial de Vida · vuelve al descansar" : "Manantial de Vida",
+                      sub: "1 Estrés · tú o un aliado os quitáis 1 PV",
+                      disabled: !!c.f_lifespring_used,
+                      run: () => setRenewDlg({ mode: "lifespring" }),
+                    });
                   }
                   // Estirpe del Cielo · Fuerza del Vendaval y Ojo de la Tormenta.
                   if (d.ancestryKey === "Estirpe del Cielo" && !d.fromChat) {
