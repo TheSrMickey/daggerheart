@@ -3017,6 +3017,8 @@ const sharedStyles = `
   .mh-mark-btn { background: #6B7891; }
   .mh-necro-btn { background: #5B6B5E; }
   .mh-blood-btn { background: #A8323E; }
+  .mh-wz-sep { display: flex; align-items: center; gap: 8px; margin: 6px 4px 2px; color: var(--mh-muted); font: 700 9.5px "Inter", system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+  .mh-wz-sep::before, .mh-wz-sep::after { content: ""; flex: 1; height: 1px; background: var(--mh-line); }
   .mh-toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 60; max-width: min(560px, calc(100vw - 32px)); padding: 10px 16px; border-radius: 12px; background: var(--mh-ink); color: var(--mh-panel); font: 600 12.5px "Inter", system-ui, sans-serif; box-shadow: 0 10px 30px rgba(0,0,0,.25); animation: mh-toast-in .25s ease-out both; pointer-events: none; }
   @keyframes mh-toast-in { from { opacity: 0; transform: translate(-50%, 8px); } }
   .mh-specter-btn { background: #5B6B7E; }
@@ -20407,13 +20409,22 @@ export default function App({ onSignOut }) {
                   <div className="mh-wz-list" role="listbox" aria-label={wizardStep === "class" ? "Clases" : "Subclases"}>
                     {stepItems.map((it, i) => {
                       const col = CLASS_COLORS[wizardStep === "class" ? it.key : CLASSES[carouselIndex].key] || "#E3B04B";
+                      // Línea de separación al empezar las clases de otra expansión.
+                      const newGroup = i > 0 && (it.expansion || "") !== (stepItems[i - 1].expansion || "");
                       return (
-                        <button key={it.key} type="button" role="option" aria-selected={i === stepIndex} className={"mh-wz-it" + (i === stepIndex ? " is-on" : "")} style={{ "--wc": col }} onClick={() => setStepIndex(i)}>
+                        <Fragment key={it.key}>
+                        {newGroup && (
+                          <div className="mh-wz-sep" role="separator">
+                            <span>{it.expansion === "The Void" ? "The Void · en pruebas" : it.expansion}</span>
+                          </div>
+                        )}
+                        <button type="button" role="option" aria-selected={i === stepIndex} className={"mh-wz-it" + (i === stepIndex ? " is-on" : "")} style={{ "--wc": col }} onClick={() => setStepIndex(i)}>
                           <i style={{ background: col }} />
                           <span className="mh-wz-it-n">{it.key}</span>
                           {wizardStep === "class" && <small>{(CLASS_DOMAINS[it.key] || []).join(" · ")}</small>}
                           {it.expansion && <em>{it.expansion === "The Void" ? "Void" : "H&F"}</em>}
                         </button>
+                        </Fragment>
                       );
                     })}
                   </div>
