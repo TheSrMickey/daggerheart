@@ -374,7 +374,7 @@ const SUBCLASSES = {
         { name: "Golpe Esperanzador", text: "Cuando tengas éxito con Esperanza en una tirada de ataque, puedes ordenar a un Ángel que haga 1d10 de daño mágico adicional al objetivo. Después, ese Ángel desaparece." },
         { name: "Tercer Círculo: Arcángel (Especialización)", text: "Puedes invocar Arcángeles usando tu Tercer Círculo." },
         { name: "Comandante Divino (Especialización)", text: "Mientras tengas algún Arcángel invocado, el daño adicional de tu Golpe Esperanzador es 1d12 en lugar de 1d10." },
-        { name: "Ayuda Celestial (Especialización)", text: "Puedes ordenar a un Arcángel que haga una de estas cosas: llevarte volando a ti o a un aliado en alcance Muy cercano a un lugar en alcance Lejano, o ayudar a un aliado en alcance Cercano sin gastar Esperanza. Después, el Arcángel desaparece." },
+        { name: "Ayuda Celestial (Especialización)", text: "Puedes ordenar a un Arcángel que haga una de estas cosas: llevaros volando a ti o a un aliado en alcance Muy cercano a un lugar en alcance Lejano, o ayudar a un aliado en alcance Cercano sin gastar Esperanza. Después, el Arcángel desaparece." },
         { name: "Cuarto Círculo: Manifestación Divina (Maestría)", text: "Puedes invocar a una única Manifestación Divina a la vez usando tu Cuarto Círculo." },
         { name: "Esperanza Consagrada (Maestría)", text: "Cuando invoques una Manifestación Divina, coloca tres Dados de Esperanza adicionales en esta carta. Cuando hagas una tirada de acción o de reacción, puedes tirar y gastar uno de estos dados junto con tu Dado de Esperanza normal y quedarte con el resultado más alto. Cuando no queden dados en esta carta, la Manifestación Divina desaparece." },
       ],
@@ -2985,6 +2985,8 @@ const sharedStyles = `
   .mh-combo-btn { background: #C08B5C; }
   .mh-mark-btn { background: #6B7891; }
   .mh-necro-btn { background: #5B6B5E; }
+  .mh-angel-btn { background: #C9A24A; }
+  .mh-angel-btn:hover:not(:disabled) { background: #B08A36; }
   .mh-stat-circles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
   .mh-stat-circle { height: 22px; display: flex; align-items: center; gap: 3px; padding: 0 4px 0 2px; border-radius: 20px; border: 1px solid color-mix(in srgb, #8E6FC4 45%, var(--mh-line)); background: var(--mh-panel); color: var(--mh-ink); font: 600 9.5px "Inter", system-ui, sans-serif; cursor: pointer; min-width: 0; }
   .mh-stat-circle i { flex-shrink: 0; width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid #8E6FC4; display: inline-flex; align-items: center; justify-content: center; font: 700 11px "Cinzel", Georgia, serif; font-style: normal; color: #6B4FB8; }
@@ -4061,6 +4063,7 @@ function DualityResult({ roll, size = 84 }) {
             {roll.slayerRoll ? " + " + (roll.slayerRolls || []).join(" + ") + " (Cazador)" : ""}
             {roll.difficulty != null ? ` · Dificultad ${roll.difficulty}` : ""}
           </div>
+          {roll.hallowRoll > 0 && <div style={{ fontSize: 11.5, color: "#B8862E", marginTop: 3 }}>Esperanza Consagrada: {roll.hallowFirst} y {roll.hallowRoll} → te quedas con {Math.max(roll.hallowFirst, roll.hallowRoll)}</div>}
           <div style={{ fontSize: 14.5, fontWeight: 600, color: ink(roll.color), marginTop: 4 }}>{roll.text}</div>
           {roll.note && <div style={{ fontSize: 11.5, color: "var(--mh-ink3)", marginTop: 3 }}>{roll.note}</div>}
         </div>
@@ -4126,6 +4129,7 @@ function DamageResult({ roll }) {
         {(roll.rolls2 || []).map((v, i) => (
           <DieFace key={"r2" + i} sides={roll.die2} value={v} color={color} size={size} rolling={false} highlight={v === roll.die2} />
         ))}
+        {roll.angelRoll > 0 && <DieFace sides={roll.angelSides} value={roll.angelRoll} color="#D8A84A" size={Math.round(size * 0.8)} rolling={false} highlight={roll.angelRoll === roll.angelSides} label="Ángel" />}
         {(roll.knightRolls || []).map((v, i) => (
           <DieFace key={"kn" + i} sides={12} value={v} color="#5B6B5E" size={Math.round(size * 0.8)} rolling={false} highlight={v === 12} label={i === 0 ? "Caballero" : undefined} />
         ))}
@@ -4155,6 +4159,7 @@ function DamageResult({ roll }) {
           <div style={{ fontSize: 12.5, color: "var(--mh-ink3)" }}>
             {roll.dice || 1}d{roll.die} ({rolls.join(" + ")}){roll.rolls2 ? ` + ${roll.rolls2.length}d${roll.die2} (${roll.rolls2.join(" + ")})` : ""}{roll.bonus ? " + " + roll.bonus : ""}
             {roll.comboRolls ? ` + ${roll.comboRolls.join(" + ")} (Combo d${roll.comboDie})` : ""}
+            {roll.angelRoll ? ` + 1d${roll.angelSides} (${roll.angelRoll}) mágico (Ángel)` : ""}
             {roll.knightRolls ? ` + 2d12 (${roll.knightRolls.join(" + ")}) (Caballero de la Muerte)` : ""}
             {roll.igniteRoll ? ` + 1d6 (${roll.igniteRoll}) (Ignición)` : ""}
             {roll.poisonDmg ? ` + ${roll.poisonDmg} (Veneno)` : ""}
@@ -6117,6 +6122,8 @@ export default function App({ onSignOut }) {
     // Hechicero · Canalizar Poder en Bruto: bono guardado para el próximo daño mágico.
     const rawBonus = ch && damageType === "mágico" ? Number(ch.f_raw_dmg || 0) : 0;
     if (rawBonus) updateCharacterField(charId, "f_raw_dmg", "");
+    // Teúrgia · Golpe Esperanzador: un Ángel suma 1d10 (1d12) de daño mágico.
+    const angelRoll = opts.angel ? Math.floor(Math.random() * opts.angel) + 1 : 0;
     // Nigromancia · Guerrero Mortal: el Caballero de la Muerte suma 2d12.
     const knightRolls = opts.knight ? [1, 2].map(() => Math.floor(Math.random() * 12) + 1) : null;
     const knightBonus = knightRolls ? knightRolls[0] + knightRolls[1] : 0;
@@ -6127,9 +6134,9 @@ export default function App({ onSignOut }) {
     const furyBonus = furyRolls ? furyRolls.reduce((a, b) => a + b, 0) : 0;
     const fearRolls = opts.fearDice ? Array.from({ length: opts.fearDice }, () => Math.floor(Math.random() * 10) + 1) : null;
     const fearBonus = fearRolls ? fearRolls.reduce((a, b) => a + b, 0) : 0;
-    const total = knightBonus + igniteRoll + roll + sum2 + bonus + critBonus + wolfBonus + unstopBonus + sneakBonus + rawBonus + fearBonus + furyBonus;
+    const total = angelRoll + knightBonus + igniteRoll + roll + sum2 + bonus + critBonus + wolfBonus + unstopBonus + sneakBonus + rawBonus + fearBonus + furyBonus;
     if (stanceNow === "aterradora") postCampaignEvent(charId, "😨 Postura Aterradora: el objetivo marca 1 Estrés");
-    setDamageRollResult({ knightRolls, attackFear: opts.attackFear || 0, igniteRoll, stanceNow, droppedRoll, favoredBonus, rolls2, die2, comboBase: total, furyRolls, furySides: ch ? patronSides(ch) : 6, fearRolls, rawBonus, sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, doublePick: !!opts.doublePick, charged: ch && ch.f_subclass === "Origen Primigenio" && ch.f_charged === "1" && damageType === "mágico", note: resonance ? "Resonancia Sagrada: los dados repetidos valen el doble" : opts.extraFlat ? "Incluye +" + opts.extraFlat + " de Elementalista" : waxBonus ? "Incluye +2 de la Luna Creciente" : opts.note || "", spirit: !!opts.spirit });
+    setDamageRollResult({ angelRoll, angelSides: opts.angel || 0, knightRolls, attackFear: opts.attackFear || 0, igniteRoll, stanceNow, droppedRoll, favoredBonus, rolls2, die2, comboBase: total, furyRolls, furySides: ch ? patronSides(ch) : 6, fearRolls, rawBonus, sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, doublePick: !!opts.doublePick, charged: ch && ch.f_subclass === "Origen Primigenio" && ch.f_charged === "1" && damageType === "mágico", note: resonance ? "Resonancia Sagrada: los dados repetidos valen el doble" : opts.extraFlat ? "Incluye +" + opts.extraFlat + " de Elementalista" : waxBonus ? "Incluye +2 de la Luna Creciente" : opts.note || "", spirit: !!opts.spirit });
     const who = playerName || "Alguien en la mesa";
     const critLabel = isCritical ? ` · ¡Crítico! (+${critBonus} máx.)` : "";
     const diceLabel = `${dice}d${die} (${rolls.join("+")})` + (rolls2 ? ` + ${dice}d${die2} (${rolls2.join("+")})` : "") + (furyRolls ? ` + Furia ${furyRolls.length}d${patronSides(ch)} (${furyRolls.join("+")})` : "") + (fearRolls ? ` + Enfrenta tu Miedo ${fearRolls.length}d10 (${fearRolls.join("+")}) mágico` : "") + (wolfBonus ? ` + Lobo 1d10 (${wolfBonus})` : "") + (unstopBonus ? ` + Imparable ${unstopBonus}` : "") + (sneakRolls ? ` + Furtivo ${sneakRolls.length}d6 (${sneakRolls.join("+")})` : "");
@@ -8530,7 +8537,7 @@ export default function App({ onSignOut }) {
   const rollTraitCheck = (charId, traitLabel, traitValue, weapon, cardContext, advantage) => {
     // Galapa · Retraerse: desventaja en las tiradas de acción mientras está en el caparazón.
     const shellOn = getConditions(charsRef.current[charId] || {}).includes("Retraído");
-    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage && !shellOn, exps: [], rally: false, privilege: false, disadvantage: shellOn, shellOn, poet: false, dedicated: false, quick: false, reaction: false, tide: 0, dc: "", elem: "", slayer: 0, found: "", adept: false, patron: false, surround: 0, honed: false });
+    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage && !shellOn, exps: [], rally: false, privilege: false, disadvantage: shellOn, shellOn, poet: false, dedicated: false, quick: false, reaction: false, tide: 0, dc: "", elem: "", slayer: 0, found: "", adept: false, patron: false, surround: 0, honed: false, hallow: false });
   };
   const confirmPreRoll = () => {
     const pr = preRoll;
@@ -8589,6 +8596,13 @@ export default function App({ onSignOut }) {
     if (elemUse) postCampaignEvent(pr.charId, `${"🌀"} Elementalista: gasta 1 Esperanza y usa su ${ch.f_origin_element || "elemento"} para ${elemUse === "roll" ? "sumar +2 a la tirada" : "sumar +3 al daño"}`);
     const noMercy = ch && ch.f_class === "Guerrero" && ch.f_no_mercy === "1" && pr.weapon && !pr.weapon.charge ? 1 : 0;
     const moonbeam = ch && ch.f_moonbeam === "1" && pr.traitLabel === TRAITS.find((t) => t.key === spellcastTraitFor(ch.f_class, ch.f_subclass))?.label ? 1 : 0;
+    // Teúrgia · Esperanza Consagrada: se gasta un dado de la carta; sin dados, la Manifestación desaparece.
+    const hallowUse = ch && ch.f_subclass === "Teúrgia" && pr.hallow && Number(ch.f_hallow_dice || 0) > 0;
+    if (hallowUse) {
+      const left = Number(ch.f_hallow_dice) - 1;
+      updateCharacterFields(pr.charId, { f_hallow_dice: String(left), ...(left === 0 ? { f_summons: JSON.stringify({ ...getSummons(ch), manifest: 0 }) } : {}) });
+      if (left === 0) postCampaignEvent(pr.charId, "✨ Esperanza Consagrada: gasta el último dado y la Manifestación Divina desaparece");
+    }
     // Bruja del Seto · Círculo de Poder: +2 al ataque y cada tirada de acción retira una ficha.
     // Brujo · Pacto con el Patrón: se gasta 1 Favor y se tira el Dado de Patrón.
     const patronUse = ch && ch.f_class === "Brujo" && pr.patron && !pr.reaction && getFavor(ch) > 0 ? patronSides(ch) : 0;
@@ -8612,6 +8626,7 @@ export default function App({ onSignOut }) {
       exps: [...exps.map((e, i) => ({ text: e.text + (adeptOn ? " ×2" : honed.length ? " · Pericia " + honed[i] + (honed[i] >= 5 ? " (gratis)" : "") : ""), bonus: (Number(e.bonus) || 0) * (adeptOn ? 2 : 1) })), ...(foundExp ? [foundExp] : [])],
       slayer: slayerSpent,
       patronSides: patronUse,
+      hallow: hallowUse,
       honed,
       rallyDie,
       disadvantage: (ch?.f_ancestry || "").split(" + ").includes("Goblin") && pr.traitLabel === "Agilidad" ? false : pr.disadvantage || (pr.shellOn && !pr.reaction),
@@ -8766,7 +8781,10 @@ export default function App({ onSignOut }) {
     }
     // Del Orden · Entregado: el Dado de Esperanza pasa a ser un d20.
     const hopeSides = extras.hopeD20 ? 20 : 12;
-    const hope = Math.floor(Math.random() * hopeSides) + 1;
+    const hopeA = Math.floor(Math.random() * hopeSides) + 1;
+    // Teúrgia · Esperanza Consagrada: un Dado de Esperanza más y te quedas con el más alto.
+    const hallowRoll = extras.hallow ? Math.floor(Math.random() * 12) + 1 : 0;
+    const hope = Math.max(hopeA, hallowRoll);
     const fear = Math.floor(Math.random() * 12) + 1;
     // Ventaja suma 1d6 y desventaja lo resta; si hay las dos, se anulan.
     const edgeSign = (advantage ? 1 : 0) - (extras.disadvantage ? 1 : 0);
@@ -8809,7 +8827,7 @@ export default function App({ onSignOut }) {
         ? "Ignoras los efectos que te afectarían aun con éxito"
         : "Las reacciones no generan Esperanza ni Miedo"
       : hope === fear ? "Ganas 1 Esperanza y te quitas 1 Estrés" : hope > fear ? "Ganas 1 Esperanza" : "El DJ gana 1 de Miedo";
-    setTraitRollResult({ key: Date.now(), hopeSides, traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, tideBonus, patronRoll, patronSides: extras.patronSides || 0, slayerRoll, slayerRolls, total, text: hope === fear ? "Éxito crítico" : reaction ? "Tirada de reacción" : text, color, note, reaction, card: cardContext ? { name: cardContext.name, dc: cardContext.dc } : dcVal ? { name: "", dc: dcVal } : null, exps: extras.exps || [], honed: extras.honed || [], wasCloaked, weapon: weapon || null, charId });
+    setTraitRollResult({ key: Date.now(), hopeSides, traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, tideBonus, hallowRoll, hallowFirst: hopeA, patronRoll, patronSides: extras.patronSides || 0, slayerRoll, slayerRolls, total, text: hope === fear ? "Éxito crítico" : reaction ? "Tirada de reacción" : text, color, note, reaction, card: cardContext ? { name: cardContext.name, dc: cardContext.dc } : dcVal ? { name: "", dc: dcVal } : null, exps: extras.exps || [], honed: extras.honed || [], wasCloaked, weapon: weapon || null, charId });
 
     // Con Esperanza (o crítico) ganas 1 Esperanza; con crítico además te quitas 1 Estrés.
     let hopeGained = 0;
@@ -10941,7 +10959,7 @@ export default function App({ onSignOut }) {
                                       <Ghost size={13} color="#8E6FC4" />
                                       <span style={{ fontSize: 12, fontWeight: 600, color: "var(--mh-ink)" }}>Círculos de invocación</span>
                                       <span style={{ marginLeft: "auto", fontSize: 11, color: "var(--mh-muted)" }}>
-                                        {summonTotal(c)}/{Number(c.f_level || 1)} entidades
+                                        {summonTotal(c)}/{Number(c.f_level || 1)} entidades{c.f_subclass === "Teúrgia" && Number(c.f_hallow_dice || 0) > 0 ? " · " + c.f_hallow_dice + " dados consagrados" : ""}
                                       </span>
                                     </div>
                                     <div className="mh-stat-circles">
@@ -11597,7 +11615,7 @@ export default function App({ onSignOut }) {
                               kicker: `Subclase · ${subclassBadge}`,
                               title: subclassEntry.key,
                               text: subclassEntry.blurb,
-                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento", "Escuela de la Guerra", "Bruja Lunar", "Bruja del Seto", "Pacto del Eterno", "Pacto del Iracundo", "Titán", "Artista Marcial", "Gremio del Verdugo", "Gremio del Envenenador", "Nigromancia"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
+                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento", "Escuela de la Guerra", "Bruja Lunar", "Bruja del Seto", "Pacto del Eterno", "Pacto del Iracundo", "Titán", "Artista Marcial", "Gremio del Verdugo", "Gremio del Envenenador", "Nigromancia", "Teúrgia"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
                               image: subclassEntry.image,
                               bigStyle: true,
                               ...(isElemental ? { elementalAction: true } : {}),
@@ -11618,6 +11636,7 @@ export default function App({ onSignOut }) {
                               ...(subclassEntry.key === "Artista Marcial" ? { martialActs: true } : {}),
                               ...(subclassEntry.key === "Gremio del Envenenador" ? { poisonActs: true } : {}),
                               ...(subclassEntry.key === "Nigromancia" ? { necroActs: true } : {}),
+                              ...(subclassEntry.key === "Teúrgia" ? { theurgyActs: true } : {}),
                             }),
                           });
                         }
@@ -14391,7 +14410,7 @@ export default function App({ onSignOut }) {
                 if (!added) return;
                 const next = { ...sm };
                 Object.entries(picks).forEach(([k, v]) => (next[k] = Number(next[k] || 0) + v));
-                markStress(viewingCharId, 1, { f_summons: JSON.stringify(next) });
+                markStress(viewingCharId, 1, { f_summons: JSON.stringify(next), ...(picks.manifest ? { f_hallow_dice: "3" } : {}) });
                 const list = circlesFor(me).filter((ci) => picks[ci.key]).map((ci) => picks[ci.key] + " " + (picks[ci.key] > 1 ? ci.plural : ci.name)).join(", ");
                 postCampaignEvent(viewingCharId, `🔮 Invocar Entidad: marca 1 Estrés e invoca ${list}`);
                 close();
@@ -15299,13 +15318,15 @@ export default function App({ onSignOut }) {
               const climberOk = !(ch.f_class === "Asesino" && ch.f_inout === "1" && !preRoll.reaction) && (ch.f_ancestry || "").split(" + ").includes("Simiah") && preRoll.traitLabel === "Agilidad" && !etherealOk && !dreadOk && !glamourOk;
               // Bruja del Seto · Maldición Irritante: ventaja al atacar a criaturas con Maleficio.
               // Pacto del Eterno · Manto del Patrón: ventaja para intimidar.
+              // Teúrgia · Presencia Angelical: con algún Ángel invocado, ventaja en Presencia para influir.
+              const angelicOk = ch.f_subclass === "Teúrgia" && Number(getSummons(ch).angel || 0) > 0 && preRoll.traitLabel === "Presencia";
               // Asesino · Entrar y Salir: ventaja en la siguiente tirada que aproveche la información.
               const inoutOk = ch.f_class === "Asesino" && ch.f_inout === "1" && !preRoll.reaction;
               // Artista Marcial · Aislante: ventaja si no hay más criaturas en alcance Muy cercano.
               const isolOk = !inoutOk && activeStance(ch) === "aislante" && !!preRoll.weapon;
               const mantleOk = !isolOk && ch.f_mantle === "1" && preRoll.traitLabel === "Presencia" && !etherealOk && !dreadOk && !glamourOk && !climberOk;
               const vexOk = !mantleOk && ch.f_subclass === "Bruja del Seto" && tierForLevel(ch.f_level || 1) >= 2 && !!preRoll.weapon && (ch.f_hexes || "[]") !== "[]" && !etherealOk && !dreadOk && !glamourOk && !climberOk;
-              const edgeSource = inoutOk ? "Entrar y Salir" : etherealOk ? "Rostro Etéreo" : dreadOk ? "Rostro Temible" : glamourOk ? "Glamour Nocturno" : climberOk ? "Trepador Nato" : inoutOk ? "Entrar y Salir" : isolOk ? "Aislante" : mantleOk ? "Manto del Patrón" : vexOk ? "Maldición Irritante" : highborne ? "Privilegio" : loreborne ? "Leído" : ridgeborne ? "Firme" : slyborne ? "Granuja" : underborne ? "Vida en la Penumbra" : wildborne ? "Pies Ligeros" : "";
+              const edgeSource = inoutOk ? "Entrar y Salir" : angelicOk ? "Presencia Angelical" : etherealOk ? "Rostro Etéreo" : dreadOk ? "Rostro Temible" : glamourOk ? "Glamour Nocturno" : climberOk ? "Trepador Nato" : inoutOk ? "Entrar y Salir" : isolOk ? "Aislante" : mantleOk ? "Manto del Patrón" : vexOk ? "Maldición Irritante" : highborne ? "Privilegio" : loreborne ? "Leído" : ridgeborne ? "Firme" : slyborne ? "Granuja" : underborne ? "Vida en la Penumbra" : wildborne ? "Pies Ligeros" : "";
               const poetOk = ch.f_subclass === "Orador" && preRoll.traitLabel === "Presencia";
               // Origen Elemental · Elementalista: 1 Esperanza para +2 a la tirada o +3 al daño.
               const elemOk = ch.f_subclass === "Origen Elemental" && !preRoll.reaction;
@@ -15332,6 +15353,17 @@ export default function App({ onSignOut }) {
               const setTide = (n) => setPreRoll((p) => ({ ...p, tide: Math.max(0, Math.min(tideHave, n)) }));
               const setSlayer = (n) => setPreRoll((p) => ({ ...p, slayer: Math.max(0, Math.min(slayerHave, n)) }));
               const bonusTiles = [
+                ch.f_subclass === "Teúrgia" && Number(ch.f_hallow_dice || 0) > 0
+                  ? tile("hallow", {
+                      on: preRoll.hallow,
+                      title: "Esperanza Consagrada",
+                      sub: "Te quedan " + ch.f_hallow_dice + " dado" + (Number(ch.f_hallow_dice) > 1 ? "s" : ""),
+                      cost: "+1 d12",
+                      color: "#D8A84A",
+                      hint: "Tiras un Dado de Esperanza más y te quedas con el más alto",
+                      onClick: () => setPreRoll((p) => ({ ...p, hallow: !p.hallow })),
+                    })
+                  : null,
                 activeStance(ch) === "afinada" && preRoll.weapon
                   ? tile("honed", {
                       on: preRoll.honed,
@@ -15487,10 +15519,10 @@ export default function App({ onSignOut }) {
                   ? tile("priv", {
                       on: preRoll.privilege,
                       title: edgeSource,
-                      sub: etherealOk ? "Centinela Alado · volando" : dreadOk ? "Infernal" : glamourOk ? "Bruja Lunar" : climberOk ? "Simiah" : inoutOk ? "Asesino" : isolOk ? "Postura marcial" : mantleOk ? "Pacto del Eterno" : vexOk ? "Bruja del Seto" : highborne ? "De Alta Cuna" : loreborne ? "Del Saber" : slyborne ? "De las Sombras" : underborne ? "De las Profundidades" : wildborne ? "Salvaje" : "De las Cumbres",
+                      sub: etherealOk ? "Centinela Alado · volando" : dreadOk ? "Infernal" : glamourOk ? "Bruja Lunar" : climberOk ? "Simiah" : inoutOk ? "Asesino" : angelicOk ? "Teúrgia" : isolOk ? "Postura marcial" : mantleOk ? "Pacto del Eterno" : vexOk ? "Bruja del Seto" : highborne ? "De Alta Cuna" : loreborne ? "Del Saber" : slyborne ? "De las Sombras" : underborne ? "De las Profundidades" : wildborne ? "Salvaje" : "De las Cumbres",
                       cost: "Ventaja",
-                      color: etherealOk ? "#D8A84A" : dreadOk ? "#A33A3A" : glamourOk ? "#8C7FD0" : climberOk ? "#A0784A" : inoutOk ? "#7D8BA3" : isolOk ? "#C08B5C" : mantleOk ? "#B55FA0" : vexOk ? "#9B7FD6" : highborne ? "#B8862E" : loreborne ? "#5E8FC9" : slyborne ? "#6E5A8A" : underborne ? "#5A6B7A" : wildborne ? "#5E8A4E" : "#7E8C6A",
-                      hint: etherealOk ? "Mientras vuelas, tienes ventaja en las tiradas de Presencia" : dreadOk ? "Si intentas intimidar a una criatura hostil" : glamourOk ? "Si la tirada aprovecha tu apariencia ilusoria" : climberOk ? "Si la tirada implica mantener el equilibrio o trepar" : inoutOk ? "Si la tirada aprovecha la forma de entrar o salir que te dio el DJ (se gasta al tirar)" : isolOk ? "Si no hay otras criaturas en alcance Muy cercano de ti o de tu objetivo" : mantleOk ? "Si intentas intimidar a un objetivo" : vexOk ? "Si atacas a una criatura con tu Maleficio" : highborne ? "Si tratas con nobles, negocias un precio o usas tu reputación" : loreborne ? "Si la tirada trata sobre la historia, la cultura o la política de una persona o un lugar importantes" : slyborne ? "Si negocias con criminales, intentas detectar una mentira o buscas un escondite seguro" : underborne ? "Si estás en una zona con poca luz o sombras densas y te escondes, investigas o percibes detalles en ella" : wildborne ? "Si intentas moverte sin que te oigan" : "Si cruzas precipicios y cornisas peligrosos, te orientas en un entorno duro o usas tus conocimientos de supervivencia",
+                      color: etherealOk ? "#D8A84A" : dreadOk ? "#A33A3A" : glamourOk ? "#8C7FD0" : climberOk ? "#A0784A" : inoutOk ? "#7D8BA3" : angelicOk ? "#D8A84A" : isolOk ? "#C08B5C" : mantleOk ? "#B55FA0" : vexOk ? "#9B7FD6" : highborne ? "#B8862E" : loreborne ? "#5E8FC9" : slyborne ? "#6E5A8A" : underborne ? "#5A6B7A" : wildborne ? "#5E8A4E" : "#7E8C6A",
+                      hint: etherealOk ? "Mientras vuelas, tienes ventaja en las tiradas de Presencia" : dreadOk ? "Si intentas intimidar a una criatura hostil" : glamourOk ? "Si la tirada aprovecha tu apariencia ilusoria" : climberOk ? "Si la tirada implica mantener el equilibrio o trepar" : inoutOk ? "Si la tirada aprovecha la forma de entrar o salir que te dio el DJ (se gasta al tirar)" : angelicOk ? "Si intentas influir en otros: el poder angelical inspira asombro y temor" : isolOk ? "Si no hay otras criaturas en alcance Muy cercano de ti o de tu objetivo" : mantleOk ? "Si intentas intimidar a un objetivo" : vexOk ? "Si atacas a una criatura con tu Maleficio" : highborne ? "Si tratas con nobles, negocias un precio o usas tu reputación" : loreborne ? "Si la tirada trata sobre la historia, la cultura o la política de una persona o un lugar importantes" : slyborne ? "Si negocias con criminales, intentas detectar una mentira o buscas un escondite seguro" : underborne ? "Si estás en una zona con poca luz o sombras densas y te escondes, investigas o percibes detalles en ella" : wildborne ? "Si intentas moverte sin que te oigan" : "Si cruzas precipicios y cornisas peligrosos, te orientas en un entorno duro o usas tus conocimientos de supervivencia",
                       onClick: () => setPreRoll((p) => ({ ...p, privilege: !p.privilege, advantage: p.privilege ? p.advantage : false })),
                     })
                   : null,
@@ -15870,6 +15902,29 @@ export default function App({ onSignOut }) {
                         <button type="button" className="mh-luck-btn mh-feline-btn" disabled={hopeK < 2} onClick={() => bendLuck(r.charId, r.charId, rollForReroll(r), { kind: "feline" })}>
                           <PawPrint size={15} /> Instinto Felino · 2 Esperanza
                           <small>{hopeK < 2 ? "Necesitas 2 de Esperanza" : "Repite tu Dado de Esperanza"}</small>
+                        </button>
+                      );
+                    })()}
+                    {(() => {
+                      // Teúrgia · Golpe Esperanzador: con éxito con Esperanza en un ataque, un Ángel suma 1d10 mágico (1d12 con Arcángeles).
+                      const r = traitRollResult;
+                      const rc = characters[r.charId];
+                      if (!rc || rc.f_subclass !== "Teúrgia" || !r.weapon || r.reaction || !(r.hope >= r.fear) || !Number(getSummons(rc).angel || 0)) return null;
+                      const okA = r.hope === r.fear ? true : r.card?.dc != null ? r.total >= r.card.dc : null;
+                      if (okA === false) return null;
+                      const sides = tierForLevel(rc.f_level || 1) >= 2 && Number(getSummons(rc).archangel || 0) > 0 ? 12 : 10;
+                      if (r.weapon.angel) return <div className="mh-luck-done" style={{ color: "#B8862E" }}>Golpe Esperanzador: un Ángel suma 1d{r.weapon.angel} mágico al daño</div>;
+                      return (
+                        <button
+                          type="button"
+                          className="mh-luck-btn mh-angel-btn"
+                          onClick={() => {
+                            setSummon(r.charId, "angel", Number(getSummons(charsRef.current[r.charId]).angel || 0) - 1, `😇 Golpe Esperanzador: un Ángel golpea al objetivo (+1d${sides} de daño mágico) y desaparece`);
+                            setTraitRollResult((prev) => (prev ? { ...prev, weapon: { ...prev.weapon, angel: sides } } : prev));
+                          }}
+                        >
+                          <Sparkles size={15} /> Golpe Esperanzador: +1d{sides} mágico
+                          <small>{okA ? "Éxito con Esperanza" : "Si has tenido éxito"} · el Ángel desaparece</small>
                         </button>
                       );
                     })()}
@@ -16350,7 +16405,7 @@ export default function App({ onSignOut }) {
                               updateCharacterFields(charId, { hope_marked: String(Math.min(getHopeMax(cur), Number(cur.hope_marked ?? HOPE_DEFAULT) + 1)), stress_marked: String(Math.max(0, Number(cur.stress_marked || 0) - 1)) });
                               postCampaignEvent(charId, "🥊 Gozo del Golpe: gana 1 Esperanza más, se quita 1 Estrés más y su Competencia sube en 1 en este ataque");
                             }
-                            rollWeaponDamage(name, damage, charId, isCritical, { knight: !!traitRollResult.weapon.knight, attackFear: traitRollResult.fear, ...(pummel || honedHit ? { fixedDice: getProficiency(rc) + (pummel ? 1 : 0) + (honedHit ? 1 : 0) } : {}), fearDice, cloaked: wasCloaked, spirit, resonance: spirit && rc && tierForLevel(rc.f_level || 1) >= 3, extraFlat: traitRollResult.weapon.elemDmg || 0, doublePick: !!traitRollResult.weapon.manipDouble });
+                            rollWeaponDamage(name, damage, charId, isCritical, { angel: traitRollResult.weapon.angel || 0, knight: !!traitRollResult.weapon.knight, attackFear: traitRollResult.fear, ...(pummel || honedHit ? { fixedDice: getProficiency(rc) + (pummel ? 1 : 0) + (honedHit ? 1 : 0) } : {}), fearDice, cloaked: wasCloaked, spirit, resonance: spirit && rc && tierForLevel(rc.f_level || 1) >= 3, extraFlat: traitRollResult.weapon.elemDmg || 0, doublePick: !!traitRollResult.weapon.manipDouble });
                           }}
                         >
                           Sí
@@ -18141,6 +18196,26 @@ export default function App({ onSignOut }) {
                         },
                       });
                   }
+                  // Teúrgia · Ayuda Celestial (Especialización): órdenes al Arcángel.
+                  if (d.theurgyActs && !d.fromChat && tierForLevel(c.f_level || 1) >= 2) {
+                    const arch = Number(getSummons(c).archangel || 0);
+                    [
+                      ["fly", "Arcángel: llevar volando", "A ti o a un aliado Muy cercano, hasta alcance Lejano", "🪽 Ayuda Celestial: un Arcángel lleva volando a alguien hasta un lugar en alcance Lejano y desaparece"],
+                      ["help", "Arcángel: ayudar a un aliado", "Ayuda a un aliado en alcance Cercano sin gastar Esperanza", "😇 Ayuda Celestial: un Arcángel ayuda a un aliado sin gastar Esperanza y desaparece"],
+                    ].forEach(([k, label, sub, msg]) =>
+                      cardActs.push({
+                        key: "arch-" + k,
+                        Icon: k === "fly" ? Feather : Users,
+                        label: arch ? label : label + " · sin Arcángeles",
+                        sub,
+                        disabled: !arch,
+                        run: () => {
+                          closeCardDetail();
+                          setSummon(viewingCharId, "archangel", arch - 1, msg);
+                        },
+                      })
+                    );
+                  }
                   // Nigromancia: Hambre de la Tumba, Cosecha Macabra y Terror Espectral.
                   if (d.necroActs && !d.fromChat) {
                     const sm = getSummons(c);
@@ -19088,7 +19163,7 @@ export default function App({ onSignOut }) {
                       label: "Mostrar en la campaña",
                       sub: shareCamp.name,
                       run: () => {
-                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, divineActs, sentinelActs, originActs, primalActs, braveActs, slayerCard, moonActs, hedgeActs, endlessActs, wrathActs, brawlerStrike: _bs, comboCard: _cc, martialActs: _ma, poisonActs: _pa, necroActs: _na, ...detail } = d;
+                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, divineActs, sentinelActs, originActs, primalActs, braveActs, slayerCard, moonActs, hedgeActs, endlessActs, wrathActs, brawlerStrike: _bs, comboCard: _cc, martialActs: _ma, poisonActs: _pa, necroActs: _na, theurgyActs: _ta, ...detail } = d;
                         // Las imágenes incrustadas muy grandes no se copian al chat.
                         if (typeof detail.image === "string" && detail.image.startsWith("data:") && detail.image.length > 30000) delete detail.image;
                         const type = d.domain ? "domain" : d.weapon ? "weapon" : d.armor ? "armor" : "card";
