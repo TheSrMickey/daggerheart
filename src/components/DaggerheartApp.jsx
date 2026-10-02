@@ -264,7 +264,17 @@ const SUBCLASSES = {
     },
   ],
   Bruja: [
-    { key: "Bruja Lunar", blurb: "Encarna un poder celestial que amplifica su magia.", expansion: "Hope & Fear" },
+    {
+      key: "Bruja Lunar",
+      blurb: "Encarna un poder celestial que amplifica tu magia.",
+      expansion: "Hope & Fear",
+      features: [
+        { name: "Glamour Nocturno", text: "Haz una tirada de Lanzamiento de Conjuros (13) para envolverte en una fachada hechizante. Mientras tengas el Glamour, tienes ventaja en las tiradas que aprovechen tu apariencia ilusoria. Además, los adversarios en alcance Cercano deben marcar 1 Estrés para atacarte. A menos que marques 1 Estrés para mantenerlo, el Glamour desaparece cuando marcas un Punto de Vida o haces daño." },
+        { name: "Rayo de Luna (Especialización)", text: "Una vez por sesión, puedes conjurar una columna de luz de luna que ilumina el área en alcance Cercano hasta el final de la escena. Mientras estéis bañados por esta luz, tú y tus aliados obtenéis +1 a las tiradas de Lanzamiento de Conjuros y podéis ver a través de las ilusiones." },
+        { name: "Ira de la Luz Pálida (Especialización)", text: "Cuando una criatura con Maleficio en alcance Muy lejano falle un ataque, debe marcar 1 Estrés." },
+        { name: "Fases Lunares (Maestría)", text: "Al principio de cada sesión, tira 1d6 y colócalo en esta carta. Obtienes el efecto correspondiente hasta el final de la sesión: 1, Luna Nueva: gasta 1 Esperanza para anular daño Menor. 2–3, Creciente: +2 a las tiradas de daño. 4, Luna Llena: +3 a los umbrales de daño. 5–6, Menguante: +1 a la Evasión. Una vez por descanso, puedes gastar 1 Esperanza para aumentar en uno el valor del dado. Si aumentas un 6, pasa a ser un 1." },
+      ],
+    },
     { key: "Bruja del Seto", blurb: "Usa su oficio para fortalecerse a sí misma y a la mesa.", expansion: "Hope & Fear" },
   ],
   Brujo: [
@@ -701,6 +711,19 @@ const SUBCLASS_SPELLCAST_OVERRIDE = {
   "Gremio del Envenenador": "t_knowledge",
 };
 
+// Bruja Lunar · Fases Lunares (Maestría).
+const MOON_PHASES = [
+  { min: 1, max: 1, name: "Luna Nueva", effect: "1 Esperanza para anular daño Menor" },
+  { min: 2, max: 3, name: "Creciente", effect: "+2 a las tiradas de daño" },
+  { min: 4, max: 4, name: "Luna Llena", effect: "+3 a los umbrales de daño" },
+  { min: 5, max: 6, name: "Menguante", effect: "+1 a la Evasión" },
+];
+const moonPhaseOf = (c) => {
+  const v = c && c.f_subclass === "Bruja Lunar" && tierForLevel(c.f_level || 1) >= 3 ? Number(c.f_moon_phase || 0) : 0;
+  return v ? { value: v, ...MOON_PHASES.find((ph) => v >= ph.min && v <= ph.max) } : null;
+};
+// Comunión: efecto según el dado elegido.
+const communeEffect = (v) => (v >= 6 ? "Vives psíquicamente una escena relacionada con la respuesta como si estuvieras allí" : v >= 4 ? "Oyes sonidos o ves una visión relacionados con la respuesta" : "Notas un sabor, un olor o una sensación relacionados con la respuesta");
 function spellcastTraitFor(className, subclassName) {
   return SUBCLASS_SPELLCAST_OVERRIDE[subclassName] || CLASS_SPELLCAST_TRAIT[className] || null;
 }
@@ -787,8 +810,8 @@ const CLASS_FEATURES = {
     { name: "Patrones Extraños", text: "Elige un número entre 1 y 12. Cuando saques ese número en un Dado de Dualidad, ganas 1 Esperanza o te quitas 1 Estrés. Puedes cambiar este número cuando hagas un descanso largo." },
   ],
   Bruja: [
-    { name: "Maleficio", text: "Marca 1 Estrés para echar un Maleficio temporal a un objetivo en alcance Lejano: sufre una penalización igual a tu Rango en sus tiradas de daño y en su Dificultad. Puedes tener a la vez tantos objetivos con Maleficio como tu rasgo de conjuro." },
-    { name: "Comunión", text: "Una vez por descanso largo, en un momento de calma, puedes comulgar con un ancestro, una deidad, un espíritu o un ser de otro mundo. Hazle una pregunta y tira tantos d6 como tu rasgo de conjuro para interpretar la respuesta con el DJ." },
+    { name: "Maleficio", text: "Marca 1 Estrés para echar temporalmente un Maleficio a un objetivo en alcance Lejano. Mientras tenga el Maleficio, el objetivo sufre una penalización igual a tu Rango en sus tiradas de daño y en su Dificultad. El número máximo de criaturas que puedes tener con Maleficio a la vez es igual a tu rasgo de Lanzamiento de Conjuros." },
+    { name: "Comunión", text: "Una vez por descanso largo, en un momento de calma, puedes comulgar con un ancestro, una deidad, un espíritu o un ser de otro mundo. Hazle una pregunta y tira tantos d6 como tu rasgo de Lanzamiento de Conjuros. Elige uno de los resultados y consulta su efecto: con 1–3 notas un sabor, un olor o una sensación relacionados con la respuesta; con 4–5 oyes sonidos o ves una visión relacionados con la respuesta; con un 6 vives psíquicamente una escena relacionada con la respuesta como si estuvieras allí." },
   ],
   Brujo: [
     { name: "Pacto con el Patrón", text: "Te has comprometido con una entidad sobrenatural (un dios, un ser feérico, un demonio...). Anota su nombre y decide con el DJ su esfera de influencia. Antes de una tirada de acción relacionada con esa esfera, puedes gastar 1 Favor para sumar tu dado de patrón (d6; d8 desde el nivel 5)." },
@@ -2677,6 +2700,24 @@ const sharedStyles = `
   .mh-courage-btn { background: #B8862E; }
   .mh-fearless-btn { background: #A33A3A; }
   .mh-slayer-btn { background: #C0504A; }
+  .mh-glamour-btn { background: #8C7FD0; }
+  .mh-glamour-btn:hover:not(:disabled) { background: #7568B8; }
+  .mh-hex-foot { flex-direction: column; gap: 7px; padding: 9px 10px; }
+  .mh-hex-foot small { font-size: 10.5px; color: var(--mh-muted); }
+  .mh-hex-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; }
+  .mh-hex-list button { display: inline-flex; align-items: center; gap: 4px; border: 0; border-radius: 20px; padding: 3px 9px; font: 700 11px 'Inter', system-ui, sans-serif; color: #fff; background: #9B7FD6; cursor: pointer; }
+  .mh-hex-add { display: flex; gap: 6px; width: 100%; }
+  .mh-hex-add input { flex: 1; min-width: 0; border: 1px solid var(--mh-line); border-radius: 8px; padding: 5px 8px; font: 500 12px 'Inter', system-ui, sans-serif; background: var(--mh-panel); color: var(--mh-ink); }
+  .mh-hex-add button { border: 0; border-radius: 8px; padding: 5px 10px; font: 700 11px 'Inter', system-ui, sans-serif; color: #fff; background: #9B7FD6; cursor: pointer; white-space: nowrap; }
+  .mh-hex-add button:disabled { opacity: .45; cursor: not-allowed; }
+  .mh-commune { max-width: 400px; }
+  .mh-commune-dice { display: flex; justify-content: center; gap: 10px; margin: 6px 0 12px; }
+  .mh-commune-dice button { width: 44px; height: 44px; border-radius: 10px; border: 2px solid #9B7FD6; background: var(--mh-panel); font: 700 18px 'Cinzel', Georgia, serif; color: var(--mh-ink); cursor: pointer; }
+  .mh-commune-dice button.is-on { background: #9B7FD6; color: #fff; }
+  .mh-commune-dice button:disabled { opacity: .35; cursor: default; }
+  .mh-commune-res { text-align: center; font: 600 13px 'Inter', system-ui, sans-serif; color: var(--mh-ink); min-height: 34px; }
+  .mh-commune-table { display: flex; flex-direction: column; gap: 3px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--mh-line); font: 500 11.5px 'Inter', system-ui, sans-serif; color: var(--mh-muted); }
+  .mh-commune-table b { display: inline-block; width: 30px; color: #9B7FD6; }
   .mh-pattern-foot { flex-direction: column; gap: 6px; padding: 8px 10px; }
   .mh-pattern-foot small { font-size: 10.5px; color: var(--mh-muted); }
   .mh-pattern-nums { display: grid; grid-template-columns: repeat(6, 26px); justify-content: center; gap: 5px; }
@@ -5150,6 +5191,8 @@ export default function App({ onSignOut }) {
       next.f_dodge = "";
       postCampaignEvent(id, "🌀 Le alcanzan: termina su Esquiva del Pícaro");
     }
+    // Bruja Lunar · Glamour Nocturno: al marcar Puntos de vida se pregunta si se mantiene.
+    if (cur.f_glamour === "1" && Number(next.hp_marked || 0) > Number(cur.hp_marked || 0)) setGlamourAsk({ id, why: "Has marcado Puntos de Vida" });
     charsRef.current = { ...charsRef.current, [id]: next };
     setCharacters((prev) => ({ ...prev, [id]: next }));
     afterCharacterChange(id, cur, next);
@@ -5381,6 +5424,8 @@ export default function App({ onSignOut }) {
       next.f_dodge = "";
       postCampaignEvent(id, "🌀 Le alcanzan: termina su Esquiva del Pícaro");
     }
+    // Bruja Lunar · Glamour Nocturno: al marcar Puntos de vida se pregunta si se mantiene.
+    if (cur.f_glamour === "1" && Number(next.hp_marked || 0) > Number(cur.hp_marked || 0)) setGlamourAsk({ id, why: "Has marcado Puntos de Vida" });
     charsRef.current = { ...charsRef.current, [id]: next };
     setCharacters((prev) => ({ ...prev, [id]: next }));
     afterCharacterChange(id, cur, next);
@@ -5522,7 +5567,11 @@ export default function App({ onSignOut }) {
     const damageType = damageStr.includes("mágico") ? "mágico" : "físico";
     // Guerrero · Entrenamiento de combate: suma su nivel al daño físico.
     const levelBonus = !opts.plain && ch && ch.f_class === "Guerrero" && damageType === "físico" ? Number(ch.f_level || 1) : 0;
-    const bonus = flat + levelBonus + (opts.extraFlat || 0);
+    // Bruja Lunar · Fases Lunares: en Creciente, +2 a las tiradas de daño.
+    const phaseNow = moonPhaseOf(ch);
+    const waxBonus = !opts.plain && phaseNow && phaseNow.name === "Creciente" ? 2 : 0;
+    const bonus = flat + levelBonus + (opts.extraFlat || 0) + waxBonus;
+    if (ch && ch.f_glamour === "1") setGlamourAsk({ id: charId, why: "Has hecho daño" });
     const rolls = Array.from({ length: dice }, () => Math.floor(Math.random() * die) + 1);
     // Portador Divino · Resonancia Sagrada: en el daño del Arma Espiritual, los dados repetidos valen el doble.
     const resonance = !!opts.resonance && rolls.some((v, i) => rolls.indexOf(v) !== i);
@@ -5545,7 +5594,7 @@ export default function App({ onSignOut }) {
     const fearRolls = opts.fearDice ? Array.from({ length: opts.fearDice }, () => Math.floor(Math.random() * 10) + 1) : null;
     const fearBonus = fearRolls ? fearRolls.reduce((a, b) => a + b, 0) : 0;
     const total = roll + bonus + critBonus + wolfBonus + unstopBonus + sneakBonus + rawBonus + fearBonus;
-    setDamageRollResult({ fearRolls, rawBonus, sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, doublePick: !!opts.doublePick, charged: ch && ch.f_subclass === "Origen Primigenio" && ch.f_charged === "1" && damageType === "mágico", note: resonance ? "Resonancia Sagrada: los dados repetidos valen el doble" : opts.extraFlat ? "Incluye +" + opts.extraFlat + " de Elementalista" : opts.note || "", spirit: !!opts.spirit });
+    setDamageRollResult({ fearRolls, rawBonus, sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, doublePick: !!opts.doublePick, charged: ch && ch.f_subclass === "Origen Primigenio" && ch.f_charged === "1" && damageType === "mágico", note: resonance ? "Resonancia Sagrada: los dados repetidos valen el doble" : opts.extraFlat ? "Incluye +" + opts.extraFlat + " de Elementalista" : waxBonus ? "Incluye +2 de la Luna Creciente" : opts.note || "", spirit: !!opts.spirit });
     const who = playerName || "Alguien en la mesa";
     const critLabel = isCritical ? ` · ¡Crítico! (+${critBonus} máx.)` : "";
     const diceLabel = `${dice}d${die} (${rolls.join("+")})` + (fearRolls ? ` + Enfrenta tu Miedo ${fearRolls.length}d10 (${fearRolls.join("+")}) mágico` : "") + (wolfBonus ? ` + Lobo 1d10 (${wolfBonus})` : "") + (unstopBonus ? ` + Imparable ${unstopBonus}` : "") + (sneakRolls ? ` + Furtivo ${sneakRolls.length}d6 (${sneakRolls.join("+")})` : "");
@@ -7327,6 +7376,9 @@ export default function App({ onSignOut }) {
   // Hechicero · Canalizar Poder en Bruto y bóveda de cartas de dominio.
   const [rawDlg, setRawDlg] = useState(null);
   const [vaultDlg, setVaultDlg] = useState(false);
+  const [communeDlg, setCommuneDlg] = useState(null); // Bruja · Comunión
+  const [glamourAsk, setGlamourAsk] = useState(null); // Bruja Lunar · ¿mantener el Glamour?
+  const [hexDraft, setHexDraft] = useState("");
   const getVault = (c) => {
     try {
       return JSON.parse(c?.f_domain_vault || "[]");
@@ -7505,6 +7557,11 @@ export default function App({ onSignOut }) {
     if (isLong && c.f_slayer_reroll) restPatch.f_slayer_reroll = "";
     if (c.f_recall_used) restPatch.f_recall_used = "";
     if (isLong && c.f_pattern_lock) restPatch.f_pattern_lock = "";
+    if (c.f_moonbeam) restPatch.f_moonbeam = "";
+    if (isLong && c.f_moonbeam_used) restPatch.f_moonbeam_used = "";
+    if (isLong && c.f_moon_phase) restPatch.f_moon_phase = "";
+    if (c.f_phase_bump_used) restPatch.f_phase_bump_used = "";
+    if (isLong && c.f_commune_used) restPatch.f_commune_used = "";
     // Fin de la «sesión»: los Dados de Cazador sin gastar se cambian por Esperanza.
     if (isLong && Number(c.f_slayer || 0) > 0) {
       hope = Math.min(getHopeMax(c), hope + Number(c.f_slayer));
@@ -7898,7 +7955,8 @@ export default function App({ onSignOut }) {
     setPreRoll(null);
     if (elemUse) postCampaignEvent(pr.charId, `${"🌀"} Elementalista: gasta 1 Esperanza y usa su ${ch.f_origin_element || "elemento"} para ${elemUse === "roll" ? "sumar +2 a la tirada" : "sumar +3 al daño"}`);
     const noMercy = ch && ch.f_class === "Guerrero" && ch.f_no_mercy === "1" && pr.weapon && !pr.weapon.charge ? 1 : 0;
-    doTraitRoll(pr.charId, pr.traitLabel, pr.traitValue + noMercy, pr.weapon ? { ...pr.weapon, ...(elemUse === "dmg" ? { elemDmg: 3 } : {}) } : pr.weapon, pr.cardContext, pr.advantage || pr.privilege || pr.quick, {
+    const moonbeam = ch && ch.f_moonbeam === "1" && pr.traitLabel === TRAITS.find((t) => t.key === spellcastTraitFor(ch.f_class, ch.f_subclass))?.label ? 1 : 0;
+    doTraitRoll(pr.charId, pr.traitLabel, pr.traitValue + noMercy + moonbeam, pr.weapon ? { ...pr.weapon, ...(elemUse === "dmg" ? { elemDmg: 3 } : {}) } : pr.weapon, pr.cardContext, pr.advantage || pr.privilege || pr.quick, {
       exps: [...exps.map((e, i) => ({ text: e.text + (adeptOn ? " ×2" : honed.length ? " · Pericia " + honed[i] + (honed[i] >= 5 ? " (gratis)" : "") : ""), bonus: (Number(e.bonus) || 0) * (adeptOn ? 2 : 1) })), ...(foundExp ? [foundExp] : [])],
       slayer: slayerSpent,
       honed,
@@ -9413,6 +9471,13 @@ export default function App({ onSignOut }) {
           if (transc.picks.includes("evasion")) equipMods.evasion = (equipMods.evasion || 0) + 2;
           if (transc.picks.includes("trait") && transc.trait) equipMods[transc.trait] = (equipMods[transc.trait] || 0) + 1;
         }
+        // Bruja Lunar · Fases Lunares: Luna Llena +3 a los umbrales; Menguante +1 a la Evasión.
+        const phaseC = moonPhaseOf(c);
+        if (phaseC && phaseC.name === "Luna Llena") {
+          equipMods.major = (equipMods.major || 0) + 3;
+          equipMods.severe = (equipMods.severe || 0) + 3;
+        }
+        if (phaseC && phaseC.name === "Menguante") equipMods.evasion = (equipMods.evasion || 0) + 1;
         // "Armadura y estadísticas": espaciado fijo y fila de Evasión/Armadura de altura fija, para que la caja
         // (y con ella toda la fila de paneles) mida lo mismo con o sin armadura y con cualquier número de escudos.
         const statsSpacing = (() => {
@@ -9541,6 +9606,21 @@ export default function App({ onSignOut }) {
                       </span>
                     );
                   })()}
+                  {c.f_subclass === "Bruja Lunar" && c.f_glamour === "1" && (
+                    <span className="mh-htag is-active" style={{ "--tag": "#8C7FD0" }} title="Glamour Nocturno: ventaja al aprovechar tu apariencia; los adversarios en alcance Cercano marcan 1 Estrés para atacarte">
+                      <span className="mh-htag-dot" /> Glamour
+                    </span>
+                  )}
+                  {c.f_moonbeam === "1" && (
+                    <span className="mh-htag is-active" style={{ "--tag": "#6F86C2" }} title="Rayo de Luna: +1 a Lanzamiento de Conjuros y ves a través de las ilusiones hasta el final de la escena">
+                      <span className="mh-htag-dot" /> Rayo de Luna
+                    </span>
+                  )}
+                  {moonPhaseOf(c) && (
+                    <span className="mh-htag" style={{ "--tag": "#8C7FD0" }} title={"Fases Lunares: " + moonPhaseOf(c).effect}>
+                      <Moon size={11} /> {moonPhaseOf(c).name} · {moonPhaseOf(c).value}
+                    </span>
+                  )}
                   {(c.f_ancestry || "").split(" + ").includes("Orco") && Number(c.r_hp || 0) - Number(c.hp_marked || 0) === 1 && (
                     <span className="mh-htag is-active" style={{ "--tag": "#6E7F3A" }} title="Robusto: te queda 1 Punto de Vida, los ataques contra ti tienen desventaja">
                       <span className="mh-htag-dot" /> Robusto · ataques con desventaja
@@ -10557,7 +10637,7 @@ export default function App({ onSignOut }) {
                               kicker: `Subclase · ${subclassBadge}`,
                               title: subclassEntry.key,
                               text: subclassEntry.blurb,
-                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento", "Escuela de la Guerra"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
+                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento", "Escuela de la Guerra", "Bruja Lunar"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
                               image: subclassEntry.image,
                               bigStyle: true,
                               ...(isElemental ? { elementalAction: true } : {}),
@@ -10571,6 +10651,7 @@ export default function App({ onSignOut }) {
                               ...(subclassEntry.key === "Origen Primigenio" ? { primalActs: true } : {}),
                               ...(subclassEntry.key === "Llamado del Valiente" ? { braveActs: true } : {}),
                               ...(subclassEntry.key === "Llamado del Cazador" ? { slayerCard: true } : {}),
+                              ...(subclassEntry.key === "Bruja Lunar" ? { moonActs: true } : {}),
                             }),
                           });
                         }
@@ -13124,6 +13205,113 @@ export default function App({ onSignOut }) {
               );
             })()}
 
+            {communeDlg && (() => {
+              const me = characters[viewingCharId];
+              if (!me) return null;
+              const close = () => setCommuneDlg(null);
+              const key = spellcastTraitFor(me.f_class, me.f_subclass);
+              const n = Math.max(1, Number(me[key] || 0));
+              const D = communeDlg;
+              const roll = () => {
+                const dice = Array.from({ length: n }, () => Math.floor(Math.random() * 6) + 1);
+                updateCharacterField(viewingCharId, "f_commune_used", "1");
+                setCommuneDlg((x) => ({ ...x, dice }));
+              };
+              const pick = (k) => {
+                setCommuneDlg((x) => ({ ...x, pick: k }));
+                const v = D.dice[k];
+                postCampaignEvent(viewingCharId, `👁️ Comunión${D.q.trim() ? ": «" + D.q.trim() + "»" : ""}. Tira ${D.dice.join(", ")} y elige el ${v}: ${communeEffect(v).charAt(0).toLowerCase() + communeEffect(v).slice(1)}`);
+              };
+              return (
+                <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 46, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)" }} onClick={close}>
+                  <div className="mh-card mh-renew mh-commune" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Comunión">
+                    <div className="mh-pre-h">
+                      <span className="mh-pre-ic" style={{ background: "color-mix(in srgb, #9B7FD6 16%, var(--mh-panel))", color: "#9B7FD6" }}>
+                        <Eye size={17} />
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <b className="mh-serif">Comunión</b>
+                        <small>Comulgas con un ancestro, una deidad, un espíritu o un ser de otro mundo.</small>
+                      </div>
+                      <button type="button" className="mh-inv-x" aria-label="Cerrar" onClick={close}>
+                        <X size={16} />
+                      </button>
+                    </div>
+                    {!D.dice ? (
+                      <>
+                        <input className="mh-input" value={D.q} placeholder="¿Qué le preguntas?" maxLength={160} onChange={(e) => setCommuneDlg((x) => ({ ...x, q: e.target.value }))} />
+                        <button type="button" className="mh-btn" style={{ marginTop: 12, width: "100%" }} onClick={roll}>
+                          <Dices size={15} /> Tirar {n}d6
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <div className="mh-commune-dice">
+                          {D.dice.map((v, k) => (
+                            <button key={k} type="button" className={D.pick === k ? "is-on" : ""} disabled={D.pick != null && D.pick !== k} onClick={() => D.pick == null && pick(k)}>
+                              {v}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="mh-commune-res">{D.pick == null ? "Elige uno de los resultados" : communeEffect(D.dice[D.pick])}</div>
+                        <div className="mh-commune-table">
+                          <span><b>1–3</b> Un sabor, un olor o una sensación</span>
+                          <span><b>4–5</b> Sonidos o una visión</span>
+                          <span><b>6</b> Vives una escena como si estuvieras allí</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {glamourAsk && characters[glamourAsk.id]?.f_glamour === "1" && (() => {
+              const close = () => setGlamourAsk(null);
+              const id = glamourAsk.id;
+              return (
+                <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 47, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)" }}>
+                  <div className="mh-card mh-renew" role="dialog" aria-label="Glamour Nocturno">
+                    <div className="mh-pre-h">
+                      <span className="mh-pre-ic" style={{ background: "color-mix(in srgb, #8C7FD0 16%, var(--mh-panel))", color: "#8C7FD0" }}>
+                        <Moon size={17} />
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <b className="mh-serif">Glamour Nocturno</b>
+                        <small>{glamourAsk.why}: tu Glamour se desvanece a menos que marques 1 Estrés.</small>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                      <button
+                        type="button"
+                        className="mh-btn"
+                        style={{ flex: 1 }}
+                        onClick={() => {
+                          close();
+                          markStress(id, 1);
+                          postCampaignEvent(id, "🌙 Marca 1 Estrés para mantener su Glamour Nocturno");
+                        }}
+                      >
+                        Mantener · 1 Estrés
+                      </button>
+                      <button
+                        type="button"
+                        className="mh-btn-ghost"
+                        style={{ flex: 1 }}
+                        onClick={() => {
+                          close();
+                          updateCharacterField(id, "f_glamour", "");
+                          postCampaignEvent(id, "🌙 Su Glamour Nocturno se desvanece");
+                        }}
+                      >
+                        Dejar que caiga
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             {vaultDlg && (() => {
               const me = characters[viewingCharId];
               if (!me) return null;
@@ -13549,7 +13737,9 @@ export default function App({ onSignOut }) {
               const foundOpts = foundCamp ? (foundCamp.characterIds || []).filter((cid) => cid !== preRoll.charId && characters[cid]).flatMap((cid) => getExperiences(characters[cid]).map((e, i) => ({ v: cid + "|" + i, label: e.text + " +" + e.bonus + " · " + (characters[cid].f_name || "Aliado"), bonus: Number(e.bonus) || 0 }))) : [];
               const foundPick = foundOpts.find((o) => o.v === preRoll.found);
               const noMercyOn = ch.f_class === "Guerrero" && ch.f_no_mercy === "1" && preRoll.weapon && !preRoll.weapon.charge;
-              const mod = preRoll.traitValue + (noMercyOn ? 1 : 0) + expSum + tideUse + (foundPick && !ch.f_found_used ? foundPick.bonus : 0) + (ch.f_subclass === "Origen Elemental" && !preRoll.reaction && preRoll.elem === "roll" ? 2 : 0);
+              // Bruja Lunar · Rayo de Luna: +1 a las tiradas de Lanzamiento de Conjuros bajo la luz.
+              const moonbeamOn = ch.f_moonbeam === "1" && preRoll.traitLabel === TRAITS.find((t) => t.key === spellcastTraitFor(ch.f_class, ch.f_subclass))?.label;
+              const mod = preRoll.traitValue + (noMercyOn ? 1 : 0) + (moonbeamOn ? 1 : 0) + expSum + tideUse + (foundPick && !ch.f_found_used ? foundPick.bonus : 0) + (ch.f_subclass === "Origen Elemental" && !preRoll.reaction && preRoll.elem === "roll" ? 2 : 0);
               // Galapa retraída: la desventaja en las tiradas de acción no se puede quitar.
               // Goblin · Pie Firme: ignora la desventaja en las tiradas de Agilidad.
               const sureFoot = (ch.f_ancestry || "").split(" + ").includes("Goblin") && preRoll.traitLabel === "Agilidad";
@@ -13581,7 +13771,9 @@ export default function App({ onSignOut }) {
               const etherealOk = ch.f_subclass === "Centinela Alado" && tierForLevel(ch.f_level || 1) >= 2 && getConditions(ch).includes("Volando") && preRoll.traitLabel === "Presencia";
               // Infernal · Rostro Temible: ventaja para intimidar a criaturas hostiles.
               const dreadOk = (ch.f_ancestry || "").split(" + ").includes("Infernal") && preRoll.traitLabel === "Presencia" && !etherealOk;
-              const edgeSource = etherealOk ? "Rostro Etéreo" : dreadOk ? "Rostro Temible" : highborne ? "Privilegio" : loreborne ? "Leído" : ridgeborne ? "Firme" : slyborne ? "Granuja" : underborne ? "Vida en la Penumbra" : wildborne ? "Pies Ligeros" : "";
+              // Bruja Lunar · Glamour Nocturno: ventaja en tiradas que aprovechen tu apariencia ilusoria.
+              const glamourOk = ch.f_subclass === "Bruja Lunar" && ch.f_glamour === "1" && !etherealOk && !dreadOk;
+              const edgeSource = etherealOk ? "Rostro Etéreo" : dreadOk ? "Rostro Temible" : glamourOk ? "Glamour Nocturno" : highborne ? "Privilegio" : loreborne ? "Leído" : ridgeborne ? "Firme" : slyborne ? "Granuja" : underborne ? "Vida en la Penumbra" : wildborne ? "Pies Ligeros" : "";
               const poetOk = ch.f_subclass === "Orador" && preRoll.traitLabel === "Presencia";
               // Origen Elemental · Elementalista: 1 Esperanza para +2 a la tirada o +3 al daño.
               const elemOk = ch.f_subclass === "Origen Elemental" && !preRoll.reaction;
@@ -13724,10 +13916,10 @@ export default function App({ onSignOut }) {
                   ? tile("priv", {
                       on: preRoll.privilege,
                       title: edgeSource,
-                      sub: etherealOk ? "Centinela Alado · volando" : dreadOk ? "Infernal" : highborne ? "De Alta Cuna" : loreborne ? "Del Saber" : slyborne ? "De las Sombras" : underborne ? "De las Profundidades" : wildborne ? "Salvaje" : "De las Cumbres",
+                      sub: etherealOk ? "Centinela Alado · volando" : dreadOk ? "Infernal" : glamourOk ? "Bruja Lunar" : highborne ? "De Alta Cuna" : loreborne ? "Del Saber" : slyborne ? "De las Sombras" : underborne ? "De las Profundidades" : wildborne ? "Salvaje" : "De las Cumbres",
                       cost: "Ventaja",
-                      color: etherealOk ? "#D8A84A" : dreadOk ? "#A33A3A" : highborne ? "#B8862E" : loreborne ? "#5E8FC9" : slyborne ? "#6E5A8A" : underborne ? "#5A6B7A" : wildborne ? "#5E8A4E" : "#7E8C6A",
-                      hint: etherealOk ? "Mientras vuelas, tienes ventaja en las tiradas de Presencia" : dreadOk ? "Si intentas intimidar a una criatura hostil" : highborne ? "Si tratas con nobles, negocias un precio o usas tu reputación" : loreborne ? "Si la tirada trata sobre la historia, la cultura o la política de una persona o un lugar importantes" : slyborne ? "Si negocias con criminales, intentas detectar una mentira o buscas un escondite seguro" : underborne ? "Si estás en una zona con poca luz o sombras densas y te escondes, investigas o percibes detalles en ella" : wildborne ? "Si intentas moverte sin que te oigan" : "Si cruzas precipicios y cornisas peligrosos, te orientas en un entorno duro o usas tus conocimientos de supervivencia",
+                      color: etherealOk ? "#D8A84A" : dreadOk ? "#A33A3A" : glamourOk ? "#8C7FD0" : highborne ? "#B8862E" : loreborne ? "#5E8FC9" : slyborne ? "#6E5A8A" : underborne ? "#5A6B7A" : wildborne ? "#5E8A4E" : "#7E8C6A",
+                      hint: etherealOk ? "Mientras vuelas, tienes ventaja en las tiradas de Presencia" : dreadOk ? "Si intentas intimidar a una criatura hostil" : glamourOk ? "Si la tirada aprovecha tu apariencia ilusoria" : highborne ? "Si tratas con nobles, negocias un precio o usas tu reputación" : loreborne ? "Si la tirada trata sobre la historia, la cultura o la política de una persona o un lugar importantes" : slyborne ? "Si negocias con criminales, intentas detectar una mentira o buscas un escondite seguro" : underborne ? "Si estás en una zona con poca luz o sombras densas y te escondes, investigas o percibes detalles en ella" : wildborne ? "Si intentas moverte sin que te oigan" : "Si cruzas precipicios y cornisas peligrosos, te orientas en un entorno duro o usas tus conocimientos de supervivencia",
                       onClick: () => setPreRoll((p) => ({ ...p, privilege: !p.privilege, advantage: p.privilege ? p.advantage : false })),
                     })
                   : null,
@@ -13740,6 +13932,7 @@ export default function App({ onSignOut }) {
                 preRoll.dedicated ? ["Entregado", "Esperanza d20"] : null,
                 riseOk && !preRoll.dedicated ? ["Estar a la Altura", "Esperanza d20"] : null,
                 noMercyOn ? ["Sin Piedad", "+1"] : null,
+                moonbeamOn ? ["Rayo de Luna", "+1"] : null,
                 slayerUse ? ["Dados de Cazador", "+" + slayerUse + "d6"] : null,
                 foundPick && !ch.f_found_used ? ["Familia Elegida", "+" + foundPick.bonus] : null,
                 tideUse ? ["Conocer la Marea", "+" + tideUse] : null,
@@ -13749,7 +13942,7 @@ export default function App({ onSignOut }) {
               ].filter(Boolean);
               const DS = 40;
               // Altura fija: se reserva hueco para todas las líneas que este personaje puede llegar a tener.
-              const maxLines = 1 + exps.length + (ch.f_rally_die ? 1 : 0) + (poetOk ? 1 : 0) + (dedicatedOk ? 1 : 0) + (riseOk ? 1 : 0) + (noMercyOn ? 1 : 0) + (slayerHave ? 1 : 0) + (foundOk ? 1 : 0) + (tideOk ? 1 : 0) + (elemOk ? 1 : 0) + (wolf ? 1 : 0) + 1;
+              const maxLines = 1 + exps.length + (ch.f_rally_die ? 1 : 0) + (poetOk ? 1 : 0) + (dedicatedOk ? 1 : 0) + (riseOk ? 1 : 0) + (noMercyOn ? 1 : 0) + (moonbeamOn ? 1 : 0) + (slayerHave ? 1 : 0) + (foundOk ? 1 : 0) + (tideOk ? 1 : 0) + (elemOk ? 1 : 0) + (wolf ? 1 : 0) + 1;
               const canSpendHope = exps.length > 0 || poetOk;
               const anyAdded = preRoll.exps.length > 0 || preRoll.rally || preRoll.poet || preRoll.dedicated || preRoll.privilege || preRoll.quick || tideUse > 0 || !!preRoll.elem || slayerUse > 0 || !!foundPick || !!preRoll.adept || edgePos !== "none";
               return (
@@ -14090,6 +14283,27 @@ export default function App({ onSignOut }) {
                         <button type="button" className="mh-luck-btn mh-feline-btn" disabled={hopeK < 2} onClick={() => bendLuck(r.charId, r.charId, rollForReroll(r), { kind: "feline" })}>
                           <PawPrint size={15} /> Instinto Felino · 2 Esperanza
                           <small>{hopeK < 2 ? "Necesitas 2 de Esperanza" : "Repite tu Dado de Esperanza"}</small>
+                        </button>
+                      );
+                    })()}
+                    {traitRollResult.card?.name === "Glamour Nocturno" && (() => {
+                      const r = traitRollResult;
+                      const rc = characters[r.charId];
+                      if (!rc) return null;
+                      const ok = r.hope === r.fear || r.total >= 13;
+                      if (rc.f_glamour === "1") return <div className="mh-luck-done" style={{ color: "#8C7FD0" }}>Glamour Nocturno activo</div>;
+                      if (!ok) return <div className="mh-luck-done" style={{ color: "var(--mh-muted)" }}>No consigues envolverte en el Glamour</div>;
+                      return (
+                        <button
+                          type="button"
+                          className="mh-luck-btn mh-glamour-btn"
+                          onClick={() => {
+                            updateCharacterField(r.charId, "f_glamour", "1");
+                            postCampaignEvent(r.charId, "🌙 Glamour Nocturno: se envuelve en una fachada hechizante (los adversarios en alcance Cercano deben marcar 1 Estrés para atacarle)");
+                          }}
+                        >
+                          <Moon size={15} /> Activar Glamour Nocturno
+                          <small>Ventaja al aprovechar tu apariencia · atacarte cuesta 1 Estrés</small>
                         </button>
                       );
                     })()}
@@ -15715,6 +15929,121 @@ export default function App({ onSignOut }) {
                     });
                   }
                   // Llamado del Valiente · Ritual de Batalla.
+                  if (d.moonActs && !d.fromChat) {
+                    const tierM = tierForLevel(c.f_level || 1);
+                    const spellKey = spellcastTraitFor(c.f_class, c.f_subclass);
+                    const spellLabel = TRAITS.find((t) => t.key === spellKey)?.label || "Instinto";
+                    const hopeM = Number(c.hope_marked ?? HOPE_DEFAULT);
+                    cardActs.push(
+                      c.f_glamour === "1"
+                        ? {
+                            key: "glamour-off",
+                            Icon: Moon,
+                            label: "Terminar Glamour Nocturno",
+                            sub: "Glamour activo",
+                            run: () => {
+                              closeCardDetail();
+                              updateCharacterField(viewingCharId, "f_glamour", "");
+                              postCampaignEvent(viewingCharId, "🌙 Su Glamour Nocturno se desvanece");
+                            },
+                          }
+                        : {
+                            key: "glamour",
+                            Icon: Moon,
+                            label: "Glamour Nocturno",
+                            sub: "Tirada de " + spellLabel + " · Dificultad 13",
+                            run: () => {
+                              closeCardDetail();
+                              rollTraitCheck(viewingCharId, spellLabel, Number(c[spellKey] || 0), null, { name: "Glamour Nocturno", dc: 13 });
+                            },
+                          }
+                    );
+                    if (tierM >= 2)
+                      cardActs.push(
+                        c.f_moonbeam === "1"
+                          ? {
+                              key: "moonbeam-off",
+                              Icon: Sun,
+                              label: "Apagar Rayo de Luna",
+                              sub: "Fin de la escena",
+                              run: () => {
+                                closeCardDetail();
+                                updateCharacterField(viewingCharId, "f_moonbeam", "");
+                                postCampaignEvent(viewingCharId, "🌙 La luz del Rayo de Luna se apaga");
+                              },
+                            }
+                          : {
+                              key: "moonbeam",
+                              Icon: Sun,
+                              label: c.f_moonbeam_used ? "Rayo de Luna · vuelve al descanso largo" : "Rayo de Luna",
+                              sub: "+1 a Lanzamiento de Conjuros · ves a través de ilusiones",
+                              disabled: !!c.f_moonbeam_used,
+                              run: () => {
+                                closeCardDetail();
+                                updateCharacterFields(viewingCharId, { f_moonbeam: "1", f_moonbeam_used: "1" });
+                                postCampaignEvent(viewingCharId, "🌙 Rayo de Luna: conjura una columna de luz de luna en alcance Cercano. Quien esté bajo ella gana +1 a sus tiradas de Lanzamiento de Conjuros y ve a través de las ilusiones hasta el final de la escena");
+                              },
+                            }
+                      );
+                    if (tierM >= 3) {
+                      const ph = moonPhaseOf(c);
+                      if (!ph)
+                        cardActs.push({
+                          key: "phase-roll",
+                          Icon: Dices,
+                          label: "Tirar Fase Lunar",
+                          sub: "1d6 al empezar la sesión",
+                          run: () => {
+                            const v = Math.floor(Math.random() * 6) + 1;
+                            const nph = MOON_PHASES.find((x) => v >= x.min && v <= x.max);
+                            updateCharacterField(viewingCharId, "f_moon_phase", String(v));
+                            postCampaignEvent(viewingCharId, `🌙 Fases Lunares: saca un ${v}, ${nph.name} (${nph.effect})`);
+                          },
+                        });
+                      else {
+                        const nv = ph.value >= 6 ? 1 : ph.value + 1;
+                        const nph = MOON_PHASES.find((x) => nv >= x.min && nv <= x.max);
+                        cardActs.push({
+                          key: "phase-up",
+                          Icon: ChevronUp,
+                          label: c.f_phase_bump_used ? "Subir el dado · vuelve al descansar" : hopeM < 1 ? "Te falta Esperanza" : "Subir a " + nv + " (" + nph.name + ")",
+                          sub: "1 Esperanza · una vez por descanso",
+                          disabled: !!c.f_phase_bump_used || hopeM < 1,
+                          run: () => {
+                            updateCharacterFields(viewingCharId, { f_moon_phase: String(nv), f_phase_bump_used: "1", hope_marked: String(hopeM - 1) });
+                            postCampaignEvent(viewingCharId, `🌙 Fases Lunares: gasta 1 Esperanza y su dado pasa a ${nv}, ${nph.name} (${nph.effect})`);
+                          },
+                        });
+                        if (ph.name === "Luna Nueva")
+                          cardActs.push({
+                            key: "phase-new",
+                            Icon: ShieldHalf,
+                            label: hopeM < 1 ? "Te falta Esperanza" : "Anular daño Menor",
+                            sub: "Luna Nueva · 1 Esperanza",
+                            disabled: hopeM < 1,
+                            run: () => {
+                              closeCardDetail();
+                              updateCharacterField(viewingCharId, "hope_marked", String(hopeM - 1));
+                              postCampaignEvent(viewingCharId, "🌑 Luna Nueva: gasta 1 Esperanza y anula un daño Menor");
+                            },
+                          });
+                      }
+                    }
+                  }
+                  // Bruja · Comunión: una vez por descanso largo.
+                  if (d.title === "Comunión" && c?.f_class === "Bruja" && !d.fromChat) {
+                    cardActs.push({
+                      key: "commune",
+                      Icon: Eye,
+                      label: c.f_commune_used ? "Comunión · vuelve al descanso largo" : "Comulgar",
+                      sub: "Haz una pregunta a un ser de otro mundo",
+                      disabled: !!c.f_commune_used,
+                      run: () => {
+                        closeCardDetail();
+                        setCommuneDlg({ q: "", dice: null, pick: null });
+                      },
+                    });
+                  }
                   if (d.braveActs && !d.fromChat) {
                     cardActs.push({
                       key: "ritual",
@@ -16161,7 +16490,7 @@ export default function App({ onSignOut }) {
                       label: "Mostrar en la campaña",
                       sub: shareCamp.name,
                       run: () => {
-                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, divineActs, sentinelActs, originActs, primalActs, braveActs, slayerCard, ...detail } = d;
+                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, divineActs, sentinelActs, originActs, primalActs, braveActs, slayerCard, moonActs, ...detail } = d;
                         // Las imágenes incrustadas muy grandes no se copian al chat.
                         if (typeof detail.image === "string" && detail.image.startsWith("data:") && detail.image.length > 30000) delete detail.image;
                         const type = d.domain ? "domain" : d.weapon ? "weapon" : d.armor ? "armor" : "card";
@@ -16175,6 +16504,7 @@ export default function App({ onSignOut }) {
                   const prayerCard = !d.fromChat && d.title === "Dados de Oración" && c?.f_class === "Serafín";
                   const slayerCard = !d.fromChat && d.slayerCard;
                   const patternCard = !d.fromChat && d.title === "Patrones Extraños" && c?.f_class === "Mago";
+                  const hexCard = !d.fromChat && d.title === "Maleficio" && c?.f_class === "Bruja";
                   const tideMax = Number(c?.f_level || 1);
                   const footer = d.weapon
                     ? [d.weapon.trait !== "—" && d.weapon.trait, d.weapon.range].filter(Boolean).join(" · ")
@@ -16271,6 +16601,56 @@ export default function App({ onSignOut }) {
                           <div style={{ fontSize: "0.93em", color: "var(--mh-muted2)", fontStyle: "italic" }}>Sin característica especial.</div>
                         ))}
                     </FitBox>
+                    {hexCard && (() => {
+                      const hexes = (() => {
+                        try {
+                          return JSON.parse(c.f_hexes || "[]");
+                        } catch (e) {
+                          return [];
+                        }
+                      })();
+                      const max = Math.max(1, Number(c[spellcastTraitFor(c.f_class, c.f_subclass)] || 0));
+                      const pen = tierForLevel(c.f_level || 1);
+                      const add = () => {
+                        const n = hexDraft.trim();
+                        if (!n || hexes.length >= max) return;
+                        markStress(viewingCharId, 1, { f_hexes: JSON.stringify([...hexes, n]) });
+                        setHexDraft("");
+                        postCampaignEvent(viewingCharId, `🕯️ Maleficio: marca 1 Estrés y maldice a ${n} (−${pen} a sus tiradas de daño y a su Dificultad)`);
+                      };
+                      return (
+                        <div className="mh-cardc-foot mh-hex-foot">
+                          {hexes.length > 0 && (
+                            <span className="mh-hex-list">
+                              {hexes.map((h, k) => (
+                                <button
+                                  key={k}
+                                  type="button"
+                                  title="Quitar el Maleficio"
+                                  onClick={() => {
+                                    updateCharacterField(viewingCharId, "f_hexes", JSON.stringify(hexes.filter((_, j) => j !== k)));
+                                    postCampaignEvent(viewingCharId, "🕯️ " + h + " se libra del Maleficio");
+                                  }}
+                                >
+                                  {h} <X size={9} strokeWidth={2.6} />
+                                </button>
+                              ))}
+                            </span>
+                          )}
+                          {hexes.length < max && (
+                            <span className="mh-hex-add">
+                              <input value={hexDraft} placeholder="Objetivo" maxLength={40} onChange={(e) => setHexDraft(e.target.value)} onKeyDown={(e) => e.key === "Enter" && add()} />
+                              <button type="button" disabled={!hexDraft.trim()} onClick={add}>
+                                Maleficio · 1 Estrés
+                              </button>
+                            </span>
+                          )}
+                          <small>
+                            {hexes.length}/{max} con Maleficio · −{pen} a su daño y su Dificultad
+                          </small>
+                        </div>
+                      );
+                    })()}
                     {patternCard && (
                       <div className="mh-cardc-foot mh-pattern-foot">
                         <span className="mh-pattern-nums" role="radiogroup" aria-label="Tu número">
@@ -16379,7 +16759,7 @@ export default function App({ onSignOut }) {
                         </div>
                       );
                     })()}
-                    {!tideCard && !prayerCard && !slayerCard && !patternCard && (footer || d.domain) && (
+                    {!tideCard && !prayerCard && !slayerCard && !patternCard && !hexCard && (footer || d.domain) && (
                       <div className="mh-cardc-foot">
                         {d.domain ? (
                           <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
