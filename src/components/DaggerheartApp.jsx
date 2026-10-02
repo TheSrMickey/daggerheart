@@ -659,16 +659,16 @@ const reachFor = (c, range) => (range === "Cuerpo a cuerpo" && isGiant(c) ? "Muy
 // Invocador · círculos de invocación. El primero (Espíritus del Destino) es de la clase; el resto, de la subclase.
 const SUMMON_CIRCLES = {
   Nigromancia: [
-    { key: "fate", name: "Espíritu del Destino", plural: "Espíritus del Destino", tier: 1 },
-    { key: "corpse", name: "Cadáver Errante", plural: "Cadáveres Errantes", tier: 1 },
-    { key: "ghost", name: "Fantasma", plural: "Fantasmas", tier: 2 },
-    { key: "knight", name: "Caballero de la Muerte", plural: "Caballero de la Muerte", tier: 3, max: 1 },
+    { key: "fate", short: "Destino", name: "Espíritu del Destino", plural: "Espíritus del Destino", tier: 1 },
+    { key: "corpse", short: "Cadáver", name: "Cadáver Errante", plural: "Cadáveres Errantes", tier: 1 },
+    { key: "ghost", short: "Fantasma", name: "Fantasma", plural: "Fantasmas", tier: 2 },
+    { key: "knight", short: "Caballero", name: "Caballero de la Muerte", plural: "Caballero de la Muerte", tier: 3, max: 1 },
   ],
   Teúrgia: [
-    { key: "fate", name: "Espíritu del Destino", plural: "Espíritus del Destino", tier: 1 },
-    { key: "angel", name: "Ángel", plural: "Ángeles", tier: 1 },
-    { key: "archangel", name: "Arcángel", plural: "Arcángeles", tier: 2 },
-    { key: "manifest", name: "Manifestación Divina", plural: "Manifestación Divina", tier: 3, max: 1 },
+    { key: "fate", short: "Destino", name: "Espíritu del Destino", plural: "Espíritus del Destino", tier: 1 },
+    { key: "angel", short: "Ángel", name: "Ángel", plural: "Ángeles", tier: 1 },
+    { key: "archangel", short: "Arcángel", name: "Arcángel", plural: "Arcángeles", tier: 2 },
+    { key: "manifest", short: "Manifestación", name: "Manifestación Divina", plural: "Manifestación Divina", tier: 3, max: 1 },
   ],
 };
 const circlesFor = (c) => SUMMON_CIRCLES[c?.f_subclass] || [SUMMON_CIRCLES.Nigromancia[0]];
@@ -2985,6 +2985,14 @@ const sharedStyles = `
   .mh-combo-btn { background: #C08B5C; }
   .mh-mark-btn { background: #6B7891; }
   .mh-necro-btn { background: #5B6B5E; }
+  .mh-stat-circles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+  .mh-stat-circle { height: 22px; display: flex; align-items: center; gap: 3px; padding: 0 4px 0 2px; border-radius: 20px; border: 1px solid color-mix(in srgb, #8E6FC4 45%, var(--mh-line)); background: var(--mh-panel); color: var(--mh-ink); font: 600 9.5px "Inter", system-ui, sans-serif; cursor: pointer; min-width: 0; }
+  .mh-stat-circle i { flex-shrink: 0; width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid #8E6FC4; display: inline-flex; align-items: center; justify-content: center; font: 700 11px "Cinzel", Georgia, serif; font-style: normal; color: #6B4FB8; }
+  .mh-stat-circle span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mh-stat-circle.is-on { border-color: #8E6FC4; background: color-mix(in srgb, #8E6FC4 12%, var(--mh-panel)); }
+  .mh-stat-circle.is-on i { background: #8E6FC4; color: #fff; }
+  .mh-stat-circle:disabled { cursor: default; }
+  .mh-stat-circle.is-locked { opacity: .45; }
   .mh-necro-btn:hover:not(:disabled) { background: #4A584D; }
   .mh-circles-foot { flex-direction: column; gap: 6px; padding: 10px 10px 8px; }
   .mh-circles-foot > small { font-size: 10.5px; color: var(--mh-muted); text-align: center; }
@@ -10206,7 +10214,8 @@ export default function App({ onSignOut }) {
         // "Armadura y estadísticas": espaciado fijo y fila de Evasión/Armadura de altura fija, para que la caja
         // (y con ella toda la fila de paneles) mida lo mismo con o sin armadura y con cualquier número de escudos.
         // Brujo: una fila más (Favor), así que el hueco sobrante se reparte entre más filas y la caja no crece.
-        const favorRow = c.f_class === "Brujo";
+        // Invocador: la fila de círculos ocupa el mismo hueco que la de Favor.
+        const favorRow = c.f_class === "Brujo" || c.f_class === "Invocador";
         const statsSpacing = (() => {
           const k0 = (64 - (6 + 10 + 9)) / 6 + 51 / 5;
           const k = favorRow ? (5 * k0 - 63.06) / 6 : k0;
@@ -10923,7 +10932,41 @@ export default function App({ onSignOut }) {
                               <StepperRow gap={statsSpacing.stepMb} labelGap={statsSpacing.stepLabelMb} hitKey={hpHit && hpHit.id === viewingCharId ? hpHit.key : undefined} label="Puntos de vida" total={Number(c.r_hp || 0) + equipMods.hp} marked={Number(c.hp_marked || 0)} field="hp_marked" color="#D9644E" Icon={Heart} charId={viewingCharId} onDelta={adjustHp} onToggle={markHp} />
                               <StepperRow gap={statsSpacing.stepMb} labelGap={statsSpacing.stepLabelMb} pulseKey={resFx.stress && resFx.stress.id === viewingCharId ? resFx.stress.key : undefined} pulseClass="mh-row-stress" label="Estrés" total={Number(c.r_stress || 0) + equipMods.stress} marked={Number(c.stress_marked || 0)} field="stress_marked" color="#A58BE8" Icon={Zap} charId={viewingCharId} onDelta={adjustStress} onToggle={markStressBox} allowOverflow />
                               <StepperRow gap={statsSpacing.stepMb} labelGap={statsSpacing.stepLabelMb} pulseKey={resFx.hope && resFx.hope.id === viewingCharId ? resFx.hope.key : undefined} pulseClass="mh-row-glow" label="Esperanza" total={HOPE_MAX + equipMods.hope + (getCompanion(c)?.training?.light ? 1 : 0)} marked={Number(c.hope_marked ?? HOPE_DEFAULT)} field="hope_marked" color="#E3B04B" Icon={Sparkles} charId={viewingCharId} onDelta={updateCharacterField} onToggle={toggleCharSlot} shape="diamond" scarCount={Number(c.f_scars || 0)} />
-                              {favorRow && (
+                              {c.f_class === "Invocador" && (() => {
+                                const sm = getSummons(c);
+                                const tierS = tierForLevel(c.f_level || 1);
+                                return (
+                                  <div style={{ marginBottom: statsSpacing.stepMb }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: statsSpacing.stepLabelMb }}>
+                                      <Ghost size={13} color="#8E6FC4" />
+                                      <span style={{ fontSize: 12, fontWeight: 600, color: "var(--mh-ink)" }}>Círculos de invocación</span>
+                                      <span style={{ marginLeft: "auto", fontSize: 11, color: "var(--mh-muted)" }}>
+                                        {summonTotal(c)}/{Number(c.f_level || 1)} entidades
+                                      </span>
+                                    </div>
+                                    <div className="mh-stat-circles">
+                                      {circlesFor(c).map((ci, k) => {
+                                        const n = Number(sm[ci.key] || 0);
+                                        const locked = ci.tier > tierS;
+                                        return (
+                                          <button
+                                            key={ci.key}
+                                            type="button"
+                                            className={"mh-stat-circle" + (n ? " is-on" : "") + (locked ? " is-locked" : "")}
+                                            title={locked ? "Se desbloquea en Rango " + ci.tier : ci.plural + ": " + n + (n ? " · pulsa para que desaparezca una" : "")}
+                                            disabled={locked || !n}
+                                            onClick={() => setSummon(viewingCharId, ci.key, n - 1, "🔮 " + ci.name + ": una entidad desaparece")}
+                                          >
+                                            <i>{locked ? <Lock size={10} /> : n}</i>
+                                            <span>{ci.short || ci.name}</span>
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                );
+                              })()}
+                              {favorRow && c.f_class === "Brujo" && (
                                 <StepperRow
                                   gap={statsSpacing.stepMb}
                                   labelGap={statsSpacing.stepLabelMb}
@@ -19051,7 +19094,7 @@ export default function App({ onSignOut }) {
                   const hexCard = !d.fromChat && d.title === "Maleficio" && c?.f_class === "Bruja";
                   const patronCard = !d.fromChat && d.title === "Pacto con el Patrón" && c?.f_class === "Brujo";
                   const poisonCard = !d.fromChat && d.poisonActs && Number(c?.f_toxins || 0) > 0;
-                  const summonCard = !d.fromChat && (d.title === "Invocar Entidad" || d.necroActs) && c?.f_class === "Invocador";
+                  const summonCard = false;
                   const hedgeCard = !d.fromChat && d.hedgeActs && (Number(c?.f_talisman || 0) > 0 || Number(c?.f_walk || 0) > 0 || Number(c?.f_circle || 0) > 0);
                   const tideMax = Number(c?.f_level || 1);
                   const footer = d.weapon
