@@ -250,7 +250,18 @@ const SUBCLASSES = {
         { name: "Pericia (Maestría)", text: "Cuando uses una Experiencia, tira 1d6. Con un 5 o más, puedes usarla sin gastar Esperanza." },
       ],
     },
-    { key: "Escuela de la Guerra", blurb: "Convierte la magia en un arma de combate directo." },
+    {
+      key: "Escuela de la Guerra",
+      blurb: "Usa la magia entrenada para la violencia.",
+      features: [
+        { name: "Mago de Batalla", text: "Has centrado tus estudios en convertirte en una fuerza invencible en el campo de batalla. Ganas 1 casilla de Punto de Vida adicional." },
+        { name: "Enfrenta tu Miedo", text: "Cuando tengas éxito con Miedo en una tirada de ataque, haces 1d10 de daño mágico adicional." },
+        { name: "Conjurar Escudo (Especialización)", text: "Puedes mantener una barrera mágica protectora. Mientras tengas al menos 2 de Esperanza, sumas tu Competencia a tu Evasión." },
+        { name: "Alimentado por el Miedo (Especialización)", text: "El daño mágico adicional de tu característica «Enfrenta tu Miedo» aumenta a 2d10." },
+        { name: "Prosperar en el Caos (Maestría)", text: "Cuando tengas éxito en un ataque, puedes marcar 1 Estrés después de tirar el daño para obligar al objetivo a marcar 1 Punto de Vida adicional." },
+        { name: "Sin Miedo (Maestría)", text: "El daño mágico adicional de tu característica «Enfrenta tu Miedo» aumenta a 3d10." },
+      ],
+    },
   ],
   Bruja: [
     { key: "Bruja Lunar", blurb: "Encarna un poder celestial que amplifica su magia.", expansion: "Hope & Fear" },
@@ -358,7 +369,7 @@ const ANCESTRIES = [
   { key: "Infernal", blurb: "Humanoide de colmillos afilados, orejas puntiagudas y cuernos, descendiente de los demonios de los Círculos Inferiores.", features: [{ name: "Sin Miedo", text: "Cuando saques una tirada con Miedo, puedes marcar 2 Estrés para convertirla en una tirada con Esperanza." }, { name: "Rostro Temible", text: "Tienes ventaja en las tiradas para intimidar a criaturas hostiles." }] },
   { key: "Katari", blurb: "Humanoide felino de garras retráctiles, pupilas rasgadas y orejas triangulares que puede girar casi por completo.", features: [{ name: "Instinto Felino", text: "Cuando hagas una tirada de Agilidad, puedes gastar 2 de Esperanza para repetir tu Dado de Esperanza." }, { name: "Garras Retráctiles", text: "Haz una tirada de Agilidad para arañar a un objetivo dentro de alcance Cuerpo a cuerpo. Si tienes éxito, queda temporalmente Vulnerable." }] },
   { key: "Orco", blurb: "Humanoide de rasgos cuadrados, fácil de reconocer por los colmillos de jabalí que le sobresalen de la mandíbula inferior.", features: [{ name: "Robusto", text: "Cuando te quede 1 Punto de Vida, los ataques contra ti tienen desventaja." }, { name: "Colmillos", text: "Cuando tengas éxito en un ataque contra un adversario en alcance Cuerpo a cuerpo, puedes gastar 1 Esperanza para cornearlo con tus colmillos y hacerle 1d6 de daño adicional." }] },
-  { key: "Ribbet", blurb: "Humanoide anfibio, cómodo tanto en el agua como en tierra.", features: [{ name: "Anfibio", text: "Puedes respirar y moverte con normalidad bajo el agua." }, { name: "Lengua Larga", text: "Puedes agarrar cosas en alcance Cercano con tu lengua. Marca 1 Estrés para usarla como un arma de Destreza a alcance Cercano que hace d12 de daño físico con tu Competencia." }] },
+  { key: "Ribbet", blurb: "Humanoide parecido a una rana, de ojos saltones a ambos lados de la cabeza, manos y pies palmeados y piel lisa (a veces verrugosa) y húmeda.", features: [{ name: "Anfibio", text: "Puedes respirar y moverte con normalidad bajo el agua." }, { name: "Lengua Larga", text: "Puedes usar tu larga lengua para agarrar cosas dentro de alcance Cercano. Marca 1 Estrés para usar tu lengua como un arma de Destreza a alcance Cercano que hace d12 de daño físico usando tu Competencia." }] },
   { key: "Simiah", blurb: "Humanoide simiesco, ágil trepador de reflejos veloces.", features: [{ name: "Trepador Nato", text: "Tienes ventaja en las tiradas de Agilidad para mantener el equilibrio y trepar." }, { name: "Ágil", text: "Ganas un +1 permanente a tu Evasión al crear el personaje." }] },
   { key: "Gnomo", blurb: "Pequeño e inquieto, con una curiosidad natural por inventar.", expansion: "Hope & Fear", features: [{ name: "Dedos Ágiles", text: "Cuando hagas una tirada de Destreza, puedes gastar 2 Esperanza para repetir tu Dado de Esperanza." }, { name: "Paso Fugaz", text: "Una vez por escena, puedes teletransportarte a un punto que veas en alcance Lejano." }] },
   { key: "Aetheris", blurb: "Ser etéreo ligado a un plano más allá de lo material.", expansion: "Hope & Fear", features: [{ name: "Aura Sagrada", text: "Una vez por descanso largo, cuando un aliado en alcance Cercano saque una tirada con Miedo, puedes convertirla en una tirada con Esperanza." }, { name: "Alas Celestiales", text: "Tienes alas y puedes volar. Una vez por escena mientras vuelas, puedes gastar 1 Esperanza en lugar de marcar una casilla de Armadura." }] },
@@ -2629,6 +2640,9 @@ const sharedStyles = `
   .mh-kick-btn { margin-top: 12px; display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 10px; padding: 8px 14px; font: 700 12.5px 'Inter', system-ui, sans-serif; color: #fff; background: #9A6B3C; cursor: pointer; }
   .mh-kick-btn:hover { background: #855a30; }
   .mh-tusk-btn { background: #6E7F3A; }
+  .mh-chaos-btn { background: #7A5BC2; }
+  .mh-chaos-btn:hover { background: #664AA8; }
+  .mh-shield-chip { position: absolute; right: 6px; top: 6px; display: inline-flex; align-items: center; gap: 3px; border-radius: 20px; padding: 2px 7px; font: 700 9.5px 'Inter', system-ui, sans-serif; color: #fff; background: #7A5BC2; cursor: default; }
   .mh-tusk-btn:hover:not(:disabled) { background: #5C6B30; }
   .mh-tusk-btn:disabled { opacity: .5; cursor: not-allowed; }
   .mh-pred { display: flex; flex-direction: column; align-items: center; }
@@ -3643,6 +3657,9 @@ function DamageResult({ roll }) {
         {(roll.sneakRolls || []).map((v, i) => (
           <DieFace key={"s" + i} sides={6} value={v} color="#4F5D78" size={size} rolling={false} highlight={v === 6} label={i === 0 ? "Furtivo" : undefined} />
         ))}
+        {(roll.fearRolls || []).map((v, i) => (
+          <DieFace key={"f" + i} sides={10} value={v} color="#7A5BC2" size={size} rolling={false} highlight={v === 10} label={i === 0 ? "Miedo" : undefined} />
+        ))}
         {roll.tuskRoll > 0 && <DieFace sides={6} value={roll.tuskRoll} color="#6E7F3A" size={size} rolling={false} highlight={roll.tuskRoll === 6} label="Colmillos" />}
         {(roll.kickRolls || []).map((v, i) => (
           <DieFace key={"k" + i} sides={6} value={v} color="#9A6B3C" size={size} rolling={false} highlight={v === 6} label={i === 0 ? "Coz" : undefined} />
@@ -3659,6 +3676,7 @@ function DamageResult({ roll }) {
             {roll.unstopBonus ? ` + ${roll.unstopBonus} (Imparable)` : ""}
             {roll.kickRolls ? ` + 2d6 (${roll.kickRolls.join(" + ")}) (Coz)` : ""}
             {roll.tuskRoll ? ` + 1d6 (${roll.tuskRoll}) (Colmillos)` : ""}
+            {roll.fearRolls ? ` + ${roll.fearRolls.length}d10 (${roll.fearRolls.join(" + ")}) (Enfrenta tu Miedo)` : ""}
             {roll.wingRoll ? ` + 1d${roll.wingSides} (${roll.wingRoll}) (Alas de Luz)` : ""}
             {roll.rawBonus ? ` + ${roll.rawBonus} (Poder en Bruto)` : ""}
             {roll.sneakRolls ? ` + ${roll.sneakRolls.length}d6 (${roll.sneakRolls.join(" + ")}) (Furtivo)` : ""}
@@ -5524,11 +5542,13 @@ export default function App({ onSignOut }) {
     // Hechicero · Canalizar Poder en Bruto: bono guardado para el próximo daño mágico.
     const rawBonus = ch && damageType === "mágico" ? Number(ch.f_raw_dmg || 0) : 0;
     if (rawBonus) updateCharacterField(charId, "f_raw_dmg", "");
-    const total = roll + bonus + critBonus + wolfBonus + unstopBonus + sneakBonus + rawBonus;
-    setDamageRollResult({ rawBonus, sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, doublePick: !!opts.doublePick, charged: ch && ch.f_subclass === "Origen Primigenio" && ch.f_charged === "1" && damageType === "mágico", note: resonance ? "Resonancia Sagrada: los dados repetidos valen el doble" : opts.extraFlat ? "Incluye +" + opts.extraFlat + " de Elementalista" : opts.note || "", spirit: !!opts.spirit });
+    const fearRolls = opts.fearDice ? Array.from({ length: opts.fearDice }, () => Math.floor(Math.random() * 10) + 1) : null;
+    const fearBonus = fearRolls ? fearRolls.reduce((a, b) => a + b, 0) : 0;
+    const total = roll + bonus + critBonus + wolfBonus + unstopBonus + sneakBonus + rawBonus + fearBonus;
+    setDamageRollResult({ fearRolls, rawBonus, sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, doublePick: !!opts.doublePick, charged: ch && ch.f_subclass === "Origen Primigenio" && ch.f_charged === "1" && damageType === "mágico", note: resonance ? "Resonancia Sagrada: los dados repetidos valen el doble" : opts.extraFlat ? "Incluye +" + opts.extraFlat + " de Elementalista" : opts.note || "", spirit: !!opts.spirit });
     const who = playerName || "Alguien en la mesa";
     const critLabel = isCritical ? ` · ¡Crítico! (+${critBonus} máx.)` : "";
-    const diceLabel = `${dice}d${die} (${rolls.join("+")})` + (wolfBonus ? ` + Lobo 1d10 (${wolfBonus})` : "") + (unstopBonus ? ` + Imparable ${unstopBonus}` : "") + (sneakRolls ? ` + Furtivo ${sneakRolls.length}d6 (${sneakRolls.join("+")})` : "");
+    const diceLabel = `${dice}d${die} (${rolls.join("+")})` + (fearRolls ? ` + Enfrenta tu Miedo ${fearRolls.length}d10 (${fearRolls.join("+")}) mágico` : "") + (wolfBonus ? ` + Lobo 1d10 (${wolfBonus})` : "") + (unstopBonus ? ` + Imparable ${unstopBonus}` : "") + (sneakRolls ? ` + Furtivo ${sneakRolls.length}d6 (${sneakRolls.join("+")})` : "");
     await pushRollLog(
       `**${who}** — Daño de ${weaponName}: ${diceLabel}${bonus ? " + " + bonus : ""}${critLabel} = **${total}** ${damageType}`
     );
@@ -5865,6 +5885,15 @@ export default function App({ onSignOut }) {
     updateCharacterFields(viewingCharId, { r_hp: String(Number(c.r_hp || 0) + 1), f_endurance: "1" });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewingCharId, viewingGiant, viewingEndurance]);
+  // Escuela de la Guerra · Mago de Batalla: una casilla de Punto de Vida más, una sola vez.
+  const viewingBattlemage = viewingCharId ? characters[viewingCharId]?.f_subclass === "Escuela de la Guerra" : false;
+  const viewingBattlemageDone = viewingCharId ? characters[viewingCharId]?.f_battlemage : "";
+  useEffect(() => {
+    if (!viewingCharId || !viewingBattlemage || viewingBattlemageDone) return;
+    const c = characters[viewingCharId];
+    updateCharacterFields(viewingCharId, { r_hp: String(Number(c.r_hp || 0) + 1), f_battlemage: "1" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewingCharId, viewingBattlemage, viewingBattlemageDone]);
   // Mediano · Trae Suerte: al empezar la sesión (aquí, tras cada descanso largo) el mediano gana 1 Esperanza
   // y, si está en una campaña, el grupo recibe en el chat 1 Esperanza para recoger.
   const viewingHalfling = viewingCharId ? (characters[viewingCharId]?.f_ancestry || "").split(" + ").includes("Mediano") : false;
@@ -9684,6 +9713,8 @@ export default function App({ onSignOut }) {
                   const flying = (isFaerie(c) || c.f_subclass === "Centinela Alado") && conditions.includes("Volando");
                   const wingsOn = flying && isFaerie(c) && c.f_wings_evade === "1";
                   const dodgeOn = c.f_class === "Pícaro" && c.f_dodge === "1";
+                  // Escuela de la Guerra · Conjurar Escudo: con 2+ Esperanza, Competencia a la Evasión.
+                  const shieldBonus = c.f_subclass === "Escuela de la Guerra" && tierForLevel(c.f_level || 1) >= 2 && Number(c.hope_marked ?? HOPE_DEFAULT) >= 2 ? getProficiency(c) : 0;
                   const entries = getJournal(c);
                   const spellTraitKey = spellcastTraitFor(c.f_class, c.f_subclass);
                   const spellTraitInfo = TRAITS.find((t) => t.key === spellTraitKey);
@@ -9770,8 +9801,14 @@ export default function App({ onSignOut }) {
                                 >
                                   <div style={{ fontSize: 10, color: "var(--mh-muted)" }}>Evasión</div>
                                   <div className="mh-serif" style={{ fontSize: 26, fontWeight: 700, color: ink(wingsOn ? "#5FA77A" : themeColor) }}>
-                                    {c.r_evasion ? Number(c.r_evasion) + (beastformInfo?.evasionBonus || 0) + equipMods.evasion + (wingsOn ? 2 : 0) + (dodgeOn ? 2 : 0) + Number(c.f_natural_evade || 0) : "—"}
+                                    {c.r_evasion ? Number(c.r_evasion) + (beastformInfo?.evasionBonus || 0) + equipMods.evasion + (wingsOn ? 2 : 0) + (dodgeOn ? 2 : 0) + Number(c.f_natural_evade || 0) + shieldBonus : "—"}
                                   </div>
+                                  {shieldBonus > 0 && (
+                                    <span className="mh-shield-chip mh-tip-anchor">
+                                      <span className="mh-tip mh-tip-wrap">Conjurar Escudo: mientras tengas al menos 2 de Esperanza, sumas tu Competencia a tu Evasión</span>
+                                      <Shield size={9} /> +{shieldBonus}
+                                    </span>
+                                  )}
                                   {Number(c.f_natural_evade || 0) > 0 && (
                                     <button type="button" className="mh-wing-chip" style={{ background: (ORIGIN_ELEMENTS.find((e) => e.key === c.f_origin_element) || {}).color || "#5FA77A" }} title="Evasión Natural: solo contra este ataque. Pulsa para quitarla." onClick={() => updateCharacterField(viewingCharId, "f_natural_evade", "")}>
                                       +{c.f_natural_evade} este ataque <X size={9} strokeWidth={2.6} />
@@ -10520,7 +10557,7 @@ export default function App({ onSignOut }) {
                               kicker: `Subclase · ${subclassBadge}`,
                               title: subclassEntry.key,
                               text: subclassEntry.blurb,
-                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
+                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento", "Escuela de la Guerra"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
                               image: subclassEntry.image,
                               bigStyle: true,
                               ...(isElemental ? { elementalAction: true } : {}),
@@ -14302,7 +14339,10 @@ export default function App({ onSignOut }) {
                             }
                             const spirit = !!traitRollResult.weapon.spirit;
                             const rc = characters[charId];
-                            rollWeaponDamage(name, damage, charId, isCritical, { cloaked: wasCloaked, spirit, resonance: spirit && rc && tierForLevel(rc.f_level || 1) >= 3, extraFlat: traitRollResult.weapon.elemDmg || 0, doublePick: !!traitRollResult.weapon.manipDouble });
+                            // Escuela de la Guerra · Enfrenta tu Miedo: éxito con Miedo = +1d10/2d10/3d10 de daño mágico.
+                            const fearHit = rc && rc.f_subclass === "Escuela de la Guerra" && !traitRollResult.reaction && !traitRollResult.flipped && traitRollResult.fear > traitRollResult.hope;
+                            const fearDice = fearHit ? tierForLevel(rc.f_level || 1) : 0;
+                            rollWeaponDamage(name, damage, charId, isCritical, { fearDice, cloaked: wasCloaked, spirit, resonance: spirit && rc && tierForLevel(rc.f_level || 1) >= 3, extraFlat: traitRollResult.weapon.elemDmg || 0, doublePick: !!traitRollResult.weapon.manipDouble });
                           }}
                         >
                           Sí
@@ -14691,6 +14731,27 @@ export default function App({ onSignOut }) {
                         }}
                       >
                         <Footprints size={14} /> Coz · 1 Estrés · +2d6
+                      </button>
+                    );
+                  })()}
+                  {(() => {
+                    // Escuela de la Guerra · Prosperar en el Caos (Maestría): 1 Estrés para que el objetivo marque 1 PV más.
+                    const dr = damageRollResult;
+                    const wc = dr.charId ? characters[dr.charId] : null;
+                    if (!wc || wc.f_subclass !== "Escuela de la Guerra" || tierForLevel(wc.f_level || 1) < 3) return null;
+                    if (dr.chaosDone) return <div className="mh-kick-done" style={{ color: "#7A5BC2" }}>Prosperar en el Caos: el objetivo marca 1 Punto de Vida adicional</div>;
+                    return (
+                      <button
+                        type="button"
+                        className="mh-kick-btn mh-chaos-btn"
+                        title="Marca 1 Estrés: el objetivo marca 1 Punto de Vida adicional"
+                        onClick={() => {
+                          setDamageRollResult((r) => (r ? { ...r, chaosDone: true } : r));
+                          markStress(dr.charId, 1);
+                          postCampaignEvent(dr.charId, "🌀 Prosperar en el Caos: marca 1 Estrés y el objetivo marca 1 Punto de Vida adicional");
+                        }}
+                      >
+                        <Zap size={14} /> Prosperar en el Caos · 1 Estrés · +1 PV
                       </button>
                     );
                   })()}
@@ -15957,6 +16018,20 @@ export default function App({ onSignOut }) {
                       sub: "Da tu Esperanza a un aliado en alcance Lejano",
                       disabled: !!c.f_closeknit_used || hopeH < 1,
                       run: () => setRenewDlg({ mode: "closeknit", n: 1 }),
+                    });
+                  }
+                  if (d.ancestryKey === "Ribbet" && !d.fromChat) {
+                    cardActs.push({
+                      key: "tongue",
+                      Icon: Swords,
+                      label: "Atacar con la Lengua Larga",
+                      sub: "1 Estrés · Destreza · Cercano · d12 físico",
+                      run: () => {
+                        closeCardDetail();
+                        markStress(viewingCharId, 1);
+                        postCampaignEvent(viewingCharId, "🐸 Lengua Larga: marca 1 Estrés para atacar con su lengua");
+                        rollTraitCheck(viewingCharId, "Destreza", Number(c.t_finesse || 0) + (getEquipmentMods(PRIMARY_WEAPONS.find((x) => x.key === c.f_primary_weapon), SECONDARY_WEAPONS.find((x) => x.key === c.f_secondary_weapon), ARMORS.find((a) => a.key === c.f_armor)).t_finesse || 0), { name: "Lengua Larga", damage: "d12 físico" });
+                      },
                     });
                   }
                   if (d.ancestryKey === "Katari" && !d.fromChat) {
