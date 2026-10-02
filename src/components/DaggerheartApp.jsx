@@ -716,7 +716,7 @@ const CLASS_FEATURES = {
   Hechicero: [
     { name: "Sentido Arcano", text: "Puedes percibir la presencia de personas y objetos mágicos dentro de alcance Cercano." },
     { name: "Ilusión Menor", text: "Haz una tirada de Lanzamiento (10). Si tienes éxito, creas una ilusión visual menor, no más grande que tú, dentro de alcance Cercano. La ilusión resulta convincente para cualquiera que esté en alcance Cercano o más lejos." },
-    { name: "Canalizar Poder en Bruto", text: "Una vez por descanso largo, pasa una carta de dominio de tu equipo a la bóveda y elige: ganas tanta Esperanza como el nivel de la carta, o potencias un hechizo de daño sumando el doble del nivel de la carta a la tirada de daño." },
+    { name: "Canalizar Poder en Bruto", text: "Una vez por descanso largo, puedes pasar una carta de dominio de tu equipo a tu bóveda y elegir una de estas opciones: ganar tanta Esperanza como el nivel de la carta, o potenciar un hechizo que haga daño, obteniendo un bonificador a tu tirada de daño igual al doble del nivel de la carta." },
   ],
   Guerrero: [
     { name: "Ataque de Oportunidad", text: "Si un adversario en alcance Cuerpo a cuerpo intenta alejarse, haz una tirada de reacción con el rasgo que quieras contra su Dificultad. Si tienes éxito, elige un efecto (dos con un crítico): no puede moverse, le haces el daño de tu arma principal o te mueves con él." },
