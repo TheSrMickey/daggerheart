@@ -330,7 +330,18 @@ const SUBCLASSES = {
         { name: "Aún No He Terminado (Maestría)", text: "Cuando recibas daño Grave, puedes ganar 1 Esperanza o quitarte 1 Estrés." },
       ],
     },
-    { key: "Artista Marcial", blurb: "Combina estilos de lucha para acabar con cualquier rival.", expansion: "Hope & Fear" },
+    {
+      key: "Artista Marcial",
+      blurb: "Usa distintos estilos de lucha para acabar con tus enemigos.",
+      expansion: "Hope & Fear",
+      features: [
+        { name: "Luchador de Posturas", text: "Puedes canalizar tu determinación interior para adoptar posturas marciales que te dan beneficios especiales en combate. Elige dos posturas marciales de Rango 1. Cada vez que subas de nivel, elige una postura más de tu Rango o inferior. Las encontrarás en la pestaña Posturas Marciales." },
+        { name: "Defensas Agudas (Especialización)", text: "Cuando seas objetivo de un ataque, puedes gastar 1 de Concentración para ganar un bonificador a tu Evasión igual a tu Rango contra ese ataque." },
+        { name: "Cañón de Concentración (Especialización)", text: "Gasta 1 de Concentración para hacer una tirada de Instinto contra un adversario en alcance Lejano. Si tienes éxito, haces d20+3 de daño mágico usando tu Competencia." },
+        { name: "Rompelímites (Maestría)", text: "Una vez por descanso, puedes realizar una proeza atlética increíble sin necesidad de tirar, como correr sobre el agua, saltar entre tejados lejanos o escalar un edificio. Cuando lo hagas, ganas 1 Esperanza y te quitas 1 Estrés." },
+        { name: "Estado de Flujo (Maestría)", text: "Puedes marcar 1 Estrés en lugar de gastar 1 de Concentración para cambiar a otra postura. Además, puedes gastar 1 de Concentración en lugar de marcar 1 Estrés para empezar un golpe combinado." },
+      ],
+    },
   ],
   Asesino: [
     { key: "Gremio del Verdugo", blurb: "Abate a sus objetivos con precisión letal.", expansion: "Hope & Fear" },
@@ -432,7 +443,7 @@ const ANCESTRIES = [
   { key: "Aetheris", blurb: "Humanoide descendiente de los ángeles de los Cielos Sagrados, reconocible por sus alas y sus marcas sagradas, que emana un aura bendita.", expansion: "Hope & Fear", features: [{ name: "Aura Sagrada", text: "Una vez por descanso largo, cuando un aliado en alcance Cercano saque una tirada con Miedo, puedes convertirla en una tirada con Esperanza." }, { name: "Alas Celestiales", text: "Tienes alas que te permiten volar. Una vez por escena mientras vuelas, puedes gastar 1 Esperanza en lugar de marcar una casilla de Armadura." }] },
   { key: "Estirpe del Cielo", blurb: "Humanoide de carne y aire descendiente de los elementales del aire, de piel que cambia de color como el cielo y cabello que flota como humo o nubes.", expansion: "Hope & Fear", features: [{ name: "Fuerza del Vendaval", text: "Marca 1 Estrés para invocar una ráfaga que te lleva a ti o a un aliado Muy cercano hasta alcance Muy lejano. Además, siempre controlas la velocidad de tus caídas." }, { name: "Ojo de la Tormenta", text: "Gasta 2 Esperanza para darte a ti o a un aliado Cuerpo a cuerpo +1 a la Evasión hasta que recibáis daño Grave o vuelvas a usarlo." }] },
   { key: "Estirpe de la Marea", blurb: "Humanoide de carne y agua descendiente de los elementales del agua, con orejas como aletas, membranas entre los dedos y colores que cambian como el agua.", expansion: "Hope & Fear", features: [{ name: "Anfibio", text: "Puedes respirar y moverte con normalidad bajo el agua." }, { name: "Manantial de Vida", text: "Una vez por descanso, cuando tengas acceso a un poco de agua, puedes marcar 1 Estrés para quitarte 1 Punto de Vida a ti o a un aliado en alcance Muy cercano." }] },
-  { key: "Estirpe de la Tierra", blurb: "Vinculado a la roca y a las profundidades del suelo.", expansion: "Hope & Fear", features: [{ name: "Piel de Piedra", text: "Ganas un +1 permanente a tu Puntuación de Armadura y a tus umbrales de daño al crear el personaje." }, { name: "Inamovible", text: "Mientras toques el suelo, no pueden levantarte ni moverte contra tu voluntad." }] },
+  { key: "Estirpe de la Tierra", blurb: "Humanoide de carne y tierra descendiente de los elementales de la tierra, formado de roca, cristal, arcilla, tierra o arena.", expansion: "Hope & Fear", features: [{ name: "Piel de Piedra", text: "Ganas un bonificador permanente de +1 a tu Puntuación de Armadura y a tus umbrales de daño al crear el personaje." }, { name: "Inamovible", text: "Mientras toques el suelo, no pueden levantarte ni moverte contra tu voluntad." }] },
   { key: "Estirpe de la Brasa", blurb: "Vinculado al fuego y al calor de las brasas.", expansion: "Hope & Fear", features: [{ name: "Ignífugo", text: "Eres inmune al daño de fuego, mágico o normal." }, { name: "Ignición", text: "Marca 1 Estrés para envolver tu arma principal en llamas hasta el final de la escena: da luz brillante y +1d6 a las tiradas de daño con esa arma." }] },
 ];
 
@@ -547,6 +558,35 @@ const getContacts = (c) => {
 // Gigante · Alcance: lo que tenga alcance Cuerpo a cuerpo cuenta como Muy cercano.
 const isGiant = (c) => (c?.f_ancestry || "").split(" + ").includes("Gigante");
 const reachFor = (c, range) => (range === "Cuerpo a cuerpo" && isGiant(c) ? "Muy cercano" : range);
+// Artista Marcial · Posturas Marciales.
+const MARTIAL_STANCES = [
+  { key: "predilecta", tier: 1, name: "Predilecta", text: "Ganas un bonificador a tus tiradas de daño igual a un rasgo que elijas." },
+  { key: "vigorizante", tier: 1, name: "Vigorizante", text: "Cuando tengas éxito en un ataque, tira 1d4. Con un 4, ganas 1 de Concentración." },
+  { key: "rapida", tier: 1, name: "Rápida", text: "Cuando hagas un ataque, puedes gastar 1 de Concentración o marcar 1 Estrés para atacar también a otra criatura dentro del alcance." },
+  { key: "fiable", tier: 1, name: "Fiable", text: "Ganas +1 a tus tiradas de ataque." },
+  { key: "agresiva", tier: 2, name: "Agresiva", text: "Sufres −1 a tu Evasión. Cuando tengas éxito en un ataque, tira un dado de daño adicional y descarta el resultado más bajo." },
+  { key: "anclada", tier: 2, name: "Anclada", text: "Ganas +2 a tus umbrales de daño. Mientras estés en esta postura, no pueden moverte contra tu voluntad." },
+  { key: "defensiva", tier: 2, name: "Defensiva", text: "Las tiradas de ataque contra ti desde alcance Cuerpo a cuerpo tienen desventaja, a menos que el atacante marque 1 Estrés para anularla." },
+  { key: "otromundo", tier: 2, name: "De Otro Mundo", text: "Cuando tengas éxito en un ataque, puedes hacer daño físico o mágico." },
+  { key: "apresadora", tier: 3, name: "Apresadora", text: "Cuando tengas éxito en un ataque dentro de alcance Cuerpo a cuerpo, puedes gastar 1 de Concentración o marcar 1 Estrés para dejar al objetivo temporalmente Inmovilizado o lanzarlo hasta alcance Cercano." },
+  { key: "aterradora", tier: 3, name: "Aterradora", text: "Cuando tengas éxito en un ataque, el objetivo debe marcar 1 Estrés." },
+  { key: "estable", tier: 3, name: "Estable", text: "Puedes gastar 1 de Concentración en lugar de una casilla de Armadura para reducir el daño." },
+  { key: "vigilante", tier: 3, name: "Vigilante", text: "Cuando seas objetivo de un ataque, puedes marcar 1 Estrés para ganar 1d6 a tu Evasión contra ese ataque." },
+  { key: "demoledora", tier: 4, name: "Demoledora", text: "Cuando hagas daño Grave, puedes gastar 1 Esperanza para que el objetivo marque 1 Punto de Vida adicional." },
+  { key: "precisa", tier: 4, name: "Precisa", text: "Cuando saques un 1 en un dado de daño, puedes contarlo como el valor más alto del dado." },
+  { key: "afinada", tier: 4, name: "Afinada", text: "Gasta 1 de Concentración antes de hacer una tirada de ataque para ganar +1 a tu Competencia en ese ataque." },
+  { key: "aislante", tier: 4, name: "Aislante", text: "Tienes ventaja en las tiradas de ataque cuando no hay otras criaturas en alcance Muy cercano de ti o de tu objetivo." },
+];
+const isMartial = (c) => c?.f_subclass === "Artista Marcial";
+const getMFocus = (c) => Math.max(0, Math.min(6, Number(c?.f_mfocus || 0)));
+const getStancesKnown = (c) => {
+  try {
+    return JSON.parse(c?.f_stances_known || "[]");
+  } catch (e) {
+    return [];
+  }
+};
+const activeStance = (c) => (isMartial(c) && c.f_stance ? c.f_stance : "");
 // Camorrista · Yo Soy el Arma: arma principal a mano desnuda mientras no lleve otras armas.
 const BRAWLER_STRIKE = "Golpe de Camorrista";
 const brawlerArmed = (c) => c?.f_class === "Camorrista" && !c.f_primary_weapon && !c.f_secondary_weapon;
@@ -2780,6 +2820,38 @@ const sharedStyles = `
   .mh-favor-btn { background: #B55FA0; }
   .mh-fury-btn { background: #B55FA0; }
   .mh-combo-btn { background: #C08B5C; }
+  .mh-combo-btn:disabled { opacity: .5; cursor: not-allowed; }
+  .mh-stance-dmg { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .mh-stances { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+  .mh-stance-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .mh-stance { border: 1px solid var(--mh-line); border-radius: 11px; padding: 9px 10px; background: var(--mh-panel); display: flex; flex-direction: column; gap: 4px; }
+  .mh-stance.is-known { border-color: color-mix(in srgb, #C08B5C 50%, var(--mh-line)); }
+  .mh-stance.is-on { border-color: #C08B5C; background: color-mix(in srgb, #C08B5C 12%, var(--mh-panel)); box-shadow: 0 0 0 1px #C08B5C inset; }
+  .mh-stance.is-locked { opacity: .5; }
+  .mh-stance-h { display: flex; align-items: center; gap: 6px; }
+  .mh-stance-h b { font-size: 13px; flex: 1; }
+  .mh-stance small { font-size: 11px; color: var(--mh-muted); line-height: 1.35; }
+  .mh-stance-tag { font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #fff; background: #C08B5C; padding: 1px 7px; border-radius: 10px; }
+  .mh-stance-pick { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid #C08B5C; background: var(--mh-panel); color: #8A5F33; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+  .mh-stance-pick.is-on { background: #C08B5C; color: #fff; }
+  .mh-stance-pick:disabled { opacity: .4; cursor: not-allowed; }
+  .mh-stance-acts { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
+  .mh-stance-acts button { border: 0; border-radius: 8px; padding: 4px 8px; font: 700 10.5px "Inter", system-ui, sans-serif; color: #fff; background: #C08B5C; cursor: pointer; }
+  .mh-stance-acts button.is-alt { background: transparent; color: #8A5F33; border: 1px solid color-mix(in srgb, #C08B5C 60%, var(--mh-line)); }
+  .mh-stance-acts button:disabled { opacity: .45; cursor: not-allowed; }
+  .mh-mfocus { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+  .mh-mfocus-pips { display: flex; justify-content: center; gap: 8px; }
+  .mh-mfocus-pips button { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #C08B5C; background: var(--mh-panel); cursor: pointer; padding: 0; }
+  .mh-mfocus-pips button.is-on { background: #C08B5C; box-shadow: 0 0 10px color-mix(in srgb, #C08B5C 50%, transparent); }
+  .mh-mfocus-n { text-align: center; font-size: 12px; color: var(--mh-muted); }
+  .mh-mfocus-n b { font-size: 22px; color: #8A5F33; margin-right: 3px; }
+  .mh-mfocus-note { font-size: 10.5px; color: var(--mh-muted); line-height: 1.4; }
+  .mh-mfocus-active { border-top: 1px solid var(--mh-line); padding-top: 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 5px; }
+  .mh-mfocus-active b { font-size: 16px; color: #8A5F33; }
+  .mh-mfocus-active small { font-size: 11px; color: var(--mh-muted); }
+  .mh-evade-acts { position: absolute; right: 6px; top: 6px; display: inline-flex; gap: 4px; }
+  .mh-evade-acts button { border: 0; border-radius: 20px; padding: 2px 7px; font: 700 10px "Inter", system-ui, sans-serif; color: #fff; background: #C08B5C; cursor: pointer; }
+  .mh-evade-acts button:disabled { opacity: .45; cursor: not-allowed; }
   .mh-combo-btn:hover { background: #A57446; }
   .mh-fury-btn:hover:not(:disabled) { background: #9C4D89; }
   .mh-fury-btn.is-alt { background: transparent; color: #9C4D89; border: 1.5px solid #B55FA0; }
@@ -3871,6 +3943,8 @@ function DamageResult({ roll }) {
           <div style={{ fontSize: 12.5, color: "var(--mh-ink3)" }}>
             {roll.dice || 1}d{roll.die} ({rolls.join(" + ")}){roll.rolls2 ? ` + ${roll.rolls2.length}d${roll.die2} (${roll.rolls2.join(" + ")})` : ""}{roll.bonus ? " + " + roll.bonus : ""}
             {roll.comboRolls ? ` + ${roll.comboRolls.join(" + ")} (Combo d${roll.comboDie})` : ""}
+            {roll.droppedRoll != null ? ` · descartas un ${roll.droppedRoll} (Agresiva)` : ""}
+            {roll.favoredBonus ? ` · incluye +${roll.favoredBonus} (Predilecta)` : ""}
             {roll.wolfBonus ? ` + 1d10 (${roll.wolfBonus})` : ""}
             {roll.unstopBonus ? ` + ${roll.unstopBonus} (Imparable)` : ""}
             {roll.kickRolls ? ` + 2d6 (${roll.kickRolls.join(" + ")}) (Coz)` : ""}
@@ -5353,6 +5427,11 @@ export default function App({ onSignOut }) {
     }
     // Bruja Lunar · Glamour Nocturno: al marcar Puntos de vida se pregunta si se mantiene.
     if (cur.f_glamour === "1" && Number(next.hp_marked || 0) > Number(cur.hp_marked || 0)) setGlamourAsk({ id, why: "Has marcado Puntos de Vida" });
+    // Artista Marcial: se pierde la postura con daño Grave o al marcar el último PV.
+    if (cur.f_stance && Number(next.hp_marked || 0) > Number(cur.hp_marked || 0) && (Number(next.hp_marked || 0) - Number(cur.hp_marked || 0) >= 3 || Number(next.hp_marked || 0) >= Number(next.r_hp || 0))) {
+      next.f_stance = "";
+      postCampaignEvent(id, "🥋 Pierde su postura marcial");
+    }
     // Estirpe del Cielo · Ojo de la Tormenta: termina al recibir daño Grave.
     if (cur.f_storm_eye === "1" && Number(next.hp_marked || 0) - Number(cur.hp_marked || 0) >= 3) {
       next.f_storm_eye = "";
@@ -5616,6 +5695,11 @@ export default function App({ onSignOut }) {
     }
     // Bruja Lunar · Glamour Nocturno: al marcar Puntos de vida se pregunta si se mantiene.
     if (cur.f_glamour === "1" && Number(next.hp_marked || 0) > Number(cur.hp_marked || 0)) setGlamourAsk({ id, why: "Has marcado Puntos de Vida" });
+    // Artista Marcial: se pierde la postura con daño Grave o al marcar el último PV.
+    if (cur.f_stance && Number(next.hp_marked || 0) > Number(cur.hp_marked || 0) && (Number(next.hp_marked || 0) - Number(cur.hp_marked || 0) >= 3 || Number(next.hp_marked || 0) >= Number(next.r_hp || 0))) {
+      next.f_stance = "";
+      postCampaignEvent(id, "🥋 Pierde su postura marcial");
+    }
     // Estirpe del Cielo · Ojo de la Tormenta: termina al recibir daño Grave.
     if (cur.f_storm_eye === "1" && Number(next.hp_marked || 0) - Number(cur.hp_marked || 0) >= 3) {
       next.f_storm_eye = "";
@@ -5773,9 +5857,17 @@ export default function App({ onSignOut }) {
     // Bruja Lunar · Fases Lunares: en Creciente, +2 a las tiradas de daño.
     const phaseNow = moonPhaseOf(ch);
     const waxBonus = !opts.plain && phaseNow && phaseNow.name === "Creciente" ? 2 : 0;
-    const bonus = flat + levelBonus + (opts.extraFlat || 0) + waxBonus;
+    // Artista Marcial · Predilecta: bonificador igual a un rasgo.
+    const favoredBonus = !opts.plain && activeStance(ch) === "predilecta" ? Math.max(0, Number(ch[ch.f_favored_trait || "t_strength"] || 0)) : 0;
+    const bonus = flat + levelBonus + (opts.extraFlat || 0) + waxBonus + favoredBonus;
     if (ch && ch.f_glamour === "1") setGlamourAsk({ id: charId, why: "Has hecho daño" });
-    const rolls = Array.from({ length: dice }, () => Math.floor(Math.random() * die) + 1);
+    const stanceNow = !opts.plain ? activeStance(ch) : "";
+    // Agresiva: un dado más y se descarta el más bajo.
+    const rawRolls = Array.from({ length: dice + (stanceNow === "agresiva" ? 1 : 0) }, () => Math.floor(Math.random() * die) + 1);
+    const droppedRoll = stanceNow === "agresiva" ? Math.min(...rawRolls) : null;
+    const keptRolls = droppedRoll != null ? (() => { const a = [...rawRolls]; a.splice(a.indexOf(droppedRoll), 1); return a; })() : rawRolls;
+    // Precisa: los 1 cuentan como el valor máximo.
+    const rolls = stanceNow === "precisa" ? keptRolls.map((v) => (v === 1 ? die : v)) : keptRolls;
     // Golpe de Camorrista: «d8+d6», los dos dados escalan con la Competencia.
     const m2 = damageStr.match(/d\d+\+d(\d+)/);
     const die2 = m2 ? parseInt(m2[1], 10) : 0;
@@ -5805,7 +5897,8 @@ export default function App({ onSignOut }) {
     const fearRolls = opts.fearDice ? Array.from({ length: opts.fearDice }, () => Math.floor(Math.random() * 10) + 1) : null;
     const fearBonus = fearRolls ? fearRolls.reduce((a, b) => a + b, 0) : 0;
     const total = roll + sum2 + bonus + critBonus + wolfBonus + unstopBonus + sneakBonus + rawBonus + fearBonus + furyBonus;
-    setDamageRollResult({ rolls2, die2, comboBase: total, furyRolls, furySides: ch ? patronSides(ch) : 6, fearRolls, rawBonus, sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, doublePick: !!opts.doublePick, charged: ch && ch.f_subclass === "Origen Primigenio" && ch.f_charged === "1" && damageType === "mágico", note: resonance ? "Resonancia Sagrada: los dados repetidos valen el doble" : opts.extraFlat ? "Incluye +" + opts.extraFlat + " de Elementalista" : waxBonus ? "Incluye +2 de la Luna Creciente" : opts.note || "", spirit: !!opts.spirit });
+    if (stanceNow === "aterradora") postCampaignEvent(charId, "😨 Postura Aterradora: el objetivo marca 1 Estrés");
+    setDamageRollResult({ stanceNow, droppedRoll, favoredBonus, rolls2, die2, comboBase: total, furyRolls, furySides: ch ? patronSides(ch) : 6, fearRolls, rawBonus, sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, doublePick: !!opts.doublePick, charged: ch && ch.f_subclass === "Origen Primigenio" && ch.f_charged === "1" && damageType === "mágico", note: resonance ? "Resonancia Sagrada: los dados repetidos valen el doble" : opts.extraFlat ? "Incluye +" + opts.extraFlat + " de Elementalista" : waxBonus ? "Incluye +2 de la Luna Creciente" : opts.note || "", spirit: !!opts.spirit });
     const who = playerName || "Alguien en la mesa";
     const critLabel = isCritical ? ` · ¡Crítico! (+${critBonus} máx.)` : "";
     const diceLabel = `${dice}d${die} (${rolls.join("+")})` + (rolls2 ? ` + ${dice}d${die2} (${rolls2.join("+")})` : "") + (furyRolls ? ` + Furia ${furyRolls.length}d${patronSides(ch)} (${furyRolls.join("+")})` : "") + (fearRolls ? ` + Enfrenta tu Miedo ${fearRolls.length}d10 (${fearRolls.join("+")}) mágico` : "") + (wolfBonus ? ` + Lobo 1d10 (${wolfBonus})` : "") + (unstopBonus ? ` + Imparable ${unstopBonus}` : "") + (sneakRolls ? ` + Furtivo ${sneakRolls.length}d6 (${sneakRolls.join("+")})` : "");
@@ -7622,7 +7715,8 @@ export default function App({ onSignOut }) {
   const [talismanDlg, setTalismanDlg] = useState(null); // Bruja del Seto · Talismán Encantado
   const [embraceDlg, setEmbraceDlg] = useState(null); // Pacto del Eterno · Abrazo Inmortal
   const [vengeAsk, setVengeAsk] = useState(null);
-  const [titanAsk, setTitanAsk] = useState(null); // Titán · Ojo por Ojo / Aún No He Terminado // Pacto del Iracundo · Venganza Letal / Ira de Otro Mundo
+  const [titanAsk, setTitanAsk] = useState(null);
+  const [stanceEdit, setStanceEdit] = useState(null); // Artista Marcial · elegir posturas conocidas // Titán · Ojo por Ojo / Aún No He Terminado // Pacto del Iracundo · Venganza Letal / Ira de Otro Mundo
   const getVault = (c) => {
     try {
       return JSON.parse(c?.f_domain_vault || "[]");
@@ -7820,6 +7914,9 @@ export default function App({ onSignOut }) {
     if (c.f_fury) restPatch.f_fury = "";
     if (c.f_eye_used) restPatch.f_eye_used = "";
     if (c.f_lifespring_used) restPatch.f_lifespring_used = "";
+    if (c.f_stance) restPatch.f_stance = "";
+    if (c.f_refocus_used) restPatch.f_refocus_used = "";
+    if (c.f_limit_used) restPatch.f_limit_used = "";
     if (c.f_ire_used) restPatch.f_ire_used = "";
     if (c.f_celestial_used) restPatch.f_celestial_used = "";
     if (isLong && c.f_aura_used) restPatch.f_aura_used = "";
@@ -8172,7 +8269,7 @@ export default function App({ onSignOut }) {
   const rollTraitCheck = (charId, traitLabel, traitValue, weapon, cardContext, advantage) => {
     // Galapa · Retraerse: desventaja en las tiradas de acción mientras está en el caparazón.
     const shellOn = getConditions(charsRef.current[charId] || {}).includes("Retraído");
-    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage && !shellOn, exps: [], rally: false, privilege: false, disadvantage: shellOn, shellOn, poet: false, dedicated: false, quick: false, reaction: false, tide: 0, dc: "", elem: "", slayer: 0, found: "", adept: false, patron: false, surround: 0 });
+    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage && !shellOn, exps: [], rally: false, privilege: false, disadvantage: shellOn, shellOn, poet: false, dedicated: false, quick: false, reaction: false, tide: 0, dc: "", elem: "", slayer: 0, found: "", adept: false, patron: false, surround: 0, honed: false });
   };
   const confirmPreRoll = () => {
     const pr = preRoll;
@@ -8235,12 +8332,18 @@ export default function App({ onSignOut }) {
       postCampaignEvent(pr.charId, `👁️ Pacto con el Patrón: gasta 1 Favor y pide la ayuda de ${ch.f_patron || "su patrón"} (+1d${patronUse})`);
     }
     const circleN = ch && ch.f_subclass === "Bruja del Seto" ? Number(ch.f_circle || 0) : 0;
-    const circleAtk = circleN > 0 && pr.weapon ? 2 : 0;
+    const circleAtk = (circleN > 0 && pr.weapon ? 2 : 0) + (activeStance(ch) === "fiable" && pr.weapon ? 1 : 0);
+    // Artista Marcial · Afinada: 1 de Concentración para +1 a la Competencia en este ataque.
+    const honedUse = activeStance(ch) === "afinada" && pr.weapon && pr.honed && getMFocus(ch) > 0;
+    if (honedUse) {
+      updateCharacterField(pr.charId, "f_mfocus", String(getMFocus(ch) - 1));
+      postCampaignEvent(pr.charId, "🥋 Afinada: gasta 1 de Concentración y gana +1 a su Competencia en este ataque");
+    }
     if (circleN > 0 && !pr.reaction) {
       updateCharacterField(pr.charId, "f_circle", String(circleN - 1));
       if (circleN - 1 === 0) postCampaignEvent(pr.charId, "⭕ Círculo de Poder: se retira la última ficha y el círculo se desvanece");
     }
-    doTraitRoll(pr.charId, pr.traitLabel, pr.traitValue + noMercy + moonbeam + circleAtk, pr.weapon ? { ...pr.weapon, ...(elemUse === "dmg" ? { elemDmg: 3 } : {}) } : pr.weapon, pr.cardContext, pr.advantage || pr.privilege || pr.quick, {
+    doTraitRoll(pr.charId, pr.traitLabel, pr.traitValue + noMercy + moonbeam + circleAtk, pr.weapon ? { ...pr.weapon, ...(elemUse === "dmg" ? { elemDmg: 3 } : {}), ...(honedUse ? { honed: true } : {}) } : pr.weapon, pr.cardContext, pr.advantage || pr.privilege || pr.quick, {
       exps: [...exps.map((e, i) => ({ text: e.text + (adeptOn ? " ×2" : honed.length ? " · Pericia " + honed[i] + (honed[i] >= 5 ? " (gratis)" : "") : ""), bonus: (Number(e.bonus) || 0) * (adeptOn ? 2 : 1) })), ...(foundExp ? [foundExp] : [])],
       slayer: slayerSpent,
       patronSides: patronUse,
@@ -9807,6 +9910,18 @@ export default function App({ onSignOut }) {
         if (c.f_storm_eye === "1") equipMods.evasion = (equipMods.evasion || 0) + 1;
         // Camorrista · Yo Soy el Arma: +1 a la Evasión con el Golpe de Camorrista.
         if (brawlerArmed(c)) equipMods.evasion = (equipMods.evasion || 0) + 1;
+        // Estirpe de la Tierra · Piel de Piedra: +1 a la Armadura y a los umbrales.
+        if ((c.f_ancestry || "").split(" + ").includes("Estirpe de la Tierra")) {
+          equipMods.armor = (equipMods.armor || 0) + 1;
+          equipMods.major = (equipMods.major || 0) + 1;
+          equipMods.severe = (equipMods.severe || 0) + 1;
+        }
+        // Artista Marcial: Agresiva (−1 Evasión) y Anclada (+2 umbrales).
+        if (activeStance(c) === "agresiva") equipMods.evasion = (equipMods.evasion || 0) - 1;
+        if (activeStance(c) === "anclada") {
+          equipMods.major = (equipMods.major || 0) + 2;
+          equipMods.severe = (equipMods.severe || 0) + 2;
+        }
         // Titán · Robusto: +3 permanente al umbral Grave.
         if (c.f_subclass === "Titán") equipMods.severe = (equipMods.severe || 0) + 3;
         // Pacto del Eterno · Manto del Patrón: +Rango a los umbrales.
@@ -9968,6 +10083,11 @@ export default function App({ onSignOut }) {
                       </span>
                     );
                   })()}
+                  {activeStance(c) && (
+                    <span className="mh-htag is-active" style={{ "--tag": "#C08B5C" }} title={MARTIAL_STANCES.find((x) => x.key === c.f_stance)?.text}>
+                      <span className="mh-htag-dot" /> Postura {MARTIAL_STANCES.find((x) => x.key === c.f_stance)?.name} · {getMFocus(c)} Conc.
+                    </span>
+                  )}
                   {c.f_fury === "1" && (
                     <span className="mh-htag is-active" style={{ "--tag": "#B55FA0" }} title="Furia del Patrón: tus tiradas de daño suman tantos Dados de Patrón como tu Rango, hasta hacer daño Grave o terminar la escena">
                       <span className="mh-htag-dot" /> Furia del Patrón
@@ -10121,7 +10241,7 @@ export default function App({ onSignOut }) {
                     { key: "background", label: "Trasfondo y Conexiones", Icon: MessageCircle },
                     { key: "journal", label: "Diario", Icon: NotebookPen },
                   ];
-                  const validKeys = [...tabs.map((t) => t.key), ...(c.f_class === "Druida" ? ["beastforms"] : []), ...(c.f_subclass === "Vínculo Bestial" ? ["companion"] : []), ...(c.f_subclass === "Sindicato" ? ["contacts"] : []), ...(Object.values(campaigns).some((cp) => (cp.characterIds || []).includes(viewingCharId)) ? ["campaign"] : [])];
+                  const validKeys = [...tabs.map((t) => t.key), ...(c.f_class === "Druida" ? ["beastforms"] : []), ...(c.f_subclass === "Vínculo Bestial" ? ["companion"] : []), ...(c.f_subclass === "Sindicato" ? ["contacts"] : []), ...(isMartial(c) ? ["stances"] : []), ...(Object.values(campaigns).some((cp) => (cp.characterIds || []).includes(viewingCharId)) ? ["campaign"] : [])];
                   const charCampaign = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(viewingCharId));
                   const activeTab = validKeys.includes(detailTab) ? detailTab : "general";
                   const currentTier = tierForLevel(c.f_level || 1);
@@ -10186,6 +10306,7 @@ export default function App({ onSignOut }) {
                           ...(c.f_class === "Druida" ? [{ key: "beastforms", label: "Formas de Bestia", Icon: PawPrint, tone: "#7FB77A" }] : []),
                           ...(c.f_subclass === "Vínculo Bestial" ? [{ key: "companion", label: "Compañero Animal", Icon: Dog, tone: "#7FB77A" }] : []),
                           ...(c.f_subclass === "Sindicato" ? [{ key: "contacts", label: "Red de Contactos", Icon: Network, tone: "#6E5A8A" }] : []),
+                          ...(isMartial(c) ? [{ key: "stances", label: "Posturas Marciales", Icon: HandFist, tone: "#C08B5C" }] : []),
                           ...(charCampaign ? [{ key: "campaign", label: charCampaign.name, Icon: BookOpen, tone: "#A58BE8" }] : []),
                         ].map((t) => {
                           if (t.spacer) return <div key={t.key} style={{ flex: 1, minWidth: 12 }} />;
@@ -10271,6 +10392,37 @@ export default function App({ onSignOut }) {
                                       +{c.f_natural_evade} este ataque <X size={9} strokeWidth={2.6} />
                                     </button>
                                   )}
+                                  {isMartial(c) && (tierForLevel(c.f_level || 1) >= 2 || activeStance(c) === "vigilante") && (
+                                    <span className="mh-evade-acts">
+                                      {tierForLevel(c.f_level || 1) >= 2 && (
+                                        <button
+                                          type="button"
+                                          title={"Defensas Agudas: 1 de Concentración para +" + tierForLevel(c.f_level || 1) + " a la Evasión contra este ataque"}
+                                          disabled={getMFocus(c) < 1}
+                                          onClick={() => {
+                                            const t = tierForLevel(c.f_level || 1);
+                                            updateCharacterFields(viewingCharId, { f_mfocus: String(getMFocus(c) - 1), f_natural_evade: String(Number(c.f_natural_evade || 0) + t) });
+                                            postCampaignEvent(viewingCharId, `🥋 Defensas Agudas: gasta 1 de Concentración y gana +${t} a la Evasión contra este ataque`);
+                                          }}
+                                        >
+                                          Def. +{tierForLevel(c.f_level || 1)}
+                                        </button>
+                                      )}
+                                      {activeStance(c) === "vigilante" && (
+                                        <button
+                                          type="button"
+                                          title="Vigilante: marca 1 Estrés para +1d6 a la Evasión contra este ataque"
+                                          onClick={() => {
+                                            const v = Math.floor(Math.random() * 6) + 1;
+                                            markStress(viewingCharId, 1, { f_natural_evade: String(Number(c.f_natural_evade || 0) + v) });
+                                            postCampaignEvent(viewingCharId, `🥋 Vigilante: marca 1 Estrés y gana +${v} (1d6) a la Evasión contra este ataque`);
+                                          }}
+                                        >
+                                          Vig. +1d6
+                                        </button>
+                                      )}
+                                    </span>
+                                  )}
                                   {c.f_storm_eye === "1" && (
                                     <button type="button" className="mh-dodge-chip" style={{ top: "auto", bottom: 6, background: "#6F9FC4" }} title="Ojo de la Tormenta: +1 a la Evasión hasta recibir daño Grave o volver a usarlo. Pulsa para quitarlo." onClick={() => updateCharacterField(viewingCharId, "f_storm_eye", "")}>
                                       +1 Tormenta <X size={9} strokeWidth={2.6} />
@@ -10295,6 +10447,21 @@ export default function App({ onSignOut }) {
                                   )}
                                 </div>
                                 <div style={{ position: "relative", flex: 1.4, border: "1px solid var(--acc)", background: "color-mix(in srgb, var(--acc) 5%, transparent)", borderRadius: 12, padding: statsSpacing.boxPadY + "px 10px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                                  {activeStance(c) === "estable" && (
+                                    <button
+                                      type="button"
+                                      className="mh-celestial-btn"
+                                      style={{ background: "#C08B5C" }}
+                                      disabled={getMFocus(c) < 1}
+                                      title="Estable: gasta 1 de Concentración en lugar de una casilla de Armadura para reducir el daño"
+                                      onClick={() => {
+                                        updateCharacterField(viewingCharId, "f_mfocus", String(getMFocus(c) - 1));
+                                        postCampaignEvent(viewingCharId, "🥋 Estable: gasta 1 de Concentración en lugar de una casilla de Armadura para reducir el daño");
+                                      }}
+                                    >
+                                      <Shield size={10} /> 1 Concentración en vez de Armadura
+                                    </button>
+                                  )}
                                   {flying && isAetheris(c) && (
                                     <button
                                       type="button"
@@ -11055,7 +11222,7 @@ export default function App({ onSignOut }) {
                               kicker: `Subclase · ${subclassBadge}`,
                               title: subclassEntry.key,
                               text: subclassEntry.blurb,
-                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento", "Escuela de la Guerra", "Bruja Lunar", "Bruja del Seto", "Pacto del Eterno", "Pacto del Iracundo", "Titán"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
+                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento", "Escuela de la Guerra", "Bruja Lunar", "Bruja del Seto", "Pacto del Eterno", "Pacto del Iracundo", "Titán", "Artista Marcial"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
                               image: subclassEntry.image,
                               bigStyle: true,
                               ...(isElemental ? { elementalAction: true } : {}),
@@ -11073,6 +11240,7 @@ export default function App({ onSignOut }) {
                               ...(subclassEntry.key === "Bruja del Seto" ? { hedgeActs: true } : {}),
                               ...(subclassEntry.key === "Pacto del Eterno" ? { endlessActs: true } : {}),
                               ...(subclassEntry.key === "Pacto del Iracundo" ? { wrathActs: true } : {}),
+                              ...(subclassEntry.key === "Artista Marcial" ? { martialActs: true } : {}),
                             }),
                           });
                         }
@@ -12381,6 +12549,182 @@ export default function App({ onSignOut }) {
                               );
                               return host ? createPortal(overlay, host) : overlay;
                             })()}
+                          </div>
+                        );
+                      })()}
+
+                      {activeTab === "stances" && isMartial(c) && (() => {
+                        const tierM = tierForLevel(c.f_level || 1);
+                        const known = getStancesKnown(c);
+                        const maxKnown = 2 + Math.max(0, Number(c.f_level || 1) - 1);
+                        const focus = getMFocus(c);
+                        const act = activeStance(c);
+                        const flow = tierM >= 3;
+                        const cond = {
+                          hidden: conditions.includes("Escondido") || conditions.includes("Oculto"),
+                          restrained: conditions.includes("Inmovilizado"),
+                          vulnerable: conditions.includes("Vulnerable"),
+                          unconscious: conditions.includes("Inconsciente"),
+                          flying: conditions.includes("Volando"),
+                          retracted: conditions.includes("Retraído"),
+                        };
+                        // Mientras falten posturas por elegir se muestra la lista completa, salvo que pulses «Hecho».
+                        const editing = stanceEdit === true || (stanceEdit !== false && known.length < maxKnown);
+                        const toggleKnown = (k) => {
+                          const next = known.includes(k) ? known.filter((x) => x !== k) : known.length < maxKnown ? [...known, k] : known;
+                          updateCharacterField(viewingCharId, "f_stances_known", JSON.stringify(next));
+                        };
+                        const shift = (st, how) => {
+                          const patch = { f_stance: st.key };
+                          if (how === "focus") patch.f_mfocus = String(focus - 1);
+                          if (how === "stress") markStress(viewingCharId, 1, patch);
+                          else updateCharacterFields(viewingCharId, patch);
+                          postCampaignEvent(viewingCharId, `🥋 Adopta la postura ${st.name}${how === "stress" ? " (Estado de Flujo: marca 1 Estrés)" : " (gasta 1 de Concentración)"}`);
+                        };
+                        const refocus = () => {
+                          const n = Math.max(1, Number(c.t_instinct || 0));
+                          const rolls = Array.from({ length: n }, () => Math.floor(Math.random() * 6) + 1);
+                          const top = Math.min(6, Math.max(...rolls));
+                          updateCharacterFields(viewingCharId, { f_mfocus: String(top), f_refocus_used: "1" });
+                          postCampaignEvent(viewingCharId, `🧘 Se concentra: tira ${rolls.join(", ")} y queda con ${top} de Concentración`);
+                        };
+                        return (
+                          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(12, 1fr)", gap: 18, flex: 1, maxHeight: isMobile ? undefined : armaduraHeight || undefined }}>
+                            <Panel
+                              span={7}
+                              title="Posturas Marciales"
+                              titleRight={
+                                <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                                  <span className="mh-train-count" style={{ color: "#8A5F33", background: "color-mix(in srgb, #C08B5C 16%, var(--mh-panel))" }}>
+                                    {known.length}/{maxKnown}
+                                  </span>
+                                  <button type="button" className="mh-btn-ghost" style={{ fontSize: 11, padding: "3px 9px" }} onClick={() => setStanceEdit(editing ? false : true)}>
+                                    {editing ? "Hecho" : "Elegir posturas"}
+                                  </button>
+                                </span>
+                              }
+                              {...cond}
+                            >
+                              <div className="mh-stances mh-noscroll">
+                                {editing && <div className="mh-pre-note" style={{ color: "var(--mh-muted)" }}>Elige {maxKnown} postura{maxKnown === 1 ? "" : "s"} de tu Rango o inferior (empiezas con dos de Rango 1 y sumas una por nivel).</div>}
+                                {[1, 2, 3, 4].map((t) => {
+                                  const list = MARTIAL_STANCES.filter((st) => st.tier === t && (editing || known.includes(st.key)));
+                                  if (!list.length) return null;
+                                  return (
+                                    <div key={t} className="mh-stance-tier">
+                                      <div className="mh-label">Rango {t}</div>
+                                      <div className="mh-stance-grid">
+                                        {list.map((st) => {
+                                          const isKnown = known.includes(st.key);
+                                          const locked = st.tier > tierM;
+                                          const on = act === st.key;
+                                          return (
+                                            <div key={st.key} className={"mh-stance" + (on ? " is-on" : "") + (isKnown ? " is-known" : "") + (locked ? " is-locked" : "")}>
+                                              <div className="mh-stance-h">
+                                                <b className="mh-serif">{st.name}</b>
+                                                {on && <span className="mh-stance-tag">Activa</span>}
+                                                {editing && (
+                                                  <button type="button" className={"mh-stance-pick" + (isKnown ? " is-on" : "")} disabled={locked || (!isKnown && known.length >= maxKnown)} aria-label={(isKnown ? "Olvidar " : "Aprender ") + st.name} onClick={() => toggleKnown(st.key)}>
+                                                    {isKnown ? <Check size={12} strokeWidth={3} /> : locked ? <Lock size={11} /> : <Plus size={12} />}
+                                                  </button>
+                                                )}
+                                              </div>
+                                              <small>{st.text}</small>
+                                              {!editing && isKnown && !on && (
+                                                <span className="mh-stance-acts">
+                                                  <button type="button" disabled={focus < 1} onClick={() => shift(st, "focus")}>
+                                                    Adoptar · 1 Concentración
+                                                  </button>
+                                                  {flow && (
+                                                    <button type="button" className="is-alt" onClick={() => shift(st, "stress")}>
+                                                      · 1 Estrés
+                                                    </button>
+                                                  )}
+                                                </span>
+                                              )}
+                                              {!editing && on && st.key === "predilecta" && (
+                                                <span className="mh-stance-acts">
+                                                  {TRAITS.map((tr) => (
+                                                    <button key={tr.key} type="button" className={(c.f_favored_trait || "t_strength") === tr.key ? "" : "is-alt"} onClick={() => updateCharacterField(viewingCharId, "f_favored_trait", tr.key)}>
+                                                      {tr.label} {Number(c[tr.key] || 0) >= 0 ? "+" : ""}
+                                                      {Number(c[tr.key] || 0)}
+                                                    </button>
+                                                  ))}
+                                                </span>
+                                              )}
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </Panel>
+                            <Panel span={5} title="Concentración" {...cond}>
+                              <div className="mh-mfocus">
+                                <div className="mh-mfocus-pips" role="group" aria-label="Concentración">
+                                  {Array.from({ length: 6 }, (_, k) => (
+                                    <button key={k} type="button" className={k < focus ? "is-on" : ""} aria-label={"Concentración " + (k + 1)} onClick={() => updateCharacterField(viewingCharId, "f_mfocus", String(k + 1 === focus ? k : k + 1))} />
+                                  ))}
+                                </div>
+                                <div className="mh-mfocus-n">
+                                  <b className="mh-serif">{focus}</b> de 6
+                                </div>
+                                <button type="button" className="mh-btn" disabled={!!c.f_refocus_used} onClick={refocus}>
+                                  <Sparkles size={14} /> {c.f_refocus_used ? "Ya te has concentrado · vuelve al descansar" : "Concentrarse · " + Math.max(1, Number(c.t_instinct || 0)) + "d6"}
+                                </button>
+                                <small className="mh-mfocus-note">Una vez por descanso, en un momento de calma: vacías tu Concentración, tiras tantos d6 como tu Instinto y te quedas con el más alto.</small>
+                                <div className="mh-mfocus-active">
+                                  <span className="mh-label">Postura activa</span>
+                                  {act ? (
+                                    <>
+                                      <b className="mh-serif">{MARTIAL_STANCES.find((x) => x.key === act)?.name}</b>
+                                      <button
+                                        type="button"
+                                        className="mh-btn-ghost"
+                                        style={{ fontSize: 11.5, padding: "4px 10px" }}
+                                        onClick={() => {
+                                          updateCharacterField(viewingCharId, "f_stance", "");
+                                          postCampaignEvent(viewingCharId, "🥋 Sale de su postura");
+                                        }}
+                                      >
+                                        Salir de la postura
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <small>Ninguna. Se pierde al recibir daño Grave, al marcar tu último Punto de Vida o al terminar la escena.</small>
+                                  )}
+                                </div>
+                                {tierM >= 2 && (
+                                  <button
+                                    type="button"
+                                    className="mh-btn-ghost"
+                                    disabled={focus < 1}
+                                    onClick={() => {
+                                      updateCharacterField(viewingCharId, "f_mfocus", String(focus - 1));
+                                      postCampaignEvent(viewingCharId, "🎯 Cañón de Concentración: gasta 1 de Concentración y lanza su energía contra un adversario en alcance Lejano");
+                                      rollTraitCheck(viewingCharId, "Instinto", Number(c.t_instinct || 0) + (equipMods.t_instinct || 0), { name: "Cañón de Concentración", damage: "d20+3 mágico" });
+                                    }}
+                                  >
+                                    <Crosshair size={14} /> Cañón de Concentración · 1 Concentración
+                                  </button>
+                                )}
+                                {tierM >= 3 && (
+                                  <button
+                                    type="button"
+                                    className="mh-btn-ghost"
+                                    disabled={!!c.f_limit_used}
+                                    onClick={() => {
+                                      updateCharacterFields(viewingCharId, { f_limit_used: "1", hope_marked: String(Math.min(getHopeMax(c), Number(c.hope_marked ?? HOPE_DEFAULT) + 1)), stress_marked: String(Math.max(0, Number(c.stress_marked || 0) - 1)) });
+                                      postCampaignEvent(viewingCharId, "🏃 Rompelímites: realiza una proeza atlética increíble sin tirar, gana 1 Esperanza y se quita 1 Estrés");
+                                    }}
+                                  >
+                                    <Wind size={14} /> {c.f_limit_used ? "Rompelímites · vuelve al descansar" : "Rompelímites · +1 Esperanza, −1 Estrés"}
+                                  </button>
+                                )}
+                              </div>
+                            </Panel>
                           </div>
                         );
                       })()}
@@ -14466,7 +14810,9 @@ export default function App({ onSignOut }) {
               const patronOk = ch.f_class === "Brujo" && !preRoll.reaction && getFavor(ch) > 0;
               // Bruja del Seto · Círculo de Poder: +2 a las tiradas de ataque dentro del círculo.
               const circleOn = ch.f_subclass === "Bruja del Seto" && Number(ch.f_circle || 0) > 0 && !!preRoll.weapon;
-              const mod = preRoll.traitValue + (noMercyOn ? 1 : 0) + (moonbeamOn ? 1 : 0) + (circleOn ? 2 : 0) + expSum + tideUse + (foundPick && !ch.f_found_used ? foundPick.bonus : 0) + (ch.f_subclass === "Origen Elemental" && !preRoll.reaction && preRoll.elem === "roll" ? 2 : 0);
+              // Artista Marcial · Fiable: +1 a las tiradas de ataque.
+              const reliableOn = activeStance(ch) === "fiable" && !!preRoll.weapon;
+              const mod = preRoll.traitValue + (noMercyOn ? 1 : 0) + (moonbeamOn ? 1 : 0) + (circleOn ? 2 : 0) + (reliableOn ? 1 : 0) + expSum + tideUse + (foundPick && !ch.f_found_used ? foundPick.bonus : 0) + (ch.f_subclass === "Origen Elemental" && !preRoll.reaction && preRoll.elem === "roll" ? 2 : 0);
               // Galapa retraída: la desventaja en las tiradas de acción no se puede quitar.
               // Goblin · Pie Firme: ignora la desventaja en las tiradas de Agilidad.
               const sureFoot = (ch.f_ancestry || "").split(" + ").includes("Goblin") && preRoll.traitLabel === "Agilidad";
@@ -14504,9 +14850,11 @@ export default function App({ onSignOut }) {
               const climberOk = (ch.f_ancestry || "").split(" + ").includes("Simiah") && preRoll.traitLabel === "Agilidad" && !etherealOk && !dreadOk && !glamourOk;
               // Bruja del Seto · Maldición Irritante: ventaja al atacar a criaturas con Maleficio.
               // Pacto del Eterno · Manto del Patrón: ventaja para intimidar.
-              const mantleOk = ch.f_mantle === "1" && preRoll.traitLabel === "Presencia" && !etherealOk && !dreadOk && !glamourOk && !climberOk;
+              // Artista Marcial · Aislante: ventaja si no hay más criaturas en alcance Muy cercano.
+              const isolOk = activeStance(ch) === "aislante" && !!preRoll.weapon;
+              const mantleOk = !isolOk && ch.f_mantle === "1" && preRoll.traitLabel === "Presencia" && !etherealOk && !dreadOk && !glamourOk && !climberOk;
               const vexOk = !mantleOk && ch.f_subclass === "Bruja del Seto" && tierForLevel(ch.f_level || 1) >= 2 && !!preRoll.weapon && (ch.f_hexes || "[]") !== "[]" && !etherealOk && !dreadOk && !glamourOk && !climberOk;
-              const edgeSource = etherealOk ? "Rostro Etéreo" : dreadOk ? "Rostro Temible" : glamourOk ? "Glamour Nocturno" : climberOk ? "Trepador Nato" : mantleOk ? "Manto del Patrón" : vexOk ? "Maldición Irritante" : highborne ? "Privilegio" : loreborne ? "Leído" : ridgeborne ? "Firme" : slyborne ? "Granuja" : underborne ? "Vida en la Penumbra" : wildborne ? "Pies Ligeros" : "";
+              const edgeSource = etherealOk ? "Rostro Etéreo" : dreadOk ? "Rostro Temible" : glamourOk ? "Glamour Nocturno" : climberOk ? "Trepador Nato" : isolOk ? "Aislante" : mantleOk ? "Manto del Patrón" : vexOk ? "Maldición Irritante" : highborne ? "Privilegio" : loreborne ? "Leído" : ridgeborne ? "Firme" : slyborne ? "Granuja" : underborne ? "Vida en la Penumbra" : wildborne ? "Pies Ligeros" : "";
               const poetOk = ch.f_subclass === "Orador" && preRoll.traitLabel === "Presencia";
               // Origen Elemental · Elementalista: 1 Esperanza para +2 a la tirada o +3 al daño.
               const elemOk = ch.f_subclass === "Origen Elemental" && !preRoll.reaction;
@@ -14533,6 +14881,17 @@ export default function App({ onSignOut }) {
               const setTide = (n) => setPreRoll((p) => ({ ...p, tide: Math.max(0, Math.min(tideHave, n)) }));
               const setSlayer = (n) => setPreRoll((p) => ({ ...p, slayer: Math.max(0, Math.min(slayerHave, n)) }));
               const bonusTiles = [
+                activeStance(ch) === "afinada" && preRoll.weapon
+                  ? tile("honed", {
+                      on: preRoll.honed,
+                      title: "Afinada",
+                      sub: "Postura · tienes " + getMFocus(ch) + " de Concentración",
+                      cost: "+1 Comp.",
+                      color: "#C08B5C",
+                      hint: "Gasta 1 de Concentración: +1 a tu Competencia en este ataque",
+                      onClick: () => getMFocus(ch) > 0 && setPreRoll((p) => ({ ...p, honed: !p.honed })),
+                    })
+                  : null,
                 patronOk
                   ? tile("patron", {
                       on: preRoll.patron,
@@ -14677,10 +15036,10 @@ export default function App({ onSignOut }) {
                   ? tile("priv", {
                       on: preRoll.privilege,
                       title: edgeSource,
-                      sub: etherealOk ? "Centinela Alado · volando" : dreadOk ? "Infernal" : glamourOk ? "Bruja Lunar" : climberOk ? "Simiah" : mantleOk ? "Pacto del Eterno" : vexOk ? "Bruja del Seto" : highborne ? "De Alta Cuna" : loreborne ? "Del Saber" : slyborne ? "De las Sombras" : underborne ? "De las Profundidades" : wildborne ? "Salvaje" : "De las Cumbres",
+                      sub: etherealOk ? "Centinela Alado · volando" : dreadOk ? "Infernal" : glamourOk ? "Bruja Lunar" : climberOk ? "Simiah" : isolOk ? "Postura marcial" : mantleOk ? "Pacto del Eterno" : vexOk ? "Bruja del Seto" : highborne ? "De Alta Cuna" : loreborne ? "Del Saber" : slyborne ? "De las Sombras" : underborne ? "De las Profundidades" : wildborne ? "Salvaje" : "De las Cumbres",
                       cost: "Ventaja",
-                      color: etherealOk ? "#D8A84A" : dreadOk ? "#A33A3A" : glamourOk ? "#8C7FD0" : climberOk ? "#A0784A" : mantleOk ? "#B55FA0" : vexOk ? "#9B7FD6" : highborne ? "#B8862E" : loreborne ? "#5E8FC9" : slyborne ? "#6E5A8A" : underborne ? "#5A6B7A" : wildborne ? "#5E8A4E" : "#7E8C6A",
-                      hint: etherealOk ? "Mientras vuelas, tienes ventaja en las tiradas de Presencia" : dreadOk ? "Si intentas intimidar a una criatura hostil" : glamourOk ? "Si la tirada aprovecha tu apariencia ilusoria" : climberOk ? "Si la tirada implica mantener el equilibrio o trepar" : mantleOk ? "Si intentas intimidar a un objetivo" : vexOk ? "Si atacas a una criatura con tu Maleficio" : highborne ? "Si tratas con nobles, negocias un precio o usas tu reputación" : loreborne ? "Si la tirada trata sobre la historia, la cultura o la política de una persona o un lugar importantes" : slyborne ? "Si negocias con criminales, intentas detectar una mentira o buscas un escondite seguro" : underborne ? "Si estás en una zona con poca luz o sombras densas y te escondes, investigas o percibes detalles en ella" : wildborne ? "Si intentas moverte sin que te oigan" : "Si cruzas precipicios y cornisas peligrosos, te orientas en un entorno duro o usas tus conocimientos de supervivencia",
+                      color: etherealOk ? "#D8A84A" : dreadOk ? "#A33A3A" : glamourOk ? "#8C7FD0" : climberOk ? "#A0784A" : isolOk ? "#C08B5C" : mantleOk ? "#B55FA0" : vexOk ? "#9B7FD6" : highborne ? "#B8862E" : loreborne ? "#5E8FC9" : slyborne ? "#6E5A8A" : underborne ? "#5A6B7A" : wildborne ? "#5E8A4E" : "#7E8C6A",
+                      hint: etherealOk ? "Mientras vuelas, tienes ventaja en las tiradas de Presencia" : dreadOk ? "Si intentas intimidar a una criatura hostil" : glamourOk ? "Si la tirada aprovecha tu apariencia ilusoria" : climberOk ? "Si la tirada implica mantener el equilibrio o trepar" : isolOk ? "Si no hay otras criaturas en alcance Muy cercano de ti o de tu objetivo" : mantleOk ? "Si intentas intimidar a un objetivo" : vexOk ? "Si atacas a una criatura con tu Maleficio" : highborne ? "Si tratas con nobles, negocias un precio o usas tu reputación" : loreborne ? "Si la tirada trata sobre la historia, la cultura o la política de una persona o un lugar importantes" : slyborne ? "Si negocias con criminales, intentas detectar una mentira o buscas un escondite seguro" : underborne ? "Si estás en una zona con poca luz o sombras densas y te escondes, investigas o percibes detalles en ella" : wildborne ? "Si intentas moverte sin que te oigan" : "Si cruzas precipicios y cornisas peligrosos, te orientas en un entorno duro o usas tus conocimientos de supervivencia",
                       onClick: () => setPreRoll((p) => ({ ...p, privilege: !p.privilege, advantage: p.privilege ? p.advantage : false })),
                     })
                   : null,
@@ -14695,6 +15054,7 @@ export default function App({ onSignOut }) {
                 noMercyOn ? ["Sin Piedad", "+1"] : null,
                 moonbeamOn ? ["Rayo de Luna", "+1"] : null,
                 circleOn ? ["Círculo de Poder", "+2"] : null,
+                reliableOn ? ["Postura Fiable", "+1"] : null,
                 patronOk && preRoll.patron ? ["Dado de Patrón", "+1d" + patronSides(ch)] : null,
                 slayerUse ? ["Dados de Cazador", "+" + slayerUse + "d6"] : null,
                 foundPick && !ch.f_found_used ? ["Familia Elegida", "+" + foundPick.bonus] : null,
@@ -14705,7 +15065,7 @@ export default function App({ onSignOut }) {
               ].filter(Boolean);
               const DS = 40;
               // Altura fija: se reserva hueco para todas las líneas que este personaje puede llegar a tener.
-              const maxLines = 1 + exps.length + (ch.f_rally_die ? 1 : 0) + (poetOk ? 1 : 0) + (dedicatedOk ? 1 : 0) + (riseOk ? 1 : 0) + (noMercyOn ? 1 : 0) + (moonbeamOn ? 1 : 0) + (circleOn ? 1 : 0) + (patronOk ? 1 : 0) + (slayerHave ? 1 : 0) + (foundOk ? 1 : 0) + (tideOk ? 1 : 0) + (elemOk ? 1 : 0) + (wolf ? 1 : 0) + 1;
+              const maxLines = 1 + exps.length + (ch.f_rally_die ? 1 : 0) + (poetOk ? 1 : 0) + (dedicatedOk ? 1 : 0) + (riseOk ? 1 : 0) + (noMercyOn ? 1 : 0) + (moonbeamOn ? 1 : 0) + (circleOn ? 1 : 0) + (reliableOn ? 1 : 0) + (patronOk ? 1 : 0) + (slayerHave ? 1 : 0) + (foundOk ? 1 : 0) + (tideOk ? 1 : 0) + (elemOk ? 1 : 0) + (wolf ? 1 : 0) + 1;
               const canSpendHope = exps.length > 0 || poetOk;
               const anyAdded = preRoll.exps.length > 0 || preRoll.rally || preRoll.poet || preRoll.dedicated || preRoll.privilege || preRoll.quick || tideUse > 0 || !!preRoll.elem || slayerUse > 0 || !!foundPick || !!preRoll.adept || !!preRoll.patron || edgePos !== "none";
               return (
@@ -15458,13 +15818,14 @@ export default function App({ onSignOut }) {
                             const fearHit = rc && rc.f_subclass === "Escuela de la Guerra" && !traitRollResult.reaction && !traitRollResult.flipped && traitRollResult.fear > traitRollResult.hope;
                             const fearDice = fearHit ? tierForLevel(rc.f_level || 1) : 0;
                             // Titán · Gozo del Golpe (Maestría): crítico Cuerpo a cuerpo = +1 Esperanza, −1 Estrés y +1 Competencia.
+                            const honedHit = !!traitRollResult.weapon.honed;
                             const pummel = isCritical && rc && rc.f_subclass === "Titán" && tierForLevel(rc.f_level || 1) >= 3 && isMeleeWeapon(name);
                             if (pummel) {
                               const cur = charsRef.current[charId];
                               updateCharacterFields(charId, { hope_marked: String(Math.min(getHopeMax(cur), Number(cur.hope_marked ?? HOPE_DEFAULT) + 1)), stress_marked: String(Math.max(0, Number(cur.stress_marked || 0) - 1)) });
                               postCampaignEvent(charId, "🥊 Gozo del Golpe: gana 1 Esperanza más, se quita 1 Estrés más y su Competencia sube en 1 en este ataque");
                             }
-                            rollWeaponDamage(name, damage, charId, isCritical, { ...(pummel ? { fixedDice: getProficiency(rc) + 1 } : {}), fearDice, cloaked: wasCloaked, spirit, resonance: spirit && rc && tierForLevel(rc.f_level || 1) >= 3, extraFlat: traitRollResult.weapon.elemDmg || 0, doublePick: !!traitRollResult.weapon.manipDouble });
+                            rollWeaponDamage(name, damage, charId, isCritical, { ...(pummel || honedHit ? { fixedDice: getProficiency(rc) + (pummel ? 1 : 0) + (honedHit ? 1 : 0) } : {}), fearDice, cloaked: wasCloaked, spirit, resonance: spirit && rc && tierForLevel(rc.f_level || 1) >= 3, extraFlat: traitRollResult.weapon.elemDmg || 0, doublePick: !!traitRollResult.weapon.manipDouble });
                           }}
                         >
                           Sí
@@ -15716,6 +16077,106 @@ export default function App({ onSignOut }) {
                       >
                         <HandFist size={14} /> Golpe Combinado · 1 Estrés · d{cd}
                       </button>
+                    );
+                  })()}
+                  {(() => {
+                    // Artista Marcial · Estado de Flujo: 1 de Concentración en lugar de 1 Estrés para el combo.
+                    const dr = damageRollResult;
+                    const bc = dr.charId ? characters[dr.charId] : null;
+                    if (!bc || bc.f_class !== "Camorrista" || !isMartial(bc) || tierForLevel(bc.f_level || 1) < 3 || !isMeleeWeapon(dr.weaponName) || dr.comboRolls) return null;
+                    const cd = comboDie(bc);
+                    const foc = getMFocus(bc);
+                    return (
+                      <button
+                        type="button"
+                        className="mh-kick-btn mh-combo-btn"
+                        disabled={foc < 1}
+                        onClick={() => {
+                          const seq = [Math.floor(Math.random() * cd) + 1];
+                          for (let g = 0; g < 50; g++) {
+                            const nx = Math.floor(Math.random() * cd) + 1;
+                            seq.push(nx);
+                            if (nx < seq[seq.length - 2]) break;
+                          }
+                          const extra = seq.reduce((a, b) => a + b, 0);
+                          setDamageRollResult((r) => (r ? { ...r, comboRolls: seq, comboDie: cd, total: r.total + extra } : r));
+                          updateCharacterField(dr.charId, "f_mfocus", String(foc - 1));
+                          postCampaignEvent(dr.charId, `👊 Golpe Combinado (Estado de Flujo): gasta 1 de Concentración y encadena ${seq.length} golpes con su d${cd} (${seq.join(", ")}): +${extra} de daño`);
+                        }}
+                      >
+                        <HandFist size={14} /> Golpe Combinado · 1 Concentración
+                      </button>
+                    );
+                  })()}
+                  {(() => {
+                    // Artista Marcial: efectos de la postura activa tras acertar.
+                    const dr = damageRollResult;
+                    const mc = dr.charId ? characters[dr.charId] : null;
+                    const st = dr.stanceNow;
+                    if (!mc || !isMartial(mc) || !st) return null;
+                    const foc = getMFocus(mc);
+                    const done = dr.stanceDone || {};
+                    const mark = (k, msg, patch, stress) => {
+                      setDamageRollResult((r) => (r ? { ...r, stanceDone: { ...(r.stanceDone || {}), [k]: true } } : r));
+                      if (stress) markStress(dr.charId, 1, patch || {});
+                      else if (patch) updateCharacterFields(dr.charId, patch);
+                      postCampaignEvent(dr.charId, msg);
+                    };
+                    const melee = isMeleeWeapon(dr.weaponName);
+                    return (
+                      <div className="mh-stance-dmg">
+                        {st === "vigorizante" &&
+                          (done.vig ? (
+                            <div className="mh-kick-done" style={{ color: "#8A5F33" }}>Vigorizante: {done.vig === 4 ? "+1 de Concentración" : "sin suerte"}</div>
+                          ) : (
+                            <button
+                              type="button"
+                              className="mh-kick-btn mh-combo-btn"
+                              onClick={() => {
+                                const v = Math.floor(Math.random() * 4) + 1;
+                                setDamageRollResult((r) => (r ? { ...r, stanceDone: { ...(r.stanceDone || {}), vig: v } } : r));
+                                if (v === 4) updateCharacterField(dr.charId, "f_mfocus", String(Math.min(6, foc + 1)));
+                                postCampaignEvent(dr.charId, `🥋 Vigorizante: tira 1d4 y saca ${v}${v === 4 ? ": gana 1 de Concentración" : ""}`);
+                              }}
+                            >
+                              <Dices size={14} /> Vigorizante · tirar 1d4
+                            </button>
+                          ))}
+                        {st === "rapida" && !done.quick && (
+                          <span style={{ display: "flex", gap: 6 }}>
+                            <button type="button" className="mh-kick-btn mh-combo-btn" disabled={foc < 1} onClick={() => mark("quick", "🥋 Rápida: gasta 1 de Concentración y alcanza a otra criatura dentro del alcance", { f_mfocus: String(foc - 1) })}>
+                              Rápida: otro objetivo · 1 Concentración
+                            </button>
+                            <button type="button" className="mh-kick-btn mh-combo-btn" onClick={() => mark("quick", "🥋 Rápida: marca 1 Estrés y alcanza a otra criatura dentro del alcance", null, true)}>
+                              · 1 Estrés
+                            </button>
+                          </span>
+                        )}
+                        {st === "otromundo" && (
+                          <button type="button" className="mh-kick-btn mh-combo-btn" onClick={() => setDamageRollResult((r) => (r ? { ...r, damageType: r.damageType === "mágico" ? "físico" : "mágico" } : r))}>
+                            <Sparkles size={14} /> De Otro Mundo: hacer daño {dr.damageType === "mágico" ? "físico" : "mágico"}
+                          </button>
+                        )}
+                        {st === "apresadora" && melee && !done.grab && (
+                          <span style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" }}>
+                            <button type="button" className="mh-kick-btn mh-combo-btn" disabled={foc < 1} onClick={() => mark("grab", "🥋 Apresadora: gasta 1 de Concentración e inmoviliza o lanza al objetivo hasta alcance Cercano", { f_mfocus: String(foc - 1) })}>
+                              Apresar · 1 Concentración
+                            </button>
+                            <button type="button" className="mh-kick-btn mh-combo-btn" onClick={() => mark("grab", "🥋 Apresadora: marca 1 Estrés e inmoviliza o lanza al objetivo hasta alcance Cercano", null, true)}>
+                              · 1 Estrés
+                            </button>
+                          </span>
+                        )}
+                        {st === "aterradora" && <div className="mh-kick-done" style={{ color: "#8A5F33" }}>Aterradora: el objetivo marca 1 Estrés</div>}
+                        {st === "demoledora" &&
+                          (done.crush ? (
+                            <div className="mh-kick-done" style={{ color: "#8A5F33" }}>Demoledora: el objetivo marca 1 PV más</div>
+                          ) : (
+                            <button type="button" className="mh-kick-btn mh-combo-btn" disabled={Number(mc.hope_marked ?? HOPE_DEFAULT) < 1} onClick={() => mark("crush", "🥋 Demoledora: gasta 1 Esperanza y el objetivo marca 1 Punto de Vida adicional", { hope_marked: String(Number(mc.hope_marked ?? HOPE_DEFAULT) - 1) })}>
+                              ¿Daño Grave? Demoledora · 1 Esperanza: +1 PV
+                            </button>
+                          ))}
+                      </div>
                     );
                   })()}
                   {(() => {
@@ -16990,6 +17451,18 @@ export default function App({ onSignOut }) {
                     });
                   }
                   // Llamado del Valiente · Ritual de Batalla.
+                  if (d.martialActs && !d.fromChat) {
+                    cardActs.push({
+                      key: "stances",
+                      Icon: HandFist,
+                      label: "Ver Posturas Marciales",
+                      sub: getMFocus(c) + " de Concentración" + (activeStance(c) ? " · postura " + (MARTIAL_STANCES.find((x) => x.key === c.f_stance)?.name || "") : ""),
+                      run: () => {
+                        setDetailTab("stances");
+                        setViewingCardDetail(null);
+                      },
+                    });
+                  }
                   if (d.wrathActs && !d.fromChat) {
                     const tierW = tierForLevel(c.f_level || 1);
                     const fav = getFavor(c);
@@ -17786,7 +18259,7 @@ export default function App({ onSignOut }) {
                       label: "Mostrar en la campaña",
                       sub: shareCamp.name,
                       run: () => {
-                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, divineActs, sentinelActs, originActs, primalActs, braveActs, slayerCard, moonActs, hedgeActs, endlessActs, wrathActs, brawlerStrike: _bs, comboCard: _cc, ...detail } = d;
+                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, divineActs, sentinelActs, originActs, primalActs, braveActs, slayerCard, moonActs, hedgeActs, endlessActs, wrathActs, brawlerStrike: _bs, comboCard: _cc, martialActs: _ma, ...detail } = d;
                         // Las imágenes incrustadas muy grandes no se copian al chat.
                         if (typeof detail.image === "string" && detail.image.startsWith("data:") && detail.image.length > 30000) delete detail.image;
                         const type = d.domain ? "domain" : d.weapon ? "weapon" : d.armor ? "armor" : "card";
