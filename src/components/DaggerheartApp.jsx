@@ -336,7 +336,7 @@ const ANCESTRIES = [
   { key: "Goblin", blurb: "Humanoide pequeño de ojos grandes y enormes orejas membranosas, con un oído y una vista agudísimos, incluso a oscuras.", features: [{ name: "Pie Firme", text: "Ignoras la desventaja en las tiradas de Agilidad." }, { name: "Sentido del Peligro", text: "Una vez por descanso, marca 1 Estrés para obligar a un adversario a repetir un ataque contra ti o un aliado en alcance Muy cercano." }] },
   { key: "Mediano", blurb: "Humanoide pequeño de grandes pies peludos y orejas redondeadas, con un oído y un olfato muy finos y una brújula interior innata.", features: [{ name: "Trae Suerte", text: "Al comienzo de cada sesión, todos los miembros de tu grupo ganan 1 Esperanza." }, { name: "Brújula Interior", text: "Cuando saques un 1 en tu Dado de Esperanza, puedes volver a tirarlo." }] },
   { key: "Humano", blurb: "De manos hábiles, orejas redondeadas y cuerpos hechos para aguantar, se adaptan con facilidad a los climas más duros.", features: [{ name: "Gran Resistencia", text: "Ganas una casilla de Estrés adicional al crear el personaje." }, { name: "Adaptabilidad", text: "Cuando falles una tirada en la que hayas usado una de tus Experiencias, puedes marcar 1 Estrés para repetirla." }] },
-  { key: "Infernal", blurb: "Desciende de linajes infernales, con cuernos y cola propios.", features: [{ name: "Sin Miedo", text: "Cuando saques una tirada con Miedo, puedes marcar 2 Estrés para convertirla en una tirada con Esperanza." }, { name: "Rostro Temible", text: "Tienes ventaja en las tiradas para intimidar a criaturas hostiles." }] },
+  { key: "Infernal", blurb: "Humanoide de colmillos afilados, orejas puntiagudas y cuernos, descendiente de los demonios de los Círculos Inferiores.", features: [{ name: "Sin Miedo", text: "Cuando saques una tirada con Miedo, puedes marcar 2 Estrés para convertirla en una tirada con Esperanza." }, { name: "Rostro Temible", text: "Tienes ventaja en las tiradas para intimidar a criaturas hostiles." }] },
   { key: "Katari", blurb: "Felino humanoide de reflejos rápidos y gracia natural.", features: [{ name: "Instinto Felino", text: "Cuando hagas una tirada de Agilidad, puedes gastar 2 Esperanza para repetir tu Dado de Esperanza." }, { name: "Garras Retráctiles", text: "Haz una tirada de Agilidad para arañar a un objetivo Cuerpo a cuerpo. Con éxito, queda temporalmente Vulnerable." }] },
   { key: "Orco", blurb: "Fuerte y resistente, forjado por una cultura guerrera.", features: [{ name: "Robusto", text: "Cuando te quede 1 Punto de vida, los ataques contra ti tienen desventaja." }, { name: "Colmillos", text: "Cuando aciertas un ataque Cuerpo a cuerpo, puedes gastar 1 Esperanza para cornearle con tus colmillos: +1d6 de daño." }] },
   { key: "Ribbet", blurb: "Humanoide anfibio, cómodo tanto en el agua como en tierra.", features: [{ name: "Anfibio", text: "Puedes respirar y moverte con normalidad bajo el agua." }, { name: "Lengua Larga", text: "Puedes agarrar cosas en alcance Cercano con tu lengua. Marca 1 Estrés para usarla como un arma de Destreza a alcance Cercano que hace d12 de daño físico con tu Competencia." }] },
@@ -363,7 +363,7 @@ const COMMUNITIES = [
   { key: "Del Hogar", blurb: "Vienes de orígenes humildes, de un pueblo modesto o del campo, donde familias y vecinos forjan lazos muy estrechos.", expansion: "Hope & Fear", features: [{ name: "Muy Unidos", text: "Una vez por descanso largo, puedes gastar cualquier cantidad de Esperanza para dar a un aliado dentro de alcance Lejano esa misma cantidad de Esperanza." }] },
   { key: "De la Escarcha", blurb: "Vienes de un lugar de nieve y hielo, donde tu comunidad aprendió a sobrevivir en las condiciones más duras.", expansion: "Hope & Fear", features: [{ name: "Curtido", text: "Cuando haces un descanso, te quitas 1 Punto de vida." }] },
   { key: "De la Guerra", blurb: "Vienes de un lugar que está, o estuvo, arrasado por la guerra; sabes defenderte y sacar partido de lo que tengas a mano.", expansion: "Hope & Fear", features: [{ name: "Cara Valiente", text: "Una vez por sesión, cuando te veas obligado a marcar 1 Estrés, puedes gastar 1 Esperanza en su lugar." }] },
-  { key: "Libre", blurb: "Naciste sin ataduras a ninguna autoridad ni institución.", expansion: "Hope & Fear", features: [{ name: "Sin Ataduras", text: "Una vez por sesión, cuando saques una tirada con Miedo, puedes convertirla en una tirada con Esperanza." }] },
+  { key: "Libre", blurb: "Vienes de una comunidad que vivió bajo un régimen tiránico y que hoy es libre, unida por la lucha por conservar su cultura.", expansion: "Hope & Fear", features: [{ name: "Sin Ataduras", text: "Una vez por sesión, cuando saques una tirada con Miedo, puedes convertirla en una tirada con Esperanza." }] },
   { key: "Renacido", blurb: "Tu vida actual comenzó tras dejar atrás una anterior.", expansion: "Hope & Fear", features: [{ name: "Familia Elegida", text: "Una vez por descanso, puedes gastar 1 Esperanza para usar una Experiencia de un aliado como si fuera tuya, contando cómo te preparó para este momento." }] },
 ];
 
@@ -2636,6 +2636,11 @@ const sharedStyles = `
   .mh-compass-btn { background: #6E8B5A; }
   .mh-adapt-btn { background: #6A7E95; }
   .mh-courage-btn { background: #B8862E; }
+  .mh-fearless-btn { background: #A33A3A; }
+  .mh-fearless-btn:hover:not(:disabled) { background: #8E3030; }
+  .mh-unbound-btn { background: #5E8FC9; }
+  .mh-unbound-btn:hover:not(:disabled) { background: #4C7AB0; }
+  .mh-flip { display: flex; flex-direction: column; gap: 0; }
   .mh-courage-btn:hover:not(:disabled) { background: #A07424; }
   .mh-manip-o.is-3 { grid-template-columns: repeat(3, 1fr); }
   .mh-adapt-btn:hover:not(:disabled) { background: #5A6D82; }
@@ -7420,6 +7425,7 @@ export default function App({ onSignOut }) {
     if (isLong && c.f_raw_used) restPatch.f_raw_used = "";
     if (isLong && c.f_brave_used) restPatch.f_brave_used = "";
     if (isLong && c.f_ritual_used) restPatch.f_ritual_used = "";
+    if (isLong && c.f_unbound_used) restPatch.f_unbound_used = "";
     if (isLong && c.f_enchant_used) restPatch.f_enchant_used = "";
     if (isLong && c.f_charged) restPatch.f_charged = "";
     // Trae Suerte vuelve a repartirse en la «sesión» siguiente.
@@ -7868,6 +7874,18 @@ export default function App({ onSignOut }) {
     reaction: r.reaction,
   });
 
+  // Infernal · Sin Miedo (2 Estrés) y Libre · Sin Ataduras (1 por sesión): la tirada con Miedo pasa a ser con Esperanza.
+  const flipToHope = (r, kind) => {
+    const c = charsRef.current[r.charId];
+    if (!c) return;
+    const patch = { hope_marked: String(Math.min(getHopeMax(c), Number(c.hope_marked ?? HOPE_DEFAULT) + 1)) };
+    if (kind === "unbound") patch.f_unbound_used = "1";
+    updateCharacterFields(r.charId, patch);
+    if (kind === "fearless") markStress(r.charId, 2);
+    addFear(-1);
+    setTraitRollResult((prev) => (prev ? { ...prev, flipped: kind, text: "Con Esperanza", color: "#E3B04B", note: "Ganas 1 Esperanza (el DJ no gana Miedo)" } : prev));
+    postCampaignEvent(r.charId, kind === "fearless" ? "😈 Sin Miedo: marca 2 Estrés y su tirada con Miedo pasa a ser con Esperanza" : "🕊️ Sin Ataduras: su tirada con Miedo pasa a ser con Esperanza");
+  };
   const doTraitRoll = async (charId, traitLabel, traitValue, weapon, cardContext, advantage, extras = {}) => {
     let wasCloaked = false;
     if (weapon && !weapon.charge) {
@@ -13424,7 +13442,9 @@ export default function App({ onSignOut }) {
               const wildborne = ch.f_community === "Salvaje" && ["Agilidad", "Destreza"].includes(preRoll.traitLabel);
               // Centinela Alado · Rostro Etéreo (Especialización): ventaja en Presencia mientras vuela.
               const etherealOk = ch.f_subclass === "Centinela Alado" && tierForLevel(ch.f_level || 1) >= 2 && getConditions(ch).includes("Volando") && preRoll.traitLabel === "Presencia";
-              const edgeSource = etherealOk ? "Rostro Etéreo" : highborne ? "Privilegio" : loreborne ? "Leído" : ridgeborne ? "Firme" : slyborne ? "Granuja" : underborne ? "Vida en la Penumbra" : wildborne ? "Pies Ligeros" : "";
+              // Infernal · Rostro Temible: ventaja para intimidar a criaturas hostiles.
+              const dreadOk = (ch.f_ancestry || "").split(" + ").includes("Infernal") && preRoll.traitLabel === "Presencia" && !etherealOk;
+              const edgeSource = etherealOk ? "Rostro Etéreo" : dreadOk ? "Rostro Temible" : highborne ? "Privilegio" : loreborne ? "Leído" : ridgeborne ? "Firme" : slyborne ? "Granuja" : underborne ? "Vida en la Penumbra" : wildborne ? "Pies Ligeros" : "";
               const poetOk = ch.f_subclass === "Orador" && preRoll.traitLabel === "Presencia";
               // Origen Elemental · Elementalista: 1 Esperanza para +2 a la tirada o +3 al daño.
               const elemOk = ch.f_subclass === "Origen Elemental" && !preRoll.reaction;
@@ -13523,10 +13543,10 @@ export default function App({ onSignOut }) {
                   ? tile("priv", {
                       on: preRoll.privilege,
                       title: edgeSource,
-                      sub: etherealOk ? "Centinela Alado · volando" : highborne ? "De Alta Cuna" : loreborne ? "Del Saber" : slyborne ? "De las Sombras" : underborne ? "De las Profundidades" : wildborne ? "Salvaje" : "De las Cumbres",
+                      sub: etherealOk ? "Centinela Alado · volando" : dreadOk ? "Infernal" : highborne ? "De Alta Cuna" : loreborne ? "Del Saber" : slyborne ? "De las Sombras" : underborne ? "De las Profundidades" : wildborne ? "Salvaje" : "De las Cumbres",
                       cost: "Ventaja",
-                      color: etherealOk ? "#D8A84A" : highborne ? "#B8862E" : loreborne ? "#5E8FC9" : slyborne ? "#6E5A8A" : underborne ? "#5A6B7A" : wildborne ? "#5E8A4E" : "#7E8C6A",
-                      hint: etherealOk ? "Mientras vuelas, tienes ventaja en las tiradas de Presencia" : highborne ? "Si tratas con nobles, negocias un precio o usas tu reputación" : loreborne ? "Si la tirada trata sobre la historia, la cultura o la política de una persona o un lugar importantes" : slyborne ? "Si negocias con criminales, intentas detectar una mentira o buscas un escondite seguro" : underborne ? "Si estás en una zona con poca luz o sombras densas y te escondes, investigas o percibes detalles en ella" : wildborne ? "Si intentas moverte sin que te oigan" : "Si cruzas precipicios y cornisas peligrosos, te orientas en un entorno duro o usas tus conocimientos de supervivencia",
+                      color: etherealOk ? "#D8A84A" : dreadOk ? "#A33A3A" : highborne ? "#B8862E" : loreborne ? "#5E8FC9" : slyborne ? "#6E5A8A" : underborne ? "#5A6B7A" : wildborne ? "#5E8A4E" : "#7E8C6A",
+                      hint: etherealOk ? "Mientras vuelas, tienes ventaja en las tiradas de Presencia" : dreadOk ? "Si intentas intimidar a una criatura hostil" : highborne ? "Si tratas con nobles, negocias un precio o usas tu reputación" : loreborne ? "Si la tirada trata sobre la historia, la cultura o la política de una persona o un lugar importantes" : slyborne ? "Si negocias con criminales, intentas detectar una mentira o buscas un escondite seguro" : underborne ? "Si estás en una zona con poca luz o sombras densas y te escondes, investigas o percibes detalles en ella" : wildborne ? "Si intentas moverte sin que te oigan" : "Si cruzas precipicios y cornisas peligrosos, te orientas en un entorno duro o usas tus conocimientos de supervivencia",
                       onClick: () => setPreRoll((p) => ({ ...p, privilege: !p.privilege, advantage: p.privilege ? p.advantage : false })),
                     })
                   : null,
@@ -13729,10 +13749,35 @@ export default function App({ onSignOut }) {
                     </div>
                     <DualityResult roll={traitRollResult} size={72} />
                     {(() => {
+                      const r = traitRollResult;
+                      const rc = characters[r.charId];
+                      if (!rc || r.reaction || !(r.fear > r.hope)) return r.flipped ? <div className="mh-luck-done" style={{ color: "#B8862E" }}>{r.flipped === "fearless" ? "Sin Miedo" : "Sin Ataduras"}: ahora es con Esperanza</div> : null;
+                      if (r.flipped) return <div className="mh-luck-done" style={{ color: "#B8862E" }}>{r.flipped === "fearless" ? "Sin Miedo" : "Sin Ataduras"}: ahora es con Esperanza</div>;
+                      const infernal = (rc.f_ancestry || "").split(" + ").includes("Infernal");
+                      const freeborne = rc.f_community === "Libre";
+                      if (!infernal && !freeborne) return null;
+                      return (
+                        <div className="mh-flip">
+                          {infernal && (
+                            <button type="button" className="mh-luck-btn mh-fearless-btn" onClick={() => flipToHope(r, "fearless")}>
+                              <Flame size={15} /> Sin Miedo · 2 Estrés
+                              <small>Convierte la tirada en con Esperanza</small>
+                            </button>
+                          )}
+                          {freeborne && (
+                            <button type="button" className="mh-luck-btn mh-unbound-btn" disabled={!!rc.f_unbound_used} onClick={() => flipToHope(r, "unbound")}>
+                              <Feather size={15} /> Sin Ataduras
+                              <small>{rc.f_unbound_used ? "Ya usada · vuelve al descanso largo" : "1 por sesión · pasa a ser con Esperanza"}</small>
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })()}
+                    {(() => {
                       // Llamado del Valiente · Coraje: al fallar una tirada con Miedo, +1 Esperanza.
                       const r = traitRollResult;
                       const rc = characters[r.charId];
-                      if (!rc || rc.f_subclass !== "Llamado del Valiente" || !(r.fear > r.hope)) return null;
+                      if (!rc || rc.f_subclass !== "Llamado del Valiente" || !(r.fear > r.hope) || r.flipped) return null;
                       if (r.courage) return <div className="mh-luck-done" style={{ color: "#B8862E" }}>Coraje: +1 Esperanza</div>;
                       const failed = r.card?.dc != null ? r.total < r.card.dc : null;
                       if (failed === false) return null;
