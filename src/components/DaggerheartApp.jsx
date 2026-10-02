@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
-import { Wand, MoveUpRight, Archive, Shell, Compass, Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
+import { Wand, CircleDot, MoveUpRight, Archive, Shell, Compass, Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
 
 const NAV_ITEMS = [
   { key: "ficha", label: "Personajes", icon: User },
@@ -275,7 +275,18 @@ const SUBCLASSES = {
         { name: "Fases Lunares (Maestría)", text: "Al principio de cada sesión, tira 1d6 y colócalo en esta carta. Obtienes el efecto correspondiente hasta el final de la sesión: 1, Luna Nueva: gasta 1 Esperanza para anular daño Menor. 2–3, Creciente: +2 a las tiradas de daño. 4, Luna Llena: +3 a los umbrales de daño. 5–6, Menguante: +1 a la Evasión. Una vez por descanso, puedes gastar 1 Esperanza para aumentar en uno el valor del dado. Si aumentas un 6, pasa a ser un 1." },
       ],
     },
-    { key: "Bruja del Seto", blurb: "Usa su oficio para fortalecerse a sí misma y a la mesa.", expansion: "Hope & Fear" },
+    {
+      key: "Bruja del Seto",
+      blurb: "Usa tu oficio para fortalecerte a ti y a tu grupo.",
+      expansion: "Hope & Fear",
+      features: [
+        { name: "Remedios Herbales", text: "Cuando tú o un aliado en la escena os quitéis 1 o más Puntos de Vida o de Estrés como resultado de usar un consumible, aumenta en 1 la cantidad que os quitáis." },
+        { name: "Talismán Encantado", text: "Una vez por descanso, puedes imbuir un objeto pequeño con tu esencia protectora. Gasta cualquier cantidad de Esperanza para colocar el mismo número de fichas en esta carta. Cuando la persona que lleve el talismán reciba daño, gasta una ficha para reducir en uno los Puntos de Vida que marca. Retira todas las fichas de esta carta cuando hagas un descanso." },
+        { name: "Caminar Entre Mundos (Especialización)", text: "En un momento de calma, haz una tirada de Lanzamiento de Conjuros (13). Una vez por descanso, si tienes éxito, puedes marcar 1 Estrés para cruzar el velo de la muerte y conversar con los espíritus cercanos. Coloca en esta carta tantas fichas como tu rasgo de Lanzamiento de Conjuros y retira una cada vez que un espíritu responda a una pregunta. Cuando retires la última ficha, o al final de la escena, vuelves al Reino Mortal en el mismo lugar del que partiste." },
+        { name: "Maldición Irritante (Especialización)", text: "Tienes ventaja en los ataques contra criaturas con Maleficio." },
+        { name: "Círculo de Poder (Maestría)", text: "Una vez por descanso, traza en el suelo un círculo que delimite un área Muy cercana a tu alrededor y coloca en esta carta tantas fichas como tu rasgo de Lanzamiento de Conjuros. Mientras estéis dentro del círculo, tú y tus aliados obtenéis +2 a los umbrales de daño, a las tiradas de ataque y a la Evasión. Retira una ficha cada vez que tú o un aliado dentro del círculo hagáis una tirada de acción o evitéis un ataque. El conjuro dura hasta que se retire la última ficha o salgas del círculo." },
+      ],
+    },
   ],
   Brujo: [
     { key: "Pacto del Eterno", blurb: "Resiste a sus enemigos y esquiva la muerte misma.", expansion: "Hope & Fear" },
@@ -381,7 +392,7 @@ const ANCESTRIES = [
   { key: "Orco", blurb: "Humanoide de rasgos cuadrados, fácil de reconocer por los colmillos de jabalí que le sobresalen de la mandíbula inferior.", features: [{ name: "Robusto", text: "Cuando te quede 1 Punto de Vida, los ataques contra ti tienen desventaja." }, { name: "Colmillos", text: "Cuando tengas éxito en un ataque contra un adversario en alcance Cuerpo a cuerpo, puedes gastar 1 Esperanza para cornearlo con tus colmillos y hacerle 1d6 de daño adicional." }] },
   { key: "Ribbet", blurb: "Humanoide parecido a una rana, de ojos saltones a ambos lados de la cabeza, manos y pies palmeados y piel lisa (a veces verrugosa) y húmeda.", features: [{ name: "Anfibio", text: "Puedes respirar y moverte con normalidad bajo el agua." }, { name: "Lengua Larga", text: "Puedes usar tu larga lengua para agarrar cosas dentro de alcance Cercano. Marca 1 Estrés para usar tu lengua como un arma de Destreza a alcance Cercano que hace d12 de daño físico usando tu Competencia." }] },
   { key: "Simiah", blurb: "Humanoide parecido a un mono o un simio, de extremidades largas y pies prensiles con los que se comunica, trabaja y lucha; un trepador excelente.", features: [{ name: "Trepador Nato", text: "Tienes ventaja en las tiradas de Agilidad que impliquen mantener el equilibrio y trepar." }, { name: "Ágil", text: "Ganas un bonificador permanente de +1 a tu Evasión al crear el personaje." }] },
-  { key: "Gnomo", blurb: "Pequeño e inquieto, con una curiosidad natural por inventar.", expansion: "Hope & Fear", features: [{ name: "Dedos Ágiles", text: "Cuando hagas una tirada de Destreza, puedes gastar 2 Esperanza para repetir tu Dado de Esperanza." }, { name: "Paso Fugaz", text: "Una vez por escena, puedes teletransportarte a un punto que veas en alcance Lejano." }] },
+  { key: "Gnomo", blurb: "Humanoide pequeño de cabeza cónica, orejas suavemente puntiagudas, ojos grandes y brazos y manos proporcionalmente largos, capaz de teletransportarse a distancias cortas.", expansion: "Hope & Fear", features: [{ name: "Dedos Ágiles", text: "Cuando hagas una tirada de Destreza, puedes gastar 2 Esperanza para repetir tu Dado de Esperanza." }, { name: "Paso Fugaz", text: "Una vez por escena, puedes teletransportarte a otro punto que puedas ver dentro de alcance Lejano." }] },
   { key: "Aetheris", blurb: "Ser etéreo ligado a un plano más allá de lo material.", expansion: "Hope & Fear", features: [{ name: "Aura Sagrada", text: "Una vez por descanso largo, cuando un aliado en alcance Cercano saque una tirada con Miedo, puedes convertirla en una tirada con Esperanza." }, { name: "Alas Celestiales", text: "Tienes alas y puedes volar. Una vez por escena mientras vuelas, puedes gastar 1 Esperanza en lugar de marcar una casilla de Armadura." }] },
   { key: "Estirpe del Cielo", blurb: "Vinculado a las corrientes de aire y las alturas.", expansion: "Hope & Fear", features: [{ name: "Fuerza del Vendaval", text: "Marca 1 Estrés para invocar una ráfaga que te lleva a ti o a un aliado Muy cercano hasta alcance Muy lejano. Además, siempre controlas la velocidad de tus caídas." }, { name: "Ojo de la Tormenta", text: "Gasta 2 Esperanza para darte a ti o a un aliado Cuerpo a cuerpo +1 a la Evasión hasta que recibáis daño Grave o vuelvas a usarlo." }] },
   { key: "Estirpe de la Marea", blurb: "Vinculado al mar y al ritmo de las mareas.", expansion: "Hope & Fear", features: [{ name: "Anfibio", text: "Puedes respirar y moverte con normalidad bajo el agua." }, { name: "Manantial de Vida", text: "Una vez por descanso, si tienes acceso a un poco de agua, puedes marcar 1 Estrés para quitar 1 Punto de vida a ti o a un aliado en alcance Muy cercano." }] },
@@ -595,6 +606,7 @@ const REROLL_META = {
   swap: { tag: "Ayuda", head: "intercambia los dados", done: "Ayuda Encantada" },
   adapt: { tag: "Adaptabilidad", head: "repite con Adaptabilidad", done: "Adaptabilidad" },
   feline: { tag: "Felino", head: "repite su Dado de Esperanza", done: "Instinto Felino" },
+  nimble: { tag: "Dedos Ágiles", head: "repite su Dado de Esperanza", done: "Dedos Ágiles" },
   charm: { tag: "Encanto", head: "convierte en éxito con Miedo la tirada", done: "Encanto de Bruja" },
 };
 
@@ -2702,6 +2714,21 @@ const sharedStyles = `
   .mh-fearless-btn { background: #A33A3A; }
   .mh-slayer-btn { background: #C0504A; }
   .mh-glamour-btn { background: #8C7FD0; }
+  .mh-walk-btn { background: #6E8A6A; }
+  .mh-walk-btn:hover:not(:disabled) { background: #5C7659; }
+  .mh-nimble-btn { background: #5E8FC9; }
+  .mh-nimble-btn:hover:not(:disabled) { background: #4C7AB0; }
+  .mh-hedge-foot { flex-direction: column; align-items: stretch; gap: 8px; padding: 9px 12px; }
+  .mh-hedge-row { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 2px 10px; }
+  .mh-hedge-row b { font: 700 11.5px 'Inter', system-ui, sans-serif; color: color-mix(in srgb, var(--hc) 70%, var(--mh-ink)); }
+  .mh-hedge-row small { grid-column: 1 / -1; font-size: 10.5px; color: var(--mh-muted); }
+  .mh-hedge-pips { display: inline-flex; flex-wrap: wrap; gap: 5px; justify-content: flex-end; }
+  .mh-hedge-pips button { width: 20px; height: 20px; border-radius: 50%; border: 0; background: var(--hc); color: #fff; display: inline-flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; }
+  .mh-hedge-pips button:hover { filter: brightness(.88); }
+  .mh-talisman-step { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 4px 0 12px; font: 600 13px 'Inter', system-ui, sans-serif; }
+  .mh-talisman-step b { font: 700 22px 'Cinzel', Georgia, serif; margin-right: 4px; }
+  .mh-talisman-step button { width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid #B8862E; background: var(--mh-panel); color: #B8862E; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+  .mh-talisman-step button:disabled { opacity: .35; cursor: not-allowed; }
   .mh-glamour-btn:hover:not(:disabled) { background: #7568B8; }
   .mh-hex-foot { flex-direction: column; gap: 7px; padding: 9px 10px; }
   .mh-hex-foot small { font-size: 10.5px; color: var(--mh-muted); }
@@ -7403,6 +7430,7 @@ export default function App({ onSignOut }) {
   const [communeDlg, setCommuneDlg] = useState(null); // Bruja · Comunión
   const [glamourAsk, setGlamourAsk] = useState(null); // Bruja Lunar · ¿mantener el Glamour?
   const [hexDraft, setHexDraft] = useState("");
+  const [talismanDlg, setTalismanDlg] = useState(null); // Bruja del Seto · Talismán Encantado
   const getVault = (c) => {
     try {
       return JSON.parse(c?.f_domain_vault || "[]");
@@ -7586,6 +7614,7 @@ export default function App({ onSignOut }) {
     if (isLong && c.f_moon_phase) restPatch.f_moon_phase = "";
     if (c.f_phase_bump_used) restPatch.f_phase_bump_used = "";
     if (isLong && c.f_commune_used) restPatch.f_commune_used = "";
+    for (const k of ["f_talisman", "f_talisman_used", "f_talisman_holder", "f_walk", "f_walk_used", "f_circle", "f_circle_used", "f_flicker_used"]) if (c[k]) restPatch[k] = "";
     // Fin de la «sesión»: los Dados de Cazador sin gastar se cambian por Esperanza.
     if (isLong && Number(c.f_slayer || 0) > 0) {
       hope = Math.min(getHopeMax(c), hope + Number(c.f_slayer));
@@ -7980,7 +8009,14 @@ export default function App({ onSignOut }) {
     if (elemUse) postCampaignEvent(pr.charId, `${"🌀"} Elementalista: gasta 1 Esperanza y usa su ${ch.f_origin_element || "elemento"} para ${elemUse === "roll" ? "sumar +2 a la tirada" : "sumar +3 al daño"}`);
     const noMercy = ch && ch.f_class === "Guerrero" && ch.f_no_mercy === "1" && pr.weapon && !pr.weapon.charge ? 1 : 0;
     const moonbeam = ch && ch.f_moonbeam === "1" && pr.traitLabel === TRAITS.find((t) => t.key === spellcastTraitFor(ch.f_class, ch.f_subclass))?.label ? 1 : 0;
-    doTraitRoll(pr.charId, pr.traitLabel, pr.traitValue + noMercy + moonbeam, pr.weapon ? { ...pr.weapon, ...(elemUse === "dmg" ? { elemDmg: 3 } : {}) } : pr.weapon, pr.cardContext, pr.advantage || pr.privilege || pr.quick, {
+    // Bruja del Seto · Círculo de Poder: +2 al ataque y cada tirada de acción retira una ficha.
+    const circleN = ch && ch.f_subclass === "Bruja del Seto" ? Number(ch.f_circle || 0) : 0;
+    const circleAtk = circleN > 0 && pr.weapon ? 2 : 0;
+    if (circleN > 0 && !pr.reaction) {
+      updateCharacterField(pr.charId, "f_circle", String(circleN - 1));
+      if (circleN - 1 === 0) postCampaignEvent(pr.charId, "⭕ Círculo de Poder: se retira la última ficha y el círculo se desvanece");
+    }
+    doTraitRoll(pr.charId, pr.traitLabel, pr.traitValue + noMercy + moonbeam + circleAtk, pr.weapon ? { ...pr.weapon, ...(elemUse === "dmg" ? { elemDmg: 3 } : {}) } : pr.weapon, pr.cardContext, pr.advantage || pr.privilege || pr.quick, {
       exps: [...exps.map((e, i) => ({ text: e.text + (adeptOn ? " ×2" : honed.length ? " · Pericia " + honed[i] + (honed[i] >= 5 ? " (gratis)" : "") : ""), bonus: (Number(e.bonus) || 0) * (adeptOn ? 2 : 1) })), ...(foundExp ? [foundExp] : [])],
       slayer: slayerSpent,
       honed,
@@ -8007,14 +8043,14 @@ export default function App({ onSignOut }) {
     const sides = roll.hopeSides || 12;
     // Ayuda Encantada intercambia los dados; Brújula Interior solo repite el de Esperanza.
     const nh = kind === "swap" ? roll.fear : Math.floor(Math.random() * sides) + 1;
-    const nf = kind === "swap" ? roll.hope : kind === "compass" || kind === "feline" ? roll.fear : Math.floor(Math.random() * 12) + 1;
+    const nf = kind === "swap" ? roll.hope : kind === "compass" || kind === "feline" || kind === "nimble" ? roll.fear : Math.floor(Math.random() * 12) + 1;
     const total = roll.total - roll.hope - roll.fear + nh + nf;
     const ga = rollGains(roll.hope, roll.fear);
     const gb = rollGains(nh, nf);
     // Las tiradas de reacción no generan Esperanza ni Miedo: repetirlas no cambia nada de eso.
     const delta = roll.reaction ? { hope: 0, stress: 0, fear: 0 } : { hope: gb.hope - ga.hope, stress: gb.stress - ga.stress, fear: gb.fear - ga.fear };
     const own = rollerId === myId;
-    const hopeNow = Number(me.hope_marked ?? HOPE_DEFAULT) - (kind === "luck" ? 3 : kind === "feline" ? 2 : 0) + (own ? delta.hope : 0);
+    const hopeNow = Number(me.hope_marked ?? HOPE_DEFAULT) - (kind === "luck" ? 3 : kind === "feline" || kind === "nimble" ? 2 : 0) + (own ? delta.hope : 0);
     const patch = { hope_marked: String(Math.max(0, Math.min(getHopeMax(me), hopeNow))) };
     if (kind === "focus") patch.f_focus = "";
     if (kind === "luck") patch.f_luck_used = "1";
@@ -8039,6 +8075,7 @@ export default function App({ onSignOut }) {
       swap: `✨ Ayuda Encantada: intercambia los Dados de Dualidad de ${forName} (${nh} + ${nf} = ${total}, ${text})`,
       adapt: `🔁 Adaptabilidad: marca 1 Estrés y repite la tirada (${nh} + ${nf} = ${total}, ${text})`,
       feline: `🐈 Instinto Felino: gasta 2 Esperanza y repite su Dado de Esperanza (${nh} + ${nf} = ${total}, ${text})`,
+      nimble: `🪄 Dedos Ágiles: gasta 2 Esperanza y repite su Dado de Esperanza (${nh} + ${nf} = ${total}, ${text})`,
     }[kind];
     postCampaignEvent(myId, msg, {
       kind: "roll",
@@ -9522,6 +9559,12 @@ export default function App({ onSignOut }) {
           equipMods.severe = (equipMods.severe || 0) + 3;
         }
         if (phaseC && phaseC.name === "Menguante") equipMods.evasion = (equipMods.evasion || 0) + 1;
+        // Bruja del Seto · Círculo de Poder: +2 a umbrales y Evasión dentro del círculo.
+        if (c.f_subclass === "Bruja del Seto" && Number(c.f_circle || 0) > 0) {
+          equipMods.major = (equipMods.major || 0) + 2;
+          equipMods.severe = (equipMods.severe || 0) + 2;
+          equipMods.evasion = (equipMods.evasion || 0) + 2;
+        }
         // "Armadura y estadísticas": espaciado fijo y fila de Evasión/Armadura de altura fija, para que la caja
         // (y con ella toda la fila de paneles) mida lo mismo con o sin armadura y con cualquier número de escudos.
         const statsSpacing = (() => {
@@ -10681,7 +10724,7 @@ export default function App({ onSignOut }) {
                               kicker: `Subclase · ${subclassBadge}`,
                               title: subclassEntry.key,
                               text: subclassEntry.blurb,
-                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento", "Escuela de la Guerra", "Bruja Lunar"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
+                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento", "Escuela de la Guerra", "Bruja Lunar", "Bruja del Seto"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
                               image: subclassEntry.image,
                               bigStyle: true,
                               ...(isElemental ? { elementalAction: true } : {}),
@@ -10696,6 +10739,7 @@ export default function App({ onSignOut }) {
                               ...(subclassEntry.key === "Llamado del Valiente" ? { braveActs: true } : {}),
                               ...(subclassEntry.key === "Llamado del Cazador" ? { slayerCard: true } : {}),
                               ...(subclassEntry.key === "Bruja Lunar" ? { moonActs: true } : {}),
+                              ...(subclassEntry.key === "Bruja del Seto" ? { hedgeActs: true } : {}),
                             }),
                           });
                         }
@@ -13249,6 +13293,54 @@ export default function App({ onSignOut }) {
               );
             })()}
 
+            {talismanDlg && (() => {
+              const me = characters[viewingCharId];
+              if (!me) return null;
+              const close = () => setTalismanDlg(null);
+              const hope = Number(me.hope_marked ?? HOPE_DEFAULT);
+              const T = talismanDlg;
+              const n = Math.min(T.n, hope);
+              const go = () => {
+                if (n < 1) return;
+                updateCharacterFields(viewingCharId, { hope_marked: String(hope - n), f_talisman: String(n), f_talisman_used: "1", f_talisman_holder: T.holder.trim() });
+                postCampaignEvent(viewingCharId, `🧿 Talismán Encantado: gasta ${n} Esperanza e imbuye un objeto pequeño con su esencia protectora${T.holder.trim() ? " para " + T.holder.trim() : ""} (${n} ficha${n > 1 ? "s" : ""})`);
+                close();
+              };
+              return (
+                <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 46, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)" }} onClick={close}>
+                  <div className="mh-card mh-renew mh-commune" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Talismán Encantado">
+                    <div className="mh-pre-h">
+                      <span className="mh-pre-ic" style={{ background: "color-mix(in srgb, #B8862E 16%, var(--mh-panel))", color: "#B8862E" }}>
+                        <Gem size={17} />
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <b className="mh-serif">Talismán Encantado</b>
+                        <small>Cada Esperanza que gastes es una ficha: quien lleve el talismán marca 1 Punto de Vida menos por ficha.</small>
+                      </div>
+                      <button type="button" className="mh-inv-x" aria-label="Cerrar" onClick={close}>
+                        <X size={16} />
+                      </button>
+                    </div>
+                    <div className="mh-talisman-step">
+                      <button type="button" aria-label="Menos" disabled={n <= 1} onClick={() => setTalismanDlg((x) => ({ ...x, n: Math.max(1, Math.min(x.n, hope) - 1) }))}>
+                        <Minus size={14} />
+                      </button>
+                      <span>
+                        <b>{n}</b> Esperanza
+                      </span>
+                      <button type="button" aria-label="Más" disabled={n >= hope} onClick={() => setTalismanDlg((x) => ({ ...x, n: Math.min(hope, x.n + 1) }))}>
+                        <Plus size={14} />
+                      </button>
+                    </div>
+                    <input className="mh-input" value={T.holder} placeholder="¿Quién lo lleva? (opcional)" maxLength={40} onChange={(e) => setTalismanDlg((x) => ({ ...x, holder: e.target.value }))} />
+                    <button type="button" className="mh-btn" style={{ marginTop: 12, width: "100%" }} onClick={go}>
+                      <Gem size={15} /> Imbuir · {n} ficha{n > 1 ? "s" : ""}
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+
             {communeDlg && (() => {
               const me = characters[viewingCharId];
               if (!me) return null;
@@ -13783,7 +13875,9 @@ export default function App({ onSignOut }) {
               const noMercyOn = ch.f_class === "Guerrero" && ch.f_no_mercy === "1" && preRoll.weapon && !preRoll.weapon.charge;
               // Bruja Lunar · Rayo de Luna: +1 a las tiradas de Lanzamiento de Conjuros bajo la luz.
               const moonbeamOn = ch.f_moonbeam === "1" && preRoll.traitLabel === TRAITS.find((t) => t.key === spellcastTraitFor(ch.f_class, ch.f_subclass))?.label;
-              const mod = preRoll.traitValue + (noMercyOn ? 1 : 0) + (moonbeamOn ? 1 : 0) + expSum + tideUse + (foundPick && !ch.f_found_used ? foundPick.bonus : 0) + (ch.f_subclass === "Origen Elemental" && !preRoll.reaction && preRoll.elem === "roll" ? 2 : 0);
+              // Bruja del Seto · Círculo de Poder: +2 a las tiradas de ataque dentro del círculo.
+              const circleOn = ch.f_subclass === "Bruja del Seto" && Number(ch.f_circle || 0) > 0 && !!preRoll.weapon;
+              const mod = preRoll.traitValue + (noMercyOn ? 1 : 0) + (moonbeamOn ? 1 : 0) + (circleOn ? 2 : 0) + expSum + tideUse + (foundPick && !ch.f_found_used ? foundPick.bonus : 0) + (ch.f_subclass === "Origen Elemental" && !preRoll.reaction && preRoll.elem === "roll" ? 2 : 0);
               // Galapa retraída: la desventaja en las tiradas de acción no se puede quitar.
               // Goblin · Pie Firme: ignora la desventaja en las tiradas de Agilidad.
               const sureFoot = (ch.f_ancestry || "").split(" + ").includes("Goblin") && preRoll.traitLabel === "Agilidad";
@@ -13819,7 +13913,9 @@ export default function App({ onSignOut }) {
               const glamourOk = ch.f_subclass === "Bruja Lunar" && ch.f_glamour === "1" && !etherealOk && !dreadOk;
               // Simiah · Trepador Nato: ventaja en Agilidad para mantener el equilibrio y trepar.
               const climberOk = (ch.f_ancestry || "").split(" + ").includes("Simiah") && preRoll.traitLabel === "Agilidad" && !etherealOk && !dreadOk && !glamourOk;
-              const edgeSource = etherealOk ? "Rostro Etéreo" : dreadOk ? "Rostro Temible" : glamourOk ? "Glamour Nocturno" : climberOk ? "Trepador Nato" : highborne ? "Privilegio" : loreborne ? "Leído" : ridgeborne ? "Firme" : slyborne ? "Granuja" : underborne ? "Vida en la Penumbra" : wildborne ? "Pies Ligeros" : "";
+              // Bruja del Seto · Maldición Irritante: ventaja al atacar a criaturas con Maleficio.
+              const vexOk = ch.f_subclass === "Bruja del Seto" && tierForLevel(ch.f_level || 1) >= 2 && !!preRoll.weapon && (ch.f_hexes || "[]") !== "[]" && !etherealOk && !dreadOk && !glamourOk && !climberOk;
+              const edgeSource = etherealOk ? "Rostro Etéreo" : dreadOk ? "Rostro Temible" : glamourOk ? "Glamour Nocturno" : climberOk ? "Trepador Nato" : vexOk ? "Maldición Irritante" : highborne ? "Privilegio" : loreborne ? "Leído" : ridgeborne ? "Firme" : slyborne ? "Granuja" : underborne ? "Vida en la Penumbra" : wildborne ? "Pies Ligeros" : "";
               const poetOk = ch.f_subclass === "Orador" && preRoll.traitLabel === "Presencia";
               // Origen Elemental · Elementalista: 1 Esperanza para +2 a la tirada o +3 al daño.
               const elemOk = ch.f_subclass === "Origen Elemental" && !preRoll.reaction;
@@ -13962,10 +14058,10 @@ export default function App({ onSignOut }) {
                   ? tile("priv", {
                       on: preRoll.privilege,
                       title: edgeSource,
-                      sub: etherealOk ? "Centinela Alado · volando" : dreadOk ? "Infernal" : glamourOk ? "Bruja Lunar" : climberOk ? "Simiah" : highborne ? "De Alta Cuna" : loreborne ? "Del Saber" : slyborne ? "De las Sombras" : underborne ? "De las Profundidades" : wildborne ? "Salvaje" : "De las Cumbres",
+                      sub: etherealOk ? "Centinela Alado · volando" : dreadOk ? "Infernal" : glamourOk ? "Bruja Lunar" : climberOk ? "Simiah" : vexOk ? "Bruja del Seto" : highborne ? "De Alta Cuna" : loreborne ? "Del Saber" : slyborne ? "De las Sombras" : underborne ? "De las Profundidades" : wildborne ? "Salvaje" : "De las Cumbres",
                       cost: "Ventaja",
-                      color: etherealOk ? "#D8A84A" : dreadOk ? "#A33A3A" : glamourOk ? "#8C7FD0" : climberOk ? "#A0784A" : highborne ? "#B8862E" : loreborne ? "#5E8FC9" : slyborne ? "#6E5A8A" : underborne ? "#5A6B7A" : wildborne ? "#5E8A4E" : "#7E8C6A",
-                      hint: etherealOk ? "Mientras vuelas, tienes ventaja en las tiradas de Presencia" : dreadOk ? "Si intentas intimidar a una criatura hostil" : glamourOk ? "Si la tirada aprovecha tu apariencia ilusoria" : climberOk ? "Si la tirada implica mantener el equilibrio o trepar" : highborne ? "Si tratas con nobles, negocias un precio o usas tu reputación" : loreborne ? "Si la tirada trata sobre la historia, la cultura o la política de una persona o un lugar importantes" : slyborne ? "Si negocias con criminales, intentas detectar una mentira o buscas un escondite seguro" : underborne ? "Si estás en una zona con poca luz o sombras densas y te escondes, investigas o percibes detalles en ella" : wildborne ? "Si intentas moverte sin que te oigan" : "Si cruzas precipicios y cornisas peligrosos, te orientas en un entorno duro o usas tus conocimientos de supervivencia",
+                      color: etherealOk ? "#D8A84A" : dreadOk ? "#A33A3A" : glamourOk ? "#8C7FD0" : climberOk ? "#A0784A" : vexOk ? "#9B7FD6" : highborne ? "#B8862E" : loreborne ? "#5E8FC9" : slyborne ? "#6E5A8A" : underborne ? "#5A6B7A" : wildborne ? "#5E8A4E" : "#7E8C6A",
+                      hint: etherealOk ? "Mientras vuelas, tienes ventaja en las tiradas de Presencia" : dreadOk ? "Si intentas intimidar a una criatura hostil" : glamourOk ? "Si la tirada aprovecha tu apariencia ilusoria" : climberOk ? "Si la tirada implica mantener el equilibrio o trepar" : vexOk ? "Si atacas a una criatura con tu Maleficio" : highborne ? "Si tratas con nobles, negocias un precio o usas tu reputación" : loreborne ? "Si la tirada trata sobre la historia, la cultura o la política de una persona o un lugar importantes" : slyborne ? "Si negocias con criminales, intentas detectar una mentira o buscas un escondite seguro" : underborne ? "Si estás en una zona con poca luz o sombras densas y te escondes, investigas o percibes detalles en ella" : wildborne ? "Si intentas moverte sin que te oigan" : "Si cruzas precipicios y cornisas peligrosos, te orientas en un entorno duro o usas tus conocimientos de supervivencia",
                       onClick: () => setPreRoll((p) => ({ ...p, privilege: !p.privilege, advantage: p.privilege ? p.advantage : false })),
                     })
                   : null,
@@ -13979,6 +14075,7 @@ export default function App({ onSignOut }) {
                 riseOk && !preRoll.dedicated ? ["Estar a la Altura", "Esperanza d20"] : null,
                 noMercyOn ? ["Sin Piedad", "+1"] : null,
                 moonbeamOn ? ["Rayo de Luna", "+1"] : null,
+                circleOn ? ["Círculo de Poder", "+2"] : null,
                 slayerUse ? ["Dados de Cazador", "+" + slayerUse + "d6"] : null,
                 foundPick && !ch.f_found_used ? ["Familia Elegida", "+" + foundPick.bonus] : null,
                 tideUse ? ["Conocer la Marea", "+" + tideUse] : null,
@@ -13988,7 +14085,7 @@ export default function App({ onSignOut }) {
               ].filter(Boolean);
               const DS = 40;
               // Altura fija: se reserva hueco para todas las líneas que este personaje puede llegar a tener.
-              const maxLines = 1 + exps.length + (ch.f_rally_die ? 1 : 0) + (poetOk ? 1 : 0) + (dedicatedOk ? 1 : 0) + (riseOk ? 1 : 0) + (noMercyOn ? 1 : 0) + (moonbeamOn ? 1 : 0) + (slayerHave ? 1 : 0) + (foundOk ? 1 : 0) + (tideOk ? 1 : 0) + (elemOk ? 1 : 0) + (wolf ? 1 : 0) + 1;
+              const maxLines = 1 + exps.length + (ch.f_rally_die ? 1 : 0) + (poetOk ? 1 : 0) + (dedicatedOk ? 1 : 0) + (riseOk ? 1 : 0) + (noMercyOn ? 1 : 0) + (moonbeamOn ? 1 : 0) + (circleOn ? 1 : 0) + (slayerHave ? 1 : 0) + (foundOk ? 1 : 0) + (tideOk ? 1 : 0) + (elemOk ? 1 : 0) + (wolf ? 1 : 0) + 1;
               const canSpendHope = exps.length > 0 || poetOk;
               const anyAdded = preRoll.exps.length > 0 || preRoll.rally || preRoll.poet || preRoll.dedicated || preRoll.privilege || preRoll.quick || tideUse > 0 || !!preRoll.elem || slayerUse > 0 || !!foundPick || !!preRoll.adept || edgePos !== "none";
               return (
@@ -14320,6 +14417,19 @@ export default function App({ onSignOut }) {
                       );
                     })()}
                     {(() => {
+                      // Gnomo · Dedos Ágiles: en Destreza, 2 Esperanza para repetir el Dado de Esperanza.
+                      const r = traitRollResult;
+                      const rc = characters[r.charId];
+                      if (!rc || !(rc.f_ancestry || "").split(" + ").includes("Gnomo") || r.traitLabel !== "Destreza" || r.luck) return null;
+                      const hopeG = Number(rc.hope_marked ?? HOPE_DEFAULT);
+                      return (
+                        <button type="button" className="mh-luck-btn mh-nimble-btn" disabled={hopeG < 2} onClick={() => bendLuck(r.charId, r.charId, rollForReroll(r), { kind: "nimble" })}>
+                          <Sparkles size={15} /> Dedos Ágiles · 2 Esperanza
+                          <small>{hopeG < 2 ? "Necesitas 2 de Esperanza" : "Repite tu Dado de Esperanza"}</small>
+                        </button>
+                      );
+                    })()}
+                    {(() => {
                       // Katari · Instinto Felino: en Agilidad, 2 Esperanza para repetir el Dado de Esperanza.
                       const r = traitRollResult;
                       const rc = characters[r.charId];
@@ -14345,6 +14455,29 @@ export default function App({ onSignOut }) {
                         <button type="button" className="mh-luck-btn mh-charm-btn" disabled={hopeB < 3} onClick={() => witchCharm(r.charId, r.charId, rollForReroll(r))}>
                           <Moon size={15} /> Encanto de Bruja · 3 Esperanza
                           <small>{hopeB < 3 ? "Necesitas 3 Esperanza" : failed ? "Has fallado: conviértela en un éxito con Miedo" : "Si has fallado: conviértela en un éxito con Miedo"}</small>
+                        </button>
+                      );
+                    })()}
+                    {traitRollResult.card?.name === "Caminar Entre Mundos" && (() => {
+                      const r = traitRollResult;
+                      const rc = characters[r.charId];
+                      if (!rc) return null;
+                      const ok = r.charmed || r.hope === r.fear || r.total >= 13;
+                      if (Number(rc.f_walk || 0) > 0) return <div className="mh-luck-done" style={{ color: "#6E8A6A" }}>Estás más allá del velo</div>;
+                      if (!ok) return <div className="mh-luck-done" style={{ color: "var(--mh-muted)" }}>No consigues cruzar el velo</div>;
+                      const n = Math.max(1, Number(rc[spellcastTraitFor(rc.f_class, rc.f_subclass)] || 0));
+                      return (
+                        <button
+                          type="button"
+                          className="mh-luck-btn mh-walk-btn"
+                          disabled={!!rc.f_walk_used}
+                          onClick={() => {
+                            markStress(r.charId, 1, { f_walk: String(n), f_walk_used: "1" });
+                            postCampaignEvent(r.charId, `👻 Caminar Entre Mundos: marca 1 Estrés y cruza el velo de la muerte para hablar con los espíritus cercanos (${n} pregunta${n > 1 ? "s" : ""})`);
+                          }}
+                        >
+                          <Ghost size={15} /> Cruzar el velo · 1 Estrés
+                          <small>{rc.f_walk_used ? "Ya usado · vuelve al descansar" : n + " fichas: una por pregunta respondida"}</small>
                         </button>
                       );
                     })()}
@@ -15991,6 +16124,73 @@ export default function App({ onSignOut }) {
                     });
                   }
                   // Llamado del Valiente · Ritual de Batalla.
+                  if (d.hedgeActs && !d.fromChat) {
+                    const tierH = tierForLevel(c.f_level || 1);
+                    const spellKeyH = spellcastTraitFor(c.f_class, c.f_subclass);
+                    const spellLabelH = TRAITS.find((t) => t.key === spellKeyH)?.label || "Conocimiento";
+                    const nH = Math.max(1, Number(c[spellKeyH] || 0));
+                    const hopeH = Number(c.hope_marked ?? HOPE_DEFAULT);
+                    cardActs.push({
+                      key: "talisman",
+                      Icon: Gem,
+                      label: c.f_talisman_used ? "Talismán Encantado · vuelve al descansar" : hopeH < 1 ? "Te falta Esperanza" : "Encantar un talismán",
+                      sub: "Gasta Esperanza: una ficha por cada una",
+                      disabled: !!c.f_talisman_used || hopeH < 1,
+                      run: () => {
+                        closeCardDetail();
+                        setTalismanDlg({ n: 1, holder: "" });
+                      },
+                    });
+                    if (tierH >= 2 && !Number(c.f_walk || 0))
+                      cardActs.push({
+                        key: "walk",
+                        Icon: Ghost,
+                        label: c.f_walk_used ? "Caminar Entre Mundos · vuelve al descansar" : "Caminar Entre Mundos",
+                        sub: "Tirada de " + spellLabelH + " · Dificultad 13",
+                        disabled: !!c.f_walk_used,
+                        run: () => {
+                          closeCardDetail();
+                          rollTraitCheck(viewingCharId, spellLabelH, Number(c[spellKeyH] || 0), null, { name: "Caminar Entre Mundos", dc: 13 });
+                        },
+                      });
+                    if (tierH >= 3 && !Number(c.f_circle || 0))
+                      cardActs.push({
+                        key: "circle",
+                        Icon: CircleDot,
+                        label: c.f_circle_used ? "Círculo de Poder · vuelve al descansar" : "Trazar el Círculo de Poder",
+                        sub: nH + " fichas · +2 a umbrales, ataque y Evasión",
+                        disabled: !!c.f_circle_used,
+                        run: () => {
+                          closeCardDetail();
+                          updateCharacterFields(viewingCharId, { f_circle: String(nH), f_circle_used: "1" });
+                          postCampaignEvent(viewingCharId, `⭕ Círculo de Poder: traza un círculo en alcance Muy cercano. Dentro, el grupo gana +2 a los umbrales de daño, a las tiradas de ataque y a la Evasión (${nH} fichas; se retira una por cada tirada de acción o ataque evitado)`);
+                        },
+                      });
+                  }
+                  // Gnomo · Paso Fugaz: una vez por escena.
+                  if (d.ancestryKey === "Gnomo" && !d.fromChat) {
+                    cardActs.push(
+                      c.f_flicker_used
+                        ? {
+                            key: "flicker-reset",
+                            Icon: RotateCcw,
+                            label: "Nueva escena: recuperar Paso Fugaz",
+                            sub: "Ya usado en esta escena",
+                            run: () => updateCharacterField(viewingCharId, "f_flicker_used", ""),
+                          }
+                        : {
+                            key: "flicker",
+                            Icon: Sparkles,
+                            label: "Paso Fugaz",
+                            sub: "Teletranspórtate a un punto que veas en alcance Lejano",
+                            run: () => {
+                              closeCardDetail();
+                              updateCharacterField(viewingCharId, "f_flicker_used", "1");
+                              postCampaignEvent(viewingCharId, "✨ Paso Fugaz: desaparece y reaparece en otro punto en alcance Lejano");
+                            },
+                          }
+                    );
+                  }
                   if (d.moonActs && !d.fromChat) {
                     const tierM = tierForLevel(c.f_level || 1);
                     const spellKey = spellcastTraitFor(c.f_class, c.f_subclass);
@@ -16552,7 +16752,7 @@ export default function App({ onSignOut }) {
                       label: "Mostrar en la campaña",
                       sub: shareCamp.name,
                       run: () => {
-                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, divineActs, sentinelActs, originActs, primalActs, braveActs, slayerCard, moonActs, ...detail } = d;
+                        const { fromChat, navigateAction, transformForm, itemIcon, rowIcon, equipAction, hopeAction, invItem, elementalAction, beastLocked, ancestryKey, renewalAction, vengeAction, companionNav, shadowStep, divineActs, sentinelActs, originActs, primalActs, braveActs, slayerCard, moonActs, hedgeActs, ...detail } = d;
                         // Las imágenes incrustadas muy grandes no se copian al chat.
                         if (typeof detail.image === "string" && detail.image.startsWith("data:") && detail.image.length > 30000) delete detail.image;
                         const type = d.domain ? "domain" : d.weapon ? "weapon" : d.armor ? "armor" : "card";
@@ -16567,6 +16767,7 @@ export default function App({ onSignOut }) {
                   const slayerCard = !d.fromChat && d.slayerCard;
                   const patternCard = !d.fromChat && d.title === "Patrones Extraños" && c?.f_class === "Mago";
                   const hexCard = !d.fromChat && d.title === "Maleficio" && c?.f_class === "Bruja";
+                  const hedgeCard = !d.fromChat && d.hedgeActs && (Number(c?.f_talisman || 0) > 0 || Number(c?.f_walk || 0) > 0 || Number(c?.f_circle || 0) > 0);
                   const tideMax = Number(c?.f_level || 1);
                   const footer = d.weapon
                     ? [d.weapon.trait !== "—" && d.weapon.trait, d.weapon.range].filter(Boolean).join(" · ")
@@ -16663,6 +16864,41 @@ export default function App({ onSignOut }) {
                           <div style={{ fontSize: "0.93em", color: "var(--mh-muted2)", fontStyle: "italic" }}>Sin característica especial.</div>
                         ))}
                     </FitBox>
+                    {hedgeCard && (() => {
+                      const tokenRow = (field, label, color, Ic, spendText, onLast) => {
+                        const have = Number(c[field] || 0);
+                        if (!have) return null;
+                        return (
+                          <div className="mh-hedge-row" style={{ "--hc": color }}>
+                            <b>{label}</b>
+                            <span className="mh-hedge-pips">
+                              {Array.from({ length: have }, (_, k) => (
+                                <button
+                                  key={k}
+                                  type="button"
+                                  title={spendText}
+                                  aria-label={spendText}
+                                  onClick={() => {
+                                    updateCharacterField(viewingCharId, field, String(have - 1));
+                                    postCampaignEvent(viewingCharId, have - 1 === 0 ? onLast : spendText.replace(/^Gastar/, "Gasta").replace(/^Retirar/, "Retira"));
+                                  }}
+                                >
+                                  <Ic size={10} strokeWidth={2.6} />
+                                </button>
+                              ))}
+                            </span>
+                            <small>{spendText}</small>
+                          </div>
+                        );
+                      };
+                      return (
+                        <div className="mh-cardc-foot mh-hedge-foot">
+                          {tokenRow("f_talisman", "Talismán" + (c.f_talisman_holder ? " · " + c.f_talisman_holder : ""), "#B8862E", Gem, "Gastar una ficha: quien lleva el talismán marca 1 Punto de Vida menos", "🧿 Talismán Encantado: gasta la última ficha y reduce en 1 los Puntos de Vida marcados")}
+                          {tokenRow("f_walk", "Más allá del velo", "#6E8A6A", Ghost, "Retirar una ficha: un espíritu responde a una pregunta", "👻 Caminar Entre Mundos: el último espíritu responde y vuelve al Reino Mortal")}
+                          {tokenRow("f_circle", "Círculo de Poder", "#9B7FD6", CircleDot, "Retirar una ficha: tirada de acción o ataque evitado dentro del círculo", "⭕ Círculo de Poder: se retira la última ficha y el círculo se desvanece")}
+                        </div>
+                      );
+                    })()}
                     {hexCard && (() => {
                       const hexes = (() => {
                         try {
@@ -16821,7 +17057,7 @@ export default function App({ onSignOut }) {
                         </div>
                       );
                     })()}
-                    {!tideCard && !prayerCard && !slayerCard && !patternCard && !hexCard && (footer || d.domain) && (
+                    {!tideCard && !prayerCard && !slayerCard && !patternCard && !hexCard && !hedgeCard && (footer || d.domain) && (
                       <div className="mh-cardc-foot">
                         {d.domain ? (
                           <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
