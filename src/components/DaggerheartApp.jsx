@@ -2571,6 +2571,14 @@ const sharedStyles = `
   .mh-map-stamphint { font-size: 12px; color: var(--mh-ink3); margin-top: -4px; }
   .mh-map-flat { position: absolute; inset: 0; }
   .mh-map-terrain { position: absolute; pointer-events: none; }
+  .mh-map-tk.is-step0 .mh-map-face { animation: mh-hop0 .38s ease-out; }
+  .mh-map-tk.is-step1 .mh-map-face { animation: mh-hop1 .38s ease-out; }
+  @keyframes mh-hop0 { 0% { translate: 0 0; scale: 1; } 45% { translate: 0 -28%; scale: 1.06; } 80% { translate: 0 0; scale: 1.04 .94; } 100% { translate: 0 0; scale: 1; } }
+  @keyframes mh-hop1 { 0% { translate: 0 0; scale: 1; } 45% { translate: 0 -28%; scale: 1.06; } 80% { translate: 0 0; scale: 1.04 .94; } 100% { translate: 0 0; scale: 1; } }
+  .mh-iso-tk.is-step0 { animation: mh-iso-step0 .42s cubic-bezier(.3,.7,.4,1); }
+  .mh-iso-tk.is-step1 { animation: mh-iso-step1 .42s cubic-bezier(.3,.7,.4,1); }
+  @keyframes mh-iso-step0 { 0% { transform: translate(var(--mx), var(--my)); } 50% { transform: translate(calc(var(--mx) * .45), calc(var(--my) * .45 - 16px)); } 100% { transform: translate(0, 0); } }
+  @keyframes mh-iso-step1 { 0% { transform: translate(var(--mx), var(--my)); } 50% { transform: translate(calc(var(--mx) * .45), calc(var(--my) * .45 - 16px)); } 100% { transform: translate(0, 0); } }
   .mh-map-tk.is-attack { z-index: 5; animation: mh-lunge .7s cubic-bezier(.5,0,.3,1) both; }
   @keyframes mh-lunge { 0% { translate: 0 0; } 18% { translate: calc(var(--ax) * -.08) calc(var(--ay) * -.08); } 48% { translate: calc(var(--ax) * .62) calc(var(--ay) * .62); scale: 1.12; } 100% { translate: 0 0; scale: 1; } }
   .mh-map-tk.is-hit { animation: mh-tk-hit .55s .32s ease both; }
@@ -2581,7 +2589,7 @@ const sharedStyles = `
   @keyframes mh-iso-lunge { 0% { transform: translate(0, 0); } 18% { transform: translate(calc(var(--ax) * -.08), calc(var(--ay) * -.08)); } 48% { transform: translate(calc(var(--ax) * .62), calc(var(--ay) * .62)); } 100% { transform: translate(0, 0); } }
   .mh-iso-tk.is-hit { animation: mh-iso-hit .55s .32s ease both; }
   @keyframes mh-iso-hit { 0%, 100% { transform: translate(0, 0); filter: none; } 20% { transform: translate(-5px, 2px); filter: brightness(1.8) drop-shadow(0 0 5px #ff4a3d); } 40% { transform: translate(5px, -2px); } 60% { transform: translate(-3px, 1px); } 80% { transform: translate(2px, 0); } }
-  @media (prefers-reduced-motion: reduce) { .mh-map-tk.is-attack, .mh-map-tk.is-hit, .mh-map-tk.is-hit .mh-map-face, .mh-iso-tk.is-attack, .mh-iso-tk.is-hit { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { .mh-map-tk.is-attack, .mh-map-tk.is-hit, .mh-map-tk.is-hit .mh-map-face, .mh-iso-tk.is-attack, .mh-iso-tk.is-hit, .mh-map-tk[class*="is-step"] .mh-map-face, .mh-iso-tk[class*="is-step"] { animation: none; } .mh-map .mh-map-tk { transition: none; } }
   .mh-map-props-sep { font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-muted); margin: 0 2px 0 8px; }
   .mh-isoboard { background: #EFE8DB; }
   .mh-isoboard svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
@@ -2614,7 +2622,7 @@ const sharedStyles = `
   .mh-map-reach { position: absolute; background: rgba(111,191,115,.26); box-shadow: inset 0 0 0 1px rgba(111,191,115,.6); pointer-events: none; }
   .mh-map-drop { position: absolute; box-shadow: inset 0 0 0 2px #F3C24A; border-radius: 6px; pointer-events: none; }
   .mh-map-drop.is-bad { box-shadow: inset 0 0 0 2px #D9644E; }
-  .mh-map-tk { position: absolute; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; background: none; cursor: default; transition: left .18s ease, top .18s ease; }
+  .mh-map-tk { position: absolute; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; background: none; cursor: default; transition: left .3s cubic-bezier(.3,.7,.4,1), top .3s cubic-bezier(.3,.7,.4,1); }
   .mh-map-tk.is-movable { cursor: grab; }
   .mh-map-tk.is-drag { cursor: grabbing; transition: none; z-index: 3; opacity: .85; }
   .mh-map-tk:focus-visible { outline: none; }
@@ -4491,6 +4499,33 @@ function useAttackFx(fx) {
   }, [fx?.key]);
   return anim;
 }
+// Animación de paso: cuando una ficha cambia de casilla (la mueva quien sea) da un saltito hasta la nueva.
+// Devuelve { id: { fx, fy, n } } con la casilla de la que viene; n alterna para reiniciar la animación en pasos seguidos.
+function useMoveFx(list) {
+  const prev = useRef(null);
+  const seq = useRef(0);
+  const [steps, setSteps] = useState({});
+  const sig = list.map(([id, x, y]) => id + ":" + x + "," + y).join("|");
+  useLayoutEffect(() => {
+    const now = {};
+    const moved = {};
+    for (const [id, x, y] of list) {
+      now[id] = [x, y];
+      const o = prev.current && prev.current[id];
+      if (o && (o[0] !== x || o[1] !== y)) moved[id] = { fx: o[0], fy: o[1], n: ++seq.current };
+    }
+    prev.current = now;
+    const ids = Object.keys(moved);
+    if (!ids.length) return;
+    setSteps((st) => ({ ...st, ...moved }));
+    setTimeout(() => setSteps((st) => {
+      const c = { ...st };
+      ids.forEach((i) => c[i] === moved[i] && delete c[i]);
+      return c;
+    }), 520);
+  }, [sig]);
+  return steps;
+}
 // Vista del tablero: plana (por defecto) o isométrica. Es una preferencia de cada navegador.
 const readIsoPref = () => {
   try {
@@ -4510,6 +4545,7 @@ function MapBoard({ fx, bg, tokens, props = [], terrain = [], stampTool, onStamp
   const painting = useRef(null);
   const [iso, setIso] = useState(readIsoPref);
   const anim = useAttackFx(fx);
+  const steps = useMoveFx(tokens.map((t) => (drag && drag.id === t.id ? [t.id, drag.x, drag.y] : [t.id, t.x, t.y])));
   const toggleIso = () => {
     const v = !iso;
     setIso(v);
@@ -4688,7 +4724,7 @@ function MapBoard({ fx, bg, tokens, props = [], terrain = [], stampTool, onStamp
           <button
             key={t.id}
             type="button"
-            className={"mh-map-tk is-" + t.kind + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" : "")}
+            className={"mh-map-tk is-" + t.kind + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "")}
             style={{ ...at(pos.x, pos.y), "--tc": t.color, ...(anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); return tg ? { "--ax": (tg.x - t.x) * 100 + "%", "--ay": (tg.y - t.y) * 100 + "%" } : {}; })() : {}) }}
             onPointerDown={(e) => startDrag(e, t)}
             onContextMenu={(e) => openMenu(e, t)}
@@ -4761,6 +4797,7 @@ function IsoBoard({ anim, tokens, props = [], terrain = [], stampTool, onStamp, 
   const dragRef = useRef(null);
   const [drag, setDrag] = useState(null);
   const [rangeId, setRangeId] = useState(null);
+  const steps = useMoveFx(tokens.map((t) => (drag && drag.id === t.id ? [t.id, drag.x, drag.y] : [t.id, t.x, t.y])));
   const painting = useRef(null);
   const occupied = (x, y, exceptId) => tokens.some((t) => t.id !== exceptId && t.x === x && t.y === y);
   const selected = tokens.find((t) => t.id === selectedId && canMove(t));
@@ -4888,8 +4925,8 @@ function IsoBoard({ anim, tokens, props = [], terrain = [], stampTool, onStamp, 
                 return (
                   <g
                     key={t.id}
-                    className={"mh-iso-tk" + (movable ? " is-movable" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" : "")}
-                    style={anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); if (!tg) return undefined; const [tx, ty] = P(tg.x + 0.5, tg.y + 0.5, tAt(tg.x, tg.y).z); return { "--ax": tx - cx + "px", "--ay": ty - cy + "px" }; })() : undefined}
+                    className={"mh-iso-tk" + (movable ? " is-movable" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" : "") + (steps[t.id] && !(anim && anim.from === t.id) ? " is-step" + (steps[t.id].n % 2) : "")}
+                    style={anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); if (!tg) return undefined; const [tx, ty] = P(tg.x + 0.5, tg.y + 0.5, tAt(tg.x, tg.y).z); return { "--ax": tx - cx + "px", "--ay": ty - cy + "px" }; })() : steps[t.id] ? (() => { const st = steps[t.id]; const [ox, oy] = P(st.fx + 0.5, st.fy + 0.5, tAt(st.fx, st.fy).z); return { "--mx": ox - cx + "px", "--my": oy - cy + "px" }; })() : undefined}
                     onPointerDown={(e) => tokenDown(e, t)}
                     onContextMenu={(e) => {
                       e.preventDefault();
