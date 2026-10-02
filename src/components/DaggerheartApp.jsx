@@ -2571,6 +2571,17 @@ const sharedStyles = `
   .mh-map-stamphint { font-size: 12px; color: var(--mh-ink3); margin-top: -4px; }
   .mh-map-flat { position: absolute; inset: 0; }
   .mh-map-terrain { position: absolute; pointer-events: none; }
+  .mh-map-tk.is-attack { z-index: 5; animation: mh-lunge .7s cubic-bezier(.5,0,.3,1) both; }
+  @keyframes mh-lunge { 0% { translate: 0 0; } 18% { translate: calc(var(--ax) * -.08) calc(var(--ay) * -.08); } 48% { translate: calc(var(--ax) * .62) calc(var(--ay) * .62); scale: 1.12; } 100% { translate: 0 0; scale: 1; } }
+  .mh-map-tk.is-hit { animation: mh-tk-hit .55s .32s ease both; }
+  .mh-map-tk.is-hit .mh-map-face { animation: mh-tk-flash .55s .32s ease both; }
+  @keyframes mh-tk-hit { 0%, 100% { translate: 0 0; } 20% { translate: -10% 4%; } 40% { translate: 9% -3%; } 60% { translate: -6% 2%; } 80% { translate: 4% 0; } }
+  @keyframes mh-tk-flash { 0%, 100% { filter: none; } 25% { filter: brightness(1.8) saturate(.4) drop-shadow(0 0 6px #ff4a3d); } }
+  .mh-iso-tk.is-attack { animation: mh-iso-lunge .7s cubic-bezier(.5,0,.3,1) both; }
+  @keyframes mh-iso-lunge { 0% { transform: translate(0, 0); } 18% { transform: translate(calc(var(--ax) * -.08), calc(var(--ay) * -.08)); } 48% { transform: translate(calc(var(--ax) * .62), calc(var(--ay) * .62)); } 100% { transform: translate(0, 0); } }
+  .mh-iso-tk.is-hit { animation: mh-iso-hit .55s .32s ease both; }
+  @keyframes mh-iso-hit { 0%, 100% { transform: translate(0, 0); filter: none; } 20% { transform: translate(-5px, 2px); filter: brightness(1.8) drop-shadow(0 0 5px #ff4a3d); } 40% { transform: translate(5px, -2px); } 60% { transform: translate(-3px, 1px); } 80% { transform: translate(2px, 0); } }
+  @media (prefers-reduced-motion: reduce) { .mh-map-tk.is-attack, .mh-map-tk.is-hit, .mh-map-tk.is-hit .mh-map-face, .mh-iso-tk.is-attack, .mh-iso-tk.is-hit { animation: none; } }
   .mh-map-props-sep { font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-muted); margin: 0 2px 0 8px; }
   .mh-isoboard { background: #EFE8DB; }
   .mh-isoboard svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
@@ -4466,6 +4477,20 @@ const HAPPY_SPARKS = [
 ];
 const HAPPY_MOTES = [[14, 0], [50, 0.8], [80, 1.6], [34, 2.2], [66, 2.9]];
 
+// Animación de ataque en el tablero: la figura atacante embiste y el objetivo se sacude. Se reproduce una vez por ataque reciente.
+function useAttackFx(fx) {
+  const [anim, setAnim] = useState(null);
+  const last = useRef(null);
+  useEffect(() => {
+    if (!fx || !fx.key || last.current === fx.key) return;
+    last.current = fx.key;
+    if (Date.now() - fx.key > 15000) return;
+    setAnim(fx);
+    const t = setTimeout(() => setAnim(null), 1200);
+    return () => clearTimeout(t);
+  }, [fx?.key]);
+  return anim;
+}
 // Vista del tablero: plana (por defecto) o isométrica. Es una preferencia de cada navegador.
 const readIsoPref = () => {
   try {
@@ -4475,7 +4500,7 @@ const readIsoPref = () => {
   }
 };
 // Tablero con fichas cuadradas. Se arrastran, o se elige una y se pulsa la casilla; también con las flechas.
-function MapBoard({ bg, tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
+function MapBoard({ fx, bg, tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
   const ref = useRef(null);
   const dragRef = useRef(null);
   const [drag, setDrag] = useState(null);
@@ -4484,6 +4509,7 @@ function MapBoard({ bg, tokens, props = [], terrain = [], stampTool, onStamp, on
   const [hover, setHover] = useState(null); // casilla bajo el ratón mientras hay un sello elegido
   const painting = useRef(null);
   const [iso, setIso] = useState(readIsoPref);
+  const anim = useAttackFx(fx);
   const toggleIso = () => {
     const v = !iso;
     setIso(v);
@@ -4614,7 +4640,7 @@ function MapBoard({ bg, tokens, props = [], terrain = [], stampTool, onStamp, on
   const at = (x, y) => ({ left: (x * 100) / MAP_COLS + "%", top: (y * 100) / MAP_ROWS + "%", width: 100 / MAP_COLS + "%", height: 100 / MAP_ROWS + "%" });
 
   if (iso)
-    return <IsoBoard tokens={tokens} props={props} terrain={terrain} stampTool={stampTool} onStamp={onStamp} onUnstamp={onUnstamp} canMove={canMove} onMove={onMove} selectedId={selectedId} onSelect={onSelect} onPick={onPick} compact={compact} onToggle={toggleIso} />;
+    return <IsoBoard anim={anim} tokens={tokens} props={props} terrain={terrain} stampTool={stampTool} onStamp={onStamp} onUnstamp={onUnstamp} canMove={canMove} onMove={onMove} selectedId={selectedId} onSelect={onSelect} onPick={onPick} compact={compact} onToggle={toggleIso} />;
 
   return (
     <div
@@ -4662,8 +4688,8 @@ function MapBoard({ bg, tokens, props = [], terrain = [], stampTool, onStamp, on
           <button
             key={t.id}
             type="button"
-            className={"mh-map-tk is-" + t.kind + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "")}
-            style={{ ...at(pos.x, pos.y), "--tc": t.color }}
+            className={"mh-map-tk is-" + t.kind + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" : "")}
+            style={{ ...at(pos.x, pos.y), "--tc": t.color, ...(anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); return tg ? { "--ax": (tg.x - t.x) * 100 + "%", "--ay": (tg.y - t.y) * 100 + "%" } : {}; })() : {}) }}
             onPointerDown={(e) => startDrag(e, t)}
             onContextMenu={(e) => openMenu(e, t)}
             onKeyDown={(e) => keyMove(e, t)}
@@ -4720,7 +4746,7 @@ function MapBoard({ bg, tokens, props = [], terrain = [], stampTool, onStamp, on
 
 // Tablero isométrico tipo diorama: losetas con relieve, decorados y fichas de pie.
 // Usa los mismos datos que el tablero plano (fichas, decorados y terreno).
-function IsoBoard({ tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact, onToggle }) {
+function IsoBoard({ anim, tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact, onToggle }) {
   const S = 34;
   const OX = MAP_ROWS * S + S * 0.6;
   const OY = S * 2.4;
@@ -4862,7 +4888,8 @@ function IsoBoard({ tokens, props = [], terrain = [], stampTool, onStamp, onUnst
                 return (
                   <g
                     key={t.id}
-                    className={"mh-iso-tk" + (movable ? " is-movable" : "") + (drag?.id === t.id ? " is-drag" : "")}
+                    className={"mh-iso-tk" + (movable ? " is-movable" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" : "")}
+                    style={anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); if (!tg) return undefined; const [tx, ty] = P(tg.x + 0.5, tg.y + 0.5, tAt(tg.x, tg.y).z); return { "--ax": tx - cx + "px", "--ay": ty - cy + "px" }; })() : undefined}
                     onPointerDown={(e) => tokenDown(e, t)}
                     onContextMenu={(e) => {
                       e.preventDefault();
@@ -8426,6 +8453,7 @@ export default function App({ onSignOut }) {
   const [talismanDlg, setTalismanDlg] = useState(null); // Bruja del Seto · Talismán Encantado
   const [embraceDlg, setEmbraceDlg] = useState(null); // Pacto del Eterno · Abrazo Inmortal
   const [vengeAsk, setVengeAsk] = useState(null);
+  const [targetDlg, setTargetDlg] = useState(null); // ataque: a qué enemigo del tablero
   const [titanAsk, setTitanAsk] = useState(null);
   const [stanceEdit, setStanceEdit] = useState(null);
   const [summonDlg, setSummonDlg] = useState(null); // Invocador · Invocar Entidad
@@ -8995,6 +9023,14 @@ export default function App({ onSignOut }) {
   // Llamado del Valiente · Estar a la Altura (Especialización): con 2 o menos PV sin marcar, d20 como Dado de Esperanza.
   const riseToChallenge = (c) => !!c && c.f_subclass === "Llamado del Valiente" && tierForLevel(c.f_level || 1) >= 2 && Number(c.r_hp || 0) - Number(c.hp_marked || 0) <= 2;
   const rollTraitCheck = (charId, traitLabel, traitValue, weapon, cardContext, advantage) => {
+    // En una campaña con enemigos en el tablero, primero se elige a quién se ataca.
+    if (weapon && !weapon.targetChosen && sheetCampaignId) {
+      const foes = mapTokensView(campaignMap.tokens || []).filter((t) => t.kind === "foe" || t.kind === "npc");
+      if (foes.length) {
+        setTargetDlg({ args: [charId, traitLabel, traitValue, weapon, cardContext, advantage], foes });
+        return;
+      }
+    }
     // Galapa · Retraerse: desventaja en las tiradas de acción mientras está en el caparazón.
     const shellOn = getConditions(charsRef.current[charId] || {}).includes("Retraído");
     setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage && !shellOn, exps: [], rally: false, privilege: false, disadvantage: shellOn, shellOn, poet: false, dedicated: false, quick: false, reaction: false, tide: 0, dc: "", elem: "", slayer: 0, found: "", adept: false, patron: false, surround: 0, honed: false, hallow: false, fury: false });
@@ -10309,6 +10345,7 @@ export default function App({ onSignOut }) {
                           stampTool={stampTool}
                           onStamp={(x, y) => stampProp(stampTool, x, y)}
                           onUnstamp={unstampProp}
+                          fx={campaignMap.fx}
                           tokens={mapTokensView(tokens)}
                           canMove={(t) => t.kind === "npc" || t.kind === "foe"}
                           onMove={(id, x, y) => moveToken(viewingCampaignId, id, x, y)}
@@ -14349,6 +14386,7 @@ export default function App({ onSignOut }) {
                                             bg={scene.image}
                                             props={campaignMap.props || []}
                                             terrain={campaignMap.terrain || []}
+                                            fx={campaignMap.fx}
                                             tokens={mapTokens}
                                             canMove={(t) => (t.kind === "pc" && t.charId === viewingCharId) || (t.kind === "pet" && t.ownerCharId === viewingCharId)}
                                             onMove={(id, x, y) => moveToken(charCampaign.id, id, x, y)}
@@ -14926,6 +14964,51 @@ export default function App({ onSignOut }) {
                     </div>
                     <button type="button" className="mh-btn mh-pre-go" disabled={!picked} onClick={go} style={{ marginTop: 12 }}>
                       <Zap size={15} /> {picked ? "Canalizar · " + picked.key + " pasa a la bóveda" : "Elige una carta"}
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {targetDlg && (() => {
+              const T = targetDlg;
+              const close = () => setTargetDlg(null);
+              const go = (tok) => {
+                const [charId, traitLabel, traitValue, weapon, cardContext, advantage] = T.args;
+                close();
+                if (tok) postCampaignEvent(charId, `⚔️ Ataca a ${tok.name} con ${weapon.name}`);
+                rollTraitCheck(charId, traitLabel, traitValue, { ...weapon, targetChosen: true, ...(tok ? { targetId: tok.id, targetName: tok.name } : {}) }, cardContext, advantage);
+              };
+              return (
+                <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 46, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)" }} onClick={close}>
+                  <div className="mh-card mh-renew" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Elegir objetivo">
+                    <div className="mh-pre-h">
+                      <span className="mh-pre-ic" style={{ background: "color-mix(in srgb, #C0504A 16%, var(--mh-panel))", color: "#C0504A" }}>
+                        <Crosshair size={17} />
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <b className="mh-serif">¿A quién atacas?</b>
+                        <small>Con {T.args[3].name}. Si le haces daño, tu figura le atacará en el tablero.</small>
+                      </div>
+                      <button type="button" className="mh-inv-x" aria-label="Cerrar" onClick={close}>
+                        <X size={16} />
+                      </button>
+                    </div>
+                    <div className="mh-renew-list">
+                      {T.foes.map((t) => (
+                        <button key={t.id} type="button" className="mh-renew-row is-pick" onClick={() => go(t)}>
+                          <span className="mh-renew-av" style={{ background: t.kind === "foe" ? "#C0504A" : "#7D8BA3" }}>
+                            {t.kind === "foe" ? <Skull size={14} /> : (t.name || "?").charAt(0)}
+                          </span>
+                          <div className="mh-renew-t">
+                            <b>{t.name}</b>
+                            <small>{t.kind === "foe" ? "Enemigo" : "PNJ"} · casilla {t.x + 1},{t.y + 1}</small>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                    <button type="button" className="mh-btn-ghost" style={{ marginTop: 10, width: "100%" }} onClick={() => go(null)}>
+                      Atacar sin elegir objetivo
                     </button>
                   </div>
                 </div>
@@ -17198,6 +17281,10 @@ export default function App({ onSignOut }) {
                               const cur = charsRef.current[charId];
                               updateCharacterFields(charId, { hope_marked: String(Math.min(getHopeMax(cur), Number(cur.hope_marked ?? HOPE_DEFAULT) + 1)), stress_marked: String(Math.max(0, Number(cur.stress_marked || 0) - 1)) });
                               postCampaignEvent(charId, "🥊 Gozo del Golpe: gana 1 Esperanza más, se quita 1 Estrés más y su Competencia sube en 1 en este ataque");
+                            }
+                            if (traitRollResult.weapon.targetId && sheetCampaignId) {
+                              const fromTok = (campaignMap.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
+                              if (fromTok) mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: fromTok.id, to: traitRollResult.weapon.targetId }), "fx");
                             }
                             rollWeaponDamage(name, damage, charId, isCritical, { angel: traitRollResult.weapon.angel || 0, knight: !!traitRollResult.weapon.knight, attackFear: traitRollResult.fear, ...(pummel || honedHit ? { fixedDice: getProficiency(rc) + (pummel ? 1 : 0) + (honedHit ? 1 : 0) } : {}), fearDice, cloaked: wasCloaked, spirit, resonance: spirit && rc && tierForLevel(rc.f_level || 1) >= 3, extraFlat: traitRollResult.weapon.elemDmg || 0, doublePick: !!traitRollResult.weapon.manipDouble });
                           }}
