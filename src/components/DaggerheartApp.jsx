@@ -3841,6 +3841,9 @@ const HEADER_ELEMENTS = {
 const TRANSFORM_THEMES = {
   "Forma de Lobo": { key: "Forma de Lobo", color: "#C45050" },
 };
+// Orden del Licántropo · Forma Híbrida: el mismo fondo de lobo que la Transformación, en el rojo del Cazador de Sangre.
+const HYBRID_THEME = { key: "Forma de Lobo", color: "#A8323E" };
+const hybridThemeOf = (c) => (c?.f_subclass === "Orden del Licántropo" && c?.f_hybrid === "1" ? HYBRID_THEME : null);
 
 const BEAST_SPOTS = [
   { right: "-3%", bottom: "-7%", size: "min(58vh, 540px)", o: 0.34, d: "22s", flip: false, tx: "-26px", ty: "-10px" },
@@ -10230,7 +10233,7 @@ export default function App({ onSignOut }) {
         const themeColor = beastformInfo?.color || classColor(c.f_class);
         const headerCampaign = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(viewingCharId));
         const activeTransformForm = c.f_transformation_form_active || "";
-        const headerAccent = beastformInfo?.color || TRANSFORM_THEMES[activeTransformForm]?.color || null;
+        const headerAccent = beastformInfo?.color || TRANSFORM_THEMES[activeTransformForm]?.color || hybridThemeOf(c)?.color || null;
         const primaryWeapon = PRIMARY_WEAPONS.find((w) => w.key === c.f_primary_weapon);
         const secondaryWeapon = SECONDARY_WEAPONS.find((w) => w.key === c.f_secondary_weapon);
         const armorEntry = ARMORS.find((a) => a.key === c.f_armor);
@@ -10321,7 +10324,7 @@ export default function App({ onSignOut }) {
               overflow: "hidden",
               borderTop: "4px solid " + themeColor,
               filter: isDead ? "grayscale(1)" : "none",
-              "--panel-bg": beastformInfo || TRANSFORM_THEMES[c.f_transformation_form_active] ? "var(--mh-glass)" : "var(--mh-panel)",
+              "--panel-bg": beastformInfo || TRANSFORM_THEMES[c.f_transformation_form_active] || hybridThemeOf(c) ? "var(--mh-glass)" : "var(--mh-panel)",
             }}
           >
             {hpHit && hpHit.id === viewingCharId && (
@@ -10348,7 +10351,7 @@ export default function App({ onSignOut }) {
             })}
             <FormFx
               key={"fx-" + viewingCharId}
-              form={beastformInfo || TRANSFORM_THEMES[c.f_transformation_form_active] || null}
+              form={beastformInfo || TRANSFORM_THEMES[c.f_transformation_form_active] || hybridThemeOf(c) || null}
               kind={beastformInfo ? "beast" : "transform"}
             />
             {/* Cabecera y contenido: en el móvil se desplazan juntos */}
