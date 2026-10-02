@@ -13448,9 +13448,12 @@ export default function App({ onSignOut }) {
               const go = () => {
                 if (fav < 1) return;
                 const rolls = Array.from({ length: n }, () => Math.floor(Math.random() * sides) + 1);
-                const healed = Math.min(rolls.filter((v) => v >= 4).length, Number(me.hp_marked || 0));
-                updateCharacterFields(viewingCharId, { f_favor: String(fav - n), f_embrace_used: "1", hp_marked: String(Math.max(0, Number(me.hp_marked || 0) - healed)) });
-                setEmbraceDlg((x) => ({ ...x, rolls, healed }));
+                const cur = charsRef.current[viewingCharId] || me;
+                const hits = rolls.filter((v) => v >= 4).length;
+                const marked = Number(cur.hp_marked || 0);
+                const healed = Math.min(hits, marked);
+                updateCharacterFields(viewingCharId, { f_favor: String(fav - n), f_embrace_used: "1", hp_marked: String(Math.max(0, marked - healed)) });
+                setEmbraceDlg((x) => ({ ...x, rolls, healed, hits }));
                 postCampaignEvent(viewingCharId, `💀 Abrazo Inmortal: gasta ${n} Favor, tira ${rolls.join(", ")} y se quita ${healed} Punto${healed === 1 ? "" : "s"} de Vida`);
               };
               return (
@@ -13481,6 +13484,7 @@ export default function App({ onSignOut }) {
                             <Plus size={14} />
                           </button>
                         </div>
+                        {Number(me.hp_marked || 0) === 0 && <div className="mh-pre-note" style={{ color: "var(--mh-muted)", textAlign: "center", marginBottom: 8 }}>No tienes Puntos de Vida marcados: no te quitarías ninguno.</div>}
                         <button type="button" className="mh-btn" style={{ width: "100%" }} disabled={fav < 1} onClick={go}>
                           <Dices size={15} /> Tirar {n}d{sides}
                         </button>
@@ -13494,7 +13498,10 @@ export default function App({ onSignOut }) {
                             </button>
                           ))}
                         </div>
-                        <div className="mh-commune-res">Te quitas {E.healed} Punto{E.healed === 1 ? "" : "s"} de Vida</div>
+                        <div className="mh-commune-res">
+                          {E.hits} resultado{E.hits === 1 ? "" : "s"} de 4 o más · te quitas {E.healed} Punto{E.healed === 1 ? "" : "s"} de Vida
+                          {E.hits > E.healed && <small style={{ display: "block", fontWeight: 500, color: "var(--mh-muted)", marginTop: 4 }}>{E.healed === 0 ? "No tenías Puntos de Vida marcados." : "No tenías más Puntos de Vida marcados."}</small>}
+                        </div>
                       </>
                     )}
                   </div>
