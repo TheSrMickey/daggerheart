@@ -1725,6 +1725,16 @@ const MAP_PROPS = [
   { key: "hoguera", label: "Hoguera", svg: '<circle cx="50" cy="50" r="40" fill="#FF9A3D" opacity=".25"/><path d="M26 60 74 40M26 40 74 60" stroke="#4B3018" stroke-width="9" stroke-linecap="round"/><path d="M50 22 C62 38 66 50 50 66 C34 50 38 38 50 22Z" fill="#FF8A2A"/><path d="M50 36 C57 46 58 54 50 62 C42 54 43 46 50 36Z" fill="#FFE08A"/>' },
 ];
 const propSvg = (key) => MAP_PROPS.find((p) => p.key === key)?.svg || "";
+// Terrenos que el DJ pinta en el mapa (la hierba es el suelo por defecto). z = altura de la loseta en la vista isométrica.
+const MAP_TERRAINS = [
+  { key: "hierba", label: "Hierba", z: 0, top: ["#A9C48A", "#9DBB7E"], s1: "#7E9A5E", s2: "#6E8A50", flat: "transparent" },
+  { key: "camino", label: "Camino", z: 0, top: ["#CDB78E", "#C4AD83"], s1: "#A08A62", s2: "#8F7A55", flat: "rgba(205,183,142,.55)" },
+  { key: "agua", label: "Agua", z: 0, top: ["#7FB2C9", "#76AAC2"], s1: "#5D8FA6", s2: "#507F95", flat: "rgba(110,170,205,.6)" },
+  { key: "colina", label: "Colina", z: 0.5, top: ["#B8A982", "#B0A17A"], s1: "#8D7F5D", s2: "#7D704F", flat: "rgba(184,169,130,.55)" },
+  { key: "alto", label: "Colina alta", z: 1, top: ["#A99A72", "#A1926A"], s1: "#7E7150", s2: "#6E6244", flat: "rgba(160,145,105,.65)" },
+  { key: "roca", label: "Risco", z: 1.2, top: ["#9AA08E", "#939986"], s1: "#7C8273", s2: "#6C7263", flat: "rgba(140,146,128,.7)" },
+];
+const terrainOf = (key) => MAP_TERRAINS.find((t) => t.key === key) || MAP_TERRAINS[0];
 
 // Rangos de Daggerheart en cuadrícula (casillas desde la ficha, contando diagonales).
 const MAP_RANGES = [
@@ -2552,6 +2562,16 @@ const sharedStyles = `
   .mh-map-chip i.is-prop svg { width: 90%; height: 90%; color: inherit; }
   .mh-map-stamphint { font-size: 12px; color: var(--mh-ink3); margin-top: -4px; }
   .mh-map-flat { position: absolute; inset: 0; }
+  .mh-map-terrain { position: absolute; pointer-events: none; }
+  .mh-map-props-sep { font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-muted); margin: 0 2px 0 8px; }
+  .mh-isoboard { background: #EFE8DB; }
+  .mh-isoboard svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .mh-iso-tile { cursor: default; }
+  .mh-isoboard.is-stamping .mh-iso-tile { cursor: copy; }
+  .mh-iso-tk { cursor: default; }
+  .mh-iso-tk.is-movable { cursor: grab; }
+  .mh-iso-tk.is-drag { cursor: grabbing; opacity: .8; }
+  .mh-isoboard .mh-map-iso-btn { background: rgba(34,28,43,.82); }
   .mh-map-iso-btn { position: absolute; right: 8px; bottom: 8px; z-index: 7; border: 0; border-radius: 20px; padding: 4px 10px; background: rgba(20,14,18,.72); color: #F4EEE2; font: 700 10.5px 'Inter', system-ui, sans-serif; cursor: pointer; }
   .mh-map-iso-btn:hover { background: rgba(20,14,18,.9); }
   .mh-map.is-iso { background: radial-gradient(120% 90% at 50% 30%, #4A5A6E, #1F2734); perspective: none; }
@@ -4439,7 +4459,7 @@ const readIsoPref = () => {
   }
 };
 // Tablero con fichas cuadradas. Se arrastran, o se elige una y se pulsa la casilla; también con las flechas.
-function MapBoard({ bg, tokens, props = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
+function MapBoard({ bg, tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
   const ref = useRef(null);
   const dragRef = useRef(null);
   const [drag, setDrag] = useState(null);
@@ -4523,14 +4543,14 @@ function MapBoard({ bg, tokens, props = [], stampTool, onStamp, onUnstamp, canMo
     const c = cellAt(e);
     if (!c) return;
     painting.current = new Set([c.x + "," + c.y]);
-    if (!propAt(c.x, c.y)) onStamp(c.x, c.y);
+    if (stampTool.startsWith("t:") || !propAt(c.x, c.y)) onStamp(c.x, c.y);
     const move = (ev) => {
       const d = cellAt(ev);
       if (!d) return;
       const k = d.x + "," + d.y;
       if (painting.current && !painting.current.has(k)) {
         painting.current.add(k);
-        if (!propAt(d.x, d.y)) onStamp(d.x, d.y);
+        if (stampTool.startsWith("t:") || !propAt(d.x, d.y)) onStamp(d.x, d.y);
       }
     };
     window.addEventListener("pointermove", move);
@@ -4577,6 +4597,9 @@ function MapBoard({ bg, tokens, props = [], stampTool, onStamp, onUnstamp, canMo
   }
   const at = (x, y) => ({ left: (x * 100) / MAP_COLS + "%", top: (y * 100) / MAP_ROWS + "%", width: 100 / MAP_COLS + "%", height: 100 / MAP_ROWS + "%" });
 
+  if (iso)
+    return <IsoBoard tokens={tokens} props={props} terrain={terrain} stampTool={stampTool} onStamp={onStamp} onUnstamp={onUnstamp} canMove={canMove} onMove={onMove} selectedId={selectedId} onSelect={onSelect} onPick={onPick} compact={compact} onToggle={toggleIso} />;
+
   return (
     <div
       ref={ref}
@@ -4595,6 +4618,9 @@ function MapBoard({ bg, tokens, props = [], stampTool, onStamp, onUnstamp, canMo
         })}
       {/* La escena va difuminada para que destaquen la cuadrícula y las fichas */}
       {bg && <div className="mh-map-bg" style={{ backgroundImage: `url("${bg.replace(/"/g, "%22")}")` }} />}
+      {terrain.map((t) => (
+        <div key={"t" + t.x + "," + t.y} className="mh-map-terrain" style={{ ...at(t.x, t.y), background: terrainOf(t.kind).flat }} />
+      ))}
       {rangeCells.map(([x, y, band]) => (
         <div key={"r" + x + "," + y} className="mh-map-range" style={{ ...at(x, y), "--rc": band.color }} />
       ))}
@@ -4672,6 +4698,212 @@ function MapBoard({ bg, tokens, props = [], stampTool, onStamp, onUnstamp, canMo
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+// Tablero isométrico tipo diorama: losetas con relieve, decorados y fichas de pie.
+// Usa los mismos datos que el tablero plano (fichas, decorados y terreno).
+function IsoBoard({ tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact, onToggle }) {
+  const S = 34;
+  const OX = MAP_ROWS * S + S * 0.6;
+  const OY = S * 2.4;
+  const W = (MAP_COLS + MAP_ROWS) * S + S * 1.2;
+  const H = OY + ((MAP_COLS + MAP_ROWS) * S) / 2 + S * 0.6;
+  const P = (x, y, z = 0) => [OX + (x - y) * S, OY + ((x + y) * S) / 2 - z * S * 0.8];
+  const pts = (arr) => arr.map((q) => q.join(",")).join(" ");
+  const ter = {};
+  terrain.forEach((t) => (ter[t.x + "," + t.y] = t.kind));
+  const tAt = (x, y) => terrainOf(ter[x + "," + y]);
+  const svgRef = useRef(null);
+  const dragRef = useRef(null);
+  const [drag, setDrag] = useState(null);
+  const [rangeId, setRangeId] = useState(null);
+  const painting = useRef(null);
+  const occupied = (x, y, exceptId) => tokens.some((t) => t.id !== exceptId && t.x === x && t.y === y);
+  const selected = tokens.find((t) => t.id === selectedId && canMove(t));
+  const cellFrom = (e) => {
+    const el = document.elementsFromPoint(e.clientX, e.clientY).find((n) => n.getAttribute && n.getAttribute("data-cx") != null);
+    return el ? { x: Number(el.getAttribute("data-cx")), y: Number(el.getAttribute("data-cy")) } : null;
+  };
+  const propAt = (x, y) => props.find((pr) => pr.x === x && pr.y === y);
+  const isTerrainTool = stampTool && stampTool.startsWith("t:");
+  const tileDown = (e, x, y) => {
+    if (e.button > 0) return;
+    if (stampTool) {
+      e.preventDefault();
+      painting.current = new Set([x + "," + y]);
+      if (isTerrainTool || !propAt(x, y)) onStamp(x, y);
+      const move = (ev) => {
+        const c = cellFrom(ev);
+        if (!c || !painting.current) return;
+        const k = c.x + "," + c.y;
+        if (painting.current.has(k)) return;
+        painting.current.add(k);
+        if (isTerrainTool || !propAt(c.x, c.y)) onStamp(c.x, c.y);
+      };
+      window.addEventListener("pointermove", move);
+      window.addEventListener("pointerup", () => { window.removeEventListener("pointermove", move); painting.current = null; }, { once: true });
+      return;
+    }
+    if (selected && !occupied(x, y, selected.id)) onMove(selected.id, x, y);
+  };
+  const tileContext = (e, x, y) => {
+    if (!onUnstamp) return;
+    e.preventDefault();
+    onUnstamp(x, y);
+  };
+  const tokenDown = (e, t) => {
+    if (e.button > 0) return;
+    e.stopPropagation();
+    if (!canMove(t)) {
+      if (onPick) onPick(selectedId === t.id ? null : t.id);
+      return;
+    }
+    e.preventDefault();
+    dragRef.current = { id: t.id, x: t.x, y: t.y, moved: false };
+    setDrag(dragRef.current);
+    const move = (ev) => {
+      const c = cellFrom(ev);
+      const d = dragRef.current;
+      if (c && d && (c.x !== d.x || c.y !== d.y)) {
+        dragRef.current = { ...d, ...c, moved: true };
+        setDrag(dragRef.current);
+      }
+    };
+    const up = () => {
+      window.removeEventListener("pointermove", move);
+      const d = dragRef.current;
+      dragRef.current = null;
+      setDrag(null);
+      if (!d) return;
+      if (!d.moved) onSelect(selectedId === d.id ? null : d.id);
+      else if (!occupied(d.x, d.y, d.id)) onMove(d.id, d.x, d.y);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up, { once: true });
+  };
+  // Casillas iluminadas: alcance de movimiento de la ficha elegida y rangos del menú.
+  const reach = new Set();
+  if (selected && !drag)
+    for (let y = selected.y - MAP_REACH; y <= selected.y + MAP_REACH; y++)
+      for (let x = selected.x - MAP_REACH; x <= selected.x + MAP_REACH; x++) if (x >= 0 && y >= 0 && x < MAP_COLS && y < MAP_ROWS && !(x === selected.x && y === selected.y) && !occupied(x, y)) reach.add(x + "," + y);
+  const rangeTok = tokens.find((t) => t.id === rangeId);
+  const bandAt = (x, y) => {
+    if (!rangeTok) return null;
+    const d = Math.max(Math.abs(x - rangeTok.x), Math.abs(y - rangeTok.y));
+    return d > 0 ? MAP_RANGES.find((r) => d <= r.max) : null;
+  };
+  // Se pinta de atrás hacia delante: por diagonales (x + y), y en cada casilla primero la loseta y luego lo que hay encima.
+  const cells = [];
+  for (let sum = 0; sum <= MAP_COLS + MAP_ROWS - 2; sum++)
+    for (let x = Math.max(0, sum - MAP_ROWS + 1); x <= Math.min(MAP_COLS - 1, sum); x++) cells.push([x, sum - x]);
+  const tokAt = (x, y) => tokens.filter((t) => {
+    const pos = drag && drag.id === t.id ? drag : t;
+    return pos.x === x && pos.y === y;
+  });
+  return (
+    <div className={"mh-map mh-isoboard" + (compact ? " is-compact" : "") + (stampTool ? " is-stamping" : "")}>
+      <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" onContextMenu={(e) => e.preventDefault()}>
+        {cells.map(([x, y]) => {
+          const tr = tAt(x, y);
+          const z = tr.z;
+          const a = P(x, y, z), b = P(x + 1, y, z), c = P(x + 1, y + 1, z), d = P(x, y + 1, z);
+          const band = bandAt(x, y);
+          const lit = reach.has(x + "," + y);
+          const dropHere = drag?.moved && drag.x === x && drag.y === y;
+          const here = tokAt(x, y);
+          const pr = propAt(x, y);
+          const [cx, cy] = P(x + 0.5, y + 0.5, z);
+          return (
+            <g key={x + "," + y}>
+              {z > 0 && (
+                <>
+                  <polygon points={pts([d, c, P(x + 1, y + 1, 0), P(x, y + 1, 0)])} fill={tr.s1} />
+                  <polygon points={pts([c, b, P(x + 1, y, 0), P(x + 1, y + 1, 0)])} fill={tr.s2} />
+                </>
+              )}
+              <polygon
+                points={pts([a, b, c, d])}
+                fill={tr.top[(x + y) % 2]}
+                stroke="rgba(0,0,0,.12)"
+                strokeWidth="1"
+                data-cx={x}
+                data-cy={y}
+                className="mh-iso-tile"
+                onPointerDown={(e) => tileDown(e, x, y)}
+                onContextMenu={(e) => tileContext(e, x, y)}
+              />
+              {band && <polygon points={pts([a, b, c, d])} fill={band.color} fillOpacity=".3" stroke={band.color} strokeOpacity=".7" pointerEvents="none" />}
+              {lit && <polygon points={pts([a, b, c, d])} fill="#6FBF73" fillOpacity=".3" stroke="#6FBF73" strokeOpacity=".8" pointerEvents="none" />}
+              {dropHere && <polygon points={pts([a, b, c, d])} fill="none" stroke={occupied(x, y, drag.id) ? "#D9644E" : "#F3C24A"} strokeWidth="3" pointerEvents="none" />}
+              {pr && <svg x={cx - S * 0.62} y={cy - S * 1.05} width={S * 1.24} height={S * 1.24} viewBox="0 0 100 100" pointerEvents="none" dangerouslySetInnerHTML={{ __html: propSvg(pr.kind) }} />}
+              {here.map((t) => {
+                const movable = canMove(t);
+                const sel = selectedId === t.id;
+                const hpFree = t.hp && t.hp[1] > 0 ? (t.hp[1] - t.hp[0]) / t.hp[1] : null;
+                const col = t.kind === "foe" ? "#C0504A" : t.kind === "npc" ? "#7D8BA3" : t.color || "#C9A24A";
+                return (
+                  <g
+                    key={t.id}
+                    className={"mh-iso-tk" + (movable ? " is-movable" : "") + (drag?.id === t.id ? " is-drag" : "")}
+                    onPointerDown={(e) => tokenDown(e, t)}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setRangeId(rangeId === t.id ? null : t.id);
+                    }}
+                  >
+                    <title>{t.name}</title>
+                    {sel && <ellipse cx={cx} cy={cy} rx={S * 0.62} ry={S * 0.31} fill="none" stroke="#E3B04B" strokeWidth="3" />}
+                    <ellipse cx={cx} cy={cy} rx={S * 0.42} ry={S * 0.21} fill="rgba(0,0,0,.28)" />
+                    <rect x={cx - S * 0.33} y={cy - S * 1.1} width={S * 0.66} height={S * 1.04} rx={S * 0.33} fill={col} stroke="#fff" strokeWidth="2.2" />
+                    {t.img ? (
+                      <>
+                        <clipPath id={"isoclip-" + t.id}>
+                          <circle cx={cx} cy={cy - S * 0.76} r={S * 0.26} />
+                        </clipPath>
+                        <image href={t.img} x={cx - S * 0.26} y={cy - S * 1.02} width={S * 0.52} height={S * 0.52} clipPath={`url(#isoclip-${t.id})`} preserveAspectRatio="xMidYMid slice" />
+                      </>
+                    ) : (
+                      <text x={cx} y={cy - S * 0.5} fontSize={S * 0.38} fontWeight="700" fill="#fff" textAnchor="middle" fontFamily="Inter, system-ui, sans-serif">
+                        {t.kind === "foe" ? "!" : (t.name || "?").trim().charAt(0).toUpperCase()}
+                      </text>
+                    )}
+                    {hpFree != null && (
+                      <>
+                        <rect x={cx - S * 0.32} y={cy - S * 1.3} width={S * 0.64} height={S * 0.11} rx={2} fill="#2a1f25" />
+                        <rect x={cx - S * 0.32} y={cy - S * 1.3} width={S * 0.64 * Math.max(0, hpFree)} height={S * 0.11} rx={2} fill="#E24B4A" />
+                      </>
+                    )}
+                    {!compact && (
+                      <text x={cx} y={cy + S * 0.5} fontSize={S * 0.3} fontWeight="700" fill="#221C2B" stroke="#FBF6F0" strokeWidth="3" paintOrder="stroke" textAnchor="middle" fontFamily="Inter, system-ui, sans-serif" pointerEvents="none">
+                        {t.name}
+                      </text>
+                    )}
+                  </g>
+                );
+              })}
+            </g>
+          );
+        })}
+      </svg>
+      {rangeTok && (
+        <div className="mh-map-legend">
+          {MAP_RANGES.map((r) => (
+            <span key={r.key}>
+              <i style={{ background: r.color }} />
+              {r.label}
+            </span>
+          ))}
+          <button type="button" aria-label="Ocultar rango" title="Ocultar rango" onClick={() => setRangeId(null)}>
+            <X size={11} />
+          </button>
+        </div>
+      )}
+      <button type="button" className="mh-map-iso-btn" onClick={onToggle} title="Cambiar a la vista plana">
+        Vista plana
+      </button>
     </div>
   );
 }
@@ -7787,8 +8019,17 @@ export default function App({ onSignOut }) {
   };
 
   const stampProp = (kind, x, y) =>
-    mutateMap(viewingCampaignId, (props) => (props.some((pr) => pr.x === x && pr.y === y) ? props : [...props, { id: "p" + Date.now() + Math.random().toString(36).slice(2, 5), kind, x, y }]), "props");
-  const unstampProp = (x, y) => mutateMap(viewingCampaignId, (props) => props.filter((pr) => !(pr.x === x && pr.y === y)), "props");
+    kind && kind.startsWith("t:")
+      ? mutateMap(viewingCampaignId, (ter) => {
+          const k = kind.slice(2);
+          const rest = ter.filter((t) => !(t.x === x && t.y === y));
+          return k === "hierba" ? rest : [...rest, { x, y, kind: k }];
+        }, "terrain")
+      : mutateMap(viewingCampaignId, (props) => (props.some((pr) => pr.x === x && pr.y === y) ? props : [...props, { id: "p" + Date.now() + Math.random().toString(36).slice(2, 5), kind, x, y }]), "props");
+  const unstampProp = (x, y) => {
+    if (stampTool && stampTool.startsWith("t:")) return mutateMap(viewingCampaignId, (ter) => ter.filter((t) => !(t.x === x && t.y === y)), "terrain");
+    return mutateMap(viewingCampaignId, (props) => props.filter((pr) => !(pr.x === x && pr.y === y)), "props");
+  };
   const clearProps = () => mutateMap(viewingCampaignId, () => [], "props");
 
   const clearMap = () => {
@@ -10028,16 +10269,24 @@ export default function App({ onSignOut }) {
                               {pr.label}
                             </button>
                           ))}
+                          <span className="mh-map-props-sep">Terreno</span>
+                          {MAP_TERRAINS.map((tr) => (
+                            <button key={tr.key} type="button" className={"mh-map-chip" + (stampTool === "t:" + tr.key ? " is-on" : "")} aria-pressed={stampTool === "t:" + tr.key} onClick={() => setStampTool(stampTool === "t:" + tr.key ? null : "t:" + tr.key)}>
+                              <i className="is-prop" style={{ background: tr.top[0], boxShadow: tr.z ? `inset 0 -5px 0 ${tr.s1}` : "none" }} />
+                              {tr.label}
+                            </button>
+                          ))}
                           {(campaignMap.props || []).length > 0 && (
                             <button type="button" className="mh-btn-ghost" onClick={clearProps}>
                               Quitar decorados
                             </button>
                           )}
                         </div>
-                        {stampTool && <div className="mh-map-stamphint">Pulsa o arrastra por las casillas para poner {MAP_PROPS.find((m) => m.key === stampTool)?.label.toLowerCase()}s. Clic derecho sobre un decorado para quitarlo. Vuelve a pulsar el sello para dejar de estampar.</div>}
+                        {stampTool && (stampTool.startsWith("t:") ? <div className="mh-map-stamphint">Pulsa o arrastra por las casillas para pintar {terrainOf(stampTool.slice(2)).label.toLowerCase()}. Clic derecho para volver a hierba. Se ve con relieve en la vista isométrica.</div> : <div className="mh-map-stamphint">Pulsa o arrastra por las casillas para poner {MAP_PROPS.find((m) => m.key === stampTool)?.label.toLowerCase()}s. Clic derecho sobre un decorado para quitarlo. Vuelve a pulsar el sello para dejar de estampar.</div>)}
                         <MapBoard
                           bg={campaignStage.scene?.image}
                           props={campaignMap.props || []}
+                          terrain={campaignMap.terrain || []}
                           stampTool={stampTool}
                           onStamp={(x, y) => stampProp(stampTool, x, y)}
                           onUnstamp={unstampProp}
@@ -14080,6 +14329,7 @@ export default function App({ onSignOut }) {
                                           <MapBoard
                                             bg={scene.image}
                                             props={campaignMap.props || []}
+                                            terrain={campaignMap.terrain || []}
                                             tokens={mapTokens}
                                             canMove={(t) => (t.kind === "pc" && t.charId === viewingCharId) || (t.kind === "pet" && t.ownerCharId === viewingCharId)}
                                             onMove={(id, x, y) => moveToken(charCampaign.id, id, x, y)}
