@@ -4453,7 +4453,7 @@ function StepperRow({ label, total, marked, field, color, Icon, charId, onDelta,
                   style={{
                     width: "100%",
                     height: "100%",
-                    borderRadius: shape === "diamond" ? 2 : 5,
+                    borderRadius: shape === "diamond" ? 2 : shape === "circle" ? "50%" : 5,
                     border: "1px solid " + (isScarred ? "#D9644E" : color),
                     background: isScarred ? "#D9644E22" : i < marked ? color : "transparent",
                     cursor: isScarred ? "not-allowed" : "pointer",
@@ -9629,8 +9629,11 @@ export default function App({ onSignOut }) {
         }
         // "Armadura y estadísticas": espaciado fijo y fila de Evasión/Armadura de altura fija, para que la caja
         // (y con ella toda la fila de paneles) mida lo mismo con o sin armadura y con cualquier número de escudos.
+        // Brujo: una fila más (Favor), así que el hueco sobrante se reparte entre más filas y la caja no crece.
+        const favorRow = c.f_class === "Brujo";
         const statsSpacing = (() => {
-          const k = (64 - (6 + 10 + 9)) / 6 + 51 / 5;
+          const k0 = (64 - (6 + 10 + 9)) / 6 + 51 / 5;
+          const k = favorRow ? (5 * k0 - 63.06) / 6 : k0;
           return { boxPadY: 15, thrPadY: 13, stepLabelMb: 9, evMb: 16 + k, thrMb: 16 + k, stepMb: 14 + k };
         })();
         const infoBlock = (icon, label, value) => {
@@ -9755,11 +9758,6 @@ export default function App({ onSignOut }) {
                       </span>
                     );
                   })()}
-                  {c.f_class === "Brujo" && (
-                    <span className="mh-htag" style={{ "--tag": "#B55FA0" }} title={"Favor de " + (c.f_patron || "tu patrón") + (c.f_patron_sphere ? " (" + c.f_patron_sphere + ")" : "")}>
-                      <Eye size={11} /> Favor · {getFavor(c)}
-                    </span>
-                  )}
                   {c.f_mantle === "1" && (
                     <span className="mh-htag is-active" style={{ "--tag": "#B55FA0" }} title="Manto del Patrón: +Rango a tus umbrales y ventaja para intimidar, hasta recibir daño Grave o terminar la escena">
                       <span className="mh-htag-dot" /> Manto del Patrón
@@ -10211,6 +10209,23 @@ export default function App({ onSignOut }) {
                               <StepperRow gap={statsSpacing.stepMb} labelGap={statsSpacing.stepLabelMb} hitKey={hpHit && hpHit.id === viewingCharId ? hpHit.key : undefined} label="Puntos de vida" total={Number(c.r_hp || 0) + equipMods.hp} marked={Number(c.hp_marked || 0)} field="hp_marked" color="#D9644E" Icon={Heart} charId={viewingCharId} onDelta={adjustHp} onToggle={markHp} />
                               <StepperRow gap={statsSpacing.stepMb} labelGap={statsSpacing.stepLabelMb} label="Estrés" total={Number(c.r_stress || 0) + equipMods.stress} marked={Number(c.stress_marked || 0)} field="stress_marked" color="#A58BE8" Icon={Zap} charId={viewingCharId} onDelta={adjustStress} onToggle={markStressBox} allowOverflow />
                               <StepperRow gap={statsSpacing.stepMb} labelGap={statsSpacing.stepLabelMb} label="Esperanza" total={HOPE_MAX + equipMods.hope + (getCompanion(c)?.training?.light ? 1 : 0)} marked={Number(c.hope_marked ?? HOPE_DEFAULT)} field="hope_marked" color="#E3B04B" Icon={Sparkles} charId={viewingCharId} onDelta={updateCharacterField} onToggle={toggleCharSlot} shape="diamond" scarCount={Number(c.f_scars || 0)} />
+                              {favorRow && (
+                                <StepperRow
+                                  gap={statsSpacing.stepMb}
+                                  labelGap={statsSpacing.stepLabelMb}
+                                  label="Favor"
+                                  total={Math.max(6, getFavor(c))}
+                                  marked={getFavor(c)}
+                                  field="f_favor"
+                                  color="#B55FA0"
+                                  Icon={Eye}
+                                  charId={viewingCharId}
+                                  onDelta={updateCharacterField}
+                                  onToggle={(id, f, i, m) => updateCharacterField(id, "f_favor", String(i + 1 === m ? i : i + 1))}
+                                  allowOverflow
+                                  shape="circle"
+                                />
+                              )}
 
                               <div>
                                 <div className="mh-label" style={{ marginBottom: 6, marginTop: 4 }}>Condiciones</div>
