@@ -206,7 +206,15 @@ const SUBCLASSES = {
         { name: "Trascendencia (Maestría)", text: "Una vez por descanso largo, puedes transformarte en una manifestación física de tu elemento. Describe tu transformación y elige dos de estos beneficios hasta tu próximo descanso: +4 a tu umbral Grave; +1 a un rasgo que elijas; +1 a tu Competencia; o +2 a tu Evasión." },
       ],
     },
-    { key: "Origen Primigenio", blurb: "Su magia brota de un poder ancestral e instintivo." },
+    {
+      key: "Origen Primigenio",
+      blurb: "Amplía la versatilidad de sus hechizos de formas poderosas.",
+      features: [
+        { name: "Manipular la Magia", text: "Tu origen primigenio te permite modificar la esencia misma de la magia. Después de lanzar un hechizo o de atacar con un arma que haga daño mágico, puedes marcar 1 Estrés para hacer una de estas cosas: ampliar un paso el alcance del hechizo o del ataque; obtener un +2 al resultado de la tirada de acción; duplicar un dado de daño que elijas; o alcanzar a un objetivo adicional dentro del alcance." },
+        { name: "Ayuda Encantada (Especialización)", text: "Puedes potenciar la magia de otros con tu esencia. Cuando ayudes a un aliado en una tirada de Lanzamiento, puedes tirar un d8 como dado de ventaja. Una vez por descanso largo, después de que un aliado haya hecho una tirada de Lanzamiento con tu ayuda, puedes intercambiar los resultados de sus Dados de Dualidad." },
+        { name: "Carga Arcana (Maestría)", text: "Puedes acumular energía mágica para potenciar tus capacidades. Cuando recibas daño mágico, quedas Cargado. También puedes gastar 2 de Esperanza para quedar Cargado. Cuando tengas éxito en un ataque que haga daño mágico mientras estás Cargado, puedes gastar tu Carga para obtener un +10 a la tirada de daño o un +3 a la Dificultad de una tirada de reacción que el hechizo obligue a hacer al objetivo. Dejas de estar Cargado en tu próximo descanso largo." },
+      ],
+    },
   ],
   Guerrero: [
     { key: "Llamado del Valiente", blurb: "Lidera desde el frente con coraje inquebrantable." },
@@ -10280,7 +10288,7 @@ export default function App({ onSignOut }) {
                               kicker: `Subclase · ${subclassBadge}`,
                               title: subclassEntry.key,
                               text: subclassEntry.blurb,
-                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
+                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
                               image: subclassEntry.image,
                               bigStyle: true,
                               ...(isElemental ? { elementalAction: true } : {}),
