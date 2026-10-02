@@ -2996,6 +2996,7 @@ const sharedStyles = `
   .mh-mark-btn { background: #6B7891; }
   .mh-necro-btn { background: #5B6B5E; }
   .mh-blood-btn { background: #A8323E; }
+  .mh-psy { display: flex; flex-direction: column; gap: 6px; }
   .mh-blood-btn:hover:not(:disabled) { background: #8E2A34; }
   .mh-eq.mh-eq-crimson { border-color: #A8323E !important; box-shadow: 0 0 0 1px #A8323E, 0 0 14px color-mix(in srgb, #A8323E 35%, transparent); }
   .mh-angel-btn { background: #C9A24A; }
@@ -8232,6 +8233,7 @@ export default function App({ onSignOut }) {
     if (c.f_ignite) restPatch.f_ignite = "";
     if (c.f_hybrid) restPatch.f_hybrid = "";
     if (c.f_crimson) restPatch.f_crimson = "";
+    if (isLong && c.f_psychometry) restPatch.f_psychometry = "";
     if (c.f_bestial_used) restPatch.f_bestial_used = "";
     if (isLong && c.f_toxins) restPatch.f_toxins = "";
     if (c.f_first_strike_used) restPatch.f_first_strike_used = "";
@@ -10450,6 +10452,11 @@ export default function App({ onSignOut }) {
                   {c.f_hybrid === "1" && (
                     <span className="mh-htag is-active" style={{ "--tag": "#A8323E" }} title="Forma Híbrida: +1d de bonificador a tus tiradas de acción y de daño hasta tener todo el Estrés marcado o terminar la escena">
                       <span className="mh-htag-dot" /> Forma Híbrida · +1d{hybridSides(c)}
+                    </span>
+                  )}
+                  {c.f_class === "Cazador de Sangre" && c.f_psychometry && (
+                    <span className="mh-htag is-active" style={{ "--tag": "#A8323E" }} title="Psicometría Siniestra: ventaja para rastrear o recordar información sobre la criatura de tu visión, hasta tu descanso largo">
+                      <span className="mh-htag-dot" /> Visión{c.f_psychometry !== "1" ? ": " + c.f_psychometry : ""}
                     </span>
                   )}
                   {c.f_crimson && (
@@ -15442,6 +15449,8 @@ export default function App({ onSignOut }) {
               const climberOk = !(ch.f_class === "Asesino" && ch.f_inout === "1" && !preRoll.reaction) && (ch.f_ancestry || "").split(" + ").includes("Simiah") && preRoll.traitLabel === "Agilidad" && !etherealOk && !dreadOk && !glamourOk;
               // Bruja del Seto · Maldición Irritante: ventaja al atacar a criaturas con Maleficio.
               // Pacto del Eterno · Manto del Patrón: ventaja para intimidar.
+              // Cazador de Sangre · Psicometría Siniestra: ventaja para rastrear o recordar a la criatura de la visión.
+              const psyOk = ch.f_class === "Cazador de Sangre" && !!ch.f_psychometry && !preRoll.reaction;
               // Teúrgia · Presencia Angelical: con algún Ángel invocado, ventaja en Presencia para influir.
               const angelicOk = ch.f_subclass === "Teúrgia" && Number(getSummons(ch).angel || 0) > 0 && preRoll.traitLabel === "Presencia";
               // Asesino · Entrar y Salir: ventaja en la siguiente tirada que aproveche la información.
@@ -15450,7 +15459,7 @@ export default function App({ onSignOut }) {
               const isolOk = !inoutOk && activeStance(ch) === "aislante" && !!preRoll.weapon;
               const mantleOk = !isolOk && ch.f_mantle === "1" && preRoll.traitLabel === "Presencia" && !etherealOk && !dreadOk && !glamourOk && !climberOk;
               const vexOk = !mantleOk && ch.f_subclass === "Bruja del Seto" && tierForLevel(ch.f_level || 1) >= 2 && !!preRoll.weapon && (ch.f_hexes || "[]") !== "[]" && !etherealOk && !dreadOk && !glamourOk && !climberOk;
-              const edgeSource = inoutOk ? "Entrar y Salir" : angelicOk ? "Presencia Angelical" : etherealOk ? "Rostro Etéreo" : dreadOk ? "Rostro Temible" : glamourOk ? "Glamour Nocturno" : climberOk ? "Trepador Nato" : inoutOk ? "Entrar y Salir" : isolOk ? "Aislante" : mantleOk ? "Manto del Patrón" : vexOk ? "Maldición Irritante" : highborne ? "Privilegio" : loreborne ? "Leído" : ridgeborne ? "Firme" : slyborne ? "Granuja" : underborne ? "Vida en la Penumbra" : wildborne ? "Pies Ligeros" : "";
+              const edgeSource = inoutOk ? "Entrar y Salir" : psyOk ? "Psicometría Siniestra" : angelicOk ? "Presencia Angelical" : etherealOk ? "Rostro Etéreo" : dreadOk ? "Rostro Temible" : glamourOk ? "Glamour Nocturno" : climberOk ? "Trepador Nato" : inoutOk ? "Entrar y Salir" : isolOk ? "Aislante" : mantleOk ? "Manto del Patrón" : vexOk ? "Maldición Irritante" : highborne ? "Privilegio" : loreborne ? "Leído" : ridgeborne ? "Firme" : slyborne ? "Granuja" : underborne ? "Vida en la Penumbra" : wildborne ? "Pies Ligeros" : "";
               const poetOk = ch.f_subclass === "Orador" && preRoll.traitLabel === "Presencia";
               // Origen Elemental · Elementalista: 1 Esperanza para +2 a la tirada o +3 al daño.
               const elemOk = ch.f_subclass === "Origen Elemental" && !preRoll.reaction;
@@ -15643,10 +15652,10 @@ export default function App({ onSignOut }) {
                   ? tile("priv", {
                       on: preRoll.privilege,
                       title: edgeSource,
-                      sub: etherealOk ? "Centinela Alado · volando" : dreadOk ? "Infernal" : glamourOk ? "Bruja Lunar" : climberOk ? "Simiah" : inoutOk ? "Asesino" : angelicOk ? "Teúrgia" : isolOk ? "Postura marcial" : mantleOk ? "Pacto del Eterno" : vexOk ? "Bruja del Seto" : highborne ? "De Alta Cuna" : loreborne ? "Del Saber" : slyborne ? "De las Sombras" : underborne ? "De las Profundidades" : wildborne ? "Salvaje" : "De las Cumbres",
+                      sub: etherealOk ? "Centinela Alado · volando" : dreadOk ? "Infernal" : glamourOk ? "Bruja Lunar" : climberOk ? "Simiah" : inoutOk ? "Asesino" : psyOk ? (ch.f_psychometry !== "1" ? ch.f_psychometry : "Cazador de Sangre") : angelicOk ? "Teúrgia" : isolOk ? "Postura marcial" : mantleOk ? "Pacto del Eterno" : vexOk ? "Bruja del Seto" : highborne ? "De Alta Cuna" : loreborne ? "Del Saber" : slyborne ? "De las Sombras" : underborne ? "De las Profundidades" : wildborne ? "Salvaje" : "De las Cumbres",
                       cost: "Ventaja",
-                      color: etherealOk ? "#D8A84A" : dreadOk ? "#A33A3A" : glamourOk ? "#8C7FD0" : climberOk ? "#A0784A" : inoutOk ? "#7D8BA3" : angelicOk ? "#D8A84A" : isolOk ? "#C08B5C" : mantleOk ? "#B55FA0" : vexOk ? "#9B7FD6" : highborne ? "#B8862E" : loreborne ? "#5E8FC9" : slyborne ? "#6E5A8A" : underborne ? "#5A6B7A" : wildborne ? "#5E8A4E" : "#7E8C6A",
-                      hint: etherealOk ? "Mientras vuelas, tienes ventaja en las tiradas de Presencia" : dreadOk ? "Si intentas intimidar a una criatura hostil" : glamourOk ? "Si la tirada aprovecha tu apariencia ilusoria" : climberOk ? "Si la tirada implica mantener el equilibrio o trepar" : inoutOk ? "Si la tirada aprovecha la forma de entrar o salir que te dio el DJ (se gasta al tirar)" : angelicOk ? "Si intentas influir en otros: el poder angelical inspira asombro y temor" : isolOk ? "Si no hay otras criaturas en alcance Muy cercano de ti o de tu objetivo" : mantleOk ? "Si intentas intimidar a un objetivo" : vexOk ? "Si atacas a una criatura con tu Maleficio" : highborne ? "Si tratas con nobles, negocias un precio o usas tu reputación" : loreborne ? "Si la tirada trata sobre la historia, la cultura o la política de una persona o un lugar importantes" : slyborne ? "Si negocias con criminales, intentas detectar una mentira o buscas un escondite seguro" : underborne ? "Si estás en una zona con poca luz o sombras densas y te escondes, investigas o percibes detalles en ella" : wildborne ? "Si intentas moverte sin que te oigan" : "Si cruzas precipicios y cornisas peligrosos, te orientas en un entorno duro o usas tus conocimientos de supervivencia",
+                      color: etherealOk ? "#D8A84A" : dreadOk ? "#A33A3A" : glamourOk ? "#8C7FD0" : climberOk ? "#A0784A" : inoutOk ? "#7D8BA3" : psyOk ? "#A8323E" : angelicOk ? "#D8A84A" : isolOk ? "#C08B5C" : mantleOk ? "#B55FA0" : vexOk ? "#9B7FD6" : highborne ? "#B8862E" : loreborne ? "#5E8FC9" : slyborne ? "#6E5A8A" : underborne ? "#5A6B7A" : wildborne ? "#5E8A4E" : "#7E8C6A",
+                      hint: etherealOk ? "Mientras vuelas, tienes ventaja en las tiradas de Presencia" : dreadOk ? "Si intentas intimidar a una criatura hostil" : glamourOk ? "Si la tirada aprovecha tu apariencia ilusoria" : climberOk ? "Si la tirada implica mantener el equilibrio o trepar" : inoutOk ? "Si la tirada aprovecha la forma de entrar o salir que te dio el DJ (se gasta al tirar)" : psyOk ? "Si la tirada es para rastrear o recordar información sobre la criatura de tu visión" : angelicOk ? "Si intentas influir en otros: el poder angelical inspira asombro y temor" : isolOk ? "Si no hay otras criaturas en alcance Muy cercano de ti o de tu objetivo" : mantleOk ? "Si intentas intimidar a un objetivo" : vexOk ? "Si atacas a una criatura con tu Maleficio" : highborne ? "Si tratas con nobles, negocias un precio o usas tu reputación" : loreborne ? "Si la tirada trata sobre la historia, la cultura o la política de una persona o un lugar importantes" : slyborne ? "Si negocias con criminales, intentas detectar una mentira o buscas un escondite seguro" : underborne ? "Si estás en una zona con poca luz o sombras densas y te escondes, investigas o percibes detalles en ella" : wildborne ? "Si intentas moverte sin que te oigan" : "Si cruzas precipicios y cornisas peligrosos, te orientas en un entorno duro o usas tus conocimientos de supervivencia",
                       onClick: () => setPreRoll((p) => ({ ...p, privilege: !p.privilege, advantage: p.privilege ? p.advantage : false })),
                     })
                   : null,
@@ -16273,6 +16282,33 @@ export default function App({ onSignOut }) {
                           {hunger ? <Skull size={15} /> : <Ghost size={15} />} {hunger ? "Atacan: " + 5 * n + " de daño físico" : "El objetivo marca 1 Estrés"}
                           <small>Si has tenido éxito · {hunger ? "después desaparece un Cadáver" : "después el Fantasma desaparece"}</small>
                         </button>
+                      );
+                    })()}
+                    {traitRollResult.card?.name === "Psicometría Siniestra" && (() => {
+                      const r = traitRollResult;
+                      const rc = characters[r.charId];
+                      if (!rc) return null;
+                      const ok = r.charmed || r.hope === r.fear || r.total >= 12;
+                      if (r.psyDone) return <div className="mh-luck-done" style={{ color: "#A8323E" }}>Tienes la visión: ventaja para rastrear o recordar a esa criatura</div>;
+                      if (!ok) return <div className="mh-luck-done" style={{ color: "var(--mh-muted)" }}>La sangre no te muestra nada</div>;
+                      return (
+                        <div className="mh-psy">
+                          <input className="mh-input" placeholder="¿Qué criatura ves? (opcional)" maxLength={40} value={r.psyName || ""} onChange={(e) => { const v = e.target.value; setTraitRollResult((prev) => (prev ? { ...prev, psyName: v } : prev)); }} onClick={(e) => e.stopPropagation()} />
+                          <button
+                            type="button"
+                            className="mh-luck-btn mh-blood-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const who = (r.psyName || "").trim();
+                              updateCharacterField(r.charId, "f_psychometry", who || "1");
+                              setTraitRollResult((prev) => (prev ? { ...prev, psyDone: true } : prev));
+                              postCampaignEvent(r.charId, `👁️ Psicometría Siniestra: tiene una visión de la última criatura que cometió violencia allí${who ? " (" + who + ")" : ""}`);
+                            }}
+                          >
+                            <Eye size={15} /> Recibir la visión
+                            <small>Ventaja para rastrearla o recordar información sobre ella hasta tu descanso largo</small>
+                          </button>
+                        </div>
                       );
                     })()}
                     {traitRollResult.card?.name === "Glamour Nocturno" && (() => {
@@ -18172,7 +18208,7 @@ export default function App({ onSignOut }) {
                     else cardActs.unshift({
                       key: "hope",
                       Icon: isFrontline ? Shield : Sparkles,
-                      label: missingHope ? "Te faltan " + missingHope + " de Esperanza" : frontlineBlock || (isFrontline ? "Recuperar " + Math.min(2, armorSpent) + " de Armadura" : c.f_class === "Camorrista" ? "Plantar Cara: dejar Vulnerable al objetivo" : c.f_class === "Asesino" ? "Quitarte 2 de Estrés" : c.f_class === "Invocador" ? "Repartir 2 Esperanza y quitarte 1 Estrés" : "Usar " + d.title),
+                      label: missingHope ? "Te faltan " + missingHope + " de Esperanza" : frontlineBlock || (isFrontline ? "Recuperar " + Math.min(2, armorSpent) + " de Armadura" : c.f_class === "Camorrista" ? "Plantar Cara: dejar Vulnerable al objetivo" : c.f_class === "Asesino" ? "Quitarte 2 de Estrés" : c.f_class === "Invocador" ? "Repartir 2 Esperanza y quitarte 1 Estrés" : c.f_class === "Cazador de Sangre" ? "El adversario repite su ataque con desventaja" : "Usar " + d.title),
                       sub: d.hopeAction.cost + " Esperanza",
                       disabled: missingHope > 0 || !!frontlineBlock,
                       run: () => {
@@ -18183,6 +18219,13 @@ export default function App({ onSignOut }) {
                         else if (c.f_class === "Guerrero") doNoMercy(viewingCharId);
                         else if (c.f_class === "Serafín") setRenewDlg({ mode: "life" });
                         else if (c.f_class === "Invocador") setRenewDlg({ mode: "spirits", picks: {} });
+                        else if (c.f_class === "Cazador de Sangre") {
+                          updateCharacterField(viewingCharId, "hope_marked", String(Number(c.hope_marked ?? HOPE_DEFAULT) - d.hopeAction.cost));
+                          clearTimeout(restMsgTimer.current);
+                          setRestMessage("Maldición de Sangre: el adversario repite su ataque con desventaja (-3 Esperanza).");
+                          restMsgTimer.current = setTimeout(() => setRestMessage(""), 3500);
+                          postCampaignEvent(viewingCharId, "🩸 Maldición de Sangre: gasta 3 Esperanza y el adversario en alcance Cercano repite su ataque con éxito con desventaja");
+                        }
                         else if (c.f_class === "Asesino") {
                           updateCharacterFields(viewingCharId, { hope_marked: String(Number(c.hope_marked ?? HOPE_DEFAULT) - d.hopeAction.cost), stress_marked: String(Math.max(0, Number(c.stress_marked || 0) - 2)) });
                           clearTimeout(restMsgTimer.current);
@@ -18378,6 +18421,23 @@ export default function App({ onSignOut }) {
                           setBestialDlg(true);
                         },
                       });
+                  }
+                  // Cazador de Sangre · Psicometría Siniestra: tirada de conjuro (12) para ver al último que cometió violencia allí.
+                  if (d.title === "Psicometría Siniestra" && c?.f_class === "Cazador de Sangre" && !d.fromChat) {
+                    const spK = spellcastTraitFor(c.f_class, c.f_subclass) || "t_agility";
+                    const spL = TRAITS.find((t) => t.key === spK)?.label || "Agilidad";
+                    cardActs.push({
+                      key: "psy",
+                      Icon: Eye,
+                      label: c.f_psychometry ? "Examinar otro lugar" : "Examinar un lugar",
+                      sub: "Tirada de " + spL + " · Dificultad 12" + (c.f_psychometry ? " · sustituye la visión actual" : ""),
+                      run: () => {
+                        closeCardDetail();
+                        rollTraitCheck(viewingCharId, spL, Number(c[spK] || 0), null, { name: "Psicometría Siniestra", dc: 12 });
+                      },
+                    });
+                    if (c.f_psychometry)
+                      cardActs.push({ key: "psy-off", Icon: X, label: "Olvidar la visión", sub: c.f_psychometry !== "1" ? c.f_psychometry : "", run: () => { closeCardDetail(); updateCharacterField(viewingCharId, "f_psychometry", ""); } });
                   }
                   // Cazador de Sangre · Rito Carmesí: 1 PV para encantar un arma activa.
                   if (d.title === "Rito Carmesí" && c?.f_class === "Cazador de Sangre" && !d.fromChat) {
