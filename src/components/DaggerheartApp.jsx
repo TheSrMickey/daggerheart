@@ -2574,6 +2574,24 @@ const sharedStyles = `
   .mh-map-tk.is-hidden .mh-map-face, .mh-iso-tk.is-hidden { opacity: .45; }
   .mh-map-tk.is-hidden .mh-map-face { outline: 2px dashed rgba(255,255,255,.85); outline-offset: 2px; filter: saturate(.4); }
   .mh-map-tk.is-hidden::after { content: ""; position: absolute; right: 2%; top: 2%; width: 34%; height: 34%; border-radius: 50%; background: #2a2333 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.9 4.2A10 10 0 0 1 12 4c7 0 10 8 10 8a13 13 0 0 1-1.7 2.7M6.6 6.6C3.6 8.6 2 12 2 12s3 8 10 8a9.7 9.7 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2M2 2l20 20'/%3E%3C/svg%3E") center / 64% no-repeat; box-shadow: 0 1px 3px rgba(0,0,0,.4); pointer-events: none; }
+  .mh-map-tk > .mh-map-face, .mh-map-tk > .mh-map-hp, .mh-map-tk > .mh-map-nm { transition: opacity .55s ease, scale .55s ease, filter .55s ease; }
+  .mh-map-tk.is-vanished { pointer-events: none; }
+  .mh-map-tk.is-vanished > .mh-map-face, .mh-map-tk.is-vanished > .mh-map-hp, .mh-map-tk.is-vanished > .mh-map-nm { opacity: 0; scale: .55; filter: blur(4px); }
+  .mh-map-tk.is-poof-show > .mh-map-face { animation: mh-pop-in .55s cubic-bezier(.3,1.5,.5,1); }
+  @keyframes mh-pop-in { 0% { scale: .5; filter: blur(4px); } 60% { scale: 1.12; filter: none; } 100% { scale: 1; } }
+  .mh-map-puff { position: absolute; inset: -15%; pointer-events: none; z-index: 2; }
+  .mh-map-puff i { position: absolute; width: 46%; height: 46%; border-radius: 50%; background: radial-gradient(circle, rgba(225,222,235,.95) 0%, rgba(190,185,205,.7) 45%, rgba(160,155,180,0) 72%); opacity: 0; animation: mh-puff .8s ease-out forwards; }
+  .mh-map-puff i:nth-child(1) { left: 6%; top: 30%; --px: -40%; --py: -10%; }
+  .mh-map-puff i:nth-child(2) { left: 48%; top: 26%; --px: 40%; --py: -20%; animation-delay: .05s; }
+  .mh-map-puff i:nth-child(3) { left: 27%; top: 4%; --px: 0%; --py: -45%; animation-delay: .1s; }
+  .mh-map-puff i:nth-child(4) { left: 14%; top: 52%; --px: -30%; --py: 30%; animation-delay: .04s; }
+  .mh-map-puff i:nth-child(5) { left: 42%; top: 52%; --px: 30%; --py: 30%; animation-delay: .08s; }
+  @keyframes mh-puff { 0% { opacity: 0; scale: .3; translate: 0 0; } 25% { opacity: 1; scale: 1; } 100% { opacity: 0; scale: 1.5; translate: var(--px) var(--py); } }
+  .mh-iso-tk > :not(.mh-iso-puff) { transition: opacity .55s ease; }
+  .mh-iso-tk.is-vanished { pointer-events: none; }
+  .mh-iso-tk.is-vanished > :not(.mh-iso-puff) { opacity: 0; }
+  .mh-iso-puff circle { fill: rgba(225,222,235,.9); transform-box: fill-box; transform-origin: center; opacity: 0; animation: mh-iso-puff .8s ease-out forwards; }
+  @keyframes mh-iso-puff { 0% { opacity: 0; transform: scale(.3); } 25% { opacity: .95; transform: scale(1); } 100% { opacity: 0; transform: scale(1.6) translateY(-30%); } }
   .mh-map-tk.is-step0 .mh-map-face { animation: mh-hop0 .38s ease-out; }
   .mh-map-tk.is-step1 .mh-map-face { animation: mh-hop1 .38s ease-out; }
   @keyframes mh-hop0 { 0% { translate: 0 0; scale: 1; } 45% { translate: 0 -28%; scale: 1.06; } 80% { translate: 0 0; scale: 1.04 .94; } 100% { translate: 0 0; scale: 1; } }
@@ -2592,7 +2610,7 @@ const sharedStyles = `
   @keyframes mh-iso-lunge { 0% { transform: translate(0, 0); } 18% { transform: translate(calc(var(--ax) * -.08), calc(var(--ay) * -.08)); } 48% { transform: translate(calc(var(--ax) * .62), calc(var(--ay) * .62)); } 100% { transform: translate(0, 0); } }
   .mh-iso-tk.is-hit { animation: mh-iso-hit .55s .32s ease both; }
   @keyframes mh-iso-hit { 0%, 100% { transform: translate(0, 0); filter: none; } 20% { transform: translate(-5px, 2px); filter: brightness(1.8) drop-shadow(0 0 5px #ff4a3d); } 40% { transform: translate(5px, -2px); } 60% { transform: translate(-3px, 1px); } 80% { transform: translate(2px, 0); } }
-  @media (prefers-reduced-motion: reduce) { .mh-map-tk.is-attack, .mh-map-tk.is-hit, .mh-map-tk.is-hit .mh-map-face, .mh-iso-tk.is-attack, .mh-iso-tk.is-hit, .mh-map-tk[class*="is-step"] .mh-map-face, .mh-iso-tk[class*="is-step"] { animation: none; } .mh-map .mh-map-tk { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { .mh-map-tk.is-attack, .mh-map-tk.is-hit, .mh-map-tk.is-hit .mh-map-face, .mh-iso-tk.is-attack, .mh-iso-tk.is-hit, .mh-map-tk[class*="is-step"] .mh-map-face, .mh-iso-tk[class*="is-step"], .mh-map-puff i, .mh-iso-puff circle, .mh-map-tk.is-poof-show > .mh-map-face { animation: none; } .mh-map .mh-map-tk { transition: none; } }
   .mh-map-props-sep { font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-muted); margin: 0 2px 0 8px; }
   .mh-isoboard { background: #EFE8DB; }
   .mh-isoboard svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
@@ -4529,6 +4547,32 @@ function useMoveFx(list) {
   }, [sig]);
   return steps;
 }
+// Escondido: cuando una ficha se esconde o reaparece hace un "puf" de humo. Devuelve { id: { kind: "hide" | "show", n } }.
+function useVisFx(tokens) {
+  const prev = useRef(null);
+  const seq = useRef(0);
+  const [fx, setFx] = useState({});
+  const sig = tokens.map((t) => t.id + ":" + (t.hidden || t.vanished ? 1 : 0)).join("|");
+  useLayoutEffect(() => {
+    const now = {};
+    const changed = {};
+    for (const t of tokens) {
+      const h = !!(t.hidden || t.vanished);
+      now[t.id] = h;
+      if (prev.current && t.id in prev.current && prev.current[t.id] !== h) changed[t.id] = { kind: h ? "hide" : "show", n: ++seq.current };
+    }
+    prev.current = now;
+    const ids = Object.keys(changed);
+    if (!ids.length) return;
+    setFx((st) => ({ ...st, ...changed }));
+    setTimeout(() => setFx((st) => {
+      const c = { ...st };
+      ids.forEach((i) => c[i] === changed[i] && delete c[i]);
+      return c;
+    }), 900);
+  }, [sig]);
+  return fx;
+}
 // Vista del tablero: plana (por defecto) o isométrica. Es una preferencia de cada navegador.
 const readIsoPref = () => {
   try {
@@ -4549,6 +4593,7 @@ function MapBoard({ fx, bg, tokens, props = [], terrain = [], stampTool, onStamp
   const [iso, setIso] = useState(readIsoPref);
   const anim = useAttackFx(fx);
   const steps = useMoveFx(tokens.map((t) => (drag && drag.id === t.id ? [t.id, drag.x, drag.y] : [t.id, t.x, t.y])));
+  const vis = useVisFx(tokens);
   const toggleIso = () => {
     const v = !iso;
     setIso(v);
@@ -4584,7 +4629,7 @@ function MapBoard({ fx, bg, tokens, props = [], terrain = [], stampTool, onStamp
     const r = ref.current.getBoundingClientRect();
     return { x: clamp(Math.floor(((e.clientX - r.left) / r.width) * MAP_COLS), MAP_COLS), y: clamp(Math.floor(((e.clientY - r.top) / r.height) * MAP_ROWS), MAP_ROWS) };
   };
-  const occupied = (x, y, exceptId) => tokens.some((t) => t.id !== exceptId && t.x === x && t.y === y);
+  const occupied = (x, y, exceptId) => tokens.some((t) => t.id !== exceptId && !t.vanished && t.x === x && t.y === y);
   const selected = tokens.find((t) => t.id === selectedId && canMove(t));
 
   const startDrag = (e, t) => {
@@ -4727,15 +4772,17 @@ function MapBoard({ fx, bg, tokens, props = [], terrain = [], stampTool, onStamp
           <button
             key={t.id}
             type="button"
-            className={"mh-map-tk is-" + t.kind + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "")}
+            className={"mh-map-tk is-" + t.kind + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "")}
             style={{ ...at(pos.x, pos.y), "--tc": t.color, ...(anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); return tg ? { "--ax": (tg.x - t.x) * 100 + "%", "--ay": (tg.y - t.y) * 100 + "%" } : {}; })() : {}) }}
             onPointerDown={(e) => startDrag(e, t)}
             onContextMenu={(e) => openMenu(e, t)}
             onKeyDown={(e) => keyMove(e, t)}
             aria-label={t.name + (movable ? ". Arrástrala o usa las flechas para moverla" : "")}
             title={t.name + (t.hidden ? " · Escondido" : "")}
-            tabIndex={movable || onPick ? 0 : -1}
+            tabIndex={t.vanished ? -1 : movable || onPick ? 0 : -1}
+            aria-hidden={t.vanished || undefined}
           >
+            {vis[t.id] && <span key={vis[t.id].n} className="mh-map-puff" aria-hidden="true"><i /><i /><i /><i /><i /></span>}
             <span className="mh-map-face">{t.img ? <img src={t.img} alt="" draggable={false} /> : t.kind === "foe" ? <Skull size="55%" /> : t.kind === "pet" ? <PawPrint size="52%" /> : <span>{(t.name || "?").trim().charAt(0).toUpperCase()}</span>}</span>
             {t.hp && t.hp[1] > 0 && (
               <span className="mh-map-hp" title={`Vida: ${t.hp[1] - t.hp[0]} de ${t.hp[1]}`}>
@@ -4801,8 +4848,9 @@ function IsoBoard({ anim, tokens, props = [], terrain = [], stampTool, onStamp, 
   const [drag, setDrag] = useState(null);
   const [rangeId, setRangeId] = useState(null);
   const steps = useMoveFx(tokens.map((t) => (drag && drag.id === t.id ? [t.id, drag.x, drag.y] : [t.id, t.x, t.y])));
+  const vis = useVisFx(tokens);
   const painting = useRef(null);
-  const occupied = (x, y, exceptId) => tokens.some((t) => t.id !== exceptId && t.x === x && t.y === y);
+  const occupied = (x, y, exceptId) => tokens.some((t) => t.id !== exceptId && !t.vanished && t.x === x && t.y === y);
   const selected = tokens.find((t) => t.id === selectedId && canMove(t));
   const cellFrom = (e) => {
     const el = document.elementsFromPoint(e.clientX, e.clientY).find((n) => n.getAttribute && n.getAttribute("data-cx") != null);
@@ -4928,7 +4976,7 @@ function IsoBoard({ anim, tokens, props = [], terrain = [], stampTool, onStamp, 
                 return (
                   <g
                     key={t.id}
-                    className={"mh-iso-tk" + (movable ? " is-movable" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" : "") + (steps[t.id] && !(anim && anim.from === t.id) ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "")}
+                    className={"mh-iso-tk" + (movable ? " is-movable" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" : "") + (steps[t.id] && !(anim && anim.from === t.id) ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "")}
                     style={anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); if (!tg) return undefined; const [tx, ty] = P(tg.x + 0.5, tg.y + 0.5, tAt(tg.x, tg.y).z); return { "--ax": tx - cx + "px", "--ay": ty - cy + "px" }; })() : steps[t.id] ? (() => { const st = steps[t.id]; const [ox, oy] = P(st.fx + 0.5, st.fy + 0.5, tAt(st.fx, st.fy).z); return { "--mx": ox - cx + "px", "--my": oy - cy + "px" }; })() : undefined}
                     onPointerDown={(e) => tokenDown(e, t)}
                     onContextMenu={(e) => {
@@ -4937,7 +4985,14 @@ function IsoBoard({ anim, tokens, props = [], terrain = [], stampTool, onStamp, 
                       setRangeId(rangeId === t.id ? null : t.id);
                     }}
                   >
-                    <title>{t.name + (t.hidden ? " · Escondido" : "")}</title>
+                    <title>{t.vanished ? "" : t.name + (t.hidden ? " · Escondido" : "")}</title>
+                    {vis[t.id] && (
+                      <g key={vis[t.id].n} className="mh-iso-puff" pointerEvents="none">
+                        {[[-0.32, -0.5], [0.3, -0.62], [0, -0.95], [-0.2, -0.2], [0.26, -0.22]].map(([dx, dy], k) => (
+                          <circle key={k} cx={cx + dx * S} cy={cy + dy * S} r={S * 0.3} style={{ animationDelay: k * 0.05 + "s" }} />
+                        ))}
+                      </g>
+                    )}
                     {sel && <ellipse cx={cx} cy={cy} rx={S * 0.62} ry={S * 0.31} fill="none" stroke="#E3B04B" strokeWidth="3" />}
                     <ellipse cx={cx} cy={cy} rx={S * 0.42} ry={S * 0.21} fill="rgba(0,0,0,.28)" />
                     <rect x={cx - S * 0.33} y={cy - S * 1.1} width={S * 0.66} height={S * 1.04} rx={S * 0.33} fill={col} stroke="#fff" strokeWidth="2.2" />
@@ -5710,6 +5765,21 @@ export default function App({ onSignOut }) {
       clearInterval(timer);
     };
   }, [stageCampaignId, gmViewing]);
+
+  // Escondido / Oculto en el tablero: cada jugador corrige la marca de las fichas de sus propios personajes.
+  useEffect(() => {
+    if (!stageCampaignId) return;
+    const hid = (c) => getConditions(c).some((n) => n === "Escondido" || n === "Oculto");
+    const wrong = (campaignMap.tokens || []).some((t) => t.kind === "pc" && characters[t.charId] && !!t.hidden !== hid(characters[t.charId]));
+    if (!wrong) return;
+    mutateMap(stageCampaignId, (ts) =>
+      ts.map((t) => {
+        if (t.kind !== "pc" || !characters[t.charId]) return t;
+        const { hidden, ...rest } = t;
+        return hid(characters[t.charId]) ? { ...rest, hidden: true } : rest;
+      })
+    );
+  }, [campaignMap, characters, stageCampaignId]);
 
   // Escape cierra la pista abierta.
   useEffect(() => {
@@ -14334,7 +14404,7 @@ export default function App({ onSignOut }) {
                             </div>
                           );
                         const newHandouts = handouts.filter((h) => !handoutsSeen.includes(h.id)).length;
-                        const mapTokens = mapTokensView(campaignMap.tokens).filter((t) => !(t.kind === "pc" && t.hidden && t.charId !== viewingCharId));
+                        const mapTokens = mapTokensView(campaignMap.tokens).map((t) => (t.kind === "pc" && t.hidden && t.charId !== viewingCharId ? { ...t, hidden: false, vanished: true } : t));
                         const myToken = mapTokens.find((t) => t.kind === "pc" && t.charId === viewingCharId);
                         const kindOf = (k) => HANDOUT_KINDS.find((x) => x.key === k) || HANDOUT_KINDS[0];
                         const empty = (Icon, text) => (
