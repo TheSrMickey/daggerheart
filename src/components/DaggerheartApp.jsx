@@ -2,7 +2,7 @@
 
 import { Fragment, useState, useEffect, useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus } from "lucide-react";
+import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus, Box, LayoutGrid } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
 import { Wand, CircleDot, MoveUpRight, Archive, Shell, Compass, Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
@@ -2729,6 +2729,28 @@ const sharedStyles = `
   .mh-map-hint { flex-shrink: 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--mh-ink3); }
   .mh-map-hint .mh-stg-live { margin-left: auto; }
   .mh-map-gm { gap: 12px; }
+  .mh-map-log { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 9; display: flex; flex-direction: column; align-items: center; gap: 5px; pointer-events: none; width: max-content; max-width: calc(100% - 24px); }
+  .mh-map-log-i { padding: 6px 12px; border-radius: 10px; background: rgba(20,14,18,.86); color: #F4EEE2; font: 600 11.5px/1.35 Inter, system-ui, sans-serif; box-shadow: 0 4px 14px rgba(0,0,0,.35); border-left: 3px solid #C9A24A; text-align: center; animation: mh-log-in .28s ease, mh-log-out .5s ease 6s forwards; }
+  .mh-map-log-i.is-hit { border-left-color: #E3B04B; }
+  .mh-map-log-i.is-miss { border-left-color: #7D8BA3; }
+  .mh-map-log-i.is-dmg { border-left-color: #E24B4A; }
+  .mh-map-log-i.is-ko { border-left-color: #E24B4A; background: rgba(110,24,30,.92); }
+  @keyframes mh-log-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes mh-log-out { to { opacity: 0; transform: translateY(4px); } }
+  .mh-map-iso-btn { top: 10px; right: 10px; bottom: auto; width: 26px; height: 26px; padding: 0; border-radius: 7px; display: flex; align-items: center; justify-content: center; }
+  .mh-map-menu button:disabled { opacity: .5; cursor: not-allowed; }
+  .mh-map-menu button:disabled:hover { background: transparent; }
+  .mh-renew-row.is-off { opacity: .55; cursor: not-allowed; }
+  .mh-hit-msg { margin: 4px 0 12px; font-size: 13px; color: var(--mh-ink2); line-height: 1.5; }
+  .mh-hit-msg.is-miss { color: #5FA77A; font-weight: 600; }
+  .mh-foe-tg { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .mh-foe-tg > span { font-weight: 600; color: var(--mh-ink); margin-right: 2px; }
+  .mh-foe-tg-b { display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px 4px 4px; border-radius: 999px; border: 1px solid var(--mh-line2); background: var(--mh-panel); color: var(--mh-ink); font: 600 12px Inter, system-ui, sans-serif; cursor: pointer; }
+  .mh-foe-tg-b i { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-style: normal; font-size: 11px; }
+  .mh-foe-tg-b small { color: var(--mh-muted); font-weight: 500; }
+  .mh-foe-tg-b.is-on { border-color: #C0504A; background: color-mix(in srgb, #C0504A 12%, var(--mh-panel)); }
+  .mh-foe-tg-b:disabled { opacity: .45; cursor: not-allowed; }
+  .mh-foe-quick i { background: #C0504A !important; color: #fff; }
   .mh-foe { margin-top: 10px; padding: 12px 14px; border-radius: 12px; border: 1px solid color-mix(in srgb, #C0504A 35%, var(--mh-line)); background: color-mix(in srgb, #C0504A 5%, var(--mh-panel)); display: flex; flex-direction: column; gap: 7px; font-size: 12.5px; color: var(--mh-ink2); }
   .mh-foe.is-down { opacity: .7; }
   .mh-foe-empty { color: var(--mh-muted); font-style: italic; }
@@ -4608,6 +4630,40 @@ const FOE_BASE = {
   ],
 };
 const newFoeStats = () => ({ ...FOE_BASE, hpMarked: 0, stressMarked: 0 });
+// Alcances en casillas del tablero (igual que las bandas de colores) y distancia entre casillas.
+const RANGE_CELLS = { "Cuerpo a cuerpo": 1, "Muy cercano": 3, "Cercano": 6, "Lejano": 12, "Muy lejano": 99 };
+const cellDist = (a, b) => Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
+// Gravedad del daño según los umbrales: Menor 1 PV, Mayor 2 PV, Grave 3 PV.
+const severityOf = (dmg, major, severe) => (severe && dmg >= severe ? 3 : major && dmg >= major ? 2 : dmg > 0 ? 1 : 0);
+const SEVERITY_LABEL = ["Sin daño", "Menor", "Mayor", "Grave"];
+// Avisos de lo que pasa en el tablero (tiradas, golpes): salen un momento abajo del mapa para todos.
+function MapLog({ log }) {
+  const seen = useRef(null);
+  const [shown, setShown] = useState([]);
+  useEffect(() => {
+    const list = log || [];
+    if (!seen.current) {
+      seen.current = new Set(list.map((e) => e.key));
+      return;
+    }
+    const fresh = list.filter((e) => !seen.current.has(e.key));
+    if (!fresh.length) return;
+    fresh.forEach((e) => seen.current.add(e.key));
+    setShown((cur) => [...cur, ...fresh].slice(-3));
+    const keys = fresh.map((e) => e.key);
+    setTimeout(() => setShown((cur) => cur.filter((e) => !keys.includes(e.key))), 6500);
+  }, [(log || []).map((e) => e.key).join("|")]);
+  if (!shown.length) return null;
+  return (
+    <div className="mh-map-log" aria-live="polite" onPointerDown={(e) => e.stopPropagation()}>
+      {shown.map((e) => (
+        <div key={e.key} className={"mh-map-log-i is-" + (e.tone || "info")}>
+          {e.text}
+        </div>
+      ))}
+    </div>
+  );
+}
 // Tira una expresión tipo "1d8+1" y devuelve { rolls, mod, total }.
 const rollExpr = (expr) => {
   const m = String(expr).match(/(\d*)d(\d+)\s*([+-]\s*\d+)?/);
@@ -4721,8 +4777,10 @@ function TokenMenu({ menu, items, onClose }) {
             role="menuitem"
             autoFocus={i === 0}
             className={(it.on ? "is-on" : "") + (it.danger ? " is-danger" : "")}
+            disabled={it.disabled}
             onClick={(e) => {
               e.stopPropagation();
+              if (it.disabled) return;
               onClose();
               it.run();
             }}
@@ -4750,7 +4808,7 @@ const readIsoPref = () => {
   }
 };
 // Tablero con fichas cuadradas. Se arrastran, o se elige una y se pulsa la casilla; también con las flechas.
-function MapBoard({ menuFor, fx, bg, tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
+function MapBoard({ log, iso: isoProp, onIsoChange, hideIsoBtn, menuFor, fx, bg, tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
   const ref = useRef(null);
   const dragRef = useRef(null);
   const [drag, setDrag] = useState(null);
@@ -4760,12 +4818,14 @@ function MapBoard({ menuFor, fx, bg, tokens, props = [], terrain = [], stampTool
   rangeIdRef.current = rangeId;
   const [hover, setHover] = useState(null); // casilla bajo el ratón mientras hay un sello elegido
   const painting = useRef(null);
-  const [iso, setIso] = useState(readIsoPref);
+  const [isoOwn, setIso] = useState(readIsoPref);
+  const iso = isoProp !== undefined ? isoProp : isoOwn;
   const anim = useAttackFx(fx);
   const steps = useMoveFx(tokens.map((t) => (drag && drag.id === t.id ? [t.id, drag.x, drag.y] : [t.id, t.x, t.y])));
   const vis = useVisFx(tokens);
   const toggleIso = () => {
     const v = !iso;
+    if (onIsoChange) return onIsoChange(v);
     setIso(v);
     try {
       localStorage.setItem("mh-map-iso", v ? "1" : "0");
@@ -4912,7 +4972,7 @@ function MapBoard({ menuFor, fx, bg, tokens, props = [], terrain = [], stampTool
   const at = (x, y) => ({ left: (x * 100) / MAP_COLS + "%", top: (y * 100) / MAP_ROWS + "%", width: 100 / MAP_COLS + "%", height: 100 / MAP_ROWS + "%" });
 
   if (iso)
-    return <IsoBoard menuFor={menuFor} anim={anim} tokens={tokens} props={props} terrain={terrain} stampTool={stampTool} onStamp={onStamp} onUnstamp={onUnstamp} canMove={canMove} onMove={onMove} selectedId={selectedId} onSelect={onSelect} onPick={onPick} compact={compact} onToggle={toggleIso} />;
+    return <IsoBoard log={log} hideIsoBtn={hideIsoBtn} menuFor={menuFor} anim={anim} tokens={tokens} props={props} terrain={terrain} stampTool={stampTool} onStamp={onStamp} onUnstamp={onUnstamp} canMove={canMove} onMove={onMove} selectedId={selectedId} onSelect={onSelect} onPick={onPick} compact={compact} onToggle={toggleIso} />;
 
   return (
     <div
@@ -5006,9 +5066,12 @@ function MapBoard({ menuFor, fx, bg, tokens, props = [], terrain = [], stampTool
         );
       })}
       </div>
-      <button type="button" className="mh-map-iso-btn" onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); toggleIso(); }} title={iso ? "Cambiar a la vista plana" : "Cambiar a la vista isométrica"}>
-        {iso ? "Vista plana" : "Vista isométrica"}
-      </button>
+      {!hideIsoBtn && (
+        <button type="button" className="mh-map-iso-btn" onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); toggleIso(); }} title="Cambiar a la vista isométrica" aria-label="Cambiar a la vista isométrica">
+          <Box size={14} />
+        </button>
+      )}
+      <MapLog log={log} />
       {rangeTok && (
         <div className="mh-map-legend" onPointerDown={(e) => e.stopPropagation()}>
           {MAP_RANGES.map((r) => (
@@ -5035,7 +5098,7 @@ function MapBoard({ menuFor, fx, bg, tokens, props = [], terrain = [], stampTool
 
 // Tablero isométrico tipo diorama: losetas con relieve, decorados y fichas de pie.
 // Usa los mismos datos que el tablero plano (fichas, decorados y terreno).
-function IsoBoard({ menuFor, anim, tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact, onToggle }) {
+function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact, onToggle }) {
   const S = 34;
   const OX = MAP_ROWS * S + S * 0.6;
   const OY = S * 2.4;
@@ -5296,9 +5359,12 @@ function IsoBoard({ menuFor, anim, tokens, props = [], terrain = [], stampTool, 
           </button>
         </div>
       )}
-      <button type="button" className="mh-map-iso-btn" onClick={onToggle} title="Cambiar a la vista plana">
-        Vista plana
-      </button>
+      <MapLog log={log} />
+      {!hideIsoBtn && (
+        <button type="button" className="mh-map-iso-btn" onClick={onToggle} title="Cambiar a la vista plana" aria-label="Cambiar a la vista plana">
+          <LayoutGrid size={14} />
+        </button>
+      )}
     </div>
   );
 }
@@ -7003,6 +7069,8 @@ export default function App({ onSignOut }) {
     const total = hybridDmg + crimsonBonus + angelRoll + knightBonus + igniteRoll + roll + sum2 + bonus + critBonus + wolfBonus + unstopBonus + sneakBonus + rawBonus + fearBonus + furyBonus;
     if (stanceNow === "aterradora") postCampaignEvent(charId, "😨 Postura Aterradora: el objetivo marca 1 Estrés");
     setDamageRollResult({ hybridDmg, hybridDmgSides: ch ? hybridSides(ch) : 0, crimsonRolls, angelRoll, angelSides: opts.angel || 0, knightRolls, attackFear: opts.attackFear || 0, igniteRoll, stanceNow, droppedRoll, favoredBonus, rolls2, die2, comboBase: total, furyRolls, furySides: ch ? patronSides(ch) : 6, fearRolls, rawBonus, sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, doublePick: !!opts.doublePick, charged: ch && ch.f_subclass === "Origen Primigenio" && ch.f_charged === "1" && damageType === "mágico", note: resonance ? "Resonancia Sagrada: los dados repetidos valen el doble" : opts.extraFlat ? "Incluye +" + opts.extraFlat + " de Elementalista" : waxBonus ? "Incluye +2 de la Luna Creciente" : opts.note || "", spirit: !!opts.spirit });
+    // Ataque con objetivo en el tablero: el daño se aplica al enemigo según sus umbrales.
+    if (opts.targetId && sheetCampaignId) applyFoeDamage(sheetCampaignId, opts.targetId, total, ch?.f_name || "Alguien", weaponName);
     const who = playerName || "Alguien en la mesa";
     const critLabel = isCritical ? ` · ¡Crítico! (+${critBonus} máx.)` : "";
     const diceLabel = `${dice}d${die} (${rolls.join("+")})` + (rolls2 ? ` + ${dice}d${die2} (${rolls2.join("+")})` : "") + (furyRolls ? ` + Furia ${furyRolls.length}d${patronSides(ch)} (${furyRolls.join("+")})` : "") + (fearRolls ? ` + Enfrenta tu Miedo ${fearRolls.length}d10 (${fearRolls.join("+")}) mágico` : "") + (wolfBonus ? ` + Lobo 1d10 (${wolfBonus})` : "") + (unstopBonus ? ` + Imparable ${unstopBonus}` : "") + (sneakRolls ? ` + Furtivo ${sneakRolls.length}d6 (${sneakRolls.join("+")})` : "");
@@ -8488,6 +8556,43 @@ export default function App({ onSignOut }) {
   };
 
   // Datos para pintar cada ficha: nombre, color, retrato y vida (los jugadores, desde su hoja).
+  // Aviso en el tablero (lo ven todos un momento, abajo del mapa).
+  const pushMapLog = (campaignId, text, tone = "info") => {
+    if (!campaignId) return;
+    const entry = { key: Date.now() + "-" + Math.random().toString(36).slice(2, 6), text, tone };
+    mutateMap(campaignId, (log) => [...(Array.isArray(log) ? log : []).slice(-11), entry], "log");
+  };
+  // Alcance del arma de un personaje en casillas (y el nombre del alcance).
+  const weaponReach = (c, weaponName) => {
+    if (weaponName === BRAWLER_STRIKE) return "Cuerpo a cuerpo";
+    const w = [...PRIMARY_WEAPONS, ...SECONDARY_WEAPONS].find((x) => x.key === weaponName);
+    if (!w || !w.range) return null;
+    const r = reachFor(c, w.range);
+    return c && c.f_reach === "1" && weaponName === c.f_primary_weapon ? reachStep(r) : r;
+  };
+  // ¿Llega el arma de este personaje a esa ficha? Sin ficha propia en el tablero no se comprueba.
+  const reachInfo = (charId, weaponName, tok) => {
+    const me = (campaignMap.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
+    const range = weaponReach(characters[charId], weaponName);
+    if (!me || !tok || !range) return { ok: true, range, dist: null };
+    const dist = cellDist(me, tok);
+    return { ok: dist <= (RANGE_CELLS[range] || 99), range, dist };
+  };
+  // Un personaje golpea a un enemigo con estadísticas: se marcan sus PV según los umbrales.
+  const applyFoeDamage = (campaignId, foeId, dmg, attacker, weaponName) => {
+    const foe = (campaignMap.tokens || []).find((t) => t.id === foeId);
+    if (!foe || !foe.stats) {
+      if (foe) pushMapLog(campaignId, attacker + " golpea a " + foe.name + " con " + weaponName + ": " + dmg + " de daño", "dmg");
+      return;
+    }
+    const st = foe.stats;
+    const sev = severityOf(dmg, st.thresholds?.[0], st.thresholds?.[1]);
+    const max = Number(st.hp || 0);
+    const marked = Math.min(max, Number(st.hpMarked || 0) + sev);
+    mutateMap(campaignId, (ts) => ts.map((t) => (t.id === foeId && t.stats ? { ...t, stats: { ...t.stats, hpMarked: Math.min(Number(t.stats.hp || 0), Number(t.stats.hpMarked || 0) + sev) } } : t)));
+    pushMapLog(campaignId, attacker + " golpea a " + foe.name + ": " + dmg + " de daño (" + SEVERITY_LABEL[sev] + ") · " + sev + " PV · " + marked + "/" + max + (marked >= max ? " · ¡Derrotado!" : ""), marked >= max ? "ko" : "dmg");
+  };
+
   const mapTokensView = (tokens) =>
     (tokens || []).map((t) => {
       if (t.kind === "pc") {
@@ -8865,6 +8970,26 @@ export default function App({ onSignOut }) {
   const [embraceDlg, setEmbraceDlg] = useState(null); // Pacto del Eterno · Abrazo Inmortal
   const [vengeAsk, setVengeAsk] = useState(null);
   const [targetDlg, setTargetDlg] = useState(null); // ataque: a qué enemigo del tablero
+  const [incomingHit, setIncomingHit] = useState(null); // un enemigo del DJ te ataca en el tablero
+  const handledHits = useRef(new Set());
+  const defenseRef = useRef(null); // Evasión y umbrales del personaje abierto (los calcula la hoja)
+  const [mapIso, setMapIso] = useState(readIsoPref);
+  const toggleMapIso = (v) => {
+    setMapIso(v);
+    try {
+      localStorage.setItem("mh-map-iso", v ? "1" : "0");
+    } catch (e) {}
+  };
+  const [foeTarget, setFoeTarget] = useState(null); // DJ: a qué personaje ataca el enemigo elegido
+  // Un enemigo del DJ ataca a tu personaje: se abre el aviso para resolverlo (solo con su hoja abierta).
+  useEffect(() => {
+    if (!sheetCampaignId || !viewingCharId || incomingHit) return;
+    const h = (campaignMap.hits || []).find((x) => x.charId === viewingCharId && !handledHits.current.has(x.key) && Date.now() - Number(String(x.key).split("-")[0]) < 15 * 60 * 1000);
+    if (!h) return;
+    handledHits.current.add(h.key);
+    setIncomingHit({ ...h, campaignId: sheetCampaignId });
+  }, [campaignMap.hits, viewingCharId, sheetCampaignId, incomingHit]);
+
   const [titanAsk, setTitanAsk] = useState(null);
   const [stanceEdit, setStanceEdit] = useState(null);
   const [summonDlg, setSummonDlg] = useState(null); // Invocador · Invocar Entidad
@@ -9436,7 +9561,7 @@ export default function App({ onSignOut }) {
   const rollTraitCheck = (charId, traitLabel, traitValue, weapon, cardContext, advantage) => {
     // En una campaña con enemigos en el tablero, primero se elige a quién se ataca.
     if (weapon && !weapon.targetChosen && sheetCampaignId) {
-      const foes = mapTokensView(campaignMap.tokens || []).filter((t) => t.kind === "foe" || t.kind === "npc");
+      const foes = mapTokensView(campaignMap.tokens || []).filter((t) => t.kind === "foe" || t.kind === "npc").map((t) => ({ ...t, reach: reachInfo(charId, weapon.name, t) }));
       if (foes.length) {
         setTargetDlg({ args: [charId, traitLabel, traitValue, weapon, cardContext, advantage], foes });
         return;
@@ -9444,7 +9569,7 @@ export default function App({ onSignOut }) {
     }
     // Galapa · Retraerse: desventaja en las tiradas de acción mientras está en el caparazón.
     const shellOn = getConditions(charsRef.current[charId] || {}).includes("Retraído");
-    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage && !shellOn, exps: [], rally: false, privilege: false, disadvantage: shellOn, shellOn, poet: false, dedicated: false, quick: false, reaction: false, tide: 0, dc: "", elem: "", slayer: 0, found: "", adept: false, patron: false, surround: 0, honed: false, hallow: false, fury: false });
+    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage && !shellOn, exps: [], rally: false, privilege: false, disadvantage: shellOn, shellOn, poet: false, dedicated: false, quick: false, reaction: false, tide: 0, dc: weapon && weapon.targetDc ? String(weapon.targetDc) : "", elem: "", slayer: 0, found: "", adept: false, patron: false, surround: 0, honed: false, hallow: false, fury: false });
   };
   const confirmPreRoll = () => {
     const pr = preRoll;
@@ -9747,6 +9872,12 @@ export default function App({ onSignOut }) {
       : hope === fear ? "Ganas 1 Esperanza y te quitas 1 Estrés" : hope > fear ? "Ganas 1 Esperanza" : "El DJ gana 1 de Miedo";
     setTraitRollResult({ key: Date.now(), hopeSides, traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, tideBonus, hybridRoll, hybridSidesR: extras.hybridSides || 0, hallowRoll, hallowFirst: hopeA, patronRoll, patronSides: extras.patronSides || 0, slayerRoll, slayerRolls, total, text: hope === fear ? "Éxito crítico" : reaction ? "Tirada de reacción" : text, color, note, reaction, card: cardContext ? { name: cardContext.name, dc: cardContext.dc } : dcVal ? { name: "", dc: dcVal } : null, exps: extras.exps || [], honed: extras.honed || [], wasCloaked, weapon: weapon || null, charId });
 
+    // Ataque contra una ficha del tablero: el resultado sale abajo del mapa para todos.
+    if (weapon && weapon.targetId && sheetCampaignId && !reaction) {
+      const who = charsRef.current[charId]?.f_name || "Alguien";
+      const hit = hope === fear || (dcVal ? total >= dcVal : null);
+      pushMapLog(sheetCampaignId, who + " ataca a " + (weapon.targetName || "un enemigo") + " con " + weapon.name + ": " + total + (dcVal ? " contra " + dcVal + " · " + (hope === fear ? "¡crítico!" : hit ? "impacta" : "falla") : ""), hit === false ? "miss" : "hit");
+    }
     // Con Esperanza (o crítico) ganas 1 Esperanza; con crítico además te quitas 1 Estrés.
     let hopeGained = 0;
     if (reaction) {
@@ -10757,6 +10888,9 @@ export default function App({ onSignOut }) {
                           onStamp={(x, y) => stampProp(stampTool, x, y)}
                           onUnstamp={unstampProp}
                           fx={campaignMap.fx}
+                          log={campaignMap.log}
+                          iso={mapIso}
+                          onIsoChange={toggleMapIso}
                           tokens={mapTokensView(tokens)}
                           canMove={(t) => t.kind === "npc" || t.kind === "foe"}
                           onMove={(id, x, y) => moveToken(viewingCampaignId, id, x, y)}
@@ -10871,8 +11005,51 @@ export default function App({ onSignOut }) {
                                   <b>Experiencia:</b> {st.exp}
                                 </p>
                               )}
+                              {(() => {
+                                const pcs = mapTokensView(tokens.filter((t) => t.kind === "pc"));
+                                if (!pcs.length) return null;
+                                const reachCells = RANGE_CELLS[st.attack.range] || 1;
+                                return (
+                                  <div className="mh-foe-tg">
+                                    <span>Objetivo</span>
+                                    {pcs.map((t) => {
+                                      const dist = cellDist(sel, t);
+                                      const ok = dist <= reachCells;
+                                      const on = foeTarget && foeTarget.foeId === sel.id && foeTarget.tokenId === t.id;
+                                      return (
+                                        <button key={t.id} type="button" className={"mh-foe-tg-b" + (on ? " is-on" : "")} disabled={!ok} title={ok ? "A " + dist + " casilla" + (dist === 1 ? "" : "s") : "Fuera de alcance (" + st.attack.range + ")"} onClick={() => setFoeTarget(on ? null : { foeId: sel.id, tokenId: t.id })}>
+                                          <i style={{ background: t.color }}>{(t.name || "?").charAt(0)}</i>
+                                          {t.name}
+                                          <small>{ok ? dist + " c." : "lejos"}</small>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                );
+                              })()}
                               <div className="mh-foe-acts">
-                                <button type="button" className="mh-btn-ghost" onClick={() => { const r = rollExpr("1d20"); setFoeRoll({ id: sel.id, kind: "atk", d: r.rolls[0], total: r.rolls[0] + Number(st.atk || 0) }); }}>
+                                <button
+                                  type="button"
+                                  className="mh-btn-ghost"
+                                  onClick={() => {
+                                    const r = rollExpr("1d20");
+                                    const atk = r.rolls[0] + Number(st.atk || 0);
+                                    const crit = r.rolls[0] === 20;
+                                    setFoeRoll({ id: sel.id, kind: "atk", d: r.rolls[0], total: atk });
+                                    const tg = foeTarget && foeTarget.foeId === sel.id ? tokens.find((t) => t.id === foeTarget.tokenId) : null;
+                                    if (!tg) {
+                                      pushMapLog(viewingCampaignId, sel.name + " ataca con " + st.attack.name + ": " + atk + (crit ? " · ¡crítico!" : ""), "info");
+                                      return;
+                                    }
+                                    // Daño ya tirado (con crítico: máximo de los dados + la tirada); el jugador lo resuelve con su Evasión.
+                                    const d = rollExpr(st.attack.damage);
+                                    const m = String(st.attack.damage).match(/(\d*)d(\d+)/);
+                                    const critExtra = crit && m ? Number(m[1] || 1) * Number(m[2]) : 0;
+                                    const hitEntry = { key: Date.now() + "-" + Math.random().toString(36).slice(2, 6), charId: tg.charId, foeId: sel.id, from: sel.name, weapon: st.attack.name, d20: r.rolls[0], atk, crit, dmg: d.total + critExtra, dmgRolls: d.rolls, dmgMod: d.mod };
+                                    mutateMap(viewingCampaignId, (hs) => [...(Array.isArray(hs) ? hs : []).slice(-19), hitEntry], "hits");
+                                    pushMapLog(viewingCampaignId, sel.name + " ataca a " + mapTokensView([tg])[0].name + " con " + st.attack.name + ": " + atk + (crit ? " · ¡crítico!" : "") + " · esperando al jugador", "hit");
+                                  }}
+                                >
                                   <Dices size={13} /> Atacar (d20{st.atk >= 0 ? "+" : ""}{st.atk})
                                 </button>
                                 <button type="button" className="mh-btn-ghost" onClick={() => { const r = rollExpr(st.attack.damage); setFoeRoll({ id: sel.id, kind: "dmg", rolls: r.rolls, mod: r.mod, total: r.total }); }}>
@@ -10939,6 +11116,13 @@ export default function App({ onSignOut }) {
                               }}
                             >
                               <Skull size={13} /> Añadir enemigo
+                            </button>
+                            <button type="button" className="mh-map-chip mh-foe-quick" onClick={() => placeToken({ kind: "foe", name: "Bandido", stats: newFoeStats() })} title={"Nivel 1 · Estándar · Dificultad " + FOE_BASE.difficulty + " · PV " + FOE_BASE.hp}>
+                              <i>
+                                <Skull size={11} />
+                              </i>
+                              {FOE_BASE.base}
+                              <Plus size={12} />
                             </button>
                           </div>
                         </div>
@@ -11709,6 +11893,12 @@ export default function App({ onSignOut }) {
                   const entries = getJournal(c);
                   const spellTraitKey = spellcastTraitFor(c.f_class, c.f_subclass);
                   const spellTraitInfo = TRAITS.find((t) => t.key === spellTraitKey);
+                  defenseRef.current = {
+                    id: viewingCharId,
+                    evasion: c.r_evasion ? Number(c.r_evasion) + (beastformInfo?.evasionBonus || 0) + equipMods.evasion + (wingsOn ? 2 : 0) + (dodgeOn ? 2 : 0) + Number(c.f_natural_evade || 0) + shieldBonus : 10,
+                    major: fortMajor,
+                    severe: fortSevere,
+                  };
                   // Filas de la pestaña Acciones (subclase, clase, Esperanza, ascendencia, comunidad, transformación).
                   // También las usa el menú del clic derecho del tablero.
                   const buildActionRows = () => {
@@ -11894,14 +12084,15 @@ export default function App({ onSignOut }) {
                     const foe = t.kind === "foe" || t.kind === "npc";
                     const out = [];
                     const weapons = [primaryWeapon, secondaryWeapon].filter((w) => w && w.trait && w.trait !== "—" && /d\d/.test(w.damage || ""));
-                    const target = foe ? { targetChosen: true, targetId: t.id, targetName: t.name } : {};
+                    const target = foe ? { targetChosen: true, targetId: t.id, targetName: t.name, targetDc: t.stats?.difficulty || null } : {};
                     const attack = (name, trait, value, damage) => () => {
                       if (foe) postCampaignEvent(viewingCharId, "⚔️ Ataca a " + t.name + " con " + name);
                       rollTraitCheck(viewingCharId, trait, value, { name, damage, ...target });
                     };
                     weapons.forEach((w) => {
                       const tk = TRAITS.find((tr) => tr.label === w.trait)?.key;
-                      out.push({ section: foe ? "Atacar a " + t.name : "Armas", key: "atk-" + w.key, Icon: Swords, color: "#C0504A", label: (foe ? "Con " : "Atacar con ") + w.key, sub: w.trait + " · " + w.damage, run: attack(w.key, w.trait, Number(c[tk] || 0) + (equipMods[tk] || 0), w.damage) });
+                      const ri = foe ? reachInfo(viewingCharId, w.key, t) : { ok: true };
+                      out.push({ section: foe ? "Atacar a " + t.name : "Armas", key: "atk-" + w.key, Icon: Swords, color: "#C0504A", label: (foe ? "Con " : "Atacar con ") + w.key, sub: ri.ok ? w.trait + " · " + w.damage : "Fuera de alcance (" + ri.range + ", está a " + ri.dist + ")", disabled: !ri.ok, run: attack(w.key, w.trait, Number(c[tk] || 0) + (equipMods[tk] || 0), w.damage) });
                     });
                     if (brawlerArmed(c)) {
                       const bt = TRAITS.find((tr) => tr.label === (c.f_brawl_trait || "Fuerza")) || TRAITS[1];
@@ -11911,13 +12102,28 @@ export default function App({ onSignOut }) {
                       row.onClick();
                       setViewingCardDetail((d) => (d && !d.rowIcon ? { ...d, rowIcon: row.Icon } : d));
                     };
-                    buildActionRows().forEach((row) =>
+                    // Solo lo que se usa activamente sobre alguien (o sobre ti): fuera las pasivas.
+                    const ACTIVE_RE = /(haz una tirada|tirada de (conjuro|ataque|hechizo|lanzamiento)|gasta(r|s)? (una|un|dos|tres|\d|tu|tus|la|el)|marca(r|s)? (una|un|dos|tres|\d) (de )?(estr|esperanza|ficha)|a voluntad|una vez por (descanso|sesi|escena)|como acci[oó]n)/i;
+                    const TARGET_RE = /\b(objetivos?|aliad[oa]s?|criaturas?|adversari[oa]s?|enemig[oa]s?|inflig\w*|cur(a|ar|as)|despeja\w*|recupera\w*|a ti mism[oa]|tu evasi\w*|puntos de vida)\b/i;
+                    const isActive = (txt) => ACTIVE_RE.test(txt || "") && TARGET_RE.test(txt || "");
+                    const rowText = (row) => {
+                      if (row.key === "subclass") return (subclassEntry?.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name) || tierForLevel(c.f_level || 1) >= (/Maestría/.test(f.name) ? 3 : 2)).map((f) => f.text).join(" ");
+                      if (row.key.startsWith("cf-")) return classFeatures.find((f) => "cf-" + f.name === row.key)?.text;
+                      if (row.key.startsWith("anc-")) {
+                        const nm = row.key.slice(4);
+                        return (ANCESTRIES.find((a) => a.key === nm)?.features || []).filter((f, fi) => ancFeat(c, nm, fi)).map((f) => f.text).join(" ");
+                      }
+                      if (row.key === "community") return (COMMUNITIES.find((cm) => cm.key === c.f_community)?.features || []).map((f) => f.text).join(" ");
+                      return row.summary;
+                    };
+                    buildActionRows().filter((row) => row.key === "hope" || (row.key === "transformation" ? !!row.cost : isActive(rowText(row)))).forEach((row) =>
                       out.push({ section: "Clase y origen", key: "row-" + row.key, Icon: row.Icon, color: typeof row.color === "string" && !row.color.startsWith("var(") ? row.color : undefined, label: row.title, sub: row.kicker, run: openRow(row) })
                     );
                     domainCardKeys.forEach((k) => {
                       const cd = findDomainCard(k);
                       if (!cd) return;
                       const locked = !!c.f_beastform && cd.type === "Hechizo";
+                      if (!isActive(cd.text)) return;
                       out.push({ section: "Cartas de dominio", key: "dom-" + k, Icon: DOMAIN_ICONS[cd.domain] || Sparkles, color: DOMAIN_COLORS[cd.domain], label: cd.key, sub: locked ? "Bloqueada en Forma de Bestia" : cd.type, run: () => setViewingCardDetail(domainCardDetail(cd)) });
                     });
                     return out;
@@ -14969,6 +15175,9 @@ export default function App({ onSignOut }) {
                                             props={campaignMap.props || []}
                                             terrain={campaignMap.terrain || []}
                                             fx={campaignMap.fx}
+                                            iso={mapIso}
+                                            onIsoChange={toggleMapIso}
+                                            hideIsoBtn
                                             tokens={mapTokens}
                                             canMove={(t) => (t.kind === "pc" && t.charId === viewingCharId) || (t.kind === "pet" && t.ownerCharId === viewingCharId)}
                                             onMove={(id, x, y) => moveToken(charCampaign.id, id, x, y)}
@@ -14978,6 +15187,8 @@ export default function App({ onSignOut }) {
                                             menuFor={(t) => (t.kind === "pet" ? [] : boardActions(t))}
                                           />
                                         </MapViewport>
+                                        {/* Avisos de tiradas y golpes, centrados en la parte visible del mapa */}
+                                        <MapLog log={campaignMap.log} />
                                         <div className="mh-stg-scene-top mh-map-top">
                                           {live === "mapa" && (
                                             <span className="mh-stg-live">
@@ -14985,6 +15196,9 @@ export default function App({ onSignOut }) {
                                               En directo
                                             </span>
                                           )}
+                                          <button type="button" className="mh-stg-ibtn" aria-label={mapIso ? "Cambiar a la vista plana" : "Cambiar a la vista isométrica"} title={mapIso ? "Vista plana" : "Vista isométrica"} onClick={() => toggleMapIso(!mapIso)}>
+                                            {mapIso ? <LayoutGrid size={13} /> : <Box size={13} />}
+                                          </button>
                                           <button
                                             type="button"
                                             className={"mh-stg-ibtn" + (wide ? " is-label" : "")}
@@ -15553,6 +15767,72 @@ export default function App({ onSignOut }) {
               );
             })()}
 
+            {incomingHit && characters[incomingHit.charId] && (() => {
+              const H = incomingHit;
+              const c = characters[H.charId];
+              const def = defenseRef.current && defenseRef.current.id === H.charId ? defenseRef.current : { evasion: Number(c.r_evasion || 10), major: 0, severe: 0 };
+              const hit = H.crit || H.atk >= def.evasion;
+              const sev = hit ? severityOf(H.dmg, def.major, def.severe) : 0;
+              const armor = Number(c.armor_marked || 0);
+              const done = (useArmor) => {
+                setIncomingHit(null);
+                mutateMap(H.campaignId, (hs) => (Array.isArray(hs) ? hs : []).filter((x) => x.key !== H.key), "hits");
+                const name = c.f_name || "Personaje";
+                if (!hit) {
+                  pushMapLog(H.campaignId, H.from + " ataca a " + name + ": " + H.atk + " contra Evasión " + def.evasion + " · falla", "miss");
+                  return;
+                }
+                const final = Math.max(0, sev - (useArmor ? 1 : 0));
+                if (useArmor) updateCharacterField(H.charId, "armor_marked", String(Math.max(0, armor - 1)));
+                if (final > 0) applyDamage(H.charId, final, final === 3);
+                const me = (campaignMap.tokens || []).find((t) => t.kind === "pc" && t.charId === H.charId);
+                if (me && H.foeId) mutateMap(H.campaignId, () => ({ key: Date.now(), from: H.foeId, to: me.id }), "fx");
+                pushMapLog(H.campaignId, H.from + " golpea a " + name + (H.crit ? " (¡crítico!)" : "") + ": " + H.dmg + " de daño (" + SEVERITY_LABEL[sev] + ")" + (useArmor ? " · usa 1 de Armadura" : "") + " · " + final + " PV", "dmg");
+                postCampaignEvent(H.charId, "🩸 " + H.from + " le golpea con " + H.weapon + ": " + H.dmg + " de daño · marca " + final + " PV" + (useArmor ? " (usa 1 de Armadura)" : ""));
+              };
+              return (
+                <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 47, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)" }}>
+                  <div className="mh-card mh-renew" role="dialog" aria-label="Te atacan">
+                    <div className="mh-pre-h">
+                      <span className="mh-pre-ic" style={{ background: "color-mix(in srgb, #C0504A 16%, var(--mh-panel))", color: "#C0504A" }}>
+                        <Skull size={17} />
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <b className="mh-serif">{H.from} te ataca</b>
+                        <small>
+                          {H.weapon} · {H.atk} (d20: {H.d20}){H.crit ? " · ¡crítico!" : ""} contra tu Evasión {def.evasion}
+                        </small>
+                      </div>
+                    </div>
+                    {!hit ? (
+                      <>
+                        <p className="mh-hit-msg is-miss">¡Lo esquivas! El ataque falla.</p>
+                        <button type="button" className="mh-btn" style={{ width: "100%" }} onClick={() => done(false)}>
+                          Seguir
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <p className="mh-hit-msg">
+                          Te golpea: <b>{H.dmg}</b> de daño ({H.dmgRolls?.join(" + ")}{H.dmgMod ? " + " + H.dmgMod : ""}{H.crit ? " + máximo por crítico" : ""}). Es daño <b>{SEVERITY_LABEL[sev]}</b> con tus umbrales {def.major}/{def.severe}.
+                        </p>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                          <button type="button" className="mh-btn" onClick={() => done(false)}>
+                            <Heart size={14} /> Marcar {sev} PV
+                          </button>
+                          {armor > 0 && sev > 0 && (
+                            <button type="button" className="mh-btn-ghost" onClick={() => done(true)}>
+                              <Shield size={14} /> Usar 1 de Armadura · marcar {sev - 1} PV ({armor} {armor === 1 ? "disponible" : "disponibles"})
+                            </button>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
             {targetDlg && (() => {
               const T = targetDlg;
               const close = () => setTargetDlg(null);
@@ -15560,7 +15840,7 @@ export default function App({ onSignOut }) {
                 const [charId, traitLabel, traitValue, weapon, cardContext, advantage] = T.args;
                 close();
                 if (tok) postCampaignEvent(charId, `⚔️ Ataca a ${tok.name} con ${weapon.name}`);
-                rollTraitCheck(charId, traitLabel, traitValue, { ...weapon, targetChosen: true, ...(tok ? { targetId: tok.id, targetName: tok.name } : {}) }, cardContext, advantage);
+                rollTraitCheck(charId, traitLabel, traitValue, { ...weapon, targetChosen: true, ...(tok ? { targetId: tok.id, targetName: tok.name, targetDc: tok.stats?.difficulty || null } : {}) }, cardContext, advantage);
               };
               return (
                 <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 46, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)" }} onClick={close}>
@@ -15579,13 +15859,17 @@ export default function App({ onSignOut }) {
                     </div>
                     <div className="mh-renew-list">
                       {T.foes.map((t) => (
-                        <button key={t.id} type="button" className="mh-renew-row is-pick" onClick={() => go(t)}>
+                        <button key={t.id} type="button" className={"mh-renew-row is-pick" + (t.reach && !t.reach.ok ? " is-off" : "")} disabled={t.reach && !t.reach.ok} onClick={() => go(t)}>
                           <span className="mh-renew-av" style={{ background: t.kind === "foe" ? "#C0504A" : "#7D8BA3" }}>
                             {t.kind === "foe" ? <Skull size={14} /> : (t.name || "?").charAt(0)}
                           </span>
                           <div className="mh-renew-t">
                             <b>{t.name}</b>
-                            <small>{t.kind === "foe" ? "Enemigo" : "PNJ"} · casilla {t.x + 1},{t.y + 1}</small>
+                            <small>
+                              {t.reach && !t.reach.ok
+                                ? "Fuera de alcance · está a " + t.reach.dist + " casillas (" + t.reach.range + ")"
+                                : (t.kind === "foe" ? "Enemigo" : "PNJ") + (t.stats ? " · Dificultad " + t.stats.difficulty + " · PV " + (t.stats.hp - (t.stats.hpMarked || 0)) + "/" + t.stats.hp : "") + (t.reach?.dist != null ? " · a " + t.reach.dist + " casilla" + (t.reach.dist === 1 ? "" : "s") : "")}
+                            </small>
                           </div>
                         </button>
                       ))}
@@ -17832,9 +18116,17 @@ export default function App({ onSignOut }) {
                         {traitRollResult.hope === traitRollResult.fear && (
                           <div style={{ color: "var(--mh-green-ink)", fontWeight: 700, marginBottom: 4 }}>¡Crítico! Daño máximo + tirada</div>
                         )}
-                        ¿Impactó el ataque con {traitRollResult.weapon.name}?
+                        {traitRollResult.weapon.targetId && traitRollResult.card?.dc != null
+                          ? (traitRollResult.hope === traitRollResult.fear || traitRollResult.total >= traitRollResult.card.dc ? "Impactas a " : "Fallas contra ") + traitRollResult.weapon.targetName
+                          : "¿Impactó el ataque con " + traitRollResult.weapon.name + "?"}
                       </div>
                       <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+                        {traitRollResult.weapon.targetId && traitRollResult.card?.dc != null && !(traitRollResult.hope === traitRollResult.fear || traitRollResult.total >= traitRollResult.card.dc) ? (
+                          <button className="mh-btn-ghost" onClick={() => setTraitRollResult(null)}>
+                            Cerrar
+                          </button>
+                        ) : (
+                        <>
                         <button
                           className="mh-btn"
                           onClick={() => {
@@ -17869,14 +18161,16 @@ export default function App({ onSignOut }) {
                               const fromTok = (campaignMap.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
                               if (fromTok) mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: fromTok.id, to: traitRollResult.weapon.targetId }), "fx");
                             }
-                            rollWeaponDamage(name, damage, charId, isCritical, { angel: traitRollResult.weapon.angel || 0, knight: !!traitRollResult.weapon.knight, attackFear: traitRollResult.fear, ...(pummel || honedHit ? { fixedDice: getProficiency(rc) + (pummel ? 1 : 0) + (honedHit ? 1 : 0) } : {}), fearDice, cloaked: wasCloaked, spirit, resonance: spirit && rc && tierForLevel(rc.f_level || 1) >= 3, extraFlat: traitRollResult.weapon.elemDmg || 0, doublePick: !!traitRollResult.weapon.manipDouble });
+                            rollWeaponDamage(name, damage, charId, isCritical, { angel: traitRollResult.weapon.angel || 0, knight: !!traitRollResult.weapon.knight, attackFear: traitRollResult.fear, ...(pummel || honedHit ? { fixedDice: getProficiency(rc) + (pummel ? 1 : 0) + (honedHit ? 1 : 0) } : {}), fearDice, cloaked: wasCloaked, spirit, resonance: spirit && rc && tierForLevel(rc.f_level || 1) >= 3, extraFlat: traitRollResult.weapon.elemDmg || 0, doublePick: !!traitRollResult.weapon.manipDouble, targetId: traitRollResult.weapon.targetId || null });
                           }}
                         >
-                          Sí
+                          {traitRollResult.weapon.targetId && traitRollResult.card?.dc != null ? "Tirar daño" : "Sí"}
                         </button>
                         <button className="mh-btn-ghost" onClick={() => setTraitRollResult(null)}>
-                          No
+                          {traitRollResult.weapon.targetId && traitRollResult.card?.dc != null ? "Cerrar" : "No"}
                         </button>
+                        </>
+                        )}
                       </div>
                       {(() => {
                         const rc = characters[traitRollResult.charId];
