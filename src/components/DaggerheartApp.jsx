@@ -2634,7 +2634,7 @@ const sharedStyles = `
   .mh-isoboard.is-stamping .mh-iso-tile { cursor: copy; }
   .mh-iso-tk { cursor: default; }
   .mh-iso-tk.is-movable { cursor: grab; }
-  .mh-iso-tk.is-drag { cursor: grabbing; opacity: .8; }
+  .mh-iso-tk.is-drag { cursor: grabbing; filter: drop-shadow(0 8px 6px rgba(0,0,0,.35)); }
   .mh-isoboard .mh-map-iso-btn { background: rgba(34,28,43,.82); }
   .mh-map-iso-btn { position: absolute; right: 8px; bottom: 8px; z-index: 7; border: 0; border-radius: 20px; padding: 4px 10px; background: rgba(20,14,18,.72); color: #F4EEE2; font: 700 10.5px 'Inter', system-ui, sans-serif; cursor: pointer; }
   .mh-map-iso-btn:hover { background: rgba(20,14,18,.9); }
@@ -2661,7 +2661,9 @@ const sharedStyles = `
   .mh-map-drop.is-bad { box-shadow: inset 0 0 0 2px #D9644E; }
   .mh-map-tk { position: absolute; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; background: none; cursor: default; transition: left .3s cubic-bezier(.3,.7,.4,1), top .3s cubic-bezier(.3,.7,.4,1); }
   .mh-map-tk.is-movable { cursor: grab; }
-  .mh-map-tk.is-drag { cursor: grabbing; transition: none; z-index: 3; opacity: .85; }
+  .mh-map-tk.is-drag { cursor: grabbing; transition: none; z-index: 6; }
+  .mh-map-tk.is-drag .mh-map-face { scale: 1.12; box-shadow: 0 10px 18px rgba(0,0,0,.45); transition: scale .15s ease; }
+  .mh-map-drop { transition: left .12s ease, top .12s ease; }
   .mh-map-tk:focus-visible { outline: none; }
   .mh-map-tk:focus-visible .mh-map-face { box-shadow: 0 0 0 3px #fff, 0 3px 8px rgba(0,0,0,.5); }
   .mh-map-face { position: relative; z-index: 2; width: 80%; height: 80%; border-radius: 22%; border: 3px solid var(--tc); box-sizing: border-box; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--tc); color: #fff; font-family: 'Cinzel', Georgia, serif; font-weight: 700; font-size: clamp(10px, 1.6vw, 17px); box-shadow: 0 3px 8px rgba(0,0,0,.5); }
@@ -2729,6 +2731,13 @@ const sharedStyles = `
   .mh-map-hint { flex-shrink: 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--mh-ink3); }
   .mh-map-hint .mh-stg-live { margin-left: auto; }
   .mh-map-gm { gap: 12px; }
+  .mh-docked, .mh-overlay.mh-docked { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background: transparent !important; }
+  .mh-docked > * { pointer-events: auto; }
+  .mh-docked > div { max-width: min(400px, 100%); }
+  .mh-docked .mh-pre { width: min(390px, 100%); max-height: calc(100% - 20px); box-shadow: 0 18px 50px rgba(0,0,0,.4); }
+  .mh-docked .mh-pre-body { grid-template-columns: 1fr; }
+  .mh-docked .mh-pre-side { padding-left: 0; border-left: 0; border-top: 1px solid var(--mh-line); padding-top: 12px; }
+  .mh-docked .mh-roll-pop, .mh-docked .mh-card { box-shadow: 0 18px 50px rgba(0,0,0,.4); }
   .mh-map-log { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 9; display: flex; flex-direction: column; align-items: center; gap: 5px; pointer-events: none; width: max-content; max-width: calc(100% - 24px); }
   .mh-map-log-i { padding: 6px 12px; border-radius: 10px; background: rgba(20,14,18,.86); color: #F4EEE2; font: 600 11.5px/1.35 Inter, system-ui, sans-serif; box-shadow: 0 4px 14px rgba(0,0,0,.35); border-left: 3px solid #C9A24A; text-align: center; animation: mh-log-in .28s ease, mh-log-out .5s ease 6s forwards; }
   .mh-map-log-i.is-hit { border-left-color: #E3B04B; }
@@ -4631,6 +4640,8 @@ const FOE_BASE = {
 };
 const newFoeStats = () => ({ ...FOE_BASE, hpMarked: 0, stressMarked: 0 });
 // Alcances en casillas del tablero (igual que las bandas de colores) y distancia entre casillas.
+// En la pestaña de la campaña las ventanas de tirada se apartan a la derecha (sobre el chat) para no tapar el tablero.
+const ROLL_DOCK = { justifyContent: "flex-end", alignItems: "center", background: "transparent", padding: "20px 22px" };
 const RANGE_CELLS = { "Cuerpo a cuerpo": 1, "Muy cercano": 3, "Cercano": 6, "Lejano": 12, "Muy lejano": 99 };
 const cellDist = (a, b) => Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
 // Gravedad del daño según los umbrales: Menor 1 PV, Mayor 2 PV, Grave 3 PV.
@@ -4821,7 +4832,7 @@ function MapBoard({ log, iso: isoProp, onIsoChange, hideIsoBtn, menuFor, fx, bg,
   const [isoOwn, setIso] = useState(readIsoPref);
   const iso = isoProp !== undefined ? isoProp : isoOwn;
   const anim = useAttackFx(fx);
-  const steps = useMoveFx(tokens.map((t) => (drag && drag.id === t.id ? [t.id, drag.x, drag.y] : [t.id, t.x, t.y])));
+  const steps = useMoveFx(tokens.map((t) => [t.id, t.x, t.y]));
   const vis = useVisFx(tokens);
   const toggleIso = () => {
     const v = !iso;
@@ -4879,13 +4890,19 @@ function MapBoard({ log, iso: isoProp, onIsoChange, hideIsoBtn, menuFor, fx, bg,
     e.preventDefault();
     dragRef.current = { id: t.id, x: t.x, y: t.y, moved: false };
     setDrag(dragRef.current);
+    const sx = e.clientX, sy = e.clientY;
     const move = (ev) => {
-      const c = cellAt(ev);
       const d = dragRef.current;
-      if (c && d && (c.x !== d.x || c.y !== d.y)) {
-        dragRef.current = { ...d, ...c, moved: true };
-        setDrag(dragRef.current);
-      }
+      if (!d) return;
+      const moved = d.moved || Math.hypot(ev.clientX - sx, ev.clientY - sy) > 4;
+      if (!moved) return;
+      // La ficha va pegada al puntero (posición libre); la casilla de destino solo se marca.
+      const r = ref.current.getBoundingClientRect();
+      const fx = Math.max(-0.4, Math.min(MAP_COLS - 0.6, ((ev.clientX - r.left) / r.width) * MAP_COLS - 0.5));
+      const fy = Math.max(-0.4, Math.min(MAP_ROWS - 0.6, ((ev.clientY - r.top) / r.height) * MAP_ROWS - 0.5));
+      const c = cellAt(ev);
+      dragRef.current = { ...d, ...(c || {}), fx, fy, moved: true };
+      setDrag(dragRef.current);
     };
     const up = () => {
       window.removeEventListener("pointermove", move);
@@ -5025,7 +5042,7 @@ function MapBoard({ log, iso: isoProp, onIsoChange, hideIsoBtn, menuFor, fx, bg,
       ))}
       {drag?.moved && <div className={"mh-map-drop" + (occupied(drag.x, drag.y, drag.id) ? " is-bad" : "")} style={at(drag.x, drag.y)} />}
       {tokens.map((t) => {
-        const pos = drag && drag.id === t.id ? drag : t;
+        const pos = drag && drag.id === t.id && drag.moved ? { x: drag.fx, y: drag.fy } : t;
         const movable = canMove(t);
         return (
           <button
@@ -5061,7 +5078,6 @@ function MapBoard({ log, iso: isoProp, onIsoChange, hideIsoBtn, menuFor, fx, bg,
                 <i style={{ width: Math.max(0, ((t.hp[1] - t.hp[0]) / t.hp[1]) * 100) + "%" }} />
               </span>
             )}
-            <span className="mh-map-nm">{t.name}</span>
           </button>
         );
       })}
@@ -5117,6 +5133,7 @@ function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain 
   rangeIdRef.current = rangeId;
   const [menu, setMenu] = useState(null);
   const boxRef = useRef(null);
+  const droppedRef = useRef(null); // ficha recién soltada: no repite el salto desde su casilla anterior
   const openMenu = (e, t) => {
     e.preventDefault();
     e.stopPropagation();
@@ -5130,7 +5147,7 @@ function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain 
     const my = Math.max(v.top + 4, Math.min(e.clientY, v.bottom - 40 - Math.min(n * 34 + 60, 380)));
     setMenu({ id: t.id, title: t.name, x: mx - r.left, y: my - r.top });
   };
-  const steps = useMoveFx(tokens.map((t) => (drag && drag.id === t.id ? [t.id, drag.x, drag.y] : [t.id, t.x, t.y])));
+  const steps = useMoveFx(tokens.map((t) => [t.id, t.x, t.y]));
   const vis = useVisFx(tokens);
   const painting = useRef(null);
   const occupied = (x, y, exceptId) => tokens.some((t) => t.id !== exceptId && !t.vanished && t.x === x && t.y === y);
@@ -5177,13 +5194,21 @@ function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain 
     e.preventDefault();
     dragRef.current = { id: t.id, x: t.x, y: t.y, moved: false };
     setDrag(dragRef.current);
+    const sx = e.clientX, sy = e.clientY;
     const move = (ev) => {
-      const c = cellFrom(ev);
       const d = dragRef.current;
-      if (c && d && (c.x !== d.x || c.y !== d.y)) {
-        dragRef.current = { ...d, ...c, moved: true };
-        setDrag(dragRef.current);
-      }
+      if (!d) return;
+      const moved = d.moved || Math.hypot(ev.clientX - sx, ev.clientY - sy) > 4;
+      if (!moved) return;
+      // Punto del puntero en coordenadas del dibujo: la ficha lo sigue sin saltar de casilla en casilla.
+      const svg = svgRef.current;
+      const pt = svg.createSVGPoint();
+      pt.x = ev.clientX;
+      pt.y = ev.clientY;
+      const sp = pt.matrixTransform(svg.getScreenCTM().inverse());
+      const c = cellFrom(ev);
+      dragRef.current = { ...d, ...(c || {}), px: sp.x, py: sp.y + S * 0.45, moved: true };
+      setDrag(dragRef.current);
     };
     const up = () => {
       window.removeEventListener("pointermove", move);
@@ -5195,7 +5220,10 @@ function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain 
         const showing = rangeIdRef.current === d.id;
         setRangeId(showing ? null : d.id);
         onSelect(showing ? null : d.id);
-      } else if (!occupied(d.x, d.y, d.id)) onMove(d.id, d.x, d.y);
+      } else if (!occupied(d.x, d.y, d.id)) {
+        droppedRef.current = { id: d.id, until: Date.now() + 700 };
+        onMove(d.id, d.x, d.y);
+      }
     };
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", up, { once: true });
@@ -5215,10 +5243,73 @@ function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain 
   const cells = [];
   for (let sum = 0; sum <= MAP_COLS + MAP_ROWS - 2; sum++)
     for (let x = Math.max(0, sum - MAP_ROWS + 1); x <= Math.min(MAP_COLS - 1, sum); x++) cells.push([x, sum - x]);
-  const tokAt = (x, y) => tokens.filter((t) => {
-    const pos = drag && drag.id === t.id ? drag : t;
-    return pos.x === x && pos.y === y;
-  });
+  // La ficha que se está arrastrando se dibuja aparte, encima de todo y pegada al puntero.
+  const tokAt = (x, y) => tokens.filter((t) => !(drag && drag.moved && drag.id === t.id) && t.x === x && t.y === y);
+  const renderTok = (t, cx, cy) => {
+    const movable = canMove(t);
+    const sel = selectedId === t.id;
+    const hpFree = t.hp && t.hp[1] > 0 ? (t.hp[1] - t.hp[0]) / t.hp[1] : null;
+    const col = t.kind === "foe" ? "#C0504A" : t.kind === "npc" ? "#7D8BA3" : t.color || "#C9A24A";
+    return (
+      <g
+        key={t.id}
+        className={"mh-iso-tk" + (movable ? " is-movable" : "") + (drag?.id === t.id && drag.moved ? " is-drag" : "") + (anim && anim.from === t.id ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" : "") + (steps[t.id] && !(anim && anim.from === t.id) && !(droppedRef.current && droppedRef.current.id === t.id && Date.now() < droppedRef.current.until) ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
+        style={anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); if (!tg) return undefined; const [tx, ty] = P(tg.x + 0.5, tg.y + 0.5, tAt(tg.x, tg.y).z); return { "--ax": tx - cx + "px", "--ay": ty - cy + "px" }; })() : steps[t.id] ? (() => { const st = steps[t.id]; const [ox, oy] = P(st.fx + 0.5, st.fy + 0.5, tAt(st.fx, st.fy).z); return { "--mx": ox - cx + "px", "--my": oy - cy + "px" }; })() : undefined}
+        onPointerDown={(e) => tokenDown(e, t)}
+        onContextMenu={(e) => openMenu(e, t)}
+      >
+        <title>{t.vanished ? "" : [t.name, t.hidden && "Escondido", ...mapConds(t)].filter(Boolean).join(" · ")}</title>
+        {vis[t.id] && (
+          <g key={vis[t.id].n} className="mh-iso-puff" pointerEvents="none">
+            {[[-0.32, -0.5], [0.3, -0.62], [0, -0.95], [-0.2, -0.2], [0.26, -0.22]].map(([dx, dy], k) => (
+              <circle key={k} cx={cx + dx * S} cy={cy + dy * S} r={S * 0.3} style={{ animationDelay: k * 0.05 + "s" }} />
+            ))}
+          </g>
+        )}
+        {sel && <ellipse cx={cx} cy={cy} rx={S * 0.62} ry={S * 0.31} fill="none" stroke="#E3B04B" strokeWidth="3" />}
+        <ellipse className="mh-iso-shadow" cx={cx} cy={cy} rx={S * 0.42} ry={S * 0.21} fill="rgba(0,0,0,.28)" />
+        {mapConds(t).map((c) => (
+          <ellipse key={c} className={"mh-iso-ring ring-" + MAP_COND_FX[c].cls} cx={cx} cy={cy} rx={S * 0.52} ry={S * 0.26} stroke={MAP_COND_FX[c].color} />
+        ))}
+        <rect x={cx - S * 0.33} y={cy - S * 1.1} width={S * 0.66} height={S * 1.04} rx={S * 0.33} fill={col} stroke="#fff" strokeWidth="2.2" />
+        {t.img ? (
+          <>
+            <clipPath id={"isoclip-" + t.id}>
+              <circle cx={cx} cy={cy - S * 0.76} r={S * 0.26} />
+            </clipPath>
+            <image href={t.img} x={cx - S * 0.26} y={cy - S * 1.02} width={S * 0.52} height={S * 0.52} clipPath={`url(#isoclip-${t.id})`} preserveAspectRatio="xMidYMid slice" />
+          </>
+        ) : (
+          <text x={cx} y={cy - S * 0.5} fontSize={S * 0.38} fontWeight="700" fill="#fff" textAnchor="middle" fontFamily="Inter, system-ui, sans-serif">
+            {t.kind === "foe" ? "!" : (t.name || "?").trim().charAt(0).toUpperCase()}
+          </text>
+        )}
+        {hpFree != null && (
+          <>
+            <rect x={cx - S * 0.32} y={cy - S * 1.3} width={S * 0.64} height={S * 0.11} rx={2} fill="#2a1f25" />
+            <rect x={cx - S * 0.32} y={cy - S * 1.3} width={S * 0.64 * Math.max(0, hpFree)} height={S * 0.11} rx={2} fill="#E24B4A" />
+          </>
+        )}
+        {mapConds(t).includes("Inconsciente") && (
+          <g className="mh-iso-zz" pointerEvents="none">
+            <text x={cx + S * 0.3} y={cy - S * 1.15} fontSize={S * 0.3}>z</text>
+            <text x={cx + S * 0.45} y={cy - S * 1.35} fontSize={S * 0.22}>z</text>
+          </g>
+        )}
+        {mapConds(t).map((c, k) => {
+          const { Icon: CI, color } = MAP_COND_FX[c];
+          const bx = cx - S * 0.36 + k * S * 0.3;
+          const by = cy - S * 1.08;
+          return (
+            <g key={c} className="mh-iso-cond" pointerEvents="none">
+              <circle cx={bx} cy={by} r={S * 0.15} fill={color} stroke="#fff" strokeWidth="1.5" />
+              <CI x={bx - S * 0.095} y={by - S * 0.095} width={S * 0.19} height={S * 0.19} color="#fff" strokeWidth={2.6} />
+            </g>
+          );
+        })}
+      </g>
+    );
+  };
   return (
     <div ref={boxRef} className={"mh-map mh-isoboard" + (compact ? " is-compact" : "") + (stampTool ? " is-stamping" : "")}>
       <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" onContextMenu={(e) => e.preventDefault()}>
@@ -5265,79 +5356,14 @@ function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain 
           ) : (
             <g key={"t" + x + "," + y}>
               {pr && <svg x={cx - S * 0.62} y={cy - S * 1.05} width={S * 1.24} height={S * 1.24} viewBox="0 0 100 100" pointerEvents="none" dangerouslySetInnerHTML={{ __html: propSvg(pr.kind) }} />}
-              {here.map((t) => {
-                const movable = canMove(t);
-                const sel = selectedId === t.id;
-                const hpFree = t.hp && t.hp[1] > 0 ? (t.hp[1] - t.hp[0]) / t.hp[1] : null;
-                const col = t.kind === "foe" ? "#C0504A" : t.kind === "npc" ? "#7D8BA3" : t.color || "#C9A24A";
-                return (
-                  <g
-                    key={t.id}
-                    className={"mh-iso-tk" + (movable ? " is-movable" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" : "") + (steps[t.id] && !(anim && anim.from === t.id) ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
-                    style={anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); if (!tg) return undefined; const [tx, ty] = P(tg.x + 0.5, tg.y + 0.5, tAt(tg.x, tg.y).z); return { "--ax": tx - cx + "px", "--ay": ty - cy + "px" }; })() : steps[t.id] ? (() => { const st = steps[t.id]; const [ox, oy] = P(st.fx + 0.5, st.fy + 0.5, tAt(st.fx, st.fy).z); return { "--mx": ox - cx + "px", "--my": oy - cy + "px" }; })() : undefined}
-                    onPointerDown={(e) => tokenDown(e, t)}
-                    onContextMenu={(e) => openMenu(e, t)}
-                  >
-                    <title>{t.vanished ? "" : [t.name, t.hidden && "Escondido", ...mapConds(t)].filter(Boolean).join(" · ")}</title>
-                    {vis[t.id] && (
-                      <g key={vis[t.id].n} className="mh-iso-puff" pointerEvents="none">
-                        {[[-0.32, -0.5], [0.3, -0.62], [0, -0.95], [-0.2, -0.2], [0.26, -0.22]].map(([dx, dy], k) => (
-                          <circle key={k} cx={cx + dx * S} cy={cy + dy * S} r={S * 0.3} style={{ animationDelay: k * 0.05 + "s" }} />
-                        ))}
-                      </g>
-                    )}
-                    {sel && <ellipse cx={cx} cy={cy} rx={S * 0.62} ry={S * 0.31} fill="none" stroke="#E3B04B" strokeWidth="3" />}
-                    <ellipse className="mh-iso-shadow" cx={cx} cy={cy} rx={S * 0.42} ry={S * 0.21} fill="rgba(0,0,0,.28)" />
-                    {mapConds(t).map((c) => (
-                      <ellipse key={c} className={"mh-iso-ring ring-" + MAP_COND_FX[c].cls} cx={cx} cy={cy} rx={S * 0.52} ry={S * 0.26} stroke={MAP_COND_FX[c].color} />
-                    ))}
-                    <rect x={cx - S * 0.33} y={cy - S * 1.1} width={S * 0.66} height={S * 1.04} rx={S * 0.33} fill={col} stroke="#fff" strokeWidth="2.2" />
-                    {t.img ? (
-                      <>
-                        <clipPath id={"isoclip-" + t.id}>
-                          <circle cx={cx} cy={cy - S * 0.76} r={S * 0.26} />
-                        </clipPath>
-                        <image href={t.img} x={cx - S * 0.26} y={cy - S * 1.02} width={S * 0.52} height={S * 0.52} clipPath={`url(#isoclip-${t.id})`} preserveAspectRatio="xMidYMid slice" />
-                      </>
-                    ) : (
-                      <text x={cx} y={cy - S * 0.5} fontSize={S * 0.38} fontWeight="700" fill="#fff" textAnchor="middle" fontFamily="Inter, system-ui, sans-serif">
-                        {t.kind === "foe" ? "!" : (t.name || "?").trim().charAt(0).toUpperCase()}
-                      </text>
-                    )}
-                    {hpFree != null && (
-                      <>
-                        <rect x={cx - S * 0.32} y={cy - S * 1.3} width={S * 0.64} height={S * 0.11} rx={2} fill="#2a1f25" />
-                        <rect x={cx - S * 0.32} y={cy - S * 1.3} width={S * 0.64 * Math.max(0, hpFree)} height={S * 0.11} rx={2} fill="#E24B4A" />
-                      </>
-                    )}
-                    {mapConds(t).includes("Inconsciente") && (
-                      <g className="mh-iso-zz" pointerEvents="none">
-                        <text x={cx + S * 0.3} y={cy - S * 1.15} fontSize={S * 0.3}>z</text>
-                        <text x={cx + S * 0.45} y={cy - S * 1.35} fontSize={S * 0.22}>z</text>
-                      </g>
-                    )}
-                    {mapConds(t).map((c, k) => {
-                      const { Icon: CI, color } = MAP_COND_FX[c];
-                      const bx = cx - S * 0.36 + k * S * 0.3;
-                      const by = cy - S * 1.08;
-                      return (
-                        <g key={c} className="mh-iso-cond" pointerEvents="none">
-                          <circle cx={bx} cy={by} r={S * 0.15} fill={color} stroke="#fff" strokeWidth="1.5" />
-                          <CI x={bx - S * 0.095} y={by - S * 0.095} width={S * 0.19} height={S * 0.19} color="#fff" strokeWidth={2.6} />
-                        </g>
-                      );
-                    })}
-                    {!compact && (
-                      <text className="mh-iso-name" x={cx} y={cy + S * 0.5} fontSize={S * 0.3} fontWeight="700" fill="#221C2B" stroke="#FBF6F0" strokeWidth="3.2" paintOrder="stroke" strokeLinejoin="round" textAnchor="middle" fontFamily="Inter, system-ui, sans-serif" pointerEvents="none">
-                        {t.name}
-                      </text>
-                    )}
-                  </g>
-                );
-              })}
+              {here.map((t) => renderTok(t, cx, cy))}
             </g>
           );
         }))}
+        {drag && drag.moved && drag.px != null && (() => {
+          const t = tokens.find((x) => x.id === drag.id);
+          return t ? renderTok(t, drag.px, drag.py) : null;
+        })()}
       </svg>
       {menu && (() => {
         const t = tokens.find((x) => x.id === menu.id);
@@ -8981,6 +9007,7 @@ export default function App({ onSignOut }) {
     } catch (e) {}
   };
   const [foeTarget, setFoeTarget] = useState(null); // DJ: a qué personaje ataca el enemigo elegido
+  const rollDock = view === "ficha" && detailTab === "campaign" && !isMobile;
   // Un enemigo del DJ ataca a tu personaje: se abre el aviso para resolverlo (solo con su hoja abierta).
   useEffect(() => {
     if (!sheetCampaignId || !viewingCharId || incomingHit) return;
@@ -15791,7 +15818,7 @@ export default function App({ onSignOut }) {
                 postCampaignEvent(H.charId, "🩸 " + H.from + " le golpea con " + H.weapon + ": " + H.dmg + " de daño · marca " + final + " PV" + (useArmor ? " (usa 1 de Armadura)" : ""));
               };
               return (
-                <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 47, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)" }}>
+                <div className={"mh-overlay" + (rollDock ? " mh-docked" : "")} style={{ position: "absolute", inset: 0, zIndex: 47, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)", ...(rollDock ? ROLL_DOCK : {}) }}>
                   <div className="mh-card mh-renew" role="dialog" aria-label="Te atacan">
                     <div className="mh-pre-h">
                       <span className="mh-pre-ic" style={{ background: "color-mix(in srgb, #C0504A 16%, var(--mh-panel))", color: "#C0504A" }}>
@@ -15843,7 +15870,7 @@ export default function App({ onSignOut }) {
                 rollTraitCheck(charId, traitLabel, traitValue, { ...weapon, targetChosen: true, ...(tok ? { targetId: tok.id, targetName: tok.name, targetDc: tok.stats?.difficulty || null } : {}) }, cardContext, advantage);
               };
               return (
-                <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 46, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)" }} onClick={close}>
+                <div className={"mh-overlay" + (rollDock ? " mh-docked" : "")} style={{ position: "absolute", inset: 0, zIndex: 46, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)", ...(rollDock ? ROLL_DOCK : {}) }} onClick={close}>
                   <div className="mh-card mh-renew" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Elegir objetivo">
                     <div className="mh-pre-h">
                       <span className="mh-pre-ic" style={{ background: "color-mix(in srgb, #C0504A 16%, var(--mh-panel))", color: "#C0504A" }}>
@@ -15893,7 +15920,7 @@ export default function App({ onSignOut }) {
                 close();
               };
               return (
-                <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 47, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)" }}>
+                <div className={"mh-overlay" + (rollDock ? " mh-docked" : "")} style={{ position: "absolute", inset: 0, zIndex: 47, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)", ...(rollDock ? ROLL_DOCK : {}) }}>
                   <div className="mh-card mh-renew" role="dialog" aria-label="Forma Espectral">
                     <div className="mh-pre-h">
                       <span className="mh-pre-ic" style={{ background: "color-mix(in srgb, #5B6B7E 16%, var(--mh-panel))", color: "#5B6B7E" }}>
@@ -16431,7 +16458,7 @@ export default function App({ onSignOut }) {
               const close = () => setGlamourAsk(null);
               const id = glamourAsk.id;
               return (
-                <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 47, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)" }}>
+                <div className={"mh-overlay" + (rollDock ? " mh-docked" : "")} style={{ position: "absolute", inset: 0, zIndex: 47, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)", ...(rollDock ? ROLL_DOCK : {}) }}>
                   <div className="mh-card mh-renew" role="dialog" aria-label="Glamour Nocturno">
                     <div className="mh-pre-h">
                       <span className="mh-pre-ic" style={{ background: "color-mix(in srgb, #8C7FD0 16%, var(--mh-panel))", color: "#8C7FD0" }}>
@@ -17215,7 +17242,7 @@ export default function App({ onSignOut }) {
               const canSpendHope = exps.length > 0 || poetOk;
               const anyAdded = preRoll.exps.length > 0 || preRoll.rally || preRoll.poet || preRoll.dedicated || preRoll.privilege || preRoll.quick || tideUse > 0 || !!preRoll.elem || slayerUse > 0 || !!foundPick || !!preRoll.adept || !!preRoll.patron || edgePos !== "none";
               return (
-                <div className="mh-overlay" style={{ position: "absolute", inset: 0, zIndex: 45, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)" }} onClick={() => setPreRoll(null)}>
+                <div className={"mh-overlay" + (rollDock ? " mh-docked" : "")} style={{ position: "absolute", inset: 0, zIndex: 45, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)", ...(rollDock ? ROLL_DOCK : {}) }} onClick={() => setPreRoll(null)}>
                   <div className="mh-card mh-card-anim mh-pre" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={"Tirada de " + preRoll.traitLabel}>
                     <div className="mh-pre-h">
                       <span className="mh-pre-ic">
@@ -17369,7 +17396,9 @@ export default function App({ onSignOut }) {
                   justifyContent: "center",
                   background: "rgba(8,6,12,0.50)",
                   zIndex: 30,
+                  ...(rollDock ? ROLL_DOCK : {}),
                 }}
+                className={rollDock ? "mh-docked" : undefined}
                 onClick={() => setTraitRollResult(null)}
               >
                 <div style={{ display: "flex", gap: 16, alignItems: "stretch", flexWrap: "wrap", justifyContent: "center" }}>
@@ -18250,7 +18279,9 @@ export default function App({ onSignOut }) {
                   justifyContent: "center",
                   background: "rgba(8,6,12,0.50)",
                   zIndex: 30,
+                  ...(rollDock ? ROLL_DOCK : {}),
                 }}
+                className={rollDock ? "mh-docked" : undefined}
                 onClick={() => setDamageRollResult(null)}
               >
                 <div
