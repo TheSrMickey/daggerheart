@@ -5759,27 +5759,32 @@ export default function App({ onSignOut }) {
     load();
     loadChat();
     loadMap();
-    const timer = setInterval(() => (isPlayer ? load().then(loadChat).then(loadMap) : Promise.all([loadChat(), loadMap()])), 6000);
+    const timer = setInterval(() => (isPlayer ? load().then(loadChat) : loadChat()), 6000);
+    // El tablero va aparte y más rápido para que movimientos y fichas escondidas se vean casi en directo.
+    const mapTimer = setInterval(loadMap, 2500);
     return () => {
       alive = false;
       clearInterval(timer);
+      clearInterval(mapTimer);
     };
   }, [stageCampaignId, gmViewing]);
 
-  // Escondido / Oculto en el tablero: cada jugador corrige la marca de las fichas de sus propios personajes.
+  // Escondido / Oculto en el tablero: el jugador corrige la marca de la ficha del personaje que tiene abierto
+  // (solo ese: otra pestaña con el mismo usuario puede tener una copia antigua de los demás y desharía el cambio).
   useEffect(() => {
-    if (!stageCampaignId) return;
-    const hid = (c) => getConditions(c).some((n) => n === "Escondido" || n === "Oculto");
-    const wrong = (campaignMap.tokens || []).some((t) => t.kind === "pc" && characters[t.charId] && !!t.hidden !== hid(characters[t.charId]));
+    if (!sheetCampaignId || !viewingCharId || !characters[viewingCharId]) return;
+    const me = characters[viewingCharId];
+    const hid = getConditions(me).some((n) => n === "Escondido" || n === "Oculto");
+    const wrong = (campaignMap.tokens || []).some((t) => t.kind === "pc" && t.charId === viewingCharId && !!t.hidden !== hid);
     if (!wrong) return;
-    mutateMap(stageCampaignId, (ts) =>
+    mutateMap(sheetCampaignId, (ts) =>
       ts.map((t) => {
-        if (t.kind !== "pc" || !characters[t.charId]) return t;
+        if (t.kind !== "pc" || t.charId !== viewingCharId) return t;
         const { hidden, ...rest } = t;
-        return hid(characters[t.charId]) ? { ...rest, hidden: true } : rest;
+        return hid ? { ...rest, hidden: true } : rest;
       })
     );
-  }, [campaignMap, characters, stageCampaignId]);
+  }, [campaignMap, characters, sheetCampaignId, viewingCharId]);
 
   // Escape cierra la pista abierta.
   useEffect(() => {
@@ -8229,7 +8234,8 @@ export default function App({ onSignOut }) {
         const ch = characters[t.charId];
         let hidden = !!t.hidden;
         try {
-          if (ch) hidden = JSON.parse(ch.f_conditions || "[]").some((x) => x === "Escondido" || x === "Oculto");
+          // Solo el personaje abierto en esta pestaña manda con sus condiciones; del resto, lo que diga el tablero (otra pestaña puede tener una copia antigua).
+          if (ch && t.charId === viewingCharId && !gmViewing) hidden = JSON.parse(ch.f_conditions || "[]").some((x) => x === "Escondido" || x === "Oculto");
         } catch (e) {}
         return { ...t, hidden, name: ch?.f_name || t.name || "Personaje", color: classColor(ch?.f_class), hp: ch ? [Number(ch.hp_marked || 0), Number(ch.r_hp || 0)] : null };
       }
