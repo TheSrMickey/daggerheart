@@ -2,7 +2,7 @@
 
 import { Fragment, useState, useEffect, useLayoutEffect, useRef, createContext, useContext } from "react";
 import { createPortal } from "react-dom";
-import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus, Box, LayoutGrid, Bird, Fish, Bug, Rabbit, Cat, Turtle } from "lucide-react";
+import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus, Box, LayoutGrid, Bird, Fish, Bug, Rabbit, Cat, Turtle, Clock, CircleDashed, Slash } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
 import { Wand, CircleDot, MoveUpRight, Archive, Shell, Compass, Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
@@ -1733,24 +1733,122 @@ const MAP_PROPS = [
   { key: "cofre", label: "Cofre", svg: '<rect x="20" y="30" width="66" height="48" rx="6" fill="#000" opacity=".22"/><rect x="16" y="26" width="66" height="48" rx="6" fill="#8A5A2B"/><rect x="16" y="26" width="66" height="18" rx="6" fill="#A8703A"/><path d="M16 44h66" stroke="#E3C26A" stroke-width="4"/><rect x="44" y="40" width="10" height="12" rx="2" fill="#E3C26A"/>' },
   { key: "antorcha", label: "Antorcha", svg: '<circle cx="50" cy="44" r="34" fill="#F7D35A" opacity=".22"/><rect x="46" y="44" width="8" height="40" rx="3" fill="#5A3A22"/><path d="M50 14 C60 28 62 38 50 50 C38 38 40 28 50 14Z" fill="#F3A64A"/><path d="M50 28 C55 34 55 40 50 46 C45 40 45 34 50 28Z" fill="#FFE08A"/>' },
   { key: "muro", label: "Muro", svg: '<rect x="6" y="30" width="92" height="44" fill="#000" opacity=".2"/><rect x="2" y="26" width="92" height="44" fill="#A7A196"/><path d="M2 40h92M2 55h92M24 26v14M56 26v14M88 26v14M10 40v15M40 40v15M72 40v15M24 55v15M56 55v15M88 55v15" stroke="#7E786E" stroke-width="3"/>' },
+  { key: "torre", label: "Torre", svg: '<rect x="22" y="14" width="56" height="74" fill="#000" opacity=".2"/><rect x="18" y="10" width="56" height="74" fill="#B3ADA2"/><path d="M18 10h12v8H18zM40 10h12v8H40zM62 10h12v8H62z" fill="#8E8A80"/><rect x="40" y="40" width="10" height="18" fill="#2B2433"/>' },
+  { key: "puerta", label: "Puerta", svg: '<rect x="8" y="22" width="86" height="62" fill="#000" opacity=".2"/><rect x="4" y="18" width="86" height="62" fill="#A7A196"/><path d="M28 80V50a19 19 0 0 1 38 0v30Z" fill="#1A1620"/><path d="M33 52v28M41 46v34M49 44v36M57 46v34M63 52v28M28 60h38M28 70h38" stroke="#6B6474" stroke-width="3"/>' },
+  { key: "puente", label: "Puente", svg: '<rect x="14" y="10" width="72" height="80" fill="#000" opacity=".18"/><rect x="10" y="6" width="72" height="80" fill="#8A5A2B"/><path d="M10 22h72M10 38h72M10 54h72M10 70h72" stroke="#5A3A22" stroke-width="3"/><path d="M14 6v80M78 6v80" stroke="#4A4452" stroke-width="4"/>' },
+  { key: "estandarte", label: "Estandarte", svg: '<rect x="30" y="8" width="5" height="84" fill="#5A3A22"/><path d="M35 14h40v34l-20-10-20 10Z" fill="#B33A3A" stroke="#E3C26A" stroke-width="3"/><circle cx="55" cy="28" r="5" fill="#E3C26A"/>' },
   { key: "hoguera", label: "Hoguera", svg: '<circle cx="50" cy="50" r="40" fill="#FF9A3D" opacity=".25"/><path d="M26 60 74 40M26 40 74 60" stroke="#4B3018" stroke-width="9" stroke-linecap="round"/><path d="M50 22 C62 38 66 50 50 66 C34 50 38 38 50 22Z" fill="#FF8A2A"/><path d="M50 36 C57 46 58 54 50 62 C42 54 43 46 50 36Z" fill="#FFE08A"/>' },
 ];
-// Muro: un bloque de piedra que ocupa toda la casilla (se dibuja aparte en la vista isométrica).
-const isoWall = (P, x, y, z, S) => {
-  const h = S * 0.75;
-  const a = P(x, y, z), b = P(x + 1, y, z), c = P(x + 1, y + 1, z), d = P(x, y + 1, z);
-  const up = (q) => [q[0], q[1] - h];
-  const pts = (arr) => arr.map((q) => q.join(",")).join(" ");
-  return (
-    <g pointerEvents="none">
-      <polygon points={pts([d, c, up(c), up(d)])} fill="#A7A196" stroke="#7E786E" />
-      <polygon points={pts([c, b, up(b), up(c)])} fill="#918B80" stroke="#7E786E" />
-      <polygon points={pts([up(a), up(b), up(c), up(d)])} fill="#BDB7AC" stroke="#7E786E" />
-      <path d={`M${d[0]} ${d[1] - h / 2} L${c[0]} ${c[1] - h / 2} L${b[0]} ${b[1] - h / 2}`} stroke="#8A847A" strokeWidth="1.2" fill="none" />
-    </g>
-  );
-};
 const propSvg = (key) => MAP_PROPS.find((p) => p.key === key)?.svg || "";
+// Estructuras: tienen altura y se puede poner algo encima (otra estructura, un estandarte, una antorcha...).
+const STRUCT_H = { muro: 1, torre: 2.6, puerta: 2 };
+const shadeHex = (hex, f) => {
+  const n = parseInt(String(hex).slice(1), 16);
+  const r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+  const m = (v) => Math.max(0, Math.min(255, Math.round(f > 0 ? v + (255 - v) * f : v * (1 + f))));
+  return `rgb(${m(r)},${m(g)},${m(b)})`;
+};
+const isoPts = (arr) => arr.map((q) => q[0].toFixed(1) + "," + q[1].toFixed(1)).join(" ");
+// Prisma (bloque) entre dos esquinas de casilla y dos alturas.
+const isoPrism = (P, x0, y0, x1, y1, z0, z1, col, k) => (
+  <g key={k}>
+    <polygon points={isoPts([P(x0, y1, z0), P(x1, y1, z0), P(x1, y1, z1), P(x0, y1, z1)])} fill={shadeHex(col, -0.08)} stroke="rgba(0,0,0,.18)" />
+    <polygon points={isoPts([P(x1, y0, z0), P(x1, y1, z0), P(x1, y1, z1), P(x1, y0, z1)])} fill={shadeHex(col, -0.26)} stroke="rgba(0,0,0,.18)" />
+    <polygon points={isoPts([P(x0, y0, z1), P(x1, y0, z1), P(x1, y1, z1), P(x0, y1, z1)])} fill={shadeHex(col, 0.12)} stroke="rgba(0,0,0,.18)" />
+  </g>
+);
+// Almenas alrededor del borde superior de un bloque.
+const isoMerlons = (P, x0, y0, x1, y1, z, col) => {
+  const list = [];
+  for (let a = x0; a < x1 - 0.2; a += 0.5) list.push([a, y0, a + 0.3, y0 + 0.28], [a, y1 - 0.28, a + 0.3, y1]);
+  for (let a = y0 + 0.5; a < y1 - 0.4; a += 0.5) list.push([x0, a, x0 + 0.28, a + 0.3], [x1 - 0.28, a, x1, a + 0.3]);
+  list.sort((p, q) => p[0] + p[1] - (q[0] + q[1]));
+  return list.map(([a, b, c, d], i) => isoPrism(P, a, b, c, d, z, z + 0.32, col, "m" + i));
+};
+const ISO_STRUCT = {
+  muro: (P, x, y, z) => (
+    <g pointerEvents="none">
+      {isoPrism(P, x, y, x + 1, y + 1, z, z + 1, "#A7A196", "b")}
+      {isoMerlons(P, x, y, x + 1, y + 1, z + 1, "#A7A196")}
+    </g>
+  ),
+  torre: (P, x, y, z) => {
+    const f = (u, v) => P(x + u, y + 0.95, z + v);
+    return (
+      <g pointerEvents="none">
+        {isoPrism(P, x + 0.05, y + 0.05, x + 0.95, y + 0.95, z, z + 2.6, "#B3ADA2", "b")}
+        {isoMerlons(P, x + 0.05, y + 0.05, x + 0.95, y + 0.95, z + 2.6, "#B3ADA2")}
+        <polygon points={isoPts([f(0.44, 1.7), f(0.56, 1.7), f(0.56, 1.2), f(0.44, 1.2)])} fill="#1A1620" />
+      </g>
+    );
+  },
+  puerta: (P, x, y, z) => {
+    const f = (u, v) => P(x + u, y + 1, z + v);
+    const arch = [f(0.22, 0)];
+    for (let i = 0; i <= 10; i++) {
+      const a = (Math.PI * i) / 10;
+      arch.push(f(0.5 - 0.28 * Math.cos(a), 1.1 + 0.3 * Math.sin(a)));
+    }
+    arch.push(f(0.78, 0));
+    const bars = [];
+    for (let u = 0.29; u <= 0.72; u += 0.085) {
+      const a = f(u, 0.3), b = f(u, 1.2);
+      bars.push(<line key={"v" + u} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke="#4A4452" strokeWidth="2" />);
+    }
+    [0.5, 0.8, 1.1].forEach((v) => {
+      const a = f(0.24, v), b = f(0.76, v);
+      bars.push(<line key={"h" + v} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke="#4A4452" strokeWidth="2" />);
+    });
+    return (
+      <g pointerEvents="none">
+        {isoPrism(P, x, y, x + 1, y + 1, z, z + 2, "#A7A196", "b")}
+        <polygon points={isoPts(arch)} fill="#1A1620" />
+        {bars}
+        {isoMerlons(P, x, y, x + 1, y + 1, z + 2, "#A7A196")}
+      </g>
+    );
+  },
+  puente: (P, x, y, z, S) => {
+    const lines = [];
+    for (let i = 1; i < 5; i++) {
+      const a = P(x + i / 5, y, z), b = P(x + i / 5, y + 1, z);
+      lines.push(<line key={i} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke="#5A3A22" strokeWidth="1.6" />);
+    }
+    return (
+      <g pointerEvents="none">
+        <polygon points={isoPts([P(x, y, z), P(x + 1, y, z), P(x + 1, y + 1, z), P(x, y + 1, z)])} fill="#8A5A2B" stroke="#5A3A22" />
+        {lines}
+        {isoPrism(P, x, y, x + 1, y + 0.08, z, z + 0.3, "#6B4426", "r1")}
+        {isoPrism(P, x, y + 0.92, x + 1, y + 1, z, z + 0.3, "#6B4426", "r2")}
+      </g>
+    );
+  },
+  estandarte: (P, x, y, z, S) => {
+    const [cx, cy] = P(x + 0.5, y + 0.5, z);
+    return (
+      <g pointerEvents="none">
+        <ellipse cx={cx} cy={cy + 1} rx={S * 0.12} ry={S * 0.06} fill="rgba(0,0,0,.25)" />
+        <rect x={cx - S * 0.04} y={cy - S * 1.5} width={S * 0.08} height={S * 1.5} fill="#5A3A22" />
+        <g className="mh-iso-flag">
+          <path d={`M${cx + S * 0.04} ${cy - S * 1.45} h${S * 0.5} v${S * 0.62} l-${S * 0.25} -${S * 0.14} l-${S * 0.25} ${S * 0.14} Z`} fill="#B33A3A" stroke="#E3C26A" strokeWidth="1.6" />
+          <circle cx={cx + S * 0.29} cy={cy - S * 1.2} r={S * 0.07} fill="#E3C26A" />
+        </g>
+      </g>
+    );
+  },
+};
+// Dibuja lo que hay en una casilla, apilado: cada estructura sube la base de lo siguiente.
+const drawIsoStack = (P, x, y, z, S, list) => {
+  let base = z;
+  return list.map((pr) => {
+    const zb = base;
+    if (STRUCT_H[pr.kind]) base += STRUCT_H[pr.kind];
+    if (ISO_STRUCT[pr.kind]) return <g key={pr.id}>{ISO_STRUCT[pr.kind](P, x, y, zb, S)}</g>;
+    const [cx, cy] = P(x + 0.5, y + 0.5, zb);
+    if (ISO_PROPS[pr.kind]) return <g key={pr.id}>{ISO_PROPS[pr.kind](cx, cy, S)}</g>;
+    return <svg key={pr.id} x={cx - S * 0.62} y={cy - S * 1.05} width={S * 1.24} height={S * 1.24} viewBox="0 0 100 100" pointerEvents="none" dangerouslySetInnerHTML={{ __html: propSvg(pr.kind) }} />;
+  });
+};
 // Terrenos que el DJ pinta en el mapa (la hierba es el suelo por defecto). z = altura de la loseta en la vista isométrica.
 const MAP_TERRAINS = [
   { key: "hierba", label: "Hierba", z: 0, top: ["#A9C48A", "#9DBB7E"], s1: "#7E9A5E", s2: "#6E8A50", flat: "transparent" },
@@ -2862,12 +2960,46 @@ const sharedStyles = `
   .mh-measure { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 8; }
   .mh-measure-tag { position: absolute; z-index: 9; transform: translate(14px, -130%); padding: 4px 9px; border-radius: 8px; background: rgba(20,14,18,.86); border: 1.5px solid var(--mc); color: #F4EEE2; font: 600 11.5px Inter, system-ui, sans-serif; white-space: nowrap; pointer-events: none; }
   .mh-measure-tag b { font-size: 13px; color: var(--mc); }
+  .mh-iso-ghost { opacity: .7; }
+  .mh-iso-flag { transform-box: fill-box; transform-origin: 0 50%; animation: mh-flag 2.4s ease-in-out infinite; }
+  @keyframes mh-flag { 0%, 100% { transform: skewY(0deg); } 50% { transform: skewY(-6deg); } }
   .mh-iso-emblem { animation: mh-emb 2.4s ease-in-out infinite; }
   @keyframes mh-emb { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
   .mh-foe-size { display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap; }
   .mh-foe-size > span { font: 600 11.5px Inter, system-ui, sans-serif; color: var(--mh-muted); margin-right: 2px; }
   .mh-foe-size button { min-width: 26px; padding: 3px 8px; border-radius: 7px; border: 1px solid var(--mh-line2); background: var(--mh-panel); color: var(--mh-ink); font: 600 11.5px Inter, system-ui, sans-serif; cursor: pointer; }
   .mh-foe-size button.is-on { border-color: #C0504A; background: color-mix(in srgb, #C0504A 14%, var(--mh-panel)); }
+  .mh-map-counters { position: absolute; left: 10px; top: 10px; z-index: 7; display: flex; flex-direction: column; gap: 5px; pointer-events: none; }
+  .mh-map-counter { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 9px; background: rgba(20,14,18,.84); color: #F4EEE2; font: 600 12px Inter, system-ui, sans-serif; border-left: 3px solid #C9A24A; width: max-content; }
+  .mh-map-counter b { font: 700 15px 'Cinzel', Georgia, serif; color: #F3C24A; }
+  .mh-map-counter.is-secret { border-left-style: dashed; opacity: .8; }
+  .mh-map-counter.is-zero { border-left-color: #E24B4A; background: rgba(110,24,30,.9); }
+  .mh-map-counter.is-zero b { color: #fff; }
+  .mh-area-cards { position: absolute; right: 10px; top: 46px; z-index: 7; display: flex; flex-direction: column; gap: 6px; max-width: 240px; }
+  .mh-area-card { padding: 8px 10px; border-radius: 10px; background: rgba(20,14,18,.88); color: #F4EEE2; border-left: 3px solid var(--ac); font: 500 11.5px Inter, system-ui, sans-serif; display: flex; flex-direction: column; gap: 5px; }
+  .mh-area-card .mh-btn { padding: 5px 9px; font-size: 12px; }
+  .mh-area-h { display: flex; align-items: center; gap: 6px; }
+  .mh-area-h b { flex: 1; font-size: 12px; }
+  .mh-area-h button { border: 0; background: transparent; color: #F4EEE2; cursor: pointer; padding: 2px; }
+  .mh-area-card small { color: #CFC6D8; }
+  .mh-area-hint { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); z-index: 8; padding: 6px 10px; border-radius: 9px; background: rgba(20,14,18,.9); color: #F4EEE2; font: 600 12px Inter, system-ui, sans-serif; display: flex; gap: 8px; align-items: center; }
+  .mh-area-hint button { border: 1px solid rgba(255,255,255,.3); background: transparent; color: #F4EEE2; border-radius: 7px; padding: 2px 8px; cursor: pointer; font: inherit; }
+  .mh-area-pick { display: flex; flex-direction: column; gap: 6px; }
+  .mh-area-pick > span { font-size: 12px; color: var(--mh-muted); font-weight: 600; margin-top: 4px; }
+  .mh-area-pick > div { display: flex; gap: 6px; flex-wrap: wrap; }
+  .mh-iso-area { animation: mh-area 1.6s ease-in-out infinite; }
+  @keyframes mh-area { 0%, 100% { fill-opacity: .26; } 50% { fill-opacity: .4; } }
+  .mh-counters-gm { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+  .mh-counters-gm .mh-gm-h2 { display: inline-flex; align-items: center; gap: 6px; }
+  .mh-counter-row { display: flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 9px; border: 1px solid var(--mh-line); background: var(--mh-panel2); }
+  .mh-counter-row b { flex: 1; font-size: 13px; color: var(--mh-ink); }
+  .mh-counter-row button { width: 26px; height: 26px; border-radius: 7px; border: 1px solid var(--mh-line2); background: var(--mh-panel); color: var(--mh-ink); display: grid; place-items: center; cursor: pointer; padding: 0; }
+  .mh-counter-row button.is-on { color: #5FA77A; }
+  .mh-counter-row.is-zero { border-color: #E24B4A; }
+  .mh-counter-v { min-width: 26px; text-align: center; font: 700 16px 'Cinzel', Georgia, serif; color: var(--mh-ink); }
+  .mh-counter-new { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .mh-counter-new .mh-input:first-child { flex: 1; min-width: 140px; }
+  .mh-counter-vis { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--mh-ink2); }
   .mh-map-log { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 9; display: flex; flex-direction: column; align-items: center; gap: 5px; pointer-events: none; width: max-content; max-width: calc(100% - 24px); }
   .mh-map-log-i { padding: 6px 12px; border-radius: 10px; background: rgba(20,14,18,.86); color: #F4EEE2; font: 600 11.5px/1.35 Inter, system-ui, sans-serif; box-shadow: 0 4px 14px rgba(0,0,0,.35); border-left: 3px solid #C9A24A; text-align: center; animation: mh-log-in .28s ease, mh-log-out .5s ease 6s forwards; }
   .mh-map-log-i.is-hit { border-left-color: #E3B04B; }
@@ -4867,6 +4999,11 @@ const beastIcon = (name) => {
   if (/Manada/i.test(n)) return Dog;
   return PawPrint;
 };
+// Color de la forma de bestia (el mismo que en la hoja).
+const beastColor = (name) => {
+  const c = BEASTFORMS.find((b) => b.key === name)?.color;
+  return /^#[0-9a-f]{6}$/i.test(c || "") ? c : "#7FB55A";
+};
 // Tamaño de las fichas de enemigo (lo elige el DJ).
 const FOE_SIZES = [
   { key: "p", label: "Pequeño", short: "P", k: 0.78 },
@@ -4875,6 +5012,43 @@ const FOE_SIZES = [
   { key: "e", label: "Enorme", short: "E", k: 1.75 },
 ];
 const sizeK = (t) => (t.kind === "pet" ? 0.68 : FOE_SIZES.find((z) => z.key === t.size)?.k || 1);
+// Áreas de efecto: círculo alrededor de un punto o línea desde quien lanza.
+const AREA_RANGES = ["Cuerpo a cuerpo", "Muy cercano", "Cercano", "Lejano"];
+const areaCells = (a, tokens) => {
+  const out = new Set();
+  const R = RANGE_CELLS[a.range] || 3;
+  if (a.shape === "line") {
+    const o = (tokens || []).find((t) => t.kind === "pc" && t.charId === a.owner) || { x: a.ox ?? a.x, y: a.oy ?? a.y };
+    const dx = a.x - o.x, dy = a.y - o.y;
+    const n = Math.max(Math.abs(dx), Math.abs(dy)) || 1;
+    for (let i = 1; i <= R; i++) {
+      const x = Math.round(o.x + (dx / n) * i), y = Math.round(o.y + (dy / n) * i);
+      if (x < 0 || y < 0 || x >= MAP_COLS || y >= MAP_ROWS) break;
+      out.add(x + "," + y);
+    }
+    return out;
+  }
+  for (let y = a.y - R; y <= a.y + R; y++)
+    for (let x = a.x - R; x <= a.x + R; x++) if (x >= 0 && y >= 0 && x < MAP_COLS && y < MAP_ROWS) out.add(x + "," + y);
+  return out;
+};
+// Cuentas atrás del DJ, arriba a la izquierda del mapa (los jugadores solo ven las visibles).
+function MapCounters({ list, gm }) {
+  const shown = (list || []).filter((c) => gm || c.visible);
+  if (!shown.length) return null;
+  return (
+    <div className="mh-map-counters">
+      {shown.map((c) => (
+        <div key={c.id} className={"mh-map-counter" + (!c.visible ? " is-secret" : "") + (Number(c.value) <= 0 ? " is-zero" : "")} title={!c.visible ? "Solo la ve el DJ" : undefined}>
+          <Clock size={13} />
+          <span>{c.name}</span>
+          <b>{c.value}</b>
+          {!c.visible && <EyeOff size={11} />}
+        </div>
+      ))}
+    </div>
+  );
+}
 const isFlying = (t) => mapConds(t).includes("Volando");
 const isDeadFoe = (t) => !!(t.stats && Number(t.stats.hp || 0) > 0 && Number(t.stats.hpMarked || 0) >= Number(t.stats.hp || 0));
 // Proyectil de un ataque a distancia (orbe mágico o flecha) en el tablero isométrico: vuela en arco y estalla al llegar.
@@ -5060,7 +5234,7 @@ const readIsoPref = () => {
   }
 };
 // Tablero con fichas cuadradas. Se arrastran, o se elige una y se pulsa la casilla; también con las flechas.
-function MapBoard({ log, iso: isoProp, onIsoChange, hideIsoBtn, menuFor, fx, bg, tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
+function MapBoard({ areas, areaTool, log, iso: isoProp, onIsoChange, hideIsoBtn, menuFor, fx, bg, tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
   const ref = useRef(null);
   const dragRef = useRef(null);
   const [drag, setDrag] = useState(null);
@@ -5248,7 +5422,7 @@ function MapBoard({ log, iso: isoProp, onIsoChange, hideIsoBtn, menuFor, fx, bg,
   const at = (x, y) => ({ left: (x * 100) / MAP_COLS + "%", top: (y * 100) / MAP_ROWS + "%", width: 100 / MAP_COLS + "%", height: 100 / MAP_ROWS + "%" });
 
   if (iso)
-    return <IsoBoard log={log} hideIsoBtn={hideIsoBtn} menuFor={menuFor} anim={anim} tokens={tokens} props={props} terrain={terrain} stampTool={stampTool} onStamp={onStamp} onUnstamp={onUnstamp} canMove={canMove} onMove={onMove} selectedId={selectedId} onSelect={onSelect} onPick={onPick} compact={compact} onToggle={toggleIso} />;
+    return <IsoBoard areas={areas} areaTool={areaTool} log={log} hideIsoBtn={hideIsoBtn} menuFor={menuFor} anim={anim} tokens={tokens} props={props} terrain={terrain} stampTool={stampTool} onStamp={onStamp} onUnstamp={onUnstamp} canMove={canMove} onMove={onMove} selectedId={selectedId} onSelect={onSelect} onPick={onPick} compact={compact} onToggle={toggleIso} />;
 
   return (
     <div
@@ -5413,7 +5587,7 @@ function MapBoard({ log, iso: isoProp, onIsoChange, hideIsoBtn, menuFor, fx, bg,
 
 // Tablero isométrico tipo diorama: losetas con relieve, decorados y fichas de pie.
 // Usa los mismos datos que el tablero plano (fichas, decorados y terreno).
-function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact, onToggle }) {
+function IsoBoard({ areas = [], areaTool, log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact, onToggle }) {
   const S = 34;
   const OX = MAP_ROWS * S + S * 0.6;
   const OY = S * 2.4;
@@ -5434,6 +5608,9 @@ function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain 
   const boxRef = useRef(null);
   const droppedRef = useRef(null); // ficha recién soltada: no repite el salto desde su casilla anterior
   const overlayEl = useContext(MapOverlayCtx);
+  // Casillas cubiertas por áreas de efecto: casilla -> color.
+  const areaMap = {};
+  (areas || []).forEach((a) => areaCells(a, tokens).forEach((k) => (areaMap[k] = a.color || "#C0504A")));
   const svgPoint = (ev) => {
     const svg = svgRef.current;
     if (!svg) return null;
@@ -5473,20 +5650,31 @@ function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain 
     return el ? { x: Number(el.getAttribute("data-cx")), y: Number(el.getAttribute("data-cy")) } : null;
   };
   const propAt = (x, y) => props.find((pr) => pr.x === x && pr.y === y);
+  const propsAt = (x, y) => props.filter((pr) => pr.x === x && pr.y === y);
+  // Se puede estampar si la casilla está vacía o lo de arriba es una estructura (muro, torre, puerta).
+  const canStack = (x, y) => {
+    const list = propsAt(x, y);
+    return !list.length || !!STRUCT_H[list[list.length - 1].kind];
+  };
   const isTerrainTool = stampTool && stampTool.startsWith("t:");
   const tileDown = (e, x, y) => {
     if (e.button > 0) return;
+    if (areaTool) {
+      e.preventDefault();
+      areaTool.onPlace(x, y);
+      return;
+    }
     if (stampTool) {
       e.preventDefault();
       painting.current = new Set([x + "," + y]);
-      if (isTerrainTool || !propAt(x, y)) onStamp(x, y);
+      if (isTerrainTool || canStack(x, y)) onStamp(x, y);
       const move = (ev) => {
         const c = cellFrom(ev);
         if (!c || !painting.current) return;
         const k = c.x + "," + c.y;
         if (painting.current.has(k)) return;
         painting.current.add(k);
-        if (isTerrainTool || !propAt(c.x, c.y)) onStamp(c.x, c.y);
+        if (isTerrainTool || canStack(c.x, c.y)) onStamp(c.x, c.y);
       };
       window.addEventListener("pointermove", move);
       window.addEventListener("pointerup", () => { window.removeEventListener("pointermove", move); painting.current = null; }, { once: true });
@@ -5503,6 +5691,11 @@ function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain 
   const tokenDown = (e, t) => {
     if (e.button > 0) return;
     e.stopPropagation();
+    if (areaTool) {
+      e.preventDefault();
+      areaTool.onPlace(t.x, t.y);
+      return;
+    }
     if (!canMove(t)) {
       setRangeId((r) => (r === t.id ? null : t.id));
       if (onPick) onPick(selectedId === t.id ? null : t.id);
@@ -5610,15 +5803,22 @@ function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain 
         {mapConds(t).map((c) => (
           <ellipse key={c} className={"mh-iso-ring ring-" + MAP_COND_FX[c].cls} cx={cx} cy={cy} rx={S * 0.52} ry={S * 0.26} stroke={MAP_COND_FX[c].color} />
         ))}
-        {t.beast && !down && (
-          <g className="mh-iso-leaves" pointerEvents="none">
-            {Array.from({ length: 10 }, (_, i) => {
-              const ang = (i / 10) * Math.PI * 2;
-              const lx = cx + Math.cos(ang) * S * 0.6 * sizeK(t), ly = cy + Math.sin(ang) * S * 0.3 * sizeK(t);
-              return <ellipse key={i} cx={lx} cy={ly} rx={S * 0.12} ry={S * 0.06} fill={i % 2 ? "#7FB55A" : "#5E8C46"} transform={`rotate(${(ang * 180) / Math.PI + 90} ${lx} ${ly})`} />;
-            })}
-          </g>
-        )}
+        {t.beast && !down && (() => {
+          const bc = beastColor(t.beast);
+          const R = S * 0.6 * sizeK(t);
+          return (
+            <g className="mh-iso-leaves" pointerEvents="none" transform={`translate(${cx} ${cy}) scale(1 .5)`}>
+              <g>
+                <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="9s" repeatCount="indefinite" />
+                {Array.from({ length: 10 }, (_, i) => {
+                  const ang = (i / 10) * Math.PI * 2;
+                  const lx = Math.cos(ang) * R, ly = Math.sin(ang) * R;
+                  return <ellipse key={i} cx={lx} cy={ly} rx={S * 0.13} ry={S * 0.07} fill={i % 2 ? bc : shadeHex(bc, -0.3)} transform={`rotate(${(ang * 180) / Math.PI + 90} ${lx} ${ly})`} />;
+                })}
+              </g>
+            </g>
+          );
+        })()}
         <g className="mh-iso-body" transform={sizeK(t) !== 1 ? `translate(${cx} ${cy}) scale(${sizeK(t)}) translate(${-cx} ${-cy})` : undefined}>
         {down ? (
           deadFoe ? (
@@ -5671,8 +5871,8 @@ function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain 
           const ey = cy - S * 1.6;
           return (
             <g className="mh-iso-emblem" pointerEvents="none">
-              <circle cx={cx} cy={ey} r={S * 0.26} fill="#2B2433" stroke="#7FB55A" strokeWidth="2.2" />
-              <BI x={cx - S * 0.16} y={ey - S * 0.16} width={S * 0.32} height={S * 0.32} color="#C9F2CF" strokeWidth={2.2} />
+              <circle cx={cx} cy={ey} r={S * 0.26} fill="#2B2433" stroke={beastColor(t.beast)} strokeWidth="2.2" />
+              <BI x={cx - S * 0.16} y={ey - S * 0.16} width={S * 0.32} height={S * 0.32} color={shadeHex(beastColor(t.beast), 0.45)} strokeWidth={2.2} />
             </g>
           );
         })()}
@@ -5711,9 +5911,10 @@ function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain 
           const lit = !rangeTok && reach.has(x + "," + y);
           const dropHere = drag?.moved && drag.x === x && drag.y === y;
           const here = tokAt(x, y);
-          const pr = propAt(x, y);
+          const prs = propsAt(x, y);
+          const pr = prs[0];
           const [cx, cy] = P(x + 0.5, y + 0.5, z);
-          if (layer === "things" && !pr && !here.length) return null;
+          if (layer === "things" && !prs.length && !here.length) return null;
           return layer === "ground" ? (
             <g key={"g" + x + "," + y}>
               {z > 0 && (
@@ -5756,6 +5957,7 @@ function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain 
                   );
                 return null;
               })()}
+              {areaMap[x + "," + y] && <polygon className="mh-iso-area" points={pts([a, b, c, d])} fill={areaMap[x + "," + y]} fillOpacity=".32" stroke={areaMap[x + "," + y]} strokeWidth="1.6" pointerEvents="none" />}
               {band && <polygon points={pts([a, b, c, d])} fill={band.color} fillOpacity=".42" pointerEvents="none" />}
               {band &&
                 [[x, y - 1, a, b], [x + 1, y, b, c], [x, y + 1, c, d], [x - 1, y, d, a]].map(([nx, ny, p1, p2], k) =>
@@ -5766,12 +5968,25 @@ function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain 
             </g>
           ) : (
             <g key={"t" + x + "," + y}>
-              {pr && pr.kind === "muro" ? isoWall(P, x, y, z, S) : pr && ISO_PROPS[pr.kind] ? ISO_PROPS[pr.kind](cx, cy, S) : pr && <svg x={cx - S * 0.62} y={cy - S * 1.05} width={S * 1.24} height={S * 1.24} viewBox="0 0 100 100" pointerEvents="none" dangerouslySetInnerHTML={{ __html: propSvg(pr.kind) }} />}
-              {[...here].sort((p, q) => isFlying(p) - isFlying(q)).map((t) => renderTok(t, cx + (here.length > 1 && isFlying(t) ? S * 0.32 : 0), cy))}
+              {drawIsoStack(P, x, y, z, S, prs)}
+              {[...here].sort((p, q) => isFlying(p) - isFlying(q)).map((t) => renderTok(t, cx, cy))}
             </g>
           );
         }))}
         {petLinks}
+        {tokens.map((t) => {
+          if (t.vanished || (drag && drag.moved && drag.id === t.id)) return null;
+          const z0 = tAt(t.x, t.y).z;
+          const tall = (nx, ny) => nx < MAP_COLS && ny < MAP_ROWS && (tAt(nx, ny).z > z0 + 0.2 || propsAt(nx, ny).some((pr) => STRUCT_H[pr.kind] || pr.kind === "arbol" || pr.kind === "pino"));
+          if (![[1, 0], [0, 1], [1, 1], [2, 0], [0, 2], [2, 1], [1, 2], [2, 2]].some(([dx, dy]) => tall(t.x + dx, t.y + dy))) return null;
+          const [gx, gy] = P(t.x + 0.5, t.y + 0.5, z0);
+          const k = sizeK(t);
+          const lift = isFlying(t) ? 60 : 0;
+          const col = t.kind === "foe" ? "#E07A6E" : t.kind === "npc" ? "#A9B4C6" : t.color || "#C9A24A";
+          return (
+            <rect key={"gh" + t.id} className="mh-iso-ghost" x={gx - S * 0.33 * k} y={gy - lift - S * 1.1 * k} width={S * 0.66 * k} height={S * 1.04 * k} rx={S * 0.33 * k} fill="none" stroke={col} strokeWidth="2.2" strokeDasharray="5 3" pointerEvents="none" />
+          );
+        })}
         {anim && (anim.kind || "melee") !== "melee" && (() => {
           const fa = tokens.find((x) => x.id === anim.from), fb = tokens.find((x) => x.id === anim.to);
           if (!fa || !fb) return null;
@@ -7579,6 +7794,8 @@ export default function App({ onSignOut }) {
     setDamageRollResult({ hybridDmg, hybridDmgSides: ch ? hybridSides(ch) : 0, crimsonRolls, angelRoll, angelSides: opts.angel || 0, knightRolls, attackFear: opts.attackFear || 0, igniteRoll, stanceNow, droppedRoll, favoredBonus, rolls2, die2, comboBase: total, furyRolls, furySides: ch ? patronSides(ch) : 6, fearRolls, rawBonus, sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, doublePick: !!opts.doublePick, charged: ch && ch.f_subclass === "Origen Primigenio" && ch.f_charged === "1" && damageType === "mágico", note: resonance ? "Resonancia Sagrada: los dados repetidos valen el doble" : opts.extraFlat ? "Incluye +" + opts.extraFlat + " de Elementalista" : waxBonus ? "Incluye +2 de la Luna Creciente" : opts.note || "", spirit: !!opts.spirit });
     // Ataque con objetivo en el tablero: el daño se aplica al enemigo según sus umbrales.
     if (opts.targetId && sheetCampaignId) applyFoeDamage(sheetCampaignId, opts.targetId, total, ch?.f_name || "Alguien", weaponName);
+    // Ataque en área: el mismo daño a cada objetivo impactado (cada uno con sus umbrales).
+    if (opts.targetIds && opts.targetIds.length && sheetCampaignId) opts.targetIds.forEach((id) => applyFoeDamage(sheetCampaignId, id, total, ch?.f_name || "Alguien", weaponName));
     const who = playerName || "Alguien en la mesa";
     const critLabel = isCritical ? ` · ¡Crítico! (+${critBonus} máx.)` : "";
     const diceLabel = `${dice}d${die} (${rolls.join("+")})` + (rolls2 ? ` + ${dice}d${die2} (${rolls2.join("+")})` : "") + (furyRolls ? ` + Furia ${furyRolls.length}d${patronSides(ch)} (${furyRolls.join("+")})` : "") + (fearRolls ? ` + Enfrenta tu Miedo ${fearRolls.length}d10 (${fearRolls.join("+")}) mágico` : "") + (wolfBonus ? ` + Lobo 1d10 (${wolfBonus})` : "") + (unstopBonus ? ` + Imparable ${unstopBonus}` : "") + (sneakRolls ? ` + Furtivo ${sneakRolls.length}d6 (${sneakRolls.join("+")})` : "");
@@ -9051,10 +9268,27 @@ export default function App({ onSignOut }) {
           const rest = ter.filter((t) => !(t.x === x && t.y === y));
           return k === "hierba" ? rest : [...rest, { x, y, kind: k }];
         }, "terrain")
-      : mutateMap(viewingCampaignId, (props) => (props.some((pr) => pr.x === x && pr.y === y) ? props : [...props, { id: "p" + Date.now() + Math.random().toString(36).slice(2, 5), kind, x, y }]), "props");
+      : mutateMap(
+          viewingCampaignId,
+          (props) => {
+            // Encima de una estructura se puede apilar; si no, la casilla ya está ocupada.
+            const here = props.filter((pr) => pr.x === x && pr.y === y);
+            if (here.length && !STRUCT_H[here[here.length - 1].kind]) return props;
+            return [...props, { id: "p" + Date.now() + Math.random().toString(36).slice(2, 5), kind, x, y }];
+          },
+          "props"
+        );
   const unstampProp = (x, y) => {
     if (stampTool && stampTool.startsWith("t:")) return mutateMap(viewingCampaignId, (ter) => ter.filter((t) => !(t.x === x && t.y === y)), "terrain");
-    return mutateMap(viewingCampaignId, (props) => props.filter((pr) => !(pr.x === x && pr.y === y)), "props");
+    // Quita solo lo de más arriba de la pila.
+    return mutateMap(
+      viewingCampaignId,
+      (props) => {
+        const idx = props.map((pr, i) => (pr.x === x && pr.y === y ? i : -1)).filter((i) => i >= 0).pop();
+        return idx == null ? props : props.filter((_, i) => i !== idx);
+      },
+      "props"
+    );
   };
   const clearProps = () => mutateMap(viewingCampaignId, () => [], "props");
 
@@ -9490,6 +9724,109 @@ export default function App({ onSignOut }) {
     } catch (e) {}
   };
   const [foeTarget, setFoeTarget] = useState(null); // DJ: a qué personaje ataca el enemigo elegido
+  const [areaPick, setAreaPick] = useState(null); // elegir forma y alcance del área: { owner, campaignId, color, name }
+  const [areaTool, setAreaTool] = useState(null); // colocando un área: el siguiente clic en una casilla la pone
+  const [counterDraft, setCounterDraft] = useState({ name: "", value: 4, visible: true });
+  // Pone el área elegida en la casilla pulsada (las ven todos en el tablero).
+  const placeArea = (cfg, x, y) => {
+    const area = { id: "a" + Date.now() + Math.random().toString(36).slice(2, 5), owner: cfg.owner, ownerName: cfg.name, shape: cfg.shape, range: cfg.range, color: cfg.color, x, y };
+    mutateMap(cfg.campaignId, (as) => [...(Array.isArray(as) ? as : []).filter((a) => a.owner !== cfg.owner), area], "areas");
+    setAreaTool(null);
+    pushMapLog(cfg.campaignId, cfg.name + " marca un área de efecto (" + (cfg.shape === "line" ? "línea" : "círculo") + " · " + cfg.range + ")", "info");
+  };
+  // Elegir forma y alcance del área (lo usan la hoja del jugador y el panel del DJ).
+  const renderAreaPick = () => {
+              const A = areaPick;
+              const close = () => setAreaPick(null);
+              const choose = (shape, range) => {
+                close();
+                setAreaTool({ ...A, shape, range });
+              };
+              return (
+                <div className={"mh-overlay" + (rollDock ? " mh-docked" : "")} style={{ position: "absolute", inset: 0, zIndex: 46, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)", ...(rollDock ? ROLL_DOCK : {}) }} onClick={close}>
+                  <div className="mh-card mh-renew" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Área de efecto">
+                    <div className="mh-pre-h">
+                      <span className="mh-pre-ic" style={{ background: "color-mix(in srgb, " + A.color + " 16%, var(--mh-panel))", color: A.color }}>
+                        <CircleDashed size={17} />
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <b className="mh-serif">Área de efecto</b>
+                        <small>Elige la forma y el alcance; luego pulsa una casilla del tablero.</small>
+                      </div>
+                      <button type="button" className="mh-inv-x" aria-label="Cerrar" onClick={close}>
+                        <X size={16} />
+                      </button>
+                    </div>
+                    <div className="mh-area-pick">
+                      <span>Círculo alrededor de un punto</span>
+                      <div>
+                        {AREA_RANGES.slice(0, 3).map((r) => (
+                          <button key={r} type="button" className="mh-btn-ghost" onClick={() => choose("circle", r)}>
+                            {r}
+                          </button>
+                        ))}
+                      </div>
+                      {A.line && (
+                        <>
+                          <span>Línea desde tu ficha</span>
+                          <div>
+                            {AREA_RANGES.slice(1).map((r) => (
+                              <button key={r} type="button" className="mh-btn-ghost" onClick={() => choose("line", r)}>
+                                {r}
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+  };
+  const removeArea = (campaignId, id) => mutateMap(campaignId, (as) => (Array.isArray(as) ? as : []).filter((a) => a.id !== id), "areas");
+  // Tarjetas de las áreas: quién queda dentro y, para el jugador que la puso, atacar a todos a la vez.
+  const AreaCards = ({ campaignId, gm }) => {
+    const list = (campaignMap.areas || []).filter((a) => gm || a.owner === viewingCharId);
+    if (!list.length) return null;
+    const view = mapTokensView(campaignMap.tokens || []);
+    return (
+      <div className="mh-area-cards">
+        {list.map((a) => {
+          const cells = areaCells(a, campaignMap.tokens || []);
+          const inside = view.filter((t) => !t.vanished && cells.has(t.x + "," + t.y) && !(t.kind === "pc" && t.charId === a.owner));
+          const foes = inside.filter((t) => t.kind === "foe" || t.kind === "npc");
+          const me = !gm && characters[a.owner];
+          const w = me ? PRIMARY_WEAPONS.find((x) => x.key === me.f_primary_weapon) : null;
+          return (
+            <div key={a.id} className="mh-area-card" style={{ "--ac": a.color }}>
+              <div className="mh-area-h">
+                {a.shape === "line" ? <Slash size={13} /> : <CircleDashed size={13} />}
+                <b>{(a.shape === "line" ? "Línea" : "Círculo") + " · " + a.range}</b>
+                <button type="button" aria-label="Quitar área" title="Quitar área" onClick={() => removeArea(campaignId, a.id)}>
+                  <X size={12} />
+                </button>
+              </div>
+              <small>{inside.length ? "Dentro: " + inside.map((t) => t.name).join(", ") : "No hay nadie dentro"}</small>
+              {me && w && w.trait !== "—" && foes.length > 0 && (
+                <button
+                  type="button"
+                  className="mh-btn"
+                  onClick={() => {
+                    const tk = TRAITS.find((tr) => tr.label === w.trait)?.key;
+                    const mods = getEquipmentMods(w, SECONDARY_WEAPONS.find((x) => x.key === me.f_secondary_weapon), ARMORS.find((x) => x.key === me.f_armor));
+                    postCampaignEvent(a.owner, "💥 Ataca en área a " + foes.map((t) => t.name).join(", ") + " con " + w.key);
+                    rollTraitCheck(a.owner, w.trait, Number(me[tk] || 0) + (mods[tk] || 0), { name: w.key, damage: w.damage, targetChosen: true, targets: foes.map((t) => ({ id: t.id, name: t.name, dc: t.stats?.difficulty || null })) });
+                  }}
+                >
+                  <Swords size={13} /> Atacar a todos con {w.key}
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
   const rollDock = view === "ficha" && detailTab === "campaign" && !isMobile;
   // Un enemigo del DJ ataca a tu personaje: se abre el aviso para resolverlo (solo con su hoja abierta).
   useEffect(() => {
@@ -10382,6 +10719,14 @@ export default function App({ onSignOut }) {
       : hope === fear ? "Ganas 1 Esperanza y te quitas 1 Estrés" : hope > fear ? "Ganas 1 Esperanza" : "El DJ gana 1 de Miedo";
     setTraitRollResult({ key: Date.now(), hopeSides, traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, tideBonus, hybridRoll, hybridSidesR: extras.hybridSides || 0, hallowRoll, hallowFirst: hopeA, patronRoll, patronSides: extras.patronSides || 0, slayerRoll, slayerRolls, total, text: hope === fear ? "Éxito crítico" : reaction ? "Tirada de reacción" : text, color, note, reaction, card: cardContext ? { name: cardContext.name, dc: cardContext.dc } : dcVal ? { name: "", dc: dcVal } : null, exps: extras.exps || [], honed: extras.honed || [], wasCloaked, weapon: weapon || null, charId });
 
+    // Ataque en área: una tirada contra todos; impacta a quienes tengan Dificultad igual o menor.
+    if (weapon && weapon.targets && sheetCampaignId && !reaction) {
+      const who = charsRef.current[charId]?.f_name || "Alguien";
+      const hits = weapon.targets.filter((t) => hope === fear || !t.dc || total >= t.dc);
+      const miss = weapon.targets.filter((t) => !hits.includes(t));
+      setTraitRollResult((r) => (r ? { ...r, weapon: { ...r.weapon, hitIds: hits.map((t) => t.id), hitNames: hits.map((t) => t.name) } } : r));
+      pushMapLog(sheetCampaignId, who + " ataca en área con " + weapon.name + ": " + total + (hits.length ? " · impacta a " + hits.map((t) => t.name).join(", ") : "") + (miss.length ? " · falla contra " + miss.map((t) => t.name).join(", ") : ""), hits.length ? "hit" : "miss");
+    }
     // Ataque contra una ficha del tablero: el resultado sale abajo del mapa para todos.
     if (weapon && weapon.targetId && sheetCampaignId && !reaction) {
       const who = charsRef.current[charId]?.f_name || "Alguien";
@@ -11401,6 +11746,8 @@ export default function App({ onSignOut }) {
                           onUnstamp={unstampProp}
                           fx={campaignMap.fx}
                           log={campaignMap.log}
+                          areas={campaignMap.areas || []}
+                          areaTool={areaTool && areaTool.campaignId === viewingCampaignId ? { onPlace: (x, y) => placeArea(areaTool, x, y) } : null}
                           iso={mapIso}
                           onIsoChange={toggleMapIso}
                           tokens={mapTokensView(tokens)}
@@ -11416,6 +11763,10 @@ export default function App({ onSignOut }) {
                           }
                         />
                         </MapViewport>
+                        <MapCounters list={campaignMap.counters} gm />
+                        <AreaCards campaignId={viewingCampaignId} gm />
+                        {areaPick && areaPick.owner === "gm" && renderAreaPick()}
+                        {areaTool && <div className="mh-area-hint">Pulsa una casilla para colocar el área <button type="button" onClick={() => setAreaTool(null)}>Cancelar</button></div>}
                         </div>
                         <div className="mh-map-bar">
                           {sel ? (
@@ -11433,11 +11784,64 @@ export default function App({ onSignOut }) {
                           ) : (
                             <span className="mh-map-bar-t">{tokens.length ? tokens.length + " ficha" + (tokens.length === 1 ? "" : "s") + " en el mapa" : "El mapa está vacío"}</span>
                           )}
+                          <button type="button" className="mh-btn-ghost" onClick={() => setAreaPick({ owner: "gm", campaignId: viewingCampaignId, color: "#C0504A", name: "El DJ", line: false })}>
+                            <CircleDashed size={13} /> Área de efecto
+                          </button>
                           {tokens.length > 0 && (
                             <button type="button" className="mh-btn-ghost" style={{ marginLeft: "auto" }} onClick={clearMap}>
                               Vaciar mapa
                             </button>
                           )}
+                        </div>
+                        <div className="mh-counters-gm">
+                          <span className="mh-gm-h2">
+                            <Clock size={13} /> Cuentas atrás
+                          </span>
+                          {(campaignMap.counters || []).map((ct) => {
+                            const setCt = (patch) => mutateMap(viewingCampaignId, (cs) => (Array.isArray(cs) ? cs : []).map((x) => (x.id === ct.id ? { ...x, ...patch } : x)), "counters");
+                            return (
+                              <div key={ct.id} className={"mh-counter-row" + (Number(ct.value) <= 0 ? " is-zero" : "")}>
+                                <b>{ct.name}</b>
+                                <button type="button" aria-label="Bajar" onClick={() => {
+                                  const v = Math.max(0, Number(ct.value) - 1);
+                                  setCt({ value: v });
+                                  if (v === 0 && ct.visible) pushMapLog(viewingCampaignId, "⏳ La cuenta atrás «" + ct.name + "» llega a 0", "ko");
+                                }}>
+                                  <Minus size={12} />
+                                </button>
+                                <span className="mh-counter-v">{ct.value}</span>
+                                <button type="button" aria-label="Subir" onClick={() => setCt({ value: Number(ct.value) + 1 })}>
+                                  <Plus size={12} />
+                                </button>
+                                <button type="button" className={ct.visible ? "is-on" : ""} title={ct.visible ? "La ven los jugadores" : "Solo la ves tú"} aria-label={ct.visible ? "Ocultar a los jugadores" : "Mostrar a los jugadores"} onClick={() => setCt({ visible: !ct.visible })}>
+                                  {ct.visible ? <Eye size={12} /> : <EyeOff size={12} />}
+                                </button>
+                                <button type="button" aria-label="Borrar cuenta atrás" onClick={() => mutateMap(viewingCampaignId, (cs) => (Array.isArray(cs) ? cs : []).filter((x) => x.id !== ct.id), "counters")}>
+                                  <Trash2 size={12} />
+                                </button>
+                              </div>
+                            );
+                          })}
+                          <div className="mh-counter-new">
+                            <input className="mh-input" placeholder="Nombre (p. ej. El ritual)" value={counterDraft.name} onChange={(e) => setCounterDraft((d) => ({ ...d, name: e.target.value }))} />
+                            <input className="mh-input" type="number" min="1" max="99" value={counterDraft.value} onChange={(e) => setCounterDraft((d) => ({ ...d, value: Math.max(1, Math.min(99, Number(e.target.value) || 1)) }))} style={{ width: 64 }} />
+                            <label className="mh-counter-vis">
+                              <input type="checkbox" checked={counterDraft.visible} onChange={(e) => setCounterDraft((d) => ({ ...d, visible: e.target.checked }))} /> Visible
+                            </label>
+                            <button
+                              type="button"
+                              className="mh-btn-ghost"
+                              onClick={() => {
+                                const name = counterDraft.name.trim();
+                                if (!name) return;
+                                mutateMap(viewingCampaignId, (cs) => [...(Array.isArray(cs) ? cs : []), { id: "c" + Date.now(), name, value: counterDraft.value, visible: counterDraft.visible }], "counters");
+                                if (counterDraft.visible) pushMapLog(viewingCampaignId, "⏳ Nueva cuenta atrás: «" + name + "» (" + counterDraft.value + ")", "info");
+                                setCounterDraft({ name: "", value: 4, visible: true });
+                              }}
+                            >
+                              <Plus size={13} /> Crear
+                            </button>
+                          </div>
                         </div>
                         {sel && sel.kind === "foe" && (() => {
                           const st = sel.stats;
@@ -12661,6 +13065,8 @@ export default function App({ onSignOut }) {
                       if (!isActive(cd.text)) return;
                       out.push({ section: "Cartas de dominio", key: "dom-" + k, Icon: DOMAIN_ICONS[cd.domain] || Sparkles, color: DOMAIN_COLORS[cd.domain], label: cd.key, sub: locked ? "Bloqueada en Forma de Bestia" : cd.type, run: () => setViewingCardDetail(domainCardDetail(cd)) });
                     });
+                    if (!foe && sheetCampaignId)
+                      out.push({ section: "Herramientas", key: "area", Icon: CircleDashed, color: classColor(c.f_class), label: "Área de efecto", sub: "Círculo o línea", run: () => setAreaPick({ owner: viewingCharId, campaignId: sheetCampaignId, color: classColor(c.f_class), name: c.f_name || "Personaje", line: true }) });
                     return out;
                   };
 
@@ -15713,6 +16119,8 @@ export default function App({ onSignOut }) {
                                             iso={mapIso}
                                             onIsoChange={toggleMapIso}
                                             hideIsoBtn
+                                            areas={campaignMap.areas || []}
+                                            areaTool={areaTool && areaTool.campaignId === charCampaign.id ? { onPlace: (x, y) => placeArea(areaTool, x, y) } : null}
                                             tokens={mapTokens}
                                             canMove={(t) => (t.kind === "pc" && t.charId === viewingCharId) || (t.kind === "pet" && t.ownerCharId === viewingCharId)}
                                             onMove={(id, x, y) => moveToken(charCampaign.id, id, x, y)}
@@ -15724,6 +16132,9 @@ export default function App({ onSignOut }) {
                                         </MapViewport>
                                         {/* Avisos de tiradas y golpes, centrados en la parte visible del mapa */}
                                         <MapLog log={campaignMap.log} />
+                                        <MapCounters list={campaignMap.counters} />
+                                        <AreaCards campaignId={charCampaign.id} />
+                                        {areaTool && <div className="mh-area-hint">Pulsa una casilla para colocar el área <button type="button" onClick={() => setAreaTool(null)}>Cancelar</button></div>}
                                         <div className="mh-stg-scene-top mh-map-top">
                                           {live === "mapa" && (
                                             <span className="mh-stg-live">
@@ -16364,6 +16775,8 @@ export default function App({ onSignOut }) {
                 </div>
               );
             })()}
+
+            {areaPick && areaPick.owner !== "gm" && renderAreaPick()}
 
             {targetDlg && (() => {
               const T = targetDlg;
@@ -18650,12 +19063,16 @@ export default function App({ onSignOut }) {
                         {traitRollResult.hope === traitRollResult.fear && (
                           <div style={{ color: "var(--mh-green-ink)", fontWeight: 700, marginBottom: 4 }}>¡Crítico! Daño máximo + tirada</div>
                         )}
-                        {traitRollResult.weapon.targetId && traitRollResult.card?.dc != null
+                        {traitRollResult.weapon.targets
+                          ? (traitRollResult.weapon.hitIds || []).length
+                            ? "Impactas a " + (traitRollResult.weapon.hitNames || []).join(", ")
+                            : "Fallas contra todos"
+                          : traitRollResult.weapon.targetId && traitRollResult.card?.dc != null
                           ? (traitRollResult.hope === traitRollResult.fear || traitRollResult.total >= traitRollResult.card.dc ? "Impactas a " : "Fallas contra ") + traitRollResult.weapon.targetName
                           : "¿Impactó el ataque con " + traitRollResult.weapon.name + "?"}
                       </div>
                       <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
-                        {traitRollResult.weapon.targetId && traitRollResult.card?.dc != null && !(traitRollResult.hope === traitRollResult.fear || traitRollResult.total >= traitRollResult.card.dc) ? (
+                        {(traitRollResult.weapon.targets && !(traitRollResult.weapon.hitIds || []).length) || (traitRollResult.weapon.targetId && traitRollResult.card?.dc != null && !(traitRollResult.hope === traitRollResult.fear || traitRollResult.total >= traitRollResult.card.dc)) ? (
                           <button className="mh-btn-ghost" onClick={() => setTraitRollResult(null)}>
                             Cerrar
                           </button>
@@ -18697,13 +19114,13 @@ export default function App({ onSignOut }) {
                               const fxKind = /mágic/i.test(damage || "") ? "magic" : reachNow && reachNow !== "Cuerpo a cuerpo" ? "shot" : "melee";
                               if (fromTok) mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: fromTok.id, to: traitRollResult.weapon.targetId, kind: fxKind }), "fx");
                             }
-                            rollWeaponDamage(name, damage, charId, isCritical, { angel: traitRollResult.weapon.angel || 0, knight: !!traitRollResult.weapon.knight, attackFear: traitRollResult.fear, ...(pummel || honedHit ? { fixedDice: getProficiency(rc) + (pummel ? 1 : 0) + (honedHit ? 1 : 0) } : {}), fearDice, cloaked: wasCloaked, spirit, resonance: spirit && rc && tierForLevel(rc.f_level || 1) >= 3, extraFlat: traitRollResult.weapon.elemDmg || 0, doublePick: !!traitRollResult.weapon.manipDouble, targetId: traitRollResult.weapon.targetId || null });
+                            rollWeaponDamage(name, damage, charId, isCritical, { angel: traitRollResult.weapon.angel || 0, knight: !!traitRollResult.weapon.knight, attackFear: traitRollResult.fear, ...(pummel || honedHit ? { fixedDice: getProficiency(rc) + (pummel ? 1 : 0) + (honedHit ? 1 : 0) } : {}), fearDice, cloaked: wasCloaked, spirit, resonance: spirit && rc && tierForLevel(rc.f_level || 1) >= 3, extraFlat: traitRollResult.weapon.elemDmg || 0, doublePick: !!traitRollResult.weapon.manipDouble, targetId: traitRollResult.weapon.targetId || null, targetIds: traitRollResult.weapon.hitIds || null });
                           }}
                         >
-                          {traitRollResult.weapon.targetId && traitRollResult.card?.dc != null ? "Tirar daño" : "Sí"}
+                          {traitRollResult.weapon.targets || (traitRollResult.weapon.targetId && traitRollResult.card?.dc != null) ? "Tirar daño" : "Sí"}
                         </button>
                         <button className="mh-btn-ghost" onClick={() => setTraitRollResult(null)}>
-                          {traitRollResult.weapon.targetId && traitRollResult.card?.dc != null ? "Cerrar" : "No"}
+                          {traitRollResult.weapon.targets || (traitRollResult.weapon.targetId && traitRollResult.card?.dc != null) ? "Cerrar" : "No"}
                         </button>
                         </>
                         )}
