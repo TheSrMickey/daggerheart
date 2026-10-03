@@ -2852,6 +2852,9 @@ const sharedStyles = `
   .mh-map-tk.is-c-fly { z-index: 4; }
   .mh-map-tk.is-c-fly.is-shared { translate: 26% -8%; }
   @media (prefers-reduced-motion: reduce) { .mh-iso-tk.is-c-fly .mh-iso-body, .mh-iso-fire, .mh-iso-glow { animation: none !important; } }
+  .mh-measure { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 8; }
+  .mh-measure-tag { position: absolute; z-index: 9; transform: translate(14px, -130%); padding: 4px 9px; border-radius: 8px; background: rgba(20,14,18,.86); border: 1.5px solid var(--mc); color: #F4EEE2; font: 600 11.5px Inter, system-ui, sans-serif; white-space: nowrap; pointer-events: none; }
+  .mh-measure-tag b { font-size: 13px; color: var(--mc); }
   .mh-map-log { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 9; display: flex; flex-direction: column; align-items: center; gap: 5px; pointer-events: none; width: max-content; max-width: calc(100% - 24px); }
   .mh-map-log-i { padding: 6px 12px; border-radius: 10px; background: rgba(20,14,18,.86); color: #F4EEE2; font: 600 11.5px/1.35 Inter, system-ui, sans-serif; box-shadow: 0 4px 14px rgba(0,0,0,.35); border-left: 3px solid #C9A24A; text-align: center; animation: mh-log-in .28s ease, mh-log-out .5s ease 6s forwards; }
   .mh-map-log-i.is-hit { border-left-color: #E3B04B; }
@@ -4806,6 +4809,39 @@ const MAP_COND_FX = {
   Retraído: { cls: "shell", Icon: Shell, color: "#6E8B5A" },
 };
 const mapConds = (t) => (t.conds || []).filter((c) => MAP_COND_FX[c]);
+// Banda de alcance para una distancia en casillas (más allá de Lejano es Muy lejano).
+const rangeBandOf = (d) => MAP_RANGES.find((r) => d <= r.max) || { key: "vfar", label: "Muy lejano", color: "#A58BE8" };
+// Regla del clic derecho mantenido: al arrastrar con el botón derecho se mide desde la casilla inicial.
+// toCell(ev) da la casilla bajo el puntero y toPoint(ev) el punto en las coordenadas del tablero.
+function useMeasure(toCell, toPoint) {
+  const [measure, setMeasure] = useState(null);
+  const suppressUntil = useRef(0);
+  const down = (e) => {
+    if (e.button !== 2) return;
+    const from = toCell(e);
+    if (!from) return;
+    const sx = e.clientX, sy = e.clientY;
+    let moved = false;
+    const move = (ev) => {
+      if (!moved && Math.hypot(ev.clientX - sx, ev.clientY - sy) < 6) return;
+      moved = true;
+      const to = toCell(ev) || from;
+      setMeasure({ from, to, pt: toPoint(ev) });
+    };
+    const up = (ev) => {
+      if (ev.button !== 2 && ev.type !== "blur") return;
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      if (moved) suppressUntil.current = Date.now() + 400;
+      setMeasure(null);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  };
+  // Tras medir no sale el menú del clic derecho.
+  const suppressed = () => Date.now() < suppressUntil.current;
+  return { measure, measureDown: down, measureSuppressed: suppressed };
+}
 const isFlying = (t) => mapConds(t).includes("Volando");
 const isDeadFoe = (t) => !!(t.stats && Number(t.stats.hp || 0) > 0 && Number(t.stats.hpMarked || 0) >= Number(t.stats.hp || 0));
 // Proyectil de un ataque a distancia (orbe mágico o flecha) en el tablero isométrico: vuela en arco y estalla al llegar.
@@ -5006,6 +5042,17 @@ function MapBoard({ log, iso: isoProp, onIsoChange, hideIsoBtn, menuFor, fx, bg,
   const anim = useAttackFx(fx);
   const steps = useMoveFx(tokens.map((t) => [t.id, t.x, t.y]));
   const vis = useVisFx(tokens);
+  const { measure, measureDown, measureSuppressed } = useMeasure(
+    (ev) => {
+      const r = ref.current?.getBoundingClientRect();
+      if (!r) return null;
+      return { x: Math.max(0, Math.min(MAP_COLS - 1, Math.floor(((ev.clientX - r.left) / r.width) * MAP_COLS))), y: Math.max(0, Math.min(MAP_ROWS - 1, Math.floor(((ev.clientY - r.top) / r.height) * MAP_ROWS))) };
+    },
+    (ev) => {
+      const r = ref.current.getBoundingClientRect();
+      return { x: ((ev.clientX - r.left) / r.width) * MAP_COLS, y: ((ev.clientY - r.top) / r.height) * MAP_ROWS };
+    }
+  );
   const toggleIso = () => {
     const v = !iso;
     if (onIsoChange) return onIsoChange(v);
@@ -5031,6 +5078,7 @@ function MapBoard({ log, iso: isoProp, onIsoChange, hideIsoBtn, menuFor, fx, bg,
     if (t.vanished) return;
     e.preventDefault();
     e.stopPropagation();
+    if (measureSuppressed()) return;
     const r = ref.current.getBoundingClientRect();
     const n = ((menuFor && menuFor(t)) || []).length;
     if (!n) return;
@@ -5117,6 +5165,7 @@ function MapBoard({ log, iso: isoProp, onIsoChange, hideIsoBtn, menuFor, fx, bg,
     window.addEventListener("pointerup", () => { window.removeEventListener("pointermove", move); painting.current = null; }, { once: true });
   };
   const boardContext = (e) => {
+    if (measureSuppressed()) return e.preventDefault();
     if (!onUnstamp || e.target.closest(".mh-map-tk")) return;
     const c = cellAt(e);
     if (!c || !propAt(c.x, c.y)) return;
@@ -5173,6 +5222,7 @@ function MapBoard({ log, iso: isoProp, onIsoChange, hideIsoBtn, menuFor, fx, bg,
       onClick={boardClick}
       onPointerDown={stampDown}
       onContextMenu={boardContext}
+      onPointerDownCapture={measureDown}
       onPointerMove={stampTool ? (e) => { const c = cellAt(e); if (c) setHover(c); } : undefined}
       onPointerLeave={stampTool ? () => setHover(null) : undefined}
     >
@@ -5271,6 +5321,26 @@ function MapBoard({ log, iso: isoProp, onIsoChange, hideIsoBtn, menuFor, fx, bg,
           </svg>
         );
       })()}
+      {measure && (() => {
+        const d = cellDist(measure.from, measure.to);
+        const band = rangeBandOf(d);
+        const U = 40;
+        const ax = (measure.from.x + 0.5) * U, ay = (measure.from.y + 0.5) * U;
+        const bx = measure.pt.x * U, by = measure.pt.y * U;
+        return (
+          <>
+            <svg className="mh-measure" viewBox={`0 0 ${MAP_COLS * U} ${MAP_ROWS * U}`} preserveAspectRatio="none">
+              <rect x={measure.to.x * U + 2} y={measure.to.y * U + 2} width={U - 4} height={U - 4} rx="6" fill={band.color} fillOpacity=".25" stroke={band.color} strokeWidth="2" />
+              <circle cx={ax} cy={ay} r="5" fill={band.color} stroke="#fff" strokeWidth="2" />
+              <line x1={ax} y1={ay} x2={bx} y2={by} stroke="#fff" strokeWidth="5" strokeLinecap="round" opacity=".55" />
+              <line x1={ax} y1={ay} x2={bx} y2={by} stroke={band.color} strokeWidth="3" strokeLinecap="round" strokeDasharray="8 6" />
+            </svg>
+            <div className="mh-measure-tag" style={{ left: (measure.pt.x / MAP_COLS) * 100 + "%", top: (measure.pt.y / MAP_ROWS) * 100 + "%", "--mc": band.color }}>
+              <b>{d}</b> {d === 1 ? "casilla" : "casillas"} · {band.label}
+            </div>
+          </>
+        );
+      })()}
       <MapLog log={log} />
       {rangeTok && (
         <div className="mh-map-legend" onPointerDown={(e) => e.stopPropagation()}>
@@ -5318,10 +5388,23 @@ function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain 
   const [menu, setMenu] = useState(null);
   const boxRef = useRef(null);
   const droppedRef = useRef(null); // ficha recién soltada: no repite el salto desde su casilla anterior
+  const svgPoint = (ev) => {
+    const svg = svgRef.current;
+    if (!svg) return null;
+    const pt = svg.createSVGPoint();
+    pt.x = ev.clientX;
+    pt.y = ev.clientY;
+    const sp = pt.matrixTransform(svg.getScreenCTM().inverse());
+    return { x: sp.x, y: sp.y };
+  };
+  const { measure, measureDown, measureSuppressed } = useMeasure((ev) => {
+    const el = document.elementsFromPoint(ev.clientX, ev.clientY).find((n) => n.getAttribute && n.getAttribute("data-cx") != null);
+    return el ? { x: Number(el.getAttribute("data-cx")), y: Number(el.getAttribute("data-cy")) } : null;
+  }, svgPoint);
   const openMenu = (e, t) => {
     e.preventDefault();
     e.stopPropagation();
-    if (t.vanished) return;
+    if (t.vanished || measureSuppressed()) return;
     const r = boxRef.current.getBoundingClientRect();
     const n = ((menuFor && menuFor(t)) || []).length;
     if (!n) return;
@@ -5366,6 +5449,7 @@ function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain 
     if (selected && !occupied(x, y, selected.id)) onMove(selected.id, x, y);
   };
   const tileContext = (e, x, y) => {
+    if (measureSuppressed()) return e.preventDefault();
     if (!onUnstamp) return;
     e.preventDefault();
     onUnstamp(x, y);
@@ -5549,7 +5633,7 @@ function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain 
     );
   };
   return (
-    <div ref={boxRef} className={"mh-map mh-isoboard" + (compact ? " is-compact" : "") + (stampTool ? " is-stamping" : "")}>
+    <div ref={boxRef} className={"mh-map mh-isoboard" + (compact ? " is-compact" : "") + (stampTool ? " is-stamping" : "")} onPointerDownCapture={measureDown}>
       <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" onContextMenu={(e) => e.preventDefault()}>
         {/* Dos pasadas: primero todo el suelo y luego, de atrás hacia delante, decorados y fichas (con su nombre).
             Así el suelo nunca tapa a una ficha ni a su nombre, y una ficha de delante sí tapa a la de detrás. */}
@@ -5627,6 +5711,30 @@ function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain 
           const [ax, ay] = P(fa.x + 0.5, fa.y + 0.5, tAt(fa.x, fa.y).z);
           const [bx, by] = P(fb.x + 0.5, fb.y + 0.5, tAt(fb.x, fb.y).z);
           return <ShotFx key={anim.key} kind={anim.kind} a={[ax, ay - S * 0.65]} b={[bx, by - S * 0.6]} size={S} />;
+        })()}
+        {measure && (() => {
+          const d = cellDist(measure.from, measure.to);
+          const band = rangeBandOf(d);
+          const zt = tAt(measure.to.x, measure.to.y).z;
+          const [ax, ay] = P(measure.from.x + 0.5, measure.from.y + 0.5, tAt(measure.from.x, measure.from.y).z);
+          const corners = [P(measure.to.x, measure.to.y, zt), P(measure.to.x + 1, measure.to.y, zt), P(measure.to.x + 1, measure.to.y + 1, zt), P(measure.to.x, measure.to.y + 1, zt)];
+          const bx = measure.pt.x, by = measure.pt.y;
+          const label = d + (d === 1 ? " casilla" : " casillas") + " · " + band.label;
+          const w = label.length * S * 0.168 + S * 0.5;
+          return (
+            <g pointerEvents="none">
+              <polygon points={pts(corners)} fill={band.color} fillOpacity=".3" stroke={band.color} strokeWidth="2.4" />
+              <ellipse cx={ax} cy={ay} rx={S * 0.18} ry={S * 0.09} fill={band.color} stroke="#fff" strokeWidth="2" />
+              <line x1={ax} y1={ay} x2={bx} y2={by} stroke="rgba(20,14,18,.6)" strokeWidth="6" strokeLinecap="round" />
+              <line x1={ax} y1={ay} x2={bx} y2={by} stroke={band.color} strokeWidth="3" strokeLinecap="round" strokeDasharray="8 6" />
+              <g transform={`translate(${bx + S * 0.35} ${by - S * 0.55})`}>
+                <rect x="0" y={-S * 0.36} width={w} height={S * 0.52} rx={S * 0.14} fill="rgba(20,14,18,.86)" stroke={band.color} strokeWidth="1.5" />
+                <text x={S * 0.25} y="0" fontSize={S * 0.3} fontWeight="700" fill="#F4EEE2" fontFamily="Inter, system-ui, sans-serif">
+                  {label}
+                </text>
+              </g>
+            </g>
+          );
         })()}
         {drag && drag.moved && drag.px != null && (() => {
           const t = tokens.find((x) => x.id === drag.id);
