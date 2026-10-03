@@ -2729,6 +2729,37 @@ const sharedStyles = `
   .mh-map-hint { flex-shrink: 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--mh-ink3); }
   .mh-map-hint .mh-stg-live { margin-left: auto; }
   .mh-map-gm { gap: 12px; }
+  .mh-foe { margin-top: 10px; padding: 12px 14px; border-radius: 12px; border: 1px solid color-mix(in srgb, #C0504A 35%, var(--mh-line)); background: color-mix(in srgb, #C0504A 5%, var(--mh-panel)); display: flex; flex-direction: column; gap: 7px; font-size: 12.5px; color: var(--mh-ink2); }
+  .mh-foe.is-down { opacity: .7; }
+  .mh-foe-empty { color: var(--mh-muted); font-style: italic; }
+  .mh-foe-h { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .mh-foe-h b { display: block; font-size: 15px; color: var(--mh-ink); }
+  .mh-foe-h small { color: var(--mh-muted); font-size: 11.5px; }
+  .mh-foe-ko { padding: 2px 8px; border-radius: 999px; background: #C0504A; color: #fff; font: 700 10.5px Inter, system-ui, sans-serif; text-transform: uppercase; letter-spacing: .06em; }
+  .mh-foe-desc { margin: 0; font-style: italic; color: var(--mh-ink3); }
+  .mh-foe-line { margin: 0; }
+  .mh-foe-line b { color: var(--mh-ink); font-weight: 600; }
+  .mh-foe-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .mh-foe-stats span { display: flex; flex-direction: column; align-items: center; padding: 6px 4px; border-radius: 9px; background: var(--mh-panel2); border: 1px solid var(--mh-line); }
+  .mh-foe-stats small { font-size: 10.5px; color: var(--mh-muted); }
+  .mh-foe-stats b { font: 700 17px 'Cinzel', Georgia, serif; color: var(--mh-ink); }
+  .mh-foe-track { display: flex; align-items: center; gap: 8px; }
+  .mh-foe-track > span { width: 46px; font-weight: 600; color: var(--mh-ink); }
+  .mh-foe-track > b { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--mh-ink); }
+  .mh-foe-pips { display: flex; gap: 4px; flex-wrap: wrap; }
+  .mh-foe-pip { width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid #E24B4A; background: transparent; cursor: pointer; padding: 0; transition: background .15s ease, transform .15s ease; }
+  .mh-foe-pip.is-stress { border-color: #8E7CC3; }
+  .mh-foe-pip.is-on { background: #E24B4A; }
+  .mh-foe-pip.is-stress.is-on { background: #8E7CC3; }
+  .mh-foe-pip:hover { transform: scale(1.1); }
+  .mh-foe-acts { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .mh-foe-roll { padding: 4px 10px; border-radius: 9px; background: var(--mh-panel2); border: 1px solid var(--mh-line); color: var(--mh-ink); animation: mh-foe-roll .3s ease; }
+  .mh-foe-roll b { font-size: 15px; }
+  .mh-foe-roll small { color: var(--mh-muted); }
+  @keyframes mh-foe-roll { from { transform: scale(.85); opacity: 0; } to { transform: none; opacity: 1; } }
+  .mh-foe-feats { display: flex; flex-direction: column; gap: 4px; padding-top: 6px; border-top: 1px solid var(--mh-line); }
+  .mh-foe-feats p { margin: 0; }
+  .mh-foe-feats b { color: var(--mh-ink); font-weight: 600; }
   .mh-map-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 12.5px; color: var(--mh-ink3); }
   .mh-map-bar b { color: var(--mh-ink); }
   .mh-map-bar button { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; }
@@ -4557,6 +4588,34 @@ const HAPPY_SPARKS = [
   [68, 24, 0.2, 0.6], [22, 2, 0.7, 0.9], [98, 62, 1.1, 0.7], [-4, 70, 0.55, 0.85],
 ];
 const HAPPY_MOTES = [[14, 0], [50, 0.8], [80, 1.6], [34, 2.2], [66, 2.9]];
+// Enemigo por defecto al añadirlo al tablero: el adversario de ejemplo del manual básico (cap. 4).
+const FOE_BASE = {
+  base: "Bandido del Cuchillo Dentado",
+  tier: 1,
+  type: "Estándar",
+  desc: "Un criminal astuto con una capa que lleva uno de los icónicos cuchillos de la banda.",
+  motives: "Escapar, sacar provecho, robar, lanzar humo",
+  difficulty: 12,
+  thresholds: [8, 14],
+  hp: 5,
+  stress: 3,
+  atk: 1,
+  attack: { name: "Dagas", range: "Cuerpo a cuerpo", damage: "1d8+1", type: "fís" },
+  exp: "Ladrón +2",
+  features: [
+    { name: "Trepador", kind: "Pasiva", text: "El Bandido trepa con la misma facilidad con la que corre." },
+    { name: "Desde arriba", kind: "Pasiva", text: "Cuando el Bandido tiene éxito en un ataque estándar desde una posición más alta que su objetivo, inflige 1d10+1 de daño físico en lugar de su daño estándar." },
+  ],
+};
+const newFoeStats = () => ({ ...FOE_BASE, hpMarked: 0, stressMarked: 0 });
+// Tira una expresión tipo "1d8+1" y devuelve { rolls, mod, total }.
+const rollExpr = (expr) => {
+  const m = String(expr).match(/(\d*)d(\d+)\s*([+-]\s*\d+)?/);
+  if (!m) return { rolls: [], mod: 0, total: 0 };
+  const n = Number(m[1] || 1), sides = Number(m[2]), mod = m[3] ? Number(m[3].replace(/\s/g, "")) : 0;
+  const rolls = Array.from({ length: n }, () => 1 + Math.floor(Math.random() * sides));
+  return { rolls, mod, total: rolls.reduce((a, b) => a + b, 0) + mod };
+};
 // Condiciones que se ven en el tablero (Escondido/Oculto van aparte: la ficha se oculta a los demás).
 const MAP_COND_FX = {
   Inmovilizado: { cls: "rooted", Icon: Lock, color: "#C08B5C" },
@@ -5637,6 +5696,7 @@ export default function App({ onSignOut }) {
   const [campaignMap, setCampaignMap] = useState({ tokens: [] });
   const [mapSel, setMapSel] = useState(null);
   const [foeDraft, setFoeDraft] = useState("");
+  const [foeRoll, setFoeRoll] = useState(null); // última tirada del DJ con un enemigo: { id, kind, ... }
   const [stampTool, setStampTool] = useState(null);
   const mapBusy = useRef(0);
   const [campaignEncounters, setCampaignEncounters] = useState([]);
@@ -8442,7 +8502,7 @@ export default function App({ onSignOut }) {
         return { ...t, hidden, conds, name: ch?.f_name || t.name || "Personaje", color: classColor(ch?.f_class), hp: ch ? [Number(ch.hp_marked || 0), Number(ch.r_hp || 0)] : null };
       }
       if (t.kind === "pet") return { ...t, color: classColor(characters[t.ownerCharId]?.f_class) };
-      return { ...t, color: t.kind === "foe" ? "#C0504A" : "#C9A24A", img: t.imgId ? castImgs[t.imgId] : null };
+      return { ...t, color: t.kind === "foe" ? "#C0504A" : "#C9A24A", img: t.imgId ? castImgs[t.imgId] : null, ...(t.stats ? { hp: [Number(t.stats.hpMarked || 0), Number(t.stats.hp || 0)] } : {}) };
     });
 
   const addEncounter = async () => {
@@ -10731,6 +10791,122 @@ export default function App({ onSignOut }) {
                             </button>
                           )}
                         </div>
+                        {sel && sel.kind === "foe" && (() => {
+                          const st = sel.stats;
+                          const setStats = (patch) => mutateMap(viewingCampaignId, (ts) => ts.map((t) => (t.id === sel.id ? { ...t, stats: { ...(t.stats || newFoeStats()), ...patch } } : t)));
+                          if (!st)
+                            return (
+                              <div className="mh-foe">
+                                <span className="mh-foe-empty">Este enemigo no tiene estadísticas.</span>
+                                <button type="button" className="mh-btn-ghost" onClick={() => setStats({})}>
+                                  <Plus size={13} /> Añadir estadísticas base
+                                </button>
+                              </div>
+                            );
+                          const track = (label, key, max) => (
+                            <div className="mh-foe-track">
+                              <span>{label}</span>
+                              <div className="mh-foe-pips">
+                                {Array.from({ length: max }, (_, i) => (
+                                  <button
+                                    key={i}
+                                    type="button"
+                                    className={"mh-foe-pip is-" + key + (i < Number(st[key + "Marked"] || 0) ? " is-on" : "")}
+                                    aria-label={label + " " + (i + 1)}
+                                    onClick={() => setStats({ [key + "Marked"]: Number(st[key + "Marked"] || 0) === i + 1 ? i : i + 1 })}
+                                  />
+                                ))}
+                              </div>
+                              <b>
+                                {Number(st[key + "Marked"] || 0)}/{max}
+                              </b>
+                            </div>
+                          );
+                          const roll = foeRoll && foeRoll.id === sel.id ? foeRoll : null;
+                          const down = Number(st.hpMarked || 0) >= Number(st.hp || 0);
+                          return (
+                            <div className={"mh-foe" + (down ? " is-down" : "")}>
+                              <div className="mh-foe-h">
+                                <div>
+                                  <b className="mh-serif">{sel.name}</b>
+                                  <small>
+                                    Nivel {st.tier} · {st.type}
+                                    {st.base && st.base !== sel.name ? " · " + st.base : ""}
+                                  </small>
+                                </div>
+                                {down && <span className="mh-foe-ko">Derrotado</span>}
+                              </div>
+                              {st.desc && <p className="mh-foe-desc">{st.desc}</p>}
+                              {st.motives && (
+                                <p className="mh-foe-line">
+                                  <b>Motivaciones y tácticas:</b> {st.motives}
+                                </p>
+                              )}
+                              <div className="mh-foe-stats">
+                                <span>
+                                  <small>Dificultad</small>
+                                  <b>{st.difficulty}</b>
+                                </span>
+                                <span>
+                                  <small>Umbrales</small>
+                                  <b>
+                                    {st.thresholds[0]}/{st.thresholds[1]}
+                                  </b>
+                                </span>
+                                <span>
+                                  <small>Ataque</small>
+                                  <b>
+                                    {st.atk >= 0 ? "+" : ""}
+                                    {st.atk}
+                                  </b>
+                                </span>
+                              </div>
+                              {track("PV", "hp", Number(st.hp || 0))}
+                              {track("Estrés", "stress", Number(st.stress || 0))}
+                              <p className="mh-foe-line">
+                                <b>{st.attack.name}:</b> {st.attack.range} · {st.attack.damage} {st.attack.type}
+                              </p>
+                              {st.exp && (
+                                <p className="mh-foe-line">
+                                  <b>Experiencia:</b> {st.exp}
+                                </p>
+                              )}
+                              <div className="mh-foe-acts">
+                                <button type="button" className="mh-btn-ghost" onClick={() => { const r = rollExpr("1d20"); setFoeRoll({ id: sel.id, kind: "atk", d: r.rolls[0], total: r.rolls[0] + Number(st.atk || 0) }); }}>
+                                  <Dices size={13} /> Atacar (d20{st.atk >= 0 ? "+" : ""}{st.atk})
+                                </button>
+                                <button type="button" className="mh-btn-ghost" onClick={() => { const r = rollExpr(st.attack.damage); setFoeRoll({ id: sel.id, kind: "dmg", rolls: r.rolls, mod: r.mod, total: r.total }); }}>
+                                  <Swords size={13} /> Daño ({st.attack.damage})
+                                </button>
+                                {roll && (
+                                  <span className="mh-foe-roll" key={roll.total + "-" + roll.kind + "-" + (roll.d || roll.rolls?.join())}>
+                                    {roll.kind === "atk" ? (
+                                      <>
+                                        {roll.d === 20 ? "¡Crítico! " : ""}Ataque <b>{roll.total}</b> <small>(d20: {roll.d})</small>
+                                      </>
+                                    ) : (
+                                      <>
+                                        Daño <b>{roll.total}</b> <small>({roll.rolls.join(" + ")}{roll.mod ? (roll.mod > 0 ? " + " : " − ") + Math.abs(roll.mod) : ""})</small>
+                                      </>
+                                    )}
+                                  </span>
+                                )}
+                              </div>
+                              {(st.features || []).length > 0 && (
+                                <div className="mh-foe-feats">
+                                  {st.features.map((ft) => (
+                                    <p key={ft.name}>
+                                      <b>
+                                        {ft.name} · {ft.kind}:
+                                      </b>{" "}
+                                      {ft.text}
+                                    </p>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
                         <div className="mh-map-tray">
                           <div className="mh-map-tray-g">
                             <span className="mh-gm-h2">Reparto</span>
@@ -10750,7 +10926,7 @@ export default function App({ onSignOut }) {
                               onChange={(e) => setFoeDraft(e.target.value)}
                               onKeyDown={(e) => {
                                 if (e.key !== "Enter") return;
-                                placeToken({ kind: "foe", name: foeDraft.trim() || "Enemigo" });
+                                placeToken({ kind: "foe", name: foeDraft.trim() || "Bandido", stats: newFoeStats() });
                                 setFoeDraft("");
                               }}
                             />
@@ -10758,7 +10934,7 @@ export default function App({ onSignOut }) {
                               type="button"
                               className="mh-btn-ghost"
                               onClick={() => {
-                                placeToken({ kind: "foe", name: foeDraft.trim() || "Enemigo" });
+                                placeToken({ kind: "foe", name: foeDraft.trim() || "Bandido", stats: newFoeStats() });
                                 setFoeDraft("");
                               }}
                             >
