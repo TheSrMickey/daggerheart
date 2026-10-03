@@ -2552,6 +2552,15 @@ const sharedStyles = `
   .mh-map-grid { position: absolute; inset: 0; pointer-events: none; background-image: linear-gradient(rgba(255,255,255,.28) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.28) 1px, transparent 1px); background-size: calc(100% / ${MAP_COLS}) calc(100% / ${MAP_ROWS}); }
   .mh-map-range { position: absolute; box-sizing: border-box; background: color-mix(in srgb, var(--rc) 58%, transparent); border: 0 solid var(--rc); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rc) 35%, transparent); pointer-events: none; z-index: 1; }
   .mh-map-menu { min-width: 190px; }
+  .mh-map-menu { min-width: 230px; max-width: 280px; }
+  .mh-map-menu-list { max-height: 340px; overflow-y: auto; }
+  .mh-map-menu-sec { padding: 7px 10px 3px; font: 700 9.5px Inter, system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--mh-muted); }
+  .mh-map-menu { width: 256px; min-width: 0; max-width: calc(100% - 8px); }
+  .mh-map-menu button { align-items: flex-start; }
+  .mh-map-menu button > svg:first-child { margin-top: 2px; flex: none; }
+  .mh-map-menu .mh-map-menu-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  .mh-map-menu .mh-map-menu-t b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mh-map-menu .mh-map-menu-t small { font-size: 10.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .mh-map-menu-h { padding: 6px 10px 4px; font: 700 10.5px Inter, system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--mh-muted); border-bottom: 1px solid var(--mh-line); margin-bottom: 3px; }
   .mh-map-menu button span { flex: 1; }
   .mh-map-menu button small { color: var(--mh-muted); font-weight: 500; font-size: 11px; }
@@ -4641,11 +4650,14 @@ function TokenMenu({ menu, items, onClose }) {
   return (
     <div className="mh-map-menu" role="menu" style={{ left: Math.max(4, menu.x), top: Math.max(4, menu.y) }} onPointerDown={(e) => e.stopPropagation()} onContextMenu={(e) => e.preventDefault()}>
       {menu.title && <div className="mh-map-menu-h">{menu.title}</div>}
+      <div className="mh-map-menu-list">
       {items.map((it, i) => {
         const MI = it.Icon || Crosshair;
+        const head = it.section && it.section !== items[i - 1]?.section;
         return (
+          <Fragment key={it.key}>
+          {head && <div className="mh-map-menu-sec">{it.section}</div>}
           <button
-            key={it.key}
             type="button"
             role="menuitem"
             autoFocus={i === 0}
@@ -4657,12 +4669,16 @@ function TokenMenu({ menu, items, onClose }) {
             }}
           >
             <MI size={13} style={it.color ? { color: it.color } : undefined} />
-            <span>{it.label}</span>
-            {it.sub && <small>{it.sub}</small>}
+            <span className="mh-map-menu-t">
+              <b>{it.label}</b>
+              {it.sub && <small>{it.sub}</small>}
+            </span>
             {it.on && <Check size={12} className="mh-map-menu-ck" />}
           </button>
+          </Fragment>
         );
       })}
+      </div>
     </div>
   );
 }
@@ -4714,11 +4730,12 @@ function MapBoard({ menuFor, fx, bg, tokens, props = [], terrain = [], stampTool
     e.preventDefault();
     e.stopPropagation();
     const r = ref.current.getBoundingClientRect();
-    const n = 1 + ((menuFor && menuFor(t)) || []).length;
+    const n = ((menuFor && menuFor(t)) || []).length;
+    if (!n) return;
     // Que el menú quepa en la parte visible del tablero (puede estar recortado por el visor).
     const v = (e.currentTarget.closest(".mh-map-view") || e.currentTarget.closest(".mh-map") || document.body).getBoundingClientRect();
-    const mx = Math.max(v.left + 4, Math.min(e.clientX, v.right - 204));
-    const my = Math.max(v.top + 4, Math.min(e.clientY, v.bottom - 40 - n * 34));
+    const mx = Math.max(v.left + 4, Math.min(e.clientX, v.right - 264));
+    const my = Math.max(v.top + 4, Math.min(e.clientY, v.bottom - 40 - Math.min(n * 34 + 60, 380)));
     setMenu({ id: t.id, title: t.name, x: mx - r.left, y: my - r.top });
   };
   const clamp = (v, max) => Math.max(0, Math.min(max - 1, v));
@@ -4949,7 +4966,8 @@ function MapBoard({ menuFor, fx, bg, tokens, props = [], terrain = [], stampTool
       {menu && (() => {
         const t = tokens.find((x) => x.id === menu.id);
         if (!t) return null;
-        const items = [{ key: "range", Icon: Crosshair, label: rangeId === t.id ? "Ocultar alcance" : "Ver alcance", run: () => setRangeId(rangeId === t.id ? null : t.id) }, ...((menuFor && menuFor(t)) || [])];
+        const items = (menuFor && menuFor(t)) || [];
+        if (!items.length) return null;
         return <TokenMenu menu={menu} items={items} onClose={() => setMenu(null)} />;
       })()}
     </div>
@@ -4982,11 +5000,12 @@ function IsoBoard({ menuFor, anim, tokens, props = [], terrain = [], stampTool, 
     e.stopPropagation();
     if (t.vanished) return;
     const r = boxRef.current.getBoundingClientRect();
-    const n = 1 + ((menuFor && menuFor(t)) || []).length;
+    const n = ((menuFor && menuFor(t)) || []).length;
+    if (!n) return;
     // Que el menú quepa en la parte visible del tablero (puede estar recortado por el visor).
     const v = (e.currentTarget.closest(".mh-map-view") || e.currentTarget.closest(".mh-map") || document.body).getBoundingClientRect();
-    const mx = Math.max(v.left + 4, Math.min(e.clientX, v.right - 204));
-    const my = Math.max(v.top + 4, Math.min(e.clientY, v.bottom - 40 - n * 34));
+    const mx = Math.max(v.left + 4, Math.min(e.clientX, v.right - 264));
+    const my = Math.max(v.top + 4, Math.min(e.clientY, v.bottom - 40 - Math.min(n * 34 + 60, 380)));
     setMenu({ id: t.id, title: t.name, x: mx - r.left, y: my - r.top });
   };
   const steps = useMoveFx(tokens.map((t) => (drag && drag.id === t.id ? [t.id, drag.x, drag.y] : [t.id, t.x, t.y])));
@@ -5195,7 +5214,8 @@ function IsoBoard({ menuFor, anim, tokens, props = [], terrain = [], stampTool, 
       {menu && (() => {
         const t = tokens.find((x) => x.id === menu.id);
         if (!t) return null;
-        const items = [{ key: "range", Icon: Crosshair, label: rangeId === t.id ? "Ocultar alcance" : "Ver alcance", run: () => setRangeId(rangeId === t.id ? null : t.id) }, ...((menuFor && menuFor(t)) || [])];
+        const items = (menuFor && menuFor(t)) || [];
+        if (!items.length) return null;
         return <TokenMenu menu={menu} items={items} onClose={() => setMenu(null)} />;
       })()}
       {rangeTok && (
@@ -11507,6 +11527,219 @@ export default function App({ onSignOut }) {
                   const entries = getJournal(c);
                   const spellTraitKey = spellcastTraitFor(c.f_class, c.f_subclass);
                   const spellTraitInfo = TRAITS.find((t) => t.key === spellTraitKey);
+                  // Filas de la pestaña Acciones (subclase, clase, Esperanza, ascendencia, comunidad, transformación).
+                  // También las usa el menú del clic derecho del tablero.
+                  const buildActionRows = () => {
+                    const items = [];
+                    const openDetail = (detail) => () => setViewingCardDetail(detail);
+
+                  if (subclassEntry) {
+                    const subclassBadge = currentTier <= 1 ? "Fundación" : currentTier === 2 ? "Especialización" : "Maestría";
+                    const ELEMENT_ICONS = { Fuego: Flame, Tierra: Mountain, Agua: Droplets, Aire: Wind };
+                    const ELEMENT_COLORS = { Fuego: "#D9644E", Tierra: "#C08B5C", Agua: "#5E93B3", Aire: "#8FB8C9" };
+                    const isElemental = subclassEntry.key === "Guardián de los Elementos" && subclassEntry.features;
+                    const activeElement = isElemental ? c.f_elemental_active : null;
+                    items.push({
+                      key: "subclass",
+                      Icon: ShieldHalf,
+                      color: activeElement ? ELEMENT_COLORS[activeElement] : "var(--acc)",
+                      kicker: "Subclase · " + subclassBadge,
+                      title: subclassEntry.key,
+                      summary: isElemental ? (activeElement ? "Canalizando " + activeElement : "Ningún elemento canalizado") : subclassEntry.blurb,
+                      costText: isElemental ? subclassEntry.blurb : null,
+                      onClick: openDetail({
+                        kicker: `Subclase · ${subclassBadge}`,
+                        title: subclassEntry.key,
+                        text: subclassEntry.blurb,
+                        features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento", "Escuela de la Guerra", "Bruja Lunar", "Bruja del Seto", "Pacto del Eterno", "Pacto del Iracundo", "Titán", "Artista Marcial", "Gremio del Verdugo", "Gremio del Envenenador", "Nigromancia", "Teúrgia", "Orden del Licántropo", "Orden del Mutante", "Orden del Espectro"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
+                        image: subclassEntry.image,
+                        bigStyle: true,
+                        ...(isElemental ? { elementalAction: true } : {}),
+                        ...(subclassEntry.key === "Guardián de la Renovación" ? { renewalAction: true } : {}),
+                        ...(subclassEntry.key === "Vengador" ? { vengeAction: true } : {}),
+                        ...(subclassEntry.key === "Vínculo Bestial" ? { companionNav: true } : {}),
+                        ...(subclassEntry.key === "Caminante Nocturno" ? { shadowStep: true } : {}),
+                        ...(subclassEntry.key === "Portador Divino" ? { divineActs: true } : {}),
+                        ...(subclassEntry.key === "Centinela Alado" ? { sentinelActs: true } : {}),
+                        ...(subclassEntry.key === "Origen Elemental" ? { originActs: true } : {}),
+                        ...(subclassEntry.key === "Origen Primigenio" ? { primalActs: true } : {}),
+                        ...(subclassEntry.key === "Llamado del Valiente" ? { braveActs: true } : {}),
+                        ...(subclassEntry.key === "Llamado del Cazador" ? { slayerCard: true } : {}),
+                        ...(subclassEntry.key === "Bruja Lunar" ? { moonActs: true } : {}),
+                        ...(subclassEntry.key === "Bruja del Seto" ? { hedgeActs: true } : {}),
+                        ...(subclassEntry.key === "Pacto del Eterno" ? { endlessActs: true } : {}),
+                        ...(subclassEntry.key === "Pacto del Iracundo" ? { wrathActs: true } : {}),
+                        ...(subclassEntry.key === "Artista Marcial" ? { martialActs: true } : {}),
+                        ...(subclassEntry.key === "Gremio del Envenenador" ? { poisonActs: true } : {}),
+                        ...(subclassEntry.key === "Nigromancia" ? { necroActs: true } : {}),
+                        ...(subclassEntry.key === "Teúrgia" ? { theurgyActs: true } : {}),
+                        ...(subclassEntry.key === "Orden del Licántropo" ? { lycanActs: true } : {}),
+                        ...(subclassEntry.key === "Orden del Mutante" ? { mutantActs: true } : {}),
+                        ...(subclassEntry.key === "Orden del Espectro" ? { specterActs: true } : {}),
+                      }),
+                    });
+                  }
+
+                  classFeatures.forEach((f) => {
+                    const isBeastformLink = f.name === "Forma de Bestia";
+                    items.push({
+                      key: "cf-" + f.name,
+                      Icon: isBeastformLink ? PawPrint : Swords,
+                      color: "var(--acc)",
+                      kicker: "Característica de clase",
+                      title: f.name,
+                      summary: f.text,
+                      ...(f.name === "Dados de Oración" && c.f_class === "Serafín" ? { summary: getPrayerDice(c).length ? "Te quedan: " + getPrayerDice(c).join(" · ") + " (d4)" : c.f_prayer_rolled ? "Has gastado tus dados · vuelven al descanso largo" : "Sin tirar: tíralos al empezar la sesión", cost: null } : {}),
+                      onClick: openDetail({ kicker: "Característica de clase", title: f.name, text: f.text, image: f.image, bigStyle: true, ...(c.f_class === "Druida" && /forma de bestia/i.test(f.name) ? { navigateAction: { tab: "beastforms", label: "Ver Formas de Bestia" } } : {}) }),
+                      extra: isBeastformLink && (
+                        <button
+                          type="button"
+                          className="mh-arow-link"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDetailTab("beastforms");
+                          }}
+                        >
+                          Formas
+                          <ChevronRight size={12} />
+                        </button>
+                      ),
+                    });
+                  });
+
+                  if (hopeFeature) {
+                    items.push({
+                      key: "hope",
+                      Icon: Sparkles,
+                      color: "#E3B04B",
+                      kicker: "Característica de Esperanza",
+                      title: hopeFeature.name,
+                      summary: hopeFeature.text,
+                      cost: { label: hopeFeature.cost + " Esperanza", kind: "hope" },
+                      onClick: openDetail({ kicker: "Característica de Esperanza", title: hopeFeature.name, text: hopeFeature.text, bigStyle: true, accent: "#E3B04B", stat: { label: "Coste en Esperanza", value: hopeFeature.cost }, hopeAction: { cost: hopeFeature.cost } }),
+                    });
+                  }
+
+                  if (c.f_ancestry) {
+                    c.f_ancestry.split(" + ").forEach((name) => {
+                      const ancEntry = ANCESTRIES.find((an) => an.key === name);
+                      items.push({
+                        key: "anc-" + name,
+                        Icon: User,
+                        color: "#6FA3C0",
+                        kicker: "Ascendencia",
+                        title: name,
+                        summary: ancEntry?.blurb || "",
+                        onClick: openDetail({ kicker: "Ascendencia" + (ancList(c).length > 1 ? " · " + (ancList(c).indexOf(name) === 0 ? "1.ª" : "2.ª") + " característica" : ""), title: name, text: ancEntry?.blurb || "", features: (name === "Dracona" && c.f_breath_element ? (ancEntry?.features || []).map((f) => (f.name === "Aliento Elemental" ? { ...f, element: c.f_breath_element } : f)) : ancEntry?.features || []).filter((f, fi) => ancFeat(c, name, fi)), image: ancEntry?.image, bigStyle: true, ancestryKey: name }),
+                      });
+                    });
+                  }
+
+                  if (c.f_community) {
+                    const blurb = COMMUNITIES.find((cm) => cm.key === c.f_community)?.blurb || "";
+                    items.push({
+                      key: "community",
+                      Icon: Home,
+                      color: "#C08B5C",
+                      kicker: "Comunidad",
+                      title: c.f_community,
+                      summary: blurb,
+                      onClick: openDetail({
+                        kicker: "Comunidad",
+                        title: c.f_community,
+                        text: blurb,
+                        features: [
+                          ...(COMMUNITIES.find((cm) => cm.key === c.f_community)?.features || []),
+                          ...(() => {
+                            try {
+                              return JSON.parse(c.f_principles || "[]").filter((x) => x.text).map((x) => ({ name: x.kind, text: x.text }));
+                            } catch (e) {
+                              return [];
+                            }
+                          })(),
+                        ],
+                        bigStyle: true,
+                      }),
+                    });
+                  }
+
+                  if (c.f_transformation) {
+                    const transEntry = TRANSFORMATIONS.find((t) => t.key === c.f_transformation);
+                    if (transEntry) {
+                      const activatableFeature = transEntry.features?.find((f) => f.activatable);
+                      const isActive = activatableFeature && c.f_transformation_form_active === activatableFeature.name;
+                      items.push({
+                        key: "transformation",
+                        Icon: Moon,
+                        color: TRANSFORM_THEMES[activatableFeature?.name]?.color || "#A58BE8",
+                        kicker: "Transformación",
+                        title: transEntry.key,
+                        summary: isActive ? activatableFeature.name + " activa" : transEntry.blurb,
+                        active: isActive,
+                        cost: activatableFeature ? { label: isActive ? "Activa" : "1 Estrés", kind: isActive ? "active" : "stress" } : null,
+                        onClick: openDetail({ kicker: "Transformación", title: transEntry.key, text: transEntry.blurb, features: transEntry.features, bigStyle: true, accent: "#A58BE8", transformForm: activatableFeature?.name }),
+                        extra: activatableFeature && (
+                          <button
+                            type="button"
+                            className="mh-arow-link"
+                            title={isActive ? "Salir de " + activatableFeature.name : "Activar " + activatableFeature.name + " (marca 1 Estrés)"}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleTransformationForm(viewingCharId, activatableFeature.name, isActive);
+                            }}
+                          >
+                            {isActive ? "Salir" : "Activar"}
+                          </button>
+                        ),
+                      });
+                    }
+                  }
+                    return items;
+                  };
+                  const domainCardDetail = (cardData) => ({
+                    ...(c.f_beastform && cardData.type === "Hechizo" ? { beastLocked: c.f_beastform } : {}),
+                    kicker: `${cardData.domain} · ${cardData.type} · Nivel ${cardData.level} · Recuperación ${cardData.recall}`,
+                    title: cardData.key,
+                    text: cardData.text,
+                    image: cardData.image,
+                    accent: DOMAIN_COLORS[cardData.domain] || "var(--acc)",
+                    domain: { name: cardData.domain, type: cardData.type, level: cardData.level, recall: cardData.recall },
+                    bigStyle: true,
+                    tags: [cardData.type, "Nivel " + cardData.level, "Recuperación " + cardData.recall],
+                  });
+                  // Menú del clic derecho en el tablero: atacar con tus armas y abrir tus cartas con acciones.
+                  const boardActions = (t) => {
+                    const foe = t.kind === "foe" || t.kind === "npc";
+                    const out = [];
+                    const weapons = [primaryWeapon, secondaryWeapon].filter((w) => w && w.trait && w.trait !== "—" && /d\d/.test(w.damage || ""));
+                    const target = foe ? { targetChosen: true, targetId: t.id, targetName: t.name } : {};
+                    const attack = (name, trait, value, damage) => () => {
+                      if (foe) postCampaignEvent(viewingCharId, "⚔️ Ataca a " + t.name + " con " + name);
+                      rollTraitCheck(viewingCharId, trait, value, { name, damage, ...target });
+                    };
+                    weapons.forEach((w) => {
+                      const tk = TRAITS.find((tr) => tr.label === w.trait)?.key;
+                      out.push({ section: foe ? "Atacar a " + t.name : "Armas", key: "atk-" + w.key, Icon: Swords, color: "#C0504A", label: (foe ? "Con " : "Atacar con ") + w.key, sub: w.trait + " · " + w.damage, run: attack(w.key, w.trait, Number(c[tk] || 0) + (equipMods[tk] || 0), w.damage) });
+                    });
+                    if (brawlerArmed(c)) {
+                      const bt = TRAITS.find((tr) => tr.label === (c.f_brawl_trait || "Fuerza")) || TRAITS[1];
+                      out.push({ section: foe ? "Atacar a " + t.name : "Armas", key: "atk-brawl", Icon: HandFist, color: "#C0504A", label: (foe ? "Con " : "Atacar con ") + BRAWLER_STRIKE, sub: bt.label, run: attack(BRAWLER_STRIKE, bt.label, Number(c[bt.key] || 0) + (equipMods[bt.key] || 0), "d8+d6 físico") });
+                    }
+                    const openRow = (row) => () => {
+                      row.onClick();
+                      setViewingCardDetail((d) => (d && !d.rowIcon ? { ...d, rowIcon: row.Icon } : d));
+                    };
+                    buildActionRows().forEach((row) =>
+                      out.push({ section: "Clase y origen", key: "row-" + row.key, Icon: row.Icon, color: typeof row.color === "string" && !row.color.startsWith("var(") ? row.color : undefined, label: row.title, sub: row.kicker, run: openRow(row) })
+                    );
+                    domainCardKeys.forEach((k) => {
+                      const cd = findDomainCard(k);
+                      if (!cd) return;
+                      const locked = !!c.f_beastform && cd.type === "Hechizo";
+                      out.push({ section: "Cartas de dominio", key: "dom-" + k, Icon: DOMAIN_ICONS[cd.domain] || Sparkles, color: DOMAIN_COLORS[cd.domain], label: cd.key, sub: locked ? "Bloqueada en Forma de Bestia" : cd.type, run: () => setViewingCardDetail(domainCardDetail(cd)) });
+                    });
+                    return out;
+                  };
 
                   return (
                     <div>
@@ -12492,170 +12725,7 @@ export default function App({ onSignOut }) {
 
                       {activeTab === "actions" && (() => {
                         // Lista de acciones: cada fila con icono, tipo, nombre, resumen y coste.
-                        const items = [];
-                        const openDetail = (detail) => () => setViewingCardDetail(detail);
-
-                        if (subclassEntry) {
-                          const subclassBadge = currentTier <= 1 ? "Fundación" : currentTier === 2 ? "Especialización" : "Maestría";
-                          const ELEMENT_ICONS = { Fuego: Flame, Tierra: Mountain, Agua: Droplets, Aire: Wind };
-                          const ELEMENT_COLORS = { Fuego: "#D9644E", Tierra: "#C08B5C", Agua: "#5E93B3", Aire: "#8FB8C9" };
-                          const isElemental = subclassEntry.key === "Guardián de los Elementos" && subclassEntry.features;
-                          const activeElement = isElemental ? c.f_elemental_active : null;
-                          items.push({
-                            key: "subclass",
-                            Icon: ShieldHalf,
-                            color: activeElement ? ELEMENT_COLORS[activeElement] : "var(--acc)",
-                            kicker: "Subclase · " + subclassBadge,
-                            title: subclassEntry.key,
-                            summary: isElemental ? (activeElement ? "Canalizando " + activeElement : "Ningún elemento canalizado") : subclassEntry.blurb,
-                            costText: isElemental ? subclassEntry.blurb : null,
-                            onClick: openDetail({
-                              kicker: `Subclase · ${subclassBadge}`,
-                              title: subclassEntry.key,
-                              text: subclassEntry.blurb,
-                              features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento", "Escuela de la Guerra", "Bruja Lunar", "Bruja del Seto", "Pacto del Eterno", "Pacto del Iracundo", "Titán", "Artista Marcial", "Gremio del Verdugo", "Gremio del Envenenador", "Nigromancia", "Teúrgia", "Orden del Licántropo", "Orden del Mutante", "Orden del Espectro"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
-                              image: subclassEntry.image,
-                              bigStyle: true,
-                              ...(isElemental ? { elementalAction: true } : {}),
-                              ...(subclassEntry.key === "Guardián de la Renovación" ? { renewalAction: true } : {}),
-                              ...(subclassEntry.key === "Vengador" ? { vengeAction: true } : {}),
-                              ...(subclassEntry.key === "Vínculo Bestial" ? { companionNav: true } : {}),
-                              ...(subclassEntry.key === "Caminante Nocturno" ? { shadowStep: true } : {}),
-                              ...(subclassEntry.key === "Portador Divino" ? { divineActs: true } : {}),
-                              ...(subclassEntry.key === "Centinela Alado" ? { sentinelActs: true } : {}),
-                              ...(subclassEntry.key === "Origen Elemental" ? { originActs: true } : {}),
-                              ...(subclassEntry.key === "Origen Primigenio" ? { primalActs: true } : {}),
-                              ...(subclassEntry.key === "Llamado del Valiente" ? { braveActs: true } : {}),
-                              ...(subclassEntry.key === "Llamado del Cazador" ? { slayerCard: true } : {}),
-                              ...(subclassEntry.key === "Bruja Lunar" ? { moonActs: true } : {}),
-                              ...(subclassEntry.key === "Bruja del Seto" ? { hedgeActs: true } : {}),
-                              ...(subclassEntry.key === "Pacto del Eterno" ? { endlessActs: true } : {}),
-                              ...(subclassEntry.key === "Pacto del Iracundo" ? { wrathActs: true } : {}),
-                              ...(subclassEntry.key === "Artista Marcial" ? { martialActs: true } : {}),
-                              ...(subclassEntry.key === "Gremio del Envenenador" ? { poisonActs: true } : {}),
-                              ...(subclassEntry.key === "Nigromancia" ? { necroActs: true } : {}),
-                              ...(subclassEntry.key === "Teúrgia" ? { theurgyActs: true } : {}),
-                              ...(subclassEntry.key === "Orden del Licántropo" ? { lycanActs: true } : {}),
-                              ...(subclassEntry.key === "Orden del Mutante" ? { mutantActs: true } : {}),
-                              ...(subclassEntry.key === "Orden del Espectro" ? { specterActs: true } : {}),
-                            }),
-                          });
-                        }
-
-                        classFeatures.forEach((f) => {
-                          const isBeastformLink = f.name === "Forma de Bestia";
-                          items.push({
-                            key: "cf-" + f.name,
-                            Icon: isBeastformLink ? PawPrint : Swords,
-                            color: "var(--acc)",
-                            kicker: "Característica de clase",
-                            title: f.name,
-                            summary: f.text,
-                            ...(f.name === "Dados de Oración" && c.f_class === "Serafín" ? { summary: getPrayerDice(c).length ? "Te quedan: " + getPrayerDice(c).join(" · ") + " (d4)" : c.f_prayer_rolled ? "Has gastado tus dados · vuelven al descanso largo" : "Sin tirar: tíralos al empezar la sesión", cost: null } : {}),
-                            onClick: openDetail({ kicker: "Característica de clase", title: f.name, text: f.text, image: f.image, bigStyle: true, ...(c.f_class === "Druida" && /forma de bestia/i.test(f.name) ? { navigateAction: { tab: "beastforms", label: "Ver Formas de Bestia" } } : {}) }),
-                            extra: isBeastformLink && (
-                              <button
-                                type="button"
-                                className="mh-arow-link"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setDetailTab("beastforms");
-                                }}
-                              >
-                                Formas
-                                <ChevronRight size={12} />
-                              </button>
-                            ),
-                          });
-                        });
-
-                        if (hopeFeature) {
-                          items.push({
-                            key: "hope",
-                            Icon: Sparkles,
-                            color: "#E3B04B",
-                            kicker: "Característica de Esperanza",
-                            title: hopeFeature.name,
-                            summary: hopeFeature.text,
-                            cost: { label: hopeFeature.cost + " Esperanza", kind: "hope" },
-                            onClick: openDetail({ kicker: "Característica de Esperanza", title: hopeFeature.name, text: hopeFeature.text, bigStyle: true, accent: "#E3B04B", stat: { label: "Coste en Esperanza", value: hopeFeature.cost }, hopeAction: { cost: hopeFeature.cost } }),
-                          });
-                        }
-
-                        if (c.f_ancestry) {
-                          c.f_ancestry.split(" + ").forEach((name) => {
-                            const ancEntry = ANCESTRIES.find((an) => an.key === name);
-                            items.push({
-                              key: "anc-" + name,
-                              Icon: User,
-                              color: "#6FA3C0",
-                              kicker: "Ascendencia",
-                              title: name,
-                              summary: ancEntry?.blurb || "",
-                              onClick: openDetail({ kicker: "Ascendencia" + (ancList(c).length > 1 ? " · " + (ancList(c).indexOf(name) === 0 ? "1.ª" : "2.ª") + " característica" : ""), title: name, text: ancEntry?.blurb || "", features: (name === "Dracona" && c.f_breath_element ? (ancEntry?.features || []).map((f) => (f.name === "Aliento Elemental" ? { ...f, element: c.f_breath_element } : f)) : ancEntry?.features || []).filter((f, fi) => ancFeat(c, name, fi)), image: ancEntry?.image, bigStyle: true, ancestryKey: name }),
-                            });
-                          });
-                        }
-
-                        if (c.f_community) {
-                          const blurb = COMMUNITIES.find((cm) => cm.key === c.f_community)?.blurb || "";
-                          items.push({
-                            key: "community",
-                            Icon: Home,
-                            color: "#C08B5C",
-                            kicker: "Comunidad",
-                            title: c.f_community,
-                            summary: blurb,
-                            onClick: openDetail({
-                              kicker: "Comunidad",
-                              title: c.f_community,
-                              text: blurb,
-                              features: [
-                                ...(COMMUNITIES.find((cm) => cm.key === c.f_community)?.features || []),
-                                ...(() => {
-                                  try {
-                                    return JSON.parse(c.f_principles || "[]").filter((x) => x.text).map((x) => ({ name: x.kind, text: x.text }));
-                                  } catch (e) {
-                                    return [];
-                                  }
-                                })(),
-                              ],
-                              bigStyle: true,
-                            }),
-                          });
-                        }
-
-                        if (c.f_transformation) {
-                          const transEntry = TRANSFORMATIONS.find((t) => t.key === c.f_transformation);
-                          if (transEntry) {
-                            const activatableFeature = transEntry.features?.find((f) => f.activatable);
-                            const isActive = activatableFeature && c.f_transformation_form_active === activatableFeature.name;
-                            items.push({
-                              key: "transformation",
-                              Icon: Moon,
-                              color: TRANSFORM_THEMES[activatableFeature?.name]?.color || "#A58BE8",
-                              kicker: "Transformación",
-                              title: transEntry.key,
-                              summary: isActive ? activatableFeature.name + " activa" : transEntry.blurb,
-                              active: isActive,
-                              cost: activatableFeature ? { label: isActive ? "Activa" : "1 Estrés", kind: isActive ? "active" : "stress" } : null,
-                              onClick: openDetail({ kicker: "Transformación", title: transEntry.key, text: transEntry.blurb, features: transEntry.features, bigStyle: true, accent: "#A58BE8", transformForm: activatableFeature?.name }),
-                              extra: activatableFeature && (
-                                <button
-                                  type="button"
-                                  className="mh-arow-link"
-                                  title={isActive ? "Salir de " + activatableFeature.name : "Activar " + activatableFeature.name + " (marca 1 Estrés)"}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    toggleTransformationForm(viewingCharId, activatableFeature.name, isActive);
-                                  }}
-                                >
-                                  {isActive ? "Salir" : "Activar"}
-                                </button>
-                              ),
-                            });
-                          }
-                        }
+                        const items = buildActionRows();
 
                         // Coste detectado en el texto: "marca un Estrés", "gasta 2 de Esperanza", "a voluntad".
                         const NUM = { un: 1, una: 1, dos: 2, tres: 3 };
@@ -14723,33 +14793,7 @@ export default function App({ onSignOut }) {
                                             selectedId={mapSel}
                                             onSelect={setMapSel}
                                             compact={!wide}
-                                            menuFor={(t) => {
-                                              // Tu ficha: tus condiciones. Un enemigo o PNJ: atacarle con tus armas (ya con él como objetivo).
-                                              if (t.kind === "pc" && t.charId === viewingCharId) {
-                                                const mine = getConditions(c);
-                                                return conditionPresetsFor(c).map((n) => {
-                                                  const on = mine.includes(n) || (n === "Oculto" && mine.includes("Escondido"));
-                                                  return { key: "c-" + n, Icon: CONDITION_ICONS[n] || AlertCircle, color: CONDITION_THEME_COLOR[n], label: n, sub: on ? "Quitar" : "", on, run: () => toggleCondition(viewingCharId, n) };
-                                                });
-                                              }
-                                              if (t.kind !== "foe" && t.kind !== "npc") return [];
-                                              return [primaryWeapon, secondaryWeapon]
-                                                .filter((w) => w && w.trait && w.trait !== "—" && /d\d/.test(w.damage || ""))
-                                                .map((w) => {
-                                                  const tk = TRAITS.find((tr) => tr.label === w.trait)?.key;
-                                                  return {
-                                                    key: "atk-" + w.key,
-                                                    Icon: Swords,
-                                                    color: "#C0504A",
-                                                    label: "Atacar con " + w.key,
-                                                    sub: w.trait,
-                                                    run: () => {
-                                                      postCampaignEvent(viewingCharId, "⚔️ Ataca a " + t.name + " con " + w.key);
-                                                      rollTraitCheck(viewingCharId, w.trait, Number(c[tk] || 0) + (equipMods[tk] || 0), { name: w.key, damage: w.damage, targetChosen: true, targetId: t.id, targetName: t.name });
-                                                    },
-                                                  };
-                                                });
-                                            }}
+                                            menuFor={(t) => (t.kind === "pet" ? [] : boardActions(t))}
                                           />
                                         </MapViewport>
                                         <div className="mh-stg-scene-top mh-map-top">
