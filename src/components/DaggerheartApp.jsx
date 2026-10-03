@@ -2652,6 +2652,42 @@ const sharedStyles = `
   .mh-map-tk.is-npc .mh-map-face, .mh-map-tk.is-foe .mh-map-face { background: #221C2B; }
   .mh-map-tk.is-foe .mh-map-face { background: #6B2F2F; }
   .mh-map-face img { width: 100%; height: 100%; object-fit: cover; object-position: center 12%; pointer-events: none; }
+  /* Condiciones en el tablero */
+  .mh-map-fx { position: absolute; left: 10%; top: 10%; width: 80%; height: 80%; border-radius: 26%; pointer-events: none; box-sizing: border-box; }
+  .mh-map-fx.fx-rooted { z-index: 3; inset: 3%; width: auto; height: auto; border: 3px dashed #C08B5C; border-radius: 30%; animation: mh-rooted 1.8s ease-in-out infinite; }
+  @keyframes mh-rooted { 0%, 100% { scale: 1; opacity: .9; } 50% { scale: .94; opacity: 1; } }
+  .mh-map-fx.fx-vuln { z-index: 1; box-shadow: 0 0 10px 4px rgba(217,100,78,.8); animation: mh-vuln 1.3s ease-in-out infinite; }
+  @keyframes mh-vuln { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
+  .mh-map-tk.is-c-ko .mh-map-face { filter: grayscale(.9) brightness(.8); rotate: -90deg; }
+  .mh-map-tk.is-c-ko .mh-map-face > span { rotate: 0deg; }
+  .mh-map-fx.fx-ko { z-index: 3; overflow: visible; }
+  .mh-map-fx.fx-ko b { position: absolute; right: -8%; top: -10%; color: #E9DDFB; font: 800 clamp(9px, 1.2vw, 13px)/1 Inter, system-ui, sans-serif; text-shadow: 0 1px 2px rgba(0,0,0,.6); opacity: 0; animation: mh-zz 2.4s ease-in-out infinite; }
+  .mh-map-fx.fx-ko b + b { animation-delay: 1.2s; }
+  @keyframes mh-zz { 0% { opacity: 0; translate: 0 0; scale: .6; } 30% { opacity: 1; } 100% { opacity: 0; translate: 40% -120%; scale: 1.2; } }
+  .mh-map-tk.is-c-fly .mh-map-face { animation: mh-fly 2.2s ease-in-out infinite; }
+  @keyframes mh-fly { 0%, 100% { translate: 0 -12%; } 50% { translate: 0 -22%; } }
+  .mh-map-fx.fx-fly { z-index: 1; left: 22%; width: 56%; top: auto; bottom: 0; height: 12%; border-radius: 50%; background: rgba(0,0,0,.45); filter: blur(2px); animation: mh-fly-shadow 2.2s ease-in-out infinite; }
+  @keyframes mh-fly-shadow { 0%, 100% { scale: 1; opacity: .8; } 50% { scale: .8; opacity: .55; } }
+  .mh-map-tk.is-c-shell .mh-map-face { scale: .82; }
+  .mh-map-fx.fx-shell { z-index: 3; inset: 6%; width: auto; height: auto; border-radius: 50% 50% 30% 30%; border: 3px solid #6E8B5A; background: repeating-linear-gradient(45deg, rgba(110,139,90,.35) 0 4px, rgba(110,139,90,.15) 4px 8px); }
+  .mh-map-conds { position: absolute; z-index: 4; left: 2%; top: 2%; display: flex; gap: 1px; width: 100%; pointer-events: none; }
+  .mh-map-conds i { width: 28%; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; color: #fff; border: 1.5px solid #fff; box-sizing: border-box; box-shadow: 0 1px 3px rgba(0,0,0,.45); }
+  .mh-map-tk.is-vanished > .mh-map-fx, .mh-map-tk.is-vanished > .mh-map-conds { display: none; }
+  .mh-iso-ring { fill: none; stroke-width: 3; pointer-events: none; transform-box: fill-box; transform-origin: center; }
+  .mh-iso-ring.ring-rooted { stroke-dasharray: 6 4; animation: mh-rooted 1.8s ease-in-out infinite; }
+  .mh-iso-ring.ring-vuln { stroke-width: 4; filter: drop-shadow(0 0 4px #D9644E); animation: mh-vuln 1.3s ease-in-out infinite; }
+  .mh-iso-ring.ring-shell { fill: rgba(110,139,90,.3); }
+  .mh-iso-ring.ring-ko, .mh-iso-ring.ring-fly { display: none; }
+  .mh-iso-tk.is-c-ko > rect, .mh-iso-tk.is-c-ko > image, .mh-iso-tk.is-c-ko > text { filter: grayscale(.9) brightness(.8); }
+  .mh-iso-zz text { fill: #E9DDFB; font-weight: 800; font-family: Inter, system-ui, sans-serif; stroke: rgba(0,0,0,.5); stroke-width: 2px; paint-order: stroke; transform-box: fill-box; animation: mh-iso-zz 2.4s ease-in-out infinite; opacity: 0; }
+  .mh-iso-zz text + text { animation-delay: 1.2s; }
+  @keyframes mh-iso-zz { 0% { opacity: 0; transform: translate(0, 0); } 30% { opacity: 1; } 100% { opacity: 0; transform: translate(6px, -14px); } }
+  .mh-iso-tk.is-c-fly > rect, .mh-iso-tk.is-c-fly > image, .mh-iso-tk.is-c-fly > text, .mh-iso-tk.is-c-fly > .mh-iso-cond, .mh-iso-tk.is-c-fly > .mh-iso-zz { animation: mh-iso-fly 2.2s ease-in-out infinite; }
+  @keyframes mh-iso-fly { 0%, 100% { transform: translateY(-10px); } 50% { transform: translateY(-17px); } }
+  .mh-iso-tk.is-c-fly > .mh-iso-shadow { transform-box: fill-box; transform-origin: center; animation: mh-fly-shadow 2.2s ease-in-out infinite; }
+  .mh-iso-tk.is-c-shell > rect { opacity: .85; }
+  .mh-iso-tk.is-vanished > .mh-iso-ring, .mh-iso-tk.is-vanished > .mh-iso-cond, .mh-iso-tk.is-vanished > .mh-iso-zz { display: none; }
+  @media (prefers-reduced-motion: reduce) { .mh-map-fx, .mh-map-fx b, .mh-map-tk.is-c-fly .mh-map-face, .mh-iso-ring, .mh-iso-zz text, .mh-iso-tk[class*="is-c-"] > * { animation: none !important; } }
   .mh-map-tk.is-sel .mh-map-face { box-shadow: 0 0 0 2px #F3C24A, 0 3px 10px rgba(0,0,0,.55); }
   .mh-map-hp { position: absolute; z-index: 3; left: 20%; right: 20%; bottom: 6%; height: 9%; min-height: 3px; border-radius: 3px; background: #2a1f25; overflow: hidden; box-shadow: 0 0 0 1px rgba(0,0,0,.5); }
   .mh-map-hp i { display: block; height: 100%; background: #E24B4A; }
@@ -4505,6 +4541,15 @@ const HAPPY_SPARKS = [
   [68, 24, 0.2, 0.6], [22, 2, 0.7, 0.9], [98, 62, 1.1, 0.7], [-4, 70, 0.55, 0.85],
 ];
 const HAPPY_MOTES = [[14, 0], [50, 0.8], [80, 1.6], [34, 2.2], [66, 2.9]];
+// Condiciones que se ven en el tablero (Escondido/Oculto van aparte: la ficha se oculta a los demás).
+const MAP_COND_FX = {
+  Inmovilizado: { cls: "rooted", Icon: Lock, color: "#C08B5C" },
+  Vulnerable: { cls: "vuln", Icon: ShieldOff, color: "#D9644E" },
+  Inconsciente: { cls: "ko", Icon: ZapOff, color: "#A58BE8" },
+  Volando: { cls: "fly", Icon: Feather, color: "#5FA77A" },
+  Retraído: { cls: "shell", Icon: Shell, color: "#6E8B5A" },
+};
+const mapConds = (t) => (t.conds || []).filter((c) => MAP_COND_FX[c]);
 
 // Animación de ataque en el tablero: la figura atacante embiste y el objetivo se sacude. Se reproduce una vez por ataque reciente.
 function useAttackFx(fx) {
@@ -4772,17 +4817,30 @@ function MapBoard({ fx, bg, tokens, props = [], terrain = [], stampTool, onStamp
           <button
             key={t.id}
             type="button"
-            className={"mh-map-tk is-" + t.kind + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "")}
+            className={"mh-map-tk is-" + t.kind + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
             style={{ ...at(pos.x, pos.y), "--tc": t.color, ...(anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); return tg ? { "--ax": (tg.x - t.x) * 100 + "%", "--ay": (tg.y - t.y) * 100 + "%" } : {}; })() : {}) }}
             onPointerDown={(e) => startDrag(e, t)}
             onContextMenu={(e) => openMenu(e, t)}
             onKeyDown={(e) => keyMove(e, t)}
             aria-label={t.name + (movable ? ". Arrástrala o usa las flechas para moverla" : "")}
-            title={t.name + (t.hidden ? " · Escondido" : "")}
+            title={[t.name, t.hidden && "Escondido", ...mapConds(t)].filter(Boolean).join(" · ")}
             tabIndex={t.vanished ? -1 : movable || onPick ? 0 : -1}
             aria-hidden={t.vanished || undefined}
           >
             {vis[t.id] && <span key={vis[t.id].n} className="mh-map-puff" aria-hidden="true"><i /><i /><i /><i /><i /></span>}
+            {mapConds(t).map((c) => (
+              <span key={c} className={"mh-map-fx fx-" + MAP_COND_FX[c].cls} aria-hidden="true">
+                {c === "Inconsciente" && <><b>z</b><b>z</b></>}
+              </span>
+            ))}
+            {mapConds(t).length > 0 && (
+              <span className="mh-map-conds" aria-hidden="true">
+                {mapConds(t).map((c) => {
+                  const { Icon: CI, color } = MAP_COND_FX[c];
+                  return <i key={c} style={{ background: color }}><CI size="62%" strokeWidth={2.6} /></i>;
+                })}
+              </span>
+            )}
             <span className="mh-map-face">{t.img ? <img src={t.img} alt="" draggable={false} /> : t.kind === "foe" ? <Skull size="55%" /> : t.kind === "pet" ? <PawPrint size="52%" /> : <span>{(t.name || "?").trim().charAt(0).toUpperCase()}</span>}</span>
             {t.hp && t.hp[1] > 0 && (
               <span className="mh-map-hp" title={`Vida: ${t.hp[1] - t.hp[0]} de ${t.hp[1]}`}>
@@ -4976,7 +5034,7 @@ function IsoBoard({ anim, tokens, props = [], terrain = [], stampTool, onStamp, 
                 return (
                   <g
                     key={t.id}
-                    className={"mh-iso-tk" + (movable ? " is-movable" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" : "") + (steps[t.id] && !(anim && anim.from === t.id) ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "")}
+                    className={"mh-iso-tk" + (movable ? " is-movable" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" : "") + (steps[t.id] && !(anim && anim.from === t.id) ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
                     style={anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); if (!tg) return undefined; const [tx, ty] = P(tg.x + 0.5, tg.y + 0.5, tAt(tg.x, tg.y).z); return { "--ax": tx - cx + "px", "--ay": ty - cy + "px" }; })() : steps[t.id] ? (() => { const st = steps[t.id]; const [ox, oy] = P(st.fx + 0.5, st.fy + 0.5, tAt(st.fx, st.fy).z); return { "--mx": ox - cx + "px", "--my": oy - cy + "px" }; })() : undefined}
                     onPointerDown={(e) => tokenDown(e, t)}
                     onContextMenu={(e) => {
@@ -4985,7 +5043,7 @@ function IsoBoard({ anim, tokens, props = [], terrain = [], stampTool, onStamp, 
                       setRangeId(rangeId === t.id ? null : t.id);
                     }}
                   >
-                    <title>{t.vanished ? "" : t.name + (t.hidden ? " · Escondido" : "")}</title>
+                    <title>{t.vanished ? "" : [t.name, t.hidden && "Escondido", ...mapConds(t)].filter(Boolean).join(" · ")}</title>
                     {vis[t.id] && (
                       <g key={vis[t.id].n} className="mh-iso-puff" pointerEvents="none">
                         {[[-0.32, -0.5], [0.3, -0.62], [0, -0.95], [-0.2, -0.2], [0.26, -0.22]].map(([dx, dy], k) => (
@@ -4994,7 +5052,10 @@ function IsoBoard({ anim, tokens, props = [], terrain = [], stampTool, onStamp, 
                       </g>
                     )}
                     {sel && <ellipse cx={cx} cy={cy} rx={S * 0.62} ry={S * 0.31} fill="none" stroke="#E3B04B" strokeWidth="3" />}
-                    <ellipse cx={cx} cy={cy} rx={S * 0.42} ry={S * 0.21} fill="rgba(0,0,0,.28)" />
+                    <ellipse className="mh-iso-shadow" cx={cx} cy={cy} rx={S * 0.42} ry={S * 0.21} fill="rgba(0,0,0,.28)" />
+                    {mapConds(t).map((c) => (
+                      <ellipse key={c} className={"mh-iso-ring ring-" + MAP_COND_FX[c].cls} cx={cx} cy={cy} rx={S * 0.52} ry={S * 0.26} stroke={MAP_COND_FX[c].color} />
+                    ))}
                     <rect x={cx - S * 0.33} y={cy - S * 1.1} width={S * 0.66} height={S * 1.04} rx={S * 0.33} fill={col} stroke="#fff" strokeWidth="2.2" />
                     {t.img ? (
                       <>
@@ -5014,6 +5075,23 @@ function IsoBoard({ anim, tokens, props = [], terrain = [], stampTool, onStamp, 
                         <rect x={cx - S * 0.32} y={cy - S * 1.3} width={S * 0.64 * Math.max(0, hpFree)} height={S * 0.11} rx={2} fill="#E24B4A" />
                       </>
                     )}
+                    {mapConds(t).includes("Inconsciente") && (
+                      <g className="mh-iso-zz" pointerEvents="none">
+                        <text x={cx + S * 0.3} y={cy - S * 1.15} fontSize={S * 0.3}>z</text>
+                        <text x={cx + S * 0.45} y={cy - S * 1.35} fontSize={S * 0.22}>z</text>
+                      </g>
+                    )}
+                    {mapConds(t).map((c, k) => {
+                      const { Icon: CI, color } = MAP_COND_FX[c];
+                      const bx = cx - S * 0.36 + k * S * 0.3;
+                      const by = cy - S * 1.08;
+                      return (
+                        <g key={c} className="mh-iso-cond" pointerEvents="none">
+                          <circle cx={bx} cy={by} r={S * 0.15} fill={color} stroke="#fff" strokeWidth="1.5" />
+                          <CI x={bx - S * 0.095} y={by - S * 0.095} width={S * 0.19} height={S * 0.19} color="#fff" strokeWidth={2.6} />
+                        </g>
+                      );
+                    })}
                     {!compact && (
                       <text x={cx} y={cy + S * 0.5} fontSize={S * 0.3} fontWeight="700" fill="#221C2B" stroke="#FBF6F0" strokeWidth="3" paintOrder="stroke" textAnchor="middle" fontFamily="Inter, system-ui, sans-serif" pointerEvents="none">
                         {t.name}
@@ -5775,13 +5853,15 @@ export default function App({ onSignOut }) {
     if (!sheetCampaignId || !viewingCharId || !characters[viewingCharId]) return;
     const me = characters[viewingCharId];
     const hid = getConditions(me).some((n) => n === "Escondido" || n === "Oculto");
-    const wrong = (campaignMap.tokens || []).some((t) => t.kind === "pc" && t.charId === viewingCharId && !!t.hidden !== hid);
+    const conds = getConditions(me).filter((c) => MAP_COND_FX[c]);
+    const sameConds = (a) => (a || []).join("|") === conds.join("|");
+    const wrong = (campaignMap.tokens || []).some((t) => t.kind === "pc" && t.charId === viewingCharId && (!!t.hidden !== hid || !sameConds(t.conds)));
     if (!wrong) return;
     mutateMap(sheetCampaignId, (ts) =>
       ts.map((t) => {
         if (t.kind !== "pc" || t.charId !== viewingCharId) return t;
-        const { hidden, ...rest } = t;
-        return hid ? { ...rest, hidden: true } : rest;
+        const { hidden, conds: _c, ...rest } = t;
+        return { ...rest, ...(hid ? { hidden: true } : {}), ...(conds.length ? { conds } : {}) };
       })
     );
   }, [campaignMap, characters, sheetCampaignId, viewingCharId]);
@@ -8237,7 +8317,9 @@ export default function App({ onSignOut }) {
           // Solo el personaje abierto en esta pestaña manda con sus condiciones; del resto, lo que diga el tablero (otra pestaña puede tener una copia antigua).
           if (ch && t.charId === viewingCharId && !gmViewing) hidden = JSON.parse(ch.f_conditions || "[]").some((x) => x === "Escondido" || x === "Oculto");
         } catch (e) {}
-        return { ...t, hidden, name: ch?.f_name || t.name || "Personaje", color: classColor(ch?.f_class), hp: ch ? [Number(ch.hp_marked || 0), Number(ch.r_hp || 0)] : null };
+        let conds = t.conds || [];
+        if (ch && t.charId === viewingCharId && !gmViewing) conds = getConditions(ch).filter((c) => MAP_COND_FX[c]);
+        return { ...t, hidden, conds, name: ch?.f_name || t.name || "Personaje", color: classColor(ch?.f_class), hp: ch ? [Number(ch.hp_marked || 0), Number(ch.r_hp || 0)] : null };
       }
       if (t.kind === "pet") return { ...t, color: classColor(characters[t.ownerCharId]?.f_class) };
       return { ...t, color: t.kind === "foe" ? "#C0504A" : "#C9A24A", img: t.imgId ? castImgs[t.imgId] : null };
