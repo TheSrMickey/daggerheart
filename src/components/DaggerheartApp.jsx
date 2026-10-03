@@ -2698,7 +2698,7 @@ const sharedStyles = `
   .mh-iso-zz text { fill: #E9DDFB; font-weight: 800; font-family: Inter, system-ui, sans-serif; stroke: rgba(0,0,0,.5); stroke-width: 2px; paint-order: stroke; transform-box: fill-box; animation: mh-iso-zz 2.4s ease-in-out infinite; opacity: 0; }
   .mh-iso-zz text + text { animation-delay: 1.2s; }
   @keyframes mh-iso-zz { 0% { opacity: 0; transform: translate(0, 0); } 30% { opacity: 1; } 100% { opacity: 0; transform: translate(6px, -14px); } }
-  .mh-iso-tk.is-c-fly > rect, .mh-iso-tk.is-c-fly > image, .mh-iso-tk.is-c-fly > text, .mh-iso-tk.is-c-fly > .mh-iso-cond, .mh-iso-tk.is-c-fly > .mh-iso-zz { animation: mh-iso-fly 2.2s ease-in-out infinite; }
+  .mh-iso-tk.is-c-fly > rect, .mh-iso-tk.is-c-fly > image, .mh-iso-tk.is-c-fly > text:not(.mh-iso-name), .mh-iso-tk.is-c-fly > .mh-iso-cond, .mh-iso-tk.is-c-fly > .mh-iso-zz { animation: mh-iso-fly 2.2s ease-in-out infinite; }
   @keyframes mh-iso-fly { 0%, 100% { transform: translateY(-10px); } 50% { transform: translateY(-17px); } }
   .mh-iso-tk.is-c-fly > .mh-iso-shadow { transform-box: fill-box; transform-origin: center; animation: mh-fly-shadow 2.2s ease-in-out infinite; }
   .mh-iso-tk.is-c-shell > rect { opacity: .85; }
@@ -5100,7 +5100,9 @@ function IsoBoard({ menuFor, anim, tokens, props = [], terrain = [], stampTool, 
   return (
     <div ref={boxRef} className={"mh-map mh-isoboard" + (compact ? " is-compact" : "") + (stampTool ? " is-stamping" : "")}>
       <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" onContextMenu={(e) => e.preventDefault()}>
-        {cells.map(([x, y]) => {
+        {/* Dos pasadas: primero todo el suelo y luego, de atrás hacia delante, decorados y fichas (con su nombre).
+            Así el suelo nunca tapa a una ficha ni a su nombre, y una ficha de delante sí tapa a la de detrás. */}
+        {["ground", "things"].map((layer) => cells.map(([x, y]) => {
           const tr = tAt(x, y);
           const z = tr.z;
           const a = P(x, y, z), b = P(x + 1, y, z), c = P(x + 1, y + 1, z), d = P(x, y + 1, z);
@@ -5110,8 +5112,9 @@ function IsoBoard({ menuFor, anim, tokens, props = [], terrain = [], stampTool, 
           const here = tokAt(x, y);
           const pr = propAt(x, y);
           const [cx, cy] = P(x + 0.5, y + 0.5, z);
-          return (
-            <g key={x + "," + y}>
+          if (layer === "things" && !pr && !here.length) return null;
+          return layer === "ground" ? (
+            <g key={"g" + x + "," + y}>
               {z > 0 && (
                 <>
                   <polygon points={pts([d, c, P(x + 1, y + 1, 0), P(x, y + 1, 0)])} fill={tr.s1} />
@@ -5136,6 +5139,9 @@ function IsoBoard({ menuFor, anim, tokens, props = [], terrain = [], stampTool, 
                 )}
               {lit && <polygon points={pts([a, b, c, d])} fill="#6FBF73" fillOpacity=".3" stroke="#6FBF73" strokeOpacity=".8" pointerEvents="none" />}
               {dropHere && <polygon points={pts([a, b, c, d])} fill="none" stroke={occupied(x, y, drag.id) ? "#D9644E" : "#F3C24A"} strokeWidth="3" pointerEvents="none" />}
+            </g>
+          ) : (
+            <g key={"t" + x + "," + y}>
               {pr && <svg x={cx - S * 0.62} y={cy - S * 1.05} width={S * 1.24} height={S * 1.24} viewBox="0 0 100 100" pointerEvents="none" dangerouslySetInnerHTML={{ __html: propSvg(pr.kind) }} />}
               {here.map((t) => {
                 const movable = canMove(t);
@@ -5200,7 +5206,7 @@ function IsoBoard({ menuFor, anim, tokens, props = [], terrain = [], stampTool, 
                       );
                     })}
                     {!compact && (
-                      <text x={cx} y={cy + S * 0.5} fontSize={S * 0.3} fontWeight="700" fill="#221C2B" stroke="#FBF6F0" strokeWidth="3" paintOrder="stroke" textAnchor="middle" fontFamily="Inter, system-ui, sans-serif" pointerEvents="none">
+                      <text className="mh-iso-name" x={cx} y={cy + S * 0.5} fontSize={S * 0.3} fontWeight="700" fill="#221C2B" stroke="#FBF6F0" strokeWidth="3.2" paintOrder="stroke" strokeLinejoin="round" textAnchor="middle" fontFamily="Inter, system-ui, sans-serif" pointerEvents="none">
                         {t.name}
                       </text>
                     )}
@@ -5209,7 +5215,7 @@ function IsoBoard({ menuFor, anim, tokens, props = [], terrain = [], stampTool, 
               })}
             </g>
           );
-        })}
+        }))}
       </svg>
       {menu && (() => {
         const t = tokens.find((x) => x.id === menu.id);
