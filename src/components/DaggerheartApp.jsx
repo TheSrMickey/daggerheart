@@ -2,7 +2,7 @@
 
 import { Fragment, useState, useEffect, useLayoutEffect, useRef, createContext, useContext } from "react";
 import { createPortal } from "react-dom";
-import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus, Box, LayoutGrid } from "lucide-react";
+import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus, Box, LayoutGrid, Bird, Fish, Bug, Rabbit, Cat, Turtle } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
 import { Wand, CircleDot, MoveUpRight, Archive, Shell, Compass, Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
@@ -2862,6 +2862,12 @@ const sharedStyles = `
   .mh-measure { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 8; }
   .mh-measure-tag { position: absolute; z-index: 9; transform: translate(14px, -130%); padding: 4px 9px; border-radius: 8px; background: rgba(20,14,18,.86); border: 1.5px solid var(--mc); color: #F4EEE2; font: 600 11.5px Inter, system-ui, sans-serif; white-space: nowrap; pointer-events: none; }
   .mh-measure-tag b { font-size: 13px; color: var(--mc); }
+  .mh-iso-emblem { animation: mh-emb 2.4s ease-in-out infinite; }
+  @keyframes mh-emb { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+  .mh-foe-size { display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+  .mh-foe-size > span { font: 600 11.5px Inter, system-ui, sans-serif; color: var(--mh-muted); margin-right: 2px; }
+  .mh-foe-size button { min-width: 26px; padding: 3px 8px; border-radius: 7px; border: 1px solid var(--mh-line2); background: var(--mh-panel); color: var(--mh-ink); font: 600 11.5px Inter, system-ui, sans-serif; cursor: pointer; }
+  .mh-foe-size button.is-on { border-color: #C0504A; background: color-mix(in srgb, #C0504A 14%, var(--mh-panel)); }
   .mh-map-log { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 9; display: flex; flex-direction: column; align-items: center; gap: 5px; pointer-events: none; width: max-content; max-width: calc(100% - 24px); }
   .mh-map-log-i { padding: 6px 12px; border-radius: 10px; background: rgba(20,14,18,.86); color: #F4EEE2; font: 600 11.5px/1.35 Inter, system-ui, sans-serif; box-shadow: 0 4px 14px rgba(0,0,0,.35); border-left: 3px solid #C9A24A; text-align: center; animation: mh-log-in .28s ease, mh-log-out .5s ease 6s forwards; }
   .mh-map-log-i.is-hit { border-left-color: #E3B04B; }
@@ -4849,6 +4855,26 @@ function useMeasure(toCell, toPoint) {
   const suppressed = () => Date.now() < suppressUntil.current;
   return { measure, measureDown: down, measureSuppressed: suppressed };
 }
+// Forma de Bestia en el tablero: emblema con el tipo de animal sobre la ficha.
+const beastIcon = (name) => {
+  const n = String(name || "");
+  if (/Acu[aá]tic/i.test(n)) return Fish;
+  if (/Alad|A[eé]reo/i.test(n)) return Bird;
+  if (/Ar[aá]cnid/i.test(n)) return Bug;
+  if (/Herb[ií]voro/i.test(n)) return Rabbit;
+  if (/Hogar/i.test(n)) return Cat;
+  if (/Acorazad/i.test(n)) return Turtle;
+  if (/Manada/i.test(n)) return Dog;
+  return PawPrint;
+};
+// Tamaño de las fichas de enemigo (lo elige el DJ).
+const FOE_SIZES = [
+  { key: "p", label: "Pequeño", short: "P", k: 0.78 },
+  { key: "m", label: "Mediano", short: "M", k: 1 },
+  { key: "g", label: "Grande", short: "G", k: 1.35 },
+  { key: "e", label: "Enorme", short: "E", k: 1.75 },
+];
+const sizeK = (t) => (t.kind === "pet" ? 0.68 : FOE_SIZES.find((z) => z.key === t.size)?.k || 1);
 const isFlying = (t) => mapConds(t).includes("Volando");
 const isDeadFoe = (t) => !!(t.stats && Number(t.stats.hp || 0) > 0 && Number(t.stats.hpMarked || 0) >= Number(t.stats.hp || 0));
 // Proyectil de un ataque a distancia (orbe mágico o flecha) en el tablero isométrico: vuela en arco y estalla al llegar.
@@ -5564,7 +5590,7 @@ function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain 
         onPointerDown={(e) => tokenDown(e, t)}
         onContextMenu={(e) => openMenu(e, t)}
       >
-        <title>{t.vanished ? "" : [t.name, t.hidden && "Escondido", ...mapConds(t)].filter(Boolean).join(" · ")}</title>
+        <title>{t.vanished ? "" : [t.name, t.beast && "Forma de Bestia: " + t.beast, t.hidden && "Escondido", ...mapConds(t)].filter(Boolean).join(" · ")}</title>
         {vis[t.id] && (
           <g key={vis[t.id].n} className="mh-iso-puff" pointerEvents="none">
             {[[-0.32, -0.5], [0.3, -0.62], [0, -0.95], [-0.2, -0.2], [0.26, -0.22]].map(([dx, dy], k) => (
@@ -5584,7 +5610,16 @@ function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain 
         {mapConds(t).map((c) => (
           <ellipse key={c} className={"mh-iso-ring ring-" + MAP_COND_FX[c].cls} cx={cx} cy={cy} rx={S * 0.52} ry={S * 0.26} stroke={MAP_COND_FX[c].color} />
         ))}
-        <g className="mh-iso-body" transform={pet ? `translate(${cx} ${cy}) scale(.68) translate(${-cx} ${-cy})` : undefined}>
+        {t.beast && !down && (
+          <g className="mh-iso-leaves" pointerEvents="none">
+            {Array.from({ length: 10 }, (_, i) => {
+              const ang = (i / 10) * Math.PI * 2;
+              const lx = cx + Math.cos(ang) * S * 0.6 * sizeK(t), ly = cy + Math.sin(ang) * S * 0.3 * sizeK(t);
+              return <ellipse key={i} cx={lx} cy={ly} rx={S * 0.12} ry={S * 0.06} fill={i % 2 ? "#7FB55A" : "#5E8C46"} transform={`rotate(${(ang * 180) / Math.PI + 90} ${lx} ${ly})`} />;
+            })}
+          </g>
+        )}
+        <g className="mh-iso-body" transform={sizeK(t) !== 1 ? `translate(${cx} ${cy}) scale(${sizeK(t)}) translate(${-cx} ${-cy})` : undefined}>
         {down ? (
           deadFoe ? (
             <g>
@@ -5631,6 +5666,16 @@ function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain 
         )}
         </>
         )}
+        {t.beast && !down && (() => {
+          const BI = beastIcon(t.beast);
+          const ey = cy - S * 1.6;
+          return (
+            <g className="mh-iso-emblem" pointerEvents="none">
+              <circle cx={cx} cy={ey} r={S * 0.26} fill="#2B2433" stroke="#7FB55A" strokeWidth="2.2" />
+              <BI x={cx - S * 0.16} y={ey - S * 0.16} width={S * 0.32} height={S * 0.32} color="#C9F2CF" strokeWidth={2.2} />
+            </g>
+          );
+        })()}
         {mapConds(t).includes("Inconsciente") && (
           <g className="mh-iso-zz" pointerEvents="none">
             <text x={cx + S * 0.3} y={cy - S * (down ? 0.6 : 1.15)} fontSize={S * 0.3}>z</text>
@@ -5657,7 +5702,8 @@ function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain 
       <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" onContextMenu={(e) => e.preventDefault()}>
         {/* Dos pasadas: primero todo el suelo y luego, de atrás hacia delante, decorados y fichas (con su nombre).
             Así el suelo nunca tapa a una ficha ni a su nombre, y una ficha de delante sí tapa a la de detrás. */}
-        {["ground", "links", "things"].map((layer) => layer === "links" ? petLinks : cells.map(([x, y]) => {
+        {/* De atrás hacia delante, cada casilla con lo que tiene encima: así una colina o un muro de delante tapan lo que hay detrás. */}
+        {cells.map(([x, y]) => ["ground", "things"].map((layer) => {
           const tr = tAt(x, y);
           const z = tr.z;
           const a = P(x, y, z), b = P(x + 1, y, z), c = P(x + 1, y + 1, z), d = P(x, y + 1, z);
@@ -5725,6 +5771,7 @@ function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain 
             </g>
           );
         }))}
+        {petLinks}
         {anim && (anim.kind || "melee") !== "melee" && (() => {
           const fa = tokens.find((x) => x.id === anim.from), fb = tokens.find((x) => x.id === anim.to);
           if (!fa || !fb) return null;
@@ -6220,6 +6267,7 @@ export default function App({ onSignOut }) {
   const [campaignMap, setCampaignMap] = useState({ tokens: [] });
   const [mapSel, setMapSel] = useState(null);
   const [foeDraft, setFoeDraft] = useState("");
+  const [foeSize, setFoeSize] = useState("m"); // tamaño de los enemigos que añade el DJ
   const [foeRoll, setFoeRoll] = useState(null); // última tirada del DJ con un enemigo: { id, kind, ... }
   const [stampTool, setStampTool] = useState(null);
   const mapBusy = useRef(0);
@@ -6560,13 +6608,14 @@ export default function App({ onSignOut }) {
     const conds = getConditions(me).filter((c) => MAP_COND_FX[c]);
     const sameConds = (a) => (a || []).join("|") === conds.join("|");
     const down = Number(me.r_hp || 0) > 0 && Number(me.hp_marked || 0) >= Number(me.r_hp || 0);
-    const wrong = (campaignMap.tokens || []).some((t) => t.kind === "pc" && t.charId === viewingCharId && (!!t.hidden !== hid || !sameConds(t.conds) || !!t.down !== down));
+    const beast = me.f_beastform || "";
+    const wrong = (campaignMap.tokens || []).some((t) => t.kind === "pc" && t.charId === viewingCharId && (!!t.hidden !== hid || !sameConds(t.conds) || !!t.down !== down || (t.beast || "") !== beast));
     if (!wrong) return;
     mutateMap(sheetCampaignId, (ts) =>
       ts.map((t) => {
         if (t.kind !== "pc" || t.charId !== viewingCharId) return t;
-        const { hidden, conds: _c, down: _d, ...rest } = t;
-        return { ...rest, ...(hid ? { hidden: true } : {}), ...(conds.length ? { conds } : {}), ...(down ? { down: true } : {}) };
+        const { hidden, conds: _c, down: _d, beast: _b, ...rest } = t;
+        return { ...rest, ...(hid ? { hidden: true } : {}), ...(conds.length ? { conds } : {}), ...(down ? { down: true } : {}), ...(beast ? { beast } : {}) };
       })
     );
   }, [campaignMap, characters, sheetCampaignId, viewingCharId]);
@@ -9063,7 +9112,8 @@ export default function App({ onSignOut }) {
         } catch (e) {}
         let conds = t.conds || [];
         if (ch && t.charId === viewingCharId && !gmViewing) conds = getConditions(ch).filter((c) => MAP_COND_FX[c]);
-        return { ...t, hidden, conds, name: ch?.f_name || t.name || "Personaje", color: classColor(ch?.f_class), hp: ch ? [Number(ch.hp_marked || 0), Number(ch.r_hp || 0)] : null };
+        const beast = ch && t.charId === viewingCharId && !gmViewing ? ch.f_beastform || "" : t.beast || "";
+        return { ...t, hidden, conds, beast, name: ch?.f_name || t.name || "Personaje", color: classColor(ch?.f_class), hp: ch ? [Number(ch.hp_marked || 0), Number(ch.r_hp || 0)] : null };
       }
       if (t.kind === "pet") return { ...t, color: classColor(characters[t.ownerCharId]?.f_class) };
       return { ...t, color: t.kind === "foe" ? "#C0504A" : "#C9A24A", img: t.imgId ? castImgs[t.imgId] : null, ...(t.stats ? { hp: [Number(t.stats.hpMarked || 0), Number(t.stats.hp || 0)] } : {}) };
@@ -11434,6 +11484,14 @@ export default function App({ onSignOut }) {
                                 </div>
                                 {down && <span className="mh-foe-ko">Derrotado</span>}
                               </div>
+                              <div className="mh-foe-size" role="radiogroup" aria-label="Tamaño de la ficha">
+                                <span>Tamaño</span>
+                                {FOE_SIZES.map((z) => (
+                                  <button key={z.key} type="button" role="radio" aria-checked={(sel.size || "m") === z.key} className={(sel.size || "m") === z.key ? "is-on" : ""} title={z.label} onClick={() => mutateMap(viewingCampaignId, (ts) => ts.map((t) => (t.id === sel.id ? { ...t, size: z.key } : t)))}>
+                                    {z.label}
+                                  </button>
+                                ))}
+                              </div>
                               {st.desc && <p className="mh-foe-desc">{st.desc}</p>}
                               {st.motives && (
                                 <p className="mh-foe-line">
@@ -11567,7 +11625,7 @@ export default function App({ onSignOut }) {
                               onChange={(e) => setFoeDraft(e.target.value)}
                               onKeyDown={(e) => {
                                 if (e.key !== "Enter") return;
-                                placeToken({ kind: "foe", name: foeDraft.trim() || "Bandido", stats: newFoeStats() });
+                                placeToken({ kind: "foe", name: foeDraft.trim() || "Bandido", stats: newFoeStats(), size: foeSize });
                                 setFoeDraft("");
                               }}
                             />
@@ -11575,13 +11633,21 @@ export default function App({ onSignOut }) {
                               type="button"
                               className="mh-btn-ghost"
                               onClick={() => {
-                                placeToken({ kind: "foe", name: foeDraft.trim() || "Bandido", stats: newFoeStats() });
+                                placeToken({ kind: "foe", name: foeDraft.trim() || "Bandido", stats: newFoeStats(), size: foeSize });
                                 setFoeDraft("");
                               }}
                             >
                               <Skull size={13} /> Añadir enemigo
                             </button>
-                            <button type="button" className="mh-map-chip mh-foe-quick" onClick={() => placeToken({ kind: "foe", name: "Bandido", stats: newFoeStats() })} title={"Nivel 1 · Estándar · Dificultad " + FOE_BASE.difficulty + " · PV " + FOE_BASE.hp}>
+                            <div className="mh-foe-size" role="radiogroup" aria-label="Tamaño del enemigo">
+                              <span>Tamaño</span>
+                              {FOE_SIZES.map((z) => (
+                                <button key={z.key} type="button" role="radio" aria-checked={foeSize === z.key} className={foeSize === z.key ? "is-on" : ""} title={z.label} onClick={() => setFoeSize(z.key)}>
+                                  {z.short}
+                                </button>
+                              ))}
+                            </div>
+                            <button type="button" className="mh-map-chip mh-foe-quick" onClick={() => placeToken({ kind: "foe", name: "Bandido", stats: newFoeStats(), size: foeSize })} title={"Nivel 1 · Estándar · Dificultad " + FOE_BASE.difficulty + " · PV " + FOE_BASE.hp}>
                               <i>
                                 <Skull size={11} />
                               </i>
