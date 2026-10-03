@@ -2550,7 +2550,14 @@ const sharedStyles = `
   .mh-map.is-blank { background-image: linear-gradient(#3F4B5E, #2B3A4F); }
   .mh-map-bg { position: absolute; inset: -8px; background: center / cover no-repeat; filter: blur(3px); pointer-events: none; }
   .mh-map-grid { position: absolute; inset: 0; pointer-events: none; background-image: linear-gradient(rgba(255,255,255,.28) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.28) 1px, transparent 1px); background-size: calc(100% / ${MAP_COLS}) calc(100% / ${MAP_ROWS}); }
-  .mh-map-range { position: absolute; background: color-mix(in srgb, var(--rc) 24%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rc) 45%, transparent); pointer-events: none; }
+  .mh-map-range { position: absolute; box-sizing: border-box; background: color-mix(in srgb, var(--rc) 58%, transparent); border: 0 solid var(--rc); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rc) 35%, transparent); pointer-events: none; z-index: 1; }
+  .mh-map-menu { min-width: 190px; }
+  .mh-map-menu-h { padding: 6px 10px 4px; font: 700 10.5px Inter, system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--mh-muted); border-bottom: 1px solid var(--mh-line); margin-bottom: 3px; }
+  .mh-map-menu button span { flex: 1; }
+  .mh-map-menu button small { color: var(--mh-muted); font-weight: 500; font-size: 11px; }
+  .mh-map-menu button.is-on { background: color-mix(in srgb, var(--mh-gold, #C9A24A) 14%, transparent); }
+  .mh-map-menu button.is-danger { color: #C0504A; }
+  .mh-map-menu-ck { color: #5FA77A; }
   .mh-map-legend { position: absolute; left: 8px; bottom: 8px; z-index: 6; display: flex; align-items: center; gap: 4px 10px; flex-wrap: wrap; max-width: calc(100% - 16px); padding: 5px 8px; border-radius: 8px; background: rgba(20,14,18,.78); color: #F4EEE2; font: 600 10.5px 'Inter', system-ui, sans-serif; }
   .mh-map-legend span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
   .mh-map-legend i { width: 10px; height: 10px; border-radius: 3px; }
@@ -2613,7 +2620,7 @@ const sharedStyles = `
   @media (prefers-reduced-motion: reduce) { .mh-map-tk.is-attack, .mh-map-tk.is-hit, .mh-map-tk.is-hit .mh-map-face, .mh-iso-tk.is-attack, .mh-iso-tk.is-hit, .mh-map-tk[class*="is-step"] .mh-map-face, .mh-iso-tk[class*="is-step"], .mh-map-puff i, .mh-iso-puff circle, .mh-map-tk.is-poof-show > .mh-map-face { animation: none; } .mh-map .mh-map-tk { transition: none; } }
   .mh-map-props-sep { font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-muted); margin: 0 2px 0 8px; }
   .mh-isoboard { background: #EFE8DB; }
-  .mh-isoboard svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .mh-isoboard > svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   .mh-iso-tile { cursor: default; }
   .mh-isoboard.is-stamping .mh-iso-tile { cursor: copy; }
   .mh-iso-tk { cursor: default; }
@@ -4618,6 +4625,47 @@ function useVisFx(tokens) {
   }, [sig]);
   return fx;
 }
+// Menú del clic derecho sobre una ficha: el alcance y las acciones que dé la mesa (menuFor).
+function TokenMenu({ menu, items, onClose }) {
+  useEffect(() => {
+    const close = (e) => (e.type !== "keydown" || e.key === "Escape") && onClose();
+    window.addEventListener("pointerdown", close);
+    window.addEventListener("keydown", close);
+    window.addEventListener("wheel", close, { passive: true });
+    return () => {
+      window.removeEventListener("pointerdown", close);
+      window.removeEventListener("keydown", close);
+      window.removeEventListener("wheel", close);
+    };
+  }, []);
+  return (
+    <div className="mh-map-menu" role="menu" style={{ left: Math.max(4, menu.x), top: Math.max(4, menu.y) }} onPointerDown={(e) => e.stopPropagation()} onContextMenu={(e) => e.preventDefault()}>
+      {menu.title && <div className="mh-map-menu-h">{menu.title}</div>}
+      {items.map((it, i) => {
+        const MI = it.Icon || Crosshair;
+        return (
+          <button
+            key={it.key}
+            type="button"
+            role="menuitem"
+            autoFocus={i === 0}
+            className={(it.on ? "is-on" : "") + (it.danger ? " is-danger" : "")}
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+              it.run();
+            }}
+          >
+            <MI size={13} style={it.color ? { color: it.color } : undefined} />
+            <span>{it.label}</span>
+            {it.sub && <small>{it.sub}</small>}
+            {it.on && <Check size={12} className="mh-map-menu-ck" />}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 // Vista del tablero: plana (por defecto) o isométrica. Es una preferencia de cada navegador.
 const readIsoPref = () => {
   try {
@@ -4627,12 +4675,14 @@ const readIsoPref = () => {
   }
 };
 // Tablero con fichas cuadradas. Se arrastran, o se elige una y se pulsa la casilla; también con las flechas.
-function MapBoard({ fx, bg, tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
+function MapBoard({ menuFor, fx, bg, tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
   const ref = useRef(null);
   const dragRef = useRef(null);
   const [drag, setDrag] = useState(null);
   const [menu, setMenu] = useState(null); // menú del clic derecho: { id, x, y } en px dentro del tablero
   const [rangeId, setRangeId] = useState(null);
+  const rangeIdRef = useRef(null);
+  rangeIdRef.current = rangeId;
   const [hover, setHover] = useState(null); // casilla bajo el ratón mientras hay un sello elegido
   const painting = useRef(null);
   const [iso, setIso] = useState(readIsoPref);
@@ -4660,10 +4710,16 @@ function MapBoard({ fx, bg, tokens, props = [], terrain = [], stampTool, onStamp
     };
   }, [menu]);
   const openMenu = (e, t) => {
-    if (!canMove(t)) return;
+    if (t.vanished) return;
     e.preventDefault();
+    e.stopPropagation();
     const r = ref.current.getBoundingClientRect();
-    setMenu({ id: t.id, x: Math.min(e.clientX - r.left, r.width - 170), y: Math.min(e.clientY - r.top, r.height - 50) });
+    const n = 1 + ((menuFor && menuFor(t)) || []).length;
+    // Que el menú quepa en la parte visible del tablero (puede estar recortado por el visor).
+    const v = (e.currentTarget.closest(".mh-map-view") || e.currentTarget.closest(".mh-map") || document.body).getBoundingClientRect();
+    const mx = Math.max(v.left + 4, Math.min(e.clientX, v.right - 204));
+    const my = Math.max(v.top + 4, Math.min(e.clientY, v.bottom - 40 - n * 34));
+    setMenu({ id: t.id, title: t.name, x: mx - r.left, y: my - r.top });
   };
   const clamp = (v, max) => Math.max(0, Math.min(max - 1, v));
   const cellAt = (e) => {
@@ -4680,6 +4736,7 @@ function MapBoard({ fx, bg, tokens, props = [], terrain = [], stampTool, onStamp
   const startDrag = (e, t) => {
     if (e.button > 0) return;
     if (!canMove(t)) {
+      setRangeId((r) => (r === t.id ? null : t.id));
       if (onPick) onPick(selectedId === t.id ? null : t.id);
       return;
     }
@@ -4700,8 +4757,12 @@ function MapBoard({ fx, bg, tokens, props = [], terrain = [], stampTool, onStamp
       dragRef.current = null;
       setDrag(null);
       if (!d) return;
-      if (!d.moved) onSelect(selectedId === d.id ? null : d.id);
-      else if (!occupied(d.x, d.y, d.id)) onMove(d.id, d.x, d.y);
+      if (!d.moved) {
+        // Un clic muestra (u oculta) su alcance y la deja elegida para moverla pulsando una casilla.
+        const showing = rangeIdRef.current === d.id;
+        setRangeId(showing ? null : d.id);
+        onSelect(showing ? null : d.id);
+      } else if (!occupied(d.x, d.y, d.id)) onMove(d.id, d.x, d.y);
     };
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", up, { once: true });
@@ -4766,10 +4827,16 @@ function MapBoard({ fx, bg, tokens, props = [], terrain = [], stampTool, onStamp
         if (band) rangeCells.push([x, y, band]);
       }
   }
+  // Banda de rango de una casilla (para dibujar el contorno donde cambia).
+  const bandKey = (x, y) => {
+    if (!rangeTok || x < 0 || y < 0 || x >= MAP_COLS || y >= MAP_ROWS) return null;
+    const d = Math.max(Math.abs(x - rangeTok.x), Math.abs(y - rangeTok.y));
+    return d > 0 ? MAP_RANGES.find((r) => d <= r.max)?.key || null : "self";
+  };
   const at = (x, y) => ({ left: (x * 100) / MAP_COLS + "%", top: (y * 100) / MAP_ROWS + "%", width: 100 / MAP_COLS + "%", height: 100 / MAP_ROWS + "%" });
 
   if (iso)
-    return <IsoBoard anim={anim} tokens={tokens} props={props} terrain={terrain} stampTool={stampTool} onStamp={onStamp} onUnstamp={onUnstamp} canMove={canMove} onMove={onMove} selectedId={selectedId} onSelect={onSelect} onPick={onPick} compact={compact} onToggle={toggleIso} />;
+    return <IsoBoard menuFor={menuFor} anim={anim} tokens={tokens} props={props} terrain={terrain} stampTool={stampTool} onStamp={onStamp} onUnstamp={onUnstamp} canMove={canMove} onMove={onMove} selectedId={selectedId} onSelect={onSelect} onPick={onPick} compact={compact} onToggle={toggleIso} />;
 
   return (
     <div
@@ -4793,7 +4860,18 @@ function MapBoard({ fx, bg, tokens, props = [], terrain = [], stampTool, onStamp
         <div key={"t" + t.x + "," + t.y} className="mh-map-terrain" style={{ ...at(t.x, t.y), background: terrainOf(t.kind).flat }} />
       ))}
       {rangeCells.map(([x, y, band]) => (
-        <div key={"r" + x + "," + y} className="mh-map-range" style={{ ...at(x, y), "--rc": band.color }} />
+        <div
+          key={"r" + x + "," + y}
+          className="mh-map-range"
+          style={{
+            ...at(x, y),
+            "--rc": band.color,
+            borderTopWidth: bandKey(x, y - 1) !== band.key ? 3 : 0,
+            borderBottomWidth: bandKey(x, y + 1) !== band.key ? 3 : 0,
+            borderLeftWidth: bandKey(x - 1, y) !== band.key ? 3 : 0,
+            borderRightWidth: bandKey(x + 1, y) !== band.key ? 3 : 0,
+          }}
+        />
       ))}
       {props.map((pr) => (
         <div key={pr.id} className="mh-map-prop" style={at(pr.x, pr.y)} title={MAP_PROPS.find((m) => m.key === pr.kind)?.label}>
@@ -4806,7 +4884,7 @@ function MapBoard({ fx, bg, tokens, props = [], terrain = [], stampTool, onStamp
         </div>
       )}
       <div className="mh-map-grid" />
-      {reach.map(([x, y]) => (
+      {!rangeTok && reach.map(([x, y]) => (
         <div key={x + "," + y} className="mh-map-reach" style={at(x, y)} />
       ))}
       {drag?.moved && <div className={"mh-map-drop" + (occupied(drag.x, drag.y, drag.id) ? " is-bad" : "")} style={at(drag.x, drag.y)} />}
@@ -4868,29 +4946,19 @@ function MapBoard({ fx, bg, tokens, props = [], terrain = [], stampTool, onStamp
           </button>
         </div>
       )}
-      {menu && (
-        <div className="mh-map-menu" role="menu" style={{ left: Math.max(4, menu.x), top: Math.max(4, menu.y) }} onPointerDown={(e) => e.stopPropagation()} onContextMenu={(e) => e.preventDefault()}>
-          <button
-            type="button"
-            role="menuitem"
-            autoFocus
-            onClick={(e) => {
-              e.stopPropagation();
-              setRangeId(rangeId === menu.id ? null : menu.id);
-              setMenu(null);
-            }}
-          >
-            <Crosshair size={13} /> {rangeId === menu.id ? "Ocultar rango" : "Mostrar rango"}
-          </button>
-        </div>
-      )}
+      {menu && (() => {
+        const t = tokens.find((x) => x.id === menu.id);
+        if (!t) return null;
+        const items = [{ key: "range", Icon: Crosshair, label: rangeId === t.id ? "Ocultar alcance" : "Ver alcance", run: () => setRangeId(rangeId === t.id ? null : t.id) }, ...((menuFor && menuFor(t)) || [])];
+        return <TokenMenu menu={menu} items={items} onClose={() => setMenu(null)} />;
+      })()}
     </div>
   );
 }
 
 // Tablero isométrico tipo diorama: losetas con relieve, decorados y fichas de pie.
 // Usa los mismos datos que el tablero plano (fichas, decorados y terreno).
-function IsoBoard({ anim, tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact, onToggle }) {
+function IsoBoard({ menuFor, anim, tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact, onToggle }) {
   const S = 34;
   const OX = MAP_ROWS * S + S * 0.6;
   const OY = S * 2.4;
@@ -4905,6 +4973,22 @@ function IsoBoard({ anim, tokens, props = [], terrain = [], stampTool, onStamp, 
   const dragRef = useRef(null);
   const [drag, setDrag] = useState(null);
   const [rangeId, setRangeId] = useState(null);
+  const rangeIdRef = useRef(null);
+  rangeIdRef.current = rangeId;
+  const [menu, setMenu] = useState(null);
+  const boxRef = useRef(null);
+  const openMenu = (e, t) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (t.vanished) return;
+    const r = boxRef.current.getBoundingClientRect();
+    const n = 1 + ((menuFor && menuFor(t)) || []).length;
+    // Que el menú quepa en la parte visible del tablero (puede estar recortado por el visor).
+    const v = (e.currentTarget.closest(".mh-map-view") || e.currentTarget.closest(".mh-map") || document.body).getBoundingClientRect();
+    const mx = Math.max(v.left + 4, Math.min(e.clientX, v.right - 204));
+    const my = Math.max(v.top + 4, Math.min(e.clientY, v.bottom - 40 - n * 34));
+    setMenu({ id: t.id, title: t.name, x: mx - r.left, y: my - r.top });
+  };
   const steps = useMoveFx(tokens.map((t) => (drag && drag.id === t.id ? [t.id, drag.x, drag.y] : [t.id, t.x, t.y])));
   const vis = useVisFx(tokens);
   const painting = useRef(null);
@@ -4945,6 +5029,7 @@ function IsoBoard({ anim, tokens, props = [], terrain = [], stampTool, onStamp, 
     if (e.button > 0) return;
     e.stopPropagation();
     if (!canMove(t)) {
+      setRangeId((r) => (r === t.id ? null : t.id));
       if (onPick) onPick(selectedId === t.id ? null : t.id);
       return;
     }
@@ -4965,8 +5050,11 @@ function IsoBoard({ anim, tokens, props = [], terrain = [], stampTool, onStamp, 
       dragRef.current = null;
       setDrag(null);
       if (!d) return;
-      if (!d.moved) onSelect(selectedId === d.id ? null : d.id);
-      else if (!occupied(d.x, d.y, d.id)) onMove(d.id, d.x, d.y);
+      if (!d.moved) {
+        const showing = rangeIdRef.current === d.id;
+        setRangeId(showing ? null : d.id);
+        onSelect(showing ? null : d.id);
+      } else if (!occupied(d.x, d.y, d.id)) onMove(d.id, d.x, d.y);
     };
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", up, { once: true });
@@ -4991,14 +5079,14 @@ function IsoBoard({ anim, tokens, props = [], terrain = [], stampTool, onStamp, 
     return pos.x === x && pos.y === y;
   });
   return (
-    <div className={"mh-map mh-isoboard" + (compact ? " is-compact" : "") + (stampTool ? " is-stamping" : "")}>
+    <div ref={boxRef} className={"mh-map mh-isoboard" + (compact ? " is-compact" : "") + (stampTool ? " is-stamping" : "")}>
       <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" onContextMenu={(e) => e.preventDefault()}>
         {cells.map(([x, y]) => {
           const tr = tAt(x, y);
           const z = tr.z;
           const a = P(x, y, z), b = P(x + 1, y, z), c = P(x + 1, y + 1, z), d = P(x, y + 1, z);
           const band = bandAt(x, y);
-          const lit = reach.has(x + "," + y);
+          const lit = !rangeTok && reach.has(x + "," + y);
           const dropHere = drag?.moved && drag.x === x && drag.y === y;
           const here = tokAt(x, y);
           const pr = propAt(x, y);
@@ -5022,7 +5110,11 @@ function IsoBoard({ anim, tokens, props = [], terrain = [], stampTool, onStamp, 
                 onPointerDown={(e) => tileDown(e, x, y)}
                 onContextMenu={(e) => tileContext(e, x, y)}
               />
-              {band && <polygon points={pts([a, b, c, d])} fill={band.color} fillOpacity=".3" stroke={band.color} strokeOpacity=".7" pointerEvents="none" />}
+              {band && <polygon points={pts([a, b, c, d])} fill={band.color} fillOpacity=".42" pointerEvents="none" />}
+              {band &&
+                [[x, y - 1, a, b], [x + 1, y, b, c], [x, y + 1, c, d], [x - 1, y, d, a]].map(([nx, ny, p1, p2], k) =>
+                  bandAt(nx, ny)?.key !== band.key ? <line key={"e" + k} x1={p1[0]} y1={p1[1]} x2={p2[0]} y2={p2[1]} stroke={band.color} strokeWidth="2.6" strokeLinecap="round" pointerEvents="none" /> : null
+                )}
               {lit && <polygon points={pts([a, b, c, d])} fill="#6FBF73" fillOpacity=".3" stroke="#6FBF73" strokeOpacity=".8" pointerEvents="none" />}
               {dropHere && <polygon points={pts([a, b, c, d])} fill="none" stroke={occupied(x, y, drag.id) ? "#D9644E" : "#F3C24A"} strokeWidth="3" pointerEvents="none" />}
               {pr && <svg x={cx - S * 0.62} y={cy - S * 1.05} width={S * 1.24} height={S * 1.24} viewBox="0 0 100 100" pointerEvents="none" dangerouslySetInnerHTML={{ __html: propSvg(pr.kind) }} />}
@@ -5037,11 +5129,7 @@ function IsoBoard({ anim, tokens, props = [], terrain = [], stampTool, onStamp, 
                     className={"mh-iso-tk" + (movable ? " is-movable" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" : "") + (steps[t.id] && !(anim && anim.from === t.id) ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
                     style={anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); if (!tg) return undefined; const [tx, ty] = P(tg.x + 0.5, tg.y + 0.5, tAt(tg.x, tg.y).z); return { "--ax": tx - cx + "px", "--ay": ty - cy + "px" }; })() : steps[t.id] ? (() => { const st = steps[t.id]; const [ox, oy] = P(st.fx + 0.5, st.fy + 0.5, tAt(st.fx, st.fy).z); return { "--mx": ox - cx + "px", "--my": oy - cy + "px" }; })() : undefined}
                     onPointerDown={(e) => tokenDown(e, t)}
-                    onContextMenu={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setRangeId(rangeId === t.id ? null : t.id);
-                    }}
+                    onContextMenu={(e) => openMenu(e, t)}
                   >
                     <title>{t.vanished ? "" : [t.name, t.hidden && "Escondido", ...mapConds(t)].filter(Boolean).join(" · ")}</title>
                     {vis[t.id] && (
@@ -5104,6 +5192,12 @@ function IsoBoard({ anim, tokens, props = [], terrain = [], stampTool, onStamp, 
           );
         })}
       </svg>
+      {menu && (() => {
+        const t = tokens.find((x) => x.id === menu.id);
+        if (!t) return null;
+        const items = [{ key: "range", Icon: Crosshair, label: rangeId === t.id ? "Ocultar alcance" : "Ver alcance", run: () => setRangeId(rangeId === t.id ? null : t.id) }, ...((menuFor && menuFor(t)) || [])];
+        return <TokenMenu menu={menu} items={items} onClose={() => setMenu(null)} />;
+      })()}
       {rangeTok && (
         <div className="mh-map-legend">
           {MAP_RANGES.map((r) => (
@@ -10583,6 +10677,11 @@ export default function App({ onSignOut }) {
                           selectedId={mapSel}
                           onSelect={setMapSel}
                           onPick={setMapSel}
+                          menuFor={(t) =>
+                            t.kind === "foe" || t.kind === "npc" || t.kind === "pet"
+                              ? [{ key: "rm", Icon: Trash2, label: "Quitar del tablero", danger: true, run: () => removeToken(t.id) }]
+                              : []
+                          }
                         />
                         <div className="mh-map-bar">
                           {sel ? (
@@ -14624,6 +14723,33 @@ export default function App({ onSignOut }) {
                                             selectedId={mapSel}
                                             onSelect={setMapSel}
                                             compact={!wide}
+                                            menuFor={(t) => {
+                                              // Tu ficha: tus condiciones. Un enemigo o PNJ: atacarle con tus armas (ya con él como objetivo).
+                                              if (t.kind === "pc" && t.charId === viewingCharId) {
+                                                const mine = getConditions(c);
+                                                return conditionPresetsFor(c).map((n) => {
+                                                  const on = mine.includes(n) || (n === "Oculto" && mine.includes("Escondido"));
+                                                  return { key: "c-" + n, Icon: CONDITION_ICONS[n] || AlertCircle, color: CONDITION_THEME_COLOR[n], label: n, sub: on ? "Quitar" : "", on, run: () => toggleCondition(viewingCharId, n) };
+                                                });
+                                              }
+                                              if (t.kind !== "foe" && t.kind !== "npc") return [];
+                                              return [primaryWeapon, secondaryWeapon]
+                                                .filter((w) => w && w.trait && w.trait !== "—" && /d\d/.test(w.damage || ""))
+                                                .map((w) => {
+                                                  const tk = TRAITS.find((tr) => tr.label === w.trait)?.key;
+                                                  return {
+                                                    key: "atk-" + w.key,
+                                                    Icon: Swords,
+                                                    color: "#C0504A",
+                                                    label: "Atacar con " + w.key,
+                                                    sub: w.trait,
+                                                    run: () => {
+                                                      postCampaignEvent(viewingCharId, "⚔️ Ataca a " + t.name + " con " + w.key);
+                                                      rollTraitCheck(viewingCharId, w.trait, Number(c[tk] || 0) + (equipMods[tk] || 0), { name: w.key, damage: w.damage, targetChosen: true, targetId: t.id, targetName: t.name });
+                                                    },
+                                                  };
+                                                });
+                                            }}
                                           />
                                         </MapViewport>
                                         <div className="mh-stg-scene-top mh-map-top">
