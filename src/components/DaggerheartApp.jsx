@@ -1741,7 +1741,7 @@ const MAP_PROPS = [
 ];
 const propSvg = (key) => MAP_PROPS.find((p) => p.key === key)?.svg || "";
 // Estructuras: tienen altura y se puede poner algo encima (otra estructura, un estandarte, una antorcha...).
-const STRUCT_H = { muro: 1, torre: 2.6, puerta: 2 };
+const STRUCT_H = { muro: 1, torre: 2.6, puerta: 2, caja: 0.6 };
 const shadeHex = (hex, f) => {
   const n = parseInt(String(hex).slice(1), 16);
   const r = n >> 16, g = (n >> 8) & 255, b = n & 255;
@@ -1782,8 +1782,9 @@ const ISO_STRUCT = {
       </g>
     );
   },
-  puerta: (P, x, y, z) => {
-    const f = (u, v) => P(x + u, y + 1, z + v);
+  puerta: (P, x, y, z, S, rot) => {
+    // Girada, el arco mira a la otra cara visible.
+    const f = (rot || 0) % 2 === 1 ? (u, v) => P(x + 1, y + u, z + v) : (u, v) => P(x + u, y + 1, z + v);
     const arch = [f(0.22, 0)];
     for (let i = 0; i <= 10; i++) {
       const a = (Math.PI * i) / 10;
@@ -1808,25 +1809,43 @@ const ISO_STRUCT = {
       </g>
     );
   },
-  puente: (P, x, y, z, S) => {
+  caja: (P, x, y, z) => {
+    const x0 = x + 0.2, x1 = x + 0.8, y0 = y + 0.2, y1 = y + 0.8, z1 = z + 0.6;
+    const st = { stroke: "#5C3E1E", strokeWidth: 2, strokeLinecap: "round" };
+    const L = (a, b, k) => <line key={k} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} {...st} />;
+    return (
+      <g pointerEvents="none">
+        <ellipse cx={P(x + 0.5, y + 0.5, z)[0]} cy={P(x + 0.5, y + 0.5, z)[1] + 2} rx="16" ry="7" fill="rgba(0,0,0,.22)" />
+        {isoPrism(P, x0, y0, x1, y1, z, z1, "#A0703E", "b")}
+        {L(P(x0, y1, z), P(x1, y1, z1), "a")}
+        {L(P(x0, y1, z1), P(x1, y1, z), "b2")}
+        {L(P(x1, y0, z), P(x1, y1, z1), "c")}
+        {L(P(x1, y0, z1), P(x1, y1, z), "d")}
+        <polygon points={isoPts([P(x0, y0, z1), P(x1, y0, z1), P(x1, y1, z1), P(x0, y1, z1)])} fill="none" stroke="#5C3E1E" strokeWidth="2" />
+      </g>
+    );
+  },
+  puente: (P, x, y, z, S, rot) => {
+    // Girado, los tablones y las barandillas cambian de eje.
+    const turned = (rot || 0) % 2 === 1;
     const lines = [];
     for (let i = 1; i < 5; i++) {
-      const a = P(x + i / 5, y, z), b = P(x + i / 5, y + 1, z);
+      const a = turned ? P(x, y + i / 5, z) : P(x + i / 5, y, z), b = turned ? P(x + 1, y + i / 5, z) : P(x + i / 5, y + 1, z);
       lines.push(<line key={i} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke="#5A3A22" strokeWidth="1.6" />);
     }
     return (
       <g pointerEvents="none">
         <polygon points={isoPts([P(x, y, z), P(x + 1, y, z), P(x + 1, y + 1, z), P(x, y + 1, z)])} fill="#8A5A2B" stroke="#5A3A22" />
         {lines}
-        {isoPrism(P, x, y, x + 1, y + 0.08, z, z + 0.3, "#6B4426", "r1")}
-        {isoPrism(P, x, y + 0.92, x + 1, y + 1, z, z + 0.3, "#6B4426", "r2")}
+        {turned ? isoPrism(P, x, y, x + 0.08, y + 1, z, z + 0.3, "#6B4426", "r1") : isoPrism(P, x, y, x + 1, y + 0.08, z, z + 0.3, "#6B4426", "r1")}
+        {turned ? isoPrism(P, x + 0.92, y, x + 1, y + 1, z, z + 0.3, "#6B4426", "r2") : isoPrism(P, x, y + 0.92, x + 1, y + 1, z, z + 0.3, "#6B4426", "r2")}
       </g>
     );
   },
-  estandarte: (P, x, y, z, S) => {
+  estandarte: (P, x, y, z, S, rot) => {
     const [cx, cy] = P(x + 0.5, y + 0.5, z);
     return (
-      <g pointerEvents="none">
+      <g pointerEvents="none" transform={(rot || 0) % 2 === 1 ? `translate(${2 * cx} 0) scale(-1 1)` : undefined}>
         <ellipse cx={cx} cy={cy + 1} rx={S * 0.12} ry={S * 0.06} fill="rgba(0,0,0,.25)" />
         <rect x={cx - S * 0.04} y={cy - S * 1.5} width={S * 0.08} height={S * 1.5} fill="#5A3A22" />
         <g className="mh-iso-flag">
@@ -1837,13 +1856,26 @@ const ISO_STRUCT = {
     );
   },
 };
+// Punto dentro de un polígono (para saber si algo de delante tapa una ficha).
+const pointInPoly = (pt, poly) => {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i], [xj, yj] = poly[j];
+    if (yi > pt[1] !== yj > pt[1] && pt[0] < ((xj - xi) * (pt[1] - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+};
+// Silueta en pantalla de un bloque (hexágono).
+const prismHull = (P, x0, y0, x1, y1, z0, z1) => [P(x0, y0, z1), P(x1, y0, z1), P(x1, y0, z0), P(x1, y1, z0), P(x0, y1, z0), P(x0, y1, z1)];
+// Colores de las transformaciones de personaje (aura en el tablero).
+const TRANSFORM_COLORS = { Vampiro: "#B0243F", "Hombre Lobo": "#C45050", Reanimado: "#6E8B5A", Cambiaformas: "#7F6FD1", Fantasma: "#9FB6C9", Semidiós: "#E3B04B" };
 // Dibuja lo que hay en una casilla, apilado: cada estructura sube la base de lo siguiente.
 const drawIsoStack = (P, x, y, z, S, list) => {
   let base = z;
   return list.map((pr) => {
     const zb = base;
     if (STRUCT_H[pr.kind]) base += STRUCT_H[pr.kind];
-    if (ISO_STRUCT[pr.kind]) return <g key={pr.id}>{ISO_STRUCT[pr.kind](P, x, y, zb, S)}</g>;
+    if (ISO_STRUCT[pr.kind]) return <g key={pr.id}>{ISO_STRUCT[pr.kind](P, x, y, zb, S, pr.rot)}</g>;
     const [cx, cy] = P(x + 0.5, y + 0.5, zb);
     if (ISO_PROPS[pr.kind]) return <g key={pr.id}>{ISO_PROPS[pr.kind](cx, cy, S)}</g>;
     return <svg key={pr.id} x={cx - S * 0.62} y={cy - S * 1.05} width={S * 1.24} height={S * 1.24} viewBox="0 0 100 100" pointerEvents="none" dangerouslySetInnerHTML={{ __html: propSvg(pr.kind) }} />;
@@ -2961,6 +2993,10 @@ const sharedStyles = `
   .mh-measure-tag { position: absolute; z-index: 9; transform: translate(14px, -130%); padding: 4px 9px; border-radius: 8px; background: rgba(20,14,18,.86); border: 1.5px solid var(--mc); color: #F4EEE2; font: 600 11.5px Inter, system-ui, sans-serif; white-space: nowrap; pointer-events: none; }
   .mh-measure-tag b { font-size: 13px; color: var(--mc); }
   .mh-iso-ghost { opacity: .7; }
+  .mh-iso-aura { transform-box: fill-box; transform-origin: center; animation: mh-aura 2s ease-in-out infinite; }
+  @keyframes mh-aura { 0%, 100% { opacity: .22; transform: scale(.94); } 50% { opacity: .5; transform: scale(1.06); } }
+  .mh-iso-spark { animation: mh-spark 2.2s ease-in infinite; }
+  @keyframes mh-spark { 0% { opacity: 0; transform: translateY(0); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(-26px); } }
   .mh-iso-flag { transform-box: fill-box; transform-origin: 0 50%; animation: mh-flag 2.4s ease-in-out infinite; }
   @keyframes mh-flag { 0%, 100% { transform: skewY(0deg); } 50% { transform: skewY(-6deg); } }
   .mh-iso-emblem { animation: mh-emb 2.4s ease-in-out infinite; }
@@ -5596,8 +5632,12 @@ function IsoBoard({ areas = [], areaTool, log, hideIsoBtn, menuFor, anim, tokens
   const P = (x, y, z = 0) => [OX + (x - y) * S, OY + ((x + y) * S) / 2 - z * S * 0.8];
   const pts = (arr) => arr.map((q) => q.join(",")).join(" ");
   const ter = {};
-  terrain.forEach((t) => (ter[t.x + "," + t.y] = t.kind));
-  const tAt = (x, y) => terrainOf(ter[x + "," + y]);
+  terrain.forEach((t) => (ter[t.x + "," + t.y] = t));
+  const tAt = (x, y) => {
+    const t = ter[x + "," + y];
+    const d = terrainOf(t?.kind);
+    return t && t.lvl > 1 ? { ...d, z: d.z * t.lvl } : d;
+  };
   const svgRef = useRef(null);
   const dragRef = useRef(null);
   const [drag, setDrag] = useState(null);
@@ -5667,14 +5707,14 @@ function IsoBoard({ areas = [], areaTool, log, hideIsoBtn, menuFor, anim, tokens
     if (stampTool) {
       e.preventDefault();
       painting.current = new Set([x + "," + y]);
-      if (isTerrainTool || canStack(x, y)) onStamp(x, y);
+      if (stampTool === "rot" || isTerrainTool || canStack(x, y)) onStamp(x, y);
       const move = (ev) => {
         const c = cellFrom(ev);
         if (!c || !painting.current) return;
         const k = c.x + "," + c.y;
         if (painting.current.has(k)) return;
         painting.current.add(k);
-        if (isTerrainTool || canStack(c.x, c.y)) onStamp(c.x, c.y);
+        if (stampTool !== "rot" && (isTerrainTool || canStack(c.x, c.y))) onStamp(c.x, c.y);
       };
       window.addEventListener("pointermove", move);
       window.addEventListener("pointerup", () => { window.removeEventListener("pointermove", move); painting.current = null; }, { once: true });
@@ -5755,6 +5795,34 @@ function IsoBoard({ areas = [], areaTool, log, hideIsoBtn, menuFor, anim, tokens
     for (let x = Math.max(0, sum - MAP_ROWS + 1); x <= Math.min(MAP_COLS - 1, sum); x++) cells.push([x, sum - x]);
   // La ficha que se está arrastrando se dibuja aparte, encima de todo y pegada al puntero.
   const tokAt = (x, y) => tokens.filter((t) => !(drag && drag.moved && drag.id === t.id) && t.x === x && t.y === y);
+  // Para las siluetas: orden de pintado de cada casilla y formas que dibuja (colina, estructuras, árboles).
+  const cellIdx = {};
+  cells.forEach(([x, y], i) => (cellIdx[x + "," + y] = i));
+  const occShapes = (x, y) => {
+    const out = [];
+    const z = tAt(x, y).z;
+    if (z > 0) {
+      const hull = prismHull(P, x, y, x + 1, y + 1, 0, z);
+      out.push((pt) => pointInPoly(pt, hull));
+    }
+    let base = z;
+    propsAt(x, y).forEach((pr) => {
+      if (STRUCT_H[pr.kind]) {
+        const top = base + STRUCT_H[pr.kind] + (pr.kind === "caja" ? 0 : 0.32);
+        const hull = pr.kind === "caja" ? prismHull(P, x + 0.2, y + 0.2, x + 0.8, y + 0.8, base, top) : prismHull(P, x, y, x + 1, y + 1, base, top);
+        out.push((pt) => pointInPoly(pt, hull));
+        base += STRUCT_H[pr.kind];
+      } else if (pr.kind === "arbol") {
+        const [cx, cy] = P(x + 0.5, y + 0.5, base);
+        out.push((pt) => Math.hypot(pt[0] - cx, pt[1] - (cy - S * 0.85)) < S * 0.45);
+      } else if (pr.kind === "pino") {
+        const [cx, cy] = P(x + 0.5, y + 0.5, base);
+        const tri = [[cx, cy - S * 1.3], [cx + S * 0.38, cy - S * 0.3], [cx - S * 0.38, cy - S * 0.3]];
+        out.push((pt) => pointInPoly(pt, tri));
+      }
+    });
+    return out;
+  };
   // Hilo discontinuo entre cada mascota y su dueño.
   const petLinks = tokens
     .filter((t) => t.kind === "pet" && !t.vanished)
@@ -5783,7 +5851,7 @@ function IsoBoard({ areas = [], areaTool, log, hideIsoBtn, menuFor, anim, tokens
         onPointerDown={(e) => tokenDown(e, t)}
         onContextMenu={(e) => openMenu(e, t)}
       >
-        <title>{t.vanished ? "" : [t.name, t.beast && "Forma de Bestia: " + t.beast, t.hidden && "Escondido", ...mapConds(t)].filter(Boolean).join(" · ")}</title>
+        <title>{t.vanished ? "" : [t.name, t.trf && "Transformación: " + t.trf, t.beast && "Forma de Bestia: " + t.beast, t.hidden && "Escondido", ...mapConds(t)].filter(Boolean).join(" · ")}</title>
         {vis[t.id] && (
           <g key={vis[t.id].n} className="mh-iso-puff" pointerEvents="none">
             {[[-0.32, -0.5], [0.3, -0.62], [0, -0.95], [-0.2, -0.2], [0.26, -0.22]].map(([dx, dy], k) => (
@@ -5820,6 +5888,17 @@ function IsoBoard({ areas = [], areaTool, log, hideIsoBtn, menuFor, anim, tokens
           );
         })()}
         <g className="mh-iso-body" transform={sizeK(t) !== 1 ? `translate(${cx} ${cy}) scale(${sizeK(t)}) translate(${-cx} ${-cy})` : undefined}>
+        {t.trf && !down && (() => {
+          const tc = TRANSFORM_COLORS[t.trf] || "#A58BE8";
+          return (
+            <g pointerEvents="none">
+              <ellipse className="mh-iso-aura" cx={cx} cy={cy - S * 0.55} rx={S * 0.62} ry={S * 0.82} fill={tc} />
+              {[0, 1, 2].map((i) => (
+                <circle key={i} className="mh-iso-spark" style={{ animationDelay: -i * 0.7 + "s" }} cx={cx - S * 0.3 + i * S * 0.3} cy={cy - S * 0.2} r={S * 0.06} fill={tc} />
+              ))}
+            </g>
+          );
+        })()}
         {down ? (
           deadFoe ? (
             <g>
@@ -5977,11 +6056,22 @@ function IsoBoard({ areas = [], areaTool, log, hideIsoBtn, menuFor, anim, tokens
         {tokens.map((t) => {
           if (t.vanished || (drag && drag.moved && drag.id === t.id)) return null;
           const z0 = tAt(t.x, t.y).z;
-          const tall = (nx, ny) => nx < MAP_COLS && ny < MAP_ROWS && (tAt(nx, ny).z > z0 + 0.2 || propsAt(nx, ny).some((pr) => STRUCT_H[pr.kind] || pr.kind === "arbol" || pr.kind === "pino"));
-          if (![[1, 0], [0, 1], [1, 1], [2, 0], [0, 2], [2, 1], [1, 2], [2, 2]].some(([dx, dy]) => tall(t.x + dx, t.y + dy))) return null;
           const [gx, gy] = P(t.x + 0.5, t.y + 0.5, z0);
           const k = sizeK(t);
           const lift = isFlying(t) ? 60 : 0;
+          // Puntos de muestra de la ficha en pantalla: si varios quedan dentro de algo pintado después (delante), está tapada.
+          const rx0 = gx - S * 0.3 * k, rx1 = gx + S * 0.3 * k, ry0 = gy - lift - S * 1.05 * k, ry1 = gy - lift - S * 0.12 * k;
+          const samples = [];
+          for (let i = 0; i < 3; i++) for (let j = 0; j < 4; j++) samples.push([rx0 + ((rx1 - rx0) * (i + 0.5)) / 3, ry0 + ((ry1 - ry0) * (j + 0.5)) / 4]);
+          const hit = samples.map(() => false);
+          const ti = cellIdx[t.x + "," + t.y];
+          for (let dy = -1; dy <= 3; dy++)
+            for (let dx = -1; dx <= 3; dx++) {
+              const nx = t.x + dx, ny = t.y + dy;
+              if (nx < 0 || ny < 0 || nx >= MAP_COLS || ny >= MAP_ROWS || cellIdx[nx + "," + ny] <= ti) continue;
+              occShapes(nx, ny).forEach((sh) => samples.forEach((pt, si) => !hit[si] && sh(pt) && (hit[si] = true)));
+            }
+          if (hit.filter(Boolean).length < 5) return null;
           const col = t.kind === "foe" ? "#E07A6E" : t.kind === "npc" ? "#A9B4C6" : t.color || "#C9A24A";
           return (
             <rect key={"gh" + t.id} className="mh-iso-ghost" x={gx - S * 0.33 * k} y={gy - lift - S * 1.1 * k} width={S * 0.66 * k} height={S * 1.04 * k} rx={S * 0.33 * k} fill="none" stroke={col} strokeWidth="2.2" strokeDasharray="5 3" pointerEvents="none" />
@@ -6824,13 +6914,14 @@ export default function App({ onSignOut }) {
     const sameConds = (a) => (a || []).join("|") === conds.join("|");
     const down = Number(me.r_hp || 0) > 0 && Number(me.hp_marked || 0) >= Number(me.r_hp || 0);
     const beast = me.f_beastform || "";
-    const wrong = (campaignMap.tokens || []).some((t) => t.kind === "pc" && t.charId === viewingCharId && (!!t.hidden !== hid || !sameConds(t.conds) || !!t.down !== down || (t.beast || "") !== beast));
+    const trf = me.f_transformation || "";
+    const wrong = (campaignMap.tokens || []).some((t) => t.kind === "pc" && t.charId === viewingCharId && (!!t.hidden !== hid || !sameConds(t.conds) || !!t.down !== down || (t.beast || "") !== beast || (t.trf || "") !== trf));
     if (!wrong) return;
     mutateMap(sheetCampaignId, (ts) =>
       ts.map((t) => {
         if (t.kind !== "pc" || t.charId !== viewingCharId) return t;
-        const { hidden, conds: _c, down: _d, beast: _b, ...rest } = t;
-        return { ...rest, ...(hid ? { hidden: true } : {}), ...(conds.length ? { conds } : {}), ...(down ? { down: true } : {}), ...(beast ? { beast } : {}) };
+        const { hidden, conds: _c, down: _d, beast: _b, trf: _t, ...rest } = t;
+        return { ...rest, ...(hid ? { hidden: true } : {}), ...(conds.length ? { conds } : {}), ...(down ? { down: true } : {}), ...(beast ? { beast } : {}), ...(trf ? { trf } : {}) };
       })
     );
   }, [campaignMap, characters, sheetCampaignId, viewingCharId]);
@@ -9262,10 +9353,19 @@ export default function App({ onSignOut }) {
   };
 
   const stampProp = (kind, x, y) =>
-    kind && kind.startsWith("t:")
+    kind === "rot"
+      ? mutateMap(viewingCampaignId, (props) => {
+          // Gira lo de más arriba de la casilla.
+          const idx = props.map((pr, i) => (pr.x === x && pr.y === y ? i : -1)).filter((i) => i >= 0).pop();
+          return idx == null ? props : props.map((pr, i) => (i === idx ? { ...pr, rot: ((pr.rot || 0) + 1) % 4 } : pr));
+        }, "props")
+      : kind && kind.startsWith("t:")
       ? mutateMap(viewingCampaignId, (ter) => {
           const k = kind.slice(2);
+          const cur = ter.find((t) => t.x === x && t.y === y);
           const rest = ter.filter((t) => !(t.x === x && t.y === y));
+          // Colinas y riscos se apilan: pintar otra vez la misma sube un nivel (hasta 4).
+          if (cur && cur.kind === k && terrainOf(k).z > 0) return [...rest, { ...cur, lvl: Math.min(4, (cur.lvl || 1) + 1) }];
           return k === "hierba" ? rest : [...rest, { x, y, kind: k }];
         }, "terrain")
       : mutateMap(
@@ -9279,7 +9379,9 @@ export default function App({ onSignOut }) {
           "props"
         );
   const unstampProp = (x, y) => {
-    if (stampTool && stampTool.startsWith("t:")) return mutateMap(viewingCampaignId, (ter) => ter.filter((t) => !(t.x === x && t.y === y)), "terrain");
+    // Con el terreno, el clic derecho baja un nivel (o vuelve a hierba).
+    if (stampTool && stampTool.startsWith("t:"))
+      return mutateMap(viewingCampaignId, (ter) => ter.flatMap((t) => (t.x === x && t.y === y ? ((t.lvl || 1) > 1 ? [{ ...t, lvl: t.lvl - 1 }] : []) : [t])), "terrain");
     // Quita solo lo de más arriba de la pila.
     return mutateMap(
       viewingCampaignId,
@@ -9347,7 +9449,8 @@ export default function App({ onSignOut }) {
         let conds = t.conds || [];
         if (ch && t.charId === viewingCharId && !gmViewing) conds = getConditions(ch).filter((c) => MAP_COND_FX[c]);
         const beast = ch && t.charId === viewingCharId && !gmViewing ? ch.f_beastform || "" : t.beast || "";
-        return { ...t, hidden, conds, beast, name: ch?.f_name || t.name || "Personaje", color: classColor(ch?.f_class), hp: ch ? [Number(ch.hp_marked || 0), Number(ch.r_hp || 0)] : null };
+        const trf = ch && t.charId === viewingCharId && !gmViewing ? ch.f_transformation || "" : t.trf || "";
+        return { ...t, hidden, conds, beast, trf, name: ch?.f_name || t.name || "Personaje", color: classColor(ch?.f_class), hp: ch ? [Number(ch.hp_marked || 0), Number(ch.r_hp || 0)] : null };
       }
       if (t.kind === "pet") return { ...t, color: classColor(characters[t.ownerCharId]?.f_class) };
       return { ...t, color: t.kind === "foe" ? "#C0504A" : "#C9A24A", img: t.imgId ? castImgs[t.imgId] : null, ...(t.stats ? { hp: [Number(t.stats.hpMarked || 0), Number(t.stats.hp || 0)] } : {}) };
@@ -11721,6 +11824,12 @@ export default function App({ onSignOut }) {
                               {pr.label}
                             </button>
                           ))}
+                          <button type="button" className={"mh-map-chip" + (stampTool === "rot" ? " is-on" : "")} aria-pressed={stampTool === "rot"} title="Pulsa un puente, una puerta o un estandarte para girarlo" onClick={() => setStampTool(stampTool === "rot" ? null : "rot")}>
+                            <i className="is-prop">
+                              <RotateCcw size={14} />
+                            </i>
+                            Girar
+                          </button>
                           <span className="mh-map-props-sep">Terreno</span>
                           {MAP_TERRAINS.map((tr) => (
                             <button key={tr.key} type="button" className={"mh-map-chip" + (stampTool === "t:" + tr.key ? " is-on" : "")} aria-pressed={stampTool === "t:" + tr.key} onClick={() => setStampTool(stampTool === "t:" + tr.key ? null : "t:" + tr.key)}>
