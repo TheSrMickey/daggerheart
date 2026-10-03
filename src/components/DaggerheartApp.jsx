@@ -1730,8 +1730,26 @@ const MAP_PROPS = [
   { key: "tronco", label: "Tronco", svg: '<rect x="8" y="36" width="84" height="30" rx="15" fill="#000" opacity=".22"/><rect x="6" y="30" width="84" height="30" rx="15" fill="#7A5230"/><ellipse cx="82" cy="45" rx="8" ry="15" fill="#B08560"/><path d="M20 38h40M26 50h44" stroke="#5E3D22" stroke-width="3"/>' },
   { key: "barril", label: "Barril", svg: '<ellipse cx="54" cy="58" rx="30" ry="30" fill="#000" opacity=".25"/><circle cx="50" cy="50" r="32" fill="#8A5A2E"/><circle cx="50" cy="50" r="26" fill="none" stroke="#4B3018" stroke-width="4"/><circle cx="50" cy="50" r="12" fill="none" stroke="#4B3018" stroke-width="3"/><path d="M50 18v64M18 50h64" stroke="#6E4623" stroke-width="2"/>' },
   { key: "caja", label: "Caja", svg: '<rect x="20" y="22" width="64" height="64" fill="#000" opacity=".22"/><rect x="16" y="16" width="64" height="64" rx="4" fill="#A0703E"/><rect x="16" y="16" width="64" height="64" rx="4" fill="none" stroke="#5C3E1E" stroke-width="5"/><path d="M16 16 80 80M80 16 16 80" stroke="#5C3E1E" stroke-width="5"/>' },
+  { key: "cofre", label: "Cofre", svg: '<rect x="20" y="30" width="66" height="48" rx="6" fill="#000" opacity=".22"/><rect x="16" y="26" width="66" height="48" rx="6" fill="#8A5A2B"/><rect x="16" y="26" width="66" height="18" rx="6" fill="#A8703A"/><path d="M16 44h66" stroke="#E3C26A" stroke-width="4"/><rect x="44" y="40" width="10" height="12" rx="2" fill="#E3C26A"/>' },
+  { key: "antorcha", label: "Antorcha", svg: '<circle cx="50" cy="44" r="34" fill="#F7D35A" opacity=".22"/><rect x="46" y="44" width="8" height="40" rx="3" fill="#5A3A22"/><path d="M50 14 C60 28 62 38 50 50 C38 38 40 28 50 14Z" fill="#F3A64A"/><path d="M50 28 C55 34 55 40 50 46 C45 40 45 34 50 28Z" fill="#FFE08A"/>' },
+  { key: "muro", label: "Muro", svg: '<rect x="6" y="30" width="92" height="44" fill="#000" opacity=".2"/><rect x="2" y="26" width="92" height="44" fill="#A7A196"/><path d="M2 40h92M2 55h92M24 26v14M56 26v14M88 26v14M10 40v15M40 40v15M72 40v15M24 55v15M56 55v15M88 55v15" stroke="#7E786E" stroke-width="3"/>' },
   { key: "hoguera", label: "Hoguera", svg: '<circle cx="50" cy="50" r="40" fill="#FF9A3D" opacity=".25"/><path d="M26 60 74 40M26 40 74 60" stroke="#4B3018" stroke-width="9" stroke-linecap="round"/><path d="M50 22 C62 38 66 50 50 66 C34 50 38 38 50 22Z" fill="#FF8A2A"/><path d="M50 36 C57 46 58 54 50 62 C42 54 43 46 50 36Z" fill="#FFE08A"/>' },
 ];
+// Muro: un bloque de piedra que ocupa toda la casilla (se dibuja aparte en la vista isométrica).
+const isoWall = (P, x, y, z, S) => {
+  const h = S * 0.75;
+  const a = P(x, y, z), b = P(x + 1, y, z), c = P(x + 1, y + 1, z), d = P(x, y + 1, z);
+  const up = (q) => [q[0], q[1] - h];
+  const pts = (arr) => arr.map((q) => q.join(",")).join(" ");
+  return (
+    <g pointerEvents="none">
+      <polygon points={pts([d, c, up(c), up(d)])} fill="#A7A196" stroke="#7E786E" />
+      <polygon points={pts([c, b, up(b), up(c)])} fill="#918B80" stroke="#7E786E" />
+      <polygon points={pts([up(a), up(b), up(c), up(d)])} fill="#BDB7AC" stroke="#7E786E" />
+      <path d={`M${d[0]} ${d[1] - h / 2} L${c[0]} ${c[1] - h / 2} L${b[0]} ${b[1] - h / 2}`} stroke="#8A847A" strokeWidth="1.2" fill="none" />
+    </g>
+  );
+};
 const propSvg = (key) => MAP_PROPS.find((p) => p.key === key)?.svg || "";
 // Terrenos que el DJ pinta en el mapa (la hierba es el suelo por defecto). z = altura de la loseta en la vista isométrica.
 const MAP_TERRAINS = [
@@ -1743,6 +1761,86 @@ const MAP_TERRAINS = [
   { key: "roca", label: "Risco", z: 1.2, top: ["#9AA08E", "#939986"], s1: "#7C8273", s2: "#6C7263", flat: "rgba(140,146,128,.7)" },
 ];
 const terrainOf = (key) => MAP_TERRAINS.find((t) => t.key === key) || MAP_TERRAINS[0];
+// Vista isométrica: la hierba con varios tonos y detalles por casilla (siempre los mismos para la misma casilla).
+const GRASS_TONES = ["#A9C48A", "#9DBB7E", "#A4C084", "#98B679"];
+const cellHash = (x, y) => (((x * 73856093) ^ (y * 19349663)) >>> 0) % 997;
+// Decorados con volumen para la vista isométrica (los demás usan su dibujo plano).
+const ISO_PROPS = {
+  arbol: (cx, cy, S) => (
+    <g pointerEvents="none">
+      <ellipse cx={cx} cy={cy + 2} rx={S * 0.42} ry={S * 0.17} fill="rgba(0,0,0,.25)" />
+      <rect x={cx - S * 0.09} y={cy - S * 0.5} width={S * 0.18} height={S * 0.52} fill="#7A4E2A" />
+      <circle cx={cx} cy={cy - S * 0.85} r={S * 0.45} fill="#5E8C46" />
+      <circle cx={cx - S * 0.2} cy={cy - S * 1} r={S * 0.27} fill="#6FA055" />
+      <circle cx={cx + S * 0.17} cy={cy - S * 0.7} r={S * 0.24} fill="#527C3D" />
+    </g>
+  ),
+  pino: (cx, cy, S) => (
+    <g pointerEvents="none">
+      <ellipse cx={cx} cy={cy + 2} rx={S * 0.36} ry={S * 0.15} fill="rgba(0,0,0,.25)" />
+      <rect x={cx - S * 0.07} y={cy - S * 0.36} width={S * 0.14} height={S * 0.38} fill="#6B4426" />
+      <path d={`M${cx} ${cy - S * 1.3} L${cx + S * 0.38} ${cy - S * 0.3} L${cx - S * 0.38} ${cy - S * 0.3} Z`} fill="#3F7A4A" />
+      <path d={`M${cx} ${cy - S * 1.3} L${cx + S * 0.38} ${cy - S * 0.3} L${cx} ${cy - S * 0.36} Z`} fill="#336840" />
+    </g>
+  ),
+  roca: (cx, cy, S) => (
+    <g pointerEvents="none">
+      <ellipse cx={cx} cy={cy + 2} rx={S * 0.45} ry={S * 0.17} fill="rgba(0,0,0,.25)" />
+      <path d={`M${cx - S * 0.4} ${cy} L${cx - S * 0.27} ${cy - S * 0.4} L${cx + S * 0.07} ${cy - S * 0.53} L${cx + S * 0.37} ${cy - S * 0.27} L${cx + S * 0.4} ${cy} Z`} fill="#9A958C" />
+      <path d={`M${cx - S * 0.27} ${cy - S * 0.4} L${cx + S * 0.07} ${cy - S * 0.53} L${cx + S * 0.37} ${cy - S * 0.27} L${cx} ${cy - S * 0.2} Z`} fill="#B7B2A8" />
+    </g>
+  ),
+  hoguera: (cx, cy, S) => (
+    <g pointerEvents="none">
+      <ellipse className="mh-iso-glow" cx={cx} cy={cy} rx={S * 0.8} ry={S * 0.37} fill="#F3A64A" opacity=".3" />
+      <ellipse cx={cx} cy={cy + 1} rx={S * 0.43} ry={S * 0.17} fill="#4A3A2E" />
+      <g stroke="#6B4426" strokeWidth={S * 0.1} strokeLinecap="round">
+        <line x1={cx - S * 0.3} y1={cy + 2} x2={cx + S * 0.3} y2={cy - 3} />
+        <line x1={cx - S * 0.3} y1={cy - 3} x2={cx + S * 0.3} y2={cy + 2} />
+      </g>
+      <g className="mh-iso-fire">
+        <path d={`M${cx - S * 0.23} ${cy - 1} C${cx - S * 0.3} ${cy - S * 0.4} ${cx - S * 0.07} ${cy - S * 0.47} ${cx} ${cy - S * 0.8} C${cx + S * 0.13} ${cy - S * 0.47} ${cx + S * 0.3} ${cy - S * 0.4} ${cx + S * 0.23} ${cy - 1} Z`} fill="#F08A3C" />
+        <path d={`M${cx - S * 0.1} ${cy - 1} C${cx - S * 0.13} ${cy - S * 0.27} ${cx} ${cy - S * 0.33} ${cx + S * 0.03} ${cy - S * 0.5} C${cx + S * 0.1} ${cy - S * 0.3} ${cx + S * 0.17} ${cy - S * 0.23} ${cx + S * 0.1} ${cy - 1} Z`} fill="#F7D35A" />
+      </g>
+    </g>
+  ),
+  cofre: (cx, cy, S) => (
+    <g pointerEvents="none">
+      <ellipse cx={cx} cy={cy + 2} rx={S * 0.43} ry={S * 0.17} fill="rgba(0,0,0,.25)" />
+      <path d={`M${cx - S * 0.4} ${cy - S * 0.4} L${cx} ${cy - S * 0.2} L${cx} ${cy + S * 0.13} L${cx - S * 0.4} ${cy - S * 0.07} Z`} fill="#8A5A2B" />
+      <path d={`M${cx} ${cy - S * 0.2} L${cx + S * 0.4} ${cy - S * 0.4} L${cx + S * 0.4} ${cy - S * 0.07} L${cx} ${cy + S * 0.13} Z`} fill="#6E4521" />
+      <path d={`M${cx - S * 0.4} ${cy - S * 0.4} L${cx} ${cy - S * 0.6} L${cx + S * 0.4} ${cy - S * 0.4} L${cx} ${cy - S * 0.2} Z`} fill="#A8703A" />
+      <path d={`M${cx - S * 0.4} ${cy - S * 0.27} L${cx} ${cy - S * 0.07} L${cx + S * 0.4} ${cy - S * 0.27}`} stroke="#E3C26A" strokeWidth="1.8" fill="none" />
+      <rect x={cx - S * 0.07} y={cy - S * 0.17} width={S * 0.13} height={S * 0.13} fill="#E3C26A" />
+    </g>
+  ),
+  barril: (cx, cy, S) => (
+    <g pointerEvents="none">
+      {[[-0.23, 0], [0.2, 0.07], [0, -0.17]].map(([dx, dy], i) => {
+        const x = cx + dx * S, y = cy + dy * S;
+        return (
+          <g key={i}>
+            <ellipse cx={x} cy={y + 1} rx={S * 0.23} ry={S * 0.1} fill="rgba(0,0,0,.2)" />
+            <rect x={x - S * 0.2} y={y - S * 0.47} width={S * 0.4} height={S * 0.5} rx={S * 0.1} fill="#9A6634" />
+            <ellipse cx={x} cy={y - S * 0.47} rx={S * 0.2} ry={S * 0.09} fill="#B57B44" />
+            <line x1={x - S * 0.2} y1={y - S * 0.3} x2={x + S * 0.2} y2={y - S * 0.3} stroke="#5A3A22" strokeWidth="1.5" />
+            <line x1={x - S * 0.2} y1={y - S * 0.1} x2={x + S * 0.2} y2={y - S * 0.1} stroke="#5A3A22" strokeWidth="1.5" />
+          </g>
+        );
+      })}
+    </g>
+  ),
+  antorcha: (cx, cy, S) => (
+    <g pointerEvents="none">
+      <circle className="mh-iso-glow" cx={cx} cy={cy - S * 1} r={S * 0.4} fill="#F7D35A" opacity=".3" />
+      <ellipse cx={cx} cy={cy + 1} rx={S * 0.13} ry={S * 0.06} fill="rgba(0,0,0,.25)" />
+      <rect x={cx - S * 0.05} y={cy - S * 0.87} width={S * 0.1} height={S * 0.88} fill="#5A3A22" />
+      <g className="mh-iso-fire">
+        <path d={`M${cx - S * 0.13} ${cy - S * 0.87} C${cx - S * 0.17} ${cy - S * 1.1} ${cx} ${cy - S * 1.13} ${cx} ${cy - S * 1.33} C${cx + S * 0.07} ${cy - S * 1.13} ${cx + S * 0.17} ${cy - S * 1.1} ${cx + S * 0.13} ${cy - S * 0.87} Z`} fill="#F3A64A" />
+      </g>
+    </g>
+  ),
+};
 
 // Rangos de Daggerheart en cuadrícula (casillas desde la ficha, contando diagonales).
 const MAP_RANGES = [
@@ -2700,7 +2798,7 @@ const sharedStyles = `
   .mh-iso-zz text { fill: #E9DDFB; font-weight: 800; font-family: Inter, system-ui, sans-serif; stroke: rgba(0,0,0,.5); stroke-width: 2px; paint-order: stroke; transform-box: fill-box; animation: mh-iso-zz 2.4s ease-in-out infinite; opacity: 0; }
   .mh-iso-zz text + text { animation-delay: 1.2s; }
   @keyframes mh-iso-zz { 0% { opacity: 0; transform: translate(0, 0); } 30% { opacity: 1; } 100% { opacity: 0; transform: translate(6px, -14px); } }
-  .mh-iso-tk.is-c-fly > rect, .mh-iso-tk.is-c-fly > image, .mh-iso-tk.is-c-fly > text:not(.mh-iso-name), .mh-iso-tk.is-c-fly > .mh-iso-cond, .mh-iso-tk.is-c-fly > .mh-iso-zz { animation: mh-iso-fly 2.2s ease-in-out infinite; }
+
   @keyframes mh-iso-fly { 0%, 100% { transform: translateY(-10px); } 50% { transform: translateY(-17px); } }
   .mh-iso-tk.is-c-fly > .mh-iso-shadow { transform-box: fill-box; transform-origin: center; animation: mh-fly-shadow 2.2s ease-in-out infinite; }
   .mh-iso-tk.is-c-shell > rect { opacity: .85; }
@@ -2738,6 +2836,22 @@ const sharedStyles = `
   .mh-docked .mh-pre-body { grid-template-columns: 1fr; }
   .mh-docked .mh-pre-side { padding-left: 0; border-left: 0; border-top: 1px solid var(--mh-line); padding-top: 12px; }
   .mh-docked .mh-roll-pop, .mh-docked .mh-card { box-shadow: 0 18px 50px rgba(0,0,0,.4); }
+  .mh-iso-tk.is-c-fly .mh-iso-body { animation: mh-iso-fly2 2.2s ease-in-out infinite; }
+  @keyframes mh-iso-fly2 { 0%, 100% { transform: translateY(-30px); } 50% { transform: translateY(-36px); } }
+  .mh-iso-fire { transform-box: fill-box; transform-origin: 50% 100%; animation: mh-fire .45s ease-in-out infinite; }
+  @keyframes mh-fire { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.16) translateY(-1px); } }
+  .mh-iso-glow { animation: mh-glow 1.4s ease-in-out infinite; }
+  @keyframes mh-glow { 0%, 100% { opacity: .25; } 50% { opacity: .55; } }
+  .mh-map-tk.is-hit.is-late, .mh-iso-tk.is-hit.is-late { animation-delay: .62s; }
+  .mh-map-tk.is-hit.is-late .mh-map-face { animation-delay: .62s; }
+  .mh-map-shot { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 8; overflow: visible; }
+  .mh-map-tk.is-pet .mh-map-face { width: 56%; height: 56%; background: #8C7A5E; border-color: var(--tc); border-width: 3px; border-radius: 40%; }
+  .mh-map-tk.is-dead .mh-map-face { filter: grayscale(.85) brightness(.75); opacity: .8; }
+  .mh-map-tk.is-dead::before { content: ""; position: absolute; left: 8%; right: 0; top: 30%; bottom: 0; border-radius: 50%; background: rgba(122,31,40,.55); }
+  .mh-map-tk.is-dead::after { content: "✕"; position: absolute; right: 4%; top: 0; z-index: 4; color: #E24B4A; font: 800 clamp(10px, 1.3vw, 15px)/1 Inter, system-ui, sans-serif; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+  .mh-map-tk.is-c-fly { z-index: 4; }
+  .mh-map-tk.is-c-fly.is-shared { translate: 26% -8%; }
+  @media (prefers-reduced-motion: reduce) { .mh-iso-tk.is-c-fly .mh-iso-body, .mh-iso-fire, .mh-iso-glow { animation: none !important; } }
   .mh-map-log { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 9; display: flex; flex-direction: column; align-items: center; gap: 5px; pointer-events: none; width: max-content; max-width: calc(100% - 24px); }
   .mh-map-log-i { padding: 6px 12px; border-radius: 10px; background: rgba(20,14,18,.86); color: #F4EEE2; font: 600 11.5px/1.35 Inter, system-ui, sans-serif; box-shadow: 0 4px 14px rgba(0,0,0,.35); border-left: 3px solid #C9A24A; text-align: center; animation: mh-log-in .28s ease, mh-log-out .5s ease 6s forwards; }
   .mh-map-log-i.is-hit { border-left-color: #E3B04B; }
@@ -4692,6 +4806,64 @@ const MAP_COND_FX = {
   Retraído: { cls: "shell", Icon: Shell, color: "#6E8B5A" },
 };
 const mapConds = (t) => (t.conds || []).filter((c) => MAP_COND_FX[c]);
+const isFlying = (t) => mapConds(t).includes("Volando");
+const isDeadFoe = (t) => !!(t.stats && Number(t.stats.hp || 0) > 0 && Number(t.stats.hpMarked || 0) >= Number(t.stats.hp || 0));
+// Proyectil de un ataque a distancia (orbe mágico o flecha) en el tablero isométrico: vuela en arco y estalla al llegar.
+function ShotFx({ kind, a, b, size: S }) {
+  const [p, setP] = useState(0);
+  useEffect(() => {
+    let raf;
+    const t0 = performance.now();
+    const tick = (n) => {
+      const v = Math.min(1, (n - t0) / 1300);
+      setP(v);
+      if (v < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  const dist = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  const c = [(a[0] + b[0]) / 2, Math.min(a[1], b[1]) - dist * 0.35 - S * 0.4];
+  const at = (f) => [(1 - f) * (1 - f) * a[0] + 2 * (1 - f) * f * c[0] + f * f * b[0], (1 - f) * (1 - f) * a[1] + 2 * (1 - f) * f * c[1] + f * f * b[1]];
+  const f = Math.min(1, p / 0.5);
+  const q = p > 0.5 ? (p - 0.5) / 0.5 : 0;
+  const magic = kind === "magic";
+  const [x, y] = at(f);
+  return (
+    <g pointerEvents="none">
+      {f < 1 &&
+        (magic ? (
+          <>
+            {[0.15, 0.1, 0.05].map((d, i) => {
+              if (f - d <= 0) return null;
+              const [tx, ty] = at(f - d);
+              return <circle key={i} cx={tx} cy={ty} r={S * (0.05 + i * 0.03)} fill="#9D8BF0" opacity={0.25 + i * 0.15} />;
+            })}
+            <circle cx={x} cy={y} r={S * 0.27} fill="#B7A8F5" opacity=".4" />
+            <circle cx={x} cy={y} r={S * 0.15} fill="#EDE8FF" />
+          </>
+        ) : (
+          (() => {
+            const [px, py] = at(Math.max(0, f - 0.04));
+            const ang = (Math.atan2(y - py, x - px) * 180) / Math.PI;
+            return (
+              <g transform={`translate(${x} ${y}) rotate(${ang})`}>
+                <line x1={-S * 0.45} y1="0" x2="0" y2="0" stroke="#6B4426" strokeWidth="2.4" strokeLinecap="round" />
+                <path d={`M0 0 L-${S * 0.14} -${S * 0.08} L-${S * 0.14} ${S * 0.08} Z`} fill="#DDE3EA" />
+                <path d={`M-${S * 0.45} 0 l-${S * 0.1} -${S * 0.07} M-${S * 0.45} 0 l-${S * 0.1} ${S * 0.07}`} stroke="#C0504A" strokeWidth="1.6" />
+              </g>
+            );
+          })()
+        ))}
+      {q > 0 && (
+        <>
+          <circle cx={b[0]} cy={b[1]} r={S * (0.15 + q * 0.75)} fill="none" stroke={magic ? "#B7A8F5" : "#E3D9C6"} strokeWidth={3 * (1 - q) + 0.5} opacity={1 - q} />
+          {magic && <circle cx={b[0]} cy={b[1]} r={S * (0.1 + q * 0.5)} fill="none" stroke="#EDE8FF" strokeWidth="2" opacity={(1 - q) * 0.9} />}
+        </>
+      )}
+    </g>
+  );
+}
 
 // Animación de ataque en el tablero: la figura atacante embiste y el objetivo se sacude. Se reproduce una vez por ataque reciente.
 function useAttackFx(fx) {
@@ -4702,7 +4874,7 @@ function useAttackFx(fx) {
     last.current = fx.key;
     if (Date.now() - fx.key > 15000) return;
     setAnim(fx);
-    const t = setTimeout(() => setAnim(null), 1200);
+    const t = setTimeout(() => setAnim(null), 1500);
     return () => clearTimeout(t);
   }, [fx?.key]);
   return anim;
@@ -4877,7 +5049,10 @@ function MapBoard({ log, iso: isoProp, onIsoChange, hideIsoBtn, menuFor, fx, bg,
     const r = ref.current.getBoundingClientRect();
     return { x: clamp(Math.floor(((e.clientX - r.left) / r.width) * MAP_COLS), MAP_COLS), y: clamp(Math.floor(((e.clientY - r.top) / r.height) * MAP_ROWS), MAP_ROWS) };
   };
-  const occupied = (x, y, exceptId) => tokens.some((t) => t.id !== exceptId && !t.vanished && t.x === x && t.y === y);
+  const occupied = (x, y, exceptId) => {
+    const mv = tokens.find((t) => t.id === exceptId);
+    return tokens.some((t) => t.id !== exceptId && !t.vanished && t.x === x && t.y === y && !(mv && isFlying(mv) !== isFlying(t)));
+  };
   const selected = tokens.find((t) => t.id === selectedId && canMove(t));
 
   const startDrag = (e, t) => {
@@ -5048,7 +5223,7 @@ function MapBoard({ log, iso: isoProp, onIsoChange, hideIsoBtn, menuFor, fx, bg,
           <button
             key={t.id}
             type="button"
-            className={"mh-map-tk is-" + t.kind + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
+            className={"mh-map-tk is-" + t.kind + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
             style={{ ...at(pos.x, pos.y), "--tc": t.color, ...(anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); return tg ? { "--ax": (tg.x - t.x) * 100 + "%", "--ay": (tg.y - t.y) * 100 + "%" } : {}; })() : {}) }}
             onPointerDown={(e) => startDrag(e, t)}
             onContextMenu={(e) => openMenu(e, t)}
@@ -5072,7 +5247,7 @@ function MapBoard({ log, iso: isoProp, onIsoChange, hideIsoBtn, menuFor, fx, bg,
                 })}
               </span>
             )}
-            <span className="mh-map-face">{t.img ? <img src={t.img} alt="" draggable={false} /> : t.kind === "foe" ? <Skull size="55%" /> : t.kind === "pet" ? <PawPrint size="52%" /> : <span>{(t.name || "?").trim().charAt(0).toUpperCase()}</span>}</span>
+            <span className="mh-map-face">{t.img ? <img src={t.img} alt="" draggable={false} /> : t.kind === "foe" ? <Skull size="55%" /> : t.kind === "pet" ? null : <span>{(t.name || "?").trim().charAt(0).toUpperCase()}</span>}</span>
             {t.hp && t.hp[1] > 0 && (
               <span className="mh-map-hp" title={`Vida: ${t.hp[1] - t.hp[0]} de ${t.hp[1]}`}>
                 <i style={{ width: Math.max(0, ((t.hp[1] - t.hp[0]) / t.hp[1]) * 100) + "%" }} />
@@ -5087,6 +5262,15 @@ function MapBoard({ log, iso: isoProp, onIsoChange, hideIsoBtn, menuFor, fx, bg,
           <Box size={14} />
         </button>
       )}
+      {anim && (anim.kind || "melee") !== "melee" && (() => {
+        const fa = tokens.find((x) => x.id === anim.from), fb = tokens.find((x) => x.id === anim.to);
+        if (!fa || !fb) return null;
+        return (
+          <svg className="mh-map-shot" viewBox={`0 0 ${MAP_COLS * 40} ${MAP_ROWS * 40}`} preserveAspectRatio="none">
+            <ShotFx key={anim.key} kind={anim.kind} a={[(fa.x + 0.5) * 40, (fa.y + 0.5) * 40]} b={[(fb.x + 0.5) * 40, (fb.y + 0.5) * 40]} size={40} />
+          </svg>
+        );
+      })()}
       <MapLog log={log} />
       {rangeTok && (
         <div className="mh-map-legend" onPointerDown={(e) => e.stopPropagation()}>
@@ -5150,7 +5334,10 @@ function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain 
   const steps = useMoveFx(tokens.map((t) => [t.id, t.x, t.y]));
   const vis = useVisFx(tokens);
   const painting = useRef(null);
-  const occupied = (x, y, exceptId) => tokens.some((t) => t.id !== exceptId && !t.vanished && t.x === x && t.y === y);
+  const occupied = (x, y, exceptId) => {
+    const mv = tokens.find((t) => t.id === exceptId);
+    return tokens.some((t) => t.id !== exceptId && !t.vanished && t.x === x && t.y === y && !(mv && isFlying(mv) !== isFlying(t)));
+  };
   const selected = tokens.find((t) => t.id === selectedId && canMove(t));
   const cellFrom = (e) => {
     const el = document.elementsFromPoint(e.clientX, e.clientY).find((n) => n.getAttribute && n.getAttribute("data-cx") != null);
@@ -5245,15 +5432,30 @@ function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain 
     for (let x = Math.max(0, sum - MAP_ROWS + 1); x <= Math.min(MAP_COLS - 1, sum); x++) cells.push([x, sum - x]);
   // La ficha que se está arrastrando se dibuja aparte, encima de todo y pegada al puntero.
   const tokAt = (x, y) => tokens.filter((t) => !(drag && drag.moved && drag.id === t.id) && t.x === x && t.y === y);
+  // Hilo discontinuo entre cada mascota y su dueño.
+  const petLinks = tokens
+    .filter((t) => t.kind === "pet" && !t.vanished)
+    .map((t) => {
+      const o = tokens.find((x) => x.kind === "pc" && x.charId === t.ownerCharId && !x.vanished);
+      if (!o || (o.x === t.x && o.y === t.y)) return null;
+      const [ax, ay] = P(t.x + 0.5, t.y + 0.5, tAt(t.x, t.y).z);
+      const [bx, by] = P(o.x + 0.5, o.y + 0.5, tAt(o.x, o.y).z);
+      return <path key={"pl" + t.id} d={`M${ax} ${ay - 4} Q${(ax + bx) / 2} ${Math.min(ay, by) - S * 0.9} ${bx} ${by - 4}`} fill="none" stroke={o.color || "#C9A24A"} strokeWidth="1.6" strokeDasharray="3 3" opacity=".8" pointerEvents="none" />;
+    });
   const renderTok = (t, cx, cy) => {
     const movable = canMove(t);
+    const pet = t.kind === "pet";
+    const fly = isFlying(t);
+    const deadFoe = isDeadFoe(t);
+    const koPc = t.kind === "pc" && (mapConds(t).includes("Inconsciente") || t.down);
+    const down = deadFoe || koPc;
     const sel = selectedId === t.id;
     const hpFree = t.hp && t.hp[1] > 0 ? (t.hp[1] - t.hp[0]) / t.hp[1] : null;
     const col = t.kind === "foe" ? "#C0504A" : t.kind === "npc" ? "#7D8BA3" : t.color || "#C9A24A";
     return (
       <g
         key={t.id}
-        className={"mh-iso-tk" + (movable ? " is-movable" : "") + (drag?.id === t.id && drag.moved ? " is-drag" : "") + (anim && anim.from === t.id ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" : "") + (steps[t.id] && !(anim && anim.from === t.id) && !(droppedRef.current && droppedRef.current.id === t.id && Date.now() < droppedRef.current.until) ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
+        className={"mh-iso-tk" + (movable ? " is-movable" : "") + (drag?.id === t.id && drag.moved ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") : "") + (steps[t.id] && !(anim && anim.from === t.id) && !(droppedRef.current && droppedRef.current.id === t.id && Date.now() < droppedRef.current.until) ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
         style={anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); if (!tg) return undefined; const [tx, ty] = P(tg.x + 0.5, tg.y + 0.5, tAt(tg.x, tg.y).z); return { "--ax": tx - cx + "px", "--ay": ty - cy + "px" }; })() : steps[t.id] ? (() => { const st = steps[t.id]; const [ox, oy] = P(st.fx + 0.5, st.fy + 0.5, tAt(st.fx, st.fy).z); return { "--mx": ox - cx + "px", "--my": oy - cy + "px" }; })() : undefined}
         onPointerDown={(e) => tokenDown(e, t)}
         onContextMenu={(e) => openMenu(e, t)}
@@ -5267,12 +5469,45 @@ function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain 
           </g>
         )}
         {sel && <ellipse cx={cx} cy={cy} rx={S * 0.62} ry={S * 0.31} fill="none" stroke="#E3B04B" strokeWidth="3" />}
-        <ellipse className="mh-iso-shadow" cx={cx} cy={cy} rx={S * 0.42} ry={S * 0.21} fill="rgba(0,0,0,.28)" />
+        {deadFoe && (
+          <g pointerEvents="none">
+            <ellipse cx={cx + 3} cy={cy + 2} rx={S * 0.66} ry={S * 0.24} fill="#7A1F28" opacity=".55" />
+            <ellipse cx={cx + S * 0.5} cy={cy + S * 0.15} rx={S * 0.18} ry={S * 0.07} fill="#7A1F28" opacity=".5" />
+          </g>
+        )}
+        <ellipse className="mh-iso-shadow" cx={cx} cy={cy} rx={S * (down ? 0.55 : pet ? 0.3 : 0.42)} ry={S * (down ? 0.22 : pet ? 0.15 : 0.21)} fill="rgba(0,0,0,.28)" />
+        {fly && <line className="mh-iso-flyline" x1={cx} y1={cy - 2} x2={cx} y2={cy - S * 1.05} stroke="#fff" strokeWidth="1.2" strokeDasharray="2 3" opacity=".85" pointerEvents="none" />}
         {mapConds(t).map((c) => (
           <ellipse key={c} className={"mh-iso-ring ring-" + MAP_COND_FX[c].cls} cx={cx} cy={cy} rx={S * 0.52} ry={S * 0.26} stroke={MAP_COND_FX[c].color} />
         ))}
-        <rect x={cx - S * 0.33} y={cy - S * 1.1} width={S * 0.66} height={S * 1.04} rx={S * 0.33} fill={col} stroke="#fff" strokeWidth="2.2" />
-        {t.img ? (
+        <g className="mh-iso-body" transform={pet ? `translate(${cx} ${cy}) scale(.68) translate(${-cx} ${-cy})` : undefined}>
+        {down ? (
+          deadFoe ? (
+            <g>
+              <rect x={cx - S * 0.5} y={cy - S * 0.42} width={S} height={S * 0.52} rx={S * 0.26} fill="#6E5A5A" stroke="#D9CFCF" strokeWidth="2" opacity=".9" />
+              <g transform={`translate(${cx} ${cy - S * 0.17})`} fill="#fff">
+                <circle r={S * 0.17} />
+                <rect x={-S * 0.09} y={S * 0.09} width={S * 0.18} height={S * 0.1} rx="1" />
+                <circle cx={-S * 0.06} cy={-S * 0.01} r={S * 0.045} fill="#4A2E2E" />
+                <circle cx={S * 0.06} cy={-S * 0.01} r={S * 0.045} fill="#4A2E2E" />
+              </g>
+              <path d={`M${cx + S * 0.55} ${cy - S * 0.6} l${S * 0.18} ${S * 0.18} m0 -${S * 0.18} l-${S * 0.18} ${S * 0.18}`} stroke="#C0504A" strokeWidth="2.4" strokeLinecap="round" />
+            </g>
+          ) : (
+            <g>
+              <rect x={cx - S * 0.5} y={cy - S * 0.42} width={S} height={S * 0.52} rx={S * 0.26} fill="#8E9A92" stroke="#fff" strokeWidth="2" />
+              <text x={cx - S * 0.12} y={cy - S * 0.03} fontSize={S * 0.34} fontWeight="700" fill="#fff" textAnchor="middle" fontFamily="Inter, system-ui, sans-serif" transform={`rotate(-90 ${cx - S * 0.12} ${cy - S * 0.15})`}>
+                {(t.name || "?").trim().charAt(0).toUpperCase()}
+              </text>
+            </g>
+          )
+        ) : (
+        <>
+        {pet && (
+          <path d={`M${cx - S * 0.3} ${cy - S * 0.95} L${cx - S * 0.36} ${cy - S * 1.38} L${cx - S * 0.08} ${cy - S * 1.08} Z M${cx + S * 0.3} ${cy - S * 0.95} L${cx + S * 0.36} ${cy - S * 1.38} L${cx + S * 0.08} ${cy - S * 1.08} Z`} fill="#8C7A5E" stroke={col} strokeWidth="2.4" strokeLinejoin="round" />
+        )}
+        <rect x={cx - S * 0.33} y={cy - S * 1.1} width={S * 0.66} height={S * 1.04} rx={S * 0.33} fill={pet ? "#8C7A5E" : col} stroke={pet ? col : "#fff"} strokeWidth={pet ? 3.2 : 2.2} />
+        {pet ? null : t.img ? (
           <>
             <clipPath id={"isoclip-" + t.id}>
               <circle cx={cx} cy={cy - S * 0.76} r={S * 0.26} />
@@ -5290,10 +5525,12 @@ function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain 
             <rect x={cx - S * 0.32} y={cy - S * 1.3} width={S * 0.64 * Math.max(0, hpFree)} height={S * 0.11} rx={2} fill="#E24B4A" />
           </>
         )}
+        </>
+        )}
         {mapConds(t).includes("Inconsciente") && (
           <g className="mh-iso-zz" pointerEvents="none">
-            <text x={cx + S * 0.3} y={cy - S * 1.15} fontSize={S * 0.3}>z</text>
-            <text x={cx + S * 0.45} y={cy - S * 1.35} fontSize={S * 0.22}>z</text>
+            <text x={cx + S * 0.3} y={cy - S * (down ? 0.6 : 1.15)} fontSize={S * 0.3}>z</text>
+            <text x={cx + S * 0.45} y={cy - S * (down ? 0.8 : 1.35)} fontSize={S * 0.22}>z</text>
           </g>
         )}
         {mapConds(t).map((c, k) => {
@@ -5307,6 +5544,7 @@ function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain 
             </g>
           );
         })}
+        </g>
       </g>
     );
   };
@@ -5315,7 +5553,7 @@ function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain 
       <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" onContextMenu={(e) => e.preventDefault()}>
         {/* Dos pasadas: primero todo el suelo y luego, de atrás hacia delante, decorados y fichas (con su nombre).
             Así el suelo nunca tapa a una ficha ni a su nombre, y una ficha de delante sí tapa a la de detrás. */}
-        {["ground", "things"].map((layer) => cells.map(([x, y]) => {
+        {["ground", "links", "things"].map((layer) => layer === "links" ? petLinks : cells.map(([x, y]) => {
           const tr = tAt(x, y);
           const z = tr.z;
           const a = P(x, y, z), b = P(x + 1, y, z), c = P(x + 1, y + 1, z), d = P(x, y + 1, z);
@@ -5336,7 +5574,7 @@ function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain 
               )}
               <polygon
                 points={pts([a, b, c, d])}
-                fill={tr.top[(x + y) % 2]}
+                fill={tr.key === "hierba" ? GRASS_TONES[cellHash(x, y) % 4] : tr.top[(x + y) % 2]}
                 stroke="rgba(0,0,0,.12)"
                 strokeWidth="1"
                 data-cx={x}
@@ -5345,6 +5583,29 @@ function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain 
                 onPointerDown={(e) => tileDown(e, x, y)}
                 onContextMenu={(e) => tileContext(e, x, y)}
               />
+              {(() => {
+                // Detalles del suelo: oleaje en el agua, piedras en el camino y alguna flor en la hierba.
+                const [mx, my] = P(x + 0.5, y + 0.5, z);
+                const h = cellHash(x, y);
+                if (tr.key === "agua")
+                  return <path d={`M${mx - S * 0.4} ${my} q${S * 0.13} -${S * 0.1} ${S * 0.27} 0 t${S * 0.27} 0 t${S * 0.27} 0`} stroke="#E6F2F8" strokeWidth="1.4" fill="none" opacity=".75" pointerEvents="none" />;
+                if (tr.key === "camino")
+                  return (
+                    <g fill="#B9A67A" pointerEvents="none">
+                      <ellipse cx={mx - S * 0.2} cy={my - S * 0.07} rx={S * 0.13} ry={S * 0.07} />
+                      <ellipse cx={mx + S * 0.2} cy={my + S * 0.1} rx={S * 0.12} ry={S * 0.06} />
+                    </g>
+                  );
+                if (tr.key === "hierba" && h % 100 < 9 && !propAt(x, y))
+                  return (
+                    <g fill={h % 2 ? "#F3C24A" : "#E98BA6"} pointerEvents="none">
+                      <circle cx={mx - S * 0.27} cy={my + S * 0.07} r={S * 0.06} />
+                      <circle cx={mx + S * 0.17} cy={my - S * 0.1} r={S * 0.06} />
+                      <circle cx={mx + S * 0.3} cy={my + S * 0.13} r={S * 0.05} />
+                    </g>
+                  );
+                return null;
+              })()}
               {band && <polygon points={pts([a, b, c, d])} fill={band.color} fillOpacity=".42" pointerEvents="none" />}
               {band &&
                 [[x, y - 1, a, b], [x + 1, y, b, c], [x, y + 1, c, d], [x - 1, y, d, a]].map(([nx, ny, p1, p2], k) =>
@@ -5355,11 +5616,18 @@ function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain 
             </g>
           ) : (
             <g key={"t" + x + "," + y}>
-              {pr && <svg x={cx - S * 0.62} y={cy - S * 1.05} width={S * 1.24} height={S * 1.24} viewBox="0 0 100 100" pointerEvents="none" dangerouslySetInnerHTML={{ __html: propSvg(pr.kind) }} />}
-              {here.map((t) => renderTok(t, cx, cy))}
+              {pr && pr.kind === "muro" ? isoWall(P, x, y, z, S) : pr && ISO_PROPS[pr.kind] ? ISO_PROPS[pr.kind](cx, cy, S) : pr && <svg x={cx - S * 0.62} y={cy - S * 1.05} width={S * 1.24} height={S * 1.24} viewBox="0 0 100 100" pointerEvents="none" dangerouslySetInnerHTML={{ __html: propSvg(pr.kind) }} />}
+              {[...here].sort((p, q) => isFlying(p) - isFlying(q)).map((t) => renderTok(t, cx + (here.length > 1 && isFlying(t) ? S * 0.32 : 0), cy))}
             </g>
           );
         }))}
+        {anim && (anim.kind || "melee") !== "melee" && (() => {
+          const fa = tokens.find((x) => x.id === anim.from), fb = tokens.find((x) => x.id === anim.to);
+          if (!fa || !fb) return null;
+          const [ax, ay] = P(fa.x + 0.5, fa.y + 0.5, tAt(fa.x, fa.y).z);
+          const [bx, by] = P(fb.x + 0.5, fb.y + 0.5, tAt(fb.x, fb.y).z);
+          return <ShotFx key={anim.key} kind={anim.kind} a={[ax, ay - S * 0.65]} b={[bx, by - S * 0.6]} size={S} />;
+        })()}
         {drag && drag.moved && drag.px != null && (() => {
           const t = tokens.find((x) => x.id === drag.id);
           return t ? renderTok(t, drag.px, drag.py) : null;
@@ -6127,13 +6395,14 @@ export default function App({ onSignOut }) {
     const hid = getConditions(me).some((n) => n === "Escondido" || n === "Oculto");
     const conds = getConditions(me).filter((c) => MAP_COND_FX[c]);
     const sameConds = (a) => (a || []).join("|") === conds.join("|");
-    const wrong = (campaignMap.tokens || []).some((t) => t.kind === "pc" && t.charId === viewingCharId && (!!t.hidden !== hid || !sameConds(t.conds)));
+    const down = Number(me.r_hp || 0) > 0 && Number(me.hp_marked || 0) >= Number(me.r_hp || 0);
+    const wrong = (campaignMap.tokens || []).some((t) => t.kind === "pc" && t.charId === viewingCharId && (!!t.hidden !== hid || !sameConds(t.conds) || !!t.down !== down));
     if (!wrong) return;
     mutateMap(sheetCampaignId, (ts) =>
       ts.map((t) => {
         if (t.kind !== "pc" || t.charId !== viewingCharId) return t;
-        const { hidden, conds: _c, ...rest } = t;
-        return { ...rest, ...(hid ? { hidden: true } : {}), ...(conds.length ? { conds } : {}) };
+        const { hidden, conds: _c, down: _d, ...rest } = t;
+        return { ...rest, ...(hid ? { hidden: true } : {}), ...(conds.length ? { conds } : {}), ...(down ? { down: true } : {}) };
       })
     );
   }, [campaignMap, characters, sheetCampaignId, viewingCharId]);
@@ -18188,7 +18457,9 @@ export default function App({ onSignOut }) {
                             }
                             if (traitRollResult.weapon.targetId && sheetCampaignId) {
                               const fromTok = (campaignMap.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
-                              if (fromTok) mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: fromTok.id, to: traitRollResult.weapon.targetId }), "fx");
+                              const reachNow = weaponReach(rc, name);
+                              const fxKind = /mágic/i.test(damage || "") ? "magic" : reachNow && reachNow !== "Cuerpo a cuerpo" ? "shot" : "melee";
+                              if (fromTok) mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: fromTok.id, to: traitRollResult.weapon.targetId, kind: fxKind }), "fx");
                             }
                             rollWeaponDamage(name, damage, charId, isCritical, { angel: traitRollResult.weapon.angel || 0, knight: !!traitRollResult.weapon.knight, attackFear: traitRollResult.fear, ...(pummel || honedHit ? { fixedDice: getProficiency(rc) + (pummel ? 1 : 0) + (honedHit ? 1 : 0) } : {}), fearDice, cloaked: wasCloaked, spirit, resonance: spirit && rc && tierForLevel(rc.f_level || 1) >= 3, extraFlat: traitRollResult.weapon.elemDmg || 0, doublePick: !!traitRollResult.weapon.manipDouble, targetId: traitRollResult.weapon.targetId || null });
                           }}
