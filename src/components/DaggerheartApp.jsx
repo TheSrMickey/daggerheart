@@ -1868,6 +1868,13 @@ const pointInPoly = (pt, poly) => {
 // Silueta en pantalla de un bloque (hexágono).
 const prismHull = (P, x0, y0, x1, y1, z0, z1) => [P(x0, y0, z1), P(x1, y0, z1), P(x1, y0, z0), P(x1, y1, z0), P(x0, y1, z0), P(x0, y1, z1)];
 // Colores de las transformaciones de personaje (aura en el tablero).
+// Transformación que se ve en el tablero: las que tienen una forma que se activa (como la Forma de Lobo) solo mientras está activa.
+const visibleTransform = (c) => {
+  const key = c?.f_transformation || "";
+  if (!key) return "";
+  const hasForm = (TRANSFORMATIONS.find((t) => t.key === key)?.features || []).some((f) => f.activatable);
+  return !hasForm || c.f_transformation_form_active ? key : "";
+};
 const TRANSFORM_COLORS = { Vampiro: "#B0243F", "Hombre Lobo": "#C45050", Reanimado: "#6E8B5A", Cambiaformas: "#7F6FD1", Fantasma: "#9FB6C9", Semidiós: "#E3B04B" };
 // Dibuja lo que hay en una casilla, apilado: cada estructura sube la base de lo siguiente.
 const drawIsoStack = (P, x, y, z, S, list) => {
@@ -6914,7 +6921,7 @@ export default function App({ onSignOut }) {
     const sameConds = (a) => (a || []).join("|") === conds.join("|");
     const down = Number(me.r_hp || 0) > 0 && Number(me.hp_marked || 0) >= Number(me.r_hp || 0);
     const beast = me.f_beastform || "";
-    const trf = me.f_transformation || "";
+    const trf = visibleTransform(me);
     const wrong = (campaignMap.tokens || []).some((t) => t.kind === "pc" && t.charId === viewingCharId && (!!t.hidden !== hid || !sameConds(t.conds) || !!t.down !== down || (t.beast || "") !== beast || (t.trf || "") !== trf));
     if (!wrong) return;
     mutateMap(sheetCampaignId, (ts) =>
@@ -9449,7 +9456,7 @@ export default function App({ onSignOut }) {
         let conds = t.conds || [];
         if (ch && t.charId === viewingCharId && !gmViewing) conds = getConditions(ch).filter((c) => MAP_COND_FX[c]);
         const beast = ch && t.charId === viewingCharId && !gmViewing ? ch.f_beastform || "" : t.beast || "";
-        const trf = ch && t.charId === viewingCharId && !gmViewing ? ch.f_transformation || "" : t.trf || "";
+        const trf = ch && t.charId === viewingCharId && !gmViewing ? visibleTransform(ch) : t.trf || "";
         return { ...t, hidden, conds, beast, trf, name: ch?.f_name || t.name || "Personaje", color: classColor(ch?.f_class), hp: ch ? [Number(ch.hp_marked || 0), Number(ch.r_hp || 0)] : null };
       }
       if (t.kind === "pet") return { ...t, color: classColor(characters[t.ownerCharId]?.f_class) };
