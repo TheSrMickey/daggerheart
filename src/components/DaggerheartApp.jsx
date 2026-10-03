@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useState, useEffect, useLayoutEffect, useRef } from "react";
+import { Fragment, useState, useEffect, useLayoutEffect, useRef, createContext, useContext } from "react";
 import { createPortal } from "react-dom";
 import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus, Box, LayoutGrid } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
@@ -2726,7 +2726,9 @@ const sharedStyles = `
   @keyframes mh-iso-hit { 0%, 100% { transform: translate(0, 0); filter: none; } 20% { transform: translate(-5px, 2px); filter: brightness(1.8) drop-shadow(0 0 5px #ff4a3d); } 40% { transform: translate(5px, -2px); } 60% { transform: translate(-3px, 1px); } 80% { transform: translate(2px, 0); } }
   @media (prefers-reduced-motion: reduce) { .mh-map-tk.is-attack, .mh-map-tk.is-hit, .mh-map-tk.is-hit .mh-map-face, .mh-iso-tk.is-attack, .mh-iso-tk.is-hit, .mh-map-tk[class*="is-step"] .mh-map-face, .mh-iso-tk[class*="is-step"], .mh-map-puff i, .mh-iso-puff circle, .mh-map-tk.is-poof-show > .mh-map-face { animation: none; } .mh-map .mh-map-tk { transition: none; } }
   .mh-map-props-sep { font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-muted); margin: 0 2px 0 8px; }
-  .mh-isoboard { background: #EFE8DB; }
+  .mh-isoboard { background: #1E1A27; }
+  html[data-mh-theme="light"] .mh-isoboard { background: #EFE8DB; }
+  html[data-mh-theme="light"] .mh-map-stage { background: #EFE8DB; }
   .mh-isoboard > svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   .mh-iso-tile { cursor: default; }
   .mh-isoboard.is-stamping .mh-iso-tile { cursor: copy; }
@@ -2815,7 +2817,12 @@ const sharedStyles = `
   .mh-map-view.is-pannable { cursor: grab; }
   .mh-map-view.is-pannable:active { cursor: grabbing; }
   /* Cubre la caja: el lado que sobra se recorre desplazando */
-  .mh-map-fit { position: relative; width: max(100cqw, 100cqh * ${MAP_COLS} / ${MAP_ROWS}); }
+  .mh-map-fit { position: relative; width: calc(max(100cqw, 100cqh * ${MAP_COLS} / ${MAP_ROWS}) * var(--mz, 1)); }
+  .mh-map-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 6; }
+  .mh-map-overlay > * { pointer-events: auto; }
+  .mh-map-overlay .mh-map-legend { left: auto; right: 10px; bottom: 10px; top: auto; flex-direction: column; align-items: flex-start; max-width: 150px; }
+  .mh-map-overlay .mh-map-legend button { align-self: flex-end; order: -1; }
+  .mh-map-zoomwrap { position: relative; aspect-ratio: ${MAP_COLS} / ${MAP_ROWS}; border-radius: 12px; overflow: hidden; }
   .mh-map-fit .mh-map { border-radius: 0; }
   .mh-map-top { position: absolute; top: 0; right: 0; z-index: 5; pointer-events: none; }
   .mh-map-top > * { pointer-events: auto; }
@@ -2837,7 +2844,7 @@ const sharedStyles = `
   .mh-docked .mh-pre-side { padding-left: 0; border-left: 0; border-top: 1px solid var(--mh-line); padding-top: 12px; }
   .mh-docked .mh-roll-pop, .mh-docked .mh-card { box-shadow: 0 18px 50px rgba(0,0,0,.4); }
   .mh-iso-tk.is-c-fly .mh-iso-body { animation: mh-iso-fly2 2.2s ease-in-out infinite; }
-  @keyframes mh-iso-fly2 { 0%, 100% { transform: translateY(-30px); } 50% { transform: translateY(-36px); } }
+  @keyframes mh-iso-fly2 { 0%, 100% { transform: translateY(-56px); } 50% { transform: translateY(-64px); } }
   .mh-iso-fire { transform-box: fill-box; transform-origin: 50% 100%; animation: mh-fire .45s ease-in-out infinite; }
   @keyframes mh-fire { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.16) translateY(-1px); } }
   .mh-iso-glow { animation: mh-glow 1.4s ease-in-out infinite; }
@@ -5038,7 +5045,9 @@ function MapBoard({ log, iso: isoProp, onIsoChange, hideIsoBtn, menuFor, fx, bg,
   const [hover, setHover] = useState(null); // casilla bajo el ratón mientras hay un sello elegido
   const painting = useRef(null);
   const [isoOwn, setIso] = useState(readIsoPref);
-  const iso = isoProp !== undefined ? isoProp : isoOwn;
+  // El tablero se ve siempre en isométrica (la vista plana se retiró).
+  const iso = true;
+  const overlayEl = useContext(MapOverlayCtx);
   const anim = useAttackFx(fx);
   const steps = useMoveFx(tokens.map((t) => [t.id, t.x, t.y]));
   const vis = useVisFx(tokens);
@@ -5307,11 +5316,7 @@ function MapBoard({ log, iso: isoProp, onIsoChange, hideIsoBtn, menuFor, fx, bg,
         );
       })}
       </div>
-      {!hideIsoBtn && (
-        <button type="button" className="mh-map-iso-btn" onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); toggleIso(); }} title="Cambiar a la vista isométrica" aria-label="Cambiar a la vista isométrica">
-          <Box size={14} />
-        </button>
-      )}
+
       {anim && (anim.kind || "melee") !== "melee" && (() => {
         const fa = tokens.find((x) => x.id === anim.from), fb = tokens.find((x) => x.id === anim.to);
         if (!fa || !fb) return null;
@@ -5342,7 +5347,21 @@ function MapBoard({ log, iso: isoProp, onIsoChange, hideIsoBtn, menuFor, fx, bg,
         );
       })()}
       <MapLog log={log} />
-      {rangeTok && (
+      {rangeTok && overlayEl && createPortal(
+        <div className="mh-map-legend" onPointerDown={(e) => e.stopPropagation()}>
+          {MAP_RANGES.map((r) => (
+            <span key={r.key}>
+              <i style={{ background: r.color }} />
+              {r.label}
+            </span>
+          ))}
+          <button type="button" aria-label="Ocultar alcance" title="Ocultar alcance" onClick={() => setRangeId(null)}>
+            <X size={11} />
+          </button>
+        </div>,
+        overlayEl
+      )}
+      {rangeTok && !overlayEl && (
         <div className="mh-map-legend" onPointerDown={(e) => e.stopPropagation()}>
           {MAP_RANGES.map((r) => (
             <span key={r.key}>
@@ -5388,6 +5407,7 @@ function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain 
   const [menu, setMenu] = useState(null);
   const boxRef = useRef(null);
   const droppedRef = useRef(null); // ficha recién soltada: no repite el salto desde su casilla anterior
+  const overlayEl = useContext(MapOverlayCtx);
   const svgPoint = (ev) => {
     const svg = svgRef.current;
     if (!svg) return null;
@@ -5560,7 +5580,7 @@ function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain 
           </g>
         )}
         <ellipse className="mh-iso-shadow" cx={cx} cy={cy} rx={S * (down ? 0.55 : pet ? 0.3 : 0.42)} ry={S * (down ? 0.22 : pet ? 0.15 : 0.21)} fill="rgba(0,0,0,.28)" />
-        {fly && <line className="mh-iso-flyline" x1={cx} y1={cy - 2} x2={cx} y2={cy - S * 1.05} stroke="#fff" strokeWidth="1.2" strokeDasharray="2 3" opacity=".85" pointerEvents="none" />}
+        {fly && <line className="mh-iso-flyline" x1={cx} y1={cy - 2} x2={cx} y2={cy - S * 1.8} stroke="#fff" strokeWidth="1.2" strokeDasharray="2 3" opacity=".85" pointerEvents="none" />}
         {mapConds(t).map((c) => (
           <ellipse key={c} className={"mh-iso-ring ring-" + MAP_COND_FX[c].cls} cx={cx} cy={cy} rx={S * 0.52} ry={S * 0.26} stroke={MAP_COND_FX[c].color} />
         ))}
@@ -5748,35 +5768,44 @@ function IsoBoard({ log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain 
         if (!items.length) return null;
         return <TokenMenu menu={menu} items={items} onClose={() => setMenu(null)} />;
       })()}
-      {rangeTok && (
-        <div className="mh-map-legend">
-          {MAP_RANGES.map((r) => (
-            <span key={r.key}>
-              <i style={{ background: r.color }} />
-              {r.label}
-            </span>
-          ))}
-          <button type="button" aria-label="Ocultar rango" title="Ocultar rango" onClick={() => setRangeId(null)}>
-            <X size={11} />
-          </button>
-        </div>
-      )}
-      <MapLog log={log} />
-      {!hideIsoBtn && (
-        <button type="button" className="mh-map-iso-btn" onClick={onToggle} title="Cambiar a la vista plana" aria-label="Cambiar a la vista plana">
-          <LayoutGrid size={14} />
-        </button>
-      )}
+      {rangeTok && (() => {
+        // La leyenda va en la capa fija del visor (siempre a la derecha aunque desplaces el mapa).
+        const legend = (
+          <div className="mh-map-legend" onPointerDown={(e) => e.stopPropagation()}>
+            {MAP_RANGES.map((r) => (
+              <span key={r.key}>
+                <i style={{ background: r.color }} />
+                {r.label}
+              </span>
+            ))}
+            <button type="button" aria-label="Ocultar alcance" title="Ocultar alcance" onClick={() => setRangeId(null)}>
+              <X size={11} />
+            </button>
+          </div>
+        );
+        return overlayEl ? createPortal(legend, overlayEl) : legend;
+      })()}
+      {overlayEl ? createPortal(<MapLog log={log} />, overlayEl) : <MapLog log={log} />}
     </div>
   );
 }
 
 // Ventana del tablero: lo escala para cubrir toda la caja (como la imagen de la escena) y deja
 // desplazarse por lo que no cabe arrastrando el fondo o con la rueda. Al abrirse se centra en "focus".
+// Capa fija sobre el visor (no se desplaza con el mapa): ahí van la leyenda del alcance y los avisos.
+const MapOverlayCtx = createContext(null);
 function MapViewport({ focus, children }) {
   const ref = useRef(null);
   const pan = useRef(null);
   const [overflow, setOverflow] = useState(false);
+  const [overlay, setOverlay] = useState(null);
+  const [zoom, setZoom] = useState(1);
+  const zoomRef = useRef(1);
+  const centered = useRef(false);
+  const measure = () => {
+    const el = ref.current;
+    if (el) setOverflow(el.scrollWidth > el.clientWidth + 2 || el.scrollHeight > el.clientHeight + 2);
+  };
   const center = () => {
     const el = ref.current;
     if (!el) return;
@@ -5784,16 +5813,44 @@ function MapViewport({ focus, children }) {
     const fy = focus ? (focus.y + 0.5) / MAP_ROWS : 0.5;
     el.scrollLeft = fx * el.scrollWidth - el.clientWidth / 2;
     el.scrollTop = fy * el.scrollHeight - el.clientHeight / 2;
-    setOverflow(el.scrollWidth > el.clientWidth + 2 || el.scrollHeight > el.clientHeight + 2);
+    measure();
   };
+  // La cámara se coloca una sola vez (al abrir el mapa o al aparecer tu ficha); al moverte ya no salta.
   useLayoutEffect(() => {
+    if (centered.current && focus) return;
     center();
-    const ro = new ResizeObserver(center);
+    if (focus) centered.current = true;
+  }, [focus?.x, focus?.y]);
+  useLayoutEffect(() => {
+    const ro = new ResizeObserver(measure);
     if (ref.current) ro.observe(ref.current);
     return () => ro.disconnect();
-  }, [focus?.x, focus?.y]);
+  }, []);
+  // La rueda del ratón acerca y aleja el mapa alrededor del puntero.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const onWheel = (e) => {
+      e.preventDefault();
+      const z1 = zoomRef.current;
+      const z2 = Math.max(1, Math.min(3, z1 * (e.deltaY < 0 ? 1.12 : 1 / 1.12)));
+      if (z2 === z1) return;
+      const r = el.getBoundingClientRect();
+      const px = e.clientX - r.left, py = e.clientY - r.top;
+      const ax = (el.scrollLeft + px) / z1, ay = (el.scrollTop + py) / z1;
+      zoomRef.current = z2;
+      setZoom(z2);
+      requestAnimationFrame(() => {
+        el.scrollLeft = ax * z2 - px;
+        el.scrollTop = ay * z2 - py;
+        measure();
+      });
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
   const down = (e) => {
-    if (e.button > 0 || e.target.closest(".mh-map-tk")) return;
+    if (e.button > 0 || e.target.closest(".mh-map-tk") || e.target.closest(".mh-iso-tk") || e.target.closest(".is-stamping")) return;
     pan.current = { x: e.clientX, y: e.clientY, l: ref.current.scrollLeft, t: ref.current.scrollTop, moved: false };
   };
   const move = (e) => {
@@ -5816,14 +5873,13 @@ function MapViewport({ focus, children }) {
       e.stopPropagation();
     }
   };
-  const wheel = (e) => {
-    const el = ref.current;
-    if (el.scrollHeight <= el.clientHeight + 2 && Math.abs(e.deltaY) > Math.abs(e.deltaX)) el.scrollLeft += e.deltaY;
-  };
   return (
-    <div ref={ref} className={"mh-map-view" + (overflow ? " is-pannable" : "")} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerLeave={up} onClickCapture={clickCapture} onWheel={wheel}>
-      <div className="mh-map-fit">{children}</div>
-    </div>
+    <MapOverlayCtx.Provider value={overlay}>
+      <div ref={ref} className={"mh-map-view" + (overflow ? " is-pannable" : "")} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerLeave={up} onClickCapture={clickCapture}>
+        <div className="mh-map-fit" style={{ "--mz": zoom }}>{children}</div>
+      </div>
+      <div className="mh-map-overlay" ref={setOverlay} />
+    </MapOverlayCtx.Provider>
   );
 }
 
@@ -11284,6 +11340,8 @@ export default function App({ onSignOut }) {
                           )}
                         </div>
                         {stampTool && (stampTool.startsWith("t:") ? <div className="mh-map-stamphint">Pulsa o arrastra por las casillas para pintar {terrainOf(stampTool.slice(2)).label.toLowerCase()}. Clic derecho para volver a hierba. Se ve con relieve en la vista isométrica.</div> : <div className="mh-map-stamphint">Pulsa o arrastra por las casillas para poner {MAP_PROPS.find((m) => m.key === stampTool)?.label.toLowerCase()}s. Clic derecho sobre un decorado para quitarlo. Vuelve a pulsar el sello para dejar de estampar.</div>)}
+                        <div className="mh-map-zoomwrap">
+                        <MapViewport focus={null}>
                         <MapBoard
                           bg={campaignStage.scene?.image}
                           props={campaignMap.props || []}
@@ -11307,6 +11365,8 @@ export default function App({ onSignOut }) {
                               : []
                           }
                         />
+                        </MapViewport>
+                        </div>
                         <div className="mh-map-bar">
                           {sel ? (
                             <>
@@ -12507,9 +12567,14 @@ export default function App({ onSignOut }) {
                       setViewingCardDetail((d) => (d && !d.rowIcon ? { ...d, rowIcon: row.Icon } : d));
                     };
                     // Solo lo que se usa activamente sobre alguien (o sobre ti): fuera las pasivas.
-                    const ACTIVE_RE = /(haz una tirada|tirada de (conjuro|ataque|hechizo|lanzamiento)|gasta(r|s)? (una|un|dos|tres|\d|tu|tus|la|el)|marca(r|s)? (una|un|dos|tres|\d) (de )?(estr|esperanza|ficha)|a voluntad|una vez por (descanso|sesi|escena)|como acci[oó]n)/i;
-                    const TARGET_RE = /\b(objetivos?|aliad[oa]s?|criaturas?|adversari[oa]s?|enemig[oa]s?|inflig\w*|cur(a|ar|as)|despeja\w*|recupera\w*|a ti mism[oa]|tu evasi\w*|puntos de vida)\b/i;
-                    const isActive = (txt) => ACTIVE_RE.test(txt || "") && TARGET_RE.test(txt || "");
+                    // Activa = algo que decides usar tú: alguna frase empieza con una orden ("Haz una tirada…", "Gasta…", "Marca un Estrés para…")
+                    // o con "Una vez por…"/"Como acción". Lo que empieza por "Cuando…", "Mientras…", "Ganas…" o "Tienes…" es pasivo o reactivo.
+                    const ACTIVE_START = /^(haz|gasta|marca|elige|toca|lanza|invoca|conjura|realiza|usa|tira|crea|coloca|transf[oó]rmate|teletransp[oó]rtate|una vez por|a voluntad|como acci[oó]n|al empezar la sesi[oó]n|puedes (gastar|marcar|hacer|usar|lanzar|tocar|elegir|invocar|crear|transformarte|teletransportarte))/i;
+                    const isActive = (txt) =>
+                      String(txt || "")
+                        .split(/(?<=[.;:])\s+/)
+                        .map((x) => x.trim().replace(/^[«"(]/, ""))
+                        .some((x) => ACTIVE_START.test(x));
                     const rowText = (row) => {
                       if (row.key === "subclass") return (subclassEntry?.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name) || tierForLevel(c.f_level || 1) >= (/Maestría/.test(f.name) ? 3 : 2)).map((f) => f.text).join(" ");
                       if (row.key.startsWith("cf-")) return classFeatures.find((f) => "cf-" + f.name === row.key)?.text;
@@ -15588,7 +15653,7 @@ export default function App({ onSignOut }) {
                                             selectedId={mapSel}
                                             onSelect={setMapSel}
                                             compact={!wide}
-                                            menuFor={(t) => (t.kind === "pet" ? [] : boardActions(t))}
+                                            menuFor={(t) => (t.kind === "pc" && t.charId === viewingCharId ? boardActions(t) : [])}
                                           />
                                         </MapViewport>
                                         {/* Avisos de tiradas y golpes, centrados en la parte visible del mapa */}
@@ -15600,9 +15665,6 @@ export default function App({ onSignOut }) {
                                               En directo
                                             </span>
                                           )}
-                                          <button type="button" className="mh-stg-ibtn" aria-label={mapIso ? "Cambiar a la vista plana" : "Cambiar a la vista isométrica"} title={mapIso ? "Vista plana" : "Vista isométrica"} onClick={() => toggleMapIso(!mapIso)}>
-                                            {mapIso ? <LayoutGrid size={13} /> : <Box size={13} />}
-                                          </button>
                                           <button
                                             type="button"
                                             className={"mh-stg-ibtn" + (wide ? " is-label" : "")}
