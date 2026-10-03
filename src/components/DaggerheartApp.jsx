@@ -2571,6 +2571,9 @@ const sharedStyles = `
   .mh-map-stamphint { font-size: 12px; color: var(--mh-ink3); margin-top: -4px; }
   .mh-map-flat { position: absolute; inset: 0; }
   .mh-map-terrain { position: absolute; pointer-events: none; }
+  .mh-map-tk.is-hidden .mh-map-face, .mh-iso-tk.is-hidden { opacity: .45; }
+  .mh-map-tk.is-hidden .mh-map-face { outline: 2px dashed rgba(255,255,255,.85); outline-offset: 2px; filter: saturate(.4); }
+  .mh-map-tk.is-hidden::after { content: ""; position: absolute; right: 2%; top: 2%; width: 34%; height: 34%; border-radius: 50%; background: #2a2333 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.9 4.2A10 10 0 0 1 12 4c7 0 10 8 10 8a13 13 0 0 1-1.7 2.7M6.6 6.6C3.6 8.6 2 12 2 12s3 8 10 8a9.7 9.7 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2M2 2l20 20'/%3E%3C/svg%3E") center / 64% no-repeat; box-shadow: 0 1px 3px rgba(0,0,0,.4); pointer-events: none; }
   .mh-map-tk.is-step0 .mh-map-face { animation: mh-hop0 .38s ease-out; }
   .mh-map-tk.is-step1 .mh-map-face { animation: mh-hop1 .38s ease-out; }
   @keyframes mh-hop0 { 0% { translate: 0 0; scale: 1; } 45% { translate: 0 -28%; scale: 1.06; } 80% { translate: 0 0; scale: 1.04 .94; } 100% { translate: 0 0; scale: 1; } }
@@ -4724,13 +4727,13 @@ function MapBoard({ fx, bg, tokens, props = [], terrain = [], stampTool, onStamp
           <button
             key={t.id}
             type="button"
-            className={"mh-map-tk is-" + t.kind + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "")}
+            className={"mh-map-tk is-" + t.kind + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "")}
             style={{ ...at(pos.x, pos.y), "--tc": t.color, ...(anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); return tg ? { "--ax": (tg.x - t.x) * 100 + "%", "--ay": (tg.y - t.y) * 100 + "%" } : {}; })() : {}) }}
             onPointerDown={(e) => startDrag(e, t)}
             onContextMenu={(e) => openMenu(e, t)}
             onKeyDown={(e) => keyMove(e, t)}
             aria-label={t.name + (movable ? ". Arrástrala o usa las flechas para moverla" : "")}
-            title={t.name}
+            title={t.name + (t.hidden ? " · Escondido" : "")}
             tabIndex={movable || onPick ? 0 : -1}
           >
             <span className="mh-map-face">{t.img ? <img src={t.img} alt="" draggable={false} /> : t.kind === "foe" ? <Skull size="55%" /> : t.kind === "pet" ? <PawPrint size="52%" /> : <span>{(t.name || "?").trim().charAt(0).toUpperCase()}</span>}</span>
@@ -4925,7 +4928,7 @@ function IsoBoard({ anim, tokens, props = [], terrain = [], stampTool, onStamp, 
                 return (
                   <g
                     key={t.id}
-                    className={"mh-iso-tk" + (movable ? " is-movable" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" : "") + (steps[t.id] && !(anim && anim.from === t.id) ? " is-step" + (steps[t.id].n % 2) : "")}
+                    className={"mh-iso-tk" + (movable ? " is-movable" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" : "") + (steps[t.id] && !(anim && anim.from === t.id) ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "")}
                     style={anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); if (!tg) return undefined; const [tx, ty] = P(tg.x + 0.5, tg.y + 0.5, tAt(tg.x, tg.y).z); return { "--ax": tx - cx + "px", "--ay": ty - cy + "px" }; })() : steps[t.id] ? (() => { const st = steps[t.id]; const [ox, oy] = P(st.fx + 0.5, st.fy + 0.5, tAt(st.fx, st.fy).z); return { "--mx": ox - cx + "px", "--my": oy - cy + "px" }; })() : undefined}
                     onPointerDown={(e) => tokenDown(e, t)}
                     onContextMenu={(e) => {
@@ -4934,7 +4937,7 @@ function IsoBoard({ anim, tokens, props = [], terrain = [], stampTool, onStamp, 
                       setRangeId(rangeId === t.id ? null : t.id);
                     }}
                   >
-                    <title>{t.name}</title>
+                    <title>{t.name + (t.hidden ? " · Escondido" : "")}</title>
                     {sel && <ellipse cx={cx} cy={cy} rx={S * 0.62} ry={S * 0.31} fill="none" stroke="#E3B04B" strokeWidth="3" />}
                     <ellipse cx={cx} cy={cy} rx={S * 0.42} ry={S * 0.21} fill="rgba(0,0,0,.28)" />
                     <rect x={cx - S * 0.33} y={cy - S * 1.1} width={S * 0.66} height={S * 1.04} rx={S * 0.33} fill={col} stroke="#fff" strokeWidth="2.2" />
@@ -6127,6 +6130,30 @@ export default function App({ onSignOut }) {
 
   // Reacciones automáticas a cualquier cambio del personaje.
   const afterCharacterChange = (id, prev, next) => {
+    // Escondido / Oculto: su ficha del tablero se marca para que solo la vea él (y el DJ, atenuada).
+    const isHid = (c) => {
+      try {
+        const cs = JSON.parse(c.f_conditions || "[]");
+        return cs.includes("Escondido") || cs.includes("Oculto");
+      } catch (e) {
+        return false;
+      }
+    };
+    if (isHid(prev) !== isHid(next)) {
+      const hid = isHid(next);
+      const camp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(id));
+      const fn = (toks) => toks.map((t) => (t.kind === "pc" && t.charId === id ? { ...t, hidden: hid || undefined } : t));
+      if (camp && camp.id === stageCampaignId) mutateMap(camp.id, fn);
+      else if (camp)
+        (async () => {
+          try {
+            const r = await safeGet("campaign-map:" + camp.id, true);
+            if (!r) return;
+            const m = JSON.parse(r.value);
+            await safeSet("campaign-map:" + camp.id, JSON.stringify({ ...m, tokens: fn(m.tokens || []) }), true);
+          } catch (e) {}
+        })();
+    }
     // Animación al perder Puntos de vida.
     const hpBefore = Number(prev.hp_marked || 0);
     const hpAfter = Number(next.hp_marked || 0);
@@ -8093,7 +8120,12 @@ export default function App({ onSignOut }) {
   const placeToken = (token, campaignId = viewingCampaignId) =>
     mutateMap(campaignId, (tokens) => {
       const [x, y] = freeCell(tokens);
-      return [...tokens, { id: "t" + Date.now() + Math.random().toString(36).slice(2, 5), x, y, ...token }];
+      // Si el personaje ya está Escondido u Oculto, su ficha entra escondida.
+      let hidden;
+      try {
+        if (token.kind === "pc" && JSON.parse(characters[token.charId]?.f_conditions || "[]").some((c) => c === "Escondido" || c === "Oculto")) hidden = true;
+      } catch (e) {}
+      return [...tokens, { id: "t" + Date.now() + Math.random().toString(36).slice(2, 5), x, y, ...token, ...(hidden ? { hidden } : {}) }];
     });
 
   const removeToken = (id, campaignId = viewingCampaignId) => {
@@ -8125,7 +8157,11 @@ export default function App({ onSignOut }) {
     (tokens || []).map((t) => {
       if (t.kind === "pc") {
         const ch = characters[t.charId];
-        return { ...t, name: ch?.f_name || t.name || "Personaje", color: classColor(ch?.f_class), hp: ch ? [Number(ch.hp_marked || 0), Number(ch.r_hp || 0)] : null };
+        let hidden = !!t.hidden;
+        try {
+          if (ch) hidden = JSON.parse(ch.f_conditions || "[]").some((x) => x === "Escondido" || x === "Oculto");
+        } catch (e) {}
+        return { ...t, hidden, name: ch?.f_name || t.name || "Personaje", color: classColor(ch?.f_class), hp: ch ? [Number(ch.hp_marked || 0), Number(ch.r_hp || 0)] : null };
       }
       if (t.kind === "pet") return { ...t, color: classColor(characters[t.ownerCharId]?.f_class) };
       return { ...t, color: t.kind === "foe" ? "#C0504A" : "#C9A24A", img: t.imgId ? castImgs[t.imgId] : null };
@@ -14298,7 +14334,7 @@ export default function App({ onSignOut }) {
                             </div>
                           );
                         const newHandouts = handouts.filter((h) => !handoutsSeen.includes(h.id)).length;
-                        const mapTokens = mapTokensView(campaignMap.tokens);
+                        const mapTokens = mapTokensView(campaignMap.tokens).filter((t) => !(t.kind === "pc" && t.hidden && t.charId !== viewingCharId));
                         const myToken = mapTokens.find((t) => t.kind === "pc" && t.charId === viewingCharId);
                         const kindOf = (k) => HANDOUT_KINDS.find((x) => x.key === k) || HANDOUT_KINDS[0];
                         const empty = (Icon, text) => (
