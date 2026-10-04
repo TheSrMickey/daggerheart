@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus, Box, LayoutGrid, Bird, Fish, Bug, Rabbit, Cat, Turtle, Clock, CircleDashed, Slash } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
+import { buildSablewood } from "./quickstartSablewood";
 import { Wand, CircleDot, MoveUpRight, Archive, Shell, Compass, Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -1733,6 +1734,7 @@ const MAP_PROPS = [
   { key: "cofre", label: "Cofre", svg: '<rect x="20" y="30" width="66" height="48" rx="6" fill="#000" opacity=".22"/><rect x="16" y="26" width="66" height="48" rx="6" fill="#8A5A2B"/><rect x="16" y="26" width="66" height="18" rx="6" fill="#A8703A"/><path d="M16 44h66" stroke="#E3C26A" stroke-width="4"/><rect x="44" y="40" width="10" height="12" rx="2" fill="#E3C26A"/>' },
   { key: "antorcha", label: "Antorcha", svg: '<circle cx="50" cy="44" r="34" fill="#F7D35A" opacity=".22"/><rect x="46" y="44" width="8" height="40" rx="3" fill="#5A3A22"/><path d="M50 14 C60 28 62 38 50 50 C38 38 40 28 50 14Z" fill="#F3A64A"/><path d="M50 28 C55 34 55 40 50 46 C45 40 45 34 50 28Z" fill="#FFE08A"/>' },
   { key: "muro", label: "Muro", svg: '<rect x="6" y="30" width="92" height="44" fill="#000" opacity=".2"/><rect x="2" y="26" width="92" height="44" fill="#A7A196"/><path d="M2 40h92M2 55h92M24 26v14M56 26v14M88 26v14M10 40v15M40 40v15M72 40v15M24 55v15M56 55v15M88 55v15" stroke="#7E786E" stroke-width="3"/>' },
+  { key: "carro", label: "Carro", svg: '<rect x="14" y="30" width="76" height="40" rx="6" fill="#000" opacity=".2"/><rect x="10" y="26" width="76" height="40" rx="6" fill="#8A5A2B"/><path d="M10 40h76M10 52h76" stroke="#5A3A22" stroke-width="3"/><circle cx="26" cy="72" r="11" fill="#5A3A22"/><circle cx="70" cy="72" r="11" fill="#5A3A22"/><circle cx="26" cy="72" r="4" fill="#C9A24A"/><circle cx="70" cy="72" r="4" fill="#C9A24A"/>' },
   { key: "torre", label: "Torre", svg: '<rect x="22" y="14" width="56" height="74" fill="#000" opacity=".2"/><rect x="18" y="10" width="56" height="74" fill="#B3ADA2"/><path d="M18 10h12v8H18zM40 10h12v8H40zM62 10h12v8H62z" fill="#8E8A80"/><rect x="40" y="40" width="10" height="18" fill="#2B2433"/>' },
   { key: "puerta", label: "Puerta", svg: '<rect x="8" y="22" width="86" height="62" fill="#000" opacity=".2"/><rect x="4" y="18" width="86" height="62" fill="#A7A196"/><path d="M28 80V50a19 19 0 0 1 38 0v30Z" fill="#1A1620"/><path d="M33 52v28M41 46v34M49 44v36M57 46v34M63 52v28M28 60h38M28 70h38" stroke="#6B6474" stroke-width="3"/>' },
   { key: "puente", label: "Puente", svg: '<rect x="14" y="10" width="72" height="80" fill="#000" opacity=".18"/><rect x="10" y="6" width="72" height="80" fill="#8A5A2B"/><path d="M10 22h72M10 38h72M10 54h72M10 70h72" stroke="#5A3A22" stroke-width="3"/><path d="M14 6v80M78 6v80" stroke="#4A4452" stroke-width="4"/>' },
@@ -1806,6 +1808,46 @@ const ISO_STRUCT = {
         <polygon points={isoPts(arch)} fill="#1A1620" />
         {bars}
         {isoMerlons(P, x, y, x + 1, y + 1, z + 2, "#A7A196")}
+      </g>
+    );
+  },
+  carro: (P, x, y, z, S, rot) => {
+    const over = (rot || 0) % 2 === 1;
+    // Rueda: elipse en la cara que mira hacia delante a la izquierda.
+    const wheel = (u, v, r, k) => {
+      const pts = [];
+      for (let i = 0; i < 14; i++) {
+        const a = (i / 14) * Math.PI * 2;
+        pts.push(P(x + u + Math.cos(a) * r, y + 0.74, z + v + Math.sin(a) * r * 1.2));
+      }
+      return (
+        <g key={k}>
+          <polygon points={isoPts(pts)} fill="#5A3A22" stroke="#3A2414" strokeWidth="1.2" />
+          <circle cx={P(x + u, y + 0.74, z + v)[0]} cy={P(x + u, y + 0.74, z + v)[1]} r="2.6" fill="#C9A24A" />
+        </g>
+      );
+    };
+    const [cx, cy] = P(x + 0.5, y + 0.5, z);
+    if (over)
+      // Volcado de lado: la caja de pie, las ruedas al aire y fruta por el suelo.
+      return (
+        <g pointerEvents="none">
+          <ellipse cx={cx} cy={cy + 2} rx={S * 0.55} ry={S * 0.22} fill="rgba(0,0,0,.25)" />
+          {isoPrism(P, x + 0.1, y + 0.35, x + 0.9, y + 0.62, z, z + 0.75, "#8A5A2B", "b")}
+          {wheel(0.25, 0.55, 0.17, "w1")}
+          {wheel(0.75, 0.55, 0.17, "w2")}
+          {[[-0.5, 0.3, "#E0763C"], [-0.3, 0.42, "#C0504A"], [0.45, 0.35, "#E3B04B"], [0.6, 0.18, "#7FB55A"], [-0.15, 0.5, "#E0763C"]].map(([dx, dy, c], i) => (
+            <circle key={i} cx={cx + dx * S} cy={cy + dy * S} r={S * 0.07} fill={c} />
+          ))}
+        </g>
+      );
+    return (
+      <g pointerEvents="none">
+        <ellipse cx={cx} cy={cy + 2} rx={S * 0.5} ry={S * 0.2} fill="rgba(0,0,0,.25)" />
+        {isoPrism(P, x + 0.1, y + 0.28, x + 0.9, y + 0.72, z + 0.22, z + 0.62, "#8A5A2B", "b")}
+        {isoPrism(P, x + 0.1, y + 0.28, x + 0.9, y + 0.72, z + 0.62, z + 0.66, "#A8703A", "t")}
+        {wheel(0.25, 0.22, 0.2, "w1")}
+        {wheel(0.75, 0.22, 0.2, "w2")}
       </g>
     );
   },
@@ -3034,6 +3076,16 @@ const sharedStyles = `
   .mh-area-pick > div { display: flex; gap: 6px; flex-wrap: wrap; }
   .mh-iso-area { animation: mh-area 1.6s ease-in-out infinite; }
   @keyframes mh-area { 0%, 100% { fill-opacity: .26; } 50% { fill-opacity: .4; } }
+  .mh-maps-lib { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+  .mh-maps-lib .mh-gm-h2 { display: inline-flex; align-items: center; gap: 6px; }
+  .mh-maps-n { color: var(--mh-muted); font-size: 11.5px; }
+  .mh-counter-row button.mh-maps-load { width: auto; padding: 0 10px; font: 600 12px Inter, system-ui, sans-serif; }
+  .mh-hand-vis { color: var(--mh-muted); }
+  .mh-hand-vis.is-on { color: #5FA77A; }
+  .mh-hand-hidden { margin-left: 6px; padding: 1px 6px; border-radius: 999px; font: 700 9.5px Inter, system-ui, sans-serif; text-transform: uppercase; letter-spacing: .05em; color: var(--mh-muted); border: 1px dashed var(--mh-line2); }
+  .mh-qs { margin-top: 6px; padding-top: 10px; border-top: 1px dashed var(--mh-line2); display: flex; flex-direction: column; gap: 6px; }
+  .mh-qs > span { font-size: 12.5px; color: var(--mh-ink2); }
+  .mh-qs > small { font-size: 11.5px; color: var(--mh-muted); }
   .mh-counters-gm { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
   .mh-counters-gm .mh-gm-h2 { display: inline-flex; align-items: center; gap: 6px; }
   .mh-counter-row { display: flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 9px; border: 1px solid var(--mh-line); background: var(--mh-panel2); }
@@ -6715,6 +6767,12 @@ export default function App({ onSignOut }) {
       setCampaignChat(chat ? JSON.parse(chat.value) : []);
       const enc = await safeGet("campaign-encounters:" + viewingCampaignId, true);
       setCampaignEncounters(enc ? JSON.parse(enc.value) : []);
+      const ml = await safeGet("campaign-maps:" + viewingCampaignId, true);
+      try {
+        setCampaignMaps(ml ? JSON.parse(ml.value) : []);
+      } catch (e) {
+        setCampaignMaps([]);
+      }
       const cast = await safeGet("campaign-cast:" + viewingCampaignId, true);
       let castList = [];
       try {
@@ -9774,6 +9832,15 @@ export default function App({ onSignOut }) {
     postChat(viewingCampaignId, { kind: "event", author: "El DJ", gm: true, icon: key, text: "muestra " + what });
   };
 
+  // Las pistas preparadas pueden estar ocultas: el DJ las muestra cuando toque (y se avisa en el chat).
+  const toggleHandout = (id) => {
+    const list = campaignStage.handouts || [];
+    const h = list.find((x) => x.id === id);
+    if (!h) return;
+    const reveal = !!h.hidden;
+    saveStage(viewingCampaignId, { handouts: list.map((x) => (x.id === id ? { ...x, hidden: !reveal, ...(reveal ? { ts: Date.now() } : {}) } : x)) });
+    if (reveal) postChat(viewingCampaignId, { kind: "share", author: "El DJ", gm: true, text: "", share: { type: "handout", name: h.title, sub: "Pista · " + (HANDOUT_KINDS.find((k) => k.key === h.kind)?.label || ""), handout: { ...h, hidden: false } } });
+  };
   const removeHandout = (id) => saveStage(viewingCampaignId, { handouts: (campaignStage.handouts || []).filter((h) => h.id !== id) });
 
   const updateEncounterNotes = async (id, notes) => {
@@ -9868,6 +9935,49 @@ export default function App({ onSignOut }) {
   const [areaPick, setAreaPick] = useState(null); // elegir forma y alcance del área: { owner, campaignId, color, name }
   const [areaTool, setAreaTool] = useState(null); // colocando un área: el siguiente clic en una casilla la pone
   const [counterDraft, setCounterDraft] = useState({ name: "", value: 4, visible: true });
+  const [campaignMaps, setCampaignMaps] = useState([]); // mapas guardados de la campaña (DJ)
+  const [mapNameDraft, setMapNameDraft] = useState("");
+  const saveMapsLib = async (next) => {
+    setCampaignMaps(next);
+    await safeSet("campaign-maps:" + viewingCampaignId, JSON.stringify(next), true);
+  };
+  // Cargar un mapa guardado: sustituye terreno, decorados, enemigos y cuentas atrás; las fichas de los jugadores se quedan.
+  const loadSavedMap = async (m) => {
+    if (!viewingCampaignId || !window.confirm("¿Cargar «" + m.name + "»? Sustituye el mapa actual (las fichas de los jugadores se quedan).")) return;
+    const keep = (campaignMap.tokens || []).filter((t) => t.kind === "pc" || t.kind === "pet");
+    const next = { tokens: [...(m.map.tokens || []).map((t) => ({ ...t })), ...keep], props: m.map.props || [], terrain: m.map.terrain || [], counters: m.map.counters || [], areas: [], hits: [], log: [] };
+    setCampaignMap(next);
+    await safeSet("campaign-map:" + viewingCampaignId, JSON.stringify(next), true);
+    setMapSel(null);
+    postChat(viewingCampaignId, { kind: "event", author: "El DJ", gm: true, icon: "escena", text: "prepara el mapa «" + m.name + "»" });
+  };
+  const saveCurrentMap = async () => {
+    const name = mapNameDraft.trim();
+    if (!name) return;
+    const map = { tokens: (campaignMap.tokens || []).filter((t) => t.kind !== "pc" && t.kind !== "pet"), props: campaignMap.props || [], terrain: campaignMap.terrain || [], counters: campaignMap.counters || [] };
+    const same = campaignMaps.find((x) => x.name === name);
+    await saveMapsLib(same ? campaignMaps.map((x) => (x.id === same.id ? { ...x, map } : x)) : [...campaignMaps, { id: "m" + Date.now(), name, map }]);
+    setMapNameDraft("");
+  };
+  // Aventura de inicio: crea la campaña con escenas, pistas, reparto, notas por acto y mapas con los enemigos.
+  const createSablewood = async () => {
+    const q = buildSablewood();
+    const id = q.campaign.id;
+    const nextCampaigns = { ...campaigns, [id]: q.campaign };
+    setCampaigns(nextCampaigns);
+    await safeSet("campaign-index", JSON.stringify(Object.keys(nextCampaigns)), false);
+    await safeSet("campaign:" + id, JSON.stringify(q.campaign), false);
+    await safeSet("campaign-stage:" + id, JSON.stringify(q.stage), true);
+    await safeSet("campaign-cast:" + id, JSON.stringify(q.cast), true);
+    await safeSet("campaign-lines:" + id, JSON.stringify({ convs: q.convs }), true);
+    await safeSet("campaign-encounters:" + id, JSON.stringify(q.encounters), true);
+    await safeSet("campaign-maps:" + id, JSON.stringify(q.maps), true);
+    await safeSet("campaign-map:" + id, JSON.stringify(q.liveMap), true);
+    setShowNewCampaignForm(false);
+    setNewCampaignName("");
+    setNewCampaignDesc("");
+    setViewingCampaignId(id);
+  };
   // Pone el área elegida en la casilla pulsada (las ven todos en el tablero).
   const placeArea = (cfg, x, y) => {
     const area = { id: "a" + Date.now() + Math.random().toString(36).slice(2, 5), owner: cfg.owner, ownerName: cfg.name, shape: cfg.shape, range: cfg.range, color: cfg.color, x, y };
@@ -11741,9 +11851,12 @@ export default function App({ onSignOut }) {
                                       {!h.image && <KIcon size={16} />}
                                     </span>
                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                      <div className="mh-stg-hand-title">{h.title}</div>
+                                      <div className="mh-stg-hand-title">{h.title}{h.hidden && <span className="mh-hand-hidden">Oculta</span>}</div>
                                       <div className="mh-stg-hand-kind">{kind.label}{h.text ? " · " + h.text : ""}</div>
                                     </div>
+                                    <button type="button" className={"mh-inv-x mh-hand-vis" + (h.hidden ? "" : " is-on")} aria-label={h.hidden ? "Mostrar a los jugadores" : "Ocultar a los jugadores"} title={h.hidden ? "Oculta · pulsa para mostrarla" : "Visible para los jugadores"} onClick={() => toggleHandout(h.id)}>
+                                      {h.hidden ? <EyeOff size={14} /> : <Eye size={14} />}
+                                    </button>
                                     <button type="button" className="mh-inv-x" aria-label={"Quitar " + h.title} title="Quitar" onClick={() => removeHandout(h.id)}>
                                       <Trash2 size={14} />
                                     </button>
@@ -11940,6 +12053,30 @@ export default function App({ onSignOut }) {
                             </button>
                           )}
                         </div>
+                        <div className="mh-maps-lib">
+                          <span className="mh-gm-h2">
+                            <MapPinned size={13} /> Mapas guardados
+                          </span>
+                          {campaignMaps.length === 0 && <span className="mh-map-tray-e">Guarda el mapa actual para poder cargarlo en otra escena.</span>}
+                          {campaignMaps.map((m) => (
+                            <div key={m.id} className="mh-counter-row">
+                              <b>{m.name}</b>
+                              <small className="mh-maps-n">{(m.map.tokens || []).length} fichas</small>
+                              <button type="button" className="mh-maps-load" onClick={() => loadSavedMap(m)}>
+                                Cargar
+                              </button>
+                              <button type="button" aria-label={"Borrar " + m.name} onClick={() => window.confirm("¿Borrar el mapa guardado «" + m.name + "»?") && saveMapsLib(campaignMaps.filter((x) => x.id !== m.id))}>
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
+                          ))}
+                          <div className="mh-counter-new">
+                            <input className="mh-input" placeholder="Nombre del mapa (p. ej. La emboscada)" value={mapNameDraft} onChange={(e) => setMapNameDraft(e.target.value)} onKeyDown={(e) => e.key === "Enter" && saveCurrentMap()} />
+                            <button type="button" className="mh-btn-ghost" onClick={saveCurrentMap}>
+                              Guardar el mapa actual
+                            </button>
+                          </div>
+                        </div>
                         <div className="mh-counters-gm">
                           <span className="mh-gm-h2">
                             <Clock size={13} /> Cuentas atrás
@@ -12057,7 +12194,7 @@ export default function App({ onSignOut }) {
                                 <span>
                                   <small>Umbrales</small>
                                   <b>
-                                    {st.thresholds[0]}/{st.thresholds[1]}
+                                    {st.thresholds[0]}/{st.thresholds[1] ?? "—"}
                                   </b>
                                 </span>
                                 <span>
@@ -12305,6 +12442,13 @@ export default function App({ onSignOut }) {
                         <button className="mh-btn-ghost" onClick={() => { setShowNewCampaignForm(false); setNewCampaignName(""); setNewCampaignDesc(""); }}>
                           Cancelar
                         </button>
+                      </div>
+                      <div className="mh-qs">
+                        <span>O empieza con la aventura de inicio, ya preparada:</span>
+                        <button type="button" className="mh-btn-ghost" onClick={createSablewood}>
+                          <BookOpen size={14} /> Los mensajeros de Sablewood
+                        </button>
+                        <small>Escenas, pistas ocultas, reparto con diálogos, notas de cada acto y mapas con los enemigos colocados.</small>
                       </div>
                     </div>
                   ) : (
@@ -16117,7 +16261,7 @@ export default function App({ onSignOut }) {
                         const live = stage.live || "escena";
                         const stTab = stageTab || live;
                         const scene = stage.scene || {};
-                        const handouts = stage.handouts || [];
+                        const handouts = (stage.handouts || []).filter((h) => !h.hidden);
                         const dlg = stage.dialogue && hiddenDialogue !== stage.dialogue.id ? stage.dialogue : null;
                         const dlgKey = dlg ? dlg.castId || dlg.name : null;
                         let dlgFig = dlg ? castImgs[dlg.imgId] : null;
