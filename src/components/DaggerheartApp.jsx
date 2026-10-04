@@ -3000,6 +3000,8 @@ const sharedStyles = `
   .mh-measure-tag { position: absolute; z-index: 9; transform: translate(14px, -130%); padding: 4px 9px; border-radius: 8px; background: rgba(20,14,18,.86); border: 1.5px solid var(--mc); color: #F4EEE2; font: 600 11.5px Inter, system-ui, sans-serif; white-space: nowrap; pointer-events: none; }
   .mh-measure-tag b { font-size: 13px; color: var(--mc); }
   .mh-iso-ghost { opacity: .7; }
+  .mh-iso-prop { pointer-events: none; }
+  .mh-iso-prop.is-hit, .mh-iso-prop.is-hit * { pointer-events: visiblePainted !important; cursor: pointer; }
   .mh-iso-aura { transform-box: fill-box; transform-origin: center; animation: mh-aura 2s ease-in-out infinite; }
   @keyframes mh-aura { 0%, 100% { opacity: .22; transform: scale(.94); } 50% { opacity: .5; transform: scale(1.06); } }
   .mh-iso-spark { animation: mh-spark 2.2s ease-in infinite; }
@@ -5668,7 +5670,7 @@ function IsoBoard({ areas = [], areaTool, log, hideIsoBtn, menuFor, anim, tokens
     return { x: sp.x, y: sp.y };
   };
   const { measure, measureDown, measureSuppressed } = useMeasure((ev) => {
-    const el = document.elementsFromPoint(ev.clientX, ev.clientY).find((n) => n.getAttribute && n.getAttribute("data-cx") != null);
+    const el = document.elementsFromPoint(ev.clientX, ev.clientY).map((n) => n.closest && n.closest("[data-cx]")).find(Boolean);
     return el ? { x: Number(el.getAttribute("data-cx")), y: Number(el.getAttribute("data-cy")) } : null;
   }, svgPoint);
   const openMenu = (e, t) => {
@@ -5693,7 +5695,7 @@ function IsoBoard({ areas = [], areaTool, log, hideIsoBtn, menuFor, anim, tokens
   };
   const selected = tokens.find((t) => t.id === selectedId && canMove(t));
   const cellFrom = (e) => {
-    const el = document.elementsFromPoint(e.clientX, e.clientY).find((n) => n.getAttribute && n.getAttribute("data-cx") != null);
+    const el = document.elementsFromPoint(e.clientX, e.clientY).map((n) => n.closest && n.closest("[data-cx]")).find(Boolean);
     return el ? { x: Number(el.getAttribute("data-cx")), y: Number(el.getAttribute("data-cy")) } : null;
   };
   const propAt = (x, y) => props.find((pr) => pr.x === x && pr.y === y);
@@ -5733,7 +5735,31 @@ function IsoBoard({ areas = [], areaTool, log, hideIsoBtn, menuFor, anim, tokens
     if (measureSuppressed()) return e.preventDefault();
     if (!onUnstamp) return;
     e.preventDefault();
-    onUnstamp(x, y);
+    // Con un sello elegido, el borrado lo hace eraseDown al pulsar (y al arrastrar).
+    if (!stampTool) onUnstamp(x, y);
+  };
+  // DJ con un sello elegido: el botón derecho borra (lo de más arriba o un nivel de terreno) y, arrastrando, va borrando casillas. Sin regla.
+  const eraseDown = (e) => {
+    if (e.button !== 2 || !onUnstamp) return;
+    e.preventDefault();
+    const first = cellFrom(e);
+    const done = new Set();
+    const hitCell = (c) => {
+      if (!c) return;
+      const k = c.x + "," + c.y;
+      if (done.has(k)) return;
+      done.add(k);
+      onUnstamp(c.x, c.y);
+    };
+    hitCell(first);
+    const move = (ev) => hitCell(cellFrom(ev));
+    const up = (ev) => {
+      if (ev.button !== 2) return;
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
   };
   const tokenDown = (e, t) => {
     if (e.button > 0) return;
@@ -5984,7 +6010,7 @@ function IsoBoard({ areas = [], areaTool, log, hideIsoBtn, menuFor, anim, tokens
     );
   };
   return (
-    <div ref={boxRef} className={"mh-map mh-isoboard" + (compact ? " is-compact" : "") + (stampTool ? " is-stamping" : "")} onPointerDownCapture={measureDown}>
+    <div ref={boxRef} className={"mh-map mh-isoboard" + (compact ? " is-compact" : "") + (stampTool ? " is-stamping" : "")} onPointerDownCapture={stampTool ? eraseDown : measureDown}>
       <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" onContextMenu={(e) => e.preventDefault()}>
         {/* Dos pasadas: primero todo el suelo y luego, de atrás hacia delante, decorados y fichas (con su nombre).
             Así el suelo nunca tapa a una ficha ni a su nombre, y una ficha de delante sí tapa a la de detrás. */}
@@ -6005,8 +6031,8 @@ function IsoBoard({ areas = [], areaTool, log, hideIsoBtn, menuFor, anim, tokens
             <g key={"g" + x + "," + y}>
               {z > 0 && (
                 <>
-                  <polygon points={pts([d, c, P(x + 1, y + 1, 0), P(x, y + 1, 0)])} fill={tr.s1} />
-                  <polygon points={pts([c, b, P(x + 1, y, 0), P(x + 1, y + 1, 0)])} fill={tr.s2} />
+                  <polygon points={pts([d, c, P(x + 1, y + 1, 0), P(x, y + 1, 0)])} fill={tr.s1} data-cx={x} data-cy={y} onPointerDown={(e) => tileDown(e, x, y)} onContextMenu={(e) => tileContext(e, x, y)} />
+                  <polygon points={pts([c, b, P(x + 1, y, 0), P(x + 1, y + 1, 0)])} fill={tr.s2} data-cx={x} data-cy={y} onPointerDown={(e) => tileDown(e, x, y)} onContextMenu={(e) => tileContext(e, x, y)} />
                 </>
               )}
               <polygon
@@ -6054,7 +6080,12 @@ function IsoBoard({ areas = [], areaTool, log, hideIsoBtn, menuFor, anim, tokens
             </g>
           ) : (
             <g key={"t" + x + "," + y}>
-              {drawIsoStack(P, x, y, z, S, prs)}
+              {prs.length > 0 && (
+                // Mientras el DJ decora, los decorados se pueden pulsar (es su casilla, no la de detrás).
+                <g className={"mh-iso-prop" + (stampTool ? " is-hit" : "")} data-cx={x} data-cy={y} onPointerDown={(e) => tileDown(e, x, y)} onContextMenu={(e) => tileContext(e, x, y)}>
+                  {drawIsoStack(P, x, y, z, S, prs)}
+                </g>
+              )}
               {[...here].sort((p, q) => isFlying(p) - isFlying(q)).map((t) => renderTok(t, cx, cy))}
             </g>
           );
