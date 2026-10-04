@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, createElement } from "react";
+import { useState, useEffect, useRef, useCallback, createElement } from "react";
+import WorldPlace from "./WorldPlace";
 import { Castle, Home, Mountain, Skull, Anchor, Trees, Landmark, Tent } from "lucide-react";
 
 // Tipos de localización: icono y color del marcador.
@@ -44,8 +45,7 @@ const MOUNTAINS = [[500, 150], [530, 120], [560, 145], [740, 140], [775, 100], [
 const FORESTS = [[270, 300], [300, 360], [260, 355], [320, 300], [360, 320], [235, 270]];
 const RIVER = "M530 130 C520 200 540 250 505 300 C480 340 520 400 585 440";
 
-export default function WorldMap() {
-  const [selected, setSelected] = useState("aurelia");
+function RegionMap({ selected, setSelected, here, counts, myChar, myCharId, onVisit, onTravelHere }) {
   const [hidden, setHidden] = useState({});
   const [hover, setHover] = useState(null);
   const sel = PLACES.find((p) => p.id === selected);
@@ -151,6 +151,12 @@ export default function WorldMap() {
                   {p.name}
                 </text>
                 <title>{p.name}</title>
+                {counts[p.id] > 0 && (
+                  <g transform={`translate(${r} ${-r})`}>
+                    <circle r="9" fill="#C0504A" stroke="#fff" strokeWidth="1.5" />
+                    <text textAnchor="middle" y="4" fontSize="11" fontWeight="800" fill="#fff">{counts[p.id]}</text>
+                  </g>
+                )}
                 {hover === p.id && <circle r={r + 3} fill="none" stroke="#fff" strokeWidth="1.5" />}
               </g>
             );
@@ -180,6 +186,15 @@ export default function WorldMap() {
               </div>
             </div>
             <div style={{ fontSize: 13.5, lineHeight: 1.5, color: "var(--mh-ink3)" }}>{sel.desc}</div>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 10 }}>
+              <button className="mh-btn" onClick={() => onVisit(sel.id)}>Visitar</button>
+              {myChar && (
+                <button className="mh-btn-ghost" onClick={() => onTravelHere(sel.id)}>Viajar con {myChar.f_name || "mi personaje"}</button>
+              )}
+            </div>
+            <div style={{ marginTop: 10, fontSize: 12, color: "var(--mh-muted)" }}>
+              {here.length === 0 ? "Nadie por aquí ahora mismo." : "Aquí ahora: " + here.map((h) => h.name + (h.id === myCharId ? " (tú)" : "")).join(", ")}
+            </div>
           </div>
         )}
         <div className="mh-serif" style={{ margin: "14px 0 6px", fontSize: 13, color: "var(--mh-muted)" }}>Localizaciones</div>
@@ -193,12 +208,138 @@ export default function WorldMap() {
                 style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 8px", borderRadius: 8, cursor: "pointer", fontSize: 13, background: p.id === selected ? "#E3B04B1F" : "transparent", color: "var(--mh-ink3)" }}
               >
                 <span style={{ width: 9, height: 9, borderRadius: 5, background: t.color, flex: "none" }} />
-                {p.name}
+                {p.name}{counts[p.id] > 0 && <span style={{ marginLeft: "auto", fontSize: 11, color: "var(--mh-muted)" }}>{counts[p.id]} 👤</span>}
               </div>
             );
           })}
         </div>
       </div>
+    </div>
+  );
+}
+
+const PRESENCE_KEY = "world-presence";
+const ACTIVE_MS = 5 * 60 * 1000;
+const POLL_MS = 4000;
+const parse = (v) => {
+  try {
+    return JSON.parse(v) || {};
+  } catch {
+    return {};
+  }
+};
+
+// Mapa vivo: personajes de todos los jugadores repartidos por el mundo, guardados en el almacén compartido.
+export default function WorldMap({ characters = {}, playerName = "", classColor = () => "#E3B04B", store }) {
+  const [selected, setSelected] = useState("aurelia");
+  const [visiting, setVisiting] = useState(null);
+  const [presence, setPresence] = useState({});
+  const [myCharId, setMyCharId] = useState("");
+  const [now, setNow] = useState(() => Date.now());
+  const presenceRef = useRef({});
+
+  const myChars = Object.entries(characters).map(([id, c]) => ({ id, ...c }));
+  const effectiveId = myChars.some((c) => c.id === myCharId) ? myCharId : myChars[0]?.id || "";
+  const myChar = myChars.find((c) => c.id === effectiveId) || null;
+
+  // Sondeo del estado compartido: cada jugador ve moverse a los demás.
+  useEffect(() => {
+    if (!store) return;
+    let alive = true;
+    const load = async () => {
+      const r = await store.get(PRESENCE_KEY, true);
+      if (!alive) return;
+      const data = r ? parse(r.value) : {};
+      presenceRef.current = data;
+      setPresence(data);
+      setNow(Date.now());
+    };
+    load();
+    const t = setInterval(load, POLL_MS);
+    return () => {
+      alive = false;
+      clearInterval(t);
+    };
+  }, [store]);
+
+  // Lee lo último, cambia solo la entrada de mi personaje y guarda.
+  const writeMine = useCallback(
+    async (charId, patch) => {
+      const c = characters[charId];
+      if (!c || !store) return;
+      const r = await store.get(PRESENCE_KEY, true);
+      const data = r ? parse(r.value) : { ...presenceRef.current };
+      data[charId] = {
+        ...(data[charId] || {}),
+        name: c.f_name || "Sin nombre",
+        cls: c.f_class || "",
+        color: classColor(c.f_class),
+        owner: playerName,
+        ...patch,
+        t: Date.now(),
+      };
+      presenceRef.current = data;
+      setPresence(data);
+      await store.set(PRESENCE_KEY, JSON.stringify(data), true);
+    },
+    [characters, playerName, classColor, store],
+  );
+
+  const entries = Object.entries(presence).map(([id, v]) => ({ id, ...v, active: now - (v.t || 0) < ACTIVE_MS }));
+  const at = (placeId) => entries.filter((e) => e.place === placeId);
+  const counts = {};
+  entries.forEach((e) => {
+    if (e.active) counts[e.place] = (counts[e.place] || 0) + 1;
+  });
+
+  const travel = (placeId, spawn) => {
+    if (!myChar) return;
+    writeMine(myChar.id, { place: placeId, x: spawn.x, y: spawn.y });
+  };
+  const place = PLACES.find((p) => p.id === visiting);
+
+  return (
+    <div>
+      {myChars.length > 0 && (
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, fontSize: 13, color: "var(--mh-muted)" }}>
+          Mi personaje en el mundo:
+          <select className="mh-input" style={{ width: "auto" }} value={effectiveId} onChange={(e) => setMyCharId(e.target.value)}>
+            {myChars.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.f_name || "Sin nombre"}
+                {presence[c.id] ? ` — ${PLACES.find((p) => p.id === presence[c.id].place)?.name || ""}` : ""}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+      {place ? (
+        <WorldPlace
+          place={place}
+          typeInfo={TYPES[place.type]}
+          present={at(place.id)}
+          myCharId={effectiveId}
+          myChar={myChar}
+          onBack={() => setVisiting(null)}
+          onMove={(x, y) => writeMine(effectiveId, { x, y })}
+          onTravel={(spawn) => travel(place.id, spawn)}
+        />
+      ) : (
+        <RegionMap
+          selected={selected}
+          setSelected={setSelected}
+          here={at(selected)}
+          counts={counts}
+          myChar={myChar}
+          myCharId={effectiveId}
+          onVisit={setVisiting}
+          onTravelHere={(id) => {
+            setVisiting(id);
+            // El punto de entrada lo calcula la vista de la localización; aquí se coloca al llegar.
+            import("./worldGen").then(({ generatePlace }) => travel(id, generatePlace(PLACES.find((p) => p.id === id)).spawn));
+          }}
+        />
+      )}
     </div>
   );
 }

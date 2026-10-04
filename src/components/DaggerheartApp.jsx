@@ -2304,6 +2304,7 @@ async function safeGet(key, shared) {
     return null;
   }
 }
+const worldStore = { get: (k, s) => safeGet(k, s), set: (k, v, s) => safeSet(k, v, s) };
 async function safeSet(key, value, shared) {
   try {
     return await storageSet(key, value, shared);
@@ -12684,7 +12685,7 @@ export default function App({ onSignOut }) {
 
           {view === "mapa" && (
             <Card title="Mapa del mundo">
-              <WorldMap />
+              <WorldMap characters={characters} playerName={playerName} classColor={classColor} store={worldStore} />
             </Card>
           )}
 
