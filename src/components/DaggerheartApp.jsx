@@ -5275,7 +5275,10 @@ function useVisFx(tokens) {
 // Menú del clic derecho sobre una ficha: el alcance y las acciones que dé la mesa (menuFor).
 function TokenMenu({ menu, items, onClose }) {
   useEffect(() => {
-    const close = (e) => (e.type !== "keydown" || e.key === "Escape") && onClose();
+    const close = (e) => {
+      if (e.type === "wheel" && e.target.closest && e.target.closest(".mh-map-menu")) return;
+      if (e.type !== "keydown" || e.key === "Escape") onClose();
+    };
     window.addEventListener("pointerdown", close);
     window.addEventListener("keydown", close);
     window.addEventListener("wheel", close, { passive: true });
@@ -6248,23 +6251,26 @@ function MapViewport({ focus, children }) {
     const el = ref.current;
     if (el) setOverflow(el.scrollWidth > el.clientWidth + 2 || el.scrollHeight > el.clientHeight + 2);
   };
+  const userMoved = useRef(false);
   const center = () => {
     const el = ref.current;
     if (!el) return;
-    const fx = focus ? (focus.x + 0.5) / MAP_COLS : 0.5;
-    const fy = focus ? (focus.y + 0.5) / MAP_ROWS : 0.5;
+    // Siempre al centro del tablero.
+    const fx = 0.5;
+    const fy = 0.5;
     el.scrollLeft = fx * el.scrollWidth - el.clientWidth / 2;
     el.scrollTop = fy * el.scrollHeight - el.clientHeight / 2;
     measure();
   };
   // La cámara se coloca una sola vez (al abrir el mapa o al aparecer tu ficha); al moverte ya no salta.
   useLayoutEffect(() => {
-    if (centered.current && focus) return;
+    if (centered.current) return;
     center();
-    if (focus) centered.current = true;
-  }, [focus?.x, focus?.y]);
+    centered.current = true;
+  }, []);
   useLayoutEffect(() => {
-    const ro = new ResizeObserver(measure);
+    // Mientras el visor coge su tamaño (o cambia), se vuelve a centrar si el jugador aún no lo ha movido.
+    const ro = new ResizeObserver(() => (userMoved.current ? measure() : center()));
     if (ref.current) ro.observe(ref.current);
     return () => ro.disconnect();
   }, []);
@@ -6273,7 +6279,10 @@ function MapViewport({ focus, children }) {
     const el = ref.current;
     if (!el) return;
     const onWheel = (e) => {
+      // Dentro del menú del clic derecho, la rueda desplaza el menú.
+      if (e.target.closest && e.target.closest(".mh-map-menu")) return;
       e.preventDefault();
+      userMoved.current = true;
       const z1 = zoomRef.current;
       const z2 = Math.max(1, Math.min(3, z1 * (e.deltaY < 0 ? 1.12 : 1 / 1.12)));
       if (z2 === z1) return;
@@ -6301,6 +6310,7 @@ function MapViewport({ focus, children }) {
     const dx = e.clientX - p.x, dy = e.clientY - p.y;
     if (!p.moved && Math.hypot(dx, dy) < 6) return;
     p.moved = true;
+    userMoved.current = true;
     ref.current.scrollLeft = p.l - dx;
     ref.current.scrollTop = p.t - dy;
   };
@@ -13331,11 +13341,16 @@ export default function App({ onSignOut }) {
                     // Activa = algo que decides usar tú: alguna frase empieza con una orden ("Haz una tirada…", "Gasta…", "Marca un Estrés para…")
                     // o con "Una vez por…"/"Como acción". Lo que empieza por "Cuando…", "Mientras…", "Ganas…" o "Tienes…" es pasivo o reactivo.
                     const ACTIVE_START = /^(haz|gasta|marca|elige|toca|lanza|invoca|conjura|realiza|usa|tira|crea|coloca|transf[oó]rmate|teletransp[oó]rtate|una vez por|a voluntad|como acci[oó]n|al empezar la sesi[oó]n|puedes (gastar|marcar|hacer|usar|lanzar|tocar|elegir|invocar|crear|transformarte|teletransportarte))/i;
-                    const isActive = (txt) =>
-                      String(txt || "")
+                    // Además, tiene que tener efecto en el combate (atacar, dañar, curar, proteger, transformarse...).
+                    // Las que solo dan ventaja en reacciones o sirven en el descanso no salen.
+                    const COMBAT_RE = /(atac|daño|inflig|objetivo|enemig|adversari|aliad|cur(a|ar|as)\b|puntos de vida|\bPV\b|evasi[oó]n|armadura|umbral|transf[oó]rm|forma de bestia|tirada de (conjuro|ataque|lanzamiento)|inmoviliz|vulnerable|escondid)/i;
+                    const isActive = (txt) => {
+                      const sentences = String(txt || "")
                         .split(/(?<=[.;:])\s+/)
-                        .map((x) => x.trim().replace(/^[«"(]/, ""))
-                        .some((x) => ACTIVE_START.test(x));
+                        .map((x) => x.trim().replace(/^[«"(]/, ""));
+                      const act = sentences.filter((x) => ACTIVE_START.test(x) && !/tirada de reacci[oó]n|descanso|tiempo libre/i.test(x));
+                      return act.length > 0 && COMBAT_RE.test(String(txt || ""));
+                    };
                     const rowText = (row) => {
                       if (row.key === "subclass") return (subclassEntry?.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name) || tierForLevel(c.f_level || 1) >= (/Maestría/.test(f.name) ? 3 : 2)).map((f) => f.text).join(" ");
                       if (row.key.startsWith("cf-")) return classFeatures.find((f) => "cf-" + f.name === row.key)?.text;
@@ -16454,6 +16469,8 @@ export default function App({ onSignOut }) {
                                         // Solo el Explorador de Vínculo Bestial tiene compañero animal.
                                         const hasCompanion = me?.f_class === "Explorador" && me?.f_subclass === "Vínculo Bestial";
                                         const companionOn = myPets.length > 0;
+                                        // Con todas tus fichas ya en el mapa, la bandeja desaparece (vuelve si eliges una tuya, para poder quitarla).
+                                        if (myToken && (!hasCompanion || companionOn) && !mineSel) return null;
                                         return (
                                           <div className="mh-map-ptray">
                                             <span className="mh-gm-h2">Tus fichas</span>
