@@ -3,8 +3,6 @@
 import { Fragment, useState, useEffect, useLayoutEffect, useRef, createContext, useContext } from "react";
 import { createPortal } from "react-dom";
 import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus, Box, LayoutGrid, Bird, Fish, Bug, Rabbit, Cat, Turtle, Clock, CircleDashed, Slash } from "lucide-react";
-import { Map as MapIcon } from "lucide-react";
-import WorldMap from "./WorldMap";
 import { storageGet, storageSet } from "@/lib/storage";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
 import { buildSablewood } from "./quickstartSablewood";
@@ -15,7 +13,6 @@ const NAV_ITEMS = [
   { key: "campaigns", label: "Campañas", icon: BookOpen },
   { key: "dados", label: "Dados de Dualidad", icon: Dices },
   { key: "dj", label: "Panel del Director", icon: ShieldHalf },
-  { key: "mapa", label: "Mapa del mundo", icon: MapIcon },
 ];
 
 // Color propio de cada clase (ajuste "Colores por clase").
@@ -2304,7 +2301,6 @@ async function safeGet(key, shared) {
     return null;
   }
 }
-const worldStore = { get: (k, s) => safeGet(k, s), set: (k, v, s) => safeSet(k, v, s) };
 async function safeSet(key, value, shared) {
   try {
     return await storageSet(key, value, shared);
@@ -2888,6 +2884,9 @@ const sharedStyles = `
   .mh-iso-tk.is-vanished { pointer-events: none; }
   .mh-iso-tk.is-vanished > :not(.mh-iso-puff) { opacity: 0; }
   .mh-iso-puff circle { fill: rgba(225,222,235,.9); transform-box: fill-box; transform-origin: center; opacity: 0; animation: mh-iso-puff .8s ease-out forwards; }
+  .mh-iso-star { transform-box: fill-box; transform-origin: center; opacity: 0; filter: drop-shadow(0 0 3px rgba(247, 211, 90, .9)); animation: mh-iso-star 1.6s ease-out forwards; }
+  @keyframes mh-iso-star { 0% { opacity: 0; transform: translate(0, 0) scale(.2) rotate(0deg); } 15% { opacity: 1; transform: translate(calc(var(--dx) * .2), calc(var(--dy) * .25)) scale(1.15) rotate(calc(var(--rot) * .25)); } 70% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(.8) rotate(var(--rot)); } }
+  @media (prefers-reduced-motion: reduce) { .mh-iso-star { animation-duration: .01s; } }
   @keyframes mh-iso-puff { 0% { opacity: 0; transform: scale(.3); } 25% { opacity: .95; transform: scale(1); } 100% { opacity: 0; transform: scale(1.6) translateY(-30%); } }
   .mh-map-tk.is-step0 .mh-map-face { animation: mh-hop0 .38s ease-out; }
   .mh-map-tk.is-step1 .mh-map-face { animation: mh-hop1 .38s ease-out; }
@@ -5231,6 +5230,34 @@ function useAttackFx(fx) {
   }, [fx?.key]);
   return anim;
 }
+// Esperanza ganada: devuelve { charId, n } mientras dura la lluvia de estrellas sobre la ficha de ese personaje.
+function useHopeFx(hopeFx) {
+  const [fx, setFx] = useState(null);
+  const last = useRef(null);
+  const seq = useRef(0);
+  useEffect(() => {
+    if (!hopeFx || !hopeFx.key || last.current === hopeFx.key) return;
+    last.current = hopeFx.key;
+    if (Date.now() - hopeFx.key > 15000) return;
+    setFx({ charId: hopeFx.charId, n: ++seq.current });
+    const t = setTimeout(() => setFx(null), 2100);
+    return () => clearTimeout(t);
+  }, [hopeFx?.key]);
+  return fx;
+}
+// Estrella de cinco puntas centrada en (0, 0).
+const starPoints = (r) => Array.from({ length: 10 }, (_, i) => {
+  const a = -Math.PI / 2 + (i * Math.PI) / 5;
+  const rr = i % 2 ? r * 0.45 : r;
+  return (Math.cos(a) * rr).toFixed(2) + "," + (Math.sin(a) * rr).toFixed(2);
+}).join(" ");
+const HOPE_STARS = [
+  { dx: -0.6, dy: -1.1, rot: -160, delay: 0, r: 0.34 },
+  { dx: 0.55, dy: -1.3, rot: 150, delay: 0.1, r: 0.4 },
+  { dx: -0.1, dy: -1.6, rot: 200, delay: 0.2, r: 0.32 },
+  { dx: 0.85, dy: -0.8, rot: -120, delay: 0.3, r: 0.28 },
+  { dx: -0.9, dy: -0.7, rot: 120, delay: 0.4, r: 0.3 },
+];
 // Animación de paso: cuando una ficha cambia de casilla (la mueva quien sea) da un saltito hasta la nueva.
 // Devuelve { id: { fx, fy, n } } con la casilla de la que viene; n alterna para reiniciar la animación en pasos seguidos.
 function useMoveFx(list) {
@@ -5346,7 +5373,7 @@ const readIsoPref = () => {
   }
 };
 // Tablero con fichas cuadradas. Se arrastran, o se elige una y se pulsa la casilla; también con las flechas.
-function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChange, hideIsoBtn, menuFor, fx, bg, tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
+function MapBoard({ hopeFx, fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChange, hideIsoBtn, menuFor, fx, bg, tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
   const ref = useRef(null);
   const dragRef = useRef(null);
   const [drag, setDrag] = useState(null);
@@ -5534,7 +5561,7 @@ function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChang
   const at = (x, y) => ({ left: (x * 100) / MAP_COLS + "%", top: (y * 100) / MAP_ROWS + "%", width: 100 / MAP_COLS + "%", height: 100 / MAP_ROWS + "%" });
 
   if (iso)
-    return <IsoBoard fog={fog} fogView={fogView} areas={areas} areaTool={areaTool} log={log} hideIsoBtn={hideIsoBtn} menuFor={menuFor} anim={anim} tokens={tokens} props={props} terrain={terrain} stampTool={stampTool} onStamp={onStamp} onUnstamp={onUnstamp} canMove={canMove} onMove={onMove} selectedId={selectedId} onSelect={onSelect} onPick={onPick} compact={compact} onToggle={toggleIso} />;
+    return <IsoBoard hopeFx={hopeFx} fog={fog} fogView={fogView} areas={areas} areaTool={areaTool} log={log} hideIsoBtn={hideIsoBtn} menuFor={menuFor} anim={anim} tokens={tokens} props={props} terrain={terrain} stampTool={stampTool} onStamp={onStamp} onUnstamp={onUnstamp} canMove={canMove} onMove={onMove} selectedId={selectedId} onSelect={onSelect} onPick={onPick} compact={compact} onToggle={toggleIso} />;
 
   return (
     <div
@@ -5699,7 +5726,7 @@ function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChang
 
 // Tablero isométrico tipo diorama: losetas con relieve, decorados y fichas de pie.
 // Usa los mismos datos que el tablero plano (fichas, decorados y terreno).
-function IsoBoard({ fog, fogView = "player", areas = [], areaTool, log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact, onToggle }) {
+function IsoBoard({ hopeFx, fog, fogView = "player", areas = [], areaTool, log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact, onToggle }) {
   const S = 34;
   const OX = MAP_ROWS * S + S * 0.6;
   const OY = S * 2.4;
@@ -5755,6 +5782,7 @@ function IsoBoard({ fog, fogView = "player", areas = [], areaTool, log, hideIsoB
   };
   const steps = useMoveFx(tokens.map((t) => [t.id, t.x, t.y]));
   const vis = useVisFx(tokens);
+  const hope = useHopeFx(hopeFx);
   const painting = useRef(null);
   const occupied = (x, y, exceptId) => {
     const mv = tokens.find((t) => t.id === exceptId);
@@ -5965,6 +5993,22 @@ function IsoBoard({ fog, fogView = "player", areas = [], areaTool, log, hideIsoB
           </g>
         )}
         {sel && <ellipse cx={cx} cy={cy} rx={S * 0.62} ry={S * 0.31} fill="none" stroke="#E3B04B" strokeWidth="3" />}
+        {hope && t.kind === "pc" && hope.charId === t.charId && !t.vanished && (
+          <g key={hope.n} pointerEvents="none" transform={`translate(${cx} ${cy - S * 1.2})`}>
+            {HOPE_STARS.map((st, i) => (
+              <polygon
+                key={i}
+                className="mh-iso-star"
+                points={starPoints(S * st.r)}
+                fill="#F7D35A"
+                stroke="#B7791F"
+                strokeWidth="1"
+                strokeLinejoin="round"
+                style={{ "--dx": st.dx * S + "px", "--dy": st.dy * S + "px", "--rot": st.rot + "deg", animationDelay: st.delay + "s" }}
+              />
+            ))}
+          </g>
+        )}
         {deadFoe && (
           <g pointerEvents="none">
             <ellipse cx={cx + 3} cy={cy + 2} rx={S * 0.66} ry={S * 0.24} fill="#7A1F28" opacity=".55" />
@@ -7574,6 +7618,20 @@ export default function App({ onSignOut }) {
       hope: Number(next.hope_marked ?? HOPE_DEFAULT) - Number(prev.hope_marked ?? HOPE_DEFAULT),
       favor: next.f_class === "Brujo" ? getFavor(next) - getFavor(prev) : 0,
     };
+    // Estrellas sobre la ficha del tablero (las ven todos los de la campaña).
+    if (gains.hope > 0) {
+      const hopeCamp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(id));
+      const hopeEv = { key: Date.now(), charId: id };
+      if (hopeCamp && hopeCamp.id === stageCampaignId) mutateMap(hopeCamp.id, () => hopeEv, "hopeFx");
+      else if (hopeCamp)
+        (async () => {
+          try {
+            const r = await safeGet("campaign-map:" + hopeCamp.id, true);
+            if (!r) return;
+            await safeSet("campaign-map:" + hopeCamp.id, JSON.stringify({ ...JSON.parse(r.value), hopeFx: hopeEv }), true);
+          } catch (e) {}
+        })();
+    }
     Object.entries(gains).forEach(([kind, amount]) => {
       if (amount <= 0) return;
       const key = Date.now() + Math.random();
@@ -12121,6 +12179,7 @@ export default function App({ onSignOut }) {
                           onStamp={(x, y) => stampProp(stampTool, x, y)}
                           onUnstamp={unstampProp}
                           fx={campaignMap.fx}
+                          hopeFx={campaignMap.hopeFx}
                           log={campaignMap.log}
                           fog={campaignMap.fog}
                           fogView="gm"
@@ -12681,19 +12740,6 @@ export default function App({ onSignOut }) {
                 </div>
               </Card>
             </div>
-          )}
-
-          {view === "mapa" && (
-            <Card title="Mapa del mundo">
-              <WorldMap characters={characters} playerName={playerName} classColor={classColor} store={worldStore}
-                renderBoard={(b) => (
-                  <div className="mh-map-stage" style={{ aspectRatio: "1.7 / 1", minHeight: 260, flex: "none" }}>
-                    <MapViewport focus={null}>
-                      <MapBoard iso hideIsoBtn compact={isMobile} fog={null} fogView="player" areas={[]} log={[]} {...b} />
-                    </MapViewport>
-                  </div>
-                )} />
-            </Card>
           )}
 
           {view === "dj" && (
@@ -16543,6 +16589,7 @@ export default function App({ onSignOut }) {
                                             props={campaignMap.props || []}
                                             terrain={campaignMap.terrain || []}
                                             fx={campaignMap.fx}
+                                            hopeFx={campaignMap.hopeFx}
                                             iso={mapIso}
                                             onIsoChange={toggleMapIso}
                                             hideIsoBtn
