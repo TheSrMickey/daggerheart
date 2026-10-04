@@ -230,7 +230,7 @@ const parse = (v) => {
 };
 
 // Mapa vivo: personajes de todos los jugadores repartidos por el mundo, guardados en el almacén compartido.
-export default function WorldMap({ characters = {}, playerName = "", classColor = () => "#E3B04B", store }) {
+export default function WorldMap({ characters = {}, playerName = "", classColor = () => "#E3B04B", store, renderBoard }) {
   const [selected, setSelected] = useState("aurelia");
   const [visiting, setVisiting] = useState(null);
   const [presence, setPresence] = useState({});
@@ -320,6 +320,7 @@ export default function WorldMap({ characters = {}, playerName = "", classColor 
           present={at(place.id)}
           myCharId={effectiveId}
           myChar={myChar}
+          renderBoard={renderBoard}
           onBack={() => setVisiting(null)}
           onMove={(x, y) => writeMine(effectiveId, { x, y })}
           onTravel={(spawn) => travel(place.id, spawn)}

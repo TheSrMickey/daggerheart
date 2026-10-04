@@ -12685,7 +12685,14 @@ export default function App({ onSignOut }) {
 
           {view === "mapa" && (
             <Card title="Mapa del mundo">
-              <WorldMap characters={characters} playerName={playerName} classColor={classColor} store={worldStore} />
+              <WorldMap characters={characters} playerName={playerName} classColor={classColor} store={worldStore}
+                renderBoard={(b) => (
+                  <div className="mh-map-stage" style={{ aspectRatio: "1.7 / 1", minHeight: 260, flex: "none" }}>
+                    <MapViewport focus={null}>
+                      <MapBoard iso hideIsoBtn compact={isMobile} fog={null} fogView="player" areas={[]} log={[]} {...b} />
+                    </MapViewport>
+                  </div>
+                )} />
             </Card>
           )}
 
