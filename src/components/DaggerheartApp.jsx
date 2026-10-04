@@ -3,6 +3,8 @@
 import { Fragment, useState, useEffect, useLayoutEffect, useRef, createContext, useContext } from "react";
 import { createPortal } from "react-dom";
 import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus, Box, LayoutGrid, Bird, Fish, Bug, Rabbit, Cat, Turtle, Clock, CircleDashed, Slash } from "lucide-react";
+import { Map as MapIcon } from "lucide-react";
+import WorldMap from "./WorldMap";
 import { storageGet, storageSet } from "@/lib/storage";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
 import { buildSablewood } from "./quickstartSablewood";
@@ -13,6 +15,7 @@ const NAV_ITEMS = [
   { key: "campaigns", label: "Campañas", icon: BookOpen },
   { key: "dados", label: "Dados de Dualidad", icon: Dices },
   { key: "dj", label: "Panel del Director", icon: ShieldHalf },
+  { key: "mapa", label: "Mapa del mundo", icon: MapIcon },
 ];
 
 // Color propio de cada clase (ajuste "Colores por clase").
@@ -12677,6 +12680,12 @@ export default function App({ onSignOut }) {
                 </div>
               </Card>
             </div>
+          )}
+
+          {view === "mapa" && (
+            <Card title="Mapa del mundo">
+              <WorldMap />
+            </Card>
           )}
 
           {view === "dj" && (
