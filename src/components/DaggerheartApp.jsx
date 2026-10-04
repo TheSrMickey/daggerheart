@@ -3042,6 +3042,11 @@ const sharedStyles = `
   .mh-measure-tag { position: absolute; z-index: 9; transform: translate(14px, -130%); padding: 4px 9px; border-radius: 8px; background: rgba(20,14,18,.86); border: 1.5px solid var(--mc); color: #F4EEE2; font: 600 11.5px Inter, system-ui, sans-serif; white-space: nowrap; pointer-events: none; }
   .mh-measure-tag b { font-size: 13px; color: var(--mc); }
   .mh-iso-ghost { opacity: .7; }
+  .mh-fog-puff { transform-box: fill-box; transform-origin: center; animation: mh-fog 6s ease-in-out infinite; }
+  @keyframes mh-fog { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(4px, -2px) scale(1.06); } }
+  .mh-map-chip .is-fog { background: linear-gradient(135deg, #3B3547, #6E6680); }
+  .mh-fog-auto { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--mh-ink2); }
+  @media (prefers-reduced-motion: reduce) { .mh-fog-puff { animation: none; } }
   .mh-iso-prop { pointer-events: none; }
   .mh-iso-prop.is-hit, .mh-iso-prop.is-hit * { pointer-events: visiblePainted !important; cursor: pointer; }
   .mh-iso-aura { transform-box: fill-box; transform-origin: center; animation: mh-aura 2s ease-in-out infinite; }
@@ -5146,6 +5151,9 @@ function MapCounters({ list, gm }) {
     </div>
   );
 }
+// Niebla de guerra: con la niebla activada, solo se ven las casillas despejadas.
+const fogAt = (map, x, y) => !!(map && map.fog && map.fog.on && !(map.fog.revealed || []).includes(x + "," + y));
+const FOG_RADIUS = 3; // los personajes despejan a su alrededor (alcance Muy cercano)
 const isFlying = (t) => mapConds(t).includes("Volando");
 const isDeadFoe = (t) => !!(t.stats && Number(t.stats.hp || 0) > 0 && Number(t.stats.hpMarked || 0) >= Number(t.stats.hp || 0));
 // Proyectil de un ataque a distancia (orbe mágico o flecha) en el tablero isométrico: vuela en arco y estalla al llegar.
@@ -5334,7 +5342,7 @@ const readIsoPref = () => {
   }
 };
 // Tablero con fichas cuadradas. Se arrastran, o se elige una y se pulsa la casilla; también con las flechas.
-function MapBoard({ areas, areaTool, log, iso: isoProp, onIsoChange, hideIsoBtn, menuFor, fx, bg, tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
+function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChange, hideIsoBtn, menuFor, fx, bg, tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
   const ref = useRef(null);
   const dragRef = useRef(null);
   const [drag, setDrag] = useState(null);
@@ -5522,7 +5530,7 @@ function MapBoard({ areas, areaTool, log, iso: isoProp, onIsoChange, hideIsoBtn,
   const at = (x, y) => ({ left: (x * 100) / MAP_COLS + "%", top: (y * 100) / MAP_ROWS + "%", width: 100 / MAP_COLS + "%", height: 100 / MAP_ROWS + "%" });
 
   if (iso)
-    return <IsoBoard areas={areas} areaTool={areaTool} log={log} hideIsoBtn={hideIsoBtn} menuFor={menuFor} anim={anim} tokens={tokens} props={props} terrain={terrain} stampTool={stampTool} onStamp={onStamp} onUnstamp={onUnstamp} canMove={canMove} onMove={onMove} selectedId={selectedId} onSelect={onSelect} onPick={onPick} compact={compact} onToggle={toggleIso} />;
+    return <IsoBoard fog={fog} fogView={fogView} areas={areas} areaTool={areaTool} log={log} hideIsoBtn={hideIsoBtn} menuFor={menuFor} anim={anim} tokens={tokens} props={props} terrain={terrain} stampTool={stampTool} onStamp={onStamp} onUnstamp={onUnstamp} canMove={canMove} onMove={onMove} selectedId={selectedId} onSelect={onSelect} onPick={onPick} compact={compact} onToggle={toggleIso} />;
 
   return (
     <div
@@ -5687,7 +5695,7 @@ function MapBoard({ areas, areaTool, log, iso: isoProp, onIsoChange, hideIsoBtn,
 
 // Tablero isométrico tipo diorama: losetas con relieve, decorados y fichas de pie.
 // Usa los mismos datos que el tablero plano (fichas, decorados y terreno).
-function IsoBoard({ areas = [], areaTool, log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact, onToggle }) {
+function IsoBoard({ fog, fogView = "player", areas = [], areaTool, log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact, onToggle }) {
   const S = 34;
   const OX = MAP_ROWS * S + S * 0.6;
   const OY = S * 2.4;
@@ -5760,7 +5768,12 @@ function IsoBoard({ areas = [], areaTool, log, hideIsoBtn, menuFor, anim, tokens
     const list = propsAt(x, y);
     return !list.length || !!STRUCT_H[list[list.length - 1].kind];
   };
-  const isTerrainTool = stampTool && stampTool.startsWith("t:");
+  const isTerrainTool = stampTool && (stampTool.startsWith("t:") || stampTool.startsWith("fog:"));
+  // Niebla: el DJ la ve translúcida; los jugadores, opaca y sin lo que hay debajo.
+  const fogOn = !!(fog && fog.on);
+  const fogSet = new Set((fog && fog.revealed) || []);
+  const inFog = (x, y) => fogOn && !fogSet.has(x + "," + y);
+  const fogHide = fogView !== "gm";
   const tileDown = (e, x, y) => {
     if (e.button > 0) return;
     if (areaTool) {
@@ -6081,18 +6094,20 @@ function IsoBoard({ areas = [], areaTool, log, hideIsoBtn, menuFor, anim, tokens
           const prs = propsAt(x, y);
           const pr = prs[0];
           const [cx, cy] = P(x + 0.5, y + 0.5, z);
-          if (layer === "things" && !prs.length && !here.length) return null;
+          const misty = inFog(x, y);
+          const fogged = misty && fogHide;
+          if (layer === "things" && !prs.length && !here.length && !misty) return null;
           return layer === "ground" ? (
             <g key={"g" + x + "," + y}>
               {z > 0 && (
                 <>
-                  <polygon points={pts([d, c, P(x + 1, y + 1, 0), P(x, y + 1, 0)])} fill={tr.s1} data-cx={x} data-cy={y} onPointerDown={(e) => tileDown(e, x, y)} onContextMenu={(e) => tileContext(e, x, y)} />
-                  <polygon points={pts([c, b, P(x + 1, y, 0), P(x + 1, y + 1, 0)])} fill={tr.s2} data-cx={x} data-cy={y} onPointerDown={(e) => tileDown(e, x, y)} onContextMenu={(e) => tileContext(e, x, y)} />
+                  <polygon points={pts([d, c, P(x + 1, y + 1, 0), P(x, y + 1, 0)])} fill={fogged ? "#231F2C" : tr.s1} data-cx={x} data-cy={y} onPointerDown={(e) => tileDown(e, x, y)} onContextMenu={(e) => tileContext(e, x, y)} />
+                  <polygon points={pts([c, b, P(x + 1, y, 0), P(x + 1, y + 1, 0)])} fill={fogged ? "#1C1925" : tr.s2} data-cx={x} data-cy={y} onPointerDown={(e) => tileDown(e, x, y)} onContextMenu={(e) => tileContext(e, x, y)} />
                 </>
               )}
               <polygon
                 points={pts([a, b, c, d])}
-                fill={tr.key === "hierba" ? GRASS_TONES[cellHash(x, y) % 4] : tr.top[(x + y) % 2]}
+                fill={fogged ? ((x + y) % 2 ? "#2C2737" : "#302B3C") : tr.key === "hierba" ? GRASS_TONES[cellHash(x, y) % 4] : tr.top[(x + y) % 2]}
                 stroke="rgba(0,0,0,.12)"
                 strokeWidth="1"
                 data-cx={x}
@@ -6103,6 +6118,7 @@ function IsoBoard({ areas = [], areaTool, log, hideIsoBtn, menuFor, anim, tokens
               />
               {(() => {
                 // Detalles del suelo: oleaje en el agua, piedras en el camino y alguna flor en la hierba.
+                if (fogged) return null;
                 const [mx, my] = P(x + 0.5, y + 0.5, z);
                 const h = cellHash(x, y);
                 if (tr.key === "agua")
@@ -6135,19 +6151,27 @@ function IsoBoard({ areas = [], areaTool, log, hideIsoBtn, menuFor, anim, tokens
             </g>
           ) : (
             <g key={"t" + x + "," + y}>
-              {prs.length > 0 && (
+              {prs.length > 0 && !fogged && (
                 // Mientras el DJ decora, los decorados se pueden pulsar (es su casilla, no la de detrás).
                 <g className={"mh-iso-prop" + (stampTool ? " is-hit" : "")} data-cx={x} data-cy={y} onPointerDown={(e) => tileDown(e, x, y)} onContextMenu={(e) => tileContext(e, x, y)}>
                   {drawIsoStack(P, x, y, z, S, prs)}
                 </g>
               )}
-              {[...here].sort((p, q) => isFlying(p) - isFlying(q)).map((t) => renderTok(t, cx, cy))}
+              {!fogged && [...here].sort((p, q) => isFlying(p) - isFlying(q)).map((t) => renderTok(t, cx, cy))}
+              {misty && (
+                <g className={"mh-fog" + (fogHide ? "" : " is-gm")} pointerEvents="none">
+                  {!fogHide && <polygon points={pts([a, b, c, d])} fill="#1E1A27" fillOpacity=".42" />}
+                  {[[-0.2, -0.04, 0.36], [0.22, 0.05, 0.31], [0.02, -0.24, 0.29]].map(([dx, dy, r], i) => (
+                    <ellipse key={i} className="mh-fog-puff" style={{ animationDelay: -(((x * 3 + y * 7 + i * 5) % 10) * 0.45) + "s" }} cx={cx + dx * S} cy={cy + dy * S - S * 0.14} rx={r * S * 1.35} ry={r * S * 0.78} fill={fogHide ? "#3B3547" : "#9A93B2"} fillOpacity={fogHide ? 0.92 : 0.3} />
+                  ))}
+                </g>
+              )}
             </g>
           );
         }))}
         {petLinks}
         {tokens.map((t) => {
-          if (t.vanished || (drag && drag.moved && drag.id === t.id)) return null;
+          if (t.vanished || (drag && drag.moved && drag.id === t.id) || (fogHide && inFog(t.x, t.y))) return null;
           const z0 = tAt(t.x, t.y).z;
           const [gx, gy] = P(t.x + 0.5, t.y + 0.5, z0);
           const k = sizeK(t);
@@ -7031,6 +7055,33 @@ export default function App({ onSignOut }) {
       })
     );
   }, [campaignMap, characters, sheetCampaignId, viewingCharId]);
+
+  // Niebla: al moverse, cada personaje despeja las casillas a su alrededor (lo hace el DJ para todos y cada jugador para el suyo).
+  useEffect(() => {
+    const fog = campaignMap.fog;
+    if (!fog || !fog.on || fog.auto === false) return;
+    const campId = gmViewing ? viewingCampaignId : sheetCampaignId;
+    if (!campId) return;
+    const rev = new Set(fog.revealed || []);
+    const add = [];
+    (campaignMap.tokens || [])
+      .filter((t) => t.kind === "pc" && (gmViewing || t.charId === viewingCharId))
+      .forEach((t) => {
+        for (let dy = -FOG_RADIUS; dy <= FOG_RADIUS; dy++)
+          for (let dx = -FOG_RADIUS; dx <= FOG_RADIUS; dx++) {
+            const x = t.x + dx, y = t.y + dy;
+            const k = x + "," + y;
+            if (x < 0 || y < 0 || x >= MAP_COLS || y >= MAP_ROWS || rev.has(k)) continue;
+            rev.add(k);
+            add.push(k);
+          }
+      });
+    if (!add.length) return;
+    mutateMap(campId, (f) => {
+      const cur = f && !Array.isArray(f) ? f : fog;
+      return { ...cur, revealed: [...new Set([...(cur.revealed || []), ...add])] };
+    }, "fog");
+  }, [campaignMap, viewingCharId, gmViewing, sheetCampaignId, viewingCampaignId]);
 
   // Escape cierra la pista abierta.
   useEffect(() => {
@@ -9458,8 +9509,19 @@ export default function App({ onSignOut }) {
     if (mapSel === id) setMapSel(null);
   };
 
+  // Niebla del mapa: { on, revealed: ["x,y"...], auto }.
+  const fogOf = (f) => (f && !Array.isArray(f) ? { on: false, revealed: [], auto: true, ...f } : { on: false, revealed: [], auto: true });
+  const setFog = (patch) => mutateMap(viewingCampaignId, (f) => ({ ...fogOf(f), ...(typeof patch === "function" ? patch(fogOf(f)) : patch) }), "fog");
   const stampProp = (kind, x, y) =>
-    kind === "rot"
+    kind && kind.startsWith("fog:")
+      ? setFog((f) => {
+          const k = x + "," + y;
+          const rv = new Set(f.revealed);
+          if (kind === "fog:reveal") rv.add(k);
+          else rv.delete(k);
+          return { revealed: [...rv] };
+        })
+      : kind === "rot"
       ? mutateMap(viewingCampaignId, (props) => {
           // Gira lo de más arriba de la casilla.
           const idx = props.map((pr, i) => (pr.x === x && pr.y === y ? i : -1)).filter((i) => i >= 0).pop();
@@ -9485,6 +9547,8 @@ export default function App({ onSignOut }) {
           "props"
         );
   const unstampProp = (x, y) => {
+    // Con la niebla, el clic derecho hace lo contrario (despejar ↔ cubrir).
+    if (stampTool && stampTool.startsWith("fog:")) return stampProp(stampTool === "fog:reveal" ? "fog:hide" : "fog:reveal", x, y);
     // Con el terreno, el clic derecho baja un nivel (o vuelve a hierba).
     if (stampTool && stampTool.startsWith("t:"))
       return mutateMap(viewingCampaignId, (ter) => ter.flatMap((t) => (t.x === x && t.y === y ? ((t.lvl || 1) > 1 ? [{ ...t, lvl: t.lvl - 1 }] : []) : [t])), "terrain");
@@ -9955,7 +10019,7 @@ export default function App({ onSignOut }) {
   const loadSavedMap = async (m) => {
     if (!viewingCampaignId || !window.confirm("¿Cargar «" + m.name + "»? Sustituye el mapa actual (las fichas de los jugadores se quedan).")) return;
     const keep = (campaignMap.tokens || []).filter((t) => t.kind === "pc" || t.kind === "pet");
-    const next = { tokens: [...(m.map.tokens || []).map((t) => ({ ...t })), ...keep], props: m.map.props || [], terrain: m.map.terrain || [], counters: m.map.counters || [], areas: [], hits: [], log: [] };
+    const next = { tokens: [...(m.map.tokens || []).map((t) => ({ ...t })), ...keep], props: m.map.props || [], terrain: m.map.terrain || [], counters: m.map.counters || [], ...(m.map.fog ? { fog: m.map.fog } : {}), areas: [], hits: [], log: [] };
     setCampaignMap(next);
     await safeSet("campaign-map:" + viewingCampaignId, JSON.stringify(next), true);
     setMapSel(null);
@@ -9964,7 +10028,7 @@ export default function App({ onSignOut }) {
   const saveCurrentMap = async () => {
     const name = mapNameDraft.trim();
     if (!name) return;
-    const map = { tokens: (campaignMap.tokens || []).filter((t) => t.kind !== "pc" && t.kind !== "pet"), props: campaignMap.props || [], terrain: campaignMap.terrain || [], counters: campaignMap.counters || [] };
+    const map = { tokens: (campaignMap.tokens || []).filter((t) => t.kind !== "pc" && t.kind !== "pet"), props: campaignMap.props || [], terrain: campaignMap.terrain || [], counters: campaignMap.counters || [], ...(campaignMap.fog ? { fog: campaignMap.fog } : {}) };
     const same = campaignMaps.find((x) => x.name === name);
     await saveMapsLib(same ? campaignMaps.map((x) => (x.id === same.id ? { ...x, map } : x)) : [...campaignMaps, { id: "m" + Date.now(), name, map }]);
     setMapNameDraft("");
@@ -10054,7 +10118,7 @@ export default function App({ onSignOut }) {
       <div className="mh-area-cards">
         {list.map((a) => {
           const cells = areaCells(a, campaignMap.tokens || []);
-          const inside = view.filter((t) => !t.vanished && cells.has(t.x + "," + t.y) && !(t.kind === "pc" && t.charId === a.owner));
+          const inside = view.filter((t) => !t.vanished && cells.has(t.x + "," + t.y) && !(t.kind === "pc" && t.charId === a.owner) && (gm || !fogAt(campaignMap, t.x, t.y)));
           const foes = inside.filter((t) => t.kind === "foe" || t.kind === "npc");
           const me = !gm && characters[a.owner];
           const w = me ? PRIMARY_WEAPONS.find((x) => x.key === me.f_primary_weapon) : null;
@@ -10669,7 +10733,7 @@ export default function App({ onSignOut }) {
   const rollTraitCheck = (charId, traitLabel, traitValue, weapon, cardContext, advantage) => {
     // En una campaña con enemigos en el tablero, primero se elige a quién se ataca.
     if (weapon && !weapon.targetChosen && sheetCampaignId) {
-      const foes = mapTokensView(campaignMap.tokens || []).filter((t) => t.kind === "foe" || t.kind === "npc").map((t) => ({ ...t, reach: reachInfo(charId, weapon.name, t) }));
+      const foes = mapTokensView(campaignMap.tokens || []).filter((t) => (t.kind === "foe" || t.kind === "npc") && !fogAt(campaignMap, t.x, t.y)).map((t) => ({ ...t, reach: reachInfo(charId, weapon.name, t) }));
       if (foes.length) {
         setTargetDlg({ args: [charId, traitLabel, traitValue, weapon, cardContext, advantage], foes });
         return;
@@ -11991,6 +12055,43 @@ export default function App({ onSignOut }) {
                             </i>
                             Girar
                           </button>
+                          <span className="mh-map-props-sep">Niebla</span>
+                          {(() => {
+                            const f = fogOf(campaignMap.fog);
+                            return (
+                              <>
+                                <button type="button" className={"mh-map-chip" + (f.on ? " is-on" : "")} aria-pressed={f.on} title="Con la niebla activada, los jugadores solo ven las casillas despejadas" onClick={() => setFog({ on: !f.on })}>
+                                  <i className="is-prop is-fog" />
+                                  {f.on ? "Niebla activada" : "Activar niebla"}
+                                </button>
+                                {f.on && (
+                                  <>
+                                    <button type="button" className={"mh-map-chip" + (stampTool === "fog:reveal" ? " is-on" : "")} aria-pressed={stampTool === "fog:reveal"} onClick={() => setStampTool(stampTool === "fog:reveal" ? null : "fog:reveal")}>
+                                      <i className="is-prop">
+                                        <Eye size={13} />
+                                      </i>
+                                      Despejar
+                                    </button>
+                                    <button type="button" className={"mh-map-chip" + (stampTool === "fog:hide" ? " is-on" : "")} aria-pressed={stampTool === "fog:hide"} onClick={() => setStampTool(stampTool === "fog:hide" ? null : "fog:hide")}>
+                                      <i className="is-prop">
+                                        <EyeOff size={13} />
+                                      </i>
+                                      Cubrir
+                                    </button>
+                                    <button type="button" className="mh-map-chip" onClick={() => setFog({ revealed: [] })}>
+                                      Cubrir todo
+                                    </button>
+                                    <button type="button" className="mh-map-chip" onClick={() => setFog({ revealed: Array.from({ length: MAP_COLS * MAP_ROWS }, (_, i) => (i % MAP_COLS) + "," + Math.floor(i / MAP_COLS)) })}>
+                                      Despejar todo
+                                    </button>
+                                    <label className="mh-fog-auto">
+                                      <input type="checkbox" checked={f.auto !== false} onChange={(e) => setFog({ auto: e.target.checked })} /> Los personajes despejan a su alrededor
+                                    </label>
+                                  </>
+                                )}
+                              </>
+                            );
+                          })()}
                           <span className="mh-map-props-sep">Terreno</span>
                           {MAP_TERRAINS.map((tr) => (
                             <button key={tr.key} type="button" className={"mh-map-chip" + (stampTool === "t:" + tr.key ? " is-on" : "")} aria-pressed={stampTool === "t:" + tr.key} onClick={() => setStampTool(stampTool === "t:" + tr.key ? null : "t:" + tr.key)}>
@@ -12004,7 +12105,8 @@ export default function App({ onSignOut }) {
                             </button>
                           )}
                         </div>
-                        {stampTool && (stampTool.startsWith("t:") ? <div className="mh-map-stamphint">Pulsa o arrastra por las casillas para pintar {terrainOf(stampTool.slice(2)).label.toLowerCase()}. Clic derecho para volver a hierba. Se ve con relieve en la vista isométrica.</div> : <div className="mh-map-stamphint">Pulsa o arrastra por las casillas para poner {MAP_PROPS.find((m) => m.key === stampTool)?.label.toLowerCase()}s. Clic derecho sobre un decorado para quitarlo. Vuelve a pulsar el sello para dejar de estampar.</div>)}
+                        {stampTool && stampTool.startsWith("fog:") && <div className="mh-map-stamphint">Pulsa o arrastra por las casillas para {stampTool === "fog:reveal" ? "despejar" : "cubrir"} la niebla. Clic derecho para lo contrario. Tú la ves translúcida; los jugadores no ven lo que hay debajo.</div>}
+                        {stampTool && !stampTool.startsWith("fog:") && (stampTool.startsWith("t:") ? <div className="mh-map-stamphint">Pulsa o arrastra por las casillas para pintar {terrainOf(stampTool.slice(2)).label.toLowerCase()}. Clic derecho para volver a hierba. Se ve con relieve en la vista isométrica.</div> : <div className="mh-map-stamphint">Pulsa o arrastra por las casillas para poner {MAP_PROPS.find((m) => m.key === stampTool)?.label.toLowerCase()}s. Clic derecho sobre un decorado para quitarlo. Vuelve a pulsar el sello para dejar de estampar.</div>)}
                         <div className="mh-map-zoomwrap">
                         <MapViewport focus={null}>
                         <MapBoard
@@ -12016,6 +12118,8 @@ export default function App({ onSignOut }) {
                           onUnstamp={unstampProp}
                           fx={campaignMap.fx}
                           log={campaignMap.log}
+                          fog={campaignMap.fog}
+                          fogView="gm"
                           areas={campaignMap.areas || []}
                           areaTool={areaTool && areaTool.campaignId === viewingCampaignId ? { onPlace: (x, y) => placeArea(areaTool, x, y) } : null}
                           iso={mapIso}
@@ -16296,7 +16400,7 @@ export default function App({ onSignOut }) {
                             </div>
                           );
                         const newHandouts = handouts.filter((h) => !handoutsSeen.includes(h.id)).length;
-                        const mapTokens = mapTokensView(campaignMap.tokens).map((t) => (t.kind === "pc" && t.hidden && t.charId !== viewingCharId ? { ...t, hidden: false, vanished: true } : t));
+                        const mapTokens = mapTokensView(campaignMap.tokens).filter((t) => !((t.kind === "foe" || t.kind === "npc") && fogAt(campaignMap, t.x, t.y))).map((t) => (t.kind === "pc" && t.hidden && t.charId !== viewingCharId ? { ...t, hidden: false, vanished: true } : t));
                         const myToken = mapTokens.find((t) => t.kind === "pc" && t.charId === viewingCharId);
                         const kindOf = (k) => HANDOUT_KINDS.find((x) => x.key === k) || HANDOUT_KINDS[0];
                         const empty = (Icon, text) => (
@@ -16412,7 +16516,7 @@ export default function App({ onSignOut }) {
                                   ))}
 
                                 {stTab === "mapa" &&
-                                  (mapTokens.length || scene.image ? (
+                                  (mapTokens.length || scene.image || (campaignMap.tokens || []).length || (campaignMap.props || []).length || campaignMap.fog?.on ? (
                                     <>
                                       {/* La escena llena la caja (difuminada por detrás) y el tablero, con casillas cuadradas, se ajusta dentro */}
                                       <div className="mh-map-stage">
@@ -16425,6 +16529,8 @@ export default function App({ onSignOut }) {
                                             iso={mapIso}
                                             onIsoChange={toggleMapIso}
                                             hideIsoBtn
+                                            fog={campaignMap.fog}
+                                            fogView="player"
                                             areas={campaignMap.areas || []}
                                             areaTool={areaTool && areaTool.campaignId === charCampaign.id ? { onPlace: (x, y) => placeArea(areaTool, x, y) } : null}
                                             tokens={mapTokens}
