@@ -11,8 +11,6 @@ import { Wand, CircleDot, MoveUpRight, Archive, Shell, Compass, Ghost, ChevronsR
 const NAV_ITEMS = [
   { key: "ficha", label: "Personajes", icon: User },
   { key: "campaigns", label: "Campañas", icon: BookOpen },
-  { key: "dados", label: "Dados de Dualidad", icon: Dices },
-  { key: "dj", label: "Panel del Director", icon: ShieldHalf },
 ];
 
 // Color propio de cada clase (ajuste "Colores por clase").
