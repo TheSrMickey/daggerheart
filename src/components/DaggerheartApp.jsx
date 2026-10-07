@@ -10551,6 +10551,8 @@ export default function App({ onSignOut }) {
   // Al pulsar un personaje se pregunta qué hoja abrir.
   const openCharDetail = (id) => setSheetAsk(id);
   const openModern = (id) => {
+    setDetailTab("general");
+    setActionPage(0);
     setViewingCharId(null);
     setViewingCardDetail(null);
     setView("ficha");
@@ -11829,6 +11831,22 @@ export default function App({ onSignOut }) {
       proficiency: getProficiency(c),
       weapons: [weapon(primary, "Arma principal"), weapon(secondary, "Arma secundaria")].filter(Boolean),
       experiences: getExperiences(c),
+      tabs: (() => {
+        const camp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(id));
+        return [
+          ["general", "Detalles generales"],
+          ["actions", "Acciones"],
+          ["rests", "Descanso"],
+          ["inventory", "Inventario"],
+          ["background", "Trasfondo"],
+          ["journal", "Diario"],
+          ...(c.f_class === "Druida" ? [["beastforms", "Formas de Bestia"]] : []),
+          ...(c.f_subclass === "Vínculo Bestial" ? [["companion", "Compañero Animal"]] : []),
+          ...(c.f_subclass === "Sindicato" ? [["contacts", "Red de Contactos"]] : []),
+          ...(isMartial(c) ? [["stances", "Posturas Marciales"]] : []),
+          ...(camp ? [["campaign", camp.name]] : []),
+        ];
+      })(),
     };
   };
   const modernActions = (id) => ({
@@ -12311,7 +12329,7 @@ export default function App({ onSignOut }) {
                   ];
                   const validKeys = [...tabs.map((t) => t.key), ...(c.f_class === "Druida" ? ["beastforms"] : []), ...(c.f_subclass === "Vínculo Bestial" ? ["companion"] : []), ...(c.f_subclass === "Sindicato" ? ["contacts"] : []), ...(isMartial(c) ? ["stances"] : []), ...(Object.values(campaigns).some((cp) => (cp.characterIds || []).includes(viewingCharId)) ? ["campaign"] : [])];
                   const charCampaign = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(viewingCharId));
-                  const activeTab = embedded ? "general" : validKeys.includes(detailTab) ? detailTab : "general";
+                  const activeTab = validKeys.includes(detailTab) ? detailTab : "general";
                   const currentTier = tierForLevel(c.f_level || 1);
                   const hopeFeature = CLASS_HOPE_FEATURE[c.f_class];
                   const classFeatures = CLASS_FEATURES[c.f_class] || [];
@@ -22296,11 +22314,15 @@ export default function App({ onSignOut }) {
             </div>
           </div>
         )}
-        <div className={showTopbar ? "mh-scroll-hidden" : undefined} style={{ position: "absolute", top: showTopbar ? 108 : 0, left: 0, bottom: 0, right: showRail ? 290 : 0, overflowY: view === "ficha" && !viewingCharId && showRail ? "hidden" : "auto", padding: isMobile ? "18px 14px" : showTopbar ? "0 " + padX + " 24px" : "24px 28px" }}>
+        <div className={showTopbar ? "mh-scroll-hidden" : undefined} style={{ position: "absolute", top: showTopbar ? 108 : 0, left: 0, bottom: 0, right: showRail ? 290 : 0, overflowY: view === "ficha" && !viewingCharId && !modernCharId && showRail ? "hidden" : "auto", padding: isMobile ? "18px 14px" : showTopbar ? "0 " + padX + " 24px" : "24px 28px" }}>
           <div key={view} className="mh-view-in" style={{ maxWidth: contentMax, margin: "0 auto" }}>
             {!showTopbar && view !== "inicio" && <div className="mh-pagetitle">{viewLabel}</div>}
 
-          {modernOpen && <ModernSheet key={modernCharId} d={modernData(modernCharId)} actions={modernActions(modernCharId)} general={renderClassicSheet(modernCharId, true)} />}
+          {modernOpen && (() => {
+            const md = modernData(modernCharId);
+            const tab = md.tabs.some(([k]) => k === detailTab) ? detailTab : "general";
+            return <ModernSheet key={modernCharId} d={md} actions={modernActions(modernCharId)} content={renderClassicSheet(modernCharId, true)} tab={tab} onTab={(k) => (setDetailTab(k), setActionPage(0))} />;
+          })()}
 
           {view === "inicio" && (() => {
             const chars = Object.entries(characters);
