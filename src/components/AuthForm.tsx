@@ -13,26 +13,27 @@ export function AuthForm({ mode, next, notice }: { mode: "login" | "register"; n
   }
 
   return (
-    <form action={action} className="space-y-4">
+    <form action={action} className="space-y-3">
       {notice && <p className="rounded-md bg-panel-2 px-3 py-2 text-sm">{notice}</p>}
       {next && <input type="hidden" name="next" value={next} />}
 
       {isRegister && (
         <div>
-          <label className="label" htmlFor="username">Nombre de jugador</label>
-          <input className="field" id="username" name="username" required minLength={2} maxLength={32} autoComplete="nickname" />
+          <label className="label sr-only" htmlFor="username">Nombre de jugador</label>
+          <input className="field" id="username" name="username" placeholder="Nombre de jugador" required minLength={2} maxLength={32} autoComplete="nickname" />
         </div>
       )}
       <div>
-        <label className="label" htmlFor="email">Correo</label>
-        <input className="field" id="email" name="email" type="email" required autoComplete="email" />
+        <label className="label sr-only" htmlFor="email">Correo</label>
+        <input className="field" id="email" name="email" placeholder="Correo electrónico" type="email" required autoComplete="email" />
       </div>
       <div>
-        <label className="label" htmlFor="password">Contraseña</label>
+        <label className="label sr-only" htmlFor="password">Contraseña</label>
         <input
           className="field"
           id="password"
           name="password"
+          placeholder="Contraseña"
           type="password"
           required
           minLength={isRegister ? 8 : undefined}
@@ -41,8 +42,8 @@ export function AuthForm({ mode, next, notice }: { mode: "login" | "register"; n
       </div>
       {isRegister && (
         <div>
-          <label className="label" htmlFor="confirm">Repite la contraseña</label>
-          <input className="field" id="confirm" name="confirm" type="password" required autoComplete="new-password" />
+          <label className="label sr-only" htmlFor="confirm">Repite la contraseña</label>
+          <input className="field" id="confirm" name="confirm" placeholder="Repite la contraseña" type="password" required autoComplete="new-password" />
         </div>
       )}
 

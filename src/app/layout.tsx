@@ -7,7 +7,7 @@ const display = Cinzel({ variable: "--font-cinzel", subsets: ["latin"] });
 const body = Inter({ variable: "--font-body", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Daggerheart · Mesa",
+  title: "Enaris",
   description: "Hojas de personaje de Daggerheart para tu grupo",
 };
 

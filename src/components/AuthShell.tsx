@@ -13,7 +13,7 @@ export function AuthShell({ title, subtitle, children }: { title: string; subtit
         </section>
         <section className="auth-art" aria-hidden="true">
           <p className="auth-quote">«Cada aventura empieza con un paso… y una tirada de dados.»</p>
-          <span className="auth-tag">✦ Marheim · Daggerheart</span>
+          <span className="auth-tag">Enaris · Mickey</span>
         </section>
       </div>
     </main>
