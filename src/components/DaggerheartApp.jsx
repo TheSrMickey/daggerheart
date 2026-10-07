@@ -936,6 +936,9 @@ const TRAIT_HINTS = {
   t_knowledge: "Recordar, analizar, comprender",
 };
 
+// Máximo de personajes por cuenta.
+const MAX_CHARACTERS = 3;
+
 const TRAIT_MODIFIER_POOL = [
   { id: "m_2", value: 2 },
   { id: "m_1a", value: 1 },
@@ -4258,6 +4261,44 @@ const sharedStyles = `
   .mh-hero-bars { margin-top: auto; display: flex; gap: 5px; padding-top: 6px; }
   .mh-hero-bars span { flex: 1; height: 5px; border-radius: 3px; background: var(--mh-line); overflow: hidden; }
   .mh-hero-bars i { display: block; height: 100%; border-radius: 3px; }
+  /* Galería de personajes: 3 tarjetas grandes que ocupan todo el alto, centradas */
+  .mh-gal-wrap { display: flex; flex-direction: column; min-height: calc(100dvh - 124px); }
+  .mh-gal-head { display: flex; align-items: baseline; gap: 12px; margin: -10px 0 14px; font-size: 13px; color: var(--mh-ink3); font-weight: 600; }
+  .mh-gal-head small { font-size: 12px; color: #C0504A; font-weight: 500; }
+  .mh-gal { flex: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; align-items: stretch; justify-content: center; min-height: 520px; }
+  .mh-gal .mh-hero { height: 100%; text-align: center; }
+  .mh-gal .mh-hero-top { flex: 1 1 auto; min-height: 220px; height: auto; }
+  .mh-gal .mh-hero-emb { width: 124px; height: 124px; }
+  .mh-gal .mh-hero-emb svg { width: 58px; height: 58px; }
+  .mh-gal .mh-hero-lv { top: 14px; left: 14px; min-width: 38px; height: 42px; font-size: 18px; }
+  .mh-gal .mh-hero-del { top: 12px; right: 12px; width: 34px; height: 34px; }
+  .mh-gal .mh-hero-inf { flex: 0 0 auto; align-items: center; padding: 20px 22px 24px; gap: 6px; }
+  .mh-gal .mh-hero-nm { font-size: 24px; }
+  .mh-gal .mh-hero-cl { font-size: 13.5px; }
+  .mh-gal .mh-hero-or { font-size: 12.5px; }
+  .mh-gal .mh-hero-tags { justify-content: center; }
+  .mh-gal .mh-hero-tags span { font-size: 11px; padding: 2px 10px; }
+  .mh-gal .mh-hero-bars { width: 100%; padding-top: 14px; gap: 7px; }
+  .mh-gal .mh-hero-bars span { height: 7px; border-radius: 4px; }
+  .mh-gal .mh-hero-nums { width: 100%; font-size: 12px; }
+  .mh-gal-new { margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; cursor: pointer; border-style: dashed; color: var(--mh-ink3); text-align: center; min-height: 420px; transition: border-color .15s, background .15s; }
+  .mh-gal-new:hover, .mh-gal-new:focus-visible { border-color: #E3B04B; background: #E3B04B0F; outline: none; }
+  .mh-gal-new small { font-size: 12px; color: var(--mh-muted); }
+  .mh-gal-plus { width: 76px; height: 76px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1.5px dashed var(--mh-line2); }
+  @media (max-width: 900px) { .mh-gal-wrap { min-height: 0; } .mh-gal { grid-template-columns: 1fr; min-height: 0; } .mh-gal .mh-hero { min-height: 420px; } }
+  /* Diálogo de borrado de personaje */
+  .mh-del-back { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(8,6,12,.62); }
+  .mh-del { width: min(460px, 100%); margin: 0; padding: 28px 26px 22px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; }
+  .mh-del-emb { width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 6px; color: color-mix(in srgb, var(--hc) var(--mh-accent-keep, 100%), #000); background: color-mix(in srgb, var(--hc) 18%, var(--mh-panel)); border: 2px solid color-mix(in srgb, var(--hc) 60%, transparent); }
+  .mh-del-t { font-size: 21px; font-weight: 700; color: var(--mh-ink); line-height: 1.25; }
+  .mh-del-sub { font-size: 12.5px; color: var(--mh-muted); }
+  .mh-del-d { font-size: 13.5px; color: var(--mh-ink3); margin: 10px 0 0; line-height: 1.5; }
+  .mh-del-warn { font-size: 12.5px; color: #C0504A; background: #C0504A14; border: 1px solid #C0504A44; border-radius: 8px; padding: 7px 10px; margin: 6px 0 0; }
+  .mh-del-btns { display: flex; gap: 10px; margin-top: 20px; width: 100%; }
+  .mh-del-btns > * { flex: 1; justify-content: center; }
+  .mh-del-go { display: inline-flex; align-items: center; gap: 6px; border: none; border-radius: 8px; padding: 9px 14px; font-family: inherit; font-size: 13px; font-weight: 600; white-space: nowrap; background: #C0504A; color: #fff; cursor: pointer; }
+  .mh-del-go:hover { background: #A8403B; }
+  .mh-del-go:focus-visible { outline: 2px solid #C0504A; outline-offset: 2px; }
   .mh-hero-nums { display: flex; justify-content: space-between; gap: 4px; font-size: 10px; color: var(--mh-muted); }
   .mh-wz-body:has(> .mh-sc) { display: flex; }
   .mh-sc { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px 0 8px; background: radial-gradient(60% 70% at 50% 45%, color-mix(in srgb, var(--tc) 11%, transparent), transparent 75%); }
@@ -7148,7 +7189,7 @@ export default function App({ onSignOut }) {
   const [draftExp2, setDraftExp2] = useState("");
   const [draftDomainCards, setDraftDomainCards] = useState([]);
   const [expandedDomainCard, setExpandedDomainCard] = useState(null);
-  const [pendingDeleteId, setPendingDeleteId] = useState(null);
+  const [deleteTargetId, setDeleteTargetId] = useState(null);
   const [charWarning, setCharWarning] = useState("");
   const [viewingCharId, setViewingCharId] = useState(null);
 
@@ -7323,6 +7364,11 @@ export default function App({ onSignOut }) {
   };
 
   const openNewCharModal = () => {
+    if (Object.keys(characters).length >= MAX_CHARACTERS) {
+      setCharWarning(`Has llegado al límite de ${MAX_CHARACTERS} personajes por cuenta. Elimina uno para crear otro.`);
+      return;
+    }
+    setCharWarning("");
     setCarouselIndex(0);
     setSubclassIndex(0);
     setLevelChoice(1);
@@ -7536,6 +7582,11 @@ export default function App({ onSignOut }) {
   };
 
   const confirmNewChar = async () => {
+    if (Object.keys(characters).length >= MAX_CHARACTERS) {
+      setShowNewCharModal(false);
+      setCharWarning(`Has llegado al límite de ${MAX_CHARACTERS} personajes por cuenta. Elimina uno para crear otro.`);
+      return;
+    }
     const isAutomaton = draftFeat("Autómata", 0);
     const chosenClass = CLASSES[carouselIndex];
     const subclasses = SUBCLASSES[chosenClass.key] || [];
@@ -7626,14 +7677,23 @@ export default function App({ onSignOut }) {
     await safeSet("character:" + id, JSON.stringify(created), false);
     switchChar(id);
     setShowNewCharModal(false);
+    // Sin pasos intermedios: al terminar el asistente se abre la hoja del personaje recién creado.
+    setView("ficha");
+    openCharDetail(id);
   };
 
+  useEffect(() => {
+    if (!deleteTargetId) return;
+    const onKey = (e) => e.key === "Escape" && setDeleteTargetId(null);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [deleteTargetId]);
+
   const delChar = async (id) => {
-    if (pendingDeleteId !== id) {
-      setPendingDeleteId(id);
-      return;
-    }
-    setPendingDeleteId(null);
+    setDeleteTargetId(null);
+    // Sale de su campaña para no dejar un personaje fantasma.
+    const inCamp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(id));
+    if (inCamp) removeCharacterFromCampaign(inCamp.id, id);
     const nextChars = { ...characters };
     delete nextChars[id];
     setCharacters(nextChars);
@@ -11404,7 +11464,8 @@ export default function App({ onSignOut }) {
     <div className={"mh-root" + (isMobile ? " is-mobile" : "")} style={{ display: "flex", flexDirection: isMobile ? "column" : "row", height: "100dvh", background: "var(--mh-bg)", fontFamily: "'Inter', system-ui, sans-serif", color: "var(--mh-ink)", overflow: "hidden" }}>
       <style>{sharedStyles}</style>
 
-      {/* Menú lateral (arriba en móvil) */}
+      {/* Menú lateral (arriba en móvil). Con una hoja de personaje abierta se oculta en escritorio. */}
+      {!(viewingCharId && !isMobile) && (
       <nav
         style={{
           background: "var(--mh-nav)",
@@ -11518,24 +11579,23 @@ export default function App({ onSignOut }) {
           )}
         </div>
       </nav>
+      )}
 
       {/* Body */}
       <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", inset: 0, overflowY: "auto", padding: isMobile ? "18px 14px" : "24px 28px" }}>
-          <div style={{ maxWidth: 960, margin: "0 auto" }}>
+          <div style={{ maxWidth: view === "ficha" ? 1160 : 960, margin: "0 auto" }}>
             <h1 className="mh-serif" style={{ fontSize: 26, fontWeight: 700, margin: "0 0 22px", color: "var(--mh-ink)" }}>
               {view === "ajustes" ? "Ajustes" : NAV_ITEMS.find((n) => n.key === view)?.label}
             </h1>
 
           {view === "ficha" && (
-            <div>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-                  gap: 14,
-                }}
-              >
+            <div className="mh-gal-wrap">
+              <div className="mh-gal-head">
+                <span>{Object.keys(characters).length} de {MAX_CHARACTERS} personajes</span>
+                {Object.keys(characters).length >= MAX_CHARACTERS && <small>Límite alcanzado: elimina uno para crear otro.</small>}
+              </div>
+              <div className="mh-gal">
                 {Object.keys(characters).map((id) => {
                   const ch = characters[id];
                   const col = ch.f_class ? classColor(ch.f_class) : "#9A8F80";
@@ -11566,12 +11626,12 @@ export default function App({ onSignOut }) {
                         {ch.f_class && <span className="mh-hero-lv" title={"Nivel " + (ch.f_level || "1")}>{ch.f_level || "1"}</span>}
                         <button
                           type="button"
-                          className={"mh-hero-del" + (pendingDeleteId === id ? " is-armed" : "")}
-                          title={pendingDeleteId === id ? "Vuelve a pulsar para confirmar" : "Eliminar personaje"}
-                          aria-label={pendingDeleteId === id ? "Confirmar eliminar personaje" : "Eliminar personaje"}
+                          className="mh-hero-del"
+                          title="Eliminar personaje"
+                          aria-label={"Eliminar a " + (ch.f_name || "personaje")}
                           onClick={(e) => {
                             e.stopPropagation();
-                            delChar(id);
+                            setDeleteTargetId(id);
                           }}
                         >
                           <Trash2 size={14} />
@@ -11615,26 +11675,13 @@ export default function App({ onSignOut }) {
                   );
                 })}
 
-                <div
-                  className="mh-card"
-                  onClick={openNewCharModal}
-                  style={{
-                    margin: 0,
-                    padding: "18px 16px",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 8,
-                    cursor: "pointer",
-                    borderStyle: "dashed",
-                    color: "var(--mh-ink3)",
-                    minHeight: 300,
-                  }}
-                >
-                  <Plus size={18} />
-                  <span style={{ fontSize: 13, fontWeight: 500 }}>Nuevo personaje</span>
-                </div>
+                {Object.keys(characters).length < MAX_CHARACTERS && (
+                  <div className="mh-card mh-gal-new" role="button" tabIndex={0} onClick={openNewCharModal} onKeyDown={(e) => e.key === "Enter" && openNewCharModal()}>
+                    <span className="mh-gal-plus"><Plus size={30} /></span>
+                    <span className="mh-serif" style={{ fontSize: 18, fontWeight: 700 }}>Nuevo personaje</span>
+                    <small>Crea el personaje {Object.keys(characters).length + 1} de {MAX_CHARACTERS}</small>
+                  </div>
+                )}
               </div>
 
               {charWarning && (
@@ -11642,6 +11689,30 @@ export default function App({ onSignOut }) {
               )}
 
               <div style={{ fontSize: 11.5, color: "var(--mh-muted)", minHeight: 14, marginTop: 14 }}>{saveTick > 0 ? "Guardado" : "\u00a0"}</div>
+
+              {deleteTargetId && characters[deleteTargetId] && (() => {
+                const dc = characters[deleteTargetId];
+                const dcamp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(deleteTargetId));
+                const DEmb = CLASS_EMBLEMS[dc.f_class] || User;
+                const dcol = dc.f_class ? classColor(dc.f_class) : "#9A8F80";
+                return (
+                  <div className="mh-overlay mh-del-back" onClick={() => setDeleteTargetId(null)}>
+                    <div className="mh-card mh-card-anim mh-del" role="alertdialog" aria-modal="true" aria-labelledby="mh-del-t" aria-describedby="mh-del-d" onClick={(e) => e.stopPropagation()}>
+                      <span className="mh-del-emb" style={{ "--hc": dcol }}><DEmb size={34} strokeWidth={1.6} /></span>
+                      <div id="mh-del-t" className="mh-serif mh-del-t">¿Eliminar a {dc.f_name || "este personaje"}?</div>
+                      <div className="mh-del-sub">{dc.f_class ? dc.f_class + " · Nivel " + (dc.f_level || 1) : "Sin clase asignada"}</div>
+                      <p id="mh-del-d" className="mh-del-d">Se borrará su hoja con todo su equipo, cartas y diario. Esta acción no se puede deshacer.</p>
+                      {dcamp && <p className="mh-del-warn">Está en la campaña «{dcamp.name}» y dejará de aparecer en ella.</p>}
+                      <div className="mh-del-btns">
+                        <button type="button" className="mh-btn-ghost" autoFocus onClick={() => setDeleteTargetId(null)}>Cancelar</button>
+                        <button type="button" className="mh-del-go" onClick={() => delChar(deleteTargetId)}>
+                          <Trash2 size={14} /> Eliminar personaje
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           )}
 
