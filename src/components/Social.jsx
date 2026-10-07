@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { Bell, Search, UserPlus, Check, X, UserMinus } from "lucide-react";
+import { Bell, Search, UserPlus, Check, X, UserMinus, Star, MoreHorizontal } from "lucide-react";
+import { storageGet, storageSet } from "@/lib/storage";
 import { loadSocial, searchPeople, sendRequest, respond, removeFriend, markNoticesRead } from "@/lib/social";
 
 // Estado compartido entre la campana y el panel de amigos (se refresca cada 20 s y al volver a la pestaña).
@@ -116,6 +117,49 @@ export function FriendsPanel() {
   const [q, setQ] = useState("");
   const [found, setFound] = useState([]);
   const [msg, setMsg] = useState("");
+  const [favs, setFavs] = useState([]);
+  const [menu, setMenu] = useState(null); // { p, x, y }
+  useEffect(() => {
+    storageGet("friend-favs", false)
+      .then((r) => setFavs(JSON.parse(r?.value || "[]")))
+      .catch(() => {});
+  }, [s.me?.id]);
+  const toggleFav = (id) => {
+    const next = favs.includes(id) ? favs.filter((x) => x !== id) : [...favs, id];
+    setFavs(next);
+    storageSet("friend-favs", JSON.stringify(next), false);
+  };
+  useEffect(() => {
+    if (!menu) return;
+    const close = () => setMenu(null);
+    const esc = (e) => e.key === "Escape" && close();
+    window.addEventListener("keydown", esc);
+    window.addEventListener("scroll", close, true);
+    window.addEventListener("resize", close);
+    return () => {
+      window.removeEventListener("keydown", esc);
+      window.removeEventListener("scroll", close, true);
+      window.removeEventListener("resize", close);
+    };
+  }, [menu]);
+  const openMenu = (e, p, fromButton) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const r = fromButton ? e.currentTarget.getBoundingClientRect() : null;
+    setMenu({ p, x: r ? r.right - 190 : e.clientX, y: r ? r.bottom + 4 : e.clientY });
+  };
+  const friendRow = (p) => (
+    <div key={p.id} className="mh-friend" onContextMenu={(e) => openMenu(e, p, false)}>
+      <Avatar name={p.username} />
+      <span>{p.username}</span>
+      {favs.includes(p.id) && <Star size={12} className="mh-fav-star" />}
+      <button type="button" className="mh-fbtn" onClick={(e) => openMenu(e, p, true)} title="Más opciones" aria-label={"Opciones de " + p.username}>
+        <MoreHorizontal size={14} />
+      </button>
+    </div>
+  );
+  const favFriends = s.friends.filter((f) => favs.includes(f.id));
+  const otherFriends = s.friends.filter((f) => !favs.includes(f.id));
   useEffect(() => {
     let live = true;
     const t = setTimeout(async () => {
@@ -167,17 +211,16 @@ export function FriendsPanel() {
       )}
       {tab === "amigos" ? (
         <div className="mh-friends-sec">
-          <h4>Amigos <i>{s.friends.length}</i></h4>
+          {favFriends.length > 0 && (
+            <>
+              <h4>Favoritos <i>{favFriends.length}</i></h4>
+              {favFriends.map(friendRow)}
+              <div className="mh-friends-gap" />
+            </>
+          )}
+          {(otherFriends.length > 0 || favFriends.length === 0) && <h4>Amigos <i>{otherFriends.length}</i></h4>}
           {s.friends.length === 0 && <div className="mh-pop-empty">Aún no tienes amigos. Busca a un jugador por su nombre para añadirlo.</div>}
-          {s.friends.map((p) => (
-            <div key={p.id} className="mh-friend">
-              <Avatar name={p.username} />
-              <span>{p.username}</span>
-              <button type="button" className="mh-fbtn" onClick={async () => (await removeFriend(p), refreshSocial())} title="Eliminar amigo" aria-label={"Eliminar a " + p.username}>
-                <UserMinus size={14} />
-              </button>
-            </div>
-          ))}
+          {otherFriends.map(friendRow)}
           {s.outgoing.length > 0 && (
             <>
               <h4>Enviadas <i>{s.outgoing.length}</i></h4>
@@ -204,6 +247,19 @@ export function FriendsPanel() {
             </div>
           ))}
         </div>
+      )}
+      {menu && (
+        <>
+          <div className="mh-pop-bg" onClick={() => setMenu(null)} onContextMenu={(e) => (e.preventDefault(), setMenu(null))} />
+          <div className="mh-ctx" style={{ left: Math.min(menu.x, window.innerWidth - 200), top: Math.min(menu.y, window.innerHeight - 100) }} role="menu">
+            <button type="button" role="menuitem" onClick={() => (toggleFav(menu.p.id), setMenu(null))}>
+              <Star size={14} /> {favs.includes(menu.p.id) ? "Quitar de favoritos" : "Añadir a favoritos"}
+            </button>
+            <button type="button" role="menuitem" className="is-danger" onClick={async () => (setMenu(null), await removeFriend(menu.p), refreshSocial())}>
+              <UserMinus size={14} /> Eliminar amigo
+            </button>
+          </div>
+        </>
       )}
     </aside>
   );
