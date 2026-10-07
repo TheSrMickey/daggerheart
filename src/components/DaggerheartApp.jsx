@@ -4253,7 +4253,6 @@ const sharedStyles = `
   .mh-wz-body { flex: 1; min-height: 0; overflow-y: auto; padding: 18px 22px; }
   .mh-hero { margin: 0; padding: 0; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; border: 1.5px solid color-mix(in srgb, var(--hc) 40%, var(--mh-line)); transition: transform .15s, box-shadow .15s, border-color .15s; }
   .mh-hero:hover, .mh-hero:focus-visible { transform: translateY(-3px); border-color: var(--hc); box-shadow: 0 10px 24px rgba(0,0,0,.12); outline: none; }
-  .mh-hero.is-current { border-color: #E3B04B; box-shadow: 0 0 0 2px color-mix(in srgb, #E3B04B 45%, transparent); }
   .mh-hero.is-dead { filter: grayscale(.7); opacity: .8; }
   .mh-hero-top { position: relative; height: 150px; display: flex; align-items: center; justify-content: center; background: radial-gradient(70% 80% at 50% 45%, color-mix(in srgb, var(--hc) 30%, var(--mh-panel)), color-mix(in srgb, var(--hc) 10%, var(--mh-panel)) 75%); }
   .mh-hero-emb { width: 88px; height: 88px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: color-mix(in srgb, var(--hc) var(--mh-accent-keep, 100%), #000); background: var(--mh-panel); border: 2px solid var(--hc); box-shadow: 0 0 0 6px color-mix(in srgb, var(--hc) 16%, transparent), 0 8px 18px color-mix(in srgb, var(--hc) 30%, transparent); transition: transform .2s; }
@@ -11957,7 +11956,7 @@ export default function App({ onSignOut }) {
                   return (
                     <div
                       key={id}
-                      className={"mh-card mh-hero" + (id === currentCharId ? " is-current" : "") + (dead ? " is-dead" : "")}
+                      className={"mh-card mh-hero" + (dead ? " is-dead" : "")}
                       style={{ "--hc": col }}
                       role="button"
                       tabIndex={0}
