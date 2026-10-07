@@ -126,8 +126,8 @@ body {
 }
 
 /* Pantallas de acceso: panel oscuro con formulario y arte a un lado */
-.auth-page { flex: 1; display: grid; place-items: center; padding: 24px 16px; background: radial-gradient(900px 500px at 15% 0%, #1d3f8c55, transparent), radial-gradient(800px 600px at 100% 100%, #4a1fb855, transparent), #0b0a22; }
-.auth-win { width: min(1100px, 100%); min-height: min(660px, 90vh); display: grid; grid-template-columns: 42% 58%; border-radius: 18px; overflow: hidden; border: 1px solid #ffffff22; box-shadow: 0 30px 80px #0009; }
+.auth-page { flex: 1; display: flex; min-height: 100vh; background: radial-gradient(900px 500px at 15% 0%, #1d3f8c55, transparent), radial-gradient(800px 600px at 100% 100%, #4a1fb855, transparent), #0b0a22; }
+.auth-win { width: 100%; min-height: 100vh; display: grid; grid-template-columns: 42% 58%; overflow: hidden; }
 .auth-left { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 64px; color: #e9e6f2; background: linear-gradient(180deg, #12112a, #0b0a18);
   --bg: #0b0a18; --panel: #1a1930; --panel-2: #1a1930; --ink: #e9e6f2; --muted: #9a98b4; --line: #ffffff1f; --gold: #6f9bff; --gold-ink: #9db8ff; --danger: #ff7a7a; }
 .auth-logo { height: 92px; margin-bottom: 14px; filter: drop-shadow(0 0 14px #9db8ff88); }
@@ -137,6 +137,6 @@ body {
 .auth-form .field { background: #1a1930; border-color: #ffffff1c; color: #fff; border-radius: 10px; }
 .auth-form .btn-primary { background: #2f6bf0; border-color: #2f6bf0; color: #fff; border-radius: 10px; box-shadow: 0 8px 22px -8px #2f6bf0; }
 .auth-art { position: relative; background: linear-gradient(90deg, #0e0d1c55, transparent 30%), linear-gradient(0deg, #0b0a2299, transparent 40%), url(/auth-art.jpg) 60% center / cover; }
-.auth-quote { position: absolute; left: 32px; bottom: 28px; max-width: 340px; font: italic 20px/1.35 Georgia, serif; color: #fff; text-shadow: 0 2px 10px #000; }
-.auth-tag { position: absolute; right: 20px; bottom: 20px; padding: 7px 12px; border-radius: 10px; background: #0b0a22aa; border: 1px solid #ffffff22; color: #fff; font-size: 12px; backdrop-filter: blur(6px); }
+.auth-quote { position: absolute; left: 48px; bottom: 44px; max-width: 340px; font: italic 20px/1.35 Georgia, serif; color: #fff; text-shadow: 0 2px 10px #000; }
+.auth-tag { position: absolute; right: 32px; bottom: 32px; padding: 7px 12px; border-radius: 10px; background: #0b0a22aa; border: 1px solid #ffffff22; color: #fff; font-size: 12px; backdrop-filter: blur(6px); }
 @media (max-width: 760px) { .auth-win { grid-template-columns: 1fr; } .auth-art { display: none; } .auth-left { padding: 36px 24px; } }
