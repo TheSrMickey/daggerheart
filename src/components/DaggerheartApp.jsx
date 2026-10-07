@@ -3205,6 +3205,9 @@ const sharedStyles = `
   .mh-fan { position: absolute; left: 50%; bottom: -110px; transform: translateX(-50%); display: flex; z-index: 6; pointer-events: none; }
   .mh-fan-card { --s: .5; pointer-events: auto; cursor: grab; touch-action: none; user-select: none; position: relative; width: calc(300px * var(--s)); height: calc(420px * var(--s)); margin: 0 -26px; filter: drop-shadow(0 6px 14px rgba(0,0,0,.5)); transform: translateY(var(--y)) rotate(var(--r)); transform-origin: 50% 120%; transition: transform .15s; }
   .mh-fan-in { position: absolute; left: 0; top: 0; width: 300px; height: 420px; transform: scale(var(--s)); transform-origin: 0 0; }
+  .mh-fan-zoom { position: fixed; inset: 0; z-index: 9998; background: rgba(8,6,12,.7); display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .mh-fan-big { position: relative; width: 300px; height: 420px; max-height: 88vh; --s: 1; }
+  @media (max-height: 520px) { .mh-fan-big { --s: .7; width: 210px; height: 294px; } }
   .mh-fan-card.is-last-weapon { margin-right: 22px; }
   @media (max-width: 760px) { .mh-fan-card { --s: .36; margin: 0 -20px; } }
   .mh-fan-card:hover { transform: translateY(-60px) rotate(0deg) scale(1.15); z-index: 2; }
@@ -5612,77 +5615,10 @@ const readIsoPref = () => {
   }
 };
 // Tablero con fichas cuadradas. Se arrastran, o se elige una y se pulsa la casilla; también con las flechas.
-// Abanico de cartas de dominio en el borde inferior del mapa: se arrastran hasta una casilla para usarlas.
-function CardFan({ cards, me, tokens, onUse }) {
-  const [drag, setDrag] = useState(null); // { key, x, y, cell }
-  const dragRef = useRef(null);
-  const cellAt = (x, y) => {
-    const el = document.elementsFromPoint(x, y).map((n) => n.closest && n.closest("[data-cx]")).find(Boolean);
-    return el ? { x: Number(el.getAttribute("data-cx")), y: Number(el.getAttribute("data-cy")) } : null;
-  };
-  const rangeOf = (cell) => {
-    if (!me || !cell) return null;
-    const d = Math.max(Math.abs(cell.x - me.x), Math.abs(cell.y - me.y));
-    return MAP_RANGES.find((r) => d <= r.max) || null;
-  };
-  const end = (ev, cancel) => {
-    const d = dragRef.current;
-    dragRef.current = null;
-    setDrag(null);
-    window.removeEventListener("pointermove", move);
-    window.removeEventListener("pointerup", up);
-    window.removeEventListener("keydown", key);
-    if (!d || cancel) return;
-    const cell = cellAt(ev.clientX, ev.clientY);
-    if (!cell) return;
-    const target = tokens.find((t) => !t.hidden && t.x === cell.x && t.y === cell.y && t.id !== me?.id) || null;
-    onUse(d.card, cell, target, rangeOf(cell));
-  };
-  const move = (ev) => {
-    const cell = cellAt(ev.clientX, ev.clientY);
-    const next = { ...dragRef.current, x: ev.clientX, y: ev.clientY, cell };
-    dragRef.current = next;
-    setDrag(next);
-  };
-  const up = (ev) => end(ev, false);
-  const key = (ev) => {
-    if (ev.key === "Escape") end({ clientX: 0, clientY: 0 }, true);
-  };
-  const start = (ev, card) => {
-    if (ev.button > 0) return;
-    ev.preventDefault();
-    dragRef.current = { card, x: ev.clientX, y: ev.clientY, cell: null };
-    setDrag(dragRef.current);
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", up);
-    window.addEventListener("keydown", key);
-  };
-  useEffect(() => () => {
-    window.removeEventListener("pointermove", move);
-    window.removeEventListener("pointerup", up);
-    window.removeEventListener("keydown", key);
-  }, []);
-  if (!cards.length) return null;
-  const n = cards.length;
-  const rng = drag ? rangeOf(drag.cell) : null;
-  const target = drag?.cell ? tokens.find((t) => !t.hidden && t.x === drag.cell.x && t.y === drag.cell.y && t.id !== me?.id) : null;
+function FanFace({ c, col }) {
+  const Art = c.weapon ? weaponIcon(c.key) : DOMAIN_ICONS[c.domain] || Sparkles;
+  const dmg = c.weapon ? c.damage.match(/^(\S+)\s*(.*)$/) : null;
   return (
-    <>
-      <div className="mh-fan" aria-label="Tus cartas de dominio">
-        {cards.map((c, i) => {
-          const mid = (n - 1) / 2;
-          const col = c.weapon ? TIER_COLORS[c.level]?.color || "#C9A24B" : DOMAIN_COLORS[c.domain] || "#C9A24B";
-          const lifting = drag?.card.key === c.key;
-          const Art = c.weapon ? weaponIcon(c.key) : DOMAIN_ICONS[c.domain] || Sparkles;
-          const dmg = c.weapon ? c.damage.match(/^(\S+)\s*(.*)$/) : null;
-          return (
-            <div
-              key={c.key}
-              className={"mh-fan-card" + (lifting ? " is-lifted" : "") + (c.weapon && cards[i + 1] && !cards[i + 1].weapon ? " is-last-weapon" : "")}
-              style={{ "--r": `${(i - mid) * 5}deg`, "--y": `${Math.abs(i - mid) * 5}px`, "--cc": col }}
-              onPointerDown={(e) => start(e, c)}
-              title="Arrástrala hasta el mapa para usarla"
-            >
               <div className="mh-card mh-cardc mh-fan-in" style={{ margin: 0, padding: 0, overflow: "hidden", borderRadius: 22, display: "flex", flexDirection: "column", border: (c.weapon ? "3px" : "2px") + " solid " + col, position: "relative" }}>
                 <div className="mh-cardc-art" style={{ height: 124 }}>
                   <div className="mh-cardc-noart">
@@ -5712,11 +5648,101 @@ function CardFan({ cards, me, tokens, onUse }) {
                   )}
                 </div>
               </div>
+  );
+}
+
+// Abanico de cartas de dominio en el borde inferior del mapa: se arrastran hasta una casilla para usarlas.
+function CardFan({ cards, me, tokens, onUse }) {
+  const [drag, setDrag] = useState(null); // { card, x, y, cell, moved }
+  const [open, setOpen] = useState(null); // carta mostrada en grande
+  const dragRef = useRef(null);
+  const cellAt = (x, y) => {
+    const el = document.elementsFromPoint(x, y).map((n) => n.closest && n.closest("[data-cx]")).find(Boolean);
+    return el ? { x: Number(el.getAttribute("data-cx")), y: Number(el.getAttribute("data-cy")) } : null;
+  };
+  const rangeOf = (cell) => {
+    if (!me || !cell) return null;
+    const d = Math.max(Math.abs(cell.x - me.x), Math.abs(cell.y - me.y));
+    return MAP_RANGES.find((r) => d <= r.max) || null;
+  };
+  const end = (ev, cancel) => {
+    const d = dragRef.current;
+    dragRef.current = null;
+    setDrag(null);
+    window.removeEventListener("pointermove", move);
+    window.removeEventListener("pointerup", up);
+    window.removeEventListener("keydown", key);
+    if (!d || cancel) return;
+    if (!d.moved) return setOpen(d.card);
+    const cell = cellAt(ev.clientX, ev.clientY);
+    if (!cell) return;
+    const target = tokens.find((t) => !t.hidden && t.x === cell.x && t.y === cell.y && t.id !== me?.id) || null;
+    onUse(d.card, cell, target, rangeOf(cell));
+  };
+  const move = (ev) => {
+    const cell = cellAt(ev.clientX, ev.clientY);
+    const cur = dragRef.current;
+    const moved = cur.moved || Math.hypot(ev.clientX - cur.x0, ev.clientY - cur.y0) > 6;
+    const next = { ...cur, x: ev.clientX, y: ev.clientY, cell, moved };
+    dragRef.current = next;
+    setDrag(next);
+  };
+  const up = (ev) => end(ev, false);
+  const key = (ev) => {
+    if (ev.key === "Escape") end({ clientX: 0, clientY: 0 }, true);
+  };
+  const start = (ev, card) => {
+    if (ev.button > 0) return;
+    ev.preventDefault();
+    dragRef.current = { card, x: ev.clientX, y: ev.clientY, x0: ev.clientX, y0: ev.clientY, cell: null, moved: false };
+    setDrag(dragRef.current);
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    window.addEventListener("keydown", key);
+  };
+  useEffect(() => () => {
+    window.removeEventListener("pointermove", move);
+    window.removeEventListener("pointerup", up);
+    window.removeEventListener("keydown", key);
+  }, []);
+  useEffect(() => {
+    if (!open) return;
+    const esc = (e) => e.key === "Escape" && setOpen(null);
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [open]);
+  if (!cards.length) return null;
+  const n = cards.length;
+  const rng = drag ? rangeOf(drag.cell) : null;
+  const target = drag?.cell ? tokens.find((t) => !t.hidden && t.x === drag.cell.x && t.y === drag.cell.y && t.id !== me?.id) : null;
+  return (
+    <>
+      <div className="mh-fan" aria-label="Tus cartas de dominio">
+        {cards.map((c, i) => {
+          const mid = (n - 1) / 2;
+          const col = c.weapon ? TIER_COLORS[c.level]?.color || "#C9A24B" : DOMAIN_COLORS[c.domain] || "#C9A24B";
+          const lifting = drag?.moved && drag.card.key === c.key;
+          return (
+            <div
+              key={c.key}
+              className={"mh-fan-card" + (lifting ? " is-lifted" : "") + (c.weapon && cards[i + 1] && !cards[i + 1].weapon ? " is-last-weapon" : "")}
+              style={{ "--r": `${(i - mid) * 5}deg`, "--y": `${Math.abs(i - mid) * 5}px`, "--cc": col }}
+              onPointerDown={(e) => start(e, c)}
+              title="Púlsala para verla en grande · arrástrala al mapa para usarla"
+            >
+              <FanFace c={c} col={col} />
             </div>
           );
         })}
       </div>
-      {drag && (
+      {open && (
+        <div className="mh-fan-zoom" onClick={() => setOpen(null)}>
+          <div className="mh-fan-big" style={{ "--cc": open.weapon ? TIER_COLORS[open.level]?.color || "#C9A24B" : DOMAIN_COLORS[open.domain] || "#C9A24B" }} onClick={(e) => e.stopPropagation()}>
+            <FanFace c={open} col={open.weapon ? TIER_COLORS[open.level]?.color || "#C9A24B" : DOMAIN_COLORS[open.domain] || "#C9A24B"} />
+          </div>
+        </div>
+      )}
+      {drag?.moved && (
         <>
           <div className="mh-fan-ghost" style={{ left: drag.x, top: drag.y, "--c": drag.card.weapon ? TIER_COLORS[drag.card.level]?.color || "#C9A24B" : DOMAIN_COLORS[drag.card.domain] || "#C9A24B" }}>
             <b>{drag.card.key}</b>
