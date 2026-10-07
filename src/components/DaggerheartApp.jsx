@@ -4277,6 +4277,9 @@ const sharedStyles = `
   .mh-hero-bars span { flex: 1; height: 5px; border-radius: 3px; background: var(--mh-line); overflow: hidden; }
   .mh-hero-bars i { display: block; height: 100%; border-radius: 3px; }
   /* Galería de personajes: 3 tarjetas grandes que ocupan todo el alto, centradas */
+  .mh-view-in { animation: mh-view-in .28s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes mh-view-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .mh-view-in { animation: none; } }
   .mh-brand { display: flex; align-items: center; gap: 10px; }
   .mh-brand-logo { height: 30px; filter: drop-shadow(0 0 8px #9db8ff66); }
   .mh-brand-name { flex: 1; font-weight: 700; font-size: 15px; color: var(--mh-ink); letter-spacing: .02em; }
@@ -4357,12 +4360,12 @@ const sharedStyles = `
   .mh-notice-a button { all: unset; cursor: pointer; padding: 5px 12px; border-radius: 8px; background: var(--mh-panel3); font-size: 12px; }
   .mh-notice-a .is-ok { background: #2a56c4; color: #fff; }
   @media (max-width: 900px) { .mh-home { grid-template-columns: 1fr; } .mh-friends { position: static; } .mh-pop { left: 12px; bottom: auto; top: 60px; } }
-  .mh-gal-wrap { display: flex; flex-direction: column; min-height: calc(100dvh - 124px); }
+  .mh-gal-wrap { display: flex; flex-direction: column; height: calc(100dvh - 160px); min-height: 380px; }
   .mh-gal-head { display: flex; align-items: baseline; gap: 12px; margin: -10px 0 14px; font-size: 13px; color: var(--mh-ink3); font-weight: 600; }
   .mh-gal-head small { font-size: 12px; color: #C0504A; font-weight: 500; }
-  .mh-gal { flex: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; align-items: stretch; justify-content: center; min-height: 520px; }
+  .mh-gal { flex: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; align-items: stretch; justify-content: center; min-height: 0; }
   .mh-gal .mh-hero { height: 100%; text-align: center; }
-  .mh-gal .mh-hero-top { flex: 1 1 auto; min-height: 220px; height: auto; }
+  .mh-gal .mh-hero-top { flex: 1 1 auto; min-height: 130px; height: auto; }
   .mh-gal .mh-hero-emb { width: 124px; height: 124px; }
   .mh-gal .mh-hero-emb svg { width: 58px; height: 58px; }
   .mh-gal .mh-hero-lv { top: 14px; left: 14px; min-width: 38px; height: 42px; font-size: 18px; }
@@ -4376,11 +4379,11 @@ const sharedStyles = `
   .mh-gal .mh-hero-bars { width: 100%; padding-top: 14px; gap: 7px; }
   .mh-gal .mh-hero-bars span { height: 7px; border-radius: 4px; }
   .mh-gal .mh-hero-nums { width: 100%; font-size: 12px; }
-  .mh-gal-new { margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; cursor: pointer; border-style: dashed; color: var(--mh-ink3); text-align: center; min-height: 420px; transition: border-color .15s, background .15s; }
+  .mh-gal-new { margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; cursor: pointer; border-style: dashed; color: var(--mh-ink3); text-align: center; min-height: 0; transition: border-color .15s, background .15s; }
   .mh-gal-new:hover, .mh-gal-new:focus-visible { border-color: #E3B04B; background: #E3B04B0F; outline: none; }
   .mh-gal-new small { font-size: 12px; color: var(--mh-muted); }
   .mh-gal-plus { width: 76px; height: 76px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1.5px dashed var(--mh-line2); }
-  @media (max-width: 900px) { .mh-gal-wrap { min-height: 0; } .mh-gal { grid-template-columns: 1fr; min-height: 0; } .mh-gal .mh-hero { min-height: 420px; } }
+  @media (max-width: 900px) { .mh-gal-wrap { height: auto; min-height: 0; } .mh-gal { grid-template-columns: 1fr; min-height: 0; } .mh-gal .mh-hero { min-height: 420px; } }
   /* Diálogo de borrado de personaje */
   .mh-del-back { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(8,6,12,.62); }
   .mh-del { width: min(460px, 100%); margin: 0; padding: 28px 26px 22px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; }
@@ -11847,8 +11850,8 @@ export default function App({ onSignOut }) {
             <FriendsPanel />
           </div>
         )}
-        <div style={{ position: "absolute", top: 0, left: 0, bottom: 0, right: showRail ? 290 : 0, overflowY: "auto", padding: isMobile ? "18px 14px" : showRail ? "24px clamp(28px, 3.4vw, 48px)" : "24px 28px" }}>
-          <div style={{ maxWidth: showRail ? 1320 : view === "ficha" ? 1160 : 960, margin: "0 auto" }}>
+        <div style={{ position: "absolute", top: 0, left: 0, bottom: 0, right: showRail ? 290 : 0, overflowY: view === "ficha" && !viewingCharId && showRail ? "hidden" : "auto", padding: isMobile ? "18px 14px" : showRail ? "24px clamp(28px, 3.4vw, 48px)" : "24px 28px" }}>
+          <div key={view} className="mh-view-in" style={{ maxWidth: showRail ? 1320 : view === "ficha" ? 1160 : 960, margin: "0 auto" }}>
             {showTopbar && (
               <div className="mh-topbar">
                 <span>{view === "inicio" ? "General" : ""}</span>
