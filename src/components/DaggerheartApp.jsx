@@ -2,6 +2,7 @@
 
 import { Fragment, useState, useEffect, useLayoutEffect, useRef, createContext, useContext } from "react";
 import { createPortal } from "react-dom";
+import { Squirrel } from "lucide-react";
 import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus, Box, LayoutGrid, Bird, Fish, Bug, Rabbit, Cat, Turtle, Clock, CircleDashed, Slash } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { NotificationBell, FriendsPanel } from "./Social";
@@ -4607,12 +4608,26 @@ const sharedStyles = `
   .mh-jl-list > .mh-gm-h2 { margin: 6px 0 0; }
   .mh-jl-count { font-size: 11px; font-weight: 600; color: var(--mh-muted); }
   .mh-jl-line { position: relative; display: flex; flex-direction: column; gap: 6px; padding-left: 16px; }
-  .mh-jl-line::before { content: ""; position: absolute; left: 4px; top: 10px; bottom: 10px; width: 2px; background: var(--mh-line); }
+  .mh-jl-line .mh-jl-item:not(:last-child)::after { content: ""; position: absolute; left: -12px; top: 17px; height: calc(100% - 11px); width: 2px; background: var(--mh-line); z-index: 0; }
+  .mh-bf-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 11px; flex: 1; min-height: 0; }
+  .mh-bf { position: relative; display: flex; flex-direction: column; min-height: 0; padding: 0; border: 1px solid var(--mh-line); border-radius: 12px; background: var(--mh-panel); color: var(--mh-ink); cursor: pointer; font-family: inherit; overflow: hidden; text-align: center; transition: border-color .15s, transform .15s; }
+  .mh-bf:hover { border-color: #8FA8FF; transform: translateY(-2px); }
+  .mh-bf.is-on { border-color: #8FA8FF; box-shadow: 0 0 0 1px #8FA8FF inset; }
+  .mh-bf.is-locked { opacity: .55; }
+  .mh-bf-gem { position: absolute; top: 6px; left: 6px; z-index: 1; width: 20px; height: 20px; display: grid; place-items: center; font-size: 11px; font-weight: 700; color: #b8c4ff; border: 1px solid #3d4a8a; border-radius: 6px; transform: rotate(45deg) scale(.85); background: var(--mh-panel2); }
+  .mh-bf-lock { position: absolute; top: 7px; right: 7px; z-index: 1; color: #b8c4ff; }
+  .mh-bf-art { flex: 1 1 0; min-height: 40px; display: grid; place-items: center; color: #b8c4ff; background: radial-gradient(circle at 50% 55%, rgba(143,168,255,.22), transparent 70%); border-bottom: 1px solid #3d4a8a; }
+  .mh-bf-name { font-family: Georgia, serif; font-size: 13px; font-weight: 700; margin-top: 6px; padding: 0 6px; line-height: 1.15; }
+  .mh-bf-an { font-size: 10px; color: var(--mh-muted); padding: 0 6px; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mh-bf-orn { height: 1px; margin: 6px 14px; background: linear-gradient(90deg, transparent, #8FA8FF, transparent); }
+  .mh-bf-row { display: flex; justify-content: space-between; gap: 6px; padding: 0 10px; font-size: 11px; color: var(--mh-muted); }
+  .mh-bf-row b { color: var(--mh-ink); }
+  .mh-bf-ft { margin-top: 6px; padding: 5px 6px; font-size: 10.5px; font-weight: 600; color: #b8c4ff; background: rgba(143,168,255,.12); border-top: 1px solid #3d4a8a; }
   .mh-jl-item { position: relative; display: grid; grid-template-columns: 1fr auto; gap: 1px 6px; text-align: left; padding: 8px 10px; border: 1px solid var(--mh-line); border-radius: 9px; background: var(--mh-panel); color: var(--mh-ink); cursor: pointer; font-family: inherit; }
   .mh-jl-item:hover { border-color: var(--mh-line2); }
   .mh-jl-item.is-on { border-color: var(--acc); background: color-mix(in srgb, var(--acc) 9%, var(--mh-panel)); }
   .mh-jl-dot { display: none; }
-  .mh-jl-line .mh-jl-dot { display: block; position: absolute; left: -16px; top: 12px; width: 10px; height: 10px; border-radius: 50%; background: var(--mh-line2); }
+  .mh-jl-line .mh-jl-dot { display: block; position: absolute; left: -16px; top: 12px; width: 10px; height: 10px; border-radius: 50%; background: var(--mh-line2); z-index: 1; }
   .mh-jl-line .mh-jl-item.is-on .mh-jl-dot { background: var(--acc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--acc) 22%, transparent); }
   .mh-jl-t { font-size: 12.5px; font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .mh-jl-d { grid-column: 1 / -1; font-size: 11px; color: var(--mh-muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -4659,6 +4674,8 @@ const sharedStyles = `
   .mh-qa-kin-b:hover { border-color: var(--mh-ink3); color: var(--mh-ink); }
   .mh-qa-kin-b.is-on { background: var(--mh-ink); border-color: var(--mh-ink); color: var(--mh-panel); }
   .mh-qa-rel { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+  .mh-qa-rel-tg { display: grid; place-items: center; width: 20px; height: 20px; border: 0; border-radius: 6px; background: transparent; color: var(--mh-muted); cursor: pointer; padding: 0; }
+  .mh-qa-rel-tg:hover { color: var(--mh-ink); background: var(--mh-panel2); }
   .mh-qa-rel-l { font-size: 11px; color: var(--mh-muted); margin-right: 2px; }
   .mh-qa-rel-b { padding: 3px 10px; border-radius: 20px; border: 1px solid var(--mh-line2); background: transparent; color: var(--mh-ink3); font: 600 11px 'Inter', system-ui, sans-serif; cursor: pointer; }
   .mh-qa-rel-b:hover { border-color: var(--rl); color: var(--mh-ink); }
@@ -5539,6 +5556,7 @@ const beastIcon = (name) => {
   if (/Hogar/i.test(n)) return Cat;
   if (/Acorazad/i.test(n)) return Turtle;
   if (/Manada/i.test(n)) return Dog;
+  if (/[AÁ]gil/i.test(n)) return Squirrel;
   return PawPrint;
 };
 // Color de la forma de bestia (el mismo que en la hoja).
@@ -9492,6 +9510,7 @@ export default function App({ onSignOut }) {
   const [qaDraft, setQaDraft] = useState("");
   const [qaWithOther, setQaWithOther] = useState(null);
   const [showRelNet, setShowRelNet] = useState(false);
+  const [relHidden, setRelHidden] = useState({});
   useEffect(() => {
     setQaEdit(null);
     setShowRelNet(false);
@@ -14640,8 +14659,11 @@ export default function App({ onSignOut }) {
                                       {answerBlock("f_connection_qa", connRows, i, row)}
                                       {w?.name && (
                                         <div className="mh-qa-rel" role="radiogroup" aria-label={"Qué es " + w.name + " para " + (c.f_name || "tu personaje")}>
-                                          <span className="mh-qa-rel-l">{w.name} es</span>
-                                          {REL_TITLES.map((rt) => {
+                                          <button type="button" className="mh-qa-rel-tg" aria-expanded={!relHidden[w.name]} title={relHidden[w.name] ? "Mostrar roles" : "Ocultar roles"} onClick={() => setRelHidden((m) => ({ ...m, [w.name]: !m[w.name] }))}>
+                                            <ChevronDown size={13} style={{ transform: relHidden[w.name] ? "rotate(-90deg)" : "none", transition: "transform .15s" }} />
+                                          </button>
+                                          <span className="mh-qa-rel-l">{w.name} es{relHidden[w.name] ? " " + (row.rel ? relOf(row.rel).label + (row.rel === "familiar" && kinOf(row.kin) ? " · " + kinOf(row.kin).label : "") : "—") : ""}</span>
+                                          {!relHidden[w.name] && REL_TITLES.map((rt) => {
                                             const on = row.rel === rt.key;
                                             return (
                                               <button
@@ -14661,7 +14683,7 @@ export default function App({ onSignOut }) {
                                               </button>
                                             );
                                           })}
-                                          {row.rel === "familiar" && (
+                                          {row.rel === "familiar" && !relHidden[w.name] && (
                                             <div className="mh-qa-kin" role="radiogroup" aria-label="Parentesco">
                                               <span className="mh-qa-rel-l">¿Qué parentesco?</span>
                                               {KIN.filter((k) => !k.automaton || (c.f_ancestry || "").split(" + ").includes("Autómata")).map((k) => {
@@ -15499,65 +15521,63 @@ export default function App({ onSignOut }) {
                               flying={conditions.includes("Volando")}
                               retracted={conditions.includes("Retraído")}
                             >
-                              <div style={{ fontSize: 10.5, color: "var(--mh-muted3)", marginBottom: 10, flexShrink: 0 }}>
-                                Siluetas de fondo:{" "}
-                                <a href="https://game-icons.net" target="_blank" rel="noreferrer" style={{ color: "var(--mh-muted)" }}>game-icons.net</a>{" "}
-                                (Lorc, Delapouite y colaboradores), licencia CC BY 3.0.
-                              </div>
                               {stressFull && !c.f_beastform && (
                                 <div style={{ fontSize: 11.5, color: "#D9644E", marginBottom: 14, fontWeight: 600, flexShrink: 0 }}>
                                   Sin casillas de Estrés libres — no puedes activar ninguna forma hasta quitarte algo de Estrés.
                                 </div>
                               )}
 
-                              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 10, flex: 1, minHeight: 0, overflow: "hidden" }}>
+                              <div className="mh-bf-grid">
                                 {BEASTFORMS.filter((b) => b.tier === beastformTierFilter).length === 0 && (
                                   <div style={{ fontSize: 12.5, color: "var(--mh-muted)", fontStyle: "italic", gridColumn: "1 / -1" }}>
                                     Todavía no hay formas de bestia cargadas para el Rango {beastformTierFilter}.
                                   </div>
                                 )}
-                                {BEASTFORMS.filter((b) => b.tier === beastformTierFilter).map((b) => {
+                                {BEASTFORMS.filter((b) => b.tier === beastformTierFilter).map((b, bi) => {
                                   const tierLocked = b.tier > currentTier;
                                   const selected = c.f_beastform === b.key;
                                   const locked = tierLocked || (!selected && stressFull);
+                                  const BIcon = beastIcon(b.key);
+                                  const [traitTxt, evaTxt] = String(b.bonus || "").split("·").map((x) => x.trim());
+                                  const stat = (t) => { const m = String(t || "").match(/^(.*?)\s*([+-]\d+)$/); return m ? [m[1], m[2]] : [t || "", ""]; };
+                                  const [tn, tv] = stat(traitTxt);
+                                  const [en, ev] = stat(evaTxt);
+                                  const atk = String(b.attack || "").split("·").map((x) => x.trim());
+                                  const dmg = (atk[2] || "").split(" ")[0];
                                   return (
-                                    <div
+                                    <button
                                       key={b.key}
-                                      onClick={() => !locked && toggleBeastform(viewingCharId, b.key, selected)}
+                                      type="button"
+                                      className={"mh-bf" + (selected ? " is-on" : "") + (locked ? " is-locked" : "")}
+                                      onClick={() =>
+                                        setViewingCardDetail({
+                                          kicker: "Forma de Bestia · Rango " + b.tier,
+                                          title: b.key,
+                                          text: `${b.bonus} · ${b.attack}\nVentaja en: ${b.advantage}`,
+                                          features: b.features,
+                                          bigStyle: true,
+                                          itemIcon: BIcon,
+                                          accent: "#8FA8FF",
+                                          beastKey: b.key,
+                                        })
+                                      }
                                       title={tierLocked ? `Se desbloquea en Rango ${b.tier}` : !selected && stressFull ? "Sin Estrés disponible para activarla" : undefined}
-                                      style={{
-                                        border: "1px solid " + (locked ? "var(--mh-line)" : selected ? b.color : "var(--mh-line)"),
-                                        background: locked ? "var(--mh-panel2)" : selected ? alpha(b.color, 8) : "var(--mh-panel)",
-                                        borderRadius: 10,
-                                        padding: "8px 12px",
-                                        cursor: locked ? "not-allowed" : "pointer",
-                                        opacity: locked ? 0.6 : 1,
-                                        overflow: "hidden",
-                                      }}
                                     >
-                                      <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 1 }}>
-                                        {locked && <Lock size={10} color="#9C93AD" />}
-                                        {selected && <Check size={11} color={b.color} />}
-                                        <span style={{ fontSize: 12, fontWeight: 700, color: ink(selected ? b.color : "var(--mh-ink)") }}>{b.key}</span>
-                                        <span style={{ fontSize: 8.5, color: "var(--mh-muted)", marginLeft: "auto" }}>
-                                          {tierLocked ? `Se desbloquea en Rango ${b.tier}` : `Rango ${b.tier}`}
-                                        </span>
-                                      </div>
-                                      <div style={{ fontSize: 9.5, color: "var(--mh-muted)", fontStyle: "italic", marginBottom: 4 }}>{b.animals}</div>
-                                      <div style={{ fontSize: 10, color: "var(--mh-ink)", marginBottom: 1 }}>{b.bonus}</div>
-                                      <div style={{ fontSize: 10, color: "var(--mh-ink)", marginBottom: 4 }}>{b.attack}</div>
-                                      <div style={{ fontSize: 9.5, color: "var(--mh-ink3)", marginBottom: 4 }}>
-                                        <b>Ventaja en:</b> {b.advantage}
-                                      </div>
-                                      {b.features.map((f) => (
-                                        <div key={f.name} style={{ fontSize: 9.5, color: "var(--mh-ink3)", marginBottom: 2, lineHeight: 1.3 }}>
-                                          <b style={{ color: "var(--mh-ink)" }}>{f.name}:</b> {f.text}
-                                        </div>
-                                      ))}
-                                    </div>
+                                      <span className="mh-bf-gem">{bi + 1}</span>
+                                      {locked && <Lock className="mh-bf-lock" size={12} />}
+                                      {selected && <Check className="mh-bf-lock" size={13} />}
+                                      <span className="mh-bf-art"><BIcon size={40} strokeWidth={1.3} /></span>
+                                      <span className="mh-bf-name">{b.key}</span>
+                                      <span className="mh-bf-an">{b.animals}</span>
+                                      <span className="mh-bf-orn" />
+                                      <span className="mh-bf-row"><span>{tn}</span><b>{tv}</b></span>
+                                      <span className="mh-bf-row"><span>{en}</span><b>{ev}</b></span>
+                                      <span className="mh-bf-ft">{dmg} · {atk[0]}</span>
+                                    </button>
                                   );
                                 })}
                               </div>
+                              <div style={{ fontSize: 10.5, color: "var(--mh-muted3)", marginTop: 8, textAlign: "center", flexShrink: 0 }}>Pulsa una carta para verla ampliada y transformarte</div>
                             </Panel>
                           </div>
                         );
@@ -16145,6 +16165,7 @@ export default function App({ onSignOut }) {
                               return (
                                 <div className="mh-jl">
                                   <div className="mh-jl-side">
+                                    {entries.length > 0 && (
                                     <div className="mh-jl-search">
                                       <Search size={14} />
                                       <input className="mh-input" placeholder="Buscar en el diario…" aria-label="Buscar en el diario" value={journalSearch} onChange={(ev) => setJournalSearch(ev.target.value)} />
@@ -16154,6 +16175,7 @@ export default function App({ onSignOut }) {
                                         </button>
                                       )}
                                     </div>
+                                    )}
                                     <button type="button" className="mh-btn mh-jl-new" onClick={() => addJournalSession(viewingCharId)}>
                                       <Plus size={14} /> Nueva sesión
                                     </button>
@@ -21461,6 +21483,21 @@ export default function App({ onSignOut }) {
                         sub: on ? "" : "1 Estrés",
                         run: () => toggleElemental(viewingCharId, el, on),
                       });
+                    });
+                  }
+                  // Carta de Forma de Bestia: transformarse / salir.
+                  if (d.beastKey && !d.fromChat) {
+                    const bf = BEASTFORMS.find((x) => x.key === d.beastKey);
+                    const on = c.f_beastform === d.beastKey;
+                    const tierLk = bf && bf.tier > tierForLevel(c.f_level || 1);
+                    const stressFl = Number(c.stress_marked || 0) >= Number(c.r_stress || 0);
+                    cardActs.push({
+                      key: "beast-toggle",
+                      Icon: on ? X : PawPrint,
+                      label: on ? "Salir de la forma" : "Transformarse",
+                      sub: on ? "" : tierLk ? "Se desbloquea en Rango " + bf.tier : stressFl ? "Sin Estrés disponible" : "1 Estrés",
+                      disabled: !on && (tierLk || stressFl),
+                      run: () => { toggleBeastform(viewingCharId, d.beastKey, on); closeCardDetail(); },
                     });
                   }
                   // Druida en Forma de Bestia: los hechizos no se pueden lanzar.
