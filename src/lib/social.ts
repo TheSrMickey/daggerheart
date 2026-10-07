@@ -7,7 +7,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 
-export type Person = { id: string; username: string };
+export type Person = { id: string; username: string; playing?: string };
 export type Notice = { key: string; type: "friend_request" | "friend_accepted"; from: Person; at: number; read: boolean };
 export type SocialState = { me: Person | null; friends: Person[]; incoming: Person[]; outgoing: Person[]; notices: Notice[] };
 
@@ -97,9 +97,21 @@ export async function loadSocial(): Promise<SocialState> {
   const who = (id: string) => names.get(id)!;
 
   const byName = (a: Person, b: Person) => a.username.localeCompare(b.username, "es");
+  const friends = pairs.filter((p) => p.status === "friends").map((p) => who(other(p))).sort(byName);
+  // Quién tiene ahora una hoja de personaje abierta (señal con latido: caduca a los 80 s).
+  if (isDev()) {
+    for (const f of friends) if (f.id === "dev-ana") f.playing = "Druida";
+  } else if (friends.length) {
+    const { data } = await sb().from("kv_shared").select("key, value").in("key", friends.map((f) => `pr:${f.id}`));
+    for (const r of data ?? []) {
+      const v = parse<{ cls: string | null; at: number }>(r.value);
+      const f = friends.find((x) => `pr:${x.id}` === r.key);
+      if (f && v?.cls && Date.now() - v.at < 80000) f.playing = v.cls;
+    }
+  }
   return {
     me,
-    friends: pairs.filter((p) => p.status === "friends").map((p) => who(other(p))).sort(byName),
+    friends,
     incoming: pairs.filter((p) => p.status === "pending" && p.to === me.id).map((p) => who(p.from)),
     outgoing: pairs.filter((p) => p.status === "pending" && p.from === me.id).map((p) => who(p.to)),
     notices: isDev()
@@ -166,4 +178,21 @@ export async function markNoticesRead(list: Notice[]) {
       await writeShared(n.key, { type: n.type, from: n.from.id, at: n.at, read: true } satisfies NoticeRow, me.id);
     }
   }
+}
+
+// Presencia propia: mientras haya una hoja abierta se publica la clase con un latido cada 30 s; al cerrarla se borra.
+let presenceCls: string | null = null;
+let presenceTimer: ReturnType<typeof setInterval> | null = null;
+async function publishPresence() {
+  if (isDev()) return;
+  const { data } = await sb().auth.getUser();
+  if (!data.user) return;
+  await writeShared(`pr:${data.user.id}`, { cls: presenceCls, at: Date.now() }, data.user.id).catch(() => {});
+}
+export function setPresence(cls: string | null) {
+  if (cls === presenceCls) return;
+  presenceCls = cls;
+  if (presenceTimer) clearInterval(presenceTimer);
+  presenceTimer = cls ? setInterval(() => void publishPresence(), 30000) : null;
+  void publishPresence();
 }

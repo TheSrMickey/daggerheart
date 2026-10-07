@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus, Box, LayoutGrid, Bird, Fish, Bug, Rabbit, Cat, Turtle, Clock, CircleDashed, Slash } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { NotificationBell, FriendsPanel } from "./Social";
+import { setPresence } from "@/lib/social";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
 import { buildSablewood } from "./quickstartSablewood";
 import { Wand, CircleDot, MoveUpRight, Archive, Shell, Compass, Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
@@ -4340,15 +4341,17 @@ const sharedStyles = `
   .mh-friends-sec h4 { margin: 0 4px 8px; font-size: 11.5px; font-weight: 600; color: var(--mh-muted); display: flex; justify-content: space-between; }
   .mh-friends-sec h4 i { font-style: normal; }
   .mh-friend { display: flex; align-items: center; gap: 10px; padding: 6px 4px; font-size: 13px; color: var(--mh-ink); }
-  .mh-friend > span:not(.mh-av) { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mh-friend > span:not(.mh-av):not(.mh-cls-dot) { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .mh-friend.is-dim { opacity: .65; } .mh-friend small { font-size: 11px; color: var(--mh-muted); }
   .mh-av { border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; flex-shrink: 0; }
   .mh-fbtn { all: unset; cursor: pointer; width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--mh-muted); background: var(--mh-panel3); }
   .mh-fbtn:hover:not(:disabled) { color: var(--mh-ink); } .mh-fbtn:disabled { opacity: .5; cursor: default; } .mh-fbtn.is-ok { background: #2a56c4; color: #fff; }
   .mh-fav-star { color: #E3B04B; fill: #E3B04B; flex-shrink: 0; }
-  .mh-friends-gap { height: 8px; }
-  .mh-friend .mh-fbtn { opacity: 0; } .mh-friend:hover .mh-fbtn, .mh-friend .mh-fbtn:focus-visible { opacity: 1; }
-  @media (hover: none) { .mh-friend .mh-fbtn { opacity: 1; } }
+  .mh-friends-hr { border: 0; border-top: 1px solid var(--mh-line2); margin: 10px 4px; }
+  .mh-friend-t { display: flex; flex-direction: column; min-width: 0; }
+  .mh-friend-t b { font-weight: 500; display: flex; align-items: center; gap: 5px; }
+  .mh-friend-t small { font-size: 11px; color: var(--mh-muted2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mh-cls-dot { width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; box-shadow: 0 0 0 2px #ffffff22; }
   .mh-ctx { position: fixed; z-index: 80; width: 190px; padding: 5px; border-radius: 12px; background: var(--mh-panel2); border: 1px solid var(--mh-line2); box-shadow: 0 16px 40px #0008; display: flex; flex-direction: column; }
   .mh-ctx button { all: unset; cursor: pointer; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 8px; font-size: 12.5px; color: var(--mh-ink); }
   .mh-ctx button:hover { background: #ffffff12; } .mh-ctx .is-danger { color: #ff7a7a; }
@@ -11711,6 +11714,20 @@ export default function App({ onSignOut }) {
   // Barra superior (con la campana) y columna de amigos a la derecha: solo en las pantallas de lista, no en hojas ni mesas de campaña.
   const showTopbar = !isMobile && !viewingCharId && !gmViewing && view !== "ajustes";
   const showRail = showTopbar;
+  // Presencia: los amigos ven "Jugando como <clase>" mientras tengas una hoja de personaje abierta.
+  const sheetClass = viewingCharId ? characters[viewingCharId]?.f_class || null : null;
+  useEffect(() => {
+    setPresence(sheetClass);
+    return () => setPresence(null);
+  }, [sheetClass]);
+  const renderClassDot = (cls) => {
+    const Em = CLASS_EMBLEMS[cls] || User;
+    return (
+      <span className="mh-cls-dot" style={{ background: classColor(cls) }} title={cls}>
+        <Em size={14} />
+      </span>
+    );
+  };
   return (
     <div className={"mh-root" + (isMobile ? " is-mobile" : "")} style={{ display: "flex", flexDirection: isMobile ? "column" : "row", height: "100dvh", background: "var(--mh-bg)", fontFamily: "'Inter', system-ui, sans-serif", color: "var(--mh-ink)", overflow: "hidden" }}>
       <style>{sharedStyles}</style>
@@ -11853,7 +11870,7 @@ export default function App({ onSignOut }) {
       <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
         {showRail && (
           <div className="mh-rail">
-            <FriendsPanel />
+            <FriendsPanel renderClass={renderClassDot} />
           </div>
         )}
         <div style={{ position: "absolute", top: 0, left: 0, bottom: 0, right: showRail ? 290 : 0, overflowY: view === "ficha" && !viewingCharId && showRail ? "hidden" : "auto", padding: isMobile ? "18px 14px" : showRail ? "24px clamp(28px, 3.4vw, 48px)" : "24px 28px" }}>
@@ -11932,7 +11949,7 @@ export default function App({ onSignOut }) {
                     })}
                   </div>
                 </div>
-                {isMobile && <FriendsPanel />}
+                {isMobile && <FriendsPanel renderClass={renderClassDot} />}
               </div>
             );
           })()}

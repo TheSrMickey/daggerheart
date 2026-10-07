@@ -111,7 +111,7 @@ export function NotificationBell({ placement }) {
 }
 
 // Panel de amigos: lista, solicitudes y buscador para añadir.
-export function FriendsPanel() {
+export function FriendsPanel({ renderClass }) {
   const s = useSocial();
   const [tab, setTab] = useState("amigos");
   const [q, setQ] = useState("");
@@ -142,18 +142,20 @@ export function FriendsPanel() {
       window.removeEventListener("resize", close);
     };
   }, [menu]);
-  const openMenu = (e, p, fromButton) => {
-    e.preventDefault();
+  const openMenu = (e, p) => {
     e.stopPropagation();
-    const r = fromButton ? e.currentTarget.getBoundingClientRect() : null;
-    setMenu({ p, x: r ? r.right - 190 : e.clientX, y: r ? r.bottom + 4 : e.clientY });
+    const r = e.currentTarget.getBoundingClientRect();
+    setMenu({ p, x: r.right - 190, y: r.bottom + 4 });
   };
   const friendRow = (p) => (
-    <div key={p.id} className="mh-friend" onContextMenu={(e) => openMenu(e, p, false)}>
+    <div key={p.id} className="mh-friend">
       <Avatar name={p.username} />
-      <span>{p.username}</span>
-      {favs.includes(p.id) && <Star size={12} className="mh-fav-star" />}
-      <button type="button" className="mh-fbtn" onClick={(e) => openMenu(e, p, true)} title="Más opciones" aria-label={"Opciones de " + p.username}>
+      <span className="mh-friend-t">
+        <b>{p.username}{favs.includes(p.id) && <Star size={11} className="mh-fav-star" />}</b>
+        {p.playing && <small>Jugando como {p.playing}</small>}
+      </span>
+      {p.playing && renderClass && renderClass(p.playing)}
+      <button type="button" className="mh-fbtn" onClick={(e) => openMenu(e, p)} title="Más opciones" aria-label={"Opciones de " + p.username}>
         <MoreHorizontal size={14} />
       </button>
     </div>
@@ -215,7 +217,7 @@ export function FriendsPanel() {
             <>
               <h4>Favoritos <i>{favFriends.length}</i></h4>
               {favFriends.map(friendRow)}
-              <div className="mh-friends-gap" />
+              <hr className="mh-friends-hr" />
             </>
           )}
           {(otherFriends.length > 0 || favFriends.length === 0) && <h4>Amigos <i>{otherFriends.length}</i></h4>}
@@ -250,8 +252,8 @@ export function FriendsPanel() {
       )}
       {menu && (
         <>
-          <div className="mh-pop-bg" onClick={() => setMenu(null)} onContextMenu={(e) => (e.preventDefault(), setMenu(null))} />
-          <div className="mh-ctx" style={{ left: Math.min(menu.x, window.innerWidth - 200), top: Math.min(menu.y, window.innerHeight - 100) }} role="menu">
+          <div className="mh-pop-bg" onClick={() => setMenu(null)} />
+          <div className="mh-ctx" style={{ left: Math.max(8, Math.min(menu.x, window.innerWidth - 200)), top: Math.min(menu.y, window.innerHeight - 100) }} role="menu">
             <button type="button" role="menuitem" onClick={() => (toggleFav(menu.p.id), setMenu(null))}>
               <Star size={14} /> {favs.includes(menu.p.id) ? "Quitar de favoritos" : "Añadir a favoritos"}
             </button>
