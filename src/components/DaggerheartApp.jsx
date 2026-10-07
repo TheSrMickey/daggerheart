@@ -990,6 +990,25 @@ const CLASS_SUGGESTED = {
   Guerrero: { traits: { t_agility: 2, t_strength: 1, t_finesse: 0, t_instinct: 1, t_presence: -1, t_knowledge: 0 }, primary: "Espada larga", armor: "Cota de malla" },
   Mago: { traits: { t_agility: -1, t_strength: 0, t_finesse: 0, t_instinct: 1, t_presence: 1, t_knowledge: 2 }, primary: "Gran bastón", armor: "Armadura de cuero" },
 };
+// Desglose de una estadística: valor base y cuánto sube (verde) o baja (rojo) por cada elección anterior.
+function StatMods({ base, baseLabel, mods }) {
+  return (
+    <div className="mh-wz-mods">
+      <span>Base{baseLabel ? " de " + baseLabel : ""}: {base}</span>
+      {mods.map((m, k) => (
+        <span key={k} className={m.v > 0 ? "is-up" : "is-down"}>
+          {m.v > 0 ? "+" : "−"}{Math.abs(m.v)} {m.label}
+        </span>
+      ))}
+    </div>
+  );
+}
+const isMagicWeapon = (w) => !!w.magic || /mágico/.test(w.damage || "");
+// Cabecera de rango dentro de una lista ordenada por rango (solo si hay más de uno).
+const tierHead = (list, i) =>
+  new Set(list.map((x) => x.tier)).size > 1 && (i === 0 || list[i - 1].tier !== list[i].tier) ? (
+    <div className="mh-wz-tierhead">Rango {list[i].tier}</div>
+  ) : null;
 const ARMOR_TIER_SUFFIXES = ["", " mejorada", " avanzada", " legendaria"];
 // Claves (de cualquier rango) que corresponden al equipo recomendado de una clase.
 const recommendedGear = (className) => {
@@ -4294,6 +4313,13 @@ const sharedStyles = `
   .mh-wz-badge { width: 48px; height: 48px; flex-shrink: 0; border-radius: 12px; color: #fff; font: 700 22px 'Cinzel', Georgia, serif; display: flex; align-items: center; justify-content: center; }
   .mh-wz-img { width: 64px; height: 64px; flex-shrink: 0; border-radius: 12px; object-fit: cover; border: 1px solid var(--mh-line); }
   .mh-wz-dn { font-size: 22px; font-weight: 700; color: var(--mh-ink); line-height: 1.15; }
+  .mh-wz-gfilter { display: flex; gap: 6px; margin: 0 0 12px; flex-wrap: wrap; }
+  .mh-wz-tierhead { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--mh-muted); margin: 10px 2px 0; }
+  .mh-wz-tierhead:first-child { margin-top: 0; }
+  .mh-wz-mods { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 10.5px; color: var(--mh-muted); }
+  .mh-wz-mods .is-up { color: #2F8F5B; font-weight: 700; }
+  .mh-wz-mods .is-down { color: #C0504A; font-weight: 700; }
+  html[data-mh-theme="dark"] .mh-wz-mods .is-up { color: #7FE0A8; }
   .mh-rec-hint { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: #2F8F5B; background: rgba(76,175,122,.12); border: 1px solid rgba(76,175,122,.35); border-radius: 8px; padding: 7px 11px; margin: -4px 0 12px; }
   .mh-rec-pill { font-size: 10.5px; font-weight: 700; letter-spacing: .04em; color: #1F6B45; background: rgba(76,175,122,.22); border: 1px solid rgba(76,175,122,.5); border-radius: 10px; padding: 1px 8px; }
   html[data-mh-theme="dark"] .mh-rec-hint, html[data-mh-theme="dark"] .mh-rec-pill { color: #7FE0A8; }
@@ -7112,6 +7138,7 @@ export default function App({ onSignOut }) {
   const [traitPool, setTraitPool] = useState(TRAIT_MODIFIER_POOL.map((m) => m.id));
   const [draggedModifier, setDraggedModifier] = useState(null);
   const [gearTab, setGearTab] = useState("primary");
+  const [gearFilter, setGearFilter] = useState("todas");
   const [draftPrimaryWeapon, setDraftPrimaryWeapon] = useState("");
   const [draftSecondaryWeapon, setDraftSecondaryWeapon] = useState("");
   const [draftArmor, setDraftArmor] = useState("");
@@ -7317,6 +7344,7 @@ export default function App({ onSignOut }) {
     setTraitAssign({});
     setTraitPool(TRAIT_MODIFIER_POOL.map((m) => m.id));
     setGearTab("primary");
+    setGearFilter("todas");
     setDraftPrimaryWeapon("");
     setDraftSecondaryWeapon("");
     setDraftArmor("");
@@ -7462,6 +7490,17 @@ export default function App({ onSignOut }) {
     });
     setTraitAssign(nextAssign);
     setTraitPool([]);
+  };
+
+  // Armas que se pueden elegir: solo rangos permitidos por el nivel, ordenadas por rango y con el filtro físicas/mágicas.
+  const visibleWeapons = (kind) => {
+    const cls = CLASSES[carouselIndex]?.key;
+    const canCast = !!spellcastTraitFor(cls, (SUBCLASSES[cls] || [])[subclassIndex]?.key);
+    const mode = !canCast && gearFilter === "magico" ? "todas" : gearFilter;
+    const src = kind === "primary" ? PRIMARY_WEAPONS : SECONDARY_WEAPONS;
+    return src
+      .filter((w) => w.tier <= tierForLevel(levelChoice) && (kind !== "primary" || !w.magic || canCast) && (mode === "todas" || (mode === "magico") === isMagicWeapon(w)))
+      .sort((x, y) => x.tier - y.tier);
   };
 
   const clearTraits = () => {
@@ -23182,6 +23221,9 @@ export default function App({ onSignOut }) {
       </div>
 
       {showNewCharModal && (() => {
+        // Con un arma principal de dos manos (y una clase que no ignore la carga) no hay arma secundaria: se salta ese paso.
+        const twoHandedPrimary = PRIMARY_WEAPONS.find((w) => w.key === draftPrimaryWeapon)?.hands === 2 && !ignoresBurden(CLASSES[carouselIndex]?.key);
+        const steps = WIZARD_STEPS.filter((st) => !(st.key === "secondary" && twoHandedPrimary));
         const stepItems = wizardStep === "class" ? CLASSES : SUBCLASSES[CLASSES[carouselIndex].key] || [];
         const stepIndex = wizardStep === "class" ? carouselIndex : subclassIndex;
         const setStepIndex = wizardStep === "class" ? setCarouselIndex : setSubclassIndex;
@@ -23202,13 +23244,13 @@ export default function App({ onSignOut }) {
           >
             <div className="mh-card mh-wz" onClick={(e) => e.stopPropagation()}>
               {(() => {
-                const idx = WIZARD_STEPS.findIndex((st) => st.key === wizardStep);
-                const groups = [...new Set(WIZARD_STEPS.map((st) => st.group))];
+                const idx = Math.max(0, steps.findIndex((st) => st.key === wizardStep));
+                const groups = [...new Set(steps.map((st) => st.group))];
                 return (
                   <div className="mh-wz-top">
                     <div className="mh-wz-title">
-                      <span className="mh-serif">{wizardStep === "subclass" ? "Elige tu subclase de " + CLASSES[carouselIndex].key : WIZARD_STEPS[idx].title}</span>
-                      <small>Paso {idx + 1} de {WIZARD_STEPS.length}</small>
+                      <span className="mh-serif">{wizardStep === "subclass" ? "Elige tu subclase de " + CLASSES[carouselIndex].key : steps[idx].title}</span>
+                      <small>Paso {idx + 1} de {steps.length}</small>
                       <button type="button" className="mh-wz-x" aria-label="Cerrar" onClick={() => setShowNewCharModal(false)}>
                         <X size={16} />
                       </button>
@@ -23218,7 +23260,7 @@ export default function App({ onSignOut }) {
                         <div key={g} className="mh-wz-grp">
                           <span>{g}</span>
                           <div>
-                            {WIZARD_STEPS.map((st, k) =>
+                            {steps.map((st, k) =>
                               st.group !== g ? null : (
                                 <button
                                   key={st.key}
@@ -23703,8 +23745,8 @@ export default function App({ onSignOut }) {
               ) : wizardStep === "stats" ? (
                 <div className="mh-wz-stats">
                   <div style={{ fontSize: 12.5, color: "var(--mh-ink3)", marginBottom: 16 }}>
-                    Estas estadísticas se calculan automáticamente según tu clase ({CLASSES[carouselIndex].key}). El
-                    Estrés es siempre igual para todo el mundo al empezar.
+                    Estas estadísticas se calculan automáticamente según tu clase ({CLASSES[carouselIndex].key}), tu subclase y tu ascendencia. Debajo de cada valor ves
+                    cuánto sube o baja por tus elecciones anteriores.
                   </div>
                   <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
                     <div
@@ -23722,8 +23764,9 @@ export default function App({ onSignOut }) {
                       <ShieldCheck size={20} color="#E3B04B" />
                       <div style={{ fontSize: 11, color: "var(--mh-muted)" }}>Evasión</div>
                       <div className="mh-serif" style={{ fontSize: 34, fontWeight: 700, color: "var(--mh-gold-ink)" }}>
-                        {CLASS_EVASION[CLASSES[carouselIndex].key] ?? 10}
+                        {(CLASS_EVASION[CLASSES[carouselIndex].key] ?? 10) + (draftFeat("Simiah", 1) ? 1 : 0)}
                       </div>
+                      <StatMods base={CLASS_EVASION[CLASSES[carouselIndex].key] ?? 10} baseLabel={CLASSES[carouselIndex].key} mods={draftFeat("Simiah", 1) ? [{ v: 1, label: "Ágil · Simiah" }] : []} />
                     </div>
                     <div
                       style={{
@@ -23742,7 +23785,7 @@ export default function App({ onSignOut }) {
                       <div className="mh-serif" style={{ fontSize: 34, fontWeight: 700, color: "#D9644E" }}>
                         {(CLASS_HP[CLASSES[carouselIndex].key] ?? 6) + (draftFeat("Gigante", 0) ? 1 : 0)}
                       </div>
-                      {draftFeat("Gigante", 0) && <div style={{ fontSize: 10.5, color: "var(--mh-muted)" }}>+1 por Aguante</div>}
+                      <StatMods base={CLASS_HP[CLASSES[carouselIndex].key] ?? 6} baseLabel={CLASSES[carouselIndex].key} mods={draftFeat("Gigante", 0) ? [{ v: 1, label: "Aguante · Gigante" }] : []} />
                     </div>
                     <div
                       style={{
@@ -23761,6 +23804,14 @@ export default function App({ onSignOut }) {
                       <div className="mh-serif" style={{ fontSize: 34, fontWeight: 700, color: ink("#6FA3C0") }}>
                         {STRESS_SLOTS + ((SUBCLASSES[CLASSES[carouselIndex]?.key] || [])[subclassIndex]?.key === "Vengador" ? 1 : 0) + (draftFeat("Humano", 0) ? 1 : 0)}
                       </div>
+                      <StatMods
+                        base={STRESS_SLOTS}
+                        baseLabel=""
+                        mods={[
+                          ...((SUBCLASSES[CLASSES[carouselIndex]?.key] || [])[subclassIndex]?.key === "Vengador" ? [{ v: 1, label: "Sereno · Vengador" }] : []),
+                          ...(draftFeat("Humano", 0) ? [{ v: 1, label: "Gran Resistencia · Humano" }] : []),
+                        ]}
+                      />
                     </div>
                   </div>
                 </div>
@@ -23855,7 +23906,7 @@ export default function App({ onSignOut }) {
               ) : ["primary", "secondary", "armor"].includes(wizardStep) ? (
                 <div>
                   <div className="mh-wz-dm" style={{ marginBottom: 12 }}>
-                    {wizardStep === "primary" ? "Elige el arma con la que empiezas." : wizardStep === "secondary" ? (PRIMARY_WEAPONS.find((w) => w.key === draftPrimaryWeapon)?.hands === 2 && !ignoresBurden(CLASSES[carouselIndex]?.key) ? "Con un arma a dos manos no hay arma secundaria: puedes seguir." : PRIMARY_WEAPONS.find((w) => w.key === draftPrimaryWeapon)?.hands === 2 ? "Entrenamiento de Combate: ignoras la carga, así que puedes llevar también un arma secundaria." : "Elige un arma secundaria o «Ninguna».") : "Elige tu armadura o «Ninguna»."}
+                    {wizardStep === "primary" ? "Elige el arma con la que empiezas." : wizardStep === "secondary" ? (PRIMARY_WEAPONS.find((w) => w.key === draftPrimaryWeapon)?.hands === 2 && !ignoresBurden(CLASSES[carouselIndex]?.key) ? "Con un arma a dos manos no hay arma secundaria: puedes seguir." : PRIMARY_WEAPONS.find((w) => w.key === draftPrimaryWeapon)?.hands === 2 ? "Entrenamiento de Combate: ignoras la carga, así que puedes llevar también un arma secundaria." : "Elige un arma secundaria o «Ninguna».") : "Elige tu armadura."}
                   </div>
                   {(() => {
                     const g = recommendedGear(CLASSES[carouselIndex]?.key);
@@ -23866,18 +23917,30 @@ export default function App({ onSignOut }) {
                       </div>
                     ) : null;
                   })()}
+                  {(wizardStep === "primary" || wizardStep === "secondary") && (() => {
+                    const cls = CLASSES[carouselIndex]?.key;
+                    const canCast = !!spellcastTraitFor(cls, (SUBCLASSES[cls] || [])[subclassIndex]?.key);
+                    const mode = !canCast && gearFilter === "magico" ? "todas" : gearFilter;
+                    const opts = [["todas", "Todas"], ["fisico", "Físicas"], ...(canCast ? [["magico", "Mágicas"]] : [])];
+                    return (
+                      <div className="mh-wz-gfilter" role="radiogroup" aria-label="Filtrar armas por tipo de daño">
+                        {opts.map(([k, label]) => (
+                          <button key={k} type="button" role="radio" aria-checked={mode === k} className={"mh-chip" + (mode === k ? " active" : "")} onClick={() => setGearFilter(k)}>
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    );
+                  })()}
                   {wizardStep === "primary" && (
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                      {PRIMARY_WEAPONS.filter(
-                        (w) =>
-                          w.tier <= tierForLevel(levelChoice) &&
-                          (!w.magic || spellcastTraitFor(CLASSES[carouselIndex]?.key, (SUBCLASSES[CLASSES[carouselIndex]?.key] || [])[subclassIndex]?.key))
-                      ).map((w) => {
+                      {visibleWeapons("primary").map((w, gi, gearList) => {
                         const selected = draftPrimaryWeapon === w.key;
                         const rec = recommendedGear(CLASSES[carouselIndex]?.key).primary.has(w.key);
                         return (
+                          <Fragment key={w.key}>
+                          {tierHead(gearList, gi)}
                           <div
-                            key={w.key}
                             onClick={() => setDraftPrimaryWeapon(w.key)}
                             style={{
                               display: "flex",
@@ -23899,6 +23962,7 @@ export default function App({ onSignOut }) {
                               {w.trait} · {w.range} · {w.damage}
                             </span>
                           </div>
+                          </Fragment>
                         );
                       })}
                     </div>
@@ -23947,12 +24011,13 @@ export default function App({ onSignOut }) {
                         {draftSecondaryWeapon === "Ninguna" && <Check size={13} color="#E3B04B" />}
                         <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--mh-ink)" }}>Ninguna</span>
                       </div>
-                      {SECONDARY_WEAPONS.map((w) => {
+                      {visibleWeapons("secondary").map((w, gi, gearList) => {
                         const selected = draftSecondaryWeapon === w.key;
                         const rec = recommendedGear(CLASSES[carouselIndex]?.key).secondary.has(w.key);
                         return (
+                          <Fragment key={w.key}>
+                          {tierHead(gearList, gi)}
                           <div
-                            key={w.key}
                             onClick={() => setDraftSecondaryWeapon(w.key)}
                             style={{
                               display: "flex",
@@ -23974,6 +24039,7 @@ export default function App({ onSignOut }) {
                               {w.trait !== "—" ? w.trait + " · " + w.range + " · " + w.damage : w.damage}
                             </span>
                           </div>
+                          </Fragment>
                         );
                       })}
                     </div>
@@ -23982,28 +24048,13 @@ export default function App({ onSignOut }) {
 
                   {wizardStep === "armor" && (
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                      <div
-                        onClick={() => setDraftArmor("Ninguna")}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
-                          border: "1px solid " + (draftArmor === "Ninguna" ? "#E3B04B" : "var(--mh-line)"),
-                          background: draftArmor === "Ninguna" ? "#E3B04B14" : "var(--mh-panel2)",
-                          borderRadius: 8,
-                          padding: "9px 14px",
-                          cursor: "pointer",
-                        }}
-                      >
-                        {draftArmor === "Ninguna" && <Check size={13} color="#E3B04B" />}
-                        <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--mh-ink)" }}>Ninguna</span>
-                      </div>
-                      {ARMORS.filter((a) => a.tier <= tierForLevel(levelChoice)).map((a) => {
+                      {ARMORS.filter((a) => a.tier <= tierForLevel(levelChoice)).map((a, gi, gearList) => {
                         const selected = draftArmor === a.key;
                         const rec = recommendedGear(CLASSES[carouselIndex]?.key).armor.has(a.key);
                         return (
+                          <Fragment key={a.key}>
+                          {tierHead(gearList, gi)}
                           <div
-                            key={a.key}
                             onClick={() => setDraftArmor(a.key)}
                             style={{
                               display: "flex",
@@ -24023,6 +24074,7 @@ export default function App({ onSignOut }) {
                             </div>
                             <span style={{ fontSize: 11.5, color: "var(--mh-muted)" }}>Puntuación {a.score}</span>
                           </div>
+                          </Fragment>
                         );
                       })}
                     </div>
@@ -24259,7 +24311,7 @@ export default function App({ onSignOut }) {
                   if (idx >= 7 && draftTransformation !== "Ninguna") chips.push(draftTransformation);
                   if (idx >= 10 && (draftExp1.trim() || draftExp2.trim())) chips.push([draftExp1, draftExp2].map((x) => x.trim()).filter(Boolean).join(", "));
                   if (idx >= 11 && draftPrimaryWeapon) chips.push(draftPrimaryWeapon);
-                  if (idx >= 12 && draftSecondaryWeapon && draftSecondaryWeapon !== "Ninguna") chips.push(draftSecondaryWeapon);
+                  if (idx >= 12 && !twoHandedPrimary && draftSecondaryWeapon && draftSecondaryWeapon !== "Ninguna") chips.push(draftSecondaryWeapon);
                   if (idx >= 13 && draftArmor && draftArmor !== "Ninguna") chips.push(draftArmor);
                   return (
                     <div className="mh-wz-sum">
@@ -24271,10 +24323,9 @@ export default function App({ onSignOut }) {
                   );
                 })()}
               {(() => {
-                const idx = WIZARD_STEPS.findIndex((st) => st.key === wizardStep);
-                const prev = WIZARD_STEPS[idx - 1];
-                const nextStep = WIZARD_STEPS[idx + 1];
-                const twoHanded = PRIMARY_WEAPONS.find((w) => w.key === draftPrimaryWeapon)?.hands === 2 && !ignoresBurden(CLASSES[carouselIndex]?.key);
+                const idx = steps.findIndex((st) => st.key === wizardStep);
+                const prev = steps[idx - 1];
+                const nextStep = steps[idx + 1];
                 const block = {
                   subclass: (SUBCLASSES[CLASSES[carouselIndex]?.key] || [])[subclassIndex]?.key === "Origen Elemental" && !draftOriginElement && "Elige tu elemento para continuar.",
                   traits: traitPool.length > 0 && "Reparte todos los valores para continuar.",
@@ -24289,8 +24340,8 @@ export default function App({ onSignOut }) {
                   community: !draftCommunity ? "Elige una comunidad para continuar." : draftCommunity === "Del Orden" && draftPrinciples.some((x) => !x.text.trim()) ? "Escribe tus tres principios." : false,
                   experiences: !draftExp1.trim() || !draftExp2.trim() ? "Escribe tus dos Experiencias." : (SUBCLASSES[CLASSES[carouselIndex]?.key] || [])[subclassIndex]?.key === "Vínculo Bestial" && (!draftCompanion.name.trim() || !draftCompanion.exp1.trim() || !draftCompanion.exp2.trim() || !draftCompanion.attack.trim()) ? "Completa a tu compañero: nombre, dos Experiencias y su ataque." : draftAncestries.includes("Autómata") && draftPurposeExp == null ? "Elige la Experiencia que encaja con tu propósito." : false,
                   primary: !draftPrimaryWeapon && "Elige un arma principal para continuar.",
-                  secondary: !twoHanded && !draftSecondaryWeapon && "Elige un arma secundaria o «Ninguna».",
-                  armor: !draftArmor && "Elige una armadura o «Ninguna».",
+                  secondary: !draftSecondaryWeapon && "Elige un arma secundaria o «Ninguna».",
+                  armor: !draftArmor && "Elige una armadura para continuar.",
                   domain: !(wizardCardLimit === 0 || draftDomainCards.length === wizardCardLimit) && "Elige tus cartas de dominio.",
                 }[wizardStep];
                 const go = (key) => {
