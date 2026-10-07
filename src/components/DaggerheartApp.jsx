@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus, Box, LayoutGrid, Bird, Fish, Bug, Rabbit, Cat, Turtle, Clock, CircleDashed, Slash } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { NotificationBell, FriendsPanel } from "./Social";
-import { setPresence } from "@/lib/social";
+import { setPresence, startPresence, stopPresence } from "@/lib/social";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
 import { buildSablewood } from "./quickstartSablewood";
 import { Wand, CircleDot, MoveUpRight, Archive, Shell, Compass, Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
@@ -4343,6 +4343,11 @@ const sharedStyles = `
   .mh-friend { display: flex; align-items: center; gap: 10px; padding: 6px 4px; font-size: 13px; color: var(--mh-ink); }
   .mh-friend > span:not(.mh-av):not(.mh-cls-dot) { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .mh-friend.is-dim { opacity: .65; } .mh-friend small { font-size: 11px; color: var(--mh-muted); }
+  .mh-av { position: relative; }
+  .mh-st { position: absolute; right: -2px; bottom: -2px; width: 11px; height: 11px; box-sizing: content-box; border-radius: 50%; border: 3px solid var(--mh-nav); }
+  .mh-st.is-on { background: #3fcf7a; } .mh-st.is-away { background: #f59a2b; }
+  .mh-st.is-off { background: var(--mh-nav); box-shadow: inset 0 0 0 2px #6c6b8c; }
+  .mh-friend.is-off .mh-av, .mh-friend.is-off .mh-friend-t { opacity: .55; } .mh-friend.is-off .mh-st { opacity: 1; }
   .mh-av { border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; flex-shrink: 0; }
   .mh-fbtn { all: unset; cursor: pointer; width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--mh-muted); background: var(--mh-panel3); }
   .mh-fbtn:hover:not(:disabled) { color: var(--mh-ink); } .mh-fbtn:disabled { opacity: .5; cursor: default; } .mh-fbtn.is-ok { background: #2a56c4; color: #fff; }
@@ -11717,8 +11722,11 @@ export default function App({ onSignOut }) {
   // Presencia: los amigos ven "Jugando como <clase>" mientras tengas una hoja de personaje abierta.
   const sheetClass = viewingCharId ? characters[viewingCharId]?.f_class || null : null;
   useEffect(() => {
+    startPresence();
+    return () => stopPresence();
+  }, []);
+  useEffect(() => {
     setPresence(sheetClass);
-    return () => setPresence(null);
   }, [sheetClass]);
   const renderClassDot = (cls) => {
     const Em = CLASS_EMBLEMS[cls] || User;

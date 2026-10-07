@@ -7,11 +7,13 @@
 
 import { createClient } from "@/lib/supabase/client";
 
-export type Person = { id: string; username: string; playing?: string };
+export type Status = "on" | "away" | "off";
+export type Person = { id: string; username: string; playing?: string; status?: Status; since?: number; lastSeen?: number };
 export type Notice = { key: string; type: "friend_request" | "friend_accepted"; from: Person; at: number; read: boolean };
 export type SocialState = { me: Person | null; friends: Person[]; incoming: Person[]; outgoing: Person[]; notices: Notice[] };
 
 type Pair = { from: string; to: string; status: "pending" | "friends" | "none"; at: number };
+type Presence = { cls: string | null; at: number; act: number; away: boolean; off?: boolean };
 type NoticeRow = { type: Notice["type"]; from: string; at: number; read: boolean };
 
 const isDev = () => process.env.NODE_ENV === "development" && typeof window !== "undefined" && window.location.pathname.startsWith("/dev-preview");
@@ -30,6 +32,8 @@ const DEV_PEOPLE: Person[] = [
 const devPairs = new Map<string, Pair>([
   [pairKey("dev-me", "dev-ana"), { from: "dev-ana", to: "dev-me", status: "friends", at: Date.now() - 864e5 }],
   [pairKey("dev-me", "dev-bruno"), { from: "dev-bruno", to: "dev-me", status: "pending", at: Date.now() - 36e5 }],
+  [pairKey("dev-me", "dev-carla"), { from: "dev-carla", to: "dev-me", status: "friends", at: Date.now() - 864e5 }],
+  [pairKey("dev-me", "dev-dario"), { from: "dev-dario", to: "dev-me", status: "friends", at: Date.now() - 864e5 }],
 ]);
 const devNotices: Notice[] = [{ key: "nt:dev-me:1", type: "friend_request", from: DEV_PEOPLE[1], at: Date.now() - 36e5, read: false }];
 
@@ -98,15 +102,27 @@ export async function loadSocial(): Promise<SocialState> {
 
   const byName = (a: Person, b: Person) => a.username.localeCompare(b.username, "es");
   const friends = pairs.filter((p) => p.status === "friends").map((p) => who(other(p))).sort(byName);
-  // Quién tiene ahora una hoja de personaje abierta (señal con latido: caduca a los 80 s).
+  // Presencia de los amigos: señal con latido cada 30 s. Sin señal en 150 s = desconectado.
+  const now = Date.now();
   if (isDev()) {
-    for (const f of friends) if (f.id === "dev-ana") f.playing = "Druida";
-  } else if (friends.length) {
-    const { data } = await sb().from("kv_shared").select("key, value").in("key", friends.map((f) => `pr:${f.id}`));
-    for (const r of data ?? []) {
-      const v = parse<{ cls: string | null; at: number }>(r.value);
-      const f = friends.find((x) => `pr:${x.id}` === r.key);
-      if (f && v?.cls && Date.now() - v.at < 80000) f.playing = v.cls;
+    for (const f of friends) {
+      if (f.id === "dev-ana") Object.assign(f, { status: "on", playing: "Druida" });
+      else if (f.id === "dev-dario") Object.assign(f, { status: "away", since: now - 12 * 60000 });
+      else Object.assign(f, { status: "off", lastSeen: now - 2 * 36e5 });
+    }
+  } else {
+    const { data } = friends.length ? await sb().from("kv_shared").select("key, value").in("key", friends.map((f) => `pr:${f.id}`)) : { data: [] };
+    for (const f of friends) {
+      const row = (data ?? []).find((r) => r.key === `pr:${f.id}`);
+      const v = row ? parse<Presence>(row.value) : null;
+      if (v && !v.off && now - v.at < 150000) {
+        f.status = v.away ? "away" : "on";
+        f.since = v.act;
+        if (v.cls) f.playing = v.cls;
+      } else {
+        f.status = "off";
+        f.lastSeen = v?.at;
+      }
     }
   }
   return {
@@ -180,19 +196,50 @@ export async function markNoticesRead(list: Notice[]) {
   }
 }
 
-// Presencia propia: mientras haya una hoja abierta se publica la clase con un latido cada 30 s; al cerrarla se borra.
+// Presencia propia: latido cada 30 s con la clase de la hoja abierta (si la hay) y si estás ausente
+// (10 min sin tocar nada, o con la pestaña en segundo plano).
+const AWAY_MS = 10 * 60000;
 let presenceCls: string | null = null;
 let presenceTimer: ReturnType<typeof setInterval> | null = null;
-async function publishPresence() {
+let lastActive = Date.now();
+let stopListeners: (() => void) | null = null;
+async function publishPresence(off = false) {
   if (isDev()) return;
   const { data } = await sb().auth.getUser();
   if (!data.user) return;
-  await writeShared(`pr:${data.user.id}`, { cls: presenceCls, at: Date.now() }, data.user.id).catch(() => {});
+  const away = document.hidden || Date.now() - lastActive > AWAY_MS;
+  const value: Presence = { cls: presenceCls, at: Date.now(), act: lastActive, away, ...(off ? { off: true } : {}) };
+  await writeShared(`pr:${data.user.id}`, value, data.user.id).catch(() => {});
+}
+export function startPresence() {
+  if (presenceTimer || typeof window === "undefined") return;
+  const touch = () => {
+    lastActive = Date.now();
+  };
+  const vis = () => {
+    if (!document.hidden) touch();
+    void publishPresence();
+  };
+  const evs = ["pointerdown", "pointermove", "keydown", "wheel", "touchstart"] as const;
+  evs.forEach((e) => window.addEventListener(e, touch, { passive: true }));
+  document.addEventListener("visibilitychange", vis);
+  stopListeners = () => {
+    evs.forEach((e) => window.removeEventListener(e, touch));
+    document.removeEventListener("visibilitychange", vis);
+  };
+  presenceTimer = setInterval(() => void publishPresence(), 30000);
+  void publishPresence();
+}
+export function stopPresence() {
+  if (presenceTimer) clearInterval(presenceTimer);
+  presenceTimer = null;
+  stopListeners?.();
+  stopListeners = null;
+  presenceCls = null;
+  void publishPresence(true);
 }
 export function setPresence(cls: string | null) {
   if (cls === presenceCls) return;
   presenceCls = cls;
-  if (presenceTimer) clearInterval(presenceTimer);
-  presenceTimer = cls ? setInterval(() => void publishPresence(), 30000) : null;
-  void publishPresence();
+  if (presenceTimer) void publishPresence();
 }
