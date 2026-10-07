@@ -21,15 +21,32 @@ let userIdPromise: Promise<string | null> | null = null;
 let privateCache: Promise<Map<string, string>> | null = null;
 // Vista previa: lo compartido se guarda solo en memoria para poder probar sin tocar la base de datos.
 const devShared = new Map<string, string>();
-const pendingWrites = new Map<string, { value: string; shared: boolean; timer: ReturnType<typeof setTimeout> }>();
+const pendingWrites = new Map<string, { value: string; shared: boolean; uid: string | null; timer: ReturnType<typeof setTimeout> }>();
 
-function getUserId() {
-  userIdPromise ??= sb().auth.getUser().then(({ data }) => data.user?.id ?? null);
+// Si en esta misma pestaña se cierra sesión y entra otra cuenta, los datos en caché del jugador anterior
+// no deben verse ni guardarse en la cuenta nueva: al detectar otro usuario se vacía todo lo privado.
+let activeUid: string | null | undefined;
+async function ensureUser() {
+  const { data } = await sb().auth.getSession();
+  const uid = data.session?.user.id ?? null;
+  if (activeUid !== undefined && uid !== activeUid) {
+    userIdPromise = null;
+    privateCache = null;
+    devShared.clear();
+  }
+  activeUid = uid;
+  return uid;
+}
+
+async function getUserId() {
+  const uid = await ensureUser();
+  userIdPromise ??= sb().auth.getUser().then(({ data }) => data.user?.id ?? uid);
   return userIdPromise;
 }
 
 // Todas las claves privadas del jugador se cargan de una vez (personajes, campañas, preferencias).
-function loadPrivate() {
+async function loadPrivate() {
+  await ensureUser();
   privateCache ??= (async () => {
     const map = new Map<string, string>();
     const { data, error } = await sb().from("kv_private").select("key, value");
@@ -56,10 +73,11 @@ function loadPrivate() {
     }
     return map;
   })();
-  privateCache.catch(() => {
-    privateCache = null;
+  const loading = privateCache;
+  loading.catch(() => {
+    if (privateCache === loading) privateCache = null;
   });
-  return privateCache;
+  return loading;
 }
 
 const pendingKey = (key: string, shared: boolean) => `${shared ? "s" : "p"}:${key}`;
@@ -92,7 +110,7 @@ export async function storageSet(key: string, value: string, shared = false): Pr
   const previous = pendingWrites.get(id);
   if (previous) clearTimeout(previous.timer);
   const timer = setTimeout(() => void flush(id), WRITE_DELAY_MS);
-  pendingWrites.set(id, { value, shared, timer });
+  pendingWrites.set(id, { value, shared, uid: activeUid ?? null, timer });
   return { key, value };
 }
 
@@ -103,8 +121,9 @@ async function flush(id: string) {
   clearTimeout(entry.timer);
 
   const key = id.slice(2);
-  const uid = await getUserId();
-  if (!uid) return;
+  // Se guarda siempre con la cuenta que hizo el cambio (nunca con otra que haya entrado después).
+  const uid = entry.uid;
+  if (!uid || uid !== (await getUserId())) return;
 
   const { error } = entry.shared
     ? await sb().from("kv_shared").upsert({ key, value: entry.value, updated_by: uid })
