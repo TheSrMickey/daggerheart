@@ -44,11 +44,21 @@ const ago = (t) => {
   if (m < 1440) return `hace ${Math.round(m / 60)} h`;
   return `hace ${Math.round(m / 1440)} d`;
 };
-const Avatar = ({ name, size = 34 }) => (
+const Avatar = ({ name, size = 34, status }) => (
   <span className="mh-av" style={{ width: size, height: size, fontSize: size * 0.4, background: `hsl(${[...name].reduce((a, c) => a + c.charCodeAt(0), 0) * 47 % 360} 45% 45%)` }}>
     {(name || "?").charAt(0).toUpperCase()}
+    {status && <i className={"mh-st is-" + status} title={{ on: "Conectado", away: "Ausente", off: "Desconectado" }[status]} />}
   </span>
 );
+const minsAgo = (t) => Math.max(1, Math.round((Date.now() - t) / 60000));
+const seen = (t) => {
+  if (!t) return "Desconectado";
+  const m = minsAgo(t);
+  if (m < 60) return `Visto hace ${m} min`;
+  if (m < 1440) return `Visto hace ${Math.round(m / 60)} h`;
+  return m < 2880 ? "Visto ayer" : `Visto hace ${Math.round(m / 1440)} d`;
+};
+const statusText = (p) => (p.status === "on" ? (p.playing ? "Jugando como " + p.playing : "En línea") : p.status === "away" ? "Ausente" + (p.since ? ` · ${minsAgo(p.since)} min` : "") + (p.playing ? " · " + p.playing : "") : seen(p.lastSeen));
 
 // Campana de avisos con panel desplegable.
 export function NotificationBell({ placement }) {
@@ -148,20 +158,22 @@ export function FriendsPanel({ renderClass }) {
     setMenu({ p, x: r.right - 190, y: r.bottom + 4 });
   };
   const friendRow = (p) => (
-    <div key={p.id} className="mh-friend">
-      <Avatar name={p.username} />
+    <div key={p.id} className={"mh-friend" + (p.status === "off" ? " is-off" : "")}>
+      <Avatar name={p.username} status={p.status} />
       <span className="mh-friend-t">
         <b>{p.username}{favs.includes(p.id) && <Star size={11} className="mh-fav-star" />}</b>
-        {p.playing && <small>Jugando como {p.playing}</small>}
+        <small>{statusText(p)}</small>
       </span>
-      {p.playing && renderClass && renderClass(p.playing)}
+      {p.playing && p.status !== "off" && renderClass && renderClass(p.playing)}
       <button type="button" className="mh-fbtn" onClick={(e) => openMenu(e, p)} title="Más opciones" aria-label={"Opciones de " + p.username}>
         <MoreHorizontal size={14} />
       </button>
     </div>
   );
-  const favFriends = s.friends.filter((f) => favs.includes(f.id));
-  const otherFriends = s.friends.filter((f) => !favs.includes(f.id));
+  const rank = { on: 0, away: 1, off: 2 };
+  const sorted = [...s.friends].sort((a, b) => (rank[a.status] ?? 2) - (rank[b.status] ?? 2));
+  const favFriends = sorted.filter((f) => favs.includes(f.id));
+  const otherFriends = sorted.filter((f) => !favs.includes(f.id));
   useEffect(() => {
     let live = true;
     const t = setTimeout(async () => {
