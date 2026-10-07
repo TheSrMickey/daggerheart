@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus, Box, LayoutGrid, Bird, Fish, Bug, Rabbit, Cat, Turtle, Clock, CircleDashed, Slash } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { NotificationBell, FriendsPanel } from "./Social";
+import { ModernSheet } from "./ModernSheet";
 import { setPresence, startPresence, stopPresence } from "@/lib/social";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
 import { buildSablewood } from "./quickstartSablewood";
@@ -4280,6 +4281,44 @@ const sharedStyles = `
   .mh-view-in { animation: mh-view-in .28s cubic-bezier(.2,.8,.2,1) both; }
   @keyframes mh-view-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
   @media (prefers-reduced-motion: reduce) { .mh-view-in { animation: none; } }
+  .mh-toptabs { display: flex; gap: 22px; } .mh-toptabs button { all: unset; cursor: pointer; color: var(--mh-muted); } .mh-toptabs .is-on { color: var(--mh-ink); }
+  .mh-sheetask-bg { position: fixed; inset: 0; z-index: 90; background: rgba(6,6,16,.7); display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .mh-sheetask { width: min(520px, 100%); border-radius: 18px; background: var(--mh-panel); border: 1px solid var(--mh-line2); padding: 24px; box-shadow: 0 30px 80px #000a; }
+  .mh-sheetask h3 { margin: 0; font-size: 20px; } .mh-sheetask p { margin: 4px 0 16px; color: var(--mh-muted); font-size: 13px; }
+  .mh-sheetask-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .mh-sheetask-opts button { all: unset; cursor: pointer; display: flex; flex-direction: column; gap: 6px; padding: 16px; border-radius: 14px; background: var(--mh-panel2); border: 1px solid var(--mh-line); transition: border-color .15s, translate .15s; }
+  .mh-sheetask-opts button:hover { border-color: #4f86ff; translate: 0 -2px; } .mh-sheetask-opts b { font-size: 15px; color: var(--mh-ink); } .mh-sheetask-opts span { font-size: 12px; color: var(--mh-muted); line-height: 1.4; }
+  .mh-sheetask-opts i { font-style: normal; font-size: 10px; padding: 2px 7px; border-radius: 9px; background: #2a56c4; color: #fff; margin-left: 6px; vertical-align: 1px; }
+  .mh-sheetask-x { all: unset; cursor: pointer; display: block; margin: 14px auto 0; font-size: 12.5px; color: var(--mh-muted); }
+  @media (max-width: 520px) { .mh-sheetask-opts { grid-template-columns: 1fr; } }
+  .mhm { display: flex; flex-direction: column; gap: 18px; padding-bottom: 8px; }
+  .mhm-head { position: relative; overflow: hidden; border-radius: 18px; padding: 22px 24px 20px; border: 1px solid color-mix(in srgb, var(--cc) 40%, #ffffff14); background: linear-gradient(135deg, color-mix(in srgb, var(--cc) 40%, #0d1a1a), #0c0c20 80%); }
+  .mhm-head-emb { position: absolute; right: 18px; top: 50%; translate: 0 -50%; color: #ffffff12; }
+  .mhm-head-top { position: relative; display: flex; align-items: center; gap: 16px; margin-bottom: 30px; }
+  .mhm-level { width: 50px; height: 50px; border: 1.5px solid #e9e6f2aa; display: flex; flex-direction: column; align-items: center; justify-content: center; } .mhm-level small { font-size: 7.5px; letter-spacing: .12em; } .mhm-level b { font: 700 20px Cinzel, serif; line-height: 1; }
+  .mhm-head h2 { margin: 0; font-size: 30px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; } .mhm-head p { margin: 2px 0 0; color: #ffffffcc; font-size: 14px; }
+  .mhm-traits { position: relative; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+  .mhm-traits button { all: unset; cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-radius: 10px; background: #00000040; border: 1px solid #ffffff14; font-size: 12.5px; } .mhm-traits button:hover { border-color: var(--cc); } .mhm-traits b { font-size: 15px; }
+  .mhm-tabs { display: flex; gap: 22px; border-bottom: 1px solid var(--mh-line); overflow-x: auto; }
+  .mhm-tabs button { all: unset; cursor: pointer; padding: 6px 0 12px; font-size: 13.5px; color: var(--mh-muted); white-space: nowrap; border-bottom: 2px solid transparent; margin-bottom: -1px; } .mhm-tabs button:hover { color: var(--mh-ink); } .mhm-tabs .is-on { color: var(--mh-ink); font-weight: 600; border-color: #4f86ff; }
+  .mhm-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; } .mhm-col { display: flex; flex-direction: column; gap: 16px; }
+  .mhm-panel { border-radius: 16px; padding: 18px 20px; background: var(--mh-panel); border: 1px solid var(--mh-line); }
+  .mhm-panel h3 { margin: 0 0 14px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: #E3B04B; display: flex; justify-content: space-between; align-items: baseline; } .mhm-panel h3 small { font: 600 11px Inter, sans-serif; letter-spacing: 0; text-transform: none; color: var(--mh-muted); }
+  .mhm-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .mhm-big { border-radius: 12px; padding: 12px; text-align: center; background: color-mix(in srgb, var(--cc) 10%, transparent); border: 1px solid color-mix(in srgb, var(--cc) 45%, transparent); } .mhm-big small { display: block; font-size: 11px; color: var(--mh-muted); } .mhm-big > b { font-size: 34px; }
+  .mhm-armor { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; } .mhm-armor > b { font-size: 34px; } .mhm-armor > span { display: flex; gap: 2px; flex-wrap: wrap; }
+  .mhm-shield { all: unset; cursor: pointer; color: var(--mh-muted3); display: flex; } .mhm-shield.is-on { color: var(--mh-ink); }
+  .mhm-thr { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 10px 0 16px; } .mhm-thr > div { text-align: center; padding: 9px 4px; border-radius: 10px; background: var(--mh-panel2); border: 1px solid var(--mh-line); } .mhm-thr small { display: block; font-size: 10.5px; color: var(--mh-muted); } .mhm-thr b { font-size: 17px; } .mhm-thr .is-severe { border-color: #c0504a88; background: #c0504a1a; }
+  .mhm-track { margin-top: 12px; } .mhm-track-l { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; margin-bottom: 7px; } .mhm-track-l small { margin-left: auto; color: var(--mh-muted); font-weight: 500; }
+  .mhm-pips { display: flex; flex-wrap: wrap; gap: 7px; } .mhm-pip { all: unset; cursor: pointer; width: 20px; height: 20px; border: 1.5px solid var(--pc); box-sizing: border-box; } .mhm-pip.is-box { border-radius: 5px; } .mhm-pip.is-box.is-on { background: var(--pc); } .mhm-pip.is-diamond { width: 17px; height: 17px; rotate: 45deg; margin: 2px 3px; } .mhm-pip.is-diamond.is-on { background: var(--pc); }
+  .mhm-weapon { display: flex; gap: 14px; } .mhm-weapon + .mhm-weapon { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--mh-line); }
+  .mhm-wicon { position: relative; width: 84px; height: 100px; flex-shrink: 0; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--mh-ink); background: var(--mh-panel2); border: 1px solid color-mix(in srgb, var(--tc) 55%, transparent); } .mhm-wicon i { position: absolute; bottom: 6px; font-style: normal; font-size: 8.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 2px 7px; border-radius: 8px; background: var(--tc); color: #fff; }
+  .mhm-winfo { min-width: 0; } .mhm-winfo small { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--mh-muted); } .mhm-winfo > b { display: block; font-size: 17px; text-transform: uppercase; }
+  .mhm-wdmg { font-size: 12px; color: var(--mh-muted); margin-top: 3px; } .mhm-wdmg strong { font: 700 18px Cinzel, serif; color: var(--mh-ink); } .mhm-wfeat { font-size: 11.5px; color: var(--mh-muted); margin-top: 6px; line-height: 1.4; }
+  .mhm-wact, .mhm-soon button { display: flex; gap: 8px; margin-top: 10px; } .mhm-wact button, .mhm-soon button { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 9px; background: var(--mh-panel3); font-size: 12.5px; font-weight: 600; } .mhm-wact .is-primary, .mhm-soon .is-primary { background: #2a56c4; color: #eaf0ff; }
+  .mhm-exp { display: flex; justify-content: space-between; align-items: center; padding: 11px 14px; margin-bottom: 8px; border-radius: 10px; background: var(--mh-panel2); border-left: 3px solid #7FB77A; } .mhm-exp small { display: block; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-muted); } .mhm-exp b { font-size: 14px; text-transform: uppercase; } .mhm-exp > span { font-size: 22px; color: #7FB77A; }
+  .mhm-empty { margin: 0; font-size: 12.5px; color: var(--mh-muted); } .mhm-soon p { margin: 0 0 4px; font-size: 13px; color: var(--mh-muted); }
+  @media (max-width: 1100px) { .mhm-grid { grid-template-columns: 1fr; } .mhm-traits { grid-template-columns: repeat(3, 1fr); } }
   .mh-brand { display: flex; align-items: center; gap: 10px; }
   .mh-brand-logo { height: 30px; filter: drop-shadow(0 0 8px #9db8ff66); }
   .mh-brand-name { flex: 1; font-weight: 700; font-size: 15px; color: var(--mh-ink); letter-spacing: .02em; }
@@ -7938,7 +7977,7 @@ export default function App({ onSignOut }) {
     setShowNewCharModal(false);
     // Sin pasos intermedios: al terminar el asistente se abre la hoja del personaje recién creado.
     setView("ficha");
-    openCharDetail(id);
+    openClassic(id);
   };
 
   useEffect(() => {
@@ -8928,6 +8967,8 @@ export default function App({ onSignOut }) {
   };
 
   const [detailTab, setDetailTab] = useState("general");
+  const [sheetAsk, setSheetAsk] = useState(null); // personaje por el que se pregunta qué hoja abrir
+  const [modernCharId, setModernCharId] = useState(null); // personaje abierto en la hoja moderna
   const [actionPage, setActionPage] = useState(0);
   const [restMessage, setRestMessage] = useState("");
   const [restPicks, setRestPicks] = useState(null);
@@ -10495,10 +10536,20 @@ export default function App({ onSignOut }) {
     await safeSet("campaign-encounters:" + viewingCampaignId, JSON.stringify(next), true);
   };
 
-  const openCharDetail = (id) => {
+  // Hoja clásica (la de siempre).
+  const openClassic = (id) => {
+    setModernCharId(null);
     setDetailTab("general");
     setActionPage(0);
     setViewingCharId(id);
+  };
+  // Al pulsar un personaje se pregunta qué hoja abrir.
+  const openCharDetail = (id) => setSheetAsk(id);
+  const openModern = (id) => {
+    setViewingCharId(null);
+    setViewingCardDetail(null);
+    setView("ficha");
+    setModernCharId(id);
   };
 
   const applyShortRestMove = (id, field, label) => {
@@ -11724,7 +11775,79 @@ export default function App({ onSignOut }) {
   const showRail = showTopbar && view !== "ajustes";
   const padX = showRail ? "clamp(28px, 3.4vw, 48px)" : "28px";
   const contentMax = showRail ? 1320 : view === "ficha" ? 1160 : 960;
+  // Datos de la hoja moderna: valores base con lo que aportan armas y armadura (las reglas especiales de subclase siguen en la clásica).
+  const modernData = (id) => {
+    const c = characters[id];
+    const primary = PRIMARY_WEAPONS.find((w) => w.key === c.f_primary_weapon);
+    const secondary = SECONDARY_WEAPONS.find((w) => w.key === c.f_secondary_weapon);
+    const armor = ARMORS.find((a) => a.key === c.f_armor);
+    const mods = { ...getEquipmentMods(primary, secondary, armor) };
+    const beast = BEASTFORMS.find((b) => b.key === c.f_beastform);
+    const level = Number(c.f_level || 1);
+    const base = thresholdsFor(armor, level);
+    const major = base.major + (mods.major || 0);
+    const traitOf = (key) => Number(c[key] || 0) + (mods[key] || 0);
+    const weapon = (w, kind) =>
+      w && {
+        key: w.key,
+        kind,
+        hands: w.hands === 2 ? "Dos manos" : "Una mano",
+        damage: w.damage,
+        trait: w.trait,
+        range: w.range,
+        feature: w.feature,
+        tierColor: TIER_COLORS[w.tier]?.color || "#857C96",
+        tierLabel: TIER_COLORS[w.tier]?.label || "",
+        traitValue: w.trait && w.trait !== "—" ? traitOf(TRAITS.find((t) => t.label === w.trait)?.key) : 0,
+      };
+    return {
+      name: c.f_name,
+      cls: c.f_class,
+      subclass: c.f_subclass,
+      level,
+      color: beast?.color || classColor(c.f_class),
+      Emblem: CLASS_EMBLEMS[c.f_class] || User,
+      traits: TRAITS.map((t) => ({ key: t.key, label: t.label, value: traitOf(t.key) })),
+      evasion: c.r_evasion ? Number(c.r_evasion) + (beast?.evasionBonus || 0) + (mods.evasion || 0) + Number(c.f_natural_evade || 0) : "—",
+      armorTotal: armor ? armor.score + (mods.armor || 0) : 0,
+      armorLeft: Number(c.armor_marked || 0),
+      minor: Math.max(1, major - 1),
+      major,
+      severe: base.severe + (mods.severe || 0),
+      hpTotal: Number(c.r_hp || 0) + (mods.hp || 0),
+      hpMarked: Number(c.hp_marked || 0),
+      stressTotal: Number(c.r_stress || 0) + (mods.stress || 0),
+      stressMarked: Number(c.stress_marked || 0),
+      hopeTotal: getHopeMax(c) + (mods.hope || 0),
+      hope: Number(c.hope_marked ?? HOPE_DEFAULT),
+      proficiency: getProficiency(c),
+      weapons: [weapon(primary, "Arma principal"), weapon(secondary, "Arma secundaria")].filter(Boolean),
+      experiences: getExperiences(c),
+    };
+  };
+  const modernActions = (id) => ({
+    rollTrait: (label, value) => rollTraitCheck(id, label, value, null),
+    attack: (w) => rollTraitCheck(id, w.trait, w.traitValue, { name: w.key, damage: w.damage }),
+    damage: (w) => rollWeaponDamage(w.key, w.damage, id, false),
+    markHp: (i) => markHp(id, "hp_marked", i, Number(characters[id]?.hp_marked || 0)),
+    markStress: (i) => markStressBox(id, "stress_marked", i, Number(characters[id]?.stress_marked || 0)),
+    setHope: (i) => {
+      const cur = Number(characters[id]?.hope_marked ?? HOPE_DEFAULT);
+      updateCharacterField(id, "hope_marked", String(cur === i + 1 ? i : i + 1));
+    },
+    setArmor: (n) => updateCharacterField(id, "armor_marked", String(n)),
+    openClassic: () => openClassic(id),
+  });
+  const modernOpen = view === "ficha" && modernCharId && characters[modernCharId];
   const viewLabel = view === "ajustes" ? "Ajustes" : view === "inicio" ? "General" : NAV_ITEMS.find((n) => n.key === view)?.label;
+  const topLeft = modernOpen ? (
+    <span className="mh-toptabs">
+      <button type="button" onClick={() => setModernCharId(null)}>Mis personajes</button>
+      <button type="button" className="is-on">Hoja</button>
+    </span>
+  ) : (
+    viewLabel
+  );
   // Presencia: los amigos ven "Jugando como <clase>" mientras tengas una hoja de personaje abierta.
   const sheetClass = viewingCharId ? characters[viewingCharId]?.f_class || null : null;
   useEffect(() => {
@@ -11745,6 +11868,25 @@ export default function App({ onSignOut }) {
   return (
     <div className={"mh-root" + (isMobile ? " is-mobile" : "")} style={{ display: "flex", flexDirection: isMobile ? "column" : "row", height: "100dvh", background: "var(--mh-bg)", fontFamily: "'Inter', system-ui, sans-serif", color: "var(--mh-ink)", overflow: "hidden" }}>
       <style>{sharedStyles}</style>
+      {sheetAsk && characters[sheetAsk] && (
+        <div className="mh-sheetask-bg" onClick={() => setSheetAsk(null)}>
+          <div className="mh-sheetask" role="dialog" aria-label="Elegir hoja de personaje" onClick={(e) => e.stopPropagation()}>
+            <h3 className="mh-serif">¿Qué hoja quieres abrir?</h3>
+            <p>{characters[sheetAsk].f_name || "Tu personaje"}</p>
+            <div className="mh-sheetask-opts">
+              <button type="button" onClick={() => (openClassic(sheetAsk), setSheetAsk(null))}>
+                <b>Hoja clásica</b>
+                <span>La de siempre, con todas las reglas y herramientas.</span>
+              </button>
+              <button type="button" className="is-new" onClick={() => (openModern(sheetAsk), setSheetAsk(null))}>
+                <b>Hoja moderna <i>Nueva</i></b>
+                <span>Dentro de la columna central, con tu menú y tus amigos a la vista.</span>
+              </button>
+            </div>
+            <button type="button" className="mh-sheetask-x" onClick={() => setSheetAsk(null)}>Cancelar</button>
+          </div>
+        </div>
+      )}
 
       {/* Menú lateral (arriba en móvil). Con una hoja de personaje abierta se oculta en escritorio. */}
       {!(viewingCharId && !isMobile) && (
@@ -11784,6 +11926,7 @@ export default function App({ onSignOut }) {
                   // Salir de la hoja de personaje (y de la carta ampliada) al cambiar de sección.
                   setViewingCharId(null);
                   setViewingCardDetail(null);
+                  setModernCharId(null);
                   setView(item.key);
                 }}
                 title={item.label}
@@ -11890,7 +12033,7 @@ export default function App({ onSignOut }) {
         {showTopbar && (
           <div className="mh-topbar-wrap" style={{ right: showRail ? 290 : 0, padding: "0 " + padX }}>
             <div className="mh-topbar" style={{ maxWidth: contentMax }}>
-              <span>{viewLabel}</span>
+              <span>{topLeft}</span>
               <NotificationBell placement="top" />
             </div>
           </div>
@@ -11898,6 +12041,8 @@ export default function App({ onSignOut }) {
         <div className={showTopbar ? "mh-scroll-hidden" : undefined} style={{ position: "absolute", top: showTopbar ? 108 : 0, left: 0, bottom: 0, right: showRail ? 290 : 0, overflowY: view === "ficha" && !viewingCharId && showRail ? "hidden" : "auto", padding: isMobile ? "18px 14px" : showTopbar ? "0 " + padX + " 24px" : "24px 28px" }}>
           <div key={view} className="mh-view-in" style={{ maxWidth: contentMax, margin: "0 auto" }}>
             {!showTopbar && view !== "inicio" && <div className="mh-pagetitle">{viewLabel}</div>}
+
+          {modernOpen && <ModernSheet key={modernCharId} d={modernData(modernCharId)} actions={modernActions(modernCharId)} />}
 
           {view === "inicio" && (() => {
             const chars = Object.entries(characters);
@@ -11966,7 +12111,7 @@ export default function App({ onSignOut }) {
             );
           })()}
 
-          {view === "ficha" && (
+          {view === "ficha" && !modernCharId && (
             <div className="mh-gal-wrap">
               <div className="mh-gal-head">
                 <span>{Object.keys(characters).length} de {MAX_CHARACTERS} personajes</span>
@@ -12655,7 +12800,7 @@ export default function App({ onSignOut }) {
                           if (!ch) return null;
                           return (
                             <div key={id} className="mh-card" style={{ margin: 0, padding: "14px 16px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
-                              <div style={{ cursor: "pointer" }} onClick={() => openCharDetail(id)}>
+                              <div style={{ cursor: "pointer" }} onClick={() => openClassic(id)}>
                                 <div className="mh-serif" style={{ fontSize: 15, fontWeight: 600 }}>{ch.f_name || "Sin nombre"}</div>
                                 <div style={{ fontSize: 11.5, color: "var(--mh-muted)" }}>
                                   {ch.f_class ? "Nivel " + (ch.f_level || "1") + " · " + ch.f_class : "Sin clase asignada"}
