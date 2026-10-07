@@ -37,7 +37,11 @@ export function ModernSheet({ d, actions }) {
   return (
     <div className="mhm" style={{ "--cc": d.color }}>
       <section className="mhm-head">
-        <span className="mhm-head-emb" aria-hidden="true"><Emblem size={190} strokeWidth={1} /></span>
+        {d.art ? (
+          <span className="mhm-head-art" aria-hidden="true" style={{ backgroundImage: `url(${d.art})` }} />
+        ) : (
+          <span className="mhm-head-emb" aria-hidden="true"><Emblem size={190} strokeWidth={1} /></span>
+        )}
         <div className="mhm-head-top">
           <div className="mhm-level"><small>NIVEL</small><b>{d.level}</b></div>
           <div>

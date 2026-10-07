@@ -4293,6 +4293,9 @@ const sharedStyles = `
   @media (max-width: 520px) { .mh-sheetask-opts { grid-template-columns: 1fr; } }
   .mhm { display: flex; flex-direction: column; gap: 18px; padding-bottom: 8px; }
   .mhm-head { position: relative; overflow: hidden; border-radius: 18px; padding: 22px 24px 20px; border: 1px solid color-mix(in srgb, var(--cc) 40%, #ffffff14); background: linear-gradient(135deg, color-mix(in srgb, var(--cc) 40%, #0d1a1a), #0c0c20 80%); }
+  .mhm-head-art { position: absolute; top: -8px; right: -8px; bottom: -8px; width: 68%; background-size: cover; background-position: center 28%; filter: blur(2.5px) saturate(1.1); opacity: .62; -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 55%); mask-image: linear-gradient(90deg, transparent 0%, #000 55%); }
+  .mhm-head::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(0deg, #0c0c2099, transparent 55%); }
+  .mhm-head-top, .mhm-traits { z-index: 1; }
   .mhm-head-emb { position: absolute; right: 18px; top: 50%; translate: 0 -50%; color: #ffffff12; }
   .mhm-head-top { position: relative; display: flex; align-items: center; gap: 16px; margin-bottom: 30px; }
   .mhm-level { width: 50px; height: 50px; border: 1.5px solid #e9e6f2aa; display: flex; flex-direction: column; align-items: center; justify-content: center; } .mhm-level small { font-size: 7.5px; letter-spacing: .12em; } .mhm-level b { font: 700 20px Cinzel, serif; line-height: 1; }
@@ -11807,6 +11810,7 @@ export default function App({ onSignOut }) {
       level,
       color: beast?.color || classColor(c.f_class),
       Emblem: CLASS_EMBLEMS[c.f_class] || User,
+      art: CLASS_ART[c.f_class] || null,
       traits: TRAITS.map((t) => ({ key: t.key, label: t.label, value: traitOf(t.key) })),
       evasion: c.r_evasion ? Number(c.r_evasion) + (beast?.evasionBonus || 0) + (mods.evasion || 0) + Number(c.f_natural_evade || 0) : "—",
       armorTotal: armor ? armor.score + (mods.armor || 0) : 0,
