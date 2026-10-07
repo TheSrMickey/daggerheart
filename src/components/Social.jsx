@@ -21,6 +21,7 @@ export const refreshSocial = async () => {
 const subscribe = (l) => {
   listeners.add(l);
   if (listeners.size === 1) {
+    state = EMPTY; // nada de la cuenta anterior mientras carga
     refreshSocial();
     timer = setInterval(refreshSocial, 20000);
     document.addEventListener("visibilitychange", refreshSocial);
