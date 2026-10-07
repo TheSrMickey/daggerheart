@@ -4345,6 +4345,13 @@ const sharedStyles = `
   .mh-av { border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; flex-shrink: 0; }
   .mh-fbtn { all: unset; cursor: pointer; width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--mh-muted); background: var(--mh-panel3); }
   .mh-fbtn:hover:not(:disabled) { color: var(--mh-ink); } .mh-fbtn:disabled { opacity: .5; cursor: default; } .mh-fbtn.is-ok { background: #2a56c4; color: #fff; }
+  .mh-fav-star { color: #E3B04B; fill: #E3B04B; flex-shrink: 0; }
+  .mh-friends-gap { height: 8px; }
+  .mh-friend .mh-fbtn { opacity: 0; } .mh-friend:hover .mh-fbtn, .mh-friend .mh-fbtn:focus-visible { opacity: 1; }
+  @media (hover: none) { .mh-friend .mh-fbtn { opacity: 1; } }
+  .mh-ctx { position: fixed; z-index: 80; width: 190px; padding: 5px; border-radius: 12px; background: var(--mh-panel2); border: 1px solid var(--mh-line2); box-shadow: 0 16px 40px #0008; display: flex; flex-direction: column; }
+  .mh-ctx button { all: unset; cursor: pointer; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 8px; font-size: 12.5px; color: var(--mh-ink); }
+  .mh-ctx button:hover { background: #ffffff12; } .mh-ctx .is-danger { color: #ff7a7a; }
   .mh-pop-empty { padding: 8px 6px; font-size: 12.5px; color: var(--mh-muted); line-height: 1.4; }
   .mh-bell { all: unset; cursor: pointer; position: relative; padding: 7px; border-radius: 8px; color: var(--mh-muted); display: flex; }
   .mh-bell:hover { background: var(--mh-panel3); color: var(--mh-ink); }
