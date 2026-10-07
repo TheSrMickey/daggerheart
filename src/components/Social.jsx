@@ -64,6 +64,7 @@ const statusText = (p) => (p.status === "on" ? (p.playing ? "Jugando como " + p.
 export function NotificationBell({ placement }) {
   const s = useSocial();
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState(null);
   const unread = s.notices.filter((n) => !n.read);
   useEffect(() => {
     if (!open) return;
@@ -71,8 +72,13 @@ export function NotificationBell({ placement }) {
     window.addEventListener("keydown", esc);
     return () => window.removeEventListener("keydown", esc);
   }, [open]);
-  const toggle = () => {
-    setOpen((o) => !o);
+  const toggle = (e) => {
+    // El panel se abre pegado a la campana (no en una esquina fija).
+    const r = e.currentTarget.getBoundingClientRect();
+    const w = Math.min(330, window.innerWidth - 16);
+    const left = Math.max(8, Math.min(r.right - w, window.innerWidth - w - 8));
+    setPos(r.top < window.innerHeight / 2 ? { top: r.bottom + 8, bottom: "auto", left } : { top: "auto", bottom: window.innerHeight - r.top + 8, left: Math.max(8, Math.min(r.left, window.innerWidth - w - 8)) });
+    setOpen(true);
   };
   const close = async () => {
     setOpen(false);
@@ -90,7 +96,7 @@ export function NotificationBell({ placement }) {
       {open && (
         <>
           <div className="mh-pop-bg" onClick={close} />
-          <div className={"mh-pop" + (placement === "top" ? " is-top" : "")} role="dialog" aria-label="Notificaciones">
+          <div className="mh-pop" style={pos || undefined} role="dialog" aria-label="Notificaciones">
             <div className="mh-pop-h">Notificaciones</div>
             {s.notices.length === 0 && <div className="mh-pop-empty">No tienes avisos nuevos.</div>}
             {s.notices.map((n) => {

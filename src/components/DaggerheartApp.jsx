@@ -4297,11 +4297,14 @@ const sharedStyles = `
   .mh-navrow-t { display: flex; flex-direction: column; min-width: 0; }
   .mh-navrow-t b { font-size: 13px; font-weight: 600; color: var(--mh-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .mh-navrow-t small { font-size: 11px; color: var(--mh-muted2); }
-  .mh-topbar { display: flex; align-items: center; justify-content: space-between; margin: -4px 0 18px; font-size: 13.5px; font-weight: 600; color: var(--mh-ink); min-height: 34px; }
+  .mh-topbar-wrap { position: absolute; top: 0; left: 0; height: 108px; z-index: 5; background: var(--mh-bg); }
+  .mh-topbar { display: flex; align-items: center; justify-content: space-between; height: 100%; padding-top: 34px; margin: 0 auto; font-size: 13.5px; font-weight: 600; color: var(--mh-ink); }
+  .mh-topbar { align-items: flex-start; } .mh-topbar > span { line-height: 34px; }
+  .mh-pagetitle { font-size: 13.5px; font-weight: 600; color: var(--mh-ink); margin: 0 0 18px; }
+  .mh-scroll-hidden { scrollbar-width: none; } .mh-scroll-hidden::-webkit-scrollbar { display: none; }
   .mh-rail { position: absolute; top: 0; right: 0; bottom: 0; width: 290px; overflow-y: auto; border-left: 1px solid var(--mh-line); background: var(--mh-nav); }
   .mh-rail .mh-friends { position: static; border: 0; border-radius: 0; background: transparent; min-height: 100%; padding: 16px 14px; }
   .mh-bell.is-top { width: 34px; height: 34px; padding: 0; align-items: center; justify-content: center; border-radius: 10px; background: #ffffff12; color: var(--mh-ink); }
-  .mh-pop.is-top { left: auto; bottom: auto; top: 58px; right: 304px; }
   .mh-home { display: block; }
   .mh-home-main { min-width: 0; }
   .mh-home-tabs { display: flex; gap: 22px; margin-bottom: 16px; font-size: 13.5px; color: var(--mh-muted); }
@@ -4374,8 +4377,8 @@ const sharedStyles = `
   .mh-notice-a button { all: unset; cursor: pointer; padding: 5px 12px; border-radius: 8px; background: var(--mh-panel3); font-size: 12px; }
   .mh-notice-a .is-ok { background: #2a56c4; color: #fff; }
   @media (max-width: 900px) { .mh-home { grid-template-columns: 1fr; } .mh-friends { position: static; } .mh-pop { left: 12px; bottom: auto; top: 60px; } }
-  .mh-gal-wrap { display: flex; flex-direction: column; height: calc(100dvh - 160px); min-height: 380px; }
-  .mh-gal-head { display: flex; align-items: baseline; gap: 12px; margin: -10px 0 14px; font-size: 13px; color: var(--mh-ink3); font-weight: 600; }
+  .mh-gal-wrap { display: flex; flex-direction: column; height: calc(100dvh - 170px); min-height: 380px; }
+  .mh-gal-head { display: flex; align-items: baseline; gap: 12px; margin: 0 0 14px; font-size: 13px; color: var(--mh-ink3); font-weight: 600; }
   .mh-gal-head small { font-size: 12px; color: #C0504A; font-weight: 500; }
   .mh-gal { flex: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; align-items: stretch; justify-content: center; min-height: 0; }
   .mh-gal .mh-hero { height: 100%; text-align: center; }
@@ -11717,8 +11720,11 @@ export default function App({ onSignOut }) {
   };
 
   // Barra superior (con la campana) y columna de amigos a la derecha: solo en las pantallas de lista, no en hojas ni mesas de campaña.
-  const showTopbar = !isMobile && !viewingCharId && !gmViewing && view !== "ajustes";
-  const showRail = showTopbar;
+  const showTopbar = !isMobile && !viewingCharId && !gmViewing;
+  const showRail = showTopbar && view !== "ajustes";
+  const padX = showRail ? "clamp(28px, 3.4vw, 48px)" : "28px";
+  const contentMax = showRail ? 1320 : view === "ficha" ? 1160 : 960;
+  const viewLabel = view === "ajustes" ? "Ajustes" : view === "inicio" ? "General" : NAV_ITEMS.find((n) => n.key === view)?.label;
   // Presencia: los amigos ven "Jugando como <clase>" mientras tengas una hoja de personaje abierta.
   const sheetClass = viewingCharId ? characters[viewingCharId]?.f_class || null : null;
   useEffect(() => {
@@ -11881,19 +11887,17 @@ export default function App({ onSignOut }) {
             <FriendsPanel renderClass={renderClassDot} />
           </div>
         )}
-        <div style={{ position: "absolute", top: 0, left: 0, bottom: 0, right: showRail ? 290 : 0, overflowY: view === "ficha" && !viewingCharId && showRail ? "hidden" : "auto", padding: isMobile ? "18px 14px" : showRail ? "24px clamp(28px, 3.4vw, 48px)" : "24px 28px" }}>
-          <div key={view} className="mh-view-in" style={{ maxWidth: showRail ? 1320 : view === "ficha" ? 1160 : 960, margin: "0 auto" }}>
-            {showTopbar && (
-              <div className="mh-topbar">
-                <span>{view === "inicio" ? "General" : ""}</span>
-                <NotificationBell placement="top" />
-              </div>
-            )}
-            {view !== "inicio" && (
-              <h1 className="mh-serif" style={{ fontSize: 26, fontWeight: 700, margin: "0 0 22px", color: "var(--mh-ink)" }}>
-                {view === "ajustes" ? "Ajustes" : NAV_ITEMS.find((n) => n.key === view)?.label}
-              </h1>
-            )}
+        {showTopbar && (
+          <div className="mh-topbar-wrap" style={{ right: showRail ? 290 : 0, padding: "0 " + padX }}>
+            <div className="mh-topbar" style={{ maxWidth: contentMax }}>
+              <span>{viewLabel}</span>
+              <NotificationBell placement="top" />
+            </div>
+          </div>
+        )}
+        <div className={showTopbar ? "mh-scroll-hidden" : undefined} style={{ position: "absolute", top: showTopbar ? 108 : 0, left: 0, bottom: 0, right: showRail ? 290 : 0, overflowY: view === "ficha" && !viewingCharId && showRail ? "hidden" : "auto", padding: isMobile ? "18px 14px" : showTopbar ? "0 " + padX + " 24px" : "24px 28px" }}>
+          <div key={view} className="mh-view-in" style={{ maxWidth: contentMax, margin: "0 auto" }}>
+            {!showTopbar && view !== "inicio" && <div className="mh-pagetitle">{viewLabel}</div>}
 
           {view === "inicio" && (() => {
             const chars = Object.entries(characters);
