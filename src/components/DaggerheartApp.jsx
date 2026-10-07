@@ -4,11 +4,13 @@ import { Fragment, useState, useEffect, useLayoutEffect, useRef, createContext, 
 import { createPortal } from "react-dom";
 import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus, Box, LayoutGrid, Bird, Fish, Bug, Rabbit, Cat, Turtle, Clock, CircleDashed, Slash } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
+import { NotificationBell, FriendsPanel } from "./Social";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
 import { buildSablewood } from "./quickstartSablewood";
 import { Wand, CircleDot, MoveUpRight, Archive, Shell, Compass, Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
 
 const NAV_ITEMS = [
+  { key: "inicio", label: "Inicio", icon: Home },
   { key: "ficha", label: "Personajes", icon: User },
   { key: "campaigns", label: "Campañas", icon: BookOpen },
 ];
@@ -4275,6 +4277,64 @@ const sharedStyles = `
   .mh-hero-bars span { flex: 1; height: 5px; border-radius: 3px; background: var(--mh-line); overflow: hidden; }
   .mh-hero-bars i { display: block; height: 100%; border-radius: 3px; }
   /* Galería de personajes: 3 tarjetas grandes que ocupan todo el alto, centradas */
+  .mh-home { display: grid; grid-template-columns: minmax(0, 1fr) 270px; gap: 24px; align-items: start; }
+  .mh-home-main { min-width: 0; }
+  .mh-home-tabs { display: flex; gap: 22px; margin-bottom: 16px; font-size: 13.5px; color: var(--mh-muted); }
+  .mh-home-tabs .is-on { color: var(--mh-ink); font-weight: 600; }
+  .mh-home-hero { position: relative; overflow: hidden; border-radius: 20px; padding: 34px 32px; min-height: 250px; display: flex; flex-direction: column; justify-content: flex-end; color: #fff; border: 1px solid #ffffff1c;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--hc) 55%, #10162f), #0d0b22 78%); box-shadow: 0 18px 40px -22px var(--hc); }
+  .mh-home-emb { position: absolute; right: 26px; top: 50%; translate: 0 -50%; color: #ffffff22; }
+  .mh-home-kick { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #ffffffaa; }
+  .mh-home-hero h2 { font-size: 34px; font-weight: 700; margin: 6px 0 4px; }
+  .mh-home-hero p { margin: 0; color: #ffffffcc; font-size: 14px; max-width: 460px; }
+  .mh-home-cta { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+  .mh-home-btn { all: unset; cursor: pointer; padding: 10px 20px; border-radius: 10px; background: #2a56c4; color: #eaf0ff; font-size: 13px; font-weight: 600; }
+  .mh-home-btn:hover { background: #3263d6; }
+  .mh-home-btn.is-ghost { background: #ffffff1a; }
+  .mh-home-btn.is-ghost:hover { background: #ffffff2a; }
+  .mh-home-sec { display: flex; align-items: center; justify-content: space-between; margin: 26px 0 12px; }
+  .mh-home-sec h3 { margin: 0; font-size: 16px; font-weight: 700; color: var(--mh-ink); }
+  .mh-home-sec h3 i { font-style: normal; font-size: 11px; padding: 2px 7px; border-radius: 10px; background: var(--mh-panel3); color: var(--mh-muted); margin-left: 6px; vertical-align: 2px; }
+  .mh-home-sec button { all: unset; cursor: pointer; font-size: 12.5px; color: #4f86ff; }
+  .mh-home-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .mh-home-empty { grid-column: 1 / -1; color: var(--mh-muted); font-size: 13px; padding: 14px 0; }
+  .mh-home-tile { all: unset; cursor: pointer; display: flex; flex-direction: column; gap: 3px; padding: 10px; border-radius: 14px; background: var(--mh-panel); border: 1px solid var(--mh-line); --hc: #7A8CFF; transition: translate .15s, border-color .15s; }
+  .mh-home-tile:hover { translate: 0 -3px; border-color: var(--hc); }
+  .mh-home-tile b { font-size: 13.5px; color: var(--mh-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mh-home-tile small { font-size: 11.5px; color: var(--mh-muted); }
+  .mh-home-tile-art { height: 76px; border-radius: 9px; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; color: #ffffffb0; background: linear-gradient(135deg, #2b3a7a, #151236); }
+  .mh-home-tile-art.is-char { background: linear-gradient(135deg, color-mix(in srgb, var(--hc) 60%, #12122e), #12122e); }
+  .mh-friends { position: sticky; top: 0; border-radius: 16px; background: var(--mh-panel); border: 1px solid var(--mh-line); padding: 14px 12px; min-height: 320px; }
+  .mh-friends-tabs { display: flex; gap: 16px; padding: 0 4px 10px; font-size: 13px; }
+  .mh-friends-tabs button { all: unset; cursor: pointer; color: var(--mh-muted); display: flex; align-items: center; gap: 6px; }
+  .mh-friends-tabs button.is-on { color: var(--mh-ink); font-weight: 600; }
+  .mh-friends-tabs b { font-size: 10px; min-width: 16px; height: 16px; border-radius: 8px; background: #c0443a; color: #fff; display: inline-flex; align-items: center; justify-content: center; padding: 0 4px; }
+  .mh-friends-search { display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 11px; border-radius: 9px; background: var(--mh-panel2, #ffffff0d); border: 1px solid var(--mh-line); color: var(--mh-muted); }
+  .mh-friends-search input { all: unset; flex: 1; min-width: 0; font-size: 12.5px; color: var(--mh-ink); }
+  .mh-friends-msg { margin-top: 8px; font-size: 12px; padding: 7px 10px; border-radius: 8px; background: #2a56c433; color: var(--mh-ink); }
+  .mh-friends-sec { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--mh-line); }
+  .mh-friends-sec h4 { margin: 0 4px 8px; font-size: 11.5px; font-weight: 600; color: var(--mh-muted); display: flex; justify-content: space-between; }
+  .mh-friends-sec h4 i { font-style: normal; }
+  .mh-friend { display: flex; align-items: center; gap: 10px; padding: 6px 4px; font-size: 13px; color: var(--mh-ink); }
+  .mh-friend > span:not(.mh-av) { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mh-friend.is-dim { opacity: .65; } .mh-friend small { font-size: 11px; color: var(--mh-muted); }
+  .mh-av { border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; flex-shrink: 0; }
+  .mh-fbtn { all: unset; cursor: pointer; width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--mh-muted); background: var(--mh-panel3); }
+  .mh-fbtn:hover:not(:disabled) { color: var(--mh-ink); } .mh-fbtn:disabled { opacity: .5; cursor: default; } .mh-fbtn.is-ok { background: #2a56c4; color: #fff; }
+  .mh-pop-empty { padding: 8px 6px; font-size: 12.5px; color: var(--mh-muted); line-height: 1.4; }
+  .mh-bell { all: unset; cursor: pointer; position: relative; padding: 7px; border-radius: 8px; color: var(--mh-muted); display: flex; }
+  .mh-bell:hover { background: var(--mh-panel3); color: var(--mh-ink); }
+  .mh-bell b { position: absolute; top: 1px; right: 0; min-width: 15px; height: 15px; border-radius: 8px; background: #c0443a; color: #fff; font-size: 9.5px; display: flex; align-items: center; justify-content: center; padding: 0 3px; }
+  .mh-pop-bg { position: fixed; inset: 0; z-index: 70; }
+  .mh-pop { position: fixed; z-index: 71; left: 16px; bottom: 70px; width: min(330px, calc(100vw - 32px)); max-height: 60vh; overflow-y: auto; border-radius: 14px; background: var(--mh-panel); border: 1px solid var(--mh-line); box-shadow: 0 20px 50px #0007; padding: 8px; }
+  .mh-pop-h { padding: 8px 8px 10px; font-weight: 700; font-size: 14px; color: var(--mh-ink); }
+  .mh-notice { display: flex; gap: 10px; padding: 9px 8px; border-radius: 10px; font-size: 12.5px; color: var(--mh-ink); }
+  .mh-notice.is-new { background: #2a56c41f; }
+  .mh-notice-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; } .mh-notice-t small { color: var(--mh-muted); }
+  .mh-notice-a { display: flex; gap: 8px; margin-top: 6px; }
+  .mh-notice-a button { all: unset; cursor: pointer; padding: 5px 12px; border-radius: 8px; background: var(--mh-panel3); font-size: 12px; }
+  .mh-notice-a .is-ok { background: #2a56c4; color: #fff; }
+  @media (max-width: 900px) { .mh-home { grid-template-columns: 1fr; } .mh-friends { position: static; } .mh-pop { left: 12px; bottom: auto; top: 60px; } }
   .mh-gal-wrap { display: flex; flex-direction: column; min-height: calc(100dvh - 124px); }
   .mh-gal-head { display: flex; align-items: baseline; gap: 12px; margin: -10px 0 14px; font-size: 13px; color: var(--mh-ink3); font-weight: 600; }
   .mh-gal-head small { font-size: 12px; color: #C0504A; font-weight: 500; }
@@ -7050,7 +7110,7 @@ function StepperRow({ label, total, marked, field, color, Icon, charId, onDelta,
 }
 
 export default function App({ onSignOut }) {
-  const [view, setView] = useState("ficha");
+  const [view, setView] = useState("inicio");
   const [playerName, setPlayerName] = useState("");
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [isMobile, setIsMobile] = useState(false);
@@ -11713,6 +11773,7 @@ export default function App({ onSignOut }) {
             </div>
           )}
           {isMobile && themeSwitch}
+          <NotificationBell />
           <button
             type="button"
             className={"mh-btn-ghost mh-gear" + (view === "ajustes" ? " is-active" : "")}
@@ -11742,9 +11803,79 @@ export default function App({ onSignOut }) {
       <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", inset: 0, overflowY: "auto", padding: isMobile ? "18px 14px" : "24px 28px" }}>
           <div style={{ maxWidth: view === "ficha" ? 1160 : 960, margin: "0 auto" }}>
-            <h1 className="mh-serif" style={{ fontSize: 26, fontWeight: 700, margin: "0 0 22px", color: "var(--mh-ink)" }}>
-              {view === "ajustes" ? "Ajustes" : NAV_ITEMS.find((n) => n.key === view)?.label}
-            </h1>
+            {view !== "inicio" && (
+              <h1 className="mh-serif" style={{ fontSize: 26, fontWeight: 700, margin: "0 0 22px", color: "var(--mh-ink)" }}>
+                {view === "ajustes" ? "Ajustes" : NAV_ITEMS.find((n) => n.key === view)?.label}
+              </h1>
+            )}
+
+          {view === "inicio" && (() => {
+            const chars = Object.entries(characters);
+            const camps = Object.values(campaigns);
+            const featId = (currentCharId && characters[currentCharId] ? currentCharId : chars[0]?.[0]) || null;
+            const fch = featId ? characters[featId] : null;
+            const fcol = fch?.f_class ? classColor(fch.f_class) : "#7A8CFF";
+            const fcamp = fch ? camps.find((cp) => (cp.characterIds || []).includes(featId)) : null;
+            const FEmblem = CLASS_EMBLEMS[fch?.f_class] || User;
+            return (
+              <div className="mh-home">
+                <div className="mh-home-main">
+                  <div className="mh-home-tabs"><span className="is-on">General</span></div>
+                  <div className="mh-home-hero" style={{ "--hc": fcol }}>
+                    <span className="mh-home-emb" aria-hidden="true"><FEmblem size={170} strokeWidth={1.1} /></span>
+                    <div className="mh-home-kick">{fch ? "Continúa tu aventura" : "Bienvenido a Marheim"}</div>
+                    <h2 className="mh-serif">{fch ? fch.f_name || "Sin nombre" : "Crea tu primer personaje"}</h2>
+                    <p>
+                      {fch
+                        ? [fch.f_class && fch.f_class + (fch.f_subclass ? " · " + fch.f_subclass : ""), "Nivel " + (fch.f_level || 1), fcamp && fcamp.name].filter(Boolean).join(" · ")
+                        : "Elige clase, ascendencia y comunidad, y empieza a jugar con tu grupo."}
+                    </p>
+                    <div className="mh-home-cta">
+                      <button type="button" className="mh-home-btn" onClick={() => (fch ? openCharDetail(featId) : setView("ficha"))}>
+                        {fch ? "Abrir ficha" : "Ir a personajes"}
+                      </button>
+                      {fcamp && (
+                        <button type="button" className="mh-home-btn is-ghost" onClick={() => (setViewingCampaignId(fcamp.id), setView("campaigns"))}>
+                          Ir a la campaña
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="mh-home-sec">
+                    <h3>Retoma tus campañas <i>{camps.length}</i></h3>
+                    <button type="button" onClick={() => setView("campaigns")}>Ver todas ›</button>
+                  </div>
+                  <div className="mh-home-row">
+                    {camps.length === 0 && <div className="mh-home-empty">Todavía no estás en ninguna campaña.</div>}
+                    {camps.slice(0, 6).map((cp) => (
+                      <button type="button" key={cp.id} className="mh-home-tile" onClick={() => (setViewingCampaignId(cp.id), setView("campaigns"))}>
+                        <span className="mh-home-tile-art"><BookOpen size={26} /></span>
+                        <b>{cp.name || "Campaña"}</b>
+                        <small>{(cp.characterIds || []).length} personaje{(cp.characterIds || []).length === 1 ? "" : "s"}</small>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="mh-home-sec">
+                    <h3>Tus personajes <i>{chars.length}</i></h3>
+                    <button type="button" onClick={() => setView("ficha")}>Gestionar ›</button>
+                  </div>
+                  <div className="mh-home-row">
+                    {chars.map(([id, ch]) => {
+                      const Em = CLASS_EMBLEMS[ch.f_class] || User;
+                      return (
+                        <button type="button" key={id} className="mh-home-tile" style={{ "--hc": ch.f_class ? classColor(ch.f_class) : "#7A8CFF" }} onClick={() => openCharDetail(id)}>
+                          <span className="mh-home-tile-art is-char"><Em size={28} strokeWidth={1.6} /></span>
+                          <b>{ch.f_name || "Sin nombre"}</b>
+                          <small>{ch.f_class ? ch.f_class + " · Nv " + (ch.f_level || 1) : "Sin clase"}</small>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <FriendsPanel />
+              </div>
+            );
+          })()}
 
           {view === "ficha" && (
             <div className="mh-gal-wrap">
