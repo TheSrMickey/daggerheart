@@ -4557,11 +4557,13 @@ const sharedStyles = `
   .mh-wz-trwrap { flex: 1; min-height: 0; display: flex; flex-direction: column; }
   .mh-wz-trwrap .mh-wz-traits { flex: 1; display: flex; flex-direction: column; }
   .mh-wz-trwrap .mh-wz-tr { flex: 1; }
-  .mh-wz-pane { display: flex; flex-direction: column; gap: 16px; padding-bottom: 6px; }
+  /* Pasos de contenido corto: centrados en vertical y con un ancho cómodo, sin dejar el hueco abajo */
+  .mh-wz-body:has(> .mh-wz-pane) { display: flex; flex-direction: column; }
+  .mh-wz-pane { display: flex; flex-direction: column; gap: 18px; width: 100%; max-width: 680px; margin: auto; padding: 4px 0; }
   .mh-wz-subs { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 12px; }
   .mh-wz-subs > span { font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-muted); margin-right: 2px; }
   .mh-wz-subs em { font-style: normal; font-size: 11.5px; color: var(--mh-ink2); border: 1px solid var(--mh-line2); background: var(--mh-panel2); border-radius: 20px; padding: 3px 10px; }
-  .mh-wz-stats.mh-wz-pane { gap: 16px; }
+  .mh-wz-stats.mh-wz-pane { gap: 18px; max-width: 780px; align-items: center; }
   .mh-wz-stats { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 4px; }
   .mh-wz-stats > div:last-child { display: grid !important; grid-template-columns: repeat(3, 170px); gap: 14px !important; justify-content: center; }
   .mh-wz-stats > div:last-child > div { width: 170px; box-sizing: border-box; padding: 18px 10px !important; }
