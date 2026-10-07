@@ -4278,7 +4278,7 @@ const sharedStyles = `
   .mh-hero-bars span { flex: 1; height: 5px; border-radius: 3px; background: var(--mh-line); overflow: hidden; }
   .mh-hero-bars i { display: block; height: 100%; border-radius: 3px; }
   /* Galería de personajes: 3 tarjetas grandes que ocupan todo el alto, centradas */
-  .mh-view-in { animation: mh-view-in .28s cubic-bezier(.2,.8,.2,1) both; }
+  .mh-view-in { animation: mh-view-in .28s cubic-bezier(.2,.8,.2,1) backwards; }
   @keyframes mh-view-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
   @media (prefers-reduced-motion: reduce) { .mh-view-in { animation: none; } }
   .mh-toptabs { display: flex; gap: 22px; } .mh-toptabs button { all: unset; cursor: pointer; color: var(--mh-muted); } .mh-toptabs .is-on { color: var(--mh-ink); }
@@ -4853,6 +4853,12 @@ const sharedStyles = `
     100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--rc) 0%, transparent); scale: 1; }
   }
 
+  /* Efectos y ventanas: cubren toda la pantalla (no solo el cuadro de la hoja) */
+  .mh-overlay { position: fixed !important; inset: 0 !important; }
+  .mh-hit-flash, .mh-res-flash, .mh-hit-text, .mh-res-text, .mh-beast-bg { position: fixed; }
+  .mh-hit-flash, .mh-res-flash { z-index: 55; }
+  .mh-hit-text, .mh-res-text { z-index: 56; }
+  .mh-sheet.is-embedded .mh-overlay, .mh-sheet.is-embedded .mh-hit-flash, .mh-sheet.is-embedded .mh-res-flash, .mh-sheet.is-embedded .mh-hit-text, .mh-sheet.is-embedded .mh-res-text, .mh-sheet.is-embedded .mh-beast-bg { zoom: calc(1 / var(--mhz, 1)); }
   @media (prefers-reduced-motion: reduce) {
     .mh-rampage::before, .mh-rampage-card, .mh-rampage-title, .mh-hit-flash, .mh-hit-text, .mh-shake, .mh-res-flash, .mh-res-text, .mh-row-stress, .mh-row-glow { animation: none !important; }
     .mh-hit-flash, .mh-hit-text { display: none; }
