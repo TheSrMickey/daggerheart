@@ -2,14 +2,19 @@ import type { ReactNode } from "react";
 
 export function AuthShell({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {
   return (
-    <main className="flex flex-1 items-center justify-center px-4 py-12">
-      <div className="w-full max-w-sm">
-        <div className="mb-8 text-center">
-          <p className="font-display text-3xl font-bold tracking-wide text-gold">Daggerheart</p>
-          <h1 className="mt-4 text-xl font-semibold">{title}</h1>
-          <p className="mt-1 text-sm text-muted">{subtitle}</p>
-        </div>
-        <div className="card p-6">{children}</div>
+    <main className="auth-page">
+      <div className="auth-win">
+        <section className="auth-left">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="auth-logo" src="/logo.svg" alt="Daggerheart" />
+          <h1 className="auth-title">{title}</h1>
+          <p className="auth-sub">{subtitle}</p>
+          <div className="auth-form">{children}</div>
+        </section>
+        <section className="auth-art" aria-hidden="true">
+          <p className="auth-quote">«Cada aventura empieza con un paso… y una tirada de dados.»</p>
+          <span className="auth-tag">✦ Marheim · Daggerheart</span>
+        </section>
       </div>
     </main>
   );

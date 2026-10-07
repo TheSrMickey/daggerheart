@@ -57,9 +57,9 @@ export function AuthForm({ mode, next, notice }: { mode: "login" | "register"; n
       </button>
 
       <p className="text-center text-sm text-muted">
-        {isRegister ? "¿Ya tienes cuenta? " : "¿Primera vez? "}
+        {isRegister ? "¿Ya tienes cuenta? " : "¿No tienes cuenta? "}
         <Link className="text-gold underline" href={isRegister ? "/login" : "/register"}>
-          {isRegister ? "Inicia sesión" : "Crea una cuenta"}
+          {isRegister ? "Inicia sesión" : "Regístrate"}
         </Link>
       </p>
     </form>
