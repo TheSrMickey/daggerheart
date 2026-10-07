@@ -2538,15 +2538,15 @@ const sharedStyles = `
   }
   .mh-root, .mh-keep-dark {
     color-scheme: dark;
-    --mh-bg: #121019; --mh-nav: #16131E; --mh-panel: #1B1824; --mh-panel2: #221E2C; --mh-panel3: #2A2436;
-    --mh-input: #14111B; --mh-sunk: #1E1A27; --mh-line: #2E2939; --mh-line2: #3A3448;
-    --mh-ink: #ECE6DA; --mh-ink2: #D6CFE0; --mh-ink3: #B7AEC6; --mh-muted: #9C93AD; --mh-muted2: #857C96; --mh-muted3: #6E6580;
+    --mh-bg: #0a0a1c; --mh-nav: #0d0d22; --mh-panel: #131329; --mh-panel2: #1a1a35; --mh-panel3: #23233f;
+    --mh-input: #0f0f25; --mh-sunk: #111128; --mh-line: #24244a; --mh-line2: #34346a;
+    --mh-ink: #ecebf7; --mh-ink2: #d6d5ea; --mh-ink3: #b5b4d0; --mh-muted: #9291b3; --mh-muted2: #7d7c9f; --mh-muted3: #686788;
     --mh-gold-ink: #E3B04B; --mh-green-ink: #7FB77A; --mh-purple-ink: #A58BE8;
-    --mh-glass: rgba(27,24,36,0.58);
+    --mh-glass: rgba(19,19,41,0.6);
     --mh-accent-keep: 100%;
-    --mh-chip: #2A2436;
-    --mh-bg-base: #121019; --mh-nav-base: #16131E; --mh-panel-base: #1B1824; --mh-panel2-base: #221E2C; --mh-panel3-base: #2A2436;
-    --mh-chip-base: #2A2436; --mh-line-base: #2E2939; --mh-line2-base: #3A3448;
+    --mh-chip: #23233f;
+    --mh-bg-base: #0a0a1c; --mh-nav-base: #0d0d22; --mh-panel-base: #131329; --mh-panel2-base: #1a1a35; --mh-panel3-base: #23233f;
+    --mh-chip-base: #23233f; --mh-line-base: #24244a; --mh-line2-base: #34346a;
   }
   html[data-mh-theme="light"] .mh-root {
     color-scheme: light;
@@ -4277,11 +4277,33 @@ const sharedStyles = `
   .mh-hero-bars span { flex: 1; height: 5px; border-radius: 3px; background: var(--mh-line); overflow: hidden; }
   .mh-hero-bars i { display: block; height: 100%; border-radius: 3px; }
   /* Galería de personajes: 3 tarjetas grandes que ocupan todo el alto, centradas */
-  .mh-home { display: grid; grid-template-columns: minmax(0, 1fr) 270px; gap: 24px; align-items: start; }
+  .mh-brand { display: flex; align-items: center; gap: 10px; }
+  .mh-brand-logo { height: 30px; filter: drop-shadow(0 0 8px #9db8ff66); }
+  .mh-brand-name { flex: 1; font-weight: 700; font-size: 15px; color: var(--mh-ink); letter-spacing: .02em; }
+  .mh-brand-av { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #4f86ff, #7a5cff); color: #fff; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .mh-navitem { display: flex; align-items: center; gap: 10px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 500; white-space: nowrap; color: var(--mh-ink3); border: 1px solid transparent; }
+  .mh-navitem:hover { background: #ffffff0a; }
+  .mh-navitem.is-on { background: #ffffff14; border-color: #ffffff1a; color: var(--mh-ink); }
+  html[data-mh-theme="light"] .mh-navitem.is-on { background: #00000010; border-color: #0000001a; }
+  .mh-navlists { display: flex; flex-direction: column; gap: 2px; margin-top: 12px; padding-top: 4px; border-top: 1px solid var(--mh-line); overflow-y: auto; min-height: 0; }
+  .mh-navsec { margin: 14px 8px 6px; font-size: 11.5px; color: var(--mh-muted2); }
+  .mh-navempty { margin: 0 8px; font-size: 12px; color: var(--mh-muted3); }
+  .mh-navrow { all: unset; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 10px; }
+  .mh-navrow:hover { background: #ffffff0a; }
+  .mh-navrow-ic { width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #ffffff12; color: var(--mh-ink2); }
+  .mh-navrow-t { display: flex; flex-direction: column; min-width: 0; }
+  .mh-navrow-t b { font-size: 13px; font-weight: 600; color: var(--mh-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mh-navrow-t small { font-size: 11px; color: var(--mh-muted2); }
+  .mh-topbar { display: flex; align-items: center; justify-content: space-between; margin: -4px 0 18px; font-size: 13.5px; font-weight: 600; color: var(--mh-ink); min-height: 34px; }
+  .mh-rail { position: absolute; top: 0; right: 0; bottom: 0; width: 290px; overflow-y: auto; border-left: 1px solid var(--mh-line); background: var(--mh-nav); }
+  .mh-rail .mh-friends { position: static; border: 0; border-radius: 0; background: transparent; min-height: 100%; padding: 16px 14px; }
+  .mh-bell.is-top { width: 34px; height: 34px; padding: 0; align-items: center; justify-content: center; border-radius: 10px; background: #ffffff12; color: var(--mh-ink); }
+  .mh-pop.is-top { left: auto; bottom: auto; top: 58px; right: 304px; }
+  .mh-home { display: block; }
   .mh-home-main { min-width: 0; }
   .mh-home-tabs { display: flex; gap: 22px; margin-bottom: 16px; font-size: 13.5px; color: var(--mh-muted); }
   .mh-home-tabs .is-on { color: var(--mh-ink); font-weight: 600; }
-  .mh-home-hero { position: relative; overflow: hidden; border-radius: 20px; padding: 34px 32px; min-height: 250px; display: flex; flex-direction: column; justify-content: flex-end; color: #fff; border: 1px solid #ffffff1c;
+  .mh-home-hero { position: relative; overflow: hidden; border-radius: 20px; padding: 34px 32px; min-height: 300px; display: flex; flex-direction: column; justify-content: flex-end; color: #fff; border: 1px solid #ffffff1c;
     background: linear-gradient(135deg, color-mix(in srgb, var(--hc) 55%, #10162f), #0d0b22 78%); box-shadow: 0 18px 40px -22px var(--hc); }
   .mh-home-emb { position: absolute; right: 26px; top: 50%; translate: 0 -50%; color: #ffffff22; }
   .mh-home-kick { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #ffffffaa; }
@@ -7116,9 +7138,9 @@ export default function App({ onSignOut }) {
   const [isMobile, setIsMobile] = useState(false);
   // Tema claro/oscuro: preferencia de este navegador (por defecto, claro).
   // El script del layout lo aplica en <html> antes de pintar para que no parpadee.
-  const [theme, setTheme] = useState("light");
+  const [theme, setTheme] = useState("dark");
   useEffect(() => {
-    if (document.documentElement.dataset.mhTheme === "dark") setTheme("dark");
+    setTheme(document.documentElement.dataset.mhTheme === "light" ? "light" : "dark");
   }, []);
   const themeSwitch = (
     <button
@@ -11677,6 +11699,9 @@ export default function App({ onSignOut }) {
     await safeSet("gm-npcs", JSON.stringify(next), true);
   };
 
+  // Barra superior (con la campana) y columna de amigos a la derecha: solo en las pantallas de lista, no en hojas ni mesas de campaña.
+  const showTopbar = !isMobile && !viewingCharId && !gmViewing && view !== "ajustes";
+  const showRail = showTopbar;
   return (
     <div className={"mh-root" + (isMobile ? " is-mobile" : "")} style={{ display: "flex", flexDirection: isMobile ? "column" : "row", height: "100dvh", background: "var(--mh-bg)", fontFamily: "'Inter', system-ui, sans-serif", color: "var(--mh-ink)", overflow: "hidden" }}>
       <style>{sharedStyles}</style>
@@ -11697,12 +11722,15 @@ export default function App({ onSignOut }) {
           flexShrink: 0,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 9, padding: isMobile ? 0 : "0 8px 18px" }}>
-          <Swords size={isMobile ? 18 : 20} color="#E3B04B" />
-          <div>
-            {!isMobile && <div className="mh-serif" style={{ color: "var(--mh-gold-ink)", fontSize: 18, fontWeight: 700, lineHeight: 1.1 }}>Marheim</div>}
-            {!isMobile && <div style={{ color: "var(--mh-muted2)", fontSize: 10.5, marginTop: 2 }}>Mesa de Daggerheart</div>}
-          </div>
+        <div className="mh-brand" style={{ padding: isMobile ? 0 : "0 8px 16px" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="" className="mh-brand-logo" />
+          {!isMobile && <span className="mh-brand-name">Enaris</span>}
+          {!isMobile && (
+            <span className="mh-brand-av" title={playerName}>
+              {(playerName || "?").trim().charAt(0).toUpperCase()}
+            </span>
+          )}
         </div>
 
         <div style={{ display: "flex", flexDirection: isMobile ? "row" : "column", gap: 2, flex: isMobile ? 1 : "none", overflowX: isMobile ? "auto" : "visible" }}>
@@ -11719,19 +11747,8 @@ export default function App({ onSignOut }) {
                   setView(item.key);
                 }}
                 title={item.label}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  padding: isMobile ? "8px 10px" : "10px 12px",
-                  borderRadius: 8,
-                  cursor: "pointer",
-                  background: active ? "#E3B04B1F" : "transparent",
-                  color: ink(active ? "#E3B04B" : "var(--mh-ink3)"),
-                  fontSize: 13,
-                  fontWeight: 500,
-                  whiteSpace: "nowrap",
-                }}
+                className={"mh-navitem" + (active ? " is-on" : "")}
+                style={{ padding: isMobile ? "8px 10px" : "10px 12px" }}
               >
                 <Icon size={16} strokeWidth={1.8} />
                 {!isMobile && item.label}
@@ -11739,6 +11756,30 @@ export default function App({ onSignOut }) {
             );
           })}
         </div>
+
+        {!isMobile && (
+          <div className="mh-navlists">
+            <div className="mh-navsec">Mis campañas</div>
+            {Object.values(campaigns).length === 0 && <div className="mh-navempty">Sin campañas</div>}
+            {Object.values(campaigns).slice(0, 6).map((cp) => (
+              <button type="button" key={cp.id} className="mh-navrow" onClick={() => (setViewingCharId(null), setViewingCardDetail(null), setViewingCampaignId(cp.id), setView("campaigns"))}>
+                <span className="mh-navrow-ic"><BookOpen size={15} /></span>
+                <span className="mh-navrow-t"><b>{cp.name || "Campaña"}</b><small>{(cp.characterIds || []).length} personaje{(cp.characterIds || []).length === 1 ? "" : "s"}</small></span>
+              </button>
+            ))}
+            <div className="mh-navsec">Mis personajes</div>
+            {Object.keys(characters).length === 0 && <div className="mh-navempty">Sin personajes</div>}
+            {Object.entries(characters).map(([id, ch]) => {
+              const Em = CLASS_EMBLEMS[ch.f_class] || User;
+              return (
+                <button type="button" key={id} className="mh-navrow" onClick={() => (setView("ficha"), openCharDetail(id))}>
+                  <span className="mh-navrow-ic" style={{ background: ch.f_class ? classColor(ch.f_class) + "55" : undefined }}><Em size={15} /></span>
+                  <span className="mh-navrow-t"><b>{ch.f_name || "Sin nombre"}</b><small>{ch.f_class || "Sin clase"} · Nv {ch.f_level || 1}</small></span>
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {!isMobile && <div style={{ flex: 1 }} />}
 
@@ -11773,7 +11814,7 @@ export default function App({ onSignOut }) {
             </div>
           )}
           {isMobile && themeSwitch}
-          <NotificationBell />
+          {(isMobile || !showTopbar) && <NotificationBell />}
           <button
             type="button"
             className={"mh-btn-ghost mh-gear" + (view === "ajustes" ? " is-active" : "")}
@@ -11801,8 +11842,19 @@ export default function App({ onSignOut }) {
 
       {/* Body */}
       <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
-        <div style={{ position: "absolute", inset: 0, overflowY: "auto", padding: isMobile ? "18px 14px" : "24px 28px" }}>
+        {showRail && (
+          <div className="mh-rail">
+            <FriendsPanel />
+          </div>
+        )}
+        <div style={{ position: "absolute", top: 0, left: 0, bottom: 0, right: showRail ? 290 : 0, overflowY: "auto", padding: isMobile ? "18px 14px" : "24px 28px" }}>
           <div style={{ maxWidth: view === "ficha" ? 1160 : 960, margin: "0 auto" }}>
+            {showTopbar && (
+              <div className="mh-topbar">
+                <span>{view === "inicio" ? "General" : ""}</span>
+                <NotificationBell placement="top" />
+              </div>
+            )}
             {view !== "inicio" && (
               <h1 className="mh-serif" style={{ fontSize: 26, fontWeight: 700, margin: "0 0 22px", color: "var(--mh-ink)" }}>
                 {view === "ajustes" ? "Ajustes" : NAV_ITEMS.find((n) => n.key === view)?.label}
@@ -11820,10 +11872,9 @@ export default function App({ onSignOut }) {
             return (
               <div className="mh-home">
                 <div className="mh-home-main">
-                  <div className="mh-home-tabs"><span className="is-on">General</span></div>
                   <div className="mh-home-hero" style={{ "--hc": fcol }}>
                     <span className="mh-home-emb" aria-hidden="true"><FEmblem size={170} strokeWidth={1.1} /></span>
-                    <div className="mh-home-kick">{fch ? "Continúa tu aventura" : "Bienvenido a Marheim"}</div>
+                    <div className="mh-home-kick">{fch ? "Continúa tu aventura" : "Bienvenido a Enaris"}</div>
                     <h2 className="mh-serif">{fch ? fch.f_name || "Sin nombre" : "Crea tu primer personaje"}</h2>
                     <p>
                       {fch
@@ -11872,7 +11923,7 @@ export default function App({ onSignOut }) {
                     })}
                   </div>
                 </div>
-                <FriendsPanel />
+                {isMobile && <FriendsPanel />}
               </div>
             );
           })()}
