@@ -49,7 +49,7 @@ const Avatar = ({ name, size = 34 }) => (
 );
 
 // Campana de avisos con panel desplegable.
-export function NotificationBell() {
+export function NotificationBell({ placement }) {
   const s = useSocial();
   const [open, setOpen] = useState(false);
   const unread = s.notices.filter((n) => !n.read);
@@ -71,14 +71,14 @@ export function NotificationBell() {
   };
   return (
     <>
-      <button type="button" className="mh-bell" onClick={open ? close : toggle} aria-label="Notificaciones" title="Notificaciones">
+      <button type="button" className={"mh-bell" + (placement === "top" ? " is-top" : "")} onClick={open ? close : toggle} aria-label="Notificaciones" title="Notificaciones">
         <Bell size={16} />
         {unread.length > 0 && <b>{unread.length > 9 ? "9+" : unread.length}</b>}
       </button>
       {open && (
         <>
           <div className="mh-pop-bg" onClick={close} />
-          <div className="mh-pop" role="dialog" aria-label="Notificaciones">
+          <div className={"mh-pop" + (placement === "top" ? " is-top" : "")} role="dialog" aria-label="Notificaciones">
             <div className="mh-pop-h">Notificaciones</div>
             {s.notices.length === 0 && <div className="mh-pop-empty">No tienes avisos nuevos.</div>}
             {s.notices.map((n) => {
