@@ -11847,8 +11847,8 @@ export default function App({ onSignOut }) {
             <FriendsPanel />
           </div>
         )}
-        <div style={{ position: "absolute", top: 0, left: 0, bottom: 0, right: showRail ? 290 : 0, overflowY: "auto", padding: isMobile ? "18px 14px" : "24px 28px" }}>
-          <div style={{ maxWidth: view === "ficha" ? 1160 : 960, margin: "0 auto" }}>
+        <div style={{ position: "absolute", top: 0, left: 0, bottom: 0, right: showRail ? 290 : 0, overflowY: "auto", padding: isMobile ? "18px 14px" : showRail ? "24px clamp(28px, 3.4vw, 48px)" : "24px 28px" }}>
+          <div style={{ maxWidth: showRail ? 1320 : view === "ficha" ? 1160 : 960, margin: "0 auto" }}>
             {showTopbar && (
               <div className="mh-topbar">
                 <span>{view === "inicio" ? "General" : ""}</span>
