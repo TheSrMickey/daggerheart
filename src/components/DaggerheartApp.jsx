@@ -4303,8 +4303,13 @@ const sharedStyles = `
   .mhm-traits { position: relative; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
   .mhm-traits button { all: unset; cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 7px 11px; border-radius: 9px; background: #00000050; border: 1px solid #ffffff14; font-size: 12px; } .mhm-traits button:hover { border-color: var(--cc); } .mhm-traits b { font-size: 15px; }
   .mhm-tabs { display: flex; align-items: flex-end; gap: 4px; border-bottom: 1px solid var(--mh-line); overflow-x: auto; scrollbar-width: none; } .mhm-tabs::-webkit-scrollbar { display: none; } .mhm-tabs .mhm-spacer { flex: 1; min-width: 12px; }
-  .mhm-tabs button { all: unset; cursor: pointer; display: flex; align-items: center; gap: 7px; padding: 11px 13px; font-size: 13px; font-weight: 500; color: var(--mh-muted); white-space: nowrap; border-bottom: 2px solid transparent; margin-bottom: -1px; } .mhm-tabs button:hover { color: var(--mh-ink); } .mhm-tabs .is-on { color: var(--tone, var(--cc)); border-color: var(--tone, var(--cc)); }
+  .mhm-tabs button { all: unset; cursor: pointer; display: flex; align-items: center; gap: 7px; padding: 11px 7px; font-size: 12.5px; font-weight: 500; color: var(--mh-muted); white-space: nowrap; border-bottom: 2px solid transparent; margin-bottom: -1px; } .mhm-tabs .lbl { max-width: 84px; overflow: hidden; text-overflow: ellipsis; } .mhm-tabs button:hover { color: var(--mh-ink); } .mhm-tabs .is-on { color: var(--tone, var(--cc)); border-color: var(--tone, var(--cc)); }
   .mhm-zoom { width: 100%; overflow: hidden; }
+  .mhm-zoom.is-fill { display: flex; flex-direction: column; overflow: visible; }
+  .mhm-zoom.is-fill .mh-sheet, .mhm-zoom.is-fill .mh-sheet-scroll, .mhm-zoom.is-fill .mh-sheet-body, .mhm-zoom.is-fill .mh-sheet-body > div, .mhm-zoom.is-fill .mh-sheet-body > div > div { width: 100%; margin: 0 !important; flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .mhm-zoom.is-fill .mh-sheet-body > div > div > div { flex: 1; min-height: 0; }
+  .mh-rail-chat { height: 100%; padding: 16px 14px; display: flex; flex-direction: column; }
+  .mh-rail-chat .mh-panel-box { flex: 1; min-height: 0; }
   .mh-sheet.is-embedded { min-height: 0; }
   .mhm-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; } .mhm-col { display: flex; flex-direction: column; gap: 16px; }
   .mhm-panel { border-radius: 16px; padding: 18px 20px; background: var(--mh-panel); border: 1px solid var(--mh-line); }
@@ -6947,6 +6952,12 @@ function DialogueFigure({ src, alt, expr }) {
   );
 }
 
+// En la hoja moderna, el chat de la campaña se pinta en la columna derecha (portal); en la clásica, donde está.
+function ChatHost({ embedded, slot, children }) {
+  if (!embedded) return children;
+  return slot ? createPortal(children, slot) : null;
+}
+
 function Panel({ span, title, titleRight, children, hidden, restrained, vulnerable, unconscious, flying, retracted, glow, fill, link }) {
   const borderColor = glow || (vulnerable ? "#D9644E" : restrained ? "#C08B5C" : unconscious ? "#A58BE8" : retracted ? "#6E8B5A" : flying ? "#5FA77A" : hidden ? "var(--mh-muted)" : "var(--mh-line)");
   return (
@@ -7203,6 +7214,7 @@ function StepperRow({ label, total, marked, field, color, Icon, charId, onDelta,
 
 export default function App({ onSignOut }) {
   const [view, setView] = useState("inicio");
+  const [modernCharId, setModernCharId] = useState(null); // personaje abierto en la hoja moderna
   const [playerName, setPlayerName] = useState("");
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [isMobile, setIsMobile] = useState(false);
@@ -7515,7 +7527,9 @@ export default function App({ onSignOut }) {
   // Mesa del DJ: el DJ la carga una vez al abrir la campaña; el jugador la consulta cada pocos segundos desde su hoja.
   // Quién mira: el DJ desde la campaña abierta o el jugador desde la hoja de su personaje.
   const gmViewing = view === "campaigns" && !!viewingCampaignId;
-  const sheetCampaignId = view === "ficha" && viewingCharId ? Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(viewingCharId))?.id || null : null;
+  // Personaje cuya hoja está abierta (clásica o moderna): de él depende lo que se ve de la campaña.
+  const sheetCharId = view === "ficha" ? viewingCharId || modernCharId : null;
+  const sheetCampaignId = sheetCharId ? Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(sheetCharId))?.id || null : null;
   const stageCampaignId = gmViewing ? viewingCampaignId : sheetCampaignId;
   const stageLiveRef = useRef(null);
   const dialogueRef = useRef(undefined);
@@ -7607,24 +7621,24 @@ export default function App({ onSignOut }) {
   // Escondido / Oculto en el tablero: el jugador corrige la marca de la ficha del personaje que tiene abierto
   // (solo ese: otra pestaña con el mismo usuario puede tener una copia antigua de los demás y desharía el cambio).
   useEffect(() => {
-    if (!sheetCampaignId || !viewingCharId || !characters[viewingCharId]) return;
-    const me = characters[viewingCharId];
+    if (!sheetCampaignId || !sheetCharId || !characters[sheetCharId]) return;
+    const me = characters[sheetCharId];
     const hid = getConditions(me).some((n) => n === "Escondido" || n === "Oculto");
     const conds = getConditions(me).filter((c) => MAP_COND_FX[c]);
     const sameConds = (a) => (a || []).join("|") === conds.join("|");
     const down = Number(me.r_hp || 0) > 0 && Number(me.hp_marked || 0) >= Number(me.r_hp || 0);
     const beast = me.f_beastform || "";
     const trf = visibleTransform(me);
-    const wrong = (campaignMap.tokens || []).some((t) => t.kind === "pc" && t.charId === viewingCharId && (!!t.hidden !== hid || !sameConds(t.conds) || !!t.down !== down || (t.beast || "") !== beast || (t.trf || "") !== trf));
+    const wrong = (campaignMap.tokens || []).some((t) => t.kind === "pc" && t.charId === sheetCharId && (!!t.hidden !== hid || !sameConds(t.conds) || !!t.down !== down || (t.beast || "") !== beast || (t.trf || "") !== trf));
     if (!wrong) return;
     mutateMap(sheetCampaignId, (ts) =>
       ts.map((t) => {
-        if (t.kind !== "pc" || t.charId !== viewingCharId) return t;
+        if (t.kind !== "pc" || t.charId !== sheetCharId) return t;
         const { hidden, conds: _c, down: _d, beast: _b, trf: _t, ...rest } = t;
         return { ...rest, ...(hid ? { hidden: true } : {}), ...(conds.length ? { conds } : {}), ...(down ? { down: true } : {}), ...(beast ? { beast } : {}), ...(trf ? { trf } : {}) };
       })
     );
-  }, [campaignMap, characters, sheetCampaignId, viewingCharId]);
+  }, [campaignMap, characters, sheetCampaignId, sheetCharId]);
 
   // Niebla: al moverse, cada personaje despeja las casillas a su alrededor (lo hace el DJ para todos y cada jugador para el suyo).
   useEffect(() => {
@@ -7635,7 +7649,7 @@ export default function App({ onSignOut }) {
     const rev = new Set(fog.revealed || []);
     const add = [];
     (campaignMap.tokens || [])
-      .filter((t) => t.kind === "pc" && (gmViewing || t.charId === viewingCharId))
+      .filter((t) => t.kind === "pc" && (gmViewing || t.charId === sheetCharId))
       .forEach((t) => {
         for (let dy = -FOG_RADIUS; dy <= FOG_RADIUS; dy++)
           for (let dx = -FOG_RADIUS; dx <= FOG_RADIUS; dx++) {
@@ -7651,7 +7665,7 @@ export default function App({ onSignOut }) {
       const cur = f && !Array.isArray(f) ? f : fog;
       return { ...cur, revealed: [...new Set([...(cur.revealed || []), ...add])] };
     }, "fog");
-  }, [campaignMap, viewingCharId, gmViewing, sheetCampaignId, viewingCampaignId]);
+  }, [campaignMap, sheetCharId, gmViewing, sheetCampaignId, viewingCampaignId]);
 
   // Escape cierra la pista abierta.
   useEffect(() => {
@@ -8978,8 +8992,8 @@ export default function App({ onSignOut }) {
   };
 
   const [detailTab, setDetailTab] = useState("general");
+  const [chatSlot, setChatSlot] = useState(null); // contenedor del chat en la columna derecha (hoja moderna, pestaña de campaña)
   const [sheetAsk, setSheetAsk] = useState(null); // personaje por el que se pregunta qué hoja abrir
-  const [modernCharId, setModernCharId] = useState(null); // personaje abierto en la hoja moderna
   const [actionPage, setActionPage] = useState(0);
   const [restMessage, setRestMessage] = useState("");
   const [restPicks, setRestPicks] = useState(null);
@@ -10790,12 +10804,12 @@ export default function App({ onSignOut }) {
   const rollDock = view === "ficha" && detailTab === "campaign" && !isMobile;
   // Un enemigo del DJ ataca a tu personaje: se abre el aviso para resolverlo (solo con su hoja abierta).
   useEffect(() => {
-    if (!sheetCampaignId || !viewingCharId || incomingHit) return;
-    const h = (campaignMap.hits || []).find((x) => x.charId === viewingCharId && !handledHits.current.has(x.key) && Date.now() - Number(String(x.key).split("-")[0]) < 15 * 60 * 1000);
+    if (!sheetCampaignId || !sheetCharId || incomingHit) return;
+    const h = (campaignMap.hits || []).find((x) => x.charId === sheetCharId && !handledHits.current.has(x.key) && Date.now() - Number(String(x.key).split("-")[0]) < 15 * 60 * 1000);
     if (!h) return;
     handledHits.current.add(h.key);
     setIncomingHit({ ...h, campaignId: sheetCampaignId });
-  }, [campaignMap.hits, viewingCharId, sheetCampaignId, incomingHit]);
+  }, [campaignMap.hits, sheetCharId, sheetCampaignId, incomingHit]);
 
   const [titanAsk, setTitanAsk] = useState(null);
   const [stanceEdit, setStanceEdit] = useState(null);
@@ -11786,6 +11800,7 @@ export default function App({ onSignOut }) {
   // Barra superior (con la campana) y columna de amigos a la derecha: solo en las pantallas de lista, no en hojas ni mesas de campaña.
   const showTopbar = !isMobile && !viewingCharId && !gmViewing;
   const showRail = showTopbar && view !== "ajustes";
+  const modernCamp = view === "ficha" && modernCharId && detailTab === "campaign" ? Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(modernCharId)) : null;
   const padX = showRail ? "clamp(28px, 3.4vw, 48px)" : "28px";
   const contentMax = showRail ? 1320 : view === "ficha" ? 1160 : 960;
   // Datos de la hoja moderna: valores base con lo que aportan armas y armadura (las reglas especiales de subclase siguen en la clásica).
@@ -12682,7 +12697,7 @@ export default function App({ onSignOut }) {
                       )}
 
                       <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 18, alignItems: isMobile ? "stretch" : "stretch" }}>
-                        <div style={{ flex: isMobile ? "1 1 auto" : "0 0 320px", display: (stageWide && activeTab === "campaign" && !isMobile) || (isMobile && activeTab !== "general") ? "none" : undefined }} ref={armaduraRef}>
+                        <div style={{ flex: isMobile ? "1 1 auto" : "0 0 320px", display: (stageWide && activeTab === "campaign" && !isMobile) || (embedded && activeTab === "campaign") || (isMobile && activeTab !== "general") ? "none" : undefined }} ref={armaduraRef}>
                             <Panel
                               span={12}
                               title="Armadura y estadísticas"
@@ -15533,7 +15548,7 @@ export default function App({ onSignOut }) {
 
                       {activeTab === "campaign" && charCampaign && (() => {
                         const partyIds = charCampaign.characterIds || [];
-                        const wide = stageWide && !isMobile;
+                        const wide = stageWide && !isMobile && !embedded;
                         const stage = campaignStage;
                         const live = stage.live || "escena";
                         const stTab = stageTab || live;
@@ -15572,7 +15587,7 @@ export default function App({ onSignOut }) {
                             style={{
                               display: "grid",
                               // Ampliada, el chat mide lo mismo que en la rejilla normal: 5 de 12 columnas del hueco que queda sin las estadísticas.
-                              gridTemplateColumns: isMobile ? "1fr" : wide ? `minmax(0, 1fr) calc((100% - ${(armaduraWidth || 320) + 18 + 11 * 18}px) * 5 / 12 + ${4 * 18}px)` : "repeat(12, 1fr)",
+                              gridTemplateColumns: isMobile || embedded ? "1fr" : wide ? `minmax(0, 1fr) calc((100% - ${(armaduraWidth || 320) + 18 + 11 * 18}px) * 5 / 12 + ${4 * 18}px)` : "repeat(12, 1fr)",
                               gap: 18,
                               flex: wide && armaduraHeight ? "0 0 auto" : 1,
                               minHeight: 0,
@@ -15908,8 +15923,10 @@ export default function App({ onSignOut }) {
                               )}
                             </Panel>
 
+                            <ChatHost embedded={embedded} slot={chatSlot}>
                             <Panel
                               span={wide ? 1 : 5}
+                              fill={embedded}
                               title="Chat"
                               hidden={conditions.includes("Escondido") || conditions.includes("Oculto")}
                               restrained={conditions.includes("Inmovilizado")}
@@ -16052,6 +16069,7 @@ export default function App({ onSignOut }) {
                                 </div>
                               </div>
                             </Panel>
+                            </ChatHost>
                           </div>
                         );
                       })()}
@@ -22310,7 +22328,7 @@ export default function App({ onSignOut }) {
       <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
         {showRail && (
           <div className="mh-rail">
-            <FriendsPanel renderClass={renderClassDot} />
+            {modernCamp ? <div ref={setChatSlot} className="mh-rail-chat" /> : <FriendsPanel renderClass={renderClassDot} />}
           </div>
         )}
         {showTopbar && (
@@ -22328,7 +22346,7 @@ export default function App({ onSignOut }) {
           {modernOpen && (() => {
             const md = modernData(modernCharId);
             const tab = md.tabs.some((t) => t.key === detailTab) ? detailTab : "general";
-            return <ModernSheet key={modernCharId} d={md} actions={modernActions(modernCharId)} content={renderClassicSheet(modernCharId, true)} tab={tab} onTab={(k) => (setDetailTab(k), setActionPage(0))} />;
+            return <ModernSheet key={modernCharId} d={md} actions={modernActions(modernCharId)} content={renderClassicSheet(modernCharId, true)} tab={tab} fill={tab === "campaign"} onTab={(k) => (setDetailTab(k), setActionPage(0))} />;
           })()}
 
           {view === "inicio" && (() => {

@@ -21,7 +21,7 @@ const readsZoomed = () => {
   }
   return zoomedApi;
 };
-function ZoomFit({ children, isGeneral, natural, onNatural }) {
+function ZoomFit({ children, isGeneral, natural, onNatural, fill }) {
   const outer = useRef(null);
   const inner = useRef(null);
   const [fit, setFit] = useState({ s: 1, h: undefined, w: BASE_W });
@@ -33,6 +33,12 @@ function ZoomFit({ children, isGeneral, natural, onNatural }) {
     const calc = () => {
       const ow = o.clientWidth;
       const availH = window.innerHeight - o.getBoundingClientRect().top - 24;
+      // Pestaña de campaña: sin escala, la escena o el mapa llenan el hueco disponible.
+      if (fill) {
+        cur.current = 1;
+        setFit({ s: 1, h: Math.max(320, availH), w: ow });
+        return;
+      }
       const nat = readsZoomed() ? i.offsetHeight / cur.current : i.offsetHeight; // alto sin zoom
       if (isGeneral && nat && Math.abs(nat - natural) > 1) onNatural(nat);
       const ref = isGeneral ? nat || natural : natural;
@@ -49,19 +55,20 @@ function ZoomFit({ children, isGeneral, natural, onNatural }) {
       ro.disconnect();
       window.removeEventListener("resize", calc);
     };
-  }, [isGeneral, natural, onNatural]);
+  }, [isGeneral, natural, onNatural, fill]);
   return (
-    <div ref={outer} className="mhm-zoom" style={{ height: fit.h }}>
-      <div ref={inner} style={{ width: fit.w, zoom: fit.s, "--mhz": fit.s }}>{children}</div>
+    <div ref={outer} className={"mhm-zoom" + (fill ? " is-fill" : "")} style={{ height: fit.h }}>
+      <div ref={inner} style={fill ? { width: fit.w, flex: 1, minHeight: 0, display: "flex", flexDirection: "column", "--mhz": 1 } : { width: fit.w, zoom: fit.s, "--mhz": fit.s }}>{children}</div>
     </div>
   );
 }
 
-export function ModernSheet({ d, actions, content, tab, onTab }) {
+export function ModernSheet({ d, actions, content, tab, onTab, fill }) {
   const Emblem = d.Emblem;
   const [natural, setNatural] = useState(0); // alto de «Detalles generales»: referencia para todas las pestañas
   return (
     <div className="mhm" style={{ "--cc": d.color }}>
+      {!fill && (
       <section className="mhm-head">
         {d.art ? (
           <span className="mhm-head-art" aria-hidden="true" style={{ backgroundImage: `url(${d.art})` }} />
@@ -84,6 +91,7 @@ export function ModernSheet({ d, actions, content, tab, onTab }) {
           ))}
         </div>
       </section>
+      )}
 
       <nav className="mhm-tabs" role="tablist">
         {d.tabs.filter((t) => !t.extra).map((t) => (
@@ -94,12 +102,12 @@ export function ModernSheet({ d, actions, content, tab, onTab }) {
         <span className="mhm-spacer" />
         {d.tabs.filter((t) => t.extra).map((t) => (
           <button key={t.key} type="button" role="tab" aria-selected={tab === t.key} className={tab === t.key ? "is-on" : ""} style={{ "--tone": t.tone }} onClick={() => onTab(t.key)}>
-            <t.Icon size={15} strokeWidth={1.8} /> {t.label}
+            <t.Icon size={15} strokeWidth={1.8} /> <span className="lbl" title={t.label}>{t.label}</span>
           </button>
         ))}
       </nav>
 
-      <ZoomFit isGeneral={tab === "general"} natural={natural} onNatural={setNatural}>{content}</ZoomFit>
+      <ZoomFit isGeneral={tab === "general"} natural={natural} onNatural={setNatural} fill={fill}>{content}</ZoomFit>
     </div>
   );
 }

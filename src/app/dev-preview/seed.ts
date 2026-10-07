@@ -108,5 +108,7 @@ const characters: Record<string, Record<string, string>> = {
 export const DEV_SEED: Record<string, string> = {
   "player-name": "Probador",
   "character-index": JSON.stringify(Object.keys(characters)),
+  "campaign-index": JSON.stringify(["camp_dev"]),
+  "campaign:camp_dev": JSON.stringify({ id: "camp_dev", name: "Los mensajeros de Sablewood", description: "", characterIds: ["dev_druida", "dev_guerrero"] }),
   ...Object.fromEntries(Object.entries(characters).map(([id, c]) => ["character:" + id, JSON.stringify(c)])),
 };
