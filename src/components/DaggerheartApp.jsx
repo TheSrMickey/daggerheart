@@ -3202,15 +3202,13 @@ const sharedStyles = `
   .mh-map-hp i { display: block; height: 100%; background: #E24B4A; }
   .mh-map-nm { position: absolute; z-index: 1; top: 92%; left: 50%; translate: -50% 0; font-size: 10px; font-weight: 700; color: #fff; text-shadow: 0 1px 3px #000, 0 0 2px #000; white-space: nowrap; pointer-events: none; }
   .mh-map.is-compact .mh-map-nm { display: none; }
-  .mh-fan { position: absolute; left: 50%; bottom: -34px; transform: translateX(-50%); display: flex; z-index: 6; pointer-events: none; }
-  .mh-fan-card { pointer-events: auto; cursor: grab; touch-action: none; user-select: none; width: clamp(92px, 11vw, 132px); aspect-ratio: 5 / 7; margin: 0 -10px; padding: 8px 8px 8px; border-radius: 10px; border: 2px solid var(--c); background: linear-gradient(180deg, color-mix(in srgb, var(--c) 28%, #1B1824), #1B1824 70%); color: #F3EBDD; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; box-shadow: 0 6px 16px rgba(0,0,0,.5); transform: translateY(var(--y)) rotate(var(--r)); transform-origin: 50% 120%; transition: transform .15s; }
-  .mh-fan-card.is-weapon { background: linear-gradient(180deg, #4A3A1C, #1B1824 70%); }
+  .mh-fan { position: absolute; left: 50%; bottom: -110px; transform: translateX(-50%); display: flex; z-index: 6; pointer-events: none; }
+  .mh-fan-card { --s: .5; pointer-events: auto; cursor: grab; touch-action: none; user-select: none; position: relative; width: calc(300px * var(--s)); height: calc(420px * var(--s)); margin: 0 -26px; filter: drop-shadow(0 6px 14px rgba(0,0,0,.5)); transform: translateY(var(--y)) rotate(var(--r)); transform-origin: 50% 120%; transition: transform .15s; }
+  .mh-fan-in { position: absolute; left: 0; top: 0; width: 300px; height: 420px; transform: scale(var(--s)); transform-origin: 0 0; }
   .mh-fan-card.is-last-weapon { margin-right: 22px; }
-  .mh-fan-card:hover { transform: translateY(-34px) rotate(0deg) scale(1.06); z-index: 2; }
+  @media (max-width: 760px) { .mh-fan-card { --s: .36; margin: 0 -20px; } }
+  .mh-fan-card:hover { transform: translateY(-60px) rotate(0deg) scale(1.15); z-index: 2; }
   .mh-fan-card.is-lifted { opacity: .25; }
-  .mh-fan-card b { font-size: 11px; line-height: 1.15; }
-  .mh-fan-card small { font-size: 9px; opacity: .75; }
-  .mh-fan-lv { position: absolute; top: 5px; left: 5px; width: 18px; height: 18px; border-radius: 50%; background: var(--c); color: #1B1824; font-size: 11px; font-weight: 700; display: grid; place-items: center; }
   .mh-fan-ghost { position: fixed; z-index: 9999; pointer-events: none; transform: translate(-50%, -50%) rotate(-6deg); padding: 8px 12px; border-radius: 8px; border: 2px solid var(--c); background: #1B1824; color: #F3EBDD; font-size: 12px; box-shadow: 0 0 18px var(--c); }
   .mh-fan-tip { position: fixed; z-index: 9999; pointer-events: none; transform: translate(-50%, -150%); padding: 6px 10px; border-radius: 8px; background: rgba(20,17,26,.92); color: #F3EBDD; font-size: 12px; white-space: nowrap; }
   .mh-fan-tip small { display: block; font-size: 10px; opacity: .7; }
@@ -5673,26 +5671,54 @@ function CardFan({ cards, me, tokens, onUse }) {
       <div className="mh-fan" aria-label="Tus cartas de dominio">
         {cards.map((c, i) => {
           const mid = (n - 1) / 2;
-          const col = c.weapon ? "#C9A24B" : DOMAIN_COLORS[c.domain] || "#C9A24B";
+          const col = c.weapon ? TIER_COLORS[c.level]?.color || "#C9A24B" : DOMAIN_COLORS[c.domain] || "#C9A24B";
           const lifting = drag?.card.key === c.key;
+          const Art = c.weapon ? weaponIcon(c.key) : DOMAIN_ICONS[c.domain] || Sparkles;
+          const dmg = c.weapon ? c.damage.match(/^(\S+)\s*(.*)$/) : null;
           return (
             <div
               key={c.key}
-              className={"mh-fan-card" + (lifting ? " is-lifted" : "") + (c.weapon ? " is-weapon" : "") + (c.weapon && cards[i + 1] && !cards[i + 1].weapon ? " is-last-weapon" : "")}
-              style={{ "--r": `${(i - mid) * 6}deg`, "--y": `${Math.abs(i - mid) * 5}px`, "--c": col }}
+              className={"mh-fan-card" + (lifting ? " is-lifted" : "") + (c.weapon && cards[i + 1] && !cards[i + 1].weapon ? " is-last-weapon" : "")}
+              style={{ "--r": `${(i - mid) * 5}deg`, "--y": `${Math.abs(i - mid) * 5}px`, "--cc": col }}
               onPointerDown={(e) => start(e, c)}
               title="Arrástrala hasta el mapa para usarla"
             >
-              <span className="mh-fan-lv">{c.level}</span>
-              <b>{c.key}</b>
-              <small>{c.weapon ? `${c.type} · ${c.damage}` : `${c.domain} · ${c.type}`}</small>
+              <div className="mh-card mh-cardc mh-fan-in" style={{ margin: 0, padding: 0, overflow: "hidden", borderRadius: 22, display: "flex", flexDirection: "column", border: (c.weapon ? "3px" : "2px") + " solid " + col, position: "relative" }}>
+                <div className="mh-cardc-art" style={{ height: 124 }}>
+                  <div className="mh-cardc-noart">
+                    <Art size={50} strokeWidth={1.5} />
+                  </div>
+                </div>
+                <div className="mh-cardc-badge">
+                  {c.weapon ? <span className="mh-cardc-tier" style={{ background: col }}>{TIER_COLORS[c.level]?.label}</span> : <span className="mh-cardc-gem">{c.level}</span>}
+                </div>
+                <div style={{ padding: "0 18px", textAlign: "center", flexShrink: 0, marginTop: 16 }}>
+                  <FitTitle text={c.key} max={19} min={14} className="mh-serif" style={{ fontWeight: 700, color: "var(--mh-ink)", maxHeight: "2.4em", overflow: "hidden" }} />
+                  <div className="mh-cardc-sub">{c.weapon ? `${c.type} · ${c.hands}` : `${c.domain} · ${c.type}`}</div>
+                  <div className="mh-cardc-orn" />
+                </div>
+                <div style={{ flex: 1, minHeight: 0, overflow: "hidden", padding: "10px 18px 12px", display: "flex", flexDirection: "column", justifyContent: c.weapon ? "center" : "flex-start", textAlign: "center", gap: "0.7em", lineHeight: 1.5, fontSize: 12, color: "var(--mh-ink)" }}>
+                  {c.weapon ? (
+                    <>
+                      <div>
+                        <div className="mh-cardc-label">Daño</div>
+                        <div className="mh-cardc-big">{dmg?.[1] || c.damage}</div>
+                        {dmg?.[2] && <div style={{ fontSize: "0.88em", color: "var(--mh-muted)" }}>{dmg[2]}</div>}
+                      </div>
+                      <div>{c.feature}</div>
+                    </>
+                  ) : (
+                    <div>{c.text}</div>
+                  )}
+                </div>
+              </div>
             </div>
           );
         })}
       </div>
       {drag && (
         <>
-          <div className="mh-fan-ghost" style={{ left: drag.x, top: drag.y, "--c": drag.card.weapon ? "#C9A24B" : DOMAIN_COLORS[drag.card.domain] || "#C9A24B" }}>
+          <div className="mh-fan-ghost" style={{ left: drag.x, top: drag.y, "--c": drag.card.weapon ? TIER_COLORS[drag.card.level]?.color || "#C9A24B" : DOMAIN_COLORS[drag.card.domain] || "#C9A24B" }}>
             <b>{drag.card.key}</b>
           </div>
           {drag.cell && (
@@ -16981,7 +17007,7 @@ export default function App({ onSignOut }) {
                                           } catch (e) {}
                                           const wp = (w, list, type) => {
                                             const f = w && list.find((x) => x.key === w);
-                                            return f ? { key: f.key, level: f.tier, type, damage: f.damage, weapon: true } : null;
+                                            return f ? { key: f.key, level: f.tier, type, damage: f.damage, hands: f.hands === 2 ? "Dos manos" : "Una mano", feature: f.feature, weapon: true } : null;
                                           };
                                           const cards = [wp(me?.f_primary_weapon, PRIMARY_WEAPONS, "Principal"), wp(me?.f_secondary_weapon, SECONDARY_WEAPONS, "Secundaria"), ...keys.map((k) => findDomainCardAny(k))].filter(Boolean);
                                           return (
