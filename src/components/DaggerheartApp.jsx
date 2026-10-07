@@ -13118,7 +13118,7 @@ export default function App({ onSignOut }) {
                             </Panel>
                         </div>
 
-                        <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                        <div key={embedded ? activeTab : "tabs"} className={embedded ? "mh-view-in" : undefined} style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
 
                       {activeTab === "general" && (
                         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(12, 1fr)", gap: 18, flex: 1 }}>

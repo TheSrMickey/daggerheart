@@ -5,22 +5,25 @@ import { useEffect, useRef, useState } from "react";
 // Hoja de personaje "moderna": vive en la columna central. Recibe los datos ya calculados y las acciones de la app.
 const signed = (n) => (n > 0 ? "+" + n : String(n));
 
-// La hoja clásica está pensada para unos 1100 px de ancho: se escala (ancho y alto) para que quepa entera en la columna central.
+// La hoja clásica está pensada para unos 1100 px de ancho mínimo. Se escala para que «Detalles generales» quepa entera
+// (alto) y su ancho se estira hasta llenar la columna central; el resto de pestañas usan exactamente las mismas medidas.
 const BASE_W = 1100;
-function ZoomFit({ children, fitHeight }) {
+function ZoomFit({ children, isGeneral, natural, onNatural }) {
   const outer = useRef(null);
   const inner = useRef(null);
-  const [fit, setFit] = useState({ s: 1, h: undefined, x: 0 });
+  const [fit, setFit] = useState({ s: 1, h: undefined, w: BASE_W });
   useEffect(() => {
     const o = outer.current;
     const i = inner.current;
     if (!o || !i) return;
     const calc = () => {
-      const natural = i.offsetHeight || 1;
+      const ow = o.clientWidth;
       const availH = window.innerHeight - o.getBoundingClientRect().top - 24;
-      const s = Math.min(1.1, o.clientWidth / BASE_W, fitHeight ? availH / natural : 9);
-      const sc = Math.max(0.5, s);
-      setFit({ s: sc, h: natural * sc, x: Math.max(0, (o.clientWidth - BASE_W * sc) / 2) });
+      // El alto de referencia es el de Detalles generales (se guarda al verlo la primera vez).
+      if (isGeneral && i.offsetHeight && i.offsetHeight !== natural) onNatural(i.offsetHeight);
+      const ref = isGeneral ? i.offsetHeight || natural : natural;
+      const sc = Math.max(0.5, Math.min(1.1, ow / BASE_W, ref ? availH / ref : 9));
+      setFit({ s: sc, h: i.offsetHeight * sc, w: ow / sc });
     };
     calc();
     const ro = new ResizeObserver(calc);
@@ -31,16 +34,17 @@ function ZoomFit({ children, fitHeight }) {
       ro.disconnect();
       window.removeEventListener("resize", calc);
     };
-  }, [fitHeight]);
+  }, [isGeneral, natural, onNatural]);
   return (
     <div ref={outer} className="mhm-zoom" style={{ height: fit.h }}>
-      <div ref={inner} style={{ width: BASE_W, transform: `scale(${fit.s})`, transformOrigin: "top left", marginLeft: fit.x }}>{children}</div>
+      <div ref={inner} style={{ width: fit.w, transform: `scale(${fit.s})`, transformOrigin: "top left" }}>{children}</div>
     </div>
   );
 }
 
 export function ModernSheet({ d, actions, content, tab, onTab }) {
   const Emblem = d.Emblem;
+  const [natural, setNatural] = useState(0); // alto de «Detalles generales»: referencia para todas las pestañas
   return (
     <div className="mhm" style={{ "--cc": d.color }}>
       <section className="mhm-head">
@@ -72,9 +76,7 @@ export function ModernSheet({ d, actions, content, tab, onTab }) {
         ))}
       </nav>
 
-      <div key={tab} className="mh-view-in">
-        <ZoomFit fitHeight={tab === "general"}>{content}</ZoomFit>
-      </div>
+      <ZoomFit isGeneral={tab === "general"} natural={natural} onNatural={setNatural}>{content}</ZoomFit>
     </div>
   );
 }
