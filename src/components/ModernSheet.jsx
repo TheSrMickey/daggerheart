@@ -1,22 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ExternalLink } from "lucide-react";
 
 // Hoja de personaje "moderna": vive en la columna central. Recibe los datos ya calculados y las acciones de la app.
-const TABS = [
-  ["general", "Detalles generales"],
-  ["acciones", "Acciones"],
-  ["descanso", "Descanso"],
-  ["inventario", "Inventario"],
-  ["trasfondo", "Trasfondo"],
-];
-
 const signed = (n) => (n > 0 ? "+" + n : String(n));
 
 // La hoja clásica está pensada para unos 1100 px de ancho: se escala (ancho y alto) para que quepa entera en la columna central.
 const BASE_W = 1100;
-function ZoomFit({ children }) {
+function ZoomFit({ children, fitHeight }) {
   const outer = useRef(null);
   const inner = useRef(null);
   const [fit, setFit] = useState({ s: 1, h: undefined, x: 0 });
@@ -27,7 +18,7 @@ function ZoomFit({ children }) {
     const calc = () => {
       const natural = i.offsetHeight || 1;
       const availH = window.innerHeight - o.getBoundingClientRect().top - 24;
-      const s = Math.min(1.1, o.clientWidth / BASE_W, availH / natural);
+      const s = Math.min(1.1, o.clientWidth / BASE_W, fitHeight ? availH / natural : 9);
       const sc = Math.max(0.5, s);
       setFit({ s: sc, h: natural * sc, x: Math.max(0, (o.clientWidth - BASE_W * sc) / 2) });
     };
@@ -40,7 +31,7 @@ function ZoomFit({ children }) {
       ro.disconnect();
       window.removeEventListener("resize", calc);
     };
-  }, []);
+  }, [fitHeight]);
   return (
     <div ref={outer} className="mhm-zoom" style={{ height: fit.h }}>
       <div ref={inner} style={{ width: BASE_W, transform: `scale(${fit.s})`, transformOrigin: "top left", marginLeft: fit.x }}>{children}</div>
@@ -48,8 +39,7 @@ function ZoomFit({ children }) {
   );
 }
 
-export function ModernSheet({ d, actions, general }) {
-  const [tab, setTab] = useState("general");
+export function ModernSheet({ d, actions, content, tab, onTab }) {
   const Emblem = d.Emblem;
   return (
     <div className="mhm" style={{ "--cc": d.color }}>
@@ -77,20 +67,14 @@ export function ModernSheet({ d, actions, general }) {
       </section>
 
       <nav className="mhm-tabs" role="tablist">
-        {TABS.map(([k, l]) => (
-          <button key={k} type="button" role="tab" aria-selected={tab === k} className={tab === k ? "is-on" : ""} onClick={() => setTab(k)}>{l}</button>
+        {d.tabs.map(([k, l]) => (
+          <button key={k} type="button" role="tab" aria-selected={tab === k} className={tab === k ? "is-on" : ""} onClick={() => onTab(k)}>{l}</button>
         ))}
       </nav>
 
-      {tab === "general" ? (
-        <ZoomFit>{general}</ZoomFit>
-      ) : (
-        <section className="mhm-panel mhm-soon">
-          <h3 className="mh-serif">{TABS.find((t) => t[0] === tab)[1]}</h3>
-          <p>Esta sección todavía no está en la hoja moderna. Puedes usarla en la hoja clásica.</p>
-          <button type="button" className="is-primary" onClick={actions.openClassic}><ExternalLink size={14} /> Abrir hoja clásica</button>
-        </section>
-      )}
+      <div key={tab} className="mh-view-in">
+        <ZoomFit fitHeight={tab === "general"}>{content}</ZoomFit>
+      </div>
     </div>
   );
 }
