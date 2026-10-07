@@ -4302,8 +4302,8 @@ const sharedStyles = `
   .mhm-head h2 { margin: 0; font-size: 24px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; } .mhm-head p { margin: 0; color: #ffffffcc; font-size: 13px; }
   .mhm-traits { position: relative; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
   .mhm-traits button { all: unset; cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 7px 11px; border-radius: 9px; background: #00000050; border: 1px solid #ffffff14; font-size: 12px; } .mhm-traits button:hover { border-color: var(--cc); } .mhm-traits b { font-size: 15px; }
-  .mhm-tabs { display: flex; gap: 22px; border-bottom: 1px solid var(--mh-line); overflow-x: auto; }
-  .mhm-tabs button { all: unset; cursor: pointer; padding: 2px 0 10px; font-size: 13.5px; color: var(--mh-muted); white-space: nowrap; border-bottom: 2px solid transparent; margin-bottom: -1px; } .mhm-tabs button:hover { color: var(--mh-ink); } .mhm-tabs .is-on { color: var(--mh-ink); font-weight: 600; border-color: #4f86ff; }
+  .mhm-tabs { display: flex; align-items: flex-end; gap: 4px; border-bottom: 1px solid var(--mh-line); overflow-x: auto; scrollbar-width: none; } .mhm-tabs::-webkit-scrollbar { display: none; } .mhm-tabs .mhm-spacer { flex: 1; min-width: 12px; }
+  .mhm-tabs button { all: unset; cursor: pointer; display: flex; align-items: center; gap: 7px; padding: 11px 13px; font-size: 13px; font-weight: 500; color: var(--mh-muted); white-space: nowrap; border-bottom: 2px solid transparent; margin-bottom: -1px; } .mhm-tabs button:hover { color: var(--mh-ink); } .mhm-tabs .is-on { color: var(--tone, var(--cc)); border-color: var(--tone, var(--cc)); }
   .mhm-zoom { width: 100%; overflow: hidden; }
   .mh-sheet.is-embedded { min-height: 0; }
   .mhm-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; } .mhm-col { display: flex; flex-direction: column; gap: 16px; }
@@ -11833,18 +11833,19 @@ export default function App({ onSignOut }) {
       experiences: getExperiences(c),
       tabs: (() => {
         const camp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(id));
+        const G = "#7FB77A";
         return [
-          ["general", "Detalles generales"],
-          ["actions", "Acciones"],
-          ["rests", "Descanso"],
-          ["inventory", "Inventario"],
-          ["background", "Trasfondo"],
-          ["journal", "Diario"],
-          ...(c.f_class === "Druida" ? [["beastforms", "Formas de Bestia"]] : []),
-          ...(c.f_subclass === "Vínculo Bestial" ? [["companion", "Compañero Animal"]] : []),
-          ...(c.f_subclass === "Sindicato" ? [["contacts", "Red de Contactos"]] : []),
-          ...(isMartial(c) ? [["stances", "Posturas Marciales"]] : []),
-          ...(camp ? [["campaign", camp.name]] : []),
+          { key: "general", label: "Detalles generales", Icon: Home },
+          { key: "actions", label: "Acciones", Icon: Swords },
+          { key: "rests", label: "Descanso", Icon: BedDouble },
+          { key: "inventory", label: "Inventario", Icon: Backpack },
+          { key: "background", label: "Trasfondo", Icon: MessageCircle },
+          { key: "journal", label: "Diario", Icon: NotebookPen },
+          ...(c.f_class === "Druida" ? [{ key: "beastforms", label: "Formas de Bestia", Icon: PawPrint, tone: G, extra: true }] : []),
+          ...(c.f_subclass === "Vínculo Bestial" ? [{ key: "companion", label: "Compañero Animal", Icon: Dog, tone: G, extra: true }] : []),
+          ...(c.f_subclass === "Sindicato" ? [{ key: "contacts", label: "Red de Contactos", Icon: Network, tone: "#6E5A8A", extra: true }] : []),
+          ...(isMartial(c) ? [{ key: "stances", label: "Posturas Marciales", Icon: HandFist, tone: "#C08B5C", extra: true }] : []),
+          ...(camp ? [{ key: "campaign", label: camp.name, Icon: BookOpen, tone: "#A58BE8", extra: true }] : []),
         ];
       })(),
     };
@@ -12314,7 +12315,7 @@ export default function App({ onSignOut }) {
 
             {/* Body */}
             <div className="mh-sheet-body" style={embedded ? { position: "relative", zIndex: 1 } : { position: "relative", zIndex: 1, flex: 1, overflowY: "auto", padding: "22px 26px", scrollbarGutter: "stable" }}>
-              <div style={{ maxWidth: 1300, margin: "0 auto" }}>
+              <div style={{ maxWidth: embedded ? "none" : 1300, margin: "0 auto" }}>
                 {evolutionWarning && (
                   <div style={{ fontSize: 12.5, color: "#D9644E", marginBottom: 14, fontWeight: 600 }}>{evolutionWarning}</div>
                 )}
@@ -22320,7 +22321,7 @@ export default function App({ onSignOut }) {
 
           {modernOpen && (() => {
             const md = modernData(modernCharId);
-            const tab = md.tabs.some(([k]) => k === detailTab) ? detailTab : "general";
+            const tab = md.tabs.some((t) => t.key === detailTab) ? detailTab : "general";
             return <ModernSheet key={modernCharId} d={md} actions={modernActions(modernCharId)} content={renderClassicSheet(modernCharId, true)} tab={tab} onTab={(k) => (setDetailTab(k), setActionPage(0))} />;
           })()}
 

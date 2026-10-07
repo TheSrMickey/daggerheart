@@ -71,8 +71,16 @@ export function ModernSheet({ d, actions, content, tab, onTab }) {
       </section>
 
       <nav className="mhm-tabs" role="tablist">
-        {d.tabs.map(([k, l]) => (
-          <button key={k} type="button" role="tab" aria-selected={tab === k} className={tab === k ? "is-on" : ""} onClick={() => onTab(k)}>{l}</button>
+        {d.tabs.filter((t) => !t.extra).map((t) => (
+          <button key={t.key} type="button" role="tab" aria-selected={tab === t.key} className={tab === t.key ? "is-on" : ""} onClick={() => onTab(t.key)}>
+            <t.Icon size={15} strokeWidth={1.8} /> {t.label}
+          </button>
+        ))}
+        <span className="mhm-spacer" />
+        {d.tabs.filter((t) => t.extra).map((t) => (
+          <button key={t.key} type="button" role="tab" aria-selected={tab === t.key} className={tab === t.key ? "is-on" : ""} style={{ "--tone": t.tone }} onClick={() => onTab(t.key)}>
+            <t.Icon size={15} strokeWidth={1.8} /> {t.label}
+          </button>
         ))}
       </nav>
 
