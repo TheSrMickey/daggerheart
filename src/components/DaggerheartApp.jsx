@@ -3204,6 +3204,8 @@ const sharedStyles = `
   .mh-map.is-compact .mh-map-nm { display: none; }
   .mh-fan { position: absolute; left: 50%; bottom: -34px; transform: translateX(-50%); display: flex; z-index: 6; pointer-events: none; }
   .mh-fan-card { pointer-events: auto; cursor: grab; touch-action: none; user-select: none; width: clamp(92px, 11vw, 132px); aspect-ratio: 5 / 7; margin: 0 -10px; padding: 8px 8px 8px; border-radius: 10px; border: 2px solid var(--c); background: linear-gradient(180deg, color-mix(in srgb, var(--c) 28%, #1B1824), #1B1824 70%); color: #F3EBDD; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; box-shadow: 0 6px 16px rgba(0,0,0,.5); transform: translateY(var(--y)) rotate(var(--r)); transform-origin: 50% 120%; transition: transform .15s; }
+  .mh-fan-card.is-weapon { background: linear-gradient(180deg, #4A3A1C, #1B1824 70%); }
+  .mh-fan-card.is-last-weapon { margin-right: 22px; }
   .mh-fan-card:hover { transform: translateY(-34px) rotate(0deg) scale(1.06); z-index: 2; }
   .mh-fan-card.is-lifted { opacity: .25; }
   .mh-fan-card b { font-size: 11px; line-height: 1.15; }
@@ -5671,26 +5673,26 @@ function CardFan({ cards, me, tokens, onUse }) {
       <div className="mh-fan" aria-label="Tus cartas de dominio">
         {cards.map((c, i) => {
           const mid = (n - 1) / 2;
-          const col = DOMAIN_COLORS[c.domain] || "#C9A24B";
+          const col = c.weapon ? "#C9A24B" : DOMAIN_COLORS[c.domain] || "#C9A24B";
           const lifting = drag?.card.key === c.key;
           return (
             <div
               key={c.key}
-              className={"mh-fan-card" + (lifting ? " is-lifted" : "")}
+              className={"mh-fan-card" + (lifting ? " is-lifted" : "") + (c.weapon ? " is-weapon" : "") + (c.weapon && cards[i + 1] && !cards[i + 1].weapon ? " is-last-weapon" : "")}
               style={{ "--r": `${(i - mid) * 6}deg`, "--y": `${Math.abs(i - mid) * 5}px`, "--c": col }}
               onPointerDown={(e) => start(e, c)}
               title="Arrástrala hasta el mapa para usarla"
             >
               <span className="mh-fan-lv">{c.level}</span>
               <b>{c.key}</b>
-              <small>{c.domain} · {c.type}</small>
+              <small>{c.weapon ? `${c.type} · ${c.damage}` : `${c.domain} · ${c.type}`}</small>
             </div>
           );
         })}
       </div>
       {drag && (
         <>
-          <div className="mh-fan-ghost" style={{ left: drag.x, top: drag.y, "--c": DOMAIN_COLORS[drag.card.domain] || "#C9A24B" }}>
+          <div className="mh-fan-ghost" style={{ left: drag.x, top: drag.y, "--c": drag.card.weapon ? "#C9A24B" : DOMAIN_COLORS[drag.card.domain] || "#C9A24B" }}>
             <b>{drag.card.key}</b>
           </div>
           {drag.cell && (
@@ -16977,14 +16979,18 @@ export default function App({ onSignOut }) {
                                           try {
                                             keys = JSON.parse(me?.f_domain_cards || "[]");
                                           } catch (e) {}
-                                          const cards = keys.map((k) => findDomainCardAny(k)).filter(Boolean);
+                                          const wp = (w, list, type) => {
+                                            const f = w && list.find((x) => x.key === w);
+                                            return f ? { key: f.key, level: f.tier, type, damage: f.damage, weapon: true } : null;
+                                          };
+                                          const cards = [wp(me?.f_primary_weapon, PRIMARY_WEAPONS, "Principal"), wp(me?.f_secondary_weapon, SECONDARY_WEAPONS, "Secundaria"), ...keys.map((k) => findDomainCardAny(k))].filter(Boolean);
                                           return (
                                             <CardFan
                                               cards={cards}
                                               me={myToken}
                                               tokens={mapTokens}
                                               onUse={(card, cell, target, rng) =>
-                                                postCampaignEvent(viewingCharId, `usa la carta «${card.key}»${target ? ` sobre ${target.name || "una ficha"}` : ` en la casilla ${cell.x + 1},${cell.y + 1}`}${rng ? ` (${rng.label})` : ""}.`)
+                                                postCampaignEvent(viewingCharId, `${card.weapon ? "ataca con" : "usa la carta"} «${card.key}»${target ? ` sobre ${target.name || "una ficha"}` : ` en la casilla ${cell.x + 1},${cell.y + 1}`}${rng ? ` (${rng.label})` : ""}.`)
                                               }
                                             />
                                           );
