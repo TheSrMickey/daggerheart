@@ -4303,8 +4303,11 @@ const sharedStyles = `
   .mhm-traits { position: relative; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
   .mhm-traits button { all: unset; cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 7px 11px; border-radius: 9px; background: #00000050; border: 1px solid #ffffff14; font-size: 12px; } .mhm-traits button:hover { border-color: var(--cc); } .mhm-traits b { font-size: 15px; }
   .mhm-tabs { display: flex; align-items: flex-end; gap: 4px; border-bottom: 1px solid var(--mh-line); overflow-x: auto; scrollbar-width: none; } .mhm-tabs::-webkit-scrollbar { display: none; } .mhm-tabs .mhm-spacer { flex: 1; min-width: 12px; }
-  .mhm-tabs button { all: unset; cursor: pointer; display: flex; align-items: center; gap: 7px; padding: 11px 7px; font-size: 12.5px; font-weight: 500; color: var(--mh-muted); white-space: nowrap; border-bottom: 2px solid transparent; margin-bottom: -1px; } .mhm-tabs .lbl { max-width: 84px; overflow: hidden; text-overflow: ellipsis; } .mhm-tabs button:hover { color: var(--mh-ink); } .mhm-tabs .is-on { color: var(--tone, var(--cc)); border-color: var(--tone, var(--cc)); }
-  .mhm-zoom { width: 100%; overflow: hidden; }
+  .mhm-tabs button { all: unset; cursor: pointer; display: flex; align-items: center; gap: 7px; padding: 11px 7px; font-size: 12.5px; font-weight: 500; color: var(--mh-muted); white-space: nowrap; border-bottom: 2px solid transparent; margin-bottom: -1px; } .mhm-tabs.is-compact .is-base:not(.is-on) .lbl { display: none; } .mhm-tabs.is-compact .is-base:not(.is-on) { padding-left: 9px; padding-right: 9px; } .mhm-tabs button:hover { color: var(--mh-ink); } .mhm-tabs .is-on { color: var(--tone, var(--cc)); border-color: var(--tone, var(--cc)); }
+  .mhm-zoom { width: 100%; overflow: hidden; transition: height .35s ease; }
+  .mhm-headwrap { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .35s ease, opacity .25s ease, margin .35s ease; } .mhm-headwrap > .mhm-head { min-height: 0; overflow: hidden; }
+  .mhm-headwrap.is-collapsed { grid-template-rows: 0fr; opacity: 0; margin-bottom: -14px; } .mhm-headwrap.is-collapsed > .mhm-head { padding-top: 0; padding-bottom: 0; border-width: 0; }
+  .mh-rail > * { animation: mh-view-in .3s ease backwards; }
   .mhm-zoom.is-fill { display: flex; flex-direction: column; overflow: visible; }
   .mhm-zoom.is-fill .mh-sheet, .mhm-zoom.is-fill .mh-sheet-scroll, .mhm-zoom.is-fill .mh-sheet-body, .mhm-zoom.is-fill .mh-sheet-body > div, .mhm-zoom.is-fill .mh-sheet-body > div > div { width: 100%; margin: 0 !important; flex: 1; min-height: 0; display: flex; flex-direction: column; }
   .mhm-zoom.is-fill .mh-sheet-body > div > div > div { flex: 1; min-height: 0; }
@@ -12697,7 +12700,14 @@ export default function App({ onSignOut }) {
                       )}
 
                       <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 18, alignItems: isMobile ? "stretch" : "stretch" }}>
-                        <div style={{ flex: isMobile ? "1 1 auto" : "0 0 320px", display: (stageWide && activeTab === "campaign" && !isMobile) || (embedded && activeTab === "campaign") || (isMobile && activeTab !== "general") ? "none" : undefined }} ref={armaduraRef}>
+                        <div
+                          style={
+                            embedded && activeTab === "campaign" && !isMobile
+                              ? { flex: "0 0 0px", width: 0, minWidth: 0, opacity: 0, overflow: "hidden", marginRight: -18, pointerEvents: "none", transition: "flex-basis .35s ease, margin .35s ease, opacity .25s ease" }
+                              : { flex: isMobile ? "1 1 auto" : "0 0 320px", transition: embedded ? "flex-basis .35s ease, margin .35s ease, opacity .3s ease .1s" : undefined, display: (stageWide && activeTab === "campaign" && !isMobile) || (isMobile && activeTab !== "general") ? "none" : undefined }
+                          }
+                          ref={armaduraRef}
+                        >
                             <Panel
                               span={12}
                               title="Armadura y estadísticas"
