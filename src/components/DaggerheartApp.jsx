@@ -4557,6 +4557,11 @@ const sharedStyles = `
   .mh-wz-trwrap { flex: 1; min-height: 0; display: flex; flex-direction: column; }
   .mh-wz-trwrap .mh-wz-traits { flex: 1; display: flex; flex-direction: column; }
   .mh-wz-trwrap .mh-wz-tr { flex: 1; }
+  .mh-wz-pane { display: flex; flex-direction: column; gap: 16px; padding-bottom: 6px; }
+  .mh-wz-subs { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 12px; }
+  .mh-wz-subs > span { font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-muted); margin-right: 2px; }
+  .mh-wz-subs em { font-style: normal; font-size: 11.5px; color: var(--mh-ink2); border: 1px solid var(--mh-line2); background: var(--mh-panel2); border-radius: 20px; padding: 3px 10px; }
+  .mh-wz-stats.mh-wz-pane { gap: 16px; }
   .mh-wz-stats { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 4px; }
   .mh-wz-stats > div:last-child { display: grid !important; grid-template-columns: repeat(3, 170px); gap: 14px !important; justify-content: center; }
   .mh-wz-stats > div:last-child > div { width: 170px; box-sizing: border-box; padding: 18px 10px !important; }
@@ -23989,7 +23994,7 @@ export default function App({ onSignOut }) {
                             )}
                             <span className="mh-sc-txt">
                               <span className="mh-serif mh-sc-n">{it.key}</span>
-                              <span className="mh-sc-k">Subclase de {cls}{it.expansion ? " · " + it.expansion : ""}</span>
+                              {it.expansion && <span className="mh-sc-k">{it.expansion}</span>}
                               <span className="mh-sc-b">{it.blurb}</span>
                               {feats.length > 0 && (
                                 <span className="mh-sc-chips">
@@ -24068,16 +24073,24 @@ export default function App({ onSignOut }) {
                               <div>
                                 <div className="mh-serif mh-wz-dn">{cls}</div>
                                 <div className="mh-wz-dm">
-                                  Dominios {(CLASS_DOMAINS[cls] || []).join(" y ")} · Evasión {CLASS_EVASION[cls] ?? 10} · PV {CLASS_HP[cls] ?? 6}
+                                  Dominios {(CLASS_DOMAINS[cls] || []).join(" y ")}
                                   {current.expansion && " · Expansión " + current.expansion}
                                 </div>
                               </div>
                             </div>
+                            {(SUBCLASSES[cls] || []).length > 0 && (
+                              <div className="mh-wz-subs">
+                                <span>Subclases</span>
+                                {(SUBCLASSES[cls] || []).map((sc) => (
+                                  <em key={sc.key}>{sc.key}</em>
+                                ))}
+                              </div>
+                            )}
                             <p className="mh-wz-blurb">{current.blurb}</p>
                             <div className="mh-wz-feats">
                               {hope && (
                                 <div>
-                                  <b>Esperanza: {hope.name}</b>
+                                  <b>Característica de Esperanza: {hope.name}</b>
                                   <span>
                                     Gasta {hope.cost} Esperanza. {hope.text}
                                   </span>
@@ -24085,12 +24098,11 @@ export default function App({ onSignOut }) {
                               )}
                               {(CLASS_FEATURES[cls] || []).map((f) => (
                                 <div key={f.name}>
-                                  <b>{f.name}</b>
+                                  <b>Característica de clase: {f.name}</b>
                                   <span>{f.text}</span>
                                 </div>
                               ))}
                             </div>
-                            {(SUBCLASSES[cls] || []).length > 0 && <div className="mh-wz-dm">Subclases: {(SUBCLASSES[cls] || []).map((sc) => sc.key).join(" · ")}</div>}
                           </>
                         );
                       }
@@ -24100,7 +24112,6 @@ export default function App({ onSignOut }) {
                             <span className="mh-wz-badge" style={{ background: col }} aria-hidden="true">{(() => { const Em = CLASS_EMBLEMS[cls] || User; return <Em size={26} strokeWidth={1.8} />; })()}</span>
                             <div>
                               <div className="mh-serif mh-wz-dn">{current.key}</div>
-                              <div className="mh-wz-dm">Subclase de {cls}</div>
                             </div>
                           </div>
                           <p className="mh-wz-blurb">{current.blurb}</p>
@@ -24118,7 +24129,7 @@ export default function App({ onSignOut }) {
                   </div>
                 </>
               ) : wizardStep === "level" ? (
-                <div style={{ marginBottom: 20 }}>
+                <div className="mh-wz-pane">
                   <div
                     style={{
                       textAlign: "center",
@@ -24126,7 +24137,6 @@ export default function App({ onSignOut }) {
                       background: "#E3B04B14",
                       borderRadius: 8,
                       padding: "18px 20px",
-                      marginBottom: 18,
                     }}
                   >
                     <div className="mh-serif" style={{ fontSize: 30, fontWeight: 700, color: "var(--mh-gold-ink)" }}>
@@ -24148,7 +24158,7 @@ export default function App({ onSignOut }) {
                     style={{ width: "100%", accentColor: "#E3B04B" }}
                   />
 
-                  <div style={{ display: "flex", marginTop: 10, gap: 2 }}>
+                  <div style={{ display: "flex", gap: 2 }}>
                     {TIERS.map((t) => {
                       const active = t.levels.includes(levelChoice);
                       return (
@@ -24172,7 +24182,7 @@ export default function App({ onSignOut }) {
                   </div>
                 </div>
               ) : wizardStep === "name" ? (
-                <div style={{ marginBottom: 20 }}>
+                <div className="mh-wz-pane">
                   <Field label="Nombre del personaje">
                     <input
                       className="mh-input"
@@ -24183,7 +24193,7 @@ export default function App({ onSignOut }) {
                     />
                   </Field>
 
-                  <div style={{ marginTop: 14 }}>
+                  <div>
                     <label className="mh-label">Pronombres</label>
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                       {PRONOUN_OPTIONS.map((p) => (
@@ -24427,8 +24437,8 @@ export default function App({ onSignOut }) {
                   </div>
                 </div>
               ) : wizardStep === "stats" ? (
-                <div className="mh-wz-stats">
-                  <div style={{ fontSize: 12.5, color: "var(--mh-ink3)", marginBottom: 16 }}>
+                <div className="mh-wz-stats mh-wz-pane">
+                  <div style={{ fontSize: 12.5, color: "var(--mh-ink3)" }}>
                     Estas estadísticas se calculan automáticamente según tu clase ({CLASSES[carouselIndex].key}), tu subclase y tu ascendencia. Debajo de cada valor ves
                     cuánto sube o baja por tus elecciones anteriores.
                   </div>
@@ -24500,8 +24510,8 @@ export default function App({ onSignOut }) {
                   </div>
                 </div>
               ) : wizardStep === "experiences" ? (
-                <div style={{ marginBottom: 20 }}>
-                  <div style={{ fontSize: 12.5, color: "var(--mh-ink3)", marginBottom: 16, textAlign: "center" }}>
+                <div className="mh-wz-pane">
+                  <div style={{ fontSize: 12.5, color: "var(--mh-ink3)", textAlign: "center" }}>
                     Escribe las dos Experiencias iniciales de tu personaje — cosas que se le dan bien, gracias a su pasado.
                     Cada una empieza con un bono de +2.
                   </div>
@@ -24993,7 +25003,6 @@ export default function App({ onSignOut }) {
                   if (idx >= 4 && draftName.trim()) chips.push(draftName.trim());
                   if (idx >= 5) chips.push([draftAncestries.join(" + "), idx >= 6 && draftCommunity].filter(Boolean).join(" · "));
                   if (idx >= 7 && draftTransformation !== "Ninguna") chips.push(draftTransformation);
-                  if (idx >= 10 && (draftExp1.trim() || draftExp2.trim())) chips.push([draftExp1, draftExp2].map((x) => x.trim()).filter(Boolean).join(", "));
                   if (idx >= 11 && draftPrimaryWeapon) chips.push(draftPrimaryWeapon);
                   if (idx >= 12 && !twoHandedPrimary && draftSecondaryWeapon && draftSecondaryWeapon !== "Ninguna") chips.push(draftSecondaryWeapon);
                   if (idx >= 13 && draftArmor && draftArmor !== "Ninguna") chips.push(draftArmor);
@@ -25011,6 +25020,7 @@ export default function App({ onSignOut }) {
                 const prev = steps[idx - 1];
                 const nextStep = steps[idx + 1];
                 const block = {
+                  name: !draftName.trim() && "Escribe un nombre para continuar.",
                   subclass: (SUBCLASSES[CLASSES[carouselIndex]?.key] || [])[subclassIndex]?.key === "Origen Elemental" && !draftOriginElement && "Elige tu elemento para continuar.",
                   traits: traitPool.length > 0 && "Reparte todos los valores para continuar.",
                   ancestry:
