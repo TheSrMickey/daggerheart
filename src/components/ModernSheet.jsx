@@ -64,11 +64,34 @@ function ZoomFit({ children, isGeneral, natural, onNatural, fill }) {
 }
 
 export function ModernSheet({ d, actions, content, tab, onTab, fill }) {
+  const navRef = useRef(null);
+  const [compact, setCompact] = useState(false);
+  const fullW = useRef(0);
+  // Si las pestañas no caben con texto, las de la izquierda que no están activas pasan a solo icono (las de la derecha conservan su nombre).
+  useEffect(() => {
+    const n = navRef.current;
+    if (!n) return;
+    const check = () => {
+      if (!compact && n.scrollWidth > n.clientWidth + 1) {
+        fullW.current = n.scrollWidth;
+        setCompact(true);
+      } else if (compact && n.clientWidth >= fullW.current) setCompact(false);
+    };
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(n);
+    return () => ro.disconnect();
+  }, [compact, d.tabs]);
+  // Al pasar a la campaña la cabecera se pliega: se recalcula el alto disponible cuando acaba la transición.
+  useEffect(() => {
+    const t = [60, 200, 420].map((ms) => setTimeout(() => window.dispatchEvent(new Event("resize")), ms));
+    return () => t.forEach(clearTimeout);
+  }, [fill]);
   const Emblem = d.Emblem;
   const [natural, setNatural] = useState(0); // alto de «Detalles generales»: referencia para todas las pestañas
   return (
     <div className="mhm" style={{ "--cc": d.color }}>
-      {!fill && (
+      <div className={"mhm-headwrap" + (fill ? " is-collapsed" : "")}>
       <section className="mhm-head">
         {d.art ? (
           <span className="mhm-head-art" aria-hidden="true" style={{ backgroundImage: `url(${d.art})` }} />
@@ -91,18 +114,18 @@ export function ModernSheet({ d, actions, content, tab, onTab, fill }) {
           ))}
         </div>
       </section>
-      )}
+      </div>
 
-      <nav className="mhm-tabs" role="tablist">
+      <nav ref={navRef} className={"mhm-tabs" + (compact ? " is-compact" : "")} role="tablist">
         {d.tabs.filter((t) => !t.extra).map((t) => (
-          <button key={t.key} type="button" role="tab" aria-selected={tab === t.key} className={tab === t.key ? "is-on" : ""} onClick={() => onTab(t.key)}>
-            <t.Icon size={15} strokeWidth={1.8} /> {t.label}
+          <button key={t.key} type="button" role="tab" aria-selected={tab === t.key} className={"is-base" + (tab === t.key ? " is-on" : "")} title={t.label} onClick={() => onTab(t.key)}>
+            <t.Icon size={15} strokeWidth={1.8} /> <span className="lbl">{t.label}</span>
           </button>
         ))}
         <span className="mhm-spacer" />
         {d.tabs.filter((t) => t.extra).map((t) => (
           <button key={t.key} type="button" role="tab" aria-selected={tab === t.key} className={tab === t.key ? "is-on" : ""} style={{ "--tone": t.tone }} onClick={() => onTab(t.key)}>
-            <t.Icon size={15} strokeWidth={1.8} /> <span className="lbl" title={t.label}>{t.label}</span>
+            <t.Icon size={15} strokeWidth={1.8} /> <span className="lbl-full">{t.label}</span>
           </button>
         ))}
       </nav>
