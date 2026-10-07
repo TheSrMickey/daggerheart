@@ -977,16 +977,33 @@ const CLASS_SPELLCAST_TRAIT = {
   Invocador: "t_knowledge",
 };
 
+// Recomendaciones de las hojas de personaje del libro básico (solo las 9 clases base):
+// rasgos sugeridos y equipo inicial sugerido. Las armas y la armadura son las claves del nivel 1.
+const CLASS_SUGGESTED = {
+  Bardo: { traits: { t_agility: 0, t_strength: -1, t_finesse: 1, t_instinct: 0, t_presence: 2, t_knowledge: 1 }, primary: "Estoque", secondary: "Daga pequeña", armor: "Armadura de gambesón" },
+  Druida: { traits: { t_agility: 1, t_strength: 0, t_finesse: 1, t_instinct: 2, t_presence: -1, t_knowledge: 0 }, primary: "Bastón corto", secondary: "Escudo redondo", armor: "Armadura de cuero" },
+  Guardián: { traits: { t_agility: 1, t_strength: 2, t_finesse: -1, t_instinct: 0, t_presence: 1, t_knowledge: 0 }, primary: "Hacha de guerra", armor: "Cota de malla" },
+  Explorador: { traits: { t_agility: 2, t_strength: 0, t_finesse: 1, t_instinct: 1, t_presence: -1, t_knowledge: 0 }, primary: "Arco corto", armor: "Armadura de cuero" },
+  Pícaro: { traits: { t_agility: 1, t_strength: -1, t_finesse: 2, t_instinct: 0, t_presence: 1, t_knowledge: 0 }, primary: "Daga", secondary: "Daga pequeña", armor: "Armadura de gambesón" },
+  Serafín: { traits: { t_agility: 0, t_strength: 2, t_finesse: 0, t_instinct: 1, t_presence: 1, t_knowledge: -1 }, primary: "Hacha consagrada", secondary: "Escudo redondo", armor: "Cota de malla" },
+  Hechicero: { traits: { t_agility: 0, t_strength: -1, t_finesse: 1, t_instinct: 2, t_presence: 1, t_knowledge: 0 }, primary: "Bastón doble", armor: "Armadura de gambesón" },
+  Guerrero: { traits: { t_agility: 2, t_strength: 1, t_finesse: 0, t_instinct: 1, t_presence: -1, t_knowledge: 0 }, primary: "Espada larga", armor: "Cota de malla" },
+  Mago: { traits: { t_agility: -1, t_strength: 0, t_finesse: 0, t_instinct: 1, t_presence: 1, t_knowledge: 2 }, primary: "Gran bastón", armor: "Armadura de cuero" },
+};
+const ARMOR_TIER_SUFFIXES = ["", " mejorada", " avanzada", " legendaria"];
+// Claves (de cualquier rango) que corresponden al equipo recomendado de una clase.
+const recommendedGear = (className) => {
+  const r = CLASS_SUGGESTED[className] || {};
+  const base = BASE_WEAPONS.find((w) => w.key === r.primary);
+  return {
+    primary: new Set(base ? [1, 2, 3, 4].map((tier) => buildWeapon(base, tier).key) : []),
+    secondary: new Set(r.secondary ? [r.secondary] : []),
+    armor: new Set(r.armor ? ARMOR_TIER_SUFFIXES.map((s) => r.armor + s) : []),
+    names: r,
+  };
+};
+
 const CLASS_TRAIT_PRIORITY = {
-  Bardo: ["t_presence", "t_instinct", "t_finesse", "t_knowledge", "t_agility", "t_strength"],
-  Druida: ["t_instinct", "t_agility", "t_presence", "t_knowledge", "t_finesse", "t_strength"],
-  Guardián: ["t_strength", "t_agility", "t_instinct", "t_presence", "t_finesse", "t_knowledge"],
-  Explorador: ["t_agility", "t_instinct", "t_finesse", "t_strength", "t_presence", "t_knowledge"],
-  Pícaro: ["t_finesse", "t_agility", "t_instinct", "t_presence", "t_knowledge", "t_strength"],
-  Serafín: ["t_presence", "t_strength", "t_instinct", "t_knowledge", "t_agility", "t_finesse"],
-  Hechicero: ["t_instinct", "t_presence", "t_agility", "t_knowledge", "t_finesse", "t_strength"],
-  Guerrero: ["t_strength", "t_agility", "t_instinct", "t_presence", "t_finesse", "t_knowledge"],
-  Mago: ["t_knowledge", "t_instinct", "t_presence", "t_agility", "t_finesse", "t_strength"],
   Bruja: ["t_instinct", "t_knowledge", "t_presence", "t_agility", "t_finesse", "t_strength"],
   Brujo: ["t_presence", "t_instinct", "t_knowledge", "t_agility", "t_finesse", "t_strength"],
   Camorrista: ["t_strength", "t_agility", "t_instinct", "t_finesse", "t_presence", "t_knowledge"],
@@ -4277,6 +4294,9 @@ const sharedStyles = `
   .mh-wz-badge { width: 48px; height: 48px; flex-shrink: 0; border-radius: 12px; color: #fff; font: 700 22px 'Cinzel', Georgia, serif; display: flex; align-items: center; justify-content: center; }
   .mh-wz-img { width: 64px; height: 64px; flex-shrink: 0; border-radius: 12px; object-fit: cover; border: 1px solid var(--mh-line); }
   .mh-wz-dn { font-size: 22px; font-weight: 700; color: var(--mh-ink); line-height: 1.15; }
+  .mh-rec-hint { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: #2F8F5B; background: rgba(76,175,122,.12); border: 1px solid rgba(76,175,122,.35); border-radius: 8px; padding: 7px 11px; margin: -4px 0 12px; }
+  .mh-rec-pill { font-size: 10.5px; font-weight: 700; letter-spacing: .04em; color: #1F6B45; background: rgba(76,175,122,.22); border: 1px solid rgba(76,175,122,.5); border-radius: 10px; padding: 1px 8px; }
+  html[data-mh-theme="dark"] .mh-rec-hint, html[data-mh-theme="dark"] .mh-rec-pill { color: #7FE0A8; }
   .mh-wz-dm { font-size: 12px; color: var(--mh-muted); }
   .mh-wz-blurb { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--mh-ink2); }
   .mh-wz-feats { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
@@ -7444,8 +7464,28 @@ export default function App({ onSignOut }) {
     setTraitPool([]);
   };
 
+  const clearTraits = () => {
+    setTraitAssign({});
+    setTraitPool(TRAIT_MODIFIER_POOL.map((m) => m.id));
+  };
+
   const applyRecommendedTraits = () => {
     const chosenClassKey = CLASSES[carouselIndex]?.key;
+    const suggested = CLASS_SUGGESTED[chosenClassKey]?.traits;
+    if (suggested) {
+      const taken = new Set();
+      const assigned = {};
+      TRAITS.forEach((tr) => {
+        const mod = TRAIT_MODIFIER_POOL.find((m) => m.value === suggested[tr.key] && !taken.has(m.id));
+        if (mod) {
+          taken.add(mod.id);
+          assigned[tr.key] = mod.id;
+        }
+      });
+      setTraitAssign(assigned);
+      setTraitPool(TRAIT_MODIFIER_POOL.map((m) => m.id).filter((id) => !taken.has(id)));
+      return;
+    }
     const priority = CLASS_TRAIT_PRIORITY[chosenClassKey] || TRAITS.map((t) => t.key);
     const sortedMods = [...TRAIT_MODIFIER_POOL].sort((a, b) => b.value - a.value).map((m) => m.id);
     const nextAssign = {};
@@ -23618,6 +23658,9 @@ export default function App({ onSignOut }) {
                     <button className="mh-btn-ghost" onClick={applyRecommendedTraits}>
                       <Sparkles size={14} /> Recomendados para {CLASSES[carouselIndex]?.key}
                     </button>
+                    <button className="mh-btn-ghost" onClick={clearTraits} disabled={Object.keys(traitAssign).length === 0}>
+                      <RotateCcw size={14} /> Limpiar selección
+                    </button>
                     <span className="mh-wz-dm">
                       {traitPool.length === 0
                         ? "Todos los valores repartidos ✓"
@@ -23814,6 +23857,15 @@ export default function App({ onSignOut }) {
                   <div className="mh-wz-dm" style={{ marginBottom: 12 }}>
                     {wizardStep === "primary" ? "Elige el arma con la que empiezas." : wizardStep === "secondary" ? (PRIMARY_WEAPONS.find((w) => w.key === draftPrimaryWeapon)?.hands === 2 && !ignoresBurden(CLASSES[carouselIndex]?.key) ? "Con un arma a dos manos no hay arma secundaria: puedes seguir." : PRIMARY_WEAPONS.find((w) => w.key === draftPrimaryWeapon)?.hands === 2 ? "Entrenamiento de Combate: ignoras la carga, así que puedes llevar también un arma secundaria." : "Elige un arma secundaria o «Ninguna».") : "Elige tu armadura o «Ninguna»."}
                   </div>
+                  {(() => {
+                    const g = recommendedGear(CLASSES[carouselIndex]?.key);
+                    const pick = { primary: g.names.primary, secondary: g.names.secondary, armor: g.names.armor }[wizardStep];
+                    return pick ? (
+                      <div className="mh-rec-hint">
+                        <Sparkles size={13} /> Recomendado para {CLASSES[carouselIndex]?.key}: <b>{pick}</b>
+                      </div>
+                    ) : null;
+                  })()}
                   {wizardStep === "primary" && (
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       {PRIMARY_WEAPONS.filter(
@@ -23822,6 +23874,7 @@ export default function App({ onSignOut }) {
                           (!w.magic || spellcastTraitFor(CLASSES[carouselIndex]?.key, (SUBCLASSES[CLASSES[carouselIndex]?.key] || [])[subclassIndex]?.key))
                       ).map((w) => {
                         const selected = draftPrimaryWeapon === w.key;
+                        const rec = recommendedGear(CLASSES[carouselIndex]?.key).primary.has(w.key);
                         return (
                           <div
                             key={w.key}
@@ -23830,8 +23883,8 @@ export default function App({ onSignOut }) {
                               display: "flex",
                               justifyContent: "space-between",
                               alignItems: "center",
-                              border: "1px solid " + (selected ? "#E3B04B" : "var(--mh-line)"),
-                              background: selected ? "#E3B04B14" : "var(--mh-panel2)",
+                              border: "1px solid " + (selected ? "#E3B04B" : rec ? "#4CAF7A" : "var(--mh-line)"),
+                              background: selected ? "#E3B04B14" : rec ? "#4CAF7A18" : "var(--mh-panel2)",
                               borderRadius: 8,
                               padding: "9px 14px",
                               cursor: "pointer",
@@ -23840,6 +23893,7 @@ export default function App({ onSignOut }) {
                             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                               {selected && <Check size={13} color="#E3B04B" />}
                               <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--mh-ink)" }}>{w.key}</span>
+                              {rec && <span className="mh-rec-pill">Recomendada</span>}
                             </div>
                             <span style={{ fontSize: 11.5, color: "var(--mh-muted)" }}>
                               {w.trait} · {w.range} · {w.damage}
@@ -23895,6 +23949,7 @@ export default function App({ onSignOut }) {
                       </div>
                       {SECONDARY_WEAPONS.map((w) => {
                         const selected = draftSecondaryWeapon === w.key;
+                        const rec = recommendedGear(CLASSES[carouselIndex]?.key).secondary.has(w.key);
                         return (
                           <div
                             key={w.key}
@@ -23903,8 +23958,8 @@ export default function App({ onSignOut }) {
                               display: "flex",
                               justifyContent: "space-between",
                               alignItems: "center",
-                              border: "1px solid " + (selected ? "#E3B04B" : "var(--mh-line)"),
-                              background: selected ? "#E3B04B14" : "var(--mh-panel2)",
+                              border: "1px solid " + (selected ? "#E3B04B" : rec ? "#4CAF7A" : "var(--mh-line)"),
+                              background: selected ? "#E3B04B14" : rec ? "#4CAF7A18" : "var(--mh-panel2)",
                               borderRadius: 8,
                               padding: "9px 14px",
                               cursor: "pointer",
@@ -23913,6 +23968,7 @@ export default function App({ onSignOut }) {
                             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                               {selected && <Check size={13} color="#E3B04B" />}
                               <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--mh-ink)" }}>{w.key}</span>
+                              {rec && <span className="mh-rec-pill">Recomendada</span>}
                             </div>
                             <span style={{ fontSize: 11.5, color: "var(--mh-muted)" }}>
                               {w.trait !== "—" ? w.trait + " · " + w.range + " · " + w.damage : w.damage}
@@ -23944,6 +24000,7 @@ export default function App({ onSignOut }) {
                       </div>
                       {ARMORS.filter((a) => a.tier <= tierForLevel(levelChoice)).map((a) => {
                         const selected = draftArmor === a.key;
+                        const rec = recommendedGear(CLASSES[carouselIndex]?.key).armor.has(a.key);
                         return (
                           <div
                             key={a.key}
@@ -23952,8 +24009,8 @@ export default function App({ onSignOut }) {
                               display: "flex",
                               justifyContent: "space-between",
                               alignItems: "center",
-                              border: "1px solid " + (selected ? "#E3B04B" : "var(--mh-line)"),
-                              background: selected ? "#E3B04B14" : "var(--mh-panel2)",
+                              border: "1px solid " + (selected ? "#E3B04B" : rec ? "#4CAF7A" : "var(--mh-line)"),
+                              background: selected ? "#E3B04B14" : rec ? "#4CAF7A18" : "var(--mh-panel2)",
                               borderRadius: 8,
                               padding: "9px 14px",
                               cursor: "pointer",
@@ -23962,6 +24019,7 @@ export default function App({ onSignOut }) {
                             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                               {selected && <Check size={13} color="#E3B04B" />}
                               <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--mh-ink)" }}>{a.key}</span>
+                              {rec && <span className="mh-rec-pill">Recomendada</span>}
                             </div>
                             <span style={{ fontSize: 11.5, color: "var(--mh-muted)" }}>Puntuación {a.score}</span>
                           </div>
