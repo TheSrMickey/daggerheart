@@ -5,13 +5,27 @@ import { useEffect, useRef, useState } from "react";
 // Hoja de personaje "moderna": vive en la columna central. Recibe los datos ya calculados y las acciones de la app.
 const signed = (n) => (n > 0 ? "+" + n : String(n));
 
-// La hoja clásica está pensada para unos 1100 px de ancho mínimo. Se escala para que «Detalles generales» quepa entera
-// (alto) y su ancho se estira hasta llenar la columna central; el resto de pestañas usan exactamente las mismas medidas.
+// La hoja clásica está pensada para unos 1100 px de ancho mínimo. Se escala (CSS zoom, que no crea un contenedor para los
+// elementos fijos: así los efectos y las ventanas siguen cubriendo toda la pantalla) para que «Detalles generales» quepa
+// entera en alto y su ancho se estira hasta llenar la columna central; el resto de pestañas usan las mismas medidas.
 const BASE_W = 1100;
+// Según el navegador, offsetHeight devuelve el alto con o sin zoom: se detecta una vez.
+let zoomedApi = null;
+const readsZoomed = () => {
+  if (zoomedApi === null) {
+    const d = document.createElement("div");
+    d.style.cssText = "position:absolute;visibility:hidden;height:100px;zoom:.5";
+    document.body.appendChild(d);
+    zoomedApi = d.offsetHeight < 75;
+    d.remove();
+  }
+  return zoomedApi;
+};
 function ZoomFit({ children, isGeneral, natural, onNatural }) {
   const outer = useRef(null);
   const inner = useRef(null);
   const [fit, setFit] = useState({ s: 1, h: undefined, w: BASE_W });
+  const cur = useRef(1);
   useEffect(() => {
     const o = outer.current;
     const i = inner.current;
@@ -19,11 +33,12 @@ function ZoomFit({ children, isGeneral, natural, onNatural }) {
     const calc = () => {
       const ow = o.clientWidth;
       const availH = window.innerHeight - o.getBoundingClientRect().top - 24;
-      // El alto de referencia es el de Detalles generales (se guarda al verlo la primera vez).
-      if (isGeneral && i.offsetHeight && i.offsetHeight !== natural) onNatural(i.offsetHeight);
-      const ref = isGeneral ? i.offsetHeight || natural : natural;
+      const nat = readsZoomed() ? i.offsetHeight / cur.current : i.offsetHeight; // alto sin zoom
+      if (isGeneral && nat && Math.abs(nat - natural) > 1) onNatural(nat);
+      const ref = isGeneral ? nat || natural : natural;
       const sc = Math.max(0.5, Math.min(1.1, ow / BASE_W, ref ? availH / ref : 9));
-      setFit({ s: sc, h: i.offsetHeight * sc, w: ow / sc });
+      cur.current = sc;
+      setFit({ s: sc, h: nat * sc, w: ow / sc });
     };
     calc();
     const ro = new ResizeObserver(calc);
@@ -37,7 +52,7 @@ function ZoomFit({ children, isGeneral, natural, onNatural }) {
   }, [isGeneral, natural, onNatural]);
   return (
     <div ref={outer} className="mhm-zoom" style={{ height: fit.h }}>
-      <div ref={inner} style={{ width: fit.w, transform: `scale(${fit.s})`, transformOrigin: "top left" }}>{children}</div>
+      <div ref={inner} style={{ width: fit.w, zoom: fit.s, "--mhz": fit.s }}>{children}</div>
     </div>
   );
 }
