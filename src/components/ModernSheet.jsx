@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Dices, Shield, Heart, Zap, Sparkles, ExternalLink } from "lucide-react";
-import { weaponIcon } from "./gearIcons";
+import { useEffect, useRef, useState } from "react";
+import { ExternalLink } from "lucide-react";
 
 // Hoja de personaje "moderna": vive en la columna central. Recibe los datos ya calculados y las acciones de la app.
 const TABS = [
@@ -15,23 +14,41 @@ const TABS = [
 
 const signed = (n) => (n > 0 ? "+" + n : String(n));
 
-function Track({ label, Icon, total, filled, onToggle, color, shape = "box" }) {
+// La hoja clásica está pensada para unos 1100 px de ancho: se escala (ancho y alto) para que quepa entera en la columna central.
+const BASE_W = 1100;
+function ZoomFit({ children }) {
+  const outer = useRef(null);
+  const inner = useRef(null);
+  const [fit, setFit] = useState({ s: 1, h: undefined, x: 0 });
+  useEffect(() => {
+    const o = outer.current;
+    const i = inner.current;
+    if (!o || !i) return;
+    const calc = () => {
+      const natural = i.offsetHeight || 1;
+      const availH = window.innerHeight - o.getBoundingClientRect().top - 24;
+      const s = Math.min(1.1, o.clientWidth / BASE_W, availH / natural);
+      const sc = Math.max(0.5, s);
+      setFit({ s: sc, h: natural * sc, x: Math.max(0, (o.clientWidth - BASE_W * sc) / 2) });
+    };
+    calc();
+    const ro = new ResizeObserver(calc);
+    ro.observe(o);
+    ro.observe(i);
+    window.addEventListener("resize", calc);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", calc);
+    };
+  }, []);
   return (
-    <div className="mhm-track">
-      <div className="mhm-track-l">
-        <Icon size={13} /> {label}
-        <small>{filled}/{total}</small>
-      </div>
-      <div className="mhm-pips">
-        {Array.from({ length: total }, (_, i) => (
-          <button key={i} type="button" className={"mhm-pip is-" + shape + (i < filled ? " is-on" : "")} style={{ "--pc": color }} onClick={() => onToggle(i)} aria-label={`${label} ${i + 1}`} />
-        ))}
-      </div>
+    <div ref={outer} className="mhm-zoom" style={{ height: fit.h }}>
+      <div ref={inner} style={{ width: BASE_W, transform: `scale(${fit.s})`, transformOrigin: "top left", marginLeft: fit.x }}>{children}</div>
     </div>
   );
 }
 
-export function ModernSheet({ d, actions }) {
+export function ModernSheet({ d, actions, general }) {
   const [tab, setTab] = useState("general");
   const Emblem = d.Emblem;
   return (
@@ -66,73 +83,7 @@ export function ModernSheet({ d, actions }) {
       </nav>
 
       {tab === "general" ? (
-        <div className="mhm-grid">
-          <section className="mhm-panel">
-            <h3 className="mh-serif">Armadura y estadísticas</h3>
-            <div className="mhm-two">
-              <div className="mhm-big"><small>Evasión</small><b className="mh-serif">{d.evasion}</b></div>
-              <div className="mhm-big">
-                <small>Armadura</small>
-                <div className="mhm-armor">
-                  <b className="mh-serif">{d.armorTotal}</b>
-                  <span>
-                    {Array.from({ length: d.armorTotal }, (_, i) => (
-                      <button key={i} type="button" className={"mhm-shield" + (i < d.armorLeft ? " is-on" : "")} onClick={() => actions.setArmor(i < d.armorLeft && i + 1 === d.armorLeft ? i : i + 1)} aria-label={`Armadura ${i + 1}`}>
-                        <Shield size={15} />
-                      </button>
-                    ))}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="mhm-thr">
-              <div><small>Menor</small><b>{d.minor}</b></div>
-              <div><small>Mayor</small><b>{d.major}</b></div>
-              <div className="is-severe"><small>Grave</small><b>{d.severe}</b></div>
-            </div>
-            <Track label="Puntos de vida" Icon={Heart} total={d.hpTotal} filled={d.hpMarked} color="#E0544A" onToggle={actions.markHp} />
-            <Track label="Estrés" Icon={Zap} total={d.stressTotal} filled={d.stressMarked} color="#A58BE8" onToggle={actions.markStress} />
-            <Track label="Esperanza" Icon={Sparkles} total={d.hopeTotal} filled={d.hope} color="#E3B04B" shape="diamond" onToggle={actions.setHope} />
-          </section>
-
-          <div className="mhm-col">
-            <section className="mhm-panel">
-              <h3 className="mh-serif">Armas <small>Competencia {d.proficiency}</small></h3>
-              {d.weapons.length === 0 && <p className="mhm-empty">Sin armas equipadas.</p>}
-              {d.weapons.map((w) => {
-                const Icon = weaponIcon(w.key);
-                return (
-                  <div key={w.kind} className="mhm-weapon">
-                    <div className="mhm-wicon" style={{ "--tc": w.tierColor }}>
-                      <Icon size={34} strokeWidth={1.5} />
-                      <i>{w.tierLabel}</i>
-                    </div>
-                    <div className="mhm-winfo">
-                      <small>{w.kind} · {w.hands}</small>
-                      <b className="mh-serif">{w.key}</b>
-                      <div className="mhm-wdmg"><strong>{w.damage.split(" ")[0]}</strong> {w.damage.split(" ").slice(1).join(" ")} · {w.trait} · {w.range}</div>
-                      {w.feature && <div className="mhm-wfeat">{w.feature}</div>}
-                      <div className="mhm-wact">
-                        <button type="button" className="is-primary" onClick={() => actions.attack(w)}><Dices size={13} /> Atacar</button>
-                        <button type="button" onClick={() => actions.damage(w)}>{w.damage.split(" ")[0]}</button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </section>
-            <section className="mhm-panel">
-              <h3 className="mh-serif">Experiencias</h3>
-              {d.experiences.length === 0 && <p className="mhm-empty">Aún no tienes experiencias.</p>}
-              {d.experiences.map((e, i) => (
-                <div key={i} className="mhm-exp">
-                  <div><small>Experiencia</small><b className="mh-serif">{e.text}</b></div>
-                  <span className="mh-serif">{signed(e.bonus)}</span>
-                </div>
-              ))}
-            </section>
-          </div>
-        </div>
+        <ZoomFit>{general}</ZoomFit>
       ) : (
         <section className="mhm-panel mhm-soon">
           <h3 className="mh-serif">{TABS.find((t) => t[0] === tab)[1]}</h3>
