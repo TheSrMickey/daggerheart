@@ -3202,6 +3202,16 @@ const sharedStyles = `
   .mh-map-hp i { display: block; height: 100%; background: #E24B4A; }
   .mh-map-nm { position: absolute; z-index: 1; top: 92%; left: 50%; translate: -50% 0; font-size: 10px; font-weight: 700; color: #fff; text-shadow: 0 1px 3px #000, 0 0 2px #000; white-space: nowrap; pointer-events: none; }
   .mh-map.is-compact .mh-map-nm { display: none; }
+  .mh-fan { position: absolute; left: 50%; bottom: -34px; transform: translateX(-50%); display: flex; z-index: 6; pointer-events: none; }
+  .mh-fan-card { pointer-events: auto; cursor: grab; touch-action: none; user-select: none; width: clamp(92px, 11vw, 132px); aspect-ratio: 5 / 7; margin: 0 -10px; padding: 8px 8px 8px; border-radius: 10px; border: 2px solid var(--c); background: linear-gradient(180deg, color-mix(in srgb, var(--c) 28%, #1B1824), #1B1824 70%); color: #F3EBDD; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; box-shadow: 0 6px 16px rgba(0,0,0,.5); transform: translateY(var(--y)) rotate(var(--r)); transform-origin: 50% 120%; transition: transform .15s; }
+  .mh-fan-card:hover { transform: translateY(-34px) rotate(0deg) scale(1.06); z-index: 2; }
+  .mh-fan-card.is-lifted { opacity: .25; }
+  .mh-fan-card b { font-size: 11px; line-height: 1.15; }
+  .mh-fan-card small { font-size: 9px; opacity: .75; }
+  .mh-fan-lv { position: absolute; top: 5px; left: 5px; width: 18px; height: 18px; border-radius: 50%; background: var(--c); color: #1B1824; font-size: 11px; font-weight: 700; display: grid; place-items: center; }
+  .mh-fan-ghost { position: fixed; z-index: 9999; pointer-events: none; transform: translate(-50%, -50%) rotate(-6deg); padding: 8px 12px; border-radius: 8px; border: 2px solid var(--c); background: #1B1824; color: #F3EBDD; font-size: 12px; box-shadow: 0 0 18px var(--c); }
+  .mh-fan-tip { position: fixed; z-index: 9999; pointer-events: none; transform: translate(-50%, -150%); padding: 6px 10px; border-radius: 8px; background: rgba(20,17,26,.92); color: #F3EBDD; font-size: 12px; white-space: nowrap; }
+  .mh-fan-tip small { display: block; font-size: 10px; opacity: .7; }
   .mh-map-stage { position: relative; flex: 1 1 auto; min-height: 200px; border-radius: 12px; overflow: hidden; background: #1B1824; }
   .mh-map-view { position: absolute; inset: 0; overflow: auto; scrollbar-width: none; container-type: size; }
   .mh-map-view::-webkit-scrollbar { display: none; }
@@ -5602,6 +5612,99 @@ const readIsoPref = () => {
   }
 };
 // Tablero con fichas cuadradas. Se arrastran, o se elige una y se pulsa la casilla; también con las flechas.
+// Abanico de cartas de dominio en el borde inferior del mapa: se arrastran hasta una casilla para usarlas.
+function CardFan({ cards, me, tokens, onUse }) {
+  const [drag, setDrag] = useState(null); // { key, x, y, cell }
+  const dragRef = useRef(null);
+  const cellAt = (x, y) => {
+    const el = document.elementsFromPoint(x, y).map((n) => n.closest && n.closest("[data-cx]")).find(Boolean);
+    return el ? { x: Number(el.getAttribute("data-cx")), y: Number(el.getAttribute("data-cy")) } : null;
+  };
+  const rangeOf = (cell) => {
+    if (!me || !cell) return null;
+    const d = Math.max(Math.abs(cell.x - me.x), Math.abs(cell.y - me.y));
+    return MAP_RANGES.find((r) => d <= r.max) || null;
+  };
+  const end = (ev, cancel) => {
+    const d = dragRef.current;
+    dragRef.current = null;
+    setDrag(null);
+    window.removeEventListener("pointermove", move);
+    window.removeEventListener("pointerup", up);
+    window.removeEventListener("keydown", key);
+    if (!d || cancel) return;
+    const cell = cellAt(ev.clientX, ev.clientY);
+    if (!cell) return;
+    const target = tokens.find((t) => !t.hidden && t.x === cell.x && t.y === cell.y && t.id !== me?.id) || null;
+    onUse(d.card, cell, target, rangeOf(cell));
+  };
+  const move = (ev) => {
+    const cell = cellAt(ev.clientX, ev.clientY);
+    const next = { ...dragRef.current, x: ev.clientX, y: ev.clientY, cell };
+    dragRef.current = next;
+    setDrag(next);
+  };
+  const up = (ev) => end(ev, false);
+  const key = (ev) => {
+    if (ev.key === "Escape") end({ clientX: 0, clientY: 0 }, true);
+  };
+  const start = (ev, card) => {
+    if (ev.button > 0) return;
+    ev.preventDefault();
+    dragRef.current = { card, x: ev.clientX, y: ev.clientY, cell: null };
+    setDrag(dragRef.current);
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    window.addEventListener("keydown", key);
+  };
+  useEffect(() => () => {
+    window.removeEventListener("pointermove", move);
+    window.removeEventListener("pointerup", up);
+    window.removeEventListener("keydown", key);
+  }, []);
+  if (!cards.length) return null;
+  const n = cards.length;
+  const rng = drag ? rangeOf(drag.cell) : null;
+  const target = drag?.cell ? tokens.find((t) => !t.hidden && t.x === drag.cell.x && t.y === drag.cell.y && t.id !== me?.id) : null;
+  return (
+    <>
+      <div className="mh-fan" aria-label="Tus cartas de dominio">
+        {cards.map((c, i) => {
+          const mid = (n - 1) / 2;
+          const col = DOMAIN_COLORS[c.domain] || "#C9A24B";
+          const lifting = drag?.card.key === c.key;
+          return (
+            <div
+              key={c.key}
+              className={"mh-fan-card" + (lifting ? " is-lifted" : "")}
+              style={{ "--r": `${(i - mid) * 6}deg`, "--y": `${Math.abs(i - mid) * 5}px`, "--c": col }}
+              onPointerDown={(e) => start(e, c)}
+              title="Arrástrala hasta el mapa para usarla"
+            >
+              <span className="mh-fan-lv">{c.level}</span>
+              <b>{c.key}</b>
+              <small>{c.domain} · {c.type}</small>
+            </div>
+          );
+        })}
+      </div>
+      {drag && (
+        <>
+          <div className="mh-fan-ghost" style={{ left: drag.x, top: drag.y, "--c": DOMAIN_COLORS[drag.card.domain] || "#C9A24B" }}>
+            <b>{drag.card.key}</b>
+          </div>
+          {drag.cell && (
+            <div className="mh-fan-tip" style={{ left: drag.x, top: drag.y }}>
+              {target ? `Objetivo: ${target.name || "Ficha"}` : "Casilla"} {rng ? `(${rng.label})` : "(fuera de alcance)"}
+              <small>Suelta para usar · Esc para cancelar</small>
+            </div>
+          )}
+        </>
+      )}
+    </>
+  );
+}
+
 function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChange, hideIsoBtn, menuFor, fx, bg, tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
   const ref = useRef(null);
   const dragRef = useRef(null);
@@ -16868,6 +16971,24 @@ export default function App({ onSignOut }) {
                                         {/* Avisos de tiradas y golpes, centrados en la parte visible del mapa */}
                                         <MapLog log={campaignMap.log} />
                                         <MapCounters list={campaignMap.counters} />
+                                        {myToken && (() => {
+                                          const me = characters[viewingCharId];
+                                          let keys = [];
+                                          try {
+                                            keys = JSON.parse(me?.f_domain_cards || "[]");
+                                          } catch (e) {}
+                                          const cards = keys.map((k) => findDomainCardAny(k)).filter(Boolean);
+                                          return (
+                                            <CardFan
+                                              cards={cards}
+                                              me={myToken}
+                                              tokens={mapTokens}
+                                              onUse={(card, cell, target, rng) =>
+                                                postCampaignEvent(viewingCharId, `usa la carta «${card.key}»${target ? ` sobre ${target.name || "una ficha"}` : ` en la casilla ${cell.x + 1},${cell.y + 1}`}${rng ? ` (${rng.label})` : ""}.`)
+                                              }
+                                            />
+                                          );
+                                        })()}
                                         <AreaCards campaignId={charCampaign.id} />
                                         {areaTool && <div className="mh-area-hint">Pulsa una casilla para colocar el área <button type="button" onClick={() => setAreaTool(null)}>Cancelar</button></div>}
                                         <div className="mh-stg-scene-top mh-map-top">
