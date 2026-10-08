@@ -1071,7 +1071,7 @@ const moonPhaseOf = (c) => {
 // Comunión: efecto según el dado elegido.
 const communeEffect = (v) => (v >= 6 ? "Vives psíquicamente una escena relacionada con la respuesta como si estuvieras allí" : v >= 4 ? "Oyes sonidos o ves una visión relacionados con la respuesta" : "Notas un sabor, un olor o una sensación relacionados con la respuesta");
 // Rasgo de conjuro del personaje: el de su subclase o, si ha multiclaseado, el de la subclase nueva (si no tenía o si elige usarlo).
-// Filas de Acciones que comparten línea: subclase y multiclase, características de clase de las dos clases y las dos ascendencias.
+// Filas de Acciones que comparten línea: las dos ascendencias de un personaje de ascendencia mixta.
 function pairActionRows(list) {
   const items = list.map((x) => ({ ...x }));
   const take = (key) => {
@@ -1082,10 +1082,6 @@ function pairActionRows(list) {
     const a = items.find((x) => x.key === aKey);
     if (a && items.some((x) => x.key === bKey)) a.pair = take(bKey);
   };
-  attach("subclass", "mc-sub");
-  const cf = items.filter((x) => x.key.startsWith("cf-"));
-  const base = cf.filter((x) => !x.mc);
-  cf.filter((x) => x.mc).forEach((m, i) => base[i] && attach(base[i].key, m.key));
   const anc = items.filter((x) => x.key.startsWith("anc-"));
   if (anc.length === 2) attach(anc[0].key, anc[1].key);
   return items;
@@ -4411,6 +4407,12 @@ const sharedStyles = `
   html[data-mh-theme="light"] .mhm-head .mh-htag { color: color-mix(in srgb, var(--tag) 70%, #000); background: color-mix(in srgb, var(--tag) 16%, #FFFCF6e6); }
   html[data-mh-theme="light"] .mhm-head .mh-htag.is-active { background: color-mix(in srgb, var(--tag) 28%, #FFFCF6e6); }
   .mhm-head.is-multi { background: linear-gradient(90deg, color-mix(in srgb, var(--cc) 44%, #0d1a1a) 0%, #0c0c20 50%, color-mix(in srgb, var(--cc2) 44%, #0d1a1a) 100%); border-color: color-mix(in srgb, var(--cc2) 35%, #ffffff14); }
+  .mh-arows-few > .mh-arow { flex: 0 0 auto; min-height: 66px; }
+  .mh-atabs { display: flex; gap: 4px; padding: 3px; border-radius: 10px; background: var(--mh-panel2); border: 1px solid var(--mh-line); flex-shrink: 0; }
+  .mh-atabs button { all: unset; box-sizing: border-box; flex: 1; min-width: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 8px; border-radius: 7px; font-size: 12px; font-weight: 500; color: var(--mh-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mh-atabs button:hover { color: var(--mh-ink); } .mh-atabs button:focus-visible { outline: 2px solid #E3B04B; outline-offset: 1px; }
+  .mh-atabs button.is-on { background: var(--mh-panel); color: var(--mh-ink); font-weight: 600; box-shadow: inset 0 0 0 1px var(--mh-line2); }
+  .mh-atabs i { font-style: normal; font-size: 10px; padding: 0 6px; border-radius: 8px; background: var(--mh-panel3); color: var(--mh-muted); }
   .mh-arow-pair { flex: 1 1 0; min-height: 0; display: flex; gap: 8px; }
   .mh-arow.is-half { flex: 1 1 0; min-width: 0; padding: 8px 10px; gap: 8px; }
   .mh-arow.is-half .mh-arow-ico { width: 30px; height: 30px; }
@@ -9264,6 +9266,7 @@ export default function App({ onSignOut }) {
       document.removeEventListener("keydown", close);
     };
   }, [acctOpen]);
+  const [actionsTabMc, setActionsTabMc] = useState("general"); // pestaña de Acciones con multiclase: general o multi
   const [levelUpId, setLevelUpId] = useState(null); // personaje que está subiendo de nivel
   const [sheetAsk, setSheetAsk] = useState(null); // personaje por el que se pregunta qué hoja abrir
   const [actionPage, setActionPage] = useState(0);
@@ -14096,7 +14099,11 @@ export default function App({ onSignOut }) {
 
                       {activeTab === "actions" && (() => {
                         // Lista de acciones: cada fila con icono, tipo, nombre, resumen y coste.
-                        const items = pairActionRows(buildActionRows());
+                        const mcAct = getMulticlass(c);
+                        const allRows = buildActionRows();
+                        const isMcRow = (x) => x.mc || x.key === "mc-sub";
+                        const showMc = !!mcAct && actionsTabMc === "multi";
+                        const items = pairActionRows(mcAct ? (showMc ? [...allRows.filter((x) => x.key === "mc-sub"), ...allRows.filter((x) => x.mc)] : allRows.filter((x) => !isMcRow(x))) : allRows);
 
                         // Coste detectado en el texto: "marca un Estrés", "gasta 2 de Esperanza", "a voluntad".
                         const NUM = { un: 1, una: 1, dos: 2, tres: 3 };
@@ -14122,7 +14129,17 @@ export default function App({ onSignOut }) {
                             flying={conditions.includes("Volando")}
                             retracted={conditions.includes("Retraído")}
                             >
-                              <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, minHeight: 0 }}>
+                              <div className={showMc ? "mh-arows-few" : undefined} style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, minHeight: 0 }}>
+                                {mcAct && (
+                                  <div className="mh-atabs" role="tablist" aria-label="Acciones">
+                                    <button type="button" role="tab" aria-selected={!showMc} className={!showMc ? "is-on" : ""} onClick={() => setActionsTabMc("general")}>
+                                      General <i>{allRows.filter((x) => !isMcRow(x)).length}</i>
+                                    </button>
+                                    <button type="button" role="tab" aria-selected={showMc} className={showMc ? "is-on" : ""} onClick={() => setActionsTabMc("multi")}>
+                                      Multiclase · {mcAct.cls} <i>{allRows.filter(isMcRow).length}</i>
+                                    </button>
+                                  </div>
+                                )}
                                 {items.length === 0 && <div style={{ fontSize: 12.5, color: "var(--mh-muted)", fontStyle: "italic" }}>Todavía no hay acciones para este personaje.</div>}
                                 {items.map((item) => {
                                   const row = (it, half) => {
