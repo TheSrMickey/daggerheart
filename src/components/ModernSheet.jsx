@@ -148,12 +148,30 @@ export function ModernSheet({ d, actions, content, tab, onTab, fill }) {
               {d.pronouns && <span data-tour="pron"> · {d.pronouns}</span>}
             </p>
           </div>
+          {d.tags && <div className="mhm-tags">{d.tags}</div>}
         </div>
         <div className="mhm-traits">
           {d.traits.map((t) => (
-            <button key={t.key} type="button" onClick={() => actions.rollTrait(t.label, t.value)} title={"Tirar " + t.label}>
+            <button
+              key={t.key}
+              type="button"
+              className={(t.spell ? "is-spell " : "") + (t.form > 0 ? "is-form " : "") + (t.equip > 0 ? "is-eq-up" : t.equip < 0 ? "is-eq-down" : "")}
+              onClick={() => actions.rollTrait(t.label, t.value, t)}
+              title={
+                (t.form > 0 ? t.label + " +" + t.form + " por " + t.formKey + ". " : "") +
+                (t.equip !== 0 ? t.label + " " + signed(t.equip) + " por equipo. " : "") +
+                (t.adv ? "Ventaja en tiradas de " + t.label + " (Encarnación Elemental — Aire). " : "") +
+                (t.spell ? t.label + " — rasgo de conjuro. " : "") +
+                "Tirar " + t.label
+              }
+            >
               <span>{t.label}</span>
-              <b>{signed(t.value)}</b>
+              <span className="mhm-tright">
+                {t.form > 0 && <span className="mhm-tmod">+{t.form}</span>}
+                {t.equip !== 0 && <span className="mhm-tmod">{signed(t.equip)}</span>}
+                {t.adv && <span className="mhm-tmod" aria-label="ventaja">▲</span>}
+                <b>{signed(t.value)}</b>
+              </span>
             </button>
           ))}
         </div>

@@ -4352,6 +4352,12 @@ const sharedStyles = `
   .mhm-head h2 { margin: 0; font-size: 24px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; } .mhm-head p { margin: 0; color: #ffffffcc; font-size: 13px; }
   .mhm-traits { position: relative; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
   .mhm-traits button { all: unset; cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 7px 11px; border-radius: 9px; background: #00000050; border: 1px solid #ffffff14; font-size: 12px; } .mhm-traits button:hover { border-color: var(--cc); } .mhm-traits b { font-size: 15px; }
+  .mhm-traits button.is-spell { border: 1px dashed var(--cc); } .mhm-traits button.is-form { background: color-mix(in srgb, var(--cc) 18%, #00000050); border-color: var(--cc); } .mhm-traits button.is-eq-up { border-color: #7FB77A; } .mhm-traits button.is-eq-down { border-color: #D9644E; }
+  .mhm-traits button .mhm-tmod { font-size: 9px; font-weight: 700; margin-right: 3px; } .mhm-traits button .mhm-tright { display: flex; align-items: center; gap: 3px; }
+  .mhm-tags { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; margin-left: auto; align-self: flex-start; max-width: 55%; position: relative; z-index: 1; }
+  .mhm-head .mh-htag { color: color-mix(in srgb, var(--tag) 45%, #fff); background: color-mix(in srgb, var(--tag) 20%, #0c0c2099); backdrop-filter: blur(3px); }
+  .mhm-head .mh-htag.is-active { background: color-mix(in srgb, var(--tag) 32%, #0c0c2099); }
+  @media (max-width: 819px) { .mhm-tags { max-width: 100%; margin-left: 0; justify-content: flex-start; flex-basis: 100%; } .mhm-head-top { flex-wrap: wrap; } }
   .mhm-tabs { display: flex; align-items: flex-end; gap: 4px; border-bottom: 1px solid var(--mh-line); overflow-x: auto; scrollbar-width: none; } .mhm-tabs::-webkit-scrollbar { display: none; } .mhm-tabs .mhm-spacer { flex: 1; min-width: 12px; }
   .mhm-tabs button { all: unset; cursor: pointer; display: flex; align-items: center; gap: 7px; padding: 11px 7px; font-size: 12.5px; font-weight: 500; color: var(--mh-muted); white-space: nowrap; border-bottom: 2px solid transparent; margin-bottom: -1px; } .mhm-tabs.is-compact .is-base:not(.is-on) .lbl { display: none; } .mhm-tabs.is-compact .is-base:not(.is-on) { padding-left: 9px; padding-right: 9px; } .mhm-tabs button:hover { color: var(--mh-ink); } .mhm-tabs .is-on { color: var(--tone, var(--cc)); border-color: var(--tone, var(--cc)); }
   .mhm-plain { width: 100%; padding-bottom: 24px; }
@@ -11905,6 +11911,13 @@ export default function App({ onSignOut }) {
   const padX = showRail ? "clamp(28px, 3.4vw, 48px)" : "28px";
   const contentMax = showRail ? 1320 : view === "ficha" ? 1160 : 960;
   // Datos de la hoja moderna: valores base con lo que aportan armas y armadura (las reglas especiales de subclase siguen en la clásica).
+  const getKeys = (raw) => {
+    try {
+      return JSON.parse(raw || "[]");
+    } catch (e) {
+      return [];
+    }
+  };
   const modernData = (id) => {
     const c = characters[id];
     const primary = PRIMARY_WEAPONS.find((w) => w.key === c.f_primary_weapon);
@@ -11938,7 +11951,24 @@ export default function App({ onSignOut }) {
       Emblem: CLASS_EMBLEMS[c.f_class] || User,
       art: CLASS_ART[c.f_class] || null,
       pronouns: c.f_pronouns || "",
-      traits: TRAITS.map((t) => ({ key: t.key, label: t.label, value: traitOf(t.key) })),
+      tags: renderHeaderTags(c, id, { noCampaign: true }),
+      traits: TRAITS.map((t) => {
+        // Igual que en la hoja clásica: bonos de forma o evolución, de equipo, rasgo de conjuro y ventaja del Aire.
+        const formBoost = beast && beast.traitBonus?.key === t.key ? beast.traitBonus.amount : 0;
+        const evoBoost = c.f_evolution_trait === t.key ? 1 : 0;
+        const spell = spellcastTraitFor(c.f_class, c.f_subclass) === t.key;
+        return {
+          key: t.key,
+          label: t.label,
+          value: traitOf(t.key) + formBoost + evoBoost,
+          form: formBoost + evoBoost,
+          formKey: beast?.key || "transformación",
+          equip: mods[t.key] || 0,
+          spell,
+          adv: c.f_elemental_active === "Aire" && t.key === "t_agility",
+          tongue: spell && getKeys(c.f_domain_cards).includes("Lengua de la Naturaleza"),
+        };
+      }),
       evasion: c.r_evasion ? Number(c.r_evasion) + (beast?.evasionBonus || 0) + (mods.evasion || 0) + Number(c.f_natural_evade || 0) : "—",
       armorTotal: armor ? armor.score + (mods.armor || 0) : 0,
       armorLeft: Number(c.armor_marked || 0),
@@ -11981,7 +12011,10 @@ export default function App({ onSignOut }) {
     };
   };
   const modernActions = (id) => ({
-    rollTrait: (label, value) => rollTraitCheck(id, label, value, null),
+    rollTrait: (label, value, t) => {
+      if (t?.tongue) setPendingSpellRoll({ charId: id, traitLabel: label, traitValue: value, advantage: !!t.adv });
+      else rollTraitCheck(id, label, value, undefined, undefined, !!t?.adv);
+    },
     attack: (w) => rollTraitCheck(id, w.trait, w.traitValue, { name: w.key, damage: w.damage }),
     damage: (w) => rollWeaponDamage(w.key, w.damage, id, false),
     markHp: (i) => markHp(id, "hp_marked", i, Number(characters[id]?.hp_marked || 0)),
@@ -12033,6 +12066,165 @@ export default function App({ onSignOut }) {
       </span>
     );
   };
+  // Etiquetas de estado de la cabecera (formas activas, posturas, efectos importantes…): las comparten la hoja clásica y la moderna.
+  const renderHeaderTags = (c, viewingCharId, opts = {}) => {
+    const beastformInfo = BEASTFORMS.find((b) => b.key === c.f_beastform);
+    const headerCampaign = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(viewingCharId));
+    const activeTransformForm = c.f_transformation_form_active || "";
+    const isExpansionClass = CLASSES.find((cl) => cl.key === c.f_class)?.expansion;
+    return (
+      <>
+                  {headerCampaign && !opts.noCampaign && (
+                    <span className="mh-htag" style={{ "--tag": "var(--acc)" }} title="Campaña">
+                      <BookOpen size={14} /> {headerCampaign.name}
+                    </span>
+                  )}
+                  {c.f_transformation &&
+                    (activeTransformForm ? (
+                      <span className="mh-htag is-active" style={{ "--tag": TRANSFORM_THEMES[activeTransformForm]?.color || "#A58BE8" }} title={c.f_transformation + ": " + activeTransformForm + " activa"}>
+                        <span className="mh-htag-dot" /> {activeTransformForm}
+                        {activeTransformForm === "Forma de Lobo" ? " · +1d10" : ""}
+                      </span>
+                    ) : (
+                      <span className="mh-htag" style={{ "--tag": "#A58BE8" }} title="Transformación">
+                        <Moon size={14} /> {c.f_transformation}
+                      </span>
+                    ))}
+                  {beastformInfo && (
+                    <span className="mh-htag is-active" style={{ "--tag": beastformInfo.color }} title="Forma de Bestia">
+                      <span className="mh-htag-dot" /> {beastformInfo.key}
+                    </span>
+                  )}
+                  {c.f_elemental_active && HEADER_ELEMENTS[c.f_elemental_active] && (() => {
+                    const el = HEADER_ELEMENTS[c.f_elemental_active];
+                    return (
+                      <span className="mh-htag" style={{ "--tag": el.color }} title="Encarnación Elemental">
+                        <el.Icon size={14} /> {c.f_elemental_active} canalizado
+                      </span>
+                    );
+                  })()}
+                  {activeStance(c) && (
+                    <span className="mh-htag is-active" style={{ "--tag": "#C08B5C" }} title={MARTIAL_STANCES.find((x) => x.key === c.f_stance)?.text}>
+                      <span className="mh-htag-dot" /> Postura {MARTIAL_STANCES.find((x) => x.key === c.f_stance)?.name} · {getMFocus(c)} Conc.
+                    </span>
+                  )}
+                  {c.f_class === "Invocador" && summonTotal(c) > 0 && (
+                    <span className="mh-htag" style={{ "--tag": "#8E6FC4" }} title={circlesFor(c).filter((ci) => Number(getSummons(c)[ci.key] || 0)).map((ci) => getSummons(c)[ci.key] + " " + ci.plural).join(" · ")}>
+                      <Ghost size={11} /> Entidades · {summonTotal(c)}/{Number(c.f_level || 1)}
+                    </span>
+                  )}
+                  {c.f_subclass === "Gremio del Envenenador" && Number(c.f_toxins || 0) > 0 && (
+                    <span className="mh-htag" style={{ "--tag": "#5E8A4E" }} title="Brebajes Tóxicos: fichas de veneno preparadas">
+                      <FlaskConical size={11} /> Venenos · {c.f_toxins}
+                    </span>
+                  )}
+                  {c.f_spectral === "1" && (
+                    <span className="mh-htag is-active" style={{ "--tag": "#5B6B7E" }} title="Forma Espectral: atraviesas la materia física, resistes el daño físico y marcas Estrés en lugar de Puntos de Vida">
+                      <span className="mh-htag-dot" /> Forma Espectral
+                    </span>
+                  )}
+                  {c.f_subclass === "Orden del Espectro" && c.f_veil_adv === "1" && (
+                    <span className="mh-htag is-active" style={{ "--tag": "#5B6B7E" }} title="Acechador del Velo: ventaja en tu siguiente tirada de acción de esta escena">
+                      <span className="mh-htag-dot" /> Acechador · ventaja
+                    </span>
+                  )}
+                  {getMutagen(c) && (
+                    <span className="mh-htag is-active" style={{ "--tag": "#A8323E" }} title={"Mutágeno: " + (getMutagen(c).benefits || []).map((k) => MUTAGEN_BENEFITS.find((x) => x.key === k)?.text).join(" · ")}>
+                      <span className="mh-htag-dot" /> Mutágeno · {(getMutagen(c).benefits || []).map((k) => MUTAGEN_BENEFITS.find((x) => x.key === k)?.name).join(" + ")}
+                    </span>
+                  )}
+                  {c.f_hybrid === "1" && (
+                    <span className="mh-htag is-active" style={{ "--tag": "#A8323E" }} title="Forma Híbrida: +1d de bonificador a tus tiradas de acción y de daño hasta tener todo el Estrés marcado o terminar la escena">
+                      <span className="mh-htag-dot" /> Forma Híbrida · +1d{hybridSides(c)}
+                    </span>
+                  )}
+                  {c.f_class === "Cazador de Sangre" && c.f_psychometry && (
+                    <span className="mh-htag is-active" style={{ "--tag": "#A8323E" }} title="Psicometría Siniestra: ventaja para rastrear o recordar información sobre la criatura de tu visión, hasta tu descanso largo">
+                      <span className="mh-htag-dot" /> Visión{c.f_psychometry !== "1" ? ": " + c.f_psychometry : ""}
+                    </span>
+                  )}
+                  {c.f_crimson && (
+                    <span className="mh-htag" style={{ "--tag": "#A8323E" }} title={"Rito Carmesí: " + c.f_crimson + " suma " + crimsonDice(c) + "d4 de daño mágico al acertar"}>
+                      <Droplets size={11} /> Rito Carmesí
+                    </span>
+                  )}
+                  {c.f_ignite === "1" && (
+                    <span className="mh-htag is-active" style={{ "--tag": "#E0823A" }} title="Ignición: tu arma principal arde, da luz brillante y suma 1d6 al daño hasta el final de la escena">
+                      <span className="mh-htag-dot" /> Arma en llamas · +1d6
+                    </span>
+                  )}
+                  {c.f_class === "Asesino" && c.f_inout === "1" && (
+                    <span className="mh-htag is-active" style={{ "--tag": "#7D8BA3" }} title="Entrar y Salir: tu próxima tirada que aproveche la información del DJ tiene ventaja">
+                      <span className="mh-htag-dot" /> Entrar y Salir · ventaja
+                    </span>
+                  )}
+                  {c.f_class === "Asesino" && c.f_marked === "1" && (
+                    <button type="button" className="mh-htag is-active" style={{ "--tag": "#7D8BA3", cursor: "pointer" }} title="Tienes a un adversario Marcado para Morir. Pulsa si ha sido derrotado o el DJ ha quitado la marca." onClick={() => { updateCharacterField(viewingCharId, "f_marked", ""); postCampaignEvent(viewingCharId, "💀 Su objetivo deja de estar Marcado para Morir"); }}>
+                      <span className="mh-htag-dot" /> Marcado para Morir · +{tierForLevel(c.f_level || 1)}d{markedDie(c)} <X size={10} />
+                    </button>
+                  )}
+                  {c.f_fury === "1" && (
+                    <span className="mh-htag is-active" style={{ "--tag": "#B55FA0" }} title="Furia del Patrón: tus tiradas de daño suman tantos Dados de Patrón como tu Rango, hasta hacer daño Grave o terminar la escena">
+                      <span className="mh-htag-dot" /> Furia del Patrón
+                    </span>
+                  )}
+                  {c.f_reach === "1" && (
+                    <span className="mh-htag is-active" style={{ "--tag": "#B55FA0" }} title="Alcance Amenazador: tu arma principal alcanza un paso más lejos hasta que aciertes con ella">
+                      <span className="mh-htag-dot" /> Alcance Amenazador
+                    </span>
+                  )}
+                  {c.f_mantle === "1" && (
+                    <span className="mh-htag is-active" style={{ "--tag": "#B55FA0" }} title="Manto del Patrón: +Rango a tus umbrales y ventaja para intimidar, hasta recibir daño Grave o terminar la escena">
+                      <span className="mh-htag-dot" /> Manto del Patrón
+                    </span>
+                  )}
+                  {c.f_subclass === "Bruja Lunar" && c.f_glamour === "1" && (
+                    <span className="mh-htag is-active" style={{ "--tag": "#8C7FD0" }} title="Glamour Nocturno: ventaja al aprovechar tu apariencia; los adversarios en alcance Cercano marcan 1 Estrés para atacarte">
+                      <span className="mh-htag-dot" /> Glamour
+                    </span>
+                  )}
+                  {c.f_moonbeam === "1" && (
+                    <span className="mh-htag is-active" style={{ "--tag": "#6F86C2" }} title="Rayo de Luna: +1 a Lanzamiento de Conjuros y ves a través de las ilusiones hasta el final de la escena">
+                      <span className="mh-htag-dot" /> Rayo de Luna
+                    </span>
+                  )}
+                  {moonPhaseOf(c) && (
+                    <span className="mh-htag" style={{ "--tag": "#8C7FD0" }} title={"Fases Lunares: " + moonPhaseOf(c).effect}>
+                      <Moon size={11} /> {moonPhaseOf(c).name} · {moonPhaseOf(c).value}
+                    </span>
+                  )}
+                  {ancFeat(c, "Orco", 0) && Number(c.r_hp || 0) - Number(c.hp_marked || 0) === 1 && (
+                    <span className="mh-htag is-active" style={{ "--tag": "#6E7F3A" }} title="Robusto: te queda 1 Punto de Vida, los ataques contra ti tienen desventaja">
+                      <span className="mh-htag-dot" /> Robusto · ataques con desventaja
+                    </span>
+                  )}
+                  {c.f_class === "Guerrero" && c.f_no_mercy === "1" && (
+                    <span className="mh-htag is-active" style={{ "--tag": "#C0504A" }} title="Sin Piedad: +1 a tus tiradas de ataque hasta tu próximo descanso">
+                      <span className="mh-htag-dot" /> Sin Piedad · +1 ataque
+                    </span>
+                  )}
+                  {c.f_subclass === "Origen Primigenio" && c.f_charged === "1" && (
+                    <span className="mh-htag is-active" style={{ "--tag": "#8A6FD0" }} title="Carga Arcana: gástala en un ataque mágico con éxito (+10 al daño o +3 a la Dificultad de la reacción). Se pierde en el descanso largo.">
+                      <span className="mh-htag-dot" /> Cargado
+                    </span>
+                  )}
+                  {c.f_subclass === "Origen Elemental" && ORIGIN_ELEMENTS.find((e) => e.key === c.f_origin_element) && (() => {
+                    // Origen Elemental: el elemento que domina; con Trascendencia, su manifestación activa.
+                    const el = ORIGIN_ELEMENTS.find((e) => e.key === c.f_origin_element);
+                    return getTranscend(c) ? (
+                      <span className="mh-htag is-active" style={{ "--tag": el.color }} title={"Trascendencia: " + getTranscend(c).picks.map((k) => TRANSCEND_OPTS.find((o) => o.key === k)?.label).join(" · ")}>
+                        <span className="mh-htag-dot" /> Manifestación de {el.key}
+                      </span>
+                    ) : (
+                      <span className="mh-htag" style={{ "--tag": el.color }} title="Elementalista: tu elemento">
+                        <el.Icon size={14} /> {el.key}
+                      </span>
+                    );
+                  })()}
+      </>
+    );
+  };
+
   // Hoja clásica completa. Con embedded=true solo se pinta el contenido de «Detalles generales» (para la hoja moderna).
   const renderClassicSheet = (viewingCharId, embedded) => {
     if (!viewingCharId || !characters[viewingCharId]) return null;
@@ -12228,153 +12420,7 @@ export default function App({ onSignOut }) {
                   )}
                 </div>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: isMobile ? "flex-start" : "flex-end", marginLeft: "auto", flexBasis: isMobile ? "100%" : "auto" }}>
-                  {headerCampaign && (
-                    <span className="mh-htag" style={{ "--tag": "var(--acc)" }} title="Campaña">
-                      <BookOpen size={14} /> {headerCampaign.name}
-                    </span>
-                  )}
-                  {c.f_transformation &&
-                    (activeTransformForm ? (
-                      <span className="mh-htag is-active" style={{ "--tag": TRANSFORM_THEMES[activeTransformForm]?.color || "#A58BE8" }} title={c.f_transformation + ": " + activeTransformForm + " activa"}>
-                        <span className="mh-htag-dot" /> {activeTransformForm}
-                        {activeTransformForm === "Forma de Lobo" ? " · +1d10" : ""}
-                      </span>
-                    ) : (
-                      <span className="mh-htag" style={{ "--tag": "#A58BE8" }} title="Transformación">
-                        <Moon size={14} /> {c.f_transformation}
-                      </span>
-                    ))}
-                  {beastformInfo && (
-                    <span className="mh-htag is-active" style={{ "--tag": beastformInfo.color }} title="Forma de Bestia">
-                      <span className="mh-htag-dot" /> {beastformInfo.key}
-                    </span>
-                  )}
-                  {c.f_elemental_active && HEADER_ELEMENTS[c.f_elemental_active] && (() => {
-                    const el = HEADER_ELEMENTS[c.f_elemental_active];
-                    return (
-                      <span className="mh-htag" style={{ "--tag": el.color }} title="Encarnación Elemental">
-                        <el.Icon size={14} /> {c.f_elemental_active} canalizado
-                      </span>
-                    );
-                  })()}
-                  {activeStance(c) && (
-                    <span className="mh-htag is-active" style={{ "--tag": "#C08B5C" }} title={MARTIAL_STANCES.find((x) => x.key === c.f_stance)?.text}>
-                      <span className="mh-htag-dot" /> Postura {MARTIAL_STANCES.find((x) => x.key === c.f_stance)?.name} · {getMFocus(c)} Conc.
-                    </span>
-                  )}
-                  {c.f_class === "Invocador" && summonTotal(c) > 0 && (
-                    <span className="mh-htag" style={{ "--tag": "#8E6FC4" }} title={circlesFor(c).filter((ci) => Number(getSummons(c)[ci.key] || 0)).map((ci) => getSummons(c)[ci.key] + " " + ci.plural).join(" · ")}>
-                      <Ghost size={11} /> Entidades · {summonTotal(c)}/{Number(c.f_level || 1)}
-                    </span>
-                  )}
-                  {c.f_subclass === "Gremio del Envenenador" && Number(c.f_toxins || 0) > 0 && (
-                    <span className="mh-htag" style={{ "--tag": "#5E8A4E" }} title="Brebajes Tóxicos: fichas de veneno preparadas">
-                      <FlaskConical size={11} /> Venenos · {c.f_toxins}
-                    </span>
-                  )}
-                  {c.f_spectral === "1" && (
-                    <span className="mh-htag is-active" style={{ "--tag": "#5B6B7E" }} title="Forma Espectral: atraviesas la materia física, resistes el daño físico y marcas Estrés en lugar de Puntos de Vida">
-                      <span className="mh-htag-dot" /> Forma Espectral
-                    </span>
-                  )}
-                  {c.f_subclass === "Orden del Espectro" && c.f_veil_adv === "1" && (
-                    <span className="mh-htag is-active" style={{ "--tag": "#5B6B7E" }} title="Acechador del Velo: ventaja en tu siguiente tirada de acción de esta escena">
-                      <span className="mh-htag-dot" /> Acechador · ventaja
-                    </span>
-                  )}
-                  {getMutagen(c) && (
-                    <span className="mh-htag is-active" style={{ "--tag": "#A8323E" }} title={"Mutágeno: " + (getMutagen(c).benefits || []).map((k) => MUTAGEN_BENEFITS.find((x) => x.key === k)?.text).join(" · ")}>
-                      <span className="mh-htag-dot" /> Mutágeno · {(getMutagen(c).benefits || []).map((k) => MUTAGEN_BENEFITS.find((x) => x.key === k)?.name).join(" + ")}
-                    </span>
-                  )}
-                  {c.f_hybrid === "1" && (
-                    <span className="mh-htag is-active" style={{ "--tag": "#A8323E" }} title="Forma Híbrida: +1d de bonificador a tus tiradas de acción y de daño hasta tener todo el Estrés marcado o terminar la escena">
-                      <span className="mh-htag-dot" /> Forma Híbrida · +1d{hybridSides(c)}
-                    </span>
-                  )}
-                  {c.f_class === "Cazador de Sangre" && c.f_psychometry && (
-                    <span className="mh-htag is-active" style={{ "--tag": "#A8323E" }} title="Psicometría Siniestra: ventaja para rastrear o recordar información sobre la criatura de tu visión, hasta tu descanso largo">
-                      <span className="mh-htag-dot" /> Visión{c.f_psychometry !== "1" ? ": " + c.f_psychometry : ""}
-                    </span>
-                  )}
-                  {c.f_crimson && (
-                    <span className="mh-htag" style={{ "--tag": "#A8323E" }} title={"Rito Carmesí: " + c.f_crimson + " suma " + crimsonDice(c) + "d4 de daño mágico al acertar"}>
-                      <Droplets size={11} /> Rito Carmesí
-                    </span>
-                  )}
-                  {c.f_ignite === "1" && (
-                    <span className="mh-htag is-active" style={{ "--tag": "#E0823A" }} title="Ignición: tu arma principal arde, da luz brillante y suma 1d6 al daño hasta el final de la escena">
-                      <span className="mh-htag-dot" /> Arma en llamas · +1d6
-                    </span>
-                  )}
-                  {c.f_class === "Asesino" && c.f_inout === "1" && (
-                    <span className="mh-htag is-active" style={{ "--tag": "#7D8BA3" }} title="Entrar y Salir: tu próxima tirada que aproveche la información del DJ tiene ventaja">
-                      <span className="mh-htag-dot" /> Entrar y Salir · ventaja
-                    </span>
-                  )}
-                  {c.f_class === "Asesino" && c.f_marked === "1" && (
-                    <button type="button" className="mh-htag is-active" style={{ "--tag": "#7D8BA3", cursor: "pointer" }} title="Tienes a un adversario Marcado para Morir. Pulsa si ha sido derrotado o el DJ ha quitado la marca." onClick={() => { updateCharacterField(viewingCharId, "f_marked", ""); postCampaignEvent(viewingCharId, "💀 Su objetivo deja de estar Marcado para Morir"); }}>
-                      <span className="mh-htag-dot" /> Marcado para Morir · +{tierForLevel(c.f_level || 1)}d{markedDie(c)} <X size={10} />
-                    </button>
-                  )}
-                  {c.f_fury === "1" && (
-                    <span className="mh-htag is-active" style={{ "--tag": "#B55FA0" }} title="Furia del Patrón: tus tiradas de daño suman tantos Dados de Patrón como tu Rango, hasta hacer daño Grave o terminar la escena">
-                      <span className="mh-htag-dot" /> Furia del Patrón
-                    </span>
-                  )}
-                  {c.f_reach === "1" && (
-                    <span className="mh-htag is-active" style={{ "--tag": "#B55FA0" }} title="Alcance Amenazador: tu arma principal alcanza un paso más lejos hasta que aciertes con ella">
-                      <span className="mh-htag-dot" /> Alcance Amenazador
-                    </span>
-                  )}
-                  {c.f_mantle === "1" && (
-                    <span className="mh-htag is-active" style={{ "--tag": "#B55FA0" }} title="Manto del Patrón: +Rango a tus umbrales y ventaja para intimidar, hasta recibir daño Grave o terminar la escena">
-                      <span className="mh-htag-dot" /> Manto del Patrón
-                    </span>
-                  )}
-                  {c.f_subclass === "Bruja Lunar" && c.f_glamour === "1" && (
-                    <span className="mh-htag is-active" style={{ "--tag": "#8C7FD0" }} title="Glamour Nocturno: ventaja al aprovechar tu apariencia; los adversarios en alcance Cercano marcan 1 Estrés para atacarte">
-                      <span className="mh-htag-dot" /> Glamour
-                    </span>
-                  )}
-                  {c.f_moonbeam === "1" && (
-                    <span className="mh-htag is-active" style={{ "--tag": "#6F86C2" }} title="Rayo de Luna: +1 a Lanzamiento de Conjuros y ves a través de las ilusiones hasta el final de la escena">
-                      <span className="mh-htag-dot" /> Rayo de Luna
-                    </span>
-                  )}
-                  {moonPhaseOf(c) && (
-                    <span className="mh-htag" style={{ "--tag": "#8C7FD0" }} title={"Fases Lunares: " + moonPhaseOf(c).effect}>
-                      <Moon size={11} /> {moonPhaseOf(c).name} · {moonPhaseOf(c).value}
-                    </span>
-                  )}
-                  {ancFeat(c, "Orco", 0) && Number(c.r_hp || 0) - Number(c.hp_marked || 0) === 1 && (
-                    <span className="mh-htag is-active" style={{ "--tag": "#6E7F3A" }} title="Robusto: te queda 1 Punto de Vida, los ataques contra ti tienen desventaja">
-                      <span className="mh-htag-dot" /> Robusto · ataques con desventaja
-                    </span>
-                  )}
-                  {c.f_class === "Guerrero" && c.f_no_mercy === "1" && (
-                    <span className="mh-htag is-active" style={{ "--tag": "#C0504A" }} title="Sin Piedad: +1 a tus tiradas de ataque hasta tu próximo descanso">
-                      <span className="mh-htag-dot" /> Sin Piedad · +1 ataque
-                    </span>
-                  )}
-                  {c.f_subclass === "Origen Primigenio" && c.f_charged === "1" && (
-                    <span className="mh-htag is-active" style={{ "--tag": "#8A6FD0" }} title="Carga Arcana: gástala en un ataque mágico con éxito (+10 al daño o +3 a la Dificultad de la reacción). Se pierde en el descanso largo.">
-                      <span className="mh-htag-dot" /> Cargado
-                    </span>
-                  )}
-                  {c.f_subclass === "Origen Elemental" && ORIGIN_ELEMENTS.find((e) => e.key === c.f_origin_element) && (() => {
-                    // Origen Elemental: el elemento que domina; con Trascendencia, su manifestación activa.
-                    const el = ORIGIN_ELEMENTS.find((e) => e.key === c.f_origin_element);
-                    return getTranscend(c) ? (
-                      <span className="mh-htag is-active" style={{ "--tag": el.color }} title={"Trascendencia: " + getTranscend(c).picks.map((k) => TRANSCEND_OPTS.find((o) => o.key === k)?.label).join(" · ")}>
-                        <span className="mh-htag-dot" /> Manifestación de {el.key}
-                      </span>
-                    ) : (
-                      <span className="mh-htag" style={{ "--tag": el.color }} title="Elementalista: tu elemento">
-                        <el.Icon size={14} /> {el.key}
-                      </span>
-                    );
-                  })()}
+                  {renderHeaderTags(c, viewingCharId)}
                 </div>
               </div>
 
