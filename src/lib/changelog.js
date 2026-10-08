@@ -2,6 +2,14 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.12",
+    date: "2026-10-08",
+    title: "Carta de subclase en la mano",
+    items: [
+      { tag: "nuevo", text: "El Guardián de los Elementos tiene su carta de subclase en la mano del mapa; al abrirla se canaliza Fuego, Tierra, Agua o Aire." },
+    ],
+  },
+  {
     version: "1.11",
     date: "2026-10-08",
     title: "Chat de la campaña",
