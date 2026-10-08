@@ -2,6 +2,17 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.10",
+    date: "2026-10-08",
+    title: "Elementos del Guardián de los Elementos en el mapa",
+    items: [
+      { tag: "nuevo", text: "Canalizar Fuego, Tierra, Agua o Aire desde el clic derecho de tu ficha: la ficha hace un bote al activarlo." },
+      { tag: "nuevo", text: "Fuego: las casillas cuerpo a cuerpo arden y te siguen. Quien te hiere cuerpo a cuerpo tira un d10 pequeño sobre él y recibe el daño mágico con una animación de quemadura." },
+      { tag: "nuevo", text: "Agua: al dañar cuerpo a cuerpo, una onda cuadrada marca 1 Estrés a los adversarios Muy cercanos al objetivo, y se avisa en el chat." },
+      { tag: "nuevo", text: "Tierra marca la casilla y el borde de la ficha en marrón, y Aire la eleva un poco con un remolino de viento." },
+    ],
+  },
+  {
     version: "1.9",
     date: "2026-10-08",
     title: "Actualizaciones y campañas con el nuevo diseño",

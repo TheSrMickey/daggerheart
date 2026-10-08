@@ -20,6 +20,8 @@ import { Wand, CircleDot, MoveUpRight, Archive, Shell, Compass, Ghost, ChevronsR
 // Color de cada campaña (se reparte según su id).
 const CAMP_COLORS = ["#A58BE8", "#6FA3C0", "#E0A04A", "#7FB77A", "#D9644E", "#E07FB0"];
 const campColor = (id) => CAMP_COLORS[[...String(id)].reduce((a, ch) => a + ch.charCodeAt(0), 0) % CAMP_COLORS.length];
+// Colores de los elementos del Guardián de los Elementos.
+const ELEM_COL = { Fuego: "#FF7A2E", Tierra: "#A9742F", Agua: "#4FA8E8", Aire: "#BFE6F5" };
 const NAV_ITEMS = [
   { key: "inicio", label: "Inicio", icon: Home },
   { key: "ficha", label: "Personajes", icon: User },
@@ -3287,6 +3289,19 @@ const sharedStyles = `
   .mh-docked .mh-pre-body { grid-template-columns: 1fr; }
   .mh-docked .mh-pre-side { padding-left: 0; border-left: 0; border-top: 1px solid var(--mh-line); padding-top: 12px; }
   .mh-docked .mh-roll-pop, .mh-docked .mh-card { box-shadow: 0 18px 50px rgba(0,0,0,.4); }
+  .mh-iso-tk.is-elem-aire .mh-iso-body { animation: mh-iso-hover 2.6s ease-in-out infinite; }
+  @keyframes mh-iso-hover { 0%, 100% { translate: 0 -15px; } 50% { translate: 0 -20px; } }
+  .mh-iso-tk.is-elem-bounce .mh-iso-body { animation: mh-elem-bounce .75s cubic-bezier(.3,1.3,.5,1) both; }
+  @keyframes mh-elem-bounce { 0% { translate: 0 0; } 30% { translate: 0 -16px; } 55% { translate: 0 0; } 75% { translate: 0 -6px; } 100% { translate: 0 0; } }
+  .mh-iso-tk.is-burn .mh-iso-body { animation: mh-burn-shake .22s ease 6; filter: drop-shadow(0 0 6px #FF7A2E); }
+  @keyframes mh-burn-shake { 25% { translate: -2px 0; } 75% { translate: 2px 0; } }
+  .mh-burn-glow { animation: mh-burn-glow 1.9s ease-in .85s both; } @keyframes mh-burn-glow { 0% { opacity: 0; } 30% { opacity: .5; } 100% { opacity: 0; } }
+  .mh-burn-flame { transform-box: fill-box; animation: mh-burn-flame 1.1s ease-out both; } @keyframes mh-burn-flame { 0% { opacity: 0; translate: 0 6px; scale: .5; } 25% { opacity: 1; scale: 1.1; } 100% { opacity: 0; translate: 0 -30px; scale: .8; } }
+  .mh-burn-die { transform-box: fill-box; transform-origin: 50% 50%; animation: mh-burn-die 1.5s ease both; } @keyframes mh-burn-die { 0% { opacity: 0; scale: .4; } 14% { opacity: 1; scale: 1.18; } 24% { scale: 1; } 78% { opacity: 1; } 100% { opacity: 0; translate: 0 -10px; } }
+  .mh-wave { opacity: 0; animation: mh-wave 1.3s ease-out both; } @keyframes mh-wave { 0% { opacity: 0; } 22% { opacity: .95; } 100% { opacity: 0; } }
+  .mh-chip-pop { transform-box: fill-box; transform-origin: 50% 100%; animation: mh-chip-pop 2.4s ease both; animation-delay: .5s; } @keyframes mh-chip-pop { 0% { opacity: 0; scale: .5; translate: 0 8px; } 14% { opacity: 1; scale: 1.1; translate: 0 0; } 24% { scale: 1; } 80% { opacity: 1; } 100% { opacity: 0; translate: 0 -8px; } }
+  .mh-zone-ripple { transform-box: fill-box; transform-origin: 50% 50%; animation: mh-zone-ripple 2.1s ease-out infinite; } @keyframes mh-zone-ripple { 0% { scale: .5; opacity: .9; } 100% { scale: 1.7; opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .mh-iso-tk.is-elem-aire .mh-iso-body, .mh-iso-tk.is-elem-bounce .mh-iso-body, .mh-zone-ripple { animation: none !important; } }
   .mh-iso-tk.is-c-fly .mh-iso-body { animation: mh-iso-fly2 2.2s ease-in-out infinite; }
   @keyframes mh-iso-fly2 { 0%, 100% { transform: translateY(-56px); } 50% { transform: translateY(-64px); } }
   .mh-iso-fire { transform-box: fill-box; transform-origin: 50% 100%; animation: mh-fire .45s ease-in-out infinite; }
@@ -5918,6 +5933,45 @@ function ShotFx({ kind, a, b, b2, size: S }) {
 }
 
 // Animación de ataque en el tablero: la figura atacante embiste y el objetivo se sacude. Se reproduce una vez por ataque reciente.
+// Elementos del Guardián de los Elementos: al cambiar de elemento la ficha hace un bote. Devuelve { id: n }.
+function useElemFx(tokens) {
+  const prev = useRef(null);
+  const seq = useRef(0);
+  const [fx, setFx] = useState({});
+  const sig = tokens.map((t) => t.id + ":" + (t.elem || "")).join("|");
+  useLayoutEffect(() => {
+    const now = {};
+    const changed = {};
+    for (const t of tokens) {
+      now[t.id] = t.elem || "";
+      if (prev.current && t.id in prev.current && prev.current[t.id] !== now[t.id] && now[t.id]) changed[t.id] = ++seq.current;
+    }
+    prev.current = now;
+    const ids = Object.keys(changed);
+    if (!ids.length) return;
+    setFx((st) => ({ ...st, ...changed }));
+    setTimeout(() => setFx((st) => {
+      const c = { ...st };
+      ids.forEach((i) => c[i] === changed[i] && delete c[i]);
+      return c;
+    }), 900);
+  }, [sig]);
+  return fx;
+}
+// Efectos de los elementos (quemadura del Fuego, onda del Agua): se reproducen una vez por evento reciente.
+function useElemEvent(efx) {
+  const [anim, setAnim] = useState(null);
+  const last = useRef(null);
+  useEffect(() => {
+    if (!efx || !efx.key || last.current === efx.key) return;
+    last.current = efx.key;
+    if (Date.now() - efx.key > 15000) return;
+    setAnim(efx);
+    const t = setTimeout(() => setAnim(null), 2800);
+    return () => clearTimeout(t);
+  }, [efx?.key]);
+  return anim;
+}
 function useAttackFx(fx) {
   const [anim, setAnim] = useState(null);
   const last = useRef(null);
@@ -6190,7 +6244,7 @@ function CardFan({ cards, me, tokens, onUse }) {
   );
 }
 
-function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChange, hideIsoBtn, menuFor, fx, bg, tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
+function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChange, hideIsoBtn, menuFor, fx, efx, bg, tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
   const ref = useRef(null);
   const dragRef = useRef(null);
   const [drag, setDrag] = useState(null);
@@ -6205,6 +6259,7 @@ function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChang
   const iso = true;
   const overlayEl = useContext(MapOverlayCtx);
   const anim = useAttackFx(fx);
+  const eAnim = useElemEvent(efx);
   const steps = useMoveFx(tokens.map((t) => [t.id, t.x, t.y]));
   const vis = useVisFx(tokens);
   const { measure, measureDown, measureSuppressed } = useMeasure(
@@ -6378,7 +6433,7 @@ function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChang
   const at = (x, y) => ({ left: (x * 100) / MAP_COLS + "%", top: (y * 100) / MAP_ROWS + "%", width: 100 / MAP_COLS + "%", height: 100 / MAP_ROWS + "%" });
 
   if (iso)
-    return <IsoBoard fog={fog} fogView={fogView} areas={areas} areaTool={areaTool} log={log} hideIsoBtn={hideIsoBtn} menuFor={menuFor} anim={anim} tokens={tokens} props={props} terrain={terrain} stampTool={stampTool} onStamp={onStamp} onUnstamp={onUnstamp} canMove={canMove} onMove={onMove} selectedId={selectedId} onSelect={onSelect} onPick={onPick} compact={compact} onToggle={toggleIso} />;
+    return <IsoBoard fog={fog} fogView={fogView} areas={areas} areaTool={areaTool} log={log} hideIsoBtn={hideIsoBtn} menuFor={menuFor} anim={anim} eAnim={eAnim} tokens={tokens} props={props} terrain={terrain} stampTool={stampTool} onStamp={onStamp} onUnstamp={onUnstamp} canMove={canMove} onMove={onMove} selectedId={selectedId} onSelect={onSelect} onPick={onPick} compact={compact} onToggle={toggleIso} />;
 
   return (
     <div
@@ -6543,7 +6598,7 @@ function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChang
 
 // Tablero isométrico tipo diorama: losetas con relieve, decorados y fichas de pie.
 // Usa los mismos datos que el tablero plano (fichas, decorados y terreno).
-function IsoBoard({ fog, fogView = "player", areas = [], areaTool, log, hideIsoBtn, menuFor, anim, tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact, onToggle }) {
+function IsoBoard({ fog, fogView = "player", areas = [], areaTool, log, hideIsoBtn, menuFor, anim, eAnim, tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact, onToggle }) {
   const S = 34;
   const OX = MAP_ROWS * S + S * 0.6;
   const OY = S * 2.4;
@@ -6599,6 +6654,19 @@ function IsoBoard({ fog, fogView = "player", areas = [], areaTool, log, hideIsoB
   };
   const steps = useMoveFx(tokens.map((t) => [t.id, t.x, t.y]));
   const vis = useVisFx(tokens);
+  const elemBounce = useElemFx(tokens);
+  // Zonas de los elementos: el Fuego y el Agua marcan las casillas cuerpo a cuerpo (cuadradas) y todos marcan la casilla de la ficha.
+  const zones = {};
+  const putZone = (x, y, el, self) => {
+    if (x < 0 || y < 0 || x >= MAP_COLS || y >= MAP_ROWS) return;
+    const k = x + "," + y;
+    if (!zones[k] || (self && !zones[k].self)) zones[k] = { el, self };
+  };
+  tokens.forEach((t) => {
+    if (t.kind !== "pc" || !t.elem || t.vanished || t.down) return;
+    putZone(t.x, t.y, t.elem, true);
+    if (t.elem === "Fuego" || t.elem === "Agua") for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (dx || dy) putZone(t.x + dx, t.y + dy, t.elem, false);
+  });
   const painting = useRef(null);
   const occupied = (x, y, exceptId) => {
     const mv = tokens.find((t) => t.id === exceptId);
@@ -6795,7 +6863,7 @@ function IsoBoard({ fog, fogView = "player", areas = [], areaTool, log, hideIsoB
     return (
       <g
         key={t.id}
-        className={"mh-iso-tk" + (movable ? " is-movable" : "") + (drag?.id === t.id && drag.moved ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") : "") + (steps[t.id] && !(anim && anim.from === t.id) && !(droppedRef.current && droppedRef.current.id === t.id && Date.now() < droppedRef.current.until) ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
+        className={"mh-iso-tk" + (t.elem ? " is-elem-" + t.elem.toLowerCase() : "") + (elemBounce[t.id] ? " is-elem-bounce" : "") + (eAnim && eAnim.kind === "burn" && eAnim.to === t.id ? " is-burn" : "") + (movable ? " is-movable" : "") + (drag?.id === t.id && drag.moved ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") : "") + (steps[t.id] && !(anim && anim.from === t.id) && !(droppedRef.current && droppedRef.current.id === t.id && Date.now() < droppedRef.current.until) ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
         style={anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); if (!tg) return undefined; const [tx, ty] = P(tg.x + 0.5, tg.y + 0.5, tAt(tg.x, tg.y).z); return { "--ax": tx - cx + "px", "--ay": ty - cy + "px" }; })() : steps[t.id] ? (() => { const st = steps[t.id]; const [ox, oy] = P(st.fx + 0.5, st.fy + 0.5, tAt(st.fx, st.fy).z); return { "--mx": ox - cx + "px", "--my": oy - cy + "px" }; })() : undefined}
         onPointerDown={(e) => tokenDown(e, t)}
         onContextMenu={(e) => openMenu(e, t)}
@@ -6816,6 +6884,16 @@ function IsoBoard({ fog, fogView = "player", areas = [], areaTool, log, hideIsoB
           </g>
         )}
         <ellipse className="mh-iso-shadow" cx={cx} cy={cy} rx={S * (down ? 0.55 : pet ? 0.3 : 0.42)} ry={S * (down ? 0.22 : pet ? 0.15 : 0.21)} fill="rgba(0,0,0,.28)" />
+        {t.elem === "Aire" && !down && !fly && (
+          <g className="mh-iso-wind" pointerEvents="none" transform={`translate(${cx} ${cy}) scale(1 .45)`}>
+            <circle r={S * 0.5} fill="none" stroke="#BFE6F5" strokeWidth="2.4" strokeDasharray="10 12" opacity=".9">
+              <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="5s" repeatCount="indefinite" />
+            </circle>
+            <circle r={S * 0.34} fill="none" stroke="#fff" strokeWidth="1.6" strokeDasharray="6 10" opacity=".7">
+              <animateTransform attributeName="transform" type="rotate" from="360" to="0" dur="3.4s" repeatCount="indefinite" />
+            </circle>
+          </g>
+        )}
         {fly && <line className="mh-iso-flyline" x1={cx} y1={cy - 2} x2={cx} y2={cy - S * 1.8} stroke="#fff" strokeWidth="1.2" strokeDasharray="2 3" opacity=".85" pointerEvents="none" />}
         {mapConds(t).map((c) => (
           <ellipse key={c} className={"mh-iso-ring ring-" + MAP_COND_FX[c].cls} cx={cx} cy={cy} rx={S * 0.52} ry={S * 0.26} stroke={MAP_COND_FX[c].color} />
@@ -6873,7 +6951,7 @@ function IsoBoard({ fog, fogView = "player", areas = [], areaTool, log, hideIsoB
         {pet && (
           <path d={`M${cx - S * 0.3} ${cy - S * 0.95} L${cx - S * 0.36} ${cy - S * 1.38} L${cx - S * 0.08} ${cy - S * 1.08} Z M${cx + S * 0.3} ${cy - S * 0.95} L${cx + S * 0.36} ${cy - S * 1.38} L${cx + S * 0.08} ${cy - S * 1.08} Z`} fill="#8C7A5E" stroke={col} strokeWidth="2.4" strokeLinejoin="round" />
         )}
-        <rect x={cx - S * 0.33} y={cy - S * 1.1} width={S * 0.66} height={S * 1.04} rx={S * 0.33} fill={pet ? "#8C7A5E" : col} stroke={pet ? col : "#fff"} strokeWidth={pet ? 3.2 : 2.2} />
+        <rect x={cx - S * 0.33} y={cy - S * 1.1} width={S * 0.66} height={S * 1.04} rx={S * 0.33} fill={pet ? "#8C7A5E" : col} stroke={pet ? col : t.elem === "Tierra" ? "#A9742F" : "#fff"} strokeWidth={pet ? 3.2 : t.elem === "Tierra" ? 3.6 : 2.2} />
         {pet ? null : t.img ? (
           <>
             <clipPath id={"isoclip-" + t.id}>
@@ -6919,6 +6997,25 @@ function IsoBoard({ fog, fogView = "player", areas = [], areaTool, log, hideIsoB
             <ellipse cx={cx + S * 0.34} cy={cy - S * 0.3} rx={S * 0.09} ry={S * 0.05} fill="#7fcf86" />
           </g>
         )}
+        {eAnim && eAnim.kind === "burn" && eAnim.to === t.id && (
+          <g key={eAnim.key} className="mh-iso-burn" pointerEvents="none">
+            <rect className="mh-burn-glow" x={cx - S * 0.36} y={cy - S * 1.14} width={S * 0.72} height={S * 1.1} rx={S * 0.36} fill="#FF5A1F" />
+            {[-0.24, 0, 0.24].map((dx, i) => (
+              <g key={i} transform={`translate(${cx + dx * S} ${cy - S * 0.55}) scale(${S / 34})`}>
+                <g className="mh-burn-flame" style={{ animationDelay: 0.9 + i * 0.13 + "s" }}>
+                  <path d="M0 0 C-7 -6 -4 -13 0 -20 C2 -13 8 -11 7 -4 C7 0 4 4 0 4 Z" fill="#FF7A2E" />
+                  <path d="M0 0 C-3 -3 -2 -7 0 -10 C1 -6 4 -5 3 -2 C3 0 1 2 0 2 Z" fill="#FFD27A" />
+                </g>
+              </g>
+            ))}
+            <g transform={`translate(${cx} ${cy - S * 1.95})`}>
+              <g className="mh-burn-die">
+                <rect x={-S * 0.5} y={-S * 0.2} width={S} height={S * 0.4} rx={S * 0.12} fill="#2b1608" stroke="#FF7A2E" strokeWidth="1.6" />
+                <text y={S * 0.09} textAnchor="middle" fontSize={S * 0.25} fontWeight="700" fill="#FFD27A" fontFamily="Inter, system-ui, sans-serif">d10 · {eAnim.roll}</text>
+              </g>
+            </g>
+          </g>
+        )}
         {t.say && !t.vanished && (
           <g className="mh-iso-say" pointerEvents="none">
             <rect x={cx - S * 0.52} y={cy - S * 1.62} width={S * 1.04} height={S * 0.34} rx={S * 0.12} fill="#E3B04B" />
@@ -6953,6 +7050,7 @@ function IsoBoard({ fog, fogView = "player", areas = [], areaTool, log, hideIsoB
           const a = P(x, y, z), b = P(x + 1, y, z), c = P(x + 1, y + 1, z), d = P(x, y + 1, z);
           const band = bandAt(x, y);
           const lit = !rangeTok && reach.has(x + "," + y);
+          const zone = zones[x + "," + y];
           const dropHere = drag?.moved && drag.x === x && drag.y === y;
           const here = tokAt(x, y);
           const prs = propsAt(x, y);
@@ -7005,6 +7103,18 @@ function IsoBoard({ fog, fogView = "player", areas = [], areaTool, log, hideIsoB
                 return null;
               })()}
               {areaMap[x + "," + y] && <polygon className="mh-iso-area" points={pts([a, b, c, d])} fill={areaMap[x + "," + y]} fillOpacity=".32" stroke={areaMap[x + "," + y]} strokeWidth="1.6" pointerEvents="none" />}
+              {zone && !fogged && (
+                <g pointerEvents="none" className={"mh-iso-zone is-" + zone.el.toLowerCase() + (zone.self ? " is-self" : "")}>
+                  <polygon points={pts([a, b, c, d])} fill={ELEM_COL[zone.el]} fillOpacity={zone.self ? (zone.el === "Tierra" ? 0.24 : 0.16) : 0.26} stroke={ELEM_COL[zone.el]} strokeOpacity={zone.self ? 0.95 : 0.7} strokeWidth={zone.self ? 3 : 1.5} strokeLinejoin="round" />
+                  {zone.el === "Fuego" && !zone.self && (
+                    <g transform={`translate(${cx} ${cy + S * 0.14}) scale(${S / 40})`}>
+                      <g className="mh-iso-fire"><path d="M-10 0 C-16 -5 -13 -11 -10 -17 C-8 -11 -3 -9 -4 -3 C-4 0 -7 3 -10 3 Z" fill="#FF7A2E" /><path d="M-10 0 C-12 -2 -11 -6 -10 -9 C-9 -6 -7 -5 -7 -2 C-7 0 -9 1 -10 1 Z" fill="#FFD27A" /></g>
+                      <g className="mh-iso-fire" style={{ animationDelay: "-.2s" }}><path d="M9 4 C4 -1 6 -7 9 -13 C11 -7 15 -5 14 1 C14 4 12 7 9 7 Z" fill="#FF8F3A" /><path d="M9 4 C7 2 8 -2 9 -5 C10 -2 12 -1 12 2 C12 4 10 5 9 5 Z" fill="#FFD27A" /></g>
+                    </g>
+                  )}
+                  {zone.el === "Agua" && !zone.self && <ellipse className="mh-zone-ripple" cx={cx} cy={cy} rx={S * 0.3} ry={S * 0.15} fill="none" stroke="#BDE4FA" strokeWidth="1.6" style={{ animationDelay: -((x * 5 + y * 3) % 7) * 0.3 + "s" }} />}
+                </g>
+              )}
               {band && <polygon points={pts([a, b, c, d])} fill={band.color} fillOpacity=".42" pointerEvents="none" />}
               {band &&
                 [[x, y - 1, a, b], [x + 1, y, b, c], [x, y + 1, c, d], [x - 1, y, d, a]].map(([nx, ny, p1, p2], k) =>
@@ -7066,6 +7176,32 @@ function IsoBoard({ fog, fogView = "player", areas = [], areaTool, log, hideIsoB
           const f2 = anim.to2 ? tokens.find((x) => x.id === anim.to2) : null;
           const b2 = f2 ? (() => { const [qx, qy] = P(f2.x + 0.5, f2.y + 0.5, tAt(f2.x, f2.y).z); return [qx, qy - S * 0.6]; })() : null;
           return <ShotFx key={anim.key} kind={anim.kind} a={[ax, ay - S * 0.65]} b={[bx, by - S * 0.6]} b2={b2} size={S} />;
+        })()}
+        {eAnim && eAnim.kind === "wave" && (() => {
+          const tg = tokens.find((x) => x.id === eAnim.to);
+          if (!tg) return null;
+          const zt = tAt(tg.x, tg.y).z;
+          const ring = (R) => pts([P(tg.x - R, tg.y - R, zt), P(tg.x + 1 + R, tg.y - R, zt), P(tg.x + 1 + R, tg.y + 1 + R, zt), P(tg.x - R, tg.y + 1 + R, zt)]);
+          return (
+            <g key={eAnim.key} pointerEvents="none">
+              {[1, 2, 3].map((R) => (
+                <polygon key={R} className="mh-wave" style={{ animationDelay: (R - 1) * 0.3 + "s" }} points={ring(R)} fill="none" stroke="#4FA8E8" strokeWidth="3" strokeLinejoin="round" />
+              ))}
+              {(eAnim.ids || []).map((id) => {
+                const o = tokens.find((x) => x.id === id);
+                if (!o) return null;
+                const [ox, oy] = P(o.x + 0.5, o.y + 0.5, tAt(o.x, o.y).z);
+                return (
+                  <g key={id} transform={`translate(${ox} ${oy - S * 1.7})`}>
+                    <g className="mh-chip-pop">
+                      <rect x={-S * 0.55} y={-S * 0.17} width={S * 1.1} height={S * 0.34} rx={S * 0.17} fill="#A58BE8" />
+                      <text y={S * 0.08} textAnchor="middle" fontSize={S * 0.2} fontWeight="700" fill="#fff" fontFamily="Inter, system-ui, sans-serif">+1 Estrés</text>
+                    </g>
+                  </g>
+                );
+              })}
+            </g>
+          );
         })()}
         {measure && (() => {
           const d = cellDist(measure.from, measure.to);
@@ -7924,13 +8060,14 @@ export default function App({ onSignOut }) {
     const down = Number(me.r_hp || 0) > 0 && Number(me.hp_marked || 0) >= Number(me.r_hp || 0);
     const beast = me.f_beastform || "";
     const trf = visibleTransform(me);
-    const wrong = (campaignMap.tokens || []).some((t) => t.kind === "pc" && t.charId === sheetCharId && (!!t.hidden !== hid || !sameConds(t.conds) || !!t.down !== down || (t.beast || "") !== beast || (t.trf || "") !== trf));
+    const elem = me.f_elemental_active || "";
+    const wrong = (campaignMap.tokens || []).some((t) => t.kind === "pc" && t.charId === sheetCharId && (!!t.hidden !== hid || !sameConds(t.conds) || !!t.down !== down || (t.beast || "") !== beast || (t.trf || "") !== trf || (t.elem || "") !== elem));
     if (!wrong) return;
     mutateMap(sheetCampaignId, (ts) =>
       ts.map((t) => {
         if (t.kind !== "pc" || t.charId !== sheetCharId) return t;
-        const { hidden, conds: _c, down: _d, beast: _b, trf: _t, ...rest } = t;
-        return { ...rest, ...(hid ? { hidden: true } : {}), ...(conds.length ? { conds } : {}), ...(down ? { down: true } : {}), ...(beast ? { beast } : {}), ...(trf ? { trf } : {}) };
+        const { hidden, conds: _c, down: _d, beast: _b, trf: _t, elem: _e, ...rest } = t;
+        return { ...rest, ...(hid ? { hidden: true } : {}), ...(conds.length ? { conds } : {}), ...(down ? { down: true } : {}), ...(beast ? { beast } : {}), ...(trf ? { trf } : {}), ...(elem ? { elem } : {}) };
       })
     );
   }, [campaignMap, characters, sheetCampaignId, sheetCharId]);
@@ -8975,6 +9112,7 @@ export default function App({ onSignOut }) {
     setDamageRollResult({ hybridDmg, hybridDmgSides: ch ? hybridSides(ch) : 0, crimsonRolls, angelRoll, angelSides: opts.angel || 0, knightRolls, attackFear: opts.attackFear || 0, igniteRoll, stanceNow, droppedRoll, favoredBonus, rolls2, die2, comboBase: total, furyRolls, furySides: ch ? patronSides(ch) : 6, fearRolls, rawBonus, sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, doublePick: !!opts.doublePick, charged: ch && ch.f_subclass === "Origen Primigenio" && ch.f_charged === "1" && damageType === "mágico", note: resonance ? "Resonancia Sagrada: los dados repetidos valen el doble" : opts.extraFlat ? "Incluye +" + opts.extraFlat + " de Elementalista" : waxBonus ? "Incluye +2 de la Luna Creciente" : opts.note || "", spirit: !!opts.spirit });
     // Ataque con objetivo en el tablero: el daño se aplica al enemigo según sus umbrales.
     if (opts.targetId && sheetCampaignId) applyFoeDamage(sheetCampaignId, opts.targetId, total, ch?.f_name || "Alguien", weaponName);
+    if (opts.targetId && sheetCampaignId && ch && ch.f_elemental_active === "Agua") elementalWave(sheetCampaignId, charId, opts.targetId);
     // Ataque en área: el mismo daño a cada objetivo impactado (cada uno con sus umbrales).
     if (opts.targetIds && opts.targetIds.length && sheetCampaignId) opts.targetIds.forEach((id) => applyFoeDamage(sheetCampaignId, id, total, ch?.f_name || "Alguien", weaponName));
     const who = playerName || "Alguien en la mesa";
@@ -10545,6 +10683,28 @@ export default function App({ onSignOut }) {
     return { ok: dist <= (RANGE_CELLS[range] || 99), range, dist };
   };
   // Un personaje golpea a un enemigo con estadísticas: se marcan sus PV según los umbrales.
+  // Fuego: el enemigo que hiere cuerpo a cuerpo a quien canaliza Fuego recibe 1d10 de daño mágico, con una tirada pequeña sobre él y una quemadura.
+  const elementalBurn = (campaignId, charId, foe) => {
+    const c = charsRef.current[charId];
+    const roll = 1 + Math.floor(Math.random() * 10);
+    mutateMap(campaignId, () => ({ key: Date.now(), kind: "burn", to: foe.id, roll }), "efx");
+    postCampaignEvent(charId, "🔥 Fuego: " + foe.name + " se quema al herirle: 1d10 = " + roll + " de daño mágico");
+    setTimeout(() => applyFoeDamage(campaignId, foe.id, roll, (c?.f_name || "Alguien") + " · Fuego", "Fuego"), 1300);
+  };
+  // Agua: al dañar a un adversario cuerpo a cuerpo, los demás Muy cercanos al objetivo marcan 1 Estrés.
+  const elementalWave = (campaignId, charId, targetId) => {
+    const toks = campaignMapRef.current.tokens || [];
+    const me = toks.find((t) => t.kind === "pc" && t.charId === charId);
+    const target = toks.find((t) => t.id === targetId);
+    if (!me || !target || cellDist(me, target) > RANGE_CELLS["Cuerpo a cuerpo"]) return;
+    const near = toks.filter((t) => t.id !== targetId && (t.kind === "foe" || t.kind === "npc") && !t.gmHidden && cellDist(t, target) <= RANGE_CELLS["Muy cercano"] && !(t.stats && Number(t.stats.hpMarked || 0) >= Number(t.stats.hp || 0)));
+    if (!near.length) return;
+    mutateMap(campaignId, (ts) => ts.map((t) => (near.some((n) => n.id === t.id) && t.stats ? { ...t, stats: { ...t.stats, stressMarked: Math.min(Number(t.stats.stress || 0), Number(t.stats.stressMarked || 0) + 1) } } : t)));
+    mutateMap(campaignId, () => ({ key: Date.now(), kind: "wave", to: targetId, ids: near.map((n) => n.id) }), "efx");
+    const names = near.map((n) => n.name).join(", ");
+    postCampaignEvent(charId, "💧 Agua: " + names + (near.length > 1 ? " marcan" : " marca") + " 1 Estrés");
+    pushMapLog(campaignId, "💧 Agua: " + names + (near.length > 1 ? " marcan" : " marca") + " 1 Estrés", "info");
+  };
   const applyFoeDamage = (campaignId, foeId, dmg, attacker, weaponName) => {
     const foe = (campaignMap.tokens || []).find((t) => t.id === foeId);
     if (!foe || !foe.stats) {
@@ -10653,7 +10813,8 @@ export default function App({ onSignOut }) {
         if (ch && t.charId === viewingCharId && !gmViewing) conds = getConditions(ch).filter((c) => MAP_COND_FX[c]);
         const beast = ch && t.charId === viewingCharId && !gmViewing ? ch.f_beastform || "" : t.beast || "";
         const trf = ch && t.charId === viewingCharId && !gmViewing ? visibleTransform(ch) : t.trf || "";
-        return { ...t, hidden, conds, beast, trf, name: ch?.f_name || t.name || "Personaje", color: classColor(ch?.f_class), hp: ch ? [Number(ch.hp_marked || 0), Number(ch.r_hp || 0)] : null };
+        const elem = ch && t.charId === viewingCharId && !gmViewing ? ch.f_elemental_active || "" : t.elem || "";
+        return { ...t, hidden, conds, beast, trf, elem, name: ch?.f_name || t.name || "Personaje", color: classColor(ch?.f_class), hp: ch ? [Number(ch.hp_marked || 0), Number(ch.r_hp || 0)] : null };
       }
       if (t.kind === "pet") return { ...t, color: classColor(characters[t.ownerCharId]?.f_class) };
       return { ...t, color: t.kind === "foe" ? "#C0504A" : "#C9A24A", img: t.imgId ? castImgs[t.imgId] : null, ...(t.stats ? { hp: [Number(t.stats.hpMarked || 0), Number(t.stats.hp || 0)] } : {}) };
@@ -13109,6 +13270,22 @@ export default function App({ onSignOut }) {
                     buildActionRows().filter((row) => row.key === "hope" || (row.key === "transformation" ? !!row.cost : isActive(rowText(row)))).forEach((row) =>
                       out.push({ section: "Clase y origen", key: "row-" + row.key, Icon: row.Icon, color: typeof row.color === "string" && !row.color.startsWith("var(") ? row.color : undefined, label: row.title, sub: row.kicker, run: openRow(row) })
                     );
+                    // Guardián de los Elementos · Encarnación Elemental: canalizar un elemento (solo uno a la vez) desde el mapa.
+                    if (!foe && c.f_subclass === "Guardián de los Elementos") {
+                      const curEl = c.f_elemental_active || "";
+                      const ELEM_SUB = { Fuego: "Quien te hiere cuerpo a cuerpo recibe 1d10 mágico", Tierra: "Tus umbrales suben tu Competencia", Agua: "Al dañar cuerpo a cuerpo, los Muy cercanos marcan Estrés", Aire: "Flotas con ventaja en Agilidad" };
+                      ["Fuego", "Tierra", "Agua", "Aire"].forEach((el) =>
+                        out.push({
+                          section: "Clase y origen",
+                          key: "elem-" + el,
+                          Icon: HEADER_ELEMENTS[el].Icon,
+                          color: ELEM_COL[el],
+                          label: curEl === el ? "Dejar de canalizar " + el : "Canalizar " + el,
+                          sub: curEl === el ? "Termina el elemento" : "1 Estrés · " + ELEM_SUB[el] + (curEl ? " · sustituye a " + curEl : ""),
+                          run: () => toggleElemental(viewingCharId, el, curEl === el),
+                        })
+                      );
+                    }
                     // Enredo Feroz (Sabio): conjuro a alcance Lejano que inmoviliza; con una Esperanza, también a otro adversario Muy cercano del objetivo.
                     const enredoSk = charSpellTrait(c);
                     const enredoLabel = TRAITS.find((tr) => tr.key === enredoSk)?.label;
@@ -16214,7 +16391,7 @@ export default function App({ onSignOut }) {
                                             bg={scene.image}
                                             props={campaignMap.props || []}
                                             terrain={campaignMap.terrain || []}
-                                            fx={campaignMap.fx}
+                                            fx={campaignMap.fx} efx={campaignMap.efx}
                                             iso={mapIso}
                                             onIsoChange={toggleMapIso}
                                             hideIsoBtn
@@ -16860,6 +17037,11 @@ export default function App({ onSignOut }) {
                 if (final > 0) applyDamage(H.charId, final, final === 3);
                 const me = (campaignMap.tokens || []).find((t) => t.kind === "pc" && t.charId === H.charId);
                 if (me && H.foeId) mutateMap(H.campaignId, () => ({ key: Date.now(), from: H.foeId, to: me.id }), "fx");
+                // Fuego: quien le hiere cuerpo a cuerpo se quema.
+                if (final > 0 && c.f_elemental_active === "Fuego" && me && H.foeId) {
+                  const foeTok = (campaignMap.tokens || []).find((t) => t.id === H.foeId);
+                  if (foeTok && cellDist(foeTok, me) <= RANGE_CELLS["Cuerpo a cuerpo"]) elementalBurn(H.campaignId, H.charId, foeTok);
+                }
                 pushMapLog(H.campaignId, H.from + " golpea a " + name + (H.crit ? " (¡crítico!)" : "") + ": " + H.dmg + " de daño (" + SEVERITY_LABEL[sev] + ")" + (useArmor ? " · usa 1 de Armadura" : "") + " · " + final + " PV", "dmg");
                 postCampaignEvent(H.charId, "🩸 " + H.from + " le golpea con " + H.weapon + ": " + H.dmg + " de daño · marca " + final + " PV" + (useArmor ? " (usa 1 de Armadura)" : ""));
               };
@@ -23865,7 +24047,7 @@ export default function App({ onSignOut }) {
                           stampTool={stampTool}
                           onStamp={(x, y) => stampProp(stampTool, x, y)}
                           onUnstamp={unstampProp}
-                          fx={campaignMap.fx}
+                          fx={campaignMap.fx} efx={campaignMap.efx}
                           log={campaignMap.log}
                           fog={campaignMap.fog}
                           fogView="gm"
