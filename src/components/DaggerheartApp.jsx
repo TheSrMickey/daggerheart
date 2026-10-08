@@ -4394,6 +4394,11 @@ const sharedStyles = `
   .mh-brand { display: flex; align-items: center; gap: 10px; }
   .mh-brand-logo { height: 30px; filter: drop-shadow(0 0 8px #9db8ff66); }
   .mh-brand-name { flex: 1; font-weight: 700; font-size: 15px; color: var(--mh-ink); letter-spacing: .02em; }
+  .mh-acct { position: relative; display: flex; align-items: center; gap: 6px; }
+  .mh-acct-menu { position: absolute; z-index: 60; top: 36px; right: 0; width: 190px; padding: 6px; border-radius: 12px; background: var(--mh-panel2); border: 1px solid var(--mh-line2); box-shadow: 0 14px 36px #0009; animation: mh-fade-in .14s ease both; }
+  .mh-acct-who { padding: 8px 10px 9px; border-bottom: 1px solid var(--mh-line); margin-bottom: 4px; } .mh-acct-who small { display: block; font-size: 10px; color: var(--mh-muted2); text-transform: uppercase; letter-spacing: .08em; } .mh-acct-who b { display: block; font-size: 13.5px; color: var(--mh-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mh-acct-menu button { all: unset; box-sizing: border-box; width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 13px; color: var(--mh-ink2); } .mh-acct-menu button:hover { background: var(--mh-panel3); color: var(--mh-ink); }
+  .mh-brand-av { border: 0; padding: 0; cursor: pointer; font-family: inherit; } .mh-brand-av:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
   .mh-brand-av { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #4f86ff, #7a5cff); color: #fff; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
   .mh-navitem { display: flex; align-items: center; gap: 10px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 500; white-space: nowrap; color: var(--mh-ink3); border: 1px solid transparent; }
   .mh-navitem:hover { background: #ffffff0a; }
@@ -9097,6 +9102,19 @@ export default function App({ onSignOut }) {
 
   const [detailTab, setDetailTab] = useState("general");
   const [chatSlot, setChatSlot] = useState(null); // contenedor del chat en la columna derecha (hoja moderna, pestaña de campaña)
+  const [acctOpen, setAcctOpen] = useState(false); // menú de la cuenta (avatar de la cabecera del menú lateral)
+  useEffect(() => {
+    if (!acctOpen) return;
+    const close = (e) => {
+      if (e.type === "keydown" ? e.key === "Escape" : !e.target.closest(".mh-acct")) setAcctOpen(false);
+    };
+    document.addEventListener("mousedown", close);
+    document.addEventListener("keydown", close);
+    return () => {
+      document.removeEventListener("mousedown", close);
+      document.removeEventListener("keydown", close);
+    };
+  }, [acctOpen]);
   const [levelUpId, setLevelUpId] = useState(null); // personaje que está subiendo de nivel
   const [sheetAsk, setSheetAsk] = useState(null); // personaje por el que se pregunta qué hoja abrir
   const [actionPage, setActionPage] = useState(0);
@@ -22426,9 +22444,25 @@ export default function App({ onSignOut }) {
           <img src="/logo.svg" alt="" className="mh-brand-logo" />
           {!isMobile && <span className="mh-brand-name">Enaris</span>}
           {!isMobile && (
-            <span className="mh-brand-av" title={playerName}>
-              {(playerName || "?").trim().charAt(0).toUpperCase()}
-            </span>
+            <div className="mh-acct">
+              {!showTopbar && <NotificationBell />}
+              <button type="button" className="mh-brand-av" title={playerName} aria-label="Cuenta" aria-haspopup="menu" aria-expanded={acctOpen} onClick={() => setAcctOpen((v) => !v)}>
+                {(playerName || "?").trim().charAt(0).toUpperCase()}
+              </button>
+              {acctOpen && (
+                <div className="mh-acct-menu" role="menu">
+                  <div className="mh-acct-who"><small>Jugando como</small><b title={playerName}>{playerName || "—"}</b></div>
+                  <button type="button" role="menuitem" onClick={() => { setAcctOpen(false); setViewingCharId(null); setViewingCardDetail(null); setView("ajustes"); }}>
+                    <Settings size={15} /> Ajustes
+                  </button>
+                  {onSignOut && (
+                    <form action={onSignOut}>
+                      <button type="submit" role="menuitem"><LogOut size={15} /> Cerrar sesión</button>
+                    </form>
+                  )}
+                </div>
+              )}
+            </div>
           )}
         </div>
 
@@ -22490,6 +22524,7 @@ export default function App({ onSignOut }) {
           </div>
         )}
 
+        {isMobile && (
         <div
           style={{
             display: "flex",
@@ -22537,6 +22572,7 @@ export default function App({ onSignOut }) {
             </form>
           )}
         </div>
+        )}
       </nav>
       )}
 
