@@ -19,7 +19,7 @@ export const LEVEL_OPTIONS = [
   { id: "eva", name: "+1 Evasión", desc: "Permanente", rank: 2, cost: 1, slots: 1 },
   { id: "sub", name: "Subclase mejorada", desc: "Especialización o Maestría", rank: 3, cost: 1, slots: 1 },
   { id: "prof", name: "+1 Competencia", desc: "Y un dado de daño más en tu arma", rank: 3, cost: 2, slots: 1 },
-  { id: "multi", name: "Multiclase", desc: "Segunda clase y dominio", rank: 3, cost: 2, slots: 1, soon: true },
+  { id: "multi", name: "Multiclase", desc: "Segunda clase y dominio", rank: 3, cost: 2, slots: 1 },
 ];
 
 export const parseAdvances = (c) => {
@@ -40,18 +40,36 @@ export const freeSlots = (adv, opt, rank) => {
 };
 export const totalSlots = (opt, rank) => opt.slots * Math.max(0, rank - opt.rank + 1);
 
+export const getMulticlass = (c) => {
+  try {
+    const m = JSON.parse(c?.f_multiclass || "");
+    return m && m.cls ? m : null;
+  } catch (e) {
+    return null;
+  }
+};
+
 // Marca las casillas gastadas empezando por el Rango actual y bajando.
+// La multiclase tacha además una «subclase mejorada» sin usar y la otra multiclase; la subclase mejorada tacha la multiclase de su Rango.
 const spend = (adv, picks, rank) => {
   const s = JSON.parse(JSON.stringify(adv.s || {}));
-  picks.forEach((id) => {
+  const take = (id) => {
     const opt = LEVEL_OPTIONS.find((o) => o.id === id);
     for (let k = rank; k >= opt.rank; k--) {
       if (used({ s }, k, id) < opt.slots) {
         s[k] = { ...(s[k] || {}), [id]: used({ s }, k, id) + 1 };
-        break;
+        return;
       }
     }
-  });
+  };
+  picks.forEach(take);
+  if (picks.includes("sub") && used({ s }, rank, "multi") < 1) s[rank] = { ...(s[rank] || {}), multi: 1 };
+  if (picks.includes("multi")) {
+    take("sub");
+    [3, 4].forEach((k) => {
+      s[k] = { ...(s[k] || {}), multi: 1 };
+    });
+  }
   return s;
 };
 
@@ -70,7 +88,7 @@ export const ownedCards = (c) => ({ loadout: list(c?.f_domain_cards), vault: lis
 export const cardsNeeded = (picks) => 1 + (picks.includes("dom") ? 1 : 0);
 
 // Campos de la hoja que cambian al subir de nivel.
-export function levelUpPatch(c, { nl, picks, traits, expIdx, newExp, cards, swapOut, swapIn, profBase }) {
+export function levelUpPatch(c, { nl, picks, traits, expIdx, newExp, cards, swapOut, swapIn, profBase, mc }) {
   const adv = parseAdvances(c);
   const rank = rankOf(nl);
   const ach = isAchievementLevel(nl);
@@ -104,13 +122,17 @@ export function levelUpPatch(c, { nl, picks, traits, expIdx, newExp, cards, swap
   cards.forEach((k) => (loadout.length < 5 ? loadout.push(k) : vault.push(k)));
   patch.f_domain_cards = JSON.stringify(loadout);
   patch.f_domain_vault = vault.length ? JSON.stringify(vault) : "";
+  if (picks.includes("multi") && mc) {
+    patch.f_multiclass = JSON.stringify({ cls: mc.cls, domain: mc.domain, sub: mc.sub });
+    patch.f_multi_spell = mc.spell === "new" ? "new" : "";
+  }
   patch.f_advances = JSON.stringify({ s: spend(adv, picks, rank), marks, sub: adv.sub + (picks.includes("sub") ? 1 : 0) });
   return patch;
 }
 
-const STEPS = ["Logros", "Avances", "Umbrales", "Carta de dominio"];
+const STEP_LABEL = { logros: "Logros", avances: "Avances", multi: "Multiclase", umbrales: "Umbrales", cartas: "Carta de dominio" };
 
-export function LevelUpDialog({ c, color, traitList, pool, domainColors, profBase, thresholds, onClose, onConfirm }) {
+export function LevelUpDialog({ c, color, traitList, classDomains, cardsByDomain, classes, spellOf, domainColors, profBase, thresholds, onClose, onConfirm }) {
   const nl = Number(c.f_level || 1) + 1;
   const rank = rankOf(nl);
   const ach = isAchievementLevel(nl);
@@ -131,11 +153,30 @@ export function LevelUpDialog({ c, color, traitList, pool, domainColors, profBas
   const [swapOut, setSwapOut] = useState("");
   const [swapIn, setSwapIn] = useState("");
   const [msg, setMsg] = useState("");
+  const [mcCls, setMcCls] = useState("");
+  const [mcDom, setMcDom] = useState("");
+  const [mcSub, setMcSub] = useState("");
+  const [mcSpell, setMcSpell] = useState("");
+  const mcOld = getMulticlass(c);
 
   const opts = LEVEL_OPTIONS.filter((o) => o.rank <= rank);
   const spent = picks.reduce((a, id) => a + LEVEL_OPTIONS.find((o) => o.id === id).cost, 0);
-  const available = pool.filter((k) => !owned.includes(k.key) && k.level <= nl);
+  // Cartas que puedes coger: las de tus dominios hasta tu nivel y las del dominio de multiclase hasta la mitad (redondeando hacia arriba).
+  const mcDomain = mcOld ? mcOld.domain : picks.includes("multi") ? mcDom : "";
+  const half = Math.ceil(nl / 2);
+  const pool = [...classDomains.map((d) => [d, nl]), ...(mcDomain ? [[mcDomain, half]] : [])].flatMap(([d, cap]) => (cardsByDomain[d] || []).filter((k) => k.level <= cap).map((k) => ({ ...k, domain: d })));
+  const available = pool.filter((k) => !owned.includes(k.key));
   const need = Math.min(cardsNeeded(picks), available.length);
+  const stepKeys = ["logros", "avances", ...(picks.includes("multi") ? ["multi"] : []), "umbrales", "cartas"];
+  const key = stepKeys[Math.min(step, stepKeys.length - 1)];
+  // Multiclase: rasgo de conjuro.
+  const lbl = (k) => traitList.find((t) => t.key === k)?.label || "";
+  const ownSpell = spellOf(c.f_class, c.f_subclass);
+  const newSpell = mcCls && mcSub ? spellOf(mcCls, mcSub) : null;
+  const spellChoice = !!ownSpell && !!newSpell && ownSpell !== newSpell;
+  const effSpell = !ownSpell && newSpell ? "new" : spellChoice ? mcSpell : "orig";
+  const mcClassList = classes.filter((cl) => cl.key !== c.f_class && cl.domains.some((d) => !classDomains.includes(d)));
+  const mcCur = classes.find((cl) => cl.key === mcCls);
 
   const pick = (o) => {
     setMsg("");
@@ -143,9 +184,15 @@ export function LevelUpDialog({ c, color, traitList, pool, domainColors, profBas
       setPicks(picks.filter((x) => x !== o.id));
       if (o.id === "traits") setTraits([]);
       if (o.id === "exp") setExpIdx([]);
+      if (o.id === "multi") (setMcCls(""), setMcDom(""), setMcSub(""), setMcSpell(""));
       return;
     }
-    if (o.soon) return setMsg("La multiclase todavía no está disponible en la app.");
+    if (o.id === "multi") {
+      if (mcOld) return setMsg("Ya has multiclaseado. Solo se puede una vez.");
+      if (nl < 5) return setMsg("La multiclase aparece desde el nivel 5.");
+      const subOpt = LEVEL_OPTIONS.find((x) => x.id === "sub");
+      if (freeSlots(adv, subOpt, rank) - (picks.includes("sub") ? 1 : 0) < 1) return setMsg("Necesitas una «subclase mejorada» sin usar en este Rango.");
+    }
     if (freeSlots(adv, o, rank) < 1) return setMsg(o.name + ": ya no te quedan casillas.");
     if (spent + o.cost > 2) return setMsg("Solo tienes 2 puntos. Quita un avance antes de elegir «" + o.name.toLowerCase() + "».");
     setPicks([...picks, o.id]);
@@ -163,28 +210,35 @@ export function LevelUpDialog({ c, color, traitList, pool, domainColors, profBas
   };
 
   const stepError = (s) => {
-    if (s === 0 && ach && !newExp.trim()) return "Escribe la nueva Experiencia.";
-    if (s === 1) {
+    if (s === "logros" && ach && !newExp.trim()) return "Escribe la nueva Experiencia.";
+    if (s === "avances") {
       if (spent !== 2) return "Elige avances hasta usar los 2 puntos.";
       if (picks.includes("traits") && traits.length !== 2) return "Elige los dos rasgos que suben.";
       if (picks.includes("exp") && expIdx.length !== 2) return "Elige las dos Experiencias que suben.";
     }
-    if (s === 3) {
+    if (s === "multi") {
+      if (!mcCls) return "Elige la clase.";
+      if (!mcDom) return "Elige el dominio.";
+      if (!mcSub) return "Elige la carta fundamento.";
+      if (spellChoice && !mcSpell) return "Elige qué rasgo de conjuro usas.";
+    }
+    if (s === "cartas") {
       if (cards.length !== need) return need ? "Elige " + (need === 1 ? "una carta" : need + " cartas") + " de dominio." : "";
       if (swapOn && (!swapOut || !swapIn)) return "Elige la carta que cambias y por cuál.";
     }
     return "";
   };
   const next = () => {
-    const e = stepError(step);
+    const e = stepError(key);
     if (e) return setMsg(e);
     setMsg("");
     setStep(step + 1);
   };
   const confirm = () => {
-    const e = stepError(3);
+    const e = stepError("cartas");
     if (e) return setMsg(e);
-    onConfirm(levelUpPatch(c, { nl, picks, traits, expIdx, newExp, cards, swapOut: swapOn ? swapOut : "", swapIn: swapOn ? swapIn : "", profBase }), nl);
+    const mc = picks.includes("multi") ? { cls: mcCls, domain: mcDom, sub: mcSub, spell: effSpell } : null;
+    onConfirm(levelUpPatch(c, { nl, picks, traits, expIdx, newExp, cards, swapOut: swapOn ? swapOut : "", swapIn: swapOn ? swapIn : "", profBase, mc }), nl);
   };
 
   const hp = picks.includes("hp") ? 1 : 0;
@@ -207,13 +261,13 @@ export function LevelUpDialog({ c, color, traitList, pool, domainColors, profBas
           <button type="button" className="lv-x" onClick={onClose} aria-label="Cerrar">✕</button>
         </div>
         <div className="lv-steps">
-          {STEPS.map((s, i) => (
-            <div key={s} className={"lv-step" + (i === step ? " is-on" : i < step ? " is-ok" : "")}>{i < step ? "✓ " : i + 1 + " · "}{s}</div>
+          {stepKeys.map((k, i) => (
+            <div key={k} className={"lv-step" + (i === step ? " is-on" : i < step ? " is-ok" : "")}>{i < step ? "✓ " : i + 1 + " · "}{STEP_LABEL[k]}</div>
           ))}
         </div>
 
         <div className="lv-body">
-          {step === 0 && (
+          {key === "logros" && (
             <>
               <p className="lv-p">{ach ? "Al empezar el Rango " + rank + " ganas estos logros de nivel:" : "Este nivel no abre un Rango nuevo, así que no hay logros de nivel. Pasa a elegir tus avances."}</p>
               {ach && (
@@ -230,7 +284,7 @@ export function LevelUpDialog({ c, color, traitList, pool, domainColors, profBas
             </>
           )}
 
-          {step === 1 && (
+          {key === "avances" && (
             <>
               <p className="lv-p">Elige dos avances del Rango {rank} (o de los anteriores con casillas libres). <b>Puntos usados: {spent} / 2</b></p>
               <div className="lv-opts">
@@ -238,12 +292,12 @@ export function LevelUpDialog({ c, color, traitList, pool, domainColors, profBas
                   const fr = freeSlots(adv, o, rank);
                   const tt = totalSlots(o, rank);
                   const sel = picks.includes(o.id);
-                  const off = (fr < 1 && !sel) || o.soon;
+                  const off = (fr < 1 && !sel) || (o.id === "multi" && !sel && (!!mcOld || nl < 5));
                   return (
                     <button type="button" key={o.id} className={"lv-opt" + (sel ? " is-on" : "") + (off ? " is-off" : "")} onClick={() => pick(o)}>
                       <span className="lv-cost">{o.cost} pt</span>
                       <b>{o.name}</b>
-                      <small>{o.soon ? "Próximamente" : o.desc}</small>
+                      <small>{o.id === "multi" && mcOld ? "Ya has multiclaseado" : o.desc}</small>
                       <span className="lv-pips">
                         {Array.from({ length: tt }, (_, i) => (
                           <i key={i} className={i < tt - fr ? "u" : sel && i === tt - fr ? "n" : ""} />
@@ -286,7 +340,56 @@ export function LevelUpDialog({ c, color, traitList, pool, domainColors, profBas
             </>
           )}
 
-          {step === 2 && (
+          {key === "multi" && (
+            <>
+              <p className="lv-p">Elige una segunda clase. Ganas su característica de clase (no su rasgo de Esperanza), un dominio nuevo y una carta fundamento. <b>Solo se puede una vez.</b></p>
+              <label className="lv-lab">Clase</label>
+              <div className="lv-mcgrid">
+                {mcClassList.map((cl) => (
+                  <button type="button" key={cl.key} className={"lv-mccl" + (mcCls === cl.key ? " is-on" : "")} onClick={() => (setMcCls(cl.key), setMcDom(""), setMcSub(""), setMcSpell(""), setMsg(""))}>
+                    <b>{cl.key}</b>
+                    <small>{cl.domains.join(" · ")}</small>
+                  </button>
+                ))}
+              </div>
+              {mcCur && (
+                <>
+                  <label className="lv-lab">Dominio nuevo (cartas de nivel {half} o menor)</label>
+                  <div className="lv-row">
+                    {mcCur.domains.filter((d) => !classDomains.includes(d)).map((d) => (
+                      <button type="button" key={d} className={"lv-chipb" + (mcDom === d ? " is-on" : "")} onClick={() => (setMcDom(d), setMsg(""))}>
+                        {d} {(cardsByDomain[d] || []).length ? "" : <small>· sin cartas cargadas</small>}
+                      </button>
+                    ))}
+                  </div>
+                  <label className="lv-lab">Carta fundamento (va a tus acciones)</label>
+                  <div className="lv-cards">
+                    {mcCur.subs.map((sb) => (
+                      <button type="button" key={sb.key} className={"lv-card" + (mcSub === sb.key ? " is-on" : "")} style={{ "--dc": color }} onClick={() => (setMcSub(sb.key), setMcSpell(""), setMsg(""))}>
+                        <span className="lv-dom">{mcCur.key} · Fundamento</span>
+                        <b>{sb.key}</b>
+                        <small>{sb.foundation.join(" · ")}</small>
+                      </button>
+                    ))}
+                  </div>
+                  {mcCur.features.length > 0 && <div className="lv-note">Ganas: {mcCur.features.join(", ")}.</div>}
+                  {!ownSpell && newSpell && <div className="lv-note">Tu rasgo de conjuro pasa a ser {lbl(newSpell)}, el de tu nueva subclase.</div>}
+                  {spellChoice && (
+                    <>
+                      <label className="lv-lab">Rasgo de conjuro que usas</label>
+                      <div className="lv-row">
+                        <button type="button" className={"lv-chipb" + (mcSpell === "orig" ? " is-on" : "")} onClick={() => setMcSpell("orig")}>{lbl(ownSpell)} (tu subclase)</button>
+                        <button type="button" className={"lv-chipb" + (mcSpell === "new" ? " is-on" : "")} onClick={() => setMcSpell("new")}>{lbl(newSpell)} (la nueva)</button>
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
+              <div className="lv-note">Se tacha una «subclase mejorada» sin usar y la otra multiclase: no podrás llegar a la Maestría de ninguna subclase.</div>
+            </>
+          )}
+
+          {key === "umbrales" && (
             <>
               <p className="lv-p">Tus umbrales de daño suman tu nivel, así que suben +1 automáticamente.</p>
               <div className="lv-chips">
@@ -302,7 +405,7 @@ export function LevelUpDialog({ c, color, traitList, pool, domainColors, profBas
             </>
           )}
 
-          {step === 3 && (
+          {key === "cartas" && (
             <>
               <p className="lv-p">
                 {need ? "Elige " + (need === 1 ? "una carta" : need + " cartas") + " de dominio de nivel " + nl + " o menor" + (picks.includes("dom") ? " (una es el avance extra)." : ".") : "No hay cartas nuevas de tus dominios cargadas para este nivel."}
@@ -341,7 +444,7 @@ export function LevelUpDialog({ c, color, traitList, pool, domainColors, profBas
 
         <div className="lv-foot">
           <button type="button" className="lv-btn" onClick={() => (setMsg(""), step === 0 ? onClose() : setStep(step - 1))}>{step === 0 ? "Cancelar" : "Atrás"}</button>
-          {step < 3 ? (
+          {step < stepKeys.length - 1 ? (
             <button type="button" className="lv-btn is-go" onClick={next}>Siguiente</button>
           ) : (
             <button type="button" className="lv-btn is-go" onClick={confirm}>Confirmar nivel {nl}</button>

@@ -8,7 +8,7 @@ import { storageGet, storageSet } from "@/lib/storage";
 import { NotificationBell, FriendsPanel } from "./Social";
 import { ModernSheet } from "./ModernSheet";
 import { Tour } from "./Tour";
-import { LevelUpDialog, parseAdvances, ownedCards, MAX_LEVEL, rankOf } from "./LevelUp";
+import { LevelUpDialog, parseAdvances, ownedCards, getMulticlass, MAX_LEVEL, rankOf } from "./LevelUp";
 import { RulesPanel } from "./MapRules";
 import { setPresence, startPresence, stopPresence } from "@/lib/social";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
@@ -1068,6 +1068,16 @@ const moonPhaseOf = (c) => {
 };
 // Comunión: efecto según el dado elegido.
 const communeEffect = (v) => (v >= 6 ? "Vives psíquicamente una escena relacionada con la respuesta como si estuvieras allí" : v >= 4 ? "Oyes sonidos o ves una visión relacionados con la respuesta" : "Notas un sabor, un olor o una sensación relacionados con la respuesta");
+// Rasgo de conjuro del personaje: el de su subclase o, si ha multiclaseado, el de la subclase nueva (si no tenía o si elige usarlo).
+const isDruidLike = (c) => c?.f_class === "Druida" || getMulticlass(c)?.cls === "Druida";
+function charSpellTrait(c) {
+  const own = spellcastTraitFor(c?.f_class, c?.f_subclass);
+  const mc = getMulticlass(c);
+  if (!mc) return own;
+  const neu = spellcastTraitFor(mc.cls, mc.sub);
+  if (!own) return neu;
+  return neu && c.f_multi_spell === "new" ? neu : own;
+}
 function spellcastTraitFor(className, subclassName) {
   return SUBCLASS_SPELLCAST_OVERRIDE[subclassName] || CLASS_SPELLCAST_TRAIT[className] || null;
 }
@@ -4361,6 +4371,8 @@ const sharedStyles = `
   .lv-card b { display: block; font-size: 13px; font-weight: 600; } .lv-dom { display: block; font-size: 11px; color: var(--dc); margin-bottom: 2px; text-transform: uppercase; letter-spacing: .05em; }
   .lv-card small { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; color: var(--mh-muted); font-size: 11.5px; margin-top: 3px; }
   .lv-chk { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; } .lv-row .lv-in { flex: 1; min-width: 160px; width: auto; }
+  .lv-mcgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 6px; } .lv-mccl { all: unset; box-sizing: border-box; cursor: pointer; padding: 8px 10px; border-radius: 9px; border: 1px solid var(--mh-line2); background: var(--mh-panel2); text-align: center; font-size: 13px; } .lv-mccl small { display: block; font-size: 11px; color: var(--mh-muted); } .lv-mccl.is-on { border-color: #E3B04B; background: color-mix(in srgb, #E3B04B 12%, var(--mh-panel2)); }
+  .mhm-multi { color: #9be0b4; font-weight: 600; }
   .lv-err { min-height: 20px; margin-top: 10px; font-size: 13px; color: #E5484D; }
   .lv-foot { display: flex; justify-content: space-between; gap: 10px; padding: 12px 22px 18px; border-top: 1px solid var(--mh-line); }
   .lv-btn { all: unset; cursor: pointer; padding: 9px 20px; border-radius: 9px; border: 1px solid var(--mh-line2); font-size: 13.5px; font-weight: 600; } .lv-btn:hover { background: var(--mh-panel3); }
@@ -9132,7 +9144,7 @@ export default function App({ onSignOut }) {
     }
   };
   const prayerCountFor = (c) => {
-    const key = spellcastTraitFor(c.f_class, c.f_subclass);
+    const key = charSpellTrait(c);
     const mods = getEquipmentMods(PRIMARY_WEAPONS.find((x) => x.key === c.f_primary_weapon), SECONDARY_WEAPONS.find((x) => x.key === c.f_secondary_weapon), ARMORS.find((x) => x.key === c.f_armor));
     return Math.max(0, Number(c[key] || 0) + (mods[key] || 0));
   };
@@ -9931,7 +9943,7 @@ export default function App({ onSignOut }) {
         const luckable = meC && ancFeat(meC, "Hada", 0) && !r.reaction && !r.luck && m.charId && Date.now() - (m.ts || 0) < 10 * 60 * 1000;
         // Origen Primigenio · Ayuda Encantada: intercambiar los dados de la tirada de Lanzamiento de un aliado.
         const allyC = m.charId ? characters[m.charId] : null;
-        const allySpell = allyC ? TRAITS.find((t) => t.key === spellcastTraitFor(allyC.f_class, allyC.f_subclass))?.label : "";
+        const allySpell = allyC ? TRAITS.find((t) => t.key === charSpellTrait(allyC))?.label : "";
         const enchantable = meC && meC.f_subclass === "Origen Primigenio" && tierForLevel(meC.f_level || 1) >= 2 && m.charId && m.charId !== meCharId && !r.luck && !r.weapon && r.trait && r.trait === allySpell && Date.now() - (m.ts || 0) < 10 * 60 * 1000;
         const enchantBtn = enchantable ? (
           <button type="button" className="mh-chat-luck mh-chat-enchant" disabled={!!meC.f_enchant_used} onClick={() => bendLuck(meCharId, m.charId, r, { kind: "swap" })}>
@@ -11197,7 +11209,7 @@ export default function App({ onSignOut }) {
 
     // Brujo · Favor: rendir tributo al patrón como movimiento de descanso.
     let favorGain = 0;
-    const tributeGain = Math.max(1, Number(c[spellcastTraitFor(c.f_class, c.f_subclass)] || 0));
+    const tributeGain = Math.max(1, Number(c[charSpellTrait(c)] || 0));
     [key1, key2, key3].forEach((key) => {
       if (!key) return;
       const entry = REST_ACTIONS.find((a) => a.key === key);
@@ -11752,7 +11764,7 @@ export default function App({ onSignOut }) {
     setPreRoll(null);
     if (elemUse) postCampaignEvent(pr.charId, `${"🌀"} Elementalista: gasta 1 Esperanza y usa su ${ch.f_origin_element || "elemento"} para ${elemUse === "roll" ? "sumar +2 a la tirada" : "sumar +3 al daño"}`);
     const noMercy = ch && ch.f_class === "Guerrero" && ch.f_no_mercy === "1" && pr.weapon && !pr.weapon.charge ? 1 : 0;
-    const moonbeam = ch && ch.f_moonbeam === "1" && pr.traitLabel === TRAITS.find((t) => t.key === spellcastTraitFor(ch.f_class, ch.f_subclass))?.label ? 1 : 0;
+    const moonbeam = ch && ch.f_moonbeam === "1" && pr.traitLabel === TRAITS.find((t) => t.key === charSpellTrait(ch))?.label ? 1 : 0;
     // Teúrgia · Esperanza Consagrada: se gasta un dado de la carta; sin dados, la Manifestación desaparece.
     const hallowUse = ch && ch.f_subclass === "Teúrgia" && pr.hallow && Number(ch.f_hallow_dice || 0) > 0;
     if (hallowUse) {
@@ -12139,6 +12151,7 @@ export default function App({ onSignOut }) {
       name: c.f_name,
       cls: c.f_class,
       subclass: c.f_subclass,
+      multi: getMulticlass(c),
       level,
       color: beast?.color || classColor(c.f_class),
       Emblem: CLASS_EMBLEMS[c.f_class] || User,
@@ -12149,7 +12162,7 @@ export default function App({ onSignOut }) {
         // Igual que en la hoja clásica: bonos de forma o evolución, de equipo, rasgo de conjuro y ventaja del Aire.
         const formBoost = beast && beast.traitBonus?.key === t.key ? beast.traitBonus.amount : 0;
         const evoBoost = c.f_evolution_trait === t.key ? 1 : 0;
-        const spell = spellcastTraitFor(c.f_class, c.f_subclass) === t.key;
+        const spell = charSpellTrait(c) === t.key;
         return {
           key: t.key,
           label: t.label,
@@ -12183,6 +12196,7 @@ export default function App({ onSignOut }) {
         prof: getProficiency(c),
         marks: parseAdvances(c).marks.map((k) => TRAITS.find((t) => t.key === k)?.label).filter(Boolean),
         cards: ownedCards(c).loadout.length + ownedCards(c).vault.length,
+        multi: getMulticlass(c)?.cls || "",
       },
       tabs: (() => {
         const camp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(id));
@@ -12194,7 +12208,7 @@ export default function App({ onSignOut }) {
           { key: "inventory", label: "Inventario", Icon: Backpack },
           { key: "background", label: "Trasfondo", Icon: MessageCircle },
           { key: "journal", label: "Diario", Icon: NotebookPen },
-          ...(c.f_class === "Druida" ? [{ key: "beastforms", label: "Formas de Bestia", Icon: PawPrint, tone: G, extra: true }] : []),
+          ...(isDruidLike(c) ? [{ key: "beastforms", label: "Formas de Bestia", Icon: PawPrint, tone: G, extra: true }] : []),
           ...(c.f_subclass === "Vínculo Bestial" ? [{ key: "companion", label: "Compañero Animal", Icon: Dog, tone: G, extra: true }] : []),
           ...(c.f_subclass === "Sindicato" ? [{ key: "contacts", label: "Red de Contactos", Icon: Network, tone: "#6E5A8A", extra: true }] : []),
           ...(isMartial(c) ? [{ key: "stances", label: "Posturas Marciales", Icon: HandFist, tone: "#C08B5C", extra: true }] : []),
@@ -12607,7 +12621,7 @@ export default function App({ onSignOut }) {
                   </div>
                   {(c.f_class || c.f_pronouns) && (
                     <div style={{ color: "var(--mh-ink3)", fontSize: 13, marginTop: 4, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                      <span>{[c.f_class, c.f_subclass, c.f_pronouns].filter(Boolean).join(" · ")}</span>
+                      <span>{[c.f_class, c.f_subclass, c.f_pronouns].filter(Boolean).join(" · ")}{getMulticlass(c) && <b className="mhm-multi"> + {getMulticlass(c).cls}</b>}</span>
                       {isExpansionClass && <span className="mh-exp-tag">{isExpansionClass}</span>}
                     </div>
                   )}
@@ -12627,7 +12641,7 @@ export default function App({ onSignOut }) {
                   const equipBoost = equipMods[t.key] || 0;
                   const boost = formBoost + evoBoost + equipBoost;
                   const val = baseVal + boost;
-                  const isSpellcast = spellcastTraitFor(c.f_class, c.f_subclass) === t.key;
+                  const isSpellcast = charSpellTrait(c) === t.key;
                   const formBoosted = formBoost + evoBoost > 0;
                   const hasAdvantage = c.f_elemental_active === "Aire" && t.key === "t_agility";
                   const hasNaturesTongue = (() => {
@@ -12710,12 +12724,13 @@ export default function App({ onSignOut }) {
                     { key: "background", label: "Trasfondo y Conexiones", Icon: MessageCircle },
                     { key: "journal", label: "Diario", Icon: NotebookPen },
                   ];
-                  const validKeys = [...tabs.map((t) => t.key), ...(c.f_class === "Druida" ? ["beastforms"] : []), ...(c.f_subclass === "Vínculo Bestial" ? ["companion"] : []), ...(c.f_subclass === "Sindicato" ? ["contacts"] : []), ...(isMartial(c) ? ["stances"] : []), ...(Object.values(campaigns).some((cp) => (cp.characterIds || []).includes(viewingCharId)) ? ["campaign"] : [])];
+                  const validKeys = [...tabs.map((t) => t.key), ...(isDruidLike(c) ? ["beastforms"] : []), ...(c.f_subclass === "Vínculo Bestial" ? ["companion"] : []), ...(c.f_subclass === "Sindicato" ? ["contacts"] : []), ...(isMartial(c) ? ["stances"] : []), ...(Object.values(campaigns).some((cp) => (cp.characterIds || []).includes(viewingCharId)) ? ["campaign"] : [])];
                   const charCampaign = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(viewingCharId));
                   const activeTab = validKeys.includes(detailTab) ? detailTab : "general";
                   const currentTier = tierForLevel(c.f_level || 1);
                   const hopeFeature = CLASS_HOPE_FEATURE[c.f_class];
-                  const classFeatures = CLASS_FEATURES[c.f_class] || [];
+                  const mcInfo = getMulticlass(c);
+                  const classFeatures = [...(CLASS_FEATURES[c.f_class] || []), ...(mcInfo ? CLASS_FEATURES[mcInfo.cls] || [] : [])];
                   const subclassEntry = (SUBCLASSES[c.f_class] || []).find((s) => s.key === c.f_subclass);
                   const activeBeastform = BEASTFORMS.find((b) => b.key === c.f_beastform);
                   const items = getItems(c);
@@ -12762,7 +12777,7 @@ export default function App({ onSignOut }) {
                   // Escuela de la Guerra · Conjurar Escudo: con 2+ Esperanza, Competencia a la Evasión.
                   const shieldBonus = c.f_subclass === "Escuela de la Guerra" && tierForLevel(c.f_level || 1) >= 2 && Number(c.hope_marked ?? HOPE_DEFAULT) >= 2 ? getProficiency(c) : 0;
                   const entries = getJournal(c);
-                  const spellTraitKey = spellcastTraitFor(c.f_class, c.f_subclass);
+                  const spellTraitKey = charSpellTrait(c);
                   const spellTraitInfo = TRAITS.find((t) => t.key === spellTraitKey);
                   defenseRef.current = {
                     id: viewingCharId,
@@ -12849,6 +12864,20 @@ export default function App({ onSignOut }) {
                       ),
                     });
                   });
+
+                  if (mcInfo) {
+                    const msub = (SUBCLASSES[mcInfo.cls] || []).find((x) => x.key === mcInfo.sub);
+                    const found = (msub?.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name));
+                    items.push({
+                      key: "mc-sub",
+                      Icon: Sparkles,
+                      color: "#7FB77A",
+                      kicker: "Multiclase · " + mcInfo.cls + " · Fundamento",
+                      title: mcInfo.sub,
+                      summary: found.map((f) => f.name).join(" · "),
+                      onClick: openDetail({ kicker: "Multiclase · " + mcInfo.cls + " · Fundamento", title: mcInfo.sub, text: msub?.blurb, features: found, image: msub?.image, bigStyle: true, accent: "#7FB77A" }),
+                    });
+                  }
 
                   if (hopeFeature) {
                     items.push({
@@ -13001,7 +13030,7 @@ export default function App({ onSignOut }) {
                       out.push({ section: "Clase y origen", key: "row-" + row.key, Icon: row.Icon, color: typeof row.color === "string" && !row.color.startsWith("var(") ? row.color : undefined, label: row.title, sub: row.kicker, run: openRow(row) })
                     );
                     // Enredo Feroz (Sabio): conjuro a alcance Lejano que inmoviliza; con una Esperanza, también a otro adversario Muy cercano del objetivo.
-                    const enredoSk = spellcastTraitFor(c.f_class, c.f_subclass);
+                    const enredoSk = charSpellTrait(c);
                     const enredoLabel = TRAITS.find((tr) => tr.key === enredoSk)?.label;
                     const enredoOn = !foe && !c.f_beastform && domainCardKeys.includes("Enredo Feroz") && !!enredoLabel;
                     if (enredoOn) {
@@ -13034,7 +13063,7 @@ export default function App({ onSignOut }) {
                         {[
                           ...tabs.map((t) => ({ ...t, tone: "var(--acc)" })),
                           { spacer: true, key: "_spacer" },
-                          ...(c.f_class === "Druida" ? [{ key: "beastforms", label: "Formas de Bestia", Icon: PawPrint, tone: "#7FB77A" }] : []),
+                          ...(isDruidLike(c) ? [{ key: "beastforms", label: "Formas de Bestia", Icon: PawPrint, tone: "#7FB77A" }] : []),
                           ...(c.f_subclass === "Vínculo Bestial" ? [{ key: "companion", label: "Compañero Animal", Icon: Dog, tone: "#7FB77A" }] : []),
                           ...(c.f_subclass === "Sindicato" ? [{ key: "contacts", label: "Red de Contactos", Icon: Network, tone: "#6E5A8A" }] : []),
                           ...(isMartial(c) ? [{ key: "stances", label: "Posturas Marciales", Icon: HandFist, tone: "#C08B5C" }] : []),
@@ -14303,7 +14332,7 @@ export default function App({ onSignOut }) {
                                   </div>
 
                                   {c.f_class === "Brujo" && (() => {
-                                    const gain = Math.max(1, Number(c[spellcastTraitFor(c.f_class, c.f_subclass)] || 0));
+                                    const gain = Math.max(1, Number(c[charSpellTrait(c)] || 0));
                                     const n = countOf("tribute");
                                     return (
                                       <div className="mh-trov mh-tribute" style={{ "--tb": "#B55FA0" }}>
@@ -15838,7 +15867,7 @@ export default function App({ onSignOut }) {
                         );
                       })()}
 
-                      {activeTab === "beastforms" && c.f_class === "Druida" && (() => {
+                      {activeTab === "beastforms" && isDruidLike(c) && (() => {
                         const stressFull = Number(c.stress_marked || 0) >= Number(c.r_stress || 0);
                         return (
                           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(12, 1fr)", gap: 18, flex: 1, maxHeight: armaduraHeight || "calc(100vh - 280px)" }}>
@@ -17312,7 +17341,7 @@ export default function App({ onSignOut }) {
               const me = characters[viewingCharId];
               if (!me) return null;
               const close = () => setCommuneDlg(null);
-              const key = spellcastTraitFor(me.f_class, me.f_subclass);
+              const key = charSpellTrait(me);
               const n = Math.max(1, Number(me[key] || 0));
               const D = communeDlg;
               const roll = () => {
@@ -17859,7 +17888,7 @@ export default function App({ onSignOut }) {
               const foundPick = foundOpts.find((o) => o.v === preRoll.found);
               const noMercyOn = ch.f_class === "Guerrero" && ch.f_no_mercy === "1" && preRoll.weapon && !preRoll.weapon.charge;
               // Bruja Lunar · Rayo de Luna: +1 a las tiradas de Lanzamiento de Conjuros bajo la luz.
-              const moonbeamOn = ch.f_moonbeam === "1" && preRoll.traitLabel === TRAITS.find((t) => t.key === spellcastTraitFor(ch.f_class, ch.f_subclass))?.label;
+              const moonbeamOn = ch.f_moonbeam === "1" && preRoll.traitLabel === TRAITS.find((t) => t.key === charSpellTrait(ch))?.label;
               // Brujo · Pacto con el Patrón: 1 Favor para sumar el Dado de Patrón.
               const patronOk = ch.f_class === "Brujo" && !preRoll.reaction && getFavor(ch) > 0;
               // Bruja del Seto · Círculo de Poder: +2 a las tiradas de ataque dentro del círculo.
@@ -18743,7 +18772,7 @@ export default function App({ onSignOut }) {
                       const ok = r.charmed || r.hope === r.fear || r.total >= 13;
                       if (Number(rc.f_walk || 0) > 0) return <div className="mh-luck-done" style={{ color: "#6E8A6A" }}>Estás más allá del velo</div>;
                       if (!ok) return <div className="mh-luck-done" style={{ color: "var(--mh-muted)" }}>No consigues cruzar el velo</div>;
-                      const n = Math.max(1, Number(rc[spellcastTraitFor(rc.f_class, rc.f_subclass)] || 0));
+                      const n = Math.max(1, Number(rc[charSpellTrait(rc)] || 0));
                       return (
                         <button
                           type="button"
@@ -18855,7 +18884,7 @@ export default function App({ onSignOut }) {
                       const r = traitRollResult;
                       const rc = characters[r.charId];
                       if (!rc || rc.f_subclass !== "Origen Primigenio" || r.reaction) return null;
-                      const spellLabel = TRAITS.find((t) => t.key === spellcastTraitFor(rc.f_class, rc.f_subclass))?.label;
+                      const spellLabel = TRAITS.find((t) => t.key === charSpellTrait(rc))?.label;
                       const magicAttack = r.weapon && /mágico/.test(r.weapon.damage || "");
                       if (!magicAttack && !(r.traitLabel === spellLabel && !r.weapon)) return null;
                       if (r.manip) return <div className="mh-luck-done" style={{ color: "#6B4FB8" }}>Manipular la Magia: {r.manip}</div>;
@@ -21014,7 +21043,7 @@ export default function App({ onSignOut }) {
                   }
                   // Cazador de Sangre · Psicometría Siniestra: tirada de conjuro (12) para ver al último que cometió violencia allí.
                   if (d.title === "Psicometría Siniestra" && c?.f_class === "Cazador de Sangre" && !d.fromChat) {
-                    const spK = spellcastTraitFor(c.f_class, c.f_subclass) || "t_agility";
+                    const spK = charSpellTrait(c) || "t_agility";
                     const spL = TRAITS.find((t) => t.key === spK)?.label || "Agilidad";
                     cardActs.push({
                       key: "psy",
@@ -21075,7 +21104,7 @@ export default function App({ onSignOut }) {
                   if (d.necroActs && !d.fromChat) {
                     const sm = getSummons(c);
                     const tierN = tierForLevel(c.f_level || 1);
-                    const spellKeyN = spellcastTraitFor(c.f_class, c.f_subclass);
+                    const spellKeyN = charSpellTrait(c);
                     const spellLabelN = TRAITS.find((t) => t.key === spellKeyN)?.label || "Conocimiento";
                     const cap = Number(c.f_level || 1);
                     cardActs.push(
@@ -21206,7 +21235,7 @@ export default function App({ onSignOut }) {
                   }
                   // Brujo · Favor: rendir tributo (movimiento de descanso).
                   if (d.title === "Favor" && c?.f_class === "Brujo" && !d.fromChat) {
-                    const gain = Math.max(1, Number(c[spellcastTraitFor(c.f_class, c.f_subclass)] || 0));
+                    const gain = Math.max(1, Number(c[charSpellTrait(c)] || 0));
                     cardActs.push({
                       key: "tribute",
                       Icon: Flame,
@@ -21221,7 +21250,7 @@ export default function App({ onSignOut }) {
                   }
                   if (d.hedgeActs && !d.fromChat) {
                     const tierH = tierForLevel(c.f_level || 1);
-                    const spellKeyH = spellcastTraitFor(c.f_class, c.f_subclass);
+                    const spellKeyH = charSpellTrait(c);
                     const spellLabelH = TRAITS.find((t) => t.key === spellKeyH)?.label || "Conocimiento";
                     const nH = Math.max(1, Number(c[spellKeyH] || 0));
                     const hopeH = Number(c.hope_marked ?? HOPE_DEFAULT);
@@ -21459,7 +21488,7 @@ export default function App({ onSignOut }) {
                   }
                   if (d.moonActs && !d.fromChat) {
                     const tierM = tierForLevel(c.f_level || 1);
-                    const spellKey = spellcastTraitFor(c.f_class, c.f_subclass);
+                    const spellKey = charSpellTrait(c);
                     const spellLabel = TRAITS.find((t) => t.key === spellKey)?.label || "Instinto";
                     const hopeM = Number(c.hope_marked ?? HOPE_DEFAULT);
                     cardActs.push(
@@ -22272,7 +22301,7 @@ export default function App({ onSignOut }) {
                           return [];
                         }
                       })();
-                      const max = Math.max(1, Number(c[spellcastTraitFor(c.f_class, c.f_subclass)] || 0));
+                      const max = Math.max(1, Number(c[charSpellTrait(c)] || 0));
                       const pen = tierForLevel(c.f_level || 1);
                       const add = () => {
                         const n = hexDraft.trim();
@@ -22489,7 +22518,9 @@ export default function App({ onSignOut }) {
 
             {showChangeDomainModal && (() => {
               const chosenClassKey = characters[viewingCharId]?.f_class;
-              const domains = (CLASS_DOMAINS[chosenClassKey] || []).filter((d) => (DOMAIN_CARDS[d] || []).length > 0);
+              const mcEd = getMulticlass(characters[viewingCharId]);
+              const classDoms = (CLASS_DOMAINS[chosenClassKey] || []).filter((d) => (DOMAIN_CARDS[d] || []).length > 0);
+              const domains = [...classDoms, ...(mcEd && !classDoms.includes(mcEd.domain) && (DOMAIN_CARDS[mcEd.domain] || []).length ? [mcEd.domain] : [])];
               const charLevel = Number(characters[viewingCharId]?.f_level || 1);
               return (
                 <div
@@ -22523,7 +22554,7 @@ export default function App({ onSignOut }) {
                           <label className="mh-label">{domainName}</label>
                           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                             {(DOMAIN_CARDS[domainName] || [])
-                              .filter((card) => card.level <= charLevel)
+                              .filter((card) => card.level <= (mcEd && domainName === mcEd.domain && !classDoms.includes(domainName) ? Math.ceil(charLevel / 2) : charLevel))
                               .map((card) => {
                                 const selected = tempDomainCards.includes(card.key);
                                 const disabled = !selected && tempDomainCards.length >= tempCardLimit;
@@ -22584,14 +22615,23 @@ export default function App({ onSignOut }) {
       {levelUpId && characters[levelUpId] && (() => {
         const lc = characters[levelUpId];
         const lvMd = modernData(levelUpId);
-        const pool = (CLASS_DOMAINS[lc.f_class] || []).flatMap((d) => (DOMAIN_CARDS[d] || []).map((k) => ({ key: k.key, level: k.level, text: k.text, domain: d })));
+        const cardsByDomain = Object.fromEntries(Object.entries(DOMAIN_CARDS).map(([d, list]) => [d, list.map((k) => ({ key: k.key, level: k.level, text: k.text }))]));
+        const mcClasses = CLASSES.filter((cl) => (CLASS_DOMAINS[cl.key] || []).length).map((cl) => ({
+          key: cl.key,
+          domains: CLASS_DOMAINS[cl.key],
+          features: (CLASS_FEATURES[cl.key] || []).map((f) => f.name),
+          subs: (SUBCLASSES[cl.key] || []).map((sb) => ({ key: sb.key, foundation: (sb.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)).map((f) => f.name) })),
+        }));
         return (
           <LevelUpDialog
             key={levelUpId + ":" + (lc.f_level || 1)}
             c={lc}
             color={classColor(lc.f_class)}
             traitList={lvMd.traits}
-            pool={pool}
+            classDomains={CLASS_DOMAINS[lc.f_class] || []}
+            cardsByDomain={cardsByDomain}
+            classes={mcClasses}
+            spellOf={spellcastTraitFor}
             domainColors={DOMAIN_COLORS}
             profBase={Math.max(1, Number(lc.f_proficiency || proficiencyForLevel(Number(lc.f_level || 1))))}
             thresholds={{ major: lvMd.major, severe: lvMd.severe }}

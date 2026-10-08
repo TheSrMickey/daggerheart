@@ -121,6 +121,7 @@ export function ModernSheet({ d, actions, content, tab, onTab, fill }) {
           <div className="k"><span>Competencia</span><b>{li.prof}</b></div>
           <div className="k"><span>Umbrales</span><b>{d.major} / {d.severe}</b></div>
           <div className="k"><span>Cartas de dominio</span><b>{li.cards}</b></div>
+          {li.multi && <div className="k"><span>Multiclase</span><b>{li.multi}</b></div>}
           <div className="k"><span>Rasgos marcados</span><b>{li.marks.length ? li.marks.join(", ") : "Ninguno"}</b></div>
           {li.maxed ? <div className="max">Has llegado al nivel máximo.</div> : <button type="button" onClick={() => (setLvOpen(false), actions.levelUp())}>Subir al nivel {d.level + 1}</button>}
         </div>
@@ -145,6 +146,7 @@ export function ModernSheet({ d, actions, content, tab, onTab, fill }) {
             <h2 className="mh-serif">{d.name || "Sin nombre"}</h2>
             <p data-tour="cls">
               {[d.cls, d.subclass].filter(Boolean).join(" · ") || "Sin clase asignada"}
+              {d.multi && <b className="mhm-multi"> + {d.multi.cls}</b>}
               {d.pronouns && <span data-tour="pron"> · {d.pronouns}</span>}
             </p>
           </div>
