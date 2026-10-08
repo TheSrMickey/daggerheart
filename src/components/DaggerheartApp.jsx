@@ -912,6 +912,8 @@ const getTranscend = (c) => {
     return null;
   }
 };
+// Altura (en %) a la que se centra cada ilustración en la cabecera de la hoja moderna, para que se vea la cara del personaje.
+const CLASS_ART_Y = { Asesino: 12, Bardo: 20, Bruja: 46, Brujo: 44, Camorrista: 28, Druida: 16, Explorador: 16, Guardián: 16, Guerrero: 38, Hechicero: 16, Mago: 16, Pícaro: 9, Serafín: 2 };
 const CLASS_ART = {
   Bardo: "/clases/bardo.webp",
   Druida: "/clases/druida.webp",
@@ -1069,6 +1071,25 @@ const moonPhaseOf = (c) => {
 // Comunión: efecto según el dado elegido.
 const communeEffect = (v) => (v >= 6 ? "Vives psíquicamente una escena relacionada con la respuesta como si estuvieras allí" : v >= 4 ? "Oyes sonidos o ves una visión relacionados con la respuesta" : "Notas un sabor, un olor o una sensación relacionados con la respuesta");
 // Rasgo de conjuro del personaje: el de su subclase o, si ha multiclaseado, el de la subclase nueva (si no tenía o si elige usarlo).
+// Filas de Acciones que comparten línea: subclase y multiclase, características de clase de las dos clases y las dos ascendencias.
+function pairActionRows(list) {
+  const items = list.map((x) => ({ ...x }));
+  const take = (key) => {
+    const i = items.findIndex((x) => x.key === key);
+    return i < 0 ? null : items.splice(i, 1)[0];
+  };
+  const attach = (aKey, bKey) => {
+    const a = items.find((x) => x.key === aKey);
+    if (a && items.some((x) => x.key === bKey)) a.pair = take(bKey);
+  };
+  attach("subclass", "mc-sub");
+  const cf = items.filter((x) => x.key.startsWith("cf-"));
+  const base = cf.filter((x) => !x.mc);
+  cf.filter((x) => x.mc).forEach((m, i) => base[i] && attach(base[i].key, m.key));
+  const anc = items.filter((x) => x.key.startsWith("anc-"));
+  if (anc.length === 2) attach(anc[0].key, anc[1].key);
+  return items;
+}
 const isDruidLike = (c) => c?.f_class === "Druida" || getMulticlass(c)?.cls === "Druida";
 function charSpellTrait(c) {
   const own = spellcastTraitFor(c?.f_class, c?.f_subclass);
@@ -12163,7 +12184,8 @@ export default function App({ onSignOut }) {
       color: beast?.color || classColor(c.f_class),
       color2: getMulticlass(c) ? classColor(getMulticlass(c).cls) : null,
       Emblem: CLASS_EMBLEMS[c.f_class] || User,
-      art: (getMulticlass(c) && CLASS_ART[getMulticlass(c).cls]) || CLASS_ART[c.f_class] || null,
+      art: CLASS_ART[c.f_class] || null,
+      artY: CLASS_ART_Y[c.f_class] ?? 28,
       pronouns: c.f_pronouns || "",
       tags: renderHeaderTags(c, id, { noCampaign: true }),
       traits: TRAITS.map((t) => {
@@ -12738,7 +12760,7 @@ export default function App({ onSignOut }) {
                   const currentTier = tierForLevel(c.f_level || 1);
                   const hopeFeature = CLASS_HOPE_FEATURE[c.f_class];
                   const mcInfo = getMulticlass(c);
-                  const classFeatures = [...(CLASS_FEATURES[c.f_class] || []), ...(mcInfo ? CLASS_FEATURES[mcInfo.cls] || [] : [])];
+                  const classFeatures = [...(CLASS_FEATURES[c.f_class] || []), ...(mcInfo ? (CLASS_FEATURES[mcInfo.cls] || []).map((f) => ({ ...f, _mc: true })) : [])];
                   const subclassEntry = (SUBCLASSES[c.f_class] || []).find((s) => s.key === c.f_subclass);
                   const activeBeastform = BEASTFORMS.find((b) => b.key === c.f_beastform);
                   const items = getItems(c);
@@ -12850,6 +12872,7 @@ export default function App({ onSignOut }) {
                     const isBeastformLink = f.name === "Forma de Bestia";
                     items.push({
                       key: "cf-" + f.name,
+                      mc: !!f._mc,
                       Icon: isBeastformLink ? PawPrint : Swords,
                       color: "var(--acc)",
                       kicker: "Característica de clase",
@@ -12885,9 +12908,7 @@ export default function App({ onSignOut }) {
                       summary: found.map((f) => f.name).join(" · "),
                       onClick: openDetail({ kicker: "Multiclase · " + mcInfo.cls + " · Fundamento", title: mcInfo.sub, text: msub?.blurb, features: found, image: msub?.image, bigStyle: true, accent: "#7FB77A" }),
                     };
-                    const baseIdx = items.findIndex((x) => x.key === "subclass");
-                    if (baseIdx >= 0) items[baseIdx] = { ...items[baseIdx], pair: mcItem };
-                    else items.push(mcItem);
+                    items.push(mcItem);
                   }
 
                   if (hopeFeature) {
@@ -14059,7 +14080,7 @@ export default function App({ onSignOut }) {
 
                       {activeTab === "actions" && (() => {
                         // Lista de acciones: cada fila con icono, tipo, nombre, resumen y coste.
-                        const items = buildActionRows();
+                        const items = pairActionRows(buildActionRows());
 
                         // Coste detectado en el texto: "marca un Estrés", "gasta 2 de Esperanza", "a voluntad".
                         const NUM = { un: 1, una: 1, dos: 2, tres: 3 };
@@ -14095,6 +14116,13 @@ export default function App({ onSignOut }) {
                                     it.onClick();
                                     setViewingCardDetail((d) => (d && !d.rowIcon ? { ...d, rowIcon: it.Icon } : d));
                                   };
+                                  const costChip = cost && (
+                                    <span className={"mh-arow-cost is-" + cost.kind} style={half ? { alignSelf: "flex-start", marginTop: 3 } : undefined}>
+                                      {cost.kind === "hope" && <Sparkles size={11} />}
+                                      {cost.kind === "stress" && <Zap size={11} />}
+                                      {cost.label}
+                                    </span>
+                                  );
                                   return (
                                     <div
                                       key={it.key}
@@ -14120,15 +14148,10 @@ export default function App({ onSignOut }) {
                                         ) : (
                                           <div className="mh-arow-sum">{it.warning ? <span style={{ color: "#D9644E", fontWeight: 600 }}>{it.warning}</span> : it.summary}</div>
                                         )}
+                                        {half && costChip}
                                       </div>
-                                      {!it.extraBelow && it.extra}
-                                      {cost && (
-                                        <span className={"mh-arow-cost is-" + cost.kind}>
-                                          {cost.kind === "hope" && <Sparkles size={11} />}
-                                          {cost.kind === "stress" && <Zap size={11} />}
-                                          {cost.label}
-                                        </span>
-                                      )}
+                                      {!it.extraBelow && !half && it.extra}
+                                      {!half && costChip}
                                       <ChevronRight size={14} className="mh-arow-chev" />
                                     </div>
                                   );

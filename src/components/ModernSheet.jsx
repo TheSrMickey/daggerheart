@@ -129,7 +129,7 @@ export function ModernSheet({ d, actions, content, tab, onTab, fill }) {
       <div className={"mhm-headwrap" + (fill ? " is-collapsed" : "")}>
       <section className={"mhm-head" + (d.color2 ? " is-multi" : "")}>
         {d.art ? (
-          <span className="mhm-head-art" aria-hidden="true" style={{ backgroundImage: `url(${d.art})` }} />
+          <span className="mhm-head-art" aria-hidden="true" style={{ backgroundImage: `url(${d.art})`, backgroundPosition: "center " + (d.artY ?? 28) + "%" }} />
         ) : (
           <span className="mhm-head-emb" aria-hidden="true"><Emblem size={190} strokeWidth={1} /></span>
         )}
