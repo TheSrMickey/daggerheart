@@ -2,6 +2,14 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.11",
+    date: "2026-10-08",
+    title: "Chat de la campaña",
+    items: [
+      { tag: "mejora", text: "El chat de la campaña ocupa la columna de la derecha sin caja redondeada, igual que el panel de amigos." },
+    ],
+  },
+  {
     version: "1.10",
     date: "2026-10-08",
     title: "Elementos del Guardián de los Elementos en el mapa",

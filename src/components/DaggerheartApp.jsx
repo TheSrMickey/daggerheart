@@ -4465,7 +4465,9 @@ const sharedStyles = `
   .mhm-zoom.is-fill .mh-sheet, .mhm-zoom.is-fill .mh-sheet-scroll, .mhm-zoom.is-fill .mh-sheet-body, .mhm-zoom.is-fill .mh-sheet-body > div, .mhm-zoom.is-fill .mh-sheet-body > div > div { width: 100%; margin: 0 !important; flex: 1; min-height: 0; display: flex; flex-direction: column; }
   .mhm-zoom.is-fill .mh-sheet-body > div > div > div { flex: 1; min-height: 0; }
   .mh-rail-chat { height: 100%; padding: 16px 14px; display: flex; flex-direction: column; }
-  .mh-rail-chat .mh-panel-box { flex: 1; min-height: 0; }
+  .mh-rail-chat .mh-panel-box { flex: 1; min-height: 0; border: 0 !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; padding: 0 !important; }
+  .mh-rail-chat .mh-panel-box > div:first-child { height: auto !important; margin: 0 0 10px !important; padding: 0 4px 10px; border-bottom: 1px solid var(--mh-line); }
+  .mh-rail-chat .mh-panel-box > div:first-child .mh-serif { font-family: inherit !important; font-size: 13px !important; font-weight: 600 !important; letter-spacing: 0 !important; }
   .mh-sheet.is-embedded { min-height: 0; }
   .mhm-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; } .mhm-col { display: flex; flex-direction: column; gap: 16px; }
   .mhm-panel { border-radius: 16px; padding: 18px 20px; background: var(--mh-panel); border: 1px solid var(--mh-line); }
