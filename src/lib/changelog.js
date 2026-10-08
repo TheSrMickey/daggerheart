@@ -7,6 +7,7 @@ export const CHANGELOG = [
     title: "Carta de subclase en la mano",
     items: [
       { tag: "nuevo", text: "El Guardián de los Elementos tiene su carta de subclase en la mano del mapa; al abrirla se canaliza Fuego, Tierra, Agua o Aire." },
+      { tag: "mejora", text: "Al canalizar Aire, la ficha rebota y se queda flotando sin ningún salto entre el bote y el vuelo suave." },
     ],
   },
   {
