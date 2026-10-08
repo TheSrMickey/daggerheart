@@ -88,6 +88,21 @@ export function ModernSheet({ d, actions, content, tab, onTab, fill }) {
     return () => t.forEach(clearTimeout);
   }, [fill]);
   const Emblem = d.Emblem;
+  // Ficha del nivel: se abre al pulsar el escudo y deja subir de nivel sin pedir permiso.
+  const [lvOpen, setLvOpen] = useState(false);
+  useEffect(() => {
+    if (!lvOpen) return;
+    const close = (e) => {
+      if (e.type === "keydown" ? e.key === "Escape" : !e.target.closest(".mhm-lvpop, .mhm-level")) setLvOpen(false);
+    };
+    document.addEventListener("mousedown", close);
+    document.addEventListener("keydown", close);
+    return () => {
+      document.removeEventListener("mousedown", close);
+      document.removeEventListener("keydown", close);
+    };
+  }, [lvOpen]);
+  const li = d.levelInfo;
   // En móvil no se escala: el contenido usa las mismas columnas apiladas que la hoja clásica.
   const [mobile, setMobile] = useState(false);
   useEffect(() => {
@@ -100,6 +115,16 @@ export function ModernSheet({ d, actions, content, tab, onTab, fill }) {
   const [natural, setNatural] = useState(0); // alto de «Detalles generales»: referencia para todas las pestañas
   return (
     <div className="mhm" style={{ "--cc": d.color }}>
+      {lvOpen && li && (
+        <div className="mhm-lvpop" role="dialog" aria-label="Tu nivel">
+          <h5>Nivel {d.level} · Rango {li.rank}<span>de 10</span></h5>
+          <div className="k"><span>Competencia</span><b>{li.prof}</b></div>
+          <div className="k"><span>Umbrales</span><b>{d.major} / {d.severe}</b></div>
+          <div className="k"><span>Cartas de dominio</span><b>{li.cards}</b></div>
+          <div className="k"><span>Rasgos marcados</span><b>{li.marks.length ? li.marks.join(", ") : "Ninguno"}</b></div>
+          {li.maxed ? <div className="max">Has llegado al nivel máximo.</div> : <button type="button" onClick={() => (setLvOpen(false), actions.levelUp())}>Subir al nivel {d.level + 1}</button>}
+        </div>
+      )}
       <div className={"mhm-headwrap" + (fill ? " is-collapsed" : "")}>
       <section className="mhm-head">
         {d.art ? (
@@ -108,7 +133,14 @@ export function ModernSheet({ d, actions, content, tab, onTab, fill }) {
           <span className="mhm-head-emb" aria-hidden="true"><Emblem size={190} strokeWidth={1} /></span>
         )}
         <div className="mhm-head-top">
-          <div className="mhm-level"><small>NIVEL</small><b>{d.level}</b></div>
+          <button type="button" className={"mhm-level" + (lvOpen ? " is-open" : "")} title={"Nivel " + d.level} aria-label={"Nivel " + d.level + ": ver o subir de nivel"} aria-expanded={lvOpen} onClick={() => setLvOpen((v) => !v)}>
+            <svg viewBox="0 0 52 58" width="46" height="52" aria-hidden="true">
+              <path d="M4 4 H48 V31 C48 43 38 51 26 55 C14 51 4 43 4 31 Z" />
+              <text x="26" y="17" className="l">NIVEL</text>
+              <text x="26" y="40" className="n">{d.level}</text>
+            </svg>
+            {!li?.maxed && <span className="mhm-level-plus" aria-hidden="true">+</span>}
+          </button>
           <div>
             <h2 className="mh-serif">{d.name || "Sin nombre"}</h2>
             <p data-tour="cls">

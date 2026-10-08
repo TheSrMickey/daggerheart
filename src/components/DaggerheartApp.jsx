@@ -8,6 +8,7 @@ import { storageGet, storageSet } from "@/lib/storage";
 import { NotificationBell, FriendsPanel } from "./Social";
 import { ModernSheet } from "./ModernSheet";
 import { Tour } from "./Tour";
+import { LevelUpDialog, parseAdvances, ownedCards, MAX_LEVEL, rankOf } from "./LevelUp";
 import { setPresence, startPresence, stopPresence } from "@/lib/social";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
 import { buildSablewood } from "./quickstartSablewood";
@@ -4300,7 +4301,54 @@ const sharedStyles = `
   .mhm-head-top, .mhm-traits { z-index: 1; }
   .mhm-head-emb { position: absolute; right: 18px; top: 50%; translate: 0 -50%; color: #ffffff12; }
   .mhm-head-top { position: relative; display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
-  .mhm-level { width: 42px; height: 42px; border: 1.5px solid #e9e6f2aa; display: flex; flex-direction: column; align-items: center; justify-content: center; } .mhm-level small { font-size: 7.5px; letter-spacing: .12em; } .mhm-level b { font: 700 20px Cinzel, serif; line-height: 1; }
+  .mhm { position: relative; }
+  .mhm-level { all: unset; cursor: pointer; position: relative; display: flex; flex-shrink: 0; border-radius: 10px; transition: transform .15s; }
+  .mhm-level:hover { transform: translateY(-1px); } .mhm-level:focus-visible { outline: 2px solid #E3B04B; outline-offset: 3px; }
+  .mhm-level path { fill: color-mix(in srgb, var(--cc) 22%, #0c0c20); stroke: var(--cc); stroke-width: 1.6; stroke-linejoin: round; }
+  .mhm-level text { text-anchor: middle; fill: #fff; } .mhm-level .l { font: 700 7px Inter, sans-serif; letter-spacing: .14em; } .mhm-level .n { font: 700 20px Cinzel, Georgia, serif; }
+  .mhm-level-plus { position: absolute; right: -6px; top: -5px; width: 18px; height: 18px; border-radius: 50%; background: #E3B04B; color: #241a05; font: 700 13px/18px Inter, sans-serif; text-align: center; opacity: 0; scale: .6; transition: opacity .15s, scale .15s; }
+  .mhm-level:hover .mhm-level-plus, .mhm-level.is-open .mhm-level-plus, .mhm-level:focus-visible .mhm-level-plus { opacity: 1; scale: 1; }
+  .mhm-lvpop { position: absolute; z-index: 30; top: 76px; left: 20px; width: 290px; background: var(--mh-panel2); border: 1px solid var(--mh-line2); border-radius: 12px; padding: 14px; box-shadow: 0 16px 40px #0009; color: var(--mh-ink); animation: mh-fade-in .15s ease both; }
+  .mhm-lvpop h5 { margin: 0 0 8px; font-size: 13px; display: flex; justify-content: space-between; font-weight: 600; } .mhm-lvpop h5 span { color: var(--mh-muted); font-weight: 400; }
+  .mhm-lvpop .k { display: flex; justify-content: space-between; gap: 10px; padding: 4px 0; border-top: 1px solid var(--mh-line); font-size: 12.5px; } .mhm-lvpop .k span { color: var(--mh-muted); } .mhm-lvpop .k b { text-align: right; font-weight: 600; }
+  .mhm-lvpop button { all: unset; box-sizing: border-box; cursor: pointer; display: block; width: 100%; margin-top: 10px; padding: 9px; border-radius: 9px; background: #E3B04B; color: #241a05; font: 700 13px Inter, sans-serif; text-align: center; } .mhm-lvpop button:hover { filter: brightness(1.08); }
+  .mhm-lvpop .max { margin-top: 10px; text-align: center; color: var(--mh-muted); font-size: 12.5px; }
+  .lv-bg { position: fixed; inset: 0; z-index: 95; background: rgba(6,6,16,.72); display: flex; align-items: center; justify-content: center; padding: 16px; animation: mh-fade-in .18s ease both; }
+  .lv { width: min(760px, 100%); max-height: calc(100dvh - 32px); display: flex; flex-direction: column; border-radius: 18px; background: var(--mh-panel); border: 1px solid var(--mh-line2); box-shadow: 0 30px 80px #000a; color: var(--mh-ink); }
+  .lv-head { display: flex; align-items: center; gap: 12px; padding: 18px 22px 12px; }
+  .lv-shield path { fill: color-mix(in srgb, var(--lvc) 22%, var(--mh-panel)); stroke: var(--lvc); stroke-width: 1.6; stroke-linejoin: round; } .lv-shield text { text-anchor: middle; fill: var(--mh-ink); }
+  .lv-sl { font: 700 7px Inter, sans-serif; letter-spacing: .14em; } .lv-sn { font: 700 20px Cinzel, Georgia, serif; }
+  .lv-title { font-size: 19px; font-weight: 700; } .lv-sub { font-size: 12.5px; color: var(--mh-muted); }
+  .lv-x { all: unset; cursor: pointer; margin-left: auto; padding: 6px 9px; border-radius: 8px; color: var(--mh-muted); } .lv-x:hover { background: var(--mh-panel3); color: var(--mh-ink); }
+  .lv-steps { display: flex; gap: 6px; padding: 0 22px 12px; }
+  .lv-step { flex: 1; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--mh-line); font-size: 12px; color: var(--mh-muted); background: var(--mh-panel2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lv-step.is-ok { color: var(--mh-green-ink); } .lv-step.is-on { color: var(--mh-ink); border-color: #E3B04B; background: color-mix(in srgb, #E3B04B 10%, var(--mh-panel2)); }
+  .lv-body { padding: 4px 22px 8px; overflow-y: auto; min-height: 200px; }
+  .lv-p { margin: 0 0 12px; font-size: 13.5px; color: var(--mh-ink2); } .lv-p b { color: var(--mh-ink); margin-left: 6px; }
+  .lv-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; } .lv-chips span { font-size: 12.5px; padding: 4px 11px; border-radius: 8px; background: color-mix(in srgb, #E3B04B 14%, var(--mh-panel2)); color: var(--mh-gold-ink); }
+  .lv-lab { display: block; margin: 12px 0 6px; font-size: 12px; color: var(--mh-muted); text-transform: uppercase; letter-spacing: .06em; }
+  .lv-in { width: 100%; box-sizing: border-box; padding: 9px 11px; border-radius: 9px; border: 1px solid var(--mh-line2); background: var(--mh-input); color: var(--mh-ink); font: inherit; font-size: 13.5px; }
+  .lv-opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; }
+  .lv-opt { all: unset; box-sizing: border-box; cursor: pointer; display: block; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--mh-line); background: var(--mh-panel2); font-size: 12.5px; line-height: 1.4; } .lv-opt:hover { border-color: var(--mh-line2); }
+  .lv-opt b { display: block; font-weight: 600; font-size: 13px; } .lv-opt small { display: block; color: var(--mh-muted); font-size: 11.5px; }
+  .lv-opt.is-on { border-color: #E3B04B; background: color-mix(in srgb, #E3B04B 11%, var(--mh-panel2)); } .lv-opt.is-off { opacity: .42; cursor: default; }
+  .lv-cost { float: right; font-size: 11px; padding: 0 7px; border-radius: 9px; border: 1px solid var(--mh-line2); color: var(--mh-muted); }
+  .lv-pips { display: flex; gap: 4px; margin-top: 7px; } .lv-pips i { width: 11px; height: 11px; border-radius: 3px; border: 1.5px solid var(--mh-muted2); } .lv-pips i.u { background: var(--mh-muted2); } .lv-pips i.n { background: #E3B04B; border-color: #E3B04B; }
+  .lv-sec { margin-top: 12px; } .lv-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .lv-chipb { all: unset; cursor: pointer; padding: 5px 11px; border-radius: 8px; border: 1px solid var(--mh-line2); font-size: 12.5px; background: var(--mh-panel2); } .lv-chipb.is-on { border-color: #E3B04B; background: color-mix(in srgb, #E3B04B 14%, var(--mh-panel2)); } .lv-chipb.is-mk { opacity: .45; }
+  .lv-note { margin-top: 10px; font-size: 12.5px; padding: 7px 11px; border-radius: 8px; background: color-mix(in srgb, #E3B04B 12%, var(--mh-panel2)); color: var(--mh-ink2); }
+  .lv-sum { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; } .lv-sum div { background: var(--mh-panel2); border-radius: 9px; padding: 8px 11px; } .lv-sum small { display: block; font-size: 11.5px; color: var(--mh-muted); } .lv-sum b { font-size: 15px; }
+  .lv-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; max-height: 300px; overflow-y: auto; padding: 2px; }
+  .lv-card { all: unset; box-sizing: border-box; cursor: pointer; display: block; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--mh-line); border-top: 3px solid var(--dc); background: var(--mh-panel2); } .lv-card:hover { border-color: var(--mh-line2); border-top-color: var(--dc); }
+  .lv-card.is-on { border-color: #E3B04B; border-top-color: #E3B04B; background: color-mix(in srgb, #E3B04B 11%, var(--mh-panel2)); }
+  .lv-card b { display: block; font-size: 13px; font-weight: 600; } .lv-dom { display: block; font-size: 11px; color: var(--dc); margin-bottom: 2px; text-transform: uppercase; letter-spacing: .05em; }
+  .lv-card small { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; color: var(--mh-muted); font-size: 11.5px; margin-top: 3px; }
+  .lv-chk { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; } .lv-row .lv-in { flex: 1; min-width: 160px; width: auto; }
+  .lv-err { min-height: 20px; margin-top: 10px; font-size: 13px; color: #E5484D; }
+  .lv-foot { display: flex; justify-content: space-between; gap: 10px; padding: 12px 22px 18px; border-top: 1px solid var(--mh-line); }
+  .lv-btn { all: unset; cursor: pointer; padding: 9px 20px; border-radius: 9px; border: 1px solid var(--mh-line2); font-size: 13.5px; font-weight: 600; } .lv-btn:hover { background: var(--mh-panel3); }
+  .lv-btn.is-go { background: #E3B04B; border-color: #E3B04B; color: #241a05; } .lv-btn.is-go:hover { filter: brightness(1.08); }
+  @media (max-width: 640px) { .lv-steps { overflow-x: auto; } .lv-step { flex: 0 0 auto; } .lv-head { padding: 14px 16px 10px; } .lv-body, .lv-foot, .lv-steps { padding-left: 16px; padding-right: 16px; } }
   .mhm-head h2 { margin: 0; font-size: 24px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; } .mhm-head p { margin: 0; color: #ffffffcc; font-size: 13px; }
   .mhm-traits { position: relative; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
   .mhm-traits button { all: unset; cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 7px 11px; border-radius: 9px; background: #00000050; border: 1px solid #ffffff14; font-size: 12px; } .mhm-traits button:hover { border-color: var(--cc); } .mhm-traits b { font-size: 15px; }
@@ -9043,6 +9091,7 @@ export default function App({ onSignOut }) {
 
   const [detailTab, setDetailTab] = useState("general");
   const [chatSlot, setChatSlot] = useState(null); // contenedor del chat en la columna derecha (hoja moderna, pestaña de campaña)
+  const [levelUpId, setLevelUpId] = useState(null); // personaje que está subiendo de nivel
   const [sheetAsk, setSheetAsk] = useState(null); // personaje por el que se pregunta qué hoja abrir
   const [actionPage, setActionPage] = useState(0);
   const [restMessage, setRestMessage] = useState("");
@@ -11905,6 +11954,13 @@ export default function App({ onSignOut }) {
       proficiency: getProficiency(c),
       weapons: [weapon(primary, "Arma principal"), weapon(secondary, "Arma secundaria")].filter(Boolean),
       experiences: getExperiences(c),
+      levelInfo: {
+        rank: rankOf(level),
+        maxed: level >= MAX_LEVEL,
+        prof: getProficiency(c),
+        marks: parseAdvances(c).marks.map((k) => TRAITS.find((t) => t.key === k)?.label).filter(Boolean),
+        cards: ownedCards(c).loadout.length + ownedCards(c).vault.length,
+      },
       tabs: (() => {
         const camp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(id));
         const G = "#7FB77A";
@@ -11936,6 +11992,7 @@ export default function App({ onSignOut }) {
     },
     setArmor: (n) => updateCharacterField(id, "armor_marked", String(n)),
     openClassic: () => openClassic(id),
+    levelUp: () => setLevelUpId(id),
   });
   const modernOpen = view === "ficha" && modernCharId && characters[modernCharId];
   // Con el ajuste «Tutorial» activo, el tutorial arranca al abrir una hoja moderna (una vez por apertura).
@@ -22259,6 +22316,29 @@ export default function App({ onSignOut }) {
   return (
     <div className={"mh-root" + (isMobile ? " is-mobile" : "")} style={{ display: "flex", flexDirection: isMobile ? "column" : "row", height: "100dvh", background: "var(--mh-bg)", fontFamily: "'Inter', system-ui, sans-serif", color: "var(--mh-ink)", overflow: "hidden" }}>
       <style>{sharedStyles}</style>
+      {levelUpId && characters[levelUpId] && (() => {
+        const lc = characters[levelUpId];
+        const lvMd = modernData(levelUpId);
+        const pool = (CLASS_DOMAINS[lc.f_class] || []).flatMap((d) => (DOMAIN_CARDS[d] || []).map((k) => ({ key: k.key, level: k.level, text: k.text, domain: d })));
+        return (
+          <LevelUpDialog
+            key={levelUpId + ":" + (lc.f_level || 1)}
+            c={lc}
+            color={classColor(lc.f_class)}
+            traitList={lvMd.traits}
+            pool={pool}
+            domainColors={DOMAIN_COLORS}
+            profBase={Math.max(1, Number(lc.f_proficiency || proficiencyForLevel(Number(lc.f_level || 1))))}
+            thresholds={{ major: lvMd.major, severe: lvMd.severe }}
+            onClose={() => setLevelUpId(null)}
+            onConfirm={(patch, nl) => {
+              updateCharacterFields(levelUpId, patch);
+              postCampaignEvent(levelUpId, "⬆️ Sube al nivel " + nl);
+              setLevelUpId(null);
+            }}
+          />
+        );
+      })()}
       {sheetAsk && characters[sheetAsk] && (
         <div className="mh-sheetask-bg" onClick={() => setSheetAsk(null)}>
           <div className="mh-sheetask" role="dialog" aria-label="Elegir hoja de personaje" onClick={(e) => e.stopPropagation()}>
