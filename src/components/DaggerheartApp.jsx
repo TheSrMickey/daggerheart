@@ -4373,6 +4373,13 @@ const sharedStyles = `
   .lv-chk { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; } .lv-row .lv-in { flex: 1; min-width: 160px; width: auto; }
   .lv-mcgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 6px; } .lv-mccl { all: unset; box-sizing: border-box; cursor: pointer; padding: 8px 10px; border-radius: 9px; border: 1px solid var(--mh-line2); background: var(--mh-panel2); text-align: center; font-size: 13px; } .lv-mccl small { display: block; font-size: 11px; color: var(--mh-muted); } .lv-mccl.is-on { border-color: #E3B04B; background: color-mix(in srgb, #E3B04B 12%, var(--mh-panel2)); }
   .mhm-multi { color: #9be0b4; font-weight: 600; }
+  .mhm-head.is-multi { background: linear-gradient(90deg, color-mix(in srgb, var(--cc) 44%, #0d1a1a) 0%, #0c0c20 50%, color-mix(in srgb, var(--cc2) 44%, #0d1a1a) 100%); border-color: color-mix(in srgb, var(--cc2) 35%, #ffffff14); }
+  .mh-arow-pair { flex: 1 1 0; min-height: 0; display: flex; gap: 8px; }
+  .mh-arow.is-half { flex: 1 1 0; min-width: 0; padding: 8px 10px; gap: 8px; }
+  .mh-arow.is-half .mh-arow-ico { width: 30px; height: 30px; }
+  .mh-arow.is-half .mh-arow-kicker, .mh-arow.is-half .mh-arow-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mh-arow.is-half .mh-arow-sum { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .mh-arow.is-half .mh-arow-chev { display: none; }
   .lv-err { min-height: 20px; margin-top: 10px; font-size: 13px; color: #E5484D; }
   .lv-foot { display: flex; justify-content: space-between; gap: 10px; padding: 12px 22px 18px; border-top: 1px solid var(--mh-line); }
   .lv-btn { all: unset; cursor: pointer; padding: 9px 20px; border-radius: 9px; border: 1px solid var(--mh-line2); font-size: 13.5px; font-weight: 600; } .lv-btn:hover { background: var(--mh-panel3); }
@@ -12154,8 +12161,9 @@ export default function App({ onSignOut }) {
       multi: getMulticlass(c),
       level,
       color: beast?.color || classColor(c.f_class),
+      color2: getMulticlass(c) ? classColor(getMulticlass(c).cls) : null,
       Emblem: CLASS_EMBLEMS[c.f_class] || User,
-      art: CLASS_ART[c.f_class] || null,
+      art: (getMulticlass(c) && CLASS_ART[getMulticlass(c).cls]) || CLASS_ART[c.f_class] || null,
       pronouns: c.f_pronouns || "",
       tags: renderHeaderTags(c, id, { noCampaign: true }),
       traits: TRAITS.map((t) => {
@@ -12868,15 +12876,18 @@ export default function App({ onSignOut }) {
                   if (mcInfo) {
                     const msub = (SUBCLASSES[mcInfo.cls] || []).find((x) => x.key === mcInfo.sub);
                     const found = (msub?.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name));
-                    items.push({
+                    const mcItem = {
                       key: "mc-sub",
                       Icon: Sparkles,
                       color: "#7FB77A",
-                      kicker: "Multiclase · " + mcInfo.cls + " · Fundamento",
+                      kicker: "Multiclase · " + mcInfo.cls,
                       title: mcInfo.sub,
                       summary: found.map((f) => f.name).join(" · "),
                       onClick: openDetail({ kicker: "Multiclase · " + mcInfo.cls + " · Fundamento", title: mcInfo.sub, text: msub?.blurb, features: found, image: msub?.image, bigStyle: true, accent: "#7FB77A" }),
-                    });
+                    };
+                    const baseIdx = items.findIndex((x) => x.key === "subclass");
+                    if (baseIdx >= 0) items[baseIdx] = { ...items[baseIdx], pair: mcItem };
+                    else items.push(mcItem);
                   }
 
                   if (hopeFeature) {
@@ -14076,7 +14087,8 @@ export default function App({ onSignOut }) {
                             >
                               <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, minHeight: 0 }}>
                                 {items.length === 0 && <div style={{ fontSize: 12.5, color: "var(--mh-muted)", fontStyle: "italic" }}>Todavía no hay acciones para este personaje.</div>}
-                                {items.map((it) => {
+                                {items.map((item) => {
+                                  const row = (it, half) => {
                                   const cost = it.cost === undefined ? detectCost(it.costText || it.summary) : it.cost;
                                   // La carta usa el mismo icono que la fila cuando no tiene imagen.
                                   const openRow = () => {
@@ -14089,7 +14101,7 @@ export default function App({ onSignOut }) {
                                       role="button"
                                       tabIndex={0}
                                       title={it.hint}
-                                      className={"mh-arow" + (it.dim ? " is-dim" : "") + (it.active ? " is-active" : "")}
+                                      className={"mh-arow" + (it.dim ? " is-dim" : "") + (it.active ? " is-active" : "") + (half ? " is-half" : "")}
                                       style={{ "--ac": it.color }}
                                       onClick={openRow}
                                       onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), openRow())}
@@ -14120,6 +14132,9 @@ export default function App({ onSignOut }) {
                                       <ChevronRight size={14} className="mh-arow-chev" />
                                     </div>
                                   );
+                                  };
+                                  if (item.pair) return <div key={item.key} className="mh-arow-pair">{row(item, true)}{row(item.pair, true)}</div>;
+                                  return row(item, false);
                                 })}
                               </div>
                             </Panel>

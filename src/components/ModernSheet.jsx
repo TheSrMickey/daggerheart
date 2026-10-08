@@ -114,7 +114,7 @@ export function ModernSheet({ d, actions, content, tab, onTab, fill }) {
   }, []);
   const [natural, setNatural] = useState(0); // alto de «Detalles generales»: referencia para todas las pestañas
   return (
-    <div className="mhm" style={{ "--cc": d.color }}>
+    <div className="mhm" style={{ "--cc": d.color, ...(d.color2 ? { "--cc2": d.color2 } : {}) }}>
       {lvOpen && li && (
         <div className="mhm-lvpop" role="dialog" aria-label="Tu nivel">
           <h5>Nivel {d.level} · Rango {li.rank}<span>de 10</span></h5>
@@ -127,7 +127,7 @@ export function ModernSheet({ d, actions, content, tab, onTab, fill }) {
         </div>
       )}
       <div className={"mhm-headwrap" + (fill ? " is-collapsed" : "")}>
-      <section className="mhm-head">
+      <section className={"mhm-head" + (d.color2 ? " is-multi" : "")}>
         {d.art ? (
           <span className="mhm-head-art" aria-hidden="true" style={{ backgroundImage: `url(${d.art})` }} />
         ) : (
