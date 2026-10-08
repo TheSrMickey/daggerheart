@@ -88,6 +88,15 @@ export function ModernSheet({ d, actions, content, tab, onTab, fill }) {
     return () => t.forEach(clearTimeout);
   }, [fill]);
   const Emblem = d.Emblem;
+  // En móvil no se escala: el contenido usa las mismas columnas apiladas que la hoja clásica.
+  const [mobile, setMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 819px)");
+    const upd = () => setMobile(mq.matches);
+    upd();
+    mq.addEventListener("change", upd);
+    return () => mq.removeEventListener("change", upd);
+  }, []);
   const [natural, setNatural] = useState(0); // alto de «Detalles generales»: referencia para todas las pestañas
   return (
     <div className="mhm" style={{ "--cc": d.color }}>
@@ -134,7 +143,11 @@ export function ModernSheet({ d, actions, content, tab, onTab, fill }) {
         ))}
       </nav>
 
-      <ZoomFit isGeneral={tab === "general"} natural={natural} onNatural={setNatural} fill={fill}>{content}</ZoomFit>
+      {mobile ? (
+        <div className="mhm-plain" style={{ "--mhz": 1 }}>{content}</div>
+      ) : (
+        <ZoomFit isGeneral={tab === "general"} natural={natural} onNatural={setNatural} fill={fill}>{content}</ZoomFit>
+      )}
     </div>
   );
 }
