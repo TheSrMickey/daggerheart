@@ -3298,6 +3298,8 @@ const sharedStyles = `
   .mh-docked .mh-pre-body { grid-template-columns: 1fr; }
   .mh-docked .mh-pre-side { padding-left: 0; border-left: 0; border-top: 1px solid var(--mh-line); padding-top: 12px; }
   .mh-docked .mh-roll-pop, .mh-docked .mh-card { box-shadow: 0 18px 50px rgba(0,0,0,.4); }
+  .mh-iso-wind { animation: mh-wind-in .7s ease-out both; } @keyframes mh-wind-in { from { opacity: 0; } to { opacity: 1; } }
+  .mh-iso-zone { animation: mh-zone-in .6s ease-out both; } @keyframes mh-zone-in { from { opacity: 0; } to { opacity: 1; } }
   .mh-iso-tk.is-elem-aire .mh-iso-body { animation: mh-iso-hover 2.6s ease-in-out infinite; }
   @keyframes mh-iso-hover { 0%, 100% { translate: 0 -15px; } 50% { translate: 0 -20px; } }
   .mh-iso-tk.is-elem-bounce .mh-iso-body { animation: mh-elem-bounce .75s cubic-bezier(.3,1.3,.5,1) both; }
@@ -5946,6 +5948,29 @@ function ShotFx({ kind, a, b, b2, size: S }) {
 }
 
 // Animación de ataque en el tablero: la figura atacante embiste y el objetivo se sacude. Se reproduce una vez por ataque reciente.
+// Al canalizar un elemento, la app hace trabajo pesado (guardar, redibujar la hoja y el mapa) que congela unos 100-250 ms los fotogramas.
+// Si la animación empezase ahí, se vería un parón y un salto: se muestra el elemento un instante después, ya con el mapa tranquilo.
+function useSettledElem(tokens, ms = 380) {
+  const [shown, setShown] = useState(() => Object.fromEntries(tokens.filter((t) => t.elem).map((t) => [t.id, t.elem])));
+  const timers = useRef({});
+  const sig = tokens.map((t) => t.id + ":" + (t.elem || "")).join("|");
+  useEffect(() => {
+    tokens.forEach((t) => {
+      const want = t.elem || "";
+      if (!want) {
+        if (timers.current[t.id]) (clearTimeout(timers.current[t.id]), delete timers.current[t.id]);
+        setShown((st) => (st[t.id] ? (({ [t.id]: _x, ...rest }) => rest)(st) : st));
+      } else if (shown[t.id] !== want && !timers.current[t.id]) {
+        timers.current[t.id] = setTimeout(() => {
+          delete timers.current[t.id];
+          setShown((st) => ({ ...st, [t.id]: want }));
+        }, ms);
+      }
+    });
+  }, [sig]);
+  useEffect(() => () => Object.values(timers.current).forEach(clearTimeout), []);
+  return tokens.map((t) => (t.kind === "pc" ? (t.elem === (shown[t.id] || "") ? t : { ...t, elem: shown[t.id] || "" }) : t));
+}
 // Elementos del Guardián de los Elementos: al cambiar de elemento la ficha hace un bote. Devuelve { id: n }.
 function useElemFx(tokens) {
   const prev = useRef(null);
@@ -5967,7 +5992,7 @@ function useElemFx(tokens) {
       const c = { ...st };
       ids.forEach((i) => c[i] === changed[i] && delete c[i]);
       return c;
-    }), 900);
+    }), 1400);
   }, [sig]);
   return fx;
 }
@@ -6638,7 +6663,8 @@ function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChang
 
 // Tablero isométrico tipo diorama: losetas con relieve, decorados y fichas de pie.
 // Usa los mismos datos que el tablero plano (fichas, decorados y terreno).
-function IsoBoard({ fog, fogView = "player", areas = [], areaTool, log, hideIsoBtn, menuFor, anim, eAnim, tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact, onToggle }) {
+function IsoBoard({ fog, fogView = "player", areas = [], areaTool, log, hideIsoBtn, menuFor, anim, eAnim, tokens: tokensIn, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact, onToggle }) {
+  const tokens = useSettledElem(tokensIn);
   const S = 34;
   const OX = MAP_ROWS * S + S * 0.6;
   const OY = S * 2.4;

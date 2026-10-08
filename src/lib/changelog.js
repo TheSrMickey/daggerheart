@@ -9,6 +9,7 @@ export const CHANGELOG = [
       { tag: "mejora", text: "La carta de la mano del mapa tiene el mismo diseño que la de Acciones, con su ilustración." },
       { tag: "mejora", text: "Soltar la carta en cualquier casilla del mapa la activa y pregunta qué elemento canalizar." },
       { tag: "mejora", text: "Aire: se quita el bote de activación y la ficha se eleva de forma continua hasta flotar." },
+      { tag: "arreglo", text: "Los elementos del Guardián de los Elementos aparecen tras un instante, cuando el mapa ya está tranquilo, para que la animación no se corte ni dé un salto al empezar." },
     ],
   },
   {
