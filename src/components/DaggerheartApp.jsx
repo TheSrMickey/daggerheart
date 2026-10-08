@@ -4761,20 +4761,21 @@ const sharedStyles = `
   .mh-jl-count { font-size: 11px; font-weight: 600; color: var(--mh-muted); }
   .mh-jl-line { position: relative; display: flex; flex-direction: column; gap: 6px; padding-left: 16px; }
   .mh-jl-line .mh-jl-item:not(:last-child)::after { content: ""; position: absolute; left: -12px; top: 17px; height: calc(100% - 11px); width: 2px; background: var(--mh-line); z-index: 0; }
-  .mh-bf-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 11px; flex: 1; min-height: 0; }
-  .mh-bf { position: relative; display: flex; flex-direction: column; min-height: 0; padding: 0; border: 1px solid var(--mh-line); border-radius: 12px; background: var(--mh-panel); color: var(--mh-ink); cursor: pointer; font-family: inherit; overflow: hidden; text-align: center; transition: border-color .15s, transform .15s; }
-  .mh-bf:hover { border-color: #8FA8FF; transform: translateY(-2px); }
-  .mh-bf.is-on { border-color: #8FA8FF; box-shadow: 0 0 0 1px #8FA8FF inset; }
+  .mh-bf-grid { display: flex; flex-direction: column; gap: 8px; flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; }
+  .mh-bf { --bc: var(--acc); position: relative; flex: 1 1 0; min-height: 62px; display: flex; align-items: center; gap: 12px; padding: 8px 12px; border: 1px solid var(--mh-line); border-left: 4px solid var(--bc); border-radius: 12px; background: color-mix(in srgb, var(--bc) 7%, var(--mh-panel)); color: var(--mh-ink); cursor: pointer; font-family: inherit; text-align: left; transition: border-color .15s, background .15s, transform .15s; }
+  .mh-bf:hover { border-color: var(--bc); background: color-mix(in srgb, var(--bc) 12%, var(--mh-panel)); transform: translateX(2px); }
+  .mh-bf.is-on { border-color: var(--bc); background: color-mix(in srgb, var(--bc) 16%, var(--mh-panel)); box-shadow: 0 0 0 1px var(--bc) inset; }
   .mh-bf.is-locked { opacity: .55; }
-  .mh-bf-gem { position: absolute; top: 6px; left: 6px; z-index: 1; width: 20px; height: 20px; display: grid; place-items: center; font-size: 11px; font-weight: 700; color: #b8c4ff; border: 1px solid #3d4a8a; border-radius: 6px; transform: rotate(45deg) scale(.85); background: var(--mh-panel2); }
-  .mh-bf-lock { position: absolute; top: 7px; right: 7px; z-index: 1; color: #b8c4ff; }
-  .mh-bf-art { flex: 1 1 0; min-height: 40px; display: grid; place-items: center; color: #b8c4ff; background: radial-gradient(circle at 50% 55%, rgba(143,168,255,.22), transparent 70%); border-bottom: 1px solid #3d4a8a; }
-  .mh-bf-name { font-family: Georgia, serif; font-size: 13px; font-weight: 700; margin-top: 6px; padding: 0 6px; line-height: 1.15; }
-  .mh-bf-an { font-size: 10px; color: var(--mh-muted); padding: 0 6px; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .mh-bf-orn { height: 1px; margin: 6px 14px; background: linear-gradient(90deg, transparent, #8FA8FF, transparent); }
-  .mh-bf-row { display: flex; justify-content: space-between; gap: 6px; padding: 0 10px; font-size: 11px; color: var(--mh-muted); }
-  .mh-bf-row b { color: var(--mh-ink); }
-  .mh-bf-ft { margin-top: 6px; padding: 5px 6px; font-size: 10.5px; font-weight: 600; color: #b8c4ff; background: rgba(143,168,255,.12); border-top: 1px solid #3d4a8a; }
+  .mh-bf-ico { width: 46px; height: 46px; flex-shrink: 0; display: grid; place-items: center; border-radius: 12px; color: color-mix(in srgb, var(--bc) var(--mh-accent-keep, 100%), #000); background: color-mix(in srgb, var(--bc) 20%, transparent); }
+  .mh-bf-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  .mh-bf-name { font-family: Georgia, serif; font-size: 14px; font-weight: 700; line-height: 1.2; }
+  .mh-bf-an { font-size: 11px; color: var(--mh-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mh-bf-adv { font-size: 11px; color: var(--mh-ink3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+  .mh-bf-stats { display: flex; gap: 5px; flex-shrink: 0; }
+  .mh-bf-st { min-width: 40px; padding: 4px 7px; border-radius: 8px; text-align: center; background: var(--mh-panel3); display: flex; flex-direction: column; align-items: center; }
+  .mh-bf-st.is-dmg { min-width: 52px; } .mh-bf-st small { font-size: 9px; letter-spacing: .06em; color: var(--mh-muted); } .mh-bf-st b { font-size: 14px; color: var(--mh-ink); }
+  .mh-bf-lock { position: absolute; top: 6px; right: 8px; color: var(--bc); }
+  @media (max-width: 640px) { .mh-bf { flex-wrap: wrap; } .mh-bf-stats { width: 100%; justify-content: flex-end; } }
   .mh-tour { position: fixed; inset: 0; z-index: 100000; cursor: pointer; font-family: 'Inter', system-ui, sans-serif; }
   .mh-tour-spot { position: fixed; border-radius: 14px; box-shadow: 0 0 0 9999px rgba(6, 8, 18, .76); outline: 2px solid #8FA8FF; transition: left .3s ease, top .3s ease, width .3s ease, height .3s ease; pointer-events: none; }
   .mh-tour-card { position: fixed; width: 330px; padding: 14px 16px; border-radius: 14px; background: #171c36; border: 1px solid #3d4a8a; color: #e8ebff; box-shadow: 0 12px 40px rgba(0,0,0,.5); animation: mh-tour-in .25s ease both; cursor: default; }
@@ -15994,6 +15995,7 @@ export default function App({ onSignOut }) {
                                       key={b.key}
                                       type="button"
                                       className={"mh-bf" + (selected ? " is-on" : "") + (locked ? " is-locked" : "")}
+                                      style={{ "--bc": b.color }}
                                       onClick={() =>
                                         setViewingCardDetail({
                                           kicker: "Forma de Bestia · Rango " + b.tier,
@@ -16002,27 +16004,30 @@ export default function App({ onSignOut }) {
                                           features: b.features,
                                           bigStyle: true,
                                           itemIcon: BIcon,
-                                          accent: "#8FA8FF",
+                                          accent: b.color,
                                           beastKey: b.key,
                                         })
                                       }
                                       title={tierLocked ? `Se desbloquea en Rango ${b.tier}` : !selected && stressFull ? "Sin Estrés disponible para activarla" : undefined}
                                     >
-                                      <span className="mh-bf-gem">{bi + 1}</span>
-                                      {locked && <Lock className="mh-bf-lock" size={12} />}
-                                      {selected && <Check className="mh-bf-lock" size={13} />}
-                                      <span className="mh-bf-art"><BIcon size={40} strokeWidth={1.3} /></span>
-                                      <span className="mh-bf-name">{b.key}</span>
-                                      <span className="mh-bf-an">{b.animals}</span>
-                                      <span className="mh-bf-orn" />
-                                      <span className="mh-bf-row"><span>{tn}</span><b>{tv}</b></span>
-                                      <span className="mh-bf-row"><span>{en}</span><b>{ev}</b></span>
-                                      <span className="mh-bf-ft">{dmg} · {atk[0]}</span>
+                                      <span className="mh-bf-ico"><BIcon size={26} strokeWidth={1.6} /></span>
+                                      <span className="mh-bf-main">
+                                        <span className="mh-bf-name">{b.key}</span>
+                                        <span className="mh-bf-an">{b.animals}</span>
+                                        <span className="mh-bf-adv">Ventaja: {b.advantage}</span>
+                                      </span>
+                                      <span className="mh-bf-stats">
+                                        <span className="mh-bf-st"><small>{String(tn).slice(0, 3).toUpperCase()}</small><b>{tv}</b></span>
+                                        <span className="mh-bf-st"><small>EVA</small><b>{ev}</b></span>
+                                        <span className="mh-bf-st is-dmg" title={atk[0] + " · " + atk[1] + " · " + (atk[2] || "")}><small>DAÑO</small><b>{dmg}</b></span>
+                                      </span>
+                                      {locked && <Lock className="mh-bf-lock" size={13} />}
+                                      {selected && <Check className="mh-bf-lock" size={14} />}
                                     </button>
                                   );
                                 })}
                               </div>
-                              <div style={{ fontSize: 10.5, color: "var(--mh-muted3)", marginTop: 8, textAlign: "center", flexShrink: 0 }}>Pulsa una carta para verla ampliada y transformarte</div>
+                              <div style={{ fontSize: 10.5, color: "var(--mh-muted3)", marginTop: 8, textAlign: "center", flexShrink: 0 }}>Pulsa una forma para verla ampliada y transformarte</div>
                             </Panel>
                           </div>
                         );
