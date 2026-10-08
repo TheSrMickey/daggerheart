@@ -3,18 +3,23 @@
 import { Fragment, useState, useEffect, useLayoutEffect, useRef, createContext, useContext } from "react";
 import { createPortal } from "react-dom";
 import { Squirrel } from "lucide-react";
-import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus, Box, LayoutGrid, Bird, Fish, Bug, Rabbit, Cat, Turtle, Clock, CircleDashed, Slash } from "lucide-react";
+import { History, LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus, Box, LayoutGrid, Bird, Fish, Bug, Rabbit, Cat, Turtle, Clock, CircleDashed, Slash } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { NotificationBell, FriendsPanel } from "./Social";
 import { ModernSheet } from "./ModernSheet";
 import { Tour } from "./Tour";
 import { LevelUpDialog, parseAdvances, ownedCards, getMulticlass, MAX_LEVEL, rankOf } from "./LevelUp";
 import { RulesPanel } from "./MapRules";
+import { Changelog } from "./Changelog";
+import { APP_VERSION } from "@/lib/changelog";
 import { setPresence, startPresence, stopPresence } from "@/lib/social";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
 import { buildSablewood } from "./quickstartSablewood";
 import { Wand, CircleDot, MoveUpRight, Archive, Shell, Compass, Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
 
+// Color de cada campaña (se reparte según su id).
+const CAMP_COLORS = ["#A58BE8", "#6FA3C0", "#E0A04A", "#7FB77A", "#D9644E", "#E07FB0"];
+const campColor = (id) => CAMP_COLORS[[...String(id)].reduce((a, ch) => a + ch.charCodeAt(0), 0) % CAMP_COLORS.length];
 const NAV_ITEMS = [
   { key: "inicio", label: "Inicio", icon: Home },
   { key: "ficha", label: "Personajes", icon: User },
@@ -4467,6 +4472,8 @@ const sharedStyles = `
   @media (max-width: 1100px) { .mhm-grid { grid-template-columns: 1fr; } .mhm-traits { grid-template-columns: repeat(3, 1fr); } }
   .mh-brand { display: flex; align-items: center; gap: 10px; }
   .mh-brand-logo { height: 30px; filter: drop-shadow(0 0 8px #9db8ff66); }
+  html[data-mh-theme="light"] .mh-brand-logo { filter: invert(1) drop-shadow(0 0 6px #00000026); }
+  .mh-navver { margin-left: auto; font-size: 10.5px; color: var(--mh-muted2); font-weight: 600; letter-spacing: .02em; }
   .mh-brand-name { flex: 1; font-weight: 700; font-size: 15px; color: var(--mh-ink); letter-spacing: .02em; }
   .mh-acct { position: relative; display: flex; align-items: center; gap: 6px; }
   .mh-acct-menu { position: absolute; z-index: 60; top: 36px; right: 0; width: 190px; padding: 6px; border-radius: 12px; background: var(--mh-panel2); border: 1px solid var(--mh-line2); box-shadow: 0 14px 36px #0009; animation: mh-fade-in .14s ease both; }
@@ -4592,7 +4599,41 @@ const sharedStyles = `
   .mh-gal .mh-hero-emb svg { width: 58px; height: 58px; }
   .mh-gal .mh-hero-lv { top: 14px; left: 14px; min-width: 38px; height: 42px; font-size: 18px; }
   .mh-gal .mh-hero-del { top: 12px; right: 12px; width: 34px; height: 34px; }
-  .mh-gal .mh-hero-inf { flex: 0 0 auto; align-items: center; padding: 20px 22px 24px; gap: 6px; }
+  .mh-gal .mh-hero-inf { flex: 0 0 auto; align-items: center; padding: 20px 22px 24px; gap: 6px; min-height: 252px; }
+  .mh-gal .mh-hero-bars { margin-top: auto; }
+  html[data-mh-theme="light"] .mh-hero-top { background: radial-gradient(78% 88% at 50% 42%, color-mix(in srgb, var(--hc) 40%, #FFFCF6), color-mix(in srgb, var(--hc) 14%, #FFFCF6) 80%); }
+  html[data-mh-theme="light"] .mh-hero-top::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 46px; background: linear-gradient(0deg, var(--mh-panel), transparent); pointer-events: none; }
+  html[data-mh-theme="light"] .mh-hero-emb { background: #FFFCF6; box-shadow: 0 0 0 7px color-mix(in srgb, var(--hc) 24%, transparent), 0 10px 22px color-mix(in srgb, var(--hc) 34%, transparent); }
+  .mh-camps-head { display: flex; align-items: baseline; gap: 12px; margin: 0 0 14px; font-size: 13px; color: var(--mh-ink3); font-weight: 600; } .mh-camps-head small { font-size: 12px; color: var(--mh-muted); font-weight: 400; }
+  .mh-camps { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; align-items: stretch; }
+  .mh-camps .mh-hero { margin: 0; text-align: center; }
+  .mh-camps .mh-hero-top { height: 140px; } .mh-camps .mh-hero-emb { width: 92px; height: 92px; } .mh-camps .mh-hero-lv { top: 12px; left: 12px; }
+  .mh-camps .mh-hero-inf { align-items: center; padding: 16px 18px 20px; gap: 6px; min-height: 150px; } .mh-camps .mh-hero-nm { font-size: 20px; } .mh-camps .mh-hero-tags { justify-content: center; }
+  .mh-camp-ds { font-size: 12.5px; color: var(--mh-muted); line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .mh-camp-new { margin: 0; min-height: 290px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; cursor: pointer; border-style: dashed; color: var(--mh-ink3); text-align: center; padding: 20px; transition: border-color .15s, background .15s; }
+  .mh-camp-new:hover, .mh-camp-new:focus-visible { border-color: #E3B04B; background: #E3B04B0F; outline: none; } .mh-camp-new small { font-size: 12px; color: var(--mh-muted); max-width: 200px; }
+  .mh-camps > .mh-card:not(.mh-hero):not(.mh-camp-new) { margin: 0; }
+  .mh-camp-hero { position: relative; margin-bottom: 18px; padding: 16px 22px 20px; border-radius: 18px; border: 1.5px solid color-mix(in srgb, var(--hc) 40%, var(--mh-line)); background: linear-gradient(135deg, color-mix(in srgb, var(--hc) 34%, #0d1020), #0c0c20 80%); color: #fff; box-shadow: 0 16px 36px -26px var(--hc); }
+  .mh-camp-back { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: #ffffffb0; padding: 4px 8px; margin: -4px 0 8px -8px; border-radius: 8px; } .mh-camp-back:hover { background: #ffffff18; color: #fff; }
+  .mh-camp-hero-row { display: flex; align-items: center; gap: 18px; }
+  .mh-camp-emb { width: 76px; height: 76px; flex-shrink: 0; background: color-mix(in srgb, var(--hc) 20%, #0c0c20); }
+  .mh-camp-title { font-size: 26px; font-weight: 700; line-height: 1.15; outline: none; } .mh-camp-desc { font-size: 13.5px; color: #ffffffcc; margin-top: 4px; min-height: 20px; outline: none; max-width: 640px; }
+  .mh-camp-del { cursor: pointer; border-radius: 5px; flex-shrink: 0; align-self: flex-start; }
+  html[data-mh-theme="light"] .mh-camp-hero { background: linear-gradient(135deg, color-mix(in srgb, var(--hc) 30%, #FFFCF6), #FFFCF6 80%); color: #221C2B; border-color: color-mix(in srgb, var(--hc) 45%, #DCD2C1); box-shadow: 0 14px 30px -24px var(--hc); }
+  html[data-mh-theme="light"] .mh-camp-back { color: #4C4458; } html[data-mh-theme="light"] .mh-camp-back:hover { background: #00000010; color: #221C2B; }
+  html[data-mh-theme="light"] .mh-camp-desc { color: #4C4458; } html[data-mh-theme="light"] .mh-camp-emb { background: #FFFCF6; }
+  @media (max-width: 640px) { .mh-camp-hero-row { flex-direction: column; align-items: flex-start; } .mh-camp-title { font-size: 21px; } }
+  .mh-cl { max-width: 780px; } .mh-cl-head h2 { margin: 0; font-size: 26px; } .mh-cl-head p { margin: 4px 0 22px; color: var(--mh-muted); font-size: 13.5px; }
+  .mh-cl-list { list-style: none; margin: 0; padding: 0 0 0 22px; position: relative; display: flex; flex-direction: column; gap: 16px; }
+  .mh-cl-list::before { content: ""; position: absolute; left: 6px; top: 8px; bottom: 8px; width: 2px; background: linear-gradient(180deg, #E3B04B, var(--mh-line) 18%); border-radius: 2px; }
+  .mh-cl-v { position: relative; } .mh-cl-dot { position: absolute; left: -22px; top: 18px; width: 14px; height: 14px; border-radius: 50%; background: var(--mh-panel); border: 2px solid var(--mh-line2); } .mh-cl-v.is-last .mh-cl-dot { border-color: #E3B04B; background: #E3B04B; box-shadow: 0 0 0 4px #E3B04B30; }
+  .mh-cl-card { padding: 16px 20px 18px; border-radius: 14px; border: 1px solid var(--mh-line); background: var(--mh-panel); } .mh-cl-v.is-last .mh-cl-card { border-color: color-mix(in srgb, #E3B04B 45%, var(--mh-line)); }
+  .mh-cl-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; } .mh-cl-top time { margin-left: auto; font-size: 12px; color: var(--mh-muted); }
+  .mh-cl-ver { font: 700 12px Inter, sans-serif; padding: 2px 10px; border-radius: 8px; background: var(--mh-panel3); color: var(--mh-ink); } .mh-cl-new { font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--mh-gold-ink); }
+  .mh-cl-card h3 { margin: 8px 0 10px; font-size: 17px; color: var(--mh-ink); } .mh-cl-card ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+  .mh-cl-card li { display: flex; gap: 10px; align-items: baseline; font-size: 13.5px; line-height: 1.5; color: var(--mh-ink2); }
+  .mh-cl-tag { flex: 0 0 56px; text-align: center; font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 2px 0; border-radius: 6px; } .mh-cl-tag.is-nuevo { background: #7FB77A24; color: #5E9A58; } .mh-cl-tag.is-mejora { background: #5E93C924; color: #4A7FB0; } .mh-cl-tag.is-arreglo { background: #E0A04A26; color: #B37A24; }
+  html:not([data-mh-theme="light"]) .mh-cl-tag.is-nuevo { color: #8FD08A; } html:not([data-mh-theme="light"]) .mh-cl-tag.is-mejora { color: #8FB8E8; } html:not([data-mh-theme="light"]) .mh-cl-tag.is-arreglo { color: #E8B870; }
   .mh-gal .mh-hero-nm { font-size: 24px; }
   .mh-gal .mh-hero-cl { font-size: 13.5px; }
   .mh-gal .mh-hero-or { font-size: 12.5px; }
@@ -12284,7 +12325,7 @@ export default function App({ onSignOut }) {
       setTourOn(true);
     }
   }, [modernOpen, modernCharId, settings.tutorial]);
-  const viewLabel = view === "ajustes" ? "Ajustes" : view === "inicio" ? "General" : NAV_ITEMS.find((n) => n.key === view)?.label;
+  const viewLabel = view === "actualizaciones" ? "Actualizaciones" : view === "ajustes" ? "Ajustes" : view === "inicio" ? "General" : NAV_ITEMS.find((n) => n.key === view)?.label;
   const topLeft = modernOpen ? (
     <span className="mh-toptabs">
       <button type="button" onClick={() => setModernCharId(null)}>Mis personajes</button>
@@ -22803,6 +22844,27 @@ export default function App({ onSignOut }) {
         {!isMobile && <div style={{ flex: 1 }} />}
 
         {!isMobile && (
+          <div
+            role="button"
+            tabIndex={0}
+            className={"mh-navitem" + (view === "actualizaciones" ? " is-on" : "")}
+            title="Actualizaciones"
+            style={{ padding: "10px 12px" }}
+            onClick={() => {
+              setViewingCharId(null);
+              setViewingCardDetail(null);
+              setModernCharId(null);
+              setView("actualizaciones");
+            }}
+            onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), e.currentTarget.click())}
+          >
+            <History size={16} strokeWidth={1.8} />
+            Actualizaciones
+            <small className="mh-navver">v{APP_VERSION}</small>
+          </div>
+        )}
+
+        {!isMobile && (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 8px", fontSize: 12, color: "var(--mh-muted)" }}>
             <span>{theme === "light" ? "Modo claro" : "Modo oscuro"}</span>
             {themeSwitch}
@@ -23103,84 +23165,71 @@ export default function App({ onSignOut }) {
               );
               return (
                 <div>
-                  <button className="mh-btn-ghost" style={{ marginBottom: 16 }} onClick={() => setViewingCampaignId(null)}>
-                    <ArrowLeft size={14} /> Campañas
-                  </button>
-
-                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 6 }}>
-                    <div
-                      contentEditable
-                      suppressContentEditableWarning
-                      onBlur={(e) => updateCampaign(viewingCampaignId, { name: e.target.textContent })}
-                      className="mh-serif"
-                      style={{ fontSize: 22, fontWeight: 700, flex: 1 }}
-                    >
-                      {activeCampaign.name}
+                  <div className="mh-camp-hero" style={{ "--hc": campColor(viewingCampaignId) }}>
+                    <button type="button" className="mh-camp-back" onClick={() => setViewingCampaignId(null)}>
+                      <ArrowLeft size={14} /> Campañas
+                    </button>
+                    <div className="mh-camp-hero-row">
+                      <span className="mh-hero-emb mh-camp-emb" aria-hidden="true">
+                        <BookOpen size={34} strokeWidth={1.5} />
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div
+                          contentEditable
+                          suppressContentEditableWarning
+                          onBlur={(e) => updateCampaign(viewingCampaignId, { name: e.target.textContent })}
+                          className="mh-serif mh-camp-title"
+                        >
+                          {activeCampaign.name}
+                        </div>
+                        <div
+                          contentEditable
+                          suppressContentEditableWarning
+                          onBlur={(e) => updateCampaign(viewingCampaignId, { description: e.target.textContent })}
+                          className="mh-camp-desc"
+                        >
+                          {activeCampaign.description || "Añade una descripción para la campaña..."}
+                        </div>
+                        <div className="mh-hero-tags" style={{ justifyContent: "flex-start", marginTop: 8 }}>
+                          <span className="is-camp">{memberIds.length} personaje{memberIds.length === 1 ? "" : "s"}</span>
+                          {memberIds.slice(0, 4).map((mid) => characters[mid] && <span key={mid} className="is-tf">{characters[mid].f_name}</span>)}
+                        </div>
+                      </div>
+                      <Trash2
+                        size={16}
+                        className="mh-camp-del"
+                        style={{
+                          color: ink(pendingDeleteCampaignId === viewingCampaignId ? "#FFFFFF" : "#D9644E"),
+                          background: pendingDeleteCampaignId === viewingCampaignId ? "#D9644E" : "transparent",
+                          padding: pendingDeleteCampaignId === viewingCampaignId ? 3 : 0,
+                        }}
+                        title={pendingDeleteCampaignId === viewingCampaignId ? "Vuelve a pulsar para confirmar" : "Eliminar campaña"}
+                        onClick={() => {
+                          if (pendingDeleteCampaignId === viewingCampaignId) {
+                            deleteCampaign(viewingCampaignId);
+                            setPendingDeleteCampaignId(null);
+                          } else {
+                            setPendingDeleteCampaignId(viewingCampaignId);
+                            setTimeout(() => setPendingDeleteCampaignId(null), 3000);
+                          }
+                        }}
+                      />
                     </div>
-                    <Trash2
-                      size={16}
-                      style={{
-                        color: ink(pendingDeleteCampaignId === viewingCampaignId ? "#FFFFFF" : "#D9644E"),
-                        background: pendingDeleteCampaignId === viewingCampaignId ? "#D9644E" : "transparent",
-                        borderRadius: 4,
-                        padding: pendingDeleteCampaignId === viewingCampaignId ? 3 : 0,
-                        cursor: "pointer",
-                        flexShrink: 0,
-                      }}
-                      title={pendingDeleteCampaignId === viewingCampaignId ? "Vuelve a pulsar para confirmar" : "Eliminar campaña"}
-                      onClick={() => {
-                        if (pendingDeleteCampaignId === viewingCampaignId) {
-                          deleteCampaign(viewingCampaignId);
-                          setPendingDeleteCampaignId(null);
-                        } else {
-                          setPendingDeleteCampaignId(viewingCampaignId);
-                          setTimeout(() => setPendingDeleteCampaignId(null), 3000);
-                        }
-                      }}
-                    />
-                  </div>
-                  <div
-                    contentEditable
-                    suppressContentEditableWarning
-                    onBlur={(e) => updateCampaign(viewingCampaignId, { description: e.target.textContent })}
-                    style={{ fontSize: 13, color: "var(--mh-ink3)", marginBottom: 20, minHeight: 20 }}
-                  >
-                    {activeCampaign.description || "Añade una descripción para la campaña..."}
                   </div>
 
-                  <div className="mh-camp-tabs mh-noscroll" style={{ display: "flex", gap: 4, background: "var(--mh-panel)", border: "1px solid var(--mh-line)", borderRadius: 30, padding: 5, width: "fit-content", marginBottom: 22 }}>
+                  <nav className="mhm-tabs mh-camp-tabs" role="tablist" style={{ "--cc": campColor(viewingCampaignId), marginBottom: 18 }}>
                     {[
                       { key: "mesa", label: "Mesa", Icon: Radio },
                       { key: "resumen", label: "Resumen", Icon: User },
                       { key: "chat", label: "Chat", Icon: MessageCircle },
                       { key: "mapa", label: "Mapa", Icon: MapPinned },
                       { key: "encuentros", label: "Encuentros", Icon: Swords },
-                    ].map((t) => {
-                      const TIcon = t.Icon;
-                      const active = campaignDetailTab === t.key;
-                      return (
-                        <div
-                          key={t.key}
-                          onClick={() => setCampaignDetailTab(t.key)}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 6,
-                            padding: "8px 16px",
-                            borderRadius: 24,
-                            cursor: "pointer",
-                            fontSize: 12.5,
-                            fontWeight: 600,
-                            background: active ? "var(--mh-line)" : "transparent",
-                            color: ink(active ? "var(--mh-ink)" : "var(--mh-ink3)"),
-                          }}
-                        >
-                          <TIcon size={14} />
-                          {t.label}
-                        </div>
-                      );
-                    })}
-                  </div>
+                    ].map((t) => (
+                      <button key={t.key} type="button" role="tab" aria-selected={campaignDetailTab === t.key} className={"is-base" + (campaignDetailTab === t.key ? " is-on" : "")} onClick={() => setCampaignDetailTab(t.key)}>
+                        <t.Icon size={15} strokeWidth={1.8} /> <span className="lbl">{t.label}</span>
+                      </button>
+                    ))}
+                  </nav>
 
                   {campaignDetailTab === "mesa" && (() => {
                     const stage = campaignStage;
@@ -24275,25 +24324,40 @@ export default function App({ onSignOut }) {
 
             return (
               <div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 14 }}>
+                <div className="mh-camps-head">
+                  <span>{Object.keys(campaigns).length} campaña{Object.keys(campaigns).length === 1 ? "" : "s"}</span>
+                  <small>Cada campaña reúne a tu grupo con su mesa, su mapa y su chat.</small>
+                </div>
+                <div className="mh-camps">
                   {Object.keys(campaigns).map((id) => {
                     const camp = campaigns[id];
-                    const memberCount = (camp.characterIds || []).length;
+                    const members = (camp.characterIds || []).map((cid) => characters[cid]).filter(Boolean);
                     return (
                       <div
                         key={id}
-                        className="mh-card"
+                        className="mh-card mh-hero"
+                        style={{ "--hc": campColor(id) }}
+                        role="button"
+                        tabIndex={0}
                         onClick={() => setViewingCampaignId(id)}
-                        style={{ margin: 0, padding: "18px 16px", display: "flex", flexDirection: "column", gap: 8, cursor: "pointer" }}
+                        onKeyDown={(e) => e.key === "Enter" && e.target === e.currentTarget && setViewingCampaignId(id)}
                       >
-                        <div className="mh-serif" style={{ fontSize: 17, fontWeight: 600 }}>{camp.name}</div>
-                        {camp.description && (
-                          <div style={{ fontSize: 12, color: "var(--mh-muted)", overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
-                            {camp.description}
+                        <div className="mh-hero-top">
+                          <span className="mh-hero-lv" title={members.length + " personajes"}>{members.length}</span>
+                          <span className="mh-hero-emb" aria-hidden="true">
+                            <BookOpen size={36} strokeWidth={1.5} />
+                          </span>
+                        </div>
+                        <div className="mh-hero-inf">
+                          <div className="mh-serif mh-hero-nm">{camp.name}</div>
+                          <div className="mh-camp-ds">{camp.description || "Sin descripción todavía."}</div>
+                          <div className="mh-hero-tags">
+                            {members.slice(0, 3).map((m, i) => (
+                              <span key={i} className="is-camp">{m.f_name || "Sin nombre"}</span>
+                            ))}
+                            {members.length > 3 && <span className="is-tf">+{members.length - 3}</span>}
+                            {!members.length && <span className="is-tf">Sin personajes</span>}
                           </div>
-                        )}
-                        <div style={{ fontSize: 11, color: "var(--mh-gold-ink)", fontWeight: 600 }}>
-                          {memberCount} personaje{memberCount === 1 ? "" : "s"}
                         </div>
                       </div>
                     );
@@ -24330,31 +24394,18 @@ export default function App({ onSignOut }) {
                       </div>
                     </div>
                   ) : (
-                    <div
-                      className="mh-card"
-                      onClick={() => setShowNewCampaignForm(true)}
-                      style={{
-                        margin: 0,
-                        padding: "18px 16px",
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 8,
-                        cursor: "pointer",
-                        borderStyle: "dashed",
-                        color: "var(--mh-ink3)",
-                        minHeight: 84,
-                      }}
-                    >
-                      <Plus size={18} />
-                      <span style={{ fontSize: 13, fontWeight: 500 }}>Nueva campaña</span>
+                    <div className="mh-card mh-camp-new" role="button" tabIndex={0} onClick={() => setShowNewCampaignForm(true)} onKeyDown={(e) => e.key === "Enter" && setShowNewCampaignForm(true)}>
+                      <span className="mh-gal-plus"><Plus size={26} /></span>
+                      <span style={{ fontSize: 14, fontWeight: 600 }}>Nueva campaña</span>
+                      <small>Crea una mesa para tu grupo o empieza con la aventura de inicio.</small>
                     </div>
                   )}
                 </div>
               </div>
             );
           })()}
+
+          {view === "actualizaciones" && <Changelog />}
 
           {view === "ajustes" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 14, maxWidth: 640 }}>

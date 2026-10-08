@@ -1,0 +1,107 @@
+// Historial de versiones que se muestra en «Actualizaciones». La primera entrada es la más reciente.
+// Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
+export const CHANGELOG = [
+  {
+    version: "1.9",
+    date: "2026-10-08",
+    title: "Actualizaciones y campañas con el nuevo diseño",
+    items: [
+      { tag: "nuevo", text: "Pestaña «Actualizaciones» en el menú lateral con el historial de versiones." },
+      { tag: "mejora", text: "Campañas con el mismo diseño que Personajes: tarjetas con color, miembros y cabecera propia en cada campaña." },
+      { tag: "mejora", text: "El icono de la página del menú se ve en negro en modo día." },
+      { tag: "arreglo", text: "Las tarjetas de personajes miden lo mismo y su degradado se ve bien en modo día." },
+    ],
+  },
+  {
+    version: "1.8",
+    date: "2026-10-08",
+    title: "Una sola hoja de personaje",
+    items: [
+      { tag: "mejora", text: "Siempre se abre la hoja moderna: se quita la hoja clásica y la pregunta de qué hoja abrir." },
+      { tag: "mejora", text: "Formas de Bestia en filas con el color de cada forma, su ventaja y las cifras clave a la vista." },
+      { tag: "mejora", text: "Los amigos se actualizan en segundos: conectado, ausente, desconectado y la clase con la que juegan." },
+      { tag: "arreglo", text: "Las formas de bestia ya no muestran una barra lateral al pasar el ratón." },
+      { tag: "arreglo", text: "El texto de +Estrés, +Esperanza y +Favor tiene el mismo estilo que la pérdida de vida." },
+    ],
+  },
+  {
+    version: "1.7",
+    date: "2026-10-08",
+    title: "Multiclase",
+    items: [
+      { tag: "nuevo", text: "Multiclase desde el nivel 5 con asistente: clase, dominio, carta fundamento y rasgo de conjuro." },
+      { tag: "nuevo", text: "En Acciones, las pestañas General y Multiclase separan lo de cada clase." },
+      { tag: "mejora", text: "La cabecera mezcla los colores de las dos clases y las ascendencias mixtas comparten fila." },
+      { tag: "mejora", text: "La hoja moderna se ve bien en modo día y las ilustraciones de cada clase muestran al personaje." },
+    ],
+  },
+  {
+    version: "1.6",
+    date: "2026-10-08",
+    title: "Subida de nivel y novedades de Inicio",
+    items: [
+      { tag: "nuevo", text: "Subida de nivel con las reglas del manual: logros, avances por Rango, umbrales y carta de dominio." },
+      { tag: "nuevo", text: "Banner de la expansión Hope & Fear en el inicio." },
+      { tag: "mejora", text: "Etiquetas de estado en la cabecera de la hoja y rasgo de conjuro marcado." },
+      { tag: "mejora", text: "Menú de la cuenta desde el avatar y favicon que se adapta al tema del navegador." },
+    ],
+  },
+  {
+    version: "1.5",
+    date: "2026-10-08",
+    title: "Tablero: criaturas, eventos y Enredo Feroz",
+    items: [
+      { tag: "nuevo", text: "El DJ muestra u oculta criaturas sueltas o en grupo, aparte de la niebla." },
+      { tag: "nuevo", text: "Eventos y desencadenantes: reglas «cuando… si… entonces…», como que los demás huyan al herir a un enemigo." },
+      { tag: "nuevo", text: "Enredo Feroz con raíces y enredaderas, con la opción de gastar Esperanza para un segundo adversario." },
+      { tag: "mejora", text: "La ficha del enemigo aparece encima del mapa y no cambia su altura." },
+    ],
+  },
+  {
+    version: "1.4",
+    date: "2026-10-07",
+    title: "Hoja moderna y creador de personajes",
+    items: [
+      { tag: "nuevo", text: "Hoja de personaje moderna en la columna central, con tutorial interactivo la primera vez." },
+      { tag: "nuevo", text: "Pestaña de campaña dentro de la hoja, con la escena o el mapa y el chat de la campaña." },
+      { tag: "mejora", text: "Creador de personaje con pasos cortos, previsualización de clase y subclase y resumen." },
+      { tag: "mejora", text: "Efectos de daño, recursos y ventanas a pantalla completa." },
+    ],
+  },
+  {
+    version: "1.3",
+    date: "2026-10-07",
+    title: "Nueva interfaz",
+    items: [
+      { tag: "nuevo", text: "Interfaz completa estilo launcher: menú lateral con listas, barra superior y columna de amigos." },
+      { tag: "nuevo", text: "Página de inicio, solicitudes de amistad, notificaciones y estado de los amigos." },
+      { tag: "mejora", text: "Inicio de sesión y registro a pantalla completa con el logo de la estrella." },
+      { tag: "mejora", text: "Abanico de cartas de dominio y de armas en el mapa isométrico." },
+    ],
+  },
+  {
+    version: "1.2",
+    date: "2026-10-04",
+    title: "Aventura de inicio y niebla de guerra",
+    items: [
+      { tag: "nuevo", text: "«Los mensajeros de Sablewood»: campaña lista con escenas, pistas, reparto, notas por acto y mapas con enemigos." },
+      { tag: "nuevo", text: "Niebla de guerra: el DJ la activa, despeja y cubre; los personajes despejan a su alrededor." },
+      { tag: "mejora", text: "Tablero con piezas apilables, siluetas tras los muros, giro de piezas y colinas apilables." },
+      { tag: "arreglo", text: "Borrar decorados y terreno como DJ es más fácil, con el botón derecho." },
+    ],
+  },
+  {
+    version: "1.1",
+    date: "2026-10-03",
+    title: "Tablero jugable",
+    items: [
+      { tag: "nuevo", text: "Atacar desde el mapa con alcance, Dificultad, umbrales y daño aplicado a los enemigos." },
+      { tag: "nuevo", text: "Enemigos con estadísticas base del manual y tamaño de ficha a elegir." },
+      { tag: "nuevo", text: "Regla del clic derecho mantenido que mide la distancia y el alcance en casillas." },
+      { tag: "nuevo", text: "Efectos en el mapa para Inmovilizado, Vulnerable, Inconsciente, Volando y Retraído." },
+      { tag: "mejora", text: "Clic derecho con las acciones de tu personaje y animaciones de ataque y de movimiento." },
+    ],
+  },
+];
+
+export const APP_VERSION = CHANGELOG[0].version;
