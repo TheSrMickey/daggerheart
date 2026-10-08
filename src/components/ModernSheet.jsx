@@ -102,8 +102,12 @@ export function ModernSheet({ d, actions, content, tab, onTab, fill }) {
           <div className="mhm-level"><small>NIVEL</small><b>{d.level}</b></div>
           <div>
             <h2 className="mh-serif">{d.name || "Sin nombre"}</h2>
-            <p>{[d.cls, d.subclass].filter(Boolean).join(" · ") || "Sin clase asignada"}</p>
+            <p data-tour="cls">
+              {[d.cls, d.subclass].filter(Boolean).join(" · ") || "Sin clase asignada"}
+              {d.pronouns && <span data-tour="pron"> · {d.pronouns}</span>}
+            </p>
           </div>
+          <button type="button" className="mhm-tour-btn" onClick={actions.tour} title="Ver el tutorial de la hoja">? Tutorial</button>
         </div>
         <div className="mhm-traits">
           {d.traits.map((t) => (

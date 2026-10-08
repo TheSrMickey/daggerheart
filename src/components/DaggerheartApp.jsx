@@ -7,6 +7,7 @@ import { LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, Arro
 import { storageGet, storageSet } from "@/lib/storage";
 import { NotificationBell, FriendsPanel } from "./Social";
 import { ModernSheet } from "./ModernSheet";
+import { Tour } from "./Tour";
 import { setPresence, startPresence, stopPresence } from "@/lib/social";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
 import { buildSablewood } from "./quickstartSablewood";
@@ -4623,6 +4624,21 @@ const sharedStyles = `
   .mh-bf-row { display: flex; justify-content: space-between; gap: 6px; padding: 0 10px; font-size: 11px; color: var(--mh-muted); }
   .mh-bf-row b { color: var(--mh-ink); }
   .mh-bf-ft { margin-top: 6px; padding: 5px 6px; font-size: 10.5px; font-weight: 600; color: #b8c4ff; background: rgba(143,168,255,.12); border-top: 1px solid #3d4a8a; }
+  .mh-tour { position: fixed; inset: 0; z-index: 100000; cursor: pointer; font-family: 'Inter', system-ui, sans-serif; }
+  .mh-tour-spot { position: fixed; border-radius: 14px; box-shadow: 0 0 0 9999px rgba(6, 8, 18, .76); outline: 2px solid #8FA8FF; transition: left .3s ease, top .3s ease, width .3s ease, height .3s ease; pointer-events: none; }
+  .mh-tour-card { position: fixed; width: 330px; padding: 14px 16px; border-radius: 14px; background: #171c36; border: 1px solid #3d4a8a; color: #e8ebff; box-shadow: 0 12px 40px rgba(0,0,0,.5); animation: mh-tour-in .25s ease both; cursor: default; }
+  @keyframes mh-tour-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .mh-tour-block { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: #8FA8FF; font-weight: 700; }
+  .mh-tour-title { font-size: 18px; font-weight: 700; margin: 4px 0 6px; }
+  .mh-tour-card p { margin: 0; font-size: 13px; line-height: 1.5; color: #c9d0f5; }
+  .mh-tour-demo { display: inline-block; margin-top: 8px; padding: 3px 12px; border-radius: 20px; border: 1px solid #8FA8FF; color: #b8c4ff; font-size: 12px; font-weight: 600; }
+  .mh-tour-foot { display: flex; align-items: center; gap: 10px; margin-top: 12px; font-size: 11px; color: #8b93c4; }
+  .mh-tour-foot em { margin-left: auto; font-style: normal; }
+  .mh-tour-foot button { background: none; border: 0; color: #b8c4ff; font: inherit; cursor: pointer; padding: 0; }
+  .mh-tour-skip { position: fixed; right: 22px; bottom: 20px; padding: 8px 14px; border-radius: 10px; background: #171c36; border: 1px solid #3d4a8a; color: #c9d0f5; font: 600 12px 'Inter', system-ui, sans-serif; cursor: pointer; }
+  .mh-tour-skip:hover { border-color: #8FA8FF; color: #fff; }
+  .mhm-tour-btn { margin-left: auto; align-self: flex-start; padding: 5px 11px; border-radius: 9px; border: 1px solid #e9e6f255; background: #0006; color: #fff; font: 600 11px 'Inter', system-ui, sans-serif; cursor: pointer; }
+  .mhm-tour-btn:hover { background: #0009; }
   .mh-jl-item { position: relative; display: grid; grid-template-columns: 1fr auto; gap: 1px 6px; text-align: left; padding: 8px 10px; border: 1px solid var(--mh-line); border-radius: 9px; background: var(--mh-panel); color: var(--mh-ink); cursor: pointer; font-family: inherit; }
   .mh-jl-item:hover { border-color: var(--mh-line2); }
   .mh-jl-item.is-on { border-color: var(--acc); background: color-mix(in srgb, var(--acc) 9%, var(--mh-panel)); }
@@ -8030,7 +8046,12 @@ export default function App({ onSignOut }) {
     setShowNewCharModal(false);
     // Sin pasos intermedios: al terminar el asistente se abre la hoja del personaje recién creado.
     setView("ficha");
-    openClassic(id);
+    // El primer personaje abre la hoja moderna con el tutorial (una sola vez por cuenta).
+    const firstEver = Object.keys(characters).length === 0 && !(await safeGet("onboarding-done", false));
+    if (firstEver) {
+      openModern(id);
+      setTourOn(true);
+    } else openClassic(id);
   };
 
   useEffect(() => {
@@ -9510,6 +9531,7 @@ export default function App({ onSignOut }) {
   const [qaDraft, setQaDraft] = useState("");
   const [qaWithOther, setQaWithOther] = useState(null);
   const [showRelNet, setShowRelNet] = useState(false);
+  const [tourOn, setTourOn] = useState(false); // tutorial de la hoja moderna
   const [relHidden, setRelHidden] = useState({});
   useEffect(() => {
     setQaEdit(null);
@@ -11865,6 +11887,7 @@ export default function App({ onSignOut }) {
       color: beast?.color || classColor(c.f_class),
       Emblem: CLASS_EMBLEMS[c.f_class] || User,
       art: CLASS_ART[c.f_class] || null,
+      pronouns: c.f_pronouns || "",
       traits: TRAITS.map((t) => ({ key: t.key, label: t.label, value: traitOf(t.key) })),
       evasion: c.r_evasion ? Number(c.r_evasion) + (beast?.evasionBonus || 0) + (mods.evasion || 0) + Number(c.f_natural_evade || 0) : "—",
       armorTotal: armor ? armor.score + (mods.armor || 0) : 0,
@@ -11912,6 +11935,7 @@ export default function App({ onSignOut }) {
     },
     setArmor: (n) => updateCharacterField(id, "armor_marked", String(n)),
     openClassic: () => openClassic(id),
+    tour: () => setTourOn(true),
   });
   const modernOpen = view === "ficha" && modernCharId && characters[modernCharId];
   const viewLabel = view === "ajustes" ? "Ajustes" : view === "inicio" ? "General" : NAV_ITEMS.find((n) => n.key === view)?.label;
@@ -22400,7 +22424,17 @@ export default function App({ onSignOut }) {
           {modernOpen && (() => {
             const md = modernData(modernCharId);
             const tab = md.tabs.some((t) => t.key === detailTab) ? detailTab : "general";
-            return <ModernSheet key={modernCharId} d={md} actions={modernActions(modernCharId)} content={renderClassicSheet(modernCharId, true)} tab={tab} fill={tab === "campaign"} onTab={(k) => (setDetailTab(k), setActionPage(0))} />;
+            const closeTour = () => {
+              setTourOn(false);
+              setDetailTab("general");
+              safeSet("onboarding-done", "1", false);
+            };
+            return (
+              <>
+                <ModernSheet key={modernCharId} d={md} actions={modernActions(modernCharId)} content={renderClassicSheet(modernCharId, true)} tab={tab} fill={tab === "campaign"} onTab={(k) => (setDetailTab(k), setActionPage(0))} />
+                {tourOn && <Tour ctx={{ hasPronouns: !!md.pronouns, tabs: md.tabs.map((t) => t.key) }} onTab={(k) => (setDetailTab(k), setActionPage(0))} onClose={closeTour} />}
+              </>
+            );
           })()}
 
           {view === "inicio" && (() => {
