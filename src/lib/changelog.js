@@ -2,6 +2,15 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.14",
+    date: "2026-10-08",
+    title: "Carta de subclase del Guardián de los Elementos",
+    items: [
+      { tag: "mejora", text: "La carta de la mano del mapa tiene el mismo diseño que la de Acciones, con su ilustración." },
+      { tag: "mejora", text: "Soltar la carta en cualquier casilla del mapa la activa y pregunta qué elemento canalizar." },
+    ],
+  },
+  {
     version: "1.13",
     date: "2026-10-08",
     title: "Vida, Estrés y Esperanza en el mapa",

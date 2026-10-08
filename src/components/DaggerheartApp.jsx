@@ -3248,7 +3248,8 @@ const sharedStyles = `
   .mh-fan-card { --s: .5; pointer-events: auto; cursor: grab; touch-action: none; user-select: none; position: relative; width: calc(300px * var(--s)); height: calc(420px * var(--s)); margin: 0 -26px; filter: drop-shadow(0 6px 14px rgba(0,0,0,.5)); transform: translateY(var(--y)) rotate(var(--r)); transform-origin: 50% 120%; transition: transform .15s; }
   .mh-fan-in { position: absolute; left: 0; top: 0; width: 300px; height: 420px; transform: scale(var(--s)); transform-origin: 0 0; }
   .mh-fan-zoom { position: fixed; inset: 0; z-index: 9998; background: rgba(8,6,12,.7); display: flex; align-items: center; justify-content: center; padding: 16px; }
-  .mh-fan-elems { position: absolute; left: 0; right: 0; top: calc(100% + 12px); display: flex; gap: 8px; justify-content: center; }
+  .mh-fan-elems { position: absolute; left: 0; right: 0; top: calc(100% + 12px); display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .mh-fan-ask { flex: 0 0 100%; text-align: center; font: 600 13px Inter, system-ui, sans-serif; color: #fff; text-shadow: 0 1px 4px #000; }
   .mh-fan-elems button { all: unset; box-sizing: border-box; cursor: pointer; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 9px 4px; border-radius: 12px; font: 600 11.5px Inter, system-ui, sans-serif; color: #fff; background: color-mix(in srgb, var(--ec) 30%, #141018); border: 1.5px solid color-mix(in srgb, var(--ec) 70%, transparent); }
   .mh-fan-elems button:hover { background: color-mix(in srgb, var(--ec) 48%, #141018); } .mh-fan-elems button.is-on { background: var(--ec); color: #1a1206; }
   .mh-fan-big { position: relative; width: 300px; height: 420px; max-height: 88vh; --s: 1; }
@@ -6118,16 +6119,20 @@ function FanFace({ c, col }) {
   return (
               <div className="mh-card mh-cardc mh-fan-in" style={{ margin: 0, padding: 0, overflow: "hidden", borderRadius: 22, display: "flex", flexDirection: "column", border: (c.weapon ? "3px" : "2px") + " solid " + col, position: "relative" }}>
                 <div className="mh-cardc-art" style={{ height: 124 }}>
-                  <div className="mh-cardc-noart">
-                    <Art size={50} strokeWidth={1.5} />
-                  </div>
+                  {c.image ? (
+                    <img src={c.image} alt={c.key} />
+                  ) : (
+                    <div className="mh-cardc-noart">
+                      <Art size={50} strokeWidth={1.5} />
+                    </div>
+                  )}
                 </div>
                 <div className="mh-cardc-badge">
-                  {c.weapon ? <span className="mh-cardc-tier" style={{ background: col }}>{TIER_COLORS[c.level]?.label}</span> : <span className="mh-cardc-gem">{c.subclass ? "★" : c.level}</span>}
+                  {c.subclass ? null : c.weapon ? <span className="mh-cardc-tier" style={{ background: col }}>{TIER_COLORS[c.level]?.label}</span> : <span className="mh-cardc-gem">{c.level}</span>}
                 </div>
-                <div style={{ padding: "0 18px", textAlign: "center", flexShrink: 0, marginTop: 16 }}>
+                <div style={{ padding: "0 18px", textAlign: "center", flexShrink: 0, marginTop: c.subclass ? 8 : 16 }}>
                   <FitTitle text={c.key} max={19} min={14} className="mh-serif" style={{ fontWeight: 700, color: "var(--mh-ink)", maxHeight: "2.4em", overflow: "hidden" }} />
-                  <div className="mh-cardc-sub">{c.weapon ? `${c.type} · ${c.hands}` : c.subclass ? `Subclase · ${c.cls}` : `${c.domain} · ${c.type}`}</div>
+                  <div className="mh-cardc-sub">{c.weapon ? `${c.type} · ${c.hands}` : c.subclass ? c.kicker : `${c.domain} · ${c.type}`}</div>
                   <div className="mh-cardc-orn" />
                 </div>
                 <div style={{ flex: 1, minHeight: 0, overflow: "hidden", padding: "10px 18px 12px", display: "flex", flexDirection: "column", justifyContent: c.weapon ? "center" : "flex-start", textAlign: "center", gap: "0.7em", lineHeight: 1.5, fontSize: 12, color: "var(--mh-ink)" }}>
@@ -6177,9 +6182,10 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement }) {
     window.removeEventListener("pointerup", up);
     window.removeEventListener("keydown", key);
     if (!d || cancel) return;
-    if (!d.moved || d.card.subclass) return setOpen(d.card);
+    if (!d.moved) return setOpen(d.card);
     const cell = cellAt(ev.clientX, ev.clientY);
     if (!cell) return;
+    if (d.card.subclass) return setOpen({ ...d.card, choose: true });
     const target = tokens.find((t) => !t.hidden && t.x === cell.x && t.y === cell.y && t.id !== me?.id) || null;
     onUse(d.card, cell, target, rangeOf(cell));
   };
@@ -6245,6 +6251,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement }) {
             <FanFace c={open} col={open.weapon ? TIER_COLORS[open.level]?.color || "#C9A24B" : DOMAIN_COLORS[open.domain] || "#C9A24B"} />
             {open.subclass && onElement && (
               <div className="mh-fan-elems">
+                <span className="mh-fan-ask">{open.choose ? "¿Qué elemento quieres activar?" : "Elige un elemento"}</span>
                 {["Fuego", "Tierra", "Agua", "Aire"].map((el) => {
                   const on = activeElement === el;
                   const EI = HEADER_ELEMENTS[el].Icon;
@@ -6267,8 +6274,8 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement }) {
           </div>
           {drag.cell && (
             <div className="mh-fan-tip" style={{ left: drag.x, top: drag.y }}>
-              {target ? `Objetivo: ${target.name || "Ficha"}` : "Casilla"} {rng ? `(${rng.label})` : "(fuera de alcance)"}
-              <small>Suelta para usar · Esc para cancelar</small>
+              {drag.card.subclass ? "Activar Encarnación Elemental" : <>{target ? `Objetivo: ${target.name || "Ficha"}` : "Casilla"} {rng ? `(${rng.label})` : "(fuera de alcance)"}</>}
+              <small>{drag.card.subclass ? "Suelta en cualquier casilla · Esc para cancelar" : "Suelta para usar · Esc para cancelar"}</small>
             </div>
           )}
         </>
@@ -16491,7 +16498,7 @@ export default function App({ onSignOut }) {
                                             return f ? { key: f.key, level: f.tier, type, damage: f.damage, hands: f.hands === 2 ? "Dos manos" : "Una mano", feature: f.feature, weapon: true } : null;
                                           };
                                           const elSub = me?.f_subclass === "Guardián de los Elementos" ? (SUBCLASSES.Druida || []).find((x) => x.key === "Guardián de los Elementos") : null;
-                                          const subCard = elSub ? { key: elSub.key, subclass: true, cls: "Druida", level: "★", domain: "Sabio", type: "Subclase", text: "Encarnación Elemental: marca un Estrés para canalizar un elemento hasta sufrir daño Grave o tu próximo descanso.", features: (elSub.features || []).filter((x) => ELEM_COL[x.name]) } : null;
+                                          const subCard = elSub ? { key: elSub.key, subclass: true, cls: "Druida", level: "", domain: "Sabio", type: "Subclase", kicker: "Subclase · " + (Number(me?.f_level || 1) <= 1 ? "Fundación" : tierForLevel(me?.f_level || 1) === 2 ? "Especialización" : "Maestría"), image: elSub.image, text: elSub.blurb, features: (elSub.features || []).filter((x) => ELEM_COL[x.name]) } : null;
                                           const cards = [wp(me?.f_primary_weapon, PRIMARY_WEAPONS, "Principal"), wp(me?.f_secondary_weapon, SECONDARY_WEAPONS, "Secundaria"), subCard, ...keys.map((k) => findDomainCardAny(k))].filter(Boolean);
                                           return (
                                             <CardFan
