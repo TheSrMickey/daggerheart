@@ -3302,8 +3302,8 @@ const sharedStyles = `
   @keyframes mh-iso-hover { 0%, 100% { translate: 0 -15px; } 50% { translate: 0 -20px; } }
   .mh-iso-tk.is-elem-bounce .mh-iso-body { animation: mh-elem-bounce .75s cubic-bezier(.3,1.3,.5,1) both; }
   @keyframes mh-elem-bounce { 0% { translate: 0 0; } 30% { translate: 0 -16px; } 55% { translate: 0 0; } 75% { translate: 0 -6px; } 100% { translate: 0 0; } }
-  .mh-iso-tk.is-elem-aire.is-elem-bounce .mh-iso-body { animation: mh-iso-hover 2.6s ease-in-out infinite, mh-aire-bump .8s cubic-bezier(.3,1.2,.5,1) both; }
-  @keyframes mh-aire-bump { 0% { transform: translateY(15px); } 32% { transform: translateY(-14px); } 58% { transform: translateY(2px); } 80% { transform: translateY(-4px); } 100% { transform: translateY(0); } }
+  .mh-iso-tk.is-elem-aire.is-elem-bounce .mh-iso-body { animation: mh-iso-hover 2.6s ease-in-out infinite, mh-aire-bump 1.1s cubic-bezier(.25,.7,.3,1) both; }
+  @keyframes mh-aire-bump { 0% { transform: translateY(15px); } 100% { transform: translateY(0); } }
   .mh-iso-tk.is-burn .mh-iso-body { animation: mh-burn-shake .22s ease 6; filter: drop-shadow(0 0 6px #FF7A2E); }
   @keyframes mh-burn-shake { 25% { translate: -2px 0; } 75% { translate: 2px 0; } }
   .mh-burn-glow { animation: mh-burn-glow 1.9s ease-in .85s both; } @keyframes mh-burn-glow { 0% { opacity: 0; } 30% { opacity: .5; } 100% { opacity: 0; } }

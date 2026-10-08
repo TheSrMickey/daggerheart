@@ -8,6 +8,7 @@ export const CHANGELOG = [
     items: [
       { tag: "mejora", text: "La carta de la mano del mapa tiene el mismo diseño que la de Acciones, con su ilustración." },
       { tag: "mejora", text: "Soltar la carta en cualquier casilla del mapa la activa y pregunta qué elemento canalizar." },
+      { tag: "mejora", text: "Aire: se quita el bote de activación y la ficha se eleva de forma continua hasta flotar." },
     ],
   },
   {
