@@ -4453,6 +4453,21 @@ const sharedStyles = `
   .mh-home-btn:hover { background: #3263d6; }
   .mh-home-btn.is-ghost { background: #ffffff1a; }
   .mh-home-btn.is-ghost:hover { background: #ffffff2a; }
+  .mh-home-news { --ns: #0d0b22; position: relative; overflow: hidden; border-radius: 20px; padding: 34px 32px; min-height: 300px; display: flex; flex-direction: column; justify-content: flex-end; color: #fff; border: 1px solid #ffffff1c; background: var(--ns); box-shadow: 0 18px 40px -24px #E3B04B; }
+  .mh-news-art { position: absolute; inset: 0 0 0 30%; display: flex; }
+  .mh-news-art i { flex: 1.35; margin-left: -9%; background-size: cover; background-position: center 18%; filter: saturate(1.05); -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 28%, #000 72%, transparent 100%); mask-image: linear-gradient(90deg, transparent 0%, #000 28%, #000 72%, transparent 100%); }
+  .mh-news-art i:first-child { margin-left: 0; -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 40%, #000 72%, transparent 100%); mask-image: linear-gradient(90deg, transparent 0%, #000 40%, #000 72%, transparent 100%); }
+  .mh-news-art i:last-child { -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 28%, #000 100%); mask-image: linear-gradient(90deg, transparent 0%, #000 28%, #000 100%); }
+  .mh-home-news::before { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(90deg, var(--ns) 0%, var(--ns) 30%, color-mix(in srgb, var(--ns) 70%, transparent) 52%, color-mix(in srgb, var(--ns) 15%, transparent) 100%), linear-gradient(0deg, color-mix(in srgb, var(--ns) 80%, transparent) 0%, transparent 45%); }
+  .mh-home-news > :not(.mh-news-art) { position: relative; z-index: 2; }
+  .mh-news-tag { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; padding: 4px 11px; border-radius: 999px; color: #E3B04B; background: #E3B04B1f; border: 1px solid #E3B04B66; }
+  .mh-home-news h2 { font-size: 34px; font-weight: 700; margin: 10px 0 6px; color: #fff; }
+  .mh-home-news p { margin: 0; color: #ffffffd0; font-size: 14px; max-width: 470px; line-height: 1.55; } .mh-home-news p b { color: #fff; font-weight: 600; }
+  html[data-mh-theme="light"] .mh-home-news { --ns: #FFFCF6; color: #221C2B; border-color: #DCD2C1; box-shadow: 0 18px 40px -26px #A87A1E; }
+  html[data-mh-theme="light"] .mh-home-news h2 { color: #221C2B; } html[data-mh-theme="light"] .mh-home-news p { color: #4C4458; } html[data-mh-theme="light"] .mh-home-news p b { color: #221C2B; }
+  html[data-mh-theme="light"] .mh-news-tag { color: #8A5E0C; background: #E3B04B26; border-color: #C9A24A88; }
+  html[data-mh-theme="light"] .mh-home-news .mh-home-btn.is-ghost { background: #EAE2D3; color: #221C2B; } html[data-mh-theme="light"] .mh-home-news .mh-home-btn.is-ghost:hover { background: #DFD5C1; }
+  @media (max-width: 720px) { .mh-news-art { inset: 0; opacity: .55; } .mh-home-news h2 { font-size: 26px; } .mh-home-news { padding: 26px 20px; } }
   .mh-home-sec { display: flex; align-items: center; justify-content: space-between; margin: 26px 0 12px; }
   .mh-home-sec h3 { margin: 0; font-size: 16px; font-weight: 700; color: var(--mh-ink); }
   .mh-home-sec h3 i { font-style: normal; font-size: 11px; padding: 2px 7px; border-radius: 10px; background: var(--mh-panel3); color: var(--mh-muted); margin-left: 6px; vertical-align: 2px; }
@@ -22809,22 +22824,24 @@ export default function App({ onSignOut }) {
             return (
               <div className="mh-home">
                 <div className="mh-home-main">
-                  <div className="mh-home-hero" style={{ "--hc": fcol }}>
-                    <span className="mh-home-emb" aria-hidden="true"><FEmblem size={170} strokeWidth={1.1} /></span>
-                    <div className="mh-home-kick">{fch ? "Continúa tu aventura" : "Bienvenido a Enaris"}</div>
-                    <h2 className="mh-serif">{fch ? fch.f_name || "Sin nombre" : "Crea tu primer personaje"}</h2>
+                  <div className="mh-home-news" role="region" aria-label="Novedad: expansión Hope & Fear">
+                    <div className="mh-news-art" aria-hidden="true">
+                      {["bruja", "brujo", "camorrista", "asesino"].map((k) => (
+                        <i key={k} style={{ backgroundImage: "url(/clases/" + k + ".webp)" }} />
+                      ))}
+                    </div>
+                    <span className="mh-news-tag"><Sparkles size={12} /> Nueva expansión disponible</span>
+                    <h2 className="mh-serif">Hope &amp; Fear ya está aquí</h2>
                     <p>
-                      {fch
-                        ? [fch.f_class && fch.f_class + (fch.f_subclass ? " · " + fch.f_subclass : ""), "Nivel " + (fch.f_level || 1), fcamp && fcamp.name].filter(Boolean).join(" · ")
-                        : "Elige clase, ascendencia y comunidad, y empieza a jugar con tu grupo."}
+                      Cuatro clases nuevas para tu mesa: <b>Bruja</b>, <b>Brujo</b>, <b>Camorrista</b> y <b>Asesino</b>, con sus subclases y cartas de dominio. Crea un personaje con ellas y estrena la expansión en tu próxima sesión.
                     </p>
                     <div className="mh-home-cta">
-                      <button type="button" className="mh-home-btn" onClick={() => (fch ? openCharDetail(featId) : setView("ficha"))}>
-                        {fch ? "Abrir ficha" : "Ir a personajes"}
+                      <button type="button" className="mh-home-btn" onClick={() => setView("ficha")}>
+                        Crear un personaje
                       </button>
-                      {fcamp && (
-                        <button type="button" className="mh-home-btn is-ghost" onClick={() => (setViewingCampaignId(fcamp.id), setView("campaigns"))}>
-                          Ir a la campaña
+                      {fch && (
+                        <button type="button" className="mh-home-btn is-ghost" onClick={() => openCharDetail(featId)}>
+                          Abrir {fch.f_name || "mi ficha"}
                         </button>
                       )}
                     </div>
