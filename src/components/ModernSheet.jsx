@@ -116,7 +116,6 @@ export function ModernSheet({ d, actions, content, tab, onTab, fill }) {
               {d.pronouns && <span data-tour="pron"> · {d.pronouns}</span>}
             </p>
           </div>
-          <button type="button" className="mhm-tour-btn" onClick={actions.tour} title="Ver el tutorial de la hoja">? Tutorial</button>
         </div>
         <div className="mhm-traits">
           {d.traits.map((t) => (

@@ -37,7 +37,7 @@ const CLASS_COLORS = {
   Invocador: "#8E6FC4",
   "Cazador de Sangre": "#A8323E",
 };
-const DEFAULT_SETTINGS = { classColors: true };
+const DEFAULT_SETTINGS = { classColors: true, tutorial: false };
 // Texto oscuro o blanco según lo claro que sea el color.
 function onColor(hex) {
   const n = parseInt(hex.slice(1), 16);
@@ -4308,7 +4308,7 @@ const sharedStyles = `
   .mhm-tabs button { all: unset; cursor: pointer; display: flex; align-items: center; gap: 7px; padding: 11px 7px; font-size: 12.5px; font-weight: 500; color: var(--mh-muted); white-space: nowrap; border-bottom: 2px solid transparent; margin-bottom: -1px; } .mhm-tabs.is-compact .is-base:not(.is-on) .lbl { display: none; } .mhm-tabs.is-compact .is-base:not(.is-on) { padding-left: 9px; padding-right: 9px; } .mhm-tabs button:hover { color: var(--mh-ink); } .mhm-tabs .is-on { color: var(--tone, var(--cc)); border-color: var(--tone, var(--cc)); }
   .mhm-plain { width: 100%; padding-bottom: 24px; }
   .mh-root.is-mobile .mhm-plain .mh-sheet-body { padding: 14px 0 0 !important; }
-  @media (max-width: 560px) { .mhm .mhm-traits { grid-template-columns: repeat(2, 1fr); } .mhm-tour-btn { padding: 4px 8px; } }
+  @media (max-width: 560px) { .mhm .mhm-traits { grid-template-columns: repeat(2, 1fr); } }
   .mhm-zoom { width: 100%; overflow: hidden; transition: height .35s ease; }
   .mhm-headwrap { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .35s ease, opacity .25s ease, margin .35s ease; } .mhm-headwrap > .mhm-head { min-height: 0; overflow: hidden; }
   .mhm-headwrap.is-collapsed { grid-template-rows: 0fr; opacity: 0; margin-bottom: -14px; } .mhm-headwrap.is-collapsed > .mhm-head { padding-top: 0; padding-bottom: 0; border-width: 0; }
@@ -4640,8 +4640,6 @@ const sharedStyles = `
   .mh-tour-foot button { background: none; border: 0; color: #b8c4ff; font: inherit; cursor: pointer; padding: 0; }
   .mh-tour-skip { position: fixed; right: 22px; bottom: 20px; padding: 8px 14px; border-radius: 10px; background: #171c36; border: 1px solid #3d4a8a; color: #c9d0f5; font: 600 12px 'Inter', system-ui, sans-serif; cursor: pointer; }
   .mh-tour-skip:hover { border-color: #8FA8FF; color: #fff; }
-  .mhm-tour-btn { margin-left: auto; align-self: flex-start; padding: 5px 11px; border-radius: 9px; border: 1px solid #e9e6f255; background: #0006; color: #fff; font: 600 11px 'Inter', system-ui, sans-serif; cursor: pointer; }
-  .mhm-tour-btn:hover { background: #0009; }
   .mh-jl-item { position: relative; display: grid; grid-template-columns: 1fr auto; gap: 1px 6px; text-align: left; padding: 8px 10px; border: 1px solid var(--mh-line); border-radius: 9px; background: var(--mh-panel); color: var(--mh-ink); cursor: pointer; font-family: inherit; }
   .mh-jl-item:hover { border-color: var(--mh-line2); }
   .mh-jl-item.is-on { border-color: var(--acc); background: color-mix(in srgb, var(--acc) 9%, var(--mh-panel)); }
@@ -8052,8 +8050,8 @@ export default function App({ onSignOut }) {
     // El primer personaje abre la hoja moderna con el tutorial (una sola vez por cuenta).
     const firstEver = Object.keys(characters).length === 0 && !(await safeGet("onboarding-done", false));
     if (firstEver) {
+      updateSetting("tutorial", true);
       openModern(id);
-      setTourOn(true);
     } else openClassic(id);
   };
 
@@ -11938,9 +11936,20 @@ export default function App({ onSignOut }) {
     },
     setArmor: (n) => updateCharacterField(id, "armor_marked", String(n)),
     openClassic: () => openClassic(id),
-    tour: () => setTourOn(true),
   });
   const modernOpen = view === "ficha" && modernCharId && characters[modernCharId];
+  // Con el ajuste «Tutorial» activo, el tutorial arranca al abrir una hoja moderna (una vez por apertura).
+  const tourShownFor = useRef(null);
+  useEffect(() => {
+    if (!modernOpen) {
+      tourShownFor.current = null;
+      return;
+    }
+    if (settings.tutorial && tourShownFor.current !== modernCharId) {
+      tourShownFor.current = modernCharId;
+      setTourOn(true);
+    }
+  }, [modernOpen, modernCharId, settings.tutorial]);
   const viewLabel = view === "ajustes" ? "Ajustes" : view === "inicio" ? "General" : NAV_ITEMS.find((n) => n.key === view)?.label;
   const topLeft = modernOpen ? (
     <span className="mh-toptabs">
@@ -22430,6 +22439,7 @@ export default function App({ onSignOut }) {
             const closeTour = () => {
               setTourOn(false);
               setDetailTab("general");
+              updateSetting("tutorial", false);
               safeSet("onboarding-done", "1", false);
             };
             return (
@@ -23863,6 +23873,29 @@ export default function App({ onSignOut }) {
                       {cls}
                     </span>
                   ))}
+                </div>
+              </div>
+              <div className="mh-card" style={{ margin: 0 }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--mh-panel3)", color: "var(--mh-gold-ink)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Compass size={18} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14.5, fontWeight: 600, color: "var(--mh-ink)" }}>Tutorial de la hoja</div>
+                    <div style={{ fontSize: 12.5, color: "var(--mh-muted)", marginTop: 3, lineHeight: 1.5 }}>
+                      Guía paso a paso por las secciones de la hoja moderna. Al activarlo se muestra al abrir una hoja moderna y se desactiva solo cuando lo terminas u omites.
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={!!settings.tutorial}
+                    aria-label="Tutorial de la hoja"
+                    className="mh-switch"
+                    onClick={() => updateSetting("tutorial", !settings.tutorial)}
+                  >
+                    <span className="mh-switch-knob" />
+                  </button>
                 </div>
               </div>
             </div>
