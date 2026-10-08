@@ -2,6 +2,14 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.13",
+    date: "2026-10-08",
+    title: "Vida, Estrés y Esperanza en el mapa",
+    items: [
+      { tag: "nuevo", text: "Un panel en la esquina superior izquierda del mapa muestra tu Vida, Estrés y Esperanza en casillas, y se pueden marcar o quitar pulsándolas. Cada jugador ve solo el suyo." },
+    ],
+  },
+  {
     version: "1.12",
     date: "2026-10-08",
     title: "Carta de subclase en la mano",

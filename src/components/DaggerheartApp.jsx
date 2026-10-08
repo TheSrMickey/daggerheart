@@ -3273,6 +3273,11 @@ const sharedStyles = `
   .mh-map-overlay .mh-map-legend button { align-self: flex-end; order: -1; }
   .mh-map-zoomwrap { position: relative; aspect-ratio: ${MAP_COLS} / ${MAP_ROWS}; border-radius: 12px; overflow: hidden; }
   .mh-map-fit .mh-map { border-radius: 0; }
+  .mh-map-hud { position: absolute; left: 12px; top: 12px; z-index: 7; padding: 9px 11px; border-radius: 12px; background: rgba(13,13,28,.8); border: 1px solid #ffffff22; backdrop-filter: blur(4px); color: #e8e8f4; display: grid; gap: 5px; font: 600 11px Inter, system-ui, sans-serif; }
+  .mh-hud-row { display: flex; align-items: center; gap: 8px; } .mh-hud-row b { width: 58px; font-weight: 600; color: #bdbdd6; } .mh-hud-row em { margin-left: auto; font-style: normal; color: #fff; min-width: 26px; text-align: right; }
+  .mh-hud-pips { display: flex; gap: 3px; align-items: center; min-width: 78px; }
+  .mh-hud-pip { all: unset; box-sizing: border-box; cursor: pointer; width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid var(--pc); background: transparent; transition: background .15s, transform .15s; } .mh-hud-pip:hover { transform: scale(1.2); } .mh-hud-pip.is-on { background: var(--pc); } .mh-hud-pip:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
+  .mh-hud-pip.is-dia { border-radius: 2px; rotate: 45deg; width: 10px; height: 10px; margin: 0 2px; }
   .mh-map-top { position: absolute; top: 0; right: 0; z-index: 5; pointer-events: none; }
   .mh-map-top > * { pointer-events: auto; }
   .mh-map-ptray { flex-shrink: 0; display: flex; align-items: center; gap: 6px 8px; flex-wrap: wrap; padding: 8px 10px; border: 1px solid var(--mh-line); border-radius: 10px; background: var(--mh-panel2); }
@@ -16439,6 +16444,42 @@ export default function App({ onSignOut }) {
                                         {/* Avisos de tiradas y golpes, centrados en la parte visible del mapa */}
                                         <MapLog log={campaignMap.log} />
                                         <MapCounters list={campaignMap.counters} />
+                                        {myToken && (() => {
+                                          // Vida, Estrés y Esperanza de tu personaje en la esquina del mapa (solo tú ves los tuyos).
+                                          const hc = characters[viewingCharId];
+                                          if (!hc) return null;
+                                          const hm = getEquipmentMods(PRIMARY_WEAPONS.find((w) => w.key === hc.f_primary_weapon), SECONDARY_WEAPONS.find((w) => w.key === hc.f_secondary_weapon), ARMORS.find((a) => a.key === hc.f_armor));
+                                          const hpT = Math.max(0, Number(hc.r_hp || 0) + (hm.hp || 0));
+                                          const hpLeft = Math.max(0, hpT - Number(hc.hp_marked || 0));
+                                          const stT = Math.max(0, Number(hc.r_stress || 0) + (hm.stress || 0));
+                                          const stN = Math.min(stT, Number(hc.stress_marked || 0));
+                                          const hpeT = getHopeMax(hc) + (hm.hope || 0);
+                                          const hpeN = Math.min(hpeT, Number(hc.hope_marked ?? HOPE_DEFAULT));
+                                          const rows = [
+                                            { k: "hp", label: "Vida", n: hpLeft, t: hpT, col: "#E0544A", on: (i) => markHp(viewingCharId, "hp_marked", i, Number(hc.hp_marked || 0)), inv: true },
+                                            { k: "st", label: "Estrés", n: stN, t: stT, col: "#A58BE8", on: (i) => markStressBox(viewingCharId, "stress_marked", i, Number(hc.stress_marked || 0)) },
+                                            { k: "ho", label: "Esperanza", n: hpeN, t: hpeT, col: "#E3B04B", dia: true, on: (i) => updateCharacterField(viewingCharId, "hope_marked", String(hpeN === i + 1 ? i : i + 1)) },
+                                          ];
+                                          return (
+                                            <div className="mh-map-hud" role="group" aria-label="Tu Vida, Estrés y Esperanza">
+                                              {rows.map((r) => (
+                                                <div key={r.k} className="mh-hud-row">
+                                                  <b>{r.label}</b>
+                                                  <span className="mh-hud-pips">
+                                                    {Array.from({ length: r.t }, (_, i) => {
+                                                      const on = i < r.n;
+                                                      const idx = r.inv ? hpT - (on ? i : i + 1) - 1 : i;
+                                                      return (
+                                                        <button key={i} type="button" className={"mh-hud-pip" + (r.dia ? " is-dia" : "") + (on ? " is-on" : "")} style={{ "--pc": r.col }} aria-label={r.label + " " + (i + 1)} onClick={() => r.on(idx)} />
+                                                      );
+                                                    })}
+                                                  </span>
+                                                  <em>{r.n}/{r.t}</em>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          );
+                                        })()}
                                         {myToken && (() => {
                                           const me = characters[viewingCharId];
                                           let keys = [];
