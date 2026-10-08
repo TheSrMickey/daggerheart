@@ -4761,9 +4761,9 @@ const sharedStyles = `
   .mh-jl-count { font-size: 11px; font-weight: 600; color: var(--mh-muted); }
   .mh-jl-line { position: relative; display: flex; flex-direction: column; gap: 6px; padding-left: 16px; }
   .mh-jl-line .mh-jl-item:not(:last-child)::after { content: ""; position: absolute; left: -12px; top: 17px; height: calc(100% - 11px); width: 2px; background: var(--mh-line); z-index: 0; }
-  .mh-bf-grid { display: flex; flex-direction: column; gap: 8px; flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; }
+  .mh-bf-grid { display: flex; flex-direction: column; gap: 8px; flex: 1; min-height: 0; overflow-x: hidden; overflow-y: auto; scrollbar-width: thin; }
   .mh-bf { --bc: var(--acc); position: relative; flex: 1 1 0; min-height: 62px; display: flex; align-items: center; gap: 12px; padding: 8px 12px; border: 1px solid var(--mh-line); border-left: 4px solid var(--bc); border-radius: 12px; background: color-mix(in srgb, var(--bc) 7%, var(--mh-panel)); color: var(--mh-ink); cursor: pointer; font-family: inherit; text-align: left; transition: border-color .15s, background .15s, transform .15s; }
-  .mh-bf:hover { border-color: var(--bc); background: color-mix(in srgb, var(--bc) 12%, var(--mh-panel)); transform: translateX(2px); }
+  .mh-bf:hover { border-color: var(--bc); background: color-mix(in srgb, var(--bc) 12%, var(--mh-panel)); box-shadow: 0 0 0 1px color-mix(in srgb, var(--bc) 55%, transparent) inset; }
   .mh-bf.is-on { border-color: var(--bc); background: color-mix(in srgb, var(--bc) 16%, var(--mh-panel)); box-shadow: 0 0 0 1px var(--bc) inset; }
   .mh-bf.is-locked { opacity: .55; }
   .mh-bf-ico { width: 46px; height: 46px; flex-shrink: 0; display: grid; place-items: center; border-radius: 12px; color: color-mix(in srgb, var(--bc) var(--mh-accent-keep, 100%), #000); background: color-mix(in srgb, var(--bc) 20%, transparent); }
@@ -5035,9 +5035,8 @@ const sharedStyles = `
   .mh-res-hope.mh-res-flash, .mh-res-favor.mh-res-flash { background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--rc) 22%, transparent), transparent 60%); }
   .mh-res-text {
     position: absolute; left: 50%; z-index: 6; pointer-events: none; white-space: nowrap;
-    font-family: "Cinzel", Georgia, serif; font-size: 42px; font-weight: 700; color: var(--rc);
-    -webkit-text-stroke: 1.2px color-mix(in srgb, var(--rc) 45%, #000);
-    text-shadow: 0 0 18px color-mix(in srgb, var(--rc) 90%, transparent), 0 0 4px rgba(255,255,255,.9), 0 3px 0 color-mix(in srgb, var(--rc) 40%, #000);
+    font-family: 'Cinzel', Georgia, serif; font-size: 46px; font-weight: 700; color: color-mix(in srgb, var(--rc) 82%, #fff);
+    text-shadow: 0 0 22px color-mix(in srgb, var(--rc) 85%, transparent), 0 2px 0 #000;
     animation: mh-hit-text 1.2s cubic-bezier(.2,.8,.2,1) both;
   }
   .mh-res-stress.mh-res-text { animation: mh-hit-text 1.2s cubic-bezier(.2,.8,.2,1) both, mh-res-jitter .3s ease 2; }
@@ -8259,10 +8258,8 @@ export default function App({ onSignOut }) {
     setView("ficha");
     // El primer personaje abre la hoja moderna con el tutorial (una sola vez por cuenta).
     const firstEver = Object.keys(characters).length === 0 && !(await safeGet("onboarding-done", false));
-    if (firstEver) {
-      updateSetting("tutorial", true);
-      openModern(id);
-    } else openClassic(id);
+    if (firstEver) updateSetting("tutorial", true);
+    openModern(id);
   };
 
   useEffect(() => {
@@ -9268,7 +9265,6 @@ export default function App({ onSignOut }) {
   }, [acctOpen]);
   const [actionsTabMc, setActionsTabMc] = useState("general"); // pestaña de Acciones con multiclase: general o multi
   const [levelUpId, setLevelUpId] = useState(null); // personaje que está subiendo de nivel
-  const [sheetAsk, setSheetAsk] = useState(null); // personaje por el que se pregunta qué hoja abrir
   const [actionPage, setActionPage] = useState(0);
   const [restMessage, setRestMessage] = useState("");
   const [restPicks, setRestPicks] = useState(null);
@@ -10920,15 +10916,8 @@ export default function App({ onSignOut }) {
     await safeSet("campaign-encounters:" + viewingCampaignId, JSON.stringify(next), true);
   };
 
-  // Hoja clásica (la de siempre).
-  const openClassic = (id) => {
-    setModernCharId(null);
-    setDetailTab("general");
-    setActionPage(0);
-    setViewingCharId(id);
-  };
-  // Al pulsar un personaje se pregunta qué hoja abrir.
-  const openCharDetail = (id) => setSheetAsk(id);
+  // Al pulsar un personaje se abre su hoja (la moderna).
+  const openCharDetail = (id) => openModern(id);
   const openModern = (id) => {
     setDetailTab("general");
     setActionPage(0);
@@ -12280,7 +12269,6 @@ export default function App({ onSignOut }) {
       updateCharacterField(id, "hope_marked", String(cur === i + 1 ? i : i + 1));
     },
     setArmor: (n) => updateCharacterField(id, "armor_marked", String(n)),
-    openClassic: () => openClassic(id),
     levelUp: () => setLevelUpId(id),
   });
   const modernOpen = view === "ficha" && modernCharId && characters[modernCharId];
@@ -22719,25 +22707,6 @@ export default function App({ onSignOut }) {
           />
         );
       })()}
-      {sheetAsk && characters[sheetAsk] && (
-        <div className="mh-sheetask-bg" onClick={() => setSheetAsk(null)}>
-          <div className="mh-sheetask" role="dialog" aria-label="Elegir hoja de personaje" onClick={(e) => e.stopPropagation()}>
-            <h3 className="mh-serif">¿Qué hoja quieres abrir?</h3>
-            <p>{characters[sheetAsk].f_name || "Tu personaje"}</p>
-            <div className="mh-sheetask-opts">
-              <button type="button" onClick={() => (openClassic(sheetAsk), setSheetAsk(null))}>
-                <b>Hoja clásica</b>
-                <span>La de siempre, con todas las reglas y herramientas.</span>
-              </button>
-              <button type="button" className="is-new" onClick={() => (openModern(sheetAsk), setSheetAsk(null))}>
-                <b>Hoja moderna <i>Nueva</i></b>
-                <span>Dentro de la columna central, con tu menú y tus amigos a la vista.</span>
-              </button>
-            </div>
-            <button type="button" className="mh-sheetask-x" onClick={() => setSheetAsk(null)}>Cancelar</button>
-          </div>
-        </div>
-      )}
 
       {/* Menú lateral (arriba en móvil). Con una hoja de personaje abierta se oculta en escritorio. */}
       {!(viewingCharId && !isMobile) && (
@@ -23686,7 +23655,7 @@ export default function App({ onSignOut }) {
                           if (!ch) return null;
                           return (
                             <div key={id} className="mh-card" style={{ margin: 0, padding: "14px 16px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
-                              <div style={{ cursor: "pointer" }} onClick={() => openClassic(id)}>
+                              <div style={{ cursor: "pointer" }} onClick={() => openModern(id)}>
                                 <div className="mh-serif" style={{ fontSize: 15, fontWeight: 600 }}>{ch.f_name || "Sin nombre"}</div>
                                 <div style={{ fontSize: 11.5, color: "var(--mh-muted)" }}>
                                   {ch.f_class ? "Nivel " + (ch.f_level || "1") + " · " + ch.f_class : "Sin clase asignada"}

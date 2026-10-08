@@ -115,7 +115,7 @@ export async function loadSocial(): Promise<SocialState> {
     for (const f of friends) {
       const row = (data ?? []).find((r) => r.key === `pr:${f.id}`);
       const v = row ? parse<Presence>(row.value) : null;
-      if (v && !v.off && now - v.at < 150000) {
+      if (v && !v.off && now - v.at < 40000) {
         f.status = v.away ? "away" : "on";
         f.since = v.act;
         if (v.cls) f.playing = v.cls;
@@ -196,7 +196,7 @@ export async function markNoticesRead(list: Notice[]) {
   }
 }
 
-// Presencia propia: latido cada 30 s con la clase de la hoja abierta (si la hay) y si estás ausente
+// Presencia propia: latido cada 12 s con la clase de la hoja abierta (si la hay) y si estás ausente
 // (10 min sin tocar nada, o con la pestaña en segundo plano).
 const AWAY_MS = 10 * 60000;
 let presenceCls: string | null = null;
@@ -214,8 +214,12 @@ async function publishPresence(off = false) {
 export function startPresence() {
   if (presenceTimer || typeof window === "undefined") return;
   const touch = () => {
+    // Al volver de estar ausente se avisa al momento, sin esperar al siguiente latido.
+    const wasAway = Date.now() - lastActive > AWAY_MS;
     lastActive = Date.now();
+    if (wasAway) void publishPresence();
   };
+  const bye = () => void publishPresence(true);
   const vis = () => {
     if (!document.hidden) touch();
     void publishPresence();
@@ -223,11 +227,13 @@ export function startPresence() {
   const evs = ["pointerdown", "pointermove", "keydown", "wheel", "touchstart"] as const;
   evs.forEach((e) => window.addEventListener(e, touch, { passive: true }));
   document.addEventListener("visibilitychange", vis);
+  window.addEventListener("pagehide", bye);
   stopListeners = () => {
     evs.forEach((e) => window.removeEventListener(e, touch));
     document.removeEventListener("visibilitychange", vis);
+    window.removeEventListener("pagehide", bye);
   };
-  presenceTimer = setInterval(() => void publishPresence(), 30000);
+  presenceTimer = setInterval(() => void publishPresence(), 12000);
   void publishPresence();
 }
 export function stopPresence() {

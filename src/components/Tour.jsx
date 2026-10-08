@@ -20,7 +20,7 @@ const B4 = "Pestañas de clase";
 // when: (ctx) => boolean decide si el paso se muestra (según pronombres, pestañas disponibles…).
 const STEPS = [
   { block: B1, tab: "general", title: "Nivel", text: "Pulsa el escudo para ver tu nivel y subir al siguiente cuando toque: cada subida te da mejoras y nuevas cartas.", target: Q(".mhm-level"), pad: 8 },
-  { block: B1, tab: "general", title: "Nombre", text: "El nombre de tu personaje. Puedes cambiarlo cuando quieras desde la hoja clásica.", target: Q(".mhm-head-top h2"), pad: 8 },
+  { block: B1, tab: "general", title: "Nombre", text: "El nombre de tu personaje.", target: Q(".mhm-head-top h2"), pad: 8 },
   { block: B1, tab: "general", title: "Clase y subclase", text: "La clase define tus dominios y habilidades; la subclase añade características propias y desbloquea pestañas extra.", target: Q("[data-tour=cls]"), pad: 8 },
   { block: B1, tab: "general", title: "Pronombres", text: "Cómo se refieren a tu personaje. Los verán tus compañeros en la campaña.", target: Q("[data-tour=pron]"), pad: 6, when: (c) => c.hasPronouns },
   {

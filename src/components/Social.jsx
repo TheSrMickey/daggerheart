@@ -5,7 +5,7 @@ import { Bell, Search, UserPlus, Check, X, UserMinus, Star, MoreHorizontal } fro
 import { storageGet, storageSet } from "@/lib/storage";
 import { loadSocial, searchPeople, sendRequest, respond, removeFriend, markNoticesRead } from "@/lib/social";
 
-// Estado compartido entre la campana y el panel de amigos (se refresca cada 20 s y al volver a la pestaña).
+// Estado compartido entre la campana y el panel de amigos (se refresca cada 6 s con la pestaña visible y al volver a ella).
 const EMPTY = { me: null, friends: [], incoming: [], outgoing: [], notices: [] };
 let state = EMPTY;
 const listeners = new Set();
@@ -24,7 +24,7 @@ const subscribe = (l) => {
   if (listeners.size === 1) {
     state = EMPTY; // nada de la cuenta anterior mientras carga
     refreshSocial();
-    timer = setInterval(refreshSocial, 20000);
+    timer = setInterval(() => !document.hidden && refreshSocial(), 6000);
     document.addEventListener("visibilitychange", refreshSocial);
   }
   return () => {
