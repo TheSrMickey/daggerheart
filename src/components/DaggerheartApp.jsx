@@ -4407,7 +4407,6 @@ const sharedStyles = `
   html[data-mh-theme="light"] .mhm-head .mh-htag { color: color-mix(in srgb, var(--tag) 70%, #000); background: color-mix(in srgb, var(--tag) 16%, #FFFCF6e6); }
   html[data-mh-theme="light"] .mhm-head .mh-htag.is-active { background: color-mix(in srgb, var(--tag) 28%, #FFFCF6e6); }
   .mhm-head.is-multi { background: linear-gradient(90deg, color-mix(in srgb, var(--cc) 44%, #0d1a1a) 0%, #0c0c20 50%, color-mix(in srgb, var(--cc2) 44%, #0d1a1a) 100%); border-color: color-mix(in srgb, var(--cc2) 35%, #ffffff14); }
-  .mh-arows-few > .mh-arow { flex: 0 0 auto; min-height: 66px; }
   .mh-atabs { display: flex; gap: 4px; padding: 3px; border-radius: 10px; background: var(--mh-panel2); border: 1px solid var(--mh-line); flex-shrink: 0; }
   .mh-atabs button { all: unset; box-sizing: border-box; flex: 1; min-width: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 8px; border-radius: 7px; font-size: 12px; font-weight: 500; color: var(--mh-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .mh-atabs button:hover { color: var(--mh-ink); } .mh-atabs button:focus-visible { outline: 2px solid #E3B04B; outline-offset: 1px; }
@@ -14129,7 +14128,7 @@ export default function App({ onSignOut }) {
                             flying={conditions.includes("Volando")}
                             retracted={conditions.includes("Retraído")}
                             >
-                              <div className={showMc ? "mh-arows-few" : undefined} style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, minHeight: 0 }}>
+                              <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, minHeight: 0 }}>
                                 {mcAct && (
                                   <div className="mh-atabs" role="tablist" aria-label="Acciones">
                                     <button type="button" role="tab" aria-selected={!showMc} className={!showMc ? "is-on" : ""} onClick={() => setActionsTabMc("general")}>
