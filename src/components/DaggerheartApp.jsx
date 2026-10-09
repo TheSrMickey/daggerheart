@@ -11,6 +11,7 @@ import { Tour } from "./Tour";
 import { LevelUpDialog, parseAdvances, ownedCards, getMulticlass, MAX_LEVEL, rankOf } from "./LevelUp";
 import { RulesPanel } from "./MapRules";
 import { Changelog } from "./Changelog";
+import { SpotPlayer, SpotPause, SpotPanel, normSpot, liveHands, kindOf } from "./Spotlight";
 import { APP_VERSION } from "@/lib/changelog";
 import { setPresence, startPresence, stopPresence } from "@/lib/social";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
@@ -3274,6 +3275,34 @@ const sharedStyles = `
   .mh-map-overlay .mh-map-legend button { align-self: flex-end; order: -1; }
   .mh-map-zoomwrap { position: relative; aspect-ratio: ${MAP_COLS} / ${MAP_ROWS}; border-radius: 12px; overflow: hidden; }
   .mh-map-fit .mh-map { border-radius: 0; }
+  .mh-spot-ui { position: absolute; left: 12px; top: 112px; z-index: 7; display: flex; flex-direction: column; gap: 6px; max-width: 250px; }
+  .mh-spot-btn { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 7px; padding: 8px 13px; border-radius: 10px; background: rgba(13,13,28,.82); border: 1px solid #ffffff2a; backdrop-filter: blur(4px); color: #fff; font: 600 12.5px Inter, system-ui, sans-serif; }
+  .mh-spot-btn:hover:not(.is-off) { border-color: #E3B04B; } .mh-spot-btn.is-on { background: #E3B04B; border-color: #E3B04B; color: #241a05; } .mh-spot-btn.is-off, .mh-spot-btn:disabled { opacity: .55; cursor: default; }
+  .mh-spot-kinds { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; padding: 7px; border-radius: 12px; background: rgba(13,13,28,.92); border: 1px solid #ffffff22; width: 250px; animation: mh-fade-in .15s ease both; }
+  .mh-spot-kinds button { all: unset; box-sizing: border-box; cursor: pointer; padding: 7px 9px; border-radius: 9px; border: 1px solid #ffffff22; background: #ffffff0d; color: #fff; font: 600 12px Inter, system-ui, sans-serif; display: flex; flex-direction: column; gap: 1px; } .mh-spot-kinds button:hover { border-color: #E3B04B; background: #E3B04B22; } .mh-spot-kinds button.is-urg { border-color: #D9644E88; } .mh-spot-kinds small { font-weight: 400; color: #bdbdd6; font-size: 10.5px; }
+  .mh-spot-got { position: absolute; left: 50%; top: 12px; translate: -50% 0; z-index: 9; width: min(300px, calc(100% - 24px)); padding: 10px 12px; border-radius: 12px; background: linear-gradient(90deg, #E3B04B55, #E3B04B22); border: 1px solid #E3B04Baa; color: #fff; display: flex; flex-direction: column; gap: 3px; backdrop-filter: blur(4px); animation: mh-fade-in .25s ease both; } .mh-spot-got small { color: #e6dcc0; font-size: 11px; }
+  .mh-spot-got button { all: unset; cursor: pointer; margin-top: 4px; text-align: center; padding: 6px; border-radius: 8px; background: #E3B04B; color: #241a05; font: 700 12px Inter, system-ui, sans-serif; }
+  .mh-spot-pause { position: absolute; inset: 0; z-index: 30; display: grid; place-items: center; background: rgba(4,4,15,.62); backdrop-filter: blur(2px); animation: mh-fade-in .25s ease both; }
+  .mh-spot-pause > div { padding: 14px 24px; border-radius: 14px; background: #2a1a1a; border: 1px solid #E0544A; text-align: center; color: #fff; box-shadow: 0 12px 30px #000a; } .mh-spot-pause b { display: block; font-size: 16px; color: #ff9a86; } .mh-spot-pause small { color: #bdbdd6; font-size: 12.5px; }
+  .mh-spot-ring { transform-box: fill-box; transform-origin: 50% 50%; animation: mh-spot-pulse 2.2s ease-out infinite; } .mh-spot-ring.is-2 { animation-delay: -1.1s; }
+  @keyframes mh-spot-pulse { 0% { scale: .8; opacity: .95; } 100% { scale: 1.7; opacity: 0; } }
+  .mh-iso-tk .mh-iso-body { transition: translate .6s cubic-bezier(.3,1.3,.5,1); } .mh-iso-tk.is-spot .mh-iso-body { translate: 0 -8px; }
+  .mh-iso-hand { animation: mh-hand-in .35s cubic-bezier(.3,1.5,.5,1) both; transform-box: fill-box; transform-origin: 50% 100%; } @keyframes mh-hand-in { from { opacity: 0; scale: .4; } to { opacity: 1; scale: 1; } }
+  .mh-spot-dim { animation: mh-fade-in .5s ease both; }
+  .mh-spot-panel { margin-top: 10px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel); font-size: 13px; display: flex; flex-direction: column; gap: 7px; }
+  .mh-spot-h { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; } .mh-spot-h b { color: var(--mh-ink); } .mh-spot-h span { color: var(--mh-muted); font-size: 12px; margin-right: auto; }
+  .mh-spot-now { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 9px; background: var(--mh-panel2); } .mh-spot-now span { flex: 1; } .mh-spot-now small { color: var(--mh-muted); margin-left: 6px; } .mh-spot-none { color: var(--mh-muted); font-style: italic; }
+  .mh-spot-q { display: flex; align-items: center; gap: 9px; padding: 7px 10px; border-radius: 9px; background: var(--mh-panel2); } .mh-spot-q.is-urg { border: 1px solid #E0544A88; }
+  .mh-spot-q i { width: 22px; height: 22px; border-radius: 50%; background: #E3B04B; color: #241a05; font: 700 12px/22px Inter, system-ui, sans-serif; text-align: center; font-style: normal; flex: none; } .mh-spot-q.is-urg i { background: #E0544A; color: #fff; }
+  .mh-spot-q span { flex: 1; min-width: 0; } .mh-spot-q b { display: block; color: var(--mh-ink); } .mh-spot-q small { color: var(--mh-muted); font-size: 11.5px; }
+  .mh-spot-go { all: unset; cursor: pointer; padding: 5px 11px; border-radius: 8px; background: #E3B04B; color: #241a05; font: 700 12px Inter, system-ui, sans-serif; } .mh-spot-go:hover { filter: brightness(1.08); } .mh-spot-go:disabled { opacity: .45; cursor: not-allowed; }
+  .mh-spot-ctl { display: flex; gap: 6px; flex-wrap: wrap; } .mh-spot-ctl .is-on { border-color: #E3B04B !important; color: var(--mh-gold-ink) !important; } .mh-spot-ctl .is-danger { border-color: #E0544A88 !important; color: #E0544A !important; }
+  .mh-spot-alert { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 9px; } .mh-spot-alert.is-pause { background: #3a1c1c; border: 1px solid #E0544A88; } .mh-spot-alert b { flex: 1; color: #ff9a86; }
+  .mh-spot-idle { padding: 8px 10px; border-radius: 9px; background: color-mix(in srgb, #E3B04B 14%, var(--mh-panel2)); border: 1px solid #E3B04B66; display: flex; flex-direction: column; gap: 6px; } .mh-spot-idle > b { color: var(--mh-gold-ink); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+  .mh-spot-irow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; } .mh-spot-irow span { flex: 1; min-width: 160px; color: var(--mh-ink2); } .mh-spot-irow b { color: var(--mh-ink); }
+  .mh-spot-cfg { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; border-radius: 9px; border: 1px dashed var(--mh-line2); }
+  .mh-spot-sw { display: flex; align-items: center; gap: 10px; cursor: pointer; } .mh-spot-sw span { flex: 1; } .mh-spot-sw b { display: block; font-weight: 600; color: var(--mh-ink); } .mh-spot-sw small { color: var(--mh-muted); font-size: 11.5px; } .mh-spot-sw .mh-input { width: auto; min-width: 100px; }
+  .mh-spot-foot { font-size: 11.5px; color: var(--mh-muted); }
   .mh-map-hud { position: absolute; left: 12px; top: 12px; z-index: 7; padding: 9px 11px; border-radius: 12px; background: rgba(13,13,28,.8); border: 1px solid #ffffff22; backdrop-filter: blur(4px); color: #e8e8f4; display: grid; gap: 5px; font: 600 11px Inter, system-ui, sans-serif; }
   .mh-hud-row { display: flex; align-items: center; gap: 8px; } .mh-hud-row b { width: 58px; font-weight: 600; color: #bdbdd6; } .mh-hud-row em { margin-left: auto; font-style: normal; color: #fff; min-width: 26px; text-align: right; }
   .mh-hud-pips { display: flex; gap: 3px; align-items: center; min-width: 78px; }
@@ -6340,7 +6369,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement }) {
   );
 }
 
-function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChange, hideIsoBtn, menuFor, fx, efx, hfx, bg, tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
+function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChange, hideIsoBtn, menuFor, fx, efx, hfx, spot, bg, tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
   const ref = useRef(null);
   const dragRef = useRef(null);
   const [drag, setDrag] = useState(null);
@@ -6530,7 +6559,7 @@ function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChang
   const at = (x, y) => ({ left: (x * 100) / MAP_COLS + "%", top: (y * 100) / MAP_ROWS + "%", width: 100 / MAP_COLS + "%", height: 100 / MAP_ROWS + "%" });
 
   if (iso)
-    return <IsoBoard fog={fog} fogView={fogView} areas={areas} areaTool={areaTool} log={log} hideIsoBtn={hideIsoBtn} menuFor={menuFor} anim={anim} eAnim={eAnim} hAnim={hAnim} tokens={tokens} props={props} terrain={terrain} stampTool={stampTool} onStamp={onStamp} onUnstamp={onUnstamp} canMove={canMove} onMove={onMove} selectedId={selectedId} onSelect={onSelect} onPick={onPick} compact={compact} onToggle={toggleIso} />;
+    return <IsoBoard fog={fog} fogView={fogView} areas={areas} areaTool={areaTool} log={log} hideIsoBtn={hideIsoBtn} menuFor={menuFor} anim={anim} eAnim={eAnim} hAnim={hAnim} spot={spot} tokens={tokens} props={props} terrain={terrain} stampTool={stampTool} onStamp={onStamp} onUnstamp={onUnstamp} canMove={canMove} onMove={onMove} selectedId={selectedId} onSelect={onSelect} onPick={onPick} compact={compact} onToggle={toggleIso} />;
 
   return (
     <div
@@ -6695,7 +6724,7 @@ function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChang
 
 // Tablero isométrico tipo diorama: losetas con relieve, decorados y fichas de pie.
 // Usa los mismos datos que el tablero plano (fichas, decorados y terreno).
-function IsoBoard({ fog, fogView = "player", areas = [], areaTool, log, hideIsoBtn, menuFor, anim, eAnim, hAnim, tokens: tokensIn, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact, onToggle }) {
+function IsoBoard({ fog, fogView = "player", areas = [], areaTool, log, hideIsoBtn, menuFor, anim, eAnim, hAnim, spot, tokens: tokensIn, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact, onToggle }) {
   const tokens = useSettledElem(tokensIn);
   const S = 34;
   const OX = MAP_ROWS * S + S * 0.6;
@@ -6753,6 +6782,9 @@ function IsoBoard({ fog, fogView = "player", areas = [], areaTool, log, hideIsoB
   const steps = useMoveFx(tokens.map((t) => [t.id, t.x, t.y]));
   const vis = useVisFx(tokens);
   const elemBounce = useElemFx(tokens);
+  const spotSt = normSpot(spot);
+  const spotHands = Object.fromEntries(liveHands(spotSt).map((h, i) => [h.charId, { n: i + 1, kind: h.kind }]));
+  const spotTok = spotSt.focus ? tokens.find((t) => t.id === spotSt.focus.tokenId && !t.vanished) : null;
   // Zonas de los elementos: el Fuego y el Agua marcan las casillas cuerpo a cuerpo (cuadradas) y todos marcan la casilla de la ficha.
   const zones = {};
   const putZone = (x, y, el, self) => {
@@ -6961,7 +6993,7 @@ function IsoBoard({ fog, fogView = "player", areas = [], areaTool, log, hideIsoB
     return (
       <g
         key={t.id}
-        className={"mh-iso-tk" + (t.elem ? " is-elem-" + t.elem.toLowerCase() : "") + (elemBounce[t.id] ? " is-elem-bounce" : "") + (eAnim && eAnim.kind === "burn" && eAnim.to === t.id ? " is-burn" : "") + (hAnim && hAnim.to === t.id ? " is-hurt" : "") + (movable ? " is-movable" : "") + (drag?.id === t.id && drag.moved ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") : "") + (steps[t.id] && !(anim && anim.from === t.id) && !(droppedRef.current && droppedRef.current.id === t.id && Date.now() < droppedRef.current.until) ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
+        className={"mh-iso-tk" + (t.elem ? " is-elem-" + t.elem.toLowerCase() : "") + (elemBounce[t.id] ? " is-elem-bounce" : "") + (eAnim && eAnim.kind === "burn" && eAnim.to === t.id ? " is-burn" : "") + (hAnim && hAnim.to === t.id ? " is-hurt" : "") + (spotTok && spotTok.id === t.id ? " is-spot" : "") + (movable ? " is-movable" : "") + (drag?.id === t.id && drag.moved ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") : "") + (steps[t.id] && !(anim && anim.from === t.id) && !(droppedRef.current && droppedRef.current.id === t.id && Date.now() < droppedRef.current.until) ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
         style={anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); if (!tg) return undefined; const [tx, ty] = P(tg.x + 0.5, tg.y + 0.5, tAt(tg.x, tg.y).z); return { "--ax": tx - cx + "px", "--ay": ty - cy + "px" }; })() : steps[t.id] ? (() => { const st = steps[t.id]; const [ox, oy] = P(st.fx + 0.5, st.fy + 0.5, tAt(st.fx, st.fy).z); return { "--mx": ox - cx + "px", "--my": oy - cy + "px" }; })() : undefined}
         onPointerDown={(e) => tokenDown(e, t)}
         onContextMenu={(e) => openMenu(e, t)}
@@ -7093,6 +7125,29 @@ function IsoBoard({ fog, fogView = "player", areas = [], areaTool, log, hideIsoB
             ))}
             <ellipse cx={cx - S * 0.34} cy={cy - S * 0.6} rx={S * 0.09} ry={S * 0.05} fill="#7fcf86" />
             <ellipse cx={cx + S * 0.34} cy={cy - S * 0.3} rx={S * 0.09} ry={S * 0.05} fill="#7fcf86" />
+          </g>
+        )}
+        {spotTok && spotTok.id === t.id && !t.vanished && (
+          <g className="mh-iso-spotlight" pointerEvents="none">
+            <defs>
+              <linearGradient id="spot-cone" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stopColor="#ffe9a8" stopOpacity="0" />
+                <stop offset="1" stopColor="#ffe9a8" stopOpacity=".42" />
+              </linearGradient>
+            </defs>
+            <path d={`M${cx - S * 0.3} ${cy - S * 5} L${cx + S * 0.3} ${cy - S * 5} L${cx + S * 1.15} ${cy} L${cx - S * 1.15} ${cy}Z`} fill="url(#spot-cone)" />
+            <ellipse cx={cx} cy={cy + 1} rx={S * 0.95} ry={S * 0.46} fill="#ffe9a8" fillOpacity=".18" />
+            <ellipse className="mh-spot-ring" cx={cx} cy={cy + 1} rx={S * 0.6} ry={S * 0.3} fill="none" stroke="#ffe9a8" strokeWidth="2.6" />
+            <ellipse className="mh-spot-ring is-2" cx={cx} cy={cy + 1} rx={S * 0.6} ry={S * 0.3} fill="none" stroke="#ffe9a8" strokeWidth="1.6" />
+          </g>
+        )}
+        {t.kind === "pc" && spotHands[t.charId] && !t.vanished && (
+          <g className="mh-iso-hand" pointerEvents="none">
+            <rect x={cx - S * 0.42} y={cy - S * 2.05} width={S * 0.84} height={S * 0.72} rx={S * 0.22} fill={kindOf(spotHands[t.charId].kind).urgent ? "#E0544A" : "#E3B04B"} />
+            <path d={`M${cx - S * 0.1} ${cy - S * 1.34} L${cx + S * 0.04} ${cy - S * 1.15} L${cx + S * 0.16} ${cy - S * 1.34}Z`} fill={kindOf(spotHands[t.charId].kind).urgent ? "#E0544A" : "#E3B04B"} />
+            <text x={cx} y={cy - S * 1.5} textAnchor="middle" fontSize={S * 0.5}>{kindOf(spotHands[t.charId].kind).icon}</text>
+            <circle cx={cx + S * 0.4} cy={cy - S * 2.02} r={S * 0.22} fill="#241a05" stroke="#E3B04B" strokeWidth="1.5" />
+            <text x={cx + S * 0.4} y={cy - S * 1.94} textAnchor="middle" fontSize={S * 0.25} fontWeight="700" fill="#E3B04B" fontFamily="Inter, system-ui, sans-serif">{spotHands[t.charId].n}</text>
           </g>
         )}
         {hAnim && hAnim.to === t.id && !t.vanished && (
@@ -7308,6 +7363,18 @@ function IsoBoard({ fog, fogView = "player", areas = [], areaTool, log, hideIsoB
                   </g>
                 );
               })}
+            </g>
+          );
+        })()}
+        {spotTok && (() => {
+          const [fx0, fy0] = P(spotTok.x + 0.5, spotTok.y + 0.5, tAt(spotTok.x, spotTok.y).z);
+          return (
+            <g pointerEvents="none" className="mh-spot-dim">
+              <mask id="spot-mask">
+                <rect x="-50" y="-50" width={W + 100} height={H + 100} fill="#fff" />
+                <ellipse cx={fx0} cy={fy0 - S * 0.4} rx={S * 3.4} ry={S * 2.1} fill="#000" />
+              </mask>
+              <rect x="-50" y="-50" width={W + 100} height={H + 100} fill="#04040f" fillOpacity=".5" mask="url(#spot-mask)" />
             </g>
           );
         })()}
@@ -10838,6 +10905,36 @@ export default function App({ onSignOut }) {
     pushMapLog(campaignId, attacker + " golpea a " + foe.name + ": " + dmg + " de daño (" + SEVERITY_LABEL[sev] + ") · " + sev + " PV · " + marked + "/" + max + (marked >= max ? " · ¡Derrotado!" : ""), marked >= max ? "ko" : "dmg");
   };
 
+  // Foco de la mesa: todo se guarda en el campo «spot» del estado del mapa.
+  const spotWrite = (campId, fn) => (campId ? mutateMap(campId, (cur) => { const sp = normSpot(cur); return { ...fn(sp), t0: sp.t0 || Date.now() }; }, "spot") : null);
+  const raiseHand = (campId, charId, name, kind) => {
+    spotWrite(campId, (sp) => {
+      if (sp.mode !== "normal") return sp;
+      const k = kindOf(kind);
+      const rest = sp.settings.oneHand ? sp.hands.filter((h) => h.charId !== charId) : sp.hands;
+      return { ...sp, hands: [...rest, { charId, name, kind, at: Date.now(), urgent: !!k.urgent }] };
+    });
+    pushMapLog(campId, "✋ " + name + " levanta la mano: " + kindOf(kind).label.toLowerCase(), "info");
+    if (kind === "react") postCampaignEvent(charId, "⚡ Pide reaccionar");
+  };
+  const lowerHand = (campId, charId) => spotWrite(campId, (sp) => ({ ...sp, hands: sp.hands.filter((h) => h.charId !== charId) }));
+  const giveSpotFocus = (campId, tokenId, charId, name) => {
+    spotWrite(campId, (sp) => ({
+      ...sp,
+      focus: { tokenId, charId: charId || null, name: name || "", since: Date.now() },
+      last: charId ? { ...sp.last, [charId]: Date.now() } : sp.last,
+      hands: sp.settings.dropHand && charId ? sp.hands.filter((h) => h.charId !== charId) : sp.hands,
+    }));
+    pushMapLog(campId, "✨ " + (name || "Una ficha") + " tiene el foco", "info");
+  };
+  const clearSpotFocus = (campId, who) => {
+    spotWrite(campId, (sp) => ({ ...sp, focus: null }));
+    pushMapLog(campId, who ? "✔ " + who + " ha terminado su turno de foco" : "El foco se apaga", "info");
+  };
+  const setSpotMode = (campId, mode) => {
+    spotWrite(campId, (sp) => ({ ...sp, mode }));
+    pushMapLog(campId, mode === "paused" ? "⏸ El DJ interrumpe la mesa" : mode === "silent" ? "🔇 El DJ pide silencio" : "▶ La mesa continúa", "info");
+  };
   // Mostrar u ocultar criaturas a los jugadores (independiente de la niebla).
   const setCreatureVis = (ids, hide) => {
     if (!viewingCampaignId || !ids.length) return;
@@ -12044,6 +12141,8 @@ export default function App({ onSignOut }) {
   // Llamado del Valiente · Estar a la Altura (Especialización): con 2 o menos PV sin marcar, d20 como Dado de Esperanza.
   const riseToChallenge = (c) => !!c && c.f_subclass === "Llamado del Valiente" && tierForLevel(c.f_level || 1) >= 2 && Number(c.r_hp || 0) - Number(c.hp_marked || 0) <= 2;
   const rollTraitCheck = (charId, traitLabel, traitValue, weapon, cardContext, advantage) => {
+    // El DJ ha interrumpido la mesa: nadie tira hasta que reanude.
+    if (!gmViewing && sheetCampaignId && normSpot(campaignMapRef.current.spot).mode === "paused") return;
     // En una campaña con enemigos en el tablero, primero se elige a quién se ataca.
     if (weapon && !weapon.targetChosen && sheetCampaignId) {
       const foes = mapTokensView(campaignMap.tokens || []).filter((t) => (t.kind === "foe" || t.kind === "npc") && !t.gmHidden && !fogAt(campaignMap, t.x, t.y)).map((t) => ({ ...t, reach: reachInfo(charId, weapon.name, t) }));
@@ -16505,7 +16604,7 @@ export default function App({ onSignOut }) {
                                             bg={scene.image}
                                             props={campaignMap.props || []}
                                             terrain={campaignMap.terrain || []}
-                                            fx={campaignMap.fx} efx={campaignMap.efx} hfx={campaignMap.hfx}
+                                            fx={campaignMap.fx} efx={campaignMap.efx} hfx={campaignMap.hfx} spot={campaignMap.spot}
                                             iso={mapIso}
                                             onIsoChange={toggleMapIso}
                                             hideIsoBtn
@@ -16514,7 +16613,7 @@ export default function App({ onSignOut }) {
                                             areas={campaignMap.areas || []}
                                             areaTool={areaTool && areaTool.campaignId === charCampaign.id ? { onPlace: (x, y) => placeArea(areaTool, x, y) } : null}
                                             tokens={mapTokens}
-                                            canMove={(t) => (t.kind === "pc" && t.charId === viewingCharId) || (t.kind === "pet" && t.ownerCharId === viewingCharId)}
+                                            canMove={(t) => normSpot(campaignMap.spot).mode !== "paused" && ((t.kind === "pc" && t.charId === viewingCharId) || (t.kind === "pet" && t.ownerCharId === viewingCharId))}
                                             onMove={(id, x, y) => moveToken(charCampaign.id, id, x, y)}
                                             selectedId={mapSel}
                                             onSelect={setMapSel}
@@ -16525,6 +16624,16 @@ export default function App({ onSignOut }) {
                                         {/* Avisos de tiradas y golpes, centrados en la parte visible del mapa */}
                                         <MapLog log={campaignMap.log} />
                                         <MapCounters list={campaignMap.counters} />
+                                        <SpotPause spot={campaignMap.spot} />
+                                        {myToken && (
+                                          <SpotPlayer
+                                            spot={campaignMap.spot}
+                                            charId={viewingCharId}
+                                            onRaise={(kind) => raiseHand(charCampaign.id, viewingCharId, characters[viewingCharId]?.f_name || "Jugador", kind)}
+                                            onLower={() => lowerHand(charCampaign.id, viewingCharId)}
+                                            onDone={() => clearSpotFocus(charCampaign.id, characters[viewingCharId]?.f_name)}
+                                          />
+                                        )}
                                         {myToken && (() => {
                                           // Vida, Estrés y Esperanza de tu personaje en la esquina del mapa (solo tú ves los tuyos).
                                           const hc = characters[viewingCharId];
@@ -24207,7 +24316,7 @@ export default function App({ onSignOut }) {
                           stampTool={stampTool}
                           onStamp={(x, y) => stampProp(stampTool, x, y)}
                           onUnstamp={unstampProp}
-                          fx={campaignMap.fx} efx={campaignMap.efx} hfx={campaignMap.hfx}
+                          fx={campaignMap.fx} efx={campaignMap.efx} hfx={campaignMap.hfx} spot={campaignMap.spot}
                           log={campaignMap.log}
                           fog={campaignMap.fog}
                           fogView="gm"
@@ -24411,6 +24520,9 @@ export default function App({ onSignOut }) {
                               <span className="mh-map-bar-t">
                                 Seleccionada: <b>{mapTokensView([sel])[0].name}</b>
                               </span>
+                              <button type="button" className="mh-btn-ghost" onClick={() => giveSpotFocus(viewingCampaignId, sel.id, sel.kind === "pc" ? sel.charId : null, mapTokensView([sel])[0].name)}>
+                                ✨ Dar foco
+                              </button>
                               {(sel.kind === "foe" || sel.kind === "npc") && (
                                 <button type="button" className="mh-btn-ghost" onClick={() => setCreatureVis([sel.id], !sel.gmHidden)}>
                                   {sel.gmHidden ? <Eye size={13} /> : <EyeOff size={13} />} {sel.gmHidden ? "Mostrar a los jugadores" : "Ocultar a los jugadores"}
@@ -24435,6 +24547,17 @@ export default function App({ onSignOut }) {
                             </button>
                           )}
                         </div>
+                        <SpotPanel
+                          spot={campaignMap.spot}
+                          tokens={mapTokensView(tokens)}
+                          onFocus={(tid, cid, nm) => giveSpotFocus(viewingCampaignId, tid, cid, nm)}
+                          onUnfocus={() => clearSpotFocus(viewingCampaignId, "")}
+                          onLowerHand={(cid) => lowerHand(viewingCampaignId, cid)}
+                          onLowerAll={() => spotWrite(viewingCampaignId, (sp) => ({ ...sp, hands: [] }))}
+                          onMode={(m) => setSpotMode(viewingCampaignId, m)}
+                          onSetting={(k, v) => spotWrite(viewingCampaignId, (sp) => ({ ...sp, settings: { ...sp.settings, [k]: v } }))}
+                          onSnooze={(cid) => spotWrite(viewingCampaignId, (sp) => ({ ...sp, snooze: { ...sp.snooze, [cid]: Date.now() + 10 * 60000 } }))}
+                        />
                         {(() => {
                           const crit = tokens.filter((t) => t.kind === "foe" || t.kind === "npc");
                           const groups = {};

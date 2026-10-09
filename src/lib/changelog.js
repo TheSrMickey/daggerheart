@@ -2,6 +2,18 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.17",
+    date: "2026-10-09",
+    title: "Foco de la mesa (spotlight)",
+    items: [
+      { tag: "nuevo", text: "Los jugadores pueden levantar la mano desde el mapa (actuar, hablar, duda o reacción) y se ve sobre su ficha con su puesto en la cola." },
+      { tag: "nuevo", text: "El DJ tiene un panel de foco: cola de manos, dar foco a un jugador o a cualquier ficha, apagarlo, bajar las manos, mesa en silencio e interrumpir la mesa." },
+      { tag: "nuevo", text: "La ficha con el foco sube y brilla con un haz de luz y el resto del tablero se atenúa. El jugador pulsa «He terminado» al acabar." },
+      { tag: "nuevo", text: "Aviso al DJ cuando un jugador lleva mucho tiempo sin foco, con «Dar foco» y «Más tarde»." },
+      { tag: "nuevo", text: "Al interrumpir, nadie puede tirar ni moverse hasta que el DJ reanude." },
+    ],
+  },
+  {
     version: "1.16",
     date: "2026-10-09",
     title: "Daño visible en el mapa",
