@@ -2,6 +2,17 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.20",
+    date: "2026-10-09",
+    title: "Ventana de tiradas ordenada y golpes en el aire",
+    items: [
+      { tag: "mejora", text: "La ventana de tirada es ahora de una sola columna: Tipo y Ventaja arriba, luego Experiencias y Bonificaciones, el desglose plegable y un botón grande para tirar." },
+      { tag: "mejora", text: "El resultado de la tirada muestra el total en un recuadro, el resultado destacado en una franja de color y un botón para cerrar." },
+      { tag: "arreglo", text: "Si una ficha flota o vuela y recibe daño, ya no baja al suelo: encaja el golpe en el aire, se echa un poco hacia atrás y vuelve a su sitio." },
+      { tag: "mejora", text: "Al dejar de flotar o volar la ficha desciende con suavidad en vez de caer de golpe." },
+    ],
+  },
+  {
     version: "1.19",
     date: "2026-10-09",
     title: "Ajuste de la ilustración de la cabecera",

@@ -3335,13 +3335,21 @@ const sharedStyles = `
   @keyframes mh-elem-bounce { 0% { translate: 0 0; } 30% { translate: 0 -16px; } 55% { translate: 0 0; } 75% { translate: 0 -6px; } 100% { translate: 0 0; } }
   .mh-iso-tk.is-elem-aire.is-elem-bounce .mh-iso-body { animation: mh-iso-hover 2.6s ease-in-out infinite, mh-aire-bump 1.1s cubic-bezier(.25,.7,.3,1) both; }
   @keyframes mh-aire-bump { 0% { transform: translateY(15px); } 100% { transform: translateY(0); } }
-  .mh-iso-tk.is-hurt .mh-iso-body { transform-box: fill-box; transform-origin: 50% 100%; animation: mh-hurt-shake .4s ease-out both; }
+  .mh-iso-tk.is-hurt > .mh-iso-hit { transform-box: fill-box; transform-origin: 50% 100%; animation: mh-hurt-shake .4s ease-out both; }
   @keyframes mh-hurt-shake { 0% { rotate: 0deg; } 25% { rotate: -3deg; } 55% { rotate: 2deg; } 80% { rotate: -1deg; } 100% { rotate: 0deg; } }
+  .mh-iso-tk.is-hurt.is-elem-aire > .mh-iso-hit, .mh-iso-tk.is-hurt.is-c-fly > .mh-iso-hit { animation: mh-hurt-air .95s cubic-bezier(.22,.8,.3,1) both; }
+  @keyframes mh-hurt-air { 0% { translate: 0 0; rotate: 0deg; } 16% { translate: -6px -2px; rotate: -3deg; } 40% { translate: -3px -1px; rotate: -1.5deg; } 66% { translate: 1px 0; rotate: .6deg; } 100% { translate: 0 0; rotate: 0deg; } }
+  .mh-iso-tk.is-land-aire .mh-iso-body { animation: mh-land-aire .8s cubic-bezier(.3,.9,.4,1) both; }
+  @keyframes mh-land-aire { 0% { translate: 0 -16px; } 70% { translate: 0 1px; } 100% { translate: 0 0; } }
+  .mh-iso-tk.is-land-fly .mh-iso-body { animation: mh-land-fly .9s cubic-bezier(.3,.9,.4,1) both; }
+  @keyframes mh-land-fly { 0% { transform: translateY(-60px); } 75% { transform: translateY(2px); } 100% { transform: translateY(0); } }
+  .mh-iso-tk.is-land-fly > .mh-iso-shadow { transform-box: fill-box; transform-origin: center; animation: mh-land-shadow .9s ease-out both; }
+  @keyframes mh-land-shadow { 0% { scale: .75; opacity: .5; } 100% { scale: 1; opacity: 1; } }
   .mh-hurt-glow { opacity: 0; animation: mh-hurt-glow .8s ease-out both; } @keyframes mh-hurt-glow { 0% { opacity: 0; } 12% { opacity: .65; } 100% { opacity: 0; } }
   .mh-hurt-ring { transform-box: fill-box; transform-origin: 50% 50%; opacity: 0; animation: mh-hurt-ring .8s ease-out both; } @keyframes mh-hurt-ring { 0% { scale: .6; opacity: .9; } 100% { scale: 1.8; opacity: 0; } }
   .mh-hurt-drop { transform-box: fill-box; opacity: 0; animation: mh-hurt-drop .8s ease-out both; } @keyframes mh-hurt-drop { 0% { opacity: 0; translate: 0 0; scale: .5; } 15% { opacity: 1; scale: 1; } 100% { opacity: 0; translate: var(--dx) 26px; scale: .9; } }
   .mh-hurt-num { transform-box: fill-box; transform-origin: 50% 100%; animation: mh-hurt-num 1.5s cubic-bezier(.2,.8,.2,1) both; } @keyframes mh-hurt-num { 0% { opacity: 0; scale: .5; translate: 0 8px; } 14% { opacity: 1; scale: 1.2; translate: 0 0; } 26% { scale: 1; } 72% { opacity: 1; } 100% { opacity: 0; translate: 0 -22px; } }
-  @media (prefers-reduced-motion: reduce) { .mh-iso-tk.is-hurt .mh-iso-body { animation: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .mh-iso-tk.is-hurt > .mh-iso-hit, .mh-iso-tk[class*="is-land-"] .mh-iso-body, .mh-iso-tk[class*="is-land-"] > .mh-iso-shadow { animation: none !important; } }
   .mh-iso-tk.is-burn .mh-iso-body { animation: mh-burn-shake .22s ease 6; filter: drop-shadow(0 0 6px #FF7A2E); }
   @keyframes mh-burn-shake { 25% { translate: -2px 0; } 75% { translate: 2px 0; } }
   .mh-burn-glow { animation: mh-burn-glow 1.9s ease-in .85s both; } @keyframes mh-burn-glow { 0% { opacity: 0; } 30% { opacity: .5; } 100% { opacity: 0; } }
@@ -3809,13 +3817,32 @@ const sharedStyles = `
     .mh-cardc-dock { position: relative; left: auto; top: auto; translate: none; flex-direction: row; margin-top: -18px; padding: 26px 10px 10px; border: 2px solid var(--cc); border-top: 0; border-radius: 0 0 18px 18px; }
     .mh-cardc-tip { left: 50%; top: auto; bottom: calc(100% + 30px); translate: -50% 0; }
   }
-  .mh-pre { margin: 0; width: min(820px, 100%); max-height: 90%; overflow-y: auto; padding: 18px 20px; border-radius: 18px; display: flex; flex-direction: column; }
-  .mh-pre-body { display: grid; grid-template-columns: minmax(0, 1fr) 290px; gap: 20px; margin-top: 4px; }
+  .mh-pre { margin: 0; width: min(460px, 100%); max-height: 90%; overflow-y: auto; padding: 18px 20px; border-radius: 18px; display: flex; flex-direction: column; }
+  .mh-pre-body { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; margin-top: 10px; }
+  .mh-res-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: -6px -14px 4px 0; text-align: left; }
+  .mh-res-h b { font-size: 15px; }
+  .mh-res-total { display: flex; flex-direction: column; align-items: center; width: fit-content; min-width: 110px; margin: 12px auto 8px; padding: 6px 22px 8px; border: 1px solid var(--mh-line2); border-radius: 14px; background: var(--mh-panel); position: relative; }
+  .mh-res-total small { font: 700 10px 'Inter', system-ui, sans-serif; letter-spacing: .09em; text-transform: uppercase; color: var(--mh-muted); }
+  .mh-res-total > div { font-size: 44px; font-weight: 700; line-height: 1.1; min-height: 48px; color: var(--mh-ink); }
+  .mh-res-banner { margin-top: 10px; padding: 8px 12px; border-radius: 10px; font-size: 14px; font-weight: 700; color: var(--mh-ink); background: color-mix(in srgb, var(--rc, #888) 16%, var(--mh-panel)); border: 1px solid color-mix(in srgb, var(--rc, #888) 55%, transparent); }
+  .mh-pre-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .mh-pre-lab { flex: 0 0 74px; font: 700 10.5px 'Inter', system-ui, sans-serif; letter-spacing: .07em; text-transform: uppercase; color: var(--mh-muted); }
+  .mh-pre-row .mh-pre-seg { flex: 1; }
+  .mh-pre-row .mh-pre-seg button { flex: 1; padding: 6px 6px; white-space: nowrap; font-size: 11.5px; }
+  .mh-pre-det { border: 1px solid var(--mh-line); border-radius: 10px; background: var(--mh-panel); }
+  .mh-pre-det > summary { cursor: pointer; padding: 7px 11px; font: 600 12px 'Inter', system-ui, sans-serif; color: var(--mh-ink3); list-style: none; }
+  .mh-pre-det > summary::-webkit-details-marker { display: none; }
+  .mh-pre-det > summary::before { content: "▸ "; }
+  .mh-pre-det[open] > summary::before { content: "▾ "; }
+  .mh-pre-det .mh-pre-lines { padding: 2px 11px 10px; }
+  .mh-pre-side .mh-pre-dice { min-height: 0; }
+  .mh-pre-side .mh-pre-sum { margin: 0; }
+  .mh-pre-go { width: 100%; justify-content: center; padding: 11px; font-size: 14px; }
   .mh-pre-opts { min-width: 0; }
-  .mh-pre-side { display: flex; flex-direction: column; gap: 10px; padding-left: 20px; border-left: 1px solid var(--mh-line); }
-  @media (max-width: 720px) { .mh-pre-body { grid-template-columns: 1fr; } .mh-pre-side { padding-left: 0; border-left: 0; border-top: 1px solid var(--mh-line); padding-top: 12px; } }
+  .mh-pre-side { display: flex; flex-direction: column; gap: 10px; padding-top: 12px; border-top: 1px solid var(--mh-line); }
+
   .mh-pre-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
-  .mh-pre-grid.is-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .mh-pre-grid.is-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .mh-pre-tile { --pc: #E3B04B; position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; padding: 9px 11px; border: 1.5px solid var(--mh-line); border-radius: 11px; background: var(--mh-panel); color: var(--mh-ink); font: inherit; text-align: left; cursor: pointer; transition: border-color .15s, background .15s; }
   .mh-pre-tile b { font-size: 12.5px; line-height: 1.25; padding-right: 44px; overflow-wrap: anywhere; }
   .mh-pre-tile small { font-size: 10.5px; color: var(--mh-muted); line-height: 1.3; }
@@ -3850,7 +3877,7 @@ const sharedStyles = `
   .mh-pre-lines > div { display: flex; justify-content: space-between; gap: 10px; height: 18px; align-items: center; }
   .mh-pre-lines > .is-pad { visibility: hidden; }
   .mh-pre-lines > .is-cost { height: auto; }
-  .mh-pre-dice { min-height: 64px; }
+
   .mh-pre-lines span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .mh-pre-lines b { color: var(--mh-ink); white-space: nowrap; display: inline-flex; align-items: center; gap: 3px; }
   .mh-pre-lines .is-cost { border-top: 1px dashed var(--mh-line2); padding-top: 6px; margin-top: 1px; }
@@ -5420,11 +5447,12 @@ function DualityResult({ roll, size = 84 }) {
           </>
         )}
       </div>
-      <div className="mh-serif" style={{ fontSize: 46, fontWeight: 700, lineHeight: 1.1, marginTop: 10, minHeight: 52, color: "var(--mh-ink)", position: "relative" }}>
-        {!has ? "–" : rolling ? <span className="mh-dots">···</span> : <CountUp value={roll.total} />}
+      <div className="mh-res-total">
+        <small>Total</small>
+        <div className="mh-serif">{!has ? "–" : rolling ? <span className="mh-dots">···</span> : <CountUp value={roll.total} />}</div>
       </div>
       {landed && (
-        <div className="mh-pop" key={roll.key} style={{ position: "relative", fontFamily: "'Inter', system-ui, sans-serif" }}>
+        <div className="mh-pop" key={roll.key} style={{ position: "relative", inset: "auto", width: "auto", maxHeight: "none", overflow: "visible", background: "none", border: 0, boxShadow: "none", borderRadius: 0, fontFamily: "'Inter', system-ui, sans-serif" }}>
           <div style={{ fontSize: 12, color: "var(--mh-muted)" }}>
             {roll.hope} + {roll.fear}
             {mod ? (mod > 0 ? " + " : " − ") + Math.abs(mod) : ""}
@@ -5440,7 +5468,7 @@ function DualityResult({ roll, size = 84 }) {
             {roll.difficulty != null ? ` · Dificultad ${roll.difficulty}` : ""}
           </div>
           {roll.hallowRoll > 0 && <div style={{ fontSize: 11.5, color: "#B8862E", marginTop: 3 }}>Esperanza Consagrada: {roll.hallowFirst} y {roll.hallowRoll} → te quedas con {Math.max(roll.hallowFirst, roll.hallowRoll)}</div>}
-          <div style={{ fontSize: 14.5, fontWeight: 600, color: ink(roll.color), marginTop: 4 }}>{roll.text}</div>
+          <div className="mh-res-banner" style={{ "--rc": roll.color }}>{roll.text}</div>
           {roll.note && <div style={{ fontSize: 11.5, color: "var(--mh-ink3)", marginTop: 3 }}>{roll.note}</div>}
         </div>
       )}
@@ -6039,6 +6067,32 @@ function useElemFx(tokens) {
     }), 1400);
   }, [sig]);
   return fx;
+}
+// Al dejar de flotar o volar la ficha desciende con suavidad en vez de caer de golpe. Devuelve { id: "aire" | "fly" }.
+const floatKind = (t) => (String(t.elem || "").toLowerCase() === "aire" ? "aire" : mapConds(t).some((c) => MAP_COND_FX[c].cls === "fly") ? "fly" : "");
+function useLanding(tokens) {
+  const prev = useRef(null);
+  const [land, setLand] = useState({});
+  const sig = tokens.map((t) => t.id + ":" + floatKind(t)).join("|");
+  useLayoutEffect(() => {
+    const now = {};
+    const ended = {};
+    for (const t of tokens) {
+      now[t.id] = floatKind(t);
+      if (prev.current && prev.current[t.id] && !now[t.id]) ended[t.id] = prev.current[t.id];
+    }
+    prev.current = now;
+    const ids = Object.keys(ended);
+    if (!ids.length) return;
+    setLand((st) => ({ ...st, ...ended }));
+    const tm = setTimeout(() => setLand((st) => {
+      const c = { ...st };
+      ids.forEach((i) => delete c[i]);
+      return c;
+    }), 900);
+    return () => clearTimeout(tm);
+  }, [sig]);
+  return land;
 }
 // Efectos de los elementos (quemadura del Fuego, onda del Agua): se reproducen una vez por evento reciente.
 function useElemEvent(efx) {
@@ -6790,6 +6844,7 @@ function IsoBoard({ fog, fogView = "player", areas = [], areaTool, log, hideIsoB
   const steps = useMoveFx(tokens.map((t) => [t.id, t.x, t.y]));
   const vis = useVisFx(tokens);
   const elemBounce = useElemFx(tokens);
+  const landing = useLanding(tokens);
   const spotSt = normSpot(spot);
   const spotHands = Object.fromEntries(liveHands(spotSt).map((h, i) => [h.charId, { n: i + 1, kind: h.kind }]));
   const spotTok = spotSt.focus ? tokens.find((t) => t.id === spotSt.focus.tokenId && !t.vanished) : null;
@@ -7001,7 +7056,7 @@ function IsoBoard({ fog, fogView = "player", areas = [], areaTool, log, hideIsoB
     return (
       <g
         key={t.id}
-        className={"mh-iso-tk" + (t.elem ? " is-elem-" + t.elem.toLowerCase() : "") + (elemBounce[t.id] ? " is-elem-bounce" : "") + (eAnim && eAnim.kind === "burn" && eAnim.to === t.id ? " is-burn" : "") + (hAnim && hAnim.to === t.id ? " is-hurt" : "") + (spotTok && spotTok.id === t.id ? " is-spot" : "") + (movable ? " is-movable" : "") + (drag?.id === t.id && drag.moved ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") : "") + (steps[t.id] && !(anim && anim.from === t.id) && !(droppedRef.current && droppedRef.current.id === t.id && Date.now() < droppedRef.current.until) ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
+        className={"mh-iso-tk" + (t.elem ? " is-elem-" + t.elem.toLowerCase() : "") + (elemBounce[t.id] ? " is-elem-bounce" : "") + (landing[t.id] && !floatKind(t) ? " is-land-" + landing[t.id] : "") + (eAnim && eAnim.kind === "burn" && eAnim.to === t.id ? " is-burn" : "") + (hAnim && hAnim.to === t.id ? " is-hurt" : "") + (spotTok && spotTok.id === t.id ? " is-spot" : "") + (movable ? " is-movable" : "") + (drag?.id === t.id && drag.moved ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") : "") + (steps[t.id] && !(anim && anim.from === t.id) && !(droppedRef.current && droppedRef.current.id === t.id && Date.now() < droppedRef.current.until) ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
         style={anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); if (!tg) return undefined; const [tx, ty] = P(tg.x + 0.5, tg.y + 0.5, tAt(tg.x, tg.y).z); return { "--ax": tx - cx + "px", "--ay": ty - cy + "px" }; })() : steps[t.id] ? (() => { const st = steps[t.id]; const [ox, oy] = P(st.fx + 0.5, st.fy + 0.5, tAt(st.fx, st.fy).z); return { "--mx": ox - cx + "px", "--my": oy - cy + "px" }; })() : undefined}
         onPointerDown={(e) => tokenDown(e, t)}
         onContextMenu={(e) => openMenu(e, t)}
@@ -7052,6 +7107,7 @@ function IsoBoard({ fog, fogView = "player", areas = [], areaTool, log, hideIsoB
             </g>
           );
         })()}
+        <g className="mh-iso-hit">
         <g className="mh-iso-body" transform={sizeK(t) !== 1 ? `translate(${cx} ${cy}) scale(${sizeK(t)}) translate(${-cx} ${-cy})` : undefined}>
         {t.trf && !down && (() => {
           const tc = TRANSFORM_COLORS[t.trf] || "#A58BE8";
@@ -7203,6 +7259,7 @@ function IsoBoard({ fog, fogView = "player", areas = [], areaTool, log, hideIsoB
             </g>
           );
         })}
+        </g>
         </g>
       </g>
     );
@@ -18745,7 +18802,7 @@ export default function App({ onSignOut }) {
               ].filter(Boolean);
               const DS = 40;
               // Altura fija: se reserva hueco para todas las líneas que este personaje puede llegar a tener.
-              const maxLines = 1 + exps.length + (ch.f_rally_die ? 1 : 0) + (poetOk ? 1 : 0) + (dedicatedOk ? 1 : 0) + (riseOk ? 1 : 0) + (noMercyOn ? 1 : 0) + (moonbeamOn ? 1 : 0) + (circleOn ? 1 : 0) + (reliableOn ? 1 : 0) + (patronOk ? 1 : 0) + (hybridSides(ch) ? 1 : 0) + (slayerHave ? 1 : 0) + (foundOk ? 1 : 0) + (tideOk ? 1 : 0) + (elemOk ? 1 : 0) + (wolf ? 1 : 0) + 1;
+              const maxLines = 0 * (1 + exps.length) + (ch.f_rally_die ? 1 : 0) + (poetOk ? 1 : 0) + (dedicatedOk ? 1 : 0) + (riseOk ? 1 : 0) + (noMercyOn ? 1 : 0) + (moonbeamOn ? 1 : 0) + (circleOn ? 1 : 0) + (reliableOn ? 1 : 0) + (patronOk ? 1 : 0) + (hybridSides(ch) ? 1 : 0) + (slayerHave ? 1 : 0) + (foundOk ? 1 : 0) + (tideOk ? 1 : 0) + (elemOk ? 1 : 0) + (wolf ? 1 : 0) + 1;
               const canSpendHope = exps.length > 0 || poetOk;
               const anyAdded = preRoll.exps.length > 0 || preRoll.rally || preRoll.poet || preRoll.dedicated || preRoll.privilege || preRoll.quick || tideUse > 0 || !!preRoll.elem || slayerUse > 0 || !!foundPick || !!preRoll.adept || !!preRoll.patron || edgePos !== "none";
               return (
@@ -18762,8 +18819,16 @@ export default function App({ onSignOut }) {
                           {preRoll.shellOn && !preRoll.reaction ? " · Retraído: desventaja" : ""}{preRoll.cardContext?.dc != null ? " · Dificultad " + preRoll.cardContext.dc : ""}
                         </small>
                       </div>
-                      {canReact && (
-                        <div className="mh-pre-seg mh-pre-kind" role="radiogroup" aria-label="Tipo de tirada">
+                      <button type="button" className="mh-inv-x" aria-label="Cerrar" onClick={() => setPreRoll(null)}>
+                        <X size={16} />
+                      </button>
+                    </div>
+                    <div className="mh-pre-body">
+                      <div className="mh-pre-opts">
+                        {canReact && (
+                          <div className="mh-pre-row">
+                            <span className="mh-pre-lab">Tipo</span>
+                            <div className="mh-pre-seg" role="radiogroup" aria-label="Tipo de tirada">
                           {[
                             [false, "Acción", "Genera Esperanza o Miedo"],
                             [true, "Reacción", "Para esquivar o resistir un ataque o un peligro: no genera Esperanza ni Miedo"],
@@ -18781,13 +18846,23 @@ export default function App({ onSignOut }) {
                             </button>
                           ))}
                         </div>
-                      )}
-                      <button type="button" className="mh-inv-x" aria-label="Cerrar" onClick={() => setPreRoll(null)}>
-                        <X size={16} />
-                      </button>
-                    </div>
-                    <div className="mh-pre-body">
-                      <div className="mh-pre-opts">
+                          </div>
+                        )}
+                        <div className="mh-pre-row">
+                          <span className="mh-pre-lab">Ventaja</span>
+                          <div className="mh-pre-seg" role="radiogroup" aria-label="Ventaja o desventaja">
+                          {[
+                            ["dis", "Desventaja −1d6"],
+                            ["none", "Normal"],
+                            ["adv", "Ventaja +1d6"],
+                          ].map(([k, l]) => (
+                            <button key={k} type="button" role="radio" aria-checked={edgePos === k} disabled={(shellLock && k !== "dis") || (sureFoot && k === "dis")} title={shellLock && k !== "dis" ? "Dentro del caparazón tienes desventaja en las tiradas de acción" : sureFoot && k === "dis" ? "Pie Firme: ignoras la desventaja en las tiradas de Agilidad" : undefined} className={"is-" + k + (edgePos === k ? " is-on" : "")} onClick={() => setEdge(k)}>
+                              {l}
+                            </button>
+                          ))}
+                        </div>
+                        </div>
+                        {(shellLock || sureFoot) && <div className="mh-pre-note">{shellLock ? "Retraído: desventaja obligatoria" : "Pie Firme: ignoras la desventaja"}</div>}
                         {exps.length > 0 && (
                           <>
                             <div className="mh-pre-sec">Experiencias · {adeptOnUI ? "1 Estrés cada una (Diestro)" : "1 Esperanza cada una"}</div>
@@ -18807,18 +18882,6 @@ export default function App({ onSignOut }) {
                             <div className="mh-pre-grid is-3">{bonusTiles}</div>
                           </>
                         )}
-                        <div className="mh-pre-sec">Ventaja{shellLock ? " · Retraído: desventaja obligatoria" : sureFoot ? " · Pie Firme: ignoras la desventaja" : ""}</div>
-                        <div className="mh-pre-seg" role="radiogroup" aria-label="Ventaja o desventaja">
-                          {[
-                            ["dis", "Desventaja −1d6"],
-                            ["none", "Normal"],
-                            ["adv", "Ventaja +1d6"],
-                          ].map(([k, l]) => (
-                            <button key={k} type="button" role="radio" aria-checked={edgePos === k} disabled={(shellLock && k !== "dis") || (sureFoot && k === "dis")} title={shellLock && k !== "dis" ? "Dentro del caparazón tienes desventaja en las tiradas de acción" : sureFoot && k === "dis" ? "Pie Firme: ignoras la desventaja en las tiradas de Agilidad" : undefined} className={"is-" + k + (edgePos === k ? " is-on" : "")} onClick={() => setEdge(k)}>
-                              {l}
-                            </button>
-                          ))}
-                        </div>
                       </div>
                       <div className="mh-pre-side">
                         <div className="mh-pre-dice">
@@ -18829,27 +18892,25 @@ export default function App({ onSignOut }) {
                           {rallyOn && <DieFace sides={parseInt(ch.f_rally_die.slice(1), 10) || 6} value={ch.f_rally_die} color="#E07FB0" size={Math.round(DS * 0.8)} label="Arenga" />}
                           {preRoll.poet && <DieFace sides={4} value={"d4"} color="#C77DBA" size={Math.round(DS * 0.78)} label="Poeta" />}
                         </div>
-                        <div className="mh-pre-lines">
-                          {lines.map(([l, v], k) => (
-                            <div key={k}>
-                              <span>{l}</span>
-                              <b>{v}</b>
-                            </div>
-                          ))}
-                          {Array.from({ length: Math.max(0, maxLines - lines.length) }, (_, k) => (
-                            <div key={"pad" + k} className="is-pad" aria-hidden="true">
-                              <span>·</span>
-                            </div>
-                          ))}
-                          {canSpendHope && (
-                            <div className="is-cost" style={hopeUsed > 0 ? undefined : { visibility: "hidden" }} aria-hidden={hopeUsed > 0 ? undefined : "true"}>
-                              <span>Esperanza que gastas</span>
-                              <b>
-                                {hopeUsed} <Sparkles size={11} />
-                              </b>
-                            </div>
-                          )}
-                        </div>
+                        <details className="mh-pre-det">
+                          <summary>Desglose{canSpendHope && hopeUsed > 0 ? " · gastas " + hopeUsed + " de Esperanza" : ""}</summary>
+                          <div className="mh-pre-lines">
+                            {lines.map(([l, v], k) => (
+                              <div key={k}>
+                                <span>{l}</span>
+                                <b>{v}</b>
+                              </div>
+                            ))}
+                            {canSpendHope && hopeUsed > 0 && (
+                              <div className="is-cost">
+                                <span>Esperanza que gastas</span>
+                                <b>
+                                  {hopeUsed} <Sparkles size={11} />
+                                </b>
+                              </div>
+                            )}
+                          </div>
+                        </details>
                         <div className="mh-pre-sum">
                           <b>{formula}</b>
                           {preRoll.cardContext?.dc != null ? (
@@ -18880,7 +18941,7 @@ export default function App({ onSignOut }) {
                         <button
                           type="button"
                           className="mh-pre-plain"
-                          style={anyAdded ? undefined : { visibility: "hidden" }}
+                          style={anyAdded ? undefined : { display: "none" }}
                           tabIndex={anyAdded ? undefined : -1}
                           onClick={() => setPreRoll((p) => ({ ...p, exps: [], rally: false, poet: false, dedicated: false, privilege: false, quick: false, tide: 0, elem: "", slayer: 0, found: "", adept: false, patron: false, advantage: false, disadvantage: false }))}
                         >
@@ -18925,8 +18986,11 @@ export default function App({ onSignOut }) {
                       border: "1px solid " + traitRollResult.color,
                     }}
                   >
-                    <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 12, color: "var(--mh-muted)", marginBottom: 6 }}>
-                      {traitRollResult.traitLabel}
+                    <div className="mh-res-h">
+                      <b className="mh-serif">{traitRollResult.traitLabel}</b>
+                      <button type="button" className="mh-inv-x" aria-label="Cerrar" onClick={() => setTraitRollResult(null)}>
+                        <X size={16} />
+                      </button>
                     </div>
                     <DualityResult roll={traitRollResult} size={72} />
                     {(() => {
