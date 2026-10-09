@@ -15,6 +15,7 @@ import { CardsPage } from "./Cards";
 import { Generators } from "./Generators";
 import { CampaignCalendar, NextSession } from "./Calendar";
 import { PollsGm, ActivePoll } from "./Polls";
+import { RestGm, GroupRestDialog } from "./GroupRest";
 import { SpotPlayer, SpotPause, SpotPanel, normSpot, liveHands, kindOf } from "./Spotlight";
 import { APP_VERSION } from "@/lib/changelog";
 import { setPresence, startPresence, stopPresence, publishTable, loadTable, myUid } from "@/lib/social";
@@ -4771,6 +4772,8 @@ const sharedStyles = `
   html[data-mh-theme="light"] .mh-camp-back { color: #4C4458; } html[data-mh-theme="light"] .mh-camp-back:hover { background: #00000010; color: #221C2B; }
   html[data-mh-theme="light"] .mh-camp-desc { color: #4C4458; } html[data-mh-theme="light"] .mh-camp-emb { background: #FFFCF6; }
   @media (max-width: 640px) { .mh-camp-hero-row { flex-direction: column; align-items: flex-start; } .mh-camp-title { font-size: 21px; } }
+  .gr-box { width: min(560px, 100%); max-height: 90vh; overflow-y: auto; border: 1px solid var(--mh-line); border-radius: 20px; background: var(--mh-panel); padding: 20px 22px; box-shadow: 0 30px 70px rgba(0,0,0,.55); }
+  .gr-who { border: 1px solid var(--mh-line); border-radius: 14px; padding: 12px 14px; margin-top: 10px; }
   .pl-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; } @media (max-width: 900px) { .pl-grid { grid-template-columns: 1fr; } }
   .pl-main { margin: 0 !important; padding: 18px 20px !important; }
   .pl-q { font-size: 15px; font-weight: 700; margin: 8px 0 12px; line-height: 1.3; }
@@ -23995,6 +23998,7 @@ export default function App({ onSignOut }) {
                       { key: "encuentros", label: "Encuentros", Icon: Swords },
                       { key: "calendario", label: "Calendario", Icon: CalendarDays },
                       { key: "votaciones", label: "Votaciones", Icon: Vote },
+                      { key: "descanso", label: "Descanso", Icon: BedDouble },
                       { key: "generadores", label: "Generadores", Icon: Dices },
                     ].map((t) => (
                       <button key={t.key} type="button" role="tab" aria-selected={campaignDetailTab === t.key} className={"is-base" + (campaignDetailTab === t.key ? " is-on" : "")} onClick={() => setCampaignDetailTab(t.key)}>
@@ -25061,6 +25065,15 @@ export default function App({ onSignOut }) {
                     );
                   })()}
 
+                  {campaignDetailTab === "descanso" && (
+                    <RestGm
+                      key={viewingCampaignId}
+                      campaignId={viewingCampaignId}
+                      members={(campaigns[viewingCampaignId]?.characterIds || []).filter((id) => characters[id]).map((id) => ({ id, name: characters[id].f_name || "Sin nombre", cls: characters[id].f_class || "", color: characters[id].f_class ? classColor(characters[id].f_class) : "#C9A24A" }))}
+                      onAnnounce={(text) => postChat(viewingCampaignId, { kind: "msg", text, author: "El DJ", gm: true })}
+                    />
+                  )}
+
                   {campaignDetailTab === "votaciones" && (
                     <PollsGm
                       key={viewingCampaignId}
@@ -25226,6 +25239,24 @@ export default function App({ onSignOut }) {
           })()}
 
           {view === "actualizaciones" && <Changelog />}
+
+          {!gmViewing && (() => {
+            const cp = sheetCampaignId ? campaigns[sheetCampaignId] : Object.values(campaigns).find((x) => (x.characterIds || []).some((id) => characters[id]));
+            if (!cp) return null;
+            const mine = (cp.characterIds || []).filter((id) => characters[id]).map((id) => {
+              const c = characters[id];
+              const armorTotal = ARMORS.find((a) => a.key === c.f_armor)?.score || 0;
+              const r = (n, t) => (t ? Math.min(1, Number(n || 0) / t) : 0);
+              return {
+                id,
+                name: c.f_name || "Sin nombre",
+                cls: c.f_class || "",
+                slots: ancFeat(c, "Elfo", 1) ? 3 : 2,
+                need: { heal: r(c.hp_marked, Number(c.r_hp || 0)), clearmind: r(c.stress_marked, Number(c.r_stress || 0)), repair: armorTotal ? Math.max(0, (armorTotal - Number(c.armor_marked || 0)) / armorTotal) : 0 },
+              };
+            });
+            return <GroupRestDialog key={cp.id} campaignId={cp.id} mine={mine} onRest={(id, type, p) => (performRest(id, type, p[0], p[1], p[2]), postCampaignEvent(id, "😴 Hace un descanso " + (type === "long" ? "largo" : "corto") + " con el grupo"))} />;
+          })()}
 
           {view === "cartas" && <CardsPage cards={DOMAIN_CARDS} colors={DOMAIN_COLORS} icons={DOMAIN_ICONS} FitTitle={FitTitle} FitBox={FitBox} />}
 

@@ -2,6 +2,16 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.28",
+    date: "2026-10-09",
+    title: "Descanso del grupo",
+    items: [
+      { tag: "nuevo", text: "Nueva pestaña «Descanso» en la campaña: el DJ propone un descanso corto o largo a todo el grupo y ve quién ya ha descansado." },
+      { tag: "nuevo", text: "A cada jugador le sale una ventana con las acciones recomendadas según lo que le falta; al descansar se aplica la recuperación de su personaje." },
+      { tag: "nuevo", text: "Al terminar, el chat avisa de cuántos han descansado y de lo que gana el DJ en Miedo." },
+    ],
+  },
+  {
     version: "1.27",
     date: "2026-10-09",
     title: "Votaciones rápidas",
