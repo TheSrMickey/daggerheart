@@ -4471,8 +4471,10 @@ const sharedStyles = `
   html[data-mh-theme="light"] .mhm-multi { color: #2F7A4A; }
   html[data-mh-theme="light"] .mhm-traits button { background: #FFFCF6d9; border-color: var(--mh-line2); color: var(--mh-ink); backdrop-filter: blur(3px); }
   html[data-mh-theme="light"] .mhm-traits button:hover { border-color: var(--cc); }
-  html[data-mh-theme="light"] .mhm-traits button.is-form { background: color-mix(in srgb, var(--cc) 22%, #FFFCF6); }
   html[data-mh-theme="light"] .mhm-traits button.is-spell { border-color: color-mix(in srgb, var(--cc) 85%, #000); }
+  html[data-mh-theme="light"] .mhm-traits button.is-up { border-color: #2F8A4E; background: color-mix(in srgb, #2F8A4E 14%, #FFFCF6); } html[data-mh-theme="light"] .mhm-traits button.is-up b, html[data-mh-theme="light"] .mhm-traits button.is-up .mhm-tmod { color: #2F8A4E; }
+  html[data-mh-theme="light"] .mhm-traits button.is-down { border-color: #C0453A; background: color-mix(in srgb, #C0453A 14%, #FFFCF6); } html[data-mh-theme="light"] .mhm-traits button.is-down b, html[data-mh-theme="light"] .mhm-traits button.is-down .mhm-tmod { color: #C0453A; }
+  html[data-mh-theme="light"] .mhm-tic { color: #2c7a45; } html[data-mh-theme="light"] .mhm-tadv { background: #FFFCF6; border-color: #5fa3c9; color: #1d5f87; } html[data-mh-theme="light"] .mhm-tadv.is-dis { border-color: #C0453A; color: #C0453A; }
   html[data-mh-theme="light"] .mhm-head .mh-htag { color: color-mix(in srgb, var(--tag) 70%, #000); background: color-mix(in srgb, var(--tag) 16%, #FFFCF6e6); }
   html[data-mh-theme="light"] .mhm-head .mh-htag.is-active { background: color-mix(in srgb, var(--tag) 28%, #FFFCF6e6); }
   .mhm-head.is-multi { background: linear-gradient(90deg, color-mix(in srgb, var(--cc) 44%, #0d1a1a) 0%, #0c0c20 50%, color-mix(in srgb, var(--cc2) 44%, #0d1a1a) 100%); border-color: color-mix(in srgb, var(--cc2) 35%, #ffffff14); }
@@ -4495,8 +4497,14 @@ const sharedStyles = `
   .mhm-head h2 { margin: 0; font-size: 24px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; } .mhm-head p { margin: 0; color: #ffffffcc; font-size: 13px; }
   .mhm-traits { position: relative; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
   .mhm-traits button { all: unset; cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 7px 11px; border-radius: 9px; background: #00000050; border: 1px solid #ffffff14; font-size: 12px; } .mhm-traits button:hover { border-color: var(--cc); } .mhm-traits b { font-size: 15px; }
-  .mhm-traits button.is-spell { border: 1px dashed var(--cc); } .mhm-traits button.is-form { background: color-mix(in srgb, var(--cc) 18%, #00000050); border-color: var(--cc); } .mhm-traits button.is-eq-up { border-color: #7FB77A; } .mhm-traits button.is-eq-down { border-color: #D9644E; }
-  .mhm-traits button .mhm-tmod { font-size: 9px; font-weight: 700; margin-right: 3px; } .mhm-traits button .mhm-tright { display: flex; align-items: center; gap: 3px; }
+  .mhm-traits button { position: relative; }
+  .mhm-traits button.is-spell { border: 1px dashed var(--cc); }
+  .mhm-traits button.is-up { border: 1.5px solid #6FCF8A; background: color-mix(in srgb, #6FCF8A 16%, #00000050); } .mhm-traits button.is-up b { color: #6FCF8A; }
+  .mhm-traits button.is-down { border: 1.5px solid #F0786A; background: color-mix(in srgb, #F0786A 16%, #00000050); } .mhm-traits button.is-down b { color: #F0786A; }
+  .mhm-traits button .mhm-tright { display: flex; align-items: center; gap: 5px; }
+  .mhm-traits button .mhm-tmod { display: inline-flex; align-items: center; gap: 1px; font-size: 10.5px; font-weight: 700; font-style: normal; } .mhm-traits button.is-up .mhm-tmod { color: #6FCF8A; } .mhm-traits button.is-down .mhm-tmod { color: #F0786A; }
+  .mhm-tic { position: absolute; left: 4px; top: 2px; display: inline-flex; color: #9be0b4; } .mhm-traits button.is-spell { padding-left: 15px; }
+  .mhm-tadv { position: absolute; right: 6px; bottom: -7px; font: 700 9.5px/14px Inter, system-ui, sans-serif; font-style: normal; padding: 0 5px; border-radius: 7px; border: 1px solid #7FC4E8; color: #7FC4E8; background: #14141f; } .mhm-tadv.is-dis { border-color: #F0786A; color: #F0786A; }
   .mhm-tags { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; margin-left: auto; align-self: flex-start; max-width: 55%; position: relative; z-index: 1; }
   .mhm-head .mh-htag { color: color-mix(in srgb, var(--tag) 45%, #fff); background: color-mix(in srgb, var(--tag) 20%, #0c0c2099); backdrop-filter: blur(3px); }
   .mhm-head .mh-htag.is-active { background: color-mix(in srgb, var(--tag) 32%, #0c0c2099); }
@@ -12622,7 +12630,9 @@ export default function App({ onSignOut }) {
           formKey: beast?.key || "transformación",
           equip: mods[t.key] || 0,
           spell,
-          adv: c.f_elemental_active === "Aire" && t.key === "t_agility",
+          // Retraído (caparazón): desventaja en todas las tiradas de acción; la ventaja del Aire no cuenta entonces.
+          dis: getConditions(c).includes("Retraído"),
+          adv: c.f_elemental_active === "Aire" && t.key === "t_agility" && !getConditions(c).includes("Retraído"),
           tongue: spell && getKeys(c.f_domain_cards).includes("Lengua de la Naturaleza"),
         };
       }),

@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 
 // Hoja de personaje "moderna": vive en la columna central. Recibe los datos ya calculados y las acciones de la app.
 const signed = (n) => (n > 0 ? "+" + n : String(n));
+// Cambio neto del rasgo por forma, evolución y equipo.
+const net = (t) => (t.form || 0) + (t.equip || 0);
 
 // La hoja clásica está pensada para unos 1100 px de ancho mínimo. Se escala (CSS zoom, que no crea un contenedor para los
 // elementos fijos: así los efectos y las ventanas siguen cubriendo toda la pantalla) para que «Detalles generales» quepa
@@ -157,23 +159,34 @@ export function ModernSheet({ d, actions, content, tab, onTab, fill }) {
             <button
               key={t.key}
               type="button"
-              className={(t.spell ? "is-spell " : "") + (t.form > 0 ? "is-form " : "") + (t.equip > 0 ? "is-eq-up" : t.equip < 0 ? "is-eq-down" : "")}
+              className={(t.spell ? "is-spell " : "") + (net(t) > 0 ? "is-up" : net(t) < 0 ? "is-down" : "")}
               onClick={() => actions.rollTrait(t.label, t.value, t)}
               title={
                 (t.form > 0 ? t.label + " +" + t.form + " por " + t.formKey + ". " : "") +
                 (t.equip !== 0 ? t.label + " " + signed(t.equip) + " por equipo. " : "") +
-                (t.adv ? "Ventaja en tiradas de " + t.label + " (Encarnación Elemental — Aire). " : "") +
+                (t.adv ? "Ventaja en tiradas de " + t.label + " (Encarnación Elemental — Aire): +1d6. " : "") +
+                (t.dis ? "Desventaja en tus tiradas de acción (Retraído): −1d6. " : "") +
                 (t.spell ? t.label + " — rasgo de conjuro. " : "") +
                 "Tirar " + t.label
               }
             >
+              {t.spell && (
+                <i className="mhm-tic" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9l-5.6 1.9L12 16.5l-1.9-5.6L4.5 9l5.6-1.4z" /><path d="M19 15l.9 2.6 2.6.9-2.6.9L19 22l-.9-2.6-2.6-.9 2.6-.9z" /></svg>
+                </i>
+              )}
               <span>{t.label}</span>
               <span className="mhm-tright">
-                {t.form > 0 && <span className="mhm-tmod">+{t.form}</span>}
-                {t.equip !== 0 && <span className="mhm-tmod">{signed(t.equip)}</span>}
-                {t.adv && <span className="mhm-tmod" aria-label="ventaja">▲</span>}
+                {net(t) !== 0 && (
+                  <em className="mhm-tmod" aria-label={net(t) > 0 ? "aumento" : "bajada"}>
+                    <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor">{net(t) > 0 ? <path d="M12 4l8 11H4z" /> : <path d="M12 20L4 9h16z" />}</svg>
+                    {Math.abs(net(t))}
+                  </em>
+                )}
                 <b>{signed(t.value)}</b>
               </span>
+              {t.adv && <i className="mhm-tadv">+d6</i>}
+              {t.dis && <i className="mhm-tadv is-dis">−d6</i>}
             </button>
           ))}
         </div>

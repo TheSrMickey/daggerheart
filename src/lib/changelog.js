@@ -2,6 +2,14 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.18",
+    date: "2026-10-09",
+    title: "Rasgos más claros en la hoja",
+    items: [
+      { tag: "mejora", text: "Los rasgos se señalan con el mismo código en la cabecera: ✦ para el rasgo de conjuro, etiqueta «+d6» de ventaja, «−d6» de desventaja, y flecha verde o roja con la cantidad cuando el rasgo sube o baja por la forma, el equipo o la evolución." },
+    ],
+  },
+  {
     version: "1.17",
     date: "2026-10-09",
     title: "Foco de la mesa (spotlight)",
