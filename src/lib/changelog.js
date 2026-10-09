@@ -2,6 +2,14 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.31",
+    date: "2026-10-09",
+    title: "Cartas más altas",
+    items: [
+      { tag: "mejora", text: "En la pestaña «Cartas» las cartas tienen ahora la misma altura que al abrirlas y enseñan más texto." },
+    ],
+  },
+  {
     version: "1.30",
     date: "2026-10-09",
     title: "Barra del foco",
