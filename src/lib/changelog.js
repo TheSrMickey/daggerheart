@@ -2,6 +2,14 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.19",
+    date: "2026-10-09",
+    title: "Ajuste de la ilustración de la cabecera",
+    items: [
+      { tag: "nuevo", text: "Nuevo ajuste «Ilustración de la cabecera»: se puede quitar la imagen de la clase del banner de la hoja de personaje y dejar solo el degradado." },
+    ],
+  },
+  {
     version: "1.18",
     date: "2026-10-09",
     title: "Rasgos más claros en la hoja",

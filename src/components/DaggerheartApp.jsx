@@ -47,7 +47,7 @@ const CLASS_COLORS = {
   Invocador: "#8E6FC4",
   "Cazador de Sangre": "#A8323E",
 };
-const DEFAULT_SETTINGS = { classColors: true, tutorial: false };
+const DEFAULT_SETTINGS = { classColors: true, tutorial: false, headerArt: true };
 // Texto oscuro o blanco según lo claro que sea el color.
 function onColor(hex) {
   const n = parseInt(hex.slice(1), 16);
@@ -12613,7 +12613,7 @@ export default function App({ onSignOut }) {
       color: beast?.color || classColor(c.f_class),
       color2: getMulticlass(c) ? classColor(getMulticlass(c).cls) : null,
       Emblem: CLASS_EMBLEMS[c.f_class] || User,
-      art: CLASS_ART[c.f_class] || null,
+      art: settings.headerArt === false ? null : CLASS_ART[c.f_class] || null,
       artY: CLASS_ART_Y[c.f_class] ?? 28,
       pronouns: c.f_pronouns || "",
       tags: renderHeaderTags(c, id, { noCampaign: true }),
@@ -24930,6 +24930,29 @@ export default function App({ onSignOut }) {
                     aria-label="Tutorial de la hoja"
                     className="mh-switch"
                     onClick={() => updateSetting("tutorial", !settings.tutorial)}
+                  >
+                    <span className="mh-switch-knob" />
+                  </button>
+                </div>
+              </div>
+              <div className="mh-card" style={{ margin: 0 }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--mh-panel3)", color: "var(--mh-gold-ink)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <ImageIcon size={18} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14.5, fontWeight: 600, color: "var(--mh-ink)" }}>Ilustración de la cabecera</div>
+                    <div style={{ fontSize: 12.5, color: "var(--mh-muted)", marginTop: 3, lineHeight: 1.5 }}>
+                      Muestra la ilustración de tu clase de fondo en el banner superior de la hoja de personaje. Si lo desactivas, queda solo el degradado de color.
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={settings.headerArt !== false}
+                    aria-label="Ilustración de la cabecera"
+                    className="mh-switch"
+                    onClick={() => updateSetting("headerArt", settings.headerArt === false)}
                   >
                     <span className="mh-switch-knob" />
                   </button>
