@@ -4855,17 +4855,10 @@ const sharedStyles = `
   .cx-meta { display: flex; justify-content: space-between; align-items: center; margin: 10px 2px 4px; color: var(--mh-muted); font-size: 12px; gap: 10px; flex-wrap: wrap; }
   .cx-lv { display: flex; align-items: center; gap: 12px; margin: 22px 0 12px; } .cx-lv b { font: 700 13px 'Cinzel', Georgia, serif; letter-spacing: .06em; text-transform: uppercase; color: var(--mh-ink); }
   .cx-lv span { height: 1px; flex: 1; background: var(--mh-line); } .cx-lv small { color: var(--mh-muted); font-size: 12px; }
-  .cx-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
-  .cx-card { appearance: none; font: inherit; color: var(--mh-ink); text-align: center; box-sizing: border-box; cursor: pointer; width: 100%; margin: 0 !important; padding: 0 !important; overflow: hidden; border-radius: 18px !important; display: flex; flex-direction: column; position: relative; height: 420px; transition: translate .15s, box-shadow .15s; }
-  .cx-card:hover { translate: 0 -3px; box-shadow: 0 12px 26px rgba(0,0,0,.28); } .cx-card:focus-visible { outline: 2px solid var(--cc); outline-offset: 3px; }
-  .cx-card .mh-cardc-art { height: 124px; }
-  .cx-t { padding: 0 12px; text-align: center; margin-top: 14px; } .cx-t b { display: block; font-size: 14.5px; line-height: 1.15; color: var(--mh-ink); font-family: 'Cinzel', Georgia, serif; }
-  .cx-card .mh-cardc-sub { font-size: 10.5px; }
-  .cx-x { flex: 1; overflow: hidden; padding: 8px 14px 12px; text-align: center; font-size: 11.5px; line-height: 1.45; color: var(--mh-ink); display: -webkit-box; -webkit-line-clamp: 13; -webkit-box-orient: vertical; }
-  .cx-rc { position: absolute; right: 9px; top: 9px; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 99px; font: 700 10px 'Inter', system-ui, sans-serif; background: rgba(10,10,20,.62); color: #fff; z-index: 3; }
+  .cx-grid { display: grid; grid-template-columns: repeat(auto-fill, 300px); gap: 16px; justify-content: start; }
+  .cx-card { appearance: none; font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; display: block; width: 300px; max-width: 100%; height: 420px; border-radius: 22px; transition: translate .15s, box-shadow .15s; }
+  .cx-card:hover { translate: 0 -3px; box-shadow: 0 12px 26px rgba(0,0,0,.28); } .cx-card:focus-visible { outline: 2px solid var(--acc, #C9A24A); outline-offset: 3px; }
   .cx-empty { padding: 40px; text-align: center; color: var(--mh-muted); border: 1px dashed var(--mh-line); border-radius: 16px; margin-top: 14px; }
-  @media (max-width: 1180px) { .cx-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-  @media (max-width: 860px) { .cx-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   @media (prefers-reduced-motion: reduce) { .cx-card { transition: none; } .cx-card:hover { translate: none; } }
   .mh-cl { max-width: 780px; } .mh-cl-head h2 { margin: 0; font-size: 26px; } .mh-cl-head p { margin: 4px 0 22px; color: var(--mh-muted); font-size: 13.5px; }
   .mh-cl-list { list-style: none; margin: 0; padding: 0 0 0 22px; position: relative; display: flex; flex-direction: column; gap: 16px; }

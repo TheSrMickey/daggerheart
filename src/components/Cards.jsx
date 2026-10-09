@@ -1,12 +1,41 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Layers, Search, X, RotateCcw } from "lucide-react";
+import { Layers, Search, X } from "lucide-react";
 
 // Pestaña «Cartas»: todas las cartas de dominio, de menor a mayor nivel, con filtro por dominio y buscador.
 // Al pulsar una carta se ve en grande, con el mismo diseño que en la hoja.
 const alpha = (c, a) => (c.startsWith("#") && c.length === 7 ? c + a.toString(16).padStart(2, "0") : c);
 const norm = (t) => String(t || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+
+// La carta, tal cual se ve al abrirla; en la cuadrícula tiene exactamente el mismo tamaño (300 × 420).
+function CardFace({ c, col, I, FitTitle, FitBox, onClose, tilt }) {
+  const total = c.text.length;
+  const modal = !!onClose;
+  return (
+    <div
+      className={"mh-card mh-cardc" + (modal ? " mh-card-anim mh-tilt" : "")}
+      style={{ "--glow": alpha(col, 51), "--cc": col, margin: 0, width: modal ? "min(300px, 100%)" : 300, height: modal ? "min(420px, 80vh)" : 420, maxWidth: "100%", padding: 0, overflow: "hidden", borderRadius: 22, display: "flex", flexDirection: "column", border: "2px solid " + col, position: "relative", textAlign: "left" }}
+      {...(tilt || {})}
+    >
+      <div className="mh-glare" />
+      <div className="mh-cardc-art" style={{ height: total > 600 ? 84 : total > 320 ? 100 : 124 }}>
+        {c.image ? <img src={c.image} alt={modal ? c.key : ""} /> : <div className="mh-cardc-noart"><I size={50} strokeWidth={1.5} /></div>}
+        {modal && <button type="button" className="mh-cardc-close" onClick={onClose} aria-label="Cerrar"><X size={14} /></button>}
+      </div>
+      <div className="mh-cardc-badge"><span className="mh-cardc-gem" title={"Nivel " + c.level}>{c.level}</span></div>
+      <div style={{ padding: "0 18px", textAlign: "center", flexShrink: 0, marginTop: 16 }}>
+        <FitTitle text={c.key} max={19} min={14} className="mh-serif" style={{ fontWeight: 700, color: "var(--mh-ink)", maxHeight: "2.4em", overflow: "hidden" }} />
+        <div className="mh-cardc-sub">{c.domain} · {c.type}</div>
+        <div className="mh-cardc-orn" />
+      </div>
+      <FitBox fitKey={c.key + total} max={13} min={9} style={{ flex: 1, minHeight: 0, overflow: "hidden", padding: "10px 18px 12px", display: "flex", flexDirection: "column", justifyContent: "flex-start", textAlign: "center", gap: "0.7em", lineHeight: 1.5, color: "var(--mh-ink)" }}>
+        <div style={{ color: "var(--mh-ink)" }}>{c.text}</div>
+      </FitBox>
+      <div style={{ padding: "0 18px 12px", textAlign: "center", fontSize: 10.5, color: "var(--mh-muted)", flexShrink: 0 }}>Nivel {c.level} · Recuperación {c.recall}</div>
+    </div>
+  );
+}
 
 export function CardsPage({ cards, colors, icons, FitTitle, FitBox }) {
   const [sel, setSel] = useState([]);
@@ -91,18 +120,8 @@ export function CardsPage({ cards, colors, icons, FitTitle, FitBox }) {
                 const col = colors[c.domain];
                 const I = Icon(c.domain);
                 return (
-                  <button type="button" key={c.domain + c.key} className="mh-card mh-cardc cx-card" style={{ "--cc": col, border: "2px solid " + col }} onClick={() => setOpen(c)} aria-label={"Ver " + c.key}>
-                    <div className="mh-cardc-art">
-                      {c.image ? <img src={c.image} alt="" /> : <div className="mh-cardc-noart" style={{ color: col }}><I size={40} strokeWidth={1.5} /></div>}
-                    </div>
-                    <span className="cx-rc" title={"Coste de recuperación: " + c.recall}><RotateCcw size={10} /> {c.recall}</span>
-                    <div className="mh-cardc-badge"><span className="mh-cardc-gem">{c.level}</span></div>
-                    <div className="cx-t">
-                      <b>{c.key}</b>
-                      <div className="mh-cardc-sub">{c.domain} · {c.type}</div>
-                      <div className="mh-cardc-orn" />
-                    </div>
-                    <div className="cx-x">{c.text}</div>
+                  <button type="button" key={c.domain + c.key} className="cx-card" onClick={() => setOpen(c)} aria-label={"Ver " + c.key}>
+                    <CardFace c={c} col={col} I={I} FitTitle={FitTitle} FitBox={FitBox} />
                   </button>
                 );
               })}
@@ -113,33 +132,10 @@ export function CardsPage({ cards, colors, icons, FitTitle, FitBox }) {
 
       {open && (() => {
         const c = open, col = colors[c.domain], I = Icon(c.domain);
-        const total = c.text.length;
         return (
           <div className={"mh-overlay" + (closing ? " is-closing" : "")} style={{ background: "rgba(8,6,12,0.70)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 60, padding: 20 }} onClick={close} role="dialog" aria-modal="true" aria-label={c.key}>
             <div className="mh-cardc-wrap" onClick={(e) => e.stopPropagation()}>
-              <div
-                className="mh-card mh-card-anim mh-tilt mh-cardc"
-                style={{ "--glow": alpha(col, 51), "--cc": col, margin: 0, width: "min(300px, 100%)", height: "min(420px, 80vh)", padding: 0, overflow: "hidden", borderRadius: 22, display: "flex", flexDirection: "column", border: "2px solid " + col, position: "relative" }}
-                onPointerMove={tilt}
-                onPointerLeave={untilt}
-                onPointerUp={(e) => e.pointerType !== "mouse" && untilt(e)}
-              >
-                <div className="mh-glare" />
-                <div className="mh-cardc-art" style={{ height: total > 600 ? 84 : total > 320 ? 100 : 124 }}>
-                  {c.image ? <img src={c.image} alt={c.key} /> : <div className="mh-cardc-noart"><I size={50} strokeWidth={1.5} /></div>}
-                  <button type="button" className="mh-cardc-close" onClick={close} aria-label="Cerrar"><X size={14} /></button>
-                </div>
-                <div className="mh-cardc-badge"><span className="mh-cardc-gem" title={"Nivel " + c.level}>{c.level}</span></div>
-                <div style={{ padding: "0 18px", textAlign: "center", flexShrink: 0, marginTop: 16 }}>
-                  <FitTitle text={c.key} max={19} min={14} className="mh-serif" style={{ fontWeight: 700, color: "var(--mh-ink)", maxHeight: "2.4em", overflow: "hidden" }} />
-                  <div className="mh-cardc-sub">{c.domain} · {c.type}</div>
-                  <div className="mh-cardc-orn" />
-                </div>
-                <FitBox fitKey={c.key + total} max={13} min={9} style={{ flex: 1, minHeight: 0, overflow: "hidden", padding: "10px 18px 12px", display: "flex", flexDirection: "column", justifyContent: "flex-start", textAlign: "center", gap: "0.7em", lineHeight: 1.5, color: "var(--mh-ink)" }}>
-                  <div style={{ color: "var(--mh-ink)" }}>{c.text}</div>
-                </FitBox>
-                <div style={{ padding: "0 18px 12px", textAlign: "center", fontSize: 10.5, color: "var(--mh-muted)", flexShrink: 0 }}>Nivel {c.level} · Recuperación {c.recall}</div>
-              </div>
+              <CardFace c={c} col={col} I={I} FitTitle={FitTitle} FitBox={FitBox} onClose={close} tilt={{ onPointerMove: tilt, onPointerLeave: untilt, onPointerUp: (e) => e.pointerType !== "mouse" && untilt(e) }} />
             </div>
           </div>
         );

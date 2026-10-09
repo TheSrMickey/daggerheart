@@ -6,7 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-09",
     title: "Cartas más altas",
     items: [
-      { tag: "mejora", text: "En la pestaña «Cartas» las cartas tienen ahora la misma altura que al abrirlas y enseñan más texto." },
+      { tag: "mejora", text: "En la pestaña «Cartas» las cartas tienen exactamente el mismo tamaño (300 × 420) y el mismo diseño que al abrirlas." },
     ],
   },
   {
