@@ -2,7 +2,7 @@
 
 import { Fragment, useState, useEffect, useLayoutEffect, useRef, createContext, useContext } from "react";
 import { createPortal } from "react-dom";
-import { Squirrel, Layers, CalendarDays } from "lucide-react";
+import { Squirrel, Layers, CalendarDays, Vote } from "lucide-react";
 import { History, LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus, Box, LayoutGrid, Bird, Fish, Bug, Rabbit, Cat, Turtle, Clock, CircleDashed, Slash } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { NotificationBell, FriendsPanel } from "./Social";
@@ -14,6 +14,7 @@ import { Changelog } from "./Changelog";
 import { CardsPage } from "./Cards";
 import { Generators } from "./Generators";
 import { CampaignCalendar, NextSession } from "./Calendar";
+import { PollsGm, ActivePoll } from "./Polls";
 import { SpotPlayer, SpotPause, SpotPanel, normSpot, liveHands, kindOf } from "./Spotlight";
 import { APP_VERSION } from "@/lib/changelog";
 import { setPresence, startPresence, stopPresence, publishTable, loadTable, myUid } from "@/lib/social";
@@ -4770,6 +4771,16 @@ const sharedStyles = `
   html[data-mh-theme="light"] .mh-camp-back { color: #4C4458; } html[data-mh-theme="light"] .mh-camp-back:hover { background: #00000010; color: #221C2B; }
   html[data-mh-theme="light"] .mh-camp-desc { color: #4C4458; } html[data-mh-theme="light"] .mh-camp-emb { background: #FFFCF6; }
   @media (max-width: 640px) { .mh-camp-hero-row { flex-direction: column; align-items: flex-start; } .mh-camp-title { font-size: 21px; } }
+  .pl-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; } @media (max-width: 900px) { .pl-grid { grid-template-columns: 1fr; } }
+  .pl-main { margin: 0 !important; padding: 18px 20px !important; }
+  .pl-q { font-size: 15px; font-weight: 700; margin: 8px 0 12px; line-height: 1.3; }
+  .pl-bars { display: flex; flex-direction: column; gap: 10px; } .pl-ot { display: flex; justify-content: space-between; gap: 8px; font-size: 12.5px; margin-bottom: 5px; } .pl-ot b em { font-style: normal; font-weight: 600; color: #5fd47c; } .pl-ot span { color: var(--mh-muted); }
+  .pl-bar { height: 11px; border-radius: 99px; background: var(--mh-line); overflow: hidden; } .pl-bar i { display: block; height: 100%; border-radius: 99px; transition: width .35s; }
+  .pl-foot { color: var(--mh-muted); font-size: 11.5px; }
+  .pl-card { flex-shrink: 0; border: 1.5px solid var(--acc, #C9A24A); border-radius: 14px; padding: 10px 12px; background: color-mix(in srgb, var(--acc, #C9A24A) 7%, var(--mh-panel)); }
+  .pl-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; } .pl-h b { display: inline-flex; align-items: center; gap: 6px; }
+  .pl-vote { display: flex; flex-direction: column; gap: 6px; } .pl-btn { appearance: none; font: 600 12.5px 'Inter', system-ui, sans-serif; text-align: left; cursor: pointer; padding: 8px 12px; border-radius: 10px; border: 1.5px solid color-mix(in srgb, var(--c) 55%, var(--mh-line)); background: var(--mh-panel); color: var(--mh-ink); } .pl-btn:hover { background: color-mix(in srgb, var(--c) 14%, var(--mh-panel)); }
+  .pl-change { margin-top: 8px; font-size: 11.5px !important; padding: 4px 10px !important; }
   .cal { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 16px; align-items: start; } @media (max-width: 900px) { .cal { grid-template-columns: 1fr; } }
   .cal-main, .cal-month { margin: 0 !important; padding: 18px 20px !important; }
   .cal-edit { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin: 12px 0 4px; padding: 12px; border: 1px solid var(--mh-line); border-radius: 12px; } .cal-edit label { display: flex; flex-direction: column; flex: 1 1 180px; }
@@ -17173,6 +17184,14 @@ export default function App({ onSignOut }) {
                                     </div>
                                   </>
                                 )}
+                                {sheetCampaignId && (
+                                  <ActivePoll
+                                    campaignId={sheetCampaignId}
+                                    mine={(campaigns[sheetCampaignId]?.characterIds || []).filter((id) => characters[id]).map((id) => ({ id }))}
+                                    total={(campaigns[sheetCampaignId]?.characterIds || []).length}
+                                    onResult={(text) => postChat(sheetCampaignId, { kind: "msg", text, author: "El DJ", gm: true })}
+                                  />
+                                )}
                                 <div className="mh-chat-box">
                                   <div ref={chatScrollRef} className="mh-chat-feed">
                                     {campaignChat.length === 0 && <div className="mh-chat-empty">Todavía no hay mensajes. Aquí aparecerán también las tiradas y acciones de la mesa.</div>}
@@ -23975,6 +23994,7 @@ export default function App({ onSignOut }) {
                       { key: "mapa", label: "Mapa", Icon: MapPinned },
                       { key: "encuentros", label: "Encuentros", Icon: Swords },
                       { key: "calendario", label: "Calendario", Icon: CalendarDays },
+                      { key: "votaciones", label: "Votaciones", Icon: Vote },
                       { key: "generadores", label: "Generadores", Icon: Dices },
                     ].map((t) => (
                       <button key={t.key} type="button" role="tab" aria-selected={campaignDetailTab === t.key} className={"is-base" + (campaignDetailTab === t.key ? " is-on" : "")} onClick={() => setCampaignDetailTab(t.key)}>
@@ -25040,6 +25060,16 @@ export default function App({ onSignOut }) {
                       </div>
                     );
                   })()}
+
+                  {campaignDetailTab === "votaciones" && (
+                    <PollsGm
+                      key={viewingCampaignId}
+                      campaignId={viewingCampaignId}
+                      total={(campaigns[viewingCampaignId]?.characterIds || []).filter((id) => characters[id]).length}
+                      onAnnounce={(text) => postChat(viewingCampaignId, { kind: "msg", text, author: "El DJ", gm: true })}
+                      onResult={(text) => postChat(viewingCampaignId, { kind: "msg", text, author: "El DJ", gm: true })}
+                    />
+                  )}
 
                   {campaignDetailTab === "calendario" && (
                     <CampaignCalendar

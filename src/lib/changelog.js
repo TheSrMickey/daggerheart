@@ -2,6 +2,16 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.27",
+    date: "2026-10-09",
+    title: "Votaciones rápidas",
+    items: [
+      { tag: "nuevo", text: "Nueva pestaña «Votaciones» en la campaña: el DJ lanza una pregunta con 2 a 5 opciones, con tiempo límite, voto secreto y cierre automático si votan todos." },
+      { tag: "nuevo", text: "Los jugadores ven la votación como una tarjeta sobre el chat y votan con un toque; pueden cambiar su voto." },
+      { tag: "nuevo", text: "Al cerrar, el resultado se publica en el chat." },
+    ],
+  },
+  {
     version: "1.26",
     date: "2026-10-09",
     title: "Calendario de sesiones",
