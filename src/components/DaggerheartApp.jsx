@@ -4855,7 +4855,7 @@ const sharedStyles = `
   .cx-meta { display: flex; justify-content: space-between; align-items: center; margin: 10px 2px 4px; color: var(--mh-muted); font-size: 12px; gap: 10px; flex-wrap: wrap; }
   .cx-lv { display: flex; align-items: center; gap: 12px; margin: 22px 0 12px; } .cx-lv b { font: 700 13px 'Cinzel', Georgia, serif; letter-spacing: .06em; text-transform: uppercase; color: var(--mh-ink); }
   .cx-lv span { height: 1px; flex: 1; background: var(--mh-line); } .cx-lv small { color: var(--mh-muted); font-size: 12px; }
-  .cx-grid { display: grid; grid-template-columns: repeat(auto-fill, 300px); gap: 16px; justify-content: start; }
+  .cx-grid { display: grid; grid-template-columns: repeat(auto-fill, 300px); gap: 16px; justify-content: center; }
   .cx-card { appearance: none; font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; display: block; width: 300px; max-width: 100%; height: 420px; border-radius: 22px; transition: translate .15s, box-shadow .15s; }
   .cx-card:hover { translate: 0 -3px; box-shadow: 0 12px 26px rgba(0,0,0,.28); } .cx-card:focus-visible { outline: 2px solid var(--acc, #C9A24A); outline-offset: 3px; }
   .cx-empty { padding: 40px; text-align: center; color: var(--mh-muted); border: 1px dashed var(--mh-line); border-radius: 16px; margin-top: 14px; }
