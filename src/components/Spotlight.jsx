@@ -16,7 +16,7 @@ export const kindOf = (k) => SPOT_KINDS.find((x) => x.key === k) || SPOT_KINDS[0
 // El campo puede venir vacío (o como lista, por el valor por defecto del mapa): se normaliza.
 export const normSpot = (raw) => {
   const s = raw && !Array.isArray(raw) && typeof raw === "object" ? raw : {};
-  return { mode: s.mode || "normal", focus: s.focus || null, hands: Array.isArray(s.hands) ? s.hands : [], last: s.last || {}, snooze: s.snooze || {}, t0: s.t0 || 0, settings: { ...SPOT_DEFAULTS, ...(s.settings || {}) } };
+  return { mode: s.mode || "normal", focus: s.focus || null, hands: Array.isArray(s.hands) ? s.hands : [], last: s.last || {}, snooze: s.snooze || {}, t0: s.t0 || 0, chain: Array.isArray(s.chain) ? s.chain : [], settings: { ...SPOT_DEFAULTS, ...(s.settings || {}) } };
 };
 // Manos vivas (sin caducar) y ordenadas: primero las urgentes y luego por hora.
 export const liveHands = (sp, now = Date.now()) =>
@@ -134,7 +134,7 @@ export function SpotPanel({ spot, tokens, onFocus, onUnfocus, onLowerHand, onLow
     if (seen.current && sp.settings.sound) for (const k of keys) if (!seen.current.has(k)) return (seen.current = keys), beep();
     seen.current = keys;
   }, [hands.map((h) => h.charId + h.at).join("|"), idle.map((p) => p.charId).join("|")]);
-  const focusTok = sp.focus ? tokens.find((t) => t.id === sp.focus.tokenId) : null;
+  const focusTok = sp.focus ? (sp.focus.dm ? { name: "El DJ" } : tokens.find((t) => t.id === sp.focus.tokenId)) : null;
   const sw = (k, label, hint) => (
     <label className="mh-spot-sw" key={k}>
       <span><b>{label}</b><small>{hint}</small></span>
@@ -223,6 +223,61 @@ export function SpotPanel({ spot, tokens, onFocus, onUnfocus, onLowerHand, onLow
         </div>
       )}
       <div className="mh-spot-foot">También puedes dar el foco a cualquier ficha: selecciónala y usa «Dar foco» en la barra del mapa.</div>
+    </div>
+  );
+}
+
+// Barra del foco: quién lo tiene, los últimos pases y un menú para pasarlo (Esperanza: elige la mesa; Miedo: pasa al DJ).
+const mmss = (ms) => { const s = Math.max(0, Math.round(ms / 1000)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+export function FocusBar({ spot, pcs, myCharId, isGm, onPass, onClear }) {
+  const sp = normSpot(spot);
+  const [now, setNow] = useState(() => Date.now());
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 15000);
+    return () => clearInterval(t);
+  }, []);
+  const f = sp.focus;
+  if (!f && !sp.chain.length && !isGm) return null;
+  const dm = !!f?.dm;
+  const mine = !!f && !dm && f.charId && f.charId === myCharId;
+  const canPass = isGm || mine;
+  const initial = (n) => (n || "?").trim().charAt(0).toUpperCase();
+  const chip = (n, c, big, ring) => <span className={"fb-av" + (ring ? " is-ring" : "")} style={{ "--c": c, width: big ? 40 : 24, height: big ? 40 : 24, fontSize: big ? 15 : 10 }}>{n === "DJ" ? "DJ" : initial(n)}</span>;
+  const colorOfName = (n) => (pcs.find((p) => p.name === n)?.color) || "#8E6FC4";
+  return (
+    <div className="fb" role="status" aria-label="Foco de la mesa" onPointerDown={(e) => e.stopPropagation()}>
+      <div className="fb-cur">
+        <span className="fb-lab">Foco</span>
+        {f ? chip(dm ? "DJ" : f.name, dm ? "#8E6FC4" : colorOfName(f.name), true, true) : <span className="fb-none">—</span>}
+        <div className="fb-who"><b className="mh-serif">{f ? (dm ? "El DJ" : f.name) : "Nadie"}</b><small>{f ? (dm ? (sp.chain[sp.chain.length - 1]?.why === "fear" ? "Miedo: el foco ha pasado al DJ" : "El DJ tiene el foco") : "tiene el foco · " + mmss(now - f.since)) : "La mesa está libre"}</small></div>
+      </div>
+      {sp.chain.length > 0 && (
+        <div className="fb-chain">
+          <span className="fb-lab">Últimos pases</span>
+          <div>{sp.chain.slice(-5).map((c, i) => <span key={c.at + "" + i} className="fb-link">{i > 0 && <i>→</i>}{chip(c.dm ? "DJ" : c.name, c.dm ? "#8E6FC4" : colorOfName(c.name), false)}{c.why === "fear" && <em title="Con Miedo">😨</em>}{c.why === "hope" && <em title="Con Esperanza">✦</em>}</span>)}</div>
+        </div>
+      )}
+      <span style={{ flex: 1 }} />
+      {canPass && (
+        <div className="fb-pass">
+          <button type="button" className="mh-btn" onClick={() => setOpen((v) => !v)} aria-expanded={open}>✋ Pasar el foco ▾</button>
+          {open && (
+            <>
+              <div className="fb-bg" onClick={() => setOpen(false)} />
+              <div className="fb-menu" role="menu">
+                <div className="fb-lab">¿A quién pasas el foco?</div>
+                {pcs.filter((p) => !(f && !dm && f.charId === p.charId)).map((p) => (
+                  <button key={p.tokenId} type="button" role="menuitem" onClick={() => (setOpen(false), onPass({ tokenId: p.tokenId, charId: p.charId, name: p.name }, isGm ? "dj" : "hope"))}>{chip(p.name, p.color, false)}<span><b>{p.name}</b><small>{p.cls}</small></span></button>
+                ))}
+                {!dm && <button type="button" role="menuitem" onClick={() => (setOpen(false), onPass({ dm: true }, "dj"))}>{chip("DJ", "#8E6FC4", false)}<span><b>El DJ</b><small>Hace un movimiento</small></span></button>}
+                {f && isGm && <button type="button" role="menuitem" onClick={() => (setOpen(false), onClear())}><span style={{ width: 24 }}>✕</span><span><b>Apagar el foco</b></span></button>}
+                <div className="fb-note">Con <b style={{ color: "#E3B04B" }}>Esperanza</b> el foco sigue en la mesa y eliges quién actúa. Con <b style={{ color: "#A58BE8" }}>Miedo</b> pasa al DJ.</div>
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }

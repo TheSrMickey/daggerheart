@@ -18,7 +18,7 @@ import { PollsGm, ActivePoll } from "./Polls";
 import { RestGm, GroupRestDialog } from "./GroupRest";
 import { Chronicle, Timeline } from "./Chronicle";
 import { appendLog } from "@/lib/chronicle";
-import { SpotPlayer, SpotPause, SpotPanel, normSpot, liveHands, kindOf } from "./Spotlight";
+import { SpotPlayer, SpotPause, SpotPanel, FocusBar, normSpot, liveHands, kindOf } from "./Spotlight";
 import { APP_VERSION } from "@/lib/changelog";
 import { setPresence, startPresence, stopPresence, publishTable, loadTable, myUid } from "@/lib/social";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
@@ -4784,6 +4784,18 @@ const sharedStyles = `
   .ch-ic, .tl-node { width: 30px; height: 30px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; flex: none; background: color-mix(in srgb, var(--c) 20%, var(--mh-panel)); color: var(--c); }
   .ch-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; } .ch-tx small { font: 700 9.5px 'Inter', sans-serif; letter-spacing: .08em; color: var(--c); } .ch-tx b { font-size: 13px; } .ch-tx em { font-style: normal; color: var(--mh-muted); font-size: 11.5px; }
   .tl-row { display: flex; align-items: center; gap: 12px; margin-top: 8px; position: relative; } .tl-node { border-radius: 50%; border: 2px solid var(--c); width: 34px; height: 34px; background: var(--mh-panel); }
+  .fb { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 10px 14px; margin-bottom: 8px; border: 1px solid var(--mh-line); border-radius: 14px; background: var(--mh-panel); position: relative; z-index: 12; }
+  .fb-lab { display: block; font: 700 10px 'Inter', system-ui, sans-serif; letter-spacing: .09em; text-transform: uppercase; color: var(--mh-muted); margin-bottom: 4px; }
+  .fb-cur { display: flex; align-items: center; gap: 11px; } .fb-cur .fb-lab { writing-mode: vertical-rl; transform: rotate(180deg); margin: 0; }
+  .fb-who b { display: block; font-size: 14px; } .fb-who small { color: var(--mh-muted); font-size: 11.5px; } .fb-none { color: var(--mh-muted); }
+  .fb-av { display: inline-flex; align-items: center; justify-content: center; flex: none; border-radius: 50%; border: 1.5px solid var(--c); background: color-mix(in srgb, var(--c) 28%, var(--mh-panel)); color: var(--mh-ink); font-weight: 700; font-family: 'Inter', sans-serif; }
+  .fb-av.is-ring { box-shadow: 0 0 0 3px var(--mh-panel), 0 0 0 5px var(--c), 0 0 16px 3px color-mix(in srgb, var(--c) 60%, transparent); }
+  .fb-chain > div { display: flex; align-items: center; gap: 4px; } .fb-link { display: inline-flex; align-items: center; gap: 4px; } .fb-link i { font-style: normal; color: var(--mh-muted); } .fb-link em { font-style: normal; font-size: 11px; color: #E3B04B; }
+  .fb-pass { position: relative; } .fb-bg { position: fixed; inset: 0; z-index: 30; }
+  .fb-menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 31; width: 290px; padding: 10px 12px; border: 1px solid var(--mh-line); border-radius: 14px; background: var(--mh-panel); box-shadow: 0 16px 40px rgba(0,0,0,.4); }
+  .fb-menu > button { appearance: none; width: 100%; display: flex; align-items: center; gap: 10px; text-align: left; font: inherit; color: var(--mh-ink); background: transparent; border: 0; padding: 7px 6px; border-radius: 10px; cursor: pointer; } .fb-menu > button:hover { background: var(--mh-panel3); }
+  .fb-menu button b { display: block; font-size: 12.5px; } .fb-menu button small { color: var(--mh-muted); font-size: 11px; }
+  .fb-note { margin-top: 8px; padding: 8px 10px; border-radius: 10px; background: color-mix(in srgb, var(--mh-ink) 6%, transparent); color: var(--mh-ink3); font-size: 11.5px; line-height: 1.45; }
   .gr-box { width: min(560px, 100%); max-height: 90vh; overflow-y: auto; border: 1px solid var(--mh-line); border-radius: 20px; background: var(--mh-panel); padding: 20px 22px; box-shadow: 0 30px 70px rgba(0,0,0,.55); }
   .gr-who { border: 1px solid var(--mh-line); border-radius: 14px; padding: 12px 14px; margin-top: 10px; }
   .pl-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; } @media (max-width: 900px) { .pl-grid { grid-template-columns: 1fr; } }
@@ -11179,15 +11191,23 @@ export default function App({ onSignOut }) {
     if (kind === "react") postCampaignEvent(charId, "⚡ Pide reaccionar");
   };
   const lowerHand = (campId, charId) => spotWrite(campId, (sp) => ({ ...sp, hands: sp.hands.filter((h) => h.charId !== charId) }));
-  const giveSpotFocus = (campId, tokenId, charId, name) => {
+  const giveSpotFocus = (campId, tokenId, charId, name, why = "dj") => {
     spotWrite(campId, (sp) => ({
       ...sp,
+      chain: [...sp.chain, { name: name || "", charId: charId || null, why, at: Date.now() }].slice(-8),
       focus: { tokenId, charId: charId || null, name: name || "", since: Date.now() },
       last: charId ? { ...sp.last, [charId]: Date.now() } : sp.last,
       hands: sp.settings.dropHand && charId ? sp.hands.filter((h) => h.charId !== charId) : sp.hands,
     }));
     pushMapLog(campId, "✨ " + (name || "Una ficha") + " tiene el foco", "info");
   };
+  // Con Miedo (o a voluntad del DJ) el foco pasa al DJ.
+  const passFocusDm = (campId, why = "dj") => {
+    spotWrite(campId, (sp) => ({ ...sp, chain: [...sp.chain, { name: "El DJ", dm: true, why, at: Date.now() }].slice(-8), focus: { dm: true, tokenId: null, charId: null, name: "El DJ", since: Date.now() } }));
+    pushMapLog(campId, (why === "fear" ? "😨 Miedo: " : "") + "el foco pasa al DJ", "info");
+  };
+  const passFocus = (campId, target, why) => (target.dm ? passFocusDm(campId, why) : giveSpotFocus(campId, target.tokenId, target.charId, target.name, why));
+  const focusPcs = (tokens) => (tokens || []).filter((t) => t.kind === "pc" && t.charId && !t.vanished).map((t) => ({ tokenId: t.id, charId: t.charId, name: characters[t.charId]?.f_name || t.name || "Jugador", cls: characters[t.charId]?.f_class || "", color: characters[t.charId]?.f_class ? classColor(characters[t.charId].f_class) : "#C9A24A" }));
   const clearSpotFocus = (campId, who) => {
     spotWrite(campId, (sp) => ({ ...sp, focus: null }));
     pushMapLog(campId, who ? "✔ " + who + " ha terminado su turno de foco" : "El foco se apaga", "info");
@@ -12750,6 +12770,11 @@ export default function App({ onSignOut }) {
       }
     } else {
       addFear(1);
+      // Con Miedo, si quien tira tenía el foco, este pasa al DJ.
+      if (sheetCampaignId) {
+        const spf = normSpot(campaignMapRef.current?.spot);
+        if (spf.focus && !spf.focus.dm && spf.focus.charId === charId) passFocusDm(sheetCampaignId, "fear");
+      }
       // Del Mar: cada tirada con Miedo pone una ficha en la carta de comunidad (máximo tu nivel).
       const chT = charsRef.current[charId];
       if (chT && chT.f_community === "Del Mar") {
@@ -16866,6 +16891,7 @@ export default function App({ onSignOut }) {
                                   (mapTokens.length || scene.image || (campaignMap.tokens || []).length || (campaignMap.props || []).length || campaignMap.fog?.on ? (
                                     <>
                                       {/* La escena llena la caja (difuminada por detrás) y el tablero, con casillas cuadradas, se ajusta dentro */}
+                                      <FocusBar spot={campaignMap.spot} pcs={focusPcs(campaignMap.tokens)} myCharId={viewingCharId} isGm={false} onPass={(t, why) => passFocus(charCampaign.id, t, why)} onClear={() => {}} />
                                       <div className="mh-map-stage">
                                         <MapViewport focus={myToken ? { x: myToken.x, y: myToken.y } : null}>
                                           <MapBoard
@@ -24887,6 +24913,7 @@ export default function App({ onSignOut }) {
                             </button>
                           )}
                         </div>
+                        <FocusBar spot={campaignMap.spot} pcs={focusPcs(tokens)} myCharId={null} isGm onPass={(t, why) => passFocus(viewingCampaignId, t, why)} onClear={() => clearSpotFocus(viewingCampaignId, "")} />
                         <SpotPanel
                           spot={campaignMap.spot}
                           tokens={mapTokensView(tokens)}

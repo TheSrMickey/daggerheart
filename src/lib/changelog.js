@@ -2,6 +2,16 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.30",
+    date: "2026-10-09",
+    title: "Barra del foco",
+    items: [
+      { tag: "nuevo", text: "Sobre el mapa hay ahora una barra con quién tiene el foco, los últimos pases y un menú «Pasar el foco»." },
+      { tag: "nuevo", text: "Quien tiene el foco puede pasárselo a otro jugador (como con Esperanza) o al DJ; el DJ puede dárselo a cualquiera o apagarlo." },
+      { tag: "nuevo", text: "Si quien tiene el foco hace una tirada con Miedo, el foco pasa solo al DJ y queda anotado en el mapa." },
+    ],
+  },
+  {
     version: "1.29",
     date: "2026-10-09",
     title: "Crónica y línea de tiempo",
