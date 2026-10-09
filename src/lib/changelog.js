@@ -2,6 +2,16 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.26",
+    date: "2026-10-09",
+    title: "Calendario de sesiones",
+    items: [
+      { tag: "nuevo", text: "Nueva pestaña «Calendario» en la campaña: el DJ fija la próxima sesión (fecha, hora y lugar) y ve quién viene." },
+      { tag: "nuevo", text: "Los jugadores ven la próxima sesión en Inicio, con cuenta atrás, y confirman con Voy, Quizá o No puedo." },
+      { tag: "nuevo", text: "Un mes con las sesiones pasadas y la próxima marcadas." },
+    ],
+  },
+  {
     version: "1.25",
     date: "2026-10-09",
     title: "Generadores para el DJ",

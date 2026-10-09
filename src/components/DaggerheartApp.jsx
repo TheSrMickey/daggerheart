@@ -2,7 +2,7 @@
 
 import { Fragment, useState, useEffect, useLayoutEffect, useRef, createContext, useContext } from "react";
 import { createPortal } from "react-dom";
-import { Squirrel, Layers } from "lucide-react";
+import { Squirrel, Layers, CalendarDays } from "lucide-react";
 import { History, LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus, Box, LayoutGrid, Bird, Fish, Bug, Rabbit, Cat, Turtle, Clock, CircleDashed, Slash } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { NotificationBell, FriendsPanel } from "./Social";
@@ -13,6 +13,7 @@ import { RulesPanel } from "./MapRules";
 import { Changelog } from "./Changelog";
 import { CardsPage } from "./Cards";
 import { Generators } from "./Generators";
+import { CampaignCalendar, NextSession } from "./Calendar";
 import { SpotPlayer, SpotPause, SpotPanel, normSpot, liveHands, kindOf } from "./Spotlight";
 import { APP_VERSION } from "@/lib/changelog";
 import { setPresence, startPresence, stopPresence, publishTable, loadTable, myUid } from "@/lib/social";
@@ -4769,6 +4770,25 @@ const sharedStyles = `
   html[data-mh-theme="light"] .mh-camp-back { color: #4C4458; } html[data-mh-theme="light"] .mh-camp-back:hover { background: #00000010; color: #221C2B; }
   html[data-mh-theme="light"] .mh-camp-desc { color: #4C4458; } html[data-mh-theme="light"] .mh-camp-emb { background: #FFFCF6; }
   @media (max-width: 640px) { .mh-camp-hero-row { flex-direction: column; align-items: flex-start; } .mh-camp-title { font-size: 21px; } }
+  .cal { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 16px; align-items: start; } @media (max-width: 900px) { .cal { grid-template-columns: 1fr; } }
+  .cal-main, .cal-month { margin: 0 !important; padding: 18px 20px !important; }
+  .cal-edit { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin: 12px 0 4px; padding: 12px; border: 1px solid var(--mh-line); border-radius: 12px; } .cal-edit label { display: flex; flex-direction: column; flex: 1 1 180px; }
+  .cal-hero { display: flex; align-items: center; gap: 18px; margin: 14px 0 4px; }
+  .cal-date { width: 96px; height: 104px; border-radius: 16px; border: 2px solid var(--acc, #C9A24A); display: flex; flex-direction: column; align-items: center; justify-content: center; background: color-mix(in srgb, var(--acc, #C9A24A) 10%, var(--mh-panel)); } .cal-date small { letter-spacing: .08em; color: var(--mh-muted); font-size: 10.5px; } .cal-date b { font-size: 38px; line-height: 1; }
+  .cal-count { color: var(--mh-muted); margin-bottom: 8px; } .cal-count b { color: var(--mh-ink); }
+  .cal-rsvp { display: flex; flex-direction: column; gap: 8px; }
+  .cal-who { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--mh-line); border-radius: 12px; }
+  .cal-av { width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font: 700 13px 'Inter', sans-serif; border: 1.5px solid var(--c); background: color-mix(in srgb, var(--c) 24%, var(--mh-panel)); color: var(--mh-ink); flex: none; }
+  .cal-nm { flex: 1; min-width: 0; display: flex; flex-direction: column; } .cal-nm b { font-size: 13px; } .cal-nm small { color: var(--mh-muted); font-size: 11.5px; }
+  .cal-btns { display: flex; gap: 8px; margin-top: 12px; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 12px; text-align: center; } .cal-grid > small { color: var(--mh-muted); font-weight: 700; padding-bottom: 4px; }
+  .cal-day { aspect-ratio: 1; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 600; border: 1px solid transparent; position: relative; }
+  .cal-day.is-ses { background: color-mix(in srgb, var(--acc, #C9A24A) 16%, var(--mh-panel)); border-color: var(--acc, #C9A24A); } .cal-day u { width: 5px; height: 5px; border-radius: 50%; background: var(--mh-muted); text-decoration: none; } .cal-day.is-next u { background: #4CC36B; }
+  .cal-day.is-today { outline: 2px solid var(--mh-ink3); outline-offset: -3px; }
+  .cal-leg { display: flex; gap: 14px; margin-top: 12px; color: var(--mh-muted); font-size: 12px; } .cal-leg u { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--mh-muted); margin-right: 5px; text-decoration: none; } .cal-leg u.n { background: #4CC36B; } .cal-leg s { display: inline-block; width: 8px; height: 8px; border: 2px solid var(--mh-ink3); border-radius: 3px; margin-right: 5px; text-decoration: none; }
+  .ns { --c: #C9A24A; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 14px 0; padding: 12px 16px; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--c) 45%, var(--mh-line)); background: color-mix(in srgb, var(--c) 9%, var(--mh-panel)); }
+  .ns-d { display: flex; flex-direction: column; align-items: center; min-width: 64px; padding: 6px 10px; border-radius: 12px; background: color-mix(in srgb, var(--c) 18%, var(--mh-panel)); } .ns-d small { color: var(--mh-muted); font-size: 10.5px; text-transform: capitalize; } .ns-d b { font-size: 16px; }
+  .ns-t { flex: 1; min-width: 180px; display: flex; flex-direction: column; } .ns-t b { font-size: 13.5px; } .ns-t small { color: var(--mh-muted); font-size: 12px; }
   .gx { padding: 18px 20px; max-width: 760px; }
   .gx-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; } .gx-h h3 { margin: 0; font-size: 16px; display: flex; align-items: center; gap: 9px; }
   .gx-sub { margin: 4px 0 14px; color: var(--mh-muted); font-size: 12.5px; }
@@ -23719,6 +23739,9 @@ export default function App({ onSignOut }) {
                       )}
                     </div>
                   </div>
+                  {camps.map((cp) => (
+                    <NextSession key={cp.id} campaign={cp} colorOf={campColor(cp.id)} mine={(cp.characterIds || []).filter((id) => characters[id]).map((id) => ({ id }))} />
+                  ))}
                   <div className="mh-home-sec">
                     <h3>Retoma tus campañas <i>{camps.length}</i></h3>
                     <button type="button" onClick={() => setView("campaigns")}>Ver todas ›</button>
@@ -23951,6 +23974,7 @@ export default function App({ onSignOut }) {
                       { key: "chat", label: "Chat", Icon: MessageCircle },
                       { key: "mapa", label: "Mapa", Icon: MapPinned },
                       { key: "encuentros", label: "Encuentros", Icon: Swords },
+                      { key: "calendario", label: "Calendario", Icon: CalendarDays },
                       { key: "generadores", label: "Generadores", Icon: Dices },
                     ].map((t) => (
                       <button key={t.key} type="button" role="tab" aria-selected={campaignDetailTab === t.key} className={"is-base" + (campaignDetailTab === t.key ? " is-on" : "")} onClick={() => setCampaignDetailTab(t.key)}>
@@ -25016,6 +25040,16 @@ export default function App({ onSignOut }) {
                       </div>
                     );
                   })()}
+
+                  {campaignDetailTab === "calendario" && (
+                    <CampaignCalendar
+                      key={viewingCampaignId}
+                      campaignId={viewingCampaignId}
+                      isGm
+                      colorOf={(cls) => (cls ? classColor(cls) : "#C9A24A")}
+                      members={(campaigns[viewingCampaignId]?.characterIds || []).filter((id) => characters[id]).map((id) => ({ id, name: characters[id].f_name || "Sin nombre", cls: characters[id].f_class || "", mine: false }))}
+                    />
+                  )}
 
                   {campaignDetailTab === "generadores" && (() => {
                     const ids = (campaigns[viewingCampaignId]?.characterIds || []).filter((id) => characters[id]);
