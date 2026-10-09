@@ -2,6 +2,17 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.21",
+    date: "2026-10-09",
+    title: "Tiradas a pantalla completa y etiqueta de multiclase",
+    items: [
+      { tag: "mejora", text: "La ventana de tirada es más ancha y baja: Tipo y Ventaja comparten fila y los dados, la fórmula y el botón de tirar van en una sola línea." },
+      { tag: "arreglo", text: "Las tiradas y sus resultados se muestran siempre a pantalla completa, también desde la pestaña de campaña." },
+      { tag: "mejora", text: "Al ganar Esperanza o Favor la fila y el texto tiemblan igual que con la Vida y el Estrés, sin el resplandor." },
+      { tag: "mejora", text: "La multiclase ahora es una etiqueta «Multiclase: clase» en la cabecera, con el color de esa clase, junto a la de Hombre Lobo o las formas de bestia." },
+    ],
+  },
+  {
     version: "1.20",
     date: "2026-10-09",
     title: "Ventana de tiradas ordenada y golpes en el aire",

@@ -148,7 +148,6 @@ export function ModernSheet({ d, actions, content, tab, onTab, fill }) {
             <h2 className="mh-serif">{d.name || "Sin nombre"}</h2>
             <p data-tour="cls">
               {[d.cls, d.subclass].filter(Boolean).join(" · ") || "Sin clase asignada"}
-              {d.multi && <b className="mhm-multi"> + {d.multi.cls}</b>}
               {d.pronouns && <span data-tour="pron"> · {d.pronouns}</span>}
             </p>
           </div>

@@ -2,7 +2,7 @@
 
 import { Fragment, useState, useEffect, useLayoutEffect, useRef, createContext, useContext } from "react";
 import { createPortal } from "react-dom";
-import { Squirrel } from "lucide-react";
+import { Squirrel, Layers } from "lucide-react";
 import { History, LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus, Box, LayoutGrid, Bird, Fish, Bug, Rabbit, Cat, Turtle, Clock, CircleDashed, Slash } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { NotificationBell, FriendsPanel } from "./Social";
@@ -3817,7 +3817,7 @@ const sharedStyles = `
     .mh-cardc-dock { position: relative; left: auto; top: auto; translate: none; flex-direction: row; margin-top: -18px; padding: 26px 10px 10px; border: 2px solid var(--cc); border-top: 0; border-radius: 0 0 18px 18px; }
     .mh-cardc-tip { left: 50%; top: auto; bottom: calc(100% + 30px); translate: -50% 0; }
   }
-  .mh-pre { margin: 0; width: min(460px, 100%); max-height: 90%; overflow-y: auto; padding: 18px 20px; border-radius: 18px; display: flex; flex-direction: column; }
+  .mh-pre { margin: 0; width: min(700px, 100%); max-height: 90%; overflow-y: auto; padding: 18px 20px; border-radius: 18px; display: flex; flex-direction: column; }
   .mh-pre-body { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; margin-top: 10px; }
   .mh-res-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: -6px -14px 4px 0; text-align: left; }
   .mh-res-h b { font-size: 15px; }
@@ -3825,8 +3825,20 @@ const sharedStyles = `
   .mh-res-total small { font: 700 10px 'Inter', system-ui, sans-serif; letter-spacing: .09em; text-transform: uppercase; color: var(--mh-muted); }
   .mh-res-total > div { font-size: 44px; font-weight: 700; line-height: 1.1; min-height: 48px; color: var(--mh-ink); }
   .mh-res-banner { margin-top: 10px; padding: 8px 12px; border-radius: 10px; font-size: 14px; font-weight: 700; color: var(--mh-ink); background: color-mix(in srgb, var(--rc, #888) 16%, var(--mh-panel)); border: 1px solid color-mix(in srgb, var(--rc, #888) 55%, transparent); }
-  .mh-pre-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
-  .mh-pre-lab { flex: 0 0 74px; font: 700 10.5px 'Inter', system-ui, sans-serif; letter-spacing: .07em; text-transform: uppercase; color: var(--mh-muted); }
+  .mh-pre-row { display: flex; align-items: center; gap: 12px; margin-bottom: 0; }
+  .mh-pre-top { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 18px; margin-bottom: 12px; }
+  .mh-pre-top > .mh-pre-note { grid-column: 1 / -1; margin: 0; }
+  .mh-pre-side { display: grid !important; grid-template-columns: auto minmax(0, 1fr) minmax(190px, 230px); align-items: center; gap: 10px 16px !important; }
+  .mh-pre-side > .mh-pre-det { grid-column: 1 / -1; order: 5; }
+  .mh-pre-side > .mh-pre-plain { grid-column: 1 / -1; order: 6; }
+  .mh-pre-side > .mh-pre-go { order: 3; }
+  .mh-pre-side > .mh-pre-sum { order: 2; }
+  .mh-pre-side > .mh-pre-dice { order: 1; flex-wrap: nowrap; }
+  .mh-pre-sum { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .mh-pre-grid.is-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .mh-pre-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  @media (max-width: 720px) { .mh-pre-top { grid-template-columns: 1fr; } .mh-pre-side { grid-template-columns: 1fr !important; } .mh-pre-grid, .mh-pre-grid.is-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .mh-pre-lab { flex: 0 0 auto; min-width: 52px; font: 700 10.5px 'Inter', system-ui, sans-serif; letter-spacing: .07em; text-transform: uppercase; color: var(--mh-muted); }
   .mh-pre-row .mh-pre-seg { flex: 1; }
   .mh-pre-row .mh-pre-seg button { flex: 1; padding: 6px 6px; white-space: nowrap; font-size: 11.5px; }
   .mh-pre-det { border: 1px solid var(--mh-line); border-radius: 10px; background: var(--mh-panel); }
@@ -5174,14 +5186,13 @@ const sharedStyles = `
     box-shadow: inset 0 0 120px 26px color-mix(in srgb, var(--rc) 55%, transparent);
     animation: mh-hit-flash .8s ease-out both;
   }
-  .mh-res-hope.mh-res-flash, .mh-res-favor.mh-res-flash { background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--rc) 22%, transparent), transparent 60%); }
   .mh-res-text {
     position: absolute; left: 50%; z-index: 6; pointer-events: none; white-space: nowrap;
     font-family: 'Cinzel', Georgia, serif; font-size: 46px; font-weight: 700; color: color-mix(in srgb, var(--rc) 82%, #fff);
     text-shadow: 0 0 22px color-mix(in srgb, var(--rc) 85%, transparent), 0 2px 0 #000;
     animation: mh-hit-text 1.2s cubic-bezier(.2,.8,.2,1) both;
   }
-  .mh-res-stress.mh-res-text { animation: mh-hit-text 1.2s cubic-bezier(.2,.8,.2,1) both, mh-res-jitter .3s ease 2; }
+  .mh-res-text { animation: mh-hit-text 1.2s cubic-bezier(.2,.8,.2,1) both, mh-res-jitter .3s ease 2; }
   @keyframes mh-res-jitter { 25% { margin-left: -4px; } 75% { margin-left: 4px; } }
   .mh-row-stress { animation: mh-row-jitter .4s ease both; }
   @keyframes mh-row-jitter { 0%, 100% { translate: 0 0; } 25% { translate: -4px 0; } 50% { translate: 4px 0; } 75% { translate: -2px 0; } }
@@ -11625,7 +11636,7 @@ export default function App({ onSignOut }) {
       </div>
     );
   };
-  const rollDock = view === "ficha" && detailTab === "campaign" && !isMobile;
+  const rollDock = false;
   // Un enemigo del DJ ataca a tu personaje: se abre el aviso para resolverlo (solo con su hoja abierta).
   useEffect(() => {
     if (!sheetCampaignId || !sheetCharId || incomingHit) return;
@@ -12814,6 +12825,11 @@ export default function App({ onSignOut }) {
                         <Moon size={14} /> {c.f_transformation}
                       </span>
                     ))}
+                  {getMulticlass(c) && (
+                    <span className="mh-htag" style={{ "--tag": classColor(getMulticlass(c).cls) }} title={"Multiclase: " + getMulticlass(c).cls}>
+                      <Layers size={14} /> Multiclase: {getMulticlass(c).cls}
+                    </span>
+                  )}
                   {beastformInfo && (
                     <span className="mh-htag is-active" style={{ "--tag": beastformInfo.color }} title="Forma de Bestia">
                       <span className="mh-htag-dot" /> {beastformInfo.key}
@@ -13138,7 +13154,7 @@ export default function App({ onSignOut }) {
                   </div>
                   {(c.f_class || c.f_pronouns) && (
                     <div style={{ color: "var(--mh-ink3)", fontSize: 13, marginTop: 4, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                      <span>{[c.f_class, c.f_subclass, c.f_pronouns].filter(Boolean).join(" · ")}{getMulticlass(c) && <b className="mhm-multi"> + {getMulticlass(c).cls}</b>}</span>
+                      <span>{[c.f_class, c.f_subclass, c.f_pronouns].filter(Boolean).join(" · ")}</span>
                       {isExpansionClass && <span className="mh-exp-tag">{isExpansionClass}</span>}
                     </div>
                   )}
@@ -13933,7 +13949,7 @@ export default function App({ onSignOut }) {
 
                               <StepperRow gap={statsSpacing.stepMb} labelGap={statsSpacing.stepLabelMb} hitKey={hpHit && hpHit.id === viewingCharId ? hpHit.key : undefined} label="Puntos de vida" total={Number(c.r_hp || 0) + equipMods.hp} marked={Number(c.hp_marked || 0)} field="hp_marked" color="#D9644E" Icon={Heart} charId={viewingCharId} onDelta={adjustHp} onToggle={markHp} />
                               <StepperRow gap={statsSpacing.stepMb} labelGap={statsSpacing.stepLabelMb} pulseKey={resFx.stress && resFx.stress.id === viewingCharId ? resFx.stress.key : undefined} pulseClass="mh-row-stress" label="Estrés" total={Number(c.r_stress || 0) + equipMods.stress} marked={Number(c.stress_marked || 0)} field="stress_marked" color="#A58BE8" Icon={Zap} charId={viewingCharId} onDelta={adjustStress} onToggle={markStressBox} allowOverflow />
-                              <StepperRow gap={statsSpacing.stepMb} labelGap={statsSpacing.stepLabelMb} pulseKey={resFx.hope && resFx.hope.id === viewingCharId ? resFx.hope.key : undefined} pulseClass="mh-row-glow" label="Esperanza" total={HOPE_MAX + equipMods.hope + (getCompanion(c)?.training?.light ? 1 : 0)} marked={Number(c.hope_marked ?? HOPE_DEFAULT)} field="hope_marked" color="#E3B04B" Icon={Sparkles} charId={viewingCharId} onDelta={updateCharacterField} onToggle={toggleCharSlot} shape="diamond" scarCount={Number(c.f_scars || 0)} />
+                              <StepperRow gap={statsSpacing.stepMb} labelGap={statsSpacing.stepLabelMb} pulseKey={resFx.hope && resFx.hope.id === viewingCharId ? resFx.hope.key : undefined} pulseClass="mh-row-stress" label="Esperanza" total={HOPE_MAX + equipMods.hope + (getCompanion(c)?.training?.light ? 1 : 0)} marked={Number(c.hope_marked ?? HOPE_DEFAULT)} field="hope_marked" color="#E3B04B" Icon={Sparkles} charId={viewingCharId} onDelta={updateCharacterField} onToggle={toggleCharSlot} shape="diamond" scarCount={Number(c.f_scars || 0)} />
                               {c.f_class === "Invocador" && (() => {
                                 const sm = getSummons(c);
                                 const tierS = tierForLevel(c.f_level || 1);
@@ -13974,7 +13990,7 @@ export default function App({ onSignOut }) {
                                   labelGap={statsSpacing.stepLabelMb}
                                   label="Favor"
                                   pulseKey={resFx.favor && resFx.favor.id === viewingCharId ? resFx.favor.key : undefined}
-                                  pulseClass="mh-row-glow"
+                                  pulseClass="mh-row-stress"
                                   total={Math.max(6, getFavor(c))}
                                   marked={getFavor(c)}
                                   field="f_favor"
@@ -18825,6 +18841,7 @@ export default function App({ onSignOut }) {
                     </div>
                     <div className="mh-pre-body">
                       <div className="mh-pre-opts">
+                        <div className="mh-pre-top">
                         {canReact && (
                           <div className="mh-pre-row">
                             <span className="mh-pre-lab">Tipo</span>
@@ -18863,6 +18880,7 @@ export default function App({ onSignOut }) {
                         </div>
                         </div>
                         {(shellLock || sureFoot) && <div className="mh-pre-note">{shellLock ? "Retraído: desventaja obligatoria" : "Pie Firme: ignoras la desventaja"}</div>}
+                        </div>
                         {exps.length > 0 && (
                           <>
                             <div className="mh-pre-sec">Experiencias · {adeptOnUI ? "1 Estrés cada una (Diestro)" : "1 Esperanza cada una"}</div>
