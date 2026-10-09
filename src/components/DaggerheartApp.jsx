@@ -2,7 +2,7 @@
 
 import { Fragment, useState, useEffect, useLayoutEffect, useRef, createContext, useContext } from "react";
 import { createPortal } from "react-dom";
-import { Squirrel, Layers, CalendarDays, Vote } from "lucide-react";
+import { Squirrel, Layers, CalendarDays, Vote, ScrollText as ChronIcon } from "lucide-react";
 import { History, LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus, Box, LayoutGrid, Bird, Fish, Bug, Rabbit, Cat, Turtle, Clock, CircleDashed, Slash } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { NotificationBell, FriendsPanel } from "./Social";
@@ -16,6 +16,8 @@ import { Generators } from "./Generators";
 import { CampaignCalendar, NextSession } from "./Calendar";
 import { PollsGm, ActivePoll } from "./Polls";
 import { RestGm, GroupRestDialog } from "./GroupRest";
+import { Chronicle, Timeline } from "./Chronicle";
+import { appendLog } from "@/lib/chronicle";
 import { SpotPlayer, SpotPause, SpotPanel, normSpot, liveHands, kindOf } from "./Spotlight";
 import { APP_VERSION } from "@/lib/changelog";
 import { setPresence, startPresence, stopPresence, publishTable, loadTable, myUid } from "@/lib/social";
@@ -2844,6 +2846,7 @@ const sharedStyles = `
   .mh-root.is-mobile .mh-sheet-scroll { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; }
   .mh-root.is-mobile .mh-sheet-head { padding: 12px 14px !important; }
   .mh-root.is-mobile .mh-sheet-body { flex: none !important; overflow: visible !important; padding: 16px 12px 28px !important; }
+  .mh-camp-tabs { overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; } .mh-camp-tabs::-webkit-scrollbar { display: none; } .mh-camp-tabs > button { flex-shrink: 0; white-space: nowrap; }
   .mh-root.is-mobile .mh-camp-tabs { max-width: 100%; overflow-x: auto; flex-wrap: nowrap; }
   .mh-root.is-mobile .mh-camp-tabs > div { flex-shrink: 0; padding: 8px 12px !important; }
   .mh-root.is-mobile .mh-panel-box { grid-column: 1 / -1 !important; min-width: 0; max-width: 100%; }
@@ -4772,6 +4775,15 @@ const sharedStyles = `
   html[data-mh-theme="light"] .mh-camp-back { color: #4C4458; } html[data-mh-theme="light"] .mh-camp-back:hover { background: #00000010; color: #221C2B; }
   html[data-mh-theme="light"] .mh-camp-desc { color: #4C4458; } html[data-mh-theme="light"] .mh-camp-emb { background: #FFFCF6; }
   @media (max-width: 640px) { .mh-camp-hero-row { flex-direction: column; align-items: flex-start; } .mh-camp-title { font-size: 21px; } }
+  .ch-grid { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 18px; margin-top: 12px; } @media (max-width: 800px) { .ch-grid { grid-template-columns: 1fr; } }
+  .ch-list { display: flex; flex-direction: column; gap: 8px; }
+  .ch-ses { appearance: none; font: inherit; color: var(--mh-ink); text-align: left; cursor: pointer; display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel); position: relative; } .ch-ses small { color: var(--mh-muted); font-size: 11.5px; } .ch-ses em { position: absolute; right: 10px; top: 10px; font-style: normal; font-size: 10.5px; color: #5fd47c; font-weight: 700; } .ch-ses em.draft { color: #E0544A; }
+  .ch-ses.on { border-color: var(--acc, #C9A24A); background: color-mix(in srgb, var(--acc, #C9A24A) 10%, var(--mh-panel)); }
+  .ch-sum { width: 100%; min-height: 100px; resize: vertical; line-height: 1.55; }
+  .ch-ev { display: flex; align-items: center; gap: 11px; padding: 9px 12px; border: 1px solid var(--mh-line); border-radius: 12px; margin-top: 8px; background: color-mix(in srgb, var(--mh-panel) 70%, transparent); }
+  .ch-ic, .tl-node { width: 30px; height: 30px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; flex: none; background: color-mix(in srgb, var(--c) 20%, var(--mh-panel)); color: var(--c); }
+  .ch-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; } .ch-tx small { font: 700 9.5px 'Inter', sans-serif; letter-spacing: .08em; color: var(--c); } .ch-tx b { font-size: 13px; } .ch-tx em { font-style: normal; color: var(--mh-muted); font-size: 11.5px; }
+  .tl-row { display: flex; align-items: center; gap: 12px; margin-top: 8px; position: relative; } .tl-node { border-radius: 50%; border: 2px solid var(--c); width: 34px; height: 34px; background: var(--mh-panel); }
   .gr-box { width: min(560px, 100%); max-height: 90vh; overflow-y: auto; border: 1px solid var(--mh-line); border-radius: 20px; background: var(--mh-panel); padding: 20px 22px; box-shadow: 0 30px 70px rgba(0,0,0,.55); }
   .gr-who { border: 1px solid var(--mh-line); border-radius: 14px; padding: 12px 14px; margin-top: 10px; }
   .pl-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; } @media (max-width: 900px) { .pl-grid { grid-template-columns: 1fr; } }
@@ -10420,6 +10432,7 @@ export default function App({ onSignOut }) {
     }
     const next = [...list, { ts: Date.now(), ...entry }].slice(-CHAT_LIMIT);
     await safeSet("campaign-chat:" + campaignId, JSON.stringify(next), true);
+    appendLog(campaignId, next[next.length - 1]);
     if (getActiveCampaignIdForChat() === campaignId) setCampaignChat(next);
   };
 
@@ -23996,6 +24009,8 @@ export default function App({ onSignOut }) {
                       { key: "chat", label: "Chat", Icon: MessageCircle },
                       { key: "mapa", label: "Mapa", Icon: MapPinned },
                       { key: "encuentros", label: "Encuentros", Icon: Swords },
+                      { key: "cronica", label: "Crónica", Icon: ChronIcon },
+                      { key: "linea", label: "Línea de tiempo", Icon: History },
                       { key: "calendario", label: "Calendario", Icon: CalendarDays },
                       { key: "votaciones", label: "Votaciones", Icon: Vote },
                       { key: "descanso", label: "Descanso", Icon: BedDouble },
@@ -25064,6 +25079,10 @@ export default function App({ onSignOut }) {
                       </div>
                     );
                   })()}
+
+                  {campaignDetailTab === "cronica" && <Chronicle key={viewingCampaignId} campaignId={viewingCampaignId} onShare={(text) => postChat(viewingCampaignId, { kind: "msg", text, author: "El DJ", gm: true })} />}
+
+                  {campaignDetailTab === "linea" && <Timeline key={viewingCampaignId} campaignId={viewingCampaignId} />}
 
                   {campaignDetailTab === "descanso" && (
                     <RestGm

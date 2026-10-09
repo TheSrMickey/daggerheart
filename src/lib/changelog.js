@@ -2,6 +2,16 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.29",
+    date: "2026-10-09",
+    title: "Crónica y línea de tiempo",
+    items: [
+      { tag: "nuevo", text: "La campaña guarda ahora sus hitos solos: escenas mostradas, pistas, combates, críticos, subidas de nivel, descansos del grupo y votaciones." },
+      { tag: "nuevo", text: "Nueva pestaña «Crónica»: una sesión por día con resumen automático editable, momentos clave que se pueden quitar, quién estuvo y notas privadas del DJ; se puede compartir con la mesa en el chat." },
+      { tag: "nuevo", text: "Nueva pestaña «Línea de tiempo»: toda la historia sesión a sesión con filtros por tipo de hito." },
+    ],
+  },
+  {
     version: "1.28",
     date: "2026-10-09",
     title: "Descanso del grupo",
