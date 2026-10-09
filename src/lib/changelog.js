@@ -2,6 +2,14 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.22",
+    date: "2026-10-09",
+    title: "Inicio en modo día",
+    items: [
+      { tag: "arreglo", text: "Las imágenes de «Retoma tus campañas» y «Tus personajes» ahora tienen un degradado claro en modo día, en vez del fondo oscuro." },
+    ],
+  },
+  {
     version: "1.21",
     date: "2026-10-09",
     title: "Tiradas a pantalla completa y etiqueta de multiclase",

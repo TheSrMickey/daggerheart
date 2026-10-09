@@ -4657,6 +4657,8 @@ const sharedStyles = `
   .mh-home-tile small { font-size: 11.5px; color: var(--mh-muted); }
   .mh-home-tile-art { height: 76px; border-radius: 9px; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; color: #ffffffb0; background: linear-gradient(135deg, #2b3a7a, #151236); }
   .mh-home-tile-art.is-char { background: linear-gradient(135deg, color-mix(in srgb, var(--hc) 60%, #12122e), #12122e); }
+  html[data-mh-theme="light"] .mh-home-tile-art { background: linear-gradient(135deg, #cfd8f6, #f1f3fc); color: #3b4a8f; }
+  html[data-mh-theme="light"] .mh-home-tile-art.is-char { background: linear-gradient(135deg, color-mix(in srgb, var(--hc) 42%, #fffcf6), #fffcf6); color: color-mix(in srgb, var(--hc) 75%, #221C2B); }
   .mh-friends { position: sticky; top: 0; border-radius: 16px; background: var(--mh-panel); border: 1px solid var(--mh-line); padding: 14px 12px; min-height: 320px; }
   .mh-friends-tabs { display: flex; gap: 16px; padding: 0 4px 10px; font-size: 13px; }
   .mh-friends-tabs button { all: unset; cursor: pointer; color: var(--mh-muted); display: flex; align-items: center; gap: 6px; }
