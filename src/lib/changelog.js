@@ -2,6 +2,15 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.15",
+    date: "2026-10-09",
+    title: "La mano del mapa con todas tus cartas",
+    items: [
+      { tag: "nuevo", text: "La mano del mapa incluye las cartas de Acciones (subclase, características de clase, Esperanza, ascendencia, comunidad y transformación). El orden es: armas, Acciones y cartas de dominio." },
+      { tag: "mejora", text: "Con muchas cartas, se juntan para caber en el ancho del mapa. Al pulsar o soltar una carta de Acciones se abre su carta completa." },
+    ],
+  },
+  {
     version: "1.14",
     date: "2026-10-08",
     title: "Carta de subclase del Guardián de los Elementos",
