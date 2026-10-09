@@ -249,3 +249,47 @@ export function setPresence(cls: string | null) {
   presenceCls = cls;
   if (presenceTimer) void publishPresence();
 }
+
+// --- La mesa de una campaña: quién está conectado y quién escribe ---
+// Una fila por jugador y campaña (`cpr:<campaña>:<usuario>`), así nadie pisa lo de otro.
+export type TableEntry = { uid: string; name: string; as: string; cls: string; chars: string[]; at: number; away: boolean; typing: number; off?: boolean };
+type TableRow = Omit<TableEntry, "uid">;
+const devTable = new Map<string, TableEntry>();
+if (typeof window !== "undefined" && isDev()) (window as unknown as { __devTable?: Map<string, TableEntry> }).__devTable = devTable;
+let tableUid: string | null = null;
+export async function myUid(): Promise<string | null> {
+  if (isDev()) return "dev-me";
+  if (tableUid) return tableUid;
+  const { data } = await sb().auth.getUser();
+  tableUid = data.user?.id ?? null;
+  return tableUid;
+}
+
+export async function publishTable(campId: string, v: { name: string; as: string; cls: string; chars: string[]; typing: number }, off = false) {
+  const uid = await myUid();
+  if (!uid) return;
+  const row: TableRow = { ...v, at: Date.now(), away: typeof document !== "undefined" && document.hidden, ...(off ? { off: true } : {}) };
+  if (isDev()) {
+    devTable.set(`${campId}:${uid}`, { uid, ...row });
+    return;
+  }
+  await writeShared(`cpr:${campId}:${uid}`, row, uid).catch(() => {});
+}
+
+export async function loadTable(campId: string): Promise<TableEntry[]> {
+  const now = Date.now();
+  let list: TableEntry[] = [];
+  if (isDev()) {
+    list = [...devTable.entries()].filter(([k]) => k.startsWith(campId + ":")).map(([, e]) => e);
+  } else {
+    const { data } = await sb().from("kv_shared").select("key, value").like("key", `cpr:${campId}:%`);
+    list = (data ?? [])
+      .map((r) => {
+        const v = parse<TableRow>(r.value);
+        return v ? ({ ...v, uid: r.key.split(":")[2] } as TableEntry) : null;
+      })
+      .filter((x): x is TableEntry => !!x);
+  }
+  // Sin latido en 40 s, o con «off», se considera desconectado.
+  return list.map((e) => (e.off || now - e.at > 40000 ? { ...e, off: true, typing: 0 } : e));
+}

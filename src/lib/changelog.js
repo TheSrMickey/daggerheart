@@ -2,6 +2,16 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.23",
+    date: "2026-10-09",
+    title: "La mesa en el chat",
+    items: [
+      { tag: "nuevo", text: "El chat de la campaña muestra arriba los círculos de los jugadores con su estado (en línea, ausente o desconectado). Al pulsarlos se abre la lista de la mesa." },
+      { tag: "nuevo", text: "Cuando alguien escribe, el chat avisa con «nombre está escribiendo…»." },
+      { tag: "mejora", text: "Los mensajes de texto llevan avatar con el color de la clase y su estado, el nombre del personaje y su clase y jugador, sin burbuja." },
+    ],
+  },
+  {
     version: "1.22",
     date: "2026-10-09",
     title: "Inicio en modo día",

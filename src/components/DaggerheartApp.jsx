@@ -13,7 +13,7 @@ import { RulesPanel } from "./MapRules";
 import { Changelog } from "./Changelog";
 import { SpotPlayer, SpotPause, SpotPanel, normSpot, liveHands, kindOf } from "./Spotlight";
 import { APP_VERSION } from "@/lib/changelog";
-import { setPresence, startPresence, stopPresence } from "@/lib/social";
+import { setPresence, startPresence, stopPresence, publishTable, loadTable, myUid } from "@/lib/social";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
 import { buildSablewood } from "./quickstartSablewood";
 import { Wand, CircleDot, MoveUpRight, Archive, Shell, Compass, Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
@@ -3556,7 +3556,35 @@ const sharedStyles = `
   .mh-stg-modal-text { margin-top: 10px; font-size: 13.5px; line-height: 1.6; color: var(--mh-ink2); white-space: pre-wrap; }
   .mh-stg-modal-text.is-note { font-family: Georgia, serif; font-style: italic; padding: 12px 14px; border-radius: 10px; background: color-mix(in srgb, #E8D4A0 28%, var(--mh-panel)); }
   /* Chat de campaña: registro unificado */
-  .mh-chat { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; }
+  .mh-chat { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; position: relative; }
+  .mh-chat-m { display: flex; gap: 9px; align-items: flex-start; flex-shrink: 0; padding: 1px 2px; }
+  .mh-chat-mb { flex: 1; min-width: 0; }
+  .mh-chat-mh { display: flex; align-items: baseline; gap: 6px; font-size: 12.5px; min-width: 0; }
+  .mh-chat-mh b { font-weight: 700; white-space: nowrap; }
+  .mh-chat-mh em { font-style: normal; font-size: 10.5px; color: var(--mh-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .mh-chat-mh time { margin-left: auto; font-size: 10px; color: var(--mh-muted); flex-shrink: 0; font-variant-numeric: tabular-nums; }
+  .mh-chat-mt { margin-top: 1px; font-size: 13px; line-height: 1.4; color: var(--mh-ink); white-space: pre-wrap; overflow-wrap: anywhere; }
+  .mh-chat-pav { position: relative; width: 30px; height: 30px; flex: none; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; border: 1.5px solid var(--c); background: color-mix(in srgb, var(--c) 22%, var(--mh-panel)); color: color-mix(in srgb, var(--c) 80%, var(--mh-ink)); font: 700 12px 'Inter', system-ui, sans-serif; }
+  .mh-chat-pav.is-s { width: 24px; height: 24px; font-size: 10px; }
+  .mh-chat-sd { position: absolute; right: -3px; bottom: -3px; width: 10px; height: 10px; border-radius: 50%; box-sizing: border-box; border: 2px solid var(--mh-bg, var(--mh-panel)); }
+  .mh-chat-sd.is-on { background: #4CC36B; } .mh-chat-sd.is-away { background: #F0A037; } .mh-chat-sd.is-off { background: #7d7d98; }
+  .mh-chat-grp { all: unset; cursor: pointer; display: inline-flex; align-items: center; padding: 2px 4px 2px 10px; border-radius: 20px; }
+  .mh-chat-grp:hover { background: var(--mh-panel3); } .mh-chat-grp:focus-visible { outline: 2px solid var(--acc, #C9A24A); }
+  .mh-chat-grp .mh-chat-pav { margin-left: -7px; }
+  .mh-chat-more { margin-left: 4px; font-size: 10.5px; color: var(--mh-muted); font-weight: 600; }
+  .mh-chat-tbl-bg { position: fixed; inset: 0; z-index: 30; }
+  .mh-chat-tbl { position: absolute; top: -4px; left: 0; right: 0; z-index: 31; padding: 10px 12px 6px; border-radius: 12px; background: var(--mh-panel); border: 1px solid var(--mh-line2, var(--mh-line)); box-shadow: 0 14px 34px rgba(0,0,0,.35); }
+  .mh-chat-tbl > b { display: block; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--mh-muted); margin-bottom: 4px; }
+  .mh-chat-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+  .mh-chat-rn { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .mh-chat-rn b { font-size: 12.5px; color: var(--mh-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mh-chat-rn small, .mh-chat-row > small { font-size: 10.5px; color: var(--mh-muted); }
+  .mh-chat-typing { min-height: 16px; margin-top: -4px; font-size: 11.5px; font-style: italic; color: var(--mh-muted); display: flex; align-items: center; gap: 6px; }
+  .mh-chat-typing i { display: inline-flex; gap: 3px; }
+  .mh-chat-typing u { width: 4px; height: 4px; border-radius: 50%; background: currentColor; animation: mh-typing 1.1s ease-in-out infinite; }
+  .mh-chat-typing u:nth-child(2) { animation-delay: .15s; } .mh-chat-typing u:nth-child(3) { animation-delay: .3s; }
+  @keyframes mh-typing { 0%, 60%, 100% { opacity: .25; translate: 0 0; } 30% { opacity: 1; translate: 0 -2px; } }
+  @media (prefers-reduced-motion: reduce) { .mh-chat-typing u { animation: none; opacity: .7; } }
   /* El historial no empuja la altura de la caja: ocupa el hueco que queda y se desplaza dentro. */
   .mh-chat-box { position: relative; flex: 1; min-height: 160px; }
   .mh-chat-box > .mh-chat-feed { position: absolute; inset: 0; }
@@ -8213,6 +8241,55 @@ export default function App({ onSignOut }) {
   const sheetCharId = view === "ficha" ? viewingCharId || modernCharId : null;
   const sheetCampaignId = sheetCharId ? Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(sheetCharId))?.id || null : null;
   const stageCampaignId = gmViewing ? viewingCampaignId : sheetCampaignId;
+  // La mesa de la campaña: quién está, su estado y quién escribe (una fila por jugador).
+  const [table, setTable] = useState([]);
+  const [tableMe, setTableMe] = useState(null);
+  const [tableOpen, setTableOpen] = useState(false);
+  const [tableNow, setTableNow] = useState(() => Date.now());
+  const typingRef = useRef(0);
+  const typingPubAt = useRef(0);
+  const tablePubRef = useRef(null);
+  const tableCampId = !gmViewing ? sheetCampaignId : null;
+  useEffect(() => {
+    if (!tableCampId) return;
+    let alive = true;
+    const camp = campaigns[tableCampId];
+    const pub = (off = false) => {
+      const cur = charsRef.current[sheetCharId] || {};
+      const mine = (camp?.characterIds || []).filter((id) => charsRef.current[id]);
+      return publishTable(tableCampId, { name: playerName || "", as: cur.f_name || playerName || "Jugador", cls: cur.f_class || "", chars: mine, typing: typingRef.current }, off);
+    };
+    tablePubRef.current = pub;
+    const pull = async () => {
+      try {
+        const t = await loadTable(tableCampId);
+        if (alive) (setTable(t), setTableNow(Date.now()));
+      } catch (e) {}
+    };
+    myUid().then((u) => alive && setTableMe(u));
+    pub().then(pull);
+    const a = setInterval(() => pub(), 12000);
+    const b = setInterval(pull, 3500);
+    return () => {
+      alive = false;
+      clearInterval(a);
+      clearInterval(b);
+      tablePubRef.current = null;
+      pub(true);
+    };
+  }, [tableCampId, sheetCharId, playerName, campaigns]);
+  const tableStatus = (e) => (!e ? "" : e.off ? "off" : e.away ? "away" : "on");
+  const tableOfChar = (m) => table.find((e) => (m.charId && (e.chars || []).includes(m.charId)) || (!m.gm && m.author && e.as === m.author)) || null;
+  const typers = table.filter((e) => e.uid !== tableMe && !e.off && tableNow - (e.typing || 0) < 6000);
+  const onChatTyping = (v) => {
+    setCampaignChatDraft(v);
+    const now = Date.now();
+    typingRef.current = v ? now : 0;
+    if (tablePubRef.current && now - typingPubAt.current > 2000) {
+      typingPubAt.current = now;
+      tablePubRef.current();
+    }
+  };
   const stageLiveRef = useRef(null);
   const dialogueRef = useRef(undefined);
   // Última imagen mostrada de cada personaje: si la nueva expresión aún no ha llegado, se mantiene la anterior.
@@ -10284,6 +10361,8 @@ export default function App({ onSignOut }) {
     const campaignId = getActiveCampaignIdForChat();
     if (!text || !campaignId) return;
     setCampaignChatDraft("");
+    typingRef.current = 0;
+    tablePubRef.current?.();
     await postChat(campaignId, { kind: "msg", text, ...chatAuthor() });
   };
 
@@ -10768,17 +10847,22 @@ export default function App({ onSignOut }) {
         );
       }
 
-      const mine = meCharId ? m.charId === meCharId : !!m.gm;
-      return chatCard(
-        col.startsWith("#") ? col : "#C9A24A",
-        <>
-          {whoB}
-          {mine && <span className="mh-chat-me"> · tú</span>}
-        </>,
-        null,
-        <div className="mh-chat-c-t is-msg">{m.text}</div>,
-        null,
-        " is-msg" + (mine ? " is-me" : "")
+      const st = m.gm ? "" : tableStatus(tableOfChar(m));
+      return (
+        <div key={key} className="mh-chat-m">
+          <span className="mh-chat-pav" style={{ "--c": col }}>
+            <span style={m.gm ? { fontSize: 10 } : undefined}>{chatInitial(m)}</span>
+            {st && <i className={"mh-chat-sd is-" + st} />}
+          </span>
+          <div className="mh-chat-mb">
+            <div className="mh-chat-mh">
+              <b style={{ color: ink(col) }}>{m.author}</b>
+              {!m.gm && (m.cls || (m.player && m.player !== m.author)) && <em>{[m.cls, m.player !== m.author ? m.player : ""].filter(Boolean).join(" · ")}</em>}
+              <time>{time}</time>
+            </div>
+            <div className="mh-chat-mt">{m.text}</div>
+          </div>
+        </div>
       );
     });
 
@@ -16973,6 +17057,19 @@ export default function App({ onSignOut }) {
                               span={wide ? 1 : 5}
                               fill={embedded}
                               title="Chat"
+                              titleRight={
+                                table.length > 0 && (
+                                  <button type="button" className="mh-chat-grp" aria-label="La mesa: ver quién está" aria-expanded={tableOpen} onClick={() => setTableOpen((v) => !v)}>
+                                    {table.slice(0, 5).map((e) => (
+                                      <span key={e.uid} className="mh-chat-pav is-s" style={{ "--c": e.cls ? classColor(e.cls) : "#C9A24A" }}>
+                                        <span>{(e.as || "?").trim().charAt(0).toUpperCase()}</span>
+                                        <i className={"mh-chat-sd is-" + tableStatus(e)} />
+                                      </span>
+                                    ))}
+                                    {table.length > 5 && <span className="mh-chat-more">+{table.length - 5}</span>}
+                                  </button>
+                                )
+                              }
                               hidden={conditions.includes("Escondido") || conditions.includes("Oculto")}
                               restrained={conditions.includes("Inmovilizado")}
                               vulnerable={conditions.includes("Vulnerable")}
@@ -16981,11 +17078,44 @@ export default function App({ onSignOut }) {
                             retracted={conditions.includes("Retraído")}
                             >
                               <div className="mh-chat">
+                                {tableOpen && table.length > 0 && (
+                                  <>
+                                    <div className="mh-chat-tbl-bg" onClick={() => setTableOpen(false)} />
+                                    <div className="mh-chat-tbl" role="dialog" aria-label="La mesa">
+                                      <b>En la mesa</b>
+                                      {table.map((e) => (
+                                        <div key={e.uid} className="mh-chat-row">
+                                          <span className="mh-chat-pav is-s" style={{ "--c": e.cls ? classColor(e.cls) : "#C9A24A" }}>
+                                            <span>{(e.as || "?").trim().charAt(0).toUpperCase()}</span>
+                                            <i className={"mh-chat-sd is-" + tableStatus(e)} />
+                                          </span>
+                                          <span className="mh-chat-rn">
+                                            <b>{e.as}</b>
+                                            <small>{[e.cls, e.name].filter(Boolean).join(" · ")}</small>
+                                          </span>
+                                          <small>{{ on: "En línea", away: "Ausente", off: "Desconectado" }[tableStatus(e)]}</small>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </>
+                                )}
                                 <div className="mh-chat-box">
                                   <div ref={chatScrollRef} className="mh-chat-feed">
                                     {campaignChat.length === 0 && <div className="mh-chat-empty">Todavía no hay mensajes. Aquí aparecerán también las tiradas y acciones de la mesa.</div>}
                                     {renderChatFeed(campaignChat, viewingCharId)}
                                   </div>
+                                </div>
+                                <div className="mh-chat-typing" aria-live="polite">
+                                  {typers.length > 0 && (
+                                    <>
+                                      {typers.length === 1 ? typers[0].as + " está escribiendo" : typers.length === 2 ? typers[0].as + " y " + typers[1].as + " están escribiendo" : "Varios jugadores están escribiendo"}
+                                      <i>
+                                        <u />
+                                        <u />
+                                        <u />
+                                      </i>
+                                    </>
+                                  )}
                                 </div>
                                 {showShareTray && (() => {
                                   const shareables = [];
@@ -17105,7 +17235,7 @@ export default function App({ onSignOut }) {
                                     style={{ flex: 1, minWidth: 0 }}
                                     placeholder={showShareTray ? "Añade un comentario (opcional)…" : "Escribe un mensaje…"}
                                     value={campaignChatDraft}
-                                    onChange={(e) => setCampaignChatDraft(e.target.value)}
+                                    onChange={(e) => onChatTyping(e.target.value)}
                                     onKeyDown={(e) => e.key === "Enter" && sendCampaignChat()}
                                   />
                                   <button type="button" className="mh-chat-send" aria-label="Enviar" onClick={sendCampaignChat}>
