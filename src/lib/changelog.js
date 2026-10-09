@@ -2,6 +2,16 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.25",
+    date: "2026-10-09",
+    title: "Generadores para el DJ",
+    items: [
+      { tag: "nuevo", text: "Nueva pestaña «Generadores» en la campaña: nombres, rumores, botín, taberna y PNJ, y encuentros." },
+      { tag: "nuevo", text: "El generador de encuentros reparte los puntos de combate (3 por jugador + 2, más o menos según la dificultad) y propone tres composiciones según el ambiente." },
+      { tag: "nuevo", text: "Cada resultado se puede enviar al chat, y los encuentros se colocan en el mapa de un clic." },
+    ],
+  },
+  {
     version: "1.24",
     date: "2026-10-09",
     title: "Nueva pestaña: Cartas",

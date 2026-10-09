@@ -12,6 +12,7 @@ import { LevelUpDialog, parseAdvances, ownedCards, getMulticlass, MAX_LEVEL, ran
 import { RulesPanel } from "./MapRules";
 import { Changelog } from "./Changelog";
 import { CardsPage } from "./Cards";
+import { Generators } from "./Generators";
 import { SpotPlayer, SpotPause, SpotPanel, normSpot, liveHands, kindOf } from "./Spotlight";
 import { APP_VERSION } from "@/lib/changelog";
 import { setPresence, startPresence, stopPresence, publishTable, loadTable, myUid } from "@/lib/social";
@@ -4768,6 +4769,19 @@ const sharedStyles = `
   html[data-mh-theme="light"] .mh-camp-back { color: #4C4458; } html[data-mh-theme="light"] .mh-camp-back:hover { background: #00000010; color: #221C2B; }
   html[data-mh-theme="light"] .mh-camp-desc { color: #4C4458; } html[data-mh-theme="light"] .mh-camp-emb { background: #FFFCF6; }
   @media (max-width: 640px) { .mh-camp-hero-row { flex-direction: column; align-items: flex-start; } .mh-camp-title { font-size: 21px; } }
+  .gx { padding: 18px 20px; max-width: 760px; }
+  .gx-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; } .gx-h h3 { margin: 0; font-size: 16px; display: flex; align-items: center; gap: 9px; }
+  .gx-sub { margin: 4px 0 14px; color: var(--mh-muted); font-size: 12.5px; }
+  .gx-kinds, .gx-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .gx-opts { display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: flex-end; margin: 14px 0 4px; padding: 12px 14px; border: 1px solid var(--mh-line); border-radius: 12px; background: color-mix(in srgb, var(--mh-panel) 70%, transparent); }
+  .gx-lab { display: block; font: 700 10.5px 'Inter', system-ui, sans-serif; letter-spacing: .09em; text-transform: uppercase; color: var(--mh-muted); margin-bottom: 6px; }
+  .gx-fact { color: var(--mh-muted); font-size: 12px; }
+  .gx-res { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .gx-names { display: flex; flex-wrap: wrap; gap: 8px; } .gx-names .cx-chip em { color: #5fd47c; }
+  .gx-item { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; padding: 12px 14px; border: 1px solid var(--mh-line); border-radius: 12px; background: var(--mh-panel); }
+  .gx-item p { margin: 3px 0 0; color: var(--mh-ink); font-size: 13px; line-height: 1.45; } .gx-secret { color: var(--mh-muted) !important; font-style: italic; }
+  .gx-enc { flex-direction: column; align-items: stretch; gap: 8px; } .gx-enc-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; } .gx-enc-h b { font-size: 14.5px; }
+  .gx-note { color: var(--mh-muted); font-size: 11.5px; margin: 2px 2px 0; }
   .cx-h { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin: 2px 0 14px; flex-wrap: wrap; }
   .cx-h h1 { margin: 0; font-size: 24px; } .cx-h p { margin: 2px 0 0; color: var(--mh-muted); font-size: 13px; }
   .cx-search { display: flex; align-items: center; gap: 8px; min-width: 230px; border: 1px solid var(--mh-line); border-radius: 12px; padding: 8px 12px; background: var(--mh-panel); color: var(--mh-muted); }
@@ -10961,6 +10975,17 @@ export default function App({ onSignOut }) {
         if (token.kind === "pc" && JSON.parse(characters[token.charId]?.f_conditions || "[]").some((c) => c === "Escondido" || c === "Oculto")) hidden = true;
       } catch (e) {}
       return [...tokens, { id: "t" + Date.now() + Math.random().toString(36).slice(2, 5), x, y, ...token, ...(hidden ? { hidden } : {}) }];
+    });
+
+  // Coloca varios enemigos de una vez, cada uno en una casilla libre distinta.
+  const placeFoes = (names, campaignId = viewingCampaignId) =>
+    mutateMap(campaignId, (tokens) => {
+      let cur = tokens;
+      names.forEach((name, i) => {
+        const [x, y] = freeCell(cur);
+        cur = [...cur, { id: "t" + Date.now() + i + Math.random().toString(36).slice(2, 5), x, y, kind: "foe", name, stats: { ...newFoeStats(), base: name }, size: "m" }];
+      });
+      return cur;
     });
 
   const removeToken = (id, campaignId = viewingCampaignId) => {
@@ -23926,6 +23951,7 @@ export default function App({ onSignOut }) {
                       { key: "chat", label: "Chat", Icon: MessageCircle },
                       { key: "mapa", label: "Mapa", Icon: MapPinned },
                       { key: "encuentros", label: "Encuentros", Icon: Swords },
+                      { key: "generadores", label: "Generadores", Icon: Dices },
                     ].map((t) => (
                       <button key={t.key} type="button" role="tab" aria-selected={campaignDetailTab === t.key} className={"is-base" + (campaignDetailTab === t.key ? " is-on" : "")} onClick={() => setCampaignDetailTab(t.key)}>
                         <t.Icon size={15} strokeWidth={1.8} /> <span className="lbl">{t.label}</span>
@@ -24988,6 +25014,20 @@ export default function App({ onSignOut }) {
                           </div>
                         </div>
                       </div>
+                    );
+                  })()}
+
+                  {campaignDetailTab === "generadores" && (() => {
+                    const ids = (campaigns[viewingCampaignId]?.characterIds || []).filter((id) => characters[id]);
+                    const lv = ids.length ? Math.round(ids.reduce((s, id) => s + Number(characters[id].f_level || 1), 0) / ids.length) : 1;
+                    return (
+                      <Generators
+                        key={viewingCampaignId}
+                        players={ids.length || 3}
+                        avgLevel={lv}
+                        onChat={(text) => postChat(viewingCampaignId, { kind: "msg", text, ...chatAuthor() })}
+                        onPlace={placeFoes}
+                      />
                     );
                   })()}
 
