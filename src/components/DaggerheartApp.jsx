@@ -11,6 +11,7 @@ import { Tour } from "./Tour";
 import { LevelUpDialog, parseAdvances, ownedCards, getMulticlass, MAX_LEVEL, rankOf } from "./LevelUp";
 import { RulesPanel } from "./MapRules";
 import { Changelog } from "./Changelog";
+import { CardsPage } from "./Cards";
 import { SpotPlayer, SpotPause, SpotPanel, normSpot, liveHands, kindOf } from "./Spotlight";
 import { APP_VERSION } from "@/lib/changelog";
 import { setPresence, startPresence, stopPresence, publishTable, loadTable, myUid } from "@/lib/social";
@@ -27,6 +28,7 @@ const NAV_ITEMS = [
   { key: "inicio", label: "Inicio", icon: Home },
   { key: "ficha", label: "Personajes", icon: User },
   { key: "campaigns", label: "Campañas", icon: BookOpen },
+  { key: "cartas", label: "Cartas", icon: Layers },
 ];
 
 // Color propio de cada clase (ajuste "Colores por clase").
@@ -4766,6 +4768,33 @@ const sharedStyles = `
   html[data-mh-theme="light"] .mh-camp-back { color: #4C4458; } html[data-mh-theme="light"] .mh-camp-back:hover { background: #00000010; color: #221C2B; }
   html[data-mh-theme="light"] .mh-camp-desc { color: #4C4458; } html[data-mh-theme="light"] .mh-camp-emb { background: #FFFCF6; }
   @media (max-width: 640px) { .mh-camp-hero-row { flex-direction: column; align-items: flex-start; } .mh-camp-title { font-size: 21px; } }
+  .cx-h { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin: 2px 0 14px; flex-wrap: wrap; }
+  .cx-h h1 { margin: 0; font-size: 24px; } .cx-h p { margin: 2px 0 0; color: var(--mh-muted); font-size: 13px; }
+  .cx-search { display: flex; align-items: center; gap: 8px; min-width: 230px; border: 1px solid var(--mh-line); border-radius: 12px; padding: 8px 12px; background: var(--mh-panel); color: var(--mh-muted); }
+  .cx-search input { all: unset; flex: 1; min-width: 0; font-size: 13px; color: var(--mh-ink); }
+  .cx-search:focus-within { border-color: var(--acc, #C9A24A); }
+  .cx-bar { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 6px; }
+  .cx-chip { --c: #888; all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; padding: 7px 12px; border-radius: 99px; border: 1.5px solid var(--mh-line); background: var(--mh-panel); color: var(--mh-ink3); font: 600 12.5px 'Inter', system-ui, sans-serif; transition: border-color .15s, background .15s; }
+  .cx-chip:hover:not(:disabled) { border-color: color-mix(in srgb, var(--c) 60%, var(--mh-line)); }
+  .cx-chip:focus-visible { outline: 2px solid var(--c); outline-offset: 2px; }
+  .cx-chip i { display: inline-flex; color: var(--c); } .cx-chip em { font-style: normal; font-size: 11px; color: var(--mh-muted); font-weight: 600; }
+  .cx-chip.on { border-color: var(--c); background: color-mix(in srgb, var(--c) 14%, var(--mh-panel)); color: var(--mh-ink); }
+  .cx-chip.off { opacity: .45; cursor: default; }
+  .cx-meta { display: flex; justify-content: space-between; align-items: center; margin: 10px 2px 4px; color: var(--mh-muted); font-size: 12px; gap: 10px; flex-wrap: wrap; }
+  .cx-lv { display: flex; align-items: center; gap: 12px; margin: 22px 0 12px; } .cx-lv b { font: 700 13px 'Cinzel', Georgia, serif; letter-spacing: .06em; text-transform: uppercase; color: var(--mh-ink); }
+  .cx-lv span { height: 1px; flex: 1; background: var(--mh-line); } .cx-lv small { color: var(--mh-muted); font-size: 12px; }
+  .cx-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+  .cx-card { appearance: none; font: inherit; color: var(--mh-ink); text-align: center; box-sizing: border-box; cursor: pointer; width: 100%; margin: 0 !important; padding: 0 !important; overflow: hidden; border-radius: 18px !important; display: flex; flex-direction: column; position: relative; height: 300px; transition: translate .15s, box-shadow .15s; }
+  .cx-card:hover { translate: 0 -3px; box-shadow: 0 12px 26px rgba(0,0,0,.28); } .cx-card:focus-visible { outline: 2px solid var(--cc); outline-offset: 3px; }
+  .cx-card .mh-cardc-art { height: 96px; }
+  .cx-t { padding: 0 12px; text-align: center; margin-top: 14px; } .cx-t b { display: block; font-size: 14.5px; line-height: 1.15; color: var(--mh-ink); font-family: 'Cinzel', Georgia, serif; }
+  .cx-card .mh-cardc-sub { font-size: 10.5px; }
+  .cx-x { flex: 1; overflow: hidden; padding: 8px 14px 12px; text-align: center; font-size: 11px; line-height: 1.42; color: var(--mh-ink); display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; }
+  .cx-rc { position: absolute; right: 9px; top: 9px; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 99px; font: 700 10px 'Inter', system-ui, sans-serif; background: rgba(10,10,20,.62); color: #fff; z-index: 3; }
+  .cx-empty { padding: 40px; text-align: center; color: var(--mh-muted); border: 1px dashed var(--mh-line); border-radius: 16px; margin-top: 14px; }
+  @media (max-width: 1180px) { .cx-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (max-width: 860px) { .cx-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (prefers-reduced-motion: reduce) { .cx-card { transition: none; } .cx-card:hover { translate: none; } }
   .mh-cl { max-width: 780px; } .mh-cl-head h2 { margin: 0; font-size: 26px; } .mh-cl-head p { margin: 4px 0 22px; color: var(--mh-muted); font-size: 13.5px; }
   .mh-cl-list { list-style: none; margin: 0; padding: 0 0 0 22px; position: relative; display: flex; flex-direction: column; gap: 16px; }
   .mh-cl-list::before { content: ""; position: absolute; left: 6px; top: 8px; bottom: 8px; width: 2px; background: linear-gradient(180deg, #E3B04B, var(--mh-line) 18%); border-radius: 2px; }
@@ -25093,6 +25122,8 @@ export default function App({ onSignOut }) {
           })()}
 
           {view === "actualizaciones" && <Changelog />}
+
+          {view === "cartas" && <CardsPage cards={DOMAIN_CARDS} colors={DOMAIN_COLORS} icons={DOMAIN_ICONS} FitTitle={FitTitle} FitBox={FitBox} />}
 
           {view === "ajustes" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 14, maxWidth: 640 }}>

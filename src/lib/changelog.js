@@ -2,6 +2,16 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.24",
+    date: "2026-10-09",
+    title: "Nueva pestaña: Cartas",
+    items: [
+      { tag: "nuevo", text: "Nueva pestaña «Cartas» en el menú de la izquierda: todas las cartas de dominio ordenadas por nivel, de 4 en 4." },
+      { tag: "nuevo", text: "Filtro por dominio (se pueden elegir varios a la vez) y buscador por nombre o texto." },
+      { tag: "nuevo", text: "Al pulsar una carta se ve en grande, con el mismo diseño y la inclinación de las cartas de la hoja." },
+    ],
+  },
+  {
     version: "1.23",
     date: "2026-10-09",
     title: "La mesa en el chat",
