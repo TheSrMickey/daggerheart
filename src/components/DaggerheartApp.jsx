@@ -3306,8 +3306,8 @@ const sharedStyles = `
   @keyframes mh-elem-bounce { 0% { translate: 0 0; } 30% { translate: 0 -16px; } 55% { translate: 0 0; } 75% { translate: 0 -6px; } 100% { translate: 0 0; } }
   .mh-iso-tk.is-elem-aire.is-elem-bounce .mh-iso-body { animation: mh-iso-hover 2.6s ease-in-out infinite, mh-aire-bump 1.1s cubic-bezier(.25,.7,.3,1) both; }
   @keyframes mh-aire-bump { 0% { transform: translateY(15px); } 100% { transform: translateY(0); } }
-  .mh-iso-tk.is-hurt .mh-iso-body { transform-box: fill-box; transform-origin: 50% 100%; animation: mh-hurt-shake .55s cubic-bezier(.3,.7,.4,1) both; }
-  @keyframes mh-hurt-shake { 0% { rotate: 0deg; } 14% { rotate: -11deg; } 30% { rotate: 9deg; } 46% { rotate: -6deg; } 62% { rotate: 4deg; } 80% { rotate: -2deg; } 100% { rotate: 0deg; } }
+  .mh-iso-tk.is-hurt .mh-iso-body { transform-box: fill-box; transform-origin: 50% 100%; animation: mh-hurt-shake .4s ease-out both; }
+  @keyframes mh-hurt-shake { 0% { rotate: 0deg; } 25% { rotate: -3deg; } 55% { rotate: 2deg; } 80% { rotate: -1deg; } 100% { rotate: 0deg; } }
   .mh-hurt-glow { opacity: 0; animation: mh-hurt-glow .8s ease-out both; } @keyframes mh-hurt-glow { 0% { opacity: 0; } 12% { opacity: .65; } 100% { opacity: 0; } }
   .mh-hurt-ring { transform-box: fill-box; transform-origin: 50% 50%; opacity: 0; animation: mh-hurt-ring .8s ease-out both; } @keyframes mh-hurt-ring { 0% { scale: .6; opacity: .9; } 100% { scale: 1.8; opacity: 0; } }
   .mh-hurt-drop { transform-box: fill-box; opacity: 0; animation: mh-hurt-drop .8s ease-out both; } @keyframes mh-hurt-drop { 0% { opacity: 0; translate: 0 0; scale: .5; } 15% { opacity: 1; scale: 1; } 100% { opacity: 0; translate: var(--dx) 26px; scale: .9; } }
