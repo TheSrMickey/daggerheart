@@ -11,6 +11,7 @@ export const CHANGELOG = [
       { tag: "nuevo", text: "La ficha con el foco sube y brilla con un haz de luz y el resto del tablero se atenúa. El jugador pulsa «He terminado» al acabar." },
       { tag: "nuevo", text: "Aviso al DJ cuando un jugador lleva mucho tiempo sin foco, con «Dar foco» y «Más tarde»." },
       { tag: "nuevo", text: "Al interrumpir, nadie puede tirar ni moverse hasta que el DJ reanude." },
+      { tag: "mejora", text: "El efecto del foco es más sutil: un anillo suave, un atenuado ligero y la ficha sube un poco." },
     ],
   },
   {

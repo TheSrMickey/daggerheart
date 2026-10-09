@@ -3284,9 +3284,9 @@ const sharedStyles = `
   .mh-spot-got button { all: unset; cursor: pointer; margin-top: 4px; text-align: center; padding: 6px; border-radius: 8px; background: #E3B04B; color: #241a05; font: 700 12px Inter, system-ui, sans-serif; }
   .mh-spot-pause { position: absolute; inset: 0; z-index: 30; display: grid; place-items: center; background: rgba(4,4,15,.62); backdrop-filter: blur(2px); animation: mh-fade-in .25s ease both; }
   .mh-spot-pause > div { padding: 14px 24px; border-radius: 14px; background: #2a1a1a; border: 1px solid #E0544A; text-align: center; color: #fff; box-shadow: 0 12px 30px #000a; } .mh-spot-pause b { display: block; font-size: 16px; color: #ff9a86; } .mh-spot-pause small { color: #bdbdd6; font-size: 12.5px; }
-  .mh-spot-ring { transform-box: fill-box; transform-origin: 50% 50%; animation: mh-spot-pulse 2.2s ease-out infinite; } .mh-spot-ring.is-2 { animation-delay: -1.1s; }
-  @keyframes mh-spot-pulse { 0% { scale: .8; opacity: .95; } 100% { scale: 1.7; opacity: 0; } }
-  .mh-iso-tk .mh-iso-body { transition: translate .6s cubic-bezier(.3,1.3,.5,1); } .mh-iso-tk.is-spot .mh-iso-body { translate: 0 -8px; }
+  .mh-spot-ring { transform-box: fill-box; transform-origin: 50% 50%; animation: mh-spot-pulse 2.6s ease-out infinite; }
+  @keyframes mh-spot-pulse { 0% { scale: 1; opacity: .5; } 100% { scale: 1.35; opacity: 0; } }
+  .mh-iso-tk .mh-iso-body { transition: translate .6s cubic-bezier(.3,1.3,.5,1); } .mh-iso-tk.is-spot .mh-iso-body { translate: 0 -4px; }
   .mh-iso-hand { animation: mh-hand-in .35s cubic-bezier(.3,1.5,.5,1) both; transform-box: fill-box; transform-origin: 50% 100%; } @keyframes mh-hand-in { from { opacity: 0; scale: .4; } to { opacity: 1; scale: 1; } }
   .mh-spot-dim { animation: mh-fade-in .5s ease both; }
   .mh-spot-panel { margin-top: 10px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel); font-size: 13px; display: flex; flex-direction: column; gap: 7px; }
@@ -7135,10 +7135,8 @@ function IsoBoard({ fog, fogView = "player", areas = [], areaTool, log, hideIsoB
                 <stop offset="1" stopColor="#ffe9a8" stopOpacity=".42" />
               </linearGradient>
             </defs>
-            <path d={`M${cx - S * 0.3} ${cy - S * 5} L${cx + S * 0.3} ${cy - S * 5} L${cx + S * 1.15} ${cy} L${cx - S * 1.15} ${cy}Z`} fill="url(#spot-cone)" />
-            <ellipse cx={cx} cy={cy + 1} rx={S * 0.95} ry={S * 0.46} fill="#ffe9a8" fillOpacity=".18" />
-            <ellipse className="mh-spot-ring" cx={cx} cy={cy + 1} rx={S * 0.6} ry={S * 0.3} fill="none" stroke="#ffe9a8" strokeWidth="2.6" />
-            <ellipse className="mh-spot-ring is-2" cx={cx} cy={cy + 1} rx={S * 0.6} ry={S * 0.3} fill="none" stroke="#ffe9a8" strokeWidth="1.6" />
+            <ellipse cx={cx} cy={cy + 1} rx={S * 0.6} ry={S * 0.3} fill="#ffe9a8" fillOpacity=".12" stroke="#ffe9a8" strokeOpacity=".75" strokeWidth="2" />
+            <ellipse className="mh-spot-ring" cx={cx} cy={cy + 1} rx={S * 0.6} ry={S * 0.3} fill="none" stroke="#ffe9a8" strokeWidth="1.4" />
           </g>
         )}
         {t.kind === "pc" && spotHands[t.charId] && !t.vanished && (
@@ -7374,7 +7372,7 @@ function IsoBoard({ fog, fogView = "player", areas = [], areaTool, log, hideIsoB
                 <rect x="-50" y="-50" width={W + 100} height={H + 100} fill="#fff" />
                 <ellipse cx={fx0} cy={fy0 - S * 0.4} rx={S * 3.4} ry={S * 2.1} fill="#000" />
               </mask>
-              <rect x="-50" y="-50" width={W + 100} height={H + 100} fill="#04040f" fillOpacity=".5" mask="url(#spot-mask)" />
+              <rect x="-50" y="-50" width={W + 100} height={H + 100} fill="#04040f" fillOpacity=".2" mask="url(#spot-mask)" />
             </g>
           );
         })()}
