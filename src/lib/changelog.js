@@ -2,6 +2,14 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.16",
+    date: "2026-10-09",
+    title: "Daño visible en el mapa",
+    items: [
+      { tag: "nuevo", text: "Cuando un personaje marca Puntos de vida, su ficha en el mapa se sacude con un destello rojo, gotas y un «−N PV» que sube. Lo ven todos los jugadores y el DJ." },
+    ],
+  },
+  {
     version: "1.15",
     date: "2026-10-09",
     title: "La mano del mapa con todas tus cartas",

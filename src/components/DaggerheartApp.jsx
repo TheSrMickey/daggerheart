@@ -3306,6 +3306,13 @@ const sharedStyles = `
   @keyframes mh-elem-bounce { 0% { translate: 0 0; } 30% { translate: 0 -16px; } 55% { translate: 0 0; } 75% { translate: 0 -6px; } 100% { translate: 0 0; } }
   .mh-iso-tk.is-elem-aire.is-elem-bounce .mh-iso-body { animation: mh-iso-hover 2.6s ease-in-out infinite, mh-aire-bump 1.1s cubic-bezier(.25,.7,.3,1) both; }
   @keyframes mh-aire-bump { 0% { transform: translateY(15px); } 100% { transform: translateY(0); } }
+  .mh-iso-tk.is-hurt .mh-iso-body { transform-box: fill-box; transform-origin: 50% 100%; animation: mh-hurt-shake .55s cubic-bezier(.3,.7,.4,1) both; }
+  @keyframes mh-hurt-shake { 0% { rotate: 0deg; } 14% { rotate: -11deg; } 30% { rotate: 9deg; } 46% { rotate: -6deg; } 62% { rotate: 4deg; } 80% { rotate: -2deg; } 100% { rotate: 0deg; } }
+  .mh-hurt-glow { opacity: 0; animation: mh-hurt-glow .8s ease-out both; } @keyframes mh-hurt-glow { 0% { opacity: 0; } 12% { opacity: .65; } 100% { opacity: 0; } }
+  .mh-hurt-ring { transform-box: fill-box; transform-origin: 50% 50%; opacity: 0; animation: mh-hurt-ring .8s ease-out both; } @keyframes mh-hurt-ring { 0% { scale: .6; opacity: .9; } 100% { scale: 1.8; opacity: 0; } }
+  .mh-hurt-drop { transform-box: fill-box; opacity: 0; animation: mh-hurt-drop .8s ease-out both; } @keyframes mh-hurt-drop { 0% { opacity: 0; translate: 0 0; scale: .5; } 15% { opacity: 1; scale: 1; } 100% { opacity: 0; translate: var(--dx) 26px; scale: .9; } }
+  .mh-hurt-num { transform-box: fill-box; transform-origin: 50% 100%; animation: mh-hurt-num 1.5s cubic-bezier(.2,.8,.2,1) both; } @keyframes mh-hurt-num { 0% { opacity: 0; scale: .5; translate: 0 8px; } 14% { opacity: 1; scale: 1.2; translate: 0 0; } 26% { scale: 1; } 72% { opacity: 1; } 100% { opacity: 0; translate: 0 -22px; } }
+  @media (prefers-reduced-motion: reduce) { .mh-iso-tk.is-hurt .mh-iso-body { animation: none !important; } }
   .mh-iso-tk.is-burn .mh-iso-body { animation: mh-burn-shake .22s ease 6; filter: drop-shadow(0 0 6px #FF7A2E); }
   @keyframes mh-burn-shake { 25% { translate: -2px 0; } 75% { translate: 2px 0; } }
   .mh-burn-glow { animation: mh-burn-glow 1.9s ease-in .85s both; } @keyframes mh-burn-glow { 0% { opacity: 0; } 30% { opacity: .5; } 100% { opacity: 0; } }
@@ -6333,7 +6340,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement }) {
   );
 }
 
-function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChange, hideIsoBtn, menuFor, fx, efx, bg, tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
+function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChange, hideIsoBtn, menuFor, fx, efx, hfx, bg, tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
   const ref = useRef(null);
   const dragRef = useRef(null);
   const [drag, setDrag] = useState(null);
@@ -6349,6 +6356,7 @@ function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChang
   const overlayEl = useContext(MapOverlayCtx);
   const anim = useAttackFx(fx);
   const eAnim = useElemEvent(efx);
+  const hAnim = useElemEvent(hfx);
   const steps = useMoveFx(tokens.map((t) => [t.id, t.x, t.y]));
   const vis = useVisFx(tokens);
   const { measure, measureDown, measureSuppressed } = useMeasure(
@@ -6522,7 +6530,7 @@ function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChang
   const at = (x, y) => ({ left: (x * 100) / MAP_COLS + "%", top: (y * 100) / MAP_ROWS + "%", width: 100 / MAP_COLS + "%", height: 100 / MAP_ROWS + "%" });
 
   if (iso)
-    return <IsoBoard fog={fog} fogView={fogView} areas={areas} areaTool={areaTool} log={log} hideIsoBtn={hideIsoBtn} menuFor={menuFor} anim={anim} eAnim={eAnim} tokens={tokens} props={props} terrain={terrain} stampTool={stampTool} onStamp={onStamp} onUnstamp={onUnstamp} canMove={canMove} onMove={onMove} selectedId={selectedId} onSelect={onSelect} onPick={onPick} compact={compact} onToggle={toggleIso} />;
+    return <IsoBoard fog={fog} fogView={fogView} areas={areas} areaTool={areaTool} log={log} hideIsoBtn={hideIsoBtn} menuFor={menuFor} anim={anim} eAnim={eAnim} hAnim={hAnim} tokens={tokens} props={props} terrain={terrain} stampTool={stampTool} onStamp={onStamp} onUnstamp={onUnstamp} canMove={canMove} onMove={onMove} selectedId={selectedId} onSelect={onSelect} onPick={onPick} compact={compact} onToggle={toggleIso} />;
 
   return (
     <div
@@ -6687,7 +6695,7 @@ function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChang
 
 // Tablero isométrico tipo diorama: losetas con relieve, decorados y fichas de pie.
 // Usa los mismos datos que el tablero plano (fichas, decorados y terreno).
-function IsoBoard({ fog, fogView = "player", areas = [], areaTool, log, hideIsoBtn, menuFor, anim, eAnim, tokens: tokensIn, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact, onToggle }) {
+function IsoBoard({ fog, fogView = "player", areas = [], areaTool, log, hideIsoBtn, menuFor, anim, eAnim, hAnim, tokens: tokensIn, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact, onToggle }) {
   const tokens = useSettledElem(tokensIn);
   const S = 34;
   const OX = MAP_ROWS * S + S * 0.6;
@@ -6953,7 +6961,7 @@ function IsoBoard({ fog, fogView = "player", areas = [], areaTool, log, hideIsoB
     return (
       <g
         key={t.id}
-        className={"mh-iso-tk" + (t.elem ? " is-elem-" + t.elem.toLowerCase() : "") + (elemBounce[t.id] ? " is-elem-bounce" : "") + (eAnim && eAnim.kind === "burn" && eAnim.to === t.id ? " is-burn" : "") + (movable ? " is-movable" : "") + (drag?.id === t.id && drag.moved ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") : "") + (steps[t.id] && !(anim && anim.from === t.id) && !(droppedRef.current && droppedRef.current.id === t.id && Date.now() < droppedRef.current.until) ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
+        className={"mh-iso-tk" + (t.elem ? " is-elem-" + t.elem.toLowerCase() : "") + (elemBounce[t.id] ? " is-elem-bounce" : "") + (eAnim && eAnim.kind === "burn" && eAnim.to === t.id ? " is-burn" : "") + (hAnim && hAnim.to === t.id ? " is-hurt" : "") + (movable ? " is-movable" : "") + (drag?.id === t.id && drag.moved ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") : "") + (steps[t.id] && !(anim && anim.from === t.id) && !(droppedRef.current && droppedRef.current.id === t.id && Date.now() < droppedRef.current.until) ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
         style={anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); if (!tg) return undefined; const [tx, ty] = P(tg.x + 0.5, tg.y + 0.5, tAt(tg.x, tg.y).z); return { "--ax": tx - cx + "px", "--ay": ty - cy + "px" }; })() : steps[t.id] ? (() => { const st = steps[t.id]; const [ox, oy] = P(st.fx + 0.5, st.fy + 0.5, tAt(st.fx, st.fy).z); return { "--mx": ox - cx + "px", "--my": oy - cy + "px" }; })() : undefined}
         onPointerDown={(e) => tokenDown(e, t)}
         onContextMenu={(e) => openMenu(e, t)}
@@ -7085,6 +7093,16 @@ function IsoBoard({ fog, fogView = "player", areas = [], areaTool, log, hideIsoB
             ))}
             <ellipse cx={cx - S * 0.34} cy={cy - S * 0.6} rx={S * 0.09} ry={S * 0.05} fill="#7fcf86" />
             <ellipse cx={cx + S * 0.34} cy={cy - S * 0.3} rx={S * 0.09} ry={S * 0.05} fill="#7fcf86" />
+          </g>
+        )}
+        {hAnim && hAnim.to === t.id && !t.vanished && (
+          <g key={hAnim.key} className="mh-iso-hurt" pointerEvents="none">
+            <ellipse className="mh-hurt-ring" cx={cx} cy={cy} rx={S * 0.5} ry={S * 0.25} fill="none" stroke="#E0544A" strokeWidth="3" />
+            <rect className="mh-hurt-glow" x={cx - S * 0.38} y={cy - S * 1.14} width={S * 0.76} height={S * 1.1} rx={S * 0.38} fill="#E0544A" />
+            {[[-0.36, -0.7, -18], [0.38, -0.55, 16], [0.05, -1.05, 4]].map(([dx, dy, rot], i) => (
+              <path key={i} className="mh-hurt-drop" style={{ animationDelay: i * 0.05 + "s", "--dx": dx * 46 + "px" }} d={`M${cx + dx * S} ${cy + dy * S} c-${S * 0.05} -${S * 0.08} -${S * 0.07} -${S * 0.12} 0 -${S * 0.2} c${S * 0.07} ${S * 0.08} ${S * 0.05} ${S * 0.12} 0 ${S * 0.2}z`} fill="#E0544A" transform={`rotate(${rot} ${cx + dx * S} ${cy + dy * S})`} />
+            ))}
+            <text className="mh-hurt-num" x={cx} y={cy - S * 1.55} textAnchor="middle" fontSize={S * 0.52} fontWeight="700" fill="#FF6B5E" stroke="#2a0a0a" strokeWidth="3" paintOrder="stroke" fontFamily="Cinzel, Georgia, serif">−{hAnim.amount} PV</text>
           </g>
         )}
         {eAnim && eAnim.kind === "burn" && eAnim.to === t.id && (
@@ -8692,6 +8710,12 @@ export default function App({ onSignOut }) {
     if (hpAfter > hpBefore) {
       const key = Date.now() + Math.random();
       setHpHit({ key, id, amount: hpAfter - hpBefore });
+      // En el mapa: la ficha del personaje se sacude con un destello rojo (lo ven todos).
+      {
+        const cp = Object.values(campaigns).find((x) => (x.characterIds || []).includes(id));
+        const tk = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === id);
+        if (cp && tk && tk.x != null) mutateMap(cp.id, () => ({ key: Date.now(), to: tk.id, amount: hpAfter - hpBefore }), "hfx");
+      }
       // Pacto del Iracundo · Venganza Letal (e Ira de Otro Mundo en Maestría): se ofrece al marcar PV.
       if (next.f_subclass === "Pacto del Iracundo" && getFavor(next) > 0) setVengeAsk({ id, n: hpAfter - hpBefore, rolls: null, ire: null });
       // Nigromancia · Baluarte del Caballero: con daño Grave, el Caballero de la Muerte recibe un PV y desaparece.
@@ -16481,7 +16505,7 @@ export default function App({ onSignOut }) {
                                             bg={scene.image}
                                             props={campaignMap.props || []}
                                             terrain={campaignMap.terrain || []}
-                                            fx={campaignMap.fx} efx={campaignMap.efx}
+                                            fx={campaignMap.fx} efx={campaignMap.efx} hfx={campaignMap.hfx}
                                             iso={mapIso}
                                             onIsoChange={toggleMapIso}
                                             hideIsoBtn
@@ -24183,7 +24207,7 @@ export default function App({ onSignOut }) {
                           stampTool={stampTool}
                           onStamp={(x, y) => stampProp(stampTool, x, y)}
                           onUnstamp={unstampProp}
-                          fx={campaignMap.fx} efx={campaignMap.efx}
+                          fx={campaignMap.fx} efx={campaignMap.efx} hfx={campaignMap.hfx}
                           log={campaignMap.log}
                           fog={campaignMap.fog}
                           fogView="gm"
