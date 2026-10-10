@@ -2,6 +2,14 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.42",
+    date: "2026-10-10",
+    title: "El mapa muestra lo que pone el DJ",
+    items: [
+      { tag: "mejora", text: "En la pestaña de la campaña ya no hay selector Escena / Mapa / Pistas / Personajes: los jugadores ven directamente lo que el DJ tenga en directo. Se quita también el icono de ampliar de la escena y del mapa." },
+    ],
+  },
+  {
     version: "1.41",
     date: "2026-10-10",
     title: "Abanico de cartas por grupos",

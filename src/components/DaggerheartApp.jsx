@@ -16968,7 +16968,7 @@ export default function App({ onSignOut }) {
                         const wide = stageWide && !isMobile && !embedded;
                         const stage = campaignStage;
                         const live = stage.live || "escena";
-                        const stTab = stageTab || live;
+                        const stTab = live; // los jugadores ven lo que el DJ tiene en directo, sin selector
                         const scene = stage.scene || {};
                         const handouts = (stage.handouts || []).filter((h) => !h.hidden);
                         const dlg = stage.dialogue && hiddenDialogue !== stage.dialogue.id ? stage.dialogue : null;
@@ -16989,7 +16989,6 @@ export default function App({ onSignOut }) {
                               </div>
                             </div>
                           );
-                        const newHandouts = handouts.filter((h) => !handoutsSeen.includes(h.id)).length;
                         const mapTokens = mapTokensView(campaignMap.tokens).filter((t) => !((t.kind === "foe" || t.kind === "npc") && fogAt(campaignMap, t.x, t.y))).map((t) => (t.kind === "pc" && t.hidden && t.charId !== viewingCharId ? { ...t, hidden: false, vanished: true } : t.kind !== "pc" && t.gmHidden ? { ...t, hidden: false, vanished: true } : t));
                         const myToken = mapTokens.find((t) => t.kind === "pc" && t.charId === viewingCharId);
                         const kindOf = (k) => HANDOUT_KINDS.find((x) => x.key === k) || HANDOUT_KINDS[0];
@@ -17033,28 +17032,6 @@ export default function App({ onSignOut }) {
                             flying={conditions.includes("Volando")}
                             retracted={conditions.includes("Retraído")}
                             >
-                              <div className="mh-stg-seg" role="tablist">
-                                {STAGE_TABS.map((t) => {
-                                  const TIcon = t.Icon;
-                                  return (
-                                    <button
-                                      key={t.key}
-                                      type="button"
-                                      role="tab"
-                                      aria-selected={stTab === t.key}
-                                      className={stTab === t.key ? "is-on" : ""}
-                                      onClick={() => setStageTab(t.key)}
-                                      title={live === t.key ? "El DJ está mostrando esto ahora" : undefined}
-                                    >
-                                      <TIcon size={13} />
-                                      <span>{t.label}</span>
-                                      {live === t.key && <i className="mh-stg-dot" />}
-                                      {t.key === "pistas" && newHandouts > 0 && <b className="mh-stg-cnt">{newHandouts}</b>}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-
                               {wide && stTab !== "escena" && stTab !== "mapa" && (
                                 <button type="button" className="mh-stg-reduce" onClick={() => setStageWide(false)} title="Reducir y volver a ver las estadísticas">
                                   <Minimize2 size={13} /> Reducir
@@ -17065,9 +17042,8 @@ export default function App({ onSignOut }) {
                                   (scene.title || scene.image || dlg ? (
                                     <>
                                       <div
-                                        className={"mh-stg-scene" + (scene.image ? "" : " is-blank") + (wide ? " is-wide" : " is-zoomable")}
+                                        className={"mh-stg-scene" + (scene.image ? "" : " is-blank") + (wide ? " is-wide" : "")}
                                         style={scene.image ? { backgroundImage: `url("${scene.image.replace(/"/g, "%22")}")` } : undefined}
-                                        onClick={wide ? undefined : () => setStageWide(true)}
                                       >
                                         <div className="mh-stg-scene-top">
                                           {live === "escena" && (
@@ -17076,20 +17052,6 @@ export default function App({ onSignOut }) {
                                               En directo
                                             </span>
                                           )}
-                                          <button
-                                            type="button"
-                                            className={"mh-stg-ibtn" + (wide ? " is-label" : "")}
-                                            aria-label={wide ? "Reducir la escena" : "Ampliar la escena"}
-                                            title={wide ? "Reducir y volver a ver las estadísticas" : "Ampliar la escena"}
-                                            aria-pressed={wide}
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setStageWide((v) => !v);
-                                            }}
-                                          >
-                                            {wide ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
-                                            {wide && <span>Reducir</span>}
-                                          </button>
                                         </div>
                                         {dlg ? (
                                           renderDialogue(wide)
@@ -17223,17 +17185,6 @@ export default function App({ onSignOut }) {
                                               En directo
                                             </span>
                                           )}
-                                          <button
-                                            type="button"
-                                            className={"mh-stg-ibtn" + (wide ? " is-label" : "")}
-                                            aria-label={wide ? "Reducir el mapa" : "Ampliar el mapa"}
-                                            title={wide ? "Reducir y volver a ver las estadísticas" : "Ampliar el mapa"}
-                                            aria-pressed={wide}
-                                            onClick={() => setStageWide((v) => !v)}
-                                          >
-                                            {wide ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
-                                            {wide && <span>Reducir</span>}
-                                          </button>
                                         </div>
                                       </div>
                                       {(() => {
