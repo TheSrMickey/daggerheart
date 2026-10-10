@@ -1324,6 +1324,7 @@ const BEASTFORMS = [
     key: "Herbívoro Veloz",
     tier: 1,
     color: "var(--mh-green-ink)",
+    image: "/formas-bestia/herbivoro-veloz.webp",
     animals: "Ciervo, Gacela, Cabra, etc.",
     bonus: "Agilidad +1 · Evasión +3",
     traitBonus: { key: "t_agility", amount: 1 },
