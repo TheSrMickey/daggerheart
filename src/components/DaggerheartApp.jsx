@@ -3048,6 +3048,8 @@ const sharedStyles = `
   .mh-stg-dot { width: 7px; height: 7px; border-radius: 50%; background: #D9644E; flex-shrink: 0; animation: mh-stg-pulse 1.6s ease-in-out infinite; }
   @keyframes mh-stg-pulse { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, #D9644E 55%, transparent); } 50% { box-shadow: 0 0 0 4px color-mix(in srgb, #D9644E 0%, transparent); } }
   .mh-stg-cnt { font-size: 9.5px; font-weight: 700; color: #fff; background: #B8862E; border-radius: 10px; padding: 0 5px; line-height: 15px; }
+  .mh-stg-fear.is-over { position: absolute; top: 20px; right: 20px; z-index: 8; padding: 5px 11px; border-radius: 20px; background: rgba(10,8,14,.72); backdrop-filter: blur(4px); border: 1px solid rgba(165,139,232,.28); box-shadow: 0 2px 8px rgba(0,0,0,.35); }
+  .mh-stg-fear.is-over > span:first-child, .mh-stg-fear.is-over b { color: #CDBBF5; }
   .mh-stg-body { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
   .mh-stg-kick { font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
   .mh-stg-scene { position: relative; flex: 1 1 auto; min-height: 240px; border-radius: 12px; overflow: hidden; background: #2B3A4F center / cover no-repeat; display: flex; flex-direction: column; justify-content: space-between; }
@@ -7881,7 +7883,7 @@ function ChatHost({ embedded, slot, children }) {
   return slot ? createPortal(children, slot) : null;
 }
 
-function Panel({ span, title, titleRight, children, hidden, restrained, vulnerable, unconscious, flying, retracted, glow, fill, link }) {
+function Panel({ span, title, titleRight, children, hidden, restrained, vulnerable, unconscious, flying, retracted, glow, fill, link, bare }) {
   const borderColor = glow || (vulnerable ? "#D9644E" : restrained ? "#C08B5C" : unconscious ? "#A58BE8" : retracted ? "#6E8B5A" : flying ? "#5FA77A" : hidden ? "var(--mh-muted)" : "var(--mh-line)");
   return (
     <div
@@ -7892,7 +7894,7 @@ function Panel({ span, title, titleRight, children, hidden, restrained, vulnerab
         background: "var(--panel-bg, var(--mh-panel))",
         border: "1px solid " + borderColor,
         borderRadius: 14,
-        padding: "18px 20px",
+        padding: bare ? 10 : "18px 20px",
         position: "relative",
         display: "flex",
         flexDirection: "column",
@@ -7900,15 +7902,17 @@ function Panel({ span, title, titleRight, children, hidden, restrained, vulnerab
         ...(glow ? { boxShadow: "0 0 0 3px " + glow + "33, 0 0 22px " + glow + "33" } : {}),
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 14, height: 20 }}>
-        <div className="mh-serif" title={titleRight && typeof title === "string" ? title : undefined} style={{ fontSize: 15, fontWeight: 700, color: "var(--mh-ink)", letterSpacing: 0.2, minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{title}</div>
-        {titleRight && <div style={{ flexShrink: 0 }}>{titleRight}</div>}
-      </div>
+      {!bare && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 14, height: 20 }}>
+          <div className="mh-serif" title={titleRight && typeof title === "string" ? title : undefined} style={{ fontSize: 15, fontWeight: 700, color: "var(--mh-ink)", letterSpacing: 0.2, minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{title}</div>
+          {titleRight && <div style={{ flexShrink: 0 }}>{titleRight}</div>}
+        </div>
+      )}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>{children}</div>
       {/* Línea que une esta caja con la de la izquierda (a la altura de la Evasión). */}
       {link && <span aria-hidden="true" style={{ position: "absolute", left: -20, top: 101, width: 20, height: 2, borderRadius: 2, background: link }} />}
       {(hidden || restrained || vulnerable || unconscious || flying || retracted) && (
-        <div style={{ position: "absolute", top: 10, right: 12, display: "flex", gap: 4, pointerEvents: "none" }}>
+        <div style={{ position: "absolute", top: 10, ...(bare ? { left: 20, top: 20, zIndex: 9 } : { right: 12 }), display: "flex", gap: 4, pointerEvents: "none" }}>
           {hidden && <EyeOff size={14} color="#9C93AD" />}
           {restrained && <Lock size={14} color="#C08B5C" />}
           {vulnerable && <ShieldOff size={14} color="#D9644E" />}
@@ -17018,18 +17022,7 @@ export default function App({ onSignOut }) {
                           >
                             <Panel
                               span={wide ? 1 : 7}
-                              title={charCampaign.name}
-                              titleRight={
-                                <div className="mh-stg-fear" title={`Miedo del DJ: ${fearCount} de 12`}>
-                                  <span>Miedo</span>
-                                  <span className="mh-stg-fear-pips">
-                                    {Array.from({ length: 12 }, (_, i) => (
-                                      <Skull key={i} size={17} strokeWidth={i < fearCount ? 1.4 : 1.6} className={"mh-fear-sk" + (i < fearCount ? " on" : "") + (i === fearCount - 1 ? " pulse" : "")} />
-                                    ))}
-                                  </span>
-                                  <b>{fearCount}</b>
-                                </div>
-                              }
+                              bare
                               hidden={conditions.includes("Escondido") || conditions.includes("Oculto")}
                               restrained={conditions.includes("Inmovilizado")}
                               vulnerable={conditions.includes("Vulnerable")}
@@ -17043,6 +17036,15 @@ export default function App({ onSignOut }) {
                                 </button>
                               )}
                               <div className="mh-stg-body">
+                                <div className="mh-stg-fear is-over" title={`Miedo del DJ: ${fearCount} de 12`}>
+                                  <span>Miedo</span>
+                                  <span className="mh-stg-fear-pips">
+                                    {Array.from({ length: 12 }, (_, i) => (
+                                      <Skull key={i} size={17} strokeWidth={i < fearCount ? 1.4 : 1.6} className={"mh-fear-sk" + (i < fearCount ? " on" : "") + (i === fearCount - 1 ? " pulse" : "")} />
+                                    ))}
+                                  </span>
+                                  <b>{fearCount}</b>
+                                </div>
                                 {stTab === "escena" &&
                                   (scene.title || scene.image || dlg ? (
                                     <>
@@ -17054,7 +17056,7 @@ export default function App({ onSignOut }) {
                                           renderDialogue(wide)
                                         ) : (
                                           <div className="mh-stg-scene-cap">
-                                            <div className="mh-stg-kick">Escena actual</div>
+                                            <div className="mh-stg-kick">{charCampaign.name}</div>
                                             <div className="mh-stg-scene-title">{scene.title || "Sin título"}</div>
                                           </div>
                                         )}

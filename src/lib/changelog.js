@@ -2,6 +2,14 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.44",
+    date: "2026-10-10",
+    title: "Más sitio para la escena y el mapa",
+    items: [
+      { tag: "mejora", text: "En la pestaña de la campaña desaparece la barra del título: el Miedo pasa a la esquina superior derecha de la escena y del mapa, y el nombre de la campaña se muestra encima del nombre de la escena. La escena y el mapa ganan ese espacio." },
+    ],
+  },
+  {
     version: "1.43",
     date: "2026-10-10",
     title: "El Miedo, con calaveras",
