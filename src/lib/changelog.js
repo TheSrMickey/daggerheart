@@ -2,6 +2,14 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.35",
+    date: "2026-10-10",
+    title: "Entrada a la hoja de personaje",
+    items: [
+      { tag: "mejora", text: "Al elegir un personaje en la pestaña Personajes, la hoja entra con una animación: aparece con un zoom suave y los rasgos y la cabecera se colocan uno tras otro." },
+    ],
+  },
+  {
     version: "1.34",
     date: "2026-10-10",
     title: "Lo social, ampliado",

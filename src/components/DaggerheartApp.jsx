@@ -4491,7 +4491,14 @@ const sharedStyles = `
   /* Galería de personajes: 3 tarjetas grandes que ocupan todo el alto, centradas */
   .mh-view-in { animation: mh-view-in .28s cubic-bezier(.2,.8,.2,1) backwards; }
   @keyframes mh-view-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-  @media (prefers-reduced-motion: reduce) { .mh-view-in { animation: none; } }
+  .mh-view-in.mh-sheet-in { animation: mh-sheet-in .5s cubic-bezier(.16,.84,.24,1) backwards; transform-origin: 50% 30%; }
+  @keyframes mh-sheet-in { 0% { opacity: 0; transform: translateY(18px) scale(.965); filter: blur(5px); } 55% { filter: blur(0); } 100% { opacity: 1; transform: none; filter: none; } }
+  .mh-sheet-in .mhm-head { animation: mh-head-in .6s .08s cubic-bezier(.16,.84,.24,1) backwards; }
+  .mh-sheet-in .mhm-traits button { animation: mh-trait-in .45s cubic-bezier(.2,.9,.3,1.2) backwards; }
+  .mh-sheet-in .mhm-traits button:nth-child(2) { animation-delay: .14s; } .mh-sheet-in .mhm-traits button:nth-child(3) { animation-delay: .18s; } .mh-sheet-in .mhm-traits button:nth-child(4) { animation-delay: .22s; } .mh-sheet-in .mhm-traits button:nth-child(5) { animation-delay: .26s; } .mh-sheet-in .mhm-traits button:nth-child(6) { animation-delay: .3s; } .mh-sheet-in .mhm-traits button:nth-child(1) { animation-delay: .1s; }
+  @keyframes mh-head-in { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
+  @keyframes mh-trait-in { from { opacity: 0; transform: translateY(10px) scale(.92); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .mh-view-in, .mh-sheet-in .mhm-head, .mh-sheet-in .mhm-traits button { animation: none !important; } }
   .mh-toptabs { display: flex; gap: 22px; } .mh-toptabs button { all: unset; cursor: pointer; color: var(--mh-muted); } .mh-toptabs .is-on { color: var(--mh-ink); }
   .mh-sheetask-bg { position: fixed; inset: 0; z-index: 90; background: rgba(6,6,16,.7); display: flex; align-items: center; justify-content: center; padding: 16px; }
   .mh-sheetask { width: min(520px, 100%); border-radius: 18px; background: var(--mh-panel); border: 1px solid var(--mh-line2); padding: 24px; box-shadow: 0 30px 80px #000a; }
@@ -23879,7 +23886,7 @@ export default function App({ onSignOut }) {
           </div>
         )}
         <div className={showTopbar ? "mh-scroll-hidden" : undefined} style={{ position: "absolute", top: showTopbar ? 108 : 0, left: 0, bottom: 0, right: showRail ? 290 : 0, overflowY: view === "ficha" && !viewingCharId && !modernCharId && showRail ? "hidden" : "auto", padding: isMobile ? "18px 14px" : showTopbar ? "0 " + padX + " 24px" : "24px 28px" }}>
-          <div key={view} className="mh-view-in" style={{ maxWidth: contentMax, margin: "0 auto" }}>
+          <div key={view + (view === "ficha" && modernCharId ? ":hoja" : "")} className={"mh-view-in" + (view === "ficha" && modernCharId ? " mh-sheet-in" : "")} style={{ maxWidth: contentMax, margin: "0 auto" }}>
             {!showTopbar && view !== "inicio" && <div className="mh-pagetitle">{viewLabel}</div>}
 
           {modernOpen && (() => {
