@@ -76,9 +76,9 @@ export function RestLock({ campaignId, campName, charId, charName, onAsk, onType
       {open && <div className="rl-ban"><BedDouble size={16} /><span><b>El DJ ha convocado un {TYPES[curType][0].toLowerCase()}.</b> {project ? "Es tiempo libre: puedes avanzar tus proyectos." : "Elige tus acciones y descansa."}</span></div>}
       <div className={"rl-body" + (open ? "" : " is-locked")} inert={!open}>{typeof children === "function" ? children({ open, markReady, fixedType: open ? curType : null }) : children}</div>
       {!open && (
-        <div className="rl-lock">
+        <div className={"rl-lock" + (project ? " is-mini" : "")}>
           <span className="rl-ic">{done ? <Check size={26} /> : <Lock size={26} />}</span>
-          {done ? (
+          {project ? null : done ? (
             <>
               <h4 className="mh-serif">Ya has descansado</h4>
               <p>{charName} ya ha hecho este descanso del grupo.</p>
