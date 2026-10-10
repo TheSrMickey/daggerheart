@@ -854,6 +854,19 @@ const buildCardCatalog = () => {
     list.forEach((s) => out.push({ id: "s-" + cls + s.key, kind: "subclase", key: s.key, sub: cls + " · Subclase", text: s.blurb, features: s.features, image: SUBCLASS_CARD_ART[s.key] || s.image, color: CLASS_COLORS[cls] || "#E3B04B", Icon: CLASS_EMBLEMS[cls] || Sparkles })),
   );
   TRANSFORMATIONS.forEach((t) => out.push({ id: "t-" + t.key, kind: "transformacion", key: t.key, sub: "Transformación" + (t.expansion ? " · " + t.expansion : ""), text: t.blurb, features: t.features, image: TRANSFORMATION_ART[t.key]?.src, color: TRANSFORMATION_ART[t.key]?.color || "#A58BE8", Icon: Moon }));
+  [...BEASTFORMS].sort((a, b) => a.tier - b.tier).forEach((b) =>
+    out.push({
+      id: "f-" + b.key,
+      kind: "forma",
+      key: b.key,
+      sub: "Forma de Bestia · Rango " + b.tier,
+      text: b.animals,
+      features: [{ name: "Bonificador", text: b.bonus }, { name: "Ataque", text: b.attack }, { name: "Ventaja en", text: b.advantage }, ...b.features],
+      image: b.image,
+      color: beastColor(b.key),
+      Icon: beastIcon(b.key),
+    }),
+  );
   return (CARD_CATALOG = out);
 };
 // Ilustraciones de subclase recortadas (páginas de clase del manual básico y de Hope & Fear).
@@ -1295,6 +1308,7 @@ const BEASTFORMS = [
     key: "Explorador Ágil",
     tier: 1,
     color: "#E0A04A",
+    image: "/formas-bestia/explorador-agil.webp",
     animals: "Zorro, Ratón, Comadreja, etc.",
     bonus: "Agilidad +1 · Evasión +2",
     traitBonus: { key: "t_agility", amount: 1 },
@@ -16942,6 +16956,7 @@ export default function App({ onSignOut }) {
                                           title: b.key,
                                           text: `${b.bonus} · ${b.attack}\nVentaja en: ${b.advantage}`,
                                           features: b.features,
+                                          image: b.image,
                                           bigStyle: true,
                                           itemIcon: BIcon,
                                           accent: b.color,

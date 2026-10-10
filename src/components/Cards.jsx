@@ -13,8 +13,9 @@ export const KINDS = [
   { key: "comunidad", label: "Comunidad", plural: "Comunidades" },
   { key: "subclase", label: "Subclase", plural: "Subclases" },
   { key: "transformacion", label: "Transformación", plural: "Transformaciones" },
+  { key: "forma", label: "Forma de Bestia", plural: "Formas de Bestia" },
 ];
-const KIND_COLOR = { dominio: "#C9A24A", ascendencia: "#6FA3C0", comunidad: "#C08B5C", subclase: "#7FB77A", transformacion: "#A58BE8" };
+const KIND_COLOR = { dominio: "#C9A24A", ascendencia: "#6FA3C0", comunidad: "#C08B5C", subclase: "#7FB77A", transformacion: "#A58BE8", forma: "#E0A04A" };
 
 // La carta, tal cual se ve al abrirla; en la cuadrícula tiene exactamente el mismo tamaño (300 × 420).
 function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
@@ -83,7 +84,8 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
   const shown = all.filter((c) => matches(c) && (!sel.length || !q || norm(c.key + " " + c.text).includes(q)));
   const showDomains = !kinds.length || kinds.includes("dominio");
   const domCount = (d) => all.filter((c) => c.kind === "dominio" && c.domain === d).length;
-  const toggleKind = (k) => (setSel([]), setKinds((s) => (s.includes(k) ? s.filter((x) => x !== k) : [...s, k])));
+  // Los tipos se eligen de uno en uno; solo los dominios se pueden combinar.
+  const toggleKind = (k) => (setSel([]), setKinds((s) => (s.includes(k) ? [] : [k])));
   const toggle = (d) => setSel((s) => (s.includes(d) ? s.filter((x) => x !== d) : [...s, d]));
   // Secciones: cartas de dominio por nivel y, después, cada otro tipo.
   const sections = [
@@ -123,7 +125,7 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
       <div className="cx-h">
         <div>
           <h1 className="mh-serif">Cartas</h1>
-          <p>Todas las cartas del juego: dominio, ascendencia, comunidad, subclase y transformación. Pulsa una para verla a tamaño completo.</p>
+          <p>Todas las cartas del juego: dominio, ascendencia, comunidad, subclase, transformación y formas de bestia. Pulsa una para verla a tamaño completo.</p>
         </div>
         <label className="cx-search">
           <Search size={15} />

@@ -2,6 +2,16 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.45",
+    date: "2026-10-10",
+    title: "Formas de Bestia en Cartas e ilustración nueva",
+    items: [
+      { tag: "nuevo", text: "La pestaña Cartas incluye ahora las Formas de Bestia (ordenadas por Rango), con el mismo diseño de carta y vista ampliada." },
+      { tag: "mejora", text: "La carta Explorador Ágil tiene ilustración (zorro, ratón y comadreja), también al abrirla desde la hoja." },
+      { tag: "mejora", text: "En Cartas, los tipos (Dominio, Ascendencia, Comunidad…) se eligen de uno en uno; solo los filtros de dominio se pueden combinar entre sí." },
+    ],
+  },
+  {
     version: "1.44",
     date: "2026-10-10",
     title: "Más sitio para la escena y el mapa",
