@@ -3031,9 +3031,14 @@ const sharedStyles = `
   /* Mesa del DJ (vista del jugador) */
   .mh-stg-fear { display: flex; align-items: center; gap: 7px; font-family: 'Inter', system-ui, sans-serif; }
   .mh-stg-fear > span:first-child { font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-purple-ink); }
-  .mh-stg-fear-pips { display: flex; gap: 3px; }
-  .mh-stg-fear-pips i { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid color-mix(in srgb, #A58BE8 45%, transparent); box-sizing: border-box; }
-  .mh-stg-fear-pips i.on { background: #A58BE8; border-color: #A58BE8; }
+  .mh-stg-fear-pips { display: flex; gap: 3px; align-items: center; }
+  .mh-fear-sk { flex: none; color: color-mix(in srgb, #A58BE8 40%, transparent); fill: none; transition: color .2s, filter .2s; }
+  .mh-fear-sk.on { color: #A58BE8; fill: #A58BE8; filter: drop-shadow(0 0 4px rgba(165,139,232,.55)); }
+  .mh-fear-sk.on circle { fill: var(--mh-panel); stroke: var(--mh-panel); }
+  .mh-fear-sk.on path:first-child { fill: var(--mh-panel); stroke: var(--mh-panel); }
+  .mh-fear-sk.pulse { animation: mh-fear-pulse 1.4s ease-in-out infinite; transform-origin: center; }
+  @keyframes mh-fear-pulse { 50% { filter: drop-shadow(0 0 9px rgba(205,175,255,.95)); transform: scale(1.18); } }
+  .mh-fear-btn { all: unset; cursor: pointer; display: inline-flex; padding: 1px; border-radius: 6px; } .mh-fear-btn:hover .mh-fear-sk { color: #A58BE8; }
   .mh-stg-fear b { font-size: 12px; color: var(--mh-purple-ink); min-width: 14px; text-align: right; }
   .mh-stg-seg { display: flex; gap: 3px; padding: 3px; border-radius: 11px; background: var(--mh-panel2); border: 1px solid var(--mh-line); flex-shrink: 0; margin-bottom: 12px; }
   .mh-stg-seg button { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 4px; border: 0; border-radius: 8px; background: transparent; color: var(--mh-ink3); font: 600 12px 'Inter', system-ui, sans-serif; cursor: pointer; transition: background .15s, color .15s; }
@@ -17019,7 +17024,7 @@ export default function App({ onSignOut }) {
                                   <span>Miedo</span>
                                   <span className="mh-stg-fear-pips">
                                     {Array.from({ length: 12 }, (_, i) => (
-                                      <i key={i} className={i < fearCount ? "on" : ""} />
+                                      <Skull key={i} size={17} strokeWidth={i < fearCount ? 1.4 : 1.6} className={"mh-fear-sk" + (i < fearCount ? " on" : "") + (i === fearCount - 1 ? " pulse" : "")} />
                                     ))}
                                   </span>
                                   <b>{fearCount}</b>
@@ -17045,14 +17050,6 @@ export default function App({ onSignOut }) {
                                         className={"mh-stg-scene" + (scene.image ? "" : " is-blank") + (wide ? " is-wide" : "")}
                                         style={scene.image ? { backgroundImage: `url("${scene.image.replace(/"/g, "%22")}")` } : undefined}
                                       >
-                                        <div className="mh-stg-scene-top">
-                                          {live === "escena" && (
-                                            <span className="mh-stg-live">
-                                              <i />
-                                              En directo
-                                            </span>
-                                          )}
-                                        </div>
                                         {dlg ? (
                                           renderDialogue(wide)
                                         ) : (
@@ -17178,14 +17175,6 @@ export default function App({ onSignOut }) {
                                         })()}
                                         <AreaCards campaignId={charCampaign.id} />
                                         {areaTool && <div className="mh-area-hint">Pulsa una casilla para colocar el área <button type="button" onClick={() => setAreaTool(null)}>Cancelar</button></div>}
-                                        <div className="mh-stg-scene-top mh-map-top">
-                                          {live === "mapa" && (
-                                            <span className="mh-stg-live">
-                                              <i />
-                                              En directo
-                                            </span>
-                                          )}
-                                        </div>
                                       </div>
                                       {(() => {
                                         const me = characters[viewingCharId];
@@ -25634,11 +25623,9 @@ export default function App({ onSignOut }) {
                 </div>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                   {Array.from({ length: 12 }, (_, idx) => idx + 1).map((i) => (
-                    <div
-                      key={i}
-                      onClick={() => toggleFear(i)}
-                      style={{ width: 24, height: 24, borderRadius: "50%", border: "1.5px solid #A58BE8", cursor: "pointer", background: i <= fearCount ? "#A58BE8" : "transparent" }}
-                    />
+                    <button key={i} type="button" className="mh-fear-btn" aria-label={"Poner el Miedo en " + i} onClick={() => toggleFear(i)}>
+                      <Skull size={26} strokeWidth={i <= fearCount ? 1.4 : 1.6} className={"mh-fear-sk" + (i <= fearCount ? " on" : "") + (i === fearCount ? " pulse" : "")} />
+                    </button>
                   ))}
                 </div>
               </Card>

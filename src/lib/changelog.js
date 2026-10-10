@@ -2,6 +2,15 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.43",
+    date: "2026-10-10",
+    title: "El Miedo, con calaveras",
+    items: [
+      { tag: "mejora", text: "El Miedo del DJ se ve ahora como 12 calaveras (vacías o encendidas con brillo morado), y la última encendida late suavemente. Lo mismo en el contador del DJ, donde se pulsan para fijar el Miedo." },
+      { tag: "mejora", text: "Se quita el cartelito «En directo» de la escena y del mapa de los jugadores." },
+    ],
+  },
+  {
     version: "1.42",
     date: "2026-10-10",
     title: "El mapa muestra lo que pone el DJ",
