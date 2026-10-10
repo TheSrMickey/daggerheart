@@ -5156,6 +5156,16 @@ const sharedStyles = `
   .mh-bf:hover { border-color: var(--bc); background: color-mix(in srgb, var(--bc) 12%, var(--mh-panel)); box-shadow: 0 0 0 1px color-mix(in srgb, var(--bc) 55%, transparent) inset; }
   .mh-bf.is-on { border-color: var(--bc); background: color-mix(in srgb, var(--bc) 16%, var(--mh-panel)); box-shadow: 0 0 0 1px var(--bc) inset; }
   .mh-bf.is-locked { opacity: .55; }
+  .mh-bf { --fb: color-mix(in srgb, var(--bc) 7%, var(--mh-panel)); overflow: hidden; min-height: 84px; }
+  .mh-bf:hover { --fb: color-mix(in srgb, var(--bc) 12%, var(--mh-panel)); } .mh-bf.is-on { --fb: color-mix(in srgb, var(--bc) 16%, var(--mh-panel)); }
+  .mh-bf-img { position: absolute; right: 0; top: 0; bottom: 0; width: 78%; background: center 30% / cover no-repeat; filter: saturate(.9) brightness(.88); pointer-events: none; transition: filter .2s; }
+  .mh-bf.is-on .mh-bf-img { filter: none; } .mh-bf.is-locked .mh-bf-img { filter: grayscale(.9) brightness(.6); }
+  .mh-bf-img.is-ph { display: grid; place-items: center; justify-content: end; padding-right: 130px; color: var(--bc); opacity: .5; width: 100%; filter: none; }
+  .mh-bf-fade { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, var(--fb) 0%, var(--fb) 28%, color-mix(in srgb, var(--fb) 82%, transparent) 46%, color-mix(in srgb, var(--fb) 25%, transparent) 74%, color-mix(in srgb, var(--fb) 8%, transparent) 100%); }
+  .mh-bf.is-on .mh-bf-fade { background: linear-gradient(90deg, var(--fb) 0%, var(--fb) 26%, color-mix(in srgb, var(--fb) 78%, transparent) 44%, color-mix(in srgb, var(--fb) 18%, transparent) 72%, transparent 100%); }
+  .mh-bf-main, .mh-bf-stats { position: relative; z-index: 1; } .mh-bf-main { flex: 0 1 46%; } .mh-bf-stats { margin-left: auto; align-self: flex-end; }
+  .mh-bf .mh-bf-st { background: color-mix(in srgb, var(--mh-panel3) 78%, transparent); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,.1); }
+  .mh-bf-lock { z-index: 2; }
   .mh-bf-ico { width: 46px; height: 46px; flex-shrink: 0; display: grid; place-items: center; border-radius: 12px; color: color-mix(in srgb, var(--bc) var(--mh-accent-keep, 100%), #000); background: color-mix(in srgb, var(--bc) 20%, transparent); }
   .mh-bf-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
   .mh-bf-name { font-family: Georgia, serif; font-size: 14px; font-weight: 700; line-height: 1.2; }
@@ -16950,7 +16960,7 @@ export default function App({ onSignOut }) {
                                     <button
                                       key={b.key}
                                       type="button"
-                                      className={"mh-bf" + (selected ? " is-on" : "") + (locked ? " is-locked" : "")}
+                                      className={"mh-bf" + (selected ? " is-on" : "") + (locked ? " is-locked" : "") + (b.image ? " has-img" : "")}
                                       style={{ "--bc": b.color }}
                                       onClick={() =>
                                         setViewingCardDetail({
@@ -16967,7 +16977,8 @@ export default function App({ onSignOut }) {
                                       }
                                       title={tierLocked ? `Se desbloquea en Rango ${b.tier}` : !selected && stressFull ? "Sin Estrés disponible para activarla" : undefined}
                                     >
-                                      <span className="mh-bf-ico"><BIcon size={26} strokeWidth={1.6} /></span>
+                                      {b.image ? <span className="mh-bf-img" style={{ backgroundImage: `url("${b.image}")` }} /> : <span className="mh-bf-img is-ph"><BIcon size={46} strokeWidth={1.3} /></span>}
+                                      <span className="mh-bf-fade" />
                                       <span className="mh-bf-main">
                                         <span className="mh-bf-name">{b.key}</span>
                                         <span className="mh-bf-an">{b.animals}</span>

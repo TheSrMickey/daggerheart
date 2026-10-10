@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-10",
     title: "Formas de Bestia en Cartas e ilustración nueva",
     items: [
+      { tag: "mejora", text: "En la caja de Formas de Bestia de la hoja, cada forma muestra su ilustración como fondo de la fila, difuminada hacia la izquierda para que el texto se lea. La activa se ve a todo color y las bloqueadas, en gris oscuro." },
       { tag: "nuevo", text: "La pestaña Cartas incluye ahora las Formas de Bestia (ordenadas por Rango), con el mismo diseño de carta y vista ampliada." },
       { tag: "mejora", text: "La carta Explorador Acuático tiene ilustración (anguila, pez y pulpo)." },
       { tag: "mejora", text: "La carta Herbívoro Veloz tiene ilustración (ciervo, gacela y cabra montés)." },
