@@ -4448,6 +4448,7 @@ const sharedStyles = `
   .mh-tribute-go .mh-rest-ico { width: 30px; height: 30px; }
   .mh-trov.is-flash .mh-trov-s { animation: mh-trov-glow 1.2s ease-out; }
   @keyframes mh-trov-glow { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--tb) 70%, transparent); } 40% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--tb) 30%, transparent); } 100% { box-shadow: 0 0 0 0 transparent; } }
+  .mh-wz-page { animation: mh-view-in .3s cubic-bezier(.2,.8,.2,1) backwards; } .mh-wz-page .mh-wz { width: 100%; height: calc(100vh - 150px); min-height: 520px; max-height: none; }
   .mh-wz { margin: 0; width: min(1020px, 100%); height: min(640px, 92%); padding: 0; display: flex; flex-direction: column; overflow: hidden; }
   .mh-wz-top { padding: 16px 22px 12px; border-bottom: 1px solid var(--mh-line); flex-shrink: 0; }
   .mh-wz-title { display: flex; align-items: baseline; gap: 10px; }
@@ -8317,6 +8318,7 @@ export default function App({ onSignOut }) {
   };
 
   const [showNewCharModal, setShowNewCharModal] = useState(false);
+  const [wizSlot, setWizSlot] = useState(null); // hueco de la columna central donde va la creación de personaje
   const [wizardStep, setWizardStep] = useState("class");
   const [originTab, setOriginTab] = useState("ancestry");
   const [originFocus, setOriginFocus] = useState(null);
@@ -23751,6 +23753,7 @@ export default function App({ onSignOut }) {
                   setViewingCharId(null);
                   setViewingCardDetail(null);
                   setModernCharId(null);
+                  setShowNewCharModal(false);
                   setView(item.key);
                 }}
                 title={item.label}
@@ -23886,7 +23889,8 @@ export default function App({ onSignOut }) {
           </div>
         )}
         <div className={showTopbar ? "mh-scroll-hidden" : undefined} style={{ position: "absolute", top: showTopbar ? 108 : 0, left: 0, bottom: 0, right: showRail ? 290 : 0, overflowY: view === "ficha" && !viewingCharId && !modernCharId && showRail ? "hidden" : "auto", padding: isMobile ? "18px 14px" : showTopbar ? "0 " + padX + " 24px" : "24px 28px" }}>
-          <div key={view + (view === "ficha" && modernCharId ? ":hoja" : "")} className={"mh-view-in" + (view === "ficha" && modernCharId ? " mh-sheet-in" : "")} style={{ maxWidth: contentMax, margin: "0 auto" }}>
+          <div ref={setWizSlot} style={{ maxWidth: contentMax, margin: "0 auto" }} />
+          <div key={view + (view === "ficha" && modernCharId ? ":hoja" : "")} className={"mh-view-in" + (view === "ficha" && modernCharId ? " mh-sheet-in" : "")} style={{ display: showNewCharModal ? "none" : undefined, maxWidth: contentMax, margin: "0 auto" }}>
             {!showTopbar && view !== "inicio" && <div className="mh-pagetitle">{viewLabel}</div>}
 
           {modernOpen && (() => {
@@ -25655,21 +25659,10 @@ export default function App({ onSignOut }) {
         const stepIndex = wizardStep === "class" ? carouselIndex : subclassIndex;
         const setStepIndex = wizardStep === "class" ? setCarouselIndex : setSubclassIndex;
         const current = stepItems[stepIndex] || { key: "", blurb: "" };
-        return (
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background: "rgba(8,6,12,0.70)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              zIndex: 10,
-              padding: 20,
-            }}
-            onClick={() => setShowNewCharModal(false)}
-          >
-            <div className="mh-card mh-wz" onClick={(e) => e.stopPropagation()}>
+        if (!wizSlot) return null;
+        return createPortal(
+          <div className="mh-wz-page">
+            <div className="mh-card mh-wz">
               {(() => {
                 const idx = Math.max(0, steps.findIndex((st) => st.key === wizardStep));
                 const groups = [...new Set(steps.map((st) => st.group))];
@@ -26796,7 +26789,8 @@ export default function App({ onSignOut }) {
               })()}
               </div>
             </div>
-          </div>
+          </div>,
+          wizSlot
         );
       })()}
 

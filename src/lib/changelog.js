@@ -2,6 +2,14 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.36",
+    date: "2026-10-10",
+    title: "Creación de personaje en la columna central",
+    items: [
+      { tag: "mejora", text: "La creación de personaje ya no es una ventana emergente: se hace en la columna central, con el menú y la lista de amigos siempre a la vista. Al cambiar de sección desde el menú se cierra." },
+    ],
+  },
+  {
     version: "1.35",
     date: "2026-10-10",
     title: "Entrada a la hoja de personaje",
