@@ -2,6 +2,22 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.34",
+    date: "2026-10-10",
+    title: "Lo social, ampliado",
+    items: [
+      { tag: "nuevo", text: "Invitar a un amigo a una campaña desde su menú: le llega a la campana con un botón para unirse con el personaje que elija." },
+      { tag: "nuevo", text: "Mensajes privados entre amigos (pulsa su nombre), con avisos de mensajes sin leer, y grupos de amigos para avisarlos o invitarlos de una vez." },
+      { tag: "nuevo", text: "Perfil de jugador («Mi perfil» en tu cuenta y «Ver perfil» en un amigo) con lo que buscas, un texto y los personajes que quieres enseñar." },
+      { tag: "nuevo", text: "Nueva página «Buscar mesa»: anuncios de jugadores y DJ que buscan gente, con petición de unirse." },
+      { tag: "nuevo", text: "Compartir una ficha con un enlace de solo lectura, con caducidad y qué se ve, o enviarla a un amigo." },
+      { tag: "nuevo", text: "Actividad de tus amigos en Inicio: subidas de nivel, campañas nuevas y críticos." },
+      { tag: "nuevo", text: "Reacciones con emojis en los mensajes y tiradas del chat, y sellos de la sesión que reparte el DJ en la Crónica." },
+      { tag: "nuevo", text: "Estado En línea, No molestar o Invisible, y en la lista de amigos se ve quién está en una sesión." },
+      { tag: "nuevo", text: "Privacidad en Ajustes: quién puede invitarte o escribirte, qué compartes y una lista de bloqueados." },
+    ],
+  },
+  {
     version: "1.33",
     date: "2026-10-10",
     title: "Cartas abre al instante",

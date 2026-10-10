@@ -34,7 +34,10 @@ function autoSummary(events) {
   return out.join(" ") || "Todavía no hay hitos en esta sesión.";
 }
 
-export function Chronicle({ campaignId, onShare }) {
+const SEALS = ["MVP de la sesión", "Mejor interpretación", "Idea brillante", "Golpe de efecto", "Alma de la mesa"];
+export function Chronicle({ campaignId, onShare, members = [] }) {
+  const [sealWho, setSealWho] = useState("");
+  const [sealTxt, setSealTxt] = useState(SEALS[0]);
   const [log] = useDoc(logKey(campaignId), [], 6000);
   const [chron, update] = useDoc(chronKey(campaignId), { days: {} }, 8000);
   const sess = sessionsOf(Array.isArray(log) ? log : []);
@@ -49,9 +52,11 @@ export function Chronicle({ campaignId, onShare }) {
   const events = cur.events.filter((e) => !hidden.has(e.ts));
   const summary = meta.summary != null ? meta.summary : autoSummary(events);
   const who = [...new Set(cur.events.filter((e) => e.who && e.who !== "El DJ").map((e) => e.who))];
+  const seals = meta.seals || [];
+  const sealLine = seals.length ? " Sellos: " + seals.map((x) => x.who + " (" + x.t + ")").join(", ") + "." : "";
   return (
     <div className="mh-card gx" style={{ margin: 0, maxWidth: 940 }}>
-      <div className="gx-h"><h3 className="mh-serif"><ScrollText size={18} /> Crónica de la campaña</h3><button type="button" className="mh-btn" onClick={() => { onShare("📖 Crónica · Sesión " + cur.n + " (" + dayLabel(cur.key) + "): " + summary); patch(cur.key, { published: true }); }}><Share2 size={14} /> {meta.published ? "Compartida · volver a compartir" : "Compartir con la mesa"}</button></div>
+      <div className="gx-h"><h3 className="mh-serif"><ScrollText size={18} /> Crónica de la campaña</h3><button type="button" className="mh-btn" onClick={() => { onShare("📖 Crónica · Sesión " + cur.n + " (" + dayLabel(cur.key) + "): " + summary + sealLine); patch(cur.key, { published: true }); }}><Share2 size={14} /> {meta.published ? "Compartida · volver a compartir" : "Compartir con la mesa"}</button></div>
       <p className="gx-sub">Se rellena sola con lo que pasa en la mesa. Edítala antes de compartirla.</p>
       <div className="ch-grid">
         <div className="ch-list">
@@ -77,6 +82,13 @@ export function Chronicle({ campaignId, onShare }) {
           {hidden.size > 0 && <button type="button" className="mh-btn-ghost" onClick={() => patch(cur.key, { hidden: [] })}>Restaurar {hidden.size} quitado{hidden.size === 1 ? "" : "s"}</button>}
           <span className="gx-lab">Quién estuvo</span>
           <div className="gx-row">{who.length ? who.map((w) => <span key={w} className="cx-chip">{w}</span>) : <span className="gx-fact">Sin datos todavía</span>}</div>
+          <span className="gx-lab">Sellos de la sesión · los reparte el DJ</span>
+          {seals.map((x, i) => <div key={i} className="ch-ev" style={{ "--c": "#E3B04B" }}><span className="ch-ic">🏅</span><span className="ch-tx"><b>{x.who}</b><em>{x.t}</em></span><button type="button" className="cx-chip" onClick={() => patch(cur.key, { seals: seals.filter((_, j) => j !== i) })}>Quitar</button></div>)}
+          <div className="gx-row" style={{ marginTop: 8 }}>
+            <select className="mh-input" value={sealWho} onChange={(e) => setSealWho(e.target.value)} aria-label="Quién recibe el sello"><option value="">Elige a quién…</option>{members.map((m) => <option key={m} value={m}>{m}</option>)}</select>
+            <select className="mh-input" value={sealTxt} onChange={(e) => setSealTxt(e.target.value)} aria-label="Sello">{SEALS.map((x) => <option key={x}>{x}</option>)}</select>
+            <button type="button" className="mh-btn-ghost" disabled={!sealWho} onClick={() => (patch(cur.key, { seals: [...seals, { who: sealWho, t: sealTxt }] }), setSealWho(""))}>Dar sello</button>
+          </div>
           <span className="gx-lab">Notas del DJ (solo las ves tú)</span>
           <textarea key={cur.key} className="mh-input" style={{ minHeight: 70, width: "100%", resize: "vertical" }} placeholder="Ganchos para la próxima sesión…" defaultValue={meta.notes || ""} onBlur={(e) => patch(cur.key, { notes: e.target.value })} />
         </div>

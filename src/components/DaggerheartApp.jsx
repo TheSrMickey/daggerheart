@@ -2,7 +2,7 @@
 
 import { Fragment, useState, useEffect, useLayoutEffect, useRef, createContext, useContext } from "react";
 import { createPortal } from "react-dom";
-import { Squirrel, Layers, CalendarDays, Vote, ScrollText as ChronIcon } from "lucide-react";
+import { Squirrel, Layers, CalendarDays, Vote, ScrollText as ChronIcon, Megaphone, Link2 } from "lucide-react";
 import { History, LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus, Box, LayoutGrid, Bird, Fish, Bug, Rabbit, Cat, Turtle, Clock, CircleDashed, Slash } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { NotificationBell, FriendsPanel } from "./Social";
@@ -20,7 +20,8 @@ import { Chronicle, Timeline } from "./Chronicle";
 import { appendLog } from "@/lib/chronicle";
 import { SpotPlayer, SpotPause, SpotPanel, FocusBar, normSpot, liveHands, kindOf } from "./Spotlight";
 import { APP_VERSION } from "@/lib/changelog";
-import { setPresence, startPresence, stopPresence, publishTable, loadTable, myUid } from "@/lib/social";
+import { setPresence, startPresence, stopPresence, publishTable, loadTable, myUid, setPresenceCamp, bridge, logActivity, loadReactions, toggleReaction } from "@/lib/social";
+import { SocialHost, LookingFor, ActivityCard, PrivacyCard, ReactionBar } from "./Social2";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
 import { buildSablewood } from "./quickstartSablewood";
 import { Wand, CircleDot, MoveUpRight, Archive, Shell, Compass, Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
@@ -35,6 +36,7 @@ const NAV_ITEMS = [
   { key: "ficha", label: "Personajes", icon: User },
   { key: "campaigns", label: "Campañas", icon: BookOpen },
   { key: "cartas", label: "Cartas", icon: Layers },
+  { key: "mesas", label: "Buscar mesa", icon: Megaphone },
 ];
 
 // Color propio de cada clase (ajuste "Colores por clase").
@@ -4857,6 +4859,49 @@ const sharedStyles = `
   .gx-item p { margin: 3px 0 0; color: var(--mh-ink); font-size: 13px; line-height: 1.45; } .gx-secret { color: var(--mh-muted) !important; font-style: italic; }
   .gx-enc { flex-direction: column; align-items: stretch; gap: 8px; } .gx-enc-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; } .gx-enc-h b { font-size: 14.5px; }
   .gx-note { color: var(--mh-muted); font-size: 11.5px; margin: 2px 2px 0; }
+  .mh-htag.is-btn { cursor: pointer; } .mh-htag.is-btn:hover { background: var(--mh-panel3); }
+  .mh-st.is-dnd { background: #E0544A; } .mh-st-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #4CC36B; } .mh-st-dot.is-dnd { background: #E0544A; } .mh-st-dot.is-inv { background: #7d7d98; }
+  .mh-me-row { display: flex; align-items: center; gap: 9px; padding: 0 4px 10px; margin-bottom: 8px; border-bottom: 1px solid var(--mh-line); position: relative; } .mh-me-t { flex: 1; min-width: 0; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mh-st-btn { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 99px; border: 1px solid var(--mh-line2); font-size: 11.5px; font-weight: 600; color: var(--mh-ink); } .mh-st-btn:hover { background: #ffffff0f; }
+  .mh-st-menu { right: 0; top: 36px; position: absolute !important; width: 220px; z-index: 81; } .mh-st-menu button { align-items: flex-start; } .mh-st-menu .mh-st-dot { margin-top: 5px; }
+  .mh-unread { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: #2a56c4; color: #fff; font-size: 10.5px; display: inline-flex; align-items: center; justify-content: center; }
+  .mh-ctx-sub { display: flex; flex-direction: column; padding: 2px 0 4px 22px; border-left: 2px solid var(--mh-line2); margin: 0 6px 4px 14px; } .mh-ctx-sub small { color: var(--mh-muted); padding: 4px 8px; }
+  .mh-ctx { width: 210px; }
+  .mh-notice-card { margin: 6px 0 2px; padding: 9px 10px; border: 1px solid var(--mh-line); border-radius: 12px; background: var(--mh-panel); display: flex; flex-direction: column; gap: 3px; } .mh-notice-card b { font-size: 13px; } .mh-notice-card small { color: var(--mh-muted); font-size: 11.5px; }
+  .mh-join { display: flex; gap: 6px; margin-top: 6px; } .mh-join select { flex: 1; min-width: 0; font-size: 12px; } .mh-join .is-ok { all: unset; cursor: pointer; padding: 6px 12px; border-radius: 9px; background: #4CC36B; color: #06210f; font-weight: 700; font-size: 12px; } .mh-join .is-ok:disabled { opacity: .5; }
+  .mh-grp { border: 1px solid var(--mh-line); border-radius: 12px; margin: 0 0 8px; background: var(--mh-panel); overflow: hidden; }
+  .mh-grp-h { all: unset; cursor: pointer; box-sizing: border-box; width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 10px; } .mh-grp-ic { width: 26px; height: 26px; border-radius: 8px; background: #4f9a6244; color: #6FBF73; display: inline-flex; align-items: center; justify-content: center; }
+  .mh-grp-t { flex: 1; display: flex; flex-direction: column; } .mh-grp-t b { font-size: 13px; font-weight: 600; } .mh-grp-t small { color: var(--mh-muted); font-size: 11px; }
+  .mh-grp-b { padding: 0 10px 10px; } .mh-grp-av { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; } .mh-grp-a { display: flex; gap: 6px; flex-wrap: wrap; } .mh-grp-a .mh-fbtn { width: auto; padding: 0 8px; gap: 4px; display: inline-flex; align-items: center; font-size: 11.5px; height: 26px; }
+  .mh-grp-new { display: flex; gap: 6px; margin: 8px 0 4px; } .mh-grp-new input { flex: 1; min-width: 0; font-size: 12px; }
+  .mh-grp-pick { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; } .mh-grp-pick button { all: unset; cursor: pointer; padding: 4px 10px; border-radius: 99px; border: 1px solid var(--mh-line2); font-size: 11.5px; } .mh-grp-pick button.is-on { background: color-mix(in srgb, var(--acc, #C9A24A) 18%, var(--mh-panel)); border-color: var(--acc, #C9A24A); }
+  .mh-dm { display: flex; flex-direction: column; height: calc(100vh - 60px); min-height: 380px; } .mh-dm-h { display: flex; align-items: center; gap: 9px; padding-bottom: 10px; border-bottom: 1px solid var(--mh-line); }
+  .mh-dm-feed { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 12px 2px; } .mh-dm-m { max-width: 86%; align-self: flex-start; padding: 8px 11px; border-radius: 14px; border-top-left-radius: 4px; background: var(--mh-panel3); font-size: 12.5px; line-height: 1.4; overflow-wrap: anywhere; } .mh-dm-m small { display: block; color: var(--mh-muted); font-size: 10px; margin-top: 2px; }
+  .mh-dm-m.is-me { align-self: flex-end; border-radius: 14px; border-top-right-radius: 4px; background: color-mix(in srgb, var(--acc, #C9A24A) 20%, var(--mh-panel)); }
+  .mh-dm-in { display: flex; gap: 6px; padding-top: 10px; border-top: 1px solid var(--mh-line); } .mh-dm-in input { flex: 1; min-width: 0; }
+  .so-ov { position: fixed !important; inset: 0 !important; z-index: 75; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(8,6,12,.68); overflow-y: auto; }
+  .so-modal { width: min(520px, 100%); max-height: calc(100vh - 40px); overflow-y: auto; border: 1px solid var(--mh-line); border-radius: 20px; background: var(--mh-panel); box-shadow: 0 30px 70px rgba(0,0,0,.55); } .so-modal.is-wide { width: min(640px, 100%); }
+  .so-ban { height: 88px; background: linear-gradient(135deg, color-mix(in srgb, var(--c, #4f9a62) 60%, #12142a), #12142a); } .so-body { padding: 0 24px 22px; margin-top: -32px; } .so-ban + .so-body { margin-top: -34px; }
+  .so-prow { display: flex; align-items: center; gap: 12px; justify-content: space-between; } .so-grow { flex: 1; min-width: 0; } .so-name { font-size: 21px; font-weight: 700; } .so-h { margin: 0; font-size: 16px; display: flex; align-items: center; gap: 9px; }
+  .so-sub { color: var(--mh-muted); font-size: 12.5px; margin: 4px 0 8px; } .so-bio { margin: 0; line-height: 1.5; font-size: 13px; } .so-foot { margin-top: 14px; color: var(--mh-muted); font-size: 12px; display: flex; gap: 6px; align-items: center; }
+  .so-lab { font: 700 10.5px 'Inter', system-ui, sans-serif; letter-spacing: .09em; text-transform: uppercase; color: var(--mh-muted); margin: 14px 0 8px; }
+  .so-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; } .so-acts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 14px; } .so-acts small { color: var(--mh-muted); display: inline-flex; gap: 5px; align-items: center; }
+  .so-chip { --c: #C9A24A; appearance: none; font: 600 11.5px 'Inter', sans-serif; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 99px; border: 1px solid var(--mh-line); background: var(--mh-panel); color: var(--mh-ink3); } span.so-chip { cursor: default; }
+  .so-chip.on { border-color: var(--c); background: color-mix(in srgb, var(--c) 15%, var(--mh-panel)); color: var(--mh-ink); }
+  .so-chars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; } .so-char { appearance: none; font: inherit; color: var(--mh-ink); text-align: left; cursor: pointer; display: flex; flex-direction: column; gap: 2px; padding: 9px 10px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel); } .so-char small { color: var(--mh-muted); font-size: 11px; } .so-char.on { border-color: var(--acc, #C9A24A); background: color-mix(in srgb, var(--acc, #C9A24A) 10%, var(--mh-panel)); }
+  .so-set { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-top: 1px solid var(--mh-line); cursor: default; } .so-set:first-of-type { border-top: 0; } .so-set b { display: block; font-size: 13px; } .so-set small { color: var(--mh-muted); font-size: 12px; }
+  .so-link { display: flex; gap: 8px; align-items: center; } .so-link code { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 9px 12px; border: 1px solid var(--mh-line); border-radius: 10px; font-size: 12px; color: var(--mh-ink3); }
+  .so-traits { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; } .so-traits > div { text-align: center; padding: 8px 4px; border-radius: 10px; border: 1px solid var(--mh-line); } .so-traits small { display: block; color: var(--mh-muted); font-size: 10px; } .so-traits b { font-size: 16px; }
+  .so-page { max-width: 880px; } .so-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; margin-bottom: 14px; flex-wrap: wrap; } .so-head h1 { margin: 0; font-size: 24px; } .so-head p { margin: 2px 0 0; color: var(--mh-muted); font-size: 13px; }
+  .so-card { border: 1px solid var(--mh-line); border-radius: 16px; background: var(--mh-panel); padding: 16px 18px; margin-bottom: 12px; } .so-form { display: flex; flex-direction: column; gap: 10px; }
+  .so-filters { margin: 12px 0; } .so-q { margin-left: auto; width: 180px; }
+  .so-post { display: flex; gap: 14px; align-items: flex-start; } .so-post p { margin: 6px 0; line-height: 1.5; font-size: 13px; } .so-post small { color: var(--mh-muted); font-size: 11.5px; } .so-ptitle { font-size: 15px; } .so-side { display: flex; flex-direction: column; gap: 6px; }
+  .so-empty { padding: 30px; text-align: center; color: var(--mh-muted); border: 1px dashed var(--mh-line); border-radius: 14px; }
+  .so-feed { display: flex; flex-direction: column; gap: 8px; } .so-ev { display: flex; align-items: center; gap: 11px; padding: 10px 12px; border: 1px solid var(--mh-line); border-radius: 12px; } .so-ev b { font-size: 13px; display: block; } .so-ev small { color: var(--mh-muted); font-size: 11.5px; }
+  .so-priv { padding: 18px 20px !important; }
+  .rx-bar { display: flex; flex-wrap: wrap; gap: 4px; margin: -4px 0 0 38px; min-height: 20px; align-items: center; }
+  .rx-c { appearance: none; font: 600 11.5px 'Inter', sans-serif; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border-radius: 99px; border: 1px solid var(--mh-line); background: var(--mh-panel); color: var(--mh-ink); } .rx-c.mine { border-color: var(--acc, #C9A24A); background: color-mix(in srgb, var(--acc, #C9A24A) 14%, var(--mh-panel)); }
+  .rx-plus { opacity: .0; padding: 1px 6px; color: var(--mh-muted); transition: opacity .15s; } .rx-bar:hover .rx-plus, .rx-plus:focus-visible { opacity: 1; } .rx-add { position: relative; } .rx-pick { position: absolute; left: 0; bottom: 24px; z-index: 20; display: flex; gap: 2px; padding: 4px 6px; border-radius: 99px; background: var(--mh-panel2, var(--mh-panel)); border: 1px solid var(--mh-line2); box-shadow: 0 10px 24px #0007; } .rx-pick button { all: unset; cursor: pointer; padding: 3px 5px; border-radius: 8px; font-size: 15px; } .rx-pick button:hover { background: #ffffff1a; }
   .cx-h { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin: 2px 0 14px; flex-wrap: wrap; }
   .cx-h h1 { margin: 0; font-size: 24px; } .cx-h p { margin: 2px 0 0; color: var(--mh-muted); font-size: 13px; }
   .cx-search { display: flex; align-items: center; gap: 8px; min-width: 230px; border: 1px solid var(--mh-line); border-radius: 12px; padding: 8px 12px; background: var(--mh-panel); color: var(--mh-muted); }
@@ -10401,6 +10446,7 @@ export default function App({ onSignOut }) {
     setCampaigns(nextCampaigns);
     await safeSet("campaign-index", JSON.stringify(Object.keys(nextCampaigns)), false);
     await safeSet("campaign:" + id, JSON.stringify(newCampaign), false);
+    logActivity("camp", "ha empezado una campaña: «" + name + "»");
     setNewCampaignName("");
     setNewCampaignDesc("");
     setShowNewCampaignForm(false);
@@ -10507,6 +10553,16 @@ export default function App({ onSignOut }) {
 
   const renderChatFeed = (list, meCharId) =>
     list.map((m, i) => {
+      const rk = (m.ts || 0) + "-" + (m.author || "");
+      const withRx = m.kind === "msg" || m.kind === "roll" || m.kind === "share" || (!m.kind && !CHAT_EMOJI_RE.test(m.text || ""));
+      return (
+        <Fragment key={(m.ts || 0) + "-" + i}>
+          {renderChatItem(list, meCharId, m, i)}
+          {withRx && stageCampaignId && <ReactionBar data={rx[rk]} me={meUid} onToggle={(e) => reactTo(rk, e)} />}
+        </Fragment>
+      );
+    });
+  const renderChatItem = (list, meCharId, m, i) => {
       const kind = m.kind || (CHAT_EMOJI_RE.test(m.text || "") ? "event" : "msg");
       const col = chatColor(m);
       const time = new Date(m.ts).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
@@ -10977,7 +11033,7 @@ export default function App({ onSignOut }) {
           </div>
         </div>
       );
-    });
+  };
 
   const shareToChat = async (share) => {
     const campaignId = getActiveCampaignIdForChat();
@@ -12762,6 +12818,7 @@ export default function App({ onSignOut }) {
       const hit = hope === fear || (dcVal ? total >= dcVal : null);
       pushMapLog(sheetCampaignId, who + " ataca a " + (weapon.targetName || "un enemigo") + " con " + weapon.name + ": " + total + (dcVal ? " contra " + dcVal + " · " + (hope === fear ? "¡crítico!" : hit ? "impacta" : "falla") : ""), hit === false ? "miss" : "hit");
     }
+    if (hope === fear && !reaction) logActivity("crit", "ha sacado un crítico (" + hope + "+" + fear + ") con " + (charsRef.current[charId]?.f_name || "su personaje"));
     // Con Esperanza (o crítico) ganas 1 Esperanza; con crítico además te quitas 1 Estrés.
     let hopeGained = 0;
     if (reaction) {
@@ -13016,6 +13073,60 @@ export default function App({ onSignOut }) {
   useEffect(() => {
     setPresence(sheetClass);
   }, [sheetClass]);
+  // Presencia: en qué campaña estás (se ve en la lista de amigos de los demás).
+  useEffect(() => {
+    setPresenceCamp(stageCampaignId ? campaigns[stageCampaignId]?.name || "Campaña" : null, gmViewing ? "DJ" : "Juega");
+  }, [stageCampaignId, gmViewing, campaigns]);
+  // Unirse a la campaña de una invitación: se crea una copia local con el mismo id (lo compartido va por ese id).
+  const joinInvited = async (camp, charId) => {
+    const id = camp.campId;
+    const ch = characters[charId];
+    if (campaigns[id]) addCharacterToCampaign(id, charId);
+    else {
+      Object.values(campaigns).forEach((o) => {
+        if ((o.characterIds || []).includes(charId)) updateCampaign(o.id, { characterIds: o.characterIds.filter((x) => x !== charId) });
+      });
+      const nc = { id, name: camp.name || "Campaña", description: camp.desc || "", characterIds: [charId] };
+      const next = { ...campaigns, [id]: nc };
+      setCampaigns(next);
+      await safeSet("campaign-index", JSON.stringify(Object.keys(next)), false);
+      await safeSet("campaign:" + id, JSON.stringify(nc), false);
+    }
+    await postChat(id, { kind: "event", author: ch?.f_name || "Un personaje", charId, cls: ch?.f_class || "", text: "👋 se une a la campaña" });
+    logActivity("camp", "se ha unido a la campaña «" + (camp.name || "Campaña") + "»");
+  };
+  useEffect(() => {
+    bridge.chars = Object.entries(characters).map(([id, c]) => ({ id, name: c.f_name || "Sin nombre", cls: c.f_class || "", lvl: Number(c.f_level || 1) }));
+    bridge.camps = Object.values(campaigns).map((cp) => ({ id: cp.id, name: cp.name || "Campaña", desc: cp.description || "", players: (cp.characterIds || []).length }));
+    bridge.getChar = (id) => characters[id] || null;
+    bridge.join = joinInvited;
+  });
+  // Reacciones del chat de la campaña.
+  const [rx, setRx] = useState({});
+  const [meUid, setMeUid] = useState(null);
+  useEffect(() => {
+    myUid().then(setMeUid);
+  }, []);
+  useEffect(() => {
+    if (!stageCampaignId) return;
+    let alive = true;
+    const pull = () => loadReactions(stageCampaignId).then((r) => alive && setRx(r)).catch(() => {});
+    pull();
+    const t = setInterval(pull, 5000);
+    return () => {
+      alive = false;
+      clearInterval(t);
+    };
+  }, [stageCampaignId]);
+  const reactTo = async (msgKey, emoji) => {
+    setRx((cur) => {
+      const m = { ...cur, [msgKey]: { ...(cur[msgKey] || {}) } };
+      const arr = m[msgKey][emoji] || [];
+      m[msgKey][emoji] = arr.includes(meUid) ? arr.filter((u) => u !== meUid) : [...arr, meUid];
+      return m;
+    });
+    await toggleReaction(stageCampaignId, msgKey, emoji);
+  };
   const renderClassDot = (cls) => {
     const Em = CLASS_EMBLEMS[cls] || User;
     return (
@@ -13032,6 +13143,11 @@ export default function App({ onSignOut }) {
     const isExpansionClass = CLASSES.find((cl) => cl.key === c.f_class)?.expansion;
     return (
       <>
+                  {!opts.noShare && (
+                    <span role="button" tabIndex={0} className="mh-htag is-btn" title="Compartir esta ficha con un enlace" onClick={() => window.dispatchEvent(new CustomEvent("mh-share", { detail: { charId: viewingCharId } }))} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && e.currentTarget.click()}>
+                      <Link2 size={13} /> Compartir
+                    </span>
+                  )}
                   {headerCampaign && !opts.noCampaign && (
                     <span className="mh-htag" style={{ "--tag": "var(--acc)" }} title="Campaña">
                       <BookOpen size={14} /> {headerCampaign.name}
@@ -23535,6 +23651,7 @@ export default function App({ onSignOut }) {
   return (
     <div className={"mh-root" + (isMobile ? " is-mobile" : "")} style={{ display: "flex", flexDirection: isMobile ? "column" : "row", height: "100dvh", background: "var(--mh-bg)", fontFamily: "'Inter', system-ui, sans-serif", color: "var(--mh-ink)", overflow: "hidden" }}>
       <style>{sharedStyles}</style>
+      <SocialHost />
       {levelUpId && characters[levelUpId] && (() => {
         const lc = characters[levelUpId];
         const lvMd = modernData(levelUpId);
@@ -23562,6 +23679,7 @@ export default function App({ onSignOut }) {
             onConfirm={(patch, nl) => {
               updateCharacterFields(levelUpId, patch);
               postCampaignEvent(levelUpId, "⬆️ Sube al nivel " + nl);
+              logActivity("level", "ha subido a " + (characters[levelUpId]?.f_name || "su personaje") + " al nivel " + nl);
               setLevelUpId(null);
             }}
           />
@@ -23597,6 +23715,9 @@ export default function App({ onSignOut }) {
               {acctOpen && (
                 <div className="mh-acct-menu" role="menu">
                   <div className="mh-acct-who"><small>Jugando como</small><b title={playerName}>{playerName || "—"}</b></div>
+                  <button type="button" role="menuitem" onClick={() => { setAcctOpen(false); window.dispatchEvent(new CustomEvent("mh-profile", { detail: { id: "me", name: playerName || "Yo" } })); }}>
+                    <User size={15} /> Mi perfil
+                  </button>
                   <button type="button" role="menuitem" onClick={() => { setAcctOpen(false); setViewingCharId(null); setViewingCardDetail(null); setView("ajustes"); }}>
                     <Settings size={15} /> Ajustes
                   </button>
@@ -23814,6 +23935,7 @@ export default function App({ onSignOut }) {
                   {camps.map((cp) => (
                     <NextSession key={cp.id} campaign={cp} colorOf={campColor(cp.id)} mine={(cp.characterIds || []).filter((id) => characters[id]).map((id) => ({ id }))} />
                   ))}
+                  <ActivityCard />
                   <div className="mh-home-sec">
                     <h3>Retoma tus campañas <i>{camps.length}</i></h3>
                     <button type="button" onClick={() => setView("campaigns")}>Ver todas ›</button>
@@ -25118,7 +25240,7 @@ export default function App({ onSignOut }) {
                     );
                   })()}
 
-                  {campaignDetailTab === "cronica" && <Chronicle key={viewingCampaignId} campaignId={viewingCampaignId} onShare={(text) => postChat(viewingCampaignId, { kind: "msg", text, author: "El DJ", gm: true })} />}
+                  {campaignDetailTab === "cronica" && <Chronicle key={viewingCampaignId} campaignId={viewingCampaignId} members={(campaigns[viewingCampaignId]?.characterIds || []).map((id) => characters[id]?.f_name).filter(Boolean)} onShare={(text) => postChat(viewingCampaignId, { kind: "msg", text, author: "El DJ", gm: true })} />}
 
                   {campaignDetailTab === "linea" && <Timeline key={viewingCampaignId} campaignId={viewingCampaignId} />}
 
@@ -25315,6 +25437,8 @@ export default function App({ onSignOut }) {
             return <GroupRestDialog key={cp.id} campaignId={cp.id} mine={mine} onRest={(id, type, p) => (performRest(id, type, p[0], p[1], p[2]), postCampaignEvent(id, "😴 Hace un descanso " + (type === "long" ? "largo" : "corto") + " con el grupo"))} />;
           })()}
 
+          {view === "mesas" && <LookingFor />}
+
           {view === "cartas" && <CardsPage items={buildCardCatalog()} domainColors={DOMAIN_COLORS} icons={DOMAIN_ICONS} FitTitle={FitTitle} FitBox={FitBox} />}
 
           {view === "ajustes" && (
@@ -25395,6 +25519,7 @@ export default function App({ onSignOut }) {
                   </button>
                 </div>
               </div>
+              <PrivacyCard />
             </div>
           )}
 
