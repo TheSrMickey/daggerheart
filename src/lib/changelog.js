@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-11",
     title: "Mapa de mundo en 3D",
     items: [
+      { tag: "nuevo", text: "El mapa aleatorio genera ríos: nacen en las zonas altas, serpentean por el terreno y desembocan en el mar, con las piezas de río orientadas para que encajen entre casillas." },
       { tag: "nuevo", text: "Botón «Generar mapa aleatorio» en el Mapa de mundo: crea un mundo nuevo que ocupa todo el campo, con continentes e islas, costas, bosques, desiertos, colinas y montañas, lugares con nombre (castillo, aldeas, puertos, mina, torre de mago…) y barcos en alta mar. Se puede retocar a mano después." },
       { tag: "nuevo", text: "Nueva sección «Mapa de mundo» en la campaña: un mapa 3D de casillas hexagonales (Three.js con React Three Fiber y el Hexagon Kit de Kenney). El DJ pinta terreno, ríos, lugares y detalles, gira las piezas y pone nombre a los sitios (visibles u ocultos para los jugadores)." },
       { tag: "nuevo", text: "El DJ puede ponerlo en directo desde «Qué ven ahora los jugadores»: los jugadores lo ven, lo giran con el ratón y se acercan con la rueda." },

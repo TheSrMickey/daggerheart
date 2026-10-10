@@ -86,12 +86,60 @@ export function generateWorld(seed = Math.floor(Math.random() * 1e9)) {
     if (c.t === "grass" && rand() < 0.16) c.d = "unit-tree";
   }
 
+  // Ríos: nacen en las zonas altas y bajan por el terreno hasta el mar. Las piezas del kit unen casillas vecinas:
+  // recta (W–E), curva (W–NE) y nacimiento (solo W). Con el giro de la pieza se orientan hacia cada vecina.
+  // Direcciones en el sentido de las agujas del reloj: E, SE, SW, W, NW, NE.
+  const IDX = [[1, 0], [0, 1], [-1, 1], [-1, 0], [0, -1], [1, -1]];
+  const used = new Set();
+  const coastal = (c) => DIRS.some(([dq, dr]) => { const o = at(c.q + dq, c.r + dr); return o && !isLand(o); });
+  const sources = Object.values(grid).filter((c) => isLand(c) && c.e - SEA > 0.26 && !coastal(c));
+  const want = 2 + Math.floor(rand() * 3);
+  let made = 0;
+  for (let tries = 0; tries < 60 && made < want && sources.length; tries++) {
+    const start = sources[Math.floor(rand() * sources.length)];
+    if (used.has(start.q + "," + start.r)) continue;
+    const path = [start], dirs = [];
+    let cur = start, f = null, sea = false;
+    for (let step = 0; step < 24; step++) {
+      const choices = f === null ? [0, 1, 2, 3, 4, 5] : [f, (f + 1) % 6, (f + 5) % 6];
+      const opts = choices
+        .map((d) => ({ d, c: at(cur.q + IDX[d][0], cur.r + IDX[d][1]) }))
+        .filter((o) => o.c && !used.has(o.c.q + "," + o.c.r) && !path.includes(o.c));
+      if (!opts.length) break;
+      opts.sort((x, y) => x.c.e - y.c.e + (rand() - 0.5) * 0.04);
+      const o = opts[0];
+      if (o.c.e > cur.e + 0.04) break;
+      dirs.push(o.d);
+      path.push(o.c);
+      f = o.d;
+      cur = o.c;
+      if (!isLand(o.c)) { sea = true; break; }
+    }
+    if (!sea || path.length < 5) continue;
+    for (let i = 0; i < path.length - 1; i++) {
+      const c = path[i];
+      c.d = undefined;
+      c.n = undefined;
+      if (i === 0) {
+        c.t = "river-start";
+        c.rot = (dirs[0] - 3 + 6) % 6;
+      } else {
+        const aa = (dirs[i - 1] + 3) % 6, bb = dirs[i], dd = (bb - aa + 6) % 6;
+        if (dd === 3) { c.t = "river-straight"; c.rot = (aa - 3 + 6) % 6; }
+        else if (dd === 2) { c.t = "river-corner"; c.rot = (aa - 3 + 6) % 6; }
+        else { c.t = "river-corner"; c.rot = (bb - 3 + 6) % 6; }
+      }
+      used.add(c.q + "," + c.r);
+    }
+    made++;
+  }
+
   // Lugares: se reparten por la tierra con una distancia mínima entre sí.
   const placed = [];
   const far = (c, min) => placed.every((p) => hexDist(c, p) >= min);
   const hexDist = (a, b) => Math.max(Math.abs(a.q - b.q), Math.abs(a.r - b.r), Math.abs(a.q + a.r - b.q - b.r));
   const pick = (test, min = 3) => {
-    const list = Object.values(grid).filter((c) => test(c) && far(c, min));
+    const list = Object.values(grid).filter((c) => !used.has(c.q + "," + c.r) && test(c) && far(c, min));
     return list.length ? list[Math.floor(rand() * list.length)] : null;
   };
   const put = (c, t, label, keepDetail = false) => {
