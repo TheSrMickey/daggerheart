@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Layers, Search, X } from "lucide-react";
 
 // Pestaña «Cartas»: todas las cartas del juego (dominio, ascendencia, comunidad, subclase y transformación),
@@ -49,6 +49,20 @@ function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
       {dom && <div style={{ padding: "0 18px 12px", textAlign: "center", fontSize: 10.5, color: "var(--mh-muted)", flexShrink: 0 }}>Nivel {c.level} · Recuperación {c.recall}</div>}
     </div>
   );
+}
+
+// Solo se pinta la carta cuando está cerca de la pantalla: 100 cartas con imágenes a la vez tardaban unos segundos.
+function Lazy({ children }) {
+  const ref = useRef(null);
+  const [on, setOn] = useState(() => typeof IntersectionObserver === "undefined");
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || on) return;
+    const io = new IntersectionObserver((es) => es.some((e) => e.isIntersecting) && (setOn(true), io.disconnect()), { rootMargin: "700px 0px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [on]);
+  return <span ref={ref} className="cx-lz">{on ? children : null}</span>;
 }
 
 export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
@@ -152,7 +166,7 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
               const I = Icon(c);
               return (
                 <button type="button" key={c.id} className="cx-card" onClick={() => setOpen(c)} aria-label={"Ver " + c.key}>
-                  <CardFace c={c} I={I} FitTitle={FitTitle} FitBox={FitBox} />
+                  <Lazy><CardFace c={c} I={I} FitTitle={FitTitle} FitBox={FitBox} /></Lazy>
                 </button>
               );
             })}

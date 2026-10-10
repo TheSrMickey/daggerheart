@@ -2,6 +2,14 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.33",
+    date: "2026-10-10",
+    title: "Cartas abre al instante",
+    items: [
+      { tag: "arreglo", text: "La pestaña «Cartas» tardaba unos segundos en aparecer porque pintaba las 103 cartas (con sus ilustraciones) de golpe. Ahora solo pinta las que están cerca de la pantalla y el resto según bajas." },
+    ],
+  },
+  {
     version: "1.32",
     date: "2026-10-10",
     title: "Todas las cartas en «Cartas»",
