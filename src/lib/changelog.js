@@ -2,6 +2,15 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.32",
+    date: "2026-10-10",
+    title: "Todas las cartas en «Cartas»",
+    items: [
+      { tag: "nuevo", text: "La pestaña «Cartas» incluye ahora también las cartas de ascendencia, comunidad, subclase y transformación, además de las de dominio." },
+      { tag: "nuevo", text: "Nuevos filtros por tipo de carta (el de dominios sigue ahí) y el buscador mira también en las características." },
+    ],
+  },
+  {
     version: "1.31",
     date: "2026-10-09",
     title: "Cartas más altas",

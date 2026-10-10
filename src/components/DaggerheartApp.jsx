@@ -837,6 +837,23 @@ const TRANSFORMATION_ART = {
 };
 
 // Ilustración de cada clase del manual básico (el halo usa el color de la clase).
+// Catálogo de la pestaña «Cartas»: todas las cartas del juego en una sola lista.
+let CARD_CATALOG = null;
+const buildCardCatalog = () => {
+  if (CARD_CATALOG) return CARD_CATALOG;
+  const out = [];
+  Object.entries(DOMAIN_CARDS).forEach(([domain, list]) =>
+    list.forEach((c) => out.push({ id: "d-" + domain + c.key, kind: "dominio", key: c.key, sub: domain + " · " + c.type, domain, type: c.type, level: c.level, recall: c.recall, text: c.text, image: c.image, color: DOMAIN_COLORS[domain] || "#C9A24A", Icon: DOMAIN_ICONS[domain] })),
+  );
+  const sort = (a, b) => a.key.localeCompare(b.key, "es");
+  ANCESTRIES.map((a) => ({ id: "a-" + a.key, kind: "ascendencia", key: a.key, sub: "Ascendencia", text: a.blurb, features: a.features, image: a.image, color: "#6FA3C0", Icon: User })).sort(sort).forEach((c) => out.push(c));
+  COMMUNITIES.map((a) => ({ id: "c-" + a.key, kind: "comunidad", key: a.key, sub: "Comunidad", text: a.blurb, features: a.features, image: a.image, color: "#C08B5C", Icon: Home })).sort(sort).forEach((c) => out.push(c));
+  Object.entries(SUBCLASSES).forEach(([cls, list]) =>
+    list.forEach((s) => out.push({ id: "s-" + cls + s.key, kind: "subclase", key: s.key, sub: cls + " · Subclase", text: s.blurb, features: s.features, image: SUBCLASS_CARD_ART[s.key] || s.image, color: CLASS_COLORS[cls] || "#E3B04B", Icon: CLASS_EMBLEMS[cls] || Sparkles })),
+  );
+  TRANSFORMATIONS.forEach((t) => out.push({ id: "t-" + t.key, kind: "transformacion", key: t.key, sub: "Transformación" + (t.expansion ? " · " + t.expansion : ""), text: t.blurb, features: t.features, image: TRANSFORMATION_ART[t.key]?.src, color: TRANSFORMATION_ART[t.key]?.color || "#A58BE8", Icon: Moon }));
+  return (CARD_CATALOG = out);
+};
 // Ilustraciones de subclase recortadas (páginas de clase del manual básico y de Hope & Fear).
 const SUBCLASS_ART = {
   "Trovador": "/subclases/trovador.webp",
@@ -25297,7 +25314,7 @@ export default function App({ onSignOut }) {
             return <GroupRestDialog key={cp.id} campaignId={cp.id} mine={mine} onRest={(id, type, p) => (performRest(id, type, p[0], p[1], p[2]), postCampaignEvent(id, "😴 Hace un descanso " + (type === "long" ? "largo" : "corto") + " con el grupo"))} />;
           })()}
 
-          {view === "cartas" && <CardsPage cards={DOMAIN_CARDS} colors={DOMAIN_COLORS} icons={DOMAIN_ICONS} FitTitle={FitTitle} FitBox={FitBox} />}
+          {view === "cartas" && <CardsPage items={buildCardCatalog()} domainColors={DOMAIN_COLORS} icons={DOMAIN_ICONS} FitTitle={FitTitle} FitBox={FitBox} />}
 
           {view === "ajustes" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 14, maxWidth: 640 }}>
