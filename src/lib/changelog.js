@@ -2,6 +2,14 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.38",
+    date: "2026-10-10",
+    title: "Rasgo de conjuro más limpio",
+    items: [
+      { tag: "mejora", text: "El rasgo de lanzamiento de hechizos ya no lleva la estrellita: se distingue por su borde discontinuo." },
+    ],
+  },
+  {
     version: "1.37",
     date: "2026-10-10",
     title: "Arreglo de la ventana de compartir",
