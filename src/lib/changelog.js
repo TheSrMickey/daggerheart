@@ -4,9 +4,9 @@ export const CHANGELOG = [
   {
     version: "1.39",
     date: "2026-10-10",
-    title: "Caja de armadura estable",
+    title: "Hoja sin saltos al cambiar de pestaña",
     items: [
-      { tag: "arreglo", text: "La caja «Armadura y estadísticas» ya no se mueve un píxel al cambiar de pestaña: su tamaño se medía redondeado y ahora se mide con decimales." },
+      { tag: "arreglo", text: "Al cambiar de pestaña la hoja recalculaba su escala con una altura distinta en Detalles generales que en el resto, y las cajas (Armadura y estadísticas, etc.) cambiaban de tamaño unas décimas. Ahora todas las pestañas usan la misma escala. Además la caja de armadura se mide con decimales." },
     ],
   },
   {

@@ -43,7 +43,9 @@ function ZoomFit({ children, isGeneral, natural, onNatural, fill }) {
       }
       const nat = readsZoomed() ? i.offsetHeight / cur.current : i.offsetHeight; // alto sin zoom
       if (isGeneral && nat && Math.abs(nat - natural) > 1) onNatural(nat);
-      const ref = isGeneral ? nat || natural : natural;
+      // Una sola altura de referencia para todas las pestañas: antes Detalles usaba la medida del momento y el resto la guardada
+      // (hasta 1 px de diferencia), y la escala cambiaba unas décimas al cambiar de pestaña, moviendo los bordes de las cajas.
+      const ref = natural && !(isGeneral && nat && Math.abs(nat - natural) > 1) ? natural : nat || natural;
       const sc = Math.max(0.5, Math.min(1.1, ow / BASE_W, ref ? availH / ref : 9));
       cur.current = sc;
       setFit({ s: sc, h: nat * sc, w: ow / sc });
