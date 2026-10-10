@@ -15,7 +15,7 @@ import { CardsPage } from "./Cards";
 import { Generators } from "./Generators";
 import { CampaignCalendar, NextSession } from "./Calendar";
 import { PollsGm, ActivePoll } from "./Polls";
-import { RestGm, GroupRestDialog } from "./GroupRest";
+import { RestGm, GroupRestDialog, RestLock } from "./GroupRest";
 import { Chronicle, Timeline } from "./Chronicle";
 import { appendLog } from "@/lib/chronicle";
 import { SpotPlayer, SpotPause, SpotPanel, FocusBar, normSpot, liveHands, kindOf } from "./Spotlight";
@@ -4425,6 +4425,17 @@ const sharedStyles = `
   .mh-rest-grid .mh-rest-tick { position: absolute; top: 8px; right: 8px; width: 18px; height: 18px; }
   .mh-rest-grid .mh-rest-x2 { position: absolute; bottom: 7px; right: 10px; }
   .mh-rest-grid .mh-rest-rec { display: inline-block; margin-top: 3px; font-size: 8.5px; padding: 0 6px; }
+  .rl { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; }
+  .rl-body { flex: 1; min-height: 0; display: flex; flex-direction: column; transition: opacity .25s, filter .25s; }
+  .rl-body.is-locked { opacity: .32; filter: grayscale(.6); }
+  .rl-ban { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px; font-size: 12.5px; background: color-mix(in srgb, #4CC36B 14%, transparent); border: 1px solid color-mix(in srgb, #4CC36B 45%, transparent); color: var(--mh-ink); }
+  .rl-lock { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 22px; gap: 8px; background: color-mix(in srgb, var(--mh-panel3) 60%, transparent); backdrop-filter: blur(4px); animation: mh-view-in .25s ease backwards; }
+  .rl-ic { width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; color: var(--mh-gold-ink); border: 2px solid var(--mh-gold-ink); background: color-mix(in srgb, var(--mh-gold-ink) 12%, var(--mh-panel3)); }
+  .rl-lock h4 { margin: 4px 0 0; font-size: 17px; color: var(--mh-ink); }
+  .rl-lock p { margin: 0; max-width: 360px; font-size: 12.5px; line-height: 1.5; color: var(--mh-muted); }
+  .rl-btns { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 4px; }
+  .rl-wait { display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; padding: 6px 12px; border-radius: 99px; font-size: 12px; background: var(--mh-panel3); color: var(--mh-ink); }
+  .rl-reqs { margin-bottom: 10px; padding: 10px; border-radius: 10px; border: 1px solid color-mix(in srgb, var(--mh-gold-ink) 40%, transparent); }
   .mh-rest-foot { flex-shrink: 0; display: flex; align-items: center; gap: 10px; }
   .mh-rest-foot .mh-rest-dl { width: auto; flex-shrink: 0; padding: 7px 11px; font-size: 12px; gap: 6px; }
   .mh-trov-s { display: flex; flex-direction: column; align-items: stretch; gap: 3px; padding: 8px 9px; text-align: left; border-radius: 10px; border: 1px solid color-mix(in srgb, var(--tb) 40%, var(--mh-line)); background: var(--mh-panel); color: var(--mh-ink); font: inherit; cursor: pointer; transition: transform .12s, box-shadow .12s; }
@@ -15205,9 +15216,10 @@ export default function App({ onSignOut }) {
                               };
                               const shortRests = Number(c.f_short_rests || 0);
                               const blocked = !isLong && shortRests >= 3;
-                              return (
+                              const restCamp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(viewingCharId));
+                              const renderRest = (lock) => (
                                 <div style={{ display: "flex", flexDirection: "column", gap: 11, flex: 1, minHeight: 0 }}>
-                                  <div className="mh-seg" role="tablist">
+                                  <div className="mh-seg" role="tablist" style={lock?.fixedType ? { pointerEvents: "none" } : undefined}>
                                     {[["short", "Descanso corto", Sun], ["long", "Descanso largo", Moon]].map(([key, label, Ico]) => (
                                       <button
                                         key={key}
@@ -15349,6 +15361,10 @@ export default function App({ onSignOut }) {
                                     disabled={blocked || picks.length === 0}
                                     onClick={() => {
                                       performRest(viewingCharId, restType, picks[0], picks[1], picks[2], isAutomatonRest && !isLong && picks.includes(restEfficient) ? restEfficient : null);
+                                      if (lock) {
+                                        lock.markReady();
+                                        postCampaignEvent(viewingCharId, "Hace un descanso " + (restType === "long" ? "largo" : "corto") + " con el grupo");
+                                      }
                                       setRestPicks(null);
                                       setRestEfficient(null);
                                     }}
@@ -15374,6 +15390,19 @@ export default function App({ onSignOut }) {
                                   </button>
                                   </div>
                                 </div>
+                              );
+                              if (!restCamp) return renderRest(null);
+                              return (
+                                <RestLock
+                                  campaignId={restCamp.id}
+                                  campName={restCamp.name || "la campaña"}
+                                  charId={viewingCharId}
+                                  charName={c.f_name || "Tu personaje"}
+                                  onType={(t) => setRestType(t)}
+                                  onAsk={(t) => postCampaignEvent(viewingCharId, "Pide un descanso " + (t === "long" ? "largo" : "corto") + " al DJ")}
+                                >
+                                  {renderRest}
+                                </RestLock>
                               );
                             })()}
                           </Panel>
@@ -25447,7 +25476,7 @@ export default function App({ onSignOut }) {
                 need: { heal: r(c.hp_marked, Number(c.r_hp || 0)), clearmind: r(c.stress_marked, Number(c.r_stress || 0)), repair: armorTotal ? Math.max(0, (armorTotal - Number(c.armor_marked || 0)) / armorTotal) : 0 },
               };
             });
-            return <GroupRestDialog key={cp.id} campaignId={cp.id} mine={mine} onRest={(id, type, p) => (performRest(id, type, p[0], p[1], p[2]), postCampaignEvent(id, "😴 Hace un descanso " + (type === "long" ? "largo" : "corto") + " con el grupo"))} />;
+            return <GroupRestDialog key={cp.id} campaignId={cp.id} mine={mine} onRest={(id, type, p) => (performRest(id, type, p[0], p[1], p[2]), postCampaignEvent(id, "Hace un descanso " + (type === "long" ? "largo" : "corto") + " con el grupo"))} />;
           })()}
 
           {view === "mesas" && <LookingFor />}

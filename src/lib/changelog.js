@@ -2,6 +2,15 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.40",
+    date: "2026-10-10",
+    title: "Descansos solo con el grupo en campaña",
+    items: [
+      { tag: "mejora", text: "Un personaje que está en una campaña ya no puede descansar por su cuenta: la pestaña Descansos queda bloqueada con un candado y un botón para pedir al DJ un descanso corto o largo (le llega al chat y a su pestaña Descanso del grupo, donde ve las peticiones)." },
+      { tag: "mejora", text: "Cuando el DJ convoca el descanso del grupo, la pestaña Descansos se desbloquea con un aviso, fija el tipo de descanso y, al descansar, el jugador queda marcado como listo. Los personajes sin campaña descansan como siempre." },
+    ],
+  },
+  {
     version: "1.39",
     date: "2026-10-10",
     title: "Hoja sin saltos al cambiar de pestaña",

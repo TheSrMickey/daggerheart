@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { BedDouble, Sun, Moon, Check, Hourglass, Bell } from "lucide-react";
+import { useEffect, useState } from "react";
+import { BedDouble, Sun, Moon, Check, Hourglass, Bell, Lock } from "lucide-react";
 import { useDoc } from "@/lib/campaignDocs";
 
 // Descanso del grupo: el DJ lo propone, cada jugador elige sus acciones y descansa, y el DJ ve quién ha terminado.
@@ -53,16 +53,66 @@ export function GroupRestDialog({ campaignId, mine, onRest }) {
   );
 }
 
+// Descansos de un personaje que está en una campaña: la hoja queda bloqueada hasta que el DJ convoca el descanso del grupo.
+export function RestLock({ campaignId, campName, charId, charName, onAsk, onType, children }) {
+  const [doc, update] = useDoc(restKey(campaignId), EMPTY, 3500);
+  const cur = doc.cur && !doc.cur.closed ? doc.cur : null;
+  const done = !!cur?.ready?.[charId];
+  const open = !!cur && !done;
+  const asked = doc.req?.[charId];
+  const curType = cur?.type;
+  useEffect(() => {
+    if (open && curType) onType(curType);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, curType]);
+  const markReady = () => update((d) => ({ ...d, cur: d.cur && cur && d.cur.id === cur.id ? { ...d.cur, ready: { ...(d.cur.ready || {}), [charId]: Date.now() } } : d.cur }));
+  const ask = (type) => {
+    update((d) => ({ ...d, req: { ...(d.req || {}), [charId]: { name: charName, type, at: Date.now() } } }));
+    onAsk(type);
+  };
+  return (
+    <div className="rl">
+      {open && <div className="rl-ban"><BedDouble size={16} /><span><b>El DJ ha convocado un {TYPES[curType][0].toLowerCase()}.</b> Elige tus acciones y descansa.</span></div>}
+      <div className={"rl-body" + (open ? "" : " is-locked")} inert={!open}>{children({ open, markReady, fixedType: open ? curType : null })}</div>
+      {!open && (
+        <div className="rl-lock">
+          <span className="rl-ic">{done ? <Check size={26} /> : <Lock size={26} />}</span>
+          {done ? (
+            <>
+              <h4 className="mh-serif">Ya has descansado</h4>
+              <p>{charName} ya ha hecho este descanso del grupo.</p>
+            </>
+          ) : (
+            <>
+              <h4 className="mh-serif">{charName} está en «{campName}»</h4>
+              <p>En una campaña los descansos los convoca el DJ para todo el grupo a la vez, y el DJ gana su Miedo. No se puede descansar a solas.</p>
+              {asked ? (
+                <span className="rl-wait"><Hourglass size={14} /> Pedido · esperando al DJ ({TYPES[asked.type]?.[0].toLowerCase()})</span>
+              ) : (
+                <div className="rl-btns">
+                  <button type="button" className="mh-btn" onClick={() => ask("short")}><Bell size={14} /> Pedir descanso corto</button>
+                  <button type="button" className="mh-btn" onClick={() => ask("long")}><Bell size={14} /> Pedir descanso largo</button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Pestaña del DJ: proponer el descanso y ver quién ha descansado.
 export function RestGm({ campaignId, members, onAnnounce }) {
   const [doc, update] = useDoc(restKey(campaignId), EMPTY, 3000);
   const [type, setType] = useState("long");
   const cur = doc.cur && !doc.cur.closed ? doc.cur : null;
   const done = members.filter((m) => cur?.ready?.[m.id]).length;
-  const start = () => { update(() => ({ cur: { id: "r" + Date.now(), type, at: Date.now(), ready: {}, closed: false } })); onAnnounce("😴 El DJ propone un " + TYPES[type][0].toLowerCase() + " para todo el grupo. Elige tus acciones y descansa."); };
+  const reqs = members.filter((m) => doc.req?.[m.id]);
+  const start = () => { update(() => ({ cur: { id: "r" + Date.now(), type, at: Date.now(), ready: {}, closed: false } })); onAnnounce("El DJ propone un " + TYPES[type][0].toLowerCase() + " para todo el grupo. Elige tus acciones y descansa."); };
   const end = () => {
     update((d) => ({ cur: d.cur ? { ...d.cur, closed: true } : null }));
-    onAnnounce("😴 " + TYPES[cur.type][0] + " del grupo terminado (" + done + " de " + members.length + "). " + (cur.type === "long" ? "El DJ gana 1d4 + " + members.length + " de Miedo." : "El DJ gana 1d4 de Miedo."));
+    onAnnounce(TYPES[cur.type][0] + " del grupo terminado (" + done + " de " + members.length + "). " + (cur.type === "long" ? "El DJ gana 1d4 + " + members.length + " de Miedo." : "El DJ gana 1d4 de Miedo."));
   };
   return (
     <div className="mh-card gx" style={{ margin: 0 }}>
@@ -70,6 +120,12 @@ export function RestGm({ campaignId, members, onAnnounce }) {
       <p className="gx-sub">Propón un descanso y cada jugador lo hace desde su hoja. Aquí ves quién ya ha descansado.</p>
       {!cur ? (
         <>
+          {reqs.length > 0 && (
+            <div className="rl-reqs">
+              <span className="gx-lab" style={{ marginTop: 0 }}>Peticiones de la mesa</span>
+              {reqs.map((m) => <div key={m.id} className="cal-who" style={{ marginBottom: 6 }}><span className="cal-av" style={{ "--c": m.color }}>{m.name.charAt(0).toUpperCase()}</span><span className="cal-nm"><b>{m.name}</b><small>Pide un {TYPES[doc.req[m.id].type]?.[0].toLowerCase()}</small></span><button type="button" className="mh-btn-ghost" onClick={() => setType(doc.req[m.id].type)}>Elegir este tipo</button></div>)}
+            </div>
+          )}
           <span className="gx-lab">Tipo</span>
           <div className="gx-row">{Object.entries(TYPES).map(([k, [l, I]]) => <button key={k} type="button" className={"cx-chip" + (type === k ? " on" : "")} style={{ "--c": k === "long" ? "#8E6FC4" : "#E3B04B" }} onClick={() => setType(k)}><i><I size={13} /></i>{l}</button>)}</div>
           <p className="gx-note" style={{ marginTop: 10 }}>{type === "long" ? "Recuperación completa. El DJ gana 1d4 + nº de PJ de Miedo." : "Cada jugador recupera 1d4 + su Rango con sus acciones. El DJ gana 1d4 de Miedo."}</p>
@@ -80,7 +136,7 @@ export function RestGm({ campaignId, members, onAnnounce }) {
           <div className="gx-row" style={{ marginBottom: 10 }}><span className="cx-chip on" style={{ "--c": cur.type === "long" ? "#8E6FC4" : "#E3B04B" }}>{TYPES[cur.type][0]} en curso</span><span className="gx-fact">{done} de {members.length} listos</span></div>
           {members.map((m) => { const ok = cur.ready?.[m.id]; return <div key={m.id} className="cal-who" style={{ marginBottom: 8 }}><span className="cal-av" style={{ "--c": m.color }}>{m.name.charAt(0).toUpperCase()}</span><span className="cal-nm"><b>{m.name}</b><small>{m.cls}</small></span><span className="cx-chip on" style={{ "--c": ok ? "#4CC36B" : "#F0A037" }}><i>{ok ? <Check size={13} /> : <Hourglass size={13} />}</i>{ok ? "Listo" : "Esperando"}</span></div>; })}
           <div className="gx-row" style={{ marginTop: 12 }}>
-            <button type="button" className="mh-btn-ghost" onClick={() => onAnnounce("⏳ El DJ pide que termine el descanso del grupo.")}><Bell size={14} /> Recordar al grupo</button>
+            <button type="button" className="mh-btn-ghost" onClick={() => onAnnounce("El DJ pide que termine el descanso del grupo.")}><Bell size={14} /> Recordar al grupo</button>
             <button type="button" className="mh-btn" onClick={end}>Terminar descanso</button>
           </div>
         </>
