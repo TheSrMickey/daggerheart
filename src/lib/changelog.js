@@ -2,6 +2,14 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.37",
+    date: "2026-10-10",
+    title: "Arreglo de la ventana de compartir",
+    items: [
+      { tag: "arreglo", text: "La ventana de «Compartir ficha» (y las de perfil y ficha recibida) se cortaba por arriba: el título y la X quedaban fuera y no se podían pulsar. Ahora se ven completas." },
+    ],
+  },
+  {
     version: "1.36",
     date: "2026-10-10",
     title: "Creación de personaje en la columna central",
