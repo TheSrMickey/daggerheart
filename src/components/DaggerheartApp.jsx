@@ -2,6 +2,8 @@
 
 import { Fragment, useState, useEffect, useLayoutEffect, useRef, createContext, useContext } from "react";
 import { createPortal } from "react-dom";
+import dynamic from "next/dynamic";
+import { Globe } from "lucide-react";
 import { Squirrel, Layers, CalendarDays, Vote, ScrollText as ChronIcon, Megaphone, Link2 } from "lucide-react";
 import { History, LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus, Box, LayoutGrid, Bird, Fish, Bug, Rabbit, Cat, Turtle, Clock, CircleDashed, Slash } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
@@ -2291,9 +2293,12 @@ const castImgIdFor = (m, expr) => {
   return imgs[expr] || imgs.tranquila || Object.values(imgs)[0] || null;
 };
 
+// El mapa de mundo es 3D (Three.js): se carga solo cuando se abre.
+const WorldMap = dynamic(() => import("./WorldMap"), { ssr: false, loading: () => <div className="wm-load">Cargando el mapa de mundo…</div> });
 const STAGE_TABS = [
   { key: "escena", label: "Escena", Icon: Clapperboard },
-  { key: "mapa", label: "Mapa", Icon: MapPinned },
+  { key: "mapa", label: "Mapa de combate", Icon: MapPinned },
+  { key: "mundo", label: "Mapa de mundo", Icon: Globe },
   { key: "pistas", label: "Pistas", Icon: ScrollText },
   { key: "personajes", label: "Personajes", Icon: Users },
 ];
@@ -2306,7 +2311,7 @@ const HANDOUT_KINDS = [
 
 // Las acciones automáticas del chat empiezan por un emoji (🎲, 💥, 🐾…): lo usamos como icono.
 const CHAT_EMOJI_RE = /^\s*\p{Extended_Pictographic}(?:️|‍\p{Extended_Pictographic})*\s*/u;
-const CHAT_STAGE_ICONS = { escena: Clapperboard, mapa: MapPinned, pistas: ScrollText, personajes: Users };
+const CHAT_STAGE_ICONS = { escena: Clapperboard, mapa: MapPinned, mundo: Globe, pistas: ScrollText, personajes: Users };
 
 const REST_ACTIONS = [
   { key: "heal", label: "Curar heridas" },
@@ -3765,7 +3770,26 @@ const sharedStyles = `
   .mh-gm-preset-t { font-size: 12px; font-weight: 600; color: var(--mh-ink2); padding: 0 2px; }
   .mh-gm-h { display: flex; align-items: center; gap: 8px; font-family: 'Cinzel', Georgia, serif; font-weight: 700; font-size: 15px; color: var(--mh-ink); }
   .mh-gm-sub { font-size: 12px; color: var(--mh-muted); margin-top: -6px; }
-  .mh-gm-live { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .mh-gm-live { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+  .wm { display: flex; gap: 14px; align-items: stretch; min-height: 520px; margin-top: 10px; } .wm.wm-view { margin: 0; flex: 1; min-height: 0; }
+  .wm-stage { position: relative; flex: 1; min-width: 0; min-height: 480px; border-radius: 12px; overflow: hidden; border: 1px solid var(--mh-line); background: #121b29; } .wm-view .wm-stage { min-height: 0; }
+  .wm-stage canvas { display: block; touch-action: none; }
+  .wm-load { padding: 40px; text-align: center; color: var(--mh-muted); font-size: 13px; }
+  .wm-empty { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; padding: 30px; color: #b9c4d6; font-size: 13px; pointer-events: none; } .wm-empty button { pointer-events: auto; }
+  .wm-center { position: absolute; top: 10px; right: 10px; width: 32px; height: 32px; border-radius: 9px; border: 1px solid rgba(255,255,255,.18); background: rgba(10,14,24,.7); color: #e9eefc; display: grid; place-items: center; cursor: pointer; backdrop-filter: blur(4px); } .wm-center:hover { background: rgba(10,14,24,.9); }
+  .wm-help { position: absolute; left: 10px; bottom: 8px; font-size: 10.5px; color: rgba(220,230,250,.7); text-shadow: 0 1px 3px #000; pointer-events: none; }
+  .wm-labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; } .wm-labels .wm-lbl { position: absolute; left: 0; top: 0; will-change: transform; }
+  .wm-lbl { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 99px; background: rgba(10,14,24,.82); border: 1px solid rgba(227,176,75,.55); color: #f3e6c4; font: 700 12px 'Inter', system-ui, sans-serif; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,.4); } .wm-lbl.is-hidden { opacity: .6; border-style: dashed; }
+  .wm-side { width: 270px; flex-shrink: 0; display: flex; flex-direction: column; gap: 12px; max-height: 620px; overflow-y: auto; scrollbar-width: thin; }
+  .wm-sec { display: flex; flex-direction: column; gap: 8px; } .wm-sec.wm-row { flex-direction: row; flex-wrap: wrap; }
+  .wm-lab { font: 700 10px 'Inter', system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-muted); }
+  .wm-pal { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; max-height: 250px; overflow-y: auto; scrollbar-width: thin; padding-right: 2px; }
+  .wm-it { all: unset; cursor: pointer; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 5px 3px 4px; border-radius: 9px; border: 1px solid var(--mh-line); background: var(--mh-panel2); font: 600 10px 'Inter', system-ui, sans-serif; color: var(--mh-ink3); text-align: center; line-height: 1.15; }
+  .wm-it img { width: 100%; height: 44px; object-fit: contain; } .wm-it:hover { border-color: var(--mh-line2); color: var(--mh-ink); } .wm-it.on { border-color: var(--mh-gold-ink); background: color-mix(in srgb, var(--mh-gold-ink) 14%, var(--mh-panel)); color: var(--mh-ink); }
+  .wm-chk { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--mh-ink3); cursor: pointer; }
+  .wm-note { margin: 0; font-size: 11.5px; line-height: 1.45; color: var(--mh-muted); } .wm-note svg { vertical-align: -2px; }
+  .wm-card { margin: 0; } .wm-card .wm { min-height: 560px; }
+  @media (max-width: 900px) { .wm { flex-direction: column; } .wm-side { width: auto; max-height: none; } }
   .mh-gm-live button { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 8px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel); color: var(--mh-ink3); font: 600 13px 'Inter', system-ui, sans-serif; cursor: pointer; }
   .mh-gm-live button:hover { color: var(--mh-ink); border-color: var(--mh-line2); }
   .mh-gm-live button.is-on { color: var(--mh-ink); border-color: #D9644E; background: color-mix(in srgb, #D9644E 9%, var(--mh-panel)); }
@@ -11751,7 +11775,7 @@ export default function App({ onSignOut }) {
     if (!viewingCampaignId || (campaignStage.live || "escena") === key) return;
     await saveStage(viewingCampaignId, { live: key });
     const title = campaignStage.scene?.title;
-    const what = { escena: title ? "la escena «" + title + "»" : "la escena", mapa: "el mapa", pistas: "las pistas", personajes: "los personajes" }[key];
+    const what = { escena: title ? "la escena «" + title + "»" : "la escena", mapa: "el mapa de combate", mundo: "el mapa de mundo", pistas: "las pistas", personajes: "los personajes" }[key];
     postChat(viewingCampaignId, { kind: "event", author: "El DJ", gm: true, icon: key, text: "muestra " + what });
   };
 
@@ -17271,6 +17295,8 @@ export default function App({ onSignOut }) {
                                   ) : (
                                     empty(MapPinned, "El DJ todavía no ha preparado el mapa.")
                                   ))}
+
+                                {stTab === "mundo" && <WorldMap campaignId={charCampaign.id} />}
 
                                 {stTab === "pistas" &&
                                   (handouts.length ? (
@@ -24238,7 +24264,8 @@ export default function App({ onSignOut }) {
                       { key: "mesa", label: "Mesa", Icon: Radio },
                       { key: "resumen", label: "Resumen", Icon: User },
                       { key: "chat", label: "Chat", Icon: MessageCircle },
-                      { key: "mapa", label: "Mapa", Icon: MapPinned },
+                      { key: "mapa", label: "Mapa de combate", Icon: MapPinned },
+                      { key: "mundo", label: "Mapa de mundo", Icon: Globe },
                       { key: "encuentros", label: "Encuentros", Icon: Swords },
                       { key: "cronica", label: "Crónica", Icon: ChronIcon },
                       { key: "linea", label: "Línea de tiempo", Icon: History },
@@ -24790,6 +24817,14 @@ export default function App({ onSignOut }) {
                         />
                         <button className="mh-btn" onClick={sendCampaignChat}>Enviar</button>
                       </div>
+                    </div>
+                  )}
+
+                  {campaignDetailTab === "mundo" && (
+                    <div className="mh-card wm-card">
+                      <div className="mh-gm-h"><Globe size={15} /> Mapa de mundo</div>
+                      <div className="mh-gm-sub">Dibuja el mundo con casillas hexagonales en 3D. Cuando quieras enseñárselo a los jugadores, ponlo en directo desde «Mesa».</div>
+                      <WorldMap campaignId={viewingCampaignId} edit />
                     </div>
                   )}
 

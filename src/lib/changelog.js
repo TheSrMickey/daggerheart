@@ -2,6 +2,16 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.48",
+    date: "2026-10-11",
+    title: "Mapa de mundo en 3D",
+    items: [
+      { tag: "nuevo", text: "Nueva sección «Mapa de mundo» en la campaña: un mapa 3D de casillas hexagonales (Three.js con React Three Fiber y el Hexagon Kit de Kenney). El DJ pinta terreno, ríos, lugares y detalles, gira las piezas y pone nombre a los sitios (visibles u ocultos para los jugadores)." },
+      { tag: "nuevo", text: "El DJ puede ponerlo en directo desde «Qué ven ahora los jugadores»: los jugadores lo ven, lo giran con el ratón y se acercan con la rueda." },
+      { tag: "mejora", text: "El mapa de siempre pasa a llamarse «Mapa de combate»." },
+    ],
+  },
+  {
     version: "1.47",
     date: "2026-10-10",
     title: "Campañas y Actualizaciones a todo el ancho",
