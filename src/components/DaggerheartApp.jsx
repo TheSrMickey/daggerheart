@@ -15419,7 +15419,23 @@ export default function App({ onSignOut }) {
                           >
                             {(() => {
                               const projects = getProjects(c);
-                              return (
+                              const projCamp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(viewingCharId));
+                              const wrapLock = (node) =>
+                                projCamp ? (
+                                  <RestLock
+                                    project
+                                    campaignId={projCamp.id}
+                                    campName={projCamp.name || "la campaña"}
+                                    charId={viewingCharId}
+                                    charName={c.f_name || "Tu personaje"}
+                                    onAsk={(t) => postCampaignEvent(viewingCharId, "Pide un descanso " + (t === "long" ? "largo" : "corto") + " al DJ")}
+                                  >
+                                    {node}
+                                  </RestLock>
+                                ) : (
+                                  node
+                                );
+                              return wrapLock(
                                 <div style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1, minHeight: 0, overflowY: "auto" }} className="mh-noscroll">
                                   {projects.map((p, i) => {
                                     const goal = Number(p.goal) || 0;

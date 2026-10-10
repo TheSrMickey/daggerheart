@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-10",
     title: "Descansos solo con el grupo en campaña",
     items: [
+      { tag: "mejora", text: "Los proyectos siguen la misma regla: si el personaje está en una campaña, su caja de Proyectos queda bloqueada hasta que el DJ convoca el descanso del grupo (tiempo libre). Mientras dura el descanso se pueden avanzar aunque ya hayas descansado." },
       { tag: "mejora", text: "Un personaje que está en una campaña ya no puede descansar por su cuenta: la pestaña Descansos queda bloqueada con un candado y un botón para pedir al DJ un descanso corto o largo (le llega al chat y a su pestaña Descanso del grupo, donde ve las peticiones)." },
       { tag: "mejora", text: "Cuando el DJ convoca el descanso del grupo, la pestaña Descansos se desbloquea con un aviso, fija el tipo de descanso y, al descansar, el jugador queda marcado como listo. Los personajes sin campaña descansan como siempre." },
     ],

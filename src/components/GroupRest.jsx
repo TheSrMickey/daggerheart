@@ -54,15 +54,16 @@ export function GroupRestDialog({ campaignId, mine, onRest }) {
 }
 
 // Descansos de un personaje que está en una campaña: la hoja queda bloqueada hasta que el DJ convoca el descanso del grupo.
-export function RestLock({ campaignId, campName, charId, charName, onAsk, onType, children }) {
+export function RestLock({ campaignId, campName, charId, charName, onAsk, onType, project, children }) {
   const [doc, update] = useDoc(restKey(campaignId), EMPTY, 3500);
   const cur = doc.cur && !doc.cur.closed ? doc.cur : null;
   const done = !!cur?.ready?.[charId];
-  const open = !!cur && !done;
+  // Los proyectos se pueden avanzar mientras dure el descanso del grupo, también después de haber descansado.
+  const open = !!cur && (project || !done);
   const asked = doc.req?.[charId];
   const curType = cur?.type;
   useEffect(() => {
-    if (open && curType) onType(curType);
+    if (open && curType && onType) onType(curType);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, curType]);
   const markReady = () => update((d) => ({ ...d, cur: d.cur && cur && d.cur.id === cur.id ? { ...d.cur, ready: { ...(d.cur.ready || {}), [charId]: Date.now() } } : d.cur }));
@@ -72,8 +73,8 @@ export function RestLock({ campaignId, campName, charId, charName, onAsk, onType
   };
   return (
     <div className="rl">
-      {open && <div className="rl-ban"><BedDouble size={16} /><span><b>El DJ ha convocado un {TYPES[curType][0].toLowerCase()}.</b> Elige tus acciones y descansa.</span></div>}
-      <div className={"rl-body" + (open ? "" : " is-locked")} inert={!open}>{children({ open, markReady, fixedType: open ? curType : null })}</div>
+      {open && <div className="rl-ban"><BedDouble size={16} /><span><b>El DJ ha convocado un {TYPES[curType][0].toLowerCase()}.</b> {project ? "Es tiempo libre: puedes avanzar tus proyectos." : "Elige tus acciones y descansa."}</span></div>}
+      <div className={"rl-body" + (open ? "" : " is-locked")} inert={!open}>{typeof children === "function" ? children({ open, markReady, fixedType: open ? curType : null }) : children}</div>
       {!open && (
         <div className="rl-lock">
           <span className="rl-ic">{done ? <Check size={26} /> : <Lock size={26} />}</span>
@@ -85,7 +86,7 @@ export function RestLock({ campaignId, campName, charId, charName, onAsk, onType
           ) : (
             <>
               <h4 className="mh-serif">{charName} está en «{campName}»</h4>
-              <p>En una campaña los descansos los convoca el DJ para todo el grupo a la vez, y el DJ gana su Miedo. No se puede descansar a solas.</p>
+              <p>{project ? "Los proyectos se avanzan en el tiempo libre de los descansos, y en una campaña los convoca el DJ para todo el grupo. Puedes consultarlos, pero no avanzarlos hasta entonces." : "En una campaña los descansos los convoca el DJ para todo el grupo a la vez, y el DJ gana su Miedo. No se puede descansar a solas."}</p>
               {asked ? (
                 <span className="rl-wait"><Hourglass size={14} /> Pedido · esperando al DJ ({TYPES[asked.type]?.[0].toLowerCase()})</span>
               ) : (
