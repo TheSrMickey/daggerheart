@@ -2,6 +2,14 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.39",
+    date: "2026-10-10",
+    title: "Caja de armadura estable",
+    items: [
+      { tag: "arreglo", text: "La caja «Armadura y estadísticas» ya no se mueve un píxel al cambiar de pestaña: su tamaño se medía redondeado y ahora se mide con decimales." },
+    ],
+  },
+  {
     version: "1.38",
     date: "2026-10-10",
     title: "Rasgo de conjuro más limpio",

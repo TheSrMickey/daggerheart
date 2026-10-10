@@ -10117,10 +10117,12 @@ export default function App({ onSignOut }) {
   useEffect(() => {
     if (armaduraRef.current) {
       // El panel, no el envoltorio: el envoltorio se estira con la columna vecina.
-      const h = (armaduraRef.current.firstElementChild || armaduraRef.current).offsetHeight;
-      if (h && h !== armaduraHeight) setArmaduraHeight(h);
-      const w = armaduraRef.current.offsetWidth;
-      if (w && w !== armaduraWidth) setArmaduraWidth(w);
+      // Con decimales (offsetWidth/Height redondean y el panel bailaba un píxel al cambiar de pestaña).
+      const css = (el, p) => parseFloat(getComputedStyle(el)[p]) || 0;
+      const h = css(armaduraRef.current.firstElementChild || armaduraRef.current, "height");
+      if (h && Math.abs(h - (armaduraHeight || 0)) > 0.05) setArmaduraHeight(h);
+      const w = css(armaduraRef.current, "width");
+      if (w && Math.abs(w - (armaduraWidth || 0)) > 0.05) setArmaduraWidth(w);
     }
   });
 
