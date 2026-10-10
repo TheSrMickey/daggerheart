@@ -2935,6 +2935,9 @@ const sharedStyles = `
   }
   .mh-seg button.on { background: var(--mh-panel); color: var(--mh-gold-ink); box-shadow: 0 1px 3px rgba(0,0,0,.14); }
   .mh-seg button:focus-visible { outline: 2px solid var(--acc); }
+  .mh-seg button { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mh-seg.is-fit button { flex: 1 1 auto; padding: 7px 9px; } .mh-seg.is-fit button:first-child { flex: 0 1 auto; }
+  .mh-seg button i { font-style: normal; font-size: 10.5px; font-weight: 700; opacity: .65; padding: 1px 6px; border-radius: 99px; background: color-mix(in srgb, currentColor 12%, transparent); }
   .mh-rest-row {
     --rc: var(--acc); flex: 1 1 0; min-height: 0; max-height: 92px; display: flex; align-items: center; gap: 11px; padding: 9px 12px;
     border: 1.5px solid var(--mh-line); border-radius: 12px; background: var(--mh-panel); cursor: pointer; transition: border-color .15s, background .15s;
@@ -15063,12 +15066,12 @@ export default function App({ onSignOut }) {
                             >
                               <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, minHeight: 0 }}>
                                 {mcAct && (
-                                  <div className="mh-atabs" role="tablist" aria-label="Acciones">
-                                    <button type="button" role="tab" aria-selected={!showMc} className={!showMc ? "is-on" : ""} onClick={() => setActionsTabMc("general")}>
-                                      General <i>{allRows.filter((x) => !isMcRow(x)).length}</i>
+                                  <div className="mh-seg is-fit" role="tablist" aria-label="Acciones">
+                                    <button type="button" role="tab" aria-selected={!showMc} className={!showMc ? "on" : ""} onClick={() => setActionsTabMc("general")}>
+                                      <Swords size={14} /> General <i>{allRows.filter((x) => !isMcRow(x)).length}</i>
                                     </button>
-                                    <button type="button" role="tab" aria-selected={showMc} className={showMc ? "is-on" : ""} onClick={() => setActionsTabMc("multi")}>
-                                      Multiclase · {mcAct.cls} <i>{allRows.filter(isMcRow).length}</i>
+                                    <button type="button" role="tab" aria-selected={showMc} className={showMc ? "on" : ""} onClick={() => setActionsTabMc("multi")}>
+                                      <Layers size={14} /> Multiclase · {mcAct.cls} <i>{allRows.filter(isMcRow).length}</i>
                                     </button>
                                   </div>
                                 )}

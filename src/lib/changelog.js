@@ -2,6 +2,14 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.46",
+    date: "2026-10-10",
+    title: "Selector de acciones como el de descansos",
+    items: [
+      { tag: "mejora", text: "En la caja de Acciones, el selector General / Multiclase tiene ahora el mismo diseño que el de Descanso corto / largo, con iconos y el número de acciones de cada una." },
+    ],
+  },
+  {
     version: "1.45",
     date: "2026-10-10",
     title: "Formas de Bestia en Cartas e ilustración nueva",
