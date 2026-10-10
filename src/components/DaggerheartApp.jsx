@@ -3049,6 +3049,7 @@ const sharedStyles = `
   @keyframes mh-stg-pulse { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, #D9644E 55%, transparent); } 50% { box-shadow: 0 0 0 4px color-mix(in srgb, #D9644E 0%, transparent); } }
   .mh-stg-cnt { font-size: 9.5px; font-weight: 700; color: #fff; background: #B8862E; border-radius: 10px; padding: 0 5px; line-height: 15px; }
   .mh-stg-fear.is-over { position: absolute; top: 20px; right: 20px; z-index: 8; padding: 5px 11px; border-radius: 20px; background: rgba(10,8,14,.72); backdrop-filter: blur(4px); border: 1px solid rgba(165,139,232,.28); box-shadow: 0 2px 8px rgba(0,0,0,.35); }
+  .mh-stg-scene-cap { position: relative; } .mh-stg-fear.is-incap { top: 50%; right: 12px; transform: translateY(-50%); }
   .mh-stg-fear.is-over > span:first-child, .mh-stg-fear.is-over b { color: #CDBBF5; }
   .mh-stg-body { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
   .mh-stg-kick { font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
@@ -17001,6 +17002,18 @@ export default function App({ onSignOut }) {
                         const mapTokens = mapTokensView(campaignMap.tokens).filter((t) => !((t.kind === "foe" || t.kind === "npc") && fogAt(campaignMap, t.x, t.y))).map((t) => (t.kind === "pc" && t.hidden && t.charId !== viewingCharId ? { ...t, hidden: false, vanished: true } : t.kind !== "pc" && t.gmHidden ? { ...t, hidden: false, vanished: true } : t));
                         const myToken = mapTokens.find((t) => t.kind === "pc" && t.charId === viewingCharId);
                         const kindOf = (k) => HANDOUT_KINDS.find((x) => x.key === k) || HANDOUT_KINDS[0];
+                        const fearEl = (cls) => (
+<div className={"mh-stg-fear is-over" + cls} title={`Miedo del DJ: ${fearCount} de 12`}>
+  <span>Miedo</span>
+  <span className="mh-stg-fear-pips">
+    {Array.from({ length: 12 }, (_, i) => (
+      <Skull key={i} size={17} strokeWidth={i < fearCount ? 1.4 : 1.6} className={"mh-fear-sk" + (i < fearCount ? " on" : "") + (i === fearCount - 1 ? " pulse" : "")} />
+    ))}
+  </span>
+  <b>{fearCount}</b>
+</div>
+                        );
+                        const fearInCap = stTab === "escena" && (scene.title || scene.image) && !dlg;
                         const empty = (Icon, text) => (
                           <div className="mh-stg-empty">
                             <Icon size={26} strokeWidth={1.6} />
@@ -17036,15 +17049,7 @@ export default function App({ onSignOut }) {
                                 </button>
                               )}
                               <div className="mh-stg-body">
-                                <div className="mh-stg-fear is-over" title={`Miedo del DJ: ${fearCount} de 12`}>
-                                  <span>Miedo</span>
-                                  <span className="mh-stg-fear-pips">
-                                    {Array.from({ length: 12 }, (_, i) => (
-                                      <Skull key={i} size={17} strokeWidth={i < fearCount ? 1.4 : 1.6} className={"mh-fear-sk" + (i < fearCount ? " on" : "") + (i === fearCount - 1 ? " pulse" : "")} />
-                                    ))}
-                                  </span>
-                                  <b>{fearCount}</b>
-                                </div>
+                                {!fearInCap && fearEl("")}
                                 {stTab === "escena" &&
                                   (scene.title || scene.image || dlg ? (
                                     <>
@@ -17058,6 +17063,7 @@ export default function App({ onSignOut }) {
                                           <div className="mh-stg-scene-cap">
                                             <div className="mh-stg-kick">{charCampaign.name}</div>
                                             <div className="mh-stg-scene-title">{scene.title || "Sin título"}</div>
+                                            {fearEl(" is-incap")}
                                           </div>
                                         )}
                                       </div>
