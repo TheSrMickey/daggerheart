@@ -1340,6 +1340,7 @@ const BEASTFORMS = [
     key: "Explorador Acuático",
     tier: 1,
     color: "#6FA3C0",
+    image: "/formas-bestia/explorador-acuatico.webp",
     animals: "Anguila, Pez, Pulpo, etc.",
     bonus: "Agilidad +1 · Evasión +2",
     traitBonus: { key: "t_agility", amount: 1 },

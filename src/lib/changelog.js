@@ -7,6 +7,7 @@ export const CHANGELOG = [
     title: "Formas de Bestia en Cartas e ilustración nueva",
     items: [
       { tag: "nuevo", text: "La pestaña Cartas incluye ahora las Formas de Bestia (ordenadas por Rango), con el mismo diseño de carta y vista ampliada." },
+      { tag: "mejora", text: "La carta Explorador Acuático tiene ilustración (anguila, pez y pulpo)." },
       { tag: "mejora", text: "La carta Herbívoro Veloz tiene ilustración (ciervo, gacela y cabra montés)." },
       { tag: "mejora", text: "La carta Explorador Ágil tiene ilustración (zorro, ratón y comadreja), también al abrirla desde la hoja." },
       { tag: "mejora", text: "En Cartas, los tipos (Dominio, Ascendencia, Comunidad…) se eligen de uno en uno; solo los filtros de dominio se pueden combinar entre sí." },
