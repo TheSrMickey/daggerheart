@@ -2,6 +2,14 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.41",
+    date: "2026-10-10",
+    title: "Abanico de cartas por grupos",
+    items: [
+      { tag: "mejora", text: "En el mapa, cuando llevas más de 6 cartas el abanico abre un solo grupo (Dominio, Armas o Clase) con las cartas bien separadas; los demás grupos quedan en pila a los lados y se abren pulsándolos o con las pestañas de encima. Con 6 cartas o menos, el abanico sigue como siempre." },
+    ],
+  },
+  {
     version: "1.40",
     date: "2026-10-10",
     title: "Descansos solo con el grupo en campaña",

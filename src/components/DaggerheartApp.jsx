@@ -3276,6 +3276,12 @@ const sharedStyles = `
   .mh-fan { position: absolute; left: 50%; bottom: -110px; transform: translateX(-50%); display: flex; z-index: 6; pointer-events: none; }
   .mh-fan-card { --s: .5; pointer-events: auto; cursor: grab; touch-action: none; user-select: none; position: relative; width: calc(300px * var(--s)); height: calc(420px * var(--s)); margin: 0 var(--m, -26px); filter: drop-shadow(0 6px 14px rgba(0,0,0,.5)); transform: translateY(var(--y)) rotate(var(--r)); transform-origin: 50% 120%; transition: transform .15s; }
   .mh-fan-in { position: absolute; left: 0; top: 0; width: 300px; height: 420px; transform: scale(var(--s)); transform-origin: 0 0; }
+  .mh-fan-tabs { position: absolute; left: 50%; bottom: 176px; transform: translateX(-50%); z-index: 7; display: flex; gap: 4px; padding: 3px; border-radius: 10px; background: rgba(21,17,28,.9); border: 1px solid rgba(255,255,255,.14); }
+  .mh-fan-tabs button { all: unset; cursor: pointer; box-sizing: border-box; padding: 5px 12px; border-radius: 7px; font: 600 12px Inter, system-ui, sans-serif; color: #b9afc8; } .mh-fan-tabs button small { opacity: .7; margin-left: 2px; } .mh-fan-tabs button.on { background: #3a2f55; color: #E3B04B; } .mh-fan-tabs button:not(.on):hover { color: #fff; }
+  .mh-fan-pile { all: unset; cursor: pointer; position: absolute; bottom: 46px; width: 74px; height: 104px; z-index: 7; } .mh-fan-pile.is-l { left: 12px; } .mh-fan-pile.is-r { right: 12px; }
+  .mh-fan-pile span { position: absolute; width: 62px; height: 90px; border-radius: 9px; border: 2px solid var(--pc); background: linear-gradient(160deg, color-mix(in srgb, var(--pc) 30%, #1d1827), #15111c); box-shadow: 0 3px 8px rgba(0,0,0,.5); left: calc(var(--q) * 6px); top: calc(10px - var(--q) * 4px); transform: rotate(calc(-6deg + var(--q) * 6deg)); transition: transform .15s; }
+  .mh-fan-pile:hover span { transform: translateY(-6px) rotate(calc(-6deg + var(--q) * 6deg)); }
+  .mh-fan-pile em { position: absolute; left: -6px; right: -6px; bottom: -22px; text-align: center; font: 600 10.5px Inter, system-ui, sans-serif; font-style: normal; color: #fff; background: rgba(21,17,28,.9); border-radius: 6px; padding: 2px 4px; white-space: nowrap; }
   .mh-fan-zoom { position: fixed; inset: 0; z-index: 9998; background: rgba(8,6,12,.7); display: flex; align-items: center; justify-content: center; padding: 16px; }
   .mh-fan-elems { position: absolute; left: 0; right: 0; top: calc(100% + 12px); display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
   .mh-fan-ask { flex: 0 0 100%; text-align: center; font: 600 13px Inter, system-ui, sans-serif; color: #fff; text-shadow: 0 1px 4px #000; }
@@ -6568,6 +6574,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement }) {
     return () => window.removeEventListener("keydown", esc);
   }, [open]);
   const fanRef = useRef(null);
+  const [grpSel, setGrpSel] = useState(null); // grupo abierto del abanico cuando hay muchas cartas
   const [fanW, setFanW] = useState(760);
   useLayoutEffect(() => {
     const el = fanRef.current?.parentElement;
@@ -6579,27 +6586,55 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement }) {
     return () => ro.disconnect();
   }, [cards.length]);
   if (!cards.length) return null;
-  const n = cards.length;
+  const grp = (c) => (c.weapon ? "w" : c.subclass || c.rowCard ? "a" : "d");
+  // Con más de 6 cartas se abre un solo grupo (Dominio, Armas o Clase) y los demás quedan en pila a los lados.
+  const GN = { d: "Dominio", w: "Armas", a: "Clase" };
+  const present = ["d", "w", "a"].filter((k) => cards.some((c) => grp(c) === k));
+  const grouped = cards.length > 6 && present.length > 1;
+  const act = grouped ? (present.includes(grpSel) ? grpSel : present[0]) : null;
+  const shown = grouped ? cards.filter((c) => grp(c) === act) : cards;
+  const others = grouped ? present.filter((k) => k !== act) : [];
+  const colOf = (c) => (c.weapon ? TIER_COLORS[c.level]?.color || "#C9A24B" : c.rowCard ? c.color : DOMAIN_COLORS[c.domain] || "#C9A24B");
+  const n = shown.length;
   // Separación entre cartas: la de siempre, o más junta si no caben en el ancho del mapa.
   const cardW = 150 * (fanW <= 760 ? 0.72 : 1);
-  const pitch = Math.max(28, Math.min(98, (fanW - 90 - cardW) / Math.max(1, n - 1)));
+  const pitch = Math.max(28, Math.min(98, (fanW - 90 - cardW - (others.length ? 170 : 0)) / Math.max(1, n - 1)));
   const gap = pitch - cardW;
   const stepR = Math.min(5, 36 / Math.max(1, n - 1));
   const stepY = Math.min(5, 30 / Math.max(1, n - 1));
-  const grp = (c) => (c.weapon ? "w" : c.subclass || c.rowCard ? "a" : "d");
   const rng = drag ? rangeOf(drag.cell) : null;
   const target = drag?.cell ? tokens.find((t) => !t.hidden && t.x === drag.cell.x && t.y === drag.cell.y && t.id !== me?.id) : null;
   return (
     <>
+      {grouped && (
+        <div className="mh-fan-tabs" role="tablist" aria-label="Grupos de cartas">
+          {present.map((k) => (
+            <button key={k} type="button" role="tab" aria-selected={k === act} className={k === act ? "on" : ""} onClick={() => setGrpSel(k)}>
+              {GN[k]} <small>{cards.filter((c) => grp(c) === k).length}</small>
+            </button>
+          ))}
+        </div>
+      )}
+      {others.map((k, j) => {
+        const list = cards.filter((c) => grp(c) === k);
+        return (
+          <button key={k} type="button" className={"mh-fan-pile " + (j === 0 ? "is-l" : "is-r")} onClick={() => setGrpSel(k)} title={"Abrir " + GN[k].toLowerCase() + " (" + list.length + ")"} aria-label={"Abrir " + GN[k] + ", " + list.length + " cartas"}>
+            {list.slice(0, 3).map((c, q) => (
+              <span key={c.key} style={{ "--pc": colOf(c), "--q": q }} />
+            ))}
+            <em>{GN[k]} · {list.length}</em>
+          </button>
+        );
+      })}
       <div className="mh-fan" ref={fanRef} aria-label="Tus cartas">
-        {cards.map((c, i) => {
+        {shown.map((c, i) => {
           const mid = (n - 1) / 2;
-          const col = c.weapon ? TIER_COLORS[c.level]?.color || "#C9A24B" : c.rowCard ? c.color : DOMAIN_COLORS[c.domain] || "#C9A24B";
+          const col = colOf(c);
           const lifting = drag?.moved && drag.card.key === c.key;
           return (
             <div
               key={c.key}
-              className={"mh-fan-card" + (lifting ? " is-lifted" : "") + (cards[i + 1] && grp(cards[i + 1]) !== grp(c) ? " is-last-weapon" : "")}
+              className={"mh-fan-card" + (lifting ? " is-lifted" : "") + (shown[i + 1] && grp(shown[i + 1]) !== grp(c) ? " is-last-weapon" : "")}
               style={{ "--r": `${(i - mid) * stepR}deg`, "--y": `${Math.abs(i - mid) * stepY}px`, "--cc": col, "--m": gap / 2 + "px" }}
               onPointerDown={(e) => start(e, c)}
               title="Púlsala para verla en grande · arrástrala al mapa para usarla"
