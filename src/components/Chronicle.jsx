@@ -55,7 +55,7 @@ export function Chronicle({ campaignId, onShare, members = [] }) {
   const seals = meta.seals || [];
   const sealLine = seals.length ? " Sellos: " + seals.map((x) => x.who + " (" + x.t + ")").join(", ") + "." : "";
   return (
-    <div className="mh-card gx" style={{ margin: 0, maxWidth: 940 }}>
+    <div className="mh-card gx" style={{ margin: 0 }}>
       <div className="gx-h"><h3 className="mh-serif"><ScrollText size={18} /> Crónica de la campaña</h3><button type="button" className="mh-btn" onClick={() => { onShare("📖 Crónica · Sesión " + cur.n + " (" + dayLabel(cur.key) + "): " + summary + sealLine); patch(cur.key, { published: true }); }}><Share2 size={14} /> {meta.published ? "Compartida · volver a compartir" : "Compartir con la mesa"}</button></div>
       <p className="gx-sub">Se rellena sola con lo que pasa en la mesa. Edítala antes de compartirla.</p>
       <div className="ch-grid">
@@ -102,7 +102,7 @@ export function Timeline({ campaignId }) {
   const [filter, setFilter] = useState(null);
   const sess = sessionsOf(Array.isArray(log) ? log : []).reverse();
   return (
-    <div className="mh-card gx" style={{ margin: 0, maxWidth: 940 }}>
+    <div className="mh-card gx" style={{ margin: 0 }}>
       <div className="gx-h"><h3 className="mh-serif"><History size={18} /> Línea de tiempo</h3></div>
       <p className="gx-sub">Toda la historia en orden, sesión a sesión.</p>
       <div className="gx-row">

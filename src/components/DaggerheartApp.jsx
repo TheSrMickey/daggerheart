@@ -3734,7 +3734,7 @@ const sharedStyles = `
   .mh-chat-tile-art { width: 100%; height: 40px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--sc); background: color-mix(in srgb, var(--sc) 14%, var(--mh-panel)) center / cover no-repeat; }
   .mh-chat-tile-t { width: 100%; font-size: 10px; font-weight: 600; color: var(--mh-ink2); text-align: center; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   /* Mesa del DJ (vista del DJ) */
-  .mh-gm { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; max-width: 1100px; align-items: start; }
+  .mh-gm { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
   .mh-gm-box { margin: 0; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; }
   .mh-gm-box:first-child, .mh-gm-box.is-wide { grid-column: 1 / -1; }
   .mh-gm-count { font-family: 'Inter', system-ui, sans-serif; font-size: 11px; font-weight: 700; color: var(--mh-muted); background: var(--mh-panel2); border: 1px solid var(--mh-line); border-radius: 20px; padding: 0 8px; }
@@ -4898,7 +4898,7 @@ const sharedStyles = `
   .ns { --c: #C9A24A; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 14px 0; padding: 12px 16px; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--c) 45%, var(--mh-line)); background: color-mix(in srgb, var(--c) 9%, var(--mh-panel)); }
   .ns-d { display: flex; flex-direction: column; align-items: center; min-width: 64px; padding: 6px 10px; border-radius: 12px; background: color-mix(in srgb, var(--c) 18%, var(--mh-panel)); } .ns-d small { color: var(--mh-muted); font-size: 10.5px; text-transform: capitalize; } .ns-d b { font-size: 16px; }
   .ns-t { flex: 1; min-width: 180px; display: flex; flex-direction: column; } .ns-t b { font-size: 13.5px; } .ns-t small { color: var(--mh-muted); font-size: 12px; }
-  .gx { padding: 18px 20px; max-width: 760px; }
+  .gx { padding: 18px 20px; }
   .gx-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; } .gx-h h3 { margin: 0; font-size: 16px; display: flex; align-items: center; gap: 9px; }
   .gx-sub { margin: 4px 0 14px; color: var(--mh-muted); font-size: 12.5px; }
   .gx-kinds, .gx-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
@@ -4975,7 +4975,7 @@ const sharedStyles = `
   .cx-card:hover { translate: 0 -3px; box-shadow: 0 12px 26px rgba(0,0,0,.28); } .cx-card:focus-visible { outline: 2px solid var(--acc, #C9A24A); outline-offset: 3px; }
   .cx-empty { padding: 40px; text-align: center; color: var(--mh-muted); border: 1px dashed var(--mh-line); border-radius: 16px; margin-top: 14px; }
   @media (prefers-reduced-motion: reduce) { .cx-card { transition: none; } .cx-card:hover { translate: none; } }
-  .mh-cl { max-width: 780px; } .mh-cl-head h2 { margin: 0; font-size: 26px; } .mh-cl-head p { margin: 4px 0 22px; color: var(--mh-muted); font-size: 13.5px; }
+  .mh-cl { max-width: none; } .mh-cl-head h2 { margin: 0; font-size: 26px; } .mh-cl-head p { margin: 4px 0 22px; color: var(--mh-muted); font-size: 13.5px; }
   .mh-cl-list { list-style: none; margin: 0; padding: 0 0 0 22px; position: relative; display: flex; flex-direction: column; gap: 16px; }
   .mh-cl-list::before { content: ""; position: absolute; left: 6px; top: 8px; bottom: 8px; width: 2px; background: linear-gradient(180deg, #E3B04B, var(--mh-line) 18%); border-radius: 2px; }
   .mh-cl-v { position: relative; } .mh-cl-dot { position: absolute; left: -22px; top: 18px; width: 14px; height: 14px; border-radius: 50%; background: var(--mh-panel); border: 2px solid var(--mh-line2); } .mh-cl-v.is-last .mh-cl-dot { border-color: #E3B04B; background: #E3B04B; box-shadow: 0 0 0 4px #E3B04B30; }
@@ -13010,8 +13010,8 @@ export default function App({ onSignOut }) {
     await safeSet("gm-npcs", JSON.stringify(next), true);
   };
 
-  // Barra superior (con la campana) y columna de amigos a la derecha: solo en las pantallas de lista, no en hojas ni mesas de campaña.
-  const showTopbar = !isMobile && !viewingCharId && !gmViewing;
+  // Barra superior (con la campana) y columna de amigos a la derecha: en las pantallas de lista y en la mesa del DJ; no en las hojas de personaje.
+  const showTopbar = !isMobile && !viewingCharId;
   const showRail = showTopbar && view !== "ajustes";
   const modernCamp = view === "ficha" && modernCharId && detailTab === "campaign" ? Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(modernCharId)) : null;
   const padX = showRail ? "clamp(28px, 3.4vw, 48px)" : "28px";

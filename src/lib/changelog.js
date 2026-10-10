@@ -2,6 +2,14 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.47",
+    date: "2026-10-10",
+    title: "Campañas y Actualizaciones a todo el ancho",
+    items: [
+      { tag: "mejora", text: "Al abrir una campaña como DJ vuelven la barra superior y la columna de amigos de la derecha, y las pestañas (Mesa, Crónica, Calendario, Votaciones…) aprovechan todo el ancho de la columna central. Actualizaciones también ocupa todo el ancho." },
+    ],
+  },
+  {
     version: "1.46",
     date: "2026-10-10",
     title: "Selector de acciones como el de descansos",
