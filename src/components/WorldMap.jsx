@@ -1,11 +1,12 @@
 "use client";
 
-import { Suspense, useMemo, useRef, useState } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, useGLTF } from "@react-three/drei";
 import { MOUSE, Vector3 } from "three";
-import { Paintbrush, RotateCw, Tag, Eraser, Crosshair, Sprout, Trash2, Eye, EyeOff, Globe } from "lucide-react";
+import { Paintbrush, RotateCw, Tag, Eraser, Crosshair, Sprout, Trash2, Eye, EyeOff, Globe, Dices } from "lucide-react";
 import { useDoc } from "@/lib/campaignDocs";
+import { generateWorld } from "@/lib/worldGen";
 import { worldKey, WORLD_RADIUS, WORLD_CATS, WORLD_ITEMS, WORLD_ITEM, hexPos, cellsInRadius } from "@/lib/worldCatalog";
 
 // Mapa de mundo: casillas hexagonales en 3D (Three.js con React Three Fiber y el Hexagon Kit de Kenney).
@@ -67,6 +68,29 @@ function Labels({ items, place }) {
   return null;
 }
 
+// Aleja o acerca la cámara según lo grande que sea el mapa (solo cuando el tamaño cambia de verdad).
+function FitCamera({ extent, controlsRef }) {
+  const camera = useThree((s) => s.camera);
+  const aspect = useThree((s) => s.size.width / Math.max(1, s.size.height));
+  const last = useRef(-9);
+  useEffect(() => {
+    if (Math.abs(extent - last.current) < 2) return;
+    last.current = extent;
+    const e = Math.max(3, extent);
+    // Distancia a la que cabe todo el mapa a lo ancho (con el aspecto real del lienzo) y a lo alto.
+    const dist = Math.max(8, ((e * 0.95 + 1.2) / (0.364 * Math.min(aspect, 1.7))) * 0.82);
+    camera.position.set(0, dist * 0.82, dist * 0.57);
+    camera.lookAt(0, 0, 0);
+    const c = controlsRef.current;
+    if (c) {
+      c.target.set(0, 0, 0);
+      c.update();
+      c.saveState();
+    }
+  }, [extent, camera, controlsRef, aspect]);
+  return null;
+}
+
 function Scene({ tiles, edit, hover, setHover, onCell, selCell, controlsRef, labels, place }) {
   return (
     <>
@@ -108,8 +132,9 @@ function Scene({ tiles, edit, hover, setHover, onCell, selCell, controlsRef, lab
         const [q, r] = selCell.split(",").map(Number);
         return <Outline q={q} r={r} y={(WORLD_ITEM[tiles[selCell]?.t]?.h || 0.02) + 0.04} color="#E3B04B" />;
       })()}
+      <FitCamera extent={Object.keys(tiles).reduce((m, k) => { const [q, r] = k.split(",").map(Number); return Math.max(m, Math.abs(q), Math.abs(r), Math.abs(-q - r)); }, 0)} controlsRef={controlsRef} />
       <Labels items={labels} place={place} />
-      <OrbitControls ref={controlsRef} makeDefault enableDamping maxPolarAngle={1.25} minDistance={3} maxDistance={26} mouseButtons={{ LEFT: MOUSE.ROTATE, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.PAN }} />
+      <OrbitControls ref={controlsRef} makeDefault enableDamping maxPolarAngle={1.25} minDistance={3} maxDistance={70} mouseButtons={{ LEFT: MOUSE.ROTATE, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.PAN }} />
     </>
   );
 }
@@ -186,6 +211,12 @@ export default function WorldMap({ campaignId, edit = false }) {
       });
       return { ...d, tiles: ts };
     });
+  // Mapa de mundo aleatorio: llena todo el campo con continentes, islas, biomas y lugares con nombre.
+  const randomize = () => {
+    if (count > 0 && !window.confirm("¿Sustituir el mapa de mundo actual por uno aleatorio?")) return;
+    setSelCell(null);
+    apply((d) => ({ ...d, tiles: generateWorld() }));
+  };
   const clearAll = () => {
     if (!window.confirm("¿Vaciar todo el mapa de mundo?")) return;
     setSelCell(null);
@@ -211,9 +242,14 @@ export default function WorldMap({ campaignId, edit = false }) {
           <Globe size={26} strokeWidth={1.6} />
           <div>{edit ? "El mapa de mundo está vacío. Empieza con el terreno inicial o pinta casillas del cuadrado." : "El DJ todavía no ha dibujado el mapa de mundo."}</div>
           {edit && (
-            <button type="button" className="mh-btn" onClick={fillStart}>
-              <Sprout size={14} /> Crear terreno inicial
-            </button>
+            <div className="wm-row2">
+              <button type="button" className="mh-btn" onClick={randomize}>
+                <Dices size={14} /> Mapa aleatorio
+              </button>
+              <button type="button" className="mh-btn-ghost" onClick={fillStart}>
+                <Sprout size={14} /> Terreno inicial
+              </button>
+            </div>
           )}
         </div>
       )}
@@ -280,6 +316,11 @@ export default function WorldMap({ campaignId, edit = false }) {
             )}
           </div>
         )}
+        <div className="wm-sec">
+          <button type="button" className="mh-btn" onClick={randomize} title="Genera un mundo nuevo que ocupa todo el campo: continentes, islas, biomas y lugares con nombre">
+            <Dices size={14} /> Generar mapa aleatorio
+          </button>
+        </div>
         <div className="wm-sec wm-row">
           <button type="button" className="mh-btn-ghost" onClick={fillStart}>
             <Sprout size={13} /> Terreno inicial

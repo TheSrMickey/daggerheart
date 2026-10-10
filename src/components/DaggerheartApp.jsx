@@ -3774,12 +3774,13 @@ const sharedStyles = `
   .wm { display: flex; gap: 14px; align-items: stretch; min-height: 520px; margin-top: 10px; } .wm.wm-view { margin: 0; flex: 1; min-height: 0; }
   .wm-stage { position: relative; flex: 1; min-width: 0; min-height: 480px; border-radius: 12px; overflow: hidden; border: 1px solid var(--mh-line); background: #121b29; } .wm-view .wm-stage { min-height: 0; }
   .wm-stage canvas { display: block; touch-action: none; }
+  .wm-row2 { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; pointer-events: auto; }
   .wm-load { padding: 40px; text-align: center; color: var(--mh-muted); font-size: 13px; }
   .wm-empty { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; padding: 30px; color: #b9c4d6; font-size: 13px; pointer-events: none; } .wm-empty button { pointer-events: auto; }
   .wm-center { position: absolute; top: 10px; right: 10px; width: 32px; height: 32px; border-radius: 9px; border: 1px solid rgba(255,255,255,.18); background: rgba(10,14,24,.7); color: #e9eefc; display: grid; place-items: center; cursor: pointer; backdrop-filter: blur(4px); } .wm-center:hover { background: rgba(10,14,24,.9); }
   .wm-help { position: absolute; left: 10px; bottom: 8px; font-size: 10.5px; color: rgba(220,230,250,.7); text-shadow: 0 1px 3px #000; pointer-events: none; }
   .wm-labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; } .wm-labels .wm-lbl { position: absolute; left: 0; top: 0; will-change: transform; }
-  .wm-lbl { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 99px; background: rgba(10,14,24,.82); border: 1px solid rgba(227,176,75,.55); color: #f3e6c4; font: 700 12px 'Inter', system-ui, sans-serif; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,.4); } .wm-lbl.is-hidden { opacity: .6; border-style: dashed; }
+  .wm-lbl { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 99px; background: rgba(10,14,24,.82); border: 1px solid rgba(227,176,75,.55); color: #f3e6c4; font: 700 11px 'Inter', system-ui, sans-serif; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,.4); } .wm-lbl.is-hidden { opacity: .6; border-style: dashed; }
   .wm-side { width: 270px; flex-shrink: 0; display: flex; flex-direction: column; gap: 12px; max-height: 620px; overflow-y: auto; scrollbar-width: thin; }
   .wm-sec { display: flex; flex-direction: column; gap: 8px; } .wm-sec.wm-row { flex-direction: row; flex-wrap: wrap; }
   .wm-lab { font: 700 10px 'Inter', system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-muted); }
