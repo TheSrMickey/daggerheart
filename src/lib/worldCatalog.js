@@ -1,6 +1,12 @@
 // Piezas del Mapa de mundo (Hexagon Kit de Kenney, CC0). h = altura de la cara superior de la loseta.
 export const worldKey = (id) => "campaign-world:" + id;
 export const WORLD_RADIUS = 9;
+// Variantes de estilo del kit de Kenney (cambian los colores de todas las piezas).
+export const WORLD_THEMES = [
+  { k: "verano", n: "Verano" },
+  { k: "invierno", n: "Invierno" },
+  { k: "otono", n: "Otoño" },
+];
 
 export const WORLD_CATS = [
   { key: "terreno", label: "Terreno" },

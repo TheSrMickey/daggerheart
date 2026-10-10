@@ -3775,6 +3775,9 @@ const sharedStyles = `
   .wm-stage { position: relative; flex: 1; min-width: 0; min-height: 480px; border-radius: 12px; overflow: hidden; border: 1px solid var(--mh-line); background: #121b29; } .wm-view .wm-stage { min-height: 0; }
   .wm-stage canvas { display: block; touch-action: none; }
   .wm-row2 { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; pointer-events: auto; }
+  .wm-banner { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 3; display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 99px; background: rgba(10,14,24,.9); border: 1px solid #E3B04B; color: #f3e6c4; font: 600 12px 'Inter', system-ui, sans-serif; white-space: nowrap; } .wm-banner button { all: unset; cursor: pointer; padding: 2px 8px; border-radius: 99px; background: rgba(255,255,255,.12); font-size: 11px; }
+  .wm-lbl.is-party { background: #E3B04B; border-color: #fff6; color: #1a1206; }
+  .mh-btn-ghost.is-on { border-color: #E3B04B; color: #E3B04B; }
   .wm-load { padding: 40px; text-align: center; color: var(--mh-muted); font-size: 13px; }
   .wm-empty { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; padding: 30px; color: #b9c4d6; font-size: 13px; pointer-events: none; } .wm-empty button { pointer-events: auto; }
   .wm-center { position: absolute; top: 10px; right: 10px; width: 32px; height: 32px; border-radius: 9px; border: 1px solid rgba(255,255,255,.18); background: rgba(10,14,24,.7); color: #e9eefc; display: grid; place-items: center; cursor: pointer; backdrop-filter: blur(4px); } .wm-center:hover { background: rgba(10,14,24,.9); }
