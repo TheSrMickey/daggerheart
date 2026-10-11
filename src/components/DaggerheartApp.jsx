@@ -870,6 +870,14 @@ const buildCardCatalog = () => {
       Icon: beastIcon(b.key),
     }),
   );
+  // Armas (principales y secundarias), ordenadas por rango.
+  const wlist = [...PRIMARY_WEAPONS.map((w) => ({ w, prim: true })), ...SECONDARY_WEAPONS.map((w) => ({ w, prim: false }))];
+  wlist.forEach(({ w, prim }, i) => {
+    const fi = w.feature ? w.feature.indexOf(": ") : -1;
+    const feats = [{ name: "Daño", text: w.damage }, { name: "Alcance", text: w.range }, { name: "Rasgo", text: w.trait + " · " + (w.hands === 2 ? "dos manos" : "una mano") }];
+    if (w.feature) feats.push(fi > 0 && fi < 28 ? { name: w.feature.slice(0, fi), text: w.feature.slice(fi + 2) } : { name: "Efecto", text: w.feature });
+    out.push({ id: "w-" + i + w.key, kind: "arma", key: w.key, sub: (prim ? "Arma principal" : "Arma secundaria") + " · " + (TIER_COLORS[w.tier]?.label || ""), tier: w.tier, text: "", features: feats, image: null, color: TIER_COLORS[w.tier]?.color || "#C9A24A", Icon: weaponIcon(w.key) });
+  });
   return (CARD_CATALOG = out);
 };
 // Ilustraciones de subclase recortadas (páginas de clase del manual básico y de Hope & Fear).

@@ -14,8 +14,9 @@ export const KINDS = [
   { key: "subclase", label: "Subclase", plural: "Subclases" },
   { key: "transformacion", label: "Transformación", plural: "Transformaciones" },
   { key: "forma", label: "Forma de Bestia", plural: "Formas de Bestia" },
+  { key: "arma", label: "Arma", plural: "Armas" },
 ];
-const KIND_COLOR = { dominio: "#C9A24A", ascendencia: "#6FA3C0", comunidad: "#C08B5C", subclase: "#7FB77A", transformacion: "#A58BE8", forma: "#E0A04A" };
+const KIND_COLOR = { dominio: "#C9A24A", ascendencia: "#6FA3C0", comunidad: "#C08B5C", subclase: "#7FB77A", transformacion: "#A58BE8", forma: "#E0A04A", arma: "#C9A24A" };
 
 // La carta, tal cual se ve al abrirla; en la cuadrícula tiene exactamente el mismo tamaño (300 × 420).
 function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
@@ -90,7 +91,9 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
   // Secciones: cartas de dominio por nivel y, después, cada otro tipo.
   const sections = [
     ...[...new Set(shown.filter((c) => c.kind === "dominio").map((c) => c.level))].sort((a, b) => a - b).map((lv) => ({ id: "n" + lv, title: "Nivel " + lv, list: shown.filter((c) => c.kind === "dominio" && c.level === lv) })),
-    ...KINDS.filter((k) => k.key !== "dominio").map((k) => ({ id: k.key, title: k.plural, list: shown.filter((c) => c.kind === k.key) })).filter((s) => s.list.length),
+    ...KINDS.filter((k) => k.key !== "dominio" && k.key !== "arma").map((k) => ({ id: k.key, title: k.plural, list: shown.filter((c) => c.kind === k.key) })).filter((s) => s.list.length),
+    // Las armas van por rango, como los dominios por nivel.
+    ...[1, 2, 3, 4].map((t) => ({ id: "arma" + t, title: "Armas · Rango " + t, list: shown.filter((c) => c.kind === "arma" && c.tier === t) })).filter((s) => s.list.length),
   ];
   const close = () => {
     if (closing) return;
@@ -125,7 +128,7 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
       <div className="cx-h">
         <div>
           <h1 className="mh-serif">Cartas</h1>
-          <p>Todas las cartas del juego: dominio, ascendencia, comunidad, subclase, transformación y formas de bestia. Pulsa una para verla a tamaño completo.</p>
+          <p>Todas las cartas del juego: dominio, ascendencia, comunidad, subclase, transformación, formas de bestia y armas. Pulsa una para verla a tamaño completo.</p>
         </div>
         <label className="cx-search">
           <Search size={15} />
