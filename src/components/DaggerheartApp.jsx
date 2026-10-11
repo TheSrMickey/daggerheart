@@ -4829,6 +4829,17 @@ const sharedStyles = `
   .mh-acct-menu button { all: unset; box-sizing: border-box; width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 13px; color: var(--mh-ink2); } .mh-acct-menu button:hover { background: var(--mh-panel3); color: var(--mh-ink); }
   .mh-brand-av { border: 0; padding: 0; cursor: pointer; font-family: inherit; } .mh-brand-av:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
   .mh-brand-av { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #4f86ff, #7a5cff); color: #fff; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .mh-dock { order: 99; flex-shrink: 0; margin: 0 12px calc(10px + env(safe-area-inset-bottom, 0px)); height: 62px; border-radius: 24px; display: flex; align-items: center; justify-content: space-around; padding: 0 8px; position: relative; z-index: 45; background: color-mix(in srgb, var(--mh-nav) 78%, transparent); -webkit-backdrop-filter: blur(16px) saturate(1.2); backdrop-filter: blur(16px) saturate(1.2); border: 1px solid var(--mh-line2); box-shadow: 0 14px 34px #0009, inset 0 1px 0 #ffffff14; }
+  html[data-mh-theme="light"] .mh-dock { box-shadow: 0 14px 34px #3a2c1233, inset 0 1px 0 #fff; }
+  .mh-dock-it { all: unset; box-sizing: border-box; width: 48px; height: 48px; border-radius: 16px; display: flex; align-items: center; justify-content: center; color: var(--mh-ink3); cursor: pointer; transition: background .15s; }
+  .mh-dock-it:focus-visible { outline: 2px solid #E3B04B; }
+  .mh-dock-it.is-on { background: #E3B04B; color: #1F1606; box-shadow: 0 6px 18px #E3B04B44; }
+  .mh-dock-scrim { position: fixed; inset: 0; z-index: 44; }
+  .mh-dock-sheet { position: fixed; left: 12px; right: 12px; bottom: calc(82px + env(safe-area-inset-bottom, 0px)); z-index: 46; border-radius: 22px; padding: 10px; background: color-mix(in srgb, var(--mh-nav) 92%, transparent); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); border: 1px solid var(--mh-line2); box-shadow: 0 20px 50px #000b; animation: mh-fade-in .16s ease both; }
+  .mh-dock-sh { margin: 4px 8px 6px; font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--mh-muted2); }
+  .mh-dock-row { all: unset; box-sizing: border-box; width: 100%; display: flex; align-items: center; gap: 12px; padding: 7px 8px; border-radius: 14px; cursor: pointer; }
+  .mh-dock-row:active { background: #ffffff10; }
+  .mh-dock-all { all: unset; box-sizing: border-box; width: 100%; display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 4px; padding: 10px; border-top: 1px solid var(--mh-line); font-size: 12.5px; font-weight: 600; color: var(--mh-ink3); cursor: pointer; }
   .mh-isle-wrap { position: relative; flex-shrink: 0; width: 84px; z-index: 40; transition: width .22s ease; }
   .mh-isle-wrap.is-pin { width: 236px; }
   .mh-isle { position: absolute; top: 12px; bottom: 12px; left: 10px; width: 64px; box-sizing: border-box; border-radius: 24px; padding: 12px 9px; display: flex; flex-direction: column; gap: 4px; background: color-mix(in srgb, var(--mh-nav) 74%, transparent); -webkit-backdrop-filter: blur(16px) saturate(1.2); backdrop-filter: blur(16px) saturate(1.2); border: 1px solid var(--mh-line2); box-shadow: 0 18px 44px #0007, inset 0 1px 0 #ffffff14; transition: width .22s ease, box-shadow .22s ease; }
@@ -10603,6 +10614,7 @@ export default function App({ onSignOut }) {
 
   const [detailTab, setDetailTab] = useState("general");
   const [chatSlot, setChatSlot] = useState(null); // contenedor del chat en la columna derecha (hoja moderna, pestaña de campaña)
+  const [dockSheet, setDockSheet] = useState(false); // hoja de personajes del dock (móvil)
   const [islePin, setIslePin] = useState(false); // isla lateral fijada abierta
   useEffect(() => {
     try { if (localStorage.getItem("mh-isle-pin") === "1") setIslePin(true); } catch {}
@@ -24594,8 +24606,8 @@ export default function App({ onSignOut }) {
           )}
         </div>
 
-        <div style={{ display: "flex", flexDirection: isMobile ? "row" : "column", gap: 2, flex: isMobile ? 1 : "none", overflowX: isMobile ? "auto" : "visible" }}>
-          {NAV_ITEMS.map((item) => {
+        <div style={{ flex: 1 }}>
+          {!isMobile && NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const active = view === item.key;
             return (
@@ -24725,6 +24737,51 @@ export default function App({ onSignOut }) {
         )}
       </nav>
       )}
+
+      {/* Dock inferior flotante (móvil) */}
+      {isMobile && (() => {
+        const go = (key) => { setDockSheet(false); setViewingCharId(null); setViewingCardDetail(null); setModernCharId(null); setShowNewCharModal(false); setView(key); };
+        return (
+          <>
+            {dockSheet && (
+              <>
+                <div className="mh-dock-scrim" onClick={() => setDockSheet(false)} />
+                <div className="mh-dock-sheet" role="dialog" aria-label="Personajes">
+                  <div className="mh-dock-sh">Personajes</div>
+                  {Object.entries(characters).map(([id, ch]) => {
+                    const Em = CLASS_EMBLEMS[ch.f_class] || User;
+                    const col = ch.f_class ? classColor(ch.f_class) : "#8b88a8";
+                    return (
+                      <button type="button" key={id} className="mh-dock-row" onClick={() => (setDockSheet(false), setView("ficha"), openCharDetail(id))}>
+                        <span className="mh-isle-ic is-round" style={{ background: col + "40", color: col }}><Em size={16} /></span>
+                        <span className="mh-isle-t"><b>{ch.f_name || "Sin nombre"}</b><small>{ch.f_class || "Sin clase"} · Nv {ch.f_level || 1}</small></span>
+                      </button>
+                    );
+                  })}
+                  {Object.keys(characters).length < MAX_CHARACTERS && (
+                    <button type="button" className="mh-dock-row" onClick={() => (go("ficha"), openNewCharModal())}>
+                      <span className="mh-isle-ic is-round is-add"><Plus size={15} /></span>
+                      <span className="mh-isle-t"><b>Nuevo personaje</b></span>
+                    </button>
+                  )}
+                  <button type="button" className="mh-dock-all" onClick={() => go("ficha")}>Ver todos los personajes <ChevronRight size={14} /></button>
+                </div>
+              </>
+            )}
+            <nav className="mh-dock" aria-label="Navegación">
+              {NAV_ITEMS.map((item) => {
+                const Icon = item.icon;
+                const on = dockSheet ? item.key === "ficha" : view === item.key;
+                return (
+                  <button type="button" key={item.key} aria-label={item.label} title={item.label} className={"mh-dock-it" + (on ? " is-on" : "")} onClick={() => (item.key === "ficha" ? setDockSheet((v) => !v) : go(item.key))}>
+                    <Icon size={21} strokeWidth={1.8} />
+                  </button>
+                );
+              })}
+            </nav>
+          </>
+        );
+      })()}
 
       {/* Body */}
       <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
