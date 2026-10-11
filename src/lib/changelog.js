@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-11",
     title: "Imágenes propias en las escenas y viñeta",
     items: [
+      { tag: "mejora", text: "Mapa de mundo: ahora tiene cielo (un degradado que cambia con la hora, el clima y el estilo del mapa) y el mar se funde con el horizonte con un degradado de agua más honda y bruma, sin cortes bruscos. La vista de jugadores usa una cámara más baja para que asome el cielo; el DJ, al editar, sigue viéndolo desde arriba." },
       { tag: "mejora", text: "Mapa de mundo: nubes de pocos polígonos cruzan el mapa por encima y se apartan alrededor del grupo para dejar un hueco por el que se ve el terreno (se ven en la vista de jugadores, no mientras el DJ edita). Todo lo que queda fuera del mapa es agua, con el color del estilo elegido. Además, en las cartas abiertas todos los botones de acción tienen el mismo aspecto: el primero ya no va de color." },
       { tag: "mejora", text: "Inicio: «Retoma tus campañas» y «Tus personajes» pasan a fichas anchas que aprovechan el ancho. Las campañas muestran la próxima sesión y quién juega; los personajes, su clase, nivel, campaña y barras de PV y Estrés. Si te queda sitio, aparece la ficha «+ Nuevo personaje»." },
       { tag: "nuevo", text: "Inicio tiene ahora la sección «Tus dados», encima de «Retoma tus campañas»: tus tiradas totales, críticos, porcentaje de tiradas con Esperanza y un gráfico de los últimos 10 días. Las estadísticas son personales (solo las ves tú) y se cuentan desde que se instala esta versión." },

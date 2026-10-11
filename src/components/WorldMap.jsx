@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, useGLTF, useTexture, Stars } from "@react-three/drei";
-import { MOUSE, Vector3, SRGBColorSpace, Color, Fog, CanvasTexture, Matrix4 } from "three";
+import { MOUSE, Vector3, SRGBColorSpace, Color, Fog, CanvasTexture, Matrix4, BackSide } from "three";
 import { Paintbrush, RotateCw, Tag, Eraser, Crosshair, Sprout, Trash2, Eye, EyeOff, Globe, Dices, Flag, Sun, Snowflake, Leaf, Sunrise, Sunset, Moon, CloudRain, CloudLightning, CloudFog, Repeat, KeyRound, Footprints, Tent } from "lucide-react";
 import { useDoc } from "@/lib/campaignDocs";
 import { generateWorld } from "@/lib/worldGen";
@@ -115,7 +115,7 @@ const TIMES = {
 const CYCLE = ["amanecer", "dia", "atardecer", "noche"];
 const DAY_BG = { verano: "#18304a", invierno: "#25384e", otono: "#34261c" };
 const WEATHER = {
-  despejado: { k: 1, gray: 0, fog: [24, 52] },
+  despejado: { k: 1, gray: 0, fog: [20, 46] },
   lluvia: { k: 0.7, gray: 0.35, fog: [14, 38] },
   tormenta: { k: 0.5, gray: 0.55, fog: [10, 30] },
   nieve: { k: 0.85, gray: 0.25, fog: [14, 40] },
@@ -124,6 +124,9 @@ const WEATHER = {
 export const CYCLE_MS = 6 * 60 * 1000; // un día completo dura 6 minutos
 const SNOWY = new Set(["stone-mountain", "stone-hill", "grass-hill", "stone-rocks", "stone", "sand-rocks"]);
 const mixN = (a, b, t) => a + (b - a) * t;
+// Cielo: color en el horizonte y en lo alto según el estilo del mapa. De noche se oscurece y con mal tiempo se apaga.
+const SKY_HOR = { verano: "#bfe0f3", invierno: "#d3e2ee", otono: "#f0d2a6" };
+const SKY_TOP = { verano: "#4f8fd8", invierno: "#86a6c8", otono: "#6b86b8" };
 
 // Un paso de la animación del ambiente: calcula la luz objetivo (hora fija o ciclo) y se acerca a ella con suavidad.
 function stepAtmos(ctx, h, d, scene, dt, elapsed, time, cycle, weather, theme) {
@@ -168,8 +171,32 @@ function stepAtmos(ctx, h, d, scene, dt, elapsed, time, cycle, weather, theme) {
   h.color.copy(c.hemi); h.groundColor.copy(c.ground); h.intensity = c.hi + fl.v * 2.2;
   d.color.copy(c.dir); d.intensity = c.di + fl.v * 2.5; d.position.set(c.pos[0], c.pos[1], c.pos[2]);
   scene.background = c.bg;
-  if (scene.fog) { scene.fog.color.copy(c.bg); scene.fog.near = c.fogNear; scene.fog.far = c.fogFar; }
+  // Cielo: de día se aclara hacia el horizonte; la niebla toma el color del horizonte para que el mar se funda con él.
+  const dayf = Math.max(0, Math.min(1, (c.di - 0.5) / 0.65)) * (1 - w.gray * 0.8);
+  if (!c.hor) { c.hor = new Color(); c.top = new Color(); }
+  c.hor.copy(c.bg).lerp(new Color(SKY_HOR[theme] || SKY_HOR.verano), dayf);
+  c.top.copy(c.bg).multiplyScalar(0.7).lerp(new Color(SKY_TOP[theme] || SKY_TOP.verano), dayf);
+  if (scene.fog) { scene.fog.color.copy(c.hor); scene.fog.near = c.fogNear; scene.fog.far = c.fogFar; }
   return tg.star > 0.5;
+}
+
+// Cúpula de cielo: degradado del horizonte (claro) a lo alto, con los colores que calcula el ambiente.
+const SKY_VERT = "varying float vH; void main(){ vH = normalize(position).y; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }";
+const SKY_FRAG = "uniform vec3 top; uniform vec3 hor; varying float vH; void main(){ float t = smoothstep(-0.02, 0.62, vH); gl_FragColor = vec4(mix(hor, top, t), 1.0);\n#include <colorspace_fragment>\n}";
+function SkyDome({ ctx }) {
+  const mat = useRef(null);
+  useFrame(() => {
+    const c = ctx.current.st;
+    if (!mat.current || !c || !c.hor) return;
+    mat.current.uniforms.top.value.copy(c.top);
+    mat.current.uniforms.hor.value.copy(c.hor);
+  });
+  return (
+    <mesh renderOrder={-10} frustumCulled={false}>
+      <sphereGeometry args={[190, 24, 16]} />
+      <shaderMaterial ref={mat} side={BackSide} depthWrite={false} fog={false} vertexShader={SKY_VERT} fragmentShader={SKY_FRAG} uniforms={{ top: { value: new Color("#4f8fd8") }, hor: { value: new Color("#bfe0f3") } }} />
+    </mesh>
+  );
 }
 
 function Atmosphere({ time, cycle, weather, theme, onNight }) {
@@ -189,6 +216,7 @@ function Atmosphere({ time, cycle, weather, theme, onNight }) {
     <>
       <hemisphereLight ref={hemi} args={["#ffffff", "#5a5240", 0.75]} />
       <directionalLight ref={dir} position={[6, 12, 4]} intensity={1.15} />
+      <SkyDome ctx={ctx} />
     </>
   );
 }
@@ -330,17 +358,24 @@ function Labels({ items, place }) {
 }
 
 // Aleja o acerca la cámara según lo grande que sea el mapa (solo cuando el tamaño cambia de verdad).
-function FitCamera({ extent, controlsRef }) {
+function FitCamera({ extent, controlsRef, flat }) {
   const camera = useThree((s) => s.camera);
   const aspect = useThree((s) => s.size.width / Math.max(1, s.size.height));
   const last = useRef(-9);
+  const lastFlat = useRef(null);
   useEffect(() => {
-    if (Math.abs(extent - last.current) < 2) return;
+    if (Math.abs(extent - last.current) < 2 && lastFlat.current === flat) return;
     last.current = extent;
+    lastFlat.current = flat;
     const e = Math.max(3, extent);
+    // Vista de jugadores: cámara más baja y de campo más abierto, para que asome el horizonte con el cielo.
+    // Vista del DJ al editar: más cenital, para pintar casillas con comodidad.
+    Object.assign(camera, { fov: flat ? 52 : 40 });
+    camera.updateProjectionMatrix();
+    const tf = Math.tan((camera.fov * Math.PI) / 360);
     // Distancia a la que cabe todo el mapa a lo ancho (con el aspecto real del lienzo) y a lo alto.
-    const dist = Math.max(8, ((e * 0.95 + 1.2) / (0.364 * Math.min(aspect, 1.7))) * 0.82);
-    camera.position.set(0, dist * 0.82, dist * 0.57);
+    const dist = Math.max(8, ((e * 0.95 + 1.2) / (tf * Math.min(aspect, 1.7))) * 0.82 * (flat ? 1.1 : 1));
+    camera.position.set(0, dist * (flat ? 0.5 : 0.82), dist * (flat ? 0.87 : 0.57));
     camera.lookAt(0, 0, 0);
     const c = controlsRef.current;
     if (c) {
@@ -348,19 +383,37 @@ function FitCamera({ extent, controlsRef }) {
       c.update();
       c.saveState();
     }
-  }, [extent, camera, controlsRef, aspect]);
+  }, [extent, flat, camera, controlsRef, aspect]);
   return null;
 }
 
 const topOf = (t) => (WORLD_ITEM[t?.t]?.h || 0.2) + (t?.d && t.d.startsWith("unit-") ? 0.3 : 0);
 
 // Mar abierto: todo lo que queda fuera del mapa es agua (solo diseño). El color sigue el estilo del mapa.
-const OCEAN = { verano: "#4f9fd6", invierno: "#8fc0dd", otono: "#4a86a8" };
+const OCEAN = { verano: ["#4f9fd6", "#3f82bd"], invierno: ["#8fc0dd", "#74a6c6"], otono: ["#4a86a8", "#3f7094"] };
+// Degradado radial: junto al mapa el color del agua de las casillas; hacia fuera, mar más hondo.
+const makeOceanTex = (theme) => {
+  const [near, deep] = OCEAN[theme] || OCEAN.verano;
+  const c = document.createElement("canvas");
+  c.width = c.height = 1024;
+  const g = c.getContext("2d");
+  const grad = g.createRadialGradient(512, 512, 0, 512, 512, 512);
+  grad.addColorStop(0, near);
+  grad.addColorStop(0.1, near);
+  grad.addColorStop(0.42, deep);
+  grad.addColorStop(1, deep);
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 1024, 1024);
+  const t = new CanvasTexture(c);
+  t.colorSpace = SRGBColorSpace;
+  return t;
+};
 function Ocean({ theme }) {
+  const tex = useMemo(() => makeOceanTex(theme), [theme]);
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.094, 0]}>
-      <circleGeometry args={[160, 48]} />
-      <meshStandardMaterial color={OCEAN[theme] || OCEAN.verano} roughness={0.55} metalness={0.05} />
+      <circleGeometry args={[160, 64]} />
+      <meshStandardMaterial map={tex} roughness={0.55} metalness={0.05} />
     </mesh>
   );
 }
@@ -465,7 +518,7 @@ function Scene({ tiles, edit, clouds, hover, setHover, onCell, selCell, controls
         const [q, r] = selCell.split(",").map(Number);
         return <Outline q={q} r={r} y={(WORLD_ITEM[tiles[selCell]?.t]?.h || 0.02) + 0.04} color="#E3B04B" />;
       })()}
-      <FitCamera extent={Object.keys(tiles).reduce((m, k) => { const [q, r] = k.split(",").map(Number); return Math.max(m, Math.abs(q), Math.abs(r), Math.abs(-q - r)); }, 0)} controlsRef={controlsRef} />
+      <FitCamera extent={Object.keys(tiles).reduce((m, k) => { const [q, r] = k.split(",").map(Number); return Math.max(m, Math.abs(q), Math.abs(r), Math.abs(-q - r)); }, 0)} controlsRef={controlsRef} flat={!!clouds} />
       <Labels items={labels} place={place} />
       <OrbitControls ref={controlsRef} makeDefault enableDamping maxPolarAngle={1.25} minDistance={3} maxDistance={70} mouseButtons={{ LEFT: MOUSE.ROTATE, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.PAN }} />
     </>
