@@ -3073,6 +3073,8 @@ const sharedStyles = `
   @keyframes mh-stg-pulse { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, #D9644E 55%, transparent); } 50% { box-shadow: 0 0 0 4px color-mix(in srgb, #D9644E 0%, transparent); } }
   .mh-stg-cnt { font-size: 9.5px; font-weight: 700; color: #fff; background: #B8862E; border-radius: 10px; padding: 0 5px; line-height: 15px; }
   .mh-stg-fear.is-over { position: absolute; top: 20px; right: 20px; z-index: 8; padding: 5px 11px; border-radius: 20px; background: rgba(10,8,14,.72); backdrop-filter: blur(4px); border: 1px solid rgba(165,139,232,.28); box-shadow: 0 2px 8px rgba(0,0,0,.35); }
+  .mh-stg-scene::before, .mh-chat-c-scene::before, .mh-gm-sc-img::before, .mh-gm-dlg-prev::before, .mh-gm-cvscene-img::before, .mh-gm-preset-img::before { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; background: url(/escenas/vignette.webp) center / 100% 100% no-repeat; border-radius: inherit; }
+  .mh-chat-c-scene > *, .mh-gm-sc-img > *, .mh-gm-preset-img > * { position: relative; z-index: 1; } .mh-gm-cvscene-img { position: relative; }
   .mh-stg-scene-cap { position: relative; } .mh-stg-fear.is-incap { top: 50%; right: 12px; transform: translateY(-50%); }
   .mh-stg-fear.is-over > span:first-child, .mh-stg-fear.is-over b { color: #CDBBF5; }
   .mh-stg-body { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
@@ -8292,6 +8294,7 @@ export default function App({ onSignOut }) {
   // Diálogos: reparto de personajes del DJ (nombre + imagen) y la frase que se envía a los jugadores.
   const [campaignCast, setCampaignCast] = useState([]);
   const [castImgs, setCastImgs] = useState({});
+  const [sceneError, setSceneError] = useState("");
   const castImgFetching = useRef(new Map());
   const [castDraft, setCastDraft] = useState({ name: "", img: "" });
   const [castError, setCastError] = useState("");
@@ -8594,6 +8597,12 @@ export default function App({ onSignOut }) {
     castImgFetching.current.set(imgId, job);
     return job;
   };
+  // Las imágenes de escena subidas se guardan aparte (su valor es "img:<id>") y se muestran con lo ya descargado.
+  const imgSrc = (u) => (u && u.startsWith("img:") ? castImgs[u.slice(4)] || "" : u || "");
+  const bgStyle = (u) => {
+    const v = imgSrc(u);
+    return v ? { backgroundImage: `url("${v.replace(/"/g, "%22")}")` } : undefined;
+  };
   useEffect(() => {
     if (!stageCampaignId) return;
     let alive = true;
@@ -8634,6 +8643,11 @@ export default function App({ onSignOut }) {
       }
       // Primero la imagen y luego el diálogo: así el cambio de expresión es un corte limpio.
       if (s.dialogue?.imgId) await ensureCastImg(s.dialogue.imgId);
+      // La imagen de la escena en pantalla llega antes que la escena; las demás se descargan en segundo plano.
+      const sceneImgId = (u) => (u && u.startsWith("img:") ? u.slice(4) : null);
+      const liveImg = sceneImgId(s.scene?.image);
+      if (liveImg) await ensureCastImg(liveImg);
+      (s.scenes || []).forEach((x) => sceneImgId(x.image) && ensureCastImg(sceneImgId(x.image)));
       if (!alive) return;
       setCampaignStage(s);
       if (!isPlayer) return;
@@ -11091,7 +11105,7 @@ export default function App({ onSignOut }) {
             </>,
             label,
             sceneTitle ? (
-              <div className={"mh-chat-c-scene" + (sc?.image ? "" : " is-blank")} style={sc?.image ? { backgroundImage: `url("${sc.image.replace(/"/g, "%22")}")` } : undefined}>
+              <div className={"mh-chat-c-scene" + (sc?.image ? "" : " is-blank")} style={bgStyle(sc?.image)}>
                 <span>{sceneTitle}</span>
               </div>
             ) : null,
@@ -11547,6 +11561,64 @@ export default function App({ onSignOut }) {
     postChat(viewingCampaignId, { kind: "share", author: "El DJ", gm: true, text: "", share: { type: "handout", name: handout.title, sub: "Pista · " + (HANDOUT_KINDS.find((k) => k.key === handout.kind)?.label || ""), handout } });
   };
 
+  // Reduce la imagen de la escena en el navegador (máx. 1600 px, JPEG) para que pese poco en la base de datos.
+  const readSceneImage = (file) =>
+    new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const k = Math.min(1, 1600 / Math.max(img.width, img.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(img.width * k));
+        canvas.height = Math.max(1, Math.round(img.height * k));
+        const g = canvas.getContext("2d");
+        g.fillStyle = "#000";
+        g.fillRect(0, 0, canvas.width, canvas.height);
+        g.drawImage(img, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url);
+        let data = canvas.toDataURL("image/jpeg", 0.82);
+        if (data.length > 900000) data = canvas.toDataURL("image/jpeg", 0.62);
+        resolve(data);
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("imagen"));
+      };
+      img.src = url;
+    });
+  const saveSceneImage = async (file) => {
+    if (!file || !viewingCampaignId) return null;
+    setSceneError("");
+    if (!/^image\//.test(file.type)) {
+      setSceneError("Ese archivo no es una imagen.");
+      return null;
+    }
+    let data;
+    try {
+      data = await readSceneImage(file);
+    } catch (e) {
+      setSceneError("No se pudo leer la imagen.");
+      return null;
+    }
+    const imgId = viewingCampaignId + "-scene-" + Date.now();
+    setCastImgs((m) => ({ ...m, [imgId]: data }));
+    castImgFetching.current.set(imgId, Promise.resolve());
+    await safeSet("campaign-img:" + imgId, data, true);
+    return "img:" + imgId;
+  };
+  const uploadSceneImg = async (sceneId, file) => {
+    const ref = await saveSceneImage(file);
+    if (!ref) return;
+    const old = stageScenesOf(campaignStage).find((x) => x.id === sceneId)?.image;
+    if (old && old.startsWith("img:")) safeSet("campaign-img:" + old.slice(4), "", true);
+    updateScene(sceneId, { image: ref });
+  };
+  const addSceneFromFile = async (file) => {
+    const ref = await saveSceneImage(file);
+    if (!ref || !viewingCampaignId) return;
+    const sc = { id: "s" + Date.now(), title: (file.name || "Nueva escena").replace(/\.[^.]+$/, "").slice(0, 60), image: ref };
+    saveStage(viewingCampaignId, { scenes: [...stageScenesOf(campaignStage), sc], activeSceneId: activeSceneIdOf(campaignStage) });
+  };
   const addScene = (preset) => {
     if (!viewingCampaignId) return;
     const sc = { id: "s" + Date.now(), title: preset?.title || "Nueva escena", image: preset?.image || "" };
@@ -11562,6 +11634,8 @@ export default function App({ onSignOut }) {
   };
 
   const removeScene = (id) => {
+    const gone = stageScenesOf(campaignStage).find((x) => x.id === id)?.image;
+    if (gone && gone.startsWith("img:")) safeSet("campaign-img:" + gone.slice(4), "", true);
     const scenes = stageScenesOf(campaignStage).filter((sc) => sc.id !== id);
     const wasActive = activeSceneIdOf(campaignStage) === id;
     saveStage(viewingCampaignId, { scenes, activeSceneId: wasActive ? null : activeSceneIdOf(campaignStage), ...(wasActive ? { scene: { title: "", image: "" } } : {}) });
@@ -17124,7 +17198,7 @@ export default function App({ onSignOut }) {
                                     <>
                                       <div
                                         className={"mh-stg-scene" + (scene.image ? "" : " is-blank") + (wide ? " is-wide" : "")}
-                                        style={scene.image ? { backgroundImage: `url("${scene.image.replace(/"/g, "%22")}")` } : undefined}
+                                        style={bgStyle(scene.image)}
                                       >
                                         {dlg ? (
                                           renderDialogue(wide)
@@ -17149,7 +17223,7 @@ export default function App({ onSignOut }) {
                                       <div className="mh-map-stage">
                                         <MapViewport focus={myToken ? { x: myToken.x, y: myToken.y } : null}>
                                           <MapBoard
-                                            bg={scene.image}
+                                            bg={imgSrc(scene.image)}
                                             props={campaignMap.props || []}
                                             terrain={campaignMap.terrain || []}
                                             fx={campaignMap.fx} efx={campaignMap.efx} hfx={campaignMap.hfx} spot={campaignMap.spot}
@@ -24326,14 +24400,15 @@ export default function App({ onSignOut }) {
                             <Clapperboard size={15} /> Escenas
                             {scenes.length > 0 && <span className="mh-gm-count">{scenes.length}</span>}
                           </div>
-                          <div className="mh-gm-sub">Prepara las escenas de la sesión y pulsa «Mostrar» en la que quieras que vean los jugadores.</div>
+                          <div className="mh-gm-sub">Prepara las escenas de la sesión y pulsa «Mostrar» en la que quieras que vean los jugadores. Puedes subir tus propias imágenes.</div>
+                          {sceneError && <div className="mh-gm-sub" style={{ color: "#D9644E" }}>{sceneError}</div>}
                           <div className="mh-gm-scenes">
                             {scenes.map((sc) => {
                               const isLive = sc.id === activeSceneId;
                               const editing = editingSceneId === sc.id;
                               return (
                                 <div key={sc.id} className={"mh-gm-sc" + (isLive ? " is-live" : "")}>
-                                  <div className={"mh-gm-sc-img" + (sc.image ? "" : " is-blank")} style={sc.image ? { backgroundImage: `url("${sc.image.replace(/"/g, "%22")}")` } : undefined}>
+                                  <div className={"mh-gm-sc-img" + (sc.image ? "" : " is-blank")} style={bgStyle(sc.image)}>
                                     {isLive && (
                                       <span className="mh-stg-live">
                                         <i />
@@ -24344,7 +24419,11 @@ export default function App({ onSignOut }) {
                                   {editing ? (
                                     <div className="mh-gm-sc-edit">
                                       <input className="mh-input" aria-label="Título de la escena" placeholder="Título" value={sc.title} onChange={(e) => updateScene(sc.id, { title: e.target.value })} autoFocus />
-                                      <input className="mh-input" aria-label="Enlace de la imagen" placeholder="Imagen (enlace https://…)" value={sc.image} onChange={(e) => updateScene(sc.id, { image: e.target.value })} />
+                                      <input className="mh-input" aria-label="Enlace de la imagen" placeholder={sc.image && sc.image.startsWith("img:") ? "Imagen subida (pega un enlace para cambiarla)" : "Imagen (enlace https://…)"} value={sc.image && sc.image.startsWith("img:") ? "" : sc.image} onChange={(e) => updateScene(sc.id, { image: e.target.value })} />
+                                      <label className="mh-btn-ghost" style={{ cursor: "pointer", justifyContent: "center" }}>
+                                        <Upload size={13} /> Subir imagen
+                                        <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { uploadSceneImg(sc.id, e.target.files?.[0]); e.target.value = ""; }} />
+                                      </label>
                                       <button type="button" className="mh-btn-ghost" onClick={() => setEditingSceneId(null)}>
                                         <Check size={13} /> Listo
                                       </button>
@@ -24374,10 +24453,16 @@ export default function App({ onSignOut }) {
                                 </div>
                               );
                             })}
+                            <label className="mh-gm-sc-add" style={{ cursor: "pointer" }}>
+                              <Upload size={18} />
+                              Subir imagen
+                              <small>JPG, PNG o WebP desde tu equipo</small>
+                              <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { addSceneFromFile(e.target.files?.[0]); e.target.value = ""; }} />
+                            </label>
                             <button type="button" className="mh-gm-sc-add" onClick={() => addScene()}>
                               <Plus size={18} />
                               Escena en blanco
-                              <small>con tu propia imagen</small>
+                              <small>con un enlace a una imagen</small>
                             </button>
                           </div>
                           <div className="mh-gm-h2">Plantillas</div>
@@ -24477,7 +24562,7 @@ export default function App({ onSignOut }) {
                                 const sceneBg = stage.scene?.image;
                                 const figId = who ? castImgIdFor(who, dialogueDraft.expr || "tranquila") : null;
                                 return (
-                                  <div className={"mh-gm-dlg-prev" + (sceneBg ? "" : " is-blank")} style={sceneBg ? { backgroundImage: `url("${sceneBg.replace(/"/g, "%22")}")` } : undefined}>
+                                  <div className={"mh-gm-dlg-prev" + (sceneBg ? "" : " is-blank")} style={bgStyle(sceneBg)}>
                                     {who ? (
                                       <div className="mh-dlg is-mini">
                                         <DialogueFigure key={who.id} src={castImgs[figId]} alt="" expr={dialogueDraft.expr || "tranquila"} />
@@ -24579,7 +24664,7 @@ export default function App({ onSignOut }) {
                                               setEditingConvId(null);
                                             }}
                                           >
-                                            <span className={"mh-gm-cvscene-img" + (sc.image ? "" : " is-blank")} style={sc.image ? { backgroundImage: `url("${sc.image.replace(/"/g, "%22")}")` } : undefined} />
+                                            <span className={"mh-gm-cvscene-img" + (sc.image ? "" : " is-blank")} style={bgStyle(sc.image)} />
                                             <span className="mh-gm-cvscene-t">{sc.title}</span>
                                             {sc.id === activeSceneIdOf(stage) && <i className="mh-stg-dot" title="En pantalla" />}
                                             <span className="mh-gm-count">{n}</span>
@@ -24930,7 +25015,7 @@ export default function App({ onSignOut }) {
                         <div className="mh-map-zoomwrap">
                         <MapViewport focus={null}>
                         <MapBoard
-                          bg={campaignStage.scene?.image}
+                          bg={imgSrc(campaignStage.scene?.image)}
                           props={campaignMap.props || []}
                           terrain={campaignMap.terrain || []}
                           stampTool={stampTool}
