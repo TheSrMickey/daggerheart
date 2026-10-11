@@ -3,11 +3,11 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, useGLTF, useTexture, Stars } from "@react-three/drei";
-import { MOUSE, Vector3, SRGBColorSpace, Color, Fog, CanvasTexture } from "three";
-import { Paintbrush, RotateCw, Tag, Eraser, Crosshair, Sprout, Trash2, Eye, EyeOff, Globe, Dices, Flag, Sun, Snowflake, Leaf, Sunrise, Sunset, Moon, CloudRain, CloudLightning, CloudFog, Repeat } from "lucide-react";
+import { MOUSE, Vector3, SRGBColorSpace, Color, Fog, CanvasTexture, Matrix4 } from "three";
+import { Paintbrush, RotateCw, Tag, Eraser, Crosshair, Sprout, Trash2, Eye, EyeOff, Globe, Dices, Flag, Sun, Snowflake, Leaf, Sunrise, Sunset, Moon, CloudRain, CloudLightning, CloudFog, Repeat, KeyRound, Footprints, Tent } from "lucide-react";
 import { useDoc } from "@/lib/campaignDocs";
 import { generateWorld } from "@/lib/worldGen";
-import { worldKey, WORLD_RADIUS, WORLD_CATS, WORLD_ITEMS, WORLD_ITEM, WORLD_THEMES, hexPos, cellsInRadius } from "@/lib/worldCatalog";
+import { worldKey, WORLD_RADIUS, WORLD_CATS, WORLD_ITEMS, WORLD_ITEM, WORLD_THEMES, HABITATS, TERRAIN_NAMES, ENCOUNTERS, HEX_DIRS, rollEncounterName, rollDice, nowMs, defaultTerrain, hexPos, cellsInRadius } from "@/lib/worldCatalog";
 
 // Mapa de mundo: casillas hexagonales en 3D (Three.js con React Three Fiber y el Hexagon Kit de Kenney).
 // El DJ lo dibuja y los jugadores lo ven (y lo giran) cuando lo pone en directo.
@@ -255,6 +255,53 @@ function Weather({ kind }) {
   );
 }
 
+// Casilla aún sin explorar: una losa gris oscura con relieve plano.
+function FogHex({ q, r }) {
+  const [x, z] = hexPos(q, r);
+  return (
+    <mesh position={[x, 0.06, z]}>
+      <cylinderGeometry args={[0.55, 0.55, 0.12, 6]} />
+      <meshStandardMaterial color="#262b41" roughness={1} />
+    </mesh>
+  );
+}
+
+// Puntitos de la clave del DJ: tantos como el rango de terreno de cada casilla y un aviso rojo si lleva encuentro.
+const PIP_COL = ["#4CC36B", "#E3B04B", "#e07a5f", "#c0392b"];
+function fillMarks(mesh, items) {
+  const m = new Matrix4(), c = new Color();
+  let i = 0;
+  for (const it of items) {
+    for (let j = 0; j < it.n; j++) {
+      m.makeTranslation(it.x + (j - (it.n - 1) / 2) * 0.17, it.y, it.z + 0.3);
+      mesh.setMatrixAt(i, m);
+      mesh.setColorAt(i, c.set(PIP_COL[Math.min(3, Math.max(0, it.n - 1))]));
+      i++;
+    }
+    if (it.enc) {
+      m.makeScale(1.7, 1.7, 1.7).setPosition(it.x + 0.36, it.y + 0.05, it.z - 0.12);
+      mesh.setMatrixAt(i, m);
+      mesh.setColorAt(i, c.set("#ff3b30"));
+      i++;
+    }
+  }
+  mesh.count = i;
+  mesh.instanceMatrix.needsUpdate = true;
+  if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+}
+function KeyMarks({ items }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    if (ref.current) fillMarks(ref.current, items);
+  }, [items]);
+  return (
+    <instancedMesh ref={ref} args={[undefined, undefined, 1800]} frustumCulled={false}>
+      <sphereGeometry args={[0.055, 10, 8]} />
+      <meshBasicMaterial />
+    </instancedMesh>
+  );
+}
+
 function Tile({ q, r, t, theme, weather }) {
   // Con nieve, las montañas y colinas se cubren de blanco (variante de invierno) aunque el resto siga en su estación.
   const snowy = weather === "nieve" && SNOWY.has(t.t);
@@ -307,10 +354,10 @@ function FitCamera({ extent, controlsRef }) {
 
 const topOf = (t) => (WORLD_ITEM[t?.t]?.h || 0.2) + (t?.d && t.d.startsWith("unit-") ? 0.3 : 0);
 
-function Scene({ tiles, edit, hover, setHover, onCell, selCell, controlsRef, labels, place, theme, party, moving, onParty, atmos }) {
+function Scene({ tiles, edit, hover, setHover, onCell, selCell, controlsRef, labels, place, theme, party, moving, onParty, atmos, fogged, ghostKeys, marks }) {
   const [night, setNight] = useState(false);
   const weather = atmos.weather || "despejado";
-  const ghosts = edit ? CELLS : moving ? CELLS.filter(([q, r]) => tiles[q + "," + r]) : [];
+  const ghosts = edit ? CELLS : moving ? CELLS.filter(([q, r]) => (ghostKeys ? ghostKeys.has(q + "," + r) : tiles[q + "," + r])) : [];
   const pk = party ? party.q + "," + party.r : null;
   const [px, pz] = party ? hexPos(party.q, party.r) : [0, 0];
   return (
@@ -320,8 +367,9 @@ function Scene({ tiles, edit, hover, setHover, onCell, selCell, controlsRef, lab
       {(weather === "lluvia" || weather === "tormenta" || weather === "nieve") && <Weather kind={weather} />}
       {Object.entries(tiles).map(([key, t]) => {
         const [q, r] = key.split(",").map(Number);
-        return <Tile key={key} q={q} r={r} t={t} theme={theme} weather={weather} />;
+        return fogged && fogged.has(key) ? <FogHex key={key} q={q} r={r} /> : <Tile key={key} q={q} r={r} t={t} theme={theme} weather={weather} />;
       })}
+      {marks && marks.length > 0 && <KeyMarks items={marks} />}
       {party && pk && tiles[pk] && <Party x={px} z={pz} top={topOf(tiles[pk])} grabbed={moving} onPick={onParty} />}
       {ghosts.map(([q, r]) => {
           const [x, z] = hexPos(q, r);
@@ -365,13 +413,16 @@ const WEATHER_ICONS = { despejado: Sun, lluvia: CloudRain, tormenta: CloudLightn
 const WEATHER_LABELS = { despejado: "Despejado", lluvia: "Lluvia", tormenta: "Tormenta", nieve: "Nieve", niebla: "Niebla" };
 
 const TOOLS = [
+  { key: "clave", label: "Clave", Icon: KeyRound },
   { key: "pintar", label: "Pintar", Icon: Paintbrush },
   { key: "girar", label: "Girar", Icon: RotateCw },
   { key: "nombrar", label: "Nombrar", Icon: Tag },
   { key: "borrar", label: "Borrar", Icon: Eraser },
 ];
 
-export default function WorldMap({ campaignId, edit = false }) {
+const around = (q, r) => Object.fromEntries([[q + "," + r, true], ...HEX_DIRS.map(([dq, dr]) => [q + dq + "," + (r + dr), true])]);
+
+export default function WorldMap({ campaignId, edit = false, onLog }) {
   const [doc, update] = useDoc(worldKey(campaignId), EMPTY, 4000);
   const [opt, setOpt] = useState(null);
   const pending = useRef(0);
@@ -383,6 +434,15 @@ export default function WorldMap({ campaignId, edit = false }) {
   const [brushRot, setBrushRot] = useState(0);
   const [selCell, setSelCell] = useState(null);
   const [moving, setMoving] = useState(false);
+  const [preview, setPreview] = useState(false); // el DJ ve el mapa como lo ven los jugadores
+  const [showKey, setShowKey] = useState(false);
+  const [toast, setToast] = useState("");
+  const toastT = useRef(null);
+  const flash = (msg) => {
+    setToast(msg);
+    clearTimeout(toastT.current);
+    toastT.current = setTimeout(() => setToast(""), 3500);
+  };
   const labelRefs = useRef({});
   // Mueve el nombre de una casilla a su posición en pantalla (se llama en cada fotograma).
   const place = (key, x, y, vis) => {
@@ -396,8 +456,21 @@ export default function WorldMap({ campaignId, edit = false }) {
   const theme = cur.theme || "verano";
   const atmos = cur.atmos || {};
   const party = cur.party || null;
+  const info = cur.info || {};
+  const travel = !!cur.travel;
+  const fogOn = !!cur.fog;
+  const day = cur.day || 1;
+  const rests = cur.rests || 0;
+  const lastRoll = cur.lastRoll || null;
+  const asPlayer = !edit || preview;
+  // Niebla: el grupo conoce su hex y los contiguos, y todo lo que ya ha descubierto.
+  const known = fogOn && asPlayer ? { ...(cur.explored || {}), ...(party ? around(party.q, party.r) : {}) } : null;
+  const fogged = known ? new Set(Object.keys(tiles).filter((k) => !known[k])) : null;
+  const pKey = party ? party.q + "," + party.r : null;
+  const nearKeys = party ? new Set(HEX_DIRS.map(([dq, dr]) => party.q + dq + "," + (party.r + dr))) : null;
+  const ghostKeys = travel && party && moving ? new Set([...nearKeys].filter((k) => tiles[k])) : null;
   const labels = Object.entries(tiles)
-    .filter(([, t]) => t.n && (!t.h || edit))
+    .filter(([key, t]) => t.n && (!t.h || edit) && !(fogged && fogged.has(key)))
     .map(([key, t]) => {
       const [q, r] = key.split(",").map(Number);
       const [x, z] = hexPos(q, r);
@@ -407,6 +480,18 @@ export default function WorldMap({ campaignId, edit = false }) {
     const [x, z] = hexPos(party.q, party.r);
     labels.push({ key: "party", x, z, y: topOf(tiles[party.q + "," + party.r]) + 0.95, n: "Grupo", party: true });
   }
+  // Con las reglas de viaje, al agarrar al grupo cada hex contiguo muestra cuántos días cuesta entrar.
+  if (travel && moving && nearKeys) {
+    for (const k of nearKeys) {
+      const t = tiles[k];
+      if (!t) continue;
+      const [q, r] = k.split(",").map(Number);
+      const [x, z] = hexPos(q, r);
+      const ter = info[k]?.ter || defaultTerrain(t);
+      labels.push({ key: "adj:" + k, x, z, y: topOf(t) + 0.3, n: ter === 0 ? "mar · d4" : ter + (ter === 1 ? " día" : " días"), adj: ter });
+    }
+  }
+  const marks = edit && showKey && !preview ? Object.entries(tiles).map(([k, t]) => { const [q, r] = k.split(",").map(Number); const [x, z] = hexPos(q, r); return { x, z, y: topOf(t) + 0.1, n: info[k]?.ter || defaultTerrain(t), enc: !!info[k]?.enc }; }) : null;
   const count = Object.keys(tiles).length;
 
   // El cambio se ve al momento y se guarda en segundo plano.
@@ -427,15 +512,64 @@ export default function WorldMap({ campaignId, edit = false }) {
       return { ...d, tiles: ts };
     });
 
+  const setInfo = (key, patch) => apply((d) => ({ ...d, info: { ...(d.info || {}), [key]: { ...((d.info || {})[key] || {}), ...patch } } }));
   const moveParty = (key) => {
     if (!tiles[key]) return;
     const [q, r] = key.split(",").map(Number);
-    apply((d) => ({ ...d, party: { q, r } }));
+    if (travel && party) {
+      if (!nearKeys.has(key)) return flash("Con las reglas de viaje solo se puede ir a un hex contiguo.");
+      const tile = tiles[key];
+      let ter = info[key]?.ter || defaultTerrain(tile);
+      let days = ter, sea = "";
+      if (ter === 0) {
+        days = rollDice(1, 4)[0];
+        ter = days;
+        sea = " (mar abierto: tiempo " + days + ")";
+      }
+      const dice = rollDice(ter);
+      const hit = dice.includes(1);
+      const roll = { dice, hit, key, days, enc: hit ? info[key]?.enc || null : null, at: nowMs() };
+      apply((d) => ({ ...d, party: { q, r }, day: (d.day || 1) + days, explored: { ...(d.explored || {}), ...around(q, r) }, lastRoll: roll }));
+      onLog?.("El grupo viaja a " + (tile.n || "un hex nuevo") + ": " + days + (days === 1 ? " día" : " días") + sea + ". Dados de encuentro (" + ter + "d6): " + dice.join(", ") + " → " + (hit ? "¡sale un 1! Se activa un encuentro" : "sin encuentro") + ".");
+    } else {
+      apply((d) => ({ ...d, party: { q, r }, explored: { ...(d.explored || {}), ...around(q, r) } }));
+    }
     setMoving(false);
+  };
+  // Descansos del viaje: fuera de un santuario solo cortos (1 día cada uno, máximo 3 seguidos); el largo, en un santuario.
+  const restNow = (kind) => {
+    if (kind === "corto") {
+      if (rests >= 3) return flash("Ya son 3 descansos cortos seguidos: el siguiente debe ser largo, en un santuario.");
+      apply((d) => ({ ...d, day: (d.day || 1) + 1, rests: (d.rests || 0) + 1 }));
+      onLog?.("El grupo hace un descanso corto (1 día). Descansos cortos seguidos: " + (rests + 1) + "/3.");
+      return;
+    }
+    const here = pKey && tiles[pKey];
+    const sanctuary = here && (here.t.startsWith("building-") || info[pKey]?.sanc);
+    if (!sanctuary && !edit) return flash("El descanso largo solo se hace en un santuario.");
+    apply((d) => ({ ...d, day: (d.day || 1) + 3, rests: 0 }));
+    onLog?.("El grupo hace un descanso largo (3 días)" + (sanctuary ? " en un santuario" : "") + ".");
+  };
+  const copyKey = (inf) => {
+    const [q0, r0] = selCell.split(",").map(Number);
+    const base = tiles[selCell];
+    apply((d) => {
+      const next = { ...(d.info || {}) };
+      for (const [dq, dr] of HEX_DIRS) {
+        const k = q0 + dq + "," + (r0 + dr);
+        const t = (d.tiles || {})[k];
+        if (t && base && t.t === base.t && !next[k]) next[k] = { hab: inf.hab, ter: inf.ter };
+      }
+      return { ...d, info: next };
+    });
+  };
+  const forceEncounter = () => {
+    apply((d) => ({ ...d, lastRoll: { ...(d.lastRoll || {}), hit: true, enc: (d.info || {})[(d.lastRoll || {}).key]?.enc || null } }));
+    onLog?.("El DJ gasta Miedo y activa un encuentro.");
   };
   const onCell = (key) => {
     if (moving) return moveParty(key);
-    if (tool === "nombrar") return setSelCell(key);
+    if (tool === "nombrar" || tool === "clave") return setSelCell(key);
     if (tool === "borrar") return setTile(key, (t) => (t && t.d ? { ...t, d: undefined, dr: undefined } : null));
     if (tool === "girar") return setTile(key, (t) => (t ? (t.d ? { ...t, dr: ((t.dr || 0) + 1) % 6 } : { ...t, r: ((t.r || 0) + 1) % 6 }) : t));
     const item = WORLD_ITEM[sel];
@@ -468,11 +602,11 @@ export default function WorldMap({ campaignId, edit = false }) {
   const stage = (
     <div className="wm-stage">
       <Canvas camera={{ position: [0, 9, 10], fov: 40 }} dpr={[1, 1.75]} gl={{ antialias: true }}>
-        <Scene tiles={tiles} edit={edit} hover={hover} setHover={setHover} onCell={onCell} selCell={tool === "nombrar" ? selCell : null} controlsRef={controlsRef} labels={labels} place={place} theme={theme} party={party} moving={moving} onParty={() => setMoving((m) => !m)} atmos={atmos} />
+        <Scene tiles={tiles} edit={edit} hover={hover} setHover={setHover} onCell={onCell} selCell={tool === "nombrar" || tool === "clave" ? selCell : null} controlsRef={controlsRef} labels={labels} place={place} theme={theme} party={party} moving={moving} onParty={() => setMoving((m) => !m)} atmos={atmos} fogged={fogged} ghostKeys={ghostKeys} marks={marks} />
       </Canvas>
       <div className="wm-labels" aria-hidden="true">
         {labels.map((l) => (
-          <div key={l.key} ref={(el) => (labelRefs.current[l.key] = el)} className={"wm-lbl" + (l.h ? " is-hidden" : "") + (l.party ? " is-party" : "")} style={{ opacity: 0 }}>
+          <div key={l.key} ref={(el) => (labelRefs.current[l.key] = el)} className={"wm-lbl" + (l.h ? " is-hidden" : "") + (l.party ? " is-party" : "") + (l.adj !== undefined ? " is-adj a" + l.adj : "")} style={{ opacity: 0 }}>
             {l.h && <EyeOff size={11} />}
             {l.n}
           </div>
@@ -501,9 +635,35 @@ export default function WorldMap({ campaignId, edit = false }) {
           {atmos.weather && atmos.weather !== "despejado" && (() => { const W = WEATHER_ICONS[atmos.weather] || CloudRain; return <><W size={12} /><span>{WEATHER_LABELS[atmos.weather]}</span></>; })()}
         </div>
       )}
+      {toast && <div className="wm-toast">{toast}</div>}
+      {travel && (
+        <div className="wm-trip">
+          <div className="wm-trip-h">
+            <b>Día {day}</b>
+            {party && tiles[pKey] && (() => { const ter = info[pKey]?.ter || defaultTerrain(tiles[pKey]); return <span>{ter === 0 ? "Mar abierto" : "Terreno " + TERRAIN_NAMES[ter].toLowerCase()}</span>; })()}
+          </div>
+          <div className="wm-trip-r">
+            <Tent size={12} /> Descansos cortos
+            {[0, 1, 2].map((i) => <i key={i} className={i < rests ? "on" : ""} />)}
+            <span>{rests}/3</span>
+          </div>
+          {lastRoll && (
+            <div className={"wm-trip-d" + (lastRoll.hit ? " is-hit" : "")}>
+              {lastRoll.dice.map((v, i) => <i key={i} className={v === 1 ? "one" : ""}>{v}</i>)}
+              <span>{lastRoll.hit ? "¡Encuentro!" : "Sin encuentro"}</span>
+              {edit && lastRoll.enc && <em>{lastRoll.enc}</em>}
+            </div>
+          )}
+          <div className="wm-trip-b">
+            <button type="button" onClick={() => restNow("corto")}>Descanso corto</button>
+            <button type="button" onClick={() => restNow("largo")}>Descanso largo</button>
+            {edit && lastRoll && !lastRoll.hit && <button type="button" onClick={forceEncounter} title="El DJ puede gastar Miedo para activar un encuentro aunque no salga un 1">Activar encuentro</button>}
+          </div>
+        </div>
+      )}
       {moving && (
         <div className="wm-banner">
-          <Flag size={13} /> Pulsa la casilla a la que quieres llevar al grupo
+          <Flag size={13} /> {travel ? "Pulsa un hex contiguo para viajar" : "Pulsa la casilla a la que quieres llevar al grupo"}
           <button type="button" onClick={() => setMoving(false)}>Cancelar</button>
         </div>
       )}
@@ -564,6 +724,20 @@ export default function WorldMap({ campaignId, edit = false }) {
           </button>
         </div>
         <div className="wm-sec">
+          <span className="wm-lab">Viaje por hexágonos (opcional)</span>
+          <label className="wm-chk"><input type="checkbox" checked={travel} onChange={(e) => apply((d) => ({ ...d, travel: e.target.checked }))} /><Footprints size={13} /> Reglas de viaje: días, dados de encuentro y descansos</label>
+          <label className="wm-chk"><input type="checkbox" checked={fogOn} onChange={(e) => apply((d) => ({ ...d, fog: e.target.checked }))} /><Eye size={13} /> Niebla: los jugadores solo ven lo que descubren</label>
+          <div className="wm-row2" style={{ justifyContent: "flex-start" }}>
+            <button type="button" className={"mh-btn-ghost" + (preview ? " is-on" : "")} onClick={() => setPreview((v) => !v)} title="Mira el mapa como lo ven los jugadores">Ver como jugadores</button>
+            <button type="button" className={"mh-btn-ghost" + (showKey ? " is-on" : "")} onClick={() => setShowKey((v) => !v)} title="Muestra el rango de terreno (puntos) y los encuentros preparados (rojo)">Ver clave</button>
+          </div>
+          {(travel || fogOn) && (
+            <button type="button" className="mh-btn-ghost" onClick={() => window.confirm("¿Reiniciar el viaje (día 1, sin explorar)?") && apply((d) => ({ ...d, day: 1, rests: 0, explored: {}, lastRoll: null }))}>
+              Reiniciar viaje
+            </button>
+          )}
+        </div>
+        <div className="wm-sec">
           <span className="wm-lab">Herramienta</span>
           <div className="mh-seg is-fit">
             {TOOLS.map((t) => (
@@ -594,6 +768,45 @@ export default function WorldMap({ campaignId, edit = false }) {
             <RotateCw size={13} /> Orientación de la pieza: {brushRot * 60}°
           </button>
         </div>
+        {tool === "clave" && (
+          <div className="wm-sec">
+            <span className="wm-lab">Clave de la casilla</span>
+            {cell ? (() => {
+              const inf = info[selCell] || {};
+              const auto = defaultTerrain(cell);
+              return (
+                <>
+                  <label className="wm-f">Hábitat
+                    <select className="mh-input" value={inf.hab || ""} onChange={(e) => setInfo(selCell, { hab: e.target.value || undefined })}>
+                      <option value="">—</option>
+                      {HABITATS.map((h) => <option key={h}>{h}</option>)}
+                    </select>
+                  </label>
+                  <label className="wm-f">Terreno (días para entrar)
+                    <select className="mh-input" value={inf.ter || ""} onChange={(e) => setInfo(selCell, { ter: Number(e.target.value) || undefined })}>
+                      <option value="">Automático ({auto === 0 ? "mar" : TERRAIN_NAMES[auto]})</option>
+                      {[1, 2, 3, 4].map((n) => <option key={n} value={n}>{TERRAIN_NAMES[n]} · {n} {n === 1 ? "día" : "días"}</option>)}
+                    </select>
+                  </label>
+                  <label className="wm-f">Encuentro preparado
+                    <span className="wm-row2" style={{ justifyContent: "flex-start", flexWrap: "nowrap" }}>
+                      <select className="mh-input" style={{ flex: 1, minWidth: 0 }} value={inf.enc || ""} onChange={(e) => setInfo(selCell, { enc: e.target.value || undefined })}>
+                        <option value="">Ninguno</option>
+                        {ENCOUNTERS.map((x) => <option key={x}>{x}</option>)}
+                      </select>
+                      <button type="button" className="mh-btn-ghost" onClick={() => setInfo(selCell, { enc: rollEncounterName() })} title="Tira d8 + d6 en la tabla de encuentros"><Dices size={13} /></button>
+                    </span>
+                  </label>
+                  <label className="wm-f">Rumor
+                    <input key={selCell + "r"} className="mh-input" defaultValue={inf.rumor || ""} placeholder="Algo que se cuenta de esta zona" maxLength={120} onBlur={(e) => { const v = e.target.value.trim(); if (v !== (inf.rumor || "")) setInfo(selCell, { rumor: v || undefined }); }} onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()} />
+                  </label>
+                  <label className="wm-chk"><input type="checkbox" checked={!!inf.sanc} onChange={(e) => setInfo(selCell, { sanc: e.target.checked || undefined })} /> Santuario (permite descanso largo)</label>
+                  <button type="button" className="mh-btn-ghost" onClick={() => copyKey(inf)}>Copiar hábitat y terreno a las vecinas iguales</button>
+                </>
+              );
+            })() : <p className="wm-note">Pulsa una casilla con terreno para rellenar su ficha (solo la ve el DJ).</p>}
+          </div>
+        )}
         {tool === "nombrar" && (
           <div className="wm-sec">
             <span className="wm-lab">Nombre del lugar</span>
@@ -627,7 +840,7 @@ export default function WorldMap({ campaignId, edit = false }) {
           </button>
         </div>
         <p className="wm-note">
-          <Eye size={12} /> Los jugadores ven este mapa cuando lo pones en directo desde «Mesa». {count} casilla{count === 1 ? "" : "s"}.
+          <Eye size={12} /> Los jugadores ven este mapa cuando lo pones en directo desde «Mesa». {count} casilla{count === 1 ? "" : "s"}. La clave del DJ (hábitat, rumores…) se guarda en el mismo documento: no es un secreto técnico.
         </p>
       </aside>
     </div>

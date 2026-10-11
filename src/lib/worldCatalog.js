@@ -8,6 +8,30 @@ export const WORLD_THEMES = [
   { k: "otono", n: "Otoño" },
 ];
 
+// Reglas de viaje por hexágonos (hex crawl) y clave del DJ.
+export const HABITATS = ["Corrompido por la sombra", "Subterráneo", "Acuático", "Pantano", "Pradera", "Tropical", "Bosque", "Tierras secas", "Colinas", "Montaña", "Helado", "Páramo"];
+export const TERRAIN_NAMES = { 1: "Óptimo", 2: "Justo", 3: "Áspero", 4: "Extremo" };
+export const ENCOUNTERS = ["Dos encuentros a la vez", "Viajeros", "Contratiempo", "Clima extremo", "Adversarios", "Guarida de bestias", "Peligro del entorno", "Facción enemiga", "Lugar de interés", "Golpe de suerte", "Asentamiento", "Tesoro"];
+// d8 + d6 → entrada de la tabla (las sumas bajas se agrupan; las centrales son las más probables).
+export const rollEncounterName = () => {
+  const sum = 2 + Math.floor(Math.random() * 8) + Math.floor(Math.random() * 6);
+  return ENCOUNTERS[Math.max(0, Math.min(11, sum <= 3 ? 0 : sum - 3))];
+};
+// Rango de terreno por defecto de una casilla (0 = mar abierto: los días salen de un d4). El DJ puede cambiarlo en la clave.
+export const defaultTerrain = (tile) => {
+  if (!tile) return 2;
+  const k = tile.t || "grass";
+  if (tile.d && tile.d.startsWith("path-")) return 1;
+  if (k === "bridge" || k.startsWith("building-")) return 1;
+  if (k.startsWith("water")) return 0;
+  if (k === "stone-mountain") return 4;
+  if (/forest|hill|desert|rocks|lumber|river|^stone$/.test(k)) return 3;
+  return 2;
+};
+export const rollDice = (n, sides = 6) => Array.from({ length: n }, () => 1 + Math.floor(Math.random() * sides));
+export const nowMs = () => Date.now();
+export const HEX_DIRS = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]];
+
 export const WORLD_CATS = [
   { key: "terreno", label: "Terreno" },
   { key: "lugares", label: "Lugares" },

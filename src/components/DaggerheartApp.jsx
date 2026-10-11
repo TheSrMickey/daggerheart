@@ -3778,6 +3778,14 @@ const sharedStyles = `
   .wm-banner { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 3; display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 99px; background: rgba(10,14,24,.9); border: 1px solid #E3B04B; color: #f3e6c4; font: 600 12px 'Inter', system-ui, sans-serif; white-space: nowrap; } .wm-banner button { all: unset; cursor: pointer; padding: 2px 8px; border-radius: 99px; background: rgba(255,255,255,.12); font-size: 11px; }
   .wm-env { position: absolute; top: 10px; left: 10px; z-index: 3; display: flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 99px; background: rgba(10,14,24,.78); border: 1px solid rgba(255,255,255,.16); color: #dfe8ff; font: 600 11.5px 'Inter', system-ui, sans-serif; backdrop-filter: blur(4px); pointer-events: none; } .wm-env svg + span + svg { margin-left: 4px; }
   .mh-seg.wm-wrap { flex-wrap: wrap; } .mh-seg.wm-wrap button { flex: 1 1 44%; }
+  .wm-toast { position: absolute; left: 50%; bottom: 44px; transform: translateX(-50%); z-index: 4; max-width: 80%; padding: 8px 14px; border-radius: 12px; background: rgba(10,14,24,.94); border: 1px solid #c0392b; color: #ffd9d4; font: 600 12px 'Inter', system-ui, sans-serif; text-align: center; }
+  .wm-trip { position: absolute; left: 10px; bottom: 32px; z-index: 3; width: 232px; display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-radius: 12px; background: rgba(10,14,24,.84); border: 1px solid rgba(255,255,255,.16); color: #dfe8ff; font: 500 11px 'Inter', system-ui, sans-serif; backdrop-filter: blur(4px); }
+  .wm-trip-h { display: flex; align-items: baseline; justify-content: space-between; } .wm-trip-h b { font: 700 18px Georgia, serif; color: #E3B04B; } .wm-trip-h span { color: #9fa8cf; }
+  .wm-trip-r { display: flex; align-items: center; gap: 5px; color: #9fa8cf; } .wm-trip-r i { width: 11px; height: 11px; border-radius: 50%; border: 2px solid #44507a; } .wm-trip-r i.on { background: #E3B04B; border-color: #E3B04B; } .wm-trip-r span { margin-left: auto; color: #dfe8ff; font-weight: 700; }
+  .wm-trip-d { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; } .wm-trip-d i { font-style: normal; width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; background: #262c48; border: 1px solid #44507a; font-weight: 700; font-size: 12px; } .wm-trip-d i.one { background: #c0392b; border-color: #ff6b5e; color: #fff; } .wm-trip-d span { margin-left: 4px; font-weight: 700; } .wm-trip-d.is-hit span { color: #ff9b91; } .wm-trip-d em { flex-basis: 100%; font-style: normal; color: #E3B04B; font-weight: 600; }
+  .wm-trip-b { display: flex; gap: 6px; flex-wrap: wrap; } .wm-trip-b button { all: unset; cursor: pointer; padding: 4px 9px; border-radius: 8px; background: #262c48; border: 1px solid #44507a; font-size: 10.5px; font-weight: 600; } .wm-trip-b button:hover { border-color: #E3B04B; color: #E3B04B; }
+  .wm-lbl.is-adj { background: #16301f; border-color: #4CC36B; color: #bfeccb; } .wm-lbl.is-adj.a2 { background: #3a2f12; border-color: #E3B04B; color: #f3e6c4; } .wm-lbl.is-adj.a3 { background: #3a2216; border-color: #e07a5f; color: #ffd5c8; } .wm-lbl.is-adj.a4 { background: #3a1a1a; border-color: #c0392b; color: #f5c2bd; } .wm-lbl.is-adj.a0 { background: #16283a; border-color: #78bde0; color: #cfe8f7; }
+  .wm-f { display: flex; flex-direction: column; gap: 4px; font-size: 10.5px; color: var(--mh-muted); } .wm-f select, .wm-f input { font-size: 12px; }
   .wm-lbl.is-party { background: #E3B04B; border-color: #fff6; color: #1a1206; }
   .mh-btn-ghost.is-on { border-color: #E3B04B; color: #E3B04B; }
   .wm-load { padding: 40px; text-align: center; color: var(--mh-muted); font-size: 13px; }
@@ -17302,7 +17310,7 @@ export default function App({ onSignOut }) {
                                     empty(MapPinned, "El DJ todavía no ha preparado el mapa.")
                                   ))}
 
-                                {stTab === "mundo" && <WorldMap campaignId={charCampaign.id} />}
+                                {stTab === "mundo" && <WorldMap campaignId={charCampaign.id} onLog={(t) => postChat(charCampaign.id, { kind: "event", author: characters[viewingCharId]?.f_name || "El grupo", charId: viewingCharId, icon: "mundo", text: t })} />}
 
                                 {stTab === "pistas" &&
                                   (handouts.length ? (
@@ -24830,7 +24838,7 @@ export default function App({ onSignOut }) {
                     <div className="mh-card wm-card">
                       <div className="mh-gm-h"><Globe size={15} /> Mapa de mundo</div>
                       <div className="mh-gm-sub">Dibuja el mundo con casillas hexagonales en 3D. Cuando quieras enseñárselo a los jugadores, ponlo en directo desde «Mesa».</div>
-                      <WorldMap campaignId={viewingCampaignId} edit />
+                      <WorldMap campaignId={viewingCampaignId} edit onLog={(t) => postChat(viewingCampaignId, { kind: "event", author: "El DJ", gm: true, icon: "mundo", text: t })} />
                     </div>
                   )}
 
