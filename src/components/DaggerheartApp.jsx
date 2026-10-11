@@ -5526,6 +5526,19 @@ const sharedStyles = `
   }
   .mh-res-text { animation: mh-hit-text 1.2s cubic-bezier(.2,.8,.2,1) both, mh-res-jitter .3s ease 2; }
   @keyframes mh-res-jitter { 25% { margin-left: -4px; } 75% { margin-left: 4px; } }
+  /* Armadura: aparece un escudo azul y se rompe */
+  .mh-arm-fx { position: fixed; left: 50%; top: 42%; width: 130px; height: 130px; margin: -65px 0 0 -65px; z-index: 56; pointer-events: none; color: #5BA3F0; filter: drop-shadow(0 0 18px #4A8FD9aa); }
+  .mh-arm-half { position: absolute; inset: 0; opacity: 0; }
+  .mh-arm-half svg { display: block; }
+  .mh-arm-half.is-l { clip-path: polygon(0 0, 52% 0, 47% 28%, 55% 45%, 46% 68%, 53% 100%, 0 100%); animation: mh-arm-l 1.25s cubic-bezier(.3,.7,.3,1) both; }
+  .mh-arm-half.is-r { clip-path: polygon(52% 0, 100% 0, 100% 100%, 53% 100%, 46% 68%, 55% 45%, 47% 28%); animation: mh-arm-r 1.25s cubic-bezier(.3,.7,.3,1) both; }
+  @keyframes mh-arm-l { 0% { opacity: 0; transform: scale(.4); } 18% { opacity: 1; transform: scale(1.1); } 30% { transform: scale(1); } 46% { opacity: 1; transform: translate(0,0) rotate(0); } 100% { opacity: 0; transform: translate(-46px, 70px) rotate(-22deg); } }
+  @keyframes mh-arm-r { 0% { opacity: 0; transform: scale(.4); } 18% { opacity: 1; transform: scale(1.1); } 30% { transform: scale(1); } 46% { opacity: 1; transform: translate(0,0) rotate(0); } 100% { opacity: 0; transform: translate(46px, 78px) rotate(24deg); } }
+  .mh-arm-crack { position: absolute; inset: 0; opacity: 0; animation: mh-arm-crack 1.25s ease both; }
+  @keyframes mh-arm-crack { 0%, 30% { opacity: 0; } 38% { opacity: 1; } 55% { opacity: 1; } 70%, 100% { opacity: 0; } }
+  .mh-arm-txt { position: absolute; left: 50%; top: 100%; margin-top: 22px; white-space: nowrap; font: 700 30px 'Cinzel', Georgia, serif; color: #A9CFFF; text-shadow: 0 0 20px #4A8FD9, 0 2px 0 #000; opacity: 0; translate: -50% 0; animation: mh-arm-txt 1.25s ease both; }
+  @keyframes mh-arm-txt { 0%, 40% { opacity: 0; } 55% { opacity: 1; } 100% { opacity: 0; translate: -50% -20px; } }
+  .mh-sheet.is-embedded .mh-arm-fx { zoom: calc(1 / var(--mhz, 1)); }
   .mh-row-stress { animation: mh-row-jitter .4s ease both; }
   @keyframes mh-row-jitter { 0%, 100% { translate: 0 0; } 25% { translate: -4px 0; } 50% { translate: 4px 0; } 75% { translate: -2px 0; } }
   .mh-row-glow { animation: mh-row-glow .9s ease-out both; border-radius: 10px; }
@@ -5542,7 +5555,7 @@ const sharedStyles = `
   .mh-hit-text, .mh-res-text { z-index: 56; }
   .mh-sheet.is-embedded .mh-overlay, .mh-sheet.is-embedded .mh-hit-flash, .mh-sheet.is-embedded .mh-res-flash, .mh-sheet.is-embedded .mh-hit-text, .mh-sheet.is-embedded .mh-res-text, .mh-sheet.is-embedded .mh-beast-bg { zoom: calc(1 / var(--mhz, 1)); }
   @media (prefers-reduced-motion: reduce) {
-    .mh-rampage::before, .mh-rampage-card, .mh-rampage-title, .mh-hit-flash, .mh-hit-text, .mh-shake, .mh-res-flash, .mh-res-text, .mh-row-stress, .mh-row-glow { animation: none !important; }
+    .mh-rampage::before, .mh-rampage-card, .mh-rampage-title, .mh-hit-flash, .mh-hit-text, .mh-shake, .mh-res-flash, .mh-res-text, .mh-row-stress, .mh-row-glow, .mh-arm-half, .mh-arm-crack, .mh-arm-txt { animation: none !important; }
     .mh-hit-flash, .mh-hit-text { display: none; }
     .mh-beast, .mh-beast-bg, .mh-beast-ring, .mh-claws, .mh-beast-layer { animation: none !important; }
     .mh-beast-ring, .mh-claws { display: none; }
@@ -13745,7 +13758,6 @@ export default function App({ onSignOut }) {
               ["stress", "Estrés", "#A58BE8", "mh-res-stress"],
               ["hope", "Esperanza", "#E3B04B", "mh-res-hope"],
               ["favor", "Favor", "#B55FA0", "mh-res-favor"],
-              ["armor", "Armadura", "var(--acc)", "mh-res-armor"],
             ].map(([kind, label, col, cls], i) => {
               const fx = resFx[kind];
               if (!fx || fx.id !== viewingCharId) return null;
@@ -13753,11 +13765,22 @@ export default function App({ onSignOut }) {
                 <Fragment key={kind}>
                   <div key={"f" + fx.key} className={"mh-res-flash " + cls} style={{ "--rc": col }} />
                   <div key={"t" + fx.key} className={"mh-res-text " + cls} style={{ "--rc": col, top: 30 + i * 9 + "%" }}>
-                    {kind === "armor" ? "−" : "+"}{fx.amount} {label}
+                    +{fx.amount} {label}
                   </div>
                 </Fragment>
               );
             })}
+            {resFx.armor && resFx.armor.id === viewingCharId && (
+              <>
+                <div key={"af" + resFx.armor.key} className="mh-res-flash" style={{ "--rc": "#4A8FD9" }} />
+                <div key={"as" + resFx.armor.key} className="mh-arm-fx" aria-hidden="true">
+                  <span className="mh-arm-half is-l"><Shield size={130} strokeWidth={1.4} fill="#4A8FD926" /></span>
+                  <span className="mh-arm-half is-r"><Shield size={130} strokeWidth={1.4} fill="#4A8FD926" /></span>
+                  <svg className="mh-arm-crack" width="130" height="130" viewBox="0 0 24 24" fill="none" stroke="#CFE4FF" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.5 L10.8 7.5 L13.2 10.5 L10.6 14 L12.6 17.5 L11.6 21.5" /></svg>
+                  <b className="mh-arm-txt">−{resFx.armor.amount} Armadura</b>
+                </div>
+              </>
+            )}
             {restMessage && detailTab !== "rests" && (
               <div className="mh-toast" role="status" key={restMessage}>
                 {restMessage}
@@ -14483,7 +14506,7 @@ export default function App({ onSignOut }) {
                                       {armorEntry ? armorEntry.score + equipMods.armor : "—"}
                                     </div>
                                     {armorEntry && (
-                                      <div key={resFx.armor && resFx.armor.id === viewingCharId ? resFx.armor.key : "ar"} className={resFx.armor && resFx.armor.id === viewingCharId ? "mh-row-stress" : undefined} style={{ "--rc": "var(--acc)", display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
+                                      <div key={resFx.armor && resFx.armor.id === viewingCharId ? resFx.armor.key : "ar"} className={resFx.armor && resFx.armor.id === viewingCharId ? "mh-row-stress" : undefined} style={{ "--rc": "#4A8FD9", display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
                                         {Array.from({ length: armorEntry.score + equipMods.armor }, (_, i) => i).map((i) => {
                                           const filled = i < Number(c.armor_marked || 0);
                                           return (
@@ -14501,16 +14524,17 @@ export default function App({ onSignOut }) {
                                       </div>
                                     )}
                                   </div>
-                                  {c.f_armor_pend === "1" && (
-                                    <div style={{ fontSize: 10.5, color: "var(--mh-gold-ink)", textAlign: "center", marginTop: 5 }}>
-                                      Armadura marcada: el próximo daño baja un umbral
-                                    </div>
-                                  )}
                                 </div>
                               </div>
 
                               <div className="mh-label" style={{ marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
                                 Umbrales
+                                {c.f_armor_pend === "1" && (
+                                  <span className="mh-tip-anchor" style={{ fontSize: 9.5, fontWeight: 700, color: "#fff", background: "#4A8FD9", padding: "1px 7px", borderRadius: 20, textTransform: "none", letterSpacing: 0, display: "inline-flex", alignItems: "center", gap: 4 }}>
+                                    <span className="mh-tip mh-tip-wrap">El próximo daño baja un umbral: Grave a Mayor, Mayor a Menor, Menor a ningún daño</span>
+                                    <Shield size={10} /> Armadura marcada
+                                  </span>
+                                )}
                                 {earthBonus > 0 && (
                                   <span style={{ fontSize: 9.5, fontWeight: 700, color: ink("#C08B5C"), background: "#C08B5C1A", padding: "1px 7px", borderRadius: 20, textTransform: "none" }}>
                                     +{earthBonus} por Tierra
