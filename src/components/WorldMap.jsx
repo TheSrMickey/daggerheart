@@ -115,18 +115,18 @@ const TIMES = {
 const CYCLE = ["amanecer", "dia", "atardecer", "noche"];
 const DAY_BG = { verano: "#18304a", invierno: "#25384e", otono: "#34261c" };
 const WEATHER = {
-  despejado: { k: 1, gray: 0, fog: [20, 46] },
-  lluvia: { k: 0.7, gray: 0.35, fog: [14, 38] },
-  tormenta: { k: 0.5, gray: 0.55, fog: [10, 30] },
-  nieve: { k: 0.85, gray: 0.25, fog: [14, 40] },
-  niebla: { k: 0.75, gray: 0.5, fog: [5, 24] },
+  despejado: { k: 1, gray: 0, fog: [20, 46], cl: 0.5 },
+  lluvia: { k: 0.7, gray: 0.35, fog: [14, 38], cl: 0.74 },
+  tormenta: { k: 0.5, gray: 0.55, fog: [10, 30], cl: 0.9 },
+  nieve: { k: 0.85, gray: 0.25, fog: [14, 40], cl: 0.66 },
+  niebla: { k: 0.75, gray: 0.5, fog: [5, 24], cl: 0.82 },
 };
 export const CYCLE_MS = 6 * 60 * 1000; // un día completo dura 6 minutos
 const SNOWY = new Set(["stone-mountain", "stone-hill", "grass-hill", "stone-rocks", "stone", "sand-rocks"]);
 const mixN = (a, b, t) => a + (b - a) * t;
 // Cielo: color en el horizonte y en lo alto según el estilo del mapa. De noche se oscurece y con mal tiempo se apaga.
-const SKY_HOR = { verano: "#bfe0f3", invierno: "#d3e2ee", otono: "#f0d2a6" };
-const SKY_TOP = { verano: "#4f8fd8", invierno: "#86a6c8", otono: "#6b86b8" };
+const SKY_HOR = { verano: "#cfe8f7", invierno: "#e3edf5", otono: "#f6d9b0" };
+const SKY_TOP = { verano: "#2f6fd0", invierno: "#6f93c0", otono: "#5a74b0" };
 
 // Un paso de la animación del ambiente: calcula la luz objetivo (hora fija o ciclo) y se acerca a ella con suavidad.
 function stepAtmos(ctx, h, d, scene, dt, elapsed, time, cycle, weather, theme) {
@@ -174,8 +174,17 @@ function stepAtmos(ctx, h, d, scene, dt, elapsed, time, cycle, weather, theme) {
   // Cielo: de día se aclara hacia el horizonte. El mar de fuera lleva su propio color y no se mezcla con él.
   const dayf = Math.max(0, Math.min(1, (c.di - 0.5) / 0.65)) * (1 - w.gray * 0.8);
   if (!c.hor) { c.hor = new Color(); c.top = new Color(); }
-  c.hor.copy(c.bg).lerp(new Color(SKY_HOR[theme] || SKY_HOR.verano), dayf);
-  c.top.copy(c.bg).multiplyScalar(0.7).lerp(new Color(SKY_TOP[theme] || SKY_TOP.verano), dayf);
+  // Colores propios del cielo: de noche azul muy oscuro, de día los del estilo del mapa, y grises con mal tiempo.
+  const kd = Math.pow(Math.max(0, Math.min(1, (c.di - 0.5) / 0.65)), 0.55);
+  c.hor.set("#141c34").lerp(new Color(SKY_HOR[theme] || SKY_HOR.verano), kd).lerp(new Color("#8a93a3").multiplyScalar(0.35 + 0.65 * kd), w.gray * 0.85);
+  c.top.set("#050a1c").lerp(new Color(SKY_TOP[theme] || SKY_TOP.verano), kd).lerp(new Color("#5d6675").multiplyScalar(0.35 + 0.65 * kd), w.gray * 0.9);
+  if (!c.mid) { c.mid = new Color(); c.cloudCol = new Color(); c.sunD = new Vector3(); }
+  c.mid.copy(c.top).lerp(c.hor, 0.38);
+  // Nubes del cielo: blancas con la luz del sol; grises con mal tiempo y casi negras de noche.
+  c.cloudCol.set("#ffffff").lerp(c.dir, 0.3).lerp(new Color("#5d6573"), w.gray * 0.9).multiplyScalar(0.18 + 0.82 * Math.max(dayf, 0.0));
+  c.sunD.set(c.pos[0], c.pos[1], c.pos[2]).normalize();
+  c.sunI = Math.max(0, Math.min(1, c.di / 1.15)) * (1 - w.gray * 0.85);
+  c.cloudAmt = w.cl;
   if (!c.fogc) c.fogc = new Color();
   c.fogc.set((OCEAN[theme] || OCEAN.verano)[1]).multiplyScalar(0.25 + 0.75 * dayf);
   if (scene.fog) { scene.fog.color.copy(c.fogc); scene.fog.near = c.fogNear; scene.fog.far = c.fogFar; }
@@ -183,20 +192,54 @@ function stepAtmos(ctx, h, d, scene, dt, elapsed, time, cycle, weather, theme) {
 }
 
 // Cúpula de cielo: degradado del horizonte (claro) a lo alto, con los colores que calcula el ambiente.
-const SKY_VERT = "varying float vH; void main(){ vH = normalize(position).y; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }";
-const SKY_FRAG = "uniform vec3 top; uniform vec3 hor; varying float vH; void main(){ float t = smoothstep(-0.02, 0.62, vH); gl_FragColor = vec4(mix(hor, top, t), 1.0);\n#include <colorspace_fragment>\n}";
+const SKY_VERT = "varying vec3 vDir; void main(){ vDir = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }";
+const SKY_FRAG = [
+  "uniform vec3 top; uniform vec3 mid; uniform vec3 hor; uniform vec3 sunDir; uniform vec3 sunCol; uniform vec3 cloudCol;",
+  "uniform float sunI; uniform float cloudAmt; uniform float time; varying vec3 vDir;",
+  "float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }",
+  "float noise(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y); }",
+  "float fbm(vec2 p){ float v = 0.0; float a = 0.5; for (int i = 0; i < 5; i++){ v += a * noise(p); p *= 2.03; a *= 0.5; } return v; }",
+  "void main(){",
+  "  vec3 d = normalize(vDir);",
+  "  float h = max(d.y, 0.0);",
+  "  vec3 col = mix(hor, mid, smoothstep(0.0, 0.16, h));",
+  "  col = mix(col, top, smoothstep(0.1, 0.75, h));",
+  "  vec3 sd = normalize(sunDir);",
+  "  float s = max(dot(d, sd), 0.0);",
+  "  col += sunCol * (pow(s, 900.0) * 2.2 + pow(s, 28.0) * 0.45 + pow(s, 4.0) * 0.14) * sunI;",
+  "  float az = max(dot(normalize(d.xz + 0.0001), normalize(sd.xz + 0.0001)), 0.0);",
+  "  col += sunCol * 0.32 * sunI * exp(-h * 7.0) * az * az;",
+  "  if (d.y > 0.015) {",
+  "    vec2 uv = d.xz / (d.y + 0.22) * 1.25 + vec2(time * 0.012, time * 0.005);",
+  "    float n = fbm(uv * 1.5);",
+  "    float c = smoothstep(1.0 - cloudAmt, 1.0 - cloudAmt + 0.3, n) * smoothstep(0.015, 0.2, d.y);",
+  "    float lit = 0.78 + 0.22 * fbm(uv * 3.1 + 7.0);",
+  "    col = mix(col, cloudCol * lit, c * 0.92);",
+  "  }",
+  "  gl_FragColor = vec4(col, 1.0);",
+  "#include <colorspace_fragment>",
+  "}"
+].join("\n");
 function SkyDome({ ctx }) {
   const mat = useRef(null);
-  useFrame(() => {
+  useFrame(({ clock }) => {
     const c = ctx.current.st;
-    if (!mat.current || !c || !c.hor) return;
-    mat.current.uniforms.top.value.copy(c.top);
-    mat.current.uniforms.hor.value.copy(c.hor);
+    if (!mat.current || !c || !c.hor || !c.mid) return;
+    const u = mat.current.uniforms;
+    u.top.value.copy(c.top);
+    u.hor.value.copy(c.hor);
+    u.mid.value.copy(c.mid);
+    u.sunDir.value.copy(c.sunD);
+    u.sunCol.value.copy(c.dir);
+    u.cloudCol.value.copy(c.cloudCol);
+    u.sunI.value = c.sunI;
+    u.cloudAmt.value = c.cloudAmt;
+    u.time.value = clock.elapsedTime;
   });
   return (
     <mesh renderOrder={-10} frustumCulled={false}>
       <sphereGeometry args={[900, 24, 16]} />
-      <shaderMaterial ref={mat} side={BackSide} depthWrite={false} fog={false} vertexShader={SKY_VERT} fragmentShader={SKY_FRAG} uniforms={{ top: { value: new Color("#4f8fd8") }, hor: { value: new Color("#bfe0f3") } }} />
+      <shaderMaterial ref={mat} side={BackSide} depthWrite={false} fog={false} vertexShader={SKY_VERT} fragmentShader={SKY_FRAG} uniforms={{ top: { value: new Color("#2f6fd0") }, mid: { value: new Color("#7fb3e6") }, hor: { value: new Color("#cfe8f7") }, sunDir: { value: new Vector3(0.4, 0.8, 0.3) }, sunCol: { value: new Color("#ffffff") }, cloudCol: { value: new Color("#ffffff") }, sunI: { value: 1 }, cloudAmt: { value: 0.4 }, time: { value: 0 } }} />
     </mesh>
   );
 }
@@ -363,8 +406,16 @@ function Labels({ items, place }) {
 function FitCamera({ extent, controlsRef, flat }) {
   const camera = useThree((s) => s.camera);
   const aspect = useThree((s) => s.size.width / Math.max(1, s.size.height));
+  const sw = useThree((s) => s.size.width);
+  const sh = useThree((s) => s.size.height);
   const last = useRef(-9);
   const lastFlat = useRef(null);
+  // Vista de jugadores: el encuadre baja un poco (como un desplazamiento de lente) para dejar más cielo arriba.
+  useEffect(() => {
+    if (flat) camera.setViewOffset(sw, sh, 0, -sh * 0.2, sw, sh);
+    else camera.clearViewOffset();
+    camera.updateProjectionMatrix();
+  }, [flat, sw, sh, camera]);
   useEffect(() => {
     if (Math.abs(extent - last.current) < 2 && lastFlat.current === flat) return;
     last.current = extent;
@@ -376,7 +427,7 @@ function FitCamera({ extent, controlsRef, flat }) {
     camera.updateProjectionMatrix();
     const tf = Math.tan((camera.fov * Math.PI) / 360);
     // Distancia a la que cabe todo el mapa a lo ancho (con el aspecto real del lienzo) y a lo alto.
-    const dist = Math.max(8, ((e * 0.95 + 1.2) / (tf * Math.min(aspect, 1.7))) * 0.82 * (flat ? 1.1 : 1));
+    const dist = Math.max(8, ((e * 0.95 + 1.2) / (tf * Math.min(aspect, 1.7))) * 0.82 * (flat ? 1.22 : 1));
     camera.position.set(0, dist * (flat ? 0.375 : 0.82), dist * (flat ? 0.927 : 0.57));
     camera.lookAt(0, 0, 0);
     const c = controlsRef.current;
@@ -556,7 +607,7 @@ function Scene({ tiles, edit, clouds, hover, setHover, onCell, selCell, controls
       })()}
       <FitCamera extent={Object.keys(tiles).reduce((m, k) => { const [q, r] = k.split(",").map(Number); return Math.max(m, Math.abs(q), Math.abs(r), Math.abs(-q - r)); }, 0)} controlsRef={controlsRef} flat={!!clouds} />
       <Labels items={labels} place={place} />
-      <OrbitControls ref={controlsRef} makeDefault enabled={!clouds} enableDamping maxPolarAngle={1.25} minDistance={3} maxDistance={70} mouseButtons={{ LEFT: MOUSE.ROTATE, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.PAN }} />
+      <OrbitControls ref={controlsRef} makeDefault enableRotate={!clouds} enableZoom={!clouds} enablePan={!clouds} autoRotate={!!clouds && !moving} autoRotateSpeed={0.3} enableDamping maxPolarAngle={1.25} minDistance={3} maxDistance={70} mouseButtons={{ LEFT: MOUSE.ROTATE, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.PAN }} />
     </>
   );
 }
