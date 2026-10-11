@@ -2826,6 +2826,14 @@ const sharedStyles = `
     background: linear-gradient(color-mix(in srgb, var(--cc) 10%, transparent), color-mix(in srgb, var(--cc) 3%, transparent)), var(--mh-panel);
     transition: transform .15s, box-shadow .15s;
   }
+  .mh-eq { animation: mh-eq-in .35s cubic-bezier(.2,.8,.2,1) backwards; }
+  @keyframes mh-eq-in { 0% { opacity: 0; transform: scale(.94) translateY(6px); } 100% { opacity: 1; transform: none; } }
+  .mh-eq-empty { min-height: 0; animation: mh-eq-empty-in .4s ease both; }
+  @keyframes mh-eq-empty-in { 0% { opacity: 0; } 100% { opacity: 1; } }
+  .mh-eq.is-stashing { animation: mh-eq-stash .46s cubic-bezier(.5,0,.75,.4) both; pointer-events: none; transform-origin: 96% 8%; }
+  .mh-eq.is-stashing .mh-eq-stash { animation: mh-eq-bag .46s ease both; }
+  @keyframes mh-eq-stash { 0% { opacity: 1; transform: none; } 35% { opacity: 1; transform: scale(.82) rotate(-2deg); } 100% { opacity: 0; transform: translate(34%, -22%) scale(.1) rotate(10deg); } }
+  @keyframes mh-eq-bag { 0%, 100% { scale: 1; } 40% { scale: 1.7; } }
   .mh-eq:hover { transform: translateY(-1px); border-color: color-mix(in srgb, var(--cc) 70%, transparent); box-shadow: 0 6px 16px color-mix(in srgb, var(--cc) 22%, transparent); }
   .mh-eq:focus-visible { outline: 2px solid var(--cc); outline-offset: 2px; }
   .mh-eq-art {
@@ -5555,7 +5563,7 @@ const sharedStyles = `
   .mh-hit-text, .mh-res-text { z-index: 56; }
   .mh-sheet.is-embedded .mh-overlay, .mh-sheet.is-embedded .mh-hit-flash, .mh-sheet.is-embedded .mh-res-flash, .mh-sheet.is-embedded .mh-hit-text, .mh-sheet.is-embedded .mh-res-text, .mh-sheet.is-embedded .mh-beast-bg { zoom: calc(1 / var(--mhz, 1)); }
   @media (prefers-reduced-motion: reduce) {
-    .mh-rampage::before, .mh-rampage-card, .mh-rampage-title, .mh-hit-flash, .mh-hit-text, .mh-shake, .mh-res-flash, .mh-res-text, .mh-row-stress, .mh-row-glow, .mh-arm-half, .mh-arm-crack, .mh-arm-txt { animation: none !important; }
+    .mh-rampage::before, .mh-rampage-card, .mh-rampage-title, .mh-hit-flash, .mh-hit-text, .mh-shake, .mh-res-flash, .mh-res-text, .mh-row-stress, .mh-row-glow, .mh-eq, .mh-eq-empty, .mh-arm-half, .mh-arm-crack, .mh-arm-txt { animation: none !important; }
     .mh-hit-flash, .mh-hit-text { display: none; }
     .mh-beast, .mh-beast-bg, .mh-beast-ring, .mh-claws, .mh-beast-layer { animation: none !important; }
     .mh-beast-ring, .mh-claws { display: none; }
@@ -10358,6 +10366,7 @@ export default function App({ onSignOut }) {
     delete el.dataset.active;
   };
   const [equipPickerSlot, setEquipPickerSlot] = useState(null);
+  const [stashFx, setStashFx] = useState(null); // hueco que se está guardando en la mochila (animación)
   const [pendingSpellRoll, setPendingSpellRoll] = useState(null);
   const [deathMoveCharId, setDeathMoveCharId] = useState(null);
   const [avoidDeathRollResult, setAvoidDeathRollResult] = useState(null);
@@ -14821,15 +14830,9 @@ export default function App({ onSignOut }) {
                                 )
                               }
                               titleRight={
-                                <div style={{ display: "flex", alignItems: "center", gap: 6 }} title="Número de dados de daño que tiras">
+                                <div style={{ display: "flex", alignItems: "center", gap: 6 }} title="Número de dados de daño que tiras. Sube con tu nivel y no se puede cambiar a mano">
                                   {!c.f_focus && <span className="mh-label" style={{ margin: 0 }}>Competencia</span>}
-                                  <button className="mh-btn-ghost" style={{ padding: "1px 6px" }} aria-label="Restar Competencia" onClick={() => updateCharacterField(viewingCharId, "f_proficiency", Math.max(1, proficiency - 1))}>
-                                    <Minus size={11} />
-                                  </button>
                                   <span className="mh-serif" style={{ fontSize: 16, fontWeight: 700, color: "var(--mh-gold-ink)", minWidth: 16, textAlign: "center", lineHeight: 1 }}>{proficiency}</span>
-                                  <button className="mh-btn-ghost" style={{ padding: "1px 6px" }} aria-label="Sumar Competencia" onClick={() => updateCharacterField(viewingCharId, "f_proficiency", Math.min(6, proficiency + 1))}>
-                                    <Plus size={11} />
-                                  </button>
                                 </div>
                               }
                               hidden={conditions.includes("Escondido") || conditions.includes("Oculto")}
@@ -14926,7 +14929,7 @@ export default function App({ onSignOut }) {
                                   </div>
                                 );
                               })() : (
-                              <div style={{ display: "flex", flexDirection: "column", gap: 12, flex: 1 }}>
+                              <div style={{ display: "grid", gridAutoRows: "minmax(0, 1fr)", gap: 12, flex: 1, minHeight: 0 }}>
                                 {(() => {
                                   const primaryIsTwoHanded = primaryWeapon?.hands === 2 && !ignoresBurden(c.f_class);
                                   return [
@@ -14940,6 +14943,7 @@ export default function App({ onSignOut }) {
                                         key={idx}
                                         title={`${primaryWeapon.key} ocupa las dos manos`}
                                         style={{
+                                          minHeight: 0,
                                           display: "flex",
                                           flexDirection: "column",
                                           alignItems: "center",
@@ -14968,7 +14972,8 @@ export default function App({ onSignOut }) {
                                     const pickerOpen = equipPickerSlot === slotKind;
                                     return (
                                       <div
-                                        key={idx}
+                                        key={"e" + idx}
+                                        className="mh-eq-empty"
                                         style={{
                                           position: "relative",
                                           display: "flex",
@@ -15067,8 +15072,8 @@ export default function App({ onSignOut }) {
                                     );
                                   return (
                                     <div
-                                      key={idx}
-                                      className={"mh-eq" + (w.virtual ? " mh-eq-bare" : "") + (!isArmor && slot.label === "Arma principal" && c.f_ignite === "1" ? " mh-eq-ablaze" : "") + (!isArmor && c.f_crimson && c.f_crimson === w.key ? " mh-eq-crimson" : "")}
+                                      key={idx + "-" + w.key}
+                                      className={"mh-eq" + (stashFx === (isArmor ? "armor" : idx === 0 ? "primary" : "secondary") ? " is-stashing" : "") + (w.virtual ? " mh-eq-bare" : "") + (!isArmor && slot.label === "Arma principal" && c.f_ignite === "1" ? " mh-eq-ablaze" : "") + (!isArmor && c.f_crimson && c.f_crimson === w.key ? " mh-eq-crimson" : "")}
                                       style={{ "--cc": w.virtual ? "#C08B5C" : TIER_COLORS[tier].color }}
                                       role="button"
                                       tabIndex={0}
@@ -15179,7 +15184,14 @@ export default function App({ onSignOut }) {
                                           style={{ cursor: "pointer" }}
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            stashEquippedItem(viewingCharId, isArmor ? "armor" : idx === 0 ? "primary" : "secondary", w.key, desc);
+                                            if (stashFx) return;
+                                            const sk = isArmor ? "armor" : idx === 0 ? "primary" : "secondary";
+                                            if (items.length >= ITEM_SLOTS) return stashEquippedItem(viewingCharId, sk, w.key, desc);
+                                            setStashFx(sk);
+                                            setTimeout(() => {
+                                              stashEquippedItem(viewingCharId, sk, w.key, desc);
+                                              setStashFx(null);
+                                            }, 460);
                                           }}
                                         />
                                       </div>
