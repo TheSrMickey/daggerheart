@@ -3776,6 +3776,8 @@ const sharedStyles = `
   .wm-stage canvas { display: block; touch-action: none; }
   .wm-row2 { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; pointer-events: auto; }
   .wm-banner { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 3; display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 99px; background: rgba(10,14,24,.9); border: 1px solid #E3B04B; color: #f3e6c4; font: 600 12px 'Inter', system-ui, sans-serif; white-space: nowrap; } .wm-banner button { all: unset; cursor: pointer; padding: 2px 8px; border-radius: 99px; background: rgba(255,255,255,.12); font-size: 11px; }
+  .wm-env { position: absolute; top: 10px; left: 10px; z-index: 3; display: flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 99px; background: rgba(10,14,24,.78); border: 1px solid rgba(255,255,255,.16); color: #dfe8ff; font: 600 11.5px 'Inter', system-ui, sans-serif; backdrop-filter: blur(4px); pointer-events: none; } .wm-env svg + span + svg { margin-left: 4px; }
+  .mh-seg.wm-wrap { flex-wrap: wrap; } .mh-seg.wm-wrap button { flex: 1 1 44%; }
   .wm-lbl.is-party { background: #E3B04B; border-color: #fff6; color: #1a1206; }
   .mh-btn-ghost.is-on { border-color: #E3B04B; color: #E3B04B; }
   .wm-load { padding: 40px; text-align: center; color: var(--mh-muted); font-size: 13px; }

@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-11",
     title: "Mapa de mundo en 3D",
     items: [
+      { tag: "nuevo", text: "Ambiente en el Mapa de mundo: el DJ elige la hora del día (amanecer, día, atardecer, noche, con estrellas) y el clima (lluvia, tormenta con rayos, nieve, niebla), o activa un ciclo automático de día y noche (6 minutos por día). Con nieve, las montañas y colinas se cubren de blanco. La luz cambia con transición suave y los jugadores lo ven al momento, con una etiqueta que indica la hora y el clima." },
       { tag: "nuevo", text: "Pieza del grupo en el Mapa de mundo: un peón dorado que el DJ y los jugadores pueden mover (se pulsa el peón y después la casilla de destino) y que salta con animación. Todos lo ven moverse." },
       { tag: "nuevo", text: "Variantes de estilo del mapa de mundo: verano, invierno (nieve) y otoño, que el DJ cambia con un clic. El mapa aleatorio elige una al azar." },
       { tag: "mejora", text: "El mapa aleatorio ahora genera ríos que cruzan la tierra de costa a costa, caminos entre los lugares y puentes donde un camino cruza un río." },
