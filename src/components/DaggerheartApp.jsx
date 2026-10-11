@@ -4829,6 +4829,43 @@ const sharedStyles = `
   .mh-acct-menu button { all: unset; box-sizing: border-box; width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 13px; color: var(--mh-ink2); } .mh-acct-menu button:hover { background: var(--mh-panel3); color: var(--mh-ink); }
   .mh-brand-av { border: 0; padding: 0; cursor: pointer; font-family: inherit; } .mh-brand-av:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
   .mh-brand-av { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #4f86ff, #7a5cff); color: #fff; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .mh-isle-wrap { position: relative; flex-shrink: 0; width: 84px; z-index: 40; transition: width .22s ease; }
+  .mh-isle-wrap.is-pin { width: 236px; }
+  .mh-isle { position: absolute; top: 12px; bottom: 12px; left: 10px; width: 64px; box-sizing: border-box; border-radius: 24px; padding: 12px 9px; display: flex; flex-direction: column; gap: 4px; background: color-mix(in srgb, var(--mh-nav) 74%, transparent); -webkit-backdrop-filter: blur(16px) saturate(1.2); backdrop-filter: blur(16px) saturate(1.2); border: 1px solid var(--mh-line2); box-shadow: 0 18px 44px #0007, inset 0 1px 0 #ffffff14; transition: width .22s ease, box-shadow .22s ease; }
+  .mh-isle:hover, .mh-isle:has(:focus-visible), .mh-isle.is-pin, .mh-isle.is-open { width: 216px; }
+  .mh-isle:hover:not(.is-pin) { box-shadow: 0 24px 60px #000a, inset 0 1px 0 #ffffff14; }
+  html[data-mh-theme="light"] .mh-isle { box-shadow: 0 18px 40px #3a2c1230, inset 0 1px 0 #fff; }
+  .mh-isle .lb { display: none; }
+  .mh-isle:hover .lb, .mh-isle:has(:focus-visible) .lb, .mh-isle.is-pin .lb, .mh-isle.is-open .lb { display: inline; }
+  .mh-isle-logo { display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 5px 0 11px; margin-bottom: 8px; flex-shrink: 0; }
+  .mh-isle-logo .mh-brand-logo { height: 22px; flex-shrink: 0; }
+  .mh-isle-logo b { font-size: 15px; font-weight: 700; letter-spacing: .02em; color: var(--mh-ink); }
+  .mh-isle-pin { all: unset; margin-left: auto; width: 26px; height: 26px; border-radius: 8px; cursor: pointer; display: none; align-items: center; justify-content: center; color: var(--mh-muted2); }
+  .mh-isle:hover .mh-isle-pin, .mh-isle:has(:focus-visible) .mh-isle-pin, .mh-isle.is-pin .mh-isle-pin, .mh-isle.is-open .mh-isle-pin { display: inline-flex; }
+  .mh-isle-pin:hover { background: #ffffff12; color: var(--mh-ink); } .mh-isle-pin.is-on { color: #E3B04B; } .mh-isle-pin.is-on svg { fill: currentColor; }
+  .mh-isle-it { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 13px; border-radius: 15px; cursor: pointer; flex-shrink: 0; font-size: 13px; font-weight: 500; white-space: nowrap; color: var(--mh-ink3); overflow: hidden; }
+  .mh-isle-it > svg { flex-shrink: 0; }
+  .mh-isle:hover .lb.mh-isle-t, .mh-isle:has(:focus-visible) .lb.mh-isle-t, .mh-isle.is-pin .lb.mh-isle-t, .mh-isle.is-open .lb.mh-isle-t { display: flex; }
+  .mh-isle-it.av { padding: 0 5px; min-height: 44px; }
+  .mh-isle-it:hover { background: #ffffff0f; color: var(--mh-ink); }
+  html[data-mh-theme="light"] .mh-isle-it:hover, html[data-mh-theme="light"] .mh-isle-pin:hover { background: #0000000d; }
+  .mh-isle-it:focus-visible { outline: 2px solid #E3B04B; outline-offset: -2px; }
+  .mh-isle-it.is-on { background: #E3B04B; color: #1F1606; box-shadow: 0 6px 18px #E3B04B44; }
+  .mh-isle-it.is-on .mh-navver { color: #1F1606aa; }
+  .mh-isle-list { display: flex; flex-direction: column; gap: 3px; overflow-y: auto; min-height: 0; scrollbar-width: none; }
+  .mh-isle-list::-webkit-scrollbar { display: none; }
+  .mh-isle-sec { height: 1px; margin: 7px 10px; background: var(--mh-line); font-size: 0; overflow: hidden; flex-shrink: 0; }
+  .mh-isle:hover .mh-isle-sec, .mh-isle:has(:focus-visible) .mh-isle-sec, .mh-isle.is-pin .mh-isle-sec, .mh-isle.is-open .mh-isle-sec { height: auto; margin: 10px 10px 3px; background: none; font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--mh-muted2); }
+  .mh-isle-ic { width: 34px; height: 34px; border-radius: 11px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #ffffff12; color: var(--mh-ink2); }
+  .mh-isle-ic.is-round { border-radius: 50%; }
+  .mh-isle-ic.is-add { background: none; border: 1.5px dashed var(--mh-line2); color: var(--mh-muted2); }
+  html[data-mh-theme="light"] .mh-isle-ic { background: #0000000f; }
+  .mh-isle-t { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+  .mh-isle-t b { font-size: 12.5px; font-weight: 600; color: var(--mh-ink); overflow: hidden; text-overflow: ellipsis; }
+  .mh-isle-t small { font-size: 10.5px; color: var(--mh-muted2); font-weight: 500; overflow: hidden; text-overflow: ellipsis; }
+  .mh-isle-fl { flex: 1; min-height: 6px; }
+  .mh-isle-acct { position: relative; flex-shrink: 0; display: block; }
+  .mh-isle .mh-acct-menu { top: auto; bottom: 0; left: calc(100% + 18px); right: auto; }
   .mh-navitem { display: flex; align-items: center; gap: 10px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 500; white-space: nowrap; color: var(--mh-ink3); border: 1px solid transparent; }
   .mh-navitem:hover { background: #ffffff0a; }
   .mh-navitem.is-on { background: #ffffff14; border-color: #ffffff1a; color: var(--mh-ink); }
@@ -4847,7 +4884,8 @@ const sharedStyles = `
   .mh-topbar { align-items: flex-start; } .mh-topbar > span { line-height: 34px; }
   .mh-pagetitle { font-size: 13.5px; font-weight: 600; color: var(--mh-ink); margin: 0 0 18px; }
   .mh-scroll-hidden { scrollbar-width: none; } .mh-scroll-hidden::-webkit-scrollbar { display: none; }
-  .mh-rail { position: absolute; top: 0; right: 0; bottom: 0; width: 290px; overflow-y: auto; border-left: 1px solid var(--mh-line); background: var(--mh-nav); }
+  .mh-rail { position: absolute; top: 12px; right: 12px; bottom: 12px; width: 268px; overflow-y: auto; border-radius: 24px; border: 1px solid var(--mh-line2); background: color-mix(in srgb, var(--mh-nav) 74%, transparent); -webkit-backdrop-filter: blur(16px) saturate(1.2); backdrop-filter: blur(16px) saturate(1.2); box-shadow: 0 18px 44px #0007, inset 0 1px 0 #ffffff14; }
+  html[data-mh-theme="light"] .mh-rail { box-shadow: 0 18px 40px #3a2c1230, inset 0 1px 0 #fff; }
   .mh-rail .mh-friends { position: static; border: 0; border-radius: 0; background: transparent; min-height: 100%; padding: 16px 14px; }
   .mh-bell.is-top { width: 34px; height: 34px; padding: 0; align-items: center; justify-content: center; border-radius: 10px; background: #ffffff12; color: var(--mh-ink); }
   .mh-home { display: block; }
@@ -10565,6 +10603,15 @@ export default function App({ onSignOut }) {
 
   const [detailTab, setDetailTab] = useState("general");
   const [chatSlot, setChatSlot] = useState(null); // contenedor del chat en la columna derecha (hoja moderna, pestaña de campaña)
+  const [islePin, setIslePin] = useState(false); // isla lateral fijada abierta
+  useEffect(() => {
+    try { if (localStorage.getItem("mh-isle-pin") === "1") setIslePin(true); } catch {}
+  }, []);
+  const toggleIslePin = () => {
+    const next = !islePin;
+    setIslePin(next);
+    try { localStorage.setItem("mh-isle-pin", next ? "1" : "0"); } catch {}
+  };
   const [acctOpen, setAcctOpen] = useState(false); // menú de la cuenta (avatar de la cabecera del menú lateral)
   useEffect(() => {
     if (!acctOpen) return;
@@ -24414,8 +24461,95 @@ export default function App({ onSignOut }) {
         );
       })()}
 
-      {/* Menú lateral (arriba en móvil). Con una hoja de personaje abierta se oculta en escritorio. */}
-      {!(viewingCharId && !isMobile) && (
+      {/* Isla lateral (escritorio). Con una hoja de personaje abierta se oculta. */}
+      {!isMobile && !viewingCharId && (() => {
+        const go = (key) => { setViewingCharId(null); setViewingCardDetail(null); setModernCharId(null); setShowNewCharModal(false); setView(key); };
+        const camps = Object.values(campaigns).slice(0, 6);
+        return (
+          <div className={"mh-isle-wrap" + (islePin ? " is-pin" : "")}>
+            <nav className={"mh-isle" + (islePin ? " is-pin" : "") + (acctOpen ? " is-open" : "")} aria-label="Navegación">
+              <div className="mh-isle-logo">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logo.svg" alt="" className="mh-brand-logo" />
+                <b className="lb">Enaris</b>
+                <button type="button" className={"lb mh-isle-pin" + (islePin ? " is-on" : "")} title={islePin ? "Soltar barra" : "Fijar barra abierta"} aria-pressed={islePin} onClick={toggleIslePin}>
+                  <Pin size={14} />
+                </button>
+              </div>
+              {NAV_ITEMS.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button type="button" key={item.key} title={item.label} className={"mh-isle-it" + (view === item.key ? " is-on" : "")} onClick={() => go(item.key)}>
+                    <Icon size={18} strokeWidth={1.8} />
+                    <span className="lb">{item.label}</span>
+                  </button>
+                );
+              })}
+              <div className="mh-isle-list">
+                <div className="mh-isle-sec">Mis campañas</div>
+                {camps.map((cp) => (
+                  <button type="button" key={cp.id} title={cp.name || "Campaña"} className="mh-isle-it av" onClick={() => (go("campaigns"), setViewingCampaignId(cp.id))}>
+                    <span className="mh-isle-ic"><BookOpen size={16} /></span>
+                    <span className="lb mh-isle-t"><b>{cp.name || "Campaña"}</b><small>{(cp.characterIds || []).length} personaje{(cp.characterIds || []).length === 1 ? "" : "s"}</small></span>
+                  </button>
+                ))}
+                <div className="mh-isle-sec">Mis personajes</div>
+                {Object.entries(characters).map(([id, ch]) => {
+                  const Em = CLASS_EMBLEMS[ch.f_class] || User;
+                  const col = ch.f_class ? classColor(ch.f_class) : "#8b88a8";
+                  return (
+                    <button type="button" key={id} title={ch.f_name || "Sin nombre"} className="mh-isle-it av" onClick={() => (setView("ficha"), openCharDetail(id))}>
+                      <span className="mh-isle-ic is-round" style={{ background: col + "40", color: col }}><Em size={16} /></span>
+                      <span className="lb mh-isle-t"><b>{ch.f_name || "Sin nombre"}</b><small>{ch.f_class || "Sin clase"} · Nv {ch.f_level || 1}</small></span>
+                    </button>
+                  );
+                })}
+                {Object.keys(characters).length < MAX_CHARACTERS && (
+                  <button type="button" title="Nuevo personaje" className="mh-isle-it av" onClick={() => (go("ficha"), openNewCharModal())}>
+                    <span className="mh-isle-ic is-round is-add"><Plus size={15} /></span>
+                    <span className="lb mh-isle-t"><b>Nuevo personaje</b></span>
+                  </button>
+                )}
+              </div>
+              <div className="mh-isle-fl" />
+              <button type="button" title="Actualizaciones" className={"mh-isle-it" + (view === "actualizaciones" ? " is-on" : "")} onClick={() => go("actualizaciones")}>
+                <History size={18} strokeWidth={1.8} />
+                <span className="lb">Actualizaciones</span>
+                <small className="lb mh-navver">v{APP_VERSION}</small>
+              </button>
+              <button type="button" title={theme === "light" ? "Cambiar a modo oscuro" : "Cambiar a modo claro"} className="mh-isle-it" onClick={() => toggleTheme()}>
+                {theme === "light" ? <Sun size={18} strokeWidth={1.8} /> : <Moon size={18} strokeWidth={1.8} />}
+                <span className="lb">{theme === "light" ? "Modo claro" : "Modo oscuro"}</span>
+              </button>
+              <div className="mh-acct mh-isle-acct">
+                <button type="button" className="mh-isle-it av" title={playerName} aria-label="Cuenta" aria-haspopup="menu" aria-expanded={acctOpen} onClick={() => setAcctOpen((v) => !v)}>
+                  <span className="mh-brand-av">{(playerName || "?").trim().charAt(0).toUpperCase()}</span>
+                  <span className="lb mh-isle-t"><b>{playerName || "—"}</b><small>Cuenta</small></span>
+                </button>
+                {acctOpen && (
+                  <div className="mh-acct-menu" role="menu">
+                    <div className="mh-acct-who"><small>Jugando como</small><b title={playerName}>{playerName || "—"}</b></div>
+                    <button type="button" role="menuitem" onClick={() => { setAcctOpen(false); window.dispatchEvent(new CustomEvent("mh-profile", { detail: { id: "me", name: playerName || "Yo" } })); }}>
+                      <User size={15} /> Mi perfil
+                    </button>
+                    <button type="button" role="menuitem" onClick={() => { setAcctOpen(false); go("ajustes"); }}>
+                      <Settings size={15} /> Ajustes
+                    </button>
+                    {onSignOut && (
+                      <form action={onSignOut}>
+                        <button type="submit" role="menuitem"><LogOut size={15} /> Cerrar sesión</button>
+                      </form>
+                    )}
+                  </div>
+                )}
+              </div>
+            </nav>
+          </div>
+        );
+      })()}
+
+      {/* Menú lateral en móvil (arriba). */}
+      {isMobile && (
       <nav
         style={{
           background: "var(--mh-nav)",

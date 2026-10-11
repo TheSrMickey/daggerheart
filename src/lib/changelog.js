@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-11",
     title: "Imágenes propias en las escenas y viñeta",
     items: [
+      { tag: "mejora", text: "Nuevo diseño de las barras laterales: la izquierda es ahora una isla flotante de cristal con solo iconos (secciones, tus campañas y personajes). Al pasar el ratón se despliega con los nombres, y con la chincheta puedes fijarla abierta. La barra derecha (amigos y chat) también flota con el mismo estilo. En móvil no cambia." },
       { tag: "mejora", text: "Mapa de mundo: la cámara de los jugadores gira despacio alrededor del mapa. El cielo es mucho mejor: degradado propio según la hora, el clima y el estilo, sol (o luna) con su brillo, resplandor en el horizonte y nubes altas que se mueven; ocupa más espacio en pantalla." },
       { tag: "mejora", text: "Mapa de mundo: el mar de fuera tiene su propio diseño (azul más hondo con olas suaves) y el horizonte queda marcado frente al cielo, sin fundirse con él. El agua del propio mapa sí se difumina hacia ese mar en los bordes. Los jugadores ven el mapa con una cámara fija (sin girar ni acercar); el DJ la mueve libremente al editar." },
       { tag: "mejora", text: "Mapa de mundo: ahora tiene cielo (un degradado que cambia con la hora, el clima y el estilo del mapa) y el mar se funde con el horizonte con un degradado de agua más honda y bruma, sin cortes bruscos. La vista de jugadores usa una cámara más baja para que asome el cielo; el DJ, al editar, sigue viéndolo desde arriba." },
