@@ -16,7 +16,7 @@ import { RulesPanel } from "./MapRules";
 import { Changelog } from "./Changelog";
 import { CardsPage } from "./Cards";
 import { Generators } from "./Generators";
-import { CampaignCalendar, HomeSessions } from "./Calendar";
+import { CampaignCalendar, HomeSessions, HomeCampCards } from "./Calendar";
 import { PollsGm, ActivePoll } from "./Polls";
 import { RestGm, GroupRestDialog, RestLock } from "./GroupRest";
 import { Chronicle, Timeline } from "./Chronicle";
@@ -4905,6 +4905,17 @@ const sharedStyles = `
   .mh-dice-bars > div { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; } .mh-dice-bars u { display: block; width: 100%; border-radius: 4px 4px 0 0; text-decoration: none; background: linear-gradient(#5b7cff, #2b3a7a); opacity: .75; } .mh-dice-bars u.is-today { opacity: 1; }
   .mh-dice-bars small { font-size: 9.5px; color: var(--mh-muted); }
   @media (max-width: 760px) { .mh-dice { flex-wrap: wrap; } .mh-dice-st { width: calc(33% - 8px); min-width: 96px; } .mh-dice-ch { flex-basis: 100%; } }
+  .mh-hrow { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+  .mh-hcard { all: unset; box-sizing: border-box; cursor: pointer; display: flex; gap: 14px; align-items: center; padding: 12px; border-radius: 14px; background: var(--mh-panel); border: 1px solid var(--mh-line); --hc: #7A8CFF; transition: translate .15s, border-color .15s; min-width: 0; }
+  .mh-hcard:hover { translate: 0 -3px; border-color: var(--hc); } .mh-hcard:focus-visible { outline: 2px solid var(--hc); outline-offset: 2px; }
+  .mh-hcard-art { width: 84px; height: 84px; flex: none; border-radius: 11px; display: grid; place-items: center; color: #ffffffc8; background: linear-gradient(135deg, color-mix(in srgb, var(--hc) 62%, #12122e), #12122e); }
+  .mh-hcard-b { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .mh-hcard-b > b { font-size: 14.5px; color: var(--mh-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .mh-hcard-b > small { font-size: 11.5px; color: var(--mh-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mh-hcard-row { flex: none; display: flex; align-items: center; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
+  .mh-hcard-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 99px; background: color-mix(in srgb, #E3B04B 16%, transparent); color: var(--mh-gold-ink, #E3B04B); } .mh-hcard-pill.is-off { background: var(--mh-panel3); color: var(--mh-muted); font-weight: 500; }
+  .mh-hcard-avs { display: inline-flex; padding-left: 6px; } .mh-hcard-avs span { display: grid; place-items: center; width: 22px; height: 22px; margin-left: -6px; border-radius: 50%; font: 700 10px Inter, system-ui, sans-serif; color: #fff; border: 2px solid var(--mh-panel); } .mh-hcard-avs .is-more { background: var(--mh-panel3); color: var(--mh-muted); }
+  .mh-hcard-bar { flex: none; position: relative; display: flex; align-items: center; height: 16px; border-radius: 7px; background: var(--mh-panel3); overflow: hidden; margin-top: 4px; } .mh-hcard-bar i { position: absolute; left: 0; top: 0; bottom: 0; opacity: .8; border-radius: 7px; } .mh-hcard-bar em { position: relative; font-style: normal; font-size: 9.5px; font-weight: 700; padding: 0 8px; line-height: 16px; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+  .mh-hcard.is-new { justify-content: center; border-style: dashed; color: var(--mh-muted); font-size: 13px; font-weight: 600; min-height: 108px; } .mh-hcard.is-new:hover { color: var(--mh-ink); border-color: var(--mh-ink3); }
   .mh-home-tile-art.is-char { background: linear-gradient(135deg, color-mix(in srgb, var(--hc) 60%, #12122e), #12122e); }
   html[data-mh-theme="light"] .mh-home-tile-art { background: linear-gradient(135deg, #cfd8f6, #f1f3fc); color: #3b4a8f; }
   html[data-mh-theme="light"] .mh-home-tile-art.is-char { background: linear-gradient(135deg, color-mix(in srgb, var(--hc) 42%, #fffcf6), #fffcf6); color: color-mix(in srgb, var(--hc) 75%, #221C2B); }
@@ -24667,31 +24678,50 @@ export default function App({ onSignOut }) {
                     <h3>Retoma tus campañas <i>{camps.length}</i></h3>
                     <button type="button" onClick={() => setView("campaigns")}>Ver todas ›</button>
                   </div>
-                  <div className="mh-home-row">
+                  <div className="mh-hrow">
                     {camps.length === 0 && <div className="mh-home-empty">Todavía no estás en ninguna campaña.</div>}
-                    {camps.slice(0, 6).map((cp) => (
-                      <button type="button" key={cp.id} className="mh-home-tile" onClick={() => (setViewingCampaignId(cp.id), setView("campaigns"))}>
-                        <span className="mh-home-tile-art"><BookOpen size={26} /></span>
-                        <b>{cp.name || "Campaña"}</b>
-                        <small>{(cp.characterIds || []).length} personaje{(cp.characterIds || []).length === 1 ? "" : "s"}</small>
-                      </button>
-                    ))}
+                    <HomeCampCards
+                      camps={camps.slice(0, 6)}
+                      colorOf={campColor}
+                      membersOf={(cp) => (cp.characterIds || []).filter((id) => characters[id]).map((id) => ({ id, name: characters[id].f_name, color: characters[id].f_class ? classColor(characters[id].f_class) : "#7A8CFF" }))}
+                      onOpen={(cp) => (setViewingCampaignId(cp.id), setView("campaigns"))}
+                    />
                   </div>
                   <div className="mh-home-sec">
                     <h3>Tus personajes <i>{chars.length}</i></h3>
                     <button type="button" onClick={() => setView("ficha")}>Gestionar ›</button>
                   </div>
-                  <div className="mh-home-row">
+                  <div className="mh-hrow">
                     {chars.map(([id, ch]) => {
                       const Em = CLASS_EMBLEMS[ch.f_class] || User;
+                      const camp = camps.find((cp) => (cp.characterIds || []).includes(id));
+                      const mods = getEquipmentMods(PRIMARY_WEAPONS.find((w) => w.key === ch.f_primary_weapon), SECONDARY_WEAPONS.find((w) => w.key === ch.f_secondary_weapon), ARMORS.find((a) => a.key === ch.f_armor));
+                      const hpT = Number(ch.r_hp || 0) + (mods.hp || 0);
+                      const stT = Number(ch.r_stress || 0) + (mods.stress || 0);
+                      const hpLeft = Math.max(0, hpT - Number(ch.hp_marked || 0));
+                      const st = Number(ch.stress_marked || 0);
+                      const pc = (a, b) => (b > 0 ? Math.max(0, Math.min(100, (a / b) * 100)) : 0) + "%";
                       return (
-                        <button type="button" key={id} className="mh-home-tile" style={{ "--hc": ch.f_class ? classColor(ch.f_class) : "#7A8CFF" }} onClick={() => openCharDetail(id)}>
-                          <span className="mh-home-tile-art is-char"><Em size={28} strokeWidth={1.6} /></span>
-                          <b>{ch.f_name || "Sin nombre"}</b>
-                          <small>{ch.f_class ? ch.f_class + " · Nv " + (ch.f_level || 1) : "Sin clase"}</small>
+                        <button type="button" key={id} className="mh-hcard" style={{ "--hc": ch.f_class ? classColor(ch.f_class) : "#7A8CFF" }} onClick={() => openCharDetail(id)}>
+                          <span className="mh-hcard-art is-char"><Em size={32} strokeWidth={1.6} /></span>
+                          <span className="mh-hcard-b">
+                            <b>{ch.f_name || "Sin nombre"}</b>
+                            <small>{ch.f_class ? ch.f_class + " · Nv " + (ch.f_level || 1) : "Sin clase"}{camp ? " · " + (camp.name || "Campaña") : ""}</small>
+                            {ch.f_class && (
+                              <>
+                                <span className="mh-hcard-bar" title={"Puntos de vida " + hpLeft + " / " + hpT}><i style={{ width: pc(hpLeft, hpT), background: "#E0544A" }} /><em>PV {hpLeft}/{hpT}</em></span>
+                                <span className="mh-hcard-bar" title={"Estrés " + st + " / " + stT}><i style={{ width: pc(st, stT), background: "#A58BE8" }} /><em>Estrés {st}/{stT}</em></span>
+                              </>
+                            )}
+                          </span>
                         </button>
                       );
                     })}
+                    {chars.length < MAX_CHARACTERS && (
+                      <button type="button" className="mh-hcard is-new" onClick={() => setView("ficha")}>
+                        <Plus size={16} /> Nuevo personaje
+                      </button>
+                    )}
                   </div>
                 </div>
                 {isMobile && <FriendsPanel renderClass={renderClassDot} />}

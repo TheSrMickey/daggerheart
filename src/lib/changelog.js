@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-11",
     title: "Imágenes propias en las escenas y viñeta",
     items: [
+      { tag: "mejora", text: "Inicio: «Retoma tus campañas» y «Tus personajes» pasan a fichas anchas que aprovechan el ancho. Las campañas muestran la próxima sesión y quién juega; los personajes, su clase, nivel, campaña y barras de PV y Estrés. Si te queda sitio, aparece la ficha «+ Nuevo personaje»." },
       { tag: "nuevo", text: "Inicio tiene ahora la sección «Tus dados», encima de «Retoma tus campañas»: tus tiradas totales, críticos, porcentaje de tiradas con Esperanza y un gráfico de los últimos 10 días. Las estadísticas son personales (solo las ves tú) y se cuentan desde que se instala esta versión." },
       { tag: "mejora", text: "Creación de personaje, último paso: las cartas de dominio se eligen con tu mano en abanico arriba y un estante con las cartas de cada dominio debajo (si la mano está llena, eliges cuál sustituyes). En los descansos ya no se marcan opciones por defecto: eliges tú. Y «Buscar mesa» aprovecha todo el ancho de la columna central." },
       { tag: "mejora", text: "El cambio de cartas de dominio al descansar se abre ahora en la columna central (con la barra superior, el menú y los amigos a la vista) en lugar de a pantalla completa. En la creación de personaje, las transformaciones llevan la etiqueta H&F, y «Un puñado de oro» como equipo adicional suma 1 puñado (10 de oro) a la bolsa en vez de ocupar un hueco del inventario." },

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CalendarDays, MapPin, Check, HelpCircle, X } from "lucide-react";
+import { CalendarDays, MapPin, Check, HelpCircle, X, BookOpen } from "lucide-react";
 import { useDoc, readDoc, mutateDoc } from "@/lib/campaignDocs";
 
 // Calendario de la campaña: la próxima sesión, quién viene y un mes con las sesiones marcadas.
@@ -111,6 +111,50 @@ export function CampaignCalendar({ campaignId, isGm, members, colorOf }) {
       </div>
     </div>
   );
+}
+
+// Inicio · «Retoma tus campañas»: una ficha ancha por campaña con la próxima sesión y quién juega.
+export function HomeCampCards({ camps, colorOf, membersOf, onOpen }) {
+  const key = camps.map((c) => c.id).join(",");
+  const [docs, setDocs] = useState({});
+  const [now] = useState(() => Date.now());
+  useEffect(() => {
+    let alive = true;
+    const pull = async () => {
+      const out = {};
+      await Promise.all(key.split(",").filter(Boolean).map(async (id) => { out[id] = await readDoc(calKey(id), EMPTY); }));
+      if (alive) setDocs(out);
+    };
+    pull();
+    const t = setInterval(pull, 30000);
+    return () => {
+      alive = false;
+      clearInterval(t);
+    };
+  }, [key]);
+  return camps.map((cp) => {
+    const mem = membersOf(cp);
+    const next = docs[cp.id]?.next;
+    const soon = next && next.ts >= now - 3 * 3600 * 1000 ? next : null;
+    return (
+      <button type="button" key={cp.id} className="mh-hcard" style={{ "--hc": colorOf(cp.id) }} onClick={() => onOpen(cp)}>
+        <span className="mh-hcard-art"><BookOpen size={30} strokeWidth={1.7} /></span>
+        <span className="mh-hcard-b">
+          <b>{cp.name || "Campaña"}</b>
+          <small>{mem.length} personaje{mem.length === 1 ? "" : "s"}</small>
+          <span className="mh-hcard-row">
+            {soon ? <span className="mh-hcard-pill"><CalendarDays size={11} /> {fmtDate(soon.ts)} · {fmtTime(soon.ts)}</span> : <span className="mh-hcard-pill is-off">Sin sesión fijada</span>}
+            {mem.length > 0 && (
+              <span className="mh-hcard-avs">
+                {mem.slice(0, 4).map((m) => <span key={m.id} style={{ background: m.color }} title={m.name}>{(m.name || "?").charAt(0).toUpperCase()}</span>)}
+                {mem.length > 4 && <span className="is-more">+{mem.length - 4}</span>}
+              </span>
+            )}
+          </span>
+        </span>
+      </button>
+    );
+  });
 }
 
 // Inicio: sección «Próximas sesiones» con el mismo diseño que «Retoma tus campañas» y «Tus personajes».
