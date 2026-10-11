@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-11",
     title: "Imágenes propias en las escenas y viñeta",
     items: [
+      { tag: "mejora", text: "Pestaña Personajes: nuevas tarjetas de cristal a juego con las barras laterales. Cada personaje tiene su emblema grande con el color de su clase, nivel, etiquetas y sus PV, estrés y esperanza como casillas iluminadas. Al pasar el ratón la tarjeta se eleva y se ilumina, y aparece el botón «Abrir ficha»; la papelera solo se ve al pasar el ratón." },
       { tag: "mejora", text: "Móvil: las secciones (Inicio, Personajes, Campañas, Cartas y Buscar mesa) pasan a un dock flotante de cristal abajo, a juego con la nueva barra lateral. «Personajes» abre una hoja con tus personajes (y crear uno nuevo); arriba queda la cabecera con la cuenta, el tema y los avisos." },
       { tag: "mejora", text: "Nuevo diseño de las barras laterales: la izquierda es ahora una isla flotante de cristal con solo iconos (secciones, tus campañas y personajes). Al pasar el ratón se despliega con los nombres, y con la chincheta puedes fijarla abierta. La barra derecha (amigos y chat) también flota con el mismo estilo. En móvil no cambia." },
       { tag: "mejora", text: "Mapa de mundo: la cámara de los jugadores gira despacio alrededor del mapa. El cielo es mucho mejor: degradado propio según la hora, el clima y el estilo, sol (o luna) con su brillo, resplandor en el horizonte y nubes altas que se mueven; ocupa más espacio en pantalla." },

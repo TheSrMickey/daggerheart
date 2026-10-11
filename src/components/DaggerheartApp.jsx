@@ -5196,6 +5196,30 @@ const sharedStyles = `
   .mh-gal .mh-hero-bars { width: 100%; padding-top: 14px; gap: 7px; }
   .mh-gal .mh-hero-bars span { height: 7px; border-radius: 4px; }
   .mh-gal .mh-hero-nums { width: 100%; font-size: 12px; }
+  .mh-gc { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; min-height: 0; padding: 16px 16px 14px; border-radius: 26px; cursor: pointer; overflow: hidden; background: radial-gradient(120% 60% at 50% 0%, color-mix(in srgb, var(--k) 24%, transparent), transparent 70%), color-mix(in srgb, var(--mh-panel) 84%, transparent); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); border: 1px solid color-mix(in srgb, var(--k) 38%, var(--mh-line2)); box-shadow: 0 18px 44px #0007, inset 0 1px 0 #ffffff14; transition: transform .22s ease, box-shadow .22s ease; }
+  html[data-mh-theme="light"] .mh-gc { box-shadow: 0 14px 34px #3a2c1230, inset 0 1px 0 #fff; }
+  .mh-gc:hover, .mh-gc:focus-visible { transform: translateY(-6px); outline: none; box-shadow: 0 28px 64px #000a, 0 0 0 1px color-mix(in srgb, var(--k) 60%, transparent), 0 0 46px color-mix(in srgb, var(--k) 30%, transparent), inset 0 1px 0 #ffffff22; }
+  .mh-gc.is-dead { filter: grayscale(.85); opacity: .8; }
+  .mh-gc-top { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+  .mh-gc-lv { padding: 4px 11px; border-radius: 20px; font-size: 11.5px; font-weight: 700; color: var(--mh-ink); background: color-mix(in srgb, var(--k) 24%, var(--mh-panel)); border: 1px solid color-mix(in srgb, var(--k) 50%, transparent); }
+  .mh-gc-del { all: unset; box-sizing: border-box; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--mh-muted2); opacity: 0; transition: opacity .15s, background .15s; }
+  .mh-gc:hover .mh-gc-del, .mh-gc-del:focus-visible { opacity: 1; } .mh-gc-del:hover { background: #C0443A33; color: #E8685C; }
+  .mh-gc-mid { flex: 1 1 auto; min-height: 150px; display: flex; align-items: center; justify-content: center; }
+  .mh-gc-emb { width: clamp(124px, 22vh, 176px); aspect-ratio: 1; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--k); background: radial-gradient(circle at 35% 28%, color-mix(in srgb, var(--k) 30%, var(--mh-panel2)), var(--mh-panel) 72%); border: 2px solid var(--k); box-shadow: 0 0 0 7px color-mix(in srgb, var(--k) 14%, transparent), 0 0 40px color-mix(in srgb, var(--k) 36%, transparent); }
+  .mh-gc-emb svg { width: 42%; height: 42%; }
+  .mh-gc-nm { font-size: 22px; font-weight: 600; letter-spacing: .03em; text-transform: uppercase; color: var(--mh-ink); }
+  .mh-gc-cl { margin-top: 6px; font-size: 12.5px; color: var(--mh-ink2); } .mh-gc-or { margin-top: 3px; font-size: 11.5px; color: var(--mh-muted2); }
+  .mh-gc-tags { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-top: 12px; min-height: 24px; }
+  .mh-gc-tags span { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 600; padding: 3px 10px; border-radius: 20px; background: var(--mh-panel3); color: var(--mh-ink3); }
+  .mh-gc-tags .is-tf { background: #A58BE833; color: #B7A2F5; } .mh-gc-tags .is-camp { background: #E3B04B26; color: #E3B04B; } .mh-gc-tags .is-dead { background: #C0443A33; color: #E8685C; }
+  html[data-mh-theme="light"] .mh-gc-tags .is-tf { color: #6a4fc0; } html[data-mh-theme="light"] .mh-gc-tags .is-camp { color: #8a6410; }
+  .mh-gc-st { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; width: 100%; margin-top: 14px; padding: 12px 12px 10px; border-radius: 16px; text-align: left; background: color-mix(in srgb, var(--mh-ink) 6%, transparent); border: 1px solid var(--mh-line); }
+  .mh-gc-st label { display: flex; flex-direction: column; font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--mh-muted2); margin-bottom: 5px; } .mh-gc-st label b { font-size: 13px; letter-spacing: 0; color: var(--mh-ink); font-weight: 700; }
+  .mh-gc-pips { display: flex; gap: 2px; } .mh-gc-pips i { flex: 1; height: 5px; border-radius: 2px; background: var(--mh-panel3); } .mh-gc-pips i.is-f { background: var(--c); box-shadow: 0 0 6px color-mix(in srgb, var(--c) 55%, transparent); }
+  .mh-gc-open { width: 100%; margin-top: 12px; height: 38px; border-radius: 13px; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--mh-ink2); background: color-mix(in srgb, var(--mh-ink) 7%, transparent); border: 1px solid var(--mh-line2); transition: background .18s, color .18s; }
+  .mh-gc:hover .mh-gc-open, .mh-gc:focus-visible .mh-gc-open { background: var(--k); color: #10101e; border-color: transparent; box-shadow: 0 8px 20px color-mix(in srgb, var(--k) 40%, transparent); }
+  .mh-gal .mh-gal-new { border-radius: 26px; }
+  @media (max-width: 900px) { .mh-gc { min-height: 460px; } .mh-gc-del { opacity: 1; } }
   .mh-gal-new { margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; cursor: pointer; border-style: dashed; color: var(--mh-ink3); text-align: center; min-height: 0; transition: border-color .15s, background .15s; }
   .mh-gal-new:hover, .mh-gal-new:focus-visible { border-color: #E3B04B; background: #E3B04B0F; outline: none; }
   .mh-gal-new small { font-size: 12px; color: var(--mh-muted); }
@@ -24942,22 +24966,26 @@ export default function App({ onSignOut }) {
                   const dead = ch.f_is_dead === "1";
                   const isExp = CLASSES.find((c) => c.key === ch.f_class)?.expansion;
                   const origin = [ch.f_ancestry, ch.f_community].filter(Boolean).join(" · ");
-                  const pct = (a, b) => (b > 0 ? Math.max(0, Math.min(100, (a / b) * 100)) : 0) + "%";
+                  const pips = (n, max, color) => (
+                    <span className="mh-gc-pips">
+                      {Array.from({ length: Math.max(1, Math.min(max, 14)) }, (_, i) => <i key={i} className={i < n ? "is-f" : ""} style={{ "--c": color }} />)}
+                    </span>
+                  );
                   return (
                     <div
                       key={id}
-                      className={"mh-card mh-hero" + (dead ? " is-dead" : "")}
-                      style={{ "--hc": col }}
+                      className={"mh-card mh-gc" + (dead ? " is-dead" : "")}
+                      style={{ "--k": col }}
                       role="button"
                       tabIndex={0}
                       onClick={() => openCharDetail(id)}
                       onKeyDown={(e) => e.key === "Enter" && e.target === e.currentTarget && openCharDetail(id)}
                     >
-                      <div className="mh-hero-top">
-                        {ch.f_class && <span className="mh-hero-lv" title={"Nivel " + (ch.f_level || "1")}>{ch.f_level || "1"}</span>}
+                      <div className="mh-gc-top">
+                        {ch.f_class ? <span className="mh-gc-lv" title={"Nivel " + (ch.f_level || "1")}>Nv {ch.f_level || "1"}</span> : <span />}
                         <button
                           type="button"
-                          className="mh-hero-del"
+                          className="mh-gc-del"
                           title="Eliminar personaje"
                           aria-label={"Eliminar a " + (ch.f_name || "personaje")}
                           onClick={(e) => {
@@ -24967,41 +24995,29 @@ export default function App({ onSignOut }) {
                         >
                           <Trash2 size={14} />
                         </button>
-                        <span className="mh-hero-emb" aria-hidden="true">
-                          <Emblem size={40} strokeWidth={1.6} />
+                      </div>
+                      <div className="mh-gc-mid">
+                        <span className="mh-gc-emb" aria-hidden="true">
+                          <Emblem size={64} strokeWidth={1.5} />
                         </span>
                       </div>
-                      <div className="mh-hero-inf">
-                        <div className="mh-serif mh-hero-nm">{ch.f_name || "Sin nombre"}</div>
-                        <div className="mh-hero-cl">{ch.f_class ? ch.f_class + (ch.f_subclass ? " · " + ch.f_subclass : "") : "Sin clase asignada"}</div>
-                        {origin && <div className="mh-hero-or">{origin}</div>}
-                        <div className="mh-hero-tags">
-                          {dead && <span className="is-dead">Caído</span>}
-                          {ch.f_transformation && <span className="is-tf">{ch.f_transformation}</span>}
-                          {camp && <span className="is-camp">{camp.name}</span>}
-                          {isExp && <span className="is-tf">{isExp}</span>}
-                        </div>
-                        {ch.f_class && (
-                          <>
-                            <div className="mh-hero-bars">
-                              <span title={"Puntos de vida " + hpLeft + " / " + hpT}>
-                                <i style={{ width: pct(hpLeft, hpT), background: "#E0544A" }} />
-                              </span>
-                              <span title={"Estrés " + st + " / " + stT}>
-                                <i style={{ width: pct(st, stT), background: "#A58BE8" }} />
-                              </span>
-                              <span title={"Esperanza " + hope + " / " + hopeMax}>
-                                <i style={{ width: pct(hope, hopeMax), background: "#E3B04B" }} />
-                              </span>
-                            </div>
-                            <div className="mh-hero-nums">
-                              <span>PV {hpLeft}/{hpT}</span>
-                              <span>Estrés {st}/{stT}</span>
-                              <span>Esperanza {hope}</span>
-                            </div>
-                          </>
-                        )}
+                      <div className="mh-serif mh-gc-nm">{ch.f_name || "Sin nombre"}</div>
+                      <div className="mh-gc-cl">{ch.f_class ? ch.f_class + (ch.f_subclass ? " · " + ch.f_subclass : "") : "Sin clase asignada"}</div>
+                      {origin && <div className="mh-gc-or">{origin}</div>}
+                      <div className="mh-gc-tags">
+                        {dead && <span className="is-dead">Caído</span>}
+                        {ch.f_transformation && <span className="is-tf">{ch.f_transformation}</span>}
+                        {camp && <span className="is-camp"><BookOpen size={11} />{camp.name}</span>}
+                        {isExp && <span className="is-tf">{isExp}</span>}
                       </div>
+                      {ch.f_class && (
+                        <div className="mh-gc-st">
+                          <div title={"Puntos de vida " + hpLeft + " / " + hpT}><label>PV <b>{hpLeft}/{hpT}</b></label>{pips(hpLeft, hpT, "#E0617A")}</div>
+                          <div title={"Estrés " + st + " / " + stT}><label>Estrés <b>{st}/{stT}</b></label>{pips(st, stT, "#A58BE8")}</div>
+                          <div title={"Esperanza " + hope + " / " + hopeMax}><label>Esperanza <b>{hope}/{hopeMax}</b></label>{pips(hope, hopeMax, "#E3B04B")}</div>
+                        </div>
+                      )}
+                      <span className="mh-gc-open">Abrir ficha <ChevronRight size={15} /></span>
                     </div>
                   );
                 })}
