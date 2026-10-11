@@ -4631,8 +4631,8 @@ const sharedStyles = `
   @keyframes mh-head-in { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
   @keyframes mh-trait-in { from { opacity: 0; transform: translateY(10px) scale(.92); } to { opacity: 1; transform: none; } }
   @media (prefers-reduced-motion: reduce) { .mh-view-in, .mh-sheet-in .mhm-head, .mh-sheet-in .mhm-traits button { animation: none !important; } }
-  .mh-crumbs { display: flex; align-items: center; gap: 6px; font-weight: 600; min-width: 0; } .mh-crumbs button { all: unset; cursor: pointer; color: var(--mh-muted); display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; } .mh-crumbs button:hover { color: var(--mh-ink); text-decoration: underline; text-underline-offset: 3px; } .mh-crumbs button:focus-visible { outline: 2px solid var(--mh-ink3); outline-offset: 3px; border-radius: 4px; }
-  .mh-crumbs b { color: var(--mh-ink); display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; } .mh-crumb-sep { color: var(--mh-muted3, var(--mh-muted)); flex-shrink: 0; opacity: .7; }
+  .mh-crumbs { display: flex; align-items: center; gap: 6px; font-weight: 400; min-width: 0; } .mh-crumbs button { all: unset; cursor: pointer; color: var(--mh-muted); display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; } .mh-crumbs button:hover { color: var(--mh-ink); text-decoration: underline; text-underline-offset: 3px; } .mh-crumbs button:focus-visible { outline: 2px solid var(--mh-ink3); outline-offset: 3px; border-radius: 4px; }
+  .mh-crumbs b { font-weight: 400; color: var(--mh-ink); display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; } .mh-crumb-sep { color: var(--mh-muted3, var(--mh-muted)); flex-shrink: 0; opacity: .7; }
   .mh-crumb-em { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; color: var(--c); background: color-mix(in srgb, var(--c) 20%, transparent); }
   .mh-toptabs { display: flex; gap: 22px; } .mh-toptabs button { all: unset; cursor: pointer; color: var(--mh-muted); } .mh-toptabs .is-on { color: var(--mh-ink); }
   .mh-sheetask-bg { position: fixed; inset: 0; z-index: 90; background: rgba(6,6,16,.7); display: flex; align-items: center; justify-content: center; padding: 16px; }
@@ -5547,7 +5547,7 @@ const sharedStyles = `
   @keyframes mh-arm-l { 0% { opacity: 0; transform: scale(.4); } 18% { opacity: 1; transform: scale(1.1); } 30% { transform: scale(1); } 46% { opacity: 1; transform: translate(0,0) rotate(0); } 100% { opacity: 0; transform: translate(-46px, 70px) rotate(-22deg); } }
   @keyframes mh-arm-r { 0% { opacity: 0; transform: scale(.4); } 18% { opacity: 1; transform: scale(1.1); } 30% { transform: scale(1); } 46% { opacity: 1; transform: translate(0,0) rotate(0); } 100% { opacity: 0; transform: translate(46px, 78px) rotate(24deg); } }
   .mh-arm-crack { position: absolute; inset: 0; opacity: 0; animation: mh-arm-crack 1.25s ease both; }
-  @keyframes mh-arm-crack { 0%, 30% { opacity: 0; } 38% { opacity: 1; } 55% { opacity: 1; } 70%, 100% { opacity: 0; } }
+  @keyframes mh-arm-crack { 0%, 26% { opacity: 0; } 32% { opacity: 1; } 43% { opacity: 1; } 47%, 100% { opacity: 0; } }
   .mh-arm-txt { position: absolute; left: 50%; top: 100%; margin-top: 22px; white-space: nowrap; font: 700 30px 'Cinzel', Georgia, serif; color: #A9CFFF; text-shadow: 0 0 20px #4A8FD9, 0 2px 0 #000; opacity: 0; translate: -50% 0; animation: mh-arm-txt 1.25s ease both; }
   @keyframes mh-arm-txt { 0%, 40% { opacity: 0; } 55% { opacity: 1; } 100% { opacity: 0; translate: -50% -20px; } }
   .mh-sheet.is-embedded .mh-arm-fx { zoom: calc(1 / var(--mhz, 1)); }
@@ -14108,7 +14108,7 @@ export default function App({ onSignOut }) {
                     items.push({
                       key: "cf-" + f.name,
                       mc: !!f._mc,
-                      Icon: isBeastformLink ? PawPrint : (CLASS_EMBLEMS[f._mc ? mcInfo?.cls : c.f_class] || Swords),
+                      Icon: CLASS_EMBLEMS[f._mc ? mcInfo?.cls : c.f_class] || Swords,
                       color: "var(--acc)",
                       kicker: "Característica de clase",
                       title: f.name,
@@ -15625,7 +15625,7 @@ export default function App({ onSignOut }) {
                                           aria-checked={n > 0}
                                           tabIndex={0}
                                           className={"mh-rest-row" + (n > 0 ? " sel" : "")}
-                                          style={{ "--rc": ac.color }}
+                                          style={{ "--rc": ac.color, ...(ac.key === "project" ? { gridColumn: "1 / -1" } : {}) }}
                                           title={n > 0 && picks.length < slots ? "Pulsa otra vez para elegirla dos veces" : undefined}
                                           onClick={() => togglePick(ac.key)}
                                           onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), togglePick(ac.key))}

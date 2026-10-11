@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-11",
     title: "Imágenes propias en las escenas y viñeta",
     items: [
+      { tag: "mejora", text: "Retoques: las migas de pan van sin negrita; la animación de marcar Armadura ya no deja la grieta del escudo en pantalla mientras se rompe; la Forma de Bestia en Acciones usa el emblema de la clase; «Trabajar en un proyecto» ocupa las dos columnas en el descanso largo; y «Una bolsita de piedras y huesos» tiene un icono de bolsa." },
       { tag: "mejora", text: "La barra superior es ahora una ruta de migas de pan: «Personajes › Kaelen Vox › Acciones» en la hoja y «Campañas › nombre de la campaña › pestaña» en las campañas. Los niveles anteriores se pueden pulsar para volver." },
       { tag: "mejora", text: "Proyectos: si el personaje no está en una campaña, los proyectos están en pausa (desenfocados con un candado) hasta que hace un descanso largo. Durante ese descanso puede crear y editar proyectos, y avanzar uno (+1) solo si eligió el nuevo movimiento «Trabajar en un proyecto». El botón «Terminar» (o un descanso corto) los vuelve a bloquear." },
       { tag: "mejora", text: "En Acciones, la subclase y las características de clase usan el emblema de su clase (el mismo de la lista de personajes) en lugar de un escudo o espadas genéricas." },

@@ -1,7 +1,7 @@
 // Iconos de armas y armaduras para la carta abierta.
 // Los que existen en lucide se usan tal cual; el resto se dibuja con el mismo estilo (24×24, trazo redondeado).
 import { createElement as h } from "react";
-import { Backpack, Axe, Bone, BowArrow, Coins, FlaskConical, Flame, Hammer, HandCoins, HandFist, Package, Sword, WandSparkles } from "lucide-react";
+import { Backpack, Axe, BowArrow, Coins, FlaskConical, Flame, Hammer, HandCoins, HandFist, Package, Sword, WandSparkles } from "lucide-react";
 
 const CUSTOM = {
   estoque: [
@@ -182,7 +182,7 @@ export function itemVisual(name, { isWeapon, isArmor } = {}) {
   if (isArmor) return { Icon: armorIcon(name), color: "var(--acc)", kind: "Armadura" };
   if (isWeapon) return { Icon: weaponIcon(name), color: "var(--acc)", kind: "Arma" };
   if (/petate/i.test(name || "")) return { Icon: Backpack, color: "#9A6B3C", kind: "Petate Nómada" };
-  if (/piedras y huesos/i.test(name || "")) return { Icon: Bone, color: "#B9A48A", kind: "Objeto" };
+  if (/piedras y huesos/i.test(name || "")) return { Icon: ICONS.bolsa, color: "#B9A48A", kind: "Objeto" };
   if (/poci[oó]n menor de vigor/i.test(name || "")) return { Icon: FlaskConical, color: "#A58BE8", kind: "Consumible" };
   if (/poci|elixir|t[oó]nico|frasco|brebaje|ung[uü]ento/i.test(name || "")) return { Icon: FlaskConical, color: "#D9644E", kind: "Consumible" };
   if (/antorcha|vela|farol|linterna/i.test(name || "")) return { Icon: Flame, color: "#E0823A", kind: "Equipo" };
