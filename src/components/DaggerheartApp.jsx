@@ -14022,7 +14022,7 @@ export default function App({ onSignOut }) {
                     const activeElement = isElemental ? c.f_elemental_active : null;
                     items.push({
                       key: "subclass",
-                      Icon: ShieldHalf,
+                      Icon: CLASS_EMBLEMS[c.f_class] || ShieldHalf,
                       color: activeElement ? ELEMENT_COLORS[activeElement] : "var(--acc)",
                       kicker: "Subclase · " + subclassBadge,
                       title: subclassEntry.key,
@@ -14066,7 +14066,7 @@ export default function App({ onSignOut }) {
                     items.push({
                       key: "cf-" + f.name,
                       mc: !!f._mc,
-                      Icon: isBeastformLink ? PawPrint : Swords,
+                      Icon: isBeastformLink ? PawPrint : (CLASS_EMBLEMS[f._mc ? mcInfo?.cls : c.f_class] || Swords),
                       color: "var(--acc)",
                       kicker: "Característica de clase",
                       title: f.name,
