@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-11",
     title: "Imágenes propias en las escenas y viñeta",
     items: [
+      { tag: "mejora", text: "Descansos: los movimientos que no sirven (curar sin heridas, quitarse Estrés sin Estrés, reparar sin armadura o con ella completa, prepararse con la Esperanza al máximo) aparecen atenuados y no se pueden elegir. Si eliges «Trabajar en un proyecto» varias veces (×2, ×3), puedes avanzar proyectos ese mismo número de pasos en el descanso." },
       { tag: "mejora", text: "Retoques: las migas de pan van sin negrita; la animación de marcar Armadura ya no deja la grieta del escudo en pantalla mientras se rompe; la Forma de Bestia en Acciones usa el emblema de la clase; «Trabajar en un proyecto» ocupa las dos columnas en el descanso largo; y «Una bolsita de piedras y huesos» tiene un icono de bolsa." },
       { tag: "mejora", text: "La barra superior es ahora una ruta de migas de pan: «Personajes › Kaelen Vox › Acciones» en la hoja y «Campañas › nombre de la campaña › pestaña» en las campañas. Los niveles anteriores se pueden pulsar para volver." },
       { tag: "mejora", text: "Proyectos: si el personaje no está en una campaña, los proyectos están en pausa (desenfocados con un candado) hasta que hace un descanso largo. Durante ese descanso puede crear y editar proyectos, y avanzar uno (+1) solo si eligió el nuevo movimiento «Trabajar en un proyecto». El botón «Terminar» (o un descanso corto) los vuelve a bloquear." },

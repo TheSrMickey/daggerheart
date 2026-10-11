@@ -4523,6 +4523,7 @@ const sharedStyles = `
   .mh-trov-lute { font-size: 16px; }
   .mh-trov-tag { margin-left: auto; font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; padding: 2px 8px; border-radius: 10px; color: #fff; background: var(--tb); }
   .mh-trov-songs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+  .mh-rest-row.is-off { opacity: .42; cursor: not-allowed; filter: grayscale(.6); }
   .mh-rest-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: minmax(0, 1fr); gap: 8px; }
   .mh-rest-grid .mh-rest-row { position: relative; max-height: none; min-height: 52px; gap: 9px; padding: 8px 30px 8px 10px; }
   .mh-rest-grid .mh-rest-ico { width: 30px; height: 30px; }
@@ -12345,7 +12346,7 @@ export default function App({ onSignOut }) {
 
     // Brujo · Favor: rendir tributo al patrón como movimiento de descanso.
     let favorGain = 0;
-    let projectMove = false;
+    let projectSteps = 0;
     const tributeGain = Math.max(1, Number(c[charSpellTrait(c)] || 0));
     [key1, key2, key3].forEach((key) => {
       if (!key) return;
@@ -12359,7 +12360,7 @@ export default function App({ onSignOut }) {
       }
       if (key === "project") {
         if (!isLong) return;
-        projectMove = true;
+        projectSteps++;
         messages.push("Trabajar en un proyecto: puedes avanzar uno (+1)");
         return;
       }
@@ -12428,7 +12429,7 @@ export default function App({ onSignOut }) {
     if (favorGain) restPatch.f_favor = String(getFavor(c) + favorGain);
     // Proyectos: se abren con un descanso largo (crear y editar) y solo avanzan si elegiste «Trabajar en un proyecto».
     restPatch.f_proj_open = isLong ? "1" : "";
-    restPatch.f_proj_adv = projectMove ? "1" : "";
+    restPatch.f_proj_adv = projectSteps ? String(projectSteps) : "";
     // Trovador: el descanso largo recupera sus canciones.
     if (isLong && c.f_speech_used) restPatch.f_speech_used = "";
     if (c.f_scales_ready) restPatch.f_scales_ready = "";
@@ -12636,7 +12637,8 @@ export default function App({ onSignOut }) {
     if (!p) return;
     const next = (p.count || 0) + 1;
     adjustProject(id, index, 1);
-    if (c.f_proj_adv) updateCharacterField(id, "f_proj_adv", "");
+    const stepsLeft = Number(c.f_proj_adv || 0);
+    if (stepsLeft > 0) updateCharacterField(id, "f_proj_adv", stepsLeft > 1 ? String(stepsLeft - 1) : "");
     const done = p.goal && next >= p.goal;
     postCampaignEvent(id, done ? `🔨 Termina su proyecto «${p.name}».` : `🔨 Trabaja en «${p.name}» (${next}${p.goal ? "/" + p.goal : ""}).`);
   };
@@ -15571,20 +15573,21 @@ export default function App({ onSignOut }) {
                               const hope = Number(c.hope_marked ?? HOPE_DEFAULT);
                               const roll = `1d4+${tier}`;
                               const acts = [
-                                { key: "heal", label: "Curar heridas", Icon: Heart, color: "#D9644E", need: hpTotal ? hpMarked / hpTotal : 0, text: isLong ? "Recupera todos los PV" : `Recupera ${roll} PV` },
-                                { key: "clearmind", label: "Quitarse el Estrés", Icon: Zap, color: "#A58BE8", need: stressTotal ? stressMarked / stressTotal : 0, text: isLong ? "Quita todo el Estrés" : `Quita ${roll} Estrés` },
-                                { key: "repair", label: "Reparar la armadura", Icon: Shield, color: "var(--acc)", need: armorTotal ? (armorTotal - armorLeft) / armorTotal : 0, text: !armorTotal ? "No llevas armadura" : isLong ? "Repara toda la Armadura" : `Repara ${roll} casillas` },
-                                { key: "prepare", label: "Prepararse", Icon: Sparkles, color: "#E3B04B", need: hopeTotal ? ((hopeTotal - hope) / hopeTotal) * 0.8 : 0, text: "+1 Esperanza" },
-                                ...(isLong ? [{ key: "project", label: "Trabajar en un proyecto", Icon: Hammer, color: "#C08B5C", need: 0, text: "Avanza un proyecto +1" }] : []),
+                                { key: "heal", label: "Curar heridas", Icon: Heart, color: "#D9644E", need: hpTotal ? hpMarked / hpTotal : 0, text: isLong ? "Recupera todos los PV" : `Recupera ${roll} PV`, off: hpMarked <= 0 ? "Sin heridas que curar" : "" },
+                                { key: "clearmind", label: "Quitarse el Estrés", Icon: Zap, color: "#A58BE8", need: stressTotal ? stressMarked / stressTotal : 0, text: isLong ? "Quita todo el Estrés" : `Quita ${roll} Estrés`, off: stressMarked <= 0 ? "Sin Estrés marcado" : "" },
+                                { key: "repair", label: "Reparar la armadura", Icon: Shield, color: "var(--acc)", need: armorTotal ? (armorTotal - armorLeft) / armorTotal : 0, text: !armorTotal ? "No llevas armadura" : isLong ? "Repara toda la Armadura" : `Repara ${roll} casillas`, off: !armorTotal ? "No llevas armadura" : armorLeft >= armorTotal ? "Armadura completa" : "" },
+                                { key: "prepare", label: "Prepararse", Icon: Sparkles, color: "#E3B04B", need: hopeTotal ? ((hopeTotal - hope) / hopeTotal) * 0.8 : 0, text: "+1 Esperanza", off: hope >= hopeTotal ? "Esperanza al máximo" : "" },
+                                ...(isLong ? [{ key: "project", label: "Trabajar en un proyecto", Icon: Hammer, color: "#C08B5C", need: 0, text: "Avanza un proyecto +1", off: "" }] : []),
                               ];
+                              const offKeys = acts.filter((ac) => ac.off).map((ac) => ac.key);
                               // Recomendadas: lo que más te falta; si sobra hueco, prepararse.
                               const recommended = acts
                                 .filter((ac) => ac.need > 0)
                                 .sort((x, y) => y.need - x.need)
                                 .slice(0, slots)
                                 .map((ac) => ac.key);
-                              while (recommended.length < slots) recommended.push("prepare");
-                              const picks = (restPicks || recommended).filter((p) => isLong || p !== "project");
+                              while (recommended.length < slots && !offKeys.includes("prepare")) recommended.push("prepare");
+                              const picks = (restPicks || recommended).filter((p) => (isLong || p !== "project") && !offKeys.includes(p));
                               const countOf = (key) => picks.filter((p) => p === key).length;
                               const togglePick = (key) => {
                                 const n = countOf(key);
@@ -15592,7 +15595,11 @@ export default function App({ onSignOut }) {
                                 // Pulsar otra vez la elige dos veces si queda hueco; si no, la quita.
                                 if (n === 0 && picks.length < slots) setRestPicks([...picks, key]);
                                 else if (n > 0 && picks.length < slots) setRestPicks([...picks, key]);
-                                else if (n > 0) setRestPicks(without);
+                                else if (n > 0 && without.length > 0) {
+                                  // Ya están todas elegidas: otra pulsación cambia una de las otras por esta (×2, ×3…); si solo queda esta, se quita.
+                                  const at = picks.findIndex((p) => p !== key);
+                                  setRestPicks(picks.map((p, i) => (i === at ? key : p)));
+                                } else if (n > 0) setRestPicks(without);
                                 else setRestPicks([...picks.slice(1), key]);
                               };
                               const shortRests = Number(c.f_short_rests || 0);
@@ -15624,18 +15631,19 @@ export default function App({ onSignOut }) {
                                           role="checkbox"
                                           aria-checked={n > 0}
                                           tabIndex={0}
-                                          className={"mh-rest-row" + (n > 0 ? " sel" : "")}
+                                          className={"mh-rest-row" + (n > 0 ? " sel" : "") + (ac.off ? " is-off" : "")}
+                                          aria-disabled={ac.off ? true : undefined}
                                           style={{ "--rc": ac.color, ...(ac.key === "project" ? { gridColumn: "1 / -1" } : {}) }}
                                           title={n > 0 && picks.length < slots ? "Pulsa otra vez para elegirla dos veces" : undefined}
-                                          onClick={() => togglePick(ac.key)}
-                                          onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), togglePick(ac.key))}
+                                          onClick={() => !ac.off && togglePick(ac.key)}
+                                          onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), !ac.off && togglePick(ac.key))}
                                         >
                                           <span className="mh-rest-ico">
                                             <ac.Icon size={17} />
                                           </span>
                                           <div style={{ flex: 1, minWidth: 0 }}>
                                             <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--mh-ink)", lineHeight: 1.25 }}>{ac.label}</div>
-                                            <div style={{ fontSize: 10.5, color: "var(--mh-muted)", marginTop: 1 }}>{ac.text}</div>
+                                            <div style={{ fontSize: 10.5, color: "var(--mh-muted)", marginTop: 1 }}>{ac.off || ac.text}</div>
                                             {recommended.includes(ac.key) && ac.need > 0 && <span className="mh-rest-rec">Recomendado</span>}
                                           </div>
                                           {n > 1 && <span className="mh-rest-x2">×{n}</span>}
@@ -15739,7 +15747,7 @@ export default function App({ onSignOut }) {
                                   <button
                                     className="mh-btn"
                                     style={{ width: "100%", justifyContent: "center", padding: "10px 14px", fontSize: 13.5 }}
-                                    disabled={blocked || picks.length === 0}
+                                    disabled={blocked || (picks.length === 0 && acts.some((ac) => !ac.off && ac.key !== "project"))}
                                     onClick={() => {
                                       performRest(viewingCharId, restType, picks[0], picks[1], picks[2], isAutomatonRest && !isLong && picks.includes(restEfficient) ? restEfficient : null);
                                       if (lock) {
@@ -15802,7 +15810,8 @@ export default function App({ onSignOut }) {
                               const projects = getProjects(c);
                               const projCamp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(viewingCharId));
                               const projOpen = c.f_proj_open === "1";
-                              const canAdvance = projCamp ? true : c.f_proj_adv === "1";
+                              const stepsLeft = Number(c.f_proj_adv || 0);
+                              const canAdvance = projCamp ? true : stepsLeft > 0;
                               const wrapLock = (node) =>
                                 !projCamp ? (
                                   <div className="rl">
@@ -15810,7 +15819,7 @@ export default function App({ onSignOut }) {
                                       <div className="rl-ban">
                                         <Moon size={16} />
                                         <span>
-                                          <b>Descanso largo.</b> {c.f_proj_adv === "1" ? "Puedes avanzar un proyecto." : "Crea y edita tus proyectos."}
+                                          <b>Descanso largo.</b> {stepsLeft > 0 ? "Puedes avanzar " + stepsLeft + (stepsLeft > 1 ? " pasos." : " paso.") : "Crea y edita tus proyectos."}
                                         </span>
                                         <button type="button" className="mh-btn-ghost" style={{ marginLeft: "auto", padding: "3px 9px", fontSize: 11.5 }} onClick={() => updateCharacterFields(viewingCharId, { f_proj_open: "", f_proj_adv: "" })}>
                                           Terminar
