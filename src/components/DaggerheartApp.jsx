@@ -9369,6 +9369,7 @@ export default function App({ onSignOut }) {
       stress: Number(next.stress_marked || 0) - Number(prev.stress_marked || 0),
       hope: Number(next.hope_marked ?? HOPE_DEFAULT) - Number(prev.hope_marked ?? HOPE_DEFAULT),
       favor: next.f_class === "Brujo" ? getFavor(next) - getFavor(prev) : 0,
+      armor: next.f_armor === prev.f_armor ? Number(prev.armor_marked || 0) - Number(next.armor_marked || 0) : 0,
     };
     Object.entries(gains).forEach(([kind, amount]) => {
       if (amount <= 0) return;
@@ -9403,6 +9404,12 @@ export default function App({ onSignOut }) {
       kind: "roll",
       roll: { type: "howl", dice: rolls, dieLabel: tier + "d20", total },
     });
+  };
+
+  // Armadura: se marca de 1 en 1. Al marcar una, el siguiente daño que se pulse baja un umbral de gravedad.
+  const markArmor = (id, index, current) => {
+    if (index < current) updateCharacterFields(id, { armor_marked: String(current - 1), f_armor_pend: "1" });
+    else updateCharacterFields(id, { armor_marked: String(current + 1), f_armor_pend: "" });
   };
 
   const toggleCharSlot = (id, field, index, current) => {
@@ -9519,6 +9526,9 @@ export default function App({ onSignOut }) {
     // Guardián · Imparable: la gravedad baja un umbral (Grave→Mayor, Mayor→Menor, Menor→nada).
     const unstop = Number(c.f_unstop_value || 0) > 0 && amount > 0;
     if (unstop) amount -= 1;
+    // Armadura marcada: el daño baja un umbral (Grave→Mayor, Mayor→Menor, Menor→nada).
+    const armored = c.f_armor_pend === "1" && amount > 0;
+    if (armored) amount -= 1;
     // Dracona · Escamas: si se activaron antes, el siguiente daño Grave marca 1 PV menos.
     const scales = amount === 3 && c.f_scales_ready === "1";
     if (scales) amount = 2;
@@ -9528,9 +9538,10 @@ export default function App({ onSignOut }) {
     const total = Number(c.r_hp || 0);
     const current = Number(c.hp_marked || 0);
     const next = Math.min(total, current + amount);
-    let patch = { hp_marked: String(next), ...(scales ? { f_scales_ready: "" } : {}), ...(thick ? { f_thickskin_ready: "" } : {}), ...(c.f_fortitude_ready ? { f_fortitude_ready: "" } : {}) };
+    let patch = { hp_marked: String(next), ...(armored ? { f_armor_pend: "" } : {}), ...(scales ? { f_scales_ready: "" } : {}), ...(thick ? { f_thickskin_ready: "" } : {}), ...(c.f_fortitude_ready ? { f_fortitude_ready: "" } : {}) };
     if (scales) postCampaignEvent(id, "🐉 Escamas: el daño Grave marca 2 PV en vez de 3");
     if (thick) postCampaignEvent(id, "⛰️ Piel Gruesa: el daño Menor no marca PV (marcó 2 de Estrés)");
+    if (armored) postCampaignEvent(id, "🛡️ La Armadura reduce el daño un umbral" + (amount === 0 ? ": no marca PV" : ""));
     if (unstop && amount === 0) postCampaignEvent(id, "🛡️ Imparable: el daño Menor no marca PV");
     if (clearElemental && c.f_elemental_active) {
       postCampaignEvent(id, `🌪️ Deja de canalizar ${c.f_elemental_active} (daño Grave)`);
@@ -13734,6 +13745,7 @@ export default function App({ onSignOut }) {
               ["stress", "Estrés", "#A58BE8", "mh-res-stress"],
               ["hope", "Esperanza", "#E3B04B", "mh-res-hope"],
               ["favor", "Favor", "#B55FA0", "mh-res-favor"],
+              ["armor", "Armadura", "var(--acc)", "mh-res-armor"],
             ].map(([kind, label, col, cls], i) => {
               const fx = resFx[kind];
               if (!fx || fx.id !== viewingCharId) return null;
@@ -13741,7 +13753,7 @@ export default function App({ onSignOut }) {
                 <Fragment key={kind}>
                   <div key={"f" + fx.key} className={"mh-res-flash " + cls} style={{ "--rc": col }} />
                   <div key={"t" + fx.key} className={"mh-res-text " + cls} style={{ "--rc": col, top: 30 + i * 9 + "%" }}>
-                    +{fx.amount} {label}
+                    {kind === "armor" ? "−" : "+"}{fx.amount} {label}
                   </div>
                 </Fragment>
               );
@@ -14471,15 +14483,15 @@ export default function App({ onSignOut }) {
                                       {armorEntry ? armorEntry.score + equipMods.armor : "—"}
                                     </div>
                                     {armorEntry && (
-                                      <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
+                                      <div key={resFx.armor && resFx.armor.id === viewingCharId ? resFx.armor.key : "ar"} className={resFx.armor && resFx.armor.id === viewingCharId ? "mh-row-stress" : undefined} style={{ "--rc": "var(--acc)", display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
                                         {Array.from({ length: armorEntry.score + equipMods.armor }, (_, i) => i).map((i) => {
                                           const filled = i < Number(c.armor_marked || 0);
                                           return (
                                             <Shield
                                               key={i}
                                               size={22}
-                                              onClick={() => toggleCharSlot(viewingCharId, "armor_marked", i, Number(c.armor_marked || 0))}
-                                              title={filled ? "Armadura disponible — clic para gastarla" : "Armadura gastada — clic para recuperarla"}
+                                              onClick={() => markArmor(viewingCharId, i, Number(c.armor_marked || 0))}
+                                              title={filled ? "Armadura disponible — clic para marcar 1 (el siguiente daño baja un umbral)" : "Armadura gastada — clic para recuperar 1"}
                                               color="var(--acc)"
                                               fill={filled ? "var(--acc)" : "transparent"}
                                               style={{ cursor: "pointer" }}
@@ -14489,6 +14501,11 @@ export default function App({ onSignOut }) {
                                       </div>
                                     )}
                                   </div>
+                                  {c.f_armor_pend === "1" && (
+                                    <div style={{ fontSize: 10.5, color: "var(--mh-gold-ink)", textAlign: "center", marginTop: 5 }}>
+                                      Armadura marcada: el próximo daño baja un umbral
+                                    </div>
+                                  )}
                                 </div>
                               </div>
 

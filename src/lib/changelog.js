@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-11",
     title: "Imágenes propias en las escenas y viñeta",
     items: [
+      { tag: "mejora", text: "Armadura: ahora se marca de 1 en 1. Al marcar una, el siguiente umbral que pulses baja un escalón de gravedad según las reglas (Grave a Mayor, Mayor a Menor, Menor a ningún daño). Marcarla tiene su propia animación, como la Vida, el Estrés y la Esperanza." },
       { tag: "mejora", text: "«Una bolsita de piedras y huesos» tiene ahora su propio icono (un hueso) y la «Poción menor de vigor» usa el color del Estrés (morado) en lugar del rojo de las pociones de salud." },
       { tag: "mejora", text: "La creación de personaje sale de su caja y se adapta a la columna central, como el resto de páginas, y los pasos de clase, ascendencia y comunidad ya no van dentro de marcos. Mientras creas un personaje, tus amigos ven «Creando un personaje…» en tu estado, hasta que lo termines o canceles." },
       { tag: "mejora", text: "En Inicio, la próxima sesión ya no es un aviso suelto: aparece en su propia sección «Próximas sesiones», con el mismo diseño de fichas que «Retoma tus campañas» y «Tus personajes» (día, hora, cuenta atrás, lugar y botones para confirmar si vas)." },
