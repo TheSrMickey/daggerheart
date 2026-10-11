@@ -171,12 +171,14 @@ function stepAtmos(ctx, h, d, scene, dt, elapsed, time, cycle, weather, theme) {
   h.color.copy(c.hemi); h.groundColor.copy(c.ground); h.intensity = c.hi + fl.v * 2.2;
   d.color.copy(c.dir); d.intensity = c.di + fl.v * 2.5; d.position.set(c.pos[0], c.pos[1], c.pos[2]);
   scene.background = c.bg;
-  // Cielo: de día se aclara hacia el horizonte; la niebla toma el color del horizonte para que el mar se funda con él.
+  // Cielo: de día se aclara hacia el horizonte. El mar de fuera lleva su propio color y no se mezcla con él.
   const dayf = Math.max(0, Math.min(1, (c.di - 0.5) / 0.65)) * (1 - w.gray * 0.8);
   if (!c.hor) { c.hor = new Color(); c.top = new Color(); }
   c.hor.copy(c.bg).lerp(new Color(SKY_HOR[theme] || SKY_HOR.verano), dayf);
   c.top.copy(c.bg).multiplyScalar(0.7).lerp(new Color(SKY_TOP[theme] || SKY_TOP.verano), dayf);
-  if (scene.fog) { scene.fog.color.copy(c.hor); scene.fog.near = c.fogNear; scene.fog.far = c.fogFar; }
+  if (!c.fogc) c.fogc = new Color();
+  c.fogc.set((OCEAN[theme] || OCEAN.verano)[1]).multiplyScalar(0.25 + 0.75 * dayf);
+  if (scene.fog) { scene.fog.color.copy(c.fogc); scene.fog.near = c.fogNear; scene.fog.far = c.fogFar; }
   return tg.star > 0.5;
 }
 
@@ -193,7 +195,7 @@ function SkyDome({ ctx }) {
   });
   return (
     <mesh renderOrder={-10} frustumCulled={false}>
-      <sphereGeometry args={[190, 24, 16]} />
+      <sphereGeometry args={[900, 24, 16]} />
       <shaderMaterial ref={mat} side={BackSide} depthWrite={false} fog={false} vertexShader={SKY_VERT} fragmentShader={SKY_FRAG} uniforms={{ top: { value: new Color("#4f8fd8") }, hor: { value: new Color("#bfe0f3") } }} />
     </mesh>
   );
@@ -370,12 +372,12 @@ function FitCamera({ extent, controlsRef, flat }) {
     const e = Math.max(3, extent);
     // Vista de jugadores: cámara más baja y de campo más abierto, para que asome el horizonte con el cielo.
     // Vista del DJ al editar: más cenital, para pintar casillas con comodidad.
-    Object.assign(camera, { fov: flat ? 52 : 40 });
+    Object.assign(camera, { fov: flat ? 58 : 40 });
     camera.updateProjectionMatrix();
     const tf = Math.tan((camera.fov * Math.PI) / 360);
     // Distancia a la que cabe todo el mapa a lo ancho (con el aspecto real del lienzo) y a lo alto.
     const dist = Math.max(8, ((e * 0.95 + 1.2) / (tf * Math.min(aspect, 1.7))) * 0.82 * (flat ? 1.1 : 1));
-    camera.position.set(0, dist * (flat ? 0.5 : 0.82), dist * (flat ? 0.87 : 0.57));
+    camera.position.set(0, dist * (flat ? 0.375 : 0.82), dist * (flat ? 0.927 : 0.57));
     camera.lookAt(0, 0, 0);
     const c = controlsRef.current;
     if (c) {
@@ -390,7 +392,7 @@ function FitCamera({ extent, controlsRef, flat }) {
 const topOf = (t) => (WORLD_ITEM[t?.t]?.h || 0.2) + (t?.d && t.d.startsWith("unit-") ? 0.3 : 0);
 
 // Mar abierto: todo lo que queda fuera del mapa es agua (solo diseño). El color sigue el estilo del mapa.
-const OCEAN = { verano: ["#4f9fd6", "#3f82bd"], invierno: ["#8fc0dd", "#74a6c6"], otono: ["#4a86a8", "#3f7094"] };
+const OCEAN = { verano: ["#4f9fd6", "#2b6fae"], invierno: ["#8fc0dd", "#4f84ad"], otono: ["#4a86a8", "#2d5f86"] };
 // Degradado radial: junto al mapa el color del agua de las casillas; hacia fuera, mar más hondo.
 const makeOceanTex = (theme) => {
   const [near, deep] = OCEAN[theme] || OCEAN.verano;
@@ -399,22 +401,56 @@ const makeOceanTex = (theme) => {
   const g = c.getContext("2d");
   const grad = g.createRadialGradient(512, 512, 0, 512, 512, 512);
   grad.addColorStop(0, near);
-  grad.addColorStop(0.1, near);
-  grad.addColorStop(0.42, deep);
+  grad.addColorStop(0.05, near);
+  grad.addColorStop(0.085, deep);
   grad.addColorStop(1, deep);
   g.fillStyle = grad;
   g.fillRect(0, 0, 1024, 1024);
+  // Olas: anillos claros muy suaves que se alejan del mapa (el mar de fuera tiene diseño propio).
+  g.strokeStyle = "rgba(255,255,255,.07)";
+  g.lineWidth = 3;
+  for (let r = 70; r < 512; r += 26) {
+    g.beginPath();
+    g.arc(512, 512, r, 0, Math.PI * 2);
+    g.stroke();
+  }
   const t = new CanvasTexture(c);
   t.colorSpace = SRGBColorSpace;
   return t;
 };
-function Ocean({ theme }) {
+// Orilla: el agua de las casillas del borde se difumina hacia el color del mar de fuera.
+const makeShoreTex = (theme) => {
+  const deep = (OCEAN[theme] || OCEAN.verano)[1];
+  const c = document.createElement("canvas");
+  c.width = c.height = 512;
+  const g = c.getContext("2d");
+  const grad = g.createRadialGradient(256, 256, 0, 256, 256, 256);
+  grad.addColorStop(0, deep + "00");
+  grad.addColorStop(0.5, deep + "00");
+  grad.addColorStop(0.8, deep + "dd");
+  grad.addColorStop(1, deep);
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 512, 512);
+  const t = new CanvasTexture(c);
+  t.colorSpace = SRGBColorSpace;
+  return t;
+};
+function Ocean({ theme, shore }) {
   const tex = useMemo(() => makeOceanTex(theme), [theme]);
+  const st = useMemo(() => makeShoreTex(theme), [theme]);
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.094, 0]}>
-      <circleGeometry args={[160, 64]} />
-      <meshStandardMaterial map={tex} roughness={0.55} metalness={0.05} />
-    </mesh>
+    <>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.094, 0]}>
+        <circleGeometry args={[600, 64]} />
+        <meshStandardMaterial map={tex} roughness={0.55} metalness={0.05} />
+      </mesh>
+      {shore && (
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.106, 0]} renderOrder={1}>
+          <circleGeometry args={[15.5, 64]} />
+          <meshStandardMaterial map={st} transparent depthWrite={false} roughness={0.55} metalness={0.05} />
+        </mesh>
+      )}
+    </>
   );
 }
 
@@ -479,7 +515,7 @@ function Scene({ tiles, edit, clouds, hover, setHover, onCell, selCell, controls
   return (
     <>
       <Atmosphere time={atmos.time || "dia"} cycle={!!atmos.cycle} weather={weather} theme={theme} onNight={setNight} />
-      <Ocean theme={theme} />
+      <Ocean theme={theme} shore={!!clouds} />
       {clouds && <Clouds center={[px, pz]} weather={weather} />}
       {night && <Stars radius={70} depth={25} count={1800} factor={3.2} saturation={0} fade speed={0.4} />}
       {(weather === "lluvia" || weather === "tormenta" || weather === "nieve") && <Weather kind={weather} />}
@@ -520,7 +556,7 @@ function Scene({ tiles, edit, clouds, hover, setHover, onCell, selCell, controls
       })()}
       <FitCamera extent={Object.keys(tiles).reduce((m, k) => { const [q, r] = k.split(",").map(Number); return Math.max(m, Math.abs(q), Math.abs(r), Math.abs(-q - r)); }, 0)} controlsRef={controlsRef} flat={!!clouds} />
       <Labels items={labels} place={place} />
-      <OrbitControls ref={controlsRef} makeDefault enableDamping maxPolarAngle={1.25} minDistance={3} maxDistance={70} mouseButtons={{ LEFT: MOUSE.ROTATE, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.PAN }} />
+      <OrbitControls ref={controlsRef} makeDefault enabled={!clouds} enableDamping maxPolarAngle={1.25} minDistance={3} maxDistance={70} mouseButtons={{ LEFT: MOUSE.ROTATE, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.PAN }} />
     </>
   );
 }
@@ -785,10 +821,12 @@ export default function WorldMap({ campaignId, edit = false, onLog }) {
           <button type="button" onClick={() => setMoving(false)}>Cancelar</button>
         </div>
       )}
-      <button type="button" className="wm-center" onClick={() => controlsRef.current?.reset()} title="Volver a la vista inicial" aria-label="Volver a la vista inicial">
-        <Crosshair size={15} />
-      </button>
-      <div className="wm-help">Arrastra para girar · rueda para acercar · botón derecho para mover{party ? " · pulsa al grupo para moverlo" : ""}{edit ? " · pulsa una casilla para aplicar la herramienta" : ""}</div>
+      {!asPlayer && (
+        <button type="button" className="wm-center" onClick={() => controlsRef.current?.reset()} title="Volver a la vista inicial" aria-label="Volver a la vista inicial">
+          <Crosshair size={15} />
+        </button>
+      )}
+      <div className="wm-help">{asPlayer ? (party ? "Vista fija · pulsa al grupo para moverlo" : "Vista fija") : "Arrastra para girar · rueda para acercar · botón derecho para mover" + (party ? " · pulsa al grupo para moverlo" : "") + (edit ? " · pulsa una casilla para aplicar la herramienta" : "")}</div>
     </div>
   );
 
