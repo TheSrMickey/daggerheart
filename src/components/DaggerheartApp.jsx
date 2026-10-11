@@ -3347,6 +3347,39 @@ const sharedStyles = `
   .mh-fan-pile span { position: absolute; width: 62px; height: 90px; border-radius: 9px; border: 2px solid var(--pc); background: linear-gradient(160deg, color-mix(in srgb, var(--pc) 30%, #1d1827), #15111c); box-shadow: 0 3px 8px rgba(0,0,0,.5); left: calc(var(--q) * 6px); top: calc(10px - var(--q) * 4px); transform: rotate(calc(-6deg + var(--q) * 6deg)); transition: transform .15s; }
   .mh-fan-pile:hover span { transform: translateY(-6px) rotate(calc(-6deg + var(--q) * 6deg)); }
   .mh-fan-pile em { position: absolute; left: -6px; right: -6px; bottom: -22px; text-align: center; font: 600 10.5px Inter, system-ui, sans-serif; font-style: normal; color: #fff; background: rgba(21,17,28,.9); border-radius: 6px; padding: 2px 4px; white-space: nowrap; }
+  .dsw { z-index: 9990 !important; display: flex; align-items: center; justify-content: center; padding: 16px; background: radial-gradient(ellipse at 50% 45%, rgba(40,32,64,.9), rgba(6,5,12,.95) 70%); backdrop-filter: blur(7px); animation: dsw-bg .3s ease both; }
+  @keyframes dsw-bg { from { opacity: 0; } to { opacity: 1; } }
+  .dsw-in { position: relative; width: min(1100px, 100%); max-height: 100%; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 8px 12px 18px; scrollbar-width: none; }
+  .dsw-in::-webkit-scrollbar { display: none; }
+  .dsw-x { all: unset; cursor: pointer; position: absolute; right: 10px; top: 6px; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: #c9c3d8; background: rgba(255,255,255,.07); } .dsw-x:hover { background: rgba(255,255,255,.14); color: #fff; }
+  .dsw-head { text-align: center; animation: dsw-up .5s .05s cubic-bezier(.2,.8,.2,1) both; } .dsw-head h2 { margin: 0 0 4px; font-size: 26px; color: #f3ebdd; } .dsw-head p { margin: 0; font-size: 13.5px; color: #b9afc8; max-width: 520px; line-height: 1.5; }
+  @keyframes dsw-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  .dsw-stage { display: flex; justify-content: center; align-items: flex-end; min-height: 300px; padding: 10px 0 4px; }
+  .dsw-card, .dsw-slot { --s: .62; position: relative; flex: none; width: calc(300px * var(--s)); height: calc(420px * var(--s)); margin: 0 6px; transform: translateY(var(--y)) rotate(var(--r)); transition: transform .25s cubic-bezier(.2,.8,.2,1), filter .2s; }
+  .dsw-card { filter: drop-shadow(0 12px 22px rgba(0,0,0,.55)); animation: dsw-deal .65s var(--d) cubic-bezier(.2,.9,.25,1.1) backwards; }
+  .dsw-card .mh-fan-in { transform: scale(var(--s)); }
+  .dsw-card:hover { transform: translateY(calc(var(--y) - 26px)) rotate(0deg) scale(1.05); z-index: 3; }
+  @keyframes dsw-deal { 0% { opacity: 0; transform: translateY(160px) rotate(0deg) scale(.55); } 60% { opacity: 1; } 100% { opacity: 1; transform: translateY(var(--y)) rotate(var(--r)); } }
+  .dsw-card.is-out { animation: dsw-out .33s cubic-bezier(.5,0,.8,.4) both; pointer-events: none; }
+  @keyframes dsw-out { to { opacity: 0; transform: translateY(-90px) rotate(0deg) scale(.6); } }
+  .dsw-slot { border: 2px dashed rgba(255,255,255,.22); border-radius: 22px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: #8d88a3; font: 600 12px Inter, system-ui, sans-serif; background: rgba(255,255,255,.03); animation: dsw-slot .5s var(--d) ease backwards; }
+  @keyframes dsw-slot { from { opacity: 0; transform: translateY(40px) rotate(var(--r)); } }
+  .dsw-rm { all: unset; cursor: pointer; position: absolute; right: -6px; top: -6px; z-index: 4; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: #C0504A; box-shadow: 0 4px 10px rgba(0,0,0,.5); animation: dsw-pop .3s ease both; } .dsw-rm:hover { background: #d9625a; transform: scale(1.1); }
+  @keyframes dsw-pop { from { transform: scale(0); } to { transform: scale(1); } }
+  .dsw-stage.is-pick { animation: dsw-shake .35s ease; }
+  .dsw-card.is-target { cursor: pointer; animation: dsw-glow 1s ease-in-out infinite alternate; } .dsw-card.is-target:hover { filter: drop-shadow(0 0 22px var(--cc)); }
+  @keyframes dsw-glow { from { filter: drop-shadow(0 0 4px var(--cc)); } to { filter: drop-shadow(0 0 20px var(--cc)); } }
+  @keyframes dsw-shake { 25% { translate: -6px 0; } 75% { translate: 6px 0; } }
+  .dsw-act { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 4px; animation: dsw-up .5s .35s cubic-bezier(.2,.8,.2,1) both; } .dsw-act button { display: inline-flex; align-items: center; gap: 8px; padding: 11px 20px; font-size: 14px; }
+  .dsw-shelf-h { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; animation: dsw-up .4s ease both; } .dsw-lv { font-size: 12px; color: #9d93ab; }
+  .dsw-shelf { width: 100%; display: flex; justify-content: safe center; gap: 12px; overflow-x: auto; padding: 10px 6px 14px; scrollbar-width: thin; }
+  .dsw-mini { all: unset; cursor: pointer; --s: .42; position: relative; flex: none; width: calc(300px * var(--s)); height: calc(420px * var(--s)); border-radius: 12px; filter: drop-shadow(0 6px 12px rgba(0,0,0,.5)); transition: transform .2s, filter .2s; animation: dsw-up .45s var(--d) cubic-bezier(.2,.8,.2,1) backwards; }
+  .dsw-mini .mh-fan-in { transform: scale(var(--s)); } .dsw-mini:hover { transform: translateY(-8px) scale(1.04); filter: drop-shadow(0 0 14px var(--cc)); }
+  .dsw-mini.is-on { cursor: default; filter: grayscale(.7) brightness(.6); } .dsw-mini.is-on:hover { transform: none; }
+  .dsw-mini.is-pend { outline: 2px solid var(--cc); outline-offset: 3px; }
+  .dsw-tick { position: absolute; left: 8px; right: 8px; top: 50%; transform: translateY(-50%); padding: 8px 4px; border-radius: 10px; background: rgba(8,6,12,.72); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: #fff; font: 700 11px Inter, system-ui, sans-serif; text-shadow: 0 1px 4px #000; }
+  @media (prefers-reduced-motion: reduce) { .dsw, .dsw-head, .dsw-card, .dsw-slot, .dsw-act, .dsw-shelf-h, .dsw-mini, .dsw-rm, .dsw-stage { animation: none !important; } }
+  @media (max-width: 760px) { .dsw-card, .dsw-slot { --s: .42; margin: 0 -14px; } .dsw-stage { min-height: 200px; } }
   .mh-fan-zoom { position: fixed; inset: 0; z-index: 9998; background: rgba(8,6,12,.7); display: flex; align-items: center; justify-content: center; padding: 16px; }
   .mh-fan-elems { position: absolute; left: 0; right: 0; top: calc(100% + 12px); display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
   .mh-fan-ask { flex: 0 0 100%; text-align: center; font: 600 13px Inter, system-ui, sans-serif; color: #fff; text-shadow: 0 1px 4px #000; }
@@ -4872,6 +4905,7 @@ const sharedStyles = `
   .mh-friends-search input { all: unset; flex: 1; min-width: 0; font-size: 12.5px; color: var(--mh-ink); }
   .mh-friends-msg { margin-top: 8px; font-size: 12px; padding: 7px 10px; border-radius: 8px; background: #2a56c433; color: var(--mh-ink); }
   .mh-friends-sec { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--mh-line); }
+  .mh-friends-sec .mh-friends-sec { margin-top: 0; padding-top: 0; border-top: 0; }
   .mh-friends-sec h4 { margin: 0 4px 8px; font-size: 11.5px; font-weight: 600; color: var(--mh-muted); display: flex; justify-content: space-between; }
   .mh-friends-sec h4 i { font-style: normal; }
   .mh-friend { display: flex; align-items: center; gap: 10px; padding: 6px 4px; font-size: 13px; color: var(--mh-ink); }
@@ -5251,7 +5285,7 @@ const sharedStyles = `
   .mh-jl-line { position: relative; display: flex; flex-direction: column; gap: 6px; padding-left: 16px; }
   .mh-jl-line .mh-jl-item:not(:last-child)::after { content: ""; position: absolute; left: -12px; top: 17px; height: calc(100% - 11px); width: 2px; background: var(--mh-line); z-index: 0; }
   .mh-bf-grid { display: flex; flex-direction: column; gap: 8px; flex: 1; min-height: 0; overflow-x: hidden; overflow-y: auto; scrollbar-width: thin; }
-  .mh-bf { --bc: var(--acc); position: relative; flex: 1 1 0; min-height: 62px; display: flex; align-items: center; gap: 12px; padding: 8px 12px; border: 1px solid var(--mh-line); border-left: 4px solid var(--bc); border-radius: 12px; background: color-mix(in srgb, var(--bc) 7%, var(--mh-panel)); color: var(--mh-ink); cursor: pointer; font-family: inherit; text-align: left; transition: border-color .15s, background .15s, transform .15s; }
+  .mh-bf { --bc: var(--acc); position: relative; flex: 1 1 0; min-height: 62px; display: flex; align-items: center; gap: 12px; padding: 8px 12px; border: 1px solid var(--mh-line); border-radius: 12px; background: color-mix(in srgb, var(--bc) 7%, var(--mh-panel)); color: var(--mh-ink); cursor: pointer; font-family: inherit; text-align: left; transition: border-color .15s, background .15s, transform .15s; }
   .mh-bf:hover { border-color: var(--bc); background: color-mix(in srgb, var(--bc) 12%, var(--mh-panel)); box-shadow: 0 0 0 1px color-mix(in srgb, var(--bc) 55%, transparent) inset; }
   .mh-bf.is-on { border-color: var(--bc); background: color-mix(in srgb, var(--bc) 16%, var(--mh-panel)); box-shadow: 0 0 0 1px var(--bc) inset; }
   .mh-bf.is-locked { opacity: .55; }
@@ -6651,6 +6685,140 @@ function FanFace({ c, col }) {
                   )}
                 </div>
               </div>
+  );
+}
+
+// Cambio de cartas de dominio al descansar: pantalla completa con tu mano en el centro.
+// Primero se ve la mano y se decide si cambiar; al cambiar, aparece el estante con las cartas disponibles.
+function DomainSwap({ entries, initial, limit, level, domains, colors, onSave, onClose }) {
+  const [sel, setSel] = useState(initial);
+  const [edit, setEdit] = useState(false);
+  const [dom, setDom] = useState(domains[0]);
+  const [pend, setPend] = useState(null); // carta del estante a la espera de elegir a cuál sustituye
+  const [out, setOut] = useState(null); // carta que se está retirando (animación)
+  const [shake, setShake] = useState(0);
+  const byKey = (k) => entries.find((e) => e.key === k);
+  const colOf = (c) => colors[c.domain] || "#C9A24B";
+  const changed = sel.length !== initial.length || sel.some((k, i) => k !== initial[i]);
+  useEffect(() => {
+    const esc = (e) => {
+      if (e.key !== "Escape") return;
+      if (pend) setPend(null);
+      else onClose();
+    };
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [pend, onClose]);
+  const retire = (k) => {
+    setOut(k);
+    setTimeout(() => {
+      setSel((p) => p.filter((x) => x !== k));
+      setOut(null);
+    }, 330);
+  };
+  const addCard = (k) => {
+    if (sel.includes(k)) return;
+    if (sel.length < limit) setSel((p) => [...p, k]);
+    else if (pend === k) setPend(null);
+    else (setPend(k), setShake((n) => n + 1));
+  };
+  const replaceWith = (oldK) => {
+    if (!pend) return;
+    const nk = pend;
+    setPend(null);
+    setOut(oldK);
+    setTimeout(() => {
+      setSel((p) => p.map((x) => (x === oldK ? nk : x)));
+      setOut(null);
+    }, 300);
+  };
+  const slots = Array.from({ length: limit }, (_, i) => sel[i] || null);
+  const mid = (limit - 1) / 2;
+  const shelf = entries.filter((e) => e.domain === dom);
+  return (
+    <div className="mh-overlay dsw" role="dialog" aria-label="Cambiar cartas de dominio" onClick={onClose}>
+      <div className="dsw-in" onClick={(e) => e.stopPropagation()}>
+        <button type="button" className="dsw-x" onClick={onClose} aria-label="Cerrar"><X size={18} /></button>
+        <div className="dsw-head">
+          <h2 className="mh-serif">Cartas de dominio</h2>
+          <p>
+            {pend
+              ? "Elige la carta de tu mano que quieres sustituir."
+              : edit
+              ? "Retira una carta de tu mano y elige otra del estante. Tienes " + sel.length + " de " + limit + " cartas."
+              : "Este es tu momento de descanso para repasar tu mano. ¿Quieres cambiar alguna carta?"}
+          </p>
+        </div>
+        <div className={"dsw-stage" + (pend ? " is-pick" : "")} key={"st" + shake}>
+          {slots.map((k, i) => {
+            const c = k ? byKey(k) : null;
+            const col = c ? colOf(c) : "#8d88a3";
+            const style = { "--r": ((i - mid) * 5) + "deg", "--y": Math.abs(i - mid) * 7 + "px", "--d": i * 110 + "ms", "--cc": col };
+            if (!c) {
+              return (
+                <div key={"e" + i} className="dsw-slot" style={style}>
+                  <Plus size={22} />
+                  <span>Hueco libre</span>
+                </div>
+              );
+            }
+            return (
+              <div key={k} className={"dsw-card" + (out === k ? " is-out" : "") + (pend ? " is-target" : "")} style={style} onClick={() => pend && replaceWith(k)}>
+                <FanFace c={c} col={col} />
+                {edit && !pend && (
+                  <button type="button" className="dsw-rm" onClick={() => retire(k)} aria-label={"Retirar " + k} title="Retirar de la mano">
+                    <X size={14} strokeWidth={2.6} />
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        {!edit ? (
+          <div className="dsw-act">
+            <button type="button" className="mh-btn-ghost" onClick={onClose}>
+              <Check size={15} /> Mantener mis cartas
+            </button>
+            <button type="button" className="mh-btn" onClick={() => setEdit(true)}>
+              <ArrowLeftRight size={15} /> Cambiar cartas
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="dsw-shelf-h">
+              <div className="mh-seg is-fit" role="tablist">
+                {domains.map((d) => (
+                  <button key={d} type="button" role="tab" aria-selected={dom === d} className={dom === d ? "on" : ""} onClick={() => setDom(d)}>
+                    {d} <i>{entries.filter((e) => e.domain === d).length}</i>
+                  </button>
+                ))}
+              </div>
+              <span className="dsw-lv">Hasta nivel {level}</span>
+            </div>
+            <div className="dsw-shelf">
+              {shelf.map((e, i) => {
+                const on = sel.includes(e.key);
+                const col = colOf(e);
+                return (
+                  <button key={e.key} type="button" className={"dsw-mini" + (on ? " is-on" : "") + (pend === e.key ? " is-pend" : "")} style={{ "--cc": col, "--d": Math.min(i, 12) * 40 + "ms" }} onClick={() => !on && addCard(e.key)} aria-pressed={on} title={on ? "Ya está en tu mano" : "Añadir a tu mano"}>
+                    <FanFace c={e} col={col} />
+                    {on && <span className="dsw-tick"><Check size={20} strokeWidth={3} /> En tu mano</span>}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="dsw-act">
+              <button type="button" className="mh-btn-ghost" onClick={() => (setSel(initial), setPend(null), setEdit(false))}>
+                Descartar cambios
+              </button>
+              <button type="button" className="mh-btn" disabled={!changed || sel.length === 0} onClick={() => onSave(sel)}>
+                <Check size={15} /> Guardar mi mano
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -23978,86 +24146,27 @@ export default function App({ onSignOut }) {
               const classDoms = (CLASS_DOMAINS[chosenClassKey] || []).filter((d) => (DOMAIN_CARDS[d] || []).length > 0);
               const domains = [...classDoms, ...(mcEd && !classDoms.includes(mcEd.domain) && (DOMAIN_CARDS[mcEd.domain] || []).length ? [mcEd.domain] : [])];
               const charLevel = Number(characters[viewingCharId]?.f_level || 1);
+              const entries = domains.flatMap((d) =>
+                (DOMAIN_CARDS[d] || [])
+                  .filter((card) => card.level <= (mcEd && d === mcEd.domain && !classDoms.includes(d) ? Math.ceil(charLevel / 2) : charLevel))
+                  .map((card) => ({ ...card, domain: d }))
+              );
+              const have = tempDomainCards.map((k) => findDomainCardAny(k)).filter(Boolean);
+              have.forEach((h) => !entries.some((e) => e.key === h.key) && entries.push(h));
               return (
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    background: "rgba(8,6,12,0.70)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    zIndex: 40,
-                    padding: 20,
+                <DomainSwap
+                  entries={entries}
+                  initial={tempDomainCards}
+                  limit={tempCardLimit}
+                  level={charLevel}
+                  domains={domains.length ? domains : [...new Set(entries.map((e) => e.domain))]}
+                  colors={DOMAIN_COLORS}
+                  onClose={() => setShowChangeDomainModal(false)}
+                  onSave={(keys) => {
+                    updateCharacterField(viewingCharId, "f_domain_cards", JSON.stringify(keys));
+                    setShowChangeDomainModal(false);
                   }}
-                  onClick={() => setShowChangeDomainModal(false)}
-                >
-                  <div
-                    className="mh-card"
-                    style={{ margin: 0, width: "min(680px, 100%)", maxHeight: "82%", overflowY: "auto", padding: "22px 24px" }}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="mh-serif" style={{ fontSize: 17, fontWeight: 700, color: "var(--mh-ink)", marginBottom: 4 }}>
-                      Cambiar cartas de dominio
-                    </div>
-                    <div style={{ fontSize: 12.5, color: "var(--mh-muted)", marginBottom: 16 }}>
-                      Elige hasta {tempCardLimit} cartas de nivel {charLevel} o inferior entre {domains.join(" y ")}. Seleccionadas: {tempDomainCards.length}/{tempCardLimit}.
-                    </div>
-
-                    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14, marginBottom: 20 }}>
-                      {domains.map((domainName) => (
-                        <div key={domainName}>
-                          <label className="mh-label">{domainName}</label>
-                          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                            {(DOMAIN_CARDS[domainName] || [])
-                              .filter((card) => card.level <= (mcEd && domainName === mcEd.domain && !classDoms.includes(domainName) ? Math.ceil(charLevel / 2) : charLevel))
-                              .map((card) => {
-                                const selected = tempDomainCards.includes(card.key);
-                                const disabled = !selected && tempDomainCards.length >= tempCardLimit;
-                                return (
-                                  <div
-                                    key={card.key}
-                                    onClick={() => !disabled && toggleTempDomainCard(card.key)}
-                                    style={{
-                                      border: "1px solid " + (selected ? "var(--acc)" : "var(--mh-line)"),
-                                      background: selected ? "color-mix(in srgb, var(--acc) 8%, transparent)" : "var(--mh-panel2)",
-                                      borderRadius: 8,
-                                      padding: "10px 12px",
-                                      cursor: disabled ? "not-allowed" : "pointer",
-                                      opacity: disabled ? 0.5 : 1,
-                                    }}
-                                  >
-                                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                                      {selected && <Check size={13} color="var(--acc)" />}
-                                      <span style={{ fontSize: 13.5, fontWeight: 700, color: "var(--mh-ink)" }}>{card.key}</span>
-                                      <span style={{ fontSize: 10.5, color: "var(--mh-muted)", marginLeft: "auto" }}>
-                                        Nivel {card.level} · {card.type} · Recuperación {card.recall}
-                                      </span>
-                                    </div>
-                                    <div style={{ fontSize: 11.5, color: "var(--mh-ink3)", lineHeight: 1.4 }}>{card.text}</div>
-                                  </div>
-                                );
-                              })}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-                      <button className="mh-btn-ghost" onClick={() => setShowChangeDomainModal(false)}>
-                        Cancelar
-                      </button>
-                      <button
-                        className="mh-btn"
-                        disabled={tempDomainCards.length === 0}
-                        style={{ opacity: tempDomainCards.length > 0 ? 1 : 0.5, cursor: tempDomainCards.length > 0 ? "pointer" : "not-allowed" }}
-                        onClick={confirmChangeDomain}
-                      >
-                        Guardar
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                />
               );
             })()}
           </div>
