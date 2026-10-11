@@ -2334,6 +2334,7 @@ const REST_ACTIONS = [
   { key: "project", label: "Trabajar en un proyecto" },
 ];
 
+const GOLD_HANDFUL = "Un puñado de oro";
 const STARTER_ITEMS = [
   { name: "Antorcha", description: "Ilumina a tu alrededor durante un buen rato antes de consumirse." },
   { name: "Cuerda de 15 metros", description: "Cuerda resistente, útil para escalar, atar o improvisar." },
@@ -3347,15 +3348,15 @@ const sharedStyles = `
   .mh-fan-pile span { position: absolute; width: 62px; height: 90px; border-radius: 9px; border: 2px solid var(--pc); background: linear-gradient(160deg, color-mix(in srgb, var(--pc) 30%, #1d1827), #15111c); box-shadow: 0 3px 8px rgba(0,0,0,.5); left: calc(var(--q) * 6px); top: calc(10px - var(--q) * 4px); transform: rotate(calc(-6deg + var(--q) * 6deg)); transition: transform .15s; }
   .mh-fan-pile:hover span { transform: translateY(-6px) rotate(calc(-6deg + var(--q) * 6deg)); }
   .mh-fan-pile em { position: absolute; left: -6px; right: -6px; bottom: -22px; text-align: center; font: 600 10.5px Inter, system-ui, sans-serif; font-style: normal; color: #fff; background: rgba(21,17,28,.9); border-radius: 6px; padding: 2px 4px; white-space: nowrap; }
-  .dsw { z-index: 9990 !important; display: flex; align-items: center; justify-content: center; padding: 16px; background: radial-gradient(ellipse at 50% 45%, rgba(40,32,64,.9), rgba(6,5,12,.95) 70%); backdrop-filter: blur(7px); animation: dsw-bg .3s ease both; }
+  .dsw { position: fixed; z-index: 60; display: flex; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box; overflow: hidden; background: radial-gradient(ellipse at 50% 40%, color-mix(in srgb, var(--mh-panel, #1b1830) 70%, #2b2152), var(--mh-bg, #0b0c1b) 78%); animation: dsw-bg .3s ease both; }
   @keyframes dsw-bg { from { opacity: 0; } to { opacity: 1; } }
   .dsw-in { position: relative; width: min(1100px, 100%); max-height: 100%; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 8px 12px 18px; scrollbar-width: none; }
   .dsw-in::-webkit-scrollbar { display: none; }
   .dsw-x { all: unset; cursor: pointer; position: absolute; right: 10px; top: 6px; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: #c9c3d8; background: rgba(255,255,255,.07); } .dsw-x:hover { background: rgba(255,255,255,.14); color: #fff; }
   .dsw-head { text-align: center; animation: dsw-up .5s .05s cubic-bezier(.2,.8,.2,1) both; } .dsw-head h2 { margin: 0 0 4px; font-size: 26px; color: #f3ebdd; } .dsw-head p { margin: 0; font-size: 13.5px; color: #b9afc8; max-width: 520px; line-height: 1.5; }
   @keyframes dsw-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
-  .dsw-stage { display: flex; justify-content: center; align-items: flex-end; min-height: 300px; padding: 10px 0 4px; }
-  .dsw-card, .dsw-slot { --s: .62; position: relative; flex: none; width: calc(300px * var(--s)); height: calc(420px * var(--s)); margin: 0 6px; transform: translateY(var(--y)) rotate(var(--r)); transition: transform .25s cubic-bezier(.2,.8,.2,1), filter .2s; }
+  .dsw-stage { --s: .62; display: flex; justify-content: center; align-items: flex-end; min-height: 300px; padding: 10px 0 4px; }
+  .dsw-card, .dsw-slot { position: relative; flex: none; width: calc(300px * var(--s)); height: calc(420px * var(--s)); margin: 0 6px; transform: translateY(var(--y)) rotate(var(--r)); transition: transform .25s cubic-bezier(.2,.8,.2,1), filter .2s; }
   .dsw-card { filter: drop-shadow(0 12px 22px rgba(0,0,0,.55)); animation: dsw-deal .65s var(--d) cubic-bezier(.2,.9,.25,1.1) backwards; }
   .dsw-card .mh-fan-in { transform: scale(var(--s)); }
   .dsw-card:hover { transform: translateY(calc(var(--y) - 26px)) rotate(0deg) scale(1.05); z-index: 3; }
@@ -3379,7 +3380,7 @@ const sharedStyles = `
   .dsw-mini.is-pend { outline: 2px solid var(--cc); outline-offset: 3px; }
   .dsw-tick { position: absolute; left: 8px; right: 8px; top: 50%; transform: translateY(-50%); padding: 8px 4px; border-radius: 10px; background: rgba(8,6,12,.72); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: #fff; font: 700 11px Inter, system-ui, sans-serif; text-shadow: 0 1px 4px #000; }
   @media (prefers-reduced-motion: reduce) { .dsw, .dsw-head, .dsw-card, .dsw-slot, .dsw-act, .dsw-shelf-h, .dsw-mini, .dsw-rm, .dsw-stage { animation: none !important; } }
-  @media (max-width: 760px) { .dsw-card, .dsw-slot { --s: .42; margin: 0 -14px; } .dsw-stage { min-height: 200px; } }
+  @media (max-width: 760px) { .dsw-stage { --s: .42 !important; min-height: 200px; } .dsw-card, .dsw-slot { margin: 0 -14px; } }
   .mh-fan-zoom { position: fixed; inset: 0; z-index: 9998; background: rgba(8,6,12,.7); display: flex; align-items: center; justify-content: center; padding: 16px; }
   .mh-fan-elems { position: absolute; left: 0; right: 0; top: calc(100% + 12px); display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
   .mh-fan-ask { flex: 0 0 100%; text-align: center; font: 600 13px Inter, system-ui, sans-serif; color: #fff; text-shadow: 0 1px 4px #000; }
@@ -6735,8 +6736,28 @@ function DomainSwap({ entries, initial, limit, level, domains, colors, onSave, o
   const slots = Array.from({ length: limit }, (_, i) => sel[i] || null);
   const mid = (limit - 1) / 2;
   const shelf = entries.filter((e) => e.domain === dom);
-  return (
-    <div className="mh-overlay dsw" role="dialog" aria-label="Cambiar cartas de dominio" onClick={onClose}>
+  // Ocupa la columna central (entre el menú y la barra de amigos), no toda la ventana.
+  const [box, setBox] = useState(null);
+  useLayoutEffect(() => {
+    const el = document.querySelector("[data-mh-main]");
+    if (!el) return;
+    const upd = () => {
+      const r = el.getBoundingClientRect();
+      // El color de acento del personaje vive en la hoja, no en el body: se copia para los botones.
+      const acc = getComputedStyle(document.querySelector(".mh-sheet") || el).getPropertyValue("--acc").trim();
+      setBox({ left: r.left, top: r.top, width: r.width, height: r.height, ...(acc ? { "--acc": acc } : {}) });
+    };
+    upd();
+    const ro = new ResizeObserver(upd);
+    ro.observe(el);
+    window.addEventListener("resize", upd);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", upd);
+    };
+  }, []);
+  return createPortal(
+    <div className="dsw" style={box || { left: 0, top: 0, right: 0, bottom: 0 }} role="dialog" aria-label="Cambiar cartas de dominio" onClick={onClose}>
       <div className="dsw-in" onClick={(e) => e.stopPropagation()}>
         <button type="button" className="dsw-x" onClick={onClose} aria-label="Cerrar"><X size={18} /></button>
         <div className="dsw-head">
@@ -6749,7 +6770,7 @@ function DomainSwap({ entries, initial, limit, level, domains, colors, onSave, o
               : "Este es tu momento de descanso para repasar tu mano. ¿Quieres cambiar alguna carta?"}
           </p>
         </div>
-        <div className={"dsw-stage" + (pend ? " is-pick" : "")} key={"st" + shake}>
+        <div className={"dsw-stage" + (pend ? " is-pick" : "")} key={"st" + shake} style={{ "--s": limit >= 5 ? 0.46 : limit === 4 ? 0.54 : 0.62 }}>
           {slots.map((k, i) => {
             const c = k ? byKey(k) : null;
             const col = c ? colOf(c) : "#8d88a3";
@@ -6818,7 +6839,8 @@ function DomainSwap({ entries, initial, limit, level, domains, colors, onSave, o
           </>
         )}
       </div>
-    </div>
+    </div>,
+    document.querySelector(".mh-root") || document.body
   );
 }
 
@@ -9318,8 +9340,10 @@ export default function App({ onSignOut }) {
       armor_marked: String(draftArmor === "Ninguna" ? 0 : ARMORS.find((a) => a.key === draftArmor)?.score || 0),
       f_items: JSON.stringify([
         ...(draftCommunity === "Errante" ? [{ name: PACK_NAME, description: PACK_DESC, count: 1 }] : []),
-        ...draftItems.map((name) => ({ name, description: STARTER_ITEMS.find((si) => si.name === name)?.description || "", count: 1 })),
+        ...draftItems.filter((name) => name !== GOLD_HANDFUL).map((name) => ({ name, description: STARTER_ITEMS.find((si) => si.name === name)?.description || "", count: 1 })),
       ]),
+      // «Un puñado de oro» no ocupa hueco: suma 1 puñado (10 de oro) a la bolsa.
+      f_gold_tens: draftItems.includes(GOLD_HANDFUL) ? "1" : "0",
       f_pack_added: draftCommunity === "Errante" ? "1" : "",
       // Tu equipo admite 5 cartas; el resto va a la bóveda.
       f_domain_cards: JSON.stringify(draftDomainCards.slice(0, 5)),
@@ -24405,7 +24429,7 @@ export default function App({ onSignOut }) {
             </div>
           </div>
         )}
-        <div className={showTopbar ? "mh-scroll-hidden" : undefined} style={{ position: "absolute", top: showTopbar ? 108 : 0, left: 0, bottom: 0, right: showRail ? 290 : 0, overflowY: view === "ficha" && !viewingCharId && !modernCharId && showRail ? "hidden" : "auto", padding: isMobile ? "18px 14px" : showTopbar ? "0 " + padX + " 24px" : "24px 28px" }}>
+        <div data-mh-main className={showTopbar ? "mh-scroll-hidden" : undefined} style={{ position: "absolute", top: showTopbar ? 108 : 0, left: 0, bottom: 0, right: showRail ? 290 : 0, overflowY: view === "ficha" && !viewingCharId && !modernCharId && showRail ? "hidden" : "auto", padding: isMobile ? "18px 14px" : showTopbar ? "0 " + padX + " 24px" : "24px 28px" }}>
           <div ref={setWizSlot} style={{ maxWidth: contentMax, margin: "0 auto" }} />
           <div key={view + (view === "ficha" && modernCharId ? ":hoja" : "")} className={"mh-view-in" + (view === "ficha" && modernCharId ? " mh-sheet-in" : "")} style={{ display: showNewCharModal ? "none" : undefined, maxWidth: contentMax, margin: "0 auto" }}>
             {!showTopbar && view !== "inicio" && <div className="mh-pagetitle">{viewLabel}</div>}
@@ -26550,7 +26574,7 @@ export default function App({ onSignOut }) {
                         {list.map((it) => (
                           <button key={it.key} type="button" aria-pressed={isSel(it.key)} className={"mh-wz-it" + (focus?.key === it.key ? " is-focus" : "") + (isSel(it.key) ? " is-on" : "")} onClick={() => pick(it.key)}>
                             <span className="mh-wz-it-n">{it.key}</span>
-                            {it.expansion && originTab !== "transformation" && <em>{it.expansion === "The Void" ? "Void" : "H&F"}</em>}
+                            {(originTab === "transformation" ? it.key !== "Ninguna" : it.expansion) && <em>{originTab === "transformation" || it.expansion !== "The Void" ? "H&F" : "Void"}</em>}
                             {isSel(it.key) && <Check size={13} className="mh-wz-ck" />}
                           </button>
                         ))}
