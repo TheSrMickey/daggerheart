@@ -24292,7 +24292,7 @@ export default function App({ onSignOut }) {
                   {cardActs.length > 0 && (
                     <div className="mh-cardc-dock" style={{ "--cc": cardColor }} role="toolbar" aria-label="Acciones de la carta">
                       {cardActs.map((ac, k) => (
-                        <button key={ac.key} type="button" className={"mh-cardc-dk" + (k === 0 ? " is-pri" : "")} disabled={ac.disabled} aria-label={ac.label + (ac.sub ? " (" + ac.sub + ")" : "")} onClick={ac.run}>
+                        <button key={ac.key} type="button" className="mh-cardc-dk" disabled={ac.disabled} aria-label={ac.label + (ac.sub ? " (" + ac.sub + ")" : "")} onClick={ac.run}>
                           <ac.Icon size={18} />
                           <span className="mh-cardc-tip">
                             {ac.label}

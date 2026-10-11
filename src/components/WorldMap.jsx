@@ -354,7 +354,70 @@ function FitCamera({ extent, controlsRef }) {
 
 const topOf = (t) => (WORLD_ITEM[t?.t]?.h || 0.2) + (t?.d && t.d.startsWith("unit-") ? 0.3 : 0);
 
-function Scene({ tiles, edit, hover, setHover, onCell, selCell, controlsRef, labels, place, theme, party, moving, onParty, atmos, fogged, ghostKeys, marks }) {
+// Mar abierto: todo lo que queda fuera del mapa es agua (solo diseño). El color sigue el estilo del mapa.
+const OCEAN = { verano: "#4f9fd6", invierno: "#8fc0dd", otono: "#4a86a8" };
+function Ocean({ theme }) {
+  return (
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.094, 0]}>
+      <circleGeometry args={[160, 48]} />
+      <meshStandardMaterial color={OCEAN[theme] || OCEAN.verano} roughness={0.55} metalness={0.05} />
+    </mesh>
+  );
+}
+
+// Nubes de pocos polígonos (esferas planas, como las piezas del kit) que cruzan el mapa por encima.
+// Se apartan de la zona donde está el grupo para dejar un hueco por el que el jugador ve el terreno.
+const CLOUD_SEEDS = (() => {
+  let a = 7;
+  const rnd = () => ((a = (a * 16807) % 2147483647) - 1) / 2147483646;
+  return Array.from({ length: 11 }, () => ({
+    x: (rnd() - 0.5) * 36, z: (rnd() - 0.5) * 30, y: 3.3 + rnd() * 1.4, sc: 0.8 + rnd() * 0.9, v: 0.12 + rnd() * 0.2,
+    puffs: Array.from({ length: 5 }, (_, i) => [(i - 2) * 0.55 + (rnd() - 0.5) * 0.3, (i === 2 ? 0.18 : 0) + rnd() * 0.12, (rnd() - 0.5) * 0.5, 0.5 + rnd() * 0.3 + (i === 2 ? 0.2 : 0)]),
+  }));
+})();
+const CLOUD_COLOR = { despejado: "#ffffff", lluvia: "#c7cdd8", tormenta: "#8b93a3", niebla: "#d6dbe2", nieve: "#f1f5fa" };
+function Clouds({ center, weather }) {
+  const refs = useRef([]);
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime;
+    const R = 4.6;
+    CLOUD_SEEDS.forEach((c, i) => {
+      const g = refs.current[i];
+      if (!g) return;
+      let x = ((c.x + c.v * t + 20) % 40 + 40) % 40 - 20;
+      let z = c.z;
+      const dx = x - center[0], dz = z - center[1];
+      const d = Math.hypot(dx, dz);
+      let k = 1;
+      if (d < R) {
+        const f = 1 - d / R;
+        const ease = f * f * (3 - 2 * f);
+        const n = d || 1;
+        x += (dx / n || 1) * ease * R * 1.15;
+        z += (dz / n) * ease * R * 1.15;
+        k = 1 - ease * 0.65;
+      }
+      g.position.set(x, c.y, z);
+      g.scale.setScalar(c.sc * k);
+    });
+  });
+  return (
+    <>
+      {CLOUD_SEEDS.map((c, i) => (
+        <group key={i} ref={(el) => (refs.current[i] = el)}>
+          {c.puffs.map((p, j) => (
+            <mesh key={j} position={[p[0], p[1], p[2]]} scale={[p[3] * 1.25, p[3] * 0.8, p[3]]}>
+              <sphereGeometry args={[1, 7, 5]} />
+              <meshStandardMaterial color={CLOUD_COLOR[weather] || "#ffffff"} flatShading transparent opacity={0.9} depthWrite={false} />
+            </mesh>
+          ))}
+        </group>
+      ))}
+    </>
+  );
+}
+
+function Scene({ tiles, edit, clouds, hover, setHover, onCell, selCell, controlsRef, labels, place, theme, party, moving, onParty, atmos, fogged, ghostKeys, marks }) {
   const [night, setNight] = useState(false);
   const weather = atmos.weather || "despejado";
   const ghosts = edit ? CELLS : moving ? CELLS.filter(([q, r]) => (ghostKeys ? ghostKeys.has(q + "," + r) : tiles[q + "," + r])) : [];
@@ -363,6 +426,8 @@ function Scene({ tiles, edit, hover, setHover, onCell, selCell, controlsRef, lab
   return (
     <>
       <Atmosphere time={atmos.time || "dia"} cycle={!!atmos.cycle} weather={weather} theme={theme} onNight={setNight} />
+      <Ocean theme={theme} />
+      {clouds && <Clouds center={[px, pz]} weather={weather} />}
       {night && <Stars radius={70} depth={25} count={1800} factor={3.2} saturation={0} fade speed={0.4} />}
       {(weather === "lluvia" || weather === "tormenta" || weather === "nieve") && <Weather kind={weather} />}
       {Object.entries(tiles).map(([key, t]) => {
@@ -378,7 +443,7 @@ function Scene({ tiles, edit, hover, setHover, onCell, selCell, controlsRef, lab
           return (
             <mesh
               key={key}
-              position={[x, 0.02, z]}
+              position={[x, 0.12, z]}
               onPointerOver={(e) => (e.stopPropagation(), setHover(key), (document.body.style.cursor = "pointer"))}
               onPointerOut={() => (setHover((h) => (h === key ? null : h)), (document.body.style.cursor = ""))}
               onClick={(e) => {
@@ -602,7 +667,7 @@ export default function WorldMap({ campaignId, edit = false, onLog }) {
   const stage = (
     <div className="wm-stage">
       <Canvas camera={{ position: [0, 9, 10], fov: 40 }} dpr={[1, 1.75]} gl={{ antialias: true }}>
-        <Scene tiles={tiles} edit={edit} hover={hover} setHover={setHover} onCell={onCell} selCell={tool === "nombrar" || tool === "clave" ? selCell : null} controlsRef={controlsRef} labels={labels} place={place} theme={theme} party={party} moving={moving} onParty={() => setMoving((m) => !m)} atmos={atmos} fogged={fogged} ghostKeys={ghostKeys} marks={marks} />
+        <Scene tiles={tiles} edit={edit} clouds={asPlayer} hover={hover} setHover={setHover} onCell={onCell} selCell={tool === "nombrar" || tool === "clave" ? selCell : null} controlsRef={controlsRef} labels={labels} place={place} theme={theme} party={party} moving={moving} onParty={() => setMoving((m) => !m)} atmos={atmos} fogged={fogged} ghostKeys={ghostKeys} marks={marks} />
       </Canvas>
       <div className="wm-labels" aria-hidden="true">
         {labels.map((l) => (
