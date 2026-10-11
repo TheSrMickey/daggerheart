@@ -3096,10 +3096,11 @@ const sharedStyles = `
   .mh-dlg { position: absolute; inset: 0; pointer-events: none; }
   .mh-dlg > * { pointer-events: auto; }
   .mh-dlg-figwrap { position: absolute; left: 0; bottom: 0; height: 78%; max-width: 70%; display: flex; align-items: flex-end; animation: mh-dlg-fig .45s cubic-bezier(.2,.8,.2,1) both; }
-  /* En la caja de la hoja el personaje va centrado; ampliada (y en la vista previa del DJ) se queda a la izquierda */
-  .mh-dlg:not(.is-big):not(.is-mini) .mh-dlg-figwrap { left: 0; right: 0; margin: 0 auto; width: fit-content; max-width: 86%; animation-name: mh-dlg-fig-up; }
-  .mh-dlg:not(.is-big):not(.is-mini) .mh-dlg-fig { object-position: center bottom; }
-  @keyframes mh-dlg-fig-up { from { opacity: 0; translate: 0 18px; } to { opacity: 1; translate: 0 0; } }
+  /* El personaje que habla va siempre a la izquierda; la escena de fondo se desenfoca y se oscurece un poco para dar prioridad al diálogo */
+  .mh-dlg-dim { position: absolute; inset: 0; pointer-events: none !important; background: rgba(8,6,12,.28); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); animation: mh-dlg-dim .45s ease both; }
+  @keyframes mh-dlg-dim { from { opacity: 0; } to { opacity: 1; } }
+  .mh-dlg-t .tw-rest { visibility: hidden; }
+  .mh-dlg-t.is-typing { cursor: pointer; }
   .mh-dlg-fig { position: relative; z-index: 1; display: block; height: 100%; width: auto; max-width: 100%; object-fit: contain; object-position: left bottom; filter: drop-shadow(0 6px 18px rgba(0,0,0,.45)); }
   /* Feliz: halo cálido, destellos que titilan y motas que suben */
   .mh-dlg-figwrap.is-feliz::before { content: ""; position: absolute; left: -12%; right: -12%; top: -6%; height: 70%; border-radius: 50%; background: radial-gradient(closest-side, rgba(255,214,120,.42), rgba(255,214,120,0)); animation: mh-dlg-halo 2.6s ease-in-out infinite; }
@@ -3113,7 +3114,7 @@ const sharedStyles = `
   @keyframes mh-dlg-spark { 0%, 100% { opacity: 0; transform: scale(.2) rotate(0deg); } 45% { opacity: 1; transform: scale(1) rotate(35deg); } 70% { opacity: .8; transform: scale(.85) rotate(55deg); } }
   @keyframes mh-dlg-mote { 0% { opacity: 0; transform: translateY(0) scale(.6); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-120px) scale(1); } }
   @keyframes mh-dlg-halo { 0%, 100% { opacity: .75; transform: scale(.96); } 50% { opacity: 1; transform: scale(1.04); } }
-  @media (prefers-reduced-motion: reduce) { .mh-dlg-fx, .mh-dlg-figwrap { animation: none !important; } .mh-dlg-fx i, .mh-dlg-fx b { animation: none; opacity: .8; } }
+  @media (prefers-reduced-motion: reduce) { .mh-dlg-dim { animation: none !important; } .mh-dlg-fx, .mh-dlg-figwrap { animation: none !important; } .mh-dlg-fx i, .mh-dlg-fx b { animation: none; opacity: .8; } }
   .mh-dlg-box {
     position: absolute; left: 10px; right: 10px; bottom: 10px; padding: 20px 16px 14px; border-radius: 12px; color: #F4EEE2;
     background: linear-gradient(rgba(20,14,18,.88), rgba(20,14,18,.95)); border: 1px solid rgba(232,212,160,.45); box-shadow: 0 8px 24px rgba(0,0,0,.4);
@@ -7925,6 +7926,30 @@ function MapViewport({ focus, children }) {
       </div>
       <div className="mh-map-overlay" ref={setOverlay} />
     </MapOverlayCtx.Provider>
+  );
+}
+
+// Texto de un diálogo que va apareciendo poco a poco (pulsar lo muestra entero). El hueco del texto completo ya está reservado.
+function Typewriter({ text, cps = 42 }) {
+  const [state, setState] = useState(() => ({ n: typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches ? text.length : 0 }));
+  const n = Math.min(state.n, text.length);
+  const done = n >= text.length;
+  useEffect(() => {
+    if (done) return undefined;
+    const t0 = performance.now() - (n / cps) * 1000;
+    let raf = requestAnimationFrame(function tick(now) {
+      const k = Math.min(text.length, Math.floor(((now - t0) / 1000) * cps));
+      setState({ n: k });
+      if (k < text.length) raf = requestAnimationFrame(tick);
+    });
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [text, cps, done]);
+  return (
+    <span onClick={() => !done && setState({ n: text.length })} title={done ? undefined : "Pulsa para ver todo el texto"} style={done ? undefined : { cursor: "pointer" }}>
+      {text.slice(0, n)}
+      <span className="tw-rest">{text.slice(n)}</span>
+    </span>
   );
 }
 
@@ -17132,10 +17157,11 @@ export default function App({ onSignOut }) {
                         const renderDialogue = (big) =>
                           dlg && (
                             <div className={"mh-dlg" + (big ? " is-big" : "")} onClick={(e) => e.stopPropagation()}>
+                              <div className="mh-dlg-dim" aria-hidden="true" />
                               <DialogueFigure key={dlg.castId || dlg.name} src={dlgFig} alt={dlg.name} expr={dlg.expr} />
                               <div key={dlg.id} className="mh-dlg-box" role="status" aria-live="polite">
                                 <span className="mh-dlg-name">{dlg.name}</span>
-                                <div className="mh-dlg-t">{dlg.text}</div>
+                                <div className="mh-dlg-t"><Typewriter key={dlg.id} text={dlg.text || ""} /></div>
                                 <button type="button" className="mh-dlg-hide" aria-label="Ocultar el diálogo" title="Ocultar" onClick={() => setHiddenDialogue(dlg.id)}>
                                   <X size={13} />
                                 </button>
