@@ -23,7 +23,7 @@ import { Chronicle, Timeline } from "./Chronicle";
 import { appendLog } from "@/lib/chronicle";
 import { SpotPlayer, SpotPause, SpotPanel, FocusBar, normSpot, liveHands, kindOf } from "./Spotlight";
 import { APP_VERSION } from "@/lib/changelog";
-import { setPresence, startPresence, stopPresence, publishTable, loadTable, myUid, setPresenceCamp, bridge, logActivity, loadReactions, toggleReaction } from "@/lib/social";
+import { setPresence, setPresenceMaking, startPresence, stopPresence, publishTable, loadTable, myUid, setPresenceCamp, bridge, logActivity, loadReactions, toggleReaction } from "@/lib/social";
 import { SocialHost, LookingFor, ActivityCard, PrivacyCard, ReactionBar } from "./Social2";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
 import { buildSablewood } from "./quickstartSablewood";
@@ -4555,6 +4555,16 @@ const sharedStyles = `
   .mh-trov.is-flash .mh-trov-s { animation: mh-trov-glow 1.2s ease-out; }
   @keyframes mh-trov-glow { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--tb) 70%, transparent); } 40% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--tb) 30%, transparent); } 100% { box-shadow: 0 0 0 0 transparent; } }
   .mh-wz-page { animation: mh-view-in .3s cubic-bezier(.2,.8,.2,1) backwards; } .mh-wz-page .mh-wz { width: 100%; height: calc(100vh - 150px); min-height: 520px; max-height: none; }
+  /* La creación de personaje vive en la columna central, sin caja alrededor (como el resto de páginas). */
+  .mh-wz-page .mh-card.mh-wz { background: none; border: 0; box-shadow: none; border-radius: 0; overflow: visible; backdrop-filter: none; }
+  .mh-wz-page .mh-wz-top { padding: 2px 0 16px; border-bottom: 0; }
+  .mh-wz-page .mh-wz-title .mh-serif { font-size: 28px; }
+  .mh-wz-page .mh-wz-title small { font-size: 13px; }
+  .mh-wz-page .mh-wz-steps { margin-top: 14px; }
+  .mh-wz-page .mh-wz-grp button { height: 6px; }
+  .mh-wz-page .mh-wz-body { padding: 4px 2px 18px; }
+  .mh-wz-page .mh-wz-body.is-split { border-radius: 18px; border: 1px solid var(--mh-line); background: var(--mh-panel); }
+  .mh-wz-page .mh-wz-foot { background: none; padding: 14px 0 2px; border-top: 1px solid var(--mh-line); }
   .mh-wz { margin: 0; width: min(1020px, 100%); height: min(640px, 92%); padding: 0; display: flex; flex-direction: column; overflow: hidden; }
   .mh-wz-top { padding: 16px 22px 12px; border-bottom: 1px solid var(--mh-line); flex-shrink: 0; }
   .mh-wz-title { display: flex; align-items: baseline; gap: 10px; }
@@ -13359,6 +13369,11 @@ export default function App({ onSignOut }) {
   useEffect(() => {
     setPresence(sheetClass);
   }, [sheetClass]);
+  // Mientras se crea un personaje, los amigos ven «Creando un personaje…» (se quita al terminar o cancelar).
+  useEffect(() => {
+    setPresenceMaking(showNewCharModal);
+    return () => setPresenceMaking(false);
+  }, [showNewCharModal]);
   // Presencia: en qué campaña estás (se ve en la lista de amigos de los demás).
   useEffect(() => {
     setPresenceCamp(stageCampaignId ? campaigns[stageCampaignId]?.name || "Campaña" : null, gmViewing ? "DJ" : "Juega");

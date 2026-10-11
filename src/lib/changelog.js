@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-11",
     title: "Imágenes propias en las escenas y viñeta",
     items: [
+      { tag: "mejora", text: "La creación de personaje sale de su caja y se adapta a la columna central, como el resto de páginas. Mientras creas un personaje, tus amigos ven «Creando un personaje…» en tu estado, hasta que lo termines o canceles." },
       { tag: "mejora", text: "En Inicio, la próxima sesión ya no es un aviso suelto: aparece en su propia sección «Próximas sesiones», con el mismo diseño de fichas que «Retoma tus campañas» y «Tus personajes» (día, hora, cuenta atrás, lugar y botones para confirmar si vas)." },
       { tag: "nuevo", text: "La pestaña Cartas incluye ahora las armas (principales y secundarias), ordenadas por rango, con su daño, alcance, rasgo y efecto." },
       { tag: "mejora", text: "Fundido al cambiar de escena: al mostrar otra escena, la anterior se desvanece y la nueva aparece poco a poco; también al mostrar la primera o al quitarla." },

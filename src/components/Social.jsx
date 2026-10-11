@@ -58,7 +58,7 @@ const seen = (t) => {
   if (m < 1440) return `Visto hace ${Math.round(m / 60)} h`;
   return m < 2880 ? "Visto ayer" : `Visto hace ${Math.round(m / 1440)} d`;
 };
-export const statusText = (p) => (p.status === "on" ? (p.dnd ? "No molestar" : p.playing ? "Jugando como " + p.playing : "En línea") : p.status === "away" ? "Ausente" + (p.since ? ` · ${minsAgo(p.since)} min` : "") + (p.playing ? " · " + p.playing : "") : seen(p.lastSeen));
+export const statusText = (p) => (p.status === "on" ? (p.dnd ? "No molestar" : p.creating ? "Creando un personaje…" : p.playing ? "Jugando como " + p.playing : "En línea") : p.status === "away" ? "Ausente" + (p.since ? ` · ${minsAgo(p.since)} min` : "") + (p.playing ? " · " + p.playing : "") : seen(p.lastSeen));
 
 // Elegir con qué personaje entras y unirse a la campaña de una invitación.
 export function JoinCard({ camp, onDone }) {

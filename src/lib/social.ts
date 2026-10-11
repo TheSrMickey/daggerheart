@@ -8,14 +8,14 @@
 import { createClient } from "@/lib/supabase/client";
 
 export type Status = "on" | "away" | "off";
-export type Person = { id: string; username: string; playing?: string; status?: Status; since?: number; lastSeen?: number; dnd?: boolean; camp?: string; role?: string; campSince?: number };
+export type Person = { id: string; username: string; playing?: string; creating?: boolean; status?: Status; since?: number; lastSeen?: number; dnd?: boolean; camp?: string; role?: string; campSince?: number };
 export type NoticeType = "friend_request" | "friend_accepted" | "campaign_invite" | "lf_request";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Notice = { key: string; type: NoticeType; from: Person; at: number; read: boolean; data?: any };
 export type SocialState = { me: Person | null; friends: Person[]; incoming: Person[]; outgoing: Person[]; notices: Notice[]; unread?: Record<string, number>; profile?: Profile };
 
 type Pair = { from: string; to: string; status: "pending" | "friends" | "none"; at: number };
-type Presence = { cls: string | null; at: number; act: number; away: boolean; off?: boolean; dnd?: boolean; camp?: string; role?: string; campSince?: number };
+type Presence = { mk?: boolean; cls: string | null; at: number; act: number; away: boolean; off?: boolean; dnd?: boolean; camp?: string; role?: string; campSince?: number };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type NoticeRow = { type: Notice["type"]; from: string; at: number; read: boolean; data?: any };
 
@@ -128,6 +128,7 @@ export async function loadSocial(): Promise<SocialState> {
         f.status = v.away ? "away" : "on";
         f.since = v.act;
         if (v.cls) f.playing = v.cls;
+        if (v.mk) f.creating = true;
         if (v.dnd) f.dnd = true;
         if (v.camp) Object.assign(f, { camp: v.camp, role: v.role, campSince: v.campSince });
       } else {
@@ -214,6 +215,12 @@ export async function markNoticesRead(list: Notice[]) {
 const AWAY_MS = 10 * 60000;
 let presenceCls: string | null = null;
 let presenceMode: "on" | "dnd" | "inv" = "on";
+let presenceMaking = false; // está creando un personaje
+export function setPresenceMaking(v: boolean) {
+  if (v === presenceMaking) return;
+  presenceMaking = v;
+  if (presenceTimer) void publishPresence();
+}
 let presenceCamp: { name: string; role: string; since: number } | null = null;
 export function setPresenceMode(m: "on" | "dnd" | "inv") {
   if (m === presenceMode) return;
@@ -233,7 +240,7 @@ async function publishPresence(off = false) {
   const { data } = await sb().auth.getUser();
   if (!data.user) return;
   const away = document.hidden || Date.now() - lastActive > AWAY_MS;
-  const value: Presence = { cls: presenceCls, at: Date.now(), act: lastActive, away, ...(off || presenceMode === "inv" ? { off: true } : {}), ...(presenceMode === "dnd" ? { dnd: true } : {}), ...(presenceCamp ? { camp: presenceCamp.name, role: presenceCamp.role, campSince: presenceCamp.since } : {}) };
+  const value: Presence = { ...(presenceMaking ? { mk: true } : {}), cls: presenceCls, at: Date.now(), act: lastActive, away, ...(off || presenceMode === "inv" ? { off: true } : {}), ...(presenceMode === "dnd" ? { dnd: true } : {}), ...(presenceCamp ? { camp: presenceCamp.name, role: presenceCamp.role, campSince: presenceCamp.since } : {}) };
   await writeShared(`pr:${data.user.id}`, value, data.user.id).catch(() => {});
 }
 export function startPresence() {
