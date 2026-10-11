@@ -4631,6 +4631,9 @@ const sharedStyles = `
   @keyframes mh-head-in { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
   @keyframes mh-trait-in { from { opacity: 0; transform: translateY(10px) scale(.92); } to { opacity: 1; transform: none; } }
   @media (prefers-reduced-motion: reduce) { .mh-view-in, .mh-sheet-in .mhm-head, .mh-sheet-in .mhm-traits button { animation: none !important; } }
+  .mh-crumbs { display: flex; align-items: center; gap: 6px; font-weight: 600; min-width: 0; } .mh-crumbs button { all: unset; cursor: pointer; color: var(--mh-muted); display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; } .mh-crumbs button:hover { color: var(--mh-ink); text-decoration: underline; text-underline-offset: 3px; } .mh-crumbs button:focus-visible { outline: 2px solid var(--mh-ink3); outline-offset: 3px; border-radius: 4px; }
+  .mh-crumbs b { color: var(--mh-ink); display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; } .mh-crumb-sep { color: var(--mh-muted3, var(--mh-muted)); flex-shrink: 0; opacity: .7; }
+  .mh-crumb-em { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; color: var(--c); background: color-mix(in srgb, var(--c) 20%, transparent); }
   .mh-toptabs { display: flex; gap: 22px; } .mh-toptabs button { all: unset; cursor: pointer; color: var(--mh-muted); } .mh-toptabs .is-on { color: var(--mh-ink); }
   .mh-sheetask-bg { position: fixed; inset: 0; z-index: 90; background: rgba(6,6,16,.7); display: flex; align-items: center; justify-content: center; padding: 16px; }
   .mh-sheetask { width: min(520px, 100%); border-radius: 18px; background: var(--mh-panel); border: 1px solid var(--mh-line2); padding: 24px; box-shadow: 0 30px 80px #000a; }
@@ -13403,14 +13406,41 @@ export default function App({ onSignOut }) {
     }
   }, [modernOpen, modernCharId, settings.tutorial]);
   const viewLabel = view === "actualizaciones" ? "Actualizaciones" : view === "ajustes" ? "Ajustes" : view === "inicio" ? "General" : NAV_ITEMS.find((n) => n.key === view)?.label;
-  const topLeft = modernOpen ? (
-    <span className="mh-toptabs">
-      <button type="button" onClick={() => setModernCharId(null)}>Mis personajes</button>
-      <button type="button" className="is-on">Hoja</button>
-    </span>
-  ) : (
-    viewLabel
+  // Migas de pan de la barra superior: los niveles anteriores se pueden pulsar para volver.
+  const CAMP_TAB_LABELS = { mesa: "Mesa", resumen: "Resumen", chat: "Chat", mapa: "Mapa de combate", mundo: "Mapa de mundo", encuentros: "Encuentros", cronica: "Crónica", linea: "Línea de tiempo", calendario: "Calendario", votaciones: "Votaciones", descanso: "Descanso", generadores: "Generadores" };
+  const crumbsOf = (items) => (
+    <nav className="mh-crumbs" aria-label="Ruta">
+      {items.map((it, i) => (
+        <Fragment key={i}>
+          {i > 0 && <ChevronRight size={13} className="mh-crumb-sep" aria-hidden="true" />}
+          {it.go && i < items.length - 1 ? (
+            <button type="button" onClick={it.go}>{it.icon}{it.label}</button>
+          ) : (
+            <b aria-current={i === items.length - 1 ? "page" : undefined}>{it.icon}{it.label}</b>
+          )}
+        </Fragment>
+      ))}
+    </nav>
   );
+  const topLeft = modernOpen
+    ? (() => {
+        const mc = characters[modernCharId];
+        const CE = CLASS_EMBLEMS[mc?.f_class];
+        const SHEET_TABS = { general: "Detalles generales", actions: "Acciones", rests: "Descanso", inventory: "Inventario", background: "Trasfondo", journal: "Diario", beastforms: "Formas de Bestia", companion: "Compañero Animal", contacts: "Red de Contactos", stances: "Posturas Marciales", campaign: "Campaña" };
+        const curTab = { label: SHEET_TABS[detailTab] || SHEET_TABS.general };
+        return crumbsOf([
+          { label: "Personajes", go: () => setModernCharId(null) },
+          { label: mc?.f_name || "Personaje", icon: CE ? <span className="mh-crumb-em" style={{ "--c": classColor(mc.f_class) }}><CE size={12} /></span> : null, go: () => (setDetailTab("general"), setActionPage(0)) },
+          ...(curTab ? [{ label: curTab.label }] : []),
+        ]);
+      })()
+    : view === "campaigns" && viewingCampaignId && campaigns[viewingCampaignId]
+    ? crumbsOf([
+        { label: "Campañas", go: () => setViewingCampaignId(null) },
+        { label: campaigns[viewingCampaignId].name || "Campaña", go: () => setCampaignDetailTab("mesa") },
+        { label: CAMP_TAB_LABELS[campaignDetailTab] || "Mesa" },
+      ])
+    : crumbsOf([{ label: viewLabel }]);
   // Presencia: los amigos ven "Jugando como <clase>" mientras tengas una hoja de personaje abierta.
   const sheetClass = viewingCharId ? characters[viewingCharId]?.f_class || null : null;
   useEffect(() => {
