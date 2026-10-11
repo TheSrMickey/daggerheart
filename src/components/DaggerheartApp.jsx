@@ -27,7 +27,7 @@ import { setPresence, setPresenceMaking, startPresence, stopPresence, publishTab
 import { SocialHost, LookingFor, ActivityCard, PrivacyCard, ReactionBar } from "./Social2";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
 import { buildSablewood } from "./quickstartSablewood";
-import { Wand, CircleDot, MoveUpRight, Archive, Shell, Compass, Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp } from "lucide-react";
+import { Wand, CircleDot, MoveUpRight, Archive, Shell, Compass, Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp, Trophy, Star } from "lucide-react";
 
 // Color de cada campaña (se reparte según su id).
 const CAMP_COLORS = ["#A58BE8", "#6FA3C0", "#E0A04A", "#7FB77A", "#D9644E", "#E07FB0"];
@@ -4896,6 +4896,15 @@ const sharedStyles = `
   .mh-home-tile.is-ses .ses-pl { display: flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ses-rsvp { display: flex; gap: 5px; margin-top: 6px; } .ses-rsvp button { all: unset; cursor: pointer; width: 30px; height: 24px; display: grid; place-items: center; border-radius: 8px; border: 1px solid var(--mh-line2); color: var(--mh-muted); box-sizing: border-box; }
   .ses-rsvp button:hover { color: var(--c); border-color: var(--c); } .ses-rsvp button.on { color: var(--c); border-color: var(--c); background: color-mix(in srgb, var(--c) 16%, transparent); }
+  .mh-dice { display: flex; gap: 12px; align-items: stretch; margin-bottom: 4px; }
+  .mh-dice-st { width: 150px; flex: none; display: flex; flex-direction: column; gap: 2px; padding: 14px 16px; border: 1px solid var(--mh-line); border-radius: 14px; background: var(--mh-panel); }
+  .mh-dice-st span { width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; margin-bottom: 6px; color: var(--c); background: color-mix(in srgb, var(--c) 16%, var(--mh-panel)); }
+  .mh-dice-st b { font: 600 28px Georgia, serif; color: var(--mh-ink); } .mh-dice-st small { font-size: 11.5px; color: var(--mh-muted); }
+  .mh-dice-ch { flex: 1; min-width: 0; padding: 14px 16px; border: 1px solid var(--mh-line); border-radius: 14px; background: var(--mh-panel); display: flex; flex-direction: column; } .mh-dice-ch > small { font-size: 11.5px; color: var(--mh-muted); }
+  .mh-dice-bars { flex: 1; display: flex; gap: 8px; align-items: flex-end; margin-top: 10px; min-height: 84px; }
+  .mh-dice-bars > div { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; } .mh-dice-bars u { display: block; width: 100%; border-radius: 4px 4px 0 0; text-decoration: none; background: linear-gradient(#5b7cff, #2b3a7a); opacity: .75; } .mh-dice-bars u.is-today { opacity: 1; }
+  .mh-dice-bars small { font-size: 9.5px; color: var(--mh-muted); }
+  @media (max-width: 760px) { .mh-dice { flex-wrap: wrap; } .mh-dice-st { width: calc(33% - 8px); min-width: 96px; } .mh-dice-ch { flex-basis: 100%; } }
   .mh-home-tile-art.is-char { background: linear-gradient(135deg, color-mix(in srgb, var(--hc) 60%, #12122e), #12122e); }
   html[data-mh-theme="light"] .mh-home-tile-art { background: linear-gradient(135deg, #cfd8f6, #f1f3fc); color: #3b4a8f; }
   html[data-mh-theme="light"] .mh-home-tile-art.is-char { background: linear-gradient(135deg, color-mix(in srgb, var(--hc) 42%, #fffcf6), #fffcf6); color: color-mix(in srgb, var(--hc) 75%, #221C2B); }
@@ -6937,6 +6946,46 @@ function DomainPicker({ entries, sel, limit, level, domains, colors, onChange })
   );
 }
 
+// Inicio · «Tus dados»: tiradas, críticos y porcentaje con Esperanza, más las tiradas de los últimos días.
+const dayKeyOf = (ms) => {
+  const d = new Date(ms);
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+};
+function HomeDice({ stats }) {
+  const [now] = useState(() => Date.now());
+  const st = stats || {};
+  const total = st.total || 0;
+  const days = Array.from({ length: 10 }, (_, i) => {
+    const ms = now - (9 - i) * 86400000;
+    return { key: dayKeyOf(ms), n: (st.days || {})[dayKeyOf(ms)] || 0, lab: ["D", "L", "M", "X", "J", "V", "S"][new Date(ms).getDay()] };
+  });
+  const max = Math.max(1, ...days.map((d) => d.n));
+  const pct = total ? Math.round(((st.hope || 0) / total) * 100) : 0;
+  return (
+    <>
+      <div className="mh-home-sec">
+        <h3>Tus dados <i>{total}</i></h3>
+      </div>
+      <div className="mh-dice">
+        <div className="mh-dice-st" style={{ "--c": "#5b7cff" }}><span><Dices size={19} /></span><b>{total}</b><small>{total === 1 ? "tirada" : "tiradas"}</small></div>
+        <div className="mh-dice-st" style={{ "--c": "#E3B04B" }}><span><Star size={19} /></span><b>{st.crit || 0}</b><small>{st.crit === 1 ? "crítico" : "críticos"}</small></div>
+        <div className="mh-dice-st" style={{ "--c": "#6FBF73" }}><span><Trophy size={19} /></span><b>{pct}%</b><small>con Esperanza</small></div>
+        <div className="mh-dice-ch">
+          <small>{total ? "Tiradas de los últimos 10 días" : "Tira dados en tu hoja y aquí verás tus estadísticas"}</small>
+          <div className="mh-dice-bars">
+            {days.map((d, i) => (
+              <div key={d.key} title={d.n + (d.n === 1 ? " tirada" : " tiradas")}>
+                <u className={i === 9 ? "is-today" : ""} style={{ height: Math.max(3, (d.n / max) * 64) }} />
+                <small>{d.lab}</small>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
 // Abanico de cartas de dominio en el borde inferior del mapa: se arrastran hasta una casilla para usarlas.
 function CardFan({ cards, me, tokens, onUse, onElement, activeElement }) {
   const [drag, setDrag] = useState(null); // { card, x, y, cell, moved }
@@ -8721,6 +8770,7 @@ export default function App({ onSignOut }) {
   const [rollTotal, setRollTotal] = useState(null);
   const [verdict, setVerdict] = useState({ text: "", color: "var(--mh-ink3)" });
   const [rollLog, setRollLog] = useState([]);
+  const [diceStats, setDiceStats] = useState(null); // estadísticas personales de las tiradas de dualidad
 
   const [fearCount, setFearCount] = useState(0);
   const [npcs, setNpcs] = useState({});
@@ -8816,6 +8866,12 @@ export default function App({ onSignOut }) {
       if (r) {
         try {
           setRollLog(JSON.parse(r.value));
+        } catch (e) {}
+      }
+      const ds = await safeGet("dice-stats", false);
+      if (ds) {
+        try {
+          setDiceStats(JSON.parse(ds.value));
         } catch (e) {}
       }
     })();
@@ -9504,6 +9560,22 @@ export default function App({ onSignOut }) {
   };
 
 
+  // Guarda tus estadísticas personales (solo tú las ves): total, críticos, Esperanza/Miedo y tiradas por día.
+  const recordDice = async (hope, fear) => {
+    const r = await safeGet("dice-stats", false);
+    let st = {};
+    try {
+      st = r ? JSON.parse(r.value) || {} : {};
+    } catch (e) {}
+    const day = dayKeyOf(Date.now());
+    const days = { ...(st.days || {}), [day]: ((st.days || {})[day] || 0) + 1 };
+    const keep = {};
+    Object.keys(days).sort().slice(-30).forEach((k) => (keep[k] = days[k]));
+    const next = { total: (st.total || 0) + 1, crit: (st.crit || 0) + (hope === fear ? 1 : 0), hope: (st.hope || 0) + (hope > fear ? 1 : 0), fear: (st.fear || 0) + (fear > hope ? 1 : 0), days: keep };
+    await safeSet("dice-stats", JSON.stringify(next), false);
+    setDiceStats(next);
+  };
+
   const pushRollLog = async (line) => {
     const r = await safeGet("roll-log", true);
     let log = [];
@@ -9552,6 +9624,7 @@ export default function App({ onSignOut }) {
     const edgeStr = edge > 0 ? ` + Ventaja ${edge}` : edge < 0 ? ` − Desventaja ${-edge}` : "";
     const diffStr = hasDifficulty ? ` vs Dificultad ${difficulty}` : "";
     const line = `**${who}** — Esperanza ${hope} + Miedo ${fear}${modStr}${edgeStr} = **${total}**${diffStr} (${text.split(" ·")[0]})`;
+    recordDice(hope, fear);
     await pushRollLog(line);
   };
 
@@ -13500,6 +13573,7 @@ export default function App({ onSignOut }) {
       (tideBonus ? ` + Marea ${tideBonus}` : "");
     const rollExtra = { exp: expBonus, expNames: (extras.exps || []).map((e) => e.text), rally: rallyRoll, rallyDie: extras.rallyDie || "", poet: poetRoll, tide: tideBonus };
     const line = `**${who}** — ${reaction ? "Reacción de " : ""}${traitLabel}: Esperanza ${hope} + Miedo ${fear} ${modStr}${advStr} = **${total}** (${text})`;
+    recordDice(hope, fear);
     await pushRollLog(line);
     if (cardContext) {
       const success = dcVal ? hope === fear || total >= dcVal : null;
@@ -24588,6 +24662,7 @@ export default function App({ onSignOut }) {
                     }}
                   />
                   <ActivityCard />
+                  <HomeDice stats={diceStats} />
                   <div className="mh-home-sec">
                     <h3>Retoma tus campañas <i>{camps.length}</i></h3>
                     <button type="button" onClick={() => setView("campaigns")}>Ver todas ›</button>
