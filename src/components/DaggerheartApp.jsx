@@ -3,7 +3,8 @@
 import { Fragment, useState, useEffect, useLayoutEffect, useRef, createContext, useContext } from "react";
 import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
-import { Globe } from "lucide-react";
+import { Globe, Tent, Haze, CloudFog, CloudRain, CloudLightning, Beer } from "lucide-react";
+import SceneFx, { SCENE_FX } from "./SceneFx";
 import { Squirrel, Layers, CalendarDays, Vote, ScrollText as ChronIcon, Megaphone, Link2 } from "lucide-react";
 import { History, LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus, Box, LayoutGrid, Bird, Fish, Bug, Rabbit, Cat, Turtle, Clock, CircleDashed, Slash } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
@@ -2295,6 +2296,9 @@ const castImgIdFor = (m, expr) => {
 
 // El mapa de mundo es 3D (Three.js): se carga solo cuando se abre.
 const WorldMap = dynamic(() => import("./WorldMap"), { ssr: false, loading: () => <div className="wm-load">Cargando el mapa de mundo…</div> });
+// Icono de cada efecto de escena.
+const FX_ICONS = { campfire: Tent, dust: Haze, fire: Flame, fog: CloudFog, rays: Sun, gold: Sparkles, purple: Sparkles, rain: CloudRain, storm: CloudLightning, snow: Snowflake, tavern: Beer, wind: Wind };
+const FX_COLORS = { gold: "#E3B04B", purple: "#A58BE8", fire: "#E0823A", campfire: "#E0823A", tavern: "#E3A04B" };
 const STAGE_TABS = [
   { key: "escena", label: "Escena", Icon: Clapperboard },
   { key: "mapa", label: "Mapa de combate", Icon: MapPinned },
@@ -3075,6 +3079,12 @@ const sharedStyles = `
   .mh-stg-fear.is-over { position: absolute; top: 20px; right: 20px; z-index: 8; padding: 5px 11px; border-radius: 20px; background: rgba(10,8,14,.72); backdrop-filter: blur(4px); border: 1px solid rgba(165,139,232,.28); box-shadow: 0 2px 8px rgba(0,0,0,.35); }
   .mh-stg-scene::before, .mh-chat-c-scene::before, .mh-gm-sc-img::before, .mh-gm-dlg-prev::before, .mh-gm-cvscene-img::before, .mh-gm-preset-img::before { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; background: url(/escenas/vignette.webp) center / 100% 100% no-repeat; border-radius: inherit; }
   .mh-chat-c-scene > *, .mh-gm-sc-img > *, .mh-gm-preset-img > * { position: relative; z-index: 1; } .mh-gm-cvscene-img { position: relative; }
+  .mh-fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; border-radius: inherit; }
+  .mh-fx-rays { object-fit: cover; mix-blend-mode: screen; opacity: .95; }
+  .mh-gm-fxl { display: flex; flex-direction: column; gap: 6px; } .mh-gm-fxg { display: flex; flex-wrap: wrap; gap: 5px; }
+  .mh-gm-fx { all: unset; cursor: pointer; box-sizing: border-box; display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 99px; border: 1px solid var(--mh-line2); color: var(--mh-ink3); font: 600 11px 'Inter', system-ui, sans-serif; }
+  .mh-gm-fx:hover { color: var(--mh-ink); border-color: var(--mh-ink3); } .mh-gm-fx.is-on { color: var(--mh-ink); border-color: var(--fc, #D9644E); background: color-mix(in srgb, var(--fc, #D9644E) 16%, transparent); }
+  .mh-gm-fxi { display: flex; gap: 6px; align-items: center; color: var(--mh-muted); padding: 0 2px; }
   .mh-stg-scene-cap { position: relative; } .mh-stg-fear.is-incap { top: 50%; right: 12px; transform: translateY(-50%); }
   .mh-stg-fear.is-over > span:first-child, .mh-stg-fear.is-over b { color: #CDBBF5; }
   .mh-stg-body { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
@@ -11646,7 +11656,7 @@ export default function App({ onSignOut }) {
   };
   const addScene = (preset) => {
     if (!viewingCampaignId) return;
-    const sc = { id: "s" + Date.now(), title: preset?.title || "Nueva escena", image: preset?.image || "" };
+    const sc = { id: "s" + Date.now(), title: preset?.title || "Nueva escena", image: preset?.image || "", fx: preset?.fx || [] };
     saveStage(viewingCampaignId, { scenes: [...stageScenesOf(campaignStage), sc], activeSceneId: activeSceneIdOf(campaignStage) });
     setEditingSceneId(preset ? null : sc.id);
   };
@@ -11655,15 +11665,16 @@ export default function App({ onSignOut }) {
     const scenes = stageScenesOf(campaignStage).map((sc) => (sc.id === id ? { ...sc, ...patch } : sc));
     const active = activeSceneIdOf(campaignStage) === id ? scenes.find((sc) => sc.id === id) : null;
     // La escena en pantalla se copia también en stage.scene, que es lo que leen los jugadores.
-    saveStage(viewingCampaignId, { scenes, activeSceneId: activeSceneIdOf(campaignStage), ...(active ? { scene: { title: active.title, image: active.image } } : {}) });
+    saveStage(viewingCampaignId, { scenes, activeSceneId: activeSceneIdOf(campaignStage), ...(active ? { scene: { title: active.title, image: active.image, fx: active.fx || [] } } : {}) });
   };
 
+  const toggleFx = (sc, k) => updateScene(sc.id, { fx: (sc.fx || []).includes(k) ? (sc.fx || []).filter((x) => x !== k) : [...(sc.fx || []), k] });
   const removeScene = (id) => {
     const gone = stageScenesOf(campaignStage).find((x) => x.id === id)?.image;
     if (gone && gone.startsWith("img:")) safeSet("campaign-img:" + gone.slice(4), "", true);
     const scenes = stageScenesOf(campaignStage).filter((sc) => sc.id !== id);
     const wasActive = activeSceneIdOf(campaignStage) === id;
-    saveStage(viewingCampaignId, { scenes, activeSceneId: wasActive ? null : activeSceneIdOf(campaignStage), ...(wasActive ? { scene: { title: "", image: "" } } : {}) });
+    saveStage(viewingCampaignId, { scenes, activeSceneId: wasActive ? null : activeSceneIdOf(campaignStage), ...(wasActive ? { scene: { title: "", image: "", fx: [] } } : {}) });
     if (editingSceneId === id) setEditingSceneId(null);
     if (dialogueConvs.some((c) => c.sceneId === id)) saveConvs(dialogueConvs.filter((c) => c.sceneId !== id));
   };
@@ -11672,7 +11683,7 @@ export default function App({ onSignOut }) {
     const scenes = stageScenesOf(campaignStage);
     const sc = scenes.find((x) => x.id === id);
     if (!sc || !viewingCampaignId) return;
-    await saveStage(viewingCampaignId, { scenes, activeSceneId: id, scene: { title: sc.title, image: sc.image }, live: "escena" });
+    await saveStage(viewingCampaignId, { scenes, activeSceneId: id, scene: { title: sc.title, image: sc.image, fx: sc.fx || [] }, live: "escena" });
     postChat(viewingCampaignId, { kind: "event", author: "El DJ", gm: true, icon: "escena", text: "muestra la escena «" + (sc.title || "Sin título") + "»" });
   };
 
@@ -11874,7 +11885,7 @@ export default function App({ onSignOut }) {
     await saveStage(viewingCampaignId, {
       dialogue: { id: "d" + Date.now(), lineId: line.id, castId: m.id, name: m.name, expr, imgId: castImgIdFor(m, expr), text: line.text },
       live: "escena",
-      ...(switchScene ? { scenes, activeSceneId: sc.id, scene: { title: sc.title, image: sc.image } } : {}),
+      ...(switchScene ? { scenes, activeSceneId: sc.id, scene: { title: sc.title, image: sc.image, fx: sc.fx || [] } } : {}),
     });
     if (switchScene) postChat(viewingCampaignId, { kind: "event", author: "El DJ", gm: true, icon: "escena", text: "muestra la escena «" + (sc.title || "Sin título") + "»" });
     postChat(viewingCampaignId, { kind: "msg", author: m.name, gm: true, npc: true, text: line.text });
@@ -11882,7 +11893,7 @@ export default function App({ onSignOut }) {
 
   const clearDialogue = () => saveStage(viewingCampaignId, { dialogue: null });
 
-  const hideScene = () => saveStage(viewingCampaignId, { scenes: stageScenesOf(campaignStage), activeSceneId: null, scene: { title: "", image: "" } });
+  const hideScene = () => saveStage(viewingCampaignId, { scenes: stageScenesOf(campaignStage), activeSceneId: null, scene: { title: "", image: "", fx: [] } });
 
   const showOnStage = async (key) => {
     if (!viewingCampaignId || (campaignStage.live || "escena") === key) return;
@@ -17226,6 +17237,7 @@ export default function App({ onSignOut }) {
                                         className={"mh-stg-scene" + (scene.image ? "" : " is-blank") + (wide ? " is-wide" : "")}
                                         style={bgStyle(scene.image)}
                                       >
+                                        <SceneFx fx={scene.fx} />
                                         {dlg ? (
                                           renderDialogue(wide)
                                         ) : (
@@ -24450,12 +24462,34 @@ export default function App({ onSignOut }) {
                                         <Upload size={13} /> Subir imagen
                                         <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { uploadSceneImg(sc.id, e.target.files?.[0]); e.target.value = ""; }} />
                                       </label>
+                                      <div className="mh-gm-fxl">
+                                        <span className="mh-gm-h2">Efectos</span>
+                                        <div className="mh-gm-fxg">
+                                          {SCENE_FX.map((f) => {
+                                            const I = FX_ICONS[f.k];
+                                            const on = (sc.fx || []).includes(f.k);
+                                            return (
+                                              <button key={f.k} type="button" className={"mh-gm-fx" + (on ? " is-on" : "")} aria-pressed={on} style={FX_COLORS[f.k] ? { "--fc": FX_COLORS[f.k] } : undefined} onClick={() => toggleFx(sc, f.k)} title={f.n}>
+                                                <I size={13} /> {f.n}
+                                              </button>
+                                            );
+                                          })}
+                                        </div>
+                                      </div>
                                       <button type="button" className="mh-btn-ghost" onClick={() => setEditingSceneId(null)}>
                                         <Check size={13} /> Listo
                                       </button>
                                     </div>
                                   ) : (
                                     <div className="mh-gm-sc-t mh-serif" title={sc.title}>{sc.title || "Sin título"}</div>
+                                  )}
+                                  {!editing && (sc.fx || []).length > 0 && (
+                                    <div className="mh-gm-fxi" title={"Efectos: " + (sc.fx || []).map((k) => SCENE_FX.find((f) => f.k === k)?.n).filter(Boolean).join(", ")}>
+                                      {(sc.fx || []).map((k) => {
+                                        const I = FX_ICONS[k];
+                                        return I ? <I key={k} size={13} style={FX_COLORS[k] ? { color: FX_COLORS[k] } : undefined} /> : null;
+                                      })}
+                                    </div>
                                   )}
                                   {!editing && (
                                     <div className="mh-gm-sc-acts">
