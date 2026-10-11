@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CalendarDays, MapPin, Check, HelpCircle, X } from "lucide-react";
-import { useDoc } from "@/lib/campaignDocs";
+import { useDoc, readDoc, mutateDoc } from "@/lib/campaignDocs";
 
 // Calendario de la campaña: la próxima sesión, quién viene y un mes con las sesiones marcadas.
 export const calKey = (id) => "campaign-cal:" + id;
@@ -113,23 +113,66 @@ export function CampaignCalendar({ campaignId, isGm, members, colorOf }) {
   );
 }
 
-// Aviso en Inicio: la próxima sesión de cada campaña con fecha y un toque para confirmar.
-export function NextSession({ campaign, mine, colorOf }) {
-  const [doc, update] = useDoc(calKey(campaign.id), EMPTY, 30000);
+// Inicio: sección «Próximas sesiones» con el mismo diseño que «Retoma tus campañas» y «Tus personajes».
+// Una ficha por campaña con sesión fijada: día, hora, cuenta atrás y un toque para confirmar si vas.
+export function HomeSessions({ camps, colorOf, mineOf, onOpen }) {
+  const key = camps.map((c) => c.id).join(",");
+  const [docs, setDocs] = useState({});
   const [now] = useState(() => Date.now());
-  const next = doc.next;
-  if (!next || next.ts < now - 3 * 3600 * 1000) return null;
-  const st = mine.length && mine.every((m) => doc.rsvp?.[m.id] === doc.rsvp?.[mine[0].id]) ? doc.rsvp?.[mine[0].id] : null;
-  const set = (v) => update((d) => ({ ...d, rsvp: { ...(d.rsvp || {}), ...Object.fromEntries(mine.map((m) => [m.id, v])) } }));
+  useEffect(() => {
+    let alive = true;
+    const pull = async () => {
+      const out = {};
+      await Promise.all(key.split(",").filter(Boolean).map(async (id) => { out[id] = await readDoc(calKey(id), EMPTY); }));
+      if (alive) setDocs(out);
+    };
+    pull();
+    const t = setInterval(pull, 30000);
+    return () => {
+      alive = false;
+      clearInterval(t);
+    };
+  }, [key]);
+  const items = camps
+    .map((cp) => ({ cp, next: docs[cp.id]?.next, rsvp: docs[cp.id]?.rsvp || {} }))
+    .filter((x) => x.next && x.next.ts >= now - 3 * 3600 * 1000)
+    .sort((a, b) => a.next.ts - b.next.ts);
+  if (!items.length) return null;
+  const answer = (cp, mine, v) =>
+    mutateDoc(calKey(cp.id), EMPTY, (d) => ({ ...d, rsvp: { ...(d.rsvp || {}), ...Object.fromEntries(mine.map((m) => [m.id, v])) } })).then((n) => setDocs((s) => ({ ...s, [cp.id]: n })));
   return (
-    <div className="ns" style={{ "--c": colorOf }}>
-      <div className="ns-d"><small>{fmtDate(next.ts)}</small><b>{fmtTime(next.ts)}</b></div>
-      <div className="ns-t"><b>Próxima sesión · {campaign.name || "Campaña"}</b><small>Empieza en {countdown(next.ts, now)}{next.place ? " · " + next.place : ""}</small></div>
-      {mine.length > 0 && (
-        <div className="gx-row">
-          {Object.entries(STATES).map(([k, [label, c]]) => <button key={k} type="button" className={"cx-chip" + (st === k ? " on" : "")} style={{ "--c": c }} onClick={() => set(k)}>{label}</button>)}
-        </div>
-      )}
-    </div>
+    <>
+      <div className="mh-home-sec">
+        <h3>Próximas sesiones <i>{items.length}</i></h3>
+        <button type="button" onClick={() => onOpen(items[0].cp)}>Ver calendario ›</button>
+      </div>
+      <div className="mh-home-row">
+        {items.map(({ cp, next, rsvp }) => {
+          const mine = mineOf(cp);
+          const st = mine.length && mine.every((m) => rsvp[m.id] === rsvp[mine[0].id]) ? rsvp[mine[0].id] : null;
+          const d = new Date(next.ts);
+          return (
+            <div key={cp.id} className="mh-home-tile is-ses" style={{ "--hc": colorOf(cp.id) }} role="button" tabIndex={0} onClick={() => onOpen(cp)} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), onOpen(cp))}>
+              <span className="mh-home-tile-art is-ses">
+                <strong>{d.getDate()}</strong>
+                <em>{d.toLocaleDateString("es-ES", { weekday: "short", month: "short" }).replace(/\./g, "")}</em>
+              </span>
+              <b>{cp.name || "Campaña"}</b>
+              <small>{fmtTime(next.ts)} · en {countdown(next.ts, now)}</small>
+              {next.place && <small className="ses-pl"><MapPin size={10} /> {next.place}</small>}
+              {mine.length > 0 && (
+                <span className="ses-rsvp" onClick={(e) => e.stopPropagation()}>
+                  {Object.entries(STATES).map(([k, [label, c, Ico]]) => (
+                    <button key={k} type="button" className={st === k ? "on" : ""} style={{ "--c": c }} title={label} aria-label={label} aria-pressed={st === k} onClick={() => answer(cp, mine, k)}>
+                      <Ico size={13} />
+                    </button>
+                  ))}
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </>
   );
 }

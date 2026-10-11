@@ -16,7 +16,7 @@ import { RulesPanel } from "./MapRules";
 import { Changelog } from "./Changelog";
 import { CardsPage } from "./Cards";
 import { Generators } from "./Generators";
-import { CampaignCalendar, NextSession } from "./Calendar";
+import { CampaignCalendar, HomeSessions } from "./Calendar";
 import { PollsGm, ActivePoll } from "./Polls";
 import { RestGm, GroupRestDialog, RestLock } from "./GroupRest";
 import { Chronicle, Timeline } from "./Chronicle";
@@ -4826,6 +4826,11 @@ const sharedStyles = `
   .mh-home-tile b { font-size: 13.5px; color: var(--mh-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .mh-home-tile small { font-size: 11.5px; color: var(--mh-muted); }
   .mh-home-tile-art { height: 76px; border-radius: 9px; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; color: #ffffffb0; background: linear-gradient(135deg, #2b3a7a, #151236); }
+  .mh-home-tile-art.is-ses { flex-direction: column; gap: 0; background: linear-gradient(135deg, color-mix(in srgb, var(--hc) 62%, #12122e), #12122e); }
+  .mh-home-tile-art.is-ses strong { font: 700 28px Georgia, serif; line-height: 1; color: #fff; } .mh-home-tile-art.is-ses em { font-style: normal; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: #ffffffc0; margin-top: 3px; }
+  .mh-home-tile.is-ses .ses-pl { display: flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ses-rsvp { display: flex; gap: 5px; margin-top: 6px; } .ses-rsvp button { all: unset; cursor: pointer; width: 30px; height: 24px; display: grid; place-items: center; border-radius: 8px; border: 1px solid var(--mh-line2); color: var(--mh-muted); box-sizing: border-box; }
+  .ses-rsvp button:hover { color: var(--c); border-color: var(--c); } .ses-rsvp button.on { color: var(--c); border-color: var(--c); background: color-mix(in srgb, var(--c) 16%, transparent); }
   .mh-home-tile-art.is-char { background: linear-gradient(135deg, color-mix(in srgb, var(--hc) 60%, #12122e), #12122e); }
   html[data-mh-theme="light"] .mh-home-tile-art { background: linear-gradient(135deg, #cfd8f6, #f1f3fc); color: #3b4a8f; }
   html[data-mh-theme="light"] .mh-home-tile-art.is-char { background: linear-gradient(135deg, color-mix(in srgb, var(--hc) 42%, #fffcf6), #fffcf6); color: color-mix(in srgb, var(--hc) 75%, #221C2B); }
@@ -24194,9 +24199,16 @@ export default function App({ onSignOut }) {
                       )}
                     </div>
                   </div>
-                  {camps.map((cp) => (
-                    <NextSession key={cp.id} campaign={cp} colorOf={campColor(cp.id)} mine={(cp.characterIds || []).filter((id) => characters[id]).map((id) => ({ id }))} />
-                  ))}
+                  <HomeSessions
+                    camps={camps}
+                    colorOf={campColor}
+                    mineOf={(cp) => (cp.characterIds || []).filter((id) => characters[id]).map((id) => ({ id }))}
+                    onOpen={(cp) => {
+                      setViewingCampaignId(cp.id);
+                      setCampaignDetailTab("calendario");
+                      setView("campaigns");
+                    }}
+                  />
                   <ActivityCard />
                   <div className="mh-home-sec">
                     <h3>Retoma tus campañas <i>{camps.length}</i></h3>

@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-11",
     title: "Imágenes propias en las escenas y viñeta",
     items: [
+      { tag: "mejora", text: "En Inicio, la próxima sesión ya no es un aviso suelto: aparece en su propia sección «Próximas sesiones», con el mismo diseño de fichas que «Retoma tus campañas» y «Tus personajes» (día, hora, cuenta atrás, lugar y botones para confirmar si vas)." },
       { tag: "nuevo", text: "La pestaña Cartas incluye ahora las armas (principales y secundarias), ordenadas por rango, con su daño, alcance, rasgo y efecto." },
       { tag: "mejora", text: "Fundido al cambiar de escena: al mostrar otra escena, la anterior se desvanece y la nueva aparece poco a poco; también al mostrar la primera o al quitarla." },
       { tag: "nuevo", text: "Efectos de escena: el DJ puede añadir a cada escena hoguera, polvo, fuego, niebla, rayos de luz, presencia mágica (dorada o morada), lluvia, tormenta (con rayos), nieve, taberna y viento, combinables entre sí. Se activan al editar la escena y los jugadores los ven al momento sobre la imagen." },
