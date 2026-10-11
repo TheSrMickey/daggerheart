@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-11",
     title: "Imágenes propias en las escenas y viñeta",
     items: [
+      { tag: "mejora", text: "Proyectos: si el personaje no está en una campaña, los proyectos están en pausa (desenfocados con un candado) hasta que hace un descanso largo. Durante ese descanso puede crear y editar proyectos, y avanzar uno (+1) solo si eligió el nuevo movimiento «Trabajar en un proyecto». El botón «Terminar» (o un descanso corto) los vuelve a bloquear." },
       { tag: "mejora", text: "En Acciones, la subclase y las características de clase usan el emblema de su clase (el mismo de la lista de personajes) en lugar de un escudo o espadas genéricas." },
       { tag: "mejora", text: "Armas y armadura: al guardar un arma o una armadura en la mochila, su carta se encoge y vuela hacia ella; al equipar, la carta aparece con su propia animación. Las tres cajas (arma principal, secundaria y armadura) mantienen siempre la misma altura al equipar o quitar algo, y la Competencia ya no se puede cambiar a mano (sube con el nivel)." },
       { tag: "mejora", text: "Armadura: ahora se marca de 1 en 1. Al marcar una, el siguiente umbral que pulses baja un escalón de gravedad según las reglas (Grave a Mayor, Mayor a Menor, Menor a ningún daño). Al marcarla aparece un escudo azul que se rompe, y junto a «Umbrales» se ve la etiqueta «Armadura marcada» hasta que recibes el daño." },

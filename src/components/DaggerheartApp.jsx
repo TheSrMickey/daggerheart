@@ -2331,6 +2331,7 @@ const REST_ACTIONS = [
   { key: "repair", label: "Reparar la armadura" },
   { key: "prepare", label: "Prepararse" },
   { key: "tribute", label: "Rendir tributo" },
+  { key: "project", label: "Trabajar en un proyecto" },
 ];
 
 const STARTER_ITEMS = [
@@ -12341,6 +12342,7 @@ export default function App({ onSignOut }) {
 
     // Brujo · Favor: rendir tributo al patrón como movimiento de descanso.
     let favorGain = 0;
+    let projectMove = false;
     const tributeGain = Math.max(1, Number(c[charSpellTrait(c)] || 0));
     [key1, key2, key3].forEach((key) => {
       if (!key) return;
@@ -12350,6 +12352,12 @@ export default function App({ onSignOut }) {
         if (c.f_class !== "Brujo") return;
         favorGain += tributeGain;
         messages.push(`Rinde tributo a ${c.f_patron || "su patrón"}: +${tributeGain} Favor`);
+        return;
+      }
+      if (key === "project") {
+        if (!isLong) return;
+        projectMove = true;
+        messages.push("Trabajar en un proyecto: puedes avanzar uno (+1)");
         return;
       }
       if (key === "prepare") {
@@ -12415,6 +12423,9 @@ export default function App({ onSignOut }) {
       f_short_rests: isLong ? "0" : String(Number(c.f_short_rests || 0) + 1),
     };
     if (favorGain) restPatch.f_favor = String(getFavor(c) + favorGain);
+    // Proyectos: se abren con un descanso largo (crear y editar) y solo avanzan si elegiste «Trabajar en un proyecto».
+    restPatch.f_proj_open = isLong ? "1" : "";
+    restPatch.f_proj_adv = projectMove ? "1" : "";
     // Trovador: el descanso largo recupera sus canciones.
     if (isLong && c.f_speech_used) restPatch.f_speech_used = "";
     if (c.f_scales_ready) restPatch.f_scales_ready = "";
@@ -12622,6 +12633,7 @@ export default function App({ onSignOut }) {
     if (!p) return;
     const next = (p.count || 0) + 1;
     adjustProject(id, index, 1);
+    if (c.f_proj_adv) updateCharacterField(id, "f_proj_adv", "");
     const done = p.goal && next >= p.goal;
     postCampaignEvent(id, done ? `🔨 Termina su proyecto «${p.name}».` : `🔨 Trabaja en «${p.name}» (${next}${p.goal ? "/" + p.goal : ""}).`);
   };
@@ -15533,6 +15545,7 @@ export default function App({ onSignOut }) {
                                 { key: "clearmind", label: "Quitarse el Estrés", Icon: Zap, color: "#A58BE8", need: stressTotal ? stressMarked / stressTotal : 0, text: isLong ? "Quita todo el Estrés" : `Quita ${roll} Estrés` },
                                 { key: "repair", label: "Reparar la armadura", Icon: Shield, color: "var(--acc)", need: armorTotal ? (armorTotal - armorLeft) / armorTotal : 0, text: !armorTotal ? "No llevas armadura" : isLong ? "Repara toda la Armadura" : `Repara ${roll} casillas` },
                                 { key: "prepare", label: "Prepararse", Icon: Sparkles, color: "#E3B04B", need: hopeTotal ? ((hopeTotal - hope) / hopeTotal) * 0.8 : 0, text: "+1 Esperanza" },
+                                ...(isLong ? [{ key: "project", label: "Trabajar en un proyecto", Icon: Hammer, color: "#C08B5C", need: 0, text: "Avanza un proyecto +1" }] : []),
                               ];
                               // Recomendadas: lo que más te falta; si sobra hueco, prepararse.
                               const recommended = acts
@@ -15541,7 +15554,7 @@ export default function App({ onSignOut }) {
                                 .slice(0, slots)
                                 .map((ac) => ac.key);
                               while (recommended.length < slots) recommended.push("prepare");
-                              const picks = restPicks || recommended;
+                              const picks = (restPicks || recommended).filter((p) => isLong || p !== "project");
                               const countOf = (key) => picks.filter((p) => p === key).length;
                               const togglePick = (key) => {
                                 const n = countOf(key);
@@ -15758,8 +15771,34 @@ export default function App({ onSignOut }) {
                             {(() => {
                               const projects = getProjects(c);
                               const projCamp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(viewingCharId));
+                              const projOpen = c.f_proj_open === "1";
+                              const canAdvance = projCamp ? true : c.f_proj_adv === "1";
                               const wrapLock = (node) =>
-                                projCamp ? (
+                                !projCamp ? (
+                                  <div className="rl">
+                                    {projOpen && (
+                                      <div className="rl-ban">
+                                        <Moon size={16} />
+                                        <span>
+                                          <b>Descanso largo.</b> {c.f_proj_adv === "1" ? "Puedes avanzar un proyecto." : "Crea y edita tus proyectos."}
+                                        </span>
+                                        <button type="button" className="mh-btn-ghost" style={{ marginLeft: "auto", padding: "3px 9px", fontSize: 11.5 }} onClick={() => updateCharacterFields(viewingCharId, { f_proj_open: "", f_proj_adv: "" })}>
+                                          Terminar
+                                        </button>
+                                      </div>
+                                    )}
+                                    <div className={"rl-body" + (projOpen ? "" : " is-locked")} inert={!projOpen}>
+                                      {node}
+                                    </div>
+                                    {!projOpen && (
+                                      <div className="rl-lock">
+                                        <span className="rl-ic"><Lock size={26} /></span>
+                                        <h4 className="mh-serif">Proyectos en pausa</h4>
+                                        <p>Se abren cuando haces un descanso largo.</p>
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : projCamp ? (
                                   <RestLock
                                     project
                                     campaignId={projCamp.id}
@@ -15810,7 +15849,7 @@ export default function App({ onSignOut }) {
                                             <span style={{ fontSize: 11.5, color: "var(--mh-muted)" }}>{goal ? `${count}/${goal}` : `${count} avances`}</span>
                                           )}
                                           {!done && (
-                                            <button type="button" className="mh-btn" style={{ fontSize: 11.5, padding: "5px 10px" }} onClick={() => workOnProject(viewingCharId, i)}>
+                                            <button type="button" className="mh-btn" style={{ fontSize: 11.5, padding: "5px 10px" }} disabled={!canAdvance} title={canAdvance ? undefined : "Elige «Trabajar en un proyecto» en tu descanso largo"} onClick={() => workOnProject(viewingCharId, i)}>
                                               <Hammer size={12} /> Trabajar +1
                                             </button>
                                           )}
