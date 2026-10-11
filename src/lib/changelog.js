@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-11",
     title: "Imágenes propias en las escenas y viñeta",
     items: [
+      { tag: "mejora", text: "Fundido al cambiar de escena: al mostrar otra escena, la anterior se desvanece y la nueva aparece poco a poco; también al mostrar la primera o al quitarla." },
       { tag: "nuevo", text: "Efectos de escena: el DJ puede añadir a cada escena hoguera, polvo, fuego, niebla, rayos de luz, presencia mágica (dorada o morada), lluvia, tormenta (con rayos), nieve, taberna y viento, combinables entre sí. Se activan al editar la escena y los jugadores los ven al momento sobre la imagen." },
       { tag: "mejora", text: "Diálogos de escena más cinematográficos: al aparecer un diálogo la escena se desenfoca y se oscurece un poco para dar prioridad a la conversación, el texto aparece poco a poco (pulsarlo lo muestra entero) y el personaje que habla sale siempre a la izquierda." },
       { tag: "nuevo", text: "En la preparación de escenas del DJ se pueden subir imágenes desde el equipo (botón «Subir imagen» en una escena nueva o al editar una existente). Se reducen a 1600 px para que pesen poco." },

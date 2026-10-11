@@ -3087,6 +3087,9 @@ const sharedStyles = `
   .mh-gm-fxi { display: flex; gap: 6px; align-items: center; color: var(--mh-muted); padding: 0 2px; }
   .mh-stg-scene-cap { position: relative; } .mh-stg-fear.is-incap { top: 50%; right: 12px; transform: translateY(-50%); }
   .mh-stg-fear.is-over > span:first-child, .mh-stg-fear.is-over b { color: #CDBBF5; }
+  .mh-stg-body { transition: opacity .36s ease; } .mh-stg-body.is-out { opacity: 0; }
+  .mh-stg-scene { animation: mh-scene-in .55s ease both; } @keyframes mh-scene-in { from { opacity: 0; } to { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .mh-stg-body { transition: none; } .mh-stg-scene { animation: none; } }
   .mh-stg-body { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
   .mh-stg-kick { font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
   .mh-stg-scene { position: relative; flex: 1 1 auto; min-height: 240px; border-radius: 12px; overflow: hidden; background: #2B3A4F center / cover no-repeat; display: flex; flex-direction: column; justify-content: space-between; }
@@ -8335,6 +8338,32 @@ export default function App({ onSignOut }) {
   const [castError, setCastError] = useState("");
   const [dialogueDraft, setDialogueDraft] = useState({ castId: null, text: "", expr: "tranquila" });
   const [hiddenDialogue, setHiddenDialogue] = useState(null);
+  // Cambio de escena con fundido: la escena que se ve se desvanece, se cambia y la nueva aparece.
+  const [shownScene, setShownScene] = useState(null);
+  const [sceneOut, setSceneOut] = useState(false);
+  const shownSig = useRef(null);
+  const liveSceneNow = campaignStage.scene || {};
+  const liveSceneSig = (liveSceneNow.title || "") + "|" + (liveSceneNow.image || "");
+  useEffect(() => {
+    if (shownSig.current === liveSceneSig) return undefined;
+    const apply = () => {
+      shownSig.current = liveSceneSig;
+      setShownScene(liveSceneNow);
+      setSceneOut(false);
+    };
+    // Sin escena anterior no hay nada que desvanecer: aparece directamente con su fundido de entrada.
+    if (!shownSig.current || shownSig.current === "|") {
+      const t = setTimeout(apply, 0);
+      return () => clearTimeout(t);
+    }
+    const t0 = setTimeout(() => setSceneOut(true), 0);
+    const t1 = setTimeout(apply, 380);
+    return () => {
+      clearTimeout(t0);
+      clearTimeout(t1);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [liveSceneSig]);
   // Diálogos preparados por el DJ: se guardan en orden y se muestran cuando toca.
   const [dialogueConvs, setDialogueConvs] = useState([]);
   const [editingLineId, setEditingLineId] = useState(null);
@@ -17158,7 +17187,7 @@ export default function App({ onSignOut }) {
                         const stage = campaignStage;
                         const live = stage.live || "escena";
                         const stTab = live; // los jugadores ven lo que el DJ tiene en directo, sin selector
-                        const scene = stage.scene || {};
+                        const scene = shownScene ? { ...shownScene, fx: (stage.scene || {}).fx || [] } : stage.scene || {};
                         const handouts = (stage.handouts || []).filter((h) => !h.hidden);
                         const dlg = stage.dialogue && hiddenDialogue !== stage.dialogue.id ? stage.dialogue : null;
                         const dlgKey = dlg ? dlg.castId || dlg.name : null;
@@ -17228,12 +17257,13 @@ export default function App({ onSignOut }) {
                                   <Minimize2 size={13} /> Reducir
                                 </button>
                               )}
-                              <div className="mh-stg-body">
+                              <div className={"mh-stg-body" + (sceneOut && stTab === "escena" ? " is-out" : "")}>
                                 {!fearInCap && fearEl("")}
                                 {stTab === "escena" &&
                                   (scene.title || scene.image || dlg ? (
                                     <>
                                       <div
+                                        key={(scene.title || "") + "|" + (scene.image || "")}
                                         className={"mh-stg-scene" + (scene.image ? "" : " is-blank") + (wide ? " is-wide" : "")}
                                         style={bgStyle(scene.image)}
                                       >
