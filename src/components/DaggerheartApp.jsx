@@ -575,7 +575,7 @@ const ANCESTRIES = [
 ];
 
 const COMMUNITIES = [
-  { key: "De Alta Cuna", blurb: "Creciste entre privilegios y expectativas de la nobleza.", features: [{ name: "Privilegio", text: "Tienes ventaja en las tiradas para tratar con nobles, negociar precios o aprovechar tu reputación para conseguir lo que quieres." }] },
+  { key: "De Alta Cuna", image: "/comunidades/de-alta-cuna.webp", blurb: "Creciste entre privilegios y expectativas de la nobleza.", features: [{ name: "Privilegio", text: "Tienes ventaja en las tiradas para tratar con nobles, negociar precios o aprovechar tu reputación para conseguir lo que quieres." }] },
   { key: "Del Saber", blurb: "Vienes de una sociedad que valora el saber académico y la habilidad política: la historia, la ciencia, la política o la recopilación de mitos y leyendas.", features: [{ name: "Leído", text: "Tienes ventaja en las tiradas sobre la historia, la cultura o la política de una persona o un lugar importantes." }] },
   { key: "Del Orden", blurb: "Creciste bajo una disciplina estricta, militar o religiosa.", features: [{ name: "Entregado", text: "Apunta tres dichos o valores que te inculcó tu educación. Una vez por descanso, cuando describas cómo encarnas uno de estos principios con lo que estás haciendo, puedes tirar un d20 como Dado de Esperanza." }] },
   { key: "De las Cumbres", blurb: "Tu hogar fueron las montañas y sus caminos escarpados.", features: [{ name: "Firme", text: "Tienes ventaja en las tiradas para cruzar precipicios y cornisas peligrosos, orientarte en entornos duros y usar tus conocimientos de supervivencia." }] },
@@ -1069,7 +1069,14 @@ const COMMUNITY_ICONS = {
   "De las Profundidades": Gem, Errante: Compass, Salvaje: Leaf, "De las Dunas": Sun, "Del Hogar": Home,
   "De la Escarcha": Snowflake, "De la Guerra": Swords, Libre: Feather, Renacido: Sparkles,
 };
-const EXP_EXAMPLES = ["Guía de las tierras salvajes", "Protocolo de la corte real", "Superviviente de la calle", "Trovadora de tabernas", "Herbolario", "Contrabandista", "Leyendas antiguas", "Duelista"];
+const EXP_POOL = [
+  "Guía de las tierras salvajes", "Protocolo de la corte real", "Superviviente de la calle", "Trovador de tabernas", "Herbolario", "Contrabandista",
+  "Leyendas antiguas", "Duelista", "Marinero de altura", "Cazador de recompensas", "Erudito de biblioteca", "Aprendiz de alquimista",
+  "Pícaro de mercado", "Soldado veterano", "Curandero de aldea", "Cartógrafo curioso", "Cocinero de campamento", "Rastreador de bestias",
+  "Mensajero incansable", "Artesano del hierro", "Hablador nato", "Buscador de reliquias", "Criado en el templo", "Domador de caballos",
+];
+const pickExamples = () => [...EXP_POOL].sort(() => Math.random() - 0.5).slice(0, 8);
+const EXP_EXAMPLES = EXP_POOL.slice(0, 8);
 // Medidor circular de una estadística inicial, con el desglose de dónde sale su valor.
 function StatGauge({ color, Icon, label, value, max, base, baseLabel, mods }) {
   const C = 2 * Math.PI * 52;
@@ -4836,7 +4843,8 @@ const sharedStyles = `
   .mh-wz-callout { margin-top: 16px; padding: 12px 16px; border-radius: 16px; display: flex; gap: 10px; align-items: flex-start; text-align: left; font-size: 12.5px; line-height: 1.55; color: var(--mh-ink3); background: color-mix(in srgb, var(--mh-ink) 5%, transparent); border: 1px solid var(--mh-line); } .mh-wz-callout svg { flex-shrink: 0; margin-top: 2px; } .mh-wz-callout > span { flex: 1; min-width: 0; text-align: left; }
   @media (max-width: 760px) { .mh-wz-gauges { grid-template-columns: minmax(0, 1fr); } }
   .mh-wz-body .mh-wz-pane.mh-wz-xps { max-width: none; width: 100%; margin: 0; align-items: stretch; justify-content: flex-start; }
-  .mh-wz-xps .mh-wz-exprow { justify-content: flex-start; }
+  .mh-wz-xps .mh-wz-exprow { justify-content: flex-start; flex-wrap: nowrap; width: 100%; gap: 18px; }
+  .mh-wz-xps .mh-wz-exprow > div:first-child { max-width: none; }
   .mh-wz-xp { display: flex; gap: 14px; padding: 16px; border-radius: 22px; background: color-mix(in srgb, var(--mh-ink) 4%, transparent); border: 1px solid var(--mh-line); }
   .mh-wz-xpb { width: 68px; height: 68px; border-radius: 20px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(160deg, #E3B04B, #a97d1e); color: #1F1606; font: 700 26px 'Cinzel', Georgia, serif; box-shadow: 0 8px 20px #E3B04B33; }
   .mh-wz-xpb small { font: 700 8.5px 'Inter', sans-serif; letter-spacing: .12em; }
@@ -4846,6 +4854,32 @@ const sharedStyles = `
   .mh-wz-sug { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
   .mh-wz-sug button { all: unset; cursor: pointer; font-size: 11px; padding: 4px 11px; border-radius: 20px; color: var(--mh-ink3); background: color-mix(in srgb, var(--mh-ink) 6%, transparent); border: 1px solid var(--mh-line2); } .mh-wz-sug button:hover { color: var(--mh-ink); background: color-mix(in srgb, var(--mh-ink) 11%, transparent); } .mh-wz-sug button:focus-visible { outline: 2px solid #E3B04B; }
   .mh-wz-sug button.is-pick { background: #E3B04B22; border-color: #E3B04B66; color: #E3B04B; }
+  /* Asistente · cartas de dominio: baraja arriba, estante en filas abajo */
+  .mh-wz-body:has(.dpk) { display: flex; overflow: hidden; padding-bottom: 16px; }
+  .mh-wz-domain { flex: 1; min-height: 0; width: 100%; display: flex; margin: 0; }
+  .dpk { position: relative; flex: 1; min-height: 0; width: 100%; display: flex; flex-direction: column; gap: 10px; }
+  .dpk-q { margin: 0; font-size: 13px; color: var(--mh-muted2); text-align: center; line-height: 1.4; flex-shrink: 0; }
+  .dpk-deck { position: relative; flex: 1; min-height: 190px; }
+  .dpk-card, .dpk-slot { position: absolute; transform: rotate(var(--r)); transform-origin: 50% 90%; transition: transform .25s cubic-bezier(.2,.8,.2,1), filter .2s; }
+  .dpk-card { filter: drop-shadow(0 12px 18px rgba(0,0,0,.55)); animation: dsw-deal .6s cubic-bezier(.2,.9,.25,1.1) backwards; }
+  .dpk-card:hover { transform: translateY(-14px) rotate(0deg) scale(1.04); z-index: 50 !important; }
+  .dpk-card.is-out { animation: dsw-out .33s cubic-bezier(.5,0,.8,.4) both; pointer-events: none; }
+  .dpk-card.is-target { cursor: pointer; animation: dsw-glow 1s ease-in-out infinite alternate; } .dpk-card.is-target:hover { filter: drop-shadow(0 0 22px var(--cc)); }
+  .dpk-slot { border: 2px dashed var(--mh-line2); border-radius: 22px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--mh-muted2); font: 600 12px 'Inter', system-ui, sans-serif; background: color-mix(in srgb, var(--mh-ink) 4%, transparent); }
+  .dpk-rm { all: unset; cursor: pointer; position: absolute; right: -6px; top: -6px; z-index: 4; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: #C0504A; box-shadow: 0 4px 10px rgba(0,0,0,.5); opacity: 0; transition: opacity .15s; }
+  .dpk-card:hover .dpk-rm, .dpk-rm:focus-visible { opacity: 1; }
+  .dpk-h { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; flex-shrink: 0; }
+  .dpk-lv { font-size: 12px; color: var(--mh-muted2); }
+  .dpk-shelf { flex-shrink: 0; max-height: 178px; overflow-y: auto; scrollbar-width: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; padding: 2px; }
+  .dpk-shelf::-webkit-scrollbar { display: none; }
+  .dpk-row { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 6px 12px 6px 6px; border-radius: 16px; min-width: 0; background: color-mix(in srgb, var(--mh-ink) 5%, transparent); border: 1px solid var(--mh-line); transition: background .15s, border-color .15s, box-shadow .15s; }
+  .dpk-row:hover, .dpk-row:focus-visible { border-color: var(--cc); background: color-mix(in srgb, var(--cc) 12%, transparent); box-shadow: 0 0 16px color-mix(in srgb, var(--cc) 25%, transparent); outline: none; }
+  .dpk-th { width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--cc); background: color-mix(in srgb, var(--cc) 16%, var(--mh-panel)) center / cover; border: 1px solid color-mix(in srgb, var(--cc) 45%, transparent); }
+  .dpk-rt { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; } .dpk-rt b { font-size: 12.5px; font-weight: 600; color: var(--mh-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .dpk-rt small { font-size: 10.5px; color: var(--mh-muted2); }
+  .dpk-ok, .dpk-pl { margin-left: auto; flex-shrink: 0; } .dpk-ok { color: #4E9E52; } .dpk-pl { color: var(--mh-muted2); }
+  .dpk-row.is-on { cursor: default; opacity: .6; border-style: dashed; } .dpk-row.is-on:hover { background: color-mix(in srgb, var(--mh-ink) 5%, transparent); box-shadow: none; border-color: var(--mh-line); }
+  .dpk-row.is-pend { border-color: var(--cc); box-shadow: 0 0 0 1px var(--cc); }
+  .dpk-pv { position: absolute; z-index: 60; width: 210px; height: 294px; pointer-events: none; filter: drop-shadow(0 14px 26px rgba(0,0,0,.7)); animation: dsw-up .18s ease both; }
   .mh-wz-page { animation: mh-view-in .3s cubic-bezier(.2,.8,.2,1) backwards; } .mh-wz-page .mh-wz { width: 100%; height: calc(100vh - 150px); min-height: 520px; max-height: none; }
   /* La creación de personaje vive en la columna central, sin caja alrededor (como el resto de páginas). */
   .mh-wz-page .mh-card.mh-wz { background: none !important; border: 0 !important; box-shadow: none !important; border-radius: 0; overflow: visible; backdrop-filter: none; -webkit-backdrop-filter: none; }
@@ -5610,7 +5644,7 @@ const sharedStyles = `
   .mh-wz-foot { flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 11px 22px; border-top: 1px solid var(--mh-line); background: var(--mh-panel2); }
   .mh-wz-sum { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; overflow: hidden; }
   .mh-wz-sum > span { font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-muted); white-space: nowrap; margin-right: 2px; }
-  .mh-wz-sum em { font-style: normal; font-size: 11px; color: var(--mh-ink3); border: 1px solid var(--mh-line2); background: var(--mh-panel); border-radius: 20px; padding: 2px 9px; white-space: nowrap; max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+  .mh-wz-sum em { flex-shrink: 0; font-style: normal; font-size: 11px; color: var(--mh-ink3); border: 1px solid var(--mh-line2); background: var(--mh-panel); border-radius: 20px; padding: 2px 9px; white-space: nowrap; max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
   .mh-wz-btns { display: flex; gap: 10px; flex-shrink: 0; }
   @media (max-width: 760px) {
     .mh-wz { height: 94%; }
@@ -7200,7 +7234,17 @@ function DomainPicker({ entries, sel, limit, level, domains, colors, onChange })
   const [dom, setDom] = useState(domains[0]);
   const [pend, setPend] = useState(null);
   const [out, setOut] = useState(null);
-  const [shake, setShake] = useState(0);
+  const [hov, setHov] = useState(null);
+  const [box, setBox] = useState({ w: 700, h: 360 });
+  const deckRef = useRef(null);
+  const rootRef = useRef(null);
+  useEffect(() => {
+    const el = deckRef.current;
+    if (!el) return undefined;
+    const ro = new ResizeObserver((es) => setBox({ w: es[0].contentRect.width, h: es[0].contentRect.height }));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   const byKey = (k) => entries.find((e) => e.key === k);
   const colOf = (c) => colors[c.domain] || "#C9A24B";
   const retire = (k) => {
@@ -7213,8 +7257,7 @@ function DomainPicker({ entries, sel, limit, level, domains, colors, onChange })
   const addCard = (k) => {
     if (sel.includes(k)) return;
     if (sel.length < limit) onChange([...sel, k]);
-    else if (pend === k) setPend(null);
-    else (setPend(k), setShake((n) => n + 1));
+    else setPend(pend === k ? null : k);
   };
   const replaceWith = (oldK) => {
     if (!pend) return;
@@ -7229,30 +7272,44 @@ function DomainPicker({ entries, sel, limit, level, domains, colors, onChange })
   const slots = Array.from({ length: limit }, (_, i) => sel[i] || null);
   const mid = (limit - 1) / 2;
   const shelf = entries.filter((e) => e.domain === dom);
-  const sc = limit >= 7 ? 0.3 : limit >= 5 ? 0.4 : limit === 4 ? 0.46 : 0.5;
+  // La mano se dibuja como una baraja abierta y se escala para llenar la altura disponible.
+  const sc = Math.max(0.35, Math.min(1, (box.h - 30) / 420));
+  const cw = 300 * sc;
+  const step = limit > 1 ? Math.min(cw + 18, Math.max(cw * 0.26, (box.w - cw - 24) / (limit - 1))) : 0;
+  const left0 = Math.max(0, (box.w - (cw + step * (limit - 1))) / 2);
+  const showPv = (e, c) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const bx = rootRef.current ? rootRef.current.getBoundingClientRect() : { left: 0, top: 0, width: 600 };
+    const w = 210;
+    const h = 294;
+    const x = Math.max(0, Math.min(bx.width - w, r.left - bx.left + r.width / 2 - w / 2));
+    const y = Math.max(0, r.top - bx.top - h - 8);
+    setHov({ k: c.key, x, y });
+  };
+  const hovC = hov ? byKey(hov.k) : null;
   return (
-    <div className="dsp">
-      <p className="dsp-q">
-        {pend ? "Elige la carta de tu mano que quieres sustituir (Esc para cancelar)." : sel.length < limit ? "Elige " + (limit - sel.length) + (limit - sel.length === 1 ? " carta" : " cartas") + " del estante para tu mano. Llevas " + sel.length + " de " + limit + "." : "Tu mano está completa (" + limit + " de " + limit + "). Para cambiar una, retírala o elige otra del estante."}
+    <div className="dpk" ref={rootRef} onKeyDown={(e) => e.key === "Escape" && setPend(null)}>
+      <p className="dpk-q">
+        {pend ? "Elige la carta de tu mano que quieres sustituir (Esc para cancelar)." : sel.length < limit ? "Elige " + (limit - sel.length) + (limit - sel.length === 1 ? " carta" : " cartas") + " del estante para tu mano." : "Tu mano está completa. Si quieres cambiar una carta, elige otra del estante y luego la que sustituye."}
       </p>
-      <div className={"dsw-stage" + (pend ? " is-pick" : "")} key={"st" + shake} style={{ "--s": sc }} tabIndex={-1} onKeyDown={(e) => e.key === "Escape" && setPend(null)}>
+      <div className={"dpk-deck" + (pend ? " is-pick" : "")} ref={deckRef}>
         {slots.map((k, i) => {
           const c = k ? byKey(k) : null;
           const col = c ? colOf(c) : "#8d88a3";
-          const style = { "--r": ((i - mid) * 5) + "deg", "--y": Math.abs(i - mid) * 7 + "px", "--d": i * 110 + "ms", "--cc": col };
+          const style = { "--s": sc, "--cc": col, "--r": (i - mid) * 2.4 + "deg", left: left0 + i * step, top: Math.max(0, (box.h - 420 * sc) / 2) + Math.abs(i - mid) * 5, width: cw, height: 420 * sc, zIndex: i + 1 };
           if (!c) {
             return (
-              <div key={"e" + i} className="dsw-slot" style={style}>
+              <div key={"e" + i} className="dpk-slot" style={style}>
                 <Plus size={22} />
                 <span>Hueco libre</span>
               </div>
             );
           }
           return (
-            <div key={k} className={"dsw-card" + (out === k ? " is-out" : "") + (pend ? " is-target" : "")} style={style} onClick={() => pend && replaceWith(k)}>
+            <div key={k} className={"dpk-card" + (out === k ? " is-out" : "") + (pend ? " is-target" : "")} style={{ ...style, animationDelay: i * 90 + "ms" }} onClick={() => pend && replaceWith(k)}>
               <FanFace c={c} col={col} />
               {!pend && (
-                <button type="button" className="dsw-rm" onClick={() => retire(k)} aria-label={"Retirar " + k} title="Retirar de la mano">
+                <button type="button" className="dpk-rm" onClick={(e) => (e.stopPropagation(), retire(k))} aria-label={"Retirar " + k} title="Retirar de la mano">
                   <X size={14} strokeWidth={2.6} />
                 </button>
               )}
@@ -7260,7 +7317,7 @@ function DomainPicker({ entries, sel, limit, level, domains, colors, onChange })
           );
         })}
       </div>
-      <div className="dsw-shelf-h">
+      <div className="dpk-h">
         <div className="mh-seg is-fit" role="tablist">
           {domains.map((d) => (
             <button key={d} type="button" role="tab" aria-selected={dom === d} className={dom === d ? "on" : ""} onClick={() => setDom(d)}>
@@ -7268,20 +7325,36 @@ function DomainPicker({ entries, sel, limit, level, domains, colors, onChange })
             </button>
           ))}
         </div>
-        <span className="dsw-lv">Hasta nivel {level}</span>
+        <span className="dpk-lv">Hasta nivel {level}</span>
       </div>
-      <div className="dsw-shelf">
-        {shelf.map((e, i) => {
+      <div className="dpk-shelf" onMouseLeave={() => setHov(null)}>
+        {shelf.map((e) => {
           const on = sel.includes(e.key);
           const col = colOf(e);
+          const DI = DOMAIN_ICONS[e.domain] || Sparkles;
           return (
-            <button key={e.key} type="button" className={"dsw-mini" + (on ? " is-on" : "") + (pend === e.key ? " is-pend" : "")} style={{ "--cc": col, "--d": Math.min(i, 12) * 40 + "ms" }} onClick={() => !on && addCard(e.key)} aria-pressed={on} title={on ? "Ya está en tu mano" : "Añadir a tu mano"}>
-              <FanFace c={e} col={col} />
-              {on && <span className="dsw-tick"><Check size={20} strokeWidth={3} /> En tu mano</span>}
+            <button
+              key={e.key}
+              type="button"
+              className={"dpk-row" + (on ? " is-on" : "") + (pend === e.key ? " is-pend" : "")}
+              style={{ "--cc": col }}
+              onMouseEnter={(ev) => showPv(ev, e)}
+              onFocus={(ev) => showPv(ev, e)}
+              onBlur={() => setHov(null)}
+              onClick={() => !on && addCard(e.key)}
+            >
+              <span className="dpk-th" aria-hidden="true" style={e.image ? { backgroundImage: "url(" + e.image + ")" } : undefined}>{!e.image && <DI size={16} />}</span>
+              <span className="dpk-rt"><b>{e.key}</b><small>{e.type} · Nv {e.level}</small></span>
+              {on ? <Check size={16} className="dpk-ok" /> : <Plus size={16} className="dpk-pl" />}
             </button>
           );
         })}
       </div>
+      {hovC && (
+        <div className="dpk-pv" style={{ left: hov.x, top: hov.y, "--s": 0.7 }} aria-hidden="true">
+          <FanFace c={hovC} col={colOf(hovC)} />
+        </div>
+      )}
     </div>
   );
 }
@@ -9250,6 +9323,7 @@ export default function App({ onSignOut }) {
   const [subclassIndex, setSubclassIndex] = useState(0);
   const [levelChoice, setLevelChoice] = useState(1);
   const [draftName, setDraftName] = useState("");
+  const [expSug, setExpSug] = useState(EXP_EXAMPLES); // sugerencias de Experiencia: cambian en cada creación
   const [draftPronoun, setDraftPronoun] = useState("Él");
   const [draftPronounCustom, setDraftPronounCustom] = useState("");
   const [mixAncestry, setMixAncestry] = useState(false);
@@ -9548,6 +9622,7 @@ export default function App({ onSignOut }) {
   };
 
   const openNewCharModal = () => {
+    setExpSug(pickExamples());
     if (Object.keys(characters).length >= MAX_CHARACTERS) {
       setCharWarning(`Has llegado al límite de ${MAX_CHARACTERS} personajes por cuenta. Elimina uno para crear otro.`);
       return;
@@ -27504,7 +27579,7 @@ export default function App({ onSignOut }) {
                 <div className="mh-wz-pane mh-wz-xps">
                   <div className="mh-wz-sech">Dos cosas que se te dan bien gracias a tu pasado · cada una empieza con +2</div>
                   <div className="mh-wz-exprow">
-                  <div style={{ display: "flex", flexDirection: "column", gap: 14, maxWidth: 560, flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 14, flex: 1, minWidth: 0 }}>
                     {[1, 2].map((n) => {
                       const val = n === 1 ? draftExp1 : draftExp2;
                       const setVal = n === 1 ? setDraftExp1 : setDraftExp2;
@@ -27515,7 +27590,7 @@ export default function App({ onSignOut }) {
                             <label htmlFor={"mh-exp" + n}>Experiencia {n}</label>
                             <input id={"mh-exp" + n} className="mh-input mh-wz-xin" autoFocus={n === 1} placeholder={n === 1 ? "Ej. Guía de las tierras salvajes…" : "Ej. Protocolo de la corte real…"} value={val} onChange={(e) => setVal(e.target.value)} />
                             <div className="mh-wz-sug">
-                              {EXP_EXAMPLES.slice((n - 1) * 4, n * 4).map((t) => (
+                              {expSug.slice((n - 1) * 4, n * 4).map((t) => (
                                 <button key={t} type="button" className={val.trim() === t ? "is-pick" : ""} onClick={() => setVal(t)}>{t}</button>
                               ))}
                             </div>
@@ -27863,7 +27938,7 @@ export default function App({ onSignOut }) {
                   )}
                 </div>
               ) : (
-                <div style={{ marginBottom: 20 }}>
+                <div className="mh-wz-domain">
                   {(() => {
                     const chosenClassKey = CLASSES[carouselIndex].key;
                     const domains = (CLASS_DOMAINS[chosenClassKey] || []).filter((d) => (DOMAIN_CARDS[d] || []).length > 0);
