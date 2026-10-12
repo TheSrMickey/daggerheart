@@ -5200,7 +5200,15 @@ const sharedStyles = `
   html[data-mh-theme="light"] .mh-gc { box-shadow: 0 14px 34px #3a2c1230, inset 0 1px 0 #fff; }
   .mh-gc:hover, .mh-gc:focus-visible { transform: translateY(-6px); outline: none; box-shadow: 0 28px 64px #000a, 0 0 0 1px color-mix(in srgb, var(--k) 60%, transparent), 0 0 46px color-mix(in srgb, var(--k) 30%, transparent), inset 0 1px 0 #ffffff22; }
   .mh-gc.is-dead { filter: grayscale(.85); opacity: .8; }
-  .mh-gc-top { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+  .mh-gc-top { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: center; gap: 6px; width: 100%; }
+  .mh-gc-top .mh-gc-del { margin-left: auto; }
+  .mh-gc > :not(.mh-gc-art) { position: relative; z-index: 1; }
+  .mh-gc-art { position: absolute !important; inset: 0 0 auto 0; height: 68%; background-size: cover; -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent 100%); mask-image: linear-gradient(180deg, #000 55%, transparent 100%); transition: filter .3s ease; pointer-events: none; z-index: 0 !important; }
+  .mh-gc:hover .mh-gc-art, .mh-gc:focus-visible .mh-gc-art { filter: saturate(1.15) brightness(1.08); }
+  .mh-gc-badge { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--k); background: color-mix(in srgb, var(--mh-bg) 80%, transparent); border: 1.5px solid var(--k); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+  .mh-gc.has-art .mh-gc-lv { background: color-mix(in srgb, var(--mh-bg) 80%, transparent); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+  .mh-gc.has-art .mh-gc-nm { text-shadow: 0 2px 14px #000a; }
+  html[data-mh-theme="light"] .mh-gc.has-art .mh-gc-nm { text-shadow: none; }
   .mh-gc-lv { padding: 4px 11px; border-radius: 20px; font-size: 11.5px; font-weight: 700; color: var(--mh-ink); background: color-mix(in srgb, var(--k) 24%, var(--mh-panel)); border: 1px solid color-mix(in srgb, var(--k) 50%, transparent); }
   .mh-gc-del { all: unset; box-sizing: border-box; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--mh-muted2); opacity: 0; transition: opacity .15s, background .15s; }
   .mh-gc:hover .mh-gc-del, .mh-gc-del:focus-visible { opacity: 1; } .mh-gc-del:hover { background: #C0443A33; color: #E8685C; }
@@ -24974,13 +24982,14 @@ export default function App({ onSignOut }) {
                   return (
                     <div
                       key={id}
-                      className={"mh-card mh-gc" + (dead ? " is-dead" : "")}
+                      className={"mh-card mh-gc" + (dead ? " is-dead" : "") + (CLASS_ART[ch.f_class] ? " has-art" : "")}
                       style={{ "--k": col }}
                       role="button"
                       tabIndex={0}
                       onClick={() => openCharDetail(id)}
                       onKeyDown={(e) => e.key === "Enter" && e.target === e.currentTarget && openCharDetail(id)}
                     >
+                      {CLASS_ART[ch.f_class] && <div className="mh-gc-art" aria-hidden="true" style={{ backgroundImage: "url(" + CLASS_ART[ch.f_class] + ")", backgroundPosition: "50% " + (CLASS_ART_Y[ch.f_class] ?? 20) + "%" }} />}
                       <div className="mh-gc-top">
                         {ch.f_class ? <span className="mh-gc-lv" title={"Nivel " + (ch.f_level || "1")}>Nv {ch.f_level || "1"}</span> : <span />}
                         <button
@@ -24995,11 +25004,14 @@ export default function App({ onSignOut }) {
                         >
                           <Trash2 size={14} />
                         </button>
+                        {CLASS_ART[ch.f_class] && <span className="mh-gc-badge" title={ch.f_class} aria-hidden="true"><Emblem size={17} strokeWidth={1.7} /></span>}
                       </div>
                       <div className="mh-gc-mid">
-                        <span className="mh-gc-emb" aria-hidden="true">
-                          <Emblem size={64} strokeWidth={1.5} />
-                        </span>
+                        {!CLASS_ART[ch.f_class] && (
+                          <span className="mh-gc-emb" aria-hidden="true">
+                            <Emblem size={64} strokeWidth={1.5} />
+                          </span>
+                        )}
                       </div>
                       <div className="mh-serif mh-gc-nm">{ch.f_name || "Sin nombre"}</div>
                       <div className="mh-gc-cl">{ch.f_class ? ch.f_class + (ch.f_subclass ? " · " + ch.f_subclass : "") : "Sin clase asignada"}</div>
