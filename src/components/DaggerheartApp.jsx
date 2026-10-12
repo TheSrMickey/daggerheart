@@ -1077,23 +1077,24 @@ const EXP_POOL = [
 ];
 const pickExamples = () => [...EXP_POOL].sort(() => Math.random() - 0.5).slice(0, 8);
 const EXP_EXAMPLES = EXP_POOL.slice(0, 8);
-// Medidor circular de una estadística inicial, con el desglose de dónde sale su valor.
-function StatGauge({ color, Icon, label, value, max, base, baseLabel, mods }) {
-  const C = 2 * Math.PI * 52;
+// Tarjeta de una estadística inicial: el valor una sola vez, las casillas que tendrás en la hoja y de dónde sale.
+function StatGauge({ color, Icon, label, value, what, pips, base, baseLabel, mods }) {
+  const plus = mods.reduce((n, m) => n + (m.v > 0 ? m.v : 0), 0);
   return (
     <div className="mh-wz-ga" style={{ "--c": color }}>
-      <label><Icon size={14} />{label}</label>
-      <div className="mh-wz-ring">
-        <svg viewBox="0 0 120 120" aria-hidden="true">
-          <circle cx="60" cy="60" r="52" fill="none" stroke="currentColor" strokeOpacity=".12" strokeWidth="9" />
-          <circle cx="60" cy="60" r="52" fill="none" stroke="var(--c)" strokeWidth="9" strokeLinecap="round" strokeDasharray={C * Math.min(1, value / max) + " " + C} transform="rotate(-90 60 60)" style={{ filter: "drop-shadow(0 0 6px var(--c))" }} />
-        </svg>
-        <b className="mh-serif">{value}</b>
-      </div>
-      <div className="mh-wz-bd">
-        <div><span>Base{baseLabel ? " de " + baseLabel : ""}</span><b>{base}</b></div>
+      <span className="mh-wz-gi"><Icon size={22} /></span>
+      <label>{label}</label>
+      <b className="mh-serif mh-wz-gn">{value}</b>
+      {pips ? (
+        <div className="mh-wz-pips" aria-hidden="true">
+          {Array.from({ length: value }, (_, i) => <i key={i} className={i >= value - plus ? "is-plus" : ""} />)}
+        </div>
+      ) : null}
+      <div className="mh-wz-gw">{what}</div>
+      <div className="mh-wz-src">
+        <span>{baseLabel ? "Clase " + baseLabel : "Base de la hoja"}</span>
         {mods.map((m, k) => (
-          <div key={k} className={m.v > 0 ? "is-up" : "is-down"}><span>{m.label}</span><b>{m.v > 0 ? "+" : "−"}{Math.abs(m.v)}</b></div>
+          <span key={k} className={m.v > 0 ? "is-up" : "is-down"}>{m.v > 0 ? "+" : "−"}{Math.abs(m.v)} {m.label}</span>
         ))}
       </div>
     </div>
@@ -4833,14 +4834,30 @@ const sharedStyles = `
   .mh-wz-sech { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--mh-muted2); margin: 2px 4px 12px; }
   .mh-wz-body .mh-wz-pane.mh-wz-stats { max-width: none; width: 100%; align-items: stretch; margin: 0; justify-content: flex-start; }
   .mh-wz-gauges { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-  .mh-wz-ga { border-radius: 24px; padding: 18px 14px 14px; display: flex; flex-direction: column; align-items: center; gap: 8px; background: radial-gradient(100% 90% at 50% 0%, color-mix(in srgb, var(--c) 22%, transparent), transparent 70%), color-mix(in srgb, var(--mh-ink) 4%, transparent); border: 1px solid color-mix(in srgb, var(--c) 40%, var(--mh-line)); color: var(--mh-ink); }
-  .mh-wz-ga label { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; color: var(--c); display: flex; align-items: center; gap: 6px; }
-  .mh-wz-ring { position: relative; width: 120px; height: 120px; } .mh-wz-ring svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-  .mh-wz-ring b { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: 700; color: var(--mh-ink); }
-  .mh-wz-bd { width: 100%; display: flex; flex-direction: column; gap: 5px; margin-top: 4px; }
-  .mh-wz-bd div { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--mh-ink3); padding: 5px 9px; border-radius: 9px; background: color-mix(in srgb, var(--mh-ink) 5%, transparent); }
-  .mh-wz-bd div b { color: var(--mh-ink); } .mh-wz-bd div.is-up b { color: #4E9E52; } .mh-wz-bd div.is-down b { color: #D9644E; }
+  .mh-wz-ga { border-radius: 24px; padding: 20px 16px 16px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; background: radial-gradient(100% 80% at 50% 0%, color-mix(in srgb, var(--c) 20%, transparent), transparent 70%), color-mix(in srgb, var(--mh-ink) 4%, transparent); border: 1px solid color-mix(in srgb, var(--c) 38%, var(--mh-line)); color: var(--mh-ink); }
+  .mh-wz-gi { width: 46px; height: 46px; border-radius: 15px; display: flex; align-items: center; justify-content: center; color: var(--c); background: color-mix(in srgb, var(--c) 16%, var(--mh-panel)); border: 1px solid color-mix(in srgb, var(--c) 45%, transparent); }
+  .mh-wz-ga label { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; color: var(--c); margin-top: 4px; }
+  .mh-wz-gn { font-size: 62px; line-height: 1; font-weight: 700; color: var(--mh-ink); text-shadow: 0 0 28px color-mix(in srgb, var(--c) 55%, transparent); }
+  .mh-wz-pips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 6px 0 2px; }
+  .mh-wz-pips i { width: 22px; height: 22px; border-radius: 7px; background: var(--c); box-shadow: 0 0 10px color-mix(in srgb, var(--c) 55%, transparent); } .mh-wz-pips i.is-plus { background: #E3B04B; box-shadow: 0 0 10px #E3B04B88; }
+  .mh-wz-gw { font-size: 12px; line-height: 1.4; color: var(--mh-muted2); min-height: 34px; }
+  .mh-wz-src { margin-top: auto; padding-top: 10px; width: 100%; border-top: 1px solid var(--mh-line); display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+  .mh-wz-src span { font-size: 11px; padding: 4px 10px; border-radius: 20px; color: var(--mh-ink3); background: color-mix(in srgb, var(--mh-ink) 6%, transparent); border: 1px solid var(--mh-line2); }
+  .mh-wz-src span.is-up { color: #4E9E52; background: #6FBF7322; border-color: #6FBF7366; } .mh-wz-src span.is-down { color: #D9644E; background: #D9644E1f; border-color: #D9644E66; }
   .mh-wz-callout { margin-top: 16px; padding: 12px 16px; border-radius: 16px; display: flex; gap: 10px; align-items: flex-start; text-align: left; font-size: 12.5px; line-height: 1.55; color: var(--mh-ink3); background: color-mix(in srgb, var(--mh-ink) 5%, transparent); border: 1px solid var(--mh-line); } .mh-wz-callout svg { flex-shrink: 0; margin-top: 2px; } .mh-wz-callout > span { flex: 1; min-width: 0; text-align: left; }
+  .mh-wz-callout.is-center { max-width: 640px; margin: 16px auto 0; justify-content: center; align-items: center; } .mh-wz-callout > p { margin: 0; } .mh-wz-callout.is-center > p { text-align: center; } .mh-wz-callout.is-center svg { margin-top: 0; }
+  /* Ascendencia y comunidad: la ilustración es el fondo del detalle */
+  .mh-wz-page .mh-wz-det.has-hero { background: linear-gradient(180deg, rgba(10,10,28,0) 0%, rgba(10,10,28,.2) 30%, rgba(10,10,28,.86) 62%, rgba(10,10,28,.96) 100%), var(--hero) 50% 22% / cover no-repeat; --mh-ink: #F4F0FA; --mh-ink2: #E6E0F0; --mh-ink3: #D6CFE3; --mh-muted: #BFB8CE; --mh-muted2: #A59DB8; text-shadow: 0 1px 8px rgba(0,0,0,.8); padding: 22px 24px; border-radius: 0 25px 25px 0; }
+  .mh-wz-det.has-hero > :first-child { margin-top: auto; }
+  .mh-wz-det.has-hero .mh-wz-img { display: none; }
+  .mh-wz-page .mh-wz-det.has-hero .mh-wz-go { margin-top: 4px; }
+  .mh-wz-det.has-hero .mh-wz-dn { font-size: 34px; text-transform: uppercase; letter-spacing: .04em; }
+  .mh-wz-det.has-hero .mh-wz-dm { text-transform: uppercase; letter-spacing: .12em; font-size: 10px; }
+  .mh-wz-det.has-hero .mh-wz-blurb { font-size: 13.5px; }
+  .mh-wz-det.has-hero .mh-wz-feats { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+  .mh-wz-page .mh-wz-det.has-hero .mh-wz-feats > div { padding: 12px 14px; border: 1px solid rgba(255,255,255,.14); border-left: 1px solid rgba(255,255,255,.14); border-radius: 16px; background: rgba(13,13,34,.66); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: inset 0 1px 0 #ffffff18; }
+  .mh-wz-det.has-hero .mh-wz-feats b { color: #fff; }
+  .mh-wz-det.has-hero .mh-wz-slot, .mh-wz-det.has-hero .mh-wz-mixwait, .mh-wz-det.has-hero .mh-wz-venn { background: rgba(13,13,34,.66); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
   @media (max-width: 760px) { .mh-wz-gauges { grid-template-columns: minmax(0, 1fr); } }
   .mh-wz-body .mh-wz-pane.mh-wz-xps { max-width: none; width: 100%; margin: 0; align-items: stretch; justify-content: flex-start; }
   .mh-wz-xps .mh-wz-exprow { justify-content: flex-start; flex-wrap: nowrap; width: 100%; gap: 18px; }
@@ -5625,8 +5642,6 @@ const sharedStyles = `
   .mh-wz-subs em { font-style: normal; font-size: 11.5px; color: var(--mh-ink2); border: 1px solid var(--mh-line2); background: var(--mh-panel2); border-radius: 20px; padding: 3px 10px; }
   .mh-wz-stats.mh-wz-pane { gap: 18px; max-width: 780px; align-items: center; }
   .mh-wz-stats { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 4px; }
-  .mh-wz-stats > div:last-child { display: grid !important; grid-template-columns: repeat(3, 170px); gap: 14px !important; justify-content: center; }
-  .mh-wz-stats > div:last-child > div { width: 170px; box-sizing: border-box; padding: 18px 10px !important; }
   .mh-wz-block { align-self: center; font-size: 11.5px; color: #D9644E; margin-right: 4px; }
   .mh-wz-det.has-art { position: relative; overflow-x: hidden; }
   .mh-wz-det.has-art > :not(.mh-wz-art) { position: relative; max-width: 54%; }
@@ -5654,7 +5669,6 @@ const sharedStyles = `
     .mh-wz-tr { flex-wrap: wrap; } .mh-wz-tr > span { flex-basis: 100%; order: 3; }
     .mh-wz-sum { display: none; }
     .mh-wz-art { display: none; } .mh-wz-det.has-art > :not(.mh-wz-art) { max-width: none; }
-    .mh-wz-stats > div:last-child { grid-template-columns: 1fr; }
   }
   .mh-jl { flex: 1; min-height: 0; display: flex; gap: 16px; }
   .mh-jl-side { width: 260px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; min-height: 0; padding-right: 14px; border-right: 1px solid var(--mh-line); }
@@ -27355,7 +27369,7 @@ export default function App({ onSignOut }) {
                           );
                         })}
                       </div>
-                      <div className="mh-wz-det mh-noscroll">
+                      <div className={"mh-wz-det mh-noscroll" + (originTab !== "transformation" && focus?.image ? " has-hero" : "")} style={originTab !== "transformation" && focus?.image ? { "--hero": "url(" + focus.image + ")" } : undefined}>
                         {originTab === "transformation" && (
                           <div className="mh-wz-note">
                             <Sparkles size={14} />
@@ -27537,13 +27551,13 @@ export default function App({ onSignOut }) {
                 </div>
               ) : wizardStep === "stats" ? (
                 <div className="mh-wz-stats mh-wz-pane">
-                  <div className="mh-wz-sech">Calculadas según tu clase ({CLASSES[carouselIndex].key}), tu subclase y tu ascendencia</div>
+                  <div className="mh-wz-sech">Así empieza tu personaje</div>
                   <div className="mh-wz-gauges">
                     <StatGauge
                       color="#E3B04B"
                       Icon={ShieldCheck}
                       label="Evasión"
-                      max={16}
+                      what="Dificultad de los ataques contra ti"
                       value={(CLASS_EVASION[CLASSES[carouselIndex].key] ?? 10) + (draftFeat("Simiah", 1) ? 1 : 0)}
                       base={CLASS_EVASION[CLASSES[carouselIndex].key] ?? 10}
                       baseLabel={CLASSES[carouselIndex].key}
@@ -27553,7 +27567,8 @@ export default function App({ onSignOut }) {
                       color="#E0617A"
                       Icon={Heart}
                       label="Puntos de vida"
-                      max={10}
+                      what="Casillas de vida en tu hoja"
+                      pips
                       value={(CLASS_HP[CLASSES[carouselIndex].key] ?? 6) + (draftFeat("Gigante", 0) ? 1 : 0)}
                       base={CLASS_HP[CLASSES[carouselIndex].key] ?? 6}
                       baseLabel={CLASSES[carouselIndex].key}
@@ -27563,7 +27578,8 @@ export default function App({ onSignOut }) {
                       color="#A58BE8"
                       Icon={Zap}
                       label="Estrés"
-                      max={10}
+                      what="Casillas de estrés en tu hoja"
+                      pips
                       value={STRESS_SLOTS + ((SUBCLASSES[CLASSES[carouselIndex]?.key] || [])[subclassIndex]?.key === "Vengador" ? 1 : 0) + (draftFeat("Humano", 0) ? 1 : 0)}
                       base={STRESS_SLOTS}
                       baseLabel=""
@@ -27573,7 +27589,7 @@ export default function App({ onSignOut }) {
                       ]}
                     />
                   </div>
-                  <div className="mh-wz-callout"><Info size={16} /><span>No hace falta que apuntes nada: se actualizan solas al cambiar de clase, subir de nivel o equiparte. Debajo de cada valor ves de dónde sale.</span></div>
+                  <div className="mh-wz-callout is-center"><Info size={16} /><p>Se calculan solas y se actualizan al subir de nivel o equiparte. Solo tienes que revisarlas.</p></div>
                 </div>
               ) : wizardStep === "experiences" ? (
                 <div className="mh-wz-pane mh-wz-xps">
