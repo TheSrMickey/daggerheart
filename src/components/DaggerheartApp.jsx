@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 import { Globe, Tent, Haze, CloudFog, CloudRain, CloudLightning, Beer } from "lucide-react";
 import SceneFx, { SCENE_FX } from "./SceneFx";
+import { Info, Lightbulb } from "lucide-react";
 import { Squirrel, Layers, CalendarDays, Vote, ScrollText as ChronIcon, Megaphone, Link2 } from "lucide-react";
 import { History, LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus, Box, LayoutGrid, Bird, Fish, Bug, Rabbit, Cat, Turtle, Clock, CircleDashed, Slash } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
@@ -1063,6 +1064,34 @@ const CLASS_SUGGESTED = {
   Mago: { traits: { t_agility: -1, t_strength: 0, t_finesse: 0, t_instinct: 1, t_presence: 1, t_knowledge: 2 }, primary: "Gran bastón", armor: "Armadura de cuero" },
 };
 // Desglose de una estadística: valor base y cuánto sube (verde) o baja (rojo) por cada elección anterior.
+const COMMUNITY_ICONS = {
+  "De Alta Cuna": Star, "Del Saber": BookOpen, "Del Orden": Shield, "De las Cumbres": Mountain, "Del Mar": Waves, "De las Sombras": Moon,
+  "De las Profundidades": Gem, Errante: Compass, Salvaje: Leaf, "De las Dunas": Sun, "Del Hogar": Home,
+  "De la Escarcha": Snowflake, "De la Guerra": Swords, Libre: Feather, Renacido: Sparkles,
+};
+const EXP_EXAMPLES = ["Guía de las tierras salvajes", "Protocolo de la corte real", "Superviviente de la calle", "Trovadora de tabernas", "Herbolario", "Contrabandista", "Leyendas antiguas", "Duelista"];
+// Medidor circular de una estadística inicial, con el desglose de dónde sale su valor.
+function StatGauge({ color, Icon, label, value, max, base, baseLabel, mods }) {
+  const C = 2 * Math.PI * 52;
+  return (
+    <div className="mh-wz-ga" style={{ "--c": color }}>
+      <label><Icon size={14} />{label}</label>
+      <div className="mh-wz-ring">
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <circle cx="60" cy="60" r="52" fill="none" stroke="currentColor" strokeOpacity=".12" strokeWidth="9" />
+          <circle cx="60" cy="60" r="52" fill="none" stroke="var(--c)" strokeWidth="9" strokeLinecap="round" strokeDasharray={C * Math.min(1, value / max) + " " + C} transform="rotate(-90 60 60)" style={{ filter: "drop-shadow(0 0 6px var(--c))" }} />
+        </svg>
+        <b className="mh-serif">{value}</b>
+      </div>
+      <div className="mh-wz-bd">
+        <div><span>Base{baseLabel ? " de " + baseLabel : ""}</span><b>{base}</b></div>
+        {mods.map((m, k) => (
+          <div key={k} className={m.v > 0 ? "is-up" : "is-down"}><span>{m.label}</span><b>{m.v > 0 ? "+" : "−"}{Math.abs(m.v)}</b></div>
+        ))}
+      </div>
+    </div>
+  );
+}
 function StatMods({ base, baseLabel, mods }) {
   return (
     <div className="mh-wz-mods">
@@ -4717,6 +4746,106 @@ const sharedStyles = `
   .mh-wz-page .mh-wz-body.is-split .mh-wz-it.is-on { border-color: var(--wc, #6FBF73); background: radial-gradient(120% 160% at 0% 0%, color-mix(in srgb, var(--wc, #6FBF73) 22%, transparent), transparent 70%), color-mix(in srgb, var(--mh-ink) 6%, transparent); box-shadow: 0 0 0 1px var(--wc, #6FBF73), 0 0 22px color-mix(in srgb, var(--wc, #6FBF73) 26%, transparent); }
   .mh-wz-page .mh-wz-body.is-split .mh-wz-mix, .mh-wz-page .mh-wz-body.is-split .mh-wz-tabs button { border-radius: 14px; }
   .mh-wz-page .mh-wz-body.is-split .mh-wz-det { padding: 22px 26px; }
+  /* Asistente · subclase en baraja */
+  .mh-wz-body:has(> .mh-dk) { display: flex; }
+  .mh-dk { flex: 1; min-height: 0; width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 18px; outline: none; }
+  .mh-dk-deck { position: relative; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .mh-dk-card { all: unset; box-sizing: border-box; position: absolute; left: 50%; top: 50%; width: 290px; height: min(440px, calc(100% - 36px)); margin: calc(min(440px, 100% - 36px) / -2) 0 0 -145px; border-radius: 26px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; background: color-mix(in srgb, var(--mh-panel) 92%, #000); border: 1.5px solid color-mix(in srgb, var(--tc) 40%, var(--mh-line2)); box-shadow: 0 22px 36px -20px #000d; transform: translate(calc(var(--d) * 150px - 20px), calc(var(--a) * 14px)) rotate(calc(var(--d) * 5deg)) scale(calc(1 - var(--a) * .05)); transition: transform .35s cubic-bezier(.2,.8,.2,1), filter .3s, box-shadow .3s; filter: brightness(calc(1 - var(--a) * .38)) saturate(calc(1 - var(--a) * .2)); }
+  .mh-dk-card.is-front { cursor: default; border-color: var(--tc); transform: translate(-20px, -8px) rotate(-1.5deg); box-shadow: 0 0 0 1px var(--tc), 0 0 40px color-mix(in srgb, var(--tc) 36%, transparent), 0 24px 40px -20px #000e; }
+  .mh-dk-card:not(.is-front):hover { filter: brightness(.85); }
+  .mh-dk-card:focus-visible { outline: 2px solid #E3B04B; outline-offset: 3px; }
+  .mh-dk-im { flex: none; height: 52%; display: flex; align-items: center; justify-content: center; color: var(--tc); background-size: cover; background-position: 50% 20%; -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent); mask-image: linear-gradient(180deg, #000 55%, transparent); }
+  .mh-dk-tick { position: absolute; top: 12px; right: 12px; width: 30px; height: 30px; border-radius: 50%; background: var(--tc); color: #10101e; display: flex; align-items: center; justify-content: center; }
+  .mh-dk-tx { flex: 1; min-height: 0; margin-top: -18px; padding: 0 20px 16px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 7px; position: relative; overflow: hidden; }
+  .mh-dk-n { font-size: 23px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--mh-ink); text-shadow: 0 2px 14px #000a; }
+  .mh-dk-k { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--mh-muted2); }
+  .mh-dk-b { font-size: 12.5px; line-height: 1.5; color: var(--mh-ink2); }
+  .mh-dk-chips { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; margin-top: auto; }
+  .mh-dk-chips span { font-size: 10.5px; font-weight: 600; padding: 3px 10px; border-radius: 20px; color: var(--mh-ink); background: color-mix(in srgb, var(--tc) 22%, transparent); }
+  .mh-dk-nav { all: unset; position: absolute; top: 50%; z-index: 20; width: 44px; height: 44px; margin-top: -22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--mh-ink2); background: color-mix(in srgb, var(--mh-panel) 80%, transparent); border: 1px solid var(--mh-line2); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+  .mh-dk-nav:hover { color: var(--mh-ink); background: color-mix(in srgb, var(--mh-ink) 10%, var(--mh-panel)); } .mh-dk-nav:focus-visible { outline: 2px solid #E3B04B; }
+  .mh-dk-nav.is-l { left: 6px; } .mh-dk-nav.is-r { right: 6px; }
+  .mh-dk-dots { position: absolute; left: 0; right: 0; bottom: 2px; z-index: 20; display: flex; justify-content: center; gap: 7px; }
+  .mh-dk-dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--mh-line2); transition: width .2s, background .2s; } .mh-dk-dots i.is-on { width: 22px; border-radius: 5px; background: var(--tc); }
+  .mh-dk-side { display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow-y: auto; scrollbar-width: none; padding: 4px 2px; }
+  .mh-dk-side::-webkit-scrollbar { display: none; }
+  .mh-dk-sh { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--mh-muted2); margin: 4px 4px 2px; }
+  .mh-dk-fe { padding: 12px 14px; border-radius: 16px; background: color-mix(in srgb, var(--mh-ink) 5%, transparent); border: 1px solid var(--mh-line); border-left: 3px solid var(--tc); }
+  .mh-dk-fe b { display: block; font-size: 13.5px; color: var(--mh-ink); margin-bottom: 2px; } .mh-dk-fe p { margin: 0; font-size: 12px; line-height: 1.5; color: var(--mh-ink3); }
+  .mh-dk-hint { margin-top: auto; padding-top: 6px; font-size: 11px; text-align: center; color: var(--mh-muted2); }
+  @media (max-width: 900px) { .mh-dk { grid-template-columns: minmax(0, 1fr); overflow-y: auto; } .mh-dk-deck { min-height: 460px; } }
+  /* Asistente · origen (ascendencia, comunidad, transformación) */
+  .mh-wz-page .mh-wz-body.is-split .mh-wz-list.is-anc { width: 470px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; gap: 7px; padding: 18px 16px; }
+  .mh-wz-list.is-anc > .mh-wz-seg2, .mh-wz-list.is-anc > .mh-wz-mixhint { grid-column: 1 / -1; }
+  .mh-wz-seg2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 18px; background: color-mix(in srgb, var(--mh-ink) 6%, transparent); border: 1px solid var(--mh-line); }
+  .mh-wz-seg2 button { all: unset; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 9px 8px; border-radius: 14px; cursor: pointer; color: var(--mh-muted2); transition: background .15s, color .15s; }
+  .mh-wz-seg2 button b { font-size: 13px; } .mh-wz-seg2 button small { font-size: 10.5px; opacity: .85; }
+  .mh-wz-seg2 button:hover { color: var(--mh-ink); } .mh-wz-seg2 button:focus-visible { outline: 2px solid #E3B04B; }
+  .mh-wz-seg2 button.is-on { background: #E3B04B; color: #1F1606; box-shadow: 0 6px 18px #E3B04B44; }
+  .mh-wz-seg2 button:last-child.is-on { background: linear-gradient(135deg, #E3B04B, #3FB5B0); color: #10101e; box-shadow: 0 6px 18px #3FB5B044; }
+  .mh-wz-mixhint { font-size: 11.5px; line-height: 1.45; color: var(--mh-muted2); padding: 0 4px 4px; } .mh-wz-mixhint b.is-1 { color: #E3B04B; } .mh-wz-mixhint b.is-2 { color: #3FB5B0; }
+  .mh-wz-ig { width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font: 700 13px 'Cinzel', Georgia, serif; background: color-mix(in srgb, var(--mh-ink) 9%, transparent); color: var(--mh-ink2); }
+  .mh-wz-list.is-com .mh-wz-ig { border-radius: 11px; width: 32px; height: 32px; }
+  .mh-wz-page .mh-wz-body.is-split .mh-wz-list.is-anc .mh-wz-it { padding: 7px 10px; border-radius: 16px; position: relative; }
+  .mh-wz-page .mh-wz-body.is-split .mh-wz-list.is-com .mh-wz-it.is-on { --wc: #C08B5C; }
+  .mh-wz-page .mh-wz-body.is-split .mh-wz-list.is-com .mh-wz-it.is-on .mh-wz-ig { background: #C08B5C; color: #10101e; }
+  .mh-wz-page .mh-wz-body.is-split .mh-wz-list.is-anc .mh-wz-it.is-on:not([class*="is-ord"]) { --wc: #E3B04B; }
+  .mh-wz-it.is-ord1 { --wc: #E3B04B !important; } .mh-wz-it.is-ord2 { --wc: #3FB5B0 !important; }
+  .mh-wz-it.is-ord1 .mh-wz-ig { background: #E3B04B; color: #1F1606; } .mh-wz-it.is-ord2 .mh-wz-ig { background: #3FB5B0; color: #10101e; }
+  .mh-wz-ordb { position: absolute; top: -7px; right: 8px; font-size: 9.5px; font-weight: 800; padding: 1px 8px; border-radius: 10px; color: #10101e; background: var(--wc); }
+  .mh-wz-it > .mh-wz-ordb { margin: 0; }
+  .mh-wz-mixwait { padding: 12px 14px; border-radius: 16px; font-size: 12.5px; color: var(--mh-ink3); background: color-mix(in srgb, #E3B04B 8%, transparent); border: 1px dashed #E3B04B55; } .mh-wz-mixwait b { color: var(--mh-ink); }
+  .mh-wz-page .mh-wz-det .mh-wz-mixpick { gap: 10px; padding: 0; border: 0; background: none; border-radius: 0; }
+  .mh-wz-venn { display: flex; align-items: center; justify-content: center; height: 138px; border-radius: 22px; background: radial-gradient(80% 120% at 50% 0%, #ffffff12, transparent), color-mix(in srgb, var(--mh-ink) 4%, transparent); border: 1px solid var(--mh-line); }
+  .mh-wz-venn span { width: 104px; height: 104px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; font: 600 15px 'Cinzel', Georgia, serif; text-transform: uppercase; color: #fff; background-size: cover; background-position: center; text-shadow: 0 1px 8px #000; text-align: center; }
+  .mh-wz-venn span small { font: 700 9px 'Inter', sans-serif; letter-spacing: .12em; opacity: .85; }
+  .mh-wz-venn span.is-1 { margin-right: -20px; z-index: 1; border: 2px solid #E3B04B; background-color: #2a2236; box-shadow: 0 0 26px #E3B04B44; }
+  .mh-wz-venn span.is-2 { border: 2px solid #3FB5B0; background-color: #1c2d3a; box-shadow: 0 0 26px #3FB5B044; }
+  .mh-wz-slot { display: flex; gap: 12px; padding: 12px 14px; border-radius: 18px; background: color-mix(in srgb, var(--mh-ink) 5%, transparent); border: 1px solid var(--mh-line); border-left: 3px solid var(--sc); }
+  .mh-wz-slot.is-1 { --sc: #E3B04B; } .mh-wz-slot.is-2 { --sc: #3FB5B0; }
+  .mh-wz-slot .mh-wz-mixn { width: 34px; height: 34px; border-radius: 12px; background: var(--sc); color: #10101e; font-size: 12px; }
+  .mh-wz-slot b { font-size: 14px; color: var(--mh-ink); } .mh-wz-slot small { font-size: 10.5px; font-weight: 700; color: var(--sc); margin-left: 4px; } .mh-wz-slot p { margin: 3px 0 0; font-size: 12px; line-height: 1.5; color: var(--mh-ink3); }
+  .mh-wz-swap { all: unset; align-self: center; display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px; border-radius: 12px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--mh-ink2); background: color-mix(in srgb, var(--mh-ink) 7%, transparent); border: 1px solid var(--mh-line2); } .mh-wz-swap:hover { background: color-mix(in srgb, var(--mh-ink) 12%, transparent); } .mh-wz-swap:focus-visible { outline: 2px solid #E3B04B; }
+  .mh-wz-go { align-self: stretch !important; justify-content: center; height: 46px; border-radius: 15px; font-weight: 700; margin-top: auto; background: var(--pc, #E3B04B); color: #10101e; border: 0; box-shadow: 0 8px 22px color-mix(in srgb, var(--pc, #E3B04B) 40%, transparent); }
+  .mh-wz-page .mh-wz-body.is-split .mh-wz-list.is-tf { width: 480px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-content: start; gap: 10px; padding: 18px 16px; }
+  .mh-wz-po { all: unset; box-sizing: border-box; position: relative; height: 200px; border-radius: 20px; overflow: hidden; cursor: pointer; display: flex; align-items: flex-end; justify-content: center; background: color-mix(in srgb, var(--mh-panel) 92%, #000); border: 1px solid var(--mh-line2); transition: transform .2s, box-shadow .2s, border-color .2s; }
+  .mh-wz-po:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
+  .mh-wz-po-im { position: absolute; inset: 0; background-size: cover; background-position: 50% 20%; filter: saturate(.75) brightness(.78); transition: filter .2s; }
+  .mh-wz-po::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 45%, rgba(10,10,28,.92)); pointer-events: none; }
+  .mh-wz-po b { position: relative; z-index: 1; font: 600 13px 'Cinzel', Georgia, serif; text-transform: uppercase; padding: 0 6px 12px; text-align: center; color: #fff; text-shadow: 0 1px 8px #000; }
+  .mh-wz-po em { position: absolute; top: 8px; right: 8px; z-index: 2; font-style: normal; font-size: 8.5px; font-weight: 700; padding: 1px 6px; border-radius: 9px; background: rgba(13,13,34,.72); border: 1px solid #A58BE866; color: #B7A2F5; }
+  .mh-wz-po:hover .mh-wz-po-im { filter: saturate(.95) brightness(.9); }
+  .mh-wz-po.is-focus { border-color: color-mix(in srgb, var(--pc) 60%, var(--mh-line2)); }
+  .mh-wz-po.is-on { border-color: var(--pc); transform: translateY(-4px); box-shadow: 0 0 0 1px var(--pc), 0 0 26px color-mix(in srgb, var(--pc) 40%, transparent); }
+  .mh-wz-po.is-on .mh-wz-po-im { filter: none; }
+  .mh-wz-po-ck { position: absolute; top: 8px; left: 8px; z-index: 2; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--pc); color: #10101e; }
+  .mh-wz-po.is-none { flex-direction: column; align-items: center; justify-content: center; gap: 6px; border-style: dashed; color: var(--mh-muted2); background: color-mix(in srgb, var(--mh-ink) 4%, transparent); }
+  .mh-wz-po.is-none::after { display: none; } .mh-wz-po.is-none b { padding: 0; color: var(--mh-ink2); text-shadow: none; } .mh-wz-po.is-none small { font-size: 10px; }
+  .mh-wz-det .mh-wz-note { border-radius: 14px; }
+  /* Asistente · estadísticas y experiencias */
+  .mh-wz-sech { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--mh-muted2); margin: 2px 4px 12px; }
+  .mh-wz-body .mh-wz-pane.mh-wz-stats { max-width: none; width: 100%; align-items: stretch; margin: 0; justify-content: flex-start; }
+  .mh-wz-gauges { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .mh-wz-ga { border-radius: 24px; padding: 18px 14px 14px; display: flex; flex-direction: column; align-items: center; gap: 8px; background: radial-gradient(100% 90% at 50% 0%, color-mix(in srgb, var(--c) 22%, transparent), transparent 70%), color-mix(in srgb, var(--mh-ink) 4%, transparent); border: 1px solid color-mix(in srgb, var(--c) 40%, var(--mh-line)); color: var(--mh-ink); }
+  .mh-wz-ga label { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; color: var(--c); display: flex; align-items: center; gap: 6px; }
+  .mh-wz-ring { position: relative; width: 120px; height: 120px; } .mh-wz-ring svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .mh-wz-ring b { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: 700; color: var(--mh-ink); }
+  .mh-wz-bd { width: 100%; display: flex; flex-direction: column; gap: 5px; margin-top: 4px; }
+  .mh-wz-bd div { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--mh-ink3); padding: 5px 9px; border-radius: 9px; background: color-mix(in srgb, var(--mh-ink) 5%, transparent); }
+  .mh-wz-bd div b { color: var(--mh-ink); } .mh-wz-bd div.is-up b { color: #4E9E52; } .mh-wz-bd div.is-down b { color: #D9644E; }
+  .mh-wz-callout { margin-top: 16px; padding: 12px 16px; border-radius: 16px; display: flex; gap: 10px; align-items: flex-start; text-align: left; font-size: 12.5px; line-height: 1.55; color: var(--mh-ink3); background: color-mix(in srgb, var(--mh-ink) 5%, transparent); border: 1px solid var(--mh-line); } .mh-wz-callout svg { flex-shrink: 0; margin-top: 2px; } .mh-wz-callout > span { flex: 1; min-width: 0; text-align: left; }
+  @media (max-width: 760px) { .mh-wz-gauges { grid-template-columns: minmax(0, 1fr); } }
+  .mh-wz-body .mh-wz-pane.mh-wz-xps { max-width: none; width: 100%; margin: 0; align-items: stretch; justify-content: flex-start; }
+  .mh-wz-xps .mh-wz-exprow { justify-content: flex-start; }
+  .mh-wz-xp { display: flex; gap: 14px; padding: 16px; border-radius: 22px; background: color-mix(in srgb, var(--mh-ink) 4%, transparent); border: 1px solid var(--mh-line); }
+  .mh-wz-xpb { width: 68px; height: 68px; border-radius: 20px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(160deg, #E3B04B, #a97d1e); color: #1F1606; font: 700 26px 'Cinzel', Georgia, serif; box-shadow: 0 8px 20px #E3B04B33; }
+  .mh-wz-xpb small { font: 700 8.5px 'Inter', sans-serif; letter-spacing: .12em; }
+  .mh-wz-xpf { flex: 1; min-width: 0; } .mh-wz-xpf label { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--mh-muted2); display: block; margin-bottom: 7px; }
+  .mh-wz-xin { padding: 13px 15px; border-radius: 15px; font-size: 16px; border: 1.5px solid var(--mh-line2); background: color-mix(in srgb, var(--mh-ink) 6%, transparent); transition: border-color .15s, box-shadow .15s; }
+  .mh-wz-xin:focus { outline: none; border-color: #E3B04B; box-shadow: 0 0 0 4px #E3B04B22; }
+  .mh-wz-sug { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .mh-wz-sug button { all: unset; cursor: pointer; font-size: 11px; padding: 4px 11px; border-radius: 20px; color: var(--mh-ink3); background: color-mix(in srgb, var(--mh-ink) 6%, transparent); border: 1px solid var(--mh-line2); } .mh-wz-sug button:hover { color: var(--mh-ink); background: color-mix(in srgb, var(--mh-ink) 11%, transparent); } .mh-wz-sug button:focus-visible { outline: 2px solid #E3B04B; }
+  .mh-wz-sug button.is-pick { background: #E3B04B22; border-color: #E3B04B66; color: #E3B04B; }
   .mh-wz-page { animation: mh-view-in .3s cubic-bezier(.2,.8,.2,1) backwards; } .mh-wz-page .mh-wz { width: 100%; height: calc(100vh - 150px); min-height: 520px; max-height: none; }
   /* La creación de personaje vive en la columna central, sin caja alrededor (como el resto de páginas). */
   .mh-wz-page .mh-card.mh-wz { background: none !important; border: 0 !important; box-shadow: none !important; border-radius: 0; overflow: visible; backdrop-filter: none; -webkit-backdrop-filter: none; }
@@ -26838,56 +26967,86 @@ export default function App({ onSignOut }) {
 
               {wizardStep === "subclass" ? (
                 (() => {
-                  // Subclases como cartas centradas: ilustración arriba, nombre, frase y rasgos de Fundación.
+                  // Subclases como una baraja: la elegida va delante y las demás asoman por detrás.
                   const cls = CLASSES[carouselIndex].key;
                   const col = CLASS_COLORS[cls] || "#E3B04B";
+                  const len = stepItems.length;
+                  const goTo = (i) => setStepIndex(Math.max(0, Math.min(len - 1, i)));
+                  const cur = stepItems[stepIndex] || stepItems[0] || { key: "", features: [] };
+                  const featsOf = (it) => (it.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name));
+                  const Em = CLASS_EMBLEMS[cls] || User;
                   return (
-                    <div className="mh-sc" style={{ "--tc": col }}>
-                      <div className="mh-sc-row" role="radiogroup" aria-label={"Subclases de " + cls}>
-                      {stepItems.map((it, i) => {
-                        const on = i === stepIndex;
-                        const feats = (it.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name));
-                        return (
-                          <button key={it.key} type="button" role="radio" aria-checked={on} className={"mh-sc-card" + (on ? " is-on" : "")} onClick={() => setStepIndex(i)}>
-                            <span className="mh-sc-art" aria-hidden="true">
-                              {SUBCLASS_CARD_ART[it.key] ? <img src={SUBCLASS_CARD_ART[it.key]} alt="" /> : (() => { const Em = CLASS_EMBLEMS[cls] || User; return <Em size={64} strokeWidth={1.4} />; })()}
-                            </span>
-                            {on && (
-                              <span className="mh-sc-ck" aria-hidden="true">
-                                <Check size={15} strokeWidth={3} />
+                    <div
+                      className="mh-dk"
+                      style={{ "--tc": col }}
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "ArrowRight") (e.preventDefault(), goTo(stepIndex + 1));
+                        else if (e.key === "ArrowLeft") (e.preventDefault(), goTo(stepIndex - 1));
+                      }}
+                    >
+                      <div className="mh-dk-deck" role="radiogroup" aria-label={"Subclases de " + cls}>
+                        {stepIndex > 0 && <button type="button" className="mh-dk-nav is-l" aria-label="Subclase anterior" onClick={() => goTo(stepIndex - 1)}><ChevronLeft size={20} /></button>}
+                        {stepIndex < len - 1 && <button type="button" className="mh-dk-nav is-r" aria-label="Subclase siguiente" onClick={() => goTo(stepIndex + 1)}><ChevronRight size={20} /></button>}
+                        {stepItems.map((it, i) => {
+                          const d = i - stepIndex;
+                          const ad = Math.abs(d);
+                          return (
+                            <button
+                              key={it.key}
+                              type="button"
+                              role="radio"
+                              aria-checked={d === 0}
+                              className={"mh-dk-card" + (d === 0 ? " is-front" : "")}
+                              style={{ "--d": d, "--a": ad, zIndex: 10 - ad }}
+                              onClick={() => goTo(i)}
+                            >
+                              <span className="mh-dk-im" aria-hidden="true" style={SUBCLASS_CARD_ART[it.key] ? { backgroundImage: "url(" + SUBCLASS_CARD_ART[it.key] + ")" } : undefined}>
+                                {!SUBCLASS_CARD_ART[it.key] && <Em size={64} strokeWidth={1.4} />}
                               </span>
-                            )}
-                            <span className="mh-sc-txt">
-                              <span className="mh-serif mh-sc-n">{it.key}</span>
-                              {it.expansion && <span className="mh-sc-k">{it.expansion}</span>}
-                              <span className="mh-sc-b">{it.blurb}</span>
-                              {feats.length > 0 && (
-                                <span className="mh-sc-chips">
-                                  {feats.map((f) => (
-                                    <span key={f.name} title={f.text}>
-                                      {f.name}
-                                    </span>
-                                  ))}
-                                </span>
-                              )}
-                            </span>
-                          </button>
-                        );
-                      })}
-                      </div>
-                      {stepItems[stepIndex]?.key === "Origen Elemental" && (
-                        <div className="mh-sc-elem">
-                          <b className="mh-serif">Elige tu elemento</b>
-                          <div className="mh-wz-breath" role="radiogroup" aria-label="Elemento">
-                            {ORIGIN_ELEMENTS.map((el) => (
-                              <button key={el.key} type="button" role="radio" aria-checked={draftOriginElement === el.key} className={draftOriginElement === el.key ? "is-on" : ""} style={{ "--be": el.color }} onClick={() => setDraftOriginElement(el.key)}>
-                                <el.Icon size={15} />
-                                {el.key}
-                              </button>
-                            ))}
+                              {d === 0 && <span className="mh-dk-tick" aria-hidden="true"><Check size={16} strokeWidth={3} /></span>}
+                              <span className="mh-dk-tx">
+                                <span className="mh-serif mh-dk-n">{it.key}</span>
+                                {it.expansion && <span className="mh-dk-k">{it.expansion}</span>}
+                                <span className="mh-dk-b">{it.blurb}</span>
+                                {d === 0 && featsOf(it).length > 0 && (
+                                  <span className="mh-dk-chips">
+                                    {featsOf(it).map((f) => <span key={f.name}>{f.name}</span>)}
+                                  </span>
+                                )}
+                              </span>
+                            </button>
+                          );
+                        })}
+                        {len > 1 && (
+                          <div className="mh-dk-dots" aria-hidden="true">
+                            {stepItems.map((it, i) => <i key={it.key} className={i === stepIndex ? "is-on" : ""} />)}
                           </div>
-                        </div>
-                      )}
+                        )}
+                      </div>
+                      <div className="mh-dk-side">
+                        <div className="mh-dk-sh">{cur.key} · Fundación</div>
+                        {featsOf(cur).map((f) => (
+                          <div key={f.name} className="mh-dk-fe">
+                            <b>{f.name}</b>
+                            <p>{f.text}</p>
+                          </div>
+                        ))}
+                        {cur.key === "Origen Elemental" && (
+                          <div className="mh-sc-elem">
+                            <b className="mh-serif">Elige tu elemento</b>
+                            <div className="mh-wz-breath" role="radiogroup" aria-label="Elemento">
+                              {ORIGIN_ELEMENTS.map((el) => (
+                                <button key={el.key} type="button" role="radio" aria-checked={draftOriginElement === el.key} className={draftOriginElement === el.key ? "is-on" : ""} style={{ "--be": el.color }} onClick={() => setDraftOriginElement(el.key)}>
+                                  <el.Icon size={15} />
+                                  {el.key}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {len > 1 && <div className="mh-dk-hint">Pulsa la carta de detrás, usa las flechas o el teclado ← → para cambiar de subclase.</div>}
+                      </div>
                     </div>
                   );
                 })()
@@ -27066,7 +27225,62 @@ export default function App({ onSignOut }) {
                   const focus = list.find((x) => x.key === originFocus) || list.find((x) => isSel(x.key)) || list[0];
                   return (
                     <>
-                      <div className="mh-wz-list">
+                      <div className={"mh-wz-list is-" + (originTab === "ancestry" ? "anc" : originTab === "community" ? "com" : "tf")}>
+                        {originTab === "ancestry" && (
+                          <>
+                            <div className="mh-wz-seg2" role="radiogroup" aria-label="Tipo de ascendencia">
+                              <button type="button" role="radio" aria-checked={!mixAncestry} className={!mixAncestry ? "is-on" : ""} onClick={() => mixAncestry && toggleMixAncestry()}>
+                                <b>Pura</b><small>Una ascendencia</small>
+                              </button>
+                              <button type="button" role="radio" aria-checked={mixAncestry} className={mixAncestry ? "is-on" : ""} onClick={() => !mixAncestry && toggleMixAncestry()}>
+                                <b>Mixta</b><small>Dos ascendencias</small>
+                              </button>
+                            </div>
+                            {mixAncestry && (
+                              <div className="mh-wz-mixhint">
+                                Elige dos: la <b className="is-1">1.ª característica</b> sale de la primera y la <b className="is-2">2.ª</b> de la segunda.
+                              </div>
+                            )}
+                          </>
+                        )}
+                        {list.map((it) => {
+                          const ord = originTab === "ancestry" && mixAncestry ? draftAncestries.indexOf(it.key) : -1;
+                          const CIcon = COMMUNITY_ICONS[it.key];
+                          const hf = (originTab === "transformation" ? it.key !== "Ninguna" : it.expansion) ? (originTab === "transformation" || it.expansion !== "The Void" ? "H&F" : "Void") : null;
+                          const cls2 = (focus?.key === it.key ? " is-focus" : "") + (isSel(it.key) ? " is-on" : "") + (ord >= 0 ? " is-ord" + (ord + 1) : "");
+                          if (originTab === "transformation") {
+                            const ta = TRANSFORMATION_ART[it.key];
+                            return (
+                              <button key={it.key} type="button" aria-pressed={isSel(it.key)} className={"mh-wz-po" + cls2 + (it.key === "Ninguna" ? " is-none" : "")} style={{ "--pc": ta?.color || "#A58BE8" }} onClick={() => pick(it.key)}>
+                                {it.key === "Ninguna" ? (
+                                  <>
+                                    <CircleDashed size={26} strokeWidth={1.4} />
+                                    <b>Ninguna</b>
+                                    <small>Es opcional</small>
+                                  </>
+                                ) : (
+                                  <>
+                                    <span className="mh-wz-po-im" aria-hidden="true" style={ta ? { backgroundImage: "url(" + ta.src + ")" } : undefined} />
+                                    {hf && <em>{hf}</em>}
+                                    <b>{it.key}</b>
+                                  </>
+                                )}
+                                {isSel(it.key) && <span className="mh-wz-po-ck" aria-hidden="true"><Check size={13} strokeWidth={3} /></span>}
+                              </button>
+                            );
+                          }
+                          return (
+                            <button key={it.key} type="button" aria-pressed={isSel(it.key)} className={"mh-wz-it" + cls2} onClick={() => pick(it.key)}>
+                              <span className="mh-wz-ig" aria-hidden="true">{CIcon ? <CIcon size={16} /> : it.key.charAt(0)}</span>
+                              <span className="mh-wz-it-n">{it.key}</span>
+                              {hf && <em>{hf}</em>}
+                              {ord >= 0 && <span className="mh-wz-ordb">{ord + 1}.ª</span>}
+                              {isSel(it.key) && ord < 0 && <Check size={13} className="mh-wz-ck" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <div className="mh-wz-det mh-noscroll">
                         {originTab === "transformation" && (
                           <div className="mh-wz-note">
                             <Sparkles size={14} />
@@ -27075,29 +27289,39 @@ export default function App({ onSignOut }) {
                             </span>
                           </div>
                         )}
-                        {originTab === "ancestry" && (
-                          <button type="button" className={"mh-wz-mix" + (mixAncestry ? " is-on" : "")} aria-pressed={mixAncestry} onClick={toggleMixAncestry}>
-                            <i />
-                            Ascendencia mixta
-                            {mixAncestry && <small>{draftAncestries.join(" + ") || "elige dos"}</small>}
-                          </button>
-                        )}
-                        {list.map((it) => (
-                          <button key={it.key} type="button" aria-pressed={isSel(it.key)} className={"mh-wz-it" + (focus?.key === it.key ? " is-focus" : "") + (isSel(it.key) ? " is-on" : "")} onClick={() => pick(it.key)}>
-                            <span className="mh-wz-it-n">{it.key}</span>
-                            {(originTab === "transformation" ? it.key !== "Ninguna" : it.expansion) && <em>{originTab === "transformation" || it.expansion !== "The Void" ? "H&F" : "Void"}</em>}
-                            {isSel(it.key) && <Check size={13} className="mh-wz-ck" />}
-                          </button>
-                        ))}
-                      </div>
-                      {originTab === "transformation" && TRANSFORMATION_ART[focus?.key] && (
-                        <div className="mh-wz-art" style={{ "--tc": TRANSFORMATION_ART[focus.key].color }} aria-hidden="true">
-                          <img key={focus.key} src={TRANSFORMATION_ART[focus.key].src} alt="" />
-                        </div>
-                      )}
-                      <div className={"mh-wz-det mh-noscroll" + (originTab === "transformation" && TRANSFORMATION_ART[focus?.key] ? " has-art" : "")}>
                         {focus && (
                           <>
+                            {originTab === "ancestry" && mixAncestry && (() => {
+                              const [a1, a2] = draftAncestries.map((k) => ANCESTRIES.find((x) => x.key === k));
+                              if (!a2) {
+                                return (
+                                  <div className="mh-wz-mixwait">
+                                    {a1 ? <>Tu <b>1.ª</b> es <b>{a1.key}</b>. Elige ahora la segunda ascendencia.</> : "Elige las dos ascendencias de tu personaje."}
+                                  </div>
+                                );
+                              }
+                              const f1 = a1?.features?.[0];
+                              const f2 = a2?.features?.[1];
+                              return (
+                                <div className="mh-wz-mixpick">
+                                  <div className="mh-wz-venn" aria-hidden="true">
+                                    <span className="is-1" style={a1.image ? { backgroundImage: "linear-gradient(#14153b99,#14153bdd), url(" + a1.image + ")" } : undefined}><small>1.ª</small>{a1.key}</span>
+                                    <span className="is-2" style={a2.image ? { backgroundImage: "linear-gradient(#14153b99,#14153bdd), url(" + a2.image + ")" } : undefined}><small>2.ª</small>{a2.key}</span>
+                                  </div>
+                                  <div className="mh-wz-slot is-1">
+                                    <span className="mh-wz-mixn">1.ª</span>
+                                    <div><b>{f1?.name}</b> <small>de {a1?.key}</small><p>{f1?.text}</p></div>
+                                  </div>
+                                  <div className="mh-wz-slot is-2">
+                                    <span className="mh-wz-mixn">2.ª</span>
+                                    <div><b>{f2?.name}</b> <small>de {a2?.key}</small><p>{f2?.text}</p></div>
+                                  </div>
+                                  <button type="button" className="mh-wz-swap" onClick={() => setDraftAncestries((l) => [l[1], l[0]])}>
+                                    <ArrowLeftRight size={13} /> Intercambiar: {a2?.features?.[0]?.name} y {a1?.features?.[1]?.name}
+                                  </button>
+                                </div>
+                              );
+                            })()}
                             <div className="mh-wz-dh">
                               {focus.image ? <img className="mh-wz-img" src={focus.image} alt="" /> : null}
                               <div>
@@ -27120,40 +27344,10 @@ export default function App({ onSignOut }) {
                               </div>
                             )}
                             {!isSel(focus.key) && (
-                              <button type="button" className="mh-btn" style={{ alignSelf: "flex-start" }} onClick={() => pick(focus.key)}>
+                              <button type="button" className="mh-btn mh-wz-go" style={{ "--pc": originTab === "transformation" ? TRANSFORMATION_ART[focus.key]?.color : undefined }} onClick={() => pick(focus.key)}>
                                 <Check size={14} /> Elegir {focus.key}
                               </button>
                             )}
-                            {originTab === "ancestry" && mixAncestry && (draftAncestries.length < 2 ? (
-                              <div className="mh-wz-dm">Con ascendencia mixta eliges dos: tomas la 1.ª característica de una y la 2.ª de la otra.</div>
-                            ) : (() => {
-                              const [a1, a2] = draftAncestries.map((k) => ANCESTRIES.find((x) => x.key === k));
-                              const f1 = a1?.features?.[0];
-                              const f2 = a2?.features?.[1];
-                              return (
-                                <div className="mh-wz-mixpick">
-                                  <b className="mh-wz-purpose-t">Tus características</b>
-                                  <div className="mh-wz-mixrow">
-                                    <span className="mh-wz-mixn">1.ª</span>
-                                    <div>
-                                      <b>{f1?.name}</b> <small>de {a1?.key}</small>
-                                      <span>{f1?.text}</span>
-                                    </div>
-                                  </div>
-                                  <div className="mh-wz-mixrow">
-                                    <span className="mh-wz-mixn">2.ª</span>
-                                    <div>
-                                      <b>{f2?.name}</b> <small>de {a2?.key}</small>
-                                      <span>{f2?.text}</span>
-                                    </div>
-                                  </div>
-                                  <button type="button" className="mh-btn-ghost" onClick={() => setDraftAncestries((l) => [l[1], l[0]])}>
-                                    <ArrowLeftRight size={13} /> Intercambiar: {a2?.features?.[0]?.name} y {a1?.features?.[1]?.name}
-                                  </button>
-                                  <small className="mh-wz-mixnote">Según el manual, la 1.ª característica sale de una ascendencia y la 2.ª de la otra.</small>
-                                </div>
-                              );
-                            })())}
                             {originTab === "community" && draftCommunity === "Del Orden" && (
                               <div className="mh-wz-purpose">
                                 <b className="mh-wz-purpose-t">Entregado</b>
@@ -27268,103 +27462,67 @@ export default function App({ onSignOut }) {
                 </div>
               ) : wizardStep === "stats" ? (
                 <div className="mh-wz-stats mh-wz-pane">
-                  <div style={{ fontSize: 12.5, color: "var(--mh-ink3)" }}>
-                    Estas estadísticas se calculan automáticamente según tu clase ({CLASSES[carouselIndex].key}), tu subclase y tu ascendencia. Debajo de cada valor ves
-                    cuánto sube o baja por tus elecciones anteriores.
+                  <div className="mh-wz-sech">Calculadas según tu clase ({CLASSES[carouselIndex].key}), tu subclase y tu ascendencia</div>
+                  <div className="mh-wz-gauges">
+                    <StatGauge
+                      color="#E3B04B"
+                      Icon={ShieldCheck}
+                      label="Evasión"
+                      max={16}
+                      value={(CLASS_EVASION[CLASSES[carouselIndex].key] ?? 10) + (draftFeat("Simiah", 1) ? 1 : 0)}
+                      base={CLASS_EVASION[CLASSES[carouselIndex].key] ?? 10}
+                      baseLabel={CLASSES[carouselIndex].key}
+                      mods={draftFeat("Simiah", 1) ? [{ v: 1, label: "Ágil · Simiah" }] : []}
+                    />
+                    <StatGauge
+                      color="#E0617A"
+                      Icon={Heart}
+                      label="Puntos de vida"
+                      max={10}
+                      value={(CLASS_HP[CLASSES[carouselIndex].key] ?? 6) + (draftFeat("Gigante", 0) ? 1 : 0)}
+                      base={CLASS_HP[CLASSES[carouselIndex].key] ?? 6}
+                      baseLabel={CLASSES[carouselIndex].key}
+                      mods={draftFeat("Gigante", 0) ? [{ v: 1, label: "Aguante · Gigante" }] : []}
+                    />
+                    <StatGauge
+                      color="#A58BE8"
+                      Icon={Zap}
+                      label="Estrés"
+                      max={10}
+                      value={STRESS_SLOTS + ((SUBCLASSES[CLASSES[carouselIndex]?.key] || [])[subclassIndex]?.key === "Vengador" ? 1 : 0) + (draftFeat("Humano", 0) ? 1 : 0)}
+                      base={STRESS_SLOTS}
+                      baseLabel=""
+                      mods={[
+                        ...((SUBCLASSES[CLASSES[carouselIndex]?.key] || [])[subclassIndex]?.key === "Vengador" ? [{ v: 1, label: "Sereno · Vengador" }] : []),
+                        ...(draftFeat("Humano", 0) ? [{ v: 1, label: "Gran Resistencia · Humano" }] : []),
+                      ]}
+                    />
                   </div>
-                  <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        gap: 6,
-                        border: "1px solid #E3B04B",
-                        background: "#E3B04B14",
-                        borderRadius: 8,
-                        padding: "18px 30px",
-                      }}
-                    >
-                      <ShieldCheck size={20} color="#E3B04B" />
-                      <div style={{ fontSize: 11, color: "var(--mh-muted)" }}>Evasión</div>
-                      <div className="mh-serif" style={{ fontSize: 34, fontWeight: 700, color: "var(--mh-gold-ink)" }}>
-                        {(CLASS_EVASION[CLASSES[carouselIndex].key] ?? 10) + (draftFeat("Simiah", 1) ? 1 : 0)}
-                      </div>
-                      <StatMods base={CLASS_EVASION[CLASSES[carouselIndex].key] ?? 10} baseLabel={CLASSES[carouselIndex].key} mods={draftFeat("Simiah", 1) ? [{ v: 1, label: "Ágil · Simiah" }] : []} />
-                    </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        gap: 6,
-                        border: "1px solid #D9644E",
-                        background: "#D9644E14",
-                        borderRadius: 8,
-                        padding: "18px 30px",
-                      }}
-                    >
-                      <Heart size={20} color="#D9644E" />
-                      <div style={{ fontSize: 11, color: "var(--mh-muted)" }}>Puntos de vida</div>
-                      <div className="mh-serif" style={{ fontSize: 34, fontWeight: 700, color: "#D9644E" }}>
-                        {(CLASS_HP[CLASSES[carouselIndex].key] ?? 6) + (draftFeat("Gigante", 0) ? 1 : 0)}
-                      </div>
-                      <StatMods base={CLASS_HP[CLASSES[carouselIndex].key] ?? 6} baseLabel={CLASSES[carouselIndex].key} mods={draftFeat("Gigante", 0) ? [{ v: 1, label: "Aguante · Gigante" }] : []} />
-                    </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        gap: 6,
-                        border: "1px solid #6FA3C0",
-                        background: "#6FA3C014",
-                        borderRadius: 8,
-                        padding: "18px 30px",
-                      }}
-                    >
-                      <Zap size={20} color="#6FA3C0" />
-                      <div style={{ fontSize: 11, color: "var(--mh-muted)" }}>Estrés</div>
-                      <div className="mh-serif" style={{ fontSize: 34, fontWeight: 700, color: ink("#6FA3C0") }}>
-                        {STRESS_SLOTS + ((SUBCLASSES[CLASSES[carouselIndex]?.key] || [])[subclassIndex]?.key === "Vengador" ? 1 : 0) + (draftFeat("Humano", 0) ? 1 : 0)}
-                      </div>
-                      <StatMods
-                        base={STRESS_SLOTS}
-                        baseLabel=""
-                        mods={[
-                          ...((SUBCLASSES[CLASSES[carouselIndex]?.key] || [])[subclassIndex]?.key === "Vengador" ? [{ v: 1, label: "Sereno · Vengador" }] : []),
-                          ...(draftFeat("Humano", 0) ? [{ v: 1, label: "Gran Resistencia · Humano" }] : []),
-                        ]}
-                      />
-                    </div>
-                  </div>
+                  <div className="mh-wz-callout"><Info size={16} /><span>No hace falta que apuntes nada: se actualizan solas al cambiar de clase, subir de nivel o equiparte. Debajo de cada valor ves de dónde sale.</span></div>
                 </div>
               ) : wizardStep === "experiences" ? (
-                <div className="mh-wz-pane">
-                  <div style={{ fontSize: 12.5, color: "var(--mh-ink3)", textAlign: "center" }}>
-                    Escribe las dos Experiencias iniciales de tu personaje — cosas que se le dan bien, gracias a su pasado.
-                    Cada una empieza con un bono de +2.
-                  </div>
+                <div className="mh-wz-pane mh-wz-xps">
+                  <div className="mh-wz-sech">Dos cosas que se te dan bien gracias a tu pasado · cada una empieza con +2</div>
                   <div className="mh-wz-exprow">
-                  <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 420, flex: 1, minWidth: 0 }}>
-                    <div>
-                      <label className="mh-label">Experiencia 1</label>
-                      <input
-                        className="mh-input"
-                        placeholder="Ej. Guía de las tierras salvajes..."
-                        value={draftExp1}
-                        onChange={(e) => setDraftExp1(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="mh-label">Experiencia 2</label>
-                      <input
-                        className="mh-input"
-                        placeholder="Ej. Protocolo de la corte real..."
-                        value={draftExp2}
-                        onChange={(e) => setDraftExp2(e.target.value)}
-                      />
-                    </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 14, maxWidth: 560, flex: 1, minWidth: 0 }}>
+                    {[1, 2].map((n) => {
+                      const val = n === 1 ? draftExp1 : draftExp2;
+                      const setVal = n === 1 ? setDraftExp1 : setDraftExp2;
+                      return (
+                        <div key={n} className="mh-wz-xp">
+                          <span className="mh-wz-xpb">+{draftFeat("Autómata", 0) && draftPurposeExp === n - 1 ? 3 : 2}<small>BONO</small></span>
+                          <div className="mh-wz-xpf">
+                            <label htmlFor={"mh-exp" + n}>Experiencia {n}</label>
+                            <input id={"mh-exp" + n} className="mh-input mh-wz-xin" autoFocus={n === 1} placeholder={n === 1 ? "Ej. Guía de las tierras salvajes…" : "Ej. Protocolo de la corte real…"} value={val} onChange={(e) => setVal(e.target.value)} />
+                            <div className="mh-wz-sug">
+                              {EXP_EXAMPLES.slice((n - 1) * 4, n * 4).map((t) => (
+                                <button key={t} type="button" className={val.trim() === t ? "is-pick" : ""} onClick={() => setVal(t)}>{t}</button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                     {draftFeat("Autómata", 0) && (
                       <div className="mh-wz-purpose is-pick">
                         <div className="mh-wz-purpose-q">
@@ -27426,6 +27584,7 @@ export default function App({ onSignOut }) {
                     </div>
                   )}
                   </div>
+                  <div className="mh-wz-callout"><Lightbulb size={16} /><span>Piensa en una frase corta y concreta. Las sugerencias son solo ejemplos: pulsa una para rellenar el campo y edítala si quieres.</span></div>
                 </div>
               ) : ["primary", "secondary", "armor"].includes(wizardStep) ? (
                 <div>
