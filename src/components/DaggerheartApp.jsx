@@ -4600,6 +4600,62 @@ const sharedStyles = `
   .mh-tribute-go .mh-rest-ico { width: 30px; height: 30px; }
   .mh-trov.is-flash .mh-trov-s { animation: mh-trov-glow 1.2s ease-out; }
   @keyframes mh-trov-glow { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--tb) 70%, transparent); } 40% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--tb) 30%, transparent); } 100% { box-shadow: 0 0 0 0 transparent; } }
+
+  /* Asistente de creación · estilo cristal */
+  .mh-wz-page .mh-wz { gap: 14px; }
+  .mh-wz-page .mh-wz-top { padding: 2px 0 0; }
+  .mh-wz-page .mh-wz-title { align-items: center; }
+  .mh-wz-page .mh-wz-title small { padding: 5px 12px; border-radius: 20px; background: color-mix(in srgb, var(--mh-ink) 7%, transparent); border: 1px solid var(--mh-line2); color: var(--mh-ink3); font-size: 11.5px; }
+  .mh-wz-page .mh-wz-x { width: 38px; height: 38px; }
+  .mh-wz-page .mh-wz-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding: 8px; margin-top: 14px; border-radius: 20px; background: color-mix(in srgb, var(--mh-panel) 80%, transparent); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); border: 1px solid var(--mh-line2); box-shadow: 0 14px 34px #0006, inset 0 1px 0 #ffffff12; }
+  .mh-wz-page .mh-wz-grp { padding: 9px 12px 10px; border-radius: 14px; }
+  .mh-wz-page .mh-wz-grp > span { display: flex; justify-content: space-between; margin-bottom: 7px; font-size: 10px; letter-spacing: .12em; }
+  .mh-wz-page .mh-wz-grp > span em { font-style: normal; letter-spacing: 0; }
+  .mh-wz-page .mh-wz-grp.is-cur { background: #E3B04B14; box-shadow: inset 0 0 0 1px #E3B04B40; }
+  .mh-wz-page .mh-wz-grp.is-cur > span { color: #E3B04B; } .mh-wz-page .mh-wz-grp.is-ok > span { color: #6FBF73; }
+  .mh-wz-page .mh-wz-grp button.is-on { flex: 1.8; box-shadow: 0 0 8px #E3B04B88; }
+  .mh-wz-main { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .mh-wz-main.has-pv { grid-template-columns: minmax(0, 1fr) 320px; }
+  .mh-wz-page .mh-wz-main .mh-wz-body, .mh-wz-page .mh-wz-main .mh-wz-body.is-split { min-height: 0; padding: 20px; border-radius: 26px; background: color-mix(in srgb, var(--mh-panel) 80%, transparent); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); border: 1px solid var(--mh-line2); box-shadow: 0 18px 44px #0007, inset 0 1px 0 #ffffff12; }
+  .mh-wz-page .mh-wz-main .mh-wz-body.is-split { padding: 0; overflow: hidden; }
+  .mh-wz-page .mh-wz-main .mh-wz-body.is-split .mh-wz-list { padding: 16px 14px 16px 16px; }
+  .mh-wz-page .mh-wz-main .mh-wz-body.is-split .mh-wz-det { padding: 18px 22px; }
+  html[data-mh-theme="light"] .mh-wz-page .mh-wz-main .mh-wz-body { box-shadow: 0 14px 34px #3a2c1230, inset 0 1px 0 #fff; }
+  .mh-wz-page .mh-wz .mh-wz-foot { flex-shrink: 0; height: 62px; margin-top: 2px; padding: 0 12px 0 22px; border: 1px solid var(--mh-line2); border-radius: 22px; background: color-mix(in srgb, var(--mh-panel) 80%, transparent); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: 0 14px 34px #0006, inset 0 1px 0 #ffffff12; }
+  .mh-wz.has-pv .mh-wz-sum { display: none; }
+  .mh-wz-btns { margin-left: auto; align-items: center; }
+  .mh-wz-btns .mh-btn, .mh-wz-btns .mh-btn-ghost { height: 40px; border-radius: 14px; padding: 0 20px; }
+  .mh-wz-cls { display: flex; flex-direction: column; gap: 14px; width: 100%; min-height: 0; }
+  .mh-wz-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; flex-shrink: 0; }
+  .mh-wz-tiles .mh-wz-sep { grid-column: 1 / -1; margin: 6px 4px 0; }
+  .mh-wz-tile { all: unset; box-sizing: border-box; position: relative; display: flex; align-items: center; gap: 11px; padding: 8px 12px; border-radius: 18px; cursor: pointer; min-width: 0; background: color-mix(in srgb, var(--mh-ink) 4%, transparent); border: 1px solid var(--mh-line); transition: border-color .15s, background .15s, box-shadow .2s; }
+  .mh-wz-tile:hover { background: color-mix(in srgb, var(--mh-ink) 8%, transparent); }
+  .mh-wz-tile:focus-visible { outline: 2px solid #E3B04B; outline-offset: 1px; }
+  .mh-wz-te { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--wc); background: color-mix(in srgb, var(--wc) 18%, var(--mh-panel)); border: 1.5px solid color-mix(in srgb, var(--wc) 55%, transparent); }
+  .mh-wz-tn { display: flex; flex-direction: column; min-width: 0; } .mh-wz-tn b { font-size: 13.5px; font-weight: 600; color: var(--mh-ink); } .mh-wz-tn small { font-size: 10.5px; color: var(--mh-muted2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mh-wz-tile > em { margin-left: auto; flex-shrink: 0; font-style: normal; font-size: 8.5px; font-weight: 700; padding: 1px 6px; border-radius: 9px; border: 1px solid #A58BE866; color: var(--mh-purple-ink, #8A6FD0); }
+  .mh-wz-tile.is-on { border-color: var(--wc); background: radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--wc) 24%, transparent), transparent 70%), color-mix(in srgb, var(--mh-ink) 6%, transparent); box-shadow: 0 0 0 1px var(--wc), 0 0 30px color-mix(in srgb, var(--wc) 28%, transparent); }
+  .mh-wz-tile.is-on .mh-wz-te { background: var(--wc); color: #10101e; }
+  .mh-wz-cls .mh-wz-det { flex: none; padding: 14px 16px; border-radius: 18px; background: color-mix(in srgb, var(--mh-ink) 5%, transparent); border: 1px solid var(--mh-line); overflow: visible; -webkit-mask-image: none; mask-image: none; }
+  .mh-wz-cls .mh-wz-det.has-art > :not(.mh-wz-art) { max-width: none; }
+  .mh-wz-pv { position: relative; min-height: 0; border-radius: 26px; overflow: hidden; display: flex; flex-direction: column; align-items: center; padding: 14px; background: radial-gradient(120% 60% at 50% 0%, color-mix(in srgb, var(--k) 24%, transparent), transparent 70%), color-mix(in srgb, var(--mh-panel) 84%, transparent); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); border: 1px solid color-mix(in srgb, var(--k) 38%, var(--mh-line2)); box-shadow: 0 18px 44px #0007, inset 0 1px 0 #ffffff18; }
+  .mh-wz-pv > * { position: relative; z-index: 1; }
+  .mh-wz-pv .mh-wz-pv-art { position: absolute; inset: 0 0 auto 0; height: 58%; z-index: 0; background-size: cover; -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent 100%); mask-image: linear-gradient(180deg, #000 55%, transparent 100%); }
+  .mh-wz-pv-top { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+  .mh-wz-pv-lv { padding: 4px 11px; border-radius: 20px; font-size: 11.5px; font-weight: 700; color: var(--mh-ink); background: color-mix(in srgb, var(--mh-bg) 80%, transparent); border: 1px solid color-mix(in srgb, var(--k) 50%, transparent); }
+  .mh-wz-pv-live { display: flex; align-items: center; gap: 6px; font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: #E3B04B; } .mh-wz-pv-live i { width: 7px; height: 7px; border-radius: 50%; background: #E3B04B; box-shadow: 0 0 8px #E3B04B; }
+  .mh-wz-pv-badge { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--k); background: color-mix(in srgb, var(--mh-bg) 80%, transparent); border: 1.5px solid var(--k); }
+  .mh-wz-pv-sp { flex: 1; min-height: 80px; }
+  .mh-wz-pv-nm { font-size: 21px; font-weight: 600; letter-spacing: .03em; text-transform: uppercase; text-align: center; color: var(--mh-ink); text-shadow: 0 2px 14px #000a; overflow-wrap: anywhere; } .mh-wz-pv-nm.is-ph { opacity: .35; }
+  html[data-mh-theme="light"] .mh-wz-pv-nm { text-shadow: none; }
+  .mh-wz-pv-cl { margin-top: 6px; font-size: 12.5px; color: var(--mh-ink2); text-align: center; }
+  .mh-wz-pv-tags { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 10px; min-height: 24px; }
+  .mh-wz-pv-tags span { font-size: 10.5px; font-weight: 600; padding: 3px 10px; border-radius: 20px; background: color-mix(in srgb, var(--mh-ink) 9%, transparent); color: var(--mh-ink2); } .mh-wz-pv-tags span.is-g { background: color-mix(in srgb, var(--k) 22%, transparent); color: var(--mh-ink); }
+  .mh-wz-pv-trs { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; width: 100%; margin-top: 10px; }
+  .mh-wz-pv-trs div { padding: 6px 0; border-radius: 11px; text-align: center; font-size: 8.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--mh-muted2); background: color-mix(in srgb, var(--mh-ink) 6%, transparent); }
+  .mh-wz-pv-trs b { display: block; font-size: 14px; letter-spacing: 0; color: var(--mh-ink); } .mh-wz-pv-trs b.is-n { opacity: .35; }
+  @media (max-width: 1100px) { .mh-wz-main.has-pv { grid-template-columns: minmax(0, 1fr); } .mh-wz-pv { display: none; } .mh-wz.has-pv .mh-wz-sum { display: flex; } }
+  @media (max-width: 760px) { .mh-wz-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .mh-wz-page .mh-wz-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   .mh-wz-page { animation: mh-view-in .3s cubic-bezier(.2,.8,.2,1) backwards; } .mh-wz-page .mh-wz { width: 100%; height: calc(100vh - 150px); min-height: 520px; max-height: none; }
   /* La creación de personaje vive en la columna central, sin caja alrededor (como el resto de páginas). */
   .mh-wz-page .mh-card.mh-wz { background: none; border: 0; box-shadow: none; border-radius: 0; overflow: visible; backdrop-filter: none; }
@@ -26664,13 +26720,21 @@ export default function App({ onSignOut }) {
         const stepIndex = wizardStep === "class" ? carouselIndex : subclassIndex;
         const setStepIndex = wizardStep === "class" ? setCarouselIndex : setSubclassIndex;
         const current = stepItems[stepIndex] || { key: "", blurb: "" };
+        // Vista previa del personaje a la derecha, salvo en los pasos con ilustración a pantalla ancha.
+        const showPv = !["subclass", "ancestry", "community", "transformation", "domain"].includes(wizardStep);
         if (!wizSlot) return null;
         return createPortal(
           <div className="mh-wz-page">
-            <div className="mh-card mh-wz">
+            <div className={"mh-card mh-wz" + (showPv ? " has-pv" : "")}>
               {(() => {
                 const idx = Math.max(0, steps.findIndex((st) => st.key === wizardStep));
                 const groups = [...new Set(steps.map((st) => st.group))];
+                const gInfo = (g) => {
+                  const ks = steps.map((st, k) => (st.group === g ? k : -1)).filter((k) => k >= 0);
+                  const done = ks.every((k) => k < idx);
+                  const on = ks.includes(idx);
+                  return { cls: (on ? " is-cur" : "") + (done ? " is-ok" : ""), txt: done ? "✓" : on ? ks.indexOf(idx) + 1 + "/" + ks.length : String(ks.length) };
+                };
                 return (
                   <div className="mh-wz-top">
                     <div className="mh-wz-title">
@@ -26682,8 +26746,8 @@ export default function App({ onSignOut }) {
                     </div>
                     <div className="mh-wz-steps">
                       {groups.map((g) => (
-                        <div key={g} className="mh-wz-grp">
-                          <span>{g}</span>
+                        <div key={g} className={"mh-wz-grp" + gInfo(g).cls}>
+                          <span>{g}<em>{gInfo(g).txt}</em></span>
                           <div>
                             {steps.map((st, k) =>
                               st.group !== g ? null : (
@@ -26705,7 +26769,8 @@ export default function App({ onSignOut }) {
                   </div>
                 );
               })()}
-              <div className={"mh-wz-body" + (["class", "ancestry", "community", "transformation"].includes(wizardStep) ? " is-split" : "")}>
+              <div className={"mh-wz-main" + (showPv ? " has-pv" : "")}>
+              <div className={"mh-wz-body" + (["ancestry", "community", "transformation"].includes(wizardStep) ? " is-split" : "")}>
 
               {wizardStep === "subclass" ? (
                 (() => {
@@ -26763,8 +26828,8 @@ export default function App({ onSignOut }) {
                   );
                 })()
               ) : wizardStep === "class" ? (
-                <>
-                  <div className="mh-wz-list" role="listbox" aria-label={wizardStep === "class" ? "Clases" : "Subclases"}>
+                <div className="mh-wz-cls">
+                  <div className="mh-wz-tiles" role="listbox" aria-label="Clases">
                     {stepItems.map((it, i) => {
                       const col = CLASS_COLORS[wizardStep === "class" ? it.key : CLASSES[carouselIndex].key] || "#E3B04B";
                       // Línea de separación al empezar las clases de otra expansión.
@@ -26776,26 +26841,15 @@ export default function App({ onSignOut }) {
                             <span>{it.expansion === "The Void" ? "The Void · en pruebas" : it.expansion}</span>
                           </div>
                         )}
-                        <button type="button" role="option" aria-selected={i === stepIndex} className={"mh-wz-it" + (i === stepIndex ? " is-on" : "")} style={{ "--wc": col }} onClick={() => setStepIndex(i)}>
-                          <i style={{ background: col }} />
-                          <span className="mh-wz-it-n">{it.key}</span>
-                          {wizardStep === "class" && <small>{(CLASS_DOMAINS[it.key] || []).join(" · ")}</small>}
+                        <button type="button" role="option" aria-selected={i === stepIndex} className={"mh-wz-tile" + (i === stepIndex ? " is-on" : "")} style={{ "--wc": col }} onClick={() => setStepIndex(i)}>
+                          <span className="mh-wz-te">{(() => { const TE = CLASS_EMBLEMS[it.key] || User; return <TE size={19} strokeWidth={1.8} />; })()}</span>
+                          <span className="mh-wz-tn"><b>{it.key}</b><small>{(CLASS_DOMAINS[it.key] || []).join(" · ")}</small></span>
                           {it.expansion && <em>{it.expansion === "The Void" ? "Void" : "H&F"}</em>}
                         </button>
                         </Fragment>
                       );
                     })}
                   </div>
-                  {wizardStep === "class" && CLASS_ART[CLASSES[carouselIndex].key] && (
-                    <div className="mh-wz-art" style={{ "--tc": CLASS_COLORS[CLASSES[carouselIndex].key] || "#E3B04B" }} aria-hidden="true">
-                      <img key={CLASSES[carouselIndex].key} src={CLASS_ART[CLASSES[carouselIndex].key]} alt="" />
-                    </div>
-                  )}
-                  {wizardStep === "subclass" && SUBCLASS_ART[current?.key] && (
-                    <div className="mh-wz-art" style={{ "--tc": CLASS_COLORS[CLASSES[carouselIndex].key] || "#E3B04B" }} aria-hidden="true">
-                      <img key={current.key} src={SUBCLASS_ART[current.key]} alt="" />
-                    </div>
-                  )}
                   <div className={"mh-wz-det mh-noscroll" + ((wizardStep === "class" && CLASS_ART[CLASSES[carouselIndex].key]) || (wizardStep === "subclass" && SUBCLASS_ART[current?.key]) ? " has-art" : "")}>
                     {(() => {
                       const cls = CLASSES[carouselIndex].key;
@@ -26863,7 +26917,7 @@ export default function App({ onSignOut }) {
                       );
                     })()}
                   </div>
-                </>
+                </div>
               ) : wizardStep === "level" ? (
                 <div className="mh-wz-pane">
                   <div
@@ -27629,6 +27683,46 @@ export default function App({ onSignOut }) {
                 </div>
               )}
 
+              </div>
+              {showPv && (() => {
+                const pcls = CLASSES[carouselIndex].key;
+                const pcol = CLASS_COLORS[pcls] || "#E3B04B";
+                const PEm = CLASS_EMBLEMS[pcls] || User;
+                const pidx = WIZARD_STEPS.findIndex((st) => st.key === wizardStep);
+                const psub = pidx >= 2 ? (SUBCLASSES[pcls] || [])[subclassIndex]?.key : "";
+                const pname = pidx >= 3 ? draftName.trim() : "";
+                const ptags = [];
+                (CLASS_DOMAINS[pcls] || []).forEach((d) => ptags.push([d, true]));
+                if (pidx >= 3) ptags.push([draftPronoun === "Otro" ? draftPronounCustom : draftPronoun, true]);
+                if (pidx >= 5 && draftAncestries.length) ptags.push([draftAncestries.join(" + "), true]);
+                if (pidx >= 6 && draftCommunity) ptags.push([draftCommunity, true]);
+                if (pidx >= 7 && draftTransformation !== "Ninguna") ptags.push([draftTransformation, true]);
+                if (pidx >= 11 && draftPrimaryWeapon) ptags.push([draftPrimaryWeapon, false]);
+                if (pidx >= 12 && !twoHandedPrimary && draftSecondaryWeapon && draftSecondaryWeapon !== "Ninguna") ptags.push([draftSecondaryWeapon, false]);
+                if (pidx >= 13 && draftArmor && draftArmor !== "Ninguna") ptags.push([draftArmor, false]);
+                return (
+                  <aside className="mh-wz-pv" style={{ "--k": pcol }} aria-label="Vista previa del personaje">
+                    {CLASS_ART[pcls] && <div className="mh-wz-pv-art" aria-hidden="true" style={{ backgroundImage: "url(" + CLASS_ART[pcls] + ")", backgroundPosition: "50% " + (CLASS_ART_Y[pcls] ?? 20) + "%" }} />}
+                    <div className="mh-wz-pv-top">
+                      <span className="mh-wz-pv-lv">Nv {pidx >= 3 ? levelChoice : 1}</span>
+                      <span className="mh-wz-pv-live"><i />Vista previa</span>
+                      <span className="mh-wz-pv-badge"><PEm size={17} strokeWidth={1.7} /></span>
+                    </div>
+                    <div className="mh-wz-pv-sp" />
+                    <div className={"mh-serif mh-wz-pv-nm" + (pname ? "" : " is-ph")}>{pname || "Sin nombre"}</div>
+                    <div className="mh-wz-pv-cl">{pcls}{psub ? " · " + psub : ""}</div>
+                    <div className="mh-wz-pv-tags">{ptags.filter(([t]) => t).map(([t, g], k) => <span key={k} className={g ? "is-g" : ""}>{t}</span>)}</div>
+                    {pidx >= 7 && (
+                      <div className="mh-wz-pv-trs">
+                        {TRAITS.map((t) => {
+                          const m = TRAIT_MODIFIER_POOL.find((x) => x.id === traitAssign[t.key]);
+                          return <div key={t.key}>{t.label.slice(0, 3)}<b className={m ? "" : "is-n"}>{m ? (m.value > 0 ? "+" + m.value : m.value) : "–"}</b></div>;
+                        })}
+                      </div>
+                    )}
+                  </aside>
+                );
+              })()}
               </div>
 
               <div className="mh-wz-foot">
