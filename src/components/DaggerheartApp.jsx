@@ -4669,6 +4669,52 @@ const sharedStyles = `
   .mh-wz-pv-trs b { display: block; font-size: 14px; letter-spacing: 0; color: var(--mh-ink); } .mh-wz-pv-trs b.is-n { opacity: .35; }
   @media (max-width: 1100px) { .mh-wz-main.has-pv { grid-template-columns: minmax(0, 1fr); } .mh-wz-pv { display: none; } .mh-wz.has-pv .mh-wz-sum { display: flex; } }
   @media (max-width: 760px) { .mh-wz-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .mh-wz-page .mh-wz-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  /* Asistente · ajustes de estilo (sombras sin franjas laterales, clase compacta, nivel, nombre y origen) */
+  .mh-wz-page .mh-wz-steps, .mh-wz-page .mh-wz .mh-wz-foot { box-shadow: 0 14px 24px -16px #000c, inset 0 1px 0 #ffffff12; }
+  .mh-wz-page .mh-wz-main .mh-wz-body, .mh-wz-page .mh-wz-main .mh-wz-body.is-split, .mh-wz-pv { box-shadow: 0 18px 30px -20px #000d, inset 0 1px 0 #ffffff12; }
+  html[data-mh-theme="light"] .mh-wz-page .mh-wz-main .mh-wz-body { box-shadow: 0 14px 26px -18px #3a2c1250, inset 0 1px 0 #fff; }
+  .mh-wz-cls { height: 100%; display: grid; grid-template-columns: 372px minmax(0, 1fr); gap: 18px; align-items: stretch; }
+  .mh-wz-cls .mh-wz-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; overflow-y: auto; scrollbar-width: none; min-height: 0; }
+  .mh-wz-cls .mh-wz-tiles::-webkit-scrollbar { display: none; }
+  .mh-wz-cls .mh-wz-det { position: relative; overflow: hidden; padding: 22px 26px; -webkit-mask-image: none; mask-image: none; }
+  .mh-wz-cls .mh-wz-det::before { content: ""; position: absolute; right: 0; top: 0; bottom: 0; width: 58%; background: var(--art, none) 50% 14% / cover no-repeat; opacity: .5; pointer-events: none; -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 70%); mask-image: linear-gradient(90deg, transparent 0, #000 70%); }
+  .mh-wz-cls .mh-wz-det > * { position: relative; z-index: 1; }
+  .mh-wz-cls .mh-wz-det .mh-wz-feats, .mh-wz-cls .mh-wz-det .mh-wz-blurb { max-width: 62%; }
+  .mh-wz-tiles { gap: 8px; }
+  .mh-wz-tile { padding: 6px 10px; gap: 10px; border-radius: 14px; }
+  .mh-wz-te { width: 30px; height: 30px; }
+  .mh-wz-te svg { width: 15px; height: 15px; }
+  .mh-wz-tn b { font-size: 13px; }
+  .mh-wz-cls .mh-wz-det { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: thin; }
+  .mh-wz-tiles .mh-wz-sep { margin: 2px 4px 0; }
+  .mh-wz-lvl { max-width: 640px; gap: 16px; }
+  .mh-wz-lvl-hero { display: flex; align-items: center; gap: 18px; padding: 16px 20px; border-radius: 22px; background: radial-gradient(120% 160% at 0% 0%, #E3B04B26, transparent 65%), color-mix(in srgb, var(--mh-ink) 5%, transparent); border: 1px solid #E3B04B55; }
+  .mh-wz-lvl-n { width: 76px; height: 76px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 38px; font-weight: 700; color: #1F1606; background: #E3B04B; box-shadow: 0 0 0 6px #E3B04B22, 0 0 34px #E3B04B55; flex-shrink: 0; }
+  .mh-wz-lvl-hero b { display: block; font-size: 22px; color: var(--mh-ink); } .mh-wz-lvl-hero small { font-size: 13px; color: var(--mh-ink3); }
+  .mh-wz-lvl-tiers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .mh-wz-lvl-t { padding: 12px 14px 14px; border-radius: 20px; background: color-mix(in srgb, var(--mh-ink) 4%, transparent); border: 1px solid var(--mh-line); }
+  .mh-wz-lvl-t.is-on { border-color: #E3B04B66; background: color-mix(in srgb, #E3B04B 8%, transparent); }
+  .mh-wz-lvl-th { display: flex; flex-direction: column; margin-bottom: 10px; } .mh-wz-lvl-th b { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-ink2); } .mh-wz-lvl-th small { font-size: 11px; color: var(--mh-muted2); }
+  .mh-wz-lvl-t.is-on .mh-wz-lvl-th b { color: #E3B04B; }
+  .mh-wz-lvl-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .mh-wz-lvl-btns button { all: unset; box-sizing: border-box; width: 46px; height: 46px; border-radius: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; font: 700 17px 'Cinzel', Georgia, serif; color: var(--mh-ink2); background: color-mix(in srgb, var(--mh-ink) 7%, transparent); border: 1px solid var(--mh-line2); transition: transform .12s, background .15s, box-shadow .15s; }
+  .mh-wz-lvl-btns button:hover { transform: translateY(-2px); background: color-mix(in srgb, var(--mh-ink) 12%, transparent); }
+  .mh-wz-lvl-btns button:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
+  .mh-wz-lvl-btns button.is-on { background: #E3B04B; color: #1F1606; border-color: transparent; box-shadow: 0 6px 18px #E3B04B55; }
+  .mh-wz-pane .mh-wz-name { padding: 16px 18px; border-radius: 18px; font: 600 22px 'Cinzel', Georgia, serif; letter-spacing: .03em; background: color-mix(in srgb, var(--mh-ink) 6%, transparent); border: 1.5px solid var(--mh-line2); transition: border-color .15s, box-shadow .15s; }
+  .mh-wz-pane .mh-wz-name:focus { outline: none; border-color: #E3B04B; box-shadow: 0 0 0 4px #E3B04B22; }
+  .mh-wz-pane .mh-wz-name.is-sm { font: 500 14px 'Inter', system-ui, sans-serif; letter-spacing: 0; padding: 12px 14px; border-radius: 14px; }
+  .mh-wz-seg { display: inline-flex; gap: 4px; padding: 4px; border-radius: 18px; background: color-mix(in srgb, var(--mh-ink) 6%, transparent); border: 1px solid var(--mh-line); }
+  .mh-wz-segi { padding: 10px 22px; border-radius: 14px; font-size: 13.5px; font-weight: 500; color: var(--mh-ink3); cursor: pointer; transition: background .15s, color .15s; }
+  .mh-wz-segi:hover { background: color-mix(in srgb, var(--mh-ink) 8%, transparent); }
+  .mh-wz-segi.is-on { background: #E3B04B; color: #1F1606; font-weight: 700; box-shadow: 0 6px 16px #E3B04B44; }
+  .mh-wz-page .mh-wz-body.is-split .mh-wz-list { gap: 6px; border-right: 1px solid var(--mh-line); }
+  .mh-wz-page .mh-wz-body.is-split .mh-wz-it { padding: 10px 14px; border-radius: 14px; background: color-mix(in srgb, var(--mh-ink) 4%, transparent); border: 1px solid var(--mh-line); box-shadow: none; transition: background .15s, border-color .15s, box-shadow .15s; }
+  .mh-wz-page .mh-wz-body.is-split .mh-wz-it:hover { background: color-mix(in srgb, var(--mh-ink) 9%, transparent); }
+  .mh-wz-page .mh-wz-body.is-split .mh-wz-it.is-focus:not(.is-on) { border-color: var(--mh-line2); background: color-mix(in srgb, var(--mh-ink) 8%, transparent); }
+  .mh-wz-page .mh-wz-body.is-split .mh-wz-it.is-on { border-color: var(--wc, #6FBF73); background: radial-gradient(120% 160% at 0% 0%, color-mix(in srgb, var(--wc, #6FBF73) 22%, transparent), transparent 70%), color-mix(in srgb, var(--mh-ink) 6%, transparent); box-shadow: 0 0 0 1px var(--wc, #6FBF73), 0 0 22px color-mix(in srgb, var(--wc, #6FBF73) 26%, transparent); }
+  .mh-wz-page .mh-wz-body.is-split .mh-wz-mix, .mh-wz-page .mh-wz-body.is-split .mh-wz-tabs button { border-radius: 14px; }
+  .mh-wz-page .mh-wz-body.is-split .mh-wz-det { padding: 22px 26px; }
   .mh-wz-page { animation: mh-view-in .3s cubic-bezier(.2,.8,.2,1) backwards; } .mh-wz-page .mh-wz { width: 100%; height: calc(100vh - 150px); min-height: 520px; max-height: none; }
   /* La creación de personaje vive en la columna central, sin caja alrededor (como el resto de páginas). */
   .mh-wz-page .mh-card.mh-wz { background: none; border: 0; box-shadow: none; border-radius: 0; overflow: visible; backdrop-filter: none; }
@@ -26737,7 +26783,7 @@ export default function App({ onSignOut }) {
         const setStepIndex = wizardStep === "class" ? setCarouselIndex : setSubclassIndex;
         const current = stepItems[stepIndex] || { key: "", blurb: "" };
         // Vista previa del personaje a la derecha, salvo en los pasos con ilustración a pantalla ancha.
-        const showPv = !["subclass", "ancestry", "community", "transformation", "domain"].includes(wizardStep);
+        const showPv = !["class", "subclass", "ancestry", "community", "transformation", "domain"].includes(wizardStep);
         if (!wizSlot) return null;
         return createPortal(
           <div className="mh-wz-page">
@@ -26859,14 +26905,14 @@ export default function App({ onSignOut }) {
                         )}
                         <button type="button" role="option" aria-selected={i === stepIndex} className={"mh-wz-tile" + (i === stepIndex ? " is-on" : "")} style={{ "--wc": col }} onClick={() => setStepIndex(i)}>
                           <span className="mh-wz-te">{(() => { const TE = CLASS_EMBLEMS[it.key] || User; return <TE size={19} strokeWidth={1.8} />; })()}</span>
-                          <span className="mh-wz-tn"><b>{it.key}</b><small>{(CLASS_DOMAINS[it.key] || []).join(" · ")}</small></span>
+                          <span className="mh-wz-tn" title={(CLASS_DOMAINS[it.key] || []).join(" · ")}><b>{it.key}</b></span>
                           {it.expansion && <em>{it.expansion === "The Void" ? "Void" : "H&F"}</em>}
                         </button>
                         </Fragment>
                       );
                     })}
                   </div>
-                  <div className={"mh-wz-det mh-noscroll" + ((wizardStep === "class" && CLASS_ART[CLASSES[carouselIndex].key]) || (wizardStep === "subclass" && SUBCLASS_ART[current?.key]) ? " has-art" : "")}>
+                  <div style={wizardStep === "class" && CLASS_ART[CLASSES[carouselIndex].key] ? { "--art": "url(" + CLASS_ART[CLASSES[carouselIndex].key] + ")" } : undefined} className={"mh-wz-det mh-noscroll" + ((wizardStep === "class" && CLASS_ART[CLASSES[carouselIndex].key]) || (wizardStep === "subclass" && SUBCLASS_ART[current?.key]) ? " has-art" : "")}>
                     {(() => {
                       const cls = CLASSES[carouselIndex].key;
                       const col = CLASS_COLORS[cls] || "#E3B04B";
@@ -26935,63 +26981,37 @@ export default function App({ onSignOut }) {
                   </div>
                 </div>
               ) : wizardStep === "level" ? (
-                <div className="mh-wz-pane">
-                  <div
-                    style={{
-                      textAlign: "center",
-                      border: "1px solid #E3B04B",
-                      background: "#E3B04B14",
-                      borderRadius: 8,
-                      padding: "18px 20px",
-                    }}
-                  >
-                    <div className="mh-serif" style={{ fontSize: 30, fontWeight: 700, color: "var(--mh-gold-ink)" }}>
-                      Nivel {levelChoice}
-                    </div>
-                    <div style={{ fontSize: 12.5, color: "var(--mh-ink3)", marginTop: 2 }}>
-                      {TIERS.find((t) => t.levels.includes(levelChoice))?.label} ·{" "}
-                      {TIERS.find((t) => t.levels.includes(levelChoice))?.sub}
-                    </div>
-                  </div>
-
-                  <input
-                    type="range"
-                    min={1}
-                    max={10}
-                    step={1}
-                    value={levelChoice}
-                    onChange={(e) => setLevelChoice(Number(e.target.value))}
-                    style={{ width: "100%", accentColor: "#E3B04B" }}
-                  />
-
-                  <div style={{ display: "flex", gap: 2 }}>
-                    {TIERS.map((t) => {
-                      const active = t.levels.includes(levelChoice);
-                      return (
-                        <div
-                          key={t.key}
-                          style={{
-                            flex: t.levels.length,
-                            textAlign: "center",
-                            padding: "6px 4px",
-                            borderRadius: 6,
-                            background: active ? "#E3B04B14" : "transparent",
-                          }}
-                        >
-                          <div style={{ fontSize: 11, fontWeight: 600, color: ink(active ? "#E3B04B" : "var(--mh-muted)") }}>{t.label}</div>
-                          <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>
-                            {t.levels.length === 1 ? `Nv. ${t.levels[0]}` : `Nv. ${t.levels[0]}-${t.levels[t.levels.length - 1]}`}
-                          </div>
+                <div className="mh-wz-pane mh-wz-lvl">
+                  {(() => {
+                    const tier = TIERS.find((t) => t.levels.includes(levelChoice));
+                    return (
+                      <div className="mh-wz-lvl-hero">
+                        <span className="mh-serif mh-wz-lvl-n">{levelChoice}</span>
+                        <div>
+                          <b>Nivel {levelChoice}</b>
+                          <small>{tier?.label} · {tier?.sub}</small>
                         </div>
-                      );
-                    })}
+                      </div>
+                    );
+                  })()}
+                  <div className="mh-wz-lvl-tiers" role="radiogroup" aria-label="Nivel">
+                    {TIERS.map((t) => (
+                      <div key={t.key} className={"mh-wz-lvl-t" + (t.levels.includes(levelChoice) ? " is-on" : "")}>
+                        <div className="mh-wz-lvl-th"><b>{t.label}</b><small>{t.sub}</small></div>
+                        <div className="mh-wz-lvl-btns">
+                          {t.levels.map((n) => (
+                            <button key={n} type="button" role="radio" aria-checked={n === levelChoice} className={n === levelChoice ? "is-on" : ""} onClick={() => setLevelChoice(n)}>{n}</button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               ) : wizardStep === "name" ? (
                 <div className="mh-wz-pane">
                   <Field label="Nombre del personaje">
                     <input
-                      className="mh-input"
+                      className="mh-input mh-wz-name"
                       autoFocus
                       placeholder="Escribe un nombre..."
                       value={draftName}
@@ -27001,12 +27021,14 @@ export default function App({ onSignOut }) {
 
                   <div>
                     <label className="mh-label">Pronombres</label>
-                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <div className="mh-wz-seg" role="radiogroup" aria-label="Pronombres">
                       {PRONOUN_OPTIONS.map((p) => (
                         <div
                           key={p}
+                          role="radio"
+                          aria-checked={draftPronoun === p}
                           onClick={() => setDraftPronoun(p)}
-                          className={"mh-chip" + (draftPronoun === p ? " active" : "")}
+                          className={"mh-wz-segi" + (draftPronoun === p ? " is-on" : "")}
                         >
                           {p}
                         </div>
@@ -27014,7 +27036,7 @@ export default function App({ onSignOut }) {
                     </div>
                     {draftPronoun === "Otro" && (
                       <input
-                        className="mh-input"
+                        className="mh-input mh-wz-name is-sm"
                         style={{ marginTop: 10 }}
                         placeholder="Escribe tus pronombres..."
                         value={draftPronounCustom}
