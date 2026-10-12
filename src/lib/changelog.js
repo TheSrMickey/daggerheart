@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-11",
     title: "Imágenes propias en las escenas y viñeta",
     items: [
+      { tag: "mejora", text: "Creación de personaje: las ascendencias llevan un icono (autómata, enano, elfo, hada, orco…) en lugar de la inicial. Móvil: las Formas de Bestia se ven bien: los rangos pasan a una fila deslizable debajo del título, las tarjetas muestran nombre, ventaja y los tres valores (rasgo, evasión y daño) sin recortes, y la lista usa el scroll de la página." },
       { tag: "mejora", text: "Cartas de subclase del Druida: Guardián de los Elementos y Guardián de la Renovación estrenan ilustración en alta calidad." },
       { tag: "mejora", text: "Transformaciones: nuevas ilustraciones en alta calidad (Vampiro, Hombre Lobo, Reanimado, Cambiaformas, Fantasma y Semidiós) y, al crear un personaje, se eligen en una baraja de cartas donde «Ninguna» es la primera. La carta de delante es la elegida; se cambia con las flechas, el teclado ← → o pulsando otra carta." },
       { tag: "mejora", text: "Ilustraciones de las 15 comunidades en alta calidad: las del manual básico (De Alta Cuna, Del Saber, Del Orden, De las Cumbres, Del Mar, De las Sombras, De las Profundidades, Errante y Salvaje) se suman a las de Hope & Fear. De Alta Cuna cambia a la ilustración oficial." },

@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 import { Globe, Tent, Haze, CloudFog, CloudRain, CloudLightning, Beer } from "lucide-react";
 import SceneFx, { SCENE_FX } from "./SceneFx";
-import { Info, Lightbulb } from "lucide-react";
+import { Info, Lightbulb, Sprout, Bot, Pickaxe, TreePine, Cog, Ear, Angry, Axe, Banana, Cloud } from "lucide-react";
 import { Squirrel, Layers, CalendarDays, Vote, ScrollText as ChronIcon, Megaphone, Link2 } from "lucide-react";
 import { History, LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus, Box, LayoutGrid, Bird, Fish, Bug, Rabbit, Cat, Turtle, Clock, CircleDashed, Slash } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
@@ -1064,6 +1064,12 @@ const CLASS_SUGGESTED = {
   Mago: { traits: { t_agility: -1, t_strength: 0, t_finesse: 0, t_instinct: 1, t_presence: 1, t_knowledge: 2 }, primary: "Gran bastón", armor: "Armadura de cuero" },
 };
 // Desglose de una estadística: valor base y cuánto sube (verde) o baja (rojo) por cada elección anterior.
+const ANCESTRY_ICONS = {
+  "Autómata": Bot, Dracona: Wind, Enano: Pickaxe, Elfo: TreePine, Hada: Sparkles, Fauno: Music, Firbolg: Sprout, Fungril: Droplets,
+  Galapa: Shell, Gigante: Maximize2, Gnomo: Cog, Goblin: Ear, Mediano: Clover, Humano: User, Infernal: Angry, Katari: Cat,
+  Orco: Axe, Ribbet: Waves, Simiah: Banana, Aetheris: Feather, "Estirpe del Cielo": Cloud, "Estirpe de la Marea": Waves,
+  "Estirpe de la Tierra": Mountain, "Estirpe de la Brasa": Flame,
+};
 const COMMUNITY_ICONS = {
   "De Alta Cuna": Star, "Del Saber": BookOpen, "Del Orden": Shield, "De las Cumbres": Mountain, "Del Mar": Waves, "De las Sombras": Moon,
   "De las Profundidades": Gem, Errante: Compass, Salvaje: Leaf, "De las Dunas": Sun, "Del Hogar": Home,
@@ -5710,6 +5716,20 @@ const sharedStyles = `
   .mh-bf-st.is-dmg { min-width: 52px; } .mh-bf-st small { font-size: 9px; letter-spacing: .06em; color: var(--mh-muted); } .mh-bf-st b { font-size: 14px; color: var(--mh-ink); }
   .mh-bf-lock { position: absolute; top: 6px; right: 8px; color: var(--bc); }
   @media (max-width: 640px) { .mh-bf { flex-wrap: wrap; } .mh-bf-stats { width: 100%; justify-content: flex-end; } }
+  .mh-bf-tiers { display: flex; gap: 6px; margin: 0 0 12px; overflow-x: auto; scrollbar-width: none; flex-shrink: 0; padding: 1px; } .mh-bf-tiers::-webkit-scrollbar { display: none; }
+  .mh-bf-tiers button { all: unset; box-sizing: border-box; flex: 1 0 auto; text-align: center; cursor: pointer; padding: 8px 14px; border-radius: 20px; font: 600 12.5px 'Inter', system-ui, sans-serif; white-space: nowrap; color: var(--mh-ink3); border: 1px solid var(--mh-line2); background: color-mix(in srgb, var(--mh-ink) 4%, transparent); }
+  .mh-bf-tiers button.is-on { color: #1F1606; background: #E3B04B; border-color: transparent; font-weight: 700; }
+  .mh-root.is-mobile .mh-bf-grid { flex: none; overflow: visible; gap: 10px; }
+  .mh-root.is-mobile .mh-bf { flex: none; flex-wrap: wrap; align-items: flex-start; min-height: 0; padding: 14px 14px 12px; gap: 10px; border-radius: 16px; }
+  .mh-root.is-mobile .mh-bf-main { flex: 1 1 100%; }
+  .mh-root.is-mobile .mh-bf-name { font-size: 16px; }
+  .mh-root.is-mobile .mh-bf-an, .mh-root.is-mobile .mh-bf-adv { white-space: normal; font-size: 12px; }
+  .mh-root.is-mobile .mh-bf-img { width: 100%; background-position: center 28%; }
+  .mh-root.is-mobile .mh-bf-fade, .mh-root.is-mobile .mh-bf.is-on .mh-bf-fade { background: linear-gradient(180deg, var(--fb) 0%, color-mix(in srgb, var(--fb) 88%, transparent) 30%, color-mix(in srgb, var(--fb) 38%, transparent) 62%, color-mix(in srgb, var(--fb) 8%, transparent) 100%); }
+  .mh-root.is-mobile .mh-bf-stats { flex: 1 1 100%; width: 100%; margin-left: 0; align-self: stretch; justify-content: stretch; gap: 6px; }
+  .mh-root.is-mobile .mh-bf .mh-bf-st { flex: 1 1 0; min-width: 0; padding: 6px 8px; }
+  .mh-root.is-mobile .mh-bf-st small { font-size: 9.5px; } .mh-root.is-mobile .mh-bf-st b { font-size: 14px; }
+  .mh-root.is-mobile .mh-bf-lock { top: 10px; right: 12px; }
   .mh-tour { position: fixed; inset: 0; z-index: 100000; cursor: pointer; font-family: 'Inter', system-ui, sans-serif; }
   .mh-tour-spot { position: fixed; border-radius: 14px; box-shadow: 0 0 0 9999px rgba(6, 8, 18, .76); outline: 2px solid #8FA8FF; transition: left .3s ease, top .3s ease, width .3s ease, height .3s ease; pointer-events: none; }
   .mh-tour-card { position: fixed; width: 330px; padding: 14px 16px; border-radius: 14px; background: #171c36; border: 1px solid #3d4a8a; color: #e8ebff; box-shadow: 0 12px 40px rgba(0,0,0,.5); animation: mh-tour-in .25s ease both; cursor: default; }
@@ -18053,10 +18073,11 @@ export default function App({ onSignOut }) {
                       {activeTab === "beastforms" && isDruidLike(c) && (() => {
                         const stressFull = Number(c.stress_marked || 0) >= Number(c.r_stress || 0);
                         return (
-                          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(12, 1fr)", gap: 18, flex: 1, maxHeight: armaduraHeight || "calc(100vh - 280px)" }}>
+                          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(12, 1fr)", gap: 18, flex: 1, maxHeight: isMobile ? "none" : armaduraHeight || "calc(100vh - 280px)" }}>
                             <Panel
                               span={12}
                               title={
+                                isMobile ? "Formas de Bestia" : (
                                 <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
                                   <span>Formas de Bestia</span>
                                   <div style={{ display: "flex", gap: 6 }}>
@@ -18071,6 +18092,7 @@ export default function App({ onSignOut }) {
                                     ))}
                                   </div>
                                 </div>
+                                )
                               }
                               hidden={conditions.includes("Escondido") || conditions.includes("Oculto")}
                               restrained={conditions.includes("Inmovilizado")}
@@ -18079,6 +18101,15 @@ export default function App({ onSignOut }) {
                               flying={conditions.includes("Volando")}
                               retracted={conditions.includes("Retraído")}
                             >
+                              {isMobile && (
+                                <div className="mh-bf-tiers" role="tablist" aria-label="Rango">
+                                  {[1, 2, 3, 4].map((t) => (
+                                    <button key={t} type="button" role="tab" aria-selected={beastformTierFilter === t} className={beastformTierFilter === t ? "is-on" : ""} onClick={() => setBeastformTierFilter(t)}>
+                                      Rango {t}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
                               {stressFull && !c.f_beastform && (
                                 <div style={{ fontSize: 11.5, color: "#D9644E", marginBottom: 14, fontWeight: 600, flexShrink: 0 }}>
                                   Sin casillas de Estrés libres — no puedes activar ninguna forma hasta quitarte algo de Estrés.
@@ -27413,7 +27444,7 @@ export default function App({ onSignOut }) {
                         )}
                         {list.map((it) => {
                           const ord = originTab === "ancestry" && mixAncestry ? draftAncestries.indexOf(it.key) : -1;
-                          const CIcon = COMMUNITY_ICONS[it.key];
+                          const CIcon = originTab === "ancestry" ? ANCESTRY_ICONS[it.key] : COMMUNITY_ICONS[it.key];
                           const hf = (originTab === "transformation" ? it.key !== "Ninguna" : it.expansion) ? (originTab === "transformation" || it.expansion !== "The Void" ? "H&F" : "Void") : null;
                           const cls2 = (focus?.key === it.key ? " is-focus" : "") + (isSel(it.key) ? " is-on" : "") + (ord >= 0 ? " is-ord" + (ord + 1) : "");
                           if (originTab === "transformation") {
@@ -27439,7 +27470,7 @@ export default function App({ onSignOut }) {
                           }
                           return (
                             <button key={it.key} type="button" aria-pressed={isSel(it.key)} className={"mh-wz-it" + cls2} onClick={() => pick(it.key)}>
-                              <span className="mh-wz-ig" aria-hidden="true">{CIcon ? <CIcon size={16} /> : it.key.charAt(0)}</span>
+                              <span className="mh-wz-ig" aria-hidden="true">{CIcon ? <CIcon size={originTab === "ancestry" ? 17 : 16} strokeWidth={1.8} /> : it.key.charAt(0)}</span>
                               <span className="mh-wz-it-n">{it.key}</span>
                               {hf && <em>{hf}</em>}
                               {ord >= 0 && <span className="mh-wz-ordb">{ord + 1}.ª</span>}
