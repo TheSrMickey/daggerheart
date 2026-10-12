@@ -37,6 +37,7 @@ function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
         {modal && <button type="button" className="mh-cardc-close" onClick={onClose} aria-label="Cerrar"><X size={14} /></button>}
       </div>
       <div className="mh-cardc-badge">{dom && <span className="mh-cardc-gem" title={"Nivel " + c.level}>{c.level}</span>}</div>
+      {dom && <span className="mh-cardc-dom">{c.sub}</span>}
       <div style={{ padding: "0 18px", textAlign: "center", flexShrink: 0, marginTop: dom ? 16 : 8 }}>
         <FitTitle text={c.key} max={19} min={14} className="mh-serif" style={{ fontWeight: 700, color: "var(--mh-ink)", maxHeight: "2.4em", overflow: "hidden" }} />
         <div className="mh-cardc-sub">{c.sub}</div>

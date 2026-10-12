@@ -2783,16 +2783,19 @@ const sharedStyles = `
     width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
     background: linear-gradient(160deg, var(--mh-panel3) 0%, #3A3150 100%); color: rgba(236,230,218,.45);
   }
-  /* Cartas de dominio: la ilustración es el fondo de toda la carta */
-  .mh-cardc.is-bg { --mh-ink: #F4F0FA; --mh-ink2: #E6E0F0; --mh-ink3: #D6CFE3; --mh-muted: #BFB8CE; --mh-muted2: #A59DB8; --mh-gold-ink: #EDC15F; background: #10112a !important; text-shadow: 0 1px 8px rgba(0,0,0,.75); }
-  .mh-cardc.is-bg .mh-cardc-art { position: static; margin: 0; border: 0; border-radius: 0; overflow: visible; background: none; }
-  .mh-cardc.is-bg .mh-cardc-art img, .mh-cardc.is-bg .mh-cardc-noart { position: absolute; left: 0; top: 0; width: 100%; height: calc(var(--ah, 120px) + 100px); object-fit: cover; object-position: 50% 22%; z-index: 0; -webkit-mask-image: linear-gradient(180deg, #000 50%, transparent 100%); mask-image: linear-gradient(180deg, #000 50%, transparent 100%); }
-  .mh-cardc.is-bg .mh-cardc-art::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(180deg, transparent 0, transparent calc(var(--ah, 120px) - 30px), rgba(10,10,28,.5) calc(var(--ah, 120px) + 30px), rgba(10,10,28,.86) calc(var(--ah, 120px) + 96px), rgba(10,10,28,.95) 100%); }
-  .mh-cardc.is-bg .mh-cardc-noart { align-items: flex-start; padding-top: 26px; box-sizing: border-box; background: linear-gradient(160deg, var(--mh-panel3, #2a2a4a) 0%, #3A3150 100%); }
-  .mh-cardc.is-bg .mh-cardc-close { z-index: 4; }
-  .mh-cardc.is-bg .mh-cardc-badge, .mh-cardc.is-bg > div:not(.mh-cardc-art):not(.mh-glare):not(.mh-holo) { position: relative; z-index: 2; }
-  .mh-cardc.is-bg .mh-cardc-sub { color: color-mix(in srgb, var(--cc) 35%, #fff); }
-  .mh-cardc.is-bg .mh-cardc-gem { background: rgba(13,13,34,.82); color: #fff; border-color: #fff; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+  /* Cartas de dominio: la ilustración es el fondo de toda la carta (nivel arriba a la izquierda, dominio arriba a la derecha) */
+  .mh-cardc.is-bg { --mh-ink: #F4F0FA; --mh-ink2: #E6E0F0; --mh-ink3: #D6CFE3; --mh-muted: #BFB8CE; --mh-muted2: #A59DB8; --mh-gold-ink: #EDC15F; background: #10112a !important; text-shadow: 0 1px 8px rgba(0,0,0,.8); }
+  .mh-cardc.is-bg .mh-cardc-art { position: static; margin: 0; border: 0; border-radius: 0; overflow: visible; background: none; min-height: 146px; }
+  .mh-cardc.is-bg .mh-cardc-art img, .mh-cardc.is-bg .mh-cardc-noart { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 46% 30%; z-index: 0; }
+  .mh-cardc.is-bg .mh-cardc-noart { align-items: flex-start; padding-top: 70px; box-sizing: border-box; background: linear-gradient(160deg, var(--mh-panel3, #2a2a4a) 0%, #3A3150 100%); }
+  .mh-cardc.is-bg .mh-cardc-art::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(180deg, rgba(10,10,28,0) 0%, rgba(10,10,28,0) 20%, rgba(10,10,28,.8) 44%, rgba(10,10,28,.96) 100%); }
+  .mh-cardc.is-bg .mh-cardc-close { z-index: 5; top: 46px; left: auto; right: 12px; }
+  .mh-cardc.is-bg .mh-cardc-badge { position: absolute; top: 12px; left: 12px; height: auto; z-index: 4; display: block; }
+  .mh-cardc.is-bg .mh-cardc-gem { translate: none; width: 30px; height: 30px; font-size: 13px; background: rgba(13,13,34,.82); color: #fff; border: 1.5px solid #fff; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+  .mh-cardc.is-bg .mh-cardc-tier { translate: none; }
+  .mh-cardc.is-bg .mh-cardc-dom { position: absolute; top: 12px; right: 12px; z-index: 4; font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; padding: 5px 11px; border-radius: 20px; background: rgba(13,13,34,.72); border: 1px solid color-mix(in srgb, var(--cc) 60%, transparent); color: color-mix(in srgb, var(--cc) 30%, #fff); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); white-space: nowrap; }
+  .mh-cardc.is-bg .mh-cardc-sub, .mh-cardc.is-bg .mh-cardc-orn { display: none; }
+  .mh-cardc.is-bg > div:not(.mh-cardc-art):not(.mh-cardc-badge):not(.mh-glare):not(.mh-holo) { position: relative; z-index: 2; }
   .mh-cardc-close {
     all: unset; cursor: pointer; position: absolute; top: 9px; left: 9px; width: 26px; height: 26px; border-radius: 50%;
     background: rgba(0,0,0,.42); color: #fff; display: flex; align-items: center; justify-content: center;
@@ -6827,6 +6830,7 @@ function FanFace({ c, col }) {
                 <div className="mh-cardc-badge">
                   {c.subclass || c.rowCard ? null : c.weapon ? <span className="mh-cardc-tier" style={{ background: col }}>{TIER_COLORS[c.level]?.label}</span> : <span className="mh-cardc-gem">{c.level}</span>}
                 </div>
+                {bgArt && <span className="mh-cardc-dom">{c.domain} · {c.type}</span>}
                 <div style={{ padding: "0 18px", textAlign: "center", flexShrink: 0, marginTop: c.subclass || c.rowCard ? 8 : 16 }}>
                   <FitTitle text={c.key} max={19} min={14} className="mh-serif" style={{ fontWeight: 700, color: "var(--mh-ink)", maxHeight: "2.4em", overflow: "hidden" }} />
                   <div className="mh-cardc-sub">{c.weapon ? `${c.type} · ${c.hands}` : c.subclass || c.rowCard ? c.kicker : `${c.domain} · ${c.type}`}</div>
@@ -24140,6 +24144,7 @@ export default function App({ onSignOut }) {
                         <span className="mh-cardc-tier" style={{ background: TIER_COLORS[d.tier].color }}>{TIER_COLORS[d.tier].label}</span>
                       ) : null}
                     </div>
+                    {d.domain && subtitle && <span className="mh-cardc-dom">{subtitle}</span>}
                     <div style={{ padding: "0 18px", textAlign: "center", flexShrink: 0, marginTop: d.domain || d.tier ? 16 : 8 }}>
                       <FitTitle text={d.title} max={19} min={14} className="mh-serif" style={{ fontWeight: 700, color: "var(--mh-ink)", maxHeight: "2.4em", overflow: "hidden" }} />
                       {subtitle && <div className="mh-cardc-sub">{subtitle}</div>}
