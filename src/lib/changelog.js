@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-11",
     title: "Imágenes propias en las escenas y viñeta",
     items: [
+      { tag: "mejora", text: "Ilustraciones de las 15 comunidades en alta calidad: las del manual básico (De Alta Cuna, Del Saber, Del Orden, De las Cumbres, Del Mar, De las Sombras, De las Profundidades, Errante y Salvaje) se suman a las de Hope & Fear. De Alta Cuna cambia a la ilustración oficial." },
       { tag: "mejora", text: "Más ilustraciones: Estirpe del Cielo y Estirpe de la Marea, y las comunidades De las Dunas, Del Hogar, De la Escarcha, De la Guerra, Libre y Renacido ya tienen su imagen de fondo en la creación de personaje y en Cartas. De Alta Cuna conserva la suya." },
       { tag: "mejora", text: "Ilustraciones de las ascendencias: 22 ascendencias (Autómata, Dracona, Enano, Elfo, Hada, Fauno, Firbolg, Fungril, Galapa, Gigante, Goblin, Mediano, Humano, Infernal, Katari, Orco, Ribbet, Simiah, Gnomo, Aetheris, Estirpe de la Tierra y de la Brasa) tienen ya su imagen en buena calidad, que se ve de fondo en la creación de personaje y en la pestaña Cartas. El elfo cambia a la ilustración oficial de la arquera." },
       { tag: "mejora", text: "Creación de personaje: en ascendencia y comunidad, la ilustración (si la tiene, como Elfo o De Alta Cuna) pasa a ser el fondo del detalle, con un degradado oscuro y las características en tarjetas de cristal. Las estadísticas iniciales se rediseñan sin círculos: cada valor sale una sola vez, con las casillas que tendrás en la hoja y de dónde viene (clase y modificadores)." },
