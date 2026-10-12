@@ -2444,6 +2444,7 @@ const DOMAIN_CARDS = {
   Arcano: [
     {
       key: "Guarda Rúnica",
+      image: "/cartas-dominio/guarda-runica.webp",
       level: 1,
       type: "Hechizo",
       recall: 0,
@@ -2451,6 +2452,7 @@ const DOMAIN_CARDS = {
     },
     {
       key: "Desatar el Caos",
+      image: "/cartas-dominio/desatar-el-caos.webp",
       level: 1,
       type: "Hechizo",
       recall: 1,
@@ -2458,6 +2460,7 @@ const DOMAIN_CARDS = {
     },
     {
       key: "Caminar por Paredes",
+      image: "/cartas-dominio/caminar-por-paredes.webp",
       level: 1,
       type: "Hechizo",
       recall: 1,
@@ -2467,6 +2470,7 @@ const DOMAIN_CARDS = {
   Sabio: [
     {
       key: "Rastreador Dotado",
+      image: "/cartas-dominio/rastreador-dotado.webp",
       level: 1,
       type: "Habilidad",
       recall: 0,
@@ -4859,6 +4863,8 @@ const sharedStyles = `
   .mh-wz-page .mh-wz-det.has-hero { background: linear-gradient(180deg, rgba(10,10,28,0) 0%, rgba(10,10,28,.2) 30%, rgba(10,10,28,.86) 62%, rgba(10,10,28,.96) 100%), var(--hero) 50% 8% / cover no-repeat; --mh-ink: #F4F0FA; --mh-ink2: #E6E0F0; --mh-ink3: #D6CFE3; --mh-muted: #BFB8CE; --mh-muted2: #A59DB8; text-shadow: 0 1px 8px rgba(0,0,0,.8); padding: 22px 24px; border-radius: 0 25px 25px 0; }
   .mh-wz-det.has-hero > :first-child { margin-top: auto; }
   .mh-wz-det.has-hero .mh-wz-img { display: none; }
+  .mh-wz-page .mh-wz-body.is-split .mh-wz-det.mh-noscroll { -webkit-mask-image: none; mask-image: none; padding-bottom: 22px; }
+  .mh-wz-page .mh-wz-body.is-split .mh-wz-list { -webkit-mask-image: none; mask-image: none; }
   .mh-wz-page .mh-wz-det.has-hero .mh-wz-go { margin-top: 4px; }
   .mh-wz-det.has-hero .mh-wz-dn { font-size: 34px; text-transform: uppercase; letter-spacing: .04em; }
   .mh-wz-det.has-hero .mh-wz-dm { text-transform: uppercase; letter-spacing: .12em; font-size: 10px; }
@@ -4895,6 +4901,11 @@ const sharedStyles = `
   .dpk-rm { all: unset; cursor: pointer; position: absolute; right: -6px; top: -6px; z-index: 4; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: #C0504A; box-shadow: 0 4px 10px rgba(0,0,0,.5); opacity: 0; transition: opacity .15s; }
   .dpk-card:hover .dpk-rm, .dpk-rm:focus-visible { opacity: 1; }
   .dpk-h { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; flex-shrink: 0; }
+  .dpk-tip { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-radius: 14px; font-size: 12.5px; line-height: 1.4; color: var(--mh-ink2); background: color-mix(in srgb, #E3B04B 12%, transparent); border: 1px solid #E3B04B55; flex-shrink: 0; } .dpk-tip svg { flex-shrink: 0; color: #E3B04B; } .dpk-tip b { color: var(--mh-ink); }
+  .dpk-tabs button { position: relative; }
+  .dpk-tabs button.is-new { box-shadow: 0 0 0 1.5px #E3B04B, 0 0 16px #E3B04B66; animation: dpk-pulse 1.6s ease-in-out infinite; }
+  .dpk-new { text-decoration: none; margin-left: 6px; font-size: 9.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: 2px 7px; border-radius: 9px; background: #E3B04B; color: #1F1606; }
+  @keyframes dpk-pulse { 50% { box-shadow: 0 0 0 1.5px #E3B04B, 0 0 4px #E3B04B33; } }
   .dpk-lv { font-size: 12px; color: var(--mh-muted2); }
   .dpk-shelf { flex-shrink: 0; max-height: 178px; overflow-y: auto; scrollbar-width: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; padding: 2px; }
   .dpk-shelf::-webkit-scrollbar { display: none; }
@@ -7272,6 +7283,7 @@ function DomainPicker({ entries, sel, limit, level, domains, colors, onChange })
   const [pend, setPend] = useState(null);
   const [out, setOut] = useState(null);
   const [hov, setHov] = useState(null);
+  const [seen, setSeen] = useState(() => new Set([domains[0]]));
   const [box, setBox] = useState({ w: 700, h: 360 });
   const deckRef = useRef(null);
   const rootRef = useRef(null);
@@ -7354,11 +7366,18 @@ function DomainPicker({ entries, sel, limit, level, domains, colors, onChange })
           );
         })}
       </div>
+      {domains.length > 1 && (
+        <div className="dpk-tip" role="note">
+          <Layers size={15} />
+          <span>Tu clase usa <b>{domains.join(" y ")}</b>. Puedes elegir cartas de <b>cualquiera de los dos dominios</b>: cambia de dominio con las pestañas de abajo para ver las demás.</span>
+        </div>
+      )}
       <div className="dpk-h">
-        <div className="mh-seg is-fit" role="tablist">
+        <div className="mh-seg is-fit dpk-tabs" role="tablist">
           {domains.map((d) => (
-            <button key={d} type="button" role="tab" aria-selected={dom === d} className={dom === d ? "on" : ""} onClick={() => setDom(d)}>
+            <button key={d} type="button" role="tab" aria-selected={dom === d} className={(dom === d ? "on" : "") + (!seen.has(d) ? " is-new" : "")} onClick={() => (setDom(d), setSeen((p) => new Set([...p, d])))}>
               {d} <i>{entries.filter((e) => e.domain === d).length}</i>
+              {!seen.has(d) && <u className="dpk-new">Ver más</u>}
             </button>
           ))}
         </div>
@@ -9840,9 +9859,10 @@ export default function App({ onSignOut }) {
     const canCast = !!spellcastTraitFor(cls, (SUBCLASSES[cls] || [])[subclassIndex]?.key);
     const mode = !canCast && gearFilter === "magico" ? "todas" : gearFilter;
     const src = kind === "primary" ? PRIMARY_WEAPONS : SECONDARY_WEAPONS;
+    const recSet = recommendedGear(cls)[kind === "primary" ? "primary" : "secondary"]; // las recomendadas van primero dentro de cada rango
     return src
       .filter((w) => w.tier <= tierForLevel(levelChoice) && (kind !== "primary" || !w.magic || canCast) && (mode === "todas" || (mode === "magico") === isMagicWeapon(w)))
-      .sort((x, y) => x.tier - y.tier);
+      .sort((x, y) => x.tier - y.tier || (recSet.has(y.key) ? 1 : 0) - (recSet.has(x.key) ? 1 : 0));
   };
 
   const clearTraits = () => {
@@ -27932,7 +27952,7 @@ export default function App({ onSignOut }) {
 
                   {wizardStep === "armor" && (
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                      {ARMORS.filter((a) => a.tier <= tierForLevel(levelChoice)).map((a, gi, gearList) => {
+                      {ARMORS.filter((a) => a.tier <= tierForLevel(levelChoice)).sort((x, y) => x.tier - y.tier || (recommendedGear(CLASSES[carouselIndex]?.key).armor.has(y.key) ? 1 : 0) - (recommendedGear(CLASSES[carouselIndex]?.key).armor.has(x.key) ? 1 : 0)).map((a, gi, gearList) => {
                         const selected = draftArmor === a.key;
                         const rec = recommendedGear(CLASSES[carouselIndex]?.key).armor.has(a.key);
                         return (

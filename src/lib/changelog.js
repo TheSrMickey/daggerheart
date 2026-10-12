@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-11",
     title: "Imágenes propias en las escenas y viñeta",
     items: [
+      { tag: "mejora", text: "Creación de personaje: el equipo recomendado (arma principal, secundaria y armadura) sale ahora el primero de su rango; desaparece el desvanecido inferior del detalle de ascendencia y comunidad; y en las cartas de dominio hay un aviso (y las pestañas de dominio que aún no has visto parpadean con «Ver más») para que no pases por alto que puedes elegir cartas de los dos dominios de tu clase. Además, Rastreador Dotado, Guarda Rúnica, Desatar el Caos y Caminar por Paredes tienen ya su ilustración." },
       { tag: "mejora", text: "Creación de personaje: las ascendencias llevan un icono (autómata, enano, elfo, hada, orco…) en lugar de la inicial. Móvil: las Formas de Bestia se ven bien: los rangos pasan a una fila deslizable debajo del título, las tarjetas muestran nombre, ventaja y los tres valores (rasgo, evasión y daño) sin recortes, y la lista usa el scroll de la página." },
       { tag: "mejora", text: "Cartas de subclase del Druida: Guardián de los Elementos y Guardián de la Renovación estrenan ilustración en alta calidad." },
       { tag: "mejora", text: "Transformaciones: nuevas ilustraciones en alta calidad (Vampiro, Hombre Lobo, Reanimado, Cambiaformas, Fantasma y Semidiós) y, al crear un personaje, se eligen en una baraja de cartas donde «Ninguna» es la primera. La carta de delante es la elegida; se cambia con las flechas, el teclado ← → o pulsando otra carta." },
