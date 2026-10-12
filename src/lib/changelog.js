@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-11",
     title: "Imágenes propias en las escenas y viñeta",
     items: [
+      { tag: "mejora", text: "Cartas de dominio: la ilustración pasa a ser el fondo de toda la carta, con un degradado oscuro desde abajo que sostiene el texto. Así cualquier tamaño de imagen encaja y se ve entera. Se aplica en la mano, el cambio de cartas, el catálogo y la carta ampliada; el resto de cartas (armas, subclases…) no cambia." },
       { tag: "mejora", text: "Creación de personaje rediseñada con el estilo de cristal: los pasos se agrupan en un panel con contador por bloque, las clases son baldosas con su emblema y dominios, y a la derecha hay una tarjeta de vista previa que se va rellenando (ilustración de la clase, nombre, etiquetas y rasgos). Atrás y Siguiente van en una barra flotante." },
       { tag: "mejora", text: "Pestaña Personajes: las tarjetas muestran la ilustración de la clase del personaje (a media tarjeta, fundida con el cristal), con el emblema de la clase en una insignia arriba. Es provisional, hasta que cada jugador pueda subir la imagen de su personaje." },
       { tag: "mejora", text: "Pestaña Personajes: nuevas tarjetas de cristal a juego con las barras laterales. Cada personaje tiene su emblema grande con el color de su clase, nivel, etiquetas y sus PV, estrés y esperanza como casillas iluminadas. Al pasar el ratón la tarjeta se eleva y se ilumina, y aparece el botón «Abrir ficha»; la papelera solo se ve al pasar el ratón." },

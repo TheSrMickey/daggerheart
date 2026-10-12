@@ -2783,6 +2783,16 @@ const sharedStyles = `
     width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
     background: linear-gradient(160deg, var(--mh-panel3) 0%, #3A3150 100%); color: rgba(236,230,218,.45);
   }
+  /* Cartas de dominio: la ilustración es el fondo de toda la carta */
+  .mh-cardc.is-bg { --mh-ink: #F4F0FA; --mh-ink2: #E6E0F0; --mh-ink3: #D6CFE3; --mh-muted: #BFB8CE; --mh-muted2: #A59DB8; --mh-gold-ink: #EDC15F; background: #10112a !important; text-shadow: 0 1px 8px rgba(0,0,0,.75); }
+  .mh-cardc.is-bg .mh-cardc-art { position: static; margin: 0; border: 0; border-radius: 0; overflow: visible; background: none; }
+  .mh-cardc.is-bg .mh-cardc-art img, .mh-cardc.is-bg .mh-cardc-noart { position: absolute; left: 0; top: 0; width: 100%; height: calc(var(--ah, 120px) + 100px); object-fit: cover; object-position: 50% 22%; z-index: 0; -webkit-mask-image: linear-gradient(180deg, #000 50%, transparent 100%); mask-image: linear-gradient(180deg, #000 50%, transparent 100%); }
+  .mh-cardc.is-bg .mh-cardc-art::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(180deg, transparent 0, transparent calc(var(--ah, 120px) - 30px), rgba(10,10,28,.5) calc(var(--ah, 120px) + 30px), rgba(10,10,28,.86) calc(var(--ah, 120px) + 96px), rgba(10,10,28,.95) 100%); }
+  .mh-cardc.is-bg .mh-cardc-noart { align-items: flex-start; padding-top: 26px; box-sizing: border-box; background: linear-gradient(160deg, var(--mh-panel3, #2a2a4a) 0%, #3A3150 100%); }
+  .mh-cardc.is-bg .mh-cardc-close { z-index: 4; }
+  .mh-cardc.is-bg .mh-cardc-badge, .mh-cardc.is-bg > div:not(.mh-cardc-art):not(.mh-glare):not(.mh-holo) { position: relative; z-index: 2; }
+  .mh-cardc.is-bg .mh-cardc-sub { color: color-mix(in srgb, var(--cc) 35%, #fff); }
+  .mh-cardc.is-bg .mh-cardc-gem { background: rgba(13,13,34,.82); color: #fff; border-color: #fff; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
   .mh-cardc-close {
     all: unset; cursor: pointer; position: absolute; top: 9px; left: 9px; width: 26px; height: 26px; border-radius: 50%;
     background: rgba(0,0,0,.42); color: #fff; display: flex; align-items: center; justify-content: center;
@@ -6802,9 +6812,10 @@ const readIsoPref = () => {
 function FanFace({ c, col }) {
   const Art = c.weapon ? weaponIcon(c.key) : c.rowCard ? c.Icon || Sparkles : c.subclass ? Flame : DOMAIN_ICONS[c.domain] || Sparkles;
   const dmg = c.weapon ? c.damage.match(/^(\S+)\s*(.*)$/) : null;
+  const bgArt = !c.weapon && !c.subclass && !c.rowCard && !!c.domain; // carta de dominio: la ilustración es el fondo
   return (
-              <div className="mh-card mh-cardc mh-fan-in" style={{ margin: 0, padding: 0, overflow: "hidden", borderRadius: 22, display: "flex", flexDirection: "column", border: (c.weapon ? "3px" : "2px") + " solid " + col, position: "relative" }}>
-                <div className="mh-cardc-art" style={{ height: 124 }}>
+              <div className={"mh-card mh-cardc mh-fan-in" + (bgArt ? " is-bg" : "")} style={{ margin: 0, padding: 0, overflow: "hidden", borderRadius: 22, display: "flex", flexDirection: "column", border: (c.weapon ? "3px" : "2px") + " solid " + col, position: "relative" }}>
+                <div className="mh-cardc-art" style={{ height: 124, "--ah": "124px" }}>
                   {c.image ? (
                     <img src={c.image} alt={c.key} />
                   ) : (
@@ -24086,7 +24097,7 @@ export default function App({ onSignOut }) {
                   return (
                   <div className="mh-cardc-wrap" onClick={(e) => e.stopPropagation()}>
                   <div
-                    className="mh-card mh-card-anim mh-tilt mh-cardc"
+                    className={"mh-card mh-card-anim mh-tilt mh-cardc" + (d.domain ? " is-bg" : "")}
                     style={{
                       "--glow": alpha(cardColor, 33),
                       "--cc": cardColor,
@@ -24108,7 +24119,7 @@ export default function App({ onSignOut }) {
                   >
                     <div className="mh-glare" />
                     {d.tier === 4 && <div className="mh-holo" />}
-                    <div className="mh-cardc-art" style={{ height: artHeight }}>
+                    <div className="mh-cardc-art" style={{ height: artHeight, "--ah": artHeight + "px" }}>
                       {d.image ? (
                         <img src={d.image} alt={d.title} />
                       ) : (

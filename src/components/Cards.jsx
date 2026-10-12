@@ -27,12 +27,12 @@ function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
   const dom = c.kind === "dominio";
   return (
     <div
-      className={"mh-card mh-cardc" + (modal ? " mh-card-anim mh-tilt" : "")}
+      className={"mh-card mh-cardc" + (modal ? " mh-card-anim mh-tilt" : "") + (dom ? " is-bg" : "")}
       style={{ "--glow": alpha(col, 51), "--cc": col, margin: 0, width: modal ? "min(300px, 100%)" : 300, height: modal ? "min(420px, 80vh)" : 420, maxWidth: "100%", padding: 0, overflow: "hidden", borderRadius: 22, display: "flex", flexDirection: "column", border: "2px solid " + col, position: "relative", textAlign: "left" }}
       {...(tilt || {})}
     >
       <div className="mh-glare" />
-      <div className="mh-cardc-art" style={{ height: total > 600 ? 84 : total > 320 ? 100 : 124 }}>
+      <div className="mh-cardc-art" style={{ height: total > 600 ? 84 : total > 320 ? 100 : 124, "--ah": (total > 600 ? 84 : total > 320 ? 100 : 124) + "px" }}>
         {c.image ? <img src={c.image} alt={modal ? c.key : ""} /> : <div className="mh-cardc-noart" style={{ color: col }}><I size={50} strokeWidth={1.5} /></div>}
         {modal && <button type="button" className="mh-cardc-close" onClick={onClose} aria-label="Cerrar"><X size={14} /></button>}
       </div>
