@@ -4780,6 +4780,8 @@ const sharedStyles = `
   .mh-dk-sh { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--mh-muted2); margin: 4px 4px 2px; }
   .mh-dk-fe { padding: 12px 14px; border-radius: 16px; background: color-mix(in srgb, var(--mh-ink) 5%, transparent); border: 1px solid var(--mh-line); border-left: 3px solid var(--tc); }
   .mh-dk-fe b { display: block; font-size: 13.5px; color: var(--mh-ink); margin-bottom: 2px; } .mh-dk-fe p { margin: 0; font-size: 12px; line-height: 1.5; color: var(--mh-ink3); }
+  .mh-dk-hf { position: absolute; top: 14px; left: 14px; z-index: 3; font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 9px; background: rgba(13,13,34,.72); border: 1px solid #A58BE866; color: #B7A2F5; }
+  .mh-dk-note { display: flex; gap: 8px; align-items: flex-start; padding: 10px 12px; border-radius: 14px; font-size: 11.5px; line-height: 1.45; color: var(--mh-ink3); background: #A58BE814; border: 1px solid #A58BE833; } .mh-dk-note svg { flex-shrink: 0; margin-top: 2px; color: #A58BE8; } .mh-dk-note b { color: var(--mh-ink); }
   .mh-dk-hint { margin-top: auto; padding-top: 6px; font-size: 11px; text-align: center; color: var(--mh-muted2); }
   @media (max-width: 900px) { .mh-dk { grid-template-columns: minmax(0, 1fr); overflow-y: auto; } .mh-dk-deck { min-height: 460px; } }
   /* Asistente · origen (ascendencia, comunidad, transformación) */
@@ -27053,7 +27055,7 @@ export default function App({ onSignOut }) {
                 );
               })()}
               <div className={"mh-wz-main" + (showPv ? " has-pv" : "")}>
-              <div className={"mh-wz-body" + (["ancestry", "community", "transformation"].includes(wizardStep) ? " is-split" : "")}>
+              <div className={"mh-wz-body" + (["ancestry", "community"].includes(wizardStep) ? " is-split" : "")}>
 
               {wizardStep === "subclass" ? (
                 (() => {
@@ -27313,6 +27315,82 @@ export default function App({ onSignOut }) {
                     else setDraftTransformation(k);
                   };
                   const focus = list.find((x) => x.key === originFocus) || list.find((x) => isSel(x.key)) || list[0];
+                  if (originTab === "transformation") {
+                    // Transformaciones como una baraja: «Ninguna» va primera y la carta de delante es la elegida.
+                    const len = list.length;
+                    const idx = Math.max(0, list.findIndex((x) => x.key === draftTransformation));
+                    const goTo = (i) => {
+                      const k = Math.max(0, Math.min(len - 1, i));
+                      setOriginFocus(list[k].key);
+                      setDraftTransformation(list[k].key);
+                    };
+                    const cur = list[idx] || list[0];
+                    const curArt = TRANSFORMATION_ART[cur.key];
+                    return (
+                      <div
+                        className="mh-dk"
+                        style={{ "--tc": curArt?.color || "#A58BE8" }}
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "ArrowRight") (e.preventDefault(), goTo(idx + 1));
+                          else if (e.key === "ArrowLeft") (e.preventDefault(), goTo(idx - 1));
+                        }}
+                      >
+                        <div className="mh-dk-deck" role="radiogroup" aria-label="Transformaciones">
+                          {idx > 0 && <button type="button" className="mh-dk-nav is-l" aria-label="Transformación anterior" onClick={() => goTo(idx - 1)}><ChevronLeft size={20} /></button>}
+                          {idx < len - 1 && <button type="button" className="mh-dk-nav is-r" aria-label="Transformación siguiente" onClick={() => goTo(idx + 1)}><ChevronRight size={20} /></button>}
+                          {list.map((it, i) => {
+                            const d = i - idx;
+                            const ad = Math.abs(d);
+                            const ta = TRANSFORMATION_ART[it.key];
+                            return (
+                              <button
+                                key={it.key}
+                                type="button"
+                                role="radio"
+                                aria-checked={d === 0}
+                                className={"mh-dk-card" + (d === 0 ? " is-front" : "")}
+                                style={{ "--d": d, "--a": ad, "--tc": ta?.color || "#A58BE8", zIndex: 10 - ad }}
+                                onClick={() => goTo(i)}
+                              >
+                                <span className="mh-dk-im" aria-hidden="true" style={ta ? { backgroundImage: "url(" + ta.src + ")" } : undefined}>
+                                  {!ta && <CircleDashed size={64} strokeWidth={1.3} />}
+                                </span>
+                                {d === 0 && <span className="mh-dk-tick" aria-hidden="true"><Check size={16} strokeWidth={3} /></span>}
+                                {it.expansion && <span className="mh-dk-hf">H&amp;F</span>}
+                                <span className="mh-dk-tx">
+                                  <span className="mh-serif mh-dk-n">{it.key}</span>
+                                  <span className="mh-dk-k">{it.expansion ? "Expansión " + it.expansion : "Opcional"}</span>
+                                  <span className="mh-dk-b">{it.blurb}</span>
+                                </span>
+                              </button>
+                            );
+                          })}
+                          <div className="mh-dk-dots" aria-hidden="true">
+                            {list.map((it, i) => <i key={it.key} className={i === idx ? "is-on" : ""} />)}
+                          </div>
+                        </div>
+                        <div className="mh-dk-side">
+                          <div className="mh-dk-note"><Sparkles size={14} /><span>Las transformaciones son de la expansión <b>Hope &amp; Fear</b>. Es opcional: puedes seguir sin ninguna.</span></div>
+                          <div className="mh-dk-sh">{cur.key}{cur.expansion ? " · Características" : ""}</div>
+                          {(cur.features || []).length > 0 ? (
+                            cur.features.map((f) => (
+                              <div key={f.name} className="mh-dk-fe">
+                                <b>{f.name}</b>
+                                <p>{f.text}</p>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="mh-dk-fe">
+                              <b>{cur.expansion ? "Sin características detalladas" : "Sin transformación"}</b>
+                              <p>{cur.expansion ? cur.blurb : "Tu personaje empieza sin ninguna transformación. Podrás adquirir una más adelante si la historia lo pide."}</p>
+                            </div>
+                          )}
+                          <div className="mh-dk-hint">Pulsa la carta de detrás, usa las flechas o el teclado ← → para cambiar.</div>
+                        </div>
+                      </div>
+                    );
+                  }
                   return (
                     <>
                       <div className={"mh-wz-list is-" + (originTab === "ancestry" ? "anc" : originTab === "community" ? "com" : "tf")}>
