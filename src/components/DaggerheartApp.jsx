@@ -14374,8 +14374,9 @@ export default function App({ onSignOut }) {
       color: beast?.color || classColor(c.f_class),
       color2: getMulticlass(c) ? classColor(getMulticlass(c).cls) : null,
       Emblem: CLASS_EMBLEMS[c.f_class] || User,
-      art: settings.headerArt === false ? null : CLASS_ART[c.f_class] || null,
-      artY: CLASS_ART_Y[c.f_class] ?? 28,
+      // La imagen propia del personaje sustituye a la ilustración de la clase.
+      art: settings.headerArt === false ? null : portraitPick(charImgs[id], portraitStateOf(c)) || CLASS_ART[c.f_class] || null,
+      artY: portraitPick(charImgs[id], portraitStateOf(c)) ? 18 : CLASS_ART_Y[c.f_class] ?? 28,
       pronouns: c.f_pronouns || "",
       tags: renderHeaderTags(c, id, { noCampaign: true }),
       traits: TRAITS.map((t) => {
