@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Layers, Search, X } from "lucide-react";
+import { Layers, Search, X, Zap } from "lucide-react";
 
 // Pestaña «Cartas»: todas las cartas del juego (dominio, ascendencia, comunidad, subclase y transformación),
 // con filtros y buscador. Al pulsar una carta se ve en grande, con el mismo diseño que en la hoja.
@@ -28,7 +28,7 @@ function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
   const dom = c.kind === "dominio";
   return (
     <div
-      className={"mh-card mh-cardc" + (modal ? " mh-card-anim" : "") + (modal || legend ? " mh-tilt" : "") + (dom ? " is-bg" : "") + (legend ? " is-legend" : "")}
+      className={"mh-card mh-cardc" + (modal ? " mh-card-anim" : "") + (modal || legend || dom ? " mh-tilt" : "") + (dom ? " is-bg" : "") + (legend ? " is-legend" : "")}
       style={{ "--glow": alpha(col, 51), "--cc": col, margin: 0, width: modal ? "min(300px, 100%)" : 300, height: modal ? "min(420px, 80vh)" : 420, maxWidth: "100%", padding: 0, overflow: "hidden", borderRadius: 22, display: "flex", flexDirection: "column", border: "2px solid " + col, position: "relative", textAlign: "left" }}
       {...(tilt || {})}
     >
@@ -52,7 +52,13 @@ function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
           <div key={f.name} style={{ fontSize: "0.95em", lineHeight: 1.4 }}><b style={{ color: "var(--mh-gold-ink)" }}>{f.name}</b>{f.text ? ": " + f.text : ""}</div>
         ))}
       </FitBox>
-      {dom && <div style={{ padding: "0 18px 12px", textAlign: "center", fontSize: 10.5, color: "var(--mh-muted)", flexShrink: 0 }}>Nivel {c.level} · Recuperación {c.recall}</div>}
+      {dom && (
+        <div className="mh-cardc-foot">
+          <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+            <Zap size={12} color="#E3B04B" /> Recuperación <b>{c.recall}</b>
+          </span>
+        </div>
+      )}
     </div>
   );
 }
@@ -175,7 +181,7 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
               const I = Icon(c);
               return (
                 <button type="button" key={c.id} className="cx-card" onClick={() => setOpen(c)} aria-label={"Ver " + c.key}>
-                  <Lazy><CardFace c={c} I={I} FitTitle={FitTitle} FitBox={FitBox} tilt={c.kind === "arma" && c.tier === 4 ? { onPointerMove: tilt, onPointerLeave: untilt } : undefined} /></Lazy>
+                  <Lazy><CardFace c={c} I={I} FitTitle={FitTitle} FitBox={FitBox} tilt={c.kind === "dominio" || (c.kind === "arma" && c.tier === 4) ? { onPointerMove: tilt, onPointerLeave: untilt } : undefined} /></Lazy>
                 </button>
               );
             })}
