@@ -1217,6 +1217,29 @@ const MOD_LABELS = {
   t_knowledge: "Conocimiento",
 };
 
+// Imágenes propias del personaje según su estado.
+const PORTRAIT_STATES = [
+  { key: "normal", label: "Normal", hint: "Cuando no le pasa nada especial.", color: "#6FBF73" },
+  { key: "herido", label: "Dañado", hint: "Le queda un tercio de su vida o menos.", color: "#E0544A" },
+  { key: "inspirado", label: "Inspirado", hint: "Tiene toda la Esperanza.", color: "#E3B04B" },
+  { key: "estresado", label: "Estresado", hint: "Le queda 1 casilla de Estrés o menos.", color: "#A58BE8" },
+  { key: "caido", label: "Muerto", hint: "Sin Puntos de vida o marcado como caído.", color: "#8b88a8" },
+];
+function portraitStateOf(ch) {
+  if (!ch || !ch.f_class) return "normal";
+  const mods = getEquipmentMods(PRIMARY_WEAPONS.find((w) => w.key === ch.f_primary_weapon), SECONDARY_WEAPONS.find((w) => w.key === ch.f_secondary_weapon), ARMORS.find((a) => a.key === ch.f_armor));
+  const hpT = Number(ch.r_hp || 0) + (mods.hp || 0);
+  const stT = Number(ch.r_stress || 0) + (mods.stress || 0);
+  const hpLeft = Math.max(0, hpT - Number(ch.hp_marked || 0));
+  const st = Number(ch.stress_marked || 0);
+  const hope = Number(ch.hope_marked ?? HOPE_DEFAULT);
+  if (ch.f_is_dead === "1" || (hpT > 0 && hpLeft === 0)) return "caido";
+  if (hpT > 0 && hpLeft * 3 <= hpT) return "herido";
+  if (stT > 0 && stT - st <= 1) return "estresado";
+  if (hope >= getHopeMax(ch) && hope > 0) return "inspirado";
+  return "normal";
+}
+const portraitPick = (imgs, state) => (imgs && (imgs[state] || imgs.normal)) || null;
 function getEquipmentMods(primaryWeapon, secondaryWeapon, armorEntry) {
   const totals = { evasion: 0, armor: 0, major: 0, severe: 0, hp: 0, stress: 0, hope: 0 };
   [primaryWeapon, secondaryWeapon, armorEntry].forEach((item) => {
@@ -2774,6 +2797,23 @@ const sharedStyles = `
   .mh-gear-menu button:hover:not(:disabled), .mh-gear-menu button:focus-visible { background: #E3B04B22; color: var(--mh-ink); outline: none; }
   .mh-gear-menu button:disabled { opacity: .4; cursor: not-allowed; }
   .mh-gear-menu hr { border: 0; border-top: 1px solid var(--mh-line); margin: 4px 0; }
+  .mh-pd-back { position: fixed; inset: 0; z-index: 85; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(5,5,16,.7); -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px); animation: mh-fade-in .16s ease both; }
+  .mh-pd { position: relative; width: min(920px, 100%); max-height: 100%; overflow-y: auto; padding: 24px; border-radius: 28px; background: color-mix(in srgb, var(--mh-panel) 92%, transparent); border: 1px solid var(--mh-line2); box-shadow: 0 30px 80px #000c, inset 0 1px 0 #ffffff14; }
+  .mh-pd h3 { margin: 0 0 4px; font-size: 22px; letter-spacing: .04em; text-transform: uppercase; color: var(--mh-ink); padding-right: 40px; }
+  .mh-pd-sub { margin: 0 0 18px; font-size: 12.5px; line-height: 1.5; color: var(--mh-muted2); max-width: 640px; }
+  .mh-pd-x { all: unset; position: absolute; right: 18px; top: 18px; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; color: var(--mh-muted2); background: color-mix(in srgb, var(--mh-ink) 8%, transparent); } .mh-pd-x:hover { color: var(--mh-ink); } .mh-pd-x:focus-visible { outline: 2px solid #E3B04B; }
+  .mh-pd-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+  .mh-pd-slot { display: flex; flex-direction: column; gap: 8px; padding: 10px; border-radius: 20px; background: color-mix(in srgb, var(--mh-ink) 4%, transparent); border: 1px solid var(--mh-line); }
+  .mh-pd-slot.is-cur { border-color: var(--k); box-shadow: 0 0 0 1px var(--k), 0 0 22px color-mix(in srgb, var(--k) 30%, transparent); }
+  .mh-pd-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-height: 22px; } .mh-pd-head b { font-size: 13px; color: var(--k); } .mh-pd-head em { font-style: normal; font-size: 9px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: 2px 7px; border-radius: 9px; background: var(--k); color: #10101e; }
+  .mh-pd-img { all: unset; box-sizing: border-box; position: relative; aspect-ratio: 3 / 4; border-radius: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; overflow: hidden; background: color-mix(in srgb, var(--mh-ink) 6%, transparent) center top / cover no-repeat; border: 1.5px dashed var(--mh-line2); transition: border-color .15s, transform .15s; }
+  .mh-pd-img.has { border-style: solid; border-color: color-mix(in srgb, var(--k) 55%, transparent); }
+  .mh-pd-img:hover, .mh-pd-img:focus-visible { border-color: var(--k); transform: translateY(-2px); outline: none; }
+  .mh-pd-add { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--mh-ink2); padding: 8px 10px; border-radius: 12px; background: color-mix(in srgb, var(--mh-panel) 78%, transparent); } .mh-pd-add small { font-size: 11px; font-weight: 600; text-align: center; }
+  .mh-pd-hint { font-size: 10.5px; line-height: 1.4; color: var(--mh-muted2); min-height: 30px; }
+  .mh-pd-rm { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; justify-content: center; font-size: 11px; font-weight: 600; padding: 5px 8px; border-radius: 9px; color: #E8685C; background: #C0443A1c; } .mh-pd-rm:hover { background: #C0443A33; } .mh-pd-rm:focus-visible { outline: 2px solid #E3B04B; }
+  .mh-pd-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; } .mh-pd-foot span { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--mh-muted2); }
+  @media (max-width: 760px) { .mh-pd { padding: 18px 14px; border-radius: 22px; } .mh-pd-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .mh-pd-hint { min-height: 0; } }
   .mh-pt-toast { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); z-index: 95; padding: 10px 18px; border-radius: 14px; font-size: 12.5px; font-weight: 600; color: var(--mh-ink); background: color-mix(in srgb, var(--mh-panel2) 94%, transparent); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border: 1px solid #E3B04B66; box-shadow: 0 14px 30px #0009; animation: mh-fade-in .16s ease both; }
   .mh-htag-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--tag); animation: mh-tag-pulse 1.6s ease-out infinite; }
   @keyframes mh-tag-pulse {
@@ -10088,7 +10128,7 @@ export default function App({ onSignOut }) {
 
   const delChar = async (id) => {
     setDeleteTargetId(null);
-    safeSet("char-portrait:" + id, "", false);
+    PORTRAIT_STATES.forEach((p) => safeSet("char-portrait:" + id + (p.key === "normal" ? "" : ":" + p.key), "", false));
     // Sale de su campaña para no dejar un personaje fantasma.
     const inCamp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(id));
     if (inCamp) removeCharacterFromCampaign(inCamp.id, id);
@@ -10206,7 +10246,13 @@ export default function App({ onSignOut }) {
       };
       img.src = url;
     });
-  const uploadPortrait = async (id, file) => {
+  const portraitKey = (id, state) => "char-portrait:" + id + (state === "normal" ? "" : ":" + state);
+  const savePortraitStates = async (id, imgs) => {
+    const keys = PORTRAIT_STATES.map((p) => p.key).filter((k) => imgs[k]);
+    await updateCharacterField(id, "f_portrait_st", keys.join(","));
+    await updateCharacterField(id, "f_portrait", keys.length ? String(Date.now()) : "");
+  };
+  const uploadPortrait = async (id, state, file) => {
     if (!file || !id) return;
     if (!/^image\//.test(file.type)) return setPortraitMsg("Ese archivo no es una imagen.");
     if (file.size > 5 * 1024 * 1024) return setPortraitMsg("La imagen pesa más de 5 MB.");
@@ -10216,10 +10262,17 @@ export default function App({ onSignOut }) {
     } catch (e) {
       return setPortraitMsg("No se pudo leer la imagen.");
     }
-    setCharImgs((m) => ({ ...m, [id]: data }));
-    await safeSet("char-portrait:" + id, data, false);
-    await updateCharacterField(id, "f_portrait", String(Date.now()));
+    const next = { ...(charImgs[id] || {}), [state]: data };
+    setCharImgs((m) => ({ ...m, [id]: next }));
+    await safeSet(portraitKey(id, state), data, false);
+    await savePortraitStates(id, next);
     setPortraitMsg("Imagen guardada.");
+  };
+  const removePortrait = async (id, state) => {
+    const { [state]: _gone, ...rest } = charImgs[id] || {};
+    setCharImgs((m) => ({ ...m, [id]: rest }));
+    await safeSet(portraitKey(id, state), "", false);
+    await savePortraitStates(id, rest);
   };
   const resetPortrait = async (id) => {
     if (!id) return;
@@ -10227,9 +10280,10 @@ export default function App({ onSignOut }) {
       const { [id]: _gone, ...rest } = m;
       return rest;
     });
-    await safeSet("char-portrait:" + id, "", false);
+    await Promise.all(PORTRAIT_STATES.map((p) => safeSet(portraitKey(id, p.key), "", false)));
+    await updateCharacterField(id, "f_portrait_st", "");
     await updateCharacterField(id, "f_portrait", "");
-    setPortraitMsg("Imagen restablecida: vuelve la ilustración de la clase.");
+    setPortraitMsg("Imágenes restablecidas: vuelve la ilustración de la clase.");
   };
   const updateCharacterField = async (id, field, value) => {
     const cur = charsRef.current[id];
@@ -11168,6 +11222,7 @@ export default function App({ onSignOut }) {
     try { localStorage.setItem("mh-isle-pin", next ? "1" : "0"); } catch {}
   };
   const [charImgs, setCharImgs] = useState({}); // imágenes propias de los personajes (solo las ve su dueño)
+  const [portraitDlg, setPortraitDlg] = useState(null); // id del personaje cuyo diálogo de imágenes está abierto
   const [gearMenu, setGearMenu] = useState(null); // menú del engranaje de la ficha
   const [portraitMsg, setPortraitMsg] = useState("");
   useEffect(() => {
@@ -11189,11 +11244,14 @@ export default function App({ onSignOut }) {
   }, [gearMenu]);
   useEffect(() => {
     Object.entries(characters).forEach(([cid, ch]) => {
-      if (ch?.f_portrait && !charImgs[cid]) {
-        safeGet("char-portrait:" + cid, false).then((r) => {
-          if (r?.value) setCharImgs((m) => (m[cid] ? m : { ...m, [cid]: r.value }));
+      if (!ch?.f_portrait) return;
+      const want = ch.f_portrait_st ? ch.f_portrait_st.split(",").filter(Boolean) : ["normal"];
+      want.forEach((state) => {
+        if (charImgs[cid]?.[state]) return;
+        safeGet(portraitKey(cid, state), false).then((r) => {
+          if (r?.value) setCharImgs((m) => (m[cid]?.[state] ? m : { ...m, [cid]: { ...(m[cid] || {}), [state]: r.value } }));
         });
-      }
+      });
     });
   }, [characters, charImgs]);
   const portraitInputRef = useRef(null);
@@ -25344,9 +25402,9 @@ export default function App({ onSignOut }) {
         hidden
         onChange={(e) => {
           const file = e.target.files?.[0];
-          const id = portraitTarget.current;
+          const tg = portraitTarget.current;
           e.target.value = "";
-          if (file && id) uploadPortrait(id, file);
+          if (file && tg) uploadPortrait(tg.id, tg.state, file);
         }}
       />
       {gearMenu && (() => {
@@ -25357,13 +25415,59 @@ export default function App({ onSignOut }) {
             <button type="button" role="menuitem" onClick={() => { setGearMenu(null); window.dispatchEvent(new CustomEvent("mh-share", { detail: { charId: gid } })); }}>
               <Link2 size={15} /> Compartir personaje
             </button>
-            <button type="button" role="menuitem" onClick={() => { setGearMenu(null); portraitTarget.current = gid; portraitInputRef.current?.click(); }}>
-              <Upload size={15} /> Subir imagen
+            <button type="button" role="menuitem" onClick={() => { setGearMenu(null); setPortraitDlg(gid); }}>
+              <Upload size={15} /> Cambiar imagen
             </button>
             <hr />
             <button type="button" role="menuitem" disabled={!has} onClick={() => { setGearMenu(null); resetPortrait(gid); }}>
               <RotateCcw size={15} /> Restablecer imagen
             </button>
+          </div>,
+          document.querySelector(".mh-root") || document.body
+        );
+      })()}
+      {portraitDlg && characters[portraitDlg] && (() => {
+        const did = portraitDlg;
+        const dch = characters[did];
+        const imgs = charImgs[did] || {};
+        const cur = portraitStateOf(dch);
+        const cls = CLASS_ART[dch.f_class];
+        return createPortal(
+          <div className="mh-pd-back" onClick={() => setPortraitDlg(null)}>
+            <div className="mh-pd" role="dialog" aria-modal="true" aria-label="Imágenes del personaje" onClick={(e) => e.stopPropagation()}>
+              <button type="button" className="mh-pd-x" aria-label="Cerrar" onClick={() => setPortraitDlg(null)}><X size={16} /></button>
+              <h3 className="mh-serif">Imágenes de {dch.f_name || "tu personaje"}</h3>
+              <p className="mh-pd-sub">Sube una imagen para cada estado. Si falta alguna, se usa la imagen normal; y si no hay ninguna, la ilustración de la clase.</p>
+              <div className="mh-pd-grid">
+                {PORTRAIT_STATES.map((p) => {
+                  const src = imgs[p.key];
+                  const preview = src || (p.key === "normal" ? null : imgs.normal);
+                  return (
+                    <div key={p.key} className={"mh-pd-slot" + (cur === p.key ? " is-cur" : "")} style={{ "--k": p.color }}>
+                      <div className="mh-pd-head">
+                        <b>{p.label}</b>
+                        {cur === p.key && <em>Estado actual</em>}
+                      </div>
+                      <button
+                        type="button"
+                        className={"mh-pd-img" + (src ? " has" : "")}
+                        title={src ? "Cambiar imagen" : "Subir imagen"}
+                        onClick={() => { portraitTarget.current = { id: did, state: p.key }; portraitInputRef.current?.click(); }}
+                        style={preview ? { backgroundImage: "url(" + preview + ")" } : cls && p.key === "normal" ? { backgroundImage: "url(" + cls + ")", opacity: 0.55 } : undefined}
+                      >
+                        {!src && <span className="mh-pd-add"><Upload size={20} /><small>{p.key === "normal" || !preview ? "Subir" : "Usa la normal"}</small></span>}
+                      </button>
+                      <small className="mh-pd-hint">{p.hint}</small>
+                      {src && <button type="button" className="mh-pd-rm" onClick={() => removePortrait(did, p.key)}><Trash2 size={13} /> Quitar</button>}
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="mh-pd-foot">
+                <span><Info size={14} /> Máx. 5 MB por imagen. Solo las ves tú.</span>
+                <button type="button" className="mh-btn" onClick={() => setPortraitDlg(null)}>Listo</button>
+              </div>
+            </div>
           </div>,
           document.querySelector(".mh-root") || document.body
         );
@@ -25582,14 +25686,14 @@ export default function App({ onSignOut }) {
                   return (
                     <div
                       key={id}
-                      className={"mh-card mh-gc" + (dead ? " is-dead" : "") + (CLASS_ART[ch.f_class] || charImgs[id] ? " has-art" : "")}
+                      className={"mh-card mh-gc" + (dead ? " is-dead" : "") + (CLASS_ART[ch.f_class] || portraitPick(charImgs[id], portraitStateOf(ch)) ? " has-art" : "")}
                       style={{ "--k": col }}
                       role="button"
                       tabIndex={0}
                       onClick={() => openCharDetail(id)}
                       onKeyDown={(e) => e.key === "Enter" && e.target === e.currentTarget && openCharDetail(id)}
                     >
-                      {(charImgs[id] || CLASS_ART[ch.f_class]) && <div className="mh-gc-art" aria-hidden="true" style={charImgs[id] ? { backgroundImage: "url(" + charImgs[id] + ")", backgroundPosition: "58% 6%" } : { backgroundImage: "url(" + CLASS_ART[ch.f_class] + ")", backgroundPosition: "50% " + (CLASS_ART_Y[ch.f_class] ?? 20) + "%" }} />}
+                      {(portraitPick(charImgs[id], portraitStateOf(ch)) || CLASS_ART[ch.f_class]) && <div className="mh-gc-art" aria-hidden="true" style={portraitPick(charImgs[id], portraitStateOf(ch)) ? { backgroundImage: "url(" + portraitPick(charImgs[id], portraitStateOf(ch)) + ")", backgroundPosition: "58% 6%" } : { backgroundImage: "url(" + CLASS_ART[ch.f_class] + ")", backgroundPosition: "50% " + (CLASS_ART_Y[ch.f_class] ?? 20) + "%" }} />}
                       <div className="mh-gc-top">
                         {ch.f_class ? <span className="mh-gc-lv" title={"Nivel " + (ch.f_level || "1")}>Nv {ch.f_level || "1"}</span> : <span />}
                         <button
@@ -25604,10 +25708,10 @@ export default function App({ onSignOut }) {
                         >
                           <Trash2 size={14} />
                         </button>
-                        {(charImgs[id] || CLASS_ART[ch.f_class]) && <span className="mh-gc-badge" title={ch.f_class} aria-hidden="true"><Emblem size={17} strokeWidth={1.7} /></span>}
+                        {(portraitPick(charImgs[id], portraitStateOf(ch)) || CLASS_ART[ch.f_class]) && <span className="mh-gc-badge" title={ch.f_class} aria-hidden="true"><Emblem size={17} strokeWidth={1.7} /></span>}
                       </div>
                       <div className="mh-gc-mid">
-                        {!CLASS_ART[ch.f_class] && !charImgs[id] && (
+                        {!CLASS_ART[ch.f_class] && !portraitPick(charImgs[id], portraitStateOf(ch)) && (
                           <span className="mh-gc-emb" aria-hidden="true">
                             <Emblem size={64} strokeWidth={1.5} />
                           </span>
