@@ -2768,6 +2768,13 @@ const sharedStyles = `
     color: color-mix(in srgb, var(--tag) var(--mh-accent-keep, 100%), #000);
   }
   .mh-htag.is-active { border-color: var(--tag); background: color-mix(in srgb, var(--tag) 20%, transparent); font-weight: 600; }
+  .mh-gear-tag { cursor: pointer; padding: 5px 8px; } .mh-gear-tag:hover { border-color: var(--tag); }
+  .mh-gear-menu { position: fixed; z-index: 90; width: 232px; padding: 6px; border-radius: 14px; background: color-mix(in srgb, var(--mh-panel2) 96%, transparent); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); border: 1px solid var(--mh-line2); box-shadow: 0 18px 36px #000a; animation: mh-fade-in .14s ease both; }
+  .mh-gear-menu button { all: unset; box-sizing: border-box; width: 100%; display: flex; align-items: center; gap: 10px; padding: 9px 11px; border-radius: 9px; cursor: pointer; font-size: 12.5px; color: var(--mh-ink2); }
+  .mh-gear-menu button:hover:not(:disabled), .mh-gear-menu button:focus-visible { background: #E3B04B22; color: var(--mh-ink); outline: none; }
+  .mh-gear-menu button:disabled { opacity: .4; cursor: not-allowed; }
+  .mh-gear-menu hr { border: 0; border-top: 1px solid var(--mh-line); margin: 4px 0; }
+  .mh-pt-toast { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); z-index: 95; padding: 10px 18px; border-radius: 14px; font-size: 12.5px; font-weight: 600; color: var(--mh-ink); background: color-mix(in srgb, var(--mh-panel2) 94%, transparent); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border: 1px solid #E3B04B66; box-shadow: 0 14px 30px #0009; animation: mh-fade-in .16s ease both; }
   .mh-htag-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--tag); animation: mh-tag-pulse 1.6s ease-out infinite; }
   @keyframes mh-tag-pulse {
     0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--tag) 60%, transparent); }
@@ -10081,6 +10088,7 @@ export default function App({ onSignOut }) {
 
   const delChar = async (id) => {
     setDeleteTargetId(null);
+    safeSet("char-portrait:" + id, "", false);
     // Sale de su campaña para no dejar un personaje fantasma.
     const inCamp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(id));
     if (inCamp) removeCharacterFromCampaign(inCamp.id, id);
@@ -10169,6 +10177,60 @@ export default function App({ onSignOut }) {
     await pushRollLog(line);
   };
 
+  // Imagen propia del personaje: se reduce a ~800 px y se guarda aparte (clave privada); en la ficha solo queda la marca f_portrait.
+  const readPortrait = (file) =>
+    new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const k = Math.min(1, 800 / Math.max(img.width, img.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(img.width * k));
+        canvas.height = Math.max(1, Math.round(img.height * k));
+        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url);
+        let data = canvas.toDataURL("image/webp", 0.85);
+        if (data.length > 450000) data = canvas.toDataURL("image/webp", 0.6);
+        if (data.length > 450000) {
+          const small = document.createElement("canvas");
+          small.width = Math.round(canvas.width * 0.7);
+          small.height = Math.round(canvas.height * 0.7);
+          small.getContext("2d").drawImage(canvas, 0, 0, small.width, small.height);
+          data = small.toDataURL("image/webp", 0.6);
+        }
+        resolve(data);
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("imagen"));
+      };
+      img.src = url;
+    });
+  const uploadPortrait = async (id, file) => {
+    if (!file || !id) return;
+    if (!/^image\//.test(file.type)) return setPortraitMsg("Ese archivo no es una imagen.");
+    if (file.size > 5 * 1024 * 1024) return setPortraitMsg("La imagen pesa más de 5 MB.");
+    let data;
+    try {
+      data = await readPortrait(file);
+    } catch (e) {
+      return setPortraitMsg("No se pudo leer la imagen.");
+    }
+    setCharImgs((m) => ({ ...m, [id]: data }));
+    await safeSet("char-portrait:" + id, data, false);
+    await updateCharacterField(id, "f_portrait", String(Date.now()));
+    setPortraitMsg("Imagen guardada.");
+  };
+  const resetPortrait = async (id) => {
+    if (!id) return;
+    setCharImgs((m) => {
+      const { [id]: _gone, ...rest } = m;
+      return rest;
+    });
+    await safeSet("char-portrait:" + id, "", false);
+    await updateCharacterField(id, "f_portrait", "");
+    setPortraitMsg("Imagen restablecida: vuelve la ilustración de la clase.");
+  };
   const updateCharacterField = async (id, field, value) => {
     const cur = charsRef.current[id];
     if (!cur) return;
@@ -11105,6 +11167,37 @@ export default function App({ onSignOut }) {
     setIslePin(next);
     try { localStorage.setItem("mh-isle-pin", next ? "1" : "0"); } catch {}
   };
+  const [charImgs, setCharImgs] = useState({}); // imágenes propias de los personajes (solo las ve su dueño)
+  const [gearMenu, setGearMenu] = useState(null); // menú del engranaje de la ficha
+  const [portraitMsg, setPortraitMsg] = useState("");
+  useEffect(() => {
+    if (!portraitMsg) return undefined;
+    const t = setTimeout(() => setPortraitMsg(""), 3800);
+    return () => clearTimeout(t);
+  }, [portraitMsg]);
+  useEffect(() => {
+    if (!gearMenu) return undefined;
+    const close = (e) => {
+      if (e.type === "keydown" ? e.key === "Escape" : !e.target.closest(".mh-gear-menu, .mh-gear-tag")) setGearMenu(null);
+    };
+    document.addEventListener("mousedown", close);
+    document.addEventListener("keydown", close);
+    return () => {
+      document.removeEventListener("mousedown", close);
+      document.removeEventListener("keydown", close);
+    };
+  }, [gearMenu]);
+  useEffect(() => {
+    Object.entries(characters).forEach(([cid, ch]) => {
+      if (ch?.f_portrait && !charImgs[cid]) {
+        safeGet("char-portrait:" + cid, false).then((r) => {
+          if (r?.value) setCharImgs((m) => (m[cid] ? m : { ...m, [cid]: r.value }));
+        });
+      }
+    });
+  }, [characters, charImgs]);
+  const portraitInputRef = useRef(null);
+  const portraitTarget = useRef(null);
   const [acctOpen, setAcctOpen] = useState(false); // menú de la cuenta (avatar de la cabecera del menú lateral)
   useEffect(() => {
     if (!acctOpen) return;
@@ -14438,8 +14531,21 @@ export default function App({ onSignOut }) {
     return (
       <>
                   {!opts.noShare && (
-                    <span role="button" tabIndex={0} className="mh-htag is-btn" title="Compartir esta ficha con un enlace" onClick={() => window.dispatchEvent(new CustomEvent("mh-share", { detail: { charId: viewingCharId } }))} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && e.currentTarget.click()}>
-                      <Link2 size={13} /> Compartir
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      className="mh-htag is-btn mh-gear-tag"
+                      title="Ajustes de la ficha"
+                      aria-label="Ajustes de la ficha"
+                      aria-haspopup="menu"
+                      aria-expanded={gearMenu?.id === viewingCharId}
+                      onClick={(e) => {
+                        const r = e.currentTarget.getBoundingClientRect();
+                        setGearMenu((g) => (g?.id === viewingCharId ? null : { id: viewingCharId, right: window.innerWidth - r.right, top: r.bottom + 8 }));
+                      }}
+                      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), e.currentTarget.click())}
+                    >
+                      <Settings size={14} />
                     </span>
                   )}
                   {headerCampaign && !opts.noCampaign && (
@@ -25231,6 +25337,39 @@ export default function App({ onSignOut }) {
       </nav>
       )}
 
+      <input
+        ref={portraitInputRef}
+        type="file"
+        accept="image/*"
+        hidden
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          const id = portraitTarget.current;
+          e.target.value = "";
+          if (file && id) uploadPortrait(id, file);
+        }}
+      />
+      {gearMenu && (() => {
+        const gid = gearMenu.id;
+        const has = !!characters[gid]?.f_portrait;
+        return createPortal(
+          <div className="mh-gear-menu" role="menu" style={{ top: gearMenu.top, right: gearMenu.right }}>
+            <button type="button" role="menuitem" onClick={() => { setGearMenu(null); window.dispatchEvent(new CustomEvent("mh-share", { detail: { charId: gid } })); }}>
+              <Link2 size={15} /> Compartir personaje
+            </button>
+            <button type="button" role="menuitem" onClick={() => { setGearMenu(null); portraitTarget.current = gid; portraitInputRef.current?.click(); }}>
+              <Upload size={15} /> Subir imagen
+            </button>
+            <hr />
+            <button type="button" role="menuitem" disabled={!has} onClick={() => { setGearMenu(null); resetPortrait(gid); }}>
+              <RotateCcw size={15} /> Restablecer imagen
+            </button>
+          </div>,
+          document.querySelector(".mh-root") || document.body
+        );
+      })()}
+      {portraitMsg && <div className="mh-pt-toast" role="status">{portraitMsg}</div>}
+
       {/* Dock inferior flotante (móvil) */}
       {isMobile && (() => {
         const go = (key) => { setDockSheet(false); setViewingCharId(null); setViewingCardDetail(null); setModernCharId(null); setShowNewCharModal(false); setView(key); };
@@ -25443,14 +25582,14 @@ export default function App({ onSignOut }) {
                   return (
                     <div
                       key={id}
-                      className={"mh-card mh-gc" + (dead ? " is-dead" : "") + (CLASS_ART[ch.f_class] ? " has-art" : "")}
+                      className={"mh-card mh-gc" + (dead ? " is-dead" : "") + (CLASS_ART[ch.f_class] || charImgs[id] ? " has-art" : "")}
                       style={{ "--k": col }}
                       role="button"
                       tabIndex={0}
                       onClick={() => openCharDetail(id)}
                       onKeyDown={(e) => e.key === "Enter" && e.target === e.currentTarget && openCharDetail(id)}
                     >
-                      {CLASS_ART[ch.f_class] && <div className="mh-gc-art" aria-hidden="true" style={{ backgroundImage: "url(" + CLASS_ART[ch.f_class] + ")", backgroundPosition: "50% " + (CLASS_ART_Y[ch.f_class] ?? 20) + "%" }} />}
+                      {(charImgs[id] || CLASS_ART[ch.f_class]) && <div className="mh-gc-art" aria-hidden="true" style={charImgs[id] ? { backgroundImage: "url(" + charImgs[id] + ")", backgroundPosition: "58% 6%" } : { backgroundImage: "url(" + CLASS_ART[ch.f_class] + ")", backgroundPosition: "50% " + (CLASS_ART_Y[ch.f_class] ?? 20) + "%" }} />}
                       <div className="mh-gc-top">
                         {ch.f_class ? <span className="mh-gc-lv" title={"Nivel " + (ch.f_level || "1")}>Nv {ch.f_level || "1"}</span> : <span />}
                         <button
@@ -25465,10 +25604,10 @@ export default function App({ onSignOut }) {
                         >
                           <Trash2 size={14} />
                         </button>
-                        {CLASS_ART[ch.f_class] && <span className="mh-gc-badge" title={ch.f_class} aria-hidden="true"><Emblem size={17} strokeWidth={1.7} /></span>}
+                        {(charImgs[id] || CLASS_ART[ch.f_class]) && <span className="mh-gc-badge" title={ch.f_class} aria-hidden="true"><Emblem size={17} strokeWidth={1.7} /></span>}
                       </div>
                       <div className="mh-gc-mid">
-                        {!CLASS_ART[ch.f_class] && (
+                        {!CLASS_ART[ch.f_class] && !charImgs[id] && (
                           <span className="mh-gc-emb" aria-hidden="true">
                             <Emblem size={64} strokeWidth={1.5} />
                           </span>
