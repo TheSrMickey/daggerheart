@@ -21,20 +21,6 @@ const KIND_COLOR = { dominio: "#C9A24A", ascendencia: "#6FA3C0", comunidad: "#C0
 // La carta, tal cual se ve al abrirla; en la cuadrícula tiene exactamente el mismo tamaño (300 × 420).
 function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
   const col = c.color;
-  // En la cuadrícula, las cartas de dominio se ven como en «Acciones»: ilustración, nivel, recuperación y nombre.
-  if (c.kind === "dominio" && !onClose)
-    return (
-      <div className="mh-dslot cx-dtile" style={{ "--dc": col }}>
-        {c.image ? <img className="mh-dslot-art" src={c.image} alt="" /> : <div className="mh-dslot-noart"><I size={58} strokeWidth={1.4} /></div>}
-        <div className="mh-dslot-shade" />
-        <span className="mh-dslot-gem" title={"Nivel " + c.level}>{c.level}</span>
-        <span className="mh-dslot-recall" title="Coste de recuperación">{c.recall}</span>
-        <div className="mh-dslot-txt">
-          <div className="mh-dslot-kicker">{c.sub}</div>
-          <FitTitle text={c.key} max={17} min={12} className="mh-serif mh-dslot-title" />
-        </div>
-      </div>
-    );
   const legend = c.kind === "arma" && c.tier === 4;
   const feats = c.features || [];
   const total = (c.text || "").length + feats.reduce((s, f) => s + (f.name || "").length + (f.text || "").length, 0);
@@ -72,7 +58,7 @@ function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
 }
 
 // Solo se pinta la carta cuando está cerca de la pantalla: 100 cartas con imágenes a la vez tardaban unos segundos.
-function Lazy({ children, dom }) {
+function Lazy({ children }) {
   const ref = useRef(null);
   const [on, setOn] = useState(() => typeof IntersectionObserver === "undefined");
   useEffect(() => {
@@ -82,7 +68,7 @@ function Lazy({ children, dom }) {
     io.observe(el);
     return () => io.disconnect();
   }, [on]);
-  return <span ref={ref} className={"cx-lz" + (dom ? " is-dom" : "")}>{on ? children : null}</span>;
+  return <span ref={ref} className="cx-lz">{on ? children : null}</span>;
 }
 
 export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
@@ -188,8 +174,8 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
             {s.list.map((c) => {
               const I = Icon(c);
               return (
-                <button type="button" key={c.id} className={"cx-card" + (c.kind === "dominio" ? " is-dom" : "")} onClick={() => setOpen(c)} aria-label={"Ver " + c.key}>
-                  <Lazy dom={c.kind === "dominio"}><CardFace c={c} I={I} FitTitle={FitTitle} FitBox={FitBox} tilt={c.kind === "arma" && c.tier === 4 ? { onPointerMove: tilt, onPointerLeave: untilt } : undefined} /></Lazy>
+                <button type="button" key={c.id} className="cx-card" onClick={() => setOpen(c)} aria-label={"Ver " + c.key}>
+                  <Lazy><CardFace c={c} I={I} FitTitle={FitTitle} FitBox={FitBox} tilt={c.kind === "arma" && c.tier === 4 ? { onPointerMove: tilt, onPointerLeave: untilt } : undefined} /></Lazy>
                 </button>
               );
             })}
