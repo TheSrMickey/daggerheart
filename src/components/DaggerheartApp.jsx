@@ -4917,6 +4917,63 @@ const sharedStyles = `
   .dpk-row.is-on { cursor: default; opacity: .6; border-style: dashed; } .dpk-row.is-on:hover { background: color-mix(in srgb, var(--mh-ink) 5%, transparent); box-shadow: none; border-color: var(--mh-line); }
   .dpk-row.is-pend { border-color: var(--cc); box-shadow: 0 0 0 1px var(--cc); }
   .dpk-pv { position: absolute; z-index: 60; width: 210px; height: 294px; pointer-events: none; filter: drop-shadow(0 14px 26px rgba(0,0,0,.7)); animation: dsw-up .18s ease both; }
+  /* Asistente de creación · móvil */
+  .mh-root.is-mobile .mh-wz-page .mh-wz { height: auto; min-height: 0; gap: 12px; }
+  .mh-root.is-mobile .mh-wz-page .mh-wz-title { align-items: center; gap: 10px; flex-wrap: nowrap; }
+  .mh-root.is-mobile .mh-wz-page .mh-wz-title .mh-serif { font-size: 20px; line-height: 1.2; flex: 1; min-width: 0; }
+  .mh-root.is-mobile .mh-wz-page .mh-wz-title small { white-space: nowrap; font-size: 11px; padding: 4px 10px; }
+  .mh-root.is-mobile .mh-wz-page .mh-wz-x { width: 32px; height: 32px; flex-shrink: 0; margin-left: 0; }
+  .mh-root.is-mobile .mh-wz-page .mh-wz-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; padding: 5px; margin-top: 8px; border-radius: 16px; }
+  .mh-root.is-mobile .mh-wz-page .mh-wz-grp { padding: 6px 9px 7px; border-radius: 11px; }
+  .mh-root.is-mobile .mh-wz-page .mh-wz-grp > span { margin-bottom: 4px; font-size: 9px; }
+  .mh-root.is-mobile .mh-wz-main, .mh-root.is-mobile .mh-wz-main.has-pv { display: block; }
+  .mh-root.is-mobile .mh-wz-pv { display: none; }
+  .mh-root.is-mobile .mh-wz-page .mh-wz-main .mh-wz-body, .mh-root.is-mobile .mh-wz-page .mh-wz-main .mh-wz-body.is-split { display: block; flex: none; overflow: visible; padding: 14px; border-radius: 22px; }
+  .mh-root.is-mobile .mh-wz-body:has(> .mh-dk), .mh-root.is-mobile .mh-wz-body:has(.dpk), .mh-root.is-mobile .mh-wz-body:has(> .mh-wz-cls) { display: block; overflow: visible; }
+  .mh-root.is-mobile .mh-wz-page .mh-wz-main .mh-wz-body.is-split { padding: 0; }
+  .mh-root.is-mobile .mh-wz-page .mh-wz .mh-wz-foot { position: sticky; bottom: 6px; z-index: 6; height: auto; flex-wrap: wrap; gap: 8px; padding: 10px 12px; border-radius: 18px; background: color-mix(in srgb, var(--mh-panel) 94%, transparent); }
+  .mh-root.is-mobile .mh-wz-sum, .mh-root.is-mobile .mh-wz.has-pv .mh-wz-sum { display: none; }
+  .mh-root.is-mobile .mh-wz-btns { width: 100%; margin-left: 0; flex-wrap: wrap; justify-content: flex-end; }
+  .mh-root.is-mobile .mh-wz-block { flex: 1 1 100%; font-size: 12px; text-align: left; }
+  .mh-root.is-mobile .mh-wz-btns .mh-btn, .mh-root.is-mobile .mh-wz-btns .mh-btn-ghost { flex: 1 1 0; height: 44px; }
+  .mh-root.is-mobile .mh-wz-btns .mh-btn-ghost { flex: 0 0 38%; }
+  .mh-root.is-mobile .mh-wz-cls { display: flex; flex-direction: column; height: auto; gap: 12px; }
+  .mh-root.is-mobile .mh-wz-cls .mh-wz-tiles { overflow: visible; padding: 0; margin: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mh-root.is-mobile .mh-wz-tile { padding: 7px 8px; gap: 8px; } .mh-root.is-mobile .mh-wz-tile > em { display: none; }
+  .mh-root.is-mobile .mh-wz-cls .mh-wz-det { padding: 16px; overflow: visible; }
+  .mh-root.is-mobile .mh-wz-cls .mh-wz-det .mh-wz-feats, .mh-root.is-mobile .mh-wz-cls .mh-wz-det .mh-wz-blurb { max-width: none; }
+  .mh-root.is-mobile .mh-wz-cls .mh-wz-det::before { width: 100%; opacity: .16; -webkit-mask-image: linear-gradient(180deg, #000, transparent 70%); mask-image: linear-gradient(180deg, #000, transparent 70%); }
+  .mh-root.is-mobile .mh-wz-page .mh-wz-body.is-split .mh-wz-list, .mh-root.is-mobile .mh-wz-page .mh-wz-body.is-split .mh-wz-list.is-anc, .mh-root.is-mobile .mh-wz-page .mh-wz-body.is-split .mh-wz-list.is-com { width: auto; max-height: none; overflow: visible; border-right: 0; border-bottom: 1px solid var(--mh-line); padding: 12px; }
+  .mh-root.is-mobile .mh-wz-list.is-com { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; align-content: start; }
+  .mh-root.is-mobile .mh-wz-page .mh-wz-body.is-split .mh-wz-it { padding: 7px 8px; gap: 8px; } .mh-root.is-mobile .mh-wz-ig { width: 28px; height: 28px; } .mh-root.is-mobile .mh-wz-it em { display: none; }
+  .mh-root.is-mobile .mh-wz-page .mh-wz-body.is-split .mh-wz-det, .mh-root.is-mobile .mh-wz-page .mh-wz-det.has-hero { min-height: 440px; padding: 16px; overflow: visible; border-radius: 0 0 21px 21px; }
+  .mh-root.is-mobile .mh-wz-det.has-hero .mh-wz-feats { grid-template-columns: minmax(0, 1fr); }
+  .mh-root.is-mobile .mh-wz-det.has-hero .mh-wz-dn { font-size: 26px; }
+  .mh-root.is-mobile .mh-wz-venn { height: 120px; } .mh-root.is-mobile .mh-wz-venn span { width: 88px; height: 88px; font-size: 13px; }
+  .mh-root.is-mobile .mh-dk { display: flex; flex-direction: column; gap: 12px; }
+  .mh-root.is-mobile .mh-dk-deck { height: 500px; flex: none; overflow: hidden; touch-action: pan-y; }
+  .mh-root.is-mobile .mh-dk-card { width: min(300px, 80vw); height: 470px; margin: -235px 0 0 calc(min(300px, 80vw) / -2); transform: translateX(calc(var(--d) * (100% + 18px))) scale(1); filter: brightness(calc(1 - var(--a) * .35)); }
+  .mh-root.is-mobile .mh-dk-card.is-front { transform: translateX(0) rotate(0); }
+  .mh-root.is-mobile .mh-dk-nav { width: 38px; height: 38px; margin-top: -19px; z-index: 22; } .mh-root.is-mobile .mh-dk-nav.is-l { left: 0; } .mh-root.is-mobile .mh-dk-nav.is-r { right: 0; }
+  .mh-root.is-mobile .mh-dk-side { overflow: visible; }
+  .mh-root.is-mobile .mh-dk-dots { bottom: 6px; }
+  .mh-root.is-mobile .dpk { display: flex; gap: 12px; }
+  .mh-root.is-mobile .dpk-deck { flex: none; height: 450px; min-height: 0; display: flex; gap: 14px; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; padding: 4px calc(50% - 150px); touch-action: pan-x pan-y; scrollbar-width: none; align-items: center; }
+  .mh-root.is-mobile .dpk-deck::-webkit-scrollbar { display: none; }
+  .mh-root.is-mobile .dpk-card, .mh-root.is-mobile .dpk-slot { position: relative !important; left: auto !important; top: auto !important; flex: none; scroll-snap-align: center; transform: none; animation: none; }
+  .mh-root.is-mobile .dpk-card:hover { transform: none; }
+  .mh-root.is-mobile .dpk-rm { opacity: 1; }
+  .mh-root.is-mobile .dpk-pv { display: none; }
+  .mh-root.is-mobile .dpk-shelf { max-height: none; overflow: visible; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .mh-root.is-mobile .dpk-tip { align-items: flex-start; }
+  .mh-root.is-mobile .mh-wz-xp { flex-direction: column; gap: 10px; padding: 14px; }
+  .mh-root.is-mobile .mh-wz-xpb { width: 100%; height: 44px; flex-direction: row; gap: 8px; border-radius: 14px; font-size: 20px; }
+  .mh-root.is-mobile .mh-wz-xps .mh-wz-exprow { flex-wrap: wrap; }
+  .mh-root.is-mobile .mh-wz-xin { font-size: 15px; }
+  .mh-root.is-mobile .mh-wz-gauges { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .mh-root.is-mobile .mh-wz-ga { padding: 14px; }
+  .mh-root.is-mobile .mh-wz-gn { font-size: 46px; } .mh-root.is-mobile .mh-wz-gw { min-height: 0; }
+  .mh-root.is-mobile .mh-wz-body div[style*="cursor: pointer"][style*="space-between"] { flex-wrap: wrap; gap: 4px 10px; }
   .mh-wz-page { animation: mh-view-in .3s cubic-bezier(.2,.8,.2,1) backwards; } .mh-wz-page .mh-wz { width: 100%; height: calc(100vh - 150px); min-height: 520px; max-height: none; }
   /* La creación de personaje vive en la columna central, sin caja alrededor (como el resto de páginas). */
   .mh-wz-page .mh-card.mh-wz { background: none !important; border: 0 !important; box-shadow: none !important; border-radius: 0; overflow: visible; backdrop-filter: none; -webkit-backdrop-filter: none; }
@@ -7278,6 +7335,18 @@ function DomainSwap({ entries, initial, limit, level, domains, colors, onSave, o
 }
 
 // Último paso de la creación: tu mano en abanico arriba y, debajo, el estante con las cartas de cada dominio.
+// Deslizar con el dedo: a la izquierda avanza y a la derecha retrocede.
+const swipeProps = (go, idx) => ({
+  onTouchStart: (e) => { e.currentTarget.dataset.sx = String(e.touches[0].clientX); e.currentTarget.dataset.sy = String(e.touches[0].clientY); },
+  onTouchEnd: (e) => {
+    const sx = Number(e.currentTarget.dataset.sx);
+    const sy = Number(e.currentTarget.dataset.sy);
+    if (Number.isNaN(sx)) return;
+    const dx = e.changedTouches[0].clientX - sx;
+    const dy = e.changedTouches[0].clientY - sy;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.4) go(idx + (dx < 0 ? 1 : -1));
+  },
+});
 function DomainPicker({ entries, sel, limit, level, domains, colors, onChange }) {
   const [dom, setDom] = useState(domains[0]);
   const [pend, setPend] = useState(null);
@@ -27128,7 +27197,7 @@ export default function App({ onSignOut }) {
                         else if (e.key === "ArrowLeft") (e.preventDefault(), goTo(stepIndex - 1));
                       }}
                     >
-                      <div className="mh-dk-deck" role="radiogroup" aria-label={"Subclases de " + cls}>
+                      <div className="mh-dk-deck" role="radiogroup" aria-label={"Subclases de " + cls} {...swipeProps(goTo, stepIndex)}>
                         {stepIndex > 0 && <button type="button" className="mh-dk-nav is-l" aria-label="Subclase anterior" onClick={() => goTo(stepIndex - 1)}><ChevronLeft size={20} /></button>}
                         {stepIndex < len - 1 && <button type="button" className="mh-dk-nav is-r" aria-label="Subclase siguiente" onClick={() => goTo(stepIndex + 1)}><ChevronRight size={20} /></button>}
                         {stepItems.map((it, i) => {
@@ -27188,7 +27257,7 @@ export default function App({ onSignOut }) {
                             </div>
                           </div>
                         )}
-                        {len > 1 && <div className="mh-dk-hint">Pulsa la carta de detrás, usa las flechas o el teclado ← → para cambiar de subclase.</div>}
+                        {len > 1 && <div className="mh-dk-hint">Desliza o usa las flechas (← →) para cambiar de subclase.</div>}
                       </div>
                     </div>
                   );
@@ -27387,7 +27456,7 @@ export default function App({ onSignOut }) {
                           else if (e.key === "ArrowLeft") (e.preventDefault(), goTo(idx - 1));
                         }}
                       >
-                        <div className="mh-dk-deck" role="radiogroup" aria-label="Transformaciones">
+                        <div className="mh-dk-deck" role="radiogroup" aria-label="Transformaciones" {...swipeProps(goTo, idx)}>
                           {idx > 0 && <button type="button" className="mh-dk-nav is-l" aria-label="Transformación anterior" onClick={() => goTo(idx - 1)}><ChevronLeft size={20} /></button>}
                           {idx < len - 1 && <button type="button" className="mh-dk-nav is-r" aria-label="Transformación siguiente" onClick={() => goTo(idx + 1)}><ChevronRight size={20} /></button>}
                           {list.map((it, i) => {
@@ -27437,7 +27506,7 @@ export default function App({ onSignOut }) {
                               <p>{cur.expansion ? cur.blurb : "Tu personaje empieza sin ninguna transformación. Podrás adquirir una más adelante si la historia lo pide."}</p>
                             </div>
                           )}
-                          <div className="mh-dk-hint">Pulsa la carta de detrás, usa las flechas o el teclado ← → para cambiar.</div>
+                          <div className="mh-dk-hint">Desliza o usa las flechas (← →) para cambiar.</div>
                         </div>
                       </div>
                     );
