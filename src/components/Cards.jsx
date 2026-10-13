@@ -21,17 +21,34 @@ const KIND_COLOR = { dominio: "#C9A24A", ascendencia: "#6FA3C0", comunidad: "#C0
 // La carta, tal cual se ve al abrirla; en la cuadrícula tiene exactamente el mismo tamaño (300 × 420).
 function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
   const col = c.color;
+  // En la cuadrícula, las cartas de dominio se ven como en «Acciones»: ilustración, nivel, recuperación y nombre.
+  if (c.kind === "dominio" && !onClose)
+    return (
+      <div className="mh-dslot cx-dtile" style={{ "--dc": col }}>
+        {c.image ? <img className="mh-dslot-art" src={c.image} alt="" /> : <div className="mh-dslot-noart"><I size={58} strokeWidth={1.4} /></div>}
+        <div className="mh-dslot-shade" />
+        <span className="mh-dslot-gem" title={"Nivel " + c.level}>{c.level}</span>
+        <span className="mh-dslot-recall" title="Coste de recuperación">{c.recall}</span>
+        <div className="mh-dslot-txt">
+          <div className="mh-dslot-kicker">{c.sub}</div>
+          <FitTitle text={c.key} max={17} min={12} className="mh-serif mh-dslot-title" />
+        </div>
+      </div>
+    );
+  const legend = c.kind === "arma" && c.tier === 4;
   const feats = c.features || [];
   const total = (c.text || "").length + feats.reduce((s, f) => s + (f.name || "").length + (f.text || "").length, 0);
   const modal = !!onClose;
   const dom = c.kind === "dominio";
   return (
     <div
-      className={"mh-card mh-cardc" + (modal ? " mh-card-anim mh-tilt" : "") + (dom ? " is-bg" : "")}
+      className={"mh-card mh-cardc" + (modal ? " mh-card-anim" : "") + (modal || legend ? " mh-tilt" : "") + (dom ? " is-bg" : "") + (legend ? " is-legend" : "")}
       style={{ "--glow": alpha(col, 51), "--cc": col, margin: 0, width: modal ? "min(300px, 100%)" : 300, height: modal ? "min(420px, 80vh)" : 420, maxWidth: "100%", padding: 0, overflow: "hidden", borderRadius: 22, display: "flex", flexDirection: "column", border: "2px solid " + col, position: "relative", textAlign: "left" }}
       {...(tilt || {})}
     >
       <div className="mh-glare" />
+      {legend && <div className="mh-holo is-idle" />}
+      {legend && <div className="mh-legend-sheen" />}
       <div className="mh-cardc-art" style={{ height: total > 600 ? 84 : total > 320 ? 100 : 124, "--ah": (total > 600 ? 84 : total > 320 ? 100 : 124) + "px" }}>
         {c.image ? <img src={c.image} alt={modal ? c.key : ""} /> : <div className="mh-cardc-noart" style={{ color: col }}><I size={50} strokeWidth={1.5} /></div>}
         {modal && <button type="button" className="mh-cardc-close" onClick={onClose} aria-label="Cerrar"><X size={14} /></button>}
@@ -55,7 +72,7 @@ function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
 }
 
 // Solo se pinta la carta cuando está cerca de la pantalla: 100 cartas con imágenes a la vez tardaban unos segundos.
-function Lazy({ children }) {
+function Lazy({ children, dom }) {
   const ref = useRef(null);
   const [on, setOn] = useState(() => typeof IntersectionObserver === "undefined");
   useEffect(() => {
@@ -65,7 +82,7 @@ function Lazy({ children }) {
     io.observe(el);
     return () => io.disconnect();
   }, [on]);
-  return <span ref={ref} className="cx-lz">{on ? children : null}</span>;
+  return <span ref={ref} className={"cx-lz" + (dom ? " is-dom" : "")}>{on ? children : null}</span>;
 }
 
 export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
@@ -171,8 +188,8 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
             {s.list.map((c) => {
               const I = Icon(c);
               return (
-                <button type="button" key={c.id} className="cx-card" onClick={() => setOpen(c)} aria-label={"Ver " + c.key}>
-                  <Lazy><CardFace c={c} I={I} FitTitle={FitTitle} FitBox={FitBox} /></Lazy>
+                <button type="button" key={c.id} className={"cx-card" + (c.kind === "dominio" ? " is-dom" : "")} onClick={() => setOpen(c)} aria-label={"Ver " + c.key}>
+                  <Lazy dom={c.kind === "dominio"}><CardFace c={c} I={I} FitTitle={FitTitle} FitBox={FitBox} tilt={c.kind === "arma" && c.tier === 4 ? { onPointerMove: tilt, onPointerLeave: untilt } : undefined} /></Lazy>
                 </button>
               );
             })}

@@ -5598,6 +5598,16 @@ const sharedStyles = `
   .cx-lv span { height: 1px; flex: 1; background: var(--mh-line); } .cx-lv small { color: var(--mh-muted); font-size: 12px; }
   .cx-grid { display: grid; grid-template-columns: repeat(auto-fill, 300px); gap: 16px; justify-content: center; }
   .cx-card { appearance: none; font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; display: block; width: 300px; max-width: 100%; height: 420px; border-radius: 22px; transition: translate .15s, box-shadow .15s; }
+  .cx-card.is-dom, .cx-lz.is-dom { height: 170px; border-radius: 12px; }
+  .cx-dtile { width: 300px; max-width: 100%; height: 170px; }
+  .mh-cardc.is-legend { box-shadow: 0 0 0 1px #F6D675 inset, 0 0 22px -4px #E8C547, 0 8px 24px -8px rgba(232,197,71,.55); }
+  .mh-holo.is-idle { opacity: .42; }
+  .mh-tilt:not([data-active="1"]) .mh-holo.is-idle { animation: mh-holo-drift 7s ease-in-out infinite alternate; }
+  @keyframes mh-holo-drift { from { background-position: 8% 12%; } to { background-position: 92% 88%; } }
+  .mh-legend-sheen { position: absolute; inset: 0; z-index: 31; pointer-events: none; border-radius: inherit; overflow: hidden; }
+  .mh-legend-sheen::after { content: ""; position: absolute; top: -20%; bottom: -20%; width: 38%; left: -60%; transform: skewX(-18deg); background: linear-gradient(90deg, transparent, rgba(255,246,200,.5), transparent); animation: mh-sheen 4.2s ease-in-out infinite; }
+  @keyframes mh-sheen { 0%, 55% { left: -60%; } 100% { left: 130%; } }
+  @media (prefers-reduced-motion: reduce) { .mh-tilt:not([data-active="1"]) .mh-holo.is-idle, .mh-legend-sheen::after { animation: none; } }
   .cx-lz { display: block; width: 300px; max-width: 100%; height: 420px; }
   .cx-card:hover { translate: 0 -3px; box-shadow: 0 12px 26px rgba(0,0,0,.28); } .cx-card:focus-visible { outline: 2px solid var(--acc, #C9A24A); outline-offset: 3px; }
   .cx-empty { padding: 40px; text-align: center; color: var(--mh-muted); border: 1px dashed var(--mh-line); border-radius: 16px; margin-top: 14px; }
