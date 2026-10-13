@@ -91,6 +91,17 @@ export function ModernSheet({ d, actions, content, tab, onTab, fill }) {
     const t = [60, 200, 420].map((ms) => setTimeout(() => window.dispatchEvent(new Event("resize")), ms));
     return () => t.forEach(clearTimeout);
   }, [fill]);
+  // Al cambiar la imagen del banner (otro estado del retrato) se funde con la anterior.
+  const [artFx, setArtFx] = useState({ prev: null });
+  const lastArt = useRef({ src: d.art, y: d.artY });
+  useEffect(() => {
+    const old = lastArt.current;
+    lastArt.current = { src: d.art, y: d.artY };
+    if (!old.src || !d.art || old.src === d.art) return;
+    setArtFx({ prev: old });
+    const tm = setTimeout(() => setArtFx({ prev: null }), 700);
+    return () => clearTimeout(tm);
+  }, [d.art, d.artY]);
   const Emblem = d.Emblem;
   // Ficha del nivel: se abre al pulsar el escudo y deja subir de nivel sin pedir permiso.
   const [lvOpen, setLvOpen] = useState(false);
@@ -133,7 +144,10 @@ export function ModernSheet({ d, actions, content, tab, onTab, fill }) {
       <div className={"mhm-headwrap" + (fill ? " is-collapsed" : "")}>
       <section className={"mhm-head" + (d.color2 ? " is-multi" : "")}>
         {d.art ? (
-          <span className="mhm-head-art" aria-hidden="true" style={{ backgroundImage: `url(${d.art})`, backgroundPosition: "center " + (d.artY ?? 28) + "%" }} />
+          <>
+            {artFx.prev && <span key={"o" + artFx.prev.src} className="mhm-head-art is-out" aria-hidden="true" style={{ backgroundImage: `url(${artFx.prev.src})`, backgroundPosition: "center " + (artFx.prev.y ?? 28) + "%" }} />}
+            <span key={d.art} className={"mhm-head-art" + (artFx.prev ? " is-in" : "")} aria-hidden="true" style={{ backgroundImage: `url(${d.art})`, backgroundPosition: "center " + (d.artY ?? 28) + "%" }} />
+          </>
         ) : (
           <span className="mhm-head-emb" aria-hidden="true"><Emblem size={190} strokeWidth={1} /></span>
         )}
