@@ -5598,8 +5598,6 @@ const sharedStyles = `
   .cx-lv span { height: 1px; flex: 1; background: var(--mh-line); } .cx-lv small { color: var(--mh-muted); font-size: 12px; }
   .cx-grid { display: grid; grid-template-columns: repeat(auto-fill, 300px); gap: 16px; justify-content: center; }
   .cx-card { appearance: none; font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; display: block; width: 300px; max-width: 100%; height: 420px; border-radius: 22px; transition: translate .15s, box-shadow .15s; }
-  .cx-card.is-dom, .cx-lz.is-dom { height: 170px; border-radius: 12px; }
-  .cx-dtile { width: 300px; max-width: 100%; height: 170px; }
   .mh-cardc.is-legend { box-shadow: 0 0 0 1px #F6D675 inset, 0 0 22px -4px #E8C547, 0 8px 24px -8px rgba(232,197,71,.55); }
   .mh-holo.is-idle { opacity: .42; }
   .mh-tilt:not([data-active="1"]) .mh-holo.is-idle { animation: mh-holo-drift 7s ease-in-out infinite alternate; }
