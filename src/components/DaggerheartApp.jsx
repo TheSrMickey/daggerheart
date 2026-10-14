@@ -3170,6 +3170,10 @@ const sharedStyles = `
   .mh-cardc.is-bg .mh-cardc-gem { width: 44px; height: auto; padding: 10px 0 25px; gap: 9px; flex-direction: column; border: 0; border-radius: 0; background: var(--cc); color: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; font: 700 24px/1 'Cinzel', Georgia, serif; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 13px), 0 100%); text-shadow: 0 2px 4px #0006; }
   .mh-cardc.is-bg .mh-cardc-dom { top: 176px; right: auto; left: 50%; transform: translateX(-50%); padding: 4px 18px; border: 0; border-radius: 99px; font-size: 10px; font-weight: 800; letter-spacing: .2em; color: #fff; background: color-mix(in srgb, var(--cc) 82%, #10112a); box-shadow: 0 4px 12px -4px #000a, inset 0 1px 0 #ffffff40; -webkit-backdrop-filter: none; backdrop-filter: none; }
   .mh-cardc-cost { display: none; }
+  .mh-cardc.is-bg.is-wp .mh-cardc-sub { display: block; margin-top: 2px; font-size: 9.5px; letter-spacing: .14em; color: var(--mh-muted); }
+  .mh-cardc.is-bg.is-wp .mh-cardc-big { font-size: 36px; font-weight: 800; letter-spacing: -.02em; color: #fff; text-shadow: 0 2px 12px color-mix(in srgb, var(--cc) 60%, transparent); }
+  html[data-mh-theme="light"] .mh-cardc.is-bg.is-wp .mh-cardc-big { color: #2B2236; text-shadow: none; }
+  .mh-cardc.is-bg.is-wp .mh-cardc-label { color: var(--mh-muted); }
   .mh-cardc.is-bg .mh-cardc-cost { position: absolute; top: 12px; right: 12px; z-index: 4; width: 42px; height: 42px; border-radius: 50%; border: 2.5px solid #f3d98a; background: rgba(13,13,34,.82); color: #fff; display: flex; align-items: center; justify-content: center; gap: 1px; font: 800 17px 'Inter', system-ui, sans-serif; box-shadow: 0 4px 12px #0008; text-shadow: none; }
   .mh-cardc.is-bg .mh-cardc-cost svg { color: #f3d98a; }
   .mh-cardc.is-bg .mh-cardc-close { top: 62px; }
@@ -24975,7 +24979,7 @@ export default function App({ onSignOut }) {
                   return (
                   <div className="mh-cardc-wrap" onClick={(e) => e.stopPropagation()}>
                   <div
-                    className={"mh-card mh-card-anim mh-tilt mh-cardc" + (d.domain || isAncCom ? " is-bg" : "")}
+                    className={"mh-card mh-card-anim mh-tilt mh-cardc" + (d.domain || isAncCom || d.weapon ? " is-bg" : "") + (d.weapon ? " is-wp" : "")}
                     style={{
                       "--glow": alpha(cardColor, 33),
                       "--cc": cardColor,
@@ -25010,6 +25014,8 @@ export default function App({ onSignOut }) {
                     <div className="mh-cardc-badge">
                       {d.domain ? (
                         <span className="mh-cardc-gem" title={"Nivel " + d.domain.level}>{d.domain.level}<ArtIcon size={19} strokeWidth={1.8} /></span>
+                      ) : d.weapon && d.tier ? (
+                        <span className="mh-cardc-gem is-rank" title={TIER_COLORS[d.tier].label}>{["I", "II", "III", "IV"][d.tier - 1]}<ArtIcon size={19} strokeWidth={1.8} /></span>
                       ) : d.brawlerStrike ? (
                         <span className="mh-cardc-tier" style={{ background: "#C08B5C" }}>Sin arma</span>
                       ) : d.tier ? (
@@ -25018,6 +25024,7 @@ export default function App({ onSignOut }) {
                     </div>
                     {d.domain && subtitle && <span className="mh-cardc-dom">{d.domain.type || subtitle}</span>}
                     {isAncCom && <span className="mh-cardc-dom">{ancComLabel}</span>}
+                    {d.weapon && d.tier && <span className="mh-cardc-dom">{TIER_COLORS[d.tier].label}</span>}
                     {d.domain && <span className="mh-cardc-cost" title="Coste de recuperación">{d.domain.recall ?? "—"}<Zap size={12} fill="currentColor" /></span>}
                     <div style={{ padding: "0 18px", textAlign: "center", flexShrink: 0, marginTop: d.domain || d.tier || isAncCom ? 16 : 8 }}>
                       <FitTitle text={d.title} max={19} min={14} className="mh-serif" style={{ fontWeight: 700, color: "var(--mh-ink)", maxHeight: "2.4em", overflow: "hidden" }} />
@@ -25320,6 +25327,11 @@ export default function App({ onSignOut }) {
                           <span className="mh-cardc-sig">
                             <span>Dominio {d.domain.name}</span>
                             <span>Nivel {d.domain.level} · Recuperación {d.domain.recall ?? "—"}</span>
+                          </span>
+                        ) : d.weapon ? (
+                          <span className="mh-cardc-sig">
+                            <span>{footer}</span>
+                            <span>{d.tier ? TIER_COLORS[d.tier].label : ""}</span>
                           </span>
                         ) : isAncCom ? (
                           <span className="mh-cardc-sig">
