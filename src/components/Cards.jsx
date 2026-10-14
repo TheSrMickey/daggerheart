@@ -39,8 +39,9 @@ function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
         {c.image ? <img src={c.image} alt={modal ? c.key : ""} /> : <div className="mh-cardc-noart" style={{ color: col }}><I size={50} strokeWidth={1.5} /></div>}
         {modal && <button type="button" className="mh-cardc-close" onClick={onClose} aria-label="Cerrar"><X size={14} /></button>}
       </div>
-      <div className="mh-cardc-badge">{dom && <span className="mh-cardc-gem" title={"Nivel " + c.level}>{c.level}</span>}</div>
-      {dom && <span className="mh-cardc-dom">{c.sub}</span>}
+      <div className="mh-cardc-badge">{dom && <span className="mh-cardc-gem" title={"Nivel " + c.level}>{c.level}<I size={19} strokeWidth={1.8} /></span>}</div>
+      {dom && <span className="mh-cardc-dom">{c.type}</span>}
+      {dom && <span className="mh-cardc-cost" title="Coste de recuperación">{c.recall}<Zap size={12} fill="currentColor" /></span>}
       <div style={{ padding: "0 18px", textAlign: "center", flexShrink: 0, marginTop: dom ? 16 : 8 }}>
         <FitTitle text={c.key} max={19} min={14} className="mh-serif" style={{ fontWeight: 700, color: "var(--mh-ink)", maxHeight: "2.4em", overflow: "hidden" }} />
         <div className="mh-cardc-sub">{c.sub}</div>
@@ -53,10 +54,9 @@ function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
         ))}
       </FitBox>
       {dom && (
-        <div className="mh-cardc-foot">
-          <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
-            <Zap size={12} color="#E3B04B" /> Recuperación <b>{c.recall}</b>
-          </span>
+        <div className="mh-cardc-sig">
+          <span>Dominio {c.domain}</span>
+          <span>Nivel {c.level} · Recuperación {c.recall}</span>
         </div>
       )}
     </div>
