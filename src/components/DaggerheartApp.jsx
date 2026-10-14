@@ -594,10 +594,18 @@ const COMMUNITIES = [
 ];
 
 const TRANSFORMATIONS = [
-  { key: "Vampiro", blurb: "Sediento de sangre, veloz y débil ante la luz del sol.", expansion: "Hope & Fear" },
+  {
+    key: "Vampiro",
+    blurb: "Los vampiros son criaturas no muertas de colmillos afilados que se alimentan de la sangre de los vivos.",
+    expansion: "Hope & Fear",
+    features: [
+      { name: "Colmillos", text: "Haz un ataque con un rasgo a tu elección para morder a un objetivo en alcance Cuerpo a cuerpo. Si tienes éxito, inflige d6 de daño físico usando tu Competencia." },
+      { name: "Alimentarse", text: "Tras un ataque de «Colmillos» exitoso contra una criatura que pueda sangrar, puedes marcar un Estrés para alimentarte. Coloca sobre esta carta tantas fichas como Puntos de Vida marque el objetivo. Puedes tener hasta 6 fichas a la vez. Antes de hacer una tirada de acción, puedes gastar una ficha para que tu Dado de Miedo sea un d20. Cuando hagas un descanso largo, retira una ficha. Mientras no haya fichas en esta carta, haces las tiradas de acción y de reacción con desventaja." },
+    ],
+  },
   {
     key: "Hombre Lobo",
-    blurb: "Cambia de forma bajo la luna, con garras y furia salvaje.",
+    blurb: "Los hombres lobo son criaturas que se transforman en grandes lobos sobrenaturales.",
     expansion: "Hope & Fear",
     features: [
       {
@@ -611,10 +619,42 @@ const TRANSFORMATIONS = [
       },
     ],
   },
-  { key: "Reanimado", blurb: "Regresó de la muerte, y ya no teme lo que antes le detenía.", expansion: "Hope & Fear" },
-  { key: "Cambiaformas", blurb: "Puede adoptar la apariencia de otros seres a voluntad.", expansion: "Hope & Fear" },
-  { key: "Fantasma", blurb: "Ligado al mundo de los vivos como un eco incorpóreo.", expansion: "Hope & Fear" },
-  { key: "Semidiós", blurb: "Lleva la sangre de lo divino corriendo por sus venas.", expansion: "Hope & Fear" },
+  {
+    key: "Reanimado",
+    blurb: "Los reanimados son cadáveres que han sido devueltos a la vida.",
+    expansion: "Hope & Fear",
+    features: [
+      { name: "Cadáver", text: "Durante un descanso, solo puedes recuperar Puntos de Vida si tienes acceso a los restos de una criatura recién fallecida. Describe cómo usas estos materiales para mantener tu cuerpo." },
+      { name: "No Se Queda Muerto", text: "Cuando elijas el movimiento de muerte Arriesgarlo Todo y falles, puedes marcar permanentemente un Punto de Vida para tener éxito en su lugar. Cuando lo hagas, sigues usando el valor del Dado de Esperanza para recuperar Puntos de Vida y Estrés. Cuando marques permanentemente tu último Punto de Vida, atraviesas el velo de la muerte." },
+    ],
+  },
+  {
+    key: "Cambiaformas",
+    blurb: "Los cambiaformas son criaturas capaces de cambiar su forma física.",
+    expansion: "Hope & Fear",
+    features: [
+      { name: "Cambiar de Forma", text: "Durante un descanso, puedes usar un movimiento de tiempo libre para intercambiar tu ascendencia actual por otra. Cuando lo hagas, describe cómo cambia tu aspecto." },
+      { name: "Solo Superficial", text: "Solo obtienes el beneficio de una de las características de la ascendencia elegida, que seleccionas al escogerla. Puedes usar un movimiento de tiempo libre para elegir otra característica de esa ascendencia." },
+    ],
+  },
+  {
+    key: "Fantasma",
+    blurb: "Los fantasmas son los espíritus de quienes vivieron y siguen atados al Reino Mortal.",
+    expansion: "Hope & Fear",
+    features: [
+      { name: "Asuntos Pendientes", text: "Acuerda con el DJ qué propósito o deseo te mantiene atado al Reino Mortal. Cuando lo cumplas, atraviesas el velo de la muerte." },
+      { name: "Efímero", text: "Tu cuerpo oscila entre lo corpóreo y lo incorpóreo. Eres resistente al daño físico, recibes el doble de daño mágico y puedes marcar 2 Estrés para atravesar por un instante un objeto sólido." },
+    ],
+  },
+  {
+    key: "Semidiós",
+    blurb: "Los semidioses son criaturas mortales por cuyas venas corre la sangre de los dioses.",
+    expansion: "Hope & Fear",
+    features: [
+      { name: "Dotado", text: "Ganas un bonificador de +1 a las tiradas de acción, de reacción y de daño." },
+      { name: "Peso de la Divinidad", text: "Cuando falles una tirada, debes marcar un Estrés o el DJ gana un Miedo." },
+    ],
+  },
 ];
 
 const LANGUAGES = [
@@ -878,6 +918,7 @@ const buildCardCatalog = () => {
       kind: "forma",
       key: b.key,
       sub: "Forma de Bestia · Rango " + b.tier,
+      tier: b.tier,
       text: b.animals,
       features: [{ name: "Bonificador", text: b.bonus }, { name: "Ataque", text: b.attack }, { name: "Ventaja en", text: b.advantage }, ...b.features],
       image: b.image,
