@@ -8185,7 +8185,8 @@ function DualityResult({ roll, size = 84 }) {
 
 // Aullido Frenético: tantos d20 como tu Rango.
 function RampageResult({ roll }) {
-  const rolling = useRolling(roll?.key, 1100);
+  const inst = isInstant(roll); // con la escena 3D no se repiten los dados
+  const rolling = useRolling(inst ? null : roll?.key, 1100);
   const size = roll.rolls.length > 2 ? 58 : 72;
   return (
     <div style={{ position: "relative", textAlign: "center" }}>
@@ -8194,13 +8195,15 @@ function RampageResult({ roll }) {
       <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 12.5, color: "var(--mh-ink2)", margin: "4px 0 12px", position: "relative" }}>
         {roll.who} marca su último Estrés en Forma de Lobo y entra en frenesí
       </div>
-      <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", position: "relative" }}>
-        {roll.rolls.map((v, i) => (
-          <DieFace key={i} sides={20} value={v} color="#E0544A" size={size} rolling={rolling} delay={i * 90} highlight={!rolling && v === 20} />
-        ))}
-      </div>
+      {!inst && (
+        <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", position: "relative" }}>
+          {roll.rolls.map((v, i) => (
+            <DieFace key={i} sides={20} value={v} color="#E0544A" size={size} rolling={rolling} delay={i * 90} highlight={!rolling && v === 20} />
+          ))}
+        </div>
+      )}
       <div className="mh-serif" style={{ fontSize: 50, fontWeight: 700, lineHeight: 1.1, marginTop: 10, minHeight: 56, color: "var(--mh-ink)", position: "relative" }}>
-        {rolling ? <span className="mh-dots">···</span> : <CountUp value={roll.total} />}
+        {rolling ? <span className="mh-dots">···</span> : inst ? roll.total : <CountUp value={roll.total} />}
       </div>
       {!rolling && (
         <div className="mh-pop" key={roll.key} style={{ fontFamily: "'Inter', system-ui, sans-serif", position: "relative" }}>
@@ -12213,7 +12216,19 @@ export default function App({ onSignOut }) {
     const rolls = Array.from({ length: tier }, () => Math.floor(Math.random() * 20) + 1);
     const total = rolls.reduce((a, b) => a + b, 0);
     const who = c.f_name || "El personaje";
-    setRampageResult({ key: Date.now(), who, rolls, total });
+    const use3d = canDice3d();
+    const rk = Date.now();
+    setRampageResult({ key: rk, instantKey: use3d ? rk : null, who, rolls, total });
+    if (use3d) {
+      // Mismas escena y dados 3D que el resto de tiradas; la tarjeta roja con el temblor sale al cerrarla.
+      flushOutcome();
+      setDiceHold(true);
+      setDice3d({
+        key: rk,
+        dice: rolls.map((v) => ({ sides: 20, value: v, kind: "dmg", main: true })),
+        summary: { parts: [{ label: tier + "d20", v: total, plain: true }], total, text: "¡Aullido Frenético!", color: "#E0674F", note: "Daño físico a todo en alcance Muy cercano", dc: who + " sale de la Forma de Lobo", outcome: "dmg" },
+      });
+    }
     const detail = `${tier}d20 (${rolls.join("+")}) = ${total}`;
     pushRollLog(`**${who}** — ¡Aullido Frenético! ${detail} de daño físico a todo en alcance Muy cercano`);
     postCampaignEvent(id, `🐺 ¡Aullido Frenético! ${detail} de daño físico a todas las criaturas en alcance Muy cercano. Sale de la Forma de Lobo.`, {
@@ -17046,8 +17061,9 @@ export default function App({ onSignOut }) {
                         kicker: `Subclase · ${subclassBadge}`,
                         title: subclassEntry.key,
                         text: subclassEntry.blurb,
+                        accent: CLASS_COLORS[c.f_class] || undefined,
                         features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento", "Escuela de la Guerra", "Bruja Lunar", "Bruja del Seto", "Pacto del Eterno", "Pacto del Iracundo", "Titán", "Artista Marcial", "Gremio del Verdugo", "Gremio del Envenenador", "Nigromancia", "Teúrgia", "Orden del Licántropo", "Orden del Mutante", "Orden del Espectro"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
-                        image: subclassEntry.image,
+                        image: SUBCLASS_CARD_ART[subclassEntry.key] || subclassEntry.image,
                         bigStyle: true,
                         ...(isElemental ? { elementalAction: true } : {}),
                         ...(subclassEntry.key === "Guardián de la Renovación" ? { renewalAction: true } : {}),
@@ -17113,7 +17129,7 @@ export default function App({ onSignOut }) {
                       kicker: "Multiclase · " + mcInfo.cls,
                       title: mcInfo.sub,
                       summary: found.map((f) => f.name).join(" · "),
-                      onClick: openDetail({ kicker: "Multiclase · " + mcInfo.cls + " · Fundamento", title: mcInfo.sub, text: msub?.blurb, features: found, image: msub?.image, bigStyle: true, accent: "#7FB77A" }),
+                      onClick: openDetail({ kicker: "Multiclase · " + mcInfo.cls + " · Fundamento", title: mcInfo.sub, text: msub?.blurb, features: found, image: SUBCLASS_CARD_ART[mcInfo.sub] || msub?.image, bigStyle: true, accent: CLASS_COLORS[mcInfo.cls] || "#7FB77A" }),
                     };
                     items.push(mcItem);
                   }
@@ -17189,7 +17205,7 @@ export default function App({ onSignOut }) {
                         summary: isActive ? activatableFeature.name + " activa" : transEntry.blurb,
                         active: isActive,
                         cost: activatableFeature ? { label: isActive ? "Activa" : "1 Estrés", kind: isActive ? "active" : "stress" } : null,
-                        onClick: openDetail({ kicker: "Transformación", title: transEntry.key, text: transEntry.blurb, features: transEntry.features, bigStyle: true, accent: "#A58BE8", transformForm: activatableFeature?.name }),
+                        onClick: openDetail({ kicker: "Transformación", title: transEntry.key, text: transEntry.blurb, features: transEntry.features, image: TRANSFORMATION_ART[transEntry.key]?.src, bigStyle: true, accent: TRANSFORMATION_ART[transEntry.key]?.color || "#A58BE8", transformForm: activatableFeature?.name }),
                         extra: activatableFeature && (
                           <button
                             type="button"
@@ -23642,7 +23658,7 @@ export default function App({ onSignOut }) {
               </div>
             )}
 
-            {rampageResult && (
+            {rampageResult && !diceHold && (
               <div
                 className="mh-overlay mh-rampage"
                 style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 35, padding: 20 }}
@@ -25047,7 +25063,16 @@ export default function App({ onSignOut }) {
                   const dmg = d.weapon ? d.weapon.damage.match(/^(\S+)\s*(.*)$/) : null;
                   const isAncCom = !d.domain && !d.weapon && !d.armor && /^(Ascendencia|Comunidad)\b/.test(d.kicker || "");
                   const ancComLabel = isAncCom ? (d.kicker.startsWith("Comunidad") ? "Comunidad" : "Ascendencia") : "";
-                  const subtitle = d.weapon ? [d.kicker, d.weapon.hands].join(" · ") : d.domain ? d.domain.name + " · " + d.domain.type : d.kicker?.replace(/ · Nivel .*$/, "");
+                  // Mismo diseño nuevo que la pestaña Cartas (arte de fondo) para subclases, transformaciones y formas de bestia.
+                  const isSub = !d.domain && !d.weapon && !d.armor && /^(Subclase|Multiclase)\b/.test(d.kicker || "");
+                  const isTrans = !d.domain && !d.weapon && /^Transformación\b/.test(d.kicker || "");
+                  const isForm = !d.domain && !d.weapon && !!d.beastKey && /^Forma de Bestia\b/.test(d.kicker || "");
+                  const newBg = !!(d.domain || isAncCom || d.weapon || isSub || isTrans || isForm);
+                  const subRank = /Maestr/.test(d.kicker || "") ? 2 : /Especializ/.test(d.kicker || "") ? 1 : 0;
+                  const subRankLabel = ["Fundación", "Especialización", "Maestría"][subRank];
+                  const formRank = Number((/Rango (\d)/.exec(d.kicker || "") || [])[1] || 1);
+                  const subCls = (/^Multiclase · ([^·]+)/.exec(d.kicker || "") || [])[1]?.trim() || c.f_class;
+                  const subtitle = isSub ? subCls + " · Subclase" : isTrans ? "Transformación" : isForm ? d.kicker : d.weapon ? [d.kicker, d.weapon.hands].join(" · ") : d.domain ? d.domain.name + " · " + d.domain.type : d.kicker?.replace(/ · Nivel .*$/, "");
                   const ArtIcon = d.armor
                     ? armorIcon(d.title)
                     : d.brawlerStrike
@@ -26562,7 +26587,7 @@ export default function App({ onSignOut }) {
                   return (
                   <div className="mh-cardc-wrap" onClick={(e) => e.stopPropagation()}>
                   <div
-                    className={"mh-card mh-card-anim mh-tilt mh-cardc" + (d.domain || isAncCom || d.weapon ? " is-bg" : "") + (d.weapon ? " is-wp" : "")}
+                    className={"mh-card mh-card-anim mh-tilt mh-cardc" + (newBg ? " is-bg" : "") + (d.weapon ? " is-wp" : "")}
                     style={{
                       "--glow": alpha(cardColor, 33),
                       "--cc": cardColor,
@@ -26599,6 +26624,8 @@ export default function App({ onSignOut }) {
                         <span className="mh-cardc-gem" title={"Nivel " + d.domain.level}>{d.domain.level}<ArtIcon size={19} strokeWidth={1.8} /></span>
                       ) : d.weapon && d.tier ? (
                         <span className="mh-cardc-gem is-rank" title={TIER_COLORS[d.tier].label}>{["I", "II", "III", "IV"][d.tier - 1]}<ArtIcon size={19} strokeWidth={1.8} /></span>
+                      ) : isSub || isForm ? (
+                        <span className="mh-cardc-gem is-rank" title={isSub ? subRankLabel : "Rango " + formRank}>{["I", "II", "III", "IV"][isSub ? subRank : formRank - 1]}<ArtIcon size={19} strokeWidth={1.8} /></span>
                       ) : d.brawlerStrike ? (
                         <span className="mh-cardc-tier" style={{ background: "#C08B5C" }}>Sin arma</span>
                       ) : d.tier ? (
@@ -26607,9 +26634,12 @@ export default function App({ onSignOut }) {
                     </div>
                     {d.domain && subtitle && <span className="mh-cardc-dom">{d.domain.type || subtitle}</span>}
                     {isAncCom && <span className="mh-cardc-dom">{ancComLabel}</span>}
+                    {isSub && <span className="mh-cardc-dom">{subRankLabel}</span>}
+                    {isTrans && <span className="mh-cardc-dom">Transformación</span>}
+                    {isForm && <span className="mh-cardc-dom">Forma de Bestia</span>}
                     {d.weapon && d.tier && <span className="mh-cardc-dom">{TIER_COLORS[d.tier].label}</span>}
                     {d.domain && <span className="mh-cardc-cost" title="Coste de recuperación">{d.domain.recall ?? "—"}<Zap size={12} fill="currentColor" /></span>}
-                    <div style={{ padding: "0 18px", textAlign: "center", flexShrink: 0, marginTop: d.domain || d.tier || isAncCom ? 16 : 8 }}>
+                    <div style={{ padding: "0 18px", textAlign: "center", flexShrink: 0, marginTop: d.domain || d.tier || isAncCom || isSub || isTrans || isForm ? 16 : 8 }}>
                       <FitTitle text={d.title} max={19} min={14} className="mh-serif" style={{ fontWeight: 700, color: "var(--mh-ink)", maxHeight: "2.4em", overflow: "hidden" }} />
                       {subtitle && <div className="mh-cardc-sub">{subtitle}</div>}
                       <div className="mh-cardc-orn" />
@@ -26904,7 +26934,7 @@ export default function App({ onSignOut }) {
                         </div>
                       );
                     })()}
-                    {!tideCard && !prayerCard && !slayerCard && !patternCard && !hexCard && !hedgeCard && !poisonCard && !summonCard && !patronCard && (footer || d.domain || isAncCom) && (
+                    {!tideCard && !prayerCard && !slayerCard && !patternCard && !hexCard && !hedgeCard && !poisonCard && !summonCard && !patronCard && (footer || d.domain || isAncCom || isSub || isTrans || isForm) && (
                       <div className="mh-cardc-foot">
                         {d.domain ? (
                           <span className="mh-cardc-sig">
@@ -26915,6 +26945,11 @@ export default function App({ onSignOut }) {
                           <span className="mh-cardc-sig">
                             <span>{footer}</span>
                             <span>{d.tier ? TIER_COLORS[d.tier].label : ""}</span>
+                          </span>
+                        ) : isSub || isTrans || isForm ? (
+                          <span className="mh-cardc-sig">
+                            <span>{subtitle}</span>
+                            <span>{(d.features || []).length} característica{(d.features || []).length === 1 ? "" : "s"}</span>
                           </span>
                         ) : isAncCom ? (
                           <span className="mh-cardc-sig">

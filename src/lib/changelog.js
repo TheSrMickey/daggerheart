@@ -6,6 +6,8 @@ export const CHANGELOG = [
     date: "2026-10-11",
     title: "Imágenes propias en las escenas y viñeta",
     items: [
+      { tag: "mejora", text: "Aullido Frenético: los d20 se tiran ahora con los dados 3D (zoom, borde rojo y suma), y la tarjeta roja con el temblor aparece al tocar la pantalla, ya sin repetir la tirada antigua." },
+      { tag: "mejora", text: "Acciones: las cartas de subclase, transformación y formas de bestia se abren ahora con el diseño nuevo de la pestaña Cartas (ilustración de fondo, rango en la esquina, etiqueta y pie), igual que las de dominio, ascendencia y comunidad." },
       { tag: "mejora", text: "Hoja de personaje: la imagen de fondo de la cabecera es ahora la ilustración oficial de la clase en alta calidad (con su escena) y se ve más nítida; la tuya propia sigue sustituyéndola si la subes." },
       { tag: "mejora", text: "Al tocar la pantalla tras una tirada de dados, la escena sale con animación: la caja de la suma baja y se desvanece, los dados se acercan y todo se funde. Además, al marcar una casilla de Armadura ya no aparece el texto «Armadura marcada» junto a los umbrales: ahora el borde de las tres cajas de umbrales se pone azul." },
       { tag: "nuevo", text: "El daño de las armas también se tira con los dados 3D (misma escena: zoom, borde animado y suma con todas las bonificaciones; el daño al enemigo se aplica al tocar la pantalla). Y las cajas de resultado antiguas ya no repiten los dados: solo quedan si tienen botones o habilidades que usar, y si no se cierran solas." },
