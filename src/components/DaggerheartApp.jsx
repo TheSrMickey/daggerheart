@@ -5821,6 +5821,21 @@ const sharedStyles = `
   .mh-relnet-sec::after { content: ""; flex: 1; height: 1px; background: color-mix(in srgb, var(--rl) 35%, transparent); }
   .mh-cardc-wrap { position: relative; display: flex; align-items: center; justify-content: center; width: min(300px, 100%); }
   .mh-cardc-wrap > .mh-cardc { z-index: 2; }
+  .cx-deckwrap { display: flex; flex-direction: column; align-items: center; gap: 22px; max-width: 100%; }
+  .cx-deck { --pk: 78px; position: relative; width: calc(300px + var(--pk) * 2 * (var(--n) - 1)); max-width: 100%; height: 420px; }
+  .cx-dk { position: absolute; left: 50%; top: 0; width: 300px; margin-left: -150px; z-index: var(--z); transform: translateX(calc(var(--o) * var(--pk))) scale(calc(1 - var(--o) * var(--o) * .045)); transform-origin: 50% 50%; transition: transform .38s cubic-bezier(.2,.8,.2,1), filter .3s; filter: brightness(calc(1 - (var(--o) * var(--o)) * .22)); }
+  .cx-dk:not(.is-front) { cursor: pointer; }
+  .cx-dk:not(.is-front) > * { pointer-events: none; }
+  .cx-dk:not(.is-front):hover { filter: brightness(.95); }
+  .cx-dk:not(.is-front):focus-visible { outline: 2px solid #E3B04B; outline-offset: 4px; border-radius: 24px; }
+  .cx-dtabs { display: flex; gap: 6px; padding: 5px; border-radius: 16px; background: color-mix(in srgb, var(--mh-panel) 84%, transparent); border: 1px solid var(--mh-line2); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+  .cx-dtabs button { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 7px; padding: 8px 13px; border-radius: 11px; font-size: 12px; font-weight: 600; color: var(--mh-ink3); }
+  .cx-dtabs button b { font: 700 11px Cinzel, Georgia, serif; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid var(--mh-line2); }
+  .cx-dtabs button:hover { color: var(--mh-ink); }
+  .cx-dtabs button.on { color: var(--mh-ink); background: color-mix(in srgb, var(--cc) 26%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cc) 60%, transparent); }
+  .cx-dtabs button.on b { background: var(--cc); border-color: var(--cc); color: #10101e; }
+  .cx-dtabs button:focus-visible { outline: 2px solid #E3B04B; }
+  @media (max-width: 560px) { .cx-deck { --pk: 24px; } .cx-dtabs button { padding: 8px 9px; font-size: 11px; } }
   .mh-cardc-dock {
     position: absolute; z-index: 1; left: calc(100% - 18px); top: 50%; translate: 0 -50%;
     display: flex; flex-direction: column; gap: 8px; padding: 10px 9px 10px 26px;

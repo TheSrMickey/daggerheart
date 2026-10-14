@@ -112,6 +112,7 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(null);
   const [closing, setClosing] = useState(false);
+  const [deckIdx, setDeckIdx] = useState(0); // subclase abierta: qué carta del mazo está delante (0 Fundación, 1 Especialización, 2 Maestría)
   const rootRef = useRef(null);
   const scRef = useRef(null);
   const [showTop, setShowTop] = useState(false);
@@ -203,13 +204,18 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
   const domains = useMemo(() => [...Object.keys(domainColors).filter((d) => d !== "Sangre"), ...(domainColors.Sangre ? ["Sangre"] : [])], [domainColors]); // Sangre (playtest de The Void) va el último
   const all = items;
   const q = norm(query.trim());
-  const count = (k) => all.filter((c) => c.kind === k).length;
+  // Subclases: en la cuadrícula solo sale la carta de Fundación; Especialización y Maestría van detrás, al abrirla.
+  const subSet = (c) => all.filter((x) => x.kind === "subclase" && x.cls === c.cls && x.key === c.key).sort((a, b) => a.rank - b.rank);
+  const count = (k) => all.filter((c) => c.kind === k && (k !== "subclase" || c.rank === 0)).length;
   const matches = (c) => {
     if (sel.length) return c.kind === "dominio" && sel.includes(c.domain);
     if (kinds.length && !kinds.includes(c.kind)) return false;
-    return !q || norm(c.key + " " + c.text + " " + (c.features || []).map((f) => f.name + " " + f.text).join(" ") + " " + c.sub).includes(q);
+    if (c.kind === "subclase" && c.rank) return false;
+    const group = c.kind === "subclase" ? subSet(c) : [c];
+    return !q || group.some((g) => norm(g.key + " " + g.text + " " + (g.features || []).map((f) => f.name + " " + f.text).join(" ") + " " + g.sub).includes(q));
   };
   const shown = all.filter((c) => matches(c) && (!sel.length || !q || norm(c.key + " " + c.text).includes(q)));
+  const openCard = (c) => (setDeckIdx(0), setOpen(c));
   const showDomains = !kinds.length || kinds.includes("dominio");
   const domCount = (d) => all.filter((c) => c.kind === "dominio" && c.domain === d).length;
   // Los tipos se eligen de uno en uno; solo los dominios se pueden combinar.
@@ -229,7 +235,10 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
   };
   useEffect(() => {
     if (!open) return;
-    const k = (e) => e.key === "Escape" && close();
+    const k = (e) => {
+      if (e.key === "Escape") close();
+      else if (open.kind === "subclase" && (e.key === "ArrowRight" || e.key === "ArrowLeft")) setDeckIdx((i) => Math.max(0, Math.min(subSet(open).length - 1, i + (e.key === "ArrowRight" ? 1 : -1))));
+    };
     window.addEventListener("keydown", k);
     return () => window.removeEventListener("keydown", k);
   });
@@ -299,7 +308,7 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
             {s.list.map((c) => {
               const I = Icon(c);
               return (
-                <button type="button" key={c.id} className="cx-card" onClick={() => setOpen(c)} aria-label={"Ver " + c.key}>
+                <button type="button" key={c.id} className="cx-card" onClick={() => openCard(c)} aria-label={"Ver " + c.key}>
                   <Lazy><CardFace c={c} I={I} FitTitle={FitTitle} FitBox={FitBox} tilt={c.kind === "dominio" || (c.kind === "arma" && c.tier === 4) ? { onPointerMove: (e) => e.pointerType === "mouse" && tilt(e), onPointerLeave: untilt } : undefined} /></Lazy>
                 </button>
               );
@@ -310,6 +319,43 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
 
       {open && (() => {
         const c = open, I = Icon(c);
+        if (c.kind === "subclase") {
+          const deck = subSet(c);
+          const cur = Math.min(deckIdx, deck.length - 1);
+          return (
+            <div className={"mh-overlay" + (closing ? " is-closing" : "")} style={{ background: "rgba(8,6,12,0.70)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 60, padding: 20 }} onClick={close} role="dialog" aria-modal="true" aria-label={c.key}>
+              <div className="cx-deckwrap" onClick={(e) => e.stopPropagation()} style={{ "--cc": c.color }}>
+                <div className="cx-deck" style={{ "--n": deck.length }}>
+                  {deck.map((d, i) => {
+                    const off = i - cur;
+                    const front = off === 0;
+                    return (
+                      <div
+                        key={d.id}
+                        className={"cx-dk" + (front ? " is-front" : "")}
+                        style={{ "--o": off, "--z": 10 - Math.abs(off) }}
+                        onClick={front ? undefined : () => setDeckIdx(i)}
+                        role={front ? undefined : "button"}
+                        tabIndex={front ? -1 : 0}
+                        aria-label={front ? undefined : "Ver " + d.rankLabel}
+                        onKeyDown={front ? undefined : (e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setDeckIdx(i))}
+                      >
+                        <CardFace c={d} I={Icon(d)} FitTitle={FitTitle} FitBox={FitBox} tilt={front ? { onPointerMove: tilt, onPointerLeave: untilt, onPointerUp: (e) => e.pointerType !== "mouse" && untilt(e) } : undefined} />
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="cx-dtabs" role="tablist" aria-label="Rango de la subclase">
+                  {deck.map((d, i) => (
+                    <button key={d.id} type="button" role="tab" aria-selected={i === cur} className={i === cur ? "on" : ""} onClick={() => setDeckIdx(i)}>
+                      <b>{["I", "II", "III"][d.rank]}</b>{d.rankLabel}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        }
         return (
           <div className={"mh-overlay" + (closing ? " is-closing" : "")} style={{ background: "rgba(8,6,12,0.70)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 60, padding: 20 }} onClick={close} role="dialog" aria-modal="true" aria-label={c.key}>
             <div className="mh-cardc-wrap" onClick={(e) => e.stopPropagation()}>
