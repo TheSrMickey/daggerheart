@@ -114,38 +114,82 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
     if (!sc) return;
     scRef.current = sc;
     const mobile = window.matchMedia("(max-width: 819px)").matches;
-    let tm = 0;
-    // Móvil: cuando el desplazamiento se detiene, la carta más cercana se centra en la zona visible (entre los filtros fijos y la barra inferior).
-    const settle = () => {
+    const onScroll = () => setShowTop(sc.scrollTop > 700);
+    sc.addEventListener("scroll", onScroll, { passive: true });
+    // Móvil: el deslizamiento vertical avanza de carta en carta. El dedo arrastra la lista y, al soltar, se va a la carta
+    // anterior o siguiente (nunca queda entre dos) con la carta centrada en la zona visible.
+    const stops = () => {
       const bar = rootRef.current?.querySelector(".cx-bars");
       const dock = document.querySelector(".mh-dock");
       const sr = sc.getBoundingClientRect();
-      const top = bar ? bar.getBoundingClientRect().bottom : sr.top;
+      const top = sr.top + (bar ? bar.offsetHeight : 0); // altura con los filtros ya fijos
       const bottom = dock ? Math.min(sr.bottom, dock.getBoundingClientRect().top) : sr.bottom;
       const mid = (top + bottom) / 2;
-      let best = null;
-      let bd = Infinity;
+      const list = [0];
       rootRef.current?.querySelectorAll(".cx-card").forEach((el) => {
         const r = el.getBoundingClientRect();
-        const d = r.top + r.height / 2 - mid;
-        if (Math.abs(d) < Math.abs(bd)) {
+        list.push(Math.max(0, Math.min(sc.scrollHeight - sc.clientHeight, sc.scrollTop + r.top + r.height / 2 - mid)));
+      });
+      return list;
+    };
+    let g = null;
+    const start = (e) => {
+      if (e.touches.length !== 1 || e.target.closest(".cx-bars, .cx-top, .mh-overlay")) return (g = null);
+      g = { x: e.touches[0].clientX, y: e.touches[0].clientY, t: performance.now(), base: sc.scrollTop, dir: 0, last: e.touches[0].clientY, lt: performance.now(), v: 0 };
+    };
+    const move = (e) => {
+      if (!g) return;
+      const x = e.touches[0].clientX;
+      const y = e.touches[0].clientY;
+      if (!g.dir) {
+        if (Math.abs(x - g.x) < 6 && Math.abs(y - g.y) < 6) return;
+        if (Math.abs(x - g.x) > Math.abs(y - g.y)) return (g = null);
+        g.dir = 1;
+        sc.style.scrollBehavior = "auto";
+      }
+      e.preventDefault();
+      const now = performance.now();
+      g.v = (g.last - y) / Math.max(1, now - g.lt);
+      g.last = y;
+      g.lt = now;
+      sc.scrollTop = g.base + (g.y - y);
+    };
+    const end = () => {
+      if (!g || !g.dir) return (g = null);
+      const list = stops();
+      const cur = sc.scrollTop;
+      const moved = g.y - g.last; // >0: el dedo subió (se avanza)
+      let idx = 0;
+      let bd = Infinity;
+      list.forEach((s, i) => {
+        const d = Math.abs(s - g.base);
+        if (d < bd) {
           bd = d;
-          best = el;
+          idx = i;
         }
       });
-      // Solo se ajusta si hay una carta a la vista; en la cabecera de la lista no se mueve.
-      if (best && Math.abs(bd) > 2 && sc.scrollTop > 160) sc.scrollTo({ top: sc.scrollTop + bd, behavior: "smooth" });
+      // Posición de partida = parada más cercana al inicio del gesto; con un gesto claro se mueve una carta.
+      const fast = Math.abs(g.v) > 0.35 && Math.abs(moved) > 12;
+      let to = idx;
+      if (Math.abs(moved) > 50 || fast) to = idx + (moved > 0 || (fast && g.v > 0) ? 1 : -1);
+      to = Math.max(0, Math.min(list.length - 1, to));
+      g = null;
+      sc.style.scrollBehavior = "";
+      sc.scrollTo({ top: list[to], behavior: "smooth" });
     };
-    const onScroll = () => {
-      setShowTop(sc.scrollTop > 700);
-      if (!mobile) return;
-      clearTimeout(tm);
-      tm = setTimeout(settle, 140);
-    };
-    sc.addEventListener("scroll", onScroll, { passive: true });
+    if (mobile) {
+      sc.addEventListener("touchstart", start, { passive: true });
+      sc.addEventListener("touchmove", move, { passive: false });
+      sc.addEventListener("touchend", end, { passive: true });
+      sc.addEventListener("touchcancel", end, { passive: true });
+    }
     return () => {
-      clearTimeout(tm);
       sc.removeEventListener("scroll", onScroll);
+      sc.removeEventListener("touchstart", start);
+      sc.removeEventListener("touchmove", move);
+      sc.removeEventListener("touchend", end);
+      sc.removeEventListener("touchcancel", end);
+      sc.style.scrollBehavior = "";
     };
   }, []);
   const domains = useMemo(() => [...Object.keys(domainColors).filter((d) => d !== "Sangre"), ...(domainColors.Sangre ? ["Sangre"] : [])], [domainColors]); // Sangre (playtest de The Void) va el último
