@@ -5718,13 +5718,15 @@ const sharedStyles = `
   .cx-chip.on { border-color: var(--c); background: color-mix(in srgb, var(--c) 14%, var(--mh-panel)); color: var(--mh-ink); }
   .cx-chip.off { opacity: .45; cursor: default; }
   .cx-bars { display: block; }
+  .cx-top { position: fixed; right: 22px; bottom: 22px; z-index: 40; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; color: var(--mh-ink); background: color-mix(in srgb, var(--mh-nav) 82%, transparent); -webkit-backdrop-filter: blur(16px) saturate(1.2); backdrop-filter: blur(16px) saturate(1.2); border: 1px solid var(--mh-line2); box-shadow: 0 12px 22px -12px #000b, inset 0 1px 0 #ffffff14; animation: mh-fade-in .2s ease both; }
+  .cx-top:hover { border-color: var(--acc, #E3B04B); color: var(--acc, #E3B04B); }
+  @media (min-width: 820px) { .cx-top { right: 310px; } }
+  @media (max-width: 819px) { .cx-top { bottom: calc(92px + env(safe-area-inset-bottom, 0px)); right: 16px; } }
   @media (max-width: 819px) {
     .cx-bars { position: sticky; top: -18px; z-index: 12; margin: 0 -12px 6px; padding: 8px 12px 4px; background: color-mix(in srgb, var(--mh-bg) 95%, transparent); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border-bottom: 1px solid var(--mh-line); }
     .cx-bars .cx-bar { flex-wrap: nowrap; overflow-x: auto; margin-bottom: 6px; padding-bottom: 2px; scrollbar-width: none; }
     .cx-bars .cx-bar::-webkit-scrollbar { display: none; }
     .cx-bars .cx-chip { flex-shrink: 0; }
-    .cx-h, .cx-lv { scroll-snap-align: start; }
-    .cx-card { scroll-snap-align: center; touch-action: pan-y; }
   }
   .cx-meta { display: flex; justify-content: space-between; align-items: center; margin: 10px 2px 4px; color: var(--mh-muted); font-size: 12px; gap: 10px; flex-wrap: wrap; }
   .cx-lv { display: flex; align-items: center; gap: 12px; margin: 22px 0 12px; } .cx-lv b { font: 700 13px 'Cinzel', Georgia, serif; letter-spacing: .06em; text-transform: uppercase; color: var(--mh-ink); }
