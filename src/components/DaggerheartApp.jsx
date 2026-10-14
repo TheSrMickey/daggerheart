@@ -12,6 +12,7 @@ import { storageGet, storageSet } from "@/lib/storage";
 import { NotificationBell, FriendsPanel } from "./Social";
 import { ModernSheet } from "./ModernSheet";
 import { Tour } from "./Tour";
+import { Dice3D, canDice3d } from "./Dice3D";
 import { LevelUpDialog, parseAdvances, ownedCards, getMulticlass, MAX_LEVEL, rankOf } from "./LevelUp";
 import { RulesPanel } from "./MapRules";
 import { Changelog } from "./Changelog";
@@ -13897,6 +13898,9 @@ export default function App({ onSignOut }) {
   };
 
   const [traitRollResult, setTraitRollResult] = useState(null);
+  // Dados 3D con física (solo en las tiradas de Agilidad, de momento): mientras ruedan, la tarjeta de resultado espera.
+  const [dice3d, setDice3d] = useState(null);
+  const [diceHold, setDiceHold] = useState(false);
   const [bfAboveKey, setBfAboveKey] = useState(null);
   const [beastformTierFilter, setBeastformTierFilter] = useState(1);
 
@@ -14227,6 +14231,10 @@ export default function App({ onSignOut }) {
         : "Las reacciones no generan Esperanza ni Miedo"
       : hope === fear ? "Ganas 1 Esperanza y te quitas 1 Estrés" : hope > fear ? "Ganas 1 Esperanza" : "El DJ gana 1 de Miedo";
     setTraitRollResult({ key: Date.now(), hopeSides, traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, tideBonus, hybridRoll, hybridSidesR: extras.hybridSides || 0, hallowRoll, hallowFirst: hopeA, patronRoll, patronSides: extras.patronSides || 0, slayerRoll, slayerRolls, total, text: hope === fear ? "Éxito crítico" : reaction ? "Tirada de reacción" : text, color, note, reaction, card: cardContext ? { name: cardContext.name, dc: cardContext.dc } : dcVal ? { name: "", dc: dcVal } : null, exps: extras.exps || [], honed: extras.honed || [], wasCloaked, weapon: weapon || null, charId });
+    if (traitLabel === "Agilidad" && hopeSides === 12 && canDice3d()) {
+      setDiceHold(true);
+      setDice3d({ key: Date.now(), hope, fear });
+    }
 
     // Ataque en área: una tirada contra todos; impacta a quienes tengan Dificultad igual o menor.
     if (weapon && weapon.targets && sheetCampaignId && !reaction) {
@@ -20881,7 +20889,7 @@ export default function App({ onSignOut }) {
               );
             })()}
 
-            {traitRollResult && (
+            {traitRollResult && !diceHold && (
               <div
                 style={{
                   position: "absolute",
@@ -25107,6 +25115,7 @@ export default function App({ onSignOut }) {
 
   return (
     <div className={"mh-root" + (isMobile ? " is-mobile" : "")} style={{ display: "flex", flexDirection: isMobile ? "column" : "row", height: "100dvh", background: "var(--mh-bg)", fontFamily: "'Inter', system-ui, sans-serif", color: "var(--mh-ink)", overflow: "hidden" }}>
+      {dice3d && <Dice3D key={dice3d.key} hope={dice3d.hope} fear={dice3d.fear} onReveal={() => setDiceHold(false)} onEnd={() => (setDice3d(null), setDiceHold(false))} />}
       <style>{sharedStyles}</style>
       <SocialHost />
       {levelUpId && characters[levelUpId] && (() => {
