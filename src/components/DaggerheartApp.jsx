@@ -3015,7 +3015,13 @@ const sharedStyles = `
   .mh-cardc.is-bg .mh-cardc-art { height: 188px !important; min-height: 188px; }
   .mh-cardc.is-bg .mh-cardc-art img, .mh-cardc.is-bg .mh-cardc-noart { bottom: auto; height: 222px; object-position: 46% 28%; }
   .mh-cardc.is-bg .mh-cardc-noart { padding-top: 0; align-items: center; }
-  .mh-cardc.is-bg .mh-cardc-art::after { top: 112px; bottom: auto; height: 116px; background: linear-gradient(180deg, rgba(16,17,42,0) 0%, rgba(16,17,42,.6) 50%, #10112a 100%); }
+  .mh-cardc.is-bg .mh-cardc-art img, .mh-cardc.is-bg .mh-cardc-noart { -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 52%, transparent 100%); mask-image: linear-gradient(180deg, #000 0%, #000 52%, transparent 100%); }
+  .mh-cardc.is-bg .mh-cardc-art::after { top: 70px; bottom: auto; height: 170px; background: linear-gradient(180deg, rgba(16,17,42,0) 0%, rgba(16,17,42,.12) 18%, rgba(16,17,42,.4) 40%, rgba(16,17,42,.72) 62%, rgba(16,17,42,.93) 82%, #10112a 100%); }
+  /* Modo claro: el fundido baja a crema y el texto pasa a tinta oscura */
+  html[data-mh-theme="light"] .mh-cardc.is-bg { --mh-ink: #2B2236; --mh-ink2: #3A3046; --mh-ink3: #4A4057; --mh-muted: #6D6478; --mh-muted2: #857C96; --mh-gold-ink: #8A5C0B; background: #FBF6EA !important; text-shadow: none; box-shadow: 0 16px 30px -18px rgba(70,45,20,.45); }
+  html[data-mh-theme="light"] .mh-cardc.is-bg .mh-cardc-art::after { background: linear-gradient(180deg, rgba(251,246,234,0) 0%, rgba(251,246,234,.12) 18%, rgba(251,246,234,.4) 40%, rgba(251,246,234,.72) 62%, rgba(251,246,234,.93) 82%, #FBF6EA 100%); }
+  html[data-mh-theme="light"] .mh-cardc.is-bg .mh-cardc-sig { color: #6D6478; opacity: 1; text-shadow: none; }
+  html[data-mh-theme="light"] .mh-cardc.is-bg .mh-cardc-dom { box-shadow: 0 4px 10px -4px rgba(60,40,20,.5), inset 0 1px 0 #ffffff55; }
   .mh-cardc.is-bg .mh-cardc-badge { top: 0; left: 14px; }
   .mh-cardc.is-bg .mh-cardc-gem { width: 44px; height: auto; padding: 10px 0 25px; gap: 9px; flex-direction: column; border: 0; border-radius: 0; background: var(--cc); color: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; font: 700 24px/1 'Cinzel', Georgia, serif; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 13px), 0 100%); text-shadow: 0 2px 4px #0006; }
   .mh-cardc.is-bg .mh-cardc-dom { top: 176px; right: auto; left: 50%; transform: translateX(-50%); padding: 4px 18px; border: 0; border-radius: 99px; font-size: 10px; font-weight: 800; letter-spacing: .2em; color: #fff; background: color-mix(in srgb, var(--cc) 82%, #10112a); box-shadow: 0 4px 12px -4px #000a, inset 0 1px 0 #ffffff40; -webkit-backdrop-filter: none; backdrop-filter: none; }
