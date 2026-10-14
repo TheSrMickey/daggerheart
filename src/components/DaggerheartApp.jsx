@@ -2465,30 +2465,6 @@ const DOMAIN_ICONS = {
 };
 
 const DOMAIN_CARDS = {
-  // Sangre (The Void · playtest). Demiplane no publica ilustración (solo una imagen genérica) ni el coste de Recuperación: queda por confirmar (null).
-  Sangre: [
-    {
-      key: "Poder a Través del Dolor",
-      level: 1,
-      type: "Habilidad",
-      recall: null,
-      text: "Cuando marques un Punto de Vida, coloca una ficha sobre esta carta. En un ataque exitoso, puedes gastar cualquier número de fichas de esta carta para ganar un bonificador de 1d6 al daño del ataque por cada ficha gastada. Esta carta puede contener un máximo de fichas igual a tu rasgo de conjuro. Retira todas las fichas de esta carta cuando hagas un descanso largo.",
-    },
-    {
-      key: "Espina de Sangre",
-      level: 1,
-      type: "Hechizo",
-      recall: null,
-      text: "Haz una tirada de conjuro contra un objetivo en alcance Cercano. Si tienes éxito, gasta una Esperanza para infligirle d8+2 de daño mágico usando tu Competencia, y el objetivo marca un Estrés. Si tienes al menos 3 Puntos de Vida marcados, el dado de daño es un d10.",
-    },
-    {
-      key: "Talismán de Sangre Vital",
-      level: 1,
-      type: "Hechizo",
-      recall: null,
-      text: "Marca un Punto de Vida para conjurar un talismán imbuido con tu esencia vital. Cuando quien porte el talismán fuera a recibir daño Grave o mayor, puede destruirlo para reducir el daño en dos umbrales. El talismán desaparece cuando hagas un descanso o vuelvas a lanzar este hechizo.",
-    },
-  ],
   Arcano: [
     {
       key: "Guarda Rúnica",
@@ -2723,6 +2699,30 @@ const DOMAIN_CARDS = {
       image: "/cartas-dominio/soy-tu-escudo.webp",
       recall: 1,
       text: "Cuando un aliado en alcance Muy cercano fuera a recibir daño, puedes marcar un Estrés para interponerte y convertirte en el objetivo del ataque. Cuando recibas daño de este ataque, puedes marcar cualquier cantidad de Casillas de Armadura.",
+    },
+  ],
+  // Sangre (The Void · playtest). Demiplane no publica ilustración (solo una imagen genérica) ni el coste de Recuperación: queda por confirmar (null).
+  Sangre: [
+    {
+      key: "Poder a Través del Dolor",
+      level: 1,
+      type: "Habilidad",
+      recall: null,
+      text: "Cuando marques un Punto de Vida, coloca una ficha sobre esta carta. En un ataque exitoso, puedes gastar cualquier número de fichas de esta carta para ganar un bonificador de 1d6 al daño del ataque por cada ficha gastada. Esta carta puede contener un máximo de fichas igual a tu rasgo de conjuro. Retira todas las fichas de esta carta cuando hagas un descanso largo.",
+    },
+    {
+      key: "Espina de Sangre",
+      level: 1,
+      type: "Hechizo",
+      recall: null,
+      text: "Haz una tirada de conjuro contra un objetivo en alcance Cercano. Si tienes éxito, gasta una Esperanza para infligirle d8+2 de daño mágico usando tu Competencia, y el objetivo marca un Estrés. Si tienes al menos 3 Puntos de Vida marcados, el dado de daño es un d10.",
+    },
+    {
+      key: "Talismán de Sangre Vital",
+      level: 1,
+      type: "Hechizo",
+      recall: null,
+      text: "Marca un Punto de Vida para conjurar un talismán imbuido con tu esencia vital. Cuando quien porte el talismán fuera a recibir daño Grave o mayor, puede destruirlo para reducir el daño en dos umbrales. El talismán desaparece cuando hagas un descanso o vuelvas a lanzar este hechizo.",
     },
   ],
 };
