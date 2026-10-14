@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Layers, Search, Zap } from "lucide-react";
+import { Crown, Gem, Layers, Search, Sprout, Zap } from "lucide-react";
 
 // Pestaña «Cartas»: todas las cartas del juego (dominio, ascendencia, comunidad, subclase y transformación),
 // con filtros y buscador. Al pulsar una carta se ve en grande, con el mismo diseño que en la hoja.
@@ -28,7 +28,9 @@ function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
   const dom = c.kind === "dominio";
   // Ascendencias y comunidades usan el mismo diseño que las de dominio, sin cinta de nivel ni coste.
   const gen = c.kind === "ascendencia" || c.kind === "comunidad";
-  const bg = dom || gen;
+  const sub = c.kind === "subclase";
+  const RankIcon = sub ? [Sprout, Gem, Crown][c.rank || 0] : null; // Fundación, Especialización, Maestría
+  const bg = dom || gen || sub;
   return (
     <div
       className={"mh-card mh-cardc" + (modal ? " mh-card-anim" : "") + (modal || legend || bg ? " mh-tilt" : "") + (bg ? " is-bg" : "") + (legend ? " is-legend" : "")}
@@ -41,8 +43,11 @@ function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
       <div className="mh-cardc-art" style={{ height: total > 600 ? 84 : total > 320 ? 100 : 124, "--ah": (total > 600 ? 84 : total > 320 ? 100 : 124) + "px" }}>
         {c.image ? <img src={c.image} alt={modal ? c.key : ""} /> : <div className="mh-cardc-noart" style={{ color: col }}><I size={50} strokeWidth={1.5} /></div>}
       </div>
-      <div className="mh-cardc-badge">{dom && <span className="mh-cardc-gem" title={"Nivel " + c.level}>{c.level}<I size={19} strokeWidth={1.8} /></span>}</div>
-      {bg && <span className="mh-cardc-dom">{dom ? c.type : c.sub}</span>}
+      <div className="mh-cardc-badge">
+        {dom && <span className="mh-cardc-gem" title={"Nivel " + c.level}>{c.level}<I size={19} strokeWidth={1.8} /></span>}
+        {sub && <span className="mh-cardc-gem is-rank" title={c.rankLabel}><RankIcon size={22} strokeWidth={1.7} /><I size={17} strokeWidth={1.8} /></span>}
+      </div>
+      {bg && <span className="mh-cardc-dom">{dom ? c.type : sub ? c.rankLabel : c.sub}</span>}
       {dom && <span className="mh-cardc-cost" title="Coste de recuperación">{c.recall ?? "—"}<Zap size={12} fill="currentColor" /></span>}
       <div style={{ padding: "0 18px", textAlign: "center", flexShrink: 0, marginTop: bg ? 16 : 8 }}>
         <FitTitle text={c.key} max={19} min={14} className="mh-serif" style={{ fontWeight: 700, color: "var(--mh-ink)", maxHeight: "2.4em", overflow: "hidden" }} />
@@ -61,7 +66,7 @@ function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
           <span>Nivel {c.level} · Recuperación {c.recall ?? "—"}</span>
         </div>
       )}
-      {gen && (
+      {(gen || sub) && (
         <div className="mh-cardc-sig">
           <span>{c.sub}</span>
           <span>{feats.length} característica{feats.length === 1 ? "" : "s"}</span>

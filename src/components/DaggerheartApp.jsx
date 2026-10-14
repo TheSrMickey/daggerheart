@@ -855,8 +855,21 @@ const buildCardCatalog = () => {
   const sort = (a, b) => a.key.localeCompare(b.key, "es");
   ANCESTRIES.map((a) => ({ id: "a-" + a.key, kind: "ascendencia", key: a.key, sub: "Ascendencia", text: a.blurb, features: a.features, image: a.image, color: "#6FA3C0", Icon: User })).sort(sort).forEach((c) => out.push(c));
   COMMUNITIES.map((a) => ({ id: "c-" + a.key, kind: "comunidad", key: a.key, sub: "Comunidad", text: a.blurb, features: a.features, image: a.image, color: "#C08B5C", Icon: Home })).sort(sort).forEach((c) => out.push(c));
+  // Cada subclase da tres cartas: Fundación, Especialización y Maestría.
   Object.entries(SUBCLASSES).forEach(([cls, list]) =>
-    list.forEach((s) => out.push({ id: "s-" + cls + s.key, kind: "subclase", key: s.key, sub: cls + " · Subclase", text: s.blurb, features: s.features, image: SUBCLASS_CARD_ART[s.key] || s.image, color: CLASS_COLORS[cls] || "#E3B04B", Icon: CLASS_EMBLEMS[cls] || Sparkles })),
+    list.forEach((sc) => {
+      const feats = sc.features || [];
+      const isSp = (f) => /\(Especialización\)/.test(f.name);
+      const isMa = (f) => /\(Maestría\)/.test(f.name);
+      const strip = (f) => ({ ...f, name: f.name.replace(/\s*\((Especialización|Maestría)\)/, "") });
+      [
+        { r: 0, label: "Fundación", text: sc.blurb, features: feats.filter((f) => !isSp(f) && !isMa(f)) },
+        { r: 1, label: "Especialización", text: "", features: feats.filter(isSp).map(strip) },
+        { r: 2, label: "Maestría", text: "", features: feats.filter(isMa).map(strip) },
+      ]
+        .filter((x) => x.r === 0 || x.features.length)
+        .forEach((x) => out.push({ id: "s-" + cls + sc.key + x.r, kind: "subclase", key: sc.key, sub: cls + " · Subclase", cls, rank: x.r, rankLabel: x.label, text: x.text, features: x.features, image: SUBCLASS_CARD_ART[sc.key] || sc.image, color: CLASS_COLORS[cls] || "#E3B04B", Icon: CLASS_EMBLEMS[cls] || Sparkles }));
+    })
   );
   TRANSFORMATIONS.forEach((t) => out.push({ id: "t-" + t.key, kind: "transformacion", key: t.key, sub: "Transformación" + (t.expansion ? " · " + t.expansion : ""), text: t.blurb, features: t.features, image: TRANSFORMATION_ART[t.key]?.src, color: TRANSFORMATION_ART[t.key]?.color || "#A58BE8", Icon: Moon }));
   [...BEASTFORMS].sort((a, b) => a.tier - b.tier).forEach((b) =>
@@ -930,7 +943,8 @@ const CLASS_EMBLEMS = {
   "Cazador de Sangre": Droplets,
 };
 // Ilustraciones encuadradas para las cartas del paso de subclase (600×500).
-const SUBCLASS_CARD_ART = Object.fromEntries(Object.entries(SUBCLASS_ART).map(([k, v]) => [k, v.replace("/subclases/", "/subclases/cartas/")]));
+// Ilustraciones en alta calidad (900×720) de las cartas de subclase.
+const SUBCLASS_CARD_ART = Object.fromEntries(Object.keys(SUBCLASS_ART).map((k) => [k, "/subclases/hd/" + k.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + ".webp"]));
 // Dracona · Aliento Elemental: elementos a elegir.
 const BREATH_ELEMENTS = [
   { key: "Fuego", Icon: Flame, color: "#E0823A" },
@@ -23243,7 +23257,8 @@ export default function App({ onSignOut }) {
                 {(viewingCardDetail.image || viewingCardDetail.bigStyle) ? (() => {
                   // Carta enmarcada: arte en un marco, título centrado y datos al pie.
                   const d = viewingCardDetail;
-                  const cardColor = d.brawlerStrike ? "#C08B5C" : d.tier ? TIER_COLORS[d.tier].color : d.accent || "var(--acc)";
+                  // Sin color propio, la carta no toma el de la clase: ascendencia azul, comunidad bronce y el resto el acento de la página.
+                  const cardColor = d.brawlerStrike ? "#C08B5C" : d.tier ? TIER_COLORS[d.tier].color : d.accent || (/^Ascendencia\b/.test(d.kicker || "") ? "#6FA3C0" : /^Comunidad\b/.test(d.kicker || "") ? "#C08B5C" : "#8FA8FF");
                   const totalChars = (d.text?.length || 0) + (d.characteristic?.length || 0) + (d.features || []).reduce((sum, f) => sum + (f.name?.length || 0) + (f.text?.length || 0), 0);
                   const long = totalChars > 320;
                   const artHeight = d.weapon || d.armor ? 128 : totalChars > 600 ? 84 : long ? 100 : 124;
