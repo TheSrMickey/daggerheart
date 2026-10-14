@@ -73,8 +73,8 @@ export function Dice3D({ dice, summary, onReveal, onEnd }) {
       try {
         const list = (dice || []).filter((d) => DICE3D_SIDES.includes(d.sides)).slice(0, 8);
         if (!list.length) throw new Error("sin dados");
-        const W = window.innerWidth;
-        const H = window.innerHeight;
+        const W = window.innerWidth || 1280;
+        const H = window.innerHeight || 720;
         const aspect = W / H;
         const R = rngOf((Math.random() * 1e9) | 0);
         const rr = (a, b) => a + (b - a) * R();
@@ -198,11 +198,11 @@ export function Dice3D({ dice, summary, onReveal, onEnd }) {
           w.position.set(x, y, z);
           world.addBody(w);
         };
-        addBox(40, 0.5, 40, 0, -0.5, 0);
-        addBox(0.5, 12, 14, -halfX - 0.5, 12, 0);
-        addBox(0.5, 12, 14, halfX + 0.5, 12, 0);
-        addBox(14, 12, 0.5, 0, 12, -halfZ - 0.5);
-        addBox(14, 12, 0.5, 0, 12, halfZ + 0.5);
+        addBox(40, 6, 40, 0, -6, 0); // suelo grueso: con uno fino los dados a veces lo atravesaban
+        addBox(3, 12, 14, -halfX - 3, 12, 0);
+        addBox(3, 12, 14, halfX + 3, 12, 0);
+        addBox(14, 12, 3, 0, 12, -halfZ - 3);
+        addBox(14, 12, 3, 0, 12, halfZ + 3);
 
         const items = list.map((d, i) => {
           const T = typeOf(d.sides);
@@ -223,11 +223,14 @@ export function Dice3D({ dice, summary, onReveal, onEnd }) {
         const rec = [];
         let tt = 0;
         let rest = null;
+        let calm = 0;
         for (let s = 0; s < 120 * 8; s++) {
           world.step(DT);
           tt += DT;
           rec.push(items.map(({ b }) => [b.position.x, b.position.y, b.position.z, b.quaternion.x, b.quaternion.y, b.quaternion.z, b.quaternion.w]));
-          if (rest === null && items.every(({ b }) => b.sleepState === CANNON.Body.SLEEPING)) rest = tt;
+          // Quietos: dormidos, o casi sin velocidad un momento (algunos dados se quedan vibrando y no llegan a dormir).
+          calm = items.every(({ b }) => b.sleepState === CANNON.Body.SLEEPING || (b.velocity.length() < 0.3 && b.angularVelocity.length() < 0.6)) ? calm + DT : 0;
+          if (rest === null && calm > 0.3) rest = tt;
           if (rest !== null && tt > rest + 0.3) break;
         }
         if (rest === null) rest = tt;

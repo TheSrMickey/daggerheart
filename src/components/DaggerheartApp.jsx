@@ -8091,7 +8091,7 @@ function DieFace({ sides, value, color, size = 72, rolling, highlight, dim, labe
 
 // Resultado de una tirada de Dualidad: dados que ruedan, total que cuenta y veredicto.
 function DualityResult({ roll, size = 84 }) {
-  const rolling = useRolling(roll?.key);
+  const rolling = useRolling(roll?.instant ? null : roll?.key); // con la escena 3D, el panel ya no vuelve a tirar los dados
   const has = !!roll;
   const crit = has && roll.hope === roll.fear;
   const winner = !has ? null : crit ? "both" : roll.hope > roll.fear ? "hope" : "fear";
@@ -8149,7 +8149,7 @@ function DualityResult({ roll, size = 84 }) {
       </div>
       <div className="mh-res-total">
         <small>Total</small>
-        <div className="mh-serif">{!has ? "–" : rolling ? <span className="mh-dots">···</span> : <CountUp value={roll.total} />}</div>
+        <div className="mh-serif">{!has ? "–" : rolling ? <span className="mh-dots">···</span> : roll.instant ? roll.total : <CountUp value={roll.total} />}</div>
       </div>
       {landed && (
         <div className="mh-pop" key={roll.key} style={{ position: "relative", inset: "auto", width: "auto", maxHeight: "none", overflow: "visible", background: "none", border: 0, boxShadow: "none", borderRadius: 0, fontFamily: "'Inter', system-ui, sans-serif" }}>
@@ -15656,6 +15656,12 @@ export default function App({ onSignOut }) {
   // Dados 3D con física (solo en las tiradas de Agilidad, de momento): mientras ruedan, la tarjeta de resultado espera.
   const [dice3d, setDice3d] = useState(null);
   const [diceHold, setDiceHold] = useState(false);
+  const pendingOutcome = useRef(null); // Esperanza/Miedo de la tirada: se aplican al cerrar la escena de dados
+  const flushOutcome = () => {
+    const fn = pendingOutcome.current;
+    pendingOutcome.current = null;
+    if (fn) fn();
+  };
   const [bfAboveKey, setBfAboveKey] = useState(null);
   const [beastformTierFilter, setBeastformTierFilter] = useState(1);
 
@@ -15980,13 +15986,15 @@ export default function App({ onSignOut }) {
       color = hope === fear ? "#7FB77A" : "#5E8FC9";
     }
     clearTimeout(traitRollTimer.current);
+    flushOutcome(); // si quedaba pendiente la tirada anterior, se aplica antes
+    const use3d = canDice3d();
     const note = reaction
       ? hope === fear
         ? "Ignoras los efectos que te afectarían aun con éxito"
         : "Las reacciones no generan Esperanza ni Miedo"
       : hope === fear ? "Ganas 1 Esperanza y te quitas 1 Estrés" : hope > fear ? "Ganas 1 Esperanza" : "El DJ gana 1 de Miedo";
-    setTraitRollResult({ key: Date.now(), hopeSides, traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, tideBonus, hybridRoll, hybridSidesR: extras.hybridSides || 0, hallowRoll, hallowFirst: hopeA, patronRoll, patronSides: extras.patronSides || 0, slayerRoll, slayerRolls, total, text: hope === fear ? "Éxito crítico" : reaction ? "Tirada de reacción" : text, color, note, reaction, card: cardContext ? { name: cardContext.name, dc: cardContext.dc } : dcVal ? { name: "", dc: dcVal } : null, exps: extras.exps || [], honed: extras.honed || [], wasCloaked, weapon: weapon || null, charId });
-    if (canDice3d()) {
+    setTraitRollResult({ key: Date.now(), instant: use3d, hopeSides, traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, tideBonus, hybridRoll, hybridSidesR: extras.hybridSides || 0, hallowRoll, hallowFirst: hopeA, patronRoll, patronSides: extras.patronSides || 0, slayerRoll, slayerRolls, total, text: hope === fear ? "Éxito crítico" : reaction ? "Tirada de reacción" : text, color, note, reaction, card: cardContext ? { name: cardContext.name, dc: cardContext.dc } : dcVal ? { name: "", dc: dcVal } : null, exps: extras.exps || [], honed: extras.honed || [], wasCloaked, weapon: weapon || null, charId });
+    if (use3d) {
       // Todos los dados de la tirada: dualidad más ventaja y demás auxiliares.
       const dl = [{ sides: hopeSides, value: hopeA, kind: "hope", main: true }];
       if (hallowRoll) dl.push({ sides: 12, value: hallowRoll, kind: "hope", main: true });
@@ -16032,37 +16040,42 @@ export default function App({ onSignOut }) {
     }
     if (hope === fear && !reaction) logActivity("crit", "ha sacado un crítico (" + hope + "+" + fear + ") con " + (charsRef.current[charId]?.f_name || "su personaje"));
     // Con Esperanza (o crítico) ganas 1 Esperanza; con crítico además te quitas 1 Estrés.
-    let hopeGained = 0;
-    if (reaction) {
-      // Nada que ganar ni que dar al DJ.
-    } else if (hope >= fear) {
-      const ch = charsRef.current[charId];
-      if (ch) {
-        const patch = {};
-        const currentHope = Number(ch.hope_marked ?? HOPE_DEFAULT);
-        const nextHope = Math.min(getHopeMax(ch), currentHope + 1);
-        if (nextHope !== currentHope) patch.hope_marked = String(nextHope);
-        hopeGained = nextHope - currentHope;
-        setTraitRollResult((prev) => (prev && prev.charId === charId ? { ...prev, hopeGained } : prev));
-        const stress = Number(ch.stress_marked || 0);
-        if (hope === fear && stress > 0) patch.stress_marked = String(stress - 1);
-        if (Object.keys(patch).length) updateCharacterFields(charId, patch);
+    // Esperanza y Miedo no se suman hasta que el jugador cierra la escena de dados.
+    const applyOutcome = () => {
+      let hopeGained = 0;
+      if (reaction) {
+        // Nada que ganar ni que dar al DJ.
+      } else if (hope >= fear) {
+        const ch = charsRef.current[charId];
+        if (ch) {
+          const patch = {};
+          const currentHope = Number(ch.hope_marked ?? HOPE_DEFAULT);
+          const nextHope = Math.min(getHopeMax(ch), currentHope + 1);
+          if (nextHope !== currentHope) patch.hope_marked = String(nextHope);
+          hopeGained = nextHope - currentHope;
+          setTraitRollResult((prev) => (prev && prev.charId === charId ? { ...prev, hopeGained } : prev));
+          const stress = Number(ch.stress_marked || 0);
+          if (hope === fear && stress > 0) patch.stress_marked = String(stress - 1);
+          if (Object.keys(patch).length) updateCharacterFields(charId, patch);
+        }
+      } else {
+        addFear(1);
+        // Con Miedo, si quien tira tenía el foco, este pasa al DJ.
+        if (sheetCampaignId) {
+          const spf = normSpot(campaignMapRef.current?.spot);
+          if (spf.focus && !spf.focus.dm && spf.focus.charId === charId) passFocusDm(sheetCampaignId, "fear");
+        }
+        // Del Mar: cada tirada con Miedo pone una ficha en la carta de comunidad (máximo tu nivel).
+        const chT = charsRef.current[charId];
+        if (chT && chT.f_community === "Del Mar") {
+          const now = extras.tideLeft ?? Number(chT.f_tide_tokens || 0);
+          const max = Number(chT.f_level || 1);
+          if (now < max) updateCharacterField(charId, "f_tide_tokens", String(now + 1));
+        }
       }
-    } else {
-      addFear(1);
-      // Con Miedo, si quien tira tenía el foco, este pasa al DJ.
-      if (sheetCampaignId) {
-        const spf = normSpot(campaignMapRef.current?.spot);
-        if (spf.focus && !spf.focus.dm && spf.focus.charId === charId) passFocusDm(sheetCampaignId, "fear");
-      }
-      // Del Mar: cada tirada con Miedo pone una ficha en la carta de comunidad (máximo tu nivel).
-      const chT = charsRef.current[charId];
-      if (chT && chT.f_community === "Del Mar") {
-        const now = extras.tideLeft ?? Number(chT.f_tide_tokens || 0);
-        const max = Number(chT.f_level || 1);
-        if (now < max) updateCharacterField(charId, "f_tide_tokens", String(now + 1));
-      }
-    }
+    };
+    if (use3d) pendingOutcome.current = applyOutcome;
+    else applyOutcome();
 
     const who = playerName || "Alguien en la mesa";
     const modStr = traitValue > 0 ? "+" + traitValue : traitValue;
@@ -26913,7 +26926,7 @@ export default function App({ onSignOut }) {
 
   return (
     <div className={"mh-root" + (isMobile ? " is-mobile" : "")} style={{ display: "flex", flexDirection: isMobile ? "column" : "row", height: "100dvh", background: "var(--mh-bg)", fontFamily: "'Inter', system-ui, sans-serif", color: "var(--mh-ink)", overflow: "hidden" }}>
-      {dice3d && <Dice3D key={dice3d.key} dice={dice3d.dice} summary={dice3d.summary} onReveal={() => setDiceHold(false)} onEnd={() => (setDice3d(null), setDiceHold(false))} />}
+      {dice3d && <Dice3D key={dice3d.key} dice={dice3d.dice} summary={dice3d.summary} onReveal={() => (setDiceHold(false), flushOutcome())} onEnd={() => (setDice3d(null), setDiceHold(false))} />}
       <style>{sharedStyles}</style>
       <SocialHost />
       {levelUpId && characters[levelUpId] && (() => {
