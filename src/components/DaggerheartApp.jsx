@@ -12,7 +12,7 @@ import { storageGet, storageSet } from "@/lib/storage";
 import { NotificationBell, FriendsPanel } from "./Social";
 import { ModernSheet } from "./ModernSheet";
 import { Tour } from "./Tour";
-import { Dice3D, canDice3d } from "./Dice3D";
+import { Dice3D, canDice3d, DICE3D_SIDES } from "./Dice3D";
 import { LevelUpDialog, parseAdvances, ownedCards, getMulticlass, MAX_LEVEL, rankOf } from "./LevelUp";
 import { RulesPanel } from "./MapRules";
 import { Changelog } from "./Changelog";
@@ -8089,9 +8089,13 @@ function DieFace({ sides, value, color, size = 72, rolling, highlight, dim, labe
   );
 }
 
+// Una tirada es «instantánea» si su escena 3D ya mostró los dados: la caja de resultado no los repite.
+// Si algo la repite (nuevo key), vuelve a enseñarlos con normalidad.
+const isInstant = (r) => !!r && r.instantKey != null && r.instantKey === r.key;
+
 // Resultado de una tirada de Dualidad: dados que ruedan, total que cuenta y veredicto.
 function DualityResult({ roll, size = 84 }) {
-  const rolling = useRolling(roll?.instant ? null : roll?.key); // con la escena 3D, el panel ya no vuelve a tirar los dados
+  const rolling = useRolling(isInstant(roll) ? null : roll?.key); // con la escena 3D, el panel ya no vuelve a tirar los dados
   const has = !!roll;
   const crit = has && roll.hope === roll.fear;
   const winner = !has ? null : crit ? "both" : roll.hope > roll.fear ? "hope" : "fear";
@@ -8149,7 +8153,7 @@ function DualityResult({ roll, size = 84 }) {
       </div>
       <div className="mh-res-total">
         <small>Total</small>
-        <div className="mh-serif">{!has ? "–" : rolling ? <span className="mh-dots">···</span> : roll.instant ? roll.total : <CountUp value={roll.total} />}</div>
+        <div className="mh-serif">{!has ? "–" : rolling ? <span className="mh-dots">···</span> : isInstant(roll) ? roll.total : <CountUp value={roll.total} />}</div>
       </div>
       {landed && (
         <div className="mh-pop" key={roll.key} style={{ position: "relative", inset: "auto", width: "auto", maxHeight: "none", overflow: "visible", background: "none", border: 0, boxShadow: "none", borderRadius: 0, fontFamily: "'Inter', system-ui, sans-serif" }}>
@@ -12659,12 +12663,58 @@ export default function App({ onSignOut }) {
     const fearBonus = fearRolls ? fearRolls.reduce((a, b) => a + b, 0) : 0;
     const total = hybridDmg + crimsonBonus + angelRoll + knightBonus + igniteRoll + roll + sum2 + bonus + critBonus + wolfBonus + unstopBonus + sneakBonus + rawBonus + fearBonus + furyBonus;
     if (stanceNow === "aterradora") postCampaignEvent(charId, "😨 Postura Aterradora: el objetivo marca 1 Estrés");
-    setDamageRollResult({ hybridDmg, hybridDmgSides: ch ? hybridSides(ch) : 0, crimsonRolls, angelRoll, angelSides: opts.angel || 0, knightRolls, attackFear: opts.attackFear || 0, igniteRoll, stanceNow, droppedRoll, favoredBonus, rolls2, die2, comboBase: total, furyRolls, furySides: ch ? patronSides(ch) : 6, fearRolls, rawBonus, sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: Date.now(), weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, doublePick: !!opts.doublePick, charged: ch && ch.f_subclass === "Origen Primigenio" && ch.f_charged === "1" && damageType === "mágico", note: resonance ? "Resonancia Sagrada: los dados repetidos valen el doble" : opts.extraFlat ? "Incluye +" + opts.extraFlat + " de Elementalista" : waxBonus ? "Incluye +2 de la Luna Creciente" : opts.note || "", spirit: !!opts.spirit });
-    // Ataque con objetivo en el tablero: el daño se aplica al enemigo según sus umbrales.
-    if (opts.targetId && sheetCampaignId) applyFoeDamage(sheetCampaignId, opts.targetId, total, ch?.f_name || "Alguien", weaponName);
-    if (opts.targetId && sheetCampaignId && ch && ch.f_elemental_active === "Agua") elementalWave(sheetCampaignId, charId, opts.targetId);
-    // Ataque en área: el mismo daño a cada objetivo impactado (cada uno con sus umbrales).
-    if (opts.targetIds && opts.targetIds.length && sheetCampaignId) opts.targetIds.forEach((id) => applyFoeDamage(sheetCampaignId, id, total, ch?.f_name || "Alguien", weaponName));
+    const use3d = canDice3d();
+    const dmgKey = Date.now();
+    setDamageRollResult({ instantKey: use3d ? dmgKey : null, hybridDmg, hybridDmgSides: ch ? hybridSides(ch) : 0, crimsonRolls, angelRoll, angelSides: opts.angel || 0, knightRolls, attackFear: opts.attackFear || 0, igniteRoll, stanceNow, droppedRoll, favoredBonus, rolls2, die2, comboBase: total, furyRolls, furySides: ch ? patronSides(ch) : 6, fearRolls, rawBonus, sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: dmgKey, weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, doublePick: !!opts.doublePick, charged: ch && ch.f_subclass === "Origen Primigenio" && ch.f_charged === "1" && damageType === "mágico", note: resonance ? "Resonancia Sagrada: los dados repetidos valen el doble" : opts.extraFlat ? "Incluye +" + opts.extraFlat + " de Elementalista" : waxBonus ? "Incluye +2 de la Luna Creciente" : opts.note || "", spirit: !!opts.spirit });
+    // El daño al enemigo se aplica al cerrar la escena de dados (o ya, si no hay escena).
+    const applyDamage = () => {
+      // Ataque con objetivo en el tablero: el daño se aplica al enemigo según sus umbrales.
+      if (opts.targetId && sheetCampaignId) applyFoeDamage(sheetCampaignId, opts.targetId, total, ch?.f_name || "Alguien", weaponName);
+      if (opts.targetId && sheetCampaignId && ch && ch.f_elemental_active === "Agua") elementalWave(sheetCampaignId, charId, opts.targetId);
+      // Ataque en área: el mismo daño a cada objetivo impactado (cada uno con sus umbrales).
+      if (opts.targetIds && opts.targetIds.length && sheetCampaignId) opts.targetIds.forEach((id) => applyFoeDamage(sheetCampaignId, id, total, ch?.f_name || "Alguien", weaponName));
+    };
+    if (use3d) {
+      flushOutcome();
+      const dl = [];
+      const push = (sides, value, kind, main) => DICE3D_SIDES.includes(sides) && value > 0 && dl.push({ sides, value, kind, main });
+      rolls.forEach((v) => push(die, v, isCritical ? "crit" : "dmg", true));
+      (rolls2 || []).forEach((v) => push(die2, v, isCritical ? "crit" : "dmg", true));
+      push(10, wolfBonus, "bonus");
+      (sneakRolls || []).forEach((v) => push(6, v, "bonus"));
+      push((ch && hybridSides(ch)) || 4, hybridDmg, "bonus");
+      (crimsonRolls || []).forEach((v) => push(4, v, "bonus"));
+      push(opts.angel || 0, angelRoll, "bonus");
+      (knightRolls || []).forEach((v) => push(12, v, "bonus"));
+      push(6, igniteRoll, "bonus");
+      (furyRolls || []).forEach((v) => push(ch ? patronSides(ch) : 6, v, "bonus"));
+      (fearRolls || []).forEach((v) => push(10, v, "bonus"));
+      const diceSum = roll + sum2;
+      const parts = [{ label: dice + "d" + die + (die2 ? " + " + dice + "d" + die2 : ""), v: diceSum, plain: true }];
+      const extra = (label, v) => v && parts.push({ label, v });
+      extra("Bonificador", bonus);
+      extra("Crítico", critBonus);
+      extra("Lobo", wolfBonus);
+      extra("Imparable", unstopBonus);
+      extra("Furtivo", sneakBonus);
+      extra("Poder en bruto", rawBonus);
+      extra("Híbrida", hybridDmg);
+      extra("Carmesí", crimsonBonus);
+      extra("Ángel", angelRoll);
+      extra("Caballero", knightBonus);
+      extra("Llamas", igniteRoll);
+      extra("Furia", furyBonus);
+      extra("Miedo", fearBonus);
+      setDiceHold(true);
+      pendingOutcome.current = applyDamage;
+      setDice3d({
+        key: dmgKey,
+        dice: dl,
+        summary: { parts, total, text: (isCritical ? "Crítico · " : "") + "Daño " + damageType, color: isCritical ? "#7FB77A" : "#E0674F", note: opts.note || (isCritical ? "Sumas el máximo de los dados" : ""), dc: weaponName, outcome: isCritical ? "crit" : "dmg" },
+      });
+    } else {
+      applyDamage();
+    }
     const who = playerName || "Alguien en la mesa";
     const critLabel = isCritical ? ` · ¡Crítico! (+${critBonus} máx.)` : "";
     const diceLabel = `${dice}d${die} (${rolls.join("+")})` + (rolls2 ? ` + ${dice}d${die2} (${rolls2.join("+")})` : "") + (furyRolls ? ` + Furia ${furyRolls.length}d${patronSides(ch)} (${furyRolls.join("+")})` : "") + (fearRolls ? ` + Enfrenta tu Miedo ${fearRolls.length}d10 (${fearRolls.join("+")}) mágico` : "") + (wolfBonus ? ` + Lobo 1d10 (${wolfBonus})` : "") + (unstopBonus ? ` + Imparable ${unstopBonus}` : "") + (sneakRolls ? ` + Furtivo ${sneakRolls.length}d6 (${sneakRolls.join("+")})` : "");
@@ -15662,6 +15712,34 @@ export default function App({ onSignOut }) {
     pendingOutcome.current = null;
     if (fn) fn();
   };
+  // Tras la escena de dados, la caja antigua solo se queda si tiene algo que hacer (botones, rasgos…); si no, se cierra sola.
+  const rollPopRef = useRef(null);
+  const dmgPopRef = useRef(null);
+  const [rollPopEmpty, setRollPopEmpty] = useState(false);
+  const [dmgPopEmpty, setDmgPopEmpty] = useState(false);
+  useEffect(() => {
+    if (!traitRollResult || diceHold || !isInstant(traitRollResult)) return setRollPopEmpty(false);
+    const id = requestAnimationFrame(() => {
+      const el = rollPopRef.current;
+      if (!el) return;
+      const acts = el.querySelector("button:not(.mh-inv-x), input, .mh-luck-done, .mh-manip, .mh-flip");
+      if (acts) return setRollPopEmpty(false);
+      if (traitRollResult.weapon) setRollPopEmpty(true);
+      else setTraitRollResult(null);
+    });
+    return () => cancelAnimationFrame(id);
+  }, [traitRollResult, diceHold]);
+  useEffect(() => {
+    if (!damageRollResult || diceHold || !isInstant(damageRollResult)) return setDmgPopEmpty(false);
+    const id = requestAnimationFrame(() => {
+      const el = dmgPopRef.current;
+      if (!el) return;
+      const acts = el.querySelector("button, input, .mh-kick-done, .mh-pred, .mh-volatile, .mh-poison, .mh-stance-dmg, .mh-manip");
+      if (acts) return setDmgPopEmpty(false);
+      setDamageRollResult(null);
+    });
+    return () => cancelAnimationFrame(id);
+  }, [damageRollResult, diceHold]);
   const [bfAboveKey, setBfAboveKey] = useState(null);
   const [beastformTierFilter, setBeastformTierFilter] = useState(1);
 
@@ -15988,12 +16066,13 @@ export default function App({ onSignOut }) {
     clearTimeout(traitRollTimer.current);
     flushOutcome(); // si quedaba pendiente la tirada anterior, se aplica antes
     const use3d = canDice3d();
+    const rollKey = Date.now();
     const note = reaction
       ? hope === fear
         ? "Ignoras los efectos que te afectarían aun con éxito"
         : "Las reacciones no generan Esperanza ni Miedo"
       : hope === fear ? "Ganas 1 Esperanza y te quitas 1 Estrés" : hope > fear ? "Ganas 1 Esperanza" : "El DJ gana 1 de Miedo";
-    setTraitRollResult({ key: Date.now(), instant: use3d, hopeSides, traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, tideBonus, hybridRoll, hybridSidesR: extras.hybridSides || 0, hallowRoll, hallowFirst: hopeA, patronRoll, patronSides: extras.patronSides || 0, slayerRoll, slayerRolls, total, text: hope === fear ? "Éxito crítico" : reaction ? "Tirada de reacción" : text, color, note, reaction, card: cardContext ? { name: cardContext.name, dc: cardContext.dc } : dcVal ? { name: "", dc: dcVal } : null, exps: extras.exps || [], honed: extras.honed || [], wasCloaked, weapon: weapon || null, charId });
+    setTraitRollResult({ key: rollKey, instantKey: use3d ? rollKey : null, hopeSides, traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, tideBonus, hybridRoll, hybridSidesR: extras.hybridSides || 0, hallowRoll, hallowFirst: hopeA, patronRoll, patronSides: extras.patronSides || 0, slayerRoll, slayerRolls, total, text: hope === fear ? "Éxito crítico" : reaction ? "Tirada de reacción" : text, color, note, reaction, card: cardContext ? { name: cardContext.name, dc: cardContext.dc } : dcVal ? { name: "", dc: dcVal } : null, exps: extras.exps || [], honed: extras.honed || [], wasCloaked, weapon: weapon || null, charId });
     if (use3d) {
       // Todos los dados de la tirada: dualidad más ventaja y demás auxiliares.
       const dl = [{ sides: hopeSides, value: hopeA, kind: "hope", main: true }];
@@ -22700,7 +22779,7 @@ export default function App({ onSignOut }) {
               >
                 <div style={{ display: "flex", gap: 16, alignItems: "stretch", flexWrap: "wrap", justifyContent: "center" }}>
                   <div
-                    className="mh-serif mh-roll-pop"
+                    ref={rollPopRef} className="mh-serif mh-roll-pop"
                     onClick={(e) => e.stopPropagation()}
                     style={{
                       background: "var(--mh-line)",
@@ -22712,7 +22791,7 @@ export default function App({ onSignOut }) {
                       overflow: "hidden",
                       textAlign: "center",
                       boxShadow: "0 12px 30px rgba(0,0,0,0.35)",
-                      border: "1px solid " + traitRollResult.color,
+                      ...(rollPopEmpty ? { display: "none" } : {}), border: "1px solid " + traitRollResult.color,
                     }}
                   >
                     <div className="mh-res-h">
@@ -22721,7 +22800,14 @@ export default function App({ onSignOut }) {
                         <X size={16} />
                       </button>
                     </div>
-                    <DualityResult roll={traitRollResult} size={72} />
+                    {isInstant(traitRollResult) ? (
+                      <div className="mh-serif" style={{ fontSize: 30, fontWeight: 700, margin: "2px 0 2px" }}>
+                        {traitRollResult.total}
+                        <small style={{ display: "block", fontSize: 13, fontWeight: 600, color: traitRollResult.color, fontFamily: "'Inter', system-ui, sans-serif" }}>{traitRollResult.text}</small>
+                      </div>
+                    ) : (
+                      <DualityResult roll={traitRollResult} size={72} />
+                    )}
                     {(() => {
                       const r = traitRollResult;
                       const rc = characters[r.charId];
@@ -23587,7 +23673,7 @@ export default function App({ onSignOut }) {
               </div>
             )}
 
-            {damageRollResult && (
+            {damageRollResult && !diceHold && (
               <div
                 style={{
                   position: "absolute",
@@ -23603,7 +23689,7 @@ export default function App({ onSignOut }) {
                 onClick={() => setDamageRollResult(null)}
               >
                 <div
-                  className="mh-serif mh-roll-pop"
+                  ref={dmgPopRef} className="mh-serif mh-roll-pop"
                   onClick={(e) => e.stopPropagation()}
                   style={{
                     background: "var(--mh-line)",
@@ -23615,13 +23701,20 @@ export default function App({ onSignOut }) {
                     position: "relative",
                     overflow: "hidden",
                     boxShadow: "0 12px 30px rgba(0,0,0,0.35)",
-                    border: "1px solid " + (damageRollResult.isCritical ? "#7FB77A" : "#D9644E"),
+                    ...(dmgPopEmpty ? { display: "none" } : {}), border: "1px solid " + (damageRollResult.isCritical ? "#7FB77A" : "#D9644E"),
                   }}
                 >
                   <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 12, color: "var(--mh-muted)", marginBottom: 6 }}>
                     Daño · {damageRollResult.weaponName}
                   </div>
-                  <DamageResult roll={damageRollResult} />
+                  {isInstant(damageRollResult) ? (
+                    <div className="mh-serif" style={{ fontSize: 34, fontWeight: 700, lineHeight: 1.1 }}>
+                      {damageRollResult.total}
+                      <small style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#D9644E", fontFamily: "'Inter', system-ui, sans-serif" }}>daño {damageRollResult.damageType}</small>
+                    </div>
+                  ) : (
+                    <DamageResult roll={damageRollResult} />
+                  )}
                   {(() => {
                     // Llamado del Cazador: gastar Dados de Cazador en el daño; Especialista en Armas: dado del arma secundaria.
                     const dr = damageRollResult;

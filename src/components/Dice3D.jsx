@@ -35,6 +35,8 @@ const TINTS = {
   adv: [0xc8f5d2, 0x2fae5a, "#e6ffec"],
   dis: [0xffd0c8, 0xd0402e, "#fff0ec"],
   bonus: [0xcfeeff, 0x3a9bd6, "#eaf7ff"],
+  dmg: [0xffd6c8, 0xd9482a, "#fff0ea"],
+  crit: [0xd2f5d0, 0x2f9e44, "#eaffe8"],
 };
 
 export function Dice3D({ dice, summary, onReveal, onEnd }) {
@@ -71,7 +73,7 @@ export function Dice3D({ dice, summary, onReveal, onEnd }) {
       }
       if (dead || !host.current) return;
       try {
-        const list = (dice || []).filter((d) => DICE3D_SIDES.includes(d.sides)).slice(0, 8);
+        const list = (dice || []).filter((d) => DICE3D_SIDES.includes(d.sides)).slice(0, 12);
         if (!list.length) throw new Error("sin dados");
         const W = window.innerWidth || 1280;
         const H = window.innerHeight || 720;
@@ -307,7 +309,7 @@ export function Dice3D({ dice, summary, onReveal, onEnd }) {
         };
 
         const objs = items.map(({ d, T, scale, b }) => {
-          const tint = d.kind === "dis" ? TINTS.dis : TINTS[d.kind] || TINTS.bonus;
+          const tint = TINTS[d.kind] || TINTS.bonus;
           const group = new THREE.Group();
           const mat = new THREE.MeshPhysicalMaterial({ color: tint[0], transmission: 1, thickness: 1.6, ior: 1.5, roughness: 0.06, attenuationColor: tint[1], attenuationDistance: 1.4, clearcoat: 1, clearcoatRoughness: 0.04, iridescence: 0.6, iridescenceIOR: 1.4, envMapIntensity: 1.6, transparent: true });
           const body = new THREE.Group();
@@ -523,6 +525,8 @@ const D3_CSS = `
 .d3-edge.is-hope::after { background: radial-gradient(ellipse 80% 55% at 50% 118%, color-mix(in srgb, var(--ec) 55%, transparent), transparent 70%); animation: d3-rise 2.2s ease-in-out infinite; }
 .d3-edge.is-fear::before { animation: d3-flicker 1.5s steps(1, end) infinite; }
 .d3-edge.is-fear::after { background: radial-gradient(ellipse 120% 90% at 50% 50%, transparent 55%, color-mix(in srgb, var(--ec) 40%, #000) 130%); animation: d3-creep 3s ease-in-out infinite; }
+.d3-edge.is-dmg::before { animation: d3-flicker 1.9s steps(1, end) infinite; }
+.d3-edge.is-dmg::after { background: radial-gradient(ellipse 110% 85% at 50% 50%, transparent 52%, color-mix(in srgb, var(--ec) 45%, #000) 135%); animation: d3-creep 1.6s ease-in-out infinite; }
 .d3-edge.is-crit::before { animation: d3-breathe 1.1s ease-in-out infinite; }
 .d3-edge.is-crit::after { background: conic-gradient(from 0deg, transparent, color-mix(in srgb, var(--ec) 35%, transparent), transparent 25%, color-mix(in srgb, #E3B04B 35%, transparent), transparent 50%, color-mix(in srgb, var(--ec) 35%, transparent), transparent 75%, color-mix(in srgb, #E3B04B 35%, transparent), transparent); -webkit-mask: radial-gradient(ellipse at center, transparent 62%, #000 100%); mask: radial-gradient(ellipse at center, transparent 62%, #000 100%); animation: d3-spin 6s linear infinite; }
 @keyframes d3-breathe { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
