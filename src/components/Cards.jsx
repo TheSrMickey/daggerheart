@@ -104,6 +104,19 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(null);
   const [closing, setClosing] = useState(false);
+  // Móvil: al desplazar en vertical, siempre queda una carta centrada (no se detiene entre dos).
+  const rootRef = useRef(null);
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia("(max-width: 819px)").matches) return;
+    let sc = rootRef.current?.parentElement;
+    while (sc && !(/(auto|scroll)/.test(getComputedStyle(sc).overflowY) && sc.scrollHeight > sc.clientHeight)) sc = sc.parentElement;
+    if (!sc) return;
+    const prev = sc.style.scrollSnapType;
+    sc.style.scrollSnapType = "y mandatory";
+    return () => {
+      sc.style.scrollSnapType = prev;
+    };
+  }, []);
   const domains = useMemo(() => [...Object.keys(domainColors).filter((d) => d !== "Sangre"), ...(domainColors.Sangre ? ["Sangre"] : [])], [domainColors]); // Sangre (playtest de The Void) va el último
   const all = items;
   const q = norm(query.trim());
@@ -155,7 +168,7 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
   };
 
   return (
-    <div className="cx">
+    <div className="cx" ref={rootRef}>
       <div className="cx-h">
         <div>
           <h1 className="mh-serif">Cartas</h1>
@@ -204,7 +217,7 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
               const I = Icon(c);
               return (
                 <button type="button" key={c.id} className="cx-card" onClick={() => setOpen(c)} aria-label={"Ver " + c.key}>
-                  <Lazy><CardFace c={c} I={I} FitTitle={FitTitle} FitBox={FitBox} tilt={c.kind === "dominio" || (c.kind === "arma" && c.tier === 4) ? { onPointerMove: tilt, onPointerLeave: untilt } : undefined} /></Lazy>
+                  <Lazy><CardFace c={c} I={I} FitTitle={FitTitle} FitBox={FitBox} tilt={c.kind === "dominio" || (c.kind === "arma" && c.tier === 4) ? { onPointerMove: (e) => e.pointerType === "mouse" && tilt(e), onPointerLeave: untilt } : undefined} /></Lazy>
                 </button>
               );
             })}
