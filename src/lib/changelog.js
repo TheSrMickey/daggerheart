@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-11",
     title: "Imágenes propias en las escenas y viñeta",
     items: [
+      { tag: "mejora", text: "Acciones y hoja: las Experiencias, las características de clase y las de Esperanza se abren con el diseño nuevo. La Experiencia lleva un aura del color de tu clase, el emblema de la clase de marca de agua, el coste de Esperanza y el bono grande; las características de clase y de Esperanza usan la ilustración de tu clase de fondo." },
       { tag: "mejora", text: "Aullido Frenético: los d20 se tiran ahora con los dados 3D (zoom, borde rojo y suma), y la tarjeta roja con el temblor aparece al tocar la pantalla, ya sin repetir la tirada antigua." },
       { tag: "mejora", text: "Acciones: las cartas de subclase, transformación y formas de bestia se abren ahora con el diseño nuevo de la pestaña Cartas (ilustración de fondo, rango en la esquina, etiqueta y pie), igual que las de dominio, ascendencia y comunidad." },
       { tag: "mejora", text: "Hoja de personaje: la imagen de fondo de la cabecera es ahora la ilustración oficial de la clase en alta calidad (con su escena) y se ve más nítida; la tuya propia sigue sustituyéndola si la subes." },

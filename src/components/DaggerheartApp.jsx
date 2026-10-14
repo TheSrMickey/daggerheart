@@ -5822,6 +5822,9 @@ const sharedStyles = `
   .mh-relnet-legend i { width: 10px; height: 10px; border-radius: 50%; }
   .mh-relnet-sec { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--rl); }
   .mh-relnet-sec::after { content: ""; flex: 1; height: 1px; background: color-mix(in srgb, var(--rl) 35%, transparent); }
+  .mh-cardc.is-bg .mh-cardc-noart.is-exp { display: flex; align-items: center; justify-content: center; color: var(--cc); background: radial-gradient(60% 55% at 50% 24%, color-mix(in srgb, var(--cc) 42%, transparent), transparent 72%), radial-gradient(90% 45% at 18% 0, #7a5be84d, transparent 60%), radial-gradient(70% 45% at 92% 8%, #3fa7b24d, transparent 60%); }
+  .mh-cardc-noart.is-exp svg { opacity: .14; width: 210px; height: 210px; margin-top: -26px; }
+  .mh-cardc-hp { position: absolute; top: 12px; right: 12px; z-index: 4; display: flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 20px; font-size: 11.5px; font-weight: 700; color: #fff; background: rgba(13,13,34,.72); border: 1px solid var(--cc); }
   .mh-cardc-wrap { position: relative; display: flex; align-items: center; justify-content: center; width: min(300px, 100%); }
   .mh-cardc-wrap > .mh-cardc { z-index: 2; }
   .cx-deckwrap { display: flex; flex-direction: column; align-items: center; gap: 22px; max-width: 100%; }
@@ -25056,7 +25059,7 @@ export default function App({ onSignOut }) {
                   // Carta enmarcada: arte en un marco, título centrado y datos al pie.
                   const d = viewingCardDetail;
                   // Sin color propio, la carta no toma el de la clase: ascendencia azul, comunidad bronce y el resto el acento de la página.
-                  const cardColor = d.brawlerStrike ? "#C08B5C" : d.tier ? TIER_COLORS[d.tier].color : d.accent || (/^Ascendencia\b/.test(d.kicker || "") ? "#6FA3C0" : /^Comunidad\b/.test(d.kicker || "") ? "#C08B5C" : "#8FA8FF");
+                  const cardColor = d.brawlerStrike ? "#C08B5C" : d.tier ? TIER_COLORS[d.tier].color : d.accent || (/^(Experiencia|Característica de clase)\b/.test(d.kicker || "") && !d.weapon && CLASS_COLORS[c.f_class]) || (/^Ascendencia\b/.test(d.kicker || "") ? "#6FA3C0" : /^Comunidad\b/.test(d.kicker || "") ? "#C08B5C" : "#8FA8FF");
                   const totalChars = (d.text?.length || 0) + (d.characteristic?.length || 0) + (d.features || []).reduce((sum, f) => sum + (f.name?.length || 0) + (f.text?.length || 0), 0);
                   const long = totalChars > 320;
                   const artHeight = d.weapon || d.armor ? 128 : totalChars > 600 ? 84 : long ? 100 : 124;
@@ -25067,12 +25070,18 @@ export default function App({ onSignOut }) {
                   const isSub = !d.domain && !d.weapon && !d.armor && /^(Subclase|Multiclase)\b/.test(d.kicker || "");
                   const isTrans = !d.domain && !d.weapon && /^Transformación\b/.test(d.kicker || "");
                   const isForm = !d.domain && !d.weapon && !!d.beastKey && /^Forma de Bestia\b/.test(d.kicker || "");
-                  const newBg = !!(d.domain || isAncCom || d.weapon || isSub || isTrans || isForm);
+                  const isExp = !d.domain && !d.weapon && !d.armor && !!d.stat && /^Experiencia\b/.test(d.kicker || "");
+                  const isCf = !d.domain && !d.weapon && !d.armor && !d.stat && /^Característica de clase\b/.test(d.kicker || "");
+                  const isHopeCf = !d.domain && !d.weapon && !d.armor && /^Característica de Esperanza\b/.test(d.kicker || "");
+                  const CfIcon = CLASS_EMBLEMS[c.f_class] || Sparkles;
+                  const artSrc = d.image || (isCf || isHopeCf ? CLASS_HEADER_ART[c.f_class] || CLASS_ART[c.f_class] || null : null);
+                  const hopeCost = d.stat?.value ?? d.hopeAction?.cost ?? "";
+                  const newBg = !!(d.domain || isAncCom || d.weapon || isSub || isTrans || isForm || isExp || isCf || isHopeCf);
                   const subRank = /Maestr/.test(d.kicker || "") ? 2 : /Especializ/.test(d.kicker || "") ? 1 : 0;
                   const subRankLabel = ["Fundación", "Especialización", "Maestría"][subRank];
                   const formRank = Number((/Rango (\d)/.exec(d.kicker || "") || [])[1] || 1);
                   const subCls = (/^Multiclase · ([^·]+)/.exec(d.kicker || "") || [])[1]?.trim() || c.f_class;
-                  const subtitle = isSub ? subCls + " · Subclase" : isTrans ? "Transformación" : isForm ? d.kicker : d.weapon ? [d.kicker, d.weapon.hands].join(" · ") : d.domain ? d.domain.name + " · " + d.domain.type : d.kicker?.replace(/ · Nivel .*$/, "");
+                  const subtitle = isExp || isCf || isHopeCf ? null : isSub ? subCls + " · Subclase" : isTrans ? "Transformación" : isForm ? d.kicker : d.weapon ? [d.kicker, d.weapon.hands].join(" · ") : d.domain ? d.domain.name + " · " + d.domain.type : d.kicker?.replace(/ · Nivel .*$/, "");
                   const ArtIcon = d.armor
                     ? armorIcon(d.title)
                     : d.brawlerStrike
@@ -26610,8 +26619,12 @@ export default function App({ onSignOut }) {
                     <div className="mh-glare" />
                     {d.tier === 4 && <div className="mh-holo" />}
                     <div className="mh-cardc-art" style={{ height: artHeight, "--ah": artHeight + "px" }}>
-                      {d.image ? (
-                        <img src={d.image} alt={d.title} />
+                      {artSrc ? (
+                        <img src={artSrc} alt={d.title} />
+                      ) : isExp ? (
+                        <div className="mh-cardc-noart is-exp">
+                          <CfIcon size={210} strokeWidth={1} />
+                        </div>
                       ) : (
                         <div className="mh-cardc-noart">
                           <ArtIcon size={50} strokeWidth={1.5} />
@@ -26624,6 +26637,10 @@ export default function App({ onSignOut }) {
                         <span className="mh-cardc-gem" title={"Nivel " + d.domain.level}>{d.domain.level}<ArtIcon size={19} strokeWidth={1.8} /></span>
                       ) : d.weapon && d.tier ? (
                         <span className="mh-cardc-gem is-rank" title={TIER_COLORS[d.tier].label}>{["I", "II", "III", "IV"][d.tier - 1]}<ArtIcon size={19} strokeWidth={1.8} /></span>
+                      ) : isCf || isHopeCf ? (
+                        <span className="mh-cardc-gem is-rank" title={isHopeCf ? "Esperanza" : "Clase"}>
+                          {isHopeCf ? <Sparkles size={22} strokeWidth={1.8} /> : <CfIcon size={22} strokeWidth={1.8} />}
+                        </span>
                       ) : isSub || isForm ? (
                         <span className="mh-cardc-gem is-rank" title={isSub ? subRankLabel : "Rango " + formRank}>{["I", "II", "III", "IV"][isSub ? subRank : formRank - 1]}<ArtIcon size={19} strokeWidth={1.8} /></span>
                       ) : d.brawlerStrike ? (
@@ -26635,11 +26652,19 @@ export default function App({ onSignOut }) {
                     {d.domain && subtitle && <span className="mh-cardc-dom">{d.domain.type || subtitle}</span>}
                     {isAncCom && <span className="mh-cardc-dom">{ancComLabel}</span>}
                     {isSub && <span className="mh-cardc-dom">{subRankLabel}</span>}
+                    {isExp && <span className="mh-cardc-dom">Experiencia</span>}
+                    {isCf && <span className="mh-cardc-dom">Característica de clase</span>}
+                    {isHopeCf && <span className="mh-cardc-dom" style={{ fontSize: 9, letterSpacing: ".13em", padding: "4px 14px" }}>Característica de Esperanza</span>}
+                    {(isExp || isHopeCf) && (
+                      <span className="mh-cardc-hp" title="Coste en Esperanza">
+                        <Sparkles size={13} /> {isExp ? 1 : hopeCost} Esperanza
+                      </span>
+                    )}
                     {isTrans && <span className="mh-cardc-dom">Transformación</span>}
                     {isForm && <span className="mh-cardc-dom">Forma de Bestia</span>}
                     {d.weapon && d.tier && <span className="mh-cardc-dom">{TIER_COLORS[d.tier].label}</span>}
                     {d.domain && <span className="mh-cardc-cost" title="Coste de recuperación">{d.domain.recall ?? "—"}<Zap size={12} fill="currentColor" /></span>}
-                    <div style={{ padding: "0 18px", textAlign: "center", flexShrink: 0, marginTop: d.domain || d.tier || isAncCom || isSub || isTrans || isForm ? 16 : 8 }}>
+                    <div style={{ padding: "0 18px", textAlign: "center", flexShrink: 0, marginTop: d.domain || d.tier || isAncCom || isSub || isTrans || isForm || isExp || isCf || isHopeCf ? 16 : 8 }}>
                       <FitTitle text={d.title} max={19} min={14} className="mh-serif" style={{ fontWeight: 700, color: "var(--mh-ink)", maxHeight: "2.4em", overflow: "hidden" }} />
                       {subtitle && <div className="mh-cardc-sub">{subtitle}</div>}
                       <div className="mh-cardc-orn" />
@@ -26648,9 +26673,9 @@ export default function App({ onSignOut }) {
                       fitKey={d.title + totalChars}
                       max={13}
                       min={9}
-                      style={{ flex: 1, minHeight: 0, overflow: "hidden", padding: "10px 18px 12px", display: "flex", flexDirection: "column", justifyContent: d.weapon || d.armor || d.stat ? "center" : "flex-start", textAlign: d.features ? "left" : "center", gap: "0.7em", lineHeight: 1.5 }}
+                      style={{ flex: 1, minHeight: 0, overflow: "hidden", padding: "10px 18px 12px", display: "flex", flexDirection: "column", justifyContent: d.weapon || d.armor || (d.stat && !isExp && !isHopeCf) ? "center" : "flex-start", textAlign: d.features ? "left" : "center", gap: "0.7em", lineHeight: 1.5 }}
                     >
-                      {(d.weapon || d.armor || d.stat) && (
+                      {(d.weapon || d.armor || (d.stat && !isExp && !isHopeCf)) && (
                         <div>
                           <div className="mh-cardc-label">{d.weapon ? "Daño" : d.armor ? "Puntuación" : d.stat.label}</div>
                           <div className="mh-cardc-big">{d.weapon ? dmg?.[1] || d.weapon.damage : d.armor ? d.armor.score : d.stat.value}</div>
@@ -26684,6 +26709,7 @@ export default function App({ onSignOut }) {
                         ) : (
                           <div style={{ fontSize: "0.93em", color: "var(--mh-muted2)", fontStyle: "italic" }}>Sin característica especial.</div>
                         ))}
+                      {isExp && <div className="mh-cardc-big" style={{ marginTop: "auto", fontSize: 40, color: "var(--cc)", textShadow: "0 0 24px color-mix(in srgb, var(--cc) 55%, transparent)" }}>{d.stat.value}</div>}
                     </FitBox>
                     {patronCard && (
                       <div className="mh-cardc-foot mh-patron-foot">
@@ -26934,7 +26960,7 @@ export default function App({ onSignOut }) {
                         </div>
                       );
                     })()}
-                    {!tideCard && !prayerCard && !slayerCard && !patternCard && !hexCard && !hedgeCard && !poisonCard && !summonCard && !patronCard && (footer || d.domain || isAncCom || isSub || isTrans || isForm) && (
+                    {!tideCard && !prayerCard && !slayerCard && !patternCard && !hexCard && !hedgeCard && !poisonCard && !summonCard && !patronCard && (footer || d.domain || isAncCom || isSub || isTrans || isForm || isExp || isCf || isHopeCf) && (
                       <div className="mh-cardc-foot">
                         {d.domain ? (
                           <span className="mh-cardc-sig">
@@ -26945,6 +26971,11 @@ export default function App({ onSignOut }) {
                           <span className="mh-cardc-sig">
                             <span>{footer}</span>
                             <span>{d.tier ? TIER_COLORS[d.tier].label : ""}</span>
+                          </span>
+                        ) : isExp || isCf || isHopeCf ? (
+                          <span className="mh-cardc-sig">
+                            <span>{isExp ? "Bono a tirada de acción o reacción" : c.f_class + (isHopeCf ? " · Esperanza" : " · Clase")}</span>
+                            <span>{isHopeCf ? hopeCost + " Esperanza" : ""}</span>
                           </span>
                         ) : isSub || isTrans || isForm ? (
                           <span className="mh-cardc-sig">
