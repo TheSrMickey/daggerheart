@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Crown, Gem, Layers, Search, Sprout, Zap } from "lucide-react";
+import { Layers, Search, Zap } from "lucide-react";
 
 // Pestaña «Cartas»: todas las cartas del juego (dominio, ascendencia, comunidad, subclase y transformación),
 // con filtros y buscador. Al pulsar una carta se ve en grande, con el mismo diseño que en la hoja.
@@ -27,10 +27,11 @@ function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
   const modal = !!onClose;
   const dom = c.kind === "dominio";
   // Ascendencias y comunidades usan el mismo diseño que las de dominio, sin cinta de nivel ni coste.
-  const gen = c.kind === "ascendencia" || c.kind === "comunidad";
-  const sub = c.kind === "subclase";
-  const RankIcon = sub ? [Sprout, Gem, Crown][c.rank || 0] : null; // Fundación, Especialización, Maestría
-  const bg = dom || gen || sub;
+  const gen = c.kind === "ascendencia" || c.kind === "comunidad" || c.kind === "transformacion";
+  const sub = c.kind === "subclase"; // cinta con el rango en numeral romano: I Fundación, II Especialización, III Maestría
+  const bst = c.kind === "forma"; // cinta con el rango de la forma
+  const roman = ["I", "II", "III", "IV"];
+  const bg = dom || gen || sub || bst;
   return (
     <div
       className={"mh-card mh-cardc" + (modal ? " mh-card-anim" : "") + (modal || legend || bg ? " mh-tilt" : "") + (bg ? " is-bg" : "") + (legend ? " is-legend" : "")}
@@ -45,9 +46,10 @@ function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
       </div>
       <div className="mh-cardc-badge">
         {dom && <span className="mh-cardc-gem" title={"Nivel " + c.level}>{c.level}<I size={19} strokeWidth={1.8} /></span>}
-        {sub && <span className="mh-cardc-gem is-rank" title={c.rankLabel}><RankIcon size={22} strokeWidth={1.7} /><I size={17} strokeWidth={1.8} /></span>}
+        {sub && <span className="mh-cardc-gem is-rank" title={c.rankLabel}>{roman[c.rank || 0]}<I size={19} strokeWidth={1.8} /></span>}
+        {bst && <span className="mh-cardc-gem is-rank" title={"Rango " + c.tier}>{roman[(c.tier || 1) - 1]}<I size={19} strokeWidth={1.8} /></span>}
       </div>
-      {bg && <span className="mh-cardc-dom">{dom ? c.type : sub ? c.rankLabel : c.sub}</span>}
+      {bg && <span className="mh-cardc-dom">{dom ? c.type : sub ? c.rankLabel : bst ? "Forma de Bestia" : c.kind === "transformacion" ? "Transformación" : c.sub}</span>}
       {dom && <span className="mh-cardc-cost" title="Coste de recuperación">{c.recall ?? "—"}<Zap size={12} fill="currentColor" /></span>}
       <div style={{ padding: "0 18px", textAlign: "center", flexShrink: 0, marginTop: bg ? 16 : 8 }}>
         <FitTitle text={c.key} max={19} min={14} className="mh-serif" style={{ fontWeight: 700, color: "var(--mh-ink)", maxHeight: "2.4em", overflow: "hidden" }} />
@@ -70,6 +72,12 @@ function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
         <div className="mh-cardc-sig">
           <span>{c.sub}</span>
           <span>{feats.length} característica{feats.length === 1 ? "" : "s"}</span>
+        </div>
+      )}
+      {bst && (
+        <div className="mh-cardc-sig">
+          <span>Forma de Bestia</span>
+          <span>Rango {c.tier}</span>
         </div>
       )}
     </div>
