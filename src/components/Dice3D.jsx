@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // Dados en 3D (cristal): los de dualidad y los auxiliares (ventaja, bonos…) se tiran con física real (cannon-es) desde un
 // punto, una velocidad y un giro aleatorios. Cada tirada ya está decidida; la física no la cambia: al terminar se
 // renumeran las caras para que la de arriba muestre el valor que toca. Al quedar quietos, cada dado se gira para que su
-// número se lea derecho y se atenúan los demás. El resultado (onReveal) se enseña un rato después.
+// número se lea derecho y se atenúan los demás. Después los dados se acercan a la pantalla, el borde se anima según sea
+// Esperanza, Miedo o crítico y se muestra la suma con todas las bonificaciones. Se queda así hasta que el jugador toca
+// la pantalla; solo entonces (onReveal + onEnd) se cierra y aparece el resultado en la ficha.
 export function canDice3d() {
   if (typeof window === "undefined") return false;
   if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return false;
@@ -35,8 +37,14 @@ const TINTS = {
   bonus: [0xcfeeff, 0x3a9bd6, "#eaf7ff"],
 };
 
-export function Dice3D({ dice, onReveal, onEnd }) {
+export function Dice3D({ dice, summary, onReveal, onEnd }) {
   const host = useRef(null);
+  const [edgeOn, setEdgeOn] = useState(false);
+  const [ready, setReady] = useState(false);
+  const readyRef = useRef(false);
+  const shift = useRef(0); // un toque antes de tiempo salta directo a la escena final
+  const zoomEndRef = useRef(0);
+  const t0Ref = useRef(0);
   const cb = useRef({ onReveal, onEnd });
   useEffect(() => {
     cb.current = { onReveal, onEnd };
@@ -359,14 +367,43 @@ export function Dice3D({ dice, onReveal, onEnd }) {
         const t0 = performance.now();
         const alignStart = rest + 0.05;
         const alignDur = 0.55;
-        const revealAt = rest + 1.15;
-        const endAt = rest + 1.8;
+        const zoomStart = rest + 0.95;
+        const zoomDur = 0.9;
+        const zoomEnd = zoomStart + zoomDur;
+        zoomEndRef.current = zoomEnd;
+        t0Ref.current = t0;
+        let edgeFlag = false;
+        // Destino de cada dado: delante de la cámara, en filas, con el número mirando al jugador y derecho.
+        const zd = 11.5;
+        const tanH = Math.tan((FOV / 2) * (Math.PI / 180));
+        const visW = 2 * zd * tanH * aspect;
+        const visH = 2 * zd * tanH;
+        const nD = objs.length;
+        const perRow = Math.max(1, Math.min(nD, Math.floor((visW * 0.9) / 2.9)));
+        const rowsN = Math.ceil(nD / perRow);
+        const sp = Math.min(2.9, (visW * 0.92) / perRow, (visH * 0.5) / rowsN);
+        const zs = sp / 2.9;
+        cam.updateMatrixWorld();
+        const targets = objs.map((o, i) => {
+          const r = Math.floor(i / perRow);
+          const inRow = Math.min(perRow, nD - r * perRow);
+          const c = i % perRow;
+          const x = (c - (inRow - 1) / 2) * sp;
+          const y = ((rowsN - 1) / 2 - r) * sp + visH * 0.1;
+          const p = new THREE.Vector3(x, y, -zd).applyQuaternion(cam.quaternion).add(camPos);
+          const nrm = o.slot.sl.n.clone();
+          const yA = o.slot.yAx.clone();
+          const xA = new THREE.Vector3().crossVectors(yA, nrm);
+          const local = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(xA, yA, nrm));
+          const q = cam.quaternion.clone().multiply(local.invert());
+          return { p, q, sc: (items[i].d.main ? 1.25 : 1) * zs };
+        });
         const qY = new THREE.Quaternion();
         const qT = new THREE.Quaternion();
         const ease = (x) => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
         const tick = () => {
           if (dead) return;
-          const t = typeof window.__d3t === "number" ? window.__d3t : (performance.now() - t0) / 1000;
+          const t = typeof window.__d3t === "number" ? window.__d3t : (performance.now() - t0) / 1000 + shift.current;
           const i = Math.min(rec.length - 1, Math.max(0, Math.round(t / DT)));
           const e = ease((t - alignStart) / alignDur);
           objs.forEach((o, di) => {
@@ -386,15 +423,27 @@ export function Dice3D({ dice, onReveal, onEnd }) {
               });
             }
           });
-          if (t >= revealAt) reveal();
-          const fade = t > revealAt ? Math.max(0, 1 - (t - revealAt) / (endAt - revealAt)) : 1;
-          host.current.style.opacity = String(Math.min(1, t / 0.12) * fade);
-          if (veil) veil.style.opacity = String(0.35 * fade);
-          renderer.render(scene, cam);
-          if (t >= endAt) {
-            cb.current.onEnd && cb.current.onEnd();
-            return;
+          // Los dados se acercan a la pantalla.
+          const z = ease((t - zoomStart) / zoomDur);
+          if (z > 0) {
+            catcher.visible = false;
+            objs.forEach((o, di) => {
+              o.group.position.lerp(targets[di].p, z);
+              o.group.quaternion.slerp(targets[di].q, z);
+              o.group.scale.setScalar(1 + (targets[di].sc - 1) * z);
+            });
           }
+          if (t >= zoomStart && !edgeFlag) {
+            edgeFlag = true;
+            setEdgeOn(true);
+          }
+          if (t >= zoomEnd && !readyRef.current) {
+            readyRef.current = true;
+            setReady(true);
+          }
+          host.current.style.opacity = String(Math.min(1, t / 0.12));
+          if (veil) veil.style.opacity = String(0.35 + 0.4 * z);
+          renderer.render(scene, cam);
           raf = requestAnimationFrame(tick);
         };
         window.__d3rest = rest;
@@ -408,6 +457,7 @@ export function Dice3D({ dice, onReveal, onEnd }) {
           renderer.domElement.remove();
         };
       } catch (e) {
+        console.warn("Dice3D", e);
         reveal();
         cb.current.onEnd && cb.current.onEnd();
       }
@@ -420,14 +470,79 @@ export function Dice3D({ dice, onReveal, onEnd }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Un toque en la pantalla salta la animación.
-  const skip = () => {
+  // Un toque antes de tiempo salta a la escena final; con la suma ya a la vista, un toque cierra.
+  const tap = () => {
+    if (!readyRef.current && t0Ref.current) {
+      const raw = (performance.now() - t0Ref.current) / 1000 + shift.current;
+      shift.current += Math.max(0, zoomEndRef.current - raw + 0.02);
+      return;
+    }
     cb.current.onReveal && cb.current.onReveal();
     cb.current.onEnd && cb.current.onEnd();
   };
+  const sm = summary || null;
+  const fmt = (p, i) => (p.plain || i === 0 ? String(p.v) : p.v < 0 ? "−" + Math.abs(p.v) : "+" + p.v);
   return (
-    <div ref={host} className="d3-host" onClick={skip} role="presentation" style={{ position: "fixed", inset: 0, zIndex: 100050, opacity: 0, cursor: "pointer" }}>
+    <div ref={host} className="d3-host" onClick={tap} role="presentation" style={{ position: "fixed", inset: 0, zIndex: 100050, opacity: 0, cursor: "pointer" }}>
+      <style>{D3_CSS}</style>
       <div className="d3-veil" style={{ position: "absolute", inset: 0, background: "rgb(8,6,12)", opacity: 0.35 }} />
+      {sm && <div className={"d3-edge is-" + sm.outcome + (edgeOn ? " on" : "")} style={{ "--ec": sm.color }} />}
+      {sm && ready && (
+        <div className="d3-sum" style={{ "--ec": sm.color }} role="status">
+          <div className="d3-sum-row">
+            {sm.parts.map((p, i) => (
+              <span key={i} className={"d3-chip k-" + (p.kind || "")} style={{ animationDelay: i * 0.11 + "s" }}>
+                <small>{p.label}</small>
+                <b>{fmt(p, i)}</b>
+              </span>
+            ))}
+          </div>
+          <div className="d3-sum-total" style={{ animationDelay: sm.parts.length * 0.11 + 0.08 + "s" }}>
+            <span>=</span>
+            <b>{sm.total}</b>
+          </div>
+          <div className="d3-sum-t" style={{ animationDelay: sm.parts.length * 0.11 + 0.3 + "s" }}>{sm.text}</div>
+          {sm.dc && <div className="d3-sum-dc" style={{ animationDelay: sm.parts.length * 0.11 + 0.4 + "s" }}>{sm.dc}</div>}
+          {sm.note && <div className="d3-sum-note" style={{ animationDelay: sm.parts.length * 0.11 + 0.5 + "s" }}>{sm.note}</div>}
+          <div className="d3-sum-hint" style={{ animationDelay: sm.parts.length * 0.11 + 0.9 + "s" }}>Toca la pantalla para continuar</div>
+        </div>
+      )}
     </div>
   );
 }
+
+const D3_CSS = `
+.d3-edge { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .35s; }
+.d3-edge.on { opacity: 1; }
+.d3-edge::before { content: ""; position: absolute; inset: 0; box-shadow: inset 0 0 0 3px var(--ec), inset 0 0 60px 8px var(--ec), inset 0 0 150px 24px color-mix(in srgb, var(--ec) 45%, transparent); }
+.d3-edge::after { content: ""; position: absolute; inset: 0; }
+.d3-edge.is-hope::before { animation: d3-breathe 2.2s ease-in-out infinite; }
+.d3-edge.is-hope::after { background: radial-gradient(ellipse 80% 55% at 50% 118%, color-mix(in srgb, var(--ec) 55%, transparent), transparent 70%); animation: d3-rise 2.2s ease-in-out infinite; }
+.d3-edge.is-fear::before { animation: d3-flicker 1.5s steps(1, end) infinite; }
+.d3-edge.is-fear::after { background: radial-gradient(ellipse 120% 90% at 50% 50%, transparent 55%, color-mix(in srgb, var(--ec) 40%, #000) 130%); animation: d3-creep 3s ease-in-out infinite; }
+.d3-edge.is-crit::before { animation: d3-breathe 1.1s ease-in-out infinite; }
+.d3-edge.is-crit::after { background: conic-gradient(from 0deg, transparent, color-mix(in srgb, var(--ec) 35%, transparent), transparent 25%, color-mix(in srgb, #E3B04B 35%, transparent), transparent 50%, color-mix(in srgb, var(--ec) 35%, transparent), transparent 75%, color-mix(in srgb, #E3B04B 35%, transparent), transparent); -webkit-mask: radial-gradient(ellipse at center, transparent 62%, #000 100%); mask: radial-gradient(ellipse at center, transparent 62%, #000 100%); animation: d3-spin 6s linear infinite; }
+@keyframes d3-breathe { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+@keyframes d3-rise { 0%, 100% { opacity: .4; transform: translateY(6%); } 50% { opacity: 1; transform: translateY(0); } }
+@keyframes d3-flicker { 0% { opacity: 1; } 12% { opacity: .35; } 18% { opacity: .9; } 40% { opacity: .6; } 46% { opacity: 1; } 70% { opacity: .45; } 76% { opacity: .95; } 100% { opacity: 1; } }
+@keyframes d3-creep { 0%, 100% { opacity: .5; transform: scale(1.08); } 50% { opacity: 1; transform: scale(1); } }
+@keyframes d3-spin { to { transform: rotate(360deg); } }
+.d3-sum { position: absolute; left: 0; right: 0; margin: 0 auto; bottom: max(4vh, 22px); width: min(560px, calc(100vw - 28px)); display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 18px 14px; border-radius: 24px; text-align: center; color: #f1ecdf; background: color-mix(in srgb, #14153b 80%, transparent); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); border: 1px solid color-mix(in srgb, var(--ec) 55%, #ffffff22); box-shadow: 0 0 40px -6px color-mix(in srgb, var(--ec) 60%, transparent), 0 18px 34px -18px #000d, inset 0 1px 0 #ffffff1c; animation: d3-in .4s cubic-bezier(.2,.8,.2,1) both; }
+.d3-sum-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.d3-chip { display: inline-flex; flex-direction: column; align-items: center; min-width: 54px; padding: 5px 10px 6px; border-radius: 12px; background: #ffffff0d; border: 1px solid #ffffff1f; animation: d3-pop .35s cubic-bezier(.2,.9,.3,1.3) both; }
+.d3-chip small { font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: #b9b2c8; }
+.d3-chip b { font: 700 19px Georgia, serif; }
+.d3-chip.k-hope { border-color: #E3B04B88; } .d3-chip.k-hope b { color: #F5CF72; }
+.d3-chip.k-fear { border-color: #A58BE888; } .d3-chip.k-fear b { color: #C7B3FA; }
+.d3-chip.k-adv { border-color: #2fae5a88; } .d3-chip.k-adv b { color: #8be0a4; }
+.d3-chip.k-dis { border-color: #d0402e88; } .d3-chip.k-dis b { color: #ff9c8c; }
+.d3-sum-total { display: flex; align-items: baseline; gap: 10px; animation: d3-pop .4s cubic-bezier(.2,.9,.3,1.3) both; }
+.d3-sum-total span { font-size: 22px; color: #b9b2c8; }
+.d3-sum-total b { font: 700 54px/1 Georgia, serif; color: var(--ec); text-shadow: 0 0 24px color-mix(in srgb, var(--ec) 70%, transparent); }
+.d3-sum-t { font: 600 17px Georgia, serif; letter-spacing: .06em; text-transform: uppercase; color: var(--ec); animation: d3-in .4s both; }
+.d3-sum-dc { font-size: 13px; font-weight: 600; color: #e9e2d4; animation: d3-in .4s both; }
+.d3-sum-note { font-size: 12px; color: #b9b2c8; animation: d3-in .4s both; }
+.d3-sum-hint { margin-top: 4px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #8c85a0; animation: d3-in .5s both, d3-breathe 2s ease-in-out 1s infinite; }
+@keyframes d3-in { from { opacity: 0; transform: translate(0, 10px); } to { opacity: 1; transform: none; } }
+@keyframes d3-pop { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
+`;

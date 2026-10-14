@@ -15986,7 +15986,7 @@ export default function App({ onSignOut }) {
         : "Las reacciones no generan Esperanza ni Miedo"
       : hope === fear ? "Ganas 1 Esperanza y te quitas 1 Estrés" : hope > fear ? "Ganas 1 Esperanza" : "El DJ gana 1 de Miedo";
     setTraitRollResult({ key: Date.now(), hopeSides, traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, tideBonus, hybridRoll, hybridSidesR: extras.hybridSides || 0, hallowRoll, hallowFirst: hopeA, patronRoll, patronSides: extras.patronSides || 0, slayerRoll, slayerRolls, total, text: hope === fear ? "Éxito crítico" : reaction ? "Tirada de reacción" : text, color, note, reaction, card: cardContext ? { name: cardContext.name, dc: cardContext.dc } : dcVal ? { name: "", dc: dcVal } : null, exps: extras.exps || [], honed: extras.honed || [], wasCloaked, weapon: weapon || null, charId });
-    if (traitLabel === "Agilidad" && canDice3d()) {
+    if (canDice3d()) {
       // Todos los dados de la tirada: dualidad más ventaja y demás auxiliares.
       const dl = [{ sides: hopeSides, value: hopeA, kind: "hope", main: true }];
       if (hallowRoll) dl.push({ sides: 12, value: hallowRoll, kind: "hope", main: true });
@@ -15998,8 +15998,22 @@ export default function App({ onSignOut }) {
       slayerRolls.forEach((v) => dl.push({ sides: 6, value: v, kind: "bonus" }));
       if (patronRoll) dl.push({ sides: extras.patronSides, value: patronRoll, kind: "bonus" });
       if (hybridRoll) dl.push({ sides: extras.hybridSides, value: hybridRoll, kind: "bonus" });
+      // Suma que se muestra al acercarse los dados: dualidad, rasgo y todas las bonificaciones.
+      const parts = [
+        { label: "Esperanza", v: hope, kind: "hope", plain: true },
+        { label: "Miedo", v: fear, kind: "fear", plain: true },
+        { label: traitLabel, v: traitValue },
+      ];
+      if (advantageRoll) parts.push({ label: advantageRoll > 0 ? "Ventaja" : "Desventaja", v: advantageRoll, kind: advantageRoll > 0 ? "adv" : "dis" });
+      if (wolfBonus) parts.push({ label: "Lobo", v: wolfBonus });
+      if (expBonus) parts.push({ label: "Experiencia", v: expBonus });
+      if (rallyRoll) parts.push({ label: "Arenga", v: rallyRoll });
+      if (poetRoll) parts.push({ label: "Poeta", v: poetRoll });
+      if (tideBonus) parts.push({ label: "Extra", v: tideBonus });
+      if (hybridRoll) parts.push({ label: "Dado extra", v: hybridRoll });
+      const dcTxt = dcVal ? (hope === fear || total >= dcVal ? "Éxito" : "Fracaso") + " contra Dificultad " + dcVal : "";
       setDiceHold(true);
-      setDice3d({ key: Date.now(), dice: dl });
+      setDice3d({ key: Date.now(), dice: dl, summary: { parts, total, text: hope === fear ? "Éxito crítico" : reaction ? "Tirada de reacción" : text, color, note, dc: dcTxt, outcome: hope === fear ? "crit" : hope > fear ? "hope" : "fear" } });
     }
 
     // Ataque en área: una tirada contra todos; impacta a quienes tengan Dificultad igual o menor.
@@ -26899,7 +26913,7 @@ export default function App({ onSignOut }) {
 
   return (
     <div className={"mh-root" + (isMobile ? " is-mobile" : "")} style={{ display: "flex", flexDirection: isMobile ? "column" : "row", height: "100dvh", background: "var(--mh-bg)", fontFamily: "'Inter', system-ui, sans-serif", color: "var(--mh-ink)", overflow: "hidden" }}>
-      {dice3d && <Dice3D key={dice3d.key} dice={dice3d.dice} onReveal={() => setDiceHold(false)} onEnd={() => (setDice3d(null), setDiceHold(false))} />}
+      {dice3d && <Dice3D key={dice3d.key} dice={dice3d.dice} summary={dice3d.summary} onReveal={() => setDiceHold(false)} onEnd={() => (setDice3d(null), setDiceHold(false))} />}
       <style>{sharedStyles}</style>
       <SocialHost />
       {levelUpId && characters[levelUpId] && (() => {
