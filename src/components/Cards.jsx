@@ -82,7 +82,7 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(null);
   const [closing, setClosing] = useState(false);
-  const domains = useMemo(() => Object.keys(domainColors), [domainColors]);
+  const domains = useMemo(() => [...Object.keys(domainColors).filter((d) => d !== "Sangre"), ...(domainColors.Sangre ? ["Sangre"] : [])], [domainColors]); // Sangre (playtest de The Void) va el último
   const all = items;
   const q = norm(query.trim());
   const count = (k) => all.filter((c) => c.kind === k).length;
