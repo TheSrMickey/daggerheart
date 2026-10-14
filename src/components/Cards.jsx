@@ -26,9 +26,12 @@ function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
   const total = (c.text || "").length + feats.reduce((s, f) => s + (f.name || "").length + (f.text || "").length, 0);
   const modal = !!onClose;
   const dom = c.kind === "dominio";
+  // Ascendencias y comunidades usan el mismo diseño que las de dominio, sin cinta de nivel ni coste.
+  const gen = c.kind === "ascendencia" || c.kind === "comunidad";
+  const bg = dom || gen;
   return (
     <div
-      className={"mh-card mh-cardc" + (modal ? " mh-card-anim" : "") + (modal || legend || dom ? " mh-tilt" : "") + (dom ? " is-bg" : "") + (legend ? " is-legend" : "")}
+      className={"mh-card mh-cardc" + (modal ? " mh-card-anim" : "") + (modal || legend || bg ? " mh-tilt" : "") + (bg ? " is-bg" : "") + (legend ? " is-legend" : "")}
       style={{ "--glow": alpha(col, 51), "--cc": col, margin: 0, width: modal ? "min(300px, 100%)" : 300, height: modal ? "min(420px, 80vh)" : 420, maxWidth: "100%", padding: 0, overflow: "hidden", borderRadius: 22, display: "flex", flexDirection: "column", border: "2px solid " + col, position: "relative", textAlign: "left" }}
       {...(tilt || {})}
     >
@@ -39,9 +42,9 @@ function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
         {c.image ? <img src={c.image} alt={modal ? c.key : ""} /> : <div className="mh-cardc-noart" style={{ color: col }}><I size={50} strokeWidth={1.5} /></div>}
       </div>
       <div className="mh-cardc-badge">{dom && <span className="mh-cardc-gem" title={"Nivel " + c.level}>{c.level}<I size={19} strokeWidth={1.8} /></span>}</div>
-      {dom && <span className="mh-cardc-dom">{c.type}</span>}
+      {bg && <span className="mh-cardc-dom">{dom ? c.type : c.sub}</span>}
       {dom && <span className="mh-cardc-cost" title="Coste de recuperación">{c.recall ?? "—"}<Zap size={12} fill="currentColor" /></span>}
-      <div style={{ padding: "0 18px", textAlign: "center", flexShrink: 0, marginTop: dom ? 16 : 8 }}>
+      <div style={{ padding: "0 18px", textAlign: "center", flexShrink: 0, marginTop: bg ? 16 : 8 }}>
         <FitTitle text={c.key} max={19} min={14} className="mh-serif" style={{ fontWeight: 700, color: "var(--mh-ink)", maxHeight: "2.4em", overflow: "hidden" }} />
         <div className="mh-cardc-sub">{c.sub}</div>
         <div className="mh-cardc-orn" />
@@ -56,6 +59,12 @@ function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
         <div className="mh-cardc-sig">
           <span>Dominio {c.domain}</span>
           <span>Nivel {c.level} · Recuperación {c.recall ?? "—"}</span>
+        </div>
+      )}
+      {gen && (
+        <div className="mh-cardc-sig">
+          <span>{c.sub}</span>
+          <span>{feats.length} característica{feats.length === 1 ? "" : "s"}</span>
         </div>
       )}
     </div>
