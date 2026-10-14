@@ -43,6 +43,8 @@ export function Dice3D({ dice, summary, onReveal, onEnd }) {
   const host = useRef(null);
   const [edgeOn, setEdgeOn] = useState(false);
   const [ready, setReady] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const closeAt = useRef(0); // al tocar con la suma a la vista: animación de salida antes de cerrar
   const readyRef = useRef(false);
   const shift = useRef(0); // un toque antes de tiempo salta directo a la escena final
   const zoomEndRef = useRef(0);
@@ -446,9 +448,24 @@ export function Dice3D({ dice, summary, onReveal, onEnd }) {
             readyRef.current = true;
             setReady(true);
           }
-          host.current.style.opacity = String(Math.min(1, t / 0.12));
-          if (veil) veil.style.opacity = String(0.35 + 0.4 * z);
+          // Salida: los dados se alejan hacia la cámara mientras todo se desvanece.
+          let cl = 0;
+          if (closeAt.current) {
+            cl = Math.min(1, (performance.now() - closeAt.current) / 480);
+            const ec = 1 - Math.pow(1 - cl, 3);
+            objs.forEach((o, di) => {
+              o.group.position.lerp(camPos, 0.22 * ec);
+              o.group.scale.setScalar(targets[di].sc * (1 + 0.35 * ec));
+            });
+          }
+          host.current.style.opacity = String(Math.min(1, t / 0.12) * (1 - cl));
+          if (veil) veil.style.opacity = String((0.35 + 0.4 * z) * (1 - cl * 0.4));
           renderer.render(scene, cam);
+          if (cl >= 1) {
+            cb.current.onReveal && cb.current.onReveal();
+            cb.current.onEnd && cb.current.onEnd();
+            return;
+          }
           raf = requestAnimationFrame(tick);
         };
         window.__d3rest = rest;
@@ -482,8 +499,9 @@ export function Dice3D({ dice, summary, onReveal, onEnd }) {
       shift.current += Math.max(0, zoomEndRef.current - raw + 0.02);
       return;
     }
-    cb.current.onReveal && cb.current.onReveal();
-    cb.current.onEnd && cb.current.onEnd();
+    if (closeAt.current) return;
+    closeAt.current = performance.now();
+    setClosing(true);
   };
   const sm = summary || null;
   const fmt = (p, i) => (p.plain || i === 0 ? String(p.v) : p.v < 0 ? "−" + Math.abs(p.v) : "+" + p.v);
@@ -493,7 +511,7 @@ export function Dice3D({ dice, summary, onReveal, onEnd }) {
       <div className="d3-veil" style={{ position: "absolute", inset: 0, background: "rgb(8,6,12)", opacity: 0.35 }} />
       {sm && <div className={"d3-edge is-" + sm.outcome + (edgeOn ? " on" : "")} style={{ "--ec": sm.color }} />}
       {sm && ready && (
-        <div className="d3-sum" style={{ "--ec": sm.color }} role="status">
+        <div className={"d3-sum" + (closing ? " is-out" : "")} style={{ "--ec": sm.color }} role="status">
           <div className="d3-sum-row">
             {sm.parts.map((p, i) => (
               <span key={i} className={"d3-chip k-" + (p.kind || "")} style={{ animationDelay: i * 0.11 + "s" }}>
@@ -535,6 +553,8 @@ const D3_CSS = `
 @keyframes d3-creep { 0%, 100% { opacity: .5; transform: scale(1.08); } 50% { opacity: 1; transform: scale(1); } }
 @keyframes d3-spin { to { transform: rotate(360deg); } }
 .d3-sum { position: absolute; left: 0; right: 0; margin: 0 auto; bottom: max(4vh, 22px); width: min(560px, calc(100vw - 28px)); display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 18px 14px; border-radius: 24px; text-align: center; color: #f1ecdf; background: color-mix(in srgb, #14153b 80%, transparent); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); border: 1px solid color-mix(in srgb, var(--ec) 55%, #ffffff22); box-shadow: 0 0 40px -6px color-mix(in srgb, var(--ec) 60%, transparent), 0 18px 34px -18px #000d, inset 0 1px 0 #ffffff1c; animation: d3-in .4s cubic-bezier(.2,.8,.2,1) both; }
+.d3-sum.is-out { animation: d3-out .42s cubic-bezier(.4,0,.8,.4) both; }
+@keyframes d3-out { to { opacity: 0; transform: translateY(26px) scale(.97); } }
 .d3-sum-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
 .d3-chip { display: inline-flex; flex-direction: column; align-items: center; min-width: 54px; padding: 5px 10px 6px; border-radius: 12px; background: #ffffff0d; border: 1px solid #ffffff1f; animation: d3-pop .35s cubic-bezier(.2,.9,.3,1.3) both; }
 .d3-chip small { font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: #b9b2c8; }

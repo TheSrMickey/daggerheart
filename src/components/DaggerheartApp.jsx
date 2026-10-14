@@ -17550,12 +17550,6 @@ export default function App({ onSignOut }) {
 
                               <div className="mh-label" style={{ marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
                                 Umbrales
-                                {c.f_armor_pend === "1" && (
-                                  <span className="mh-tip-anchor" style={{ fontSize: 9.5, fontWeight: 700, color: "#fff", background: "#4A8FD9", padding: "1px 7px", borderRadius: 20, textTransform: "none", letterSpacing: 0, display: "inline-flex", alignItems: "center", gap: 4 }}>
-                                    <span className="mh-tip mh-tip-wrap">El próximo daño baja un umbral: Grave a Mayor, Mayor a Menor, Menor a ningún daño</span>
-                                    <Shield size={10} /> Armadura marcada
-                                  </span>
-                                )}
                                 {earthBonus > 0 && (
                                   <span style={{ fontSize: 9.5, fontWeight: 700, color: ink("#C08B5C"), background: "#C08B5C1A", padding: "1px 7px", borderRadius: 20, textTransform: "none" }}>
                                     +{earthBonus} por Tierra
@@ -17579,7 +17573,7 @@ export default function App({ onSignOut }) {
                                   onClick={() => (isDwarf ? setMinorPop((v) => !v) : applyDamage(viewingCharId, 1))}
                                   className={"mh-tip-anchor" + (fortOn ? " mh-thr-fort" : "")}
                                   title={fortOn ? "Fortaleza Aumentada: el próximo daño físico se reduce a la mitad (umbrales ×2)" : undefined}
-                                  style={{ position: "relative", flex: 1, textAlign: "center", border: "1px solid " + (minorPop ? "var(--mh-ink)" : "var(--mh-line)"), background: "var(--mh-panel2)", borderRadius: 10, padding: statsSpacing.thrPadY + "px 4px", cursor: "pointer" }}
+                                  style={{ position: "relative", flex: 1, textAlign: "center", border: "1px solid " + (c.f_armor_pend === "1" ? "#4A8FD9" : minorPop ? "var(--mh-ink)" : "var(--mh-line)"), background: "var(--mh-panel2)", borderRadius: 10, padding: statsSpacing.thrPadY + "px 4px", cursor: "pointer" }}
                                 >
                                   {!minorPop && <span className="mh-tip">{unstopOn ? "Imparable: el daño Menor no marca PV" : isDwarf ? "Pulsa para elegir: 1 PV o Piel Gruesa" : "Pulsa para -1 PV"}</span>}
                                   <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Menor{unstopOn ? " · 0 PV" : ""}</div>
@@ -17637,7 +17631,7 @@ export default function App({ onSignOut }) {
                                     );
                                   })()}
                                 </div>
-                                <div onClick={() => applyDamage(viewingCharId, 2)} title={fortOn ? "Fortaleza Aumentada: umbrales ×2" : undefined} className={"mh-tip-anchor" + (fortOn ? " mh-thr-fort" : "")} style={{ flex: 1, textAlign: "center", border: "1px solid var(--acc)", background: "color-mix(in srgb, var(--acc) 8%, transparent)", borderRadius: 10, padding: statsSpacing.thrPadY + "px 4px", cursor: "pointer" }}>
+                                <div onClick={() => applyDamage(viewingCharId, 2)} title={fortOn ? "Fortaleza Aumentada: umbrales ×2" : undefined} className={"mh-tip-anchor" + (fortOn ? " mh-thr-fort" : "")} style={{ flex: 1, textAlign: "center", border: "1px solid " + (c.f_armor_pend === "1" ? "#4A8FD9" : "var(--acc)"), background: "color-mix(in srgb, var(--acc) 8%, transparent)", borderRadius: 10, padding: statsSpacing.thrPadY + "px 4px", cursor: "pointer" }}>
                                   <span className="mh-tip">{unstopOn ? "Imparable: pulsa para -1 PV" : "Pulsa para -2 PV"}</span>
                                   <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Mayor{unstopOn ? " · 1 PV" : ""}</div>
                                   <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700, color: "var(--mh-gold-ink)" }}>{fortMajor}</div>
@@ -17646,7 +17640,7 @@ export default function App({ onSignOut }) {
                                   onClick={() => applyDamage(viewingCharId, 3, true)}
                                   title={fortOn ? "Fortaleza Aumentada: umbrales ×2" : undefined}
                                   className={"mh-tip-anchor" + (fortOn ? " mh-thr-fort" : "")}
-                                  style={{ flex: 1, textAlign: "center", border: "1px solid #D9644E", background: "#D9644E14", borderRadius: 10, padding: statsSpacing.thrPadY + "px 4px", cursor: "pointer" }}
+                                  style={{ flex: 1, textAlign: "center", border: "1px solid " + (c.f_armor_pend === "1" ? "#4A8FD9" : "#D9644E"), background: "#D9644E14", borderRadius: 10, padding: statsSpacing.thrPadY + "px 4px", cursor: "pointer" }}
                                 >
                                   <span className="mh-tip">{unstopOn ? "Imparable: pulsa para -2 PV" : c.f_scales_ready === "1" ? "Escamas activas: pulsa para -2 PV" : "Pulsa para -3 PV"}</span>
                                   <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Grave{unstopOn ? " · 2 PV" : ""}{c.f_scales_ready === "1" && <span title="Escamas activas: marcarás 2 PV" style={{ marginLeft: 4, color: "#D9644E", fontWeight: 700 }}>· Escamas</span>}</div>
