@@ -40,7 +40,7 @@ function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
       </div>
       <div className="mh-cardc-badge">{dom && <span className="mh-cardc-gem" title={"Nivel " + c.level}>{c.level}<I size={19} strokeWidth={1.8} /></span>}</div>
       {dom && <span className="mh-cardc-dom">{c.type}</span>}
-      {dom && <span className="mh-cardc-cost" title="Coste de recuperación">{c.recall}<Zap size={12} fill="currentColor" /></span>}
+      {dom && <span className="mh-cardc-cost" title="Coste de recuperación">{c.recall ?? "—"}<Zap size={12} fill="currentColor" /></span>}
       <div style={{ padding: "0 18px", textAlign: "center", flexShrink: 0, marginTop: dom ? 16 : 8 }}>
         <FitTitle text={c.key} max={19} min={14} className="mh-serif" style={{ fontWeight: 700, color: "var(--mh-ink)", maxHeight: "2.4em", overflow: "hidden" }} />
         <div className="mh-cardc-sub">{c.sub}</div>
@@ -55,7 +55,7 @@ function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
       {dom && (
         <div className="mh-cardc-sig">
           <span>Dominio {c.domain}</span>
-          <span>Nivel {c.level} · Recuperación {c.recall}</span>
+          <span>Nivel {c.level} · Recuperación {c.recall ?? "—"}</span>
         </div>
       )}
     </div>

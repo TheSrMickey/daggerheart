@@ -2465,6 +2465,30 @@ const DOMAIN_ICONS = {
 };
 
 const DOMAIN_CARDS = {
+  // Sangre (The Void · playtest). Demiplane no publica ilustración (solo una imagen genérica) ni el coste de Recuperación: queda por confirmar (null).
+  Sangre: [
+    {
+      key: "Poder a Través del Dolor",
+      level: 1,
+      type: "Habilidad",
+      recall: null,
+      text: "Cuando marques un Punto de Vida, coloca una ficha sobre esta carta. En un ataque exitoso, puedes gastar cualquier número de fichas de esta carta para ganar un bonificador de 1d6 al daño del ataque por cada ficha gastada. Esta carta puede contener un máximo de fichas igual a tu rasgo de conjuro. Retira todas las fichas de esta carta cuando hagas un descanso largo.",
+    },
+    {
+      key: "Espina de Sangre",
+      level: 1,
+      type: "Hechizo",
+      recall: null,
+      text: "Haz una tirada de conjuro contra un objetivo en alcance Cercano. Si tienes éxito, gasta una Esperanza para infligirle d8+2 de daño mágico usando tu Competencia, y el objetivo marca un Estrés. Si tienes al menos 3 Puntos de Vida marcados, el dado de daño es un d10.",
+    },
+    {
+      key: "Talismán de Sangre Vital",
+      level: 1,
+      type: "Hechizo",
+      recall: null,
+      text: "Marca un Punto de Vida para conjurar un talismán imbuido con tu esencia vital. Cuando quien porte el talismán fuera a recibir daño Grave o mayor, puede destruirlo para reducir el daño en dos umbrales. El talismán desaparece cuando hagas un descanso o vuelvas a lanzar este hechizo.",
+    },
+  ],
   Arcano: [
     {
       key: "Guarda Rúnica",
@@ -7252,7 +7276,7 @@ function FanFace({ c, col }) {
                   {c.subclass || c.rowCard ? null : c.weapon ? <span className="mh-cardc-tier" style={{ background: col }}>{TIER_COLORS[c.level]?.label}</span> : <span className="mh-cardc-gem">{c.level}{bgArt && <Art size={19} strokeWidth={1.8} />}</span>}
                 </div>
                 {bgArt && <span className="mh-cardc-dom">{c.type}</span>}
-                {bgArt && <span className="mh-cardc-cost" title="Coste de recuperación">{c.recall}<Zap size={12} fill="currentColor" /></span>}
+                {bgArt && <span className="mh-cardc-cost" title="Coste de recuperación">{c.recall ?? "—"}<Zap size={12} fill="currentColor" /></span>}
                 <div style={{ padding: "0 18px", textAlign: "center", flexShrink: 0, marginTop: c.subclass || c.rowCard ? 8 : 16 }}>
                   <FitTitle text={c.key} max={19} min={14} className="mh-serif" style={{ fontWeight: 700, color: "var(--mh-ink)", maxHeight: "2.4em", overflow: "hidden" }} />
                   <div className="mh-cardc-sub">{c.weapon ? `${c.type} · ${c.hands}` : c.subclass || c.rowCard ? c.kicker : `${c.domain} · ${c.type}`}</div>
@@ -7284,7 +7308,7 @@ function FanFace({ c, col }) {
                 {bgArt && (
                   <div className="mh-cardc-sig">
                     <span>Dominio {c.domain}</span>
-                    <span>Nivel {c.level} · Recuperación {c.recall}</span>
+                    <span>Nivel {c.level} · Recuperación {c.recall ?? "—"}</span>
                   </div>
                 )}
               </div>
@@ -15397,14 +15421,14 @@ export default function App({ onSignOut }) {
                   };
                   const domainCardDetail = (cardData) => ({
                     ...(c.f_beastform && cardData.type === "Hechizo" ? { beastLocked: c.f_beastform } : {}),
-                    kicker: `${cardData.domain} · ${cardData.type} · Nivel ${cardData.level} · Recuperación ${cardData.recall}`,
+                    kicker: `${cardData.domain} · ${cardData.type} · Nivel ${cardData.level} · Recuperación ${cardData.recall ?? "—"}`,
                     title: cardData.key,
                     text: cardData.text,
                     image: cardData.image,
                     accent: DOMAIN_COLORS[cardData.domain] || "var(--acc)",
                     domain: { name: cardData.domain, type: cardData.type, level: cardData.level, recall: cardData.recall },
                     bigStyle: true,
-                    tags: [cardData.type, "Nivel " + cardData.level, "Recuperación " + cardData.recall],
+                    tags: [cardData.type, "Nivel " + cardData.level, "Recuperación " + (cardData.recall ?? "—")],
                   });
                   // Menú del clic derecho en el tablero: atacar con tus armas y abrir tus cartas con acciones.
                   const boardActions = (t) => {
@@ -16637,14 +16661,14 @@ export default function App({ onSignOut }) {
                                         onClick={() =>
                                           setViewingCardDetail({
                                             ...(spellLocked ? { beastLocked: c.f_beastform } : {}),
-                                            kicker: `${cardData.domain} · ${cardData.type} · Nivel ${cardData.level} · Recuperación ${cardData.recall}`,
+                                            kicker: `${cardData.domain} · ${cardData.type} · Nivel ${cardData.level} · Recuperación ${cardData.recall ?? "—"}`,
                                             title: cardData.key,
                                             text: cardData.text,
                                             image: cardData.image,
                                             accent: dColor,
                                             domain: { name: cardData.domain, type: cardData.type, level: cardData.level, recall: cardData.recall },
                                             bigStyle: true,
-                                            tags: [cardData.type, "Nivel " + cardData.level, "Recuperación " + cardData.recall],
+                                            tags: [cardData.type, "Nivel " + cardData.level, "Recuperación " + (cardData.recall ?? "—")],
                                           })
                                         }
                                         style={{ "--dc": dColor, animationDelay: i * 70 + "ms", flex: "2 1 0", minHeight: 104 }}
@@ -16665,7 +16689,7 @@ export default function App({ onSignOut }) {
                                         )}
                                         <span className="mh-dslot-recall" title="Coste de recuperación">
                                           <Zap size={11} color="var(--acc)" />
-                                          {cardData.recall}
+                                          {cardData.recall ?? "—"}
                                         </span>
                                         <div className="mh-dslot-txt">
                                           <div className="mh-dslot-kicker">
@@ -18977,14 +19001,14 @@ export default function App({ onSignOut }) {
                                       color: DOMAIN_COLORS[cd.domain] || "#C9A24A",
                                       image: cd.image || "",
                                       detail: {
-                                        kicker: `${cd.domain} · ${cd.type} · Nivel ${cd.level} · Recuperación ${cd.recall}`,
+                                        kicker: `${cd.domain} · ${cd.type} · Nivel ${cd.level} · Recuperación ${cd.recall ?? "—"}`,
                                         title: cd.key,
                                         text: cd.text,
                                         image: cd.image,
                                         accent: DOMAIN_COLORS[cd.domain] || "#C9A24A",
                                         domain: { name: cd.domain, type: cd.type, level: cd.level, recall: cd.recall },
                                         bigStyle: true,
-                                        tags: [cd.type, "Nivel " + cd.level, "Recuperación " + cd.recall],
+                                        tags: [cd.type, "Nivel " + cd.level, "Recuperación " + (cd.recall ?? "—")],
                                       },
                                     });
                                   });
@@ -20106,7 +20130,7 @@ export default function App({ onSignOut }) {
                             <span className="mh-renew-av" style={{ background: DOMAIN_COLORS[cd?.domain] || "#6E5A8A" }}>{cd?.level ?? "?"}</span>
                             <div className="mh-renew-t">
                               <b>{k}</b>
-                              <small>{cd ? cd.domain + " · " + cd.type + " · Recuperación " + cd.recall : ""}</small>
+                              <small>{cd ? cd.domain + " · " + cd.type + " · Recuperación " + (cd.recall ?? "—") : ""}</small>
                             </div>
                             <span style={{ display: "flex", gap: 5 }}>
                               <button type="button" className="mh-btn-ghost" style={{ fontSize: 11, padding: "4px 8px" }} disabled={full} onClick={() => recover(k, 0)} title="En un descanso">
@@ -24780,7 +24804,7 @@ export default function App({ onSignOut }) {
                       ) : null}
                     </div>
                     {d.domain && subtitle && <span className="mh-cardc-dom">{d.domain.type || subtitle}</span>}
-                    {d.domain && <span className="mh-cardc-cost" title="Coste de recuperación">{d.domain.recall}<Zap size={12} fill="currentColor" /></span>}
+                    {d.domain && <span className="mh-cardc-cost" title="Coste de recuperación">{d.domain.recall ?? "—"}<Zap size={12} fill="currentColor" /></span>}
                     <div style={{ padding: "0 18px", textAlign: "center", flexShrink: 0, marginTop: d.domain || d.tier ? 16 : 8 }}>
                       <FitTitle text={d.title} max={19} min={14} className="mh-serif" style={{ fontWeight: 700, color: "var(--mh-ink)", maxHeight: "2.4em", overflow: "hidden" }} />
                       {subtitle && <div className="mh-cardc-sub">{subtitle}</div>}
@@ -25081,7 +25105,7 @@ export default function App({ onSignOut }) {
                         {d.domain ? (
                           <span className="mh-cardc-sig">
                             <span>Dominio {d.domain.name}</span>
-                            <span>Nivel {d.domain.level} · Recuperación {d.domain.recall}</span>
+                            <span>Nivel {d.domain.level} · Recuperación {d.domain.recall ?? "—"}</span>
                           </span>
                         ) : (
                           <span>{footer}</span>
