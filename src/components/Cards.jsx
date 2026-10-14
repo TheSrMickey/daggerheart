@@ -112,9 +112,24 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
     while (sc && !(/(auto|scroll)/.test(getComputedStyle(sc).overflowY) && sc.scrollHeight > sc.clientHeight)) sc = sc.parentElement;
     if (!sc) return;
     const prev = sc.style.scrollSnapType;
+    const prevPad = [sc.style.scrollPaddingTop, sc.style.scrollPaddingBottom];
     sc.style.scrollSnapType = "y mandatory";
+    // La carta se centra en la zona visible: se descuentan los filtros fijos de arriba y la barra inferior.
+    const fit = () => {
+      const bar = rootRef.current?.querySelector(".cx-bars");
+      const dock = document.querySelector(".mh-dock");
+      const sr = sc.getBoundingClientRect();
+      sc.style.scrollPaddingTop = (bar ? bar.offsetHeight : 0) + "px";
+      sc.style.scrollPaddingBottom = (dock ? Math.max(0, sr.bottom - dock.getBoundingClientRect().top) : 0) + "px";
+    };
+    fit();
+    window.addEventListener("resize", fit);
+    const tm = setTimeout(fit, 400);
     return () => {
+      clearTimeout(tm);
+      window.removeEventListener("resize", fit);
       sc.style.scrollSnapType = prev;
+      [sc.style.scrollPaddingTop, sc.style.scrollPaddingBottom] = prevPad;
     };
   }, []);
   const domains = useMemo(() => [...Object.keys(domainColors).filter((d) => d !== "Sangre"), ...(domainColors.Sangre ? ["Sangre"] : [])], [domainColors]); // Sangre (playtest de The Void) va el último
