@@ -15370,6 +15370,7 @@ export default function App({ onSignOut }) {
                       onClick: openDetail({
                         kicker: "Comunidad",
                         title: c.f_community,
+                        image: COMMUNITIES.find((cm) => cm.key === c.f_community)?.image,
                         text: blurb,
                         features: [
                           ...(COMMUNITIES.find((cm) => cm.key === c.f_community)?.features || []),
@@ -23247,6 +23248,8 @@ export default function App({ onSignOut }) {
                   const long = totalChars > 320;
                   const artHeight = d.weapon || d.armor ? 128 : totalChars > 600 ? 84 : long ? 100 : 124;
                   const dmg = d.weapon ? d.weapon.damage.match(/^(\S+)\s*(.*)$/) : null;
+                  const isAncCom = !d.domain && !d.weapon && !d.armor && /^(Ascendencia|Comunidad)\b/.test(d.kicker || "");
+                  const ancComLabel = isAncCom ? (d.kicker.startsWith("Comunidad") ? "Comunidad" : "Ascendencia") : "";
                   const subtitle = d.weapon ? [d.kicker, d.weapon.hands].join(" · ") : d.domain ? d.domain.name + " · " + d.domain.type : d.kicker?.replace(/ · Nivel .*$/, "");
                   const ArtIcon = d.armor
                     ? armorIcon(d.title)
@@ -24762,7 +24765,7 @@ export default function App({ onSignOut }) {
                   return (
                   <div className="mh-cardc-wrap" onClick={(e) => e.stopPropagation()}>
                   <div
-                    className={"mh-card mh-card-anim mh-tilt mh-cardc" + (d.domain ? " is-bg" : "")}
+                    className={"mh-card mh-card-anim mh-tilt mh-cardc" + (d.domain || isAncCom ? " is-bg" : "")}
                     style={{
                       "--glow": alpha(cardColor, 33),
                       "--cc": cardColor,
@@ -24804,8 +24807,9 @@ export default function App({ onSignOut }) {
                       ) : null}
                     </div>
                     {d.domain && subtitle && <span className="mh-cardc-dom">{d.domain.type || subtitle}</span>}
+                    {isAncCom && <span className="mh-cardc-dom">{ancComLabel}</span>}
                     {d.domain && <span className="mh-cardc-cost" title="Coste de recuperación">{d.domain.recall ?? "—"}<Zap size={12} fill="currentColor" /></span>}
-                    <div style={{ padding: "0 18px", textAlign: "center", flexShrink: 0, marginTop: d.domain || d.tier ? 16 : 8 }}>
+                    <div style={{ padding: "0 18px", textAlign: "center", flexShrink: 0, marginTop: d.domain || d.tier || isAncCom ? 16 : 8 }}>
                       <FitTitle text={d.title} max={19} min={14} className="mh-serif" style={{ fontWeight: 700, color: "var(--mh-ink)", maxHeight: "2.4em", overflow: "hidden" }} />
                       {subtitle && <div className="mh-cardc-sub">{subtitle}</div>}
                       <div className="mh-cardc-orn" />
@@ -25100,12 +25104,17 @@ export default function App({ onSignOut }) {
                         </div>
                       );
                     })()}
-                    {!tideCard && !prayerCard && !slayerCard && !patternCard && !hexCard && !hedgeCard && !poisonCard && !summonCard && !patronCard && (footer || d.domain) && (
+                    {!tideCard && !prayerCard && !slayerCard && !patternCard && !hexCard && !hedgeCard && !poisonCard && !summonCard && !patronCard && (footer || d.domain || isAncCom) && (
                       <div className="mh-cardc-foot">
                         {d.domain ? (
                           <span className="mh-cardc-sig">
                             <span>Dominio {d.domain.name}</span>
                             <span>Nivel {d.domain.level} · Recuperación {d.domain.recall ?? "—"}</span>
+                          </span>
+                        ) : isAncCom ? (
+                          <span className="mh-cardc-sig">
+                            <span>{ancComLabel}</span>
+                            <span>{(d.features || []).length} característica{(d.features || []).length === 1 ? "" : "s"}</span>
                           </span>
                         ) : (
                           <span>{footer}</span>
