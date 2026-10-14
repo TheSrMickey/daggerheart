@@ -2910,6 +2910,23 @@ const sharedStyles = `
   .mh-cardc-orn { height: 1px; width: 120px; margin: 8px auto 0; background: linear-gradient(90deg, transparent, var(--cc), transparent); }
   .mh-cardc-label { font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--mh-muted2); }
   .mh-cardc-big { font-size: 30px; font-weight: 700; line-height: 1.1; color: color-mix(in srgb, var(--cc) var(--mh-accent-keep, 100%), #000); }
+  /* Carta de dominio (diseño oficial adaptado): cinta de nivel, tipo en cápsula, coste arriba a la derecha y texto sobre un fundido */
+  .mh-cardc.is-bg { background: #10112a !important; }
+  .mh-cardc.is-bg .mh-cardc-art { height: 188px !important; min-height: 188px; }
+  .mh-cardc.is-bg .mh-cardc-art img, .mh-cardc.is-bg .mh-cardc-noart { bottom: auto; height: 222px; object-position: 46% 28%; }
+  .mh-cardc.is-bg .mh-cardc-noart { padding-top: 0; align-items: center; }
+  .mh-cardc.is-bg .mh-cardc-art::after { top: 112px; bottom: auto; height: 116px; background: linear-gradient(180deg, rgba(16,17,42,0) 0%, rgba(16,17,42,.6) 50%, #10112a 100%); }
+  .mh-cardc.is-bg .mh-cardc-badge { top: 0; left: 14px; }
+  .mh-cardc.is-bg .mh-cardc-gem { width: 44px; height: 70px; padding-top: 7px; gap: 3px; flex-direction: column; border: 0; border-radius: 0; background: var(--cc); color: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; font: 700 24px/1 'Cinzel', Georgia, serif; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 84%, 0 100%); text-shadow: 0 2px 4px #0006; }
+  .mh-cardc.is-bg .mh-cardc-dom { top: 176px; right: auto; left: 50%; transform: translateX(-50%); padding: 4px 18px; border: 0; border-radius: 99px; font-size: 10px; font-weight: 800; letter-spacing: .2em; color: #fff; background: color-mix(in srgb, var(--cc) 82%, #10112a); box-shadow: 0 4px 12px -4px #000a, inset 0 1px 0 #ffffff40; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .mh-cardc-cost { display: none; }
+  .mh-cardc.is-bg .mh-cardc-cost { position: absolute; top: 12px; right: 12px; z-index: 4; width: 42px; height: 42px; border-radius: 50%; border: 2.5px solid #f3d98a; background: rgba(13,13,34,.82); color: #fff; display: flex; align-items: center; justify-content: center; gap: 1px; font: 800 17px 'Inter', system-ui, sans-serif; box-shadow: 0 4px 12px #0008; text-shadow: none; }
+  .mh-cardc.is-bg .mh-cardc-cost svg { color: #f3d98a; }
+  .mh-cardc.is-bg .mh-cardc-close { top: 62px; }
+  .mh-cardc-sig { display: none; }
+  .mh-cardc.is-bg .mh-cardc-sig { display: flex; justify-content: space-between; gap: 8px; flex-shrink: 0; padding: 0 16px 9px; font-size: 8.5px; font-style: italic; color: #d6d8ee; opacity: .8; text-shadow: none; }
+  .mh-cardc.is-bg .mh-cardc-foot .mh-cardc-sig { width: 100%; padding: 0; }
+  .mh-cardc.is-bg .mh-cardc-foot:has(.mh-cardc-sig) { padding: 0 16px 9px !important; border: 0; background: none; padding: 0; }
   .mh-cardc-foot {
     flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 16px;
     border-top: 1px solid color-mix(in srgb, var(--cc) 35%, transparent); font-size: 12px; color: var(--mh-ink3);
@@ -7204,9 +7221,10 @@ function FanFace({ c, col }) {
                   )}
                 </div>
                 <div className="mh-cardc-badge">
-                  {c.subclass || c.rowCard ? null : c.weapon ? <span className="mh-cardc-tier" style={{ background: col }}>{TIER_COLORS[c.level]?.label}</span> : <span className="mh-cardc-gem">{c.level}</span>}
+                  {c.subclass || c.rowCard ? null : c.weapon ? <span className="mh-cardc-tier" style={{ background: col }}>{TIER_COLORS[c.level]?.label}</span> : <span className="mh-cardc-gem">{c.level}{bgArt && <Art size={19} strokeWidth={1.8} />}</span>}
                 </div>
-                {bgArt && <span className="mh-cardc-dom">{c.domain} · {c.type}</span>}
+                {bgArt && <span className="mh-cardc-dom">{c.type}</span>}
+                {bgArt && <span className="mh-cardc-cost" title="Coste de recuperación">{c.recall}<Zap size={12} fill="currentColor" /></span>}
                 <div style={{ padding: "0 18px", textAlign: "center", flexShrink: 0, marginTop: c.subclass || c.rowCard ? 8 : 16 }}>
                   <FitTitle text={c.key} max={19} min={14} className="mh-serif" style={{ fontWeight: 700, color: "var(--mh-ink)", maxHeight: "2.4em", overflow: "hidden" }} />
                   <div className="mh-cardc-sub">{c.weapon ? `${c.type} · ${c.hands}` : c.subclass || c.rowCard ? c.kicker : `${c.domain} · ${c.type}`}</div>
@@ -7235,6 +7253,12 @@ function FanFace({ c, col }) {
                     <div>{c.text}</div>
                   )}
                 </div>
+                {bgArt && (
+                  <div className="mh-cardc-sig">
+                    <span>Dominio {c.domain}</span>
+                    <span>Nivel {c.level} · Recuperación {c.recall}</span>
+                  </div>
+                )}
               </div>
   );
 }
@@ -24711,14 +24735,15 @@ export default function App({ onSignOut }) {
                     </div>
                     <div className="mh-cardc-badge">
                       {d.domain ? (
-                        <span className="mh-cardc-gem" title={"Nivel " + d.domain.level}>{d.domain.level}</span>
+                        <span className="mh-cardc-gem" title={"Nivel " + d.domain.level}>{d.domain.level}<ArtIcon size={19} strokeWidth={1.8} /></span>
                       ) : d.brawlerStrike ? (
                         <span className="mh-cardc-tier" style={{ background: "#C08B5C" }}>Sin arma</span>
                       ) : d.tier ? (
                         <span className="mh-cardc-tier" style={{ background: TIER_COLORS[d.tier].color }}>{TIER_COLORS[d.tier].label}</span>
                       ) : null}
                     </div>
-                    {d.domain && subtitle && <span className="mh-cardc-dom">{subtitle}</span>}
+                    {d.domain && subtitle && <span className="mh-cardc-dom">{d.domain.type || subtitle}</span>}
+                    {d.domain && <span className="mh-cardc-cost" title="Coste de recuperación">{d.domain.recall}<Zap size={12} fill="currentColor" /></span>}
                     <div style={{ padding: "0 18px", textAlign: "center", flexShrink: 0, marginTop: d.domain || d.tier ? 16 : 8 }}>
                       <FitTitle text={d.title} max={19} min={14} className="mh-serif" style={{ fontWeight: 700, color: "var(--mh-ink)", maxHeight: "2.4em", overflow: "hidden" }} />
                       {subtitle && <div className="mh-cardc-sub">{subtitle}</div>}
@@ -25017,8 +25042,9 @@ export default function App({ onSignOut }) {
                     {!tideCard && !prayerCard && !slayerCard && !patternCard && !hexCard && !hedgeCard && !poisonCard && !summonCard && !patronCard && (footer || d.domain) && (
                       <div className="mh-cardc-foot">
                         {d.domain ? (
-                          <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                            <Zap size={12} color="#E3B04B" /> Recuperación <b>{d.domain.recall}</b>
+                          <span className="mh-cardc-sig">
+                            <span>Dominio {d.domain.name}</span>
+                            <span>Nivel {d.domain.level} · Recuperación {d.domain.recall}</span>
                           </span>
                         ) : (
                           <span>{footer}</span>
