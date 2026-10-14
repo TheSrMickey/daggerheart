@@ -145,6 +145,7 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
           <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar por nombre o texto…" aria-label="Buscar cartas" />
         </label>
       </div>
+      <div className="cx-bars">
       <div className="cx-bar" role="group" aria-label="Filtrar por tipo de carta">
         <button type="button" className={"cx-chip" + (kinds.length || sel.length ? "" : " on")} style={{ "--c": "#C9A24A" }} aria-pressed={!kinds.length && !sel.length} onClick={() => (setKinds([]), setSel([]))}>
           <i><Layers size={15} /></i>Todas<em>{all.length}</em>
@@ -168,6 +169,7 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
           })}
         </div>
       )}
+      </div>
       <div className="cx-meta">
         <span>{shown.length} de {all.length} cartas{sel.length ? " · " + sel.join(" + ") : kinds.length ? " · " + kinds.map((k) => KINDS.find((x) => x.key === k).label).join(" + ") : ""}</span>
         <span>Orden: nivel ↑ · luego tipo</span>

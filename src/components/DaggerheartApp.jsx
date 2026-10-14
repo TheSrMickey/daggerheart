@@ -2917,7 +2917,7 @@ const sharedStyles = `
   .mh-cardc.is-bg .mh-cardc-noart { padding-top: 0; align-items: center; }
   .mh-cardc.is-bg .mh-cardc-art::after { top: 112px; bottom: auto; height: 116px; background: linear-gradient(180deg, rgba(16,17,42,0) 0%, rgba(16,17,42,.6) 50%, #10112a 100%); }
   .mh-cardc.is-bg .mh-cardc-badge { top: 0; left: 14px; }
-  .mh-cardc.is-bg .mh-cardc-gem { width: 44px; height: 70px; padding-top: 7px; gap: 3px; flex-direction: column; border: 0; border-radius: 0; background: var(--cc); color: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; font: 700 24px/1 'Cinzel', Georgia, serif; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 84%, 0 100%); text-shadow: 0 2px 4px #0006; }
+  .mh-cardc.is-bg .mh-cardc-gem { width: 44px; height: 88px; padding-top: 8px; gap: 8px; flex-direction: column; border: 0; border-radius: 0; background: var(--cc); color: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; font: 700 24px/1 'Cinzel', Georgia, serif; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 88%, 0 100%); text-shadow: 0 2px 4px #0006; }
   .mh-cardc.is-bg .mh-cardc-dom { top: 176px; right: auto; left: 50%; transform: translateX(-50%); padding: 4px 18px; border: 0; border-radius: 99px; font-size: 10px; font-weight: 800; letter-spacing: .2em; color: #fff; background: color-mix(in srgb, var(--cc) 82%, #10112a); box-shadow: 0 4px 12px -4px #000a, inset 0 1px 0 #ffffff40; -webkit-backdrop-filter: none; backdrop-filter: none; }
   .mh-cardc-cost { display: none; }
   .mh-cardc.is-bg .mh-cardc-cost { position: absolute; top: 12px; right: 12px; z-index: 4; width: 42px; height: 42px; border-radius: 50%; border: 2.5px solid #f3d98a; background: rgba(13,13,34,.82); color: #fff; display: flex; align-items: center; justify-content: center; gap: 1px; font: 800 17px 'Inter', system-ui, sans-serif; box-shadow: 0 4px 12px #0008; text-shadow: none; }
@@ -5611,6 +5611,13 @@ const sharedStyles = `
   .cx-chip i { display: inline-flex; color: var(--c); } .cx-chip em { font-style: normal; font-size: 11px; color: var(--mh-muted); font-weight: 600; }
   .cx-chip.on { border-color: var(--c); background: color-mix(in srgb, var(--c) 14%, var(--mh-panel)); color: var(--mh-ink); }
   .cx-chip.off { opacity: .45; cursor: default; }
+  .cx-bars { display: block; }
+  @media (max-width: 819px) {
+    .cx-bars { position: sticky; top: 0; z-index: 12; margin: 0 -12px 6px; padding: 8px 12px 4px; background: color-mix(in srgb, var(--mh-bg) 95%, transparent); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border-bottom: 1px solid var(--mh-line); }
+    .cx-bars .cx-bar { flex-wrap: nowrap; overflow-x: auto; margin-bottom: 6px; padding-bottom: 2px; scrollbar-width: none; }
+    .cx-bars .cx-bar::-webkit-scrollbar { display: none; }
+    .cx-bars .cx-chip { flex-shrink: 0; }
+  }
   .cx-meta { display: flex; justify-content: space-between; align-items: center; margin: 10px 2px 4px; color: var(--mh-muted); font-size: 12px; gap: 10px; flex-wrap: wrap; }
   .cx-lv { display: flex; align-items: center; gap: 12px; margin: 22px 0 12px; } .cx-lv b { font: 700 13px 'Cinzel', Georgia, serif; letter-spacing: .06em; text-transform: uppercase; color: var(--mh-ink); }
   .cx-lv span { height: 1px; flex: 1; background: var(--mh-line); } .cx-lv small { color: var(--mh-muted); font-size: 12px; }
@@ -14255,9 +14262,20 @@ export default function App({ onSignOut }) {
         : "Las reacciones no generan Esperanza ni Miedo"
       : hope === fear ? "Ganas 1 Esperanza y te quitas 1 Estrés" : hope > fear ? "Ganas 1 Esperanza" : "El DJ gana 1 de Miedo";
     setTraitRollResult({ key: Date.now(), hopeSides, traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, tideBonus, hybridRoll, hybridSidesR: extras.hybridSides || 0, hallowRoll, hallowFirst: hopeA, patronRoll, patronSides: extras.patronSides || 0, slayerRoll, slayerRolls, total, text: hope === fear ? "Éxito crítico" : reaction ? "Tirada de reacción" : text, color, note, reaction, card: cardContext ? { name: cardContext.name, dc: cardContext.dc } : dcVal ? { name: "", dc: dcVal } : null, exps: extras.exps || [], honed: extras.honed || [], wasCloaked, weapon: weapon || null, charId });
-    if (traitLabel === "Agilidad" && hopeSides === 12 && canDice3d()) {
+    if (traitLabel === "Agilidad" && canDice3d()) {
+      // Todos los dados de la tirada: dualidad más ventaja y demás auxiliares.
+      const dl = [{ sides: hopeSides, value: hopeA, kind: "hope", main: true }];
+      if (hallowRoll) dl.push({ sides: 12, value: hallowRoll, kind: "hope", main: true });
+      dl.push({ sides: 12, value: fear, kind: "fear", main: true });
+      if (advantageRoll) dl.push({ sides: 6, value: Math.abs(advantageRoll), kind: advantageRoll > 0 ? "adv" : "dis" });
+      if (wolfBonus) dl.push({ sides: 10, value: wolfBonus, kind: "bonus" });
+      if (rallyRoll) dl.push({ sides: rallySides, value: rallyRoll, kind: "bonus" });
+      if (poetRoll) dl.push({ sides: 4, value: poetRoll, kind: "bonus" });
+      slayerRolls.forEach((v) => dl.push({ sides: 6, value: v, kind: "bonus" }));
+      if (patronRoll) dl.push({ sides: extras.patronSides, value: patronRoll, kind: "bonus" });
+      if (hybridRoll) dl.push({ sides: extras.hybridSides, value: hybridRoll, kind: "bonus" });
       setDiceHold(true);
-      setDice3d({ key: Date.now(), hope, fear });
+      setDice3d({ key: Date.now(), dice: dl });
     }
 
     // Ataque en área: una tirada contra todos; impacta a quienes tengan Dificultad igual o menor.
@@ -25141,7 +25159,7 @@ export default function App({ onSignOut }) {
 
   return (
     <div className={"mh-root" + (isMobile ? " is-mobile" : "")} style={{ display: "flex", flexDirection: isMobile ? "column" : "row", height: "100dvh", background: "var(--mh-bg)", fontFamily: "'Inter', system-ui, sans-serif", color: "var(--mh-ink)", overflow: "hidden" }}>
-      {dice3d && <Dice3D key={dice3d.key} hope={dice3d.hope} fear={dice3d.fear} onReveal={() => setDiceHold(false)} onEnd={() => (setDice3d(null), setDiceHold(false))} />}
+      {dice3d && <Dice3D key={dice3d.key} dice={dice3d.dice} onReveal={() => setDiceHold(false)} onEnd={() => (setDice3d(null), setDiceHold(false))} />}
       <style>{sharedStyles}</style>
       <SocialHost />
       {levelUpId && characters[levelUpId] && (() => {

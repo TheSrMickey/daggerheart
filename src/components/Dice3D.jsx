@@ -2,9 +2,10 @@
 
 import { useEffect, useRef } from "react";
 
-// Dados de dualidad en 3D (cristal): se tiran con física real (cannon-es) desde un punto, una velocidad y un giro aleatorios.
-// La tirada ya está decidida; la física no la cambia: al terminar se renumeran las caras para que la de arriba muestre
-// el valor que toca. El resultado se enseña (onReveal) un poco después de que los dados se hayan parado.
+// Dados en 3D (cristal): los de dualidad y los auxiliares (ventaja, bonos…) se tiran con física real (cannon-es) desde un
+// punto, una velocidad y un giro aleatorios. Cada tirada ya está decidida; la física no la cambia: al terminar se
+// renumeran las caras para que la de arriba muestre el valor que toca. Al quedar quietos, cada dado se gira para que su
+// número se lea derecho y se atenúan los demás. El resultado (onReveal) se enseña un rato después.
 export function canDice3d() {
   if (typeof window === "undefined") return false;
   if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return false;
@@ -15,6 +16,7 @@ export function canDice3d() {
     return false;
   }
 }
+export const DICE3D_SIDES = [4, 6, 8, 10, 12, 20];
 
 const DT = 1 / 120;
 const rngOf = (seed) => () => {
@@ -24,8 +26,16 @@ const rngOf = (seed) => () => {
   t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
   return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 };
+// Colores por tipo de dado: [color, color de atenuación (tinte), color del número]
+const TINTS = {
+  hope: [0xffe9a0, 0xf0a010, "#fff1b8"],
+  fear: [0xd9c4ff, 0x6a2bd6, "#efe3ff"],
+  adv: [0xc8f5d2, 0x2fae5a, "#e6ffec"],
+  dis: [0xffd0c8, 0xd0402e, "#fff0ec"],
+  bonus: [0xcfeeff, 0x3a9bd6, "#eaf7ff"],
+};
 
-export function Dice3D({ hope, fear, onReveal, onEnd }) {
+export function Dice3D({ dice, onReveal, onEnd }) {
   const host = useRef(null);
   const cb = useRef({ onReveal, onEnd });
   useEffect(() => {
@@ -53,21 +63,122 @@ export function Dice3D({ hope, fear, onReveal, onEnd }) {
       }
       if (dead || !host.current) return;
       try {
+        const list = (dice || []).filter((d) => DICE3D_SIDES.includes(d.sides)).slice(0, 8);
+        if (!list.length) throw new Error("sin dados");
         const W = window.innerWidth;
         const H = window.innerHeight;
         const aspect = W / H;
         const R = rngOf((Math.random() * 1e9) | 0);
         const rr = (a, b) => a + (b - a) * R();
 
-        // Cámara: en vertical se aleja para que la mesa quepa a lo ancho.
+        // Cámara más cenital (para leer los números) y más lejos en vertical, para que la mesa quepa a lo ancho.
         const FOV = 38;
-        const dist = Math.max(20.2, 5.4 / (Math.tan((FOV / 2) * (Math.PI / 180)) * aspect));
+        const dist = Math.max(20.2, 4.7 / (Math.tan((FOV / 2) * (Math.PI / 180)) * aspect));
         const k = dist / 20.2;
-        const camPos = new THREE.Vector3(0, 13 * k, 15.5 * k);
-        const halfX = Math.min(7, 0.42 * 2 * Math.tan((FOV / 2) * (Math.PI / 180)) * dist * aspect * 1.1);
-        const halfZ = Math.min(4.6 * k, 7.5);
+        const camPos = new THREE.Vector3(0, 16.6 * k, 11.5 * k);
+        const halfX = Math.min(7.4, 0.44 * 2 * Math.tan((FOV / 2) * (Math.PI / 180)) * dist * aspect * 1.1);
+        const halfZ = Math.min(5.2 * k, 8);
 
-        // --- Física: se simula entera por adelantado y luego se reproduce ---
+        // ---------- Geometrías de los dados ----------
+        const polyGeo = (sides) => {
+          if (sides === 4) return new THREE.TetrahedronGeometry(1);
+          if (sides === 6) {
+            const g = new THREE.BoxGeometry(1, 1, 1).toNonIndexed();
+            g.scale(2 / Math.sqrt(3), 2 / Math.sqrt(3), 2 / Math.sqrt(3));
+            return g;
+          }
+          if (sides === 8) return new THREE.OctahedronGeometry(1);
+          if (sides === 12) return new THREE.DodecahedronGeometry(1);
+          if (sides === 20) return new THREE.IcosahedronGeometry(1);
+          // d10: trapezoedro pentagonal (10 caras en cometa)
+          const c = 0.105;
+          const U = (i) => new THREE.Vector3(Math.cos((i * 2 * Math.PI) / 5), c, Math.sin((i * 2 * Math.PI) / 5));
+          const L = (i) => new THREE.Vector3(Math.cos(((i * 2 + 1) * Math.PI) / 5), -c, Math.sin(((i * 2 + 1) * Math.PI) / 5));
+          const n = new THREE.Vector3().crossVectors(U(1).clone().sub(U(0)), L(0).clone().sub(U(0)));
+          const h = c + (n.x * U(0).x + n.z * U(0).z) / n.y;
+          const T = new THREE.Vector3(0, h, 0);
+          const B = new THREE.Vector3(0, -h, 0);
+          const pts = [];
+          const tri = (a, b, d) => {
+            const nn = new THREE.Vector3().crossVectors(b.clone().sub(a), d.clone().sub(a));
+            const ctr = a.clone().add(b).add(d).divideScalar(3);
+            if (nn.dot(ctr) < 0) pts.push(a, d, b);
+            else pts.push(a, b, d);
+          };
+          for (let i = 0; i < 5; i++) {
+            tri(T, U(i), L(i));
+            tri(T, L(i), U(i + 1));
+            tri(B, L(i), U(i + 1));
+            tri(B, U(i + 1), L(i + 1));
+          }
+          const g = new THREE.BufferGeometry().setFromPoints(pts);
+          const m = Math.max(...pts.map((p) => p.length()));
+          g.scale(1 / m, 1 / m, 1 / m);
+          return g;
+        };
+
+        // Caras agrupadas (triángulos coplanares) + «ranuras» de número. Un d4 se lee por el vértice de arriba.
+        const buildType = (sides) => {
+          const geo = polyGeo(sides);
+          const pos = geo.attributes.position;
+          const tris = [];
+          for (let i = 0; i < pos.count; i += 3) {
+            const a = new THREE.Vector3().fromBufferAttribute(pos, i);
+            const b = new THREE.Vector3().fromBufferAttribute(pos, i + 1);
+            const c = new THREE.Vector3().fromBufferAttribute(pos, i + 2);
+            const nrm = new THREE.Vector3().crossVectors(b.clone().sub(a), c.clone().sub(a)).normalize();
+            tris.push({ pts: [a, b, c], nrm, key: nrm.toArray().map((v) => Math.round(v * 200)).join(",") });
+          }
+          const byKey = new Map();
+          tris.forEach((t) => {
+            if (!byKey.has(t.key)) byKey.set(t.key, []);
+            byKey.get(t.key).push(t);
+          });
+          const uniq = [];
+          const idx = (p) => {
+            const i = uniq.findIndex((u) => u.distanceTo(p) < 1e-4);
+            if (i >= 0) return i;
+            uniq.push(p.clone());
+            return uniq.length - 1;
+          };
+          const faces = [];
+          byKey.forEach((ts) => {
+            const ids = [...new Set(ts.flatMap((t) => t.pts.map(idx)))];
+            const ctr = ids.reduce((s, i) => s.add(uniq[i]), new THREE.Vector3()).divideScalar(ids.length);
+            const n = ts[0].nrm.clone();
+            const u = uniq[ids[0]].clone().sub(ctr).normalize();
+            const w = new THREE.Vector3().crossVectors(n, u);
+            const ang = (p) => Math.atan2(uniq[p].clone().sub(ctr).dot(w), uniq[p].clone().sub(ctr).dot(u));
+            const order = [...ids].sort((a, b) => ang(a) - ang(b));
+            // radio interior de la cara (para el tamaño del número)
+            let inr = 9;
+            for (let i = 0; i < order.length; i++) {
+              const p = uniq[order[i]];
+              const q = uniq[order[(i + 1) % order.length]];
+              const e = q.clone().sub(p).normalize();
+              const v = ctr.clone().sub(p);
+              inr = Math.min(inr, v.clone().sub(e.clone().multiplyScalar(v.dot(e))).length());
+            }
+            faces.push({ ids, order, ctr, n, inr, u });
+          });
+          // Ranuras: una por cara; en el d4, tres por vértice (cerca del vértice, en cada cara que lo toca).
+          let groups;
+          if (sides === 4) {
+            groups = uniq.map((v) => ({
+              dir: v.clone().normalize(),
+              slots: faces
+                .filter((f) => f.ids.some((i) => uniq[i] === v))
+                .map((f) => ({ pos: f.ctr.clone().add(v.clone().sub(f.ctr).multiplyScalar(0.5)), n: f.n, up: v.clone().sub(f.ctr).normalize(), size: f.inr * 0.8 })),
+            }));
+          } else {
+            groups = faces.map((f) => ({ dir: f.n.clone(), slots: [{ pos: f.ctr.clone(), n: f.n, up: f.u.clone(), size: Math.min(f.inr * 1.35, 0.7) }] }));
+          }
+          return { geo, uniq, faces, groups };
+        };
+        const types = {};
+        const typeOf = (sides) => (types[sides] = types[sides] || buildType(sides));
+
+        // ---------- Física: se simula entera por adelantado ----------
         const world = new CANNON.World({ gravity: new CANNON.Vec3(0, -34, 0) });
         world.allowSleep = true;
         const mDie = new CANNON.Material("die");
@@ -85,61 +196,42 @@ export function Dice3D({ hope, fear, onReveal, onEnd }) {
         addBox(14, 12, 0.5, 0, 12, -halfZ - 0.5);
         addBox(14, 12, 0.5, 0, 12, halfZ + 0.5);
 
-        const geo = new THREE.DodecahedronGeometry(1, 0);
-        const posA = geo.attributes.position;
-        const faces = [];
-        for (let f = 0; f < 12; f++) {
-          const c = new THREE.Vector3();
-          for (let i = 0; i < 9; i++) c.add(new THREE.Vector3().fromBufferAttribute(posA, f * 9 + i));
-          faces.push(c.divideScalar(9));
-        }
-        const uniq = [];
-        const idx = (p) => {
-          const i = uniq.findIndex((u) => u.distanceTo(p) < 1e-4);
-          if (i >= 0) return i;
-          uniq.push(p.clone());
-          return uniq.length - 1;
-        };
-        const polys = [];
-        for (let f = 0; f < 12; f++) {
-          const ids = [...new Set([...Array(9).keys()].map((q) => idx(new THREE.Vector3().fromBufferAttribute(posA, f * 9 + q))))];
-          const c = faces[f];
-          const n = c.clone().normalize();
-          const u = uniq[ids[0]].clone().sub(c).normalize();
-          const w = new THREE.Vector3().crossVectors(n, u);
-          const ang = (p) => Math.atan2(uniq[p].clone().sub(c).dot(w), uniq[p].clone().sub(c).dot(u));
-          ids.sort((a, b) => ang(a) - ang(b));
-          polys.push(ids);
-        }
-        const shape = new CANNON.ConvexPolyhedron({ vertices: uniq.map((v) => new CANNON.Vec3(v.x, v.y, v.z)), faces: polys });
-        const bodies = [0, 1].map((i) => {
+        const items = list.map((d, i) => {
+          const T = typeOf(d.sides);
+          const scale = d.main ? 1 : 0.78;
+          const shape = new CANNON.ConvexPolyhedron({
+            vertices: T.uniq.map((v) => new CANNON.Vec3(v.x * scale, v.y * scale, v.z * scale)),
+            faces: T.faces.map((f) => f.order),
+          });
           const b = new CANNON.Body({ mass: 1, material: mDie, shape, sleepSpeedLimit: 0.35, sleepTimeLimit: 0.5, linearDamping: 0.2, angularDamping: 0.4 });
-          b.position.set(rr(-halfX * 0.7, halfX * 0.7), rr(8, 11) + i * rr(1.5, 4), rr(-halfZ * 0.6, halfZ * 0.6));
+          b.position.set(rr(-halfX * 0.7, halfX * 0.7), rr(8, 11) + i * rr(1.2, 2.6), rr(-halfZ * 0.6, halfZ * 0.6));
           const dx = -Math.sign(b.position.x || 1) * rr(0.4, 1);
           b.velocity.set(dx * rr(5, 12) + rr(-3, 3), rr(-4, 3), rr(-5, 5));
           b.angularVelocity.set(rr(-14, 14), rr(-14, 14), rr(-14, 14));
           b.quaternion.setFromEuler(rr(0, 6.28), rr(0, 6.28), rr(0, 6.28));
           world.addBody(b);
-          return b;
+          return { d, T, scale, b };
         });
         const rec = [];
         let tt = 0;
         let rest = null;
-        for (let s = 0; s < 120 * 7; s++) {
+        for (let s = 0; s < 120 * 8; s++) {
           world.step(DT);
           tt += DT;
-          rec.push(bodies.map((b) => [b.position.x, b.position.y, b.position.z, b.quaternion.x, b.quaternion.y, b.quaternion.z, b.quaternion.w]));
-          if (rest === null && bodies.every((b) => b.sleepState === CANNON.Body.SLEEPING)) rest = tt;
+          rec.push(items.map(({ b }) => [b.position.x, b.position.y, b.position.z, b.quaternion.x, b.quaternion.y, b.quaternion.z, b.quaternion.w]));
+          if (rest === null && items.every(({ b }) => b.sleepState === CANNON.Body.SLEEPING)) rest = tt;
           if (rest !== null && tt > rest + 0.3) break;
         }
         if (rest === null) rest = tt;
         const last = rec[rec.length - 1];
-        const topFace = (s) => {
+
+        // Grupo (cara o vértice) que queda arriba y numeración para que muestre el valor decidido.
+        const topGroup = (T, s) => {
           const q = new THREE.Quaternion(s[3], s[4], s[5], s[6]);
           let best = -9;
           let bi = 0;
-          faces.forEach((c, i) => {
-            const y = c.clone().normalize().applyQuaternion(q).y;
+          T.groups.forEach((g, i) => {
+            const y = g.dir.clone().applyQuaternion(q).y;
             if (y > best) {
               best = y;
               bi = i;
@@ -147,18 +239,8 @@ export function Dice3D({ hope, fear, onReveal, onEnd }) {
           });
           return bi;
         };
-        // Numeración: la cara que queda arriba muestra el valor decidido (se intercambia con la que lo llevaba).
-        const labelsFor = (want, s) => {
-          const lab = Array.from({ length: 12 }, (_, i) => i + 1);
-          const top = topFace(s);
-          const j = lab.indexOf(want);
-          [lab[top], lab[j]] = [lab[j], lab[top]];
-          return lab;
-        };
-        const labH = labelsFor(Math.min(12, Math.max(1, hope)), last[0]);
-        const labF = labelsFor(Math.min(12, Math.max(1, fear)), last[1]);
 
-        // --- Escena ---
+        // ---------- Escena ----------
         const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
         const dpr = Math.min(window.devicePixelRatio || 1, W < 820 ? 1.5 : 2);
         renderer.setPixelRatio(dpr);
@@ -175,7 +257,7 @@ export function Dice3D({ hope, fear, onReveal, onEnd }) {
         cam.position.copy(camPos);
         cam.lookAt(0, 0, 0);
         const key = new THREE.DirectionalLight(0xffffff, 2.2);
-        key.position.set(-4 * k, 9 * k, 5 * k);
+        key.position.set(-4 * k, 11 * k, 4 * k);
         key.castShadow = true;
         key.shadow.mapSize.set(1024, 1024);
         const sc = 12 * k;
@@ -186,60 +268,124 @@ export function Dice3D({ hope, fear, onReveal, onEnd }) {
         catcher.rotation.x = -Math.PI / 2;
         catcher.receiveShadow = true;
         scene.add(catcher);
+
+        const disposables = [];
+        const texCache = new Map();
         const numTex = (n, col) => {
+          const id = n + col;
+          if (texCache.has(id)) return texCache.get(id);
           const c = document.createElement("canvas");
           c.width = c.height = 128;
           const g = c.getContext("2d");
-          g.font = "bold 78px Georgia, serif";
+          g.font = "bold 80px Georgia, serif";
           g.textAlign = "center";
           g.textBaseline = "middle";
           g.fillStyle = col;
           g.shadowColor = col;
           g.shadowBlur = 10;
           g.fillText(String(n), 64, 70);
-          return new THREE.CanvasTexture(c);
+          // un 6 y un 9 se distinguen con un punto
+          if (n === 6 || n === 9) {
+            g.shadowBlur = 0;
+            g.fillRect(52, 112, 24, 6);
+          }
+          const t = new THREE.CanvasTexture(c);
+          texCache.set(id, t);
+          disposables.push(t);
+          return t;
         };
-        const disposables = [];
-        const makeDie = (tint, att, numCol, labels) => {
-          const g = new THREE.Group();
-          const mat = new THREE.MeshPhysicalMaterial({ color: tint, transmission: 1, thickness: 1.6, ior: 1.5, roughness: 0.06, attenuationColor: att, attenuationDistance: 1.4, clearcoat: 1, clearcoatRoughness: 0.04, iridescence: 0.6, iridescenceIOR: 1.4, envMapIntensity: 1.6, transparent: true });
-          const mesh = new THREE.Mesh(geo, mat);
+
+        const objs = items.map(({ d, T, scale, b }) => {
+          const tint = d.kind === "dis" ? TINTS.dis : TINTS[d.kind] || TINTS.bonus;
+          const group = new THREE.Group();
+          const mat = new THREE.MeshPhysicalMaterial({ color: tint[0], transmission: 1, thickness: 1.6, ior: 1.5, roughness: 0.06, attenuationColor: tint[1], attenuationDistance: 1.4, clearcoat: 1, clearcoatRoughness: 0.04, iridescence: 0.6, iridescenceIOR: 1.4, envMapIntensity: 1.6, transparent: true });
+          const body = new THREE.Group();
+          body.scale.setScalar(scale);
+          const mesh = new THREE.Mesh(T.geo, mat);
           mesh.castShadow = true;
-          g.add(mesh);
-          const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55 }));
-          g.add(edges);
+          body.add(mesh);
+          const edges = new THREE.LineSegments(new THREE.EdgesGeometry(T.geo), new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55 }));
+          body.add(edges);
+          group.add(body);
           disposables.push(mat, edges.material, edges.geometry);
-          faces.forEach((c, i) => {
-            const nrm = c.clone().normalize();
-            const tex = numTex(labels[i], numCol);
-            const pm2 = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, opacity: 0.95 });
-            const pl = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.62), pm2);
-            pl.position.copy(nrm.clone().multiplyScalar(c.length() + 0.012));
-            pl.lookAt(nrm.clone().multiplyScalar(5));
-            g.add(pl);
-            disposables.push(tex, pm2, pl.geometry);
+          // Numeración: cada grupo lleva un número; el que queda arriba al final recibe el valor decidido.
+          const labels = Array.from({ length: d.sides }, (_, i) => i + 1);
+          const topI = topGroup(T, last[items.findIndex((x) => x.b === b)]);
+          const want = Math.min(d.sides, Math.max(1, d.value));
+          const j = labels.indexOf(want);
+          [labels[topI], labels[j]] = [labels[j], labels[topI]];
+          const planes = [];
+          T.groups.forEach((gr, gi) => {
+            gr.slots.forEach((sl) => {
+              const pmat = new THREE.MeshBasicMaterial({ map: numTex(labels[gi], tint[2]), transparent: true, depthWrite: false, opacity: 0.95 });
+              const pl = new THREE.Mesh(new THREE.PlaneGeometry(sl.size, sl.size), pmat);
+              const yAx = sl.up.clone().sub(sl.n.clone().multiplyScalar(sl.up.dot(sl.n))).normalize();
+              const xAx = new THREE.Vector3().crossVectors(yAx, sl.n);
+              pl.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(xAx, yAx, sl.n));
+              pl.position.copy(sl.pos.clone().add(sl.n.clone().multiplyScalar(0.012)));
+              body.add(pl);
+              disposables.push(pmat, pl.geometry);
+              planes.push({ pl, gi, sl, yAx });
+            });
           });
-          return g;
-        };
-        const dH = makeDie(0xffe9a0, 0xf0a010, "#fff1b8", labH);
-        const dF = makeDie(0xd9c4ff, 0x6a2bd6, "#efe3ff", labF);
-        scene.add(dH, dF);
-        const apply = (g, s) => {
-          g.position.set(s[0], s[1], s[2]);
-          g.quaternion.set(s[3], s[4], s[5], s[6]);
-        };
+          scene.add(group);
+          return { group, planes, topI, T };
+        });
+
+        // Pose final alineada: el número de arriba se lee derecho (con su parte alta hacia el fondo de la mesa).
+        const aligned = items.map((it, i) => {
+          const o = objs[i];
+          const s = last[i];
+          const q0 = new THREE.Quaternion(s[3], s[4], s[5], s[6]);
+          // la ranura del grupo de arriba que más mira a la cámara
+          const cands = o.planes.filter((p) => p.gi === o.topI);
+          const toCam = camPos.clone().sub(new THREE.Vector3(s[0], s[1], s[2])).normalize();
+          let slot = cands[0];
+          let bd = -9;
+          cands.forEach((c) => {
+            const dd = c.sl.n.clone().applyQuaternion(q0).dot(toCam);
+            if (dd > bd) {
+              bd = dd;
+              slot = c;
+            }
+          });
+          const upW = slot.yAx.clone().applyQuaternion(q0);
+          const a = Math.atan2(upW.x, upW.z);
+          o.slot = slot;
+          return { phi: Math.PI - a, q0 };
+        });
 
         const veil = host.current.querySelector(".d3-veil");
         const t0 = performance.now();
-        window.__d3rest = rest;
-        const revealAt = rest + 0.6;
-        const endAt = rest + 1.2;
+        const alignStart = rest + 0.05;
+        const alignDur = 0.55;
+        const revealAt = rest + 1.15;
+        const endAt = rest + 1.8;
+        const qY = new THREE.Quaternion();
+        const qT = new THREE.Quaternion();
+        const ease = (x) => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
         const tick = () => {
           if (dead) return;
-          const t = (performance.now() - t0) / 1000;
+          const t = typeof window.__d3t === "number" ? window.__d3t : (performance.now() - t0) / 1000;
           const i = Math.min(rec.length - 1, Math.max(0, Math.round(t / DT)));
-          apply(dH, rec[i][0]);
-          apply(dF, rec[i][1]);
+          const e = ease((t - alignStart) / alignDur);
+          objs.forEach((o, di) => {
+            const s = rec[i][di];
+            o.group.position.set(s[0], s[1], s[2]);
+            o.group.quaternion.set(s[3], s[4], s[5], s[6]);
+            if (e > 0) {
+              qY.setFromAxisAngle(new THREE.Vector3(0, 1, 0), aligned[di].phi * e);
+              qT.copy(aligned[di].q0);
+              o.group.quaternion.premultiply(qY);
+              // los demás números se atenúan y el de arriba crece
+              o.planes.forEach((p) => {
+                const top = p === o.slot;
+                p.pl.material.opacity = top ? 1 : 0.95 - 0.8 * e;
+                p.pl.scale.setScalar(top ? 1 + 0.45 * e : 1);
+                if (top) p.pl.position.copy(p.sl.pos.clone().add(p.sl.n.clone().multiplyScalar(0.012 + 0.02 * e)));
+              });
+            }
+          });
           if (t >= revealAt) reveal();
           const fade = t > revealAt ? Math.max(0, 1 - (t - revealAt) / (endAt - revealAt)) : 1;
           host.current.style.opacity = String(Math.min(1, t / 0.12) * fade);
@@ -251,11 +397,12 @@ export function Dice3D({ hope, fear, onReveal, onEnd }) {
           }
           raf = requestAnimationFrame(tick);
         };
+        window.__d3rest = rest;
         raf = requestAnimationFrame(tick);
         cleanup = () => {
           cancelAnimationFrame(raf);
           disposables.forEach((d) => d.dispose && d.dispose());
-          geo.dispose();
+          Object.values(types).forEach((T) => T.geo.dispose());
           pm.dispose();
           renderer.dispose();
           renderer.domElement.remove();
