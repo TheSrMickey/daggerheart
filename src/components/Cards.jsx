@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Layers, Search, Zap } from "lucide-react";
+import { ArrowUp, Layers, Search, Zap } from "lucide-react";
 
 // Pestaña «Cartas»: todas las cartas del juego (dominio, ascendencia, comunidad, subclase y transformación),
 // con filtros y buscador. Al pulsar una carta se ve en grande, con el mismo diseño que en la hoja.
@@ -104,32 +104,48 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(null);
   const [closing, setClosing] = useState(false);
-  // Móvil: al desplazar en vertical, siempre queda una carta centrada (no se detiene entre dos).
   const rootRef = useRef(null);
+  const scRef = useRef(null);
+  const [showTop, setShowTop] = useState(false);
+  // Contenedor con scroll de la página: sirve para el botón de subir y, en móvil, para centrar la carta.
   useEffect(() => {
-    if (typeof window === "undefined" || !window.matchMedia("(max-width: 819px)").matches) return;
     let sc = rootRef.current?.parentElement;
     while (sc && !(/(auto|scroll)/.test(getComputedStyle(sc).overflowY) && sc.scrollHeight > sc.clientHeight)) sc = sc.parentElement;
     if (!sc) return;
-    const prev = sc.style.scrollSnapType;
-    const prevPad = [sc.style.scrollPaddingTop, sc.style.scrollPaddingBottom];
-    sc.style.scrollSnapType = "y mandatory";
-    // La carta se centra en la zona visible: se descuentan los filtros fijos de arriba y la barra inferior.
-    const fit = () => {
+    scRef.current = sc;
+    const mobile = window.matchMedia("(max-width: 819px)").matches;
+    let tm = 0;
+    // Móvil: cuando el desplazamiento se detiene, la carta más cercana se centra en la zona visible (entre los filtros fijos y la barra inferior).
+    const settle = () => {
       const bar = rootRef.current?.querySelector(".cx-bars");
       const dock = document.querySelector(".mh-dock");
       const sr = sc.getBoundingClientRect();
-      sc.style.scrollPaddingTop = (bar ? bar.offsetHeight : 0) + "px";
-      sc.style.scrollPaddingBottom = (dock ? Math.max(0, sr.bottom - dock.getBoundingClientRect().top) : 0) + "px";
+      const top = bar ? bar.getBoundingClientRect().bottom : sr.top;
+      const bottom = dock ? Math.min(sr.bottom, dock.getBoundingClientRect().top) : sr.bottom;
+      const mid = (top + bottom) / 2;
+      let best = null;
+      let bd = Infinity;
+      rootRef.current?.querySelectorAll(".cx-card").forEach((el) => {
+        const r = el.getBoundingClientRect();
+        const d = r.top + r.height / 2 - mid;
+        if (Math.abs(d) < Math.abs(bd)) {
+          bd = d;
+          best = el;
+        }
+      });
+      // Solo se ajusta si hay una carta a la vista; en la cabecera de la lista no se mueve.
+      if (best && Math.abs(bd) > 2 && sc.scrollTop > 160) sc.scrollTo({ top: sc.scrollTop + bd, behavior: "smooth" });
     };
-    fit();
-    window.addEventListener("resize", fit);
-    const tm = setTimeout(fit, 400);
+    const onScroll = () => {
+      setShowTop(sc.scrollTop > 700);
+      if (!mobile) return;
+      clearTimeout(tm);
+      tm = setTimeout(settle, 140);
+    };
+    sc.addEventListener("scroll", onScroll, { passive: true });
     return () => {
       clearTimeout(tm);
-      window.removeEventListener("resize", fit);
-      sc.style.scrollSnapType = prev;
-      [sc.style.scrollPaddingTop, sc.style.scrollPaddingBottom] = prevPad;
+      sc.removeEventListener("scroll", onScroll);
     };
   }, []);
   const domains = useMemo(() => [...Object.keys(domainColors).filter((d) => d !== "Sangre"), ...(domainColors.Sangre ? ["Sangre"] : [])], [domainColors]); // Sangre (playtest de The Void) va el último
@@ -250,6 +266,11 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
           </div>
         );
       })()}
+      {showTop && (
+        <button type="button" className="cx-top" aria-label="Subir arriba del todo" onClick={() => scRef.current?.scrollTo({ top: 0, behavior: "smooth" })}>
+          <ArrowUp size={20} />
+        </button>
+      )}
     </div>
   );
 }
