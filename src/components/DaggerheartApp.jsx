@@ -2917,7 +2917,7 @@ const sharedStyles = `
   .mh-cardc.is-bg .mh-cardc-noart { padding-top: 0; align-items: center; }
   .mh-cardc.is-bg .mh-cardc-art::after { top: 112px; bottom: auto; height: 116px; background: linear-gradient(180deg, rgba(16,17,42,0) 0%, rgba(16,17,42,.6) 50%, #10112a 100%); }
   .mh-cardc.is-bg .mh-cardc-badge { top: 0; left: 14px; }
-  .mh-cardc.is-bg .mh-cardc-gem { width: 44px; height: 88px; padding-top: 8px; gap: 8px; flex-direction: column; border: 0; border-radius: 0; background: var(--cc); color: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; font: 700 24px/1 'Cinzel', Georgia, serif; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 88%, 0 100%); text-shadow: 0 2px 4px #0006; }
+  .mh-cardc.is-bg .mh-cardc-gem { width: 44px; height: auto; padding: 10px 0 25px; gap: 9px; flex-direction: column; border: 0; border-radius: 0; background: var(--cc); color: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; font: 700 24px/1 'Cinzel', Georgia, serif; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 13px), 0 100%); text-shadow: 0 2px 4px #0006; }
   .mh-cardc.is-bg .mh-cardc-dom { top: 176px; right: auto; left: 50%; transform: translateX(-50%); padding: 4px 18px; border: 0; border-radius: 99px; font-size: 10px; font-weight: 800; letter-spacing: .2em; color: #fff; background: color-mix(in srgb, var(--cc) 82%, #10112a); box-shadow: 0 4px 12px -4px #000a, inset 0 1px 0 #ffffff40; -webkit-backdrop-filter: none; backdrop-filter: none; }
   .mh-cardc-cost { display: none; }
   .mh-cardc.is-bg .mh-cardc-cost { position: absolute; top: 12px; right: 12px; z-index: 4; width: 42px; height: 42px; border-radius: 50%; border: 2.5px solid #f3d98a; background: rgba(13,13,34,.82); color: #fff; display: flex; align-items: center; justify-content: center; gap: 1px; font: 800 17px 'Inter', system-ui, sans-serif; box-shadow: 0 4px 12px #0008; text-shadow: none; }
@@ -24747,9 +24747,7 @@ export default function App({ onSignOut }) {
                           <ArtIcon size={50} strokeWidth={1.5} />
                         </div>
                       )}
-                      <button type="button" className="mh-cardc-close" onClick={closeCardDetail} aria-label="Cerrar">
-                        <X size={14} />
-                      </button>
+
                     </div>
                     <div className="mh-cardc-badge">
                       {d.domain ? (

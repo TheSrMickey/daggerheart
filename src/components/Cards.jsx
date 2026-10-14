@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Layers, Search, X, Zap } from "lucide-react";
+import { Layers, Search, Zap } from "lucide-react";
 
 // Pestaña «Cartas»: todas las cartas del juego (dominio, ascendencia, comunidad, subclase y transformación),
 // con filtros y buscador. Al pulsar una carta se ve en grande, con el mismo diseño que en la hoja.
@@ -37,7 +37,6 @@ function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
       {legend && <div className="mh-legend-sheen" />}
       <div className="mh-cardc-art" style={{ height: total > 600 ? 84 : total > 320 ? 100 : 124, "--ah": (total > 600 ? 84 : total > 320 ? 100 : 124) + "px" }}>
         {c.image ? <img src={c.image} alt={modal ? c.key : ""} /> : <div className="mh-cardc-noart" style={{ color: col }}><I size={50} strokeWidth={1.5} /></div>}
-        {modal && <button type="button" className="mh-cardc-close" onClick={onClose} aria-label="Cerrar"><X size={14} /></button>}
       </div>
       <div className="mh-cardc-badge">{dom && <span className="mh-cardc-gem" title={"Nivel " + c.level}>{c.level}<I size={19} strokeWidth={1.8} /></span>}</div>
       {dom && <span className="mh-cardc-dom">{c.type}</span>}
