@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-11",
     title: "Imágenes propias en las escenas y viñeta",
     items: [
+      { tag: "mejora", text: "Hoja de personaje: la imagen de fondo de la cabecera es ahora la ilustración oficial de la clase en alta calidad (con su escena) y se ve más nítida; la tuya propia sigue sustituyéndola si la subes." },
       { tag: "mejora", text: "Al tocar la pantalla tras una tirada de dados, la escena sale con animación: la caja de la suma baja y se desvanece, los dados se acercan y todo se funde. Además, al marcar una casilla de Armadura ya no aparece el texto «Armadura marcada» junto a los umbrales: ahora el borde de las tres cajas de umbrales se pone azul." },
       { tag: "nuevo", text: "El daño de las armas también se tira con los dados 3D (misma escena: zoom, borde animado y suma con todas las bonificaciones; el daño al enemigo se aplica al tocar la pantalla). Y las cajas de resultado antiguas ya no repiten los dados: solo quedan si tienen botones o habilidades que usar, y si no se cierran solas." },
       { tag: "mejora", text: "Tiradas de dados: la caja de resultado ya no repite la animación antigua de los dados, y la Esperanza o el Miedo (para el personaje o el DJ) no se suman hasta que cierras la escena de dados tocando la pantalla." },

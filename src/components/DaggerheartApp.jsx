@@ -1030,6 +1030,9 @@ const getTranscend = (c) => {
 };
 // Altura (en %) a la que se centra cada ilustración en la cabecera de la hoja moderna, para que se vea la cara del personaje.
 const CLASS_ART_Y = { Asesino: 12, Bardo: 20, Bruja: 46, Brujo: 44, Camorrista: 28, Druida: 16, Explorador: 16, Guardián: 16, Guerrero: 38, Hechicero: 16, Mago: 16, Pícaro: 9, Serafín: 2 };
+// Ilustración de clase en alta calidad (1350 × 1080, con su escena) para la cabecera de la hoja. La Camorrista aún no la tiene y usa la de siempre.
+const CLASS_HEADER_ART = Object.fromEntries(["Bardo", "Druida", "Guardián", "Explorador", "Pícaro", "Serafín", "Hechicero", "Guerrero", "Mago", "Bruja", "Brujo", "Asesino"].map((k) => [k, "/clases/cabecera/" + k.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") + ".webp"]));
+const CLASS_HEADER_Y = { Bardo: 9, Druida: 36, Guardián: 22, Explorador: 22, Pícaro: 36, Serafín: 22, Hechicero: 22, Guerrero: 22, Mago: 22, Bruja: 29, Brujo: 29, Asesino: 22 };
 const CLASS_ART = {
   Bardo: "/clases/bardo.webp",
   Druida: "/clases/druida.webp",
@@ -6842,7 +6845,7 @@ const sharedStyles = `
   @media (max-width: 520px) { .mh-sheetask-opts { grid-template-columns: 1fr; } }
   .mhm { display: flex; flex-direction: column; gap: 14px; }
   .mhm-head { position: relative; overflow: hidden; border-radius: 16px; padding: 14px 20px 14px; border: 1px solid color-mix(in srgb, var(--cc) 40%, #ffffff14); background: linear-gradient(135deg, color-mix(in srgb, var(--cc) 40%, #0d1a1a), #0c0c20 80%); }
-  .mhm-head-art { position: absolute; top: -8px; right: -8px; bottom: -8px; width: 68%; background-size: cover; background-position: center 28%; filter: blur(2.5px) saturate(1.1); opacity: .62; -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 55%); mask-image: linear-gradient(90deg, transparent 0%, #000 55%); }
+  .mhm-head-art { position: absolute; top: -8px; right: -8px; bottom: -8px; width: 68%; background-size: cover; background-position: center 28%; filter: blur(.8px) saturate(1.1); opacity: .62; -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 55%); mask-image: linear-gradient(90deg, transparent 0%, #000 55%); }
   .mhm-head::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(0deg, #0c0c2099, transparent 55%); }
   .mhm-head-top, .mhm-traits { z-index: 1; }
   .mhm-head-emb { position: absolute; right: 18px; top: 50%; translate: 0 -50%; color: #ffffff12; }
@@ -6897,9 +6900,9 @@ const sharedStyles = `
   html[data-mh-theme="light"] .mhm-head::after { background: linear-gradient(0deg, #FFFCF6b0, transparent 55%); }
   .mhm-head-art.is-in { animation: mhm-art-in .65s ease both; }
   .mhm-head-art.is-out { animation: mhm-art-out .65s ease both; }
-  @keyframes mhm-art-in { from { opacity: 0; transform: scale(1.07); filter: blur(10px) saturate(1.4) brightness(1.5); } to { opacity: var(--art-o, .62); transform: none; filter: blur(2.5px) saturate(1.1); } }
+  @keyframes mhm-art-in { from { opacity: 0; transform: scale(1.07); filter: blur(10px) saturate(1.4) brightness(1.5); } to { opacity: var(--art-o, .62); transform: none; filter: blur(.8px) saturate(1.1); } }
   @keyframes mhm-art-out { from { opacity: var(--art-o, .62); } to { opacity: 0; transform: scale(.97); } }
-  html[data-mh-theme="light"] .mhm-head-art { --art-o: .5; opacity: .5; filter: blur(2px) saturate(1.05); }
+  html[data-mh-theme="light"] .mhm-head-art { --art-o: .5; opacity: .5; filter: blur(.8px) saturate(1.05); }
   html[data-mh-theme="light"] .mhm-head h2 { color: var(--mh-ink); }
   html[data-mh-theme="light"] .mhm-head p { color: var(--mh-ink3); }
   html[data-mh-theme="light"] .mhm-head-emb { color: #0000001a; }
@@ -16267,8 +16270,8 @@ export default function App({ onSignOut }) {
       color2: getMulticlass(c) ? classColor(getMulticlass(c).cls) : null,
       Emblem: CLASS_EMBLEMS[c.f_class] || User,
       // La imagen propia del personaje sustituye a la ilustración de la clase.
-      art: settings.headerArt === false ? null : portraitPick(charImgs[id], portraitStateOf(c)) || CLASS_ART[c.f_class] || null,
-      artY: portraitPick(charImgs[id], portraitStateOf(c)) ? 18 : CLASS_ART_Y[c.f_class] ?? 28,
+      art: settings.headerArt === false ? null : portraitPick(charImgs[id], portraitStateOf(c)) || CLASS_HEADER_ART[c.f_class] || CLASS_ART[c.f_class] || null,
+      artY: portraitPick(charImgs[id], portraitStateOf(c)) ? 18 : CLASS_HEADER_ART[c.f_class] ? CLASS_HEADER_Y[c.f_class] ?? 28 : CLASS_ART_Y[c.f_class] ?? 28,
       pronouns: c.f_pronouns || "",
       tags: renderHeaderTags(c, id, { noCampaign: true }),
       traits: TRAITS.map((t) => {
