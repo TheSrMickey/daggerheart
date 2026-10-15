@@ -2442,7 +2442,7 @@ const STAGE_TABS = [
 // Campaña del DJ: cuatro espacios con sus secciones.
 const CAMP_SPACES = [
   { key: "directo", label: "Directo", Icon: Radio, tabs: [{ key: "mesa", label: "Directo", Icon: Radio }] },
-  { key: "historia", label: "Historia", Icon: Clapperboard, tabs: [{ key: "historia", label: "Capítulos", Icon: Clapperboard }, { key: "pnj", label: "PNJ", Icon: Users }, { key: "mapas", label: "Mapas", Icon: MapPinned }] },
+  { key: "historia", label: "Historia", Icon: Clapperboard, tabs: [{ key: "historia", label: "Capítulos", Icon: Clapperboard }, { key: "pnj", label: "PNJ", Icon: Users }, { key: "mapas", label: "Mapas", Icon: MapPinned }, { key: "pistas", label: "Pistas", Icon: ScrollText }] },
   {
     key: "grupo",
     label: "Grupo",
@@ -16743,7 +16743,7 @@ export default function App({ onSignOut }) {
   }, [modernOpen, modernCharId, settings.tutorial]);
   const viewLabel = view === "actualizaciones" ? "Actualizaciones" : view === "ajustes" ? "Ajustes" : view === "inicio" ? "General" : NAV_ITEMS.find((n) => n.key === view)?.label;
   // Migas de pan de la barra superior: los niveles anteriores se pueden pulsar para volver.
-  const CAMP_TAB_LABELS = { mesa: "Mesa", historia: "Historia", pnj: "PNJ", mapas: "Mapas", resumen: "Resumen", chat: "Chat", mapa: "Mapa de combate", mundo: "Mapa de mundo", encuentros: "Encuentros", cronica: "Crónica", linea: "Línea de tiempo", calendario: "Calendario", votaciones: "Votaciones", descanso: "Descanso", generadores: "Generadores" };
+  const CAMP_TAB_LABELS = { mesa: "Mesa", historia: "Historia", pnj: "PNJ", mapas: "Mapas", pistas: "Pistas", resumen: "Resumen", chat: "Chat", mapa: "Mapa de combate", mundo: "Mapa de mundo", encuentros: "Encuentros", cronica: "Crónica", linea: "Línea de tiempo", calendario: "Calendario", votaciones: "Votaciones", descanso: "Descanso", generadores: "Generadores" };
   const crumbsOf = (items) => (
     <nav className="mh-crumbs" aria-label="Ruta">
       {items.map((it, i) => (
@@ -27882,7 +27882,7 @@ export default function App({ onSignOut }) {
             </div>
           </div>
         )}
-        <div data-mh-main className={showTopbar ? "mh-scroll-hidden" : undefined} style={{ position: "absolute", top: showTopbar ? 108 : 0, left: 0, bottom: 0, right: showRail ? 290 : 0, overflowY: view === "ficha" && !viewingCharId && !modernCharId && showRail ? "hidden" : "auto", padding: isMobile ? (campDetail ? "10px 12px 18px" : "18px 14px") : showTopbar ? "0 " + padX + " 24px" : campDetail ? "18px 24px 24px 96px" : "24px 28px" }}>
+        <div data-mh-main className={showTopbar ? "mh-scroll-hidden" : undefined} style={{ position: "absolute", top: showTopbar ? 108 : 0, left: 0, bottom: 0, right: showRail ? 290 : 0, overflowY: view === "ficha" && !viewingCharId && !modernCharId && showRail ? "hidden" : "auto", padding: isMobile ? (campDetail ? "10px 12px 18px" : "18px 14px") : showTopbar ? "0 " + padX + " 24px" : campDetail ? "18px 24px 24px 14px" : "24px 28px" }}>
           <div ref={setWizSlot} style={{ maxWidth: contentMax, margin: "0 auto" }} />
           <div key={view + (view === "ficha" && modernCharId ? ":hoja" : "")} className={"mh-view-in" + (view === "ficha" && modernCharId ? " mh-sheet-in" : "")} style={{ display: showNewCharModal ? "none" : undefined, maxWidth: contentMax, margin: "0 auto" }}>
             {!showTopbar && view !== "inicio" && !campDetail && <div className="mh-pagetitle">{viewLabel}</div>}
@@ -28250,7 +28250,6 @@ export default function App({ onSignOut }) {
 
                   {campaignDetailTab === "mesa" && (() => {
                     const stage = campaignStage;
-                    const handouts = stage.handouts || [];
                     const scenes = stageScenesOf(stage);
                     const activeSceneId = activeSceneIdOf(stage);
                     const cur = scenes.find((x) => x.id === activeSceneId) || null;
@@ -28428,7 +28427,7 @@ export default function App({ onSignOut }) {
                     const quickEl = (
                       <div className="mh-dir-quick">
                         {[
-                          { k: "pista", l: "Pista", I: ScrollText, go: () => document.getElementById("mh-dir-pistas")?.scrollIntoView({ behavior: "smooth", block: "start" }) },
+                          { k: "pista", l: "Pista", I: ScrollText, go: () => setCampaignDetailTab("pistas") },
                           { k: "dados", l: "Dados", I: Dices, go: () => soon("Tiradas de dados del DJ para la mesa") },
                           { k: "foco", l: "Foco", I: MapPinned, go: () => (setCombatBack(cur?.id || null), setCampaignDetailTab("mapa")) },
                           { k: "desc", l: "Descanso", I: BedDouble, go: () => setCampaignDetailTab("descanso") },
@@ -28457,56 +28456,6 @@ export default function App({ onSignOut }) {
                           </aside>
                         )}
                         {imm && <div className="mh-dir-below">{quickEl}</div>}
-                        </div>
-                        <div className="mh-card mh-gm-box is-wide mh-dir-pistas" id="mh-dir-pistas">
-                          <div className="mh-gm-h">
-                            <ScrollText size={15} /> Pistas para los jugadores
-                          </div>
-                          <div className="mh-gm-sub">Imágenes, notas, personajes u objetos. Aparecen como «Nuevo» hasta que cada jugador los abre.</div>
-                          <div className="mh-gm-kinds">
-                            {HANDOUT_KINDS.map((k) => {
-                              const KIcon = k.Icon;
-                              return (
-                                <button key={k.key} type="button" className={handoutDraft.kind === k.key ? "is-on" : ""} onClick={() => setHandoutDraft({ ...handoutDraft, kind: k.key })}>
-                                  <KIcon size={13} />
-                                  {k.label}
-                                </button>
-                              );
-                            })}
-                          </div>
-                          <div className="mh-gm-form">
-                            <input className="mh-input" placeholder="Título (p. ej. Carta sellada)" value={handoutDraft.title} onChange={(e) => setHandoutDraft({ ...handoutDraft, title: e.target.value })} />
-                            <input className="mh-input" placeholder="Imagen (enlace, opcional)" value={handoutDraft.image} onChange={(e) => setHandoutDraft({ ...handoutDraft, image: e.target.value })} />
-                            <textarea className="mh-input" rows={2} placeholder="Texto o descripción (opcional)" value={handoutDraft.text} onChange={(e) => setHandoutDraft({ ...handoutDraft, text: e.target.value })} />
-                          </div>
-                          <button type="button" className="mh-btn" style={{ alignSelf: "flex-start" }} disabled={!handoutDraft.title.trim()} onClick={addHandout}>
-                            <Plus size={14} /> Entregar a los jugadores
-                          </button>
-                          {handouts.length > 0 && (
-                            <div className="mh-gm-list">
-                              {handouts.map((h) => {
-                                const kind = HANDOUT_KINDS.find((x) => x.key === h.kind) || HANDOUT_KINDS[0];
-                                const KIcon = kind.Icon;
-                                return (
-                                  <div key={h.id} className="mh-gm-item">
-                                    <span className={"mh-gm-item-art mh-stg-hand-art is-" + h.kind} style={h.image ? { backgroundImage: `url("${h.image.replace(/"/g, "%22")}")` } : undefined}>
-                                      {!h.image && <KIcon size={16} />}
-                                    </span>
-                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                      <div className="mh-stg-hand-title">{h.title}{h.hidden && <span className="mh-hand-hidden">Oculta</span>}</div>
-                                      <div className="mh-stg-hand-kind">{kind.label}{h.text ? " · " + h.text : ""}</div>
-                                    </div>
-                                    <button type="button" className={"mh-inv-x mh-hand-vis" + (h.hidden ? "" : " is-on")} aria-label={h.hidden ? "Mostrar a los jugadores" : "Ocultar a los jugadores"} title={h.hidden ? "Oculta · pulsa para mostrarla" : "Visible para los jugadores"} onClick={() => toggleHandout(h.id)}>
-                                      {h.hidden ? <EyeOff size={14} /> : <Eye size={14} />}
-                                    </button>
-                                    <button type="button" className="mh-inv-x" aria-label={"Quitar " + h.title} title="Quitar" onClick={() => removeHandout(h.id)}>
-                                      <Trash2 size={14} />
-                                    </button>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
                         </div>
                       </div>
                     );
@@ -29129,6 +29078,65 @@ export default function App({ onSignOut }) {
                           <button type="button" className="mh-btn-ghost" style={{ alignSelf: "flex-start" }} onClick={() => (setCombatBack(null), setCampaignDetailTab("mapa"))}>
                             <MapPinned size={13} /> Abrir el tablero de combate
                           </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {campaignDetailTab === "pistas" && (() => {
+                    const stage = campaignStage;
+                    const handouts = stage.handouts || [];
+                    return (
+                      <div className="mh-gm">
+                        <div className="mh-card mh-gm-box is-wide">
+                          <div className="mh-gm-h">
+                            <ScrollText size={15} /> Pistas para los jugadores
+                          </div>
+                          <div className="mh-gm-sub">Imágenes, notas, personajes u objetos. Aparecen como «Nuevo» hasta que cada jugador los abre.</div>
+                          <div className="mh-gm-kinds">
+                            {HANDOUT_KINDS.map((k) => {
+                              const KIcon = k.Icon;
+                              return (
+                                <button key={k.key} type="button" className={handoutDraft.kind === k.key ? "is-on" : ""} onClick={() => setHandoutDraft({ ...handoutDraft, kind: k.key })}>
+                                  <KIcon size={13} />
+                                  {k.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <div className="mh-gm-form">
+                            <input className="mh-input" placeholder="Título (p. ej. Carta sellada)" value={handoutDraft.title} onChange={(e) => setHandoutDraft({ ...handoutDraft, title: e.target.value })} />
+                            <input className="mh-input" placeholder="Imagen (enlace, opcional)" value={handoutDraft.image} onChange={(e) => setHandoutDraft({ ...handoutDraft, image: e.target.value })} />
+                            <textarea className="mh-input" rows={2} placeholder="Texto o descripción (opcional)" value={handoutDraft.text} onChange={(e) => setHandoutDraft({ ...handoutDraft, text: e.target.value })} />
+                          </div>
+                          <button type="button" className="mh-btn" style={{ alignSelf: "flex-start" }} disabled={!handoutDraft.title.trim()} onClick={addHandout}>
+                            <Plus size={14} /> Entregar a los jugadores
+                          </button>
+                          {handouts.length > 0 && (
+                            <div className="mh-gm-list">
+                              {handouts.map((h) => {
+                                const kind = HANDOUT_KINDS.find((x) => x.key === h.kind) || HANDOUT_KINDS[0];
+                                const KIcon = kind.Icon;
+                                return (
+                                  <div key={h.id} className="mh-gm-item">
+                                    <span className={"mh-gm-item-art mh-stg-hand-art is-" + h.kind} style={h.image ? { backgroundImage: `url("${h.image.replace(/"/g, "%22")}")` } : undefined}>
+                                      {!h.image && <KIcon size={16} />}
+                                    </span>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                      <div className="mh-stg-hand-title">{h.title}{h.hidden && <span className="mh-hand-hidden">Oculta</span>}</div>
+                                      <div className="mh-stg-hand-kind">{kind.label}{h.text ? " · " + h.text : ""}</div>
+                                    </div>
+                                    <button type="button" className={"mh-inv-x mh-hand-vis" + (h.hidden ? "" : " is-on")} aria-label={h.hidden ? "Mostrar a los jugadores" : "Ocultar a los jugadores"} title={h.hidden ? "Oculta · pulsa para mostrarla" : "Visible para los jugadores"} onClick={() => toggleHandout(h.id)}>
+                                      {h.hidden ? <EyeOff size={14} /> : <Eye size={14} />}
+                                    </button>
+                                    <button type="button" className="mh-inv-x" aria-label={"Quitar " + h.title} title="Quitar" onClick={() => removeHandout(h.id)}>
+                                      <Trash2 size={14} />
+                                    </button>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
                       </div>
                     );
