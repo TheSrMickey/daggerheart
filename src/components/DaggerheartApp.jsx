@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 import { Globe, Tent, Haze, CloudFog, CloudRain, CloudLightning, Beer } from "lucide-react";
 import SceneFx, { SCENE_FX } from "./SceneFx";
+import Ambient from "./Ambient";
 import { Info, Lightbulb, Sprout, Bot, Pickaxe, TreePine, Cog, Ear, Angry, Axe, Banana, Cloud } from "lucide-react";
 import { Squirrel, Layers, CalendarDays, Vote, ScrollText as ChronIcon, Megaphone, Link2 } from "lucide-react";
 import { History, LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus, Box, LayoutGrid, Bird, Fish, Bug, Rabbit, Cat, Turtle, Clock, CircleDashed, Slash } from "lucide-react";
@@ -5765,7 +5766,7 @@ const sharedStyles = `
   .mh-cg-emb { width: 48px; height: 48px; flex: none; display: grid; place-items: center; border-radius: 50%; color: var(--mh-green-ink); background: color-mix(in srgb, var(--hc) 18%, var(--mh-panel2)); border: 2px solid color-mix(in srgb, var(--hc) 70%, transparent); }
   .mh-cg-tit { min-width: 0; } .mh-cg-name { font-size: 22px; line-height: 1.1; outline: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .mh-cg-sub1 { font-size: 12.5px; color: var(--mh-muted); margin-top: 3px; } .mh-cg-sub1 b { color: var(--mh-muted); font-weight: 600; } .mh-cg-sub1 b.is-on { color: var(--mh-green-ink); }
-  .mh-cg-fear { margin-left: 14px; flex: none; } .mh-cg-fear-b { display: inline-flex; padding: 0; border: 0; background: none; cursor: pointer; color: inherit; }
+  .mh-cg-fear { margin-left: auto; flex: none; } .mh-cg-fear-b { display: inline-flex; padding: 0; border: 0; background: none; cursor: pointer; color: inherit; }
   .mh-dir-mon { animation: mh-dir-in .6s cubic-bezier(.2,.7,.2,1) both; } @keyframes mh-dir-in { from { opacity: 0; transform: scale(1.025); filter: brightness(1.25) blur(3px); } to { opacity: 1; transform: none; filter: none; } }
   @media (prefers-reduced-motion: reduce) { .mh-dir-mon { animation: none; } }
   .mh-cg-sp { flex: 1; }
@@ -5882,6 +5883,35 @@ const sharedStyles = `
     .mh-dir-dtog { margin-left: 0; width: 100%; } .mh-dir-dtog button { flex: 1; justify-content: center; }
     .mh-dir-drawer { top: 130px; bottom: 90px; right: 14px; width: calc(100% - 28px); }
   }
+  /* Ambiente, dados del DJ, chat vacío */
+  .mh-amb-pill { position: fixed; left: 50%; transform: translateX(-50%); top: 14px; z-index: 40; display: flex; align-items: center; gap: 10px; max-width: min(460px, calc(100vw - 120px)); padding: 8px 12px 8px 14px; border-radius: 999px; background: var(--mh-panel); border: 1px solid var(--mh-line2); box-shadow: 0 14px 34px -14px rgba(0,0,0,.6); color: var(--mh-ink); }
+  .mh-root.is-mobile .mh-amb-pill { left: 12px; right: 12px; transform: none; top: auto; bottom: 92px; max-width: none; }
+  .mh-amb-note { color: var(--mh-gold-ink); flex: none; animation: mh-amb-beat 1.6s ease-in-out infinite; } @keyframes mh-amb-beat { 50% { transform: scale(1.18); } }
+  .mh-amb-pn { font-size: 12.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1; }
+  .mh-amb-vol { display: flex; align-items: center; gap: 6px; flex: none; } .mh-amb-vol input[type=range] { width: 90px; accent-color: var(--mh-gold-ink); }
+  .mh-amb-ib { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 9px; border: 1px solid var(--mh-line); background: var(--mh-panel2); color: var(--mh-ink3); cursor: pointer; flex: none; } .mh-amb-ib.is-x { margin-left: auto; }
+  .mh-amb-un { padding: 5px 10px; border-radius: 999px; border: 1px solid rgba(227,176,75,.6); background: rgba(227,176,75,.16); color: var(--mh-gold-ink); font: 700 11.5px 'Inter', system-ui, sans-serif; cursor: pointer; white-space: nowrap; } .mh-amb-un.is-wide { width: 100%; padding: 9px; }
+  .mh-amb-bg, .mh-dd-bg { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px; background: rgba(6,6,16,.6); }
+  .mh-amb-box, .mh-dd { width: min(480px, 100%); max-height: calc(100dvh - 32px); overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 18px 20px; border-radius: 22px; background: var(--mh-panel); border: 1px solid var(--mh-line2); box-shadow: 0 30px 70px -20px rgba(0,0,0,.7); color: var(--mh-ink); }
+  .mh-amb-h, .mh-dd-h { display: flex; align-items: center; gap: 8px; font-size: 16px; color: var(--mh-gold-ink); } .mh-amb-h b, .mh-dd-h b { color: var(--mh-ink); }
+  .mh-amb-sub, .mh-dd-sub { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--mh-muted); }
+  .mh-amb-now { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 16px; background: var(--mh-panel2); border: 1px solid var(--mh-line); }
+  .mh-amb-play { width: 42px; height: 42px; flex: none; display: grid; place-items: center; border-radius: 50%; border: 0; background: linear-gradient(180deg, #f0c264, #d9a23c); color: #1c1405; cursor: pointer; } .mh-amb-play:disabled { opacity: .4; cursor: default; }
+  .mh-amb-nt { display: flex; flex-direction: column; min-width: 0; flex: 1; } .mh-amb-nt small { font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--mh-muted); } .mh-amb-nt b { font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mh-amb-list { display: flex; flex-direction: column; gap: 6px; }
+  .mh-amb-row { display: flex; align-items: center; gap: 6px; padding: 5px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel2); } .mh-amb-row.is-on { border-color: rgba(227,176,75,.7); background: rgba(227,176,75,.1); }
+  .mh-amb-rb { flex: 1; min-width: 0; display: flex; align-items: center; gap: 9px; padding: 6px 8px; border: 0; background: none; color: var(--mh-ink); font: 600 13px 'Inter', system-ui, sans-serif; cursor: pointer; text-align: left; } .mh-amb-rb span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .mh-amb-rb small { color: var(--mh-muted); font-weight: 500; }
+  .mh-amb-add { display: flex; flex-direction: column; gap: 8px; padding-top: 12px; border-top: 1px solid var(--mh-line); } .mh-amb-lbl { font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--mh-muted); }
+  .mh-amb-addrow { display: flex; gap: 8px; } .mh-amb-addrow .mh-input { flex: 1; min-width: 0; } .mh-amb-addrow .mh-btn-ghost, .mh-amb-file { display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; } .mh-amb-file.is-busy { opacity: .6; }
+  .mh-dd-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .mh-dd-die { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 8px; border-radius: 16px; border: 1px solid var(--mh-line); background: var(--mh-panel2); } .mh-dd-die.is-on { border-color: rgba(227,176,75,.7); background: rgba(227,176,75,.1); } .mh-dd-die b { font: 700 20px 'Cormorant Garamond', Georgia, serif; letter-spacing: .04em; }
+  .mh-dd-step { display: flex; align-items: center; gap: 9px; } .mh-dd-step span { min-width: 18px; text-align: center; font-weight: 800; } .mh-dd-step button { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 8px; border: 1px solid var(--mh-line2); background: var(--mh-panel); color: var(--mh-ink); cursor: pointer; } .mh-dd-step button:disabled { opacity: .35; cursor: default; }
+  .mh-dd-vis { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-radius: 16px; background: var(--mh-panel2); border: 1px solid var(--mh-line); }
+  .mh-dd-vl { display: flex; justify-content: space-between; } .mh-dd-vl span { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; color: var(--mh-muted); } .mh-dd-vl span.is-on { color: var(--mh-gold-ink); }
+  .mh-dd-vis input[type=range] { width: 100%; accent-color: var(--mh-gold-ink); } .mh-dd-vis small { font-size: 11.5px; color: var(--mh-muted); }
+  .mh-dd-acts { display: flex; justify-content: flex-end; gap: 8px; } .mh-dd-acts .mh-btn { display: inline-flex; align-items: center; gap: 6px; }
+  .mh-chat-void { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; flex: 1; min-height: 140px; padding: 20px; text-align: center; color: var(--mh-muted); font-size: 13px; }
+  .mh-chat-void img { width: 64px; height: 64px; object-fit: contain; opacity: .16; filter: drop-shadow(0 0 10px #9db8ff55); } html[data-mh-theme="light"] .mh-chat-void img { filter: invert(1); opacity: .2; }
   /* Historia (capítulos), PNJ y capítulo en curso */
   .mh-ch-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .mh-ch-sp { flex: 1; }
@@ -7270,6 +7300,7 @@ const sharedStyles = `
   .mh-isle:hover .lb, .mh-isle:has(:focus-visible) .lb, .mh-isle.is-pin .lb, .mh-isle.is-open .lb { display: inline; }
   .mh-isle-logo { display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 5px 0 11px; margin-bottom: 8px; flex-shrink: 0; }
   .mh-isle-logo .mh-brand-logo { height: 22px; flex-shrink: 0; }
+  .mh-isle:not(:hover):not(.is-pin):not(.is-open):not(:has(:focus-visible)) .mh-isle-logo { justify-content: center; padding: 0; }
   .mh-isle-logo b { font-size: 15px; font-weight: 700; letter-spacing: .02em; color: var(--mh-ink); }
   .mh-isle-pin { all: unset; margin-left: auto; width: 26px; height: 26px; border-radius: 8px; cursor: pointer; display: none; align-items: center; justify-content: center; color: var(--mh-muted2); }
   .mh-isle:hover .mh-isle-pin, .mh-isle:has(:focus-visible) .mh-isle-pin, .mh-isle.is-pin .mh-isle-pin, .mh-isle.is-open .mh-isle-pin { display: inline-flex; }
@@ -10995,6 +11026,17 @@ function Typewriter({ text, cps = 42 }) {
   );
 }
 
+// Chat sin mensajes: el logo de la página, clarito, y un aviso debajo.
+function ChatEmpty() {
+  return (
+    <div className="mh-chat-void">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/logo.svg" alt="" />
+      <span>Aún no hay mensajes</span>
+    </div>
+  );
+}
+
 function DialogueFigure({ src, alt, expr }) {
   if (!src) return null;
   return (
@@ -11364,6 +11406,8 @@ export default function App({ onSignOut }) {
   const [stageReadyFor, setStageReadyFor] = useState(null);
   const [pnjFilter, setPnjFilter] = useState("all");
   const [chTab, setChTab] = useState("dialogos"); // pestaña abierta del capítulo en «Historia»
+  const [ambOpen, setAmbOpen] = useState(false); // ventana de «Ambiente» (audio de la mesa)
+  const [diceDlg, setDiceDlg] = useState(null); // ventana «Dados» del DJ: { counts, priv }
   const [soonMsg, setSoonMsg] = useState(null); // aviso de botón que aún no tiene función
   const soon = (t) => {
     setSoonMsg(t);
@@ -16577,6 +16621,60 @@ export default function App({ onSignOut }) {
     return next;
   };
 
+  // Dados del DJ (ventana «Dados»): tira con los dados 3D y, si es pública, la ve toda la mesa.
+  const diceClient = useRef(Math.random().toString(36).slice(2));
+  const seenDiceShow = useRef(null);
+  const rollDmDice = () => {
+    const d = diceDlg;
+    if (!d || !viewingCampaignId) return;
+    const groups = Object.entries(d.counts)
+      .map(([sd, n]) => ({ sd: Number(sd), n: Math.max(0, Number(n) || 0) }))
+      .filter((g) => g.n > 0)
+      .map((g) => ({ sd: g.sd, vals: Array.from({ length: g.n }, () => 1 + Math.floor(Math.random() * g.sd)) }));
+    if (!groups.length) return;
+    const values = groups.flatMap((g) => g.vals);
+    const dice = groups.flatMap((g) => g.vals.map((v) => ({ sides: g.sd, value: v, kind: "bonus", main: true })));
+    const total = values.reduce((a, b) => a + b, 0);
+    const label = groups.map((g) => g.vals.length + "d" + g.sd).join(" + ");
+    const parts = groups.map((g) => ({ label: g.vals.length + "d" + g.sd, v: g.vals.reduce((a, b) => a + b, 0), plain: true }));
+    const note = d.priv ? "Tirada privada: solo la ves tú" : "Tirada pública: la ve toda la mesa";
+    const key = Date.now();
+    const summary = { parts, total, text: "Tirada de dados", color: "#E3B04B", note, dc: "", outcome: "hope" };
+    setDiceDlg(null);
+    if (canDice3d()) setDice3d({ key, dice, summary });
+    else {
+      setSoonMsg((d.priv ? "Tirada privada " : "Tirada pública ") + label + " = " + total);
+      setTimeout(() => setSoonMsg(null), 6000);
+    }
+    if (!d.priv) {
+      postChat(viewingCampaignId, { kind: "roll", ...chatAuthor(), text: "🎲 " + label + " = " + total, roll: { type: "die", name: "Tirada de dados", dice: values, dieLabel: label, total } });
+      safeSet("campaign-diceshow:" + viewingCampaignId, JSON.stringify({ id: key, cid: diceClient.current, who: "El DJ", dice, parts, total, label, ts: key }), true);
+    }
+  };
+  // Tiradas públicas del DJ: el resto de la mesa las ve en su pantalla.
+  useEffect(() => {
+    if (!stageCampaignId) return undefined;
+    let alive = true;
+    const tick = async () => {
+      const r = await safeGet("campaign-diceshow:" + stageCampaignId, true);
+      if (!alive || !r) return;
+      let v = null;
+      try {
+        v = JSON.parse(r.value);
+      } catch (e) {}
+      if (!v || !v.id || v.cid === diceClient.current || seenDiceShow.current === v.id) return;
+      seenDiceShow.current = v.id;
+      if (Date.now() - v.ts > 20000 || !canDice3d()) return;
+      setDice3d({ key: v.id, dice: v.dice, summary: { parts: v.parts, total: v.total, text: "Tirada de dados", color: "#E3B04B", note: (v.who || "El DJ") + " ha hecho una tirada pública", dc: "", outcome: "hope" } });
+    };
+    tick();
+    const t = setInterval(tick, 3000);
+    return () => {
+      alive = false;
+      clearInterval(t);
+    };
+  }, [stageCampaignId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const toggleFear = async (i) => {
     const next = fearCount === i ? i - 1 : i;
     setFearCount(next);
@@ -21138,7 +21236,7 @@ export default function App({ onSignOut }) {
                                 )}
                                 <div className="mh-chat-box">
                                   <div ref={chatScrollRef} className="mh-chat-feed">
-                                    {campaignChat.length === 0 && <div className="mh-chat-empty">Todavía no hay mensajes. Aquí aparecerán también las tiradas y acciones de la mesa.</div>}
+                                    {campaignChat.length === 0 && <ChatEmpty />}
                                     {renderChatFeed(campaignChat, viewingCharId)}
                                   </div>
                                 </div>
@@ -27445,6 +27543,43 @@ export default function App({ onSignOut }) {
 
   return (
     <div className={"mh-root" + (isMobile ? " is-mobile" : "")} style={{ display: "flex", flexDirection: isMobile ? "column" : "row", height: "100dvh", background: "var(--mh-bg)", fontFamily: "'Inter', system-ui, sans-serif", color: "var(--mh-ink)", overflow: "hidden" }}>
+      {diceDlg && (
+        <div className="mh-dd-bg" onClick={() => setDiceDlg(null)}>
+          <div className="mh-dd" role="dialog" aria-label="Tirar dados" onClick={(e) => e.stopPropagation()}>
+            <div className="mh-dd-h"><Dices size={17} /> <b>Tirar dados</b><button type="button" className="mh-amb-ib is-x" aria-label="Cerrar" onClick={() => setDiceDlg(null)}><X size={16} /></button></div>
+            <p className="mh-dd-sub">¿Qué dados quieres tirar?</p>
+            <div className="mh-dd-grid">
+              {[4, 6, 8, 10, 12, 20].map((sd) => {
+                const n = diceDlg.counts[sd] || 0;
+                const totalN = Object.values(diceDlg.counts).reduce((a, b) => a + b, 0);
+                return (
+                  <div key={sd} className={"mh-dd-die" + (n ? " is-on" : "")}>
+                    <b>d{sd}</b>
+                    <div className="mh-dd-step">
+                      <button type="button" aria-label={"Quitar un d" + sd} disabled={!n} onClick={() => setDiceDlg((x) => ({ ...x, counts: { ...x.counts, [sd]: n - 1 } }))}><Minus size={14} /></button>
+                      <span>{n}</span>
+                      <button type="button" aria-label={"Añadir un d" + sd} disabled={totalN >= 12} onClick={() => setDiceDlg((x) => ({ ...x, counts: { ...x.counts, [sd]: n + 1 } }))}><Plus size={14} /></button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="mh-dd-vis">
+              <div className="mh-dd-vl">
+                <span className={diceDlg.priv ? "is-on" : ""}><EyeOff size={14} /> Privada</span>
+                <span className={!diceDlg.priv ? "is-on" : ""}><Eye size={14} /> Pública</span>
+              </div>
+              <input type="range" min="0" max="1" step="1" value={diceDlg.priv ? 0 : 1} aria-label="Tirada privada o pública" onChange={(e) => setDiceDlg((x) => ({ ...x, priv: e.target.value === "0" }))} />
+              <small>{diceDlg.priv ? "Solo la ves tú." : "Los jugadores de la campaña verán la tirada en su pantalla y en el chat."}</small>
+            </div>
+            <div className="mh-dd-acts">
+              <button type="button" className="mh-btn-ghost" onClick={() => setDiceDlg(null)}>Cancelar</button>
+              <button type="button" className="mh-btn" disabled={!Object.values(diceDlg.counts).some((n) => n > 0)} onClick={rollDmDice}><Dices size={14} /> Tirar</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {stageCampaignId && (gmViewing || sheetCampaignId) && <Ambient campaignId={stageCampaignId} isGm={gmViewing} open={gmViewing && ambOpen} onClose={() => setAmbOpen(false)} />}
       {dice3d && <Dice3D key={dice3d.key} dice={dice3d.dice} summary={dice3d.summary} onReveal={() => (setDiceHold(false), flushOutcome())} onEnd={() => (setDice3d(null), setDiceHold(false))} />}
       <style>{sharedStyles}</style>
       <SocialHost />
@@ -28174,7 +28309,6 @@ export default function App({ onSignOut }) {
                       </span>
                       <b>{fearCount}</b>
                     </div>
-                    <span className="mh-cg-sp" />
                     <div className="mh-cg-avs" aria-label="Jugadores">
                       {memberIds.slice(0, 5).map((mid) => {
                         const ch = characters[mid];
@@ -28247,7 +28381,7 @@ export default function App({ onSignOut }) {
                             <button type="button" className={"mh-dir-pause" + (cgPaused ? " is-on" : "")} onClick={() => setSpotMode(viewingCampaignId, cgPaused ? "normal" : "paused")} title={cgPaused ? "Reanudar la mesa" : "Pausar la mesa: los jugadores no pueden mover fichas"}>
                               {cgPaused ? <Play size={14} /> : <EyeOff size={14} />} <span>{cgPaused ? "Reanudar" : "Pausar la mesa"}</span>
                             </button>
-                            <button type="button" className="mh-cg-btn" onClick={() => soon("Ambiente: música y sonidos de la escena")}>
+                            <button type="button" className="mh-cg-btn" onClick={() => setAmbOpen(true)}>
                               <Music size={14} /> <span>Ambiente</span>
                             </button>
                           </div>
@@ -28349,7 +28483,7 @@ export default function App({ onSignOut }) {
                                 <DialogueFigure key={dlg.castId || dlg.name} src={dlgImg} alt="" expr={dlg.expr || "tranquila"} />
                                 <div className="mh-dlg-box">
                                   <span className="mh-dlg-name">{dlg.name}</span>
-                                  <div className="mh-dlg-t">{dlg.text}</div>
+                                  <div className="mh-dlg-t"><Typewriter key={dlg.id} text={dlg.text || ""} /></div>
                                 </div>
                               </div>
                             )}
@@ -28438,7 +28572,7 @@ export default function App({ onSignOut }) {
                       <div className="mh-dir-card mh-dir-chat">
                         <div className="mh-dir-lbl-row"><span className="mh-dir-lbl">Chat de la mesa</span><button type="button" className="mh-gm-ib" aria-label="Abrir el chat completo" title="Abrir el chat completo" onClick={() => setCampaignDetailTab("chat")}><ChevronRight size={14} /></button></div>
                         <div className="mh-chat-feed mh-dir-feed">
-                          {campaignChat.length === 0 && <div className="mh-chat-empty">Todavía no hay mensajes.</div>}
+                          {campaignChat.length === 0 && <ChatEmpty />}
                           {renderChatFeed(campaignChat.slice(-12), null)}
                         </div>
                         <div className="mh-dir-send">
@@ -28451,7 +28585,7 @@ export default function App({ onSignOut }) {
                       <div className="mh-dir-quick">
                         {[
                           { k: "pista", l: "Pista", I: ScrollText, go: () => setCampaignDetailTab("pistas") },
-                          { k: "dados", l: "Dados", I: Dices, go: () => soon("Tiradas de dados del DJ para la mesa") },
+                          { k: "dados", l: "Dados", I: Dices, go: () => setDiceDlg({ counts: { 4: 0, 6: 0, 8: 0, 10: 0, 12: 0, 20: 1 }, priv: false }) },
                           { k: "foco", l: "Foco", I: MapPinned, go: () => (setCombatBack(cur?.id || null), setCampaignDetailTab("mapa")) },
                           { k: "desc", l: "Descanso", I: BedDouble, go: () => setCampaignDetailTab("descanso") },
                         ].map((q) => (
@@ -29359,7 +29493,7 @@ export default function App({ onSignOut }) {
                         Chat de la campaña: mensajes, tiradas y acciones de la mesa. Lo que escribas aquí sale como el DJ.
                       </div>
                       <div ref={chatScrollRef} className="mh-chat-feed" style={{ maxHeight: 460, marginBottom: 14 }}>
-                        {campaignChat.length === 0 && <div className="mh-chat-empty">Todavía no hay mensajes.</div>}
+                        {campaignChat.length === 0 && <ChatEmpty />}
                         {renderChatFeed(campaignChat, null)}
                       </div>
                       <div style={{ display: "flex", gap: 8 }}>
