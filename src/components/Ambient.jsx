@@ -19,6 +19,32 @@ const parse = (raw) => {
     return EMPTY;
   }
 };
+// Identificador de un vídeo de YouTube (watch, youtu.be, shorts, embed, live o música), o null.
+const ytId = (u) => {
+  const m = String(u || "").match(/^https?:\/\/(?:www\.|m\.|music\.)?(?:youtube\.com\/(?:watch\?(?:[^#]*&)?v=|shorts\/|embed\/|live\/|v\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/i);
+  return m ? m[1] : null;
+};
+let ytApi = null; // carga única de la API de reproductor de YouTube
+const loadYT = () => {
+  if (typeof window === "undefined") return Promise.reject(new Error("sin ventana"));
+  if (window.YT && window.YT.Player) return Promise.resolve(window.YT);
+  if (!ytApi)
+    ytApi = new Promise((resolve, reject) => {
+      const prev = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = () => {
+        if (prev) prev();
+        resolve(window.YT);
+      };
+      const sc = document.createElement("script");
+      sc.src = "https://www.youtube.com/iframe_api";
+      sc.onerror = () => {
+        ytApi = null;
+        reject(new Error("YouTube"));
+      };
+      document.head.appendChild(sc);
+    });
+  return ytApi;
+};
 const readFile = (file) =>
   new Promise((resolve, reject) => {
     const r = new FileReader();
@@ -38,6 +64,7 @@ export default function Ambient({ campaignId, isGm, open, onClose, anchorRef }) 
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const [pos, setPos] = useState({ top: 0, left: 0 });
+  const [ytTick, setYtTick] = useState(0);
   const popRef = useRef(null);
 
   // Mini popup pegado al botón «Ambiente»: se coloca bajo él y se cierra al pulsar fuera o con Escape.
@@ -68,6 +95,8 @@ export default function Ambient({ campaignId, isGm, open, onClose, anchorRef }) 
     };
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
   const audio = useRef(null);
+  const ytBox = useRef(null); // contenedor del reproductor oculto de YouTube
+  const yt = useRef({ player: null, vid: null, ready: false });
   const srcCache = useRef({}); // id de pista -> url reproducible
   const stRef = useRef(EMPTY);
   stRef.current = st;
@@ -113,6 +142,33 @@ export default function Ambient({ campaignId, isGm, open, onClose, anchorRef }) 
     if (!a) return undefined;
     let dead = false;
     (async () => {
+      const vid = track ? ytId(track.src) : null;
+      if (vid) {
+        a.pause();
+        try {
+          const YT = await loadYT();
+          if (dead) return;
+          const y = yt.current;
+          if (!y.player) {
+            const host = document.createElement("div");
+            ytBox.current.appendChild(host);
+            y.player = new YT.Player(host, {
+              width: "200",
+              height: "200",
+              videoId: vid,
+              playerVars: { autoplay: 0, controls: 0, loop: 1, playlist: vid, playsinline: 1, rel: 0, modestbranding: 1 },
+              events: { onReady: () => (y.ready = true, setYtTick((n) => n + 1)), onStateChange: (e) => e.data === 0 && y.player.playVideo() },
+            });
+            y.vid = vid;
+          } else if (y.vid !== vid && y.ready) {
+            y.vid = vid;
+            y.player.loadVideoById({ videoId: vid });
+            if (!st.playing) y.player.pauseVideo();
+          }
+        } catch (e) {}
+        return;
+      }
+      if (yt.current.ready) yt.current.player.pauseVideo();
       if (!track) {
         a.pause();
         a.removeAttribute("src");
@@ -148,6 +204,25 @@ export default function Ambient({ campaignId, isGm, open, onClose, anchorRef }) 
   }, [track?.id, track?.src, st.playing]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
+    const y = yt.current;
+    if (!y.ready || !track || !ytId(track.src)) return;
+    try {
+      y.player.setVolume(Math.round((muted ? 0 : vol) * 100));
+      if (st.playing) {
+        y.player.playVideo();
+        // sin un toque en la pantalla, el navegador no deja sonar: se avisa si no arranca
+        setTimeout(() => {
+          const stt = y.player.getPlayerState && y.player.getPlayerState();
+          setBlocked(stt !== 1 && stt !== 3);
+        }, 1800);
+      } else {
+        y.player.pauseVideo();
+        setBlocked(false);
+      }
+    } catch (e) {}
+  }, [ytTick, track?.id, st.playing, vol, muted]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
     if (audio.current) audio.current.volume = muted ? 0 : vol;
     try {
       localStorage.setItem(VOL_KEY, String(vol));
@@ -156,6 +231,14 @@ export default function Ambient({ campaignId, isGm, open, onClose, anchorRef }) 
   }, [vol, muted]);
 
   const unlock = async () => {
+    const y = yt.current;
+    if (y.ready && track && ytId(track.src)) {
+      try {
+        y.player.playVideo();
+        setBlocked(false);
+      } catch (e) {}
+      return;
+    }
     try {
       await audio.current?.play();
       setBlocked(false);
@@ -165,7 +248,15 @@ export default function Ambient({ campaignId, isGm, open, onClose, anchorRef }) 
   const addLink = async () => {
     const u = link.trim();
     if (!/^https?:\/\//i.test(u)) return setErr("Pega un enlace que empiece por https://");
-    const t = { id: "t" + Date.now(), name: name.trim() || u.replace(/^https?:\/\/(www\.)?/, "").slice(0, 40), src: u };
+    let nm = name.trim();
+    if (ytId(u) && !nm) {
+      try {
+        const r = await fetch("https://www.youtube.com/oembed?format=json&url=" + encodeURIComponent(u));
+        nm = ((await r.json()).title || "").slice(0, 60);
+      } catch (e) {}
+      nm = nm || "Vídeo de YouTube";
+    }
+    const t = { id: "t" + Date.now(), name: nm || u.replace(/^https?:\/\/(www\.)?/, "").slice(0, 40), src: u };
     await save({ ...st, tracks: [...st.tracks, t], current: st.current || t.id });
     setLink("");
     setName("");
@@ -212,6 +303,8 @@ export default function Ambient({ campaignId, isGm, open, onClose, anchorRef }) 
   return (
     <>
       <audio ref={audio} preload="none" />
+      {/* Reproductor de YouTube: solo se oye el audio, el vídeo queda fuera de la pantalla */}
+      <div ref={ytBox} aria-hidden="true" style={{ position: "fixed", left: -9999, top: 0, width: 200, height: 200, overflow: "hidden", pointerEvents: "none" }} />
       {/* Mini reproductor: lo ve toda la mesa mientras suena una pista */}
       {live && !open && (
         <div className="mh-amb-pill" role="group" aria-label="Ambiente de la campaña">
@@ -259,7 +352,7 @@ export default function Ambient({ campaignId, isGm, open, onClose, anchorRef }) 
               </div>
             )}
             <div className="mh-amb-addrow">
-              <input className="mh-input" placeholder="Enlace al audio (https://…)" value={link} onChange={(e) => setLink(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addLink()} />
+              <input className="mh-input" placeholder="Enlace de audio o de YouTube" value={link} onChange={(e) => setLink(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addLink()} />
               <button type="button" className="mh-amb-ib" aria-label="Añadir el enlace" title="Añadir el enlace" disabled={!link.trim()} onClick={addLink}>
                 <Plus size={15} />
               </button>
