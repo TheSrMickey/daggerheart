@@ -132,7 +132,7 @@ export function buildSablewood() {
     handout("La Aguja del oeste", "A unas horas a pie al oeste se alza una de las Agujas de piedra con una llama dentro. Su luz es más débil de lo que debería: algo le pasa a su guardián. La Arcanista os dará su mapa cuando estéis listos."),
   ];
 
-  const stage = { live: "escena", scenes, activeSceneId: S.cart, scene: { title: scenes[0].title, image: scenes[0].image }, handouts };
+  const stage = { live: "escena", scenes, activeSceneId: null, scene: { title: "", image: "", fx: [] }, handouts };
 
   const cast = [
     { id: C.arcanist, name: "La Arcanista Fuegoblanco", imgs: {}, kind: "Aliado", role: "Hechicera del rey" },
