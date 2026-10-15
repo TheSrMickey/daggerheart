@@ -7295,7 +7295,32 @@ const sharedStyles = `
   html[data-mh-theme="light"] .mh-camp-hero { background: linear-gradient(135deg, color-mix(in srgb, var(--hc) 30%, #FFFCF6), #FFFCF6 80%); color: #221C2B; border-color: color-mix(in srgb, var(--hc) 45%, #DCD2C1); box-shadow: 0 14px 30px -24px var(--hc); }
   html[data-mh-theme="light"] .mh-camp-back { color: #4C4458; } html[data-mh-theme="light"] .mh-camp-back:hover { background: #00000010; color: #221C2B; }
   html[data-mh-theme="light"] .mh-camp-desc { color: #4C4458; } html[data-mh-theme="light"] .mh-camp-emb { background: #FFFCF6; }
-  @media (max-width: 640px) { .mh-camp-hero-row { flex-direction: column; align-items: flex-start; } .mh-camp-title { font-size: 21px; } }
+  @media (max-width: 640px) {
+    .mh-camp-hero { padding: 12px 14px 14px; margin-bottom: 12px; }
+    .mh-camp-hero-row { flex-direction: row; align-items: center; gap: 12px; }
+    .mh-camp-emb { width: 48px; height: 48px; }
+    .mh-camp-title { font-size: 19px; }
+    .mh-camp-desc { font-size: 12.5px; min-height: 0; }
+  }
+  /* Campañas en móvil: capítulos, diálogos y PNJ */
+  @media (max-width: 640px) {
+    .mh-gm { grid-template-columns: minmax(0, 1fr); }
+    .mh-gm-box { padding: 14px 14px; }
+    .mh-ch-bar > .mh-btn-ghost:first-child { flex: 1 1 100%; justify-content: center; }
+    .mh-ch-bar .mh-ch-sp { display: none; }
+    .mh-ch-bar .mh-gm-count { margin-right: auto; }
+    .mh-gm-line { flex-wrap: wrap; align-items: flex-start; }
+    .mh-gm-line-b { flex: 1 1 calc(100% - 100px); }
+    .mh-gm-line-t { white-space: normal; }
+    .mh-gm-line-acts { flex: 1 1 100%; justify-content: flex-end; flex-wrap: wrap; }
+    .mh-gm-castadd { flex-direction: column; }
+    .mh-gm-castadd .mh-gm-upload { align-self: flex-start; }
+    .mh-ch-now { align-items: flex-start; }
+    .mh-ch-now-img { width: 96px; }
+    .mh-ch-now-acts { flex: 1 1 100%; flex-wrap: wrap; }
+    .mh-ch-npcs { grid-template-columns: minmax(0, 1fr); }
+    .mh-ch-npc-acts { flex-wrap: wrap; }
+  }
   .ch-grid { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 18px; margin-top: 12px; } @media (max-width: 800px) { .ch-grid { grid-template-columns: 1fr; } }
   .ch-list { display: flex; flex-direction: column; gap: 8px; }
   .ch-ses { appearance: none; font: inherit; color: var(--mh-ink); text-align: left; cursor: pointer; display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel); position: relative; } .ch-ses small { color: var(--mh-muted); font-size: 11.5px; } .ch-ses em { position: absolute; right: 10px; top: 10px; font-style: normal; font-size: 10.5px; color: #5fd47c; font-weight: 700; } .ch-ses em.draft { color: #E0544A; }
