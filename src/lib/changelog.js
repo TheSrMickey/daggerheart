@@ -2,6 +2,18 @@
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
 export const CHANGELOG = [
   {
+    version: "1.50",
+    date: "2026-10-15",
+    title: "Historia por capítulos y PNJ en la campaña",
+    items: [
+      { tag: "nuevo", text: "Panel del DJ, pestaña «Historia»: cada escena es ahora un capítulo de la historia. Cada capítulo reúne su imagen con efectos de ambiente, sus diálogos y su combate (mapas de combate y encuentros). Los diálogos solo se pueden preparar cuando hay un capítulo creado, y el combate se prepara dentro del capítulo que acaba en pelea." },
+      { tag: "nuevo", text: "Panel del DJ, pestaña «PNJ»: el reparto de la campaña pasa a ser una sección propia, con rol, tipo (aliado, neutral o enemigo), expresiones y los capítulos en los que aparece. Desde ahí se usan para crear diálogos y combates." },
+      { tag: "mejora", text: "Mesa del DJ: nuevo bloque «Capítulo en curso» con los pasos Imagen y efectos → Diálogo → Combate, botones para cambiar de capítulo y «Pasar al combate» con el mapa del capítulo. Las pestañas «Mapa de combate» y «Encuentros» ya no son independientes: viven dentro de cada capítulo (el tablero se abre desde ahí y se vuelve con «Volver al capítulo»)." },
+      { tag: "mejora", text: "Las campañas que ya existían se adaptan solas: los diálogos, los mapas guardados y los encuentros sin escena pasan al capítulo que se llama igual o del mismo acto, o al primero si no hay coincidencia. No se pierde nada y se pueden mover entre capítulos." },
+      { tag: "nuevo", text: "Cartas de dominio: todos los dominios están completos, con las cartas de nivel 2 a 10 de Arcano, Filo, Hueso, Códice, Gracia, Medianoche, Esplendor y Valor, y los nuevos dominios Pavor y Sangre (sin ilustración ni coste de recuperación confirmados todavía)." },
+    ],
+  },
+  {
     version: "1.49",
     date: "2026-10-11",
     title: "Imágenes propias en las escenas y viñeta",
