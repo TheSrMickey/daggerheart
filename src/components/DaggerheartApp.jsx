@@ -4937,6 +4937,7 @@ const sharedStyles = `
   .mh-gm-fx:hover { color: var(--mh-ink); border-color: var(--mh-ink3); } .mh-gm-fx.is-on { color: var(--mh-ink); border-color: var(--fc, #D9644E); background: color-mix(in srgb, var(--fc, #D9644E) 16%, transparent); }
   .mh-gm-fxi { display: flex; gap: 6px; align-items: center; color: var(--mh-muted); padding: 0 2px; }
   .mh-stg-scene-cap { position: relative; } .mh-stg-fear.is-incap { top: 50%; right: 12px; transform: translateY(-50%); }
+  .mh-root.is-mobile .mh-stg-fear.is-over.is-flow { position: static; align-self: stretch; justify-content: center; flex-shrink: 0; }
   .mh-stg-fear.is-over > span:first-child, .mh-stg-fear.is-over b { color: #CDBBF5; }
   .mh-stg-body { transition: opacity .36s ease; } .mh-stg-body.is-out { opacity: 0; }
   .mh-stg-scene { animation: mh-scene-in .55s ease both; } @keyframes mh-scene-in { from { opacity: 0; } to { opacity: 1; } }
@@ -20599,7 +20600,7 @@ export default function App({ onSignOut }) {
                                 </button>
                               )}
                               <div className={"mh-stg-body" + (sceneOut && stTab === "escena" ? " is-out" : "")}>
-                                {!fearInCap && fearEl("")}
+                                {!fearInCap && fearEl(stTab === "escena" ? "" : " is-flow")}
                                 {stTab === "escena" &&
                                   (scene.title || scene.image || dlg ? (
                                     <>
@@ -20899,10 +20900,10 @@ export default function App({ onSignOut }) {
                               )}
                             </Panel>
 
-                            <ChatHost embedded={embedded} slot={chatSlot}>
+                            <ChatHost embedded={embedded && !isMobile} slot={chatSlot}>
                             <Panel
                               span={wide ? 1 : 5}
-                              fill={embedded}
+                              fill={embedded && !isMobile}
                               title="Chat"
                               titleRight={
                                 table.length > 0 && (
