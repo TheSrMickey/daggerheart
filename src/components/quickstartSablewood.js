@@ -93,7 +93,7 @@ const roadMap = (extraProps) => ({
     ...Array.from({ length: 16 }, (_, x) => ({ x, y: 4, kind: "camino" })),
     { x: 13, y: 2, kind: "colina" }, { x: 14, y: 2, kind: "colina" }, { x: 14, y: 3, kind: "colina" }, { x: 4, y: 6, kind: "roca" },
   ],
-  props: props([...FOREST, [2, 4, "carro"], [9, 4, "carro", 1], [10, 5, "caja"], [8, 5, "barril"], ...extraProps]),
+  props: props([...FOREST, [2, 4, "carro"], [9, 4, "carrovolcado"], [10, 5, "caja"], [8, 5, "barril"], ...extraProps]),
 });
 const foe = (name, x, y, stats, size) => ({ id: uid("t"), kind: "foe", name, x, y, stats: { ...stats }, ...(size ? { size } : {}) });
 const npc = (name, x, y, extra = {}) => ({ id: uid("t"), kind: "npc", name, x, y, ...extra });
