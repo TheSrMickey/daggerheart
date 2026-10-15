@@ -5765,8 +5765,11 @@ const sharedStyles = `
   .mh-cg-emb { width: 48px; height: 48px; flex: none; display: grid; place-items: center; border-radius: 50%; color: var(--mh-green-ink); background: color-mix(in srgb, var(--hc) 18%, var(--mh-panel2)); border: 2px solid color-mix(in srgb, var(--hc) 70%, transparent); }
   .mh-cg-tit { min-width: 0; } .mh-cg-name { font-size: 22px; line-height: 1.1; outline: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .mh-cg-sub1 { font-size: 12.5px; color: var(--mh-muted); margin-top: 3px; } .mh-cg-sub1 b { color: var(--mh-muted); font-weight: 600; } .mh-cg-sub1 b.is-on { color: var(--mh-green-ink); }
+  .mh-cg-fear { margin-left: 14px; flex: none; } .mh-cg-fear-b { display: inline-flex; padding: 0; border: 0; background: none; cursor: pointer; color: inherit; }
+  .mh-dir-mon { animation: mh-dir-in .6s cubic-bezier(.2,.7,.2,1) both; } @keyframes mh-dir-in { from { opacity: 0; transform: scale(1.025); filter: brightness(1.25) blur(3px); } to { opacity: 1; transform: none; filter: none; } }
+  @media (prefers-reduced-motion: reduce) { .mh-dir-mon { animation: none; } }
   .mh-cg-sp { flex: 1; }
-  .mh-cg-avs { display: flex; } .mh-cg-av { position: relative; width: 36px; height: 36px; margin-left: -9px; border-radius: 50%; display: grid; place-items: center; font: 700 14px 'Inter', system-ui, sans-serif; color: #fff; background: radial-gradient(circle at 35% 30%, var(--c), #14142c); border: 2px solid rgba(255,255,255,.3); } .mh-cg-av:first-child { margin-left: 0; }
+  .mh-cg-avs { display: flex; } .mh-cg-av { position: relative; width: 36px; height: 36px; margin-left: -9px; border-radius: 50%; display: grid; place-items: center; color: var(--c); background: color-mix(in srgb, var(--c) 25%, var(--mh-panel2)); border: 2px solid color-mix(in srgb, var(--c) 55%, transparent); } .mh-cg-av:first-child { margin-left: 0; }
   .mh-cg-av i { position: absolute; right: -2px; bottom: -2px; width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--mh-panel); background: #8d8fae; } .mh-cg-av i.is-on { background: #58d68d; } .mh-cg-av i.is-away { background: #E3B04B; }
   .mh-cg-btn { display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 12px; border: 1px solid var(--mh-line2); background: var(--mh-panel2); color: var(--mh-ink); font: 700 12.5px 'Inter', system-ui, sans-serif; cursor: pointer; white-space: nowrap; }
   .mh-cg-trash { width: 34px; height: 34px; flex: none; display: grid; place-items: center; border-radius: 11px; border: 1px solid rgba(255,122,102,.35); background: rgba(255,122,102,.1); color: color-mix(in srgb, #C0504A var(--mh-accent-keep, 100%), #000); cursor: pointer; } .mh-cg-trash.is-confirm { background: #D9644E; color: #fff; }
@@ -5838,7 +5841,7 @@ const sharedStyles = `
   .mh-dir-lbl-row small { font-size: 11.5px; color: var(--mh-green-ink); }
   .mh-dir-members { display: flex; flex-direction: column; gap: 10px; }
   .mh-dir-mem { display: flex; align-items: center; gap: 11px; padding: 0; border: 0; background: none; text-align: left; cursor: pointer; color: inherit; }
-  .mh-dir-av { width: 40px; height: 40px; flex: none; border-radius: 50%; display: grid; place-items: center; font: 700 16px 'Inter', system-ui, sans-serif; color: #fff; background: radial-gradient(circle at 35% 30%, var(--c), #14142c); border: 2px solid rgba(255,255,255,.3); }
+  .mh-dir-av { width: 40px; height: 40px; flex: none; border-radius: 50%; display: grid; place-items: center; color: var(--c); background: color-mix(in srgb, var(--c) 25%, var(--mh-panel2)); border: 2px solid color-mix(in srgb, var(--c) 55%, transparent); }
   .mh-dir-mem-b { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
   .mh-dir-mem-b b { font-size: 13.5px; color: var(--mh-ink); } .mh-dir-mem-b b small { font-size: 11px; font-weight: 500; color: var(--mh-muted); margin-left: 4px; }
   .mh-dir-mem-r { display: flex; align-items: center; gap: 8px; } .mh-dir-mem-r em { width: 44px; font-style: normal; font-size: 11px; color: var(--mh-muted); }
@@ -5864,6 +5867,7 @@ const sharedStyles = `
     .mh-dir-side .mh-dir-chat { flex: none; } .mh-dir-side .mh-dir-chat .mh-dir-feed { max-height: 220px; }
     .mh-hs { grid-template-columns: minmax(0, 1fr); } .mh-hs-back { display: grid; } .mh-hs-banner { height: 150px; padding: 12px 14px; } .mh-hs-bt { padding-left: 42px; } .mh-hs-bt .mh-serif { font-size: 19px; } .mh-hs-bacts span { display: none; } .mh-hs-body { padding: 14px 12px 16px; } .mh-hs-presets { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .mh-cg-gold { width: 100%; justify-content: center; }
+    .mh-cg-head { flex-wrap: wrap; } .mh-cg-fear { order: 9; width: 100%; margin: 4px 0 0; justify-content: center; } .mh-cg-fear .mh-stg-fear-pips svg { width: 15px; height: 15px; }
     .mh-cg-head { padding: 10px 12px; gap: 9px; } .mh-cg-emb { width: 38px; height: 38px; } .mh-cg-name { font-size: 16px; } .mh-cg-tit { flex: 1; min-width: 0; } .mh-cg-sub1 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 11.5px; } .mh-cg-sp { display: none; } .mh-cg-avs { display: none; } .mh-cg-btn span { display: none; } .mh-cg-btn { padding: 8px 10px; }
     .mh-cg-navrow { flex-wrap: wrap; } .mh-cg-acts { margin-left: 0; width: 100%; } .mh-cg-acts .mh-dir-pause, .mh-cg-acts .mh-cg-btn { flex: 1; justify-content: center; } .mh-cg-acts .mh-cg-btn span { display: inline; }
     .mh-dir-bar { gap: 6px; } .mh-dir-live button span { display: none; } .mh-dir-live button { padding: 6px 9px; }
@@ -28159,6 +28163,17 @@ export default function App({ onSignOut }) {
                         {cgScenes.length > 0 && <span> · {cgCur ? "Capítulo " + (cgScenes.indexOf(cgCur) + 1) + " de " + cgScenes.length : cgScenes.length + " capítulos"}</span>}
                       </div>
                     </div>
+                    <div className="mh-stg-fear mh-cg-fear" title={`Miedo: ${fearCount} de 12 · pulsa una calavera para ajustarlo`}>
+                      <span>Miedo</span>
+                      <span className="mh-stg-fear-pips">
+                        {Array.from({ length: 12 }, (_, i) => (
+                          <button key={i} type="button" className="mh-cg-fear-b" aria-label={"Miedo " + (i + 1)} onClick={() => toggleFear(i + 1)}>
+                            <Skull size={17} strokeWidth={i < fearCount ? 1.4 : 1.6} className={"mh-fear-sk" + (i < fearCount ? " on" : "") + (i === fearCount - 1 ? " pulse" : "")} />
+                          </button>
+                        ))}
+                      </span>
+                      <b>{fearCount}</b>
+                    </div>
                     <span className="mh-cg-sp" />
                     <div className="mh-cg-avs" aria-label="Jugadores">
                       {memberIds.slice(0, 5).map((mid) => {
@@ -28167,7 +28182,10 @@ export default function App({ onSignOut }) {
                         const ent = table.find((e) => e.name === ch.f_name);
                         return (
                           <span key={mid} className="mh-cg-av" style={{ "--c": classColor(ch.f_class) }} title={ch.f_name}>
-                            {(ch.f_name || "?").charAt(0).toUpperCase()}
+                            {(() => {
+                              const Em = CLASS_EMBLEMS[ch.f_class] || User;
+                              return <Em size={17} />;
+                            })()}
                             <i className={"is-" + (ent ? tableStatus(ent) : "off")} />
                           </span>
                         );
@@ -28310,7 +28328,7 @@ export default function App({ onSignOut }) {
                       </div>
                     );
                     const monEl = (
-                      <div className={"mh-dir-mon" + (live === "escena" && (cur?.image || stage.scene?.image) ? "" : " is-blank")} style={live === "escena" ? bgStyle(cur?.image || stage.scene?.image) : undefined}>
+                      <div key={live + "|" + (cur?.id || "") + "|" + (cur?.image || stage.scene?.image || "")} className={"mh-dir-mon" + (live === "escena" && (cur?.image || stage.scene?.image) ? "" : " is-blank")} style={live === "escena" ? bgStyle(cur?.image || stage.scene?.image) : undefined}>
                         {live === "escena" ? (
                           <>
                             <SceneFx fx={cur?.fx || stage.scene?.fx || []} />
@@ -28398,7 +28416,12 @@ export default function App({ onSignOut }) {
                             const col = classColor(ch.f_class);
                             return (
                               <button key={id} type="button" className="mh-dir-mem" onClick={() => openModern(id)} title={"Abrir la ficha de " + (ch.f_name || "Sin nombre")}>
-                                <span className="mh-dir-av" style={{ "--c": col }}>{(ch.f_name || "?").charAt(0).toUpperCase()}</span>
+                                <span className="mh-dir-av" style={{ "--c": col }}>
+                                  {(() => {
+                                    const Em = CLASS_EMBLEMS[ch.f_class] || User;
+                                    return <Em size={19} />;
+                                  })()}
+                                </span>
                                 <span className="mh-dir-mem-b">
                                   <b>{ch.f_name || "Sin nombre"} <small>{ch.f_class ? ch.f_class + " · Nv " + (ch.f_level || 1) : "Sin clase"}</small></b>
                                   <span className="mh-dir-mem-r"><em>Vida</em>{pips(hpL, hpT, "#E0544A")}</span>
