@@ -9,7 +9,7 @@ import { storageGet, storageSet } from "@/lib/storage";
 // Cada persona controla solo su volumen (se guarda en su navegador). El estado compartido vive en «campaign-ambient:<id>».
 const MAX_FILE = 2.5 * 1024 * 1024; // 2,5 MB por archivo
 const VOL_KEY = "mh-amb-vol";
-const EMPTY = { tracks: [], current: null, playing: false, ts: 0 };
+const EMPTY = { tracks: [], current: null, playing: false, pos: 0, at: 0, ts: 0 };
 
 const parse = (raw) => {
   try {
@@ -136,6 +136,46 @@ export default function Ambient({ campaignId, isGm, open, onClose, anchorRef }) 
 
   const track = st.tracks.find((t) => t.id === st.current) || null;
 
+  // Sincronía: el estado guarda en qué segundo de la pista estaba (pos) y a qué hora (at). Cada dispositivo calcula dónde
+  // debería ir ahora mismo (pos + tiempo transcurrido, en bucle) y, si se desvía más de ~1 s, salta a ese punto.
+  const targetPos = () => {
+    const c = stRef.current;
+    return c.playing ? (c.pos || 0) + (Date.now() - (c.at || Date.now())) / 1000 : c.pos || 0;
+  };
+  const playerTime = () => {
+    const c = stRef.current;
+    const tr = c.tracks.find((x) => x.id === c.current);
+    if (!tr) return null;
+    if (ytId(tr.src)) {
+      const y = yt.current;
+      return y.ready && y.player.getCurrentTime ? { cur: y.player.getCurrentTime(), dur: y.player.getDuration() } : null;
+    }
+    const a = audio.current;
+    return a && a.readyState >= 1 ? { cur: a.currentTime, dur: a.duration } : null;
+  };
+  const syncNow = () => {
+    const c = stRef.current;
+    const tr = c.tracks.find((x) => x.id === c.current);
+    if (!tr || !c.playing) return;
+    const p = playerTime();
+    if (!p) return;
+    let tg = targetPos();
+    const hasDur = p.dur > 0 && isFinite(p.dur);
+    if (hasDur) tg %= p.dur;
+    let d = Math.abs(p.cur - tg);
+    if (hasDur) d = Math.min(d, p.dur - d);
+    if (d <= 1.2) return;
+    try {
+      if (ytId(tr.src)) yt.current.player.seekTo(tg, true);
+      else audio.current.currentTime = tg;
+    } catch (e) {}
+  };
+  useEffect(() => {
+    if (!st.playing) return undefined;
+    const t = setInterval(syncNow, 2500);
+    return () => clearInterval(t);
+  }, [st.playing, st.current, st.pos, st.at]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Pone la pista actual en el reproductor y la arranca o pausa según el DJ.
   useEffect(() => {
     const a = audio.current;
@@ -157,7 +197,7 @@ export default function Ambient({ campaignId, isGm, open, onClose, anchorRef }) 
               height: "200",
               videoId: vid,
               playerVars: { autoplay: 0, controls: 0, loop: 1, playlist: vid, playsinline: 1, rel: 0, modestbranding: 1 },
-              events: { onReady: () => (y.ready = true, setYtTick((n) => n + 1)), onStateChange: (e) => e.data === 0 && y.player.playVideo() },
+              events: { onReady: () => (y.ready = true, setYtTick((n) => n + 1)), onStateChange: (e) => (e.data === 0 && y.player.playVideo(), e.data === 1 && syncNow()) },
             });
             y.vid = vid;
           } else if (y.vid !== vid && y.ready) {
@@ -210,6 +250,7 @@ export default function Ambient({ campaignId, isGm, open, onClose, anchorRef }) 
       y.player.setVolume(Math.round((muted ? 0 : vol) * 100));
       if (st.playing) {
         y.player.playVideo();
+        setTimeout(syncNow, 1200);
         // sin un toque en la pantalla, el navegador no deja sonar: se avisa si no arranca
         setTimeout(() => {
           const stt = y.player.getPlayerState && y.player.getPlayerState();
@@ -235,6 +276,7 @@ export default function Ambient({ campaignId, isGm, open, onClose, anchorRef }) 
     if (y.ready && track && ytId(track.src)) {
       try {
         y.player.playVideo();
+        setTimeout(syncNow, 1200);
         setBlocked(false);
       } catch (e) {}
       return;
@@ -285,10 +327,17 @@ export default function Ambient({ campaignId, isGm, open, onClose, anchorRef }) 
     if (t && t.src.startsWith("file:")) storageSet("campaign-audio:" + t.src.slice(5), "", true);
     const tracks = st.tracks.filter((x) => x.id !== id);
     const gone = st.current === id;
-    await save({ ...st, tracks, current: gone ? tracks[0]?.id || null : st.current, playing: gone ? false : st.playing });
+    await save({ ...st, tracks, current: gone ? tracks[0]?.id || null : st.current, playing: gone ? false : st.playing, ...(gone ? { pos: 0, at: Date.now() } : {}) });
   };
-  const select = (id) => save({ ...st, current: id, playing: true });
-  const toggle = () => track && save({ ...st, playing: !st.playing });
+  const select = (id) => save({ ...st, current: id, playing: true, pos: 0, at: Date.now() });
+  const toggle = () => {
+    if (!track) return;
+    if (st.playing) {
+      const p = playerTime();
+      return save({ ...st, playing: false, pos: p ? p.cur : targetPos(), at: Date.now() });
+    }
+    return save({ ...st, playing: true, pos: st.pos || 0, at: Date.now() });
+  };
 
   const volEl = (
     <div className="mh-amb-vol">
@@ -302,7 +351,7 @@ export default function Ambient({ campaignId, isGm, open, onClose, anchorRef }) 
   const live = !!track && st.playing;
   return (
     <>
-      <audio ref={audio} preload="none" />
+      <audio ref={audio} preload="none" onLoadedMetadata={syncNow} onPlaying={syncNow} />
       {/* Reproductor de YouTube: solo se oye el audio, el vídeo queda fuera de la pantalla */}
       <div ref={ytBox} aria-hidden="true" style={{ position: "fixed", left: -9999, top: 0, width: 200, height: 200, overflow: "hidden", pointerEvents: "none" }} />
       {/* Mini reproductor: lo ve toda la mesa mientras suena una pista */}
