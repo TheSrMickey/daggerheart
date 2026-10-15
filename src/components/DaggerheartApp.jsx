@@ -5849,6 +5849,14 @@ const sharedStyles = `
   @keyframes mhChb { 0% { opacity: 0; transform: translateY(14px) scale(.96); letter-spacing: .02em; } 14% { opacity: 1; transform: none; } 78% { opacity: 1; } 100% { opacity: 0; transform: translateY(-8px); } }
   @keyframes mhChbLine { 0% { width: 0; } 25% { width: min(320px, 60%); } 100% { width: min(320px, 60%); } }
   @media (prefers-reduced-motion: reduce) { .mh-chb, .mh-chb i { animation-duration: 3.8s; animation-name: mhChbFade; } @keyframes mhChbFade { 0%, 100% { opacity: 0; } 15%, 80% { opacity: 1; } } }
+  .mh-qs-card { border-color: color-mix(in srgb, var(--c) 70%, var(--mh-line)); box-shadow: 0 0 0 1px color-mix(in srgb, var(--c) 30%, transparent); }
+  .mh-qs-back { display: inline-flex; align-items: center; gap: 3px; border: 0; background: none; color: var(--mh-muted); font: 700 12px 'Inter', system-ui, sans-serif; cursor: pointer; padding: 0; } .mh-qs-tag { font: 800 11px 'Inter', system-ui, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--c); }
+  .mh-qs-head { display: flex; align-items: center; gap: 11px; } .mh-qs-head small { color: var(--mh-muted); font-size: 12px; } .mh-qs-name { font-size: 24px; font-weight: 700; line-height: 1.1; }
+  .mh-qs-row { display: flex; align-items: center; gap: 10px; } .mh-qs-row em { width: 84px; flex: none; font: 800 11px 'Inter', system-ui, sans-serif; font-style: normal; letter-spacing: .12em; text-transform: uppercase; color: var(--mh-muted); } .mh-qs-row b { margin-left: auto; font-size: 13px; }
+  .mh-qs-pips { display: flex; gap: 4px; flex-wrap: wrap; } .mh-qs-pip { width: 14px; height: 14px; padding: 0; border-radius: 4px; border: 1.5px solid var(--pc); background: transparent; cursor: pointer; } .mh-qs-pip.is-on { background: var(--pc); }
+  .mh-qs-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; } .mh-qs-stats > div { text-align: center; padding: 8px 4px; border-radius: 12px; background: var(--mh-panel2); border: 1px solid var(--mh-line); } .mh-qs-stats b { display: block; font: 700 20px 'Cormorant Garamond', Georgia, serif; } .mh-qs-stats small { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--mh-muted); }
+  .mh-qs-chips { display: flex; flex-wrap: wrap; gap: 6px; } .mh-qs-chips span { padding: 3px 9px; border-radius: 99px; font-size: 11px; font-weight: 700; border: 1px solid var(--mh-line2); background: var(--mh-panel2); } .mh-qs-chips span.is-cond { border-color: #E0544A; }
+  .mh-qs-acts { display: flex; gap: 6px; flex-wrap: wrap; } .mh-qs-acts button { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; padding: 7px 11px; }
   .mh-tl-sub { text-transform: none !important; letter-spacing: 0 !important; color: var(--mh-ink3) !important; }
   @keyframes mhTlIn { from { transform: translateX(38%); opacity: .35; } to { transform: none; opacity: 1; } }
   @media (prefers-reduced-motion: reduce) { .mh-tl-track { animation: none; } }
@@ -11464,6 +11472,7 @@ export default function App({ onSignOut }) {
   const [chTab, setChTab] = useState("dialogos"); // pestaña abierta del capítulo en «Historia»
   const ambBtn = useRef(null);
   const [ambOpen, setAmbOpen] = useState(false); // ventana de «Ambiente» (audio de la mesa)
+  const [quickChar, setQuickChar] = useState(null); // personaje cuya ficha rápida sustituye a «El grupo» en Directo
   const [mapPick, setMapPick] = useState({}); // por capítulo: mapa de combate elegido
   const [dlgStart, setDlgStart] = useState({}); // por capítulo: { convId, lineId } con lo que el DJ quiere decir primero
   const [clueDlg, setClueDlg] = useState(null); // popup «Pista» del DJ: { rect, sel, title, text }
@@ -28693,7 +28702,11 @@ export default function App({ onSignOut }) {
                                 canMove={() => true}
                                 onMove={(id, x, y) => moveToken(viewingCampaignId, id, x, y)}
                                 selectedId={mapSel}
-                                onSelect={setMapSel}
+                                onSelect={(id) => {
+                                  setMapSel(id);
+                                  const tk = (campaignMap.tokens || []).find((t) => t.id === id);
+                                  if (tk && tk.kind === "pc" && tk.charId && characters[tk.charId]) setQuickChar(tk.charId);
+                                }}
                                 compact
                               />
                             </MapViewport>
@@ -28853,7 +28866,7 @@ export default function App({ onSignOut }) {
                             const stN = Math.min(stT, Number(ch.stress_marked || 0));
                             const col = classColor(ch.f_class);
                             return (
-                              <button key={id} type="button" className="mh-dir-mem" onClick={() => openModern(id)} title={"Abrir la ficha de " + (ch.f_name || "Sin nombre")}>
+                              <button key={id} type="button" className="mh-dir-mem" onClick={() => setQuickChar(id)} title={"Ver la ficha rápida de " + (ch.f_name || "Sin nombre")}>
                                 <span className="mh-dir-av" style={{ "--c": col }}>
                                   {(() => {
                                     const Em = CLASS_EMBLEMS[ch.f_class] || User;
@@ -28872,9 +28885,73 @@ export default function App({ onSignOut }) {
                         </div>
                       </div>
                     );
+                    const qc = quickChar && characters[quickChar] && memberIds.includes(quickChar) ? quickChar : null;
+                    const quickSheet = qc && (() => {
+                      const c = characters[qc];
+                      const md = modernData(qc);
+                      const col = classColor(c.f_class);
+                      const Em = CLASS_EMBLEMS[c.f_class] || User;
+                      const hpT = md.hpTotal;
+                      const hpMk = md.hpMarked;
+                      const hpLeft = Math.max(0, hpT - hpMk);
+                      const stT = md.stressTotal;
+                      const stN = Math.min(stT, Number(c.stress_marked || 0));
+                      const hpeT = getHopeMax(c);
+                      const hpeN = Math.min(hpeT, Number(c.hope_marked ?? HOPE_DEFAULT));
+                      const conds = getConditions(c);
+                      const rows = [
+                        { k: "hp", label: "Vida", n: hpLeft, t: hpT, col: "#E0544A", inv: true, on: (idx) => markHp(qc, "hp_marked", idx, hpMk) },
+                        { k: "st", label: "Estrés", n: stN, t: stT, col: "#A58BE8", on: (idx) => markStressBox(qc, "stress_marked", idx, Number(c.stress_marked || 0)) },
+                        { k: "ho", label: "Esperanza", n: hpeN, t: hpeT, col: "#E3B04B", on: (idx) => updateCharacterField(qc, "hope_marked", String(hpeN === idx + 1 ? idx : idx + 1)) },
+                      ];
+                      return (
+                        <div className="mh-dir-card mh-qs-card" style={{ "--c": col }}>
+                          <div className="mh-dir-lbl-row">
+                            <button type="button" className="mh-qs-back" onClick={() => setQuickChar(null)}><ChevronLeft size={13} /> Grupo</button>
+                            <span className="mh-qs-tag">Ficha rápida</span>
+                          </div>
+                          <div className="mh-qs-head">
+                            <span className="mh-dir-av" style={{ "--c": col }}><Em size={22} /></span>
+                            <div>
+                              <div className="mh-serif mh-qs-name">{c.f_name || "Sin nombre"}</div>
+                              <small>{[c.f_class || "Sin clase", "Nv " + (c.f_level || 1), c.f_ancestry].filter(Boolean).join(" · ")}</small>
+                            </div>
+                          </div>
+                          {rows.map((r) => (
+                            <div key={r.k} className="mh-qs-row">
+                              <em>{r.label}</em>
+                              <span className="mh-qs-pips">
+                                {Array.from({ length: r.t }, (_, i) => {
+                                  const on = i < r.n;
+                                  const idx = r.inv ? r.t - (on ? i : i + 1) - 1 : i;
+                                  return <button key={i} type="button" className={"mh-qs-pip" + (on ? " is-on" : "")} style={{ "--pc": r.col }} aria-label={r.label + " " + (i + 1)} onClick={() => r.on(idx)} />;
+                                })}
+                              </span>
+                              <b>{r.n}/{r.t}</b>
+                            </div>
+                          ))}
+                          <div className="mh-qs-stats">
+                            <div><b>{md.evasion}</b><small>Evasión</small></div>
+                            <div><b>{Math.max(0, md.armorTotal - md.armorLeft)}/{md.armorTotal}</b><small>Armadura</small></div>
+                            <div><b>{md.major}·{md.severe}</b><small>Umbrales</small></div>
+                          </div>
+                          {(c.f_primary_weapon || conds.length > 0) && (
+                            <div className="mh-qs-chips">
+                              {c.f_primary_weapon && <span>{c.f_primary_weapon}</span>}
+                              {conds.map((x) => <span key={x} className="is-cond">{x}</span>)}
+                            </div>
+                          )}
+                          <div className="mh-qs-acts">
+                            <button type="button" className="mh-btn" disabled={hpeN >= hpeT} onClick={() => updateCharacterField(qc, "hope_marked", String(hpeN + 1))}>+ Esperanza</button>
+                            <button type="button" className="mh-btn-ghost" disabled={hpLeft <= 0} onClick={() => markHp(qc, "hp_marked", hpMk, hpMk)}>Daño</button>
+                            <button type="button" className="mh-btn-ghost" onClick={() => openModern(qc)}>Ficha completa <ChevronRight size={12} /></button>
+                          </div>
+                        </div>
+                      );
+                    })();
                     const groupEl = (
                       <PollSwap campaignId={viewingCampaignId} total={members.length} onResult={(text) => postChat(viewingCampaignId, { kind: "msg", text, author: "El DJ", gm: true })}>
-                        {groupBox}
+                        {quickSheet || groupBox}
                       </PollSwap>
                     );
                     const chatEl = (
