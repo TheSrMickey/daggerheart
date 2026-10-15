@@ -6,6 +6,11 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "mejora", text: "Directo: cuando los jugadores están en el mapa de combate, el DJ lo ve también en su monitor, con un botón para abrir el tablero." },
+      { tag: "mejora", text: "Directo, paso «Diálogo»: ahora el DJ elige la conversación y qué frase se dice primero antes de empezar." },
+      { tag: "nuevo", text: "Al cambiar de capítulo aparece en la pantalla de los jugadores el título del capítulo con una ligera animación." },
+      { tag: "mejora", text: "La línea de tiempo une sus pasos con una línea horizontal; la píldora del capítulo mide siempre lo mismo; y la primera escena de una campaña es siempre «Sin escena»." },
+      { tag: "mejora", text: "Directo: mientras hay una votación abierta, sustituye a la caja «El grupo» (con los votos al momento y el botón de cerrarla) hasta que termina." },
       { tag: "mejora", text: "Directo, capítulos: la flecha izquierda del capítulo 1 deja la mesa sin escena, y los jugadores (y tu monitor) ven el logo con «A la espera de una escena»." },
       { tag: "nuevo", text: "Directo: los pasos de abajo son ahora una línea de tiempo (Imagen → Diálogo → Combate → siguiente capítulo). Se salta lo que el capítulo no tenga, el paso actual siempre está a la izquierda y el botón «Siguiente» desliza la línea." },
       { tag: "nuevo", text: "El botón «Pausar la mesa» pasa a ser la X-Card: al pulsarlo aparece en la escena (para ti y para los jugadores) el aviso de que alguien no está cómodo con lo que se trata, hasta que lo retires." },

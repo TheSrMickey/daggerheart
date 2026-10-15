@@ -150,3 +150,27 @@ export function PollsGm({ campaignId, total, onAnnounce, onResult }) {
     </div>
   );
 }
+
+// Directo del DJ: mientras hay una votación abierta, sustituye a la caja «El grupo»; al terminar vuelve el grupo.
+export function PollSwap({ campaignId, total, onResult, children }) {
+  const [doc] = useDoc(pollKey(campaignId), EMPTY, 3000);
+  const p = [...doc.list].reverse().find((x) => !x.closed);
+  const now = useTick(!!p);
+  const voted = p ? Object.keys(p.votes || {}).length : 0;
+  useEffect(() => {
+    if (!p) return;
+    if ((p.endsAt && now >= p.endsAt) || (p.auto && total && voted >= total)) closePoll(campaignId, p.id, onResult);
+  });
+  if (!p) return children;
+  return (
+    <div className="mh-dir-card pl-swap" role="group" aria-label="Votación en curso">
+      <div className="mh-dir-lbl-row">
+        <span className="mh-dir-lbl"><Vote size={13} /> Votación en curso</span>
+        {p.endsAt ? <span className="cx-chip on" style={{ "--c": "#E0544A" }}><Clock size={12} /> {mmss(p.endsAt - now)}</span> : null}
+      </div>
+      <div className="pl-q mh-serif">{p.q}</div>
+      <Bars p={p} total={total} mine={null} hide={false} />
+      <button type="button" className="mh-btn-ghost" onClick={() => closePoll(campaignId, p.id, onResult)}>Cerrar ahora</button>
+    </div>
+  );
+}
