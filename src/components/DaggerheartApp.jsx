@@ -5807,7 +5807,7 @@ const sharedStyles = `
   .mh-hs-amb .mh-gm-sc-edit { max-width: 640px; }
   /* Directo */
   .mh-dir { display: flex; flex-direction: column; gap: 16px; }
-  .mh-dir-top { display: grid; grid-template-columns: minmax(0, 1fr) clamp(372px, 26vw, 480px); grid-template-rows: minmax(0, 1fr) auto; gap: 14px; height: clamp(560px, calc(100dvh - 270px), 860px); }
+  .mh-dir-top { display: grid; grid-template-columns: minmax(0, 1fr) clamp(372px, 26vw, 480px); grid-template-rows: minmax(0, 1fr) auto; gap: 14px; height: clamp(560px, calc(100dvh - 190px), 1200px); }
   .mh-dir-stage { grid-column: 1; padding: 12px; border-radius: 22px; background: var(--mh-panel); border: 1px solid var(--mh-line); display: flex; flex-direction: column; gap: 10px; position: relative; }
   .mh-dir-below { grid-column: 1; padding: 10px; border-radius: 22px; background: var(--mh-panel); border: 1px solid var(--mh-line); }
   .mh-dir-side { grid-column: 2; grid-row: 1 / span 2; display: flex; flex-direction: column; gap: 12px; min-height: 0; }
