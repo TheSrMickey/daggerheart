@@ -1995,6 +1995,7 @@ const MAP_PROPS = [
   { key: "antorcha", label: "Antorcha", svg: '<circle cx="50" cy="44" r="34" fill="#F7D35A" opacity=".22"/><rect x="46" y="44" width="8" height="40" rx="3" fill="#5A3A22"/><path d="M50 14 C60 28 62 38 50 50 C38 38 40 28 50 14Z" fill="#F3A64A"/><path d="M50 28 C55 34 55 40 50 46 C45 40 45 34 50 28Z" fill="#FFE08A"/>' },
   { key: "muro", label: "Muro", svg: '<rect x="6" y="30" width="92" height="44" fill="#000" opacity=".2"/><rect x="2" y="26" width="92" height="44" fill="#A7A196"/><path d="M2 40h92M2 55h92M24 26v14M56 26v14M88 26v14M10 40v15M40 40v15M72 40v15M24 55v15M56 55v15M88 55v15" stroke="#7E786E" stroke-width="3"/>' },
   { key: "carro", label: "Carro", svg: '<rect x="14" y="30" width="76" height="40" rx="6" fill="#000" opacity=".2"/><rect x="10" y="26" width="76" height="40" rx="6" fill="#8A5A2B"/><path d="M10 40h76M10 52h76" stroke="#5A3A22" stroke-width="3"/><circle cx="26" cy="72" r="11" fill="#5A3A22"/><circle cx="70" cy="72" r="11" fill="#5A3A22"/><circle cx="26" cy="72" r="4" fill="#C9A24A"/><circle cx="70" cy="72" r="4" fill="#C9A24A"/>' },
+  { key: "carrovolcado", label: "Carro volcado", svg: '<ellipse cx="50" cy="78" rx="45" ry="12" fill="#000" opacity=".3"/><path d="M5 28 28 46" stroke="#4A2E18" stroke-width="5" stroke-linecap="round"/><path d="M5 28 9 32" stroke="#C9A24A" stroke-width="3" stroke-linecap="round"/><g transform="rotate(-13 48 54)"><rect x="14" y="38" width="62" height="32" rx="4" fill="#6B4423"/><path d="M14 48.5h62M14 59h62" stroke="#43291A" stroke-width="2.5"/><path d="M30 38v32M52 38v32" stroke="#43291A" stroke-width="1.5" opacity=".6"/><rect x="14" y="38" width="62" height="5" rx="2.5" fill="#8A5A2B"/><rect x="14" y="65" width="62" height="5" rx="2.5" fill="#523319"/><rect x="38" y="70" width="5" height="9" fill="#3A2412"/></g><circle cx="77" cy="62" r="17" fill="none" stroke="#4A2E18" stroke-width="5"/><circle cx="77" cy="62" r="17" fill="none" stroke="#7A5230" stroke-width="1.5"/><path d="M77 45v34M60 62h34M65 50l24 24M89 50 65 74" stroke="#5A3A22" stroke-width="2.5"/><circle cx="77" cy="62" r="4.5" fill="#C9A24A"/><ellipse cx="22" cy="79" rx="14" ry="5" fill="none" stroke="#4A2E18" stroke-width="3.5"/><rect x="58" y="84" width="24" height="5" rx="1.5" transform="rotate(7 58 84)" fill="#A0703E"/><circle cx="34" cy="83" r="4.2" fill="#C8452F"/><circle cx="44" cy="87" r="4" fill="#D9573A"/><circle cx="52" cy="80" r="3.6" fill="#E08A2E"/><circle cx="26" cy="89" r="3.6" fill="#7BA04A"/><circle cx="64" cy="79" r="3.4" fill="#C8452F"/>' },
   { key: "torre", label: "Torre", svg: '<rect x="22" y="14" width="56" height="74" fill="#000" opacity=".2"/><rect x="18" y="10" width="56" height="74" fill="#B3ADA2"/><path d="M18 10h12v8H18zM40 10h12v8H40zM62 10h12v8H62z" fill="#8E8A80"/><rect x="40" y="40" width="10" height="18" fill="#2B2433"/>' },
   { key: "puerta", label: "Puerta", svg: '<rect x="8" y="22" width="86" height="62" fill="#000" opacity=".2"/><rect x="4" y="18" width="86" height="62" fill="#A7A196"/><path d="M28 80V50a19 19 0 0 1 38 0v30Z" fill="#1A1620"/><path d="M33 52v28M41 46v34M49 44v36M57 46v34M63 52v28M28 60h38M28 70h38" stroke="#6B6474" stroke-width="3"/>' },
   { key: "puente", label: "Puente", svg: '<rect x="14" y="10" width="72" height="80" fill="#000" opacity=".18"/><rect x="10" y="6" width="72" height="80" fill="#8A5A2B"/><path d="M10 22h72M10 38h72M10 54h72M10 70h72" stroke="#5A3A22" stroke-width="3"/><path d="M14 6v80M78 6v80" stroke="#4A4452" stroke-width="4"/>' },
@@ -10094,7 +10095,7 @@ function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChang
       ))}
       {props.map((pr) => (
         <div key={pr.id} className="mh-map-prop" style={at(pr.x, pr.y)} title={MAP_PROPS.find((m) => m.key === pr.kind)?.label}>
-          <svg viewBox="0 0 100 100" dangerouslySetInnerHTML={{ __html: propSvg(pr.kind) }} />
+          <svg viewBox="0 0 100 100" dangerouslySetInnerHTML={{ __html: propSvg(pr.rot && pr.kind === "carro" ? "carrovolcado" : pr.kind) }} />
         </div>
       ))}
       {stampTool && hover && !propAt(hover.x, hover.y) && (
@@ -11463,6 +11464,7 @@ export default function App({ onSignOut }) {
   const [chTab, setChTab] = useState("dialogos"); // pestaña abierta del capítulo en «Historia»
   const ambBtn = useRef(null);
   const [ambOpen, setAmbOpen] = useState(false); // ventana de «Ambiente» (audio de la mesa)
+  const [mapPick, setMapPick] = useState({}); // por capítulo: mapa de combate elegido
   const [dlgStart, setDlgStart] = useState({}); // por capítulo: { convId, lineId } con lo que el DJ quiere decir primero
   const [clueDlg, setClueDlg] = useState(null); // popup «Pista» del DJ: { rect, sel, title, text }
   const [diceDlg, setDiceDlg] = useState(null); // ventana «Dados» del DJ: { counts, priv }
@@ -15316,15 +15318,15 @@ export default function App({ onSignOut }) {
     if (combatBack === id) setCombatBack(null);
   };
   // Pasar al combate: pone el capítulo en pantalla con el tablero (y carga el mapa elegido).
-  const startCombat = async (sceneId, savedMap) => {
+  const startCombat = async (sceneId, savedMap, stay) => {
     if (!viewingCampaignId) return;
     const scenes = stageScenesOf(campaignStage);
     const sc = scenes.find((x) => x.id === sceneId);
-    if (savedMap && !(await loadSavedMap(savedMap))) return;
+    if (savedMap && !(await loadSavedMap(savedMap, true))) return;
     await saveStage(viewingCampaignId, { live: "mapa", tlStep: "cmb", ...(sc ? { scenes, activeSceneId: sc.id, scene: { title: sc.title, image: sc.image, fx: sc.fx || [] } } : {}) });
     postChat(viewingCampaignId, { kind: "event", author: "El DJ", gm: true, icon: "mapa", text: "pasa al combate" + (sc ? " en «" + (sc.title || "Sin título") + "»" : "") });
     setCombatBack(sceneId);
-    setCampaignDetailTab("mapa");
+    if (!stay) setCampaignDetailTab("mapa");
   };
   const updateCast = (id, patch) => saveCast(campaignCast.map((m) => (m.id === id ? { ...m, ...patch } : m)));
   const saveEncounters = async (next) => {
@@ -15497,8 +15499,8 @@ export default function App({ onSignOut }) {
     await safeSet("campaign-maps:" + viewingCampaignId, JSON.stringify(next), true);
   };
   // Cargar un mapa guardado: sustituye terreno, decorados, enemigos y cuentas atrás; las fichas de los jugadores se quedan.
-  const loadSavedMap = async (m) => {
-    if (!viewingCampaignId || !window.confirm("¿Cargar «" + m.name + "»? Sustituye el mapa actual (las fichas de los jugadores se quedan).")) return false;
+  const loadSavedMap = async (m, skipConfirm) => {
+    if (!viewingCampaignId || (!skipConfirm && !window.confirm("¿Cargar «" + m.name + "»? Sustituye el mapa actual (las fichas de los jugadores se quedan)."))) return false;
     const keep = (campaignMap.tokens || []).filter((t) => t.kind === "pc" || t.kind === "pet");
     const next = { tokens: [...(m.map.tokens || []).map((t) => ({ ...t })), ...keep], props: m.map.props || [], terrain: m.map.terrain || [], counters: m.map.counters || [], ...(m.map.fog ? { fog: m.map.fog } : {}), areas: [], hits: [], log: [] };
     setCampaignMap(next);
@@ -28688,10 +28690,10 @@ export default function App({ onSignOut }) {
                                 onIsoChange={toggleMapIso}
                                 hideIsoBtn
                                 tokens={mapTokensView(campaignMap.tokens || []).map((t) => (t.kind !== "pc" && t.gmHidden ? { ...t, hidden: true, gmVeil: true } : t))}
-                                canMove={() => false}
-                                onMove={() => {}}
-                                selectedId={null}
-                                onSelect={() => {}}
+                                canMove={() => true}
+                                onMove={(id, x, y) => moveToken(viewingCampaignId, id, x, y)}
+                                selectedId={mapSel}
+                                onSelect={setMapSel}
                                 compact
                               />
                             </MapViewport>
@@ -28726,7 +28728,7 @@ export default function App({ onSignOut }) {
                       if (!x) return;
                       if (x.k === "img") showScene(x.sc.id);
                       else if (x.k === "dlg") saveStage(viewingCampaignId, { live: "escena", dialogue: null, tlStep: "dlg" });
-                      else startCombat(x.sc.id, x.maps.length === 1 ? x.maps[0] : null);
+                      else startCombat(x.sc.id, x.maps.find((m) => m.id === mapPick[x.sc.id]) || x.maps[0], true);
                     };
                     const STEP_META = { img: { I: ImageIcon, n: "Imagen y efectos" }, dlg: { I: MessageSquareQuote, n: "Diálogo" }, cmb: { I: Swords, n: "Combate" } };
                     const tlNext = tl[tlCur + 1] || null;
@@ -28821,7 +28823,14 @@ export default function App({ onSignOut }) {
                                           <button type="button" className="mh-btn-ghost" onClick={() => (setCombatBack(cur?.id || null), setCampaignDetailTab("mapa"))}>Abrir tablero</button>
                                         </>
                                       ) : (
-                                        <button type="button" className="mh-btn" onClick={() => goStep(x)}><Swords size={13} /> Pasar al combate</button>
+                                        <>
+                                          {x.maps.length > 1 && (
+                                            <select className="mh-input" aria-label="Mapa de combate" value={mapPick[x.sc.id] || x.maps[0].id} onChange={(e) => setMapPick((d) => ({ ...d, [x.sc.id]: e.target.value }))}>
+                                              {x.maps.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                                            </select>
+                                          )}
+                                          <button type="button" className="mh-btn" onClick={() => goStep(x)}><Swords size={13} /> Pasar al combate</button>
+                                        </>
                                       )}
                                       {nextBtn}
                                     </span>
@@ -29934,7 +29943,7 @@ export default function App({ onSignOut }) {
                           iso={mapIso}
                           onIsoChange={toggleMapIso}
                           tokens={mapTokensView(tokens).map((t) => (t.kind !== "pc" && t.gmHidden ? { ...t, hidden: true, gmVeil: true } : t))}
-                          canMove={(t) => t.kind === "npc" || t.kind === "foe"}
+                          canMove={() => true}
                           onMove={(id, x, y) => moveToken(viewingCampaignId, id, x, y)}
                           selectedId={mapSel}
                           onSelect={setMapSel}

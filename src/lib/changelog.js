@@ -6,6 +6,8 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "arreglo", text: "Directo: al pasar al combate ya no sale la ventana del navegador ni te lleva a Historia. El tablero preparado aparece en el monitor y el DJ puede mover todas las fichas desde ahí (si el capítulo tiene varios mapas, eliges cuál)." },
+      { tag: "mejora", text: "Nuevo decorado «Carro volcado» (carro de lado, rueda suelta, tablones y fruta por el suelo). Los carros girados de campañas anteriores se ven así automáticamente." },
       { tag: "mejora", text: "Directo: cuando los jugadores están en el mapa de combate, el DJ lo ve también en su monitor, con un botón para abrir el tablero." },
       { tag: "mejora", text: "Directo, paso «Diálogo»: ahora el DJ elige la conversación y qué frase se dice primero antes de empezar." },
       { tag: "nuevo", text: "Al cambiar de capítulo aparece en la pantalla de los jugadores el título del capítulo con una ligera animación." },
