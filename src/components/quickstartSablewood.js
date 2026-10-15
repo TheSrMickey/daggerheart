@@ -135,10 +135,10 @@ export function buildSablewood() {
   const stage = { live: "escena", scenes, activeSceneId: S.cart, scene: { title: scenes[0].title, image: scenes[0].image }, handouts };
 
   const cast = [
-    { id: C.arcanist, name: "La Arcanista Fuegoblanco", imgs: {} },
-    { id: C.fidget, name: "Fidget", imgs: {} },
-    { id: C.lausa, name: "Lausa Standworth", imgs: {} },
-    { id: C.halython, name: "Halython Fives", imgs: {} },
+    { id: C.arcanist, name: "La Arcanista Fuegoblanco", imgs: {}, kind: "Aliado", role: "Hechicera del rey" },
+    { id: C.fidget, name: "Fidget", imgs: {}, kind: "Neutral", role: "Vecino curioso de Hush" },
+    { id: C.lausa, name: "Lausa Standworth", imgs: {}, kind: "Neutral", role: "Herrera de Hush" },
+    { id: C.halython, name: "Halython Fives", imgs: {}, kind: "Neutral", role: "Vecino de Hush" },
   ];
 
   const convs = [
@@ -188,36 +188,42 @@ export function buildSablewood() {
   const encounters = [
     {
       id: uid("e"),
+      sceneId: S.cart,
       name: "Acto 1 · El carro volcado",
       notes:
         "Lee: el grupo llega al Sablewood al anochecer (árboles colosales, caminos hundidos, animales híbridos: polillas-alondra, sapos-lémur, murciélagos-zorro). Pregunta quién conduce el carruaje y qué tienen de especial los árboles; usa su respuesta.\n\nEn una curva hay un carro de mercader volcado que bloquea el paso, con fruta por el suelo. Una madre strixwolf (cuerpo de lobo, cara de búho, alas) se come la mano del mercader muerto y os mira con curiosidad; detrás, dos crías.\n\nPrimera tirada: quien se acerque hace una tirada de Presencia (Dificultad 10).\n• Éxito: calma a sus crías. Con Miedo, añade una complicación (aúlla y parece llamar a otro strixwolf).\n• Fallo con Esperanza: sube a las crías al lomo y vuela a una rama a vigilar.\n• Fallo con Miedo: gruñe y el PJ marca 1 Estrés.\n• Crítico: el PJ gana Esperanza y puede quitarse 1 Estrés; ella se acerca con la cabeza gacha y se sienta.\n\nMapa: «Acto 1 · El carro volcado» (ya cargado).",
     },
     {
       id: uid("e"),
+      sceneId: S.ambush,
       name: "Acto 2 · Ladrones de la espesura",
       notes:
         "Tras el acto 1:\n• Si registran el carro: está desvalijado. Si examinan el cuerpo, al mercader le cortaron el cuello (pista «El cuerpo del mercader»).\n• Si atacan al strixwolf: Dificultad 10; las crías huyen.\n• Si buscan algo raro: zarzas en la rueda y por el camino (pista «Zarzas en la rueda»).\n• Si mueven el carro, intentan seguir o salen del camino: emboscada.\n\nLa emboscada: un PJ atento hace una tirada de Instinto (14).\n• Éxito: ven a cuatro de la gente del Cardo acercarse. El grupo actúa primero. Con Miedo, el PJ marca 1 Estrés.\n• Fallo: emboscada. Los Emboscadores actúan primero con su reacción Emboscada (se ponen en Cuerpo a cuerpo y atacan: 2d4+8 si aciertan). Con Miedo, el PJ también marca 1 Estrés.\n\nCarga el mapa «Acto 2 · Emboscada». Objetivo de la gente del Cardo: los Emboscadores entretienen al grupo mientras el Ladrón intenta llevarse el carruaje. Pregunta qué nivel de violencia prefiere la mesa (¿matar, dejar inconscientes?).\n\nFin: cuando caen todos. Pide un breve montaje del resto del viaje hasta Hush.",
     },
     {
       id: uid("e"),
+      sceneId: S.hush,
       name: "Acto 3 · Buscando a la Arcanista",
       notes:
         "Hush: un pilar de piedra con símbolos enanos marca la entrada; al cruzarlo se nota un pequeño «pop», como una burbuja. Ambiente tranquilo, saludos y música desde la taberna.\n\nVecinos (escena «Acto 3 · La aldea de Hush», conversación «Vecinos de Hush»):\n• Fidget (humano, elle): niño inquieto que enciende los farolillos de los árboles; conoce los atajos y quiere saber cómo es el mundo de fuera.\n• Lausa Standworth (enana, ella): mayor, con barba y un barril de cerveza al hombro; pregunta el nombre y la fecha de forja de cada arma.\n• Halython Fives (clank, él): autómata tranquilo con un murciélago-zorro en el hombro; juega con cartas y bellotas; pregunta por la gente del Cardo.\n\nElige un segundo vecino que sabe dónde vive la Arcanista y que la vio por última vez en la taberna.\n\nLa Taberna del Trébol: seis pisos curvos subiendo por un árbol antiguo. Los recién llegados cuelgan los zapatos en una cuerda; al irse están lustrados y llenos de baratijas. Pide a los jugadores detalles (¿por qué el segundo piso es tan distinto?, ¿a qué huele?, ¿qué costumbre tienen los vecinos?).\n\nOpcional: el Festival del Primer Musgo (pista). Cuando estén listos, muestra la conversación «Dónde está la Arcanista» y la pista «Indicaciones hacia la Arcanista».",
     },
     {
       id: uid("e"),
+      sceneId: S.tree,
       name: "Acto 4 · La casa del árbol",
       notes:
         "Camino al sur por las Granjas Sin Sol: los cultivos tienen un musgo azul que late como un corazón; los árboles tienen cientos de caras talladas. La casa de la Arcanista cuelga de un árbol enorme, sujeta por una cuerda gruesa como el brazo de un gigante y un contrapeso de piedra con símbolos; las ventanas brillan con luz verde amarillenta.\n\n• Si llaman desde abajo: no responde, pero la luz parpadea.\n• Si intentan cortar la cuerda: salen despedidos y marcan 1 Estrés.\n• Si trepan: Agilidad (13). Si fallan, una rama los agarra y los deja con suavidad en el suelo.\n\nLa Arcanista: una faérica de dos metros, mezcla de humanoide y luciérnaga, de movimientos lentos y bruscos; mayor pero ágil y pícara. Despliega su casa como una flor para meter la caja.\n\nAl abrirla: la piedra angular del arco de la capital (pista «La piedra angular»). Marlowe la reconoce. Usa la conversación «La Arcanista». Si el grupo quiere ayudar, salta al acto 5.",
     },
     {
       id: uid("e"),
+      sceneId: S.vale,
       name: "Acto 5 · El Valle Abierto",
       notes:
         "Un claro perfectamente circular, el único sitio del bosque donde se ve el cielo: aquí la Arcanista forjó los pilares que protegen Hush (y casi muere).\n\nDescanso corto: cada PJ elige dos opciones (puede repetir): Curar heridas (1d4+1 PV, o a un aliado), Quitarse Estrés (1d4+1), Reparar armadura (1d4+1 casillas), Prepararse (1 Esperanza; si se preparan juntos, 2 cada uno). El DJ gana 1d4 de Miedo.\n\nEl ritual: carga el mapa «Acto 5 · El Valle Abierto». La Arcanista en el centro; cuatro Esqueletos antiguos a alcance Cercano y dos Espectros del bosque a alcance Lejano.\n\nCuenta atrás del ritual: empieza en 8 (ya creada en el mapa). Baja 1 cada vez que cae un adversario y sube 1 cada vez que golpean a la Arcanista (Dificultad 11; no marca PV ni Estrés, el daño es narrativo). Al llegar a 0, el ritual termina.\n\nEntorno · Venganza del Valle (Acción): gasta un Miedo para que salgan dos Esqueletos antiguos a alcance Muy cercano de un PJ. Úsalo si la cuenta atrás va lenta o si los Espectros han Desligado a mucha gente.\n\nSi nadie más está a su alcance, los adversarios atacan a la Arcanista. Movimiento de muerte: si un PJ marca su último PV, queda inconsciente hasta que lo curen o pase el peligro.",
     },
     {
       id: uid("e"),
+      sceneId: S.end,
       name: "Epílogo · La piedra angular",
       notes:
         "Al terminar el ritual, el carruaje cae al suelo y una explosión silenciosa sale de la Arcanista y disipa a los enemigos que queden.\n\nUna hora después, en la casa del árbol, la piedra flota sobre el fuego. La Arcanista, más vieja que antes, descansa en un sillón (conversación «Despedida»).\n\nPlano final: el bosque desde arriba, con agujas de piedra retorcidas sobresaliendo de las copas, cada una con una llama dentro. Pista «La Aguja del oeste».\n\nFin de la sesión.",
@@ -255,9 +261,9 @@ export function buildSablewood() {
     counters: [{ id: uid("k"), name: "Ritual", value: 8, visible: true }],
   };
   const maps = [
-    { id: uid("m"), name: "Acto 1 · El carro volcado", map: map1 },
-    { id: uid("m"), name: "Acto 2 · Emboscada", map: map2 },
-    { id: uid("m"), name: "Acto 5 · El Valle Abierto", map: map3 },
+    { id: uid("m"), sceneId: S.cart, name: "Acto 1 · El carro volcado", map: map1 },
+    { id: uid("m"), sceneId: S.ambush, name: "Acto 2 · Emboscada", map: map2 },
+    { id: uid("m"), sceneId: S.vale, name: "Acto 5 · El Valle Abierto", map: map3 },
   ];
   return { campaign, stage, cast, convs, encounters, maps, liveMap: { ...map1 } };
 }
