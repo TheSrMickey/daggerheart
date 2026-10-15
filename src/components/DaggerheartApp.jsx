@@ -5893,8 +5893,8 @@ const sharedStyles = `
   .mh-amb-un { padding: 5px 10px; border-radius: 999px; border: 1px solid rgba(227,176,75,.6); background: rgba(227,176,75,.16); color: var(--mh-gold-ink); font: 700 11.5px 'Inter', system-ui, sans-serif; cursor: pointer; white-space: nowrap; } .mh-amb-un.is-wide { width: 100%; padding: 9px; }
   .mh-amb-pop { position: fixed; z-index: 60; display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 18px; background: var(--mh-panel); border: 1px solid var(--mh-line2); box-shadow: 0 22px 50px -18px rgba(0,0,0,.65); color: var(--mh-ink); }
   .mh-amb-pop .mh-amb-now { padding: 8px; gap: 10px; } .mh-amb-pop .mh-amb-play { width: 36px; height: 36px; } .mh-amb-pop .mh-amb-vol input[type=range] { width: 70px; } .mh-amb-pop .mh-amb-list { max-height: 150px; overflow-y: auto; } .mh-amb-ib.is-busy { opacity: .5; }
-  .mh-amb-bg, .mh-dd-bg { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px; background: rgba(6,6,16,.6); }
-  .mh-amb-box, .mh-dd { width: min(480px, 100%); max-height: calc(100dvh - 32px); overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 18px 20px; border-radius: 22px; background: var(--mh-panel); border: 1px solid var(--mh-line2); box-shadow: 0 30px 70px -20px rgba(0,0,0,.7); color: var(--mh-ink); }
+  .mh-amb-bg { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px; background: rgba(6,6,16,.6); }
+  .mh-amb-box { width: min(480px, 100%); max-height: calc(100dvh - 32px); overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 18px 20px; border-radius: 22px; background: var(--mh-panel); border: 1px solid var(--mh-line2); box-shadow: 0 30px 70px -20px rgba(0,0,0,.7); color: var(--mh-ink); }
   .mh-amb-h, .mh-dd-h { display: flex; align-items: center; gap: 8px; font-size: 16px; color: var(--mh-gold-ink); } .mh-amb-h b, .mh-dd-h b { color: var(--mh-ink); }
   .mh-amb-sub, .mh-dd-sub { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--mh-muted); }
   .mh-amb-now { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 16px; background: var(--mh-panel2); border: 1px solid var(--mh-line); }
@@ -5905,13 +5905,13 @@ const sharedStyles = `
   .mh-amb-rb { flex: 1; min-width: 0; display: flex; align-items: center; gap: 9px; padding: 6px 8px; border: 0; background: none; color: var(--mh-ink); font: 600 13px 'Inter', system-ui, sans-serif; cursor: pointer; text-align: left; } .mh-amb-rb span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .mh-amb-rb small { color: var(--mh-muted); font-weight: 500; }
   .mh-amb-add { display: flex; flex-direction: column; gap: 8px; padding-top: 12px; border-top: 1px solid var(--mh-line); } .mh-amb-lbl { font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--mh-muted); }
   .mh-amb-addrow { display: flex; gap: 8px; } .mh-amb-addrow .mh-input { flex: 1; min-width: 0; } .mh-amb-addrow .mh-btn-ghost, .mh-amb-file { display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; } .mh-amb-file.is-busy { opacity: .6; }
-  .mh-dd-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-  .mh-dd-die { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 8px; border-radius: 16px; border: 1px solid var(--mh-line); background: var(--mh-panel2); } .mh-dd-die.is-on { border-color: rgba(227,176,75,.7); background: rgba(227,176,75,.1); } .mh-dd-die b { font: 700 20px 'Cormorant Garamond', Georgia, serif; letter-spacing: .04em; }
-  .mh-dd-step { display: flex; align-items: center; gap: 9px; } .mh-dd-step span { min-width: 18px; text-align: center; font-weight: 800; } .mh-dd-step button { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 8px; border: 1px solid var(--mh-line2); background: var(--mh-panel); color: var(--mh-ink); cursor: pointer; } .mh-dd-step button:disabled { opacity: .35; cursor: default; }
-  .mh-dd-vis { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-radius: 16px; background: var(--mh-panel2); border: 1px solid var(--mh-line); }
-  .mh-dd-vl { display: flex; justify-content: space-between; } .mh-dd-vl span { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; color: var(--mh-muted); } .mh-dd-vl span.is-on { color: var(--mh-gold-ink); }
-  .mh-dd-vis input[type=range] { width: 100%; accent-color: var(--mh-gold-ink); } .mh-dd-vis small { font-size: 11.5px; color: var(--mh-muted); }
-  .mh-dd-acts { display: flex; justify-content: flex-end; gap: 8px; } .mh-dd-acts .mh-btn { display: inline-flex; align-items: center; gap: 6px; }
+  .mh-dd { position: fixed; z-index: 60; display: flex; flex-direction: column; gap: 10px; padding: 10px; border-radius: 18px; background: var(--mh-panel); border: 1px solid var(--mh-line2); box-shadow: 0 22px 50px -18px rgba(0,0,0,.65); color: var(--mh-ink); }
+  .mh-dd-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .mh-dd-die { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 8px 4px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel2); } .mh-dd-die.is-on { border-color: rgba(227,176,75,.7); background: rgba(227,176,75,.1); } .mh-dd-die b { font: 700 16px 'Cormorant Garamond', Georgia, serif; letter-spacing: .04em; }
+  .mh-dd-step { display: flex; align-items: center; gap: 6px; } .mh-dd-step span { min-width: 14px; text-align: center; font-weight: 800; font-size: 13px; } .mh-dd-step button { width: 22px; height: 22px; display: grid; place-items: center; border-radius: 7px; border: 1px solid var(--mh-line2); background: var(--mh-panel); color: var(--mh-ink); cursor: pointer; padding: 0; } .mh-dd-step button:disabled { opacity: .35; cursor: default; }
+  .mh-dd-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .mh-dd-sw { display: flex; align-items: center; gap: 9px; cursor: pointer; } .mh-dd-sw span { display: flex; flex-direction: column; line-height: 1.2; } .mh-dd-sw b { font-size: 12.5px; } .mh-dd-sw small { font-size: 10.5px; color: var(--mh-muted); }
+  .mh-dd-foot .mh-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; }
   .mh-chat-void { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; flex: 1; min-height: 140px; padding: 20px; text-align: center; color: var(--mh-muted); font-size: 13px; }
   .mh-chat-void img { width: 64px; height: 64px; object-fit: contain; opacity: .16; filter: drop-shadow(0 0 10px #9db8ff55); } html[data-mh-theme="light"] .mh-chat-void img { filter: invert(1); opacity: .2; }
   /* Historia (capítulos), PNJ y capítulo en curso */
@@ -16654,6 +16654,20 @@ export default function App({ onSignOut }) {
       safeSet("campaign-diceshow:" + viewingCampaignId, JSON.stringify({ id: key, cid: diceClient.current, who: "El DJ", dice, parts, total, label, ts: key }), true);
     }
   };
+  useEffect(() => {
+    if (!diceDlg) return undefined;
+    const away = (e) => {
+      if (e.target.closest && (e.target.closest(".mh-dd") || e.target.closest("[data-dice-btn]"))) return;
+      setDiceDlg(null);
+    };
+    const esc = (e) => e.key === "Escape" && setDiceDlg(null);
+    document.addEventListener("mousedown", away);
+    document.addEventListener("keydown", esc);
+    return () => {
+      document.removeEventListener("mousedown", away);
+      document.removeEventListener("keydown", esc);
+    };
+  }, [!!diceDlg]); // eslint-disable-line react-hooks/exhaustive-deps
   // Tiradas públicas del DJ: el resto de la mesa las ve en su pantalla.
   useEffect(() => {
     if (!stageCampaignId) return undefined;
@@ -27546,42 +27560,41 @@ export default function App({ onSignOut }) {
 
   return (
     <div className={"mh-root" + (isMobile ? " is-mobile" : "")} style={{ display: "flex", flexDirection: isMobile ? "column" : "row", height: "100dvh", background: "var(--mh-bg)", fontFamily: "'Inter', system-ui, sans-serif", color: "var(--mh-ink)", overflow: "hidden" }}>
-      {diceDlg && (
-        <div className="mh-dd-bg" onClick={() => setDiceDlg(null)}>
-          <div className="mh-dd" role="dialog" aria-label="Tirar dados" onClick={(e) => e.stopPropagation()}>
-            <div className="mh-dd-h"><Dices size={17} /> <b>Tirar dados</b><button type="button" className="mh-amb-ib is-x" aria-label="Cerrar" onClick={() => setDiceDlg(null)}><X size={16} /></button></div>
-            <p className="mh-dd-sub">¿Qué dados quieres tirar?</p>
+      {diceDlg && (() => {
+        const r = diceDlg.rect;
+        const w = Math.min(300, (typeof window !== "undefined" ? window.innerWidth : 320) - 24);
+        const left = r ? Math.max(12, Math.min(r.right - w, window.innerWidth - w - 12)) : 12;
+        const bottom = r ? window.innerHeight - r.top + 8 : 80;
+        const totalN = Object.values(diceDlg.counts).reduce((a, b) => a + b, 0);
+        return (
+          <div className="mh-dd" role="dialog" aria-label="Tirar dados" style={{ left, bottom, width: w }} onMouseDown={(e) => e.stopPropagation()}>
             <div className="mh-dd-grid">
               {[4, 6, 8, 10, 12, 20].map((sd) => {
                 const n = diceDlg.counts[sd] || 0;
-                const totalN = Object.values(diceDlg.counts).reduce((a, b) => a + b, 0);
                 return (
                   <div key={sd} className={"mh-dd-die" + (n ? " is-on" : "")}>
                     <b>d{sd}</b>
                     <div className="mh-dd-step">
-                      <button type="button" aria-label={"Quitar un d" + sd} disabled={!n} onClick={() => setDiceDlg((x) => ({ ...x, counts: { ...x.counts, [sd]: n - 1 } }))}><Minus size={14} /></button>
+                      <button type="button" aria-label={"Quitar un d" + sd} disabled={!n} onClick={() => setDiceDlg((x) => ({ ...x, counts: { ...x.counts, [sd]: n - 1 } }))}><Minus size={13} /></button>
                       <span>{n}</span>
-                      <button type="button" aria-label={"Añadir un d" + sd} disabled={totalN >= 12} onClick={() => setDiceDlg((x) => ({ ...x, counts: { ...x.counts, [sd]: n + 1 } }))}><Plus size={14} /></button>
+                      <button type="button" aria-label={"Añadir un d" + sd} disabled={totalN >= 12} onClick={() => setDiceDlg((x) => ({ ...x, counts: { ...x.counts, [sd]: n + 1 } }))}><Plus size={13} /></button>
                     </div>
                   </div>
                 );
               })}
             </div>
-            <div className="mh-dd-vis">
-              <div className="mh-dd-vl">
-                <span className={diceDlg.priv ? "is-on" : ""}><EyeOff size={14} /> Privada</span>
-                <span className={!diceDlg.priv ? "is-on" : ""}><Eye size={14} /> Pública</span>
-              </div>
-              <input type="range" min="0" max="1" step="1" value={diceDlg.priv ? 0 : 1} aria-label="Tirada privada o pública" onChange={(e) => setDiceDlg((x) => ({ ...x, priv: e.target.value === "0" }))} />
-              <small>{diceDlg.priv ? "Solo la ves tú." : "Los jugadores de la campaña verán la tirada en su pantalla y en el chat."}</small>
-            </div>
-            <div className="mh-dd-acts">
-              <button type="button" className="mh-btn-ghost" onClick={() => setDiceDlg(null)}>Cancelar</button>
-              <button type="button" className="mh-btn" disabled={!Object.values(diceDlg.counts).some((n) => n > 0)} onClick={rollDmDice}><Dices size={14} /> Tirar</button>
+            <div className="mh-dd-foot">
+              <label className="mh-dd-sw">
+                <button type="button" role="switch" aria-checked={!diceDlg.priv} aria-label="Tirada pública" className="mh-switch" onClick={() => setDiceDlg((x) => ({ ...x, priv: !x.priv }))}>
+                  <span className="mh-switch-knob" />
+                </button>
+                <span><b>{diceDlg.priv ? "Privada" : "Pública"}</b><small>{diceDlg.priv ? "Solo la ves tú" : "La ve toda la mesa"}</small></span>
+              </label>
+              <button type="button" className="mh-btn" disabled={totalN === 0} onClick={rollDmDice}><Dices size={14} /> Tirar</button>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
       {stageCampaignId && (gmViewing || sheetCampaignId) && <Ambient campaignId={stageCampaignId} isGm={gmViewing} open={gmViewing && ambOpen} onClose={() => setAmbOpen(false)} anchorRef={ambBtn} />}
       {dice3d && <Dice3D key={dice3d.key} dice={dice3d.dice} summary={dice3d.summary} onReveal={() => (setDiceHold(false), flushOutcome())} onEnd={() => (setDice3d(null), setDiceHold(false))} />}
       <style>{sharedStyles}</style>
@@ -28588,11 +28601,11 @@ export default function App({ onSignOut }) {
                       <div className="mh-dir-quick">
                         {[
                           { k: "pista", l: "Pista", I: ScrollText, go: () => setCampaignDetailTab("pistas") },
-                          { k: "dados", l: "Dados", I: Dices, go: () => setDiceDlg({ counts: { 4: 0, 6: 0, 8: 0, 10: 0, 12: 0, 20: 1 }, priv: false }) },
+                          { k: "dados", l: "Dados", I: Dices, go: (e) => (diceDlg ? setDiceDlg(null) : setDiceDlg({ counts: { 4: 0, 6: 0, 8: 0, 10: 0, 12: 0, 20: 1 }, priv: false, rect: e.currentTarget.getBoundingClientRect() })) },
                           { k: "foco", l: "Foco", I: MapPinned, go: () => (setCombatBack(cur?.id || null), setCampaignDetailTab("mapa")) },
                           { k: "desc", l: "Descanso", I: BedDouble, go: () => setCampaignDetailTab("descanso") },
                         ].map((q) => (
-                          <button key={q.k} type="button" onClick={q.go}>
+                          <button key={q.k} type="button" data-dice-btn={q.k === "dados" ? "1" : undefined} onClick={q.go}>
                             <q.I size={15} /> {q.l}
                           </button>
                         ))}
