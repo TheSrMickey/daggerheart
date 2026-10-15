@@ -2442,7 +2442,7 @@ const STAGE_TABS = [
 // Campaña del DJ: cuatro espacios con sus secciones.
 const CAMP_SPACES = [
   { key: "directo", label: "Directo", Icon: Radio, tabs: [{ key: "mesa", label: "Directo", Icon: Radio }] },
-  { key: "historia", label: "Historia", Icon: Clapperboard, tabs: [{ key: "historia", label: "Capítulos", Icon: Clapperboard }, { key: "pnj", label: "PNJ", Icon: Users }] },
+  { key: "historia", label: "Historia", Icon: Clapperboard, tabs: [{ key: "historia", label: "Capítulos", Icon: Clapperboard }, { key: "pnj", label: "PNJ", Icon: Users }, { key: "mapas", label: "Mapas", Icon: MapPinned }] },
   {
     key: "grupo",
     label: "Grupo",
@@ -5750,10 +5750,10 @@ const sharedStyles = `
   .mh-gm-dlg { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 20px; }
   .mh-gm-dlg-col { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
   /* Campaña del DJ en cristal: cuatro espacios */
-  .mh-cg { position: relative; isolation: isolate; padding: 18px; border-radius: 28px; overflow: hidden; }
-  .mh-cg-bg { position: absolute; inset: -40px; z-index: -2; background: #2B3A4F center / cover no-repeat; filter: blur(34px) brightness(.42) saturate(1.25); transform: scale(1.05); }
+  .mh-cg { position: relative; isolation: isolate; padding: 18px; border-radius: 28px; overflow: hidden; min-height: calc(100dvh - 150px); }
+  .mh-cg-bg { position: absolute; inset: -40px; z-index: -2; background: #2B3A4F center / cover no-repeat; filter: blur(34px) brightness(.5) saturate(1.3); transform: scale(1.05); }
   .mh-cg-bg.is-blank { background: radial-gradient(60% 50% at 20% 0%, color-mix(in srgb, var(--hc) 45%, #0b0d26), transparent 70%), radial-gradient(50% 50% at 100% 100%, #3a2a6e, transparent 70%), #0b0d26; filter: none; }
-  .mh-cg::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(7,8,22,.25), rgba(7,8,22,.7)); pointer-events: none; }
+  .mh-cg::after { content: ""; position: absolute; inset: 0; z-index: -1; background: radial-gradient(900px 500px at 12% 0%, color-mix(in srgb, var(--hc) 24%, transparent), transparent 60%), radial-gradient(800px 600px at 100% 100%, rgba(165,139,232,.2), transparent 60%), linear-gradient(180deg, rgba(7,8,22,.42), rgba(7,8,22,.82)); pointer-events: none; }
   .mh-cg .mh-camp-hero, .mh-cg .mh-card, .mh-cg .mh-gm-box { background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04)); border: 1px solid rgba(255,255,255,.16); backdrop-filter: blur(22px) saturate(150%); -webkit-backdrop-filter: blur(22px) saturate(150%); box-shadow: 0 26px 60px -26px rgba(0,0,0,.65), inset 0 1px 0 rgba(255,255,255,.2); color: var(--mh-ink); }
   .mh-cg .mh-camp-hero { margin-bottom: 14px; color: #fff; }
   .mh-cg-nav { display: flex; gap: 4px; padding: 5px; width: fit-content; max-width: 100%; margin: 0 0 12px; border-radius: 999px; background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.05)); border: 1px solid rgba(255,255,255,.18); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); box-shadow: 0 12px 32px -16px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.2); overflow-x: auto; scrollbar-width: none; }
@@ -5765,27 +5765,71 @@ const sharedStyles = `
   .mh-cg-sub button { display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; border-radius: 999px; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.07); color: #cfd3f5; font: 600 12.5px 'Inter', system-ui, sans-serif; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
   .mh-cg-sub button.is-on { background: rgba(227,176,75,.16); border-color: rgba(227,176,75,.6); color: #f4d68b; }
   .mh-cg .mh-gm-sc, .mh-cg .mh-gm-castm, .mh-cg .mh-ch-step, .mh-cg .mh-ch-map, .mh-cg .mh-ch-enc, .mh-cg .mh-ch-npc { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.14); }
+  .mh-cg-head { display: flex; align-items: center; gap: 12px; padding: 12px 18px; margin-bottom: 14px; border-radius: 22px; background: linear-gradient(180deg, rgba(255,255,255,.11), rgba(255,255,255,.045)); border: 1px solid rgba(255,255,255,.17); backdrop-filter: blur(22px) saturate(150%); -webkit-backdrop-filter: blur(22px) saturate(150%); box-shadow: 0 26px 60px -26px rgba(0,0,0,.65), inset 0 1px 0 rgba(255,255,255,.22); color: var(--mh-ink); }
+  .mh-cg-back { width: 34px; height: 34px; flex: none; display: grid; place-items: center; border-radius: 11px; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.07); color: #cfd3f5; cursor: pointer; }
+  .mh-cg-emb { width: 48px; height: 48px; flex: none; display: grid; place-items: center; border-radius: 50%; color: #bfe6bc; background: linear-gradient(135deg, color-mix(in srgb, var(--hc) 55%, #18382a), #18382a); border: 2px solid color-mix(in srgb, var(--hc) 70%, #fff 0%); }
+  .mh-cg-tit { min-width: 0; } .mh-cg-name { font-size: 22px; line-height: 1.1; outline: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mh-cg-sub1 { font-size: 12.5px; color: #a3a9d4; margin-top: 3px; } .mh-cg-sub1 b { color: #a3a9d4; font-weight: 600; } .mh-cg-sub1 b.is-on { color: #7fe0a0; }
+  .mh-cg-sp { flex: 1; }
+  .mh-cg-avs { display: flex; } .mh-cg-av { position: relative; width: 36px; height: 36px; margin-left: -9px; border-radius: 50%; display: grid; place-items: center; font: 700 14px 'Inter', system-ui, sans-serif; color: #fff; background: radial-gradient(circle at 35% 30%, var(--c), #14142c); border: 2px solid rgba(255,255,255,.3); } .mh-cg-av:first-child { margin-left: 0; }
+  .mh-cg-av i { position: absolute; right: -2px; bottom: -2px; width: 11px; height: 11px; border-radius: 50%; border: 2px solid #0b0d26; background: #6b6f94; } .mh-cg-av i.is-on { background: #58d68d; } .mh-cg-av i.is-away { background: #E3B04B; }
+  .mh-cg-btn { display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.1); color: #eef0ff; font: 700 12.5px 'Inter', system-ui, sans-serif; cursor: pointer; white-space: nowrap; }
+  .mh-cg-trash { width: 34px; height: 34px; flex: none; display: grid; place-items: center; border-radius: 11px; border: 1px solid rgba(255,122,102,.35); background: rgba(255,122,102,.1); color: #ff9b8a; cursor: pointer; } .mh-cg-trash.is-confirm { background: #D9644E; color: #fff; }
+  .mh-cg-navrow { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; } .mh-cg-navrow .mh-cg-nav { margin: 0; }
+  .mh-cg-acts { display: flex; gap: 8px; margin-left: auto; }
+  .mh-cg-soon { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 30; padding: 10px 18px; border-radius: 999px; background: rgba(12,14,40,.92); border: 1px solid rgba(227,176,75,.6); color: #f4d68b; font: 700 13px 'Inter', system-ui, sans-serif; box-shadow: 0 16px 40px -12px rgba(0,0,0,.7); }
+  .mh-cg-gold { display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 13px; border: 1px solid rgba(255,230,160,.8); background: linear-gradient(180deg, #f0c264, #d9a23c); color: #1c1405; font: 800 13px 'Inter', system-ui, sans-serif; cursor: pointer; box-shadow: 0 10px 26px -10px rgba(227,176,75,.8), inset 0 1px 0 rgba(255,255,255,.5); }
+  /* Historia: lista de capítulos + capítulo abierto */
+  .mh-hs { display: grid; grid-template-columns: 330px minmax(0, 1fr); gap: 14px; align-items: start; }
+  .mh-hs-list { display: flex; flex-direction: column; gap: 9px; padding: 14px; border-radius: 22px; background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04)); border: 1px solid rgba(255,255,255,.16); backdrop-filter: blur(22px) saturate(150%); -webkit-backdrop-filter: blur(22px) saturate(150%); box-shadow: 0 26px 60px -26px rgba(0,0,0,.65), inset 0 1px 0 rgba(255,255,255,.2); }
+  .mh-hs-row { display: flex; align-items: center; gap: 6px; padding: 7px; border-radius: 16px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04); }
+  .mh-hs-row.is-on { border-color: rgba(227,176,75,.7); background: rgba(227,176,75,.12); }
+  .mh-hs-row-b { flex: 1; min-width: 0; display: flex; align-items: center; gap: 11px; padding: 0; border: 0; background: none; color: inherit; text-align: left; cursor: pointer; }
+  .mh-hs-thumb { width: 78px; height: 54px; flex: none; border-radius: 11px; background: #2B3A4F center / cover no-repeat; } .mh-hs-thumb.is-blank { background-image: linear-gradient(#2B3A4F, #6E7F8C 58%, #C9A879); }
+  .mh-hs-row-t { display: flex; flex-direction: column; min-width: 0; }
+  .mh-hs-row-t small { font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #a3a9d4; } .mh-hs-row-t small em { font-style: normal; color: #ff9b8a; }
+  .mh-hs-row-t b { font-size: 13px; color: var(--mh-ink); line-height: 1.25; }
+  .mh-hs-cnt { display: flex; gap: 10px; margin-top: 2px; font-size: 11px; color: #a3a9d4; } .mh-hs-cnt span { display: inline-flex; align-items: center; gap: 3px; }
+  .mh-hs-mv { display: flex; flex-direction: column; gap: 2px; }
+  .mh-hs-add { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 11px; border-radius: 16px; border: 1.5px dashed rgba(255,255,255,.22); background: transparent; color: #cfd3f5; font: 600 13px 'Inter', system-ui, sans-serif; cursor: pointer; }
+  .mh-hs-presets { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; } .mh-hs-presets button { display: flex; flex-direction: column; gap: 4px; padding: 0; border: 0; background: none; color: #cfd3f5; cursor: pointer; text-align: left; } .mh-hs-presets span { aspect-ratio: 16 / 10; border-radius: 9px; background: #2B3A4F center / cover no-repeat; } .mh-hs-presets em { font-style: normal; font-size: 10.5px; }
+  .mh-hs-detail { border-radius: 22px; overflow: hidden; background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04)); border: 1px solid rgba(255,255,255,.16); backdrop-filter: blur(22px) saturate(150%); -webkit-backdrop-filter: blur(22px) saturate(150%); box-shadow: 0 26px 60px -26px rgba(0,0,0,.65), inset 0 1px 0 rgba(255,255,255,.2); }
+  .mh-hs-banner { position: relative; height: 170px; background: #2B3A4F center / cover no-repeat; display: flex; align-items: flex-end; gap: 12px; padding: 16px 22px; } .mh-hs-banner.is-blank { background-image: linear-gradient(#2B3A4F, #6E7F8C 58%, #C9A879); }
+  .mh-hs-banner::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 20%, rgba(8,10,30,.9)); pointer-events: none; } .mh-hs-banner > * { position: relative; }
+  .mh-hs-back { display: none; position: absolute !important; left: 14px; top: 14px; width: 34px; height: 34px; place-items: center; border-radius: 11px; border: 1px solid rgba(255,255,255,.25); background: rgba(8,10,30,.6); color: #fff; cursor: pointer; }
+  .mh-hs-bt { display: flex; flex-direction: column; flex: 1; min-width: 0; } .mh-hs-bt small { font-size: 10.5px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #cfd3f5; } .mh-hs-bt small em { font-style: normal; color: #ff9b8a; } .mh-hs-bt .mh-serif { font-size: 26px; line-height: 1.1; color: #fff; }
+  .mh-hs-bacts { display: flex; align-items: center; gap: 8px; } .mh-hs-bacts .mh-btn, .mh-hs-bacts .mh-btn-ghost { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 7px 12px; }
+  .mh-hs-tabs { display: flex; align-items: center; gap: 7px; padding: 12px 20px; border-bottom: 1px solid rgba(255,255,255,.1); overflow-x: auto; scrollbar-width: none; }
+  .mh-hs-tabs button { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06); color: #cfd3f5; font: 700 12.5px 'Inter', system-ui, sans-serif; cursor: pointer; white-space: nowrap; }
+  .mh-hs-tabs button.is-on { background: linear-gradient(180deg, #f0c264, #d9a23c); border-color: rgba(255,230,160,.8); color: #1c1405; } .mh-hs-tabs button em { font-style: normal; font-size: 11px; opacity: .8; }
+  .mh-hs-sp { flex: 1; } .mh-hs-fx { font-size: 12px; color: #a3a9d4; white-space: nowrap; }
+  .mh-hs-body { padding: 16px 20px 20px; } .mh-hs-body .mh-gm-box { background: none; border: 0; box-shadow: none; backdrop-filter: none; padding: 0; margin: 0; }
+  .mh-hs-amb .mh-gm-sc-edit { max-width: 640px; }
   /* Directo */
-  .mh-dir { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 16px; align-items: start; }
+  .mh-dir { display: flex; flex-direction: column; gap: 16px; }
+  .mh-dir-top { display: grid; grid-template-columns: minmax(0, 1fr) 372px; grid-template-rows: minmax(0, 1fr) auto; gap: 14px; height: clamp(560px, calc(100dvh - 330px), 780px); }
   .mh-dir-stage { grid-column: 1; padding: 12px; border-radius: 22px; background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04)); border: 1px solid rgba(255,255,255,.16); backdrop-filter: blur(22px) saturate(150%); -webkit-backdrop-filter: blur(22px) saturate(150%); box-shadow: 0 26px 60px -26px rgba(0,0,0,.65), inset 0 1px 0 rgba(255,255,255,.2); display: flex; flex-direction: column; gap: 10px; position: relative; }
   .mh-dir-below { grid-column: 1; padding: 10px; border-radius: 22px; background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04)); border: 1px solid rgba(255,255,255,.16); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); }
-  .mh-dir-side { grid-column: 2; grid-row: 1 / span 2; display: flex; flex-direction: column; gap: 12px; }
+  .mh-dir-side { grid-column: 2; grid-row: 1 / span 2; display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+  .mh-dir-side .mh-dir-chat { flex: 1; min-height: 0; } .mh-dir-side .mh-dir-chat .mh-dir-feed { flex: 1; max-height: none; min-height: 0; }
   .mh-dir-pistas { grid-column: 1 / -1; }
   .mh-dir-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 0 4px; }
   .mh-dir-lbl { font-size: 10px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: #a3a9d4; }
   .mh-dir-live { display: flex; gap: 3px; padding: 3px; border-radius: 999px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14); }
   .mh-dir-live button { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border: 0; border-radius: 999px; background: transparent; color: #cfd3f5; font: 600 12px 'Inter', system-ui, sans-serif; cursor: pointer; }
   .mh-dir-live button.is-on { background: rgba(217,100,78,.22); color: #ffb3a6; }
+  .mh-dir-live button span { display: none; } .mh-dir-live button { padding: 6px 11px; }
   .mh-dir-chnav { display: flex; align-items: center; gap: 5px; margin-left: auto; }
   .mh-dir-chpill { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 6px 13px; border-radius: 999px; border: 1px solid rgba(227,176,75,.5); background: rgba(227,176,75,.14); color: #f4d68b; font: 700 12px 'Inter', system-ui, sans-serif; cursor: pointer; }
   .mh-dir-pause { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 12px; border: 1px solid rgba(255,122,102,.5); background: rgba(255,122,102,.14); color: #ffb3a6; font: 700 12px 'Inter', system-ui, sans-serif; cursor: pointer; }
   .mh-dir-pause.is-on { background: #D9644E; color: #fff; }
+  .mh-dir-top .mh-dir-stage { min-height: 0; } .mh-dir-top .mh-dir-mon { flex: 1; min-height: 0; aspect-ratio: auto; }
   .mh-dir-mon { position: relative; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; background: #2B3A4F center / cover no-repeat; }
   .mh-dir-mon.is-blank { background: radial-gradient(70% 70% at 30% 20%, #3a4a78, #121633); }
   .mh-dir-mon::before { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; background: url(/escenas/vignette.webp) center / 100% 100% no-repeat; }
   .mh-dir-mon > * { position: relative; z-index: 1; }
   .mh-dir-mon .mh-stg-live { position: absolute; left: 12px; top: 12px; }
-  .mh-dir-tag { position: absolute !important; right: 12px; top: 12px; font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; background: rgba(8,8,24,.7); border: 1px solid rgba(255,255,255,.22); color: #f4d68b; }
+  .mh-dir-tag { position: absolute !important; right: 12px; top: 12px; display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; background: rgba(8,8,24,.7); border: 1px solid rgba(255,255,255,.22); color: #9fd0ff; backdrop-filter: blur(8px); }
   .mh-dir-mon .mh-dlg { position: absolute; left: 4%; right: 4%; bottom: 5%; }
   .mh-dir-empty { position: absolute !important; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 20px; color: #cfd3f5; font-size: 13.5px; }
   .mh-dir-steps { display: flex; align-items: stretch; gap: 6px; }
@@ -5804,7 +5848,7 @@ const sharedStyles = `
   .mh-dir-quick { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding: 10px; border-radius: 20px; background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04)); border: 1px solid rgba(255,255,255,.16); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); }
   .mh-dir-quick button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 4px; border-radius: 12px; border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.07); color: #cfd3f5; font: 600 12px 'Inter', system-ui, sans-serif; cursor: pointer; }
   /* Directo · modo inmersivo: la escena ocupa todo el alto y el grupo y el chat se abren como cajones de cristal */
-  .mh-dir.is-imm { grid-template-columns: minmax(0, 1fr); }
+  .mh-dir.is-imm .mh-dir-top { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; height: auto; }
   .mh-dir.is-imm .mh-dir-stage { height: calc(100dvh - 330px); min-height: 480px; }
   .mh-dir.is-imm .mh-dir-mon { flex: 1; min-height: 0; aspect-ratio: auto; }
   .mh-dir.is-imm .mh-dir-mon .mh-dlg { bottom: 6%; left: 6%; right: 6%; }
@@ -5822,15 +5866,20 @@ const sharedStyles = `
   html[data-mh-theme="light"] .mh-dir-lbl { color: #6A6177; } html[data-mh-theme="light"] .mh-dir-live button, html[data-mh-theme="light"] .mh-dir-quick button { color: #4C4458; }
   @media (max-width: 900px) {
     .mh-cg { padding: 10px; border-radius: 22px; }
-    .mh-dir { grid-template-columns: minmax(0, 1fr); }
-    .mh-dir-stage, .mh-dir-below, .mh-dir-side, .mh-dir-pistas { grid-column: 1; grid-row: auto; }
+    .mh-dir-top { display: flex; flex-direction: column; height: auto; }
+    .mh-dir-top .mh-dir-mon { flex: none; aspect-ratio: 16 / 9; }
+    .mh-dir-side .mh-dir-chat { flex: none; } .mh-dir-side .mh-dir-chat .mh-dir-feed { max-height: 220px; }
+    .mh-hs { grid-template-columns: minmax(0, 1fr); } .mh-hs-back { display: grid; } .mh-hs-banner { height: 150px; padding: 12px 14px; } .mh-hs-bt { padding-left: 42px; } .mh-hs-bt .mh-serif { font-size: 19px; } .mh-hs-bacts span { display: none; } .mh-hs-body { padding: 14px 12px 16px; } .mh-hs-presets { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .mh-cg-gold { width: 100%; justify-content: center; }
+    .mh-cg-head { padding: 10px 12px; gap: 9px; } .mh-cg-emb { width: 38px; height: 38px; } .mh-cg-name { font-size: 16px; } .mh-cg-tit { flex: 1; min-width: 0; } .mh-cg-sub1 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 11.5px; } .mh-cg-sp { display: none; } .mh-cg-avs { display: none; } .mh-cg-btn span { display: none; } .mh-cg-btn { padding: 8px 10px; }
+    .mh-cg-navrow { flex-wrap: wrap; } .mh-cg-acts { margin-left: 0; width: 100%; } .mh-cg-acts .mh-dir-pause, .mh-cg-acts .mh-cg-btn { flex: 1; justify-content: center; } .mh-cg-acts .mh-cg-btn span { display: inline; }
     .mh-dir-bar { gap: 6px; } .mh-dir-live button span { display: none; } .mh-dir-live button { padding: 6px 9px; }
     .mh-dir-chnav { margin-left: 0; width: 100%; } .mh-dir-chpill { flex: 1; max-width: none; text-align: center; }
     .mh-dir-pause { margin-left: auto; }
     .mh-dir-steps { flex-direction: column; } .mh-dir-steps .mh-ch-arrow { transform: rotate(90deg); }
     .mh-cg-nav { width: 100%; } .mh-cg-nav button { flex: 1; justify-content: center; padding: 9px 4px; gap: 5px; font-size: 12.5px; }
     .mh-dir-quick button { font-size: 11px; padding: 9px 2px; gap: 4px; }
-    .mh-dir.is-imm .mh-dir-stage { height: calc(100dvh - 250px); min-height: 440px; }
+    .mh-dir.is-imm .mh-dir-top { height: auto; } .mh-dir.is-imm .mh-dir-stage { height: calc(100dvh - 260px); min-height: 440px; }
     .mh-dir.is-imm .mh-dir-steps { flex-direction: row; overflow-x: auto; scrollbar-width: none; }
     .mh-dir.is-imm .mh-dir-steps .mh-ch-step { flex: 0 0 78%; } .mh-dir.is-imm .mh-dir-steps .mh-ch-arrow { display: none; }
     .mh-dir-dtog { margin-left: 0; width: 100%; } .mh-dir-dtog button { flex: 1; justify-content: center; }
@@ -11317,6 +11366,12 @@ export default function App({ onSignOut }) {
   const [dataReadyFor, setDataReadyFor] = useState(null);
   const [stageReadyFor, setStageReadyFor] = useState(null);
   const [pnjFilter, setPnjFilter] = useState("all");
+  const [chTab, setChTab] = useState("dialogos"); // pestaña abierta del capítulo en «Historia»
+  const [soonMsg, setSoonMsg] = useState(null); // aviso de botón que aún no tiene función
+  const soon = (t) => {
+    setSoonMsg(t);
+    setTimeout(() => setSoonMsg(null), 2400);
+  };
   const campLeafMem = useRef({}); // última sección abierta de cada espacio de la campaña
   const [immDrawer, setImmDrawer] = useState(null); // modo inmersivo: cajón de grupo o chat abierto
   // Diálogos: reparto de personajes del DJ (nombre + imagen) y la frase que se envía a los jugadores.
@@ -16694,7 +16749,7 @@ export default function App({ onSignOut }) {
   }, [modernOpen, modernCharId, settings.tutorial]);
   const viewLabel = view === "actualizaciones" ? "Actualizaciones" : view === "ajustes" ? "Ajustes" : view === "inicio" ? "General" : NAV_ITEMS.find((n) => n.key === view)?.label;
   // Migas de pan de la barra superior: los niveles anteriores se pueden pulsar para volver.
-  const CAMP_TAB_LABELS = { mesa: "Mesa", historia: "Historia", pnj: "PNJ", resumen: "Resumen", chat: "Chat", mapa: "Mapa de combate", mundo: "Mapa de mundo", encuentros: "Encuentros", cronica: "Crónica", linea: "Línea de tiempo", calendario: "Calendario", votaciones: "Votaciones", descanso: "Descanso", generadores: "Generadores" };
+  const CAMP_TAB_LABELS = { mesa: "Mesa", historia: "Historia", pnj: "PNJ", mapas: "Mapas", resumen: "Resumen", chat: "Chat", mapa: "Mapa de combate", mundo: "Mapa de mundo", encuentros: "Encuentros", cronica: "Crónica", linea: "Línea de tiempo", calendario: "Calendario", votaciones: "Votaciones", descanso: "Descanso", generadores: "Generadores" };
   const crumbsOf = (items) => (
     <nav className="mh-crumbs" aria-label="Ruta">
       {items.map((it, i) => (
@@ -28086,67 +28141,74 @@ export default function App({ onSignOut }) {
               const availableIds = Object.keys(characters).filter(
                 (id) => !memberIds.includes(id) && !Object.values(campaigns).some((cp) => cp.id !== viewingCampaignId && (cp.characterIds || []).includes(id))
               );
-              const cgScene = stageScenesOf(campaignStage).find((x) => x.id === activeSceneIdOf(campaignStage));
+              const cgScenes = stageScenesOf(campaignStage);
+              const cgCur = cgScenes.find((x) => x.id === activeSceneIdOf(campaignStage)) || null;
+              const cgOnline = table.filter((e) => tableStatus(e) === "on").length;
+              const cgPaused = normSpot(campaignMap.spot).mode === "paused";
+              const cgScene = cgCur;
               const cgImg = cgScene?.image || campaignStage.scene?.image || "";
               return (
                 <div className="mh-cg" style={{ "--hc": campColor(viewingCampaignId) }}>
                   <div className={"mh-cg-bg" + (cgImg ? "" : " is-blank")} style={bgStyle(cgImg)} aria-hidden="true" />
-                  <div className="mh-camp-hero" style={{ "--hc": campColor(viewingCampaignId) }}>
-                    <button type="button" className="mh-camp-back" onClick={() => setViewingCampaignId(null)}>
-                      <ArrowLeft size={14} /> Campañas
+                  {soonMsg && <div className="mh-cg-soon" role="status">{soonMsg} · próximamente</div>}
+                  <header className="mh-cg-head">
+                    <button type="button" className="mh-cg-back" aria-label="Volver a Campañas" title="Campañas" onClick={() => setViewingCampaignId(null)}>
+                      <ArrowLeft size={16} />
                     </button>
-                    <div className="mh-camp-hero-row">
-                      <span className="mh-hero-emb mh-camp-emb" aria-hidden="true">
-                        <BookOpen size={34} strokeWidth={1.5} />
-                      </span>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div
-                          contentEditable
-                          suppressContentEditableWarning
-                          onBlur={(e) => updateCampaign(viewingCampaignId, { name: e.target.textContent })}
-                          className="mh-serif mh-camp-title"
-                        >
-                          {activeCampaign.name}
-                        </div>
-                        <div
-                          contentEditable
-                          suppressContentEditableWarning
-                          onBlur={(e) => updateCampaign(viewingCampaignId, { description: e.target.textContent })}
-                          className="mh-camp-desc"
-                        >
-                          {activeCampaign.description || "Añade una descripción para la campaña..."}
-                        </div>
-                        <div className="mh-hero-tags" style={{ justifyContent: "flex-start", marginTop: 8 }}>
-                          <span className="is-camp">{memberIds.length} personaje{memberIds.length === 1 ? "" : "s"}</span>
-                          {memberIds.slice(0, 4).map((mid) => characters[mid] && <span key={mid} className="is-tf">{characters[mid].f_name}</span>)}
-                        </div>
+                    <span className="mh-cg-emb" aria-hidden="true">
+                      <BookOpen size={24} strokeWidth={1.6} />
+                    </span>
+                    <div className="mh-cg-tit">
+                      <div contentEditable suppressContentEditableWarning onBlur={(e) => updateCampaign(viewingCampaignId, { name: e.target.textContent })} className="mh-serif mh-cg-name" title="Pulsa para renombrar la campaña">
+                        {activeCampaign.name}
                       </div>
-                      <Trash2
-                        size={16}
-                        className="mh-camp-del"
-                        style={{
-                          color: ink(pendingDeleteCampaignId === viewingCampaignId ? "#FFFFFF" : "#D9644E"),
-                          background: pendingDeleteCampaignId === viewingCampaignId ? "#D9644E" : "transparent",
-                          padding: pendingDeleteCampaignId === viewingCampaignId ? 3 : 0,
-                        }}
-                        title={pendingDeleteCampaignId === viewingCampaignId ? "Vuelve a pulsar para confirmar" : "Eliminar campaña"}
-                        onClick={() => {
-                          if (pendingDeleteCampaignId === viewingCampaignId) {
-                            deleteCampaign(viewingCampaignId);
-                            setPendingDeleteCampaignId(null);
-                          } else {
-                            setPendingDeleteCampaignId(viewingCampaignId);
-                            setTimeout(() => setPendingDeleteCampaignId(null), 3000);
-                          }
-                        }}
-                      />
+                      <div className="mh-cg-sub1">
+                        <b className={cgOnline ? "is-on" : ""}>{cgOnline ? cgOnline + " conectado" + (cgOnline === 1 ? "" : "s") : "Nadie conectado"}</b>
+                        <span> · {memberIds.length} personaje{memberIds.length === 1 ? "" : "s"}</span>
+                        {cgScenes.length > 0 && <span> · {cgCur ? "Capítulo " + (cgScenes.indexOf(cgCur) + 1) + " de " + cgScenes.length : cgScenes.length + " capítulos"}</span>}
+                      </div>
                     </div>
-                  </div>
+                    <span className="mh-cg-sp" />
+                    <div className="mh-cg-avs" aria-label="Jugadores">
+                      {memberIds.slice(0, 5).map((mid) => {
+                        const ch = characters[mid];
+                        if (!ch) return null;
+                        const ent = table.find((e) => e.name === ch.f_name);
+                        return (
+                          <span key={mid} className="mh-cg-av" style={{ "--c": classColor(ch.f_class) }} title={ch.f_name}>
+                            {(ch.f_name || "?").charAt(0).toUpperCase()}
+                            <i className={"is-" + (ent ? tableStatus(ent) : "off")} />
+                          </span>
+                        );
+                      })}
+                    </div>
+                    <button type="button" className="mh-cg-btn" onClick={() => soon("Invitar jugadores por enlace")}>
+                      <Plus size={14} /> <span>Invitar</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={"mh-cg-trash" + (pendingDeleteCampaignId === viewingCampaignId ? " is-confirm" : "")}
+                      aria-label="Eliminar campaña"
+                      title={pendingDeleteCampaignId === viewingCampaignId ? "Vuelve a pulsar para confirmar" : "Eliminar campaña"}
+                      onClick={() => {
+                        if (pendingDeleteCampaignId === viewingCampaignId) {
+                          deleteCampaign(viewingCampaignId);
+                          setPendingDeleteCampaignId(null);
+                        } else {
+                          setPendingDeleteCampaignId(viewingCampaignId);
+                          setTimeout(() => setPendingDeleteCampaignId(null), 3000);
+                        }
+                      }}
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </header>
 
                   {(() => {
                     const space = CAMP_SPACES.find((sp) => sp.tabs.some((t) => t.key === campaignDetailTab)) || (campaignDetailTab === "mapa" ? CAMP_SPACES[1] : CAMP_SPACES[0]);
                     return (
                       <>
+                        <div className="mh-cg-navrow">
                         <nav className="mh-cg-nav" role="tablist" aria-label="Espacios de la campaña">
                           {CAMP_SPACES.map((sp) => (
                             <button
@@ -28164,6 +28226,24 @@ export default function App({ onSignOut }) {
                             </button>
                           ))}
                         </nav>
+                        {space.key === "historia" && campaignDetailTab === "historia" && (
+                          <div className="mh-cg-acts">
+                            <button type="button" className="mh-cg-gold" onClick={() => addScene()}>
+                              <Plus size={15} /> <span>Nuevo capítulo</span>
+                            </button>
+                          </div>
+                        )}
+                        {space.key === "directo" && (
+                          <div className="mh-cg-acts">
+                            <button type="button" className={"mh-dir-pause" + (cgPaused ? " is-on" : "")} onClick={() => setSpotMode(viewingCampaignId, cgPaused ? "normal" : "paused")} title={cgPaused ? "Reanudar la mesa" : "Pausar la mesa: los jugadores no pueden mover fichas"}>
+                              {cgPaused ? <Play size={14} /> : <EyeOff size={14} />} <span>{cgPaused ? "Reanudar" : "Pausar la mesa"}</span>
+                            </button>
+                            <button type="button" className="mh-cg-btn" onClick={() => soon("Ambiente: música y sonidos de la escena")}>
+                              <Music size={14} /> <span>Ambiente</span>
+                            </button>
+                          </div>
+                        )}
+                        </div>
                         {space.tabs.length > 1 && campaignDetailTab !== "mapa" && (
                           <div className="mh-cg-sub" role="tablist" aria-label={space.label}>
                             {space.tabs.map((t) => (
@@ -28231,9 +28311,6 @@ export default function App({ onSignOut }) {
                             </button>
                           </div>
                         )}
-                        <button type="button" className={"mh-dir-pause" + (paused ? " is-on" : "")} onClick={() => setSpotMode(viewingCampaignId, paused ? "normal" : "paused")} title={paused ? "Reanudar la mesa" : "Pausar la mesa: los jugadores no pueden mover fichas"}>
-                          {paused ? <Play size={13} /> : <EyeOff size={13} />} {paused ? "Reanudar" : "Pausar la mesa"}
-                        </button>
                         {imm && (
                           <div className="mh-dir-dtog">
                             <button type="button" className={immDrawer === "grupo" ? "is-on" : ""} onClick={() => setImmDrawer(immDrawer === "grupo" ? null : "grupo")}><Users size={14} /> Grupo</button>
@@ -28247,7 +28324,16 @@ export default function App({ onSignOut }) {
                         {live === "escena" ? (
                           <>
                             <SceneFx fx={cur?.fx || stage.scene?.fx || []} />
-                            {cur && <span className="mh-dir-tag">Capítulo {idx + 1}</span>}
+                            {cur && (cur.fx || []).length > 0 && (() => {
+                              const k = cur.fx[0];
+                              const FI = FX_ICONS[k];
+                              return (
+                                <span className="mh-dir-tag">
+                                  {FI && <FI size={11} />} {SCENE_FX.find((fx) => fx.k === k)?.n}
+                                  {cur.fx.length > 1 ? " +" + (cur.fx.length - 1) : ""}
+                                </span>
+                              );
+                            })()}
                             {(cur || stage.scene?.image) && <span className="mh-stg-live"><i />En directo</span>}
                             {!cur && !stage.scene?.image && <div className="mh-dir-empty"><Clapperboard size={28} strokeWidth={1.5} /><div>{scenes.length ? "Elige un capítulo para mostrarlo a los jugadores." : "Crea tu primer capítulo en «Historia»."}</div></div>}
                             {dlg && (
@@ -28352,7 +28438,7 @@ export default function App({ onSignOut }) {
                       <div className="mh-dir-quick">
                         {[
                           { k: "pista", l: "Pista", I: ScrollText, go: () => document.getElementById("mh-dir-pistas")?.scrollIntoView({ behavior: "smooth", block: "start" }) },
-                          { k: "gen", l: "Generar", I: Dices, go: () => setCampaignDetailTab("generadores") },
+                          { k: "dados", l: "Dados", I: Dices, go: () => soon("Tiradas de dados del DJ para la mesa") },
                           { k: "foco", l: "Foco", I: MapPinned, go: () => (setCombatBack(cur?.id || null), setCampaignDetailTab("mapa")) },
                           { k: "desc", l: "Descanso", I: BedDouble, go: () => setCampaignDetailTab("descanso") },
                         ].map((q) => (
@@ -28364,6 +28450,7 @@ export default function App({ onSignOut }) {
                     );
                     return (
                       <div className={"mh-dir" + (imm ? " is-imm" : "")}>
+                        <div className="mh-dir-top">
                         <section className="mh-dir-stage">
                           {barEl}
                           {monEl}
@@ -28379,6 +28466,7 @@ export default function App({ onSignOut }) {
                           </aside>
                         )}
                         {imm && <div className="mh-dir-below">{quickEl}</div>}
+                        </div>
                         <div className="mh-card mh-gm-box is-wide mh-dir-pistas" id="mh-dir-pistas">
                           <div className="mh-gm-h">
                             <ScrollText size={15} /> Pistas para los jugadores
@@ -28437,51 +28525,219 @@ export default function App({ onSignOut }) {
                     const stage = campaignStage;
                     const scenes = stageScenesOf(stage);
                     const activeSceneId = activeSceneIdOf(stage);
-                    const chapter = chapterId ? scenes.find((x) => x.id === chapterId) : null;
                     const fxLabel = (sc) => (sc.fx || []).map((k) => SCENE_FX.find((f) => f.k === k)?.n).filter(Boolean).join(", ");
-                    if (chapter) {
-                      const idx = scenes.indexOf(chapter);
-                      const isLive = chapter.id === activeSceneId;
-                      const chMaps = campaignMaps.filter((m) => m.sceneId === chapter.id);
-                      const chEncs = campaignEncounters.filter((e) => e.sceneId === chapter.id);
-                      return (
-                        <div className="mh-gm">
-                          <div className="mh-card mh-gm-box is-wide">
-                            <div className="mh-ch-bar">
-                              <button type="button" className="mh-btn-ghost" onClick={() => setChapterId(null)}>
-                                <ChevronLeft size={14} /> Todos los capítulos
-                              </button>
-                              <span className="mh-gm-count">Capítulo {idx + 1} de {scenes.length}</span>
-                              <span className="mh-ch-sp" />
-                              <button type="button" className="mh-gm-ib" aria-label="Capítulo anterior" title="Capítulo anterior" disabled={idx <= 0} onClick={() => openChapter(scenes[idx - 1].id)}>
-                                <ChevronLeft size={14} />
-                              </button>
-                              <button type="button" className="mh-gm-ib" aria-label="Capítulo siguiente" title="Capítulo siguiente" disabled={idx >= scenes.length - 1} onClick={() => openChapter(scenes[idx + 1].id)}>
-                                <ChevronRight size={14} />
-                              </button>
-                              {isLive ? (
-                                <button type="button" className="mh-btn-ghost" onClick={hideScene}>
-                                  <EyeOff size={13} /> Quitar de pantalla
-                                </button>
-                              ) : (
-                                <button type="button" className="mh-btn" onClick={() => showScene(chapter.id)}>
-                                  <Eye size={13} /> Mostrar a los jugadores
-                                </button>
-                              )}
-                              <button type="button" className="mh-gm-ib is-del" aria-label={"Borrar " + chapter.title} title="Borrar el capítulo" onClick={() => removeChapter(chapter.id)}>
-                                <Trash2 size={14} />
-                              </button>
-                            </div>
-                            <div className="mh-ch-head">
-                              <div className={"mh-gm-sc-img mh-ch-head-img" + (chapter.image ? "" : " is-blank")} style={bgStyle(chapter.image)}>
-                                {isLive && (
-                                  <span className="mh-stg-live">
-                                    <i />
-                                    En pantalla
-                                  </span>
-                                )}
+                    if (scenes.length === 0) {
+                    return (
+                      <div className="mh-gm">
+                        <div className="mh-card mh-gm-box is-wide">
+                          <div className="mh-gm-h">
+                            <Clapperboard size={15} /> Capítulos
+                            {scenes.length > 0 && <span className="mh-gm-count">{scenes.length}</span>}
+                          </div>
+                          <div className="mh-gm-sub">Cada escena es un capítulo de tu historia: una imagen con efectos para ambientar, diálogos con tus PNJ y, si hace falta, un mapa de combate. Pulsa un capítulo para prepararlo.</div>
+                          {sceneError && <div className="mh-gm-sub" style={{ color: "#D9644E" }}>{sceneError}</div>}
+                          {scenes.length === 0 && (
+                            <div className="mh-ch-flow">
+                              <div className="mh-ch-flow-i">
+                                <ImageIcon size={26} />
+                                <b>1 · Imagen y ambiente</b>
+                                <span>Elige o sube la ilustración y añade efectos: niebla, lluvia, hoguera…</span>
                               </div>
-                              <div className="mh-gm-sc-edit">
+                              <div className="mh-ch-flow-i is-lock">
+                                <Lock size={26} />
+                                <b>2 · Diálogos</b>
+                                <span>Se desbloquean al crear una escena: necesitas un capítulo donde ocurran.</span>
+                              </div>
+                              <div className="mh-ch-flow-i is-lock">
+                                <Lock size={26} />
+                                <b>3 · Mapa de combate</b>
+                                <span>Opcional. Se prepara dentro del capítulo que acaba en pelea.</span>
+                              </div>
+                            </div>
+                          )}
+                          <div className="mh-gm-scenes">
+                            {scenes.map((sc, i) => {
+                              const isLive = sc.id === activeSceneId;
+                              const nD = dialogueConvs.filter((c) => c.sceneId === sc.id).length;
+                              const nM = campaignMaps.filter((m) => m.sceneId === sc.id).length;
+                              const nE = campaignEncounters.filter((e) => e.sceneId === sc.id).length;
+                              return (
+                                <div key={sc.id} className={"mh-gm-sc mh-ch-card" + (isLive ? " is-live" : "")}>
+                                  <button type="button" className={"mh-gm-sc-img mh-ch-card-img" + (sc.image ? "" : " is-blank")} style={bgStyle(sc.image)} onClick={() => openChapter(sc.id)} aria-label={"Abrir el capítulo " + (sc.title || "sin título")}>
+                                    <span className="mh-ch-num">Capítulo {i + 1}</span>
+                                    {isLive && (
+                                      <span className="mh-stg-live">
+                                        <i />
+                                        En pantalla
+                                      </span>
+                                    )}
+                                  </button>
+                                  <div className="mh-ch-trow">
+                                    <div className="mh-gm-sc-t mh-serif" title={sc.title}>{sc.title || "Sin título"}</div>
+                                    <button type="button" className="mh-gm-ib" aria-label="Subir de posición" title="Mover antes" disabled={i === 0} onClick={() => moveScene(sc.id, -1)}>
+                                      <ChevronLeft size={14} />
+                                    </button>
+                                    <button type="button" className="mh-gm-ib" aria-label="Bajar de posición" title="Mover después" disabled={i === scenes.length - 1} onClick={() => moveScene(sc.id, 1)}>
+                                      <ChevronRight size={14} />
+                                    </button>
+                                  </div>
+                                  <div className="mh-ch-chips">
+                                    <span className="mh-ch-chip" title="Diálogos"><MessageSquareQuote size={12} /> {nD}</span>
+                                    <span className="mh-ch-chip" title="Mapas de combate"><MapPinned size={12} /> {nM}</span>
+                                    {nE > 0 && <span className="mh-ch-chip" title="Encuentros"><Swords size={12} /> {nE}</span>}
+                                    {(sc.fx || []).length > 0 && (
+                                      <span className="mh-ch-chip" title={"Efectos: " + fxLabel(sc)}>
+                                        {(sc.fx || []).slice(0, 3).map((k) => {
+                                          const I = FX_ICONS[k];
+                                          return I ? <I key={k} size={12} style={FX_COLORS[k] ? { color: FX_COLORS[k] } : undefined} /> : null;
+                                        })}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="mh-gm-sc-acts">
+                                    <button type="button" className="mh-btn-ghost" onClick={() => openChapter(sc.id)}>
+                                      <PenLine size={13} /> Preparar
+                                    </button>
+                                    {isLive ? (
+                                      <button type="button" className="mh-btn-ghost" onClick={hideScene} title="Quitar de pantalla">
+                                        <EyeOff size={13} />
+                                      </button>
+                                    ) : (
+                                      <button type="button" className="mh-btn" onClick={() => showScene(sc.id)}>
+                                        <Eye size={13} /> Mostrar
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                            <label className="mh-gm-sc-add" style={{ cursor: "pointer" }}>
+                              <Upload size={18} />
+                              Capítulo con tu imagen
+                              <small>JPG, PNG o WebP desde tu equipo</small>
+                              <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { addSceneFromFile(e.target.files?.[0]); e.target.value = ""; }} />
+                            </label>
+                            <button type="button" className="mh-gm-sc-add" onClick={() => addScene()}>
+                              <Plus size={18} />
+                              Capítulo en blanco
+                              <small>con un enlace a una imagen</small>
+                            </button>
+                          </div>
+                          <div className="mh-gm-h2">Plantillas</div>
+                          <div className="mh-gm-presets">
+                            {SCENE_PRESETS.map((pr) => (
+                              <button key={pr.key} type="button" className="mh-gm-preset" title={"Añadir «" + pr.title + "» como capítulo"} onClick={() => addScene(pr)}>
+                                <span className="mh-gm-preset-img" style={{ backgroundImage: `url("${pr.image}")` }}>
+                                  <Plus size={16} />
+                                </span>
+                                <span className="mh-gm-preset-t">{pr.title}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        {scenes.length === 0 && (
+                          <div className="mh-card mh-gm-box is-wide is-locked">
+                            <div className="mh-gm-h">
+                              <MessageSquareQuote size={15} /> Diálogos <Lock size={13} />
+                            </div>
+                            <div className="mh-gm-sub">Crea una escena para poder preparar diálogos.</div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                    }
+                    const sel = scenes.find((x) => x.id === chapterId) || (isMobile ? null : scenes.find((x) => x.id === activeSceneId) || scenes[0]);
+                    const chapter = sel;
+                    const idx = sel ? scenes.indexOf(sel) : -1;
+                    const isLive = !!sel && sel.id === activeSceneId;
+                    const chMaps = sel ? campaignMaps.filter((m) => m.sceneId === sel.id) : [];
+                    const chEncs = sel ? campaignEncounters.filter((e) => e.sceneId === sel.id) : [];
+                    const nDlg = sel ? dialogueConvs.filter((c) => c.sceneId === sel.id).length : 0;
+                    const listEl = (
+                      <aside className="mh-hs-list">
+                        <div className="mh-dir-lbl-row"><span className="mh-dir-lbl">Tu historia</span><small>{scenes.length} capítulo{scenes.length === 1 ? "" : "s"}</small></div>
+                        {scenes.map((sc, i) => {
+                          const live = sc.id === activeSceneId;
+                          const nD = dialogueConvs.filter((c) => c.sceneId === sc.id).length;
+                          const nM = campaignMaps.filter((m) => m.sceneId === sc.id).length;
+                          const nE = campaignEncounters.filter((e) => e.sceneId === sc.id).length;
+                          return (
+                            <div key={sc.id} className={"mh-hs-row" + (sel?.id === sc.id ? " is-on" : "") + (live ? " is-live" : "")}>
+                              <button type="button" className="mh-hs-row-b" onClick={() => openChapter(sc.id)}>
+                                <span className={"mh-hs-thumb" + (sc.image ? "" : " is-blank")} style={bgStyle(sc.image)} />
+                                <span className="mh-hs-row-t">
+                                  <small>Capítulo {i + 1}{live && <em> · En pantalla</em>}</small>
+                                  <b>{sc.title || "Sin título"}</b>
+                                  <span className="mh-hs-cnt">
+                                    <span title="Diálogos"><MessageSquareQuote size={11} /> {nD}</span>
+                                    <span title="Mapas de combate"><MapPinned size={11} /> {nM}</span>
+                                    <span title="Encuentros"><Swords size={11} /> {nE}</span>
+                                  </span>
+                                </span>
+                              </button>
+                              <span className="mh-hs-mv">
+                                <button type="button" className="mh-gm-ib" aria-label="Subir de posición" title="Mover antes" disabled={i === 0} onClick={() => moveScene(sc.id, -1)}><ChevronUp size={13} /></button>
+                                <button type="button" className="mh-gm-ib" aria-label="Bajar de posición" title="Mover después" disabled={i === scenes.length - 1} onClick={() => moveScene(sc.id, 1)}><ChevronDown size={13} /></button>
+                              </span>
+                            </div>
+                          );
+                        })}
+                        <label className="mh-hs-add" style={{ cursor: "pointer" }}>
+                          <Upload size={15} /> Capítulo con tu imagen
+                          <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { addSceneFromFile(e.target.files?.[0]); e.target.value = ""; }} />
+                        </label>
+                        <button type="button" className="mh-hs-add" onClick={() => addScene()}>
+                          <Plus size={15} /> Añadir capítulo
+                        </button>
+                        <div className="mh-gm-h2">Plantillas</div>
+                        <div className="mh-hs-presets">
+                          {SCENE_PRESETS.map((pr) => (
+                            <button key={pr.key} type="button" title={"Añadir «" + pr.title + "» como capítulo"} onClick={() => addScene(pr)}>
+                              <span style={{ backgroundImage: `url("${pr.image}")` }} />
+                              <em>{pr.title}</em>
+                            </button>
+                          ))}
+                        </div>
+                      </aside>
+                    );
+                    const TABS3 = [
+                      { k: "ambiente", l: "Ambiente", I: Sparkles, n: (sel?.fx || []).length || null },
+                      { k: "dialogos", l: "Diálogos", I: MessageSquareQuote, n: nDlg || null },
+                      { k: "combate", l: "Combate", I: Swords, n: chMaps.length + chEncs.length || null },
+                    ];
+                    const detailEl = sel && (
+                      <section className="mh-hs-detail">
+                        <div className={"mh-hs-banner" + (sel.image ? "" : " is-blank")} style={bgStyle(sel.image)}>
+                          <button type="button" className="mh-hs-back" aria-label="Todos los capítulos" title="Todos los capítulos" onClick={() => setChapterId(null)}>
+                            <ChevronLeft size={16} />
+                          </button>
+                          <div className="mh-hs-bt">
+                            <small>Capítulo {idx + 1} de {scenes.length}{isLive && <em> · En pantalla</em>}</small>
+                            <span className="mh-serif">{sel.title || "Sin título"}</span>
+                          </div>
+                          <div className="mh-hs-bacts">
+                            <button type="button" className="mh-btn-ghost" onClick={() => setChTab("ambiente")}><PenLine size={13} /> <span>Editar imagen</span></button>
+                            {isLive ? (
+                              <button type="button" className="mh-btn-ghost" onClick={hideScene}><EyeOff size={13} /> <span>Quitar</span></button>
+                            ) : (
+                              <button type="button" className="mh-btn" onClick={() => showScene(sel.id)}><Eye size={13} /> <span>Mostrar</span></button>
+                            )}
+                            <button type="button" className="mh-gm-ib is-del" aria-label={"Borrar " + sel.title} title="Borrar el capítulo" onClick={() => removeChapter(sel.id)}><Trash2 size={14} /></button>
+                          </div>
+                        </div>
+                        <div className="mh-hs-tabs" role="tablist">
+                          {TABS3.map((t) => (
+                            <button key={t.k} type="button" role="tab" aria-selected={chTab === t.k} className={chTab === t.k ? "is-on" : ""} onClick={() => setChTab(t.k)}>
+                              <t.I size={14} /> {t.l}{t.n ? <em>{t.n}</em> : null}
+                            </button>
+                          ))}
+                          <span className="mh-hs-sp" />
+                          <span className="mh-hs-fx">{fxLabel(sel)}</span>
+                        </div>
+                        <div className="mh-hs-body">
+                          {chTab === "ambiente" && (
+                            <div className="mh-hs-amb">
+<div className="mh-gm-sc-edit">
                                 <input className="mh-input" aria-label="Título del capítulo" placeholder="Título del capítulo" value={chapter.title} onChange={(e) => updateScene(chapter.id, { title: e.target.value })} />
                                 <input className="mh-input" aria-label="Enlace de la imagen" placeholder={chapter.image && chapter.image.startsWith("img:") ? "Imagen subida (pega un enlace para cambiarla)" : "Imagen (enlace https://…)"} value={chapter.image && chapter.image.startsWith("img:") ? "" : chapter.image} onChange={(e) => updateScene(chapter.id, { image: e.target.value })} />
                                 <label className="mh-btn-ghost" style={{ cursor: "pointer", justifyContent: "center" }}>
@@ -28504,8 +28760,8 @@ export default function App({ onSignOut }) {
                                 </div>
                               </div>
                             </div>
-                          </div>
-
+                          )}
+                          {chTab === "dialogos" && (
                           <div className="mh-card mh-gm-box is-wide">
                             <div className="mh-gm-h">
                               <MessageSquareQuote size={15} /> Diálogos de este capítulo
@@ -28770,7 +29026,8 @@ export default function App({ onSignOut }) {
                             );
                           })()}
                           </div>
-
+                          )}
+                          {chTab === "combate" && (
                           <div className="mh-card mh-gm-box is-wide">
                             <div className="mh-gm-h">
                               <Swords size={15} /> Combate de este capítulo
@@ -28829,125 +29086,59 @@ export default function App({ onSignOut }) {
                               <Plus size={14} /> Añadir encuentro
                             </button>
                           </div>
+                          )}
                         </div>
-                      );
-                    }
+                      </section>
+                    );
+                    return (
+                      <div className="mh-hs">
+                        {(!isMobile || !chapterId) && listEl}
+                        {(!isMobile || chapterId) && detailEl}
+                      </div>
+                    );
+                  })()}
+
+                  {campaignDetailTab === "mapas" && (() => {
+                    const scenes = stageScenesOf(campaignStage);
                     return (
                       <div className="mh-gm">
                         <div className="mh-card mh-gm-box is-wide">
                           <div className="mh-gm-h">
-                            <Clapperboard size={15} /> Capítulos
-                            {scenes.length > 0 && <span className="mh-gm-count">{scenes.length}</span>}
+                            <MapPinned size={15} /> Mapas de combate
+                            <span className="mh-gm-count">{campaignMaps.length}</span>
                           </div>
-                          <div className="mh-gm-sub">Cada escena es un capítulo de tu historia: una imagen con efectos para ambientar, diálogos con tus PNJ y, si hace falta, un mapa de combate. Pulsa un capítulo para prepararlo.</div>
-                          {sceneError && <div className="mh-gm-sub" style={{ color: "#D9644E" }}>{sceneError}</div>}
-                          {scenes.length === 0 && (
-                            <div className="mh-ch-flow">
-                              <div className="mh-ch-flow-i">
-                                <ImageIcon size={26} />
-                                <b>1 · Imagen y ambiente</b>
-                                <span>Elige o sube la ilustración y añade efectos: niebla, lluvia, hoguera…</span>
-                              </div>
-                              <div className="mh-ch-flow-i is-lock">
-                                <Lock size={26} />
-                                <b>2 · Diálogos</b>
-                                <span>Se desbloquean al crear una escena: necesitas un capítulo donde ocurran.</span>
-                              </div>
-                              <div className="mh-ch-flow-i is-lock">
-                                <Lock size={26} />
-                                <b>3 · Mapa de combate</b>
-                                <span>Opcional. Se prepara dentro del capítulo que acaba en pelea.</span>
-                              </div>
-                            </div>
-                          )}
-                          <div className="mh-gm-scenes">
-                            {scenes.map((sc, i) => {
-                              const isLive = sc.id === activeSceneId;
-                              const nD = dialogueConvs.filter((c) => c.sceneId === sc.id).length;
-                              const nM = campaignMaps.filter((m) => m.sceneId === sc.id).length;
-                              const nE = campaignEncounters.filter((e) => e.sceneId === sc.id).length;
+                          <div className="mh-gm-sub">Todos los mapas guardados con sus enemigos colocados. Cada uno pertenece a un capítulo y se prepara desde el tablero.</div>
+                          <div className="mh-ch-maps">
+                            {campaignMaps.map((m) => {
+                              const si = scenes.findIndex((x) => x.id === m.sceneId);
                               return (
-                                <div key={sc.id} className={"mh-gm-sc mh-ch-card" + (isLive ? " is-live" : "")}>
-                                  <button type="button" className={"mh-gm-sc-img mh-ch-card-img" + (sc.image ? "" : " is-blank")} style={bgStyle(sc.image)} onClick={() => openChapter(sc.id)} aria-label={"Abrir el capítulo " + (sc.title || "sin título")}>
-                                    <span className="mh-ch-num">Capítulo {i + 1}</span>
-                                    {isLive && (
-                                      <span className="mh-stg-live">
-                                        <i />
-                                        En pantalla
-                                      </span>
-                                    )}
+                                <div key={m.id} className="mh-ch-map">
+                                  <MapPinned size={16} />
+                                  <div className="mh-ch-map-t">
+                                    <b>{m.name}</b>
+                                    <small>{(m.map.tokens || []).length} fichas · {si >= 0 ? "Cap. " + (si + 1) + " · " + (scenes[si].title || "Sin título") : "Sin capítulo"}</small>
+                                  </div>
+                                  <select className="mh-input mh-ch-map-mv" aria-label={"Mover «" + m.name + "» a otro capítulo"} title="Mover a otro capítulo" value={si >= 0 ? m.sceneId : ""} onChange={(e) => saveMapsLib(campaignMaps.map((x) => (x.id === m.id ? { ...x, sceneId: e.target.value } : x)))}>
+                                    {si < 0 && <option value="">Sin capítulo</option>}
+                                    {scenes.map((sc, i) => (
+                                      <option key={sc.id} value={sc.id}>{"Cap. " + (i + 1) + " · " + (sc.title || "Sin título")}</option>
+                                    ))}
+                                  </select>
+                                  <button type="button" className="mh-btn" disabled={si < 0} onClick={() => startCombat(m.sceneId, m)}>
+                                    <Swords size={13} /> Pasar al combate
                                   </button>
-                                  <div className="mh-ch-trow">
-                                    <div className="mh-gm-sc-t mh-serif" title={sc.title}>{sc.title || "Sin título"}</div>
-                                    <button type="button" className="mh-gm-ib" aria-label="Subir de posición" title="Mover antes" disabled={i === 0} onClick={() => moveScene(sc.id, -1)}>
-                                      <ChevronLeft size={14} />
-                                    </button>
-                                    <button type="button" className="mh-gm-ib" aria-label="Bajar de posición" title="Mover después" disabled={i === scenes.length - 1} onClick={() => moveScene(sc.id, 1)}>
-                                      <ChevronRight size={14} />
-                                    </button>
-                                  </div>
-                                  <div className="mh-ch-chips">
-                                    <span className="mh-ch-chip" title="Diálogos"><MessageSquareQuote size={12} /> {nD}</span>
-                                    <span className="mh-ch-chip" title="Mapas de combate"><MapPinned size={12} /> {nM}</span>
-                                    {nE > 0 && <span className="mh-ch-chip" title="Encuentros"><Swords size={12} /> {nE}</span>}
-                                    {(sc.fx || []).length > 0 && (
-                                      <span className="mh-ch-chip" title={"Efectos: " + fxLabel(sc)}>
-                                        {(sc.fx || []).slice(0, 3).map((k) => {
-                                          const I = FX_ICONS[k];
-                                          return I ? <I key={k} size={12} style={FX_COLORS[k] ? { color: FX_COLORS[k] } : undefined} /> : null;
-                                        })}
-                                      </span>
-                                    )}
-                                  </div>
-                                  <div className="mh-gm-sc-acts">
-                                    <button type="button" className="mh-btn-ghost" onClick={() => openChapter(sc.id)}>
-                                      <PenLine size={13} /> Preparar
-                                    </button>
-                                    {isLive ? (
-                                      <button type="button" className="mh-btn-ghost" onClick={hideScene} title="Quitar de pantalla">
-                                        <EyeOff size={13} />
-                                      </button>
-                                    ) : (
-                                      <button type="button" className="mh-btn" onClick={() => showScene(sc.id)}>
-                                        <Eye size={13} /> Mostrar
-                                      </button>
-                                    )}
-                                  </div>
+                                  <button type="button" className="mh-gm-ib is-del" aria-label={"Borrar " + m.name} title="Borrar el mapa" onClick={() => window.confirm("¿Borrar el mapa guardado «" + m.name + "»?") && saveMapsLib(campaignMaps.filter((x) => x.id !== m.id))}>
+                                    <Trash2 size={14} />
+                                  </button>
                                 </div>
                               );
                             })}
-                            <label className="mh-gm-sc-add" style={{ cursor: "pointer" }}>
-                              <Upload size={18} />
-                              Capítulo con tu imagen
-                              <small>JPG, PNG o WebP desde tu equipo</small>
-                              <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { addSceneFromFile(e.target.files?.[0]); e.target.value = ""; }} />
-                            </label>
-                            <button type="button" className="mh-gm-sc-add" onClick={() => addScene()}>
-                              <Plus size={18} />
-                              Capítulo en blanco
-                              <small>con un enlace a una imagen</small>
-                            </button>
+                            {campaignMaps.length === 0 && <div className="mh-chat-empty">Todavía no hay mapas. Abre el tablero desde un capítulo, coloca a los enemigos y guárdalo.</div>}
                           </div>
-                          <div className="mh-gm-h2">Plantillas</div>
-                          <div className="mh-gm-presets">
-                            {SCENE_PRESETS.map((pr) => (
-                              <button key={pr.key} type="button" className="mh-gm-preset" title={"Añadir «" + pr.title + "» como capítulo"} onClick={() => addScene(pr)}>
-                                <span className="mh-gm-preset-img" style={{ backgroundImage: `url("${pr.image}")` }}>
-                                  <Plus size={16} />
-                                </span>
-                                <span className="mh-gm-preset-t">{pr.title}</span>
-                              </button>
-                            ))}
-                          </div>
+                          <button type="button" className="mh-btn-ghost" style={{ alignSelf: "flex-start" }} onClick={() => (setCombatBack(null), setCampaignDetailTab("mapa"))}>
+                            <MapPinned size={13} /> Abrir el tablero de combate
+                          </button>
                         </div>
-                        {scenes.length === 0 && (
-                          <div className="mh-card mh-gm-box is-wide is-locked">
-                            <div className="mh-gm-h">
-                              <MessageSquareQuote size={15} /> Diálogos <Lock size={13} />
-                            </div>
-                            <div className="mh-gm-sub">Crea una escena para poder preparar diálogos.</div>
-                          </div>
-                        )}
                       </div>
                     );
                   })()}
