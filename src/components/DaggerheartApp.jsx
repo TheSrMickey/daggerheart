@@ -4937,6 +4937,8 @@ const sharedStyles = `
   .mh-gm-fx:hover { color: var(--mh-ink); border-color: var(--mh-ink3); } .mh-gm-fx.is-on { color: var(--mh-ink); border-color: var(--fc, #D9644E); background: color-mix(in srgb, var(--fc, #D9644E) 16%, transparent); }
   .mh-gm-fxi { display: flex; gap: 6px; align-items: center; color: var(--mh-muted); padding: 0 2px; }
   .mh-stg-scene-cap { position: relative; } .mh-stg-fear.is-incap { top: 50%; right: 12px; transform: translateY(-50%); }
+  .mh-root.is-mobile .mh-stg-fear-pips { gap: 1px; } .mh-root.is-mobile .mh-stg-fear-pips svg { width: 14px; height: 14px; } .mh-root.is-mobile .mh-stg-fear.is-over { gap: 5px; padding: 4px 9px; max-width: 100%; }
+  .mh-root.is-mobile .mh-stg-fear.is-over.is-incap { position: static; transform: none; margin-top: 8px; align-self: flex-start; }
   .mh-root.is-mobile .mh-stg-fear.is-over.is-flow { position: static; align-self: stretch; justify-content: center; flex-shrink: 0; }
   .mh-stg-fear.is-over > span:first-child, .mh-stg-fear.is-over b { color: #CDBBF5; }
   .mh-stg-body { transition: opacity .36s ease; } .mh-stg-body.is-out { opacity: 0; }
@@ -20600,7 +20602,7 @@ export default function App({ onSignOut }) {
                                 </button>
                               )}
                               <div className={"mh-stg-body" + (sceneOut && stTab === "escena" ? " is-out" : "")}>
-                                {!fearInCap && fearEl(stTab === "escena" ? "" : " is-flow")}
+                                {!fearInCap && fearEl(" is-flow")}
                                 {stTab === "escena" &&
                                   (scene.title || scene.image || dlg ? (
                                     <>
