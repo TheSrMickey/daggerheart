@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "arreglo", text: "Música de ambiente sincronizada: ahora todos escuchan la pista por el mismo punto que el DJ (también con enlaces de YouTube). Si alguien entra tarde o se retrasa, salta solo al momento actual, y al pausar y reanudar el DJ todos continúan desde el mismo segundo." },
       { tag: "nuevo", text: "Panel del DJ, pestaña «Historia»: cada escena es ahora un capítulo de la historia. Cada capítulo reúne su imagen con efectos de ambiente, sus diálogos y su combate (mapas de combate y encuentros). Los diálogos solo se pueden preparar cuando hay un capítulo creado, y el combate se prepara dentro del capítulo que acaba en pelea." },
       { tag: "nuevo", text: "Panel del DJ, pestaña «PNJ»: el reparto de la campaña pasa a ser una sección propia, con rol, tipo (aliado, neutral o enemigo), expresiones y los capítulos en los que aparece. Desde ahí se usan para crear diálogos y combates." },
       { tag: "mejora", text: "Mesa del DJ: nuevo bloque «Capítulo en curso» con los pasos Imagen y efectos → Diálogo → Combate, botones para cambiar de capítulo y «Pasar al combate» con el mapa del capítulo. Las pestañas «Mapa de combate» y «Encuentros» ya no son independientes: viven dentro de cada capítulo (el tablero se abre desde ahí y se vuelve con «Volver al capítulo»)." },
