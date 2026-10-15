@@ -5891,6 +5891,8 @@ const sharedStyles = `
   .mh-amb-vol { display: flex; align-items: center; gap: 6px; flex: none; } .mh-amb-vol input[type=range] { width: 90px; accent-color: var(--mh-gold-ink); }
   .mh-amb-ib { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 9px; border: 1px solid var(--mh-line); background: var(--mh-panel2); color: var(--mh-ink3); cursor: pointer; flex: none; } .mh-amb-ib.is-x { margin-left: auto; }
   .mh-amb-un { padding: 5px 10px; border-radius: 999px; border: 1px solid rgba(227,176,75,.6); background: rgba(227,176,75,.16); color: var(--mh-gold-ink); font: 700 11.5px 'Inter', system-ui, sans-serif; cursor: pointer; white-space: nowrap; } .mh-amb-un.is-wide { width: 100%; padding: 9px; }
+  .mh-amb-pop { position: fixed; z-index: 60; display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 18px; background: var(--mh-panel); border: 1px solid var(--mh-line2); box-shadow: 0 22px 50px -18px rgba(0,0,0,.65); color: var(--mh-ink); }
+  .mh-amb-pop .mh-amb-now { padding: 8px; gap: 10px; } .mh-amb-pop .mh-amb-play { width: 36px; height: 36px; } .mh-amb-pop .mh-amb-vol input[type=range] { width: 70px; } .mh-amb-pop .mh-amb-list { max-height: 150px; overflow-y: auto; } .mh-amb-ib.is-busy { opacity: .5; }
   .mh-amb-bg, .mh-dd-bg { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px; background: rgba(6,6,16,.6); }
   .mh-amb-box, .mh-dd { width: min(480px, 100%); max-height: calc(100dvh - 32px); overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 18px 20px; border-radius: 22px; background: var(--mh-panel); border: 1px solid var(--mh-line2); box-shadow: 0 30px 70px -20px rgba(0,0,0,.7); color: var(--mh-ink); }
   .mh-amb-h, .mh-dd-h { display: flex; align-items: center; gap: 8px; font-size: 16px; color: var(--mh-gold-ink); } .mh-amb-h b, .mh-dd-h b { color: var(--mh-ink); }
@@ -11406,6 +11408,7 @@ export default function App({ onSignOut }) {
   const [stageReadyFor, setStageReadyFor] = useState(null);
   const [pnjFilter, setPnjFilter] = useState("all");
   const [chTab, setChTab] = useState("dialogos"); // pestaña abierta del capítulo en «Historia»
+  const ambBtn = useRef(null);
   const [ambOpen, setAmbOpen] = useState(false); // ventana de «Ambiente» (audio de la mesa)
   const [diceDlg, setDiceDlg] = useState(null); // ventana «Dados» del DJ: { counts, priv }
   const [soonMsg, setSoonMsg] = useState(null); // aviso de botón que aún no tiene función
@@ -27579,7 +27582,7 @@ export default function App({ onSignOut }) {
           </div>
         </div>
       )}
-      {stageCampaignId && (gmViewing || sheetCampaignId) && <Ambient campaignId={stageCampaignId} isGm={gmViewing} open={gmViewing && ambOpen} onClose={() => setAmbOpen(false)} />}
+      {stageCampaignId && (gmViewing || sheetCampaignId) && <Ambient campaignId={stageCampaignId} isGm={gmViewing} open={gmViewing && ambOpen} onClose={() => setAmbOpen(false)} anchorRef={ambBtn} />}
       {dice3d && <Dice3D key={dice3d.key} dice={dice3d.dice} summary={dice3d.summary} onReveal={() => (setDiceHold(false), flushOutcome())} onEnd={() => (setDice3d(null), setDiceHold(false))} />}
       <style>{sharedStyles}</style>
       <SocialHost />
@@ -28381,7 +28384,7 @@ export default function App({ onSignOut }) {
                             <button type="button" className={"mh-dir-pause" + (cgPaused ? " is-on" : "")} onClick={() => setSpotMode(viewingCampaignId, cgPaused ? "normal" : "paused")} title={cgPaused ? "Reanudar la mesa" : "Pausar la mesa: los jugadores no pueden mover fichas"}>
                               {cgPaused ? <Play size={14} /> : <EyeOff size={14} />} <span>{cgPaused ? "Reanudar" : "Pausar la mesa"}</span>
                             </button>
-                            <button type="button" className="mh-cg-btn" onClick={() => setAmbOpen(true)}>
+                            <button type="button" className="mh-cg-btn" ref={ambBtn} aria-expanded={ambOpen} onClick={() => setAmbOpen((v) => !v)}>
                               <Music size={14} /> <span>Ambiente</span>
                             </button>
                           </div>

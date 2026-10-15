@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Music, Play, Pause, Plus, Trash2, Upload, Volume2, VolumeX, X, Link2 } from "lucide-react";
+import { Music, Play, Pause, Plus, Trash2, Upload, Volume2, VolumeX, X } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 
 // Ambiente de la campaña: el DJ prepara pistas de audio (un enlace o un archivo) y las reproduce o pausa para toda la mesa.
@@ -27,7 +27,7 @@ const readFile = (file) =>
     r.readAsDataURL(file);
   });
 
-export default function Ambient({ campaignId, isGm, open, onClose }) {
+export default function Ambient({ campaignId, isGm, open, onClose, anchorRef }) {
   const key = "campaign-ambient:" + campaignId;
   const [st, setSt] = useState(EMPTY);
   const [vol, setVol] = useState(0.5);
@@ -37,6 +37,36 @@ export default function Ambient({ campaignId, isGm, open, onClose }) {
   const [name, setName] = useState("");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+  const popRef = useRef(null);
+
+  // Mini popup pegado al botón «Ambiente»: se coloca bajo él y se cierra al pulsar fuera o con Escape.
+  useLayoutEffect(() => {
+    if (!open) return undefined;
+    const place = () => {
+      const b = anchorRef?.current?.getBoundingClientRect();
+      const w = Math.min(340, window.innerWidth - 24);
+      if (!b) return setPos({ top: 70, left: Math.max(12, window.innerWidth - w - 12) });
+      const left = Math.max(12, Math.min(b.right - w, window.innerWidth - w - 12));
+      setPos({ top: Math.min(b.bottom + 8, window.innerHeight - 140), left });
+    };
+    place();
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    const away = (e) => {
+      if (popRef.current?.contains(e.target) || anchorRef?.current?.contains(e.target)) return;
+      onClose();
+    };
+    const esc = (e) => e.key === "Escape" && onClose();
+    document.addEventListener("mousedown", away);
+    document.addEventListener("keydown", esc);
+    return () => {
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+      document.removeEventListener("mousedown", away);
+      document.removeEventListener("keydown", esc);
+    };
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
   const audio = useRef(null);
   const srcCache = useRef({}); // id de pista -> url reproducible
   const stRef = useRef(EMPTY);
@@ -197,63 +227,50 @@ export default function Ambient({ campaignId, isGm, open, onClose }) {
       )}
       {isGm && open && typeof document !== "undefined" &&
         createPortal(
-          <div className="mh-amb-bg" onClick={onClose}>
-            <div className="mh-amb-box" role="dialog" aria-label="Ambiente" onClick={(e) => e.stopPropagation()}>
-              <div className="mh-amb-h">
-                <Music size={17} /> <b>Ambiente</b>
-                <button type="button" className="mh-amb-ib is-x" aria-label="Cerrar" onClick={onClose}>
-                  <X size={16} />
-                </button>
+          <div ref={popRef} className="mh-amb-pop" style={{ top: pos.top, left: pos.left, width: Math.min(340, (typeof window !== "undefined" ? window.innerWidth : 360) - 24) }} role="dialog" aria-label="Ambiente">
+            <div className="mh-amb-now">
+              <button type="button" className="mh-amb-play" disabled={!track} onClick={toggle} aria-label={st.playing ? "Pausar" : "Reproducir"}>
+                {st.playing ? <Pause size={16} /> : <Play size={16} />}
+              </button>
+              <div className="mh-amb-nt">
+                <small>{track ? (st.playing ? "Suena para toda la mesa" : "En pausa") : "Ambiente"}</small>
+                <b>{track ? track.name : "Añade una pista"}</b>
               </div>
-              <p className="mh-amb-sub">Prepara pistas de audio para la mesa. Solo tú eliges qué suena y cuándo se pausa; cada jugador controla su propio volumen.</p>
-              <div className="mh-amb-now">
-                <button type="button" className="mh-amb-play" disabled={!track} onClick={toggle} aria-label={st.playing ? "Pausar" : "Reproducir"}>
-                  {st.playing ? <Pause size={18} /> : <Play size={18} />}
-                </button>
-                <div className="mh-amb-nt">
-                  <small>{track ? (st.playing ? "Sonando para toda la mesa" : "En pausa") : "Sin pista"}</small>
-                  <b>{track ? track.name : "Añade una pista para empezar"}</b>
-                </div>
-                {volEl}
-              </div>
-              {blocked && st.playing && (
-                <button type="button" className="mh-amb-un is-wide" onClick={unlock}>
-                  Activar sonido en este dispositivo
-                </button>
-              )}
+              {volEl}
+            </div>
+            {blocked && st.playing && (
+              <button type="button" className="mh-amb-un is-wide" onClick={unlock}>
+                Activar sonido aquí
+              </button>
+            )}
+            {st.tracks.length > 0 && (
               <div className="mh-amb-list">
                 {st.tracks.map((t) => (
                   <div key={t.id} className={"mh-amb-row" + (t.id === st.current ? " is-on" : "")}>
                     <button type="button" className="mh-amb-rb" onClick={() => (t.id === st.current ? toggle() : select(t.id))}>
-                      {t.id === st.current && st.playing ? <Pause size={14} /> : <Play size={14} />}
+                      {t.id === st.current && st.playing ? <Pause size={13} /> : <Play size={13} />}
                       <span>{t.name}</span>
-                      <small>{t.src.startsWith("file:") ? "Archivo" : "Enlace"}</small>
                     </button>
                     <button type="button" className="mh-amb-ib" aria-label={"Quitar " + t.name} title="Quitar la pista" onClick={() => remove(t.id)}>
-                      <Trash2 size={14} />
+                      <Trash2 size={13} />
                     </button>
                   </div>
                 ))}
-                {st.tracks.length === 0 && <div className="mh-chat-empty">Todavía no hay pistas.</div>}
               </div>
-              <div className="mh-amb-add">
-                <span className="mh-amb-lbl">Añadir pista</span>
-                <input className="mh-input" placeholder="Nombre (opcional)" value={name} onChange={(e) => setName(e.target.value)} />
-                <div className="mh-amb-addrow">
-                  <input className="mh-input" placeholder="Enlace al audio (https://…mp3)" value={link} onChange={(e) => setLink(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addLink()} />
-                  <button type="button" className="mh-btn-ghost" disabled={!link.trim()} onClick={addLink}>
-                    <Link2 size={14} /> Añadir
-                  </button>
-                </div>
-                <label className={"mh-btn-ghost mh-amb-file" + (busy ? " is-busy" : "")}>
-                  <Upload size={14} /> {busy ? "Subiendo…" : "Subir un archivo de audio (máx. 2,5 MB)"}
-                  <input type="file" accept="audio/*" style={{ display: "none" }} onChange={(e) => (addFile(e.target.files?.[0]), (e.target.value = ""))} />
-                </label>
-                {err && <div className="mh-gm-err">{err}</div>}
-              </div>
+            )}
+            <div className="mh-amb-addrow">
+              <input className="mh-input" placeholder="Enlace al audio (https://…)" value={link} onChange={(e) => setLink(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addLink()} />
+              <button type="button" className="mh-amb-ib" aria-label="Añadir el enlace" title="Añadir el enlace" disabled={!link.trim()} onClick={addLink}>
+                <Plus size={15} />
+              </button>
+              <label className={"mh-amb-ib" + (busy ? " is-busy" : "")} title="Subir un archivo de audio (máx. 2,5 MB)" style={{ cursor: "pointer" }}>
+                <Upload size={14} />
+                <input type="file" accept="audio/*" style={{ display: "none" }} onChange={(e) => (addFile(e.target.files?.[0]), (e.target.value = ""))} />
+              </label>
             </div>
+            {err && <div className="mh-gm-err">{err}</div>}
           </div>,
-          document.body
+          document.querySelector(".mh-root") || document.body
         )}
     </>
   );
