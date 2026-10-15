@@ -6,6 +6,11 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "mejora", text: "Directo, capítulos: la flecha izquierda del capítulo 1 deja la mesa sin escena, y los jugadores (y tu monitor) ven el logo con «A la espera de una escena»." },
+      { tag: "nuevo", text: "Directo: los pasos de abajo son ahora una línea de tiempo (Imagen → Diálogo → Combate → siguiente capítulo). Se salta lo que el capítulo no tenga, el paso actual siempre está a la izquierda y el botón «Siguiente» desliza la línea." },
+      { tag: "nuevo", text: "El botón «Pausar la mesa» pasa a ser la X-Card: al pulsarlo aparece en la escena (para ti y para los jugadores) el aviso de que alguien no está cómodo con lo que se trata, hasta que lo retires." },
+      { tag: "mejora", text: "Popup de Dados más simple: clic izquierdo en un dado lo añade y clic derecho lo quita. Tus tiradas privadas también salen en tu chat, solo visibles para ti." },
+      { tag: "nuevo", text: "Popup de Pista: elige una pista del capítulo en pantalla o crea una rápida, y envíala al chat para que la vean los jugadores. Las pistas ahora pertenecen a un capítulo." },
       { tag: "arreglo", text: "Música de ambiente sincronizada: ahora todos escuchan la pista por el mismo punto que el DJ (también con enlaces de YouTube). Si alguien entra tarde o se retrasa, salta solo al momento actual, y al pausar y reanudar el DJ todos continúan desde el mismo segundo." },
       { tag: "nuevo", text: "Panel del DJ, pestaña «Historia»: cada escena es ahora un capítulo de la historia. Cada capítulo reúne su imagen con efectos de ambiente, sus diálogos y su combate (mapas de combate y encuentros). Los diálogos solo se pueden preparar cuando hay un capítulo creado, y el combate se prepara dentro del capítulo que acaba en pelea." },
       { tag: "nuevo", text: "Panel del DJ, pestaña «PNJ»: el reparto de la campaña pasa a ser una sección propia, con rol, tipo (aliado, neutral o enemigo), expresiones y los capítulos en los que aparece. Desde ahí se usan para crear diálogos y combates." },
