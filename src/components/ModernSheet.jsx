@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { User, Radio } from "lucide-react";
 
 // Hoja de personaje "moderna": vive en la columna central. Recibe los datos ya calculados y las acciones de la app.
 const signed = (n) => (n > 0 ? "+" + n : String(n));
@@ -128,6 +129,14 @@ export function ModernSheet({ d, actions, content, tab, onTab, fill }) {
     return () => mq.removeEventListener("change", upd);
   }, []);
   const [natural, setNatural] = useState(0); // alto de «Detalles generales»: referencia para todas las pestañas
+  // Móvil: «Ficha | Campaña» sustituye a la pestaña de la campaña. Al volver a la ficha se recupera la última pestaña abierta.
+  const campTab = d.tabs.find((t) => t.key === "campaign");
+  const inCamp = tab === "campaign";
+  const lastSheetTab = useRef("general");
+  useEffect(() => {
+    if (!inCamp) lastSheetTab.current = tab;
+  }, [tab, inCamp]);
+  const showSwitch = mobile && !!campTab;
   return (
     <div className="mhm" style={{ "--cc": d.color, ...(d.color2 ? { "--cc2": d.color2 } : {}) }}>
       {lvOpen && li && (
@@ -203,6 +212,18 @@ export function ModernSheet({ d, actions, content, tab, onTab, fill }) {
       </section>
       </div>
 
+      {showSwitch && (
+        <div className="mhm-switch" role="tablist" aria-label="Ficha o campaña">
+          <button type="button" role="tab" aria-selected={!inCamp} className={!inCamp ? "is-on" : ""} onClick={() => onTab(lastSheetTab.current)}>
+            <User size={16} strokeWidth={1.9} /> Ficha
+          </button>
+          <button type="button" role="tab" aria-selected={inCamp} className={inCamp ? "is-on" : ""} onClick={() => onTab("campaign")}>
+            <Radio size={16} strokeWidth={1.9} /> Campaña
+            {d.campLive && <em className="mhm-switch-live"><i />Directo</em>}
+          </button>
+        </div>
+      )}
+      {!(showSwitch && inCamp) && (
       <nav ref={navRef} className={"mhm-tabs" + (compact ? " is-compact" : "")} role="tablist">
         {d.tabs.filter((t) => !t.extra).map((t) => (
           <button key={t.key} type="button" role="tab" aria-selected={tab === t.key} className={"is-base" + (tab === t.key ? " is-on" : "")} title={t.label} onClick={() => onTab(t.key)}>
@@ -210,12 +231,13 @@ export function ModernSheet({ d, actions, content, tab, onTab, fill }) {
           </button>
         ))}
         <span className="mhm-spacer" />
-        {d.tabs.filter((t) => t.extra).map((t) => (
+        {d.tabs.filter((t) => t.extra && !(showSwitch && t.key === "campaign")).map((t) => (
           <button key={t.key} type="button" role="tab" aria-selected={tab === t.key} className={tab === t.key ? "is-on" : ""} style={{ "--tone": t.tone }} onClick={() => onTab(t.key)}>
             <t.Icon size={15} strokeWidth={1.8} /> <span className="lbl-full">{t.label}</span>
           </button>
         ))}
       </nav>
+      )}
 
       {mobile ? (
         <div className="mhm-plain" style={{ "--mhz": 1 }}>{content}</div>
