@@ -5275,6 +5275,39 @@ const sharedStyles = `
   .mh-map-overlay .mh-map-legend { left: auto; right: 10px; bottom: 10px; top: auto; flex-direction: column; align-items: flex-start; max-width: 150px; }
   .mh-map-overlay .mh-map-legend button { align-self: flex-end; order: -1; }
   .mh-map-zoomwrap { position: relative; aspect-ratio: ${MAP_COLS} / ${MAP_ROWS}; border-radius: 12px; overflow: hidden; }
+
+  /* ---- Tablero de combate: escena difuminada, casillas de cristal y fichas circulares ---- */
+  .mh-map { background: radial-gradient(120% 90% at 50% 30%, #2d2f66, #15163a); }
+  .mh-map.is-blank { background-image: radial-gradient(120% 90% at 50% 30%, #2d2f66, #15163a); }
+  .mh-map-flat { overflow: hidden; }
+  .mh-map-bg { inset: -40px; filter: blur(24px) saturate(1.05) brightness(.82); }
+  .mh-map-tint { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(20,22,64,.32), rgba(10,10,34,.52)); }
+  .mh-map-noise { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: overlay; opacity: .3; z-index: 1; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .55 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23f)'/%3E%3C/svg%3E"); }
+  .mh-map-grid { z-index: 0; background: linear-gradient(rgba(255,255,255,.12), rgba(255,255,255,.05));
+    -webkit-mask: linear-gradient(90deg, #000 calc(100% - 3px), transparent 0) 0 0 / calc(100% / ${MAP_COLS}) calc(100% / ${MAP_ROWS}), linear-gradient(#000 calc(100% - 3px), transparent 0) 0 0 / calc(100% / ${MAP_COLS}) calc(100% / ${MAP_ROWS}); -webkit-mask-composite: source-in;
+    mask: linear-gradient(90deg, #000 calc(100% - 3px), transparent 0) 0 0 / calc(100% / ${MAP_COLS}) calc(100% / ${MAP_ROWS}), linear-gradient(#000 calc(100% - 3px), transparent 0) 0 0 / calc(100% / ${MAP_COLS}) calc(100% / ${MAP_ROWS}); mask-composite: intersect; }
+  .mh-map-terrain { opacity: .55; mix-blend-mode: normal; border-radius: 6px; }
+  .mh-map-prop svg { filter: drop-shadow(0 3px 2px rgba(0,0,0,.35)); }
+  .mh-map-hov { position: absolute; pointer-events: none; border-radius: 6px; background: rgba(255,255,255,.14); box-shadow: inset 0 0 0 1px rgba(255,255,255,.4); z-index: 1; }
+  .mh-map-reach { background: rgba(227,176,75,.18); box-shadow: inset 0 0 0 2px rgba(227,176,75,.5); border-radius: 6px; z-index: 1; }
+  .mh-map-area { position: absolute; pointer-events: none; z-index: 1; background: color-mix(in srgb, var(--ac) 38%, transparent); box-shadow: inset 0 0 0 1.5px var(--ac); border-radius: 4px; }
+  .mh-map-fog { position: absolute; pointer-events: none; z-index: 3; background: rgba(24,20,38,.97); box-shadow: 0 0 14px 6px rgba(24,20,38,.97); }
+  .mh-map-fog.is-gm { background: repeating-linear-gradient(45deg, rgba(30,26,45,.5) 0 6px, rgba(30,26,45,.38) 6px 12px); box-shadow: none; }
+  .mh-map-tk { z-index: 4; }
+  .mh-map-ring { position: absolute; z-index: 3; inset: 9%; width: 82%; height: 82%; transform: rotate(-90deg); pointer-events: none; overflow: visible; }
+  .mh-map-face { width: 70%; height: 70%; border-radius: 50%; border: 2px solid var(--tc); background: radial-gradient(circle at 35% 28%, color-mix(in srgb, var(--tc) 34%, #12143a), color-mix(in srgb, var(--tc) 14%, #0c0d2a) 72%); backdrop-filter: blur(6px); color: var(--tc); box-shadow: 0 6px 14px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.3); }
+  .mh-map-tk.is-foe .mh-map-face { background: radial-gradient(circle at 35% 28%, rgba(192,80,74,.5), #3a1216 72%); }
+  .mh-map-tk.is-npc .mh-map-face { background: radial-gradient(circle at 35% 28%, rgba(201,162,74,.4), #2a210c 72%); }
+  .mh-map-face img { border-radius: 50%; }
+  .mh-map-tk.is-sel .mh-map-face { box-shadow: 0 0 0 3px #F3C24A, 0 0 18px 3px rgba(243,194,74,.55), 0 6px 14px rgba(0,0,0,.45); animation: mh-selpulse 2.2s ease-in-out infinite; }
+  @keyframes mh-selpulse { 50% { box-shadow: 0 0 0 4px #F3C24A, 0 0 26px 6px rgba(243,194,74,.35), 0 6px 14px rgba(0,0,0,.45); } }
+  .mh-map-tk.is-hidden .mh-map-face { outline: 0; border-style: dashed; }
+  .mh-map-nm { top: 88%; z-index: 5; padding: 2px 8px; border-radius: 99px; background: rgba(14,14,44,.82); border: 1px solid rgba(255,255,255,.14); text-shadow: none; font-size: 10px; }
+  .mh-map-tk.is-foe .mh-map-nm { background: rgba(110,26,32,.88); }
+  .mh-map-spot { position: absolute; z-index: 1; inset: 0; border-radius: 50%; box-shadow: 0 0 0 3px rgba(255,233,168,.8), 0 0 24px 8px rgba(255,233,168,.35); animation: mh-selpulse 1.8s ease-in-out infinite; pointer-events: none; }
+  .mh-map-hand { position: absolute; z-index: 6; right: -2%; top: -6%; display: inline-flex; align-items: center; gap: 2px; padding: 1px 6px; border-radius: 99px; font-size: 12px; background: #E3B04B; color: #241a05; box-shadow: 0 2px 6px rgba(0,0,0,.4); pointer-events: none; } .mh-map-hand.is-urgent { background: #E0544A; color: #fff; } .mh-map-hand b { font: 800 10px 'Inter', system-ui, sans-serif; }
+  .mh-map .mh-map-tk.is-pet .mh-map-face { width: 58%; height: 58%; background: radial-gradient(circle at 35% 28%, color-mix(in srgb, var(--tc) 30%, #12143a), #0c0d2a 72%); border-radius: 50%; border-width: 2px; border-color: var(--tc); }
+  .mh-map-hp { display: none; }
   .mh-map-fit .mh-map { border-radius: 0; }
   .mh-spot-ui { position: absolute; left: 12px; top: 112px; z-index: 7; display: flex; flex-direction: column; gap: 6px; max-width: 250px; }
   .mh-spot-btn { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 7px; padding: 8px 13px; border-radius: 10px; background: rgba(13,13,28,.82); border: 1px solid #ffffff2a; backdrop-filter: blur(4px); color: #fff; font: 600 12.5px Inter, system-ui, sans-serif; }
@@ -9884,8 +9917,8 @@ function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChang
   const [hover, setHover] = useState(null); // casilla bajo el ratón mientras hay un sello elegido
   const painting = useRef(null);
   const [isoOwn, setIso] = useState(readIsoPref);
-  // El tablero se ve siempre en isométrica (la vista plana se retiró).
-  const iso = true;
+  // Tablero de combate: vista plana con la escena difuminada de fondo, casillas de cristal y fichas circulares.
+  const iso = false;
   const overlayEl = useContext(MapOverlayCtx);
   const anim = useAttackFx(fx);
   const eAnim = useElemEvent(efx);
@@ -9912,6 +9945,19 @@ function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChang
     } catch (e) {}
   };
   const propAt = (x, y) => props.find((pr) => pr.x === x && pr.y === y);
+  // Foco de la mesa: quién tiene la palabra y quién levanta la mano.
+  const spotSt = normSpot(spot);
+  const spotHands = Object.fromEntries(liveHands(spotSt).map((h, i) => [h.charId, { n: i + 1, kind: h.kind }]));
+  const spotTok = spotSt.focus ? tokens.find((t) => t.id === spotSt.focus.tokenId && !t.vanished) : null;
+  // Niebla: el DJ la ve translúcida; los jugadores, opaca y sin lo que hay debajo.
+  const fogOn = !!(fog && fog.on);
+  const fogSet = new Set((fog && fog.revealed) || []);
+  const inFog = (x, y) => fogOn && !fogSet.has(x + "," + y);
+  const fogHide = fogView !== "gm";
+  // Áreas de efecto: casilla -> color.
+  const areaMap = {};
+  (areas || []).forEach((a) => areaCells(a, tokens).forEach((k) => (areaMap[k] = a.color || "#C0504A")));
+  const isTerrainTool = stampTool && (stampTool.startsWith("t:") || stampTool.startsWith("fog:"));
   useEffect(() => {
     if (!menu) return;
     const close = (e) => (e.type !== "keydown" || e.key === "Escape") && setMenu(null);
@@ -9955,6 +10001,11 @@ function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChang
 
   const startDrag = (e, t) => {
     if (e.button > 0) return;
+    if (areaTool) {
+      e.preventDefault();
+      areaTool.onPlace(t.x, t.y);
+      return;
+    }
     if (!canMove(t)) {
       setRangeId((r) => (r === t.id ? null : t.id));
       if (onPick) onPick(selectedId === t.id ? null : t.id);
@@ -9996,19 +10047,28 @@ function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChang
 
   // Con un sello elegido, pulsar o arrastrar sobre el tablero lo va poniendo en cada casilla.
   const stampDown = (e) => {
-    if (!stampTool || e.button > 0 || e.target.closest(".mh-map-tk")) return;
+    if (e.button > 0) return;
+    if (areaTool && !e.target.closest(".mh-map-tk")) {
+      const a = cellAt(e);
+      if (a) {
+        e.preventDefault();
+        areaTool.onPlace(a.x, a.y);
+      }
+      return;
+    }
+    if (!stampTool || e.target.closest(".mh-map-tk")) return;
     e.preventDefault();
     const c = cellAt(e);
     if (!c) return;
     painting.current = new Set([c.x + "," + c.y]);
-    if (stampTool.startsWith("t:") || !propAt(c.x, c.y)) onStamp(c.x, c.y);
+    if (isTerrainTool || !propAt(c.x, c.y)) onStamp(c.x, c.y);
     const move = (ev) => {
       const d = cellAt(ev);
       if (!d) return;
       const k = d.x + "," + d.y;
       if (painting.current && !painting.current.has(k)) {
         painting.current.add(k);
-        if (stampTool.startsWith("t:") || !propAt(d.x, d.y)) onStamp(d.x, d.y);
+        if (isTerrainTool || !propAt(d.x, d.y)) onStamp(d.x, d.y);
       }
     };
     window.addEventListener("pointermove", move);
@@ -10062,7 +10122,7 @@ function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChang
   };
   const at = (x, y) => ({ left: (x * 100) / MAP_COLS + "%", top: (y * 100) / MAP_ROWS + "%", width: 100 / MAP_COLS + "%", height: 100 / MAP_ROWS + "%" });
 
-  if (iso)
+  if (false)
     return <IsoBoard fog={fog} fogView={fogView} areas={areas} areaTool={areaTool} log={log} hideIsoBtn={hideIsoBtn} menuFor={menuFor} anim={anim} eAnim={eAnim} hAnim={hAnim} spot={spot} tokens={tokens} props={props} terrain={terrain} stampTool={stampTool} onStamp={onStamp} onUnstamp={onUnstamp} canMove={canMove} onMove={onMove} selectedId={selectedId} onSelect={onSelect} onPick={onPick} compact={compact} onToggle={toggleIso} />;
 
   return (
@@ -10073,8 +10133,11 @@ function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChang
       onPointerDown={stampDown}
       onContextMenu={boardContext}
       onPointerDownCapture={measureDown}
-      onPointerMove={stampTool ? (e) => { const c = cellAt(e); if (c) setHover(c); } : undefined}
-      onPointerLeave={stampTool ? () => setHover(null) : undefined}
+      onPointerMove={(e) => {
+        const c = cellAt(e);
+        if (c) setHover((h) => (h && h.x === c.x && h.y === c.y ? h : c));
+      }}
+      onPointerLeave={() => setHover(null)}
     >
       <div className={iso ? "mh-map-plane" : "mh-map-flat"}>
       {iso &&
@@ -10084,6 +10147,7 @@ function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChang
         })}
       {/* La escena va difuminada para que destaquen la cuadrícula y las fichas */}
       {bg && <div className="mh-map-bg" style={{ backgroundImage: `url("${bg.replace(/"/g, "%22")}")` }} />}
+      <div className="mh-map-tint" />
       {terrain.map((t) => (
         <div key={"t" + t.x + "," + t.y} className="mh-map-terrain" style={{ ...at(t.x, t.y), background: terrainOf(t.kind).flat }} />
       ))}
@@ -10112,13 +10176,27 @@ function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChang
         </div>
       )}
       <div className="mh-map-grid" />
+      {Object.keys(areaMap).map((k) => {
+        const [x, y] = k.split(",").map(Number);
+        return <div key={"a" + k} className="mh-map-area" style={{ ...at(x, y), "--ac": areaMap[k] }} />;
+      })}
+      {hover && !drag?.moved && !stampTool && !areaTool && <div className="mh-map-hov" style={at(hover.x, hover.y)} />}
+      {fogOn &&
+        Array.from({ length: MAP_COLS * MAP_ROWS }, (_, i) => {
+          const x = i % MAP_COLS, y = Math.floor(i / MAP_COLS);
+          return inFog(x, y) ? <div key={"f" + i} className={"mh-map-fog" + (fogHide ? "" : " is-gm")} style={at(x, y)} /> : null;
+        })}
+      <div className="mh-map-noise" />
       {!rangeTok && reach.map(([x, y]) => (
         <div key={x + "," + y} className="mh-map-reach" style={at(x, y)} />
       ))}
       {drag?.moved && <div className={"mh-map-drop" + (occupied(drag.x, drag.y, drag.id) ? " is-bad" : "")} style={at(drag.x, drag.y)} />}
-      {tokens.map((t) => {
+      {tokens.filter((t) => !(fogHide && inFog(t.x, t.y))).map((t) => {
         const pos = drag && drag.id === t.id && drag.moved ? { x: drag.fx, y: drag.fy } : t;
         const movable = canMove(t);
+        const Emb = t.kind === "pc" ? CLASS_EMBLEMS[t.cls] || User : t.kind === "pet" ? PawPrint : t.kind === "foe" ? Skull : Drama;
+        const hpLeft = t.hp && t.hp[1] > 0 ? Math.max(0, (t.hp[1] - t.hp[0]) / t.hp[1]) : null;
+        const hpCol = hpLeft == null ? "" : hpLeft > 0.5 ? "#5FD38C" : hpLeft > 0.25 ? "#F0B94A" : "#F0615A";
         return (
           <button
             key={t.id}
@@ -10147,12 +10225,21 @@ function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChang
                 })}
               </span>
             )}
-            <span className="mh-map-face">{t.img ? <img src={t.img} alt="" draggable={false} /> : t.kind === "foe" ? <Skull size="55%" /> : t.kind === "pet" ? null : <span>{(t.name || "?").trim().charAt(0).toUpperCase()}</span>}</span>
-            {t.hp && t.hp[1] > 0 && (
-              <span className="mh-map-hp" title={`Vida: ${t.hp[1] - t.hp[0]} de ${t.hp[1]}`}>
-                <i style={{ width: Math.max(0, ((t.hp[1] - t.hp[0]) / t.hp[1]) * 100) + "%" }} />
+            {spotTok && spotTok.id === t.id && !t.vanished && <span className="mh-map-spot" aria-hidden="true" />}
+            {t.kind === "pc" && spotHands[t.charId] && !t.vanished && (
+              <span className={"mh-map-hand" + (kindOf(spotHands[t.charId].kind).urgent ? " is-urgent" : "")} aria-hidden="true">
+                {kindOf(spotHands[t.charId].kind).icon}
+                <b>{spotHands[t.charId].n}</b>
               </span>
             )}
+            {hpLeft != null && (
+              <svg className="mh-map-ring" viewBox="0 0 100 100" aria-hidden="true">
+                <circle cx="50" cy="50" r="46" fill="none" stroke="rgba(0,0,0,.45)" strokeWidth="6" />
+                <circle cx="50" cy="50" r="46" fill="none" stroke={hpCol} strokeWidth="6" strokeLinecap="round" strokeDasharray={`${hpLeft * 289} 289`} />
+              </svg>
+            )}
+            <span className="mh-map-face" title={hpLeft != null ? `Vida: ${t.hp[1] - t.hp[0]} de ${t.hp[1]}` : undefined}>{t.img && t.kind !== "pc" ? <img src={t.img} alt="" draggable={false} /> : <Emb size="52%" strokeWidth={2.1} />}</span>
+            {t.name && <span className="mh-map-nm">{t.name}</span>}
           </button>
         );
       })}
@@ -14961,9 +15048,9 @@ export default function App({ onSignOut }) {
         const beast = ch && t.charId === viewingCharId && !gmViewing ? ch.f_beastform || "" : t.beast || "";
         const trf = ch && t.charId === viewingCharId && !gmViewing ? visibleTransform(ch) : t.trf || "";
         const elem = ch && t.charId === viewingCharId && !gmViewing ? ch.f_elemental_active || "" : t.elem || "";
-        return { ...t, hidden, conds, beast, trf, elem, name: ch?.f_name || t.name || "Personaje", color: classColor(ch?.f_class), hp: ch ? [Number(ch.hp_marked || 0), Number(ch.r_hp || 0)] : null };
+        return { ...t, hidden, conds, beast, trf, elem, name: ch?.f_name || t.name || "Personaje", cls: ch?.f_class || "", color: classColor(ch?.f_class), hp: ch ? [Number(ch.hp_marked || 0), Number(ch.r_hp || 0)] : null };
       }
-      if (t.kind === "pet") return { ...t, color: classColor(characters[t.ownerCharId]?.f_class) };
+      if (t.kind === "pet") return { ...t, cls: characters[t.ownerCharId]?.f_class || "", color: classColor(characters[t.ownerCharId]?.f_class) };
       return { ...t, color: t.kind === "foe" ? "#C0504A" : "#C9A24A", img: t.imgId ? castImgs[t.imgId] : null, ...(t.stats ? { hp: [Number(t.stats.hpMarked || 0), Number(t.stats.hp || 0)] } : {}) };
     });
 
