@@ -4972,7 +4972,7 @@ const sharedStyles = `
   .mh-root.is-mobile .mh-stg-fear.is-over.is-flow { position: static; align-self: stretch; justify-content: center; flex-shrink: 0; }
   .mh-stg-fear.is-over > span:first-child, .mh-stg-fear.is-over b { color: #CDBBF5; }
   .mh-stg-body { transition: opacity .36s ease; } .mh-stg-body.is-out { opacity: 0; }
-  .mh-stg-scene { animation: mh-scene-in .55s ease both; } @keyframes mh-scene-in { from { opacity: 0; } to { opacity: 1; } }
+  .mh-stg-scene { animation: mh-scene-in .7s ease both; } @keyframes mh-scene-in { from { opacity: .4; filter: blur(10px); } to { opacity: 1; filter: blur(0); } }
   @media (prefers-reduced-motion: reduce) { .mh-stg-body { transition: none; } .mh-stg-scene { animation: none; } }
   .mh-stg-body { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
   .mh-stg-kick { font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
@@ -5309,8 +5309,7 @@ const sharedStyles = `
   .mh-map .mh-map-tk.is-pet .mh-map-face { width: 58%; height: 58%; background: radial-gradient(circle at 35% 28%, color-mix(in srgb, var(--tc) 30%, #12143a), #0c0d2a 72%); border-radius: 50%; border-width: 2px; border-color: var(--tc); }
   .mh-map-hp { display: none; }
   /* La escena se desenfoca en el sitio y la cuadrícula aparece encima (sin fundido entre imágenes) */
-  .mh-map-bg { animation: mh-bgblur 1.1s cubic-bezier(.3,.7,.3,1) both; }
-  @keyframes mh-bgblur { from { filter: blur(0) saturate(1) brightness(1); } to { filter: blur(24px) saturate(1.05) brightness(.82); } }
+  .mh-map-bg { animation: mh-gridin 1.2s ease both; }
   .mh-map-tint { animation: mh-gridin .9s ease .15s both; }
   .mh-map-grid { animation: mh-gridin .9s ease .3s both; }
   .mh-map-noise { animation: mh-gridin 1s ease .3s both; }
@@ -5891,7 +5890,7 @@ const sharedStyles = `
   .mh-tl .mh-tl-cur { flex: 0 0 46%; } .mh-tl .mh-tl-nx { flex: 1 1 0; min-width: 0; opacity: .6; background: var(--mh-panel2); } .mh-tl-nx small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; text-transform: none; letter-spacing: 0; } .mh-tl-nx:nth-child(n+3) { opacity: .4; }
   .mh-tl .mh-ch-step { position: relative; } .mh-tl .mh-ch-step + .mh-ch-step::before { content: ""; position: absolute; left: -16px; top: 50%; width: 16px; height: 2px; background: var(--mh-gold-ink); opacity: .55; } .mh-tl .mh-ch-step + .mh-ch-step::after { content: ""; position: absolute; left: -5px; top: calc(50% - 3px); width: 8px; height: 8px; border-radius: 50%; background: var(--mh-gold-ink); opacity: .8; }
   .mh-tl-pick { display: flex; flex-direction: column; gap: 5px; width: 100%; } .mh-tl-pick select { width: 100%; padding: 6px 8px; font-size: 12px; }
-  .mh-dir-mon.is-map { background: #1B1824; } .mh-dir-mon > .mh-dir-map { position: absolute !important; inset: 0; border-radius: 0; } .mh-dir-mapbtn { position: absolute !important; right: 12px; top: 12px; z-index: 5; display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 6px 11px; background: rgba(8,8,24,.72); }
+  .mh-dir-mon.is-map { background-color: #1B1824; } .mh-dir-mon > .mh-dir-map { background: transparent; } .mh-dir-mon > .mh-dir-map { position: absolute !important; inset: 0; border-radius: 0; } .mh-dir-mapbtn { position: absolute !important; right: 12px; top: 12px; z-index: 5; display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 6px 11px; background: rgba(8,8,24,.72); }
   .mh-chb { position: absolute; left: 0; right: 0; top: 18%; z-index: 25; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; pointer-events: none; color: #fff; text-shadow: 0 2px 18px rgba(0,0,0,.85); animation: mhChb 3.8s ease both; }
   .mh-chb small { font: 700 12px 'Inter', system-ui, sans-serif; letter-spacing: .32em; text-transform: uppercase; color: #E3B04B; } .mh-chb b { font: 700 clamp(28px, 5vw, 52px)/1.1 'Cormorant Garamond', Georgia, serif; letter-spacing: .04em; padding: 0 16px; } .mh-chb i { display: block; height: 2px; width: 0; background: linear-gradient(90deg, transparent, #E3B04B, transparent); animation: mhChbLine 3.8s ease both; }
   @keyframes mhChb { 0% { opacity: 0; transform: translateY(14px) scale(.96); letter-spacing: .02em; } 14% { opacity: 1; transform: none; } 78% { opacity: 1; } 100% { opacity: 0; transform: translateY(-8px); } }
@@ -10144,6 +10143,7 @@ function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChang
     <div
       ref={ref}
       className={"mh-map" + (bg ? "" : " is-blank") + (compact ? " is-compact" : "") + (stampTool ? " is-stamping" : "") + (iso ? " is-iso" : "")}
+      style={bg ? { backgroundImage: `url("${bg.replace(/"/g, "%22")}")`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
       onClick={boardClick}
       onPointerDown={stampDown}
       onContextMenu={boardContext}
@@ -28768,7 +28768,7 @@ export default function App({ onSignOut }) {
                       </div>
                     );
                     const monEl = (
-                      <div key={view + "|" + (cur?.id || "") + "|" + (cur?.image || stage.scene?.image || "")} className={"mh-dir-mon" + (view === "escena" && (cur?.image || stage.scene?.image) ? "" : " is-blank") + (view === "mapa" ? " is-map" : "")} style={view === "escena" ? bgStyle(cur?.image || stage.scene?.image) : undefined}>
+                      <div key={view + "|" + (cur?.id || "") + "|" + (cur?.image || stage.scene?.image || "")} className={"mh-dir-mon" + (view === "escena" && (cur?.image || stage.scene?.image) ? "" : " is-blank") + (view === "mapa" ? " is-map" : "")} style={view === "escena" || view === "mapa" ? bgStyle(cur?.image || stage.scene?.image) : undefined}>
                         {view === "escena" ? (
                           <>
                             <SceneFx fx={cur?.fx || stage.scene?.fx || []} />
