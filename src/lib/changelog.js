@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "arreglo", text: "Quitada la animación de zoom (y el destello de brillo) que tenía el monitor del DJ al cambiar de escena o de vista; ahora el cambio es un fundido suave." },
       { tag: "arreglo", text: "Transición suave entre la escena y el tablero de combate: ya no hay destello oscuro. La imagen de la escena se queda debajo y la versión desenfocada con la cuadrícula aparece encima poco a poco; al volver a la escena, se enfoca de nuevo." },
       { tag: "nuevo", text: "Directo: el selector de arriba ahora es «Tu vista» y es solo tuya. Puedes preparar el tablero de combate (o cualquier otra pantalla) mientras los jugadores siguen viendo la escena; un punto rojo marca lo que ven ellos. Cuando esté listo, pulsa «Mostrar a los jugadores». La línea de tiempo de abajo sigue igual y, al avanzarla, tu vista sigue a la de los jugadores." },
       { tag: "mejora", text: "Al pasar de la escena al tablero de combate (y al cambiar de capítulo dentro del tablero) la misma imagen se desenfoca en el sitio y la cuadrícula aparece encima, sin fundido entre imágenes." },
