@@ -5864,6 +5864,13 @@ const sharedStyles = `
   .mh-dir-live { display: flex; gap: 3px; padding: 3px; border-radius: 999px; background: var(--mh-panel2); border: 1px solid var(--mh-line); }
   .mh-dir-live button { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border: 0; border-radius: 999px; background: transparent; color: var(--mh-ink3); font: 600 12px 'Inter', system-ui, sans-serif; cursor: pointer; }
   .mh-dir-live button.is-on { background: rgba(217,100,78,.22); color: color-mix(in srgb, #C0504A var(--mh-accent-keep, 100%), #000); }
+  .mh-dir-live button { position: relative; } .mh-dir-live button.is-live:not(.is-on) { color: var(--mh-ink); }
+  .mh-dir-livedot { width: 7px; height: 7px; border-radius: 50%; background: #E0544A; box-shadow: 0 0 0 3px rgba(224,84,74,.25); animation: mh-selpulse 2s ease-in-out infinite; }
+  .mh-dir-live button.is-on { background: rgba(227,176,75,.22); color: var(--mh-gold-ink); }
+  .mh-dir-seen { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--mh-green-ink, #4cc36b); }
+  .mh-dir-show { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; font-size: 12.5px; animation: mh-showpulse 2.4s ease-in-out infinite; }
+  @keyframes mh-showpulse { 50% { box-shadow: 0 0 0 5px rgba(227,176,75,.22); } }
+  .mh-stg-live.is-prev { background: rgba(227,176,75,.92); color: #241a05; } .mh-stg-live.is-prev i { background: #241a05; animation: none; }
   .mh-dir-live button span { display: none; } .mh-dir-live button { padding: 6px 11px; }
   .mh-dir-chnav { display: flex; align-items: center; gap: 5px; margin-left: auto; }
   .mh-dir-chpill { flex: none; width: 230px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 6px 13px; border-radius: 999px; border: 1px solid rgba(227,176,75,.5); background: rgba(227,176,75,.14); color: var(--mh-gold-ink); font: 700 12px 'Inter', system-ui, sans-serif; cursor: pointer; }
@@ -11567,6 +11574,7 @@ export default function App({ onSignOut }) {
   const [chTab, setChTab] = useState("dialogos"); // pestaña abierta del capítulo en «Historia»
   const ambBtn = useRef(null);
   const [ambOpen, setAmbOpen] = useState(false); // ventana de «Ambiente» (audio de la mesa)
+  const [djView, setDjView] = useState(null); // lo que el DJ está viendo en Directo (null = lo mismo que ven los jugadores)
   const [quickChar, setQuickChar] = useState(null); // personaje cuya ficha rápida sustituye a «El grupo» en Directo
   const [mapPick, setMapPick] = useState({}); // por capítulo: mapa de combate elegido
   const [dlgStart, setDlgStart] = useState({}); // por capítulo: { convId, lineId } con lo que el DJ quiere decir primero
@@ -15448,6 +15456,10 @@ export default function App({ onSignOut }) {
     if (!on) postChat(viewingCampaignId, { kind: "event", author: "El DJ", gm: true, icon: "xcard", text: "activa la X-Card: un jugador no está cómodo con lo que se está tratando" });
   };
 
+  // Si cambia lo que ven los jugadores (o de campaña), la vista del DJ vuelve a seguirlo.
+  useEffect(() => {
+    setDjView(null);
+  }, [campaignStage.live, viewingCampaignId]);
   const showOnStage = async (key) => {
     if (!viewingCampaignId || (campaignStage.live || "escena") === key) return;
     await saveStage(viewingCampaignId, { live: key });
@@ -28686,6 +28698,7 @@ export default function App({ onSignOut }) {
                     const cur = scenes.find((x) => x.id === activeSceneId) || null;
                     const idx = cur ? scenes.indexOf(cur) : -1;
                     const live = stage.live || "escena";
+                    const view = djView || live; // lo que el DJ ve; los jugadores solo ven «live»
                     const imm = !!settings.immersive;
                     const liveId = stage.dialogue?.lineId;
                     const liveConv = liveId ? dialogueConvs.find((c) => c.lines.some((l) => l.id === liveId)) : null;
@@ -28697,6 +28710,7 @@ export default function App({ onSignOut }) {
                     const dlgImg = dlg ? castImgs[dlg.imgId] : null;
                     const online = table.filter((e) => tableStatus(e) === "on").length;
                     const liveLabel = { escena: "la escena", mapa: "el mapa de combate", mundo: "el mapa de mundo", pistas: "las pistas", personajes: "los personajes" }[live];
+                    const viewLabel = { escena: "la escena", mapa: "el mapa de combate", mundo: "el mapa de mundo", pistas: "las pistas", personajes: "los personajes" }[view];
                     const pips = (n, t, col) => (
                       <span className="mh-dir-pips" style={{ color: col }}>
                         {Array.from({ length: Math.min(12, Math.max(0, t)) }, (_, i) => <i key={i} className={i < n ? "is-f" : ""} />)}
@@ -28713,17 +28727,25 @@ export default function App({ onSignOut }) {
                     );
                     const barEl = (
                       <div className="mh-dir-bar">
-                        <span className="mh-dir-lbl">Lo que ven tus jugadores</span>
-                        <div className="mh-dir-live" role="tablist" aria-label="Qué ven los jugadores">
+                        <span className="mh-dir-lbl">Tu vista</span>
+                        <div className="mh-dir-live" role="tablist" aria-label="Qué estás viendo tú">
                           {STAGE_TABS.map((t) => {
                             const TI = t.Icon;
                             return (
-                              <button key={t.key} type="button" role="tab" aria-selected={live === t.key} className={live === t.key ? "is-on" : ""} onClick={() => showOnStage(t.key)} title={t.label}>
+                              <button key={t.key} type="button" role="tab" aria-selected={view === t.key} className={(view === t.key ? "is-on" : "") + (live === t.key ? " is-live" : "")} onClick={() => setDjView(t.key === live ? null : t.key)} title={t.label + (live === t.key ? " · es lo que ven los jugadores" : "")}>
                                 <TI size={14} /> <span>{t.label}</span>
+                                {live === t.key && <i className="mh-dir-livedot" aria-hidden="true" />}
                               </button>
                             );
                           })}
                         </div>
+                        {view === live ? (
+                          <span className="mh-dir-seen" title="Lo que estás viendo es lo que ven los jugadores"><Eye size={13} /> Lo ven los jugadores</span>
+                        ) : (
+                          <button type="button" className="mh-btn mh-dir-show" onClick={() => showOnStage(view)} title={"Los jugadores ven " + liveLabel + ". Pulsa para que vean " + viewLabel}>
+                            <Play size={13} /> Mostrar a los jugadores
+                          </button>
+                        )}
                         {scenes.length > 0 && (
                           <div className="mh-dir-chnav">
                             <button type="button" className="mh-gm-ib" aria-label={idx === 0 ? "Quitar el capítulo de la pantalla" : "Capítulo anterior"} title={idx === 0 ? "Volver a «A la espera de una escena»" : "Capítulo anterior"} disabled={idx < 0} onClick={() => (idx === 0 ? hideScene() : showScene(scenes[idx - 1].id))}>
@@ -28746,8 +28768,8 @@ export default function App({ onSignOut }) {
                       </div>
                     );
                     const monEl = (
-                      <div key={live + "|" + (cur?.id || "") + "|" + (cur?.image || stage.scene?.image || "")} className={"mh-dir-mon" + (live === "escena" && (cur?.image || stage.scene?.image) ? "" : " is-blank") + (live === "mapa" ? " is-map" : "")} style={live === "escena" ? bgStyle(cur?.image || stage.scene?.image) : undefined}>
-                        {live === "escena" ? (
+                      <div key={view + "|" + (cur?.id || "") + "|" + (cur?.image || stage.scene?.image || "")} className={"mh-dir-mon" + (view === "escena" && (cur?.image || stage.scene?.image) ? "" : " is-blank") + (view === "mapa" ? " is-map" : "")} style={view === "escena" ? bgStyle(cur?.image || stage.scene?.image) : undefined}>
+                        {view === "escena" ? (
                           <>
                             <SceneFx fx={cur?.fx || stage.scene?.fx || []} />
                             {cur && (cur.fx || []).length > 0 && (() => {
@@ -28760,7 +28782,7 @@ export default function App({ onSignOut }) {
                                 </span>
                               );
                             })()}
-                            {(cur || stage.scene?.image) && <span className="mh-stg-live"><i />En directo</span>}
+                            {(cur || stage.scene?.image) && (view === live ? <span className="mh-stg-live"><i />En directo</span> : <span className="mh-stg-live is-prev"><i />Solo tú lo ves</span>)}
                             {!cur && !stage.scene?.image && (
                               <div className="mh-dir-empty mh-dir-wait">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -28779,7 +28801,7 @@ export default function App({ onSignOut }) {
                               </div>
                             )}
                           </>
-                        ) : live === "mapa" ? (
+                        ) : view === "mapa" ? (
                           <div className="mh-map-stage mh-dir-map">
                             <MapViewport focus={null}>
                               <MapBoard
@@ -28805,14 +28827,14 @@ export default function App({ onSignOut }) {
                                 compact
                               />
                             </MapViewport>
-                            <span className="mh-stg-live"><i />En directo</span>
+                            {view === live ? <span className="mh-stg-live"><i />En directo</span> : <span className="mh-stg-live is-prev"><i />Solo tú lo ves</span>}
                             <button type="button" className="mh-btn-ghost mh-dir-mapbtn" onClick={() => (setCombatBack(cur?.id || null), setCampaignDetailTab("mapa"))}><MapPinned size={13} /> Abrir tablero</button>
                           </div>
                         ) : (
                           <div className="mh-dir-empty">
                             <Radio size={28} strokeWidth={1.5} />
-                            <div>Los jugadores están viendo {liveLabel}.</div>
-                            <button type="button" className="mh-btn-ghost" onClick={() => showOnStage("escena")}>Volver a la escena</button>
+                            <div>{view === live ? "Los jugadores están viendo " + liveLabel + "." : "Preparando " + viewLabel + ". Los jugadores ven " + liveLabel + "."}</div>
+                            {view !== live && <button type="button" className="mh-btn" onClick={() => showOnStage(view)}><Play size={13} /> Mostrar a los jugadores</button>}
                           </div>
                         )}
                       </div>
