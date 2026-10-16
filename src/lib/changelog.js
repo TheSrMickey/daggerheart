@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "nuevo", text: "Directo: el selector de arriba ahora es «Tu vista» y es solo tuya. Puedes preparar el tablero de combate (o cualquier otra pantalla) mientras los jugadores siguen viendo la escena; un punto rojo marca lo que ven ellos. Cuando esté listo, pulsa «Mostrar a los jugadores». La línea de tiempo de abajo sigue igual y, al avanzarla, tu vista sigue a la de los jugadores." },
       { tag: "mejora", text: "Al pasar de la escena al tablero de combate (y al cambiar de capítulo dentro del tablero) la misma imagen se desenfoca en el sitio y la cuadrícula aparece encima, sin fundido entre imágenes." },
       { tag: "nuevo", text: "Nuevo tablero de combate: la escena del capítulo de fondo, difuminada, con casillas de cristal encima. Las fichas son círculos con el logo de su clase (el mismo que en el menú de la izquierda), un anillo alrededor que marca la vida y su nombre debajo. Sustituye a la vista isométrica." },
       { tag: "nuevo", text: "Directo: al pulsar un personaje (en el tablero o en «El grupo») la caja del grupo se convierte en su ficha rápida: Vida, Estrés y Esperanza editables, Evasión, Armadura, Umbrales, arma y condiciones, con botones de +Esperanza, Daño y Ficha completa. «‹ Grupo» vuelve a la lista." },
