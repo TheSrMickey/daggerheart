@@ -5808,7 +5808,7 @@ const sharedStyles = `
   .mh-cg-tit { min-width: 0; } .mh-cg-name { font-size: 22px; line-height: 1.1; outline: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .mh-cg-sub1 { font-size: 12.5px; color: var(--mh-muted); margin-top: 3px; } .mh-cg-sub1 b { color: var(--mh-muted); font-weight: 600; } .mh-cg-sub1 b.is-on { color: var(--mh-green-ink); }
   .mh-cg-fear { margin-left: auto; flex: none; } .mh-cg-fear-b { display: inline-flex; padding: 0; border: 0; background: none; cursor: pointer; color: inherit; }
-  .mh-dir-mon { animation: mh-dir-in .6s cubic-bezier(.2,.7,.2,1) both; } @keyframes mh-dir-in { from { opacity: 0; transform: scale(1.025); filter: brightness(1.25) blur(3px); } to { opacity: 1; transform: none; filter: none; } }
+  .mh-dir-mon { animation: mh-dir-in .45s ease both; } @keyframes mh-dir-in { from { opacity: .6; } to { opacity: 1; } }
   @media (prefers-reduced-motion: reduce) { .mh-dir-mon { animation: none; } }
   .mh-cg-sp { flex: 1; }
   .mh-cg-avs { display: flex; } .mh-cg-av { position: relative; width: 36px; height: 36px; margin-left: -9px; border-radius: 50%; display: grid; place-items: center; color: var(--c); background: color-mix(in srgb, var(--c) 25%, var(--mh-panel2)); border: 2px solid color-mix(in srgb, var(--c) 55%, transparent); } .mh-cg-av:first-child { margin-left: 0; }
