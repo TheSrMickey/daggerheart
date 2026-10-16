@@ -5308,6 +5308,14 @@ const sharedStyles = `
   .mh-map-hand { position: absolute; z-index: 6; right: -2%; top: -6%; display: inline-flex; align-items: center; gap: 2px; padding: 1px 6px; border-radius: 99px; font-size: 12px; background: #E3B04B; color: #241a05; box-shadow: 0 2px 6px rgba(0,0,0,.4); pointer-events: none; } .mh-map-hand.is-urgent { background: #E0544A; color: #fff; } .mh-map-hand b { font: 800 10px 'Inter', system-ui, sans-serif; }
   .mh-map .mh-map-tk.is-pet .mh-map-face { width: 58%; height: 58%; background: radial-gradient(circle at 35% 28%, color-mix(in srgb, var(--tc) 30%, #12143a), #0c0d2a 72%); border-radius: 50%; border-width: 2px; border-color: var(--tc); }
   .mh-map-hp { display: none; }
+  /* La escena se desenfoca en el sitio y la cuadrícula aparece encima (sin fundido entre imágenes) */
+  .mh-map-bg { animation: mh-bgblur 1.1s cubic-bezier(.3,.7,.3,1) both; }
+  @keyframes mh-bgblur { from { filter: blur(0) saturate(1) brightness(1); } to { filter: blur(24px) saturate(1.05) brightness(.82); } }
+  .mh-map-tint { animation: mh-gridin .9s ease .15s both; }
+  .mh-map-grid { animation: mh-gridin .9s ease .3s both; }
+  .mh-map-noise { animation: mh-gridin 1s ease .3s both; }
+  @keyframes mh-gridin { from { opacity: 0; } to { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .mh-map-bg, .mh-map-tint, .mh-map-grid, .mh-map-noise { animation: none; } }
   .mh-map-fit .mh-map { border-radius: 0; }
   .mh-spot-ui { position: absolute; left: 12px; top: 112px; z-index: 7; display: flex; flex-direction: column; gap: 6px; max-width: 250px; }
   .mh-spot-btn { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 7px; padding: 8px 13px; border-radius: 10px; background: rgba(13,13,28,.82); border: 1px solid #ffffff2a; backdrop-filter: blur(4px); color: #fff; font: 600 12.5px Inter, system-ui, sans-serif; }
@@ -10146,7 +10154,7 @@ function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChang
           return <div key={"c" + i} className={"mh-map-cell" + ((x + y) % 2 ? " is-alt" : "")} data-cell="1" data-x={x} data-y={y} style={at(x, y)} />;
         })}
       {/* La escena va difuminada para que destaquen la cuadrícula y las fichas */}
-      {bg && <div className="mh-map-bg" style={{ backgroundImage: `url("${bg.replace(/"/g, "%22")}")` }} />}
+      {bg && <div key={bg} className="mh-map-bg" style={{ backgroundImage: `url("${bg.replace(/"/g, "%22")}")` }} />}
       <div className="mh-map-tint" />
       {terrain.map((t) => (
         <div key={"t" + t.x + "," + t.y} className="mh-map-terrain" style={{ ...at(t.x, t.y), background: terrainOf(t.kind).flat }} />
