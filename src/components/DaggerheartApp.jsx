@@ -2,7 +2,6 @@
 
 import { Fragment, useState, useEffect, useLayoutEffect, useRef, createContext, useContext } from "react";
 import { createPortal } from "react-dom";
-import dynamic from "next/dynamic";
 import { Globe, Tent, Haze, CloudFog, CloudRain, CloudLightning, Beer } from "lucide-react";
 import SceneFx, { SCENE_FX } from "./SceneFx";
 import Ambient from "./Ambient";
@@ -2431,8 +2430,6 @@ const castImgIdFor = (m, expr) => {
   return imgs[expr] || imgs.tranquila || Object.values(imgs)[0] || null;
 };
 
-// El mapa de mundo es 3D (Three.js): se carga solo cuando se abre.
-const WorldMap = dynamic(() => import("./WorldMap"), { ssr: false, loading: () => <div className="wm-load">Cargando el mapa de mundo…</div> });
 // Icono de cada efecto de escena.
 const FX_ICONS = { campfire: Tent, dust: Haze, fire: Flame, fog: CloudFog, rays: Sun, gold: Sparkles, purple: Sparkles, rain: CloudRain, storm: CloudLightning, snow: Snowflake, tavern: Beer, wind: Wind };
 const FX_COLORS = { gold: "#E3B04B", purple: "#A58BE8", fire: "#E0823A", campfire: "#E0823A", tavern: "#E3A04B" };
@@ -5748,39 +5745,7 @@ const sharedStyles = `
   .mh-gm-h { display: flex; align-items: center; gap: 8px; font-family: 'Cinzel', Georgia, serif; font-weight: 700; font-size: 15px; color: var(--mh-ink); }
   .mh-gm-sub { font-size: 12px; color: var(--mh-muted); margin-top: -6px; }
   .mh-gm-live { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
-  .wm { display: flex; gap: 14px; align-items: stretch; min-height: 520px; margin-top: 10px; } .wm.wm-view { margin: 0; flex: 1; min-height: 0; }
-  .wm-stage { position: relative; flex: 1; min-width: 0; min-height: 480px; border-radius: 12px; overflow: hidden; border: 1px solid var(--mh-line); background: #121b29; } .wm-view .wm-stage { min-height: 0; }
-  .wm-stage canvas { display: block; touch-action: none; }
-  .wm-row2 { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; pointer-events: auto; }
-  .wm-banner { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 3; display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 99px; background: rgba(10,14,24,.9); border: 1px solid #E3B04B; color: #f3e6c4; font: 600 12px 'Inter', system-ui, sans-serif; white-space: nowrap; } .wm-banner button { all: unset; cursor: pointer; padding: 2px 8px; border-radius: 99px; background: rgba(255,255,255,.12); font-size: 11px; }
-  .wm-env { position: absolute; top: 10px; left: 10px; z-index: 3; display: flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 99px; background: rgba(10,14,24,.78); border: 1px solid rgba(255,255,255,.16); color: #dfe8ff; font: 600 11.5px 'Inter', system-ui, sans-serif; backdrop-filter: blur(4px); pointer-events: none; } .wm-env svg + span + svg { margin-left: 4px; }
-  .mh-seg.wm-wrap { flex-wrap: wrap; } .mh-seg.wm-wrap button { flex: 1 1 44%; }
-  .wm-toast { position: absolute; left: 50%; bottom: 44px; transform: translateX(-50%); z-index: 4; max-width: 80%; padding: 8px 14px; border-radius: 12px; background: rgba(10,14,24,.94); border: 1px solid #c0392b; color: #ffd9d4; font: 600 12px 'Inter', system-ui, sans-serif; text-align: center; }
-  .wm-trip { position: absolute; left: 10px; bottom: 32px; z-index: 3; width: 232px; display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-radius: 12px; background: rgba(10,14,24,.84); border: 1px solid rgba(255,255,255,.16); color: #dfe8ff; font: 500 11px 'Inter', system-ui, sans-serif; backdrop-filter: blur(4px); }
-  .wm-trip-h { display: flex; align-items: baseline; justify-content: space-between; } .wm-trip-h b { font: 700 18px Georgia, serif; color: #E3B04B; } .wm-trip-h span { color: #9fa8cf; }
-  .wm-trip-r { display: flex; align-items: center; gap: 5px; color: #9fa8cf; } .wm-trip-r i { width: 11px; height: 11px; border-radius: 50%; border: 2px solid #44507a; } .wm-trip-r i.on { background: #E3B04B; border-color: #E3B04B; } .wm-trip-r span { margin-left: auto; color: #dfe8ff; font-weight: 700; }
-  .wm-trip-d { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; } .wm-trip-d i { font-style: normal; width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; background: #262c48; border: 1px solid #44507a; font-weight: 700; font-size: 12px; } .wm-trip-d i.one { background: #c0392b; border-color: #ff6b5e; color: #fff; } .wm-trip-d span { margin-left: 4px; font-weight: 700; } .wm-trip-d.is-hit span { color: #ff9b91; } .wm-trip-d em { flex-basis: 100%; font-style: normal; color: #E3B04B; font-weight: 600; }
-  .wm-trip-b { display: flex; gap: 6px; flex-wrap: wrap; } .wm-trip-b button { all: unset; cursor: pointer; padding: 4px 9px; border-radius: 8px; background: #262c48; border: 1px solid #44507a; font-size: 10.5px; font-weight: 600; } .wm-trip-b button:hover { border-color: #E3B04B; color: #E3B04B; }
-  .wm-lbl.is-adj { background: #16301f; border-color: #4CC36B; color: #bfeccb; } .wm-lbl.is-adj.a2 { background: #3a2f12; border-color: #E3B04B; color: #f3e6c4; } .wm-lbl.is-adj.a3 { background: #3a2216; border-color: #e07a5f; color: #ffd5c8; } .wm-lbl.is-adj.a4 { background: #3a1a1a; border-color: #c0392b; color: #f5c2bd; } .wm-lbl.is-adj.a0 { background: #16283a; border-color: #78bde0; color: #cfe8f7; }
-  .wm-f { display: flex; flex-direction: column; gap: 4px; font-size: 10.5px; color: var(--mh-muted); } .wm-f select, .wm-f input { font-size: 12px; }
-  .wm-lbl.is-party { background: #E3B04B; border-color: #fff6; color: #1a1206; }
   .mh-btn-ghost.is-on { border-color: #E3B04B; color: #E3B04B; }
-  .wm-load { padding: 40px; text-align: center; color: var(--mh-muted); font-size: 13px; }
-  .wm-empty { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; padding: 30px; color: #b9c4d6; font-size: 13px; pointer-events: none; } .wm-empty button { pointer-events: auto; }
-  .wm-center { position: absolute; top: 10px; right: 10px; width: 32px; height: 32px; border-radius: 9px; border: 1px solid rgba(255,255,255,.18); background: rgba(10,14,24,.7); color: #e9eefc; display: grid; place-items: center; cursor: pointer; backdrop-filter: blur(4px); } .wm-center:hover { background: rgba(10,14,24,.9); }
-  .wm-help { position: absolute; left: 10px; bottom: 8px; font-size: 10.5px; color: rgba(220,230,250,.7); text-shadow: 0 1px 3px #000; pointer-events: none; }
-  .wm-labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; } .wm-labels .wm-lbl { position: absolute; left: 0; top: 0; will-change: transform; }
-  .wm-lbl { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 99px; background: rgba(10,14,24,.82); border: 1px solid rgba(227,176,75,.55); color: #f3e6c4; font: 700 11px 'Inter', system-ui, sans-serif; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,.4); } .wm-lbl.is-hidden { opacity: .6; border-style: dashed; }
-  .wm-side { width: 270px; flex-shrink: 0; display: flex; flex-direction: column; gap: 12px; max-height: 620px; overflow-y: auto; scrollbar-width: thin; }
-  .wm-sec { display: flex; flex-direction: column; gap: 8px; } .wm-sec.wm-row { flex-direction: row; flex-wrap: wrap; }
-  .wm-lab { font: 700 10px 'Inter', system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-muted); }
-  .wm-pal { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; max-height: 250px; overflow-y: auto; scrollbar-width: thin; padding-right: 2px; }
-  .wm-it { all: unset; cursor: pointer; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 5px 3px 4px; border-radius: 9px; border: 1px solid var(--mh-line); background: var(--mh-panel2); font: 600 10px 'Inter', system-ui, sans-serif; color: var(--mh-ink3); text-align: center; line-height: 1.15; }
-  .wm-it img { width: 100%; height: 44px; object-fit: contain; } .wm-it:hover { border-color: var(--mh-line2); color: var(--mh-ink); } .wm-it.on { border-color: var(--mh-gold-ink); background: color-mix(in srgb, var(--mh-gold-ink) 14%, var(--mh-panel)); color: var(--mh-ink); }
-  .wm-chk { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--mh-ink3); cursor: pointer; }
-  .wm-note { margin: 0; font-size: 11.5px; line-height: 1.45; color: var(--mh-muted); } .wm-note svg { vertical-align: -2px; }
-  .wm-card { margin: 0; } .wm-card .wm { min-height: 560px; }
-  @media (max-width: 900px) { .wm { flex-direction: column; } .wm-side { width: auto; max-height: none; } }
   .mh-gm-live button { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 8px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel); color: var(--mh-ink3); font: 600 13px 'Inter', system-ui, sans-serif; cursor: pointer; }
   .mh-gm-live button:hover { color: var(--mh-ink); border-color: var(--mh-line2); }
   .mh-gm-live button.is-on { color: var(--mh-ink); border-color: #D9644E; background: color-mix(in srgb, #D9644E 9%, var(--mh-panel)); }
@@ -21355,7 +21320,7 @@ export default function App({ onSignOut }) {
                                     empty(MapPinned, "El DJ todavía no ha preparado el mapa.")
                                   ))}
 
-                                {stTab === "mundo" && <WorldMap campaignId={charCampaign.id} onLog={(t) => postChat(charCampaign.id, { kind: "event", author: characters[viewingCharId]?.f_name || "El grupo", charId: viewingCharId, icon: "mundo", text: t })} />}
+                                {stTab === "mundo" && empty(Globe, "El mapa de mundo está en preparación.")}
 
                                 {stTab === "pistas" &&
                                   (handouts.length ? (
@@ -30051,10 +30016,9 @@ export default function App({ onSignOut }) {
                   )}
 
                   {campaignDetailTab === "mundo" && (
-                    <div className="mh-card wm-card">
+                    <div className="mh-card">
                       <div className="mh-gm-h"><Globe size={15} /> Mapa de mundo</div>
-                      <div className="mh-gm-sub">Dibuja el mundo con casillas hexagonales en 3D. Cuando quieras enseñárselo a los jugadores, ponlo en directo desde «Mesa».</div>
-                      <WorldMap campaignId={viewingCampaignId} edit onLog={(t) => postChat(viewingCampaignId, { kind: "event", author: "El DJ", gm: true, icon: "mundo", text: t })} />
+                      <div className="mh-gm-sub">El mapa de mundo está en preparación. Cuando esté listo, lo dibujarás y lo enseñarás a los jugadores desde aquí.</div>
                     </div>
                   )}
 
