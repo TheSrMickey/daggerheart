@@ -80,13 +80,14 @@ function PromptHelper({ onClose }) {
   );
 }
 
-export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc, ensureImg, saveImage, dropImage, onOpenScene, onLog }) {
+export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc, ensureImg, saveImage, dropImage, onOpenScene, onLog, fit = false }) {
   const [doc, update] = useDoc(docKey(campaignId), EMPTY, 4000);
   const pins = doc.pins || [];
   const [sel, setSel] = useState(null);
   const [tool, setTool] = useState(null); // "add" cuando el DJ va a colocar un marcador
   const [editing, setEditing] = useState(false);
   const [zoom, setZoom] = useState(1);
+  const [ratio, setRatio] = useState(1.6);
   const [drag, setDrag] = useState(null);
   const [help, setHelp] = useState(false);
   const [busy, setBusy] = useState("");
@@ -206,7 +207,7 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
   // ---- sin mapa ----
   if (!doc.image) {
     return (
-      <div className="mh-wm">
+      <div className={"mh-wm" + (fit ? " is-fit" : "")}>
         <div className="mh-wm-empty">
           <Sparkles size={26} />
           <b>{edit ? "Sube la imagen de tu mundo" : "El DJ todavía no ha preparado el mapa de mundo."}</b>
@@ -230,7 +231,7 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
   }
 
   return (
-    <div className="mh-wm">
+    <div className={"mh-wm" + (fit ? " is-fit" : "")}>
       {edit && (
         <div className="mh-wm-bar">
           <button type="button" className={"mh-btn-ghost" + (tool === "add" ? " is-on" : "")} onClick={() => (setTool(tool === "add" ? null : "add"), setSel(null))} title="Pulsa y luego haz clic en el mapa">
@@ -248,8 +249,8 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
       {edit && help && <PromptHelper onClose={() => setHelp(false)} />}
       <div className="mh-wm-wrap">
         <div className={"mh-wm-view" + (tool === "add" ? " is-add" : "")}>
-          <div className="mh-wm-canvas" ref={canvasRef} style={{ width: zoom * 100 + "%" }} onClick={onMapClick}>
-            {mapSrc ? <img src={mapSrc} alt="Mapa de mundo" draggable={false} /> : <div className="mh-wm-load">Cargando el mapa…</div>}
+          <div className="mh-wm-canvas" ref={canvasRef} style={fit ? { aspectRatio: String(ratio), "--wm-r": ratio } : { width: zoom * 100 + "%" }} onClick={onMapClick}>
+            {mapSrc ? <img src={mapSrc} alt="Mapa de mundo" draggable={false} onLoad={(e) => e.currentTarget.naturalHeight && setRatio(e.currentTarget.naturalWidth / e.currentTarget.naturalHeight)} /> : <div className="mh-wm-load">Cargando el mapa…</div>}
             {visible.map((p) => {
               const k = KIND[p.kind] || KIND.interes;
               const d = drag && drag.id === p.id && drag.on ? drag : p;
@@ -273,7 +274,7 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
               );
             })}
           </div>
-          <div className="mh-wm-zoom">
+          <div className="mh-wm-zoom" hidden={fit}>
             <button type="button" aria-label="Acercar" onClick={() => setZoom((z) => Math.min(3, +(z + 0.5).toFixed(1)))}><ZoomIn size={15} /></button>
             <button type="button" aria-label="Alejar" onClick={() => setZoom((z) => Math.max(1, +(z - 0.5).toFixed(1)))}><ZoomOut size={15} /></button>
           </div>
