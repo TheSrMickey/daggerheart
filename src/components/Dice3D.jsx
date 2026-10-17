@@ -21,6 +21,8 @@ export function canDice3d() {
 }
 export const DICE3D_SIDES = [4, 6, 8, 10, 12, 20];
 
+// Logo de la página (public/logo.svg), en su sistema de coordenadas de 200 × 340.
+const LOGO_PATH = "M100 0C101.5 66 106 109 200 115C106 121 102 164 100 340C98 164 94 121 0 115C94 109 98.5 66 100 0Z";
 const DT = 1 / 120;
 const rngOf = (seed) => () => {
   seed |= 0;
@@ -287,8 +289,8 @@ export function Dice3D({ dice, summary, skin, onReveal, onEnd }) {
 
         const disposables = [];
         const texCache = new Map();
-        const numTex = (n, col) => {
-          const id = n + col;
+        const numTex = (n, col, logo) => {
+          const id = n + col + (logo ? "L" : "");
           if (texCache.has(id)) return texCache.get(id);
           const c = document.createElement("canvas");
           c.width = c.height = 128;
@@ -299,7 +301,13 @@ export function Dice3D({ dice, summary, skin, onReveal, onEnd }) {
           g.fillStyle = col;
           g.shadowColor = col;
           g.shadowBlur = 10;
-          g.fillText(String(n), 64, 70);
+          if (logo) {
+            // En el dado cósmico, la cara del 12 es el logo de la página (la estrella de cuatro puntas).
+            g.translate(64, 64);
+            g.scale(0.34, 0.34);
+            g.translate(-100, -170);
+            g.fill(new Path2D(LOGO_PATH));
+          } else g.fillText(String(n), 64, 70);
           // un 6 y un 9 se distinguen con un punto
           if (n === 6 || n === 9) {
             g.shadowBlur = 0;
@@ -338,7 +346,7 @@ export function Dice3D({ dice, summary, skin, onReveal, onEnd }) {
           const planes = [];
           T.groups.forEach((gr, gi) => {
             gr.slots.forEach((sl) => {
-              const pmat = new THREE.MeshBasicMaterial({ map: numTex(labels[gi], tint[2]), transparent: true, depthWrite: false, opacity: 0.95 });
+              const pmat = new THREE.MeshBasicMaterial({ map: numTex(labels[gi], tint[2], cosmic && labels[gi] === 12), transparent: true, depthWrite: false, opacity: 0.95 });
               const pl = new THREE.Mesh(new THREE.PlaneGeometry(sl.size, sl.size), pmat);
               const yAx = sl.up.clone().sub(sl.n.clone().multiplyScalar(sl.up.dot(sl.n))).normalize();
               const xAx = new THREE.Vector3().crossVectors(yAx, sl.n);
