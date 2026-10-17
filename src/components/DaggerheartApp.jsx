@@ -14,6 +14,7 @@ import { NotificationBell, FriendsPanel } from "./Social";
 import { ModernSheet } from "./ModernSheet";
 import { Tour } from "./Tour";
 import { Dice3D, canDice3d, DICE3D_SIDES } from "./Dice3D";
+import { DicePage } from "./DiceSkins";
 import { LevelUpDialog, parseAdvances, ownedCards, getMulticlass, MAX_LEVEL, rankOf } from "./LevelUp";
 import { RulesPanel } from "./MapRules";
 import { Changelog } from "./Changelog";
@@ -42,6 +43,7 @@ const NAV_ITEMS = [
   { key: "ficha", label: "Personajes", icon: User },
   { key: "campaigns", label: "Campañas", icon: BookOpen },
   { key: "cartas", label: "Cartas", icon: Layers },
+  { key: "dadosskin", label: "Dados", icon: Dices },
   { key: "mesas", label: "Buscar mesa", icon: Megaphone },
 ];
 
@@ -6184,6 +6186,23 @@ const sharedStyles = `
   .mh-cardc.is-bg .mh-cardc-noart.is-exp { display: flex; align-items: center; justify-content: center; color: var(--cc); background: radial-gradient(60% 55% at 50% 24%, color-mix(in srgb, var(--cc) 42%, transparent), transparent 72%), radial-gradient(90% 45% at 18% 0, #7a5be84d, transparent 60%), radial-gradient(70% 45% at 92% 8%, #3fa7b24d, transparent 60%); }
   .mh-cardc-noart.is-exp svg { opacity: .14; width: 210px; height: 210px; margin-top: -26px; }
   .mh-cardc-hp { position: absolute; top: 12px; right: 12px; z-index: 4; display: flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 20px; font-size: 11.5px; font-weight: 700; color: #fff; background: rgba(13,13,34,.72); border: 1px solid var(--cc); }
+  /* Dados (Estilo Cristal) */
+  .mh-dice-page { padding: 8px 4px 90px; max-width: 1100px; margin: 0 auto; }
+  .mh-dice-h h1 { margin: 0 0 4px; font-size: 30px; }
+  .mh-dice-h p { margin: 0 0 18px; color: var(--mh-muted); font-size: 13.5px; max-width: 620px; }
+  .mh-dice-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; }
+  .mh-dice-card { position: relative; display: flex; flex-direction: column; overflow: hidden; border-radius: 24px; background: color-mix(in srgb, var(--mh-panel) 80%, transparent); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); border: 1px solid var(--mh-line2); box-shadow: 0 16px 28px -18px #000c, inset 0 1px 0 #ffffff14; transition: border-color .25s, box-shadow .25s; }
+  .mh-dice-card.is-on { border-color: var(--dc); box-shadow: 0 0 0 1px var(--dc), 0 0 36px -8px color-mix(in srgb, var(--dc) 55%, transparent), 0 16px 28px -18px #000c; }
+  .mh-dice-prev { position: relative; height: 280px; background: radial-gradient(70% 70% at 50% 40%, color-mix(in srgb, var(--dc) 22%, transparent), transparent 75%); }
+  .mh-dice-view { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+  .mh-dice-hint { font-size: 12px; color: var(--mh-muted2); }
+  .mh-dice-glass { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--dc); filter: drop-shadow(0 0 22px color-mix(in srgb, var(--dc) 55%, transparent)); }
+  .mh-dice-badge { position: absolute; top: 12px; right: 12px; display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 20px; font-size: 11px; font-weight: 700; color: #fff; background: color-mix(in srgb, var(--dc) 70%, #000); }
+  .mh-dice-body { display: flex; flex-direction: column; gap: 8px; padding: 4px 20px 20px; }
+  .mh-dice-body h3 { margin: 0; font-size: 20px; }
+  .mh-dice-body p { margin: 0; font-size: 12.5px; line-height: 1.55; color: var(--mh-ink3); min-height: 58px; }
+  .mh-dice-btn { align-self: flex-start; display: inline-flex; align-items: center; gap: 7px; }
+  .mh-dice-btn.is-on { opacity: .75; cursor: default; }
   .mh-cardc-wrap { position: relative; display: flex; align-items: center; justify-content: center; width: min(300px, 100%); }
   .mh-cardc-wrap > .mh-cardc { z-index: 2; }
   .cx-deckwrap { display: flex; flex-direction: column; align-items: center; gap: 22px; max-width: 100%; }
@@ -16350,6 +16369,17 @@ export default function App({ onSignOut }) {
   const [traitRollResult, setTraitRollResult] = useState(null);
   // Dados 3D con física (solo en las tiradas de Agilidad, de momento): mientras ruedan, la tarjeta de resultado espera.
   const [dice3d, setDice3d] = useState(null);
+  // Aspecto de dado equipado (privado de cada cuenta): «cristal» o «cosmico».
+  const [diceSkin, setDiceSkin] = useState("cristal");
+  useEffect(() => {
+    safeGet("dice-skin", false).then((r) => {
+      if (r?.value === "cosmico" || r?.value === "cristal") setDiceSkin(r.value);
+    });
+  }, []);
+  const equipDiceSkin = (key) => {
+    setDiceSkin(key);
+    safeSet("dice-skin", key, false);
+  };
   const [diceHold, setDiceHold] = useState(false);
   const pendingOutcome = useRef(null); // Esperanza/Miedo de la tirada: se aplican al cerrar la escena de dados
   const flushOutcome = () => {
@@ -27872,7 +27902,7 @@ export default function App({ onSignOut }) {
         );
       })()}
       {stageCampaignId && (gmViewing || sheetCampaignId) && <Ambient campaignId={stageCampaignId} isGm={gmViewing} open={gmViewing && ambOpen} onClose={() => setAmbOpen(false)} anchorRef={ambBtn} />}
-      {dice3d && <Dice3D key={dice3d.key} dice={dice3d.dice} summary={dice3d.summary} onReveal={() => (setDiceHold(false), flushOutcome())} onEnd={() => (setDice3d(null), setDiceHold(false))} />}
+      {dice3d && <Dice3D key={dice3d.key} dice={dice3d.dice} summary={dice3d.summary} skin={diceSkin} onReveal={() => (setDiceHold(false), flushOutcome())} onEnd={() => (setDice3d(null), setDiceHold(false))} />}
       <style>{sharedStyles}</style>
       <SocialHost />
       {levelUpId && characters[levelUpId] && (() => {
@@ -30710,6 +30740,7 @@ export default function App({ onSignOut }) {
 
           {view === "mesas" && <LookingFor />}
 
+          {view === "dadosskin" && <DicePage skin={diceSkin} onEquip={equipDiceSkin} />}
           {view === "cartas" && <CardsPage items={buildCardCatalog()} domainColors={DOMAIN_COLORS} icons={DOMAIN_ICONS} FitTitle={FitTitle} FitBox={FitBox} />}
 
           {view === "ajustes" && (

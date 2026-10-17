@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "nuevo", text: "Nuevo apartado «Dados» en el menú lateral, con el aspecto de dado que quieras equipar. Estreno: el D12 Cósmico, un dodecaedro con una nebulosa que gira muy despacio, estrellas que titilan y el logo de la página en la cara del 12. Equipado, los dados de Esperanza y de Miedo de tus tiradas se ven cósmicos." },
       { tag: "arreglo", text: "Quitada la animación de zoom (y el destello de brillo) que tenía el monitor del DJ al cambiar de escena o de vista; ahora el cambio es un fundido suave." },
       { tag: "arreglo", text: "Transición suave entre la escena y el tablero de combate: ya no hay destello oscuro. La imagen de la escena se queda debajo y la versión desenfocada con la cuadrícula aparece encima poco a poco; al volver a la escena, se enfoca de nuevo." },
       { tag: "nuevo", text: "Directo: el selector de arriba ahora es «Tu vista» y es solo tuya. Puedes preparar el tablero de combate (o cualquier otra pantalla) mientras los jugadores siguen viendo la escena; un punto rojo marca lo que ven ellos. Cuando esté listo, pulsa «Mostrar a los jugadores». La línea de tiempo de abajo sigue igual y, al avanzarla, tu vista sigue a la de los jugadores." },

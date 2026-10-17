@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { makeCosmicMaterial } from "./DiceSkins";
 
 // Dados en 3D (cristal): los de dualidad y los auxiliares (ventaja, bonos…) se tiran con física real (cannon-es) desde un
 // punto, una velocidad y un giro aleatorios. Cada tirada ya está decidida; la física no la cambia: al terminar se
@@ -39,7 +40,7 @@ const TINTS = {
   crit: [0xd2f5d0, 0x2f9e44, "#eaffe8"],
 };
 
-export function Dice3D({ dice, summary, onReveal, onEnd }) {
+export function Dice3D({ dice, summary, skin, onReveal, onEnd }) {
   const host = useRef(null);
   const [edgeOn, setEdgeOn] = useState(false);
   const [ready, setReady] = useState(false);
@@ -310,10 +311,15 @@ export function Dice3D({ dice, summary, onReveal, onEnd }) {
           return t;
         };
 
+        const cosmics = []; // dados con el aspecto cósmico: su reloj se actualiza en cada fotograma
         const objs = items.map(({ d, T, scale, b }) => {
-          const tint = TINTS[d.kind] || TINTS.bonus;
+          const cosmic = skin === "cosmico" && d.sides === 12 && (d.kind === "hope" || d.kind === "fear");
+          const tint = cosmic ? [0, 0, "#ffe3a1"] : TINTS[d.kind] || TINTS.bonus;
           const group = new THREE.Group();
-          const mat = new THREE.MeshPhysicalMaterial({ color: tint[0], transmission: 1, thickness: 1.6, ior: 1.5, roughness: 0.06, attenuationColor: tint[1], attenuationDistance: 1.4, clearcoat: 1, clearcoatRoughness: 0.04, iridescence: 0.6, iridescenceIOR: 1.4, envMapIntensity: 1.6, transparent: true });
+          const cm = cosmic ? makeCosmicMaterial(THREE, d.kind === "hope" ? 0.75 : 0) : null;
+          if (cm) cm.mat.envMapIntensity = 0.55;
+          if (cm) cosmics.push(cm.uniforms);
+          const mat = cm ? cm.mat : new THREE.MeshPhysicalMaterial({ color: tint[0], transmission: 1, thickness: 1.6, ior: 1.5, roughness: 0.06, attenuationColor: tint[1], attenuationDistance: 1.4, clearcoat: 1, clearcoatRoughness: 0.04, iridescence: 0.6, iridescenceIOR: 1.4, envMapIntensity: 1.6, transparent: true });
           const body = new THREE.Group();
           body.scale.setScalar(scale);
           const mesh = new THREE.Mesh(T.geo, mat);
@@ -410,6 +416,7 @@ export function Dice3D({ dice, summary, onReveal, onEnd }) {
         const ease = (x) => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
         const tick = () => {
           if (dead) return;
+          cosmics.forEach((u) => (u.uTime.value = performance.now() / 1000));
           const t = typeof window.__d3t === "number" ? window.__d3t : (performance.now() - t0) / 1000 + shift.current;
           const i = Math.min(rec.length - 1, Math.max(0, Math.round(t / DT)));
           const e = ease((t - alignStart) / alignDur);
