@@ -6187,7 +6187,7 @@ const sharedStyles = `
   .mh-wm-pin { all: unset; position: absolute; transform: translate(-50%, -100%); cursor: pointer; display: flex; flex-direction: column; align-items: center; z-index: 2; touch-action: none; }
   .mh-wm-pin-b { position: relative; width: 44px; height: 54px; display: block; filter: drop-shadow(0 3px 4px rgba(0,0,0,.55)); transform-origin: 50% 100%; transition: transform .15s ease, filter .15s ease; }
   .mh-wm-pin-b > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-  .mh-wm-pin-disc { fill: var(--mh-bg-base, var(--mh-bg)); stroke: var(--acc, #E3B04B); stroke-width: 3.5; } .mh-wm-pin-tail { fill: var(--acc, #E3B04B); stroke: var(--acc, #E3B04B); stroke-width: 2; stroke-linejoin: round; } .mh-wm-pin-logo { fill: var(--mh-ink); }
+  .mh-wm-pin-disc { fill: var(--mh-bg-base, var(--mh-bg)); stroke: var(--acc, #E3B04B); stroke-width: 2; } .mh-wm-pin-tail { fill: var(--acc, #E3B04B); stroke: var(--acc, #E3B04B); stroke-width: 2; stroke-linejoin: round; } .mh-wm-pin-logo { fill: var(--mh-ink); }
   .mh-wm-pin-pulse { position: absolute; left: 50%; bottom: 0; width: 14px; height: 14px; margin: 0 0 -7px -7px; border-radius: 50%; border: 2px solid var(--acc, #E3B04B); pointer-events: none; animation: mh-wm-pulse 2.4s ease-out infinite; }
   @keyframes mh-wm-pulse { 0% { transform: scale(.4); opacity: .95; } 100% { transform: scale(4.2); opacity: 0; } }
   @media (prefers-reduced-motion: reduce) { .mh-wm-pin-pulse { animation: none; opacity: 0; } }

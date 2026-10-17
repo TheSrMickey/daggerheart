@@ -269,7 +269,7 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
                   onPointerMove={moveDrag}
                   onPointerUp={() => drag && drag.id === p.id && endDrag(p)}
                 >
-                  <span className="mh-wm-pin-pulse" aria-hidden="true" /><span className="mh-wm-pin-b"><svg viewBox="0 0 44 54" aria-hidden="true"><path className="mh-wm-pin-tail" d="M15.5 33.5L22 50L28.5 33.5Z" /><circle className="mh-wm-pin-disc" cx="22" cy="21" r="18" /><path className="mh-wm-pin-logo" transform="translate(13.1 9) scale(0.0706)" d="M100 0C101.5 66 106 109 200 115C106 121 102 164 100 340C98 164 94 121 0 115C94 109 98.5 66 100 0Z" /></svg></span>
+                  <span className="mh-wm-pin-pulse" aria-hidden="true" /><span className="mh-wm-pin-b"><svg viewBox="0 0 44 54" aria-hidden="true"><path className="mh-wm-pin-tail" d="M15.5 33.5L22 50L28.5 33.5Z" /><circle className="mh-wm-pin-disc" cx="22" cy="21" r="18" /><path className="mh-wm-pin-logo" transform="translate(14.94 9) scale(0.0706)" d="M100 0C101.5 66 106 109 200 115C106 121 102 164 100 340C98 164 94 121 0 115C94 109 98.5 66 100 0Z" /></svg></span>
                   {sel === p.id && <span className="mh-wm-pin-t">{p.title}</span>}
                 </button>
               );
