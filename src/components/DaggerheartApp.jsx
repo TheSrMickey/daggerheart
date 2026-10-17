@@ -6185,11 +6185,16 @@ const sharedStyles = `
   .mh-wm-canvas img { display: block; width: 100%; height: auto; pointer-events: none; }
   .mh-wm-load { padding: 80px 20px; text-align: center; color: var(--mh-muted); font-size: 13px; }
   .mh-wm-pin { all: unset; position: absolute; transform: translate(-50%, -100%); cursor: pointer; display: flex; flex-direction: column; align-items: center; z-index: 2; touch-action: none; }
-  .mh-wm-pin-b { position: relative; width: 30px; height: 49px; display: block; filter: drop-shadow(0 3px 4px rgba(0,0,0,.55)); transform-origin: 50% 100%; transition: transform .15s ease, filter .15s ease; }
-  .mh-wm-pin-b > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; fill: var(--mh-bg-base, var(--mh-bg)); stroke: var(--acc, #E3B04B); stroke-width: 14; stroke-linejoin: round; paint-order: stroke; }
+  .mh-wm-pin-b { position: relative; width: 44px; height: 54px; display: block; filter: drop-shadow(0 3px 4px rgba(0,0,0,.55)); transform-origin: 50% 100%; transition: transform .15s ease, filter .15s ease; }
+  .mh-wm-pin-b > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .mh-wm-pin-disc { fill: var(--mh-bg-base, var(--mh-bg)); stroke: var(--acc, #E3B04B); stroke-width: 3.5; } .mh-wm-pin-tail { fill: var(--acc, #E3B04B); stroke: var(--acc, #E3B04B); stroke-width: 2; stroke-linejoin: round; } .mh-wm-pin-logo { fill: var(--mh-ink); }
+  .mh-wm-pin-pulse { position: absolute; left: 50%; bottom: 0; width: 14px; height: 14px; margin: 0 0 -7px -7px; border-radius: 50%; border: 2px solid var(--acc, #E3B04B); pointer-events: none; animation: mh-wm-pulse 2.4s ease-out infinite; }
+  @keyframes mh-wm-pulse { 0% { transform: scale(.4); opacity: .95; } 100% { transform: scale(4.2); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .mh-wm-pin-pulse { animation: none; opacity: 0; } }
   .mh-wm-pin:hover .mh-wm-pin-b, .mh-wm-pin:focus-visible .mh-wm-pin-b, .mh-wm-pin.is-sel .mh-wm-pin-b { transform: scale(1.15); filter: drop-shadow(0 0 6px var(--acc, #E3B04B)) drop-shadow(0 0 14px var(--acc, #E3B04B)) drop-shadow(0 3px 4px rgba(0,0,0,.5)); }
+  .mh-wm-pin:hover .mh-wm-pin-disc, .mh-wm-pin:focus-visible .mh-wm-pin-disc, .mh-wm-pin.is-sel .mh-wm-pin-disc { stroke: #fff; } .mh-wm-pin.is-sel .mh-wm-pin-pulse { animation-duration: 1.4s; }
   .mh-wm-pin.is-sel { z-index: 4; } .mh-wm-pin.is-sel .mh-wm-pin-b { transform: scale(1.25); }
-  .mh-wm-pin.is-hid .mh-wm-pin-b > svg { stroke-dasharray: 22 14; }
+  .mh-wm-pin.is-hid .mh-wm-pin-disc { stroke-dasharray: 7 5; } .mh-wm-pin.is-hid .mh-wm-pin-pulse { display: none; }
   .mh-wm-pin.is-drag { cursor: grabbing; z-index: 5; }
   .mh-wm-pin-t { position: absolute; top: calc(100% + 6px); white-space: nowrap; font: 600 11px 'Inter', system-ui, sans-serif; padding: 3px 9px; border-radius: 99px; background: rgba(13,13,34,.82); color: #fff; border: 1px solid #ffffff2a; }
   .mh-wm-zoom { position: sticky; left: 100%; bottom: 10px; float: right; margin: -76px 10px 0 0; display: flex; flex-direction: column; gap: 6px; z-index: 6; width: 34px; }
