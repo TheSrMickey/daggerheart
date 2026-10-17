@@ -28875,7 +28875,7 @@ export default function App({ onSignOut }) {
                           </div>
                         ) : view === "mundo" ? (
                           <div className="mh-dir-world">
-                            <WorldMap fit key={viewingCampaignId} campaignId={viewingCampaignId} imgSrc={imgSrc} ensureImg={worldEnsureImg} />
+                            <WorldMap fit showHidden key={viewingCampaignId} campaignId={viewingCampaignId} imgSrc={imgSrc} ensureImg={worldEnsureImg} />
                             {view === live ? <span className="mh-stg-live"><i />En directo</span> : <span className="mh-stg-live is-prev"><i />Solo tú lo ves</span>}
                             <button type="button" className="mh-btn-ghost mh-dir-mapbtn" onClick={() => setCampaignDetailTab("mundo")}><Globe size={13} /> Editar mapa</button>
                           </div>

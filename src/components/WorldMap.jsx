@@ -80,7 +80,7 @@ function PromptHelper({ onClose }) {
   );
 }
 
-export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc, ensureImg, saveImage, dropImage, onOpenScene, onLog, fit = false }) {
+export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc, ensureImg, saveImage, dropImage, onOpenScene, onLog, fit = false, showHidden = false }) {
   const [doc, update] = useDoc(docKey(campaignId), EMPTY, 4000);
   const pins = doc.pins || [];
   const [sel, setSel] = useState(null);
@@ -96,7 +96,7 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
   const dragMoved = useRef(false);
   const openEdit = useRef(false); // un marcador recién creado se abre directamente en edición
 
-  const visible = edit ? pins : pins.filter((p) => !p.hidden);
+  const visible = edit || showHidden ? pins : pins.filter((p) => !p.hidden);
   const pin = visible.find((p) => p.id === sel) || null;
   const mapSrc = imgSrc ? imgSrc(doc.image) : "";
 
@@ -289,7 +289,7 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
               <>
                 {pinImg ? <div className="mh-wm-img" style={{ backgroundImage: `url("${pinImg.replace(/"/g, "%22")}")` }} /> : <div className="mh-wm-img is-none" style={{ "--pc": kind.color }}><kind.Icon size={34} strokeWidth={1.4} /></div>}
                 <div className="mh-wm-body">
-                  <span className="mh-wm-kind" style={{ "--pc": kind.color }}><kind.Icon size={11} /> {kind.label}{pin.hidden && edit ? " · oculto" : ""}</span>
+                  <span className="mh-wm-kind" style={{ "--pc": kind.color }}><kind.Icon size={11} /> {kind.label}{pin.hidden && (edit || showHidden) ? " · oculto (solo tú lo ves)" : ""}</span>
                   <h3 className="mh-serif">{pin.title}</h3>
                   {pin.text ? <p>{pin.text}</p> : <p className="mh-wm-note">{edit ? "Sin descripción todavía." : "Un lugar por descubrir."}</p>}
                   {edit && pin.sceneId && sceneName(pin.sceneId) && onOpenScene && (
