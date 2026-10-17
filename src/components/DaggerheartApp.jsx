@@ -14,6 +14,7 @@ import { ModernSheet } from "./ModernSheet";
 import { Tour } from "./Tour";
 import { Dice3D, canDice3d, DICE3D_SIDES } from "./Dice3D";
 import { DicePage } from "./DiceSkins";
+import WorldMap from "./WorldMap";
 import { LevelUpDialog, parseAdvances, ownedCards, getMulticlass, MAX_LEVEL, rankOf } from "./LevelUp";
 import { RulesPanel } from "./MapRules";
 import { Changelog } from "./Changelog";
@@ -6171,6 +6172,47 @@ const sharedStyles = `
   .mh-dice-body p { margin: 0; font-size: 12.5px; line-height: 1.55; color: var(--mh-ink3); min-height: 58px; }
   .mh-dice-btn { align-self: flex-start; display: inline-flex; align-items: center; gap: 7px; }
   .mh-dice-btn.is-on { opacity: .75; cursor: default; }
+  /* Mapa de mundo: imagen con marcadores */
+  .mh-wm { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+  .mh-wm-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .mh-wm-sp { flex: 1; }
+  .mh-wm-note { font-size: 11.5px; line-height: 1.5; color: var(--mh-muted); margin: 0; }
+  .mh-wm-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .mh-wm-wrap { position: relative; border-radius: 18px; overflow: hidden; border: 1px solid var(--mh-line2); background: color-mix(in srgb, var(--mh-panel) 80%, transparent); }
+  .mh-wm-view { position: relative; max-height: 72vh; overflow: auto; scrollbar-width: thin; }
+  .mh-wm-view.is-add { cursor: crosshair; }
+  .mh-wm-canvas { position: relative; min-width: 100%; user-select: none; }
+  .mh-wm-canvas img { display: block; width: 100%; height: auto; pointer-events: none; }
+  .mh-wm-load { padding: 80px 20px; text-align: center; color: var(--mh-muted); font-size: 13px; }
+  .mh-wm-pin { all: unset; position: absolute; transform: translate(-50%, -100%); cursor: pointer; display: flex; flex-direction: column; align-items: center; z-index: 2; touch-action: none; }
+  .mh-wm-pin-b { width: 32px; height: 32px; border-radius: 50% 50% 50% 4px; transform: rotate(-45deg); display: flex; align-items: center; justify-content: center; background: color-mix(in srgb, #0d0d22 82%, var(--pc)); border: 2px solid var(--pc); color: #fff; box-shadow: 0 6px 14px -4px #000c, 0 0 0 3px color-mix(in srgb, var(--pc) 25%, transparent); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); transition: transform .15s; }
+  .mh-wm-pin-b > svg { transform: rotate(45deg); color: var(--pc); }
+  .mh-wm-pin:hover .mh-wm-pin-b { transform: rotate(-45deg) scale(1.12); }
+  .mh-wm-pin:focus-visible .mh-wm-pin-b { outline: 2px solid #fff; outline-offset: 2px; }
+  .mh-wm-pin.is-sel { z-index: 4; } .mh-wm-pin.is-sel .mh-wm-pin-b { transform: rotate(-45deg) scale(1.25); background: var(--pc); box-shadow: 0 0 0 4px color-mix(in srgb, var(--pc) 35%, transparent), 0 0 22px var(--pc); } .mh-wm-pin.is-sel .mh-wm-pin-b > svg { color: #10101e; }
+  .mh-wm-pin.is-hid .mh-wm-pin-b { border-style: dashed; opacity: .6; }
+  .mh-wm-pin.is-drag { cursor: grabbing; z-index: 5; }
+  .mh-wm-pin-t { position: absolute; top: calc(100% + 6px); white-space: nowrap; font: 600 11px 'Inter', system-ui, sans-serif; padding: 3px 9px; border-radius: 99px; background: rgba(13,13,34,.82); color: #fff; border: 1px solid #ffffff2a; }
+  .mh-wm-zoom { position: sticky; left: 100%; bottom: 10px; float: right; margin: -76px 10px 0 0; display: flex; flex-direction: column; gap: 6px; z-index: 6; width: 34px; }
+  .mh-wm-zoom button { all: unset; cursor: pointer; width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff; background: rgba(13,13,34,.7); border: 1px solid #ffffff2a; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+  .mh-wm-zoom button:hover { border-color: #E3B04B; } .mh-wm-zoom button:focus-visible { outline: 2px solid #E3B04B; }
+  .mh-wm-busy { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); padding: 6px 14px; border-radius: 99px; background: rgba(13,13,34,.85); color: #fff; font-size: 12px; z-index: 8; }
+  .mh-wm-card { position: absolute; top: 12px; right: 12px; bottom: 12px; width: min(310px, calc(100% - 24px)); overflow-y: auto; border-radius: 18px; z-index: 7; background: color-mix(in srgb, var(--mh-panel) 86%, transparent); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); border: 1px solid var(--mh-line2); box-shadow: 0 18px 36px -16px #000d, inset 0 1px 0 #ffffff14; scrollbar-width: thin; animation: mh-fade-in .18s ease both; }
+  .mh-wm-x { position: absolute; top: 8px; right: 8px; z-index: 2; background: rgba(13,13,34,.7); border-radius: 50%; }
+  .mh-wm-img { aspect-ratio: 16 / 9; background: #1b1c3a center / cover no-repeat; border-bottom: 1px solid var(--mh-line); }
+  .mh-wm-img.is-none { display: flex; align-items: center; justify-content: center; color: var(--pc); background: radial-gradient(70% 80% at 50% 40%, color-mix(in srgb, var(--pc) 24%, transparent), transparent 75%), #14153b; }
+  .mh-wm-body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 8px; }
+  .mh-wm-body h3 { margin: 0; font-size: 18px; } .mh-wm-body p { margin: 0; font-size: 13px; line-height: 1.55; color: var(--mh-ink2); white-space: pre-wrap; }
+  .mh-wm-kind { align-self: flex-start; display: inline-flex; align-items: center; gap: 5px; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; padding: 3px 9px; border-radius: 99px; color: var(--pc); background: color-mix(in srgb, var(--pc) 16%, transparent); border: 1px solid color-mix(in srgb, var(--pc) 45%, transparent); }
+  .mh-wm-go { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; }
+  .mh-wm-f { display: flex; flex-direction: column; gap: 4px; font-size: 11px; color: var(--mh-muted); } .mh-wm-f > span { font-weight: 600; letter-spacing: .04em; }
+  .mh-wm-kinds { display: flex; flex-wrap: wrap; gap: 5px; } .mh-wm-kinds button { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 4px 9px; border-radius: 99px; border: 1px solid var(--mh-line2); color: var(--mh-ink3); } .mh-wm-kinds button.is-on { color: var(--pc); border-color: var(--pc); background: color-mix(in srgb, var(--pc) 16%, transparent); } .mh-wm-kinds button:focus-visible { outline: 2px solid #E3B04B; }
+  .mh-wm-del { color: #D9644E !important; }
+  .mh-wm-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 56px 20px; border-radius: 18px; border: 1px dashed var(--mh-line2); background: color-mix(in srgb, var(--mh-panel) 70%, transparent); color: var(--mh-muted); font-size: 13px; } .mh-wm-empty b { color: var(--mh-ink); font-size: 15px; } .mh-wm-empty > span { max-width: 460px; }
+  .mh-wm-prompt { display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: 18px; border: 1px solid var(--mh-line2); background: color-mix(in srgb, var(--mh-panel) 84%, transparent); }
+  .mh-wm-ph { display: flex; align-items: center; justify-content: space-between; font: 600 14px 'Cinzel', Georgia, serif; } .mh-wm-ph span { display: inline-flex; align-items: center; gap: 8px; }
+  .mh-wm-out { font-size: 12px; line-height: 1.5; font-family: ui-monospace, Consolas, monospace; resize: vertical; }
+  @media (max-width: 700px) { .mh-wm-card { top: auto; right: 8px; left: 8px; bottom: 8px; width: auto; max-height: 62%; } .mh-wm-view { max-height: 60vh; } }
   .mh-cardc-wrap { position: relative; display: flex; align-items: center; justify-content: center; width: min(300px, 100%); }
   .mh-cardc-wrap > .mh-cardc { z-index: 2; }
   .cx-deckwrap { display: flex; flex-direction: column; align-items: center; gap: 22px; max-width: 100%; }
@@ -15092,12 +15134,12 @@ export default function App({ onSignOut }) {
   };
 
   // Reduce la imagen de la escena en el navegador (máx. 1600 px, JPEG) para que pese poco en la base de datos.
-  const readSceneImage = (file) =>
+  const readSceneImage = (file, maxPx = 1600) =>
     new Promise((resolve, reject) => {
       const url = URL.createObjectURL(file);
       const img = new Image();
       img.onload = () => {
-        const k = Math.min(1, 1600 / Math.max(img.width, img.height));
+        const k = Math.min(1, maxPx / Math.max(img.width, img.height));
         const canvas = document.createElement("canvas");
         canvas.width = Math.max(1, Math.round(img.width * k));
         canvas.height = Math.max(1, Math.round(img.height * k));
@@ -15116,7 +15158,7 @@ export default function App({ onSignOut }) {
       };
       img.src = url;
     });
-  const saveSceneImage = async (file) => {
+  const saveSceneImage = async (file, maxPx = 1600) => {
     if (!file || !viewingCampaignId) return null;
     setSceneError("");
     if (!/^image\//.test(file.type)) {
@@ -15125,7 +15167,7 @@ export default function App({ onSignOut }) {
     }
     let data;
     try {
-      data = await readSceneImage(file);
+      data = await readSceneImage(file, maxPx);
     } catch (e) {
       setSceneError("No se pudo leer la imagen.");
       return null;
@@ -15136,6 +15178,9 @@ export default function App({ onSignOut }) {
     await safeSet("campaign-img:" + imgId, data, true);
     return "img:" + imgId;
   };
+  // Mapa de mundo: las imágenes del mapa y de sus marcadores se guardan como las de las escenas.
+  const worldEnsureImg = (ref) => (ref && ref.startsWith("img:") ? ensureCastImg(ref.slice(4)) : undefined);
+  const worldDropImg = (ref) => ref && ref.startsWith("img:") && safeSet("campaign-img:" + ref.slice(4), "", true);
   const uploadSceneImg = async (sceneId, file) => {
     const ref = await saveSceneImage(file);
     if (!ref) return;
@@ -21320,7 +21365,7 @@ export default function App({ onSignOut }) {
                                     empty(MapPinned, "El DJ todavía no ha preparado el mapa.")
                                   ))}
 
-                                {stTab === "mundo" && empty(Globe, "El mapa de mundo está en preparación.")}
+                                {stTab === "mundo" && <WorldMap campaignId={charCampaign.id} imgSrc={imgSrc} ensureImg={worldEnsureImg} />}
 
                                 {stTab === "pistas" &&
                                   (handouts.length ? (
@@ -30018,7 +30063,18 @@ export default function App({ onSignOut }) {
                   {campaignDetailTab === "mundo" && (
                     <div className="mh-card">
                       <div className="mh-gm-h"><Globe size={15} /> Mapa de mundo</div>
-                      <div className="mh-gm-sub">El mapa de mundo está en preparación. Cuando esté listo, lo dibujarás y lo enseñarás a los jugadores desde aquí.</div>
+                      <div className="mh-gm-sub">Sube la imagen de tu mundo y coloca marcadores encima. Cada marcador abre una tarjeta con imagen y texto y puede llevar a una escena. Cuando quieras enseñárselo a los jugadores, ponlo en directo desde «Mesa».</div>
+                      <WorldMap
+                        campaignId={viewingCampaignId}
+                        edit
+                        scenes={stageScenesOf(campaignStage).map((x) => ({ id: x.id, title: x.title }))}
+                        imgSrc={imgSrc}
+                        ensureImg={worldEnsureImg}
+                        saveImage={saveSceneImage}
+                        dropImage={worldDropImg}
+                        onOpenScene={(id) => openChapter(id)}
+                        onLog={(t) => postChat(viewingCampaignId, { kind: "event", author: "El DJ", gm: true, icon: "mundo", text: t })}
+                      />
                     </div>
                   )}
 

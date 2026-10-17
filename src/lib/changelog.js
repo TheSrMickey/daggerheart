@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "nuevo", text: "Mapa de mundo nuevo, en la pestaña Mundo: el DJ sube la imagen de su mundo y coloca marcadores encima (se arrastran). Cada marcador abre una tarjeta con imagen, texto y tipo, y puede enlazar a una escena. Los marcadores nacen ocultos y el DJ los revela cuando quiere. Incluye un ayudante para generar un prompt con el que crear la imagen del mapa en una IA." },
       { tag: "mejora", text: "Se retira el mapa de mundo 3D. La pestaña Mundo queda con un aviso mientras se prepara un nuevo mapa de mundo." },
       { tag: "nuevo", text: "Dados · nuevo aspecto «Oficial Set», inspirado en el set oficial de Daggerheart: resina morada y azul con remolinos blancos y brillos con números amarillos, el D12 de Esperanza en ámbar y el de Miedo en azul marino con números blancos, y el logo en la cara del 12 (y del 20). Además, los aspectos ahora se aplican a todos tus dados, no solo a los de Esperanza y Miedo." },
       { tag: "mejora", text: "D12 Cósmico en las tiradas: la cara del 12 de los dados de Esperanza y de Miedo es ahora el logo de la página, igual que en el dado de la página Dados." },
