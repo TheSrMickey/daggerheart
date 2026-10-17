@@ -6,7 +6,8 @@ import { Dices, Check, Sparkles } from "lucide-react";
 // Aspectos de dado. «cristal» es el de siempre; «cosmico» pinta de nebulosa los dados de 12 caras (Esperanza y Miedo).
 export const DICE_SKINS = [
   { key: "cristal", label: "Cristal", desc: "El dado translúcido de siempre, con el tinte de cada tipo de dado.", color: "#6FA3C0" },
-  { key: "cosmico", label: "D12 Cósmico", desc: "Un dodecaedro con una nebulosa que gira muy despacio, estrellas que titilan y el logo de la página en la cara del 12. Se aplica a los dados de Esperanza y de Miedo.", color: "#A58BE8", model: "/modelos/d12-cosmico.glb" },
+  { key: "cosmico", label: "D12 Cósmico", desc: "Una nebulosa que gira muy despacio, estrellas que titilan y el logo de la página en la cara del 12. Se aplica a todos tus dados.", color: "#A58BE8", model: "/modelos/d12-cosmico.glb" },
+  { key: "oficial", label: "Oficial Set", desc: "Inspirado en el set oficial de Daggerheart: resina morada y azul con remolinos blancos, brillos y números amarillos; el D12 de Esperanza en ámbar y el de Miedo en azul marino, con números blancos y el logo en el 12 (y en el 20). Se aplica a todos tus dados.", color: "#E3B04B", model: "/modelos/oficial-set.glb", set: true },
 ];
 
 // ---- Shader galáctico (se inyecta en el material estándar de three.js) ----
@@ -59,6 +60,74 @@ export function makeCosmicMaterial(THREE, warm = 0) {
     sh.fragmentShader = sh.fragmentShader.replace("#include <common>", "#include <common>\n" + GLSL).replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\ntotalEmissiveRadiance += cosmic(vOP);");
   };
   mat.customProgramCacheKey = () => "cosmic-d12";
+  return { mat, uniforms };
+}
+
+// ---- Oficial Set: resina marmoleada con brillos, ámbar (Esperanza) y azul marino (Miedo) ----
+const SET_GLSL = /* glsl */ `
+uniform float uTime;
+varying vec3 vOP;
+float sHash(vec3 p){ p = fract(p * 0.3183099 + .1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
+float sNoise(vec3 x){
+  vec3 i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(mix(sHash(i), sHash(i + vec3(1,0,0)), f.x), mix(sHash(i + vec3(0,1,0)), sHash(i + vec3(1,1,0)), f.x), f.y),
+             mix(mix(sHash(i + vec3(0,0,1)), sHash(i + vec3(1,0,1)), f.x), mix(sHash(i + vec3(0,1,1)), sHash(i + vec3(1,1,1)), f.x), f.y), f.z);
+}
+float sFbm(vec3 p){ float a = .5, s = 0.; for (int i = 0; i < 5; i++){ s += a * sNoise(p); p = p * 2.03 + vec3(7.1, 3.7, 1.3); a *= .5; } return s; }
+// Brillos de purpurina: celdas con un punto que centellea
+float sGlitter(vec3 p, float k){
+  vec3 g = p * k; vec3 id = floor(g); vec3 f = fract(g) - .5;
+  float h = sHash(id);
+  vec3 off = (vec3(sHash(id + 1.), sHash(id + 2.), sHash(id + 3.)) - .5) * .5;
+  float d = length(f - off);
+  return smoothstep(.2, .0, d) * step(.78, h) * (.55 + .45 * sin(uTime * 1.3 + h * 70.));
+}
+vec3 marble(vec3 p){
+  vec3 q = p * 1.5;
+  float n = sFbm(q * 1.8 + 3.0 * vec3(sFbm(q * 0.9), sFbm(q * 0.9 + 4.1), sFbm(q * 0.9 + 8.3)));
+  vec3 c = mix(vec3(.06,.025,.28), vec3(.20,.07,.58), smoothstep(.3, .55, n));
+  c = mix(c, vec3(.14,.33,.95), smoothstep(.55, .9, n));
+  float w = sFbm(q * 1.5 + 2.2 * vec3(sFbm(q * 1.1 + 1.7)));
+  float vein = 1. - smoothstep(0., .06, abs(w - .5));
+  float mask = smoothstep(.46, .7, sFbm(q * 1.2 + 9.));
+  return mix(c, vec3(.72,.72,.95), clamp(vein * mask, 0., 1.)) * .85;
+}
+`;
+function injectSet(mat, uniforms, body) {
+  mat.onBeforeCompile = (sh) => {
+    sh.uniforms.uTime = uniforms.uTime;
+    sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nvarying vec3 vOP;").replace("#include <begin_vertex>", "#include <begin_vertex>\nvOP = position;");
+    sh.fragmentShader = sh.fragmentShader.replace("#include <common>", "#include <common>\n" + SET_GLSL);
+    if (body.diffuse) sh.fragmentShader = sh.fragmentShader.replace("#include <color_fragment>", "#include <color_fragment>\n" + body.diffuse);
+    sh.fragmentShader = sh.fragmentShader.replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\n" + body.emissive);
+  };
+  mat.customProgramCacheKey = () => "set-" + body.key;
+}
+export function makeMarbleMaterial(THREE) {
+  const uniforms = { uTime: { value: 0 } };
+  const mat = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.14, clearcoat: 1, clearcoatRoughness: 0.05, envMapIntensity: 0.4 });
+  injectSet(mat, uniforms, { key: "marble", diffuse: "diffuseColor.rgb = marble(vOP);", emissive: "totalEmissiveRadiance += sGlitter(vOP, 24.) * vec3(.75,.85,1.) * 3.0;" });
+  return { mat, uniforms };
+}
+export function makeResinMaterial(THREE, kind) {
+  const uniforms = { uTime: { value: 0 } };
+  const hope = kind === "hope";
+  const mat = new THREE.MeshPhysicalMaterial({
+    color: hope ? 0xffb81a : 0x0a0a52,
+    roughness: 0.1,
+    transmission: hope ? 0.45 : 0.4,
+    thickness: 1.2,
+    ior: 1.5,
+    attenuationColor: hope ? new THREE.Color(0xff9d00) : new THREE.Color(0x14146e),
+    attenuationDistance: 1.1,
+    clearcoat: 1,
+    clearcoatRoughness: 0.04,
+    envMapIntensity: 0.5,
+    transparent: true,
+  });
+  const base = hope ? "vec3(.33,.22,.02)" : "vec3(.012,.012,.07)";
+  const gl = hope ? "vec3(1.,.95,.6)" : "vec3(.6,.7,1.)";
+  injectSet(mat, uniforms, { key: kind, emissive: "totalEmissiveRadiance += " + base + " + sGlitter(vOP, " + (hope ? "20." : "26.") + ") * " + gl + " * 3.0;" });
   return { mat, uniforms };
 }
 
@@ -201,6 +270,119 @@ function Viewer({ model }) {
   );
 }
 
+// ---- Visor del Oficial Set: los 9 dados del .glb con sus materiales ----
+function SetViewer({ model }) {
+  const host = useRef(null);
+  const [state, setState] = useState("load");
+  useEffect(() => {
+    let dead = false;
+    let raf = 0;
+    let cleanup = () => {};
+    (async () => {
+      try {
+        const [THREE, { GLTFLoader }, { RoomEnvironment }] = await Promise.all([import("three"), import("three/examples/jsm/loaders/GLTFLoader.js"), import("three/examples/jsm/environments/RoomEnvironment.js")]);
+        if (dead || !host.current) return;
+        const el = host.current;
+        const W = el.clientWidth || 600;
+        const H = el.clientHeight || 340;
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        renderer.setSize(W, H);
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.domElement.style.cssText = "width:100%;height:100%;display:block;touch-action:none;cursor:grab";
+        el.appendChild(renderer.domElement);
+        const scene = new THREE.Scene();
+        const pm = new THREE.PMREMGenerator(renderer);
+        scene.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture;
+        const cam = new THREE.PerspectiveCamera(30, W / H, 0.1, 80);
+        const dist = 15.8;
+        cam.position.set(0, 0, dist);
+        const key = new THREE.DirectionalLight(0xffffff, 1.6);
+        key.position.set(-4, 6, 9);
+        scene.add(key);
+        const gltf = await new GLTFLoader().loadAsync(model);
+        if (dead) return;
+        const root = gltf.scene;
+        const mats = [];
+        const marble = makeMarbleMaterial(THREE);
+        const hope = makeResinMaterial(THREE, "hope");
+        const fear = makeResinMaterial(THREE, "fear");
+        mats.push(marble, hope, fear);
+        const yellow = new THREE.MeshStandardMaterial({ color: 0xffb81a, metalness: 0.5, roughness: 0.3, emissive: 0xff9d00, emissiveIntensity: 0.25 });
+        const white = new THREE.MeshStandardMaterial({ color: 0xf5f5ff, metalness: 0.1, roughness: 0.3, emissive: 0xffffff, emissiveIntensity: 0.18 });
+        root.traverse((o) => {
+          if (!o.isMesh) return;
+          const nm = o.name || o.parent?.name || "";
+          const isNum = /^Num_/.test(nm);
+          const hopeD = /Esperanza/.test(nm);
+          const fearD = /Miedo/.test(nm);
+          if (isNum) o.material = hopeD || fearD ? white : yellow;
+          else o.material = hopeD ? hope.mat : fearD ? fear.mat : marble.mat;
+        });
+        // El .glb sale de Blender con las caras bonitas hacia +Y: se levanta para mirarlas de frente.
+        root.rotation.x = Math.PI / 2;
+        const pivot = new THREE.Group();
+        pivot.add(root);
+        scene.add(pivot);
+        let rx = 0;
+        let ry = 0;
+        let drag = null;
+        const down = (e) => { drag = { x: e.clientX, y: e.clientY }; renderer.domElement.setPointerCapture(e.pointerId); renderer.domElement.style.cursor = "grabbing"; };
+        const move = (e) => {
+          if (!drag) return;
+          ry += (e.clientX - drag.x) * 0.008;
+          rx += (e.clientY - drag.y) * 0.008;
+          drag = { x: e.clientX, y: e.clientY };
+        };
+        const up = () => { drag = null; renderer.domElement.style.cursor = "grab"; };
+        renderer.domElement.addEventListener("pointerdown", down);
+        renderer.domElement.addEventListener("pointermove", move);
+        renderer.domElement.addEventListener("pointerup", up);
+        renderer.domElement.addEventListener("pointercancel", up);
+        const t0 = performance.now();
+        const tick = () => {
+          if (dead) return;
+          const t = (performance.now() - t0) / 1000;
+          mats.forEach((m) => (m.uniforms.uTime.value = t));
+          if (!drag) {
+            rx += (Math.sin(t * 0.3) * 0.16 - rx) * 0.02;
+            ry += (Math.sin(t * 0.21) * 0.28 - ry) * 0.02;
+          }
+          pivot.rotation.set(rx, ry, 0);
+          renderer.render(scene, cam);
+          raf = requestAnimationFrame(tick);
+        };
+        setState("ok");
+        raf = requestAnimationFrame(tick);
+        cleanup = () => {
+          cancelAnimationFrame(raf);
+          renderer.domElement.removeEventListener("pointerdown", down);
+          renderer.domElement.removeEventListener("pointermove", move);
+          renderer.domElement.removeEventListener("pointerup", up);
+          renderer.domElement.removeEventListener("pointercancel", up);
+          pm.dispose();
+          mats.forEach((m) => m.mat.dispose());
+          renderer.dispose();
+          renderer.domElement.remove();
+        };
+      } catch (e) {
+        console.warn("DiceSkins set", e);
+        if (!dead) setState("err");
+      }
+    })();
+    return () => {
+      dead = true;
+      cleanup();
+    };
+  }, [model]);
+  return (
+    <div className="mh-dice-view" ref={host}>
+      {state === "load" && <span className="mh-dice-hint">Cargando dados…</span>}
+      {state === "err" && <span className="mh-dice-hint">No se pudo mostrar los dados 3D en este navegador.</span>}
+    </div>
+  );
+}
+
 // ---- Página «Dados» ----
 export function DicePage({ skin, onEquip }) {
   return (
@@ -213,9 +395,11 @@ export function DicePage({ skin, onEquip }) {
         {DICE_SKINS.map((s) => {
           const on = skin === s.key;
           return (
-            <div key={s.key} className={"mh-dice-card" + (on ? " is-on" : "")} style={{ "--dc": s.color }}>
+            <div key={s.key} className={"mh-dice-card" + (on ? " is-on" : "") + (s.set ? " is-wide" : "")} style={{ "--dc": s.color }}>
               <div className="mh-dice-prev">
-                {s.model ? (
+                {s.set ? (
+                  <SetViewer model={s.model} />
+                ) : s.model ? (
                   <Viewer model={s.model} />
                 ) : (
                   <div className="mh-dice-glass" aria-hidden="true">

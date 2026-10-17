@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { makeCosmicMaterial } from "./DiceSkins";
+import { makeCosmicMaterial, makeMarbleMaterial, makeResinMaterial } from "./DiceSkins";
 
 // Dados en 3D (cristal): los de dualidad y los auxiliares (ventaja, bonos…) se tiran con física real (cannon-es) desde un
 // punto, una velocidad y un giro aleatorios. Cada tirada ya está decidida; la física no la cambia: al terminar se
@@ -321,11 +321,24 @@ export function Dice3D({ dice, summary, skin, onReveal, onEnd }) {
 
         const cosmics = []; // dados con el aspecto cósmico: su reloj se actualiza en cada fotograma
         const objs = items.map(({ d, T, scale, b }) => {
-          const cosmic = skin === "cosmico" && d.sides === 12 && (d.kind === "hope" || d.kind === "fear");
-          const tint = cosmic ? [0, 0, "#ffe3a1"] : TINTS[d.kind] || TINTS.bonus;
+          // Aspectos de dado: valen para todos los dados. «cosmico»: nebulosa, el logo en el 12.
+          // «oficial»: resina marmoleada (morada y azul, números amarillos), D12 de Esperanza ámbar y de Miedo azul marino (números blancos); logo en el 12 de los D12 y en el 20.
+          const duality = d.sides === 12 && (d.kind === "hope" || d.kind === "fear");
+          let cm = null;
+          let numCol = null;
+          let logoOn = 0;
+          if (skin === "cosmico") {
+            cm = makeCosmicMaterial(THREE, d.kind === "hope" ? 0.75 : 0);
+            cm.mat.envMapIntensity = 0.55;
+            numCol = "#ffe3a1";
+            logoOn = d.sides === 12 ? 12 : 0;
+          } else if (skin === "oficial") {
+            cm = duality ? makeResinMaterial(THREE, d.kind) : makeMarbleMaterial(THREE);
+            numCol = duality ? "#ffffff" : "#ffc21a";
+            logoOn = duality ? 12 : d.sides === 20 ? 20 : 0;
+          }
+          const tint = cm ? [0, 0, numCol] : TINTS[d.kind] || TINTS.bonus;
           const group = new THREE.Group();
-          const cm = cosmic ? makeCosmicMaterial(THREE, d.kind === "hope" ? 0.75 : 0) : null;
-          if (cm) cm.mat.envMapIntensity = 0.55;
           if (cm) cosmics.push(cm.uniforms);
           const mat = cm ? cm.mat : new THREE.MeshPhysicalMaterial({ color: tint[0], transmission: 1, thickness: 1.6, ior: 1.5, roughness: 0.06, attenuationColor: tint[1], attenuationDistance: 1.4, clearcoat: 1, clearcoatRoughness: 0.04, iridescence: 0.6, iridescenceIOR: 1.4, envMapIntensity: 1.6, transparent: true });
           const body = new THREE.Group();
@@ -333,7 +346,7 @@ export function Dice3D({ dice, summary, skin, onReveal, onEnd }) {
           const mesh = new THREE.Mesh(T.geo, mat);
           mesh.castShadow = true;
           body.add(mesh);
-          const edges = new THREE.LineSegments(new THREE.EdgesGeometry(T.geo), new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55 }));
+          const edges = new THREE.LineSegments(new THREE.EdgesGeometry(T.geo), new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: cm ? 0.16 : 0.55 }));
           body.add(edges);
           group.add(body);
           disposables.push(mat, edges.material, edges.geometry);
@@ -346,7 +359,7 @@ export function Dice3D({ dice, summary, skin, onReveal, onEnd }) {
           const planes = [];
           T.groups.forEach((gr, gi) => {
             gr.slots.forEach((sl) => {
-              const pmat = new THREE.MeshBasicMaterial({ map: numTex(labels[gi], tint[2], cosmic && labels[gi] === 12), transparent: true, depthWrite: false, opacity: 0.95 });
+              const pmat = new THREE.MeshBasicMaterial({ map: numTex(labels[gi], tint[2], logoOn && labels[gi] === logoOn), transparent: true, depthWrite: false, opacity: 0.95 });
               const pl = new THREE.Mesh(new THREE.PlaneGeometry(sl.size, sl.size), pmat);
               const yAx = sl.up.clone().sub(sl.n.clone().multiplyScalar(sl.up.dot(sl.n))).normalize();
               const xAx = new THREE.Vector3().crossVectors(yAx, sl.n);

@@ -6190,9 +6190,12 @@ const sharedStyles = `
   .mh-dice-page { padding: 8px 4px 90px; max-width: 1100px; margin: 0 auto; }
   .mh-dice-h h1 { margin: 0 0 4px; font-size: 30px; }
   .mh-dice-h p { margin: 0 0 18px; color: var(--mh-muted); font-size: 13.5px; max-width: 620px; }
-  .mh-dice-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; }
+  .mh-dice-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); grid-auto-flow: dense; gap: 18px; }
   .mh-dice-card { position: relative; display: flex; flex-direction: column; overflow: hidden; border-radius: 24px; background: color-mix(in srgb, var(--mh-panel) 80%, transparent); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); border: 1px solid var(--mh-line2); box-shadow: 0 16px 28px -18px #000c, inset 0 1px 0 #ffffff14; transition: border-color .25s, box-shadow .25s; }
   .mh-dice-card.is-on { border-color: var(--dc); box-shadow: 0 0 0 1px var(--dc), 0 0 36px -8px color-mix(in srgb, var(--dc) 55%, transparent), 0 16px 28px -18px #000c; }
+  .mh-dice-card.is-wide { grid-column: span 2; }
+  .mh-dice-card.is-wide .mh-dice-prev { height: 400px; }
+  @media (max-width: 760px) { .mh-dice-card.is-wide { grid-column: auto; } }
   .mh-dice-prev { position: relative; height: 280px; background: radial-gradient(70% 70% at 50% 40%, color-mix(in srgb, var(--dc) 22%, transparent), transparent 75%); }
   .mh-dice-view { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
   .mh-dice-hint { font-size: 12px; color: var(--mh-muted2); }
@@ -16369,11 +16372,11 @@ export default function App({ onSignOut }) {
   const [traitRollResult, setTraitRollResult] = useState(null);
   // Dados 3D con física (solo en las tiradas de Agilidad, de momento): mientras ruedan, la tarjeta de resultado espera.
   const [dice3d, setDice3d] = useState(null);
-  // Aspecto de dado equipado (privado de cada cuenta): «cristal» o «cosmico».
+  // Aspecto de dado equipado (privado de cada cuenta): «cristal», «cosmico» u «oficial».
   const [diceSkin, setDiceSkin] = useState("cristal");
   useEffect(() => {
     safeGet("dice-skin", false).then((r) => {
-      if (r?.value === "cosmico" || r?.value === "cristal") setDiceSkin(r.value);
+      if (["cristal", "cosmico", "oficial"].includes(r?.value)) setDiceSkin(r.value);
     });
   }, []);
   const equipDiceSkin = (key) => {
