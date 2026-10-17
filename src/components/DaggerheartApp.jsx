@@ -6186,7 +6186,7 @@ const sharedStyles = `
   .mh-wm-load { padding: 80px 20px; text-align: center; color: var(--mh-muted); font-size: 13px; }
   .mh-wm-pin { all: unset; position: absolute; transform: translate(-50%, -100%); cursor: pointer; display: flex; flex-direction: column; align-items: center; z-index: 2; touch-action: none; }
   .mh-wm-pin-b { position: relative; width: 30px; height: 49px; display: block; filter: drop-shadow(0 3px 4px rgba(0,0,0,.55)); transform-origin: 50% 100%; transition: transform .15s ease, filter .15s ease; }
-  .mh-wm-pin-b > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; fill: var(--mh-ink); stroke: var(--acc, #E3B04B); stroke-width: 14; stroke-linejoin: round; paint-order: stroke; }
+  .mh-wm-pin-b > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; fill: var(--mh-bg-base, var(--mh-bg)); stroke: var(--acc, #E3B04B); stroke-width: 14; stroke-linejoin: round; paint-order: stroke; }
   .mh-wm-pin:hover .mh-wm-pin-b, .mh-wm-pin:focus-visible .mh-wm-pin-b, .mh-wm-pin.is-sel .mh-wm-pin-b { transform: scale(1.15); filter: drop-shadow(0 0 6px var(--acc, #E3B04B)) drop-shadow(0 0 14px var(--acc, #E3B04B)) drop-shadow(0 3px 4px rgba(0,0,0,.5)); }
   .mh-wm-pin.is-sel { z-index: 4; } .mh-wm-pin.is-sel .mh-wm-pin-b { transform: scale(1.25); }
   .mh-wm-pin.is-hid .mh-wm-pin-b > svg { stroke-dasharray: 22 14; }
