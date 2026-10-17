@@ -269,7 +269,7 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
                   onPointerMove={moveDrag}
                   onPointerUp={() => drag && drag.id === p.id && endDrag(p)}
                 >
-                  <span className="mh-wm-pin-b"><Ic size={15} strokeWidth={2.2} /></span>
+                  <span className="mh-wm-pin-b"><svg viewBox="0 0 36 46" aria-hidden="true"><path d="M18 2C9.7 2 3 8.6 3 16.8c0 10 15 27.2 15 27.2s15-17.2 15-27.2C33 8.6 26.3 2 18 2z" /></svg><Ic size={15} strokeWidth={2.4} /></span>
                   {sel === p.id && <span className="mh-wm-pin-t">{p.title}</span>}
                 </button>
               );
