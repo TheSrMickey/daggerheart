@@ -133,16 +133,21 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
     return { x: clamp(((e.clientX - r.left) / r.width) * 100, 0, 100), y: clamp(((e.clientY - r.top) / r.height) * 100, 0, 100) };
   };
 
+  const addPinAt = (e) => {
+    const { x, y } = pos(e);
+    const np = { id: "p" + Date.now(), x: +x.toFixed(2), y: +y.toFixed(2), title: "Nuevo lugar", text: "", kind: "interes", img: "", sceneId: "", hidden: true };
+    update((d) => ({ ...d, pins: [...(d.pins || []), np] }));
+    setTool(null);
+    openEdit.current = true;
+    setSel(np.id);
+  };
   const onMapClick = (e) => {
     if (dragMoved.current) return (dragMoved.current = false);
-    if (edit && tool === "add") {
-      const { x, y } = pos(e);
-      const np = { id: "p" + Date.now(), x: +x.toFixed(2), y: +y.toFixed(2), title: "Nuevo lugar", text: "", kind: "interes", img: "", sceneId: "", hidden: true };
-      update((d) => ({ ...d, pins: [...(d.pins || []), np] }));
-      setTool(null);
-      openEdit.current = true;
-      setSel(np.id);
-    } else setSel(null);
+    if (edit && tool === "add") addPinAt(e);
+    else setSel(null);
+  };
+  const onMapDbl = (e) => {
+    if (edit && fit && tool !== "add") addPinAt(e);
   };
 
   const startDrag = (e, p) => {
@@ -237,20 +242,21 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
           <button type="button" className={"mh-btn-ghost" + (tool === "add" ? " is-on" : "")} onClick={() => (setTool(tool === "add" ? null : "add"), setSel(null))} title="Pulsa y luego haz clic en el mapa">
             <Plus size={14} /> {tool === "add" ? "Haz clic en el mapa…" : "Marcador"}
           </button>
-          <label className="mh-btn-ghost" style={{ cursor: "pointer" }}>
+          {!fit && <label className="mh-btn-ghost" style={{ cursor: "pointer" }}>
             <ImagePlus size={14} /> Cambiar mapa
             <input type="file" accept="image/*" hidden onChange={(e) => { uploadMap(e.target.files?.[0]); e.target.value = ""; }} />
-          </label>
-          <button type="button" className={"mh-btn-ghost" + (help ? " is-on" : "")} onClick={() => setHelp((v) => !v)}><Wand2 size={14} /> Prompt</button>
+          </label>}
+          {!fit && <button type="button" className={"mh-btn-ghost" + (help ? " is-on" : "")} onClick={() => setHelp((v) => !v)}><Wand2 size={14} /> Prompt</button>}
           <span className="mh-wm-sp" />
-          <span className="mh-wm-note">{pins.length} marcador{pins.length === 1 ? "" : "es"} · {pins.filter((p) => p.hidden).length} oculto{pins.filter((p) => p.hidden).length === 1 ? "" : "s"}</span>
+          {fit && <span className="mh-wm-note">Doble clic en el mapa para crear · arrastra para mover</span>}
+          {!fit && <span className="mh-wm-note">{pins.length} marcador{pins.length === 1 ? "" : "es"} · {pins.filter((p) => p.hidden).length} oculto{pins.filter((p) => p.hidden).length === 1 ? "" : "s"}</span>}
         </div>
       )}
       {edit && help && <PromptHelper onClose={() => setHelp(false)} />}
       <div className="mh-wm-wrap">
         <div className={"mh-wm-view" + (tool === "add" ? " is-add" : "")}>
           {fit && mapSrc && <div className="mh-wm-bg" aria-hidden="true" style={{ backgroundImage: `url("${mapSrc.replace(/"/g, "%22")}")` }} />}
-          <div className="mh-wm-canvas" ref={canvasRef} style={fit ? { aspectRatio: String(ratio), "--wm-r": ratio } : { width: zoom * 100 + "%" }} onClick={onMapClick}>
+          <div className="mh-wm-canvas" ref={canvasRef} style={fit ? { aspectRatio: String(ratio), "--wm-r": ratio } : { width: zoom * 100 + "%" }} onClick={onMapClick} onDoubleClick={onMapDbl}>
             {mapSrc ? <img src={mapSrc} alt="Mapa de mundo" draggable={false} onLoad={(e) => e.currentTarget.naturalHeight && setRatio(e.currentTarget.naturalWidth / e.currentTarget.naturalHeight)} /> : <div className="mh-wm-load">Cargando el mapa…</div>}
             {visible.map((p) => {
               const k = KIND[p.kind] || KIND.interes;
@@ -292,12 +298,12 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
                   <span className="mh-wm-kind" style={{ "--pc": kind.color }}><kind.Icon size={11} /> {kind.label}{pin.hidden && (edit || showHidden) ? " · oculto (solo tú lo ves)" : ""}</span>
                   <h3 className="mh-serif">{pin.title}</h3>
                   {pin.text ? <p>{pin.text}</p> : <p className="mh-wm-note">{edit ? "Sin descripción todavía." : "Un lugar por descubrir."}</p>}
-                  {edit && pin.sceneId && sceneName(pin.sceneId) && onOpenScene && (
+                  {(edit || showHidden) && pin.sceneId && sceneName(pin.sceneId) && onOpenScene && (
                     <button type="button" className="mh-btn mh-wm-go" onClick={() => onOpenScene(pin.sceneId)}>Ir a la escena «{sceneName(pin.sceneId)}» <ChevronRight size={14} /></button>
                   )}
-                  {edit && (
+                  {(edit || showHidden) && (
                     <div className="mh-wm-row">
-                      <button type="button" className="mh-btn-ghost" onClick={() => setEditing(true)}><Pencil size={13} /> Editar</button>
+                      {edit && <button type="button" className="mh-btn-ghost" onClick={() => setEditing(true)}><Pencil size={13} /> Editar</button>}
                       <button type="button" className="mh-btn-ghost" onClick={toggleHidden}>{pin.hidden ? <><Eye size={13} /> Revelar a los jugadores</> : <><EyeOff size={13} /> Ocultar</>}</button>
                     </div>
                   )}

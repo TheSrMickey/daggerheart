@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "mejora", text: "Mapa de mundo en Directo: «Editar mapa» permite crear marcadores con doble clic y moverlos sin salir del panel. El DJ también puede revelar u ocultar un marcador a los jugadores con solo pulsarlo." },
       { tag: "mejora", text: "Marcadores del mapa de mundo rediseñados: chapa redonda con el logo de la página (oscura en modo noche, clara en modo día), borde naranja y un pulso suave para localizarlos; brillan al pasar el ratón o seleccionarlos." },
       { tag: "mejora", text: "El DJ puede ver el Mapa de mundo desde su vista de Directo (pestaña Mapa de mundo) y mostrarlo a los jugadores." },
       { tag: "nuevo", text: "Mapa de mundo nuevo, en la pestaña Mundo: el DJ sube la imagen de su mundo y coloca marcadores encima (se arrastran). Cada marcador abre una tarjeta con imagen, texto y tipo, y puede enlazar a una escena. Los marcadores nacen ocultos y el DJ los revela cuando quiere. Incluye un ayudante para generar un prompt con el que crear la imagen del mapa en una IA." },
