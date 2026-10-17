@@ -6,7 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
-      { tag: "mejora", text: "Marcadores del mapa de mundo rediseñados: ahora son el logo de la página en el color de acento, con borde blanco al pasar el ratón o seleccionarlos." },
+      { tag: "mejora", text: "Marcadores del mapa de mundo rediseñados: ahora son el logo de la página (claro en modo noche, oscuro en modo día) con borde naranja, que brilla al pasar el ratón o seleccionarlos." },
       { tag: "mejora", text: "El DJ puede ver el Mapa de mundo desde su vista de Directo (pestaña Mapa de mundo) y mostrarlo a los jugadores." },
       { tag: "nuevo", text: "Mapa de mundo nuevo, en la pestaña Mundo: el DJ sube la imagen de su mundo y coloca marcadores encima (se arrastran). Cada marcador abre una tarjeta con imagen, texto y tipo, y puede enlazar a una escena. Los marcadores nacen ocultos y el DJ los revela cuando quiere. Incluye un ayudante para generar un prompt con el que crear la imagen del mapa en una IA." },
       { tag: "mejora", text: "Se retira el mapa de mundo 3D. La pestaña Mundo queda con un aviso mientras se prepara un nuevo mapa de mundo." },
