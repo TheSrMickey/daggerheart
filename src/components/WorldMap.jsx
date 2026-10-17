@@ -249,6 +249,7 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
       {edit && help && <PromptHelper onClose={() => setHelp(false)} />}
       <div className="mh-wm-wrap">
         <div className={"mh-wm-view" + (tool === "add" ? " is-add" : "")}>
+          {fit && mapSrc && <div className="mh-wm-bg" aria-hidden="true" style={{ backgroundImage: `url("${mapSrc.replace(/"/g, "%22")}")` }} />}
           <div className="mh-wm-canvas" ref={canvasRef} style={fit ? { aspectRatio: String(ratio), "--wm-r": ratio } : { width: zoom * 100 + "%" }} onClick={onMapClick}>
             {mapSrc ? <img src={mapSrc} alt="Mapa de mundo" draggable={false} onLoad={(e) => e.currentTarget.naturalHeight && setRatio(e.currentTarget.naturalWidth / e.currentTarget.naturalHeight)} /> : <div className="mh-wm-load">Cargando el mapa…</div>}
             {visible.map((p) => {
