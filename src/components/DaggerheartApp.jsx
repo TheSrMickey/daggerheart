@@ -6185,13 +6185,12 @@ const sharedStyles = `
   .mh-wm-canvas img { display: block; width: 100%; height: auto; pointer-events: none; }
   .mh-wm-load { padding: 80px 20px; text-align: center; color: var(--mh-muted); font-size: 13px; }
   .mh-wm-pin { all: unset; position: absolute; transform: translate(-50%, -100%); cursor: pointer; display: flex; flex-direction: column; align-items: center; z-index: 2; touch-action: none; }
-  .mh-wm-pin-b { position: relative; width: 38px; height: 49px; display: flex; align-items: flex-start; justify-content: center; padding-top: 11px; box-sizing: border-box; color: #fff; filter: drop-shadow(0 3px 5px rgba(0,0,0,.65)) drop-shadow(0 0 2px rgba(0,0,0,.8)); transform-origin: 50% 100%; transition: transform .15s ease; }
-  .mh-wm-pin-b > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; fill: #101018; stroke: #fff; stroke-width: 2.2; stroke-linejoin: round; transition: fill .15s ease; }
-  .mh-wm-pin-b > svg + svg { position: relative; inset: auto; width: 16px; height: 16px; fill: none; stroke: currentColor; color: var(--pc); }
-  .mh-wm-pin:hover .mh-wm-pin-b { transform: scale(1.12); }
-  .mh-wm-pin:focus-visible .mh-wm-pin-b { outline: 2px solid #fff; outline-offset: 4px; border-radius: 8px; }
-  .mh-wm-pin.is-sel { z-index: 4; } .mh-wm-pin.is-sel .mh-wm-pin-b { transform: scale(1.3); color: #101018; filter: drop-shadow(0 0 10px rgba(255,255,255,.75)) drop-shadow(0 3px 6px rgba(0,0,0,.6)); } .mh-wm-pin.is-sel .mh-wm-pin-b > svg { fill: #fff; } .mh-wm-pin.is-sel .mh-wm-pin-b > svg + svg { color: #101018; }
-  .mh-wm-pin.is-hid .mh-wm-pin-b { opacity: .7; } .mh-wm-pin.is-hid .mh-wm-pin-b > svg { stroke-dasharray: 4 3; }
+  .mh-wm-pin-b { position: relative; width: 30px; height: 49px; display: block; filter: drop-shadow(0 3px 4px rgba(0,0,0,.6)); transform-origin: 50% 100%; transition: transform .15s ease; }
+  .mh-wm-pin-b > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; fill: var(--acc, #E3B04B); stroke: rgba(10,10,28,.7); stroke-width: 7; stroke-linejoin: round; paint-order: stroke; transition: stroke .12s ease, stroke-width .12s ease; }
+  .mh-wm-pin:hover .mh-wm-pin-b, .mh-wm-pin:focus-visible .mh-wm-pin-b { transform: scale(1.12); }
+  .mh-wm-pin:hover .mh-wm-pin-b > svg, .mh-wm-pin:focus-visible .mh-wm-pin-b > svg { stroke: #fff; stroke-width: 18; }
+  .mh-wm-pin.is-sel { z-index: 4; } .mh-wm-pin.is-sel .mh-wm-pin-b { transform: scale(1.25); } .mh-wm-pin.is-sel .mh-wm-pin-b > svg { stroke: #fff; stroke-width: 18; }
+  .mh-wm-pin.is-hid .mh-wm-pin-b { opacity: .65; } .mh-wm-pin.is-hid .mh-wm-pin-b > svg { stroke-dasharray: 18 14; }
   .mh-wm-pin.is-drag { cursor: grabbing; z-index: 5; }
   .mh-wm-pin-t { position: absolute; top: calc(100% + 6px); white-space: nowrap; font: 600 11px 'Inter', system-ui, sans-serif; padding: 3px 9px; border-radius: 99px; background: rgba(13,13,34,.82); color: #fff; border: 1px solid #ffffff2a; }
   .mh-wm-zoom { position: sticky; left: 100%; bottom: 10px; float: right; margin: -76px 10px 0 0; display: flex; flex-direction: column; gap: 6px; z-index: 6; width: 34px; }
