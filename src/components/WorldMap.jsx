@@ -80,7 +80,7 @@ function PromptHelper({ onClose }) {
   );
 }
 
-export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc, ensureImg, saveImage, dropImage, onOpenScene, onLog, fit = false, showHidden = false }) {
+export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc, ensureImg, saveImage, dropImage, onOpenScene, onLog, fit = false, compact = false, showHidden = false }) {
   const [doc, update] = useDoc(docKey(campaignId), EMPTY, 4000);
   const pins = doc.pins || [];
   const [sel, setSel] = useState(null);
@@ -88,6 +88,7 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
   const [editing, setEditing] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [ratio, setRatio] = useState(1.6);
+  const [ready, setReady] = useState(false);
   const [drag, setDrag] = useState(null);
   const [help, setHelp] = useState(false);
   const [busy, setBusy] = useState("");
@@ -242,22 +243,22 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
           <button type="button" className={"mh-btn-ghost" + (tool === "add" ? " is-on" : "")} onClick={() => (setTool(tool === "add" ? null : "add"), setSel(null))} title="Pulsa y luego haz clic en el mapa">
             <Plus size={14} /> {tool === "add" ? "Haz clic en el mapa…" : "Marcador"}
           </button>
-          {!fit && <label className="mh-btn-ghost" style={{ cursor: "pointer" }}>
+          {!compact && <label className="mh-btn-ghost" style={{ cursor: "pointer" }}>
             <ImagePlus size={14} /> Cambiar mapa
             <input type="file" accept="image/*" hidden onChange={(e) => { uploadMap(e.target.files?.[0]); e.target.value = ""; }} />
           </label>}
-          {!fit && <button type="button" className={"mh-btn-ghost" + (help ? " is-on" : "")} onClick={() => setHelp((v) => !v)}><Wand2 size={14} /> Prompt</button>}
+          {!compact && <button type="button" className={"mh-btn-ghost" + (help ? " is-on" : "")} onClick={() => setHelp((v) => !v)}><Wand2 size={14} /> Prompt</button>}
           <span className="mh-wm-sp" />
-          {fit && <span className="mh-wm-note">Doble clic en el mapa para crear · arrastra para mover</span>}
-          {!fit && <span className="mh-wm-note">{pins.length} marcador{pins.length === 1 ? "" : "es"} · {pins.filter((p) => p.hidden).length} oculto{pins.filter((p) => p.hidden).length === 1 ? "" : "s"}</span>}
+          {compact && <span className="mh-wm-note">Doble clic en el mapa para crear · arrastra para mover</span>}
+          {!compact && <span className="mh-wm-note">{pins.length} marcador{pins.length === 1 ? "" : "es"} · {pins.filter((p) => p.hidden).length} oculto{pins.filter((p) => p.hidden).length === 1 ? "" : "s"}</span>}
         </div>
       )}
       {edit && help && <PromptHelper onClose={() => setHelp(false)} />}
       <div className="mh-wm-wrap">
         <div className={"mh-wm-view" + (tool === "add" ? " is-add" : "")}>
-          {fit && mapSrc && <div className="mh-wm-bg" aria-hidden="true" style={{ backgroundImage: `url("${mapSrc.replace(/"/g, "%22")}")` }} />}
-          <div className="mh-wm-canvas" ref={canvasRef} style={fit ? { aspectRatio: String(ratio), "--wm-r": ratio } : { width: zoom * 100 + "%" }} onClick={onMapClick} onDoubleClick={onMapDbl}>
-            {mapSrc ? <img src={mapSrc} alt="Mapa de mundo" draggable={false} onLoad={(e) => e.currentTarget.naturalHeight && setRatio(e.currentTarget.naturalWidth / e.currentTarget.naturalHeight)} /> : <div className="mh-wm-load">Cargando el mapa…</div>}
+          {fit && mapSrc && <div className={"mh-wm-bg" + (ready ? " is-ready" : "")} aria-hidden="true" style={{ backgroundImage: `url("${mapSrc.replace(/"/g, "%22")}")` }} />}
+          <div className={"mh-wm-canvas" + (ready ? " is-ready" : "")} ref={canvasRef} style={fit ? { aspectRatio: String(ratio), "--wm-r": ratio } : { width: zoom * 100 + "%" }} onClick={onMapClick} onDoubleClick={onMapDbl}>
+            {mapSrc ? <img src={mapSrc} alt="Mapa de mundo" draggable={false} ref={(el) => { if (el && el.complete && el.naturalHeight) { setReady(true); setRatio(el.naturalWidth / el.naturalHeight); } }} onLoad={(e) => { if (e.currentTarget.naturalHeight) { setRatio(e.currentTarget.naturalWidth / e.currentTarget.naturalHeight); setReady(true); } }} /> : <div className="mh-wm-load">Cargando el mapa…</div>}
             {visible.map((p) => {
               const k = KIND[p.kind] || KIND.interes;
               const d = drag && drag.id === p.id && drag.on ? drag : p;
