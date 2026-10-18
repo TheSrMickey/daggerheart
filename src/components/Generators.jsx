@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Dices, RefreshCw, Send, Skull, Swords, Scroll, Coins, Users, Sparkles } from "lucide-react";
+import { Dices, RefreshCw, Send, Skull, Swords, Scroll, Coins, Users, Sparkles, Eye, EyeOff, Gem, Package } from "lucide-react";
 
 // Generadores del DJ: para improvisar sin parar la partida. Todo es texto de ambientación salvo el encuentro,
 // que reparte los puntos de combate (3 por jugador + 2) entre tipos de adversario.
@@ -93,11 +93,11 @@ function makeEncounter(ambient, diff, players) {
 }
 
 const KINDS = [
-  { key: "nombres", label: "Nombres", Icon: Users },
-  { key: "rumores", label: "Rumores", Icon: Scroll },
-  { key: "botin", label: "Botín", Icon: Coins },
-  { key: "pnj", label: "Taberna y PNJ", Icon: Sparkles },
-  { key: "encuentro", label: "Encuentro", Icon: Swords },
+  { key: "encuentro", label: "Encuentro", Icon: Swords, desc: "Adversarios según tu mesa" },
+  { key: "pnj", label: "Taberna y PNJ", Icon: Sparkles, desc: "Personajes con secreto" },
+  { key: "nombres", label: "Nombres", Icon: Users, desc: "Diez de golpe" },
+  { key: "rumores", label: "Rumores", Icon: Scroll, desc: "Ganchos para la mesa" },
+  { key: "botin", label: "Botín", Icon: Coins, desc: "Monedas y hallazgos" },
 ];
 
 export function Generators({ players, avgLevel, onChat, onPlace }) {
@@ -107,6 +107,7 @@ export function Generators({ players, avgLevel, onChat, onPlace }) {
   const [tier, setTier] = useState(1);
   const [data, setData] = useState(() => Array.from({ length: 3 }, () => makeEncounter("Bosque", "Media", Math.max(1, players))));
   const [sent, setSent] = useState("");
+  const [open, setOpen] = useState("");
 
   const roll = (k = kind) => {
     setSent("");
@@ -128,57 +129,101 @@ export function Generators({ players, avgLevel, onChat, onPlace }) {
     encuentro: (e) => "⚔️ Encuentro: " + e.name + " (" + e.parts.map((p) => p.n + "× " + p.name).join(", ") + ")",
   };
 
+  const seg = (opts, val, set, c) => (
+    <div className="gx2-seg" role="radiogroup">
+      {opts.map((o) => (
+        <button key={o} type="button" role="radio" aria-checked={val === o} className={val === o ? "is-on" : ""} style={c ? { "--c": c } : undefined} onClick={() => set(o)}>{o}</button>
+      ))}
+    </div>
+  );
+  const sendBtn = (id, text, label = "Enviar al chat") => (
+    <button type="button" className={"mh-btn-ghost gx2-send" + (sent === id ? " is-sent" : "")} onClick={() => send(text, id)}><Send size={13} /> {sent === id ? "Enviado" : label}</button>
+  );
+  const cur = KINDS.find((k) => k.key === kind);
+  const points = 3 * players + 2 + ({ Fácil: -2, Media: 0, Dura: 2 }[diff] || 0);
+
   return (
-    <div className="mh-card gx" style={{ margin: 0 }}>
-      <div className="gx-h">
-        <h3 className="mh-serif"><Dices size={18} /> Generadores</h3>
-        <button type="button" className="mh-btn-ghost" onClick={() => roll()}><RefreshCw size={14} /> Repetir</button>
-      </div>
-      <p className="gx-sub">Para improvisar sin parar la partida. Pulsa «Enviar al chat» para enseñárselo a la mesa.</p>
-      <div className="gx-kinds" role="tablist" aria-label="Tipo de generador">
-        {KINDS.map(({ key, label, Icon }) => (
-          <button key={key} type="button" role="tab" aria-selected={kind === key} className={"cx-chip" + (kind === key ? " on" : "")} style={{ "--c": "#C9A24A" }} onClick={() => choose(key)}><i><Icon size={14} /></i>{label}</button>
+    <div className="gx2">
+      <aside className="gx2-nav" role="tablist" aria-label="Tipo de generador">
+        <div className="gx2-title"><Dices size={17} /> <b className="mh-serif">Generadores</b></div>
+        {KINDS.map(({ key, label, Icon, desc }) => (
+          <button key={key} type="button" role="tab" aria-selected={kind === key} className={"gx2-tab" + (kind === key ? " is-on" : "")} onClick={() => choose(key)}>
+            <span className="gx2-ic"><Icon size={17} strokeWidth={1.8} /></span>
+            <span><b>{label}</b><small>{desc}</small></span>
+          </button>
         ))}
-      </div>
-
-      {kind === "encuentro" && (
-        <div className="gx-opts">
-          <div><span className="gx-lab">Ambiente</span><div className="gx-row">{Object.keys(AMBIENTS).map((a) => <button key={a} type="button" className={"cx-chip" + (ambient === a ? " on" : "")} style={{ "--c": "#4f9a62" }} onClick={() => setAmbient(a)}>{a}</button>)}</div></div>
-          <div><span className="gx-lab">Dificultad</span><div className="gx-row">{["Fácil", "Media", "Dura"].map((d) => <button key={d} type="button" className={"cx-chip" + (diff === d ? " on" : "")} style={{ "--c": "#E3B04B" }} onClick={() => setDiff(d)}>{d}</button>)}</div></div>
-          <div><span className="gx-lab">Mesa</span><div className="gx-row"><span className="gx-fact">{players} jugador{players === 1 ? "" : "es"} · nivel {avgLevel} · {3 * players + 2 + ({ Fácil: -2, Media: 0, Dura: 2 }[diff])} puntos de combate</span></div></div>
-          <button type="button" className="mh-btn" onClick={() => roll()}><Dices size={15} /> Generar encuentro</button>
-        </div>
-      )}
-      {kind === "botin" && (
-        <div className="gx-opts"><div><span className="gx-lab">Nivel de la zona</span><div className="gx-row">{[1, 2].map((t) => <button key={t} type="button" className={"cx-chip" + (tier === t ? " on" : "")} style={{ "--c": "#E3B04B" }} onClick={() => setTier(t)}>{t === 1 ? "Rango 1 (niveles 1-4)" : "Rango 2 (5-7)"}</button>)}</div></div></div>
-      )}
-
-      <div className="gx-res">
-        {kind === "nombres" && (
-          <div className="gx-names">{shown.map((n, i) => <button key={i} type="button" className="cx-chip" style={{ "--c": "#C9A24A" }} title="Enviar al chat" onClick={() => send(lines.nombres(n), "n" + i)}>{n}{sent === "n" + i && <em>enviado</em>}</button>)}</div>
-        )}
-        {kind === "rumores" && shown.map((r, i) => (
-          <div key={i} className="gx-item"><p>{r}</p><button type="button" className="mh-btn-ghost" onClick={() => send(lines.rumores(r), "r" + i)}><Send size={13} /> {sent === "r" + i ? "Enviado" : "Enviar al chat"}</button></div>
-        ))}
-        {kind === "botin" && shown.map((b, i) => (
-          <div key={i} className="gx-item"><p><b>{b.coins}</b>, {b.junk}{b.nice ? <> y <b>{b.nice}</b></> : ""}.</p><button type="button" className="mh-btn-ghost" onClick={() => send(lines.botin(b), "b" + i)}><Send size={13} /> {sent === "b" + i ? "Enviado" : "Enviar al chat"}</button></div>
-        ))}
-        {kind === "pnj" && shown.map((p, i) => (
-          <div key={i} className="gx-item"><div><b className="mh-serif">{p.name}</b> <span className="gx-fact">{p.job} · {p.trait}</span><p>Quiere {p.want}.</p><p className="gx-secret">Secreto del DJ: {p.secret}.</p></div><button type="button" className="mh-btn-ghost" onClick={() => send(lines.pnj(p), "p" + i)}><Send size={13} /> {sent === "p" + i ? "Enviado" : "Enviar al chat"}</button></div>
-        ))}
-        {kind === "encuentro" && shown.map((e, i) => (
-          <div key={i} className="gx-item gx-enc">
-            <div className="gx-enc-h"><b className="mh-serif">{e.name}</b><span className="cx-chip">{e.spent} de {e.budget} puntos</span></div>
-            <div className="gx-row">{e.parts.map((p) => <span key={p.role} className="cx-chip" style={{ "--c": "#C0504A" }}><i><Skull size={13} /></i>{p.name} ×{p.n}<em>{p.role} · {p.cost} pts</em></span>)}</div>
-            <p>{e.tip}</p>
-            <div className="gx-row">
-              <button type="button" className="mh-btn" onClick={() => (onPlace(e.parts.flatMap((p) => Array.from({ length: p.n }, () => p.name))), setSent("e" + i))}><Skull size={14} /> {sent === "e" + i ? "Colocados" : "Colocar en el mapa"}</button>
-              <button type="button" className="mh-btn-ghost" onClick={() => send(lines.encuentro(e), "ec" + i)}><Send size={13} /> {sent === "ec" + i ? "Enviado" : "Enviar al chat"}</button>
-            </div>
+      </aside>
+      <section className="gx2-main">
+        <header className="gx2-head">
+          <div>
+            <h3 className="mh-serif">{cur.label}</h3>
+            <p>Pulsa «Enviar al chat» para enseñárselo a la mesa.</p>
           </div>
-        ))}
+          <button type="button" className="mh-btn gx2-again" onClick={() => roll()}><RefreshCw size={14} /> {kind === "encuentro" ? "Generar de nuevo" : "Repetir"}</button>
+        </header>
+
+        {kind === "encuentro" && (
+          <div className="gx2-opts">
+            <div><span className="gx-lab">Ambiente</span>{seg(Object.keys(AMBIENTS), ambient, setAmbient)}</div>
+            <div><span className="gx-lab">Dificultad</span>{seg(["Fácil", "Media", "Dura"], diff, setDiff)}</div>
+            <div className="gx2-mesa"><span className="gx-lab">Tu mesa</span><span className="gx-fact">{players} jugador{players === 1 ? "" : "es"} · nivel {avgLevel} · <b>{points}</b> puntos de combate</span></div>
+          </div>
+        )}
+        {kind === "botin" && (
+          <div className="gx2-opts"><div><span className="gx-lab">Nivel de la zona</span>{seg(["Nivel 1", "Nivel 2"], "Nivel " + tier, (v) => setTier(v === "Nivel 1" ? 1 : 2))}</div></div>
+        )}
+
+        <div className={"gx2-res gx2-res-" + kind}>
+          {kind === "nombres" && shown.map((n, i) => (
+            <button key={i} type="button" className={"gx2-name" + (sent === "n" + i ? " is-sent" : "")} title="Enviar al chat" onClick={() => send(lines.nombres(n), "n" + i)}>
+              <i>{n.charAt(0)}</i><span>{n}</span>{sent === "n" + i ? <em>Enviado</em> : <Send size={12} />}
+            </button>
+          ))}
+          {kind === "rumores" && shown.map((r, i) => (
+            <article key={i} className="gx2-card gx2-rumor">
+              <Scroll size={18} strokeWidth={1.5} />
+              <p>{r}</p>
+              {sendBtn("r" + i, lines.rumores(r))}
+            </article>
+          ))}
+          {kind === "botin" && shown.map((b, i) => (
+            <article key={i} className="gx2-card gx2-loot">
+              <div className="gx2-row"><Coins size={15} /><span>{b.coins}</span></div>
+              <div className="gx2-row"><Package size={15} /><span>{b.junk}</span></div>
+              {b.nice ? <div className="gx2-row is-nice"><Gem size={15} /><span>{b.nice}</span></div> : <div className="gx2-row is-none"><Gem size={15} /><span>Sin objeto especial</span></div>}
+              {sendBtn("b" + i, lines.botin(b))}
+            </article>
+          ))}
+          {kind === "pnj" && shown.map((p, i) => (
+            <article key={i} className="gx2-card gx2-npc">
+              <div className="gx2-npc-h"><i>{p.name.charAt(0)}</i><div><b className="mh-serif">{p.name}</b><span className="gx2-tags"><em>{p.job}</em><em>{p.trait}</em></span></div></div>
+              <p>Quiere {p.want}.</p>
+              <button type="button" className={"gx2-secret" + (open === "p" + i ? " is-open" : "")} onClick={() => setOpen(open === "p" + i ? "" : "p" + i)} aria-expanded={open === "p" + i}>
+                {open === "p" + i ? <Eye size={13} /> : <EyeOff size={13} />}
+                <span>{open === "p" + i ? "Secreto: " + p.secret + "." : "Ver el secreto del DJ"}</span>
+              </button>
+              {sendBtn("p" + i, lines.pnj(p))}
+            </article>
+          ))}
+          {kind === "encuentro" && shown.map((e, i) => (
+            <article key={i} className="gx2-card gx2-enc">
+              <div className="gx2-enc-h"><b className="mh-serif">{e.name}</b><span>{e.spent} de {e.budget} pts</span></div>
+              <div className="gx2-meter" aria-hidden="true"><i style={{ width: Math.min(100, Math.round((e.spent / Math.max(1, e.budget)) * 100)) + "%" }} /></div>
+              <ul className="gx2-parts">
+                {e.parts.map((p) => (
+                  <li key={p.role}><Skull size={14} /><b>{p.name}</b><em>×{p.n}</em><small>{p.role} · {p.cost} pts</small></li>
+                ))}
+              </ul>
+              <p>{e.tip}</p>
+              <div className="gx2-acts">
+                <button type="button" className="mh-btn" onClick={() => (onPlace(e.parts.flatMap((p) => Array.from({ length: p.n }, () => p.name))), setSent("e" + i))}><Skull size={14} /> {sent === "e" + i ? "Colocados" : "Colocar en el mapa"}</button>
+                {sendBtn("ec" + i, lines.encuentro(e))}
+              </div>
+            </article>
+          ))}
+        </div>
         {kind === "encuentro" && <p className="gx-note">Las criaturas se colocan con la ficha base del Bandido; edita sus estadísticas en el mapa si necesitas otras.</p>}
-      </div>
+      </section>
     </div>
   );
 }
