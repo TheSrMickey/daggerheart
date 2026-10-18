@@ -23,6 +23,7 @@ import { Generators } from "./Generators";
 import { CampaignCalendar, HomeSessions, HomeCampCards } from "./Calendar";
 import { PollsGm, ActivePoll, PollSwap } from "./Polls";
 import { RestGm, RestQuick, GroupRestDialog, RestLock } from "./GroupRest";
+import NpcStatsEditor, { npcStatsSummary, npcTokenStats } from "./NpcStats";
 import { Chronicle, Timeline } from "./Chronicle";
 import { appendLog } from "@/lib/chronicle";
 import { SpotPlayer, SpotPause, SpotPanel, FocusBar, normSpot, liveHands, kindOf } from "./Spotlight";
@@ -5969,6 +5970,8 @@ const sharedStyles = `
   .mh-cl-list { display: flex; flex-direction: column; gap: 5px; max-height: 170px; overflow-y: auto; } .mh-cl-empty { font-size: 12px; color: var(--mh-muted); padding: 6px 2px; }
   .mh-cl-it { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; border-radius: 11px; border: 1px solid var(--mh-line); background: var(--mh-panel2); color: var(--mh-ink); font: 600 12.5px 'Inter', system-ui, sans-serif; cursor: pointer; text-align: left; } .mh-cl-it span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .mh-cl-it small { font-size: 10px; color: var(--mh-muted); } .mh-cl-it small.is-sent { color: var(--mh-green-ink); } .mh-cl-it.is-on { border-color: rgba(227,176,75,.7); background: rgba(227,176,75,.12); }
   .mh-fxq { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; max-height: 260px; overflow-y: auto; } .mh-fxq .mh-gm-fx { width: 100%; justify-content: flex-start; }
+  .mh-ns { display: flex; flex-direction: column; gap: 10px; } .mh-ns-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; } .mh-ns-f { display: flex; flex-direction: column; gap: 3px; font-size: 11px; color: var(--mh-muted); min-width: 0; } .mh-ns-f > span { font-weight: 600; letter-spacing: .03em; } .mh-ns-f .mh-input { padding: 6px 8px; font-size: 13px; width: 100%; } .mh-ns-f.is-wide { width: 100%; } .mh-ns-sub { font: 700 11px 'Inter', system-ui, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: var(--mh-muted); margin-top: 2px; } .mh-ns-empty { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px 14px; border-radius: 14px; border: 1px dashed var(--mh-line2); color: var(--mh-muted); } .mh-ns-empty p { margin: 0; font-size: 12.5px; line-height: 1.5; } .mh-ns-empty .mh-btn-ghost, .mh-ns-del { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; padding: 6px 11px; } .mh-ns-del { align-self: flex-start; color: #D9644E !important; } .mh-ns-sum { color: var(--mh-gold-ink) !important; font-weight: 700; }
+  @media (max-width: 640px) { .mh-ns-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   .mh-rq-opts { display: flex; flex-direction: column; gap: 6px; } .mh-rq-opt { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--mh-line2); background: var(--mh-panel2); color: var(--mh-ink); } .mh-rq-opt span { display: flex; flex-direction: column; gap: 2px; min-width: 0; } .mh-rq-opt b { font: 600 13px 'Inter', system-ui, sans-serif; } .mh-rq-opt small { font-size: 11px; line-height: 1.35; color: var(--mh-muted); } .mh-rq-opt > svg { flex: none; color: #E3B04B; } .mh-rq-opt.is-long > svg { color: #8E6FC4; } .mh-rq-opt:hover { border-color: var(--acc, #E3B04B); } .mh-rq-opt:focus-visible { outline: 2px solid var(--acc, #E3B04B); outline-offset: 2px; } .mh-rq-opt:disabled { opacity: .5; cursor: default; }
   .mh-rq-cur { display: flex; flex-direction: column; gap: 8px; } .mh-rq-chip { align-self: flex-start; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 99px; background: var(--mh-panel3); color: var(--mh-ink); border: 1px solid var(--mh-line2); } .mh-rq-n { font-size: 12.5px; color: var(--mh-ink2); } .mh-rq-acts { display: flex; gap: 6px; flex-wrap: wrap; } .mh-rq-acts .mh-btn, .mh-rq-acts .mh-btn-ghost { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; padding: 7px 11px; } .mh-rq-more { all: unset; cursor: pointer; align-self: flex-start; font-size: 11.5px; color: var(--mh-muted); text-decoration: underline; } .mh-rq-more:hover { color: var(--mh-ink); } .mh-rq-more:focus-visible { outline: 2px solid var(--acc, #E3B04B); outline-offset: 2px; }
   .mh-nt-n { margin-left: auto; color: var(--mh-muted); font-size: 11px; } .mh-nt-list { display: flex; flex-direction: column; gap: 5px; max-height: 240px; overflow-y: auto; } .mh-nt-row { display: flex; align-items: center; gap: 8px; padding: 7px 8px 7px 10px; border-radius: 11px; border: 1px solid var(--mh-line); background: var(--mh-panel2); color: var(--mh-ink); } .mh-nt-t { flex: 1; min-width: 0; display: flex; flex-direction: column; } .mh-nt-t b { font: 600 12.5px 'Inter', system-ui, sans-serif; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .mh-nt-t small { font-size: 10.5px; color: var(--mh-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .mh-nt-send { all: unset; cursor: pointer; width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center; background: var(--acc, #E3B04B); color: var(--acc-on, #1F1606); flex: none; } .mh-nt-send.is-sent { background: transparent; color: var(--mh-muted); border: 1px solid var(--mh-line2); } .mh-nt-send:focus-visible { outline: 2px solid var(--acc, #E3B04B); outline-offset: 2px; } .mh-nt-btns { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -30090,6 +30093,7 @@ export default function App({ onSignOut }) {
                                     <span className="mh-ch-npc-id">
                                       <b className="mh-serif">{m.name}</b>
                                       <small>{m.role || "Sin rol"}</small>
+                                      {m.stats && <small className="mh-ns-sum">{npcStatsSummary(m.stats)}</small>}
                                     </span>
                                   </button>
                                   <div className="mh-ch-npc-kind" role="radiogroup" aria-label={"Tipo de " + m.name}>
@@ -30123,6 +30127,8 @@ export default function App({ onSignOut }) {
                               <PenLine size={15} /> {sel.name}
                             </div>
                             <input className="mh-input" aria-label="Rol del PNJ" placeholder="Rol (p. ej. Posadera de El Cuervo Tuerto)" value={sel.role || ""} onChange={(e) => updateCast(sel.id, { role: e.target.value })} />
+                            <div className="mh-gm-h2">Estadísticas</div>
+                            <NpcStatsEditor name={sel.name} stats={sel.stats || null} onChange={(st) => updateCast(sel.id, { stats: st })} />
                             <div className="mh-gm-h2">Expresiones</div>
                               {(() => {
                                 const who = campaignCast.find((m) => m.id === dialogueDraft.castId);
@@ -30414,10 +30420,10 @@ export default function App({ onSignOut }) {
                         <AreaCards campaignId={viewingCampaignId} gm />
                         {areaPick && areaPick.owner === "gm" && renderAreaPick()}
                         {areaTool && <div className="mh-area-hint">Pulsa una casilla para colocar el área <button type="button" onClick={() => setAreaTool(null)}>Cancelar</button></div>}
-                        {sel && sel.kind === "foe" && (
+                        {sel && (sel.kind === "foe" || (sel.kind === "npc" && sel.stats)) && (
                           <div className="mh-foe-over" onWheel={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()} onContextMenu={(e) => e.stopPropagation()}>
                             <button type="button" className="mh-foe-over-x" aria-label="Cerrar la ficha" onClick={() => setMapSel(null)}>✕</button>
-                        {sel && sel.kind === "foe" && (() => {
+                        {sel && (sel.kind === "foe" || (sel.kind === "npc" && sel.stats)) && (() => {
                           const st = sel.stats;
                           const setStats = (patch) => mutateMap(viewingCampaignId, (ts) => ts.map((t) => (t.id === sel.id ? { ...t, stats: { ...(t.stats || newFoeStats()), ...patch } } : t)));
                           if (!st)
@@ -30763,7 +30769,7 @@ export default function App({ onSignOut }) {
                             <span className="mh-gm-h2">Reparto</span>
                             {castOff.map((m) => {
                               const imgId = castImgIdFor(m, "tranquila");
-                              return chip(m.id, m.name, castImgs[imgId] ? <img src={castImgs[imgId]} alt="" /> : m.name.charAt(0).toUpperCase(), () => placeToken({ kind: "npc", castId: m.id, name: m.name, imgId }));
+                              return chip(m.id, m.name, castImgs[imgId] ? <img src={castImgs[imgId]} alt="" /> : m.name.charAt(0).toUpperCase(), () => placeToken({ kind: "npc", castId: m.id, name: m.name, imgId, ...(m.stats ? { stats: npcTokenStats(m) } : {}) }));
                             })}
                             {castOff.length === 0 && <span className="mh-map-tray-e">{campaignCast.length ? "Todos colocados" : "Crea PNJ en la pestaña «PNJ»"}</span>}
                           </div>
