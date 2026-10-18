@@ -5819,8 +5819,11 @@ const sharedStyles = `
   .mh-hs-amb .mh-gm-sc-edit { max-width: 640px; }
   /* Directo */
   .mh-dir { display: flex; flex-direction: column; gap: 16px; }
-  .mh-dir-top { display: grid; grid-template-columns: minmax(0, 1fr) clamp(372px, 26vw, 480px); grid-template-rows: minmax(0, 1fr) auto; gap: 14px; height: clamp(560px, calc(100dvh - 190px), 1200px); }
+  .mh-dir-top { display: grid; grid-template-columns: minmax(0, 1fr) clamp(372px, 26vw, 480px); grid-template-rows: minmax(0, 1fr) 176px; gap: 14px; height: clamp(560px, calc(100dvh - 190px), 1200px); }
   .mh-dir-stage { grid-column: 1; padding: 12px; border-radius: 22px; background: var(--mh-panel); border: 1px solid var(--mh-line); display: flex; flex-direction: column; gap: 10px; position: relative; }
+  .mh-dir-top .mh-dir-below { min-height: 0; overflow: auto; } .mh-dir.is-imm .mh-dir-top .mh-dir-below { overflow: visible; }
+  .mh-dir-xlock { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 99px; background: #D9644E; color: #fff; } .mh-dir.is-xlock .mh-dir-live, .mh-dir.is-xlock .mh-dir-chnav, .mh-dir.is-xlock .mh-dir-show, .mh-dir.is-xlock .mh-dir-below .mh-tl, .mh-dir.is-xlock .mh-dir-dock .mh-tl { opacity: .45; } .mh-dir.is-xlock .mh-dir-show { pointer-events: none; }
+  html[data-mh-theme="light"] .mh-dir-mon.is-blank { background: radial-gradient(60% 70% at 28% 18%, #FFFAEE 0%, rgba(255, 250, 238, 0) 70%), radial-gradient(55% 60% at 82% 88%, color-mix(in srgb, var(--acc, #E3B04B) 22%, #FFF3D6) 0%, rgba(255, 243, 214, 0) 70%), linear-gradient(160deg, #F6EEDB, #E7D9BB); border: 1px solid var(--mh-line2); } html[data-mh-theme="light"] .mh-dir-mon.is-blank::before { opacity: .12; mix-blend-mode: multiply; }
   .mh-dir-below { grid-column: 1; padding: 10px; border-radius: 22px; background: var(--mh-panel); border: 1px solid var(--mh-line); }
   .mh-dir-side { grid-column: 2; grid-row: 1 / span 2; display: flex; flex-direction: column; gap: 12px; min-height: 0; }
   .mh-dir-side .mh-dir-chat { flex: 1; min-height: 0; } .mh-dir-side .mh-dir-chat .mh-dir-feed { flex: 1; max-height: none; min-height: 0; }
@@ -15248,6 +15251,7 @@ export default function App({ onSignOut }) {
   };
 
   const showScene = async (id) => {
+    if (campaignStage.xcard?.on) return;
     const scenes = stageScenesOf(campaignStage);
     const sc = scenes.find((x) => x.id === id);
     if (!sc || !viewingCampaignId) return;
@@ -15520,6 +15524,7 @@ export default function App({ onSignOut }) {
     setDjView(null);
   }, [campaignStage.live, viewingCampaignId]);
   const showOnStage = async (key) => {
+    if (campaignStage.xcard?.on) return;
     if (!viewingCampaignId || (campaignStage.live || "escena") === key) return;
     await saveStage(viewingCampaignId, { live: key });
     const title = campaignStage.scene?.title;
@@ -28827,6 +28832,7 @@ export default function App({ onSignOut }) {
                     const cur = scenes.find((x) => x.id === activeSceneId) || null;
                     const idx = cur ? scenes.indexOf(cur) : -1;
                     const live = stage.live || "escena";
+                    const xLock = !!stage.xcard?.on; // con la X-Card activa el DJ no cambia de vista ni de capítulo
                     const view = djView || live; // lo que el DJ ve; los jugadores solo ven «live»
                     const imm = !!settings.immersive;
                     const liveId = stage.dialogue?.lineId;
@@ -28857,7 +28863,8 @@ export default function App({ onSignOut }) {
                     const barEl = (
                       <div className="mh-dir-bar">
                         <span className="mh-dir-lbl">Tu vista</span>
-                        <div className="mh-dir-live" role="tablist" aria-label="Qué estás viendo tú">
+                        {xLock && <span className="mh-dir-xlock" role="status"><X size={13} /> X-Card activa: retírala para cambiar de vista o de capítulo</span>}
+                        <div className="mh-dir-live" role="tablist" aria-label="Qué estás viendo tú" inert={xLock || undefined}>
                           {STAGE_TABS.map((t) => {
                             const TI = t.Icon;
                             return (
@@ -28876,7 +28883,7 @@ export default function App({ onSignOut }) {
                           </button>
                         )}
                         {scenes.length > 0 && (
-                          <div className="mh-dir-chnav">
+                          <div className="mh-dir-chnav" inert={xLock || undefined}>
                             <button type="button" className="mh-gm-ib" aria-label={idx === 0 ? "Quitar el capítulo de la pantalla" : "Capítulo anterior"} title={idx === 0 ? "Volver a «A la espera de una escena»" : "Capítulo anterior"} disabled={idx < 0} onClick={() => (idx === 0 ? hideScene() : showScene(scenes[idx - 1].id))}>
                               <ChevronLeft size={14} />
                             </button>
@@ -29052,7 +29059,7 @@ export default function App({ onSignOut }) {
                       </button>
                     );
                     const stepsEl = (
-                      <div className="mh-tl">
+                      <div className="mh-tl" inert={xLock || undefined}>
                         <div key={tlCur + "|" + (cur?.id || "")} className="mh-tl-track">
                           {tlShown.map((x, i) => {
                             if (i > 0) {
@@ -29272,7 +29279,6 @@ export default function App({ onSignOut }) {
                         {[
                           { k: "pista", l: "Pistas", I: ScrollText, go: (e) => (clueDlg ? setClueDlg(null) : (setDiceDlg(null), setClueDlg({ rect: e.currentTarget.getBoundingClientRect(), sel: null, title: "", text: "" }))) },
                           { k: "dados", l: "Dados", I: Dices, go: (e) => (diceDlg ? setDiceDlg(null) : (setClueDlg(null), setDiceDlg({ counts: { 4: 0, 6: 0, 8: 0, 10: 0, 12: 0, 20: 1 }, priv: false, rect: e.currentTarget.getBoundingClientRect() }))) },
-                          { k: "foco", l: "Foco", I: MapPinned, go: () => (setCombatBack(cur?.id || null), setCampaignDetailTab("mapa")) },
                           { k: "desc", l: "Descanso", I: BedDouble, go: (e) => (restDlg ? setRestDlg(null) : (setClueDlg(null), setDiceDlg(null), setRestDlg({ rect: e.currentTarget.getBoundingClientRect() }))) },
                         ].map((q) => (
                           <button key={q.k} type="button" data-dice-btn={q.k === "dados" ? "1" : undefined} data-clue-btn={q.k === "pista" ? "1" : undefined} data-rest-btn={q.k === "desc" ? "1" : undefined} onClick={q.go}>
@@ -29282,7 +29288,7 @@ export default function App({ onSignOut }) {
                       </div>
                     );
                     return (
-                      <div className={"mh-dir" + (imm ? " is-imm" : "")}>
+                      <div className={"mh-dir" + (imm ? " is-imm" : "") + (xLock ? " is-xlock" : "")}>
                         <div className="mh-dir-top">
                         <section className="mh-dir-stage">
                           {barEl}
