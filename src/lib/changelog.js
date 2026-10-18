@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "mejora", text: "Historia · Pistas rediseñada: formulario a un lado con el tipo en botones grandes y vista previa de la imagen, y a la derecha las pistas en tarjetas agrupadas por capítulo, con filtro por tipo y acciones rápidas (entregar, reenviar, ocultar, quitar)." },
       { tag: "nuevo", text: "Historia · PNJ: cualquier PNJ, amistoso o no, puede tener estadísticas (nivel, tipo, dificultad, umbrales, vida, estrés, ataque, motivaciones y experiencia). Se ven en su tarjeta y, al colocarlo en el tablero, aparece su ficha de adversario." },
       { tag: "nuevo", text: "Directo · botón «Efectos» en la línea de tiempo: un popup para activar y quitar al instante los efectos visuales de la escena (lluvia, niebla, fuego…) sin salir del directo." },
       { tag: "mejora", text: "Directo · «Tu vista» muestra el nombre de cada pestaña, se quita el aviso «Lo ven los jugadores» y la X-Card ya no muestra el texto de bloqueo." },

@@ -5972,6 +5972,17 @@ const sharedStyles = `
   .mh-fxq { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; max-height: 260px; overflow-y: auto; } .mh-fxq .mh-gm-fx { width: 100%; justify-content: flex-start; }
   .mh-ns { display: flex; flex-direction: column; gap: 10px; } .mh-ns-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; } .mh-ns-f { display: flex; flex-direction: column; gap: 3px; font-size: 11px; color: var(--mh-muted); min-width: 0; } .mh-ns-f > span { font-weight: 600; letter-spacing: .03em; } .mh-ns-f .mh-input { padding: 6px 8px; font-size: 13px; width: 100%; } .mh-ns-f.is-wide { width: 100%; } .mh-ns-sub { font: 700 11px 'Inter', system-ui, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: var(--mh-muted); margin-top: 2px; } .mh-ns-empty { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px 14px; border-radius: 14px; border: 1px dashed var(--mh-line2); color: var(--mh-muted); } .mh-ns-empty p { margin: 0; font-size: 12.5px; line-height: 1.5; } .mh-ns-empty .mh-btn-ghost, .mh-ns-del { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; padding: 6px 11px; } .mh-ns-del { align-self: flex-start; color: #D9644E !important; } .mh-ns-sum { color: var(--mh-gold-ink) !important; font-weight: 700; }
   @media (max-width: 640px) { .mh-ns-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .mh-pst { display: grid; grid-template-columns: minmax(280px, 340px) minmax(0, 1fr); gap: 16px; align-items: start; } .mh-pst-new { margin: 0 !important; display: flex; flex-direction: column; gap: 10px; position: sticky; top: 12px; } .mh-pst-h { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--mh-ink); } .mh-pst-h small { margin-left: 6px; font-size: 11.5px; color: var(--mh-muted); } .mh-pst-h svg { color: var(--mh-gold-ink); }
+  .mh-pst-kinds { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; } .mh-pst-kinds button { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 9px 4px; border-radius: 12px; border: 1px solid var(--mh-line2); background: var(--mh-panel2); color: var(--mh-ink3); font-size: 11px; font-weight: 600; text-align: center; transition: border-color .15s, background .15s; } .mh-pst-kinds button:hover { border-color: var(--acc, #E3B04B); } .mh-pst-kinds button.is-on { border-color: var(--acc, #E3B04B); background: color-mix(in srgb, var(--acc, #E3B04B) 16%, var(--mh-panel2)); color: var(--mh-ink); } .mh-pst-kinds button:focus-visible { outline: 2px solid var(--acc, #E3B04B); outline-offset: 2px; }
+  .mh-pst-img { display: flex; gap: 8px; align-items: center; } .mh-pst-img .mh-input { flex: 1; min-width: 0; } .mh-pst-prev { flex: none; width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--mh-line2); background: #1b1c3a center / cover no-repeat; } .mh-pst-go { display: inline-flex; align-items: center; justify-content: center; gap: 6px; } .mh-pst-hint { color: var(--mh-muted); font-size: 11.5px; line-height: 1.4; }
+  .mh-pst-list { display: flex; flex-direction: column; gap: 14px; min-width: 0; } .mh-pst-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .mh-pst-gh { display: flex; align-items: center; gap: 8px; font: 700 11px 'Inter', system-ui, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: var(--mh-muted); margin-bottom: 8px; } .mh-pst-gh i { font-style: normal; letter-spacing: 0; text-transform: none; font-size: 10.5px; padding: 2px 8px; border-radius: 99px; background: color-mix(in srgb, var(--acc, #E3B04B) 20%, transparent); color: var(--mh-gold-ink); }
+  .mh-pst-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; } .mh-pst-card { display: flex; flex-direction: column; border-radius: 16px; overflow: hidden; border: 1px solid var(--mh-line); background: var(--mh-panel); transition: border-color .15s, transform .15s; } .mh-pst-card:hover { border-color: var(--mh-line2); transform: translateY(-1px); } .mh-pst-card.is-hid { border-style: dashed; }
+  .mh-pst-art { position: relative; height: 96px; display: flex; align-items: center; justify-content: center; background: radial-gradient(80% 90% at 50% 30%, color-mix(in srgb, var(--acc, #E3B04B) 22%, transparent), transparent 75%), var(--mh-panel2) center / cover no-repeat; color: var(--mh-gold-ink); } .mh-pst-k, .mh-pst-st { position: absolute; top: 8px; display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 99px; background: rgba(8,8,24,.82); color: #fff; } .mh-pst-k { left: 8px; } .mh-pst-st { right: 8px; } .mh-pst-st.is-on { background: var(--acc, #E3B04B); color: var(--acc-on, #1F1606); }
+  .mh-pst-body { padding: 10px 12px 6px; display: flex; flex-direction: column; gap: 3px; flex: 1; } .mh-pst-body b { font-size: 13.5px; color: var(--mh-ink); } .mh-pst-body p { margin: 0; font-size: 12px; line-height: 1.45; color: var(--mh-ink2); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; } .mh-pst-body p.is-none { color: var(--mh-muted); font-style: italic; }
+  .mh-pst-acts { display: flex; align-items: center; gap: 6px; padding: 8px 10px 10px; } .mh-pst-acts .mh-btn, .mh-pst-acts .mh-btn-ghost { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 6px 10px; } .mh-pst-del { all: unset; cursor: pointer; margin-left: auto; width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center; color: var(--mh-muted); } .mh-pst-del:hover { color: #D9644E; background: color-mix(in srgb, #D9644E 14%, transparent); } .mh-pst-del:focus-visible { outline: 2px solid var(--acc, #E3B04B); }
+  .mh-pst-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; padding: 40px 20px; border-radius: 18px; border: 1px dashed var(--mh-line2); color: var(--mh-muted); font-size: 12.5px; } .mh-pst-empty b { color: var(--mh-ink); font-size: 14px; }
+  @media (max-width: 900px) { .mh-pst { grid-template-columns: minmax(0, 1fr); } .mh-pst-new { position: static; } }
   .mh-rq-opts { display: flex; flex-direction: column; gap: 6px; } .mh-rq-opt { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--mh-line2); background: var(--mh-panel2); color: var(--mh-ink); } .mh-rq-opt span { display: flex; flex-direction: column; gap: 2px; min-width: 0; } .mh-rq-opt b { font: 600 13px 'Inter', system-ui, sans-serif; } .mh-rq-opt small { font-size: 11px; line-height: 1.35; color: var(--mh-muted); } .mh-rq-opt > svg { flex: none; color: #E3B04B; } .mh-rq-opt.is-long > svg { color: #8E6FC4; } .mh-rq-opt:hover { border-color: var(--acc, #E3B04B); } .mh-rq-opt:focus-visible { outline: 2px solid var(--acc, #E3B04B); outline-offset: 2px; } .mh-rq-opt:disabled { opacity: .5; cursor: default; }
   .mh-rq-cur { display: flex; flex-direction: column; gap: 8px; } .mh-rq-chip { align-self: flex-start; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 99px; background: var(--mh-panel3); color: var(--mh-ink); border: 1px solid var(--mh-line2); } .mh-rq-n { font-size: 12.5px; color: var(--mh-ink2); } .mh-rq-acts { display: flex; gap: 6px; flex-wrap: wrap; } .mh-rq-acts .mh-btn, .mh-rq-acts .mh-btn-ghost { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; padding: 7px 11px; } .mh-rq-more { all: unset; cursor: pointer; align-self: flex-start; font-size: 11.5px; color: var(--mh-muted); text-decoration: underline; } .mh-rq-more:hover { color: var(--mh-ink); } .mh-rq-more:focus-visible { outline: 2px solid var(--acc, #E3B04B); outline-offset: 2px; }
   .mh-nt-n { margin-left: auto; color: var(--mh-muted); font-size: 11px; } .mh-nt-list { display: flex; flex-direction: column; gap: 5px; max-height: 240px; overflow-y: auto; } .mh-nt-row { display: flex; align-items: center; gap: 8px; padding: 7px 8px 7px 10px; border-radius: 11px; border: 1px solid var(--mh-line); background: var(--mh-panel2); color: var(--mh-ink); } .mh-nt-t { flex: 1; min-width: 0; display: flex; flex-direction: column; } .mh-nt-t b { font: 600 12.5px 'Inter', system-ui, sans-serif; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .mh-nt-t small { font-size: 10.5px; color: var(--mh-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .mh-nt-send { all: unset; cursor: pointer; width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center; background: var(--acc, #E3B04B); color: var(--acc-on, #1F1606); flex: none; } .mh-nt-send.is-sent { background: transparent; color: var(--mh-muted); border: 1px solid var(--mh-line2); } .mh-nt-send:focus-visible { outline: 2px solid var(--acc, #E3B04B); outline-offset: 2px; } .mh-nt-btns { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -11625,6 +11636,7 @@ export default function App({ onSignOut }) {
   const [ambOpen, setAmbOpen] = useState(false); // ventana de «Ambiente» (audio de la mesa)
   const [djWorldEdit, setDjWorldEdit] = useState(false);
   const [djCastEdit, setDjCastEdit] = useState(null);
+  const [pstFilter, setPstFilter] = useState("all");
   const [djView, setDjView] = useState(null); // lo que el DJ está viendo en Directo (null = lo mismo que ven los jugadores)
   const [quickChar, setQuickChar] = useState(null); // personaje cuya ficha rápida sustituye a «El grupo» en Directo
   const [mapPick, setMapPick] = useState({}); // por capítulo: mapa de combate elegido
@@ -29999,62 +30011,92 @@ export default function App({ onSignOut }) {
                   {campaignDetailTab === "pistas" && (() => {
                     const stage = campaignStage;
                     const handouts = stage.handouts || [];
+                    const scs = stageScenesOf(stage);
+                    const curId = activeSceneIdOf(stage);
+                    const draftScene = (handoutDraft.sceneId === undefined ? curId : handoutDraft.sceneId) || "";
+                    const shown = handouts.filter((h) => pstFilter === "all" || h.kind === pstFilter);
+                    const groups = [...scs.map((sc, i) => ({ key: sc.id, title: "Cap. " + (i + 1) + " · " + (sc.title || "Sin título"), items: shown.filter((h) => h.sceneId === sc.id) })), { key: "", title: "Sin capítulo", items: shown.filter((h) => !h.sceneId || !scs.some((sc) => sc.id === h.sceneId)) }].filter((g) => g.items.length);
+                    const nHidden = handouts.filter((h) => h.hidden).length;
                     return (
-                      <div className="mh-gm">
-                        <div className="mh-card mh-gm-box is-wide">
-                          <div className="mh-gm-h">
-                            <ScrollText size={15} /> Pistas para los jugadores
-                          </div>
-                          <div className="mh-gm-sub">Imágenes, notas, personajes u objetos. Aparecen como «Nuevo» hasta que cada jugador los abre.</div>
-                          <div className="mh-gm-kinds">
+                      <div className="mh-pst">
+                        <section className="mh-pst-new mh-card">
+                          <div className="mh-pst-h"><ScrollText size={16} /> <b>Nueva pista</b></div>
+                          <div className="mh-pst-kinds" role="radiogroup" aria-label="Tipo de pista">
                             {HANDOUT_KINDS.map((k) => {
                               const KIcon = k.Icon;
+                              const on = handoutDraft.kind === k.key;
                               return (
-                                <button key={k.key} type="button" className={handoutDraft.kind === k.key ? "is-on" : ""} onClick={() => setHandoutDraft({ ...handoutDraft, kind: k.key })}>
-                                  <KIcon size={13} />
-                                  {k.label}
+                                <button key={k.key} type="button" role="radio" aria-checked={on} className={on ? "is-on" : ""} onClick={() => setHandoutDraft({ ...handoutDraft, kind: k.key })}>
+                                  <KIcon size={18} strokeWidth={1.7} />
+                                  <span>{k.label}</span>
                                 </button>
                               );
                             })}
                           </div>
-                          <div className="mh-gm-form">
-                            <input className="mh-input" placeholder="Título (p. ej. Carta sellada)" value={handoutDraft.title} onChange={(e) => setHandoutDraft({ ...handoutDraft, title: e.target.value })} />
+                          <input className="mh-input" placeholder="Título (p. ej. Carta sellada)" value={handoutDraft.title} onChange={(e) => setHandoutDraft({ ...handoutDraft, title: e.target.value })} />
+                          <textarea className="mh-input" rows={3} placeholder="Texto o descripción (opcional)" value={handoutDraft.text} onChange={(e) => setHandoutDraft({ ...handoutDraft, text: e.target.value })} />
+                          <div className="mh-pst-img">
                             <input className="mh-input" placeholder="Imagen (enlace, opcional)" value={handoutDraft.image} onChange={(e) => setHandoutDraft({ ...handoutDraft, image: e.target.value })} />
-                            <textarea className="mh-input" rows={2} placeholder="Texto o descripción (opcional)" value={handoutDraft.text} onChange={(e) => setHandoutDraft({ ...handoutDraft, text: e.target.value })} />
-                            <select className="mh-input" aria-label="Capítulo de la pista" value={(handoutDraft.sceneId === undefined ? activeSceneIdOf(stage) : handoutDraft.sceneId) || ""} onChange={(e) => setHandoutDraft({ ...handoutDraft, sceneId: e.target.value })}>
-                              <option value="">Sin capítulo</option>
-                              {stageScenesOf(stage).map((sc, i) => <option key={sc.id} value={sc.id}>{"Cap. " + (i + 1) + " · " + (sc.title || "Sin título")}</option>)}
-                            </select>
+                            {handoutDraft.image.trim() && <span className="mh-pst-prev" style={{ backgroundImage: `url("${handoutDraft.image.trim().replace(/"/g, "%22")}")` }} aria-hidden="true" />}
                           </div>
-                          <button type="button" className="mh-btn" style={{ alignSelf: "flex-start" }} disabled={!handoutDraft.title.trim()} onClick={addHandout}>
-                            <Plus size={14} /> Entregar a los jugadores
+                          <select className="mh-input" aria-label="Capítulo de la pista" value={draftScene} onChange={(e) => setHandoutDraft({ ...handoutDraft, sceneId: e.target.value })}>
+                            <option value="">Sin capítulo</option>
+                            {scs.map((sc, i) => <option key={sc.id} value={sc.id}>{"Cap. " + (i + 1) + " · " + (sc.title || "Sin título")}</option>)}
+                          </select>
+                          <button type="button" className="mh-btn mh-pst-go" disabled={!handoutDraft.title.trim()} onClick={addHandout}>
+                            <Send size={14} /> Entregar a los jugadores
                           </button>
-                          {handouts.length > 0 && (
-                            <div className="mh-gm-list">
-                              {handouts.map((h) => {
-                                const kind = HANDOUT_KINDS.find((x) => x.key === h.kind) || HANDOUT_KINDS[0];
-                                const KIcon = kind.Icon;
-                                return (
-                                  <div key={h.id} className="mh-gm-item">
-                                    <span className={"mh-gm-item-art mh-stg-hand-art is-" + h.kind} style={h.image ? { backgroundImage: `url("${h.image.replace(/"/g, "%22")}")` } : undefined}>
-                                      {!h.image && <KIcon size={16} />}
-                                    </span>
-                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                      <div className="mh-stg-hand-title">{h.title}{h.hidden && <span className="mh-hand-hidden">Oculta</span>}</div>
-                                      <div className="mh-stg-hand-kind">{kind.label}{h.sceneId && stageScenesOf(stage).some((x) => x.id === h.sceneId) ? " · Cap. " + (stageScenesOf(stage).findIndex((x) => x.id === h.sceneId) + 1) : ""}{h.text ? " · " + h.text : ""}</div>
-                                    </div>
-                                    <button type="button" className={"mh-inv-x mh-hand-vis" + (h.hidden ? "" : " is-on")} aria-label={h.hidden ? "Mostrar a los jugadores" : "Ocultar a los jugadores"} title={h.hidden ? "Oculta · pulsa para mostrarla" : "Visible para los jugadores"} onClick={() => toggleHandout(h.id)}>
-                                      {h.hidden ? <EyeOff size={14} /> : <Eye size={14} />}
-                                    </button>
-                                    <button type="button" className="mh-inv-x" aria-label={"Quitar " + h.title} title="Quitar" onClick={() => removeHandout(h.id)}>
-                                      <Trash2 size={14} />
-                                    </button>
-                                  </div>
-                                );
-                              })}
+                          <small className="mh-pst-hint">Se envía al chat y aparece como «Nuevo» hasta que cada jugador la abre.</small>
+                        </section>
+                        <section className="mh-pst-list">
+                          <div className="mh-pst-top">
+                            <div className="mh-pst-h"><b>Pistas de la campaña</b><span className="mh-gm-count">{handouts.length}</span>{nHidden > 0 && <small>{nHidden} oculta{nHidden === 1 ? "" : "s"}</small>}</div>
+                            <div className="mh-ch-filter" role="tablist" aria-label="Filtrar pistas">
+                              {[{ key: "all", label: "Todas" }, ...HANDOUT_KINDS].map((k) => (
+                                <button key={k.key} type="button" role="tab" aria-selected={pstFilter === k.key} className={"mh-ch-fchip" + (pstFilter === k.key ? " is-on" : "")} onClick={() => setPstFilter(k.key)}>{k.label}</button>
+                              ))}
                             </div>
+                          </div>
+                          {handouts.length === 0 && (
+                            <div className="mh-pst-empty"><ScrollText size={30} strokeWidth={1.3} /><b>Todavía no hay pistas</b><span>Crea la primera a la izquierda: una nota, una imagen, un objeto o un personaje que los jugadores puedan abrir.</span></div>
                           )}
-                        </div>
+                          {handouts.length > 0 && groups.length === 0 && <div className="mh-pst-empty"><span>No hay pistas de este tipo.</span></div>}
+                          {groups.map((g) => (
+                            <div key={g.key || "none"} className="mh-pst-group">
+                              <div className="mh-pst-gh">{g.title}{g.key && g.key === curId && <i>En pantalla</i>}</div>
+                              <div className="mh-pst-cards">
+                                {g.items.map((h) => {
+                                  const kind = HANDOUT_KINDS.find((x) => x.key === h.kind) || HANDOUT_KINDS[0];
+                                  const KIcon = kind.Icon;
+                                  return (
+                                    <article key={h.id} className={"mh-pst-card" + (h.hidden ? " is-hid" : "")}>
+                                      <div className={"mh-pst-art is-" + h.kind} style={h.image ? { backgroundImage: `url("${h.image.replace(/"/g, "%22")}")` } : undefined}>
+                                        {!h.image && <KIcon size={26} strokeWidth={1.4} />}
+                                        <span className="mh-pst-k"><KIcon size={11} /> {kind.label}</span>
+                                        <span className={"mh-pst-st" + (h.hidden ? "" : " is-on")}>{h.hidden ? <><EyeOff size={11} /> Oculta</> : <><Eye size={11} /> Entregada</>}</span>
+                                      </div>
+                                      <div className="mh-pst-body">
+                                        <b>{h.title}</b>
+                                        {h.text ? <p>{h.text}</p> : <p className="is-none">Sin descripción</p>}
+                                      </div>
+                                      <div className="mh-pst-acts">
+                                        {h.hidden ? (
+                                          <button type="button" className="mh-btn" onClick={() => toggleHandout(h.id)}><Send size={13} /> Entregar</button>
+                                        ) : (
+                                          <>
+                                            <button type="button" className="mh-btn-ghost" onClick={() => sendNote(h.id)} title="Volver a enviarla al chat"><Send size={13} /> Reenviar</button>
+                                            <button type="button" className="mh-btn-ghost" onClick={() => toggleHandout(h.id)} title="Ocultarla a los jugadores"><EyeOff size={13} /> Ocultar</button>
+                                          </>
+                                        )}
+                                        <button type="button" className="mh-pst-del" aria-label={"Quitar " + h.title} title="Quitar" onClick={() => removeHandout(h.id)}><Trash2 size={14} /></button>
+                                      </div>
+                                    </article>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ))}
+                        </section>
                       </div>
                     );
                   })()}
