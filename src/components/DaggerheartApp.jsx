@@ -5968,6 +5968,7 @@ const sharedStyles = `
   .mh-cl-h { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--mh-gold-ink); } .mh-cl-h b { color: var(--mh-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .mh-cl-list { display: flex; flex-direction: column; gap: 5px; max-height: 170px; overflow-y: auto; } .mh-cl-empty { font-size: 12px; color: var(--mh-muted); padding: 6px 2px; }
   .mh-cl-it { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; border-radius: 11px; border: 1px solid var(--mh-line); background: var(--mh-panel2); color: var(--mh-ink); font: 600 12.5px 'Inter', system-ui, sans-serif; cursor: pointer; text-align: left; } .mh-cl-it span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .mh-cl-it small { font-size: 10px; color: var(--mh-muted); } .mh-cl-it small.is-sent { color: var(--mh-green-ink); } .mh-cl-it.is-on { border-color: rgba(227,176,75,.7); background: rgba(227,176,75,.12); }
+  .mh-fxq { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; max-height: 260px; overflow-y: auto; } .mh-fxq .mh-gm-fx { width: 100%; justify-content: flex-start; }
   .mh-rq-opts { display: flex; flex-direction: column; gap: 6px; } .mh-rq-opt { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--mh-line2); background: var(--mh-panel2); color: var(--mh-ink); } .mh-rq-opt span { display: flex; flex-direction: column; gap: 2px; min-width: 0; } .mh-rq-opt b { font: 600 13px 'Inter', system-ui, sans-serif; } .mh-rq-opt small { font-size: 11px; line-height: 1.35; color: var(--mh-muted); } .mh-rq-opt > svg { flex: none; color: #E3B04B; } .mh-rq-opt.is-long > svg { color: #8E6FC4; } .mh-rq-opt:hover { border-color: var(--acc, #E3B04B); } .mh-rq-opt:focus-visible { outline: 2px solid var(--acc, #E3B04B); outline-offset: 2px; } .mh-rq-opt:disabled { opacity: .5; cursor: default; }
   .mh-rq-cur { display: flex; flex-direction: column; gap: 8px; } .mh-rq-chip { align-self: flex-start; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 99px; background: var(--mh-panel3); color: var(--mh-ink); border: 1px solid var(--mh-line2); } .mh-rq-n { font-size: 12.5px; color: var(--mh-ink2); } .mh-rq-acts { display: flex; gap: 6px; flex-wrap: wrap; } .mh-rq-acts .mh-btn, .mh-rq-acts .mh-btn-ghost { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; padding: 7px 11px; } .mh-rq-more { all: unset; cursor: pointer; align-self: flex-start; font-size: 11.5px; color: var(--mh-muted); text-decoration: underline; } .mh-rq-more:hover { color: var(--mh-ink); } .mh-rq-more:focus-visible { outline: 2px solid var(--acc, #E3B04B); outline-offset: 2px; }
   .mh-nt-n { margin-left: auto; color: var(--mh-muted); font-size: 11px; } .mh-nt-list { display: flex; flex-direction: column; gap: 5px; max-height: 240px; overflow-y: auto; } .mh-nt-row { display: flex; align-items: center; gap: 8px; padding: 7px 8px 7px 10px; border-radius: 11px; border: 1px solid var(--mh-line); background: var(--mh-panel2); color: var(--mh-ink); } .mh-nt-t { flex: 1; min-width: 0; display: flex; flex-direction: column; } .mh-nt-t b { font: 600 12.5px 'Inter', system-ui, sans-serif; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .mh-nt-t small { font-size: 10.5px; color: var(--mh-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .mh-nt-send { all: unset; cursor: pointer; width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center; background: var(--acc, #E3B04B); color: var(--acc-on, #1F1606); flex: none; } .mh-nt-send.is-sent { background: transparent; color: var(--mh-muted); border: 1px solid var(--mh-line2); } .mh-nt-send:focus-visible { outline: 2px solid var(--acc, #E3B04B); outline-offset: 2px; } .mh-nt-btns { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -11626,6 +11627,7 @@ export default function App({ onSignOut }) {
   const [mapPick, setMapPick] = useState({}); // por capítulo: mapa de combate elegido
   const [dlgStart, setDlgStart] = useState({}); // por capítulo: { convId, lineId } con lo que el DJ quiere decir primero
   const [clueDlg, setClueDlg] = useState(null); // popup «Pista» del DJ: { rect, sel, title, text }
+  const [fxDlg, setFxDlg] = useState(null); // ventana «Efectos» de la línea de tiempo: { rect, sceneId }
   const [restDlg, setRestDlg] = useState(null); // ventana «Descanso» del DJ: { rect }
   const [diceDlg, setDiceDlg] = useState(null); // ventana «Dados» del DJ: { counts, priv }
   const [soonMsg, setSoonMsg] = useState(null); // aviso de botón que aún no tiene función
@@ -16975,6 +16977,20 @@ export default function App({ onSignOut }) {
       safeSet("campaign-diceshow:" + viewingCampaignId, JSON.stringify({ id: key, cid: diceClient.current, who: "El DJ", dice, parts, total, label, ts: key }), true);
     }
   };
+  useEffect(() => {
+    if (!fxDlg) return undefined;
+    const away = (e) => {
+      if (e.target.closest && (e.target.closest(".mh-dd") || e.target.closest("[data-fx-btn]"))) return;
+      setFxDlg(null);
+    };
+    const esc = (e) => e.key === "Escape" && setFxDlg(null);
+    document.addEventListener("mousedown", away);
+    document.addEventListener("keydown", esc);
+    return () => {
+      document.removeEventListener("mousedown", away);
+      document.removeEventListener("keydown", esc);
+    };
+  }, [!!fxDlg]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!restDlg) return undefined;
     const away = (e) => {
@@ -27913,6 +27929,36 @@ export default function App({ onSignOut }) {
 
   return (
     <div className={"mh-root" + (isMobile ? " is-mobile" : "")} style={{ display: "flex", flexDirection: isMobile ? "column" : "row", height: "100dvh", background: "var(--mh-bg)", fontFamily: "'Inter', system-ui, sans-serif", color: "var(--mh-ink)", overflow: "hidden" }}>
+      {fxDlg && viewingCampaignId && (() => {
+        const sc = stageScenesOf(campaignStage).find((x) => x.id === fxDlg.sceneId);
+        if (!sc) return null;
+        const r = fxDlg.rect;
+        const w = Math.min(340, (typeof window !== "undefined" ? window.innerWidth : 360) - 24);
+        const left = r ? Math.max(12, Math.min(r.left, window.innerWidth - w - 12)) : 12;
+        const bottom = r ? window.innerHeight - r.top + 8 : 80;
+        const n = (sc.fx || []).length;
+        const idx = stageScenesOf(campaignStage).indexOf(sc) + 1;
+        return (
+          <div className="mh-dd mh-cl" role="dialog" aria-label="Efectos de la escena" style={{ left, bottom, width: w }} onMouseDown={(e) => e.stopPropagation()}>
+            <div className="mh-cl-h"><Sparkles size={14} /> <b>Efectos · Cap. {idx}</b><small className="mh-nt-n">{n} activo{n === 1 ? "" : "s"}</small></div>
+            <div className="mh-fxq">
+              {SCENE_FX.map((fx) => {
+                const I = FX_ICONS[fx.k];
+                const on = (sc.fx || []).includes(fx.k);
+                return (
+                  <button key={fx.k} type="button" className={"mh-gm-fx" + (on ? " is-on" : "")} aria-pressed={on} style={FX_COLORS[fx.k] ? { "--fc": FX_COLORS[fx.k] } : undefined} onClick={() => toggleFx(sc, fx.k)} title={fx.n}>
+                    {I && <I size={13} />} {fx.n}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="mh-rq-acts">
+              <button type="button" className="mh-btn-ghost" disabled={!n} onClick={() => updateScene(sc.id, { fx: [] })}>Quitar todos</button>
+              <button type="button" className="mh-btn" style={{ marginLeft: "auto" }} onClick={() => setFxDlg(null)}>Listo</button>
+            </div>
+          </div>
+        );
+      })()}
       {restDlg && viewingCampaignId && (() => {
         const r = restDlg.rect;
         const w = Math.min(320, (typeof window !== "undefined" ? window.innerWidth : 340) - 24);
@@ -29105,6 +29151,7 @@ export default function App({ onSignOut }) {
                                     <small className="mh-tl-sub">{(x.sc.fx || []).length ? (x.sc.fx || []).map((k) => SCENE_FX.find((fx) => fx.k === k)?.n).filter(Boolean).join(", ") : "Sin efectos"}</small>
                                     <span className="mh-ch-step-acts">
                                       {live === "escena" ? <span className="mh-stg-live is-soft"><i />En pantalla</span> : <button type="button" className="mh-btn-ghost" onClick={() => showOnStage("escena")}><Eye size={13} /> Mostrar</button>}
+                                      <button type="button" className={"mh-btn-ghost" + (fxDlg?.sceneId === x.sc.id ? " is-on" : "")} data-fx-btn="1" aria-haspopup="dialog" aria-expanded={fxDlg?.sceneId === x.sc.id} onClick={(e) => (fxDlg?.sceneId === x.sc.id ? setFxDlg(null) : setFxDlg({ sceneId: x.sc.id, rect: e.currentTarget.getBoundingClientRect() }))}><Sparkles size={13} /> Efectos{(x.sc.fx || []).length ? " · " + x.sc.fx.length : ""}</button>
                                       {nextBtn}
                                     </span>
                                   </>
