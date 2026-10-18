@@ -4750,6 +4750,9 @@ const sharedStyles = `
   /* Tablero: escena de fondo, cuadrícula fina y fichas cuadradas */
   .mh-map { position: relative; aspect-ratio: ${MAP_COLS} / ${MAP_ROWS}; border-radius: 12px; overflow: hidden; background: #2B3A4F center / cover no-repeat; flex-shrink: 0; touch-action: none; user-select: none; }
   .mh-map.is-blank { background-image: linear-gradient(#3F4B5E, #2B3A4F); }
+  .mh-map-bg { position: absolute; inset: -40px; background: center / cover no-repeat; filter: blur(24px) saturate(1.05) brightness(.82); pointer-events: none; animation: mh-gridin 1.2s ease both; }
+  .mh-map-tint { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(20,22,64,.32), rgba(10,10,34,.52)); animation: mh-gridin .9s ease .15s both; }
+  .mh-map-noise { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: overlay; opacity: .3; z-index: 1; animation: mh-gridin 1s ease .3s both; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .55 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23f)'/%3E%3C/svg%3E"); }
   .mh-map-grid { position: absolute; inset: 0; pointer-events: none; --gl: color-mix(in srgb, var(--acc, #E3B04B) 80%, transparent); background-image: linear-gradient(var(--gl) 1.5px, transparent 1.5px), linear-gradient(90deg, var(--gl) 1.5px, transparent 1.5px); background-size: calc(100% / ${MAP_COLS}) calc(100% / ${MAP_ROWS}); }
   .mh-map-range { position: absolute; box-sizing: border-box; background: color-mix(in srgb, var(--rc) 58%, transparent); border: 0 solid var(--rc); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rc) 35%, transparent); pointer-events: none; z-index: 1; }
   .mh-map-menu { min-width: 190px; }
@@ -4958,7 +4961,7 @@ const sharedStyles = `
   /* La escena se desenfoca en el sitio y la cuadrícula aparece encima (sin fundido entre imágenes) */
   .mh-map-grid { animation: mh-gridin .9s ease .3s both; }
   @keyframes mh-gridin { from { opacity: 0; } to { opacity: 1; } }
-  @media (prefers-reduced-motion: reduce) { .mh-map-grid { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { .mh-map-bg, .mh-map-tint, .mh-map-grid, .mh-map-noise { animation: none; } }
   .mh-map-fit .mh-map { border-radius: 0; }
   .mh-spot-ui { position: absolute; left: 12px; top: 112px; z-index: 7; display: flex; flex-direction: column; gap: 6px; max-width: 250px; }
   .mh-spot-btn { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 7px; padding: 8px 13px; border-radius: 10px; background: rgba(13,13,28,.82); border: 1px solid #ffffff2a; backdrop-filter: blur(4px); color: #fff; font: 600 12.5px Inter, system-ui, sans-serif; }
@@ -9851,7 +9854,9 @@ function MapBoard({ fog, fogView, areas, areaTool, log, menuFor, fx, efx, hfx, s
       onPointerLeave={() => setHover(null)}
     >
       <div className="mh-map-flat">
-      {/* La escena es el fondo (nítida); encima van solo la cuadrícula de color y las fichas */}
+      {/* La escena va difuminada de fondo; encima van la cuadrícula de color y las fichas */}
+      {bg && <div key={bg} className="mh-map-bg" style={{ backgroundImage: `url("${bg.replace(/"/g, "%22")}")` }} />}
+      <div className="mh-map-tint" />
       {rangeCells.map(([x, y, band]) => (
         <div
           key={"r" + x + "," + y}
@@ -9877,6 +9882,7 @@ function MapBoard({ fog, fogView, areas, areaTool, log, menuFor, fx, efx, hfx, s
           const x = i % MAP_COLS, y = Math.floor(i / MAP_COLS);
           return inFog(x, y) ? <div key={"f" + i} className={"mh-map-fog" + (fogHide ? "" : " is-gm")} style={at(x, y)} /> : null;
         })}
+      <div className="mh-map-noise" />
       {!rangeTok && reach.map(([x, y]) => (
         <div key={x + "," + y} className="mh-map-reach" style={at(x, y)} />
       ))}
