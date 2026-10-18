@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "mejora", text: "Chat · la X-Card se anuncia con una tarjeta destacada («X-Card activada») y al retirarla otra de aviso verde («X-Card retirada»)." },
       { tag: "mejora", text: "Directo · con la X-Card activa el DJ no puede cambiar de vista ni de capítulo hasta retirarla." },
       { tag: "arreglo", text: "Directo · la caja «Tu vista» mantiene siempre la misma altura al cambiar de capítulo, y en modo claro tiene un fondo propio cuando no hay escena. Se quita el atajo «Foco»." },
       { tag: "mejora", text: "La X-Card ahora cubre toda la pantalla de los jugadores (en cualquier pestaña de su hoja) mientras el DJ la mantenga activa, no solo la escena." },

@@ -5638,6 +5638,7 @@ const sharedStyles = `
   .mh-chat-msg.is-me .mh-chat-bub { margin-left: 34px; background: color-mix(in srgb, var(--acc, #C9A24A) 10%, var(--mh-panel)); border-color: color-mix(in srgb, var(--acc, #C9A24A) 40%, var(--mh-line)); }
   .mh-chat-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 11.5px; }
   .mh-chat-t { font-size: 13px; color: var(--mh-ink); margin-top: 1px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .mh-chat-xc { display: flex; align-items: flex-start; gap: 10px; margin: 4px 0; padding: 10px 12px; border-radius: 12px; border: 1px solid #D9644E; background: color-mix(in srgb, #D9644E 14%, var(--mh-panel)); color: var(--mh-ink); } .mh-chat-xc-i { flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: #D9644E; color: #fff; } .mh-chat-xc b { display: block; font-size: 13px; font-weight: 700; margin-bottom: 2px; } .mh-chat-xc span:not(.mh-chat-xc-i) { font-size: 12px; line-height: 1.45; color: var(--mh-ink2); } .mh-chat-xc.is-off { border-color: #5BAA73; background: color-mix(in srgb, #5BAA73 14%, var(--mh-panel)); } .mh-chat-xc.is-off .mh-chat-xc-i { background: #5BAA73; }
   .mh-chat-ev { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; line-height: 1.45; color: var(--mh-ink2); padding: 1px 2px; }
   .mh-chat-ev-i { width: 16px; flex-shrink: 0; display: flex; justify-content: center; font-size: 12px; line-height: 17px; padding-top: 1px; }
   .mh-chat-ev time { padding-top: 2px; }
@@ -14696,6 +14697,18 @@ export default function App({ onSignOut }) {
         const body = match ? m.text.slice(match[0].length) : m.text || "";
         const named = body.startsWith(m.author);
         // Eventos del DJ en la mesa (escena, mapa, pistas, personajes).
+        if (m.gm && (m.icon === "xcard" || m.icon === "xcard-off")) {
+          const off = m.icon === "xcard-off";
+          return (
+            <div className={"mh-chat-xc" + (off ? " is-off" : "")} role={off ? "status" : "alert"}>
+              <span className="mh-chat-xc-i">{off ? <Check size={13} strokeWidth={2.6} /> : <X size={13} strokeWidth={2.6} />}</span>
+              <div>
+                <b>{off ? "X-Card retirada" : "X-Card activada"}</b>
+                <span>{off ? "Gracias por cuidar la mesa. Seguimos." : "Pausa en la mesa: alguien necesita cambiar el rumbo de la escena. Sin preguntas ni explicaciones."}</span>
+              </div>
+            </div>
+          );
+        }
         if (m.gm) {
           const label = { escena: "Escena", mapa: "Mapa", pistas: "Pistas", personajes: "Personajes", xcard: "X-Card" }[m.icon] || "Mesa";
           const sceneTitle = m.icon === "escena" ? (body.match(/«(.+)»/) || [])[1] : null;
@@ -15516,7 +15529,7 @@ export default function App({ onSignOut }) {
     if (!viewingCampaignId) return;
     const on = !!campaignStage.xcard?.on;
     await saveStage(viewingCampaignId, { xcard: on ? null : { on: true, ts: Date.now() } });
-    if (!on) postChat(viewingCampaignId, { kind: "event", author: "El DJ", gm: true, icon: "xcard", text: "activa la X-Card: un jugador no está cómodo con lo que se está tratando" });
+    postChat(viewingCampaignId, on ? { kind: "event", author: "El DJ", gm: true, icon: "xcard-off", text: "retira la X-Card" } : { kind: "event", author: "El DJ", gm: true, icon: "xcard", text: "activa la X-Card" });
   };
 
   // Si cambia lo que ven los jugadores (o de campaña), la vista del DJ vuelve a seguirlo.
