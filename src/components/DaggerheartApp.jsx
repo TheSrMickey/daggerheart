@@ -5880,6 +5880,7 @@ const sharedStyles = `
   .mh-xcard { position: absolute !important; inset: 0; z-index: 30 !important; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 24px; text-align: center; color: #fff; background: rgba(40,8,12,.86); backdrop-filter: blur(6px); animation: mhXIn .35s ease; }
   .mh-xcard b { font: 700 28px 'Cormorant Garamond', Georgia, serif; letter-spacing: .08em; } .mh-xcard p { margin: 0; font-size: 16px; max-width: 420px; } .mh-xcard small { opacity: .75; font-size: 12.5px; }
   .mh-xcard-x { width: 62px; height: 62px; display: grid; place-items: center; border-radius: 50%; background: #D9644E; box-shadow: 0 0 0 8px rgba(217,100,78,.25); animation: mhXPulse 1.8s ease-in-out infinite; }
+  .mh-xcard.is-global { position: fixed !important; inset: 0; z-index: 100000 !important; background: rgba(40,8,12,.94); } .mh-xcard.is-global b { font-size: 40px; } .mh-xcard.is-global p { font-size: 19px; max-width: 520px; } .mh-xcard.is-global small { font-size: 14px; max-width: 460px; }
   @keyframes mhXIn { from { opacity: 0; } to { opacity: 1; } } @keyframes mhXPulse { 50% { box-shadow: 0 0 0 16px rgba(217,100,78,.08); } }
   .mh-stg-body { position: relative; }
   .mh-dir-card { padding: 14px 16px; border-radius: 20px; background: var(--mh-panel); border: 1px solid var(--mh-line); display: flex; flex-direction: column; gap: 10px; }
@@ -21209,14 +21210,6 @@ export default function App({ onSignOut }) {
                               )}
                               <div className={"mh-stg-body" + (sceneOut && stTab === "escena" ? " is-out" : "")}>
                                 <ChapterBanner id={activeSceneIdOf(stage)} num={stageScenesOf(stage).findIndex((x) => x.id === activeSceneIdOf(stage)) + 1} title={stageScenesOf(stage).find((x) => x.id === activeSceneIdOf(stage))?.title} />
-                                {stage.xcard?.on && (
-                                  <div className="mh-xcard" role="alert">
-                                    <span className="mh-xcard-x"><X size={30} strokeWidth={2.2} /></span>
-                                    <b>X-Card</b>
-                                    <p>Un jugador no está cómodo con lo que se está tratando.</p>
-                                    <small>Haced una pausa y hablad de ello en la mesa.</small>
-                                  </div>
-                                )}
                                 {!fearInCap && fearEl(" is-flow")}
                                 {stTab === "escena" &&
                                   (scene.title || scene.image || dlg ? (
@@ -27998,6 +27991,15 @@ export default function App({ onSignOut }) {
           </div>
         );
       })()}
+      {stageCampaignId && !gmViewing && campaignStage.xcard?.on && typeof document !== "undefined" && createPortal(
+        <div className="mh-xcard is-global" role="alert" aria-live="assertive">
+          <span className="mh-xcard-x"><X size={36} strokeWidth={2.2} /></span>
+          <b>X-Card</b>
+          <p>Un jugador no está cómodo con lo que se está tratando.</p>
+          <small>Haced una pausa y hablad de ello en la mesa. El DJ retirará la X-Card cuando podáis continuar.</small>
+        </div>,
+        document.body
+      )}
       {stageCampaignId && (gmViewing || sheetCampaignId) && <Ambient campaignId={stageCampaignId} isGm={gmViewing} open={gmViewing && ambOpen} onClose={() => setAmbOpen(false)} anchorRef={ambBtn} />}
       {dice3d && <Dice3D key={dice3d.key} dice={dice3d.dice} summary={dice3d.summary} skin={diceSkin} onReveal={() => (setDiceHold(false), flushOutcome())} onEnd={() => (setDice3d(null), setDiceHold(false))} />}
       <style>{sharedStyles}</style>

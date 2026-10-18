@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "mejora", text: "La X-Card ahora cubre toda la pantalla de los jugadores (en cualquier pestaña de su hoja) mientras el DJ la mantenga activa, no solo la escena." },
       { tag: "mejora", text: "Directo · el atajo «Descanso» abre una ventana para pedir a los jugadores un descanso corto o largo con un clic, ver cuántos han descansado y terminarlo." },
       { tag: "nuevo", text: "Directo · pestaña Personajes de «Tu vista»: cajas a todo el alto con cada personaje de la campaña. El DJ puede mostrarlos a los jugadores (aparecen en «Personajes que habéis conocido»), ocultarlos o editarlos al momento (nombre, rol, tipo e imagen)." },
       { tag: "arreglo", text: "El chat de Directo se queda siempre en el último mensaje y el botón «Editar mapa» se lee bien en modo claro." },
