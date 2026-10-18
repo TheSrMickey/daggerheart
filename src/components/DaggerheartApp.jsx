@@ -22,7 +22,7 @@ import { CardsPage } from "./Cards";
 import { Generators } from "./Generators";
 import { CampaignCalendar, HomeSessions, HomeCampCards } from "./Calendar";
 import { PollsGm, ActivePoll, PollSwap } from "./Polls";
-import { RestGm, RestQuick, GroupRestDialog, RestLock } from "./GroupRest";
+import { RestGm, RestQuick, RestBanner, GroupRestDialog, RestLock } from "./GroupRest";
 import NpcStatsEditor, { npcStatsSummary, npcTokenStats } from "./NpcStats";
 import { Chronicle, Timeline } from "./Chronicle";
 import { appendLog } from "@/lib/chronicle";
@@ -5640,6 +5640,9 @@ const sharedStyles = `
   .mh-chat-msg.is-me .mh-chat-bub { margin-left: 34px; background: color-mix(in srgb, var(--acc, #C9A24A) 10%, var(--mh-panel)); border-color: color-mix(in srgb, var(--acc, #C9A24A) 40%, var(--mh-line)); }
   .mh-chat-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 11.5px; }
   .mh-chat-t { font-size: 13px; color: var(--mh-ink); margin-top: 1px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .mh-chat-rc { display: flex; align-items: flex-start; gap: 10px; margin: 4px 0; padding: 10px 12px; border-radius: 12px; border: 1px solid #E3B04B; background: color-mix(in srgb, #E3B04B 14%, var(--mh-panel)); color: var(--mh-ink); } .mh-chat-rc.is-long { border-color: #8E6FC4; background: color-mix(in srgb, #8E6FC4 16%, var(--mh-panel)); } .mh-chat-rc-i { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: #E3B04B; color: #241a05; } .mh-chat-rc.is-long .mh-chat-rc-i { background: #8E6FC4; color: #fff; } .mh-chat-rc b { display: block; font-size: 13px; font-weight: 700; margin-bottom: 2px; } .mh-chat-rc span:not(.mh-chat-rc-i) { font-size: 12px; line-height: 1.45; color: var(--mh-ink2); } .mh-chat-rc-go { display: inline-flex !important; align-items: center; gap: 6px; margin-top: 8px; font-size: 12px !important; padding: 6px 12px !important; color: var(--acc-on, #1F1606) !important; }
+  .rb { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 61; width: min(520px, calc(100vw - 24px)); display: flex; align-items: center; gap: 12px; padding: 9px 12px; border-radius: 16px; --c: #E3B04B; border: 1px solid var(--c); background: color-mix(in srgb, var(--c) 16%, var(--mh-panel)); box-shadow: 0 8px 30px rgba(0,0,0,.35); color: var(--mh-ink); animation: rbIn .4s cubic-bezier(.2,.8,.2,1) both; } .rb.is-long { --c: #8E6FC4; } @keyframes rbIn { from { opacity: 0; transform: translate(-50%, -14px); } to { opacity: 1; transform: translate(-50%, 0); } } @media (prefers-reduced-motion: reduce) { .rb { animation: none; } }
+  .rb-ic { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--c); color: #fff; } .rb:not(.is-long) .rb-ic { color: #241a05; } .rb-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; } .rb-tx b { font-size: 13px; } .rb-tx small { font-size: 11.5px; color: var(--mh-ink2); } .rb-prog { height: 5px; border-radius: 99px; background: color-mix(in srgb, var(--c) 22%, transparent); overflow: hidden; } .rb-prog i { display: block; height: 100%; border-radius: 99px; background: var(--c); transition: width .5s ease; } .rb .mh-btn { flex: none; display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 7px 13px; }
   .mh-chat-xc { display: flex; align-items: flex-start; gap: 10px; margin: 4px 0; padding: 10px 12px; border-radius: 12px; border: 1px solid #D9644E; background: color-mix(in srgb, #D9644E 14%, var(--mh-panel)); color: var(--mh-ink); } .mh-chat-xc-i { flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: #D9644E; color: #fff; } .mh-chat-xc b { display: block; font-size: 13px; font-weight: 700; margin-bottom: 2px; } .mh-chat-xc span:not(.mh-chat-xc-i) { font-size: 12px; line-height: 1.45; color: var(--mh-ink2); } .mh-chat-xc.is-off { border-color: #5BAA73; background: color-mix(in srgb, #5BAA73 14%, var(--mh-panel)); } .mh-chat-xc.is-off .mh-chat-xc-i { background: #5BAA73; }
   .mh-chat-ev { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; line-height: 1.45; color: var(--mh-ink2); padding: 1px 2px; }
   .mh-chat-ev-i { width: 16px; flex-shrink: 0; display: flex; justify-content: center; font-size: 12px; line-height: 17px; padding-top: 1px; }
@@ -11656,6 +11659,8 @@ export default function App({ onSignOut }) {
   const [ambOpen, setAmbOpen] = useState(false); // ventana de «Ambiente» (audio de la mesa)
   const [djWorldEdit, setDjWorldEdit] = useState(false);
   const [djCastEdit, setDjCastEdit] = useState(null);
+  const [restPlayerOpen, setRestPlayerOpen] = useState(false); // ventana de descanso del jugador (se abre desde el banner o el chat)
+  const [restPending, setRestPending] = useState(false); // al jugador le falta descansar en un descanso en curso
   // Proporción de la caja «Tu vista» del panel del DJ: el mapa de la pestaña Mundo se recorta igual para que se vean los mismos marcadores.
   const [dirMonRatio, setDirMonRatio] = useState(16 / 9);
   const dirMonRO = useRef(null);
@@ -14756,6 +14761,21 @@ export default function App({ onSignOut }) {
         const body = match ? m.text.slice(match[0].length) : m.text || "";
         const named = body.startsWith(m.author);
         // Eventos del DJ en la mesa (escena, mapa, pistas, personajes).
+        if (m.gm && (m.icon === "rest-short" || m.icon === "rest-long")) {
+          const long = m.icon === "rest-long";
+          const lastRest = [...(campaignChat || [])].reverse().find((x) => x.icon === "rest-short" || x.icon === "rest-long");
+          const canAct = !gmViewing && restPending && lastRest && lastRest.ts === m.ts;
+          return (
+            <div className={"mh-chat-rc" + (long ? " is-long" : "")} role="status">
+              <span className="mh-chat-rc-i">{long ? <Moon size={14} /> : <Sun size={14} />}</span>
+              <div>
+                <b>{long ? "Descanso largo propuesto" : "Descanso corto propuesto"}</b>
+                <span>{long ? "El DJ propone un descanso largo. Elige tus acciones y descansa." : "El DJ propone un respiro. Elige tus acciones y descansa."}</span>
+                {canAct && <button type="button" className="mh-btn mh-chat-rc-go" onClick={() => setRestPlayerOpen(true)}><BedDouble size={13} /> Descansar ahora</button>}
+              </div>
+            </div>
+          );
+        }
         if (m.gm && (m.icon === "xcard" || m.icon === "xcard-off")) {
           const off = m.icon === "xcard-off";
           return (
@@ -28023,7 +28043,7 @@ export default function App({ onSignOut }) {
             <RestQuick
               campaignId={viewingCampaignId}
               members={members}
-              onAnnounce={(text) => postChat(viewingCampaignId, { kind: "msg", text, author: "El DJ", gm: true })}
+              onAnnounce={(text, meta) => postChat(viewingCampaignId, meta?.rest ? { kind: "event", author: "El DJ", gm: true, icon: "rest-" + meta.rest, text } : { kind: "msg", text, author: "El DJ", gm: true })}
               onClose={() => setRestDlg(null)}
               onOpenFull={() => (setRestDlg(null), setCampaignDetailTab("descanso"))}
             />
@@ -30910,7 +30930,7 @@ export default function App({ onSignOut }) {
                       key={viewingCampaignId}
                       campaignId={viewingCampaignId}
                       members={(campaigns[viewingCampaignId]?.characterIds || []).filter((id) => characters[id]).map((id) => ({ id, name: characters[id].f_name || "Sin nombre", cls: characters[id].f_class || "", color: characters[id].f_class ? classColor(characters[id].f_class) : "#C9A24A" }))}
-                      onAnnounce={(text) => postChat(viewingCampaignId, { kind: "msg", text, author: "El DJ", gm: true })}
+                      onAnnounce={(text, meta) => postChat(viewingCampaignId, meta?.rest ? { kind: "event", author: "El DJ", gm: true, icon: "rest-" + meta.rest, text } : { kind: "msg", text, author: "El DJ", gm: true })}
                     />
                   )}
 
@@ -31052,7 +31072,12 @@ export default function App({ onSignOut }) {
                 need: { heal: r(c.hp_marked, Number(c.r_hp || 0)), clearmind: r(c.stress_marked, Number(c.r_stress || 0)), repair: armorTotal ? Math.max(0, (armorTotal - Number(c.armor_marked || 0)) / armorTotal) : 0 },
               };
             });
-            return <GroupRestDialog key={cp.id} campaignId={cp.id} mine={mine} onRest={(id, type, p) => (performRest(id, type, p[0], p[1], p[2]), postCampaignEvent(id, "Hace un descanso " + (type === "long" ? "largo" : "corto") + " con el grupo"))} />;
+            return (
+              <>
+                <RestBanner key={"rb" + cp.id} campaignId={cp.id} mine={mine} ids={cp.characterIds || []} onOpen={() => setRestPlayerOpen(true)} onPending={setRestPending} />
+                <GroupRestDialog key={cp.id} campaignId={cp.id} mine={mine} open={restPlayerOpen} onClose={() => setRestPlayerOpen(false)} onRest={(id, type, p) => (performRest(id, type, p[0], p[1], p[2]), postCampaignEvent(id, "Hace un descanso " + (type === "long" ? "largo" : "corto") + " con el grupo"))} />
+              </>
+            );
           })()}
 
           {view === "mesas" && <LookingFor />}

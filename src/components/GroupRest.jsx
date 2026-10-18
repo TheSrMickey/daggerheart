@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { BedDouble, Sun, Moon, Check, Hourglass, Bell, Lock } from "lucide-react";
 import { useDoc } from "@/lib/campaignDocs";
 
@@ -16,12 +17,13 @@ const ACTS = [
 const TYPES = { short: ["Descanso corto", Sun], long: ["Descanso largo", Moon] };
 
 // Ventana del jugador: aparece sola cuando el DJ propone un descanso.
-export function GroupRestDialog({ campaignId, mine, onRest }) {
+export function GroupRestDialog({ campaignId, mine, onRest, open, onClose }) {
+  const controlled = open !== undefined;
   const [doc, update] = useDoc(restKey(campaignId), EMPTY, 3500);
   const [picks, setPicks] = useState({});
   const [hidden, setHidden] = useState("");
   const cur = doc.cur;
-  if (!cur || cur.closed || hidden === cur.id) return null;
+  if (!cur || cur.closed || (controlled ? !open : hidden === cur.id)) return null;
   const pending = mine.filter((m) => !cur.ready?.[m.id]);
   if (!pending.length) return null;
   const [typeLabel, TypeIcon] = TYPES[cur.type] || TYPES.short;
@@ -31,11 +33,11 @@ export function GroupRestDialog({ campaignId, mine, onRest }) {
     const p = get(m), n = p.filter((x) => x === k).length;
     setPicks((s) => ({ ...s, [m.id]: n === 0 || p.length < m.slots ? (p.length < m.slots ? [...p, k] : [...p.slice(1), k]) : p.filter((x) => x !== k) }));
   };
-  const go = (m) => { const p = get(m); onRest(m.id, cur.type, p); update((d) => ({ ...d, cur: d.cur && d.cur.id === cur.id ? { ...d.cur, ready: { ...(d.cur.ready || {}), [m.id]: Date.now() } } : d.cur })); };
+  const go = (m) => { const p = get(m); if (controlled && pending.length <= 1) onClose && onClose(); onRest(m.id, cur.type, p); update((d) => ({ ...d, cur: d.cur && d.cur.id === cur.id ? { ...d.cur, ready: { ...(d.cur.ready || {}), [m.id]: Date.now() } } : d.cur })); };
   return (
     <div className="mh-overlay" style={{ background: "rgba(8,6,12,.68)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 62, padding: 20 }} role="dialog" aria-modal="true" aria-label="Descanso del grupo">
       <div className="gr-box">
-        <div className="gx-h"><h3 className="mh-serif"><BedDouble size={20} /> Descanso del grupo</h3><button type="button" className="mh-btn-ghost" onClick={() => setHidden(cur.id)}>Ahora no</button></div>
+        <div className="gx-h"><h3 className="mh-serif"><BedDouble size={20} /> Descanso del grupo</h3><button type="button" className="mh-btn-ghost" onClick={() => (controlled ? onClose && onClose() : setHidden(cur.id))}>Ahora no</button></div>
         <p className="gx-sub">El DJ propone un <b>{typeLabel.toLowerCase()}</b>. Elige qué hace tu personaje y descansa: la app aplica la recuperación.</p>
         <div className="gx-row" style={{ marginBottom: 10 }}><span className="cx-chip on" style={{ "--c": cur.type === "long" ? "#8E6FC4" : "#E3B04B" }}><i><TypeIcon size={13} /></i>{typeLabel}</span><span className="gx-fact">{cur.type === "long" ? "Se recupera todo" : "Recuperación parcial (1d4 + Rango)"}</span></div>
         {pending.map((m) => {
@@ -110,7 +112,7 @@ export function RestGm({ campaignId, members, onAnnounce }) {
   const cur = doc.cur && !doc.cur.closed ? doc.cur : null;
   const done = members.filter((m) => cur?.ready?.[m.id]).length;
   const reqs = members.filter((m) => doc.req?.[m.id]);
-  const start = () => { update(() => ({ cur: { id: "r" + Date.now(), type, at: Date.now(), ready: {}, closed: false } })); onAnnounce("El DJ propone un " + TYPES[type][0].toLowerCase() + " para todo el grupo. Elige tus acciones y descansa."); };
+  const start = () => { update(() => ({ cur: { id: "r" + Date.now(), type, at: Date.now(), ready: {}, closed: false } })); onAnnounce("El DJ propone un " + TYPES[type][0].toLowerCase() + " para todo el grupo. Elige tus acciones y descansa.", { rest: type }); };
   const end = () => {
     update((d) => ({ cur: d.cur ? { ...d.cur, closed: true } : null }));
     onAnnounce(TYPES[cur.type][0] + " del grupo terminado (" + done + " de " + members.length + "). " + (cur.type === "long" ? "El DJ gana 1d4 + " + members.length + " de Miedo." : "El DJ gana 1d4 de Miedo."));
@@ -153,7 +155,7 @@ export function RestQuick({ campaignId, members, onAnnounce, onClose, onOpenFull
   const done = members.filter((m) => cur?.ready?.[m.id]).length;
   const propose = (type) => {
     update(() => ({ cur: { id: "r" + Date.now(), type, at: Date.now(), ready: {}, closed: false } }));
-    onAnnounce("El DJ propone un " + TYPES[type][0].toLowerCase() + " para todo el grupo. Elige tus acciones y descansa.");
+    onAnnounce("El DJ propone un " + TYPES[type][0].toLowerCase() + " para todo el grupo. Elige tus acciones y descansa.", { rest: type });
     onClose();
   };
   const end = () => {
@@ -186,5 +188,32 @@ export function RestQuick({ campaignId, members, onAnnounce, onClose, onOpenFull
       )}
       <button type="button" className="mh-rq-more" onClick={onOpenFull}>Ver detalle por jugador</button>
     </>
+  );
+}
+
+// Banner fijo del jugador mientras el DJ tiene un descanso en curso y a su personaje aún le falta descansar.
+export function RestBanner({ campaignId, mine, ids, onOpen, onPending }) {
+  const [doc] = useDoc(restKey(campaignId), EMPTY, 3500);
+  const cur = doc.cur && !doc.cur.closed ? doc.cur : null;
+  const pending = !!cur && mine.some((m) => !cur.ready?.[m.id]);
+  useEffect(() => {
+    if (onPending) onPending(pending);
+  }, [pending]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (!cur || !pending) return null;
+  const total = Math.max(1, ids.length);
+  const done = ids.filter((id) => cur.ready?.[id]).length;
+  const [label, Ico] = TYPES[cur.type] || TYPES.short;
+  if (typeof document === "undefined") return null;
+  return createPortal(
+    <div className={"rb is-" + cur.type} role="status" aria-live="polite">
+      <span className="rb-ic"><Ico size={18} /></span>
+      <div className="rb-tx">
+        <b>{label} en curso</b>
+        <div className="rb-prog" aria-hidden="true"><i style={{ width: Math.round((done / total) * 100) + "%" }} /></div>
+        <small>{done} de {total} han descansado</small>
+      </div>
+      <button type="button" className="mh-btn" onClick={onOpen}><BedDouble size={14} /> Descansar</button>
+    </div>,
+    document.body
   );
 }
