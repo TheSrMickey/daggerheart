@@ -5857,7 +5857,8 @@ const sharedStyles = `
   .mh-tl .mh-tl-cur { flex: 0 0 46%; } .mh-tl .mh-tl-nx { flex: 1 1 0; min-width: 0; opacity: .6; background: var(--mh-panel2); } .mh-tl-nx small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; text-transform: none; letter-spacing: 0; } .mh-tl-nx:nth-child(n+3) { opacity: .4; }
   .mh-tl .mh-ch-step { position: relative; } .mh-tl .mh-ch-step + .mh-ch-step::before { content: ""; position: absolute; left: -16px; top: 50%; width: 16px; height: 2px; background: var(--mh-gold-ink); opacity: .55; } .mh-tl .mh-ch-step + .mh-ch-step::after { content: ""; position: absolute; left: -5px; top: calc(50% - 3px); width: 8px; height: 8px; border-radius: 50%; background: var(--mh-gold-ink); opacity: .8; }
   .mh-tl-pick { display: flex; flex-direction: column; gap: 5px; width: 100%; } .mh-tl-pick select { width: 100%; padding: 6px 8px; font-size: 12px; }
-  .mh-dir-mon > .mh-dir-world { position: absolute; inset: 0; margin: 0; } .mh-wm.is-fit { margin: 0 !important; position: relative; } .mh-wm.is-fit .mh-wm-bar { position: absolute; left: 12px; bottom: 12px; z-index: 9; padding: 6px 10px; border-radius: 12px; background: var(--mh-panel); border: 1px solid var(--mh-line2); } .mh-wm.is-fit .mh-wm-card { top: 56px; bottom: 64px; } .mh-wm.is-fit .mh-wm-view.is-add { cursor: crosshair; } } .mh-dir-world { position: absolute; inset: 0; overflow: hidden; padding: 0; display: flex; } .mh-dir-world .mh-dir-mapbtn { top: 12px; } .mh-wm.is-fit { flex: 1; min-width: 0; min-height: 0; height: 100%; } .mh-wm.is-fit .mh-wm-wrap { height: 100%; border-radius: 0; border: 0; background: transparent; } .mh-wm.is-fit .mh-wm-view { height: 100%; max-height: none; overflow: hidden; container-type: size; display: flex; align-items: center; justify-content: center; } .mh-wm-bg { position: absolute; inset: -30px; background: center / cover no-repeat; filter: blur(28px) brightness(.55) saturate(1.2); pointer-events: none; } .mh-wm.is-fit .mh-wm-canvas { position: relative; z-index: 1; box-shadow: 0 0 40px rgba(0,0,0,.45); } .mh-wm.is-fit .mh-wm-canvas { flex: none; min-width: 0; height: auto; width: max(100cqw, calc(100cqh * var(--wm-r, 1.6))); } .mh-wm.is-fit .mh-wm-canvas img { height: 100%; object-fit: fill; } .mh-dir-mon.is-map { background-color: #1B1824; } .mh-dir-mon > .mh-dir-map { background: transparent; } .mh-dir-mon > .mh-dir-map { position: absolute !important; inset: 0; border-radius: 0; } .mh-dir-mapbtn { position: absolute !important; right: 12px; top: 12px; z-index: 5; display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 6px 11px; background: rgba(8,8,24,.72); }
+  .mh-dir-mon > .mh-dir-world { position: absolute; inset: 0; margin: 0; } .mh-wm.is-fit { margin: 0 !important; position: relative; } .mh-wm.is-fit .mh-wm-bar { position: absolute; left: 12px; bottom: 12px; z-index: 9; padding: 6px 10px; border-radius: 12px; background: var(--mh-panel); border: 1px solid var(--mh-line2); } .mh-wm.is-fit .mh-wm-card { top: 56px; bottom: 64px; } .mh-wm.is-fit .mh-wm-view.is-add { cursor: crosshair; } } .mh-dir-mon > .mh-dir-cast { position: absolute; inset: 0; display: flex; gap: 12px; padding: 12px; overflow-x: auto; overflow-y: hidden; background: color-mix(in srgb, var(--mh-panel) 94%, transparent); scrollbar-width: thin; } .mh-dc-card { position: relative; flex: 0 0 min(250px, 64%); height: 100%; border-radius: 16px; overflow: hidden; border: 1px solid var(--mh-line2); background: var(--mh-panel2); display: flex; flex-direction: column; justify-content: flex-end; } .mh-dc-card.is-shown { border-color: var(--acc, #E3B04B); box-shadow: 0 0 0 1px var(--acc, #E3B04B); } .mh-dc-img { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font: 700 64px 'Cinzel', Georgia, serif; color: var(--mh-muted); } .mh-dc-img img { width: 100%; height: 100%; object-fit: cover; object-position: top center; } .mh-dc-st, .mh-dc-kind { position: absolute; top: 10px; z-index: 2; display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 700; padding: 4px 9px; border-radius: 99px; background: rgba(8,8,24,.85); color: #fff; } .mh-dc-st { left: 10px; } .mh-dc-st.is-on { background: var(--acc, #E3B04B); color: var(--acc-on, #1F1606); } .mh-dc-kind { right: 10px; letter-spacing: .06em; text-transform: uppercase; } .mh-dc-info { position: relative; z-index: 2; padding: 40px 14px 14px; display: flex; flex-direction: column; gap: 4px; color: #fff; background: linear-gradient(transparent, rgba(8,8,24,.94) 55%); } .mh-dc-info b { font-size: 17px; } .mh-dc-info small { font-size: 12px; color: #d6d5ea; } .mh-dc-acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; } .mh-dc-acts .mh-btn, .mh-dc-acts .mh-btn-ghost { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 7px 10px; } .mh-dc-b { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 7px 10px; border-radius: 8px; background: rgba(8,8,24,.85); color: #fff; border: 1px solid #ffffff3a; } .mh-dc-b:hover { border-color: #fff; } .mh-dc-b:focus-visible { outline: 2px solid var(--acc, #E3B04B); outline-offset: 2px; } .mh-dc-edit { position: absolute; inset: 0; z-index: 3; padding: 44px 14px 14px; background: var(--mh-panel); display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
+  .mh-dir-world { position: absolute; inset: 0; overflow: hidden; padding: 0; display: flex; } .mh-dir-world .mh-dir-mapbtn { top: 12px; } .mh-wm.is-fit { flex: 1; min-width: 0; min-height: 0; height: 100%; } .mh-wm.is-fit .mh-wm-wrap { height: 100%; border-radius: 0; border: 0; background: transparent; } .mh-wm.is-fit .mh-wm-view { height: 100%; max-height: none; overflow: hidden; container-type: size; display: flex; align-items: center; justify-content: center; } .mh-wm-bg { position: absolute; inset: -30px; background: center / cover no-repeat; filter: blur(28px) brightness(.55) saturate(1.2); pointer-events: none; } .mh-wm.is-fit .mh-wm-canvas { position: relative; z-index: 1; box-shadow: 0 0 40px rgba(0,0,0,.45); } .mh-wm.is-fit .mh-wm-canvas { flex: none; min-width: 0; height: auto; width: max(100cqw, calc(100cqh * var(--wm-r, 1.6))); } .mh-wm.is-fit .mh-wm-canvas img { height: 100%; object-fit: fill; } .mh-dir-mon.is-map { background-color: #1B1824; } .mh-dir-mon > .mh-dir-map { background: transparent; } .mh-dir-mon > .mh-dir-map { position: absolute !important; inset: 0; border-radius: 0; } .mh-dir-mapbtn { position: absolute !important; right: 12px; top: 12px; z-index: 5; display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 6px 11px; background: var(--mh-panel); color: var(--mh-ink); border: 1px solid var(--mh-line2); }
   .mh-chb { position: absolute; left: 0; right: 0; top: 18%; z-index: 25; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; pointer-events: none; color: #fff; text-shadow: 0 2px 18px rgba(0,0,0,.85); animation: mhChb 3.8s ease both; }
   .mh-chb small { font: 700 12px 'Inter', system-ui, sans-serif; letter-spacing: .32em; text-transform: uppercase; color: #E3B04B; } .mh-chb b { font: 700 clamp(28px, 5vw, 52px)/1.1 'Cormorant Garamond', Georgia, serif; letter-spacing: .04em; padding: 0 16px; } .mh-chb i { display: block; height: 2px; width: 0; background: linear-gradient(90deg, transparent, #E3B04B, transparent); animation: mhChbLine 3.8s ease both; }
   @keyframes mhChb { 0% { opacity: 0; transform: translateY(14px) scale(.96); letter-spacing: .02em; } 14% { opacity: 1; transform: none; } 78% { opacity: 1; } 100% { opacity: 0; transform: translateY(-8px); } }
@@ -11608,6 +11609,7 @@ export default function App({ onSignOut }) {
   const ambBtn = useRef(null);
   const [ambOpen, setAmbOpen] = useState(false); // ventana de «Ambiente» (audio de la mesa)
   const [djWorldEdit, setDjWorldEdit] = useState(false);
+  const [djCastEdit, setDjCastEdit] = useState(null);
   const [djView, setDjView] = useState(null); // lo que el DJ está viendo en Directo (null = lo mismo que ven los jugadores)
   const [quickChar, setQuickChar] = useState(null); // personaje cuya ficha rápida sustituye a «El grupo» en Directo
   const [mapPick, setMapPick] = useState({}); // por capítulo: mapa de combate elegido
@@ -12012,6 +12014,7 @@ export default function App({ onSignOut }) {
       }
       // Primero la imagen y luego el diálogo: así el cambio de expresión es un corte limpio.
       if (s.dialogue?.imgId) await ensureCastImg(s.dialogue.imgId);
+      (s.cast || []).forEach((c) => c.imgId && ensureCastImg(c.imgId));
       // La imagen de la escena en pantalla llega antes que la escena; las demás se descargan en segundo plano.
       const sceneImgId = (u) => (u && u.startsWith("img:") ? u.slice(4) : null);
       const liveImg = sceneImgId(s.scene?.image);
@@ -13839,6 +13842,21 @@ export default function App({ onSignOut }) {
   });
 
   const chatScrollRef = useRef(null);
+  const dirFeedRef = useRef(null);
+  useEffect(() => {
+    const el = dirFeedRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+    requestAnimationFrame(() => (el.scrollTop = el.scrollHeight));
+  }, [campaignChat]);
+  const dirFeedSeen = useRef(null);
+  useEffect(() => {
+    const el = dirFeedRef.current;
+    if (!el || el === dirFeedSeen.current) return;
+    dirFeedSeen.current = el;
+    el.scrollTop = el.scrollHeight;
+    requestAnimationFrame(() => (el.scrollTop = el.scrollHeight));
+  });
 
   useEffect(() => {
     const el = chatScrollRef.current;
@@ -15522,6 +15540,19 @@ export default function App({ onSignOut }) {
     const shown = { ...h, hidden: false, ts: Date.now() };
     await saveStage(viewingCampaignId, { handouts: list.map((x) => (x.id === id ? shown : x)) });
     postChat(viewingCampaignId, { kind: "share", author: "El DJ", gm: true, text: "", share: { type: "handout", name: h.title, sub: "Nota · " + (HANDOUT_KINDS.find((k) => k.key === h.kind)?.label || ""), handout: shown } });
+  };
+  // Personajes de la campaña que el DJ muestra a los jugadores (copia en el escenario: nombre, rol, tipo e imagen).
+  const castSnap = (m) => ({ id: m.id, name: m.name, role: m.role || "", kind: m.kind || "Neutral", imgId: castImgIdFor(m, "tranquila") || null });
+  const toggleCastShown = (m) => {
+    const cur = campaignStage.cast || [];
+    const on = cur.some((c) => c.id === m.id);
+    saveStage(viewingCampaignId, { cast: on ? cur.filter((c) => c.id !== m.id) : [...cur, castSnap(m)] });
+    if (!on) postChat(viewingCampaignId, { kind: "event", author: "El DJ", gm: true, icon: "personaje", text: "El DJ presenta a " + m.name + "." });
+  };
+  const syncCastShown = (id, patch) => {
+    const cur = campaignStage.cast || [];
+    if (!cur.some((c) => c.id === id)) return;
+    saveStage(viewingCampaignId, { cast: cur.map((c) => (c.id === id ? { ...c, ...patch } : c)) });
   };
   const quickClue = async (send) => {
     const d = clueDlg;
@@ -21429,10 +21460,21 @@ export default function App({ onSignOut }) {
                                         );
                                       })}
                                     </div>
-                                    {handouts.some((h) => h.kind === "personaje") && (
+                                    {(handouts.some((h) => h.kind === "personaje") || (stage.cast || []).length > 0) && (
                                       <>
                                         <div className="mh-stg-kick" style={{ color: "var(--mh-muted)", marginTop: 6 }}>Personajes que habéis conocido</div>
                                         <div className="mh-stg-party">
+                                          {(stage.cast || []).map((c) => (
+                                            <button key={"cast" + c.id} type="button" className="mh-stg-pc" onClick={() => openHandoutFor(charCampaign.id, { id: "cast" + c.id, kind: "personaje", title: c.name, image: castImgs[c.imgId] || "", text: c.role || "" })}>
+                                              <span className="mh-stg-av is-npc" style={castImgs[c.imgId] ? { backgroundImage: "url(\"" + castImgs[c.imgId].replace(/"/g, "%22") + "\")" } : undefined}>
+                                                {!castImgs[c.imgId] && (c.name || "?").trim().charAt(0).toUpperCase()}
+                                              </span>
+                                              <div style={{ flex: 1, minWidth: 0 }}>
+                                                <div className="mh-stg-pc-name">{c.name}</div>
+                                                <div className="mh-stg-pc-sub mh-stg-clamp">{c.role || c.kind || "Personaje no jugador"}</div>
+                                              </div>
+                                            </button>
+                                          ))}
                                           {handouts
                                             .filter((h) => h.kind === "personaje")
                                             .map((h) => (
@@ -28880,6 +28922,54 @@ export default function App({ onSignOut }) {
                             {view === live ? <span className="mh-stg-live"><i />En directo</span> : <span className="mh-stg-live is-prev"><i />Solo tú lo ves</span>}
                             <button type="button" className="mh-btn-ghost mh-dir-mapbtn" onClick={() => (setCombatBack(cur?.id || null), setCampaignDetailTab("mapa"))}><MapPinned size={13} /> Abrir tablero</button>
                           </div>
+                        ) : view === "personajes" ? (
+                          <div className="mh-dir-cast">
+                            {campaignCast.length === 0 && (
+                              <div className="mh-dir-empty">
+                                <Users size={28} strokeWidth={1.5} />
+                                <div>Todavía no hay personajes en la campaña.</div>
+                                <button type="button" className="mh-btn" onClick={() => setCampaignDetailTab("pnj")}><Plus size={13} /> Crear en PNJ</button>
+                              </div>
+                            )}
+                            {campaignCast.map((m) => {
+                              const imgId = castImgIdFor(m, "tranquila");
+                              const shown = (stage.cast || []).some((c) => c.id === m.id);
+                              const kind = m.kind || "Neutral";
+                              const editing = djCastEdit === m.id;
+                              return (
+                                <div key={m.id} className={"mh-dc-card is-" + kind.toLowerCase() + (shown ? " is-shown" : "")}>
+                                  <div className="mh-dc-img">{castImgs[imgId] ? <img src={castImgs[imgId]} alt="" /> : <span>{(m.name || "?").charAt(0).toUpperCase()}</span>}</div>
+                                  <span className={"mh-dc-st" + (shown ? " is-on" : "")}>{shown ? <><Eye size={11} /> Lo ven los jugadores</> : <><EyeOff size={11} /> Oculto</>}</span>
+                                  <span className="mh-dc-kind">{kind}</span>
+                                  {!editing ? (
+                                    <div className="mh-dc-info">
+                                      <b className="mh-serif">{m.name}</b>
+                                      <small>{m.role || "Sin rol"}</small>
+                                      <div className="mh-dc-acts">
+                                        <button type="button" className={shown ? "mh-dc-b" : "mh-btn"} onClick={() => toggleCastShown(m)}>{shown ? <><EyeOff size={13} /> Ocultar</> : <><Eye size={13} /> Mostrar a los jugadores</>}</button>
+                                        <button type="button" className="mh-dc-b" onClick={() => setDjCastEdit(m.id)}><PenLine size={13} /> Editar</button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <div className="mh-dc-edit">
+                                      <label className="mh-wm-f"><span>Nombre</span><input className="mh-input" value={m.name} maxLength={60} onChange={(e) => updateCast(m.id, { name: e.target.value })} onBlur={() => syncCastShown(m.id, { name: m.name })} /></label>
+                                      <label className="mh-wm-f"><span>Rol</span><input className="mh-input" value={m.role || ""} maxLength={80} onChange={(e) => updateCast(m.id, { role: e.target.value })} onBlur={() => syncCastShown(m.id, { role: m.role || "" })} /></label>
+                                      <div className="mh-wm-f"><span>Tipo</span>
+                                        <div className="mh-wm-kinds">{["Aliado", "Neutral", "Enemigo"].map((k) => <button key={k} type="button" className={kind === k ? "is-on" : ""} onClick={() => (updateCast(m.id, { kind: k }), syncCastShown(m.id, { kind: k }))}>{k}</button>)}</div>
+                                      </div>
+                                      <label className="mh-btn-ghost" style={{ cursor: "pointer", alignSelf: "flex-start" }}><Upload size={13} /> {imgId ? "Cambiar imagen" : "Subir imagen"}
+                                        <input type="file" accept="image/png,image/webp,image/jpeg,image/gif" hidden onChange={async (e) => { const file = e.target.files?.[0]; e.target.value = ""; if (file) { await uploadExpression(m.id, "tranquila", file); } }} />
+                                      </label>
+                                      <div className="mh-dc-acts">
+                                        <button type="button" className="mh-btn" onClick={() => (syncCastShown(m.id, castSnap(m)), setDjCastEdit(null))}><Check size={13} /> Listo</button>
+                                        <button type="button" className="mh-btn-ghost" onClick={() => (setDialogueDraft((d) => ({ ...d, castId: m.id, expr: "tranquila" })), setCampaignDetailTab("pnj"))}>Más opciones</button>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
                         ) : view === "mundo" ? (
                           <div className="mh-dir-world">
                             <WorldMap fit showHidden edit={djWorldEdit} key={viewingCampaignId} campaignId={viewingCampaignId} scenes={stageScenesOf(campaignStage).map((x) => ({ id: x.id, title: x.title }))} imgSrc={imgSrc} ensureImg={worldEnsureImg} saveImage={saveSceneImage} dropImage={worldDropImg} onOpenScene={(id) => openChapter(id)} onLog={(t) => postChat(viewingCampaignId, { kind: "event", author: "El DJ", gm: true, icon: "mundo", text: t })} />
@@ -29130,7 +29220,7 @@ export default function App({ onSignOut }) {
                     const chatEl = (
                       <div className="mh-dir-card mh-dir-chat">
                         <div className="mh-dir-lbl-row"><span className="mh-dir-lbl">Chat de la mesa</span><button type="button" className="mh-gm-ib" aria-label="Abrir el chat completo" title="Abrir el chat completo" onClick={() => setCampaignDetailTab("chat")}><ChevronRight size={14} /></button></div>
-                        <div className="mh-chat-feed mh-dir-feed">
+                        <div className="mh-chat-feed mh-dir-feed" ref={dirFeedRef}>
                           {campaignChat.length === 0 && <ChatEmpty />}
                           {renderChatFeed(campaignChat.slice(-12), null)}
                         </div>

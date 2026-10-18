@@ -6,6 +6,8 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "nuevo", text: "Directo · pestaña Personajes de «Tu vista»: cajas a todo el alto con cada personaje de la campaña. El DJ puede mostrarlos a los jugadores (aparecen en «Personajes que habéis conocido»), ocultarlos o editarlos al momento (nombre, rol, tipo e imagen)." },
+      { tag: "arreglo", text: "El chat de Directo se queda siempre en el último mensaje y el botón «Editar mapa» se lee bien en modo claro." },
       { tag: "mejora", text: "Directo · el botón «Pistas» de las acciones rápidas lista todas las pistas de la campaña (la del capítulo actual primero), permite enviar cada una al chat con un clic y crear una nueva rápidamente («Crear» la guarda, «Crear y enviar» la entrega al momento)." },
       { tag: "mejora", text: "Mapa de mundo en Directo: «Editar mapa» permite crear marcadores con doble clic y moverlos sin salir del panel. El DJ también puede revelar u ocultar un marcador a los jugadores con solo pulsarlo." },
       { tag: "mejora", text: "Marcadores del mapa de mundo rediseñados: chapa redonda con el logo de la página (oscura en modo noche, clara en modo día), borde naranja y un pulso suave para localizarlos; brillan al pasar el ratón o seleccionarlos." },
