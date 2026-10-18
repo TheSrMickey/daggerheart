@@ -2438,7 +2438,6 @@ const STAGE_TABS = [
   { key: "escena", label: "Escena", Icon: Clapperboard },
   { key: "mapa", label: "Mapa de combate", Icon: MapPinned },
   { key: "mundo", label: "Mapa de mundo", Icon: Globe },
-  { key: "pistas", label: "Pistas", Icon: ScrollText },
   { key: "personajes", label: "Personajes", Icon: Users },
 ];
 // Campaña del DJ: cuatro espacios con sus secciones.
@@ -5858,8 +5857,7 @@ const sharedStyles = `
   .mh-tl .mh-tl-cur { flex: 0 0 46%; } .mh-tl .mh-tl-nx { flex: 1 1 0; min-width: 0; opacity: .6; background: var(--mh-panel2); } .mh-tl-nx small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; text-transform: none; letter-spacing: 0; } .mh-tl-nx:nth-child(n+3) { opacity: .4; }
   .mh-tl .mh-ch-step { position: relative; } .mh-tl .mh-ch-step + .mh-ch-step::before { content: ""; position: absolute; left: -16px; top: 50%; width: 16px; height: 2px; background: var(--mh-gold-ink); opacity: .55; } .mh-tl .mh-ch-step + .mh-ch-step::after { content: ""; position: absolute; left: -5px; top: calc(50% - 3px); width: 8px; height: 8px; border-radius: 50%; background: var(--mh-gold-ink); opacity: .8; }
   .mh-tl-pick { display: flex; flex-direction: column; gap: 5px; width: 100%; } .mh-tl-pick select { width: 100%; padding: 6px 8px; font-size: 12px; }
-  .mh-dir-mon > .mh-dir-world { position: absolute; inset: 0; margin: 0; } .mh-wm.is-fit { margin: 0 !important; position: relative; } .mh-wm.is-fit .mh-wm-bar { position: absolute; left: 12px; bottom: 12px; z-index: 9; padding: 6px 10px; border-radius: 12px; background: var(--mh-panel); border: 1px solid var(--mh-line2); } .mh-wm.is-fit .mh-wm-card { top: 56px; bottom: 64px; } .mh-wm.is-fit .mh-wm-view.is-add { cursor: crosshair; } .mh-dir-mon > .mh-dir-notes { position: absolute; inset: 0; padding: 14px 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: color-mix(in srgb, var(--mh-panel) 92%, transparent); } .mh-dir-notes-h { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--mh-gold-ink); } .mh-dir-notes-h b { color: var(--mh-ink); } .mh-dir-notes-h small { margin-left: auto; color: var(--mh-muted); } .mh-dir-notes-new { display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 6px; align-items: center; } .mh-dir-notes-new .mh-btn, .mh-dir-notes-new .mh-btn-ghost { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; padding: 7px 11px; white-space: nowrap; } .mh-dir-notes-list { display: flex; flex-direction: column; gap: 5px; }
-} .mh-dir-world { position: absolute; inset: 0; overflow: hidden; padding: 0; display: flex; } .mh-dir-world .mh-dir-mapbtn { top: 12px; } .mh-wm.is-fit { flex: 1; min-width: 0; min-height: 0; height: 100%; } .mh-wm.is-fit .mh-wm-wrap { height: 100%; border-radius: 0; border: 0; background: transparent; } .mh-wm.is-fit .mh-wm-view { height: 100%; max-height: none; overflow: hidden; container-type: size; display: flex; align-items: center; justify-content: center; } .mh-wm-bg { position: absolute; inset: -30px; background: center / cover no-repeat; filter: blur(28px) brightness(.55) saturate(1.2); pointer-events: none; } .mh-wm.is-fit .mh-wm-canvas { position: relative; z-index: 1; box-shadow: 0 0 40px rgba(0,0,0,.45); } .mh-wm.is-fit .mh-wm-canvas { flex: none; min-width: 0; height: auto; width: max(100cqw, calc(100cqh * var(--wm-r, 1.6))); } .mh-wm.is-fit .mh-wm-canvas img { height: 100%; object-fit: fill; } .mh-dir-mon.is-map { background-color: #1B1824; } .mh-dir-mon > .mh-dir-map { background: transparent; } .mh-dir-mon > .mh-dir-map { position: absolute !important; inset: 0; border-radius: 0; } .mh-dir-mapbtn { position: absolute !important; right: 12px; top: 12px; z-index: 5; display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 6px 11px; background: rgba(8,8,24,.72); }
+  .mh-dir-mon > .mh-dir-world { position: absolute; inset: 0; margin: 0; } .mh-wm.is-fit { margin: 0 !important; position: relative; } .mh-wm.is-fit .mh-wm-bar { position: absolute; left: 12px; bottom: 12px; z-index: 9; padding: 6px 10px; border-radius: 12px; background: var(--mh-panel); border: 1px solid var(--mh-line2); } .mh-wm.is-fit .mh-wm-card { top: 56px; bottom: 64px; } .mh-wm.is-fit .mh-wm-view.is-add { cursor: crosshair; } } .mh-dir-world { position: absolute; inset: 0; overflow: hidden; padding: 0; display: flex; } .mh-dir-world .mh-dir-mapbtn { top: 12px; } .mh-wm.is-fit { flex: 1; min-width: 0; min-height: 0; height: 100%; } .mh-wm.is-fit .mh-wm-wrap { height: 100%; border-radius: 0; border: 0; background: transparent; } .mh-wm.is-fit .mh-wm-view { height: 100%; max-height: none; overflow: hidden; container-type: size; display: flex; align-items: center; justify-content: center; } .mh-wm-bg { position: absolute; inset: -30px; background: center / cover no-repeat; filter: blur(28px) brightness(.55) saturate(1.2); pointer-events: none; } .mh-wm.is-fit .mh-wm-canvas { position: relative; z-index: 1; box-shadow: 0 0 40px rgba(0,0,0,.45); } .mh-wm.is-fit .mh-wm-canvas { flex: none; min-width: 0; height: auto; width: max(100cqw, calc(100cqh * var(--wm-r, 1.6))); } .mh-wm.is-fit .mh-wm-canvas img { height: 100%; object-fit: fill; } .mh-dir-mon.is-map { background-color: #1B1824; } .mh-dir-mon > .mh-dir-map { background: transparent; } .mh-dir-mon > .mh-dir-map { position: absolute !important; inset: 0; border-radius: 0; } .mh-dir-mapbtn { position: absolute !important; right: 12px; top: 12px; z-index: 5; display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 6px 11px; background: rgba(8,8,24,.72); }
   .mh-chb { position: absolute; left: 0; right: 0; top: 18%; z-index: 25; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; pointer-events: none; color: #fff; text-shadow: 0 2px 18px rgba(0,0,0,.85); animation: mhChb 3.8s ease both; }
   .mh-chb small { font: 700 12px 'Inter', system-ui, sans-serif; letter-spacing: .32em; text-transform: uppercase; color: #E3B04B; } .mh-chb b { font: 700 clamp(28px, 5vw, 52px)/1.1 'Cormorant Garamond', Georgia, serif; letter-spacing: .04em; padding: 0 16px; } .mh-chb i { display: block; height: 2px; width: 0; background: linear-gradient(90deg, transparent, #E3B04B, transparent); animation: mhChbLine 3.8s ease both; }
   @keyframes mhChb { 0% { opacity: 0; transform: translateY(14px) scale(.96); letter-spacing: .02em; } 14% { opacity: 1; transform: none; } 78% { opacity: 1; } 100% { opacity: 0; transform: translateY(-8px); } }
@@ -11610,7 +11608,6 @@ export default function App({ onSignOut }) {
   const ambBtn = useRef(null);
   const [ambOpen, setAmbOpen] = useState(false); // ventana de «Ambiente» (audio de la mesa)
   const [djWorldEdit, setDjWorldEdit] = useState(false);
-  const [djNoteQ, setDjNoteQ] = useState({ title: "", text: "" });
   const [djView, setDjView] = useState(null); // lo que el DJ está viendo en Directo (null = lo mismo que ven los jugadores)
   const [quickChar, setQuickChar] = useState(null); // personaje cuya ficha rápida sustituye a «El grupo» en Directo
   const [mapPick, setMapPick] = useState({}); // por capítulo: mapa de combate elegido
@@ -15525,14 +15522,6 @@ export default function App({ onSignOut }) {
     const shown = { ...h, hidden: false, ts: Date.now() };
     await saveStage(viewingCampaignId, { handouts: list.map((x) => (x.id === id ? shown : x)) });
     postChat(viewingCampaignId, { kind: "share", author: "El DJ", gm: true, text: "", share: { type: "handout", name: h.title, sub: "Nota · " + (HANDOUT_KINDS.find((k) => k.key === h.kind)?.label || ""), handout: shown } });
-  };
-  const createNoteQ = async (send) => {
-    const d = djNoteQ;
-    if (!d.title.trim() || !viewingCampaignId) return;
-    const h = { id: "h" + Date.now(), kind: "nota", title: d.title.trim(), image: "", text: d.text.trim(), sceneId: activeSceneIdOf(campaignStage), hidden: !send, ts: Date.now() };
-    await saveStage(viewingCampaignId, { handouts: [h, ...(campaignStage.handouts || [])] });
-    if (send) postChat(viewingCampaignId, { kind: "share", author: "El DJ", gm: true, text: "", share: { type: "handout", name: h.title, sub: "Nota · Nota", handout: h } });
-    setDjNoteQ({ title: "", text: "" });
   };
   const quickClue = async (send) => {
     const d = clueDlg;
@@ -27906,23 +27895,23 @@ export default function App({ onSignOut }) {
         const notes = all.map((h, i) => ({ h, i })).sort((x, y) => rank(x.h) - rank(y.h) || x.i - y.i).map((x) => x.h);
         const chName = (h) => (h.sceneId ? (scs.find((x) => x.id === h.sceneId)?.title || "Sin título") : "Sin capítulo");
         return (
-          <div className="mh-dd mh-cl" role="dialog" aria-label="Notas del DJ" style={{ left, bottom, width: w }} onMouseDown={(e) => e.stopPropagation()}>
-            <div className="mh-cl-h"><ScrollText size={14} /> <b>Notas</b><small className="mh-nt-n">{all.length}</small></div>
+          <div className="mh-dd mh-cl" role="dialog" aria-label="Pistas del DJ" style={{ left, bottom, width: w }} onMouseDown={(e) => e.stopPropagation()}>
+            <div className="mh-cl-h"><ScrollText size={14} /> <b>Pistas</b><small className="mh-nt-n">{all.length}</small></div>
             <div className="mh-nt-list">
-              {notes.length === 0 && <div className="mh-cl-empty">Todavía no hay notas. Crea una rápida aquí abajo.</div>}
+              {notes.length === 0 && <div className="mh-cl-empty">Todavía no hay pistas. Crea una rápida aquí abajo.</div>}
               {notes.map((h) => {
                 const K = (HANDOUT_KINDS.find((k) => k.key === h.kind) || HANDOUT_KINDS[0]).Icon;
                 return (
                   <div key={h.id} className="mh-nt-row">
                     <K size={14} />
                     <span className="mh-nt-t"><b>{h.title || "Sin título"}</b><small>{chName(h)}{h.hidden ? " · sin enviar" : " · enviada"}</small></span>
-                    <button type="button" className={"mh-nt-send" + (h.hidden ? "" : " is-sent")} title={h.hidden ? "Enviar al chat" : "Volver a enviar al chat"} aria-label={(h.hidden ? "Enviar " : "Reenviar ") + (h.title || "nota")} onClick={() => sendNote(h.id)}><Send size={13} /></button>
+                    <button type="button" className={"mh-nt-send" + (h.hidden ? "" : " is-sent")} title={h.hidden ? "Enviar al chat" : "Volver a enviar al chat"} aria-label={(h.hidden ? "Enviar " : "Reenviar ") + (h.title || "pista")} onClick={() => sendNote(h.id)}><Send size={13} /></button>
                   </div>
                 );
               })}
             </div>
             <div className="mh-cl-new">
-              <input className="mh-input" placeholder={"Nota rápida: título" + (curSc ? " (en " + (curSc.title || "este capítulo") + ")" : "")} value={clueDlg.title} onChange={(e) => setClueDlg((x) => ({ ...x, title: e.target.value }))} onKeyDown={(e) => e.key === "Enter" && quickClue(false)} />
+              <input className="mh-input" placeholder={"Pista rápida: título" + (curSc ? " (en " + (curSc.title || "este capítulo") + ")" : "")} value={clueDlg.title} onChange={(e) => setClueDlg((x) => ({ ...x, title: e.target.value }))} onKeyDown={(e) => e.key === "Enter" && quickClue(false)} />
               <input className="mh-input" placeholder="Texto (opcional)" value={clueDlg.text} onChange={(e) => setClueDlg((x) => ({ ...x, text: e.target.value }))} onKeyDown={(e) => e.key === "Enter" && quickClue(false)} />
               <div className="mh-nt-btns">
                 <button type="button" className="mh-btn-ghost" disabled={!clueDlg.title.trim()} onClick={() => quickClue(false)}><Plus size={13} /> Crear</button>
@@ -28891,38 +28880,7 @@ export default function App({ onSignOut }) {
                             {view === live ? <span className="mh-stg-live"><i />En directo</span> : <span className="mh-stg-live is-prev"><i />Solo tú lo ves</span>}
                             <button type="button" className="mh-btn-ghost mh-dir-mapbtn" onClick={() => (setCombatBack(cur?.id || null), setCampaignDetailTab("mapa"))}><MapPinned size={13} /> Abrir tablero</button>
                           </div>
-                        ) : view === "pistas" ? (() => {
-                          const scs = stageScenesOf(campaignStage);
-                          const curId = activeSceneIdOf(campaignStage);
-                          const all = campaignStage.handouts || [];
-                          const rk = (h) => (h.sceneId === curId || (!h.sceneId && !curId) ? 0 : 1);
-                          const notes = all.map((h, i) => ({ h, i })).sort((x, y) => rk(x.h) - rk(y.h) || x.i - y.i).map((x) => x.h);
-                          const chName = (h) => (h.sceneId ? (scs.find((x) => x.id === h.sceneId)?.title || "Sin título") : "Sin capítulo");
-                          return (
-                            <div className="mh-dir-notes">
-                              <div className="mh-dir-notes-h"><ScrollText size={15} /> <b>Notas</b><small>{all.length}</small></div>
-                              <div className="mh-dir-notes-new">
-                                <input className="mh-input" placeholder="Nueva nota: título" value={djNoteQ.title} onChange={(e) => setDjNoteQ((q) => ({ ...q, title: e.target.value }))} onKeyDown={(e) => e.key === "Enter" && createNoteQ(false)} />
-                                <input className="mh-input" placeholder="Texto (opcional)" value={djNoteQ.text} onChange={(e) => setDjNoteQ((q) => ({ ...q, text: e.target.value }))} onKeyDown={(e) => e.key === "Enter" && createNoteQ(false)} />
-                                <button type="button" className="mh-btn-ghost" disabled={!djNoteQ.title.trim()} onClick={() => createNoteQ(false)}><Plus size={13} /> Crear</button>
-                                <button type="button" className="mh-btn" disabled={!djNoteQ.title.trim()} onClick={() => createNoteQ(true)}><Send size={13} /> Crear y enviar</button>
-                              </div>
-                              <div className="mh-dir-notes-list">
-                                {notes.length === 0 && <div className="mh-cl-empty">Todavía no hay notas. Crea la primera arriba.</div>}
-                                {notes.map((h) => {
-                                  const K = (HANDOUT_KINDS.find((k) => k.key === h.kind) || HANDOUT_KINDS[0]).Icon;
-                                  return (
-                                    <div key={h.id} className="mh-nt-row">
-                                      <K size={14} />
-                                      <span className="mh-nt-t"><b>{h.title || "Sin título"}</b><small>{chName(h)}{h.hidden ? " · sin enviar" : " · enviada"}{h.text ? " · " + h.text : ""}</small></span>
-                                      <button type="button" className={"mh-nt-send" + (h.hidden ? "" : " is-sent")} title={h.hidden ? "Enviar al chat" : "Volver a enviar al chat"} aria-label={(h.hidden ? "Enviar " : "Reenviar ") + (h.title || "nota")} onClick={() => sendNote(h.id)}><Send size={13} /></button>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          );
-                        })() : view === "mundo" ? (
+                        ) : view === "mundo" ? (
                           <div className="mh-dir-world">
                             <WorldMap fit showHidden edit={djWorldEdit} key={viewingCampaignId} campaignId={viewingCampaignId} scenes={stageScenesOf(campaignStage).map((x) => ({ id: x.id, title: x.title }))} imgSrc={imgSrc} ensureImg={worldEnsureImg} saveImage={saveSceneImage} dropImage={worldDropImg} onOpenScene={(id) => openChapter(id)} onLog={(t) => postChat(viewingCampaignId, { kind: "event", author: "El DJ", gm: true, icon: "mundo", text: t })} />
                             {view === live ? <span className="mh-stg-live"><i />En directo</span> : <span className="mh-stg-live is-prev"><i />Solo tú lo ves</span>}
@@ -29185,7 +29143,7 @@ export default function App({ onSignOut }) {
                     const quickEl = (
                       <div className="mh-dir-quick">
                         {[
-                          { k: "pista", l: "Notas", I: ScrollText, go: (e) => (clueDlg ? setClueDlg(null) : (setDiceDlg(null), setClueDlg({ rect: e.currentTarget.getBoundingClientRect(), sel: null, title: "", text: "" }))) },
+                          { k: "pista", l: "Pistas", I: ScrollText, go: (e) => (clueDlg ? setClueDlg(null) : (setDiceDlg(null), setClueDlg({ rect: e.currentTarget.getBoundingClientRect(), sel: null, title: "", text: "" }))) },
                           { k: "dados", l: "Dados", I: Dices, go: (e) => (diceDlg ? setDiceDlg(null) : (setClueDlg(null), setDiceDlg({ counts: { 4: 0, 6: 0, 8: 0, 10: 0, 12: 0, 20: 1 }, priv: false, rect: e.currentTarget.getBoundingClientRect() }))) },
                           { k: "foco", l: "Foco", I: MapPinned, go: () => (setCombatBack(cur?.id || null), setCampaignDetailTab("mapa")) },
                           { k: "desc", l: "Descanso", I: BedDouble, go: () => setCampaignDetailTab("descanso") },
