@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "mejora", text: "Los efectos de las escenas aparecen y se apagan con un fundido suave; los marcadores del mapa de mundo quedan por encima de las esquinas oscurecidas; los accesos rápidos bajo el chat ocupan todo el ancho; y el mapa de la pestaña Mundo usa la misma proporción que la caja del panel del DJ para que se vean los mismos marcadores." },
       { tag: "mejora", text: "Mundo · Generadores rediseñado: menú lateral con cada generador, resultados en tarjetas (encuentros con barra de puntos, PNJ con secreto que se revela al pulsar, botín con el hallazgo destacado, nombres y rumores) y envío al chat desde cada una." },
       { tag: "mejora", text: "Historia · Pistas rediseñada: formulario a un lado con el tipo en botones grandes y vista previa de la imagen, y a la derecha las pistas en tarjetas agrupadas por capítulo, con filtro por tipo y acciones rápidas (entregar, reenviar, ocultar, quitar)." },
       { tag: "nuevo", text: "Historia · PNJ: cualquier PNJ, amistoso o no, puede tener estadísticas (nivel, tipo, dificultad, umbrales, vida, estrés, ataque, motivaciones y experiencia). Se ven en su tarjeta y, al colocarlo en el tablero, aparece su ficha de adversario." },

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // Efectos para las escenas: partículas dibujadas en un lienzo 2D sobre la imagen (lluvia, nieve, fuego, niebla…).
 // Los rayos de luz son un vídeo con transparencia. Cada escena guarda la lista de efectos que lleva.
@@ -314,20 +314,21 @@ const FX = {
 // El orden de pintado: primero las luces y nieblas, encima la lluvia y el viento.
 const ORDER = ["fog", "tavern", "fire", "campfire", "gold", "purple", "dust", "snow", "wind", "rain", "storm"];
 
-// Capa de efectos: se coloca como primer hijo de la imagen de la escena (que debe ser position: relative).
-export default function SceneFx({ fx }) {
+// Cada efecto va en su propio lienzo para poder aparecer y desaparecer con un fundido.
+function FxLayer({ k, active }) {
   const ref = useRef(null);
-  const list = ORDER.filter((k) => (fx || []).includes(k) && FX[k]);
-  const key = list.join(",");
-  const rays = (fx || []).includes("rays");
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    const id = setTimeout(() => setShown(active), 30);
+    return () => clearTimeout(id);
+  }, [active]);
   useEffect(() => {
     const cv = ref.current;
-    if (!cv || !key) return undefined;
+    if (!cv) return undefined;
     if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return undefined;
-    const keys = key.split(",");
     const ctx = cv.getContext("2d");
     const box = cv.parentElement;
-    let w = 1, h = 1, st = {}, raf = 0, last = performance.now();
+    let w = 1, h = 1, st = null, raf = 0, last = performance.now();
     const fit = () => {
       const r = box.getBoundingClientRect();
       w = Math.max(1, Math.round(r.width));
@@ -336,8 +337,7 @@ export default function SceneFx({ fx }) {
       cv.width = Math.round(w * dpr);
       cv.height = Math.round(h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      st = {};
-      for (const k of keys) st[k] = FX[k].init(w, h);
+      st = FX[k].init(w, h);
     };
     fit();
     const ro = new ResizeObserver(fit);
@@ -346,7 +346,7 @@ export default function SceneFx({ fx }) {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       ctx.clearRect(0, 0, w, h);
-      for (const k of keys) FX[k].draw(ctx, st[k], dt, now / 1000, w, h);
+      FX[k].draw(ctx, st, dt, now / 1000, w, h);
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -354,11 +354,37 @@ export default function SceneFx({ fx }) {
       cancelAnimationFrame(raf);
       ro.disconnect();
     };
-  }, [key]);
+  }, [k]);
+  return <canvas ref={ref} className={"mh-fx mh-fx-l" + (shown ? " is-in" : "")} aria-hidden="true" />;
+}
+
+function RaysLayer({ active }) {
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    const id = setTimeout(() => setShown(active), 30);
+    return () => clearTimeout(id);
+  }, [active]);
+  return <video className={"mh-fx mh-fx-rays mh-fx-l" + (shown ? " is-in" : "")} src="/escenas/efectos/light_rays.webm" autoPlay loop muted playsInline aria-hidden="true" />;
+}
+
+const FADE_MS = 900;
+
+// Capa de efectos: se coloca como primer hijo de la imagen de la escena (que debe ser position: relative).
+export default function SceneFx({ fx }) {
+  const want = ORDER.filter((k) => (fx || []).includes(k) && FX[k]);
+  const rays = (fx || []).includes("rays");
+  const wantKey = want.join(",") + (rays ? "|rays" : "");
+  const [keep, setKeep] = useState({ keys: want, rays });
+  useEffect(() => {
+    // Los efectos nuevos entran enseguida; los que se quitan siguen montados mientras se desvanecen.
+    setKeep((p) => ({ keys: ORDER.filter((k) => want.includes(k) || p.keys.includes(k)), rays: rays || p.rays }));
+    const t = setTimeout(() => setKeep({ keys: want, rays }), FADE_MS);
+    return () => clearTimeout(t);
+  }, [wantKey]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <>
-      {rays && <video className="mh-fx mh-fx-rays" src="/escenas/efectos/light_rays.webm" autoPlay loop muted playsInline aria-hidden="true" />}
-      {key && <canvas ref={ref} className="mh-fx" aria-hidden="true" />}
+      {keep.rays && <RaysLayer active={rays} />}
+      {keep.keys.map((k) => <FxLayer key={k} k={k} active={want.includes(k)} />)}
     </>
   );
 }

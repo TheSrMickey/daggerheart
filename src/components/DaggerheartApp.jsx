@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useState, useEffect, useLayoutEffect, useRef, createContext, useContext } from "react";
+import { Fragment, useState, useEffect, useLayoutEffect, useRef, useCallback, createContext, useContext } from "react";
 import { createPortal } from "react-dom";
 import { Globe, Tent, Haze, CloudFog, CloudRain, CloudLightning, Beer } from "lucide-react";
 import SceneFx, { SCENE_FX } from "./SceneFx";
@@ -4962,6 +4962,7 @@ const sharedStyles = `
   .mh-chat-c-scene > *, .mh-gm-sc-img > *, .mh-gm-preset-img > * { position: relative; z-index: 1; } .mh-gm-cvscene-img { position: relative; }
   .mh-fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; border-radius: inherit; }
   .mh-fx-rays { object-fit: cover; mix-blend-mode: screen; opacity: .95; }
+  .mh-fx-l { opacity: 0; transition: opacity .8s ease; } .mh-fx-l.is-in { opacity: 1; } .mh-fx-rays.mh-fx-l.is-in { opacity: .95; } @media (prefers-reduced-motion: reduce) { .mh-fx-l { transition: none; } }
   .mh-gm-fxl { display: flex; flex-direction: column; gap: 6px; } .mh-gm-fxg { display: flex; flex-wrap: wrap; gap: 5px; }
   .mh-gm-fx { all: unset; cursor: pointer; box-sizing: border-box; display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 99px; border: 1px solid var(--mh-line2); color: var(--mh-ink3); font: 600 11px 'Inter', system-ui, sans-serif; }
   .mh-gm-fx:hover { color: var(--mh-ink); border-color: var(--mh-ink3); } .mh-gm-fx.is-on { color: var(--mh-ink); border-color: var(--fc, #D9644E); background: color-mix(in srgb, var(--fc, #D9644E) 16%, transparent); }
@@ -5863,11 +5864,11 @@ const sharedStyles = `
   .mh-tl .mh-ch-step { position: relative; } .mh-tl .mh-ch-step + .mh-ch-step::before { content: ""; position: absolute; left: -16px; top: 50%; width: 16px; height: 2px; background: var(--mh-gold-ink); opacity: .55; } .mh-tl .mh-ch-step + .mh-ch-step::after { content: ""; position: absolute; left: -5px; top: calc(50% - 3px); width: 8px; height: 8px; border-radius: 50%; background: var(--mh-gold-ink); opacity: .8; }
   .mh-tl-pick { display: flex; flex-direction: column; gap: 5px; width: 100%; } .mh-tl-pick select { width: 100%; padding: 6px 8px; font-size: 12px; }
   .mh-dir-mon > .mh-dir-world { position: absolute; inset: 0; margin: 0; } .mh-wm.is-fit { margin: 0 !important; position: relative; } .mh-dir-world .mh-wm.is-fit .mh-wm-bar { position: absolute; left: 12px; bottom: 12px; z-index: 9; padding: 6px 10px; border-radius: 12px; background: var(--mh-panel); border: 1px solid var(--mh-line2); } .mh-dir-world .mh-wm.is-fit .mh-wm-card { top: 56px; bottom: 64px; } .mh-wm.is-fit .mh-wm-view.is-add { cursor: crosshair; } .mh-dir-mon > .mh-dir-cast { position: absolute; inset: 0; display: flex; gap: 12px; padding: 12px; overflow-x: auto; overflow-y: hidden; background: color-mix(in srgb, var(--mh-panel) 94%, transparent); scrollbar-width: thin; } .mh-dc-card { position: relative; flex: none; height: 100%; width: auto; aspect-ratio: 2 / 3; border-radius: 16px; overflow: hidden; border: 1px solid var(--mh-line2); background: var(--mh-panel2); display: flex; flex-direction: column; justify-content: flex-end; } .mh-dc-card.is-shown { border-color: var(--acc, #E3B04B); box-shadow: 0 0 0 1px var(--acc, #E3B04B); } .mh-dc-img { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font: 700 64px 'Cinzel', Georgia, serif; color: var(--mh-muted); } .mh-dc-img img { width: 100%; height: 100%; object-fit: cover; object-position: top center; } .mh-dc-st, .mh-dc-kind { position: absolute; top: 10px; z-index: 2; display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 700; padding: 4px 9px; border-radius: 99px; background: rgba(8,8,24,.85); color: #fff; } .mh-dc-st { left: 10px; } .mh-dc-st.is-on { background: var(--acc, #E3B04B); color: var(--acc-on, #1F1606); } .mh-dc-kind { right: 10px; letter-spacing: .06em; text-transform: uppercase; } .mh-dc-info { position: relative; z-index: 2; padding: 40px 14px 14px; display: flex; flex-direction: column; gap: 4px; color: var(--mh-ink); background: linear-gradient(to bottom, color-mix(in srgb, var(--mh-panel) 0%, transparent), color-mix(in srgb, var(--mh-panel) 88%, transparent) 38%, var(--mh-panel) 62%); } .mh-dc-info b { font-size: 17px; } .mh-dc-info small { font-size: 12px; color: var(--mh-muted); } .mh-dc-acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; } .mh-dc-acts .mh-btn, .mh-dc-acts .mh-btn-ghost { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 7px 10px; } .mh-dc-b { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 7px 10px; border-radius: 8px; background: var(--mh-panel2); color: var(--mh-ink); border: 1px solid var(--mh-line2); } .mh-dc-b:hover { border-color: var(--acc, #E3B04B); } .mh-dc-b:focus-visible { outline: 2px solid var(--acc, #E3B04B); outline-offset: 2px; } .mh-dc-edit { position: absolute; inset: 0; z-index: 3; padding: 12px; background: var(--mh-panel); display: flex; flex-direction: column; gap: 8px; overflow-y: auto; } .mh-dc-edit .mh-input { padding: 6px 9px; font-size: 13px; } .mh-dc-edit .mh-dc-acts { position: sticky; bottom: -12px; margin: auto -12px -12px; padding: 8px 12px; background: var(--mh-panel); border-top: 1px solid var(--mh-line); }
-  .mh-dir-world::after { content: ""; position: absolute; inset: 0; z-index: 4; pointer-events: none; background: url(/escenas/vignette.webp) center / 100% 100% no-repeat; }
+  .mh-dir-world .mh-wm-view::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: url(/escenas/vignette.webp) center / 100% 100% no-repeat; }
   .mh-wm.is-fit .mh-wm-canvas { opacity: 0; transform: scale(1.035); transition: opacity .7s ease, transform .9s cubic-bezier(.2,.8,.2,1); } .mh-wm.is-fit .mh-wm-canvas.is-ready { opacity: 1; transform: none; } .mh-wm-bg { opacity: 0; transition: opacity .9s ease; } .mh-wm-bg.is-ready { opacity: 1; }
   @media (prefers-reduced-motion: reduce) { .mh-wm.is-fit .mh-wm-canvas, .mh-wm-bg { transition: none; transform: none; } }
-  .mh-wm-box { position: relative; height: clamp(360px, calc(100dvh - 330px), 880px); display: flex; flex-direction: column; } .mh-wm-box .mh-wm.is-fit { flex: 1; min-height: 0; margin-top: 0 !important; } .mh-wm-box .mh-wm.is-fit .mh-wm-wrap { flex: 1; min-height: 0; height: auto; border-radius: 18px; border: 1px solid var(--mh-line2); }
-  .mh-dir-world { position: absolute; inset: 0; overflow: hidden; padding: 0; display: flex; } .mh-dir-world .mh-dir-mapbtn { top: 12px; } .mh-wm.is-fit { flex: 1; min-width: 0; min-height: 0; height: 100%; } .mh-wm.is-fit .mh-wm-wrap { height: 100%; border-radius: 0; border: 0; background: transparent; } .mh-wm.is-fit .mh-wm-view { height: 100%; max-height: none; overflow: hidden; container-type: size; display: flex; align-items: center; justify-content: center; } .mh-wm-bg { position: absolute; inset: -30px; background: center / cover no-repeat; filter: blur(28px) brightness(.55) saturate(1.2); pointer-events: none; } .mh-wm.is-fit .mh-wm-canvas { position: relative; z-index: 1; box-shadow: 0 0 40px rgba(0,0,0,.45); } .mh-wm.is-fit .mh-wm-canvas { flex: none; min-width: 0; height: auto; width: max(100cqw, calc(100cqh * var(--wm-r, 1.6))); } .mh-wm.is-fit .mh-wm-canvas img { height: 100%; object-fit: fill; } .mh-dir-mon.is-map { background-color: #1B1824; } .mh-dir-mon > .mh-dir-map { background: transparent; } .mh-dir-mon > .mh-dir-map { position: absolute !important; inset: 0; border-radius: 0; } .mh-dir-mapbtn { position: absolute !important; right: 12px; top: 12px; z-index: 5; display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 6px 11px; background: var(--mh-panel); color: var(--mh-ink); border: 1px solid var(--mh-line2); }
+  .mh-wm-box { position: relative; display: flex; flex-direction: column; } .mh-wm-box .mh-wm.is-fit { flex: none; height: auto; margin-top: 0 !important; } .mh-wm-box .mh-wm.is-fit .mh-wm-wrap { flex: none; height: auto; aspect-ratio: var(--dir-r, 1.7778); width: min(100%, calc((100dvh - 380px) * var(--dir-r, 1.7778))); margin: 0 auto; border-radius: 18px; border: 1px solid var(--mh-line2); } .mh-wm-box .mh-wm.is-fit .mh-wm-bar { width: min(100%, calc((100dvh - 380px) * var(--dir-r, 1.7778))); margin: 0 auto; }
+  .mh-dir-world { position: absolute; inset: 0; overflow: hidden; padding: 0; display: flex; } .mh-dir-world .mh-dir-mapbtn { top: 12px; } .mh-wm.is-fit { flex: 1; min-width: 0; min-height: 0; height: 100%; } .mh-wm.is-fit .mh-wm-wrap { height: 100%; border-radius: 0; border: 0; background: transparent; } .mh-wm.is-fit .mh-wm-view { height: 100%; max-height: none; overflow: hidden; container-type: size; display: flex; align-items: center; justify-content: center; } .mh-wm-bg { position: absolute; inset: -30px; background: center / cover no-repeat; filter: blur(28px) brightness(.55) saturate(1.2); pointer-events: none; } .mh-wm.is-fit .mh-wm-canvas { position: relative; z-index: auto; box-shadow: 0 0 40px rgba(0,0,0,.45); } .mh-wm.is-fit .mh-wm-canvas { flex: none; min-width: 0; height: auto; width: max(100cqw, calc(100cqh * var(--wm-r, 1.6))); } .mh-wm.is-fit .mh-wm-canvas img { height: 100%; object-fit: fill; } .mh-dir-mon.is-map { background-color: #1B1824; } .mh-dir-mon > .mh-dir-map { background: transparent; } .mh-dir-mon > .mh-dir-map { position: absolute !important; inset: 0; border-radius: 0; } .mh-dir-mapbtn { position: absolute !important; right: 12px; top: 12px; z-index: 5; display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 6px 11px; background: var(--mh-panel); color: var(--mh-ink); border: 1px solid var(--mh-line2); }
   .mh-chb { position: absolute; left: 0; right: 0; top: 18%; z-index: 25; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; pointer-events: none; color: #fff; text-shadow: 0 2px 18px rgba(0,0,0,.85); animation: mhChb 3.8s ease both; }
   .mh-chb small { font: 700 12px 'Inter', system-ui, sans-serif; letter-spacing: .32em; text-transform: uppercase; color: #E3B04B; } .mh-chb b { font: 700 clamp(28px, 5vw, 52px)/1.1 'Cormorant Garamond', Georgia, serif; letter-spacing: .04em; padding: 0 16px; } .mh-chb i { display: block; height: 2px; width: 0; background: linear-gradient(90deg, transparent, #E3B04B, transparent); animation: mhChbLine 3.8s ease both; }
   @keyframes mhChb { 0% { opacity: 0; transform: translateY(14px) scale(.96); letter-spacing: .02em; } 14% { opacity: 1; transform: none; } 78% { opacity: 1; } 100% { opacity: 0; transform: translateY(-8px); } }
@@ -5904,7 +5905,7 @@ const sharedStyles = `
   .mh-dir-pips { display: inline-flex; gap: 3px; } .mh-dir-pips i { width: 11px; height: 11px; border-radius: 3px; border: 1.5px solid currentColor; opacity: .9; } .mh-dir-pips i.is-f { background: currentColor; }
   .mh-dir-feed { max-height: 220px; overflow-y: auto; }
   .mh-dir-send { display: flex; gap: 8px; } .mh-dir-send .mh-input { flex: 1; min-width: 0; } .mh-dir-send .mh-btn { display: inline-flex; align-items: center; justify-content: center; padding: 8px 12px; }
-  .mh-dir-quick { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding: 10px; border-radius: 20px; background: var(--mh-panel); border: 1px solid var(--mh-line); }
+  .mh-dir-quick { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; padding: 10px; border-radius: 20px; background: var(--mh-panel); border: 1px solid var(--mh-line); }
   .mh-dir-quick button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 4px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel2); color: var(--mh-ink3); font: 600 12px 'Inter', system-ui, sans-serif; cursor: pointer; }
   /* Directo · modo inmersivo: la escena ocupa todo el alto y el grupo y el chat se abren como cajones de cristal */
   .mh-dir.is-imm .mh-dir-top { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; height: auto; }
@@ -6211,7 +6212,7 @@ const sharedStyles = `
   .mh-wm-canvas { position: relative; min-width: 100%; user-select: none; }
   .mh-wm-canvas img { display: block; width: 100%; height: auto; pointer-events: none; }
   .mh-wm-load { padding: 80px 20px; text-align: center; color: var(--mh-muted); font-size: 13px; }
-  .mh-wm-pin { all: unset; position: absolute; transform: translate(-50%, -100%); cursor: pointer; display: flex; flex-direction: column; align-items: center; z-index: 2; touch-action: none; }
+  .mh-wm-pin { all: unset; position: absolute; transform: translate(-50%, -100%); cursor: pointer; display: flex; flex-direction: column; align-items: center; z-index: 3; touch-action: none; }
   .mh-wm-pin-b { position: relative; width: 44px; height: 54px; display: block; filter: drop-shadow(0 3px 4px rgba(0,0,0,.55)); transform-origin: 50% 100%; transition: transform .15s ease, filter .15s ease; }
   .mh-wm-pin-b > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
   .mh-wm-pin-disc { fill: var(--mh-bg-base, var(--mh-bg)); stroke: var(--acc, #E3B04B); stroke-width: 2; } .mh-wm-pin-tail { fill: var(--acc, #E3B04B); stroke: var(--acc, #E3B04B); stroke-width: 2; stroke-linejoin: round; } .mh-wm-pin-logo { fill: var(--mh-ink); }
@@ -11655,6 +11656,24 @@ export default function App({ onSignOut }) {
   const [ambOpen, setAmbOpen] = useState(false); // ventana de «Ambiente» (audio de la mesa)
   const [djWorldEdit, setDjWorldEdit] = useState(false);
   const [djCastEdit, setDjCastEdit] = useState(null);
+  // Proporción de la caja «Tu vista» del panel del DJ: el mapa de la pestaña Mundo se recorta igual para que se vean los mismos marcadores.
+  const [dirMonRatio, setDirMonRatio] = useState(16 / 9);
+  const dirMonRO = useRef(null);
+  const dirMonRef = useCallback((el) => {
+    if (dirMonRO.current) {
+      dirMonRO.current.disconnect();
+      dirMonRO.current = null;
+    }
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const measure = () => {
+      const r = el.getBoundingClientRect();
+      if (r.width > 120 && r.height > 80) setDirMonRatio(+(r.width / r.height).toFixed(3));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    dirMonRO.current = ro;
+  }, []);
   const [pstFilter, setPstFilter] = useState("all");
   const [djView, setDjView] = useState(null); // lo que el DJ está viendo en Directo (null = lo mismo que ven los jugadores)
   const [quickChar, setQuickChar] = useState(null); // personaje cuya ficha rápida sustituye a «El grupo» en Directo
@@ -28998,7 +29017,7 @@ export default function App({ onSignOut }) {
                       </div>
                     );
                     const monEl = (
-                      <div key={view + "|" + (cur?.id || "") + "|" + (cur?.image || stage.scene?.image || "")} className={"mh-dir-mon" + (view === "escena" && (cur?.image || stage.scene?.image) ? "" : " is-blank") + (view === "mapa" ? " is-map" : "")} style={view === "escena" || view === "mapa" ? bgStyle(cur?.image || stage.scene?.image) : undefined}>
+                      <div ref={dirMonRef} key={view + "|" + (cur?.id || "") + "|" + (cur?.image || stage.scene?.image || "")} className={"mh-dir-mon" + (view === "escena" && (cur?.image || stage.scene?.image) ? "" : " is-blank") + (view === "mapa" ? " is-map" : "")} style={view === "escena" || view === "mapa" ? bgStyle(cur?.image || stage.scene?.image) : undefined}>
                         {view === "escena" ? (
                           <>
                             <SceneFx fx={cur?.fx || stage.scene?.fx || []} />
@@ -30338,7 +30357,7 @@ export default function App({ onSignOut }) {
                     <div className="mh-card">
                       <div className="mh-gm-h"><Globe size={15} /> Mapa de mundo</div>
                       <div className="mh-gm-sub">Sube la imagen de tu mundo y coloca marcadores encima. Cada marcador abre una tarjeta con imagen y texto y puede llevar a una escena. Cuando quieras enseñárselo a los jugadores, ponlo en directo desde «Mesa».</div>
-                      <div className="mh-wm-box"><WorldMap
+                      <div className="mh-wm-box" style={{ "--dir-r": dirMonRatio }}><WorldMap
                         fit
                         campaignId={viewingCampaignId}
                         edit
