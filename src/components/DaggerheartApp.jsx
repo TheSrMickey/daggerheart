@@ -1985,194 +1985,6 @@ const CARD_ACTIONS = {
 const MAP_COLS = 16;
 const MAP_ROWS = 9;
 const MAP_REACH = 2; // casillas que se iluminan alrededor de la ficha elegida
-// Decorados que el DJ estampa en el mapa: una casilla cada uno.
-const MAP_PROPS = [
-  { key: "arbol", label: "Árbol", svg: '<ellipse cx="54" cy="58" rx="40" ry="36" fill="#000" opacity=".25"/><circle cx="50" cy="50" r="40" fill="#3E6B34"/><circle cx="38" cy="40" r="20" fill="#4F8442"/><circle cx="62" cy="46" r="18" fill="#4A7D3E"/><circle cx="48" cy="64" r="17" fill="#457638"/><circle cx="40" cy="36" r="8" fill="#6FA25C" opacity=".7"/>' },
-  { key: "pino", label: "Pino", svg: '<ellipse cx="54" cy="58" rx="36" ry="34" fill="#000" opacity=".25"/><path d="M50 8 62 34 90 38 68 56 76 86 50 70 24 86 32 56 10 38 38 34Z" fill="#2F5A3A"/><path d="M50 22 58 40 76 44 62 54 66 74 50 62 34 74 38 54 24 44 42 40Z" fill="#3F7449"/><circle cx="50" cy="50" r="5" fill="#5E3B22"/>' },
-  { key: "arbusto", label: "Arbusto", svg: '<ellipse cx="52" cy="58" rx="34" ry="26" fill="#000" opacity=".22"/><circle cx="36" cy="52" r="18" fill="#5C8F3E"/><circle cx="60" cy="48" r="20" fill="#6BA34A"/><circle cx="52" cy="64" r="16" fill="#588A3B"/><circle cx="62" cy="42" r="6" fill="#C0504A"/><circle cx="40" cy="48" r="5" fill="#C0504A"/>' },
-  { key: "roca", label: "Roca", svg: '<ellipse cx="54" cy="60" rx="38" ry="30" fill="#000" opacity=".25"/><path d="M18 58 28 30 52 20 78 30 86 56 70 78 40 80Z" fill="#7C7F86"/><path d="M28 32 52 22 70 30 60 44 36 46Z" fill="#9A9DA4"/><path d="M40 80 70 78 86 56 72 62Z" fill="#5F626A"/>' },
-  { key: "tronco", label: "Tronco", svg: '<rect x="8" y="36" width="84" height="30" rx="15" fill="#000" opacity=".22"/><rect x="6" y="30" width="84" height="30" rx="15" fill="#7A5230"/><ellipse cx="82" cy="45" rx="8" ry="15" fill="#B08560"/><path d="M20 38h40M26 50h44" stroke="#5E3D22" stroke-width="3"/>' },
-  { key: "barril", label: "Barril", svg: '<ellipse cx="54" cy="58" rx="30" ry="30" fill="#000" opacity=".25"/><circle cx="50" cy="50" r="32" fill="#8A5A2E"/><circle cx="50" cy="50" r="26" fill="none" stroke="#4B3018" stroke-width="4"/><circle cx="50" cy="50" r="12" fill="none" stroke="#4B3018" stroke-width="3"/><path d="M50 18v64M18 50h64" stroke="#6E4623" stroke-width="2"/>' },
-  { key: "caja", label: "Caja", svg: '<rect x="20" y="22" width="64" height="64" fill="#000" opacity=".22"/><rect x="16" y="16" width="64" height="64" rx="4" fill="#A0703E"/><rect x="16" y="16" width="64" height="64" rx="4" fill="none" stroke="#5C3E1E" stroke-width="5"/><path d="M16 16 80 80M80 16 16 80" stroke="#5C3E1E" stroke-width="5"/>' },
-  { key: "cofre", label: "Cofre", svg: '<rect x="20" y="30" width="66" height="48" rx="6" fill="#000" opacity=".22"/><rect x="16" y="26" width="66" height="48" rx="6" fill="#8A5A2B"/><rect x="16" y="26" width="66" height="18" rx="6" fill="#A8703A"/><path d="M16 44h66" stroke="#E3C26A" stroke-width="4"/><rect x="44" y="40" width="10" height="12" rx="2" fill="#E3C26A"/>' },
-  { key: "antorcha", label: "Antorcha", svg: '<circle cx="50" cy="44" r="34" fill="#F7D35A" opacity=".22"/><rect x="46" y="44" width="8" height="40" rx="3" fill="#5A3A22"/><path d="M50 14 C60 28 62 38 50 50 C38 38 40 28 50 14Z" fill="#F3A64A"/><path d="M50 28 C55 34 55 40 50 46 C45 40 45 34 50 28Z" fill="#FFE08A"/>' },
-  { key: "muro", label: "Muro", svg: '<rect x="6" y="30" width="92" height="44" fill="#000" opacity=".2"/><rect x="2" y="26" width="92" height="44" fill="#A7A196"/><path d="M2 40h92M2 55h92M24 26v14M56 26v14M88 26v14M10 40v15M40 40v15M72 40v15M24 55v15M56 55v15M88 55v15" stroke="#7E786E" stroke-width="3"/>' },
-  { key: "carro", label: "Carro", svg: '<rect x="14" y="30" width="76" height="40" rx="6" fill="#000" opacity=".2"/><rect x="10" y="26" width="76" height="40" rx="6" fill="#8A5A2B"/><path d="M10 40h76M10 52h76" stroke="#5A3A22" stroke-width="3"/><circle cx="26" cy="72" r="11" fill="#5A3A22"/><circle cx="70" cy="72" r="11" fill="#5A3A22"/><circle cx="26" cy="72" r="4" fill="#C9A24A"/><circle cx="70" cy="72" r="4" fill="#C9A24A"/>' },
-  { key: "carrovolcado", label: "Carro volcado", svg: '<ellipse cx="50" cy="78" rx="45" ry="12" fill="#000" opacity=".3"/><path d="M5 28 28 46" stroke="#4A2E18" stroke-width="5" stroke-linecap="round"/><path d="M5 28 9 32" stroke="#C9A24A" stroke-width="3" stroke-linecap="round"/><g transform="rotate(-13 48 54)"><rect x="14" y="38" width="62" height="32" rx="4" fill="#6B4423"/><path d="M14 48.5h62M14 59h62" stroke="#43291A" stroke-width="2.5"/><path d="M30 38v32M52 38v32" stroke="#43291A" stroke-width="1.5" opacity=".6"/><rect x="14" y="38" width="62" height="5" rx="2.5" fill="#8A5A2B"/><rect x="14" y="65" width="62" height="5" rx="2.5" fill="#523319"/><rect x="38" y="70" width="5" height="9" fill="#3A2412"/></g><circle cx="77" cy="62" r="17" fill="none" stroke="#4A2E18" stroke-width="5"/><circle cx="77" cy="62" r="17" fill="none" stroke="#7A5230" stroke-width="1.5"/><path d="M77 45v34M60 62h34M65 50l24 24M89 50 65 74" stroke="#5A3A22" stroke-width="2.5"/><circle cx="77" cy="62" r="4.5" fill="#C9A24A"/><ellipse cx="22" cy="79" rx="14" ry="5" fill="none" stroke="#4A2E18" stroke-width="3.5"/><rect x="58" y="84" width="24" height="5" rx="1.5" transform="rotate(7 58 84)" fill="#A0703E"/><circle cx="34" cy="83" r="4.2" fill="#C8452F"/><circle cx="44" cy="87" r="4" fill="#D9573A"/><circle cx="52" cy="80" r="3.6" fill="#E08A2E"/><circle cx="26" cy="89" r="3.6" fill="#7BA04A"/><circle cx="64" cy="79" r="3.4" fill="#C8452F"/>' },
-  { key: "torre", label: "Torre", svg: '<rect x="22" y="14" width="56" height="74" fill="#000" opacity=".2"/><rect x="18" y="10" width="56" height="74" fill="#B3ADA2"/><path d="M18 10h12v8H18zM40 10h12v8H40zM62 10h12v8H62z" fill="#8E8A80"/><rect x="40" y="40" width="10" height="18" fill="#2B2433"/>' },
-  { key: "puerta", label: "Puerta", svg: '<rect x="8" y="22" width="86" height="62" fill="#000" opacity=".2"/><rect x="4" y="18" width="86" height="62" fill="#A7A196"/><path d="M28 80V50a19 19 0 0 1 38 0v30Z" fill="#1A1620"/><path d="M33 52v28M41 46v34M49 44v36M57 46v34M63 52v28M28 60h38M28 70h38" stroke="#6B6474" stroke-width="3"/>' },
-  { key: "puente", label: "Puente", svg: '<rect x="14" y="10" width="72" height="80" fill="#000" opacity=".18"/><rect x="10" y="6" width="72" height="80" fill="#8A5A2B"/><path d="M10 22h72M10 38h72M10 54h72M10 70h72" stroke="#5A3A22" stroke-width="3"/><path d="M14 6v80M78 6v80" stroke="#4A4452" stroke-width="4"/>' },
-  { key: "estandarte", label: "Estandarte", svg: '<rect x="30" y="8" width="5" height="84" fill="#5A3A22"/><path d="M35 14h40v34l-20-10-20 10Z" fill="#B33A3A" stroke="#E3C26A" stroke-width="3"/><circle cx="55" cy="28" r="5" fill="#E3C26A"/>' },
-  { key: "hoguera", label: "Hoguera", svg: '<circle cx="50" cy="50" r="40" fill="#FF9A3D" opacity=".25"/><path d="M26 60 74 40M26 40 74 60" stroke="#4B3018" stroke-width="9" stroke-linecap="round"/><path d="M50 22 C62 38 66 50 50 66 C34 50 38 38 50 22Z" fill="#FF8A2A"/><path d="M50 36 C57 46 58 54 50 62 C42 54 43 46 50 36Z" fill="#FFE08A"/>' },
-];
-const propSvg = (key) => MAP_PROPS.find((p) => p.key === key)?.svg || "";
-// Estructuras: tienen altura y se puede poner algo encima (otra estructura, un estandarte, una antorcha...).
-const STRUCT_H = { muro: 1, torre: 2.6, puerta: 2, caja: 0.6 };
-const shadeHex = (hex, f) => {
-  const n = parseInt(String(hex).slice(1), 16);
-  const r = n >> 16, g = (n >> 8) & 255, b = n & 255;
-  const m = (v) => Math.max(0, Math.min(255, Math.round(f > 0 ? v + (255 - v) * f : v * (1 + f))));
-  return `rgb(${m(r)},${m(g)},${m(b)})`;
-};
-const isoPts = (arr) => arr.map((q) => q[0].toFixed(1) + "," + q[1].toFixed(1)).join(" ");
-// Prisma (bloque) entre dos esquinas de casilla y dos alturas.
-const isoPrism = (P, x0, y0, x1, y1, z0, z1, col, k) => (
-  <g key={k}>
-    <polygon points={isoPts([P(x0, y1, z0), P(x1, y1, z0), P(x1, y1, z1), P(x0, y1, z1)])} fill={shadeHex(col, -0.08)} stroke="rgba(0,0,0,.18)" />
-    <polygon points={isoPts([P(x1, y0, z0), P(x1, y1, z0), P(x1, y1, z1), P(x1, y0, z1)])} fill={shadeHex(col, -0.26)} stroke="rgba(0,0,0,.18)" />
-    <polygon points={isoPts([P(x0, y0, z1), P(x1, y0, z1), P(x1, y1, z1), P(x0, y1, z1)])} fill={shadeHex(col, 0.12)} stroke="rgba(0,0,0,.18)" />
-  </g>
-);
-// Almenas alrededor del borde superior de un bloque.
-const isoMerlons = (P, x0, y0, x1, y1, z, col) => {
-  const list = [];
-  for (let a = x0; a < x1 - 0.2; a += 0.5) list.push([a, y0, a + 0.3, y0 + 0.28], [a, y1 - 0.28, a + 0.3, y1]);
-  for (let a = y0 + 0.5; a < y1 - 0.4; a += 0.5) list.push([x0, a, x0 + 0.28, a + 0.3], [x1 - 0.28, a, x1, a + 0.3]);
-  list.sort((p, q) => p[0] + p[1] - (q[0] + q[1]));
-  return list.map(([a, b, c, d], i) => isoPrism(P, a, b, c, d, z, z + 0.32, col, "m" + i));
-};
-const ISO_STRUCT = {
-  muro: (P, x, y, z) => (
-    <g pointerEvents="none">
-      {isoPrism(P, x, y, x + 1, y + 1, z, z + 1, "#A7A196", "b")}
-      {isoMerlons(P, x, y, x + 1, y + 1, z + 1, "#A7A196")}
-    </g>
-  ),
-  torre: (P, x, y, z) => {
-    const f = (u, v) => P(x + u, y + 0.95, z + v);
-    return (
-      <g pointerEvents="none">
-        {isoPrism(P, x + 0.05, y + 0.05, x + 0.95, y + 0.95, z, z + 2.6, "#B3ADA2", "b")}
-        {isoMerlons(P, x + 0.05, y + 0.05, x + 0.95, y + 0.95, z + 2.6, "#B3ADA2")}
-        <polygon points={isoPts([f(0.44, 1.7), f(0.56, 1.7), f(0.56, 1.2), f(0.44, 1.2)])} fill="#1A1620" />
-      </g>
-    );
-  },
-  puerta: (P, x, y, z, S, rot) => {
-    // Girada, el arco mira a la otra cara visible.
-    const f = (rot || 0) % 2 === 1 ? (u, v) => P(x + 1, y + u, z + v) : (u, v) => P(x + u, y + 1, z + v);
-    const arch = [f(0.22, 0)];
-    for (let i = 0; i <= 10; i++) {
-      const a = (Math.PI * i) / 10;
-      arch.push(f(0.5 - 0.28 * Math.cos(a), 1.1 + 0.3 * Math.sin(a)));
-    }
-    arch.push(f(0.78, 0));
-    const bars = [];
-    for (let u = 0.29; u <= 0.72; u += 0.085) {
-      const a = f(u, 0.3), b = f(u, 1.2);
-      bars.push(<line key={"v" + u} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke="#4A4452" strokeWidth="2" />);
-    }
-    [0.5, 0.8, 1.1].forEach((v) => {
-      const a = f(0.24, v), b = f(0.76, v);
-      bars.push(<line key={"h" + v} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke="#4A4452" strokeWidth="2" />);
-    });
-    return (
-      <g pointerEvents="none">
-        {isoPrism(P, x, y, x + 1, y + 1, z, z + 2, "#A7A196", "b")}
-        <polygon points={isoPts(arch)} fill="#1A1620" />
-        {bars}
-        {isoMerlons(P, x, y, x + 1, y + 1, z + 2, "#A7A196")}
-      </g>
-    );
-  },
-  carro: (P, x, y, z, S, rot) => {
-    const over = (rot || 0) % 2 === 1;
-    // Rueda: elipse en la cara que mira hacia delante a la izquierda.
-    const wheel = (u, v, r, k) => {
-      const pts = [];
-      for (let i = 0; i < 14; i++) {
-        const a = (i / 14) * Math.PI * 2;
-        pts.push(P(x + u + Math.cos(a) * r, y + 0.74, z + v + Math.sin(a) * r * 1.2));
-      }
-      return (
-        <g key={k}>
-          <polygon points={isoPts(pts)} fill="#5A3A22" stroke="#3A2414" strokeWidth="1.2" />
-          <circle cx={P(x + u, y + 0.74, z + v)[0]} cy={P(x + u, y + 0.74, z + v)[1]} r="2.6" fill="#C9A24A" />
-        </g>
-      );
-    };
-    const [cx, cy] = P(x + 0.5, y + 0.5, z);
-    if (over)
-      // Volcado de lado: la caja de pie, las ruedas al aire y fruta por el suelo.
-      return (
-        <g pointerEvents="none">
-          <ellipse cx={cx} cy={cy + 2} rx={S * 0.55} ry={S * 0.22} fill="rgba(0,0,0,.25)" />
-          {isoPrism(P, x + 0.1, y + 0.35, x + 0.9, y + 0.62, z, z + 0.75, "#8A5A2B", "b")}
-          {wheel(0.25, 0.55, 0.17, "w1")}
-          {wheel(0.75, 0.55, 0.17, "w2")}
-          {[[-0.5, 0.3, "#E0763C"], [-0.3, 0.42, "#C0504A"], [0.45, 0.35, "#E3B04B"], [0.6, 0.18, "#7FB55A"], [-0.15, 0.5, "#E0763C"]].map(([dx, dy, c], i) => (
-            <circle key={i} cx={cx + dx * S} cy={cy + dy * S} r={S * 0.07} fill={c} />
-          ))}
-        </g>
-      );
-    return (
-      <g pointerEvents="none">
-        <ellipse cx={cx} cy={cy + 2} rx={S * 0.5} ry={S * 0.2} fill="rgba(0,0,0,.25)" />
-        {isoPrism(P, x + 0.1, y + 0.28, x + 0.9, y + 0.72, z + 0.22, z + 0.62, "#8A5A2B", "b")}
-        {isoPrism(P, x + 0.1, y + 0.28, x + 0.9, y + 0.72, z + 0.62, z + 0.66, "#A8703A", "t")}
-        {wheel(0.25, 0.22, 0.2, "w1")}
-        {wheel(0.75, 0.22, 0.2, "w2")}
-      </g>
-    );
-  },
-  caja: (P, x, y, z) => {
-    const x0 = x + 0.2, x1 = x + 0.8, y0 = y + 0.2, y1 = y + 0.8, z1 = z + 0.6;
-    const st = { stroke: "#5C3E1E", strokeWidth: 2, strokeLinecap: "round" };
-    const L = (a, b, k) => <line key={k} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} {...st} />;
-    return (
-      <g pointerEvents="none">
-        <ellipse cx={P(x + 0.5, y + 0.5, z)[0]} cy={P(x + 0.5, y + 0.5, z)[1] + 2} rx="16" ry="7" fill="rgba(0,0,0,.22)" />
-        {isoPrism(P, x0, y0, x1, y1, z, z1, "#A0703E", "b")}
-        {L(P(x0, y1, z), P(x1, y1, z1), "a")}
-        {L(P(x0, y1, z1), P(x1, y1, z), "b2")}
-        {L(P(x1, y0, z), P(x1, y1, z1), "c")}
-        {L(P(x1, y0, z1), P(x1, y1, z), "d")}
-        <polygon points={isoPts([P(x0, y0, z1), P(x1, y0, z1), P(x1, y1, z1), P(x0, y1, z1)])} fill="none" stroke="#5C3E1E" strokeWidth="2" />
-      </g>
-    );
-  },
-  puente: (P, x, y, z, S, rot) => {
-    // Girado, los tablones y las barandillas cambian de eje.
-    const turned = (rot || 0) % 2 === 1;
-    const lines = [];
-    for (let i = 1; i < 5; i++) {
-      const a = turned ? P(x, y + i / 5, z) : P(x + i / 5, y, z), b = turned ? P(x + 1, y + i / 5, z) : P(x + i / 5, y + 1, z);
-      lines.push(<line key={i} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke="#5A3A22" strokeWidth="1.6" />);
-    }
-    return (
-      <g pointerEvents="none">
-        <polygon points={isoPts([P(x, y, z), P(x + 1, y, z), P(x + 1, y + 1, z), P(x, y + 1, z)])} fill="#8A5A2B" stroke="#5A3A22" />
-        {lines}
-        {turned ? isoPrism(P, x, y, x + 0.08, y + 1, z, z + 0.3, "#6B4426", "r1") : isoPrism(P, x, y, x + 1, y + 0.08, z, z + 0.3, "#6B4426", "r1")}
-        {turned ? isoPrism(P, x + 0.92, y, x + 1, y + 1, z, z + 0.3, "#6B4426", "r2") : isoPrism(P, x, y + 0.92, x + 1, y + 1, z, z + 0.3, "#6B4426", "r2")}
-      </g>
-    );
-  },
-  estandarte: (P, x, y, z, S, rot) => {
-    const [cx, cy] = P(x + 0.5, y + 0.5, z);
-    return (
-      <g pointerEvents="none" transform={(rot || 0) % 2 === 1 ? `translate(${2 * cx} 0) scale(-1 1)` : undefined}>
-        <ellipse cx={cx} cy={cy + 1} rx={S * 0.12} ry={S * 0.06} fill="rgba(0,0,0,.25)" />
-        <rect x={cx - S * 0.04} y={cy - S * 1.5} width={S * 0.08} height={S * 1.5} fill="#5A3A22" />
-        <g className="mh-iso-flag">
-          <path d={`M${cx + S * 0.04} ${cy - S * 1.45} h${S * 0.5} v${S * 0.62} l-${S * 0.25} -${S * 0.14} l-${S * 0.25} ${S * 0.14} Z`} fill="#B33A3A" stroke="#E3C26A" strokeWidth="1.6" />
-          <circle cx={cx + S * 0.29} cy={cy - S * 1.2} r={S * 0.07} fill="#E3C26A" />
-        </g>
-      </g>
-    );
-  },
-};
-// Punto dentro de un polígono (para saber si algo de delante tapa una ficha).
-const pointInPoly = (pt, poly) => {
-  let inside = false;
-  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-    const [xi, yi] = poly[i], [xj, yj] = poly[j];
-    if (yi > pt[1] !== yj > pt[1] && pt[0] < ((xj - xi) * (pt[1] - yi)) / (yj - yi) + xi) inside = !inside;
-  }
-  return inside;
-};
-// Silueta en pantalla de un bloque (hexágono).
-const prismHull = (P, x0, y0, x1, y1, z0, z1) => [P(x0, y0, z1), P(x1, y0, z1), P(x1, y0, z0), P(x1, y1, z0), P(x0, y1, z0), P(x0, y1, z1)];
 // Colores de las transformaciones de personaje (aura en el tablero).
 // Transformación que se ve en el tablero: las que tienen una forma que se activa (como la Forma de Lobo) solo mientras está activa.
 const visibleTransform = (c) => {
@@ -2182,109 +1994,6 @@ const visibleTransform = (c) => {
   return !hasForm || c.f_transformation_form_active ? key : "";
 };
 const TRANSFORM_COLORS = { Vampiro: "#B0243F", "Hombre Lobo": "#C45050", Reanimado: "#6E8B5A", Cambiaformas: "#7F6FD1", Fantasma: "#9FB6C9", Semidiós: "#E3B04B" };
-// Dibuja lo que hay en una casilla, apilado: cada estructura sube la base de lo siguiente.
-const drawIsoStack = (P, x, y, z, S, list) => {
-  let base = z;
-  return list.map((pr) => {
-    const zb = base;
-    if (STRUCT_H[pr.kind]) base += STRUCT_H[pr.kind];
-    if (ISO_STRUCT[pr.kind]) return <g key={pr.id}>{ISO_STRUCT[pr.kind](P, x, y, zb, S, pr.rot)}</g>;
-    const [cx, cy] = P(x + 0.5, y + 0.5, zb);
-    if (ISO_PROPS[pr.kind]) return <g key={pr.id}>{ISO_PROPS[pr.kind](cx, cy, S)}</g>;
-    return <svg key={pr.id} x={cx - S * 0.62} y={cy - S * 1.05} width={S * 1.24} height={S * 1.24} viewBox="0 0 100 100" pointerEvents="none" dangerouslySetInnerHTML={{ __html: propSvg(pr.kind) }} />;
-  });
-};
-// Terrenos que el DJ pinta en el mapa (la hierba es el suelo por defecto). z = altura de la loseta en la vista isométrica.
-const MAP_TERRAINS = [
-  { key: "hierba", label: "Hierba", z: 0, top: ["#A9C48A", "#9DBB7E"], s1: "#7E9A5E", s2: "#6E8A50", flat: "transparent" },
-  { key: "camino", label: "Camino", z: 0, top: ["#CDB78E", "#C4AD83"], s1: "#A08A62", s2: "#8F7A55", flat: "rgba(205,183,142,.55)" },
-  { key: "agua", label: "Agua", z: 0, top: ["#7FB2C9", "#76AAC2"], s1: "#5D8FA6", s2: "#507F95", flat: "rgba(110,170,205,.6)" },
-  { key: "colina", label: "Colina", z: 0.5, top: ["#B8A982", "#B0A17A"], s1: "#8D7F5D", s2: "#7D704F", flat: "rgba(184,169,130,.55)" },
-  { key: "alto", label: "Colina alta", z: 1, top: ["#A99A72", "#A1926A"], s1: "#7E7150", s2: "#6E6244", flat: "rgba(160,145,105,.65)" },
-  { key: "roca", label: "Risco", z: 1.2, top: ["#9AA08E", "#939986"], s1: "#7C8273", s2: "#6C7263", flat: "rgba(140,146,128,.7)" },
-];
-const terrainOf = (key) => MAP_TERRAINS.find((t) => t.key === key) || MAP_TERRAINS[0];
-// Vista isométrica: la hierba con varios tonos y detalles por casilla (siempre los mismos para la misma casilla).
-const GRASS_TONES = ["#A9C48A", "#9DBB7E", "#A4C084", "#98B679"];
-const cellHash = (x, y) => (((x * 73856093) ^ (y * 19349663)) >>> 0) % 997;
-// Decorados con volumen para la vista isométrica (los demás usan su dibujo plano).
-const ISO_PROPS = {
-  arbol: (cx, cy, S) => (
-    <g pointerEvents="none">
-      <ellipse cx={cx} cy={cy + 2} rx={S * 0.42} ry={S * 0.17} fill="rgba(0,0,0,.25)" />
-      <rect x={cx - S * 0.09} y={cy - S * 0.5} width={S * 0.18} height={S * 0.52} fill="#7A4E2A" />
-      <circle cx={cx} cy={cy - S * 0.85} r={S * 0.45} fill="#5E8C46" />
-      <circle cx={cx - S * 0.2} cy={cy - S * 1} r={S * 0.27} fill="#6FA055" />
-      <circle cx={cx + S * 0.17} cy={cy - S * 0.7} r={S * 0.24} fill="#527C3D" />
-    </g>
-  ),
-  pino: (cx, cy, S) => (
-    <g pointerEvents="none">
-      <ellipse cx={cx} cy={cy + 2} rx={S * 0.36} ry={S * 0.15} fill="rgba(0,0,0,.25)" />
-      <rect x={cx - S * 0.07} y={cy - S * 0.36} width={S * 0.14} height={S * 0.38} fill="#6B4426" />
-      <path d={`M${cx} ${cy - S * 1.3} L${cx + S * 0.38} ${cy - S * 0.3} L${cx - S * 0.38} ${cy - S * 0.3} Z`} fill="#3F7A4A" />
-      <path d={`M${cx} ${cy - S * 1.3} L${cx + S * 0.38} ${cy - S * 0.3} L${cx} ${cy - S * 0.36} Z`} fill="#336840" />
-    </g>
-  ),
-  roca: (cx, cy, S) => (
-    <g pointerEvents="none">
-      <ellipse cx={cx} cy={cy + 2} rx={S * 0.45} ry={S * 0.17} fill="rgba(0,0,0,.25)" />
-      <path d={`M${cx - S * 0.4} ${cy} L${cx - S * 0.27} ${cy - S * 0.4} L${cx + S * 0.07} ${cy - S * 0.53} L${cx + S * 0.37} ${cy - S * 0.27} L${cx + S * 0.4} ${cy} Z`} fill="#9A958C" />
-      <path d={`M${cx - S * 0.27} ${cy - S * 0.4} L${cx + S * 0.07} ${cy - S * 0.53} L${cx + S * 0.37} ${cy - S * 0.27} L${cx} ${cy - S * 0.2} Z`} fill="#B7B2A8" />
-    </g>
-  ),
-  hoguera: (cx, cy, S) => (
-    <g pointerEvents="none">
-      <ellipse className="mh-iso-glow" cx={cx} cy={cy} rx={S * 0.8} ry={S * 0.37} fill="#F3A64A" opacity=".3" />
-      <ellipse cx={cx} cy={cy + 1} rx={S * 0.43} ry={S * 0.17} fill="#4A3A2E" />
-      <g stroke="#6B4426" strokeWidth={S * 0.1} strokeLinecap="round">
-        <line x1={cx - S * 0.3} y1={cy + 2} x2={cx + S * 0.3} y2={cy - 3} />
-        <line x1={cx - S * 0.3} y1={cy - 3} x2={cx + S * 0.3} y2={cy + 2} />
-      </g>
-      <g className="mh-iso-fire">
-        <path d={`M${cx - S * 0.23} ${cy - 1} C${cx - S * 0.3} ${cy - S * 0.4} ${cx - S * 0.07} ${cy - S * 0.47} ${cx} ${cy - S * 0.8} C${cx + S * 0.13} ${cy - S * 0.47} ${cx + S * 0.3} ${cy - S * 0.4} ${cx + S * 0.23} ${cy - 1} Z`} fill="#F08A3C" />
-        <path d={`M${cx - S * 0.1} ${cy - 1} C${cx - S * 0.13} ${cy - S * 0.27} ${cx} ${cy - S * 0.33} ${cx + S * 0.03} ${cy - S * 0.5} C${cx + S * 0.1} ${cy - S * 0.3} ${cx + S * 0.17} ${cy - S * 0.23} ${cx + S * 0.1} ${cy - 1} Z`} fill="#F7D35A" />
-      </g>
-    </g>
-  ),
-  cofre: (cx, cy, S) => (
-    <g pointerEvents="none">
-      <ellipse cx={cx} cy={cy + 2} rx={S * 0.43} ry={S * 0.17} fill="rgba(0,0,0,.25)" />
-      <path d={`M${cx - S * 0.4} ${cy - S * 0.4} L${cx} ${cy - S * 0.2} L${cx} ${cy + S * 0.13} L${cx - S * 0.4} ${cy - S * 0.07} Z`} fill="#8A5A2B" />
-      <path d={`M${cx} ${cy - S * 0.2} L${cx + S * 0.4} ${cy - S * 0.4} L${cx + S * 0.4} ${cy - S * 0.07} L${cx} ${cy + S * 0.13} Z`} fill="#6E4521" />
-      <path d={`M${cx - S * 0.4} ${cy - S * 0.4} L${cx} ${cy - S * 0.6} L${cx + S * 0.4} ${cy - S * 0.4} L${cx} ${cy - S * 0.2} Z`} fill="#A8703A" />
-      <path d={`M${cx - S * 0.4} ${cy - S * 0.27} L${cx} ${cy - S * 0.07} L${cx + S * 0.4} ${cy - S * 0.27}`} stroke="#E3C26A" strokeWidth="1.8" fill="none" />
-      <rect x={cx - S * 0.07} y={cy - S * 0.17} width={S * 0.13} height={S * 0.13} fill="#E3C26A" />
-    </g>
-  ),
-  barril: (cx, cy, S) => (
-    <g pointerEvents="none">
-      {[[-0.23, 0], [0.2, 0.07], [0, -0.17]].map(([dx, dy], i) => {
-        const x = cx + dx * S, y = cy + dy * S;
-        return (
-          <g key={i}>
-            <ellipse cx={x} cy={y + 1} rx={S * 0.23} ry={S * 0.1} fill="rgba(0,0,0,.2)" />
-            <rect x={x - S * 0.2} y={y - S * 0.47} width={S * 0.4} height={S * 0.5} rx={S * 0.1} fill="#9A6634" />
-            <ellipse cx={x} cy={y - S * 0.47} rx={S * 0.2} ry={S * 0.09} fill="#B57B44" />
-            <line x1={x - S * 0.2} y1={y - S * 0.3} x2={x + S * 0.2} y2={y - S * 0.3} stroke="#5A3A22" strokeWidth="1.5" />
-            <line x1={x - S * 0.2} y1={y - S * 0.1} x2={x + S * 0.2} y2={y - S * 0.1} stroke="#5A3A22" strokeWidth="1.5" />
-          </g>
-        );
-      })}
-    </g>
-  ),
-  antorcha: (cx, cy, S) => (
-    <g pointerEvents="none">
-      <circle className="mh-iso-glow" cx={cx} cy={cy - S * 1} r={S * 0.4} fill="#F7D35A" opacity=".3" />
-      <ellipse cx={cx} cy={cy + 1} rx={S * 0.13} ry={S * 0.06} fill="rgba(0,0,0,.25)" />
-      <rect x={cx - S * 0.05} y={cy - S * 0.87} width={S * 0.1} height={S * 0.88} fill="#5A3A22" />
-      <g className="mh-iso-fire">
-        <path d={`M${cx - S * 0.13} ${cy - S * 0.87} C${cx - S * 0.17} ${cy - S * 1.1} ${cx} ${cy - S * 1.13} ${cx} ${cy - S * 1.33} C${cx + S * 0.07} ${cy - S * 1.13} ${cx + S * 0.17} ${cy - S * 1.1} ${cx + S * 0.13} ${cy - S * 0.87} Z`} fill="#F3A64A" />
-      </g>
-    </g>
-  ),
-};
-
 // Rangos de Daggerheart en cuadrícula (casillas desde la ficha, contando diagonales).
 const MAP_RANGES = [
   { key: "melee", label: "Cuerpo a cuerpo", max: 1, color: "#D9644E" },
@@ -5041,8 +4750,7 @@ const sharedStyles = `
   /* Tablero: escena de fondo, cuadrícula fina y fichas cuadradas */
   .mh-map { position: relative; aspect-ratio: ${MAP_COLS} / ${MAP_ROWS}; border-radius: 12px; overflow: hidden; background: #2B3A4F center / cover no-repeat; flex-shrink: 0; touch-action: none; user-select: none; }
   .mh-map.is-blank { background-image: linear-gradient(#3F4B5E, #2B3A4F); }
-  .mh-map-bg { position: absolute; inset: -8px; background: center / cover no-repeat; filter: blur(3px); pointer-events: none; }
-  .mh-map-grid { position: absolute; inset: 0; pointer-events: none; background-image: linear-gradient(rgba(255,255,255,.28) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.28) 1px, transparent 1px); background-size: calc(100% / ${MAP_COLS}) calc(100% / ${MAP_ROWS}); }
+  .mh-map-grid { position: absolute; inset: 0; pointer-events: none; --gl: color-mix(in srgb, var(--acc, #E3B04B) 80%, transparent); background-image: linear-gradient(var(--gl) 1.5px, transparent 1.5px), linear-gradient(90deg, var(--gl) 1.5px, transparent 1.5px); background-size: calc(100% / ${MAP_COLS}) calc(100% / ${MAP_ROWS}); }
   .mh-map-range { position: absolute; box-sizing: border-box; background: color-mix(in srgb, var(--rc) 58%, transparent); border: 0 solid var(--rc); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rc) 35%, transparent); pointer-events: none; z-index: 1; }
   .mh-map-menu { min-width: 190px; }
   .mh-map-menu { min-width: 230px; max-width: 280px; }
@@ -5067,9 +4775,6 @@ const sharedStyles = `
   .mh-map-menu { position: absolute; z-index: 8; min-width: 160px; padding: 4px; border-radius: 10px; background: var(--mh-panel); border: 1px solid var(--mh-line2); box-shadow: 0 10px 28px rgba(0,0,0,.35); }
   .mh-map-menu button { width: 100%; display: flex; align-items: center; gap: 8px; padding: 7px 10px; border: 0; border-radius: 7px; background: transparent; color: var(--mh-ink); font: 600 12.5px 'Inter', system-ui, sans-serif; cursor: pointer; text-align: left; }
   .mh-map-menu button:hover, .mh-map-menu button:focus-visible { background: var(--mh-panel2); outline: none; }
-  .mh-map-prop { position: absolute; display: flex; align-items: center; justify-content: center; pointer-events: none; }
-  .mh-map-prop svg { width: 92%; height: 92%; }
-  .mh-map-prop.is-ghost { opacity: .55; box-shadow: inset 0 0 0 2px #F3C24A; border-radius: 6px; }
   .mh-map.is-stamping { cursor: copy; }
   .mh-map-props { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
   .mh-map-props .mh-gm-h2 { margin: 0 4px 0 0; }
@@ -5079,7 +4784,6 @@ const sharedStyles = `
   .mh-map-chip i.is-prop svg { width: 90%; height: 90%; color: inherit; }
   .mh-map-stamphint { font-size: 12px; color: var(--mh-ink3); margin-top: -4px; }
   .mh-map-flat { position: absolute; inset: 0; }
-  .mh-map-terrain { position: absolute; pointer-events: none; }
   .mh-map-tk.is-hidden .mh-map-face, .mh-iso-tk.is-hidden { opacity: .45; }
   .mh-map-tk.is-hidden .mh-map-face { outline: 2px dashed rgba(255,255,255,.85); outline-offset: 2px; filter: saturate(.4); }
   .mh-map-tk.is-hidden::after { content: ""; position: absolute; right: 2%; top: 2%; width: 34%; height: 34%; border-radius: 50%; background: #2a2333 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.9 4.2A10 10 0 0 1 12 4c7 0 10 8 10 8a13 13 0 0 1-1.7 2.7M6.6 6.6C3.6 8.6 2 12 2 12s3 8 10 8a9.7 9.7 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2M2 2l20 20'/%3E%3C/svg%3E") center / 64% no-repeat; box-shadow: 0 1px 3px rgba(0,0,0,.4); pointer-events: none; }
@@ -5096,61 +4800,19 @@ const sharedStyles = `
   .mh-map-puff i:nth-child(4) { left: 14%; top: 52%; --px: -30%; --py: 30%; animation-delay: .04s; }
   .mh-map-puff i:nth-child(5) { left: 42%; top: 52%; --px: 30%; --py: 30%; animation-delay: .08s; }
   @keyframes mh-puff { 0% { opacity: 0; scale: .3; translate: 0 0; } 25% { opacity: 1; scale: 1; } 100% { opacity: 0; scale: 1.5; translate: var(--px) var(--py); } }
-  .mh-iso-tk > :not(.mh-iso-puff) { transition: opacity .55s ease; }
-  .mh-iso-tk.is-vanished { pointer-events: none; }
-  .mh-iso-tk.is-vanished > :not(.mh-iso-puff) { opacity: 0; }
-  .mh-iso-puff circle { fill: rgba(225,222,235,.9); transform-box: fill-box; transform-origin: center; opacity: 0; animation: mh-iso-puff .8s ease-out forwards; }
-  @keyframes mh-iso-puff { 0% { opacity: 0; transform: scale(.3); } 25% { opacity: .95; transform: scale(1); } 100% { opacity: 0; transform: scale(1.6) translateY(-30%); } }
   .mh-map-tk.is-step0 .mh-map-face { animation: mh-hop0 .38s ease-out; }
   .mh-map-tk.is-step1 .mh-map-face { animation: mh-hop1 .38s ease-out; }
   @keyframes mh-hop0 { 0% { translate: 0 0; scale: 1; } 45% { translate: 0 -28%; scale: 1.06; } 80% { translate: 0 0; scale: 1.04 .94; } 100% { translate: 0 0; scale: 1; } }
   @keyframes mh-hop1 { 0% { translate: 0 0; scale: 1; } 45% { translate: 0 -28%; scale: 1.06; } 80% { translate: 0 0; scale: 1.04 .94; } 100% { translate: 0 0; scale: 1; } }
-  .mh-iso-tk.is-step0 { animation: mh-iso-step0 .42s cubic-bezier(.3,.7,.4,1); }
-  .mh-iso-tk.is-step1 { animation: mh-iso-step1 .42s cubic-bezier(.3,.7,.4,1); }
-  @keyframes mh-iso-step0 { 0% { transform: translate(var(--mx), var(--my)); } 50% { transform: translate(calc(var(--mx) * .45), calc(var(--my) * .45 - 16px)); } 100% { transform: translate(0, 0); } }
-  @keyframes mh-iso-step1 { 0% { transform: translate(var(--mx), var(--my)); } 50% { transform: translate(calc(var(--mx) * .45), calc(var(--my) * .45 - 16px)); } 100% { transform: translate(0, 0); } }
   .mh-map-tk.is-attack { z-index: 5; animation: mh-lunge .7s cubic-bezier(.5,0,.3,1) both; }
   @keyframes mh-lunge { 0% { translate: 0 0; } 18% { translate: calc(var(--ax) * -.08) calc(var(--ay) * -.08); } 48% { translate: calc(var(--ax) * .62) calc(var(--ay) * .62); scale: 1.12; } 100% { translate: 0 0; scale: 1; } }
   .mh-map-tk.is-hit { animation: mh-tk-hit .55s .32s ease both; }
   .mh-map-tk.is-hit .mh-map-face { animation: mh-tk-flash .55s .32s ease both; }
   @keyframes mh-tk-hit { 0%, 100% { translate: 0 0; } 20% { translate: -10% 4%; } 40% { translate: 9% -3%; } 60% { translate: -6% 2%; } 80% { translate: 4% 0; } }
   @keyframes mh-tk-flash { 0%, 100% { filter: none; } 25% { filter: brightness(1.8) saturate(.4) drop-shadow(0 0 6px #ff4a3d); } }
-  .mh-iso-tk.is-attack { animation: mh-iso-lunge .7s cubic-bezier(.5,0,.3,1) both; }
-  @keyframes mh-iso-lunge { 0% { transform: translate(0, 0); } 18% { transform: translate(calc(var(--ax) * -.08), calc(var(--ay) * -.08)); } 48% { transform: translate(calc(var(--ax) * .62), calc(var(--ay) * .62)); } 100% { transform: translate(0, 0); } }
-  .mh-iso-tk.is-hit { animation: mh-iso-hit .55s .32s ease both; }
-  @keyframes mh-iso-hit { 0%, 100% { transform: translate(0, 0); filter: none; } 20% { transform: translate(-5px, 2px); filter: brightness(1.8) drop-shadow(0 0 5px #ff4a3d); } 40% { transform: translate(5px, -2px); } 60% { transform: translate(-3px, 1px); } 80% { transform: translate(2px, 0); } }
   @media (prefers-reduced-motion: reduce) { .mh-map-tk.is-attack, .mh-map-tk.is-hit, .mh-map-tk.is-hit .mh-map-face, .mh-iso-tk.is-attack, .mh-iso-tk.is-hit, .mh-map-tk[class*="is-step"] .mh-map-face, .mh-iso-tk[class*="is-step"], .mh-map-puff i, .mh-iso-puff circle, .mh-map-tk.is-poof-show > .mh-map-face { animation: none; } .mh-map .mh-map-tk { transition: none; } }
   .mh-map-props-sep { font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-muted); margin: 0 2px 0 8px; }
-  .mh-isoboard { background: #1E1A27; }
-  html[data-mh-theme="light"] .mh-isoboard { background: #EFE8DB; }
   html[data-mh-theme="light"] .mh-map-stage { background: #EFE8DB; }
-  .mh-isoboard > svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-  .mh-iso-tile { cursor: default; }
-  .mh-isoboard.is-stamping .mh-iso-tile { cursor: copy; }
-  .mh-iso-tk { cursor: default; }
-  .mh-iso-tk.is-movable { cursor: grab; }
-  .mh-iso-tk.is-drag { cursor: grabbing; filter: drop-shadow(0 8px 6px rgba(0,0,0,.35)); }
-  .mh-isoboard .mh-map-iso-btn { background: rgba(34,28,43,.82); }
-  .mh-map-iso-btn { position: absolute; right: 8px; bottom: 8px; z-index: 7; border: 0; border-radius: 20px; padding: 4px 10px; background: rgba(20,14,18,.72); color: #F4EEE2; font: 700 10.5px 'Inter', system-ui, sans-serif; cursor: pointer; }
-  .mh-map-iso-btn:hover { background: rgba(20,14,18,.9); }
-  .mh-map.is-iso { background: radial-gradient(120% 90% at 50% 30%, #4A5A6E, #1F2734); perspective: none; }
-  .mh-map.is-iso .mh-map-plane {
-    position: absolute; left: 7%; top: 9%; width: 86%; height: 86%;
-    transform-origin: 50% 50%; transform: rotateX(60deg) rotateZ(-45deg) scale(.9); transform-style: preserve-3d;
-    background: #6E8F55; border-radius: 4px;
-    box-shadow: 1px 1px 0 #5B4632, 2px 2px 0 #5B4632, 3px 3px 0 #54402D, 4px 4px 0 #54402D, 5px 5px 0 #4C3A29, 6px 6px 0 #4C3A29, 7px 7px 0 #443424, 8px 8px 0 #443424, 9px 9px 0 #3B2D1F, 10px 10px 0 #3B2D1F, 14px 14px 18px rgba(0,0,0,.45);
-  }
-  .mh-map.is-iso .mh-map-cell { position: absolute; background: #8DB36F; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
-  .mh-map.is-iso .mh-map-cell.is-alt { background: #84AA66; }
-  .mh-map.is-iso .mh-map-bg { inset: 0; filter: none; opacity: .9; }
-  .mh-map.is-iso .mh-map-grid { background-image: linear-gradient(rgba(255,255,255,.22) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.22) 1px, transparent 1px); }
-  .mh-map.is-iso .mh-map-tk, .mh-map.is-iso .mh-map-prop { transform-origin: 50% 85%; transform: rotateZ(45deg) rotateX(-60deg) translateY(-26%); }
-  .mh-map.is-iso .mh-map-prop { pointer-events: none; }
-  .mh-map.is-iso .mh-map-prop svg { width: 120%; height: 120%; filter: drop-shadow(0 4px 2px rgba(0,0,0,.35)); }
-  .mh-map.is-iso .mh-map-face { border-radius: 50% 50% 22% 22%; box-shadow: 0 6px 4px -2px rgba(0,0,0,.55); }
-  .mh-map.is-iso .mh-map-tk::before { content: ""; position: absolute; left: 18%; right: 18%; bottom: 2%; height: 14%; border-radius: 50%; background: rgba(0,0,0,.35); }
-  .mh-map.is-iso .mh-map-tk.is-sel::before { background: #F3C24A; box-shadow: 0 0 10px #F3C24A; }
-  .mh-map.is-iso .mh-map-nm { top: 96%; }
   .mh-map-reach { position: absolute; background: rgba(111,191,115,.26); box-shadow: inset 0 0 0 1px rgba(111,191,115,.6); pointer-events: none; }
   .mh-map-drop { position: absolute; box-shadow: inset 0 0 0 2px #F3C24A; border-radius: 6px; pointer-events: none; }
   .mh-map-drop.is-bad { box-shadow: inset 0 0 0 2px #D9644E; }
@@ -5186,20 +4848,12 @@ const sharedStyles = `
   .mh-map-conds { position: absolute; z-index: 4; left: 2%; top: 2%; display: flex; gap: 1px; width: 100%; pointer-events: none; }
   .mh-map-conds i { width: 28%; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; color: #fff; border: 1.5px solid #fff; box-sizing: border-box; box-shadow: 0 1px 3px rgba(0,0,0,.45); }
   .mh-map-tk.is-vanished > .mh-map-fx, .mh-map-tk.is-vanished > .mh-map-conds { display: none; }
-  .mh-iso-ring { fill: none; stroke-width: 3; pointer-events: none; transform-box: fill-box; transform-origin: center; }
-  .mh-iso-ring.ring-rooted { stroke-dasharray: 6 4; animation: mh-rooted 1.8s ease-in-out infinite; }
-  .mh-iso-ring.ring-vuln { stroke-width: 4; filter: drop-shadow(0 0 4px #D9644E); animation: mh-vuln 1.3s ease-in-out infinite; }
-  .mh-iso-ring.ring-shell { fill: rgba(110,139,90,.3); }
-  .mh-iso-ring.ring-ko, .mh-iso-ring.ring-fly { display: none; }
   .mh-iso-tk.is-c-ko > rect, .mh-iso-tk.is-c-ko > image, .mh-iso-tk.is-c-ko > text { filter: grayscale(.9) brightness(.8); }
   .mh-iso-zz text { fill: #E9DDFB; font-weight: 800; font-family: Inter, system-ui, sans-serif; stroke: rgba(0,0,0,.5); stroke-width: 2px; paint-order: stroke; transform-box: fill-box; animation: mh-iso-zz 2.4s ease-in-out infinite; opacity: 0; }
   .mh-iso-zz text + text { animation-delay: 1.2s; }
-  @keyframes mh-iso-zz { 0% { opacity: 0; transform: translate(0, 0); } 30% { opacity: 1; } 100% { opacity: 0; transform: translate(6px, -14px); } }
 
-  @keyframes mh-iso-fly { 0%, 100% { transform: translateY(-10px); } 50% { transform: translateY(-17px); } }
   .mh-iso-tk.is-c-fly > .mh-iso-shadow { transform-box: fill-box; transform-origin: center; animation: mh-fly-shadow 2.2s ease-in-out infinite; }
   .mh-iso-tk.is-c-shell > rect { opacity: .85; }
-  .mh-iso-tk.is-vanished > .mh-iso-ring, .mh-iso-tk.is-vanished > .mh-iso-cond, .mh-iso-tk.is-vanished > .mh-iso-zz { display: none; }
   @media (prefers-reduced-motion: reduce) { .mh-map-fx, .mh-map-fx b, .mh-map-tk.is-c-fly .mh-map-face, .mh-iso-ring, .mh-iso-zz text, .mh-iso-tk[class*="is-c-"] > * { animation: none !important; } }
   .mh-map-tk.is-sel .mh-map-face { box-shadow: 0 0 0 2px #F3C24A, 0 3px 10px rgba(0,0,0,.55); }
   .mh-map-hp { position: absolute; z-index: 3; left: 20%; right: 20%; bottom: 6%; height: 9%; min-height: 3px; border-radius: 3px; background: #2a1f25; overflow: hidden; box-shadow: 0 0 0 1px rgba(0,0,0,.5); }
@@ -5281,14 +4935,6 @@ const sharedStyles = `
   .mh-map { background: radial-gradient(120% 90% at 50% 30%, #2d2f66, #15163a); }
   .mh-map.is-blank { background-image: radial-gradient(120% 90% at 50% 30%, #2d2f66, #15163a); }
   .mh-map-flat { overflow: hidden; }
-  .mh-map-bg { inset: -40px; filter: blur(24px) saturate(1.05) brightness(.82); }
-  .mh-map-tint { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(20,22,64,.32), rgba(10,10,34,.52)); }
-  .mh-map-noise { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: overlay; opacity: .3; z-index: 1; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .55 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23f)'/%3E%3C/svg%3E"); }
-  .mh-map-grid { z-index: 0; background: linear-gradient(rgba(255,255,255,.12), rgba(255,255,255,.05));
-    -webkit-mask: linear-gradient(90deg, #000 calc(100% - 3px), transparent 0) 0 0 / calc(100% / ${MAP_COLS}) calc(100% / ${MAP_ROWS}), linear-gradient(#000 calc(100% - 3px), transparent 0) 0 0 / calc(100% / ${MAP_COLS}) calc(100% / ${MAP_ROWS}); -webkit-mask-composite: source-in;
-    mask: linear-gradient(90deg, #000 calc(100% - 3px), transparent 0) 0 0 / calc(100% / ${MAP_COLS}) calc(100% / ${MAP_ROWS}), linear-gradient(#000 calc(100% - 3px), transparent 0) 0 0 / calc(100% / ${MAP_COLS}) calc(100% / ${MAP_ROWS}); mask-composite: intersect; }
-  .mh-map-terrain { opacity: .55; mix-blend-mode: normal; border-radius: 6px; }
-  .mh-map-prop svg { filter: drop-shadow(0 3px 2px rgba(0,0,0,.35)); }
   .mh-map-hov { position: absolute; pointer-events: none; border-radius: 6px; background: rgba(255,255,255,.14); box-shadow: inset 0 0 0 1px rgba(255,255,255,.4); z-index: 1; }
   .mh-map-reach { background: rgba(227,176,75,.18); box-shadow: inset 0 0 0 2px rgba(227,176,75,.5); border-radius: 6px; z-index: 1; }
   .mh-map-area { position: absolute; pointer-events: none; z-index: 1; background: color-mix(in srgb, var(--ac) 38%, transparent); box-shadow: inset 0 0 0 1.5px var(--ac); border-radius: 4px; }
@@ -5310,12 +4956,9 @@ const sharedStyles = `
   .mh-map .mh-map-tk.is-pet .mh-map-face { width: 58%; height: 58%; background: radial-gradient(circle at 35% 28%, color-mix(in srgb, var(--tc) 30%, #12143a), #0c0d2a 72%); border-radius: 50%; border-width: 2px; border-color: var(--tc); }
   .mh-map-hp { display: none; }
   /* La escena se desenfoca en el sitio y la cuadrícula aparece encima (sin fundido entre imágenes) */
-  .mh-map-bg { animation: mh-gridin 1.2s ease both; }
-  .mh-map-tint { animation: mh-gridin .9s ease .15s both; }
   .mh-map-grid { animation: mh-gridin .9s ease .3s both; }
-  .mh-map-noise { animation: mh-gridin 1s ease .3s both; }
   @keyframes mh-gridin { from { opacity: 0; } to { opacity: 1; } }
-  @media (prefers-reduced-motion: reduce) { .mh-map-bg, .mh-map-tint, .mh-map-grid, .mh-map-noise { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { .mh-map-grid { animation: none; } }
   .mh-map-fit .mh-map { border-radius: 0; }
   .mh-spot-ui { position: absolute; left: 12px; top: 112px; z-index: 7; display: flex; flex-direction: column; gap: 6px; max-width: 250px; }
   .mh-spot-btn { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 7px; padding: 8px 13px; border-radius: 10px; background: rgba(13,13,28,.82); border: 1px solid #ffffff2a; backdrop-filter: blur(4px); color: #fff; font: 600 12.5px Inter, system-ui, sans-serif; }
@@ -5372,7 +5015,6 @@ const sharedStyles = `
   .mh-iso-wind { animation: mh-wind-in .7s ease-out both; } @keyframes mh-wind-in { from { opacity: 0; } to { opacity: 1; } }
   .mh-iso-zone { animation: mh-zone-in .6s ease-out both; } @keyframes mh-zone-in { from { opacity: 0; } to { opacity: 1; } }
   .mh-iso-tk.is-elem-aire .mh-iso-body { animation: mh-iso-hover 2.6s ease-in-out infinite; }
-  @keyframes mh-iso-hover { 0%, 100% { translate: 0 -15px; } 50% { translate: 0 -20px; } }
   .mh-iso-tk.is-elem-bounce .mh-iso-body { animation: mh-elem-bounce .75s cubic-bezier(.3,1.3,.5,1) both; }
   @keyframes mh-elem-bounce { 0% { translate: 0 0; } 30% { translate: 0 -16px; } 55% { translate: 0 0; } 75% { translate: 0 -6px; } 100% { translate: 0 0; } }
   .mh-iso-tk.is-elem-aire.is-elem-bounce .mh-iso-body { animation: mh-iso-hover 2.6s ease-in-out infinite, mh-aire-bump 1.1s cubic-bezier(.25,.7,.3,1) both; }
@@ -5402,7 +5044,6 @@ const sharedStyles = `
   .mh-zone-ripple { transform-box: fill-box; transform-origin: 50% 50%; animation: mh-zone-ripple 2.1s ease-out infinite; } @keyframes mh-zone-ripple { 0% { scale: .5; opacity: .9; } 100% { scale: 1.7; opacity: 0; } }
   @media (prefers-reduced-motion: reduce) { .mh-iso-tk.is-elem-aire .mh-iso-body, .mh-iso-tk.is-elem-bounce .mh-iso-body, .mh-zone-ripple { animation: none !important; } }
   .mh-iso-tk.is-c-fly .mh-iso-body { animation: mh-iso-fly2 2.2s ease-in-out infinite; }
-  @keyframes mh-iso-fly2 { 0%, 100% { transform: translateY(-56px); } 50% { transform: translateY(-64px); } }
   .mh-iso-fire { transform-box: fill-box; transform-origin: 50% 100%; animation: mh-fire .45s ease-in-out infinite; }
   @keyframes mh-fire { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.16) translateY(-1px); } }
   .mh-iso-glow { animation: mh-glow 1.4s ease-in-out infinite; }
@@ -5489,7 +5130,6 @@ const sharedStyles = `
   .mh-map-log-i.is-ko { border-left-color: #E24B4A; background: rgba(110,24,30,.92); }
   @keyframes mh-log-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
   @keyframes mh-log-out { to { opacity: 0; transform: translateY(4px); } }
-  .mh-map-iso-btn { top: 10px; right: 10px; bottom: auto; width: 26px; height: 26px; padding: 0; border-radius: 7px; display: flex; align-items: center; justify-content: center; }
   .mh-map-menu button:disabled { opacity: .5; cursor: not-allowed; }
   .mh-map-menu button:disabled:hover { background: transparent; }
   .mh-renew-row.is-off { opacity: .55; cursor: not-allowed; }
@@ -9416,14 +9056,6 @@ function TokenMenu({ menu, items, onClose }) {
     </div>
   );
 }
-// Vista del tablero: plana (por defecto) o isométrica. Es una preferencia de cada navegador.
-const readIsoPref = () => {
-  try {
-    return localStorage.getItem("mh-map-iso") === "1";
-  } catch (e) {
-    return false;
-  }
-};
 // Tablero con fichas cuadradas. Se arrastran, o se elige una y se pulsa la casilla; también con las flechas.
 function FanFace({ c, col }) {
   const Art = c.weapon ? weaponIcon(c.key) : c.rowCard ? c.Icon || Sparkles : c.subclass ? Flame : DOMAIN_ICONS[c.domain] || Sparkles;
@@ -10003,7 +9635,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement }) {
   );
 }
 
-function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChange, hideIsoBtn, menuFor, fx, efx, hfx, spot, bg, tokens, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
+function MapBoard({ fog, fogView, areas, areaTool, log, menuFor, fx, efx, hfx, spot, bg, tokens, stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
   const ref = useRef(null);
   const dragRef = useRef(null);
   const [drag, setDrag] = useState(null);
@@ -10013,9 +9645,7 @@ function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChang
   rangeIdRef.current = rangeId;
   const [hover, setHover] = useState(null); // casilla bajo el ratón mientras hay un sello elegido
   const painting = useRef(null);
-  const [isoOwn, setIso] = useState(readIsoPref);
   // Tablero de combate: vista plana con la escena difuminada de fondo, casillas de cristal y fichas circulares.
-  const iso = false;
   const overlayEl = useContext(MapOverlayCtx);
   const anim = useAttackFx(fx);
   const eAnim = useElemEvent(efx);
@@ -10033,15 +9663,6 @@ function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChang
       return { x: ((ev.clientX - r.left) / r.width) * MAP_COLS, y: ((ev.clientY - r.top) / r.height) * MAP_ROWS };
     }
   );
-  const toggleIso = () => {
-    const v = !iso;
-    if (onIsoChange) return onIsoChange(v);
-    setIso(v);
-    try {
-      localStorage.setItem("mh-map-iso", v ? "1" : "0");
-    } catch (e) {}
-  };
-  const propAt = (x, y) => props.find((pr) => pr.x === x && pr.y === y);
   // Foco de la mesa: quién tiene la palabra y quién levanta la mano.
   const spotSt = normSpot(spot);
   const spotHands = Object.fromEntries(liveHands(spotSt).map((h, i) => [h.charId, { n: i + 1, kind: h.kind }]));
@@ -10054,7 +9675,6 @@ function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChang
   // Áreas de efecto: casilla -> color.
   const areaMap = {};
   (areas || []).forEach((a) => areaCells(a, tokens).forEach((k) => (areaMap[k] = a.color || "#C0504A")));
-  const isTerrainTool = stampTool && (stampTool.startsWith("t:") || stampTool.startsWith("fog:"));
   useEffect(() => {
     if (!menu) return;
     const close = (e) => (e.type !== "keydown" || e.key === "Escape") && setMenu(null);
@@ -10083,10 +9703,6 @@ function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChang
   };
   const clamp = (v, max) => Math.max(0, Math.min(max - 1, v));
   const cellAt = (e) => {
-    if (iso) {
-      const el = document.elementsFromPoint(e.clientX, e.clientY).find((n) => n.dataset && n.dataset.cell);
-      return el ? { x: Number(el.dataset.x), y: Number(el.dataset.y) } : null;
-    }
     const r = ref.current.getBoundingClientRect();
     return { x: clamp(Math.floor(((e.clientX - r.left) / r.width) * MAP_COLS), MAP_COLS), y: clamp(Math.floor(((e.clientY - r.top) / r.height) * MAP_ROWS), MAP_ROWS) };
   };
@@ -10158,14 +9774,14 @@ function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChang
     const c = cellAt(e);
     if (!c) return;
     painting.current = new Set([c.x + "," + c.y]);
-    if (isTerrainTool || !propAt(c.x, c.y)) onStamp(c.x, c.y);
+    onStamp(c.x, c.y);
     const move = (ev) => {
       const d = cellAt(ev);
       if (!d) return;
       const k = d.x + "," + d.y;
       if (painting.current && !painting.current.has(k)) {
         painting.current.add(k);
-        if (isTerrainTool || !propAt(d.x, d.y)) onStamp(d.x, d.y);
+        onStamp(d.x, d.y);
       }
     };
     window.addEventListener("pointermove", move);
@@ -10175,13 +9791,13 @@ function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChang
     if (measureSuppressed()) return e.preventDefault();
     if (!onUnstamp || e.target.closest(".mh-map-tk")) return;
     const c = cellAt(e);
-    if (!c || !propAt(c.x, c.y)) return;
+    if (!c || !(stampTool && stampTool.startsWith("fog:"))) return;
     e.preventDefault();
     onUnstamp(c.x, c.y);
   };
 
   const boardClick = (e) => {
-    if (stampTool || !selected || e.target.closest(".mh-map-tk") || e.target.closest(".mh-map-iso-btn")) return;
+    if (stampTool || !selected || e.target.closest(".mh-map-tk")) return;
     const c = cellAt(e);
     if (c && !occupied(c.x, c.y, selected.id)) onMove(selected.id, c.x, c.y);
   };
@@ -10219,13 +9835,10 @@ function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChang
   };
   const at = (x, y) => ({ left: (x * 100) / MAP_COLS + "%", top: (y * 100) / MAP_ROWS + "%", width: 100 / MAP_COLS + "%", height: 100 / MAP_ROWS + "%" });
 
-  if (false)
-    return <IsoBoard fog={fog} fogView={fogView} areas={areas} areaTool={areaTool} log={log} hideIsoBtn={hideIsoBtn} menuFor={menuFor} anim={anim} eAnim={eAnim} hAnim={hAnim} spot={spot} tokens={tokens} props={props} terrain={terrain} stampTool={stampTool} onStamp={onStamp} onUnstamp={onUnstamp} canMove={canMove} onMove={onMove} selectedId={selectedId} onSelect={onSelect} onPick={onPick} compact={compact} onToggle={toggleIso} />;
-
   return (
     <div
       ref={ref}
-      className={"mh-map" + (bg ? "" : " is-blank") + (compact ? " is-compact" : "") + (stampTool ? " is-stamping" : "") + (iso ? " is-iso" : "")}
+      className={"mh-map" + (bg ? "" : " is-blank") + (compact ? " is-compact" : "") + (stampTool ? " is-stamping" : "")}
       style={bg ? { backgroundImage: `url("${bg.replace(/"/g, "%22")}")`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
       onClick={boardClick}
       onPointerDown={stampDown}
@@ -10237,18 +9850,8 @@ function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChang
       }}
       onPointerLeave={() => setHover(null)}
     >
-      <div className={iso ? "mh-map-plane" : "mh-map-flat"}>
-      {iso &&
-        Array.from({ length: MAP_COLS * MAP_ROWS }, (_, i) => {
-          const x = i % MAP_COLS, y = Math.floor(i / MAP_COLS);
-          return <div key={"c" + i} className={"mh-map-cell" + ((x + y) % 2 ? " is-alt" : "")} data-cell="1" data-x={x} data-y={y} style={at(x, y)} />;
-        })}
-      {/* La escena va difuminada para que destaquen la cuadrícula y las fichas */}
-      {bg && <div key={bg} className="mh-map-bg" style={{ backgroundImage: `url("${bg.replace(/"/g, "%22")}")` }} />}
-      <div className="mh-map-tint" />
-      {terrain.map((t) => (
-        <div key={"t" + t.x + "," + t.y} className="mh-map-terrain" style={{ ...at(t.x, t.y), background: terrainOf(t.kind).flat }} />
-      ))}
+      <div className="mh-map-flat">
+      {/* La escena es el fondo (nítida); encima van solo la cuadrícula de color y las fichas */}
       {rangeCells.map(([x, y, band]) => (
         <div
           key={"r" + x + "," + y}
@@ -10263,16 +9866,6 @@ function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChang
           }}
         />
       ))}
-      {props.map((pr) => (
-        <div key={pr.id} className="mh-map-prop" style={at(pr.x, pr.y)} title={MAP_PROPS.find((m) => m.key === pr.kind)?.label}>
-          <svg viewBox="0 0 100 100" dangerouslySetInnerHTML={{ __html: propSvg(pr.rot && pr.kind === "carro" ? "carrovolcado" : pr.kind) }} />
-        </div>
-      ))}
-      {stampTool && hover && !propAt(hover.x, hover.y) && (
-        <div className="mh-map-prop is-ghost" style={at(hover.x, hover.y)}>
-          <svg viewBox="0 0 100 100" dangerouslySetInnerHTML={{ __html: propSvg(stampTool) }} />
-        </div>
-      )}
       <div className="mh-map-grid" />
       {Object.keys(areaMap).map((k) => {
         const [x, y] = k.split(",").map(Number);
@@ -10284,7 +9877,6 @@ function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChang
           const x = i % MAP_COLS, y = Math.floor(i / MAP_COLS);
           return inFog(x, y) ? <div key={"f" + i} className={"mh-map-fog" + (fogHide ? "" : " is-gm")} style={at(x, y)} /> : null;
         })}
-      <div className="mh-map-noise" />
       {!rangeTok && reach.map(([x, y]) => (
         <div key={x + "," + y} className="mh-map-reach" style={at(x, y)} />
       ))}
@@ -10411,724 +10003,6 @@ function MapBoard({ fog, fogView, areas, areaTool, log, iso: isoProp, onIsoChang
   );
 }
 
-// Tablero isométrico tipo diorama: losetas con relieve, decorados y fichas de pie.
-// Usa los mismos datos que el tablero plano (fichas, decorados y terreno).
-function IsoBoard({ fog, fogView = "player", areas = [], areaTool, log, hideIsoBtn, menuFor, anim, eAnim, hAnim, spot, tokens: tokensIn, props = [], terrain = [], stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact, onToggle }) {
-  const tokens = useSettledElem(tokensIn);
-  const S = 34;
-  const OX = MAP_ROWS * S + S * 0.6;
-  const OY = S * 2.4;
-  const W = (MAP_COLS + MAP_ROWS) * S + S * 1.2;
-  const H = OY + ((MAP_COLS + MAP_ROWS) * S) / 2 + S * 0.6;
-  const P = (x, y, z = 0) => [OX + (x - y) * S, OY + ((x + y) * S) / 2 - z * S * 0.8];
-  const pts = (arr) => arr.map((q) => q.join(",")).join(" ");
-  const ter = {};
-  terrain.forEach((t) => (ter[t.x + "," + t.y] = t));
-  const tAt = (x, y) => {
-    const t = ter[x + "," + y];
-    const d = terrainOf(t?.kind);
-    return t && t.lvl > 1 ? { ...d, z: d.z * t.lvl } : d;
-  };
-  const svgRef = useRef(null);
-  const dragRef = useRef(null);
-  const [drag, setDrag] = useState(null);
-  const [rangeId, setRangeId] = useState(null);
-  const rangeIdRef = useRef(null);
-  rangeIdRef.current = rangeId;
-  const [menu, setMenu] = useState(null);
-  const boxRef = useRef(null);
-  const droppedRef = useRef(null); // ficha recién soltada: no repite el salto desde su casilla anterior
-  const overlayEl = useContext(MapOverlayCtx);
-  // Casillas cubiertas por áreas de efecto: casilla -> color.
-  const areaMap = {};
-  (areas || []).forEach((a) => areaCells(a, tokens).forEach((k) => (areaMap[k] = a.color || "#C0504A")));
-  const svgPoint = (ev) => {
-    const svg = svgRef.current;
-    if (!svg) return null;
-    const pt = svg.createSVGPoint();
-    pt.x = ev.clientX;
-    pt.y = ev.clientY;
-    const sp = pt.matrixTransform(svg.getScreenCTM().inverse());
-    return { x: sp.x, y: sp.y };
-  };
-  const { measure, measureDown, measureSuppressed } = useMeasure((ev) => {
-    const el = document.elementsFromPoint(ev.clientX, ev.clientY).map((n) => n.closest && n.closest("[data-cx]")).find(Boolean);
-    return el ? { x: Number(el.getAttribute("data-cx")), y: Number(el.getAttribute("data-cy")) } : null;
-  }, svgPoint);
-  const openMenu = (e, t) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (t.vanished || measureSuppressed()) return;
-    const r = boxRef.current.getBoundingClientRect();
-    const n = ((menuFor && menuFor(t)) || []).length;
-    if (!n) return;
-    // Que el menú quepa en la parte visible del tablero (puede estar recortado por el visor).
-    const v = (e.currentTarget.closest(".mh-map-view") || e.currentTarget.closest(".mh-map") || document.body).getBoundingClientRect();
-    const mx = Math.max(v.left + 4, Math.min(e.clientX, v.right - 264));
-    const my = Math.max(v.top + 4, Math.min(e.clientY, v.bottom - 40 - Math.min(n * 34 + 60, 380)));
-    setMenu({ id: t.id, title: t.name, x: mx - r.left, y: my - r.top });
-  };
-  const steps = useMoveFx(tokens.map((t) => [t.id, t.x, t.y]));
-  const vis = useVisFx(tokens);
-  const elemBounce = useElemFx(tokens);
-  const landing = useLanding(tokens);
-  const spotSt = normSpot(spot);
-  const spotHands = Object.fromEntries(liveHands(spotSt).map((h, i) => [h.charId, { n: i + 1, kind: h.kind }]));
-  const spotTok = spotSt.focus ? tokens.find((t) => t.id === spotSt.focus.tokenId && !t.vanished) : null;
-  // Zonas de los elementos: el Fuego y el Agua marcan las casillas cuerpo a cuerpo (cuadradas) y todos marcan la casilla de la ficha.
-  const zones = {};
-  const putZone = (x, y, el, self) => {
-    if (x < 0 || y < 0 || x >= MAP_COLS || y >= MAP_ROWS) return;
-    const k = x + "," + y;
-    if (!zones[k] || (self && !zones[k].self)) zones[k] = { el, self };
-  };
-  tokens.forEach((t) => {
-    if (t.kind !== "pc" || !t.elem || t.vanished || t.down) return;
-    putZone(t.x, t.y, t.elem, true);
-    if (t.elem === "Fuego" || t.elem === "Agua") for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (dx || dy) putZone(t.x + dx, t.y + dy, t.elem, false);
-  });
-  const painting = useRef(null);
-  const occupied = (x, y, exceptId) => {
-    const mv = tokens.find((t) => t.id === exceptId);
-    return tokens.some((t) => t.id !== exceptId && !t.vanished && t.x === x && t.y === y && !(mv && isFlying(mv) !== isFlying(t)));
-  };
-  const selected = tokens.find((t) => t.id === selectedId && canMove(t));
-  const cellFrom = (e) => {
-    const el = document.elementsFromPoint(e.clientX, e.clientY).map((n) => n.closest && n.closest("[data-cx]")).find(Boolean);
-    return el ? { x: Number(el.getAttribute("data-cx")), y: Number(el.getAttribute("data-cy")) } : null;
-  };
-  const propAt = (x, y) => props.find((pr) => pr.x === x && pr.y === y);
-  const propsAt = (x, y) => props.filter((pr) => pr.x === x && pr.y === y);
-  // Se puede estampar si la casilla está vacía o lo de arriba es una estructura (muro, torre, puerta).
-  const canStack = (x, y) => {
-    const list = propsAt(x, y);
-    return !list.length || !!STRUCT_H[list[list.length - 1].kind];
-  };
-  const isTerrainTool = stampTool && (stampTool.startsWith("t:") || stampTool.startsWith("fog:"));
-  // Niebla: el DJ la ve translúcida; los jugadores, opaca y sin lo que hay debajo.
-  const fogOn = !!(fog && fog.on);
-  const fogSet = new Set((fog && fog.revealed) || []);
-  const inFog = (x, y) => fogOn && !fogSet.has(x + "," + y);
-  const fogHide = fogView !== "gm";
-  const tileDown = (e, x, y) => {
-    if (e.button > 0) return;
-    if (areaTool) {
-      e.preventDefault();
-      areaTool.onPlace(x, y);
-      return;
-    }
-    if (stampTool) {
-      e.preventDefault();
-      painting.current = new Set([x + "," + y]);
-      if (stampTool === "rot" || isTerrainTool || canStack(x, y)) onStamp(x, y);
-      const move = (ev) => {
-        const c = cellFrom(ev);
-        if (!c || !painting.current) return;
-        const k = c.x + "," + c.y;
-        if (painting.current.has(k)) return;
-        painting.current.add(k);
-        if (stampTool !== "rot" && (isTerrainTool || canStack(c.x, c.y))) onStamp(c.x, c.y);
-      };
-      window.addEventListener("pointermove", move);
-      window.addEventListener("pointerup", () => { window.removeEventListener("pointermove", move); painting.current = null; }, { once: true });
-      return;
-    }
-    if (selected && !occupied(x, y, selected.id)) onMove(selected.id, x, y);
-  };
-  const tileContext = (e, x, y) => {
-    if (measureSuppressed()) return e.preventDefault();
-    if (!onUnstamp) return;
-    e.preventDefault();
-    // Con un sello elegido, el borrado lo hace eraseDown al pulsar (y al arrastrar).
-    if (!stampTool) onUnstamp(x, y);
-  };
-  // DJ con un sello elegido: el botón derecho borra (lo de más arriba o un nivel de terreno) y, arrastrando, va borrando casillas. Sin regla.
-  const eraseDown = (e) => {
-    if (e.button !== 2 || !onUnstamp) return;
-    e.preventDefault();
-    const first = cellFrom(e);
-    const done = new Set();
-    const hitCell = (c) => {
-      if (!c) return;
-      const k = c.x + "," + c.y;
-      if (done.has(k)) return;
-      done.add(k);
-      onUnstamp(c.x, c.y);
-    };
-    hitCell(first);
-    const move = (ev) => hitCell(cellFrom(ev));
-    const up = (ev) => {
-      if (ev.button !== 2) return;
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", up);
-    };
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", up);
-  };
-  const tokenDown = (e, t) => {
-    if (e.button > 0) return;
-    e.stopPropagation();
-    if (areaTool) {
-      e.preventDefault();
-      areaTool.onPlace(t.x, t.y);
-      return;
-    }
-    if (!canMove(t)) {
-      setRangeId((r) => (r === t.id ? null : t.id));
-      if (onPick) onPick(selectedId === t.id ? null : t.id);
-      return;
-    }
-    e.preventDefault();
-    dragRef.current = { id: t.id, x: t.x, y: t.y, moved: false };
-    setDrag(dragRef.current);
-    const sx = e.clientX, sy = e.clientY;
-    const move = (ev) => {
-      const d = dragRef.current;
-      if (!d) return;
-      const moved = d.moved || Math.hypot(ev.clientX - sx, ev.clientY - sy) > 4;
-      if (!moved) return;
-      // Punto del puntero en coordenadas del dibujo: la ficha lo sigue sin saltar de casilla en casilla.
-      const svg = svgRef.current;
-      const pt = svg.createSVGPoint();
-      pt.x = ev.clientX;
-      pt.y = ev.clientY;
-      const sp = pt.matrixTransform(svg.getScreenCTM().inverse());
-      const c = cellFrom(ev);
-      dragRef.current = { ...d, ...(c || {}), px: sp.x, py: sp.y + S * 0.45, moved: true };
-      setDrag(dragRef.current);
-    };
-    const up = () => {
-      window.removeEventListener("pointermove", move);
-      const d = dragRef.current;
-      dragRef.current = null;
-      setDrag(null);
-      if (!d) return;
-      if (!d.moved) {
-        const showing = rangeIdRef.current === d.id;
-        setRangeId(showing ? null : d.id);
-        onSelect(showing ? null : d.id);
-      } else if (!occupied(d.x, d.y, d.id)) {
-        droppedRef.current = { id: d.id, until: Date.now() + 700 };
-        onMove(d.id, d.x, d.y);
-      }
-    };
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", up, { once: true });
-  };
-  // Casillas iluminadas: alcance de movimiento de la ficha elegida y rangos del menú.
-  const reach = new Set();
-  if (selected && !drag)
-    for (let y = selected.y - MAP_REACH; y <= selected.y + MAP_REACH; y++)
-      for (let x = selected.x - MAP_REACH; x <= selected.x + MAP_REACH; x++) if (x >= 0 && y >= 0 && x < MAP_COLS && y < MAP_ROWS && !(x === selected.x && y === selected.y) && !occupied(x, y)) reach.add(x + "," + y);
-  const rangeTok = tokens.find((t) => t.id === rangeId);
-  const bandAt = (x, y) => {
-    if (!rangeTok) return null;
-    const d = Math.max(Math.abs(x - rangeTok.x), Math.abs(y - rangeTok.y));
-    return d > 0 ? MAP_RANGES.find((r) => d <= r.max) : null;
-  };
-  // Se pinta de atrás hacia delante: por diagonales (x + y), y en cada casilla primero la loseta y luego lo que hay encima.
-  const cells = [];
-  for (let sum = 0; sum <= MAP_COLS + MAP_ROWS - 2; sum++)
-    for (let x = Math.max(0, sum - MAP_ROWS + 1); x <= Math.min(MAP_COLS - 1, sum); x++) cells.push([x, sum - x]);
-  // La ficha que se está arrastrando se dibuja aparte, encima de todo y pegada al puntero.
-  const tokAt = (x, y) => tokens.filter((t) => !(drag && drag.moved && drag.id === t.id) && t.x === x && t.y === y);
-  // Para las siluetas: orden de pintado de cada casilla y formas que dibuja (colina, estructuras, árboles).
-  const cellIdx = {};
-  cells.forEach(([x, y], i) => (cellIdx[x + "," + y] = i));
-  const occShapes = (x, y) => {
-    const out = [];
-    const z = tAt(x, y).z;
-    if (z > 0) {
-      const hull = prismHull(P, x, y, x + 1, y + 1, 0, z);
-      out.push((pt) => pointInPoly(pt, hull));
-    }
-    let base = z;
-    propsAt(x, y).forEach((pr) => {
-      if (STRUCT_H[pr.kind]) {
-        const top = base + STRUCT_H[pr.kind] + (pr.kind === "caja" ? 0 : 0.32);
-        const hull = pr.kind === "caja" ? prismHull(P, x + 0.2, y + 0.2, x + 0.8, y + 0.8, base, top) : prismHull(P, x, y, x + 1, y + 1, base, top);
-        out.push((pt) => pointInPoly(pt, hull));
-        base += STRUCT_H[pr.kind];
-      } else if (pr.kind === "arbol") {
-        const [cx, cy] = P(x + 0.5, y + 0.5, base);
-        out.push((pt) => Math.hypot(pt[0] - cx, pt[1] - (cy - S * 0.85)) < S * 0.45);
-      } else if (pr.kind === "pino") {
-        const [cx, cy] = P(x + 0.5, y + 0.5, base);
-        const tri = [[cx, cy - S * 1.3], [cx + S * 0.38, cy - S * 0.3], [cx - S * 0.38, cy - S * 0.3]];
-        out.push((pt) => pointInPoly(pt, tri));
-      }
-    });
-    return out;
-  };
-  // Hilo discontinuo entre cada mascota y su dueño.
-  const petLinks = tokens
-    .filter((t) => t.kind === "pet" && !t.vanished)
-    .map((t) => {
-      const o = tokens.find((x) => x.kind === "pc" && x.charId === t.ownerCharId && !x.vanished);
-      if (!o || (o.x === t.x && o.y === t.y)) return null;
-      const [ax, ay] = P(t.x + 0.5, t.y + 0.5, tAt(t.x, t.y).z);
-      const [bx, by] = P(o.x + 0.5, o.y + 0.5, tAt(o.x, o.y).z);
-      return <path key={"pl" + t.id} d={`M${ax} ${ay - 4} Q${(ax + bx) / 2} ${Math.min(ay, by) - S * 0.9} ${bx} ${by - 4}`} fill="none" stroke={o.color || "#C9A24A"} strokeWidth="1.6" strokeDasharray="3 3" opacity=".8" pointerEvents="none" />;
-    });
-  const renderTok = (t, cx, cy) => {
-    const movable = canMove(t);
-    const pet = t.kind === "pet";
-    const fly = isFlying(t);
-    const deadFoe = isDeadFoe(t);
-    const koPc = t.kind === "pc" && (mapConds(t).includes("Inconsciente") || t.down);
-    const down = deadFoe || koPc;
-    const sel = selectedId === t.id;
-    const hpFree = t.hp && t.hp[1] > 0 ? (t.hp[1] - t.hp[0]) / t.hp[1] : null;
-    const col = t.kind === "foe" ? "#C0504A" : t.kind === "npc" ? "#7D8BA3" : t.color || "#C9A24A";
-    return (
-      <g
-        key={t.id}
-        className={"mh-iso-tk" + (t.elem ? " is-elem-" + t.elem.toLowerCase() : "") + (elemBounce[t.id] ? " is-elem-bounce" : "") + (landing[t.id] && !floatKind(t) ? " is-land-" + landing[t.id] : "") + (eAnim && eAnim.kind === "burn" && eAnim.to === t.id ? " is-burn" : "") + (hAnim && hAnim.to === t.id ? " is-hurt" : "") + (spotTok && spotTok.id === t.id ? " is-spot" : "") + (movable ? " is-movable" : "") + (drag?.id === t.id && drag.moved ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") : "") + (steps[t.id] && !(anim && anim.from === t.id) && !(droppedRef.current && droppedRef.current.id === t.id && Date.now() < droppedRef.current.until) ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
-        style={anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); if (!tg) return undefined; const [tx, ty] = P(tg.x + 0.5, tg.y + 0.5, tAt(tg.x, tg.y).z); return { "--ax": tx - cx + "px", "--ay": ty - cy + "px" }; })() : steps[t.id] ? (() => { const st = steps[t.id]; const [ox, oy] = P(st.fx + 0.5, st.fy + 0.5, tAt(st.fx, st.fy).z); return { "--mx": ox - cx + "px", "--my": oy - cy + "px" }; })() : undefined}
-        onPointerDown={(e) => tokenDown(e, t)}
-        onContextMenu={(e) => openMenu(e, t)}
-      >
-        <title>{t.vanished ? "" : [t.name, t.trf && "Transformación: " + t.trf, t.beast && "Forma de Bestia: " + t.beast, t.hidden && (t.gmVeil ? "Oculto a los jugadores" : "Escondido"), ...mapConds(t)].filter(Boolean).join(" · ")}</title>
-        {vis[t.id] && (
-          <g key={vis[t.id].n} className="mh-iso-puff" pointerEvents="none">
-            {[[-0.32, -0.5], [0.3, -0.62], [0, -0.95], [-0.2, -0.2], [0.26, -0.22]].map(([dx, dy], k) => (
-              <circle key={k} cx={cx + dx * S} cy={cy + dy * S} r={S * 0.3} style={{ animationDelay: k * 0.05 + "s" }} />
-            ))}
-          </g>
-        )}
-        {sel && <ellipse cx={cx} cy={cy} rx={S * 0.62} ry={S * 0.31} fill="none" stroke="#E3B04B" strokeWidth="3" />}
-        {deadFoe && (
-          <g pointerEvents="none">
-            <ellipse cx={cx + 3} cy={cy + 2} rx={S * 0.66} ry={S * 0.24} fill="#7A1F28" opacity=".55" />
-            <ellipse cx={cx + S * 0.5} cy={cy + S * 0.15} rx={S * 0.18} ry={S * 0.07} fill="#7A1F28" opacity=".5" />
-          </g>
-        )}
-        <ellipse className="mh-iso-shadow" cx={cx} cy={cy} rx={S * (down ? 0.55 : pet ? 0.3 : 0.42)} ry={S * (down ? 0.22 : pet ? 0.15 : 0.21)} fill="rgba(0,0,0,.28)" />
-        {t.elem === "Aire" && !down && !fly && (
-          <g className="mh-iso-wind" pointerEvents="none" transform={`translate(${cx} ${cy}) scale(1 .45)`}>
-            <circle r={S * 0.5} fill="none" stroke="#BFE6F5" strokeWidth="2.4" strokeDasharray="10 12" opacity=".9">
-              <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="5s" repeatCount="indefinite" />
-            </circle>
-            <circle r={S * 0.34} fill="none" stroke="#fff" strokeWidth="1.6" strokeDasharray="6 10" opacity=".7">
-              <animateTransform attributeName="transform" type="rotate" from="360" to="0" dur="3.4s" repeatCount="indefinite" />
-            </circle>
-          </g>
-        )}
-        {fly && <line className="mh-iso-flyline" x1={cx} y1={cy - 2} x2={cx} y2={cy - S * 1.8} stroke="#fff" strokeWidth="1.2" strokeDasharray="2 3" opacity=".85" pointerEvents="none" />}
-        {mapConds(t).map((c) => (
-          <ellipse key={c} className={"mh-iso-ring ring-" + MAP_COND_FX[c].cls} cx={cx} cy={cy} rx={S * 0.52} ry={S * 0.26} stroke={MAP_COND_FX[c].color} />
-        ))}
-        {t.beast && !down && (() => {
-          const bc = beastColor(t.beast);
-          const R = S * 0.6 * sizeK(t);
-          return (
-            <g className="mh-iso-leaves" pointerEvents="none" transform={`translate(${cx} ${cy}) scale(1 .5)`}>
-              <g>
-                <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="9s" repeatCount="indefinite" />
-                {Array.from({ length: 10 }, (_, i) => {
-                  const ang = (i / 10) * Math.PI * 2;
-                  const lx = Math.cos(ang) * R, ly = Math.sin(ang) * R;
-                  return <ellipse key={i} cx={lx} cy={ly} rx={S * 0.13} ry={S * 0.07} fill={i % 2 ? bc : shadeHex(bc, -0.3)} transform={`rotate(${(ang * 180) / Math.PI + 90} ${lx} ${ly})`} />;
-                })}
-              </g>
-            </g>
-          );
-        })()}
-        <g className="mh-iso-hit">
-        <g className="mh-iso-body" transform={sizeK(t) !== 1 ? `translate(${cx} ${cy}) scale(${sizeK(t)}) translate(${-cx} ${-cy})` : undefined}>
-        {t.trf && !down && (() => {
-          const tc = TRANSFORM_COLORS[t.trf] || "#A58BE8";
-          return (
-            <g pointerEvents="none">
-              <ellipse className="mh-iso-aura" cx={cx} cy={cy - S * 0.55} rx={S * 0.62} ry={S * 0.82} fill={tc} />
-              {[0, 1, 2].map((i) => (
-                <circle key={i} className="mh-iso-spark" style={{ animationDelay: -i * 0.7 + "s" }} cx={cx - S * 0.3 + i * S * 0.3} cy={cy - S * 0.2} r={S * 0.06} fill={tc} />
-              ))}
-            </g>
-          );
-        })()}
-        {down ? (
-          deadFoe ? (
-            <g>
-              <rect x={cx - S * 0.5} y={cy - S * 0.42} width={S} height={S * 0.52} rx={S * 0.26} fill="#6E5A5A" stroke="#D9CFCF" strokeWidth="2" opacity=".9" />
-              <g transform={`translate(${cx} ${cy - S * 0.17})`} fill="#fff">
-                <circle r={S * 0.17} />
-                <rect x={-S * 0.09} y={S * 0.09} width={S * 0.18} height={S * 0.1} rx="1" />
-                <circle cx={-S * 0.06} cy={-S * 0.01} r={S * 0.045} fill="#4A2E2E" />
-                <circle cx={S * 0.06} cy={-S * 0.01} r={S * 0.045} fill="#4A2E2E" />
-              </g>
-              <path d={`M${cx + S * 0.55} ${cy - S * 0.6} l${S * 0.18} ${S * 0.18} m0 -${S * 0.18} l-${S * 0.18} ${S * 0.18}`} stroke="#C0504A" strokeWidth="2.4" strokeLinecap="round" />
-            </g>
-          ) : (
-            <g>
-              <rect x={cx - S * 0.5} y={cy - S * 0.42} width={S} height={S * 0.52} rx={S * 0.26} fill="#8E9A92" stroke="#fff" strokeWidth="2" />
-              <text x={cx - S * 0.12} y={cy - S * 0.03} fontSize={S * 0.34} fontWeight="700" fill="#fff" textAnchor="middle" fontFamily="Inter, system-ui, sans-serif" transform={`rotate(-90 ${cx - S * 0.12} ${cy - S * 0.15})`}>
-                {(t.name || "?").trim().charAt(0).toUpperCase()}
-              </text>
-            </g>
-          )
-        ) : (
-        <>
-        {pet && (
-          <path d={`M${cx - S * 0.3} ${cy - S * 0.95} L${cx - S * 0.36} ${cy - S * 1.38} L${cx - S * 0.08} ${cy - S * 1.08} Z M${cx + S * 0.3} ${cy - S * 0.95} L${cx + S * 0.36} ${cy - S * 1.38} L${cx + S * 0.08} ${cy - S * 1.08} Z`} fill="#8C7A5E" stroke={col} strokeWidth="2.4" strokeLinejoin="round" />
-        )}
-        <rect x={cx - S * 0.33} y={cy - S * 1.1} width={S * 0.66} height={S * 1.04} rx={S * 0.33} fill={pet ? "#8C7A5E" : col} stroke={pet ? col : t.elem === "Tierra" ? "#A9742F" : "#fff"} strokeWidth={pet ? 3.2 : t.elem === "Tierra" ? 3.6 : 2.2} />
-        {pet ? null : t.img ? (
-          <>
-            <clipPath id={"isoclip-" + t.id}>
-              <circle cx={cx} cy={cy - S * 0.76} r={S * 0.26} />
-            </clipPath>
-            <image href={t.img} x={cx - S * 0.26} y={cy - S * 1.02} width={S * 0.52} height={S * 0.52} clipPath={`url(#isoclip-${t.id})`} preserveAspectRatio="xMidYMid slice" />
-          </>
-        ) : (
-          <text x={cx} y={cy - S * 0.5} fontSize={S * 0.38} fontWeight="700" fill="#fff" textAnchor="middle" fontFamily="Inter, system-ui, sans-serif">
-            {t.kind === "foe" ? "!" : (t.name || "?").trim().charAt(0).toUpperCase()}
-          </text>
-        )}
-        {hpFree != null && (
-          <>
-            <rect x={cx - S * 0.32} y={cy - S * 1.3} width={S * 0.64} height={S * 0.11} rx={2} fill="#2a1f25" />
-            <rect x={cx - S * 0.32} y={cy - S * 1.3} width={S * 0.64 * Math.max(0, hpFree)} height={S * 0.11} rx={2} fill="#E24B4A" />
-          </>
-        )}
-        </>
-        )}
-        {t.beast && !down && (() => {
-          const BI = beastIcon(t.beast);
-          const ey = cy - S * 1.6;
-          return (
-            <g className="mh-iso-emblem" pointerEvents="none">
-              <circle cx={cx} cy={ey} r={S * 0.26} fill="#2B2433" stroke={beastColor(t.beast)} strokeWidth="2.2" />
-              <BI x={cx - S * 0.16} y={ey - S * 0.16} width={S * 0.32} height={S * 0.32} color={shadeHex(beastColor(t.beast), 0.45)} strokeWidth={2.2} />
-            </g>
-          );
-        })()}
-        {mapConds(t).includes("Inconsciente") && (
-          <g className="mh-iso-zz" pointerEvents="none">
-            <text x={cx + S * 0.3} y={cy - S * (down ? 0.6 : 1.15)} fontSize={S * 0.3}>z</text>
-            <text x={cx + S * 0.45} y={cy - S * (down ? 0.8 : 1.35)} fontSize={S * 0.22}>z</text>
-          </g>
-        )}
-        {mapConds(t).includes("Inmovilizado") && !t.vanished && (
-          <g className="mh-iso-vines" pointerEvents="none">
-            {[0.12, 0.34, 0.56, 0.78].map((h, i) => (
-              <path key={i} d={`M${cx - S * 0.34} ${cy - S * h} Q${cx} ${cy - S * h + S * 0.2} ${cx + S * 0.34} ${cy - S * (h + 0.06)}`} fill="none" stroke="#3f8a4a" strokeWidth={S * 0.09} strokeLinecap="round" />
-            ))}
-            <ellipse cx={cx - S * 0.34} cy={cy - S * 0.6} rx={S * 0.09} ry={S * 0.05} fill="#7fcf86" />
-            <ellipse cx={cx + S * 0.34} cy={cy - S * 0.3} rx={S * 0.09} ry={S * 0.05} fill="#7fcf86" />
-          </g>
-        )}
-        {spotTok && spotTok.id === t.id && !t.vanished && (
-          <g className="mh-iso-spotlight" pointerEvents="none">
-            <defs>
-              <linearGradient id="spot-cone" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stopColor="#ffe9a8" stopOpacity="0" />
-                <stop offset="1" stopColor="#ffe9a8" stopOpacity=".42" />
-              </linearGradient>
-            </defs>
-            <ellipse cx={cx} cy={cy + 1} rx={S * 0.6} ry={S * 0.3} fill="#ffe9a8" fillOpacity=".12" stroke="#ffe9a8" strokeOpacity=".75" strokeWidth="2" />
-            <ellipse className="mh-spot-ring" cx={cx} cy={cy + 1} rx={S * 0.6} ry={S * 0.3} fill="none" stroke="#ffe9a8" strokeWidth="1.4" />
-          </g>
-        )}
-        {t.kind === "pc" && spotHands[t.charId] && !t.vanished && (
-          <g className="mh-iso-hand" pointerEvents="none">
-            <rect x={cx - S * 0.42} y={cy - S * 2.05} width={S * 0.84} height={S * 0.72} rx={S * 0.22} fill={kindOf(spotHands[t.charId].kind).urgent ? "#E0544A" : "#E3B04B"} />
-            <path d={`M${cx - S * 0.1} ${cy - S * 1.34} L${cx + S * 0.04} ${cy - S * 1.15} L${cx + S * 0.16} ${cy - S * 1.34}Z`} fill={kindOf(spotHands[t.charId].kind).urgent ? "#E0544A" : "#E3B04B"} />
-            <text x={cx} y={cy - S * 1.5} textAnchor="middle" fontSize={S * 0.5}>{kindOf(spotHands[t.charId].kind).icon}</text>
-            <circle cx={cx + S * 0.4} cy={cy - S * 2.02} r={S * 0.22} fill="#241a05" stroke="#E3B04B" strokeWidth="1.5" />
-            <text x={cx + S * 0.4} y={cy - S * 1.94} textAnchor="middle" fontSize={S * 0.25} fontWeight="700" fill="#E3B04B" fontFamily="Inter, system-ui, sans-serif">{spotHands[t.charId].n}</text>
-          </g>
-        )}
-        {hAnim && hAnim.to === t.id && !t.vanished && (
-          <g key={hAnim.key} className="mh-iso-hurt" pointerEvents="none">
-            <ellipse className="mh-hurt-ring" cx={cx} cy={cy} rx={S * 0.5} ry={S * 0.25} fill="none" stroke="#E0544A" strokeWidth="3" />
-            <rect className="mh-hurt-glow" x={cx - S * 0.38} y={cy - S * 1.14} width={S * 0.76} height={S * 1.1} rx={S * 0.38} fill="#E0544A" />
-            {[[-0.36, -0.7, -18], [0.38, -0.55, 16], [0.05, -1.05, 4]].map(([dx, dy, rot], i) => (
-              <path key={i} className="mh-hurt-drop" style={{ animationDelay: i * 0.05 + "s", "--dx": dx * 46 + "px" }} d={`M${cx + dx * S} ${cy + dy * S} c-${S * 0.05} -${S * 0.08} -${S * 0.07} -${S * 0.12} 0 -${S * 0.2} c${S * 0.07} ${S * 0.08} ${S * 0.05} ${S * 0.12} 0 ${S * 0.2}z`} fill="#E0544A" transform={`rotate(${rot} ${cx + dx * S} ${cy + dy * S})`} />
-            ))}
-            <text className="mh-hurt-num" x={cx} y={cy - S * 1.55} textAnchor="middle" fontSize={S * 0.52} fontWeight="700" fill="#FF6B5E" stroke="#2a0a0a" strokeWidth="3" paintOrder="stroke" fontFamily="Cinzel, Georgia, serif">−{hAnim.amount} PV</text>
-          </g>
-        )}
-        {eAnim && eAnim.kind === "burn" && eAnim.to === t.id && (
-          <g key={eAnim.key} className="mh-iso-burn" pointerEvents="none">
-            <rect className="mh-burn-glow" x={cx - S * 0.36} y={cy - S * 1.14} width={S * 0.72} height={S * 1.1} rx={S * 0.36} fill="#FF5A1F" />
-            {[-0.24, 0, 0.24].map((dx, i) => (
-              <g key={i} transform={`translate(${cx + dx * S} ${cy - S * 0.55}) scale(${S / 34})`}>
-                <g className="mh-burn-flame" style={{ animationDelay: 0.9 + i * 0.13 + "s" }}>
-                  <path d="M0 0 C-7 -6 -4 -13 0 -20 C2 -13 8 -11 7 -4 C7 0 4 4 0 4 Z" fill="#FF7A2E" />
-                  <path d="M0 0 C-3 -3 -2 -7 0 -10 C1 -6 4 -5 3 -2 C3 0 1 2 0 2 Z" fill="#FFD27A" />
-                </g>
-              </g>
-            ))}
-            <g transform={`translate(${cx} ${cy - S * 1.95})`}>
-              <g className="mh-burn-die">
-                <rect x={-S * 0.5} y={-S * 0.2} width={S} height={S * 0.4} rx={S * 0.12} fill="#2b1608" stroke="#FF7A2E" strokeWidth="1.6" />
-                <text y={S * 0.09} textAnchor="middle" fontSize={S * 0.25} fontWeight="700" fill="#FFD27A" fontFamily="Inter, system-ui, sans-serif">d10 · {eAnim.roll}</text>
-              </g>
-            </g>
-          </g>
-        )}
-        {t.say && !t.vanished && (
-          <g className="mh-iso-say" pointerEvents="none">
-            <rect x={cx - S * 0.52} y={cy - S * 1.62} width={S * 1.04} height={S * 0.34} rx={S * 0.12} fill="#E3B04B" />
-            <path d={`M${cx - S * 0.08} ${cy - S * 1.28} L${cx} ${cy - S * 1.16} L${cx + S * 0.08} ${cy - S * 1.28}Z`} fill="#E3B04B" />
-            <text x={cx} y={cy - S * 1.38} textAnchor="middle" fontSize={S * 0.22} fontWeight="700" fill="#241a05">{t.say}</text>
-          </g>
-        )}
-        {mapConds(t).map((c, k) => {
-          const { Icon: CI, color } = MAP_COND_FX[c];
-          const bx = cx - S * 0.36 + k * S * 0.3;
-          const by = cy - S * 1.08;
-          return (
-            <g key={c} className="mh-iso-cond" pointerEvents="none">
-              <circle cx={bx} cy={by} r={S * 0.15} fill={color} stroke="#fff" strokeWidth="1.5" />
-              <CI x={bx - S * 0.095} y={by - S * 0.095} width={S * 0.19} height={S * 0.19} color="#fff" strokeWidth={2.6} />
-            </g>
-          );
-        })}
-        </g>
-        </g>
-      </g>
-    );
-  };
-  return (
-    <div ref={boxRef} className={"mh-map mh-isoboard" + (compact ? " is-compact" : "") + (stampTool ? " is-stamping" : "")} onPointerDownCapture={stampTool ? eraseDown : measureDown}>
-      <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" onContextMenu={(e) => e.preventDefault()}>
-        {/* Dos pasadas: primero todo el suelo y luego, de atrás hacia delante, decorados y fichas (con su nombre).
-            Así el suelo nunca tapa a una ficha ni a su nombre, y una ficha de delante sí tapa a la de detrás. */}
-        {/* De atrás hacia delante, cada casilla con lo que tiene encima: así una colina o un muro de delante tapan lo que hay detrás. */}
-        {cells.map(([x, y]) => ["ground", "things"].map((layer) => {
-          const tr = tAt(x, y);
-          const z = tr.z;
-          const a = P(x, y, z), b = P(x + 1, y, z), c = P(x + 1, y + 1, z), d = P(x, y + 1, z);
-          const band = bandAt(x, y);
-          const lit = !rangeTok && reach.has(x + "," + y);
-          const zone = zones[x + "," + y];
-          const dropHere = drag?.moved && drag.x === x && drag.y === y;
-          const here = tokAt(x, y);
-          const prs = propsAt(x, y);
-          const pr = prs[0];
-          const [cx, cy] = P(x + 0.5, y + 0.5, z);
-          const misty = inFog(x, y);
-          const fogged = misty && fogHide;
-          if (layer === "things" && !prs.length && !here.length && !misty) return null;
-          return layer === "ground" ? (
-            <g key={"g" + x + "," + y}>
-              {z > 0 && (
-                <>
-                  <polygon points={pts([d, c, P(x + 1, y + 1, 0), P(x, y + 1, 0)])} fill={fogged ? "#231F2C" : tr.s1} data-cx={x} data-cy={y} onPointerDown={(e) => tileDown(e, x, y)} onContextMenu={(e) => tileContext(e, x, y)} />
-                  <polygon points={pts([c, b, P(x + 1, y, 0), P(x + 1, y + 1, 0)])} fill={fogged ? "#1C1925" : tr.s2} data-cx={x} data-cy={y} onPointerDown={(e) => tileDown(e, x, y)} onContextMenu={(e) => tileContext(e, x, y)} />
-                </>
-              )}
-              <polygon
-                points={pts([a, b, c, d])}
-                fill={fogged ? ((x + y) % 2 ? "#2C2737" : "#302B3C") : tr.key === "hierba" ? GRASS_TONES[cellHash(x, y) % 4] : tr.top[(x + y) % 2]}
-                stroke="rgba(0,0,0,.12)"
-                strokeWidth="1"
-                data-cx={x}
-                data-cy={y}
-                className="mh-iso-tile"
-                onPointerDown={(e) => tileDown(e, x, y)}
-                onContextMenu={(e) => tileContext(e, x, y)}
-              />
-              {(() => {
-                // Detalles del suelo: oleaje en el agua, piedras en el camino y alguna flor en la hierba.
-                if (fogged) return null;
-                const [mx, my] = P(x + 0.5, y + 0.5, z);
-                const h = cellHash(x, y);
-                if (tr.key === "agua")
-                  return <path d={`M${mx - S * 0.4} ${my} q${S * 0.13} -${S * 0.1} ${S * 0.27} 0 t${S * 0.27} 0 t${S * 0.27} 0`} stroke="#E6F2F8" strokeWidth="1.4" fill="none" opacity=".75" pointerEvents="none" />;
-                if (tr.key === "camino")
-                  return (
-                    <g fill="#B9A67A" pointerEvents="none">
-                      <ellipse cx={mx - S * 0.2} cy={my - S * 0.07} rx={S * 0.13} ry={S * 0.07} />
-                      <ellipse cx={mx + S * 0.2} cy={my + S * 0.1} rx={S * 0.12} ry={S * 0.06} />
-                    </g>
-                  );
-                if (tr.key === "hierba" && h % 100 < 9 && !propAt(x, y))
-                  return (
-                    <g fill={h % 2 ? "#F3C24A" : "#E98BA6"} pointerEvents="none">
-                      <circle cx={mx - S * 0.27} cy={my + S * 0.07} r={S * 0.06} />
-                      <circle cx={mx + S * 0.17} cy={my - S * 0.1} r={S * 0.06} />
-                      <circle cx={mx + S * 0.3} cy={my + S * 0.13} r={S * 0.05} />
-                    </g>
-                  );
-                return null;
-              })()}
-              {areaMap[x + "," + y] && <polygon className="mh-iso-area" points={pts([a, b, c, d])} fill={areaMap[x + "," + y]} fillOpacity=".32" stroke={areaMap[x + "," + y]} strokeWidth="1.6" pointerEvents="none" />}
-              {zone && !fogged && (
-                <g pointerEvents="none" className={"mh-iso-zone is-" + zone.el.toLowerCase() + (zone.self ? " is-self" : "")}>
-                  <polygon points={pts([a, b, c, d])} fill={ELEM_COL[zone.el]} fillOpacity={zone.self ? (zone.el === "Tierra" ? 0.24 : 0.16) : 0.26} stroke={ELEM_COL[zone.el]} strokeOpacity={zone.self ? 0.95 : 0.7} strokeWidth={zone.self ? 3 : 1.5} strokeLinejoin="round" />
-                  {zone.el === "Fuego" && !zone.self && (
-                    <g transform={`translate(${cx} ${cy + S * 0.14}) scale(${S / 40})`}>
-                      <g className="mh-iso-fire"><path d="M-10 0 C-16 -5 -13 -11 -10 -17 C-8 -11 -3 -9 -4 -3 C-4 0 -7 3 -10 3 Z" fill="#FF7A2E" /><path d="M-10 0 C-12 -2 -11 -6 -10 -9 C-9 -6 -7 -5 -7 -2 C-7 0 -9 1 -10 1 Z" fill="#FFD27A" /></g>
-                      <g className="mh-iso-fire" style={{ animationDelay: "-.2s" }}><path d="M9 4 C4 -1 6 -7 9 -13 C11 -7 15 -5 14 1 C14 4 12 7 9 7 Z" fill="#FF8F3A" /><path d="M9 4 C7 2 8 -2 9 -5 C10 -2 12 -1 12 2 C12 4 10 5 9 5 Z" fill="#FFD27A" /></g>
-                    </g>
-                  )}
-                  {zone.el === "Agua" && !zone.self && <ellipse className="mh-zone-ripple" cx={cx} cy={cy} rx={S * 0.3} ry={S * 0.15} fill="none" stroke="#BDE4FA" strokeWidth="1.6" style={{ animationDelay: -((x * 5 + y * 3) % 7) * 0.3 + "s" }} />}
-                </g>
-              )}
-              {band && <polygon points={pts([a, b, c, d])} fill={band.color} fillOpacity=".42" pointerEvents="none" />}
-              {band &&
-                [[x, y - 1, a, b], [x + 1, y, b, c], [x, y + 1, c, d], [x - 1, y, d, a]].map(([nx, ny, p1, p2], k) =>
-                  bandAt(nx, ny)?.key !== band.key ? <line key={"e" + k} x1={p1[0]} y1={p1[1]} x2={p2[0]} y2={p2[1]} stroke={band.color} strokeWidth="2.6" strokeLinecap="round" pointerEvents="none" /> : null
-                )}
-              {lit && <polygon points={pts([a, b, c, d])} fill="#6FBF73" fillOpacity=".3" stroke="#6FBF73" strokeOpacity=".8" pointerEvents="none" />}
-              {dropHere && <polygon points={pts([a, b, c, d])} fill="none" stroke={occupied(x, y, drag.id) ? "#D9644E" : "#F3C24A"} strokeWidth="3" pointerEvents="none" />}
-            </g>
-          ) : (
-            <g key={"t" + x + "," + y}>
-              {prs.length > 0 && !fogged && (
-                // Mientras el DJ decora, los decorados se pueden pulsar (es su casilla, no la de detrás).
-                <g className={"mh-iso-prop" + (stampTool ? " is-hit" : "")} data-cx={x} data-cy={y} onPointerDown={(e) => tileDown(e, x, y)} onContextMenu={(e) => tileContext(e, x, y)}>
-                  {drawIsoStack(P, x, y, z, S, prs)}
-                </g>
-              )}
-              {!fogged && [...here].sort((p, q) => isFlying(p) - isFlying(q)).map((t) => renderTok(t, cx, cy))}
-              {misty && (
-                <g className={"mh-fog" + (fogHide ? "" : " is-gm")} pointerEvents="none">
-                  {!fogHide && <polygon points={pts([a, b, c, d])} fill="#1E1A27" fillOpacity=".42" />}
-                  {[[-0.2, -0.04, 0.36], [0.22, 0.05, 0.31], [0.02, -0.24, 0.29]].map(([dx, dy, r], i) => (
-                    <ellipse key={i} className="mh-fog-puff" style={{ animationDelay: -(((x * 3 + y * 7 + i * 5) % 10) * 0.45) + "s" }} cx={cx + dx * S} cy={cy + dy * S - S * 0.14} rx={r * S * 1.35} ry={r * S * 0.78} fill={fogHide ? "#3B3547" : "#9A93B2"} fillOpacity={fogHide ? 0.92 : 0.3} />
-                  ))}
-                </g>
-              )}
-            </g>
-          );
-        }))}
-        {petLinks}
-        {tokens.map((t) => {
-          if (t.vanished || (drag && drag.moved && drag.id === t.id) || (fogHide && inFog(t.x, t.y))) return null;
-          const z0 = tAt(t.x, t.y).z;
-          const [gx, gy] = P(t.x + 0.5, t.y + 0.5, z0);
-          const k = sizeK(t);
-          const lift = isFlying(t) ? 60 : 0;
-          // Puntos de muestra de la ficha en pantalla: si varios quedan dentro de algo pintado después (delante), está tapada.
-          const rx0 = gx - S * 0.3 * k, rx1 = gx + S * 0.3 * k, ry0 = gy - lift - S * 1.05 * k, ry1 = gy - lift - S * 0.12 * k;
-          const samples = [];
-          for (let i = 0; i < 3; i++) for (let j = 0; j < 4; j++) samples.push([rx0 + ((rx1 - rx0) * (i + 0.5)) / 3, ry0 + ((ry1 - ry0) * (j + 0.5)) / 4]);
-          const hit = samples.map(() => false);
-          const ti = cellIdx[t.x + "," + t.y];
-          for (let dy = -1; dy <= 3; dy++)
-            for (let dx = -1; dx <= 3; dx++) {
-              const nx = t.x + dx, ny = t.y + dy;
-              if (nx < 0 || ny < 0 || nx >= MAP_COLS || ny >= MAP_ROWS || cellIdx[nx + "," + ny] <= ti) continue;
-              occShapes(nx, ny).forEach((sh) => samples.forEach((pt, si) => !hit[si] && sh(pt) && (hit[si] = true)));
-            }
-          if (hit.filter(Boolean).length < 5) return null;
-          const col = t.kind === "foe" ? "#E07A6E" : t.kind === "npc" ? "#A9B4C6" : t.color || "#C9A24A";
-          return (
-            <rect key={"gh" + t.id} className="mh-iso-ghost" x={gx - S * 0.33 * k} y={gy - lift - S * 1.1 * k} width={S * 0.66 * k} height={S * 1.04 * k} rx={S * 0.33 * k} fill="none" stroke={col} strokeWidth="2.2" strokeDasharray="5 3" pointerEvents="none" />
-          );
-        })}
-        {anim && (anim.kind || "melee") !== "melee" && (() => {
-          const fa = tokens.find((x) => x.id === anim.from), fb = tokens.find((x) => x.id === anim.to);
-          if (!fa || !fb) return null;
-          const [ax, ay] = P(fa.x + 0.5, fa.y + 0.5, tAt(fa.x, fa.y).z);
-          const [bx, by] = P(fb.x + 0.5, fb.y + 0.5, tAt(fb.x, fb.y).z);
-          const f2 = anim.to2 ? tokens.find((x) => x.id === anim.to2) : null;
-          const b2 = f2 ? (() => { const [qx, qy] = P(f2.x + 0.5, f2.y + 0.5, tAt(f2.x, f2.y).z); return [qx, qy - S * 0.6]; })() : null;
-          return <ShotFx key={anim.key} kind={anim.kind} a={[ax, ay - S * 0.65]} b={[bx, by - S * 0.6]} b2={b2} size={S} />;
-        })()}
-        {eAnim && eAnim.kind === "wave" && (() => {
-          const tg = tokens.find((x) => x.id === eAnim.to);
-          if (!tg) return null;
-          const zt = tAt(tg.x, tg.y).z;
-          const ring = (R) => pts([P(tg.x - R, tg.y - R, zt), P(tg.x + 1 + R, tg.y - R, zt), P(tg.x + 1 + R, tg.y + 1 + R, zt), P(tg.x - R, tg.y + 1 + R, zt)]);
-          return (
-            <g key={eAnim.key} pointerEvents="none">
-              {[1, 2, 3].map((R) => (
-                <polygon key={R} className="mh-wave" style={{ animationDelay: (R - 1) * 0.3 + "s" }} points={ring(R)} fill="none" stroke="#4FA8E8" strokeWidth="3" strokeLinejoin="round" />
-              ))}
-              {(eAnim.ids || []).map((id) => {
-                const o = tokens.find((x) => x.id === id);
-                if (!o) return null;
-                const [ox, oy] = P(o.x + 0.5, o.y + 0.5, tAt(o.x, o.y).z);
-                return (
-                  <g key={id} transform={`translate(${ox} ${oy - S * 1.7})`}>
-                    <g className="mh-chip-pop">
-                      <rect x={-S * 0.55} y={-S * 0.17} width={S * 1.1} height={S * 0.34} rx={S * 0.17} fill="#A58BE8" />
-                      <text y={S * 0.08} textAnchor="middle" fontSize={S * 0.2} fontWeight="700" fill="#fff" fontFamily="Inter, system-ui, sans-serif">+1 Estrés</text>
-                    </g>
-                  </g>
-                );
-              })}
-            </g>
-          );
-        })()}
-        {spotTok && (() => {
-          const [fx0, fy0] = P(spotTok.x + 0.5, spotTok.y + 0.5, tAt(spotTok.x, spotTok.y).z);
-          return (
-            <g pointerEvents="none" className="mh-spot-dim">
-              <mask id="spot-mask">
-                <rect x="-50" y="-50" width={W + 100} height={H + 100} fill="#fff" />
-                <ellipse cx={fx0} cy={fy0 - S * 0.4} rx={S * 3.4} ry={S * 2.1} fill="#000" />
-              </mask>
-              <rect x="-50" y="-50" width={W + 100} height={H + 100} fill="#04040f" fillOpacity=".2" mask="url(#spot-mask)" />
-            </g>
-          );
-        })()}
-        {measure && (() => {
-          const d = cellDist(measure.from, measure.to);
-          const band = rangeBandOf(d);
-          const zt = tAt(measure.to.x, measure.to.y).z;
-          const [ax, ay] = P(measure.from.x + 0.5, measure.from.y + 0.5, tAt(measure.from.x, measure.from.y).z);
-          const corners = [P(measure.to.x, measure.to.y, zt), P(measure.to.x + 1, measure.to.y, zt), P(measure.to.x + 1, measure.to.y + 1, zt), P(measure.to.x, measure.to.y + 1, zt)];
-          const bx = measure.pt.x, by = measure.pt.y;
-          const label = d + (d === 1 ? " casilla" : " casillas") + " · " + band.label;
-          const w = label.length * S * 0.168 + S * 0.5;
-          return (
-            <g pointerEvents="none">
-              <polygon points={pts(corners)} fill={band.color} fillOpacity=".3" stroke={band.color} strokeWidth="2.4" />
-              <ellipse cx={ax} cy={ay} rx={S * 0.18} ry={S * 0.09} fill={band.color} stroke="#fff" strokeWidth="2" />
-              <line x1={ax} y1={ay} x2={bx} y2={by} stroke="rgba(20,14,18,.6)" strokeWidth="6" strokeLinecap="round" />
-              <line x1={ax} y1={ay} x2={bx} y2={by} stroke={band.color} strokeWidth="3" strokeLinecap="round" strokeDasharray="8 6" />
-              <g transform={`translate(${bx + S * 0.35} ${by - S * 0.55})`}>
-                <rect x="0" y={-S * 0.36} width={w} height={S * 0.52} rx={S * 0.14} fill="rgba(20,14,18,.86)" stroke={band.color} strokeWidth="1.5" />
-                <text x={S * 0.25} y="0" fontSize={S * 0.3} fontWeight="700" fill="#F4EEE2" fontFamily="Inter, system-ui, sans-serif">
-                  {label}
-                </text>
-              </g>
-            </g>
-          );
-        })()}
-        {drag && drag.moved && drag.px != null && (() => {
-          const t = tokens.find((x) => x.id === drag.id);
-          return t ? renderTok(t, drag.px, drag.py) : null;
-        })()}
-      </svg>
-      {menu && (() => {
-        const t = tokens.find((x) => x.id === menu.id);
-        if (!t) return null;
-        const items = (menuFor && menuFor(t)) || [];
-        if (!items.length) return null;
-        return <TokenMenu menu={menu} items={items} onClose={() => setMenu(null)} />;
-      })()}
-      {rangeTok && (() => {
-        // La leyenda va en la capa fija del visor (siempre a la derecha aunque desplaces el mapa).
-        const legend = (
-          <div className="mh-map-legend" onPointerDown={(e) => e.stopPropagation()}>
-            {MAP_RANGES.map((r) => (
-              <span key={r.key}>
-                <i style={{ background: r.color }} />
-                {r.label}
-              </span>
-            ))}
-            <button type="button" aria-label="Ocultar alcance" title="Ocultar alcance" onClick={() => setRangeId(null)}>
-              <X size={11} />
-            </button>
-          </div>
-        );
-        return overlayEl ? createPortal(legend, overlayEl) : legend;
-      })()}
-      {overlayEl ? createPortal(<MapLog log={log} />, overlayEl) : <MapLog log={log} />}
-    </div>
-  );
-}
-
-// Ventana del tablero: lo escala para cubrir toda la caja (como la imagen de la escena) y deja
-// desplazarse por lo que no cabe arrastrando el fondo o con la rueda. Al abrirse se centra en "focus".
-// Capa fija sobre el visor (no se desplaza con el mapa): ahí van la leyenda del alcance y los avisos.
 const MapOverlayCtx = createContext(null);
 function MapViewport({ focus, children }) {
   const ref = useRef(null);
@@ -11192,7 +10066,7 @@ function MapViewport({ focus, children }) {
     return () => el.removeEventListener("wheel", onWheel);
   }, []);
   const down = (e) => {
-    if (e.button > 0 || e.target.closest(".mh-map-tk") || e.target.closest(".mh-iso-tk") || e.target.closest(".is-stamping")) return;
+    if (e.button > 0 || e.target.closest(".mh-map-tk") || e.target.closest(".is-stamping")) return;
     pan.current = { x: e.clientX, y: e.clientY, l: ref.current.scrollLeft, t: ref.current.scrollTop, moved: false };
   };
   const move = (e) => {
@@ -14964,6 +13838,7 @@ export default function App({ onSignOut }) {
   // Niebla del mapa: { on, revealed: ["x,y"...], auto }.
   const fogOf = (f) => (f && !Array.isArray(f) ? { on: false, revealed: [], auto: true, ...f } : { on: false, revealed: [], auto: true });
   const setFog = (patch) => mutateMap(viewingCampaignId, (f) => ({ ...fogOf(f), ...(typeof patch === "function" ? patch(fogOf(f)) : patch) }), "fog");
+  // Niebla: pinta (despeja o cubre) una casilla.
   const stampProp = (kind, x, y) =>
     kind && kind.startsWith("fog:")
       ? setFog((f) => {
@@ -14973,48 +13848,9 @@ export default function App({ onSignOut }) {
           else rv.delete(k);
           return { revealed: [...rv] };
         })
-      : kind === "rot"
-      ? mutateMap(viewingCampaignId, (props) => {
-          // Gira lo de más arriba de la casilla.
-          const idx = props.map((pr, i) => (pr.x === x && pr.y === y ? i : -1)).filter((i) => i >= 0).pop();
-          return idx == null ? props : props.map((pr, i) => (i === idx ? { ...pr, rot: ((pr.rot || 0) + 1) % 4 } : pr));
-        }, "props")
-      : kind && kind.startsWith("t:")
-      ? mutateMap(viewingCampaignId, (ter) => {
-          const k = kind.slice(2);
-          const cur = ter.find((t) => t.x === x && t.y === y);
-          const rest = ter.filter((t) => !(t.x === x && t.y === y));
-          // Colinas y riscos se apilan: pintar otra vez la misma sube un nivel (hasta 4).
-          if (cur && cur.kind === k && terrainOf(k).z > 0) return [...rest, { ...cur, lvl: Math.min(4, (cur.lvl || 1) + 1) }];
-          return k === "hierba" ? rest : [...rest, { x, y, kind: k }];
-        }, "terrain")
-      : mutateMap(
-          viewingCampaignId,
-          (props) => {
-            // Encima de una estructura se puede apilar; si no, la casilla ya está ocupada.
-            const here = props.filter((pr) => pr.x === x && pr.y === y);
-            if (here.length && !STRUCT_H[here[here.length - 1].kind]) return props;
-            return [...props, { id: "p" + Date.now() + Math.random().toString(36).slice(2, 5), kind, x, y }];
-          },
-          "props"
-        );
-  const unstampProp = (x, y) => {
-    // Con la niebla, el clic derecho hace lo contrario (despejar ↔ cubrir).
-    if (stampTool && stampTool.startsWith("fog:")) return stampProp(stampTool === "fog:reveal" ? "fog:hide" : "fog:reveal", x, y);
-    // Con el terreno, el clic derecho baja un nivel (o vuelve a hierba).
-    if (stampTool && stampTool.startsWith("t:"))
-      return mutateMap(viewingCampaignId, (ter) => ter.flatMap((t) => (t.x === x && t.y === y ? ((t.lvl || 1) > 1 ? [{ ...t, lvl: t.lvl - 1 }] : []) : [t])), "terrain");
-    // Quita solo lo de más arriba de la pila.
-    return mutateMap(
-      viewingCampaignId,
-      (props) => {
-        const idx = props.map((pr, i) => (pr.x === x && pr.y === y ? i : -1)).filter((i) => i >= 0).pop();
-        return idx == null ? props : props.filter((_, i) => i !== idx);
-      },
-      "props"
-    );
-  };
-  const clearProps = () => mutateMap(viewingCampaignId, () => [], "props");
+      : null;
+  // Con la niebla, el clic derecho hace lo contrario (despejar ↔ cubrir).
+  const unstampProp = (x, y) => (stampTool && stampTool.startsWith("fog:") ? stampProp(stampTool === "fog:reveal" ? "fog:hide" : "fog:reveal", x, y) : null);
 
   const clearMap = () => {
     mutateMap(viewingCampaignId, () => []);
@@ -15765,13 +14601,6 @@ export default function App({ onSignOut }) {
   const [incomingHit, setIncomingHit] = useState(null); // un enemigo del DJ te ataca en el tablero
   const handledHits = useRef(new Set());
   const defenseRef = useRef(null); // Evasión y umbrales del personaje abierto (los calcula la hoja)
-  const [mapIso, setMapIso] = useState(readIsoPref);
-  const toggleMapIso = (v) => {
-    setMapIso(v);
-    try {
-      localStorage.setItem("mh-map-iso", v ? "1" : "0");
-    } catch (e) {}
-  };
   const [foeTarget, setFoeTarget] = useState(null); // DJ: a qué personaje ataca el enemigo elegido
   const [areaPick, setAreaPick] = useState(null); // elegir forma y alcance del área: { owner, campaignId, color, name }
   const [areaTool, setAreaTool] = useState(null); // colocando un área: el siguiente clic en una casilla la pone
@@ -21353,7 +20182,7 @@ export default function App({ onSignOut }) {
                                   ))}
 
                                 {stTab === "mapa" &&
-                                  (mapTokens.length || scene.image || (campaignMap.tokens || []).length || (campaignMap.props || []).length || campaignMap.fog?.on ? (
+                                  (mapTokens.length || scene.image || (campaignMap.tokens || []).length || campaignMap.fog?.on ? (
                                     <>
                                       {/* La escena llena la caja (difuminada por detrás) y el tablero, con casillas cuadradas, se ajusta dentro */}
                                       <FocusBar spot={campaignMap.spot} pcs={focusPcs(campaignMap.tokens)} myCharId={viewingCharId} isGm={false} onPass={(t, why) => passFocus(charCampaign.id, t, why)} onClear={() => {}} />
@@ -21361,12 +20190,7 @@ export default function App({ onSignOut }) {
                                         <MapViewport focus={myToken ? { x: myToken.x, y: myToken.y } : null}>
                                           <MapBoard
                                             bg={imgSrc(scene.image)}
-                                            props={campaignMap.props || []}
-                                            terrain={campaignMap.terrain || []}
                                             fx={campaignMap.fx} efx={campaignMap.efx} hfx={campaignMap.hfx} spot={campaignMap.spot}
-                                            iso={mapIso}
-                                            onIsoChange={toggleMapIso}
-                                            hideIsoBtn
                                             fog={campaignMap.fog}
                                             fogView="player"
                                             areas={campaignMap.areas || []}
@@ -29075,15 +27899,10 @@ export default function App({ onSignOut }) {
                             <MapViewport focus={null}>
                               <MapBoard
                                 bg={imgSrc(cur?.image || stage.scene?.image)}
-                                props={campaignMap.props || []}
-                                terrain={campaignMap.terrain || []}
                                 fx={campaignMap.fx} efx={campaignMap.efx} hfx={campaignMap.hfx} spot={campaignMap.spot}
                                 fog={campaignMap.fog}
                                 fogView="gm"
                                 areas={campaignMap.areas || []}
-                                iso={mapIso}
-                                onIsoChange={toggleMapIso}
-                                hideIsoBtn
                                 tokens={mapTokensView(campaignMap.tokens || []).map((t) => (t.kind !== "pc" && t.gmHidden ? { ...t, hidden: true, gmVeil: true } : t))}
                                 canMove={() => true}
                                 onMove={(id, x, y) => moveToken(viewingCampaignId, id, x, y)}
@@ -30418,23 +29237,8 @@ export default function App({ onSignOut }) {
                         <div className="mh-gm-sub" style={{ marginTop: 0 }}>
                           El fondo es el capítulo «{boardScene.title || "sin título"}». Coloca a tu reparto y a los enemigos y muévelos arrastrando, o elige uno y pulsa una casilla. Los jugadores colocan y mueven sus propias fichas desde su hoja.
                         </div>
-                        <div className="mh-map-props" role="toolbar" aria-label="Decorados">
-                          <span className="mh-gm-h2">Decorados</span>
-                          {MAP_PROPS.map((pr) => (
-                            <button key={pr.key} type="button" className={"mh-map-chip" + (stampTool === pr.key ? " is-on" : "")} aria-pressed={stampTool === pr.key} onClick={() => setStampTool(stampTool === pr.key ? null : pr.key)}>
-                              <i className="is-prop">
-                                <svg viewBox="0 0 100 100" dangerouslySetInnerHTML={{ __html: pr.svg }} />
-                              </i>
-                              {pr.label}
-                            </button>
-                          ))}
-                          <button type="button" className={"mh-map-chip" + (stampTool === "rot" ? " is-on" : "")} aria-pressed={stampTool === "rot"} title="Pulsa un puente, una puerta o un estandarte para girarlo" onClick={() => setStampTool(stampTool === "rot" ? null : "rot")}>
-                            <i className="is-prop">
-                              <RotateCcw size={14} />
-                            </i>
-                            Girar
-                          </button>
-                          <span className="mh-map-props-sep">Niebla</span>
+                        <div className="mh-map-props" role="toolbar" aria-label="Niebla">
+                          <span className="mh-gm-h2">Niebla</span>
                           {(() => {
                             const f = fogOf(campaignMap.fog);
                             return (
@@ -30471,27 +29275,12 @@ export default function App({ onSignOut }) {
                               </>
                             );
                           })()}
-                          <span className="mh-map-props-sep">Terreno</span>
-                          {MAP_TERRAINS.map((tr) => (
-                            <button key={tr.key} type="button" className={"mh-map-chip" + (stampTool === "t:" + tr.key ? " is-on" : "")} aria-pressed={stampTool === "t:" + tr.key} onClick={() => setStampTool(stampTool === "t:" + tr.key ? null : "t:" + tr.key)}>
-                              <i className="is-prop" style={{ background: tr.top[0], boxShadow: tr.z ? `inset 0 -5px 0 ${tr.s1}` : "none" }} />
-                              {tr.label}
-                            </button>
-                          ))}
-                          {(campaignMap.props || []).length > 0 && (
-                            <button type="button" className="mh-btn-ghost" onClick={clearProps}>
-                              Quitar decorados
-                            </button>
-                          )}
                         </div>
                         {stampTool && stampTool.startsWith("fog:") && <div className="mh-map-stamphint">Pulsa o arrastra por las casillas para {stampTool === "fog:reveal" ? "despejar" : "cubrir"} la niebla. Clic derecho para lo contrario. Tú la ves translúcida; los jugadores no ven lo que hay debajo.</div>}
-                        {stampTool && !stampTool.startsWith("fog:") && (stampTool.startsWith("t:") ? <div className="mh-map-stamphint">Pulsa o arrastra por las casillas para pintar {terrainOf(stampTool.slice(2)).label.toLowerCase()}. Clic derecho para volver a hierba. Se ve con relieve en la vista isométrica.</div> : <div className="mh-map-stamphint">Pulsa o arrastra por las casillas para poner {MAP_PROPS.find((m) => m.key === stampTool)?.label.toLowerCase()}s. Clic derecho sobre un decorado para quitarlo. Vuelve a pulsar el sello para dejar de estampar.</div>)}
                         <div className="mh-map-zoomwrap">
                         <MapViewport focus={null}>
                         <MapBoard
                           bg={imgSrc(boardScene.image)}
-                          props={campaignMap.props || []}
-                          terrain={campaignMap.terrain || []}
                           stampTool={stampTool}
                           onStamp={(x, y) => stampProp(stampTool, x, y)}
                           onUnstamp={unstampProp}
@@ -30501,8 +29290,6 @@ export default function App({ onSignOut }) {
                           fogView="gm"
                           areas={campaignMap.areas || []}
                           areaTool={areaTool && areaTool.campaignId === viewingCampaignId ? { onPlace: (x, y) => placeArea(areaTool, x, y) } : null}
-                          iso={mapIso}
-                          onIsoChange={toggleMapIso}
                           tokens={mapTokensView(tokens).map((t) => (t.kind !== "pc" && t.gmHidden ? { ...t, hidden: true, gmVeil: true } : t))}
                           canMove={() => true}
                           onMove={(id, x, y) => moveToken(viewingCampaignId, id, x, y)}
