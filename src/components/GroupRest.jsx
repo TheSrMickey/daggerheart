@@ -145,3 +145,46 @@ export function RestGm({ campaignId, members, onAnnounce }) {
     </div>
   );
 }
+
+// Ventana rápida del DJ (atajo «Descanso» de Directo): pedir un descanso corto o largo al grupo, o cerrar el que está en curso.
+export function RestQuick({ campaignId, members, onAnnounce, onClose, onOpenFull }) {
+  const [doc, update] = useDoc(restKey(campaignId), EMPTY, 3000);
+  const cur = doc.cur && !doc.cur.closed ? doc.cur : null;
+  const done = members.filter((m) => cur?.ready?.[m.id]).length;
+  const propose = (type) => {
+    update(() => ({ cur: { id: "r" + Date.now(), type, at: Date.now(), ready: {}, closed: false } }));
+    onAnnounce("El DJ propone un " + TYPES[type][0].toLowerCase() + " para todo el grupo. Elige tus acciones y descansa.");
+    onClose();
+  };
+  const end = () => {
+    update((d) => ({ cur: d.cur ? { ...d.cur, closed: true } : null }));
+    onAnnounce(TYPES[cur.type][0] + " del grupo terminado (" + done + " de " + members.length + "). " + (cur.type === "long" ? "El DJ gana 1d4 + " + members.length + " de Miedo." : "El DJ gana 1d4 de Miedo."));
+    onClose();
+  };
+  return (
+    <>
+      <div className="mh-cl-h"><BedDouble size={14} /> <b>Descanso del grupo</b></div>
+      {!cur ? (
+        <div className="mh-rq-opts">
+          {Object.entries(TYPES).map(([k, [label, Ico]]) => (
+            <button key={k} type="button" className={"mh-rq-opt is-" + k} disabled={!members.length} onClick={() => propose(k)}>
+              <Ico size={20} />
+              <span><b>{label}</b><small>{k === "long" ? "Recuperación completa. El DJ gana 1d4 + nº de PJ de Miedo." : "Cada jugador recupera 1d4 + su Rango. El DJ gana 1d4 de Miedo."}</small></span>
+            </button>
+          ))}
+          {!members.length && <div className="mh-cl-empty">Añade personajes a la campaña para proponer un descanso.</div>}
+        </div>
+      ) : (
+        <div className="mh-rq-cur">
+          <span className="mh-rq-chip">{TYPES[cur.type][0]} en curso</span>
+          <span className="mh-rq-n">{done} de {members.length} han descansado</span>
+          <div className="mh-rq-acts">
+            <button type="button" className="mh-btn-ghost" onClick={() => onAnnounce("El DJ pide que termine el descanso del grupo.")}><Bell size={13} /> Recordar</button>
+            <button type="button" className="mh-btn" onClick={end}>Terminar descanso</button>
+          </div>
+        </div>
+      )}
+      <button type="button" className="mh-rq-more" onClick={onOpenFull}>Ver detalle por jugador</button>
+    </>
+  );
+}
