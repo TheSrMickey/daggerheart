@@ -5530,6 +5530,7 @@ const sharedStyles = `
   .mh-qs-row { display: flex; align-items: center; gap: 10px; } .mh-qs-row em { width: 84px; flex: none; font: 800 11px 'Inter', system-ui, sans-serif; font-style: normal; letter-spacing: .12em; text-transform: uppercase; color: var(--mh-muted); } .mh-qs-row b { margin-left: auto; font-size: 13px; }
   .mh-qs-pips { display: flex; gap: 4px; flex-wrap: wrap; } .mh-qs-pip { width: 14px; height: 14px; padding: 0; border-radius: 4px; border: 1.5px solid var(--pc); background: transparent; cursor: pointer; } .mh-qs-pip.is-on { background: var(--pc); }
   .mh-qs-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; } .mh-qs-stats > div { text-align: center; padding: 8px 4px; border-radius: 12px; background: var(--mh-panel2); border: 1px solid var(--mh-line); } .mh-qs-stats b { display: block; font: 700 20px 'Cormorant Garamond', Georgia, serif; } .mh-qs-stats small { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--mh-muted); }
+  .mh-qs-line { margin: 0; font-size: 12px; line-height: 1.45; color: var(--mh-ink2); } .mh-qs-line b { color: var(--mh-ink); } .mh-qs-empty { margin: 0; font-size: 12.5px; color: var(--mh-muted); }
   .mh-qs-chips { display: flex; flex-wrap: wrap; gap: 6px; } .mh-qs-chips span { padding: 3px 9px; border-radius: 99px; font-size: 11px; font-weight: 700; border: 1px solid var(--mh-line2); background: var(--mh-panel2); } .mh-qs-chips span.is-cond { border-color: #E0544A; }
   .mh-qs-acts { display: flex; gap: 6px; flex-wrap: wrap; } .mh-qs-acts button { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; padding: 7px 11px; }
   .mh-tl-sub { text-transform: none !important; letter-spacing: 0 !important; color: var(--mh-ink3) !important; }
@@ -9774,7 +9775,10 @@ function MapBoard({ plain, backdrop, fog, fogView, areas, areaTool, log, menuFor
       if (!d) return;
       if (!d.moved) {
         // Un clic muestra (u oculta) su alcance y la deja elegida para moverla pulsando una casilla (no en el modo simple).
-        if (plain) return;
+        if (plain) {
+          if (onSelect) onSelect(d.id);
+          return;
+        }
         const showing = rangeIdRef.current === d.id;
         setRangeId(showing ? null : d.id);
         onSelect(showing ? null : d.id);
@@ -27942,7 +27946,12 @@ export default function App({ onSignOut }) {
                                 canMove={() => true}
                                 onMove={(id, x, y) => moveToken(viewingCampaignId, id, x, y)}
                                 selectedId={null}
-                                onSelect={() => {}}
+                                onSelect={(id) => {
+                                  const tk = (campaignMap.tokens || []).find((t) => t.id === id);
+                                  if (!tk) return;
+                                  if (tk.kind === "pc" && tk.charId && characters[tk.charId]) (setQuickChar(tk.charId), setMapSel(null));
+                                  else (setQuickChar(null), setMapSel(id));
+                                }}
                                 compact
                               />
                             </MapViewport>
@@ -28240,9 +28249,69 @@ export default function App({ onSignOut }) {
                         </div>
                       );
                     })();
+                    const infoTok = !qc && mapSel ? (campaignMap.tokens || []).find((t) => t.id === mapSel && t.kind !== "pc") : null;
+                    const foeSheet = infoTok && (() => {
+                      const st = infoTok.stats;
+                      const setStats = (patch) => mutateMap(viewingCampaignId, (ts) => ts.map((t) => (t.id === infoTok.id ? { ...t, stats: { ...(t.stats || {}), ...patch } } : t)));
+                      const kindLabel = { foe: "Enemigo", npc: "PNJ", pet: "Compañero" }[infoTok.kind] || "Ficha";
+                      const hpT = Number(st?.hp || 0);
+                      const hpLeft = Math.max(0, hpT - Number(st?.hpMarked || 0));
+                      const stT = Number(st?.stress || 0);
+                      const stN = Math.min(stT, Number(st?.stressMarked || 0));
+                      const col = infoTok.color || "#C0504A";
+                      return (
+                        <div className="mh-dir-card mh-qs-card" style={{ "--c": col }}>
+                          <div className="mh-dir-lbl-row">
+                            <button type="button" className="mh-qs-back" onClick={() => setMapSel(null)}><ChevronLeft size={13} /> Grupo</button>
+                            <span className="mh-qs-tag">{kindLabel}</span>
+                          </div>
+                          <div className="mh-qs-head">
+                            <span className="mh-dir-av" style={{ "--c": col }}>{infoTok.kind === "foe" ? <Skull size={22} /> : <Drama size={22} />}</span>
+                            <div>
+                              <div className="mh-serif mh-qs-name">{infoTok.name || kindLabel}</div>
+                              {st && <small>{["Nivel " + (st.tier ?? 1), st.type].filter(Boolean).join(" · ")}</small>}
+                            </div>
+                          </div>
+                          {!st && <p className="mh-qs-empty">Sin estadísticas. {infoTok.kind === "npc" ? "Añádelas en Historia · PNJ." : "Esta ficha no tiene datos de combate."}</p>}
+                          {st && (
+                            <>
+                              <div className="mh-qs-row">
+                                <em>Vida</em>
+                                <span className="mh-qs-pips">
+                                  {Array.from({ length: hpT }, (_, i) => (
+                                    <button key={i} type="button" className={"mh-qs-pip" + (i < hpLeft ? " is-on" : "")} style={{ "--pc": "#E0544A" }} aria-label={"Vida " + (i + 1)} onClick={() => setStats({ hpMarked: hpT - (hpLeft === i + 1 ? i : i + 1) })} />
+                                  ))}
+                                </span>
+                                <b>{hpLeft}/{hpT}</b>
+                              </div>
+                              <div className="mh-qs-row">
+                                <em>Estrés</em>
+                                <span className="mh-qs-pips">
+                                  {Array.from({ length: stT }, (_, i) => (
+                                    <button key={i} type="button" className={"mh-qs-pip" + (i < stN ? " is-on" : "")} style={{ "--pc": "#A58BE8" }} aria-label={"Estrés " + (i + 1)} onClick={() => setStats({ stressMarked: stN === i + 1 ? i : i + 1 })} />
+                                  ))}
+                                </span>
+                                <b>{stN}/{stT}</b>
+                              </div>
+                              <div className="mh-qs-stats">
+                                <div><b>{st.difficulty ?? "—"}</b><small>Dificultad</small></div>
+                                <div><b>{(st.thresholds || [])[0] ?? "—"}·{(st.thresholds || [])[1] ?? "—"}</b><small>Umbrales</small></div>
+                                <div><b>{Number(st.atk || 0) >= 0 ? "+" : ""}{st.atk ?? 0}</b><small>Ataque</small></div>
+                              </div>
+                              {st.attack && <p className="mh-qs-line"><b>{st.attack.name}:</b> {[st.attack.range, st.attack.damage, st.attack.type].filter(Boolean).join(" · ")}</p>}
+                              {st.motives && <p className="mh-qs-line"><b>Motivaciones:</b> {st.motives}</p>}
+                              {st.exp && <p className="mh-qs-line"><b>Experiencia:</b> {st.exp}</p>}
+                              {(st.features || []).slice(0, 4).map((ft) => (
+                                <p key={ft.name} className="mh-qs-line"><b>{ft.name}{ft.kind ? " (" + ft.kind + ")" : ""}:</b> {ft.text}</p>
+                              ))}
+                            </>
+                          )}
+                        </div>
+                      );
+                    })();
                     const groupEl = (
                       <PollSwap campaignId={viewingCampaignId} total={members.length} onResult={(text) => postChat(viewingCampaignId, { kind: "msg", text, author: "El DJ", gm: true })}>
-                        {quickSheet || groupBox}
+                        {quickSheet || foeSheet || groupBox}
                       </PollSwap>
                     );
                     const chatEl = (

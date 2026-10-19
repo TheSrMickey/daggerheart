@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "nuevo", text: "Directo · al pulsar una ficha del mapa de combate, la caja «El grupo» se sustituye por su información: la ficha rápida si es un personaje, y vida, estrés, dificultad, umbrales, ataque y rasgos si es un enemigo o PNJ. Se vuelve al grupo con «Grupo»." },
       { tag: "mejora", text: "Directo · mapa de combate: clic derecho en cualquier ficha para «Ver rango» (y «Ocultar rango»), las bandas de alcance a su alrededor." },
       { tag: "mejora", text: "Directo · mapa de combate simplificado por ahora: al pulsar una ficha no ocurre nada (ni rango ni ficha), sin zoom, sin barras de vida alrededor de las fichas y sin el botón «Abrir tablero». Las fichas se siguen arrastrando." },
       { tag: "arreglo", text: "Mapa de combate: la cuadrícula ya no deja cruces cortadas por la mitad en el borde del tablero; solo se dibujan las intersecciones interiores." },
