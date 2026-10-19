@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "arreglo", text: "Directo · el mapa de combate se ve entero en la caja «Tu vista»: ya no se recortan casillas en los bordes. Si la caja no tiene la proporción del tablero, sobran unas franjas laterales con el fondo difuminado." },
       { tag: "mejora", text: "Prueba: el tablero de combate usa temporalmente un mapa de batalla generado con IA (el camino con el carro volcado) como fondo, sin difuminar, para valorar cómo se juega encima." },
       { tag: "nuevo", text: "Prompts para ilustrar con IA: en Mundo > Mapa de mundo, un prompt por cada lugar que escribas (interior o exterior) para su banner, y un botón «Prompt para ilustrar este lugar» en el editor de cada marcador. En Diálogos y en PNJ, «Prompt para la imagen del diálogo» genera el prompt del personaje por expresión, con fondo liso para recortarlo." },
       { tag: "mejora", text: "Tablero de combate: las cruces de la cuadrícula son más translúcidas y con las puntas difuminadas. Al pasar de la escena al tablero, la imagen conserva exactamente el mismo tamaño y posición: solo se difumina y aparece la cuadrícula encima." },
