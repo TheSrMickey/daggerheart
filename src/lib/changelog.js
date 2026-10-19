@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "mejora", text: "Tablero de combate: las cruces de la cuadrícula son más finas y más largas, sin llegar a tocarse entre sí." },
       { tag: "mejora", text: "Mapa de combate: la escena sigue de fondo, difuminada, y encima solo van la cuadrícula, ahora en cruces del color del tema (clara en modo noche, oscura en modo claro), y las fichas. Se eliminan los decorados y el terreno." },
       { tag: "mejora", text: "Descanso del grupo: cuando el DJ propone un descanso, el chat muestra una tarjeta con el botón «Descansar ahora» y los jugadores ven una franja fija con el progreso («2 de 4 han descansado») hasta que descansan. La ventana de acciones se abre al pulsarlos, ya no salta sola." },
       { tag: "mejora", text: "Los efectos de las escenas aparecen y se apagan con un fundido suave; los marcadores del mapa de mundo quedan por encima de las esquinas oscurecidas; los accesos rápidos bajo el chat ocupan todo el ancho; y el mapa de la pestaña Mundo usa la misma proporción que la caja del panel del DJ para que se vean los mismos marcadores." },
