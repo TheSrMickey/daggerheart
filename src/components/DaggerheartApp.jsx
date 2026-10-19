@@ -4751,10 +4751,12 @@ const sharedStyles = `
   .mh-map { position: relative; aspect-ratio: ${MAP_COLS} / ${MAP_ROWS}; border-radius: 12px; overflow: hidden; background: #2B3A4F center / cover no-repeat; flex-shrink: 0; touch-action: none; user-select: none; }
   .mh-map.is-blank { background-image: linear-gradient(#3F4B5E, #2B3A4F); }
   .mh-map-bg { position: absolute; inset: -16px; background: center / cover no-repeat; filter: blur(9px) saturate(1.05) brightness(.82); pointer-events: none; animation: mh-gridin 1.2s ease both; }
+  .mh-map-backdrop { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; } .mh-map-sharp { position: absolute; inset: 0; background: center / cover no-repeat; }
+  .mh-map-backdrop .mh-map-bg { inset: 0; } .mh-map-stage .mh-map { background: transparent !important; }
   .mh-map-tint { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(20,22,64,.32), rgba(10,10,34,.52)); animation: mh-gridin .9s ease .15s both; }
   html[data-mh-theme="light"] .mh-map-bg { filter: blur(9px) saturate(1.05) brightness(1.08); } html[data-mh-theme="light"] .mh-map-tint { background: linear-gradient(180deg, rgba(255,250,238,.42), rgba(255,246,228,.56)); }
   .mh-map-noise { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: overlay; opacity: .3; z-index: 1; animation: mh-gridin 1s ease .3s both; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .55 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23f)'/%3E%3C/svg%3E"); }
-  .mh-map-grid { position: absolute; left: calc(-50% / ${MAP_COLS}); top: calc(-50% / ${MAP_ROWS}); width: calc(100% + 100% / ${MAP_COLS}); height: calc(100% + 100% / ${MAP_ROWS}); pointer-events: none; background: color-mix(in srgb, var(--mh-ink, #fff) 88%, transparent); -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M19 50H81M50 19V81' stroke='%23000' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E") 0 0 / calc(100% / ${MAP_COLS + 1}) calc(100% / ${MAP_ROWS + 1}) repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M19 50H81M50 19V81' stroke='%23000' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E") 0 0 / calc(100% / ${MAP_COLS + 1}) calc(100% / ${MAP_ROWS + 1}) repeat; }
+  .mh-map-grid { position: absolute; left: calc(-50% / ${MAP_COLS}); top: calc(-50% / ${MAP_ROWS}); width: calc(100% + 100% / ${MAP_COLS}); height: calc(100% + 100% / ${MAP_ROWS}); pointer-events: none; background: color-mix(in srgb, var(--mh-ink, #fff) 52%, transparent); -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Cdefs%3E%3ClinearGradient%20id='h'%20gradientUnits='userSpaceOnUse'%20x1='17'%20x2='83'%20y1='0'%20y2='0'%3E%3Cstop%20offset='0'%20stop-opacity='0'/%3E%3Cstop%20offset='.32'%20stop-opacity='1'/%3E%3Cstop%20offset='.68'%20stop-opacity='1'/%3E%3Cstop%20offset='1'%20stop-opacity='0'/%3E%3C/linearGradient%3E%3ClinearGradient%20id='v'%20gradientUnits='userSpaceOnUse'%20x1='0'%20x2='0'%20y1='17'%20y2='83'%3E%3Cstop%20offset='0'%20stop-opacity='0'/%3E%3Cstop%20offset='.32'%20stop-opacity='1'/%3E%3Cstop%20offset='.68'%20stop-opacity='1'/%3E%3Cstop%20offset='1'%20stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath%20d='M17%2050H83'%20stroke='url%28%23h%29'%20stroke-width='2.4'/%3E%3Cpath%20d='M50%2017V83'%20stroke='url%28%23v%29'%20stroke-width='2.4'/%3E%3C/svg%3E") 0 0 / calc(100% / ${MAP_COLS + 1}) calc(100% / ${MAP_ROWS + 1}) repeat; mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Cdefs%3E%3ClinearGradient%20id='h'%20gradientUnits='userSpaceOnUse'%20x1='17'%20x2='83'%20y1='0'%20y2='0'%3E%3Cstop%20offset='0'%20stop-opacity='0'/%3E%3Cstop%20offset='.32'%20stop-opacity='1'/%3E%3Cstop%20offset='.68'%20stop-opacity='1'/%3E%3Cstop%20offset='1'%20stop-opacity='0'/%3E%3C/linearGradient%3E%3ClinearGradient%20id='v'%20gradientUnits='userSpaceOnUse'%20x1='0'%20x2='0'%20y1='17'%20y2='83'%3E%3Cstop%20offset='0'%20stop-opacity='0'/%3E%3Cstop%20offset='.32'%20stop-opacity='1'/%3E%3Cstop%20offset='.68'%20stop-opacity='1'/%3E%3Cstop%20offset='1'%20stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath%20d='M17%2050H83'%20stroke='url%28%23h%29'%20stroke-width='2.4'/%3E%3Cpath%20d='M50%2017V83'%20stroke='url%28%23v%29'%20stroke-width='2.4'/%3E%3C/svg%3E") 0 0 / calc(100% / ${MAP_COLS + 1}) calc(100% / ${MAP_ROWS + 1}) repeat; }
   .mh-map-range { position: absolute; box-sizing: border-box; background: color-mix(in srgb, var(--rc) 58%, transparent); border: 0 solid var(--rc); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rc) 35%, transparent); pointer-events: none; z-index: 1; }
   .mh-map-menu { min-width: 190px; }
   .mh-map-menu { min-width: 230px; max-width: 280px; }
@@ -9639,7 +9641,20 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement }) {
   );
 }
 
-function MapBoard({ fog, fogView, areas, areaTool, log, menuFor, fx, efx, hfx, spot, bg, tokens, stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
+// Escena de fondo del tablero: la imagen nítida ocupa la misma caja que la escena y, encima, la versión difuminada aparece con fundido (sin cambiar de tamaño ni de posición).
+function MapBackdrop({ bg }) {
+  if (!bg) return null;
+  const u = `url("${bg.replace(/"/g, "%22")}")`;
+  return (
+    <div className="mh-map-backdrop" aria-hidden="true">
+      <div className="mh-map-sharp" style={{ backgroundImage: u }} />
+      <div key={bg} className="mh-map-bg" style={{ backgroundImage: u }} />
+      <div className="mh-map-tint" />
+    </div>
+  );
+}
+
+function MapBoard({ backdrop, fog, fogView, areas, areaTool, log, menuFor, fx, efx, hfx, spot, bg, tokens, stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
   const ref = useRef(null);
   const dragRef = useRef(null);
   const [drag, setDrag] = useState(null);
@@ -9843,7 +9858,7 @@ function MapBoard({ fog, fogView, areas, areaTool, log, menuFor, fx, efx, hfx, s
     <div
       ref={ref}
       className={"mh-map" + (bg ? "" : " is-blank") + (compact ? " is-compact" : "") + (stampTool ? " is-stamping" : "")}
-      style={bg ? { backgroundImage: `url("${bg.replace(/"/g, "%22")}")`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+      style={bg && !backdrop ? { backgroundImage: `url("${bg.replace(/"/g, "%22")}")`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
       onClick={boardClick}
       onPointerDown={stampDown}
       onContextMenu={boardContext}
@@ -9856,8 +9871,8 @@ function MapBoard({ fog, fogView, areas, areaTool, log, menuFor, fx, efx, hfx, s
     >
       <div className="mh-map-flat">
       {/* La escena va difuminada de fondo; encima van la cuadrícula de color y las fichas */}
-      {bg && <div key={bg} className="mh-map-bg" style={{ backgroundImage: `url("${bg.replace(/"/g, "%22")}")` }} />}
-      <div className="mh-map-tint" />
+      {bg && !backdrop && <div key={bg} className="mh-map-bg" style={{ backgroundImage: `url("${bg.replace(/"/g, "%22")}")` }} />}
+      {!backdrop && <div className="mh-map-tint" />}
       {rangeCells.map(([x, y, band]) => (
         <div
           key={"r" + x + "," + y}
@@ -20194,8 +20209,10 @@ export default function App({ onSignOut }) {
                                       {/* La escena llena la caja (difuminada por detrás) y el tablero, con casillas cuadradas, se ajusta dentro */}
                                       <FocusBar spot={campaignMap.spot} pcs={focusPcs(campaignMap.tokens)} myCharId={viewingCharId} isGm={false} onPass={(t, why) => passFocus(charCampaign.id, t, why)} onClear={() => {}} />
                                       <div className="mh-map-stage">
+                                        <MapBackdrop bg={imgSrc(scene.image)} />
                                         <MapViewport focus={myToken ? { x: myToken.x, y: myToken.y } : null}>
                                           <MapBoard
+                                            backdrop
                                             bg={imgSrc(scene.image)}
                                             fx={campaignMap.fx} efx={campaignMap.efx} hfx={campaignMap.hfx} spot={campaignMap.spot}
                                             fog={campaignMap.fog}
@@ -27903,8 +27920,10 @@ export default function App({ onSignOut }) {
                           </>
                         ) : view === "mapa" ? (
                           <div className="mh-map-stage mh-dir-map">
+                            <MapBackdrop bg={imgSrc(cur?.image || stage.scene?.image)} />
                             <MapViewport focus={null}>
                               <MapBoard
+                                backdrop
                                 bg={imgSrc(cur?.image || stage.scene?.image)}
                                 fx={campaignMap.fx} efx={campaignMap.efx} hfx={campaignMap.hfx} spot={campaignMap.spot}
                                 fog={campaignMap.fog}
