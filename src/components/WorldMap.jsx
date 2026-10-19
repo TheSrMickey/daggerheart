@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Upload, Plus, MapPin, Trash2, X, Eye, EyeOff, Landmark, Skull, Flag, Swords, Home, ZoomIn, ZoomOut, ChevronRight, Pencil, Sparkles, Copy, Check, ImagePlus, Wand2 } from "lucide-react";
 import { useDoc } from "@/lib/campaignDocs";
+import { PlacePromptHelper, CopyPrompt, buildPlacePrompt } from "./ImagePrompts";
 
 // Mapa de mundo: una imagen que sube el DJ y marcadores encima. Cada marcador abre una tarjeta con imagen, texto y,
 // para el DJ, un enlace a la escena de la historia. Los marcadores nuevos nacen ocultos hasta que el DJ los revela.
@@ -46,7 +47,10 @@ function PromptHelper({ onClose }) {
   const [places, setPlaces] = useState("Peaceful Village Church — a small stone church with a bell tower, lower left\nPort town — wooden docks on the southern coast\nAncient ruined fortress — on a hill, upper right\nDark cave entrance — at the foot of the northern mountains\nTraveler's inn — beside the crossroads in the center");
   const [style, setStyle] = useState("pintado");
   const [copied, setCopied] = useState(false);
+  const [view, setView] = useState("interior");
   const text = useMemo(() => buildMapPrompt({ world, places, style }), [world, places, style]);
+  // «Nombre — descripción» por línea.
+  const placeList = useMemo(() => places.split("\n").map((l) => l.trim()).filter(Boolean).map((l) => { const [t, ...r] = l.split(/\s+[—–-]\s+/); return { title: t.trim(), text: r.join(" — ").trim() }; }), [places]);
   const ref = useRef(null);
   const copy = () => {
     const fb = () => {
@@ -76,6 +80,22 @@ function PromptHelper({ onClose }) {
         <button type="button" className="mh-btn" onClick={copy}>{copied ? <><Check size={14} /> Copiado</> : <><Copy size={14} /> Copiar prompt</>}</button>
         <span className="mh-wm-note">Consejo: genera varias y quédate con la que deje más espacio libre alrededor de cada lugar.</span>
       </div>
+      {placeList.length > 0 && (
+        <div className="mh-wm-places">
+          <div className="mh-wm-ph"><span><Wand2 size={15} /> Prompts para ilustrar cada lugar</span></div>
+          <p className="mh-wm-note">Uno por lugar: al pulsar su marcador saldrá esa imagen en el banner. Interior o exterior según prefieras.</p>
+          <div className="mh-wm-row">
+            <button type="button" className={"mh-btn-ghost" + (view === "interior" ? " is-on" : "")} onClick={() => setView("interior")}>Interior</button>
+            <button type="button" className={"mh-btn-ghost" + (view === "exterior" ? " is-on" : "")} onClick={() => setView("exterior")}>Exterior</button>
+          </div>
+          {placeList.map((pl, i) => (
+            <details key={i} className="mh-wm-place">
+              <summary>{pl.title}</summary>
+              <CopyPrompt text={buildPlacePrompt({ world, title: pl.title, text: pl.text, kindLabel: "", view, style: "pintado" })} rows={6} label="Copiar prompt del lugar" />
+            </details>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -323,6 +343,7 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
                     {pin.img && <button type="button" className="mh-btn-ghost" onClick={async () => { const old = pin.img; await patchPin(pin.id, { img: "" }); dropImage && dropImage(old); }}>Quitar</button>}
                   </div>
                 </div>
+                <PlacePromptHelper title={pin.title === "Nuevo lugar" ? "" : draft.title} text={draft.text} kindLabel={kind.label} />
                 <label className="mh-wm-f"><span>Escena enlazada</span>
                   <select className="mh-input" value={pin.sceneId || ""} onChange={(e) => patchPin(pin.id, { sceneId: e.target.value })}>
                     <option value="">Ninguna</option>
