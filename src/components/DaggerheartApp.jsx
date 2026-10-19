@@ -4753,7 +4753,7 @@ const sharedStyles = `
   .mh-map.is-blank { background-image: linear-gradient(#3F4B5E, #2B3A4F); }
   .mh-map-bg { position: absolute; inset: -16px; background: center / cover no-repeat; filter: blur(9px) saturate(1.05) brightness(.82); pointer-events: none; animation: mh-gridin 1.2s ease both; }
   .mh-map-backdrop { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; } .mh-map-sharp { position: absolute; inset: 0; background: center / cover no-repeat; }
-  .mh-map-backdrop .mh-map-bg { inset: 0; } .mh-map-stage .mh-map { background: transparent !important; }
+  .mh-map-backdrop .mh-map-bg { inset: 0; } .mh-map-backdrop.is-battlemap .mh-map-bg { display: none; } .mh-map-backdrop.is-battlemap .mh-map-tint { background: rgba(8,8,26,.16); } .mh-map-stage .mh-map { background: transparent !important; }
   .mh-map-tint { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(20,22,64,.32), rgba(10,10,34,.52)); animation: mh-gridin .9s ease .15s both; }
   html[data-mh-theme="light"] .mh-map-bg { filter: blur(9px) saturate(1.05) brightness(1.08); } html[data-mh-theme="light"] .mh-map-tint { background: linear-gradient(180deg, rgba(255,250,238,.42), rgba(255,246,228,.56)); }
   .mh-map-noise { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: overlay; opacity: .3; z-index: 1; animation: mh-gridin 1s ease .3s both; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .55 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23f)'/%3E%3C/svg%3E"); }
@@ -9643,12 +9643,15 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement }) {
   );
 }
 
+// PRUEBA TEMPORAL: fondo fijo del tablero de combate (mapa generado con IA). Para volver al de la escena, pon aquí null y usa imgSrc(escena.image) en los 3 sitios.
+const COMBAT_BG_TEST = "/escenas/combate-prueba.webp";
+
 // Escena de fondo del tablero: la imagen nítida ocupa la misma caja que la escena y, encima, la versión difuminada aparece con fundido (sin cambiar de tamaño ni de posición).
 function MapBackdrop({ bg }) {
   if (!bg) return null;
   const u = `url("${bg.replace(/"/g, "%22")}")`;
   return (
-    <div className="mh-map-backdrop" aria-hidden="true">
+    <div className={"mh-map-backdrop" + (bg === COMBAT_BG_TEST ? " is-battlemap" : "")} aria-hidden="true">
       <div className="mh-map-sharp" style={{ backgroundImage: u }} />
       <div key={bg} className="mh-map-bg" style={{ backgroundImage: u }} />
       <div className="mh-map-tint" />
@@ -20211,11 +20214,11 @@ export default function App({ onSignOut }) {
                                       {/* La escena llena la caja (difuminada por detrás) y el tablero, con casillas cuadradas, se ajusta dentro */}
                                       <FocusBar spot={campaignMap.spot} pcs={focusPcs(campaignMap.tokens)} myCharId={viewingCharId} isGm={false} onPass={(t, why) => passFocus(charCampaign.id, t, why)} onClear={() => {}} />
                                       <div className="mh-map-stage">
-                                        <MapBackdrop bg={imgSrc(scene.image)} />
+                                        <MapBackdrop bg={COMBAT_BG_TEST} />
                                         <MapViewport focus={myToken ? { x: myToken.x, y: myToken.y } : null}>
                                           <MapBoard
                                             backdrop
-                                            bg={imgSrc(scene.image)}
+                                            bg={COMBAT_BG_TEST}
                                             fx={campaignMap.fx} efx={campaignMap.efx} hfx={campaignMap.hfx} spot={campaignMap.spot}
                                             fog={campaignMap.fog}
                                             fogView="player"
@@ -27922,11 +27925,11 @@ export default function App({ onSignOut }) {
                           </>
                         ) : view === "mapa" ? (
                           <div className="mh-map-stage mh-dir-map">
-                            <MapBackdrop bg={imgSrc(cur?.image || stage.scene?.image)} />
+                            <MapBackdrop bg={COMBAT_BG_TEST} />
                             <MapViewport focus={null}>
                               <MapBoard
                                 backdrop
-                                bg={imgSrc(cur?.image || stage.scene?.image)}
+                                bg={COMBAT_BG_TEST}
                                 fx={campaignMap.fx} efx={campaignMap.efx} hfx={campaignMap.hfx} spot={campaignMap.spot}
                                 fog={campaignMap.fog}
                                 fogView="gm"
@@ -29313,7 +29316,7 @@ export default function App({ onSignOut }) {
                         <div className="mh-map-zoomwrap">
                         <MapViewport focus={null}>
                         <MapBoard
-                          bg={imgSrc(boardScene.image)}
+                          bg={COMBAT_BG_TEST}
                           stampTool={stampTool}
                           onStamp={(x, y) => stampProp(stampTool, x, y)}
                           onUnstamp={unstampProp}
