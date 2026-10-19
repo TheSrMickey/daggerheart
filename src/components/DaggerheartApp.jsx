@@ -15,6 +15,7 @@ import { Tour } from "./Tour";
 import { Dice3D, canDice3d, DICE3D_SIDES } from "./Dice3D";
 import { DicePage } from "./DiceSkins";
 import WorldMap from "./WorldMap";
+import { DialoguePromptHelper } from "./ImagePrompts";
 import { LevelUpDialog, parseAdvances, ownedCards, getMulticlass, MAX_LEVEL, rankOf } from "./LevelUp";
 import { RulesPanel } from "./MapRules";
 import { Changelog } from "./Changelog";
@@ -5892,6 +5893,7 @@ const sharedStyles = `
   .mh-wm-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 56px 20px; border-radius: 18px; border: 1px dashed var(--mh-line2); background: color-mix(in srgb, var(--mh-panel) 70%, transparent); color: var(--mh-muted); font-size: 13px; } .mh-wm-empty b { color: var(--mh-ink); font-size: 15px; } .mh-wm-empty > span { max-width: 460px; }
   .mh-wm-prompt { display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: 18px; border: 1px solid var(--mh-line2); background: color-mix(in srgb, var(--mh-panel) 84%, transparent); }
   .mh-wm-ph { display: flex; align-items: center; justify-content: space-between; font: 600 14px 'Cinzel', Georgia, serif; } .mh-wm-ph span { display: inline-flex; align-items: center; gap: 8px; }
+  .mh-wm-places { display: flex; flex-direction: column; gap: 8px; padding-top: 10px; border-top: 1px solid var(--mh-line); } .mh-wm-place { border: 1px solid var(--mh-line); border-radius: 12px; padding: 8px 12px; background: var(--mh-panel2); } .mh-wm-place summary { cursor: pointer; font-weight: 700; font-size: 13px; } .mh-wm-place[open] summary { margin-bottom: 8px; } .mh-wm-place .mh-wm-out { margin-bottom: 8px; }
   .mh-wm-out { font-size: 12px; line-height: 1.5; font-family: ui-monospace, Consolas, monospace; resize: vertical; }
   @media (max-width: 700px) { .mh-wm-card { top: auto; right: 8px; left: 8px; bottom: 8px; width: auto; max-height: 62%; } .mh-wm-view { max-height: 60vh; } }
   .mh-cardc-wrap { position: relative; display: flex; align-items: center; justify-content: center; width: min(300px, 100%); }
@@ -28591,6 +28593,10 @@ export default function App({ onSignOut }) {
                               })()}
                               {(() => {
                                 const who = campaignCast.find((m) => m.id === dialogueDraft.castId);
+                                return who ? <DialoguePromptHelper key={who.id} name={who.name} role={who.role} exprs={EXPRESSIONS} current={dialogueDraft.expr || "tranquila"} /> : null;
+                              })()}
+                              {(() => {
+                                const who = campaignCast.find((m) => m.id === dialogueDraft.castId);
                                 const sceneBg = chapter?.image;
                                 const figId = who ? castImgIdFor(who, dialogueDraft.expr || "tranquila") : null;
                                 return (
@@ -29075,6 +29081,7 @@ export default function App({ onSignOut }) {
                             <div className="mh-gm-h2">Estadísticas</div>
                             <NpcStatsEditor name={sel.name} stats={sel.stats || null} onChange={(st) => updateCast(sel.id, { stats: st })} />
                             <div className="mh-gm-h2">Expresiones</div>
+                            <DialoguePromptHelper key={sel.id} name={sel.name} role={sel.role} exprs={EXPRESSIONS} current="tranquila" />
                               {(() => {
                                 const who = campaignCast.find((m) => m.id === dialogueDraft.castId);
                                 if (!who) return null;

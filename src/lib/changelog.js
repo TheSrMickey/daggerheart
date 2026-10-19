@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "nuevo", text: "Prompts para ilustrar con IA: en Mundo > Mapa de mundo, un prompt por cada lugar que escribas (interior o exterior) para su banner, y un botón «Prompt para ilustrar este lugar» en el editor de cada marcador. En Diálogos y en PNJ, «Prompt para la imagen del diálogo» genera el prompt del personaje por expresión, con fondo liso para recortarlo." },
       { tag: "mejora", text: "Tablero de combate: las cruces de la cuadrícula son más translúcidas y con las puntas difuminadas. Al pasar de la escena al tablero, la imagen conserva exactamente el mismo tamaño y posición: solo se difumina y aparece la cuadrícula encima." },
       { tag: "mejora", text: "Tablero de combate: las cruces de la cuadrícula son más finas y más largas, sin llegar a tocarse entre sí." },
       { tag: "mejora", text: "Mapa de combate: la escena sigue de fondo, difuminada, y encima solo van la cuadrícula, ahora en cruces del color del tema (clara en modo noche, oscura en modo claro), y las fichas. Se eliminan los decorados y el terreno." },
