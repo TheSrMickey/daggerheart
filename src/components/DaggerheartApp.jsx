@@ -9711,13 +9711,14 @@ function MapBoard({ plain, backdrop, fog, fogView, areas, areaTool, log, menuFor
       window.removeEventListener("wheel", close);
     };
   }, [menu]);
+  const menuItems = (t) => [...(plain ? [{ key: "range", Icon: Crosshair, label: rangeId === t.id ? "Ocultar rango" : "Ver rango", sub: rangeId === t.id ? "Quita las bandas de alcance" : "Cuerpo a cuerpo, muy cercano, cercano…", on: rangeId === t.id, run: () => setRangeId((r) => (r === t.id ? null : t.id)) }] : []), ...((menuFor && menuFor(t)) || [])];
   const openMenu = (e, t) => {
     if (t.vanished) return;
     e.preventDefault();
     e.stopPropagation();
     if (measureSuppressed()) return;
     const r = ref.current.getBoundingClientRect();
-    const n = ((menuFor && menuFor(t)) || []).length;
+    const n = menuItems(t).length;
     if (!n) return;
     // Que el menú quepa en la parte visible del tablero (puede estar recortado por el visor).
     const v = (e.currentTarget.closest(".mh-map-view") || e.currentTarget.closest(".mh-map") || document.body).getBoundingClientRect();
@@ -9922,7 +9923,7 @@ function MapBoard({ plain, backdrop, fog, fogView, areas, areaTool, log, menuFor
             className={"mh-map-tk is-" + t.kind + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
             style={{ ...at(pos.x, pos.y), "--tc": t.color, ...(anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); return tg ? { "--ax": (tg.x - t.x) * 100 + "%", "--ay": (tg.y - t.y) * 100 + "%" } : {}; })() : {}) }}
             onPointerDown={(e) => startDrag(e, t)}
-            onContextMenu={(e) => (plain ? e.preventDefault() : openMenu(e, t))}
+            onContextMenu={(e) => openMenu(e, t)}
             onKeyDown={(e) => keyMove(e, t)}
             aria-label={t.name + (movable ? ". Arrástrala o usa las flechas para moverla" : "")}
             title={[t.name, t.hidden && "Escondido", ...mapConds(t)].filter(Boolean).join(" · ")}
@@ -10023,7 +10024,7 @@ function MapBoard({ plain, backdrop, fog, fogView, areas, areaTool, log, menuFor
       {menu && (() => {
         const t = tokens.find((x) => x.id === menu.id);
         if (!t) return null;
-        const items = (menuFor && menuFor(t)) || [];
+        const items = menuItems(t);
         if (!items.length) return null;
         return <TokenMenu menu={menu} items={items} onClose={() => setMenu(null)} />;
       })()}
