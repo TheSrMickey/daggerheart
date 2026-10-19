@@ -9659,7 +9659,7 @@ function MapBackdrop({ bg }) {
   );
 }
 
-function MapBoard({ backdrop, fog, fogView, areas, areaTool, log, menuFor, fx, efx, hfx, spot, bg, tokens, stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
+function MapBoard({ plain, backdrop, fog, fogView, areas, areaTool, log, menuFor, fx, efx, hfx, spot, bg, tokens, stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
   const ref = useRef(null);
   const dragRef = useRef(null);
   const [drag, setDrag] = useState(null);
@@ -9772,7 +9772,8 @@ function MapBoard({ backdrop, fog, fogView, areas, areaTool, log, menuFor, fx, e
       setDrag(null);
       if (!d) return;
       if (!d.moved) {
-        // Un clic muestra (u oculta) su alcance y la deja elegida para moverla pulsando una casilla.
+        // Un clic muestra (u oculta) su alcance y la deja elegida para moverla pulsando una casilla (no en el modo simple).
+        if (plain) return;
         const showing = rangeIdRef.current === d.id;
         setRangeId(showing ? null : d.id);
         onSelect(showing ? null : d.id);
@@ -9921,7 +9922,7 @@ function MapBoard({ backdrop, fog, fogView, areas, areaTool, log, menuFor, fx, e
             className={"mh-map-tk is-" + t.kind + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
             style={{ ...at(pos.x, pos.y), "--tc": t.color, ...(anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); return tg ? { "--ax": (tg.x - t.x) * 100 + "%", "--ay": (tg.y - t.y) * 100 + "%" } : {}; })() : {}) }}
             onPointerDown={(e) => startDrag(e, t)}
-            onContextMenu={(e) => openMenu(e, t)}
+            onContextMenu={(e) => (plain ? e.preventDefault() : openMenu(e, t))}
             onKeyDown={(e) => keyMove(e, t)}
             aria-label={t.name + (movable ? ". Arrástrala o usa las flechas para moverla" : "")}
             title={[t.name, t.hidden && "Escondido", ...mapConds(t)].filter(Boolean).join(" · ")}
@@ -9949,13 +9950,13 @@ function MapBoard({ backdrop, fog, fogView, areas, areaTool, log, menuFor, fx, e
                 <b>{spotHands[t.charId].n}</b>
               </span>
             )}
-            {hpLeft != null && (
+            {hpLeft != null && !plain && (
               <svg className="mh-map-ring" viewBox="0 0 100 100" aria-hidden="true">
                 <circle cx="50" cy="50" r="46" fill="none" stroke="rgba(0,0,0,.45)" strokeWidth="6" />
                 <circle cx="50" cy="50" r="46" fill="none" stroke={hpCol} strokeWidth="6" strokeLinecap="round" strokeDasharray={`${hpLeft * 289} 289`} />
               </svg>
             )}
-            <span className="mh-map-face" title={hpLeft != null ? `Vida: ${t.hp[1] - t.hp[0]} de ${t.hp[1]}` : undefined}>{t.img && t.kind !== "pc" ? <img src={t.img} alt="" draggable={false} /> : <Emb size="52%" strokeWidth={2.1} />}</span>
+            <span className="mh-map-face" title={hpLeft != null && !plain ? `Vida: ${t.hp[1] - t.hp[0]} de ${t.hp[1]}` : undefined}>{t.img && t.kind !== "pc" ? <img src={t.img} alt="" draggable={false} /> : <Emb size="52%" strokeWidth={2.1} />}</span>
             {t.name && <span className="mh-map-nm">{t.name}</span>}
           </button>
         );
@@ -10031,7 +10032,7 @@ function MapBoard({ backdrop, fog, fogView, areas, areaTool, log, menuFor, fx, e
 }
 
 const MapOverlayCtx = createContext(null);
-function MapViewport({ focus, children }) {
+function MapViewport({ focus, noZoom, children }) {
   const ref = useRef(null);
   const pan = useRef(null);
   const [overflow, setOverflow] = useState(false);
@@ -10069,7 +10070,7 @@ function MapViewport({ focus, children }) {
   // La rueda del ratón acerca y aleja el mapa alrededor del puntero.
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    if (!el || noZoom) return;
     const onWheel = (e) => {
       // Dentro del menú del clic derecho, la rueda desplaza el menú.
       if (e.target.closest && e.target.closest(".mh-map-menu")) return;
@@ -27927,8 +27928,9 @@ export default function App({ onSignOut }) {
                           <div className="mh-dir-mapout">
                           <div className="mh-map-stage mh-dir-map">
                             <MapBackdrop bg={COMBAT_BG_TEST} />
-                            <MapViewport focus={null}>
+                            <MapViewport focus={null} noZoom>
                               <MapBoard
+                                plain
                                 backdrop
                                 bg={COMBAT_BG_TEST}
                                 fx={campaignMap.fx} efx={campaignMap.efx} hfx={campaignMap.hfx} spot={campaignMap.spot}
@@ -27938,17 +27940,12 @@ export default function App({ onSignOut }) {
                                 tokens={mapTokensView(campaignMap.tokens || []).map((t) => (t.kind !== "pc" && t.gmHidden ? { ...t, hidden: true, gmVeil: true } : t))}
                                 canMove={() => true}
                                 onMove={(id, x, y) => moveToken(viewingCampaignId, id, x, y)}
-                                selectedId={mapSel}
-                                onSelect={(id) => {
-                                  setMapSel(id);
-                                  const tk = (campaignMap.tokens || []).find((t) => t.id === id);
-                                  if (tk && tk.kind === "pc" && tk.charId && characters[tk.charId]) setQuickChar(tk.charId);
-                                }}
+                                selectedId={null}
+                                onSelect={() => {}}
                                 compact
                               />
                             </MapViewport>
                             {view === live ? <span className="mh-stg-live"><i />En directo</span> : <span className="mh-stg-live is-prev"><i />Solo tú lo ves</span>}
-                            <button type="button" className="mh-btn-ghost mh-dir-mapbtn" onClick={() => (setCombatBack(cur?.id || null), setCampaignDetailTab("mapa"))}><MapPinned size={13} /> Abrir tablero</button>
                           </div>
                           </div>
                         ) : view === "personajes" ? (

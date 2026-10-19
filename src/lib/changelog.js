@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "mejora", text: "Directo · mapa de combate simplificado por ahora: al pulsar una ficha no ocurre nada (ni rango ni ficha), sin zoom, sin barras de vida alrededor de las fichas y sin el botón «Abrir tablero». Las fichas se siguen arrastrando." },
       { tag: "arreglo", text: "Mapa de combate: la cuadrícula ya no deja cruces cortadas por la mitad en el borde del tablero; solo se dibujan las intersecciones interiores." },
       { tag: "arreglo", text: "Directo · el mapa de combate llena toda la caja «Tu vista»: la imagen de fondo y la cuadrícula ocupan todo el espacio y se ven todas las casillas completas (se ajustan un poco al tamaño de la caja; las fichas siguen cuadradas)." },
       { tag: "mejora", text: "Prueba: el tablero de combate usa temporalmente un mapa de batalla generado con IA (el camino con el carro volcado) como fondo, sin difuminar, para valorar cómo se juega encima." },
