@@ -5530,6 +5530,9 @@ const sharedStyles = `
   .mh-qs-row { display: flex; align-items: center; gap: 10px; } .mh-qs-row em { width: 84px; flex: none; font: 800 11px 'Inter', system-ui, sans-serif; font-style: normal; letter-spacing: .12em; text-transform: uppercase; color: var(--mh-muted); } .mh-qs-row b { margin-left: auto; font-size: 13px; }
   .mh-qs-pips { display: flex; gap: 4px; flex-wrap: wrap; } .mh-qs-pip { width: 14px; height: 14px; padding: 0; border-radius: 4px; border: 1.5px solid var(--pc); background: transparent; cursor: pointer; } .mh-qs-pip.is-on { background: var(--pc); }
   .mh-qs-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; } .mh-qs-stats > div { text-align: center; padding: 8px 4px; border-radius: 12px; background: var(--mh-panel2); border: 1px solid var(--mh-line); } .mh-qs-stats b { display: block; font: 700 20px 'Cormorant Garamond', Georgia, serif; } .mh-qs-stats small { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--mh-muted); }
+  .mh-dir-place { position: absolute; left: 10px; bottom: 10px; z-index: 6; max-width: calc(100% - 20px); display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 7px 9px; border-radius: 14px; border: 1px solid var(--mh-line2); background: color-mix(in srgb, var(--mh-panel) 94%, transparent); box-shadow: 0 6px 20px rgba(0,0,0,.35); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); } .mh-dir-place-h { font: 800 9.5px 'Inter', system-ui, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--mh-muted); margin-right: 2px; }
+  .mh-dir-place-chip { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px 3px 4px; border-radius: 99px; border: 1px solid var(--mh-line2); background: var(--mh-panel2); color: var(--mh-ink); font: 600 12px 'Inter', system-ui, sans-serif; } .mh-dir-place-chip i { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-size: 10px; color: #fff; } .mh-dir-place-chip:hover, .mh-dir-place-all:hover { border-color: var(--acc, #E3B04B); } .mh-dir-place-chip:focus-visible, .mh-dir-place-all:focus-visible { outline: 2px solid var(--acc, #E3B04B); outline-offset: 2px; }
+  .mh-dir-place-all { all: unset; cursor: pointer; padding: 4px 10px; border-radius: 99px; background: var(--acc, #E3B04B); color: var(--acc-on, #1F1606); font: 700 11.5px 'Inter', system-ui, sans-serif; }
   .mh-qs-line { margin: 0; font-size: 12px; line-height: 1.45; color: var(--mh-ink2); } .mh-qs-line b { color: var(--mh-ink); } .mh-qs-empty { margin: 0; font-size: 12.5px; color: var(--mh-muted); }
   .mh-qs-chips { display: flex; flex-wrap: wrap; gap: 6px; } .mh-qs-chips span { padding: 3px 9px; border-radius: 99px; font-size: 11px; font-weight: 700; border: 1px solid var(--mh-line2); background: var(--mh-panel2); } .mh-qs-chips span.is-cond { border-color: #E0544A; }
   .mh-qs-acts { display: flex; gap: 6px; flex-wrap: wrap; } .mh-qs-acts button { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; padding: 7px 11px; }
@@ -27955,6 +27958,35 @@ export default function App({ onSignOut }) {
                                 compact
                               />
                             </MapViewport>
+                            {(() => {
+                              // Jugadores sin ficha en el tablero: el DJ puede colocarlas desde aquí (la caja desaparece cuando ya están todas).
+                              const placed = new Set((campaignMap.tokens || []).filter((t) => t.kind === "pc").map((t) => t.charId));
+                              const missing = members.filter((m) => !placed.has(m.id));
+                              if (!missing.length) return null;
+                              const nameOf = (m) => m.ch.f_name || "Sin nombre";
+                              const placeAll = () =>
+                                mutateMap(viewingCampaignId, (tokens) => {
+                                  const cur = [...tokens];
+                                  missing.forEach((m) => {
+                                    const [x, y] = freeCell(cur);
+                                    cur.push({ id: "t" + Date.now() + Math.random().toString(36).slice(2, 5), x, y, kind: "pc", charId: m.id, name: nameOf(m) });
+                                  });
+                                  return cur;
+                                });
+                              return (
+                                <div className="mh-dir-place" onPointerDown={(e) => e.stopPropagation()} role="group" aria-label="Fichas de jugadores sin colocar">
+                                  <span className="mh-dir-place-h">Sin colocar</span>
+                                  {missing.map((m) => (
+                                    <button key={m.id} type="button" className="mh-dir-place-chip" title={"Colocar a " + nameOf(m) + " en el mapa"} onClick={() => placeToken({ kind: "pc", charId: m.id, name: nameOf(m) })}>
+                                      <i style={{ background: classColor(m.ch.f_class) }}>{nameOf(m).charAt(0).toUpperCase()}</i>
+                                      {nameOf(m)}
+                                      <Plus size={12} />
+                                    </button>
+                                  ))}
+                                  {missing.length > 1 && <button type="button" className="mh-dir-place-all" onClick={placeAll}>Colocar a todos</button>}
+                                </div>
+                              );
+                            })()}
                             {view === live ? <span className="mh-stg-live"><i />En directo</span> : <span className="mh-stg-live is-prev"><i />Solo tú lo ves</span>}
                           </div>
                           </div>
