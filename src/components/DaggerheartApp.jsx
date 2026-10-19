@@ -5532,6 +5532,9 @@ const sharedStyles = `
   .mh-qs-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; } .mh-qs-stats > div { text-align: center; padding: 8px 4px; border-radius: 12px; background: var(--mh-panel2); border: 1px solid var(--mh-line); } .mh-qs-stats b { display: block; font: 700 20px 'Cormorant Garamond', Georgia, serif; } .mh-qs-stats small { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--mh-muted); }
   .mh-dir-place { position: absolute; left: 10px; bottom: 10px; z-index: 6; max-width: calc(100% - 20px); display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 7px 9px; border-radius: 14px; border: 1px solid var(--mh-line2); background: color-mix(in srgb, var(--mh-panel) 94%, transparent); box-shadow: 0 6px 20px rgba(0,0,0,.35); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); } .mh-dir-place-h { font: 800 9.5px 'Inter', system-ui, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--mh-muted); margin-right: 2px; }
   .mh-dir-place-chip { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px 3px 4px; border-radius: 99px; border: 1px solid var(--mh-line2); background: var(--mh-panel2); color: var(--mh-ink); font: 600 12px 'Inter', system-ui, sans-serif; } .mh-dir-place-chip i { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-size: 10px; color: #fff; } .mh-dir-place-chip:hover, .mh-dir-place-all:hover { border-color: var(--acc, #E3B04B); } .mh-dir-place-chip:focus-visible, .mh-dir-place-all:focus-visible { outline: 2px solid var(--acc, #E3B04B); outline-offset: 2px; }
+  .mh-dir-place { transition: border-color .15s, box-shadow .15s; } .mh-dir-place.is-drop, .mh-dir-drawer.is-drop { border-color: var(--acc, #E3B04B); box-shadow: 0 0 0 3px color-mix(in srgb, var(--acc, #E3B04B) 35%, transparent), 0 6px 20px rgba(0,0,0,.35); } .mh-dir-place-chip { touch-action: none; cursor: grab; }
+  .mh-dir-drawer { position: absolute; left: 0; bottom: 14px; z-index: 6; display: flex; align-items: center; gap: 8px; padding: 10px 16px 10px 12px; border-radius: 0 14px 14px 0; border: 1px solid var(--mh-line2); border-left: 0; background: color-mix(in srgb, var(--mh-panel) 94%, transparent); color: var(--mh-ink); font: 600 12px 'Inter', system-ui, sans-serif; box-shadow: 0 6px 20px rgba(0,0,0,.35); transform: translateX(-105%); transition: transform .28s cubic-bezier(.2,.8,.2,1), border-color .15s, box-shadow .15s; pointer-events: none; } .mh-dir-drawer.is-open { transform: none; pointer-events: auto; } .mh-dir-drawer svg { color: var(--mh-gold-ink); } @media (prefers-reduced-motion: reduce) { .mh-dir-drawer { transition: none; } }
+  .mh-dir-ghost { position: fixed; z-index: 100001; width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 22%; border: 3px solid var(--tc); background: var(--tc); color: #fff; display: grid; place-items: center; font: 700 16px 'Cinzel', Georgia, serif; box-shadow: 0 10px 18px rgba(0,0,0,.45); pointer-events: none; } .mh-dir-ghost i { font-style: normal; }
   .mh-dir-place-all { all: unset; cursor: pointer; padding: 4px 10px; border-radius: 99px; background: var(--acc, #E3B04B); color: var(--acc-on, #1F1606); font: 700 11.5px 'Inter', system-ui, sans-serif; }
   .mh-qs-line { margin: 0; font-size: 12px; line-height: 1.45; color: var(--mh-ink2); } .mh-qs-line b { color: var(--mh-ink); } .mh-qs-empty { margin: 0; font-size: 12.5px; color: var(--mh-muted); }
   .mh-qs-chips { display: flex; flex-wrap: wrap; gap: 6px; } .mh-qs-chips span { padding: 3px 9px; border-radius: 99px; font-size: 11px; font-weight: 700; border: 1px solid var(--mh-line2); background: var(--mh-panel2); } .mh-qs-chips span.is-cond { border-color: #E0544A; }
@@ -9663,7 +9666,7 @@ function MapBackdrop({ bg }) {
   );
 }
 
-function MapBoard({ plain, backdrop, fog, fogView, areas, areaTool, log, menuFor, fx, efx, hfx, spot, bg, tokens, stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
+function MapBoard({ onDragInfo, onStore, plain, backdrop, fog, fogView, areas, areaTool, log, menuFor, fx, efx, hfx, spot, bg, tokens, stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
   const ref = useRef(null);
   const dragRef = useRef(null);
   const [drag, setDrag] = useState(null);
@@ -9757,6 +9760,8 @@ function MapBoard({ plain, backdrop, fog, fogView, areas, areaTool, log, menuFor
     dragRef.current = { id: t.id, x: t.x, y: t.y, moved: false };
     setDrag(dragRef.current);
     const sx = e.clientX, sy = e.clientY;
+    let lastOver = false;
+    const overStore = (ev) => document.elementsFromPoint(ev.clientX, ev.clientY).some((n) => n.closest && n.closest("[data-store-zone]"));
     const move = (ev) => {
       const d = dragRef.current;
       if (!d) return;
@@ -9769,12 +9774,20 @@ function MapBoard({ plain, backdrop, fog, fogView, areas, areaTool, log, menuFor
       const c = cellAt(ev);
       dragRef.current = { ...d, ...(c || {}), fx, fy, moved: true };
       setDrag(dragRef.current);
+      if (onDragInfo) {
+        const o = overStore(ev);
+        if (!d.moved || o !== lastOver) {
+          lastOver = o;
+          onDragInfo({ id: d.id, over: o });
+        }
+      }
     };
-    const up = () => {
+    const up = (ev) => {
       window.removeEventListener("pointermove", move);
       const d = dragRef.current;
       dragRef.current = null;
       setDrag(null);
+      if (onDragInfo) onDragInfo(null);
       if (!d) return;
       if (!d.moved) {
         // Un clic muestra (u oculta) su alcance y la deja elegida para moverla pulsando una casilla (no en el modo simple).
@@ -9785,6 +9798,8 @@ function MapBoard({ plain, backdrop, fog, fogView, areas, areaTool, log, menuFor
         const showing = rangeIdRef.current === d.id;
         setRangeId(showing ? null : d.id);
         onSelect(showing ? null : d.id);
+      } else if (onStore && ev && overStore(ev) && onStore(d.id)) {
+        /* ficha guardada */
       } else if (!occupied(d.x, d.y, d.id)) onMove(d.id, d.x, d.y);
     };
     window.addEventListener("pointermove", move);
@@ -10569,6 +10584,9 @@ export default function App({ onSignOut }) {
   const [ambOpen, setAmbOpen] = useState(false); // ventana de «Ambiente» (audio de la mesa)
   const [djWorldEdit, setDjWorldEdit] = useState(false);
   const [djCastEdit, setDjCastEdit] = useState(null);
+  const [djDragTok, setDjDragTok] = useState(null); // ficha de jugador que el DJ está arrastrando por el mapa: { id, over }
+  const [chipDrag, setChipDrag] = useState(null); // ficha arrastrada desde la caja «Sin colocar»: { id, name, color, x, y }
+  const chipSuppress = useRef(false);
   const [restPlayerOpen, setRestPlayerOpen] = useState(false); // ventana de descanso del jugador (se abre desde el banner o el chat)
   const [restPending, setRestPending] = useState(false); // al jugador le falta descansar en un descanso en curso
   // Proporción de la caja «Tu vista» del panel del DJ: el mapa de la pestaña Mundo se recorta igual para que se vean los mismos marcadores.
@@ -27939,6 +27957,13 @@ export default function App({ onSignOut }) {
                             <MapViewport focus={null} noZoom>
                               <MapBoard
                                 plain
+                                onDragInfo={(d) => setDjDragTok(d && (campaignMap.tokens || []).find((t) => t.id === d.id)?.kind === "pc" ? d : null)}
+                                onStore={(id) => {
+                                  const tk = (campaignMap.tokens || []).find((t) => t.id === id);
+                                  if (!tk || tk.kind !== "pc") return false;
+                                  removeToken(id);
+                                  return true;
+                                }}
                                 backdrop
                                 bg={COMBAT_BG_TEST}
                                 fx={campaignMap.fx} efx={campaignMap.efx} hfx={campaignMap.hfx} spot={campaignMap.spot}
@@ -27959,11 +27984,14 @@ export default function App({ onSignOut }) {
                               />
                             </MapViewport>
                             {(() => {
-                              // Jugadores sin ficha en el tablero: el DJ puede colocarlas desde aquí (la caja desaparece cuando ya están todas).
+                              // Jugadores sin ficha en el tablero: el DJ los coloca pulsando o arrastrándolos a una casilla. Arrastrar una ficha a la caja (o al cajón, si no hay caja) la guarda.
                               const placed = new Set((campaignMap.tokens || []).filter((t) => t.kind === "pc").map((t) => t.charId));
                               const missing = members.filter((m) => !placed.has(m.id));
-                              if (!missing.length) return null;
                               const nameOf = (m) => m.ch.f_name || "Sin nombre";
+                              const placeAt = (m, cx, cy) => {
+                                const taken = (campaignMap.tokens || []).some((t) => !t.vanished && t.x === cx && t.y === cy);
+                                placeToken({ kind: "pc", charId: m.id, name: nameOf(m), ...(cx != null && !taken ? { x: cx, y: cy } : {}) });
+                              };
                               const placeAll = () =>
                                 mutateMap(viewingCampaignId, (tokens) => {
                                   const cur = [...tokens];
@@ -27973,18 +28001,60 @@ export default function App({ onSignOut }) {
                                   });
                                   return cur;
                                 });
+                              const startChipDrag = (e, m) => {
+                                if (e.button > 0) return;
+                                const sx = e.clientX, sy = e.clientY;
+                                let moved = false;
+                                const move = (ev) => {
+                                  if (!moved && Math.hypot(ev.clientX - sx, ev.clientY - sy) < 5) return;
+                                  moved = true;
+                                  setChipDrag({ id: m.id, name: nameOf(m), color: classColor(m.ch.f_class), x: ev.clientX, y: ev.clientY });
+                                };
+                                const up = (ev) => {
+                                  window.removeEventListener("pointermove", move);
+                                  setChipDrag(null);
+                                  if (!moved) return;
+                                  chipSuppress.current = true;
+                                  setTimeout(() => (chipSuppress.current = false), 0);
+                                  const board = document.querySelector(".mh-dir-map .mh-map");
+                                  if (!board) return;
+                                  const r = board.getBoundingClientRect();
+                                  if (ev.clientX < r.left || ev.clientX > r.right || ev.clientY < r.top || ev.clientY > r.bottom) return;
+                                  const cx = Math.max(0, Math.min(MAP_COLS - 1, Math.floor(((ev.clientX - r.left) / r.width) * MAP_COLS)));
+                                  const cy = Math.max(0, Math.min(MAP_ROWS - 1, Math.floor(((ev.clientY - r.top) / r.height) * MAP_ROWS)));
+                                  placeAt(m, cx, cy);
+                                };
+                                window.addEventListener("pointermove", move);
+                                window.addEventListener("pointerup", up, { once: true });
+                              };
+                              const over = !!djDragTok?.over;
                               return (
-                                <div className="mh-dir-place" onPointerDown={(e) => e.stopPropagation()} role="group" aria-label="Fichas de jugadores sin colocar">
-                                  <span className="mh-dir-place-h">Sin colocar</span>
-                                  {missing.map((m) => (
-                                    <button key={m.id} type="button" className="mh-dir-place-chip" title={"Colocar a " + nameOf(m) + " en el mapa"} onClick={() => placeToken({ kind: "pc", charId: m.id, name: nameOf(m) })}>
-                                      <i style={{ background: classColor(m.ch.f_class) }}>{nameOf(m).charAt(0).toUpperCase()}</i>
-                                      {nameOf(m)}
-                                      <Plus size={12} />
-                                    </button>
-                                  ))}
-                                  {missing.length > 1 && <button type="button" className="mh-dir-place-all" onClick={placeAll}>Colocar a todos</button>}
-                                </div>
+                                <>
+                                  {missing.length > 0 ? (
+                                    <div className={"mh-dir-place" + (over ? " is-drop" : "")} data-store-zone="1" onPointerDown={(e) => e.stopPropagation()} role="group" aria-label="Fichas de jugadores sin colocar">
+                                      <span className="mh-dir-place-h">{over ? "Suelta para guardar" : "Sin colocar"}</span>
+                                      {missing.map((m) => (
+                                        <button key={m.id} type="button" className="mh-dir-place-chip" title={"Arrastra a una casilla o pulsa para colocar a " + nameOf(m)} onPointerDown={(e) => startChipDrag(e, m)} onClick={() => !chipSuppress.current && placeAt(m)}>
+                                          <i style={{ background: classColor(m.ch.f_class) }}>{nameOf(m).charAt(0).toUpperCase()}</i>
+                                          {nameOf(m)}
+                                          <Plus size={12} />
+                                        </button>
+                                      ))}
+                                      {missing.length > 1 && <button type="button" className="mh-dir-place-all" onClick={placeAll}>Colocar a todos</button>}
+                                    </div>
+                                  ) : (
+                                    <div className={"mh-dir-drawer" + (djDragTok ? " is-open" : "") + (over ? " is-drop" : "")} data-store-zone="1" aria-hidden={!djDragTok}>
+                                      <Archive size={16} />
+                                      <span>{over ? "Suelta para guardar" : "Arrastra aquí para guardar la ficha"}</span>
+                                    </div>
+                                  )}
+                                  {chipDrag && createPortal(
+                                    <div className="mh-dir-ghost" style={{ left: chipDrag.x, top: chipDrag.y, "--tc": chipDrag.color }} aria-hidden="true">
+                                      <i>{chipDrag.name.charAt(0).toUpperCase()}</i>
+                                    </div>,
+                                    document.body
+                                  )}
+                                </>
                               );
                             })()}
                             {view === live ? <span className="mh-stg-live"><i />En directo</span> : <span className="mh-stg-live is-prev"><i />Solo tú lo ves</span>}

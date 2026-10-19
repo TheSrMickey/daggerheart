@@ -6,7 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
-      { tag: "nuevo", text: "Directo · mapa de combate: si hay jugadores sin ficha en el tablero, aparece una caja «Sin colocar» sobre el mapa para que el DJ los coloque uno a uno o a todos a la vez; desaparece cuando están todos." },
+      { tag: "nuevo", text: "Directo · mapa de combate: la caja «Sin colocar» deja arrastrar a cada jugador a la casilla que quieras (o pulsarlo, o «Colocar a todos»). Arrastrar una ficha de jugador a la caja la guarda de nuevo; si ya están todas colocadas, al arrastrar una ficha sale un cajón abajo a la izquierda para guardarla." },
       { tag: "nuevo", text: "Directo · al pulsar una ficha del mapa de combate, la caja «El grupo» se sustituye por su información: la ficha rápida si es un personaje, y vida, estrés, dificultad, umbrales, ataque y rasgos si es un enemigo o PNJ. Se vuelve al grupo con «Grupo»." },
       { tag: "mejora", text: "Directo · mapa de combate: clic derecho en cualquier ficha para «Ver rango» (y «Ocultar rango»), las bandas de alcance a su alrededor." },
       { tag: "mejora", text: "Directo · mapa de combate simplificado por ahora: al pulsar una ficha no ocurre nada (ni rango ni ficha), sin zoom, sin barras de vida alrededor de las fichas y sin el botón «Abrir tablero». Las fichas se siguen arrastrando." },
