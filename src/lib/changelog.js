@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "arreglo", text: "Tablero de combate: en modo claro la cuadrícula se veía oscura sobre el fondo y no se distinguía; ahora se ve igual que en modo oscuro." },
       { tag: "nuevo", text: "Directo · mapa de combate: la caja «Sin colocar» deja arrastrar a cada jugador a la casilla que quieras (o pulsarlo, o «Colocar a todos»). Arrastrar una ficha de jugador a la caja la guarda de nuevo; si ya están todas colocadas, al arrastrar una ficha sale un pequeño cajón en la esquina inferior izquierda (solo un icono, para no tapar casillas) donde soltarla para guardarla." },
       { tag: "nuevo", text: "Directo · al pulsar una ficha del mapa de combate, la caja «El grupo» se sustituye por su información: la ficha rápida si es un personaje, y vida, estrés, dificultad, umbrales, ataque y rasgos si es un enemigo o PNJ. Se vuelve al grupo con «Grupo»." },
       { tag: "mejora", text: "Directo · mapa de combate: clic derecho en cualquier ficha para «Ver rango» (y «Ocultar rango»), las bandas de alcance a su alrededor." },
