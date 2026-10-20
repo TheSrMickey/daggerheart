@@ -15,7 +15,7 @@ import { Tour } from "./Tour";
 import { Dice3D, canDice3d, DICE3D_SIDES } from "./Dice3D";
 import { DicePage } from "./DiceSkins";
 import WorldMap from "./WorldMap";
-import { DialoguePromptHelper } from "./ImagePrompts";
+import { DialoguePromptHelper, CombatBgPromptHelper, describeMapForPrompt } from "./ImagePrompts";
 import { LevelUpDialog, parseAdvances, ownedCards, getMulticlass, MAX_LEVEL, rankOf } from "./LevelUp";
 import { RulesPanel } from "./MapRules";
 import { Changelog } from "./Changelog";
@@ -4753,7 +4753,8 @@ const sharedStyles = `
   .mh-map.is-blank { background-image: linear-gradient(#3F4B5E, #2B3A4F); }
   .mh-map-bg { position: absolute; inset: -16px; background: center / cover no-repeat; filter: blur(9px) saturate(1.05) brightness(.82); pointer-events: none; animation: mh-gridin 1.2s ease both; }
   .mh-map-backdrop { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; } .mh-map-sharp { position: absolute; inset: 0; background: center / cover no-repeat; }
-  .mh-map-backdrop .mh-map-bg { inset: 0; } .mh-map-backdrop.is-battlemap .mh-map-bg { display: none; } .mh-map-backdrop.is-battlemap .mh-map-tint { background: rgba(8,8,26,.16); } .mh-map-stage .mh-map { background: transparent !important; }
+  .mh-map-backdrop .mh-map-bg { inset: 0; } .mh-map-backdrop.is-battlemap .mh-map-bg { display: none; } .mh-map-tint.is-light { background: rgba(8,8,26,.16); animation: none; } .mh-map-flat .mh-map-sharp { position: absolute; inset: 0; background: center / cover no-repeat; pointer-events: none; }
+  .mh-map-backdrop.is-battlemap .mh-map-tint { background: rgba(8,8,26,.16); } .mh-map-stage .mh-map { background: transparent !important; }
   .mh-map-tint { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(20,22,64,.32), rgba(10,10,34,.52)); animation: mh-gridin .9s ease .15s both; }
   /* El tablero se ve igual en modo claro y oscuro: fondo oscurecido y cuadrícula clara */
   html[data-mh-theme="light"] .mh-map .mh-map-grid { background: color-mix(in srgb, #fff 52%, transparent); }
@@ -5473,7 +5474,7 @@ const sharedStyles = `
   .mh-hs-amb .mh-gm-sc-edit { max-width: 640px; }
   /* Directo */
   .mh-dir { display: flex; flex-direction: column; gap: 16px; }
-  .mh-dir-top { display: grid; grid-template-columns: minmax(0, 1fr) clamp(372px, 26vw, 480px); grid-template-rows: minmax(0, 1fr) 156px; gap: 14px; height: clamp(560px, calc(100dvh - 190px), 1200px); }
+  .mh-dir-top { display: grid; grid-template-columns: minmax(0, 1fr) clamp(372px, 26vw, 480px); grid-template-rows: minmax(0, 1fr) 214px; gap: 14px; height: clamp(600px, calc(100dvh - 190px), 1200px); }
   .mh-dir-stage { grid-column: 1; padding: 12px; border-radius: 22px; background: var(--mh-panel); border: 1px solid var(--mh-line); display: flex; flex-direction: column; gap: 10px; position: relative; }
   .mh-dir-top .mh-dir-below { min-height: 0; overflow: auto; padding: 8px 10px; display: flex; flex-direction: column; justify-content: center; } .mh-dir-top .mh-dir-below > .mh-tl { flex: none; } .mh-tl .mh-ch-step { padding: 9px 12px; gap: 4px; } .mh-dir.is-imm .mh-dir-top .mh-dir-below { overflow: visible; }
   .mh-dir-xlock { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 99px; background: #D9644E; color: #fff; } .mh-dir.is-xlock .mh-dir-live, .mh-dir.is-xlock .mh-dir-chnav, .mh-dir.is-xlock .mh-dir-show, .mh-dir.is-xlock .mh-dir-below .mh-tl, .mh-dir.is-xlock .mh-dir-dock .mh-tl { opacity: .45; } .mh-dir.is-xlock .mh-dir-show { pointer-events: none; }
@@ -5540,6 +5541,23 @@ const sharedStyles = `
   .mh-qs-line { margin: 0; font-size: 12px; line-height: 1.45; color: var(--mh-ink2); } .mh-qs-line b { color: var(--mh-ink); } .mh-qs-empty { margin: 0; font-size: 12.5px; color: var(--mh-muted); }
   .mh-qs-chips { display: flex; flex-wrap: wrap; gap: 6px; } .mh-qs-chips span { padding: 3px 9px; border-radius: 99px; font-size: 11px; font-weight: 700; border: 1px solid var(--mh-line2); background: var(--mh-panel2); } .mh-qs-chips span.is-cond { border-color: #E0544A; }
   .mh-qs-acts { display: flex; gap: 6px; flex-wrap: wrap; } .mh-qs-acts button { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; padding: 7px 11px; }
+
+  .mh-tlr { display: flex; align-items: center; gap: 8px; overflow-x: auto; padding: 22px 2px 8px; margin-bottom: 4px; scrollbar-width: thin; }
+  .mh-tlr-ch { flex: none; display: flex; align-items: center; padding: 5px 9px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel2); }
+  .mh-tlr-c { font-size: 10px; font-weight: 800; letter-spacing: .08em; color: var(--mh-muted); margin-right: 8px; white-space: nowrap; max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
+  .mh-tlr-ln { width: 12px; height: 2px; background: var(--mh-line2); margin: 0 1px; }
+  .mh-tlr-n { position: relative; display: inline-flex; align-items: center; gap: 5px; padding: 4px 6px; border: 0; border-radius: 9px; background: transparent; color: var(--mh-ink3); font: 600 12px 'Inter', system-ui, sans-serif; cursor: pointer; }
+  .mh-tlr-n i { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--mh-line2); display: block; }
+  .mh-tlr-n:hover { background: var(--mh-panel); }
+  .mh-tlr-n em { position: absolute; top: -19px; left: 50%; transform: translateX(-50%); font: 800 9px 'Inter', system-ui, sans-serif; font-style: normal; letter-spacing: .1em; text-transform: uppercase; padding: 2px 7px; border-radius: 99px; white-space: nowrap; z-index: 1; }
+  .mh-tlr-n.me { color: var(--mh-ink); background: rgba(227,176,75,.16); } .mh-tlr-n.me i { border-color: #E3B04B; background: #E3B04B; box-shadow: 0 0 0 4px rgba(227,176,75,.28); } .mh-tlr-n.me em { background: #E3B04B; color: #241a05; }
+  .mh-tlr-n.pl { color: var(--mh-ink); background: rgba(224,84,74,.16); } .mh-tlr-n.pl i { border-color: #E0544A; background: #E0544A; box-shadow: 0 0 0 4px rgba(224,84,74,.25); } .mh-tlr-n.pl em { background: #E0544A; color: #fff; }
+  .mh-tlr-n.both { color: var(--mh-ink); background: linear-gradient(90deg, rgba(227,176,75,.2), rgba(224,84,74,.2)); } .mh-tlr-n.both i { border-color: #fff; background: linear-gradient(90deg, #E3B04B 50%, #E0544A 50%); box-shadow: 0 0 0 4px rgba(255,255,255,.18); } .mh-tlr-n.both em { background: linear-gradient(90deg, #E3B04B, #E0544A); color: #fff; }
+  .mh-dir-ven { display: inline-flex; align-items: center; gap: 7px; padding: 6px 11px; border-radius: 12px; background: rgba(224,84,74,.14); border: 1px solid rgba(224,84,74,.5); font-size: 12px; font-weight: 700; color: var(--mh-ink); white-space: nowrap; } .mh-dir-ven i { width: 8px; height: 8px; border-radius: 50%; background: #E0544A; display: block; }
+  .mh-dir-seen2 { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; color: var(--mh-green-ink, #4cc36b); white-space: nowrap; }
+  .mh-dir-prevbar { position: absolute; right: 12px; top: 12px; z-index: 6; display: flex; gap: 6px; align-items: center; } .mh-dir-prevbar .mh-btn-ghost { background: var(--mh-panel); display: inline-flex; gap: 5px; align-items: center; font-size: 12px; padding: 6px 11px; } .mh-dir-prevbar select { padding: 5px 8px; font-size: 12px; max-width: 200px; }
+  .mh-dir-mapout > .mh-stg-live.is-prev { position: absolute; left: 12px; top: 12px; z-index: 6; }
+  .mh-dir-bar { row-gap: 6px; }
   .mh-tl-sub { text-transform: none !important; letter-spacing: 0 !important; color: var(--mh-ink3) !important; }
   @keyframes mhTlIn { from { transform: translateX(38%); opacity: .35; } to { transform: none; opacity: 1; } }
   @media (prefers-reduced-motion: reduce) { .mh-tl-track { animation: none; } }
@@ -7051,10 +7069,10 @@ const sharedStyles = `
   .mhm-zoom.is-fill { display: flex; flex-direction: column; overflow: visible; }
   .mhm-zoom.is-fill .mh-sheet, .mhm-zoom.is-fill .mh-sheet-scroll, .mhm-zoom.is-fill .mh-sheet-body, .mhm-zoom.is-fill .mh-sheet-body > div, .mhm-zoom.is-fill .mh-sheet-body > div > div { width: 100%; margin: 0 !important; flex: 1; min-height: 0; display: flex; flex-direction: column; }
   .mhm-zoom.is-fill .mh-sheet-body > div > div > div { flex: 1; min-height: 0; }
-  .mh-rail-chat { height: 100%; padding: 16px 14px; display: flex; flex-direction: column; }
-  .mh-rail-chat .mh-panel-box { flex: 1; min-height: 0; border: 0 !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; padding: 0 !important; }
-  .mh-rail-chat .mh-panel-box > div:first-child { height: auto !important; margin: 0 0 10px !important; padding: 0 4px 10px; border-bottom: 1px solid var(--mh-line); }
-  .mh-rail-chat .mh-panel-box > div:first-child .mh-serif { font-family: inherit !important; font-size: 13px !important; font-weight: 600 !important; letter-spacing: 0 !important; }
+  .mh-tlr-chat { height: 100%; padding: 16px 14px; display: flex; flex-direction: column; }
+  .mh-tlr-chat .mh-panel-box { flex: 1; min-height: 0; border: 0 !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; padding: 0 !important; }
+  .mh-tlr-chat .mh-panel-box > div:first-child { height: auto !important; margin: 0 0 10px !important; padding: 0 4px 10px; border-bottom: 1px solid var(--mh-line); }
+  .mh-tlr-chat .mh-panel-box > div:first-child .mh-serif { font-family: inherit !important; font-size: 13px !important; font-weight: 600 !important; letter-spacing: 0 !important; }
   .mh-sheet.is-embedded { min-height: 0; }
   .mhm-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; } .mhm-col { display: flex; flex-direction: column; gap: 16px; }
   .mhm-panel { border-radius: 16px; padding: 18px 20px; background: var(--mh-panel); border: 1px solid var(--mh-line); }
@@ -9651,15 +9669,12 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement }) {
   );
 }
 
-// PRUEBA TEMPORAL: fondo fijo del tablero de combate (mapa generado con IA). Para volver al de la escena, pon aquí null y usa imgSrc(escena.image) en los 3 sitios.
-const COMBAT_BG_TEST = "/escenas/combate-prueba.webp";
-
 // Escena de fondo del tablero: la imagen nítida ocupa la misma caja que la escena y, encima, la versión difuminada aparece con fundido (sin cambiar de tamaño ni de posición).
-function MapBackdrop({ bg }) {
+function MapBackdrop({ bg, sharp }) {
   if (!bg) return null;
   const u = `url("${bg.replace(/"/g, "%22")}")`;
   return (
-    <div className={"mh-map-backdrop" + (bg === COMBAT_BG_TEST ? " is-battlemap" : "")} aria-hidden="true">
+    <div className={"mh-map-backdrop" + (sharp ? " is-battlemap" : "")} aria-hidden="true">
       <div className="mh-map-sharp" style={{ backgroundImage: u }} />
       <div key={bg} className="mh-map-bg" style={{ backgroundImage: u }} />
       <div className="mh-map-tint" />
@@ -9667,7 +9682,7 @@ function MapBackdrop({ bg }) {
   );
 }
 
-function MapBoard({ onDragInfo, onStore, plain, backdrop, fog, fogView, areas, areaTool, log, menuFor, fx, efx, hfx, spot, bg, tokens, stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
+function MapBoard({ onDragInfo, onStore, plain, backdrop, sharp, fog, fogView, areas, areaTool, log, menuFor, fx, efx, hfx, spot, bg, tokens, stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
   const ref = useRef(null);
   const dragRef = useRef(null);
   const [drag, setDrag] = useState(null);
@@ -9901,8 +9916,8 @@ function MapBoard({ onDragInfo, onStore, plain, backdrop, fog, fogView, areas, a
     >
       <div className="mh-map-flat">
       {/* La escena va difuminada de fondo; encima van la cuadrícula de color y las fichas */}
-      {bg && !backdrop && <div key={bg} className="mh-map-bg" style={{ backgroundImage: `url("${bg.replace(/"/g, "%22")}")` }} />}
-      {!backdrop && <div className="mh-map-tint" />}
+      {bg && !backdrop && (sharp ? <div className="mh-map-sharp" style={{ backgroundImage: `url("${bg.replace(/"/g, "%22")}")` }} /> : <div key={bg} className="mh-map-bg" style={{ backgroundImage: `url("${bg.replace(/"/g, "%22")}")` }} />)}
+      {!backdrop && <div className={"mh-map-tint" + (sharp ? " is-light" : "")} />}
       {rangeCells.map(([x, y, band]) => (
         <div
           key={"r" + x + "," + y}
@@ -10609,6 +10624,8 @@ export default function App({ onSignOut }) {
     dirMonRO.current = ro;
   }, []);
   const [pstFilter, setPstFilter] = useState("all");
+  const [djCh, setDjCh] = useState(null); // capítulo que mira el DJ en privado (null = el que ven los jugadores; "__none" = ninguno)
+  const [djStep, setDjStep] = useState(null); // paso de la línea de tiempo que mira el DJ (img | dlg | cmb)
   const [djView, setDjView] = useState(null); // lo que el DJ está viendo en Directo (null = lo mismo que ven los jugadores)
   const [quickChar, setQuickChar] = useState(null); // personaje cuya ficha rápida sustituye a «El grupo» en Directo
   const [mapPick, setMapPick] = useState({}); // por capítulo: mapa de combate elegido
@@ -10970,6 +10987,8 @@ export default function App({ onSignOut }) {
   };
   // Las imágenes de escena subidas se guardan aparte (su valor es "img:<id>") y se muestran con lo ya descargado.
   const imgSrc = (u) => (u && u.startsWith("img:") ? castImgs[u.slice(4)] || "" : u || "");
+  // Fondo del tablero: el del propio mapa (nítido, para jugar encima) o, si no tiene, la escena difuminada.
+  const mapBgOf = (mapDoc, sceneImg) => (mapDoc?.bg ? { src: imgSrc(mapDoc.bg), sharp: true } : { src: imgSrc(sceneImg), sharp: false });
   const bgStyle = (u) => {
     const v = imgSrc(u);
     return v ? { backgroundImage: `url("${v.replace(/"/g, "%22")}")` } : undefined;
@@ -11037,6 +11056,7 @@ export default function App({ onSignOut }) {
         if (mp) m = JSON.parse(mp.value);
       } catch (e) {}
       (m.tokens || []).forEach((t) => t.imgId && ensureCastImg(t.imgId));
+      if (m.bg && m.bg.startsWith("img:")) ensureCastImg(m.bg.slice(4));
       setCampaignMap(m);
     };
     setCampaignMap({ tokens: [] });
@@ -14505,7 +14525,9 @@ export default function App({ onSignOut }) {
   // Si cambia lo que ven los jugadores (o de campaña), la vista del DJ vuelve a seguirlo.
   useEffect(() => {
     setDjView(null);
-  }, [campaignStage.live, viewingCampaignId]);
+    setDjCh(null);
+    setDjStep(null);
+  }, [campaignStage.live, campaignStage.activeSceneId, campaignStage.tlStep, viewingCampaignId]);
   const showOnStage = async (key) => {
     if (campaignStage.xcard?.on) return;
     if (!viewingCampaignId || (campaignStage.live || "escena") === key) return;
@@ -14670,7 +14692,8 @@ export default function App({ onSignOut }) {
   const loadSavedMap = async (m, skipConfirm) => {
     if (!viewingCampaignId || (!skipConfirm && !window.confirm("¿Cargar «" + m.name + "»? Sustituye el mapa actual (las fichas de los jugadores se quedan)."))) return false;
     const keep = (campaignMap.tokens || []).filter((t) => t.kind === "pc" || t.kind === "pet");
-    const next = { tokens: [...(m.map.tokens || []).map((t) => ({ ...t })), ...keep], props: m.map.props || [], terrain: m.map.terrain || [], counters: m.map.counters || [], ...(m.map.fog ? { fog: m.map.fog } : {}), areas: [], hits: [], log: [] };
+    const next = { tokens: [...(m.map.tokens || []).map((t) => ({ ...t })), ...keep], props: m.map.props || [], terrain: m.map.terrain || [], counters: m.map.counters || [], ...(m.map.fog ? { fog: m.map.fog } : {}), bg: m.map.bg || "", mapId: m.id, areas: [], hits: [], log: [] };
+    if (next.bg && next.bg.startsWith("img:")) ensureCastImg(next.bg.slice(4));
     setCampaignMap(next);
     await safeSet("campaign-map:" + viewingCampaignId, JSON.stringify(next), true);
     setMapSel(null);
@@ -14680,7 +14703,7 @@ export default function App({ onSignOut }) {
   const saveCurrentMap = async () => {
     const name = mapNameDraft.trim();
     if (!name) return;
-    const map = { tokens: (campaignMap.tokens || []).filter((t) => t.kind !== "pc" && t.kind !== "pet"), props: campaignMap.props || [], terrain: campaignMap.terrain || [], counters: campaignMap.counters || [], ...(campaignMap.fog ? { fog: campaignMap.fog } : {}) };
+    const map = { tokens: (campaignMap.tokens || []).filter((t) => t.kind !== "pc" && t.kind !== "pet"), props: campaignMap.props || [], terrain: campaignMap.terrain || [], counters: campaignMap.counters || [], ...(campaignMap.fog ? { fog: campaignMap.fog } : {}), ...(campaignMap.bg ? { bg: campaignMap.bg } : {}) };
     const same = campaignMaps.find((x) => x.name === name);
     await saveMapsLib(same ? campaignMaps.map((x) => (x.id === same.id ? { ...x, map } : x)) : [...campaignMaps, { id: "m" + Date.now(), name, map, sceneId: combatBack || activeSceneIdOf(campaignStage) || null }]);
     setMapNameDraft("");
@@ -20242,11 +20265,12 @@ export default function App({ onSignOut }) {
                                       {/* La escena llena la caja (difuminada por detrás) y el tablero, con casillas cuadradas, se ajusta dentro */}
                                       <FocusBar spot={campaignMap.spot} pcs={focusPcs(campaignMap.tokens)} myCharId={viewingCharId} isGm={false} onPass={(t, why) => passFocus(charCampaign.id, t, why)} onClear={() => {}} />
                                       <div className="mh-map-stage">
-                                        <MapBackdrop bg={COMBAT_BG_TEST} />
+                                        <MapBackdrop bg={mapBgOf(campaignMap, scene.image).src} sharp={mapBgOf(campaignMap, scene.image).sharp} />
                                         <MapViewport focus={myToken ? { x: myToken.x, y: myToken.y } : null}>
                                           <MapBoard
                                             backdrop
-                                            bg={COMBAT_BG_TEST}
+                                            bg={mapBgOf(campaignMap, scene.image).src}
+                                            sharp={mapBgOf(campaignMap, scene.image).sharp}
                                             fx={campaignMap.fx} efx={campaignMap.efx} hfx={campaignMap.hfx} spot={campaignMap.spot}
                                             fog={campaignMap.fog}
                                             fogView="player"
@@ -27453,7 +27477,7 @@ export default function App({ onSignOut }) {
       <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
         {showRail && (
           <div className="mh-rail">
-            {modernCamp ? <div ref={setChatSlot} className="mh-rail-chat" /> : <FriendsPanel renderClass={renderClassDot} />}
+            {modernCamp ? <div ref={setChatSlot} className="mh-tlr-chat" /> : <FriendsPanel renderClass={renderClassDot} />}
           </div>
         )}
         {showTopbar && (
@@ -27851,6 +27875,11 @@ export default function App({ onSignOut }) {
                     const live = stage.live || "escena";
                     const xLock = !!stage.xcard?.on; // con la X-Card activa el DJ no cambia de vista ni de capítulo
                     const view = djView || live; // lo que el DJ ve; los jugadores solo ven «live»
+                    // Capítulo que mira el DJ (en privado) y que puede ser distinto del que ven los jugadores.
+                    const vc = djCh === "__none" ? null : djCh ? scenes.find((x) => x.id === djCh) || cur : cur;
+                    const vcIdx = vc ? scenes.indexOf(vc) : -1;
+                    const chDiverge = (vc?.id || null) !== (cur?.id || null);
+                    const vcImg = vc?.image || (chDiverge ? "" : stage.scene?.image);
                     const imm = !!settings.immersive;
                     const liveId = stage.dialogue?.lineId;
                     const liveConv = liveId ? dialogueConvs.find((c) => c.lines.some((l) => l.id === liveId)) : null;
@@ -27877,9 +27906,9 @@ export default function App({ onSignOut }) {
                         <small>Haced una pausa y hablad de ello en la mesa.</small>
                       </div>
                     );
-                    const barEl = (
+                    const renderBar = () => (
                       <div className="mh-dir-bar">
-                        <span className="mh-dir-lbl">Tu vista</span>
+                        <span className="mh-dir-lbl">Voy a</span>
                         <div className="mh-dir-live" role="tablist" aria-label="Qué estás viendo tú" inert={xLock || undefined}>
                           {STAGE_TABS.map((t) => {
                             const TI = t.Icon;
@@ -27891,20 +27920,25 @@ export default function App({ onSignOut }) {
                             );
                           })}
                         </div>
-                        {view !== live && (
-                          <button type="button" className="mh-btn mh-dir-show" onClick={() => showOnStage(view)} title={"Los jugadores ven " + liveLabel + ". Pulsa para que vean " + viewLabel}>
-                            <Play size={13} /> Mostrar a los jugadores
-                          </button>
+                        {diverged ? (
+                          <>
+                            <span className="mh-dir-ven" title="Lo que ven ahora los jugadores"><i />Ven: {cur ? "Cap. " + (idx + 1) + " · " : ""}{{ escena: "Escena", mapa: "Combate", mundo: "Mundo", pistas: "Pistas", personajes: "Personajes" }[live]}</span>
+                            <button type="button" className="mh-btn mh-dir-show" onClick={publishMine} title="Los jugadores pasarán a ver lo que tienes tú ahora">
+                              <Play size={13} /> Mostrar
+                            </button>
+                          </>
+                        ) : (
+                          <span className="mh-dir-seen2"><Check size={13} /> Ven lo mismo que tú</span>
                         )}
                         {scenes.length > 0 && (
                           <div className="mh-dir-chnav" inert={xLock || undefined}>
-                            <button type="button" className="mh-gm-ib" aria-label={idx === 0 ? "Quitar el capítulo de la pantalla" : "Capítulo anterior"} title={idx === 0 ? "Volver a «A la espera de una escena»" : "Capítulo anterior"} disabled={idx < 0} onClick={() => (idx === 0 ? hideScene() : showScene(scenes[idx - 1].id))}>
+                            <button type="button" className="mh-gm-ib" aria-label={vcIdx === 0 ? "Sin escena" : "Capítulo anterior"} title={vcIdx === 0 ? "Sin escena (solo lo ves tú hasta que pulses Mostrar)" : "Capítulo anterior (solo tú)"} disabled={vcIdx < 0} onClick={() => (setDjStep(null), setDjCh(vcIdx === 0 ? "__none" : scenes[vcIdx - 1].id))}>
                               <ChevronLeft size={14} />
                             </button>
-                            <button type="button" className="mh-dir-chpill" onClick={() => cur && openChapter(cur.id)} title="Preparar este capítulo">
-                              {cur ? "Cap. " + (idx + 1) + " · " + (cur.title || "Sin título") : "Sin escena"}
+                            <button type="button" className="mh-dir-chpill" onClick={() => vc && openChapter(vc.id)} title="Preparar este capítulo">
+                              {vc ? "Cap. " + (vcIdx + 1) + " · " + (vc.title || "Sin título") : "Sin escena"}
                             </button>
-                            <button type="button" className="mh-gm-ib" aria-label="Capítulo siguiente" disabled={cur ? idx >= scenes.length - 1 : false} onClick={() => showScene(scenes[cur ? idx + 1 : 0].id)}>
+                            <button type="button" className="mh-gm-ib" aria-label="Capítulo siguiente" title="Capítulo siguiente (solo tú)" disabled={vc ? vcIdx >= scenes.length - 1 : false} onClick={() => (setDjStep(null), setDjCh(scenes[vc ? vcIdx + 1 : 0].id))}>
                               <ChevronRight size={14} />
                             </button>
                           </div>
@@ -27917,23 +27951,27 @@ export default function App({ onSignOut }) {
                         )}
                       </div>
                     );
+                    // Mapa de combate que mira el DJ: el del directo o, si es de otro capítulo, una vista previa del guardado.
+                    const vcMaps = vc ? campaignMaps.filter((m) => m.sceneId === vc.id) : [];
+                    const pickedMap = vcMaps.find((m) => m.id === mapPick[vc?.id]) || vcMaps[0];
+                    const mapMode = !vc ? "live" : vcMaps.length === 0 ? (chDiverge ? "none" : "live") : campaignMap.mapId ? (vcMaps.some((m) => m.id === campaignMap.mapId) ? "live" : "preview") : vc.id === cur?.id ? "live" : "preview";
                     const monEl = (
-                      <div ref={dirMonRef} key={view + "|" + (cur?.id || "") + "|" + (cur?.image || stage.scene?.image || "")} className={"mh-dir-mon" + (view === "escena" && (cur?.image || stage.scene?.image) ? "" : " is-blank") + (view === "mapa" ? " is-map" : "")} style={view === "escena" || view === "mapa" ? bgStyle(cur?.image || stage.scene?.image) : undefined}>
+                      <div ref={dirMonRef} key={view + "|" + (vc?.id || "") + "|" + (vcImg || "")} className={"mh-dir-mon" + (view === "escena" && vcImg ? "" : " is-blank") + (view === "mapa" ? " is-map" : "")} style={view === "escena" || view === "mapa" ? bgStyle(vcImg) : undefined}>
                         {view === "escena" ? (
                           <>
-                            <SceneFx fx={cur?.fx || stage.scene?.fx || []} />
-                            {cur && (cur.fx || []).length > 0 && (() => {
-                              const k = cur.fx[0];
+                            <SceneFx fx={vc?.fx || (chDiverge ? [] : stage.scene?.fx) || []} />
+                            {vc && (vc.fx || []).length > 0 && (() => {
+                              const k = vc.fx[0];
                               const FI = FX_ICONS[k];
                               return (
                                 <span className="mh-dir-tag">
                                   {FI && <FI size={11} />} {SCENE_FX.find((fx) => fx.k === k)?.n}
-                                  {cur.fx.length > 1 ? " +" + (cur.fx.length - 1) : ""}
+                                  {vc.fx.length > 1 ? " +" + (vc.fx.length - 1) : ""}
                                 </span>
                               );
                             })()}
-                            {(cur || stage.scene?.image) && (view === live ? <span className="mh-stg-live"><i />En directo</span> : <span className="mh-stg-live is-prev"><i />Solo tú lo ves</span>)}
-                            {!cur && !stage.scene?.image && (
+                            {(vc || vcImg) && (view === live && !chDiverge ? <span className="mh-stg-live"><i />En directo</span> : <span className="mh-stg-live is-prev"><i />Solo tú lo ves{vc ? " · Cap. " + (vcIdx + 1) : ""}</span>)}
+                            {!vc && !vcImg && (
                               <div className="mh-dir-empty mh-dir-wait">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img src="/logo.svg" alt="" />
@@ -27941,7 +27979,7 @@ export default function App({ onSignOut }) {
                               </div>
                             )}
                             {stage.xcard?.on && xcardEl}
-                            {dlg && (
+                            {dlg && !chDiverge && (
                               <div className="mh-dlg is-mini">
                                 <DialogueFigure key={dlg.castId || dlg.name} src={dlgImg} alt="" expr={dlg.expr || "tranquila"} />
                                 <div className="mh-dlg-box">
@@ -27951,10 +27989,46 @@ export default function App({ onSignOut }) {
                               </div>
                             )}
                           </>
+                        ) : view === "mapa" && mapMode !== "live" ? (
+                          mapMode === "none" ? (
+                            <div className="mh-dir-empty">
+                              <Swords size={28} strokeWidth={1.5} />
+                              <div>El capítulo {vc ? vcIdx + 1 : ""} no tiene mapa de combate.</div>
+                              <button type="button" className="mh-btn-ghost" onClick={() => vc && openChapter(vc.id)}><Plus size={13} /> Prepararlo en Historia</button>
+                            </div>
+                          ) : (
+                            <div className="mh-dir-mapout">
+                              <div className="mh-map-stage mh-dir-map">
+                                {(() => {
+                                  const pm = pickedMap.map;
+                                  const bgm = mapBgOf(pm, vc.image);
+                                  return (
+                                    <>
+                                      <MapBackdrop bg={bgm.src} sharp={bgm.sharp} />
+                                      <MapViewport focus={null} noZoom>
+                                        <MapBoard plain backdrop bg={bgm.src} sharp={bgm.sharp} fog={pm.fog} fogView="gm" areas={[]} tokens={mapTokensView(pm.tokens || [])} canMove={() => false} onMove={() => {}} selectedId={null} onSelect={() => {}} compact />
+                                      </MapViewport>
+                                    </>
+                                  );
+                                })()}
+                              </div>
+                              <span className="mh-stg-live is-prev"><i />Vista previa · Cap. {vcIdx + 1} · {pickedMap.name}</span>
+                              <div className="mh-dir-prevbar">
+                                {vcMaps.length > 1 && (
+                                  <select className="mh-input" aria-label="Mapa de combate" value={pickedMap.id} onChange={(e) => setMapPick((d) => ({ ...d, [vc.id]: e.target.value }))}>
+                                    {vcMaps.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                                  </select>
+                                )}
+                                <button type="button" className="mh-btn-ghost" disabled={live === "mapa"} title={live === "mapa" ? "Los jugadores están en un combate: no se puede cargar otro mapa hasta que termine" : "Carga este mapa para colocar fichas y niebla; los jugadores no lo ven hasta que pulses Mostrar"} onClick={() => loadSavedMap(pickedMap, true)}>
+                                  <Swords size={13} /> Preparar este mapa
+                                </button>
+                              </div>
+                            </div>
+                          )
                         ) : view === "mapa" ? (
                           <div className="mh-dir-mapout">
                           <div className="mh-map-stage mh-dir-map">
-                            <MapBackdrop bg={COMBAT_BG_TEST} />
+                            <MapBackdrop bg={mapBgOf(campaignMap, vcImg).src} sharp={mapBgOf(campaignMap, vcImg).sharp} />
                             <MapViewport focus={null} noZoom>
                               <MapBoard
                                 plain
@@ -27966,7 +28040,8 @@ export default function App({ onSignOut }) {
                                   return true;
                                 }}
                                 backdrop
-                                bg={COMBAT_BG_TEST}
+                                bg={mapBgOf(campaignMap, vcImg).src}
+                                sharp={mapBgOf(campaignMap, vcImg).sharp}
                                 fx={campaignMap.fx} efx={campaignMap.efx} hfx={campaignMap.hfx} spot={campaignMap.spot}
                                 fog={campaignMap.fog}
                                 fogView="gm"
@@ -28112,7 +28187,7 @@ export default function App({ onSignOut }) {
                         ) : view === "mundo" ? (
                           <div className="mh-dir-world">
                             <WorldMap fit compact showHidden edit={djWorldEdit} key={viewingCampaignId} campaignId={viewingCampaignId} scenes={stageScenesOf(campaignStage).map((x) => ({ id: x.id, title: x.title }))} imgSrc={imgSrc} ensureImg={worldEnsureImg} saveImage={saveSceneImage} dropImage={worldDropImg} onOpenScene={(id) => openChapter(id)} onLog={(t) => postChat(viewingCampaignId, { kind: "event", author: "El DJ", gm: true, icon: "mundo", text: t })} />
-                            {view === live ? <span className="mh-stg-live"><i />En directo</span> : <span className="mh-stg-live is-prev"><i />Solo tú lo ves</span>}
+                            {view === live && !chDiverge ? <span className="mh-stg-live"><i />En directo</span> : <span className="mh-stg-live is-prev"><i />Solo tú lo ves</span>}
                             <button type="button" className="mh-btn-ghost mh-dir-mapbtn" onClick={() => setDjWorldEdit((v) => !v)}><Globe size={13} /> {djWorldEdit ? "Listo" : "Editar mapa"}</button>
                           </div>
                         ) : (
@@ -28132,30 +28207,86 @@ export default function App({ onSignOut }) {
                       const mp = campaignMaps.filter((m) => m.sceneId === sc.id);
                       return [{ k: "img", sc }, ...(cv ? [{ k: "dlg", sc, conv: cv, convs: cvs }] : []), ...(mp.length ? [{ k: "cmb", sc, maps: mp }] : [])].map((x) => ({ ...x, id: sc.id + ":" + x.k }));
                     });
-                    let tlCur = -1;
-                    if (cur) {
-                      const mine = tl.filter((x) => x.sc.id === cur.id);
-                      const want = stage.tlStep || (inCombat ? "cmb" : stage.dialogue ? "dlg" : "img");
+                    const posIdx = (chId, want) => {
+                      if (!chId) return -1;
+                      const mine = tl.filter((x) => x.sc.id === chId);
                       const hit = mine.find((x) => x.k === want) || (want === "cmb" || want === "dlg" ? mine[mine.length - 1] : mine[0]);
-                      tlCur = hit ? tl.indexOf(hit) : -1;
-                    }
-                    const goStep = (x) => {
+                      return hit ? tl.indexOf(hit) : -1;
+                    };
+                    const liveWant = stage.tlStep || (inCombat ? "cmb" : stage.dialogue ? "dlg" : "img");
+                    const tlCur = cur ? posIdx(cur.id, liveWant) : -1; // donde están los jugadores
+                    const myWant = djStep || (view === "mapa" ? "cmb" : chDiverge ? "img" : liveWant);
+                    const myIdx = vc ? posIdx(vc.id, myWant) : -1; // donde estoy yo
+                    const diverged = view !== live || chDiverge || (myIdx !== tlCur && !!djStep);
+                    const here = myIdx === tlCur; // estoy en el mismo paso que los jugadores
+                    const resetMine = () => (setDjCh(null), setDjStep(null), setDjView(null));
+                    // Publicar: los jugadores pasan a ver lo mismo que el DJ.
+                    const goStep = async (x) => {
                       if (!x) return;
-                      if (x.k === "img") showScene(x.sc.id);
-                      else if (x.k === "dlg") saveStage(viewingCampaignId, { live: "escena", dialogue: null, tlStep: "dlg" });
-                      else startCombat(x.sc.id, x.maps.find((m) => m.id === mapPick[x.sc.id]) || x.maps[0], true);
+                      resetMine();
+                      if (x.k === "img") await showScene(x.sc.id);
+                      else if (x.k === "dlg") await saveStage(viewingCampaignId, { live: "escena", dialogue: null, tlStep: "dlg", ...(x.sc.id !== cur?.id ? { scenes, activeSceneId: x.sc.id, scene: { title: x.sc.title, image: x.sc.image, fx: x.sc.fx || [] } } : {}) });
+                      else await startCombat(x.sc.id, campaignMap.mapId && x.maps.some((m) => m.id === campaignMap.mapId) ? null : x.maps.find((m) => m.id === mapPick[x.sc.id]) || x.maps[0], true);
+                    };
+                    const publishMine = async () => {
+                      if (view === "mundo" || view === "pistas" || view === "personajes") {
+                        resetMine();
+                        await showOnStage(view);
+                      } else if (!vc) {
+                        resetMine();
+                        await hideScene();
+                      } else if (view === "mapa") {
+                        const x = tl.find((t) => t.sc.id === vc.id && t.k === "cmb");
+                        if (x) await goStep(x);
+                        else {
+                          resetMine();
+                          await startCombat(vc.id, null, true);
+                        }
+                      } else await goStep(tl[myIdx] || { k: "img", sc: vc });
+                    };
+                    // Moverse (solo el DJ) a un paso de la línea de tiempo.
+                    const jumpTo = (x) => {
+                      setDjCh(x.sc.id === cur?.id ? null : x.sc.id);
+                      setDjStep(x.k);
+                      setDjView(x.k === "cmb" ? (live === "mapa" ? null : "mapa") : live === "escena" ? null : "escena");
                     };
                     const STEP_META = { img: { I: ImageIcon, n: "Imagen y efectos" }, dlg: { I: MessageSquareQuote, n: "Diálogo" }, cmb: { I: Swords, n: "Combate" } };
-                    const tlNext = tl[tlCur + 1] || null;
-                    const tlShown = tlCur < 0 ? [{ k: "none", id: "none" }, ...tl.slice(0, 3)] : tl.slice(tlCur, tlCur + 4);
+                    const tlNext = tl[myIdx + 1] || null;
+                    const tlShown = myIdx < 0 ? [{ k: "none", id: "none" }, ...tl.slice(0, 3)] : tl.slice(myIdx, myIdx + 4);
                     const nextBtn = tlNext && (
-                      <button type="button" className="mh-btn" onClick={() => goStep(tlNext)} title={"Siguiente: " + STEP_META[tlNext.k].n + (tlNext.sc.id !== cur?.id ? " · Cap. " + (scenes.indexOf(tlNext.sc) + 1) : "")}>
+                      <button type="button" className="mh-btn" onClick={() => goStep(tlNext)} title={"Siguiente: " + STEP_META[tlNext.k].n + (tlNext.sc.id !== vc?.id ? " · Cap. " + (scenes.indexOf(tlNext.sc) + 1) : "")}>
                         <SkipForward size={13} /> Siguiente
                       </button>
                     );
                     const stepsEl = (
                       <div className="mh-tl" inert={xLock || undefined}>
-                        <div key={tlCur + "|" + (cur?.id || "")} className="mh-tl-track">
+                        {scenes.length > 0 && (
+                          <div className="mh-tlr" role="group" aria-label="Línea de tiempo de la historia">
+                            {scenes.map((sc, ci) => (
+                              <div key={sc.id} className="mh-tlr-ch">
+                                <span className="mh-tlr-c">CAP. {ci + 1} · {sc.title || "Sin título"}</span>
+                                {tl.filter((x) => x.sc.id === sc.id).map((x, si) => {
+                                  const gi = tl.indexOf(x);
+                                  const isMe = gi === myIdx;
+                                  const isPl = gi === tlCur;
+                                  const cls = isMe && isPl ? "both" : isMe ? "me" : isPl ? "pl" : "";
+                                  const lab = isMe && isPl ? "Tú y jugadores" : isMe ? "Tú" : isPl ? "Jugadores" : "";
+                                  return (
+                                    <Fragment key={x.id}>
+                                      {si > 0 && <span className="mh-tlr-ln" />}
+                                      <button type="button" className={"mh-tlr-n " + cls} onClick={() => jumpTo(x)} title={STEP_META[x.k].n + " · Cap. " + (ci + 1) + " (solo lo ves tú; Mostrar para publicarlo)"}>
+                                        {lab && <em>{lab}</em>}
+                                        <i />
+                                        {{ img: "Imagen", dlg: "Diálogo", cmb: "Combate" }[x.k]}
+                                      </button>
+                                    </Fragment>
+                                  );
+                                })}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        <div key={myIdx + "|" + (vc?.id || "")} className="mh-tl-track">
                           {tlShown.map((x, i) => {
                             if (i > 0) {
                               const M = STEP_META[x.k];
@@ -28185,7 +28316,7 @@ export default function App({ onSignOut }) {
                                   <>
                                     <small className="mh-tl-sub">{(x.sc.fx || []).length ? (x.sc.fx || []).map((k) => SCENE_FX.find((fx) => fx.k === k)?.n).filter(Boolean).join(", ") : "Sin efectos"}</small>
                                     <span className="mh-ch-step-acts">
-                                      {live === "escena" ? <span className="mh-stg-live is-soft"><i />En pantalla</span> : <button type="button" className="mh-btn-ghost" onClick={() => showOnStage("escena")}><Eye size={13} /> Mostrar</button>}
+                                      {live === "escena" && here ? <span className="mh-stg-live is-soft"><i />En pantalla</span> : <button type="button" className="mh-btn-ghost" onClick={() => goStep(x)}><Eye size={13} /> Mostrar</button>}
                                       <button type="button" className={"mh-btn-ghost" + (fxDlg?.sceneId === x.sc.id ? " is-on" : "")} data-fx-btn="1" aria-haspopup="dialog" aria-expanded={fxDlg?.sceneId === x.sc.id} onClick={(e) => (fxDlg?.sceneId === x.sc.id ? setFxDlg(null) : setFxDlg({ sceneId: x.sc.id, rect: e.currentTarget.getBoundingClientRect() }))}><Sparkles size={13} /> Efectos{(x.sc.fx || []).length ? " · " + x.sc.fx.length : ""}</button>
                                       {nextBtn}
                                     </span>
@@ -28193,8 +28324,8 @@ export default function App({ onSignOut }) {
                                 )}
                                 {x.k === "dlg" && (
                                   <>
-                                    <small className="mh-tl-sub">{liveConv ? liveConv.title + " · " + (liveIdx + 1) + " de " + liveConv.lines.length : x.conv.title}</small>
-                                    {!stage.dialogue && (() => {
+                                    <small className="mh-tl-sub">{liveConv && here ? liveConv.title + " · " + (liveIdx + 1) + " de " + liveConv.lines.length : x.conv.title}</small>
+                                    {!(stage.dialogue && here) && (() => {
                                       const lines = x.conv.lines.filter((l) => campaignCast.some((m) => m.id === l.castId));
                                       const startId = lines.some((l) => l.id === dlgStart[x.sc.id]?.lineId && dlgStart[x.sc.id]?.convId === x.conv.id) ? dlgStart[x.sc.id].lineId : lines[0]?.id;
                                       return (
@@ -28211,7 +28342,7 @@ export default function App({ onSignOut }) {
                                       );
                                     })()}
                                     <span className="mh-ch-step-acts">
-                                      {stage.dialogue ? (
+                                      {stage.dialogue && here ? (
                                         <>
                                           {nextLine ? <button type="button" className="mh-btn" onClick={() => showLine(nextLine)}><SkipForward size={13} /> Siguiente línea</button> : nextBtn}
                                           <button type="button" className="mh-btn-ghost" onClick={clearDialogue}><EyeOff size={13} /> Retirar</button>
@@ -28233,7 +28364,7 @@ export default function App({ onSignOut }) {
                                   <>
                                     <small className="mh-tl-sub">{x.maps.length} mapa{x.maps.length === 1 ? "" : "s"}</small>
                                     <span className="mh-ch-step-acts">
-                                      {inCombat ? (
+                                      {inCombat && here ? (
                                         <>
                                           <span className="mh-stg-live is-soft"><i />En pantalla</span>
                                           <button type="button" className="mh-btn-ghost" onClick={() => (setCombatBack(cur?.id || null), setCampaignDetailTab("mapa"))}>Abrir tablero</button>
@@ -28447,7 +28578,7 @@ export default function App({ onSignOut }) {
                       <div className={"mh-dir" + (imm ? " is-imm" : "") + (xLock ? " is-xlock" : "")}>
                         <div className="mh-dir-top">
                         <section className="mh-dir-stage">
-                          {barEl}
+                          {renderBar()}
                           {monEl}
                           {imm && <div className="mh-dir-dock">{stepsEl}</div>}
                           {imm && immDrawer && <aside className="mh-dir-drawer">{immDrawer === "grupo" ? groupEl : chatEl}</aside>}
@@ -29445,6 +29576,30 @@ export default function App({ onSignOut }) {
                         <div className="mh-gm-sub" style={{ marginTop: 0 }}>
                           El fondo es el capítulo «{boardScene.title || "sin título"}». Coloca a tu reparto y a los enemigos y muévelos arrastrando, o elige uno y pulsa una casilla. Los jugadores colocan y mueven sus propias fichas desde su hoja.
                         </div>
+                        <div className="mh-map-props" role="toolbar" aria-label="Fondo del mapa" style={{ flexWrap: "wrap" }}>
+                          <span className="mh-gm-h2">Fondo</span>
+                          <label className="mh-map-chip" style={{ cursor: "pointer" }} title="Sube una imagen de mapa de batalla (sin cuadrícula) para jugar encima">
+                            <i className="is-prop"><Upload size={13} /></i>
+                            {campaignMap.bg ? "Cambiar fondo" : "Subir fondo"}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              hidden
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                e.target.value = "";
+                                const ref = await saveSceneImage(file, 2000);
+                                if (ref) mutateMap(viewingCampaignId, () => ref, "bg");
+                              }}
+                            />
+                          </label>
+                          {campaignMap.bg && (
+                            <button type="button" className="mh-map-chip" onClick={() => mutateMap(viewingCampaignId, () => "", "bg")} title="Vuelve a la escena del capítulo difuminada">
+                              Quitar fondo
+                            </button>
+                          )}
+                          <CombatBgPromptHelper key={(boardScene.title || "") + "|" + (campaignMap.mapId || "")} place={boardScene.title ? boardScene.title : ""} features={describeMapForPrompt(campaignMap)} />
+                        </div>
                         <div className="mh-map-props" role="toolbar" aria-label="Niebla">
                           <span className="mh-gm-h2">Niebla</span>
                           {(() => {
@@ -29488,7 +29643,8 @@ export default function App({ onSignOut }) {
                         <div className="mh-map-zoomwrap">
                         <MapViewport focus={null}>
                         <MapBoard
-                          bg={COMBAT_BG_TEST}
+                          bg={mapBgOf(campaignMap, boardScene.image).src}
+                          sharp={mapBgOf(campaignMap, boardScene.image).sharp}
                           stampTool={stampTool}
                           onStamp={(x, y) => stampProp(stampTool, x, y)}
                           onUnstamp={unstampProp}
