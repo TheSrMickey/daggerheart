@@ -6,6 +6,7 @@
 // Así dos personas nunca pisan los datos de una tercera.
 
 import { createClient } from "@/lib/supabase/client";
+import { ACHIEVEMENTS, type AchState, type Stat } from "@/lib/achievements";
 
 export type Status = "on" | "away" | "off";
 export type Person = { id: string; username: string; playing?: string; creating?: boolean; status?: Status; since?: number; lastSeen?: number; dnd?: boolean; camp?: string; role?: string; campSince?: number };
@@ -527,6 +528,34 @@ export async function friendActivity(friends: Person[]) {
     }),
   );
   return out.sort((a, b) => b.at - a.at).slice(0, 8);
+}
+
+// ---------- logros ----------
+// Contadores y logros desbloqueados de cada cuenta en `ach:<uid>`. Al desbloquear, la interfaz recibe `mh-achievement`.
+export async function getAchievements(uid: string): Promise<AchState> {
+  const v = await kvGet<Partial<AchState>>(`ach:${uid}`);
+  return { stats: v?.stats || {}, unlocked: v?.unlocked || {} };
+}
+export async function trackStat(stat: Stat, n = 1, mode: "inc" | "max" = "inc") {
+  try {
+    const me = await myself();
+    if (!me) return;
+    const cur = await getAchievements(me.id);
+    const prev = cur.stats[stat] || 0;
+    const next = mode === "max" ? Math.max(prev, n) : prev + n;
+    if (next === prev) return;
+    const stats = { ...cur.stats, [stat]: next };
+    const unlocked = { ...cur.unlocked };
+    const won: string[] = [];
+    for (const a of ACHIEVEMENTS) {
+      if (!unlocked[a.id] && (stats[a.stat] || 0) >= a.goal) {
+        unlocked[a.id] = Date.now();
+        won.push(a.id);
+      }
+    }
+    await kvPut(`ach:${me.id}`, { stats, unlocked });
+    if (won.length && typeof window !== "undefined") window.dispatchEvent(new CustomEvent("mh-achievement", { detail: { ids: won } }));
+  } catch {}
 }
 
 // ---------- fichas compartidas ----------

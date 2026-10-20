@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Link2, Send, Lock, Megaphone, X, MessageCircle, BookOpen, Copy, Check, SmilePlus } from "lucide-react";
 import { useSocial, refreshSocial, Avatar, ago } from "./Social";
+import { AchievementGrid, AchievementToasts } from "./Achievements";
 import { getProfile, saveProfile, namesFor, unblockPerson, bridge, inviteToCampaign, sendDm, loadPosts, publishPost, removePost, requestJoin, friendActivity, shareSheet, revokeSheet, loadSheet } from "@/lib/social";
 
 // Todo lo social que no es el panel de amigos: perfil, ficha compartida, «Buscar mesa», actividad, privacidad y reacciones.
@@ -85,6 +86,7 @@ function ProfileModal({ id, name, onClose }) {
           {!isMe && chars.map((c) => <div key={c.name} className="so-char on"><b>{c.name}</b><small>{c.cls || "Sin clase"} · Nv {c.lvl}</small></div>)}
           {chars.length === 0 && !isMe && <small>No enseña ningún personaje.</small>}
         </div>
+        <AchievementGrid uid={id} />
         {isMe ? <div className="so-acts"><button type="button" className="mh-btn" onClick={save}>Guardar perfil</button><small><Lock size={12} /> Solo se ve lo que marques aquí.</small></div> : <div className="so-foot"><Lock size={12} /> Solo ves lo que {name} ha decidido enseñar.</div>}
       </div>
     </Modal>
@@ -213,10 +215,14 @@ export function SocialHost() {
     } catch {}
     return () => (window.removeEventListener("mh-profile", prof), window.removeEventListener("mh-share", share), window.removeEventListener("mh-sheet", sheet));
   }, []);
-  if (!m) return null;
   const close = () => setM(null);
-  if (m.t === "profile" && m.id === "me" && !me) return null;
-  return m.t === "profile" ? <ProfileModal id={m.id === "me" ? me.id : m.id} name={m.name} onClose={close} /> : m.t === "share" ? <ShareModal charId={m.charId} onClose={close} /> : <SheetView token={m.token} onClose={close} />;
+  const hide = m?.t === "profile" && m.id === "me" && !me;
+  return (
+    <>
+      <AchievementToasts />
+      {m && !hide && (m.t === "profile" ? <ProfileModal id={m.id === "me" ? me.id : m.id} name={m.name || me?.username || ""} onClose={close} /> : m.t === "share" ? <ShareModal charId={m.charId} onClose={close} /> : <SheetView token={m.token} onClose={close} />)}
+    </>
+  );
 }
 
 // ---------- Buscar mesa ----------
