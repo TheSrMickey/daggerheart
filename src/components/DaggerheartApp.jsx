@@ -15995,16 +15995,23 @@ export default function App({ onSignOut }) {
     const key = Date.now();
     const summary = { parts, total, text: "Tirada de dados", color: "#E3B04B", note, dc: "", outcome: "hope" };
     setDiceDlg(null);
-    if (canDice3d()) setDice3d({ key, dice, summary });
+    flushOutcome(); // si quedaba pendiente la tirada anterior, sale antes
+    const use3d = canDice3d();
+    if (use3d) setDice3d({ key, dice, summary });
     else {
       setSoonMsg((d.priv ? "Tirada privada " : "Tirada pública ") + label + " = " + total);
       setTimeout(() => setSoonMsg(null), 6000);
     }
-    if (d.priv) postChat(viewingCampaignId, { kind: "roll", ...chatAuthor(), priv: true, text: "🎲 " + label + " = " + total, roll: { type: "die", name: "Tirada privada", dice: values, dieLabel: label, total } });
-    if (!d.priv) {
-      postChat(viewingCampaignId, { kind: "roll", ...chatAuthor(), text: "🎲 " + label + " = " + total, roll: { type: "die", name: "Tirada de dados", dice: values, dieLabel: label, total } });
-      safeSet("campaign-diceshow:" + viewingCampaignId, JSON.stringify({ id: key, cid: diceClient.current, who: "El DJ", dice, parts, total, label, ts: key }), true);
-    }
+    // El resultado en el chat sale cuando el dado ya se ha revelado, para no hacer spoiler.
+    const postRoll = () => {
+      if (d.priv) postChat(viewingCampaignId, { kind: "roll", ...chatAuthor(), priv: true, text: "🎲 " + label + " = " + total, roll: { type: "die", name: "Tirada privada", dice: values, dieLabel: label, total } });
+      else postChat(viewingCampaignId, { kind: "roll", ...chatAuthor(), text: "🎲 " + label + " = " + total, roll: { type: "die", name: "Tirada de dados", dice: values, dieLabel: label, total } });
+    };
+    if (use3d) {
+      setDiceHold(true);
+      pendingOutcome.current = postRoll;
+    } else postRoll();
+    if (!d.priv) safeSet("campaign-diceshow:" + viewingCampaignId, JSON.stringify({ id: key, cid: diceClient.current, who: "El DJ", dice, parts, total, label, ts: key }), true);
   };
   useEffect(() => {
     if (!fxDlg) return undefined;
