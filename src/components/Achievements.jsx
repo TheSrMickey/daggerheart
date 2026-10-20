@@ -2,9 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ACHIEVEMENTS } from "@/lib/achievements";
-import { getAchievements } from "@/lib/social";
 
-// Insignias hexagonales con marco por nivel. Solo se ven en el perfil y en el aviso al conseguirlas.
+// Insignia hexagonal con marco por nivel y aviso al conseguir un logro. Solo se ven en el perfil y en el aviso.
 const TIERS = {
   bronce: ["#e2a679", "#8a5530", "#3a2314"],
   plata: ["#f1f3f8", "#9aa1b3", "#2a2d3a"],
@@ -40,38 +39,6 @@ export function Badge({ a, locked, size = 84 }) {
       <path d="M50 14l31 18v36L50 86 19 68V32z" fill={c3} stroke={c1} strokeOpacity=".55" strokeWidth="1.5" />
       <g transform="translate(34 34) scale(1.333)" fill="none" stroke={locked ? "#8a8a9c" : c1} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">{ICONS[a.icon]}</g>
     </svg>
-  );
-}
-
-const dayEs = (t) => new Date(t).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" });
-
-// Cuadrícula del perfil: todos los logros, los conseguidos en color y el resto en gris con su progreso.
-export function AchievementGrid({ uid: who }) {
-  const [st, setSt] = useState(null);
-  useEffect(() => {
-    let live = true;
-    getAchievements(who).then((v) => live && setSt(v)).catch(() => live && setSt({ stats: {}, unlocked: {} }));
-    return () => { live = false; };
-  }, [who]);
-  if (!st) return null;
-  const got = ACHIEVEMENTS.filter((a) => st.unlocked[a.id]).length;
-  return (
-    <>
-      <div className="so-lab">Logros · {got} de {ACHIEVEMENTS.length}</div>
-      <div className="ach-grid">
-        {ACHIEVEMENTS.map((a) => {
-          const on = !!st.unlocked[a.id];
-          const cur = Math.min(st.stats[a.stat] || 0, a.goal);
-          return (
-            <div key={a.id} className={"ach-it" + (on ? " is-on" : "")} title={a.desc}>
-              <Badge a={a} locked={!on} />
-              <b>{a.name}</b>
-              <small>{on ? dayEs(st.unlocked[a.id]) : a.goal > 1 ? cur + " de " + a.goal : "Bloqueado"}</small>
-            </div>
-          );
-        })}
-      </div>
-    </>
   );
 }
 

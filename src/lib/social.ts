@@ -345,6 +345,7 @@ export type Profile = {
   activity: boolean;
   status: "on" | "dnd" | "inv";
   blocked: string[];
+  featured?: string[];
   name?: string;
   since?: number;
 };
@@ -516,6 +517,9 @@ export async function logActivity(kind: Act["kind"], text: string) {
     const cur = (await kvGet<Act[]>(`ac:${me.id}`)) || [];
     await kvPut(`ac:${me.id}`, [{ id: Date.now().toString(36), kind, text, at: Date.now() }, ...cur].slice(0, 20));
   } catch {}
+}
+export async function getActivity(uid: string): Promise<Act[]> {
+  return (await kvGet<Act[]>(`ac:${uid}`)) || [];
 }
 export async function friendActivity(friends: Person[]) {
   const out: (Act & { who: Person })[] = [];

@@ -30,6 +30,7 @@ import { appendLog } from "@/lib/chronicle";
 import { SpotPlayer, SpotPause, SpotPanel, FocusBar, normSpot, liveHands, kindOf } from "./Spotlight";
 import { APP_VERSION } from "@/lib/changelog";
 import { setPresence, setPresenceMaking, startPresence, stopPresence, publishTable, loadTable, myUid, setPresenceCamp, bridge, logActivity, trackStat, loadReactions, toggleReaction } from "@/lib/social";
+import ProfilePage from "./Profile";
 import { SocialHost, LookingFor, ActivityCard, PrivacyCard, ReactionBar } from "./Social2";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
 import { buildSablewood } from "./quickstartSablewood";
@@ -7472,6 +7473,21 @@ const sharedStyles = `
   .so-modal { margin: auto; width: min(520px, 100%); overflow: visible; border: 1px solid var(--mh-line); border-radius: 20px; background: var(--mh-panel); box-shadow: 0 30px 70px rgba(0,0,0,.55); } .so-modal.is-wide { width: min(640px, 100%); }
   .ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 14px 8px; } .ach-it { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 1px; } .ach-it b { font-size: 12px; font-weight: 600; color: var(--mh-ink); margin-top: 4px; } .ach-it small { font-size: 11px; color: var(--mh-muted); } .ach-it:not(.is-on) b { color: var(--mh-muted); } .ach-badge.is-lock { opacity: .6; }
   .ach-toasts { position: fixed; right: 20px; bottom: 24px; z-index: 120; display: flex; flex-direction: column; gap: 10px; max-width: min(380px, calc(100vw - 32px)); } .ach-toast { display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 10px; border-radius: 16px; background: var(--mh-panel); border: 1px solid #E3B04B; box-shadow: 0 14px 34px rgba(0,0,0,.45); animation: ach-in .4s cubic-bezier(.2,.8,.2,1) both; } .ach-toast > div { display: flex; flex-direction: column; min-width: 0; } .ach-toast small { font: 700 10px 'Inter', system-ui, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: #E3B04B; } .ach-toast b { font: 600 15px 'Cinzel', Georgia, serif; color: var(--mh-ink); } .ach-toast em { font-style: normal; font-size: 12px; color: var(--mh-muted); } .ach-toast button { margin-left: auto; padding: 6px 12px; border-radius: 99px; border: 1px solid var(--mh-line2); background: transparent; color: var(--mh-ink); font: 600 12px 'Inter', system-ui, sans-serif; cursor: pointer; } @keyframes ach-in { from { opacity: 0; transform: translateY(14px) scale(.96); } } @media (prefers-reduced-motion: reduce) { .ach-toast { animation: none; } }
+  .pf { max-width: 1040px; } .pf-back { margin-bottom: 10px; } .pf-card { background: var(--mh-panel); border: 1px solid var(--mh-line); border-radius: 20px; overflow: hidden; }
+  .pf-ban { height: 130px; background: radial-gradient(120% 140% at 15% 0%, color-mix(in srgb, var(--c, #4f9a62) 70%, #1b2a3a) 0%, #1b2a3a 45%, #12142a 100%); position: relative; } .pf-ban::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(135deg, rgba(255,255,255,.03) 0 2px, transparent 2px 14px); }
+  .pf-head { display: flex; gap: 20px; align-items: flex-end; padding: 0 28px; margin-top: -50px; position: relative; flex-wrap: wrap; } .pf-head .so-av, .pf-head > :first-child { flex: none; } .pf-who { flex: 1; min-width: 220px; padding-bottom: 6px; } .pf-who h1 { margin: 0; font-size: 28px; font-weight: 600; letter-spacing: .02em; } .pf-who small { color: var(--mh-muted); }
+  .pf-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; } .pf-pill { font-size: 11.5px; font-weight: 600; padding: 3px 10px; border-radius: 99px; border: 1px solid var(--mh-line2); color: var(--mh-muted); } .pf-acts { display: flex; gap: 8px; padding-bottom: 10px; flex-wrap: wrap; }
+  .pf-bio { padding: 10px 28px 0; margin: 0; color: var(--mh-ink2, var(--mh-ink)); max-width: 70ch; } .pf-edit { padding: 12px 28px 0; } .pf-edit textarea { width: 100%; min-height: 70px; resize: vertical; }
+  .pf-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 18px 28px 4px; } .pf-stats > div { background: var(--mh-panel2); border: 1px solid var(--mh-line); border-radius: 14px; padding: 10px 14px; } .pf-stats b { display: block; font: 600 22px 'Cinzel', Georgia, serif; color: var(--mh-gold-ink, #E3B04B); } .pf-stats span { font-size: 12px; color: var(--mh-muted); }
+  .pf-tabs { display: flex; gap: 4px; padding: 14px 28px 0; border-bottom: 1px solid var(--mh-line); margin-top: 10px; overflow-x: auto; } .pf-tab { padding: 9px 16px; border: 1px solid transparent; border-bottom: 0; border-radius: 10px 10px 0 0; background: transparent; color: var(--mh-muted); font: 600 13.5px 'Inter', system-ui, sans-serif; cursor: pointer; white-space: nowrap; } .pf-tab.on { color: var(--mh-gold-ink, #E3B04B); background: var(--mh-panel2); border-color: var(--mh-line); margin-bottom: -1px; }
+  .pf-body { padding: 22px 28px 26px; display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(220px, 1fr); gap: 24px; } .pf-wide { grid-column: 1 / -1; } .pf-side > div { margin-bottom: 22px; }
+  .pf-h { margin: 0 0 10px; font: 700 11px 'Inter', system-ui, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--mh-muted); } .pf-mut { color: var(--mh-muted); display: inline-flex; gap: 5px; align-items: center; }
+  .pf-vit { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; } .pf-vi { background: var(--mh-panel2); border: 1px solid var(--mh-line); border-radius: 16px; padding: 14px 8px 12px; text-align: center; display: flex; flex-direction: column; align-items: center; } .pf-vi b { font: 600 14px 'Cinzel', Georgia, serif; margin-top: 4px; } .pf-vi small { color: var(--mh-muted); font-size: 11.5px; } .pf-vi.is-empty { border-style: dashed; justify-content: center; color: var(--mh-muted); font-size: 12.5px; min-height: 140px; grid-column: span 1; }
+  .pf-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; } .pf-chip { padding: 5px 12px; border-radius: 99px; border: 1px solid var(--mh-line2); background: transparent; font: 600 12.5px 'Inter', system-ui, sans-serif; color: var(--mh-muted); cursor: pointer; } .pf-chip.on { background: rgba(227,176,75,.16); color: var(--mh-gold-ink, #E3B04B); border-color: rgba(227,176,75,.45); }
+  .pf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; } .pf-ac { position: relative; display: flex; gap: 10px; align-items: center; background: var(--mh-panel2); border: 1px solid var(--mh-line); border-radius: 14px; padding: 10px; } .pf-ac.is-lock { opacity: .75; } .pf-ac.is-feat { border-color: #E3B04B; } .pf-ac b { display: block; font-size: 13px; } .pf-ac small { color: var(--mh-muted); font-size: 11.5px; display: block; } .pf-bar { height: 4px; border-radius: 4px; background: var(--mh-line); margin-top: 6px; overflow: hidden; } .pf-bar i { display: block; height: 100%; background: #E3B04B; } .pf-star { position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--mh-line2); background: var(--mh-panel); color: var(--mh-muted); display: grid; place-items: center; cursor: pointer; } .pf-star.on { color: #241a05; background: #E3B04B; border-color: #E3B04B; }
+  .pf-char { display: flex; gap: 10px; align-items: center; width: 100%; text-align: left; background: var(--mh-panel2); border: 1px solid var(--mh-line); border-radius: 14px; padding: 10px; margin-bottom: 8px; color: var(--mh-ink); font: inherit; } button.pf-char { cursor: pointer; } .pf-char.on { border-color: #E3B04B; } .pf-char b { display: block; } .pf-char small { color: var(--mh-muted); } .pf-cav { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; background: color-mix(in srgb, var(--mh-gold-ink, #E3B04B) 25%, var(--mh-panel3, #1b1c4a)); flex: none; }
+  .pf-act { display: flex; gap: 10px; font-size: 13px; padding: 8px 0; border-bottom: 1px solid var(--mh-line); } .pf-act:last-child { border: 0; } .pf-act small { color: var(--mh-muted); display: block; } .pf-act i { width: 8px; height: 8px; border-radius: 50%; background: #E3B04B; margin-top: 7px; flex: none; }
+  @media (max-width: 860px) { .pf-body { grid-template-columns: 1fr; padding: 18px 16px 22px; } .pf-stats { grid-template-columns: repeat(2, 1fr); padding: 16px 16px 4px; } .pf-head, .pf-tabs, .pf-edit { padding-left: 16px; padding-right: 16px; } .pf-bio { padding: 10px 16px 0; } .pf-vit { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; } }
   .so-ban { height: 88px; background: linear-gradient(135deg, color-mix(in srgb, var(--c, #4f9a62) 60%, #12142a), #12142a); } .so-body { padding: 0 24px 22px; } .so-ban + .so-body { margin-top: -34px; }
   .so-prow { display: flex; align-items: center; gap: 12px; justify-content: space-between; } .so-grow { flex: 1; min-width: 0; } .so-name { font-size: 21px; font-weight: 700; } .so-h { margin: 0; font-size: 16px; display: flex; align-items: center; gap: 9px; }
   .so-sub { color: var(--mh-muted); font-size: 12.5px; margin: 4px 0 8px; } .so-bio { margin: 0; line-height: 1.5; font-size: 13px; } .so-foot { margin-top: 14px; color: var(--mh-muted); font-size: 12px; display: flex; gap: 6px; align-items: center; }
@@ -16111,6 +16127,24 @@ export default function App({ onSignOut }) {
   // Barra superior (con la campana) y columna de amigos a la derecha: en las pantallas de lista y en la mesa del DJ; no en las hojas de personaje.
   const campDetail = view === "campaigns" && !!viewingCampaignId && !!campaigns[viewingCampaignId];
   const showTopbar = !isMobile && !viewingCharId && !campDetail;
+  // El perfil de jugador es una página de la columna central; los avisos y menús lo abren con el evento `mh-profile`.
+  const [profileTarget, setProfileTarget] = useState(null);
+  const prevViewRef = useRef("inicio");
+  useEffect(() => {
+    const open = (e) => {
+      setProfileTarget({ id: e.detail?.id, name: e.detail?.name });
+      setViewingCharId(null);
+      setViewingCardDetail(null);
+      setModernCharId(null);
+      setShowNewCharModal(false);
+      setView((v) => {
+        if (v !== "perfil") prevViewRef.current = v;
+        return "perfil";
+      });
+    };
+    window.addEventListener("mh-profile", open);
+    return () => window.removeEventListener("mh-profile", open);
+  }, []);
   const showRail = showTopbar && view !== "ajustes";
   const modernCamp = view === "ficha" && modernCharId && detailTab === "campaign" ? Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(modernCharId)) : null;
   const padX = showRail ? "clamp(28px, 3.4vw, 48px)" : "28px";
@@ -16252,7 +16286,7 @@ export default function App({ onSignOut }) {
       setTourOn(true);
     }
   }, [modernOpen, modernCharId, settings.tutorial]);
-  const viewLabel = view === "actualizaciones" ? "Actualizaciones" : view === "ajustes" ? "Ajustes" : view === "inicio" ? "General" : NAV_ITEMS.find((n) => n.key === view)?.label;
+  const viewLabel = view === "actualizaciones" ? "Actualizaciones" : view === "perfil" ? "Perfil" : view === "ajustes" ? "Ajustes" : view === "inicio" ? "General" : NAV_ITEMS.find((n) => n.key === view)?.label;
   // Migas de pan de la barra superior: los niveles anteriores se pueden pulsar para volver.
   const CAMP_TAB_LABELS = { mesa: "Mesa", historia: "Historia", pnj: "PNJ", mapas: "Mapas", pistas: "Pistas", resumen: "Resumen", chat: "Chat", mapa: "Mapa de combate", mundo: "Mapa de mundo", encuentros: "Encuentros", cronica: "Crónica", linea: "Línea de tiempo", calendario: "Calendario", votaciones: "Votaciones", descanso: "Descanso", generadores: "Generadores" };
   const crumbsOf = (items) => (
@@ -30411,6 +30445,7 @@ export default function App({ onSignOut }) {
           })()}
 
           {view === "mesas" && <LookingFor />}
+          {view === "perfil" && profileTarget && <ProfilePage key={profileTarget.id} id={profileTarget.id} name={profileTarget.name} onBack={() => setView(prevViewRef.current || "inicio")} />}
 
           {view === "dadosskin" && <DicePage skin={diceSkin} onEquip={equipDiceSkin} />}
           {view === "cartas" && <CardsPage items={buildCardCatalog()} domainColors={DOMAIN_COLORS} icons={DOMAIN_ICONS} FitTitle={FitTitle} FitBox={FitBox} />}
