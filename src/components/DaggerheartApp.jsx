@@ -5478,7 +5478,7 @@ const sharedStyles = `
   .mh-hs-amb .mh-gm-sc-edit { max-width: 640px; }
   /* Directo */
   .mh-dir { display: flex; flex-direction: column; gap: 16px; }
-  .mh-dir-top { display: grid; grid-template-columns: minmax(0, 1fr) clamp(372px, 26vw, 480px); grid-template-rows: minmax(0, 1fr) 214px; gap: 14px; height: clamp(600px, calc(100dvh - 190px), 1200px); }
+  .mh-dir-top { display: grid; grid-template-columns: minmax(0, 1fr) clamp(372px, 26vw, 480px); grid-template-rows: minmax(0, 1fr) auto; gap: 14px; height: clamp(600px, calc(100dvh - 190px), 1200px); }
   .mh-dir-stage { grid-column: 1; padding: 12px; border-radius: 22px; background: var(--mh-panel); border: 1px solid var(--mh-line); display: flex; flex-direction: column; gap: 10px; position: relative; }
   .mh-dir-top .mh-dir-below { min-height: 0; overflow: auto; padding: 8px 10px; display: flex; flex-direction: column; justify-content: center; } .mh-dir-top .mh-dir-below > .mh-tl { flex: none; } .mh-tl .mh-ch-step { padding: 9px 12px; gap: 4px; } .mh-dir.is-imm .mh-dir-top .mh-dir-below { overflow: visible; }
   .mh-dir-xlock { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 99px; background: #D9644E; color: #fff; } .mh-dir.is-xlock .mh-dir-live, .mh-dir.is-xlock .mh-dir-chnav, .mh-dir.is-xlock .mh-dir-show, .mh-dir.is-xlock .mh-dir-below .mh-tl, .mh-dir.is-xlock .mh-dir-dock .mh-tl { opacity: .45; } .mh-dir.is-xlock .mh-dir-show { pointer-events: none; }
@@ -5555,6 +5555,7 @@ const sharedStyles = `
   .mh-hs-tl-ar { flex: none; align-self: center; width: 1px; height: 28px; background: var(--mh-line2); }
   .mh-hs-scns { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; } .mh-hs-scns button { display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px 5px 5px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel2); color: var(--mh-ink); font: 700 12px 'Inter', system-ui, sans-serif; cursor: pointer; } .mh-hs-scns button.is-on { border-color: var(--mh-gold-ink); background: color-mix(in srgb, var(--mh-gold-ink) 10%, var(--mh-panel)); } .mh-hs-scns .mh-hs-scn-add { border-style: dashed; padding: 8px 14px; color: var(--mh-ink3); }
   .mh-hs-scn-th { width: 44px; height: 30px; border-radius: 7px; background: center / cover no-repeat #2B3A4F; } .mh-hs-scn-th.is-blank { background: var(--mh-panel); }
+  .mh-tl { display: flex; align-items: flex-end; gap: 10px; } .mh-tl .mh-tlr { flex: 1; min-width: 0; margin-bottom: 0; padding-bottom: 4px; } .mh-tlr-acts { flex: none; display: flex; align-items: center; gap: 6px; padding-bottom: 4px; } .mh-tlr-acts .mh-btn, .mh-tlr-acts .mh-btn-ghost { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 6px 11px; white-space: nowrap; }
   .mh-tlr { display: flex; align-items: center; gap: 8px; overflow-x: auto; padding: 22px 2px 8px; margin-bottom: 4px; scrollbar-width: thin; }
   .mh-tlr-ch { flex: none; display: flex; align-items: center; padding: 5px 9px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel2); }
   .mh-tlr-c { font-size: 10px; font-weight: 800; letter-spacing: .08em; color: var(--mh-muted); margin-right: 8px; white-space: nowrap; max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
@@ -28407,107 +28408,21 @@ export default function App({ onSignOut }) {
                             ))}
                           </div>
                         )}
-                        <div key={myIdx + "|" + (vc?.id || "")} className="mh-tl-track">
-                          {tlShown.map((x, i) => {
-                            if (i > 0) {
-                              const M = STEP_META[x.k];
-                              return (
-                                <div key={x.id} className="mh-ch-step mh-tl-nx">
-                                  <div className="mh-ch-step-h"><M.I size={15} /> <b>{x.k === "img" && x.nTot > 1 ? "Escena " + (x.n + 1) : x.k === "cmb" && x.nTot > 1 ? "Combate " + (x.n + 1) : M.n}</b></div>
-                                  <small>Cap. {scenes.indexOf(x.sc) + 1} · {x.sc.title || "Sin título"}</small>
-                                </div>
-                              );
-                            }
-                            if (x.k === "none") {
-                              return (
-                                <div key="none" className="mh-ch-step mh-tl-cur is-on">
-                                  <div className="mh-ch-step-h"><Clapperboard size={16} /> <b>Sin escena</b></div>
-                                  <small>{scenes.length ? "Los jugadores esperan" : "Crea tu primer capítulo en «Historia»"}</small>
-                                  <button type="button" className="mh-btn" disabled={!tl.length} onClick={() => goStep(tl[0])}><Play size={13} /> Empezar</button>
-                                </div>
-                              );
-                            }
-                            const M = STEP_META[x.k];
-                            const chap = "Cap. " + (scenes.indexOf(x.sc) + 1) + " · " + (x.sc.title || "Sin título");
-                            return (
-                              <div key={x.id} className="mh-ch-step mh-tl-cur is-on">
-                                <div className="mh-ch-step-h"><M.I size={16} /> <b>{x.k === "img" && x.nTot > 1 ? "Escena " + (x.n + 1) : x.k === "cmb" && x.nTot > 1 ? "Combate " + (x.n + 1) : M.n}</b></div>
-                                <small>{chap}</small>
-                                {x.k === "img" && (
-                                  <>
-                                    <small className="mh-tl-sub">{(x.scn.fx || []).length ? (x.scn.fx || []).map((k) => SCENE_FX.find((fx) => fx.k === k)?.n).filter(Boolean).join(", ") : "Sin efectos"}</small>
-                                    <span className="mh-ch-step-acts">
-                                      {live === "escena" && here ? <span className="mh-stg-live is-soft"><i />En pantalla</span> : <button type="button" className="mh-btn-ghost" onClick={() => goStep(x)}><Eye size={13} /> Mostrar</button>}
-                                      <button type="button" className={"mh-btn-ghost" + ((fxDlg?.sceneId === x.sc.id && (fxDlg?.sub || null) === (x.sub || null)) ? " is-on" : "")} data-fx-btn="1" aria-haspopup="dialog" aria-expanded={fxDlg?.sceneId === x.sc.id && (fxDlg?.sub || null) === (x.sub || null)} onClick={(e) => ((fxDlg?.sceneId === x.sc.id && (fxDlg?.sub || null) === (x.sub || null)) ? setFxDlg(null) : setFxDlg({ sceneId: x.sc.id, sub: x.sub || null, rect: e.currentTarget.getBoundingClientRect() }))}><Sparkles size={13} /> Efectos{(x.scn.fx || []).length ? " · " + x.scn.fx.length : ""}</button>
-                                      {nextBtn}
-                                    </span>
-                                  </>
-                                )}
-                                {x.k === "dlg" && (
-                                  <>
-                                    <small className="mh-tl-sub">{liveConv && here ? liveConv.title + " · " + (liveIdx + 1) + " de " + liveConv.lines.length : x.conv.title}</small>
-                                    {!(stage.dialogue && here) && (() => {
-                                      const lines = x.conv.lines.filter((l) => campaignCast.some((m) => m.id === l.castId));
-                                      const startId = lines.some((l) => l.id === dlgStart[x.sc.id]?.lineId && dlgStart[x.sc.id]?.convId === x.conv.id) ? dlgStart[x.sc.id].lineId : lines[0]?.id;
-                                      return (
-                                        <span className="mh-tl-pick">
-                                          {x.convs.length > 1 && (
-                                            <select className="mh-input" aria-label="Conversación" value={x.conv.id} onChange={(e) => setDlgStart((d) => ({ ...d, [x.sc.id]: { convId: e.target.value, lineId: null } }))}>
-                                              {x.convs.map((c) => <option key={c.id} value={c.id}>{c.title || "Conversación"}</option>)}
-                                            </select>
-                                          )}
-                                          <select className="mh-input" aria-label="Qué se dice primero" value={startId || ""} onChange={(e) => setDlgStart((d) => ({ ...d, [x.sc.id]: { convId: x.conv.id, lineId: e.target.value } }))}>
-                                            {lines.map((l, li) => <option key={l.id} value={l.id}>{(li + 1) + ". " + (campaignCast.find((m) => m.id === l.castId)?.name || "") + ": " + String(l.text || "").slice(0, 38)}</option>)}
-                                          </select>
-                                        </span>
-                                      );
-                                    })()}
-                                    <span className="mh-ch-step-acts">
-                                      {stage.dialogue && here ? (
-                                        <>
-                                          {nextLine ? <button type="button" className="mh-btn" onClick={() => showLine(nextLine)}><SkipForward size={13} /> Siguiente línea</button> : nextBtn}
-                                          <button type="button" className="mh-btn-ghost" onClick={clearDialogue}><EyeOff size={13} /> Retirar</button>
-                                        </>
-                                      ) : (
-                                        <>
-                                          <button type="button" className="mh-btn" onClick={() => {
-                                            const lines = x.conv.lines.filter((l) => campaignCast.some((m) => m.id === l.castId));
-                                            const pk = dlgStart[x.sc.id];
-                                            showLine(lines.find((l) => pk?.convId === x.conv.id && l.id === pk.lineId) || lines[0]);
-                                          }}><Play size={13} /> Empezar</button>
-                                          {nextBtn}
-                                        </>
-                                      )}
-                                    </span>
-                                  </>
-                                )}
-                                {x.k === "cmb" && (
-                                  <>
-                                    <small className="mh-tl-sub">{x.map.name}</small>
-                                    <span className="mh-ch-step-acts">
-                                      {inCombat && here ? (
-                                        <>
-                                          <span className="mh-stg-live is-soft"><i />En pantalla</span>
-                                          <button type="button" className="mh-btn-ghost" onClick={() => (setCombatBack(cur?.id || null), setCampaignDetailTab("mapa"))}>Abrir tablero</button>
-                                        </>
-                                      ) : (
-                                        <>
-                                          {x.maps.length > 1 && (
-                                            <select className="mh-input" aria-label="Mapa de combate" value={mapPick[x.sc.id] || x.maps[0].id} onChange={(e) => setMapPick((d) => ({ ...d, [x.sc.id]: e.target.value }))}>
-                                              {x.maps.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-                                            </select>
-                                          )}
-                                          <button type="button" className="mh-btn" onClick={() => goStep(x)}><Swords size={13} /> Pasar al combate</button>
-                                        </>
-                                      )}
-                                      {nextBtn}
-                                    </span>
-                                  </>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
+                        {scenes.length > 0 && (() => {
+                          const cx = myIdx >= 0 ? tl[myIdx] : null;
+                          return (
+                            <span className="mh-tlr-acts">
+                              {cx && cx.k === "img" && (
+                                <button type="button" className={"mh-btn-ghost" + ((fxDlg?.sceneId === cx.sc.id && (fxDlg?.sub || null) === (cx.sub || null)) ? " is-on" : "")} data-fx-btn="1" aria-haspopup="dialog" aria-expanded={fxDlg?.sceneId === cx.sc.id && (fxDlg?.sub || null) === (cx.sub || null)} onClick={(e) => ((fxDlg?.sceneId === cx.sc.id && (fxDlg?.sub || null) === (cx.sub || null)) ? setFxDlg(null) : setFxDlg({ sceneId: cx.sc.id, sub: cx.sub || null, rect: e.currentTarget.getBoundingClientRect() }))}><Sparkles size={13} /> Efectos{(cx.scn.fx || []).length ? " · " + cx.scn.fx.length : ""}</button>
+                              )}
+                              {myIdx < 0 ? (
+                                <button type="button" className="mh-btn" disabled={!tl.length} onClick={() => goStep(tl[0])}><Play size={13} /> Empezar</button>
+                              ) : (
+                                nextBtn
+                              )}
+                            </span>
+                          );
+                        })()}
                       </div>
                     );
                     const groupBox = (

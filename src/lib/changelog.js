@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "mejora", text: "Directo · se quitan las tarjetas grandes de pasos de la línea de tiempo y se queda solo la línea fina, con «Efectos» y «Siguiente» a su derecha. La escena y el mapa ganan altura." },
       { tag: "arreglo", text: "Actualizaciones: la lista de versiones se cortaba a una altura fija y no se podía leer entera (sobre todo en el móvil); ahora se muestra completa." },
       { tag: "nuevo", text: "Al crear una campaña puedes fijar sus líneas y velos (temas que no aparecerán y temas que solo pasan fuera de escena). Se ven en la tarjeta de la campaña y en su cabecera." },
       { tag: "mejora", text: "Móvil: pulsa tu avatar de la cabecera para abrir tu perfil y usa el nuevo botón de novedades para leer las notas del parche." },
