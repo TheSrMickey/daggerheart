@@ -6,6 +6,9 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "arreglo", text: "Actualizaciones: la lista de versiones se cortaba a una altura fija y no se podía leer entera (sobre todo en el móvil); ahora se muestra completa." },
+      { tag: "nuevo", text: "Al crear una campaña puedes fijar sus líneas y velos (temas que no aparecerán y temas que solo pasan fuera de escena). Se ven en la tarjeta de la campaña y en su cabecera." },
+      { tag: "mejora", text: "Móvil: pulsa tu avatar de la cabecera para abrir tu perfil y usa el nuevo botón de novedades para leer las notas del parche." },
       { tag: "nuevo", text: "Perfil: nueva sección «Líneas y velos» donde cada jugador indica qué temas no quiere ver en la mesa (líneas) y cuáles solo fuera de escena (velos). Se edita desde «Editar perfil» y los demás la ven en tu perfil." },
       { tag: "mejora", text: "Perfil: sin migas de pan, botón «Volver» ni campana, para ganar espacio arriba; el banner y los textos se adaptan al modo claro y las pestañas ya no muestran barra de desplazamiento." },
       { tag: "nuevo", text: "Perfil de jugador rediseñado: ya no es una ventana emergente, sino una página en la columna central con cabecera, cifras (campañas, personajes, críticos y logros), vitrina de 3 logros destacados que eliges tú, logros con filtros y progreso, y pestañas de Resumen, Logros, Personajes y Actividad. Se abre desde «Mi perfil», desde otros jugadores y desde el aviso de un logro." },

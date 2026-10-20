@@ -31,6 +31,7 @@ import { SpotPlayer, SpotPause, SpotPanel, FocusBar, normSpot, liveHands, kindOf
 import { APP_VERSION } from "@/lib/changelog";
 import { setPresence, setPresenceMaking, startPresence, stopPresence, publishTable, loadTable, myUid, setPresenceCamp, bridge, logActivity, trackStat, loadReactions, toggleReaction } from "@/lib/social";
 import ProfilePage from "./Profile";
+import { LinesVeilsEditor, limitsCount, limitsText } from "./LinesVeils";
 import { SocialHost, LookingFor, ActivityCard, PrivacyCard, ReactionBar } from "./Social2";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
 import { buildSablewood } from "./quickstartSablewood";
@@ -7473,6 +7474,7 @@ const sharedStyles = `
   .so-modal { margin: auto; width: min(520px, 100%); overflow: visible; border: 1px solid var(--mh-line); border-radius: 20px; background: var(--mh-panel); box-shadow: 0 30px 70px rgba(0,0,0,.55); } .so-modal.is-wide { width: min(640px, 100%); }
   .ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 14px 8px; } .ach-it { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 1px; } .ach-it b { font-size: 12px; font-weight: 600; color: var(--mh-ink); margin-top: 4px; } .ach-it small { font-size: 11px; color: var(--mh-muted); } .ach-it:not(.is-on) b { color: var(--mh-muted); } .ach-badge.is-lock { opacity: .6; }
   .ach-toasts { position: fixed; right: 20px; bottom: 24px; z-index: 120; display: flex; flex-direction: column; gap: 10px; max-width: min(380px, calc(100vw - 32px)); } .ach-toast { display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 10px; border-radius: 16px; background: var(--mh-panel); border: 1px solid #E3B04B; box-shadow: 0 14px 34px rgba(0,0,0,.45); animation: ach-in .4s cubic-bezier(.2,.8,.2,1) both; } .ach-toast > div { display: flex; flex-direction: column; min-width: 0; } .ach-toast small { font: 700 10px 'Inter', system-ui, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: #E3B04B; } .ach-toast b { font: 600 15px 'Cinzel', Georgia, serif; color: var(--mh-ink); } .ach-toast em { font-style: normal; font-size: 12px; color: var(--mh-muted); } .ach-toast button { margin-left: auto; padding: 6px 12px; border-radius: 99px; border: 1px solid var(--mh-line2); background: transparent; color: var(--mh-ink); font: 600 12px 'Inter', system-ui, sans-serif; cursor: pointer; } @keyframes ach-in { from { opacity: 0; transform: translateY(14px) scale(.96); } } @media (prefers-reduced-motion: reduce) { .ach-toast { animation: none; } }
+  .mh-lv-det { border: 1px solid var(--mh-line); border-radius: 12px; padding: 8px 12px; background: var(--mh-panel2); } .mh-lv-det > summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--mh-ink); } .mh-lv-p { margin: 8px 0; font-size: 12px; color: var(--mh-muted); } .mh-camp-lv { margin-top: 6px; font-size: 11.5px; font-weight: 600; color: #7E5BC4; }
   .pf { max-width: 1040px; } .pf-back { margin-bottom: 10px; } .pf-card { background: var(--mh-panel); border: 1px solid var(--mh-line); border-radius: 20px; overflow: hidden; }
   .pf-ban { height: 130px; background: linear-gradient(135deg, color-mix(in srgb, var(--c, #4f9a62) 55%, var(--mh-panel)) 0%, color-mix(in srgb, var(--c, #4f9a62) 16%, var(--mh-panel)) 100%); position: relative; } .pf-ban::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--mh-ink) 5%, transparent) 0 2px, transparent 2px 14px); }
   .pf-head { display: flex; gap: 20px; align-items: flex-start; padding: 0 28px; margin-top: -50px; position: relative; flex-wrap: wrap; } .pf-head .so-av, .pf-head > :first-child { flex: none; } .pf-who { flex: 1; min-width: 220px; padding-top: 58px; } .pf-who h1 { margin: 0; font-size: 28px; font-weight: 600; letter-spacing: .02em; color: var(--mh-ink); } .pf-who small { color: var(--mh-muted); }
@@ -7488,7 +7490,7 @@ const sharedStyles = `
   .pf-char { display: flex; gap: 10px; align-items: center; width: 100%; text-align: left; background: var(--mh-panel2); border: 1px solid var(--mh-line); border-radius: 14px; padding: 10px; margin-bottom: 8px; color: var(--mh-ink); font: inherit; } button.pf-char { cursor: pointer; } .pf-char.on { border-color: #E3B04B; } .pf-char b { display: block; } .pf-char small { color: var(--mh-muted); } .pf-cav { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; background: color-mix(in srgb, var(--mh-gold-ink, #E3B04B) 25%, var(--mh-panel3, #1b1c4a)); flex: none; }
   .pf-lim { display: flex; flex-direction: column; gap: 12px; } .pf-lim-g { border: 1px solid var(--mh-line); border-radius: 14px; padding: 10px 12px; background: var(--mh-panel2); } .pf-lim-g > b { display: flex; align-items: center; gap: 6px; font-size: 12.5px; } .pf-lim-g > small { display: block; color: var(--mh-muted); font-size: 11.5px; margin: 2px 0 8px; } .pf-lim-g.is-line > b { color: #C0504A; } .pf-lim-g.is-veil > b { color: #7E5BC4; } .pf-lim-c { display: flex; flex-wrap: wrap; gap: 6px; } .pf-tag { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 99px; font: 600 12px 'Inter', system-ui, sans-serif; border: 1px solid; background: transparent; } .is-line .pf-tag { color: #C0504A; border-color: rgba(192,80,74,.5); background: rgba(192,80,74,.1); } .is-veil .pf-tag { color: #7E5BC4; border-color: rgba(126,91,196,.5); background: rgba(126,91,196,.1); } button.pf-tag { cursor: pointer; } .pf-tag.off { color: var(--mh-muted); border-color: var(--mh-line2); background: transparent; } .pf-lim-add { display: flex; gap: 6px; margin-top: 8px; } .pf-lim-add input { flex: 1; min-width: 0; }
   .pf-act { display: flex; gap: 10px; font-size: 13px; padding: 8px 0; border-bottom: 1px solid var(--mh-line); } .pf-act:last-child { border: 0; } .pf-act small { color: var(--mh-muted); display: block; } .pf-act i { width: 8px; height: 8px; border-radius: 50%; background: #E3B04B; margin-top: 7px; flex: none; }
-  @media (max-width: 860px) { .pf-tabs { overflow-x: auto; overflow-y: hidden; scrollbar-width: none; } .pf-tabs::-webkit-scrollbar { display: none; } .pf-body { grid-template-columns: 1fr; padding: 18px 16px 22px; } .pf-stats { grid-template-columns: repeat(2, 1fr); padding: 16px 16px 4px; } .pf-head, .pf-tabs, .pf-edit { padding-left: 16px; padding-right: 16px; } .pf-bio { padding: 10px 16px 0; } .pf-vit { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; } }
+  @media (max-width: 860px) { .pf-head { flex-direction: column; align-items: flex-start; gap: 10px; } .pf-who, .pf-acts { padding-top: 0; flex: none; } .pf-tabs { overflow-x: auto; overflow-y: hidden; scrollbar-width: none; } .pf-tabs::-webkit-scrollbar { display: none; } .pf-body { grid-template-columns: 1fr; padding: 18px 16px 22px; } .pf-stats { grid-template-columns: repeat(2, 1fr); padding: 16px 16px 4px; } .pf-head, .pf-tabs, .pf-edit { padding-left: 16px; padding-right: 16px; } .pf-bio { padding: 10px 16px 0; } .pf-vit { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; } }
   .so-ban { height: 88px; background: linear-gradient(135deg, color-mix(in srgb, var(--c, #4f9a62) 60%, #12142a), #12142a); } .so-body { padding: 0 24px 22px; } .so-ban + .so-body { margin-top: -34px; }
   .so-prow { display: flex; align-items: center; gap: 12px; justify-content: space-between; } .so-grow { flex: 1; min-width: 0; } .so-name { font-size: 21px; font-weight: 700; } .so-h { margin: 0; font-size: 16px; display: flex; align-items: center; gap: 9px; }
   .so-sub { color: var(--mh-muted); font-size: 12.5px; margin: 4px 0 8px; } .so-bio { margin: 0; line-height: 1.5; font-size: 13px; } .so-foot { margin-top: 14px; color: var(--mh-muted); font-size: 12px; display: flex; gap: 6px; align-items: center; }
@@ -7551,6 +7553,7 @@ const sharedStyles = `
   .cx-empty { padding: 40px; text-align: center; color: var(--mh-muted); border: 1px dashed var(--mh-line); border-radius: 16px; margin-top: 14px; }
   @media (prefers-reduced-motion: reduce) { .cx-card { transition: none; } .cx-card:hover { translate: none; } }
   .mh-cl { max-width: none; } .mh-cl-head h2 { margin: 0; font-size: 26px; } .mh-cl-head p { margin: 4px 0 22px; color: var(--mh-muted); font-size: 13.5px; }
+  .mh-cl .mh-cl-list { max-height: none; overflow: visible; } .mh-cl .mh-cl-new { display: inline; padding-top: 0; border-top: 0; }
   .mh-cl-list { list-style: none; margin: 0; padding: 0 0 0 22px; position: relative; display: flex; flex-direction: column; gap: 16px; }
   .mh-cl-list::before { content: ""; position: absolute; left: 6px; top: 8px; bottom: 8px; width: 2px; background: linear-gradient(180deg, #E3B04B, var(--mh-line) 18%); border-radius: 2px; }
   .mh-cl-v { position: relative; } .mh-cl-dot { position: absolute; left: -22px; top: 18px; width: 14px; height: 14px; border-radius: 50%; background: var(--mh-panel); border: 2px solid var(--mh-line2); } .mh-cl-v.is-last .mh-cl-dot { border-color: #E3B04B; background: #E3B04B; box-shadow: 0 0 0 4px #E3B04B30; }
@@ -10599,6 +10602,7 @@ export default function App({ onSignOut }) {
   const [newCampaignName, setNewCampaignName] = useState("");
   const [newCampaignDesc, setNewCampaignDesc] = useState("");
   const [showNewCampaignForm, setShowNewCampaignForm] = useState(false);
+  const [newCampaignLimits, setNewCampaignLimits] = useState({ lines: [], veils: [] }); // líneas y velos de la mesa
   const [pendingDeleteCampaignId, setPendingDeleteCampaignId] = useState(null);
   const [campaignDetailTab, setCampaignDetailTab] = useState("mesa");
   const [campaignChat, setCampaignChat] = useState([]);
@@ -13241,7 +13245,7 @@ export default function App({ onSignOut }) {
     const name = newCampaignName.trim();
     if (!name) return;
     const id = "camp_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
-    const newCampaign = { id, name, description: newCampaignDesc.trim(), characterIds: [] };
+    const newCampaign = { id, name, description: newCampaignDesc.trim(), characterIds: [], ...(newCampaignLimits.lines.length ? { lines: newCampaignLimits.lines } : {}), ...(newCampaignLimits.veils.length ? { veils: newCampaignLimits.veils } : {}) };
     const nextCampaigns = { ...campaigns, [id]: newCampaign };
     setCampaigns(nextCampaigns);
     await safeSet("campaign-index", JSON.stringify(Object.keys(nextCampaigns)), false);
@@ -13250,6 +13254,7 @@ export default function App({ onSignOut }) {
     trackStat("campsStarted");
     setNewCampaignName("");
     setNewCampaignDesc("");
+    setNewCampaignLimits({ lines: [], veils: [] });
     setShowNewCampaignForm(false);
   };
 
@@ -27402,12 +27407,16 @@ export default function App({ onSignOut }) {
             borderTop: isMobile ? "none" : "1px solid var(--mh-line)",
           }}
         >
-          <div
+          <button
+            type="button"
             className="mh-serif"
-            style={{ width: 30, height: 30, flexShrink: 0, borderRadius: "50%", background: "#A58BE8", color: "#1A1230", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700 }}
+            title="Mi perfil"
+            aria-label="Mi perfil"
+            onClick={() => window.dispatchEvent(new CustomEvent("mh-profile", { detail: { id: "me", name: playerName || "Yo" } }))}
+            style={{ width: 30, height: 30, flexShrink: 0, borderRadius: "50%", background: "#A58BE8", color: "#1A1230", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, border: view === "perfil" ? "2px solid var(--mh-ink)" : "none", padding: 0, cursor: "pointer" }}
           >
             {(playerName || "?").trim().charAt(0).toUpperCase()}
-          </div>
+          </button>
           {!isMobile && (
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 10, color: "var(--mh-muted2)", textTransform: "uppercase", letterSpacing: ".08em" }}>Jugando como</div>
@@ -27418,6 +27427,11 @@ export default function App({ onSignOut }) {
           )}
           {isMobile && themeSwitch}
           {(isMobile || !showTopbar) && <NotificationBell />}
+          {isMobile && (
+            <button type="button" className={"mh-btn-ghost mh-gear" + (view === "actualizaciones" ? " is-active" : "")} style={{ padding: 7, border: "none" }} title="Novedades" aria-label="Novedades" onClick={() => { setViewingCharId(null); setViewingCardDetail(null); setView("actualizaciones"); }}>
+              <History size={16} />
+            </button>
+          )}
           <button
             type="button"
             className={"mh-btn-ghost mh-gear" + (view === "ajustes" ? " is-active" : "")}
@@ -27856,6 +27870,7 @@ export default function App({ onSignOut }) {
                       <div className="mh-cg-sub1">
                         <b className={cgOnline ? "is-on" : ""}>{cgOnline ? cgOnline + " conectado" + (cgOnline === 1 ? "" : "s") : "Nadie conectado"}</b>
                         <span> · {memberIds.length} personaje{memberIds.length === 1 ? "" : "s"}</span>
+                        {limitsCount(activeCampaign) > 0 && <span title={limitsText(activeCampaign)}> · Líneas y velos: {limitsCount(activeCampaign)}</span>}
                         {cgScenes.length > 0 && <span> · {cgCur ? "Capítulo " + (cgScenes.indexOf(cgCur) + 1) + " de " + cgScenes.length : cgScenes.length + " capítulos"}</span>}
                       </div>
                     </div>
@@ -30362,6 +30377,7 @@ export default function App({ onSignOut }) {
                         <div className="mh-hero-inf">
                           <div className="mh-serif mh-hero-nm">{camp.name}</div>
                           <div className="mh-camp-ds">{camp.description || "Sin descripción todavía."}</div>
+                          {limitsCount(camp) > 0 && <div className="mh-camp-lv" title={limitsText(camp)}>Líneas y velos: {limitsCount(camp)}</div>}
                           <div className="mh-hero-tags">
                             {members.slice(0, 3).map((m, i) => (
                               <span key={i} className="is-camp">{m.f_name || "Sin nombre"}</span>
@@ -30390,9 +30406,14 @@ export default function App({ onSignOut }) {
                         value={newCampaignDesc}
                         onChange={(e) => setNewCampaignDesc(e.target.value)}
                       />
+                      <details className="mh-lv-det">
+                        <summary>Líneas y velos de la mesa{limitsCount(newCampaignLimits) ? " · " + limitsCount(newCampaignLimits) : " (opcional)"}</summary>
+                        <p className="mh-lv-p">Acordad antes de jugar qué temas quedan fuera. Los jugadores los verán en la campaña.</p>
+                        <LinesVeilsEditor lines={newCampaignLimits.lines} veils={newCampaignLimits.veils} onChange={setNewCampaignLimits} />
+                      </details>
                       <div style={{ display: "flex", gap: 8 }}>
                         <button className="mh-btn" onClick={createCampaign}>Crear</button>
-                        <button className="mh-btn-ghost" onClick={() => { setShowNewCampaignForm(false); setNewCampaignName(""); setNewCampaignDesc(""); }}>
+                        <button className="mh-btn-ghost" onClick={() => { setShowNewCampaignForm(false); setNewCampaignName(""); setNewCampaignDesc(""); setNewCampaignLimits({ lines: [], veils: [] }); }}>
                           Cancelar
                         </button>
                       </div>
