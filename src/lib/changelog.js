@@ -6,6 +6,8 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "nuevo", text: "Perfil: nueva sección «Líneas y velos» donde cada jugador indica qué temas no quiere ver en la mesa (líneas) y cuáles solo fuera de escena (velos). Se edita desde «Editar perfil» y los demás la ven en tu perfil." },
+      { tag: "mejora", text: "Perfil: sin migas de pan, botón «Volver» ni campana, para ganar espacio arriba; el banner y los textos se adaptan al modo claro y las pestañas ya no muestran barra de desplazamiento." },
       { tag: "nuevo", text: "Perfil de jugador rediseñado: ya no es una ventana emergente, sino una página en la columna central con cabecera, cifras (campañas, personajes, críticos y logros), vitrina de 3 logros destacados que eliges tú, logros con filtros y progreso, y pestañas de Resumen, Logros, Personajes y Actividad. Se abre desde «Mi perfil», desde otros jugadores y desde el aviso de un logro." },
       { tag: "nuevo", text: "Logros de jugador: 8 insignias iniciales (primer personaje, primera campaña, unirte a una mesa, primer crítico, 10 críticos, nivel 5, mapa de mundo y las cuatro estaciones). Se ven en tu perfil, con su progreso, y al conseguir uno aparece un aviso. No salen en las fichas de personaje. Empiezan a contar desde hoy." },
       { tag: "arreglo", text: "Dados del DJ: el resultado de la tirada ya no aparece en el chat antes de que el dado termine de rodar; sale en cuanto se revela, para evitar spoilers." },
