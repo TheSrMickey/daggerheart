@@ -28336,8 +28336,9 @@ export default function App({ onSignOut }) {
                     const liveWant = stage.tlStep || (inCombat ? "cmb" : stage.dialogue ? "dlg" : "img");
                     const liveSub = liveWant === "cmb" ? stage.tlSub || campaignMap.mapId || null : stage.tlSub || null;
                     const tlCur = cur ? posIdx(cur.id, liveWant, liveSub) : -1; // donde están los jugadores
-                    const myWant = djStep || (view === "mapa" ? "cmb" : chDiverge ? "img" : liveWant);
-                    const mySub = djStep ? djSub : chDiverge ? null : liveSub;
+                    // Si los jugadores están en combate y yo miro la escena, mi paso es la imagen (no el combate), para que «Mostrar» publique la escena.
+                    const myWant = djStep || (view === "mapa" ? "cmb" : chDiverge || liveWant === "cmb" ? "img" : liveWant);
+                    const mySub = djStep ? djSub : chDiverge || myWant !== liveWant ? null : liveSub;
                     const myIdx = vc ? posIdx(vc.id, myWant, mySub) : -1; // donde estoy yo
                     const diverged = view !== live || chDiverge || (myIdx !== tlCur && !!djStep);
                     const here = myIdx === tlCur; // estoy en el mismo paso que los jugadores

@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "arreglo", text: "Directo · si los jugadores están en combate y pasas a «Escena» con «Voy a», el botón «Mostrar» ahora publica la escena (antes volvía a mostrar el combate y no hacía nada)." },
       { tag: "mejora", text: "Directo · la línea de tiempo se desplaza con la rueda del ratón al pasar por encima (cuando no cabe entera) y se quita el texto «0 conectados» de la caja El grupo." },
       { tag: "mejora", text: "Directo · se quitan las tarjetas grandes de pasos de la línea de tiempo y se queda solo la línea fina, centrada, sin barra de desplazamiento y con los bordes difuminados. Los efectos de la escena se añaden con un botón «Efectos» que aparece arriba a la izquierda al pasar el ratón por la escena. La escena y el mapa ganan altura." },
       { tag: "arreglo", text: "Actualizaciones: la lista de versiones se cortaba a una altura fija y no se podía leer entera (sobre todo en el móvil); ahora se muestra completa." },
