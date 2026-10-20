@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "arreglo", text: "Dados del DJ: el resultado de la tirada ya no aparece en el chat antes de que el dado termine de rodar; sale en cuanto se revela, para evitar spoilers." },
       { tag: "nuevo", text: "Directo · mapa de mundo: un pequeño menú junto a «Editar mapa» cambia el mapa entre Normal y las estaciones que hayas subido. Al cambiar de estación, los jugadores ven un fundido suave entre las dos imágenes." },
       { tag: "arreglo", text: "Directo · mapa de mundo: la etiqueta «En directo» («Solo tú lo ves») ya no queda tapada por la máscara que oscurece las esquinas, y la insignia de la estación pasa justo debajo." },
       { tag: "nuevo", text: "Capítulos con varias escenas y varios mapas de combate: dentro de un capítulo, una línea de tiempo muestra todo lo que contiene (escenas, diálogos y combates) y permite añadir más con «+ Escena» y «+ Mapa de combate». En Directo, la línea de tiempo y tu navegación privada recorren cada escena y cada mapa por separado." },
