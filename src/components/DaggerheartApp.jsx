@@ -2127,6 +2127,8 @@ const KIN = [
 ];
 const kinOf = (key) => KIN.find((k) => k.key === key) || null;
 const stageScenesOf = (st) => st.scenes || (st.scene?.title || st.scene?.image ? [{ id: "s-legacy", title: st.scene.title || "", image: st.scene.image || "" }] : []);
+// Un capítulo puede tener varias escenas: la suya (imagen y efectos del capítulo) y las que se añadan en «extras».
+const chapterScenes = (sc) => (sc ? [{ id: sc.id, title: sc.title, image: sc.image, fx: sc.fx || [], main: true }, ...(sc.extras || []).map((e) => ({ ...e, fx: e.fx || [] }))] : []);
 const activeSceneIdOf = (st) => (st.activeSceneId !== undefined ? st.activeSceneId : st.scenes ? null : stageScenesOf(st)[0]?.id || null);
 
 // Expresiones de los personajes del reparto. Si falta una, se usa la tranquila.
@@ -5542,6 +5544,15 @@ const sharedStyles = `
   .mh-qs-chips { display: flex; flex-wrap: wrap; gap: 6px; } .mh-qs-chips span { padding: 3px 9px; border-radius: 99px; font-size: 11px; font-weight: 700; border: 1px solid var(--mh-line2); background: var(--mh-panel2); } .mh-qs-chips span.is-cond { border-color: #E0544A; }
   .mh-qs-acts { display: flex; gap: 6px; flex-wrap: wrap; } .mh-qs-acts button { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; padding: 7px 11px; }
 
+  .mh-hs-tl { display: flex; flex-direction: column; gap: 6px; padding: 10px 14px 0; } .mh-hs-tl-row { display: flex; align-items: stretch; gap: 8px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: thin; }
+  .mh-hs-tl-i { flex: none; display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel2); color: var(--mh-ink); cursor: pointer; text-align: left; } .mh-hs-tl-i:hover { border-color: var(--mh-line2); }
+  .mh-hs-tl-th { width: 52px; height: 36px; border-radius: 8px; background: center / cover no-repeat #2B3A4F; flex: none; } .mh-hs-tl-th.is-blank { background: var(--mh-panel); }
+  .mh-hs-tl-ic { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: color-mix(in srgb, var(--mh-gold-ink) 14%, var(--mh-panel)); color: var(--mh-gold-ink); flex: none; }
+  .mh-hs-tl-t { display: flex; flex-direction: column; min-width: 0; max-width: 150px; } .mh-hs-tl-t b { font-size: 12.5px; } .mh-hs-tl-t small { font-size: 11px; color: var(--mh-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mh-hs-tl-add { flex: none; display: inline-flex; align-items: center; gap: 5px; padding: 0 12px; border-radius: 12px; border: 1.5px dashed var(--mh-line2); background: transparent; color: var(--mh-ink3); font: 700 12px 'Inter', system-ui, sans-serif; cursor: pointer; } .mh-hs-tl-add:hover { color: var(--mh-ink); border-color: var(--mh-gold-ink); }
+  .mh-hs-tl-ar { flex: none; align-self: center; width: 1px; height: 28px; background: var(--mh-line2); }
+  .mh-hs-scns { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; } .mh-hs-scns button { display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px 5px 5px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel2); color: var(--mh-ink); font: 700 12px 'Inter', system-ui, sans-serif; cursor: pointer; } .mh-hs-scns button.is-on { border-color: var(--mh-gold-ink); background: color-mix(in srgb, var(--mh-gold-ink) 10%, var(--mh-panel)); } .mh-hs-scns .mh-hs-scn-add { border-style: dashed; padding: 8px 14px; color: var(--mh-ink3); }
+  .mh-hs-scn-th { width: 44px; height: 30px; border-radius: 7px; background: center / cover no-repeat #2B3A4F; } .mh-hs-scn-th.is-blank { background: var(--mh-panel); }
   .mh-tlr { display: flex; align-items: center; gap: 8px; overflow-x: auto; padding: 22px 2px 8px; margin-bottom: 4px; scrollbar-width: thin; }
   .mh-tlr-ch { flex: none; display: flex; align-items: center; padding: 5px 9px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel2); }
   .mh-tlr-c { font-size: 10px; font-weight: 800; letter-spacing: .08em; color: var(--mh-muted); margin-right: 8px; white-space: nowrap; max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
@@ -5563,7 +5574,7 @@ const sharedStyles = `
   @media (prefers-reduced-motion: reduce) { .mh-tl-track { animation: none; } }
   @media (max-width: 760px) { .mh-tl .mh-tl-cur { flex: 0 0 82%; } .mh-tl .mh-tl-nx { flex: 0 0 38%; } }
   .mh-dir-wait img { width: 84px; height: 84px; object-fit: contain; opacity: .2; filter: drop-shadow(0 0 12px #9db8ff55); } html[data-mh-theme="light"] .mh-dir-wait img { filter: invert(1); opacity: .22; }
-  .mh-xcard { position: absolute !important; inset: 0; z-index: 30 !important; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 24px; text-align: center; color: #fff; background: rgba(40,8,12,.86); backdrop-filter: blur(6px); animation: mhXIn .35s ease; }
+  .mh-xcard { position: absolute !important; inset: 0; z-index: 80 !important; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 24px; text-align: center; color: #fff; background: rgba(40,8,12,.86); backdrop-filter: blur(6px); animation: mhXIn .35s ease; }
   .mh-xcard b { font: 700 28px 'Cormorant Garamond', Georgia, serif; letter-spacing: .08em; } .mh-xcard p { margin: 0; font-size: 16px; max-width: 420px; } .mh-xcard small { opacity: .75; font-size: 12.5px; }
   .mh-xcard-x { width: 62px; height: 62px; display: grid; place-items: center; border-radius: 50%; background: #D9644E; box-shadow: 0 0 0 8px rgba(217,100,78,.25); animation: mhXPulse 1.8s ease-in-out infinite; }
   .mh-xcard.is-global { position: fixed !important; inset: 0; z-index: 100000 !important; background: rgba(40,8,12,.94); } .mh-xcard.is-global b { font-size: 40px; } .mh-xcard.is-global p { font-size: 19px; max-width: 520px; } .mh-xcard.is-global small { font-size: 14px; max-width: 460px; }
@@ -5878,6 +5889,8 @@ const sharedStyles = `
   .mh-dice-btn.is-on { opacity: .75; cursor: default; }
   /* Mapa de mundo: imagen con marcadores */
   .mh-wm { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+  .mh-wm-seasons { display: inline-flex; align-items: center; gap: 3px; padding: 3px; border-radius: 999px; background: var(--mh-panel2); border: 1px solid var(--mh-line); } .mh-wm-seasons button, .mh-wm-sup { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border: 0; border-radius: 999px; background: transparent; color: var(--mh-ink3); font: 600 12px 'Inter', system-ui, sans-serif; cursor: pointer; } .mh-wm-seasons button.is-on { background: rgba(227,176,75,.22); color: var(--mh-gold-ink); } .mh-wm-seasons button.is-empty { opacity: .6; border: 1px dashed var(--mh-line2); }
+  .mh-wm-season { position: absolute; left: 12px; top: 12px; z-index: 8; padding: 4px 11px; border-radius: 99px; background: rgba(8,8,26,.7); color: #fff; font: 700 12px 'Inter', system-ui, sans-serif; border: 1px solid rgba(255,255,255,.18); pointer-events: none; }
   .mh-wm-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
   .mh-wm-sp { flex: 1; }
   .mh-wm-note { font-size: 11.5px; line-height: 1.5; color: var(--mh-muted); margin: 0; }
@@ -10595,6 +10608,7 @@ export default function App({ onSignOut }) {
   const [dataReadyFor, setDataReadyFor] = useState(null);
   const [stageReadyFor, setStageReadyFor] = useState(null);
   const [pnjFilter, setPnjFilter] = useState("all");
+  const [chScene, setChScene] = useState(null); // escena del capítulo que se edita en «Ambiente» (null = la principal)
   const [chTab, setChTab] = useState("dialogos"); // pestaña abierta del capítulo en «Historia»
   const ambBtn = useRef(null);
   const [ambOpen, setAmbOpen] = useState(false); // ventana de «Ambiente» (audio de la mesa)
@@ -10625,6 +10639,7 @@ export default function App({ onSignOut }) {
   }, []);
   const [pstFilter, setPstFilter] = useState("all");
   const [djCh, setDjCh] = useState(null); // capítulo que mira el DJ en privado (null = el que ven los jugadores; "__none" = ninguno)
+  const [djSub, setDjSub] = useState(null); // escena extra o mapa concreto que mira el DJ dentro de su capítulo
   const [djStep, setDjStep] = useState(null); // paso de la línea de tiempo que mira el DJ (img | dlg | cmb)
   const [djView, setDjView] = useState(null); // lo que el DJ está viendo en Directo (null = lo mismo que ven los jugadores)
   const [quickChar, setQuickChar] = useState(null); // personaje cuya ficha rápida sustituye a «El grupo» en Directo
@@ -14214,12 +14229,13 @@ export default function App({ onSignOut }) {
   // Mapa de mundo: las imágenes del mapa y de sus marcadores se guardan como las de las escenas.
   const worldEnsureImg = (ref) => (ref && ref.startsWith("img:") ? ensureCastImg(ref.slice(4)) : undefined);
   const worldDropImg = (ref) => ref && ref.startsWith("img:") && safeSet("campaign-img:" + ref.slice(4), "", true);
-  const uploadSceneImg = async (sceneId, file) => {
+  const uploadSceneImg = async (sceneId, file, subId) => {
     const ref = await saveSceneImage(file);
     if (!ref) return;
-    const old = stageScenesOf(campaignStage).find((x) => x.id === sceneId)?.image;
+    const ch = stageScenesOf(campaignStage).find((x) => x.id === sceneId);
+    const old = subId ? (ch?.extras || []).find((e) => e.id === subId)?.image : ch?.image;
     if (old && old.startsWith("img:")) safeSet("campaign-img:" + old.slice(4), "", true);
-    updateScene(sceneId, { image: ref });
+    updateScene(sceneId, { image: ref }, subId);
   };
   const addSceneFromFile = async (file) => {
     const ref = await saveSceneImage(file);
@@ -14235,14 +14251,40 @@ export default function App({ onSignOut }) {
     openChapter(sc.id);
   };
 
-  const updateScene = (id, patch) => {
-    const scenes = stageScenesOf(campaignStage).map((sc) => (sc.id === id ? { ...sc, ...patch } : sc));
-    const active = activeSceneIdOf(campaignStage) === id ? scenes.find((sc) => sc.id === id) : null;
+  const updateScene = (id, patch, subId) => {
+    const scenes = stageScenesOf(campaignStage).map((sc) => (sc.id !== id ? sc : subId ? { ...sc, extras: (sc.extras || []).map((e) => (e.id === subId ? { ...e, ...patch } : e)) } : { ...sc, ...patch }));
+    const ch = scenes.find((sc) => sc.id === id);
+    const scn = subId ? (ch?.extras || []).find((e) => e.id === subId) : ch;
+    const onScreen = activeSceneIdOf(campaignStage) === id && (campaignStage.tlSub || null) === (subId || null) && campaignStage.tlStep !== "cmb";
     // La escena en pantalla se copia también en stage.scene, que es lo que leen los jugadores.
-    saveStage(viewingCampaignId, { scenes, activeSceneId: activeSceneIdOf(campaignStage), ...(active ? { scene: { title: active.title, image: active.image, fx: active.fx || [] } } : {}) });
+    saveStage(viewingCampaignId, { scenes, activeSceneId: activeSceneIdOf(campaignStage), ...(onScreen && scn ? { scene: { title: scn.title || ch.title, image: scn.image, fx: scn.fx || [] } } : {}) });
   };
-
-  const toggleFx = (sc, k) => updateScene(sc.id, { fx: (sc.fx || []).includes(k) ? (sc.fx || []).filter((x) => x !== k) : [...(sc.fx || []), k] });
+  // Nuevo mapa de combate vacío dentro de un capítulo (se carga en el tablero salvo que los jugadores estén en un combate).
+  const createCombat = async (chId) => {
+    if (!viewingCampaignId) return;
+    const n = campaignMaps.filter((m) => m.sceneId === chId).length + 1;
+    const m = { id: "m" + Date.now(), sceneId: chId, name: "Combate " + n, map: { tokens: [], props: [], terrain: [], counters: [] } };
+    await saveMapsLib([...campaignMaps, m]);
+    if ((campaignStage.live || "escena") !== "mapa") {
+      await loadSavedMap(m, true);
+      setCombatBack(chId);
+      setCampaignDetailTab("mapa");
+    }
+  };
+  const addExtraScene = (chId, preset) => {
+    const ch = stageScenesOf(campaignStage).find((x) => x.id === chId);
+    if (!ch) return null;
+    const extra = { id: "x" + Date.now(), title: preset?.title || "Escena " + (chapterScenes(ch).length + 1), image: preset?.image || "", fx: preset?.fx || [] };
+    saveStage(viewingCampaignId, { scenes: stageScenesOf(campaignStage).map((sc) => (sc.id === chId ? { ...sc, extras: [...(sc.extras || []), extra] } : sc)), activeSceneId: activeSceneIdOf(campaignStage) });
+    return extra.id;
+  };
+  const removeExtraScene = (chId, subId) => {
+    const sc = stageScenesOf(campaignStage).find((x) => x.id === chId);
+    const gone = (sc?.extras || []).find((e) => e.id === subId)?.image;
+    if (gone && gone.startsWith("img:")) safeSet("campaign-img:" + gone.slice(4), "", true);
+    saveStage(viewingCampaignId, { scenes: stageScenesOf(campaignStage).map((x) => (x.id === chId ? { ...x, extras: (x.extras || []).filter((e) => e.id !== subId) } : x)), activeSceneId: activeSceneIdOf(campaignStage) });
+  };
+  const toggleFx = (sc, k, subId) => updateScene(sc.id, { fx: (sc.fx || []).includes(k) ? (sc.fx || []).filter((x) => x !== k) : [...(sc.fx || []), k] }, subId);
   const removeScene = (id) => {
     const gone = stageScenesOf(campaignStage).find((x) => x.id === id)?.image;
     if (gone && gone.startsWith("img:")) safeSet("campaign-img:" + gone.slice(4), "", true);
@@ -14253,13 +14295,15 @@ export default function App({ onSignOut }) {
     if (dialogueConvs.some((c) => c.sceneId === id)) saveConvs(dialogueConvs.filter((c) => c.sceneId !== id));
   };
 
-  const showScene = async (id) => {
+  const showScene = async (id, subId) => {
     if (campaignStage.xcard?.on) return;
     const scenes = stageScenesOf(campaignStage);
     const sc = scenes.find((x) => x.id === id);
     if (!sc || !viewingCampaignId) return;
-    await saveStage(viewingCampaignId, { scenes, activeSceneId: id, scene: { title: sc.title, image: sc.image, fx: sc.fx || [] }, live: "escena", dialogue: null, tlStep: "img" });
-    postChat(viewingCampaignId, { kind: "event", author: "El DJ", gm: true, icon: "escena", text: "muestra la escena «" + (sc.title || "Sin título") + "»" });
+    const scn = (subId && (sc.extras || []).find((e) => e.id === subId)) || sc;
+    const sameChapter = activeSceneIdOf(campaignStage) === id;
+    await saveStage(viewingCampaignId, { scenes, activeSceneId: id, scene: { title: scn.title || sc.title, image: scn.image, fx: scn.fx || [] }, live: "escena", dialogue: null, tlStep: "img", tlSub: scn.id === sc.id ? null : scn.id });
+    postChat(viewingCampaignId, { kind: "event", author: "El DJ", gm: true, icon: "escena", text: "muestra la escena «" + ((sameChapter && scn !== sc ? scn.title : sc.title) || "Sin título") + "»" });
   };
 
   // Reduce la imagen en el navegador (máx. 720 px) conservando la transparencia, para que pese poco.
@@ -14471,6 +14515,7 @@ export default function App({ onSignOut }) {
 
   // Capítulos: cada escena es un capítulo con sus propios diálogos, mapas de combate y encuentros.
   const openChapter = (id) => {
+    setChScene(null);
     setChapterId(id);
     setConvSceneId(id);
     setConvId(null);
@@ -14501,7 +14546,7 @@ export default function App({ onSignOut }) {
     const scenes = stageScenesOf(campaignStage);
     const sc = scenes.find((x) => x.id === sceneId);
     if (savedMap && !(await loadSavedMap(savedMap, true))) return;
-    await saveStage(viewingCampaignId, { live: "mapa", tlStep: "cmb", ...(sc ? { scenes, activeSceneId: sc.id, scene: { title: sc.title, image: sc.image, fx: sc.fx || [] } } : {}) });
+    await saveStage(viewingCampaignId, { live: "mapa", tlStep: "cmb", tlSub: savedMap?.id || campaignMap.mapId || null, ...(sc ? { scenes, activeSceneId: sc.id, scene: { title: sc.title, image: sc.image, fx: sc.fx || [] } } : {}) });
     postChat(viewingCampaignId, { kind: "event", author: "El DJ", gm: true, icon: "mapa", text: "pasa al combate" + (sc ? " en «" + (sc.title || "Sin título") + "»" : "") });
     setCombatBack(sceneId);
     if (!stay) setCampaignDetailTab("mapa");
@@ -14527,7 +14572,8 @@ export default function App({ onSignOut }) {
     setDjView(null);
     setDjCh(null);
     setDjStep(null);
-  }, [campaignStage.live, campaignStage.activeSceneId, campaignStage.tlStep, viewingCampaignId]);
+    setDjSub(null);
+  }, [campaignStage.live, campaignStage.activeSceneId, campaignStage.tlStep, campaignStage.tlSub, viewingCampaignId]);
   const showOnStage = async (key) => {
     if (campaignStage.xcard?.on) return;
     if (!viewingCampaignId || (campaignStage.live || "escena") === key) return;
@@ -26908,14 +26954,15 @@ export default function App({ onSignOut }) {
   return (
     <div className={"mh-root" + (isMobile ? " is-mobile" : "")} style={{ display: "flex", flexDirection: isMobile ? "column" : "row", height: "100dvh", background: "var(--mh-bg)", fontFamily: "'Inter', system-ui, sans-serif", color: "var(--mh-ink)", overflow: "hidden" }}>
       {fxDlg && viewingCampaignId && (() => {
-        const sc = stageScenesOf(campaignStage).find((x) => x.id === fxDlg.sceneId);
+        const ch = stageScenesOf(campaignStage).find((x) => x.id === fxDlg.sceneId);
+        const sc = ch && (fxDlg.sub ? (ch.extras || []).find((e) => e.id === fxDlg.sub) && { ...(ch.extras || []).find((e) => e.id === fxDlg.sub), id: ch.id } : ch);
         if (!sc) return null;
         const r = fxDlg.rect;
         const w = Math.min(340, (typeof window !== "undefined" ? window.innerWidth : 360) - 24);
         const left = r ? Math.max(12, Math.min(r.left, window.innerWidth - w - 12)) : 12;
         const bottom = r ? window.innerHeight - r.top + 8 : 80;
         const n = (sc.fx || []).length;
-        const idx = stageScenesOf(campaignStage).indexOf(sc) + 1;
+        const idx = stageScenesOf(campaignStage).findIndex((x) => x.id === sc.id) + 1;
         return (
           <div className="mh-dd mh-cl" role="dialog" aria-label="Efectos de la escena" style={{ left, bottom, width: w }} onMouseDown={(e) => e.stopPropagation()}>
             <div className="mh-cl-h"><Sparkles size={14} /> <b>Efectos · Cap. {idx}</b><small className="mh-nt-n">{n} activo{n === 1 ? "" : "s"}</small></div>
@@ -26924,14 +26971,14 @@ export default function App({ onSignOut }) {
                 const I = FX_ICONS[fx.k];
                 const on = (sc.fx || []).includes(fx.k);
                 return (
-                  <button key={fx.k} type="button" className={"mh-gm-fx" + (on ? " is-on" : "")} aria-pressed={on} style={FX_COLORS[fx.k] ? { "--fc": FX_COLORS[fx.k] } : undefined} onClick={() => toggleFx(sc, fx.k)} title={fx.n}>
+                  <button key={fx.k} type="button" className={"mh-gm-fx" + (on ? " is-on" : "")} aria-pressed={on} style={FX_COLORS[fx.k] ? { "--fc": FX_COLORS[fx.k] } : undefined} onClick={() => toggleFx(sc, fx.k, fxDlg.sub)} title={fx.n}>
                     {I && <I size={13} />} {fx.n}
                   </button>
                 );
               })}
             </div>
             <div className="mh-rq-acts">
-              <button type="button" className="mh-btn-ghost" disabled={!n} onClick={() => updateScene(sc.id, { fx: [] })}>Quitar todos</button>
+              <button type="button" className="mh-btn-ghost" disabled={!n} onClick={() => updateScene(sc.id, { fx: [] }, fxDlg.sub)}>Quitar todos</button>
               <button type="button" className="mh-btn" style={{ marginLeft: "auto" }} onClick={() => setFxDlg(null)}>Listo</button>
             </div>
           </div>
@@ -27879,7 +27926,9 @@ export default function App({ onSignOut }) {
                     const vc = djCh === "__none" ? null : djCh ? scenes.find((x) => x.id === djCh) || cur : cur;
                     const vcIdx = vc ? scenes.indexOf(vc) : -1;
                     const chDiverge = (vc?.id || null) !== (cur?.id || null);
-                    const vcImg = vc?.image || (chDiverge ? "" : stage.scene?.image);
+                    // Escena que mira el DJ: la que está en pantalla si no se ha movido; si no, la elegida (o la principal) de su capítulo.
+                    const vScn = !chDiverge && !djStep ? stage.scene || {} : vc ? chapterScenes(vc).find((x) => x.id === (djStep === "img" ? djSub || vc.id : vc.id)) || chapterScenes(vc)[0] : null;
+                    const vcImg = vScn?.image || "";
                     const imm = !!settings.immersive;
                     const liveId = stage.dialogue?.lineId;
                     const liveConv = liveId ? dialogueConvs.find((c) => c.lines.some((l) => l.id === liveId)) : null;
@@ -27953,20 +28002,20 @@ export default function App({ onSignOut }) {
                     );
                     // Mapa de combate que mira el DJ: el del directo o, si es de otro capítulo, una vista previa del guardado.
                     const vcMaps = vc ? campaignMaps.filter((m) => m.sceneId === vc.id) : [];
-                    const pickedMap = vcMaps.find((m) => m.id === mapPick[vc?.id]) || vcMaps[0];
+                    const pickedMap = (djStep === "cmb" && vcMaps.find((m) => m.id === djSub)) || vcMaps.find((m) => m.id === mapPick[vc?.id]) || vcMaps[0];
                     const mapMode = !vc ? "live" : vcMaps.length === 0 ? (chDiverge ? "none" : "live") : campaignMap.mapId ? (vcMaps.some((m) => m.id === campaignMap.mapId) ? "live" : "preview") : vc.id === cur?.id ? "live" : "preview";
                     const monEl = (
                       <div ref={dirMonRef} key={view + "|" + (vc?.id || "") + "|" + (vcImg || "")} className={"mh-dir-mon" + (view === "escena" && vcImg ? "" : " is-blank") + (view === "mapa" ? " is-map" : "")} style={view === "escena" || view === "mapa" ? bgStyle(vcImg) : undefined}>
                         {view === "escena" ? (
                           <>
-                            <SceneFx fx={vc?.fx || (chDiverge ? [] : stage.scene?.fx) || []} />
-                            {vc && (vc.fx || []).length > 0 && (() => {
-                              const k = vc.fx[0];
+                            <SceneFx fx={vScn?.fx || []} />
+                            {vc && (vScn?.fx || []).length > 0 && (() => {
+                              const k = vScn.fx[0];
                               const FI = FX_ICONS[k];
                               return (
                                 <span className="mh-dir-tag">
                                   {FI && <FI size={11} />} {SCENE_FX.find((fx) => fx.k === k)?.n}
-                                  {vc.fx.length > 1 ? " +" + (vc.fx.length - 1) : ""}
+                                  {vScn.fx.length > 1 ? " +" + (vScn.fx.length - 1) : ""}
                                 </span>
                               );
                             })()}
@@ -27978,7 +28027,6 @@ export default function App({ onSignOut }) {
                                 <div>A la espera de una escena</div>
                               </div>
                             )}
-                            {stage.xcard?.on && xcardEl}
                             {dlg && !chDiverge && (
                               <div className="mh-dlg is-mini">
                                 <DialogueFigure key={dlg.castId || dlg.name} src={dlgImg} alt="" expr={dlg.expr || "tranquila"} />
@@ -28197,6 +28245,7 @@ export default function App({ onSignOut }) {
                             {view !== live && <button type="button" className="mh-btn" onClick={() => showOnStage(view)}><Play size={13} /> Mostrar a los jugadores</button>}
                           </div>
                         )}
+                        {stage.xcard?.on && xcardEl}
                       </div>
                     );
                     // Línea de tiempo: Imagen → Diálogo → Combate de cada capítulo y después el siguiente capítulo. A la izquierda va siempre el paso actual.
@@ -28205,26 +28254,34 @@ export default function App({ onSignOut }) {
                       const pick = dlgStart[sc.id];
                       const cv = cvs.find((c) => c.id === pick?.convId) || cvs[0];
                       const mp = campaignMaps.filter((m) => m.sceneId === sc.id);
-                      return [{ k: "img", sc }, ...(cv ? [{ k: "dlg", sc, conv: cv, convs: cvs }] : []), ...(mp.length ? [{ k: "cmb", sc, maps: mp }] : [])].map((x) => ({ ...x, id: sc.id + ":" + x.k }));
+                      const scns = chapterScenes(sc);
+                      return [
+                        ...scns.map((scn, si) => ({ k: "img", sc, scn, sub: scn.main ? null : scn.id, n: si, nTot: scns.length, id: sc.id + ":img:" + scn.id })),
+                        ...(cv ? [{ k: "dlg", sc, conv: cv, convs: cvs, id: sc.id + ":dlg" }] : []),
+                        ...mp.map((m, mi) => ({ k: "cmb", sc, maps: [m], map: m, n: mi, nTot: mp.length, id: sc.id + ":cmb:" + m.id })),
+                      ];
                     });
-                    const posIdx = (chId, want) => {
+                    const posIdx = (chId, want, sub) => {
                       if (!chId) return -1;
                       const mine = tl.filter((x) => x.sc.id === chId);
-                      const hit = mine.find((x) => x.k === want) || (want === "cmb" || want === "dlg" ? mine[mine.length - 1] : mine[0]);
+                      const ofKind = mine.filter((x) => x.k === want);
+                      const hit = ofKind.find((x) => (want === "img" ? (x.sub || null) === (sub || null) : want === "cmb" ? x.map.id === sub : true)) || ofKind[0] || (want === "cmb" || want === "dlg" ? mine[mine.length - 1] : mine[0]);
                       return hit ? tl.indexOf(hit) : -1;
                     };
                     const liveWant = stage.tlStep || (inCombat ? "cmb" : stage.dialogue ? "dlg" : "img");
-                    const tlCur = cur ? posIdx(cur.id, liveWant) : -1; // donde están los jugadores
+                    const liveSub = liveWant === "cmb" ? stage.tlSub || campaignMap.mapId || null : stage.tlSub || null;
+                    const tlCur = cur ? posIdx(cur.id, liveWant, liveSub) : -1; // donde están los jugadores
                     const myWant = djStep || (view === "mapa" ? "cmb" : chDiverge ? "img" : liveWant);
-                    const myIdx = vc ? posIdx(vc.id, myWant) : -1; // donde estoy yo
+                    const mySub = djStep ? djSub : chDiverge ? null : liveSub;
+                    const myIdx = vc ? posIdx(vc.id, myWant, mySub) : -1; // donde estoy yo
                     const diverged = view !== live || chDiverge || (myIdx !== tlCur && !!djStep);
                     const here = myIdx === tlCur; // estoy en el mismo paso que los jugadores
-                    const resetMine = () => (setDjCh(null), setDjStep(null), setDjView(null));
+                    const resetMine = () => (setDjCh(null), setDjStep(null), setDjSub(null), setDjView(null));
                     // Publicar: los jugadores pasan a ver lo mismo que el DJ.
                     const goStep = async (x) => {
                       if (!x) return;
                       resetMine();
-                      if (x.k === "img") await showScene(x.sc.id);
+                      if (x.k === "img") await showScene(x.sc.id, x.sub);
                       else if (x.k === "dlg") await saveStage(viewingCampaignId, { live: "escena", dialogue: null, tlStep: "dlg", ...(x.sc.id !== cur?.id ? { scenes, activeSceneId: x.sc.id, scene: { title: x.sc.title, image: x.sc.image, fx: x.sc.fx || [] } } : {}) });
                       else await startCombat(x.sc.id, campaignMap.mapId && x.maps.some((m) => m.id === campaignMap.mapId) ? null : x.maps.find((m) => m.id === mapPick[x.sc.id]) || x.maps[0], true);
                     };
@@ -28236,7 +28293,7 @@ export default function App({ onSignOut }) {
                         resetMine();
                         await hideScene();
                       } else if (view === "mapa") {
-                        const x = tl.find((t) => t.sc.id === vc.id && t.k === "cmb");
+                        const x = tl.find((t) => t.sc.id === vc.id && t.k === "cmb" && (!djSub || t.map.id === djSub)) || tl.find((t) => t.sc.id === vc.id && t.k === "cmb");
                         if (x) await goStep(x);
                         else {
                           resetMine();
@@ -28248,6 +28305,7 @@ export default function App({ onSignOut }) {
                     const jumpTo = (x) => {
                       setDjCh(x.sc.id === cur?.id ? null : x.sc.id);
                       setDjStep(x.k);
+                      setDjSub(x.k === "img" ? x.sub : x.k === "cmb" ? x.map.id : null);
                       setDjView(x.k === "cmb" ? (live === "mapa" ? null : "mapa") : live === "escena" ? null : "escena");
                     };
                     const STEP_META = { img: { I: ImageIcon, n: "Imagen y efectos" }, dlg: { I: MessageSquareQuote, n: "Diálogo" }, cmb: { I: Swords, n: "Combate" } };
@@ -28277,7 +28335,7 @@ export default function App({ onSignOut }) {
                                       <button type="button" className={"mh-tlr-n " + cls} onClick={() => jumpTo(x)} title={STEP_META[x.k].n + " · Cap. " + (ci + 1) + " (solo lo ves tú; Mostrar para publicarlo)"}>
                                         {lab && <em>{lab}</em>}
                                         <i />
-                                        {{ img: "Imagen", dlg: "Diálogo", cmb: "Combate" }[x.k]}
+                                        {x.k === "img" ? (x.nTot > 1 ? "Escena " + (x.n + 1) : "Imagen") : x.k === "dlg" ? "Diálogo" : x.nTot > 1 ? "Combate " + (x.n + 1) : "Combate"}
                                       </button>
                                     </Fragment>
                                   );
@@ -28292,7 +28350,7 @@ export default function App({ onSignOut }) {
                               const M = STEP_META[x.k];
                               return (
                                 <div key={x.id} className="mh-ch-step mh-tl-nx">
-                                  <div className="mh-ch-step-h"><M.I size={15} /> <b>{M.n}</b></div>
+                                  <div className="mh-ch-step-h"><M.I size={15} /> <b>{x.k === "img" && x.nTot > 1 ? "Escena " + (x.n + 1) : x.k === "cmb" && x.nTot > 1 ? "Combate " + (x.n + 1) : M.n}</b></div>
                                   <small>Cap. {scenes.indexOf(x.sc) + 1} · {x.sc.title || "Sin título"}</small>
                                 </div>
                               );
@@ -28310,14 +28368,14 @@ export default function App({ onSignOut }) {
                             const chap = "Cap. " + (scenes.indexOf(x.sc) + 1) + " · " + (x.sc.title || "Sin título");
                             return (
                               <div key={x.id} className="mh-ch-step mh-tl-cur is-on">
-                                <div className="mh-ch-step-h"><M.I size={16} /> <b>{M.n}</b></div>
+                                <div className="mh-ch-step-h"><M.I size={16} /> <b>{x.k === "img" && x.nTot > 1 ? "Escena " + (x.n + 1) : x.k === "cmb" && x.nTot > 1 ? "Combate " + (x.n + 1) : M.n}</b></div>
                                 <small>{chap}</small>
                                 {x.k === "img" && (
                                   <>
-                                    <small className="mh-tl-sub">{(x.sc.fx || []).length ? (x.sc.fx || []).map((k) => SCENE_FX.find((fx) => fx.k === k)?.n).filter(Boolean).join(", ") : "Sin efectos"}</small>
+                                    <small className="mh-tl-sub">{(x.scn.fx || []).length ? (x.scn.fx || []).map((k) => SCENE_FX.find((fx) => fx.k === k)?.n).filter(Boolean).join(", ") : "Sin efectos"}</small>
                                     <span className="mh-ch-step-acts">
                                       {live === "escena" && here ? <span className="mh-stg-live is-soft"><i />En pantalla</span> : <button type="button" className="mh-btn-ghost" onClick={() => goStep(x)}><Eye size={13} /> Mostrar</button>}
-                                      <button type="button" className={"mh-btn-ghost" + (fxDlg?.sceneId === x.sc.id ? " is-on" : "")} data-fx-btn="1" aria-haspopup="dialog" aria-expanded={fxDlg?.sceneId === x.sc.id} onClick={(e) => (fxDlg?.sceneId === x.sc.id ? setFxDlg(null) : setFxDlg({ sceneId: x.sc.id, rect: e.currentTarget.getBoundingClientRect() }))}><Sparkles size={13} /> Efectos{(x.sc.fx || []).length ? " · " + x.sc.fx.length : ""}</button>
+                                      <button type="button" className={"mh-btn-ghost" + ((fxDlg?.sceneId === x.sc.id && (fxDlg?.sub || null) === (x.sub || null)) ? " is-on" : "")} data-fx-btn="1" aria-haspopup="dialog" aria-expanded={fxDlg?.sceneId === x.sc.id && (fxDlg?.sub || null) === (x.sub || null)} onClick={(e) => ((fxDlg?.sceneId === x.sc.id && (fxDlg?.sub || null) === (x.sub || null)) ? setFxDlg(null) : setFxDlg({ sceneId: x.sc.id, sub: x.sub || null, rect: e.currentTarget.getBoundingClientRect() }))}><Sparkles size={13} /> Efectos{(x.scn.fx || []).length ? " · " + x.scn.fx.length : ""}</button>
                                       {nextBtn}
                                     </span>
                                   </>
@@ -28362,7 +28420,7 @@ export default function App({ onSignOut }) {
                                 )}
                                 {x.k === "cmb" && (
                                   <>
-                                    <small className="mh-tl-sub">{x.maps.length} mapa{x.maps.length === 1 ? "" : "s"}</small>
+                                    <small className="mh-tl-sub">{x.map.name}</small>
                                     <span className="mh-ch-step-acts">
                                       {inCombat && here ? (
                                         <>
@@ -28801,6 +28859,31 @@ export default function App({ onSignOut }) {
                             <button type="button" className="mh-gm-ib is-del" aria-label={"Borrar " + sel.title} title="Borrar el capítulo" onClick={() => removeChapter(sel.id)}><Trash2 size={14} /></button>
                           </div>
                         </div>
+                        {(() => {
+                          const scnList = chapterScenes(sel);
+                          const convs = dialogueConvs.filter((c) => c.sceneId === sel.id);
+                          const item = (key, Ic, label, sub, onClick, thumb) => (
+                            <button key={key} type="button" className="mh-hs-tl-i" onClick={onClick}>
+                              {thumb !== undefined ? <span className={"mh-hs-tl-th" + (thumb ? "" : " is-blank")} style={bgStyle(thumb)} /> : <span className="mh-hs-tl-ic"><Ic size={15} /></span>}
+                              <span className="mh-hs-tl-t"><b>{label}</b><small>{sub}</small></span>
+                            </button>
+                          );
+                          return (
+                            <div className="mh-hs-tl" role="group" aria-label="Línea de tiempo del capítulo">
+                              <span className="mh-dir-lbl">Línea de tiempo</span>
+                              <div className="mh-hs-tl-row">
+                                {scnList.map((x, i) => item("s" + x.id, ImageIcon, x.main ? "Escena 1" : "Escena " + (i + 1), x.title || "Sin título", () => (setChTab("ambiente"), setChScene(x.main ? null : x.id)), x.image || ""))}
+                                <button type="button" className="mh-hs-tl-add" onClick={() => { const id = addExtraScene(sel.id); if (id) (setChScene(id), setChTab("ambiente")); }}><Plus size={13} /> Escena</button>
+                                <span className="mh-hs-tl-ar" />
+                                {convs.map((c) => item("d" + c.id, MessageSquareQuote, c.title || "Diálogo", c.lines.length + " línea" + (c.lines.length === 1 ? "" : "s"), () => setChTab("dialogos")))}
+                                <button type="button" className="mh-hs-tl-add" onClick={() => setChTab("dialogos")}><Plus size={13} /> Diálogo</button>
+                                <span className="mh-hs-tl-ar" />
+                                {chMaps.map((m) => item("m" + m.id, Swords, m.name, (m.map.tokens || []).length + " fichas", () => setChTab("combate")))}
+                                <button type="button" className="mh-hs-tl-add" onClick={() => (setChTab("combate"), createCombat(sel.id))}><Plus size={13} /> Combate</button>
+                              </div>
+                            </div>
+                          );
+                        })()}
                         <div className="mh-hs-tabs" role="tablist">
                           {TABS3.map((t) => (
                             <button key={t.k} type="button" role="tab" aria-selected={chTab === t.k} className={chTab === t.k ? "is-on" : ""} onClick={() => setChTab(t.k)}>
@@ -28811,32 +28894,49 @@ export default function App({ onSignOut }) {
                           <span className="mh-hs-fx">{fxLabel(sel)}</span>
                         </div>
                         <div className="mh-hs-body">
-                          {chTab === "ambiente" && (
+                          {chTab === "ambiente" && (() => {
+                            const scnList = chapterScenes(chapter);
+                            const scn = scnList.find((x) => x.id === chScene) || scnList[0];
+                            const sub = scn.main ? undefined : scn.id;
+                            return (
                             <div className="mh-hs-amb">
-<div className="mh-gm-sc-edit">
-                                <input className="mh-input" aria-label="Título del capítulo" placeholder="Título del capítulo" value={chapter.title} onChange={(e) => updateScene(chapter.id, { title: e.target.value })} />
-                                <input className="mh-input" aria-label="Enlace de la imagen" placeholder={chapter.image && chapter.image.startsWith("img:") ? "Imagen subida (pega un enlace para cambiarla)" : "Imagen (enlace https://…)"} value={chapter.image && chapter.image.startsWith("img:") ? "" : chapter.image} onChange={(e) => updateScene(chapter.id, { image: e.target.value })} />
+                              <div className="mh-hs-scns" role="tablist" aria-label="Escenas del capítulo">
+                                {scnList.map((x, si) => (
+                                  <button key={x.id} type="button" role="tab" aria-selected={x.id === scn.id} className={x.id === scn.id ? "is-on" : ""} onClick={() => setChScene(x.main ? null : x.id)}>
+                                    <span className={"mh-hs-scn-th" + (x.image ? "" : " is-blank")} style={bgStyle(x.image)} />
+                                    Escena {si + 1}
+                                  </button>
+                                ))}
+                                <button type="button" className="mh-hs-scn-add" onClick={() => { const id = addExtraScene(chapter.id); if (id) setChScene(id); }}><Plus size={14} /> Añadir escena</button>
+                              </div>
+                              <div className="mh-gm-sc-edit">
+                                <input className="mh-input" aria-label="Título de la escena" placeholder={scn.main ? "Título del capítulo" : "Título de la escena"} value={scn.title || ""} onChange={(e) => updateScene(chapter.id, { title: e.target.value }, sub)} />
+                                <input className="mh-input" aria-label="Enlace de la imagen" placeholder={scn.image && scn.image.startsWith("img:") ? "Imagen subida (pega un enlace para cambiarla)" : "Imagen (enlace https://…)"} value={scn.image && scn.image.startsWith("img:") ? "" : scn.image || ""} onChange={(e) => updateScene(chapter.id, { image: e.target.value }, sub)} />
                                 <label className="mh-btn-ghost" style={{ cursor: "pointer", justifyContent: "center" }}>
                                   <Upload size={13} /> Subir imagen
-                                  <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { uploadSceneImg(chapter.id, e.target.files?.[0]); e.target.value = ""; }} />
+                                  <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { uploadSceneImg(chapter.id, e.target.files?.[0], sub); e.target.value = ""; }} />
                                 </label>
                                 <div className="mh-gm-fxl">
                                   <span className="mh-gm-h2">Efectos de ambiente</span>
                                   <div className="mh-gm-fxg">
                                     {SCENE_FX.map((fx) => {
                                       const I = FX_ICONS[fx.k];
-                                      const on = (chapter.fx || []).includes(fx.k);
+                                      const on = (scn.fx || []).includes(fx.k);
                                       return (
-                                        <button key={fx.k} type="button" className={"mh-gm-fx" + (on ? " is-on" : "")} aria-pressed={on} style={FX_COLORS[fx.k] ? { "--fc": FX_COLORS[fx.k] } : undefined} onClick={() => toggleFx(chapter, fx.k)} title={fx.n}>
+                                        <button key={fx.k} type="button" className={"mh-gm-fx" + (on ? " is-on" : "")} aria-pressed={on} style={FX_COLORS[fx.k] ? { "--fc": FX_COLORS[fx.k] } : undefined} onClick={() => toggleFx({ id: chapter.id, fx: scn.fx || [] }, fx.k, sub)} title={fx.n}>
                                           <I size={13} /> {fx.n}
                                         </button>
                                       );
                                     })}
                                   </div>
                                 </div>
+                                {!scn.main && (
+                                  <button type="button" className="mh-btn-ghost mh-wm-del" style={{ alignSelf: "flex-start" }} onClick={() => (removeExtraScene(chapter.id, scn.id), setChScene(null))}><Trash2 size={13} /> Quitar esta escena</button>
+                                )}
                               </div>
                             </div>
-                          )}
+                            );
+                          })()}
                           {chTab === "dialogos" && (
                           <div className="mh-card mh-gm-box is-wide">
                             <div className="mh-gm-h">
@@ -29138,9 +29238,14 @@ export default function App({ onSignOut }) {
                               ))}
                               {chMaps.length === 0 && <div className="mh-chat-empty">Este capítulo aún no tiene mapas. Abre el tablero, coloca a los enemigos y guarda el mapa aquí.</div>}
                             </div>
-                            <button type="button" className="mh-btn-ghost" style={{ alignSelf: "flex-start" }} onClick={() => (setCombatBack(chapter.id), setCampaignDetailTab("mapa"))}>
-                              <MapPinned size={13} /> Abrir el tablero de combate
-                            </button>
+                            <div className="mh-wm-row">
+                              <button type="button" className="mh-btn" onClick={() => createCombat(chapter.id)}>
+                                <Plus size={13} /> Nuevo mapa de combate
+                              </button>
+                              <button type="button" className="mh-btn-ghost" onClick={() => (setCombatBack(chapter.id), setCampaignDetailTab("mapa"))}>
+                                <MapPinned size={13} /> Abrir el tablero de combate
+                              </button>
+                            </div>
                             <div className="mh-gm-h2">Encuentros</div>
                             <div className="mh-ch-encs">
                               {chEncs.map((enc) => (
@@ -29423,6 +29528,63 @@ export default function App({ onSignOut }) {
                               })()}
                           </div>
                         )}
+                        {(() => {
+                          // Enemigos de la campaña: los de los mapas de combate guardados y los del tablero actual.
+                          const foes = new Map();
+                          const addFoes = (tokens, ci) =>
+                            (tokens || []).filter((t) => t.kind === "foe").forEach((t) => {
+                              const key = (t.name || "").trim().toLowerCase();
+                              if (!key) return;
+                              const e = foes.get(key) || { name: t.name, stats: t.stats || null, chapters: new Set(), total: 0 };
+                              e.total++;
+                              if (ci >= 0) e.chapters.add(ci + 1);
+                              if (!e.stats && t.stats) e.stats = t.stats;
+                              foes.set(key, e);
+                            });
+                          campaignMaps.forEach((mp) => addFoes(mp.map?.tokens, scenes.findIndex((x) => x.id === mp.sceneId)));
+                          addFoes(campaignMap.tokens, -1);
+                          const foeList = [...foes.values()];
+                          return (
+                            <div className="mh-card mh-gm-box is-wide">
+                              <div className="mh-gm-h">
+                                <Skull size={15} /> Enemigos de la campaña
+                                {foeList.length > 0 && <span className="mh-gm-count">{foeList.length}</span>}
+                              </div>
+                              <div className="mh-gm-sub">Los adversarios que has colocado en tus mapas de combate, con sus estadísticas. Puedes colocarlos de nuevo en el tablero actual.</div>
+                              <div className="mh-ch-npcs">
+                                {foeList.map((e) => (
+                                  <div key={e.name} className="mh-ch-npc is-enemigo">
+                                    <div className="mh-ch-npc-top" style={{ cursor: "default" }}>
+                                      <span className="mh-ch-npc-img"><Skull size={22} /></span>
+                                      <span className="mh-ch-npc-id">
+                                        <b className="mh-serif">{e.name}</b>
+                                        <small>{e.stats ? "Nivel " + e.stats.tier + " · " + e.stats.type + (e.stats.base && e.stats.base !== e.name ? " · " + e.stats.base : "") : "Sin estadísticas"}</small>
+                                        {e.stats && <small className="mh-ns-sum">{"Dif " + e.stats.difficulty + " · PV " + e.stats.hp + " · Estrés " + e.stats.stress + (e.stats.attack ? " · " + e.stats.attack.name + " " + e.stats.attack.damage : "")}</small>}
+                                      </span>
+                                    </div>
+                                    <div className="mh-ch-npc-w">{e.chapters.size ? "Aparece en: " + [...e.chapters].sort((a, b) => a - b).map((n) => "Cap. " + n).join(", ") : "Solo en el tablero actual"} · {e.total} ficha{e.total === 1 ? "" : "s"}</div>
+                                    <div className="mh-ch-npc-acts">
+                                      <button
+                                        type="button"
+                                        className="mh-btn-ghost"
+                                        onClick={() =>
+                                          mutateMap(viewingCampaignId, (tokens) => {
+                                            const [x, y] = freeCell(tokens);
+                                            return [...tokens, { id: "t" + Date.now() + Math.random().toString(36).slice(2, 5), x, y, kind: "foe", name: e.name, stats: { ...(e.stats || newFoeStats()), hpMarked: 0, stressMarked: 0 }, size: "m" }];
+                                          })
+                                        }
+                                        title="Añade una copia de este enemigo al tablero actual"
+                                      >
+                                        <Plus size={13} /> Colocar en el tablero
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))}
+                                {foeList.length === 0 && <div className="mh-chat-empty">Aún no hay enemigos. Colócalos en un mapa de combate (en «Mapas» o desde el tablero) y aparecerán aquí.</div>}
+                              </div>
+                            </div>
+                          );
+                        })()}
                         <div className="mh-card mh-gm-box is-wide">
                           <div className="mh-gm-h">
                             <Plus size={15} /> Nuevo PNJ
