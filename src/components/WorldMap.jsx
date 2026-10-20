@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Upload, Plus, MapPin, Trash2, X, Eye, EyeOff, Landmark, Skull, Flag, Swords, Home, ZoomIn, ZoomOut, ChevronRight, Pencil, Sparkles, Copy, Check, ImagePlus, Wand2 } from "lucide-react";
 import { useDoc } from "@/lib/campaignDocs";
+import { trackStat } from "@/lib/social";
 import { PlacePromptHelper, CopyPrompt, buildPlacePrompt } from "./ImagePrompts";
 
 // Mapa de mundo: una imagen que sube el DJ y marcadores encima. Cada marcador abre una tarjeta con imagen, texto y,
@@ -220,6 +221,7 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
     if (!ref) return;
     const old = doc.image;
     await update((d) => ({ ...d, image: ref }));
+    if (!old) trackStat("worldMaps");
     if (old && dropImage) dropImage(old);
   };
   const [seasonPick, setSeasonPick] = useState(null); // estación a la que se sube imagen
@@ -231,6 +233,7 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
     if (!ref) return;
     const old = (doc.seasons || {})[key];
     await update((d) => ({ ...d, seasons: { ...(d.seasons || {}), [key]: ref }, season: key }));
+    trackStat("seasons", Object.keys({ ...(doc.seasons || {}), [key]: ref }).length, "max");
     if (old && dropImage) dropImage(old);
   };
   const removeSeason = async (key) => {

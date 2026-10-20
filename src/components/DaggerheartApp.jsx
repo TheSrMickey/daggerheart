@@ -29,7 +29,7 @@ import { Chronicle, Timeline } from "./Chronicle";
 import { appendLog } from "@/lib/chronicle";
 import { SpotPlayer, SpotPause, SpotPanel, FocusBar, normSpot, liveHands, kindOf } from "./Spotlight";
 import { APP_VERSION } from "@/lib/changelog";
-import { setPresence, setPresenceMaking, startPresence, stopPresence, publishTable, loadTable, myUid, setPresenceCamp, bridge, logActivity, loadReactions, toggleReaction } from "@/lib/social";
+import { setPresence, setPresenceMaking, startPresence, stopPresence, publishTable, loadTable, myUid, setPresenceCamp, bridge, logActivity, trackStat, loadReactions, toggleReaction } from "@/lib/social";
 import { SocialHost, LookingFor, ActivityCard, PrivacyCard, ReactionBar } from "./Social2";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
 import { buildSablewood } from "./quickstartSablewood";
@@ -7470,6 +7470,8 @@ const sharedStyles = `
   .mh-dm-in { display: flex; gap: 6px; padding-top: 10px; border-top: 1px solid var(--mh-line); } .mh-dm-in input { flex: 1; min-width: 0; }
   .so-ov { position: fixed !important; inset: 0 !important; z-index: 75; display: flex; align-items: flex-start; justify-content: center; padding: 20px; background: rgba(8,6,12,.68); overflow-y: auto; }
   .so-modal { margin: auto; width: min(520px, 100%); overflow: visible; border: 1px solid var(--mh-line); border-radius: 20px; background: var(--mh-panel); box-shadow: 0 30px 70px rgba(0,0,0,.55); } .so-modal.is-wide { width: min(640px, 100%); }
+  .ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 14px 8px; } .ach-it { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 1px; } .ach-it b { font-size: 12px; font-weight: 600; color: var(--mh-ink); margin-top: 4px; } .ach-it small { font-size: 11px; color: var(--mh-muted); } .ach-it:not(.is-on) b { color: var(--mh-muted); } .ach-badge.is-lock { opacity: .6; }
+  .ach-toasts { position: fixed; right: 20px; bottom: 24px; z-index: 120; display: flex; flex-direction: column; gap: 10px; max-width: min(380px, calc(100vw - 32px)); } .ach-toast { display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 10px; border-radius: 16px; background: var(--mh-panel); border: 1px solid #E3B04B; box-shadow: 0 14px 34px rgba(0,0,0,.45); animation: ach-in .4s cubic-bezier(.2,.8,.2,1) both; } .ach-toast > div { display: flex; flex-direction: column; min-width: 0; } .ach-toast small { font: 700 10px 'Inter', system-ui, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: #E3B04B; } .ach-toast b { font: 600 15px 'Cinzel', Georgia, serif; color: var(--mh-ink); } .ach-toast em { font-style: normal; font-size: 12px; color: var(--mh-muted); } .ach-toast button { margin-left: auto; padding: 6px 12px; border-radius: 99px; border: 1px solid var(--mh-line2); background: transparent; color: var(--mh-ink); font: 600 12px 'Inter', system-ui, sans-serif; cursor: pointer; } @keyframes ach-in { from { opacity: 0; transform: translateY(14px) scale(.96); } } @media (prefers-reduced-motion: reduce) { .ach-toast { animation: none; } }
   .so-ban { height: 88px; background: linear-gradient(135deg, color-mix(in srgb, var(--c, #4f9a62) 60%, #12142a), #12142a); } .so-body { padding: 0 24px 22px; } .so-ban + .so-body { margin-top: -34px; }
   .so-prow { display: flex; align-items: center; gap: 12px; justify-content: space-between; } .so-grow { flex: 1; min-width: 0; } .so-name { font-size: 21px; font-weight: 700; } .so-h { margin: 0; font-size: 16px; display: flex; align-items: center; gap: 9px; }
   .so-sub { color: var(--mh-muted); font-size: 12.5px; margin: 4px 0 8px; } .so-bio { margin: 0; line-height: 1.5; font-size: 13px; } .so-foot { margin-top: 14px; color: var(--mh-muted); font-size: 12px; display: flex; gap: 6px; align-items: center; }
@@ -11477,6 +11479,7 @@ export default function App({ onSignOut }) {
     setCharacters(nextChars);
     await safeSet("character-index", JSON.stringify(Object.keys(nextChars)), false);
     await safeSet("character:" + id, JSON.stringify(created), false);
+    trackStat("chars");
     switchChar(id);
     setShowNewCharModal(false);
     // Sin pasos intermedios: al terminar el asistente se abre la hoja del personaje recién creado.
@@ -13227,6 +13230,7 @@ export default function App({ onSignOut }) {
     await safeSet("campaign-index", JSON.stringify(Object.keys(nextCampaigns)), false);
     await safeSet("campaign:" + id, JSON.stringify(newCampaign), false);
     logActivity("camp", "ha empezado una campaña: «" + name + "»");
+    trackStat("campsStarted");
     setNewCampaignName("");
     setNewCampaignDesc("");
     setShowNewCampaignForm(false);
@@ -15902,6 +15906,7 @@ export default function App({ onSignOut }) {
     // Esperanza y Miedo no se suman hasta que el jugador cierra la escena de dados.
     const applyOutcome = () => {
       let hopeGained = 0;
+      if (hope === fear && !reaction) trackStat("crit"); // el logro sale cuando el dado ya se ha revelado
       if (reaction) {
         // Nada que ganar ni que dar al DJ.
       } else if (hope >= fear) {
@@ -16318,6 +16323,7 @@ export default function App({ onSignOut }) {
     }
     await postChat(id, { kind: "event", author: ch?.f_name || "Un personaje", charId, cls: ch?.f_class || "", text: "👋 se une a la campaña" });
     logActivity("camp", "se ha unido a la campaña «" + (camp.name || "Campaña") + "»");
+    trackStat("campsJoined");
   };
   useEffect(() => {
     bridge.chars = Object.entries(characters).map(([id, c]) => ({ id, name: c.f_name || "Sin nombre", cls: c.f_class || "", lvl: Number(c.f_level || 1) }));
@@ -27135,6 +27141,7 @@ export default function App({ onSignOut }) {
               updateCharacterFields(levelUpId, patch);
               postCampaignEvent(levelUpId, "⬆️ Sube al nivel " + nl);
               logActivity("level", "ha subido a " + (characters[levelUpId]?.f_name || "su personaje") + " al nivel " + nl);
+              trackStat("maxLevel", Number(nl) || 0, "max");
               setLevelUpId(null);
             }}
           />
