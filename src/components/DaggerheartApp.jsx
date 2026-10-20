@@ -28004,7 +28004,6 @@ export default function App({ onSignOut }) {
                     const paused = normSpot(campaignMap.spot).mode === "paused";
                     const dlg = stage.dialogue || null;
                     const dlgImg = dlg ? castImgs[dlg.imgId] : null;
-                    const online = table.filter((e) => tableStatus(e) === "on").length;
                     const liveLabel = { escena: "la escena", mapa: "el mapa de combate", mundo: "el mapa de mundo", pistas: "las pistas", personajes: "los personajes" }[live];
                     const viewLabel = { escena: "la escena", mapa: "el mapa de combate", mundo: "el mapa de mundo", pistas: "las pistas", personajes: "los personajes" }[view];
                     const pips = (n, t, col) => (
@@ -28385,7 +28384,25 @@ export default function App({ onSignOut }) {
                     const stepsEl = (
                       <div className="mh-tl" inert={xLock || undefined}>
                         {scenes.length > 0 && (
-                          <div className="mh-tlr" role="group" aria-label="Línea de tiempo de la historia">
+                          <div
+                            className="mh-tlr"
+                            role="group"
+                            aria-label="Línea de tiempo de la historia"
+                            ref={(el) => {
+                              // La rueda del ratón desplaza la línea de lado a lado cuando no cabe entera.
+                              if (!el || el.dataset.wheel) return;
+                              el.dataset.wheel = "1";
+                              el.addEventListener(
+                                "wheel",
+                                (e) => {
+                                  if (el.scrollWidth <= el.clientWidth + 1) return;
+                                  e.preventDefault();
+                                  el.scrollLeft += Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+                                },
+                                { passive: false }
+                              );
+                            }}
+                          >
                             {scenes.map((sc, ci) => (
                               <div key={sc.id} className="mh-tlr-ch">
                                 <span className="mh-tlr-c">CAP. {ci + 1} · {sc.title || "Sin título"}</span>
@@ -28428,7 +28445,7 @@ export default function App({ onSignOut }) {
                     );
                     const groupBox = (
                       <div className="mh-dir-card">
-                        <div className="mh-dir-lbl-row"><span className="mh-dir-lbl">El grupo</span><small>{online} conectado{online === 1 ? "" : "s"}</small></div>
+                        <div className="mh-dir-lbl-row"><span className="mh-dir-lbl">El grupo</span></div>
                         <div className="mh-dir-members">
                           {members.map(({ id, ch }) => {
                             const hpT = Number(ch.r_hp || 0);
