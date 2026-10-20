@@ -1,15 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Link2, Send, Lock, Megaphone, X, MessageCircle, BookOpen, Copy, Check, SmilePlus } from "lucide-react";
+import { Link2, Send, Lock, Megaphone, X, Copy, Check, SmilePlus } from "lucide-react";
 import { useSocial, refreshSocial, Avatar, ago } from "./Social";
-import { AchievementGrid, AchievementToasts } from "./Achievements";
-import { getProfile, saveProfile, namesFor, unblockPerson, bridge, inviteToCampaign, sendDm, loadPosts, publishPost, removePost, requestJoin, friendActivity, shareSheet, revokeSheet, loadSheet } from "@/lib/social";
+import { AchievementToasts } from "./Achievements";
+import { saveProfile, namesFor, unblockPerson, bridge, sendDm, loadPosts, publishPost, removePost, requestJoin, friendActivity, shareSheet, revokeSheet, loadSheet } from "@/lib/social";
 
 // Todo lo social que no es el panel de amigos: perfil, ficha compartida, «Buscar mesa», actividad, privacidad y reacciones.
-const LOOKING = ["Jugador", "DJ", "Mesa nueva", "Entre semana", "Fines de semana", "Rol con interpretación", "Combate táctico", "Principiante"];
-const hueOf = (n) => [...(n || "?")].reduce((a, c) => a + c.charCodeAt(0), 0) * 47 % 360;
-const dateEs = (t) => new Date(t).toLocaleDateString("es-ES", { month: "long", year: "numeric" });
 
 function Modal({ children, onClose, wide }) {
   useEffect(() => {
@@ -21,75 +18,6 @@ function Modal({ children, onClose, wide }) {
     <div className="mh-overlay so-ov" role="dialog" aria-modal="true" onClick={onClose}>
       <div className={"so-modal" + (wide ? " is-wide" : "")} onClick={(e) => e.stopPropagation()}>{children}</div>
     </div>
-  );
-}
-
-// ---------- perfil ----------
-function ProfileModal({ id, name, onClose }) {
-  const s = useSocial();
-  const isMe = s.me?.id === id;
-  const [p, setP] = useState(null);
-  const [inv, setInv] = useState(false);
-  const [msg, setMsg] = useState("");
-  const [draft, setDraft] = useState(null);
-  useEffect(() => {
-    getProfile(id, true).then((v) => (setP(v), setDraft({ bio: v.bio, looking: v.looking, chars: v.chars })));
-  }, [id]);
-  if (!p || !draft) return null;
-  const friend = s.friends.find((f) => f.id === id);
-  const col = `hsl(${hueOf(name)} 45% 45%)`;
-  const save = async () => {
-    await saveProfile({ bio: draft.bio.slice(0, 280), looking: draft.looking, chars: draft.chars });
-    setMsg("Perfil guardado.");
-    setP(await getProfile(id, true));
-    refreshSocial();
-  };
-  const chars = isMe ? draft.chars : p.chars;
-  return (
-    <Modal onClose={onClose}>
-      <div className="so-ban" style={{ "--c": col }} />
-      <div className="so-body">
-        <div className="so-prow">
-          <Avatar name={name} size={72} status={friend?.status} />
-          <div className="so-grow"><div className="mh-serif so-name">{name}{isMe ? " · tú" : ""}</div><small>{friend ? (friend.camp ? (friend.role || "Juega") + " en «" + friend.camp + "»" : friend.status === "off" ? "Desconectado" : "En línea") : isMe ? "Tu perfil" : "Jugador"}{p.since ? " · miembro desde " + dateEs(p.since) : ""}</small></div>
-          <button type="button" className="mh-x" aria-label="Cerrar" onClick={onClose}><X size={16} /></button>
-        </div>
-        {!isMe && (
-          <div className="so-acts">
-            {friend && <button type="button" className="mh-btn" onClick={() => (window.dispatchEvent(new CustomEvent("mh-dm", { detail: { id } })), onClose())}><MessageCircle size={14} /> Mensaje</button>}
-            {friend && <button type="button" className="mh-btn-ghost" onClick={() => setInv((v) => !v)}><BookOpen size={14} /> Invitar a una campaña</button>}
-          </div>
-        )}
-        {inv && (
-          <div className="so-chips">
-            {bridge.camps.length === 0 && <small>Aún no tienes campañas.</small>}
-            {bridge.camps.map((c) => <button key={c.id} type="button" className="so-chip" onClick={async () => setMsg(await inviteToCampaign(friend, { campId: c.id, name: c.name, desc: c.desc, gm: s.me?.username || "", players: c.players }))}>{c.name}</button>)}
-          </div>
-        )}
-        {msg && <div className="mh-friends-msg">{msg}</div>}
-        <div className="so-lab">Lo que busco</div>
-        <div className="so-chips">
-          {(isMe ? LOOKING : p.looking).map((t) => {
-            const on = (isMe ? draft.looking : p.looking).includes(t);
-            return isMe ? <button key={t} type="button" className={"so-chip" + (on ? " on" : "")} onClick={() => setDraft({ ...draft, looking: on ? draft.looking.filter((x) => x !== t) : [...draft.looking, t] })}>{t}</button> : <span key={t} className="so-chip on">{t}</span>;
-          })}
-          {!isMe && p.looking.length === 0 && <small>No ha dicho nada todavía.</small>}
-        </div>
-        <div className="so-lab">Sobre mí</div>
-        {isMe ? <textarea className="mh-input" maxLength={280} style={{ width: "100%", minHeight: 64, resize: "vertical" }} value={draft.bio} onChange={(e) => setDraft({ ...draft, bio: e.target.value })} placeholder="Cuenta algo de ti: qué te gusta jugar, tu horario…" /> : <p className="so-bio">{p.bio || "—"}</p>}
-        <div className="so-lab">Personajes que enseño</div>
-        <div className="so-chars">
-          {isMe && bridge.chars.map((c) => {
-            const on = draft.chars.some((x) => x.name === c.name);
-            return <button key={c.id} type="button" className={"so-char" + (on ? " on" : "")} onClick={() => setDraft({ ...draft, chars: on ? draft.chars.filter((x) => x.name !== c.name) : [...draft.chars, { name: c.name, cls: c.cls, lvl: c.lvl }] })}><b>{c.name}</b><small>{c.cls || "Sin clase"} · Nv {c.lvl}</small></button>;
-          })}
-          {!isMe && chars.map((c) => <div key={c.name} className="so-char on"><b>{c.name}</b><small>{c.cls || "Sin clase"} · Nv {c.lvl}</small></div>)}
-          {chars.length === 0 && !isMe && <small>No enseña ningún personaje.</small>}
-        </div>
-        <AchievementGrid uid={id} />
-        {isMe ? <div className="so-acts"><button type="button" className="mh-btn" onClick={save}>Guardar perfil</button><small><Lock size={12} /> Solo se ve lo que marques aquí.</small></div> : <div className="so-foot"><Lock size={12} /> Solo ves lo que {name} ha decidido enseñar.</div>}
-      </div>
-    </Modal>
   );
 }
 
@@ -196,12 +124,9 @@ function SheetView({ token, onClose }) {
 
 // Escucha los eventos de la interfaz y abre perfil, compartir ficha o una ficha recibida por enlace.
 export function SocialHost() {
-  const me = useSocial().me;
   const [m, setM] = useState(null);
   useEffect(() => {
-    const prof = (e) => setM({ t: "profile", ...e.detail });
     const share = (e) => setM({ t: "share", ...e.detail });
-    window.addEventListener("mh-profile", prof);
     window.addEventListener("mh-share", share);
     const sheet = (e) => setM({ t: "sheet", token: e.detail.token });
     window.addEventListener("mh-sheet", sheet);
@@ -213,14 +138,13 @@ export function SocialHost() {
         history.replaceState(null, "", location.pathname);
       }
     } catch {}
-    return () => (window.removeEventListener("mh-profile", prof), window.removeEventListener("mh-share", share), window.removeEventListener("mh-sheet", sheet));
+    return () => (window.removeEventListener("mh-share", share), window.removeEventListener("mh-sheet", sheet));
   }, []);
   const close = () => setM(null);
-  const hide = m?.t === "profile" && m.id === "me" && !me;
   return (
     <>
       <AchievementToasts />
-      {m && !hide && (m.t === "profile" ? <ProfileModal id={m.id === "me" ? me.id : m.id} name={m.name || me?.username || ""} onClose={close} /> : m.t === "share" ? <ShareModal charId={m.charId} onClose={close} /> : <SheetView token={m.token} onClose={close} />)}
+      {m && (m.t === "share" ? <ShareModal charId={m.charId} onClose={close} /> : <SheetView token={m.token} onClose={close} />)}
     </>
   );
 }
