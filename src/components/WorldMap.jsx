@@ -107,7 +107,7 @@ function PromptHelper({ onClose }) {
   );
 }
 
-export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc, ensureImg, saveImage, dropImage, onOpenScene, onLog, fit = false, compact = false, showHidden = false }) {
+export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc, ensureImg, saveImage, dropImage, onOpenScene, onLog, fit = false, compact = false, showHidden = false, seasonMenu = false }) {
   const [doc, update] = useDoc(docKey(campaignId), EMPTY, 4000);
   const pins = doc.pins || [];
   const [sel, setSel] = useState(null);
@@ -130,6 +130,15 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
   const season = doc.season && seasons[doc.season] ? doc.season : "";
   const shownRef = season ? seasons[season] : doc.image;
   const mapSrc = imgSrc ? imgSrc(shownRef) : "";
+  // Al cambiar de estación la imagen anterior se queda debajo mientras la nueva aparece con un fundido suave.
+  const [fade, setFade] = useState({ cur: mapSrc, prev: "" });
+  if (mapSrc !== fade.cur) setFade({ cur: mapSrc, prev: fade.cur });
+  useEffect(() => {
+    if (!fade.prev) return undefined;
+    const t = setTimeout(() => setFade((f) => ({ ...f, prev: "" })), 1100);
+    return () => clearTimeout(t);
+  }, [fade.prev]);
+  const [smOpen, setSmOpen] = useState(false);
 
   // Descarga las imágenes del mapa y de los marcadores visibles.
   useEffect(() => {
@@ -324,9 +333,11 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
       {edit && help && <PromptHelper onClose={() => setHelp(false)} />}
       <div className="mh-wm-wrap">
         <div className={"mh-wm-view" + (tool === "add" ? " is-add" : "")}>
-          {fit && mapSrc && <div className={"mh-wm-bg" + (ready ? " is-ready" : "")} aria-hidden="true" style={{ backgroundImage: `url("${mapSrc.replace(/"/g, "%22")}")` }} />}
+          {fit && fade.prev && <div className="mh-wm-bg is-ready" aria-hidden="true" style={{ backgroundImage: `url("${fade.prev.replace(/"/g, "%22")}")` }} />}
+          {fit && mapSrc && <div key={mapSrc} className={"mh-wm-bg" + (ready ? " is-ready" : "") + (fade.prev ? " mh-wm-in" : "")} aria-hidden="true" style={{ backgroundImage: `url("${mapSrc.replace(/"/g, "%22")}")` }} />}
           <div className={"mh-wm-canvas" + (ready ? " is-ready" : "")} ref={canvasRef} style={fit ? { aspectRatio: String(ratio), "--wm-r": ratio } : { width: zoom * 100 + "%" }} onClick={onMapClick} onDoubleClick={onMapDbl}>
-            {mapSrc ? <img src={mapSrc} alt="Mapa de mundo" draggable={false} ref={(el) => { if (el && el.complete && el.naturalHeight) { setReady(true); setRatio(el.naturalWidth / el.naturalHeight); } }} onLoad={(e) => { if (e.currentTarget.naturalHeight) { setRatio(e.currentTarget.naturalWidth / e.currentTarget.naturalHeight); setReady(true); } }} /> : <div className="mh-wm-load">Cargando el mapa…</div>}
+            {fade.prev && mapSrc && <img className="mh-wm-prev" src={fade.prev} alt="" aria-hidden="true" draggable={false} />}
+            {mapSrc ? <img key={mapSrc} className={fade.prev ? "mh-wm-in" : undefined} src={mapSrc} alt="Mapa de mundo" draggable={false} ref={(el) => { if (el && el.complete && el.naturalHeight) { setReady(true); setRatio(el.naturalWidth / el.naturalHeight); } }} onLoad={(e) => { if (e.currentTarget.naturalHeight) { setRatio(e.currentTarget.naturalWidth / e.currentTarget.naturalHeight); setReady(true); } }} /> : <div className="mh-wm-load">Cargando el mapa…</div>}
             {visible.map((p) => {
               const k = KIND[p.kind] || KIND.interes;
               const d = drag && drag.id === p.id && drag.on ? drag : p;
@@ -354,6 +365,21 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
             <button type="button" aria-label="Acercar" onClick={() => setZoom((z) => Math.min(3, +(z + 0.5).toFixed(1)))}><ZoomIn size={15} /></button>
             <button type="button" aria-label="Alejar" onClick={() => setZoom((z) => Math.max(1, +(z - 0.5).toFixed(1)))}><ZoomOut size={15} /></button>
           </div>
+          {seasonMenu && !edit && Object.keys(seasons).length > 0 && (
+            <div className="mh-wm-sm">
+              <button type="button" className="mh-wm-sm-b" aria-haspopup="true" aria-expanded={smOpen} onClick={() => setSmOpen((v) => !v)} title="Cambiar la estación del mapa">
+                <span aria-hidden="true">{season ? SEASONS.find((x) => x.key === season).emoji : "🗺️"}</span> {season ? SEASONS.find((x) => x.key === season).label : "Normal"} <ChevronRight size={12} style={{ transform: smOpen ? "rotate(-90deg)" : "rotate(90deg)" }} />
+              </button>
+              {smOpen && (
+                <div className="mh-wm-sm-l" role="menu">
+                  <button type="button" role="menuitem" className={!season ? "is-on" : ""} disabled={!doc.image} onClick={() => (setSeason(""), setSmOpen(false))}>🗺️ Normal</button>
+                  {SEASONS.filter((x) => seasons[x.key]).map((x) => (
+                    <button key={x.key} type="button" role="menuitem" className={season === x.key ? "is-on" : ""} onClick={() => (setSeason(x.key), setSmOpen(false))}>{x.emoji} {x.label}</button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           {season && <span className="mh-wm-season">{SEASONS.find((x) => x.key === season).emoji} {SEASONS.find((x) => x.key === season).label}</span>}
           {busy && <div className="mh-wm-busy">{busy}</div>}
         </div>
