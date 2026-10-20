@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, BookOpen, Lock, MessageCircle, Pencil, Star } from "lucide-react";
+import { BookOpen, EyeOff, Lock, MessageCircle, Octagon, Pencil, Plus, Star } from "lucide-react";
 import { useSocial, refreshSocial, Avatar } from "./Social";
 import { Badge } from "./Achievements";
 import { ACHIEVEMENTS, CATS } from "@/lib/achievements";
@@ -12,6 +12,8 @@ const LOOKING = ["Jugador", "DJ", "Mesa nueva", "Entre semana", "Fines de semana
 const hueOf = (n) => [...(n || "?")].reduce((a, c) => a + c.charCodeAt(0), 0) * 47 % 360;
 const monthEs = (t) => new Date(t).toLocaleDateString("es-ES", { month: "long", year: "numeric" });
 const dayEs = (t) => new Date(t).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" });
+// Líneas (nunca aparecen en la mesa) y velos (pueden pasar, pero fuera de escena). Se sugieren temas habituales y se puede escribir otro.
+const SUGGEST = ["Violencia gráfica", "Maltrato o abuso", "Violencia sexual", "Daño a niños", "Tortura", "Autolesiones", "Enfermedad grave", "Daño a animales", "Discriminación", "Arañas e insectos"];
 const TABS = [["resumen", "Resumen"], ["logros", "Logros"], ["personajes", "Personajes"], ["actividad", "Actividad"]];
 
 function AchCard({ a, st, edit, featured, onToggle }) {
@@ -32,7 +34,7 @@ function AchCard({ a, st, edit, featured, onToggle }) {
   );
 }
 
-export default function ProfilePage({ id, name, onBack }) {
+export default function ProfilePage({ id, name }) {
   const s = useSocial();
   const meId = s.me?.id;
   const uid = id === "me" ? meId : id;
@@ -67,7 +69,7 @@ export default function ProfilePage({ id, name, onBack }) {
 
   if (!uid || !p || !ach) return <div className="so-page"><div className="so-empty">Cargando perfil…</div></div>;
 
-  const d = edit && draft ? draft : { bio: p.bio, looking: p.looking, chars: p.chars, featured: p.featured || [] };
+  const d = edit && draft ? draft : { bio: p.bio, looking: p.looking, chars: p.chars, featured: p.featured || [], lines: p.lines || [], veils: p.veils || [] };
   const featIds = d.featured.filter((x) => unlockedIds.includes(x)).slice(0, 3);
   const recent = [...unlockedIds].sort((a, b) => ach.unlocked[b] - ach.unlocked[a]).slice(0, 3);
   const shown = (edit || featIds.length ? featIds : recent).map((x) => ACHIEVEMENTS.find((a) => a.id === x));
@@ -76,9 +78,9 @@ export default function ProfilePage({ id, name, onBack }) {
   const list = ACHIEVEMENTS.filter((a) => !cat || a.cat === cat);
   const col = `hsl(${hueOf(who)} 45% 45%)`;
 
-  const startEdit = () => (setDraft({ bio: p.bio, looking: p.looking, chars: p.chars, featured: p.featured || [] }), setEdit(true), setMsg(""));
+  const startEdit = () => (setDraft({ bio: p.bio, looking: p.looking, chars: p.chars, featured: p.featured || [], lines: p.lines || [], veils: p.veils || [] }), setEdit(true), setMsg(""));
   const save = async () => {
-    await saveProfile({ bio: draft.bio.slice(0, 280), looking: draft.looking, chars: draft.chars, featured: draft.featured.slice(0, 3) });
+    await saveProfile({ bio: draft.bio.slice(0, 280), looking: draft.looking, chars: draft.chars, featured: draft.featured.slice(0, 3), lines: draft.lines, veils: draft.veils });
     setP(await getProfile(uid, true));
     setEdit(false);
     setMsg("Perfil guardado.");
@@ -122,6 +124,43 @@ export default function ProfilePage({ id, name, onBack }) {
       {!charsList && d.chars.length === 0 && <small className="pf-mut">{isMe ? "No enseñas ningún personaje. Edita tu perfil para elegirlos." : "No enseña ningún personaje."}</small>}
     </>
   );
+  const addTag = (field, t) => {
+    const v = t.trim().slice(0, 40);
+    if (v && !d[field].includes(v)) setDraft((x) => ({ ...x, [field]: [...x[field], v] }));
+  };
+  const dropTag = (field, t) => setDraft((x) => ({ ...x, [field]: x[field].filter((y) => y !== t) }));
+  const limGroup = (field, cls, Icon, title, hint) => {
+    const cur = d[field];
+    const free = SUGGEST.filter((t) => !d.lines.includes(t) && !d.veils.includes(t));
+    return (
+      <div className={"pf-lim-g " + cls}>
+        <b><Icon size={13} /> {title}</b>
+        <small>{hint}</small>
+        <div className="pf-lim-c">
+          {cur.map((t) => (edit ? <button key={t} type="button" className="pf-tag" title="Quitar" onClick={() => dropTag(field, t)}>{t} ×</button> : <span key={t} className="pf-tag">{t}</span>))}
+          {!edit && cur.length === 0 && <small className="pf-mut" style={{ margin: 0 }}>{isMe ? "Nada indicado." : "Sin indicar."}</small>}
+        </div>
+        {edit && (
+          <>
+            <div className="pf-lim-c" style={{ marginTop: 8 }}>{free.slice(0, 6).map((t) => <button key={t} type="button" className="pf-tag off" onClick={() => addTag(field, t)}>+ {t}</button>)}</div>
+            <form className="pf-lim-add" onSubmit={(e) => { e.preventDefault(); const f = e.currentTarget.elements.t; addTag(field, f.value); f.value = ""; }}>
+              <input name="t" className="mh-input" maxLength={40} placeholder="Otro tema…" aria-label={"Añadir a " + title.toLowerCase()} />
+              <button type="submit" className="mh-btn-ghost" aria-label="Añadir"><Plus size={14} /></button>
+            </form>
+          </>
+        )}
+      </div>
+    );
+  };
+  const limitsBlock = (
+    <>
+      <h3 className="pf-h">Líneas y velos</h3>
+      <div className="pf-lim">
+        {limGroup("lines", "is-line", Octagon, "Líneas", "Temas que no quiere que aparezcan en la mesa.")}
+        {limGroup("veils", "is-veil", EyeOff, "Velos", "Temas que pueden existir, pero sin mostrarse: se resuelven fuera de escena.")}
+      </div>
+    </>
+  );
   const actBlock = (
     <>
       <h3 className="pf-h">Actividad reciente</h3>
@@ -131,7 +170,6 @@ export default function ProfilePage({ id, name, onBack }) {
 
   return (
     <div className="so-page pf">
-      {onBack && <button type="button" className="mh-btn-ghost pf-back" onClick={onBack}><ArrowLeft size={14} /> Volver</button>}
       <div className="pf-card">
         <div className="pf-ban" style={{ "--c": col }} />
         <div className="pf-head">
@@ -180,11 +218,11 @@ export default function ProfilePage({ id, name, onBack }) {
           {tab === "resumen" && (
             <>
               <div>{vitrina}<h3 className="pf-h" style={{ marginTop: 22 }}>Logros</h3>{filters}{grid(list)}</div>
-              <div className="pf-side"><div>{charsBlock}</div><div>{actBlock}</div></div>
+              <div className="pf-side"><div>{limitsBlock}</div><div>{charsBlock}</div><div>{actBlock}</div></div>
             </>
           )}
           {tab === "logros" && <div className="pf-wide">{vitrina}<h3 className="pf-h" style={{ marginTop: 22 }}>Todos los logros</h3>{filters}{grid(list)}</div>}
-          {tab === "personajes" && <div className="pf-wide">{charsBlock}</div>}
+          {tab === "personajes" && <div className="pf-wide">{charsBlock}<div style={{ marginTop: 22 }}>{limitsBlock}</div></div>}
           {tab === "actividad" && <div className="pf-wide">{actBlock}</div>}
         </div>
         {!isMe && <div className="so-foot" style={{ padding: "0 28px 18px" }}><Lock size={12} /> Solo ves lo que {who} ha decidido enseñar.</div>}
