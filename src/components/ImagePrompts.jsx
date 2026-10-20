@@ -142,3 +142,69 @@ export function DialoguePromptHelper({ name, role, exprs = [], current }) {
     </div>
   );
 }
+
+const PROP_EN = { arbol: "a large leafy tree", pino: "a tall pine tree", arbusto: "a bush", roca: "boulders", tronco: "a fallen log", barril: "a barrel", caja: "a wooden crate", cofre: "a treasure chest", antorcha: "a lit torch", muro: "a stone wall", carro: "a merchant cart", carrovolcado: "an overturned merchant wagon with a broken wheel and spilled cargo", torre: "a tower", puerta: "a doorway", puente: "a wooden bridge", estandarte: "a banner", hoguera: "a campfire" };
+const TERRAIN_EN = { camino: "a dirt road", agua: "water", colina: "a raised grassy hill", risco: "a rocky cliff" };
+const zoneOf = (x, y) => {
+  const h = x < 5 ? "left" : x > 10 ? "right" : "center";
+  const v = y < 3 ? "upper" : y > 5 ? "lower" : "middle";
+  return v === "middle" && h === "center" ? "center" : v === "middle" ? h : v + " " + h;
+};
+// Resume en inglés lo que hay colocado en el mapa (decorados y terreno) para el prompt del fondo.
+export function describeMapForPrompt(map) {
+  const out = [];
+  const group = (list, dict) => {
+    const by = {};
+    (list || []).forEach((p) => {
+      if (!dict[p.kind]) return;
+      (by[p.kind] ||= []).push(p);
+    });
+    Object.entries(by).forEach(([k, arr]) => {
+      const zones = [...new Set(arr.map((p) => zoneOf(p.x, p.y)))].slice(0, 3);
+      out.push(dict[k] + (arr.length > 1 ? " (several, mostly " + zones.join(" / ") + ")" : " in the " + zones[0]));
+    });
+  };
+  group(map?.terrain, TERRAIN_EN);
+  group(map?.props, PROP_EN);
+  return out;
+}
+
+export function buildCombatBgPrompt({ place, features, style }) {
+  const st = styleOf(style);
+  return [
+    "A wide 16:9 top-down battle map illustration, seen from directly above (bird's-eye view, at most a 15 degree tilt), of " + ((place || "").trim() || "(describe the location here)") + ".",
+    (features || []).length ? "Include, laid out roughly like this: " + features.join("; ") + "." : "",
+    "Keep the central area open, clear and readable, with clear ground so gaming tokens can be moved freely; put the dense decoration and large objects toward the edges of the frame.",
+    "Style: " + st.txt + ". Warm, readable lighting and good contrast between walkable ground and obstacles. Fill the entire canvas edge to edge.",
+    "Strictly NO text, NO letters, NO numbers, NO grid lines, NO labels, NO legend, NO border, NO frame, NO user interface, NO watermark, NO characters, NO creatures, NO tokens.",
+  ].filter(Boolean).join("\n");
+}
+
+// Ayuda para generar el fondo de un mapa de combate (se abre desde el editor del tablero).
+export function CombatBgPromptHelper({ place: placeInit, features }) {
+  const [open, setOpen] = useState(false);
+  const [place, setPlace] = useState(placeInit || "");
+  const [style, setStyle] = useState("pintado");
+  const out = useMemo(() => buildCombatBgPrompt({ place, features, style }), [place, features, style]);
+  if (!open)
+    return (
+      <button type="button" className="mh-btn-ghost" onClick={() => setOpen(true)}>
+        <Wand2 size={13} /> Prompt para el fondo
+      </button>
+    );
+  return (
+    <div className="mh-wm-prompt" style={{ flexBasis: "100%" }}>
+      <div className="mh-wm-ph">
+        <span><Wand2 size={15} /> Prompt para el fondo del mapa</span>
+        <button type="button" className="mh-btn-ghost" onClick={() => setOpen(false)}>Cerrar</button>
+      </div>
+      <p className="mh-wm-note">Describe el lugar en inglés. Los decorados y el terreno que ya has colocado se añaden solos al prompt. Genera la imagen, súbela con «Subir fondo» y quedará como fondo de este mapa, sin difuminar, para jugar encima (la cuadrícula la pone la plataforma).</p>
+      <label className="mh-wm-f"><span>Cómo es el lugar</span><textarea className="mh-input" rows={3} value={place} onChange={(e) => setPlace(e.target.value)} placeholder="a dirt road crossing a dark ancient forest at dusk, with an overturned merchant wagon" /></label>
+      <label className="mh-wm-f"><span>Estilo</span>
+        <select className="mh-input" value={style} onChange={(e) => setStyle(e.target.value)}>{ART_STYLES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}</select>
+      </label>
+      <CopyPrompt text={out} rows={9} />
+      {features.length > 0 && <p className="mh-wm-note">Incluye: {features.join("; ")}.</p>}
+    </div>
+  );
+}

@@ -235,6 +235,7 @@ export function buildSablewood() {
     ...roadMap([]),
     tokens: [foe("Madre strixwolf", 10, 3, STRIXWOLF, "g"), npc("Cría de strixwolf", 11, 3, { size: "p" }), npc("Cría de strixwolf", 11, 5, { size: "p" })],
     counters: [],
+    bg: "/escenas/combate-acto1.webp", // fondo de batalla (generado con IA) para el acto 1
   };
   const map2 = {
     ...roadMap([]),
@@ -260,10 +261,11 @@ export function buildSablewood() {
     tokens: valeTokens,
     counters: [{ id: uid("k"), name: "Ritual", value: 8, visible: true }],
   };
+  const m1id = uid("m");
   const maps = [
-    { id: uid("m"), sceneId: S.cart, name: "Acto 1 · El carro volcado", map: map1 },
+    { id: m1id, sceneId: S.cart, name: "Acto 1 · El carro volcado", map: map1 },
     { id: uid("m"), sceneId: S.ambush, name: "Acto 2 · Emboscada", map: map2 },
     { id: uid("m"), sceneId: S.vale, name: "Acto 5 · El Valle Abierto", map: map3 },
   ];
-  return { campaign, stage, cast, convs, encounters, maps, liveMap: { ...map1 } };
+  return { campaign, stage, cast, convs, encounters, maps, liveMap: { ...map1, mapId: m1id } };
 }
