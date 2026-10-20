@@ -6,6 +6,10 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "nuevo", text: "Capítulos con varias escenas y varios mapas de combate: dentro de un capítulo, una línea de tiempo muestra todo lo que contiene (escenas, diálogos y combates) y permite añadir más con «+ Escena» y «+ Mapa de combate». En Directo, la línea de tiempo y tu navegación privada recorren cada escena y cada mapa por separado." },
+      { tag: "nuevo", text: "PNJ: nueva tarjeta «Enemigos de la campaña» con los enemigos de todos los capítulos, agrupados, y un botón para colocarlos en el tablero." },
+      { tag: "nuevo", text: "Mapa de mundo: además del mapa normal puedes subir una imagen por estación (primavera, verano, otoño e invierno) y cambiar entre ellas; los jugadores ven la estación activa en una insignia." },
+      { tag: "mejora", text: "X-Card: al activarla estando en el mapa de combate o en el mapa de mundo tiene el mismo efecto que en una escena, también en la vista del DJ." },
       { tag: "nuevo", text: "Directo: ahora puedes moverte libremente por capítulos, escenas y mapas sin que los jugadores lo vean. La línea de tiempo tiene dos marcas: «Tú» (dorada) y «Jugadores» (roja); las flechas de capítulo, las pestañas de vista y los puntos de la línea solo te mueven a ti. Un único botón «Mostrar» (o «Siguiente») publica lo que tú ves. Si miras el combate de otro capítulo, ves una vista previa de su mapa guardado y puedes prepararlo antes de mostrarlo." },
       { tag: "nuevo", text: "Mapas de combate con fondo propio: en el editor del tablero, «Subir fondo» pone una imagen nítida de batalla (sin difuminar) para jugar encima, y «Prompt para el fondo» genera el prompt para crearla incluyendo los decorados y el terreno que ya has colocado. Cada mapa guardado recuerda su fondo; el mapa del Acto 1 de Sablewood ya lleva el suyo." },
       { tag: "arreglo", text: "Tablero de combate: en modo claro la cuadrícula se veía oscura sobre el fondo y no se distinguía; ahora se ve igual que en modo oscuro." },

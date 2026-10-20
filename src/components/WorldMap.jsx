@@ -17,7 +17,14 @@ export const WORLD_KINDS = [
 ];
 const KIND = Object.fromEntries(WORLD_KINDS.map((k) => [k.key, k]));
 const docKey = (id) => "campaign-worldmap:" + id;
-const EMPTY = { image: "", pins: [] };
+const EMPTY = { image: "", pins: [], seasons: {}, season: "" };
+// El mapa normal y, opcionalmente, una versión por estación del año. El DJ elige cuál ven los jugadores.
+export const SEASONS = [
+  { key: "primavera", label: "Primavera", emoji: "🌱" },
+  { key: "verano", label: "Verano", emoji: "☀️" },
+  { key: "otono", label: "Otoño", emoji: "🍂" },
+  { key: "invierno", label: "Invierno", emoji: "❄️" },
+];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
 const STYLES = [
@@ -119,14 +126,17 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
 
   const visible = edit || showHidden ? pins : pins.filter((p) => !p.hidden);
   const pin = visible.find((p) => p.id === sel) || null;
-  const mapSrc = imgSrc ? imgSrc(doc.image) : "";
+  const seasons = doc.seasons || {};
+  const season = doc.season && seasons[doc.season] ? doc.season : "";
+  const shownRef = season ? seasons[season] : doc.image;
+  const mapSrc = imgSrc ? imgSrc(shownRef) : "";
 
   // Descarga las imágenes del mapa y de los marcadores visibles.
   useEffect(() => {
     if (!ensureImg) return;
-    ensureImg(doc.image);
+    ensureImg(shownRef);
     visible.forEach((p) => ensureImg(p.img));
-  }, [doc.image, pins]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [shownRef, pins]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const draftId = useRef(null);
   useEffect(() => {
@@ -203,6 +213,27 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
     await update((d) => ({ ...d, image: ref }));
     if (old && dropImage) dropImage(old);
   };
+  const [seasonPick, setSeasonPick] = useState(null); // estación a la que se sube imagen
+  const uploadSeason = async (key, file) => {
+    if (!file || !saveImage) return;
+    setBusy("Subiendo el mapa de " + SEASONS.find((x) => x.key === key)?.label.toLowerCase() + "…");
+    const ref = await saveImage(file, 2000);
+    setBusy("");
+    if (!ref) return;
+    const old = (doc.seasons || {})[key];
+    await update((d) => ({ ...d, seasons: { ...(d.seasons || {}), [key]: ref }, season: key }));
+    if (old && dropImage) dropImage(old);
+  };
+  const removeSeason = async (key) => {
+    const old = (doc.seasons || {})[key];
+    await update((d) => {
+      const next = { ...(d.seasons || {}) };
+      delete next[key];
+      return { ...d, seasons: next, season: d.season === key ? "" : d.season };
+    });
+    if (old && dropImage) dropImage(old);
+  };
+  const setSeason = (key) => update((d) => ({ ...d, season: key }));
   const uploadPinImg = async (file) => {
     if (!file || !saveImage || !pin) return;
     setBusy("Subiendo la imagen…");
@@ -268,6 +299,23 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
             <input type="file" accept="image/*" hidden onChange={(e) => { uploadMap(e.target.files?.[0]); e.target.value = ""; }} />
           </label>}
           {!compact && <button type="button" className={"mh-btn-ghost" + (help ? " is-on" : "")} onClick={() => setHelp((v) => !v)}><Wand2 size={14} /> Prompt</button>}
+          <div className="mh-wm-seasons" role="group" aria-label="Estación del mapa">
+            <button type="button" className={!season ? "is-on" : ""} onClick={() => setSeason("")} title="Mapa normal (el de siempre)">Normal</button>
+            {SEASONS.map((x) => {
+              const has = !!seasons[x.key];
+              return (
+                <button key={x.key} type="button" className={(season === x.key ? "is-on " : "") + (has ? "" : "is-empty")} onClick={() => (has ? setSeason(x.key) : setSeasonPick(x.key))} title={has ? x.label + " (los jugadores verán este mapa)" : "Subir el mapa de " + x.label.toLowerCase()}>
+                  <span aria-hidden="true">{x.emoji}</span> {x.label}
+                </button>
+              );
+            })}
+            <label className="mh-wm-sup" title={season ? "Cambiar el mapa de " + SEASONS.find((x) => x.key === season).label.toLowerCase() : "Subir el mapa de una estación"}>
+              <ImagePlus size={13} />
+              <input type="file" accept="image/*" hidden onChange={(e) => { const k = season || seasonPick || "primavera"; uploadSeason(k, e.target.files?.[0]); e.target.value = ""; setSeasonPick(null); }} />
+            </label>
+            {season && <button type="button" className="mh-wm-sup" title={"Quitar el mapa de " + SEASONS.find((x) => x.key === season).label.toLowerCase()} onClick={() => removeSeason(season)}><Trash2 size={13} /></button>}
+          </div>
+          {seasonPick && <span className="mh-wm-note">Elige la imagen de {SEASONS.find((x) => x.key === seasonPick).label.toLowerCase()} con el botón de subir.</span>}
           <span className="mh-wm-sp" />
           {compact && <span className="mh-wm-note">Doble clic en el mapa para crear · arrastra para mover</span>}
           {!compact && <span className="mh-wm-note">{pins.length} marcador{pins.length === 1 ? "" : "es"} · {pins.filter((p) => p.hidden).length} oculto{pins.filter((p) => p.hidden).length === 1 ? "" : "s"}</span>}
@@ -306,6 +354,7 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
             <button type="button" aria-label="Acercar" onClick={() => setZoom((z) => Math.min(3, +(z + 0.5).toFixed(1)))}><ZoomIn size={15} /></button>
             <button type="button" aria-label="Alejar" onClick={() => setZoom((z) => Math.max(1, +(z - 0.5).toFixed(1)))}><ZoomOut size={15} /></button>
           </div>
+          {season && <span className="mh-wm-season">{SEASONS.find((x) => x.key === season).emoji} {SEASONS.find((x) => x.key === season).label}</span>}
           {busy && <div className="mh-wm-busy">{busy}</div>}
         </div>
 
