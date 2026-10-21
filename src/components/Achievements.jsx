@@ -67,7 +67,7 @@ function getKit() {
   if (!glKit) {
     glKit = (async () => {
       const [THREE, { GLTFLoader }, { RoomEnvironment }] = await Promise.all([import("three"), import("three/examples/jsm/loaders/GLTFLoader.js"), import("three/examples/jsm/environments/RoomEnvironment.js")]);
-      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
+      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "high-performance" });
       renderer.setClearColor(0x000000, 0);
       renderer.setPixelRatio(1);
       const pm = new THREE.PMREMGenerator(renderer);
@@ -131,7 +131,8 @@ export function Badge({ a, locked, size = 84, rotatable = false }) {
       draw.current = (ang) => {
         if (!cv.current) return;
         pivot.rotation.y = (ang * Math.PI) / 180;
-        renderer.setSize(px, px, false);
+        // Redimensionar el lienzo reasigna memoria: solo cuando cambia el tamaño (varias insignias comparten renderer).
+        if (renderer.domElement.width !== px || renderer.domElement.height !== px) renderer.setSize(px, px, false);
         renderer.render(scene, cam);
         ctx.clearRect(0, 0, px, px);
         ctx.drawImage(renderer.domElement, 0, 0, px, px);
