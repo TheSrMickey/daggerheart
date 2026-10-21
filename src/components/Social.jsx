@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import { Bell, Search, UserPlus, Check, X, UserMinus, Star, MoreHorizontal, MessageCircle, BookOpen, User, Ban, ChevronLeft, ChevronRight, Send, Users, Plus, Megaphone } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { loadSocial, searchPeople, sendRequest, respond, removeFriend, markNoticesRead, saveProfile, blockPerson, sendDm, loadDm, markDmRead, inviteToCampaign, bridge } from "@/lib/social";
@@ -401,7 +402,9 @@ export function FriendsPanel({ renderClass }) {
           ))}
         </div>
       )}
-      {menu && (
+      {/* El panel de amigos tiene desenfoque de fondo y desplazamiento propio: un menú «fixed» dentro quedaría recortado o fuera de sitio.
+          Por eso se pinta fuera, en la raíz de la aplicación (conserva los colores del tema). */}
+      {menu && typeof document !== "undefined" && createPortal(
         <>
           <div className="mh-pop-bg" onClick={() => setMenu(null)} />
           <div className="mh-ctx" style={{ left: Math.max(8, Math.min(menu.x, window.innerWidth - 200)), top: Math.max(8, Math.min(menu.y, window.innerHeight - 330)) }} role="menu">
@@ -422,7 +425,8 @@ export function FriendsPanel({ renderClass }) {
               <UserMinus size={14} /> Eliminar amigo
             </button>
           </div>
-        </>
+        </>,
+        document.querySelector(".mh-root") || document.body
       )}
     </aside>
   );

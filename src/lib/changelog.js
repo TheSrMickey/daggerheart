@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "arreglo", text: "Amigos: el menú de los tres puntos de un amigo (favoritos, mensaje, invitar, perfil, bloquear, eliminar) no se veía; ahora aparece junto al botón." },
       { tag: "mejora", text: "Registro: al escribir el nombre de jugador se avisa al momento si ya está en uso (y el botón «Crear cuenta» se desactiva). El aviso aparece desplazando el formulario, sin dejar un hueco fijo. El aviso de correo ya registrado solo sale al pulsar «Crear cuenta», para no revelar qué correos tienen cuenta." },
       { tag: "mejora", text: "Registro: los nombres de jugador son únicos (sin distinguir mayúsculas) y solo se puede crear una cuenta por correo electrónico; si ya existen, se avisa al registrarse." },
       { tag: "mejora", text: "Inicio de sesión y registro: botón circular abajo a la izquierda para cambiar entre modo claro y oscuro, degradado de la derecha con un suave movimiento, animación al pasar de una pantalla a otra, y sin el logo grande ni los textos de ayuda." },
