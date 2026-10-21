@@ -78,6 +78,67 @@ const WRAITH = foeStats({
   ],
 });
 
+// PNJ amistosos de Hush: las mismas estadísticas que se editan en Historia · PNJ.
+const ARCANIST = foeStats({
+  base: "La Arcanista Fuegoblanco",
+  type: "Apoyo",
+  desc: "Faérica de dos metros, mezcla de humanoide y luciérnaga. Mayor pero ágil y pícara, de movimientos lentos y bruscos.",
+  motives: "Renovar la barrera de Hush, proteger la aldea, probar la valía del grupo",
+  exp: "Rituales +3, Sablewood +2",
+  difficulty: 11,
+  thresholds: [6, 12],
+  hp: 5,
+  stress: 4,
+  atk: 1,
+  attack: { name: "Chispa de luciérnaga", range: "Cercano", damage: "1d6+2", type: "mág" },
+  features: [
+    { name: "Concentrada en el ritual", kind: "Pasiva", text: "Durante el ritual no actúa. Cada golpe que recibe sube la cuenta atrás en 1 (Dificultad 11); no marca PV ni Estrés, el daño es narrativo." },
+    { name: "Luz de luciérnaga", kind: "Acción", text: "Su cuerpo brilla con luz verde amarillenta: los aliados a alcance Cercano pueden quitarse 1 Estrés." },
+  ],
+});
+const FIDGET = foeStats({
+  base: "Fidget",
+  type: "Social",
+  desc: "Niñe humane e inquiete que enciende los farolillos de los árboles de Hush.",
+  motives: "Saber cómo es el mundo de fuera, enseñar los atajos de la aldea",
+  exp: "Atajos de Hush +3",
+  difficulty: 10,
+  thresholds: [3, 6],
+  hp: 3,
+  stress: 2,
+  atk: -1,
+  attack: { name: "Empujón", range: "Cuerpo a cuerpo", damage: "1d4", type: "fís" },
+  features: [{ name: "Conoce los atajos", kind: "Pasiva", text: "Si el grupo le cae bien, los guía por los atajos de la aldea: ventaja en la tirada para llegar deprisa a cualquier sitio de Hush." }],
+});
+const LAUSA = foeStats({
+  base: "Lausa Standworth",
+  type: "Estándar",
+  desc: "Enana mayor, con barba y un barril de cerveza al hombro. Herrera de Hush.",
+  motives: "Conocer las armas del grupo, mantener a salvo la aldea",
+  exp: "Herrería +3, Hush +2",
+  difficulty: 12,
+  thresholds: [6, 12],
+  hp: 5,
+  stress: 2,
+  atk: 1,
+  attack: { name: "Martillo de herrera", range: "Cuerpo a cuerpo", damage: "1d8+2", type: "fís" },
+  features: [{ name: "Ojo de herrera", kind: "Pasiva", text: "Reconoce al instante la calidad de un arma o una armadura. Si el grupo responde con sinceridad a sus preguntas, se muestra más abierta." }],
+});
+const HALYTHON = foeStats({
+  base: "Halython Fives",
+  type: "Estándar",
+  desc: "Clank tranquilo con un murciélago-zorro en el hombro. Juega con cartas y bellotas.",
+  motives: "Saber de la gente del Cardo, jugar una partida",
+  exp: "Juegos de cartas +3",
+  difficulty: 12,
+  thresholds: [5, 10],
+  hp: 4,
+  stress: 3,
+  atk: 0,
+  attack: { name: "Puño de latón", range: "Cuerpo a cuerpo", damage: "1d6+1", type: "fís" },
+  features: [{ name: "Memoria de autómata", kind: "Pasiva", text: "Recuerda cada rostro que ha visto. Puede decir quién ha pasado por Hush y cuándo." }],
+});
+
 // Bosque alrededor del camino (actos 1 y 2).
 const FOREST = [
   [0, 0, "pino"], [2, 0, "arbol"], [4, 0, "pino"], [6, 0, "arbol"], [8, 0, "pino"], [10, 0, "arbol"], [12, 0, "pino"], [14, 0, "arbol"],
@@ -112,34 +173,35 @@ export function buildSablewood() {
     aiImages: true, // el fondo del mapa de combate del Acto 1 está generado con IA
   };
 
+  const extra = (title, key, fx) => ({ id: uid("s"), title, image: scene(key), ...(fx ? { fx } : {}) });
   const scenes = [
-    { id: S.cart, title: "Acto 1 · El carro volcado", image: scene("camino") },
-    { id: S.ambush, title: "Acto 2 · Ladrones de la espesura", image: scene("bosque") },
-    { id: S.hush, title: "Acto 3 · La aldea de Hush", image: scene("campamento") },
+    { id: S.cart, title: "Acto 1 · El carro volcado", image: scene("camino"), extras: [extra("La madre strixwolf", "bosque")] },
+    { id: S.ambush, title: "Acto 2 · Ladrones de la espesura", image: scene("bosque"), extras: [extra("El resto del viaje hasta Hush", "camino")] },
+    { id: S.hush, title: "Acto 3 · La aldea de Hush", image: scene("campamento"), extras: [extra("El Festival del Primer Musgo", "campamento", ["campfire"])] },
     { id: S.tavern, title: "Acto 3 · La Taberna del Trébol", image: scene("posada") },
-    { id: S.tree, title: "Acto 4 · La casa del árbol", image: scene("bosque") },
-    { id: S.vale, title: "Acto 5 · El Valle Abierto", image: scene("ruinas") },
-    { id: S.end, title: "Epílogo · La piedra angular", image: scene("posada") },
+    { id: S.tree, title: "Acto 4 · La casa del árbol", image: scene("bosque"), extras: [extra("Dentro de la casa", "posada")] },
+    { id: S.vale, title: "Acto 5 · El Valle Abierto", image: scene("ruinas"), extras: [extra("Descanso antes del ritual", "ruinas"), extra("El ritual", "ruinas", ["purple"])] },
+    { id: S.end, title: "Epílogo · La piedra angular", image: scene("posada"), extras: [extra("La Aguja del oeste", "montanas")] },
   ];
 
-  const handout = (title, text, hidden = true) => ({ id: uid("h"), kind: "nota", title, image: "", text, ts: Date.now(), ...(hidden ? { hidden: true } : {}) });
+  const handout = (sceneId, title, text, hidden = true) => ({ id: uid("h"), kind: "nota", sceneId, title, image: "", text, ts: Date.now(), ...(hidden ? { hidden: true } : {}) });
   const handouts = [
-    handout("El encargo del rey", "Llevad la caja sellada con magia hasta Hush, en el bosque de Sablewood, y entregadla a la Arcanista Fuegoblanco. Tenéis un mapa, un carruaje y la promesa de una recompensa a la llegada. — Por orden del rey Emeris", false),
-    handout("Zarzas en la rueda", "Restos de zarzas espinosas enredados en la rueda del carro volcado y esparcidos por el camino. Alguien preparó esto."),
-    handout("El cuerpo del mercader", "El strixwolf se comió parte del brazo, pero no fue lo que lo mató: al conductor le cortaron el cuello."),
-    handout("El Festival del Primer Musgo", "Hush celebra la llegada de la primavera: los cultivos de las Granjas Sin Sol se cubren con el primer musgo azul. Hay pulsos amistosos, una clase de pintar piedras y un mercadillo de baratijas."),
-    handout("Indicaciones hacia la Arcanista", "Su casa está al sur, cruzando los campos de cultivo. Cuelga de uno de los viejos árboles del Sablewood como una fruta madura. No tiene pérdida."),
-    handout("La piedra angular", "Dentro de la caja hay una enorme piedra con un rostro de león tallado: la clave del arco de la puerta principal de la capital. Sin ella, la ciudad no tiene barrera."),
-    handout("La Aguja del oeste", "A unas horas a pie al oeste se alza una de las Agujas de piedra con una llama dentro. Su luz es más débil de lo que debería: algo le pasa a su guardián. La Arcanista os dará su mapa cuando estéis listos."),
+    handout(S.cart, "El encargo del rey", "Llevad la caja sellada con magia hasta Hush, en el bosque de Sablewood, y entregadla a la Arcanista Fuegoblanco. Tenéis un mapa, un carruaje y la promesa de una recompensa a la llegada. — Por orden del rey Emeris", false),
+    handout(S.ambush, "Zarzas en la rueda", "Restos de zarzas espinosas enredados en la rueda del carro volcado y esparcidos por el camino. Alguien preparó esto."),
+    handout(S.ambush, "El cuerpo del mercader", "El strixwolf se comió parte del brazo, pero no fue lo que lo mató: al conductor le cortaron el cuello."),
+    handout(S.hush, "El Festival del Primer Musgo", "Hush celebra la llegada de la primavera: los cultivos de las Granjas Sin Sol se cubren con el primer musgo azul. Hay pulsos amistosos, una clase de pintar piedras y un mercadillo de baratijas."),
+    handout(S.tavern, "Indicaciones hacia la Arcanista", "Su casa está al sur, cruzando los campos de cultivo. Cuelga de uno de los viejos árboles del Sablewood como una fruta madura. No tiene pérdida."),
+    handout(S.tree, "La piedra angular", "Dentro de la caja hay una enorme piedra con un rostro de león tallado: la clave del arco de la puerta principal de la capital. Sin ella, la ciudad no tiene barrera."),
+    handout(S.end, "La Aguja del oeste", "A unas horas a pie al oeste se alza una de las Agujas de piedra con una llama dentro. Su luz es más débil de lo que debería: algo le pasa a su guardián. La Arcanista os dará su mapa cuando estéis listos."),
   ];
 
   const stage = { live: "escena", scenes, activeSceneId: null, scene: { title: "", image: "", fx: [] }, handouts };
 
   const cast = [
-    { id: C.arcanist, name: "La Arcanista Fuegoblanco", imgs: {}, kind: "Aliado", role: "Hechicera del rey" },
-    { id: C.fidget, name: "Fidget", imgs: {}, kind: "Neutral", role: "Vecino curioso de Hush" },
-    { id: C.lausa, name: "Lausa Standworth", imgs: {}, kind: "Neutral", role: "Herrera de Hush" },
-    { id: C.halython, name: "Halython Fives", imgs: {}, kind: "Neutral", role: "Vecino de Hush" },
+    { id: C.arcanist, name: "La Arcanista Fuegoblanco", imgs: {}, kind: "Aliado", role: "Hechicera del rey", stats: { ...ARCANIST } },
+    { id: C.fidget, name: "Fidget", imgs: {}, kind: "Neutral", role: "Vecino curioso de Hush", stats: { ...FIDGET } },
+    { id: C.lausa, name: "Lausa Standworth", imgs: {}, kind: "Neutral", role: "Herrera de Hush", stats: { ...LAUSA } },
+    { id: C.halython, name: "Halython Fives", imgs: {}, kind: "Neutral", role: "Vecino de Hush", stats: { ...HALYTHON } },
   ];
 
   const convs = [
@@ -245,7 +307,7 @@ export function buildSablewood() {
   };
   // Valle Abierto: claro circular rodeado de árboles.
   const valeTokens = [
-    npc("La Arcanista Fuegoblanco", 7, 4, { castId: C.arcanist }),
+    npc("La Arcanista Fuegoblanco", 7, 4, { castId: C.arcanist, stats: { ...ARCANIST } }),
     foe("Esqueleto antiguo 1", 4, 2, SKELETON), foe("Esqueleto antiguo 2", 11, 2, SKELETON), foe("Esqueleto antiguo 3", 4, 6, SKELETON), foe("Esqueleto antiguo 4", 11, 6, SKELETON),
     foe("Espectro del bosque 1", 0, 4, WRAITH), foe("Espectro del bosque 2", 15, 4, WRAITH),
   ];

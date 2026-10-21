@@ -6,6 +6,8 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "nuevo", text: "Nueva aventura de inicio: «La ladrona de deseos» (The Wish Thief). Seis actos con escenas, pistas ocultas por noble, reparto con estadísticas, diálogos, notas de cada acto y mapas con las cuentas atrás de la investigación y la persecución y el combate del puerto." },
+      { tag: "mejora", text: "Sablewood · los vecinos de Hush y la Arcanista tienen estadísticas, los capítulos traen varias escenas (el festival, el ritual, la Aguja…) y cada pista está atada a su acto." },
       { tag: "mejora", text: "Perfil · la tarjeta ocupa la altura de la pantalla y ya no se desplaza en vertical. El Resumen se reparte en tres paneles sin huecos (logros, líneas y velos, personajes y actividad), y Actividad pasa a tarjetas con icono y fecha en dos columnas." },
       { tag: "mejora", text: "Insignias · rehechas como modelo 3D en Blender (borde biselado de metal con el icono en el centro y el logo detrás). Se acabaron las transparencias raras al girar y el giro va más fluido (la insignia del detalle se dibuja directa, sin copias); el arrastre y el giro automático son los mismos." },
       { tag: "nuevo", text: "Directo · la línea de tiempo empieza con el paso «Mundo»: al pulsarlo ves el mapa del mundo (solo tú, hasta que pulses Mostrar). Está también cuando no hay escena puesta." },

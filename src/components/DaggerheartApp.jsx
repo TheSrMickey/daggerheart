@@ -35,6 +35,7 @@ import { LinesVeilsEditor, limitsCount, limitsText } from "./LinesVeils";
 import { SocialHost, LookingFor, ActivityCard, PrivacyCard, ReactionBar } from "./Social2";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
 import { buildSablewood } from "./quickstartSablewood";
+import { buildWishThief } from "./quickstartWishThief";
 import { Wand, CircleDot, MoveUpRight, Archive, Shell, Compass, Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp, Trophy, Star } from "lucide-react";
 
 // Color de cada campaña (se reparte según su id).
@@ -5548,6 +5549,7 @@ const sharedStyles = `
   .mh-dir-ghost { position: fixed; z-index: 100001; width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 22%; border: 3px solid var(--tc); background: var(--tc); color: #fff; display: grid; place-items: center; font: 700 16px 'Cinzel', Georgia, serif; box-shadow: 0 10px 18px rgba(0,0,0,.45); pointer-events: none; } .mh-dir-ghost i { font-style: normal; }
   .mh-dir-place-all { all: unset; cursor: pointer; padding: 4px 10px; border-radius: 99px; background: var(--acc, #E3B04B); color: var(--acc-on, #1F1606); font: 700 11.5px 'Inter', system-ui, sans-serif; }
   .mh-qs-line { margin: 0; font-size: 12px; line-height: 1.45; color: var(--mh-ink2); } .mh-qs-line b { color: var(--mh-ink); } .mh-qs-empty { margin: 0; font-size: 12.5px; color: var(--mh-muted); }
+  .mh-qs-btns { display: flex; flex-wrap: wrap; gap: 8px; }
   .mh-qs-chips { display: flex; flex-wrap: wrap; gap: 6px; } .mh-qs-chips span { padding: 3px 9px; border-radius: 99px; font-size: 11px; font-weight: 700; border: 1px solid var(--mh-line2); background: var(--mh-panel2); } .mh-qs-chips span.is-cond { border-color: #E0544A; }
   .mh-qs-acts { display: flex; gap: 6px; flex-wrap: wrap; } .mh-qs-acts button { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; padding: 7px 11px; }
 
@@ -14837,8 +14839,8 @@ export default function App({ onSignOut }) {
   }, [viewingCampaignId, stageReadyFor, dataReadyFor, campaignStage, dialogueConvs, campaignMaps, campaignEncounters]);
 
   // Aventura de inicio: crea la campaña con escenas, pistas, reparto, notas por acto y mapas con los enemigos.
-  const createSablewood = async () => {
-    const q = buildSablewood();
+  const createQuickstart = async (build) => {
+    const q = build();
     const id = q.campaign.id;
     const nextCampaigns = { ...campaigns, [id]: q.campaign };
     setCampaigns(nextCampaigns);
@@ -30409,11 +30411,16 @@ export default function App({ onSignOut }) {
                         </button>
                       </div>
                       <div className="mh-qs">
-                        <span>O empieza con la aventura de inicio, ya preparada:</span>
-                        <button type="button" className="mh-btn-ghost" onClick={createSablewood}>
-                          <BookOpen size={14} /> Los mensajeros de Sablewood
-                        </button>
-                        <small>Escenas, pistas ocultas, reparto con diálogos, notas de cada acto y mapas con los enemigos colocados.</small>
+                        <span>O empieza con una aventura de inicio, ya preparada:</span>
+                        <div className="mh-qs-btns">
+                          <button type="button" className="mh-btn-ghost" onClick={() => createQuickstart(buildSablewood)}>
+                            <BookOpen size={14} /> Los mensajeros de Sablewood
+                          </button>
+                          <button type="button" className="mh-btn-ghost" onClick={() => createQuickstart(buildWishThief)}>
+                            <BookOpen size={14} /> La ladrona de deseos
+                          </button>
+                        </div>
+                        <small>Escenas, pistas ocultas, reparto con estadísticas y diálogos, notas de cada acto y mapas listos.</small>
                       </div>
                     </div>
                   ) : (
