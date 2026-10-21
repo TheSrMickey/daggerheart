@@ -12,8 +12,8 @@ export function AuthShell({ title, subtitle, children }: { title: string; subtit
           <div className="auth-form">{children}</div>
         </section>
         <section className="auth-art" aria-hidden="true">
-          <p className="auth-quote">«Cada aventura empieza con un paso… y una tirada de dados.»</p>
-          <span className="auth-tag">Enaris · Mickey</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="auth-biglogo" src="/logo.svg" alt="" />
         </section>
       </div>
     </main>
