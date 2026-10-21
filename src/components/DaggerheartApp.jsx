@@ -5478,6 +5478,11 @@ const sharedStyles = `
   .mh-hs-amb .mh-gm-sc-edit { max-width: 640px; }
   /* Directo */
   .mh-dir { display: flex; flex-direction: column; gap: 16px; }
+  @media (min-width: 901px) {
+    .mh-cg:has(> .mh-dir:not(.is-imm)) { display: flex; flex-direction: column; height: calc(100dvh - 44px); }
+    .mh-cg:has(> .mh-dir:not(.is-imm)) > .mh-dir { flex: 1; min-height: 0; }
+    .mh-dir:not(.is-imm) > .mh-dir-top { flex: 1; min-height: 0; height: auto; }
+  }
   .mh-dir-top { display: grid; grid-template-columns: minmax(0, 1fr) clamp(372px, 26vw, 480px); grid-template-rows: minmax(0, 1fr) auto; gap: 14px; height: clamp(600px, calc(100dvh - 190px), 1200px); }
   .mh-dir-stage { grid-column: 1; padding: 12px; border-radius: 22px; background: var(--mh-panel); border: 1px solid var(--mh-line); display: flex; flex-direction: column; gap: 10px; position: relative; }
   .mh-dir-top .mh-dir-below { min-height: 0; overflow: auto; padding: 8px 10px; display: flex; flex-direction: column; justify-content: center; } .mh-dir-top .mh-dir-below > .mh-tl { flex: none; } .mh-tl .mh-ch-step { padding: 9px 12px; gap: 4px; } .mh-dir.is-imm .mh-dir-top .mh-dir-below { overflow: visible; }
@@ -5556,7 +5561,7 @@ const sharedStyles = `
   .mh-hs-scns { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; } .mh-hs-scns button { display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px 5px 5px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel2); color: var(--mh-ink); font: 700 12px 'Inter', system-ui, sans-serif; cursor: pointer; } .mh-hs-scns button.is-on { border-color: var(--mh-gold-ink); background: color-mix(in srgb, var(--mh-gold-ink) 10%, var(--mh-panel)); } .mh-hs-scns .mh-hs-scn-add { border-style: dashed; padding: 8px 14px; color: var(--mh-ink3); }
   .mh-hs-scn-th { width: 44px; height: 30px; border-radius: 7px; background: center / cover no-repeat #2B3A4F; } .mh-hs-scn-th.is-blank { background: var(--mh-panel); }
   .mh-tl { display: flex; align-items: center; justify-content: center; min-height: 100%; } .mh-tl .mh-tlr { flex: 1; min-width: 0; margin: 0; padding: 20px 14px 8px; justify-content: safe center; scrollbar-width: none; -ms-overflow-style: none; -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 22px, #000 calc(100% - 22px), transparent 100%); mask-image: linear-gradient(90deg, transparent 0, #000 22px, #000 calc(100% - 22px), transparent 100%); } .mh-tl .mh-tlr::-webkit-scrollbar { display: none; }
-  .mh-dir-monwrap { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; } .mh-dir-monwrap > .mh-dir-mon { flex: 1; min-height: 0; } .mh-dir-fxbtn { position: absolute; left: 12px; top: 44px; z-index: 8; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 99px; border: 1px solid var(--mh-line2); background: color-mix(in srgb, var(--mh-panel) 92%, transparent); color: var(--mh-ink); font: 600 12px 'Inter', system-ui, sans-serif; cursor: pointer; opacity: 0; transform: translateY(-4px); pointer-events: none; transition: opacity .18s ease, transform .18s ease, border-color .15s; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); } .mh-dir-monwrap:hover .mh-dir-fxbtn, .mh-dir-fxbtn:focus-visible, .mh-dir-fxbtn.is-on { opacity: 1; transform: none; pointer-events: auto; } .mh-dir-fxbtn:hover, .mh-dir-fxbtn.is-on { border-color: var(--acc, #E3B04B); } .mh-dir-fxbtn:focus-visible { outline: 2px solid var(--acc, #E3B04B); outline-offset: 2px; } .mh-dir-fxbtn svg { color: var(--mh-gold-ink); } @media (hover: none) { .mh-dir-fxbtn { opacity: 1; transform: none; pointer-events: auto; } } @media (prefers-reduced-motion: reduce) { .mh-dir-fxbtn { transition: none; } }
+  .mh-dir-monwrap { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; } .mh-dir-monwrap > .mh-dir-mon { flex: 1; min-height: 0; } .mh-dir-hov { position: absolute; left: 12px; top: 44px; z-index: 8; display: flex; gap: 6px; pointer-events: none; } .mh-dir-fxbtn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 99px; border: 1px solid var(--mh-line2); background: color-mix(in srgb, var(--mh-panel) 92%, transparent); color: var(--mh-ink); font: 600 12px 'Inter', system-ui, sans-serif; cursor: pointer; opacity: 0; transform: translateY(-4px); pointer-events: none; transition: opacity .18s ease, transform .18s ease, border-color .15s; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); } .mh-dir-monwrap:hover .mh-dir-fxbtn, .mh-dir-fxbtn:focus-visible, .mh-dir-fxbtn.is-on { opacity: 1; transform: none; pointer-events: auto; } .mh-dir-fxbtn:hover, .mh-dir-fxbtn.is-on { border-color: var(--acc, #E3B04B); } .mh-dir-fxbtn:focus-visible { outline: 2px solid var(--acc, #E3B04B); outline-offset: 2px; } .mh-dir-fxbtn svg { color: var(--mh-gold-ink); } @media (hover: none) { .mh-dir-fxbtn { opacity: 1; transform: none; pointer-events: auto; } } @media (prefers-reduced-motion: reduce) { .mh-dir-fxbtn { transition: none; } }
   .mh-tlr { display: flex; align-items: center; gap: 8px; overflow-x: auto; padding: 22px 2px 8px; margin-bottom: 4px; scrollbar-width: thin; }
   .mh-tlr-ch { flex: none; display: flex; align-items: center; padding: 5px 9px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel2); }
   .mh-tlr-c { font-size: 10px; font-weight: 800; letter-spacing: .08em; color: var(--mh-muted); margin-right: 8px; white-space: nowrap; max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
@@ -28104,6 +28109,7 @@ export default function App({ onSignOut }) {
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img src="/logo.svg" alt="" />
                                 <div>A la espera de una escena</div>
+                                <button type="button" className="mh-btn-ghost" onClick={() => setDjView("mundo")}><Globe size={13} /> Ver el mapa del mundo</button>
                               </div>
                             )}
                             {dlg && !chDiverge && (
@@ -28446,7 +28452,9 @@ export default function App({ onSignOut }) {
                     );
                     const fxCx = view === "escena" && myIdx >= 0 && tl[myIdx] && tl[myIdx].k === "img" ? tl[myIdx] : null;
                     const fxOn = !!fxCx && fxDlg?.sceneId === fxCx.sc.id && (fxDlg?.sub || null) === (fxCx.sub || null);
-                    const fxHoverBtn = fxCx && !xLock && (
+                    const fxHoverBtn = view === "escena" && !xLock && (
+                      <div className="mh-dir-hov">
+                        {fxCx && (
                       <button
                         type="button"
                         className={"mh-dir-fxbtn" + (fxOn ? " is-on" : "")}
@@ -28457,6 +28465,13 @@ export default function App({ onSignOut }) {
                       >
                         <Sparkles size={13} /> Efectos{(fxCx.scn.fx || []).length ? " · " + fxCx.scn.fx.length : ""}
                       </button>
+                        )}
+                        {(vc || vcImg) && (
+                          <button type="button" className="mh-dir-fxbtn" onClick={() => setDjView("mundo")} title="Ver el mapa del mundo (solo tú, hasta que pulses Mostrar)">
+                            <Globe size={13} /> Mapa del mundo
+                          </button>
+                        )}
+                      </div>
                     );
                     const groupBox = (
                       <div className="mh-dir-card">

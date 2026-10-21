@@ -6,6 +6,8 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "nuevo", text: "Directo · el mapa del mundo se puede abrir desde la escena: al pasar el ratón sale el botón «Mapa del mundo», y si no hay escena puesta aparece «Ver el mapa del mundo» en el centro. Solo lo ves tú hasta que pulses Mostrar." },
+      { tag: "arreglo", text: "Directo · la vista del DJ se ajusta a la altura de la pantalla y ya no se puede desplazar en vertical." },
       { tag: "mejora", text: "Insignias: al abrir un logro la insignia gira sola, despacio (una vuelta cada ~8 segundos); si la arrastras se detiene en tu mano y, al soltarla, retoma el giro. Con «reducir movimiento» no gira sola." },
       { tag: "mejora", text: "Perfil: en la pestaña Resumen ya no se repite la lista de logros (tiene su propia pestaña); se mantiene la vitrina." },
       { tag: "arreglo", text: "Amigos: el menú de los tres puntos de un amigo (favoritos, mensaje, invitar, perfil, bloquear, eliminar) no se veía; ahora aparece junto al botón." },
