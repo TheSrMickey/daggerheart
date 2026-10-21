@@ -6,6 +6,8 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "nuevo", text: "Al crear una campaña puedes marcar que sus imágenes están creadas con IA. Se avisa con una etiqueta «Imágenes creadas con IA» en la tarjeta de la campaña y en su cabecera. La aventura de Sablewood viene marcada porque su mapa de combate se generó con IA." },
+      { tag: "mejora", text: "Insignias: por detrás llevan el logo de la plataforma, centrado. Ahora solo giran cuando abres el detalle de un logro; en el resto de sitios se ven fijas." },
       { tag: "nuevo", text: "Insignias en 3D: tienen grosor y giran sobre su eje vertical al deslizar el dedo o el ratón hacia los lados (en el perfil, en el detalle y en el aviso); al soltar vuelven despacio a su posición." },
       { tag: "nuevo", text: "Nuevo logro legendario «Desde los comienzos», para quienes estuvieron en la versión 1.0 de la plataforma. De momento no se puede conseguir; ya veremos cómo se concede. Nueva categoría «Especial»." },
       { tag: "nuevo", text: "Logros: al pulsar un logro en el perfil se abre su detalle con la insignia grande, su descripción, el nivel, la fecha en que lo conseguiste o tu progreso si aún está bloqueado." },

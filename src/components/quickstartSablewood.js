@@ -109,6 +109,7 @@ export function buildSablewood() {
     name: "Los mensajeros de Sablewood",
     description: "Aventura de inicio de Daggerheart. Marlowe Fairwind, la hechicera del rey Emeris, reúne a sus aliados para llevar una caja sellada con magia hasta Hush, una aldea del antiguo bosque de Sablewood, y entregarla a la Arcanista Fuegoblanco.",
     characterIds: [],
+    aiImages: true, // el fondo del mapa de combate del Acto 1 está generado con IA
   };
 
   const scenes = [
