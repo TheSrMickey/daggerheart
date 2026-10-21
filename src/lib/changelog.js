@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "mejora", text: "Registro: los nombres de jugador son únicos (sin distinguir mayúsculas) y solo se puede crear una cuenta por correo electrónico; si ya existen, se avisa al registrarse." },
       { tag: "mejora", text: "Inicio de sesión y registro: botón circular abajo a la izquierda para cambiar entre modo claro y oscuro, degradado de la derecha con un suave movimiento, animación al pasar de una pantalla a otra, y sin el logo grande ni los textos de ayuda." },
       { tag: "nuevo", text: "Al crear una campaña puedes marcar que sus imágenes están creadas con IA. Se avisa con una etiqueta «Imágenes creadas con IA» en la tarjeta de la campaña y en su cabecera. La aventura de Sablewood viene marcada porque su mapa de combate se generó con IA." },
       { tag: "mejora", text: "Insignias: por detrás llevan el logo de la plataforma, centrado. Ahora solo giran cuando abres el detalle de un logro; en el resto de sitios se ven fijas." },

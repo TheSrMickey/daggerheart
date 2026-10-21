@@ -10,9 +10,12 @@ const ERRORS: Record<string, string> = {
   invalid_credentials: "Correo o contraseña incorrectos.",
   email_not_confirmed: "Todavía no has confirmado tu correo. Revisa tu bandeja de entrada.",
   user_already_exists: "Ya existe una cuenta con ese correo.",
+  email_exists: "Ya existe una cuenta con ese correo.",
   weak_password: "La contraseña es demasiado débil.",
   over_email_send_rate_limit: "Se han enviado demasiados correos. Espera unos minutos.",
 };
+
+const NAME_TAKEN = "Ese nombre de jugador ya está en uso. Elige otro.";
 
 function translate(code: string | undefined, fallback: string) {
   return (code && ERRORS[code]) || fallback;
@@ -37,7 +40,7 @@ export async function signIn(_: AuthState, formData: FormData): Promise<AuthStat
 
 export async function signUp(_: AuthState, formData: FormData): Promise<AuthState> {
   const username = String(formData.get("username") ?? "").trim();
-  const email = String(formData.get("email") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
   const confirm = String(formData.get("confirm") ?? "");
 
@@ -48,12 +51,21 @@ export async function signUp(_: AuthState, formData: FormData): Promise<AuthStat
 
   const origin = (await headers()).get("origin") ?? "";
   const supabase = await createClient();
+
+  // Los nombres de jugador son únicos (sin distinguir mayúsculas). Si la comprobación no está disponible, el registro sigue.
+  const { data: free, error: checkError } = await supabase.rpc("username_available", { name: username });
+  if (!checkError && free === false) return { error: NAME_TAKEN };
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: { data: { username }, emailRedirectTo: `${origin}/auth/callback` },
   });
-  if (error) return { error: translate(error.code, error.message) };
+  if (error) return { error: /database error saving new user/i.test(error.message) ? NAME_TAKEN : translate(error.code, error.message) };
+
+  // Con la confirmación por correo activada, Supabase no devuelve error si el correo ya existe (para no revelarlo),
+  // pero el usuario llega sin identidades: así lo detectamos y avisamos en vez de decir que se ha enviado un correo.
+  if (data.user && data.user.identities?.length === 0) return { error: translate("user_already_exists", "") };
 
   // Con la confirmación por correo desactivada, Supabase devuelve la sesión directamente.
   if (data.session) redirect("/");
