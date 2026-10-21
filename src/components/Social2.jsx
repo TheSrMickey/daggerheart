@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Link2, Send, Lock, Megaphone, X, Copy, Check, SmilePlus } from "lucide-react";
 import { useSocial, refreshSocial, Avatar, ago } from "./Social";
 import { AchievementToasts } from "./Achievements";
-import { saveProfile, namesFor, unblockPerson, bridge, sendDm, loadPosts, publishPost, removePost, requestJoin, friendActivity, shareSheet, revokeSheet, loadSheet } from "@/lib/social";
+import { grantTestAchievements, saveProfile, namesFor, unblockPerson, bridge, sendDm, loadPosts, publishPost, removePost, requestJoin, friendActivity, shareSheet, revokeSheet, loadSheet } from "@/lib/social";
 
 // Todo lo social que no es el panel de amigos: perfil, ficha compartida, «Buscar mesa», actividad, privacidad y reacciones.
 
@@ -124,7 +124,11 @@ function SheetView({ token, onClose }) {
 
 // Escucha los eventos de la interfaz y abre perfil, compartir ficha o una ficha recibida por enlace.
 export function SocialHost() {
+  const me = useSocial().me;
   const [m, setM] = useState(null);
+  useEffect(() => {
+    if (me?.username) grantTestAchievements(me.username);
+  }, [me?.username]);
   useEffect(() => {
     const share = (e) => setM({ t: "share", ...e.detail });
     window.addEventListener("mh-share", share);

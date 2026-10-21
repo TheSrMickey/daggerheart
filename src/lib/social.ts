@@ -6,7 +6,7 @@
 // Así dos personas nunca pisan los datos de una tercera.
 
 import { createClient } from "@/lib/supabase/client";
-import { ACHIEVEMENTS, type AchState, type Stat } from "@/lib/achievements";
+import { ACHIEVEMENTS, TEST_GRANTS, type AchState, type Stat } from "@/lib/achievements";
 
 export type Status = "on" | "away" | "off";
 export type Person = { id: string; username: string; playing?: string; creating?: boolean; status?: Status; since?: number; lastSeen?: number; dnd?: boolean; camp?: string; role?: string; campSince?: number };
@@ -561,6 +561,22 @@ export async function trackStat(stat: Stat, n = 1, mode: "inc" | "max" = "inc") 
     }
     await kvPut(`ach:${me.id}`, { stats, unlocked });
     if (won.length && typeof window !== "undefined") window.dispatchEvent(new CustomEvent("mh-achievement", { detail: { ids: won } }));
+  } catch {}
+}
+
+// Pruebas: concede los logros de `TEST_GRANTS` a la cuenta indicada, una sola vez.
+export async function grantTestAchievements(username?: string) {
+  try {
+    const ids = TEST_GRANTS[(username || "").toLowerCase()];
+    const me = await myself();
+    if (!ids || !me) return;
+    const cur = await getAchievements(me.id);
+    const missing = ids.filter((id) => !cur.unlocked[id]);
+    if (!missing.length) return;
+    const unlocked = { ...cur.unlocked };
+    missing.forEach((id) => (unlocked[id] = Date.now()));
+    await kvPut(`ach:${me.id}`, { stats: cur.stats, unlocked });
+    if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("mh-achievement", { detail: { ids: missing } }));
   } catch {}
 }
 
