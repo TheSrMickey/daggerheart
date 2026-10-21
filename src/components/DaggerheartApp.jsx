@@ -5478,7 +5478,7 @@ const sharedStyles = `
   .mh-hs-amb .mh-gm-sc-edit { max-width: 640px; }
   /* Directo */
   .mh-dir { display: flex; flex-direction: column; gap: 16px; }
-  .mh-dir-top { display: grid; grid-template-columns: minmax(0, 1fr) clamp(372px, 26vw, 480px); grid-template-rows: minmax(0, 1fr) 214px; gap: 14px; height: clamp(600px, calc(100dvh - 190px), 1200px); }
+  .mh-dir-top { display: grid; grid-template-columns: minmax(0, 1fr) clamp(372px, 26vw, 480px); grid-template-rows: minmax(0, 1fr) auto; gap: 14px; height: clamp(600px, calc(100dvh - 190px), 1200px); }
   .mh-dir-stage { grid-column: 1; padding: 12px; border-radius: 22px; background: var(--mh-panel); border: 1px solid var(--mh-line); display: flex; flex-direction: column; gap: 10px; position: relative; }
   .mh-dir-top .mh-dir-below { min-height: 0; overflow: auto; padding: 8px 10px; display: flex; flex-direction: column; justify-content: center; } .mh-dir-top .mh-dir-below > .mh-tl { flex: none; } .mh-tl .mh-ch-step { padding: 9px 12px; gap: 4px; } .mh-dir.is-imm .mh-dir-top .mh-dir-below { overflow: visible; }
   .mh-dir-xlock { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 99px; background: #D9644E; color: #fff; } .mh-dir.is-xlock .mh-dir-live, .mh-dir.is-xlock .mh-dir-chnav, .mh-dir.is-xlock .mh-dir-show, .mh-dir.is-xlock .mh-dir-below .mh-tl, .mh-dir.is-xlock .mh-dir-dock .mh-tl { opacity: .45; } .mh-dir.is-xlock .mh-dir-show { pointer-events: none; }
@@ -5555,6 +5555,8 @@ const sharedStyles = `
   .mh-hs-tl-ar { flex: none; align-self: center; width: 1px; height: 28px; background: var(--mh-line2); }
   .mh-hs-scns { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; } .mh-hs-scns button { display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px 5px 5px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel2); color: var(--mh-ink); font: 700 12px 'Inter', system-ui, sans-serif; cursor: pointer; } .mh-hs-scns button.is-on { border-color: var(--mh-gold-ink); background: color-mix(in srgb, var(--mh-gold-ink) 10%, var(--mh-panel)); } .mh-hs-scns .mh-hs-scn-add { border-style: dashed; padding: 8px 14px; color: var(--mh-ink3); }
   .mh-hs-scn-th { width: 44px; height: 30px; border-radius: 7px; background: center / cover no-repeat #2B3A4F; } .mh-hs-scn-th.is-blank { background: var(--mh-panel); }
+  .mh-tl { display: flex; align-items: center; justify-content: center; min-height: 100%; } .mh-tl .mh-tlr { flex: 1; min-width: 0; margin: 0; padding: 20px 14px 8px; justify-content: safe center; scrollbar-width: none; -ms-overflow-style: none; -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 22px, #000 calc(100% - 22px), transparent 100%); mask-image: linear-gradient(90deg, transparent 0, #000 22px, #000 calc(100% - 22px), transparent 100%); } .mh-tl .mh-tlr::-webkit-scrollbar { display: none; }
+  .mh-dir-monwrap { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; } .mh-dir-monwrap > .mh-dir-mon { flex: 1; min-height: 0; } .mh-dir-fxbtn { position: absolute; left: 12px; top: 44px; z-index: 8; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 99px; border: 1px solid var(--mh-line2); background: color-mix(in srgb, var(--mh-panel) 92%, transparent); color: var(--mh-ink); font: 600 12px 'Inter', system-ui, sans-serif; cursor: pointer; opacity: 0; transform: translateY(-4px); pointer-events: none; transition: opacity .18s ease, transform .18s ease, border-color .15s; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); } .mh-dir-monwrap:hover .mh-dir-fxbtn, .mh-dir-fxbtn:focus-visible, .mh-dir-fxbtn.is-on { opacity: 1; transform: none; pointer-events: auto; } .mh-dir-fxbtn:hover, .mh-dir-fxbtn.is-on { border-color: var(--acc, #E3B04B); } .mh-dir-fxbtn:focus-visible { outline: 2px solid var(--acc, #E3B04B); outline-offset: 2px; } .mh-dir-fxbtn svg { color: var(--mh-gold-ink); } @media (hover: none) { .mh-dir-fxbtn { opacity: 1; transform: none; pointer-events: auto; } } @media (prefers-reduced-motion: reduce) { .mh-dir-fxbtn { transition: none; } }
   .mh-tlr { display: flex; align-items: center; gap: 8px; overflow-x: auto; padding: 22px 2px 8px; margin-bottom: 4px; scrollbar-width: thin; }
   .mh-tlr-ch { flex: none; display: flex; align-items: center; padding: 5px 9px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel2); }
   .mh-tlr-c { font-size: 10px; font-weight: 800; letter-spacing: .08em; color: var(--mh-muted); margin-right: 8px; white-space: nowrap; max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
@@ -27020,11 +27022,12 @@ export default function App({ onSignOut }) {
         const r = fxDlg.rect;
         const w = Math.min(340, (typeof window !== "undefined" ? window.innerWidth : 360) - 24);
         const left = r ? Math.max(12, Math.min(r.left, window.innerWidth - w - 12)) : 12;
+        const below = !!r && r.top < 420;
         const bottom = r ? window.innerHeight - r.top + 8 : 80;
         const n = (sc.fx || []).length;
         const idx = stageScenesOf(campaignStage).findIndex((x) => x.id === sc.id) + 1;
         return (
-          <div className="mh-dd mh-cl" role="dialog" aria-label="Efectos de la escena" style={{ left, bottom, width: w }} onMouseDown={(e) => e.stopPropagation()}>
+          <div className="mh-dd mh-cl" role="dialog" aria-label="Efectos de la escena" style={below ? { left, top: r.bottom + 8, width: w } : { left, bottom, width: w }} onMouseDown={(e) => e.stopPropagation()}>
             <div className="mh-cl-h"><Sparkles size={14} /> <b>Efectos · Cap. {idx}</b><small className="mh-nt-n">{n} activo{n === 1 ? "" : "s"}</small></div>
             <div className="mh-fxq">
               {SCENE_FX.map((fx) => {
@@ -28009,7 +28012,6 @@ export default function App({ onSignOut }) {
                     const paused = normSpot(campaignMap.spot).mode === "paused";
                     const dlg = stage.dialogue || null;
                     const dlgImg = dlg ? castImgs[dlg.imgId] : null;
-                    const online = table.filter((e) => tableStatus(e) === "on").length;
                     const liveLabel = { escena: "la escena", mapa: "el mapa de combate", mundo: "el mapa de mundo", pistas: "las pistas", personajes: "los personajes" }[live];
                     const viewLabel = { escena: "la escena", mapa: "el mapa de combate", mundo: "el mapa de mundo", pistas: "las pistas", personajes: "los personajes" }[view];
                     const pips = (n, t, col) => (
@@ -28342,8 +28344,9 @@ export default function App({ onSignOut }) {
                     const liveWant = stage.tlStep || (inCombat ? "cmb" : stage.dialogue ? "dlg" : "img");
                     const liveSub = liveWant === "cmb" ? stage.tlSub || campaignMap.mapId || null : stage.tlSub || null;
                     const tlCur = cur ? posIdx(cur.id, liveWant, liveSub) : -1; // donde están los jugadores
-                    const myWant = djStep || (view === "mapa" ? "cmb" : chDiverge ? "img" : liveWant);
-                    const mySub = djStep ? djSub : chDiverge ? null : liveSub;
+                    // Si los jugadores están en combate y yo miro la escena, mi paso es la imagen (no el combate), para que «Mostrar» publique la escena.
+                    const myWant = djStep || (view === "mapa" ? "cmb" : chDiverge || liveWant === "cmb" ? "img" : liveWant);
+                    const mySub = djStep ? djSub : chDiverge || myWant !== liveWant ? null : liveSub;
                     const myIdx = vc ? posIdx(vc.id, myWant, mySub) : -1; // donde estoy yo
                     const diverged = view !== live || chDiverge || (myIdx !== tlCur && !!djStep);
                     const here = myIdx === tlCur; // estoy en el mismo paso que los jugadores
@@ -28390,7 +28393,25 @@ export default function App({ onSignOut }) {
                     const stepsEl = (
                       <div className="mh-tl" inert={xLock || undefined}>
                         {scenes.length > 0 && (
-                          <div className="mh-tlr" role="group" aria-label="Línea de tiempo de la historia">
+                          <div
+                            className="mh-tlr"
+                            role="group"
+                            aria-label="Línea de tiempo de la historia"
+                            ref={(el) => {
+                              // La rueda del ratón desplaza la línea de lado a lado cuando no cabe entera.
+                              if (!el || el.dataset.wheel) return;
+                              el.dataset.wheel = "1";
+                              el.addEventListener(
+                                "wheel",
+                                (e) => {
+                                  if (el.scrollWidth <= el.clientWidth + 1) return;
+                                  e.preventDefault();
+                                  el.scrollLeft += Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+                                },
+                                { passive: false }
+                              );
+                            }}
+                          >
                             {scenes.map((sc, ci) => (
                               <div key={sc.id} className="mh-tlr-ch">
                                 <span className="mh-tlr-c">CAP. {ci + 1} · {sc.title || "Sin título"}</span>
@@ -28415,112 +28436,25 @@ export default function App({ onSignOut }) {
                             ))}
                           </div>
                         )}
-                        <div key={myIdx + "|" + (vc?.id || "")} className="mh-tl-track">
-                          {tlShown.map((x, i) => {
-                            if (i > 0) {
-                              const M = STEP_META[x.k];
-                              return (
-                                <div key={x.id} className="mh-ch-step mh-tl-nx">
-                                  <div className="mh-ch-step-h"><M.I size={15} /> <b>{x.k === "img" && x.nTot > 1 ? "Escena " + (x.n + 1) : x.k === "cmb" && x.nTot > 1 ? "Combate " + (x.n + 1) : M.n}</b></div>
-                                  <small>Cap. {scenes.indexOf(x.sc) + 1} · {x.sc.title || "Sin título"}</small>
-                                </div>
-                              );
-                            }
-                            if (x.k === "none") {
-                              return (
-                                <div key="none" className="mh-ch-step mh-tl-cur is-on">
-                                  <div className="mh-ch-step-h"><Clapperboard size={16} /> <b>Sin escena</b></div>
-                                  <small>{scenes.length ? "Los jugadores esperan" : "Crea tu primer capítulo en «Historia»"}</small>
-                                  <button type="button" className="mh-btn" disabled={!tl.length} onClick={() => goStep(tl[0])}><Play size={13} /> Empezar</button>
-                                </div>
-                              );
-                            }
-                            const M = STEP_META[x.k];
-                            const chap = "Cap. " + (scenes.indexOf(x.sc) + 1) + " · " + (x.sc.title || "Sin título");
-                            return (
-                              <div key={x.id} className="mh-ch-step mh-tl-cur is-on">
-                                <div className="mh-ch-step-h"><M.I size={16} /> <b>{x.k === "img" && x.nTot > 1 ? "Escena " + (x.n + 1) : x.k === "cmb" && x.nTot > 1 ? "Combate " + (x.n + 1) : M.n}</b></div>
-                                <small>{chap}</small>
-                                {x.k === "img" && (
-                                  <>
-                                    <small className="mh-tl-sub">{(x.scn.fx || []).length ? (x.scn.fx || []).map((k) => SCENE_FX.find((fx) => fx.k === k)?.n).filter(Boolean).join(", ") : "Sin efectos"}</small>
-                                    <span className="mh-ch-step-acts">
-                                      {live === "escena" && here ? <span className="mh-stg-live is-soft"><i />En pantalla</span> : <button type="button" className="mh-btn-ghost" onClick={() => goStep(x)}><Eye size={13} /> Mostrar</button>}
-                                      <button type="button" className={"mh-btn-ghost" + ((fxDlg?.sceneId === x.sc.id && (fxDlg?.sub || null) === (x.sub || null)) ? " is-on" : "")} data-fx-btn="1" aria-haspopup="dialog" aria-expanded={fxDlg?.sceneId === x.sc.id && (fxDlg?.sub || null) === (x.sub || null)} onClick={(e) => ((fxDlg?.sceneId === x.sc.id && (fxDlg?.sub || null) === (x.sub || null)) ? setFxDlg(null) : setFxDlg({ sceneId: x.sc.id, sub: x.sub || null, rect: e.currentTarget.getBoundingClientRect() }))}><Sparkles size={13} /> Efectos{(x.scn.fx || []).length ? " · " + x.scn.fx.length : ""}</button>
-                                      {nextBtn}
-                                    </span>
-                                  </>
-                                )}
-                                {x.k === "dlg" && (
-                                  <>
-                                    <small className="mh-tl-sub">{liveConv && here ? liveConv.title + " · " + (liveIdx + 1) + " de " + liveConv.lines.length : x.conv.title}</small>
-                                    {!(stage.dialogue && here) && (() => {
-                                      const lines = x.conv.lines.filter((l) => campaignCast.some((m) => m.id === l.castId));
-                                      const startId = lines.some((l) => l.id === dlgStart[x.sc.id]?.lineId && dlgStart[x.sc.id]?.convId === x.conv.id) ? dlgStart[x.sc.id].lineId : lines[0]?.id;
-                                      return (
-                                        <span className="mh-tl-pick">
-                                          {x.convs.length > 1 && (
-                                            <select className="mh-input" aria-label="Conversación" value={x.conv.id} onChange={(e) => setDlgStart((d) => ({ ...d, [x.sc.id]: { convId: e.target.value, lineId: null } }))}>
-                                              {x.convs.map((c) => <option key={c.id} value={c.id}>{c.title || "Conversación"}</option>)}
-                                            </select>
-                                          )}
-                                          <select className="mh-input" aria-label="Qué se dice primero" value={startId || ""} onChange={(e) => setDlgStart((d) => ({ ...d, [x.sc.id]: { convId: x.conv.id, lineId: e.target.value } }))}>
-                                            {lines.map((l, li) => <option key={l.id} value={l.id}>{(li + 1) + ". " + (campaignCast.find((m) => m.id === l.castId)?.name || "") + ": " + String(l.text || "").slice(0, 38)}</option>)}
-                                          </select>
-                                        </span>
-                                      );
-                                    })()}
-                                    <span className="mh-ch-step-acts">
-                                      {stage.dialogue && here ? (
-                                        <>
-                                          {nextLine ? <button type="button" className="mh-btn" onClick={() => showLine(nextLine)}><SkipForward size={13} /> Siguiente línea</button> : nextBtn}
-                                          <button type="button" className="mh-btn-ghost" onClick={clearDialogue}><EyeOff size={13} /> Retirar</button>
-                                        </>
-                                      ) : (
-                                        <>
-                                          <button type="button" className="mh-btn" onClick={() => {
-                                            const lines = x.conv.lines.filter((l) => campaignCast.some((m) => m.id === l.castId));
-                                            const pk = dlgStart[x.sc.id];
-                                            showLine(lines.find((l) => pk?.convId === x.conv.id && l.id === pk.lineId) || lines[0]);
-                                          }}><Play size={13} /> Empezar</button>
-                                          {nextBtn}
-                                        </>
-                                      )}
-                                    </span>
-                                  </>
-                                )}
-                                {x.k === "cmb" && (
-                                  <>
-                                    <small className="mh-tl-sub">{x.map.name}</small>
-                                    <span className="mh-ch-step-acts">
-                                      {inCombat && here ? (
-                                        <>
-                                          <span className="mh-stg-live is-soft"><i />En pantalla</span>
-                                          <button type="button" className="mh-btn-ghost" onClick={() => (setCombatBack(cur?.id || null), setCampaignDetailTab("mapa"))}>Abrir tablero</button>
-                                        </>
-                                      ) : (
-                                        <>
-                                          {x.maps.length > 1 && (
-                                            <select className="mh-input" aria-label="Mapa de combate" value={mapPick[x.sc.id] || x.maps[0].id} onChange={(e) => setMapPick((d) => ({ ...d, [x.sc.id]: e.target.value }))}>
-                                              {x.maps.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-                                            </select>
-                                          )}
-                                          <button type="button" className="mh-btn" onClick={() => goStep(x)}><Swords size={13} /> Pasar al combate</button>
-                                        </>
-                                      )}
-                                      {nextBtn}
-                                    </span>
-                                  </>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
                       </div>
+                    );
+                    const fxCx = view === "escena" && myIdx >= 0 && tl[myIdx] && tl[myIdx].k === "img" ? tl[myIdx] : null;
+                    const fxOn = !!fxCx && fxDlg?.sceneId === fxCx.sc.id && (fxDlg?.sub || null) === (fxCx.sub || null);
+                    const fxHoverBtn = fxCx && !xLock && (
+                      <button
+                        type="button"
+                        className={"mh-dir-fxbtn" + (fxOn ? " is-on" : "")}
+                        data-fx-btn="1"
+                        aria-haspopup="dialog"
+                        aria-expanded={fxOn}
+                        onClick={(e) => (fxOn ? setFxDlg(null) : setFxDlg({ sceneId: fxCx.sc.id, sub: fxCx.sub || null, rect: e.currentTarget.getBoundingClientRect() }))}
+                      >
+                        <Sparkles size={13} /> Efectos{(fxCx.scn.fx || []).length ? " · " + fxCx.scn.fx.length : ""}
+                      </button>
                     );
                     const groupBox = (
                       <div className="mh-dir-card">
-                        <div className="mh-dir-lbl-row"><span className="mh-dir-lbl">El grupo</span><small>{online} conectado{online === 1 ? "" : "s"}</small></div>
+                        <div className="mh-dir-lbl-row"><span className="mh-dir-lbl">El grupo</span></div>
                         <div className="mh-dir-members">
                           {members.map(({ id, ch }) => {
                             const hpT = Number(ch.r_hp || 0);
@@ -28708,7 +28642,10 @@ export default function App({ onSignOut }) {
                         <div className="mh-dir-top">
                         <section className="mh-dir-stage">
                           {renderBar()}
-                          {monEl}
+                          <div className="mh-dir-monwrap">
+                            {monEl}
+                            {fxHoverBtn}
+                          </div>
                           {imm && <div className="mh-dir-dock">{stepsEl}</div>}
                           {imm && immDrawer && <aside className="mh-dir-drawer">{immDrawer === "grupo" ? groupEl : chatEl}</aside>}
                         </section>
