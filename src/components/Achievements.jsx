@@ -45,13 +45,14 @@ function Face({ a, locked, size, back }) {
       {glow && <g filter={`url(#${id}f)`} opacity=".85"><circle cx="50" cy="50" r="38" fill={c2} /></g>}
       <path d={HEX} fill={`url(#${id})`} />
       <path d="M50 14l31 18v36L50 86 19 68V32z" fill={c3} stroke={c1} strokeOpacity=".55" strokeWidth="1.5" />
+      {back && <path transform="translate(38.5 30.45) scale(0.115)" d="M100 0C101.5 66 106 109 200 115C106 121 102 164 100 340C98 164 94 121 0 115C94 109 98.5 66 100 0Z" fill={locked ? "#8a8a9c" : c1} fillOpacity=".92" />}
       {!back && <g transform="translate(34 34) scale(1.333)" fill="none" stroke={locked ? "#8a8a9c" : c1} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">{ICONS[a.icon]}</g>}
     </svg>
   );
 }
 
-// Insignia en 3D: se ve con grosor y gira sobre su eje vertical al deslizar el dedo o el ratón a izquierda y derecha.
-export function Badge({ a, locked, size = 84 }) {
+// Insignia en 3D con grosor. Solo con `rotatable` (el detalle abierto) gira sobre su eje vertical al deslizar a izquierda y derecha; detrás lleva el logo de la plataforma.
+export function Badge({ a, locked, size = 84, rotatable = false }) {
   const t = locked ? "bloqueado" : a.tier;
   const rim = TIERS[t][1];
   const thick = Math.max(4, Math.round(size * 0.1));
@@ -114,13 +115,9 @@ export function Badge({ a, locked, size = 84 }) {
   const slices = Array.from({ length: thick }, (_, i) => i);
   return (
     <span
-      className={"ach3d" + (locked ? " is-lock" : "")}
+      className={"ach3d" + (locked ? " is-lock" : "") + (rotatable ? " is-rot" : "")}
       style={{ width: size, height: size, perspective: size * 5 }}
-      onPointerDown={down}
-      onPointerMove={move}
-      onPointerUp={up}
-      onPointerCancel={up}
-      onClickCapture={(e) => { if (st.current.moved) { e.stopPropagation(); e.preventDefault(); st.current.moved = false; } }}
+      {...(rotatable ? { onPointerDown: down, onPointerMove: move, onPointerUp: up, onPointerCancel: up } : {})}
       aria-hidden="true"
     >
       <span className="ach3d-in" ref={el}>

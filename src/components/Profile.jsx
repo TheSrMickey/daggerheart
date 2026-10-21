@@ -239,7 +239,8 @@ export default function ProfilePage({ id, name }) {
           <div className="pf-dlg" role="dialog" aria-modal="true" aria-label={detailA.name} onClick={() => setDetail(null)}>
             <div className="pf-dlg-box" onClick={(e) => e.stopPropagation()}>
               <button type="button" className="mh-x pf-dlg-x" aria-label="Cerrar" onClick={() => setDetail(null)}><X size={16} /></button>
-              <Badge a={detailA} locked={!detailOn} size={150} />
+              <Badge a={detailA} locked={!detailOn} size={150} rotatable />
+              <small className="pf-dlg-hint">Desliza hacia los lados para girarla</small>
               <small className="pf-dlg-tier">{detailA.tier[0].toUpperCase() + detailA.tier.slice(1)} · {detailA.cat}</small>
               <h2 className="mh-serif">{detailA.name}</h2>
               <p>{detailA.desc}</p>
