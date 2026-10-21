@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { BookOpen, EyeOff, Lock, MessageCircle, Octagon, Pencil, Plus, Star, X } from "lucide-react";
+import { BookOpen, Clock, EyeOff, Lock, MessageCircle, Octagon, Pencil, Plus, Star, X } from "lucide-react";
 import { useSocial, refreshSocial, Avatar } from "./Social";
 import { Badge } from "./Achievements";
 import { ACHIEVEMENTS, CATS } from "@/lib/achievements";
@@ -174,12 +174,12 @@ export default function ProfilePage({ id, name }) {
   const actBlock = (
     <>
       <h3 className="pf-h">Actividad reciente</h3>
-      {!isMe && !p.activity ? <small className="pf-mut"><Lock size={12} /> {who} no comparte su actividad.</small> : acts.length === 0 ? <small className="pf-mut">Sin actividad todavía.</small> : acts.slice(0, tab === "actividad" ? 20 : 4).map((a) => <div key={a.id} className="pf-act"><i /><div>{who} {a.text}<small>{dayEs(a.at)}</small></div></div>)}
+      {!isMe && !p.activity ? <small className="pf-mut"><Lock size={12} /> {who} no comparte su actividad.</small> : acts.length === 0 ? <small className="pf-mut">Sin actividad todavía.</small> : <div className="pf-tl">{acts.slice(0, tab === "actividad" ? 16 : 6).map((a) => <div key={a.id} className="pf-act"><span className="pf-act-i"><Clock size={13} /></span><div className="pf-act-t">{who} {a.text}</div><small className="pf-act-d">{dayEs(a.at)}</small></div>)}</div>}
     </>
   );
 
   return (
-    <div className="so-page pf">
+    <div className={"so-page pf" + (edit || inv ? " is-edit" : "")}>
       <div className="pf-card">
         <div className="pf-ban" style={{ "--c": col }} />
         <div className="pf-head">
@@ -226,14 +226,15 @@ export default function ProfilePage({ id, name }) {
         </div>
         <div className="pf-body">
           {tab === "resumen" && (
-            <>
-              <div>{vitrina}</div>
-              <div className="pf-side"><div>{limitsBlock}</div><div>{charsBlock}</div><div>{actBlock}</div></div>
-            </>
+            <div className="pf-res">
+              <div className="pf-pn">{vitrina}</div>
+              <div className="pf-pn">{limitsBlock}</div>
+              <div className="pf-col"><div className="pf-pn">{charsBlock}</div><div className="pf-pn pf-pn-fill">{actBlock}</div></div>
+            </div>
           )}
-          {tab === "logros" && <div className="pf-wide">{vitrina}<h3 className="pf-h" style={{ marginTop: 22 }}>Todos los logros</h3>{filters}{grid(list)}</div>}
-          {tab === "personajes" && <div className="pf-wide">{charsBlock}<div style={{ marginTop: 22 }}>{limitsBlock}</div></div>}
-          {tab === "actividad" && <div className="pf-wide">{actBlock}</div>}
+          {tab === "logros" && <div className="pf-wide">{edit && <div style={{ marginBottom: 14 }}>{vitrina}</div>}<h3 className="pf-h">Todos los logros</h3>{filters}{grid(list)}</div>}
+          {tab === "personajes" && <div className="pf-wide pf-two"><div className="pf-pn">{charsBlock}</div><div className="pf-pn">{limitsBlock}</div></div>}
+          {tab === "actividad" && <div className="pf-wide"><div className="pf-pn pf-pn-fill">{actBlock}</div></div>}
         </div>
         {detailA && (
           <div className="pf-dlg" role="dialog" aria-modal="true" aria-label={detailA.name} onClick={() => setDetail(null)}>
