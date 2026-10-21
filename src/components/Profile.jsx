@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { BookOpen, EyeOff, Lock, MessageCircle, Octagon, Pencil, Plus, Star } from "lucide-react";
+import { BookOpen, EyeOff, Lock, MessageCircle, Octagon, Pencil, Plus, Star, X } from "lucide-react";
 import { useSocial, refreshSocial, Avatar } from "./Social";
 import { Badge } from "./Achievements";
 import { ACHIEVEMENTS, CATS } from "@/lib/achievements";
@@ -16,11 +16,11 @@ const dayEs = (t) => new Date(t).toLocaleDateString("es-ES", { day: "numeric", m
 const SUGGEST = ["Violencia gráfica", "Maltrato o abuso", "Violencia sexual", "Daño a niños", "Tortura", "Autolesiones", "Enfermedad grave", "Daño a animales", "Discriminación", "Arañas e insectos"];
 const TABS = [["resumen", "Resumen"], ["logros", "Logros"], ["personajes", "Personajes"], ["actividad", "Actividad"]];
 
-function AchCard({ a, st, edit, featured, onToggle }) {
+function AchCard({ a, st, edit, featured, onToggle, onOpen }) {
   const on = !!st.unlocked[a.id];
   const cur = Math.min(st.stats[a.stat] || 0, a.goal);
   return (
-    <div className={"pf-ac" + (on ? "" : " is-lock") + (featured ? " is-feat" : "")} title={a.desc}>
+    <div className={"pf-ac" + (on ? "" : " is-lock") + (featured ? " is-feat" : "")} role="button" tabIndex={0} aria-label={a.name + ": ver detalle"} onClick={onOpen} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), onOpen())}>
       <Badge a={a} locked={!on} size={56} />
       <div>
         <b>{a.name}</b>
@@ -28,7 +28,7 @@ function AchCard({ a, st, edit, featured, onToggle }) {
         {!on && a.goal > 1 && <div className="pf-bar"><i style={{ width: (cur / a.goal) * 100 + "%" }} /></div>}
       </div>
       {edit && on && (
-        <button type="button" className={"pf-star" + (featured ? " on" : "")} aria-pressed={featured} aria-label={featured ? "Quitar de la vitrina" : "Poner en la vitrina"} onClick={onToggle}><Star size={14} /></button>
+        <button type="button" className={"pf-star" + (featured ? " on" : "")} aria-pressed={featured} aria-label={featured ? "Quitar de la vitrina" : "Poner en la vitrina"} onClick={(e) => (e.stopPropagation(), onToggle())}><Star size={14} /></button>
       )}
     </div>
   );
@@ -48,6 +48,7 @@ export default function ProfilePage({ id, name }) {
   const [draft, setDraft] = useState(null);
   const [inv, setInv] = useState(false);
   const [msg, setMsg] = useState("");
+  const [detail, setDetail] = useState(null);
 
   useEffect(() => {
     if (!uid) return undefined;
@@ -63,6 +64,13 @@ export default function ProfilePage({ id, name }) {
     return () => { live = false; };
   }, [uid]);
 
+  useEffect(() => {
+    if (!detail) return undefined;
+    const k = (e) => e.key === "Escape" && setDetail(null);
+    window.addEventListener("keydown", k);
+    return () => window.removeEventListener("keydown", k);
+  }, [detail]);
+
   const who = name || p?.name || s.me?.username || "Jugador";
   const friend = s.friends.find((f) => f.id === uid);
   const unlockedIds = useMemo(() => (ach ? ACHIEVEMENTS.filter((a) => ach.unlocked[a.id]).map((a) => a.id) : []), [ach]);
@@ -75,6 +83,8 @@ export default function ProfilePage({ id, name }) {
   const shown = (edit || featIds.length ? featIds : recent).map((x) => ACHIEVEMENTS.find((a) => a.id === x));
   const camps = isMe ? bridge.camps.length : (ach.stats.campsStarted || 0) + (ach.stats.campsJoined || 0);
   const nChars = isMe ? bridge.chars.length : p.chars.length;
+  const detailA = detail ? ACHIEVEMENTS.find((a) => a.id === detail) : null;
+  const detailOn = !!(detailA && ach.unlocked[detailA.id]);
   const list = ACHIEVEMENTS.filter((a) => !cat || a.cat === cat);
   const col = `hsl(${hueOf(who)} 45% 45%)`;
 
@@ -89,7 +99,7 @@ export default function ProfilePage({ id, name }) {
   const toggleFeat = (aid) => setDraft((x) => ({ ...x, featured: x.featured.includes(aid) ? x.featured.filter((f) => f !== aid) : x.featured.length >= 3 ? x.featured : [...x.featured, aid] }));
   const grid = (items) => (
     <div className="pf-grid">
-      {items.map((a) => <AchCard key={a.id} a={a} st={ach} edit={edit} featured={d.featured.includes(a.id)} onToggle={() => toggleFeat(a.id)} />)}
+      {items.map((a) => <AchCard key={a.id} a={a} st={ach} edit={edit} featured={d.featured.includes(a.id)} onToggle={() => toggleFeat(a.id)} onOpen={() => setDetail(a.id)} />)}
     </div>
   );
 
@@ -98,7 +108,7 @@ export default function ProfilePage({ id, name }) {
       <h3 className="pf-h">{edit ? "Vitrina · elige hasta 3 con la estrella" : featIds.length ? "Vitrina" : "Últimos logros"}</h3>
       <div className="pf-vit">
         {shown.map((a) => (
-          <div key={a.id} className="pf-vi"><Badge a={a} size={80} /><b>{a.name}</b><small>{a.tier[0].toUpperCase() + a.tier.slice(1)}</small></div>
+          <div key={a.id} className="pf-vi" role="button" tabIndex={0} aria-label={a.name + ": ver detalle"} onClick={() => setDetail(a.id)} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setDetail(a.id))}><Badge a={a} size={80} /><b>{a.name}</b><small>{a.tier[0].toUpperCase() + a.tier.slice(1)}</small></div>
         ))}
         {!shown.length && !edit && <div className="pf-vi is-empty">{isMe ? "Aún no tienes logros. ¡Juega y aparecerán aquí!" : "Todavía sin logros."}</div>}
         {edit && Array.from({ length: Math.max(0, 3 - shown.length) }).map((_, i) => <div key={"e" + i} className="pf-vi is-empty">Hueco libre</div>)}
@@ -225,6 +235,25 @@ export default function ProfilePage({ id, name }) {
           {tab === "personajes" && <div className="pf-wide">{charsBlock}<div style={{ marginTop: 22 }}>{limitsBlock}</div></div>}
           {tab === "actividad" && <div className="pf-wide">{actBlock}</div>}
         </div>
+        {detailA && (
+          <div className="pf-dlg" role="dialog" aria-modal="true" aria-label={detailA.name} onClick={() => setDetail(null)}>
+            <div className="pf-dlg-box" onClick={(e) => e.stopPropagation()}>
+              <button type="button" className="mh-x pf-dlg-x" aria-label="Cerrar" onClick={() => setDetail(null)}><X size={16} /></button>
+              <Badge a={detailA} locked={!detailOn} size={150} />
+              <small className="pf-dlg-tier">{detailA.tier[0].toUpperCase() + detailA.tier.slice(1)} · {detailA.cat}</small>
+              <h2 className="mh-serif">{detailA.name}</h2>
+              <p>{detailA.desc}</p>
+              {detailOn ? (
+                <div className="pf-dlg-st is-on">Conseguido el {dayEs(ach.unlocked[detailA.id])}</div>
+              ) : (
+                <div className="pf-dlg-st">
+                  Bloqueado{detailA.goal > 1 ? " · " + Math.min(ach.stats[detailA.stat] || 0, detailA.goal) + " de " + detailA.goal : ""}
+                  {detailA.goal > 1 && <div className="pf-bar"><i style={{ width: (Math.min(ach.stats[detailA.stat] || 0, detailA.goal) / detailA.goal) * 100 + "%" }} /></div>}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
         {!isMe && <div className="so-foot" style={{ padding: "0 28px 18px" }}><Lock size={12} /> Solo ves lo que {who} ha decidido enseñar.</div>}
       </div>
     </div>
