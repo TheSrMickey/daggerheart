@@ -4,7 +4,7 @@ import { AuthShell } from "@/components/AuthShell";
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const { next, error } = await searchParams;
   return (
-    <AuthShell title="Bienvenido de nuevo" subtitle="Inicia sesión para acceder a tus personajes, campañas y mapas.">
+    <AuthShell title="Bienvenido de nuevo" mode="login">
       <AuthForm
         mode="login"
         next={typeof next === "string" ? next : undefined}

@@ -3,7 +3,7 @@ import { AuthShell } from "@/components/AuthShell";
 
 export default function RegisterPage() {
   return (
-    <AuthShell title="Crea tu cuenta" subtitle="Reúne a tu grupo y empieza tu próxima campaña.">
+    <AuthShell title="Crea tu cuenta" mode="register">
       <AuthForm mode="register" />
     </AuthShell>
   );
