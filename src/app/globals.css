@@ -135,6 +135,10 @@ body {
 .auth-title { margin-bottom: 24px; }
 .auth-form { width: 100%; max-width: 340px; }
 .auth-form .field { height: 40px; padding: 0 14px; background: #ffffff0a; border: 1px solid #ffffff14; color: #e9e6f2; border-radius: 9px; font-size: 13px; }
+.auth-hint { min-height: 18px; margin-top: 5px; padding-left: 2px; font-size: 12px; line-height: 1.4; color: #9a98b4; }
+.auth-hint.is-ok { color: #7FB77A; } .auth-hint.is-bad { color: #ff8f8f; } .auth-hint a { color: inherit; }
+.auth-form .field.is-bad { border-color: #ff7a7a99; }
+html[data-mh-theme="light"] .auth-hint.is-ok { color: #3E7A39; } html[data-mh-theme="light"] .auth-hint.is-bad { color: #C0392B; } html[data-mh-theme="light"] .auth-form .field.is-bad { border-color: #C0392Baa; }
 .auth-form .field::placeholder { color: #8886a3; }
 .auth-form .field:focus { border-color: #4f86ff88; outline: none; background: #ffffff10; }
 .auth-form .btn-primary { height: 40px; background: #2a56c4; border: 0; color: #eaf0ff; border-radius: 9px; box-shadow: none; font-size: 13px; font-weight: 600; }
