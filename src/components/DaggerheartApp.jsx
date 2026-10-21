@@ -28109,7 +28109,6 @@ export default function App({ onSignOut }) {
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img src="/logo.svg" alt="" />
                                 <div>A la espera de una escena</div>
-                                <button type="button" className="mh-btn-ghost" onClick={() => setDjView("mundo")}><Globe size={13} /> Ver el mapa del mundo</button>
                               </div>
                             )}
                             {dlg && !chDiverge && (
@@ -28404,7 +28403,7 @@ export default function App({ onSignOut }) {
                     );
                     const stepsEl = (
                       <div className="mh-tl" inert={xLock || undefined}>
-                        {scenes.length > 0 && (
+                        {(
                           <div
                             className="mh-tlr"
                             role="group"
@@ -28424,13 +28423,21 @@ export default function App({ onSignOut }) {
                               );
                             }}
                           >
+                            <div className="mh-tlr-ch">
+                              <span className="mh-tlr-c">MAPA</span>
+                              <button type="button" className={"mh-tlr-n " + (view === "mundo" && live === "mundo" ? "both" : view === "mundo" ? "me" : live === "mundo" ? "pl" : "")} onClick={() => setDjView(live === "mundo" ? null : "mundo")} title="Mapa del mundo (solo lo ves tú; Mostrar para publicarlo)">
+                                {view === "mundo" && live === "mundo" ? <em>Tú y jugadores</em> : view === "mundo" ? <em>Tú</em> : live === "mundo" ? <em>Jugadores</em> : null}
+                                <i />
+                                Mundo
+                              </button>
+                            </div>
                             {scenes.map((sc, ci) => (
                               <div key={sc.id} className="mh-tlr-ch">
                                 <span className="mh-tlr-c">CAP. {ci + 1} · {sc.title || "Sin título"}</span>
                                 {tl.filter((x) => x.sc.id === sc.id).map((x, si) => {
                                   const gi = tl.indexOf(x);
-                                  const isMe = gi === myIdx;
-                                  const isPl = gi === tlCur;
+                                  const isMe = gi === myIdx && view !== "mundo";
+                                  const isPl = gi === tlCur && live !== "mundo";
                                   const cls = isMe && isPl ? "both" : isMe ? "me" : isPl ? "pl" : "";
                                   const lab = isMe && isPl ? "Tú y jugadores" : isMe ? "Tú" : isPl ? "Jugadores" : "";
                                   return (
@@ -28465,11 +28472,6 @@ export default function App({ onSignOut }) {
                       >
                         <Sparkles size={13} /> Efectos{(fxCx.scn.fx || []).length ? " · " + fxCx.scn.fx.length : ""}
                       </button>
-                        )}
-                        {(vc || vcImg) && (
-                          <button type="button" className="mh-dir-fxbtn" onClick={() => setDjView("mundo")} title="Ver el mapa del mundo (solo tú, hasta que pulses Mostrar)">
-                            <Globe size={13} /> Mapa del mundo
-                          </button>
                         )}
                       </div>
                     );
