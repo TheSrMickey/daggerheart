@@ -26,6 +26,7 @@ const ICONS = {
 };
 
 const HEX = "M50 6l38 22v44L50 94 12 72V28z";
+const HEX_PTS = [[50, 6], [88, 28], [88, 72], [50, 94], [12, 72], [12, 28]];
 const reduced = () => typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const AUTO_SPIN = 42; // grados por segundo al abrir una insignia (una vuelta cada ~8,5 s)
 const REST = -14; // ángulo de reposo: un poco girada para que se note el grosor
@@ -102,7 +103,15 @@ export function Badge({ a, locked, size = 84, rotatable = false }) {
   const up = () => {
     st.current.down = false;
   };
-  const slices = Array.from({ length: thick }, (_, i) => i);
+  // Paredes del borde: un rectángulo por lado del hexágono, de pie entre las dos caras. Así, de canto, la insignia es un sólido y no un montón de láminas que desaparecen.
+  const k = size / 100;
+  const walls = HEX_PTS.map((p, i) => {
+    const q = HEX_PTS[(i + 1) % HEX_PTS.length];
+    const mx = ((p[0] + q[0]) / 2) * k, my = ((p[1] + q[1]) / 2) * k;
+    const len = Math.hypot(q[0] - p[0], q[1] - p[1]) * k;
+    const ang = (Math.atan2(q[1] - p[1], q[0] - p[0]) * 180) / Math.PI;
+    return { mx, my, len, ang, shade: 0.8 + 0.2 * Math.abs(Math.sin((ang * Math.PI) / 180 + 0.6)) };
+  });
   return (
     <span
       className={"ach3d" + (locked ? " is-lock" : "") + (rotatable ? " is-rot" : "")}
@@ -111,10 +120,8 @@ export function Badge({ a, locked, size = 84, rotatable = false }) {
       aria-hidden="true"
     >
       <span className="ach3d-in" ref={el}>
-        {slices.map((i) => (
-          <svg key={i} className="ach3d-slice" style={{ transform: `translateZ(${-half + i + 0.5}px)` }} viewBox="0 0 100 100" width={size} height={size}>
-            <path d={HEX} fill={rim} style={{ filter: `brightness(${0.78 + (i / thick) * 0.22})` }} />
-          </svg>
+        {walls.map((w, i) => (
+          <span key={i} className="ach3d-wall" style={{ left: w.mx - w.len / 2 - 0.5, top: w.my - (thick + 1) / 2, width: w.len + 1, height: thick + 1, background: rim, filter: `brightness(${w.shade})`, transform: `rotateZ(${w.ang}deg) rotateX(90deg)` }} />
         ))}
         <span className="ach3d-f" style={{ transform: `translateZ(${half + 0.5}px)` }}><Face a={a} locked={locked} size={size} /></span>
         <span className="ach3d-f" style={{ transform: `translateZ(${-half - 0.5}px) rotateY(180deg)` }}><Face a={a} locked={locked} size={size} back /></span>
