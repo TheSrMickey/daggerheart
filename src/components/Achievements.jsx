@@ -73,7 +73,7 @@ function getKit() {
       const pm = new THREE.PMREMGenerator(renderer);
       const env = pm.fromScene(new RoomEnvironment(), 0.04).texture;
       const gltf = await new GLTFLoader().loadAsync("/modelos/insignia.glb");
-      return { THREE, renderer, env, model: gltf.scene };
+      return { THREE, RoomEnvironment, renderer, env, model: gltf.scene };
     })();
   }
   return glKit;
@@ -91,10 +91,21 @@ export function Badge({ a, locked, size = 84, rotatable = false }) {
   useEffect(() => {
     let dead = false;
     const disposables = [];
-    const redraw = () => draw.current?.(st.current.ang);
+    const redraw = () => draw.current?.(st.current.ang, true);
     const texs = [];
-    getKit().then(({ THREE, renderer, env, model }) => {
+    getKit().then(({ THREE, RoomEnvironment, renderer: shared, env: sharedEnv, model }) => {
       if (dead || !cv.current) return;
+      // La insignia del detalle (la que gira) tiene su propio renderer que pinta directo en su lienzo, sin copiar cada fotograma; las pequeñas comparten uno.
+      let renderer = shared, env = sharedEnv;
+      const direct = rotatable;
+      if (direct) {
+        renderer = new THREE.WebGLRenderer({ canvas: cv.current, alpha: true, antialias: true, powerPreference: "high-performance" });
+        renderer.setClearColor(0x000000, 0);
+        renderer.setPixelRatio(1);
+        renderer.setSize(px, px, false);
+        env = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+        disposables.push({ dispose: () => { env.dispose(); renderer.dispose(); } });
+      }
       const t = locked ? "bloqueado" : a.tier;
       const [c1, c2] = TIERS[t];
       const scene = new THREE.Scene();
@@ -127,17 +138,23 @@ export function Badge({ a, locked, size = 84, rotatable = false }) {
         if (!o.isMesh) return;
         o.material = o.name === "FaceF" ? decal(false) : o.name === "FaceB" ? decal(true) : body;
       });
-      const ctx = cv.current.getContext("2d");
-      draw.current = (ang) => {
-        if (!cv.current) return;
+      const ctx = direct ? null : cv.current.getContext("2d");
+      let lastAng = null;
+      draw.current = (ang, force) => {
+        if (!cv.current || (!force && ang === lastAng)) return;
+        lastAng = ang;
         pivot.rotation.y = (ang * Math.PI) / 180;
+        if (direct) {
+          renderer.render(scene, cam);
+          return;
+        }
         // Redimensionar el lienzo reasigna memoria: solo cuando cambia el tamaño (varias insignias comparten renderer).
         if (renderer.domElement.width !== px || renderer.domElement.height !== px) renderer.setSize(px, px, false);
         renderer.render(scene, cam);
         ctx.clearRect(0, 0, px, px);
         ctx.drawImage(renderer.domElement, 0, 0, px, px);
       };
-      draw.current(st.current.ang);
+      draw.current(st.current.ang, true);
     });
     return () => {
       dead = true;
@@ -145,7 +162,7 @@ export function Badge({ a, locked, size = 84, rotatable = false }) {
       texs.forEach((tx) => tx.listeners.delete(redraw));
       disposables.forEach((d) => d.dispose());
     };
-  }, [a.id, a.tier, a.icon, locked, px]);
+  }, [a.id, a.tier, a.icon, locked, px, rotatable]);
   // Al abrir el detalle (`rotatable`) la insignia gira sola a velocidad suave; al arrastrarla se detiene en la mano
   // y, al soltarla, sigue por inercia y retoma el giro. Con «reducir movimiento» no gira sola.
   useEffect(() => {
@@ -193,7 +210,7 @@ export function Badge({ a, locked, size = 84, rotatable = false }) {
       {...(rotatable ? { onPointerDown: down, onPointerMove: move, onPointerUp: up, onPointerCancel: up } : {})}
       aria-hidden="true"
     >
-      <canvas ref={cv} width={px} height={px} style={{ width: size, height: size, display: "block" }} />
+      <canvas key={rotatable ? "gl" : "2d"} ref={cv} width={px} height={px} style={{ width: size, height: size, display: "block" }} />
     </span>
   );
 }

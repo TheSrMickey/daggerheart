@@ -6,7 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
-      { tag: "mejora", text: "Insignias · rehechas como modelo 3D en Blender (borde biselado de metal con el icono en el centro y el logo detrás). Se acabaron las transparencias raras al girar y el giro va más fluido; el arrastre y el giro automático son los mismos." },
+      { tag: "mejora", text: "Insignias · rehechas como modelo 3D en Blender (borde biselado de metal con el icono en el centro y el logo detrás). Se acabaron las transparencias raras al girar y el giro va más fluido (la insignia del detalle se dibuja directa, sin copias); el arrastre y el giro automático son los mismos." },
       { tag: "nuevo", text: "Directo · la línea de tiempo empieza con el paso «Mundo»: al pulsarlo ves el mapa del mundo (solo tú, hasta que pulses Mostrar). Está también cuando no hay escena puesta." },
       { tag: "arreglo", text: "Directo · la vista del DJ se ajusta a la altura de la pantalla y ya no se puede desplazar en vertical." },
       { tag: "mejora", text: "Insignias: al abrir un logro la insignia gira sola, despacio (una vuelta cada ~8 segundos); si la arrastras se detiene en tu mano y, al soltarla, retoma el giro. Con «reducir movimiento» no gira sola." },
