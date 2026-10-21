@@ -6,6 +6,8 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "nuevo", text: "Logros: al pulsar un logro en el perfil se abre su detalle con la insignia grande, su descripción, el nivel, la fecha en que lo conseguiste o tu progreso si aún está bloqueado." },
+      { tag: "mejora", text: "Logros: «Cartógrafo» y «Cuatro estaciones» se sustituyen por «Leyenda viva» (lleva un personaje al nivel 10, legendario) y «Mala racha» (saca Miedo tres veces seguidas). «Veterano» estrena icono." },
       { tag: "arreglo", text: "Actualizaciones: la lista de versiones se cortaba a una altura fija y no se podía leer entera (sobre todo en el móvil); ahora se muestra completa." },
       { tag: "nuevo", text: "Al crear una campaña puedes fijar sus líneas y velos (temas que no aparecerán y temas que solo pasan fuera de escena). Se ven en la tarjeta de la campaña y en su cabecera." },
       { tag: "mejora", text: "Móvil: pulsa tu avatar de la cabecera para abrir tu perfil y usa el nuevo botón de novedades para leer las notas del parche." },
