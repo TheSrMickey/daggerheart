@@ -1,12 +1,22 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useActionState } from "react";
 import { signIn, signUp, type AuthState } from "@/app/(auth)/actions";
 
 export function AuthForm({ mode, next, notice }: { mode: "login" | "register"; next?: string; notice?: string }) {
   const [state, action, pending] = useActionState<AuthState, FormData>(mode === "login" ? signIn : signUp, {});
   const isRegister = mode === "register";
+  const router = useRouter();
+  // Al cambiar de pantalla, el formulario sale deslizándose y la nueva entra desde el otro lado.
+  const go = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+    e.preventDefault();
+    e.currentTarget.closest(".auth-pane")?.classList.add("is-leaving");
+    router.prefetch(href);
+    setTimeout(() => router.push(href), window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 220);
+  };
 
   if (state.message) {
     return <p className="text-sm leading-relaxed">{state.message}</p>;
@@ -59,7 +69,7 @@ export function AuthForm({ mode, next, notice }: { mode: "login" | "register"; n
 
       <p className="text-center text-sm text-muted">
         {isRegister ? "¿Ya tienes cuenta? " : "¿No tienes cuenta? "}
-        <Link className="text-gold underline" href={isRegister ? "/login" : "/register"}>
+        <Link className="text-gold underline" href={isRegister ? "/login" : "/register"} onClick={(e) => go(e, isRegister ? "/login" : "/register")}>
           {isRegister ? "Inicia sesión" : "Regístrate"}
         </Link>
       </p>
