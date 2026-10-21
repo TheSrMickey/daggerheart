@@ -6,6 +6,8 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "mejora", text: "Insignias: al abrir un logro la insignia gira sola, despacio (una vuelta cada ~8 segundos); si la arrastras se detiene en tu mano y, al soltarla, retoma el giro. Con «reducir movimiento» no gira sola." },
+      { tag: "mejora", text: "Perfil: en la pestaña Resumen ya no se repite la lista de logros (tiene su propia pestaña); se mantiene la vitrina." },
       { tag: "arreglo", text: "Amigos: el menú de los tres puntos de un amigo (favoritos, mensaje, invitar, perfil, bloquear, eliminar) no se veía; ahora aparece junto al botón." },
       { tag: "mejora", text: "Registro: al escribir el nombre de jugador se avisa al momento si ya está en uso (y el botón «Crear cuenta» se desactiva). El aviso aparece desplazando el formulario, sin dejar un hueco fijo. El aviso de correo ya registrado solo sale al pulsar «Crear cuenta», para no revelar qué correos tienen cuenta." },
       { tag: "mejora", text: "Registro: los nombres de jugador son únicos (sin distinguir mayúsculas) y solo se puede crear una cuenta por correo electrónico; si ya existen, se avisa al registrarse." },

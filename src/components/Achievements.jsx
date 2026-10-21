@@ -27,6 +27,7 @@ const ICONS = {
 
 const HEX = "M50 6l38 22v44L50 94 12 72V28z";
 const reduced = () => typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const AUTO_SPIN = 42; // grados por segundo al abrir una insignia (una vuelta cada ~8,5 s)
 const REST = -14; // ángulo de reposo: un poco girada para que se note el grosor
 
 // Cara de la insignia (plana). La parte 3D la compone `Badge` apilando rebanadas para dar grosor.
@@ -60,38 +61,29 @@ export function Badge({ a, locked, size = 84, rotatable = false }) {
   const el = useRef(null);
   const st = useRef({ ang: REST, v: 0, down: false, x: 0, dist: 0, moved: false, raf: 0, timer: 0 });
   const apply = () => { if (el.current) el.current.style.transform = `rotateY(${st.current.ang}deg)`; };
+  // Al abrir el detalle (`rotatable`) la insignia gira sola a velocidad suave; al arrastrarla se detiene en la mano
+  // y, al soltarla, sigue por inercia y retoma el giro. Con «reducir movimiento» no gira sola.
   useEffect(() => {
     const s = st.current;
     apply();
-    return () => { cancelAnimationFrame(s.raf); clearTimeout(s.timer); };
-  }, []);
-  const stop = () => { cancelAnimationFrame(st.current.raf); clearTimeout(st.current.timer); };
-  const settle = () => {
-    // Tras soltar: sigue por inercia y, pasado un momento, vuelve despacio a su posición de reposo.
-    const s = st.current;
-    if (reduced()) return;
-    const inertia = () => {
-      s.v *= 0.94;
-      s.ang += s.v;
-      apply();
-      if (Math.abs(s.v) > 0.08) s.raf = requestAnimationFrame(inertia);
-      else s.timer = setTimeout(back, 1400);
-    };
-    const back = () => {
-      const target = Math.round((s.ang - REST) / 360) * 360 + REST;
-      const step = () => {
-        s.ang += (target - s.ang) * 0.08;
+    if (!rotatable || reduced()) return undefined;
+    let last = performance.now();
+    const tick = (now) => {
+      const dt = Math.min(120, now - last) / 1000;
+      last = now;
+      if (!s.down) {
+        s.v *= 0.94;
+        if (Math.abs(s.v) < 0.02) s.v = 0;
+        s.ang += s.v + AUTO_SPIN * dt;
         apply();
-        if (Math.abs(target - s.ang) > 0.2) s.raf = requestAnimationFrame(step);
-        else { s.ang = target; apply(); }
-      };
-      s.raf = requestAnimationFrame(step);
+      }
+      s.raf = requestAnimationFrame(tick);
     };
-    s.raf = requestAnimationFrame(inertia);
-  };
+    s.raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(s.raf);
+  }, [rotatable]);
   const down = (e) => {
     const s = st.current;
-    stop();
     s.down = true; s.x = e.clientX; s.dist = 0; s.v = 0; s.moved = false;
     e.currentTarget.setPointerCapture?.(e.pointerId);
   };
@@ -107,10 +99,7 @@ export function Badge({ a, locked, size = 84, rotatable = false }) {
     apply();
   };
   const up = () => {
-    const s = st.current;
-    if (!s.down) return;
-    s.down = false;
-    settle();
+    st.current.down = false;
   };
   const slices = Array.from({ length: thick }, (_, i) => i);
   return (

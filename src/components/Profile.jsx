@@ -111,7 +111,7 @@ export default function ProfilePage({ id, name }) {
           <div key={a.id} className="pf-vi" role="button" tabIndex={0} aria-label={a.name + ": ver detalle"} onClick={() => setDetail(a.id)} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setDetail(a.id))}><Badge a={a} size={80} /><b>{a.name}</b><small>{a.tier[0].toUpperCase() + a.tier.slice(1)}</small></div>
         ))}
         {!shown.length && !edit && <div className="pf-vi is-empty">{isMe ? "Aún no tienes logros. ¡Juega y aparecerán aquí!" : "Todavía sin logros."}</div>}
-        {edit && Array.from({ length: Math.max(0, 3 - shown.length) }).map((_, i) => <div key={"e" + i} className="pf-vi is-empty">Hueco libre</div>)}
+        {edit && Array.from({ length: Math.max(0, 3 - shown.length) }).map((_, i) => <button key={"e" + i} type="button" className="pf-vi is-empty" onClick={() => setTab("logros")}>Hueco libre<small>Elígelo en la pestaña Logros</small></button>)}
       </div>
     </>
   );
@@ -227,7 +227,7 @@ export default function ProfilePage({ id, name }) {
         <div className="pf-body">
           {tab === "resumen" && (
             <>
-              <div>{vitrina}<h3 className="pf-h" style={{ marginTop: 22 }}>Logros</h3>{filters}{grid(list)}</div>
+              <div>{vitrina}</div>
               <div className="pf-side"><div>{limitsBlock}</div><div>{charsBlock}</div><div>{actBlock}</div></div>
             </>
           )}
