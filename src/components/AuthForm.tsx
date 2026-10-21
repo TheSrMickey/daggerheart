@@ -10,25 +10,24 @@ export function AuthForm({ mode, next, notice }: { mode: "login" | "register"; n
   const isRegister = mode === "register";
   const router = useRouter();
 
-  // Registro: avisa en cuanto se escribe un nombre o un correo que ya están en uso (con una pequeña espera al teclear).
-  const [checks, setChecks] = useState<{ username?: FieldCheck; email?: FieldCheck }>({});
-  const timers = useRef<Partial<Record<"username" | "email", ReturnType<typeof setTimeout>>>>({});
-  const seq = useRef({ username: 0, email: 0 });
-  useEffect(() => {
-    const t = timers.current;
-    return () => Object.values(t).forEach((x) => x && clearTimeout(x));
-  }, []);
-  const watch = (field: "username" | "email", value: string, delay = 450) => {
-    clearTimeout(timers.current[field]);
-    const id = ++seq.current[field];
-    setChecks((c) => ({ ...c, [field]: undefined }));
+  // Registro: avisa en cuanto se escribe un nombre de jugador que ya está en uso (con una pequeña espera al teclear).
+  // El correo no se comprueba en vivo, para no revelar qué correos están registrados: solo se avisa al pulsar «Crear cuenta».
+  const [checks, setChecks] = useState<{ username?: FieldCheck }>({});
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const seq = useRef(0);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  const watchName = (value: string, delay = 450) => {
+    clearTimeout(timer.current);
+    const id = ++seq.current;
+    setChecks({});
     if (!value.trim()) return;
-    timers.current[field] = setTimeout(async () => {
-      const r = await checkField(field, value).catch(() => "unknown" as FieldCheck);
-      if (seq.current[field] === id) setChecks((c) => ({ ...c, [field]: r }));
+    timer.current = setTimeout(async () => {
+      const r = await checkField("username", value).catch(() => "unknown" as FieldCheck);
+      if (seq.current === id) setChecks({ username: r });
     }, delay);
   };
-  const taken = checks.username === "taken" || checks.email === "taken";
+  const taken = checks.username === "taken";
+
   // Al cambiar de pantalla, el formulario sale deslizándose y la nueva entra desde el otro lado.
   const go = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
@@ -60,39 +59,18 @@ export function AuthForm({ mode, next, notice }: { mode: "login" | "register"; n
             maxLength={32}
             autoComplete="nickname"
             aria-invalid={checks.username === "taken"}
-            onChange={(e) => watch("username", e.target.value)}
-            onBlur={(e) => watch("username", e.target.value, 0)}
+            onChange={(e) => watchName(e.target.value)}
+            onBlur={(e) => watchName(e.target.value, 0)}
           />
-          <p className={"auth-hint" + (checks.username === "taken" ? " is-bad" : checks.username === "free" ? " is-ok" : "")} aria-live="polite">
-            {checks.username === "taken" ? "Ese nombre de jugador ya está en uso." : checks.username === "free" ? "Nombre disponible." : ""}
-          </p>
+          <div aria-live="polite">
+            {checks.username === "taken" && <p className="auth-hint is-bad">Ese nombre de jugador ya está en uso.</p>}
+            {checks.username === "free" && <p className="auth-hint is-ok">Nombre disponible.</p>}
+          </div>
         </div>
       )}
       <div>
         <label className="label sr-only" htmlFor="email">Correo</label>
-        <input
-          className={"field" + (isRegister && checks.email === "taken" ? " is-bad" : "")}
-          id="email"
-          name="email"
-          placeholder="Correo electrónico"
-          type="email"
-          required
-          autoComplete="email"
-          aria-invalid={isRegister && checks.email === "taken"}
-          {...(isRegister ? { onChange: (e: React.ChangeEvent<HTMLInputElement>) => watch("email", e.target.value), onBlur: (e: React.FocusEvent<HTMLInputElement>) => watch("email", e.target.value, 0) } : {})}
-        />
-        {isRegister && (
-          <p className={"auth-hint" + (checks.email === "taken" ? " is-bad" : "")} aria-live="polite">
-            {checks.email === "taken" ? (
-              <>
-                Ya hay una cuenta con este correo.{" "}
-                <Link className="underline" href="/login" onClick={(e) => go(e, "/login")}>Inicia sesión</Link>
-              </>
-            ) : (
-              ""
-            )}
-          </p>
-        )}
+        <input className="field" id="email" name="email" placeholder="Correo electrónico" type="email" required autoComplete="email" />
       </div>
       <div>
         <label className="label sr-only" htmlFor="password">Contraseña</label>

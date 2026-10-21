@@ -75,14 +75,13 @@ export async function signUp(_: AuthState, formData: FormData): Promise<AuthStat
 
 export type FieldCheck = "free" | "taken" | "invalid" | "unknown";
 
-// Comprobación en vivo del registro: ¿el nombre de jugador o el correo ya están en uso?
+// Comprobación en vivo del registro: ¿el nombre de jugador ya está en uso?
 // «unknown» significa que no se ha podido comprobar (por ejemplo, la migración aún no está aplicada): no se muestra nada.
-export async function checkField(field: "username" | "email", raw: string): Promise<FieldCheck> {
+export async function checkField(field: "username", raw: string): Promise<FieldCheck> {
   const value = String(raw ?? "").trim();
-  if (field === "username" ? value.length < 2 || value.length > 32 : !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value)) return "invalid";
+  if (field !== "username" || value.length < 2 || value.length > 32) return "invalid";
   const supabase = await createClient();
-  const { data, error } =
-    field === "username" ? await supabase.rpc("username_available", { name: value }) : await supabase.rpc("email_available", { addr: value.toLowerCase() });
+  const { data, error } = await supabase.rpc("username_available", { name: value });
   if (error || typeof data !== "boolean") return "unknown";
   return data ? "free" : "taken";
 }
