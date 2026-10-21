@@ -56,7 +56,7 @@ function Face({ a, locked, size, back }) {
 export function Badge({ a, locked, size = 84, rotatable = false }) {
   const t = locked ? "bloqueado" : a.tier;
   const rim = TIERS[t][1];
-  const thick = Math.max(4, Math.round(size * 0.1));
+  const thick = Math.max(5, Math.round(size * 0.14));
   const half = thick / 2;
   const el = useRef(null);
   const st = useRef({ ang: REST, v: 0, down: false, x: 0, dist: 0, moved: false, raf: 0, timer: 0 });
@@ -74,7 +74,8 @@ export function Badge({ a, locked, size = 84, rotatable = false }) {
       if (!s.down) {
         s.v *= 0.94;
         if (Math.abs(s.v) < 0.02) s.v = 0;
-        s.ang += s.v + AUTO_SPIN * dt;
+        // Gira más deprisa al pasar de canto (cuando la insignia se queda en una tira) y más despacio de cara, para que no parezca que se encoge.
+        s.ang += s.v + AUTO_SPIN * dt * (0.45 + 1.3 * Math.abs(Math.sin((s.ang * Math.PI) / 180)));
         apply();
       }
       s.raf = requestAnimationFrame(tick);
@@ -112,7 +113,7 @@ export function Badge({ a, locked, size = 84, rotatable = false }) {
       <span className="ach3d-in" ref={el}>
         {slices.map((i) => (
           <svg key={i} className="ach3d-slice" style={{ transform: `translateZ(${-half + i + 0.5}px)` }} viewBox="0 0 100 100" width={size} height={size}>
-            <path d={HEX} fill={rim} style={{ filter: `brightness(${0.55 + (i / thick) * 0.2})` }} />
+            <path d={HEX} fill={rim} style={{ filter: `brightness(${0.78 + (i / thick) * 0.22})` }} />
           </svg>
         ))}
         <span className="ach3d-f" style={{ transform: `translateZ(${half + 0.5}px)` }}><Face a={a} locked={locked} size={size} /></span>
