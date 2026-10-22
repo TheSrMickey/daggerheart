@@ -28,7 +28,9 @@ function NewsCard({ card, icons, FitTitle, FitBox }) {
     return () => ro.disconnect();
   }, []);
   return (
-    <div ref={ref} className="mh-news-card" aria-hidden="true">
+    <div ref={ref} className="mh-news-card" aria-hidden="true" style={{ "--gc": card.color || "#C9A24A" }}>
+      <i className="mh-news-back is-b1" />
+      <i className="mh-news-back is-b2" />
       <div style={{ position: "absolute", left: 0, top: 0, width: 300, height: 420, transform: "scale(" + k + ")", transformOrigin: "0 0" }}>
         <CardFace c={card} I={icons[card.domain] || Layers} FitTitle={FitTitle} FitBox={FitBox} />
       </div>
@@ -122,6 +124,8 @@ export function HomeHero({ camps, characters, featId, cards, color, icons, FitTi
   } else if (cur === "card") {
     body = (
       <>
+        <span className="mh-news-glow" style={{ "--gc": card.color || "#C9A24A" }} aria-hidden="true" />
+        <span className="mh-news-glow is-bl" style={{ "--gc": card.color || "#C9A24A" }} aria-hidden="true" />
         <NewsCard card={card} icons={icons} FitTitle={FitTitle} FitBox={FitBox} />
         <span className="mh-news-tag"><Layers size={12} /> Carta del día · {card.domain}</span>
         <h2 className="mh-serif">{card.key}</h2>
