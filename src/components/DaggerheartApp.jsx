@@ -7269,7 +7269,7 @@ const sharedStyles = `
   html[data-mh-theme="light"] .mh-home-news .mh-home-btn.is-ghost { background: #EAE2D3; color: #221C2B; } html[data-mh-theme="light"] .mh-home-news .mh-home-btn.is-ghost:hover { background: #DFD5C1; }
   @media (max-width: 720px) { .mh-home-news > .mh-news-ctl { right: 16px; bottom: 14px; } .mh-news-art { inset: 0; opacity: .55; } .mh-home-news h2 { font-size: 26px; } .mh-home-news { padding: 22px 18px 54px; min-height: 340px; } }
   /* Carrusel de anuncios de Inicio */
-  .mh-home-news > .mh-news-slide { position: static; z-index: auto; flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: flex-end; }
+  .mh-home-news > .mh-news-slide { position: static; z-index: auto; flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; }
   .mh-news-slide > * { animation: mh-news-in .45s ease both; }
   .mh-news-slide > :not(.mh-news-art):not(.mh-news-card):not(.mh-news-orb) { position: relative; z-index: 2; }
   @keyframes mh-news-in { from { opacity: 0; translate: 16px 0; } }
@@ -7285,7 +7285,7 @@ const sharedStyles = `
   .mh-news-orb span { width: 96px; height: 96px; border-radius: 50%; background: #12102a; display: grid; place-items: center; font: 600 24px "Cinzel", Georgia, serif; color: #fff; }
   .mh-news-orb.is-avs { background: none; width: auto; height: auto; display: flex; } .mh-news-orb.is-avs span { width: 44px; height: 44px; margin-left: -10px; border: 2px solid var(--ns); font: 700 16px "Inter", system-ui, sans-serif; } .mh-news-orb.is-avs span:first-child { margin-left: 0; }
   .mh-news-card { position: absolute; right: 32px; top: 18px; bottom: 18px; z-index: 2; aspect-ratio: 5 / 7; rotate: 5deg; border-radius: 12px; overflow: hidden; box-shadow: 0 18px 40px #000a, 0 0 30px #A58BE855; } .mh-news-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .mh-home-news > .mh-news-ctl { position: absolute; right: 32px; bottom: 29px; z-index: 3; display: flex; align-items: center; gap: 7px; }
+  .mh-home-news > .mh-news-ctl { position: absolute; right: 32px; bottom: 20px; z-index: 3; display: flex; align-items: center; gap: 7px; }
   .mh-news-ar { all: unset; cursor: pointer; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: #000a; border: 1px solid #ffffff30; } .mh-news-ar:hover { background: #000d; }
   .mh-news-dot { all: unset; cursor: pointer; position: relative; overflow: hidden; width: 8px; height: 8px; border-radius: 99px; background: #ffffff55; transition: width .25s; } .mh-news-dot.is-on { width: 26px; }
   .mh-news-dot span { position: absolute; inset: 0; background: #E3B04B; transform-origin: left; transform: scaleX(0); animation: mh-news-prog linear forwards; }
@@ -7298,7 +7298,7 @@ const sharedStyles = `
   /* Inicio: se ajusta a la pantalla sin deslizar. Lo que se encoge primero es la novedad (pierde el texto y luego la etiqueta); las filas de
      campañas y personajes son de una sola línea y se desplazan hacia los lados si no caben. Solo en pantallas muy bajas vuelve el scroll vertical. */
   @media (min-height: 700px) and (min-width: 721px) { .mh-main-fit > .mh-view-in { height: 100%; } .mh-main-fit .mh-home, .mh-main-fit .mh-home-main { height: 100%; } .mh-main-fit .mh-home-main { display: flex; flex-direction: column; min-height: 0; } .mh-main-fit .mh-home-main > * { flex: none; }
-    .mh-main-fit .mh-home-news { flex: 1 0 auto; min-height: 300px; padding-top: 28px; padding-bottom: 22px; }
+    .mh-main-fit .mh-home-news { flex: 0 1 340px; min-height: 240px; max-height: 340px; padding-top: 24px; padding-bottom: 24px; }
     .mh-main-fit .mh-home-sec { margin: 16px 0 10px; }
     .mh-main-fit .mh-hrow { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(300px, 1fr); overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; padding-bottom: 2px; }
   }
