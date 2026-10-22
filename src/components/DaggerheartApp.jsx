@@ -36,11 +36,18 @@ import { SocialHost, LookingFor, ActivityCard, PrivacyCard, ReactionBar } from "
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
 import { buildSablewood } from "./quickstartSablewood";
 import { buildWishThief } from "./quickstartWishThief";
+
+// Aventuras de inicio que se ofrecen al crear una campaña.
+const QUICKSTARTS = [
+  { key: "sablewood", name: "Los mensajeros de Sablewood", build: buildSablewood, ai: true, text: "Aventura de inicio ya preparada: escenas, pistas ocultas, reparto con diálogos, notas por acto y mapas con enemigos." },
+  { key: "wishthief", name: "La ladrona de deseos", build: buildWishThief, ai: false, text: "Aventura de nivel 1 para 3-5 jugadores: escenas por acto, pistas ocultas, reparto con estadísticas y mapas listos." },
+];
 import { Wand, CircleDot, MoveUpRight, Archive, Shell, Compass, Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp, Trophy, Star } from "lucide-react";
 
 // Color de cada campaña (se reparte según su id).
 const CAMP_COLORS = ["#A58BE8", "#6FA3C0", "#E0A04A", "#7FB77A", "#D9644E", "#E07FB0"];
-const campColor = (id) => CAMP_COLORS[[...String(id)].reduce((a, ch) => a + ch.charCodeAt(0), 0) % CAMP_COLORS.length];
+const campColorMap = {}; // colores elegidos al crear la campaña (se rellena desde el estado `campaigns`)
+const campColor = (id) => campColorMap[id] || CAMP_COLORS[[...String(id)].reduce((a, ch) => a + ch.charCodeAt(0), 0) % CAMP_COLORS.length];
 // Colores de los elementos del Guardián de los Elementos.
 const ELEM_COL = { Fuego: "#FF7A2E", Tierra: "#A9742F", Agua: "#4FA8E8", Aire: "#BFE6F5" };
 const NAV_ITEMS = [
@@ -7484,8 +7491,23 @@ const sharedStyles = `
   .ach3d { display: inline-block; position: relative; user-select: none; -webkit-user-select: none; } .ach3d.is-rot { touch-action: pan-y; cursor: grab; } .ach3d.is-rot:active { cursor: grabbing; } .pf-dlg-hint { margin-top: 6px; font-size: 11px; color: var(--mh-muted); } .ach3d-in { display: block; position: absolute; inset: 0; transform-style: preserve-3d; will-change: transform; } .ach3d-wall { position: absolute; display: block; backface-visibility: visible; } .ach3d-f { position: absolute; left: 0; top: 0; display: block; } .ach3d-f { backface-visibility: hidden; -webkit-backface-visibility: hidden; width: 100%; height: 100%; } .ach3d-face { display: block; }
   .ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 14px 8px; } .ach-it { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 1px; } .ach-it b { font-size: 12px; font-weight: 600; color: var(--mh-ink); margin-top: 4px; } .ach-it small { font-size: 11px; color: var(--mh-muted); } .ach-it:not(.is-on) b { color: var(--mh-muted); } .ach-badge.is-lock { opacity: .6; }
   .ach-toasts { position: fixed; right: 20px; bottom: 24px; z-index: 120; display: flex; flex-direction: column; gap: 10px; max-width: min(380px, calc(100vw - 32px)); } .ach-toast { display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 10px; border-radius: 16px; background: var(--mh-panel); border: 1px solid #E3B04B; box-shadow: 0 14px 34px rgba(0,0,0,.45); animation: ach-in .4s cubic-bezier(.2,.8,.2,1) both; } .ach-toast > div { display: flex; flex-direction: column; min-width: 0; } .ach-toast small { font: 700 10px 'Inter', system-ui, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: #E3B04B; } .ach-toast b { font: 600 15px 'Cinzel', Georgia, serif; color: var(--mh-ink); } .ach-toast em { font-style: normal; font-size: 12px; color: var(--mh-muted); } .ach-toast button { margin-left: auto; padding: 6px 12px; border-radius: 99px; border: 1px solid var(--mh-line2); background: transparent; color: var(--mh-ink); font: 600 12px 'Inter', system-ui, sans-serif; cursor: pointer; } @keyframes ach-in { from { opacity: 0; transform: translateY(14px) scale(.96); } } @media (prefers-reduced-motion: reduce) { .ach-toast { animation: none; } }
-  .mh-ai-chk { display: flex; gap: 10px; align-items: flex-start; padding: 8px 12px; border: 1px solid var(--mh-line); border-radius: 12px; background: var(--mh-panel2); cursor: pointer; } .mh-ai-chk input { margin-top: 3px; accent-color: #E3B04B; } .mh-ai-chk b { display: block; font-size: 13px; color: var(--mh-ink); } .mh-ai-chk small { display: block; font-size: 11.5px; color: var(--mh-muted); margin-top: 2px; } .mh-camp-ai { margin-top: 6px; display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 600; color: var(--mh-gold-ink, #E3B04B); }
-  .mh-lv-det { border: 1px solid var(--mh-line); border-radius: 12px; padding: 8px 12px; background: var(--mh-panel2); } .mh-lv-det > summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--mh-ink); } .mh-lv-p { margin: 8px 0; font-size: 12px; color: var(--mh-muted); } .mh-camp-lv { margin-top: 6px; font-size: 11.5px; font-weight: 600; color: #7E5BC4; }
+  .mh-camps-head { align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; } .mh-camps-ht { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; min-width: 0; } .mh-camps-ht > span { font: 600 17px 'Inter', system-ui, sans-serif; color: var(--mh-ink); } .mh-camps-head .mh-btn { display: inline-flex; align-items: center; gap: 6px; flex: none; }
+  .mh-hero.is-static { cursor: default; } .mh-hero.is-static:hover { transform: none; box-shadow: none; border-color: color-mix(in srgb, var(--hc) 40%, var(--mh-line)); } .mh-hero.is-static:hover .mh-hero-emb { transform: none; }
+  .mh-hero-flags { position: absolute; top: 10px; right: 10px; display: flex; gap: 6px; } .mh-hero-flags span { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; background: color-mix(in srgb, var(--mh-panel) 82%, transparent); border: 1px solid var(--mh-line2); } .mh-hero-flags .is-ai, .mh-hero-meta .is-ai { color: var(--mh-gold-ink, #E3B04B); } .mh-hero-flags .is-lv, .mh-hero-meta .is-lv { color: #7E5BC4; }
+  .mh-hero-meta { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 4px; font-size: 11.5px; font-weight: 600; color: var(--mh-muted); } .mh-hero-meta span { display: inline-flex; align-items: center; gap: 4px; }
+  .mh-cc { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(250px, 1fr); gap: 26px; padding: 24px; margin: 0 0 22px; border-color: color-mix(in srgb, var(--hc) 45%, var(--mh-line)); animation: mh-fade-in .2s ease both; }
+  .mh-cc-title { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; } .mh-cc-title h2 { margin: 0; font-size: 24px; font-weight: 600; color: var(--mh-ink); } .mh-cc-x { all: unset; cursor: pointer; width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; color: var(--mh-muted); } .mh-cc-x:hover { background: var(--mh-panel2); color: var(--mh-ink); }
+  .mh-cc-sec { padding: 0 0 20px; margin: 0 0 20px; border-bottom: 1px solid var(--mh-line); } .mh-cc-sec:last-child { border: 0; margin: 0; padding: 0; }
+  .mh-cc-h { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; font: 700 11px 'Inter', system-ui, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--mh-muted); } .mh-cc-h i { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font: 700 11px 'Inter', system-ui, sans-serif; font-style: normal; letter-spacing: 0; background: color-mix(in srgb, var(--hc) 28%, var(--mh-panel2)); color: var(--mh-ink); }
+  .mh-cc-p { margin: -4px 0 12px; font-size: 12.5px; color: var(--mh-muted); }
+  .mh-cc-opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; } .mh-cc-opt { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; gap: 5px; padding: 14px 16px; border-radius: 14px; border: 1.5px solid var(--mh-line); background: var(--mh-panel2); color: var(--mh-muted); transition: border-color .15s, background .15s; } .mh-cc-opt b { font-size: 14px; color: var(--mh-ink); } .mh-cc-opt small { font-size: 12px; line-height: 1.45; } .mh-cc-opt svg { color: var(--hc); } .mh-cc-opt:hover { border-color: var(--mh-line2); } .mh-cc-opt.is-on { border-color: var(--hc); background: color-mix(in srgb, var(--hc) 10%, var(--mh-panel2)); } .mh-cc-opt:focus-visible { outline: 2px solid var(--hc); outline-offset: 2px; }
+  .mh-cc-f { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; } .mh-cc-f > span { font-size: 12.5px; font-weight: 600; color: var(--mh-ink2, var(--mh-ink)); } .mh-cc-f > span em { font-style: normal; font-weight: 400; color: var(--mh-muted); margin-left: 6px; } .mh-cc-f textarea { min-height: 84px; resize: vertical; }
+  .mh-cc-sw { display: flex; gap: 10px; flex-wrap: wrap; } .mh-cc-sw button { all: unset; box-sizing: border-box; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--sw); color: #fff; border: 2px solid transparent; box-shadow: 0 0 0 2px var(--mh-panel); } .mh-cc-sw button.is-on { box-shadow: 0 0 0 2px var(--mh-panel), 0 0 0 4px var(--sw); } .mh-cc-sw button:focus-visible { outline: 2px solid var(--mh-ink); outline-offset: 3px; }
+  .mh-cc-switch { display: flex; align-items: flex-start; gap: 12px; cursor: pointer; } .mh-cc-switch input { position: absolute; opacity: 0; pointer-events: none; } .mh-cc-switch > i { flex: none; width: 40px; height: 22px; border-radius: 99px; background: var(--mh-line2); position: relative; transition: background .15s; margin-top: 1px; } .mh-cc-switch > i::after { content: ""; position: absolute; left: 3px; top: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .15s; } .mh-cc-switch input:checked + i { background: var(--hc); } .mh-cc-switch input:checked + i::after { transform: translateX(18px); } .mh-cc-switch input:focus-visible + i { outline: 2px solid var(--hc); outline-offset: 2px; } .mh-cc-switch input:disabled + i { opacity: .7; } .mh-cc-switch b { display: block; font-size: 13.5px; color: var(--mh-ink); } .mh-cc-switch small { display: block; margin-top: 2px; font-size: 12px; line-height: 1.45; color: var(--mh-muted); }
+  .mh-cc-side { align-self: start; position: sticky; top: 8px; display: flex; flex-direction: column; gap: 12px; } .mh-cc-lab { font: 700 11px 'Inter', system-ui, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--mh-muted); } .mh-cc-acts { display: flex; gap: 8px; } .mh-cc-acts .mh-btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; } .mh-cc-acts .mh-btn:disabled { opacity: .5; cursor: not-allowed; } .mh-cc-hint { color: var(--mh-muted); font-size: 12px; }
+  .mh-cg-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; } .mh-cg-chips > * { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 99px; font: 600 11.5px 'Inter', system-ui, sans-serif; border: 1px solid var(--mh-line2); background: var(--mh-panel2); color: var(--mh-muted); } .mh-cg-chips .is-ai { color: var(--mh-gold-ink, #E3B04B); border-color: rgba(227,176,75,.4); } .mh-cg-chips .is-lv { color: #7E5BC4; border-color: rgba(126,91,196,.45); cursor: pointer; } .mh-cg-chips button.is-lv:hover, .mh-cg-chips button.is-lv.is-on { background: rgba(126,91,196,.14); } .mh-cg-chips button:focus-visible { outline: 2px solid #7E5BC4; outline-offset: 2px; }
+  .mh-cg-lv { margin: 0 0 14px; padding: 14px 18px; border-radius: 16px; border: 1px solid var(--mh-line); background: var(--mh-panel); animation: mh-fade-in .18s ease both; } .mh-cg-lv > p { margin: 0 0 12px; font-size: 12.5px; color: var(--mh-muted); } .mh-cg-lv-g { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; } .mh-cg-lv-g > div { padding: 10px 12px; border-radius: 12px; background: var(--mh-panel2); border: 1px solid var(--mh-line); } .mh-cg-lv-g b { display: block; margin-bottom: 8px; font-size: 12.5px; } .mh-cg-lv-g .is-line b { color: #C0504A; } .mh-cg-lv-g .is-veil b { color: #7E5BC4; } .mh-cg-lv-g > div > div { display: flex; flex-wrap: wrap; gap: 6px; } .mh-cg-lv-g span { padding: 3px 10px; border-radius: 99px; font: 600 12px 'Inter', system-ui, sans-serif; border: 1px solid; } .mh-cg-lv-g .is-line span { color: #C0504A; border-color: rgba(192,80,74,.5); background: rgba(192,80,74,.1); } .mh-cg-lv-g .is-veil span { color: #7E5BC4; border-color: rgba(126,91,196,.5); background: rgba(126,91,196,.1); } .mh-cg-lv-g small { color: var(--mh-muted); }
+  @media (max-width: 900px) { .mh-cc { grid-template-columns: 1fr; padding: 18px 16px; } .mh-cc-side { position: static; order: 2; } .mh-cc-opts, .mh-cg-lv-g { grid-template-columns: 1fr; } .mh-camps-head { flex-wrap: wrap; } }
   .pf { max-width: 1040px; } .pf-back { margin-bottom: 10px; } .pf-card { background: var(--mh-panel); border: 1px solid var(--mh-line); border-radius: 20px; overflow: hidden; }
   .pf-ban { height: 130px; background: linear-gradient(135deg, color-mix(in srgb, var(--c, #4f9a62) 55%, var(--mh-panel)) 0%, color-mix(in srgb, var(--c, #4f9a62) 16%, var(--mh-panel)) 100%); position: relative; } .pf-ban::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--mh-ink) 5%, transparent) 0 2px, transparent 2px 14px); }
   .pf-head { display: flex; gap: 20px; align-items: flex-start; padding: 0 28px; margin-top: -50px; position: relative; flex-wrap: wrap; } .pf-head .so-av, .pf-head > :first-child { flex: none; } .pf-who { flex: 1; min-width: 220px; padding-top: 58px; } .pf-who h1 { margin: 0; font-size: 28px; font-weight: 600; letter-spacing: .02em; color: var(--mh-ink); } .pf-who small { color: var(--mh-muted); }
@@ -10630,10 +10652,14 @@ export default function App({ onSignOut }) {
   const saveTimer = useRef(null);
 
   const [campaigns, setCampaigns] = useState({});
+  Object.values(campaigns).forEach((c) => { if (c?.id) { if (c.color) campColorMap[c.id] = c.color; else delete campColorMap[c.id]; } });
   const [viewingCampaignId, setViewingCampaignId] = useState(null);
   const [newCampaignName, setNewCampaignName] = useState("");
   const [newCampaignDesc, setNewCampaignDesc] = useState("");
   const [showNewCampaignForm, setShowNewCampaignForm] = useState(false);
+  const [newCampaignColor, setNewCampaignColor] = useState(""); // vacío = el siguiente color de la paleta
+  const [newCampaignStart, setNewCampaignStart] = useState("blank"); // blank o la clave de una aventura de inicio
+  const [cgLimitsOpen, setCgLimitsOpen] = useState(false); // detalle de líneas y velos en la cabecera de la campaña
   const [newCampaignAI, setNewCampaignAI] = useState(false); // ¿las imágenes de la campaña están hechas con IA?
   const [newCampaignLimits, setNewCampaignLimits] = useState({ lines: [], veils: [] }); // líneas y velos de la mesa
   const [pendingDeleteCampaignId, setPendingDeleteCampaignId] = useState(null);
@@ -13278,17 +13304,23 @@ export default function App({ onSignOut }) {
     const name = newCampaignName.trim();
     if (!name) return;
     const id = "camp_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
-    const newCampaign = { id, name, description: newCampaignDesc.trim(), characterIds: [], ...(newCampaignAI ? { aiImages: true } : {}), ...(newCampaignLimits.lines.length ? { lines: newCampaignLimits.lines } : {}), ...(newCampaignLimits.veils.length ? { veils: newCampaignLimits.veils } : {}) };
+    const newCampaign = { id, name, description: newCampaignDesc.trim(), characterIds: [], color: newCampaignColor || CAMP_COLORS[Object.keys(campaigns).length % CAMP_COLORS.length], ...(newCampaignAI ? { aiImages: true } : {}), ...(newCampaignLimits.lines.length ? { lines: newCampaignLimits.lines } : {}), ...(newCampaignLimits.veils.length ? { veils: newCampaignLimits.veils } : {}) };
     const nextCampaigns = { ...campaigns, [id]: newCampaign };
     setCampaigns(nextCampaigns);
     await safeSet("campaign-index", JSON.stringify(Object.keys(nextCampaigns)), false);
     await safeSet("campaign:" + id, JSON.stringify(newCampaign), false);
     logActivity("camp", "ha empezado una campaña: «" + name + "»");
     trackStat("campsStarted");
+    resetNewCampaign();
+    setViewingCampaignId(id);
+  };
+  const resetNewCampaign = () => {
     setNewCampaignName("");
     setNewCampaignDesc("");
     setNewCampaignLimits({ lines: [], veils: [] });
     setNewCampaignAI(false);
+    setNewCampaignColor("");
+    setNewCampaignStart("blank");
     setShowNewCampaignForm(false);
   };
 
@@ -14841,6 +14873,16 @@ export default function App({ onSignOut }) {
   // Aventura de inicio: crea la campaña con escenas, pistas, reparto, notas por acto y mapas con los enemigos.
   const createQuickstart = async (build) => {
     const q = build();
+    // La aventura se puede personalizar al crearla: nombre, descripción, color, imágenes con IA y líneas y velos de la mesa.
+    q.campaign = {
+      ...q.campaign,
+      ...(newCampaignName.trim() ? { name: newCampaignName.trim() } : {}),
+      ...(newCampaignDesc.trim() ? { description: newCampaignDesc.trim() } : {}),
+      color: newCampaignColor || CAMP_COLORS[Object.keys(campaigns).length % CAMP_COLORS.length],
+      ...(newCampaignAI ? { aiImages: true } : {}),
+      ...(newCampaignLimits.lines.length ? { lines: newCampaignLimits.lines } : {}),
+      ...(newCampaignLimits.veils.length ? { veils: newCampaignLimits.veils } : {}),
+    };
     const id = q.campaign.id;
     const nextCampaigns = { ...campaigns, [id]: q.campaign };
     setCampaigns(nextCampaigns);
@@ -14852,9 +14894,9 @@ export default function App({ onSignOut }) {
     await safeSet("campaign-encounters:" + id, JSON.stringify(q.encounters), true);
     await safeSet("campaign-maps:" + id, JSON.stringify(q.maps), true);
     await safeSet("campaign-map:" + id, JSON.stringify(q.liveMap), true);
-    setShowNewCampaignForm(false);
-    setNewCampaignName("");
-    setNewCampaignDesc("");
+    logActivity("camp", "ha empezado una campaña: «" + q.campaign.name + "»");
+    trackStat("campsStarted");
+    resetNewCampaign();
     setViewingCampaignId(id);
   };
   // Pone el área elegida en la casilla pulsada (las ven todos en el tablero).
@@ -27911,10 +27953,18 @@ export default function App({ onSignOut }) {
                       <div className="mh-cg-sub1">
                         <b className={cgOnline ? "is-on" : ""}>{cgOnline ? cgOnline + " conectado" + (cgOnline === 1 ? "" : "s") : "Nadie conectado"}</b>
                         <span> · {memberIds.length} personaje{memberIds.length === 1 ? "" : "s"}</span>
-                        {activeCampaign.aiImages && <span title="El DJ ha indicado que las imágenes de esta campaña están creadas con IA"> · <Sparkles size={11} style={{ verticalAlign: "-1px" }} /> Imágenes con IA</span>}
-                        {limitsCount(activeCampaign) > 0 && <span title={limitsText(activeCampaign)}> · Líneas y velos: {limitsCount(activeCampaign)}</span>}
                         {cgScenes.length > 0 && <span> · {cgCur ? "Capítulo " + (cgScenes.indexOf(cgCur) + 1) + " de " + cgScenes.length : cgScenes.length + " capítulos"}</span>}
                       </div>
+                      {(activeCampaign.aiImages || limitsCount(activeCampaign) > 0) && (
+                        <div className="mh-cg-chips">
+                          {activeCampaign.aiImages && <span className="is-ai" title="El DJ ha indicado que las imágenes de esta campaña están creadas con IA"><Sparkles size={11} /> Imágenes creadas con IA</span>}
+                          {limitsCount(activeCampaign) > 0 && (
+                            <button type="button" className={"is-lv" + (cgLimitsOpen ? " is-on" : "")} aria-expanded={cgLimitsOpen} onClick={() => setCgLimitsOpen((v) => !v)}>
+                              <ShieldCheck size={11} /> Líneas y velos · {limitsCount(activeCampaign)} <ChevronDown size={11} style={{ transform: cgLimitsOpen ? "rotate(180deg)" : "none" }} />
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
                     <div className="mh-stg-fear mh-cg-fear" title={`Miedo: ${fearCount} de 12 · pulsa una calavera para ajustarlo`}>
                       <span>Miedo</span>
@@ -27964,6 +28014,16 @@ export default function App({ onSignOut }) {
                       <Trash2 size={15} />
                     </button>
                   </header>
+
+                  {cgLimitsOpen && limitsCount(activeCampaign) > 0 && (
+                    <div className="mh-cg-lv" role="region" aria-label="Líneas y velos de la mesa">
+                      <p>Lo que se ha acordado para esta mesa. Si algo te incomoda a mitad de partida, usa la X-Card.</p>
+                      <div className="mh-cg-lv-g">
+                        <div className="is-line"><b>Líneas · no aparecerán</b><div>{(activeCampaign.lines || []).map((t) => <span key={t}>{t}</span>)}{!(activeCampaign.lines || []).length && <small>Ninguna.</small>}</div></div>
+                        <div className="is-veil"><b>Velos · fuera de escena</b><div>{(activeCampaign.veils || []).map((t) => <span key={t}>{t}</span>)}{!(activeCampaign.veils || []).length && <small>Ninguno.</small>}</div></div>
+                      </div>
+                    </div>
+                  )}
 
                   {(() => {
                     const space = CAMP_SPACES.find((sp) => sp.tabs.some((t) => t.key === campaignDetailTab)) || (campaignDetailTab === "mapa" ? CAMP_SPACES[1] : CAMP_SPACES[0]);
@@ -30336,94 +30396,159 @@ export default function App({ onSignOut }) {
               );
             }
 
+            const nCamps = Object.keys(campaigns).length;
+            const ccColor = newCampaignColor || CAMP_COLORS[nCamps % CAMP_COLORS.length];
+            const qs = QUICKSTARTS.find((x) => x.key === newCampaignStart) || null; // aventura de inicio elegida (o null = en blanco)
+            const canCreate = !!qs || !!newCampaignName.trim();
+            // Tarjeta de campaña: la misma en la lista y en la vista previa del creador.
+            const campCard = (camp, key, members, onOpen, color) => (
+              <div
+                key={key}
+                className={"mh-card mh-hero" + (onOpen ? "" : " is-static")}
+                style={{ "--hc": color }}
+                {...(onOpen ? { role: "button", tabIndex: 0, onClick: onOpen, onKeyDown: (e) => e.key === "Enter" && e.target === e.currentTarget && onOpen() } : {})}
+              >
+                <div className="mh-hero-top">
+                  <span className="mh-hero-lv" title={members.length + " personajes"}>{members.length}</span>
+                  <span className="mh-hero-emb" aria-hidden="true">
+                    <BookOpen size={36} strokeWidth={1.5} />
+                  </span>
+                  <span className="mh-hero-flags">
+                    {camp.aiImages && <span className="is-ai" title="Imágenes creadas con IA"><Sparkles size={13} /></span>}
+                    {limitsCount(camp) > 0 && <span className="is-lv" title={limitsText(camp)}><ShieldCheck size={13} /></span>}
+                  </span>
+                </div>
+                <div className="mh-hero-inf">
+                  <div className="mh-serif mh-hero-nm">{camp.name}</div>
+                  <div className="mh-camp-ds">{camp.description || "Sin descripción todavía."}</div>
+                  <div className="mh-hero-meta">
+                    <span><Users size={12} /> {members.length} personaje{members.length === 1 ? "" : "s"}</span>
+                    {camp.aiImages && <span className="is-ai"><Sparkles size={12} /> IA</span>}
+                    {limitsCount(camp) > 0 && <span className="is-lv"><ShieldCheck size={12} /> {limitsCount(camp)} límite{limitsCount(camp) === 1 ? "" : "s"}</span>}
+                  </div>
+                  <div className="mh-hero-tags">
+                    {members.slice(0, 3).map((m, i) => (
+                      <span key={i} className="is-camp">{m.f_name || "Sin nombre"}</span>
+                    ))}
+                    {members.length > 3 && <span className="is-tf">+{members.length - 3}</span>}
+                    {!members.length && <span className="is-tf">Sin personajes · invita a tu grupo</span>}
+                  </div>
+                </div>
+              </div>
+            );
+
             return (
               <div>
                 <div className="mh-camps-head">
-                  <span>{Object.keys(campaigns).length} campaña{Object.keys(campaigns).length === 1 ? "" : "s"}</span>
-                  <small>Cada campaña reúne a tu grupo con su mesa, su mapa y su chat.</small>
+                  <div className="mh-camps-ht">
+                    <span>{nCamps} campaña{nCamps === 1 ? "" : "s"}</span>
+                    <small>Cada campaña reúne a tu grupo con su mesa, su mapa y su chat.</small>
+                  </div>
+                  {!showNewCampaignForm && (
+                    <button type="button" className="mh-btn" onClick={() => setShowNewCampaignForm(true)}>
+                      <Plus size={14} /> Nueva campaña
+                    </button>
+                  )}
                 </div>
+
+                {showNewCampaignForm && (
+                  <div className="mh-card mh-cc" style={{ "--hc": ccColor }}>
+                    <div className="mh-cc-form">
+                      <div className="mh-cc-title">
+                        <h2 className="mh-serif">Nueva campaña</h2>
+                        <button type="button" className="mh-cc-x" aria-label="Cerrar" onClick={resetNewCampaign}><X size={16} /></button>
+                      </div>
+
+                      <section className="mh-cc-sec">
+                        <h3 className="mh-cc-h"><i>1</i> Cómo empezar</h3>
+                        <div className="mh-cc-opts" role="radiogroup" aria-label="Cómo empezar">
+                          <button type="button" role="radio" aria-checked={!qs} className={"mh-cc-opt" + (!qs ? " is-on" : "")} onClick={() => setNewCampaignStart("blank")}>
+                            <PenLine size={18} />
+                            <b>Campaña en blanco</b>
+                            <small>Empieza de cero: tú creas la historia, las escenas y los mapas.</small>
+                          </button>
+                          {QUICKSTARTS.map((x) => (
+                            <button key={x.key} type="button" role="radio" aria-checked={qs?.key === x.key} className={"mh-cc-opt" + (qs?.key === x.key ? " is-on" : "")} onClick={() => setNewCampaignStart(x.key)}>
+                              <BookOpen size={18} />
+                              <b>{x.name}</b>
+                              <small>{x.text}</small>
+                            </button>
+                          ))}
+                        </div>
+                      </section>
+
+                      <section className="mh-cc-sec">
+                        <h3 className="mh-cc-h"><i>2</i> Datos</h3>
+                        <label className="mh-cc-f">
+                          <span>Nombre{qs ? " (opcional)" : ""}</span>
+                          <input className="mh-input" maxLength={60} placeholder={qs ? qs.name : "Ej. La Marca Rota"} value={newCampaignName} onChange={(e) => setNewCampaignName(e.target.value)} autoFocus />
+                        </label>
+                        <label className="mh-cc-f">
+                          <span>Descripción (opcional) <em>{newCampaignDesc.length}/280</em></span>
+                          <textarea className="mh-input" maxLength={280} placeholder="De qué va la campaña, el tono, cada cuánto jugáis…" value={newCampaignDesc} onChange={(e) => setNewCampaignDesc(e.target.value)} />
+                        </label>
+                        <div className="mh-cc-f">
+                          <span>Color</span>
+                          <div className="mh-cc-sw" role="radiogroup" aria-label="Color de la campaña">
+                            {CAMP_COLORS.map((c) => (
+                              <button key={c} type="button" role="radio" aria-checked={ccColor === c} aria-label={"Color " + c} className={ccColor === c ? "is-on" : ""} style={{ "--sw": c }} onClick={() => setNewCampaignColor(c)}>
+                                {ccColor === c && <Check size={14} />}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </section>
+
+                      <section className="mh-cc-sec">
+                        <h3 className="mh-cc-h"><i>3</i> Seguridad en la mesa</h3>
+                        <p className="mh-cc-p">Acordad antes de jugar qué temas quedan fuera. Los jugadores los verán en la campaña.</p>
+                        <LinesVeilsEditor lines={newCampaignLimits.lines} veils={newCampaignLimits.veils} onChange={setNewCampaignLimits} />
+                      </section>
+
+                      <section className="mh-cc-sec">
+                        <h3 className="mh-cc-h"><i>4</i> Imágenes</h3>
+                        <label className="mh-cc-switch">
+                          <input type="checkbox" checked={newCampaignAI || !!qs?.ai} disabled={!!qs?.ai} onChange={(e) => setNewCampaignAI(e.target.checked)} />
+                          <i aria-hidden="true" />
+                          <span><b>Imágenes creadas con IA</b><small>{qs?.ai ? "Esta aventura incluye un mapa de combate generado con IA, así que va marcada." : "Avisa a tus jugadores de que las imágenes de esta campaña (escenas, mapas, personajes) se han generado con inteligencia artificial."}</small></span>
+                        </label>
+                      </section>
+                    </div>
+
+                    <aside className="mh-cc-side">
+                      <div className="mh-cc-lab">Así se verá</div>
+                      {campCard(
+                        {
+                          name: newCampaignName.trim() || (qs ? qs.name : "Nombre de tu campaña"),
+                          description: newCampaignDesc.trim() || (qs ? "Aventura de inicio de Daggerheart." : ""),
+                          aiImages: newCampaignAI || !!qs?.ai,
+                          lines: newCampaignLimits.lines,
+                          veils: newCampaignLimits.veils,
+                        },
+                        "preview",
+                        [],
+                        null,
+                        ccColor
+                      )}
+                      <div className="mh-cc-acts">
+                        <button type="button" className="mh-btn" disabled={!canCreate} onClick={qs ? () => createQuickstart(qs.build) : createCampaign}>
+                          <Check size={14} /> Crear campaña
+                        </button>
+                        <button type="button" className="mh-btn-ghost" onClick={resetNewCampaign}>Cancelar</button>
+                      </div>
+                      {!canCreate && <small className="mh-cc-hint">Ponle un nombre para poder crearla.</small>}
+                    </aside>
+                  </div>
+                )}
+
                 <div className="mh-camps">
                   {Object.keys(campaigns).map((id) => {
                     const camp = campaigns[id];
                     const members = (camp.characterIds || []).map((cid) => characters[cid]).filter(Boolean);
-                    return (
-                      <div
-                        key={id}
-                        className="mh-card mh-hero"
-                        style={{ "--hc": campColor(id) }}
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => setViewingCampaignId(id)}
-                        onKeyDown={(e) => e.key === "Enter" && e.target === e.currentTarget && setViewingCampaignId(id)}
-                      >
-                        <div className="mh-hero-top">
-                          <span className="mh-hero-lv" title={members.length + " personajes"}>{members.length}</span>
-                          <span className="mh-hero-emb" aria-hidden="true">
-                            <BookOpen size={36} strokeWidth={1.5} />
-                          </span>
-                        </div>
-                        <div className="mh-hero-inf">
-                          <div className="mh-serif mh-hero-nm">{camp.name}</div>
-                          <div className="mh-camp-ds">{camp.description || "Sin descripción todavía."}</div>
-                          {camp.aiImages && <div className="mh-camp-ai"><Sparkles size={11} /> Imágenes creadas con IA</div>}
-                          {limitsCount(camp) > 0 && <div className="mh-camp-lv" title={limitsText(camp)}>Líneas y velos: {limitsCount(camp)}</div>}
-                          <div className="mh-hero-tags">
-                            {members.slice(0, 3).map((m, i) => (
-                              <span key={i} className="is-camp">{m.f_name || "Sin nombre"}</span>
-                            ))}
-                            {members.length > 3 && <span className="is-tf">+{members.length - 3}</span>}
-                            {!members.length && <span className="is-tf">Sin personajes</span>}
-                          </div>
-                        </div>
-                      </div>
-                    );
+                    return campCard(camp, id, members, () => setViewingCampaignId(id), campColor(id));
                   })}
 
-                  {showNewCampaignForm ? (
-                    <div className="mh-card" style={{ margin: 0, padding: "18px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
-                      <input
-                        className="mh-input"
-                        placeholder="Nombre de la campaña..."
-                        value={newCampaignName}
-                        onChange={(e) => setNewCampaignName(e.target.value)}
-                        autoFocus
-                      />
-                      <textarea
-                        className="mh-input"
-                        style={{ minHeight: 60, resize: "vertical" }}
-                        placeholder="Descripción (opcional)..."
-                        value={newCampaignDesc}
-                        onChange={(e) => setNewCampaignDesc(e.target.value)}
-                      />
-                      <label className="mh-ai-chk">
-                        <input type="checkbox" checked={newCampaignAI} onChange={(e) => setNewCampaignAI(e.target.checked)} />
-                        <span><b>Imágenes creadas con IA</b><small>Indica a tus jugadores que las imágenes de esta campaña (escenas, mapas, personajes) se han generado con inteligencia artificial.</small></span>
-                      </label>
-                      <details className="mh-lv-det">
-                        <summary>Líneas y velos de la mesa{limitsCount(newCampaignLimits) ? " · " + limitsCount(newCampaignLimits) : " (opcional)"}</summary>
-                        <p className="mh-lv-p">Acordad antes de jugar qué temas quedan fuera. Los jugadores los verán en la campaña.</p>
-                        <LinesVeilsEditor lines={newCampaignLimits.lines} veils={newCampaignLimits.veils} onChange={setNewCampaignLimits} />
-                      </details>
-                      <div style={{ display: "flex", gap: 8 }}>
-                        <button className="mh-btn" onClick={createCampaign}>Crear</button>
-                        <button className="mh-btn-ghost" onClick={() => { setShowNewCampaignForm(false); setNewCampaignName(""); setNewCampaignDesc(""); setNewCampaignLimits({ lines: [], veils: [] }); setNewCampaignAI(false); }}>
-                          Cancelar
-                        </button>
-                      </div>
-                      <div className="mh-qs">
-                        <span>O empieza con una aventura de inicio, ya preparada:</span>
-                        <div className="mh-qs-btns">
-                          <button type="button" className="mh-btn-ghost" onClick={() => createQuickstart(buildSablewood)}>
-                            <BookOpen size={14} /> Los mensajeros de Sablewood
-                          </button>
-                          <button type="button" className="mh-btn-ghost" onClick={() => createQuickstart(buildWishThief)}>
-                            <BookOpen size={14} /> La ladrona de deseos
-                          </button>
-                        </div>
-                        <small>Escenas, pistas ocultas, reparto con estadísticas y diálogos, notas de cada acto y mapas listos.</small>
-                      </div>
-                    </div>
-                  ) : (
+                  {!showNewCampaignForm && (
                     <div className="mh-card mh-camp-new" role="button" tabIndex={0} onClick={() => setShowNewCampaignForm(true)} onKeyDown={(e) => e.key === "Enter" && setShowNewCampaignForm(true)}>
                       <span className="mh-gal-plus"><Plus size={26} /></span>
                       <span style={{ fontSize: 14, fontWeight: 600 }}>Nueva campaña</span>
