@@ -15,7 +15,7 @@ const ERRORS: Record<string, string> = {
   over_email_send_rate_limit: "Se han enviado demasiados correos. Espera unos minutos.",
 };
 
-const NAME_TAKEN = "Ese nombre de jugador ya está en uso. Elige otro.";
+const NAME_TAKEN = "Ese usuario ya está en uso. Elige otro.";
 
 function translate(code: string | undefined, fallback: string) {
   return (code && ERRORS[code]) || fallback;
@@ -44,7 +44,7 @@ export async function signUp(_: AuthState, formData: FormData): Promise<AuthStat
   const password = String(formData.get("password") ?? "");
   const confirm = String(formData.get("confirm") ?? "");
 
-  if (username.length < 2 || username.length > 32) return { error: "El nombre debe tener entre 2 y 32 caracteres." };
+  if (username.length < 2 || username.length > 32) return { error: "El usuario debe tener entre 2 y 32 caracteres." };
   if (!email) return { error: "Introduce un correo." };
   if (password.length < 8) return { error: "La contraseña debe tener al menos 8 caracteres." };
   if (password !== confirm) return { error: "Las contraseñas no coinciden." };
@@ -75,7 +75,7 @@ export async function signUp(_: AuthState, formData: FormData): Promise<AuthStat
 
 export type FieldCheck = "free" | "taken" | "invalid" | "unknown";
 
-// Comprobación en vivo del registro: ¿el nombre de jugador ya está en uso?
+// Comprobación en vivo del registro: ¿el usuario ya está en uso?
 // «unknown» significa que no se ha podido comprobar (por ejemplo, la migración aún no está aplicada): no se muestra nada.
 export async function checkField(field: "username", raw: string): Promise<FieldCheck> {
   const value = String(raw ?? "").trim();
