@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "nuevo", text: "Notificaciones rediseñadas: el panel muestra tarjetas con un acento de color por tipo (amistad, aceptada, invitación a campaña, busca mesa), separadas en «Nuevas» y «Anteriores». Además, los avisos que llegan con la sesión abierta salen como un aviso flotante junto a la columna derecha con sus botones (se oculta solo a los 8 s, salvo las invitaciones a campaña)." },
       { tag: "arreglo", text: "Inicio: el anuncio de Hope & Fear vuelve a mostrar siempre la etiqueta, la descripción y los botones; si la pantalla es baja, es la página la que se desplaza." },
       { tag: "mejora", text: "Ajustes: ahora se muestra en la columna central con la misma disposición que el resto de páginas, con la columna de amigos a la derecha." },
       { tag: "mejora", text: "Columna derecha: una vez fijada, la chincheta desaparece y solo se muestra al pasar el ratón por la columna." },

@@ -9,7 +9,7 @@ import { Info, Lightbulb, Sprout, Bot, Pickaxe, TreePine, Cog, Ear, Angry, Axe, 
 import { Squirrel, Layers, CalendarDays, Vote, ScrollText as ChronIcon, Megaphone, Link2 } from "lucide-react";
 import { History, LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus, Box, LayoutGrid, Bird, Fish, Bug, Rabbit, Cat, Turtle, Clock, CircleDashed, Slash } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
-import { NotificationBell, FriendsPanel, AccountButton } from "./Social";
+import { NotificationBell, NoticeToasts, FriendsPanel, AccountButton } from "./Social";
 import { ResetDiceCard, DeleteAccountCard } from "./AccountDanger";
 import { ModernSheet } from "./ModernSheet";
 import { Tour } from "./Tour";
@@ -7353,9 +7353,20 @@ const sharedStyles = `
   .mh-pop-bg { position: fixed; inset: 0; z-index: 70; }
   .mh-pop { position: fixed; z-index: 71; left: 16px; bottom: 70px; width: min(330px, calc(100vw - 32px)); max-height: 60vh; overflow-y: auto; border-radius: 14px; background: var(--mh-panel); border: 1px solid var(--mh-line); box-shadow: 0 20px 50px #0007; padding: 8px; }
   .mh-pop-h { padding: 8px 8px 10px; font-weight: 700; font-size: 14px; color: var(--mh-ink); display: flex; align-items: center; justify-content: space-between; gap: 8px; } .mh-pop-clear { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px; border-radius: 99px; border: 1px solid var(--mh-line2); font-size: 11.5px; font-weight: 600; color: var(--mh-muted); } .mh-pop-clear:hover { color: #D9644E; border-color: rgba(217,100,78,.55); } .mh-pop-clear:focus-visible, .mh-notice-x:focus-visible { outline: 2px solid #E3B04B; }
-  .mh-pop-n { max-height: min(70vh, 560px); } .mh-notice { position: relative; } .mh-notice-t { flex: 1; padding-right: 22px; } .mh-notice-x { all: unset; cursor: pointer; position: absolute; top: 8px; right: 6px; width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center; color: var(--mh-muted); } .mh-notice-x:hover { background: var(--mh-panel3); color: var(--mh-ink); }
-  .mh-notice { display: flex; gap: 10px; padding: 9px 8px; border-radius: 10px; font-size: 12.5px; color: var(--mh-ink); }
-  .mh-notice.is-new { background: #2a56c41f; }
+  .mh-pop-n { max-height: min(70vh, 640px); } .mh-notice { position: relative; } .mh-notice-t { flex: 1; padding-right: 22px; } .mh-notice-x { all: unset; cursor: pointer; position: absolute; top: 8px; right: 6px; width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center; color: var(--mh-muted); } .mh-notice-x:hover { background: var(--mh-panel3); color: var(--mh-ink); }
+  .mh-notice { --c: #4f86ff; position: relative; display: flex; gap: 11px; padding: 12px 10px 12px 15px; border-radius: 14px; font-size: 12.5px; color: var(--mh-ink); background: var(--mh-panel2); border: 1px solid var(--mh-line); overflow: hidden; }
+  .mh-notice::before, .mh-ntoast::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--c); }
+  .mh-notice[data-t="friend_accepted"], .mh-ntoast[data-t="friend_accepted"] { --c: #3fcf7a; } .mh-notice[data-t="campaign_invite"], .mh-ntoast[data-t="campaign_invite"] { --c: #E3B04B; } .mh-notice[data-t="lf_request"], .mh-ntoast[data-t="lf_request"] { --c: #A58BE8; }
+  .mh-notice.is-new { background: linear-gradient(90deg, color-mix(in srgb, var(--c) 13%, var(--mh-panel)), var(--mh-panel) 62%); border-color: color-mix(in srgb, var(--c) 36%, var(--mh-line)); }
+  .mh-notice-k { font-style: normal; font-size: 10px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--c); }
+  .mh-notice-grp { display: flex; flex-direction: column; gap: 8px; } .mh-notice-sec { margin: 6px 4px 0; font-size: 10.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--mh-muted); }
+  .mh-pop-n { width: min(372px, calc(100vw - 16px)); display: flex; flex-direction: column; gap: 8px; }
+  .mh-ntoasts { position: fixed; bottom: 26px; z-index: 75; display: flex; flex-direction: column-reverse; gap: 10px; width: min(360px, calc(100vw - 32px)); pointer-events: none; }
+  .mh-ntoast { --c: #4f86ff; pointer-events: auto; position: relative; display: flex; gap: 12px; padding: 14px 12px 14px 17px; border-radius: 18px; overflow: hidden; font-size: 13px; color: var(--mh-ink); background: linear-gradient(135deg, color-mix(in srgb, var(--c) 18%, var(--mh-panel)), var(--mh-panel)); border: 1px solid color-mix(in srgb, var(--c) 45%, var(--mh-line)); box-shadow: 0 18px 40px -12px #000c; animation: mh-toast-up .3s cubic-bezier(.2,1.2,.4,1) both; }
+  .mh-ntoast-b { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; padding-right: 18px; }
+  .mh-ntoast-bar { position: absolute; left: 0; bottom: 0; height: 3px; width: 100%; background: var(--c); transform-origin: left; animation: mh-ntoast-bar linear forwards; }
+  @keyframes mh-toast-up { from { opacity: 0; translate: 0 14px; } } @keyframes mh-ntoast-bar { to { transform: scaleX(0); } }
+  @media (prefers-reduced-motion: reduce) { .mh-ntoast { animation: none; } }
   .mh-notice-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; } .mh-notice-t small { color: var(--mh-muted); }
   .mh-notice-a { display: flex; gap: 8px; margin-top: 6px; }
   .mh-notice-a button { all: unset; cursor: pointer; padding: 5px 12px; border-radius: 8px; background: var(--mh-panel3); font-size: 12px; }
@@ -27187,6 +27198,7 @@ export default function App({ onSignOut }) {
 
   return (
     <div className={"mh-root" + (isMobile ? " is-mobile" : "")} style={{ display: "flex", flexDirection: isMobile ? "column" : "row", height: "100dvh", background: "var(--mh-bg)", fontFamily: "'Inter', system-ui, sans-serif", color: "var(--mh-ink)", overflow: "hidden" }}>
+      <NoticeToasts />
       {fxDlg && viewingCampaignId && (() => {
         const ch = stageScenesOf(campaignStage).find((x) => x.id === fxDlg.sceneId);
         const sc = ch && (fxDlg.sub ? (ch.extras || []).find((e) => e.id === fxDlg.sub) && { ...(ch.extras || []).find((e) => e.id === fxDlg.sub), id: ch.id } : ch);
