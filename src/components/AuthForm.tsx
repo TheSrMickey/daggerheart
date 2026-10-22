@@ -10,7 +10,7 @@ export function AuthForm({ mode, next, notice }: { mode: "login" | "register"; n
   const isRegister = mode === "register";
   const router = useRouter();
 
-  // Registro: avisa en cuanto se escribe un nombre de jugador que ya está en uso (con una pequeña espera al teclear).
+  // Registro: avisa en cuanto se escribe un usuario que ya está en uso (con una pequeña espera al teclear).
   // El correo no se comprueba en vivo, para no revelar qué correos están registrados: solo se avisa al pulsar «Crear cuenta».
   const [checks, setChecks] = useState<{ username?: FieldCheck }>({});
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -48,12 +48,12 @@ export function AuthForm({ mode, next, notice }: { mode: "login" | "register"; n
 
       {isRegister && (
         <div>
-          <label className="label sr-only" htmlFor="username">Nombre de jugador</label>
+          <label className="label sr-only" htmlFor="username">Usuario</label>
           <input
             className={"field" + (checks.username === "taken" ? " is-bad" : "")}
             id="username"
             name="username"
-            placeholder="Nombre de jugador"
+            placeholder="Usuario"
             required
             minLength={2}
             maxLength={32}
@@ -63,8 +63,8 @@ export function AuthForm({ mode, next, notice }: { mode: "login" | "register"; n
             onBlur={(e) => watchName(e.target.value, 0)}
           />
           <div aria-live="polite">
-            {checks.username === "taken" && <p className="auth-hint is-bad">Ese nombre de jugador ya está en uso.</p>}
-            {checks.username === "free" && <p className="auth-hint is-ok">Nombre disponible.</p>}
+            {checks.username === "taken" && <p className="auth-hint is-bad">Ese usuario ya está en uso.</p>}
+            {checks.username === "free" && <p className="auth-hint is-ok">Usuario disponible.</p>}
           </div>
         </div>
       )}

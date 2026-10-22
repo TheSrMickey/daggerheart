@@ -158,18 +158,9 @@ html[data-mh-theme="light"] .auth-hint.is-ok { color: #3E7A39; } html[data-mh-th
 @keyframes auth-drift-a { from { transform: translate(0, 0) scale(1); } to { transform: translate(38%, 32%) scale(1.25); } }
 @keyframes auth-drift-b { from { transform: translate(0, 0) scale(1.1); } to { transform: translate(-42%, -30%) scale(.9); } }
 .auth-ctl { position: absolute; left: 20px; bottom: 20px; display: flex; gap: 10px; }
-.auth-theme, .auth-swap { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; transition: background .15s, transform .15s; }
-.auth-theme:hover, .auth-swap:hover { background: var(--panel-2); transform: scale(1.06); }
-.auth-theme:focus-visible, .auth-swap:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
-.auth-swap svg { transition: transform .5s cubic-bezier(.2,.8,.2,1); }
-/* Lado del formulario: los dos paneles se cruzan con una transición suave (el ancho del formulario es el 42 %, el del arte el 58 %). */
-.auth-left { position: relative; z-index: 2; transition: transform .6s cubic-bezier(.2,.8,.2,1); }
-.auth-art { transition: transform .6s cubic-bezier(.2,.8,.2,1); }
-html[data-mh-auth-side="right"] .auth-left { transform: translateX(138.095%); }
-html[data-mh-auth-side="right"] .auth-art { transform: translateX(-72.414%); }
-html[data-mh-auth-side="right"] .auth-swap svg { transform: rotate(180deg); }
-@media (max-width: 760px) { .auth-swap { display: none; } html[data-mh-auth-side="right"] .auth-left, html[data-mh-auth-side="right"] .auth-art { transform: none; } }
-@media (prefers-reduced-motion: reduce) { .auth-left, .auth-art, .auth-swap svg { transition: none; } }
+.auth-theme { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; transition: background .15s, transform .15s; }
+.auth-theme:hover { background: var(--panel-2); transform: scale(1.06); }
+.auth-theme:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .auth-hint, .auth-pane, .auth-pane.is-leaving, .auth-art, .auth-art::before, .auth-art::after { animation: none; } }
 /* Modo claro */
 html[data-mh-theme="light"] .auth-page { background: #F3EEE4; }
