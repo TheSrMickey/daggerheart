@@ -4,8 +4,11 @@ export const CHANGELOG = [
   {
     version: "1.50",
     date: "2026-10-15",
-    title: "Historia por capítulos y PNJ en la campaña",
+    title: "Grupos y notificaciones nuevas",
+    blurb: "Chatea con toda tu mesa en un grupo compartido y recibe los avisos como tarjetas, también flotando mientras juegas.",
     items: [
+      { tag: "nuevo", text: "Inicio: el anuncio de la expansión pasa a ser un carrusel de anuncios que cambia solo cada 9 s (se pausa al pasar el ratón; con flechas, puntos y deslizando en móvil). Además de Hope & Fear salen: la novedad de la versión (hasta que la abres), tu próxima sesión, «Aún sin mesa» si no tienes campañas y una carta de dominio del día." },
+      { tag: "mejora", text: "Inicio en móvil: el anuncio ocupa menos pantalla, los dados son más compactos y las campañas, personajes y sesiones se deslizan hacia los lados en vez de apilarse." },
       { tag: "nuevo", text: "Notificaciones rediseñadas: el panel muestra tarjetas con un acento de color por tipo (amistad, aceptada, invitación a campaña, busca mesa), separadas en «Nuevas» y «Anteriores». Además, los avisos que llegan con la sesión abierta salen como un aviso flotante junto a la columna derecha con sus botones (se oculta solo a los 8 s, salvo las invitaciones a campaña)." },
       { tag: "arreglo", text: "Inicio: el anuncio de Hope & Fear vuelve a mostrar siempre la etiqueta, la descripción y los botones; si la pantalla es baja, es la página la que se desplaza." },
       { tag: "mejora", text: "Ajustes: ahora se muestra en la columna central con la misma disposición que el resto de páginas, con la columna de amigos a la derecha." },

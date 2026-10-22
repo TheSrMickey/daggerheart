@@ -10,8 +10,8 @@ const EMPTY = { next: null, past: [], rsvp: {} };
 const STATES = { yes: ["Voy", "#4CC36B", Check], maybe: ["Quizá", "#F0A037", HelpCircle], no: ["No puedo", "#D9644E", X] };
 const DAYS = ["L", "M", "X", "J", "V", "S", "D"];
 const MONTHS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
-const fmtDate = (ts) => new Date(ts).toLocaleDateString("es-ES", { weekday: "short", day: "numeric", month: "short" }).replace(".", "");
-const fmtTime = (ts) => new Date(ts).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+export const fmtDate = (ts) => new Date(ts).toLocaleDateString("es-ES", { weekday: "short", day: "numeric", month: "short" }).replace(".", "");
+export const fmtTime = (ts) => new Date(ts).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
 const toInput = (ts) => { const d = new Date(ts); const p = (n) => String(n).padStart(2, "0"); return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + "T" + p(d.getHours()) + ":" + p(d.getMinutes()); };
 export const countdown = (ts, now) => {
   const ms = ts - now;
@@ -155,6 +155,29 @@ export function HomeCampCards({ camps, colorOf, membersOf, onOpen }) {
       </button>
     );
   });
+}
+
+// La próxima sesión fijada entre las campañas dadas (la más cercana), para el carrusel de Inicio.
+export function useNextSession(camps) {
+  const key = camps.map((c) => c.id).join(",");
+  const [docs, setDocs] = useState({});
+  const [now] = useState(() => Date.now());
+  useEffect(() => {
+    let alive = true;
+    const pull = async () => {
+      const out = {};
+      await Promise.all(key.split(",").filter(Boolean).map(async (id) => { out[id] = await readDoc(calKey(id), EMPTY); }));
+      if (alive) setDocs(out);
+    };
+    pull();
+    const t = setInterval(pull, 30000);
+    return () => {
+      alive = false;
+      clearInterval(t);
+    };
+  }, [key]);
+  const items = camps.map((cp) => ({ cp, next: docs[cp.id]?.next })).filter((x) => x.next && x.next.ts >= now - 3 * 3600 * 1000).sort((a, b) => a.next.ts - b.next.ts);
+  return items[0] ? { ...items[0], now } : null;
 }
 
 // Inicio: sección «Próximas sesiones» con el mismo diseño que «Retoma tus campañas» y «Tus personajes».
