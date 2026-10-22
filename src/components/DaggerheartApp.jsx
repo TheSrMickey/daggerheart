@@ -23,6 +23,7 @@ import { Changelog } from "./Changelog";
 import { CardsPage } from "./Cards";
 import { Generators } from "./Generators";
 import { CampaignCalendar, HomeSessions, HomeCampCards } from "./Calendar";
+import { HomeHero } from "./HomeHero";
 import { PollsGm, ActivePoll, PollSwap } from "./Polls";
 import { RestGm, RestQuick, RestBanner, GroupRestDialog, RestLock } from "./GroupRest";
 import NpcStatsEditor, { npcStatsSummary, npcTokenStats } from "./NpcStats";
@@ -7261,16 +7262,43 @@ const sharedStyles = `
   .mh-home-news > :not(.mh-news-art) { position: relative; z-index: 2; }
   .mh-news-tag { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; padding: 4px 11px; border-radius: 999px; color: #E3B04B; background: #E3B04B1f; border: 1px solid #E3B04B66; }
   .mh-home-news h2 { font-size: 34px; font-weight: 700; margin: 10px 0 6px; color: #fff; }
-  .mh-home-news p { margin: 0; color: #ffffffd0; font-size: 14px; max-width: 470px; line-height: 1.55; } .mh-home-news p b { color: #fff; font-weight: 600; }
+  .mh-home-news p { margin: 0; color: #ffffffd0; font-size: 14px; max-width: 470px; line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; } .mh-home-news p b { color: #fff; font-weight: 600; }
   html[data-mh-theme="light"] .mh-home-news { --ns: #FFFCF6; color: #221C2B; border-color: #DCD2C1; box-shadow: 0 18px 40px -26px #A87A1E; }
   html[data-mh-theme="light"] .mh-home-news h2 { color: #221C2B; } html[data-mh-theme="light"] .mh-home-news p { color: #4C4458; } html[data-mh-theme="light"] .mh-home-news p b { color: #221C2B; }
   html[data-mh-theme="light"] .mh-news-tag { color: #8A5E0C; background: #E3B04B26; border-color: #C9A24A88; }
   html[data-mh-theme="light"] .mh-home-news .mh-home-btn.is-ghost { background: #EAE2D3; color: #221C2B; } html[data-mh-theme="light"] .mh-home-news .mh-home-btn.is-ghost:hover { background: #DFD5C1; }
-  @media (max-width: 720px) { .mh-news-art { inset: 0; opacity: .55; } .mh-home-news h2 { font-size: 26px; } .mh-home-news { padding: 26px 20px; } }
+  @media (max-width: 720px) { .mh-news-art { inset: 0; opacity: .55; } .mh-home-news h2 { font-size: 26px; } .mh-home-news { padding: 22px 18px 54px; min-height: 340px; } }
+  /* Carrusel de anuncios de Inicio */
+  .mh-home-news > .mh-news-slide { position: static; z-index: auto; flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: flex-end; }
+  .mh-news-slide > * { animation: mh-news-in .45s ease both; }
+  .mh-news-slide > :not(.mh-news-art):not(.mh-news-card):not(.mh-news-orb) { position: relative; z-index: 2; }
+  @keyframes mh-news-in { from { opacity: 0; translate: 16px 0; } }
+  .mh-home-news.is-ver { background: radial-gradient(520px 300px at 88% 20%, #4a1fb866, transparent 70%), var(--ns); } .mh-home-news.is-ver .mh-news-tag { color: #9fb8ff; background: #6f9bff1f; border-color: #6f9bff66; }
+  .mh-home-news.is-ses { --ns: #1a1308; background: radial-gradient(520px 300px at 88% 20%, #E3B04B44, transparent 70%), var(--ns); }
+  .mh-home-news.is-mesa { --ns: #08160f; background: radial-gradient(520px 300px at 88% 20%, #3fcf7a44, transparent 70%), var(--ns); } .mh-home-news.is-mesa .mh-news-tag { color: #3fcf7a; background: #3fcf7a1f; border-color: #3fcf7a66; }
+  .mh-home-news.is-card { --ns: #150d26; background: radial-gradient(520px 300px at 88% 20%, #A58BE855, transparent 70%), var(--ns); } .mh-home-news.is-card .mh-news-tag { color: #A58BE8; background: #A58BE81f; border-color: #A58BE866; }
+  html[data-mh-theme="light"] .mh-home-news.is-ses, html[data-mh-theme="light"] .mh-home-news.is-mesa, html[data-mh-theme="light"] .mh-home-news.is-card { --ns: #FFFCF6; }
+  html[data-mh-theme="light"] .mh-home-news.is-mesa .mh-news-tag { color: #1F7A45; } html[data-mh-theme="light"] .mh-home-news.is-card .mh-news-tag { color: #6B4FB8; } html[data-mh-theme="light"] .mh-home-news.is-ver .mh-news-tag { color: #2A4FB0; }
+  .mh-home-news:is(.is-ver, .is-ses, .is-card) .mh-news-slide > :is(h2, p, .mh-home-cta) { max-width: calc(100% - 190px); }
+  .mh-home-news.is-ver h2 { font-size: 30px; }
+  .mh-news-orb { position: absolute; right: 40px; top: 50%; translate: 0 -50%; z-index: 2; width: 120px; height: 120px; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(#6f9bff 0 70%, #ffffff18 0); }
+  .mh-news-orb span { width: 96px; height: 96px; border-radius: 50%; background: #12102a; display: grid; place-items: center; font: 600 24px "Cinzel", Georgia, serif; color: #fff; }
+  .mh-news-orb.is-avs { background: none; width: auto; height: auto; display: flex; } .mh-news-orb.is-avs span { width: 44px; height: 44px; margin-left: -10px; border: 2px solid var(--ns); font: 700 16px "Inter", system-ui, sans-serif; } .mh-news-orb.is-avs span:first-child { margin-left: 0; }
+  .mh-news-card { position: absolute; right: 44px; top: 18px; bottom: 18px; z-index: 2; aspect-ratio: 5 / 7; rotate: 5deg; border-radius: 12px; overflow: hidden; box-shadow: 0 18px 40px #000a, 0 0 30px #A58BE855; } .mh-news-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .mh-home-news > .mh-news-ctl { position: absolute; right: 16px; bottom: 14px; z-index: 3; display: flex; align-items: center; gap: 7px; }
+  .mh-news-ar { all: unset; cursor: pointer; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: #000a; border: 1px solid #ffffff30; } .mh-news-ar:hover { background: #000d; }
+  .mh-news-dot { all: unset; cursor: pointer; position: relative; overflow: hidden; width: 8px; height: 8px; border-radius: 99px; background: #ffffff55; transition: width .25s; } .mh-news-dot.is-on { width: 26px; }
+  .mh-news-dot span { position: absolute; inset: 0; background: #E3B04B; transform-origin: left; transform: scaleX(0); animation: mh-news-prog linear forwards; }
+  .mh-home-news:hover .mh-news-dot span, .mh-home-news:focus-within .mh-news-dot span { animation-play-state: paused; }
+  @keyframes mh-news-prog { to { transform: scaleX(1); } }
+  .mh-news-ar:focus-visible, .mh-news-dot:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
+  html[data-mh-theme="light"] .mh-news-dot { background: #221C2B40; } html[data-mh-theme="light"] .mh-news-ar { background: #fffc; color: #221C2B; border-color: #221C2B30; }
+  @media (prefers-reduced-motion: reduce) { .mh-news-slide > * { animation: none !important; } .mh-news-dot span { animation: none !important; transform: scaleX(1); } }
+  @media (max-width: 720px) { .mh-home-news:is(.is-ver, .is-ses, .is-card) .mh-news-slide > :is(h2, p, .mh-home-cta) { max-width: none; } .mh-news-orb, .mh-news-card { opacity: .28; } .mh-home-news p { font-size: 13px; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; } .mh-home-news h2, .mh-home-news.is-ver h2 { font-size: 22px; } .mh-home-cta { margin-top: 14px; } .mh-home-btn { padding: 9px 14px; } }
   /* Inicio: se ajusta a la pantalla sin deslizar. Lo que se encoge primero es la novedad (pierde el texto y luego la etiqueta); las filas de
      campañas y personajes son de una sola línea y se desplazan hacia los lados si no caben. Solo en pantallas muy bajas vuelve el scroll vertical. */
-  @media (min-height: 700px) { .mh-main-fit > .mh-view-in { height: 100%; } .mh-main-fit .mh-home, .mh-main-fit .mh-home-main { height: 100%; } .mh-main-fit .mh-home-main { display: flex; flex-direction: column; min-height: 0; } .mh-main-fit .mh-home-main > * { flex: none; }
-    .mh-main-fit .mh-home-news { flex: 1 0 auto; min-height: 230px; padding-top: 20px; padding-bottom: 22px; }
+  @media (min-height: 700px) and (min-width: 721px) { .mh-main-fit > .mh-view-in { height: 100%; } .mh-main-fit .mh-home, .mh-main-fit .mh-home-main { height: 100%; } .mh-main-fit .mh-home-main { display: flex; flex-direction: column; min-height: 0; } .mh-main-fit .mh-home-main > * { flex: none; }
+    .mh-main-fit .mh-home-news { flex: 1 0 auto; min-height: 300px; padding-top: 20px; padding-bottom: 22px; }
     .mh-main-fit .mh-home-sec { margin: 16px 0 10px; }
     .mh-main-fit .mh-hrow { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(300px, 1fr); overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; padding-bottom: 2px; }
   }
@@ -7300,6 +7328,16 @@ const sharedStyles = `
   .mh-dice-bars small { font-size: 9.5px; color: var(--mh-muted); }
   @media (max-width: 760px) { .mh-dice { flex-wrap: wrap; } .mh-dice-st { width: calc(33% - 8px); min-width: 96px; } .mh-dice-ch { flex-basis: 100%; } }
   .mh-hrow { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+  /* Inicio en móvil: dados más compactos y filas de campañas, personajes y sesiones en carrusel horizontal (con imán) en vez de apiladas. */
+  @media (max-width: 720px) {
+    .mh-dice { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .mh-dice-st { width: auto; padding: 10px 11px; } .mh-dice-st span { width: 30px; height: 30px; margin-bottom: 2px; } .mh-dice-st b { font-size: 22px; }
+    .mh-dice-ch { grid-column: 1 / -1; padding: 10px 12px; } .mh-dice-bars { min-height: 56px; margin-top: 6px; gap: 5px; }
+    .mh-hrow, .mh-home-row { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: min(84%, 320px); gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 4px; scrollbar-width: none; margin-right: -14px; padding-right: 14px; }
+    .mh-hrow::-webkit-scrollbar, .mh-home-row::-webkit-scrollbar { display: none; }
+    .mh-hrow > *, .mh-home-row > * { scroll-snap-align: start; min-width: 0; }
+    .mh-home-sec { margin: 18px 0 8px; }
+  }
   .mh-hcard { all: unset; box-sizing: border-box; cursor: pointer; display: flex; gap: 14px; align-items: center; padding: 12px; border-radius: 14px; background: var(--mh-panel); border: 1px solid var(--mh-line); --hc: #7A8CFF; transition: translate .15s, border-color .15s; min-width: 0; }
   .mh-hcard:hover { translate: 0 -3px; border-color: var(--hc); } .mh-hcard:focus-visible { outline: 2px solid var(--hc); outline-offset: 2px; }
   .mh-hcard-art { width: 84px; height: 84px; flex: none; border-radius: 11px; display: grid; place-items: center; color: #ffffffc8; background: linear-gradient(135deg, color-mix(in srgb, var(--hc) 62%, #12122e), #12122e); }
@@ -27830,28 +27868,16 @@ export default function App({ onSignOut }) {
             return (
               <div className="mh-home">
                 <div className="mh-home-main">
-                  <div className="mh-home-news" role="region" aria-label="Novedad: expansión Hope & Fear">
-                    <div className="mh-news-art" aria-hidden="true">
-                      {["bruja", "brujo", "camorrista", "asesino"].map((k) => (
-                        <i key={k} style={{ backgroundImage: "url(/clases/" + k + ".webp)" }} />
-                      ))}
-                    </div>
-                    <span className="mh-news-tag"><Sparkles size={12} /> Nueva expansión disponible</span>
-                    <h2 className="mh-serif">Hope &amp; Fear ya está aquí</h2>
-                    <p>
-                      Cuatro clases nuevas para tu mesa: <b>Bruja</b>, <b>Brujo</b>, <b>Camorrista</b> y <b>Asesino</b>, con sus subclases y cartas de dominio. Crea un personaje con ellas y estrena la expansión en tu próxima sesión.
-                    </p>
-                    <div className="mh-home-cta">
-                      <button type="button" className="mh-home-btn" onClick={() => setView("ficha")}>
-                        Crear un personaje
-                      </button>
-                      {fch && (
-                        <button type="button" className="mh-home-btn is-ghost" onClick={() => openCharDetail(featId)}>
-                          Abrir {fch.f_name || "mi ficha"}
-                        </button>
-                      )}
-                    </div>
-                  </div>
+                  <HomeHero
+                    camps={camps}
+                    characters={characters}
+                    featId={featId}
+                    cards={buildCardCatalog()}
+                    color={(c) => (c.f_class ? classColor(c.f_class) : "#7A8CFF")}
+                    onView={(v) => setView(v)}
+                    onChar={(id) => openCharDetail(id)}
+                    onCamp={(cp) => (setViewingCampaignId(cp.id), setCampaignDetailTab("calendario"), setView("campaigns"))}
+                  />
                   <HomeSessions
                     camps={camps}
                     colorOf={campColor}
