@@ -13,7 +13,7 @@ export type Person = { id: string; username: string; playing?: string; creating?
 export type NoticeType = "friend_request" | "friend_accepted" | "campaign_invite" | "lf_request";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Notice = { key: string; type: NoticeType; from: Person; at: number; read: boolean; data?: any };
-export type SocialState = { me: Person | null; friends: Person[]; incoming: Person[]; outgoing: Person[]; notices: Notice[]; unread?: Record<string, number>; profile?: Profile };
+export type SocialState = { me: Person | null; friends: Person[]; incoming: Person[]; outgoing: Person[]; notices: Notice[]; unread?: Record<string, number>; groups?: GroupInfo[]; profile?: Profile };
 
 type Pair = { from: string; to: string; status: "pending" | "friends" | "none"; at: number };
 type Presence = { mk?: boolean; cls: string | null; at: number; act: number; away: boolean; off?: boolean; dnd?: boolean; camp?: string; role?: string; campSince?: number };
@@ -147,6 +147,7 @@ export async function loadSocial(): Promise<SocialState> {
       ? devNotices.filter((n) => !blockedIds.has(n.from.id))
       : rows.filter((r) => !blockedIds.has(r.value.from)).map((r) => ({ key: r.key, type: r.value.type, from: who(r.value.from), at: r.value.at, read: r.value.read, data: r.value.data })),
     unread: await unreadDm(me.id),
+    groups: await loadGroups(me.id),
     profile: await getProfile(me.id),
   };
 }
@@ -463,6 +464,138 @@ async function unreadDm(meId: string): Promise<Record<string, number>> {
     }
   } catch {}
   return out;
+}
+
+// ---------- grupos (chat conjunto) ----------
+// Un grupo es `gr:<id>` { name, owner, members[] } y su conversación `gm:<id>` (mensajes). El creador gestiona a las personas;
+// todos los miembros leen y escriben. Borrar un grupo deja una lápida (`deleted`), porque las filas compartidas no se pueden eliminar.
+export type Group = { id: string; name: string; owner: string; members: string[]; at: number; deleted?: boolean };
+export type GInvite = { campId: string; name: string; desc?: string; gm: string; players: number; note?: string };
+export type GMsg = { id: string; from: string; at: number; text?: string; sys?: boolean; invite?: GInvite };
+export type GroupInfo = { g: Group; last?: GMsg; unread: number };
+const gReadKey = (id: string) => `mh-gread:${id}`;
+const gMsgId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+async function groupMsgs(id: string): Promise<GMsg[]> {
+  return (await kvGet<GMsg[]>(`gm:${id}`)) || [];
+}
+async function pushGroupMsg(gid: string, m: Omit<GMsg, "id" | "at">) {
+  const cur = await groupMsgs(gid);
+  await kvPut(`gm:${gid}`, [...cur, { id: gMsgId(), at: Date.now(), ...m }].slice(-200));
+}
+async function loadGroups(meId: string): Promise<GroupInfo[]> {
+  try {
+    const rows = await kvList<Group>("gr:");
+    const mine = rows.map((r) => r.value).filter((g) => g && !g.deleted && g.members?.includes(meId));
+    const blocked = new Set((await getProfile(meId)).blocked);
+    return await Promise.all(
+      mine
+        .sort((a, b) => a.name.localeCompare(b.name, "es"))
+        .map(async (g) => {
+          const msgs = await groupMsgs(g.id).catch(() => [] as GMsg[]);
+          let last = 0;
+          try {
+            last = Number(localStorage.getItem(gReadKey(g.id)) || 0);
+          } catch {}
+          const visible = msgs.filter((m) => !blocked.has(m.from));
+          return { g, last: visible[visible.length - 1], unread: visible.filter((m) => !m.sys && m.from !== meId && m.at > last).length };
+        }),
+    );
+  } catch {
+    return [];
+  }
+}
+export function markGroupRead(id: string) {
+  try {
+    localStorage.setItem(gReadKey(id), String(Date.now()));
+  } catch {}
+}
+export async function createGroup(name: string, ids: string[] = []): Promise<Group | null> {
+  const me = await myself();
+  const n = name.trim().slice(0, 40);
+  if (!me || !n) return null;
+  const g: Group = { id: "g" + gMsgId(), name: n, owner: me.id, members: [me.id, ...ids.filter((i) => i !== me.id)], at: Date.now() };
+  await kvPut(`gr:${g.id}`, g);
+  await pushGroupMsg(g.id, { from: me.id, sys: true, text: `${me.username} ha creado el grupo` });
+  return g;
+}
+async function mutateGroup(id: string, fn: (g: Group) => Group): Promise<Group | null> {
+  const cur = await kvGet<Group>(`gr:${id}`);
+  if (!cur || cur.deleted) return null;
+  const next = fn(cur);
+  await kvPut(`gr:${id}`, next);
+  return next;
+}
+export async function renameGroup(id: string, name: string) {
+  const me = await myself();
+  const n = name.trim().slice(0, 40);
+  if (!me || !n) return;
+  await mutateGroup(id, (g) => (g.owner === me.id ? { ...g, name: n } : g));
+}
+// Solo el creador añade gente, y solo amigos suyos que acepten mensajes. Devuelve un aviso si alguien no se pudo añadir.
+export async function addGroupMembers(id: string, people: Person[]): Promise<string | null> {
+  const me = await myself();
+  if (!me) return "Inicia sesión.";
+  const ok: Person[] = [];
+  let refused = 0;
+  for (const p of people) {
+    if (await allowed("msgs", p.id, me.id)) refused++;
+    else ok.push(p);
+  }
+  const g = await mutateGroup(id, (x) => (x.owner === me.id ? { ...x, members: [...new Set([...x.members, ...ok.map((p) => p.id)])] } : x));
+  if (g) for (const p of ok) await pushGroupMsg(id, { from: me.id, sys: true, text: `${p.username} se ha unido al grupo` });
+  return refused ? (refused === 1 ? "Una persona no acepta que la añadas a grupos." : refused + " personas no aceptan que las añadas a grupos.") : null;
+}
+export async function removeGroupMember(id: string, person: Person) {
+  const me = await myself();
+  if (!me) return;
+  const g = await mutateGroup(id, (x) => (x.owner === me.id && person.id !== me.id ? { ...x, members: x.members.filter((m) => m !== person.id) } : x));
+  if (g) await pushGroupMsg(id, { from: me.id, sys: true, text: `${person.username} ya no está en el grupo` });
+}
+// Salir: si eres el creador, el grupo pasa a la persona que llevaba más tiempo; si no queda nadie, se borra.
+export async function leaveGroup(id: string) {
+  const me = await myself();
+  if (!me) return;
+  const g = await mutateGroup(id, (x) => {
+    const members = x.members.filter((m) => m !== me.id);
+    return members.length ? { ...x, members, owner: x.owner === me.id ? members[0] : x.owner } : { ...x, members: [], deleted: true };
+  });
+  if (g && !g.deleted) await pushGroupMsg(id, { from: me.id, sys: true, text: `${me.username} ha salido del grupo` });
+}
+export async function deleteGroup(id: string) {
+  const me = await myself();
+  if (!me) return;
+  const g = await mutateGroup(id, (x) => (x.owner === me.id ? { ...x, members: [], deleted: true } : x));
+  if (g?.deleted) await kvPut(`gm:${id}`, []);
+}
+export async function loadGroupMsgs(id: string): Promise<GMsg[]> {
+  const me = await myself();
+  const blocked = me ? new Set((await getProfile(me.id)).blocked) : new Set<string>();
+  return (await groupMsgs(id)).filter((m) => !blocked.has(m.from));
+}
+export async function sendGroupMsg(id: string, text: string): Promise<string | null> {
+  const me = await myself();
+  const t = text.trim().slice(0, 1000);
+  if (!me || !t) return null;
+  const g = await kvGet<Group>(`gr:${id}`);
+  if (!g || g.deleted || !g.members.includes(me.id)) return "Ya no estás en este grupo.";
+  await pushGroupMsg(id, { from: me.id, text: t });
+  return null;
+}
+export async function postGroupNote(id: string, text: string) {
+  const me = await myself();
+  if (me) await pushGroupMsg(id, { from: me.id, sys: true, text });
+}
+// Invita a TODO el grupo a una campaña: cada persona recibe el aviso y la tarjeta queda en el chat. Quien no pueda, no la acepta.
+export async function inviteGroupToCampaign(id: string, camp: CampInvite, note: string): Promise<string> {
+  const me = await myself();
+  if (!me) return "Inicia sesión para invitar.";
+  const g = await kvGet<Group>(`gr:${id}`);
+  if (!g || g.deleted || g.owner !== me.id) return "Solo el creador del grupo puede invitar.";
+  const others = [...(await namesOf(g.members.filter((m) => m !== me.id))).values()];
+  const res = await Promise.all(others.map((p) => inviteToCampaign(p, camp)));
+  const sent = res.filter((r) => r.startsWith("Invitación")).length;
+  await pushGroupMsg(id, { from: me.id, invite: { ...camp, ...(note.trim() ? { note: note.trim().slice(0, 200) } : {}) } });
+  return sent === others.length ? `Invitaciones enviadas a las ${sent} personas del grupo.` : `Invitaciones enviadas: ${sent} de ${others.length} (algunas personas no aceptan invitaciones).`;
 }
 
 // ---------- invitaciones a campaña ----------

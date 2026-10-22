@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
-import { Bell, Search, UserPlus, Check, X, UserMinus, Star, MoreHorizontal, MessageCircle, BookOpen, User, Ban, ChevronLeft, ChevronRight, Send, Users, Plus, Megaphone, Settings, LogOut } from "lucide-react";
+import { Bell, Search, UserPlus, Check, X, UserMinus, Star, MoreHorizontal, MessageCircle, BookOpen, User, Ban, ChevronLeft, ChevronRight, Send, Plus, Settings, LogOut } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
-import { loadSocial, searchPeople, sendRequest, respond, removeFriend, markNoticesRead, saveProfile, blockPerson, sendDm, loadDm, markDmRead, inviteToCampaign, bridge } from "@/lib/social";
+import { loadSocial, searchPeople, sendRequest, respond, removeFriend, markNoticesRead, saveProfile, blockPerson, sendDm, loadDm, markDmRead, inviteToCampaign, createGroup, bridge } from "@/lib/social";
+import { GroupPanel, GroupIcon } from "./Groups";
 
 // Estado compartido entre la campana y el panel de amigos (se refresca cada 6 s con la pestaña visible y al volver a ella).
 const EMPTY = { me: null, friends: [], incoming: [], outgoing: [], notices: [] };
@@ -167,20 +168,24 @@ export function FriendsPanel({ renderClass }) {
   const [menu, setMenu] = useState(null); // { p, x, y }
   const [dm, setDm] = useState(null);
   const [invOpen, setInvOpen] = useState(false);
-  const [groups, setGroups] = useState([]);
-  const [openG, setOpenG] = useState(null);
-  const [gForm, setGForm] = useState(null); // { id, mode: "add" | "ping" | "inv", text }
+  const [grp, setGrp] = useState(null); // grupo abierto (id)
   const [newG, setNewG] = useState(null);
+  // Los grupos antiguos (solo en este navegador) pasan a ser grupos compartidos, una sola vez.
   useEffect(() => {
-    storageGet("friend-groups", false).then((r) => { const g = JSON.parse(r?.value || "[]"); gref.current = g; setGroups(g); }).catch(() => {});
-  }, [s.me?.id]);
-  const gref = useRef(groups);
-  const saveGroups = (g) => {
-    const next = typeof g === "function" ? g(gref.current) : g;
-    gref.current = next;
-    setGroups(next);
-    storageSet("friend-groups", JSON.stringify(next), false);
-  };
+    if (!s.me?.id) return;
+    let live = true;
+    (async () => {
+      try {
+        const r = await storageGet("friend-groups", false);
+        const old = JSON.parse(r?.value || "[]");
+        if (!Array.isArray(old) || !old.length) return;
+        await storageSet("friend-groups", "[]", false);
+        for (const g of old) if (g?.name) await createGroup(g.name, (g.ids || []).filter((id) => s.friends.some((f) => f.id === id)));
+        if (live) refreshSocial();
+      } catch {}
+    })();
+    return () => { live = false; };
+  }, [s.me?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     const open = (e) => { const p = s.friends.find((f) => f.id === e.detail?.id); if (p) setDm(p); };
     window.addEventListener("mh-dm", open);
@@ -255,54 +260,37 @@ export function FriendsPanel({ renderClass }) {
   };
   const known = (id) => s.friends.some((f) => f.id === id) || s.outgoing.some((f) => f.id === id);
   const inSession = s.friends.filter((f) => f.camp && f.status !== "off");
+  const createNew = async () => {
+    const n = newG?.trim();
+    if (!n) return;
+    setNewG(null);
+    const g = await createGroup(n);
+    await refreshSocial();
+    if (g) setGrp(g.id);
+  };
   const groupBlock = () => (
     <div className="mh-friends-sec">
       <h4>Grupos <i><button type="button" className="mh-fbtn" style={{ width: "auto", padding: "0 8px" }} onClick={() => setNewG("")}><Plus size={12} /> Nuevo</button></i></h4>
       {newG !== null && (
         <div className="mh-grp-new">
-          <input className="mh-input" autoFocus value={newG} onChange={(e) => setNewG(e.target.value)} placeholder="Nombre del grupo" onKeyDown={(e) => e.key === "Enter" && newG.trim() && (saveGroups([...groups, { id: "g" + Date.now(), name: newG.trim(), ids: [] }]), setNewG(null))} />
-          <button type="button" className="mh-fbtn is-ok" onClick={() => newG.trim() && (saveGroups([...groups, { id: "g" + Date.now(), name: newG.trim(), ids: [] }]), setNewG(null))}><Check size={14} /></button>
+          <input className="mh-input" autoFocus maxLength={40} value={newG} onChange={(e) => setNewG(e.target.value)} placeholder="Nombre del grupo" onKeyDown={(e) => (e.key === "Enter" ? createNew() : e.key === "Escape" && setNewG(null))} />
+          <button type="button" className="mh-fbtn is-ok" onClick={createNew} aria-label="Crear grupo"><Check size={14} /></button>
         </div>
       )}
-      {groups.length === 0 && newG === null && <div className="mh-pop-empty">Agrupa a tus amigos (por ejemplo «Mesa de los viernes») para avisarlos o invitarlos de una vez.</div>}
-      {groups.map((g) => {
-        const mem = g.ids.map((id) => s.friends.find((f) => f.id === id)).filter(Boolean);
-        const on = mem.filter((m) => m.status !== "off").length;
-        const open = openG === g.id;
-        const f = gForm && gForm.id === g.id ? gForm : null;
+      {(s.groups || []).length === 0 && newG === null && <div className="mh-pop-empty">Crea un grupo (por ejemplo «Mesa de los viernes») para chatear con varios amigos a la vez e invitarlos juntos a una campaña.</div>}
+      {(s.groups || []).map(({ g, last, unread }) => {
+        const who = last && !last.sys ? (last.from === s.me?.id ? "Tú" : s.friends.find((f) => f.id === last.from)?.username || "") : "";
         return (
-          <div key={g.id} className="mh-grp">
-            <button type="button" className="mh-grp-h" onClick={() => setOpenG(open ? null : g.id)}>
-              <span className="mh-grp-ic"><Users size={14} /></span>
-              <span className="mh-grp-t"><b>{g.name}</b><small>{on} de {mem.length} en línea</small></span>
-              <ChevronRight size={14} style={{ transform: open ? "rotate(90deg)" : "none" }} />
-            </button>
-            {open && (
-              <div className="mh-grp-b">
-                <div className="mh-grp-av">{mem.map((m) => <Avatar key={m.id} name={m.username} size={26} status={m.status} />)}{mem.length === 0 && <small>Sin miembros todavía</small>}</div>
-                <div className="mh-grp-a">
-                  <button type="button" className="mh-fbtn" onClick={() => setGForm(f?.mode === "add" ? null : { id: g.id, mode: "add" })}><Plus size={12} /> Miembros</button>
-                  <button type="button" className="mh-fbtn" disabled={!mem.length} onClick={() => setGForm(f?.mode === "ping" ? null : { id: g.id, mode: "ping", text: "" })}><Megaphone size={12} /> Avisar</button>
-                  <button type="button" className="mh-fbtn" disabled={!mem.length || !bridge.camps.length} title={bridge.camps.length ? "" : "Necesitas una campaña"} onClick={() => setGForm(f?.mode === "inv" ? null : { id: g.id, mode: "inv" })}><BookOpen size={12} /> Invitar</button>
-                  <button type="button" className="mh-fbtn" aria-label="Borrar grupo" title="Borrar grupo" onClick={() => saveGroups(groups.filter((x) => x.id !== g.id))}><X size={12} /></button>
-                </div>
-                {f?.mode === "add" && <div className="mh-grp-pick">{s.friends.map((fr) => <button key={fr.id} type="button" className={g.ids.includes(fr.id) ? "is-on" : ""} onClick={() => saveGroups((cur) => cur.map((x) => (x.id === g.id ? { ...x, ids: x.ids.includes(fr.id) ? x.ids.filter((i) => i !== fr.id) : [...x.ids, fr.id] } : x)))}>{fr.username}</button>)}</div>}
-                {f?.mode === "ping" && (
-                  <div className="mh-grp-new">
-                    <input className="mh-input" autoFocus value={f.text} onChange={(e) => setGForm({ ...f, text: e.target.value })} placeholder="Mensaje para todo el grupo" />
-                    <button type="button" className="mh-fbtn is-ok" disabled={!f.text.trim()} onClick={async () => { const r = await Promise.all(mem.map((m) => sendDm(m, "📣 [" + g.name + "] " + f.text))); say(r.some(Boolean) ? "Algunos no aceptan mensajes." : "Aviso enviado al grupo."); setGForm(null); refreshSocial(); }}><Send size={13} /></button>
-                  </div>
-                )}
-                {f?.mode === "inv" && (
-                  <div className="mh-grp-pick">{bridge.camps.map((c) => <button key={c.id} type="button" onClick={async () => { const r = await Promise.all(mem.map((m) => inviteToCampaign(m, { campId: c.id, name: c.name, desc: c.desc, gm: s.me?.username || "", players: c.players }))); say("Invitaciones enviadas: " + r.filter((x) => x.startsWith("Invitación")).length + " de " + r.length); setGForm(null); }}>{c.name}</button>)}</div>
-                )}
-              </div>
-            )}
-          </div>
+          <button key={g.id} type="button" className="mh-gp-row" onClick={() => setGrp(g.id)}>
+            <GroupIcon id={g.id} />
+            <span className="mh-gp-t"><b>{g.name}</b><small>{last ? (last.invite ? "Invitación a «" + last.invite.name + "»" : (who ? who + ": " : "") + (last.text || "")) : g.members.length + " miembro" + (g.members.length === 1 ? "" : "s")}</small></span>
+            {unread > 0 && <span className="mh-gp-unread">{unread > 9 ? "9+" : unread}</span>}
+          </button>
         );
       })}
     </div>
   );
+  if (grp) return <aside className="mh-friends"><GroupPanel gid={grp} onBack={() => setGrp(null)} /></aside>;
   if (dm) return <aside className="mh-friends"><DmPanel peer={s.friends.find((f) => f.id === dm.id) || dm} me={s.me} onBack={() => setDm(null)} /></aside>;
   return (
     <aside className="mh-friends">
