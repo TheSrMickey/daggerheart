@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
-import { Bell, Search, UserPlus, Check, X, UserMinus, Star, MoreHorizontal, MessageCircle, BookOpen, User, Ban, ChevronLeft, ChevronRight, Send, Plus, Settings, LogOut } from "lucide-react";
+import { Bell, Search, UserPlus, Check, X, UserMinus, Star, MoreHorizontal, MessageCircle, BookOpen, User, Ban, ChevronLeft, ChevronRight, Send, Plus, Settings, LogOut, Users, Mail } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { loadSocial, searchPeople, sendRequest, respond, removeFriend, markNoticesRead, saveProfile, blockPerson, sendDm, loadDm, markDmRead, inviteToCampaign, createGroup, bridge } from "@/lib/social";
 import { GroupPanel, GroupIcon } from "./Groups";
@@ -295,9 +295,9 @@ export function FriendsPanel({ renderClass }) {
   return (
     <aside className="mh-friends">
       <div className="mh-friends-tabs">
-        <button type="button" className={tab === "amigos" ? "is-on" : ""} onClick={() => setTab("amigos")}>Amigos</button>
-        <button type="button" className={tab === "solicitudes" ? "is-on" : ""} onClick={() => setTab("solicitudes")}>
-          Solicitudes {s.incoming.length > 0 && <b>{s.incoming.length}</b>}
+        <button type="button" title="Amigos" aria-label="Amigos" className={tab === "amigos" ? "is-on" : ""} onClick={() => setTab("amigos")}><Users size={17} /><span className="lb">Amigos</span></button>
+        <button type="button" title="Solicitudes" aria-label="Solicitudes" className={tab === "solicitudes" ? "is-on" : ""} onClick={() => setTab("solicitudes")}>
+          <Mail size={17} /><span className="lb">Solicitudes</span> {s.incoming.length > 0 && <b>{s.incoming.length}</b>}
         </button>
       </div>
       <label className="mh-friends-search">
