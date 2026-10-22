@@ -347,6 +347,7 @@ export function FriendsPanel({ renderClass }) {
             </>
           )}
           {groupBlock()}
+          <hr className="mh-friends-hr" />
           {favFriends.length > 0 && (
             <>
               <h4>Favoritos <i>{favFriends.length}</i></h4>
