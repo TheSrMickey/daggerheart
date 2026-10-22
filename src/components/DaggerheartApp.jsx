@@ -7323,7 +7323,7 @@ const sharedStyles = `
   .mh-cls-dot { width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; box-shadow: 0 0 0 2px #ffffff22; }
   .mh-ctx { position: fixed; z-index: 80; width: 190px; padding: 5px; border-radius: 12px; background: var(--mh-panel2); border: 1px solid var(--mh-line2); box-shadow: 0 16px 40px #0008; display: flex; flex-direction: column; }
   .mh-ctx button { all: unset; cursor: pointer; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 8px; font-size: 12.5px; color: var(--mh-ink); }
-  .mh-ctx button:hover { background: #ffffff12; } .mh-ctx .is-danger { color: #ff7a7a; }
+  .mh-ctx button:hover { background: #ffffff12; } .mh-ctx button:disabled { opacity: .45; cursor: not-allowed; } .mh-ctx button:disabled:hover { background: none; } .mh-ctx .is-danger { color: #ff7a7a; }
   .mh-pop-empty { padding: 8px 6px; font-size: 12.5px; color: var(--mh-muted); line-height: 1.4; }
   .mh-bell { all: unset; cursor: pointer; position: relative; padding: 7px; border-radius: 8px; color: var(--mh-muted); display: flex; }
   .mh-bell:hover { background: var(--mh-panel3); color: var(--mh-ink); }
@@ -7503,7 +7503,7 @@ const sharedStyles = `
   .mh-gp { display: flex; flex-direction: column; height: calc(100vh - 60px); min-height: 380px; }
   .mh-gp-h { display: flex; align-items: center; gap: 9px; padding-bottom: 10px; border-bottom: 1px solid var(--mh-line); } .mh-gp-h .mh-gp-t b { font-size: 15.5px; white-space: normal; line-height: 1.2; overflow-wrap: anywhere; } .mh-gp-h .mh-gp-t small { white-space: normal; }
   .mh-gp-faces { display: flex; } .mh-gp-faces .mh-av { margin-left: -7px; border: 2px solid var(--mh-nav); box-sizing: content-box; } .mh-gp-faces .mh-av:first-child { margin-left: 0; }
-  .mh-gp-invbar { all: unset; box-sizing: border-box; cursor: pointer; margin: 10px 0 0; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 10px; border-radius: 10px; border: 1px dashed var(--mh-line2); font-size: 12px; font-weight: 600; color: var(--mh-gold-ink, #E3B04B); } .mh-gp-invbar:hover { background: rgba(227,176,75,.1); border-style: solid; }
+  .mh-gp-invbar { all: unset; box-sizing: border-box; cursor: pointer; margin: 10px 0 0; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 10px; border-radius: 10px; border: 1px dashed var(--mh-line2); font-size: 12px; font-weight: 600; color: var(--mh-gold-ink, #E3B04B); } .mh-gp-invbar:hover { background: rgba(227,176,75,.1); border-style: solid; } .mh-gp-invbar:disabled { opacity: .5; cursor: not-allowed; } .mh-gp-invbar:disabled:hover { background: none; border-style: dashed; }
   .mh-gp-feed { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 9px; padding: 12px 2px; scrollbar-width: thin; }
   .mh-gp-day { align-self: center; font-size: 11px; color: var(--mh-muted); padding: 2px 10px; border-radius: 99px; background: var(--mh-panel2); } .mh-gp-sys { align-self: center; text-align: center; font-size: 12px; color: var(--mh-muted); }
   .mh-gp-m { max-width: 90%; display: flex; gap: 8px; align-items: flex-end; align-self: flex-start; } .mh-gp-m.is-me { align-self: flex-end; flex-direction: row-reverse; }

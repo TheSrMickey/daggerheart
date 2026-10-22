@@ -193,7 +193,7 @@ export default function ProfilePage({ id, name }) {
             {isMe && !edit && <button type="button" className="mh-btn" onClick={startEdit}><Pencil size={14} /> Editar perfil</button>}
             {isMe && edit && <><button type="button" className="mh-btn" onClick={save}>Guardar perfil</button><button type="button" className="mh-btn-ghost" onClick={() => setEdit(false)}>Cancelar</button></>}
             {!isMe && friend && <button type="button" className="mh-btn" onClick={() => window.dispatchEvent(new CustomEvent("mh-dm", { detail: { id: uid } }))}><MessageCircle size={14} /> Mensaje</button>}
-            {!isMe && friend && <button type="button" className="mh-btn-ghost" onClick={() => setInv((v) => !v)}><BookOpen size={14} /> Invitar a una campaña</button>}
+            {!isMe && friend && <button type="button" className="mh-btn-ghost" disabled={bridge.camps.length === 0} title={bridge.camps.length === 0 ? "Necesitas una campaña a la que invitar" : undefined} onClick={() => setInv((v) => !v)}><BookOpen size={14} /> Invitar a una campaña</button>}
           </div>
         </div>
         {inv && (
