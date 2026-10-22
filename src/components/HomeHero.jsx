@@ -29,11 +29,50 @@ function NewsCard({ card, icons, FitTitle, FitBox }) {
   }, []);
   return (
     <div ref={ref} className="mh-news-card" aria-hidden="true" style={{ "--gc": card.color || "#C9A24A" }}>
-      <i className="mh-news-back is-b1" />
-      <i className="mh-news-back is-b2" />
       <div style={{ position: "absolute", left: 0, top: 0, width: 300, height: 420, transform: "scale(" + k + ")", transformOrigin: "0 0" }}>
         <CardFace c={card} I={icons[card.domain] || Layers} FitTitle={FitTitle} FitBox={FitBox} />
       </div>
+    </div>
+  );
+}
+
+// Montón de cartas del juego, como si hubieran caído: posiciones y giros fijos para cada día y cada «Otra carta».
+const rng = (seed) => () => { seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+const COLS = 9;
+const ROWS = 3;
+const PILE = COLS * ROWS;
+function CardPile({ cards, skip, seed, icons, FitTitle, FitBox }) {
+  const list = useMemo(() => {
+    const r = rng(seed);
+    const pool = cards.filter((c) => c.id !== skip && (c.image || c.kind !== "dominio"));
+    const out = [];
+    const used = new Set();
+    // Una carta por casilla de una rejilla con holgura aleatoria: cubre toda la caja sin huecos y cada una mira hacia un lado distinto.
+    for (let row = 0; row < ROWS; row++) {
+      for (let col = 0; col < COLS; col++) {
+        let c = null;
+        while (!c && used.size < pool.length) {
+          const p = pool[Math.floor(r() * pool.length)];
+          if (!used.has(p.id)) c = p;
+        }
+        if (!c) break;
+        used.add(c.id);
+        const x = ((col + 0.5) / COLS) * 100 + (r() - 0.5) * 7;
+        const y = [10, 50, 90][row] + (r() - 0.5) * 20;
+        out.push({ c, x, y, rot: r() * 360, s: 0.46 + r() * 0.1, dim: x < 38 ? 0.34 : x < 55 ? 0.46 : 0.62 });
+      }
+    }
+    return out;
+  }, [cards, skip, seed]);
+  return (
+    <div className="mh-news-pile" aria-hidden="true">
+      {list.map(({ c, x, y, rot, s, dim }) => (
+        <div key={c.id} className="mh-news-pc" style={{ left: x + "%", top: y + "%", width: 300 * s, height: 420 * s, marginLeft: -150 * s, marginTop: -210 * s, transform: "rotate(" + rot + "deg)", filter: "brightness(" + dim + ") saturate(.85)" }}>
+          <div style={{ width: 300, height: 420, transform: "scale(" + s + ")", transformOrigin: "0 0" }}>
+            <CardFace c={c} I={c.Icon || icons[c.domain] || Layers} FitTitle={FitTitle} FitBox={FitBox} />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -124,6 +163,7 @@ export function HomeHero({ camps, characters, featId, cards, color, icons, FitTi
   } else if (cur === "card") {
     body = (
       <>
+        <CardPile cards={cards} skip={card.id} seed={day * 31 + pick} icons={icons} FitTitle={FitTitle} FitBox={FitBox} />
         <span className="mh-news-glow" style={{ "--gc": card.color || "#C9A24A" }} aria-hidden="true" />
         <span className="mh-news-glow is-bl" style={{ "--gc": card.color || "#C9A24A" }} aria-hidden="true" />
         <NewsCard card={card} icons={icons} FitTitle={FitTitle} FitBox={FitBox} />
