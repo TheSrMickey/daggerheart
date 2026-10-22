@@ -7230,9 +7230,9 @@ const sharedStyles = `
   .mh-rail:not(.is-fold) .mh-rail-in { padding-top: 48px; } /* con el chat de la campaña, la campana no tapa su cabecera */
   .mh-rail:has(.mh-gp) .mh-rail-pin, .mh-rail:has(.mh-dm) .mh-rail-pin { display: none; } .mh-rail:has(.mh-gp) .mh-rail-in, .mh-rail:has(.mh-dm) .mh-rail-in { padding-top: 46px; } .mh-rail .mh-gp, .mh-rail .mh-dm { height: calc(100vh - 110px); } /* chat abierto: la campana y la chincheta no tapan la cabecera */
   .mh-rail-bell { position: absolute; top: 12px; right: 12px; z-index: 6; } .mh-rail.is-fold .mh-rail-bell { right: 15px; } .mh-rail.is-fold.is-open .mh-rail-bell, .mh-rail.is-fold:has(.mh-gp) .mh-rail-bell, .mh-rail.is-fold:has(.mh-dm) .mh-rail-bell { right: 12px; }
-  .mh-rail-pin { all: unset; position: absolute; top: 16px; left: 14px; z-index: 6; width: 26px; height: 26px; border-radius: 8px; cursor: pointer; display: none; align-items: center; justify-content: center; color: var(--mh-muted2); } .mh-rail.is-open .mh-rail-pin { display: inline-flex; animation: mh-fade-in .2s ease both; } .mh-rail-pin:hover { background: #ffffff12; color: var(--mh-ink); } .mh-rail-pin.is-on { color: #E3B04B; } .mh-rail-pin.is-on svg { fill: currentColor; } .mh-rail-pin:focus-visible { outline: 2px solid #E3B04B; }
+  .mh-rail-pin { all: unset; position: absolute; top: 16px; left: 14px; z-index: 6; width: 26px; height: 26px; border-radius: 8px; cursor: pointer; display: none; align-items: center; justify-content: center; color: var(--mh-muted2); } .mh-rail.is-hover .mh-rail-pin { display: inline-flex; animation: mh-fade-in .2s ease both; } .mh-rail-pin:hover { background: #ffffff12; color: var(--mh-ink); } .mh-rail-pin.is-on { color: #E3B04B; } .mh-rail-pin.is-on svg { fill: currentColor; } .mh-rail-pin:focus-visible { outline: 2px solid #E3B04B; }
   html[data-mh-theme="light"] .mh-rail-pin:hover { background: #0000000d; }
-  .mh-rail .mh-friends-tabs { min-height: 34px; align-items: center; padding: 0 46px 0 4px; margin-bottom: 8px; transition: padding-left .25s ease; } .mh-rail.is-fold.is-open .mh-friends-tabs { padding-left: 38px; } .mh-friends-tabs svg { display: none; }
+  .mh-rail .mh-friends-tabs { min-height: 34px; align-items: center; padding: 0 46px 0 4px; margin-bottom: 8px; transition: padding-left .25s ease; } .mh-rail.is-fold.is-hover .mh-friends-tabs { padding-left: 38px; } .mh-friends-tabs svg { display: none; }
   ${RAIL_MINI} .mh-friends { padding: 56px 6px 12px; } ${RAIL_MINI} .mh-friends-tabs { flex-direction: column; gap: 6px; padding: 0; margin: 0 0 8px; } ${RAIL_MINI} .mh-friends-tabs .lb { display: none; } ${RAIL_MINI} .mh-friends-tabs svg { display: block; } ${RAIL_MINI} .mh-friends-tabs button { position: relative; justify-content: center; width: 42px; height: 38px; border-radius: 12px; } ${RAIL_MINI} .mh-friends-tabs button.is-on { background: #ffffff12; } ${RAIL_MINI} .mh-friends-tabs b { position: absolute; top: 0; right: 0; }
   ${RAIL_MINI} .mh-friends-search, ${RAIL_MINI} .mh-friends-msg, ${RAIL_MINI} .mh-pop-empty, ${RAIL_MINI} .mh-friends-sec h4, ${RAIL_MINI} .mh-friend-t, ${RAIL_MINI} .mh-friend .mh-fbtn, ${RAIL_MINI} .mh-friend .mh-cls-dot, ${RAIL_MINI} .mh-gp-row .mh-gp-t, ${RAIL_MINI} .mh-friend > small { display: none; } ${RAIL_MINI} .mh-friends-sec { margin: 4px 0 0; padding-top: 6px; }
   ${RAIL_MINI} .mh-gp-row { position: relative; justify-content: center; padding: 0; margin: 0 0 8px; border: 0; background: none; } ${RAIL_MINI} .mh-gp-unread { position: absolute; top: -4px; right: 4px; border: 2px solid var(--mh-nav); box-sizing: content-box; } ${RAIL_MINI} .mh-friend { position: relative; justify-content: center; padding: 5px 0; } ${RAIL_MINI} .mh-friend .mh-unread { position: absolute; top: 0; right: 4px; } ${RAIL_MINI} .mh-friends-hr { margin: 6px 8px; }
@@ -7267,8 +7267,16 @@ const sharedStyles = `
   html[data-mh-theme="light"] .mh-news-tag { color: #8A5E0C; background: #E3B04B26; border-color: #C9A24A88; }
   html[data-mh-theme="light"] .mh-home-news .mh-home-btn.is-ghost { background: #EAE2D3; color: #221C2B; } html[data-mh-theme="light"] .mh-home-news .mh-home-btn.is-ghost:hover { background: #DFD5C1; }
   @media (max-width: 720px) { .mh-news-art { inset: 0; opacity: .55; } .mh-home-news h2 { font-size: 26px; } .mh-home-news { padding: 26px 20px; } }
-  /* Inicio: todo cabe en la pantalla, sin deslizar. La novedad se encoge para dejar sitio; en pantallas muy bajas vuelve el desplazamiento. */
-  @media (min-height: 760px) { .mh-main-fit { overflow-y: hidden !important; } .mh-main-fit > .mh-view-in { height: 100%; } .mh-main-fit .mh-home, .mh-main-fit .mh-home-main { height: 100%; } .mh-main-fit .mh-home-main { display: flex; flex-direction: column; min-height: 0; } .mh-main-fit .mh-home-main > * { flex: none; } .mh-main-fit .mh-home-news { flex: 1 1 auto; min-height: 170px; padding-top: 22px; padding-bottom: 24px; } .mh-main-fit .mh-home-sec { margin: 16px 0 10px; } }
+  /* Inicio: se ajusta a la pantalla sin deslizar. Lo que se encoge primero es la novedad (pierde el texto y luego la etiqueta); las filas de
+     campañas y personajes son de una sola línea y se desplazan hacia los lados si no caben. Solo en pantallas muy bajas vuelve el scroll vertical. */
+  @media (min-height: 700px) { .mh-main-fit > .mh-view-in { height: 100%; } .mh-main-fit .mh-home, .mh-main-fit .mh-home-main { height: 100%; } .mh-main-fit .mh-home-main { display: flex; flex-direction: column; min-height: 0; } .mh-main-fit .mh-home-main > * { flex: none; }
+    .mh-main-fit .mh-home-news { flex: 1 1 0; min-height: 96px; container-type: size; padding-top: 20px; padding-bottom: 22px; }
+    .mh-main-fit .mh-home-sec { margin: 16px 0 10px; }
+    .mh-main-fit .mh-hrow { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(300px, 1fr); overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; padding-bottom: 2px; }
+    @container (max-height: 250px) { .mh-main-fit .mh-home-news p { display: none; } .mh-main-fit .mh-home-news h2 { font-size: 24px; margin-bottom: 10px; } }
+    @container (max-height: 170px) { .mh-main-fit .mh-news-tag { display: none; } .mh-main-fit .mh-home-news h2 { font-size: 20px; margin-bottom: 8px; } .mh-main-fit .mh-home-cta { gap: 8px; } }
+    @container (max-height: 130px) { .mh-main-fit .mh-home-cta { display: none; } }
+  }
   .mh-home-sec { display: flex; align-items: center; justify-content: space-between; margin: 26px 0 12px; }
   .mh-home-sec h3 { margin: 0; font-size: 16px; font-weight: 700; color: var(--mh-ink); }
   .mh-home-sec h3 i { font-style: normal; font-size: 11px; padding: 2px 7px; border-radius: 10px; background: var(--mh-panel3); color: var(--mh-muted); margin-left: 6px; vertical-align: 2px; }
@@ -7347,7 +7355,8 @@ const sharedStyles = `
   .mh-bell b { position: absolute; top: 1px; right: 0; min-width: 15px; height: 15px; border-radius: 8px; background: #c0443a; color: #fff; font-size: 9.5px; display: flex; align-items: center; justify-content: center; padding: 0 3px; }
   .mh-pop-bg { position: fixed; inset: 0; z-index: 70; }
   .mh-pop { position: fixed; z-index: 71; left: 16px; bottom: 70px; width: min(330px, calc(100vw - 32px)); max-height: 60vh; overflow-y: auto; border-radius: 14px; background: var(--mh-panel); border: 1px solid var(--mh-line); box-shadow: 0 20px 50px #0007; padding: 8px; }
-  .mh-pop-h { padding: 8px 8px 10px; font-weight: 700; font-size: 14px; color: var(--mh-ink); }
+  .mh-pop-h { padding: 8px 8px 10px; font-weight: 700; font-size: 14px; color: var(--mh-ink); display: flex; align-items: center; justify-content: space-between; gap: 8px; } .mh-pop-clear { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px; border-radius: 99px; border: 1px solid var(--mh-line2); font-size: 11.5px; font-weight: 600; color: var(--mh-muted); } .mh-pop-clear:hover { color: #D9644E; border-color: rgba(217,100,78,.55); } .mh-pop-clear:focus-visible, .mh-notice-x:focus-visible { outline: 2px solid #E3B04B; }
+  .mh-pop-n { max-height: min(70vh, 560px); } .mh-notice { position: relative; } .mh-notice-t { flex: 1; padding-right: 22px; } .mh-notice-x { all: unset; cursor: pointer; position: absolute; top: 8px; right: 6px; width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center; color: var(--mh-muted); } .mh-notice-x:hover { background: var(--mh-panel3); color: var(--mh-ink); }
   .mh-notice { display: flex; gap: 10px; padding: 9px 8px; border-radius: 10px; font-size: 12.5px; color: var(--mh-ink); }
   .mh-notice.is-new { background: #2a56c41f; }
   .mh-notice-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; } .mh-notice-t small { color: var(--mh-muted); }
@@ -12798,6 +12807,23 @@ export default function App({ onSignOut }) {
   const [railHover, setRailHover] = useState(false);
   useEffect(() => {
     try { if (localStorage.getItem("mh-rail-pin") === "1") setRailPin(true); } catch {}
+  }, []);
+  // Primera vez en la cuenta: los dos menús laterales empiezan desplegados (fijados). Si ya habías elegido, se respeta.
+  useEffect(() => {
+    let live = true;
+    (async () => {
+      const done = await safeGet("menus-init", false);
+      if (!live || done) return;
+      let fresh = true;
+      try { fresh = localStorage.getItem("mh-isle-pin") === null && localStorage.getItem("mh-rail-pin") === null; } catch {}
+      if (fresh) {
+        setIslePin(true);
+        setRailPin(true);
+        try { localStorage.setItem("mh-isle-pin", "1"); localStorage.setItem("mh-rail-pin", "1"); } catch {}
+      }
+      safeSet("menus-init", "1", false);
+    })();
+    return () => { live = false; };
   }, []);
   const toggleRailPin = () => {
     const next = !railPin;
@@ -27738,7 +27764,7 @@ export default function App({ onSignOut }) {
         {showRail && (
           <div className={"mh-rail-wrap" + (railFold ? " is-fold" : "") + (railPin ? " is-pin" : "")}>
             <div
-              className={"mh-rail" + (railFold ? " is-fold" : "") + (railFold && (railPin || railHover) ? " is-open" : "") + (railPin ? " is-pin" : "")}
+              className={"mh-rail" + (railFold ? " is-fold" : "") + (railFold && (railPin || railHover) ? " is-open" : "") + (railFold && railHover ? " is-hover" : "") + (railPin ? " is-pin" : "")}
               onMouseEnter={() => railFold && setRailHover(true)}
               onMouseLeave={() => railFold && railLeave()}
               onFocusCapture={() => railFold && setRailHover(true)}

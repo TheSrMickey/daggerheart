@@ -18,7 +18,7 @@ export type SocialState = { me: Person | null; friends: Person[]; incoming: Pers
 type Pair = { from: string; to: string; status: "pending" | "friends" | "none"; at: number };
 type Presence = { mk?: boolean; cls: string | null; at: number; act: number; away: boolean; off?: boolean; dnd?: boolean; camp?: string; role?: string; campSince?: number };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type NoticeRow = { type: Notice["type"]; from: string; at: number; read: boolean; data?: any };
+type NoticeRow = { type: Notice["type"]; from: string; at: number; read: boolean; dismissed?: boolean; data?: any };
 
 const isDev = () => process.env.NODE_ENV === "development" && typeof window !== "undefined" && window.location.pathname.startsWith("/dev-preview");
 let client: ReturnType<typeof createClient> | null = null;
@@ -100,7 +100,7 @@ export async function loadSocial(): Promise<SocialState> {
       sb().from("kv_shared").select("key, value").like("key", `nt:${me.id}:%`).order("updated_at", { ascending: false }).limit(30),
     ]);
     pairs = (p.data ?? []).map((r) => parse<Pair>(r.value)).filter((x): x is Pair => !!x);
-    rows = (n.data ?? []).map((r) => ({ key: r.key, value: parse<NoticeRow>(r.value)! })).filter((r) => r.value);
+    rows = (n.data ?? []).map((r) => ({ key: r.key, value: parse<NoticeRow>(r.value)! })).filter((r) => r.value && !r.value.dismissed);
   }
 
   const myProfile = await getProfile(me.id);
@@ -199,6 +199,19 @@ export async function removeFriend(other: Person) {
   await writeShared(key, pair, me.id);
 }
 
+// Descartar avisos: se quedan en la base (las filas compartidas no se pueden borrar) pero dejan de mostrarse.
+export async function dismissNotices(list: Notice[]) {
+  const me = await myself();
+  if (!me) return;
+  for (const n of list) {
+    if (isDev()) {
+      const i = devNotices.findIndex((x) => x.key === n.key);
+      if (i >= 0) devNotices.splice(i, 1);
+    } else {
+      await writeShared(n.key, { type: n.type, from: n.from.id, at: n.at, read: true, dismissed: true, ...(n.data ? { data: n.data } : {}) } satisfies NoticeRow, me.id);
+    }
+  }
+}
 export async function markNoticesRead(list: Notice[]) {
   const me = await myself();
   if (!me) return;

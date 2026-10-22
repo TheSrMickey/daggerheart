@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
-import { Bell, Search, UserPlus, Check, X, UserMinus, Star, MoreHorizontal, MessageCircle, BookOpen, User, Ban, ChevronLeft, ChevronRight, Send, Plus, Settings, LogOut, Users, Mail } from "lucide-react";
+import { Bell, Search, UserPlus, Check, X, UserMinus, Star, MoreHorizontal, MessageCircle, BookOpen, User, Ban, ChevronLeft, ChevronRight, Send, Plus, Settings, LogOut, Users, Mail, Trash2 } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
-import { loadSocial, searchPeople, sendRequest, respond, removeFriend, markNoticesRead, saveProfile, blockPerson, sendDm, loadDm, markDmRead, inviteToCampaign, createGroup, bridge } from "@/lib/social";
+import { loadSocial, searchPeople, sendRequest, respond, removeFriend, markNoticesRead, dismissNotices, saveProfile, blockPerson, sendDm, loadDm, markDmRead, inviteToCampaign, createGroup, bridge } from "@/lib/social";
 import { GroupPanel, GroupIcon } from "./Groups";
 
 // Estado compartido entre la campana y el panel de amigos (se refresca cada 6 s con la pestaña visible y al volver a ella).
@@ -98,6 +98,8 @@ export function NotificationBell({ placement }) {
     setPos(r.top < window.innerHeight / 2 ? { top: r.bottom + 8, bottom: "auto", left } : { top: "auto", bottom: window.innerHeight - r.top + 8, left: Math.max(8, Math.min(r.left, window.innerWidth - w - 8)) });
     setOpen(true);
   };
+  const dismissOne = async (n) => (await dismissNotices([n]), refreshSocial());
+  const dismissAll = async () => (await dismissNotices(s.notices), refreshSocial());
   const close = async () => {
     setOpen(false);
     if (unread.length) {
@@ -111,11 +113,15 @@ export function NotificationBell({ placement }) {
         <Bell size={16} />
         {unread.length > 0 && <b>{unread.length > 9 ? "9+" : unread.length}</b>}
       </button>
-      {open && (
+      {/* El panel se pinta fuera de la columna derecha (que recorta y desenfoca el fondo), en la raíz de la aplicación. */}
+      {open && typeof document !== "undefined" && createPortal(
         <>
           <div className="mh-pop-bg" onClick={close} />
-          <div className="mh-pop" style={pos || undefined} role="dialog" aria-label="Notificaciones">
-            <div className="mh-pop-h">Notificaciones</div>
+          <div className="mh-pop mh-pop-n" style={pos || undefined} role="dialog" aria-label="Notificaciones">
+            <div className="mh-pop-h">
+              <span>Notificaciones</span>
+              {s.notices.length > 0 && <button type="button" className="mh-pop-clear" onClick={dismissAll}><Trash2 size={12} /> Descartar todas</button>}
+            </div>
             {s.notices.length === 0 && <div className="mh-pop-empty">No tienes avisos nuevos.</div>}
             {s.notices.map((n) => {
               const pending = n.type === "friend_request" && s.incoming.some((p) => p.id === n.from.id);
@@ -147,11 +153,13 @@ export function NotificationBell({ placement }) {
                       </div>
                     )}
                   </div>
+                  <button type="button" className="mh-notice-x" onClick={() => dismissOne(n)} aria-label="Descartar este aviso" title="Descartar"><X size={13} /></button>
                 </div>
               );
             })}
           </div>
-        </>
+        </>,
+        document.querySelector(".mh-root") || document.body
       )}
     </>
   );
