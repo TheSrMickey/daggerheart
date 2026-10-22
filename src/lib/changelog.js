@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "mejora", text: "Campañas rediseñadas: la creación es ahora un panel completo con vista previa en vivo de la tarjeta, en cuatro pasos (cómo empezar —en blanco o con la aventura de Sablewood—, nombre, descripción y color, líneas y velos, e imágenes con IA). Las tarjetas muestran el número de personajes y etiquetas de IA y de límites, y en la cabecera de la campaña «Líneas y velos» se despliega con el detalle para toda la mesa. Al crear una campaña entras directamente en ella. La aventura de Sablewood también se puede personalizar y ahora cuenta para el logro «Anfitrión»." },
       { tag: "mejora", text: "Insignias: al abrir un logro la insignia gira sola, despacio (una vuelta cada ~8 segundos); si la arrastras se detiene en tu mano y, al soltarla, retoma el giro. Con «reducir movimiento» no gira sola." },
       { tag: "mejora", text: "Perfil: en la pestaña Resumen ya no se repite la lista de logros (tiene su propia pestaña); se mantiene la vitrina." },
       { tag: "arreglo", text: "Amigos: el menú de los tres puntos de un amigo (favoritos, mensaje, invitar, perfil, bloquear, eliminar) no se veía; ahora aparece junto al botón." },
