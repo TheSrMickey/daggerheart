@@ -78,6 +78,70 @@ export function JoinCard({ camp, onDone }) {
   );
 }
 
+const NOTICE_KIND = { friend_request: "Solicitud de amistad", friend_accepted: "Amistad", campaign_invite: "Invitación a campaña", lf_request: "Busca mesa" };
+const noticeText = (n) => n.type === "friend_request" ? "quiere ser tu amigo" : n.type === "friend_accepted" ? "ha aceptado tu solicitud de amistad" : n.type === "campaign_invite" ? "te invita a su campaña" : "quiere unirse a «" + (n.data?.title || "tu anuncio") + "»";
+
+const TOAST_MS = 8000;
+function NoticeToast({ n, pending, onClose }) {
+  const sticky = n.type === "campaign_invite"; // las invitaciones no se ocultan solas
+  useEffect(() => {
+    if (sticky) return;
+    const t = setTimeout(onClose, TOAST_MS);
+    return () => clearTimeout(t);
+  }, []);
+  const view = () => (onClose(), window.dispatchEvent(new Event("mh-notices-open")));
+  return (
+    <div className="mh-ntoast" data-t={n.type} role="status">
+      <Avatar name={n.from.username} />
+      <div className="mh-ntoast-b">
+        <i className="mh-notice-k">Nuevo · {NOTICE_KIND[n.type]}</i>
+        <span><b>{n.from.username}</b> {noticeText(n)}</span>
+        <div className="mh-notice-a">
+          {pending && <button type="button" className="is-ok" onClick={async () => (await respond(n.from, true), onClose(), refreshSocial())}>Aceptar</button>}
+          {(n.type === "campaign_invite" || n.type === "lf_request") && <button type="button" className="is-ok" onClick={view}>{n.type === "campaign_invite" ? "Ver invitación" : "Ver"}</button>}
+          {pending && <button type="button" onClick={onClose}>Después</button>}
+        </div>
+      </div>
+      <button type="button" className="mh-notice-x" onClick={onClose} aria-label="Cerrar aviso" title="Cerrar"><X size={13} /></button>
+      {!sticky && <span className="mh-ntoast-bar" style={{ animationDuration: TOAST_MS + "ms" }} />}
+    </div>
+  );
+}
+
+// Avisos flotantes: solo para los que llegan con la sesión abierta (los que ya había al entrar se ven en la campana).
+export function NoticeToasts() {
+  const s = useSocial();
+  const seen = useRef(null);
+  const [list, setList] = useState([]);
+  const [right, setRight] = useState(24);
+  useEffect(() => {
+    if (!s.me) return;
+    if (seen.current === null) { seen.current = new Set(s.notices.map((n) => n.key)); return; }
+    const fresh = s.notices.filter((n) => !n.read && !seen.current.has(n.key));
+    fresh.forEach((n) => seen.current.add(n.key));
+    if (fresh.length) setList((l) => [...fresh, ...l].slice(0, 3));
+  }, [s]);
+  useEffect(() => {
+    const h = () => setList([]);
+    window.addEventListener("mh-notices-opened", h);
+    return () => window.removeEventListener("mh-notices-opened", h);
+  }, []);
+  useEffect(() => {
+    const r = document.querySelector(".mh-rail-wrap")?.getBoundingClientRect();
+    setRight(r && r.width > 0 && r.left > window.innerWidth / 2 ? Math.round(window.innerWidth - r.left + 14) : 24);
+  }, [list.length]);
+  const shown = list.map((n) => s.notices.find((x) => x.key === n.key && !x.read)).filter(Boolean);
+  if (!shown.length || typeof document === "undefined") return null;
+  return createPortal(
+    <div className="mh-ntoasts" style={{ right }}>
+      {shown.map((n) => (
+        <NoticeToast key={n.key} n={n} pending={n.type === "friend_request" && s.incoming.some((p) => p.id === n.from.id)} onClose={() => setList((l) => l.filter((x) => x.key !== n.key))} />
+      ))}
+    </div>,
+    document.querySelector(".mh-root") || document.body
+  );
+}
+
 // Campana de avisos con panel desplegable.
 export function NotificationBell({ placement }) {
   const s = useSocial();
@@ -90,14 +154,23 @@ export function NotificationBell({ placement }) {
     window.addEventListener("keydown", esc);
     return () => window.removeEventListener("keydown", esc);
   }, [open]);
-  const toggle = (e) => {
+  const btnRef = useRef(null);
+  const openAt = (el) => {
     // El panel se abre pegado a la campana (no en una esquina fija).
-    const r = e.currentTarget.getBoundingClientRect();
-    const w = Math.min(330, window.innerWidth - 16);
+    const r = el.getBoundingClientRect();
+    const w = Math.min(372, window.innerWidth - 16);
     const left = Math.max(8, Math.min(r.right - w, window.innerWidth - w - 8));
     setPos(r.top < window.innerHeight / 2 ? { top: r.bottom + 8, bottom: "auto", left } : { top: "auto", bottom: window.innerHeight - r.top + 8, left: Math.max(8, Math.min(r.left, window.innerWidth - w - 8)) });
     setOpen(true);
+    window.dispatchEvent(new Event("mh-notices-opened"));
   };
+  const toggle = (e) => openAt(e.currentTarget);
+  useEffect(() => {
+    // Los avisos flotantes piden abrir el panel; solo responde la campana que está a la vista.
+    const h = () => { const el = btnRef.current; if (el && el.offsetParent !== null) openAt(el); };
+    window.addEventListener("mh-notices-open", h);
+    return () => window.removeEventListener("mh-notices-open", h);
+  }, []);
   const dismissOne = async (n) => (await dismissNotices([n]), refreshSocial());
   const dismissAll = async () => (await dismissNotices(s.notices), refreshSocial());
   const close = async () => {
@@ -109,7 +182,7 @@ export function NotificationBell({ placement }) {
   };
   return (
     <>
-      <button type="button" className={"mh-bell" + (placement === "top" ? " is-top" : "")} onClick={open ? close : toggle} aria-label="Notificaciones" title="Notificaciones">
+      <button type="button" ref={btnRef} className={"mh-bell" + (placement === "top" ? " is-top" : "")} onClick={open ? close : toggle} aria-label="Notificaciones" title="Notificaciones">
         <Bell size={16} />
         {unread.length > 0 && <b>{unread.length > 9 ? "9+" : unread.length}</b>}
       </button>
@@ -123,40 +196,46 @@ export function NotificationBell({ placement }) {
               {s.notices.length > 0 && <button type="button" className="mh-pop-clear" onClick={dismissAll}><Trash2 size={12} /> Descartar todas</button>}
             </div>
             {s.notices.length === 0 && <div className="mh-pop-empty">No tienes avisos nuevos.</div>}
-            {s.notices.map((n) => {
-              const pending = n.type === "friend_request" && s.incoming.some((p) => p.id === n.from.id);
-              return (
-                <div key={n.key} className={"mh-notice" + (n.read ? "" : " is-new")}>
-                  <Avatar name={n.from.username} />
-                  <div className="mh-notice-t">
-                    <span>
-                      <b>{n.from.username}</b>{" "}
-                      {n.type === "friend_request" ? "quiere ser tu amigo" : n.type === "friend_accepted" ? "ha aceptado tu solicitud de amistad" : n.type === "campaign_invite" ? "te invita a su campaña" : "quiere unirse a «" + (n.data?.title || "tu anuncio") + "»"}
-                    </span>
-                    {n.type === "campaign_invite" && n.data && (
-                      <div className="mh-notice-card">
-                        <b className="mh-serif">{n.data.name}</b>
-                        <small>{n.data.gm ? n.data.gm + " es el DJ · " : ""}{n.data.players || 0} jugador{n.data.players === 1 ? "" : "es"}{n.data.desc ? " · " + n.data.desc : ""}</small>
-                        <JoinCard camp={n.data} />
+            {[["Nuevas", s.notices.filter((n) => !n.read)], ["Anteriores", s.notices.filter((n) => n.read)]].map(([label, list]) => list.length > 0 && (
+              <div key={label} className="mh-notice-grp">
+                <div className="mh-notice-sec">{label}{label === "Nuevas" ? " · " + list.length : ""}</div>
+                {list.map((n) => {
+                  const pending = n.type === "friend_request" && s.incoming.some((p) => p.id === n.from.id);
+                  return (
+                    <div key={n.key} className={"mh-notice" + (n.read ? "" : " is-new")} data-t={n.type}>
+                      <Avatar name={n.from.username} />
+                      <div className="mh-notice-t">
+                        <i className="mh-notice-k">{NOTICE_KIND[n.type]}</i>
+                        <span>
+                          <b>{n.from.username}</b>{" "}
+                          {noticeText(n)}
+                        </span>
+                        <small>{ago(n.at)}</small>
+                        {n.type === "campaign_invite" && n.data && (
+                          <div className="mh-notice-card">
+                            <b className="mh-serif">{n.data.name}</b>
+                            <small>{n.data.gm ? n.data.gm + " es el DJ · " : ""}{n.data.players || 0} jugador{n.data.players === 1 ? "" : "es"}{n.data.desc ? " · " + n.data.desc : ""}</small>
+                            <JoinCard camp={n.data} />
+                          </div>
+                        )}
+                        {n.type === "lf_request" && (
+                          <div className="mh-notice-a">
+                            <button type="button" className="is-ok" onClick={async () => (n.data?.camp ? await inviteToCampaign(n.from, n.data.camp) : await sendDm(n.from, "¡Hola! He visto que quieres unirte a «" + (n.data?.title || "mi mesa") + "». Cuéntame un poco de ti."), refreshSocial())}>{n.data?.camp ? "Invitar a la campaña" : "Contestar"}</button>
+                          </div>
+                        )}
+                        {pending && (
+                          <div className="mh-notice-a">
+                            <button type="button" className="is-ok" onClick={async () => (await respond(n.from, true), refreshSocial())}>Aceptar</button>
+                            <button type="button" onClick={async () => (await respond(n.from, false), refreshSocial())}>Rechazar</button>
+                          </div>
+                        )}
                       </div>
-                    )}
-                    {n.type === "lf_request" && (
-                      <div className="mh-notice-a">
-                        <button type="button" className="is-ok" onClick={async () => (n.data?.camp ? await inviteToCampaign(n.from, n.data.camp) : await sendDm(n.from, "¡Hola! He visto que quieres unirte a «" + (n.data?.title || "mi mesa") + "». Cuéntame un poco de ti."), refreshSocial())}>{n.data?.camp ? "Invitar a la campaña" : "Contestar"}</button>
-                      </div>
-                    )}
-                    <small>{ago(n.at)}</small>
-                    {pending && (
-                      <div className="mh-notice-a">
-                        <button type="button" className="is-ok" onClick={async () => (await respond(n.from, true), refreshSocial())}>Aceptar</button>
-                        <button type="button" onClick={async () => (await respond(n.from, false), refreshSocial())}>Rechazar</button>
-                      </div>
-                    )}
-                  </div>
-                  <button type="button" className="mh-notice-x" onClick={() => dismissOne(n)} aria-label="Descartar este aviso" title="Descartar"><X size={13} /></button>
-                </div>
-              );
-            })}
+                      <button type="button" className="mh-notice-x" onClick={() => dismissOne(n)} aria-label="Descartar este aviso" title="Descartar"><X size={13} /></button>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
           </div>
         </>,
         document.querySelector(".mh-root") || document.body
