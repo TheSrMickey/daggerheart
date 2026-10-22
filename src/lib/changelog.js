@@ -6,6 +6,8 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "nuevo", text: "Ajustes · «Ilustraciones oficiales»: un interruptor que oculta todas las ilustraciones oficiales del juego (cartas de dominio, clases, subclases, ancestrías, comunidades y transformaciones) y deja los colores y los iconos. Tus propias imágenes no cambian." },
+      { tag: "nuevo", text: "Inicio de sesión y registro: junto al botón de modo claro/oscuro hay un botón con una flecha que cambia el formulario de lado (izquierda o derecha) con una pequeña animación; se recuerda en este navegador." },
       { tag: "mejora", text: "Campañas rediseñadas: la creación es ahora un panel completo con vista previa en vivo de la tarjeta, en cuatro pasos (cómo empezar —en blanco o con la aventura de Sablewood—, nombre, descripción y color, líneas y velos, e imágenes con IA). Las tarjetas muestran el número de personajes y etiquetas de IA y de límites, y en la cabecera de la campaña «Líneas y velos» se despliega con el detalle para toda la mesa. Al crear una campaña entras directamente en ella. La aventura de Sablewood también se puede personalizar y ahora cuenta para el logro «Anfitrión»." },
       { tag: "nuevo", text: "Nueva aventura de inicio: «La ladrona de deseos» (The Wish Thief). Seis actos con escenas, pistas ocultas por noble, reparto con estadísticas, diálogos, notas de cada acto y mapas con las cuentas atrás de la investigación y la persecución y el combate del puerto." },
       { tag: "mejora", text: "Sablewood · los vecinos de Hush y la Arcanista tienen estadísticas, los capítulos traen varias escenas (el festival, el ritual, la Aguja…) y cada pista está atada a su acto." },

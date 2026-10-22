@@ -77,7 +77,14 @@ const CLASS_COLORS = {
   Invocador: "#8E6FC4",
   "Cazador de Sangre": "#A8323E",
 };
-const DEFAULT_SETTINGS = { classColors: true, tutorial: false, headerArt: true, immersive: false };
+const DEFAULT_SETTINGS = { classColors: true, tutorial: false, headerArt: true, immersive: false, officialArt: true };
+// Ilustraciones oficiales del juego: se ocultan por CSS con `html[data-mh-art="off"]` (y se recuerda en este navegador para no parpadear al cargar).
+const applyOfficialArt = (off) => {
+  try {
+    document.documentElement.dataset.mhArt = off ? "off" : "on";
+    localStorage.setItem("mh-art", off ? "off" : "on");
+  } catch {}
+};
 // Texto oscuro o blanco según lo claro que sea el color.
 function onColor(hex) {
   const n = parseInt(hex.slice(1), 16);
@@ -7508,6 +7515,8 @@ const sharedStyles = `
   .mh-cg-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; } .mh-cg-chips > * { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 99px; font: 600 11.5px 'Inter', system-ui, sans-serif; border: 1px solid var(--mh-line2); background: var(--mh-panel2); color: var(--mh-muted); } .mh-cg-chips .is-ai { color: var(--mh-gold-ink, #E3B04B); border-color: rgba(227,176,75,.4); } .mh-cg-chips .is-lv { color: #7E5BC4; border-color: rgba(126,91,196,.45); cursor: pointer; } .mh-cg-chips button.is-lv:hover, .mh-cg-chips button.is-lv.is-on { background: rgba(126,91,196,.14); } .mh-cg-chips button:focus-visible { outline: 2px solid #7E5BC4; outline-offset: 2px; }
   .mh-cg-lv { margin: 0 0 14px; padding: 14px 18px; border-radius: 16px; border: 1px solid var(--mh-line); background: var(--mh-panel); animation: mh-fade-in .18s ease both; } .mh-cg-lv > p { margin: 0 0 12px; font-size: 12.5px; color: var(--mh-muted); } .mh-cg-lv-g { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; } .mh-cg-lv-g > div { padding: 10px 12px; border-radius: 12px; background: var(--mh-panel2); border: 1px solid var(--mh-line); } .mh-cg-lv-g b { display: block; margin-bottom: 8px; font-size: 12.5px; } .mh-cg-lv-g .is-line b { color: #C0504A; } .mh-cg-lv-g .is-veil b { color: #7E5BC4; } .mh-cg-lv-g > div > div { display: flex; flex-wrap: wrap; gap: 6px; } .mh-cg-lv-g span { padding: 3px 10px; border-radius: 99px; font: 600 12px 'Inter', system-ui, sans-serif; border: 1px solid; } .mh-cg-lv-g .is-line span { color: #C0504A; border-color: rgba(192,80,74,.5); background: rgba(192,80,74,.1); } .mh-cg-lv-g .is-veil span { color: #7E5BC4; border-color: rgba(126,91,196,.5); background: rgba(126,91,196,.1); } .mh-cg-lv-g small { color: var(--mh-muted); }
   @media (max-width: 900px) { .mh-cc { grid-template-columns: 1fr; padding: 18px 16px; } .mh-cc-side { position: static; order: 2; } .mh-cc-opts, .mh-cg-lv-g { grid-template-columns: 1fr; } .mh-camps-head { flex-wrap: wrap; } }
+  html[data-mh-art="off"] img[src*="/ancestrias/"], html[data-mh-art="off"] img[src*="/clases/"], html[data-mh-art="off"] img[src*="/cartas-dominio/"], html[data-mh-art="off"] img[src*="/comunidades/"], html[data-mh-art="off"] img[src*="/subclases/"], html[data-mh-art="off"] img[src*="/transformaciones/"], html[data-mh-art="off"] img[src*="/formas-bestia/"] { opacity: 0 !important; visibility: hidden !important; }
+  html[data-mh-art="off"] [style*="/ancestrias/"], html[data-mh-art="off"] [style*="/clases/"], html[data-mh-art="off"] [style*="/cartas-dominio/"], html[data-mh-art="off"] [style*="/comunidades/"], html[data-mh-art="off"] [style*="/subclases/"], html[data-mh-art="off"] [style*="/transformaciones/"], html[data-mh-art="off"] [style*="/formas-bestia/"] { background-image: none !important; }
   .pf { max-width: 1040px; } .pf-back { margin-bottom: 10px; } .pf-card { background: var(--mh-panel); border: 1px solid var(--mh-line); border-radius: 20px; overflow: hidden; }
   .pf-ban { height: 130px; background: linear-gradient(135deg, color-mix(in srgb, var(--c, #4f9a62) 55%, var(--mh-panel)) 0%, color-mix(in srgb, var(--c, #4f9a62) 16%, var(--mh-panel)) 100%); position: relative; } .pf-ban::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--mh-ink) 5%, transparent) 0 2px, transparent 2px 14px); }
   .pf-head { display: flex; gap: 20px; align-items: flex-start; padding: 0 28px; margin-top: -50px; position: relative; flex-wrap: wrap; } .pf-head .so-av, .pf-head > :first-child { flex: none; } .pf-who { flex: 1; min-width: 220px; padding-top: 58px; } .pf-who h1 { margin: 0; font-size: 28px; font-weight: 600; letter-spacing: .02em; color: var(--mh-ink); } .pf-who small { color: var(--mh-muted); }
@@ -10807,13 +10816,16 @@ export default function App({ onSignOut }) {
       const st = await safeGet("settings", false);
       if (st) {
         try {
-          setSettings({ ...DEFAULT_SETTINGS, ...JSON.parse(st.value) });
+          const loaded = { ...DEFAULT_SETTINGS, ...JSON.parse(st.value) };
+          setSettings(loaded);
+          applyOfficialArt(loaded.officialArt === false);
         } catch {}
       }
     })();
   }, []);
 
   const updateSetting = (key, value) => {
+    if (key === "officialArt") applyOfficialArt(value === false);
     setSettings((prev) => {
       const next = { ...prev, [key]: value };
       safeSet("settings", JSON.stringify(next), false);
@@ -30687,6 +30699,29 @@ export default function App({ onSignOut }) {
                     aria-label="Ilustración de la cabecera"
                     className="mh-switch"
                     onClick={() => updateSetting("headerArt", settings.headerArt === false)}
+                  >
+                    <span className="mh-switch-knob" />
+                  </button>
+                </div>
+              </div>
+              <div className="mh-card" style={{ margin: 0 }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--mh-panel3)", color: "var(--mh-gold-ink)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Palette size={18} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14.5, fontWeight: 600, color: "var(--mh-ink)" }}>Ilustraciones oficiales</div>
+                    <div style={{ fontSize: 12.5, color: "var(--mh-muted)", marginTop: 3, lineHeight: 1.5 }}>
+                      Muestra las ilustraciones oficiales del juego: cartas de dominio, clases, subclases, ancestrías, comunidades y transformaciones. Si lo desactivas se ocultan todas y quedan los colores y los iconos; tus propias imágenes no cambian.
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={settings.officialArt !== false}
+                    aria-label="Ilustraciones oficiales"
+                    className="mh-switch"
+                    onClick={() => updateSetting("officialArt", settings.officialArt === false)}
                   >
                     <span className="mh-switch-knob" />
                   </button>

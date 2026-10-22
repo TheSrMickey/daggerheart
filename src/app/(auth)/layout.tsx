@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { AuthSideToggle } from "@/components/AuthSideToggle";
 import { AuthThemeToggle } from "@/components/AuthThemeToggle";
 
 // El marco de las pantallas de acceso vive aquí para que no se vuelva a montar al pasar de iniciar sesión a registrarse:
@@ -9,7 +10,10 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       <div className="auth-win">
         <section className="auth-left">
           {children}
-          <AuthThemeToggle />
+          <div className="auth-ctl">
+            <AuthThemeToggle />
+            <AuthSideToggle />
+          </div>
         </section>
         <section className="auth-art" aria-hidden="true" />
       </div>
