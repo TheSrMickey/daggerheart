@@ -6,6 +6,8 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "arreglo", text: "Inicio: el anuncio de Hope & Fear vuelve a mostrar siempre la etiqueta, la descripción y los botones; si la pantalla es baja, es la página la que se desplaza." },
+      { tag: "mejora", text: "Ajustes: ahora se muestra en la columna central con la misma disposición que el resto de páginas, con la columna de amigos a la derecha." },
       { tag: "mejora", text: "Columna derecha: una vez fijada, la chincheta desaparece y solo se muestra al pasar el ratón por la columna." },
       { tag: "arreglo", text: "Notificaciones: el panel ya no se corta dentro de la columna derecha y cada aviso tiene una X para descartarlo, además de «Descartar todas»." },
       { tag: "mejora", text: "La primera vez que entras en tu cuenta, los dos menús laterales aparecen desplegados y fijados por defecto." },

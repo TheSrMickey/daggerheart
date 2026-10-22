@@ -7270,12 +7270,9 @@ const sharedStyles = `
   /* Inicio: se ajusta a la pantalla sin deslizar. Lo que se encoge primero es la novedad (pierde el texto y luego la etiqueta); las filas de
      campañas y personajes son de una sola línea y se desplazan hacia los lados si no caben. Solo en pantallas muy bajas vuelve el scroll vertical. */
   @media (min-height: 700px) { .mh-main-fit > .mh-view-in { height: 100%; } .mh-main-fit .mh-home, .mh-main-fit .mh-home-main { height: 100%; } .mh-main-fit .mh-home-main { display: flex; flex-direction: column; min-height: 0; } .mh-main-fit .mh-home-main > * { flex: none; }
-    .mh-main-fit .mh-home-news { flex: 1 1 0; min-height: 96px; container-type: size; padding-top: 20px; padding-bottom: 22px; }
+    .mh-main-fit .mh-home-news { flex: 1 0 auto; min-height: 230px; padding-top: 20px; padding-bottom: 22px; }
     .mh-main-fit .mh-home-sec { margin: 16px 0 10px; }
     .mh-main-fit .mh-hrow { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(300px, 1fr); overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; padding-bottom: 2px; }
-    @container (max-height: 250px) { .mh-main-fit .mh-home-news p { display: none; } .mh-main-fit .mh-home-news h2 { font-size: 24px; margin-bottom: 10px; } }
-    @container (max-height: 170px) { .mh-main-fit .mh-news-tag { display: none; } .mh-main-fit .mh-home-news h2 { font-size: 20px; margin-bottom: 8px; } .mh-main-fit .mh-home-cta { gap: 8px; } }
-    @container (max-height: 130px) { .mh-main-fit .mh-home-cta { display: none; } }
   }
   .mh-home-sec { display: flex; align-items: center; justify-content: space-between; margin: 26px 0 12px; }
   .mh-home-sec h3 { margin: 0; font-size: 16px; font-weight: 700; color: var(--mh-ink); }
@@ -16330,7 +16327,7 @@ export default function App({ onSignOut }) {
     window.addEventListener("mh-profile", open);
     return () => window.removeEventListener("mh-profile", open);
   }, []);
-  const showRail = showTopbar && view !== "ajustes";
+  const showRail = showTopbar;
   const modernCamp = view === "ficha" && modernCharId && detailTab === "campaign" ? Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(modernCharId)) : null;
   const railFold = showRail && !modernCamp; // plegable salvo con el chat de la campaña, que necesita todo el ancho
   const railW = !showRail ? 0 : railFold && !railPin ? 86 : 290;
@@ -30703,7 +30700,7 @@ export default function App({ onSignOut }) {
           {view === "cartas" && <CardsPage items={buildCardCatalog()} domainColors={DOMAIN_COLORS} icons={DOMAIN_ICONS} FitTitle={FitTitle} FitBox={FitBox} />}
 
           {view === "ajustes" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 14, maxWidth: 640 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div className="mh-card" style={{ margin: 0 }}>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
                   <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--mh-panel3)", color: "var(--mh-gold-ink)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
