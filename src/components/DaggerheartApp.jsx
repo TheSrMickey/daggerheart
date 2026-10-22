@@ -7168,7 +7168,8 @@ const sharedStyles = `
   .mh-isle:not(:hover):not(.is-pin):not(.is-open):not(:has(:focus-visible)) .mh-isle-logo { justify-content: center; padding: 0; }
   .mh-isle-logo b { font-size: 15px; font-weight: 700; letter-spacing: .02em; color: var(--mh-ink); }
   .mh-isle-pin { all: unset; margin-left: auto; width: 26px; height: 26px; border-radius: 8px; cursor: pointer; display: none; align-items: center; justify-content: center; color: var(--mh-muted2); }
-  .mh-isle:hover .mh-isle-pin, .mh-isle:has(:focus-visible) .mh-isle-pin, .mh-isle.is-pin .mh-isle-pin, .mh-isle.is-open .mh-isle-pin { display: inline-flex; }
+  .mh-isle:hover .mh-isle-pin, .mh-isle:has(:focus-visible) .mh-isle-pin { display: inline-flex; }
+  .mh-isle:not(:hover):not(:has(:focus-visible)) .lb.mh-isle-pin { display: none; }
   .mh-isle-pin:hover { background: #ffffff12; color: var(--mh-ink); } .mh-isle-pin.is-on { color: #E3B04B; } .mh-isle-pin.is-on svg { fill: currentColor; }
   .mh-isle-it { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 13px; border-radius: 15px; cursor: pointer; flex-shrink: 0; font-size: 13px; font-weight: 500; white-space: nowrap; color: var(--mh-ink3); overflow: hidden; }
   .mh-isle-it > svg { flex-shrink: 0; }
@@ -7179,6 +7180,8 @@ const sharedStyles = `
   .mh-isle-it:focus-visible { outline: 2px solid #E3B04B; outline-offset: -2px; }
   .mh-isle-it.is-on { background: #E3B04B; color: #1F1606; box-shadow: 0 6px 18px #E3B04B44; }
   .mh-isle-it.is-on .mh-navver { color: #1F1606aa; }
+  .mh-isle-hr { height: 1px; margin: 6px 10px; background: var(--mh-line); flex-shrink: 0; }
+  .mh-isle-list > .mh-isle-sec:first-child { display: none; } .mh-isle:hover .mh-isle-list > .mh-isle-sec:first-child, .mh-isle:has(:focus-visible) .mh-isle-list > .mh-isle-sec:first-child, .mh-isle.is-pin .mh-isle-list > .mh-isle-sec:first-child, .mh-isle.is-open .mh-isle-list > .mh-isle-sec:first-child { display: block; margin-top: 4px; }
   .mh-isle-list { display: flex; flex-direction: column; gap: 3px; overflow-y: auto; min-height: 0; scrollbar-width: none; }
   .mh-isle-list::-webkit-scrollbar { display: none; }
   .mh-isle-sec { height: 1px; margin: 7px 10px; background: var(--mh-line); font-size: 0; overflow: hidden; flex-shrink: 0; }
@@ -7192,6 +7195,7 @@ const sharedStyles = `
   .mh-isle-t small { font-size: 10.5px; color: var(--mh-muted2); font-weight: 500; overflow: hidden; text-overflow: ellipsis; }
   .mh-isle-fl { flex: 1; min-height: 6px; }
   .mh-isle-acct { position: relative; flex-shrink: 0; display: block; }
+  .mh-isle .mh-isle-acct { display: block; width: 100%; } .mh-isle-acct > .mh-isle-it { width: 100%; }
   .mh-isle .mh-acct-menu { top: auto; bottom: 0; left: calc(100% + 18px); right: auto; }
   .mh-navitem { display: flex; align-items: center; gap: 10px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 500; white-space: nowrap; color: var(--mh-ink3); border: 1px solid transparent; }
   .mh-navitem:hover { background: #ffffff0a; }
@@ -27303,8 +27307,9 @@ export default function App({ onSignOut }) {
                   </button>
                 );
               })}
+              <div className="mh-isle-hr" aria-hidden="true" />
               <div className="mh-isle-list">
-                <div className="mh-isle-sec">Mis campañas</div>
+                {camps.length > 0 && <div className="mh-isle-sec">Mis campañas</div>}
                 {camps.map((cp) => (
                   <button type="button" key={cp.id} title={cp.name || "Campaña"} className="mh-isle-it av" onClick={() => (go("campaigns"), setViewingCampaignId(cp.id))}>
                     <span className="mh-isle-ic"><BookOpen size={16} /></span>
@@ -27330,6 +27335,7 @@ export default function App({ onSignOut }) {
                 )}
               </div>
               <div className="mh-isle-fl" />
+              <div className="mh-isle-hr" aria-hidden="true" />
               <button type="button" title="Actualizaciones" className={"mh-isle-it" + (view === "actualizaciones" ? " is-on" : "")} onClick={() => go("actualizaciones")}>
                 <History size={18} strokeWidth={1.8} />
                 <span className="lb">Actualizaciones</span>
