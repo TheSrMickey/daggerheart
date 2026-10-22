@@ -6,6 +6,10 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "mejora", text: "Columna derecha: una vez fijada, la chincheta desaparece y solo se muestra al pasar el ratón por la columna." },
+      { tag: "arreglo", text: "Notificaciones: el panel ya no se corta dentro de la columna derecha y cada aviso tiene una X para descartarlo, además de «Descartar todas»." },
+      { tag: "mejora", text: "La primera vez que entras en tu cuenta, los dos menús laterales aparecen desplegados y fijados por defecto." },
+      { tag: "arreglo", text: "Inicio: con campañas y personajes ya no se recorta ni desaparece el anuncio de Hope & Fear; el anuncio se encoge antes que nada y las filas de campañas y personajes se desplazan en horizontal." },
       { tag: "nuevo", text: "Columna derecha plegable, como el menú de la izquierda: plegada es una barra estrecha con las pestañas, los grupos (con su contador) y tus amigos con su estado; al pasar el ratón se despliega entera por encima del contenido, con la chincheta en la esquina superior izquierda (las pestañas «Amigos» y «Solicitudes» se desplazan con una animación para no solaparse) y se puede fijar abierta. Con un chat abierto se despliega sola. La campana de notificaciones va siempre en su esquina superior derecha." },
       { tag: "nuevo", text: "Ajustes: nuevo botón «Reiniciar» las estadísticas del widget «Tus dados» y, abajo del todo, «Borrar cuenta» con doble comprobación (un aviso y escribir BORRAR). Requiere ejecutar la migración 0005 en Supabase." },
       { tag: "mejora", text: "Inicio: ya no se desliza hacia abajo (todo cabe en pantalla; en pantallas muy bajas se mantiene el desplazamiento), «Retoma tus campañas» no aparece si no tienes campañas, «Tus dados» ya no muestra el número junto al título, y las tarjetas de «Tus personajes» y campañas tienen su versión para el modo claro." },
