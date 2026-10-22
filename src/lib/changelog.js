@@ -7,7 +7,7 @@ export const CHANGELOG = [
     title: "Grupos y notificaciones nuevas",
     blurb: "Chatea con toda tu mesa en un grupo compartido y recibe los avisos como tarjetas, también flotando mientras juegas.",
     items: [
-      { tag: "mejora", text: "Inicio · la carta del día va sobre un montón de cartas del juego repartidas por toda la caja, giradas en todas direcciones y sin huecos (cambia cada día y con «Otra carta»), con un resplandor del color de su dominio." },
+      { tag: "mejora", text: "Inicio · la carta del día va sobre un montón de cartas del juego repartidas por toda la caja, giradas en todas direcciones y sin huecos (cambia cada día y con «Otra carta»), con un resplandor del color de su dominio. Se ve bien también en modo día y la carta del día es algo más grande y está más a la izquierda." },
       { tag: "mejora", text: "Inicio · la carta del día usa el mismo diseño que las cartas de dominio de la pestaña Cartas (arte, nivel, coste de recuperación, texto y dominio)." },
       { tag: "mejora", text: "Inicio · se quita la barra de ruta de arriba y la caja de novedades destacadas sube, con una altura contenida y el contenido centrado; sus controles quedan alineados con el margen de la caja." },
       { tag: "nuevo", text: "Inicio: el anuncio de la expansión pasa a ser un carrusel de anuncios que cambia solo cada 9 s (se pausa al pasar el ratón; con flechas, puntos y deslizando en móvil). Además de Hope & Fear salen: la novedad de la versión (hasta que la abres), tu próxima sesión, «Aún sin mesa» si no tienes campañas y una carta de dominio del día." },

@@ -7284,12 +7284,15 @@ const sharedStyles = `
   .mh-news-orb { position: absolute; right: 32px; top: 50%; translate: 0 -50%; z-index: 2; width: 120px; height: 120px; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(#6f9bff 0 70%, #ffffff18 0); }
   .mh-news-orb span { width: 96px; height: 96px; border-radius: 50%; background: #12102a; display: grid; place-items: center; font: 600 24px "Cinzel", Georgia, serif; color: #fff; }
   .mh-news-orb.is-avs { background: none; width: auto; height: auto; display: flex; } .mh-news-orb.is-avs span { width: 44px; height: 44px; margin-left: -10px; border: 2px solid var(--ns); font: 700 16px "Inter", system-ui, sans-serif; } .mh-news-orb.is-avs span:first-child { margin-left: 0; }
-  .mh-news-card { position: absolute; right: 36px; top: 20px; bottom: 60px; z-index: 2; aspect-ratio: 5 / 7; rotate: 5deg; border-radius: 22px; box-shadow: 0 18px 40px #000a, 0 0 30px #A58BE855; } .mh-news-card .mh-cardc { pointer-events: none; }
+  .mh-news-card { position: absolute; right: 64px; top: 10px; bottom: 56px; z-index: 2; aspect-ratio: 5 / 7; rotate: 5deg; border-radius: 22px; box-shadow: 0 18px 40px #000a, 0 0 30px #A58BE855; } .mh-news-card .mh-cardc { pointer-events: none; }
   /* Carta del día: resplandor del color del dominio a la derecha y en la esquina inferior izquierda, y dos cartas asomando por detrás */
   .mh-news-glow { position: absolute; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(ellipse 55% 95% at 84% 50%, color-mix(in srgb, var(--gc) 80%, transparent) 0%, color-mix(in srgb, var(--gc) 33%, transparent) 38%, transparent 72%); }
   .mh-news-glow.is-bl { background: radial-gradient(ellipse 44% 85% at 0% 100%, color-mix(in srgb, var(--gc) 60%, transparent) 0%, color-mix(in srgb, var(--gc) 26%, transparent) 40%, transparent 74%); }
   .mh-news-pile { position: absolute; inset: 0; z-index: 1; overflow: hidden; pointer-events: none; } .mh-news-pc { position: absolute; z-index: 1; transform-origin: 50% 50%; filter: brightness(.62) saturate(.85); box-shadow: 0 8px 18px #0009; border-radius: 12px; }
   .mh-news-card { z-index: 3 !important; box-shadow: 0 22px 46px #000d, 0 0 0 1px #ffffff26, 0 0 40px color-mix(in srgb, var(--gc) 55%, transparent) !important; }
+  html[data-mh-theme="light"] .mh-news-pile { z-index: 0; } html[data-mh-theme="light"] .mh-news-pc { filter: saturate(.85) !important; box-shadow: 0 6px 14px #5a4a2a33; }
+  html[data-mh-theme="light"] .mh-news-card { box-shadow: 0 18px 36px #3a2a0a66, 0 0 0 1px #00000018, 0 0 36px color-mix(in srgb, var(--gc) 45%, transparent) !important; }
+  html[data-mh-theme="light"] .mh-news-glow { opacity: .55; }
   .mh-news-back { position: absolute; inset: 0; border-radius: 22px; border: 2px solid var(--gc); background: var(--mh-panel); box-shadow: 0 10px 24px #0008; transform-origin: 50% 100%; pointer-events: none; }
   .mh-news-back.is-b1 { transform: translate(-34%, 5%) rotate(-14deg) scale(.88); opacity: .8; } .mh-news-back.is-b2 { transform: translate(-17%, 3%) rotate(-6deg) scale(.88); opacity: .92; }
   .mh-home-news > .mh-news-ctl { position: absolute; right: 32px; bottom: 20px; z-index: 3; display: flex; align-items: center; gap: 7px; }
