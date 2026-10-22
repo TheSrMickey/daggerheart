@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "mejora", text: "Menú lateral · cuenta: el nombre queda a la izquierda junto al icono y el círculo de estado va dentro del avatar, como en la lista de amigos. En el panel de amigos de la derecha se quitan de la parte superior tu nombre, tu icono, el selector de estado y la línea de debajo (el estado se cambia desde el menú de la cuenta)." },
       { tag: "mejora", text: "Menú lateral · cuenta: se quita el texto «Cuenta», el nombre queda centrado con el círculo de color de tu estado (y un punto en el avatar con el menú recogido). En el menú de la cuenta se quita «Jugando como» y se añade el selector de estado: En línea, No molestar e Invisible." },
       { tag: "mejora", text: "Menú lateral: la chincheta para fijarlo solo aparece al pasar el ratón por encima; hay una línea horizontal entre las pestañas y los accesos rápidos a campañas y personajes, y otra encima de «Actualizaciones»; sin campañas ya no aparece «Mis campañas»; y el botón con tu nombre («Cuenta») ocupa todo el ancho." },
       { tag: "mejora", text: "Registro: el campo «Nombre de jugador» pasa a llamarse «Usuario»; el formulario de acceso vuelve a quedar siempre a la izquierda." },

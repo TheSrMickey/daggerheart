@@ -167,7 +167,6 @@ export function FriendsPanel({ renderClass }) {
   const [menu, setMenu] = useState(null); // { p, x, y }
   const [dm, setDm] = useState(null);
   const [invOpen, setInvOpen] = useState(false);
-  const [stMenu, setStMenu] = useState(false);
   const [groups, setGroups] = useState([]);
   const [openG, setOpenG] = useState(null);
   const [gForm, setGForm] = useState(null); // { id, mode: "add" | "ping" | "inv", text }
@@ -182,8 +181,6 @@ export function FriendsPanel({ renderClass }) {
     setGroups(next);
     storageSet("friend-groups", JSON.stringify(next), false);
   };
-  const status = s.profile?.status || "on";
-  const setStatus = async (v) => (setStMenu(false), await saveProfile({ status: v }), refreshSocial());
   useEffect(() => {
     const open = (e) => { const p = s.friends.find((f) => f.id === e.detail?.id); if (p) setDm(p); };
     window.addEventListener("mh-dm", open);
@@ -309,21 +306,6 @@ export function FriendsPanel({ renderClass }) {
   if (dm) return <aside className="mh-friends"><DmPanel peer={s.friends.find((f) => f.id === dm.id) || dm} me={s.me} onBack={() => setDm(null)} /></aside>;
   return (
     <aside className="mh-friends">
-      <div className="mh-me-row">
-        <Avatar name={s.me?.username || "?"} size={30} status={status === "inv" ? "off" : status === "dnd" ? "dnd" : "on"} />
-        <span className="mh-me-t"><b>{s.me?.username || "Tú"}</b></span>
-        <button type="button" className="mh-st-btn" onClick={() => setStMenu((v) => !v)} aria-expanded={stMenu}><i className={"mh-st-dot is-" + status} />{{ on: "En línea", dnd: "No molestar", inv: "Invisible" }[status]} ▾</button>
-        {stMenu && (
-          <>
-            <div className="mh-pop-bg" onClick={() => setStMenu(false)} />
-            <div className="mh-ctx mh-st-menu" role="menu">
-              {[["on", "En línea", "Te ven los amigos"], ["dnd", "No molestar", "Apareces sin avisos"], ["inv", "Invisible", "Apareces desconectado"]].map(([k, l, d]) => (
-                <button key={k} type="button" role="menuitem" onClick={() => setStatus(k)}><i className={"mh-st-dot is-" + k} /><span style={{ flex: 1 }}>{l}<br /><small style={{ color: "var(--mh-muted)" }}>{d}</small></span>{status === k && <Check size={13} />}</button>
-              ))}
-            </div>
-          </>
-        )}
-      </div>
       <div className="mh-friends-tabs">
         <button type="button" className={tab === "amigos" ? "is-on" : ""} onClick={() => setTab("amigos")}>Amigos</button>
         <button type="button" className={tab === "solicitudes" ? "is-on" : ""} onClick={() => setTab("solicitudes")}>
@@ -510,8 +492,8 @@ export function AccountButton({ name, open, onToggle, onClose, onProfile, onSett
   return (
     <>
       <button type="button" className="mh-isle-it av mh-acct-btn" title={name + " · " + label} aria-label={"Cuenta de " + name + ", estado: " + label} aria-haspopup="menu" aria-expanded={open} onClick={onToggle}>
-        <span className="mh-brand-av">{(name || "?").trim().charAt(0).toUpperCase()}<i className={"mh-st-dot mh-acct-dot is-" + status} aria-hidden="true" /></span>
-        <span className="lb mh-acct-nm"><i className={"mh-st-dot is-" + status} aria-hidden="true" /><b>{name || "—"}</b></span>
+        <span className="mh-brand-av">{(name || "?").trim().charAt(0).toUpperCase()}<i className={"mh-st is-" + (status === "inv" ? "off" : status)} aria-hidden="true" /></span>
+        <span className="lb mh-acct-nm"><b>{name || "—"}</b></span>
       </button>
       {open && (
         <div className="mh-acct-menu" role="menu">

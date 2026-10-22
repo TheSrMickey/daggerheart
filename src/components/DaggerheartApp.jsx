@@ -7193,9 +7193,9 @@ const sharedStyles = `
   .mh-isle-t { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
   .mh-isle-t b { font-size: 12.5px; font-weight: 600; color: var(--mh-ink); overflow: hidden; text-overflow: ellipsis; }
   .mh-isle-t small { font-size: 10.5px; color: var(--mh-muted2); font-weight: 500; overflow: hidden; text-overflow: ellipsis; }
-  .mh-isle-it.mh-acct-btn { justify-content: flex-start; } .mh-acct-btn .mh-brand-av { position: relative; flex: none; } .mh-acct-btn .mh-acct-dot { position: absolute; right: -2px; bottom: -2px; width: 11px; height: 11px; border: 2px solid var(--mh-nav); box-sizing: border-box; } .mh-isle:hover .mh-acct-btn .mh-acct-dot, .mh-isle:has(:focus-visible) .mh-acct-btn .mh-acct-dot, .mh-isle.is-pin .mh-acct-btn .mh-acct-dot, .mh-isle.is-open .mh-acct-btn .mh-acct-dot { display: none; }
+  .mh-isle-it.mh-acct-btn { justify-content: flex-start; } .mh-acct-btn .mh-brand-av { position: relative; flex: none; overflow: visible; }
   .mh-isle:hover .lb.mh-acct-nm, .mh-isle:has(:focus-visible) .lb.mh-acct-nm, .mh-isle.is-pin .lb.mh-acct-nm, .mh-isle.is-open .lb.mh-acct-nm { display: flex; }
-  .mh-isle .lb.mh-acct-nm { margin-right: 40px; flex: 1; min-width: 0; align-items: center; justify-content: center; text-align: center; flex-direction: row; gap: 7px; } .mh-acct-nm b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 600; color: var(--mh-ink); } .mh-acct-nm .mh-st-dot { flex: none; }
+  .mh-isle .lb.mh-acct-nm { flex: 1; min-width: 0; align-items: center; justify-content: flex-start; text-align: left; } .mh-acct-nm b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 600; color: var(--mh-ink); }
   .mh-acct-who { text-align: left; } .mh-acct-st { padding: 2px 0 4px; margin-bottom: 4px; border-bottom: 1px solid var(--mh-line); } .mh-acct-st button { align-items: flex-start; } .mh-acct-st button > span { flex: 1; display: flex; flex-direction: column; min-width: 0; } .mh-acct-st button b { font-size: 12.5px; font-weight: 600; color: var(--mh-ink); } .mh-acct-st button small { font-size: 11px; color: var(--mh-muted); } .mh-acct-st .mh-st-dot { margin-top: 4px; flex: none; }
   .mh-isle-fl { flex: 1; min-height: 6px; }
   .mh-isle-acct { position: relative; flex-shrink: 0; display: block; }
@@ -7483,7 +7483,6 @@ const sharedStyles = `
   .gx-note { color: var(--mh-muted); font-size: 11.5px; margin: 2px 2px 0; }
   .mh-htag.is-btn { cursor: pointer; } .mh-htag.is-btn:hover { background: var(--mh-panel3); }
   .mh-st.is-dnd { background: #E0544A; } .mh-st-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #4CC36B; } .mh-st-dot.is-dnd { background: #E0544A; } .mh-st-dot.is-inv { background: #7d7d98; }
-  .mh-me-row { display: flex; align-items: center; gap: 9px; padding: 0 4px 10px; margin-bottom: 8px; border-bottom: 1px solid var(--mh-line); position: relative; } .mh-me-t { flex: 1; min-width: 0; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .mh-st-btn { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 99px; border: 1px solid var(--mh-line2); font-size: 11.5px; font-weight: 600; color: var(--mh-ink); } .mh-st-btn:hover { background: #ffffff0f; }
   .mh-st-menu { right: 0; top: 36px; position: absolute !important; width: 220px; z-index: 81; } .mh-st-menu button { align-items: flex-start; } .mh-st-menu .mh-st-dot { margin-top: 5px; }
   .mh-unread { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: #2a56c4; color: #fff; font-size: 10.5px; display: inline-flex; align-items: center; justify-content: center; }
