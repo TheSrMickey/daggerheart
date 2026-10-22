@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Sparkles, ChevronLeft, ChevronRight, CalendarDays, Layers } from "lucide-react";
 import { CHANGELOG } from "@/lib/changelog";
+import { CardFace } from "./Cards";
 import { useNextSession, fmtDate, fmtTime, countdown } from "./Calendar";
 
 // Carrusel de anuncios de Inicio: la expansión es fija; el resto aparece solo si aplica a la cuenta.
@@ -13,7 +14,29 @@ const lsGet = (k) => { try { return localStorage.getItem(k); } catch { return nu
 const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
 const short = (t, n) => { const s = (t || "").replace(/\s+/g, " ").trim(); const cut = s.search(/[.;:] /); const e = cut > 40 ? s.slice(0, cut + 1) : s; return e.length > n ? e.slice(0, n - 1).trimEnd() + "…" : e; };
 
-export function HomeHero({ camps, characters, featId, cards, color, onView, onChar, onCamp }) {
+// La carta del día con el mismo diseño que en la pestaña Cartas: se pinta a 300 × 420 y se reduce a la altura que deja la caja.
+function NewsCard({ card, icons, FitTitle, FitBox }) {
+  const ref = useRef(null);
+  const [k, setK] = useState(0.7);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return undefined;
+    const fit = () => setK(el.clientHeight / 420);
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return (
+    <div ref={ref} className="mh-news-card" aria-hidden="true">
+      <div style={{ position: "absolute", left: 0, top: 0, width: 300, height: 420, transform: "scale(" + k + ")", transformOrigin: "0 0" }}>
+        <CardFace c={card} I={icons[card.domain] || Layers} FitTitle={FitTitle} FitBox={FitBox} />
+      </div>
+    </div>
+  );
+}
+
+export function HomeHero({ camps, characters, featId, cards, color, icons, FitTitle, FitBox, onView, onChar, onCamp }) {
   const [seenVer, setSeenVer] = useState("");
   const [idx, setIdx] = useState(0);
   const [pick, setPick] = useState(0);
@@ -99,7 +122,7 @@ export function HomeHero({ camps, characters, featId, cards, color, onView, onCh
   } else if (cur === "card") {
     body = (
       <>
-        <div className="mh-news-card" aria-hidden="true"><img src={card.image} alt="" loading="lazy" /></div>
+        <NewsCard card={card} icons={icons} FitTitle={FitTitle} FitBox={FitBox} />
         <span className="mh-news-tag"><Layers size={12} /> Carta del día · {card.domain}</span>
         <h2 className="mh-serif">{card.key}</h2>
         <p>{short(card.text, 150)}</p>

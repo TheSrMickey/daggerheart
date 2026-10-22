@@ -19,7 +19,7 @@ export const KINDS = [
 const KIND_COLOR = { dominio: "#C9A24A", ascendencia: "#6FA3C0", comunidad: "#C08B5C", subclase: "#7FB77A", transformacion: "#A58BE8", forma: "#E0A04A", arma: "#C9A24A" };
 
 // La carta, tal cual se ve al abrirla; en la cuadrícula tiene exactamente el mismo tamaño (300 × 420).
-function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
+export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
   const col = c.color;
   const legend = c.kind === "arma" && c.tier === 4;
   const feats = c.features || [];

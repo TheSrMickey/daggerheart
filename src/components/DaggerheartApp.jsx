@@ -7284,7 +7284,7 @@ const sharedStyles = `
   .mh-news-orb { position: absolute; right: 32px; top: 50%; translate: 0 -50%; z-index: 2; width: 120px; height: 120px; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(#6f9bff 0 70%, #ffffff18 0); }
   .mh-news-orb span { width: 96px; height: 96px; border-radius: 50%; background: #12102a; display: grid; place-items: center; font: 600 24px "Cinzel", Georgia, serif; color: #fff; }
   .mh-news-orb.is-avs { background: none; width: auto; height: auto; display: flex; } .mh-news-orb.is-avs span { width: 44px; height: 44px; margin-left: -10px; border: 2px solid var(--ns); font: 700 16px "Inter", system-ui, sans-serif; } .mh-news-orb.is-avs span:first-child { margin-left: 0; }
-  .mh-news-card { position: absolute; right: 32px; top: 18px; bottom: 18px; z-index: 2; aspect-ratio: 5 / 7; rotate: 5deg; border-radius: 12px; overflow: hidden; box-shadow: 0 18px 40px #000a, 0 0 30px #A58BE855; } .mh-news-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .mh-news-card { position: absolute; right: 36px; top: 20px; bottom: 60px; z-index: 2; aspect-ratio: 5 / 7; rotate: 5deg; border-radius: 22px; box-shadow: 0 18px 40px #000a, 0 0 30px #A58BE855; } .mh-news-card .mh-cardc { pointer-events: none; }
   .mh-home-news > .mh-news-ctl { position: absolute; right: 32px; bottom: 20px; z-index: 3; display: flex; align-items: center; gap: 7px; }
   .mh-news-ar { all: unset; cursor: pointer; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: #000a; border: 1px solid #ffffff30; } .mh-news-ar:hover { background: #000d; }
   .mh-news-dot { all: unset; cursor: pointer; position: relative; overflow: hidden; width: 8px; height: 8px; border-radius: 99px; background: #ffffff55; transition: width .25s; } .mh-news-dot.is-on { width: 26px; }
@@ -27873,6 +27873,9 @@ export default function App({ onSignOut }) {
                     characters={characters}
                     featId={featId}
                     cards={buildCardCatalog()}
+                    icons={DOMAIN_ICONS}
+                    FitTitle={FitTitle}
+                    FitBox={FitBox}
                     color={(c) => (c.f_class ? classColor(c.f_class) : "#7A8CFF")}
                     onView={(v) => setView(v)}
                     onChar={(id) => openCharDetail(id)}
