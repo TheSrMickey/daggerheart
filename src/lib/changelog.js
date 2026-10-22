@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "mejora", text: "Menú lateral: la chincheta para fijarlo solo aparece al pasar el ratón por encima; hay una línea horizontal entre las pestañas y los accesos rápidos a campañas y personajes, y otra encima de «Actualizaciones»; sin campañas ya no aparece «Mis campañas»; y el botón con tu nombre («Cuenta») ocupa todo el ancho." },
       { tag: "mejora", text: "Registro: el campo «Nombre de jugador» pasa a llamarse «Usuario»; el formulario de acceso vuelve a quedar siempre a la izquierda." },
       { tag: "nuevo", text: "Ajustes · «Ilustraciones oficiales»: un interruptor que oculta todas las ilustraciones oficiales del juego (cartas de dominio, clases, subclases, ancestrías, comunidades y transformaciones) y deja los colores y los iconos. Tus propias imágenes no cambian." },
             { tag: "mejora", text: "Campañas rediseñadas: la creación es ahora un panel completo con vista previa en vivo de la tarjeta, en cuatro pasos (cómo empezar —en blanco o con la aventura de Sablewood—, nombre, descripción y color, líneas y velos, e imágenes con IA). Las tarjetas muestran el número de personajes y etiquetas de IA y de límites, y en la cabecera de la campaña «Líneas y velos» se despliega con el detalle para toda la mesa. Al crear una campaña entras directamente en ella. La aventura de Sablewood también se puede personalizar y ahora cuenta para el logro «Anfitrión»." },
