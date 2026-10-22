@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
-import { Bell, Search, UserPlus, Check, X, UserMinus, Star, MoreHorizontal, MessageCircle, BookOpen, User, Ban, ChevronLeft, ChevronRight, Send, Users, Plus, Megaphone } from "lucide-react";
+import { Bell, Search, UserPlus, Check, X, UserMinus, Star, MoreHorizontal, MessageCircle, BookOpen, User, Ban, ChevronLeft, ChevronRight, Send, Users, Plus, Megaphone, Settings, LogOut } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { loadSocial, searchPeople, sendRequest, respond, removeFriend, markNoticesRead, saveProfile, blockPerson, sendDm, loadDm, markDmRead, inviteToCampaign, bridge } from "@/lib/social";
 
@@ -497,5 +497,43 @@ function DmPanel({ peer, me, onBack }) {
         <button type="button" className="mh-fbtn is-ok" onClick={send} aria-label="Enviar"><Send size={14} /></button>
       </div>
     </div>
+  );
+}
+
+// Botón de la cuenta del menú lateral: nombre centrado con el círculo de color del estado y un menú con perfil, estado, ajustes y salir.
+const STATES = [["on", "En línea", "Te ven los amigos"], ["dnd", "No molestar", "Apareces sin avisos"], ["inv", "Invisible", "Apareces desconectado"]];
+export function AccountButton({ name, open, onToggle, onClose, onProfile, onSettings, onSignOut }) {
+  const s = useSocial();
+  const status = s.profile?.status || "on";
+  const setStatus = async (v) => (await saveProfile({ status: v }), refreshSocial());
+  const label = STATES.find((x) => x[0] === status)?.[1] || "En línea";
+  return (
+    <>
+      <button type="button" className="mh-isle-it av mh-acct-btn" title={name + " · " + label} aria-label={"Cuenta de " + name + ", estado: " + label} aria-haspopup="menu" aria-expanded={open} onClick={onToggle}>
+        <span className="mh-brand-av">{(name || "?").trim().charAt(0).toUpperCase()}<i className={"mh-st-dot mh-acct-dot is-" + status} aria-hidden="true" /></span>
+        <span className="lb mh-acct-nm"><i className={"mh-st-dot is-" + status} aria-hidden="true" /><b>{name || "—"}</b></span>
+      </button>
+      {open && (
+        <div className="mh-acct-menu" role="menu">
+          <div className="mh-acct-who"><b title={name}>{name || "—"}</b></div>
+          <div className="mh-acct-st" role="group" aria-label="Estado">
+            {STATES.map(([k, l, d]) => (
+              <button key={k} type="button" role="menuitemradio" aria-checked={status === k} onClick={() => setStatus(k)}>
+                <i className={"mh-st-dot is-" + k} />
+                <span><b>{l}</b><small>{d}</small></span>
+                {status === k && <Check size={14} />}
+              </button>
+            ))}
+          </div>
+          <button type="button" role="menuitem" onClick={() => (onClose(), onProfile())}><User size={15} /> Mi perfil</button>
+          <button type="button" role="menuitem" onClick={() => (onClose(), onSettings())}><Settings size={15} /> Ajustes</button>
+          {onSignOut && (
+            <form action={onSignOut}>
+              <button type="submit" role="menuitem"><LogOut size={15} /> Cerrar sesión</button>
+            </form>
+          )}
+        </div>
+      )}
+    </>
   );
 }
