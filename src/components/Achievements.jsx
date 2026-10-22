@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { ACHIEVEMENTS } from "@/lib/achievements";
 
 // Insignia hexagonal con marco por nivel y aviso al conseguir un logro. Solo se ven en el perfil y en el aviso.
@@ -25,42 +26,143 @@ const ICONS = {
   estaciones: <><circle cx="12" cy="12" r="4" /><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1" /></>,
 };
 
-const HEX = "M50 6l38 22v44L50 94 12 72V28z";
 const reduced = () => typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const AUTO_SPIN = 42; // grados por segundo al abrir una insignia (una vuelta cada ~8,5 s)
 const REST = -14; // ángulo de reposo: un poco girada para que se note el grosor
 
-// Cara de la insignia (plana). La parte 3D la compone `Badge` apilando rebanadas para dar grosor.
-let uid = 0;
-function Face({ a, locked, size, back }) {
-  const [id] = useState(() => "ab" + ++uid);
+// Texturas de las caras: el hueco interior del modelo (62x72 unidades del viewBox de 100). El marco, el grosor y los brillos son el modelo de Blender (public/modelos/insignia.glb).
+function faceSvg(a, locked, back) {
   const t = locked ? "bloqueado" : a.tier;
-  const [c1, c2, c3] = TIERS[t];
-  const glow = !locked && a.tier === "legendario" && !back;
-  return (
-    <svg className="ach3d-face" style={back ? { transform: "rotateY(180deg)" } : undefined} viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
-      <defs>
-        <linearGradient id={id} x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor={c1} /><stop offset="1" stopColor={c2} /></linearGradient>
-        {glow && <filter id={id + "f"} x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3.5" /></filter>}
-      </defs>
-      {glow && <g filter={`url(#${id}f)`} opacity=".85"><circle cx="50" cy="50" r="38" fill={c2} /></g>}
-      <path d={HEX} fill={`url(#${id})`} />
-      <path d="M50 14l31 18v36L50 86 19 68V32z" fill={c3} stroke={c1} strokeOpacity=".55" strokeWidth="1.5" />
-      {back && <path transform="translate(38.5 30.45) scale(0.115)" d="M100 0C101.5 66 106 109 200 115C106 121 102 164 100 340C98 164 94 121 0 115C94 109 98.5 66 100 0Z" fill={locked ? "#8a8a9c" : c1} fillOpacity=".92" />}
-      {!back && <g transform="translate(34 34) scale(1.333)" fill="none" stroke={locked ? "#8a8a9c" : c1} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">{ICONS[a.icon]}</g>}
-    </svg>
-  );
+  const [c1, , c3] = TIERS[t];
+  const icon = back
+    ? `<path transform="translate(38.5 30.45) scale(0.115)" d="M100 0C101.5 66 106 109 200 115C106 121 102 164 100 340C98 164 94 121 0 115C94 109 98.5 66 100 0Z" fill="${locked ? "#8a8a9c" : c1}" fill-opacity=".92"/>`
+    : `<g transform="translate(34 34) scale(1.333)" fill="none" stroke="${locked ? "#8a8a9c" : c1}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${renderToStaticMarkup(<>{ICONS[a.icon]}</>)}</g>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="19 14 62 72" width="496" height="576"><path d="M50 14l31 18v36L50 86 19 68V32z" fill="${c3}" stroke="${c1}" stroke-opacity=".55" stroke-width="1.5"/>${icon}</svg>`;
+}
+const texCache = new Map();
+function faceTexture(THREE, a, locked, back) {
+  const key = (locked ? "L" : a.tier) + "|" + (back ? "back" : a.icon);
+  if (texCache.has(key)) return texCache.get(key);
+  const cv = document.createElement("canvas");
+  cv.width = 496;
+  cv.height = 576;
+  const tex = new THREE.CanvasTexture(cv);
+  tex.flipY = false;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  const img = new Image();
+  img.onload = () => {
+    cv.getContext("2d").drawImage(img, 0, 0);
+    tex.needsUpdate = true;
+    tex.listeners?.forEach((fn) => fn());
+  };
+  img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(faceSvg(a, locked, back));
+  tex.listeners = new Set();
+  texCache.set(key, tex);
+  return tex;
+}
+// Un único renderer WebGL compartido: cada insignia pinta su fotograma y lo copia a su propio canvas 2D (así no se agotan los contextos WebGL).
+let glKit = null;
+function getKit() {
+  if (!glKit) {
+    glKit = (async () => {
+      const [THREE, { GLTFLoader }, { RoomEnvironment }] = await Promise.all([import("three"), import("three/examples/jsm/loaders/GLTFLoader.js"), import("three/examples/jsm/environments/RoomEnvironment.js")]);
+      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "high-performance" });
+      renderer.setClearColor(0x000000, 0);
+      renderer.setPixelRatio(1);
+      const pm = new THREE.PMREMGenerator(renderer);
+      const env = pm.fromScene(new RoomEnvironment(), 0.04).texture;
+      const gltf = await new GLTFLoader().loadAsync("/modelos/insignia.glb");
+      return { THREE, RoomEnvironment, renderer, env, model: gltf.scene };
+    })();
+  }
+  return glKit;
 }
 
-// Insignia en 3D con grosor. Solo con `rotatable` (el detalle abierto) gira sobre su eje vertical al deslizar a izquierda y derecha; detrás lleva el logo de la plataforma.
+// Insignia en 3D (modelo de Blender). Solo con `rotatable` (el detalle abierto) gira sobre su eje vertical al deslizar a izquierda y derecha; detrás lleva el logo de la plataforma.
 export function Badge({ a, locked, size = 84, rotatable = false }) {
-  const t = locked ? "bloqueado" : a.tier;
-  const rim = TIERS[t][1];
-  const thick = Math.max(4, Math.round(size * 0.1));
-  const half = thick / 2;
-  const el = useRef(null);
-  const st = useRef({ ang: REST, v: 0, down: false, x: 0, dist: 0, moved: false, raf: 0, timer: 0 });
-  const apply = () => { if (el.current) el.current.style.transform = `rotateY(${st.current.ang}deg)`; };
+  const cv = useRef(null);
+  const draw = useRef(null);
+  const st = useRef({ ang: REST, v: 0, down: false, x: 0, dist: 0, moved: false, raf: 0 });
+  const apply = () => draw.current?.(st.current.ang);
+  const dpr = typeof window === "undefined" ? 1 : Math.min(2, window.devicePixelRatio || 1);
+  const px = Math.round(size * dpr);
+  // Montaje: escena propia con el modelo; los materiales dependen del nivel.
+  useEffect(() => {
+    let dead = false;
+    const disposables = [];
+    const redraw = () => draw.current?.(st.current.ang, true);
+    const texs = [];
+    getKit().then(({ THREE, RoomEnvironment, renderer: shared, env: sharedEnv, model }) => {
+      if (dead || !cv.current) return;
+      // La insignia del detalle (la que gira) tiene su propio renderer que pinta directo en su lienzo, sin copiar cada fotograma; las pequeñas comparten uno.
+      let renderer = shared, env = sharedEnv;
+      const direct = rotatable;
+      if (direct) {
+        renderer = new THREE.WebGLRenderer({ canvas: cv.current, alpha: true, antialias: true, powerPreference: "high-performance" });
+        renderer.setClearColor(0x000000, 0);
+        renderer.setPixelRatio(1);
+        renderer.setSize(px, px, false);
+        env = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+        disposables.push({ dispose: () => { env.dispose(); renderer.dispose(); } });
+      }
+      const t = locked ? "bloqueado" : a.tier;
+      const [c1, c2] = TIERS[t];
+      const scene = new THREE.Scene();
+      scene.environment = env;
+      const pivot = new THREE.Group();
+      const m = model.clone(true);
+      m.rotation.x = Math.PI / 2;
+      pivot.add(m);
+      scene.add(pivot);
+      const key = new THREE.DirectionalLight(0xffffff, 1.1);
+      key.position.set(-2, 3, 4);
+      scene.add(key);
+      const cam = new THREE.PerspectiveCamera(30, 1, 0.1, 20);
+      cam.position.set(0, 0, 3.9);
+      const body = new THREE.MeshStandardMaterial({ color: new THREE.Color(locked ? "#7b7b8c" : c2).lerp(new THREE.Color(c1), locked ? 0 : 0.25), metalness: locked ? 0.45 : 0.9, roughness: locked ? 0.55 : 0.3, envMapIntensity: 1.1 });
+      if (!locked && a.tier === "legendario") {
+        body.emissive = new THREE.Color("#8f5be8");
+        body.emissiveIntensity = 0.18;
+      }
+      disposables.push(body);
+      const decal = (back) => {
+        const map = faceTexture(THREE, a, locked, back);
+        map.listeners.add(redraw);
+        texs.push(map);
+        const mat = new THREE.MeshStandardMaterial({ map, metalness: 0.15, roughness: 0.55, envMapIntensity: 0.5, transparent: true });
+        disposables.push(mat);
+        return mat;
+      };
+      m.traverse((o) => {
+        if (!o.isMesh) return;
+        o.material = o.name === "FaceF" ? decal(false) : o.name === "FaceB" ? decal(true) : body;
+      });
+      const ctx = direct ? null : cv.current.getContext("2d");
+      let lastAng = null;
+      draw.current = (ang, force) => {
+        if (!cv.current || (!force && ang === lastAng)) return;
+        lastAng = ang;
+        pivot.rotation.y = (ang * Math.PI) / 180;
+        if (direct) {
+          renderer.render(scene, cam);
+          return;
+        }
+        // Redimensionar el lienzo reasigna memoria: solo cuando cambia el tamaño (varias insignias comparten renderer).
+        if (renderer.domElement.width !== px || renderer.domElement.height !== px) renderer.setSize(px, px, false);
+        renderer.render(scene, cam);
+        ctx.clearRect(0, 0, px, px);
+        ctx.drawImage(renderer.domElement, 0, 0, px, px);
+      };
+      draw.current(st.current.ang, true);
+    });
+    return () => {
+      dead = true;
+      draw.current = null;
+      texs.forEach((tx) => tx.listeners.delete(redraw));
+      disposables.forEach((d) => d.dispose());
+    };
+  }, [a.id, a.tier, a.icon, locked, px, rotatable]);
   // Al abrir el detalle (`rotatable`) la insignia gira sola a velocidad suave; al arrastrarla se detiene en la mano
   // y, al soltarla, sigue por inercia y retoma el giro. Con «reducir movimiento» no gira sola.
   useEffect(() => {
@@ -101,23 +203,14 @@ export function Badge({ a, locked, size = 84, rotatable = false }) {
   const up = () => {
     st.current.down = false;
   };
-  const slices = Array.from({ length: thick }, (_, i) => i);
   return (
     <span
-      className={"ach3d" + (locked ? " is-lock" : "") + (rotatable ? " is-rot" : "")}
-      style={{ width: size, height: size, perspective: size * 5 }}
+      className={"ach3d" + (rotatable ? " is-rot" : "")}
+      style={{ width: size, height: size }}
       {...(rotatable ? { onPointerDown: down, onPointerMove: move, onPointerUp: up, onPointerCancel: up } : {})}
       aria-hidden="true"
     >
-      <span className="ach3d-in" ref={el}>
-        {slices.map((i) => (
-          <svg key={i} className="ach3d-slice" style={{ transform: `translateZ(${-half + i + 0.5}px)` }} viewBox="0 0 100 100" width={size} height={size}>
-            <path d={HEX} fill={rim} style={{ filter: `brightness(${0.55 + (i / thick) * 0.2})` }} />
-          </svg>
-        ))}
-        <span className="ach3d-f" style={{ transform: `translateZ(${half + 0.5}px)` }}><Face a={a} locked={locked} size={size} /></span>
-        <span className="ach3d-f" style={{ transform: `translateZ(${-half - 0.5}px) rotateY(180deg)` }}><Face a={a} locked={locked} size={size} back /></span>
-      </span>
+      <canvas key={rotatable ? "gl" : "2d"} ref={cv} width={px} height={px} style={{ width: size, height: size, display: "block" }} />
     </span>
   );
 }

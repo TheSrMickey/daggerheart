@@ -35,6 +35,13 @@ import { LinesVeilsEditor, limitsCount, limitsText } from "./LinesVeils";
 import { SocialHost, LookingFor, ActivityCard, PrivacyCard, ReactionBar } from "./Social2";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
 import { buildSablewood } from "./quickstartSablewood";
+import { buildWishThief } from "./quickstartWishThief";
+
+// Aventuras de inicio que se ofrecen al crear una campaña.
+const QUICKSTARTS = [
+  { key: "sablewood", name: "Los mensajeros de Sablewood", build: buildSablewood, ai: true, text: "Aventura de inicio ya preparada: escenas, pistas ocultas, reparto con diálogos, notas por acto y mapas con enemigos." },
+  { key: "wishthief", name: "La ladrona de deseos", build: buildWishThief, ai: false, text: "Aventura de nivel 1 para 3-5 jugadores: escenas por acto, pistas ocultas, reparto con estadísticas y mapas listos." },
+];
 import { Wand, CircleDot, MoveUpRight, Archive, Shell, Compass, Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp, Trophy, Star } from "lucide-react";
 
 // Color de cada campaña (se reparte según su id).
@@ -5479,6 +5486,11 @@ const sharedStyles = `
   .mh-hs-amb .mh-gm-sc-edit { max-width: 640px; }
   /* Directo */
   .mh-dir { display: flex; flex-direction: column; gap: 16px; }
+  @media (min-width: 901px) {
+    .mh-cg:has(> .mh-dir:not(.is-imm)) { display: flex; flex-direction: column; height: calc(100dvh - 44px); }
+    .mh-cg:has(> .mh-dir:not(.is-imm)) > .mh-dir { flex: 1; min-height: 0; }
+    .mh-dir:not(.is-imm) > .mh-dir-top { flex: 1; min-height: 0; height: auto; }
+  }
   .mh-dir-top { display: grid; grid-template-columns: minmax(0, 1fr) clamp(372px, 26vw, 480px); grid-template-rows: minmax(0, 1fr) auto; gap: 14px; height: clamp(600px, calc(100dvh - 190px), 1200px); }
   .mh-dir-stage { grid-column: 1; padding: 12px; border-radius: 22px; background: var(--mh-panel); border: 1px solid var(--mh-line); display: flex; flex-direction: column; gap: 10px; position: relative; }
   .mh-dir-top .mh-dir-below { min-height: 0; overflow: auto; padding: 8px 10px; display: flex; flex-direction: column; justify-content: center; } .mh-dir-top .mh-dir-below > .mh-tl { flex: none; } .mh-tl .mh-ch-step { padding: 9px 12px; gap: 4px; } .mh-dir.is-imm .mh-dir-top .mh-dir-below { overflow: visible; }
@@ -5544,6 +5556,7 @@ const sharedStyles = `
   .mh-dir-ghost { position: fixed; z-index: 100001; width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 22%; border: 3px solid var(--tc); background: var(--tc); color: #fff; display: grid; place-items: center; font: 700 16px 'Cinzel', Georgia, serif; box-shadow: 0 10px 18px rgba(0,0,0,.45); pointer-events: none; } .mh-dir-ghost i { font-style: normal; }
   .mh-dir-place-all { all: unset; cursor: pointer; padding: 4px 10px; border-radius: 99px; background: var(--acc, #E3B04B); color: var(--acc-on, #1F1606); font: 700 11.5px 'Inter', system-ui, sans-serif; }
   .mh-qs-line { margin: 0; font-size: 12px; line-height: 1.45; color: var(--mh-ink2); } .mh-qs-line b { color: var(--mh-ink); } .mh-qs-empty { margin: 0; font-size: 12.5px; color: var(--mh-muted); }
+  .mh-qs-btns { display: flex; flex-wrap: wrap; gap: 8px; }
   .mh-qs-chips { display: flex; flex-wrap: wrap; gap: 6px; } .mh-qs-chips span { padding: 3px 9px; border-radius: 99px; font-size: 11px; font-weight: 700; border: 1px solid var(--mh-line2); background: var(--mh-panel2); } .mh-qs-chips span.is-cond { border-color: #E0544A; }
   .mh-qs-acts { display: flex; gap: 6px; flex-wrap: wrap; } .mh-qs-acts button { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; padding: 7px 11px; }
 
@@ -5557,7 +5570,7 @@ const sharedStyles = `
   .mh-hs-scns { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; } .mh-hs-scns button { display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px 5px 5px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel2); color: var(--mh-ink); font: 700 12px 'Inter', system-ui, sans-serif; cursor: pointer; } .mh-hs-scns button.is-on { border-color: var(--mh-gold-ink); background: color-mix(in srgb, var(--mh-gold-ink) 10%, var(--mh-panel)); } .mh-hs-scns .mh-hs-scn-add { border-style: dashed; padding: 8px 14px; color: var(--mh-ink3); }
   .mh-hs-scn-th { width: 44px; height: 30px; border-radius: 7px; background: center / cover no-repeat #2B3A4F; } .mh-hs-scn-th.is-blank { background: var(--mh-panel); }
   .mh-tl { display: flex; align-items: center; justify-content: center; min-height: 100%; } .mh-tl .mh-tlr { flex: 1; min-width: 0; margin: 0; padding: 20px 14px 8px; justify-content: safe center; scrollbar-width: none; -ms-overflow-style: none; -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 22px, #000 calc(100% - 22px), transparent 100%); mask-image: linear-gradient(90deg, transparent 0, #000 22px, #000 calc(100% - 22px), transparent 100%); } .mh-tl .mh-tlr::-webkit-scrollbar { display: none; }
-  .mh-dir-monwrap { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; } .mh-dir-monwrap > .mh-dir-mon { flex: 1; min-height: 0; } .mh-dir-fxbtn { position: absolute; left: 12px; top: 44px; z-index: 8; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 99px; border: 1px solid var(--mh-line2); background: color-mix(in srgb, var(--mh-panel) 92%, transparent); color: var(--mh-ink); font: 600 12px 'Inter', system-ui, sans-serif; cursor: pointer; opacity: 0; transform: translateY(-4px); pointer-events: none; transition: opacity .18s ease, transform .18s ease, border-color .15s; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); } .mh-dir-monwrap:hover .mh-dir-fxbtn, .mh-dir-fxbtn:focus-visible, .mh-dir-fxbtn.is-on { opacity: 1; transform: none; pointer-events: auto; } .mh-dir-fxbtn:hover, .mh-dir-fxbtn.is-on { border-color: var(--acc, #E3B04B); } .mh-dir-fxbtn:focus-visible { outline: 2px solid var(--acc, #E3B04B); outline-offset: 2px; } .mh-dir-fxbtn svg { color: var(--mh-gold-ink); } @media (hover: none) { .mh-dir-fxbtn { opacity: 1; transform: none; pointer-events: auto; } } @media (prefers-reduced-motion: reduce) { .mh-dir-fxbtn { transition: none; } }
+  .mh-dir-monwrap { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; } .mh-dir-monwrap > .mh-dir-mon { flex: 1; min-height: 0; } .mh-dir-hov { position: absolute; left: 12px; top: 44px; z-index: 8; display: flex; gap: 6px; pointer-events: none; } .mh-dir-fxbtn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 99px; border: 1px solid var(--mh-line2); background: color-mix(in srgb, var(--mh-panel) 92%, transparent); color: var(--mh-ink); font: 600 12px 'Inter', system-ui, sans-serif; cursor: pointer; opacity: 0; transform: translateY(-4px); pointer-events: none; transition: opacity .18s ease, transform .18s ease, border-color .15s; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); } .mh-dir-monwrap:hover .mh-dir-fxbtn, .mh-dir-fxbtn:focus-visible, .mh-dir-fxbtn.is-on { opacity: 1; transform: none; pointer-events: auto; } .mh-dir-fxbtn:hover, .mh-dir-fxbtn.is-on { border-color: var(--acc, #E3B04B); } .mh-dir-fxbtn:focus-visible { outline: 2px solid var(--acc, #E3B04B); outline-offset: 2px; } .mh-dir-fxbtn svg { color: var(--mh-gold-ink); } @media (hover: none) { .mh-dir-fxbtn { opacity: 1; transform: none; pointer-events: auto; } } @media (prefers-reduced-motion: reduce) { .mh-dir-fxbtn { transition: none; } }
   .mh-tlr { display: flex; align-items: center; gap: 8px; overflow-x: auto; padding: 22px 2px 8px; margin-bottom: 4px; scrollbar-width: thin; }
   .mh-tlr-ch { flex: none; display: flex; align-items: center; padding: 5px 9px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel2); }
   .mh-tlr-c { font-size: 10px; font-weight: 800; letter-spacing: .08em; color: var(--mh-muted); margin-right: 8px; white-space: nowrap; max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
@@ -7475,7 +7488,7 @@ const sharedStyles = `
   .mh-dm-in { display: flex; gap: 6px; padding-top: 10px; border-top: 1px solid var(--mh-line); } .mh-dm-in input { flex: 1; min-width: 0; }
   .so-ov { position: fixed !important; inset: 0 !important; z-index: 75; display: flex; align-items: flex-start; justify-content: center; padding: 20px; background: rgba(8,6,12,.68); overflow-y: auto; }
   .so-modal { margin: auto; width: min(520px, 100%); overflow: visible; border: 1px solid var(--mh-line); border-radius: 20px; background: var(--mh-panel); box-shadow: 0 30px 70px rgba(0,0,0,.55); } .so-modal.is-wide { width: min(640px, 100%); }
-  .ach3d { display: inline-block; position: relative; user-select: none; -webkit-user-select: none; } .ach3d.is-rot { touch-action: pan-y; cursor: grab; } .ach3d.is-rot:active { cursor: grabbing; } .pf-dlg-hint { margin-top: 6px; font-size: 11px; color: var(--mh-muted); } .ach3d.is-lock { opacity: .6; } .ach3d-in { display: block; position: absolute; inset: 0; transform-style: preserve-3d; will-change: transform; } .ach3d-slice, .ach3d-f { position: absolute; left: 0; top: 0; display: block; } .ach3d-f { backface-visibility: hidden; -webkit-backface-visibility: hidden; width: 100%; height: 100%; } .ach3d-face { display: block; }
+  .ach3d { display: inline-block; position: relative; user-select: none; -webkit-user-select: none; } .ach3d.is-rot { touch-action: pan-y; cursor: grab; } .ach3d.is-rot:active { cursor: grabbing; } .pf-dlg-hint { margin-top: 6px; font-size: 11px; color: var(--mh-muted); } .ach3d-in { display: block; position: absolute; inset: 0; transform-style: preserve-3d; will-change: transform; } .ach3d-wall { position: absolute; display: block; backface-visibility: visible; } .ach3d-f { position: absolute; left: 0; top: 0; display: block; } .ach3d-f { backface-visibility: hidden; -webkit-backface-visibility: hidden; width: 100%; height: 100%; } .ach3d-face { display: block; }
   .ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 14px 8px; } .ach-it { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 1px; } .ach-it b { font-size: 12px; font-weight: 600; color: var(--mh-ink); margin-top: 4px; } .ach-it small { font-size: 11px; color: var(--mh-muted); } .ach-it:not(.is-on) b { color: var(--mh-muted); } .ach-badge.is-lock { opacity: .6; }
   .ach-toasts { position: fixed; right: 20px; bottom: 24px; z-index: 120; display: flex; flex-direction: column; gap: 10px; max-width: min(380px, calc(100vw - 32px)); } .ach-toast { display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 10px; border-radius: 16px; background: var(--mh-panel); border: 1px solid #E3B04B; box-shadow: 0 14px 34px rgba(0,0,0,.45); animation: ach-in .4s cubic-bezier(.2,.8,.2,1) both; } .ach-toast > div { display: flex; flex-direction: column; min-width: 0; } .ach-toast small { font: 700 10px 'Inter', system-ui, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: #E3B04B; } .ach-toast b { font: 600 15px 'Cinzel', Georgia, serif; color: var(--mh-ink); } .ach-toast em { font-style: normal; font-size: 12px; color: var(--mh-muted); } .ach-toast button { margin-left: auto; padding: 6px 12px; border-radius: 99px; border: 1px solid var(--mh-line2); background: transparent; color: var(--mh-ink); font: 600 12px 'Inter', system-ui, sans-serif; cursor: pointer; } @keyframes ach-in { from { opacity: 0; transform: translateY(14px) scale(.96); } } @media (prefers-reduced-motion: reduce) { .ach-toast { animation: none; } }
   .mh-camps-head { align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; } .mh-camps-ht { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; min-width: 0; } .mh-camps-ht > span { font: 600 17px 'Inter', system-ui, sans-serif; color: var(--mh-ink); } .mh-camps-head .mh-btn { display: inline-flex; align-items: center; gap: 6px; flex: none; }
@@ -7487,7 +7500,7 @@ const sharedStyles = `
   .mh-cc-sec { padding: 0 0 20px; margin: 0 0 20px; border-bottom: 1px solid var(--mh-line); } .mh-cc-sec:last-child { border: 0; margin: 0; padding: 0; }
   .mh-cc-h { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; font: 700 11px 'Inter', system-ui, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--mh-muted); } .mh-cc-h i { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font: 700 11px 'Inter', system-ui, sans-serif; font-style: normal; letter-spacing: 0; background: color-mix(in srgb, var(--hc) 28%, var(--mh-panel2)); color: var(--mh-ink); }
   .mh-cc-p { margin: -4px 0 12px; font-size: 12.5px; color: var(--mh-muted); }
-  .mh-cc-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; } .mh-cc-opt { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; gap: 5px; padding: 14px 16px; border-radius: 14px; border: 1.5px solid var(--mh-line); background: var(--mh-panel2); color: var(--mh-muted); transition: border-color .15s, background .15s; } .mh-cc-opt b { font-size: 14px; color: var(--mh-ink); } .mh-cc-opt small { font-size: 12px; line-height: 1.45; } .mh-cc-opt svg { color: var(--hc); } .mh-cc-opt:hover { border-color: var(--mh-line2); } .mh-cc-opt.is-on { border-color: var(--hc); background: color-mix(in srgb, var(--hc) 10%, var(--mh-panel2)); } .mh-cc-opt:focus-visible { outline: 2px solid var(--hc); outline-offset: 2px; }
+  .mh-cc-opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; } .mh-cc-opt { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; gap: 5px; padding: 14px 16px; border-radius: 14px; border: 1.5px solid var(--mh-line); background: var(--mh-panel2); color: var(--mh-muted); transition: border-color .15s, background .15s; } .mh-cc-opt b { font-size: 14px; color: var(--mh-ink); } .mh-cc-opt small { font-size: 12px; line-height: 1.45; } .mh-cc-opt svg { color: var(--hc); } .mh-cc-opt:hover { border-color: var(--mh-line2); } .mh-cc-opt.is-on { border-color: var(--hc); background: color-mix(in srgb, var(--hc) 10%, var(--mh-panel2)); } .mh-cc-opt:focus-visible { outline: 2px solid var(--hc); outline-offset: 2px; }
   .mh-cc-f { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; } .mh-cc-f > span { font-size: 12.5px; font-weight: 600; color: var(--mh-ink2, var(--mh-ink)); } .mh-cc-f > span em { font-style: normal; font-weight: 400; color: var(--mh-muted); margin-left: 6px; } .mh-cc-f textarea { min-height: 84px; resize: vertical; }
   .mh-cc-sw { display: flex; gap: 10px; flex-wrap: wrap; } .mh-cc-sw button { all: unset; box-sizing: border-box; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--sw); color: #fff; border: 2px solid transparent; box-shadow: 0 0 0 2px var(--mh-panel); } .mh-cc-sw button.is-on { box-shadow: 0 0 0 2px var(--mh-panel), 0 0 0 4px var(--sw); } .mh-cc-sw button:focus-visible { outline: 2px solid var(--mh-ink); outline-offset: 3px; }
   .mh-cc-switch { display: flex; align-items: flex-start; gap: 12px; cursor: pointer; } .mh-cc-switch input { position: absolute; opacity: 0; pointer-events: none; } .mh-cc-switch > i { flex: none; width: 40px; height: 22px; border-radius: 99px; background: var(--mh-line2); position: relative; transition: background .15s; margin-top: 1px; } .mh-cc-switch > i::after { content: ""; position: absolute; left: 3px; top: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .15s; } .mh-cc-switch input:checked + i { background: var(--hc); } .mh-cc-switch input:checked + i::after { transform: translateX(18px); } .mh-cc-switch input:focus-visible + i { outline: 2px solid var(--hc); outline-offset: 2px; } .mh-cc-switch input:disabled + i { opacity: .7; } .mh-cc-switch b { display: block; font-size: 13.5px; color: var(--mh-ink); } .mh-cc-switch small { display: block; margin-top: 2px; font-size: 12px; line-height: 1.45; color: var(--mh-muted); }
@@ -7513,6 +7526,24 @@ const sharedStyles = `
   .pf-char { display: flex; gap: 10px; align-items: center; width: 100%; text-align: left; background: var(--mh-panel2); border: 1px solid var(--mh-line); border-radius: 14px; padding: 10px; margin-bottom: 8px; color: var(--mh-ink); font: inherit; } button.pf-char { cursor: pointer; } .pf-char.on { border-color: #E3B04B; } .pf-char b { display: block; } .pf-char small { color: var(--mh-muted); } .pf-cav { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; background: color-mix(in srgb, var(--mh-gold-ink, #E3B04B) 25%, var(--mh-panel3, #1b1c4a)); flex: none; }
   .pf-lim { display: flex; flex-direction: column; gap: 12px; } .pf-lim-g { border: 1px solid var(--mh-line); border-radius: 14px; padding: 10px 12px; background: var(--mh-panel2); } .pf-lim-g > b { display: flex; align-items: center; gap: 6px; font-size: 12.5px; } .pf-lim-g > small { display: block; color: var(--mh-muted); font-size: 11.5px; margin: 2px 0 8px; } .pf-lim-g.is-line > b { color: #C0504A; } .pf-lim-g.is-veil > b { color: #7E5BC4; } .pf-lim-c { display: flex; flex-wrap: wrap; gap: 6px; } .pf-tag { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 99px; font: 600 12px 'Inter', system-ui, sans-serif; border: 1px solid; background: transparent; } .is-line .pf-tag { color: #C0504A; border-color: rgba(192,80,74,.5); background: rgba(192,80,74,.1); } .is-veil .pf-tag { color: #7E5BC4; border-color: rgba(126,91,196,.5); background: rgba(126,91,196,.1); } button.pf-tag { cursor: pointer; } .pf-tag.off { color: var(--mh-muted); border-color: var(--mh-line2); background: transparent; } .pf-lim-add { display: flex; gap: 6px; margin-top: 8px; } .pf-lim-add input { flex: 1; min-width: 0; }
   .pf-act { display: flex; gap: 10px; font-size: 13px; padding: 8px 0; border-bottom: 1px solid var(--mh-line); } .pf-act:last-child { border: 0; } .pf-act small { color: var(--mh-muted); display: block; } .pf-act i { width: 8px; height: 8px; border-radius: 50%; background: #E3B04B; margin-top: 7px; flex: none; }
+  /* Perfil sin scroll vertical: la tarjeta ocupa la altura de la pantalla y cada pestaña se reparte el espacio. */
+  @media (min-width: 861px) {
+    .pf:not(.is-edit) { height: calc(100dvh - 44px); max-width: 1180px; display: flex; flex-direction: column; }
+    .pf:not(.is-edit) .pf-card { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    .pf:not(.is-edit) .pf-ban { height: 78px; flex: none; } .pf:not(.is-edit) .pf-head { margin-top: -42px; flex: none; } .pf:not(.is-edit) .pf-who { padding-top: 48px; } .pf:not(.is-edit) .pf-acts { padding-top: 48px; }
+    .pf:not(.is-edit) .pf-stats, .pf:not(.is-edit) .pf-tabs, .pf:not(.is-edit) .pf-bio { flex: none; }
+    .pf:not(.is-edit) .pf-body { flex: 1; min-height: 0; overflow: hidden; grid-template-columns: minmax(0, 1fr); padding: 16px 28px 20px; }
+    .pf:not(.is-edit) .pf-wide, .pf:not(.is-edit) .pf-res { min-height: 0; height: 100%; }
+  }
+  .pf:not(.is-edit) .pf-wide { overflow-y: auto; scrollbar-width: none; } .pf:not(.is-edit) .pf-wide::-webkit-scrollbar { display: none; }
+  .pf-wide > .pf-pn-fill { height: 100%; } .pf-wide > .pf-grid { gap: 10px; } .pf-wide .pf-ac { padding: 8px 10px; } .pf-wide .pf-chips { margin-bottom: 10px; }
+  .pf-res { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr) minmax(0, 1fr); gap: 14px; } .pf-col { display: flex; flex-direction: column; gap: 14px; min-height: 0; min-width: 0; }
+  .pf-pn { background: var(--mh-panel2); border: 1px solid var(--mh-line); border-radius: 16px; padding: 14px 16px; min-height: 0; min-width: 0; overflow: hidden; position: relative; } .pf-pn-fill { flex: 1; } .pf-pn .pf-vi, .pf-pn .pf-char, .pf-pn .pf-lim-g { background: var(--mh-panel); } .pf-pn .pf-char:last-child { margin-bottom: 0; }
+  .pf-res > .pf-pn:first-child .pf-vit { grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); } .pf-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .pf-tl { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; } .pf-wide .pf-tl { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .pf-tl .pf-act { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 10px; row-gap: 2px; align-items: center; padding: 9px 12px; border: 1px solid var(--mh-line); border-radius: 12px; background: var(--mh-panel); font-size: 12.5px; } .pf-tl .pf-act:last-child { border: 1px solid var(--mh-line); }
+  .pf-act-i { grid-row: span 2; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--mh-gold-ink, #E3B04B) 18%, transparent); color: var(--mh-gold-ink, #E3B04B); } .pf-act-t { line-height: 1.35; overflow-wrap: anywhere; } .pf-tl .pf-act-d { display: block; color: var(--mh-muted); font-size: 11px; }
+  @media (max-width: 860px) { .pf-res, .pf-two { grid-template-columns: 1fr; } .pf-wide .pf-tl { grid-template-columns: 1fr; } }
   @media (max-width: 860px) { .pf-head { flex-direction: column; align-items: flex-start; gap: 10px; } .pf-who, .pf-acts { padding-top: 0; flex: none; } .pf-tabs { overflow-x: auto; overflow-y: hidden; scrollbar-width: none; } .pf-tabs::-webkit-scrollbar { display: none; } .pf-body { grid-template-columns: 1fr; padding: 18px 16px 22px; } .pf-stats { grid-template-columns: repeat(2, 1fr); padding: 16px 16px 4px; } .pf-head, .pf-tabs, .pf-edit { padding-left: 16px; padding-right: 16px; } .pf-bio { padding: 10px 16px 0; } .pf-vit { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; } }
   .so-ban { height: 88px; background: linear-gradient(135deg, color-mix(in srgb, var(--c, #4f9a62) 60%, #12142a), #12142a); } .so-body { padding: 0 24px 22px; } .so-ban + .so-body { margin-top: -34px; }
   .so-prow { display: flex; align-items: center; gap: 12px; justify-content: space-between; } .so-grow { flex: 1; min-width: 0; } .so-name { font-size: 21px; font-weight: 700; } .so-h { margin: 0; font-size: 16px; display: flex; align-items: center; gap: 9px; }
@@ -10627,7 +10658,7 @@ export default function App({ onSignOut }) {
   const [newCampaignDesc, setNewCampaignDesc] = useState("");
   const [showNewCampaignForm, setShowNewCampaignForm] = useState(false);
   const [newCampaignColor, setNewCampaignColor] = useState(""); // vacío = el siguiente color de la paleta
-  const [newCampaignStart, setNewCampaignStart] = useState("blank"); // blank | sablewood
+  const [newCampaignStart, setNewCampaignStart] = useState("blank"); // blank o la clave de una aventura de inicio
   const [cgLimitsOpen, setCgLimitsOpen] = useState(false); // detalle de líneas y velos en la cabecera de la campaña
   const [newCampaignAI, setNewCampaignAI] = useState(false); // ¿las imágenes de la campaña están hechas con IA?
   const [newCampaignLimits, setNewCampaignLimits] = useState({ lines: [], veils: [] }); // líneas y velos de la mesa
@@ -14840,14 +14871,15 @@ export default function App({ onSignOut }) {
   }, [viewingCampaignId, stageReadyFor, dataReadyFor, campaignStage, dialogueConvs, campaignMaps, campaignEncounters]);
 
   // Aventura de inicio: crea la campaña con escenas, pistas, reparto, notas por acto y mapas con los enemigos.
-  const createSablewood = async () => {
-    const q = buildSablewood();
-    // La aventura se puede personalizar al crearla: nombre, descripción, color y líneas y velos de la mesa.
+  const createQuickstart = async (build) => {
+    const q = build();
+    // La aventura se puede personalizar al crearla: nombre, descripción, color, imágenes con IA y líneas y velos de la mesa.
     q.campaign = {
       ...q.campaign,
       ...(newCampaignName.trim() ? { name: newCampaignName.trim() } : {}),
       ...(newCampaignDesc.trim() ? { description: newCampaignDesc.trim() } : {}),
       color: newCampaignColor || CAMP_COLORS[Object.keys(campaigns).length % CAMP_COLORS.length],
+      ...(newCampaignAI ? { aiImages: true } : {}),
       ...(newCampaignLimits.lines.length ? { lines: newCampaignLimits.lines } : {}),
       ...(newCampaignLimits.veils.length ? { veils: newCampaignLimits.veils } : {}),
     };
@@ -28451,7 +28483,7 @@ export default function App({ onSignOut }) {
                     );
                     const stepsEl = (
                       <div className="mh-tl" inert={xLock || undefined}>
-                        {scenes.length > 0 && (
+                        {(
                           <div
                             className="mh-tlr"
                             role="group"
@@ -28471,13 +28503,21 @@ export default function App({ onSignOut }) {
                               );
                             }}
                           >
+                            <div className="mh-tlr-ch">
+                              <span className="mh-tlr-c">MAPA</span>
+                              <button type="button" className={"mh-tlr-n " + (view === "mundo" && live === "mundo" ? "both" : view === "mundo" ? "me" : live === "mundo" ? "pl" : "")} onClick={() => setDjView(live === "mundo" ? null : "mundo")} title="Mapa del mundo (solo lo ves tú; Mostrar para publicarlo)">
+                                {view === "mundo" && live === "mundo" ? <em>Tú y jugadores</em> : view === "mundo" ? <em>Tú</em> : live === "mundo" ? <em>Jugadores</em> : null}
+                                <i />
+                                Mundo
+                              </button>
+                            </div>
                             {scenes.map((sc, ci) => (
                               <div key={sc.id} className="mh-tlr-ch">
                                 <span className="mh-tlr-c">CAP. {ci + 1} · {sc.title || "Sin título"}</span>
                                 {tl.filter((x) => x.sc.id === sc.id).map((x, si) => {
                                   const gi = tl.indexOf(x);
-                                  const isMe = gi === myIdx;
-                                  const isPl = gi === tlCur;
+                                  const isMe = gi === myIdx && view !== "mundo";
+                                  const isPl = gi === tlCur && live !== "mundo";
                                   const cls = isMe && isPl ? "both" : isMe ? "me" : isPl ? "pl" : "";
                                   const lab = isMe && isPl ? "Tú y jugadores" : isMe ? "Tú" : isPl ? "Jugadores" : "";
                                   return (
@@ -28499,7 +28539,9 @@ export default function App({ onSignOut }) {
                     );
                     const fxCx = view === "escena" && myIdx >= 0 && tl[myIdx] && tl[myIdx].k === "img" ? tl[myIdx] : null;
                     const fxOn = !!fxCx && fxDlg?.sceneId === fxCx.sc.id && (fxDlg?.sub || null) === (fxCx.sub || null);
-                    const fxHoverBtn = fxCx && !xLock && (
+                    const fxHoverBtn = view === "escena" && !xLock && (
+                      <div className="mh-dir-hov">
+                        {fxCx && (
                       <button
                         type="button"
                         className={"mh-dir-fxbtn" + (fxOn ? " is-on" : "")}
@@ -28510,6 +28552,8 @@ export default function App({ onSignOut }) {
                       >
                         <Sparkles size={13} /> Efectos{(fxCx.scn.fx || []).length ? " · " + fxCx.scn.fx.length : ""}
                       </button>
+                        )}
+                      </div>
                     );
                     const groupBox = (
                       <div className="mh-dir-card">
@@ -30354,8 +30398,8 @@ export default function App({ onSignOut }) {
 
             const nCamps = Object.keys(campaigns).length;
             const ccColor = newCampaignColor || CAMP_COLORS[nCamps % CAMP_COLORS.length];
-            const sable = newCampaignStart === "sablewood";
-            const canCreate = sable || !!newCampaignName.trim();
+            const qs = QUICKSTARTS.find((x) => x.key === newCampaignStart) || null; // aventura de inicio elegida (o null = en blanco)
+            const canCreate = !!qs || !!newCampaignName.trim();
             // Tarjeta de campaña: la misma en la lista y en la vista previa del creador.
             const campCard = (camp, key, members, onOpen, color) => (
               <div
@@ -30418,24 +30462,26 @@ export default function App({ onSignOut }) {
                       <section className="mh-cc-sec">
                         <h3 className="mh-cc-h"><i>1</i> Cómo empezar</h3>
                         <div className="mh-cc-opts" role="radiogroup" aria-label="Cómo empezar">
-                          <button type="button" role="radio" aria-checked={!sable} className={"mh-cc-opt" + (!sable ? " is-on" : "")} onClick={() => setNewCampaignStart("blank")}>
+                          <button type="button" role="radio" aria-checked={!qs} className={"mh-cc-opt" + (!qs ? " is-on" : "")} onClick={() => setNewCampaignStart("blank")}>
                             <PenLine size={18} />
                             <b>Campaña en blanco</b>
                             <small>Empieza de cero: tú creas la historia, las escenas y los mapas.</small>
                           </button>
-                          <button type="button" role="radio" aria-checked={sable} className={"mh-cc-opt" + (sable ? " is-on" : "")} onClick={() => setNewCampaignStart("sablewood")}>
-                            <BookOpen size={18} />
-                            <b>Los mensajeros de Sablewood</b>
-                            <small>Aventura de inicio ya preparada: escenas, pistas ocultas, reparto con diálogos, notas por acto y mapas con enemigos.</small>
-                          </button>
+                          {QUICKSTARTS.map((x) => (
+                            <button key={x.key} type="button" role="radio" aria-checked={qs?.key === x.key} className={"mh-cc-opt" + (qs?.key === x.key ? " is-on" : "")} onClick={() => setNewCampaignStart(x.key)}>
+                              <BookOpen size={18} />
+                              <b>{x.name}</b>
+                              <small>{x.text}</small>
+                            </button>
+                          ))}
                         </div>
                       </section>
 
                       <section className="mh-cc-sec">
                         <h3 className="mh-cc-h"><i>2</i> Datos</h3>
                         <label className="mh-cc-f">
-                          <span>Nombre{sable ? " (opcional)" : ""}</span>
-                          <input className="mh-input" maxLength={60} placeholder={sable ? "Los mensajeros de Sablewood" : "Ej. La Marca Rota"} value={newCampaignName} onChange={(e) => setNewCampaignName(e.target.value)} autoFocus />
+                          <span>Nombre{qs ? " (opcional)" : ""}</span>
+                          <input className="mh-input" maxLength={60} placeholder={qs ? qs.name : "Ej. La Marca Rota"} value={newCampaignName} onChange={(e) => setNewCampaignName(e.target.value)} autoFocus />
                         </label>
                         <label className="mh-cc-f">
                           <span>Descripción (opcional) <em>{newCampaignDesc.length}/280</em></span>
@@ -30462,9 +30508,9 @@ export default function App({ onSignOut }) {
                       <section className="mh-cc-sec">
                         <h3 className="mh-cc-h"><i>4</i> Imágenes</h3>
                         <label className="mh-cc-switch">
-                          <input type="checkbox" checked={newCampaignAI || sable} disabled={sable} onChange={(e) => setNewCampaignAI(e.target.checked)} />
+                          <input type="checkbox" checked={newCampaignAI || !!qs?.ai} disabled={!!qs?.ai} onChange={(e) => setNewCampaignAI(e.target.checked)} />
                           <i aria-hidden="true" />
-                          <span><b>Imágenes creadas con IA</b><small>{sable ? "Esta aventura incluye un mapa de combate generado con IA, así que va marcada." : "Avisa a tus jugadores de que las imágenes de esta campaña (escenas, mapas, personajes) se han generado con inteligencia artificial."}</small></span>
+                          <span><b>Imágenes creadas con IA</b><small>{qs?.ai ? "Esta aventura incluye un mapa de combate generado con IA, así que va marcada." : "Avisa a tus jugadores de que las imágenes de esta campaña (escenas, mapas, personajes) se han generado con inteligencia artificial."}</small></span>
                         </label>
                       </section>
                     </div>
@@ -30473,9 +30519,9 @@ export default function App({ onSignOut }) {
                       <div className="mh-cc-lab">Así se verá</div>
                       {campCard(
                         {
-                          name: newCampaignName.trim() || (sable ? "Los mensajeros de Sablewood" : "Nombre de tu campaña"),
-                          description: newCampaignDesc.trim() || (sable ? "Aventura de inicio de Daggerheart." : ""),
-                          aiImages: newCampaignAI || sable,
+                          name: newCampaignName.trim() || (qs ? qs.name : "Nombre de tu campaña"),
+                          description: newCampaignDesc.trim() || (qs ? "Aventura de inicio de Daggerheart." : ""),
+                          aiImages: newCampaignAI || !!qs?.ai,
                           lines: newCampaignLimits.lines,
                           veils: newCampaignLimits.veils,
                         },
@@ -30485,7 +30531,7 @@ export default function App({ onSignOut }) {
                         ccColor
                       )}
                       <div className="mh-cc-acts">
-                        <button type="button" className="mh-btn" disabled={!canCreate} onClick={sable ? createSablewood : createCampaign}>
+                        <button type="button" className="mh-btn" disabled={!canCreate} onClick={qs ? () => createQuickstart(qs.build) : createCampaign}>
                           <Check size={14} /> Crear campaña
                         </button>
                         <button type="button" className="mh-btn-ghost" onClick={resetNewCampaign}>Cancelar</button>
