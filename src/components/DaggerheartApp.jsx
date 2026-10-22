@@ -10,6 +10,7 @@ import { Squirrel, Layers, CalendarDays, Vote, ScrollText as ChronIcon, Megaphon
 import { History, LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus, Box, LayoutGrid, Bird, Fish, Bug, Rabbit, Cat, Turtle, Clock, CircleDashed, Slash } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { NotificationBell, FriendsPanel, AccountButton } from "./Social";
+import { ResetDiceCard, DeleteAccountCard } from "./AccountDanger";
 import { ModernSheet } from "./ModernSheet";
 import { Tour } from "./Tour";
 import { Dice3D, canDice3d, DICE3D_SIDES } from "./Dice3D";
@@ -77,6 +78,8 @@ const CLASS_COLORS = {
   Invocador: "#8E6FC4",
   "Cazador de Sangre": "#A8323E",
 };
+// Columna derecha plegada (barra estrecha): sin pasar el ratón, sin fijar y sin un chat abierto.
+const RAIL_MINI = ".mh-rail.is-fold:not(.is-open):not(:has(.mh-gp)):not(:has(.mh-dm))";
 const DEFAULT_SETTINGS = { classColors: true, tutorial: false, headerArt: true, immersive: false, officialArt: true };
 // Ilustraciones oficiales del juego: se ocultan por CSS con `html[data-mh-art="off"]` (y se recuerda en este navegador para no parpadear al cargar).
 const applyOfficialArt = (off) => {
@@ -7219,9 +7222,20 @@ const sharedStyles = `
   .mh-topbar { align-items: flex-start; } .mh-topbar > span { line-height: 34px; }
   .mh-pagetitle { font-size: 13.5px; font-weight: 600; color: var(--mh-ink); margin: 0 0 18px; }
   .mh-scroll-hidden { scrollbar-width: none; } .mh-scroll-hidden::-webkit-scrollbar { display: none; }
-  .mh-rail { position: absolute; top: 12px; right: 12px; bottom: 12px; width: 268px; overflow-y: auto; border-radius: 24px; border: 1px solid var(--mh-line2); background: color-mix(in srgb, var(--mh-nav) 74%, transparent); -webkit-backdrop-filter: blur(16px) saturate(1.2); backdrop-filter: blur(16px) saturate(1.2); box-shadow: 0 14px 26px -16px #000b, inset 0 1px 0 #ffffff14; }
+  .mh-rail-wrap { position: absolute; top: 0; right: 0; bottom: 0; width: 290px; z-index: 40; transition: width .22s ease; pointer-events: none; } .mh-rail-wrap.is-fold { width: 86px; } .mh-rail-wrap.is-fold.is-pin { width: 290px; }
+  .mh-rail { pointer-events: auto; position: absolute; top: 12px; right: 12px; bottom: 12px; width: 268px; display: flex; flex-direction: column; overflow: hidden; transition: width .22s ease, box-shadow .22s ease; border-radius: 24px; border: 1px solid var(--mh-line2); background: color-mix(in srgb, var(--mh-nav) 74%, transparent); -webkit-backdrop-filter: blur(16px) saturate(1.2); backdrop-filter: blur(16px) saturate(1.2); box-shadow: 0 14px 26px -16px #000b, inset 0 1px 0 #ffffff14; }
+  .mh-rail.is-fold { width: 64px; } .mh-rail.is-fold.is-open, .mh-rail.is-fold:has(.mh-gp), .mh-rail.is-fold:has(.mh-dm) { width: 268px; } .mh-rail.is-fold.is-open:not(.is-pin) { box-shadow: 0 20px 34px -16px #000d, inset 0 1px 0 #ffffff14; }
   html[data-mh-theme="light"] .mh-rail { box-shadow: 0 12px 22px -16px #3a2c1260, inset 0 1px 0 #fff; }
-  .mh-rail .mh-friends { position: static; border: 0; border-radius: 0; background: transparent; min-height: 100%; padding: 16px 14px; }
+  .mh-rail-in { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; } .mh-rail .mh-friends { position: static; border: 0; border-radius: 0; background: transparent; min-height: 100%; padding: 14px 14px; }
+  .mh-rail:not(.is-fold) .mh-rail-in { padding-top: 48px; } /* con el chat de la campaña, la campana no tapa su cabecera */
+  .mh-rail:has(.mh-gp) .mh-rail-pin, .mh-rail:has(.mh-dm) .mh-rail-pin { display: none; } .mh-rail:has(.mh-gp) .mh-rail-in, .mh-rail:has(.mh-dm) .mh-rail-in { padding-top: 46px; } .mh-rail .mh-gp, .mh-rail .mh-dm { height: calc(100vh - 110px); } /* chat abierto: la campana y la chincheta no tapan la cabecera */
+  .mh-rail-bell { position: absolute; top: 12px; right: 12px; z-index: 6; } .mh-rail.is-fold .mh-rail-bell { right: 15px; } .mh-rail.is-fold.is-open .mh-rail-bell, .mh-rail.is-fold:has(.mh-gp) .mh-rail-bell, .mh-rail.is-fold:has(.mh-dm) .mh-rail-bell { right: 12px; }
+  .mh-rail-pin { all: unset; position: absolute; top: 16px; left: 14px; z-index: 6; width: 26px; height: 26px; border-radius: 8px; cursor: pointer; display: none; align-items: center; justify-content: center; color: var(--mh-muted2); } .mh-rail.is-open .mh-rail-pin { display: inline-flex; animation: mh-fade-in .2s ease both; } .mh-rail-pin:hover { background: #ffffff12; color: var(--mh-ink); } .mh-rail-pin.is-on { color: #E3B04B; } .mh-rail-pin.is-on svg { fill: currentColor; } .mh-rail-pin:focus-visible { outline: 2px solid #E3B04B; }
+  html[data-mh-theme="light"] .mh-rail-pin:hover { background: #0000000d; }
+  .mh-rail .mh-friends-tabs { min-height: 34px; align-items: center; padding: 0 46px 0 4px; margin-bottom: 8px; transition: padding-left .25s ease; } .mh-rail.is-fold.is-open .mh-friends-tabs { padding-left: 38px; } .mh-friends-tabs svg { display: none; }
+  ${RAIL_MINI} .mh-friends { padding: 56px 6px 12px; } ${RAIL_MINI} .mh-friends-tabs { flex-direction: column; gap: 6px; padding: 0; margin: 0 0 8px; } ${RAIL_MINI} .mh-friends-tabs .lb { display: none; } ${RAIL_MINI} .mh-friends-tabs svg { display: block; } ${RAIL_MINI} .mh-friends-tabs button { position: relative; justify-content: center; width: 42px; height: 38px; border-radius: 12px; } ${RAIL_MINI} .mh-friends-tabs button.is-on { background: #ffffff12; } ${RAIL_MINI} .mh-friends-tabs b { position: absolute; top: 0; right: 0; }
+  ${RAIL_MINI} .mh-friends-search, ${RAIL_MINI} .mh-friends-msg, ${RAIL_MINI} .mh-pop-empty, ${RAIL_MINI} .mh-friends-sec h4, ${RAIL_MINI} .mh-friend-t, ${RAIL_MINI} .mh-friend .mh-fbtn, ${RAIL_MINI} .mh-friend .mh-cls-dot, ${RAIL_MINI} .mh-gp-row .mh-gp-t, ${RAIL_MINI} .mh-friend > small { display: none; } ${RAIL_MINI} .mh-friends-sec { margin: 4px 0 0; padding-top: 6px; }
+  ${RAIL_MINI} .mh-gp-row { position: relative; justify-content: center; padding: 0; margin: 0 0 8px; border: 0; background: none; } ${RAIL_MINI} .mh-gp-unread { position: absolute; top: -4px; right: 4px; border: 2px solid var(--mh-nav); box-sizing: content-box; } ${RAIL_MINI} .mh-friend { position: relative; justify-content: center; padding: 5px 0; } ${RAIL_MINI} .mh-friend .mh-unread { position: absolute; top: 0; right: 4px; } ${RAIL_MINI} .mh-friends-hr { margin: 6px 8px; }
   .mh-bell.is-top { width: 34px; height: 34px; padding: 0; align-items: center; justify-content: center; border-radius: 10px; background: #ffffff12; color: var(--mh-ink); }
   .mh-home { display: block; }
   .mh-home-main { min-width: 0; }
@@ -7253,6 +7267,8 @@ const sharedStyles = `
   html[data-mh-theme="light"] .mh-news-tag { color: #8A5E0C; background: #E3B04B26; border-color: #C9A24A88; }
   html[data-mh-theme="light"] .mh-home-news .mh-home-btn.is-ghost { background: #EAE2D3; color: #221C2B; } html[data-mh-theme="light"] .mh-home-news .mh-home-btn.is-ghost:hover { background: #DFD5C1; }
   @media (max-width: 720px) { .mh-news-art { inset: 0; opacity: .55; } .mh-home-news h2 { font-size: 26px; } .mh-home-news { padding: 26px 20px; } }
+  /* Inicio: todo cabe en la pantalla, sin deslizar. La novedad se encoge para dejar sitio; en pantallas muy bajas vuelve el desplazamiento. */
+  @media (min-height: 760px) { .mh-main-fit { overflow-y: hidden !important; } .mh-main-fit > .mh-view-in { height: 100%; } .mh-main-fit .mh-home, .mh-main-fit .mh-home-main { height: 100%; } .mh-main-fit .mh-home-main { display: flex; flex-direction: column; min-height: 0; } .mh-main-fit .mh-home-main > * { flex: none; } .mh-main-fit .mh-home-news { flex: 1 1 auto; min-height: 170px; padding-top: 22px; padding-bottom: 24px; } .mh-main-fit .mh-home-sec { margin: 16px 0 10px; } }
   .mh-home-sec { display: flex; align-items: center; justify-content: space-between; margin: 26px 0 12px; }
   .mh-home-sec h3 { margin: 0; font-size: 16px; font-weight: 700; color: var(--mh-ink); }
   .mh-home-sec h3 i { font-style: normal; font-size: 11px; padding: 2px 7px; border-radius: 10px; background: var(--mh-panel3); color: var(--mh-muted); margin-left: 6px; vertical-align: 2px; }
@@ -7282,6 +7298,7 @@ const sharedStyles = `
   .mh-hcard { all: unset; box-sizing: border-box; cursor: pointer; display: flex; gap: 14px; align-items: center; padding: 12px; border-radius: 14px; background: var(--mh-panel); border: 1px solid var(--mh-line); --hc: #7A8CFF; transition: translate .15s, border-color .15s; min-width: 0; }
   .mh-hcard:hover { translate: 0 -3px; border-color: var(--hc); } .mh-hcard:focus-visible { outline: 2px solid var(--hc); outline-offset: 2px; }
   .mh-hcard-art { width: 84px; height: 84px; flex: none; border-radius: 11px; display: grid; place-items: center; color: #ffffffc8; background: linear-gradient(135deg, color-mix(in srgb, var(--hc) 62%, #12122e), #12122e); }
+  html[data-mh-theme="light"] .mh-hcard-art { color: color-mix(in srgb, var(--hc) 82%, #000); background: linear-gradient(135deg, color-mix(in srgb, var(--hc) 34%, #FFFCF6), color-mix(in srgb, var(--hc) 12%, #FFFCF6)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--hc) 30%, transparent); }
   .mh-hcard-b { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
   .mh-hcard-b > b { font-size: 14.5px; color: var(--mh-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .mh-hcard-b > small { font-size: 11.5px; color: var(--mh-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .mh-hcard-row { flex: none; display: flex; align-items: center; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
@@ -7496,6 +7513,9 @@ const sharedStyles = `
   .mh-grp-b { padding: 0 10px 10px; } .mh-grp-av { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; } .mh-grp-a { display: flex; gap: 6px; flex-wrap: wrap; } .mh-grp-a .mh-fbtn { width: auto; padding: 0 8px; gap: 4px; display: inline-flex; align-items: center; font-size: 11.5px; height: 26px; }
   .mh-grp-new { display: flex; gap: 6px; margin: 8px 0 4px; } .mh-grp-new input { flex: 1; min-width: 0; font-size: 12px; }
   .mh-grp-pick { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; } .mh-grp-pick button { all: unset; cursor: pointer; padding: 4px 10px; border-radius: 99px; border: 1px solid var(--mh-line2); font-size: 11.5px; } .mh-grp-pick button.is-on { background: color-mix(in srgb, var(--acc, #C9A24A) 18%, var(--mh-panel)); border-color: var(--acc, #C9A24A); }
+  .mh-st-act, .mh-danger-acts { display: flex; gap: 8px; flex-wrap: wrap; } .mh-st-act { flex: none; }
+  .mh-danger { border-color: color-mix(in srgb, #D9644E 40%, var(--mh-line)); } .mh-danger-btn { color: #D9644E !important; border-color: rgba(217,100,78,.55) !important; } .mh-danger-btn:hover { background: rgba(217,100,78,.12) !important; }
+  .mh-danger-box { margin: 14px 0 0 50px; padding: 14px 16px; border-radius: 14px; border: 1px solid rgba(217,100,78,.4); background: rgba(217,100,78,.07); display: flex; flex-direction: column; gap: 10px; } .mh-danger-box p { margin: 0; font-size: 13px; line-height: 1.55; color: var(--mh-ink2, var(--mh-ink)); } .mh-danger-box p svg { vertical-align: -3px; color: #D9644E; } .mh-danger-box code { padding: 1px 7px; border-radius: 6px; background: var(--mh-panel3); font-weight: 700; letter-spacing: .08em; } .mh-danger-go { background: #D9644E !important; color: #fff !important; border-color: #D9644E !important; } .mh-danger-go:disabled { opacity: .45; cursor: not-allowed; }
   .mh-gp-ic { flex: none; display: grid; place-items: center; border-radius: 12px; color: #fff; background: color-mix(in srgb, var(--c, #4a1fb8) 40%, var(--mh-panel2)); }
   .mh-gp-row { all: unset; box-sizing: border-box; cursor: pointer; width: 100%; display: flex; align-items: center; gap: 10px; padding: 9px 10px; margin: 0 0 8px; border-radius: 14px; border: 1px solid var(--mh-line); background: var(--mh-panel); } .mh-gp-row:hover { border-color: var(--mh-line2); background: var(--mh-panel2); } .mh-gp-row:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
   .mh-gp-t { flex: 1; min-width: 0; display: flex; flex-direction: column; } .mh-gp-t b { font-size: 13.5px; font-weight: 600; color: var(--mh-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .mh-gp-t small { font-size: 11.5px; color: var(--mh-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -9605,7 +9625,7 @@ function HomeDice({ stats }) {
   return (
     <>
       <div className="mh-home-sec">
-        <h3>Tus dados <i>{total}</i></h3>
+        <h3>Tus dados</h3>
       </div>
       <div className="mh-dice">
         <div className="mh-dice-st" style={{ "--c": "#5b7cff" }}><span><Dices size={19} /></span><b>{total}</b><small>{total === 1 ? "tirada" : "tiradas"}</small></div>
@@ -12774,6 +12794,17 @@ export default function App({ onSignOut }) {
     setIslePin(next);
     try { localStorage.setItem("mh-isle-pin", next ? "1" : "0"); } catch {}
   };
+  const [railPin, setRailPin] = useState(false); // columna derecha fijada abierta
+  const [railHover, setRailHover] = useState(false);
+  useEffect(() => {
+    try { if (localStorage.getItem("mh-rail-pin") === "1") setRailPin(true); } catch {}
+  }, []);
+  const toggleRailPin = () => {
+    const next = !railPin;
+    setRailPin(next);
+    try { localStorage.setItem("mh-rail-pin", next ? "1" : "0"); } catch {}
+  };
+  const railLeave = () => setTimeout(() => { if (!document.querySelector(".mh-ctx, .mh-pop")) setRailHover(false); }, 250); // no se pliega con un menú abierto
   const [charImgs, setCharImgs] = useState({}); // imágenes propias de los personajes (solo las ve su dueño)
   const [portraitDlg, setPortraitDlg] = useState(null); // id del personaje cuyo diálogo de imágenes está abierto
   const [gearMenu, setGearMenu] = useState(null); // menú del engranaje de la ficha
@@ -16275,6 +16306,8 @@ export default function App({ onSignOut }) {
   }, []);
   const showRail = showTopbar && view !== "ajustes";
   const modernCamp = view === "ficha" && modernCharId && detailTab === "campaign" ? Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(modernCharId)) : null;
+  const railFold = showRail && !modernCamp; // plegable salvo con el chat de la campaña, que necesita todo el ancho
+  const railW = !showRail ? 0 : railFold && !railPin ? 86 : 290;
   const padX = showRail ? "clamp(28px, 3.4vw, 48px)" : "28px";
   const contentMax = campDetail ? 1760 : showRail ? 1320 : view === "ficha" ? 1160 : 960;
   // Datos de la hoja moderna: valores base con lo que aportan armas y armadura (las reglas especiales de subclase siguen en la clásica).
@@ -27703,19 +27736,33 @@ export default function App({ onSignOut }) {
       {/* Body */}
       <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
         {showRail && (
-          <div className="mh-rail">
-            {modernCamp ? <div ref={setChatSlot} className="mh-tlr-chat" /> : <FriendsPanel renderClass={renderClassDot} />}
-          </div>
-        )}
-        {showTopbar && view !== "perfil" && (
-          <div className="mh-topbar-wrap" style={{ right: showRail ? 290 : 0, padding: "0 " + padX }}>
-            <div className="mh-topbar" style={{ maxWidth: contentMax }}>
-              <span>{topLeft}</span>
-              <NotificationBell placement="top" />
+          <div className={"mh-rail-wrap" + (railFold ? " is-fold" : "") + (railPin ? " is-pin" : "")}>
+            <div
+              className={"mh-rail" + (railFold ? " is-fold" : "") + (railFold && (railPin || railHover) ? " is-open" : "") + (railPin ? " is-pin" : "")}
+              onMouseEnter={() => railFold && setRailHover(true)}
+              onMouseLeave={() => railFold && railLeave()}
+              onFocusCapture={() => railFold && setRailHover(true)}
+            >
+              {railFold && (
+                <button type="button" className={"mh-rail-pin" + (railPin ? " is-on" : "")} title={railPin ? "Soltar barra" : "Fijar barra abierta"} aria-pressed={railPin} onClick={toggleRailPin}>
+                  <Pin size={14} />
+                </button>
+              )}
+              <div className="mh-rail-bell"><NotificationBell placement="top" /></div>
+              <div className="mh-rail-in">
+                {modernCamp ? <div ref={setChatSlot} className="mh-tlr-chat" /> : <FriendsPanel renderClass={renderClassDot} />}
+              </div>
             </div>
           </div>
         )}
-        <div data-mh-main className={showTopbar ? "mh-scroll-hidden" : undefined} style={{ position: "absolute", top: showTopbar ? (view === "perfil" ? 20 : 108) : 0, left: 0, bottom: 0, right: showRail ? 290 : 0, overflowY: view === "ficha" && !viewingCharId && !modernCharId && showRail ? "hidden" : "auto", padding: isMobile ? (campDetail ? "10px 12px 18px" : "18px 14px") : showTopbar ? "0 " + padX + " 24px" : campDetail ? "18px 24px 24px 14px" : "24px 28px" }}>
+        {showTopbar && view !== "perfil" && (
+          <div className="mh-topbar-wrap" style={{ right: railW, padding: "0 " + padX }}>
+            <div className="mh-topbar" style={{ maxWidth: contentMax }}>
+              <span>{topLeft}</span>
+            </div>
+          </div>
+        )}
+        <div data-mh-main className={(showTopbar ? "mh-scroll-hidden" : "") + (view === "inicio" ? " mh-main-fit" : "") || undefined} style={{ position: "absolute", top: showTopbar ? (view === "perfil" ? 20 : 108) : 0, left: 0, bottom: 0, right: railW, overflowY: view === "ficha" && !viewingCharId && !modernCharId && showRail ? "hidden" : "auto", padding: isMobile ? (campDetail ? "10px 12px 18px" : "18px 14px") : showTopbar ? "0 " + padX + " 24px" : campDetail ? "18px 24px 24px 14px" : "24px 28px" }}>
           <div ref={setWizSlot} style={{ maxWidth: contentMax, margin: "0 auto" }} />
           <div key={view + (view === "ficha" && modernCharId ? ":hoja" : "")} className={"mh-view-in" + (view === "ficha" && modernCharId ? " mh-sheet-in" : "")} style={{ display: showNewCharModal ? "none" : undefined, maxWidth: contentMax, margin: "0 auto" }}>
             {!showTopbar && view !== "inicio" && view !== "perfil" && !campDetail && <div className="mh-pagetitle">{viewLabel}</div>}
@@ -27782,19 +27829,22 @@ export default function App({ onSignOut }) {
                   />
                   <ActivityCard />
                   <HomeDice stats={diceStats} />
-                  <div className="mh-home-sec">
-                    <h3>Retoma tus campañas <i>{camps.length}</i></h3>
-                    <button type="button" onClick={() => setView("campaigns")}>Ver todas ›</button>
-                  </div>
-                  <div className="mh-hrow">
-                    {camps.length === 0 && <div className="mh-home-empty">Todavía no estás en ninguna campaña.</div>}
-                    <HomeCampCards
-                      camps={camps.slice(0, 6)}
-                      colorOf={campColor}
-                      membersOf={(cp) => (cp.characterIds || []).filter((id) => characters[id]).map((id) => ({ id, name: characters[id].f_name, color: characters[id].f_class ? classColor(characters[id].f_class) : "#7A8CFF" }))}
-                      onOpen={(cp) => (setViewingCampaignId(cp.id), setView("campaigns"))}
-                    />
-                  </div>
+                  {camps.length > 0 && (
+                    <>
+                      <div className="mh-home-sec">
+                        <h3>Retoma tus campañas <i>{camps.length}</i></h3>
+                        <button type="button" onClick={() => setView("campaigns")}>Ver todas ›</button>
+                      </div>
+                      <div className="mh-hrow">
+                        <HomeCampCards
+                          camps={camps.slice(0, 6)}
+                          colorOf={campColor}
+                          membersOf={(cp) => (cp.characterIds || []).filter((id) => characters[id]).map((id) => ({ id, name: characters[id].f_name, color: characters[id].f_class ? classColor(characters[id].f_class) : "#7A8CFF" }))}
+                          onOpen={(cp) => (setViewingCampaignId(cp.id), setView("campaigns"))}
+                        />
+                      </div>
+                    </>
+                  )}
                   <div className="mh-home-sec">
                     <h3>Tus personajes <i>{chars.length}</i></h3>
                     <button type="button" onClick={() => setView("ficha")}>Gestionar ›</button>
@@ -30750,7 +30800,9 @@ export default function App({ onSignOut }) {
                   </button>
                 </div>
               </div>
+              <ResetDiceCard hasStats={!!(diceStats && diceStats.total)} onReset={async () => { await safeSet("dice-stats", "{}", false); setDiceStats({}); }} />
               <PrivacyCard />
+              <DeleteAccountCard username={playerName} />
             </div>
           )}
 
