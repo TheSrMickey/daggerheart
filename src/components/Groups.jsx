@@ -238,7 +238,7 @@ export function GroupPanel({ gid, onBack }) {
         </>
       ))}
       {isOwner && (
-        <button type="button" className="mh-gp-invbar" onClick={() => (setView("invite"), setErr(""))}><BookOpen size={13} /> Invitar al grupo a una campaña</button>
+        <button type="button" className="mh-gp-invbar" disabled={bridge.camps.length === 0} title={bridge.camps.length === 0 ? "Necesitas una campaña a la que invitar" : undefined} onClick={() => (setView("invite"), setErr(""))}><BookOpen size={13} /> Invitar al grupo a una campaña</button>
       )}
       <div className="mh-gp-feed">
         {msgs.length === 0 && <div className="mh-pop-empty">Todavía no hay mensajes. Escribe el primero.</div>}

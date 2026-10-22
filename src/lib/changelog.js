@@ -6,6 +6,7 @@ export const CHANGELOG = [
     date: "2026-10-15",
     title: "Historia por capítulos y PNJ en la campaña",
     items: [
+      { tag: "mejora", text: "Invitar a una campaña (menú de un amigo, perfil y grupos): el botón queda desactivado, con una pista, si todavía no tienes ninguna campaña a la que invitar." },
       { tag: "nuevo", text: "Grupos como chat conjunto: cada grupo es una conversación compartida por todos sus miembros, con mensajes sin leer, avisos de quién entra o sale y la lista en el panel de amigos. El creador añade y quita personas (solo amigos), renombra el grupo y lo borra; cualquiera puede salir. Desde el chat, el creador invita a todo el grupo a una campaña: cada persona recibe el aviso y una tarjeta en el chat con «Unirme» o «Ahora no», y el grupo ve quién se ha unido y quién no puede. Tus grupos antiguos se convierten solos en grupos compartidos." },
       { tag: "mejora", text: "Panel de amigos: una línea horizontal separa los grupos del listado de amigos." },
       { tag: "mejora", text: "Menú lateral · cuenta: el nombre queda a la izquierda junto al icono y el círculo de estado va dentro del avatar, como en la lista de amigos. En el panel de amigos de la derecha se quitan de la parte superior tu nombre, tu icono, el selector de estado y la línea de debajo (el estado se cambia desde el menú de la cuenta)." },

@@ -383,10 +383,9 @@ export function FriendsPanel({ renderClass }) {
               <Star size={14} /> {favs.includes(menu.p.id) ? "Quitar de favoritos" : "Añadir a favoritos"}
             </button>
             <button type="button" role="menuitem" onClick={() => (setDm(menu.p), setMenu(null))}><MessageCircle size={14} /> Enviar mensaje</button>
-            <button type="button" role="menuitem" onClick={() => setInvOpen((v) => !v)}><BookOpen size={14} /> Invitar a una campaña <ChevronRight size={13} style={{ marginLeft: "auto" }} /></button>
-            {invOpen && (
+            <button type="button" role="menuitem" disabled={bridge.camps.length === 0} aria-disabled={bridge.camps.length === 0} title={bridge.camps.length === 0 ? "Necesitas una campaña a la que invitar" : undefined} onClick={() => bridge.camps.length > 0 && setInvOpen((v) => !v)}><BookOpen size={14} /> Invitar a una campaña <ChevronRight size={13} style={{ marginLeft: "auto" }} /></button>
+            {invOpen && bridge.camps.length > 0 && (
               <div className="mh-ctx-sub">
-                {bridge.camps.length === 0 && <small>Aún no tienes campañas.</small>}
                 {bridge.camps.map((c) => <button key={c.id} type="button" role="menuitem" onClick={async () => { const p = menu.p; setMenu(null); setInvOpen(false); say(await inviteToCampaign(p, { campId: c.id, name: c.name, desc: c.desc, gm: s.me?.username || "", players: c.players }).catch(() => "No se pudo enviar.")); }}>{c.name}</button>)}
               </div>
             )}
