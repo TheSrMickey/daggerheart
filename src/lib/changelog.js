@@ -7,6 +7,7 @@ export const CHANGELOG = [
     title: "Grupos y notificaciones nuevas",
     blurb: "Chatea con toda tu mesa en un grupo compartido y recibe los avisos como tarjetas, también flotando mientras juegas.",
     items: [
+      { tag: "mejora", text: "Anuncio «Carta del día»: al pulsar «Otra carta» el montón del fondo ya no cambia y solo se renueva la carta de delante, que sale y entra con una animación. En modo claro desaparece el halo de color de la izquierda (queda liso, como en oscuro) y en móvil el anuncio se recompone: la carta arriba a la derecha y el texto y los botones a la izquierda." },
       { tag: "mejora", text: "Inicio · la carta del día va sobre un montón de cartas del juego repartidas por toda la caja, giradas en todas direcciones y sin huecos (cambia cada día y con «Otra carta»), con un resplandor del color de su dominio. Se ve bien en modo día y en modo noche (el degradado de la derecha ya se nota también de noche), y la carta del día va algo más a la izquierda y con el mismo espacio arriba y abajo; los controles del carrusel pasan arriba a la derecha." },
       { tag: "mejora", text: "Inicio · la carta del día usa el mismo diseño que las cartas de dominio de la pestaña Cartas (arte, nivel, coste de recuperación, texto y dominio)." },
       { tag: "mejora", text: "Inicio · se quita la barra de ruta de arriba y la caja de novedades destacadas sube, con una altura contenida y el contenido centrado; sus controles quedan alineados con el margen de la caja." },
