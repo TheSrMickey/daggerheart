@@ -7,6 +7,10 @@ export const CHANGELOG = [
     title: "Grupos y notificaciones nuevas",
     blurb: "Chatea con toda tu mesa en un grupo compartido y recibe los avisos como tarjetas, también flotando mientras juegas.",
     items: [
+      { tag: "nuevo", text: "Sonido de aviso: al llegar una notificación nueva suena una campanita de dos notas (no suena con «No molestar» ni «Invisible»)." },
+      { tag: "mejora", text: "Inicio · «Únete a una mesa o crea la tuya» tiene de fondo siluetas de aventureros (espada, varita, escudo y hoguera) con un resplandor verde." },
+      { tag: "arreglo", text: "Inicio · en la carta del día, el texto se ajusta al ancho real de la carta y no llega a tocarla aunque sea muy largo." },
+      { tag: "arreglo", text: "Perfil · la tarjeta ocupa todo el ancho hasta el menú de la derecha, con los mismos márgenes que Inicio, y el avatar del menú lateral tiene el mismo color que el del perfil." },
       { tag: "mejora", text: "Inicio · «Próxima sesión» tiene siempre la misma altura que la caja de «No tienes ninguna sesión agendada»: fecha, nombre, datos y respuesta en una sola fila." },
       { tag: "mejora", text: "Inicio · la carta del día va algo más a la izquierda y según el ancho de la caja, el texto ya no se queda tapado por el montón de cartas ni toca la carta, y se ve más nítida." },
       { tag: "arreglo", text: "Dados · la pestaña abre sin la espera de la primera vez: la app precarga el visor 3D y los modelos al quedar libre." },

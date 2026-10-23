@@ -6,16 +6,22 @@ import { Bell, Search, UserPlus, Check, X, UserMinus, Star, MoreHorizontal, Mess
 import { storageGet, storageSet } from "@/lib/storage";
 import { loadSocial, searchPeople, sendRequest, respond, removeFriend, markNoticesRead, dismissNotices, saveProfile, blockPerson, sendDm, loadDm, markDmRead, inviteToCampaign, createGroup, bridge } from "@/lib/social";
 import { GroupPanel, GroupIcon } from "./Groups";
+import { playNoticeSound } from "@/lib/sounds";
 
 // Estado compartido entre la campana y el panel de amigos (se refresca cada 6 s con la pestaña visible y al volver a ella).
 const EMPTY = { me: null, friends: [], incoming: [], outgoing: [], notices: [] };
 let state = EMPTY;
 const listeners = new Set();
 let timer = null;
+let knownNotices = null; // avisos sin leer ya vistos: en la primera carga no suena nada
 const emit = () => listeners.forEach((l) => l());
 export const refreshSocial = async () => {
   try {
     state = await loadSocial();
+    const ids = new Set(state.notices.filter((n) => !n.read).map((n) => n.key));
+    // Suena cuando llega un aviso nuevo (no en la primera carga ni con «No molestar» o «Invisible»)
+    if (knownNotices && [...ids].some((k) => !knownNotices.has(k)) && !["dnd", "inv"].includes(state.profile?.status) && !state.me?.dnd) playNoticeSound();
+    knownNotices = ids;
     emit();
   } catch (e) {
     /* sin conexión: se mantiene lo anterior */
@@ -25,6 +31,7 @@ const subscribe = (l) => {
   listeners.add(l);
   if (listeners.size === 1) {
     state = EMPTY; // nada de la cuenta anterior mientras carga
+    knownNotices = null;
     refreshSocial();
     timer = setInterval(() => !document.hidden && refreshSocial(), 6000);
     document.addEventListener("visibilitychange", refreshSocial);
@@ -46,8 +53,10 @@ export const ago = (t) => {
   if (m < 1440) return `hace ${Math.round(m / 60)} h`;
   return `hace ${Math.round(m / 1440)} d`;
 };
+// El color del avatar sale del nombre: es el mismo en el perfil, en las listas y en el menú lateral.
+export const avatarColor = (name) => `hsl(${[...(name || "?")].reduce((a, c) => a + c.charCodeAt(0), 0) * 47 % 360} 45% 45%)`;
 export const Avatar = ({ name, size = 34, status }) => (
-  <span className="mh-av" style={{ width: size, height: size, fontSize: size * 0.4, background: `hsl(${[...name].reduce((a, c) => a + c.charCodeAt(0), 0) * 47 % 360} 45% 45%)` }}>
+  <span className="mh-av" style={{ width: size, height: size, fontSize: size * 0.4, background: avatarColor(name) }}>
     {(name || "?").charAt(0).toUpperCase()}
     {status && <i className={"mh-st is-" + status} title={{ on: "Conectado", away: "Ausente", off: "Desconectado" }[status]} />}
   </span>
@@ -567,7 +576,7 @@ export function AccountButton({ name, open, onToggle, onClose, onProfile, onSett
   return (
     <>
       <button type="button" className="mh-isle-it av mh-acct-btn" title={name + " · " + label} aria-label={"Cuenta de " + name + ", estado: " + label} aria-haspopup="menu" aria-expanded={open} onClick={onToggle}>
-        <span className="mh-brand-av">{(name || "?").trim().charAt(0).toUpperCase()}<i className={"mh-st is-" + (status === "inv" ? "off" : status)} aria-hidden="true" /></span>
+        <span className="mh-brand-av" style={{ background: avatarColor(name || "Yo") }}>{(name || "?").trim().charAt(0).toUpperCase()}<i className={"mh-st is-" + (status === "inv" ? "off" : status)} aria-hidden="true" /></span>
         <span className="lb mh-acct-nm"><b>{name || "—"}</b></span>
       </button>
       {open && (

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Sparkles, ChevronLeft, ChevronRight, CalendarDays, Layers } from "lucide-react";
+import { Sparkles, ChevronLeft, ChevronRight, CalendarDays, Layers, Sword, Wand2, Shield, Flame } from "lucide-react";
 import { CHANGELOG } from "@/lib/changelog";
 import { CardFace } from "./Cards";
 import { useNextSession, fmtDate, fmtTime, countdown } from "./Calendar";
@@ -29,13 +29,13 @@ export const benefit = (text, n = 170) => {
 };
 
 // La carta del día con el mismo diseño que en la pestaña Cartas: se pinta a 300 × 420 y se reduce a la altura que deja la caja.
-function NewsCard({ card, icons, FitTitle, FitBox, out }) {
+function NewsCard({ card, icons, FitTitle, FitBox, out, onW }) {
   const ref = useRef(null);
   const [k, setK] = useState(0.7);
   useEffect(() => {
     const el = ref.current;
     if (!el) return undefined;
-    const fit = () => setK(el.clientHeight / 420);
+    const fit = () => { setK(el.clientHeight / 420); onW && onW(el.offsetWidth); };
     fit();
     const ro = new ResizeObserver(fit);
     ro.observe(el);
@@ -94,6 +94,7 @@ function CardPile({ cards, skip, seed, icons, FitTitle, FitBox }) {
 export function HomeHero({ camps, characters, featId, cards, color, icons, FitTitle, FitBox, onView, onChar, onCamp }) {
   const [seenVer, setSeenVer] = useState("");
   const [idx, setIdx] = useState(0);
+  const [cw, setCw] = useState(0); // ancho real de la carta del día, para que el texto no llegue a tocarla
   const [pick, setPick] = useState(0);
   const [gone, setGone] = useState(null); // carta que sale mientras entra la nueva
   const sess = useNextSession(camps);
@@ -181,6 +182,12 @@ export function HomeHero({ camps, characters, featId, cards, color, icons, FitTi
   } else if (cur === "mesa") {
     body = (
       <>
+        <div className="mh-news-sil" aria-hidden="true">
+          <Sword className="s1" strokeWidth={1.2} />
+          <Wand2 className="s2" strokeWidth={1.2} />
+          <Shield className="s3" strokeWidth={1.2} />
+          <Flame className="s4" strokeWidth={1.2} />
+        </div>
         <span className="mh-news-tag">Aún sin mesa</span>
         <h2 className="mh-serif">Únete a una mesa o crea la tuya</h2>
         <p>Busca grupos que necesitan jugador o DJ, o monta tu propia campaña e <b>invita a tus amigos</b> con un enlace.</p>
@@ -198,7 +205,7 @@ export function HomeHero({ camps, characters, featId, cards, color, icons, FitTi
         <span className="mh-news-glow" style={{ "--gc": dayCard.color || "#C9A24A" }} aria-hidden="true" />
         <span className="mh-news-glow is-bl" style={{ "--gc": dayCard.color || "#C9A24A" }} aria-hidden="true" />
         {gone && <NewsCard key={"o" + gone.id} card={gone} icons={icons} FitTitle={FitTitle} FitBox={FitBox} out />}
-        <NewsCard key={card.id} card={card} icons={icons} FitTitle={FitTitle} FitBox={FitBox} />
+        <NewsCard key={card.id} card={card} icons={icons} FitTitle={FitTitle} FitBox={FitBox} onW={setCw} />
         <span className="mh-news-tag" key={"t" + card.id}><Layers size={12} /> Carta del día · {card.domain}</span>
         <h2 className="mh-serif" key={"h" + card.id}>{card.key}</h2>
         <p key={"p" + card.id}>{benefit(card.text)}</p>
@@ -216,6 +223,7 @@ export function HomeHero({ camps, characters, featId, cards, color, icons, FitTi
       role="region"
       aria-roledescription="carrusel"
       aria-label="Anuncios"
+      style={cw ? { "--cw": cw + "px" } : undefined}
       onTouchStart={(e) => { touch.current = e.touches[0].clientX; }}
       onTouchEnd={(e) => { const dx = e.changedTouches[0].clientX - (touch.current ?? e.changedTouches[0].clientX); touch.current = null; if (n > 1 && Math.abs(dx) > 50) go(dx < 0 ? 1 : -1); }}
     >
