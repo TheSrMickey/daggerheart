@@ -180,6 +180,92 @@ export function useNextSession(camps) {
   return items[0] ? { ...items[0], now } : null;
 }
 
+// Inicio · «Próxima sesión»: la sesión agendada más cercana entre tus campañas, con quién viene y para responder sin entrar al calendario.
+// Si no hay ninguna sesión agendada lo dice, y ofrece fijarla (o crear una campaña si todavía no tienes ninguna).
+export function HomeNextSession({ camps, characters, campColor, classColor, onOpen, onCreate }) {
+  const key = camps.map((c) => c.id).join(",");
+  const [docs, setDocs] = useState({});
+  const [now] = useState(() => Date.now());
+  useEffect(() => {
+    let alive = true;
+    const pull = async () => {
+      const out = {};
+      await Promise.all(key.split(",").filter(Boolean).map(async (id) => { out[id] = await readDoc(calKey(id), EMPTY); }));
+      if (alive) setDocs(out);
+    };
+    pull();
+    const t = setInterval(pull, 30000);
+    return () => {
+      alive = false;
+      clearInterval(t);
+    };
+  }, [key]);
+  const items = camps
+    .map((cp) => ({ cp, next: docs[cp.id]?.next, rsvp: docs[cp.id]?.rsvp || {} }))
+    .filter((x) => x.next && x.next.ts >= now - 3 * 3600 * 1000)
+    .sort((a, b) => a.next.ts - b.next.ts);
+  const head = (
+    <div className="mh-home-sec">
+      <h3>Próxima sesión</h3>
+      {camps.length > 0 && <button type="button" onClick={() => onOpen(items[0]?.cp || camps[0])}>Ver calendario ›</button>}
+    </div>
+  );
+  if (!items.length) {
+    return (
+      <>
+        {head}
+        <div className="mh-hns is-empty">
+          <span className="mh-hns-ic"><CalendarDays size={22} /></span>
+          <div className="mh-hns-b">
+            <b>No tienes ninguna sesión agendada</b>
+            <small>{camps.length > 0 ? "Cuando el DJ fije una fecha en el calendario de la campaña, aparecerá aquí para que confirmes tu asistencia." : "Crea una campaña o únete a una mesa para empezar a agendar sesiones."}</small>
+          </div>
+          <button type="button" className="mh-home-btn" onClick={() => (camps.length > 0 ? onOpen(camps[0]) : onCreate())}>{camps.length > 0 ? "Abrir calendario" : "Crear campaña"}</button>
+        </div>
+      </>
+    );
+  }
+  const { cp, next, rsvp } = items[0];
+  const members = (cp.characterIds || []).filter((id) => characters[id]).map((id) => ({ id, name: characters[id].f_name || "Sin nombre", cls: characters[id].f_class || "" }));
+  const st = members.length && members.every((m) => rsvp[m.id] === rsvp[members[0].id]) ? rsvp[members[0].id] : null;
+  const yes = members.filter((m) => rsvp[m.id] === "yes").length;
+  const answer = (v) => mutateDoc(calKey(cp.id), EMPTY, (d) => ({ ...d, rsvp: { ...(d.rsvp || {}), ...Object.fromEntries(members.map((m) => [m.id, v])) } })).then((n) => setDocs((x) => ({ ...x, [cp.id]: n })));
+  const d = new Date(next.ts);
+  const rest = items.slice(1, 3);
+  return (
+    <>
+      {head}
+      <div className="mh-hns" style={{ "--hc": campColor(cp.id) }}>
+        <button type="button" className="mh-hns-date" onClick={() => onOpen(cp)} aria-label={"Abrir el calendario de " + (cp.name || "la campaña")}>
+          <small>{d.toLocaleDateString("es-ES", { weekday: "short" }).replace(".", "").toUpperCase()} · {d.toLocaleDateString("es-ES", { month: "short" }).replace(".", "").toUpperCase()}</small>
+          <b className="mh-serif">{d.getDate()}</b>
+          <small>{fmtTime(next.ts)} · en {countdown(next.ts, now)}</small>
+        </button>
+        <div className="mh-hns-b">
+          <b className="mh-serif mh-hns-name">{cp.name || "Campaña"}</b>
+          <small>{next.place ? <><MapPin size={11} /> {next.place}</> : "Sin lugar indicado"}{members.length > 0 ? " · " + yes + " de " + members.length + " confirmados" : ""}</small>
+          {members.length > 0 && (
+            <span className="mh-hns-who">
+              {members.map((m) => {
+                const S = rsvp[m.id] ? STATES[rsvp[m.id]] : null;
+                return <span key={m.id} className="mh-hns-pill" style={{ "--c": S ? S[1] : "#8b8bad" }}>{m.name}{m.cls ? " · " + m.cls : ""} — {S ? S[0] : "Sin responder"}</span>;
+              })}
+            </span>
+          )}
+          {members.length > 0 && (
+            <span className="mh-hns-rsvp">
+              {Object.entries(STATES).map(([k, [label, c, Ico]]) => (
+                <button key={k} type="button" className={st === k ? "on" : ""} style={{ "--c": c }} aria-pressed={st === k} onClick={() => answer(k)}><Ico size={13} /> {label}</button>
+              ))}
+            </span>
+          )}
+          {rest.length > 0 && <small className="mh-hns-more">Después: {rest.map((r) => (r.cp.name || "Campaña") + " · " + fmtDate(r.next.ts) + " " + fmtTime(r.next.ts)).join("  ·  ")}</small>}
+        </div>
+      </div>
+    </>
+  );
+}
+
 // Inicio: sección «Próximas sesiones» con el mismo diseño que «Retoma tus campañas» y «Tus personajes».
 // Una ficha por campaña con sesión fijada: día, hora, cuenta atrás y un toque para confirmar si vas.
 export function HomeSessions({ camps, colorOf, mineOf, onOpen }) {

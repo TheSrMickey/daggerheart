@@ -22,7 +22,7 @@ import { RulesPanel } from "./MapRules";
 import { Changelog } from "./Changelog";
 import { CardsPage } from "./Cards";
 import { Generators } from "./Generators";
-import { CampaignCalendar, HomeSessions, HomeCampCards } from "./Calendar";
+import { CampaignCalendar, HomeNextSession } from "./Calendar";
 import { HomeHero } from "./HomeHero";
 import { PollsGm, ActivePoll, PollSwap } from "./Polls";
 import { RestGm, RestQuick, RestBanner, GroupRestDialog, RestLock } from "./GroupRest";
@@ -7355,6 +7355,23 @@ const sharedStyles = `
   .mh-dice-bars small { font-size: 9.5px; color: var(--mh-muted); }
   @media (max-width: 760px) { .mh-dice { flex-wrap: wrap; } .mh-dice-st { width: calc(33% - 8px); min-width: 96px; } .mh-dice-ch { flex-basis: 100%; } }
   .mh-hrow { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+  /* Inicio · Próxima sesión */
+  .mh-hns { --hc: #C9A24A; display: grid; grid-template-columns: 150px minmax(0, 1fr); border-radius: 14px; background: var(--mh-panel); border: 1px solid var(--mh-line); overflow: hidden; }
+  .mh-hns-date { all: unset; cursor: pointer; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 14px 10px; text-align: center; background: linear-gradient(160deg, color-mix(in srgb, var(--hc) 34%, var(--mh-panel)), color-mix(in srgb, var(--hc) 8%, var(--mh-panel))); }
+  .mh-hns-date:focus-visible { outline: 2px solid #E3B04B; outline-offset: -3px; }
+  .mh-hns-date b { font-size: 44px; line-height: 1; color: var(--hc); } .mh-hns-date small { font-size: 11px; letter-spacing: .06em; color: var(--mh-ink2); }
+  .mh-hns-b { padding: 14px 18px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .mh-hns-name { font-size: 18px; color: var(--mh-ink); } .mh-hns-b > small { color: var(--mh-muted); font-size: 12.5px; display: block; } .mh-hns-b > small svg { display: inline-block; vertical-align: -1px; }
+  .mh-hns-who { display: flex; flex-wrap: wrap; gap: 7px; }
+  .mh-hns-pill { font-size: 11.5px; font-weight: 600; padding: 3px 10px; border-radius: 99px; color: var(--c); background: color-mix(in srgb, var(--c) 15%, transparent); border: 1px solid color-mix(in srgb, var(--c) 40%, transparent); }
+  .mh-hns-rsvp { display: flex; flex-wrap: wrap; gap: 8px; }
+  .mh-hns-rsvp button { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 99px; font-size: 12px; font-weight: 600; color: var(--c); border: 1px solid color-mix(in srgb, var(--c) 45%, transparent); } .mh-hns-rsvp button:hover { background: color-mix(in srgb, var(--c) 12%, transparent); } .mh-hns-rsvp button.on { background: color-mix(in srgb, var(--c) 24%, transparent); }
+  .mh-hns-rsvp button:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
+  .mh-hns .mh-hns-more { font-size: 11.5px; }
+  html[data-mh-theme="light"] .mh-hns-pill, html[data-mh-theme="light"] .mh-hns-rsvp button { color: color-mix(in srgb, var(--c) 62%, #221C2B); }
+  .mh-hns.is-empty { display: flex; align-items: center; gap: 14px; padding: 16px 18px; } .mh-hns.is-empty .mh-hns-b { flex: 1; padding: 0; gap: 3px; } .mh-hns.is-empty .mh-hns-b b { font-size: 14.5px; color: var(--mh-ink); }
+  .mh-hns-ic { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; flex: none; background: var(--mh-panel3); color: var(--mh-gold-ink, #E3B04B); }
+  @media (max-width: 720px) { .mh-hns { grid-template-columns: 1fr; } .mh-hns-date { flex-direction: row; justify-content: flex-start; gap: 12px; padding: 12px 16px; } .mh-hns-date b { font-size: 34px; } .mh-hns.is-empty { flex-wrap: wrap; } }
   /* Inicio en móvil: dados más compactos y filas de campañas, personajes y sesiones en carrusel horizontal (con imán) en vez de apiladas. */
   @media (max-width: 720px) {
     .mh-dice { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
@@ -10807,6 +10824,7 @@ export default function App({ onSignOut }) {
   const [newCampaignLimits, setNewCampaignLimits] = useState({ lines: [], veils: [] }); // líneas y velos de la mesa
   const [pendingDeleteCampaignId, setPendingDeleteCampaignId] = useState(null);
   const [campaignDetailTab, setCampaignDetailTab] = useState("mesa");
+  const campTabNext = useRef(null); // pestaña a la que abrir la próxima campaña (p. ej. el calendario desde Inicio); si no, «mesa»
   const [campaignChat, setCampaignChat] = useState([]);
   const [campaignChatDraft, setCampaignChatDraft] = useState("");
   const [showShareTray, setShowShareTray] = useState(false);
@@ -11027,7 +11045,8 @@ export default function App({ onSignOut }) {
       setConvSceneId(null);
       setConvId(null);
       setEditingConvId(null);
-      setCampaignDetailTab("mesa");
+      setCampaignDetailTab(campTabNext.current || "mesa");
+      campTabNext.current = null;
       setChapterId(null);
       setCombatBack(null);
       setMapSel(null);
@@ -27906,36 +27925,23 @@ export default function App({ onSignOut }) {
                     color={(c) => (c.f_class ? classColor(c.f_class) : "#7A8CFF")}
                     onView={(v) => setView(v)}
                     onChar={(id) => openCharDetail(id)}
-                    onCamp={(cp) => (setViewingCampaignId(cp.id), setCampaignDetailTab("calendario"), setView("campaigns"))}
+                    onCamp={(cp) => (campTabNext.current = viewingCampaignId === cp.id ? null : "calendario", setViewingCampaignId(cp.id), setCampaignDetailTab("calendario"), setView("campaigns"))}
                   />
-                  <HomeSessions
+                  <ActivityCard />
+                  <HomeDice stats={diceStats} />
+                  <HomeNextSession
                     camps={camps}
-                    colorOf={campColor}
-                    mineOf={(cp) => (cp.characterIds || []).filter((id) => characters[id]).map((id) => ({ id }))}
+                    characters={characters}
+                    campColor={campColor}
+                    classColor={classColor}
                     onOpen={(cp) => {
+                      campTabNext.current = viewingCampaignId === cp.id ? null : "calendario";
                       setViewingCampaignId(cp.id);
                       setCampaignDetailTab("calendario");
                       setView("campaigns");
                     }}
+                    onCreate={() => setView("campaigns")}
                   />
-                  <ActivityCard />
-                  <HomeDice stats={diceStats} />
-                  {camps.length > 0 && (
-                    <>
-                      <div className="mh-home-sec">
-                        <h3>Retoma tus campañas <i>{camps.length}</i></h3>
-                        <button type="button" onClick={() => setView("campaigns")}>Ver todas ›</button>
-                      </div>
-                      <div className="mh-hrow">
-                        <HomeCampCards
-                          camps={camps.slice(0, 6)}
-                          colorOf={campColor}
-                          membersOf={(cp) => (cp.characterIds || []).filter((id) => characters[id]).map((id) => ({ id, name: characters[id].f_name, color: characters[id].f_class ? classColor(characters[id].f_class) : "#7A8CFF" }))}
-                          onOpen={(cp) => (setViewingCampaignId(cp.id), setView("campaigns"))}
-                        />
-                      </div>
-                    </>
-                  )}
                 </div>
                 {isMobile && <FriendsPanel renderClass={renderClassDot} />}
               </div>
