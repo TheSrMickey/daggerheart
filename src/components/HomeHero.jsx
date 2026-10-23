@@ -10,6 +10,9 @@ import { useNextSession, fmtDate, fmtTime, countdown } from "./Calendar";
 // Cada diapositiva dura SLIDE_MS; el punto activo se rellena como cuenta atrás y, al terminar, pasa a la siguiente (se pausa al pasar el ratón).
 const SLIDE_MS = 9000;
 const VER_KEY = "mh-hero-ver";
+// Aviso de Darrington Press (teaser del 29 de octubre de 2026): se retira solo pasada esa fecha.
+const DP_UNTIL = new Date("2026-10-30T00:00:00").getTime();
+const DP_DATE = new Date("2026-10-29T00:00:00").getTime();
 const lsGet = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
 const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
 const short = (t, n) => { const s = (t || "").replace(/\s+/g, " ").trim(); const cut = s.search(/[.;:] /); const e = cut > 40 ? s.slice(0, cut + 1) : s; return e.length > n ? e.slice(0, n - 1).trimEnd() + "…" : e; };
@@ -108,6 +111,7 @@ export function HomeHero({ camps, characters, featId, cards, color, icons, FitTi
   useEffect(() => { if (!gone) return undefined; const t = setTimeout(() => setGone(null), 500); return () => clearTimeout(t); }, [gone]);
 
   const slides = [{ id: "exp" }];
+  if (Date.now() < DP_UNTIL) slides.push({ id: "dp" });
   if (seenVer && seenVer !== latest.version) slides.push({ id: "ver" });
   if (sess) slides.push({ id: "ses" });
   if (camps.length === 0) slides.push({ id: "mesa" });
@@ -135,6 +139,17 @@ export function HomeHero({ camps, characters, featId, cards, color, icons, FitTi
           <button type="button" className="mh-home-btn" onClick={() => onView("ficha")}>Crear un personaje</button>
           {fch && <button type="button" className="mh-home-btn is-ghost" onClick={() => onChar(featId)}>Abrir {fch.f_name || "mi ficha"}</button>}
         </div>
+      </>
+    );
+  } else if (cur === "dp") {
+    const left = Math.max(0, Math.ceil((DP_DATE - Date.now()) / 864e5));
+    body = (
+      <>
+        <div className="mh-news-art" aria-hidden="true"><i style={{ backgroundImage: "url(/noticias/darrington-teaser.jpg)", backgroundPosition: "center 80%" }} /></div>
+        <span className="mh-news-tag"><Sparkles size={12} /> Darrington Press · {left > 0 ? "29 oct · en " + left + (left === 1 ? " día" : " días") : "hoy"}</span>
+        <h2 className="mh-serif">Something approaches 👀</h2>
+        <p>Find out what&apos;s coming 10/29.</p>
+        <small className="mh-news-credit" style={{ position: "absolute", bottom: 14 }}>Ilustración de fondo: Mat Wilma · © 2026 Darrington Press, LLC</small>
       </>
     );
   } else if (cur === "ver") {
