@@ -14,6 +14,17 @@ const lsGet = (k) => { try { return localStorage.getItem(k); } catch { return nu
 const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
 const short = (t, n) => { const s = (t || "").replace(/\s+/g, " ").trim(); const cut = s.search(/[.;:] /); const e = cut > 40 ? s.slice(0, cut + 1) : s; return e.length > n ? e.slice(0, n - 1).trimEnd() + "…" : e; };
 
+// De una carta de dominio saca la frase que dice qué te da (daño, bonificadores, recuperación…) en vez de la primera, que suele ser el cómo se activa («Haz un ataque…»).
+const EFFECT = /infliges|inflige|sufre|daño|obtienes|ganas|recuperas|liberas|libera|reduc|bonificador|\+\d|ventaja|duplica|elimina|permit|repetir|anula|teletransport|cura|protege|aument|evita|ignora|vuelves|puedes/i;
+const SETUP = /^(haz una tirada|haz un ataque|elige|tira |toca |tras un descanso|una vez por descanso, gasta)/i;
+export const benefit = (text, n = 170) => {
+  const parts = (text || "").replace(/\\n/g, "\n").split(/\n|(?<=[.!?])\s+/).map((x) => x.replace(/^[•\s]+/, "").trim()).filter((x) => x.length > 12);
+  if (!parts.length) return "";
+  let best = parts[0], top = -9;
+  parts.forEach((x, k) => { const sc = (EFFECT.test(x) ? 2 : 0) - (SETUP.test(x) ? 2 : 0) - k * 0.1; if (sc > top) { top = sc; best = x; } });
+  return best.length > n ? best.slice(0, n - 1).trimEnd() + "…" : best;
+};
+
 // La carta del día con el mismo diseño que en la pestaña Cartas: se pinta a 300 × 420 y se reduce a la altura que deja la caja.
 function NewsCard({ card, icons, FitTitle, FitBox, out }) {
   const ref = useRef(null);
@@ -44,7 +55,7 @@ const PILE = COLS * ROWS;
 function CardPile({ cards, skip, seed, icons, FitTitle, FitBox }) {
   const list = useMemo(() => {
     const r = rng(seed);
-    const pool = cards.filter((c) => c.id !== skip && (c.image || c.kind !== "dominio"));
+    const pool = cards.filter((c) => c.id !== skip && c.kind === "dominio" && c.image); // solo cartas de dominio (nada de armas, ascendencias, etc.)
     const out = [];
     const used = new Set();
     // Una carta por casilla de una rejilla con holgura aleatoria: cubre toda la caja sin huecos y cada una mira hacia un lado distinto.
@@ -176,7 +187,7 @@ export function HomeHero({ camps, characters, featId, cards, color, icons, FitTi
         <NewsCard key={card.id} card={card} icons={icons} FitTitle={FitTitle} FitBox={FitBox} />
         <span className="mh-news-tag" key={"t" + card.id}><Layers size={12} /> Carta del día · {card.domain}</span>
         <h2 className="mh-serif" key={"h" + card.id}>{card.key}</h2>
-        <p key={"p" + card.id}>{short(card.text, 150)}</p>
+        <p key={"p" + card.id}>{benefit(card.text)}</p>
         <div className="mh-home-cta">
           <button type="button" className="mh-home-btn" onClick={() => onView("cartas")}>Ver las cartas</button>
           <button type="button" className="mh-home-btn is-ghost" onClick={another}>Otra carta</button>
