@@ -80,6 +80,8 @@ const CLASS_COLORS = {
   "Cazador de Sangre": "#A8323E",
 };
 // Columna derecha plegada (barra estrecha): sin pasar el ratón, sin fijar y sin un chat abierto.
+// Margen de la columna central arriba y abajo (los menús laterales tienen 12 px): 36 px en todas las páginas.
+const EDGE = 36;
 const RAIL_MINI = ".mh-rail.is-fold:not(.is-open):not(:has(.mh-gp)):not(:has(.mh-dm))";
 const DEFAULT_SETTINGS = { classColors: true, tutorial: false, headerArt: true, immersive: false, officialArt: true };
 // Ilustraciones oficiales del juego: se ocultan por CSS con `html[data-mh-art="off"]` (y se recuerda en este navegador para no parpadear al cargar).
@@ -7218,8 +7220,8 @@ const sharedStyles = `
   .mh-navrow-t { display: flex; flex-direction: column; min-width: 0; }
   .mh-navrow-t b { font-size: 13px; font-weight: 600; color: var(--mh-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .mh-navrow-t small { font-size: 11px; color: var(--mh-muted2); }
-  .mh-topbar-wrap { position: absolute; top: 0; left: 0; height: 108px; z-index: 5; background: var(--mh-bg); }
-  .mh-topbar { display: flex; align-items: center; justify-content: space-between; height: 100%; padding-top: 34px; margin: 0 auto; font-size: 13.5px; font-weight: 600; color: var(--mh-ink); }
+  .mh-topbar-wrap { position: absolute; top: 0; left: 0; height: ${EDGE + 74}px; z-index: 5; background: var(--mh-bg); }
+  .mh-topbar { display: flex; align-items: center; justify-content: space-between; height: 100%; padding-top: ${EDGE}px; margin: 0 auto; font-size: 13.5px; font-weight: 600; color: var(--mh-ink); }
   .mh-topbar { align-items: flex-start; } .mh-topbar > span { line-height: 34px; }
   .mh-pagetitle { font-size: 13.5px; font-weight: 600; color: var(--mh-ink); margin: 0 0 18px; }
   .mh-scroll-hidden { scrollbar-width: none; } .mh-scroll-hidden::-webkit-scrollbar { display: none; }
@@ -27860,7 +27862,7 @@ export default function App({ onSignOut }) {
             </div>
           </div>
         )}
-        <div data-mh-main className={(showTopbar ? "mh-scroll-hidden" : "") + (view === "inicio" ? " mh-main-fit" : "") || undefined} style={{ position: "absolute", top: showTopbar ? (view === "perfil" ? 20 : view === "inicio" ? 12 : 108) : 0, left: 0, bottom: 0, right: railW, overflowY: view === "ficha" && !viewingCharId && !modernCharId && showRail ? "hidden" : "auto", padding: isMobile ? (campDetail ? "10px 12px 18px" : "18px 14px") : showTopbar ? "0 " + padX + " " + (view === "inicio" ? 12 : 24) + "px" : campDetail ? "18px 24px 24px 14px" : "24px 28px" }}>
+        <div data-mh-main className={(showTopbar ? "mh-scroll-hidden" : "") + (view === "inicio" ? " mh-main-fit" : "") || undefined} style={{ position: "absolute", top: showTopbar ? (view === "perfil" || view === "inicio" ? EDGE : EDGE + 74) : 0, left: 0, bottom: 0, right: railW, overflowY: view === "ficha" && !viewingCharId && !modernCharId && showRail ? "hidden" : "auto", padding: isMobile ? (campDetail ? "10px 12px 18px" : "18px 14px") : showTopbar ? "0 " + padX + " " + EDGE + "px" : campDetail ? "18px 24px 24px 14px" : "24px 28px" }}>
           <div ref={setWizSlot} style={{ maxWidth: contentMax, margin: "0 auto" }} />
           <div key={view + (view === "ficha" && modernCharId ? ":hoja" : "")} className={"mh-view-in" + (view === "ficha" && modernCharId ? " mh-sheet-in" : "")} style={{ display: showNewCharModal ? "none" : undefined, maxWidth: contentMax, margin: "0 auto" }}>
             {!showTopbar && view !== "inicio" && view !== "perfil" && !campDetail && <div className="mh-pagetitle">{viewLabel}</div>}
