@@ -7325,7 +7325,7 @@ const sharedStyles = `
   /* Inicio: se ajusta a la pantalla sin deslizar. Lo que se encoge primero es la novedad (pierde el texto y luego la etiqueta); las filas de
      campañas y personajes son de una sola línea y se desplazan hacia los lados si no caben. Solo en pantallas muy bajas vuelve el scroll vertical. */
   @media (min-height: 700px) and (min-width: 721px) { .mh-main-fit > .mh-view-in { height: 100%; } .mh-main-fit .mh-home, .mh-main-fit .mh-home-main { height: 100%; } .mh-main-fit .mh-home-main { display: flex; flex-direction: column; min-height: 0; } .mh-main-fit .mh-home-main > * { flex: none; }
-    .mh-main-fit .mh-home-news { flex: 1 1 340px; min-height: 240px; max-height: 600px; padding-top: 24px; padding-bottom: 24px; }
+    .mh-main-fit .mh-home-news { flex: 1 1 340px; min-height: 240px; max-height: 760px; padding-top: 24px; padding-bottom: 24px; }
     .mh-main-fit .mh-home-sec { margin: 16px 0 10px; }
     .mh-main-fit .mh-hrow { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(300px, 1fr); overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; padding-bottom: 2px; }
   }
@@ -27936,42 +27936,6 @@ export default function App({ onSignOut }) {
                       </div>
                     </>
                   )}
-                  <div className="mh-home-sec">
-                    <h3>Tus personajes <i>{chars.length}</i></h3>
-                    <button type="button" onClick={() => setView("ficha")}>Gestionar ›</button>
-                  </div>
-                  <div className="mh-hrow">
-                    {chars.map(([id, ch]) => {
-                      const Em = CLASS_EMBLEMS[ch.f_class] || User;
-                      const camp = camps.find((cp) => (cp.characterIds || []).includes(id));
-                      const mods = getEquipmentMods(PRIMARY_WEAPONS.find((w) => w.key === ch.f_primary_weapon), SECONDARY_WEAPONS.find((w) => w.key === ch.f_secondary_weapon), ARMORS.find((a) => a.key === ch.f_armor));
-                      const hpT = Number(ch.r_hp || 0) + (mods.hp || 0);
-                      const stT = Number(ch.r_stress || 0) + (mods.stress || 0);
-                      const hpLeft = Math.max(0, hpT - Number(ch.hp_marked || 0));
-                      const st = Number(ch.stress_marked || 0);
-                      const pc = (a, b) => (b > 0 ? Math.max(0, Math.min(100, (a / b) * 100)) : 0) + "%";
-                      return (
-                        <button type="button" key={id} className="mh-hcard" style={{ "--hc": ch.f_class ? classColor(ch.f_class) : "#7A8CFF" }} onClick={() => openCharDetail(id)}>
-                          <span className="mh-hcard-art is-char"><Em size={32} strokeWidth={1.6} /></span>
-                          <span className="mh-hcard-b">
-                            <b>{ch.f_name || "Sin nombre"}</b>
-                            <small>{ch.f_class ? ch.f_class + " · Nv " + (ch.f_level || 1) : "Sin clase"}{camp ? " · " + (camp.name || "Campaña") : ""}</small>
-                            {ch.f_class && (
-                              <>
-                                <span className="mh-hcard-bar" title={"Puntos de vida " + hpLeft + " / " + hpT}><i style={{ width: pc(hpLeft, hpT), background: "#E0544A" }} /><em>PV {hpLeft}/{hpT}</em></span>
-                                <span className="mh-hcard-bar" title={"Estrés " + st + " / " + stT}><i style={{ width: pc(st, stT), background: "#A58BE8" }} /><em>Estrés {st}/{stT}</em></span>
-                              </>
-                            )}
-                          </span>
-                        </button>
-                      );
-                    })}
-                    {chars.length < MAX_CHARACTERS && (
-                      <button type="button" className="mh-hcard is-new" onClick={() => setView("ficha")}>
-                        <Plus size={16} /> Nuevo personaje
-                      </button>
-                    )}
-                  </div>
                 </div>
                 {isMobile && <FriendsPanel renderClass={renderClassDot} />}
               </div>
