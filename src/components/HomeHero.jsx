@@ -43,7 +43,7 @@ function NewsCard({ card, icons, FitTitle, FitBox, out }) {
   }, []);
   return (
     <div ref={ref} className={"mh-news-card" + (out ? " is-out" : "")} aria-hidden="true" style={{ "--gc": card.color || "#C9A24A" }}>
-      <div style={{ position: "absolute", left: 0, top: 0, width: 300, height: 420, transform: "scale(" + k + ")", transformOrigin: "0 0" }}>
+      <div style={{ position: "absolute", left: 0, top: 0, width: 300, height: 420, zoom: k }}>
         <CardFace c={card} I={icons[card.domain] || Layers} FitTitle={FitTitle} FitBox={FitBox} />
       </div>
     </div>
@@ -145,7 +145,7 @@ export function HomeHero({ camps, characters, featId, cards, color, icons, FitTi
     body = (
       <>
         <div className="mh-news-art" aria-hidden="true"><i style={{ backgroundImage: "url(/noticias/darrington-teaser.jpg)", backgroundPosition: "center 80%" }} /></div>
-        <span className="mh-news-tag"><Sparkles size={12} /> Darrington Press · Avance · {left > 0 ? "29 oct · en " + left + (left === 1 ? " día" : " días") : "hoy"}</span>
+        <span className="mh-news-tag"><Sparkles size={12} /> Darrington Press · {left > 0 ? "29 oct · en " + left + (left === 1 ? " día" : " días") : "hoy"}</span>
         <h2 className="mh-serif">Algo se acerca 👀</h2>
         <p>Descubre qué llega el 29 de octubre.</p>
         <small className="mh-news-credit" style={{ position: "absolute", bottom: 14 }}>Ilustración de fondo: Mat Wilma · © 2026 Darrington Press, LLC</small>

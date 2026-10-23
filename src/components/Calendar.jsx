@@ -235,32 +235,26 @@ export function HomeNextSession({ camps, characters, campColor, classColor, onOp
   return (
     <>
       {head}
-      <div className="mh-hns" style={{ "--hc": campColor(cp.id) }}>
-        <button type="button" className="mh-hns-date" onClick={() => onOpen(cp)} aria-label={"Abrir el calendario de " + (cp.name || "la campaña")}>
-          <small>{d.toLocaleDateString("es-ES", { weekday: "short" }).replace(".", "").toUpperCase()} · {d.toLocaleDateString("es-ES", { month: "short" }).replace(".", "").toUpperCase()}</small>
-          <b className="mh-serif">{d.getDate()}</b>
-          <small>{fmtTime(next.ts)} · en {countdown(next.ts, now)}</small>
+      <div className="mh-hns is-one" style={{ "--hc": campColor(cp.id) }}>
+        <button type="button" className="mh-hns-ic is-date" onClick={() => onOpen(cp)} aria-label={"Abrir el calendario de " + (cp.name || "la campaña")}>
+          <b>{d.getDate()}</b>
+          <small>{d.toLocaleDateString("es-ES", { month: "short" }).replace(".", "")}</small>
         </button>
-        <div className="mh-hns-b">
+        <div className="mh-hns-b" title={members.map((m) => m.name + ": " + (rsvp[m.id] ? STATES[rsvp[m.id]][0] : "Sin responder")).join("\n") + (rest.length ? "\nDespués: " + rest.map((r) => (r.cp.name || "Campaña") + " · " + fmtDate(r.next.ts) + " " + fmtTime(r.next.ts)).join("  ·  ") : "")}>
           <b className="mh-serif mh-hns-name">{cp.name || "Campaña"}</b>
-          <small>{next.place ? <><MapPin size={11} /> {next.place}</> : "Sin lugar indicado"}{members.length > 0 ? " · " + yes + " de " + members.length + " confirmados" : ""}</small>
-          {members.length > 0 && (
-            <span className="mh-hns-who">
-              {members.map((m) => {
-                const S = rsvp[m.id] ? STATES[rsvp[m.id]] : null;
-                return <span key={m.id} className="mh-hns-pill" style={{ "--c": S ? S[1] : "#8b8bad" }}>{m.name}{m.cls ? " · " + m.cls : ""} — {S ? S[0] : "Sin responder"}</span>;
-              })}
-            </span>
-          )}
-          {members.length > 0 && (
-            <span className="mh-hns-rsvp">
-              {Object.entries(STATES).map(([k, [label, c, Ico]]) => (
-                <button key={k} type="button" className={st === k ? "on" : ""} style={{ "--c": c }} aria-pressed={st === k} onClick={() => answer(k)}><Ico size={13} /> {label}</button>
-              ))}
-            </span>
-          )}
-          {rest.length > 0 && <small className="mh-hns-more">Después: {rest.map((r) => (r.cp.name || "Campaña") + " · " + fmtDate(r.next.ts) + " " + fmtTime(r.next.ts)).join("  ·  ")}</small>}
+          <small>
+            {d.toLocaleDateString("es-ES", { weekday: "short" }).replace(".", "")} {fmtTime(next.ts)} · en {countdown(next.ts, now)}
+            {next.place ? <> · <MapPin size={11} /> {next.place}</> : ""}
+            {members.length > 0 ? " · " + yes + " de " + members.length + " confirmados" : ""}
+          </small>
         </div>
+        {members.length > 0 && (
+          <span className="mh-hns-rsvp">
+            {Object.entries(STATES).map(([k, [label, c, Ico]]) => (
+              <button key={k} type="button" className={st === k ? "on" : ""} style={{ "--c": c }} aria-pressed={st === k} onClick={() => answer(k)}><Ico size={13} /> {label}</button>
+            ))}
+          </span>
+        )}
       </div>
     </>
   );

@@ -10,6 +10,21 @@ export const DICE_SKINS = [
   { key: "oficial", label: "Oficial Set", desc: "Inspirado en el set oficial de Daggerheart: resina morada y azul con remolinos blancos, brillos y números amarillos; el D12 de Esperanza en ámbar y el de Miedo en azul marino, con números blancos y el logo en el 12 (y en el 20). Se aplica a todos tus dados.", color: "#E3B04B", model: "/modelos/oficial-set.glb", set: true },
 ];
 
+// Precarga: tras abrir la app, con el navegador libre, se bajan three y los modelos 3D de los dados para que la pestaña «Dados» abra sin esperas.
+let warmed = false;
+export function warmDiceAssets() {
+  if (warmed || typeof window === "undefined") return;
+  warmed = true;
+  const go = () => {
+    import("three");
+    import("three/examples/jsm/loaders/GLTFLoader.js");
+    import("three/examples/jsm/environments/RoomEnvironment.js");
+    DICE_SKINS.forEach((s) => s.model && fetch(s.model).catch(() => {}));
+  };
+  if (window.requestIdleCallback) window.requestIdleCallback(go, { timeout: 5000 });
+  else setTimeout(go, 2500);
+}
+
 // ---- Shader galáctico (se inyecta en el material estándar de three.js) ----
 // Todo va en coordenadas del objeto, así que la nebulosa «envuelve» el dado y no depende de los UV.
 // Velocidad: la nebulosa da una vuelta cada ~2 minutos (0,05 rad/s) y la deformación avanza aún más despacio.

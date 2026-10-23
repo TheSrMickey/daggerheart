@@ -14,7 +14,7 @@ import { ResetDiceCard, DeleteAccountCard } from "./AccountDanger";
 import { ModernSheet } from "./ModernSheet";
 import { Tour } from "./Tour";
 import { Dice3D, canDice3d, DICE3D_SIDES } from "./Dice3D";
-import { DicePage } from "./DiceSkins";
+import { DicePage, warmDiceAssets } from "./DiceSkins";
 import WorldMap from "./WorldMap";
 import { DialoguePromptHelper, CombatBgPromptHelper, describeMapForPrompt } from "./ImagePrompts";
 import { LevelUpDialog, parseAdvances, ownedCards, getMulticlass, MAX_LEVEL, rankOf } from "./LevelUp";
@@ -7284,12 +7284,13 @@ const sharedStyles = `
   html:not([data-mh-theme="light"]) .mh-home-news.is-dp .mh-news-art { filter: brightness(1.55) saturate(1.1); }
   .mh-news-credit { left: 32px; font-size: 10px; opacity: .55; z-index: 2; line-height: 1.3; max-width: calc(100% - 200px); } html[data-mh-theme="light"] .mh-news-credit { color: #221C2B; }
   html[data-mh-theme="light"] .mh-home-news.is-mesa .mh-news-tag { color: #1F7A45; } html[data-mh-theme="light"] .mh-home-news.is-card .mh-news-tag { color: #6B4FB8; } html[data-mh-theme="light"] .mh-home-news.is-ver .mh-news-tag { color: #2A4FB0; }
-  .mh-home-news:is(.is-ver, .is-ses) .mh-news-slide > :is(h2, p, .mh-home-cta) { max-width: calc(100% - 190px); } .mh-home-news.is-card .mh-news-slide > :is(h2, p, .mh-home-cta) { max-width: calc(100% - 340px); }
+  .mh-home-news:is(.is-ver, .is-ses) .mh-news-slide > :is(h2, p, .mh-home-cta) { max-width: calc(100% - 190px); } .mh-home-news.is-card { container-type: inline-size; } .mh-home-news.is-card .mh-news-slide > :is(h2, p, .mh-home-cta) { max-width: max(220px, calc(100cqw - clamp(120px, 15cqw, 240px) - 290px)); } .mh-home-news.is-card .mh-news-slide > :is(h2, p) { text-shadow: 0 1px 10px color-mix(in srgb, var(--ns) 85%, transparent); }
+  .mh-news-pile::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, color-mix(in srgb, var(--ns) 94%, transparent) 0%, color-mix(in srgb, var(--ns) 82%, transparent) 34%, color-mix(in srgb, var(--ns) 38%, transparent) 56%, transparent 76%); }
   .mh-home-news.is-ver h2 { font-size: 30px; }
   .mh-news-orb { position: absolute; right: 32px; top: 50%; translate: 0 -50%; z-index: 2; width: 120px; height: 120px; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(#6f9bff 0 70%, #ffffff18 0); }
   .mh-news-orb span { width: 96px; height: 96px; border-radius: 50%; background: #12102a; display: grid; place-items: center; font: 600 24px "Cinzel", Georgia, serif; color: #fff; }
   .mh-news-orb.is-avs { background: none; width: auto; height: auto; display: flex; } .mh-news-orb.is-avs span { width: 44px; height: 44px; margin-left: -10px; border: 2px solid var(--ns); font: 700 16px "Inter", system-ui, sans-serif; } .mh-news-orb.is-avs span:first-child { margin-left: 0; }
-  .mh-news-card { position: absolute; right: 96px; top: 24px; bottom: 64px; z-index: 2; aspect-ratio: 5 / 7; rotate: 5deg; border-radius: 22px; box-shadow: 0 18px 40px #000a, 0 0 30px #A58BE855; } .mh-news-card .mh-cardc { pointer-events: none; }
+  .mh-news-card { position: absolute; right: clamp(120px, 15cqw, 240px); top: 24px; bottom: 64px; z-index: 2; aspect-ratio: 5 / 7; rotate: 5deg; border-radius: 22px; box-shadow: 0 18px 40px #000a, 0 0 30px #A58BE855; } .mh-news-card .mh-cardc { pointer-events: none; }
   /* Carta del día: resplandor del color del dominio a la derecha y en la esquina inferior izquierda, y dos cartas asomando por detrás */
   .mh-news-glow { position: absolute; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(ellipse 55% 95% at 84% 50%, color-mix(in srgb, var(--gc) 80%, transparent) 0%, color-mix(in srgb, var(--gc) 33%, transparent) 38%, transparent 72%); }
   .mh-news-glow.is-bl { background: radial-gradient(ellipse 44% 85% at 0% 100%, color-mix(in srgb, var(--gc) 60%, transparent) 0%, color-mix(in srgb, var(--gc) 26%, transparent) 40%, transparent 74%); }
@@ -7369,7 +7370,10 @@ const sharedStyles = `
   .mh-hns-rsvp button:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
   .mh-hns .mh-hns-more { font-size: 11.5px; }
   html[data-mh-theme="light"] .mh-hns-pill, html[data-mh-theme="light"] .mh-hns-rsvp button { color: color-mix(in srgb, var(--c) 62%, #221C2B); }
-  .mh-hns.is-empty { display: flex; align-items: center; gap: 14px; padding: 16px 18px; } .mh-hns.is-empty .mh-hns-b { flex: 1; padding: 0; gap: 3px; } .mh-hns.is-empty .mh-hns-b b { font-size: 14.5px; color: var(--mh-ink); }
+  .mh-hns:is(.is-empty, .is-one) { display: flex; align-items: center; gap: 14px; padding: 16px 18px; min-height: 96px; box-sizing: border-box; } .mh-hns:is(.is-empty, .is-one) .mh-hns-b { flex: 1; padding: 0; gap: 3px; } .mh-hns:is(.is-empty, .is-one) .mh-hns-b b { font-size: 14.5px; color: var(--mh-ink); }
+  .mh-hns-ic.is-date { all: unset; cursor: pointer; box-sizing: border-box; width: 44px; height: 44px; border-radius: 12px; flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; background: color-mix(in srgb, var(--hc) 24%, var(--mh-panel)); color: var(--hc); } .mh-hns-ic.is-date b { font-size: 19px; line-height: 1; color: var(--hc) !important; } .mh-hns-ic.is-date small { font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--mh-ink2); } .mh-hns-ic.is-date:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
+  .mh-hns.is-one .mh-hns-b > small { font-size: 12px; line-height: 1.35; } .mh-hns.is-one .mh-hns-rsvp { flex: none; flex-wrap: nowrap; gap: 6px; } .mh-hns.is-one .mh-hns-rsvp button { padding: 4px 10px; font-size: 11.5px; white-space: nowrap; }
+  @media (max-width: 900px) { .mh-hns.is-one { flex-wrap: wrap; } .mh-hns.is-one .mh-hns-rsvp { flex-basis: 100%; flex-wrap: wrap; } }
   .mh-hns-ic { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; flex: none; background: var(--mh-panel3); color: var(--mh-gold-ink, #E3B04B); }
   @media (max-width: 720px) { .mh-hns { grid-template-columns: 1fr; } .mh-hns-date { flex-direction: row; justify-content: flex-start; gap: 12px; padding: 12px 16px; } .mh-hns-date b { font-size: 34px; } .mh-hns.is-empty { flex-wrap: wrap; } }
   /* Inicio en móvil: dados más compactos y filas de campañas, personajes y sesiones en carrusel horizontal (con imán) en vez de apiladas. */
@@ -10956,6 +10960,7 @@ export default function App({ onSignOut }) {
   const [rollTotal, setRollTotal] = useState(null);
   const [verdict, setVerdict] = useState({ text: "", color: "var(--mh-ink3)" });
   const [rollLog, setRollLog] = useState([]);
+  useEffect(() => { warmDiceAssets(); }, []);
   const [diceStats, setDiceStats] = useState(null); // estadísticas personales de las tiradas de dualidad
 
   const [fearCount, setFearCount] = useState(0);
