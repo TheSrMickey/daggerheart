@@ -7,6 +7,7 @@ export const CHANGELOG = [
     title: "Grupos y notificaciones nuevas",
     blurb: "Chatea con toda tu mesa en un grupo compartido y recibe los avisos como tarjetas, también flotando mientras juegas.",
     items: [
+      { tag: "mejora", text: "Inicio: «Retoma tus campañas» y «Próximas sesiones» se sustituyen por «Próxima sesión»: la sesión agendada más cercana con el día en grande, la cuenta atrás, el lugar, quién viene y los botones Voy / Quizá / No puedo. Si no tienes ninguna sesión agendada, lo dice y te lleva al calendario (o a crear una campaña si aún no tienes ninguna). Los accesos «Ver calendario» ahora abren directamente la pestaña Calendario." },
       { tag: "mejora", text: "Inicio: se quita la sección «Tus personajes» de la columna central (tus personajes siguen en el menú de la izquierda y en la pestaña Personajes)." },
       { tag: "mejora", text: "Columna central: todas las páginas (Inicio, Personajes, Campañas, Cartas, Dados, Buscar mesa, Ajustes…) usan ahora el mismo margen de 36 px arriba y abajo, con la ruta de navegación a esa misma distancia del borde." },
       { tag: "mejora", text: "Inicio: la caja de anuncios queda alineada con la parte superior de los menús laterales y el contenido termina con el mismo margen inferior que ellos (la caja crece para ocupar el espacio libre); los controles del carrusel vuelven a la esquina inferior derecha y la carta del día se ajusta para no taparlos." },
