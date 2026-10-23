@@ -206,6 +206,9 @@ export default function IsoWorldTest() {
   const host = useRef(null);
   const api = useRef(null);
   const [mode, setMode] = useState("pixel");
+  const [tab, setTab] = useState("tiempo"); // tiempo = escena three.js · blender = renders hechos en Blender
+  const [bl, setBl] = useState("pixel");
+  const paused = useRef(false);
   const [err, setErr] = useState("");
 
   useEffect(() => {
@@ -571,6 +574,7 @@ export default function IsoWorldTest() {
         const clock = new THREE.Clock();
         const loop = () => {
           raf = requestAnimationFrame(loop);
+          if (paused.current) return;
           const t = clock.getElapsedTime();
           waterUniforms.uTime.value = t;
           sea.material.uniforms.uTime.value = t;
@@ -599,20 +603,45 @@ export default function IsoWorldTest() {
   }, []);
 
   useEffect(() => { api.current?.applyMode?.(mode); }, [mode]);
+  useEffect(() => { paused.current = tab !== "tiempo"; }, [tab]);
 
-  const Btn = ({ k, children }) => (
-    <button type="button" onClick={() => setMode(k)} style={{ all: "unset", cursor: "pointer", padding: "8px 14px", borderRadius: 10, fontSize: 13, fontWeight: 600, color: mode === k ? "#1c1405" : "#e8ecf8", background: mode === k ? "#E3B04B" : "rgba(14,16,40,.7)", border: "1px solid rgba(255,255,255,.18)" }}>{children}</button>
-  );
+  const pill = (on) => ({ all: "unset", cursor: "pointer", padding: "8px 14px", borderRadius: 10, fontSize: 13, fontWeight: 600, color: on ? "#1c1405" : "#e8ecf8", background: on ? "#E3B04B" : "rgba(14,16,40,.78)", border: "1px solid rgba(255,255,255,.18)" });
+  const bar = { background: "rgba(14,16,40,.78)", borderRadius: 12, padding: 6, display: "flex", gap: 6, border: "1px solid rgba(255,255,255,.12)" };
+  const blender = tab === "blender";
   return (
-    <div style={{ position: "fixed", inset: 0, background: "#0b0d22", fontFamily: "Inter, system-ui, sans-serif" }}>
-      <div ref={host} style={{ position: "absolute", inset: 0 }} />
-      <div style={{ position: "absolute", left: 16, top: 16, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", zIndex: 2 }}>
-        <Btn k="pixel">Pixel · propuesta propia</Btn>
-        <Btn k="pintado">Pintado · estilo de la imagen</Btn>
-        <a href="/" style={{ color: "#e8ecf8", fontSize: 13, textDecoration: "none", padding: "8px 12px", background: "rgba(14,16,40,.7)", borderRadius: 10, border: "1px solid rgba(255,255,255,.18)" }}>Volver</a>
+    <div style={{ position: "fixed", inset: 0, background: blender ? (bl === "pixel" ? "#d5d5d5" : "#cddbe6") : "#0b0d22", fontFamily: "Inter, system-ui, sans-serif" }}>
+      <div ref={host} style={{ position: "absolute", inset: 0, visibility: blender ? "hidden" : "visible" }} />
+      {blender && (
+        <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            key={bl}
+            src={bl === "pixel" ? "/prueba-mapa/blender-pixel.png" : "/prueba-mapa/blender-realista.jpg"}
+            alt={bl === "pixel" ? "Mapa isométrico en estilo pixel, renderizado en Blender" : "Mapa isométrico en estilo realista, renderizado en Blender"}
+            style={{ width: "100%", height: "100%", objectFit: "contain", imageRendering: bl === "pixel" ? "pixelated" : "auto" }}
+          />
+        </div>
+      )}
+      <div style={{ position: "absolute", left: 16, top: 16, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", zIndex: 2 }}>
+        <div style={bar} role="tablist" aria-label="Origen del mapa">
+          <button type="button" role="tab" aria-selected={!blender} style={pill(!blender)} onClick={() => setTab("tiempo")}>Tiempo real</button>
+          <button type="button" role="tab" aria-selected={blender} style={pill(blender)} onClick={() => setTab("blender")}>Blender</button>
+        </div>
+        {!blender ? (
+          <div style={bar}>
+            <button type="button" style={pill(mode === "pixel")} onClick={() => setMode("pixel")}>Pixel · propuesta propia</button>
+            <button type="button" style={pill(mode === "pintado")} onClick={() => setMode("pintado")}>Pintado · estilo de la imagen</button>
+          </div>
+        ) : (
+          <div style={bar}>
+            <button type="button" style={pill(bl === "pixel")} onClick={() => setBl("pixel")}>Pixel</button>
+            <button type="button" style={pill(bl === "realista")} onClick={() => setBl("realista")}>Realista</button>
+          </div>
+        )}
+        <a href="/" style={{ color: "#e8ecf8", fontSize: 13, textDecoration: "none", padding: "10px 14px", background: "rgba(14,16,40,.78)", borderRadius: 12, border: "1px solid rgba(255,255,255,.12)" }}>Volver</a>
       </div>
-      <div style={{ position: "absolute", left: 16, bottom: 14, color: "#e8ecf8", fontSize: 12, background: "rgba(14,16,40,.7)", padding: "7px 11px", borderRadius: 10, zIndex: 2 }}>
-        Prueba temporal · arrastra para mover la vista, rueda para acercar, clic derecho para desplazar
+      <div style={{ position: "absolute", left: 16, bottom: 14, color: "#e8ecf8", fontSize: 12, background: "rgba(14,16,40,.78)", padding: "7px 11px", borderRadius: 10, zIndex: 2 }}>
+        {blender ? "Prueba temporal · imágenes renderizadas en Blender con el mismo mapa" : "Prueba temporal · arrastra para mover la vista, rueda para acercar, clic derecho para desplazar"}
       </div>
       {err && <div style={{ position: "absolute", left: 16, top: 70, color: "#ffb4a8", fontSize: 13, zIndex: 3 }}>No se pudo cargar la escena 3D: {err}</div>}
     </div>

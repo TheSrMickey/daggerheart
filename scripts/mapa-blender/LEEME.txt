@@ -1,0 +1,5 @@
+Prueba temporal del mapa isométrico renderizado en Blender (pestaña "Blender" de /prueba-mapa).
+1) node scripts/mapa-blender/exportmap.cjs scripts/mapa-blender/mapdata.json   (exporta alturas, colores y árboles de IsoWorldTest.jsx)
+2) blender -b --python scripts/mapa-blender/build_map.py -- realista public/prueba-mapa/blender-realista.jpg
+   blender -b --python scripts/mapa-blender/build_map.py -- pixel public/prueba-mapa/blender-pixel.png
+Para quitar la prueba: borrar scripts/mapa-blender, public/prueba-mapa, src/app/prueba-mapa y src/components/IsoWorldTest.jsx.
