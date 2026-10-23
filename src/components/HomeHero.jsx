@@ -15,7 +15,7 @@ const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
 const short = (t, n) => { const s = (t || "").replace(/\s+/g, " ").trim(); const cut = s.search(/[.;:] /); const e = cut > 40 ? s.slice(0, cut + 1) : s; return e.length > n ? e.slice(0, n - 1).trimEnd() + "…" : e; };
 
 // La carta del día con el mismo diseño que en la pestaña Cartas: se pinta a 300 × 420 y se reduce a la altura que deja la caja.
-function NewsCard({ card, icons, FitTitle, FitBox }) {
+function NewsCard({ card, icons, FitTitle, FitBox, out }) {
   const ref = useRef(null);
   const [k, setK] = useState(0.7);
   useEffect(() => {
@@ -28,7 +28,7 @@ function NewsCard({ card, icons, FitTitle, FitBox }) {
     return () => ro.disconnect();
   }, []);
   return (
-    <div ref={ref} className="mh-news-card" aria-hidden="true" style={{ "--gc": card.color || "#C9A24A" }}>
+    <div ref={ref} className={"mh-news-card" + (out ? " is-out" : "")} aria-hidden="true" style={{ "--gc": card.color || "#C9A24A" }}>
       <div style={{ position: "absolute", left: 0, top: 0, width: 300, height: 420, transform: "scale(" + k + ")", transformOrigin: "0 0" }}>
         <CardFace c={card} I={icons[card.domain] || Layers} FitTitle={FitTitle} FitBox={FitBox} />
       </div>
@@ -81,6 +81,7 @@ export function HomeHero({ camps, characters, featId, cards, color, icons, FitTi
   const [seenVer, setSeenVer] = useState("");
   const [idx, setIdx] = useState(0);
   const [pick, setPick] = useState(0);
+  const [gone, setGone] = useState(null); // carta que sale mientras entra la nueva
   const sess = useNextSession(camps);
   const touch = useRef(null);
   useEffect(() => { setSeenVer(lsGet(VER_KEY) || "-"); }, []);
@@ -90,6 +91,10 @@ export function HomeHero({ camps, characters, featId, cards, color, icons, FitTi
   const pool = useMemo(() => cards.filter((c) => c.kind === "dominio" && c.image), [cards]);
   const day = Math.floor(Date.now() / 864e5);
   const card = pool.length ? pool[(day + pick * 7) % pool.length] : null;
+
+  const dayCard = pool.length ? pool[day % pool.length] : null; // el montón del fondo se calcula con la carta del día, así no cambia con «Otra carta»
+  const another = () => { setGone(card); setPick((x) => x + 1); };
+  useEffect(() => { if (!gone) return undefined; const t = setTimeout(() => setGone(null), 500); return () => clearTimeout(t); }, [gone]);
 
   const slides = [{ id: "exp" }];
   if (seenVer && seenVer !== latest.version) slides.push({ id: "ver" });
@@ -161,18 +166,20 @@ export function HomeHero({ camps, characters, featId, cards, color, icons, FitTi
       </>
     );
   } else if (cur === "card") {
+    // El montón del fondo y los resplandores son fijos: al cambiar de carta solo se renueva la de delante y su texto.
     body = (
       <>
-        <CardPile cards={cards} skip={card.id} seed={day * 31 + pick} icons={icons} FitTitle={FitTitle} FitBox={FitBox} />
-        <span className="mh-news-glow" style={{ "--gc": card.color || "#C9A24A" }} aria-hidden="true" />
-        <span className="mh-news-glow is-bl" style={{ "--gc": card.color || "#C9A24A" }} aria-hidden="true" />
-        <NewsCard card={card} icons={icons} FitTitle={FitTitle} FitBox={FitBox} />
-        <span className="mh-news-tag"><Layers size={12} /> Carta del día · {card.domain}</span>
-        <h2 className="mh-serif">{card.key}</h2>
-        <p>{short(card.text, 150)}</p>
+        <CardPile cards={cards} skip={dayCard.id} seed={day * 31} icons={icons} FitTitle={FitTitle} FitBox={FitBox} />
+        <span className="mh-news-glow" style={{ "--gc": dayCard.color || "#C9A24A" }} aria-hidden="true" />
+        <span className="mh-news-glow is-bl" style={{ "--gc": dayCard.color || "#C9A24A" }} aria-hidden="true" />
+        {gone && <NewsCard key={"o" + gone.id} card={gone} icons={icons} FitTitle={FitTitle} FitBox={FitBox} out />}
+        <NewsCard key={card.id} card={card} icons={icons} FitTitle={FitTitle} FitBox={FitBox} />
+        <span className="mh-news-tag" key={"t" + card.id}><Layers size={12} /> Carta del día · {card.domain}</span>
+        <h2 className="mh-serif" key={"h" + card.id}>{card.key}</h2>
+        <p key={"p" + card.id}>{short(card.text, 150)}</p>
         <div className="mh-home-cta">
           <button type="button" className="mh-home-btn" onClick={() => onView("cartas")}>Ver las cartas</button>
-          <button type="button" className="mh-home-btn is-ghost" onClick={() => setPick((x) => x + 1)}>Otra carta</button>
+          <button type="button" className="mh-home-btn is-ghost" onClick={another}>Otra carta</button>
         </div>
       </>
     );
@@ -187,7 +194,7 @@ export function HomeHero({ camps, characters, featId, cards, color, icons, FitTi
       onTouchStart={(e) => { touch.current = e.touches[0].clientX; }}
       onTouchEnd={(e) => { const dx = e.changedTouches[0].clientX - (touch.current ?? e.changedTouches[0].clientX); touch.current = null; if (n > 1 && Math.abs(dx) > 50) go(dx < 0 ? 1 : -1); }}
     >
-      <div className="mh-news-slide" key={cur + (cur === "card" ? pick : "")} aria-live="off">{body}</div>
+      <div className="mh-news-slide" key={cur} aria-live="off">{body}</div>
       {n > 1 && (
         <div className="mh-news-ctl">
           <button type="button" className="mh-news-ar" onClick={() => go(-1)} aria-label="Anuncio anterior"><ChevronLeft size={14} /></button>

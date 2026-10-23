@@ -7295,6 +7295,14 @@ const sharedStyles = `
   html:not([data-mh-theme="light"]) .mh-news-glow:not(.is-bl) { mix-blend-mode: normal; background: radial-gradient(ellipse 62% 105% at 84% 50%, color-mix(in srgb, var(--gc) 78%, transparent) 0%, color-mix(in srgb, var(--gc) 52%, transparent) 40%, transparent 80%); }
   html:not([data-mh-theme="light"]) .mh-news-glow.is-bl { mix-blend-mode: screen; }
   html[data-mh-theme="light"] .mh-news-glow { opacity: .55; }
+  /* Modo claro: sin el halo de color de la esquina inferior izquierda (en oscuro no se ve), el lado izquierdo queda liso hasta el montón. */
+  html[data-mh-theme="light"] .mh-news-glow.is-bl { display: none; }
+  /* Cambio de carta: la de delante sale y entra la nueva; el montón del fondo no se toca. */
+  .mh-news-slide > .mh-news-card { animation: mh-card-in .55s cubic-bezier(.2,1.1,.3,1) both; }
+  .mh-news-slide > .mh-news-card.is-out { z-index: 2 !important; animation: mh-card-out .45s ease-in both; pointer-events: none; }
+  @keyframes mh-card-in { from { opacity: 0; translate: 90px -14px; rotate: 20deg; scale: .88; } }
+  @keyframes mh-card-out { to { opacity: 0; translate: -110px -24px; rotate: -18deg; scale: .9; } }
+  @media (prefers-reduced-motion: reduce) { .mh-news-slide > .mh-news-card { animation: none; } .mh-news-slide > .mh-news-card.is-out { display: none; } }
   .mh-news-back { position: absolute; inset: 0; border-radius: 22px; border: 2px solid var(--gc); background: var(--mh-panel); box-shadow: 0 10px 24px #0008; transform-origin: 50% 100%; pointer-events: none; }
   .mh-news-back.is-b1 { transform: translate(-34%, 5%) rotate(-14deg) scale(.88); opacity: .8; } .mh-news-back.is-b2 { transform: translate(-17%, 3%) rotate(-6deg) scale(.88); opacity: .92; }
   .mh-home-news > .mh-news-ctl { position: absolute; right: 32px; top: 10px; z-index: 3; display: flex; align-items: center; gap: 7px; } @media (max-width: 720px) { .mh-home-news > .mh-news-ctl { top: auto; right: 16px; bottom: 14px; } }
@@ -7306,7 +7314,7 @@ const sharedStyles = `
   .mh-news-ar:focus-visible, .mh-news-dot:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
   html[data-mh-theme="light"] .mh-news-dot { background: #221C2B40; } html[data-mh-theme="light"] .mh-news-ar { background: #fffc; color: #221C2B; border-color: #221C2B30; }
   @media (prefers-reduced-motion: reduce) { .mh-news-slide > * { animation: none !important; } .mh-news-dot span { animation: none !important; transform: scaleX(1); } }
-  @media (max-width: 720px) { .mh-home-news:is(.is-ver, .is-ses, .is-card) .mh-news-slide > :is(h2, p, .mh-home-cta) { max-width: none; } .mh-news-orb, .mh-news-card { opacity: .28; } .mh-home-news p { font-size: 13px; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; } .mh-home-news h2, .mh-home-news.is-ver h2 { font-size: 22px; } .mh-home-cta { margin-top: 14px; } .mh-home-btn { padding: 9px 14px; } }
+  @media (max-width: 720px) { .mh-home-news:is(.is-ver, .is-ses, .is-card) .mh-news-slide > :is(h2, p, .mh-home-cta) { max-width: none; } .mh-news-orb { opacity: .28; } .mh-home-news.is-card .mh-news-slide > .mh-news-card { top: 22px; bottom: auto; right: 20px; height: 176px; width: 126px; } .mh-home-news.is-card .mh-news-slide > :is(.mh-news-tag, h2, p, .mh-home-cta) { max-width: calc(100% - 156px); } .mh-home-news.is-card .mh-news-slide > .mh-news-tag { font-size: 9.5px; letter-spacing: .08em; padding: 3px 9px; } .mh-home-news.is-card .mh-news-slide > p { display: none; } .mh-home-news.is-card .mh-home-cta { flex-direction: column; align-items: flex-start; } .mh-home-news p { font-size: 13px; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; } .mh-home-news h2, .mh-home-news.is-ver h2 { font-size: 22px; } .mh-home-cta { margin-top: 14px; } .mh-home-btn { padding: 9px 14px; } }
   /* Inicio: se ajusta a la pantalla sin deslizar. Lo que se encoge primero es la novedad (pierde el texto y luego la etiqueta); las filas de
      campañas y personajes son de una sola línea y se desplazan hacia los lados si no caben. Solo en pantallas muy bajas vuelve el scroll vertical. */
   @media (min-height: 700px) and (min-width: 721px) { .mh-main-fit > .mh-view-in { height: 100%; } .mh-main-fit .mh-home, .mh-main-fit .mh-home-main { height: 100%; } .mh-main-fit .mh-home-main { display: flex; flex-direction: column; min-height: 0; } .mh-main-fit .mh-home-main > * { flex: none; }
