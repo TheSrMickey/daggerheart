@@ -7277,7 +7277,10 @@ const sharedStyles = `
   .mh-home-news.is-ses { --ns: #1a1308; background: radial-gradient(520px 300px at 88% 20%, #E3B04B44, transparent 70%), var(--ns); }
   .mh-home-news.is-mesa { --ns: #08160f; background: radial-gradient(520px 300px at 88% 20%, #3fcf7a44, transparent 70%), var(--ns); } .mh-home-news.is-mesa .mh-news-tag { color: #3fcf7a; background: #3fcf7a1f; border-color: #3fcf7a66; }
   .mh-home-news.is-card { --ns: #150d26; background: radial-gradient(520px 300px at 88% 20%, #A58BE855, transparent 70%), var(--ns); } .mh-home-news.is-card .mh-news-tag { color: #A58BE8; background: #A58BE81f; border-color: #A58BE866; }
-  html[data-mh-theme="light"] .mh-home-news.is-ses, html[data-mh-theme="light"] .mh-home-news.is-mesa, html[data-mh-theme="light"] .mh-home-news.is-card { --ns: #FFFCF6; }
+  html[data-mh-theme="light"] .mh-home-news.is-ses, html[data-mh-theme="light"] .mh-home-news.is-mesa, html[data-mh-theme="light"] .mh-home-news.is-card, html[data-mh-theme="light"] .mh-home-news.is-dp { --ns: #FFFCF6; }
+  .mh-home-news.is-dp { --ns: #0b0c1d; } .mh-home-news.is-dp .mh-news-tag { color: #b9c2f0; background: #8a96e01f; border-color: #8a96e066; } html[data-mh-theme="light"] .mh-home-news.is-dp .mh-news-tag { color: #3a4a9a; }
+  html:not([data-mh-theme="light"]) .mh-home-news.is-dp .mh-news-art { filter: brightness(1.55) saturate(1.1); }
+  .mh-news-credit { left: 32px; font-size: 10px; opacity: .55; z-index: 2; line-height: 1.3; max-width: calc(100% - 200px); } html[data-mh-theme="light"] .mh-news-credit { color: #221C2B; }
   html[data-mh-theme="light"] .mh-home-news.is-mesa .mh-news-tag { color: #1F7A45; } html[data-mh-theme="light"] .mh-home-news.is-card .mh-news-tag { color: #6B4FB8; } html[data-mh-theme="light"] .mh-home-news.is-ver .mh-news-tag { color: #2A4FB0; }
   .mh-home-news:is(.is-ver, .is-ses) .mh-news-slide > :is(h2, p, .mh-home-cta) { max-width: calc(100% - 190px); } .mh-home-news.is-card .mh-news-slide > :is(h2, p, .mh-home-cta) { max-width: calc(100% - 340px); }
   .mh-home-news.is-ver h2 { font-size: 30px; }

@@ -7,6 +7,7 @@ export const CHANGELOG = [
     title: "Grupos y notificaciones nuevas",
     blurb: "Chatea con toda tu mesa en un grupo compartido y recibe los avisos como tarjetas, también flotando mientras juegas.",
     items: [
+      { tag: "nuevo", text: "Carrusel de Inicio: nueva diapositiva con el avance de Darrington Press («Something approaches… Find out what's coming 10/29»). Se retira sola el 30 de octubre." },
       { tag: "mejora", text: "Anuncio «Carta del día»: el texto bajo el título ahora muestra lo que te da la carta (daño, bonificadores, recuperación…) en vez de cómo se activa, y el montón del fondo se forma solo con cartas de dominio (sin armas ni otros tipos)." },
       { tag: "mejora", text: "Anuncio «Carta del día» en modo oscuro: bajo el título, la descripción y los botones queda un fondo liso que se desvanece hacia la derecha para mostrar el montón de cartas y la carta del día, igual que en modo claro." },
       { tag: "mejora", text: "Anuncio «Carta del día»: al pulsar «Otra carta» el montón del fondo ya no cambia y solo se renueva la carta de delante, que sale y entra con una animación. En modo claro desaparece el halo de color de la izquierda (queda liso, como en oscuro) y en móvil el anuncio se recompone: la carta arriba a la derecha y el texto y los botones a la izquierda." },
