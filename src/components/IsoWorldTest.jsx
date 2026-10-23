@@ -134,7 +134,8 @@ const colorAt = (x, z, h, slope, smoothMode) => {
   if (!smoothMode) {
     // paleta corta: se reparte cada canal en pocos escalones
     const q = 5;
-    c = c.map((v) => Math.round(v * q) / q);
+    if (Math.max(c[0], c[1], c[2]) - Math.min(c[0], c[1], c[2]) < 0.14) { const g = Math.round(((c[0] + c[1] + c[2]) / 3) * q) / q; c = [g + 0.02, g, g - 0.02]; }
+    else c = c.map((v) => Math.round(v * q) / q);
   }
   return c;
 };
@@ -792,11 +793,14 @@ export default function IsoWorldTest() {
         }
 
         // ---------- modos ----------
+        let curMode = mode;
         const applyMode = (m) => {
-          const pixel = m === "pixel";
+          const bl = m === "blender";
+          const pixel = m === "pixel" || bl;
+          curMode = m;
           const dpr = window.devicePixelRatio || 1;
-          renderer.setPixelRatio(pixel ? 1 / 2.6 : Math.min(dpr, 2));
-          renderer.setSize(el.clientWidth, el.clientHeight, false);
+          if (bl) { renderer.setPixelRatio(1); renderer.setSize(Math.round(360 * (el.clientWidth / Math.max(1, el.clientHeight))), 360, false); }
+          else { renderer.setPixelRatio(pixel ? 1 / 2.6 : Math.min(dpr, 2)); renderer.setSize(el.clientWidth, el.clientHeight, false); }
           renderer.domElement.style.imageRendering = pixel ? "pixelated" : "auto";
           renderer.shadowMap.type = pixel ? THREE.BasicShadowMap : THREE.PCFSoftShadowMap;
           renderer.toneMapping = pixel ? THREE.NoToneMapping : THREE.ACESFilmicToneMapping;
@@ -807,11 +811,12 @@ export default function IsoWorldTest() {
           waterUniforms.uMode.value = pixel ? 0 : 1;
           sea.material.uniforms.uMode.value = pixel ? 0 : 1;
           lake.material.uniforms.uMode.value = pixel ? 0 : 1;
-          scene.background = new THREE.Color(pixel ? "#cfe4ef" : "#a9c9de");
+          scene.background = new THREE.Color(bl ? "#d5d5d5" : pixel ? "#cfe4ef" : "#a9c9de");
           scene.fog = pixel ? null : new THREE.FogExp2(0xbcd3e6, 0.0032);
-          hemi.intensity = pixel ? 1.05 : 0.8;
-          sun.intensity = pixel ? 1.6 : 2.1;
+          hemi.intensity = bl ? 1.3 : pixel ? 1.05 : 0.8;
+          sun.intensity = bl ? 2.0 : pixel ? 1.6 : 2.1;
           sun.color.set(pixel ? 0xffffff : 0xfff0d0);
+          hemi.color.set(bl ? 0xffffff : 0xcfe6ff); hemi.groundColor.set(bl ? 0xb7c4a0 : 0x6b5a3a);
           scene.traverse((o) => { if (o.material) { const ms = Array.isArray(o.material) ? o.material : [o.material]; ms.forEach((x) => (x.needsUpdate = true)); } });
         };
         api.current = { ...(api.current || {}), applyMode, resize: () => {} };
@@ -822,7 +827,8 @@ export default function IsoWorldTest() {
           const a = w / h;
           cam.left = -S * a; cam.right = S * a; cam.top = S; cam.bottom = -S;
           cam.updateProjectionMatrix();
-          renderer.setSize(w, h, false);
+          if (curMode === "blender") renderer.setSize(Math.round(360 * a), 360, false);
+          else renderer.setSize(w, h, false);
         };
         const ro = new ResizeObserver(resize);
         ro.observe(el);
@@ -888,6 +894,7 @@ export default function IsoWorldTest() {
         {!blender ? (
           <div style={bar}>
             <button type="button" style={pill(mode === "pixel")} onClick={() => setMode("pixel")}>Pixel · propuesta propia</button>
+            <button type="button" style={pill(mode === "blender")} onClick={() => setMode("blender")}>Pixel · estilo Blender</button>
             <button type="button" style={pill(mode === "pintado")} onClick={() => setMode("pintado")}>Pintado · estilo de la imagen</button>
           </div>
         ) : (
