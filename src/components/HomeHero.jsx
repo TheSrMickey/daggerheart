@@ -110,8 +110,7 @@ export function HomeHero({ camps, characters, featId, cards, color, icons, FitTi
   const another = () => { setGone(card); setPick((x) => x + 1); };
   useEffect(() => { if (!gone) return undefined; const t = setTimeout(() => setGone(null), 500); return () => clearTimeout(t); }, [gone]);
 
-  const slides = [{ id: "exp" }];
-  if (Date.now() < DP_UNTIL) slides.push({ id: "dp" });
+  const slides = Date.now() < DP_UNTIL ? [{ id: "dp" }, { id: "exp" }] : [{ id: "exp" }]; // el avance de Darrington Press va primero mientras dure
   if (seenVer && seenVer !== latest.version) slides.push({ id: "ver" });
   if (sess) slides.push({ id: "ses" });
   if (camps.length === 0) slides.push({ id: "mesa" });
@@ -146,9 +145,9 @@ export function HomeHero({ camps, characters, featId, cards, color, icons, FitTi
     body = (
       <>
         <div className="mh-news-art" aria-hidden="true"><i style={{ backgroundImage: "url(/noticias/darrington-teaser.jpg)", backgroundPosition: "center 80%" }} /></div>
-        <span className="mh-news-tag"><Sparkles size={12} /> Darrington Press · {left > 0 ? "29 oct · en " + left + (left === 1 ? " día" : " días") : "hoy"}</span>
-        <h2 className="mh-serif">Something approaches 👀</h2>
-        <p>Find out what&apos;s coming 10/29.</p>
+        <span className="mh-news-tag"><Sparkles size={12} /> Darrington Press · Avance · {left > 0 ? "29 oct · en " + left + (left === 1 ? " día" : " días") : "hoy"}</span>
+        <h2 className="mh-serif">Algo se acerca 👀</h2>
+        <p>Descubre qué llega el 29 de octubre.</p>
         <small className="mh-news-credit" style={{ position: "absolute", bottom: 14 }}>Ilustración de fondo: Mat Wilma · © 2026 Darrington Press, LLC</small>
       </>
     );
