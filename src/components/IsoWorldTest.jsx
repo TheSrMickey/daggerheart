@@ -220,6 +220,84 @@ const buildSkirt = (THREE, steps) => {
   return g;
 };
 
+// Visor 3D del mapa hecho en Blender: se carga el .glb exportado desde Blender y se puede girar, acercar y desplazar.
+function BlenderViewer({ style }) {
+  const host = useRef(null);
+  const [state, setState] = useState("load"); // load | ok | err
+  useEffect(() => {
+    let dead = false;
+    let raf = 0;
+    let cleanup = () => {};
+    (async () => {
+      try {
+        const [THREE, { OrbitControls }, { GLTFLoader }] = await Promise.all([import("three"), import("three/examples/jsm/controls/OrbitControls.js"), import("three/examples/jsm/loaders/GLTFLoader.js")]);
+        if (dead || !host.current) return;
+        const el = host.current;
+        const pixel = style === "pixel";
+        const renderer = new THREE.WebGLRenderer({ antialias: !pixel });
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = pixel ? THREE.BasicShadowMap : THREE.PCFSoftShadowMap;
+        renderer.toneMapping = pixel ? THREE.NoToneMapping : (THREE.NeutralToneMapping ?? THREE.ACESFilmicToneMapping);
+        renderer.domElement.style.cssText = "position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab" + (pixel ? ";image-rendering:pixelated" : "");
+        el.appendChild(renderer.domElement);
+        const sizeIt = () => {
+          const w = el.clientWidth, h = Math.max(1, el.clientHeight);
+          if (pixel) { renderer.setPixelRatio(1); renderer.setSize(Math.round(360 * (w / h)), 360, false); }
+          else { renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2)); renderer.setSize(w, h, false); }
+          return w / h;
+        };
+        const aspect0 = sizeIt();
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(pixel ? "#d5d5d5" : "#cddbe6");
+        const S = 78;
+        const cam = new THREE.OrthographicCamera(-S * aspect0, S * aspect0, S, -S, 1, 600);
+        cam.position.set(-52, 92, 104);
+        const controls = new OrbitControls(cam, renderer.domElement);
+        controls.target.set(0, 0, 4);
+        controls.enableDamping = true;
+        controls.minPolarAngle = 0.5;
+        controls.maxPolarAngle = 1.3;
+        controls.minZoom = 0.8;
+        controls.maxZoom = 6;
+        controls.screenSpacePanning = false;
+        controls.update();
+        scene.add(new THREE.HemisphereLight(pixel ? 0xffffff : 0xcfe6ff, pixel ? 0xb7c4a0 : 0x8a7a5a, pixel ? 1.3 : 1.0));
+        const sun = new THREE.DirectionalLight(pixel ? 0xffffff : 0xfff0d6, pixel ? 2.0 : 2.6);
+        sun.position.set(90, 70, 40);
+        sun.castShadow = true;
+        sun.shadow.mapSize.set(2048, 2048);
+        const sc = sun.shadow.camera; sc.left = -90; sc.right = 90; sc.top = 90; sc.bottom = -90; sc.near = 10; sc.far = 300;
+        sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.35;
+        scene.add(sun);
+        const gltf = await new GLTFLoader().loadAsync("/prueba-mapa/blender-" + (pixel ? "pixel" : "realista") + ".glb");
+        if (dead) { renderer.dispose(); return; }
+        gltf.scene.traverse((o) => {
+          if (!o.isMesh) return;
+          o.castShadow = true; o.receiveShadow = true;
+          const ms = Array.isArray(o.material) ? o.material : [o.material];
+          ms.forEach((m) => { if (m && m.map) { m.map.anisotropy = 4; if (pixel) { m.map.magFilter = THREE.NearestFilter; m.map.minFilter = THREE.NearestFilter; } } if (m) { m.metalness = 0; if (pixel) m.roughness = 1; } });
+        });
+        scene.add(gltf.scene);
+        setState("ok");
+        const ro = new ResizeObserver(() => { const a = sizeIt(); cam.left = -S * a; cam.right = S * a; cam.updateProjectionMatrix(); });
+        ro.observe(el);
+        const loop = () => { raf = requestAnimationFrame(loop); controls.update(); renderer.render(scene, cam); };
+        loop();
+        cleanup = () => { ro.disconnect(); cancelAnimationFrame(raf); controls.dispose(); renderer.dispose(); if (renderer.domElement.parentNode) renderer.domElement.parentNode.removeChild(renderer.domElement); };
+      } catch (e) {
+        setState("err");
+      }
+    })();
+    return () => { dead = true; cleanup(); };
+  }, [style]);
+  return (
+    <div ref={host} style={{ position: "absolute", inset: 0 }}>
+      {state === "load" && <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", color: "#36404f", fontSize: 14 }}>Cargando el mapa 3D de Blender…</div>}
+      {state === "err" && <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", color: "#a33", fontSize: 14 }}>No se pudo cargar el modelo 3D.</div>}
+    </div>
+  );
+}
+
 export default function IsoWorldTest() {
   const host = useRef(null);
   const api = useRef(null);
@@ -875,17 +953,7 @@ export default function IsoWorldTest() {
   return (
     <div style={{ position: "fixed", inset: 0, background: blender ? (bl === "pixel" ? "#d5d5d5" : "#cddbe6") : "#0b0d22", fontFamily: "Inter, system-ui, sans-serif" }}>
       <div ref={host} style={{ position: "absolute", inset: 0, visibility: blender ? "hidden" : "visible" }} />
-      {blender && (
-        <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            key={bl}
-            src={bl === "pixel" ? "/prueba-mapa/blender-pixel.png" : "/prueba-mapa/blender-realista.jpg"}
-            alt={bl === "pixel" ? "Mapa isométrico en estilo pixel, renderizado en Blender" : "Mapa isométrico en estilo realista, renderizado en Blender"}
-            style={{ width: "100%", height: "100%", objectFit: "contain", imageRendering: bl === "pixel" ? "pixelated" : "auto" }}
-          />
-        </div>
-      )}
+      {blender && <BlenderViewer key={bl} style={bl} />}
       <div style={{ position: "absolute", left: 16, top: 16, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", zIndex: 2 }}>
         <div style={bar} role="tablist" aria-label="Origen del mapa">
           <button type="button" role="tab" aria-selected={!blender} style={pill(!blender)} onClick={() => setTab("tiempo")}>Tiempo real</button>
@@ -906,7 +974,7 @@ export default function IsoWorldTest() {
         <a href="/" style={{ color: "#e8ecf8", fontSize: 13, textDecoration: "none", padding: "10px 14px", background: "rgba(14,16,40,.78)", borderRadius: 12, border: "1px solid rgba(255,255,255,.12)" }}>Volver</a>
       </div>
       <div style={{ position: "absolute", left: 16, bottom: 14, color: "#e8ecf8", fontSize: 12, background: "rgba(14,16,40,.78)", padding: "7px 11px", borderRadius: 10, zIndex: 2 }}>
-        {blender ? "Prueba temporal · imágenes renderizadas en Blender con el mismo mapa" : "Prueba temporal · arrastra para mover la vista, rueda para acercar, clic derecho para desplazar"}
+        {blender ? "Prueba temporal · modelo 3D hecho en Blender · arrastra para girar, rueda para acercar, clic derecho para desplazar" : "Prueba temporal · arrastra para mover la vista, rueda para acercar, clic derecho para desplazar"}
       </div>
       {err && <div style={{ position: "absolute", left: 16, top: 70, color: "#ffb4a8", fontSize: 13, zIndex: 3 }}>No se pudo cargar la escena 3D: {err}</div>}
     </div>

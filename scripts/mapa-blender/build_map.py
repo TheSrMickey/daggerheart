@@ -7,6 +7,7 @@ from mathutils import Vector, Euler
 
 argv = sys.argv[sys.argv.index("--") + 1:]
 MODE, OUT = argv[0], argv[1]
+GLB = argv[2] if len(argv) > 2 else None
 PIXEL = MODE == "pixel"
 import os
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -86,16 +87,18 @@ def make_terrain(step):
     me = bpy.data.meshes.new("Terreno"); me.from_pydata(verts, [], faces); me.update()
     cols = np.array([lin(C[idx[b], idx[a]]) for b in range(n) for a in range(n)], dtype=np.float32)
     if PIXEL:
-        # color por cara, repartido en pocos escalones
-        fc = []
+        # color por cara, repartido en pocos escalones; vértices no compartidos para que el color vaya por vértice
+        nv, nf, ncol = [], [], []
         for (p0, p1, p2, p3) in faces:
             c = np.mean([C[idx[p // n], idx[p % n]] for p in (p0, p1, p2, p3)], axis=0)
             if c.max() - c.min() < 0.14: c = np.full(3, np.round(c.mean() * 5) / 5) + np.array([0.02, 0.0, -0.02])
             else: c = np.round(c * 5) / 5
-            fc.append(lin(c))
-        fc = np.array(fc, dtype=np.float32)
-        at = me.color_attributes.new("Col", "FLOAT_COLOR", "FACE")
-        at.data.foreach_set("color", np.concatenate([fc, np.ones((len(fc), 1), dtype=np.float32)], axis=1).ravel())
+            b = len(nv)
+            nv += [verts[p0], verts[p1], verts[p2], verts[p3]]; nf.append((b, b + 1, b + 2, b + 3)); ncol += [lin(c)] * 4
+        me = bpy.data.meshes.new("Terreno"); me.from_pydata(nv, [], nf); me.update()
+        ncol = np.array(ncol, dtype=np.float32)
+        at = me.color_attributes.new("Col", "FLOAT_COLOR", "POINT")
+        at.data.foreach_set("color", np.concatenate([ncol, np.ones((len(ncol), 1), dtype=np.float32)], axis=1).ravel())
         for pl in me.polygons: pl.use_smooth = False
     else:
         at = me.color_attributes.new("Col", "FLOAT_COLOR", "POINT")
@@ -129,7 +132,7 @@ side = bpy.data.objects.new("Borde", sme); sc.collection.objects.link(side)
 side.data.materials.append(vcol_mat("MatBorde", 0.95))
 
 # ---------- agua: imagen con la profundidad, la espuma y las ondas ----------
-R = 1536
+R = 1024
 gx = np.linspace(-HALF, HALF, R)
 fx = (gx + HALF) / SIZE * (N - 1)
 i0 = np.clip(np.floor(fx).astype(int), 0, N - 2); tx = fx - i0
@@ -342,22 +345,27 @@ else:
     round_me = mesh_from_bm(bm, "copa")
 trunk_me = cone_mesh(0.2, 0.16, 1.4, 6)
 smooth_leaf = not PIXEL
-def place_tree(me, x, h, z, s, color, extra=1.0):
-    ob = bpy.data.objects.new("a", me); ob.location = (x, -z, h); ob.rotation_euler = (0, 0, rng.uniform(0, 6.28))
-    ob.scale = (s, s, s * (0.9 + rng.random() * 0.5) * extra); ob.color = (*lin(np.array(color)).tolist(), 1)
-    ob.data.materials.clear(); ob.data.materials.append(leaf_mat); sc.collection.objects.link(ob)
-    if smooth_leaf: smooth(ob, False)
-    else: smooth(ob, True)
+variants = {}
+def tree_variant(kind, base_me, color):
+    key = (kind, tuple(round(v, 2) for v in color))
+    if key not in variants:
+        me2 = base_me.copy(); me2.materials.clear(); me2.materials.append(flat_mat("hoja_%s_%d" % (kind, len(variants)), color, 0.9))
+        for pl in me2.polygons: pl.use_smooth = not PIXEL if kind != "x" else True
+        variants[key] = me2
+    return variants[key]
+def place_tree(me, x, h, z, s, color, extra=1.0, kind="p"):
+    ob = bpy.data.objects.new("a", tree_variant(kind, me, color)); ob.location = (x, -z, h); ob.rotation_euler = (0, 0, rng.uniform(0, 6.28))
+    ob.scale = (s, s, s * (0.9 + rng.random() * 0.5) * extra); sc.collection.objects.link(ob)
     return ob
 pine_cols = [(0.12, 0.29, 0.16), (0.14, 0.33, 0.2), (0.1, 0.25, 0.15), (0.17, 0.36, 0.21)]
 round_cols = [(0.37, 0.56, 0.18), (0.45, 0.63, 0.22), (0.31, 0.5, 0.16), (0.53, 0.66, 0.24)]
 for (x, h, z, s, f) in D["pines"]:
     c = rng.choice(pine_cols)
-    if h > 11: t = min(0.7, max(0, (h - 11) / 6)); c = tuple(c[k] * (1 - t) + 0.9 * t for k in range(3))
-    place_tree(pine_me, x, h, z, s, c)
+    if h > 11: t = 0.45 if h < 14 else 0.75; c = tuple(c[k] * (1 - t) + 0.9 * t for k in range(3))
+    place_tree(pine_me, x, h, z, s, c, 1.0, "p")
     tr = bpy.data.objects.new("tr", trunk_me); tr.location = (x, -z, h); tr.scale = (s, s, s); tr.data.materials.append(trunk_mat); sc.collection.objects.link(tr)
 for (x, h, z, s, f) in D["rounds"]:
-    place_tree(round_me, x, h, z, s, rng.choice(round_cols))
+    place_tree(round_me, x, h, z, s, rng.choice(round_cols), 1.0, "r")
     tr = bpy.data.objects.new("tr", trunk_me); tr.location = (x, -z, h); tr.scale = (s, s, s * 1.6); tr.data.materials.append(trunk_mat); sc.collection.objects.link(tr)
 
 # ---------- nubes (solo en el realista) ----------
@@ -395,6 +403,16 @@ cob = bpy.data.objects.new("Camara", cam); sc.collection.objects.link(cob)
 cob.location = (-52, -100 - 4, 92)
 con = cob.constraints.new("TRACK_TO"); con.target = target; con.track_axis = "TRACK_NEGATIVE_Z"; con.up_axis = "UP_Y"
 sc.camera = cob
+
+# ---------- exportación 3D ----------
+if GLB:
+    _orig_mat = terrain.data.materials[0]; terrain.data.materials[0] = vcol_mat("MatTerrenoGLB", 0.9)
+    props = bpy.ops.export_scene.gltf.get_rna_type().properties.keys()
+    want = dict(filepath=GLB, export_format="GLB", export_yup=True, export_cameras=False, export_lights=False, export_apply=False, export_materials="EXPORT", export_vertex_color="MATERIAL", export_image_format="AUTO", use_selection=False, export_extras=False)
+    bpy.ops.export_scene.gltf(**{k: v for k, v in want.items() if k in props})
+    import os
+    print("GLB OK", GLB, os.path.getsize(GLB))
+    terrain.data.materials[0] = _orig_mat
 
 # ---------- render ----------
 engines = [i.identifier for i in bpy.types.RenderSettings.bl_rna.properties["engine"].enum_items]
