@@ -7290,13 +7290,15 @@ const sharedStyles = `
   .mh-news-glow.is-bl { background: radial-gradient(ellipse 44% 85% at 0% 100%, color-mix(in srgb, var(--gc) 60%, transparent) 0%, color-mix(in srgb, var(--gc) 26%, transparent) 40%, transparent 74%); }
   .mh-news-pile { position: absolute; inset: 0; z-index: 1; overflow: hidden; pointer-events: none; } .mh-news-pc { position: absolute; z-index: 1; transform-origin: 50% 50%; filter: brightness(.62) saturate(.85); box-shadow: 0 8px 18px #0009; border-radius: 12px; }
   .mh-news-card { z-index: 3 !important; box-shadow: 0 22px 46px #000d, 0 0 0 1px #ffffff26, 0 0 40px color-mix(in srgb, var(--gc) 55%, transparent) !important; }
-  html[data-mh-theme="light"] .mh-news-pile { z-index: 0; } html[data-mh-theme="light"] .mh-news-pc { filter: saturate(.85) !important; box-shadow: 0 6px 14px #5a4a2a33; }
+  /* Debajo del degradado de la caja (liso a la izquierda, tras el texto) en claro y en oscuro, para que el montón solo asome hacia la derecha. */
+  .mh-news-pile { z-index: 0; } .mh-news-pc { filter: saturate(.85) !important; }
+  html[data-mh-theme="light"] .mh-news-pc { box-shadow: 0 6px 14px #5a4a2a33; }
   html[data-mh-theme="light"] .mh-news-card { box-shadow: 0 18px 36px #3a2a0a66, 0 0 0 1px #00000018, 0 0 36px color-mix(in srgb, var(--gc) 45%, transparent) !important; }
   html:not([data-mh-theme="light"]) .mh-news-glow:not(.is-bl) { mix-blend-mode: normal; background: radial-gradient(ellipse 62% 105% at 84% 50%, color-mix(in srgb, var(--gc) 78%, transparent) 0%, color-mix(in srgb, var(--gc) 52%, transparent) 40%, transparent 80%); }
   html:not([data-mh-theme="light"]) .mh-news-glow.is-bl { mix-blend-mode: screen; }
   html[data-mh-theme="light"] .mh-news-glow { opacity: .55; }
   /* Modo claro: sin el halo de color de la esquina inferior izquierda (en oscuro no se ve), el lado izquierdo queda liso hasta el montón. */
-  html[data-mh-theme="light"] .mh-news-glow.is-bl { display: none; }
+  .mh-news-glow.is-bl { display: none; }
   /* Cambio de carta: la de delante sale y entra la nueva; el montón del fondo no se toca. */
   .mh-news-slide > .mh-news-card { animation: mh-card-in .55s cubic-bezier(.2,1.1,.3,1) both; }
   .mh-news-slide > .mh-news-card.is-out { z-index: 2 !important; animation: mh-card-out .45s ease-in both; pointer-events: none; }
