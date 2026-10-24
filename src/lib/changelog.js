@@ -7,6 +7,7 @@ export const CHANGELOG = [
     title: "Grupos y notificaciones nuevas",
     blurb: "Chatea con toda tu mesa en un grupo compartido y recibe los avisos como tarjetas, también flotando mientras juegas.",
     items: [
+      { tag: "nuevo", text: "La pestaña «Dados» pasa a llamarse «Personalización» y tiene dos apartados: Dados y Reversos de cartas. Primeros reversos: «Clásico Enaris» (por defecto, con versión para modo claro y oscuro) y «Noche y oro», ambos con el logo de la plataforma y sin texto. «Previsualizar» abre una carta que se puede girar en 3D arrastrándola (con giro automático y botones Frente / Reverso). El reverso elegido se guarda en tu cuenta." },
       { tag: "mejora", text: "Inicio: «Retoma tus campañas» y «Próximas sesiones» se sustituyen por «Próxima sesión»: la sesión agendada más cercana con el día en grande, la cuenta atrás, el lugar, quién viene y los botones Voy / Quizá / No puedo. Si no tienes ninguna sesión agendada, lo dice y te lleva al calendario (o a crear una campaña si aún no tienes ninguna). Los accesos «Ver calendario» ahora abren directamente la pestaña Calendario." },
       { tag: "mejora", text: "Inicio: se quita la sección «Tus personajes» de la columna central (tus personajes siguen en el menú de la izquierda y en la pestaña Personajes)." },
       { tag: "mejora", text: "Columna central: todas las páginas (Inicio, Personajes, Campañas, Cartas, Dados, Buscar mesa, Ajustes…) usan ahora el mismo margen de 36 px arriba y abajo, con la ruta de navegación a esa misma distancia del borde." },
