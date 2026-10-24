@@ -7,6 +7,7 @@ export const CHANGELOG = [
     title: "Grupos y notificaciones nuevas",
     blurb: "Chatea con toda tu mesa en un grupo compartido y recibe los avisos como tarjetas, también flotando mientras juegas.",
     items: [
+      { tag: "nuevo", text: "La pestaña «Dados» pasa a llamarse «Personalización» y tiene dos apartados: Dados y Reversos de cartas. Primeros reversos: «Clásico Enaris» (por defecto, con versión para modo claro y oscuro) y «Noche y oro», ambos con el logo de la plataforma y sin texto. «Previsualizar» abre una carta que se puede girar en 3D arrastrándola (con giro automático y botones Frente / Reverso). El reverso elegido se guarda en tu cuenta." },
       { tag: "arreglo", text: "Inicio · la carta del día ahora es completamente aleatoria (ya no sigue el orden de niveles y dominios del catálogo) y cambia a las 00:00 de España. Todos ven la misma carta cada día; «Otra carta» recorre el resto de la baraja mezclada." },
       { tag: "nuevo", text: "Sonido de aviso: al llegar una notificación nueva suena una campanita de dos notas (no suena con «No molestar» ni «Invisible»)." },
       { tag: "mejora", text: "Inicio · «Únete a una mesa o crea la tuya» tiene de fondo siluetas de aventureros (espada, varita, escudo y hoguera) con un resplandor verde." },

@@ -399,11 +399,11 @@ function SetViewer({ model }) {
 }
 
 // ---- Página «Dados» ----
-export function DicePage({ skin, onEquip }) {
+export function DicePage({ skin, onEquip, embedded }) {
   return (
-    <div className="mh-dice-page">
+    <div className={embedded ? undefined : "mh-dice-page"}>
       <div className="mh-dice-h">
-        <h1 className="mh-serif">Dados</h1>
+        {!embedded && <h1 className="mh-serif">Dados</h1>}
         <p>Elige el aspecto de tus dados. El que equipes se usa en las tiradas de tus personajes.</p>
       </div>
       <div className="mh-dice-grid">

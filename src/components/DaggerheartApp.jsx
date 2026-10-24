@@ -14,7 +14,8 @@ import { ResetDiceCard, DeleteAccountCard } from "./AccountDanger";
 import { ModernSheet } from "./ModernSheet";
 import { Tour } from "./Tour";
 import { Dice3D, canDice3d, DICE3D_SIDES } from "./Dice3D";
-import { DicePage, warmDiceAssets } from "./DiceSkins";
+import { warmDiceAssets } from "./DiceSkins";
+import { Personalizacion, CARD_BACK_KEYS } from "./CardBacks";
 import WorldMap from "./WorldMap";
 import { DialoguePromptHelper, CombatBgPromptHelper, describeMapForPrompt } from "./ImagePrompts";
 import { LevelUpDialog, parseAdvances, ownedCards, getMulticlass, MAX_LEVEL, rankOf } from "./LevelUp";
@@ -57,7 +58,7 @@ const NAV_ITEMS = [
   { key: "ficha", label: "Personajes", icon: User },
   { key: "campaigns", label: "Campañas", icon: BookOpen },
   { key: "cartas", label: "Cartas", icon: Layers },
-  { key: "dadosskin", label: "Dados", icon: Dices },
+  { key: "dadosskin", label: "Personalización", icon: Dices },
   { key: "mesas", label: "Buscar mesa", icon: Megaphone },
 ];
 
@@ -5918,6 +5919,23 @@ const sharedStyles = `
   .mh-dice-body p { margin: 0; font-size: 12.5px; line-height: 1.55; color: var(--mh-ink3); min-height: 58px; }
   .mh-dice-btn { align-self: flex-start; display: inline-flex; align-items: center; gap: 7px; }
   .mh-dice-btn.is-on { opacity: .75; cursor: default; }
+  .mh-pers-tabs { display: inline-flex; gap: 4px; padding: 4px; margin: 0 0 18px; border-radius: 14px; background: var(--mh-input); border: 1px solid var(--mh-line); }
+  .mh-pers-tabs button { all: unset; cursor: pointer; padding: 8px 18px; border-radius: 10px; font-size: 13.5px; font-weight: 600; color: var(--mh-muted); } .mh-pers-tabs button:hover { color: var(--mh-ink); } .mh-pers-tabs button.is-on { background: #E3B04B; color: #241a05; } .mh-pers-tabs button:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
+  .mh-cb-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 340px)); }
+  .mh-cb-thumb { all: unset; cursor: pointer; position: relative; display: grid; place-items: center; padding: 22px 0 8px; background: radial-gradient(70% 70% at 50% 45%, color-mix(in srgb, var(--dc) 20%, transparent), transparent 75%); } .mh-cb-thumb:focus-visible { outline: 2px solid #E3B04B; outline-offset: -3px; }
+  .mh-cb-art { display: block; width: 168px; aspect-ratio: 5 / 7; border-radius: 22px; box-shadow: 0 16px 34px -14px #000c, 0 0 28px -8px var(--dc); transition: transform .25s; } .mh-cb-thumb:hover .mh-cb-art { transform: translateY(-4px) rotate(-1.5deg); } .mh-cb-art .mh-cback, .mh-cback { display: block; width: 100%; height: 100%; }
+  .mh-cb-btns { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; } .mh-cb-btns .mh-btn-ghost { display: inline-flex; align-items: center; gap: 6px; }
+  .mh-cbp-bg { position: fixed; inset: 0; z-index: 80; background: #05050fcc; backdrop-filter: blur(6px); display: grid; place-items: center; padding: 16px; overflow: auto; }
+  .mh-cbp { position: relative; width: min(420px, 100%); border-radius: 22px; background: var(--mh-panel); border: 1px solid var(--mh-line2); padding: 22px 20px 20px; display: flex; flex-direction: column; align-items: center; gap: 14px; box-shadow: 0 30px 80px #000d; } .mh-cbp h3 { margin: 0; font-size: 20px; }
+  .mh-cbp .mh-dice-btn { align-self: center; }
+  .mh-cbp-x { all: unset; cursor: pointer; position: absolute; top: 12px; right: 12px; width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; color: var(--mh-muted); } .mh-cbp-x:hover { background: var(--mh-panel3); color: var(--mh-ink); } .mh-cbp-x:focus-visible { outline: 2px solid #E3B04B; }
+  .mh-flip3d-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .mh-flip3d { width: 300px; height: 420px; max-width: 100%; perspective: 1100px; cursor: grab; touch-action: none; user-select: none; } .mh-flip3d:active { cursor: grabbing; }
+  .mh-flip3d-in { position: relative; width: 300px; height: 420px; transform-style: preserve-3d; will-change: transform; }
+  .mh-flip3d-f { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 22px; box-shadow: 0 24px 50px -18px #000c; } .mh-flip3d-f.is-back { transform: rotateY(180deg); } .mh-flip3d-f .mh-cardc { pointer-events: none; }
+  .mh-flip3d-ctl { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; } .mh-flip3d-ctl .mh-btn-ghost { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; }
+  .mh-flip3d-hint { margin: 0; font-size: 12px; color: var(--mh-muted); }
+  @media (max-width: 380px) { .mh-flip3d, .mh-flip3d-in { transform-origin: top center; } }
   /* Mapa de mundo: imagen con marcadores */
   .mh-wm { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
   .mh-wm-seasons { display: inline-flex; align-items: center; gap: 3px; padding: 3px; border-radius: 999px; background: var(--mh-panel2); border: 1px solid var(--mh-line); } .mh-wm-seasons button, .mh-wm-sup { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border: 0; border-radius: 999px; background: transparent; color: var(--mh-ink3); font: 600 12px 'Inter', system-ui, sans-serif; cursor: pointer; } .mh-wm-seasons button.is-on { background: rgba(227,176,75,.22); color: var(--mh-gold-ink); } .mh-wm-seasons button.is-empty { opacity: .6; border: 1px dashed var(--mh-line2); }
@@ -15788,6 +15806,17 @@ export default function App({ onSignOut }) {
   const equipDiceSkin = (key) => {
     setDiceSkin(key);
     safeSet("dice-skin", key, false);
+  };
+  // Reverso de carta equipado (privado de cada cuenta): «clasico» o «noche».
+  const [cardBack, setCardBack] = useState("clasico");
+  useEffect(() => {
+    safeGet("card-back", false).then((r) => {
+      if (CARD_BACK_KEYS.includes(r?.value)) setCardBack(r.value);
+    });
+  }, []);
+  const equipCardBack = (key) => {
+    setCardBack(key);
+    safeSet("card-back", key, false);
   };
   const [diceHold, setDiceHold] = useState(false);
   const fearStreakRef = useRef(0); // tiradas seguidas con Miedo (logro «Mala racha»)
@@ -30743,7 +30772,7 @@ export default function App({ onSignOut }) {
           {view === "mesas" && <LookingFor />}
           {view === "perfil" && profileTarget && <ProfilePage key={profileTarget.id} id={profileTarget.id} name={profileTarget.name} />}
 
-          {view === "dadosskin" && <DicePage skin={diceSkin} onEquip={equipDiceSkin} />}
+          {view === "dadosskin" && <Personalizacion skin={diceSkin} onEquip={equipDiceSkin} back={cardBack} onEquipBack={equipCardBack} items={buildCardCatalog()} icons={DOMAIN_ICONS} FitTitle={FitTitle} FitBox={FitBox} />}
           {view === "cartas" && <CardsPage items={buildCardCatalog()} domainColors={DOMAIN_COLORS} icons={DOMAIN_ICONS} FitTitle={FitTitle} FitBox={FitBox} />}
 
           {view === "ajustes" && (
