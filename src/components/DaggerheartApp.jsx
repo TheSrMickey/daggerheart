@@ -9,11 +9,12 @@ import { Info, Lightbulb, Sprout, Bot, Pickaxe, TreePine, Cog, Ear, Angry, Axe, 
 import { Squirrel, Layers, CalendarDays, Vote, ScrollText as ChronIcon, Megaphone, Link2 } from "lucide-react";
 import { History, LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus, Box, LayoutGrid, Bird, Fish, Bug, Rabbit, Cat, Turtle, Clock, CircleDashed, Slash } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
-import { NotificationBell, NoticeToasts, FriendsPanel, AccountButton } from "./Social";
+import { NotificationBell, NoticeToasts, FriendsPanel, AccountButton, avatarColor } from "./Social";
 import { ResetDiceCard, DeleteAccountCard } from "./AccountDanger";
 import { ModernSheet } from "./ModernSheet";
 import { Tour } from "./Tour";
 import { Dice3D, canDice3d, DICE3D_SIDES } from "./Dice3D";
+import { warmDiceAssets } from "./DiceSkins";
 import { Personalizacion, CARD_BACK_KEYS } from "./CardBacks";
 import WorldMap from "./WorldMap";
 import { DialoguePromptHelper, CombatBgPromptHelper, describeMapForPrompt } from "./ImagePrompts";
@@ -7290,7 +7291,7 @@ const sharedStyles = `
   /* Carrusel de anuncios de Inicio */
   .mh-home-news > .mh-news-slide { position: static; z-index: auto; flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; }
   .mh-news-slide > * { animation: mh-news-in .45s ease both; }
-  .mh-news-slide > :not(.mh-news-art):not(.mh-news-card):not(.mh-news-orb):not(.mh-news-glow):not(.mh-news-pile) { position: relative; z-index: 2; }
+  .mh-news-slide > :not(.mh-news-art):not(.mh-news-card):not(.mh-news-orb):not(.mh-news-glow):not(.mh-news-pile):not(.mh-news-sil) { position: relative; z-index: 2; }
   @keyframes mh-news-in { from { opacity: 0; translate: 16px 0; } }
   .mh-home-news.is-ver { background: radial-gradient(520px 300px at 88% 20%, #4a1fb866, transparent 70%), var(--ns); } .mh-home-news.is-ver .mh-news-tag { color: #9fb8ff; background: #6f9bff1f; border-color: #6f9bff66; }
   .mh-home-news.is-ses { --ns: #1a1308; background: radial-gradient(520px 300px at 88% 20%, #E3B04B44, transparent 70%), var(--ns); }
@@ -7301,15 +7302,20 @@ const sharedStyles = `
   html:not([data-mh-theme="light"]) .mh-home-news.is-dp .mh-news-art { filter: brightness(1.55) saturate(1.1); }
   .mh-news-credit { left: 32px; font-size: 10px; opacity: .55; z-index: 2; line-height: 1.3; max-width: calc(100% - 200px); } html[data-mh-theme="light"] .mh-news-credit { color: #221C2B; }
   html[data-mh-theme="light"] .mh-home-news.is-mesa .mh-news-tag { color: #1F7A45; } html[data-mh-theme="light"] .mh-home-news.is-card .mh-news-tag { color: #6B4FB8; } html[data-mh-theme="light"] .mh-home-news.is-ver .mh-news-tag { color: #2A4FB0; }
-  .mh-home-news:is(.is-ver, .is-ses) .mh-news-slide > :is(h2, p, .mh-home-cta) { max-width: calc(100% - 190px); } .mh-home-news.is-card .mh-news-slide > :is(h2, p, .mh-home-cta) { max-width: calc(100% - 340px); }
+  .mh-home-news:is(.is-ver, .is-ses) .mh-news-slide > :is(h2, p, .mh-home-cta) { max-width: calc(100% - 190px); } .mh-home-news.is-card { container-type: inline-size; } .mh-home-news.is-card .mh-news-slide > :is(h2, p, .mh-home-cta) { max-width: max(200px, calc(100cqw - 32px - clamp(120px, 15cqw, 240px) - var(--cw, 200px) - 40px)); } .mh-home-news.is-card .mh-news-slide > :is(h2, p) { text-shadow: 0 1px 10px color-mix(in srgb, var(--ns) 85%, transparent); }
+  .mh-news-pile::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, color-mix(in srgb, var(--ns) 94%, transparent) 0%, color-mix(in srgb, var(--ns) 82%, transparent) 34%, color-mix(in srgb, var(--ns) 38%, transparent) 56%, transparent 76%); }
   .mh-home-news.is-ver h2 { font-size: 30px; }
   .mh-news-orb { position: absolute; right: 32px; top: 50%; translate: 0 -50%; z-index: 2; width: 120px; height: 120px; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(#6f9bff 0 70%, #ffffff18 0); }
   .mh-news-orb span { width: 96px; height: 96px; border-radius: 50%; background: #12102a; display: grid; place-items: center; font: 600 24px "Cinzel", Georgia, serif; color: #fff; }
   .mh-news-orb.is-avs { background: none; width: auto; height: auto; display: flex; } .mh-news-orb.is-avs span { width: 44px; height: 44px; margin-left: -10px; border: 2px solid var(--ns); font: 700 16px "Inter", system-ui, sans-serif; } .mh-news-orb.is-avs span:first-child { margin-left: 0; }
-  .mh-news-card { position: absolute; right: 96px; top: 24px; bottom: 64px; z-index: 2; aspect-ratio: 5 / 7; rotate: 5deg; border-radius: 22px; box-shadow: 0 18px 40px #000a, 0 0 30px #A58BE855; } .mh-news-card .mh-cardc { pointer-events: none; }
+  .mh-news-card { position: absolute; right: clamp(120px, 15cqw, 240px); top: 24px; bottom: 64px; z-index: 2; aspect-ratio: 5 / 7; rotate: 5deg; border-radius: 22px; box-shadow: 0 18px 40px #000a, 0 0 30px #A58BE855; } .mh-news-card .mh-cardc { pointer-events: none; }
   /* Carta del día: resplandor del color del dominio a la derecha y en la esquina inferior izquierda, y dos cartas asomando por detrás */
   .mh-news-glow { position: absolute; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(ellipse 55% 95% at 84% 50%, color-mix(in srgb, var(--gc) 80%, transparent) 0%, color-mix(in srgb, var(--gc) 33%, transparent) 38%, transparent 72%); }
   .mh-news-glow.is-bl { background: radial-gradient(ellipse 44% 85% at 0% 100%, color-mix(in srgb, var(--gc) 60%, transparent) 0%, color-mix(in srgb, var(--gc) 26%, transparent) 40%, transparent 74%); }
+  .mh-news-sil { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; background: linear-gradient(90deg, transparent 38%, color-mix(in srgb, #3fcf7a 13%, transparent) 100%); } .mh-news-sil svg { position: absolute; color: #3fcf7a; }
+  .mh-news-sil .s1 { width: 130px; height: 130px; right: 30%; top: 30%; opacity: .34; rotate: -12deg; } .mh-news-sil .s2 { width: 150px; height: 150px; right: 15%; top: 3%; opacity: .36; rotate: 8deg; } .mh-news-sil .s3 { width: 140px; height: 140px; right: 2%; top: 30%; opacity: .26; rotate: -6deg; } .mh-news-sil .s4 { width: 96px; height: 96px; right: 16%; bottom: 8%; opacity: .5; color: #E3B04B; }
+  html[data-mh-theme="light"] .mh-news-sil svg { color: #1F7A45; } html[data-mh-theme="light"] .mh-news-sil .s4 { color: #B5750E; } html[data-mh-theme="light"] .mh-news-sil { background: linear-gradient(90deg, transparent 38%, color-mix(in srgb, #3fcf7a 20%, transparent) 100%); }
+  @media (max-width: 720px) { .mh-news-sil { opacity: .55; } }
   .mh-news-pile { position: absolute; inset: 0; z-index: 1; overflow: hidden; pointer-events: none; } .mh-news-pc { position: absolute; z-index: 1; transform-origin: 50% 50%; filter: brightness(.62) saturate(.85); box-shadow: 0 8px 18px #0009; border-radius: 12px; }
   .mh-news-card { z-index: 3 !important; box-shadow: 0 22px 46px #000d, 0 0 0 1px #ffffff26, 0 0 40px color-mix(in srgb, var(--gc) 55%, transparent) !important; }
   /* Debajo del degradado de la caja (liso a la izquierda, tras el texto) en claro y en oscuro, para que el montón solo asome hacia la derecha. */
@@ -7386,7 +7392,10 @@ const sharedStyles = `
   .mh-hns-rsvp button:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
   .mh-hns .mh-hns-more { font-size: 11.5px; }
   html[data-mh-theme="light"] .mh-hns-pill, html[data-mh-theme="light"] .mh-hns-rsvp button { color: color-mix(in srgb, var(--c) 62%, #221C2B); }
-  .mh-hns.is-empty { display: flex; align-items: center; gap: 14px; padding: 16px 18px; } .mh-hns.is-empty .mh-hns-b { flex: 1; padding: 0; gap: 3px; } .mh-hns.is-empty .mh-hns-b b { font-size: 14.5px; color: var(--mh-ink); }
+  .mh-hns:is(.is-empty, .is-one) { display: flex; align-items: center; gap: 14px; padding: 16px 18px; min-height: 96px; box-sizing: border-box; } .mh-hns:is(.is-empty, .is-one) .mh-hns-b { flex: 1; padding: 0; gap: 3px; } .mh-hns:is(.is-empty, .is-one) .mh-hns-b b { font-size: 14.5px; color: var(--mh-ink); }
+  .mh-hns-ic.is-date { all: unset; cursor: pointer; box-sizing: border-box; width: 44px; height: 44px; border-radius: 12px; flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; background: color-mix(in srgb, var(--hc) 24%, var(--mh-panel)); color: var(--hc); } .mh-hns-ic.is-date b { font-size: 19px; line-height: 1; color: var(--hc) !important; } .mh-hns-ic.is-date small { font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--mh-ink2); } .mh-hns-ic.is-date:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
+  .mh-hns.is-one .mh-hns-b > small { font-size: 12px; line-height: 1.35; } .mh-hns.is-one .mh-hns-rsvp { flex: none; flex-wrap: nowrap; gap: 6px; } .mh-hns.is-one .mh-hns-rsvp button { padding: 4px 10px; font-size: 11.5px; white-space: nowrap; }
+  @media (max-width: 900px) { .mh-hns.is-one { flex-wrap: wrap; } .mh-hns.is-one .mh-hns-rsvp { flex-basis: 100%; flex-wrap: wrap; } }
   .mh-hns-ic { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; flex: none; background: var(--mh-panel3); color: var(--mh-gold-ink, #E3B04B); }
   @media (max-width: 720px) { .mh-hns { grid-template-columns: 1fr; } .mh-hns-date { flex-direction: row; justify-content: flex-start; gap: 12px; padding: 12px 16px; } .mh-hns-date b { font-size: 34px; } .mh-hns.is-empty { flex-wrap: wrap; } }
   /* Inicio en móvil: dados más compactos y filas de campañas, personajes y sesiones en carrusel horizontal (con imán) en vez de apiladas. */
@@ -7685,7 +7694,7 @@ const sharedStyles = `
   @media (max-width: 900px) { .mh-cc { grid-template-columns: 1fr; padding: 18px 16px; } .mh-cc-side { position: static; order: 2; } .mh-cc-opts, .mh-cg-lv-g { grid-template-columns: 1fr; } .mh-camps-head { flex-wrap: wrap; } }
   html[data-mh-art="off"] img[src*="/ancestrias/"], html[data-mh-art="off"] img[src*="/clases/"], html[data-mh-art="off"] img[src*="/cartas-dominio/"], html[data-mh-art="off"] img[src*="/comunidades/"], html[data-mh-art="off"] img[src*="/subclases/"], html[data-mh-art="off"] img[src*="/transformaciones/"], html[data-mh-art="off"] img[src*="/formas-bestia/"] { opacity: 0 !important; visibility: hidden !important; }
   html[data-mh-art="off"] [style*="/ancestrias/"], html[data-mh-art="off"] [style*="/clases/"], html[data-mh-art="off"] [style*="/cartas-dominio/"], html[data-mh-art="off"] [style*="/comunidades/"], html[data-mh-art="off"] [style*="/subclases/"], html[data-mh-art="off"] [style*="/transformaciones/"], html[data-mh-art="off"] [style*="/formas-bestia/"] { background-image: none !important; }
-  .pf { max-width: 1040px; } .pf-back { margin-bottom: 10px; } .pf-card { background: var(--mh-panel); border: 1px solid var(--mh-line); border-radius: 20px; overflow: hidden; }
+  .pf { max-width: none; } .pf-back { margin-bottom: 10px; } .pf-card { background: var(--mh-panel); border: 1px solid var(--mh-line); border-radius: 20px; overflow: hidden; }
   .pf-ban { height: 130px; background: linear-gradient(135deg, color-mix(in srgb, var(--c, #4f9a62) 55%, var(--mh-panel)) 0%, color-mix(in srgb, var(--c, #4f9a62) 16%, var(--mh-panel)) 100%); position: relative; } .pf-ban::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--mh-ink) 5%, transparent) 0 2px, transparent 2px 14px); }
   .pf-head { display: flex; gap: 20px; align-items: flex-start; padding: 0 28px; margin-top: -50px; position: relative; flex-wrap: wrap; } .pf-head .so-av, .pf-head > :first-child { flex: none; } .pf-who { flex: 1; min-width: 220px; padding-top: 58px; } .pf-who h1 { margin: 0; font-size: 28px; font-weight: 600; letter-spacing: .02em; color: var(--mh-ink); } .pf-who small { color: var(--mh-muted); }
   .pf-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; } .pf-pill { font-size: 11.5px; font-weight: 600; padding: 3px 10px; border-radius: 99px; border: 1px solid var(--mh-line2); color: var(--mh-ink3, var(--mh-muted)); } .pf-acts { display: flex; gap: 8px; padding-top: 58px; flex-wrap: wrap; }
@@ -7705,7 +7714,7 @@ const sharedStyles = `
   .pf-act { display: flex; gap: 10px; font-size: 13px; padding: 8px 0; border-bottom: 1px solid var(--mh-line); } .pf-act:last-child { border: 0; } .pf-act small { color: var(--mh-muted); display: block; } .pf-act i { width: 8px; height: 8px; border-radius: 50%; background: #E3B04B; margin-top: 7px; flex: none; }
   /* Perfil sin scroll vertical: la tarjeta ocupa la altura de la pantalla y cada pestaña se reparte el espacio. */
   @media (min-width: 861px) {
-    .pf:not(.is-edit) { height: calc(100dvh - 44px); max-width: 1180px; display: flex; flex-direction: column; }
+    .pf:not(.is-edit) { height: calc(100dvh - 72px); max-width: none; display: flex; flex-direction: column; }
     .pf:not(.is-edit) .pf-card { flex: 1; min-height: 0; display: flex; flex-direction: column; }
     .pf:not(.is-edit) .pf-ban { height: 78px; flex: none; } .pf:not(.is-edit) .pf-head { margin-top: -42px; flex: none; } .pf:not(.is-edit) .pf-who { padding-top: 48px; } .pf:not(.is-edit) .pf-acts { padding-top: 48px; }
     .pf:not(.is-edit) .pf-stats, .pf:not(.is-edit) .pf-tabs, .pf:not(.is-edit) .pf-bio { flex: none; }
@@ -10973,6 +10982,7 @@ export default function App({ onSignOut }) {
   const [rollTotal, setRollTotal] = useState(null);
   const [verdict, setVerdict] = useState({ text: "", color: "var(--mh-ink3)" });
   const [rollLog, setRollLog] = useState([]);
+  useEffect(() => { warmDiceAssets(); }, []);
   const [diceStats, setDiceStats] = useState(null); // estadísticas personales de las tiradas de dualidad
 
   const [fearCount, setFearCount] = useState(0);
@@ -27592,7 +27602,7 @@ export default function App({ onSignOut }) {
           {!isMobile && (
             <div className="mh-acct">
               {!showTopbar && <NotificationBell />}
-              <button type="button" className="mh-brand-av" title={playerName} aria-label="Cuenta" aria-haspopup="menu" aria-expanded={acctOpen} onClick={() => setAcctOpen((v) => !v)}>
+              <button type="button" className="mh-brand-av" style={{ background: avatarColor(playerName || "Yo") }} title={playerName} aria-label="Cuenta" aria-haspopup="menu" aria-expanded={acctOpen} onClick={() => setAcctOpen((v) => !v)}>
                 {(playerName || "?").trim().charAt(0).toUpperCase()}
               </button>
               {acctOpen && (

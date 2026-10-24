@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Sparkles, ChevronLeft, ChevronRight, CalendarDays, Layers } from "lucide-react";
+import { Sparkles, ChevronLeft, ChevronRight, CalendarDays, Layers, Sword, Wand2, Shield, Flame } from "lucide-react";
 import { CHANGELOG } from "@/lib/changelog";
 import { CardFace } from "./Cards";
 import { useNextSession, fmtDate, fmtTime, countdown } from "./Calendar";
@@ -29,13 +29,13 @@ export const benefit = (text, n = 170) => {
 };
 
 // La carta del día con el mismo diseño que en la pestaña Cartas: se pinta a 300 × 420 y se reduce a la altura que deja la caja.
-function NewsCard({ card, icons, FitTitle, FitBox, out }) {
+function NewsCard({ card, icons, FitTitle, FitBox, out, onW }) {
   const ref = useRef(null);
   const [k, setK] = useState(0.7);
   useEffect(() => {
     const el = ref.current;
     if (!el) return undefined;
-    const fit = () => setK(el.clientHeight / 420);
+    const fit = () => { setK(el.clientHeight / 420); onW && onW(el.offsetWidth); };
     fit();
     const ro = new ResizeObserver(fit);
     ro.observe(el);
@@ -43,7 +43,7 @@ function NewsCard({ card, icons, FitTitle, FitBox, out }) {
   }, []);
   return (
     <div ref={ref} className={"mh-news-card" + (out ? " is-out" : "")} aria-hidden="true" style={{ "--gc": card.color || "#C9A24A" }}>
-      <div style={{ position: "absolute", left: 0, top: 0, width: 300, height: 420, transform: "scale(" + k + ")", transformOrigin: "0 0" }}>
+      <div style={{ position: "absolute", left: 0, top: 0, width: 300, height: 420, zoom: k }}>
         <CardFace c={card} I={icons[card.domain] || Layers} FitTitle={FitTitle} FitBox={FitBox} />
       </div>
     </div>
@@ -91,9 +91,25 @@ function CardPile({ cards, skip, seed, icons, FitTitle, FitBox }) {
   );
 }
 
+// La carta del día cambia a las 00:00 de España (Europa/Madrid), sea cual sea la zona horaria de quien la mira.
+const spainParts = (ms = Date.now()) => {
+  const p = Object.fromEntries(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Madrid", hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" }).formatToParts(new Date(ms)).map((x) => [x.type, x.value]));
+  return { key: p.year + "-" + p.month + "-" + p.day, secs: +p.hour * 3600 + +p.minute * 60 + +p.second };
+};
+const msToSpainMidnight = () => (86400 - spainParts().secs) * 1000 + 250;
+const hashStr = (t) => { let h = 2166136261; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
+// Mezcla completa y repetible de las cartas para un día: no sigue el orden del catálogo (niveles, dominios).
+const shuffled = (list, seedText) => {
+  const r = rng(hashStr(seedText));
+  const a = list.slice();
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+};
+
 export function HomeHero({ camps, characters, featId, cards, color, icons, FitTitle, FitBox, onView, onChar, onCamp }) {
   const [seenVer, setSeenVer] = useState("");
   const [idx, setIdx] = useState(0);
+  const [cw, setCw] = useState(0); // ancho real de la carta del día, para que el texto no llegue a tocarla
   const [pick, setPick] = useState(0);
   const [gone, setGone] = useState(null); // carta que sale mientras entra la nueva
   const sess = useNextSession(camps);
@@ -103,10 +119,20 @@ export function HomeHero({ camps, characters, featId, cards, color, icons, FitTi
   const latest = CHANGELOG[0];
   const fch = featId ? characters[featId] : null;
   const pool = useMemo(() => cards.filter((c) => c.kind === "dominio" && c.image), [cards]);
-  const day = Math.floor(Date.now() / 864e5);
-  const card = pool.length ? pool[(day + pick * 7) % pool.length] : null;
+  const [dayKey, setDayKey] = useState(() => spainParts().key);
+  useEffect(() => {
+    // al llegar las 00:00 de España (o al volver a la pestaña después) se renueva el día
+    let t;
+    const arm = () => { t = setTimeout(() => { setDayKey(spainParts().key); setPick(0); arm(); }, msToSpainMidnight()); };
+    arm();
+    const vis = () => { const k = spainParts().key; setDayKey((cur) => (cur === k ? cur : (setPick(0), k))); };
+    document.addEventListener("visibilitychange", vis);
+    return () => { clearTimeout(t); document.removeEventListener("visibilitychange", vis); };
+  }, []);
+  const order = useMemo(() => shuffled(pool, "carta-del-dia:" + dayKey), [pool, dayKey]);
+  const card = order.length ? order[pick % order.length] : null;
 
-  const dayCard = pool.length ? pool[day % pool.length] : null; // el montón del fondo se calcula con la carta del día, así no cambia con «Otra carta»
+  const dayCard = order.length ? order[0] : null; // el montón del fondo se calcula con la carta del día, así no cambia con «Otra carta»
   const another = () => { setGone(card); setPick((x) => x + 1); };
   useEffect(() => { if (!gone) return undefined; const t = setTimeout(() => setGone(null), 500); return () => clearTimeout(t); }, [gone]);
 
@@ -145,7 +171,7 @@ export function HomeHero({ camps, characters, featId, cards, color, icons, FitTi
     body = (
       <>
         <div className="mh-news-art" aria-hidden="true"><i style={{ backgroundImage: "url(/noticias/darrington-teaser.jpg)", backgroundPosition: "center 80%" }} /></div>
-        <span className="mh-news-tag"><Sparkles size={12} /> Darrington Press · Avance · {left > 0 ? "29 oct · en " + left + (left === 1 ? " día" : " días") : "hoy"}</span>
+        <span className="mh-news-tag"><Sparkles size={12} /> Darrington Press · {left > 0 ? "29 oct · en " + left + (left === 1 ? " día" : " días") : "hoy"}</span>
         <h2 className="mh-serif">Algo se acerca 👀</h2>
         <p>Descubre qué llega el 29 de octubre.</p>
         <small className="mh-news-credit" style={{ position: "absolute", bottom: 14 }}>Ilustración de fondo: Mat Wilma · © 2026 Darrington Press, LLC</small>
@@ -181,6 +207,12 @@ export function HomeHero({ camps, characters, featId, cards, color, icons, FitTi
   } else if (cur === "mesa") {
     body = (
       <>
+        <div className="mh-news-sil" aria-hidden="true">
+          <Sword className="s1" strokeWidth={1.2} />
+          <Wand2 className="s2" strokeWidth={1.2} />
+          <Shield className="s3" strokeWidth={1.2} />
+          <Flame className="s4" strokeWidth={1.2} />
+        </div>
         <span className="mh-news-tag">Aún sin mesa</span>
         <h2 className="mh-serif">Únete a una mesa o crea la tuya</h2>
         <p>Busca grupos que necesitan jugador o DJ, o monta tu propia campaña e <b>invita a tus amigos</b> con un enlace.</p>
@@ -194,11 +226,11 @@ export function HomeHero({ camps, characters, featId, cards, color, icons, FitTi
     // El montón del fondo y los resplandores son fijos: al cambiar de carta solo se renueva la de delante y su texto.
     body = (
       <>
-        <CardPile cards={cards} skip={dayCard.id} seed={day * 31} icons={icons} FitTitle={FitTitle} FitBox={FitBox} />
+        <CardPile cards={cards} skip={dayCard.id} seed={hashStr("monton:" + dayKey)} icons={icons} FitTitle={FitTitle} FitBox={FitBox} />
         <span className="mh-news-glow" style={{ "--gc": dayCard.color || "#C9A24A" }} aria-hidden="true" />
         <span className="mh-news-glow is-bl" style={{ "--gc": dayCard.color || "#C9A24A" }} aria-hidden="true" />
         {gone && <NewsCard key={"o" + gone.id} card={gone} icons={icons} FitTitle={FitTitle} FitBox={FitBox} out />}
-        <NewsCard key={card.id} card={card} icons={icons} FitTitle={FitTitle} FitBox={FitBox} />
+        <NewsCard key={card.id} card={card} icons={icons} FitTitle={FitTitle} FitBox={FitBox} onW={setCw} />
         <span className="mh-news-tag" key={"t" + card.id}><Layers size={12} /> Carta del día · {card.domain}</span>
         <h2 className="mh-serif" key={"h" + card.id}>{card.key}</h2>
         <p key={"p" + card.id}>{benefit(card.text)}</p>
@@ -216,6 +248,7 @@ export function HomeHero({ camps, characters, featId, cards, color, icons, FitTi
       role="region"
       aria-roledescription="carrusel"
       aria-label="Anuncios"
+      style={cw ? { "--cw": cw + "px" } : undefined}
       onTouchStart={(e) => { touch.current = e.touches[0].clientX; }}
       onTouchEnd={(e) => { const dx = e.changedTouches[0].clientX - (touch.current ?? e.changedTouches[0].clientX); touch.current = null; if (n > 1 && Math.abs(dx) > 50) go(dx < 0 ? 1 : -1); }}
     >
