@@ -91,6 +91,21 @@ function CardPile({ cards, skip, seed, icons, FitTitle, FitBox }) {
   );
 }
 
+// La carta del día cambia a las 00:00 de España (Europa/Madrid), sea cual sea la zona horaria de quien la mira.
+const spainParts = (ms = Date.now()) => {
+  const p = Object.fromEntries(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Madrid", hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" }).formatToParts(new Date(ms)).map((x) => [x.type, x.value]));
+  return { key: p.year + "-" + p.month + "-" + p.day, secs: +p.hour * 3600 + +p.minute * 60 + +p.second };
+};
+const msToSpainMidnight = () => (86400 - spainParts().secs) * 1000 + 250;
+const hashStr = (t) => { let h = 2166136261; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
+// Mezcla completa y repetible de las cartas para un día: no sigue el orden del catálogo (niveles, dominios).
+const shuffled = (list, seedText) => {
+  const r = rng(hashStr(seedText));
+  const a = list.slice();
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+};
+
 export function HomeHero({ camps, characters, featId, cards, color, icons, FitTitle, FitBox, onView, onChar, onCamp }) {
   const [seenVer, setSeenVer] = useState("");
   const [idx, setIdx] = useState(0);
@@ -104,10 +119,20 @@ export function HomeHero({ camps, characters, featId, cards, color, icons, FitTi
   const latest = CHANGELOG[0];
   const fch = featId ? characters[featId] : null;
   const pool = useMemo(() => cards.filter((c) => c.kind === "dominio" && c.image), [cards]);
-  const day = Math.floor(Date.now() / 864e5);
-  const card = pool.length ? pool[(day + pick * 7) % pool.length] : null;
+  const [dayKey, setDayKey] = useState(() => spainParts().key);
+  useEffect(() => {
+    // al llegar las 00:00 de España (o al volver a la pestaña después) se renueva el día
+    let t;
+    const arm = () => { t = setTimeout(() => { setDayKey(spainParts().key); setPick(0); arm(); }, msToSpainMidnight()); };
+    arm();
+    const vis = () => { const k = spainParts().key; setDayKey((cur) => (cur === k ? cur : (setPick(0), k))); };
+    document.addEventListener("visibilitychange", vis);
+    return () => { clearTimeout(t); document.removeEventListener("visibilitychange", vis); };
+  }, []);
+  const order = useMemo(() => shuffled(pool, "carta-del-dia:" + dayKey), [pool, dayKey]);
+  const card = order.length ? order[pick % order.length] : null;
 
-  const dayCard = pool.length ? pool[day % pool.length] : null; // el montón del fondo se calcula con la carta del día, así no cambia con «Otra carta»
+  const dayCard = order.length ? order[0] : null; // el montón del fondo se calcula con la carta del día, así no cambia con «Otra carta»
   const another = () => { setGone(card); setPick((x) => x + 1); };
   useEffect(() => { if (!gone) return undefined; const t = setTimeout(() => setGone(null), 500); return () => clearTimeout(t); }, [gone]);
 
@@ -201,7 +226,7 @@ export function HomeHero({ camps, characters, featId, cards, color, icons, FitTi
     // El montón del fondo y los resplandores son fijos: al cambiar de carta solo se renueva la de delante y su texto.
     body = (
       <>
-        <CardPile cards={cards} skip={dayCard.id} seed={day * 31} icons={icons} FitTitle={FitTitle} FitBox={FitBox} />
+        <CardPile cards={cards} skip={dayCard.id} seed={hashStr("monton:" + dayKey)} icons={icons} FitTitle={FitTitle} FitBox={FitBox} />
         <span className="mh-news-glow" style={{ "--gc": dayCard.color || "#C9A24A" }} aria-hidden="true" />
         <span className="mh-news-glow is-bl" style={{ "--gc": dayCard.color || "#C9A24A" }} aria-hidden="true" />
         {gone && <NewsCard key={"o" + gone.id} card={gone} icons={icons} FitTitle={FitTitle} FitBox={FitBox} out />}

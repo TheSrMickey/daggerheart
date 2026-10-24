@@ -7,6 +7,7 @@ export const CHANGELOG = [
     title: "Grupos y notificaciones nuevas",
     blurb: "Chatea con toda tu mesa en un grupo compartido y recibe los avisos como tarjetas, también flotando mientras juegas.",
     items: [
+      { tag: "arreglo", text: "Inicio · la carta del día ahora es completamente aleatoria (ya no sigue el orden de niveles y dominios del catálogo) y cambia a las 00:00 de España. Todos ven la misma carta cada día; «Otra carta» recorre el resto de la baraja mezclada." },
       { tag: "nuevo", text: "Sonido de aviso: al llegar una notificación nueva suena una campanita de dos notas (no suena con «No molestar» ni «Invisible»)." },
       { tag: "mejora", text: "Inicio · «Únete a una mesa o crea la tuya» tiene de fondo siluetas de aventureros (espada, varita, escudo y hoguera) con un resplandor verde." },
       { tag: "arreglo", text: "Inicio · en la carta del día, el texto se ajusta al ancho real de la carta y no llega a tocarla aunque sea muy largo." },
