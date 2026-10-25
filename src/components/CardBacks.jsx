@@ -123,7 +123,7 @@ const THICK = 3; // grosor de la carta en píxeles (una carta real mide ~0,3 mm 
 const STEP = 0.5; // un corte cada medio píxel: sin huecos entre cortes aunque el canto se vea casi de lado
 
 // Carta con dos caras y canto que se puede girar en 3D: arrastrando, con giro automático o saltando al frente / reverso.
-export function FlipCard({ front, back, startBack = true }) {
+export function FlipCard({ front, back, startBack = true, edge = "#E3B04B" }) {
   const inRef = useRef(null);
   const st = useRef({ x: -8, y: startBack ? 180 : 0, vy: 0, vx: 0, drag: false, lx: 0, ly: 0, auto: true, target: null });
   const [auto, setAuto] = useState(true);
@@ -171,7 +171,7 @@ export function FlipCard({ front, back, startBack = true }) {
   return (
     <div className="mh-flip3d-wrap">
       <div className="mh-flip3d" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} role="img" aria-label="Carta que puedes girar arrastrando">
-        <div className="mh-flip3d-in" ref={inRef}>
+        <div className="mh-flip3d-in" ref={inRef} style={{ "--edge": edge }}>
           {Array.from({ length: Math.round(THICK / STEP) + 1 }, (_, i) => (
             <div key={i} className={"mh-flip3d-sl" + (i % 2 ? " is-alt" : "")} style={{ transform: "translateZ(" + (i * STEP - THICK / 2) + "px)" }} />
           ))}
@@ -201,7 +201,7 @@ function Preview({ back, sample, icons, FitTitle, FitBox, equipped, locked, onEq
       <div className="mh-cbp" role="dialog" aria-label={"Previsualización de " + back.label} onClick={(e) => e.stopPropagation()}>
         <button type="button" className="mh-cbp-x" onClick={onClose} aria-label="Cerrar"><X size={16} /></button>
         <h3 className="mh-serif">{back.label}</h3>
-        <FlipCard front={front} back={<CardBack kind={back.key} edge={cardBorder === "domain" && sample ? sample.color : undefined} />} />
+        <FlipCard edge={cardBorder === "domain" && sample ? sample.color : "#E3B04B"} front={front} back={<CardBack kind={back.key} edge={cardBorder === "domain" && sample ? sample.color : undefined} />} />
         {locked && <p className="mh-cb-lock"><Lock size={13} /> Recompensa del logro legendario «{back.reward}».</p>}
         <button type="button" className="mh-btn mh-dice-btn" disabled={equipped || locked} onClick={() => onEquip(back.key)}>
           {equipped ? <><Check size={15} /> Equipado</> : locked ? <><Lock size={15} /> Bloqueado</> : <><Sparkles size={15} /> Equipar este reverso</>}

@@ -5941,7 +5941,7 @@ const sharedStyles = `
   .mh-flip3d { filter: drop-shadow(0 22px 22px #000a); margin: 10px 0 26px; }
   .mh-flip3d-f { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 22px; overflow: hidden; } .mh-flip3d-f { transform: translateZ(1.9px); } .mh-flip3d-f.is-back { transform: rotateY(180deg) translateZ(1.9px); } .mh-flip3d-f .mh-cardc { pointer-events: none; }
   /* Canto de la carta: cortes de cartulina apilados entre las dos caras; alternan dos tonos para marcar las capas. */
-  .mh-flip3d-sl { position: absolute; inset: 0; border-radius: 22px; background: #ece6d6; } .mh-flip3d-sl.is-alt { background: #e0d9c5; }
+  .mh-flip3d-sl { position: absolute; inset: 0; border-radius: 22px; background: color-mix(in srgb, var(--edge, #E3B04B) 80%, #1a1205); } .mh-flip3d-sl.is-alt { background: color-mix(in srgb, var(--edge, #E3B04B) 62%, #1a1205); }
   .mh-flip3d-ctl { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; } .mh-flip3d-ctl .mh-btn-ghost { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; }
   .mh-flip3d-hint { margin: 0; font-size: 12px; color: var(--mh-muted); }
   @media (max-width: 380px) { .mh-flip3d, .mh-flip3d-in { transform-origin: top center; } }
