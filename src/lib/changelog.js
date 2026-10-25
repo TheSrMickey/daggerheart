@@ -7,6 +7,7 @@ export const CHANGELOG = [
     title: "Grupos y notificaciones nuevas",
     blurb: "Chatea con toda tu mesa en un grupo compartido y recibe los avisos como tarjetas, también flotando mientras juegas.",
     items: [
+      { tag: "mejora", text: "Mapa 3D · ahora trae todo el KayKit Medieval Hexagon Pack (más de 140 piezas: terreno, pendientes, costas, ríos, caminos, colinas, montañas, naturaleza, edificios en 4 colores, estructuras y objetos) con miniaturas y buscador. Se pueden subir y bajar las losas para hacer desniveles, girar piezas, quitar objetos o losas y deshacer. El mapa nuevo viene con un paisaje de ejemplo." },
       { tag: "mejora", text: "Mapa de mundo · la página ya no se desplaza (el mapa ocupa el alto disponible); al pasar a Tradicional el mapa 3D queda guardado y se recupera con «Volver al mapa 3D»; el mapa 3D usa también las costas, ríos y caminos del pack KayKit (pulsa otra vez sobre una losa para girarla)." },
       { tag: "mejora", text: "Campañas · contenido de las pestañas: Jugadores con tarjetas (clase, vida y estrés), Chat que ocupa el alto disponible, PNJ en dos columnas (lista y editor) sin scroll de página, y el editor de capítulos sin la línea de tiempo repetida." },
       { tag: "mejora", text: "Campañas · nuevo diseño interior (salvo Directo): pestañas con subrayado, Directo como botón aparte, subpestañas discretas y una cabecera común con título, frase y acción principal en cada sección. Se quitan los títulos y textos repetidos de cada pestaña." },

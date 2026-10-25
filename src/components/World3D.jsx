@@ -1,19 +1,20 @@
 "use client";
 
-import { Fragment, useEffect, useRef, useState } from "react";
-import { Hand, Eraser, Trees, Castle, Waves } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Hand, RotateCw, ChevronsUp, ChevronsDown, ChevronsLeft, Eraser, Trash2, Undo2, Search } from "lucide-react";
+import { HEX_CATALOG, HEX_COLORS } from "@/lib/hexCatalog";
 
 // Mapa de mundo en 3D con las losas hexagonales de KayKit (Medieval Hexagon Pack, CC0).
-// Cada losa se guarda como «q,r» → { t: "g" | "w", o?: "n:mountain_A" | "b:castle:blue", r?: 0..5 }.
+// Cada losa se guarda como «q,r» → { t: losa, tr?: giro de la losa, h?: altura, o?: objeto encima, r?: giro del objeto }.
 const BASE = "/modelos/hex/";
 const R = 2 / Math.sqrt(3); // radio de la losa (esquina a esquina = 2R)
 const GRID_R = 13; // alcance del tablero editable
+const MAX_H = 8;
 
 const hexToWorld = (q, r) => ({ x: 2 * q + r, z: 1.5 * R * r });
 const worldToHex = (x, z) => {
   const r = z / (1.5 * R);
   const q = x / (R * Math.sqrt(3)) - r / 2;
-  // redondeo cúbico
   let cx = q, cz = r, cy = -q - r;
   let rx = Math.round(cx), ry = Math.round(cy), rz = Math.round(cz);
   const dx = Math.abs(rx - cx), dy = Math.abs(ry - cy), dz = Math.abs(rz - cz);
@@ -25,49 +26,120 @@ const worldToHex = (x, z) => {
 const keyOf = (q, r) => q + "," + r;
 const inGrid = (q, r) => Math.max(Math.abs(q), Math.abs(r), Math.abs(q + r)) <= GRID_R;
 
-export const NATURE = [
-  ["trees_A_small", "Arbolillos"], ["trees_A_medium", "Bosque"], ["trees_A_large", "Bosque denso"], ["trees_B_medium", "Bosque (B)"], ["trees_B_large", "Bosque denso (B)"],
-  ["tree_single_A", "Árbol"], ["hills_A", "Colinas"], ["hills_B", "Colinas (B)"], ["hills_C_trees", "Colinas con árboles"],
-  ["mountain_A", "Montaña"], ["mountain_B", "Montaña (B)"], ["mountain_C", "Montaña (C)"], ["mountain_A_grass_trees", "Montaña verde"], ["mountain_B_grass", "Montaña verde (B)"],
-  ["rock_single_A", "Roca"], ["rock_single_C", "Roca (C)"],
-];
-export const BUILDINGS = [
-  ["castle", "Castillo"], ["church", "Iglesia"], ["home_A", "Casa"], ["home_B", "Casa (B)"], ["tavern", "Taberna"], ["market", "Mercado"], ["blacksmith", "Herrería"],
-  ["mine", "Mina"], ["lumbermill", "Aserradero"], ["windmill", "Molino"], ["watermill", "Molino de agua"], ["tower_A", "Torre"], ["barracks", "Cuartel"], ["well", "Pozo"],
-];
-export const FACTIONS = [["blue", "#4F86D6"], ["red", "#D9544E"], ["green", "#5FAE5B"], ["yellow", "#E3B04B"]];
-const OBJ_H = { n: 1.3, b: 2.6 };
-
-const objUrl = (o) => {
-  const p = o.split(":");
-  return p[0] === "b" ? BASE + "build/building_" + p[1] + "_" + (p[2] || "blue") + ".gltf" : BASE + "nature/" + p[1] + ".gltf";
+// Identificadores antiguos («g», «w», «x:coast_A», «n:…», «b:…») y nuevos (ruta dentro del pack).
+const tileId = (t) => {
+  if (!t || t === "g") return "tiles/base/hex_grass";
+  if (t === "w") return "tiles/base/hex_water";
+  if (t.startsWith("x:")) {
+    const n = t.slice(2);
+    const d = n.startsWith("coast") ? "coast" : n.startsWith("river") ? "rivers" : n.startsWith("road") ? "roads" : "base";
+    return "tiles/" + d + "/hex_" + n;
+  }
+  return t;
 };
-// Losas del pack: hierba, agua y las especiales (costas, ríos y caminos), que se guardan como «x:nombre».
-const tileUrl = (t) => BASE + "tiles/" + (t === "w" ? "hex_water" : t && t.startsWith("x:") ? "hex_" + t.slice(2) : "hex_grass") + ".gltf";
-export const COASTS = ["A", "B", "C", "D", "E"].map((k) => ["coast_" + k, "Costa " + k]);
-export const RIVERS = ["A", "A_curvy", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"].map((k) => ["river_" + k, "Río " + k.replace("_curvy", " curvo")]).concat([["river_crossing_A", "Vado A"], ["river_crossing_B", "Vado B"]]);
-export const ROADS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M"].map((k) => ["road_" + k, "Camino " + k]);
+const objId = (o) => {
+  if (!o) return null;
+  if (o.startsWith("n:")) return "decoration/nature/" + o.slice(2);
+  if (o.startsWith("b:")) {
+    const [, n, c] = o.split(":");
+    return "buildings/" + (c || "blue") + "/building_" + n + "_" + (c || "blue");
+  }
+  return o;
+};
+const isWater = (t) => tileId(t).endsWith("hex_water");
+const modelUrl = (id) => BASE + id + ".gltf";
+const objUp = (id) => (/cloud/.test(id) ? 3 : 0);
+const objHeight = (id) => (/buildings\/(blue|red|green|yellow)\//.test(id) ? 2.6 : /mountain/.test(id) ? 1.5 : 1.2);
 
 // Isla inicial para que el tablero no empiece vacío.
 export const starterTiles = () => {
   const t = {};
   for (let q = -6; q <= 6; q++)
     for (let r = -6; r <= 6; r++) {
-      if (Math.max(Math.abs(q), Math.abs(r), Math.abs(q + r)) > 6) continue;
       const d = Math.max(Math.abs(q), Math.abs(r), Math.abs(q + r));
+      if (d > 6) continue;
       t[keyOf(q, r)] = { t: d <= 3 ? "g" : "w" };
     }
+  // un poco de paisaje de ejemplo para que no empiece plano (se puede quitar con la goma y la papelera)
+  t["0,0"] = { t: "g", h: 1, o: "buildings/blue/building_castle_blue", r: 0 };
+  t["-1,-1"] = { t: "g", h: 1 };
+  t["1,-2"] = { t: "g", o: "decoration/nature/mountain_A_grass_trees", r: 2 };
+  t["2,-1"] = { t: "g", o: "decoration/nature/hills_A_trees", r: 1 };
+  t["-2,1"] = { t: "g", o: "decoration/nature/trees_A_large", r: 0 };
+  t["-1,2"] = { t: "g", o: "decoration/nature/trees_B_medium", r: 3 };
+  t["1,1"] = { t: "g", o: "buildings/blue/building_home_A_blue", r: 4 };
+  t["2,0"] = { t: "g", o: "buildings/blue/building_windmill_blue", r: 1 };
   return t;
 };
 
+// ---- miniaturas de la paleta: cada modelo se dibuja una vez en un lienzo pequeño ----
+let T3 = null;
+const thumbCache = new Map();
+let thumbChain = Promise.resolve();
+async function getThree() {
+  if (!T3) {
+    const [THREE, { GLTFLoader }] = await Promise.all([import("three"), import("three/examples/jsm/loaders/GLTFLoader.js")]);
+    const r = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+    r.setPixelRatio(1);
+    r.setSize(160, 160, false);
+    r.outputColorSpace = THREE.SRGBColorSpace;
+    const scene = new THREE.Scene();
+    scene.add(new THREE.HemisphereLight("#ffffff", "#7a8a6a", 1.1));
+    const sun = new THREE.DirectionalLight("#fff3dd", 1.7);
+    sun.position.set(3, 6, 4);
+    scene.add(sun);
+    const cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 60);
+    T3 = { THREE, loader: new GLTFLoader(), r, scene, cam };
+  }
+  return T3;
+}
+async function renderThumb(id) {
+  const { THREE, loader, r, scene, cam } = await getThree();
+  const g = await loader.loadAsync(modelUrl(id));
+  const m = g.scene;
+  scene.add(m);
+  const box = new THREE.Box3().setFromObject(m);
+  const c = box.getCenter(new THREE.Vector3());
+  const rad = box.getSize(new THREE.Vector3()).length() / 2;
+  const half = rad * 0.82;
+  cam.left = -half; cam.right = half; cam.top = half; cam.bottom = -half;
+  cam.position.copy(c).add(new THREE.Vector3(1, 0.95, 1).normalize().multiplyScalar(rad * 3));
+  cam.lookAt(c);
+  cam.updateProjectionMatrix();
+  r.setClearColor(0x000000, 0);
+  r.render(scene, cam);
+  const url = r.domElement.toDataURL("image/png");
+  scene.remove(m);
+  return url;
+}
+function getThumb(id) {
+  if (!thumbCache.has(id)) thumbCache.set(id, new Promise((res) => { thumbChain = thumbChain.then(() => renderThumb(id).then(res, () => res(""))); }));
+  return thumbCache.get(id);
+}
+function Thumb({ id }) {
+  const [src, setSrc] = useState("");
+  useEffect(() => {
+    let on = true;
+    getThumb(id).then((u) => on && setSrc(u));
+    return () => { on = false; };
+  }, [id]);
+  return src ? <img src={src} alt="" draggable={false} /> : <span className="mh-wm3-ph" />;
+}
+
+const TABS = [
+  ["terreno", "Terreno"], ["caminos", "Ríos y caminos"], ["relieve", "Relieve"], ["naturaleza", "Naturaleza"], ["edificios", "Edificios"], ["estructuras", "Estructuras"], ["objetos", "Objetos"],
+];
+
 export default function World3D({ tiles, edit = false, onTiles, pins = [], renderPin, placing = false, onPlace, onGround, apiRef, onBackground }) {
   const host = useRef(null);
-  const S = useRef({}); // estado de three.js
   const pinEls = useRef({});
-  const [brush, setBrush] = useState(null); // null = mover cámara
+  const hist = useRef([]);
+  const [brush, setBrush] = useState(null); // null = mover la cámara
   const [tab, setTab] = useState("terreno");
   const [faction, setFaction] = useState("blue");
+  const [q, setQ] = useState("");
   const [ready, setReady] = useState(false);
+  const [open, setOpen] = useState(true);
   const [err, setErr] = useState("");
   const live = useRef({});
   live.current = { tiles, edit, onTiles, pins, brush, faction, placing, onPlace, onGround, onBackground };
@@ -94,43 +166,43 @@ export default function World3D({ tiles, edit = false, onTiles, pins = [], rende
       Object.assign(renderer.domElement.style, { position: "absolute", inset: "0", width: "100%", height: "100%", display: "block" });
       el.prepend(renderer.domElement);
 
+      const SKY = "#9fc9e8";
       const scene = new THREE.Scene();
-      scene.background = new THREE.Color("#9fc9e8");
-      scene.fog = new THREE.Fog("#9fc9e8", 45, 110);
-      const cam = new THREE.PerspectiveCamera(38, 1, 0.5, 200);
+      scene.background = new THREE.Color(SKY);
+      scene.fog = new THREE.Fog(SKY, 55, 130);
+      const cam = new THREE.PerspectiveCamera(38, 1, 0.5, 220);
       cam.position.set(0, 17, 17);
-      scene.add(new THREE.HemisphereLight("#ffffff", "#6a8a5a", 0.75));
-      const sun = new THREE.DirectionalLight("#fff3dd", 1.5);
+      scene.add(new THREE.HemisphereLight("#ffffff", "#6a8a5a", 0.8));
+      const sun = new THREE.DirectionalLight("#fff3dd", 1.55);
       sun.position.set(14, 26, 10);
       sun.castShadow = true;
       sun.shadow.mapSize.set(2048, 2048);
       const sc = sun.shadow.camera;
-      sc.left = -34; sc.right = 34; sc.top = 34; sc.bottom = -34; sc.near = 1; sc.far = 80;
+      sc.left = -36; sc.right = 36; sc.top = 36; sc.bottom = -36; sc.near = 1; sc.far = 90;
       sun.shadow.bias = -0.0004;
       scene.add(sun);
 
-      // mar bajo el tablero
-      const sea = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.MeshStandardMaterial({ color: "#4b8fc4", roughness: 0.6 }));
+      // fondo de agua bajo el tablero, a la altura de la base de las losas
+      const sea = new THREE.Mesh(new THREE.PlaneGeometry(500, 500), new THREE.MeshStandardMaterial({ color: "#2f5f86", roughness: 0.7 }));
       sea.rotation.x = -Math.PI / 2;
-      sea.position.y = -0.3;
+      sea.position.y = -1;
       sea.receiveShadow = true;
       scene.add(sea);
 
-      // suelo invisible para apuntar con el ratón y rejilla tenue al editar
-      const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.MeshBasicMaterial({ visible: false }));
+      const ground = new THREE.Mesh(new THREE.PlaneGeometry(500, 500), new THREE.MeshBasicMaterial({ visible: false }));
       ground.rotation.x = -Math.PI / 2;
       scene.add(ground);
       const cursor = new THREE.Mesh(
-        new THREE.CylinderGeometry(R * 0.98, R * 0.98, 0.06, 6),
-        new THREE.MeshBasicMaterial({ color: "#ffd86b", transparent: true, opacity: 0.45, depthWrite: false })
+        new THREE.CylinderGeometry(R * 0.98, R * 0.98, 0.08, 6),
+        new THREE.MeshBasicMaterial({ color: "#ffd86b", transparent: true, opacity: 0.5, depthWrite: false })
       );
       cursor.visible = false;
       scene.add(cursor);
       const gridPts = [];
-      for (let q = -GRID_R; q <= GRID_R; q++)
-        for (let r = -GRID_R; r <= GRID_R; r++) {
-          if (!inGrid(q, r)) continue;
-          const c = hexToWorld(q, r);
+      for (let qq = -GRID_R; qq <= GRID_R; qq++)
+        for (let rr = -GRID_R; rr <= GRID_R; rr++) {
+          if (!inGrid(qq, rr)) continue;
+          const c = hexToWorld(qq, rr);
           for (let i = 0; i < 6; i++) {
             const a1 = Math.PI / 6 + (i * Math.PI) / 3, a2 = Math.PI / 6 + ((i + 1) * Math.PI) / 3;
             gridPts.push(c.x + Math.cos(a1) * R, 0.03, c.z + Math.sin(a1) * R, c.x + Math.cos(a2) * R, 0.03, c.z + Math.sin(a2) * R);
@@ -138,31 +210,38 @@ export default function World3D({ tiles, edit = false, onTiles, pins = [], rende
         }
       const gg = new THREE.BufferGeometry();
       gg.setAttribute("position", new THREE.Float32BufferAttribute(gridPts, 3));
-      const grid = new THREE.LineSegments(gg, new THREE.LineBasicMaterial({ color: "#ffffff", transparent: true, opacity: 0.1 }));
+      const grid = new THREE.LineSegments(gg, new THREE.LineBasicMaterial({ color: "#ffffff", transparent: true, opacity: 0.12 }));
       grid.visible = false;
       scene.add(grid);
 
       const controls = new OrbitControls(cam, renderer.domElement);
       controls.enableDamping = true;
       controls.dampingFactor = 0.09;
-      controls.maxPolarAngle = 1.25;
-      controls.minDistance = 7;
-      controls.maxDistance = 60;
+      controls.maxPolarAngle = 1.3;
+      controls.minDistance = 6;
+      controls.maxDistance = 70;
       controls.screenSpacePanning = false;
-      controls.target.set(0, 0, 0);
 
-      // ---- carga de modelos ----
       const loader = new GLTFLoader();
       const cache = new Map();
-      const getModel = (url) => {
-        if (!cache.has(url)) cache.set(url, new Promise((res) => loader.load(url, (g) => res(g.scene), undefined, () => res(null))));
-        return cache.get(url);
+      const getModel = (id) => {
+        if (!cache.has(id)) cache.set(id, new Promise((res) => loader.load(modelUrl(id), (g) => res(g.scene), undefined, () => res(null))));
+        return cache.get(id);
       };
       const world = new THREE.Group();
       scene.add(world);
-      const placed = new Map(); // clave → { sig, group }
+      const placed = new Map();
       let dirty = true;
       const shade = (o) => o.traverse((m) => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } });
+      const addModel = async (grp, id, y, rot) => {
+        const base = await getModel(id);
+        if (!base) return;
+        const m = base.clone(true);
+        shade(m);
+        m.position.y = y;
+        m.rotation.y = (rot * Math.PI) / 3;
+        grp.add(m);
+      };
 
       const sync = async () => {
         const tl = live.current.tiles || {};
@@ -170,22 +249,22 @@ export default function World3D({ tiles, edit = false, onTiles, pins = [], rende
         for (const k of Object.keys(tl)) {
           const t = tl[k];
           seen.add(k);
-          const sig = (t.t || "g") + "|" + (t.o || "") + "|" + (t.r || 0) + "|" + (t.tr || 0);
+          const sig = (t.t || "g") + "|" + (t.o || "") + "|" + (t.r || 0) + "|" + (t.tr || 0) + "|" + (t.h || 0);
           const cur = placed.get(k);
           if (cur && cur.sig === sig) continue;
           if (cur) world.remove(cur.group);
           const grp = new THREE.Group();
-          const [q, r] = k.split(",").map(Number);
-          const w = hexToWorld(q, r);
+          const [qq, rr] = k.split(",").map(Number);
+          const w = hexToWorld(qq, rr);
           grp.position.set(w.x, 0, w.z);
           placed.set(k, { sig, group: grp });
           world.add(grp);
-          const base = await getModel(tileUrl(t.t));
-          if (base) { const m = base.clone(true); shade(m); m.rotation.y = ((t.tr || 0) * Math.PI) / 3; grp.add(m); }
-          if (t.o) {
-            const om = await getModel(objUrl(t.o));
-            if (om) { const m = om.clone(true); shade(m); m.rotation.y = ((t.r || 0) * Math.PI) / 3; grp.add(m); }
-          }
+          const water = isWater(t.t);
+          const h = water ? 0 : Math.min(MAX_H, t.h || 0);
+          for (let l = 0; l < h; l++) await addModel(grp, "tiles/base/hex_grass_bottom", l, 0);
+          await addModel(grp, tileId(t.t), h, t.tr || 0);
+          const oid = objId(t.o);
+          if (oid) await addModel(grp, oid, h + objUp(oid), t.r || 0);
           dirty = true;
         }
         for (const [k, v] of placed) if (!seen.has(k)) { world.remove(v.group); placed.delete(k); dirty = true; }
@@ -195,12 +274,11 @@ export default function World3D({ tiles, edit = false, onTiles, pins = [], rende
         const ks = Object.keys(live.current.tiles || {});
         if (!ks.length) return;
         let sx = 0, sz = 0;
-        ks.forEach((k) => { const [q, r] = k.split(",").map(Number); const w = hexToWorld(q, r); sx += w.x; sz += w.z; });
+        ks.forEach((k) => { const [qq, rr] = k.split(",").map(Number); const w = hexToWorld(qq, rr); sx += w.x; sz += w.z; });
         controls.target.set(sx / ks.length, 0, sz / ks.length);
         cam.position.set(sx / ks.length, 17, sz / ks.length + 17);
       };
 
-      // ---- ratón ----
       const ray = new THREE.Raycaster();
       const ndc = new THREE.Vector2();
       const groundAt = (cx, cy) => {
@@ -210,32 +288,64 @@ export default function World3D({ tiles, edit = false, onTiles, pins = [], rende
         const h = ray.intersectObject(ground)[0];
         return h ? { x: h.point.x, z: h.point.z } : null;
       };
-      S.current.groundAt = groundAt;
-      if (apiRef) apiRef.current = { groundAt, tileTop: (x, z) => tileTop(x, z) };
       const tileTop = (x, z) => {
-        const { q, r } = worldToHex(x, z);
-        const t = (live.current.tiles || {})[keyOf(q, r)];
-        return t && t.o ? OBJ_H[t.o[0]] || 1 : t && t.t === "w" ? -0.1 : 0.15;
+        const { q: qq, r: rr } = worldToHex(x, z);
+        const t = (live.current.tiles || {})[keyOf(qq, rr)];
+        if (!t) return 0.15;
+        const water = isWater(t.t);
+        const h = water ? -0.2 : t.h || 0;
+        const oid = objId(t.o);
+        return oid ? h + objHeight(oid) : h + 0.15;
       };
+      if (apiRef) apiRef.current = { groundAt, tileTop };
 
-      const paint = (q, r) => {
+      const paint = (qq, rr) => {
         const { edit: ed, brush: br, faction: fc, onTiles: set } = live.current;
-        if (!ed || !br || !set || !inGrid(q, r)) return;
-        const k = keyOf(q, r);
+        if (!ed || !br || !set || !inGrid(qq, rr)) return;
+        const k = keyOf(qq, rr);
         set((cur) => {
           const base = cur && Object.keys(cur).length ? cur : starterTiles();
           const old = base[k];
-          let nt;
-          if (br.kind === "terrain") nt = old && old.t === br.t && br.t.startsWith("x:") ? { t: br.t, tr: ((old.tr || 0) + 1) % 6 } : { t: br.t };
-          else if (br.kind === "erase") nt = old ? { t: old.t, tr: old.tr } : null;
-          else {
-            if (old && old.t === "w") return base; // nada de edificios sobre el agua
-            const o = br.kind === "build" ? "b:" + br.name + ":" + fc : "n:" + br.name;
-            nt = { t: old ? old.t : "g", tr: old ? old.tr : 0, o, r: old && old.o === o ? ((old.r || 0) + 1) % 6 : old && old.r ? old.r : 0 };
+          const put = (v) => ({ ...base, [k]: v });
+          switch (br.kind) {
+            case "tile": {
+              let nt;
+              if (old && tileId(old.t) === br.id) nt = { ...old, tr: ((old.tr || 0) + 1) % 6 };
+              else nt = { ...(old || {}), t: br.id, tr: 0 };
+              if (isWater(nt.t)) { delete nt.h; delete nt.o; delete nt.r; }
+              return put(nt);
+            }
+            case "obj": {
+              const id = br.id.replace(/\{c\}/g, fc);
+              if (old && objId(old.o) === id) return put({ ...old, r: ((old.r || 0) + 1) % 6 });
+              return put({ ...(old || { t: "g" }), o: id, r: old && old.r ? old.r : 0 });
+            }
+            case "rotate": {
+              if (!old) return base;
+              return put(old.o ? { ...old, r: ((old.r || 0) + 1) % 6 } : { ...old, tr: ((old.tr || 0) + 1) % 6 });
+            }
+            case "up":
+            case "down": {
+              if (!old || isWater(old.t)) return base;
+              const h = Math.max(0, Math.min(MAX_H, (old.h || 0) + (br.kind === "up" ? 1 : -1)));
+              if (h === (old.h || 0)) return base;
+              return put({ ...old, h });
+            }
+            case "eraseObj": {
+              if (!old || !old.o) return base;
+              const n = { ...old };
+              delete n.o; delete n.r;
+              return put(n);
+            }
+            case "eraseTile": {
+              if (!old) return base;
+              const n = { ...base };
+              delete n[k];
+              return n;
+            }
+            default:
+              return base;
           }
-          if (!nt) return base;
-          if (old && old.t === nt.t && old.o === nt.o && (old.r || 0) === (nt.r || 0) && (old.tr || 0) === (nt.tr || 0)) return base;
-          return { ...base, [k]: nt };
         });
       };
 
@@ -247,7 +357,12 @@ export default function World3D({ tiles, edit = false, onTiles, pins = [], rende
         const L = live.current;
         if (L.edit && L.brush && !L.placing) {
           const g = groundAt(e.clientX, e.clientY);
-          if (g) { const h = worldToHex(g.x, g.z); lastKey = keyOf(h.q, h.r); paint(h.q, h.r); }
+          if (g) {
+            const h = worldToHex(g.x, g.z);
+            lastKey = keyOf(h.q, h.r);
+            if (L.tiles) { hist.current.push(L.tiles); if (hist.current.length > 40) hist.current.shift(); }
+            paint(h.q, h.r);
+          }
         }
       };
       const onMove = (e) => {
@@ -257,11 +372,11 @@ export default function World3D({ tiles, edit = false, onTiles, pins = [], rende
           const h = worldToHex(g.x, g.z);
           if (inGrid(h.q, h.r)) {
             const w = hexToWorld(h.q, h.r);
-            if (cursor.position.x !== w.x || cursor.position.z !== w.z || !cursor.visible) { cursor.position.set(w.x, 0.05, w.z); cursor.visible = true; dirty = true; }
+            if (cursor.position.x !== w.x || cursor.position.z !== w.z || !cursor.visible) { cursor.position.set(w.x, 0.06, w.z); cursor.visible = true; dirty = true; }
           } else if (cursor.visible) { cursor.visible = false; dirty = true; }
           if (down && e.buttons === 1 && L.brush && !L.placing) {
             const k = keyOf(h.q, h.r);
-            if (k !== lastKey) { lastKey = k; paint(h.q, h.r); }
+            if (k !== lastKey && L.brush.kind !== "rotate") { lastKey = k; paint(h.q, h.r); }
           }
         } else if (cursor.visible) { cursor.visible = false; dirty = true; }
         if (down && Math.hypot(e.clientX - down.x, e.clientY - down.y) > 5) down.moved = true;
@@ -296,7 +411,6 @@ export default function World3D({ tiles, edit = false, onTiles, pins = [], rende
       ro.observe(el);
       size();
 
-      // ---- bucle ----
       const v = new THREE.Vector3();
       let raf = 0;
       let lastSig = "";
@@ -305,7 +419,7 @@ export default function World3D({ tiles, edit = false, onTiles, pins = [], rende
       const loop = () => {
         raf = requestAnimationFrame(loop);
         const L = live.current;
-        const sig = L.tiles ? Object.keys(L.tiles).length + ":" + Object.values(L.tiles).map((t) => (t.t || "g") + (t.o || "") + (t.r || 0) + (t.tr || 0)).join("") : "0";
+        const sig = L.tiles ? Object.keys(L.tiles).length + ":" + Object.values(L.tiles).map((t) => (t.t || "g") + (t.o || "") + (t.r || 0) + (t.tr || 0) + (t.h || 0)).join("") : "0";
         if (sig !== lastSig) {
           lastSig = sig;
           sync().then(() => { if (first && Object.keys(L.tiles || {}).length) { first = false; centre(); } setReady(true); dirty = true; });
@@ -346,9 +460,29 @@ export default function World3D({ tiles, edit = false, onTiles, pins = [], rende
     return () => { dead = true; cleanup(); if (apiRef) apiRef.current = null; };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const tabs = [["terreno", "Terreno", Waves], ["natura", "Naturaleza", Trees], ["edificios", "Edificios", Castle]];
-  const pick = (b) => setBrush((cur) => (cur && JSON.stringify(cur) === JSON.stringify(b) ? null : b));
-  const isOn = (b) => brush && JSON.stringify(brush) === JSON.stringify(b);
+  const facCol = HEX_COLORS.find(([k]) => k === faction)?.[0] || "blue";
+  const items = useMemo(() => {
+    const s = q.trim().toLowerCase();
+    return HEX_CATALOG.filter((i) => (s ? i.label.toLowerCase().includes(s) : i.cat === tab));
+  }, [q, tab]);
+  const brushKey = brush ? JSON.stringify(brush) : "";
+  const pickItem = (i) => {
+    const isTile = i.id.startsWith("tiles/");
+    const b = isTile ? { kind: "tile", id: i.id } : { kind: "obj", id: i.id };
+    setBrush((cur) => (cur && JSON.stringify(cur) === JSON.stringify(b) ? null : b));
+  };
+  const tool = (kind) => setBrush((cur) => (cur && cur.kind === kind ? null : { kind }));
+  const undo = () => {
+    const prev = hist.current.pop();
+    if (prev && onTiles) onTiles(() => prev);
+  };
+  const tools = [
+    ["rotate", RotateCw, "Girar una losa o su objeto (un clic cada vez)"],
+    ["up", ChevronsUp, "Subir la altura de la losa"],
+    ["down", ChevronsDown, "Bajar la altura de la losa"],
+    ["eraseObj", Eraser, "Quitar el objeto de la losa"],
+    ["eraseTile", Trash2, "Quitar la losa"],
+  ];
 
   return (
     <div className="mh-wm3" ref={host} style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
@@ -361,47 +495,42 @@ export default function World3D({ tiles, edit = false, onTiles, pins = [], rende
           </div>
         ))}
       </div>
-      {edit && (
+      {edit && !open && <button type="button" className="mh-wm3-open" onClick={() => setOpen(true)}>Piezas</button>}
+      {edit && open && (
         <div className="mh-wm3-pal" onPointerDown={(e) => e.stopPropagation()}>
           <div className="mh-wm3-tools">
-            <button type="button" className={!brush ? "is-on" : ""} onClick={() => setBrush(null)} title="Mover la cámara"><Hand size={14} /></button>
-            <button type="button" className={brush?.kind === "erase" ? "is-on" : ""} onClick={() => pick({ kind: "erase" })} title="Quitar el objeto de una losa"><Eraser size={14} /></button>
-          </div>
-          <div className="mh-wm3-tabs">
-            {tabs.map(([k, l, Ic]) => (
-              <button key={k} type="button" className={tab === k ? "is-on" : ""} onClick={() => setTab(k)}><Ic size={13} /> {l}</button>
+            <button type="button" className={!brush ? "is-on" : ""} onClick={() => setBrush(null)} title="Mover la cámara" aria-label="Mover la cámara"><Hand size={15} /></button>
+            {tools.map(([k, Ic, t]) => (
+              <button key={k} type="button" className={brush && brush.kind === k ? "is-on" : ""} onClick={() => tool(k)} title={t} aria-label={t}><Ic size={15} /></button>
             ))}
+            <button type="button" onClick={undo} title="Deshacer" aria-label="Deshacer"><Undo2 size={15} /></button>
+            <button type="button" onClick={() => setOpen(false)} title="Ocultar las piezas" aria-label="Ocultar las piezas"><ChevronsLeft size={15} /></button>
           </div>
+          <label className="mh-wm3-search"><Search size={13} /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar pieza…" aria-label="Buscar pieza" /></label>
+          {!q && (
+            <div className="mh-wm3-tabs">
+              {TABS.map(([k, l]) => <button key={k} type="button" className={tab === k ? "is-on" : ""} onClick={() => setTab(k)}>{l}</button>)}
+            </div>
+          )}
+          {(tab === "edificios" || q) && (
+            <div className="mh-wm3-fac" role="group" aria-label="Color del edificio">
+              {HEX_COLORS.map(([k, c]) => <button key={k} type="button" className={faction === k ? "is-on" : ""} style={{ "--fc": c }} onClick={() => setFaction(k)} aria-label={"Color " + k} />)}
+            </div>
+          )}
           <div className="mh-wm3-list">
-            {tab === "terreno" && (
-              <>
-                <button type="button" className={isOn({ kind: "terrain", t: "g" }) ? "is-on" : ""} onClick={() => pick({ kind: "terrain", t: "g" })}>Hierba</button>
-                <button type="button" className={isOn({ kind: "terrain", t: "w" }) ? "is-on" : ""} onClick={() => pick({ kind: "terrain", t: "w" })}>Agua</button>
-                {[["Costas", COASTS], ["Ríos", RIVERS], ["Caminos", ROADS]].map(([title, list]) => (
-                  <Fragment key={title}>
-                    <span className="mh-wm3-sec">{title}</span>
-                    {list.map(([k, l]) => (
-                      <button key={k} type="button" className={isOn({ kind: "terrain", t: "x:" + k }) ? "is-on" : ""} onClick={() => pick({ kind: "terrain", t: "x:" + k })}>{l}</button>
-                    ))}
-                  </Fragment>
-                ))}
-              </>
-            )}
-            {tab === "natura" && NATURE.map(([k, l]) => (
-              <button key={k} type="button" className={isOn({ kind: "nature", name: k }) ? "is-on" : ""} onClick={() => pick({ kind: "nature", name: k })}>{l}</button>
-            ))}
-            {tab === "edificios" && (
-              <>
-                <div className="mh-wm3-fac">
-                  {FACTIONS.map(([k, c]) => <button key={k} type="button" className={faction === k ? "is-on" : ""} style={{ "--fc": c }} onClick={() => setFaction(k)} aria-label={"Color " + k} />)}
-                </div>
-                {BUILDINGS.map(([k, l]) => (
-                  <button key={k} type="button" className={isOn({ kind: "build", name: k }) ? "is-on" : ""} onClick={() => pick({ kind: "build", name: k })}>{l}</button>
-                ))}
-              </>
-            )}
+            {items.map((i) => {
+              const id = i.id.replace(/\{c\}/g, facCol);
+              const on = brushKey === JSON.stringify(i.id.startsWith("tiles/") ? { kind: "tile", id: i.id } : { kind: "obj", id: i.id });
+              return (
+                <button key={i.id} type="button" className={on ? "is-on" : ""} onClick={() => pickItem(i)} title={i.label}>
+                  <Thumb id={id} />
+                  <span>{i.label}</span>
+                </button>
+              );
+            })}
+            {items.length === 0 && <small className="mh-wm3-none">Ninguna pieza coincide.</small>}
           </div>
-          <p className="mh-wm3-hint">{brush ? "Clic o arrastra sobre el tablero · clic otra vez en un objeto para girarlo · botón derecho para orbitar" : "Elige una pieza para construir"}</p>
+          <p className="mh-wm3-hint">{brush ? "Clic o arrastra sobre el tablero. Un clic en una pieza igual la gira. Botón derecho para orbitar." : "Elige una pieza para construir."}</p>
         </div>
       )}
     </div>

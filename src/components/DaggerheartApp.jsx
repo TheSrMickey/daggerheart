@@ -6038,19 +6038,22 @@ const sharedStyles = `
   .mh-wm3-load, .mh-wm3-err { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; color: #1d3b52; pointer-events: none; z-index: 2; }
   .mh-wm3-pins { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 3; }
   .mh-wm3-pin { position: absolute; left: 0; top: 0; width: 0; height: 0; will-change: transform; } .mh-wm3-pin > * { pointer-events: auto; }
-  .mh-wm3-pal { position: absolute; left: 12px; top: 12px; z-index: 6; width: 188px; max-height: calc(100% - 24px); display: flex; flex-direction: column; gap: 8px; padding: 10px; border-radius: 14px; background: var(--mh-panel); border: 1px solid var(--mh-line2); box-shadow: 0 10px 24px -14px #000a; }
-  .mh-wm3-tools { display: flex; gap: 6px; } .mh-wm3-tools button, .mh-wm3-tabs button, .mh-wm3-list button { all: unset; box-sizing: border-box; cursor: pointer; border-radius: 8px; color: var(--mh-ink2); font-size: 12px; }
-  .mh-wm3-tools button { width: 30px; height: 28px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--mh-line); }
-  .mh-wm3-tabs { display: flex; gap: 4px; } .mh-wm3-tabs button { flex: 1; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px 2px; border: 1px solid var(--mh-line); font-size: 11px; }
-  .mh-wm3-list { overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; scrollbar-width: thin; min-height: 0; } .mh-wm3-list button { padding: 7px 6px; text-align: center; border: 1px solid var(--mh-line); line-height: 1.2; }
-  .mh-wm3-fac { grid-column: 1 / -1; display: flex; gap: 6px; justify-content: center; } .mh-wm3-fac button { width: 22px !important; height: 22px; padding: 0 !important; border-radius: 50% !important; background: var(--fc); } .mh-wm3-fac button.is-on { outline: 2px solid var(--mh-ink); outline-offset: 2px; }
-  .mh-wm3-pal button.is-on { background: linear-gradient(180deg, #f0c264, #d9a23c); color: #1c1405; border-color: #d9a23c; } .mh-wm3-pal .mh-wm3-fac button.is-on { background: var(--fc); }
-  .mh-wm3-pal button:hover:not(.is-on) { border-color: var(--mh-line2); background: var(--mh-panel2); }
+  .mh-wm3-pal { position: absolute; left: 12px; top: 12px; bottom: 12px; z-index: 6; width: 268px; display: flex; flex-direction: column; gap: 8px; padding: 10px; border-radius: 14px; background: var(--mh-panel); border: 1px solid var(--mh-line2); box-shadow: 0 10px 24px -14px #000a; }
+  .mh-wm3-tools { display: flex; gap: 5px; } .mh-wm3-tools button { all: unset; box-sizing: border-box; cursor: pointer; flex: 1; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid var(--mh-line); color: var(--mh-ink2); } .mh-wm3-tools button:hover { background: var(--mh-panel2); }
+  .mh-wm3-search { display: flex; align-items: center; gap: 6px; padding: 0 9px; height: 30px; border-radius: 8px; border: 1px solid var(--mh-line); background: var(--mh-panel2); color: var(--mh-muted); } .mh-wm3-search input { all: unset; flex: 1; min-width: 0; font-size: 12.5px; color: var(--mh-ink); }
+  .mh-wm3-tabs { display: flex; flex-wrap: wrap; gap: 4px; } .mh-wm3-tabs button { all: unset; box-sizing: border-box; cursor: pointer; padding: 4px 9px; border-radius: 99px; border: 1px solid var(--mh-line); font-size: 11.5px; color: var(--mh-ink3); } .mh-wm3-tabs button:hover { color: var(--mh-ink); }
+  .mh-wm3-fac { display: flex; gap: 8px; justify-content: center; } .mh-wm3-fac button { all: unset; cursor: pointer; width: 22px; height: 22px; border-radius: 50%; background: var(--fc); } .mh-wm3-fac button.is-on { outline: 2px solid var(--mh-ink); outline-offset: 2px; }
+  .mh-wm3-list { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: max-content; gap: 6px; scrollbar-width: thin; align-content: start; }
+  .mh-wm3-list > button { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 3px 5px; border-radius: 9px; border: 1px solid var(--mh-line); background: var(--mh-panel2); color: var(--mh-ink2); } .mh-wm3-list > button:hover { border-color: var(--mh-line2); }
+  .mh-wm3-list > button img, .mh-wm3-ph { width: 100%; aspect-ratio: 1; object-fit: contain; display: block; pointer-events: none; } .mh-wm3-ph { border-radius: 6px; background: var(--mh-panel); }
+  .mh-wm3-list > button span:not(.mh-wm3-ph) { font-size: 10.5px; line-height: 1.15; text-align: center; max-width: 100%; overflow-wrap: anywhere; }
+  .mh-wm3-pal button.is-on { background: linear-gradient(180deg, #f0c264, #d9a23c) !important; color: #1c1405 !important; border-color: #d9a23c !important; } .mh-wm3-pal .mh-wm3-fac button.is-on { background: var(--fc) !important; }
+  .mh-wm3-open { position: absolute; left: 12px; top: 12px; z-index: 6; padding: 7px 14px; border-radius: 10px; border: 1px solid var(--mh-line2); background: var(--mh-panel); color: var(--mh-ink); font: 600 12.5px 'Inter', system-ui, sans-serif; cursor: pointer; }
+  .mh-wm3-none { grid-column: 1 / -1; color: var(--mh-muted); font-size: 12px; text-align: center; padding: 10px 0; }
+  .mh-wm3-hint { margin: 0; font-size: 10.5px; line-height: 1.35; color: var(--mh-muted); }
   .mh-root:not(.is-mobile) .mh-wmpg { display: flex; flex-direction: column; padding: 12px; margin: 0; min-height: 0; overflow: hidden; }
   .mh-root:not(.is-mobile) .mh-wmpg > .mh-wm-box { flex: 1; min-height: 0; display: flex; flex-direction: column; } .mh-root:not(.is-mobile) .mh-wmpg .mh-wm-box .mh-wm.is-fit { flex: 1; min-height: 0; height: auto; margin: 0 !important; }
   .mh-root:not(.is-mobile) .mh-wmpg .mh-wm.is-fit .mh-wm-wrap:has(.is-3d) { flex: 1; min-height: 0; height: auto; aspect-ratio: auto !important; width: 100% !important; border-radius: 12px; } .mh-root:not(.is-mobile) .mh-wmpg .mh-wm-view.is-3d { height: 100%; max-height: none; min-height: 0; }
-  .mh-wm3-sec { grid-column: 1 / -1; font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--mh-muted); margin-top: 4px; }
-  .mh-wm3-hint { margin: 0; font-size: 10.5px; line-height: 1.35; color: var(--mh-muted); }
   .mh-wm-modes button { display: inline-flex; align-items: center; gap: 5px; }
   .mh-wm-canvas { position: relative; min-width: 100%; user-select: none; }
   .mh-wm-canvas img { display: block; width: 100%; height: auto; pointer-events: none; }
