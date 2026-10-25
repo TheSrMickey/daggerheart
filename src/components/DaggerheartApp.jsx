@@ -83,6 +83,28 @@ const CLASS_COLORS = {
 // Columna derecha plegada (barra estrecha): sin pasar el ratón, sin fijar y sin un chat abierto.
 // Margen de la columna central arriba y abajo (los menús laterales tienen 12 px): 36 px en todas las páginas.
 const EDGE = 36;
+// Caja que ocupa justo el alto que queda bajo ella (hasta el margen inferior), para que la página no tenga que desplazarse.
+function FitBelow({ className, children, bottom = EDGE, min = 360, off = false }) {
+  const ref = useRef(null);
+  const [h, setH] = useState(null);
+  useLayoutEffect(() => {
+    if (off) return undefined;
+    const calc = () => {
+      const el = ref.current;
+      if (!el) return;
+      const main = el.closest("[data-mh-main]");
+      const top = el.getBoundingClientRect().top + (main ? main.scrollTop : 0);
+      setH(Math.max(min, Math.round(window.innerHeight - top - bottom)));
+    };
+    calc();
+    const ro = new ResizeObserver(calc);
+    const main = ref.current && ref.current.closest("[data-mh-main]");
+    if (main) ro.observe(main);
+    window.addEventListener("resize", calc);
+    return () => { ro.disconnect(); window.removeEventListener("resize", calc); };
+  });
+  return <div ref={ref} className={className} style={!off && h ? { height: h } : undefined}>{children}</div>;
+}
 const RAIL_MINI = ".mh-rail.is-fold:not(.is-open):not(:has(.mh-gp)):not(:has(.mh-dm))";
 const DEFAULT_SETTINGS = { classColors: true, tutorial: false, headerArt: true, immersive: false, officialArt: true };
 // Ilustraciones oficiales del juego: se ocultan por CSS con `html[data-mh-art="off"]` (y se recuerda en este navegador para no parpadear al cargar).
@@ -5415,6 +5437,17 @@ const sharedStyles = `
   .mh-gm-sc-add { min-height: 170px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 1.5px dashed var(--mh-line2); border-radius: 12px; background: transparent; color: var(--mh-ink3); font: 600 13px 'Inter', system-ui, sans-serif; cursor: pointer; }
   .mh-gm-sc-add small { font-size: 11px; font-weight: 500; color: var(--mh-muted); }
   .mh-gm-sc-add:hover { color: var(--mh-ink); border-color: var(--mh-ink3); }
+  .mh-chn-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; min-height: 320px; flex: 1; }
+  .mh-chn-ov { position: fixed; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(6,6,16,.62); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+  .mh-chn { position: relative; width: min(640px, 100%); max-height: calc(100vh - 40px); overflow-y: auto; padding: 22px; border-radius: 18px; background: var(--mh-panel); border: 1px solid var(--mh-line2); box-shadow: 0 30px 60px -20px #000c; }
+  .mh-chn h3 { margin: 0 0 4px; font-size: 20px; display: flex; align-items: center; gap: 8px; } .mh-chn p { margin: 0 0 16px; font-size: 13px; color: var(--mh-muted); }
+  .mh-chn-x { position: absolute; top: 12px; right: 12px; }
+  .mh-chn-bk { all: unset; cursor: pointer; width: 26px; height: 26px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; color: var(--mh-ink2); } .mh-chn-bk:hover { background: var(--mh-panel2); }
+  .mh-chn-opts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .mh-chn-opts > * { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; padding: 18px 10px; border-radius: 14px; border: 1px solid var(--mh-line); background: var(--mh-panel2); color: var(--mh-ink2); }
+  .mh-chn-opts > *:hover, .mh-chn-opts > *:focus-visible { border-color: #E3B04B; background: #E3B04B12; } .mh-chn-opts b { font-size: 13.5px; color: var(--mh-ink); } .mh-chn-opts small { font-size: 11.5px; color: var(--mh-muted); line-height: 1.35; }
+  .mh-chn-pr { margin-top: 12px; }
+  @media (max-width: 560px) { .mh-chn-opts { grid-template-columns: 1fr; } }
   .mh-gm-presets { display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 10px; }
   .mh-gm-preset { display: flex; flex-direction: column; gap: 5px; padding: 0; border: 0; background: transparent; cursor: pointer; font: inherit; color: inherit; text-align: left; }
   .mh-gm-preset-img { position: relative; aspect-ratio: 16 / 9; border-radius: 9px; background: center / cover no-repeat; border: 1px solid var(--mh-line); display: flex; align-items: center; justify-content: center; color: #fff; overflow: hidden; }
@@ -5451,7 +5484,7 @@ const sharedStyles = `
   .mh-cg .mh-gm-sc, .mh-cg .mh-gm-castm, .mh-cg .mh-ch-step, .mh-cg .mh-ch-map, .mh-cg .mh-ch-enc, .mh-cg .mh-ch-npc { background: var(--mh-panel2); border-color: var(--mh-line); }
   .mh-cg-head { display: flex; align-items: center; gap: 12px; padding: 12px 16px; margin-bottom: 14px; border-radius: 18px; background: var(--mh-panel); border: 1px solid var(--mh-line); color: var(--mh-ink); }
   .mh-cg-back { width: 34px; height: 34px; flex: none; display: grid; place-items: center; border-radius: 11px; border: 1px solid var(--mh-line); background: var(--mh-panel2); color: var(--mh-ink3); cursor: pointer; }
-  .mh-cg-emb { width: 48px; height: 48px; flex: none; display: grid; place-items: center; border-radius: 50%; color: var(--mh-green-ink); background: color-mix(in srgb, var(--hc) 18%, var(--mh-panel2)); border: 2px solid color-mix(in srgb, var(--hc) 70%, transparent); }
+  .mh-cg-emb { width: 48px; height: 48px; flex: none; display: grid; place-items: center; border-radius: 50%; color: color-mix(in srgb, var(--hc) var(--mh-accent-keep, 100%), #000); background: color-mix(in srgb, var(--hc) 18%, var(--mh-panel2)); border: 2px solid color-mix(in srgb, var(--hc) 70%, transparent); }
   .mh-cg-tit { min-width: 0; } .mh-cg-name { font-size: 22px; line-height: 1.1; outline: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .mh-cg-sub1 { font-size: 12.5px; color: var(--mh-muted); margin-top: 3px; } .mh-cg-sub1 b { color: var(--mh-muted); font-weight: 600; } .mh-cg-sub1 b.is-on { color: var(--mh-green-ink); }
   .mh-cg-fear { margin-left: auto; flex: none; } .mh-cg-fear-b { display: inline-flex; padding: 0; border: 0; background: none; cursor: pointer; color: inherit; }
@@ -5473,6 +5506,9 @@ const sharedStyles = `
   .mh-cg-gold { display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 13px; border: 1px solid rgba(255,230,160,.8); background: linear-gradient(180deg, #f0c264, #d9a23c); color: #1c1405; font: 800 13px 'Inter', system-ui, sans-serif; cursor: pointer; }
   /* Historia: lista de capítulos + capítulo abierto */
   .mh-hs { display: grid; grid-template-columns: 330px minmax(0, 1fr); gap: 14px; align-items: start; }
+  .mh-root:not(.is-mobile) .mh-hs { align-items: stretch; min-height: 0; } .mh-root:not(.is-mobile) .mh-hs-list { overflow-y: auto; min-height: 0; scrollbar-width: thin; }
+  .mh-root:not(.is-mobile) .mh-hs-detail { display: flex; flex-direction: column; min-height: 0; } .mh-root:not(.is-mobile) .mh-hs-detail > * { flex: none; }
+  .mh-root:not(.is-mobile) .mh-hs-detail .mh-hs-banner { height: clamp(66px, 11vh, 120px); padding: 10px 18px; } .mh-root:not(.is-mobile) .mh-hs-detail .mh-hs-bt .mh-serif { font-size: 22px; } .mh-root:not(.is-mobile) .mh-hs-tabs { padding: 8px 18px; } .mh-root:not(.is-mobile) .mh-hs-tl { padding-top: 8px; } .mh-root:not(.is-mobile) .mh-hs-tl-row { padding-bottom: 6px; } .mh-root:not(.is-mobile) .mh-hs-body { padding: 12px 18px 16px; } .mh-root:not(.is-mobile) .mh-hs-detail > .mh-hs-body { flex: 1 1 0; min-height: 0; overflow-y: auto; scrollbar-width: thin; }
   .mh-hs-list { display: flex; flex-direction: column; gap: 9px; padding: 14px; border-radius: 22px; background: var(--mh-panel); border: 1px solid var(--mh-line); }
   .mh-hs-row { display: flex; align-items: center; gap: 6px; padding: 7px; border-radius: 16px; border: 1px solid var(--mh-line); background: var(--mh-panel2); }
   .mh-hs-row.is-on { border-color: rgba(227,176,75,.7); background: rgba(227,176,75,.12); }
@@ -7260,6 +7296,7 @@ const sharedStyles = `
   .mh-navempty { margin: 0 8px; font-size: 12px; color: var(--mh-muted3); }
   .mh-navrow { all: unset; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 10px; }
   .mh-navrow:hover { background: #ffffff0a; }
+  .mh-camp-ic { color: color-mix(in srgb, var(--hc) var(--mh-accent-keep, 100%), #000) !important; background: color-mix(in srgb, var(--hc) 20%, transparent) !important; }
   .mh-navrow-ic { width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #ffffff12; color: var(--mh-ink2); }
   .mh-navrow-t { display: flex; flex-direction: column; min-width: 0; }
   .mh-navrow-t b { font-size: 13px; font-weight: 600; color: var(--mh-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -7626,7 +7663,7 @@ const sharedStyles = `
   .gx2-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; } .gx2-head h3 { margin: 0; font-size: 22px; } .gx2-head p { margin: 2px 0 0; font-size: 12.5px; color: var(--mh-muted); } .gx2-again { display: inline-flex; align-items: center; gap: 7px; }
   .gx2-opts { display: flex; flex-wrap: wrap; gap: 14px 26px; padding: 12px 14px; border-radius: 16px; border: 1px solid var(--mh-line); background: var(--mh-panel2); } .gx2-mesa b { color: var(--mh-gold-ink); }
   .gx2-seg { display: inline-flex; flex-wrap: wrap; gap: 3px; padding: 3px; border-radius: 999px; background: var(--mh-panel); border: 1px solid var(--mh-line); } .gx2-seg button { all: unset; cursor: pointer; padding: 5px 12px; border-radius: 999px; font: 600 12px 'Inter', system-ui, sans-serif; color: var(--mh-ink3); } .gx2-seg button:hover { color: var(--mh-ink); } .gx2-seg button.is-on { background: color-mix(in srgb, var(--acc, #E3B04B) 24%, var(--mh-panel)); color: var(--mh-ink); box-shadow: inset 0 0 0 1px var(--acc, #E3B04B); } .gx2-seg button:focus-visible { outline: 2px solid var(--acc, #E3B04B); outline-offset: 1px; }
-  .gx2-res { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; } .gx2-res-nombres { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; } .gx2-res-rumores, .gx2-res-encuentro { grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); }
+  .gx2-res { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; } .gx2-res-nombres { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; } .gx2-res-rumores { grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); } .gx2-res-encuentro { grid-template-columns: repeat(auto-fill, minmax(225px, 1fr)); }
   .gx2-card { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 18px; border: 1px solid var(--mh-line); background: var(--mh-panel2); animation: gx2In .35s ease both; } @keyframes gx2In { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } } @media (prefers-reduced-motion: reduce) { .gx2-card { animation: none; } }
   .gx2-card p { margin: 0; font-size: 13px; line-height: 1.5; color: var(--mh-ink); } .gx2-send { align-self: flex-start; margin-top: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 6px 11px; } .gx2-send.is-sent { color: var(--mh-green-ink); border-color: var(--mh-green-ink); }
   .gx2-name { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 14px; border: 1px solid var(--mh-line); background: var(--mh-panel2); color: var(--mh-ink); font-size: 13px; font-weight: 600; } .gx2-name i { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-size: 12px; background: color-mix(in srgb, var(--acc, #E3B04B) 22%, var(--mh-panel)); color: var(--mh-ink); } .gx2-name span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .gx2-name svg { color: var(--mh-muted); flex: none; } .gx2-name em { font-style: normal; font-size: 10.5px; color: var(--mh-green-ink); } .gx2-name:hover { border-color: var(--acc, #E3B04B); } .gx2-name:focus-visible { outline: 2px solid var(--acc, #E3B04B); outline-offset: 2px; }
@@ -7637,6 +7674,7 @@ const sharedStyles = `
   .gx2-enc-h { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; } .gx2-enc-h b { font-size: 16px; } .gx2-enc-h span { font-size: 11.5px; font-weight: 700; color: var(--mh-gold-ink); } .gx2-meter { height: 6px; border-radius: 99px; background: var(--mh-panel); border: 1px solid var(--mh-line); overflow: hidden; } .gx2-meter i { display: block; height: 100%; border-radius: 99px; background: var(--acc, #E3B04B); }
   .gx2-parts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; } .gx2-parts li { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 12px; background: var(--mh-panel); border: 1px solid var(--mh-line); font-size: 13px; color: var(--mh-ink); } .gx2-parts li svg { flex: none; color: #C0504A; } .gx2-parts em { font-style: normal; font-weight: 700; color: var(--mh-gold-ink); } .gx2-parts small { margin-left: auto; font-size: 11px; color: var(--mh-muted); }
   .gx2-acts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: auto; } .gx2-acts .mh-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 7px 12px; } .gx2-acts .gx2-send { margin-top: 0; }
+  @media (max-height: 860px) and (min-width: 861px) { .gx2-main { padding: 12px; gap: 9px; } .gx2-head p { display: none; } .gx2-opts { padding: 8px 12px; gap: 8px 20px; } .gx2-card { padding: 10px 12px; gap: 7px; } .gx2-parts li { padding: 4px 8px; } .gx2-nav { padding: 8px; } .gx2-tab { padding: 6px 8px; } .gx2-tab small { display: none; } .gx2-card p { font-size: 12.5px; line-height: 1.4; } }
   @media (max-width: 860px) { .gx2 { grid-template-columns: minmax(0, 1fr); } .gx2-nav { position: static; flex-direction: row; flex-wrap: wrap; } .gx2-title { width: 100%; } .gx2-tab { flex: 1 1 150px; } }
   .gx-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; } .gx-h h3 { margin: 0; font-size: 16px; display: flex; align-items: center; gap: 9px; }
   .gx-sub { margin: 4px 0 14px; color: var(--mh-muted); font-size: 12.5px; }
@@ -10860,6 +10898,7 @@ export default function App({ onSignOut }) {
   const [characters, setCharacters] = useState({});
   // Copia siempre al día de los personajes: evita que dos cambios seguidos se pisen.
   const charsRef = useRef({});
+  const [newChOpen, setNewChOpen] = useState(0); // 0 cerrado · 1 elegir cómo crear el capítulo · 2 elegir plantilla
   charsRef.current = characters;
   const [currentCharId, setCurrentCharId] = useState(null);
   const [ficha, setFicha] = useState(FICHA_DEFAULTS);
@@ -27555,7 +27594,7 @@ export default function App({ onSignOut }) {
                 {camps.length > 0 && <div className="mh-isle-sec">Mis campañas</div>}
                 {camps.map((cp) => (
                   <button type="button" key={cp.id} title={cp.name || "Campaña"} className="mh-isle-it av" onClick={() => (go("campaigns"), setViewingCampaignId(cp.id))}>
-                    <span className="mh-isle-ic"><BookOpen size={16} /></span>
+                    <span className="mh-isle-ic mh-camp-ic" style={{ "--hc": campColor(cp.id) }}><BookOpen size={16} /></span>
                     <span className="lb mh-isle-t"><b>{cp.name || "Campaña"}</b><small>{(cp.characterIds || []).length} personaje{(cp.characterIds || []).length === 1 ? "" : "s"}</small></span>
                   </button>
                 ))}
@@ -27682,7 +27721,7 @@ export default function App({ onSignOut }) {
             {Object.values(campaigns).length === 0 && <div className="mh-navempty">Sin campañas</div>}
             {Object.values(campaigns).slice(0, 6).map((cp) => (
               <button type="button" key={cp.id} className="mh-navrow" onClick={() => (setViewingCharId(null), setViewingCardDetail(null), setViewingCampaignId(cp.id), setView("campaigns"))}>
-                <span className="mh-navrow-ic"><BookOpen size={15} /></span>
+                <span className="mh-navrow-ic mh-camp-ic" style={{ "--hc": campColor(cp.id) }}><BookOpen size={15} /></span>
                 <span className="mh-navrow-t"><b>{cp.name || "Campaña"}</b><small>{(cp.characterIds || []).length} personaje{(cp.characterIds || []).length === 1 ? "" : "s"}</small></span>
               </button>
             ))}
@@ -27944,7 +27983,7 @@ export default function App({ onSignOut }) {
             </div>
           </div>
         )}
-        <div data-mh-main className={(showTopbar ? "mh-scroll-hidden" : "") + (view === "inicio" ? " mh-main-fit" : "") || undefined} style={{ position: "absolute", top: showTopbar ? (view === "perfil" || view === "inicio" || view === "ficha" ? EDGE : EDGE + 74) : 0, left: 0, bottom: 0, right: railW, transition: "right .22s ease", overflowY: view === "ficha" && !viewingCharId && !modernCharId && showRail ? "hidden" : "auto", padding: isMobile ? (campDetail ? "10px 12px 18px" : "18px 14px") : showTopbar ? "0 " + padX + " " + EDGE + "px" : campDetail ? "18px 24px 24px 14px" : "24px 28px" }}>
+        <div data-mh-main className={(showTopbar ? "mh-scroll-hidden" : "") + (view === "inicio" ? " mh-main-fit" : "") || undefined} style={{ position: "absolute", top: showTopbar ? (view === "perfil" || view === "inicio" || view === "ficha" ? EDGE : EDGE + 74) : 0, left: 0, bottom: 0, right: railW, transition: "right .22s ease", overflowY: view === "ficha" && !viewingCharId && !modernCharId && showRail ? "hidden" : "auto", padding: isMobile ? (campDetail ? "10px 12px 18px" : "18px 14px") : showTopbar ? "0 " + padX + " " + EDGE + "px" : campDetail ? (campaignDetailTab === "mesa" ? "18px 24px 24px 14px" : EDGE + "px " + padX + " " + EDGE + "px") : "24px 28px" }}>
           <div ref={setWizSlot} style={{ maxWidth: contentMax, margin: "0 auto" }} />
           <div key={view + (view === "ficha" && modernCharId ? ":hoja" : "")} className={"mh-view-in" + (view === "ficha" && modernCharId ? " mh-sheet-in" : "")} style={{ display: showNewCharModal ? "none" : undefined, maxWidth: contentMax, margin: "0 auto" }}>
             {!showTopbar && view !== "inicio" && view !== "perfil" && !campDetail && <div className="mh-pagetitle">{viewLabel}</div>}
@@ -28277,7 +28316,7 @@ export default function App({ onSignOut }) {
                         </nav>
 {space.key === "historia" && campaignDetailTab === "historia" && (
                           <div className="mh-cg-acts">
-                            <button type="button" className="mh-cg-gold" onClick={() => addScene()}>
+                            <button type="button" className="mh-cg-gold" onClick={() => setNewChOpen(1)}>
                               <Plus size={15} /> <span>Nuevo capítulo</span>
                             </button>
                           </div>
@@ -28994,130 +29033,51 @@ export default function App({ onSignOut }) {
                     );
                   })()}
 
+                  {newChOpen > 0 && (
+                    <div className="mh-chn-ov" role="dialog" aria-modal="true" aria-label="Nuevo capítulo" onClick={() => setNewChOpen(0)}>
+                      <div className="mh-chn" onClick={(e) => e.stopPropagation()}>
+                        <button type="button" className="mh-inv-x mh-chn-x" aria-label="Cerrar" onClick={() => setNewChOpen(0)}><X size={16} /></button>
+                        {newChOpen === 1 ? (
+                          <>
+                            <h3 className="mh-serif">Nuevo capítulo</h3>
+                            <p>¿Cómo quieres empezarlo?</p>
+                            <div className="mh-chn-opts">
+                              <button type="button" onClick={() => setNewChOpen(2)}><ImageIcon size={22} /><b>Elegir una plantilla</b><small>Ilustraciones listas para ambientar</small></button>
+                              <label style={{ cursor: "pointer" }}><Upload size={22} /><b>Subir tu imagen</b><small>JPG, PNG o WebP desde tu equipo</small>
+                                <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { addSceneFromFile(e.target.files?.[0]); e.target.value = ""; setNewChOpen(0); }} />
+                              </label>
+                              <button type="button" onClick={() => { addScene(); setNewChOpen(0); }}><Plus size={22} /><b>En blanco</b><small>Sin imagen, la pones después</small></button>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <h3 className="mh-serif"><button type="button" className="mh-chn-bk" aria-label="Volver" onClick={() => setNewChOpen(1)}><ChevronLeft size={16} /></button> Elige una plantilla</h3>
+                            <div className="mh-gm-presets mh-chn-pr">
+                              {SCENE_PRESETS.map((pr) => (
+                                <button key={pr.key} type="button" className="mh-gm-preset" title={"Crear «" + pr.title + "»"} onClick={() => { addScene(pr); setNewChOpen(0); }}>
+                                  <span className="mh-gm-preset-img" style={{ backgroundImage: `url("${pr.image}")` }}><Plus size={16} /></span>
+                                  <span className="mh-gm-preset-t">{pr.title}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {campaignDetailTab === "historia" && (() => {
                     const stage = campaignStage;
                     const scenes = stageScenesOf(stage);
                     const activeSceneId = activeSceneIdOf(stage);
                     const fxLabel = (sc) => (sc.fx || []).map((k) => SCENE_FX.find((f) => f.k === k)?.n).filter(Boolean).join(", ");
                     if (scenes.length === 0) {
-                    return (
-                      <div className="mh-gm">
-                        <div className="mh-card mh-gm-box is-wide">
-                          <div className="mh-gm-h">
-                            <Clapperboard size={15} /> Capítulos
-                            {scenes.length > 0 && <span className="mh-gm-count">{scenes.length}</span>}
-                          </div>
-                          <div className="mh-gm-sub">Cada escena es un capítulo de tu historia: una imagen con efectos para ambientar, diálogos con tus PNJ y, si hace falta, un mapa de combate. Pulsa un capítulo para prepararlo.</div>
+                      return (
+                        <div className="mh-chn-empty">
                           {sceneError && <div className="mh-gm-sub" style={{ color: "#D9644E" }}>{sceneError}</div>}
-                          {scenes.length === 0 && (
-                            <div className="mh-ch-flow">
-                              <div className="mh-ch-flow-i">
-                                <ImageIcon size={26} />
-                                <b>1 · Imagen y ambiente</b>
-                                <span>Elige o sube la ilustración y añade efectos: niebla, lluvia, hoguera…</span>
-                              </div>
-                              <div className="mh-ch-flow-i is-lock">
-                                <Lock size={26} />
-                                <b>2 · Diálogos</b>
-                                <span>Se desbloquean al crear una escena: necesitas un capítulo donde ocurran.</span>
-                              </div>
-                              <div className="mh-ch-flow-i is-lock">
-                                <Lock size={26} />
-                                <b>3 · Mapa de combate</b>
-                                <span>Opcional. Se prepara dentro del capítulo que acaba en pelea.</span>
-                              </div>
-                            </div>
-                          )}
-                          <div className="mh-gm-scenes">
-                            {scenes.map((sc, i) => {
-                              const isLive = sc.id === activeSceneId;
-                              const nD = dialogueConvs.filter((c) => c.sceneId === sc.id).length;
-                              const nM = campaignMaps.filter((m) => m.sceneId === sc.id).length;
-                              const nE = campaignEncounters.filter((e) => e.sceneId === sc.id).length;
-                              return (
-                                <div key={sc.id} className={"mh-gm-sc mh-ch-card" + (isLive ? " is-live" : "")}>
-                                  <button type="button" className={"mh-gm-sc-img mh-ch-card-img" + (sc.image ? "" : " is-blank")} style={bgStyle(sc.image)} onClick={() => openChapter(sc.id)} aria-label={"Abrir el capítulo " + (sc.title || "sin título")}>
-                                    <span className="mh-ch-num">Capítulo {i + 1}</span>
-                                    {isLive && (
-                                      <span className="mh-stg-live">
-                                        <i />
-                                        En pantalla
-                                      </span>
-                                    )}
-                                  </button>
-                                  <div className="mh-ch-trow">
-                                    <div className="mh-gm-sc-t mh-serif" title={sc.title}>{sc.title || "Sin título"}</div>
-                                    <button type="button" className="mh-gm-ib" aria-label="Subir de posición" title="Mover antes" disabled={i === 0} onClick={() => moveScene(sc.id, -1)}>
-                                      <ChevronLeft size={14} />
-                                    </button>
-                                    <button type="button" className="mh-gm-ib" aria-label="Bajar de posición" title="Mover después" disabled={i === scenes.length - 1} onClick={() => moveScene(sc.id, 1)}>
-                                      <ChevronRight size={14} />
-                                    </button>
-                                  </div>
-                                  <div className="mh-ch-chips">
-                                    <span className="mh-ch-chip" title="Diálogos"><MessageSquareQuote size={12} /> {nD}</span>
-                                    <span className="mh-ch-chip" title="Mapas de combate"><MapPinned size={12} /> {nM}</span>
-                                    {nE > 0 && <span className="mh-ch-chip" title="Encuentros"><Swords size={12} /> {nE}</span>}
-                                    {(sc.fx || []).length > 0 && (
-                                      <span className="mh-ch-chip" title={"Efectos: " + fxLabel(sc)}>
-                                        {(sc.fx || []).slice(0, 3).map((k) => {
-                                          const I = FX_ICONS[k];
-                                          return I ? <I key={k} size={12} style={FX_COLORS[k] ? { color: FX_COLORS[k] } : undefined} /> : null;
-                                        })}
-                                      </span>
-                                    )}
-                                  </div>
-                                  <div className="mh-gm-sc-acts">
-                                    <button type="button" className="mh-btn-ghost" onClick={() => openChapter(sc.id)}>
-                                      <PenLine size={13} /> Preparar
-                                    </button>
-                                    {isLive ? (
-                                      <button type="button" className="mh-btn-ghost" onClick={hideScene} title="Quitar de pantalla">
-                                        <EyeOff size={13} />
-                                      </button>
-                                    ) : (
-                                      <button type="button" className="mh-btn" onClick={() => showScene(sc.id)}>
-                                        <Eye size={13} /> Mostrar
-                                      </button>
-                                    )}
-                                  </div>
-                                </div>
-                              );
-                            })}
-                            <label className="mh-gm-sc-add" style={{ cursor: "pointer" }}>
-                              <Upload size={18} />
-                              Capítulo con tu imagen
-                              <small>JPG, PNG o WebP desde tu equipo</small>
-                              <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { addSceneFromFile(e.target.files?.[0]); e.target.value = ""; }} />
-                            </label>
-                            <button type="button" className="mh-gm-sc-add" onClick={() => addScene()}>
-                              <Plus size={18} />
-                              Capítulo en blanco
-                              <small>con un enlace a una imagen</small>
-                            </button>
-                          </div>
-                          <div className="mh-gm-h2">Plantillas</div>
-                          <div className="mh-gm-presets">
-                            {SCENE_PRESETS.map((pr) => (
-                              <button key={pr.key} type="button" className="mh-gm-preset" title={"Añadir «" + pr.title + "» como capítulo"} onClick={() => addScene(pr)}>
-                                <span className="mh-gm-preset-img" style={{ backgroundImage: `url("${pr.image}")` }}>
-                                  <Plus size={16} />
-                                </span>
-                                <span className="mh-gm-preset-t">{pr.title}</span>
-                              </button>
-                            ))}
-                          </div>
+                          <button type="button" className="mh-cg-gold" onClick={() => setNewChOpen(1)}><Plus size={15} /> <span>Crear capítulo</span></button>
                         </div>
-                        {scenes.length === 0 && (
-                          <div className="mh-card mh-gm-box is-wide is-locked">
-                            <div className="mh-gm-h">
-                              <MessageSquareQuote size={15} /> Diálogos <Lock size={13} />
-                            </div>
-                            <div className="mh-gm-sub">Crea una escena para poder preparar diálogos.</div>
-                          </div>
-                        )}
-                      </div>
-                    );
+                      );
                     }
                     const sel = scenes.find((x) => x.id === chapterId) || (isMobile ? null : scenes.find((x) => x.id === activeSceneId) || scenes[0]);
                     const chapter = sel;
@@ -29155,22 +29115,9 @@ export default function App({ onSignOut }) {
                             </div>
                           );
                         })}
-                        <label className="mh-hs-add" style={{ cursor: "pointer" }}>
-                          <Upload size={15} /> Capítulo con tu imagen
-                          <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { addSceneFromFile(e.target.files?.[0]); e.target.value = ""; }} />
-                        </label>
-                        <button type="button" className="mh-hs-add" onClick={() => addScene()}>
-                          <Plus size={15} /> Añadir capítulo
+                        <button type="button" className="mh-hs-add" onClick={() => setNewChOpen(1)}>
+                          <Plus size={15} /> Nuevo capítulo
                         </button>
-                        <div className="mh-gm-h2">Plantillas</div>
-                        <div className="mh-hs-presets">
-                          {SCENE_PRESETS.map((pr) => (
-                            <button key={pr.key} type="button" title={"Añadir «" + pr.title + "» como capítulo"} onClick={() => addScene(pr)}>
-                              <span style={{ backgroundImage: `url("${pr.image}")` }} />
-                              <em>{pr.title}</em>
-                            </button>
-                          ))}
-                        </div>
                       </aside>
                     );
                     const TABS3 = [
@@ -29615,10 +29562,10 @@ export default function App({ onSignOut }) {
                       </section>
                     );
                     return (
-                      <div className="mh-hs">
+                      <FitBelow className="mh-hs" off={isMobile}>
                         {(!isMobile || !chapterId) && listEl}
                         {(!isMobile || chapterId) && detailEl}
-                      </div>
+                      </FitBelow>
                     );
                   })()}
 

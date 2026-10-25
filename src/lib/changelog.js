@@ -7,6 +7,7 @@ export const CHANGELOG = [
     title: "Grupos y notificaciones nuevas",
     blurb: "Chatea con toda tu mesa en un grupo compartido y recibe los avisos como tarjetas, también flotando mientras juegas.",
     items: [
+      { tag: "mejora", text: "Campañas · los iconos de campaña toman el color de su campaña (cabecera y menú lateral) en modo claro y oscuro; Capítulos muestra solo «Crear capítulo» y, al pulsarlo, pregunta si quieres plantilla, tu imagen o uno en blanco; márgenes de las pestañas iguales a los de Inicio y Personajes, sin scroll vertical (generadores más compactos y el editor de capítulos ajustado a la pantalla). Directo no cambia." },
       { tag: "mejora", text: "Campañas · Directo queda junto al menú Historia · Grupo · Mundo, X-Card y Ambiente vuelven al extremo derecho, y las campañas (también las nuevas) se abren siempre en Historia." },
       { tag: "nuevo", text: "Mapa de mundo 3D · el DJ puede elegir entre mapa tradicional (imagen) o un mapa 3D hecho con losas hexagonales: pinta hierba y agua, coloca bosques, colinas, montañas y edificios de cuatro colores, gira las piezas y pon marcadores sobre el terreno. Usa el pack KayKit Medieval Hexagon (CC0)." },
       { tag: "mejora", text: "Campañas · el menú superior empieza ahora por Historia y la pestaña Directo queda aparte, a la derecha." },
