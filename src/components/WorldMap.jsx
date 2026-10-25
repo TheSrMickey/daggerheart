@@ -311,10 +311,18 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
       );
   };
 
+  const modeToggle = (
+    <div className="mh-wm-seasons mh-wm-modes" role="group" aria-label="Tipo de mapa">
+      <button type="button" className={!is3d ? "is-on" : ""} onClick={() => setMode("")} title="Mapa tradicional: una imagen con marcadores"><ImageIcon size={13} /> Tradicional</button>
+      <button type="button" className={is3d ? "is-on" : ""} onClick={() => setMode("3d")} title="Mapa 3D con losas hexagonales"><Box size={13} /> 3D{doc.hex && !is3d ? " (guardado)" : ""}</button>
+    </div>
+  );
+
   // ---- sin mapa ----
   if (!is3d && !doc.image) {
     return (
       <div className={"mh-wm" + (fit ? " is-fit" : "")}>
+        {edit && <div className="mh-wm-bar">{modeToggle}</div>}
         <div className="mh-wm-empty">
           <Sparkles size={26} />
           <b>{edit ? "Sube la imagen de tu mundo" : "El DJ todavía no ha preparado el mapa de mundo."}</b>
@@ -322,7 +330,7 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
             <>
               <span>Puede ser un mapa pintado, una ilustración o una imagen que generes con IA. Después colocas marcadores encima.</span>
               <div className="mh-wm-row">
-                <button type="button" className="mh-btn" onClick={() => setMode("3d")}><Box size={14} /> Crear un mapa 3D</button>
+                <button type="button" className="mh-btn" onClick={() => setMode("3d")}><Box size={14} /> {doc.hex ? "Volver al mapa 3D" : "Crear un mapa 3D"}</button>
                 <label className="mh-btn" style={{ cursor: "pointer" }}>
                   <Upload size={14} /> Subir imagen
                   <input type="file" accept="image/*" hidden onChange={(e) => { uploadMap(e.target.files?.[0]); e.target.value = ""; }} />
@@ -342,10 +350,7 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
     <div className={"mh-wm" + (fit ? " is-fit" : "")}>
       {edit && (
         <div className="mh-wm-bar">
-          <div className="mh-wm-seasons mh-wm-modes" role="group" aria-label="Tipo de mapa">
-            <button type="button" className={!is3d ? "is-on" : ""} onClick={() => setMode("")} title="Mapa tradicional: una imagen con marcadores"><ImageIcon size={13} /> Tradicional</button>
-            <button type="button" className={is3d ? "is-on" : ""} onClick={() => setMode("3d")} title="Mapa 3D con losas hexagonales"><Box size={13} /> 3D</button>
-          </div>
+          {modeToggle}
           <button type="button" className={"mh-btn-ghost" + (tool === "add" ? " is-on" : "")} onClick={() => (setTool(tool === "add" ? null : "add"), setSel(null))} title="Pulsa y luego haz clic en el mapa">
             <Plus size={14} /> {tool === "add" ? "Haz clic en el mapa…" : "Marcador"}
           </button>

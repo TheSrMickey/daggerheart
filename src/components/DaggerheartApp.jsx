@@ -6046,6 +6046,10 @@ const sharedStyles = `
   .mh-wm3-fac { grid-column: 1 / -1; display: flex; gap: 6px; justify-content: center; } .mh-wm3-fac button { width: 22px !important; height: 22px; padding: 0 !important; border-radius: 50% !important; background: var(--fc); } .mh-wm3-fac button.is-on { outline: 2px solid var(--mh-ink); outline-offset: 2px; }
   .mh-wm3-pal button.is-on { background: linear-gradient(180deg, #f0c264, #d9a23c); color: #1c1405; border-color: #d9a23c; } .mh-wm3-pal .mh-wm3-fac button.is-on { background: var(--fc); }
   .mh-wm3-pal button:hover:not(.is-on) { border-color: var(--mh-line2); background: var(--mh-panel2); }
+  .mh-root:not(.is-mobile) .mh-wmpg { display: flex; flex-direction: column; padding: 12px; margin: 0; min-height: 0; overflow: hidden; }
+  .mh-root:not(.is-mobile) .mh-wmpg > .mh-wm-box { flex: 1; min-height: 0; display: flex; flex-direction: column; } .mh-root:not(.is-mobile) .mh-wmpg .mh-wm-box .mh-wm.is-fit { flex: 1; min-height: 0; height: auto; margin: 0 !important; }
+  .mh-root:not(.is-mobile) .mh-wmpg .mh-wm.is-fit .mh-wm-wrap:has(.is-3d) { flex: 1; min-height: 0; height: auto; aspect-ratio: auto !important; width: 100% !important; border-radius: 12px; } .mh-root:not(.is-mobile) .mh-wmpg .mh-wm-view.is-3d { height: 100%; max-height: none; min-height: 0; }
+  .mh-wm3-sec { grid-column: 1 / -1; font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--mh-muted); margin-top: 4px; }
   .mh-wm3-hint { margin: 0; font-size: 10.5px; line-height: 1.35; color: var(--mh-muted); }
   .mh-wm-modes button { display: inline-flex; align-items: center; gap: 5px; }
   .mh-wm-canvas { position: relative; min-width: 100%; user-select: none; }
@@ -30011,7 +30015,7 @@ export default function App({ onSignOut }) {
                   )}
 
                   {campaignDetailTab === "mundo" && (
-                    <div className="mh-card">
+                    <FitBelow className="mh-card mh-wmpg" off={isMobile}>
                       <div className="mh-gm-h"><Globe size={15} /> Mapa de mundo</div>
                       <div className="mh-gm-sub">Sube la imagen de tu mundo y coloca marcadores encima. Cada marcador abre una tarjeta con imagen y texto y puede llevar a una escena. Cuando quieras enseñárselo a los jugadores, ponlo en directo desde «Mesa».</div>
                       <div className="mh-wm-box" style={{ "--dir-r": dirMonRatio }}><WorldMap
@@ -30026,7 +30030,7 @@ export default function App({ onSignOut }) {
                         onOpenScene={(id) => openChapter(id)}
                         onLog={(t) => postChat(viewingCampaignId, { kind: "event", author: "El DJ", gm: true, icon: "mundo", text: t })}
                       /></div>
-                    </div>
+                    </FitBelow>
                   )}
 
                   {campaignDetailTab === "mapa" && (() => {

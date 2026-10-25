@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { Hand, Eraser, Trees, Castle, Waves } from "lucide-react";
 
 // Mapa de mundo en 3D con las losas hexagonales de KayKit (Medieval Hexagon Pack, CC0).
@@ -42,7 +42,11 @@ const objUrl = (o) => {
   const p = o.split(":");
   return p[0] === "b" ? BASE + "build/building_" + p[1] + "_" + (p[2] || "blue") + ".gltf" : BASE + "nature/" + p[1] + ".gltf";
 };
-const tileUrl = (t) => BASE + "tiles/" + (t === "w" ? "hex_water" : "hex_grass") + ".gltf";
+// Losas del pack: hierba, agua y las especiales (costas, ríos y caminos), que se guardan como «x:nombre».
+const tileUrl = (t) => BASE + "tiles/" + (t === "w" ? "hex_water" : t && t.startsWith("x:") ? "hex_" + t.slice(2) : "hex_grass") + ".gltf";
+export const COASTS = ["A", "B", "C", "D", "E"].map((k) => ["coast_" + k, "Costa " + k]);
+export const RIVERS = ["A", "A_curvy", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"].map((k) => ["river_" + k, "Río " + k.replace("_curvy", " curvo")]).concat([["river_crossing_A", "Vado A"], ["river_crossing_B", "Vado B"]]);
+export const ROADS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M"].map((k) => ["road_" + k, "Camino " + k]);
 
 // Isla inicial para que el tablero no empiece vacío.
 export const starterTiles = () => {
@@ -166,7 +170,7 @@ export default function World3D({ tiles, edit = false, onTiles, pins = [], rende
         for (const k of Object.keys(tl)) {
           const t = tl[k];
           seen.add(k);
-          const sig = (t.t || "g") + "|" + (t.o || "") + "|" + (t.r || 0);
+          const sig = (t.t || "g") + "|" + (t.o || "") + "|" + (t.r || 0) + "|" + (t.tr || 0);
           const cur = placed.get(k);
           if (cur && cur.sig === sig) continue;
           if (cur) world.remove(cur.group);
@@ -177,7 +181,7 @@ export default function World3D({ tiles, edit = false, onTiles, pins = [], rende
           placed.set(k, { sig, group: grp });
           world.add(grp);
           const base = await getModel(tileUrl(t.t));
-          if (base) { const m = base.clone(true); shade(m); grp.add(m); }
+          if (base) { const m = base.clone(true); shade(m); m.rotation.y = ((t.tr || 0) * Math.PI) / 3; grp.add(m); }
           if (t.o) {
             const om = await getModel(objUrl(t.o));
             if (om) { const m = om.clone(true); shade(m); m.rotation.y = ((t.r || 0) * Math.PI) / 3; grp.add(m); }
@@ -222,15 +226,15 @@ export default function World3D({ tiles, edit = false, onTiles, pins = [], rende
           const base = cur && Object.keys(cur).length ? cur : starterTiles();
           const old = base[k];
           let nt;
-          if (br.kind === "terrain") nt = { t: br.t };
-          else if (br.kind === "erase") nt = old ? { t: old.t } : null;
+          if (br.kind === "terrain") nt = old && old.t === br.t && br.t.startsWith("x:") ? { t: br.t, tr: ((old.tr || 0) + 1) % 6 } : { t: br.t };
+          else if (br.kind === "erase") nt = old ? { t: old.t, tr: old.tr } : null;
           else {
             if (old && old.t === "w") return base; // nada de edificios sobre el agua
             const o = br.kind === "build" ? "b:" + br.name + ":" + fc : "n:" + br.name;
-            nt = { t: old ? old.t : "g", o, r: old && old.o === o ? ((old.r || 0) + 1) % 6 : old && old.r ? old.r : 0 };
+            nt = { t: old ? old.t : "g", tr: old ? old.tr : 0, o, r: old && old.o === o ? ((old.r || 0) + 1) % 6 : old && old.r ? old.r : 0 };
           }
           if (!nt) return base;
-          if (old && old.t === nt.t && old.o === nt.o && (old.r || 0) === (nt.r || 0)) return base;
+          if (old && old.t === nt.t && old.o === nt.o && (old.r || 0) === (nt.r || 0) && (old.tr || 0) === (nt.tr || 0)) return base;
           return { ...base, [k]: nt };
         });
       };
@@ -301,7 +305,7 @@ export default function World3D({ tiles, edit = false, onTiles, pins = [], rende
       const loop = () => {
         raf = requestAnimationFrame(loop);
         const L = live.current;
-        const sig = L.tiles ? Object.keys(L.tiles).length + ":" + Object.values(L.tiles).map((t) => (t.t || "g") + (t.o || "") + (t.r || 0)).join("") : "0";
+        const sig = L.tiles ? Object.keys(L.tiles).length + ":" + Object.values(L.tiles).map((t) => (t.t || "g") + (t.o || "") + (t.r || 0) + (t.tr || 0)).join("") : "0";
         if (sig !== lastSig) {
           lastSig = sig;
           sync().then(() => { if (first && Object.keys(L.tiles || {}).length) { first = false; centre(); } setReady(true); dirty = true; });
@@ -373,6 +377,14 @@ export default function World3D({ tiles, edit = false, onTiles, pins = [], rende
               <>
                 <button type="button" className={isOn({ kind: "terrain", t: "g" }) ? "is-on" : ""} onClick={() => pick({ kind: "terrain", t: "g" })}>Hierba</button>
                 <button type="button" className={isOn({ kind: "terrain", t: "w" }) ? "is-on" : ""} onClick={() => pick({ kind: "terrain", t: "w" })}>Agua</button>
+                {[["Costas", COASTS], ["Ríos", RIVERS], ["Caminos", ROADS]].map(([title, list]) => (
+                  <Fragment key={title}>
+                    <span className="mh-wm3-sec">{title}</span>
+                    {list.map(([k, l]) => (
+                      <button key={k} type="button" className={isOn({ kind: "terrain", t: "x:" + k }) ? "is-on" : ""} onClick={() => pick({ kind: "terrain", t: "x:" + k })}>{l}</button>
+                    ))}
+                  </Fragment>
+                ))}
               </>
             )}
             {tab === "natura" && NATURE.map(([k, l]) => (
