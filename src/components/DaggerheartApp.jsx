@@ -4475,7 +4475,6 @@ const sharedStyles = `
     position: relative; flex: 1; min-height: 0; display: flex; overflow: hidden; border-radius: 12px;
     border: 1px solid color-mix(in srgb, var(--acc) 40%, transparent); background: var(--mh-panel);
   }
-  .mh-exp-bar { width: 5px; flex-shrink: 0; background: var(--acc); }
   .mh-exp-body { flex: 1; min-width: 0; padding: 0 14px; display: flex; flex-direction: column; justify-content: center; }
   .mh-exp-kicker { font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-gold-ink); margin-bottom: 2px; }
   .mh-exp-bonus {
@@ -6508,7 +6507,6 @@ const sharedStyles = `
   .mh-comp-atk em { font-style: normal; font-weight: 700; font-size: 18px; color: #C0504A; }
   .mh-comp-atk button { align-self: flex-start; margin-top: 4px; font-size: 11.5px; padding: 4px 9px; display: inline-flex; align-items: center; gap: 5px; }
   .mh-comp-rules { margin-top: auto; font-size: 12px; line-height: 1.5; color: var(--mh-ink3); padding: 10px 12px; border-radius: 10px; background: var(--mh-panel2); }
-  .mh-exp-comp .mh-exp-bar { background: #7FB77A; }
   .mh-contacts { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
   .mh-contact { position: relative; display: flex; gap: 12px; align-items: flex-start; padding: 12px 34px 12px 12px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel2); cursor: pointer; text-align: left; }
   .mh-contact:hover { border-color: color-mix(in srgb, #6E5A8A 50%, var(--mh-line)); }
@@ -8326,6 +8324,8 @@ const sharedStyles = `
   @keyframes mh-arm-crack { 0%, 26% { opacity: 0; } 32% { opacity: 1; } 43% { opacity: 1; } 47%, 100% { opacity: 0; } }
   .mh-arm-txt { position: absolute; left: 50%; top: 100%; margin-top: 22px; white-space: nowrap; font: 700 30px 'Cinzel', Georgia, serif; color: #A9CFFF; text-shadow: 0 0 20px #4A8FD9, 0 2px 0 #000; opacity: 0; translate: -50% 0; animation: mh-arm-txt 1.25s ease both; }
   @keyframes mh-arm-txt { 0%, 40% { opacity: 0; } 55% { opacity: 1; } 100% { opacity: 0; translate: -50% -20px; } }
+  html[data-mh-theme="light"] .mh-arm-fx { color: #2F6FBF; filter: drop-shadow(0 0 10px #4A8FD966); }
+  html[data-mh-theme="light"] .mh-arm-txt { color: #1D5CA8; font-size: 32px; letter-spacing: .02em; text-shadow: 0 0 2px #fff, 0 0 10px #fff, 0 0 18px #ffffffcc, 0 1px 0 #fff; }
   .mh-sheet.is-embedded .mh-arm-fx { zoom: calc(1 / var(--mhz, 1)); }
   .mh-row-stress { animation: mh-row-jitter .4s ease both; }
   @keyframes mh-row-jitter { 0%, 100% { translate: 0 0; } 25% { translate: -4px 0; } 50% { translate: 4px 0; } 75% { translate: -2px 0; } }
@@ -17839,7 +17839,7 @@ export default function App({ onSignOut }) {
                                   onClick={() => (isDwarf ? setMinorPop((v) => !v) : applyDamage(viewingCharId, 1))}
                                   className={"mh-tip-anchor" + (fortOn ? " mh-thr-fort" : "")}
                                   title={fortOn ? "Fortaleza Aumentada: el próximo daño físico se reduce a la mitad (umbrales ×2)" : undefined}
-                                  style={{ position: "relative", flex: 1, textAlign: "center", border: "1px solid " + (c.f_armor_pend === "1" ? "#4A8FD9" : minorPop ? "var(--mh-ink)" : "var(--mh-line)"), background: "var(--mh-panel2)", borderRadius: 10, padding: statsSpacing.thrPadY + "px 4px", cursor: "pointer" }}
+                                  style={{ position: "relative", flex: 1, textAlign: "center", border: "1px solid " + (c.f_armor_pend === "1" ? "#4A8FD9" : minorPop ? "var(--mh-ink)" : "var(--mh-line)"), background: c.f_armor_pend === "1" ? "repeating-linear-gradient(135deg, #4A8FD92e 0 5px, transparent 5px 11px), var(--mh-panel2)" : "var(--mh-panel2)", borderRadius: 10, padding: statsSpacing.thrPadY + "px 4px", cursor: "pointer" }}
                                 >
                                   {!minorPop && <span className="mh-tip">{unstopOn ? "Imparable: el daño Menor no marca PV" : isDwarf ? "Pulsa para elegir: 1 PV o Piel Gruesa" : "Pulsa para -1 PV"}</span>}
                                   <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Menor{unstopOn ? " · 0 PV" : ""}</div>
@@ -17897,20 +17897,20 @@ export default function App({ onSignOut }) {
                                     );
                                   })()}
                                 </div>
-                                <div onClick={() => applyDamage(viewingCharId, 2)} title={fortOn ? "Fortaleza Aumentada: umbrales ×2" : undefined} className={"mh-tip-anchor" + (fortOn ? " mh-thr-fort" : "")} style={{ flex: 1, textAlign: "center", border: "1px solid " + (c.f_armor_pend === "1" ? "#4A8FD9" : "var(--acc)"), background: "color-mix(in srgb, var(--acc) 8%, transparent)", borderRadius: 10, padding: statsSpacing.thrPadY + "px 4px", cursor: "pointer" }}>
+                                <div onClick={() => applyDamage(viewingCharId, 2)} title={fortOn ? "Fortaleza Aumentada: umbrales ×2" : undefined} className={"mh-tip-anchor" + (fortOn ? " mh-thr-fort" : "")} style={{ flex: 1, textAlign: "center", border: "1px solid " + (c.f_armor_pend === "1" ? "#4A8FD9" : "var(--acc)"), background: c.f_armor_pend === "1" ? "repeating-linear-gradient(135deg, #4A8FD92e 0 5px, transparent 5px 11px), var(--mh-panel2)" : "color-mix(in srgb, var(--acc) 8%, transparent)", borderRadius: 10, padding: statsSpacing.thrPadY + "px 4px", cursor: "pointer" }}>
                                   <span className="mh-tip">{unstopOn ? "Imparable: pulsa para -1 PV" : "Pulsa para -2 PV"}</span>
                                   <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Mayor{unstopOn ? " · 1 PV" : ""}</div>
-                                  <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700, color: "var(--mh-gold-ink)" }}>{fortMajor}</div>
+                                  <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700, color: c.f_armor_pend === "1" ? undefined : "var(--mh-gold-ink)" }}>{fortMajor}</div>
                                 </div>
                                 <div
                                   onClick={() => applyDamage(viewingCharId, 3, true)}
                                   title={fortOn ? "Fortaleza Aumentada: umbrales ×2" : undefined}
                                   className={"mh-tip-anchor" + (fortOn ? " mh-thr-fort" : "")}
-                                  style={{ flex: 1, textAlign: "center", border: "1px solid " + (c.f_armor_pend === "1" ? "#4A8FD9" : "#D9644E"), background: "#D9644E14", borderRadius: 10, padding: statsSpacing.thrPadY + "px 4px", cursor: "pointer" }}
+                                  style={{ flex: 1, textAlign: "center", border: "1px solid " + (c.f_armor_pend === "1" ? "#4A8FD9" : "#D9644E"), background: c.f_armor_pend === "1" ? "repeating-linear-gradient(135deg, #4A8FD92e 0 5px, transparent 5px 11px), color-mix(in srgb, var(--acc) 8%, transparent)" : "#D9644E14", borderRadius: 10, padding: statsSpacing.thrPadY + "px 4px", cursor: "pointer" }}
                                 >
                                   <span className="mh-tip">{unstopOn ? "Imparable: pulsa para -2 PV" : c.f_scales_ready === "1" ? "Escamas activas: pulsa para -2 PV" : "Pulsa para -3 PV"}</span>
                                   <div style={{ fontSize: 9.5, color: "var(--mh-muted)" }}>Grave{unstopOn ? " · 2 PV" : ""}{c.f_scales_ready === "1" && <span title="Escamas activas: marcarás 2 PV" style={{ marginLeft: 4, color: "#D9644E", fontWeight: 700 }}>· Escamas</span>}</div>
-                                  <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700, color: "#D9644E" }}>{fortSevere}</div>
+                                  <div className="mh-serif" style={{ fontSize: 14, fontWeight: 700, color: c.f_armor_pend === "1" ? "var(--mh-gold-ink)" : "#D9644E" }}>{fortSevere}</div>
                                 </div>
                               </div>
 
@@ -18505,7 +18505,6 @@ export default function App({ onSignOut }) {
                                             onClick={() => openExperienceCard(exp)}
                                             onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && e.target === e.currentTarget && (e.preventDefault(), openExperienceCard(exp))}
                                           >
-                                            <div className="mh-exp-bar" />
                                             <div className="mh-exp-body">
                                               <div className="mh-exp-kicker">Experiencia</div>
                                               <FitTitle text={exp.text} max={15} min={11.5} lineHeight={1.2} className="mh-serif" style={{ fontWeight: 700, color: "var(--mh-ink)", maxHeight: "2.4em", overflow: "hidden" }} />
@@ -18747,22 +18746,8 @@ export default function App({ onSignOut }) {
                                     );
                                   }
                                   return (
-                                    <div
-                                      key={i}
-                                      style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        border: "1px dashed var(--mh-line2)",
-                                        borderRadius: 10,
-                                        padding: "10px 14px",
-                                        color: "var(--mh-muted3)",
-                                        fontSize: 12,
-                                        flex: "1 1 0",
-                                        minHeight: 44,
-                                      }}
-                                    >
-                                      Espacio libre
+                                    <div key={i} className="mh-exp-locked" style={{ minHeight: 44 }}>
+                                      <span>Espacio libre</span>
                                     </div>
                                   );
                                 })}
@@ -20410,7 +20395,6 @@ export default function App({ onSignOut }) {
                                         onClick={() => openCompanionExpCard(exp, comp)}
                                         onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && e.target === e.currentTarget && (e.preventDefault(), openCompanionExpCard(exp, comp))}
                                       >
-                                        <div className="mh-exp-bar" />
                                         <div className="mh-exp-body">
                                           <div className="mh-exp-kicker">Experiencia del compañero</div>
                                           <FitTitle text={exp.text} max={15} min={11.5} lineHeight={1.2} className="mh-serif" style={{ fontWeight: 700, color: "var(--mh-ink)", maxHeight: "2.4em", overflow: "hidden" }} />
@@ -27935,13 +27919,13 @@ export default function App({ onSignOut }) {
           </div>
         )}
         {showTopbar && view !== "perfil" && view !== "inicio" && view !== "ficha" && (
-          <div className="mh-topbar-wrap" style={{ right: railW, padding: "0 " + padX }}>
+          <div className="mh-topbar-wrap" style={{ right: railW, padding: "0 " + padX, transition: "right .22s ease" }}>
             <div className="mh-topbar" style={{ maxWidth: contentMax }}>
               <span>{topLeft}</span>
             </div>
           </div>
         )}
-        <div data-mh-main className={(showTopbar ? "mh-scroll-hidden" : "") + (view === "inicio" ? " mh-main-fit" : "") || undefined} style={{ position: "absolute", top: showTopbar ? (view === "perfil" || view === "inicio" || view === "ficha" ? EDGE : EDGE + 74) : 0, left: 0, bottom: 0, right: railW, overflowY: view === "ficha" && !viewingCharId && !modernCharId && showRail ? "hidden" : "auto", padding: isMobile ? (campDetail ? "10px 12px 18px" : "18px 14px") : showTopbar ? "0 " + padX + " " + EDGE + "px" : campDetail ? "18px 24px 24px 14px" : "24px 28px" }}>
+        <div data-mh-main className={(showTopbar ? "mh-scroll-hidden" : "") + (view === "inicio" ? " mh-main-fit" : "") || undefined} style={{ position: "absolute", top: showTopbar ? (view === "perfil" || view === "inicio" || view === "ficha" ? EDGE : EDGE + 74) : 0, left: 0, bottom: 0, right: railW, transition: "right .22s ease", overflowY: view === "ficha" && !viewingCharId && !modernCharId && showRail ? "hidden" : "auto", padding: isMobile ? (campDetail ? "10px 12px 18px" : "18px 14px") : showTopbar ? "0 " + padX + " " + EDGE + "px" : campDetail ? "18px 24px 24px 14px" : "24px 28px" }}>
           <div ref={setWizSlot} style={{ maxWidth: contentMax, margin: "0 auto" }} />
           <div key={view + (view === "ficha" && modernCharId ? ":hoja" : "")} className={"mh-view-in" + (view === "ficha" && modernCharId ? " mh-sheet-in" : "")} style={{ display: showNewCharModal ? "none" : undefined, maxWidth: contentMax, margin: "0 auto" }}>
             {!showTopbar && view !== "inicio" && view !== "perfil" && !campDetail && <div className="mh-pagetitle">{viewLabel}</div>}

@@ -7,6 +7,7 @@ export const CHANGELOG = [
     title: "Grupos y notificaciones nuevas",
     blurb: "Chatea con toda tu mesa en un grupo compartido y recibe los avisos como tarjetas, también flotando mientras juegas.",
     items: [
+      { tag: "mejora", text: "Ficha · al marcar armadura, los umbrales Mayor y Grave heredan el fondo del anterior y los tres llevan rayas diagonales; la animación de armadura se lee mejor en modo claro; las experiencias pierden la tira lateral y los espacios libres de cartas de dominio se ven como los bloqueados. El menú derecho se desliza al quitar la chincheta." },
       { tag: "mejora", text: "Hoja de personaje · se quita la barra de ruta de arriba: el banner con el nombre sube (con su misma altura) y la hoja usa los mismos márgenes de 36 px arriba y abajo que Personajes." },
       { tag: "arreglo", text: "Personajes · las tarjetas terminan exactamente a 36 px del borde de abajo, como la caja de «Próxima sesión» de Inicio (los avisos de debajo ya no les quitan alto), y ya no se levantan al pasar el ratón, que las cortaba por arriba." },
       { tag: "mejora", text: "Personajes · se quitan la barra de ruta de arriba y el texto «1 de 3 personajes» (el aviso de límite solo sale cuando llegas al máximo), y la lista usa los mismos márgenes arriba y abajo que Inicio." },
