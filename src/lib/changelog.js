@@ -7,6 +7,7 @@ export const CHANGELOG = [
     title: "Grupos y notificaciones nuevas",
     blurb: "Chatea con toda tu mesa en un grupo compartido y recibe los avisos como tarjetas, también flotando mientras juegas.",
     items: [
+      { tag: "mejora", text: "Personajes · se quitan la barra de ruta de arriba y el texto «1 de 3 personajes» (el aviso de límite solo sale cuando llegas al máximo), y la lista usa los mismos márgenes arriba y abajo que Inicio." },
       { tag: "arreglo", text: "Reversos de cartas · el canto de la carta en 3D ya no se ve blanco: es del color del borde (dorado oscuro, o el color del dominio si lo eliges en el ajuste de borde)." },
       { tag: "mejora", text: "Cartas · el frente lleva ahora un borde dorado, igual que el reverso. En Personalización → Reversos de cartas hay un ajuste «Borde de las cartas»: Dorado (por defecto) o Color del dominio; con el segundo, cada carta usa el color de su dominio y, en la previsualización 3D, el reverso se pinta del mismo color que el frente." },
       { tag: "arreglo", text: "Reversos de cartas · la carta en 3D es mucho más fina (el canto pasa de 12 a 3 px) y el borde se ve limpio, sin rayas, también cuando la carta se ve casi de lado." },

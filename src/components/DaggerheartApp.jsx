@@ -7490,6 +7490,7 @@ const sharedStyles = `
   .mh-notice-a .is-ok { background: #2a56c4; color: #fff; }
   @media (max-width: 900px) { .mh-home { grid-template-columns: 1fr; } .mh-friends { position: static; } .mh-pop { left: 12px; bottom: auto; top: 60px; } }
   .mh-gal-wrap { display: flex; flex-direction: column; height: calc(100dvh - 170px); min-height: 380px; }
+  @media (min-width: 721px) { .mh-gal-wrap { height: calc(100dvh - 72px); } .mh-gal-head { margin: 10px 0 0; } }
   .mh-gal-head { display: flex; align-items: baseline; gap: 12px; margin: 0 0 14px; font-size: 13px; color: var(--mh-ink3); font-weight: 600; }
   .mh-gal-head small { font-size: 12px; color: #C0504A; font-weight: 500; }
   .mh-gal { flex: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; align-items: stretch; justify-content: center; min-height: 0; }
@@ -27933,14 +27934,14 @@ export default function App({ onSignOut }) {
             </div>
           </div>
         )}
-        {showTopbar && view !== "perfil" && view !== "inicio" && (
+        {showTopbar && view !== "perfil" && view !== "inicio" && !(view === "ficha" && !modernCharId) && (
           <div className="mh-topbar-wrap" style={{ right: railW, padding: "0 " + padX }}>
             <div className="mh-topbar" style={{ maxWidth: contentMax }}>
               <span>{topLeft}</span>
             </div>
           </div>
         )}
-        <div data-mh-main className={(showTopbar ? "mh-scroll-hidden" : "") + (view === "inicio" ? " mh-main-fit" : "") || undefined} style={{ position: "absolute", top: showTopbar ? (view === "perfil" || view === "inicio" ? EDGE : EDGE + 74) : 0, left: 0, bottom: 0, right: railW, overflowY: view === "ficha" && !viewingCharId && !modernCharId && showRail ? "hidden" : "auto", padding: isMobile ? (campDetail ? "10px 12px 18px" : "18px 14px") : showTopbar ? "0 " + padX + " " + EDGE + "px" : campDetail ? "18px 24px 24px 14px" : "24px 28px" }}>
+        <div data-mh-main className={(showTopbar ? "mh-scroll-hidden" : "") + (view === "inicio" ? " mh-main-fit" : "") || undefined} style={{ position: "absolute", top: showTopbar ? (view === "perfil" || view === "inicio" || (view === "ficha" && !modernCharId) ? EDGE : EDGE + 74) : 0, left: 0, bottom: 0, right: railW, overflowY: view === "ficha" && !viewingCharId && !modernCharId && showRail ? "hidden" : "auto", padding: isMobile ? (campDetail ? "10px 12px 18px" : "18px 14px") : showTopbar ? "0 " + padX + " " + EDGE + "px" : campDetail ? "18px 24px 24px 14px" : "24px 28px" }}>
           <div ref={setWizSlot} style={{ maxWidth: contentMax, margin: "0 auto" }} />
           <div key={view + (view === "ficha" && modernCharId ? ":hoja" : "")} className={"mh-view-in" + (view === "ficha" && modernCharId ? " mh-sheet-in" : "")} style={{ display: showNewCharModal ? "none" : undefined, maxWidth: contentMax, margin: "0 auto" }}>
             {!showTopbar && view !== "inicio" && view !== "perfil" && !campDetail && <div className="mh-pagetitle">{viewLabel}</div>}
@@ -28009,10 +28010,6 @@ export default function App({ onSignOut }) {
 
           {view === "ficha" && !modernCharId && (
             <div className="mh-gal-wrap">
-              <div className="mh-gal-head">
-                <span>{Object.keys(characters).length} de {MAX_CHARACTERS} personajes</span>
-                {Object.keys(characters).length >= MAX_CHARACTERS && <small>Límite alcanzado: elimina uno para crear otro.</small>}
-              </div>
               <div className="mh-gal">
                 {Object.keys(characters).map((id) => {
                   const ch = characters[id];
@@ -28098,6 +28095,11 @@ export default function App({ onSignOut }) {
                 )}
               </div>
 
+              {Object.keys(characters).length >= MAX_CHARACTERS && (
+                <div className="mh-gal-head">
+                  <small>Límite alcanzado: elimina uno para crear otro.</small>
+                </div>
+              )}
               {charWarning && (
                 <div style={{ fontSize: 12.5, color: "#D9644E", marginTop: 10 }}>{charWarning}</div>
               )}
