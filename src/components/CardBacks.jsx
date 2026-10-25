@@ -32,7 +32,7 @@ function useLight() {
   return light;
 }
 
-export function CardBack({ kind = "clasico" }) {
+export function CardBack({ kind = "clasico", edge }) {
   const uid = useId().replace(/[^a-z0-9]/gi, "");
   const light = useLight();
   const u = (n) => n + uid;
@@ -87,7 +87,7 @@ export function CardBack({ kind = "clasico" }) {
     body = (
       <>
         <rect width="300" height="420" rx="22" fill={"url(#" + u("bgn") + ")"} />
-        <rect x="1" y="1" width="298" height="418" rx="21" fill="none" stroke="#E3B04B" strokeOpacity=".8" strokeWidth="2" />
+        <rect x="1" y="1" width="298" height="418" rx="21" fill="none" stroke={edge || "#E3B04B"} strokeOpacity=".8" strokeWidth="2" />
         <rect x="12" y="12" width="276" height="396" rx="14" fill="none" stroke="#24244a" strokeWidth="1.5" />
         {star(150, 210, 0.42, "url(#" + u("gd") + ")", { style: { filter: "drop-shadow(0 0 10px #E3B04B88)" } })}
       </>
@@ -98,9 +98,9 @@ export function CardBack({ kind = "clasico" }) {
       <>
         <rect width="300" height="420" rx="22" fill={"url(#" + u(light ? "bgl" : "bgd") + ")"} />
         <rect width="300" height="420" rx="22" fill={"url(#" + u("lat") + ")"} mask={"url(#" + u("mk") + ")"} />
-        <rect x="1" y="1" width="298" height="418" rx="21" fill="none" stroke={k} strokeOpacity=".85" strokeWidth="2" />
-        <rect x="14" y="14" width="272" height="392" rx="14" fill="none" stroke={k} strokeOpacity=".55" strokeWidth="1.5" />
-        <rect x="21" y="21" width="258" height="378" rx="10" fill="none" stroke={k} strokeOpacity=".22" />
+        <rect x="1" y="1" width="298" height="418" rx="21" fill="none" stroke={edge || k} strokeOpacity=".85" strokeWidth="2" />
+        <rect x="14" y="14" width="272" height="392" rx="14" fill="none" stroke={edge || k} strokeOpacity=".55" strokeWidth="1.5" />
+        <rect x="21" y="21" width="258" height="378" rx="10" fill="none" stroke={edge || k} strokeOpacity=".22" />
         {[[34, 34], [266, 34], [34, 386], [266, 386]].map(([x, y]) => <g key={x + "-" + y}>{star(x, y, 0.055, k)}</g>)}
         <circle cx="150" cy="210" r="124" fill={"url(#" + u("glow") + ")"} />
         <circle cx="150" cy="210" r="96" fill="none" stroke={k} strokeOpacity={light ? 0.4 : 0.28} strokeDasharray="2 6" strokeWidth="1.5" />
@@ -189,7 +189,7 @@ export function FlipCard({ front, back, startBack = true }) {
   );
 }
 
-function Preview({ back, sample, icons, FitTitle, FitBox, equipped, locked, onEquip, onClose }) {
+function Preview({ back, sample, icons, FitTitle, FitBox, equipped, locked, onEquip, onClose, cardBorder }) {
   useEffect(() => {
     const esc = (e) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", esc);
@@ -201,7 +201,7 @@ function Preview({ back, sample, icons, FitTitle, FitBox, equipped, locked, onEq
       <div className="mh-cbp" role="dialog" aria-label={"Previsualización de " + back.label} onClick={(e) => e.stopPropagation()}>
         <button type="button" className="mh-cbp-x" onClick={onClose} aria-label="Cerrar"><X size={16} /></button>
         <h3 className="mh-serif">{back.label}</h3>
-        <FlipCard front={front} back={<CardBack kind={back.key} />} />
+        <FlipCard front={front} back={<CardBack kind={back.key} edge={cardBorder === "domain" && sample ? sample.color : undefined} />} />
         {locked && <p className="mh-cb-lock"><Lock size={13} /> Recompensa del logro legendario «{back.reward}».</p>}
         <button type="button" className="mh-btn mh-dice-btn" disabled={equipped || locked} onClick={() => onEquip(back.key)}>
           {equipped ? <><Check size={15} /> Equipado</> : locked ? <><Lock size={15} /> Bloqueado</> : <><Sparkles size={15} /> Equipar este reverso</>}
@@ -212,7 +212,7 @@ function Preview({ back, sample, icons, FitTitle, FitBox, equipped, locked, onEq
   );
 }
 
-function BacksGrid({ back, onEquip, owned, items, icons, FitTitle, FitBox }) {
+function BacksGrid({ back, onEquip, owned, items, icons, FitTitle, FitBox, cardBorder, onCardBorder }) {
   const [view, setView] = useState(null);
   const sample = (items || []).find((c) => c.kind === "dominio" && c.image) || null;
   const cur = CARD_BACKS.find((b) => b.key === view);
@@ -220,6 +220,16 @@ function BacksGrid({ back, onEquip, owned, items, icons, FitTitle, FitBox }) {
     <>
       <div className="mh-dice-h">
         <p>Elige el reverso de tus cartas. Pulsa «Previsualizar» para girar una carta en 3D y ver cómo queda.</p>
+      </div>
+      <div className="mh-cbd" role="group" aria-label="Borde de las cartas">
+        <div className="mh-cbd-t">
+          <b>Borde de las cartas</b>
+          <small>{cardBorder === "domain" ? "Cada carta lleva el borde del color de su dominio. En la previsualización, el reverso se pinta del mismo color que el frente." : "Frente y reverso llevan el mismo marco dorado."}</small>
+        </div>
+        <div className="mh-pers-tabs" role="radiogroup" aria-label="Color del borde">
+          <button type="button" role="radio" aria-checked={cardBorder !== "domain"} className={cardBorder !== "domain" ? "is-on" : ""} onClick={() => onCardBorder && onCardBorder("gold")}>Dorado</button>
+          <button type="button" role="radio" aria-checked={cardBorder === "domain"} className={cardBorder === "domain" ? "is-on" : ""} onClick={() => onCardBorder && onCardBorder("domain")}>Color del dominio</button>
+        </div>
       </div>
       <div className="mh-dice-grid mh-cb-grid">
         {CARD_BACKS.map((b) => {
@@ -247,7 +257,7 @@ function BacksGrid({ back, onEquip, owned, items, icons, FitTitle, FitBox }) {
           );
         })}
       </div>
-      {cur && <Preview back={cur} sample={sample} icons={icons} FitTitle={FitTitle} FitBox={FitBox} equipped={back === cur.key} locked={!!cur.req && !owned.has(cur.req)} onEquip={onEquip} onClose={() => setView(null)} />}
+      {cur && <Preview cardBorder={cardBorder} back={cur} sample={sample} icons={icons} FitTitle={FitTitle} FitBox={FitBox} equipped={back === cur.key} locked={!!cur.req && !owned.has(cur.req)} onEquip={onEquip} onClose={() => setView(null)} />}
     </>
   );
 }
@@ -274,7 +284,7 @@ export const effectiveBack = (key, owned) => {
 };
 
 // Pestaña «Personalización»: dados y reversos de carta.
-export function Personalizacion({ skin, onEquip, back, onEquipBack, items, icons, FitTitle, FitBox }) {
+export function Personalizacion({ skin, onEquip, back, onEquipBack, items, icons, FitTitle, FitBox, cardBorder, onCardBorder }) {
   const [tab, setTab] = useState("dados");
   const owned = useOwned();
   const own = owned || new Set();
@@ -287,7 +297,7 @@ export function Personalizacion({ skin, onEquip, back, onEquipBack, items, icons
         <button type="button" role="tab" aria-selected={tab === "dados"} className={tab === "dados" ? "is-on" : ""} onClick={() => setTab("dados")}>Dados</button>
         <button type="button" role="tab" aria-selected={tab === "reversos"} className={tab === "reversos" ? "is-on" : ""} onClick={() => setTab("reversos")}>Reversos de cartas</button>
       </div>
-      {tab === "dados" ? <DicePage skin={skin} onEquip={onEquip} embedded /> : <BacksGrid back={effectiveBack(back, owned)} onEquip={onEquipBack} owned={own} items={items} icons={icons} FitTitle={FitTitle} FitBox={FitBox} />}
+      {tab === "dados" ? <DicePage skin={skin} onEquip={onEquip} embedded /> : <BacksGrid cardBorder={cardBorder} onCardBorder={onCardBorder} back={effectiveBack(back, owned)} onEquip={onEquipBack} owned={own} items={items} icons={icons} FitTitle={FitTitle} FitBox={FitBox} />}
     </div>
   );
 }

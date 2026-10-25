@@ -5919,6 +5919,11 @@ const sharedStyles = `
   .mh-dice-body p { margin: 0; font-size: 12.5px; line-height: 1.55; color: var(--mh-ink3); min-height: 58px; }
   .mh-dice-btn { align-self: flex-start; display: inline-flex; align-items: center; gap: 7px; }
   .mh-dice-btn.is-on { opacity: .75; cursor: default; }
+  /* Borde de las cartas: dorado (como el reverso) salvo que se elija el color del dominio */
+  html:not([data-mh-cardborder="domain"]) .mh-cardc { border-color: #E3B04B !important; --glow: #E3B04B33 !important; }
+  html[data-mh-theme="light"]:not([data-mh-cardborder="domain"]) .mh-cardc { border-color: #D9A53D !important; --glow: #D9A53D33 !important; }
+  .mh-cbd { display: flex; align-items: center; justify-content: space-between; gap: 14px 24px; flex-wrap: wrap; padding: 14px 16px; margin: 0 0 18px; border-radius: 14px; background: var(--mh-panel); border: 1px solid var(--mh-line); }
+  .mh-cbd-t { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1 1 280px; } .mh-cbd-t b { font-size: 14px; color: var(--mh-ink); } .mh-cbd-t small { font-size: 12.5px; color: var(--mh-muted); line-height: 1.4; } .mh-cbd .mh-pers-tabs { margin: 0; }
   .mh-pers-tabs { display: inline-flex; gap: 4px; padding: 4px; margin: 0 0 18px; border-radius: 14px; background: var(--mh-input); border: 1px solid var(--mh-line); }
   .mh-pers-tabs button { all: unset; cursor: pointer; padding: 8px 18px; border-radius: 10px; font-size: 13.5px; font-weight: 600; color: var(--mh-muted); } .mh-pers-tabs button:hover { color: var(--mh-ink); } .mh-pers-tabs button.is-on { background: #E3B04B; color: #241a05; } .mh-pers-tabs button:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
   .mh-cb-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 340px)); }
@@ -15821,6 +15826,18 @@ export default function App({ onSignOut }) {
   const equipCardBack = (key) => {
     setCardBack(key);
     safeSet("card-back", key, false);
+  };
+  // Borde de las cartas: «gold» (por defecto, igual que el reverso) o «domain» (el color de su dominio; el reverso de la previsualización lo imita)
+  const [cardBorder, setCardBorder] = useState("gold");
+  useEffect(() => {
+    safeGet("card-border", false).then((r) => {
+      if (r?.value === "gold" || r?.value === "domain") setCardBorder(r.value);
+    });
+  }, []);
+  useEffect(() => { document.documentElement.setAttribute("data-mh-cardborder", cardBorder); }, [cardBorder]);
+  const equipCardBorder = (v) => {
+    setCardBorder(v);
+    safeSet("card-border", v, false);
   };
   const [diceHold, setDiceHold] = useState(false);
   const fearStreakRef = useRef(0); // tiradas seguidas con Miedo (logro «Mala racha»)
@@ -30776,7 +30793,7 @@ export default function App({ onSignOut }) {
           {view === "mesas" && <LookingFor />}
           {view === "perfil" && profileTarget && <ProfilePage key={profileTarget.id} id={profileTarget.id} name={profileTarget.name} />}
 
-          {view === "dadosskin" && <Personalizacion skin={diceSkin} onEquip={equipDiceSkin} back={cardBack} onEquipBack={equipCardBack} items={buildCardCatalog()} icons={DOMAIN_ICONS} FitTitle={FitTitle} FitBox={FitBox} />}
+          {view === "dadosskin" && <Personalizacion skin={diceSkin} onEquip={equipDiceSkin} back={cardBack} onEquipBack={equipCardBack} cardBorder={cardBorder} onCardBorder={equipCardBorder} items={buildCardCatalog()} icons={DOMAIN_ICONS} FitTitle={FitTitle} FitBox={FitBox} />}
           {view === "cartas" && <CardsPage items={buildCardCatalog()} domainColors={DOMAIN_COLORS} icons={DOMAIN_ICONS} FitTitle={FitTitle} FitBox={FitBox} />}
 
           {view === "ajustes" && (
