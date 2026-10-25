@@ -5463,7 +5463,7 @@ const sharedStyles = `
   .mh-cg-btn { display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 12px; border: 1px solid var(--mh-line2); background: var(--mh-panel2); color: var(--mh-ink); font: 700 12.5px 'Inter', system-ui, sans-serif; cursor: pointer; white-space: nowrap; }
   .mh-cg-trash { width: 34px; height: 34px; flex: none; display: grid; place-items: center; border-radius: 11px; border: 1px solid rgba(255,122,102,.35); background: rgba(255,122,102,.1); color: color-mix(in srgb, #C0504A var(--mh-accent-keep, 100%), #000); cursor: pointer; } .mh-cg-trash.is-confirm { background: #D9644E; color: #fff; }
   .mh-cg-navrow { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; } .mh-cg-navrow .mh-cg-nav { margin: 0; }
-  .mh-cg-acts { display: flex; gap: 8px; margin-left: auto; } .mh-cg-navrow .mh-cg-nav.is-live { margin-left: auto; } .mh-cg-acts + .mh-cg-nav.is-live { margin-left: 0; }
+  .mh-cg-acts { display: flex; gap: 8px; margin-left: auto; } 
   html[data-mh-theme="light"] .mh-cg-back, html[data-mh-theme="light"] .mh-cg-btn, html[data-mh-theme="light"] .mh-dir-pause { background: #FFFFFF; border-color: #BFB197; color: #2F2839; box-shadow: 0 1px 2px rgba(60,40,10,.12); }
   html[data-mh-theme="light"] .mh-cg-back:hover, html[data-mh-theme="light"] .mh-cg-btn:hover { background: #F4EEE3; border-color: #97680F; }
   html[data-mh-theme="light"] .mh-dir-pause { border-color: #C0504A; color: #9B2F27; background: #FDEEEA; } html[data-mh-theme="light"] .mh-dir-pause.is-on { background: #C0504A; color: #fff; }
@@ -10879,7 +10879,7 @@ export default function App({ onSignOut }) {
   const [newCampaignLimits, setNewCampaignLimits] = useState({ lines: [], veils: [] }); // líneas y velos de la mesa
   const [pendingDeleteCampaignId, setPendingDeleteCampaignId] = useState(null);
   const [campaignDetailTab, setCampaignDetailTab] = useState("mesa");
-  const campTabNext = useRef(null); // pestaña a la que abrir la próxima campaña (p. ej. el calendario desde Inicio); si no, «mesa»
+  const campTabNext = useRef(null); // pestaña a la que abrir la próxima campaña (p. ej. el calendario desde Inicio); si no, «historia»
   const [campaignChat, setCampaignChat] = useState([]);
   const [campaignChatDraft, setCampaignChatDraft] = useState("");
   const [showShareTray, setShowShareTray] = useState(false);
@@ -11101,7 +11101,7 @@ export default function App({ onSignOut }) {
       setConvSceneId(null);
       setConvId(null);
       setEditingConvId(null);
-      setCampaignDetailTab(campTabNext.current || "mesa");
+      setCampaignDetailTab(campTabNext.current || "historia");
       campTabNext.current = null;
       setChapterId(null);
       setCombatBack(null);
@@ -16676,7 +16676,7 @@ export default function App({ onSignOut }) {
     : view === "campaigns" && viewingCampaignId && campaigns[viewingCampaignId]
     ? crumbsOf([
         { label: "Campañas", go: () => setViewingCampaignId(null) },
-        { label: campaigns[viewingCampaignId].name || "Campaña", go: () => setCampaignDetailTab("mesa") },
+        { label: campaigns[viewingCampaignId].name || "Campaña", go: () => setCampaignDetailTab("historia") },
         { label: CAMP_TAB_LABELS[campaignDetailTab] || "Mesa" },
       ])
     : crumbsOf([{ label: viewLabel }]);
@@ -28258,23 +28258,6 @@ export default function App({ onSignOut }) {
                             </button>
                           ))}
                         </nav>
-{space.key === "historia" && campaignDetailTab === "historia" && (
-                          <div className="mh-cg-acts">
-                            <button type="button" className="mh-cg-gold" onClick={() => addScene()}>
-                              <Plus size={15} /> <span>Nuevo capítulo</span>
-                            </button>
-                          </div>
-                        )}
-                        {space.key === "directo" && (
-                          <div className="mh-cg-acts">
-                            <button type="button" className={"mh-dir-pause" + (campaignStage.xcard?.on ? " is-on" : "")} onClick={toggleXCard} aria-pressed={!!campaignStage.xcard?.on} title={campaignStage.xcard?.on ? "Retirar el aviso de X-Card" : "X-Card: avisa en la escena de que un jugador no está cómodo con lo que se trata"}>
-                              <X size={14} /> <span>{campaignStage.xcard?.on ? "Retirar X-Card" : "X-Card"}</span>
-                            </button>
-                            <button type="button" className="mh-cg-btn" ref={ambBtn} aria-expanded={ambOpen} onClick={() => setAmbOpen((v) => !v)}>
-                              <Music size={14} /> <span>Ambiente</span>
-                            </button>
-                          </div>
-                        )}
                         <nav className="mh-cg-nav is-live" role="tablist" aria-label="Directo">
                           {CAMP_SPACES.filter((sp) => sp.key === "directo").map((sp) => (
                             <button
@@ -28292,7 +28275,24 @@ export default function App({ onSignOut }) {
                             </button>
                           ))}
                         </nav>
-</div>
+{space.key === "historia" && campaignDetailTab === "historia" && (
+                          <div className="mh-cg-acts">
+                            <button type="button" className="mh-cg-gold" onClick={() => addScene()}>
+                              <Plus size={15} /> <span>Nuevo capítulo</span>
+                            </button>
+                          </div>
+                        )}
+                        {space.key === "directo" && (
+                          <div className="mh-cg-acts">
+                            <button type="button" className={"mh-dir-pause" + (campaignStage.xcard?.on ? " is-on" : "")} onClick={toggleXCard} aria-pressed={!!campaignStage.xcard?.on} title={campaignStage.xcard?.on ? "Retirar el aviso de X-Card" : "X-Card: avisa en la escena de que un jugador no está cómodo con lo que se trata"}>
+                              <X size={14} /> <span>{campaignStage.xcard?.on ? "Retirar X-Card" : "X-Card"}</span>
+                            </button>
+                            <button type="button" className="mh-cg-btn" ref={ambBtn} aria-expanded={ambOpen} onClick={() => setAmbOpen((v) => !v)}>
+                              <Music size={14} /> <span>Ambiente</span>
+                            </button>
+                          </div>
+                        )}
+                        </div>
                         {space.tabs.length > 1 && campaignDetailTab !== "mapa" && (
                           <div className="mh-cg-sub" role="tablist" aria-label={space.label}>
                             {space.tabs.map((t) => (

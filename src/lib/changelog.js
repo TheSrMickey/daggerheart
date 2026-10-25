@@ -7,6 +7,7 @@ export const CHANGELOG = [
     title: "Grupos y notificaciones nuevas",
     blurb: "Chatea con toda tu mesa en un grupo compartido y recibe los avisos como tarjetas, también flotando mientras juegas.",
     items: [
+      { tag: "mejora", text: "Campañas · Directo queda junto al menú Historia · Grupo · Mundo, X-Card y Ambiente vuelven al extremo derecho, y las campañas (también las nuevas) se abren siempre en Historia." },
       { tag: "nuevo", text: "Mapa de mundo 3D · el DJ puede elegir entre mapa tradicional (imagen) o un mapa 3D hecho con losas hexagonales: pinta hierba y agua, coloca bosques, colinas, montañas y edificios de cuatro colores, gira las piezas y pon marcadores sobre el terreno. Usa el pack KayKit Medieval Hexagon (CC0)." },
       { tag: "mejora", text: "Campañas · el menú superior empieza ahora por Historia y la pestaña Directo queda aparte, a la derecha." },
       { tag: "mejora", text: "Ficha · al marcar armadura, los umbrales Mayor y Grave heredan el fondo del anterior y los tres llevan rayas diagonales; la animación de armadura se lee mejor en modo claro; las experiencias pierden la tira lateral y los espacios libres de cartas de dominio se ven como los bloqueados. El menú derecho se desliza al quitar la chincheta." },
