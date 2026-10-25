@@ -7490,7 +7490,7 @@ const sharedStyles = `
   .mh-notice-a .is-ok { background: #2a56c4; color: #fff; }
   @media (max-width: 900px) { .mh-home { grid-template-columns: 1fr; } .mh-friends { position: static; } .mh-pop { left: 12px; bottom: auto; top: 60px; } }
   .mh-gal-wrap { display: flex; flex-direction: column; height: calc(100dvh - 170px); min-height: 380px; }
-  @media (min-width: 721px) { .mh-gal-wrap { height: calc(100dvh - 72px); } .mh-gal-head { margin: 10px 0 0; } }
+  @media (min-width: 721px) { .mh-gal-wrap { height: calc(100dvh - 72px); position: relative; } .mh-gal-foot { position: absolute; left: 0; right: 0; top: 100%; padding-top: 7px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 14px; } .mh-gal-foot > * { margin: 0 !important; min-height: 0 !important; } }
   .mh-gal-head { display: flex; align-items: baseline; gap: 12px; margin: 0 0 14px; font-size: 13px; color: var(--mh-ink3); font-weight: 600; }
   .mh-gal-head small { font-size: 12px; color: #C0504A; font-weight: 500; }
   .mh-gal { flex: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; align-items: stretch; justify-content: center; min-height: 0; }
@@ -7824,7 +7824,7 @@ const sharedStyles = `
   .mh-gal .mh-hero-nums { width: 100%; font-size: 12px; }
   .mh-gc { margin: 0; position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; min-height: 0; padding: 16px 16px 14px; border-radius: 26px; cursor: pointer; overflow: hidden; background: radial-gradient(120% 60% at 50% 0%, color-mix(in srgb, var(--k) 24%, transparent), transparent 70%), color-mix(in srgb, var(--mh-panel) 84%, transparent); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); border: 1px solid color-mix(in srgb, var(--k) 38%, var(--mh-line2)); box-shadow: 0 16px 28px -18px #000c, inset 0 1px 0 #ffffff14; transition: transform .22s ease, box-shadow .22s ease; }
   html[data-mh-theme="light"] .mh-gc { box-shadow: 0 12px 24px -16px #3a2c1255, inset 0 1px 0 #fff; }
-  .mh-gc:hover, .mh-gc:focus-visible { transform: translateY(-6px); outline: none; box-shadow: 0 28px 64px #000a, 0 0 0 1px color-mix(in srgb, var(--k) 60%, transparent), 0 0 46px color-mix(in srgb, var(--k) 30%, transparent), inset 0 1px 0 #ffffff22; }
+  .mh-gc:hover, .mh-gc:focus-visible { outline: none; box-shadow: 0 28px 64px #000a, 0 0 0 1px color-mix(in srgb, var(--k) 60%, transparent), 0 0 46px color-mix(in srgb, var(--k) 30%, transparent), inset 0 1px 0 #ffffff22; }
   .mh-gc.is-dead { filter: grayscale(.85); opacity: .8; }
   .mh-gc-top { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: center; gap: 6px; width: 100%; }
   .mh-gc-top .mh-gc-del { margin-left: auto; }
@@ -28095,16 +28095,17 @@ export default function App({ onSignOut }) {
                 )}
               </div>
 
-              {Object.keys(characters).length >= MAX_CHARACTERS && (
-                <div className="mh-gal-head">
-                  <small>Límite alcanzado: elimina uno para crear otro.</small>
-                </div>
-              )}
-              {charWarning && (
-                <div style={{ fontSize: 12.5, color: "#D9644E", marginTop: 10 }}>{charWarning}</div>
-              )}
-
-              <div style={{ fontSize: 11.5, color: "var(--mh-muted)", minHeight: 14, marginTop: 14 }}>{saveTick > 0 ? "Guardado" : "\u00a0"}</div>
+              <div className="mh-gal-foot">
+                {Object.keys(characters).length >= MAX_CHARACTERS && (
+                  <div className="mh-gal-head">
+                    <small>Límite alcanzado: elimina uno para crear otro.</small>
+                  </div>
+                )}
+                {charWarning && (
+                  <div style={{ fontSize: 12.5, color: "#D9644E", marginTop: 10 }}>{charWarning}</div>
+                )}
+                {saveTick > 0 && <div style={{ fontSize: 11.5, color: "var(--mh-muted)", marginTop: 14 }}>Guardado</div>}
+              </div>
 
               {deleteTargetId && characters[deleteTargetId] && (() => {
                 const dc = characters[deleteTargetId];
