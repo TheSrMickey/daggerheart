@@ -94,7 +94,7 @@ function FitBelow({ className, children, bottom = EDGE, min = 360, off = false }
       if (!el) return;
       const main = el.closest("[data-mh-main]");
       const top = el.getBoundingClientRect().top + (main ? main.scrollTop : 0);
-      setH(Math.max(min, Math.round(window.innerHeight - top - bottom)));
+      setH(Math.max(min, Math.floor(window.innerHeight - top - bottom) - 1));
     };
     calc();
     const ro = new ResizeObserver(calc);
@@ -5496,7 +5496,21 @@ const sharedStyles = `
   .mh-cg-nav.is-live button { padding: 7px 14px; border-radius: 999px; border: 1px solid var(--mh-line2); box-shadow: none; font-size: 13px; } .mh-cg-nav.is-live button.is-on { background: #E3B04B22; border-color: #E3B04B; }
   .mh-cg-navrow { border-bottom: 1px solid var(--mh-line); padding-bottom: 6px; margin-bottom: 14px !important; } .mh-cg-navrow .mh-cg-nav { overflow: visible; }
   /* la cabecera común sustituye a los títulos propios de cada pestaña */
-  .mh-cg-pg + .gx > .gx-h, .mh-cg-pg + .mh-card > .gx-h, .mh-cg-pg + .mh-card > .mh-gm-h, .mh-cg-pg + .mh-card > .mh-gm-h + .mh-gm-sub, .mh-cg-pg + .mh-gm > .mh-gm-box:first-child > .mh-gm-h:first-child, .mh-cg-pg + .mh-gm > .mh-gm-box:first-child > .mh-gm-h:first-child + .mh-gm-sub, .mh-cg-pg + .gx2 .gx2-title, .mh-cg-pg + .mh-card > .gx-h + .gx-sub:has(~ .gx-row) { display: none; }
+  .mh-cg-pg + .gx > .gx-h, .mh-cg-pg + .mh-card > .gx-h, .mh-cg-pg + .mh-card > .mh-gm-h, .mh-cg-pg + .mh-card > .mh-gm-h + .mh-gm-sub, .mh-cg-pg + .mh-gm > .mh-gm-box:first-child > .mh-gm-h:first-child, .mh-cg-pg + .mh-gm > .mh-gm-box:first-child > .mh-gm-h:first-child + .mh-gm-sub, .mh-cg-pg + .gx2 .gx2-title, .mh-cg-pg + .mh-npcpg .mh-npc-l > .mh-gm-box:first-child > .mh-gm-h:first-child, .mh-cg-pg + .mh-npcpg .mh-npc-l > .mh-gm-box:first-child > .mh-gm-h:first-child + .mh-gm-sub, .mh-cg-pg + .mh-card > .gx-h + .gx-sub:has(~ .gx-row) { display: none; }
+  .mh-root:not(.is-mobile) .mh-npcpg { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 14px; align-items: stretch; } .mh-root:not(.is-mobile) .mh-npcpg:not(:has(.mh-npc-r > *)) { grid-template-columns: minmax(0, 1fr); }
+  .mh-npc-l, .mh-npc-r { position: relative; display: flex; flex-direction: column; gap: 14px; min-width: 0; min-height: 0; } .mh-root:not(.is-mobile) .mh-npc-l, .mh-root:not(.is-mobile) .mh-npc-r { overflow-y: auto; scrollbar-width: thin; padding-right: 2px; } .mh-npcpg .mh-gm-box { margin: 0; flex: none; }
+  .mh-pl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  .mh-pl-c { position: relative; display: flex; flex-direction: column; gap: 12px; padding: 14px; border-radius: 14px; background: var(--mh-panel); border: 1px solid var(--mh-line); transition: border-color .15s; } .mh-pl-c:hover { border-color: color-mix(in srgb, var(--pc) 60%, var(--mh-line)); }
+  .mh-pl-top { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 12px; min-width: 0; padding-right: 22px; }
+  .mh-pl-em { width: 44px; height: 44px; flex: none; display: grid; place-items: center; border-radius: 50%; color: color-mix(in srgb, var(--pc) var(--mh-accent-keep, 100%), #000); background: color-mix(in srgb, var(--pc) 16%, var(--mh-panel2)); border: 1.5px solid color-mix(in srgb, var(--pc) 60%, transparent); }
+  .mh-pl-nm { display: flex; flex-direction: column; min-width: 0; } .mh-pl-nm b { font-size: 16px; color: var(--mh-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .mh-pl-nm small { font-size: 12px; color: var(--mh-muted); }
+  .mh-pl-x { all: unset; cursor: pointer; position: absolute; top: 10px; right: 10px; width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center; color: var(--mh-muted2); opacity: 0; transition: opacity .15s; } .mh-pl-c:hover .mh-pl-x, .mh-pl-x:focus-visible { opacity: 1; } .mh-pl-x:hover { color: #D9644E; background: #D9644E1a; }
+  .mh-pl-bars { display: flex; flex-direction: column; gap: 7px; } .mh-pl-bars > div { display: grid; grid-template-columns: 44px 1fr 38px; align-items: center; gap: 8px; font-size: 11.5px; } .mh-pl-bars span { color: var(--mh-muted); } .mh-pl-bars em { font-style: normal; text-align: right; color: var(--mh-ink3); }
+  .mh-pl-bars i { height: 6px; border-radius: 99px; background: var(--mh-panel2); overflow: hidden; display: block; } .mh-pl-bars u { display: block; height: 100%; border-radius: 99px; text-decoration: none; }
+  .mh-pl-empty { font-size: 13px; color: var(--mh-muted); padding: 18px 0; }
+  .mh-pl-add { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--mh-line); } .mh-pl-add > span { font-size: 12.5px; color: var(--mh-muted); margin-right: 4px; } .mh-pl-add small { font-size: 12.5px; color: var(--mh-muted); }
+  .mh-pl-add button { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 99px; border: 1px dashed var(--mh-line2); font-size: 12.5px; color: var(--mh-ink3); } .mh-pl-add button:hover { border-color: #E3B04B; color: var(--mh-ink); }
+  .mh-root:not(.is-mobile) .mh-chatpg { display: flex; flex-direction: column; min-height: 0; } .mh-chatcard { flex: 1; min-height: 0; display: flex; flex-direction: column; max-width: 860px; width: 100%; } .mh-chatcard .mh-chat-feed { flex: 1; min-height: 0; max-height: none; overflow-y: auto; }
   .mh-cg-pg { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; margin: 2px 0 16px; } .mh-cg-pg h3 { margin: 0; font-size: 20px; line-height: 1.15; color: var(--mh-ink); } .mh-cg-pg p { margin: 3px 0 0; font-size: 13px; color: var(--mh-muted); }
   .mh-cg-sub { display: flex; gap: 6px; margin: 0 0 14px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
   .mh-cg-sub::-webkit-scrollbar { display: none; }
@@ -5529,7 +5543,7 @@ const sharedStyles = `
   .mh-hs { display: grid; grid-template-columns: 330px minmax(0, 1fr); gap: 14px; align-items: start; }
   .mh-root:not(.is-mobile) .mh-hs { align-items: stretch; min-height: 0; } .mh-root:not(.is-mobile) .mh-hs-list { overflow-y: auto; min-height: 0; scrollbar-width: thin; }
   .mh-root:not(.is-mobile) .mh-hs-detail { display: flex; flex-direction: column; min-height: 0; } .mh-root:not(.is-mobile) .mh-hs-detail > * { flex: none; }
-  .mh-root:not(.is-mobile) .mh-hs-detail .mh-hs-banner { height: clamp(66px, 11vh, 120px); padding: 10px 18px; } .mh-root:not(.is-mobile) .mh-hs-detail .mh-hs-bt .mh-serif { font-size: 22px; } .mh-root:not(.is-mobile) .mh-hs-tabs { padding: 8px 18px; } .mh-root:not(.is-mobile) .mh-hs-tl { padding-top: 8px; } .mh-root:not(.is-mobile) .mh-hs-tl-row { padding-bottom: 6px; } .mh-root:not(.is-mobile) .mh-hs-body { padding: 12px 18px 16px; } .mh-root:not(.is-mobile) .mh-hs-detail > .mh-hs-body { flex: 1 1 0; min-height: 0; overflow-y: auto; scrollbar-width: thin; }
+  .mh-root:not(.is-mobile) .mh-hs-detail .mh-hs-banner { height: clamp(66px, 11vh, 120px); padding: 10px 18px; } .mh-root:not(.is-mobile) .mh-hs-detail .mh-hs-bt .mh-serif { font-size: 22px; } .mh-root:not(.is-mobile) .mh-hs-tabs { padding: 8px 18px; } .mh-root:not(.is-mobile) .mh-hs-tl { display: none; } .mh-root:not(.is-mobile) .mh-hs-tl-row { padding-bottom: 6px; } .mh-root:not(.is-mobile) .mh-hs-body { padding: 12px 18px 16px; } .mh-root:not(.is-mobile) .mh-hs-detail > .mh-hs-body { flex: 1 1 0; min-height: 0; overflow-y: auto; scrollbar-width: thin; }
   .mh-hs-list { display: flex; flex-direction: column; gap: 9px; padding: 14px; border-radius: 22px; background: var(--mh-panel); border: 1px solid var(--mh-line); }
   .mh-hs-row { display: flex; align-items: center; gap: 6px; padding: 7px; border-radius: 16px; border: 1px solid var(--mh-line); background: var(--mh-panel2); }
   .mh-hs-row.is-on { border-color: rgba(227,176,75,.7); background: rgba(227,176,75,.12); }
@@ -5823,7 +5837,7 @@ const sharedStyles = `
   .mh-ch-filter { display: flex; gap: 6px; flex-wrap: wrap; }
   .mh-ch-fchip { font: 600 12px 'Inter', system-ui, sans-serif; padding: 5px 12px; border-radius: 20px; border: 1px solid var(--mh-line2); background: var(--mh-panel2); color: var(--mh-ink3); cursor: pointer; }
   .mh-ch-fchip.is-on { border-color: var(--mh-gold-ink); color: var(--mh-gold-ink); background: color-mix(in srgb, var(--mh-gold-ink) 10%, var(--mh-panel2)); }
-  .mh-ch-npcs { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  .mh-ch-npcs { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; } .mh-npcpg .mh-ch-npcs { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
   .mh-ch-npc { --nc: var(--mh-purple-ink); display: flex; flex-direction: column; gap: 10px; padding: 14px; border: 1px solid var(--mh-line); border-radius: 16px; background: var(--mh-panel); }
   .mh-ch-npc.is-aliado { --nc: var(--mh-green-ink); }
   .mh-ch-npc.is-enemigo { --nc: #D9644E; }
@@ -29742,7 +29756,8 @@ export default function App({ onSignOut }) {
                     const target = scenes.find((x) => x.id === chapterId) || scenes.find((x) => x.id === activeSceneIdOf(campaignStage)) || scenes[0] || null;
                     const sel = campaignCast.find((m) => m.id === dialogueDraft.castId) || null;
                     return (
-                      <div className="mh-gm">
+                      <FitBelow className="mh-gm mh-npcpg" off={isMobile}>
+                        <div className="mh-npc-l">
                         <div className="mh-card mh-gm-box is-wide">
                           <div className="mh-gm-h">
                             <Users size={15} /> PNJ de la campaña
@@ -29796,6 +29811,34 @@ export default function App({ onSignOut }) {
                             {list.length === 0 && <div className="mh-chat-empty">{campaignCast.length === 0 ? "Todavía no hay PNJ. Añade el primero abajo." : "No hay PNJ de este tipo."}</div>}
                           </div>
                         </div>
+                        <div className="mh-card mh-gm-box is-wide">
+                          <div className="mh-gm-h">
+                            <Plus size={15} /> Nuevo PNJ
+                          </div>
+                          <div className="mh-gm-castadd">
+                            <label className="mh-gm-upload" title="Subir imagen del PNJ">
+                              {castDraft.img ? <img src={castDraft.img} alt="Vista previa" /> : <Upload size={18} />}
+                              <span>{castDraft.img ? "Cambiar" : "Subir PNG"}</span>
+                              <input
+                                type="file"
+                                accept="image/png,image/webp,image/jpeg,image/gif"
+                                onChange={(e) => {
+                                  pickCastImage(e.target.files?.[0]);
+                                  e.target.value = "";
+                                }}
+                              />
+                            </label>
+                            <div className="mh-gm-castadd-f">
+                              <input className="mh-input" placeholder="Nombre (p. ej. Marta, la posadera)" value={castDraft.name} onChange={(e) => setCastDraft((d) => ({ ...d, name: e.target.value }))} onKeyDown={(e) => e.key === "Enter" && addCastMember()} />
+                              <button type="button" className="mh-btn-ghost" disabled={!castDraft.name.trim()} onClick={addCastMember}>
+                                <Plus size={14} /> Añadir PNJ
+                              </button>
+                              {castError && <div className="mh-gm-err">{castError}</div>}
+                            </div>
+                          </div>
+                        </div>
+                        </div>
+                        <div className="mh-npc-r">
                         {sel && (
                           <div className="mh-card mh-gm-box is-wide">
                             <div className="mh-gm-h">
@@ -29898,97 +29941,57 @@ export default function App({ onSignOut }) {
                             </div>
                           );
                         })()}
-                        <div className="mh-card mh-gm-box is-wide">
-                          <div className="mh-gm-h">
-                            <Plus size={15} /> Nuevo PNJ
-                          </div>
-                          <div className="mh-gm-castadd">
-                            <label className="mh-gm-upload" title="Subir imagen del PNJ">
-                              {castDraft.img ? <img src={castDraft.img} alt="Vista previa" /> : <Upload size={18} />}
-                              <span>{castDraft.img ? "Cambiar" : "Subir PNG"}</span>
-                              <input
-                                type="file"
-                                accept="image/png,image/webp,image/jpeg,image/gif"
-                                onChange={(e) => {
-                                  pickCastImage(e.target.files?.[0]);
-                                  e.target.value = "";
-                                }}
-                              />
-                            </label>
-                            <div className="mh-gm-castadd-f">
-                              <input className="mh-input" placeholder="Nombre (p. ej. Marta, la posadera)" value={castDraft.name} onChange={(e) => setCastDraft((d) => ({ ...d, name: e.target.value }))} onKeyDown={(e) => e.key === "Enter" && addCastMember()} />
-                              <button type="button" className="mh-btn-ghost" disabled={!castDraft.name.trim()} onClick={addCastMember}>
-                                <Plus size={14} /> Añadir PNJ
-                              </button>
-                              {castError && <div className="mh-gm-err">{castError}</div>}
-                            </div>
-                          </div>
                         </div>
-                      </div>
+                      </FitBelow>
                     );
                   })()}
 
                   {campaignDetailTab === "resumen" && (
-                    <div>
-                      <div className="mh-serif" style={{ fontSize: 15, fontWeight: 700, marginBottom: 10 }}>
-                        Personajes en la campaña
-                      </div>
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 14, marginBottom: 26 }}>
+                    <div className="mh-pl">
+                      <div className="mh-pl-grid">
                         {memberIds.map((id) => {
                           const ch = characters[id];
                           if (!ch) return null;
+                          const Em = CLASS_EMBLEMS[ch.f_class] || User;
+                          const col = classColor(ch.f_class);
+                          const hpT = Number(ch.r_hp || 0), hpM = Number(ch.hp_marked || 0);
+                          const stT = Number(ch.r_stress || 0), stM = Number(ch.stress_marked || 0);
                           return (
-                            <div key={id} className="mh-card" style={{ margin: 0, padding: "14px 16px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
-                              <div style={{ cursor: "pointer" }} onClick={() => openModern(id)}>
-                                <div className="mh-serif" style={{ fontSize: 15, fontWeight: 600 }}>{ch.f_name || "Sin nombre"}</div>
-                                <div style={{ fontSize: 11.5, color: "var(--mh-muted)" }}>
-                                  {ch.f_class ? "Nivel " + (ch.f_level || "1") + " · " + ch.f_class : "Sin clase asignada"}
-                                </div>
+                            <div key={id} className="mh-pl-c" style={{ "--pc": col }}>
+                              <button type="button" className="mh-pl-x" title="Quitar de la campaña" aria-label={"Quitar a " + (ch.f_name || "personaje") + " de la campaña"} onClick={() => removeCharacterFromCampaign(viewingCampaignId, id)}><X size={13} /></button>
+                              <button type="button" className="mh-pl-top" onClick={() => openModern(id)}>
+                                <span className="mh-pl-em"><Em size={22} strokeWidth={1.6} /></span>
+                                <span className="mh-pl-nm"><b className="mh-serif">{ch.f_name || "Sin nombre"}</b><small>{ch.f_class ? ch.f_class + " · Nivel " + (ch.f_level || "1") : "Sin clase asignada"}</small></span>
+                              </button>
+                              <div className="mh-pl-bars">
+                                <div><span>Vida</span><i><u style={{ width: (hpT ? Math.max(0, hpT - hpM) / hpT * 100 : 0) + "%", background: "#D9644E" }} /></i><em>{hpT ? Math.max(0, hpT - hpM) + "/" + hpT : "—"}</em></div>
+                                <div><span>Estrés</span><i><u style={{ width: (stT ? Math.min(stM, stT) / stT * 100 : 0) + "%", background: "#A58BE8" }} /></i><em>{stT ? stM + "/" + stT : "—"}</em></div>
                               </div>
-                              <X size={14} style={{ cursor: "pointer", color: "#D9644E", flexShrink: 0 }} onClick={() => removeCharacterFromCampaign(viewingCampaignId, id)} />
                             </div>
                           );
                         })}
-                        {memberIds.length === 0 && (
-                          <div style={{ fontSize: 12.5, color: "var(--mh-muted)", fontStyle: "italic" }}>Todavía no hay personajes en esta campaña.</div>
-                        )}
+                        {memberIds.length === 0 && <div className="mh-pl-empty">Todavía no hay personajes en esta campaña.</div>}
                       </div>
-
-                      <div className="mh-serif" style={{ fontSize: 15, fontWeight: 700, marginBottom: 10 }}>
-                        Añadir personaje existente
-                      </div>
-                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      <div className="mh-pl-add">
+                        <span>Añadir personaje</span>
                         {availableIds.map((id) => (
-                          <div
-                            key={id}
-                            onClick={() => addCharacterToCampaign(viewingCampaignId, id)}
-                            className="mh-chip"
-                            style={{ display: "inline-flex", alignItems: "center", gap: 5, cursor: "pointer" }}
-                          >
-                            <Plus size={12} /> {characters[id].f_name || "Sin nombre"}
-                          </div>
+                          <button key={id} type="button" onClick={() => addCharacterToCampaign(viewingCampaignId, id)}><Plus size={12} /> {characters[id].f_name || "Sin nombre"}</button>
                         ))}
-                        {availableIds.length === 0 && (
-                          <div style={{ fontSize: 12.5, color: "var(--mh-muted)", fontStyle: "italic" }}>
-                            {Object.keys(characters).length === 0 ? "Todavía no tienes personajes creados." : "No hay personajes disponibles (ya están en esta u otra campaña)."}
-                          </div>
-                        )}
+                        {availableIds.length === 0 && <small>{Object.keys(characters).length === 0 ? "Todavía no tienes personajes creados." : "No hay personajes disponibles (ya están en esta u otra campaña)."}</small>}
                       </div>
                     </div>
                   )}
 
                   {campaignDetailTab === "chat" && (
-                    <div className="mh-card" style={{ margin: 0, padding: "18px 20px", maxWidth: 640, position: "relative" }}>
+                    <FitBelow className="mh-chatpg" off={isMobile}>
+                    <div className="mh-card mh-chatcard" style={{ margin: 0, padding: "18px 20px", position: "relative" }}>
                       <Trash2
                         size={16}
                         title="Limpiar chat"
                         style={{ position: "absolute", top: 18, right: 20, color: "#D9644E", cursor: "pointer" }}
                         onClick={clearCampaignChat}
                       />
-                      <div style={{ fontSize: 11.5, color: "var(--mh-muted)", marginBottom: 12, paddingRight: 24 }}>
-                        Chat de la campaña: mensajes, tiradas y acciones de la mesa. Lo que escribas aquí sale como el DJ.
-                      </div>
-                      <div ref={chatScrollRef} className="mh-chat-feed" style={{ maxHeight: 460, marginBottom: 14 }}>
+                      <div ref={chatScrollRef} className="mh-chat-feed" style={{ marginBottom: 14 }}>
                         {campaignChat.length === 0 && <ChatEmpty />}
                         {renderChatFeed(campaignChat, null)}
                       </div>
@@ -30004,6 +30007,7 @@ export default function App({ onSignOut }) {
                         <button className="mh-btn" onClick={sendCampaignChat}>Enviar</button>
                       </div>
                     </div>
+                    </FitBelow>
                   )}
 
                   {campaignDetailTab === "mundo" && (
