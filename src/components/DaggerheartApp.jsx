@@ -2227,6 +2227,22 @@ const CAMP_SPACES = [
   },
   { key: "directo", label: "Directo", Icon: Radio, tabs: [{ key: "mesa", label: "Directo", Icon: Radio }] },
 ];
+// Título y frase de cada pestaña interior de la campaña (cabecera común).
+const CAMP_PAGES = {
+  historia: ["Capítulos", "Cada capítulo es una escena de tu historia, con su imagen, diálogos y combates."],
+  pnj: ["PNJ", "Los personajes que interpretas tú, con sus estadísticas y su aspecto."],
+  mapas: ["Mapas de combate", "Tableros preparados para cuando empiece una pelea."],
+  pistas: ["Pistas", "Lo que descubre el grupo, listo para enseñarlo en el momento justo."],
+  resumen: ["Jugadores", "El estado de tu mesa de un vistazo."],
+  chat: ["Chat de la mesa", "Mensajes y tiradas de todo el grupo."],
+  votaciones: ["Votaciones", "Decide con tu grupo sin salir de la campaña."],
+  calendario: ["Calendario", "Las sesiones de la mesa y quién asiste."],
+  descanso: ["Descanso", "Propón un descanso y cada jugador lo hace desde su hoja. Aquí ves quién ya ha descansado."],
+  mundo: ["Mapa de mundo", "Tu mundo con sus lugares, tradicional o en 3D."],
+  cronica: ["Crónica", "El diario de lo que ha ocurrido en la campaña."],
+  linea: ["Línea de tiempo", "Los hechos importantes, en orden."],
+  generadores: ["Generadores", "Improvisa encuentros, nombres y rumores sin parar la partida."],
+};
 const HANDOUT_KINDS = [
   { key: "imagen", label: "Imagen", Icon: ImageIcon },
   { key: "nota", label: "Nota", Icon: ScrollText },
@@ -5473,14 +5489,19 @@ const sharedStyles = `
   .mh-gm-dlg-col { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
   /* Campaña del DJ en cristal: cuatro espacios */
   .mh-cg { position: relative; }
-  .mh-cg-nav { display: flex; gap: 4px; padding: 5px; width: fit-content; max-width: 100%; margin: 0 0 12px; border-radius: 999px; background: var(--mh-panel); border: 1px solid var(--mh-line); overflow-x: auto; scrollbar-width: none; }
+  .mh-cg-nav { display: flex; gap: 22px; padding: 0; width: fit-content; max-width: 100%; margin: 0 0 12px; background: none; border: 0; overflow-x: auto; scrollbar-width: none; }
   .mh-cg-nav::-webkit-scrollbar { display: none; }
-  .mh-cg-nav button { display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px; border: 0; border-radius: 999px; background: transparent; color: var(--mh-ink3); font: 700 13.5px 'Inter', system-ui, sans-serif; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
-  .mh-cg-nav button.is-on { background: linear-gradient(180deg, #f0c264, #d9a23c); color: #1c1405; }
+  .mh-cg-nav button { display: inline-flex; align-items: center; gap: 8px; padding: 9px 2px; border: 0; border-radius: 0; background: transparent; color: var(--mh-ink3); font: 600 14px 'Inter', system-ui, sans-serif; cursor: pointer; white-space: nowrap; flex-shrink: 0; box-shadow: inset 0 -2px 0 transparent; transition: color .15s, box-shadow .15s; }
+  .mh-cg-nav button:hover { color: var(--mh-ink); } .mh-cg-nav button.is-on { background: none; color: var(--mh-ink); box-shadow: inset 0 -2px 0 #E3B04B; }
+  .mh-cg-nav.is-live button { padding: 7px 14px; border-radius: 999px; border: 1px solid var(--mh-line2); box-shadow: none; font-size: 13px; } .mh-cg-nav.is-live button.is-on { background: #E3B04B22; border-color: #E3B04B; }
+  .mh-cg-navrow { border-bottom: 1px solid var(--mh-line); padding-bottom: 6px; margin-bottom: 14px !important; } .mh-cg-navrow .mh-cg-nav { overflow: visible; }
+  /* la cabecera común sustituye a los títulos propios de cada pestaña */
+  .mh-cg-pg + .gx > .gx-h, .mh-cg-pg + .mh-card > .gx-h, .mh-cg-pg + .mh-card > .mh-gm-h, .mh-cg-pg + .mh-card > .mh-gm-h + .mh-gm-sub, .mh-cg-pg + .mh-gm > .mh-gm-box:first-child > .mh-gm-h:first-child, .mh-cg-pg + .mh-gm > .mh-gm-box:first-child > .mh-gm-h:first-child + .mh-gm-sub, .mh-cg-pg + .gx2 .gx2-title, .mh-cg-pg + .mh-card > .gx-h + .gx-sub:has(~ .gx-row) { display: none; }
+  .mh-cg-pg { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; margin: 2px 0 16px; } .mh-cg-pg h3 { margin: 0; font-size: 20px; line-height: 1.15; color: var(--mh-ink); } .mh-cg-pg p { margin: 3px 0 0; font-size: 13px; color: var(--mh-muted); }
   .mh-cg-sub { display: flex; gap: 6px; margin: 0 0 14px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
   .mh-cg-sub::-webkit-scrollbar { display: none; }
-  .mh-cg-sub button { display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; border-radius: 999px; border: 1px solid var(--mh-line); background: var(--mh-panel2); color: var(--mh-ink3); font: 600 12.5px 'Inter', system-ui, sans-serif; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
-  .mh-cg-sub button.is-on { background: rgba(227,176,75,.16); border-color: rgba(227,176,75,.6); color: var(--mh-gold-ink); }
+  .mh-cg-sub button { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; border: 1px solid transparent; background: transparent; color: var(--mh-muted); font: 500 13px 'Inter', system-ui, sans-serif; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+  .mh-cg-sub button:hover { color: var(--mh-ink); } .mh-cg-sub button.is-on { background: var(--mh-panel); border-color: var(--mh-line2); color: var(--mh-ink); }
   .mh-cg .mh-gm-sc, .mh-cg .mh-gm-castm, .mh-cg .mh-ch-step, .mh-cg .mh-ch-map, .mh-cg .mh-ch-enc, .mh-cg .mh-ch-npc { background: var(--mh-panel2); border-color: var(--mh-line); }
   .mh-cg-head { display: flex; align-items: center; gap: 12px; padding: 12px 16px; margin-bottom: 14px; border-radius: 18px; background: var(--mh-panel); border: 1px solid var(--mh-line); color: var(--mh-ink); }
   .mh-cg-back { width: 34px; height: 34px; flex: none; display: grid; place-items: center; border-radius: 11px; border: 1px solid var(--mh-line); background: var(--mh-panel2); color: var(--mh-ink3); cursor: pointer; }
@@ -28314,13 +28335,6 @@ export default function App({ onSignOut }) {
                             </button>
                           ))}
                         </nav>
-{space.key === "historia" && campaignDetailTab === "historia" && (
-                          <div className="mh-cg-acts">
-                            <button type="button" className="mh-cg-gold" onClick={() => setNewChOpen(1)}>
-                              <Plus size={15} /> <span>Nuevo capítulo</span>
-                            </button>
-                          </div>
-                        )}
                         {space.key === "directo" && (
                           <div className="mh-cg-acts">
                             <button type="button" className={"mh-dir-pause" + (campaignStage.xcard?.on ? " is-on" : "")} onClick={toggleXCard} aria-pressed={!!campaignStage.xcard?.on} title={campaignStage.xcard?.on ? "Retirar el aviso de X-Card" : "X-Card: avisa en la escena de que un jugador no está cómodo con lo que se trata"}>
@@ -28339,6 +28353,19 @@ export default function App({ onSignOut }) {
                                 <t.Icon size={14} strokeWidth={1.9} /> {t.label}
                               </button>
                             ))}
+                          </div>
+                        )}
+                        {space.key !== "directo" && CAMP_PAGES[campaignDetailTab] && (
+                          <div className="mh-cg-pg">
+                            <div>
+                              <h3 className="mh-serif">{CAMP_PAGES[campaignDetailTab][0]}</h3>
+                              <p>{CAMP_PAGES[campaignDetailTab][1]}</p>
+                            </div>
+                            {campaignDetailTab === "historia" && stageScenesOf(campaignStage).length > 0 && (
+                              <button type="button" className="mh-cg-gold" onClick={() => setNewChOpen(1)}>
+                                <Plus size={15} /> <span>Nuevo capítulo</span>
+                              </button>
+                            )}
                           </div>
                         )}
                       </>
