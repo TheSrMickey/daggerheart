@@ -2238,7 +2238,6 @@ const CAMP_PAGES = {
   votaciones: ["Votaciones", "Decide con tu grupo sin salir de la campaña."],
   calendario: ["Calendario", "Las sesiones de la mesa y quién asiste."],
   descanso: ["Descanso", "Propón un descanso y cada jugador lo hace desde su hoja. Aquí ves quién ya ha descansado."],
-  mundo: ["Mapa de mundo", "Tu mundo con sus lugares, tradicional o en 3D."],
   cronica: ["Crónica", "El diario de lo que ha ocurrido en la campaña."],
   linea: ["Línea de tiempo", "Los hechos importantes, en orden."],
   generadores: ["Generadores", "Improvisa encuentros, nombres y rumores sin parar la partida."],
@@ -6037,7 +6036,7 @@ const sharedStyles = `
   .mh-wm.is-fit .mh-wm-view.is-3d .mh-wm3 { border-radius: 0; }
   .mh-wm3-load, .mh-wm3-err { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; color: #1d3b52; pointer-events: none; z-index: 2; }
   .mh-wm3-pins { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 3; }
-  .mh-wm3-pin { position: absolute; left: 0; top: 0; width: 0; height: 0; will-change: transform; } .mh-wm3-pin > * { pointer-events: auto; }
+  .mh-wm3-pin { position: absolute; left: 0; top: 0; width: 0; height: 0; will-change: transform; } .mh-wm3-pin > *, .mh-wm3-pin .mh-wm-pin { pointer-events: auto !important; }
   .mh-wm3-pal { position: absolute; left: 12px; top: 12px; bottom: 12px; z-index: 6; width: 268px; display: flex; flex-direction: column; gap: 8px; padding: 10px; border-radius: 14px; background: var(--mh-panel); border: 1px solid var(--mh-line2); box-shadow: 0 10px 24px -14px #000a; }
   .mh-wm3-tools { display: flex; gap: 5px; } .mh-wm3-tools button { all: unset; box-sizing: border-box; cursor: pointer; flex: 1; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid var(--mh-line); color: var(--mh-ink2); } .mh-wm3-tools button:hover { background: var(--mh-panel2); }
   .mh-wm3-search { display: flex; align-items: center; gap: 6px; padding: 0 9px; height: 30px; border-radius: 8px; border: 1px solid var(--mh-line); background: var(--mh-panel2); color: var(--mh-muted); } .mh-wm3-search input { all: unset; flex: 1; min-width: 0; font-size: 12.5px; color: var(--mh-ink); }
@@ -6050,6 +6049,7 @@ const sharedStyles = `
   .mh-wm3-pal button.is-on { background: linear-gradient(180deg, #f0c264, #d9a23c) !important; color: #1c1405 !important; border-color: #d9a23c !important; } .mh-wm3-pal .mh-wm3-fac button.is-on { background: var(--fc) !important; }
   .mh-wm3-open { position: absolute; left: 12px; top: 12px; z-index: 6; padding: 7px 14px; border-radius: 10px; border: 1px solid var(--mh-line2); background: var(--mh-panel); color: var(--mh-ink); font: 600 12.5px 'Inter', system-ui, sans-serif; cursor: pointer; }
   .mh-wm3-clear { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; height: 28px; border-radius: 8px; border: 1px solid var(--mh-line); font-size: 12px; color: var(--mh-muted); } .mh-wm3-clear:hover { color: #D9644E; border-color: #D9644E88; } .mh-wm3-clear.is-sure { background: #D9644E; border-color: #D9644E; color: #fff; }
+  .mh-root:not(.is-mobile) .mh-wmpg .mh-wm-box .mh-wm.is-fit .mh-wm-bar { width: 100%; margin: 0 0 8px; justify-content: flex-start; }
   .mh-wm3-none { grid-column: 1 / -1; color: var(--mh-muted); font-size: 12px; text-align: center; padding: 10px 0; }
   .mh-wm3-hint { margin: 0; font-size: 10.5px; line-height: 1.35; color: var(--mh-muted); }
   .mh-root:not(.is-mobile) .mh-wmpg { display: flex; flex-direction: column; padding: 12px; margin: 0; min-height: 0; overflow: hidden; }
@@ -30020,8 +30020,6 @@ export default function App({ onSignOut }) {
 
                   {campaignDetailTab === "mundo" && (
                     <FitBelow className="mh-card mh-wmpg" off={isMobile}>
-                      <div className="mh-gm-h"><Globe size={15} /> Mapa de mundo</div>
-                      <div className="mh-gm-sub">Sube la imagen de tu mundo y coloca marcadores encima. Cada marcador abre una tarjeta con imagen y texto y puede llevar a una escena. Cuando quieras enseñárselo a los jugadores, ponlo en directo desde «Mesa».</div>
                       <div className="mh-wm-box" style={{ "--dir-r": dirMonRatio }}><WorldMap
                         fit
                         campaignId={viewingCampaignId}

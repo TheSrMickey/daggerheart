@@ -216,7 +216,9 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
     if (!drag.on && Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) < 5) return;
     dragMoved.current = true;
     if (is3d) {
-      const g = apiRef.current && apiRef.current.groundAt(e.clientX, e.clientY);
+      const api = apiRef.current;
+      const g0 = api && api.groundAt(e.clientX, e.clientY);
+      const g = g0 && (api.snap(g0.x, g0.z) || null);
       if (g) setDrag((d) => ({ ...d, wx: g.x, wz: g.z, on: true }));
       return;
     }
@@ -300,7 +302,7 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
           style={flat ? { left: 0, top: 0, "--pc": k.color } : { left: d.x + "%", top: d.y + "%", "--pc": k.color }}
           title={p.title}
           aria-label={p.title + (p.hidden ? " (oculto)" : "")}
-          onClick={(e) => { e.stopPropagation(); if (!edit) setSel(p.id); }}
+          onClick={(e) => { e.stopPropagation(); if (!edit || flat) setSel(p.id); }}
           onPointerDown={(e) => (edit ? startDrag(e, p) : undefined)}
           onPointerMove={moveDrag}
           onPointerUp={() => drag && drag.id === p.id && endDrag(p)}

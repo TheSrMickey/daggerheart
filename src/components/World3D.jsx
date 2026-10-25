@@ -265,6 +265,10 @@ export default function World3D({ tiles, edit = false, onTiles, pins = [], rende
       const sync = async () => {
         const tl = live.current.tiles || {};
         const seen = new Set();
+        // descarga en paralelo todos los modelos distintos antes de montar el mapa
+        const need = new Set(["tiles/base/hex_grass_bottom"]);
+        for (const k of Object.keys(tl)) { need.add(tileId(tl[k].t)); const o = objId(tl[k].o); if (o) need.add(o); }
+        await Promise.all([...need].map(getModel));
         for (const k of Object.keys(tl)) {
           const t = tl[k];
           seen.add(k);
@@ -343,7 +347,12 @@ export default function World3D({ tiles, edit = false, onTiles, pins = [], rende
         const oid = objId(t.o);
         return oid ? h + objHeight(oid) : h + 0.15;
       };
-      if (apiRef) apiRef.current = { groundAt, tileTop };
+      // los marcadores se colocan siempre en el centro de una losa
+      const snap = (x, z) => {
+        const h = worldToHex(x, z);
+        return inGrid(h.q, h.r) ? hexToWorld(h.q, h.r) : null;
+      };
+      if (apiRef) apiRef.current = { groundAt, tileTop, snap };
 
       const paint = (qq, rr) => {
         const { edit: ed, brush: br, faction: fc, onTiles: set } = live.current;
@@ -432,7 +441,8 @@ export default function World3D({ tiles, edit = false, onTiles, pins = [], rende
         if (down && !down.moved && e.button === 0) {
           if (L.placing && L.onPlace) {
             const g = groundAt(e.clientX, e.clientY);
-            if (g) L.onPlace({ wx: +g.x.toFixed(2), wz: +g.z.toFixed(2) });
+            const c = g && snap(g.x, g.z);
+            if (c) L.onPlace({ wx: +c.x.toFixed(2), wz: +c.z.toFixed(2) });
           } else if (L.onBackground) L.onBackground();
         }
         down = null;
