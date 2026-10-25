@@ -140,6 +140,7 @@ export default function World3D({ tiles, edit = false, onTiles, pins = [], rende
   const [q, setQ] = useState("");
   const [ready, setReady] = useState(false);
   const [open, setOpen] = useState(true);
+  const [sure, setSure] = useState(false);
   const [err, setErr] = useState("");
   const live = useRef({});
   live.current = { tiles, edit, onTiles, pins, brush, faction, placing, onPlace, onGround, onBackground };
@@ -243,6 +244,24 @@ export default function World3D({ tiles, edit = false, onTiles, pins = [], rende
         grp.add(m);
       };
 
+      let first = true;
+      // animación al colocar: la losa (o solo su objeto) cae y rebota un poco
+      const anims = [];
+      let animate = false; // la primera carga no se anima
+      const buildTile = async (t) => {
+        const grp = new THREE.Group();
+        const baseG = new THREE.Group();
+        const objG = new THREE.Group();
+        grp.add(baseG, objG);
+        grp.userData = { objG };
+        const water = isWater(t.t);
+        const h = water ? 0 : Math.min(MAX_H, t.h || 0);
+        for (let l = 0; l < h; l++) await addModel(baseG, "tiles/base/hex_grass_bottom", l, 0);
+        await addModel(baseG, tileId(t.t), h, t.tr || 0);
+        const oid = objId(t.o);
+        if (oid) await addModel(objG, oid, h + objUp(oid), t.r || 0);
+        return grp;
+      };
       const sync = async () => {
         const tl = live.current.tiles || {};
         const seen = new Set();
@@ -252,22 +271,49 @@ export default function World3D({ tiles, edit = false, onTiles, pins = [], rende
           const sig = (t.t || "g") + "|" + (t.o || "") + "|" + (t.r || 0) + "|" + (t.tr || 0) + "|" + (t.h || 0);
           const cur = placed.get(k);
           if (cur && cur.sig === sig) continue;
-          if (cur) world.remove(cur.group);
-          const grp = new THREE.Group();
+          const grp = await buildTile(t);
           const [qq, rr] = k.split(",").map(Number);
           const w = hexToWorld(qq, rr);
           grp.position.set(w.x, 0, w.z);
-          placed.set(k, { sig, group: grp });
+          if (cur) world.remove(cur.group);
           world.add(grp);
-          const water = isWater(t.t);
-          const h = water ? 0 : Math.min(MAX_H, t.h || 0);
-          for (let l = 0; l < h; l++) await addModel(grp, "tiles/base/hex_grass_bottom", l, 0);
-          await addModel(grp, tileId(t.t), h, t.tr || 0);
-          const oid = objId(t.o);
-          if (oid) await addModel(grp, oid, h + objUp(oid), t.r || 0);
+          placed.set(k, { sig, group: grp });
+          if (animate) {
+            const a0 = cur ? cur.sig.split("|") : null;
+            const p = sig.split("|");
+            const onlyObj = a0 && a0[0] === p[0] && a0[3] === p[3] && a0[4] === p[4] && p[1];
+            anims.push({ node: onlyObj ? grp.userData.objG : grp, t0: performance.now(), drop: onlyObj ? 1.6 : 0.9 });
+          }
           dirty = true;
         }
         for (const [k, v] of placed) if (!seen.has(k)) { world.remove(v.group); placed.delete(k); dirty = true; }
+      };
+      let syncing = false, again = false;
+      const runSync = () => {
+        if (syncing) { again = true; return; }
+        syncing = true;
+        sync().catch(() => {}).finally(() => {
+          syncing = false;
+          if (again) { again = false; runSync(); return; }
+          const L = live.current;
+          if (first && Object.keys(L.tiles || {}).length) { first = false; centre(); }
+          animate = true;
+          setReady(true);
+          dirty = true;
+        });
+      };
+      const tickAnims = (now) => {
+        for (let i = anims.length - 1; i >= 0; i--) {
+          const an = anims[i];
+          const p = Math.min(1, (now - an.t0) / 420);
+          const c1 = 1.70158, c3 = c1 + 1;
+          const back = 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2);
+          const sc = 0.45 + 0.55 * back;
+          an.node.scale.set(sc, sc, sc);
+          an.node.position.y = (1 - (1 - Math.pow(1 - p, 3))) * an.drop;
+          if (p >= 1) { an.node.scale.set(1, 1, 1); an.node.position.y = 0; anims.splice(i, 1); }
+          dirty = true;
+        }
       };
 
       const centre = () => {
@@ -304,7 +350,7 @@ export default function World3D({ tiles, edit = false, onTiles, pins = [], rende
         if (!ed || !br || !set || !inGrid(qq, rr)) return;
         const k = keyOf(qq, rr);
         set((cur) => {
-          const base = cur && Object.keys(cur).length ? cur : starterTiles();
+          const base = cur || starterTiles();
           const old = base[k];
           const put = (v) => ({ ...base, [k]: v });
           switch (br.kind) {
@@ -415,20 +461,20 @@ export default function World3D({ tiles, edit = false, onTiles, pins = [], rende
       let raf = 0;
       let lastSig = "";
       let pinSig = "";
-      let first = true;
       const loop = () => {
         raf = requestAnimationFrame(loop);
         const L = live.current;
         const sig = L.tiles ? Object.keys(L.tiles).length + ":" + Object.values(L.tiles).map((t) => (t.t || "g") + (t.o || "") + (t.r || 0) + (t.tr || 0) + (t.h || 0)).join("") : "0";
         if (sig !== lastSig) {
           lastSig = sig;
-          sync().then(() => { if (first && Object.keys(L.tiles || {}).length) { first = false; centre(); } setReady(true); dirty = true; });
+          runSync();
         }
         const ps = L.pins.map((p) => p.id + ":" + p.wx + ":" + p.wz).join("|") + "#" + Object.keys(pinEls.current).length;
         if (ps !== pinSig) { pinSig = ps; dirty = true; }
         controls.mouseButtons.LEFT = L.edit && L.brush ? -1 : THREE.MOUSE.ROTATE;
         controls.mouseButtons.RIGHT = L.edit && L.brush ? THREE.MOUSE.ROTATE : THREE.MOUSE.PAN;
         grid.visible = !!(L.edit && (L.brush || L.placing));
+        if (anims.length) tickAnims(performance.now());
         const moving = controls.update();
         if (moving || dirty) {
           dirty = false;
@@ -471,6 +517,13 @@ export default function World3D({ tiles, edit = false, onTiles, pins = [], rende
     const b = isTile ? { kind: "tile", id: i.id } : { kind: "obj", id: i.id };
     setBrush((cur) => (cur && JSON.stringify(cur) === JSON.stringify(b) ? null : b));
   };
+  const clearAll = () => {
+    if (!sure) { setSure(true); setTimeout(() => setSure(false), 4000); return; }
+    setSure(false);
+    if (tiles) { hist.current.push(tiles); if (hist.current.length > 40) hist.current.shift(); }
+    if (onTiles) onTiles(() => ({}));
+  };
+  const empty = !!tiles && Object.keys(tiles).length === 0;
   const tool = (kind) => setBrush((cur) => (cur && cur.kind === kind ? null : { kind }));
   const undo = () => {
     const prev = hist.current.pop();
@@ -488,6 +541,7 @@ export default function World3D({ tiles, edit = false, onTiles, pins = [], rende
     <div className="mh-wm3" ref={host} style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
       {err && <div className="mh-wm3-err">{err}</div>}
       {!ready && !err && <div className="mh-wm3-load">Cargando el mundo…</div>}
+      {ready && empty && <div className="mh-wm3-load" style={{ pointerEvents: "none" }}>{edit ? "El mapa está vacío. Elige una pieza y pinta sobre el tablero." : "El DJ todavía no ha construido el mapa."}</div>}
       <div className="mh-wm3-pins">
         {pins.map((p) => (
           <div key={p.id} className="mh-wm3-pin" ref={(n) => { if (n) pinEls.current[p.id] = n; else delete pinEls.current[p.id]; }}>
@@ -530,6 +584,7 @@ export default function World3D({ tiles, edit = false, onTiles, pins = [], rende
             })}
             {items.length === 0 && <small className="mh-wm3-none">Ninguna pieza coincide.</small>}
           </div>
+          <button type="button" className={"mh-wm3-clear" + (sure ? " is-sure" : "")} onClick={clearAll}><Trash2 size={13} /> {sure ? "Pulsa otra vez para vaciar todo" : "Vaciar el mapa"}</button>
           <p className="mh-wm3-hint">{brush ? "Clic o arrastra sobre el tablero. Un clic en una pieza igual la gira. Botón derecho para orbitar." : "Elige una pieza para construir."}</p>
         </div>
       )}

@@ -6049,6 +6049,7 @@ const sharedStyles = `
   .mh-wm3-list > button span:not(.mh-wm3-ph) { font-size: 10.5px; line-height: 1.15; text-align: center; max-width: 100%; overflow-wrap: anywhere; }
   .mh-wm3-pal button.is-on { background: linear-gradient(180deg, #f0c264, #d9a23c) !important; color: #1c1405 !important; border-color: #d9a23c !important; } .mh-wm3-pal .mh-wm3-fac button.is-on { background: var(--fc) !important; }
   .mh-wm3-open { position: absolute; left: 12px; top: 12px; z-index: 6; padding: 7px 14px; border-radius: 10px; border: 1px solid var(--mh-line2); background: var(--mh-panel); color: var(--mh-ink); font: 600 12.5px 'Inter', system-ui, sans-serif; cursor: pointer; }
+  .mh-wm3-clear { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; height: 28px; border-radius: 8px; border: 1px solid var(--mh-line); font-size: 12px; color: var(--mh-muted); } .mh-wm3-clear:hover { color: #D9644E; border-color: #D9644E88; } .mh-wm3-clear.is-sure { background: #D9644E; border-color: #D9644E; color: #fff; }
   .mh-wm3-none { grid-column: 1 / -1; color: var(--mh-muted); font-size: 12px; text-align: center; padding: 10px 0; }
   .mh-wm3-hint { margin: 0; font-size: 10.5px; line-height: 1.35; color: var(--mh-muted); }
   .mh-root:not(.is-mobile) .mh-wmpg { display: flex; flex-direction: column; padding: 12px; margin: 0; min-height: 0; overflow: hidden; }
