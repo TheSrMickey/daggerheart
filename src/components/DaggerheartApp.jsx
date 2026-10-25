@@ -5924,6 +5924,7 @@ const sharedStyles = `
   .mh-cb-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 340px)); }
   .mh-cb-thumb { all: unset; cursor: pointer; position: relative; display: grid; place-items: center; padding: 22px 0 8px; background: radial-gradient(70% 70% at 50% 45%, color-mix(in srgb, var(--dc) 20%, transparent), transparent 75%); } .mh-cb-thumb:focus-visible { outline: 2px solid #E3B04B; outline-offset: -3px; }
   .mh-cb-art { display: block; width: 168px; aspect-ratio: 5 / 7; border-radius: 22px; box-shadow: 0 16px 34px -14px #000c, 0 0 28px -8px var(--dc); transition: transform .25s; } .mh-cb-thumb:hover .mh-cb-art { transform: translateY(-4px) rotate(-1.5deg); } .mh-cb-art .mh-cback, .mh-cback { display: block; width: 100%; height: 100%; }
+  .mh-cb-lock { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 12px !important; color: var(--mh-muted); min-height: 0 !important; } .mh-dice-badge.is-lock { background: #2b2b4a; color: #cfd0ec; } .mh-cb-card.is-locked .mh-cb-art { filter: grayscale(.55) brightness(.75); }
   .mh-cb-btns { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; } .mh-cb-btns .mh-btn-ghost { display: inline-flex; align-items: center; gap: 6px; }
   .mh-cbp-bg { position: fixed; inset: 0; z-index: 80; background: #05050fcc; backdrop-filter: blur(6px); display: grid; place-items: center; padding: 16px; overflow: auto; }
   .mh-cbp { position: relative; width: min(420px, 100%); border-radius: 22px; background: var(--mh-panel); border: 1px solid var(--mh-line2); padding: 22px 20px 20px; display: flex; flex-direction: column; align-items: center; gap: 14px; box-shadow: 0 30px 80px #000d; } .mh-cbp h3 { margin: 0; font-size: 20px; }
@@ -5932,7 +5933,10 @@ const sharedStyles = `
   .mh-flip3d-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; }
   .mh-flip3d { width: 300px; height: 420px; max-width: 100%; perspective: 1100px; cursor: grab; touch-action: none; user-select: none; } .mh-flip3d:active { cursor: grabbing; }
   .mh-flip3d-in { position: relative; width: 300px; height: 420px; transform-style: preserve-3d; will-change: transform; }
-  .mh-flip3d-f { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 22px; box-shadow: 0 24px 50px -18px #000c; } .mh-flip3d-f.is-back { transform: rotateY(180deg); } .mh-flip3d-f .mh-cardc { pointer-events: none; }
+  .mh-flip3d { filter: drop-shadow(0 22px 22px #000a); margin: 10px 0 26px; }
+  .mh-flip3d-f { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 22px; overflow: hidden; } .mh-flip3d-f { transform: translateZ(6.5px); } .mh-flip3d-f.is-back { transform: rotateY(180deg) translateZ(6.5px); } .mh-flip3d-f .mh-cardc { pointer-events: none; }
+  /* Canto de la carta: cortes de cartulina apilados entre las dos caras; alternan dos tonos para marcar las capas. */
+  .mh-flip3d-sl { position: absolute; inset: 0; border-radius: 22px; background: #e9e3d2; box-shadow: inset 0 0 0 1px #00000014; } .mh-flip3d-sl.is-alt { background: #d4ccb6; }
   .mh-flip3d-ctl { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; } .mh-flip3d-ctl .mh-btn-ghost { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; }
   .mh-flip3d-hint { margin: 0; font-size: 12px; color: var(--mh-muted); }
   @media (max-width: 380px) { .mh-flip3d, .mh-flip3d-in { transform-origin: top center; } }
@@ -15807,8 +15811,8 @@ export default function App({ onSignOut }) {
     setDiceSkin(key);
     safeSet("dice-skin", key, false);
   };
-  // Reverso de carta equipado (privado de cada cuenta): «clasico» o «noche».
-  const [cardBack, setCardBack] = useState("clasico");
+  // Reverso de carta equipado (privado de cada cuenta): «noche» (por defecto) o «clasico» (recompensa del logro «Desde los comienzos»).
+  const [cardBack, setCardBack] = useState("noche");
   useEffect(() => {
     safeGet("card-back", false).then((r) => {
       if (CARD_BACK_KEYS.includes(r?.value)) setCardBack(r.value);
