@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Upload, Plus, MapPin, Trash2, X, Eye, EyeOff, Landmark, Skull, Flag, Swords, Home, ZoomIn, ZoomOut, ChevronRight, Pencil, Sparkles, Copy, Check, ImagePlus, Wand2 } from "lucide-react";
+import { Upload, Plus, MapPin, Trash2, X, Eye, EyeOff, Landmark, Skull, Flag, Swords, Home, ZoomIn, ZoomOut, ChevronRight, Pencil, Sparkles, Copy, Check, ImagePlus, Wand2, Box, Image as ImageIcon } from "lucide-react";
 import { useDoc } from "@/lib/campaignDocs";
+import World3D, { starterTiles } from "./World3D";
 import { PlacePromptHelper, CopyPrompt, buildPlacePrompt } from "./ImagePrompts";
 
 // Mapa de mundo: una imagen que sube el DJ y marcadores encima. Cada marcador abre una tarjeta con imagen, texto y,
@@ -17,7 +18,7 @@ export const WORLD_KINDS = [
 ];
 const KIND = Object.fromEntries(WORLD_KINDS.map((k) => [k.key, k]));
 const docKey = (id) => "campaign-worldmap:" + id;
-const EMPTY = { image: "", pins: [], seasons: {}, season: "" };
+const EMPTY = { image: "", pins: [], seasons: {}, season: "", mode: "", hex: null };
 // El mapa normal y, opcionalmente, una versión por estación del año. El DJ elige cuál ven los jugadores.
 export const SEASONS = [
   { key: "primavera", label: "Primavera", emoji: "🌱" },
@@ -124,6 +125,9 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
   const dragMoved = useRef(false);
   const openEdit = useRef(false); // un marcador recién creado se abre directamente en edición
 
+  const is3d = doc.mode === "3d";
+  const apiRef = useRef(null);
+  const tiles3d = doc.hex || null;
   const visible = edit || showHidden ? pins : pins.filter((p) => !p.hidden);
   const pin = visible.find((p) => p.id === sel) || null;
   const seasons = doc.seasons || {};
@@ -181,6 +185,15 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
     openEdit.current = true;
     setSel(np.id);
   };
+  const placePin3d = ({ wx, wz }) => {
+    const np = { id: "p" + Date.now(), wx, wz, title: "Nuevo lugar", text: "", kind: "interes", img: "", sceneId: "", hidden: true };
+    update((d) => ({ ...d, pins: [...(d.pins || []), np] }));
+    setTool(null);
+    openEdit.current = true;
+    setSel(np.id);
+  };
+  const setMode = (m) => update((d) => ({ ...d, mode: m, hex: m === "3d" && !d.hex ? starterTiles() : d.hex }));
+  const setTiles = (fn) => update((d) => ({ ...d, hex: fn(d.hex) }));
   const onMapClick = (e) => {
     if (dragMoved.current) return (dragMoved.current = false);
     if (edit && tool === "add") addPinAt(e);
@@ -202,11 +215,16 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
     if (!drag) return;
     if (!drag.on && Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) < 5) return;
     dragMoved.current = true;
+    if (is3d) {
+      const g = apiRef.current && apiRef.current.groundAt(e.clientX, e.clientY);
+      if (g) setDrag((d) => ({ ...d, wx: g.x, wz: g.z, on: true }));
+      return;
+    }
     const { x, y } = pos(e);
     setDrag((d) => ({ ...d, x, y, on: true }));
   };
   const endDrag = (p) => {
-    if (drag && drag.on) patchPin(p.id, { x: +drag.x.toFixed(2), y: +drag.y.toFixed(2) });
+    if (drag && drag.on) patchPin(p.id, is3d ? { wx: +drag.wx.toFixed(2), wz: +drag.wz.toFixed(2) } : { x: +drag.x.toFixed(2), y: +drag.y.toFixed(2) });
     setDrag(null);
     setSel(p.id);
     setTimeout(() => (dragMoved.current = false), 0);
@@ -270,8 +288,31 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
   const kind = pin ? KIND[pin.kind] || KIND.interes : null;
   const pinImg = pin && imgSrc ? imgSrc(pin.img) : "";
 
+  const pinBtn = (p, flat) => {
+      const k = KIND[p.kind] || KIND.interes;
+      const d = drag && drag.id === p.id && drag.on ? drag : p;
+      const Ic = k.Icon;
+      return (
+        <button
+          key={p.id}
+          type="button"
+          className={"mh-wm-pin" + (sel === p.id ? " is-sel" : "") + (p.hidden ? " is-hid" : "") + (drag && drag.id === p.id && drag.on ? " is-drag" : "")}
+          style={flat ? { left: 0, top: 0, "--pc": k.color } : { left: d.x + "%", top: d.y + "%", "--pc": k.color }}
+          title={p.title}
+          aria-label={p.title + (p.hidden ? " (oculto)" : "")}
+          onClick={(e) => { e.stopPropagation(); if (!edit) setSel(p.id); }}
+          onPointerDown={(e) => (edit ? startDrag(e, p) : undefined)}
+          onPointerMove={moveDrag}
+          onPointerUp={() => drag && drag.id === p.id && endDrag(p)}
+        >
+          <span className="mh-wm-pin-pulse" aria-hidden="true" /><span className="mh-wm-pin-b"><svg viewBox="0 0 44 54" aria-hidden="true"><path className="mh-wm-pin-tail" d="M15.5 33.5L22 50L28.5 33.5Z" /><circle className="mh-wm-pin-disc" cx="22" cy="21" r="18" /><path className="mh-wm-pin-logo" transform="translate(14.94 9) scale(0.0706)" d="M100 0C101.5 66 106 109 200 115C106 121 102 164 100 340C98 164 94 121 0 115C94 109 98.5 66 100 0Z" /></svg></span>
+          {sel === p.id && <span className="mh-wm-pin-t">{p.title}</span>}
+        </button>
+      );
+  };
+
   // ---- sin mapa ----
-  if (!doc.image) {
+  if (!is3d && !doc.image) {
     return (
       <div className={"mh-wm" + (fit ? " is-fit" : "")}>
         <div className="mh-wm-empty">
@@ -281,6 +322,7 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
             <>
               <span>Puede ser un mapa pintado, una ilustración o una imagen que generes con IA. Después colocas marcadores encima.</span>
               <div className="mh-wm-row">
+                <button type="button" className="mh-btn" onClick={() => setMode("3d")}><Box size={14} /> Crear un mapa 3D</button>
                 <label className="mh-btn" style={{ cursor: "pointer" }}>
                   <Upload size={14} /> Subir imagen
                   <input type="file" accept="image/*" hidden onChange={(e) => { uploadMap(e.target.files?.[0]); e.target.value = ""; }} />
@@ -300,15 +342,19 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
     <div className={"mh-wm" + (fit ? " is-fit" : "")}>
       {edit && (
         <div className="mh-wm-bar">
+          <div className="mh-wm-seasons mh-wm-modes" role="group" aria-label="Tipo de mapa">
+            <button type="button" className={!is3d ? "is-on" : ""} onClick={() => setMode("")} title="Mapa tradicional: una imagen con marcadores"><ImageIcon size={13} /> Tradicional</button>
+            <button type="button" className={is3d ? "is-on" : ""} onClick={() => setMode("3d")} title="Mapa 3D con losas hexagonales"><Box size={13} /> 3D</button>
+          </div>
           <button type="button" className={"mh-btn-ghost" + (tool === "add" ? " is-on" : "")} onClick={() => (setTool(tool === "add" ? null : "add"), setSel(null))} title="Pulsa y luego haz clic en el mapa">
             <Plus size={14} /> {tool === "add" ? "Haz clic en el mapa…" : "Marcador"}
           </button>
-          {!compact && <label className="mh-btn-ghost" style={{ cursor: "pointer" }}>
+          {!compact && !is3d && <label className="mh-btn-ghost" style={{ cursor: "pointer" }}>
             <ImagePlus size={14} /> Cambiar mapa
             <input type="file" accept="image/*" hidden onChange={(e) => { uploadMap(e.target.files?.[0]); e.target.value = ""; }} />
           </label>}
-          {!compact && <button type="button" className={"mh-btn-ghost" + (help ? " is-on" : "")} onClick={() => setHelp((v) => !v)}><Wand2 size={14} /> Prompt</button>}
-          <div className="mh-wm-seasons" role="group" aria-label="Estación del mapa">
+          {!compact && !is3d && <button type="button" className={"mh-btn-ghost" + (help ? " is-on" : "")} onClick={() => setHelp((v) => !v)}><Wand2 size={14} /> Prompt</button>}
+          {!is3d && <div className="mh-wm-seasons" role="group" aria-label="Estación del mapa">
             <button type="button" className={!season ? "is-on" : ""} onClick={() => setSeason("")} title="Mapa normal (el de siempre)">Normal</button>
             {SEASONS.map((x) => {
               const has = !!seasons[x.key];
@@ -323,49 +369,41 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
               <input type="file" accept="image/*" hidden onChange={(e) => { const k = season || seasonPick || "primavera"; uploadSeason(k, e.target.files?.[0]); e.target.value = ""; setSeasonPick(null); }} />
             </label>
             {season && <button type="button" className="mh-wm-sup" title={"Quitar el mapa de " + SEASONS.find((x) => x.key === season).label.toLowerCase()} onClick={() => removeSeason(season)}><Trash2 size={13} /></button>}
-          </div>
+          </div>}
           {seasonPick && <span className="mh-wm-note">Elige la imagen de {SEASONS.find((x) => x.key === seasonPick).label.toLowerCase()} con el botón de subir.</span>}
           <span className="mh-wm-sp" />
-          {compact && <span className="mh-wm-note">Doble clic en el mapa para crear · arrastra para mover</span>}
+          {compact && !is3d && <span className="mh-wm-note">Doble clic en el mapa para crear · arrastra para mover</span>}
           {!compact && <span className="mh-wm-note">{pins.length} marcador{pins.length === 1 ? "" : "es"} · {pins.filter((p) => p.hidden).length} oculto{pins.filter((p) => p.hidden).length === 1 ? "" : "s"}</span>}
         </div>
       )}
       {edit && help && <PromptHelper onClose={() => setHelp(false)} />}
       <div className="mh-wm-wrap">
-        <div className={"mh-wm-view" + (tool === "add" ? " is-add" : "")}>
-          {fit && fade.prev && <div className="mh-wm-bg is-ready" aria-hidden="true" style={{ backgroundImage: `url("${fade.prev.replace(/"/g, "%22")}")` }} />}
-          {fit && mapSrc && <div key={mapSrc} className={"mh-wm-bg" + (ready ? " is-ready" : "") + (fade.prev ? " mh-wm-in" : "")} aria-hidden="true" style={{ backgroundImage: `url("${mapSrc.replace(/"/g, "%22")}")` }} />}
-          <div className={"mh-wm-canvas" + (ready ? " is-ready" : "")} ref={canvasRef} style={fit ? { aspectRatio: String(ratio), "--wm-r": ratio } : { width: zoom * 100 + "%" }} onClick={onMapClick} onDoubleClick={onMapDbl}>
+        <div className={"mh-wm-view" + (tool === "add" ? " is-add" : "") + (is3d ? " is-3d" : "")}>
+          {is3d && (
+            <World3D
+              tiles={tiles3d}
+              edit={edit}
+              onTiles={setTiles}
+              apiRef={apiRef}
+              placing={edit && tool === "add"}
+              onPlace={placePin3d}
+              onBackground={() => !tool && setSel(null)}
+              pins={visible.map((p) => (drag && drag.id === p.id && drag.on ? { ...p, wx: drag.wx, wz: drag.wz } : p))}
+              renderPin={(p) => pinBtn(p, true)}
+            />
+          )}
+          {!is3d && fit && fade.prev && <div className="mh-wm-bg is-ready" aria-hidden="true" style={{ backgroundImage: `url("${fade.prev.replace(/"/g, "%22")}")` }} />}
+          {!is3d && fit && mapSrc && <div key={mapSrc} className={"mh-wm-bg" + (ready ? " is-ready" : "") + (fade.prev ? " mh-wm-in" : "")} aria-hidden="true" style={{ backgroundImage: `url("${mapSrc.replace(/"/g, "%22")}")` }} />}
+          {!is3d && <div className={"mh-wm-canvas" + (ready ? " is-ready" : "")} ref={canvasRef} style={fit ? { aspectRatio: String(ratio), "--wm-r": ratio } : { width: zoom * 100 + "%" }} onClick={onMapClick} onDoubleClick={onMapDbl}>
             {fade.prev && mapSrc && <img className="mh-wm-prev" src={fade.prev} alt="" aria-hidden="true" draggable={false} />}
             {mapSrc ? <img key={mapSrc} className={fade.prev ? "mh-wm-in" : undefined} src={mapSrc} alt="Mapa de mundo" draggable={false} ref={(el) => { if (el && el.complete && el.naturalHeight) { setReady(true); setRatio(el.naturalWidth / el.naturalHeight); } }} onLoad={(e) => { if (e.currentTarget.naturalHeight) { setRatio(e.currentTarget.naturalWidth / e.currentTarget.naturalHeight); setReady(true); } }} /> : <div className="mh-wm-load">Cargando el mapa…</div>}
-            {visible.map((p) => {
-              const k = KIND[p.kind] || KIND.interes;
-              const d = drag && drag.id === p.id && drag.on ? drag : p;
-              const Ic = k.Icon;
-              return (
-                <button
-                  key={p.id}
-                  type="button"
-                  className={"mh-wm-pin" + (sel === p.id ? " is-sel" : "") + (p.hidden ? " is-hid" : "") + (drag && drag.id === p.id && drag.on ? " is-drag" : "")}
-                  style={{ left: d.x + "%", top: d.y + "%", "--pc": k.color }}
-                  title={p.title}
-                  aria-label={p.title + (p.hidden ? " (oculto)" : "")}
-                  onClick={(e) => { e.stopPropagation(); if (!edit) setSel(p.id); }}
-                  onPointerDown={(e) => (edit ? startDrag(e, p) : undefined)}
-                  onPointerMove={moveDrag}
-                  onPointerUp={() => drag && drag.id === p.id && endDrag(p)}
-                >
-                  <span className="mh-wm-pin-pulse" aria-hidden="true" /><span className="mh-wm-pin-b"><svg viewBox="0 0 44 54" aria-hidden="true"><path className="mh-wm-pin-tail" d="M15.5 33.5L22 50L28.5 33.5Z" /><circle className="mh-wm-pin-disc" cx="22" cy="21" r="18" /><path className="mh-wm-pin-logo" transform="translate(14.94 9) scale(0.0706)" d="M100 0C101.5 66 106 109 200 115C106 121 102 164 100 340C98 164 94 121 0 115C94 109 98.5 66 100 0Z" /></svg></span>
-                  {sel === p.id && <span className="mh-wm-pin-t">{p.title}</span>}
-                </button>
-              );
-            })}
-          </div>
-          <div className="mh-wm-zoom" hidden={fit}>
+            {!is3d && visible.map((p) => pinBtn(p, false))}
+          </div>}
+          <div className="mh-wm-zoom" hidden={fit || is3d}>
             <button type="button" aria-label="Acercar" onClick={() => setZoom((z) => Math.min(3, +(z + 0.5).toFixed(1)))}><ZoomIn size={15} /></button>
             <button type="button" aria-label="Alejar" onClick={() => setZoom((z) => Math.max(1, +(z - 0.5).toFixed(1)))}><ZoomOut size={15} /></button>
           </div>
-          {seasonMenu && !edit && Object.keys(seasons).length > 0 && (
+          {!is3d && seasonMenu && !edit && Object.keys(seasons).length > 0 && (
             <div className="mh-wm-sm">
               <button type="button" className="mh-wm-sm-b" aria-haspopup="true" aria-expanded={smOpen} onClick={() => setSmOpen((v) => !v)} title="Cambiar la estación del mapa">
                 <span aria-hidden="true">{season ? SEASONS.find((x) => x.key === season).emoji : "🗺️"}</span> {season ? SEASONS.find((x) => x.key === season).label : "Normal"} <ChevronRight size={12} style={{ transform: smOpen ? "rotate(-90deg)" : "rotate(90deg)" }} />
@@ -380,7 +418,7 @@ export default function WorldMap({ campaignId, edit = false, scenes = [], imgSrc
               )}
             </div>
           )}
-          {season && <span className="mh-wm-season">{SEASONS.find((x) => x.key === season).emoji} {SEASONS.find((x) => x.key === season).label}</span>}
+          {!is3d && season && <span className="mh-wm-season">{SEASONS.find((x) => x.key === season).emoji} {SEASONS.find((x) => x.key === season).label}</span>}
           {busy && <div className="mh-wm-busy">{busy}</div>}
         </div>
 

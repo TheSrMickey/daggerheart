@@ -5958,6 +5958,25 @@ const sharedStyles = `
   .mh-wm-wrap { position: relative; border-radius: 18px; overflow: hidden; border: 1px solid var(--mh-line2); background: color-mix(in srgb, var(--mh-panel) 80%, transparent); }
   .mh-wm-view { position: relative; max-height: 72vh; overflow: auto; scrollbar-width: thin; }
   .mh-wm-view.is-add { cursor: crosshair; }
+  /* Mapa de mundo 3D */
+  .mh-wm:has(.mh-wm-view.is-3d), .mh-wm-wrap:has(.mh-wm-view.is-3d) { width: 100% !important; max-width: none !important; margin: 0 !important; align-self: stretch; }
+  .mh-wm-view.is-3d { overflow: hidden; width: 100%; flex: 1 1 100%; height: min(68vh, 640px); min-height: 380px; } .mh-wm.is-fit .mh-wm-view.is-3d { height: 100%; max-height: none; }
+  .mh-wm3 { position: absolute; inset: 0; overflow: hidden; background: #9fc9e8; }
+  .mh-wm3-cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; outline: 0; }
+  .mh-wm.is-fit .mh-wm-view.is-3d .mh-wm3 { border-radius: 0; }
+  .mh-wm3-load, .mh-wm3-err { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; color: #1d3b52; pointer-events: none; z-index: 2; }
+  .mh-wm3-pins { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 3; }
+  .mh-wm3-pin { position: absolute; left: 0; top: 0; width: 0; height: 0; will-change: transform; } .mh-wm3-pin > * { pointer-events: auto; }
+  .mh-wm3-pal { position: absolute; left: 12px; top: 12px; z-index: 6; width: 188px; max-height: calc(100% - 24px); display: flex; flex-direction: column; gap: 8px; padding: 10px; border-radius: 14px; background: var(--mh-panel); border: 1px solid var(--mh-line2); box-shadow: 0 10px 24px -14px #000a; }
+  .mh-wm3-tools { display: flex; gap: 6px; } .mh-wm3-tools button, .mh-wm3-tabs button, .mh-wm3-list button { all: unset; box-sizing: border-box; cursor: pointer; border-radius: 8px; color: var(--mh-ink2); font-size: 12px; }
+  .mh-wm3-tools button { width: 30px; height: 28px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--mh-line); }
+  .mh-wm3-tabs { display: flex; gap: 4px; } .mh-wm3-tabs button { flex: 1; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px 2px; border: 1px solid var(--mh-line); font-size: 11px; }
+  .mh-wm3-list { overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; scrollbar-width: thin; min-height: 0; } .mh-wm3-list button { padding: 7px 6px; text-align: center; border: 1px solid var(--mh-line); line-height: 1.2; }
+  .mh-wm3-fac { grid-column: 1 / -1; display: flex; gap: 6px; justify-content: center; } .mh-wm3-fac button { width: 22px !important; height: 22px; padding: 0 !important; border-radius: 50% !important; background: var(--fc); } .mh-wm3-fac button.is-on { outline: 2px solid var(--mh-ink); outline-offset: 2px; }
+  .mh-wm3-pal button.is-on { background: linear-gradient(180deg, #f0c264, #d9a23c); color: #1c1405; border-color: #d9a23c; } .mh-wm3-pal .mh-wm3-fac button.is-on { background: var(--fc); }
+  .mh-wm3-pal button:hover:not(.is-on) { border-color: var(--mh-line2); background: var(--mh-panel2); }
+  .mh-wm3-hint { margin: 0; font-size: 10.5px; line-height: 1.35; color: var(--mh-muted); }
+  .mh-wm-modes button { display: inline-flex; align-items: center; gap: 5px; }
   .mh-wm-canvas { position: relative; min-width: 100%; user-select: none; }
   .mh-wm-canvas img { display: block; width: 100%; height: auto; pointer-events: none; }
   .mh-wm-load { padding: 80px 20px; text-align: center; color: var(--mh-muted); font-size: 13px; }
