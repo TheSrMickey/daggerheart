@@ -27934,14 +27934,14 @@ export default function App({ onSignOut }) {
             </div>
           </div>
         )}
-        {showTopbar && view !== "perfil" && view !== "inicio" && !(view === "ficha" && !modernCharId) && (
+        {showTopbar && view !== "perfil" && view !== "inicio" && view !== "ficha" && (
           <div className="mh-topbar-wrap" style={{ right: railW, padding: "0 " + padX }}>
             <div className="mh-topbar" style={{ maxWidth: contentMax }}>
               <span>{topLeft}</span>
             </div>
           </div>
         )}
-        <div data-mh-main className={(showTopbar ? "mh-scroll-hidden" : "") + (view === "inicio" ? " mh-main-fit" : "") || undefined} style={{ position: "absolute", top: showTopbar ? (view === "perfil" || view === "inicio" || (view === "ficha" && !modernCharId) ? EDGE : EDGE + 74) : 0, left: 0, bottom: 0, right: railW, overflowY: view === "ficha" && !viewingCharId && !modernCharId && showRail ? "hidden" : "auto", padding: isMobile ? (campDetail ? "10px 12px 18px" : "18px 14px") : showTopbar ? "0 " + padX + " " + EDGE + "px" : campDetail ? "18px 24px 24px 14px" : "24px 28px" }}>
+        <div data-mh-main className={(showTopbar ? "mh-scroll-hidden" : "") + (view === "inicio" ? " mh-main-fit" : "") || undefined} style={{ position: "absolute", top: showTopbar ? (view === "perfil" || view === "inicio" || view === "ficha" ? EDGE : EDGE + 74) : 0, left: 0, bottom: 0, right: railW, overflowY: view === "ficha" && !viewingCharId && !modernCharId && showRail ? "hidden" : "auto", padding: isMobile ? (campDetail ? "10px 12px 18px" : "18px 14px") : showTopbar ? "0 " + padX + " " + EDGE + "px" : campDetail ? "18px 24px 24px 14px" : "24px 28px" }}>
           <div ref={setWizSlot} style={{ maxWidth: contentMax, margin: "0 auto" }} />
           <div key={view + (view === "ficha" && modernCharId ? ":hoja" : "")} className={"mh-view-in" + (view === "ficha" && modernCharId ? " mh-sheet-in" : "")} style={{ display: showNewCharModal ? "none" : undefined, maxWidth: contentMax, margin: "0 auto" }}>
             {!showTopbar && view !== "inicio" && view !== "perfil" && !campDetail && <div className="mh-pagetitle">{viewLabel}</div>}

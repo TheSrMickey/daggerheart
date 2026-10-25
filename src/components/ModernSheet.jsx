@@ -35,7 +35,7 @@ function ZoomFit({ children, isGeneral, natural, onNatural, fill }) {
     if (!o || !i) return;
     const calc = () => {
       const ow = o.clientWidth;
-      const availH = window.innerHeight - o.getBoundingClientRect().top - 24;
+      const availH = window.innerHeight - o.getBoundingClientRect().top - 36; // mismo margen inferior que el resto de páginas
       // Pestaña de campaña: sin escala, la escena o el mapa llenan el hueco disponible.
       if (fill) {
         cur.current = 1;
