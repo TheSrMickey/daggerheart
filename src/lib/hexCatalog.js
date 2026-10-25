@@ -413,6 +413,12 @@ export const HEX_CATALOG = [
   "label": "Planta acuática C"
  },
  {
+  "id": "proc/flag_{c}",
+  "cat": "objetos",
+  "label": "Banderín",
+  "col": true
+ },
+ {
   "id": "decoration/props/barrel",
   "cat": "objetos",
   "label": "Barril"

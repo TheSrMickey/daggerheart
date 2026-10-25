@@ -7,6 +7,7 @@ export const CHANGELOG = [
     title: "Grupos y notificaciones nuevas",
     blurb: "Chatea con toda tu mesa en un grupo compartido y recibe los avisos como tarjetas, también flotando mientras juegas.",
     items: [
+      { tag: "mejora", text: "Mapa 3D · todo lo que no es tierra se ve como agua (mar sin fondo oscuro, hasta el horizonte) y nuevo objeto Banderín de mesa en 4 colores (azul, rojo, verde y amarillo) en Objetos." },
       { tag: "arreglo", text: "Mapa de mundo · los marcadores del mapa 3D ya se pueden seleccionar y se colocan (y arrastran) siempre en el centro de una losa; la barra Tradicional/3D va alineada a la izquierda, se quitó el título sobrante y el mapa carga más rápido." },
       { tag: "mejora", text: "Mapa 3D · nuevo botón «Vaciar el mapa» (pide confirmar y se puede deshacer) y animación al colocar: la losa o el objeto cae con un pequeño rebote." },
       { tag: "mejora", text: "Mapa 3D · ahora trae todo el KayKit Medieval Hexagon Pack (más de 140 piezas: terreno, pendientes, costas, ríos, caminos, colinas, montañas, naturaleza, edificios en 4 colores, estructuras y objetos) con miniaturas y buscador. Se pueden subir y bajar las losas para hacer desniveles, girar piezas, quitar objetos o losas y deshacer. El mapa nuevo viene con un paisaje de ejemplo." },

@@ -6031,7 +6031,7 @@ const sharedStyles = `
   /* Mapa de mundo 3D */
   .mh-wm:has(.mh-wm-view.is-3d), .mh-wm-wrap:has(.mh-wm-view.is-3d) { width: 100% !important; max-width: none !important; margin: 0 !important; align-self: stretch; }
   .mh-wm-view.is-3d { overflow: hidden; width: 100%; flex: 1 1 100%; height: min(68vh, 640px); min-height: 380px; } .mh-wm.is-fit .mh-wm-view.is-3d { height: 100%; max-height: none; }
-  .mh-wm3 { position: absolute; inset: 0; overflow: hidden; background: #9fc9e8; }
+  .mh-wm3 { position: absolute; inset: 0; overflow: hidden; background: #3d7aa8; }
   .mh-wm3-cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; outline: 0; }
   .mh-wm.is-fit .mh-wm-view.is-3d .mh-wm3 { border-radius: 0; }
   .mh-wm3-load, .mh-wm3-err { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; color: #1d3b52; pointer-events: none; z-index: 2; }

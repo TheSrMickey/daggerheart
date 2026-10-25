@@ -48,8 +48,28 @@ const objId = (o) => {
 };
 const isWater = (t) => tileId(t).endsWith("hex_water");
 const modelUrl = (id) => BASE + id + ".gltf";
+const FLAG_COLORS = { blue: "#2f6fe0", red: "#d6352f", green: "#2fae4f", yellow: "#f2b822" };
+// Banderín de mesa: base redonda, asta y bandera triangular, como las fichas de un juego de tablero.
+function makeProc(THREE, id) {
+  const m = /^proc\/flag_(\w+)$/.exec(id);
+  if (!m) return null;
+  const col = FLAG_COLORS[m[1]] || FLAG_COLORS.blue;
+  const mat = new THREE.MeshStandardMaterial({ color: col, roughness: 0.32, metalness: 0.05 });
+  const g = new THREE.Group();
+  const add = (geo, x, y, z) => { const me = new THREE.Mesh(geo, mat); me.position.set(x, y, z); me.castShadow = true; me.receiveShadow = true; g.add(me); return me; };
+  add(new THREE.CylinderGeometry(0.3, 0.34, 0.12, 28), 0, 0.06, 0);
+  add(new THREE.SphereGeometry(0.17, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), 0, 0.12, 0).scale.y = 0.8;
+  add(new THREE.CylinderGeometry(0.04, 0.05, 1.0, 12), 0, 0.62, 0);
+  add(new THREE.SphereGeometry(0.075, 14, 10), 0, 1.13, 0);
+  const shape = new THREE.Shape();
+  shape.moveTo(0, 0); shape.lineTo(0.62, 0.17); shape.lineTo(0, 0.4); shape.lineTo(0, 0);
+  const flag = add(new THREE.ExtrudeGeometry(shape, { depth: 0.05, bevelEnabled: false }), 0.03, 0.66, -0.025);
+  flag.rotation.y = 0;
+  g.scale.setScalar(1.45);
+  return g;
+}
 const objUp = (id) => (/cloud/.test(id) ? 3 : 0);
-const objHeight = (id) => (/buildings\/(blue|red|green|yellow)\//.test(id) ? 2.6 : /mountain/.test(id) ? 1.5 : 1.2);
+const objHeight = (id) => (/proc\/flag/.test(id) ? 1.3 : /buildings\/(blue|red|green|yellow)\//.test(id) ? 2.6 : /mountain/.test(id) ? 1.5 : 1.2);
 
 // Isla inicial para que el tablero no empiece vacío.
 export const starterTiles = () => {
@@ -95,8 +115,7 @@ async function getThree() {
 }
 async function renderThumb(id) {
   const { THREE, loader, r, scene, cam } = await getThree();
-  const g = await loader.loadAsync(modelUrl(id));
-  const m = g.scene;
+  const m = id.startsWith("proc/") ? makeProc(THREE, id) : (await loader.loadAsync(modelUrl(id))).scene;
   scene.add(m);
   const box = new THREE.Box3().setFromObject(m);
   const c = box.getCenter(new THREE.Vector3());
@@ -167,10 +186,10 @@ export default function World3D({ tiles, edit = false, onTiles, pins = [], rende
       Object.assign(renderer.domElement.style, { position: "absolute", inset: "0", width: "100%", height: "100%", display: "block" });
       el.prepend(renderer.domElement);
 
-      const SKY = "#9fc9e8";
+      const SKY = "#3d7aa8"; // el horizonte es agua: el mismo azul que las losas lejanas
       const scene = new THREE.Scene();
       scene.background = new THREE.Color(SKY);
-      scene.fog = new THREE.Fog(SKY, 55, 130);
+      scene.fog = new THREE.Fog(SKY, 60, 150);
       const cam = new THREE.PerspectiveCamera(38, 1, 0.5, 220);
       cam.position.set(0, 17, 17);
       scene.add(new THREE.HemisphereLight("#ffffff", "#6a8a5a", 0.8));
@@ -184,7 +203,7 @@ export default function World3D({ tiles, edit = false, onTiles, pins = [], rende
       scene.add(sun);
 
       // fondo de agua bajo el tablero, a la altura de la base de las losas
-      const sea = new THREE.Mesh(new THREE.PlaneGeometry(500, 500), new THREE.MeshStandardMaterial({ color: "#2f5f86", roughness: 0.7 }));
+      const sea = new THREE.Mesh(new THREE.PlaneGeometry(500, 500), new THREE.MeshStandardMaterial({ color: "#3a76a2", roughness: 0.7 }));
       sea.rotation.x = -Math.PI / 2;
       sea.position.y = -1;
       sea.receiveShadow = true;
@@ -226,12 +245,40 @@ export default function World3D({ tiles, edit = false, onTiles, pins = [], rende
       const loader = new GLTFLoader();
       const cache = new Map();
       const getModel = (id) => {
+        if (id.startsWith("proc/")) { if (!cache.has(id)) cache.set(id, Promise.resolve(makeProc(THREE, id))); return cache.get(id); }
         if (!cache.has(id)) cache.set(id, new Promise((res) => loader.load(modelUrl(id), (g) => res(g.scene), undefined, () => res(null))));
         return cache.get(id);
       };
       const world = new THREE.Group();
       scene.add(world);
       const placed = new Map();
+      // mar de relleno: una sola malla instanciada con la losa de agua en cada hexágono vacío
+      const SEA_R = 30;
+      let seaInst = null;
+      const seaCells = [];
+      for (let qq = -SEA_R; qq <= SEA_R; qq++) for (let rr = -SEA_R; rr <= SEA_R; rr++) if (Math.max(Math.abs(qq), Math.abs(rr), Math.abs(qq + rr)) <= SEA_R) seaCells.push([qq, rr]);
+      const fillSea = async (tl) => {
+        if (!seaInst) {
+          const wm = await getModel("tiles/base/hex_water");
+          let mesh = null;
+          wm && wm.traverse((o) => { if (!mesh && o.isMesh) mesh = o; });
+          if (!mesh) return;
+          seaInst = new THREE.InstancedMesh(mesh.geometry, mesh.material, seaCells.length);
+          seaInst.receiveShadow = true;
+          seaInst.frustumCulled = false;
+          scene.add(seaInst);
+        }
+        const mtx = new THREE.Matrix4();
+        let n = 0;
+        for (const [qq, rr] of seaCells) {
+          if (tl[keyOf(qq, rr)]) continue;
+          const w = hexToWorld(qq, rr);
+          mtx.makeTranslation(w.x, 0, w.z);
+          seaInst.setMatrixAt(n++, mtx);
+        }
+        seaInst.count = n;
+        seaInst.instanceMatrix.needsUpdate = true;
+      };
       let dirty = true;
       const shade = (o) => o.traverse((m) => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } });
       const addModel = async (grp, id, y, rot) => {
@@ -291,6 +338,8 @@ export default function World3D({ tiles, edit = false, onTiles, pins = [], rende
           dirty = true;
         }
         for (const [k, v] of placed) if (!seen.has(k)) { world.remove(v.group); placed.delete(k); dirty = true; }
+        await fillSea(tl);
+        dirty = true;
       };
       let syncing = false, again = false;
       const runSync = () => {
@@ -576,7 +625,7 @@ export default function World3D({ tiles, edit = false, onTiles, pins = [], rende
               {TABS.map(([k, l]) => <button key={k} type="button" className={tab === k ? "is-on" : ""} onClick={() => setTab(k)}>{l}</button>)}
             </div>
           )}
-          {(tab === "edificios" || q) && (
+          {(tab === "edificios" || tab === "objetos" || q) && (
             <div className="mh-wm3-fac" role="group" aria-label="Color del edificio">
               {HEX_COLORS.map(([k, c]) => <button key={k} type="button" className={faction === k ? "is-on" : ""} style={{ "--fc": c }} onClick={() => setFaction(k)} aria-label={"Color " + k} />)}
             </div>
