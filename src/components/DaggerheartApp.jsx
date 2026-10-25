@@ -2179,7 +2179,6 @@ const STAGE_TABS = [
 ];
 // Campaña del DJ: cuatro espacios con sus secciones.
 const CAMP_SPACES = [
-  { key: "directo", label: "Directo", Icon: Radio, tabs: [{ key: "mesa", label: "Directo", Icon: Radio }] },
   { key: "historia", label: "Historia", Icon: Clapperboard, tabs: [{ key: "historia", label: "Capítulos", Icon: Clapperboard }, { key: "pnj", label: "PNJ", Icon: Users }, { key: "mapas", label: "Mapas", Icon: MapPinned }, { key: "pistas", label: "Pistas", Icon: ScrollText }] },
   {
     key: "grupo",
@@ -2204,6 +2203,7 @@ const CAMP_SPACES = [
       { key: "generadores", label: "Generadores", Icon: Dices },
     ],
   },
+  { key: "directo", label: "Directo", Icon: Radio, tabs: [{ key: "mesa", label: "Directo", Icon: Radio }] },
 ];
 const HANDOUT_KINDS = [
   { key: "imagen", label: "Imagen", Icon: ImageIcon },
@@ -5463,7 +5463,7 @@ const sharedStyles = `
   .mh-cg-btn { display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 12px; border: 1px solid var(--mh-line2); background: var(--mh-panel2); color: var(--mh-ink); font: 700 12.5px 'Inter', system-ui, sans-serif; cursor: pointer; white-space: nowrap; }
   .mh-cg-trash { width: 34px; height: 34px; flex: none; display: grid; place-items: center; border-radius: 11px; border: 1px solid rgba(255,122,102,.35); background: rgba(255,122,102,.1); color: color-mix(in srgb, #C0504A var(--mh-accent-keep, 100%), #000); cursor: pointer; } .mh-cg-trash.is-confirm { background: #D9644E; color: #fff; }
   .mh-cg-navrow { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; } .mh-cg-navrow .mh-cg-nav { margin: 0; }
-  .mh-cg-acts { display: flex; gap: 8px; margin-left: auto; }
+  .mh-cg-acts { display: flex; gap: 8px; margin-left: auto; } .mh-cg-navrow .mh-cg-nav.is-live { margin-left: auto; } .mh-cg-acts + .mh-cg-nav.is-live { margin-left: 0; }
   html[data-mh-theme="light"] .mh-cg-back, html[data-mh-theme="light"] .mh-cg-btn, html[data-mh-theme="light"] .mh-dir-pause { background: #FFFFFF; border-color: #BFB197; color: #2F2839; box-shadow: 0 1px 2px rgba(60,40,10,.12); }
   html[data-mh-theme="light"] .mh-cg-back:hover, html[data-mh-theme="light"] .mh-cg-btn:hover { background: #F4EEE3; border-color: #97680F; }
   html[data-mh-theme="light"] .mh-dir-pause { border-color: #C0504A; color: #9B2F27; background: #FDEEEA; } html[data-mh-theme="light"] .mh-dir-pause.is-on { background: #C0504A; color: #fff; }
@@ -28218,12 +28218,12 @@ export default function App({ onSignOut }) {
                   )}
 
                   {(() => {
-                    const space = CAMP_SPACES.find((sp) => sp.tabs.some((t) => t.key === campaignDetailTab)) || (campaignDetailTab === "mapa" ? CAMP_SPACES[1] : CAMP_SPACES[0]);
+                    const space = CAMP_SPACES.find((sp) => sp.tabs.some((t) => t.key === campaignDetailTab)) || CAMP_SPACES.find((sp) => sp.key === "historia");
                     return (
                       <>
                         <div className="mh-cg-navrow">
                         <nav className="mh-cg-nav" role="tablist" aria-label="Espacios de la campaña">
-                          {CAMP_SPACES.map((sp) => (
+                          {CAMP_SPACES.filter((sp) => sp.key !== "directo").map((sp) => (
                             <button
                               key={sp.key}
                               type="button"
@@ -28239,7 +28239,7 @@ export default function App({ onSignOut }) {
                             </button>
                           ))}
                         </nav>
-                        {space.key === "historia" && campaignDetailTab === "historia" && (
+{space.key === "historia" && campaignDetailTab === "historia" && (
                           <div className="mh-cg-acts">
                             <button type="button" className="mh-cg-gold" onClick={() => addScene()}>
                               <Plus size={15} /> <span>Nuevo capítulo</span>
@@ -28256,7 +28256,24 @@ export default function App({ onSignOut }) {
                             </button>
                           </div>
                         )}
-                        </div>
+                        <nav className="mh-cg-nav is-live" role="tablist" aria-label="Directo">
+                          {CAMP_SPACES.filter((sp) => sp.key === "directo").map((sp) => (
+                            <button
+                              key={sp.key}
+                              type="button"
+                              role="tab"
+                              aria-selected={sp === space}
+                              className={sp === space ? "is-on" : ""}
+                              onClick={() => {
+                                campLeafMem.current[space.key] = campaignDetailTab;
+                                setCampaignDetailTab(sp === space ? sp.tabs[0].key : campLeafMem.current[sp.key] || sp.tabs[0].key);
+                              }}
+                            >
+                              <sp.Icon size={16} strokeWidth={1.9} /> <span>{sp.label}</span>
+                            </button>
+                          ))}
+                        </nav>
+</div>
                         {space.tabs.length > 1 && campaignDetailTab !== "mapa" && (
                           <div className="mh-cg-sub" role="tablist" aria-label={space.label}>
                             {space.tabs.map((t) => (
