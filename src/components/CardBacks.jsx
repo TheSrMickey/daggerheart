@@ -119,7 +119,8 @@ export function CardBack({ kind = "clasico" }) {
   );
 }
 
-const THICK = 12; // grosor de la carta en píxeles: un corte de papel cada píxel
+const THICK = 3; // grosor de la carta en píxeles (una carta real mide ~0,3 mm de 63: aquí algo exagerado para que el canto se vea)
+const STEP = 0.5; // un corte cada medio píxel: sin huecos entre cortes aunque el canto se vea casi de lado
 
 // Carta con dos caras y canto que se puede girar en 3D: arrastrando, con giro automático o saltando al frente / reverso.
 export function FlipCard({ front, back, startBack = true }) {
@@ -171,8 +172,8 @@ export function FlipCard({ front, back, startBack = true }) {
     <div className="mh-flip3d-wrap">
       <div className="mh-flip3d" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} role="img" aria-label="Carta que puedes girar arrastrando">
         <div className="mh-flip3d-in" ref={inRef}>
-          {Array.from({ length: THICK + 1 }, (_, i) => (
-            <div key={i} className={"mh-flip3d-sl" + (i % 2 ? " is-alt" : "")} style={{ transform: "translateZ(" + (i - THICK / 2) + "px)" }} />
+          {Array.from({ length: Math.round(THICK / STEP) + 1 }, (_, i) => (
+            <div key={i} className={"mh-flip3d-sl" + (i % 2 ? " is-alt" : "")} style={{ transform: "translateZ(" + (i * STEP - THICK / 2) + "px)" }} />
           ))}
           <div className="mh-flip3d-f">{front}</div>
           <div className="mh-flip3d-f is-back">{back}</div>
