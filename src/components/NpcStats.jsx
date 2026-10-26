@@ -76,3 +76,35 @@ export default function NpcStatsEditor({ stats, onChange, name }) {
     </div>
   );
 }
+
+// Ficha de solo lectura de un adversario (la que se abre desde la lista de PNJ y criaturas).
+export function NpcStatsView({ stats }) {
+  const st = stats || {};
+  const th = st.thresholds || [];
+  const atk = st.attack || {};
+  const cell = (label, val) => (
+    <div className="mh-nsv-c"><span>{label}</span><b>{val === undefined || val === null || val === "" ? "—" : val}</b></div>
+  );
+  return (
+    <div className="mh-nsv">
+      <div className="mh-nsv-g">
+        {cell("Nivel", st.tier)}
+        {cell("Tipo", st.type)}
+        {cell("Dificultad", st.difficulty)}
+        {cell("Umbrales", th.length ? th.join(" / ") : "")}
+        {cell("Puntos de vida", st.hp)}
+        {cell("Estrés", st.stress)}
+        {cell("Mod. de ataque", st.atk === undefined || st.atk === null ? "" : (Number(st.atk) >= 0 ? "+" : "") + st.atk)}
+      </div>
+      {(atk.name || atk.damage) && (
+        <div className="mh-nsv-a">
+          <Swords size={15} />
+          <div><b>{atk.name || "Ataque"}</b><small>{[atk.range, atk.damage ? atk.damage + (atk.type ? " " + atk.type : "") : ""].filter(Boolean).join(" · ")}</small></div>
+        </div>
+      )}
+      {st.motives && <p><b>Motivos y tácticas</b>{st.motives}</p>}
+      {st.exp && <p><b>Experiencia</b>{st.exp}</p>}
+      {st.desc && <p><b>Descripción</b>{st.desc}</p>}
+    </div>
+  );
+}
