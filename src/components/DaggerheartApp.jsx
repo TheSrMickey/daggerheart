@@ -5639,14 +5639,14 @@ const sharedStyles = `
   html[data-mh-theme="light"] .mh-cgs-live { color: #B23A31; }
   /* Capítulos: tira de capítulos + ficha con tres pasos; cada paso se edita en una ventana. */
   .cgs { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; padding: 16px 18px; border-radius: 22px; background: var(--mh-panel); border: 1px solid var(--mh-line); }
-  .cgs-strip { flex: none; display: flex; gap: 10px; overflow-x: auto; scrollbar-width: thin; padding: 2px 2px 6px; }
+  .cgs-strip-unused { flex: none; display: flex; gap: 10px; overflow-x: auto; scrollbar-width: thin; padding: 2px 2px 6px; }
   .cgs-ch { position: relative; flex: none; width: 188px; border-radius: 16px; border: 1px solid var(--mh-line); background: var(--mh-panel2); transition: border-color .15s; } .cgs-ch:hover { border-color: var(--mh-line2); } .cgs-ch.is-on { border-color: #E3B04B; background: #E3B04B12; }
   .cgs-ch-b { all: unset; box-sizing: border-box; cursor: pointer; width: 100%; display: flex; align-items: center; gap: 10px; padding: 7px; } .cgs-ch-b:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; border-radius: 14px; }
   .cgs-ch-th { width: 52px; height: 40px; border-radius: 9px; background: #2B3A4F center / cover no-repeat; flex: none; } .cgs-ch-th.is-blank { background-image: linear-gradient(#2B3A4F, #6E7F8C 58%, #C9A879); }
   .cgs-ch-t { min-width: 0; display: flex; flex-direction: column; } .cgs-ch-t small { font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--mh-muted); } .cgs-ch.is-live .cgs-ch-t small { color: #58d68d; } .cgs-ch-t b { font-size: 13px; color: var(--mh-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .cgs-ch-mv { position: absolute; right: 6px; top: -9px; display: flex; gap: 2px; padding: 2px; border-radius: 8px; background: var(--mh-panel3); border: 1px solid var(--mh-line2); } .cgs-ch-mv button { all: unset; cursor: pointer; width: 20px; height: 20px; display: grid; place-items: center; border-radius: 6px; color: var(--mh-ink3); } .cgs-ch-mv button:hover:not(:disabled) { background: var(--mh-panel); color: var(--mh-ink); } .cgs-ch-mv button:disabled { opacity: .3; cursor: default; }
   .cgs .mh-hs-detail { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; border: 0; background: none; border-radius: 0; overflow: visible; }
-  .cgs .mh-hs-banner { flex: none; height: clamp(90px, 16vh, 150px); border-radius: 18px; overflow: hidden; padding: 12px 16px; } .cgs .mh-hs-back { display: none; }
+  .cgs .mh-hs-banner { flex: none; height: clamp(90px, 16vh, 150px); border-radius: 18px; overflow: hidden; padding: 12px 16px; } .cgs .mh-hs-back { display: grid; }
   .cgs-title { all: unset; box-sizing: border-box; width: 100%; font-size: 24px; line-height: 1.15; color: #fff; text-shadow: 0 2px 10px #000a; border-bottom: 1px dashed transparent; } .cgs-title:hover { border-bottom-color: #ffffff66; } .cgs-title:focus { border-bottom-color: #E3B04B; } .cgs-title::placeholder { color: #ffffffaa; }
   .cgs-steps { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr; gap: 10px; align-content: start; } .cgs .mh-hs-bt small { display: none; } .cgp-modal .mh-hs-body > .mh-gm-box > .mh-gm-h:first-child { display: none; }
   .cgs-step { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 18px; border: 1px solid var(--mh-line); background: var(--mh-panel2); transition: border-color .15s, transform .15s; } .cgs-step:hover, .cgs-step:focus-visible { border-color: #E3B04B; transform: translateY(-2px); } .cgs-step:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
@@ -5686,6 +5686,29 @@ const sharedStyles = `
   .cgs-none { all: unset; box-sizing: border-box; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 16px; border-radius: 16px; border: 1px dashed var(--mh-line2); font-size: 13px; font-weight: 600; color: var(--mh-ink3); } .cgs-none:hover { border-color: #E3B04B; color: var(--mh-ink); } .cgs-none:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
   .cgs-tpl { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; } .cgs-tpl-b { all: unset; cursor: pointer; display: flex; flex-direction: column; gap: 4px; } .cgs-tpl-b span { aspect-ratio: 16 / 9; border-radius: 8px; background: center / cover no-repeat; border: 2px solid transparent; } .cgs-tpl-b.is-on span, .cgs-tpl-b:hover span { border-color: #E3B04B; } .cgs-tpl-b small { font-size: 11px; color: var(--mh-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .cgs-tpl-b:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; border-radius: 8px; }
   .cgp-npc-top { gap: 8px; } .cgp-npc-open { all: unset; box-sizing: border-box; cursor: pointer; flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; } .cgp-npc-open:focus-visible { outline: 2px solid #E3B04B; outline-offset: 3px; border-radius: 12px; } .cgp-kind.is-btn { all: unset; cursor: pointer; font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 4px 10px; border-radius: 99px; color: var(--kc); background: color-mix(in srgb, var(--kc) 14%, transparent); border: 1px solid color-mix(in srgb, var(--kc) 40%, transparent); flex: none; } .cgp-kind.is-btn:hover { background: color-mix(in srgb, var(--kc) 26%, transparent); } .cgp-kind.is-btn:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
+  /* Capítulos: caja por capítulo y línea de tiempo pequeña abajo. */
+  .cgs-grid { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; align-content: start; padding: 2px 4px 2px 2px; }
+  .cgs-box { position: relative; display: flex; flex-direction: column; border-radius: 18px; border: 1px solid var(--mh-line); background: var(--mh-panel2); overflow: hidden; transition: border-color .15s, transform .15s; } .cgs-box:hover { border-color: #E3B04B; transform: translateY(-2px); } .cgs-box.is-live { border-color: #58d68d88; }
+  .cgs-box-b { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; } .cgs-box-b:focus-visible { outline: 2px solid #E3B04B; outline-offset: -2px; border-radius: 18px; }
+  .cgs-box-th { position: relative; aspect-ratio: 16 / 9; background: #2B3A4F center / cover no-repeat; display: block; } .cgs-box-th.is-blank { background-image: linear-gradient(#2B3A4F, #6E7F8C 58%, #C9A879); }
+  .cgs-box-th i { position: absolute; left: 8px; top: 8px; min-width: 24px; height: 24px; padding: 0 6px; box-sizing: border-box; border-radius: 99px; display: grid; place-items: center; font: 800 12px 'Inter', sans-serif; font-style: normal; background: #0c0c20cc; color: #fff; } .cgs-box-th em { position: absolute; right: 8px; top: 8px; font-style: normal; font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: 99px; background: #58d68d; color: #06210f; }
+  .cgs-box-t { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 5px; } .cgs-box-t b { font-size: 15px; color: var(--mh-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .cgs-box-t small { display: flex; gap: 12px; font-size: 12px; color: var(--mh-muted); } .cgs-box-t small span { display: inline-flex; align-items: center; gap: 4px; }
+  .cgs-box-mv { position: absolute; right: 8px; bottom: 8px; display: flex; gap: 2px; opacity: 0; transition: opacity .15s; } .cgs-box:hover .cgs-box-mv, .cgs-box:focus-within .cgs-box-mv { opacity: 1; } .cgs-box-mv button { all: unset; cursor: pointer; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 8px; background: var(--mh-panel3); color: var(--mh-ink3); border: 1px solid var(--mh-line2); } .cgs-box-mv button:hover:not(:disabled) { color: var(--mh-ink); } .cgs-box-mv button:disabled { opacity: .3; cursor: default; } .cgs-box-mv button:focus-visible { outline: 2px solid #E3B04B; }
+  .cgs-box.is-new { all: unset; box-sizing: border-box; cursor: pointer; min-height: 140px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; border-radius: 18px; border: 1px dashed var(--mh-line2); color: var(--mh-ink3); font-size: 13px; font-weight: 600; } .cgs-box.is-new:hover { border-color: #E3B04B; color: var(--mh-ink); transform: none; } .cgs-box.is-new:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
+  .cgs-tl { flex: none; display: flex; align-items: center; gap: 12px; padding-top: 12px; border-top: 1px solid var(--mh-line); } .cgs-tl-l { flex: none; font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-muted); }
+  .cgs-tl-r { flex: 1; min-width: 0; display: flex; align-items: center; overflow-x: auto; scrollbar-width: none; } .cgs-tl-r::-webkit-scrollbar { display: none; } .cgs-tl-w { display: inline-flex; align-items: center; flex: none; }
+  .cgs-tl-ar { width: 22px; height: 2px; background: var(--mh-line2); margin: 0 4px; flex: none; position: relative; } .cgs-tl-ar::after { content: ""; position: absolute; right: -1px; top: -3px; border: 4px solid transparent; border-left: 5px solid var(--mh-line2); }
+  .cgs-tl-ch { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; padding: 5px 10px 5px 6px; border-radius: 99px; border: 1px solid var(--mh-line); background: var(--mh-panel2); max-width: 260px; } .cgs-tl-ch:hover { border-color: var(--mh-line2); } .cgs-tl-ch.is-on { border-color: #E3B04B; background: #E3B04B14; } .cgs-tl-ch:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
+  .cgs-tl-n { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 800; background: var(--mh-panel3); color: var(--mh-ink3); flex: none; } .cgs-tl-ch.is-on .cgs-tl-n { background: #E3B04B; color: #241a05; }
+  .cgs-tl-nodes { display: inline-flex; gap: 3px; } .cgs-tl-nodes i { width: 20px; height: 20px; border-radius: 6px; display: grid; place-items: center; background: var(--mh-panel3); color: var(--mh-muted); opacity: .55; } .cgs-tl-nodes i.is-set { opacity: 1; color: #E3B04B; background: #E3B04B1c; } .cgs-tl-nodes i.is-dlg.is-set { color: #6FA3C0; background: #6FA3C01c; } .cgs-tl-nodes i.is-cmb.is-set { color: #E8776F; background: #E0544A1c; }
+  .cgs-tl-ch b { font-size: 12px; color: var(--mh-ink2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* Banner de campaña en modo claro (como el de la hoja). */
+  html[data-mh-theme="light"] .mh-cgb { color: var(--mh-ink); background: linear-gradient(135deg, color-mix(in srgb, var(--cc) 32%, #FFFCF6), #FFFCF6 80%); border-color: color-mix(in srgb, var(--cc) 45%, #DCD2C1); box-shadow: 0 12px 28px -22px var(--cc); }
+  html[data-mh-theme="light"] .mh-cgb::after { background: linear-gradient(0deg, #FFFCF6b0, transparent 55%); } html[data-mh-theme="light"] .mh-cgb-emb { color: #0000001a; }
+  html[data-mh-theme="light"] .mh-cgb-tit p { color: var(--mh-ink3); } html[data-mh-theme="light"] .mh-cgb-tit p b.is-on { color: #2F7A3A; } html[data-mh-theme="light"] .mh-cgb-name { color: var(--mh-ink); }
+  html[data-mh-theme="light"] .mh-cgb-back, html[data-mh-theme="light"] .mh-cgb-btn { background: #FFFFFFcc; border-color: #BFB197; color: #2F2839; box-shadow: 0 1px 2px rgba(60,40,10,.12); } html[data-mh-theme="light"] .mh-cgb-back:hover, html[data-mh-theme="light"] .mh-cgb-btn:hover { background: #fff; border-color: #97680F; } html[data-mh-theme="light"] .mh-cgb-btn.is-del { color: #9B2F27; } html[data-mh-theme="light"] .mh-cgb-btn.is-confirm { background: #C0504A; color: #fff; }
+  html[data-mh-theme="light"] .mh-cgb-fear { background: #FFFFFFcc; border-color: #DCD2C1; color: #5b3fa8; } html[data-mh-theme="light"] .mh-cgb-fear b { color: var(--mh-ink); }
+  html[data-mh-theme="light"] .mh-cgb-ai { background: #FFFFFFcc; color: #5b3fa8; } html[data-mh-theme="light"] .mh-cgb .mh-cg-avs .mh-cg-av i { border-color: #FFFCF6; }
   .cgp-del { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; color: #D9644E !important; }
   /* Las listas de pistas: tarjetas en rejilla dentro del panel. */
   .cgp-list.mh-pst-list { display: block; }
@@ -28650,7 +28673,7 @@ export default function App({ onSignOut }) {
                         {groups.map((sp, gi) => (
                           <span key={sp.key} className="mh-cgt-g">
                             {gi > 0 && <span className="mh-cgt-sep" aria-hidden="true" />}
-                            {sp.tabs.map((t) => (
+                            {sp.tabs.filter((t) => t.key !== "mapas").map((t) => (
                               <button key={t.key} type="button" role="tab" aria-selected={campaignDetailTab === t.key} className={"is-base" + (campaignDetailTab === t.key ? " is-on" : "")} title={t.label} onClick={() => setCampaignDetailTab(t.key)}>
                                 <t.Icon size={15} strokeWidth={1.8} /> <span className="lbl">{t.label}</span>
                               </button>
@@ -29397,7 +29420,7 @@ export default function App({ onSignOut }) {
                         </section>
                       );
                     }
-                    const sel = scenes.find((x) => x.id === chapterId) || (isMobile ? null : scenes.find((x) => x.id === activeSceneId) || scenes[0]);
+                    const sel = scenes.find((x) => x.id === chapterId) || null;
                     const chapter = sel;
                     const idx = sel ? scenes.indexOf(sel) : -1;
                     const isLive = !!sel && sel.id === activeSceneId;
@@ -29962,7 +29985,33 @@ export default function App({ onSignOut }) {
                       </section>
                     );
                     if (!isMobile) {
-                        return (
+                      const tlEl = (
+                        <div className="cgs-tl" aria-label="Línea de tiempo de la historia">
+                          <span className="cgs-tl-l">Línea de tiempo</span>
+                          <div className="cgs-tl-r">
+                            {scenes.map((sc, i) => {
+                              const scns = chapterScenes(sc);
+                              const nd = dialogueConvs.filter((cv) => cv.sceneId === sc.id).length;
+                              const mps = campaignMaps.filter((m) => m.sceneId === sc.id);
+                              return (
+                                <span key={sc.id} className="cgs-tl-w">
+                                  {i > 0 && <span className="cgs-tl-ar" aria-hidden="true" />}
+                                  <button type="button" className={"cgs-tl-ch" + (sel?.id === sc.id ? " is-on" : "")} onClick={() => openChapter(sc.id)} title={"Capítulo " + (i + 1) + " · " + (sc.title || "Sin título")}>
+                                    <span className="cgs-tl-n">{i + 1}</span>
+                                    <span className="cgs-tl-nodes">
+                                      {scns.map((x) => <i key={x.id} className={"is-img" + (x.image ? " is-set" : "")} title={x.title || "Escena"}><ImageIcon size={11} /></i>)}
+                                      {nd > 0 && <i className="is-dlg is-set" title={nd + " diálogo" + (nd === 1 ? "" : "s")}><MessageSquareQuote size={11} /></i>}
+                                      {mps.map((m) => <i key={m.id} className="is-cmb is-set" title={m.name}><Swords size={11} /></i>)}
+                                    </span>
+                                    <b>{sc.title || "Sin título"}</b>
+                                  </button>
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                      return (
                         <div className="cgs">
                           {chAsk && sel && (
                             <div className="mh-chn-ov" role="dialog" aria-modal="true" aria-label="¿Qué quieres añadir?" onClick={() => setChAsk(false)}>
@@ -29978,34 +30027,47 @@ export default function App({ onSignOut }) {
                             </div>
                           )}
 
-                          <header className="cgp-h">
-                            <span className="cgp-ic"><Clapperboard size={18} /></span>
-                            <h3 className="mh-serif">Capítulos</h3>
-                            <span className="cgp-n">{scenes.length}</span>
-                            <span className="cgp-sp" />
-                            <button type="button" className="mh-cg-gold" onClick={() => setNewChOpen(1)}><Plus size={15} /> <span>Nuevo capítulo</span></button>
-                          </header>
-                          <div className="cgs-strip" role="tablist" aria-label="Capítulos">
-                            {scenes.map((sc, i) => {
-                              const live = sc.id === activeSceneId;
-                              const on = sel?.id === sc.id;
-                              return (
-                                <div key={sc.id} className={"cgs-ch" + (on ? " is-on" : "") + (live ? " is-live" : "")}>
-                                  <button type="button" role="tab" aria-selected={on} className="cgs-ch-b" onClick={() => openChapter(sc.id)}>
-                                    <span className={"cgs-ch-th" + (sc.image ? "" : " is-blank")} style={bgStyle(sc.image)} />
-                                    <span className="cgs-ch-t"><small>{i + 1}{live ? " · en pantalla" : ""}</small><b>{sc.title || "Sin título"}</b></span>
-                                  </button>
-                                  {on && scenes.length > 1 && (
-                                    <span className="cgs-ch-mv">
-                                      <button type="button" aria-label="Mover antes" title="Mover antes" disabled={i === 0} onClick={() => moveScene(sc.id, -1)}><ChevronLeft size={13} /></button>
-                                      <button type="button" aria-label="Mover después" title="Mover después" disabled={i === scenes.length - 1} onClick={() => moveScene(sc.id, 1)}><ChevronRight size={13} /></button>
-                                    </span>
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </div>
-                          {detailEl}
+                          {sel ? (
+                            detailEl
+                          ) : (
+                            <>
+                              <header className="cgp-h">
+                                <span className="cgp-ic"><Clapperboard size={18} /></span>
+                                <h3 className="mh-serif">Capítulos</h3>
+                                <span className="cgp-n">{scenes.length}</span>
+                                <span className="cgp-sp" />
+                                <button type="button" className="mh-cg-gold" onClick={() => setNewChOpen(1)}><Plus size={15} /> <span>Nuevo capítulo</span></button>
+                              </header>
+                              <div className="cgs-grid">
+                                {scenes.map((sc, i) => {
+                                  const scns = chapterScenes(sc);
+                                  const nd = dialogueConvs.filter((cv) => cv.sceneId === sc.id).length;
+                                  const nm = campaignMaps.filter((m) => m.sceneId === sc.id).length;
+                                  const live = sc.id === activeSceneId;
+                                  return (
+                                    <article key={sc.id} className={"cgs-box" + (live ? " is-live" : "")}>
+                                      <button type="button" className="cgs-box-b" onClick={() => openChapter(sc.id)} aria-label={"Editar el capítulo " + (i + 1) + ": " + (sc.title || "Sin título")}>
+                                        <span className={"cgs-box-th" + (sc.image ? "" : " is-blank")} style={bgStyle(sc.image)}>
+                                          <i>{i + 1}</i>
+                                          {live && <em>En pantalla</em>}
+                                        </span>
+                                        <span className="cgs-box-t">
+                                          <b className="mh-serif">{sc.title || "Sin título"}</b>
+                                          <small><span title="Escenas"><ImageIcon size={11} /> {scns.length}</span><span title="Diálogos"><MessageSquareQuote size={11} /> {nd}</span><span title="Mapas de combate"><Swords size={11} /> {nm}</span></small>
+                                        </span>
+                                      </button>
+                                      <span className="cgs-box-mv">
+                                        <button type="button" aria-label="Mover antes" title="Mover antes" disabled={i === 0} onClick={() => moveScene(sc.id, -1)}><ChevronLeft size={13} /></button>
+                                        <button type="button" aria-label="Mover después" title="Mover después" disabled={i === scenes.length - 1} onClick={() => moveScene(sc.id, 1)}><ChevronRight size={13} /></button>
+                                      </span>
+                                    </article>
+                                  );
+                                })}
+                                <button type="button" className="cgs-box is-new" onClick={() => setNewChOpen(1)}><Plus size={22} /> <span>Nuevo capítulo</span></button>
+                              </div>
+                            </>
+                          )}
+                          {tlEl}
                         </div>
                       );
                     }
