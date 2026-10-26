@@ -5536,7 +5536,7 @@ const sharedStyles = `
   .mh-pl-empty { font-size: 13px; color: var(--mh-muted); padding: 18px 0; }
   .mh-pl-add { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--mh-line); } .mh-pl-add > span { font-size: 12.5px; color: var(--mh-muted); margin-right: 4px; } .mh-pl-add small { font-size: 12.5px; color: var(--mh-muted); }
   .mh-pl-add button { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 99px; border: 1px dashed var(--mh-line2); font-size: 12.5px; color: var(--mh-ink3); } .mh-pl-add button:hover { border-color: #E3B04B; color: var(--mh-ink); }
-  .mh-root:not(.is-mobile) .mh-chatpg { display: flex; flex-direction: column; min-height: 0; } .mh-chatcard { flex: 1; min-height: 0; display: flex; flex-direction: column; max-width: 860px; width: 100%; } .mh-chatcard .mh-chat-feed { flex: 1; min-height: 0; max-height: none; overflow-y: auto; }
+  .mh-root:not(.is-mobile) .mh-chatpg { display: flex; flex-direction: column; min-height: 0; } .mh-chatcard { flex: 1; min-height: 0; display: flex; flex-direction: column; max-width: none; width: 100%; } .mh-chatcard .mh-chat-feed { flex: 1; min-height: 0; max-height: none; overflow-y: auto; }
   .mh-cg-pg { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; margin: 2px 0 16px; } .mh-cg-pg h3 { margin: 0; font-size: 20px; line-height: 1.15; color: var(--mh-ink); } .mh-cg-pg p { margin: 3px 0 0; font-size: 13px; color: var(--mh-muted); }
   .mh-cg-sub { display: flex; gap: 4px; margin: 0 0 16px; overflow-x: auto; scrollbar-width: none; padding: 4px; width: max-content; max-width: 100%; border-radius: 14px; background: var(--mh-input); border: 1px solid var(--mh-line); }
   .mh-cg-sub::-webkit-scrollbar { display: none; }
@@ -5570,6 +5570,7 @@ const sharedStyles = `
   .mh-cg.is-flat { height: 100%; min-height: 0; display: flex; flex-direction: column; }
   .mh-cg.is-flat .mh-cg-body { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; padding: 2px 4px 2px 2px; margin: 0 -4px 0 -2px; }
   .mh-cg.is-flat .mh-cg-body > * { flex-shrink: 0; }
+  .mh-cg.is-flat .mh-cg-body:has(.mh-chatpg) { overflow: hidden; padding: 0; margin: 0; }
   .mh-cg.is-flat .mh-cg-head { flex: none; margin-bottom: 12px; padding: 10px 14px; gap: 10px; } .mh-cg.is-flat .mh-cg-emb { width: 42px; height: 42px; } .mh-cg.is-flat .mh-cg-name { font-size: 20px; }
   .mh-cg.is-flat .mh-cg-fear, .mh-cg.is-flat .mh-cg-pg { display: none; }
   .mh-cg.is-flat .mh-cg-tit { margin-right: auto; }
