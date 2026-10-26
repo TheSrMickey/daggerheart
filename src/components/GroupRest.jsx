@@ -16,6 +16,18 @@ const ACTS = [
 ];
 const TYPES = { short: ["Descanso corto", Sun], long: ["Descanso largo", Moon] };
 
+// Historial: cada descanso terminado queda guardado (quién descansó y qué acciones eligió) para el contador de cortos seguidos y las estadísticas.
+export const MAX_SHORT = 3;
+export const shortRun = (doc) => { let n = 0; const h = (doc && doc.hist) || []; for (let i = h.length - 1; i >= 0 && h[i].type === "short"; i--) n++; return n; };
+const startRest = (d, type) => ({ ...d, cur: { id: "r" + Date.now(), type, at: Date.now(), ready: {}, acts: {}, closed: false }, req: {} });
+const finishRest = (d, members) => {
+  if (!d.cur) return d;
+  const who = members.map((m) => m.id).filter((id) => d.cur.ready?.[id]);
+  const entry = { id: d.cur.id, type: d.cur.type, at: d.cur.at, end: Date.now(), total: members.length, who, names: Object.fromEntries(members.map((m) => [m.id, m.name])), acts: d.cur.acts || {} };
+  return { ...d, cur: { ...d.cur, closed: true }, hist: [...(d.hist || []), entry].slice(-60) };
+};
+const ago = (ts) => { const m = Math.max(0, Math.round((Date.now() - ts) / 60000)); return m < 1 ? "hace un momento" : m < 60 ? "hace " + m + " min" : m < 1440 ? "hace " + Math.round(m / 60) + " h" : "hace " + Math.round(m / 1440) + " d"; };
+
 // Ventana del jugador: aparece sola cuando el DJ propone un descanso.
 export function GroupRestDialog({ campaignId, mine, onRest, open, onClose }) {
   const controlled = open !== undefined;
@@ -33,7 +45,7 @@ export function GroupRestDialog({ campaignId, mine, onRest, open, onClose }) {
     const p = get(m), n = p.filter((x) => x === k).length;
     setPicks((s) => ({ ...s, [m.id]: n === 0 || p.length < m.slots ? (p.length < m.slots ? [...p, k] : [...p.slice(1), k]) : p.filter((x) => x !== k) }));
   };
-  const go = (m) => { const p = get(m); if (controlled && pending.length <= 1) onClose && onClose(); onRest(m.id, cur.type, p); update((d) => ({ ...d, cur: d.cur && d.cur.id === cur.id ? { ...d.cur, ready: { ...(d.cur.ready || {}), [m.id]: Date.now() } } : d.cur })); };
+  const go = (m) => { const p = get(m); if (controlled && pending.length <= 1) onClose && onClose(); onRest(m.id, cur.type, p); update((d) => ({ ...d, cur: d.cur && d.cur.id === cur.id ? { ...d.cur, ready: { ...(d.cur.ready || {}), [m.id]: Date.now() }, acts: { ...(d.cur.acts || {}), [m.id]: p } } : d.cur })); };
   return (
     <div className="mh-overlay" style={{ background: "rgba(8,6,12,.68)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 62, padding: 20 }} role="dialog" aria-modal="true" aria-label="Descanso del grupo">
       <div className="gr-box">
@@ -68,7 +80,7 @@ export function RestLock({ campaignId, campName, charId, charName, onAsk, onType
     if (open && curType && onType) onType(curType);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, curType]);
-  const markReady = () => update((d) => ({ ...d, cur: d.cur && cur && d.cur.id === cur.id ? { ...d.cur, ready: { ...(d.cur.ready || {}), [charId]: Date.now() } } : d.cur }));
+  const markReady = (picks) => update((d) => ({ ...d, cur: d.cur && cur && d.cur.id === cur.id ? { ...d.cur, ready: { ...(d.cur.ready || {}), [charId]: Date.now() }, acts: { ...(d.cur.acts || {}), ...(Array.isArray(picks) ? { [charId]: picks.filter(Boolean) } : {}) } } : d.cur }));
   const ask = (type) => {
     update((d) => ({ ...d, req: { ...(d.req || {}), [charId]: { name: charName, type, at: Date.now() } } }));
     onAsk(type);
@@ -105,45 +117,108 @@ export function RestLock({ campaignId, campName, charId, charName, onAsk, onType
   );
 }
 
-// Pestaña del DJ: proponer el descanso y ver quién ha descansado.
+// Pestaña del DJ: contador de cortos seguidos, estadísticas y, a la derecha, peticiones o quién ha terminado.
 export function RestGm({ campaignId, members, onAnnounce }) {
   const [doc, update] = useDoc(restKey(campaignId), EMPTY, 3000);
-  const [type, setType] = useState("long");
   const cur = doc.cur && !doc.cur.closed ? doc.cur : null;
+  const hist = doc.hist || [];
+  const run = shortRun(doc);
   const done = members.filter((m) => cur?.ready?.[m.id]).length;
   const reqs = members.filter((m) => doc.req?.[m.id]);
-  const start = () => { update(() => ({ cur: { id: "r" + Date.now(), type, at: Date.now(), ready: {}, closed: false } })); onAnnounce("El DJ propone un " + TYPES[type][0].toLowerCase() + " para todo el grupo. Elige tus acciones y descansa.", { rest: type }); };
+  const last = hist[hist.length - 1];
+  const shorts = hist.filter((h) => h.type === "short").length;
+  const tally = {};
+  hist.forEach((h) => Object.values(h.acts || {}).forEach((a) => (a || []).forEach((k) => { tally[k] = (tally[k] || 0) + 1; })));
+  const totAct = ACTS.reduce((s, a) => s + (tally[a.key] || 0), 0);
+  const part = hist.length ? Math.round((hist.reduce((s, h) => s + (h.who || []).length / Math.max(1, h.total), 0) / hist.length) * 100) : 0;
+  const start = (type) => {
+    update((d) => startRest(d, type));
+    onAnnounce("El DJ propone un " + TYPES[type][0].toLowerCase() + " para todo el grupo. Elige tus acciones y descansa.", { rest: type });
+  };
   const end = () => {
-    update((d) => ({ cur: d.cur ? { ...d.cur, closed: true } : null }));
+    update((d) => finishRest(d, members));
     onAnnounce(TYPES[cur.type][0] + " del grupo terminado (" + done + " de " + members.length + "). " + (cur.type === "long" ? "El DJ gana 1d4 + " + members.length + " de Miedo." : "El DJ gana 1d4 de Miedo."));
   };
+  const blocked = run >= MAX_SHORT;
+  const chips = (keys) => <div className="rs-acts">{(keys || []).map((k, i) => { const a = ACTS.find((x) => x.key === k); return a ? <span key={i} className="rs-act" style={{ "--c": a.color }}>{a.label}</span> : null; })}</div>;
   return (
-    <div className="mh-card gx" style={{ margin: 0 }}>
-      <div className="gx-h"><h3 className="mh-serif"><BedDouble size={18} /> Descanso del grupo</h3></div>
-      <p className="gx-sub">Propón un descanso y cada jugador lo hace desde su hoja. Aquí ves quién ya ha descansado.</p>
-      {!cur ? (
-        <>
-          {reqs.length > 0 && (
-            <div className="rl-reqs">
-              <span className="gx-lab" style={{ marginTop: 0 }}>Peticiones de la mesa</span>
-              {reqs.map((m) => <div key={m.id} className="cal-who" style={{ marginBottom: 6 }}><span className="cal-av" style={{ "--c": m.color }}>{m.name.charAt(0).toUpperCase()}</span><span className="cal-nm"><b>{m.name}</b><small>Pide un {TYPES[doc.req[m.id].type]?.[0].toLowerCase()}</small></span><button type="button" className="mh-btn-ghost" onClick={() => setType(doc.req[m.id].type)}>Elegir este tipo</button></div>)}
+    <div className="rs">
+      <div className="mh-card rs-l">
+        <div className="gx-h"><h3 className="mh-serif"><BedDouble size={18} /> Descansos</h3>{cur && <span className="cx-chip on" style={{ "--c": cur.type === "long" ? "#8E6FC4" : "#E3B04B" }}>{TYPES[cur.type][0]} en curso</span>}</div>
+        <div className="rs-sc">
+          <div className="rs-cnt"><b>{run}</b><small> / {MAX_SHORT}</small><span>cortos seguidos.<br />Al llegar a {MAX_SHORT}, el siguiente es largo.</span></div>
+          <div className="rs-bar"><i style={{ width: Math.min(100, (run / MAX_SHORT) * 100) + "%" }} /></div>
+          {blocked && <div className="rs-warn"><Moon size={14} /> Ya hay {MAX_SHORT} descansos cortos seguidos: el próximo tiene que ser largo.</div>}
+          {cur && !blocked && cur.type === "short" && run === MAX_SHORT - 1 && <div className="rs-warn"><Moon size={14} /> Al terminar este serán {MAX_SHORT} cortos seguidos: el siguiente será largo.</div>}
+          {!cur ? (
+            <div className="rs-btns">
+              <button type="button" className="mh-btn" disabled={!members.length || blocked} title={blocked ? "Toca descanso largo" : undefined} onClick={() => start("short")}><Sun size={15} /> Proponer corto</button>
+              <button type="button" className="mh-btn rs-long" disabled={!members.length} onClick={() => start("long")}><Moon size={15} /> Proponer largo</button>
+            </div>
+          ) : (
+            <div className="rs-btns">
+              <button type="button" className="mh-btn-ghost" onClick={() => onAnnounce("El DJ pide que termine el descanso del grupo.")}><Bell size={14} /> Recordar al grupo</button>
+              <button type="button" className="mh-btn" onClick={end}>Terminar descanso</button>
             </div>
           )}
-          <span className="gx-lab">Tipo</span>
-          <div className="gx-row">{Object.entries(TYPES).map(([k, [l, I]]) => <button key={k} type="button" className={"cx-chip" + (type === k ? " on" : "")} style={{ "--c": k === "long" ? "#8E6FC4" : "#E3B04B" }} onClick={() => setType(k)}><i><I size={13} /></i>{l}</button>)}</div>
-          <p className="gx-note" style={{ marginTop: 10 }}>{type === "long" ? "Recuperación completa. El DJ gana 1d4 + nº de PJ de Miedo." : "Cada jugador recupera 1d4 + su Rango con sus acciones. El DJ gana 1d4 de Miedo."}</p>
-          <button type="button" className="mh-btn" style={{ marginTop: 12 }} disabled={!members.length} onClick={start}><BedDouble size={15} /> Proponer {TYPES[type][0].toLowerCase()} al grupo</button>
-        </>
-      ) : (
-        <>
-          <div className="gx-row" style={{ marginBottom: 10 }}><span className="cx-chip on" style={{ "--c": cur.type === "long" ? "#8E6FC4" : "#E3B04B" }}>{TYPES[cur.type][0]} en curso</span><span className="gx-fact">{done} de {members.length} listos</span></div>
-          {members.map((m) => { const ok = cur.ready?.[m.id]; return <div key={m.id} className="cal-who" style={{ marginBottom: 8 }}><span className="cal-av" style={{ "--c": m.color }}>{m.name.charAt(0).toUpperCase()}</span><span className="cal-nm"><b>{m.name}</b><small>{m.cls}</small></span><span className="cx-chip on" style={{ "--c": ok ? "#4CC36B" : "#F0A037" }}><i>{ok ? <Check size={13} /> : <Hourglass size={13} />}</i>{ok ? "Listo" : "Esperando"}</span></div>; })}
-          <div className="gx-row" style={{ marginTop: 12 }}>
-            <button type="button" className="mh-btn-ghost" onClick={() => onAnnounce("El DJ pide que termine el descanso del grupo.")}><Bell size={14} /> Recordar al grupo</button>
-            <button type="button" className="mh-btn" onClick={end}>Terminar descanso</button>
-          </div>
-        </>
-      )}
+          <p className="gx-note" style={{ margin: "8px 0 0" }}>{cur?.type === "long" ? "Largo: recuperación completa. El DJ gana 1d4 + nº de PJ de Miedo." : "Corto: cada jugador recupera 1d4 + su Rango y el DJ gana 1d4 de Miedo. Largo: recuperación completa y 1d4 + nº de PJ de Miedo."}</p>
+        </div>
+        <span className="gx-lab">Estadísticas de la campaña</span>
+        <div className="rs-stats">
+          <div><b>{hist.length}</b><span>descansos</span></div>
+          <div><b>{shorts} · {hist.length - shorts}</b><span>cortos · largos</span></div>
+          <div><b>{hist.length ? part + " %" : "—"}</b><span>asistencia media</span></div>
+        </div>
+        <span className="gx-lab">Acciones más elegidas</span>
+        {totAct === 0 ? <p className="gx-sub" style={{ margin: "2px 0 0" }}>Aún no hay descansos con acciones guardadas.</p> : ACTS.map((a) => (
+          <div key={a.key} className="rs-ch"><span>{a.label}</span><div className="rs-bar is-s"><i style={{ width: Math.round(((tally[a.key] || 0) / totAct) * 100) + "%", background: a.color }} /></div><em>{Math.round(((tally[a.key] || 0) / totAct) * 100)}%</em></div>
+        ))}
+      </div>
+      <div className="mh-card rs-r">
+        {!cur ? (
+          <>
+            <div className="gx-h"><h3 className="mh-serif"><BedDouble size={18} /> Peticiones y último descanso</h3></div>
+            <div className="rs-scr">
+              <span className="gx-lab" style={{ marginTop: 0 }}>Peticiones de la mesa</span>
+              {reqs.length === 0 ? <p className="gx-sub" style={{ margin: "2px 0 0" }}>Nadie ha pedido un descanso.</p> : reqs.map((m) => {
+                const t = doc.req[m.id].type;
+                return (
+                  <div key={m.id} className="rs-w">
+                    <span className="cal-av" style={{ "--c": m.color }}>{m.name.charAt(0).toUpperCase()}</span>
+                    <span className="cal-nm"><b>{m.name}</b><small>Pide un {TYPES[t]?.[0].toLowerCase()} · {ago(doc.req[m.id].at)}</small></span>
+                    <button type="button" className="mh-btn" disabled={t === "short" && blocked} onClick={() => start(t)}>Aceptar</button>
+                  </div>
+                );
+              })}
+              <span className="gx-lab">Último descanso</span>
+              {last ? (
+                <div className="rs-ev">
+                  <b>{last.type === "long" ? <Moon size={13} /> : <Sun size={13} />} {TYPES[last.type][0]} · {ago(last.end)}</b>
+                  <small>{(last.who || []).length} de {last.total} descansaron{last.who && last.who.length < last.total ? " · faltó " + Object.entries(last.names || {}).filter(([id]) => !last.who.includes(id)).map(([, n]) => n).join(", ") : ""}</small>
+                  {chips([...new Set(Object.values(last.acts || {}).flat())])}
+                </div>
+              ) : <p className="gx-sub" style={{ margin: "2px 0 0" }}>Todavía no habéis hecho ningún descanso.</p>}
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="gx-h"><h3 className="mh-serif"><BedDouble size={18} /> Quién ha terminado</h3><span className="cx-chip on" style={{ "--c": "#4CC36B" }}>{done} / {members.length}</span></div>
+            <div className="rs-bar" style={{ marginBottom: 12 }}><i style={{ width: (members.length ? (done / members.length) * 100 : 0) + "%" }} /></div>
+            <div className="rs-scr">
+              {members.map((m) => {
+                const ok = cur.ready?.[m.id];
+                return (
+                  <div key={m.id} className="rs-w">
+                    <span className="cal-av" style={{ "--c": m.color }}>{m.name.charAt(0).toUpperCase()}</span>
+                    <span className="cal-nm"><b>{m.name}</b>{ok ? chips(cur.acts?.[m.id]) : <small>Eligiendo acciones…</small>}</span>
+                    <span className={"cx-chip on"} style={{ "--c": ok ? "#4CC36B" : "#E3B04B" }}>{ok ? <><i><Check size={12} /></i>Listo</> : <><i><Hourglass size={12} /></i>Pendiente</>}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -154,12 +229,12 @@ export function RestQuick({ campaignId, members, onAnnounce, onClose, onOpenFull
   const cur = doc.cur && !doc.cur.closed ? doc.cur : null;
   const done = members.filter((m) => cur?.ready?.[m.id]).length;
   const propose = (type) => {
-    update(() => ({ cur: { id: "r" + Date.now(), type, at: Date.now(), ready: {}, closed: false } }));
+    update((d) => startRest(d, type));
     onAnnounce("El DJ propone un " + TYPES[type][0].toLowerCase() + " para todo el grupo. Elige tus acciones y descansa.", { rest: type });
     onClose();
   };
   const end = () => {
-    update((d) => ({ cur: d.cur ? { ...d.cur, closed: true } : null }));
+    update((d) => finishRest(d, members));
     onAnnounce(TYPES[cur.type][0] + " del grupo terminado (" + done + " de " + members.length + "). " + (cur.type === "long" ? "El DJ gana 1d4 + " + members.length + " de Miedo." : "El DJ gana 1d4 de Miedo."));
     onClose();
   };
@@ -169,7 +244,7 @@ export function RestQuick({ campaignId, members, onAnnounce, onClose, onOpenFull
       {!cur ? (
         <div className="mh-rq-opts">
           {Object.entries(TYPES).map(([k, [label, Ico]]) => (
-            <button key={k} type="button" className={"mh-rq-opt is-" + k} disabled={!members.length} onClick={() => propose(k)}>
+            <button key={k} type="button" className={"mh-rq-opt is-" + k} disabled={!members.length || (k === "short" && shortRun(doc) >= MAX_SHORT)} title={k === "short" && shortRun(doc) >= MAX_SHORT ? "Ya hay 3 descansos cortos seguidos: toca uno largo" : undefined} onClick={() => propose(k)}>
               <Ico size={20} />
               <span><b>{label}</b><small>{k === "long" ? "Recuperación completa. El DJ gana 1d4 + nº de PJ de Miedo." : "Cada jugador recupera 1d4 + su Rango. El DJ gana 1d4 de Miedo."}</small></span>
             </button>
