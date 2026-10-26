@@ -5623,6 +5623,45 @@ const sharedStyles = `
   .cgp-empty small { display: none; }
   .mh-cg.is-flat .gx-note, .mh-cg.is-flat .mh-pst-hint { display: none; }
   .mh-chn > p, .mh-chn-opts small { display: none; } .mh-chn-opts > * { padding: 22px 10px; }
+  /* Menú lateral de la campaña (esquema común): mismo lenguaje que el menú de la plataforma (iconos, activa en dorado); se despliega solo el espacio abierto. */
+  .mh-cg.is-flat { display: grid; grid-template-columns: 184px minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); column-gap: 14px; }
+  .mh-cg.is-flat > .mh-cg-head { grid-column: 1 / -1; } .mh-cg.is-flat > .mh-cg-navrow, .mh-cg.is-flat > .mh-cg-sub, .mh-cg.is-flat > .mh-cg-subrow, .mh-cg.is-flat > .mh-cg-pg, .mh-cg.is-flat > .mh-cg-chips { display: none; }
+  .mh-cg.is-flat > .mh-cgs { grid-column: 1; grid-row: 2; } .mh-cg.is-flat > .mh-cg-body { grid-column: 2; grid-row: 2; }
+  .mh-cgs { display: flex; flex-direction: column; gap: 2px; padding: 10px; min-height: 0; overflow-y: auto; scrollbar-width: none; border-radius: 22px; background: var(--mh-panel); border: 1px solid var(--mh-line); }
+  .mh-cgs-g { display: flex; flex-direction: column; gap: 2px; }
+  .mh-cgs-h { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 9px 10px; border-radius: 10px; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-muted); transition: color .15s, background .15s; } .mh-cgs-h > span { flex: 1; }
+  .mh-cgs-h svg:last-child { transition: transform .2s; transform: rotate(-90deg); } .mh-cgs-g.is-open > .mh-cgs-h svg:last-child { transform: none; } .mh-cgs-g.is-open > .mh-cgs-h { color: var(--mh-ink2); }
+  .mh-cgs-h:hover { color: var(--mh-ink); background: color-mix(in srgb, var(--mh-ink) 5%, transparent); } .mh-cgs-h:focus-visible, .mh-cgs-it:focus-visible, .mh-cgs-live:focus-visible { outline: 2px solid #E3B04B; outline-offset: -2px; }
+  .mh-cgs-l { display: flex; flex-direction: column; gap: 2px; margin: 0 0 8px; }
+  .mh-cgs-it { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 11px; padding: 9px 12px; border-radius: 12px; font-size: 13.5px; font-weight: 500; color: var(--mh-ink3); transition: background .15s, color .15s; } .mh-cgs-it span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mh-cgs-it:hover { background: color-mix(in srgb, var(--mh-ink) 7%, transparent); color: var(--mh-ink); }
+  .mh-cgs-it.is-on { background: #E3B04B; color: #241a05; font-weight: 700; box-shadow: 0 8px 18px -10px #E3B04B; }
+  .mh-cgs-live { all: unset; box-sizing: border-box; cursor: pointer; margin-top: auto; display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 12px; font-size: 13.5px; font-weight: 700; color: #E8776F; border: 1px solid #E0544A55; background: #E0544A12; } .mh-cgs-live:hover { background: #E0544A24; }
+  .mh-cgs-live svg { animation: mh-pulse 2.2s ease-in-out infinite; }
+  html[data-mh-theme="light"] .mh-cgs-live { color: #B23A31; }
+  /* Capítulos: tira de capítulos + ficha con tres pasos; cada paso se edita en una ventana. */
+  .cgs { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; padding: 16px 18px; border-radius: 22px; background: var(--mh-panel); border: 1px solid var(--mh-line); }
+  .cgs-strip { flex: none; display: flex; gap: 10px; overflow-x: auto; scrollbar-width: thin; padding: 2px 2px 6px; }
+  .cgs-ch { position: relative; flex: none; width: 188px; border-radius: 16px; border: 1px solid var(--mh-line); background: var(--mh-panel2); transition: border-color .15s; } .cgs-ch:hover { border-color: var(--mh-line2); } .cgs-ch.is-on { border-color: #E3B04B; background: #E3B04B12; }
+  .cgs-ch-b { all: unset; box-sizing: border-box; cursor: pointer; width: 100%; display: flex; align-items: center; gap: 10px; padding: 7px; } .cgs-ch-b:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; border-radius: 14px; }
+  .cgs-ch-th { width: 52px; height: 40px; border-radius: 9px; background: #2B3A4F center / cover no-repeat; flex: none; } .cgs-ch-th.is-blank { background-image: linear-gradient(#2B3A4F, #6E7F8C 58%, #C9A879); }
+  .cgs-ch-t { min-width: 0; display: flex; flex-direction: column; } .cgs-ch-t small { font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--mh-muted); } .cgs-ch.is-live .cgs-ch-t small { color: #58d68d; } .cgs-ch-t b { font-size: 13px; color: var(--mh-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cgs-ch-mv { position: absolute; right: 6px; top: -9px; display: flex; gap: 2px; padding: 2px; border-radius: 8px; background: var(--mh-panel3); border: 1px solid var(--mh-line2); } .cgs-ch-mv button { all: unset; cursor: pointer; width: 20px; height: 20px; display: grid; place-items: center; border-radius: 6px; color: var(--mh-ink3); } .cgs-ch-mv button:hover:not(:disabled) { background: var(--mh-panel); color: var(--mh-ink); } .cgs-ch-mv button:disabled { opacity: .3; cursor: default; }
+  .cgs .mh-hs-detail { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; border: 0; background: none; border-radius: 0; overflow: visible; }
+  .cgs .mh-hs-banner { flex: none; height: clamp(90px, 16vh, 150px); border-radius: 18px; overflow: hidden; padding: 12px 16px; } .cgs .mh-hs-back { display: none; }
+  .cgs-title { all: unset; box-sizing: border-box; width: 100%; font-size: 24px; line-height: 1.15; color: #fff; text-shadow: 0 2px 10px #000a; border-bottom: 1px dashed transparent; } .cgs-title:hover { border-bottom-color: #ffffff66; } .cgs-title:focus { border-bottom-color: #E3B04B; } .cgs-title::placeholder { color: #ffffffaa; }
+  .cgs-steps { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr; gap: 10px; align-content: start; } .cgs .mh-hs-bt small { display: none; } .cgp-modal .mh-hs-body > .mh-gm-box > .mh-gm-h:first-child { display: none; }
+  .cgs-step { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 18px; border: 1px solid var(--mh-line); background: var(--mh-panel2); transition: border-color .15s, transform .15s; } .cgs-step:hover, .cgs-step:focus-visible { border-color: #E3B04B; transform: translateY(-2px); } .cgs-step:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
+  .cgs-step-th { width: 58px; height: 58px; flex: none; border-radius: 14px; display: grid; place-items: center; color: #E3B04B; background: #E3B04B14 center / cover no-repeat; border: 1px solid #E3B04B33; } .cgs-step-th.is-blank { background-image: linear-gradient(#2B3A4F, #6E7F8C 58%, #C9A879); }
+  .cgs-step-t { flex: 1; min-width: 0; display: grid; grid-template-columns: auto 1fr; column-gap: 8px; align-items: center; } .cgs-step-t i { font-style: normal; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 800; color: var(--mh-muted); background: var(--mh-panel3); } .cgs-step-t b { font-size: 15px; color: var(--mh-ink); } .cgs-step-t small { grid-column: 1 / -1; margin-top: 3px; font-size: 12px; color: var(--mh-muted); }
+  .cgs-step-go { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; color: var(--mh-muted); flex: none; } .cgs-step.is-done .cgs-step-go { color: #241a05; background: #58d68d; } .cgs-step.is-done .cgs-step-t i { color: #241a05; background: #E3B04B; }
+  .cgp-modal.is-xl { width: min(860px, 100%); max-height: 90vh; } .cgp-modal.is-xl .mh-hs-body { padding: 0; overflow: visible; }
+  .cgs-seg { display: inline-flex; gap: 3px; padding: 3px; border-radius: 12px; background: var(--mh-input); border: 1px solid var(--mh-line); align-self: flex-start; } .cgs-seg button { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 9px; font-size: 12.5px; font-weight: 600; color: var(--mh-muted); } .cgs-seg button:hover { color: var(--mh-ink); } .cgs-seg button.is-on { background: #E3B04B; color: #241a05; } .cgs-seg button:focus-visible { outline: 2px solid #E3B04B; outline-offset: 1px; }
+  /* Con el menú lateral el ancho útil baja: los bloques que iban en dos columnas pasan a una. */
+  .mh-cg.is-flat .gx2 { grid-template-columns: 1fr; } .mh-cg.is-flat .gx2-nav { flex-direction: row; flex-wrap: wrap; position: static; } .mh-cg.is-flat .gx2-title { display: none; }
+  .mh-cg.is-flat .gx2 { grid-template-columns: 1fr !important; gap: 12px; } .mh-cg.is-flat .gx2-nav { flex-direction: row !important; flex-wrap: wrap; padding: 8px; } .mh-cg.is-flat .gx2-tab { padding: 7px 12px; } .mh-cg.is-flat .gx2-main { flex: 1; }
+  .mh-cg.is-flat .cal-grid .cal-day { height: 36px; aspect-ratio: auto; } .mh-cg.is-flat .cal-grid { row-gap: 4px; }
+  .mh-cg.is-flat .cal { grid-template-columns: 1fr; } .mh-cg.is-flat .mh-cg-body.is-pane { overflow-y: auto; }
   .cgp-del { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; color: #D9644E !important; }
   /* Las listas de pistas: tarjetas en rejilla dentro del panel. */
   .cgp-list.mh-pst-list { display: block; }
@@ -11098,6 +11137,7 @@ export default function App({ onSignOut }) {
   const [pstNew, setPstNew] = useState(false); // ventana «Nueva pista»
   const [chScene, setChScene] = useState(null); // escena del capítulo que se edita en «Ambiente» (null = la principal)
   const [chTab, setChTab] = useState("dialogos"); // pestaña abierta del capítulo en «Historia»
+  const [chOpen, setChOpen] = useState(false); // ventana de edición del capítulo (escena, diálogos o combate)
   const ambBtn = useRef(null);
   const [ambOpen, setAmbOpen] = useState(false); // ventana de «Ambiente» (audio de la mesa)
   const [djWorldEdit, setDjWorldEdit] = useState(false);
@@ -28504,6 +28544,52 @@ export default function App({ onSignOut }) {
                     );
                   })()}
 
+                  {campFlat && (() => {
+                    const cur = CAMP_SPACES.find((sp) => sp.tabs.some((t) => t.key === campaignDetailTab)) || CAMP_SPACES[0];
+                    const live = CAMP_SPACES.find((sp) => sp.key === "directo");
+                    return (
+                      <aside className="mh-cgs" aria-label="Secciones de la campaña">
+                        {CAMP_SPACES.filter((sp) => sp.key !== "directo").map((sp) => {
+                          const open = sp === cur;
+                          return (
+                            <div key={sp.key} className={"mh-cgs-g" + (open ? " is-open" : "")}>
+                              <button
+                                type="button"
+                                className="mh-cgs-h"
+                                aria-expanded={open}
+                                onClick={() => {
+                                  if (open) return;
+                                  campLeafMem.current[cur.key] = campaignDetailTab;
+                                  setCampaignDetailTab(campLeafMem.current[sp.key] || sp.tabs[0].key);
+                                }}
+                              >
+                                <sp.Icon size={15} strokeWidth={1.9} /> <span>{sp.label}</span> <ChevronDown size={14} />
+                              </button>
+                              {open && (
+                                <div className="mh-cgs-l" role="tablist" aria-label={sp.label}>
+                                  {sp.tabs.map((t) => (
+                                    <button key={t.key} type="button" role="tab" aria-selected={campaignDetailTab === t.key} className={"mh-cgs-it" + (campaignDetailTab === t.key ? " is-on" : "")} onClick={() => setCampaignDetailTab(t.key)}>
+                                      <t.Icon size={16} strokeWidth={1.9} /> <span>{t.label}</span>
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                        <button
+                          type="button"
+                          className="mh-cgs-live"
+                          onClick={() => {
+                            campLeafMem.current[cur.key] = campaignDetailTab;
+                            setCampaignDetailTab(campLeafMem.current[live.key] || live.tabs[0].key);
+                          }}
+                        >
+                          <Radio size={16} strokeWidth={1.9} /> <span>Directo</span>
+                        </button>
+                      </aside>
+                    );
+                  })()}
                   <div className={"mh-cg-body" + (campFlat && ["votaciones", "calendario", "descanso", "cronica", "linea"].includes(campaignDetailTab) ? " is-pane" : "")}>
                   {campaignDetailTab === "mesa" && (() => {
                     const stage = campaignStage;
@@ -29295,6 +29381,22 @@ export default function App({ onSignOut }) {
                       { k: "dialogos", l: "Diálogos", I: MessageSquareQuote, n: nDlg || null },
                       { k: "combate", l: "Combate", I: Swords, n: chMaps.length + chEncs.length || null },
                     ];
+                    const closeEd = () => setChOpen(false);
+                    const wrapBody = (inner) =>
+                      isMobile ? inner : (
+                        <div className="mh-chn-ov" role="dialog" aria-modal="true" aria-label={(TABS3.find((tt) => tt.k === chTab)?.l || "Capítulo") + " del capítulo"} onClick={closeEd}>
+                          <div className="mh-chn cgp-modal is-xl" onClick={(e) => e.stopPropagation()}>
+                            <button type="button" className="mh-inv-x mh-chn-x" aria-label="Cerrar" onClick={closeEd}><X size={16} /></button>
+                            <h3 className="mh-serif">{sel.title || "Capítulo"}</h3>
+                            <div className="cgs-seg" role="tablist">
+                              {TABS3.map((tt) => (
+                                <button key={tt.k} type="button" role="tab" aria-selected={chTab === tt.k} className={chTab === tt.k ? "is-on" : ""} onClick={() => setChTab(tt.k)}><tt.I size={14} /> {tt.l}</button>
+                              ))}
+                            </div>
+                            {inner}
+                          </div>
+                        </div>
+                      );
                     const detailEl = sel && (
                       <section className="mh-hs-detail">
                         <div className={"mh-hs-banner" + (sel.image ? "" : " is-blank")} style={bgStyle(sel.image)}>
@@ -29303,10 +29405,10 @@ export default function App({ onSignOut }) {
                           </button>
                           <div className="mh-hs-bt">
                             <small>Capítulo {idx + 1} de {scenes.length}{isLive && <em> · En pantalla</em>}</small>
-                            <span className="mh-serif">{sel.title || "Sin título"}</span>
+                            {isMobile ? <span className="mh-serif">{sel.title || "Sin título"}</span> : <input className="cgs-title mh-serif" aria-label="Título del capítulo" placeholder="Título del capítulo" value={sel.title || ""} onChange={(e) => updateScene(sel.id, { title: e.target.value })} />}
                           </div>
                           <div className="mh-hs-bacts">
-                            <button type="button" className="mh-btn-ghost" onClick={() => setChTab("ambiente")}><PenLine size={13} /> <span>Editar imagen</span></button>
+                            <button type="button" className="mh-btn-ghost" onClick={() => (setChTab("ambiente"), setChOpen(true))}><PenLine size={13} /> <span>Editar imagen</span></button>
                             {isLive ? (
                               <button type="button" className="mh-btn-ghost" onClick={hideScene}><EyeOff size={13} /> <span>Quitar</span></button>
                             ) : (
@@ -29315,6 +29417,27 @@ export default function App({ onSignOut }) {
                             <button type="button" className="mh-gm-ib is-del" aria-label={"Borrar " + sel.title} title="Borrar el capítulo" onClick={() => removeChapter(sel.id)}><Trash2 size={14} /></button>
                           </div>
                         </div>
+                        {!isMobile && (() => {
+                          const scnList = chapterScenes(sel);
+                          const nFx = (sel.fx || []).length;
+                          const convs = dialogueConvs.filter((cv) => cv.sceneId === sel.id);
+                          const step = (n, k, Ic, title, sub, thumb, done) => (
+                            <button key={k} type="button" className={"cgs-step" + (done ? " is-done" : "")} onClick={() => (setChTab(k), setChOpen(true))}>
+                              <span className={"cgs-step-th" + (thumb === undefined ? " is-ic" : thumb ? "" : " is-blank")} style={thumb ? bgStyle(thumb) : undefined}>{thumb === undefined || !thumb ? <Ic size={22} strokeWidth={1.6} /> : null}</span>
+                              <span className="cgs-step-t"><i>{n}</i><b>{title}</b><small>{sub}</small></span>
+                              <span className="cgs-step-go">{done ? <Check size={14} strokeWidth={3} /> : <ChevronRight size={16} />}</span>
+                            </button>
+                          );
+                          return (
+                            <div className="cgs-steps" role="group" aria-label="Preparar el capítulo">
+                              {step(1, "ambiente", Sparkles, "Escena", scnList.length + (scnList.length === 1 ? " escena" : " escenas") + (nFx ? " · " + nFx + (nFx === 1 ? " efecto" : " efectos") : ""), sel.image || "", !!sel.image)}
+                              {step(2, "dialogos", MessageSquareQuote, "Diálogos", convs.length ? convs.length + (convs.length === 1 ? " diálogo" : " diálogos") : "Sin diálogos", undefined, convs.length > 0)}
+                              {step(3, "combate", Swords, "Combate", chMaps.length + chEncs.length ? chMaps.length + (chMaps.length === 1 ? " mapa" : " mapas") + " · " + chEncs.length + (chEncs.length === 1 ? " encuentro" : " encuentros") : "Sin combates", undefined, chMaps.length + chEncs.length > 0)}
+                            </div>
+                          );
+                        })()}
+                        {isMobile && (
+                          <>
                         {(() => {
                           const scnList = chapterScenes(sel);
                           const convs = dialogueConvs.filter((c) => c.sceneId === sel.id);
@@ -29349,7 +29472,9 @@ export default function App({ onSignOut }) {
                           <span className="mh-hs-sp" />
                           <span className="mh-hs-fx">{fxLabel(sel)}</span>
                         </div>
-                        <div className="mh-hs-body">
+                          </>
+                        )}
+                        {(isMobile || chOpen) && wrapBody(<div className="mh-hs-body">
                           {chTab === "ambiente" && (() => {
                             const scnList = chapterScenes(chapter);
                             const scn = scnList.find((x) => x.id === chScene) || scnList[0];
@@ -29728,9 +29853,43 @@ export default function App({ onSignOut }) {
                             </button>
                           </div>
                           )}
-                        </div>
+                        </div>)}
                       </section>
                     );
+                    if (!isMobile) {
+                      return (
+                        <div className="cgs">
+                          <header className="cgp-h">
+                            <span className="cgp-ic"><Clapperboard size={18} /></span>
+                            <h3 className="mh-serif">Capítulos</h3>
+                            <span className="cgp-n">{scenes.length}</span>
+                            <span className="cgp-sp" />
+                            <button type="button" className="mh-cg-gold" onClick={() => setNewChOpen(1)}><Plus size={15} /> <span>Nuevo capítulo</span></button>
+                          </header>
+                          <div className="cgs-strip" role="tablist" aria-label="Capítulos">
+                            {scenes.map((sc, i) => {
+                              const live = sc.id === activeSceneId;
+                              const on = sel?.id === sc.id;
+                              return (
+                                <div key={sc.id} className={"cgs-ch" + (on ? " is-on" : "") + (live ? " is-live" : "")}>
+                                  <button type="button" role="tab" aria-selected={on} className="cgs-ch-b" onClick={() => openChapter(sc.id)}>
+                                    <span className={"cgs-ch-th" + (sc.image ? "" : " is-blank")} style={bgStyle(sc.image)} />
+                                    <span className="cgs-ch-t"><small>{i + 1}{live ? " · en pantalla" : ""}</small><b>{sc.title || "Sin título"}</b></span>
+                                  </button>
+                                  {on && scenes.length > 1 && (
+                                    <span className="cgs-ch-mv">
+                                      <button type="button" aria-label="Mover antes" title="Mover antes" disabled={i === 0} onClick={() => moveScene(sc.id, -1)}><ChevronLeft size={13} /></button>
+                                      <button type="button" aria-label="Mover después" title="Mover después" disabled={i === scenes.length - 1} onClick={() => moveScene(sc.id, 1)}><ChevronRight size={13} /></button>
+                                    </span>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                          {detailEl}
+                        </div>
+                      );
+                    }
                     return (
                       <FitBelow className="mh-hs" off={isMobile}>
                         {(!isMobile || !chapterId) && listEl}
