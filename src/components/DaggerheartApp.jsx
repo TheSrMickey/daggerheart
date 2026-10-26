@@ -5549,6 +5549,38 @@ const sharedStyles = `
   html[data-mh-theme="light"] .mh-cg-trash { background: #FDEEEA; border-color: #C0504A; color: #9B2F27; } html[data-mh-theme="light"] .mh-cg-trash.is-confirm { background: #C0504A; color: #fff; }
   html[data-mh-theme="light"] .mh-cg-name, html[data-mh-theme="light"] .mh-cg-sub1 b { color: #221C2B; } html[data-mh-theme="light"] .mh-cg-sub1 b.is-on { color: #2F7A3A; }
   .mh-cg-soon { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 30; padding: 10px 18px; border-radius: 999px; background: var(--mh-panel); border: 1px solid rgba(227,176,75,.7); box-shadow: 0 14px 34px -14px rgba(0,0,0,.5); color: var(--mh-gold-ink); font: 700 13px 'Inter', system-ui, sans-serif; }
+  /* Campaña · pestañas que no son «Directo»: marco de la plataforma (márgenes de la columna central, columna social a la derecha) sin desplazar la página. */
+  .mh-cg-body { display: contents; }
+  .mh-main-flat > .mh-view-in { height: 100%; }
+  .mh-cg.is-flat { height: 100%; min-height: 0; display: flex; flex-direction: column; }
+  .mh-cg.is-flat .mh-cg-body { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; padding: 2px 4px 2px 2px; margin: 0 -4px 0 -2px; }
+  .mh-cg.is-flat .mh-cg-body > * { flex-shrink: 0; }
+  .mh-cg.is-flat .mh-cg-head { flex: none; margin-bottom: 12px; padding: 10px 14px; gap: 10px; } .mh-cg.is-flat .mh-cg-emb { width: 42px; height: 42px; } .mh-cg.is-flat .mh-cg-name { font-size: 20px; }
+  .mh-cg.is-flat .mh-cg-fear, .mh-cg.is-flat .mh-cg-pg { display: none; }
+  .mh-cg.is-flat .mh-cg-tit { margin-right: auto; }
+  .mh-cg.is-flat .mh-cg-navrow { flex: none; border: 0; padding: 0; margin: 0 0 12px !important; gap: 12px; flex-wrap: wrap; }
+  .mh-cg.is-flat .mh-cg-nav { gap: 4px; padding: 4px; border-radius: 16px; background: var(--mh-input); border: 1px solid var(--mh-line); margin: 0; overflow: visible; }
+  .mh-cg.is-flat .mh-cg-nav button { padding: 9px 20px; border-radius: 12px; border: 1px solid transparent; font: 600 14px 'Inter', system-ui, sans-serif; color: var(--mh-muted); box-shadow: none; transition: background .15s, color .15s; }
+  .mh-cg.is-flat .mh-cg-nav button:hover { color: var(--mh-ink); background: color-mix(in srgb, var(--mh-ink) 6%, transparent); }
+  .mh-cg.is-flat .mh-cg-nav button.is-on { background: #E3B04B; color: #241a05; border-color: #E3B04B; box-shadow: 0 6px 16px -8px #E3B04B; }
+  .mh-cg.is-flat .mh-cg-nav.is-live { margin-left: auto; background: transparent; border-color: #E0544A66; }
+  .mh-cg.is-flat .mh-cg-nav.is-live button { color: #E8776F; gap: 8px; } .mh-cg.is-flat .mh-cg-nav.is-live button svg { animation: mh-pulse 2.2s ease-in-out infinite; } .mh-cg.is-flat .mh-cg-nav.is-live button:hover { background: #E0544A1f; }
+  .mh-cg.is-flat .mh-cg-subrow { flex: none; margin: 0 0 12px; }
+  .mh-cg.is-flat .mh-cg-sub { background: none; border: 0; padding: 0; gap: 8px; border-radius: 0; }
+  .mh-cg.is-flat .mh-cg-sub button { padding: 7px 15px; border-radius: 999px; border: 1px solid var(--mh-line); background: var(--mh-panel); }
+  .mh-cg.is-flat .mh-cg-sub button:hover { border-color: var(--mh-line2); background: var(--mh-panel2); }
+  .mh-cg.is-flat .mh-cg-sub button.is-on { background: #E3B04B1f; border-color: #E3B04B; color: var(--mh-ink); box-shadow: none; }
+  @keyframes mh-pulse { 50% { opacity: .45; } }
+  /* Capítulos: pantalla inicial compacta (solo cinco plantillas; el resto, en «Más plantillas») y cabecera del capítulo sin saltos de línea. */
+  .mh-cg.is-flat .mh-chn-start { gap: 14px; padding: 0; max-width: none; } .mh-cg.is-flat .mh-chn-start-h h3 { font-size: 22px; } .mh-cg.is-flat .mh-chn-start-h p { font-size: 13px; }
+  .mh-cg.is-flat .mh-chn-start-card { padding: 14px 18px; flex-direction: row; align-items: center; gap: 14px; flex-wrap: wrap; } .mh-cg.is-flat .mh-chn-start-card .mh-chn-start-ci { margin: 0; } .mh-cg.is-flat .mh-chn-start-card b { flex: 1; min-width: 0; } .mh-cg.is-flat .mh-chn-start-card small { flex-basis: 100%; margin-left: 54px; margin-top: -10px; }
+  .mh-cg.is-flat .mh-chn-pr.is-start { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; } .mh-cg.is-flat .mh-chn-pr.is-start .mh-gm-preset:nth-child(n+6) { display: none; }
+  .mh-chn-more.is-flat-only { display: none; } .mh-cg.is-flat .mh-chn-more.is-flat-only { display: inline-flex; }
+  .mh-chn-more { all: unset; cursor: pointer; align-self: flex-start; font-size: 12.5px; font-weight: 600; color: var(--mh-ink3); padding: 5px 12px; border-radius: 99px; border: 1px dashed var(--mh-line2); } .mh-chn-more:hover { color: var(--mh-ink); border-color: #E3B04B; } .mh-chn-more:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
+  .mh-cg.is-flat .mh-hs-bt small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .mh-cg.is-flat .mh-hs-bt .mh-serif { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* Generadores: opciones a la izquierda y resultados con su propio desplazamiento, para no mover la página. */
+  .mh-cg.is-flat .gx2 { flex: 1; min-height: 0; align-items: stretch; grid-template-columns: 200px minmax(0, 1fr); } .mh-cg.is-flat .gx2-nav { position: static; align-self: start; }
+  .mh-cg.is-flat .gx2-main { min-height: 0; overflow-y: auto; scrollbar-width: thin; }
   .mh-cg-gold { display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 13px; border: 1px solid rgba(255,230,160,.8); background: linear-gradient(180deg, #f0c264, #d9a23c); color: #1c1405; font: 800 13px 'Inter', system-ui, sans-serif; cursor: pointer; }
   /* Historia: lista de capítulos + capítulo abierto */
   .mh-hs { display: grid; grid-template-columns: 330px minmax(0, 1fr); gap: 14px; align-items: start; }
@@ -16580,7 +16612,10 @@ export default function App({ onSignOut }) {
 
   // Barra superior (con la campana) y columna de amigos a la derecha: en las pantallas de lista y en la mesa del DJ; no en las hojas de personaje.
   const campDetail = view === "campaigns" && !!viewingCampaignId && !!campaigns[viewingCampaignId];
-  const showTopbar = !isMobile && !viewingCharId && !campDetail;
+  // Dentro de una campaña, «Directo» (la mesa en vivo) usa toda la pantalla; el resto de pestañas siguen el esquema de la plataforma:
+  // márgenes de la columna central, columna social a la derecha y sin desplazamiento vertical de la página.
+  const campFlat = !isMobile && campDetail && !["mesa", "mapa"].includes(campaignDetailTab);
+  const showTopbar = !isMobile && !viewingCharId && (!campDetail || campFlat);
   // El perfil de jugador es una página de la columna central; los avisos y menús lo abren con el evento `mh-profile`.
   const [profileTarget, setProfileTarget] = useState(null);
   useEffect(() => {
@@ -16600,7 +16635,7 @@ export default function App({ onSignOut }) {
   const railFold = showRail && !modernCamp; // plegable salvo con el chat de la campaña, que necesita todo el ancho
   const railW = !showRail ? 0 : railFold && !railPin ? 86 : 290;
   const padX = showRail ? "clamp(28px, 3.4vw, 48px)" : "28px";
-  const contentMax = campDetail ? 1760 : showRail ? 1320 : view === "ficha" ? 1160 : 960;
+  const contentMax = campDetail && !campFlat ? 1760 : showRail ? 1320 : view === "ficha" ? 1160 : 960;
   // Datos de la hoja moderna: valores base con lo que aportan armas y armadura (las reglas especiales de subclase siguen en la clásica).
   const getKeys = (raw) => {
     try {
@@ -28031,14 +28066,14 @@ export default function App({ onSignOut }) {
             </div>
           </div>
         )}
-        {showTopbar && view !== "perfil" && view !== "inicio" && view !== "ficha" && (
+        {showTopbar && !campFlat && view !== "perfil" && view !== "inicio" && view !== "ficha" && (
           <div className="mh-topbar-wrap" style={{ right: railW, padding: "0 " + padX, transition: "right .22s ease" }}>
             <div className="mh-topbar" style={{ maxWidth: contentMax }}>
               <span>{topLeft}</span>
             </div>
           </div>
         )}
-        <div data-mh-main className={(showTopbar ? "mh-scroll-hidden" : "") + (view === "inicio" ? " mh-main-fit" : "") || undefined} style={{ position: "absolute", top: showTopbar ? (view === "perfil" || view === "inicio" || view === "ficha" ? EDGE : EDGE + 74) : 0, left: 0, bottom: 0, right: railW, transition: "right .22s ease", overflowY: view === "ficha" && !viewingCharId && !modernCharId && showRail ? "hidden" : "auto", padding: isMobile ? (campDetail ? "10px 12px 18px" : "18px 14px") : showTopbar ? "0 " + padX + " " + EDGE + "px" : campDetail ? (campaignDetailTab === "mesa" ? "18px 24px 24px 14px" : EDGE + "px " + padX + " " + EDGE + "px") : "24px 28px" }}>
+        <div data-mh-main className={(showTopbar ? "mh-scroll-hidden" : "") + (view === "inicio" ? " mh-main-fit" : "") + (campFlat ? " mh-main-flat" : "") || undefined} style={{ position: "absolute", top: showTopbar ? (view === "perfil" || view === "inicio" || view === "ficha" || campFlat ? EDGE : EDGE + 74) : 0, left: 0, bottom: 0, right: railW, transition: "right .22s ease", overflowY: (view === "ficha" && !viewingCharId && !modernCharId && showRail) || campFlat ? "hidden" : "auto", padding: isMobile ? (campDetail ? "10px 12px 18px" : "18px 14px") : showTopbar ? "0 " + padX + " " + EDGE + "px" : campDetail ? (campaignDetailTab === "mesa" ? "18px 24px 24px 14px" : EDGE + "px " + padX + " " + EDGE + "px") : "24px 28px" }}>
           <div ref={setWizSlot} style={{ maxWidth: contentMax, margin: "0 auto" }} />
           <div key={view + (view === "ficha" && modernCharId ? ":hoja" : "")} className={"mh-view-in" + (view === "ficha" && modernCharId ? " mh-sheet-in" : "")} style={{ display: showNewCharModal ? "none" : undefined, maxWidth: contentMax, margin: "0 auto" }}>
             {!showTopbar && view !== "inicio" && view !== "perfil" && !campDetail && <div className="mh-pagetitle">{viewLabel}</div>}
@@ -28242,7 +28277,7 @@ export default function App({ onSignOut }) {
               const cgCur = cgScenes.find((x) => x.id === activeSceneIdOf(campaignStage)) || null;
               const cgOnline = table.filter((e) => tableStatus(e) === "on").length;
               return (
-                <div className="mh-cg" style={{ "--hc": campColor(viewingCampaignId) }}>
+                <div className={"mh-cg" + (campFlat ? " is-flat" : "")} style={{ "--hc": campColor(viewingCampaignId) }}>
                   {soonMsg && <div className="mh-cg-soon" role="status">{soonMsg} · próximamente</div>}
                   <header className="mh-cg-head">
                     <button type="button" className="mh-cg-back" aria-label="Volver a Campañas" title="Campañas" onClick={() => setViewingCampaignId(null)}>
@@ -28408,6 +28443,7 @@ export default function App({ onSignOut }) {
                     );
                   })()}
 
+                  <div className="mh-cg-body">
                   {campaignDetailTab === "mesa" && (() => {
                     const stage = campaignStage;
                     const scenes = stageScenesOf(stage);
@@ -29158,7 +29194,7 @@ export default function App({ onSignOut }) {
                               <small>Sin imagen: la pones más tarde</small>
                             </button>
                           </div>
-                          <div className="mh-chn-start-sec"><span>O elige una plantilla</span><i /></div>
+                          <div className="mh-chn-start-sec"><span>O elige una plantilla</span><i /><button type="button" className="mh-chn-more is-flat-only" onClick={() => setNewChOpen(2)}>Más plantillas</button></div>
                           <div className="mh-gm-presets mh-chn-pr is-start">
                             {SCENE_PRESETS.map((pr) => (
                               <button key={pr.key} type="button" className="mh-gm-preset" title={"Crear «" + pr.title + "»"} onClick={() => addScene(pr)}>
@@ -30646,6 +30682,7 @@ export default function App({ onSignOut }) {
                     );
                   })()}
 
+                  </div>
                 </div>
               );
             }
