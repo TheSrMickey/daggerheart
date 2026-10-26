@@ -25,7 +25,7 @@ import { CardsPage } from "./Cards";
 import { Generators } from "./Generators";
 import { CampaignCalendar, HomeNextSession } from "./Calendar";
 import { HomeHero } from "./HomeHero";
-import { PollsGm, ActivePoll, PollSwap } from "./Polls";
+import { PollsGm, ActivePoll, PollSwap, PollResultCard } from "./Polls";
 import { RestGm, RestQuick, RestBanner, GroupRestDialog, RestLock } from "./GroupRest";
 import NpcStatsEditor, { npcStatsSummary, npcTokenStats } from "./NpcStats";
 import { Chronicle, Timeline } from "./Chronicle";
@@ -7860,6 +7860,31 @@ const sharedStyles = `
   .pl-main { margin: 0 !important; padding: 18px 20px !important; }
   .pl-q { font-size: 15px; font-weight: 700; margin: 8px 0 12px; line-height: 1.3; }
   .pl-bars { display: flex; flex-direction: column; gap: 10px; } .pl-ot { display: flex; justify-content: space-between; gap: 8px; font-size: 12.5px; margin-bottom: 5px; } .pl-ot b em { font-style: normal; font-weight: 600; color: #5fd47c; } .pl-ot span { color: var(--mh-muted); }
+  /* Resultado de las votaciones: tarjeta para el DJ, para el chat y aviso en pantalla. */
+  .pr-card { border-radius: 16px; border: 1.5px solid #E3B04Baa; background: linear-gradient(180deg, #E3B04B1c, #E3B04B06 70%); padding: 13px 14px; margin: 4px 0; } .pr-card.is-tie { border-color: #A58BE8aa; background: linear-gradient(180deg, #A58BE81c, #A58BE806 70%); } .pr-card.is-none { border-color: var(--mh-line2); background: var(--mh-panel2); }
+  .pr-t { display: flex; align-items: center; gap: 7px; font: 700 10.5px 'Inter', sans-serif; letter-spacing: .12em; text-transform: uppercase; color: #E3B04B; } .pr-card.is-tie .pr-t { color: #A58BE8; } .pr-card.is-none .pr-t { color: var(--mh-muted); }
+  .pr-q { font-size: 13.5px; color: var(--mh-ink3); margin: 7px 0 9px; } .pr-res { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 9px; font-size: 15px; color: var(--mh-ink); } .pr-res .mh-serif { min-width: 0; overflow-wrap: anywhere; } .pr-mk { display: inline-grid; place-items: center; color: #E3B04B; flex: none; } .pr-card.is-tie .pr-mk { color: #A58BE8; } .pr-card.is-none .pr-mk { color: var(--mh-muted); }
+  .pr-big { margin-left: auto; white-space: nowrap; font: 800 21px 'Inter', sans-serif; color: #E3B04B; } .pr-card.is-tie .pr-big { color: #A58BE8; }
+  .pr-mini { display: flex; gap: 2px; height: 8px; border-radius: 99px; overflow: hidden; background: var(--mh-line); margin-top: 10px; } .pr-mini i { display: block; height: 100%; }
+  .pr-leg { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 8px; font-size: 11.5px; color: var(--mh-muted); } .pr-leg span { display: inline-flex; align-items: center; gap: 5px; } .pr-leg u { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .pr-you { display: flex; align-items: center; gap: 5px; font-size: 11.5px; color: #4CC36B; margin-top: 8px; } .pr-you.is-tie { color: #A58BE8; } .pr-you.is-none { color: var(--mh-muted); }
+  .mh-chat-poll { padding: 4px 2px; } .mh-chat-who { display: block; font-size: 12px; color: var(--mh-muted); margin-bottom: 2px; } .mh-chat-who b { color: var(--mh-ink); }
+  .pr-toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 9999; display: flex; align-items: center; gap: 13px; max-width: min(92vw, 520px); padding: 13px 18px 13px 14px; border-radius: 18px; border: 1px solid #E3B04B99; background: var(--mh-panel); box-shadow: 0 18px 40px -14px #000c; cursor: pointer; animation: pr-in .35s ease-out; } .pr-toast.is-tie { border-color: #A58BE899; } .pr-toast.is-none { border-color: var(--mh-line2); }
+  .pr-toast .pr-mk { width: 40px; height: 40px; border-radius: 50%; background: #E3B04B; color: #241a05; } .pr-toast.is-tie .pr-mk { background: #A58BE8; color: #160d33; } .pr-toast.is-none .pr-mk { background: var(--mh-panel3); color: var(--mh-muted); }
+  .pr-toast small { display: block; font: 700 10.5px 'Inter', sans-serif; letter-spacing: .12em; text-transform: uppercase; color: #E3B04B; } .pr-toast.is-tie small { color: #A58BE8; } .pr-toast.is-none small { color: var(--mh-muted); } .pr-toast b { font-size: 16px; color: var(--mh-ink); }
+  @keyframes pr-in { from { opacity: 0; transform: translate(-50%, 14px); } to { opacity: 1; transform: translate(-50%, 0); } } @media (prefers-reduced-motion: reduce) { .pr-toast { animation: none; } }
+  .pr-gm { padding: 18px 20px; color: var(--mh-ink); } .pr-gm-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; } .pr-x { padding: 4px 8px; }
+  .pr-win { display: flex; align-items: center; gap: 13px; padding: 12px 14px; border-radius: 15px; border: 1px solid #E3B04B88; background: linear-gradient(135deg, #E3B04B26, #E3B04B0a); margin: 4px 0 14px; } .pr-win.is-tie { border-color: #A58BE888; background: linear-gradient(135deg, #A58BE826, #A58BE80a); } .pr-win.is-none { border-color: var(--mh-line2); background: var(--mh-panel2); }
+  .pr-win .pr-mk { width: 42px; height: 42px; border-radius: 50%; background: #E3B04B; color: #241a05; } .pr-win.is-tie .pr-mk { background: #A58BE8; color: #160d33; } .pr-win.is-none .pr-mk { background: var(--mh-panel3); color: var(--mh-muted); }
+  .pr-win small { display: block; font: 700 10.5px 'Inter', sans-serif; letter-spacing: .12em; text-transform: uppercase; color: #E3B04B; } .pr-win.is-tie small { color: #A58BE8; } .pr-win.is-none small { color: var(--mh-muted); } .pr-win b { font-size: 18px; color: var(--mh-ink); }
+  .pr-pc { margin-left: auto; text-align: right; flex: none; } .pr-pc b { white-space: nowrap; display: block; font: 800 26px 'Inter', sans-serif; line-height: 1; color: #E3B04B; } .pr-pc span { font-size: 12px; color: var(--mh-muted); }
+  .pr-pick { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: -4px 0 14px; } .pr-pick > span { font-size: 12.5px; color: var(--mh-ink3); width: 100%; }
+  .pr-o { margin-bottom: 12px; } .pr-o.is-dim .pl-ot b { font-weight: 500; color: var(--mh-ink3); } .pr-o.is-dim .pl-bar i { opacity: .55; }
+  .pr-who { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; } .pr-who span { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--mh-ink3); background: var(--mh-panel2); border: 1px solid var(--mh-line); border-radius: 99px; padding: 2px 9px 2px 3px; } .pr-who i { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font: 800 9px 'Inter', sans-serif; font-style: normal; color: #fff; }
+  .pr-meta { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12.5px; color: var(--mh-muted); margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--mh-line); } .pr-meta span { display: inline-flex; align-items: center; gap: 5px; }
+  .pr-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; } .pr-acts button { display: inline-flex; align-items: center; gap: 6px; }
+  html[data-mh-theme="light"] .pr-big, html[data-mh-theme="light"] .pr-pc b, html[data-mh-theme="light"] .pr-t, html[data-mh-theme="light"] .pr-win small, html[data-mh-theme="light"] .pr-toast small, html[data-mh-theme="light"] .pr-hw { color: #97680F; } html[data-mh-theme="light"] .pr-card.is-tie .pr-t, html[data-mh-theme="light"] .pr-card.is-tie .pr-big, html[data-mh-theme="light"] .pr-win.is-tie small, html[data-mh-theme="light"] .pr-toast.is-tie small, html[data-mh-theme="light"] .pr-hw.is-tie { color: #6B4FB8; } html[data-mh-theme="light"] .pr-card.is-none .pr-t, html[data-mh-theme="light"] .pr-win.is-none small, html[data-mh-theme="light"] .pr-toast.is-none small, html[data-mh-theme="light"] .pr-hw.is-none { color: var(--mh-muted); } html[data-mh-theme="light"] .pr-you { color: #2F7A3A; }
+  .pr-hist { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; } .pr-h { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 13px; background: var(--mh-panel2); border: 1px solid var(--mh-line); font-size: 13px; color: var(--mh-ink); } .pr-h:hover { border-color: var(--mh-line2); } .pr-h:focus-visible { outline: 2px solid #E3B04B; } .pr-h b { flex: 1; min-width: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .pr-hw { color: #E3B04B; font-weight: 700; } .pr-hw.is-tie { color: #A58BE8; } .pr-hw.is-none { color: var(--mh-muted); } .pr-h em { font-style: normal; color: var(--mh-muted); font-size: 12px; }
   .pl-bar { height: 11px; border-radius: 99px; background: var(--mh-line); overflow: hidden; } .pl-bar i { display: block; height: 100%; border-radius: 99px; transition: width .35s; }
   .pl-foot { color: var(--mh-muted); font-size: 11.5px; }
   .pl-card { flex-shrink: 0; border: 1.5px solid var(--acc, #C9A24A); border-radius: 14px; padding: 10px 12px; background: color-mix(in srgb, var(--acc, #C9A24A) 7%, var(--mh-panel)); }
@@ -13964,6 +13989,7 @@ export default function App({ onSignOut }) {
     });
   };
   const renderChatItem = (list, meCharId, m, i) => {
+      if (m.poll) return <div key={(m.ts || 0) + "-" + i} className="mh-chat-poll"><span className="mh-chat-who"><b>{m.author || "El DJ"}</b> · {new Date(m.ts).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}</span><PollResultCard s={m.poll} me={meCharId} /></div>;
       const kind = m.kind || (CHAT_EMOJI_RE.test(m.text || "") ? "event" : "msg");
       const col = chatColor(m);
       const time = new Date(m.ts).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
@@ -21322,7 +21348,7 @@ export default function App({ onSignOut }) {
                                     campaignId={sheetCampaignId}
                                     mine={(campaigns[sheetCampaignId]?.characterIds || []).filter((id) => characters[id]).map((id) => ({ id }))}
                                     total={(campaigns[sheetCampaignId]?.characterIds || []).length}
-                                    onResult={(text) => postChat(sheetCampaignId, { kind: "msg", text, author: "El DJ", gm: true })}
+                                    onResult={(text, poll) => postChat(sheetCampaignId, { kind: "msg", text, author: "El DJ", gm: true, poll })}
                                   />
                                 )}
                                 <div className="mh-chat-box">
@@ -29320,7 +29346,7 @@ export default function App({ onSignOut }) {
                       );
                     })();
                     const groupEl = (
-                      <PollSwap campaignId={viewingCampaignId} total={members.length} onResult={(text) => postChat(viewingCampaignId, { kind: "msg", text, author: "El DJ", gm: true })}>
+                      <PollSwap campaignId={viewingCampaignId} total={members.length} names={Object.fromEntries((campaigns[viewingCampaignId]?.characterIds || []).filter((id) => characters[id]).map((id) => [id, characters[id].f_name || "Sin nombre"]))} onResult={(text, poll) => postChat(viewingCampaignId, { kind: "msg", text, author: "El DJ", gm: true, poll })}>
                         {quickSheet || foeSheet || groupBox}
                       </PollSwap>
                     );
@@ -31045,8 +31071,9 @@ export default function App({ onSignOut }) {
                       key={viewingCampaignId}
                       campaignId={viewingCampaignId}
                       total={(campaigns[viewingCampaignId]?.characterIds || []).filter((id) => characters[id]).length}
+                      names={Object.fromEntries((campaigns[viewingCampaignId]?.characterIds || []).filter((id) => characters[id]).map((id) => [id, characters[id].f_name || "Sin nombre"]))}
                       onAnnounce={(text) => postChat(viewingCampaignId, { kind: "msg", text, author: "El DJ", gm: true })}
-                      onResult={(text) => postChat(viewingCampaignId, { kind: "msg", text, author: "El DJ", gm: true })}
+                      onResult={(text, poll) => postChat(viewingCampaignId, { kind: "msg", text, author: "El DJ", gm: true, poll })}
                     />
                   )}
 
