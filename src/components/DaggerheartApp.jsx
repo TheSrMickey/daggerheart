@@ -5624,9 +5624,7 @@ const sharedStyles = `
   .mh-cg.is-flat .gx-note, .mh-cg.is-flat .mh-pst-hint { display: none; }
   .mh-chn > p, .mh-chn-opts small { display: none; } .mh-chn-opts > * { padding: 22px 10px; }
   /* Menú lateral de la campaña (esquema común): mismo lenguaje que el menú de la plataforma (iconos, activa en dorado); se despliega solo el espacio abierto. */
-  .mh-cg.is-flat { display: grid; grid-template-columns: 184px minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); column-gap: 14px; }
   .mh-cg.is-flat > .mh-cg-head { grid-column: 1 / -1; } .mh-cg.is-flat > .mh-cg-navrow, .mh-cg.is-flat > .mh-cg-sub, .mh-cg.is-flat > .mh-cg-subrow, .mh-cg.is-flat > .mh-cg-pg, .mh-cg.is-flat > .mh-cg-chips { display: none; }
-  .mh-cg.is-flat > .mh-cgs { grid-column: 1; grid-row: 2; } .mh-cg.is-flat > .mh-cg-body { grid-column: 2; grid-row: 2; }
   .mh-cgs { display: flex; flex-direction: column; gap: 2px; padding: 10px; min-height: 0; overflow-y: auto; scrollbar-width: none; border-radius: 22px; background: var(--mh-panel); border: 1px solid var(--mh-line); }
   .mh-cgs-g { display: flex; flex-direction: column; gap: 2px; }
   .mh-cgs-h { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 9px 10px; border-radius: 10px; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-muted); transition: color .15s, background .15s; } .mh-cgs-h > span { flex: 1; }
@@ -5662,6 +5660,32 @@ const sharedStyles = `
   .mh-cg.is-flat .gx2 { grid-template-columns: 1fr !important; gap: 12px; } .mh-cg.is-flat .gx2-nav { flex-direction: row !important; flex-wrap: wrap; padding: 8px; } .mh-cg.is-flat .gx2-tab { padding: 7px 12px; } .mh-cg.is-flat .gx2-main { flex: 1; }
   .mh-cg.is-flat .cal-grid .cal-day { height: 36px; aspect-ratio: auto; } .mh-cg.is-flat .cal-grid { row-gap: 4px; }
   .mh-cg.is-flat .cal { grid-template-columns: 1fr; } .mh-cg.is-flat .mh-cg-body.is-pane { overflow-y: auto; }
+  /* Banner de la campaña (mismo tamaño y estilo que el de la hoja de personaje) y pestañas de la hoja. */
+  .mh-cg.is-flat { display: flex; flex-direction: column; gap: 0; }
+  .mh-cg.is-flat > .mh-cg-head, .mh-cg.is-flat > .mh-cg-navrow, .mh-cg.is-flat > .mh-cg-sub, .mh-cg.is-flat > .mh-cg-subrow, .mh-cg.is-flat > .mh-cg-pg { display: none; }
+  .mh-cgb { flex: none; position: relative; overflow: hidden; height: 136px; box-sizing: border-box; border-radius: 16px; padding: 14px 20px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid color-mix(in srgb, var(--cc) 40%, #ffffff14); background: linear-gradient(135deg, color-mix(in srgb, var(--cc) 40%, #0d1a1a), #0c0c20 80%); margin-bottom: 10px; color: #fff; }
+  .mh-cgb::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(0deg, #0c0c2099, transparent 55%); }
+  .mh-cgb-emb { position: absolute; right: 18px; top: 50%; translate: 0 -50%; color: #ffffff12; } .mh-cgb-top, .mh-cgb-row { position: relative; z-index: 1; display: flex; align-items: center; gap: 12px; } .mh-cgb-sp { flex: 1; }
+  .mh-cgb-back { all: unset; cursor: pointer; width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; background: #0c0c2099; border: 1px solid #ffffff22; color: #fff; flex: none; } .mh-cgb-back:hover { background: #0c0c20cc; } .mh-cgb-back:focus-visible, .mh-cgb-btn:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
+  .mh-cgb-tit { min-width: 0; } .mh-cgb-name { font: 700 24px/1.1 'Cinzel', Georgia, serif; text-transform: uppercase; letter-spacing: .02em; outline: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 560px; } .mh-cgb-tit p { margin: 4px 0 0; font-size: 13px; color: #ffffffcc; } .mh-cgb-tit p b { font-weight: 600; } .mh-cgb-tit p b.is-on { color: #7be0a5; }
+  .mh-cgb-ai { margin-left: 8px; display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border-radius: 99px; font-size: 11px; font-weight: 700; background: #0c0c2099; color: #d9c7ff; }
+  .mh-cgb-btn { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 10px; font-size: 12.5px; font-weight: 700; color: #fff; background: #0c0c2099; border: 1px solid #ffffff26; backdrop-filter: blur(3px); } .mh-cgb-btn:hover { background: #0c0c20cc; } .mh-cgb-btn.is-del { padding: 8px 10px; color: #ff9b94; } .mh-cgb-btn.is-confirm { background: #C0504A; color: #fff; }
+  .mh-cgb-fear { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 10px; background: #0c0c2099; border: 1px solid #ffffff1c; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #cdbcff; } .mh-cgb-pips { display: inline-flex; gap: 1px; } .mh-cgb-pips button { all: unset; cursor: pointer; display: inline-flex; padding: 1px; } .mh-cgb-fear b { font-size: 14px; color: #fff; }
+  .mh-cgb .mh-cg-avs .mh-cg-av i { border-color: #12122a; }
+  .mh-cgt { margin-bottom: 12px; flex: none; } .mh-cgt .mh-cgt-g { display: inline-flex; align-items: flex-end; gap: 4px; } .mh-cgt .mh-cgt-sep { align-self: center; width: 1px; height: 16px; margin: 0 8px; background: var(--mh-line2); }
+  .mh-cgt button.is-base { color: var(--mh-muted); } .mh-cgt .is-on { --cc: #E3B04B; } .mh-cgt .is-live { color: #E8776F; } .mh-cgt .is-live:hover { color: #ff9b94; }
+  /* Capítulo: escenas y mapas de combate como tarjetas. */
+  .cgs-secs { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; display: flex; flex-direction: column; gap: 16px; padding-right: 4px; }
+  .cgs-sec > header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; } .cgs-sec > header > b { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--mh-ink2); } .cgs-sec > header .mh-btn-ghost { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; }
+  .cgs-cards { display: flex; flex-direction: column; gap: 8px; }
+  .cgs-card { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 16px; border: 1px solid var(--mh-line); background: var(--mh-panel2); }
+  .cgs-card-th { all: unset; cursor: pointer; width: 76px; height: 50px; border-radius: 10px; flex: none; background: #2B3A4F center / cover no-repeat; border: 1px solid var(--mh-line2); } .cgs-card-th.is-blank { background-image: linear-gradient(#2B3A4F, #6E7F8C 58%, #C9A879); } .cgs-card-th:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
+  .cgs-card-ic { width: 50px; height: 50px; border-radius: 12px; display: grid; place-items: center; flex: none; color: #E3B04B; background: #E3B04B14; }
+  .cgs-card-t { flex: 1; min-width: 0; display: flex; flex-direction: column; } .cgs-card-t b { font-size: 14px; color: var(--mh-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .cgs-card-t small { font-size: 12px; color: var(--mh-muted); }
+  .cgs-card-a { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: flex-end; } .cgs-card-a .mh-btn-ghost, .cgs-card-a .mh-btn { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 6px 11px; }
+  .cgs-none { all: unset; box-sizing: border-box; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 16px; border-radius: 16px; border: 1px dashed var(--mh-line2); font-size: 13px; font-weight: 600; color: var(--mh-ink3); } .cgs-none:hover { border-color: #E3B04B; color: var(--mh-ink); } .cgs-none:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
+  .cgs-tpl { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; } .cgs-tpl-b { all: unset; cursor: pointer; display: flex; flex-direction: column; gap: 4px; } .cgs-tpl-b span { aspect-ratio: 16 / 9; border-radius: 8px; background: center / cover no-repeat; border: 2px solid transparent; } .cgs-tpl-b.is-on span, .cgs-tpl-b:hover span { border-color: #E3B04B; } .cgs-tpl-b small { font-size: 11px; color: var(--mh-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .cgs-tpl-b:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; border-radius: 8px; }
+  .cgp-npc-top { gap: 8px; } .cgp-npc-open { all: unset; box-sizing: border-box; cursor: pointer; flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; } .cgp-npc-open:focus-visible { outline: 2px solid #E3B04B; outline-offset: 3px; border-radius: 12px; } .cgp-kind.is-btn { all: unset; cursor: pointer; font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 4px 10px; border-radius: 99px; color: var(--kc); background: color-mix(in srgb, var(--kc) 14%, transparent); border: 1px solid color-mix(in srgb, var(--kc) 40%, transparent); flex: none; } .cgp-kind.is-btn:hover { background: color-mix(in srgb, var(--kc) 26%, transparent); } .cgp-kind.is-btn:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
   .cgp-del { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; color: #D9644E !important; }
   /* Las listas de pistas: tarjetas en rejilla dentro del panel. */
   .cgp-list.mh-pst-list { display: block; }
@@ -11137,7 +11161,11 @@ export default function App({ onSignOut }) {
   const [pstNew, setPstNew] = useState(false); // ventana «Nueva pista»
   const [chScene, setChScene] = useState(null); // escena del capítulo que se edita en «Ambiente» (null = la principal)
   const [chTab, setChTab] = useState("dialogos"); // pestaña abierta del capítulo en «Historia»
-  const [chOpen, setChOpen] = useState(false); // ventana de edición del capítulo (escena, diálogos o combate)
+  const [chOpen, setChOpen] = useState(false); // ventana de edición del capítulo (escena o diálogos)
+  const [newChName, setNewChName] = useState(""); // nombre del capítulo que se está creando
+  const [chAsk, setChAsk] = useState(false); // tras crear un capítulo: ¿escena o mapa de combate?
+  const cgNavRef = useRef(null); // barra de pestañas de la campaña
+  const [cgCompact, setCgCompact] = useState(true); // pestañas con solo el icono salvo la activa
   const ambBtn = useRef(null);
   const [ambOpen, setAmbOpen] = useState(false); // ventana de «Ambiente» (audio de la mesa)
   const [djWorldEdit, setDjWorldEdit] = useState(false);
@@ -14986,12 +15014,12 @@ export default function App({ onSignOut }) {
     const valid = (id) => ids.has(id) || (id === "__none" && hasOrphans);
     const active = activeSceneIdOf(campaignStage);
     const sceneId = valid(convSceneId) ? convSceneId : valid(active) ? active : scenes[0]?.id || (hasOrphans ? "__none" : null);
-    const convs = dialogueConvs.filter((c) => sceneKey(c) === sceneId);
+    const convs = dialogueConvs.filter((c) => sceneKey(c) === sceneId && (!chOpen || (c.subId || null) === (chScene || null)));
     const conv = convs.find((c) => c.id === convId) || convs[0] || null;
     return { scenes, sceneId, convs, conv, hasOrphans, sceneKey };
   };
 
-  const newConv = (sceneId, n) => ({ id: "c" + Date.now(), sceneId, title: "Conversación " + n, lines: [] });
+  const newConv = (sceneId, n) => ({ id: "c" + Date.now(), sceneId, ...(chOpen && chScene ? { subId: chScene } : {}), title: "Conversación " + n, lines: [] });
 
   const addConv = () => {
     const t = convTarget();
@@ -16731,6 +16759,14 @@ export default function App({ onSignOut }) {
     window.addEventListener("mh-profile", open);
     return () => window.removeEventListener("mh-profile", open);
   }, []);
+  useEffect(() => {
+    const el = cgNavRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return undefined;
+    const ro = new ResizeObserver(() => setCgCompact(el.clientWidth < 1180));
+    ro.observe(el);
+    setCgCompact(el.clientWidth < 1180);
+    return () => ro.disconnect();
+  }, [campFlat, viewingCampaignId]);
   const showRail = showTopbar;
   const modernCamp = view === "ficha" && modernCharId && detailTab === "campaign" ? Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(modernCharId)) : null;
   const railFold = showRail && !modernCamp; // plegable salvo con el chat de la campaña, que necesita todo el ancho
@@ -28380,6 +28416,68 @@ export default function App({ onSignOut }) {
               return (
                 <div className={"mh-cg" + (campFlat ? " is-flat" : "")} style={{ "--hc": campColor(viewingCampaignId) }}>
                   {soonMsg && <div className="mh-cg-soon" role="status">{soonMsg} · próximamente</div>}
+                  {campFlat && (
+                    <header className="mh-cgb" style={{ "--cc": campColor(viewingCampaignId) }}>
+                      <span className="mh-cgb-emb" aria-hidden="true"><BookOpen size={190} strokeWidth={1} /></span>
+                      <div className="mh-cgb-top">
+                        <button type="button" className="mh-cgb-back" aria-label="Volver a Campañas" title="Campañas" onClick={() => setViewingCampaignId(null)}><ArrowLeft size={16} /></button>
+                        <div className="mh-cgb-tit">
+                          <div contentEditable suppressContentEditableWarning onBlur={(e) => updateCampaign(viewingCampaignId, { name: e.target.textContent })} className="mh-cgb-name" title="Pulsa para renombrar la campaña">{activeCampaign.name}</div>
+                          <p>
+                            <b className={cgOnline ? "is-on" : ""}>{cgOnline ? cgOnline + " conectado" + (cgOnline === 1 ? "" : "s") : "Nadie conectado"}</b>
+                            <span> · {memberIds.length} personaje{memberIds.length === 1 ? "" : "s"}</span>
+                            {cgScenes.length > 0 && <span> · {cgScenes.length} capítulo{cgScenes.length === 1 ? "" : "s"}</span>}
+                            {activeCampaign.aiImages && <span className="mh-cgb-ai" title="Imágenes creadas con IA"><Sparkles size={11} /> IA</span>}
+                          </p>
+                        </div>
+                        <span className="mh-cgb-sp" />
+                        <button type="button" className="mh-cgb-btn" onClick={() => soon("Invitar jugadores por enlace")}><Plus size={14} /> <span>Invitar</span></button>
+                        <button
+                          type="button"
+                          className={"mh-cgb-btn is-del" + (pendingDeleteCampaignId === viewingCampaignId ? " is-confirm" : "")}
+                          aria-label="Eliminar campaña"
+                          title={pendingDeleteCampaignId === viewingCampaignId ? "Vuelve a pulsar para confirmar" : "Eliminar campaña"}
+                          onClick={() => {
+                            if (pendingDeleteCampaignId === viewingCampaignId) {
+                              deleteCampaign(viewingCampaignId);
+                              setPendingDeleteCampaignId(null);
+                            } else {
+                              setPendingDeleteCampaignId(viewingCampaignId);
+                              setTimeout(() => setPendingDeleteCampaignId(null), 3000);
+                            }
+                          }}
+                        ><Trash2 size={15} /></button>
+                      </div>
+                      <div className="mh-cgb-row">
+                        <div className="mh-cgb-fear" title={`Miedo: ${fearCount} de 12 · pulsa una calavera para ajustarlo`}>
+                          <span>Miedo</span>
+                          <span className="mh-cgb-pips">
+                            {Array.from({ length: 12 }, (_, i) => (
+                              <button key={i} type="button" aria-label={"Miedo " + (i + 1)} onClick={() => toggleFear(i + 1)}>
+                                <Skull size={16} strokeWidth={i < fearCount ? 1.4 : 1.6} className={"mh-fear-sk" + (i < fearCount ? " on" : "") + (i === fearCount - 1 ? " pulse" : "")} />
+                              </button>
+                            ))}
+                          </span>
+                          <b>{fearCount}</b>
+                        </div>
+                        <span className="mh-cgb-sp" />
+                        <div className="mh-cg-avs" aria-label="Jugadores">
+                          {memberIds.slice(0, 6).map((mid) => {
+                            const ch = characters[mid];
+                            if (!ch) return null;
+                            const ent = table.find((e) => e.name === ch.f_name);
+                            const Em = CLASS_EMBLEMS[ch.f_class] || User;
+                            return (
+                              <span key={mid} className="mh-cg-av" style={{ "--c": classColor(ch.f_class) }} title={ch.f_name}>
+                                <Em size={17} />
+                                <i className={"is-" + (ent ? tableStatus(ent) : "off")} />
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </header>
+                  )}
                   <header className="mh-cg-head">
                     <button type="button" className="mh-cg-back" aria-label="Volver a Campañas" title="Campañas" onClick={() => setViewingCampaignId(null)}>
                       <ArrowLeft size={16} />
@@ -28545,49 +28643,25 @@ export default function App({ onSignOut }) {
                   })()}
 
                   {campFlat && (() => {
-                    const cur = CAMP_SPACES.find((sp) => sp.tabs.some((t) => t.key === campaignDetailTab)) || CAMP_SPACES[0];
+                    const groups = CAMP_SPACES.filter((sp) => sp.key !== "directo");
                     const live = CAMP_SPACES.find((sp) => sp.key === "directo");
                     return (
-                      <aside className="mh-cgs" aria-label="Secciones de la campaña">
-                        {CAMP_SPACES.filter((sp) => sp.key !== "directo").map((sp) => {
-                          const open = sp === cur;
-                          return (
-                            <div key={sp.key} className={"mh-cgs-g" + (open ? " is-open" : "")}>
-                              <button
-                                type="button"
-                                className="mh-cgs-h"
-                                aria-expanded={open}
-                                onClick={() => {
-                                  if (open) return;
-                                  campLeafMem.current[cur.key] = campaignDetailTab;
-                                  setCampaignDetailTab(campLeafMem.current[sp.key] || sp.tabs[0].key);
-                                }}
-                              >
-                                <sp.Icon size={15} strokeWidth={1.9} /> <span>{sp.label}</span> <ChevronDown size={14} />
+                      <nav ref={cgNavRef} className={"mhm-tabs mh-cgt" + (cgCompact ? " is-compact" : "")} role="tablist" aria-label="Secciones de la campaña">
+                        {groups.map((sp, gi) => (
+                          <span key={sp.key} className="mh-cgt-g">
+                            {gi > 0 && <span className="mh-cgt-sep" aria-hidden="true" />}
+                            {sp.tabs.map((t) => (
+                              <button key={t.key} type="button" role="tab" aria-selected={campaignDetailTab === t.key} className={"is-base" + (campaignDetailTab === t.key ? " is-on" : "")} title={t.label} onClick={() => setCampaignDetailTab(t.key)}>
+                                <t.Icon size={15} strokeWidth={1.8} /> <span className="lbl">{t.label}</span>
                               </button>
-                              {open && (
-                                <div className="mh-cgs-l" role="tablist" aria-label={sp.label}>
-                                  {sp.tabs.map((t) => (
-                                    <button key={t.key} type="button" role="tab" aria-selected={campaignDetailTab === t.key} className={"mh-cgs-it" + (campaignDetailTab === t.key ? " is-on" : "")} onClick={() => setCampaignDetailTab(t.key)}>
-                                      <t.Icon size={16} strokeWidth={1.9} /> <span>{t.label}</span>
-                                    </button>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                        <button
-                          type="button"
-                          className="mh-cgs-live"
-                          onClick={() => {
-                            campLeafMem.current[cur.key] = campaignDetailTab;
-                            setCampaignDetailTab(campLeafMem.current[live.key] || live.tabs[0].key);
-                          }}
-                        >
-                          <Radio size={16} strokeWidth={1.9} /> <span>Directo</span>
+                            ))}
+                          </span>
+                        ))}
+                        <span className="mhm-spacer" />
+                        <button type="button" role="tab" aria-selected={false} className="is-live" style={{ "--tone": "#E8776F" }} onClick={() => setCampaignDetailTab(live.tabs[0].key)}>
+                          <Radio size={15} strokeWidth={1.8} /> <span className="lbl-full">Directo</span>
                         </button>
-                      </aside>
+                      </nav>
                     );
                   })()}
                   <div className={"mh-cg-body" + (campFlat && ["votaciones", "calendario", "descanso", "cronica", "linea"].includes(campaignDetailTab) ? " is-pane" : "")}>
@@ -29281,34 +29355,22 @@ export default function App({ onSignOut }) {
 
                   {newChOpen > 0 && (
                     <div className="mh-chn-ov" role="dialog" aria-modal="true" aria-label="Nuevo capítulo" onClick={() => setNewChOpen(0)}>
-                      <div className="mh-chn" onClick={(e) => e.stopPropagation()}>
+                      <form
+                        className="mh-chn cgp-modal"
+                        onClick={(e) => e.stopPropagation()}
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          addScene({ title: newChName.trim() || "Capítulo " + (stageScenesOf(campaignStage).length + 1) });
+                          setNewChName("");
+                          setNewChOpen(0);
+                          if (!isMobile) setChAsk(true);
+                        }}
+                      >
                         <button type="button" className="mh-inv-x mh-chn-x" aria-label="Cerrar" onClick={() => setNewChOpen(0)}><X size={16} /></button>
-                        {newChOpen === 1 ? (
-                          <>
-                            <h3 className="mh-serif">Nuevo capítulo</h3>
-                            <p>¿Cómo quieres empezarlo?</p>
-                            <div className="mh-chn-opts">
-                              <button type="button" onClick={() => setNewChOpen(2)}><span className="mh-chn-start-ci"><ImageIcon size={20} /></span><b>Elegir una plantilla</b><small>Ilustraciones listas para ambientar</small></button>
-                              <label style={{ cursor: "pointer" }}><span className="mh-chn-start-ci"><Upload size={20} /></span><b>Subir tu imagen</b><small>JPG, PNG o WebP desde tu equipo</small>
-                                <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { addSceneFromFile(e.target.files?.[0]); e.target.value = ""; setNewChOpen(0); }} />
-                              </label>
-                              <button type="button" onClick={() => { addScene(); setNewChOpen(0); }}><span className="mh-chn-start-ci"><Plus size={20} /></span><b>En blanco</b><small>Sin imagen, la pones después</small></button>
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            <h3 className="mh-serif"><button type="button" className="mh-chn-bk" aria-label="Volver" onClick={() => setNewChOpen(1)}><ChevronLeft size={16} /></button> Elige una plantilla</h3>
-                            <div className="mh-gm-presets mh-chn-pr">
-                              {SCENE_PRESETS.map((pr) => (
-                                <button key={pr.key} type="button" className="mh-gm-preset" title={"Crear «" + pr.title + "»"} onClick={() => { addScene(pr); setNewChOpen(0); }}>
-                                  <span className="mh-gm-preset-img" style={{ backgroundImage: `url("${pr.image}")` }}><Plus size={16} /></span>
-                                  <span className="mh-gm-preset-t">{pr.title}</span>
-                                </button>
-                              ))}
-                            </div>
-                          </>
-                        )}
-                      </div>
+                        <h3 className="mh-serif">Nuevo capítulo</h3>
+                        <input className="mh-input" autoFocus aria-label="Nombre del capítulo" placeholder={"Capítulo " + (stageScenesOf(campaignStage).length + 1)} value={newChName} onChange={(e) => setNewChName(e.target.value)} />
+                        <button type="submit" className="mh-btn" style={{ alignSelf: "flex-start" }}><Plus size={14} /> Crear capítulo</button>
+                      </form>
                     </div>
                   )}
 
@@ -29387,10 +29449,10 @@ export default function App({ onSignOut }) {
                         <div className="mh-chn-ov" role="dialog" aria-modal="true" aria-label={(TABS3.find((tt) => tt.k === chTab)?.l || "Capítulo") + " del capítulo"} onClick={closeEd}>
                           <div className="mh-chn cgp-modal is-xl" onClick={(e) => e.stopPropagation()}>
                             <button type="button" className="mh-inv-x mh-chn-x" aria-label="Cerrar" onClick={closeEd}><X size={16} /></button>
-                            <h3 className="mh-serif">{sel.title || "Capítulo"}</h3>
+                            <h3 className="mh-serif">{(chapterScenes(sel).find((x) => (x.main ? null : x.id) === (chScene || null)) || {}).title || sel.title || "Escena"}</h3>
                             <div className="cgs-seg" role="tablist">
-                              {TABS3.map((tt) => (
-                                <button key={tt.k} type="button" role="tab" aria-selected={chTab === tt.k} className={chTab === tt.k ? "is-on" : ""} onClick={() => setChTab(tt.k)}><tt.I size={14} /> {tt.l}</button>
+                              {TABS3.filter((tt) => tt.k !== "combate").map((tt) => (
+                                <button key={tt.k} type="button" role="tab" aria-selected={chTab === tt.k} className={chTab === tt.k ? "is-on" : ""} onClick={() => setChTab(tt.k)}><tt.I size={14} /> {tt.k === "ambiente" ? "Escena" : tt.l}</button>
                               ))}
                             </div>
                             {inner}
@@ -29419,20 +29481,55 @@ export default function App({ onSignOut }) {
                         </div>
                         {!isMobile && (() => {
                           const scnList = chapterScenes(sel);
-                          const nFx = (sel.fx || []).length;
-                          const convs = dialogueConvs.filter((cv) => cv.sceneId === sel.id);
-                          const step = (n, k, Ic, title, sub, thumb, done) => (
-                            <button key={k} type="button" className={"cgs-step" + (done ? " is-done" : "")} onClick={() => (setChTab(k), setChOpen(true))}>
-                              <span className={"cgs-step-th" + (thumb === undefined ? " is-ic" : thumb ? "" : " is-blank")} style={thumb ? bgStyle(thumb) : undefined}>{thumb === undefined || !thumb ? <Ic size={22} strokeWidth={1.6} /> : null}</span>
-                              <span className="cgs-step-t"><i>{n}</i><b>{title}</b><small>{sub}</small></span>
-                              <span className="cgs-step-go">{done ? <Check size={14} strokeWidth={3} /> : <ChevronRight size={16} />}</span>
-                            </button>
-                          );
+                          const convsAll = dialogueConvs.filter((cv) => cv.sceneId === sel.id);
+                          const openEd = (sub, tab) => (setChScene(sub), setChTab(tab), setChOpen(true));
                           return (
-                            <div className="cgs-steps" role="group" aria-label="Preparar el capítulo">
-                              {step(1, "ambiente", Sparkles, "Escena", scnList.length + (scnList.length === 1 ? " escena" : " escenas") + (nFx ? " · " + nFx + (nFx === 1 ? " efecto" : " efectos") : ""), sel.image || "", !!sel.image)}
-                              {step(2, "dialogos", MessageSquareQuote, "Diálogos", convs.length ? convs.length + (convs.length === 1 ? " diálogo" : " diálogos") : "Sin diálogos", undefined, convs.length > 0)}
-                              {step(3, "combate", Swords, "Combate", chMaps.length + chEncs.length ? chMaps.length + (chMaps.length === 1 ? " mapa" : " mapas") + " · " + chEncs.length + (chEncs.length === 1 ? " encuentro" : " encuentros") : "Sin combates", undefined, chMaps.length + chEncs.length > 0)}
+                            <div className="cgs-secs">
+                              <section className="cgs-sec">
+                                <header>
+                                  <b>Escenas</b><span className="cgp-n">{scnList.length}</span><span className="cgp-sp" />
+                                  <button type="button" className="mh-btn-ghost" onClick={() => { const id = addExtraScene(sel.id); if (id) openEd(id, "ambiente"); }}><Plus size={13} /> Añadir escena</button>
+                                </header>
+                                <div className="cgs-cards">
+                                  {scnList.map((x, i) => {
+                                    const sub = x.main ? null : x.id;
+                                    const nd = convsAll.filter((cv) => (cv.subId || null) === sub).length;
+                                    return (
+                                      <article key={x.id} className="cgs-card">
+                                        <button type="button" className={"cgs-card-th" + (x.image ? "" : " is-blank")} style={bgStyle(x.image)} aria-label={"Editar " + (x.title || "escena " + (i + 1))} onClick={() => openEd(sub, "ambiente")} />
+                                        <div className="cgs-card-t"><b>{x.title || "Escena " + (i + 1)}</b><small>{x.image ? "Con imagen" : "Sin imagen"}{(x.fx || []).length ? " · " + x.fx.length + (x.fx.length === 1 ? " efecto" : " efectos") : ""}</small></div>
+                                        <div className="cgs-card-a">
+                                          <button type="button" className="mh-btn-ghost" onClick={() => openEd(sub, "dialogos")}><MessageSquareQuote size={13} /> Diálogos{nd ? " · " + nd : ""}</button>
+                                          <button type="button" className="mh-btn-ghost" onClick={() => openEd(sub, "ambiente")}><PenLine size={13} /> Editar</button>
+                                          {!x.main && <button type="button" className="mh-gm-ib is-del" aria-label={"Quitar " + (x.title || "escena")} title="Quitar escena" onClick={() => removeExtraScene(sel.id, x.id)}><Trash2 size={14} /></button>}
+                                        </div>
+                                      </article>
+                                    );
+                                  })}
+                                </div>
+                              </section>
+                              <section className="cgs-sec">
+                                <header>
+                                  <b>Mapas de combate</b><span className="cgp-n">{chMaps.length}</span><span className="cgp-sp" />
+                                  <button type="button" className="mh-btn-ghost" onClick={() => createCombat(sel.id)}><Plus size={13} /> Añadir mapa</button>
+                                </header>
+                                {chMaps.length === 0 ? (
+                                  <button type="button" className="cgs-none" onClick={() => createCombat(sel.id)}><Swords size={16} /> Añadir un mapa de combate</button>
+                                ) : (
+                                  <div className="cgs-cards">
+                                    {chMaps.map((m) => (
+                                      <article key={m.id} className="cgs-card is-map">
+                                        <span className="cgs-card-ic"><MapPinned size={20} /></span>
+                                        <div className="cgs-card-t"><b>{m.name}</b><small>{(m.map.tokens || []).length} fichas</small></div>
+                                        <div className="cgs-card-a">
+                                          <button type="button" className="mh-btn" onClick={() => startCombat(sel.id, m)}><Swords size={13} /> Combatir</button>
+                                          <button type="button" className="mh-gm-ib is-del" aria-label={"Borrar " + m.name} title="Borrar el mapa" onClick={() => window.confirm("¿Borrar el mapa «" + m.name + "»?") && saveMapsLib(campaignMaps.filter((x) => x.id !== m.id))}><Trash2 size={14} /></button>
+                                        </div>
+                                      </article>
+                                    ))}
+                                  </div>
+                                )}
+                              </section>
                             </div>
                           );
                         })()}
@@ -29491,6 +29588,14 @@ export default function App({ onSignOut }) {
                                 <button type="button" className="mh-hs-scn-add" onClick={() => { const id = addExtraScene(chapter.id); if (id) setChScene(id); }}><Plus size={14} /> Añadir escena</button>
                               </div>
                               <div className="mh-gm-sc-edit">
+                                <div className="cgs-tpl" role="group" aria-label="Plantillas de escena">
+                                  {SCENE_PRESETS.map((pr) => (
+                                    <button key={pr.key} type="button" className={"cgs-tpl-b" + (scn.image === pr.image ? " is-on" : "")} title={pr.title} onClick={() => updateScene(chapter.id, { image: pr.image, fx: pr.fx || scn.fx || [], ...((scn.title || "").trim() ? {} : { title: pr.title }) }, sub)}>
+                                      <span style={{ backgroundImage: `url("${pr.image}")` }} />
+                                      <small>{pr.title}</small>
+                                    </button>
+                                  ))}
+                                </div>
                                 <input className="mh-input" aria-label="Título de la escena" placeholder={scn.main ? "Título del capítulo" : "Título de la escena"} value={scn.title || ""} onChange={(e) => updateScene(chapter.id, { title: e.target.value }, sub)} />
                                 <input className="mh-input" aria-label="Enlace de la imagen" placeholder={scn.image && scn.image.startsWith("img:") ? "Imagen subida (pega un enlace para cambiarla)" : "Imagen (enlace https://…)"} value={scn.image && scn.image.startsWith("img:") ? "" : scn.image || ""} onChange={(e) => updateScene(chapter.id, { image: e.target.value }, sub)} />
                                 <label className="mh-btn-ghost" style={{ cursor: "pointer", justifyContent: "center" }}>
@@ -29857,8 +29962,22 @@ export default function App({ onSignOut }) {
                       </section>
                     );
                     if (!isMobile) {
-                      return (
+                        return (
                         <div className="cgs">
+                          {chAsk && sel && (
+                            <div className="mh-chn-ov" role="dialog" aria-modal="true" aria-label="¿Qué quieres añadir?" onClick={() => setChAsk(false)}>
+                              <div className="mh-chn cgp-modal" onClick={(e) => e.stopPropagation()}>
+                                <button type="button" className="mh-inv-x mh-chn-x" aria-label="Cerrar" onClick={() => setChAsk(false)}><X size={16} /></button>
+                                <h3 className="mh-serif">¿Qué quieres añadir a «{sel.title || "Capítulo"}»?</h3>
+                                <div className="mh-chn-opts">
+                                  <button type="button" onClick={() => (setChAsk(false), setChScene(null), setChTab("ambiente"), setChOpen(true))}><span className="mh-chn-start-ci"><ImageIcon size={20} /></span><b>Una escena</b></button>
+                                  <button type="button" onClick={() => (setChAsk(false), createCombat(sel.id))}><span className="mh-chn-start-ci"><Swords size={20} /></span><b>Un mapa de combate</b></button>
+                                </div>
+                                <button type="button" className="mh-btn-ghost" style={{ alignSelf: "flex-start" }} onClick={() => setChAsk(false)}>Ahora no</button>
+                              </div>
+                            </div>
+                          )}
+
                           <header className="cgp-h">
                             <span className="cgp-ic"><Clapperboard size={18} /></span>
                             <h3 className="mh-serif">Capítulos</h3>
@@ -30078,96 +30197,74 @@ export default function App({ onSignOut }) {
                           campaignMaps.forEach((mp) => addFoes(mp.map?.tokens, scenes.findIndex((x) => x.id === mp.sceneId)));
                           addFoes(campaignMap.tokens, -1);
                     const foeList = [...foes.values()];
+                    const KIND_LABEL = { Aliado: "Amistoso", Neutral: "Neutral", Enemigo: "Enemigo" };
+                    const all = [...campaignCast.map((m) => ({ m, kind: m.kind || "Neutral" })), ...foeList.filter((e) => !campaignCast.some((m) => (m.name || "").trim().toLowerCase() === (e.name || "").trim().toLowerCase())).map((e) => ({ foe: e, kind: "Enemigo" }))];
+                    const shown = all.filter((x) => pnjFilter === "all" || x.kind === pnjFilter);
                     const castOpen = (m) => (setDialogueDraft((d) => ({ ...d, castId: m.id, expr: "tranquila" })), setPnjOpen(m.id));
                     return (
                       <section className="cgp">
                         <header className="cgp-h">
                           <span className="cgp-ic"><Users size={18} /></span>
-                          <h3 className="mh-serif">PNJ</h3>
-                          <div className="cgp-seg" role="tablist" aria-label="Ver PNJ o enemigos">
-                            <button type="button" role="tab" aria-selected={pnjView === "reparto"} className={pnjView === "reparto" ? "is-on" : ""} onClick={() => setPnjView("reparto")}>Reparto{campaignCast.length > 0 ? " · " + campaignCast.length : ""}</button>
-                            <button type="button" role="tab" aria-selected={pnjView === "enemigos"} className={pnjView === "enemigos" ? "is-on" : ""} onClick={() => setPnjView("enemigos")}>Enemigos{foeList.length > 0 ? " · " + foeList.length : ""}</button>
-                          </div>
+                          <h3 className="mh-serif">PNJ y criaturas</h3>
+                          {all.length > 0 && <span className="cgp-n">{all.length}</span>}
                           <span className="cgp-sp" />
-                          {pnjView === "reparto" && campaignCast.length > 0 && (
-                            <div className="mh-ch-filter" role="tablist" aria-label="Filtrar PNJ">
-                              {[["all", "Todos"], ["Aliado", "Aliados"], ["Neutral", "Neutrales"], ["Enemigo", "Hostiles"]].map(([k, label]) => (
-                                <button key={k} type="button" role="tab" aria-selected={pnjFilter === k} className={"mh-ch-fchip" + (pnjFilter === k ? " is-on" : "")} onClick={() => setPnjFilter(k)}>{label}</button>
+                          <button type="button" className="mh-cg-gold" onClick={() => setPnjNew(true)}><Plus size={15} /> <span>Nuevo PNJ</span></button>
+                          {all.length > 0 && (
+                            <div className="mh-ch-filter" role="tablist" aria-label="Filtrar por actitud">
+                              {[["all", "Todos"], ["Aliado", "Amistoso"], ["Neutral", "Neutral"], ["Enemigo", "Enemigo"]].map(([k, label]) => (
+                                <button key={k} type="button" role="tab" aria-selected={pnjFilter === k} className={"mh-ch-fchip" + (pnjFilter === k ? " is-on" : "")} onClick={() => setPnjFilter(k)}>{label}{k !== "all" ? " · " + all.filter((x) => x.kind === k).length : ""}</button>
                               ))}
                             </div>
                           )}
-                          <button type="button" className="mh-cg-gold" onClick={() => setPnjNew(true)}><Plus size={15} /> <span>Nuevo PNJ</span></button>
                         </header>
-                        {pnjView === "reparto" ? (
-                          campaignCast.length === 0 ? (
-                            <div className="cgp-empty">
-                              <span className="cgp-empty-ic"><Users size={26} strokeWidth={1.4} /></span>
-                              <b>Aún no hay PNJ</b>
-                              <button type="button" className="mh-btn" onClick={() => setPnjNew(true)}><Plus size={14} /> Crear el primero</button>
-                            </div>
-                          ) : (
-                            <div className="cgp-list is-grid">
-                              {list.length === 0 && <div className="cgp-none">No hay PNJ de este tipo.</div>}
-                              {list.map((m) => {
-                                const imgId = castImgIdFor(m, "tranquila");
-                                const kind = m.kind || "Neutral";
-                                const w = where(m);
-                                return (
-                                  <article key={m.id} className={"cgp-npc is-" + kind.toLowerCase()}>
-                                    <button type="button" className="cgp-npc-top" onClick={() => castOpen(m)} aria-label={"Editar a " + m.name}>
-                                      <span className="cgp-npc-img">{castImgs[imgId] ? <img src={castImgs[imgId]} alt="" /> : <span>{m.name.charAt(0).toUpperCase()}</span>}</span>
-                                      <span className="cgp-npc-id">
-                                        <b className="mh-serif">{m.name}</b>
-                                        <small>{m.role || "Sin rol"}</small>
-                                      </span>
-                                      <i className="cgp-kind">{kind}</i>
-                                    </button>
-                                    <small className="cgp-npc-w">{w.length ? "En " + w.map(({ i }) => "cap. " + (i + 1)).join(", ") : "Sin usar todavía"}</small>
-                                    <div className="cgp-npc-acts">
-                                      <button type="button" className="mh-btn-ghost" disabled={!target} title={target ? "Escribir un diálogo en «" + (target.title || "Sin título") + "»" : "Crea antes un capítulo en «Historia»"} onClick={() => (setDialogueDraft((d) => ({ ...d, castId: m.id, expr: "tranquila" })), openChapter(target.id))}><MessageSquareQuote size={13} /> Diálogo</button>
-                                      <button type="button" className="mh-btn-ghost" disabled={!target} title={target ? "Abrir el combate de «" + (target.title || "Sin título") + "»" : "Crea antes un capítulo en «Historia»"} onClick={() => (setCombatBack(target.id), setCampaignDetailTab("mapa"))}><Swords size={13} /> Combate</button>
-                                      <button type="button" className="mh-btn-ghost" onClick={() => castOpen(m)}><PenLine size={13} /> Editar</button>
-                                    </div>
-                                  </article>
-                                );
-                              })}
-                            </div>
-                          )
-                        ) : foeList.length === 0 ? (
+                        {all.length === 0 ? (
                           <div className="cgp-empty">
-                            <span className="cgp-empty-ic"><Skull size={26} strokeWidth={1.4} /></span>
-                            <b>Aún no hay enemigos</b>
+                            <span className="cgp-empty-ic"><Users size={26} strokeWidth={1.4} /></span>
+                            <b>Aún no hay PNJ</b>
+                            <button type="button" className="mh-btn" onClick={() => setPnjNew(true)}><Plus size={14} /> Crear el primero</button>
                           </div>
                         ) : (
                           <div className="cgp-list is-grid">
-                                {foeList.map((e) => (
-                                  <div key={e.name} className="mh-ch-npc is-enemigo cgp-foe">
-                                    <div className="mh-ch-npc-top" style={{ cursor: "default" }}>
-                                      <span className="mh-ch-npc-img"><Skull size={22} /></span>
-                                      <span className="mh-ch-npc-id">
-                                        <b className="mh-serif">{e.name}</b>
-                                        <small>{e.stats ? "Nivel " + e.stats.tier + " · " + e.stats.type + (e.stats.base && e.stats.base !== e.name ? " · " + e.stats.base : "") : "Sin estadísticas"}</small>
-                                        {e.stats && <small className="mh-ns-sum">{"Dif " + e.stats.difficulty + " · PV " + e.stats.hp + " · Estrés " + e.stats.stress + (e.stats.attack ? " · " + e.stats.attack.name + " " + e.stats.attack.damage : "")}</small>}
-                                      </span>
+                            {shown.length === 0 && <div className="cgp-none">No hay ninguno con esa actitud.</div>}
+                            {shown.map((x) => {
+                              const m = x.m;
+                              const kind = x.kind;
+                              if (x.foe) {
+                                const e = x.foe;
+                                return (
+                                  <article key={"f" + e.name} className="cgp-npc is-enemigo">
+                                    <div className="cgp-npc-top" style={{ cursor: "default" }}>
+                                      <span className="cgp-npc-img"><Skull size={22} /></span>
+                                      <span className="cgp-npc-id"><b className="mh-serif">{e.name}</b><small>{e.stats ? "Nivel " + e.stats.tier + " · " + e.stats.type : "Criatura de mapa"}</small></span>
+                                      <i className="cgp-kind">Enemigo</i>
                                     </div>
-                                    <div className="mh-ch-npc-w">{e.chapters.size ? "Aparece en: " + [...e.chapters].sort((a, b) => a - b).map((n) => "Cap. " + n).join(", ") : "Solo en el tablero actual"} · {e.total} ficha{e.total === 1 ? "" : "s"}</div>
-                                    <div className="mh-ch-npc-acts">
-                                      <button
-                                        type="button"
-                                        className="mh-btn-ghost"
-                                        onClick={() =>
-                                          mutateMap(viewingCampaignId, (tokens) => {
-                                            const [x, y] = freeCell(tokens);
-                                            return [...tokens, { id: "t" + Date.now() + Math.random().toString(36).slice(2, 5), x, y, kind: "foe", name: e.name, stats: { ...(e.stats || newFoeStats()), hpMarked: 0, stressMarked: 0 }, size: "m" }];
-                                          })
-                                        }
-                                        title="Añade una copia de este enemigo al tablero actual"
-                                      >
-                                        <Plus size={13} /> Colocar en el tablero
-                                      </button>
+                                    <small className="cgp-npc-w">{e.chapters.size ? "En " + [...e.chapters].sort((a, b) => a - b).map((n) => "cap. " + n).join(", ") : "Solo en el tablero actual"} · {e.total} ficha{e.total === 1 ? "" : "s"}</small>
+                                    <div className="cgp-npc-acts">
+                                      <button type="button" className="mh-btn-ghost" title="Añade una copia al tablero actual" onClick={() => mutateMap(viewingCampaignId, (tokens) => { const [fx, fy] = freeCell(tokens); return [...tokens, { id: "t" + Date.now() + Math.random().toString(36).slice(2, 5), x: fx, y: fy, kind: "foe", name: e.name, stats: { ...(e.stats || newFoeStats()), hpMarked: 0, stressMarked: 0 }, size: "m" }]; })}><Plus size={13} /> Al tablero</button>
                                     </div>
+                                  </article>
+                                );
+                              }
+                              const imgId = castImgIdFor(m, "tranquila");
+                              const w = where(m);
+                              return (
+                                <article key={m.id} className={"cgp-npc is-" + kind.toLowerCase()}>
+                                  <div className="cgp-npc-top">
+                                    <button type="button" className="cgp-npc-open" onClick={() => castOpen(m)} aria-label={"Editar a " + m.name}>
+                                      <span className="cgp-npc-img">{castImgs[imgId] ? <img src={castImgs[imgId]} alt="" /> : <span>{m.name.charAt(0).toUpperCase()}</span>}</span>
+                                      <span className="cgp-npc-id"><b className="mh-serif">{m.name}</b><small>{(m.type === "criatura" ? "Criatura · " : "") + (m.role || "Sin rol")}</small></span>
+                                    </button>
+                                    <button type="button" className="cgp-kind is-btn" title="Cambiar la actitud (Amistoso → Neutral → Enemigo)" onClick={() => updateCast(m.id, { kind: KINDS[(KINDS.indexOf(kind) + 1) % KINDS.length] })}>{KIND_LABEL[kind] || kind}</button>
                                   </div>
-                                ))}
+                                  <small className="cgp-npc-w">{w.length ? "En " + w.map(({ i }) => "cap. " + (i + 1)).join(", ") : "Sin usar todavía"}</small>
+                                  <div className="cgp-npc-acts">
+                                    <button type="button" className="mh-btn-ghost" disabled={!target} title={target ? "Escribir un diálogo en «" + (target.title || "Sin título") + "»" : "Crea antes un capítulo en «Historia»"} onClick={() => (setDialogueDraft((d) => ({ ...d, castId: m.id, expr: "tranquila" })), openChapter(target.id))}><MessageSquareQuote size={13} /> Diálogo</button>
+                                    <button type="button" className="mh-btn-ghost" disabled={!target} title={target ? "Abrir el combate de «" + (target.title || "Sin título") + "»" : "Crea antes un capítulo en «Historia»"} onClick={() => (setCombatBack(target.id), setCampaignDetailTab("mapa"))}><Swords size={13} /> Combate</button>
+                                    <button type="button" className="mh-btn-ghost" onClick={() => castOpen(m)}><PenLine size={13} /> Editar</button>
+                                  </div>
+                                </article>
+                              );
+                            })}
                           </div>
                         )}
                         {pnjNew && (
@@ -30198,7 +30295,12 @@ export default function App({ onSignOut }) {
                               <input className="mh-input" aria-label="Rol del PNJ" placeholder="Rol (p. ej. Posadera de El Cuervo Tuerto)" value={sel.role || ""} onChange={(e) => updateCast(sel.id, { role: e.target.value })} />
                               <div className="cgp-seg is-wide" role="radiogroup" aria-label={"Tipo de " + sel.name}>
                                 {KINDS.map((k) => (
-                                  <button key={k} type="button" role="radio" aria-checked={(sel.kind || "Neutral") === k} className={(sel.kind || "Neutral") === k ? "is-on" : ""} onClick={() => updateCast(sel.id, { kind: k })}>{k}</button>
+                                  <button key={k} type="button" role="radio" aria-checked={(sel.kind || "Neutral") === k} className={(sel.kind || "Neutral") === k ? "is-on" : ""} onClick={() => updateCast(sel.id, { kind: k })}>{KIND_LABEL[k]}</button>
+                                ))}
+                              </div>
+                              <div className="cgp-seg is-wide" role="radiogroup" aria-label="Tipo de ficha">
+                                {[["pnj", "Persona"], ["criatura", "Bestia o criatura"]].map(([k, label]) => (
+                                  <button key={k} type="button" role="radio" aria-checked={(sel.type || "pnj") === k} className={(sel.type || "pnj") === k ? "is-on" : ""} onClick={() => updateCast(sel.id, { type: k })}>{label}</button>
                                 ))}
                               </div>
                               <div className="mh-gm-h2">Estadísticas</div>
