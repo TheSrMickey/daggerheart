@@ -48,57 +48,9 @@ export function CampaignCalendar({ campaignId, isGm, members, colorOf }) {
 
   return (
     <div className="cal">
-      <div className="mh-card cal-main">
-        <div className="gx-h">
-          <h3 className="mh-serif"><CalendarDays size={18} /> Próxima sesión</h3>
-          {isGm && <button type="button" className="mh-btn-ghost" onClick={() => (setDraft({ when: toInput(next ? next.ts : now + 7 * 864e5), place: next?.place || "" }), setEditing((v) => !v))}>{next ? "Cambiar fecha" : "Fijar fecha"}</button>}
-        </div>
-        {editing && (
-          <div className="cal-edit">
-            <label><span className="gx-lab">Fecha y hora</span><input className="mh-input" type="datetime-local" value={draft.when} onChange={(e) => setDraft((d) => ({ ...d, when: e.target.value }))} /></label>
-            <label><span className="gx-lab">Dónde (opcional)</span><input className="mh-input" placeholder="Discord, casa de Ana…" value={draft.place} onChange={(e) => setDraft((d) => ({ ...d, place: e.target.value }))} /></label>
-            <button type="button" className="mh-btn" onClick={save}>Guardar</button>
-          </div>
-        )}
-        {next ? (
-          <>
-            <div className="cal-hero">
-              <div className="cal-date"><small>{new Date(next.ts).toLocaleDateString("es-ES", { weekday: "short" }).replace(".", "").toUpperCase()}</small><b className="mh-serif">{new Date(next.ts).getDate()}</b><small>{MONTHS[new Date(next.ts).getMonth()].slice(0, 3)} · {fmtTime(next.ts)}</small></div>
-              <div>
-                <div className="cal-count">Empieza en <b>{countdown(next.ts, now)}</b></div>
-                {next.place && <span className="cx-chip"><MapPin size={13} /> {next.place}</span>}
-              </div>
-            </div>
-            <span className="gx-lab" style={{ marginTop: 16 }}>¿Quién viene? · {yes} de {members.length} confirmados</span>
-            <div className="cal-rsvp">
-              {members.map((m) => {
-                const st = doc.rsvp?.[m.id];
-                const S = st ? STATES[st] : null;
-                return (
-                  <div key={m.id} className="cal-who">
-                    <span className="cal-av" style={{ "--c": colorOf(m.cls) }}>{(m.name || "?").charAt(0).toUpperCase()}</span>
-                    <span className="cal-nm"><b>{m.name}{m.mine ? " · tú" : ""}</b><small>{m.cls}</small></span>
-                    <span className="cx-chip on" style={{ "--c": S ? S[1] : "#8b8bad" }}>{S ? S[0] : "Sin responder"}</span>
-                  </div>
-                );
-              })}
-              {members.length === 0 && <div className="gx-note">Todavía no hay personajes en la campaña.</div>}
-            </div>
-            {mine.length > 0 && (
-              <div className="cal-btns">
-                {Object.entries(STATES).map(([k, [label, c, Ic]]) => (
-                  <button key={k} type="button" className={"cx-chip" + (myState === k ? " on" : "")} style={{ "--c": c, flex: 1, justifyContent: "center" }} onClick={() => set(k)}><i><Ic size={14} /></i>{label}</button>
-                ))}
-              </div>
-            )}
-          </>
-        ) : (
-          <p className="gx-sub is-keep" style={{ marginTop: 14 }}>{isGm ? "Todavía no has fijado la próxima sesión. Pulsa «Fijar fecha» y tus jugadores podrán confirmar." : "El DJ todavía no ha fijado la próxima sesión."}</p>
-        )}
-      </div>
       <div className="mh-card cal-month">
         <div className="gx-h"><h3 className="mh-serif" style={{ textTransform: "capitalize" }}>{MONTHS[view.getMonth()]} {view.getFullYear()}</h3><div className="gx-row"><button type="button" className="mh-btn-ghost" aria-label="Mes anterior" onClick={() => setShift((s) => s - 1)}>‹</button><button type="button" className="mh-btn-ghost" aria-label="Mes siguiente" onClick={() => setShift((s) => s + 1)}>›</button></div></div>
-        <div className="cal-grid">
+        <div className="cal-grid" style={{ "--rows": Math.ceil((first + total) / 7) }}>
           {DAYS.map((d) => <small key={d}>{d}</small>)}
           {Array.from({ length: first }, (_, i) => <i key={"e" + i} />)}
           {Array.from({ length: total }, (_, i) => {
@@ -108,6 +60,63 @@ export function CampaignCalendar({ campaignId, isGm, members, colorOf }) {
           })}
         </div>
         <div className="cal-leg"><span><u className="n" /> Próxima</span><span><u /> Pasada</span><span><s /> Hoy</span></div>
+      </div>
+      <div className="mh-card cal-main">
+        <div className="gx-h">
+          <h3 className="mh-serif"><CalendarDays size={18} /> Próximos eventos</h3>
+          {isGm && <button type="button" className="mh-btn" onClick={() => (setDraft({ when: toInput(next ? next.ts : now + 7 * 864e5), place: next?.place || "" }), setEditing((v) => !v))}>{next ? "Cambiar sesión" : "Fijar próxima sesión"}</button>}
+        </div>
+        <div className="cal-side">
+          {editing && (
+            <div className="cal-edit">
+              <label><span className="gx-lab">Fecha y hora</span><input className="mh-input" type="datetime-local" value={draft.when} onChange={(e) => setDraft((d) => ({ ...d, when: e.target.value }))} /></label>
+              <label><span className="gx-lab">Dónde (opcional)</span><input className="mh-input" placeholder="Discord, casa de Ana…" value={draft.place} onChange={(e) => setDraft((d) => ({ ...d, place: e.target.value }))} /></label>
+              <button type="button" className="mh-btn" onClick={save}>Guardar</button>
+            </div>
+          )}
+          {next ? (
+            <>
+              <div className="cal-hero">
+                <div className="cal-date"><small>{new Date(next.ts).toLocaleDateString("es-ES", { weekday: "short" }).replace(".", "").toUpperCase()}</small><b className="mh-serif">{new Date(next.ts).getDate()}</b><small>{MONTHS[new Date(next.ts).getMonth()].slice(0, 3)} · {fmtTime(next.ts)}</small></div>
+                <div>
+                  <b className="mh-serif cal-ev">Sesión de juego</b>
+                  <div className="cal-count">Empieza en <b>{countdown(next.ts, now)}</b></div>
+                  {next.place && <span className="cx-chip"><MapPin size={13} /> {next.place}</span>}
+                </div>
+              </div>
+              <span className="gx-lab" style={{ marginTop: 14 }}>¿Quién viene? · {yes} de {members.length} confirmados</span>
+              <div className="cal-rsvp">
+                {members.map((m) => {
+                  const st = doc.rsvp?.[m.id];
+                  const S = st ? STATES[st] : null;
+                  return (
+                    <div key={m.id} className="cal-who">
+                      <span className="cal-av" style={{ "--c": colorOf(m.cls) }}>{(m.name || "?").charAt(0).toUpperCase()}</span>
+                      <span className="cal-nm"><b>{m.name}{m.mine ? " · tú" : ""}</b><small>{m.cls}</small></span>
+                      <span className="cx-chip on" style={{ "--c": S ? S[1] : "#8b8bad" }}>{S ? S[0] : "Sin responder"}</span>
+                    </div>
+                  );
+                })}
+                {members.length === 0 && <div className="gx-note">Todavía no hay personajes en la campaña.</div>}
+              </div>
+              {mine.length > 0 && (
+                <div className="cal-btns">
+                  {Object.entries(STATES).map(([k, [label, c, Ic]]) => (
+                    <button key={k} type="button" className={"cx-chip" + (myState === k ? " on" : "")} style={{ "--c": c, flex: 1, justifyContent: "center" }} onClick={() => set(k)}><i><Ic size={14} /></i>{label}</button>
+                  ))}
+                </div>
+              )}
+            </>
+          ) : !editing && (
+            <div className="cal-empty"><span><CalendarDays size={24} strokeWidth={1.5} /></span><b>No hay sesiones fijadas</b><small>{isGm ? "Pulsa «Fijar próxima sesión» y tus jugadores podrán confirmar." : "El DJ todavía no ha fijado la próxima sesión."}</small></div>
+          )}
+          {(doc.past || []).length > 0 && (
+            <>
+              <span className="gx-lab" style={{ marginTop: 14 }}>Sesiones anteriores</span>
+              <div className="gx-row">{[...doc.past].sort((x, y) => y - x).slice(0, 4).map((ts) => <span key={ts} className="cx-chip">{fmtDate(ts)}</span>)}</div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
