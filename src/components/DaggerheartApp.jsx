@@ -5604,6 +5604,25 @@ const sharedStyles = `
   .mh-cg.is-flat .mh-hs-detail .mh-hs-banner { height: clamp(64px, 10vh, 104px); }
   .mh-cg.is-flat .mh-hs-tabs { gap: 3px; padding: 10px 16px; border-bottom: 0; } .mh-cg.is-flat .mh-hs-tabs button { padding: 7px 16px; border-radius: 10px; border: 1px solid transparent; background: transparent; color: var(--mh-muted); font-weight: 600; } .mh-cg.is-flat .mh-hs-tabs button:hover { color: var(--mh-ink); } .mh-cg.is-flat .mh-hs-tabs button.is-on { background: #E3B04B; border-color: #E3B04B; color: #241a05; }
   .mh-cg.is-flat .mh-hs-body { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; padding: 6px 18px 16px; }
+  /* Menú de la campaña (esquema común): pestañas con subrayado en dos niveles, sin píldoras ni selectores. */
+  .mh-cg.is-flat .mh-cg-navrow { display: flex; align-items: flex-end; gap: 0; padding: 0; margin: 0 0 4px !important; border: 0; border-bottom: 1px solid var(--mh-line); flex-wrap: nowrap; }
+  .mh-cg.is-flat .mh-cg-nav { display: flex; gap: 26px; padding: 0; margin: 0; background: none; border: 0; border-radius: 0; overflow: visible; }
+  .mh-cg.is-flat .mh-cg-nav button { position: relative; display: inline-flex; align-items: center; gap: 9px; padding: 10px 2px 13px; margin: 0; border: 0; border-radius: 0; background: none; box-shadow: none; color: var(--mh-muted); font: 700 15px 'Inter', system-ui, sans-serif; transition: color .15s; }
+  .mh-cg.is-flat .mh-cg-nav button::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; border-radius: 3px 3px 0 0; background: #E3B04B; transform: scaleX(0); transition: transform .2s ease; }
+  .mh-cg.is-flat .mh-cg-nav button:hover { color: var(--mh-ink); background: none; }
+  .mh-cg.is-flat .mh-cg-nav button.is-on { color: var(--mh-ink); background: none; border: 0; box-shadow: none; } .mh-cg.is-flat .mh-cg-nav button.is-on::after { transform: scaleX(1); } .mh-cg.is-flat .mh-cg-nav button.is-on svg { color: #E3B04B; }
+  .mh-cg.is-flat .mh-cg-nav button:focus-visible { outline: 2px solid #E3B04B; outline-offset: -2px; border-radius: 6px; }
+  .mh-cg.is-flat .mh-cg-nav.is-live { margin-left: auto; background: none; border: 0; }
+  .mh-cg.is-flat .mh-cg-nav.is-live button { color: #E8776F; } .mh-cg.is-flat .mh-cg-nav.is-live button::after { background: #E0544A; } .mh-cg.is-flat .mh-cg-nav.is-live button:hover { color: #ff9b94; background: none; }
+  .mh-cg.is-flat .mh-cg-subrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 14px; }
+  .mh-cg.is-flat .mh-cg-sub { display: flex; gap: 22px; padding: 0; margin: 0; width: auto; border: 0; border-radius: 0; background: none; overflow: visible; }
+  .mh-cg.is-flat .mh-cg-sub button { position: relative; display: inline-flex; align-items: center; gap: 7px; padding: 11px 0 9px; border: 0; border-radius: 0; background: none; box-shadow: none; color: var(--mh-muted); font: 600 13.5px 'Inter', system-ui, sans-serif; transition: color .15s; }
+  .mh-cg.is-flat .mh-cg-sub button::after { content: ""; position: absolute; left: 0; right: 0; bottom: 2px; height: 2px; border-radius: 2px; background: var(--mh-ink3); opacity: .75; transform: scaleX(0); transition: transform .18s ease; }
+  .mh-cg.is-flat .mh-cg-sub button:hover { color: var(--mh-ink); background: none; border: 0; } .mh-cg.is-flat .mh-cg-sub button.is-on { color: var(--mh-ink); background: none; border: 0; box-shadow: none; } .mh-cg.is-flat .mh-cg-sub button.is-on::after { transform: scaleX(1); } .mh-cg.is-flat .mh-cg-sub button.is-on svg { color: #E3B04B; }
+  .mh-cg.is-flat .mh-cg-sub button:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; border-radius: 6px; }
+  .cgp-empty small { display: none; }
+  .mh-cg.is-flat .gx-note, .mh-cg.is-flat .mh-pst-hint { display: none; }
+  .mh-chn > p, .mh-chn-opts small { display: none; } .mh-chn-opts > * { padding: 22px 10px; }
   .cgp-del { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; color: #D9644E !important; }
   /* Las listas de pistas: tarjetas en rejilla dentro del panel. */
   .cgp-list.mh-pst-list { display: block; }
@@ -29214,38 +29233,20 @@ export default function App({ onSignOut }) {
                     const fxLabel = (sc) => (sc.fx || []).map((k) => SCENE_FX.find((f) => f.k === k)?.n).filter(Boolean).join(", ");
                     if (scenes.length === 0) {
                       return (
-                        <div className="mh-chn-start">
-                          <div className="mh-chn-start-h">
-                            <span className="mh-chn-start-ic" aria-hidden="true"><Clapperboard size={22} /></span>
-                            <div>
-                              <h3 className="mh-serif">Empieza tu historia</h3>
-                              <p>Crea el primer capítulo: una imagen de fondo para ambientar a tu mesa. Después podrás añadir escenas, diálogos y combates.</p>
-                            </div>
-                          </div>
+                        <section className="cgp">
+                          <header className="cgp-h">
+                            <span className="cgp-ic"><Clapperboard size={18} /></span>
+                            <h3 className="mh-serif">Capítulos</h3>
+                            <span className="cgp-sp" />
+                            <button type="button" className="mh-cg-gold" onClick={() => setNewChOpen(1)}><Plus size={15} /> <span>Nuevo capítulo</span></button>
+                          </header>
                           {sceneError && <div className="mh-gm-sub" style={{ color: "#D9644E" }}>{sceneError}</div>}
-                          <div className="mh-chn-start-opts">
-                            <label className="mh-chn-start-card is-drop">
-                              <span className="mh-chn-start-ci"><Upload size={20} /></span>
-                              <b>Subir tu imagen</b>
-                              <small>JPG, PNG o WebP desde tu equipo</small>
-                              <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { addSceneFromFile(e.target.files?.[0]); e.target.value = ""; }} />
-                            </label>
-                            <button type="button" className="mh-chn-start-card" onClick={() => addScene()}>
-                              <span className="mh-chn-start-ci"><Plus size={20} /></span>
-                              <b>Capítulo en blanco</b>
-                              <small>Sin imagen: la pones más tarde</small>
-                            </button>
+                          <div className="cgp-empty">
+                            <span className="cgp-empty-ic"><Clapperboard size={26} strokeWidth={1.4} /></span>
+                            <b>Aún no hay capítulos</b>
+                            <button type="button" className="mh-btn" onClick={() => setNewChOpen(1)}><Plus size={14} /> Crear capítulo</button>
                           </div>
-                          <div className="mh-chn-start-sec"><span>O elige una plantilla</span><i /><button type="button" className="mh-chn-more is-flat-only" onClick={() => setNewChOpen(2)}>Más plantillas</button></div>
-                          <div className="mh-gm-presets mh-chn-pr is-start">
-                            {SCENE_PRESETS.map((pr) => (
-                              <button key={pr.key} type="button" className="mh-gm-preset" title={"Crear «" + pr.title + "»"} onClick={() => addScene(pr)}>
-                                <span className="mh-gm-preset-img" style={{ backgroundImage: `url("${pr.image}")` }}><Plus size={16} /></span>
-                                <span className="mh-gm-preset-t">{pr.title}</span>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
+                        </section>
                       );
                     }
                     const sel = scenes.find((x) => x.id === chapterId) || (isMobile ? null : scenes.find((x) => x.id === activeSceneId) || scenes[0]);
@@ -29753,7 +29754,6 @@ export default function App({ onSignOut }) {
                           <div className="cgp-empty">
                             <span className="cgp-empty-ic"><MapPinned size={26} strokeWidth={1.4} /></span>
                             <b>Aún no hay mapas</b>
-                            <small>Abre el tablero, coloca a los enemigos y guárdalo.</small>
                           </div>
                         ) : (
                           <div className="cgp-list is-rows">
@@ -29817,7 +29817,6 @@ export default function App({ onSignOut }) {
                           <div className="cgp-empty">
                             <span className="cgp-empty-ic"><ScrollText size={26} strokeWidth={1.4} /></span>
                             <b>Aún no hay pistas</b>
-                            <small>Una nota, una imagen, un objeto o un personaje que tus jugadores puedan abrir.</small>
                             <button type="button" className="mh-btn" onClick={() => setPstNew(true)}><Plus size={14} /> Crear la primera</button>
                           </div>
                         ) : (
@@ -29945,7 +29944,6 @@ export default function App({ onSignOut }) {
                             <div className="cgp-empty">
                               <span className="cgp-empty-ic"><Users size={26} strokeWidth={1.4} /></span>
                               <b>Aún no hay PNJ</b>
-                              <small>Crea a los personajes que interpretas tú, con su imagen.</small>
                               <button type="button" className="mh-btn" onClick={() => setPnjNew(true)}><Plus size={14} /> Crear el primero</button>
                             </div>
                           ) : (
@@ -29980,7 +29978,6 @@ export default function App({ onSignOut }) {
                           <div className="cgp-empty">
                             <span className="cgp-empty-ic"><Skull size={26} strokeWidth={1.4} /></span>
                             <b>Aún no hay enemigos</b>
-                            <small>Aparecerán aquí los que coloques en un mapa de combate.</small>
                           </div>
                         ) : (
                           <div className="cgp-list is-grid">
@@ -30110,7 +30107,7 @@ export default function App({ onSignOut }) {
                         <div className="cgp-empty">
                           <span className="cgp-empty-ic"><Users size={26} strokeWidth={1.4} /></span>
                           <b>Aún no hay personajes en la mesa</b>
-                          <small>{availableIds.length > 0 ? "Añade uno con el botón de arriba." : Object.keys(characters).length === 0 ? "Crea un personaje en la pestaña Personajes." : "Tus personajes ya están en otra campaña."}</small>
+                          
                         </div>
                       ) : (
                         <div className="cgp-list is-grid">
