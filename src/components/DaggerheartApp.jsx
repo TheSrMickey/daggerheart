@@ -5571,6 +5571,37 @@ const sharedStyles = `
   .mh-cg.is-flat .mh-cg-sub button:hover { border-color: var(--mh-line2); background: var(--mh-panel2); }
   .mh-cg.is-flat .mh-cg-sub button.is-on { background: #E3B04B1f; border-color: #E3B04B; color: var(--mh-ink); box-shadow: none; }
   @keyframes mh-pulse { 50% { opacity: .45; } }
+  /* Panel común de las pestañas de campaña: cabecera con título y acciones, contenido que ocupa el alto y estado vacío con una sola acción. */
+  .cgp { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; padding: 16px 18px; border-radius: 22px; background: var(--mh-panel); border: 1px solid var(--mh-line); }
+  .cgp-h { flex: none; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; } .cgp-h h3 { margin: 0; font-size: 20px; color: var(--mh-ink); } .cgp-sp { flex: 1; }
+  .cgp-ic { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; color: #E3B04B; background: #E3B04B1c; border: 1px solid #E3B04B40; flex: none; }
+  .cgp-n { min-width: 24px; padding: 2px 8px; border-radius: 99px; text-align: center; font-size: 12px; font-weight: 700; color: var(--mh-ink3); background: var(--mh-panel3); } .cgp-note { font-size: 12px; color: var(--mh-muted); }
+  .cgp-seg { display: inline-flex; gap: 3px; padding: 3px; border-radius: 12px; background: var(--mh-input); border: 1px solid var(--mh-line); } .cgp-seg button { all: unset; cursor: pointer; padding: 6px 14px; border-radius: 9px; font-size: 12.5px; font-weight: 600; color: var(--mh-muted); } .cgp-seg button:hover { color: var(--mh-ink); } .cgp-seg button.is-on { background: var(--mh-panel3); color: var(--mh-ink); } .cgp-seg button:focus-visible { outline: 2px solid #E3B04B; outline-offset: 1px; } .cgp-seg.is-wide { display: flex; } .cgp-seg.is-wide button { flex: 1; text-align: center; }
+  .cgp-list { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; padding: 2px 4px 2px 2px; margin: 0 -4px 0 -2px; align-content: start; }
+  .cgp-list.is-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; } .cgp-list.is-rows { display: flex; flex-direction: column; gap: 8px; }
+  .cgp-none { grid-column: 1 / -1; color: var(--mh-muted); font-size: 13px; padding: 14px 4px; }
+  .cgp-empty { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; padding: 20px; border-radius: 18px; border: 1px dashed var(--mh-line2); } .cgp-empty b { font-size: 16px; color: var(--mh-ink); } .cgp-empty small { font-size: 13px; color: var(--mh-muted); max-width: 380px; line-height: 1.5; } .cgp-empty .mh-btn { margin-top: 8px; display: inline-flex; align-items: center; gap: 6px; }
+  .cgp-empty-ic { width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center; color: #E3B04B; background: #E3B04B14; border: 1px solid #E3B04B40; margin-bottom: 4px; }
+  .cgp-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 14px; background: var(--mh-panel2); border: 1px solid var(--mh-line); } .cgp-row-ic { width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; color: #E3B04B; background: #E3B04B14; flex: none; } .cgp-row-t { flex: 1; min-width: 0; display: flex; flex-direction: column; } .cgp-row-t b { font-size: 14px; color: var(--mh-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .cgp-row-t small { font-size: 12px; color: var(--mh-muted); } .cgp-sel { width: auto; max-width: 190px; padding: 6px 8px; font-size: 12.5px; }
+  .cgp-add { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; } .cgp-add > span { font-size: 12.5px; color: var(--mh-muted); margin-right: 2px; } .cgp-add button { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: 99px; border: 1px dashed var(--mh-line2); font-size: 12.5px; font-weight: 600; color: var(--mh-ink3); } .cgp-add button:hover { border-color: #E3B04B; color: var(--mh-ink); } .cgp-add button:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
+  .cgp-npc { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 16px; background: var(--mh-panel2); border: 1px solid var(--mh-line); --kc: #8d8fae; } .cgp-npc.is-aliado { --kc: #58d68d; } .cgp-npc.is-enemigo { --kc: #E0544A; } .cgp-npc.is-neutral { --kc: #E3B04B; }
+  .cgp-npc-top { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 12px; min-width: 0; } .cgp-npc-top:focus-visible { outline: 2px solid #E3B04B; outline-offset: 3px; border-radius: 12px; }
+  .cgp-npc-img { width: 52px; height: 52px; flex: none; border-radius: 50%; overflow: hidden; display: grid; place-items: center; background: var(--mh-panel3); border: 2px solid var(--kc); font: 600 20px 'Cinzel', Georgia, serif; color: var(--mh-ink2); } .cgp-npc-img img { width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+  .cgp-npc-id { flex: 1; min-width: 0; display: flex; flex-direction: column; } .cgp-npc-id b { font-size: 15px; color: var(--mh-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .cgp-npc-id small { font-size: 12px; color: var(--mh-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cgp-kind { font-style: normal; font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 3px 9px; border-radius: 99px; color: var(--kc); background: color-mix(in srgb, var(--kc) 14%, transparent); border: 1px solid color-mix(in srgb, var(--kc) 40%, transparent); flex: none; }
+  .cgp-npc-w { font-size: 11.5px; color: var(--mh-muted); } .cgp-npc-acts { display: flex; gap: 6px; flex-wrap: wrap; } .cgp-npc-acts .mh-btn-ghost { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 5px 10px; }
+  .cgp-foe { background: var(--mh-panel2); }
+  .cgp-modal { width: min(460px, 100%); display: flex; flex-direction: column; gap: 12px; max-height: 88vh; overflow-y: auto; scrollbar-width: thin; } .cgp-modal.is-wide { width: min(620px, 100%); } .cgp-modal > h3 { margin: 0; font-size: 20px; }
+  .cgp-modal .mh-pst-new { display: flex; flex-direction: column; gap: 10px; padding: 0; border: 0; background: none; }
+  .cgp-h .mh-ch-filter { order: 5; flex-basis: 100%; }
+  .mh-cg.is-flat .mh-cg-body.is-pane { padding: 18px 20px; margin: 0; border-radius: 22px; background: var(--mh-panel); border: 1px solid var(--mh-line); }
+  .mh-cg.is-flat .mh-cg-body.is-pane > .mh-card, .mh-cg.is-flat .mh-cg-body.is-pane .cal-main, .mh-cg.is-flat .mh-cg-body.is-pane .cal-month, .mh-cg.is-flat .mh-cg-body.is-pane > .gx { background: none; border: 0; box-shadow: none; padding: 0; }
+  .mh-cg.is-flat .mh-cg-body.is-pane .cal { gap: 28px; }
+  .cgp-del { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; color: #D9644E !important; }
+  /* Las listas de pistas: tarjetas en rejilla dentro del panel. */
+  .cgp-list.mh-pst-list { display: block; }
+  /* En el esquema común se ocultan las frases de introducción que repiten lo que dice el título. */
+  .mh-cg.is-flat .mh-gm-h + .mh-gm-sub:not(.is-keep), .mh-cg.is-flat .gx-h + .gx-sub:not(.is-keep) { display: none; }
   /* Capítulos: pantalla inicial compacta (solo cinco plantillas; el resto, en «Más plantillas») y cabecera del capítulo sin saltos de línea. */
   .mh-cg.is-flat .mh-chn-start { gap: 14px; padding: 0; max-width: none; } .mh-cg.is-flat .mh-chn-start-h h3 { font-size: 22px; } .mh-cg.is-flat .mh-chn-start-h p { font-size: 13px; }
   .mh-cg.is-flat .mh-chn-start-card { padding: 14px 18px; flex-direction: row; align-items: center; gap: 14px; flex-wrap: wrap; } .mh-cg.is-flat .mh-chn-start-card .mh-chn-start-ci { margin: 0; } .mh-cg.is-flat .mh-chn-start-card b { flex: 1; min-width: 0; } .mh-cg.is-flat .mh-chn-start-card small { flex-basis: 100%; margin-left: 54px; margin-top: -10px; }
@@ -11035,6 +11066,10 @@ export default function App({ onSignOut }) {
   const [dataReadyFor, setDataReadyFor] = useState(null);
   const [stageReadyFor, setStageReadyFor] = useState(null);
   const [pnjFilter, setPnjFilter] = useState("all");
+  const [pnjView, setPnjView] = useState("reparto"); // PNJ · «reparto» o «enemigos»
+  const [pnjNew, setPnjNew] = useState(false); // ventana «Nuevo PNJ»
+  const [pnjOpen, setPnjOpen] = useState(null); // PNJ abierto para editar
+  const [pstNew, setPstNew] = useState(false); // ventana «Nueva pista»
   const [chScene, setChScene] = useState(null); // escena del capítulo que se edita en «Ambiente» (null = la principal)
   const [chTab, setChTab] = useState("dialogos"); // pestaña abierta del capítulo en «Historia»
   const ambBtn = useRef(null);
@@ -28443,7 +28478,7 @@ export default function App({ onSignOut }) {
                     );
                   })()}
 
-                  <div className="mh-cg-body">
+                  <div className={"mh-cg-body" + (campFlat && ["votaciones", "calendario", "descanso", "cronica", "linea"].includes(campaignDetailTab) ? " is-pane" : "")}>
                   {campaignDetailTab === "mesa" && (() => {
                     const stage = campaignStage;
                     const scenes = stageScenesOf(stage);
@@ -29699,31 +29734,39 @@ export default function App({ onSignOut }) {
                   {campaignDetailTab === "mapas" && (() => {
                     const scenes = stageScenesOf(campaignStage);
                     return (
-                      <div className="mh-gm">
-                        <div className="mh-card mh-gm-box is-wide">
-                          <div className="mh-gm-h">
-                            <MapPinned size={15} /> Mapas de combate
-                            <span className="mh-gm-count">{campaignMaps.length}</span>
+                      <section className="cgp">
+                        <header className="cgp-h">
+                          <span className="cgp-ic"><MapPinned size={18} /></span>
+                          <h3 className="mh-serif">Mapas de combate</h3>
+                          {campaignMaps.length > 0 && <span className="cgp-n">{campaignMaps.length}</span>}
+                          <span className="cgp-sp" />
+                          <button type="button" className="mh-cg-gold" onClick={() => (setCombatBack(null), setCampaignDetailTab("mapa"))}><Plus size={15} /> <span>Abrir tablero</span></button>
+                        </header>
+                        {campaignMaps.length === 0 ? (
+                          <div className="cgp-empty">
+                            <span className="cgp-empty-ic"><MapPinned size={26} strokeWidth={1.4} /></span>
+                            <b>Aún no hay mapas</b>
+                            <small>Abre el tablero, coloca a los enemigos y guárdalo.</small>
                           </div>
-                          <div className="mh-gm-sub">Todos los mapas guardados con sus enemigos colocados. Cada uno pertenece a un capítulo y se prepara desde el tablero.</div>
-                          <div className="mh-ch-maps">
+                        ) : (
+                          <div className="cgp-list is-rows">
                             {campaignMaps.map((m) => {
                               const si = scenes.findIndex((x) => x.id === m.sceneId);
                               return (
-                                <div key={m.id} className="mh-ch-map">
-                                  <MapPinned size={16} />
-                                  <div className="mh-ch-map-t">
+                                <div key={m.id} className="cgp-row">
+                                  <span className="cgp-row-ic"><MapPinned size={18} /></span>
+                                  <div className="cgp-row-t">
                                     <b>{m.name}</b>
                                     <small>{(m.map.tokens || []).length} fichas · {si >= 0 ? "Cap. " + (si + 1) + " · " + (scenes[si].title || "Sin título") : "Sin capítulo"}</small>
                                   </div>
-                                  <select className="mh-input mh-ch-map-mv" aria-label={"Mover «" + m.name + "» a otro capítulo"} title="Mover a otro capítulo" value={si >= 0 ? m.sceneId : ""} onChange={(e) => saveMapsLib(campaignMaps.map((x) => (x.id === m.id ? { ...x, sceneId: e.target.value } : x)))}>
+                                  <select className="mh-input cgp-sel" aria-label={"Mover «" + m.name + "» a otro capítulo"} title="Mover a otro capítulo" value={si >= 0 ? m.sceneId : ""} onChange={(e) => saveMapsLib(campaignMaps.map((x) => (x.id === m.id ? { ...x, sceneId: e.target.value } : x)))}>
                                     {si < 0 && <option value="">Sin capítulo</option>}
                                     {scenes.map((sc, i) => (
                                       <option key={sc.id} value={sc.id}>{"Cap. " + (i + 1) + " · " + (sc.title || "Sin título")}</option>
                                     ))}
                                   </select>
                                   <button type="button" className="mh-btn" disabled={si < 0} onClick={() => startCombat(m.sceneId, m)}>
-                                    <Swords size={13} /> Pasar al combate
+                                    <Swords size={13} /> Combatir
                                   </button>
                                   <button type="button" className="mh-gm-ib is-del" aria-label={"Borrar " + m.name} title="Borrar el mapa" onClick={() => window.confirm("¿Borrar el mapa guardado «" + m.name + "»?") && saveMapsLib(campaignMaps.filter((x) => x.id !== m.id))}>
                                     <Trash2 size={14} />
@@ -29731,13 +29774,9 @@ export default function App({ onSignOut }) {
                                 </div>
                               );
                             })}
-                            {campaignMaps.length === 0 && <div className="mh-chat-empty">Todavía no hay mapas. Abre el tablero desde un capítulo, coloca a los enemigos y guárdalo.</div>}
                           </div>
-                          <button type="button" className="mh-btn-ghost" style={{ alignSelf: "flex-start" }} onClick={() => (setCombatBack(null), setCampaignDetailTab("mapa"))}>
-                            <MapPinned size={13} /> Abrir el tablero de combate
-                          </button>
-                        </div>
-                      </div>
+                        )}
+                      </section>
                     );
                   })()}
 
@@ -29751,49 +29790,32 @@ export default function App({ onSignOut }) {
                     const groups = [...scs.map((sc, i) => ({ key: sc.id, title: "Cap. " + (i + 1) + " · " + (sc.title || "Sin título"), items: shown.filter((h) => h.sceneId === sc.id) })), { key: "", title: "Sin capítulo", items: shown.filter((h) => !h.sceneId || !scs.some((sc) => sc.id === h.sceneId)) }].filter((g) => g.items.length);
                     const nHidden = handouts.filter((h) => h.hidden).length;
                     return (
-                      <div className="mh-pst">
-                        <section className="mh-pst-new mh-card">
-                          <div className="mh-pst-h"><ScrollText size={16} /> <b>Nueva pista</b></div>
-                          <div className="mh-pst-kinds" role="radiogroup" aria-label="Tipo de pista">
-                            {HANDOUT_KINDS.map((k) => {
-                              const KIcon = k.Icon;
-                              const on = handoutDraft.kind === k.key;
-                              return (
-                                <button key={k.key} type="button" role="radio" aria-checked={on} className={on ? "is-on" : ""} onClick={() => setHandoutDraft({ ...handoutDraft, kind: k.key })}>
-                                  <KIcon size={18} strokeWidth={1.7} />
-                                  <span>{k.label}</span>
-                                </button>
-                              );
-                            })}
-                          </div>
-                          <input className="mh-input" placeholder="Título (p. ej. Carta sellada)" value={handoutDraft.title} onChange={(e) => setHandoutDraft({ ...handoutDraft, title: e.target.value })} />
-                          <textarea className="mh-input" rows={3} placeholder="Texto o descripción (opcional)" value={handoutDraft.text} onChange={(e) => setHandoutDraft({ ...handoutDraft, text: e.target.value })} />
-                          <div className="mh-pst-img">
-                            <input className="mh-input" placeholder="Imagen (enlace, opcional)" value={handoutDraft.image} onChange={(e) => setHandoutDraft({ ...handoutDraft, image: e.target.value })} />
-                            {handoutDraft.image.trim() && <span className="mh-pst-prev" style={{ backgroundImage: `url("${handoutDraft.image.trim().replace(/"/g, "%22")}")` }} aria-hidden="true" />}
-                          </div>
-                          <select className="mh-input" aria-label="Capítulo de la pista" value={draftScene} onChange={(e) => setHandoutDraft({ ...handoutDraft, sceneId: e.target.value })}>
-                            <option value="">Sin capítulo</option>
-                            {scs.map((sc, i) => <option key={sc.id} value={sc.id}>{"Cap. " + (i + 1) + " · " + (sc.title || "Sin título")}</option>)}
-                          </select>
-                          <button type="button" className="mh-btn mh-pst-go" disabled={!handoutDraft.title.trim()} onClick={addHandout}>
-                            <Send size={14} /> Entregar a los jugadores
-                          </button>
-                          <small className="mh-pst-hint">Se envía al chat y aparece como «Nuevo» hasta que cada jugador la abre.</small>
-                        </section>
-                        <section className="mh-pst-list">
-                          <div className="mh-pst-top">
-                            <div className="mh-pst-h"><b>Pistas de la campaña</b><span className="mh-gm-count">{handouts.length}</span>{nHidden > 0 && <small>{nHidden} oculta{nHidden === 1 ? "" : "s"}</small>}</div>
+                      <section className="cgp">
+                        <header className="cgp-h">
+                          <span className="cgp-ic"><ScrollText size={18} /></span>
+                          <h3 className="mh-serif">Pistas</h3>
+                          {handouts.length > 0 && <span className="cgp-n">{handouts.length}</span>}
+                          {nHidden > 0 && <small className="cgp-note">{nHidden} oculta{nHidden === 1 ? "" : "s"}</small>}
+                          <span className="cgp-sp" />
+                          {handouts.length > 0 && (
                             <div className="mh-ch-filter" role="tablist" aria-label="Filtrar pistas">
                               {[{ key: "all", label: "Todas" }, ...HANDOUT_KINDS].map((k) => (
                                 <button key={k.key} type="button" role="tab" aria-selected={pstFilter === k.key} className={"mh-ch-fchip" + (pstFilter === k.key ? " is-on" : "")} onClick={() => setPstFilter(k.key)}>{k.label}</button>
                               ))}
                             </div>
-                          </div>
-                          {handouts.length === 0 && (
-                            <div className="mh-pst-empty"><ScrollText size={30} strokeWidth={1.3} /><b>Todavía no hay pistas</b><span>Crea la primera a la izquierda: una nota, una imagen, un objeto o un personaje que los jugadores puedan abrir.</span></div>
                           )}
-                          {handouts.length > 0 && groups.length === 0 && <div className="mh-pst-empty"><span>No hay pistas de este tipo.</span></div>}
+                          <button type="button" className="mh-cg-gold" onClick={() => setPstNew(true)}><Plus size={15} /> <span>Nueva pista</span></button>
+                        </header>
+                        {handouts.length === 0 ? (
+                          <div className="cgp-empty">
+                            <span className="cgp-empty-ic"><ScrollText size={26} strokeWidth={1.4} /></span>
+                            <b>Aún no hay pistas</b>
+                            <small>Una nota, una imagen, un objeto o un personaje que tus jugadores puedan abrir.</small>
+                            <button type="button" className="mh-btn" onClick={() => setPstNew(true)}><Plus size={14} /> Crear la primera</button>
+                          </div>
+                        ) : (
+                          <div className="cgp-list mh-pst-list">
+                            {groups.length === 0 && <div className="cgp-none">No hay pistas de este tipo.</div>}
                           {groups.map((g) => (
                             <div key={g.key || "none"} className="mh-pst-group">
                               <div className="mh-pst-gh">{g.title}{g.key && g.key === curId && <i>En pantalla</i>}</div>
@@ -29829,8 +29851,44 @@ export default function App({ onSignOut }) {
                               </div>
                             </div>
                           ))}
-                        </section>
-                      </div>
+                          </div>
+                        )}
+                        {pstNew && (
+                          <div className="mh-chn-ov" role="dialog" aria-modal="true" aria-label="Nueva pista" onClick={() => setPstNew(false)}>
+                            <div className="mh-chn cgp-modal" onClick={(e) => e.stopPropagation()}>
+                              <button type="button" className="mh-inv-x mh-chn-x" aria-label="Cerrar" onClick={() => setPstNew(false)}><X size={16} /></button>
+                              <h3 className="mh-serif">Nueva pista</h3>
+                              <div className="mh-pst-new">
+                          <div className="mh-pst-kinds" role="radiogroup" aria-label="Tipo de pista">
+                            {HANDOUT_KINDS.map((k) => {
+                              const KIcon = k.Icon;
+                              const on = handoutDraft.kind === k.key;
+                              return (
+                                <button key={k.key} type="button" role="radio" aria-checked={on} className={on ? "is-on" : ""} onClick={() => setHandoutDraft({ ...handoutDraft, kind: k.key })}>
+                                  <KIcon size={18} strokeWidth={1.7} />
+                                  <span>{k.label}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <input className="mh-input" placeholder="Título (p. ej. Carta sellada)" value={handoutDraft.title} onChange={(e) => setHandoutDraft({ ...handoutDraft, title: e.target.value })} />
+                          <textarea className="mh-input" rows={3} placeholder="Texto o descripción (opcional)" value={handoutDraft.text} onChange={(e) => setHandoutDraft({ ...handoutDraft, text: e.target.value })} />
+                          <div className="mh-pst-img">
+                            <input className="mh-input" placeholder="Imagen (enlace, opcional)" value={handoutDraft.image} onChange={(e) => setHandoutDraft({ ...handoutDraft, image: e.target.value })} />
+                            {handoutDraft.image.trim() && <span className="mh-pst-prev" style={{ backgroundImage: `url("${handoutDraft.image.trim().replace(/"/g, "%22")}")` }} aria-hidden="true" />}
+                          </div>
+                          <select className="mh-input" aria-label="Capítulo de la pista" value={draftScene} onChange={(e) => setHandoutDraft({ ...handoutDraft, sceneId: e.target.value })}>
+                            <option value="">Sin capítulo</option>
+                            {scs.map((sc, i) => <option key={sc.id} value={sc.id}>{"Cap. " + (i + 1) + " · " + (sc.title || "Sin título")}</option>)}
+                          </select>
+                          <button type="button" className="mh-btn mh-pst-go" disabled={!handoutDraft.title.trim()} onClick={() => { addHandout(); setPstNew(false); }}>
+                            <Send size={14} /> Entregar a los jugadores
+                          </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </section>
                     );
                   })()}
 
@@ -29840,100 +29898,149 @@ export default function App({ onSignOut }) {
                     const list = campaignCast.filter((m) => pnjFilter === "all" || (m.kind || "Neutral") === pnjFilter);
                     const where = (m) => scenes.map((sc, i) => ({ sc, i })).filter(({ sc }) => dialogueConvs.some((c) => c.sceneId === sc.id && c.lines.some((l) => l.castId === m.id)) || campaignMaps.some((mp) => mp.sceneId === sc.id && (mp.map.tokens || []).some((t) => t.castId === m.id)));
                     const target = scenes.find((x) => x.id === chapterId) || scenes.find((x) => x.id === activeSceneIdOf(campaignStage)) || scenes[0] || null;
-                    const sel = campaignCast.find((m) => m.id === dialogueDraft.castId) || null;
+                    const sel = campaignCast.find((m) => m.id === pnjOpen) || null;
+                    const foes = new Map();
+                          const addFoes = (tokens, ci) =>
+                            (tokens || []).filter((t) => t.kind === "foe").forEach((t) => {
+                              const key = (t.name || "").trim().toLowerCase();
+                              if (!key) return;
+                              const e = foes.get(key) || { name: t.name, stats: t.stats || null, chapters: new Set(), total: 0 };
+                              e.total++;
+                              if (ci >= 0) e.chapters.add(ci + 1);
+                              if (!e.stats && t.stats) e.stats = t.stats;
+                              foes.set(key, e);
+                            });
+                          campaignMaps.forEach((mp) => addFoes(mp.map?.tokens, scenes.findIndex((x) => x.id === mp.sceneId)));
+                          addFoes(campaignMap.tokens, -1);
+                    const foeList = [...foes.values()];
+                    const castOpen = (m) => (setDialogueDraft((d) => ({ ...d, castId: m.id, expr: "tranquila" })), setPnjOpen(m.id));
                     return (
-                      <FitBelow className="mh-gm mh-npcpg" off={isMobile}>
-                        <div className="mh-npc-l">
-                        <div className="mh-card mh-gm-box is-wide">
-                          <div className="mh-gm-h">
-                            <Users size={15} /> PNJ de la campaña
-                            {campaignCast.length > 0 && <span className="mh-gm-count">{campaignCast.length}</span>}
+                      <section className="cgp">
+                        <header className="cgp-h">
+                          <span className="cgp-ic"><Users size={18} /></span>
+                          <h3 className="mh-serif">PNJ</h3>
+                          <div className="cgp-seg" role="tablist" aria-label="Ver PNJ o enemigos">
+                            <button type="button" role="tab" aria-selected={pnjView === "reparto"} className={pnjView === "reparto" ? "is-on" : ""} onClick={() => setPnjView("reparto")}>Reparto{campaignCast.length > 0 ? " · " + campaignCast.length : ""}</button>
+                            <button type="button" role="tab" aria-selected={pnjView === "enemigos"} className={pnjView === "enemigos" ? "is-on" : ""} onClick={() => setPnjView("enemigos")}>Enemigos{foeList.length > 0 ? " · " + foeList.length : ""}</button>
                           </div>
-                          <div className="mh-gm-sub">Tu reparto. Crea cada PNJ con su imagen (un PNG con fondo transparente queda mejor) y úsalo en los diálogos y combates de cualquier capítulo.</div>
-                          <div className="mh-ch-filter" role="tablist" aria-label="Filtrar PNJ">
-                            {[["all", "Todos"], ["Aliado", "Aliados"], ["Neutral", "Neutrales"], ["Enemigo", "Enemigos"]].map(([k, label]) => (
-                              <button key={k} type="button" role="tab" aria-selected={pnjFilter === k} className={"mh-ch-fchip" + (pnjFilter === k ? " is-on" : "")} onClick={() => setPnjFilter(k)}>
-                                {label}
-                              </button>
-                            ))}
+                          <span className="cgp-sp" />
+                          {pnjView === "reparto" && campaignCast.length > 0 && (
+                            <div className="mh-ch-filter" role="tablist" aria-label="Filtrar PNJ">
+                              {[["all", "Todos"], ["Aliado", "Aliados"], ["Neutral", "Neutrales"], ["Enemigo", "Hostiles"]].map(([k, label]) => (
+                                <button key={k} type="button" role="tab" aria-selected={pnjFilter === k} className={"mh-ch-fchip" + (pnjFilter === k ? " is-on" : "")} onClick={() => setPnjFilter(k)}>{label}</button>
+                              ))}
+                            </div>
+                          )}
+                          <button type="button" className="mh-cg-gold" onClick={() => setPnjNew(true)}><Plus size={15} /> <span>Nuevo PNJ</span></button>
+                        </header>
+                        {pnjView === "reparto" ? (
+                          campaignCast.length === 0 ? (
+                            <div className="cgp-empty">
+                              <span className="cgp-empty-ic"><Users size={26} strokeWidth={1.4} /></span>
+                              <b>Aún no hay PNJ</b>
+                              <small>Crea a los personajes que interpretas tú, con su imagen.</small>
+                              <button type="button" className="mh-btn" onClick={() => setPnjNew(true)}><Plus size={14} /> Crear el primero</button>
+                            </div>
+                          ) : (
+                            <div className="cgp-list is-grid">
+                              {list.length === 0 && <div className="cgp-none">No hay PNJ de este tipo.</div>}
+                              {list.map((m) => {
+                                const imgId = castImgIdFor(m, "tranquila");
+                                const kind = m.kind || "Neutral";
+                                const w = where(m);
+                                return (
+                                  <article key={m.id} className={"cgp-npc is-" + kind.toLowerCase()}>
+                                    <button type="button" className="cgp-npc-top" onClick={() => castOpen(m)} aria-label={"Editar a " + m.name}>
+                                      <span className="cgp-npc-img">{castImgs[imgId] ? <img src={castImgs[imgId]} alt="" /> : <span>{m.name.charAt(0).toUpperCase()}</span>}</span>
+                                      <span className="cgp-npc-id">
+                                        <b className="mh-serif">{m.name}</b>
+                                        <small>{m.role || "Sin rol"}</small>
+                                      </span>
+                                      <i className="cgp-kind">{kind}</i>
+                                    </button>
+                                    <small className="cgp-npc-w">{w.length ? "En " + w.map(({ i }) => "cap. " + (i + 1)).join(", ") : "Sin usar todavía"}</small>
+                                    <div className="cgp-npc-acts">
+                                      <button type="button" className="mh-btn-ghost" disabled={!target} title={target ? "Escribir un diálogo en «" + (target.title || "Sin título") + "»" : "Crea antes un capítulo en «Historia»"} onClick={() => (setDialogueDraft((d) => ({ ...d, castId: m.id, expr: "tranquila" })), openChapter(target.id))}><MessageSquareQuote size={13} /> Diálogo</button>
+                                      <button type="button" className="mh-btn-ghost" disabled={!target} title={target ? "Abrir el combate de «" + (target.title || "Sin título") + "»" : "Crea antes un capítulo en «Historia»"} onClick={() => (setCombatBack(target.id), setCampaignDetailTab("mapa"))}><Swords size={13} /> Combate</button>
+                                      <button type="button" className="mh-btn-ghost" onClick={() => castOpen(m)}><PenLine size={13} /> Editar</button>
+                                    </div>
+                                  </article>
+                                );
+                              })}
+                            </div>
+                          )
+                        ) : foeList.length === 0 ? (
+                          <div className="cgp-empty">
+                            <span className="cgp-empty-ic"><Skull size={26} strokeWidth={1.4} /></span>
+                            <b>Aún no hay enemigos</b>
+                            <small>Aparecerán aquí los que coloques en un mapa de combate.</small>
                           </div>
-                          <div className="mh-ch-npcs">
-                            {list.map((m) => {
-                              const imgId = castImgIdFor(m, "tranquila");
-                              const kind = m.kind || "Neutral";
-                              const w = where(m);
-                              return (
-                                <div key={m.id} className={"mh-ch-npc is-" + kind.toLowerCase() + (dialogueDraft.castId === m.id ? " is-on" : "")}>
-                                  <button type="button" className="mh-ch-npc-top" aria-pressed={dialogueDraft.castId === m.id} onClick={() => setDialogueDraft((d) => (d.castId === m.id ? d : { ...d, castId: m.id, expr: "tranquila" }))}>
-                                    <span className="mh-ch-npc-img">{castImgs[imgId] ? <img src={castImgs[imgId]} alt="" /> : <span>{m.name.charAt(0).toUpperCase()}</span>}</span>
-                                    <span className="mh-ch-npc-id">
-                                      <b className="mh-serif">{m.name}</b>
-                                      <small>{m.role || "Sin rol"}</small>
-                                      {m.stats && <small className="mh-ns-sum">{npcStatsSummary(m.stats)}</small>}
-                                    </span>
-                                  </button>
-                                  <div className="mh-ch-npc-kind" role="radiogroup" aria-label={"Tipo de " + m.name}>
-                                    {KINDS.map((k) => (
-                                      <button key={k} type="button" role="radio" aria-checked={kind === k} className={kind === k ? "is-on is-" + k.toLowerCase() : ""} onClick={() => updateCast(m.id, { kind: k })}>
-                                        {k}
+                        ) : (
+                          <div className="cgp-list is-grid">
+                                {foeList.map((e) => (
+                                  <div key={e.name} className="mh-ch-npc is-enemigo cgp-foe">
+                                    <div className="mh-ch-npc-top" style={{ cursor: "default" }}>
+                                      <span className="mh-ch-npc-img"><Skull size={22} /></span>
+                                      <span className="mh-ch-npc-id">
+                                        <b className="mh-serif">{e.name}</b>
+                                        <small>{e.stats ? "Nivel " + e.stats.tier + " · " + e.stats.type + (e.stats.base && e.stats.base !== e.name ? " · " + e.stats.base : "") : "Sin estadísticas"}</small>
+                                        {e.stats && <small className="mh-ns-sum">{"Dif " + e.stats.difficulty + " · PV " + e.stats.hp + " · Estrés " + e.stats.stress + (e.stats.attack ? " · " + e.stats.attack.name + " " + e.stats.attack.damage : "")}</small>}
+                                      </span>
+                                    </div>
+                                    <div className="mh-ch-npc-w">{e.chapters.size ? "Aparece en: " + [...e.chapters].sort((a, b) => a - b).map((n) => "Cap. " + n).join(", ") : "Solo en el tablero actual"} · {e.total} ficha{e.total === 1 ? "" : "s"}</div>
+                                    <div className="mh-ch-npc-acts">
+                                      <button
+                                        type="button"
+                                        className="mh-btn-ghost"
+                                        onClick={() =>
+                                          mutateMap(viewingCampaignId, (tokens) => {
+                                            const [x, y] = freeCell(tokens);
+                                            return [...tokens, { id: "t" + Date.now() + Math.random().toString(36).slice(2, 5), x, y, kind: "foe", name: e.name, stats: { ...(e.stats || newFoeStats()), hpMarked: 0, stressMarked: 0 }, size: "m" }];
+                                          })
+                                        }
+                                        title="Añade una copia de este enemigo al tablero actual"
+                                      >
+                                        <Plus size={13} /> Colocar en el tablero
                                       </button>
-                                    ))}
+                                    </div>
                                   </div>
-                                  <div className="mh-ch-npc-w">{w.length ? "Aparece en: " + w.map(({ i }) => "Cap. " + (i + 1)).join(", ") : "Aún no aparece en ningún capítulo"}</div>
-                                  <div className="mh-ch-npc-acts">
-                                    <button type="button" className="mh-btn-ghost" disabled={!target} title={target ? "Escribir un diálogo en el capítulo «" + (target.title || "Sin título") + "»" : "Crea antes un capítulo en «Historia»"} onClick={() => (setDialogueDraft((d) => ({ ...d, castId: m.id, expr: "tranquila" })), openChapter(target.id))}>
-                                      <MessageSquareQuote size={13} /> Diálogo
-                                    </button>
-                                    <button type="button" className="mh-btn-ghost" disabled={!target} title={target ? "Abrir el combate del capítulo «" + (target.title || "Sin título") + "»" : "Crea antes un capítulo en «Historia»"} onClick={() => (setCombatBack(target.id), setCampaignDetailTab("mapa"))}>
-                                      <Swords size={13} /> Combate
-                                    </button>
-                                    <button type="button" className="mh-gm-ib is-del" aria-label={"Quitar a " + m.name} title="Quitar PNJ" onClick={() => window.confirm("¿Quitar a «" + m.name + "» de la campaña?") && removeCastMember(m.id)}>
-                                      <Trash2 size={14} />
-                                    </button>
-                                  </div>
+                                ))}
+                          </div>
+                        )}
+                        {pnjNew && (
+                          <div className="mh-chn-ov" role="dialog" aria-modal="true" aria-label="Nuevo PNJ" onClick={() => setPnjNew(false)}>
+                            <div className="mh-chn cgp-modal" onClick={(e) => e.stopPropagation()}>
+                              <button type="button" className="mh-inv-x mh-chn-x" aria-label="Cerrar" onClick={() => setPnjNew(false)}><X size={16} /></button>
+                              <h3 className="mh-serif">Nuevo PNJ</h3>
+                              <div className="mh-gm-castadd">
+                                <label className="mh-gm-upload" title="Subir imagen del PNJ">
+                                  {castDraft.img ? <img src={castDraft.img} alt="Vista previa" /> : <Upload size={18} />}
+                                  <span>{castDraft.img ? "Cambiar" : "Subir PNG"}</span>
+                                  <input type="file" accept="image/png,image/webp,image/jpeg,image/gif" onChange={(e) => { pickCastImage(e.target.files?.[0]); e.target.value = ""; }} />
+                                </label>
+                                <div className="mh-gm-castadd-f">
+                                  <input className="mh-input" autoFocus placeholder="Nombre (p. ej. Marta, la posadera)" value={castDraft.name} onChange={(e) => setCastDraft((d) => ({ ...d, name: e.target.value }))} onKeyDown={(e) => { if (e.key === "Enter" && castDraft.name.trim()) { addCastMember(); setPnjNew(false); } }} />
+                                  <button type="button" className="mh-btn" disabled={!castDraft.name.trim()} onClick={() => { addCastMember(); setPnjNew(false); }}><Plus size={14} /> Añadir PNJ</button>
+                                  {castError && <div className="mh-gm-err">{castError}</div>}
                                 </div>
-                              );
-                            })}
-                            {list.length === 0 && <div className="mh-chat-empty">{campaignCast.length === 0 ? "Todavía no hay PNJ. Añade el primero abajo." : "No hay PNJ de este tipo."}</div>}
-                          </div>
-                        </div>
-                        <div className="mh-card mh-gm-box is-wide">
-                          <div className="mh-gm-h">
-                            <Plus size={15} /> Nuevo PNJ
-                          </div>
-                          <div className="mh-gm-castadd">
-                            <label className="mh-gm-upload" title="Subir imagen del PNJ">
-                              {castDraft.img ? <img src={castDraft.img} alt="Vista previa" /> : <Upload size={18} />}
-                              <span>{castDraft.img ? "Cambiar" : "Subir PNG"}</span>
-                              <input
-                                type="file"
-                                accept="image/png,image/webp,image/jpeg,image/gif"
-                                onChange={(e) => {
-                                  pickCastImage(e.target.files?.[0]);
-                                  e.target.value = "";
-                                }}
-                              />
-                            </label>
-                            <div className="mh-gm-castadd-f">
-                              <input className="mh-input" placeholder="Nombre (p. ej. Marta, la posadera)" value={castDraft.name} onChange={(e) => setCastDraft((d) => ({ ...d, name: e.target.value }))} onKeyDown={(e) => e.key === "Enter" && addCastMember()} />
-                              <button type="button" className="mh-btn-ghost" disabled={!castDraft.name.trim()} onClick={addCastMember}>
-                                <Plus size={14} /> Añadir PNJ
-                              </button>
-                              {castError && <div className="mh-gm-err">{castError}</div>}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        </div>
-                        <div className="mh-npc-r">
+                        )}
                         {sel && (
-                          <div className="mh-card mh-gm-box is-wide">
-                            <div className="mh-gm-h">
-                              <PenLine size={15} /> {sel.name}
-                            </div>
-                            <input className="mh-input" aria-label="Rol del PNJ" placeholder="Rol (p. ej. Posadera de El Cuervo Tuerto)" value={sel.role || ""} onChange={(e) => updateCast(sel.id, { role: e.target.value })} />
-                            <div className="mh-gm-h2">Estadísticas</div>
-                            <NpcStatsEditor name={sel.name} stats={sel.stats || null} onChange={(st) => updateCast(sel.id, { stats: st })} />
-                            <div className="mh-gm-h2">Expresiones</div>
+                          <div className="mh-chn-ov" role="dialog" aria-modal="true" aria-label={"Editar " + sel.name} onClick={() => setPnjOpen(null)}>
+                            <div className="mh-chn cgp-modal is-wide" onClick={(e) => e.stopPropagation()}>
+                              <button type="button" className="mh-inv-x mh-chn-x" aria-label="Cerrar" onClick={() => setPnjOpen(null)}><X size={16} /></button>
+                              <h3 className="mh-serif">{sel.name}</h3>
+                              <input className="mh-input" aria-label="Rol del PNJ" placeholder="Rol (p. ej. Posadera de El Cuervo Tuerto)" value={sel.role || ""} onChange={(e) => updateCast(sel.id, { role: e.target.value })} />
+                              <div className="cgp-seg is-wide" role="radiogroup" aria-label={"Tipo de " + sel.name}>
+                                {KINDS.map((k) => (
+                                  <button key={k} type="button" role="radio" aria-checked={(sel.kind || "Neutral") === k} className={(sel.kind || "Neutral") === k ? "is-on" : ""} onClick={() => updateCast(sel.id, { kind: k })}>{k}</button>
+                                ))}
+                              </div>
+                              <div className="mh-gm-h2">Estadísticas</div>
+                              <NpcStatsEditor name={sel.name} stats={sel.stats || null} onChange={(st) => updateCast(sel.id, { stats: st })} />
+                              <div className="mh-gm-h2">Expresiones</div>
                             <DialoguePromptHelper key={sel.id} name={sel.name} role={sel.role} exprs={EXPRESSIONS} current="tranquila" />
                               {(() => {
                                 const who = campaignCast.find((m) => m.id === dialogueDraft.castId);
@@ -29968,104 +30075,62 @@ export default function App({ onSignOut }) {
                                   </div>
                                 );
                               })()}
+                              <button type="button" className="mh-btn-ghost cgp-del" onClick={() => window.confirm("¿Quitar a «" + sel.name + "» de la campaña?") && (removeCastMember(sel.id), setPnjOpen(null))}><Trash2 size={14} /> Quitar este PNJ</button>
+                            </div>
                           </div>
                         )}
-                        {(() => {
-                          // Enemigos de la campaña: los de los mapas de combate guardados y los del tablero actual.
-                          const foes = new Map();
-                          const addFoes = (tokens, ci) =>
-                            (tokens || []).filter((t) => t.kind === "foe").forEach((t) => {
-                              const key = (t.name || "").trim().toLowerCase();
-                              if (!key) return;
-                              const e = foes.get(key) || { name: t.name, stats: t.stats || null, chapters: new Set(), total: 0 };
-                              e.total++;
-                              if (ci >= 0) e.chapters.add(ci + 1);
-                              if (!e.stats && t.stats) e.stats = t.stats;
-                              foes.set(key, e);
-                            });
-                          campaignMaps.forEach((mp) => addFoes(mp.map?.tokens, scenes.findIndex((x) => x.id === mp.sceneId)));
-                          addFoes(campaignMap.tokens, -1);
-                          const foeList = [...foes.values()];
-                          return (
-                            <div className="mh-card mh-gm-box is-wide">
-                              <div className="mh-gm-h">
-                                <Skull size={15} /> Enemigos de la campaña
-                                {foeList.length > 0 && <span className="mh-gm-count">{foeList.length}</span>}
-                              </div>
-                              <div className="mh-gm-sub">Los adversarios que has colocado en tus mapas de combate, con sus estadísticas. Puedes colocarlos de nuevo en el tablero actual.</div>
-                              <div className="mh-ch-npcs">
-                                {foeList.map((e) => (
-                                  <div key={e.name} className="mh-ch-npc is-enemigo">
-                                    <div className="mh-ch-npc-top" style={{ cursor: "default" }}>
-                                      <span className="mh-ch-npc-img"><Skull size={22} /></span>
-                                      <span className="mh-ch-npc-id">
-                                        <b className="mh-serif">{e.name}</b>
-                                        <small>{e.stats ? "Nivel " + e.stats.tier + " · " + e.stats.type + (e.stats.base && e.stats.base !== e.name ? " · " + e.stats.base : "") : "Sin estadísticas"}</small>
-                                        {e.stats && <small className="mh-ns-sum">{"Dif " + e.stats.difficulty + " · PV " + e.stats.hp + " · Estrés " + e.stats.stress + (e.stats.attack ? " · " + e.stats.attack.name + " " + e.stats.attack.damage : "")}</small>}
-                                      </span>
-                                    </div>
-                                    <div className="mh-ch-npc-w">{e.chapters.size ? "Aparece en: " + [...e.chapters].sort((a, b) => a - b).map((n) => "Cap. " + n).join(", ") : "Solo en el tablero actual"} · {e.total} ficha{e.total === 1 ? "" : "s"}</div>
-                                    <div className="mh-ch-npc-acts">
-                                      <button
-                                        type="button"
-                                        className="mh-btn-ghost"
-                                        onClick={() =>
-                                          mutateMap(viewingCampaignId, (tokens) => {
-                                            const [x, y] = freeCell(tokens);
-                                            return [...tokens, { id: "t" + Date.now() + Math.random().toString(36).slice(2, 5), x, y, kind: "foe", name: e.name, stats: { ...(e.stats || newFoeStats()), hpMarked: 0, stressMarked: 0 }, size: "m" }];
-                                          })
-                                        }
-                                        title="Añade una copia de este enemigo al tablero actual"
-                                      >
-                                        <Plus size={13} /> Colocar en el tablero
-                                      </button>
-                                    </div>
-                                  </div>
-                                ))}
-                                {foeList.length === 0 && <div className="mh-chat-empty">Aún no hay enemigos. Colócalos en un mapa de combate (en «Mapas» o desde el tablero) y aparecerán aquí.</div>}
-                              </div>
-                            </div>
-                          );
-                        })()}
-                        </div>
-                      </FitBelow>
+                      </section>
                     );
                   })()}
 
                   {campaignDetailTab === "resumen" && (
-                    <div className="mh-pl">
-                      <div className="mh-pl-grid">
-                        {memberIds.map((id) => {
-                          const ch = characters[id];
-                          if (!ch) return null;
-                          const Em = CLASS_EMBLEMS[ch.f_class] || User;
-                          const col = classColor(ch.f_class);
-                          const hpT = Number(ch.r_hp || 0), hpM = Number(ch.hp_marked || 0);
-                          const stT = Number(ch.r_stress || 0), stM = Number(ch.stress_marked || 0);
-                          return (
-                            <div key={id} className="mh-pl-c" style={{ "--pc": col }}>
-                              <button type="button" className="mh-pl-x" title="Quitar de la campaña" aria-label={"Quitar a " + (ch.f_name || "personaje") + " de la campaña"} onClick={() => removeCharacterFromCampaign(viewingCampaignId, id)}><X size={13} /></button>
-                              <button type="button" className="mh-pl-top" onClick={() => openModern(id)}>
-                                <span className="mh-pl-em"><Em size={22} strokeWidth={1.6} /></span>
-                                <span className="mh-pl-nm"><b className="mh-serif">{ch.f_name || "Sin nombre"}</b><small>{ch.f_class ? ch.f_class + " · Nivel " + (ch.f_level || "1") : "Sin clase asignada"}</small></span>
-                              </button>
-                              <div className="mh-pl-bars">
-                                <div><span>Vida</span><i><u style={{ width: (hpT ? Math.max(0, hpT - hpM) / hpT * 100 : 0) + "%", background: "#D9644E" }} /></i><em>{hpT ? Math.max(0, hpT - hpM) + "/" + hpT : "—"}</em></div>
-                                <div><span>Estrés</span><i><u style={{ width: (stT ? Math.min(stM, stT) / stT * 100 : 0) + "%", background: "#A58BE8" }} /></i><em>{stT ? stM + "/" + stT : "—"}</em></div>
+                    <section className="cgp">
+                      <header className="cgp-h">
+                        <span className="cgp-ic"><User size={18} /></span>
+                        <h3 className="mh-serif">Jugadores</h3>
+                        {memberIds.length > 0 && <span className="cgp-n">{memberIds.length}</span>}
+                        <span className="cgp-sp" />
+                        {availableIds.length > 0 && (
+                          <div className="cgp-add" aria-label="Añadir personaje a la campaña">
+                            <span>Añadir</span>
+                            {availableIds.map((id) => (
+                              <button key={id} type="button" onClick={() => addCharacterToCampaign(viewingCampaignId, id)}><Plus size={12} /> {characters[id].f_name || "Sin nombre"}</button>
+                            ))}
+                          </div>
+                        )}
+                      </header>
+                      {memberIds.length === 0 ? (
+                        <div className="cgp-empty">
+                          <span className="cgp-empty-ic"><Users size={26} strokeWidth={1.4} /></span>
+                          <b>Aún no hay personajes en la mesa</b>
+                          <small>{availableIds.length > 0 ? "Añade uno con el botón de arriba." : Object.keys(characters).length === 0 ? "Crea un personaje en la pestaña Personajes." : "Tus personajes ya están en otra campaña."}</small>
+                        </div>
+                      ) : (
+                        <div className="cgp-list is-grid">
+                          {memberIds.map((id) => {
+                            const ch = characters[id];
+                            if (!ch) return null;
+                            const Em = CLASS_EMBLEMS[ch.f_class] || User;
+                            const col = classColor(ch.f_class);
+                            const hpT = Number(ch.r_hp || 0), hpM = Number(ch.hp_marked || 0);
+                            const stT = Number(ch.r_stress || 0), stM = Number(ch.stress_marked || 0);
+                            return (
+                              <div key={id} className="mh-pl-c" style={{ "--pc": col }}>
+                                <button type="button" className="mh-pl-x" title="Quitar de la campaña" aria-label={"Quitar a " + (ch.f_name || "personaje") + " de la campaña"} onClick={() => removeCharacterFromCampaign(viewingCampaignId, id)}><X size={13} /></button>
+                                <button type="button" className="mh-pl-top" onClick={() => openModern(id)}>
+                                  <span className="mh-pl-em"><Em size={22} strokeWidth={1.6} /></span>
+                                  <span className="mh-pl-nm"><b className="mh-serif">{ch.f_name || "Sin nombre"}</b><small>{ch.f_class ? ch.f_class + " · Nivel " + (ch.f_level || "1") : "Sin clase asignada"}</small></span>
+                                </button>
+                                <div className="mh-pl-bars">
+                                  <div><span>Vida</span><i><u style={{ width: (hpT ? Math.max(0, hpT - hpM) / hpT * 100 : 0) + "%", background: "#D9644E" }} /></i><em>{hpT ? Math.max(0, hpT - hpM) + "/" + hpT : "—"}</em></div>
+                                  <div><span>Estrés</span><i><u style={{ width: (stT ? Math.min(stM, stT) / stT * 100 : 0) + "%", background: "#A58BE8" }} /></i><em>{stT ? stM + "/" + stT : "—"}</em></div>
+                                </div>
                               </div>
-                            </div>
-                          );
-                        })}
-                        {memberIds.length === 0 && <div className="mh-pl-empty">Todavía no hay personajes en esta campaña.</div>}
-                      </div>
-                      <div className="mh-pl-add">
-                        <span>Añadir personaje</span>
-                        {availableIds.map((id) => (
-                          <button key={id} type="button" onClick={() => addCharacterToCampaign(viewingCampaignId, id)}><Plus size={12} /> {characters[id].f_name || "Sin nombre"}</button>
-                        ))}
-                        {availableIds.length === 0 && <small>{Object.keys(characters).length === 0 ? "Todavía no tienes personajes creados." : "No hay personajes disponibles (ya están en esta u otra campaña)."}</small>}
-                      </div>
-                    </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </section>
                   )}
 
                   {campaignDetailTab === "chat" && (
