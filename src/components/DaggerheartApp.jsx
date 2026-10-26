@@ -5452,6 +5452,18 @@ const sharedStyles = `
   .mh-gm-sc-add { min-height: 170px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 1.5px dashed var(--mh-line2); border-radius: 12px; background: transparent; color: var(--mh-ink3); font: 600 13px 'Inter', system-ui, sans-serif; cursor: pointer; }
   .mh-gm-sc-add small { font-size: 11px; font-weight: 500; color: var(--mh-muted); }
   .mh-gm-sc-add:hover { color: var(--mh-ink); border-color: var(--mh-ink3); }
+  .mh-cg-subrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 16px; flex-wrap: wrap; } .mh-cg-subrow .mh-cg-sub { margin: 0; }
+  .mh-chn-start { display: flex; flex-direction: column; gap: 18px; padding: 8px 0 24px; max-width: 980px; }
+  .mh-chn-start-h { display: flex; gap: 16px; align-items: center; } .mh-chn-start-h h3 { margin: 0; font-size: 24px; color: var(--mh-ink); } .mh-chn-start-h p { margin: 4px 0 0; font-size: 14px; color: var(--mh-muted); max-width: 640px; line-height: 1.5; }
+  .mh-chn-start-ic { flex: none; width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; color: #E3B04B; background: linear-gradient(145deg, #E3B04B26, #E3B04B0a); border: 1px solid #E3B04B55; }
+  .mh-chn-start-opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+  .mh-chn-start-card { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; gap: 4px; padding: 20px 22px; border-radius: 16px; background: var(--mh-panel); border: 1px solid var(--mh-line2); transition: border-color .15s, transform .15s, background .15s; } .mh-chn-start-card.is-drop { border-style: dashed; background: linear-gradient(160deg, #E3B04B10, transparent 60%), var(--mh-panel); }
+  .mh-chn-start-card:hover, .mh-chn-start-card:focus-visible { border-color: #E3B04B; transform: translateY(-2px); } .mh-chn-start-card:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
+  .mh-chn-start-card b { font-size: 15px; color: var(--mh-ink); } .mh-chn-start-card small { font-size: 12.5px; color: var(--mh-muted); }
+  .mh-chn-start-ci { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; margin-bottom: 8px; color: #E3B04B; background: #E3B04B1c; }
+  .mh-chn-start-sec { display: flex; align-items: center; gap: 12px; margin-top: 6px; font-size: 12px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--mh-muted); } .mh-chn-start-sec i { flex: 1; height: 1px; background: var(--mh-line); }
+  .mh-chn-pr.is-start { margin-top: 0; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; } .mh-chn-pr.is-start .mh-gm-preset-img { border-radius: 12px; } .mh-chn-pr.is-start .mh-gm-preset-t { font-size: 13px; }
+  .mh-chn-opts .mh-chn-start-ci { margin-bottom: 4px; }
   .mh-chn-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; min-height: 320px; flex: 1; }
   .mh-chn-ov { position: fixed; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(6,6,16,.62); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
   .mh-chn { position: relative; width: min(640px, 100%); max-height: calc(100vh - 40px); overflow-y: auto; padding: 22px; border-radius: 18px; background: var(--mh-panel); border: 1px solid var(--mh-line2); box-shadow: 0 30px 60px -20px #000c; }
@@ -5511,10 +5523,10 @@ const sharedStyles = `
   .mh-pl-add button { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 99px; border: 1px dashed var(--mh-line2); font-size: 12.5px; color: var(--mh-ink3); } .mh-pl-add button:hover { border-color: #E3B04B; color: var(--mh-ink); }
   .mh-root:not(.is-mobile) .mh-chatpg { display: flex; flex-direction: column; min-height: 0; } .mh-chatcard { flex: 1; min-height: 0; display: flex; flex-direction: column; max-width: 860px; width: 100%; } .mh-chatcard .mh-chat-feed { flex: 1; min-height: 0; max-height: none; overflow-y: auto; }
   .mh-cg-pg { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; margin: 2px 0 16px; } .mh-cg-pg h3 { margin: 0; font-size: 20px; line-height: 1.15; color: var(--mh-ink); } .mh-cg-pg p { margin: 3px 0 0; font-size: 13px; color: var(--mh-muted); }
-  .mh-cg-sub { display: flex; gap: 6px; margin: 0 0 14px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+  .mh-cg-sub { display: flex; gap: 4px; margin: 0 0 16px; overflow-x: auto; scrollbar-width: none; padding: 4px; width: max-content; max-width: 100%; border-radius: 14px; background: var(--mh-input); border: 1px solid var(--mh-line); }
   .mh-cg-sub::-webkit-scrollbar { display: none; }
-  .mh-cg-sub button { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; border: 1px solid transparent; background: transparent; color: var(--mh-muted); font: 500 13px 'Inter', system-ui, sans-serif; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
-  .mh-cg-sub button:hover { color: var(--mh-ink); } .mh-cg-sub button.is-on { background: var(--mh-panel); border-color: var(--mh-line2); color: var(--mh-ink); }
+  .mh-cg-sub button { display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; border-radius: 10px; border: 1px solid transparent; background: transparent; color: var(--mh-muted); font: 600 13px 'Inter', system-ui, sans-serif; cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: background .15s, color .15s; } .mh-cg-sub button svg { opacity: .8; } .mh-cg-sub button:focus-visible { outline: 2px solid #E3B04B; outline-offset: 1px; }
+  .mh-cg-sub button:hover { color: var(--mh-ink); background: color-mix(in srgb, var(--mh-ink) 6%, transparent); } .mh-cg-sub button.is-on { background: var(--mh-panel3); border-color: var(--mh-line2); color: var(--mh-ink); box-shadow: 0 2px 8px -4px #000a; } .mh-cg-sub button.is-on svg { color: #E3B04B; opacity: 1; }
   .mh-cg .mh-gm-sc, .mh-cg .mh-gm-castm, .mh-cg .mh-ch-step, .mh-cg .mh-ch-map, .mh-cg .mh-ch-enc, .mh-cg .mh-ch-npc { background: var(--mh-panel2); border-color: var(--mh-line); }
   .mh-cg-head { display: flex; align-items: center; gap: 12px; padding: 12px 16px; margin-bottom: 14px; border-radius: 18px; background: var(--mh-panel); border: 1px solid var(--mh-line); color: var(--mh-ink); }
   .mh-cg-back { width: 34px; height: 34px; flex: none; display: grid; place-items: center; border-radius: 11px; border: 1px solid var(--mh-line); background: var(--mh-panel2); color: var(--mh-ink3); cursor: pointer; }
@@ -28246,7 +28258,7 @@ export default function App({ onSignOut }) {
                       <div className="mh-cg-sub1">
                         <b className={cgOnline ? "is-on" : ""}>{cgOnline ? cgOnline + " conectado" + (cgOnline === 1 ? "" : "s") : "Nadie conectado"}</b>
                         <span> · {memberIds.length} personaje{memberIds.length === 1 ? "" : "s"}</span>
-                        {cgScenes.length > 0 && <span> · {cgCur ? "Capítulo " + (cgScenes.indexOf(cgCur) + 1) + " de " + cgScenes.length : cgScenes.length + " capítulos"}</span>}
+                        {cgScenes.length > 0 && <span> · {cgCur ? "Capítulo " + (cgScenes.indexOf(cgCur) + 1) + " de " + cgScenes.length : cgScenes.length + (cgScenes.length === 1 ? " capítulo" : " capítulos")}</span>}
                       </div>
                       {(activeCampaign.aiImages || limitsCount(activeCampaign) > 0) && (
                         <div className="mh-cg-chips">
@@ -28369,25 +28381,27 @@ export default function App({ onSignOut }) {
                         )}
                         </div>
                         {space.tabs.length > 1 && campaignDetailTab !== "mapa" && (
-                          <div className="mh-cg-sub" role="tablist" aria-label={space.label}>
-                            {space.tabs.map((t) => (
-                              <button key={t.key} type="button" role="tab" aria-selected={campaignDetailTab === t.key} className={campaignDetailTab === t.key ? "is-on" : ""} onClick={() => setCampaignDetailTab(t.key)}>
-                                <t.Icon size={14} strokeWidth={1.9} /> {t.label}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                        {space.key !== "directo" && CAMP_PAGES[campaignDetailTab] && (
-                          <div className="mh-cg-pg">
-                            <div>
-                              <h3 className="mh-serif">{CAMP_PAGES[campaignDetailTab][0]}</h3>
-                              <p>{CAMP_PAGES[campaignDetailTab][1]}</p>
+                          <div className="mh-cg-subrow">
+                            <div className="mh-cg-sub" role="tablist" aria-label={space.label}>
+                              {space.tabs.map((t) => (
+                                <button key={t.key} type="button" role="tab" aria-selected={campaignDetailTab === t.key} className={campaignDetailTab === t.key ? "is-on" : ""} onClick={() => setCampaignDetailTab(t.key)}>
+                                  <t.Icon size={14} strokeWidth={1.9} /> {t.label}
+                                </button>
+                              ))}
                             </div>
                             {campaignDetailTab === "historia" && stageScenesOf(campaignStage).length > 0 && (
                               <button type="button" className="mh-cg-gold" onClick={() => setNewChOpen(1)}>
                                 <Plus size={15} /> <span>Nuevo capítulo</span>
                               </button>
                             )}
+                          </div>
+                        )}
+                        {space.key !== "directo" && CAMP_PAGES[campaignDetailTab] && campaignDetailTab !== "historia" && (
+                          <div className="mh-cg-pg">
+                            <div>
+                              <h3 className="mh-serif">{CAMP_PAGES[campaignDetailTab][0]}</h3>
+                              <p>{CAMP_PAGES[campaignDetailTab][1]}</p>
+                            </div>
                           </div>
                         )}
                       </>
@@ -29091,11 +29105,11 @@ export default function App({ onSignOut }) {
                             <h3 className="mh-serif">Nuevo capítulo</h3>
                             <p>¿Cómo quieres empezarlo?</p>
                             <div className="mh-chn-opts">
-                              <button type="button" onClick={() => setNewChOpen(2)}><ImageIcon size={22} /><b>Elegir una plantilla</b><small>Ilustraciones listas para ambientar</small></button>
-                              <label style={{ cursor: "pointer" }}><Upload size={22} /><b>Subir tu imagen</b><small>JPG, PNG o WebP desde tu equipo</small>
+                              <button type="button" onClick={() => setNewChOpen(2)}><span className="mh-chn-start-ci"><ImageIcon size={20} /></span><b>Elegir una plantilla</b><small>Ilustraciones listas para ambientar</small></button>
+                              <label style={{ cursor: "pointer" }}><span className="mh-chn-start-ci"><Upload size={20} /></span><b>Subir tu imagen</b><small>JPG, PNG o WebP desde tu equipo</small>
                                 <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { addSceneFromFile(e.target.files?.[0]); e.target.value = ""; setNewChOpen(0); }} />
                               </label>
-                              <button type="button" onClick={() => { addScene(); setNewChOpen(0); }}><Plus size={22} /><b>En blanco</b><small>Sin imagen, la pones después</small></button>
+                              <button type="button" onClick={() => { addScene(); setNewChOpen(0); }}><span className="mh-chn-start-ci"><Plus size={20} /></span><b>En blanco</b><small>Sin imagen, la pones después</small></button>
                             </div>
                           </>
                         ) : (
@@ -29122,9 +29136,37 @@ export default function App({ onSignOut }) {
                     const fxLabel = (sc) => (sc.fx || []).map((k) => SCENE_FX.find((f) => f.k === k)?.n).filter(Boolean).join(", ");
                     if (scenes.length === 0) {
                       return (
-                        <div className="mh-chn-empty">
+                        <div className="mh-chn-start">
+                          <div className="mh-chn-start-h">
+                            <span className="mh-chn-start-ic" aria-hidden="true"><Clapperboard size={22} /></span>
+                            <div>
+                              <h3 className="mh-serif">Empieza tu historia</h3>
+                              <p>Crea el primer capítulo: una imagen de fondo para ambientar a tu mesa. Después podrás añadir escenas, diálogos y combates.</p>
+                            </div>
+                          </div>
                           {sceneError && <div className="mh-gm-sub" style={{ color: "#D9644E" }}>{sceneError}</div>}
-                          <button type="button" className="mh-cg-gold" onClick={() => setNewChOpen(1)}><Plus size={15} /> <span>Crear capítulo</span></button>
+                          <div className="mh-chn-start-opts">
+                            <label className="mh-chn-start-card is-drop">
+                              <span className="mh-chn-start-ci"><Upload size={20} /></span>
+                              <b>Subir tu imagen</b>
+                              <small>JPG, PNG o WebP desde tu equipo</small>
+                              <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { addSceneFromFile(e.target.files?.[0]); e.target.value = ""; }} />
+                            </label>
+                            <button type="button" className="mh-chn-start-card" onClick={() => addScene()}>
+                              <span className="mh-chn-start-ci"><Plus size={20} /></span>
+                              <b>Capítulo en blanco</b>
+                              <small>Sin imagen: la pones más tarde</small>
+                            </button>
+                          </div>
+                          <div className="mh-chn-start-sec"><span>O elige una plantilla</span><i /></div>
+                          <div className="mh-gm-presets mh-chn-pr is-start">
+                            {SCENE_PRESETS.map((pr) => (
+                              <button key={pr.key} type="button" className="mh-gm-preset" title={"Crear «" + pr.title + "»"} onClick={() => addScene(pr)}>
+                                <span className="mh-gm-preset-img" style={{ backgroundImage: `url("${pr.image}")` }}><Plus size={16} /></span>
+                                <span className="mh-gm-preset-t">{pr.title}</span>
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       );
                     }

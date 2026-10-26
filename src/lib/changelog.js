@@ -7,6 +7,8 @@ export const CHANGELOG = [
     title: "Grupos y notificaciones nuevas",
     blurb: "Chatea con toda tu mesa en un grupo compartido y recibe los avisos como tarjetas, también flotando mientras juegas.",
     items: [
+      { tag: "mejora", text: "Campañas · Historia: el submenú (Capítulos, PNJ, Mapas, Pistas) pasa a ser una barra compacta con la pestaña activa resaltada, y «Nuevo capítulo» queda en la misma fila. Se quitan el título «Capítulos» y su texto explicativo." },
+      { tag: "mejora", text: "Campañas · Historia: una campaña sin capítulos ya no muestra solo un botón: ahora hay una pantalla «Empieza tu historia» con subir tu imagen, un capítulo en blanco y toda la galería de plantillas a la vista para crear el primero con un clic. También se corrige «1 capítulos» en la cabecera." },
       { tag: "mejora", text: "Mapa 3D · todo lo que no es tierra se ve como agua (mar sin fondo oscuro, hasta el horizonte) y nuevo objeto Banderín de mesa en 4 colores (azul, rojo, verde y amarillo) en Objetos." },
       { tag: "arreglo", text: "Mapa de mundo · los marcadores del mapa 3D ya se pueden seleccionar y se colocan (y arrastran) siempre en el centro de una losa; la barra Tradicional/3D va alineada a la izquierda, se quitó el título sobrante y el mapa carga más rápido." },
       { tag: "mejora", text: "Mapa 3D · nuevo botón «Vaciar el mapa» (pide confirmar y se puede deshacer) y animación al colocar: la losa o el objeto cae con un pequeño rebote." },
