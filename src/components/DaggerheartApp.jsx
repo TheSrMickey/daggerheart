@@ -7900,6 +7900,22 @@ const sharedStyles = `
   .pl-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; } .pl-h b { display: inline-flex; align-items: center; gap: 6px; }
   .pl-vote { display: flex; flex-direction: column; gap: 6px; } .pl-btn { appearance: none; font: 600 12.5px 'Inter', system-ui, sans-serif; text-align: left; cursor: pointer; padding: 8px 12px; border-radius: 10px; border: 1.5px solid color-mix(in srgb, var(--c) 55%, var(--mh-line)); background: var(--mh-panel); color: var(--mh-ink); } .pl-btn:hover { background: color-mix(in srgb, var(--c) 14%, var(--mh-panel)); }
   .pl-change { margin-top: 8px; font-size: 11.5px !important; padding: 4px 10px !important; }
+  /* Descanso del grupo: contador y estadísticas a la izquierda, peticiones o quién ha terminado a la derecha. */
+  .rs { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; align-items: start; } @media (max-width: 900px) { .rs { grid-template-columns: 1fr; } }
+  .rs-l, .rs-r { margin: 0 !important; padding: 18px 20px !important; min-width: 0; }
+  .rs-cnt { display: flex; align-items: baseline; gap: 6px; } .rs-cnt b { font: 800 40px 'Inter', sans-serif; line-height: 1; } .rs-cnt small { font-size: 15px; color: var(--mh-muted); } .rs-cnt span { margin-left: 10px; font-size: 12.5px; color: var(--mh-ink3); line-height: 1.4; }
+  .rs-bar { height: 10px; border-radius: 99px; background: var(--mh-line); overflow: hidden; margin: 10px 0 14px; } .rs-bar i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, #E3B04B, #F0C874); transition: width .3s; } .rs-bar.is-s { height: 8px; margin: 0; }
+  .rs-warn { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 12px; margin-bottom: 12px; font-size: 12.5px; color: #A58BE8; background: #A58BE814; border: 1px solid #A58BE866; }
+  .rs-btns { display: flex; flex-wrap: wrap; gap: 8px; } .rs-btns .mh-btn, .rs-btns .mh-btn-ghost { display: inline-flex; align-items: center; gap: 7px; } .rs-long { background: #8E6FC4 !important; border-color: #8E6FC4 !important; color: #fff !important; }
+  .rs-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 4px; } .rs-stats > div { padding: 10px 12px; border-radius: 14px; background: var(--mh-panel2); border: 1px solid var(--mh-line); } .rs-stats b { display: block; font: 800 20px 'Inter', sans-serif; line-height: 1.15; } .rs-stats span { font-size: 11.5px; color: var(--mh-muted); }
+  .rs-ch { display: flex; align-items: center; gap: 10px; margin: 7px 0; font-size: 12.5px; } .rs-ch span { width: 118px; flex: none; color: var(--mh-ink3); } .rs-ch .rs-bar { flex: 1; } .rs-ch em { width: 34px; text-align: right; font-style: normal; color: var(--mh-muted); }
+  .rs .gx-lab { display: block; margin: 18px 0 8px; } .rs-scr .gx-lab:first-child { margin-top: 2px; } .rs-l .gx-h, .rs-r .gx-h { margin-bottom: 12px; }
+  .rs-scr { min-height: 0; } .rs-w { display: flex; align-items: center; gap: 11px; padding: 9px 11px; border-radius: 14px; background: var(--mh-panel2); border: 1px solid var(--mh-line); margin-bottom: 8px; }
+  .rs-acts { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; } .rs-act { font-size: 10.5px; font-weight: 600; padding: 2px 8px; border-radius: 99px; color: var(--c); border: 1px solid color-mix(in srgb, var(--c) 55%, transparent); background: color-mix(in srgb, var(--c) 12%, transparent); }
+  .rs-ev { padding: 10px 12px; border-radius: 14px; background: var(--mh-panel2); border: 1px solid var(--mh-line); } .rs-ev b { display: flex; align-items: center; gap: 6px; font-size: 13px; } .rs-ev small { display: block; font-size: 11.5px; color: var(--mh-muted); margin-top: 3px; }
+  .mh-cg.is-flat .mh-cg-body.is-pane:has(.rs) { padding: 0; background: none; border: 0; overflow: hidden; display: flex; }
+  .mh-cg.is-flat .mh-cg-body.is-pane .rs { flex: 1; min-height: 0; align-items: stretch; gap: 16px; } .mh-cg.is-flat .mh-cg-body.is-pane .rs-l, .mh-cg.is-flat .mh-cg-body.is-pane .rs-r { background: var(--mh-panel); border: 1px solid var(--mh-line); border-radius: 22px; padding: 18px 20px !important; min-height: 0; overflow-y: auto; scrollbar-width: thin; display: flex; flex-direction: column; } .mh-cg.is-flat .mh-cg-body.is-pane .rs-r .rs-scr { overflow-y: auto; flex: 1; }
+  html[data-mh-theme="light"] .rs-warn { color: #6B4FB8; }
   .cal { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 16px; align-items: start; } @media (max-width: 900px) { .cal { grid-template-columns: 1fr; } }
   .cal-main, .cal-month { margin: 0 !important; padding: 18px 20px !important; }
   .cal-edit { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin: 12px 0 4px; padding: 12px; border: 1px solid var(--mh-line); border-radius: 12px; } .cal-edit label { display: flex; flex-direction: column; flex: 1 1 180px; }
@@ -19325,7 +19341,7 @@ export default function App({ onSignOut }) {
                                     onClick={() => {
                                       performRest(viewingCharId, restType, picks[0], picks[1], picks[2], isAutomatonRest && !isLong && picks.includes(restEfficient) ? restEfficient : null);
                                       if (lock) {
-                                        lock.markReady();
+                                        lock.markReady(picks);
                                         postCampaignEvent(viewingCharId, "Hace un descanso " + (restType === "long" ? "largo" : "corto") + " con el grupo");
                                       }
                                       setRestPicks(null);
