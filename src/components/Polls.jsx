@@ -109,11 +109,11 @@ export function ResultToast({ s, onDone }) {
 }
 
 // Resultado para el DJ: ganadora, barras con quién votó qué y las acciones.
-export function PollResultGm({ p, total, names = {}, onSend, onRepeat, onSave, onPick, onDismiss }) {
+export function PollResultGm({ p, total, names = {}, embedded, onSend, onRepeat, onSave, onPick, onDismiss }) {
   const t = tally(p), o = outcome(t, p.decided), voted = o.voted, tot = total || voted;
   const by = (i) => Object.entries(p.votes || {}).filter(([, v]) => v === i).map(([id]) => names[id] || "Jugador");
   return (
-    <div className="mh-card pr-gm" role="group" aria-label="Resultado de la votación" style={{ margin: 0 }}>
+    <div className={"pr-gm" + (embedded ? " is-embedded" : " mh-card")} role="group" aria-label="Resultado de la votación" style={embedded ? undefined : { margin: 0 }}>
       <div className="pr-gm-h">
         <span className={"cx-chip on"} style={{ "--c": o.tie ? "#8E6FC4" : "#4CC36B" }}>{o.tie ? "Empate" : "✓ Cerrada"}{!o.tie && voted >= tot && tot ? " · todos votaron" : ""}</span>
         {onDismiss && <button type="button" className="mh-btn-ghost pr-x" aria-label="Cerrar resultado" onClick={onDismiss}><X size={14} /></button>}
@@ -220,7 +220,7 @@ export function PollsGm({ campaignId, total, names = {}, onAnnounce, onResult })
   const done = doc.list.filter((x) => x.closed).reverse();
   const [hideId, setHideId] = useState(null);
   const [viewId, setViewId] = useState(null);
-  const latest = open ? null : done.find((x) => x.id === viewId) || (done[0] && done[0].id !== hideId ? done[0] : null);
+  const latest = done.find((x) => x.id === viewId) || (!open && done[0] && done[0].id !== hideId ? done[0] : null);
   const ok = q.trim() && opts.filter((o) => o.trim()).length >= 2 && !open;
   useEffect(() => {
     if (!open) return;
@@ -260,43 +260,44 @@ export function PollsGm({ campaignId, total, names = {}, onAnnounce, onResult })
           <button type="button" className="mh-btn" disabled={!ok} onClick={launch}>Lanzar votación</button>
         </div>
       </div>
-      <div className="pl-side">
-        {latest && (
-          <PollResultGm
-            p={latest}
-            total={total}
-            names={names}
-            onDismiss={() => (setViewId(null), setHideId(latest.id))}
-            onSend={() => onResult(latest.decided != null ? "🗳️ «" + latest.q + "» → el DJ desempató: «" + latest.opts[latest.decided] + "»" : resultText(latest), snapOf(latest, total))}
-            onRepeat={() => { setQ(latest.q); setOpts(latest.opts.length >= 2 ? latest.opts : [...latest.opts, ""]); setSecs(latest.secs ?? 120); setSecret(!!latest.secret); setAuto(latest.auto !== false); }}
-            onSave={() => { saveDecision(campaignId, latest, total); }}
-            onPick={(i) => pickWinner(campaignId, latest.id, i, total, onResult)}
-          />
-        )}
-        {!latest && <div className="mh-card" style={{ margin: 0 }}>
-          <div className="gx-h"><h3 className="mh-serif">{open ? "En directo" : "Sin votación abierta"}</h3>{open?.endsAt && <span className="cx-chip on" style={{ "--c": "#E0544A" }}><Clock size={12} /> {mmss(open.endsAt - now)}</span>}</div>
+      <div className="mh-card pl-side">
+        <div className="gx-h"><h3 className="mh-serif"><Vote size={18} /> Votaciones</h3>{open?.endsAt && <span className="cx-chip on" style={{ "--c": "#E0544A" }}><Clock size={12} /> {mmss(open.endsAt - now)}</span>}</div>
+        <div className="pl-scroll">
+          <span className="gx-lab" style={{ marginTop: 0 }}>En curso</span>
           {open ? (
-            <>
+            <div className="pl-live">
               <div className="pl-q mh-serif">{open.q}</div>
               <Bars p={open} total={total} mine={null} hide={false} />
               <button type="button" className="mh-btn-ghost" style={{ marginTop: 10 }} onClick={() => closePoll(campaignId, open.id, onResult, total)}>Cerrar ahora</button>
-            </>
-          ) : <p className="gx-sub" style={{ margin: "8px 0 0" }}>Cuando lances una, aquí verás los votos al momento.</p>}
-        </div>}
-        {done.length > 0 && (
-          <div className="mh-card" style={{ margin: "14px 0 0" }}>
-            <div className="gx-h"><h3 className="mh-serif">Historial</h3></div>
+            </div>
+          ) : <p className="gx-sub" style={{ margin: "4px 0 0" }}>Ninguna votación abierta.</p>}
+          {latest && <span className="gx-lab">Resultado</span>}
+          {latest && (
+            <PollResultGm
+              embedded
+              p={latest}
+              total={total}
+              names={names}
+              onDismiss={() => (setViewId(null), setHideId(latest.id))}
+              onSend={() => onResult(latest.decided != null ? "🗳️ «" + latest.q + "» → el DJ desempató: «" + latest.opts[latest.decided] + "»" : resultText(latest), snapOf(latest, total))}
+              onRepeat={() => { setQ(latest.q); setOpts(latest.opts.length >= 2 ? latest.opts : [...latest.opts, ""]); setSecs(latest.secs ?? 120); setSecret(!!latest.secret); setAuto(latest.auto !== false); }}
+              onSave={() => { saveDecision(campaignId, latest, total); }}
+              onPick={(i) => pickWinner(campaignId, latest.id, i, total, onResult)}
+            />
+          )}
+          <span className="gx-lab">Historial</span>
+          {done.length > 0 ? (
             <div className="pr-hist">
-              {done.slice(0, 6).map((p) => { const t = tally(p), o = outcome(t, p.decided); return (
-                <button key={p.id} type="button" className="pr-h" onClick={() => (setHideId(null), setViewId(p.id))} title="Ver el resultado">
+              {done.slice(0, 12).map((p) => { const t = tally(p), o = outcome(t, p.decided); return (
+                <button key={p.id} type="button" className={"pr-h" + (latest?.id === p.id ? " is-on" : "")} onClick={() => (setHideId(null), setViewId(p.id))} title="Ver el resultado">
                   <b>{p.q}</b>
                   <span className={"pr-hw" + (o.tie ? " is-tie" : o.none ? " is-none" : "")}>{o.none ? "Sin votos" : o.tie ? "Empate" : p.opts[o.winner]}</span>
                   <em>{t.join("–")}</em>
                 </button>
               ); })}
             </div>
-          </div>
-        )}
+          ) : <p className="gx-sub" style={{ margin: "4px 0 0" }}>Aún no hay votaciones cerradas.</p>}
+        </div>
       </div>
     </div>
   );
