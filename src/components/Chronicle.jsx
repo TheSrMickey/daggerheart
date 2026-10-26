@@ -54,9 +54,10 @@ export function Chronicle({ campaignId, onShare, members = [] }) {
   const who = [...new Set(cur.events.filter((e) => e.who && e.who !== "El DJ").map((e) => e.who))];
   const seals = meta.seals || [];
   const sealLine = seals.length ? " Sellos: " + seals.map((x) => x.who + " (" + x.t + ")").join(", ") + "." : "";
+  const decLine = (meta.decisions || []).length ? " Decisiones: " + meta.decisions.map((x) => x.text).join("; ") + "." : "";
   return (
     <div className="mh-card gx" style={{ margin: 0 }}>
-      <div className="gx-h"><h3 className="mh-serif"><ScrollText size={18} /> Crónica de la campaña</h3><button type="button" className="mh-btn" onClick={() => { onShare("📖 Crónica · Sesión " + cur.n + " (" + dayLabel(cur.key) + "): " + summary + sealLine); patch(cur.key, { published: true }); }}><Share2 size={14} /> {meta.published ? "Compartida · volver a compartir" : "Compartir con la mesa"}</button></div>
+      <div className="gx-h"><h3 className="mh-serif"><ScrollText size={18} /> Crónica de la campaña</h3><button type="button" className="mh-btn" onClick={() => { onShare("📖 Crónica · Sesión " + cur.n + " (" + dayLabel(cur.key) + "): " + summary + decLine + sealLine); patch(cur.key, { published: true }); }}><Share2 size={14} /> {meta.published ? "Compartida · volver a compartir" : "Compartir con la mesa"}</button></div>
       <p className="gx-sub">Se rellena sola con lo que pasa en la mesa. Edítala antes de compartirla.</p>
       <div className="ch-grid">
         <div className="ch-list">
@@ -80,6 +81,12 @@ export function Chronicle({ campaignId, onShare, members = [] }) {
               <button type="button" className="cx-chip" onClick={() => patch(cur.key, { hidden: [...hidden, e.ts] })}>Quitar</button>
             </div>); })}
           {hidden.size > 0 && <button type="button" className="mh-btn-ghost" onClick={() => patch(cur.key, { hidden: [] })}>Restaurar {hidden.size} quitado{hidden.size === 1 ? "" : "s"}</button>}
+          {(meta.decisions || []).length > 0 && (
+            <>
+              <span className="gx-lab">Decisiones de la mesa</span>
+              {meta.decisions.map((x, i) => <div key={x.id || i} className="ch-ev" style={{ "--c": "#E3B04B" }}><span className="ch-ic"><Vote size={15} /></span><span className="ch-tx"><b>{x.text}</b></span><button type="button" className="cx-chip" onClick={() => patch(cur.key, { decisions: meta.decisions.filter((_, j) => j !== i) })}>Quitar</button></div>)}
+            </>
+          )}
           <span className="gx-lab">Quién estuvo</span>
           <div className="gx-row">{who.length ? who.map((w) => <span key={w} className="cx-chip">{w}</span>) : <span className="gx-fact">Sin datos todavía</span>}</div>
           <span className="gx-lab">Sellos de la sesión · los reparte el DJ</span>
