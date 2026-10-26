@@ -2,6 +2,7 @@
 
 import { Fragment, useState, useEffect, useLayoutEffect, useRef, useCallback, createContext, useContext } from "react";
 import { createPortal } from "react-dom";
+import { GripVertical } from "lucide-react";
 import { Globe, Tent, Haze, CloudFog, CloudRain, CloudLightning, Beer } from "lucide-react";
 import SceneFx, { SCENE_FX } from "./SceneFx";
 import Ambient from "./Ambient";
@@ -2174,6 +2175,19 @@ const KIN = [
 const kinOf = (key) => KIN.find((k) => k.key === key) || null;
 const stageScenesOf = (st) => st.scenes || (st.scene?.title || st.scene?.image ? [{ id: "s-legacy", title: st.scene.title || "", image: st.scene.image || "" }] : []);
 // Un capítulo puede tener varias escenas: la suya (imagen y efectos del capítulo) y las que se añadan en «extras».
+// Contenido de un capítulo en el orden de la historia: escenas y mapas de combate mezclados (`order` guarda las claves s:… / m:…).
+const chapterItems = (ch, maps) => {
+  if (!ch) return [];
+  const all = [
+    ...chapterScenes(ch).map((x) => ({ key: "s:" + (x.main ? "main" : x.id), kind: "scene", x })),
+    ...(maps || []).filter((m) => m.sceneId === ch.id).map((m) => ({ key: "m:" + m.id, kind: "map", m })),
+  ];
+  const byKey = new Map(all.map((i) => [i.key, i]));
+  const out = [];
+  (ch.order || []).forEach((k) => { if (byKey.has(k)) { out.push(byKey.get(k)); byKey.delete(k); } });
+  all.forEach((i) => { if (byKey.has(i.key)) out.push(i); });
+  return out;
+};
 const chapterScenes = (sc) => (sc ? [{ id: sc.id, title: sc.title, image: sc.image, fx: sc.fx || [], main: true }, ...(sc.extras || []).map((e) => ({ ...e, fx: e.fx || [] }))] : []);
 const activeSceneIdOf = (st) => (st.activeSceneId !== undefined ? st.activeSceneId : st.scenes ? null : stageScenesOf(st)[0]?.id || null);
 
@@ -5682,6 +5696,9 @@ const sharedStyles = `
   /* Capítulo: escenas y mapas de combate como tarjetas. */
   .cgs-secs { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; display: flex; flex-direction: column; gap: 16px; padding-right: 4px; }
   .cgs-sec > header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; } .cgs-sec > header > b { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--mh-ink2); } .cgs-sec > header .mh-btn-ghost { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; }
+  .cgs-card { position: relative; cursor: grab; } .cgs-card.is-dragging { opacity: .4; } .cgs-card.is-over { box-shadow: 0 -3px 0 0 #E3B04B; }
+  .cgs-grip { flex: none; display: grid; place-items: center; color: var(--mh-muted2); } .cgs-card:hover .cgs-grip { color: var(--mh-ink2); }
+  .cgs-num { flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font: 700 11.5px 'Inter', system-ui, sans-serif; background: var(--mh-panel); border: 1px solid var(--mh-line2); color: var(--mh-ink2); }
   .cgs-cards { display: flex; flex-direction: column; gap: 8px; }
   .cgs-card { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 16px; border: 1px solid var(--mh-line); background: var(--mh-panel2); }
   .cgs-card-th { all: unset; cursor: pointer; width: 76px; height: 50px; border-radius: 10px; flex: none; background: #2B3A4F center / cover no-repeat; border: 1px solid var(--mh-line2); } .cgs-card-th.is-blank { background-image: linear-gradient(#2B3A4F, #6E7F8C 58%, #C9A879); } .cgs-card-th:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
@@ -11182,6 +11199,9 @@ export default function App({ onSignOut }) {
   const [characters, setCharacters] = useState({});
   // Copia siempre al día de los personajes: evita que dos cambios seguidos se pisen.
   const charsRef = useRef({});
+  const [addContentFor, setAddContentFor] = useState(null); // capítulo al que se está añadiendo contenido (escena o mapa de combate)
+  const [dragKey, setDragKey] = useState(null);
+  const [overKey, setOverKey] = useState(null);
   const [newChOpen, setNewChOpen] = useState(0); // 0 cerrado · 1 elegir cómo crear el capítulo · 2 elegir plantilla
   charsRef.current = characters;
   const [currentCharId, setCurrentCharId] = useState(null);
@@ -14956,17 +14976,23 @@ export default function App({ onSignOut }) {
     const n = campaignMaps.filter((m) => m.sceneId === chId).length + 1;
     const m = { id: "m" + Date.now(), sceneId: chId, name: "Combate " + n, map: { tokens: [], props: [], terrain: [], counters: [] } };
     await saveMapsLib([...campaignMaps, m]);
+    const chp = stageScenesOf(campaignStage).find((x) => x.id === chId);
+    if (chp) setChapterOrder(chId, chapterItems(chp, [...campaignMaps, m]).map((i) => i.key));
     if ((campaignStage.live || "escena") !== "mapa") {
       await loadSavedMap(m, true);
       setCombatBack(chId);
       setCampaignDetailTab("mapa");
     }
   };
+  const setChapterOrder = (chId, keys) => {
+    saveStage(viewingCampaignId, { scenes: stageScenesOf(campaignStage).map((sc) => (sc.id === chId ? { ...sc, order: keys } : sc)), activeSceneId: activeSceneIdOf(campaignStage) });
+  };
   const addExtraScene = (chId, preset) => {
     const ch = stageScenesOf(campaignStage).find((x) => x.id === chId);
     if (!ch) return null;
     const extra = { id: "x" + Date.now(), title: preset?.title || "Escena " + (chapterScenes(ch).length + 1), image: preset?.image || "", fx: preset?.fx || [] };
-    saveStage(viewingCampaignId, { scenes: stageScenesOf(campaignStage).map((sc) => (sc.id === chId ? { ...sc, extras: [...(sc.extras || []), extra] } : sc)), activeSceneId: activeSceneIdOf(campaignStage) });
+    const order = [...chapterItems(ch, campaignMaps).map((i) => i.key), "s:" + extra.id];
+    saveStage(viewingCampaignId, { scenes: stageScenesOf(campaignStage).map((sc) => (sc.id === chId ? { ...sc, extras: [...(sc.extras || []), extra], order } : sc)), activeSceneId: activeSceneIdOf(campaignStage) });
     return extra.id;
   };
   const removeExtraScene = (chId, subId) => {
@@ -29445,6 +29471,20 @@ export default function App({ onSignOut }) {
                     );
                   })()}
 
+                  {addContentFor && (
+                    <div className="mh-chn-ov" role="dialog" aria-modal="true" aria-label="Añadir contenido" onClick={() => setAddContentFor(null)}>
+                      <div className="mh-chn" style={{ width: "min(460px, 100%)" }} onClick={(e) => e.stopPropagation()}>
+                        <button type="button" className="mh-inv-x mh-chn-x" aria-label="Cerrar" onClick={() => setAddContentFor(null)}><X size={16} /></button>
+                        <h3 className="mh-serif">Añadir contenido</h3>
+                        <p>Se añade al final del capítulo. Después puedes arrastrarlo para cambiar el orden.</p>
+                        <div className="mh-chn-opts" style={{ gridTemplateColumns: "1fr 1fr" }}>
+                          <button type="button" onClick={() => { const id = addExtraScene(addContentFor); setAddContentFor(null); if (id) { setChScene(id); setChTab("ambiente"); setChOpen(true); } }}><ImageIcon size={22} /><b>Escena</b><small>Una imagen con efectos y diálogos</small></button>
+                          <button type="button" onClick={() => { const c = addContentFor; setAddContentFor(null); createCombat(c); }}><Swords size={22} /><b>Mapa de combate</b><small>Un tablero para una pelea</small></button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {newChOpen > 0 && (
                     <div className="mh-chn-ov" role="dialog" aria-modal="true" aria-label="Nuevo capítulo" onClick={() => setNewChOpen(0)}>
                       <form
@@ -29572,24 +29612,59 @@ export default function App({ onSignOut }) {
                           </div>
                         </div>
                         {!isMobile && (() => {
-                          const scnList = chapterScenes(sel);
+                          const items = chapterItems(sel, campaignMaps);
                           const convsAll = dialogueConvs.filter((cv) => cv.sceneId === sel.id);
                           const openEd = (sub, tab) => (setChScene(sub), setChTab(tab), setChOpen(true));
+                          const dropItem = (toKey) => {
+                            const from = dragKey;
+                            setDragKey(null); setOverKey(null);
+                            if (!from || from === toKey) return;
+                            const keys = items.map((i) => i.key).filter((k) => k !== from);
+                            keys.splice(keys.indexOf(toKey), 0, from);
+                            setChapterOrder(sel.id, keys);
+                          };
                           return (
                             <div className="cgs-secs">
                               <section className="cgs-sec">
                                 <header>
-                                  <b>Escenas</b><span className="cgp-n">{scnList.length}</span><span className="cgp-sp" />
-                                  <button type="button" className="mh-btn-ghost" onClick={() => { const id = addExtraScene(sel.id); if (id) openEd(id, "ambiente"); }}><Plus size={13} /> Añadir escena</button>
+                                  <b>Contenido del capítulo</b><span className="cgp-sp" />
+                                  <button type="button" className="mh-btn-ghost" onClick={() => setAddContentFor(sel.id)}><Plus size={13} /> Añadir contenido</button>
                                 </header>
                                 <div className="cgs-cards">
-                                  {scnList.map((x, i) => {
+                                  {items.map((it, i) => {
+                                    const drag = {
+                                      draggable: true,
+                                      onDragStart: (e) => { setDragKey(it.key); e.dataTransfer.effectAllowed = "move"; try { e.dataTransfer.setData("text/plain", it.key); } catch (er) {} },
+                                      onDragOver: (e) => { if (dragKey && dragKey !== it.key) { e.preventDefault(); setOverKey(it.key); } },
+                                      onDragLeave: () => setOverKey((k) => (k === it.key ? null : k)),
+                                      onDrop: (e) => { e.preventDefault(); dropItem(it.key); },
+                                      onDragEnd: () => { setDragKey(null); setOverKey(null); },
+                                    };
+                                    const cls = (dragKey === it.key ? " is-dragging" : "") + (overKey === it.key ? " is-over" : "");
+                                    if (it.kind === "map") {
+                                      const m = it.m;
+                                      return (
+                                        <article key={it.key} className={"cgs-card is-map" + cls} {...drag}>
+                                          <span className="cgs-grip" title="Arrastra para cambiar el orden" aria-hidden="true"><GripVertical size={16} /></span>
+                                          <span className="cgs-num">{i + 1}</span>
+                                          <span className="cgs-card-ic"><MapPinned size={20} /></span>
+                                          <div className="cgs-card-t"><b>{m.name}</b><small>Mapa de combate · {(m.map.tokens || []).length} fichas</small></div>
+                                          <div className="cgs-card-a">
+                                            <button type="button" className="mh-btn" onClick={() => startCombat(sel.id, m)}><Swords size={13} /> Combatir</button>
+                                            <button type="button" className="mh-gm-ib is-del" aria-label={"Borrar " + m.name} title="Borrar el mapa" onClick={() => window.confirm("¿Borrar el mapa «" + m.name + "»?") && saveMapsLib(campaignMaps.filter((x) => x.id !== m.id))}><Trash2 size={14} /></button>
+                                          </div>
+                                        </article>
+                                      );
+                                    }
+                                    const x = it.x;
                                     const sub = x.main ? null : x.id;
                                     const nd = convsAll.filter((cv) => (cv.subId || null) === sub).length;
                                     return (
-                                      <article key={x.id} className="cgs-card">
-                                        <button type="button" className={"cgs-card-th" + (x.image ? "" : " is-blank")} style={bgStyle(x.image)} aria-label={"Editar " + (x.title || "escena " + (i + 1))} onClick={() => openEd(sub, "ambiente")} />
-                                        <div className="cgs-card-t"><b>{x.title || "Escena " + (i + 1)}</b><small>{x.image ? "Con imagen" : "Sin imagen"}{(x.fx || []).length ? " · " + x.fx.length + (x.fx.length === 1 ? " efecto" : " efectos") : ""}</small></div>
+                                      <article key={it.key} className={"cgs-card" + cls} {...drag}>
+                                        <span className="cgs-grip" title="Arrastra para cambiar el orden" aria-hidden="true"><GripVertical size={16} /></span>
+                                        <span className="cgs-num">{i + 1}</span>
+                                        <button type="button" className={"cgs-card-th" + (x.image ? "" : " is-blank")} style={bgStyle(x.image)} aria-label={"Editar " + (x.title || "escena")} onClick={() => openEd(sub, "ambiente")} />
+                                        <div className="cgs-card-t"><b>{x.title || "Escena"}</b><small>Escena · {x.image ? "con imagen" : "sin imagen"}{(x.fx || []).length ? " · " + x.fx.length + (x.fx.length === 1 ? " efecto" : " efectos") : ""}</small></div>
                                         <div className="cgs-card-a">
                                           <button type="button" className="mh-btn-ghost" onClick={() => openEd(sub, "dialogos")}><MessageSquareQuote size={13} /> Diálogos{nd ? " · " + nd : ""}</button>
                                           <button type="button" className="mh-btn-ghost" onClick={() => openEd(sub, "ambiente")}><PenLine size={13} /> Editar</button>
@@ -29599,28 +29674,6 @@ export default function App({ onSignOut }) {
                                     );
                                   })}
                                 </div>
-                              </section>
-                              <section className="cgs-sec">
-                                <header>
-                                  <b>Mapas de combate</b><span className="cgp-n">{chMaps.length}</span><span className="cgp-sp" />
-                                  <button type="button" className="mh-btn-ghost" onClick={() => createCombat(sel.id)}><Plus size={13} /> Añadir mapa</button>
-                                </header>
-                                {chMaps.length === 0 ? (
-                                  <button type="button" className="cgs-none" onClick={() => createCombat(sel.id)}><Swords size={16} /> Añadir un mapa de combate</button>
-                                ) : (
-                                  <div className="cgs-cards">
-                                    {chMaps.map((m) => (
-                                      <article key={m.id} className="cgs-card is-map">
-                                        <span className="cgs-card-ic"><MapPinned size={20} /></span>
-                                        <div className="cgs-card-t"><b>{m.name}</b><small>{(m.map.tokens || []).length} fichas</small></div>
-                                        <div className="cgs-card-a">
-                                          <button type="button" className="mh-btn" onClick={() => startCombat(sel.id, m)}><Swords size={13} /> Combatir</button>
-                                          <button type="button" className="mh-gm-ib is-del" aria-label={"Borrar " + m.name} title="Borrar el mapa" onClick={() => window.confirm("¿Borrar el mapa «" + m.name + "»?") && saveMapsLib(campaignMaps.filter((x) => x.id !== m.id))}><Trash2 size={14} /></button>
-                                        </div>
-                                      </article>
-                                    ))}
-                                  </div>
-                                )}
                               </section>
                             </div>
                           );
