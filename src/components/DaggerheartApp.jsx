@@ -5342,6 +5342,7 @@ const sharedStyles = `
   .mh-chat-box { position: relative; flex: 1; min-height: 160px; }
   .mh-chat-box > .mh-chat-feed { position: absolute; inset: 0; }
   .mh-chat-feed { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 9px; padding-right: 2px; }
+  .mh-chatcard > .mh-chat-feed { margin-right: -14px !important; padding-right: 14px; }
   .mh-chat-empty { font-size: 12.5px; color: var(--mh-muted); font-style: italic; }
   .mh-chat-grow { flex: 1; min-width: 0; }
   .mh-chat-feed time { font-size: 10px; color: var(--mh-muted); flex-shrink: 0; font-variant-numeric: tabular-nums; }
@@ -5578,6 +5579,7 @@ const sharedStyles = `
   .cgp-n { min-width: 24px; padding: 2px 8px; border-radius: 99px; text-align: center; font-size: 12px; font-weight: 700; color: var(--mh-ink3); background: var(--mh-panel3); } .cgp-note { font-size: 12px; color: var(--mh-muted); }
   .cgp-seg { display: inline-flex; gap: 3px; padding: 3px; border-radius: 12px; background: var(--mh-input); border: 1px solid var(--mh-line); } .cgp-seg button { all: unset; cursor: pointer; padding: 6px 14px; border-radius: 9px; font-size: 12.5px; font-weight: 600; color: var(--mh-muted); } .cgp-seg button:hover { color: var(--mh-ink); } .cgp-seg button.is-on { background: var(--mh-panel3); color: var(--mh-ink); } .cgp-seg button:focus-visible { outline: 2px solid #E3B04B; outline-offset: 1px; } .cgp-seg.is-wide { display: flex; } .cgp-seg.is-wide button { flex: 1; text-align: center; }
   .cgp-list { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; padding: 2px 4px 2px 2px; margin: 0 -4px 0 -2px; align-content: start; }
+  .cgp-list.is-gal { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); grid-auto-rows: minmax(380px, 1fr); gap: 16px; padding: 2px 6px 2px 2px; } .cgp-list.is-gal .mh-gc { cursor: pointer; } .cgp-list.is-gal .mh-gc-del { opacity: .7; } .mh-gc-acc { display: inline-flex; align-items: center; gap: 6px; margin-top: auto; padding: 7px 14px; border-radius: 99px; max-width: 100%; font-size: 12.5px; font-weight: 600; color: var(--mh-ink2); background: var(--mh-panel3); border: 1px solid var(--mh-line2); } .mh-gc-acc svg { color: var(--mh-gold-ink); flex: none; }
   .cgp-list.is-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; } .cgp-list.is-rows { display: flex; flex-direction: column; gap: 8px; }
   .cgp-none { grid-column: 1 / -1; color: var(--mh-muted); font-size: 13px; padding: 14px 4px; }
   .cgp-empty { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; padding: 20px; border-radius: 18px; border: 1px dashed var(--mh-line2); } .cgp-empty b { font-size: 16px; color: var(--mh-ink); } .cgp-empty small { font-size: 13px; color: var(--mh-muted); max-width: 380px; line-height: 1.5; } .cgp-empty .mh-btn { margin-top: 8px; display: inline-flex; align-items: center; gap: 6px; }
@@ -11593,6 +11595,20 @@ export default function App({ onSignOut }) {
       pub(true);
     };
   }, [tableCampId, sheetCharId, playerName, campaigns]);
+  // El DJ solo mira quién está en la mesa (no publica presencia).
+  useEffect(() => {
+    if (!gmViewing || !viewingCampaignId) return;
+    let alive = true;
+    const pull = async () => {
+      try {
+        const t = await loadTable(viewingCampaignId);
+        if (alive) (setTable(t), setTableNow(Date.now()));
+      } catch (e) {}
+    };
+    pull();
+    const i = setInterval(pull, 5000);
+    return () => { alive = false; clearInterval(i); };
+  }, [gmViewing, viewingCampaignId]);
   const tableStatus = (e) => (!e ? "" : e.off ? "off" : e.away ? "away" : "on");
   const tableOfChar = (m) => table.find((e) => (m.charId && (e.chars || []).includes(m.charId)) || (!m.gm && m.author && e.as === m.author)) || null;
   const typers = table.filter((e) => e.uid !== tableMe && !e.off && tableNow - (e.typing || 0) < 6000);
@@ -30470,25 +30486,33 @@ export default function App({ onSignOut }) {
                           
                         </div>
                       ) : (
-                        <div className="cgp-list is-grid">
+                        <div className="cgp-list is-gal">
                           {memberIds.map((id) => {
                             const ch = characters[id];
                             if (!ch) return null;
                             const Em = CLASS_EMBLEMS[ch.f_class] || User;
-                            const col = classColor(ch.f_class);
-                            const hpT = Number(ch.r_hp || 0), hpM = Number(ch.hp_marked || 0);
-                            const stT = Number(ch.r_stress || 0), stM = Number(ch.stress_marked || 0);
+                            const col = ch.f_class ? classColor(ch.f_class) : "#9A8F80";
+                            const art = portraitPick(charImgs[id], portraitStateOf(ch));
+                            const hasArt = !!(art || CLASS_ART[ch.f_class]);
+                            const origin = [ch.f_ancestry, ch.f_community].filter(Boolean).join(" · ");
+                            const acct = table.find((e) => (e.chars || []).includes(id))?.name || playerName || "Sin cuenta";
                             return (
-                              <div key={id} className="mh-pl-c" style={{ "--pc": col }}>
-                                <button type="button" className="mh-pl-x" title="Quitar de la campaña" aria-label={"Quitar a " + (ch.f_name || "personaje") + " de la campaña"} onClick={() => removeCharacterFromCampaign(viewingCampaignId, id)}><X size={13} /></button>
-                                <button type="button" className="mh-pl-top" onClick={() => openModern(id)}>
-                                  <span className="mh-pl-em"><Em size={22} strokeWidth={1.6} /></span>
-                                  <span className="mh-pl-nm"><b className="mh-serif">{ch.f_name || "Sin nombre"}</b><small>{ch.f_class ? ch.f_class + " · Nivel " + (ch.f_level || "1") : "Sin clase asignada"}</small></span>
-                                </button>
-                                <div className="mh-pl-bars">
-                                  <div><span>Vida</span><i><u style={{ width: (hpT ? Math.max(0, hpT - hpM) / hpT * 100 : 0) + "%", background: "#D9644E" }} /></i><em>{hpT ? Math.max(0, hpT - hpM) + "/" + hpT : "—"}</em></div>
-                                  <div><span>Estrés</span><i><u style={{ width: (stT ? Math.min(stM, stT) / stT * 100 : 0) + "%", background: "#A58BE8" }} /></i><em>{stT ? stM + "/" + stT : "—"}</em></div>
+                              <div key={id} className={"mh-card mh-gc" + (ch.f_is_dead === "1" ? " is-dead" : "") + (hasArt ? " has-art" : "")} style={{ "--k": col }} role="button" tabIndex={0} onClick={() => openModern(id)} onKeyDown={(e) => e.key === "Enter" && e.target === e.currentTarget && openModern(id)}>
+                                {hasArt && <div className="mh-gc-art" aria-hidden="true" style={art ? { backgroundImage: "url(" + art + ")", backgroundPosition: "58% 6%" } : { backgroundImage: "url(" + CLASS_ART[ch.f_class] + ")", backgroundPosition: "50% " + (CLASS_ART_Y[ch.f_class] ?? 20) + "%" }} />}
+                                <div className="mh-gc-top">
+                                  {ch.f_class ? <span className="mh-gc-lv" title={"Nivel " + (ch.f_level || "1")}>Nv {ch.f_level || "1"}</span> : <span />}
+                                  <button type="button" className="mh-gc-del" title="Quitar de la campaña" aria-label={"Quitar a " + (ch.f_name || "personaje") + " de la campaña"} onClick={(e) => { e.stopPropagation(); removeCharacterFromCampaign(viewingCampaignId, id); }}><X size={14} /></button>
+                                  {hasArt && <span className="mh-gc-badge" title={ch.f_class} aria-hidden="true"><Em size={17} strokeWidth={1.7} /></span>}
                                 </div>
+                                <div className="mh-gc-mid">{!hasArt && <span className="mh-gc-emb" aria-hidden="true"><Em size={64} strokeWidth={1.5} /></span>}</div>
+                                <div className="mh-serif mh-gc-nm">{ch.f_name || "Sin nombre"}</div>
+                                <div className="mh-gc-cl">{ch.f_class ? ch.f_class + (ch.f_subclass ? " · " + ch.f_subclass : "") : "Sin clase asignada"}</div>
+                                {origin && <div className="mh-gc-or">{origin}</div>}
+                                <div className="mh-gc-tags">
+                                  {ch.f_is_dead === "1" && <span className="is-dead">Caído</span>}
+                                  {ch.f_transformation && <span className="is-tf">{ch.f_transformation}</span>}
+                                </div>
+                                <span className="mh-gc-acc" title="Cuenta del jugador"><User size={13} /> {acct}</span>
                               </div>
                             );
                           })}
