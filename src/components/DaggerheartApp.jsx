@@ -5597,6 +5597,13 @@ const sharedStyles = `
   .mh-cg.is-flat .mh-cg-body.is-pane { padding: 18px 20px; margin: 0; border-radius: 22px; background: var(--mh-panel); border: 1px solid var(--mh-line); }
   .mh-cg.is-flat .mh-cg-body.is-pane > .mh-card, .mh-cg.is-flat .mh-cg-body.is-pane .cal-main, .mh-cg.is-flat .mh-cg-body.is-pane .cal-month, .mh-cg.is-flat .mh-cg-body.is-pane > .gx { background: none; border: 0; box-shadow: none; padding: 0; }
   .mh-cg.is-flat .mh-cg-body.is-pane .cal { gap: 28px; }
+  /* Capítulo abierto (esquema común): sin la tira de «línea de tiempo» (las pestañas ya llevan a cada cosa), pestañas en segmento y cuerpo con su propio desplazamiento. */
+  .mh-cg.is-flat .mh-hs { flex: 1; min-height: 0; grid-template-columns: 250px minmax(0, 1fr); }
+  .mh-cg.is-flat .mh-hs-list { padding: 12px; gap: 8px; border-radius: 22px; } .mh-cg.is-flat .mh-hs-row { padding: 6px; border-radius: 14px; }
+  .mh-cg.is-flat .mh-hs-detail { border-radius: 22px; overflow: hidden; min-height: 0; } .mh-cg.is-flat .mh-hs-detail .mh-hs-tl, .mh-cg.is-flat .mh-hs-fx, .mh-cg.is-flat .mh-hs-sp { display: none; }
+  .mh-cg.is-flat .mh-hs-detail .mh-hs-banner { height: clamp(64px, 10vh, 104px); }
+  .mh-cg.is-flat .mh-hs-tabs { gap: 3px; padding: 10px 16px; border-bottom: 0; } .mh-cg.is-flat .mh-hs-tabs button { padding: 7px 16px; border-radius: 10px; border: 1px solid transparent; background: transparent; color: var(--mh-muted); font-weight: 600; } .mh-cg.is-flat .mh-hs-tabs button:hover { color: var(--mh-ink); } .mh-cg.is-flat .mh-hs-tabs button.is-on { background: #E3B04B; border-color: #E3B04B; color: #241a05; }
+  .mh-cg.is-flat .mh-hs-body { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; padding: 6px 18px 16px; }
   .cgp-del { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; color: #D9644E !important; }
   /* Las listas de pistas: tarjetas en rejilla dentro del panel. */
   .cgp-list.mh-pst-list { display: block; }
