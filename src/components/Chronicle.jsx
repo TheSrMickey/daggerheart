@@ -45,7 +45,7 @@ export function Chronicle({ campaignId, onShare, members = [] }) {
   const cur = sess.find((s) => s.key === selKey) || sess[sess.length - 1];
   const patch = (day, p) => update((d) => ({ ...d, days: { ...(d.days || {}), [day]: { ...((d.days || {})[day] || {}), ...p } } }));
   if (!cur) {
-    return <div className="mh-card gx" style={{ margin: 0 }}><div className="gx-h"><h3 className="mh-serif"><ScrollText size={18} /> Crónica de la campaña</h3></div><p className="gx-sub">Todavía no hay nada que contar. Según la mesa juegue (escenas, combates, pistas, subidas de nivel, descansos…), aquí irá apareciendo la crónica de cada sesión.</p></div>;
+    return <div className="mh-card gx" style={{ margin: 0 }}><div className="gx-h"><h3 className="mh-serif"><ScrollText size={18} /> Crónica de la campaña</h3></div><p className="gx-sub is-keep">Todavía no hay nada que contar. Irá apareciendo según se juegue.</p></div>;
   }
   const meta = (chron.days || {})[cur.key] || {};
   const hidden = new Set(meta.hidden || []);

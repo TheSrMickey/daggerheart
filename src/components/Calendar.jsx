@@ -93,7 +93,7 @@ export function CampaignCalendar({ campaignId, isGm, members, colorOf }) {
             )}
           </>
         ) : (
-          <p className="gx-sub" style={{ marginTop: 14 }}>{isGm ? "Todavía no has fijado la próxima sesión. Pulsa «Fijar fecha» y tus jugadores podrán confirmar." : "El DJ todavía no ha fijado la próxima sesión."}</p>
+          <p className="gx-sub is-keep" style={{ marginTop: 14 }}>{isGm ? "Todavía no has fijado la próxima sesión. Pulsa «Fijar fecha» y tus jugadores podrán confirmar." : "El DJ todavía no ha fijado la próxima sesión."}</p>
         )}
       </div>
       <div className="mh-card cal-month">
