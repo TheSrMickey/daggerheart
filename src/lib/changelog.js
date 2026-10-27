@@ -7,6 +7,7 @@ export const CHANGELOG = [
     title: "Grupos y notificaciones nuevas",
     blurb: "Chatea con toda tu mesa en un grupo compartido y recibe los avisos como tarjetas, también flotando mientras juegas.",
     items: [
+      { tag: "mejora", text: "Armas y armaduras · todas se ven ahora con el mismo diseño que al abrir un arma en la hoja (cinta de rango, arte arriba, daño o puntuación en grande y característica), tanto en la hoja como en la pestaña Cartas, que además estrena el filtro «Armadura» con todas las armaduras por rango." },
       { tag: "arreglo", text: "Campañas · el chat ocupa todo el ancho (mismo margen a la derecha que a la izquierda) y ya no aparece la barra de desplazamiento de fuera; solo se desplazan los mensajes dentro del chat." },
       { tag: "mejora", text: "Campañas · PNJ y criaturas: los adversarios se abren para ver sus estadísticas (nivel, tipo, dificultad, umbrales, vida, estrés, ataque y notas). Pistas: tarjetas más compactas; una imagen solo necesita la imagen (sin título ni descripción), un personaje se elige entre tus PNJ y adversarios, y un objeto se crea y se entrega a un personaje de la partida, que lo guarda en su inventario desde el chat." },
       { tag: "mejora", text: "Inicio · la diapositiva de la última actualización está siempre en la caja de novedades (ya no desaparece al verla) y se renueva sola con cada versión grande del historial." },

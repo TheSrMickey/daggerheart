@@ -981,10 +981,13 @@ const buildCardCatalog = () => {
   // Armas (principales y secundarias), ordenadas por rango.
   const wlist = [...PRIMARY_WEAPONS.map((w) => ({ w, prim: true })), ...SECONDARY_WEAPONS.map((w) => ({ w, prim: false }))];
   wlist.forEach(({ w, prim }, i) => {
-    const fi = w.feature ? w.feature.indexOf(": ") : -1;
-    const feats = [{ name: "Daño", text: w.damage }, { name: "Alcance", text: w.range }, { name: "Rasgo", text: w.trait + " · " + (w.hands === 2 ? "dos manos" : "una mano") }];
-    if (w.feature) feats.push(fi > 0 && fi < 28 ? { name: w.feature.slice(0, fi), text: w.feature.slice(fi + 2) } : { name: "Efecto", text: w.feature });
-    out.push({ id: "w-" + i + w.key, kind: "arma", key: w.key, sub: (prim ? "Arma principal" : "Arma secundaria") + " · " + (TIER_COLORS[w.tier]?.label || ""), tier: w.tier, text: "", features: feats, image: null, color: TIER_COLORS[w.tier]?.color || "#C9A24A", Icon: weaponIcon(w.key) });
+    const tl = TIER_COLORS[w.tier]?.label || "";
+    const dm = w.damage.match(/^(\S+)\s*(.*)$/);
+    out.push({ id: "w-" + i + w.key, kind: "arma", key: w.key, sub: (prim ? "Arma principal" : "Arma secundaria") + " · " + (w.hands === 2 ? "Dos manos" : "Una mano"), tier: w.tier, text: "", features: [], gear: { label: "Daño", big: dm?.[1] || w.damage, small: dm?.[2] || "", feature: w.feature || "", foot: [w.trait !== "—" && w.trait, w.range].filter(Boolean).join(" · "), pill: tl }, image: null, color: TIER_COLORS[w.tier]?.color || "#C9A24A", Icon: weaponIcon(w.key) });
+  });
+  // Armaduras, por rango, con el mismo diseño que las armas.
+  ARMORS.forEach((a, i) => {
+    out.push({ id: "a-" + i + a.key, kind: "armadura", key: a.key, sub: "Armadura", tier: a.tier, text: "", features: [], gear: { label: "Puntuación", big: String(a.score), small: "", feature: a.feature || "", foot: "Umbrales base " + a.major + " / " + a.severe, pill: TIER_COLORS[a.tier]?.label || "" }, image: null, color: TIER_COLORS[a.tier]?.color || "#C9A24A", Icon: armorIcon(a.key) });
   });
   return (CARD_CATALOG = out);
 };
@@ -25795,7 +25798,7 @@ export default function App({ onSignOut }) {
                   const CfIcon = CLASS_EMBLEMS[c.f_class] || Sparkles;
                   const artSrc = d.image || (isCf || isHopeCf ? CLASS_HEADER_ART[c.f_class] || CLASS_ART[c.f_class] || null : null);
                   const hopeCost = d.stat?.value ?? d.hopeAction?.cost ?? "";
-                  const newBg = !!(d.domain || isAncCom || d.weapon || isSub || isTrans || isForm || isExp || isCf || isHopeCf);
+                  const newBg = !!(d.domain || isAncCom || d.weapon || d.armor || isSub || isTrans || isForm || isExp || isCf || isHopeCf);
                   const subRank = /Maestr/.test(d.kicker || "") ? 2 : /Especializ/.test(d.kicker || "") ? 1 : 0;
                   const subRankLabel = ["Fundación", "Especialización", "Maestría"][subRank];
                   const formRank = Number((/Rango (\d)/.exec(d.kicker || "") || [])[1] || 1);
@@ -27315,7 +27318,7 @@ export default function App({ onSignOut }) {
                   return (
                   <div className="mh-cardc-wrap" onClick={(e) => e.stopPropagation()}>
                   <div
-                    className={"mh-card mh-card-anim mh-tilt mh-cardc" + (newBg ? " is-bg" : "") + (d.weapon ? " is-wp" : "")}
+                    className={"mh-card mh-card-anim mh-tilt mh-cardc" + (newBg ? " is-bg" : "") + (d.weapon || d.armor ? " is-wp" : "")}
                     style={{
                       "--glow": alpha(cardColor, 33),
                       "--cc": cardColor,
@@ -27354,7 +27357,7 @@ export default function App({ onSignOut }) {
                     <div className="mh-cardc-badge">
                       {d.domain ? (
                         <span className="mh-cardc-gem" title={"Nivel " + d.domain.level}>{d.domain.level}<ArtIcon size={19} strokeWidth={1.8} /></span>
-                      ) : d.weapon && d.tier ? (
+                      ) : (d.weapon || d.armor) && d.tier ? (
                         <span className="mh-cardc-gem is-rank" title={TIER_COLORS[d.tier].label}>{["I", "II", "III", "IV"][d.tier - 1]}<ArtIcon size={19} strokeWidth={1.8} /></span>
                       ) : isCf || isHopeCf ? (
                         <span className="mh-cardc-gem is-rank" title={isHopeCf ? "Esperanza" : "Clase"}>
@@ -27381,7 +27384,7 @@ export default function App({ onSignOut }) {
                     )}
                     {isTrans && <span className="mh-cardc-dom">Transformación</span>}
                     {isForm && <span className="mh-cardc-dom">Forma de Bestia</span>}
-                    {d.weapon && d.tier && <span className="mh-cardc-dom">{TIER_COLORS[d.tier].label}</span>}
+                    {(d.weapon || d.armor) && d.tier && <span className="mh-cardc-dom">{TIER_COLORS[d.tier].label}</span>}
                     {d.domain && <span className="mh-cardc-cost" title="Coste de recuperación">{d.domain.recall ?? "—"}<Zap size={12} fill="currentColor" /></span>}
                     <div style={{ padding: "0 18px", textAlign: "center", flexShrink: 0, marginTop: d.domain || d.tier || isAncCom || isSub || isTrans || isForm || isExp || isCf || isHopeCf ? 16 : 8 }}>
                       <FitTitle text={d.title} max={19} min={14} className="mh-serif" style={{ fontWeight: 700, color: "var(--mh-ink)", maxHeight: "2.4em", overflow: "hidden" }} />
@@ -27686,7 +27689,7 @@ export default function App({ onSignOut }) {
                             <span>Dominio {d.domain.name}</span>
                             <span>Nivel {d.domain.level} · Recuperación {d.domain.recall ?? "—"}</span>
                           </span>
-                        ) : d.weapon ? (
+                        ) : d.weapon || d.armor ? (
                           <span className="mh-cardc-sig">
                             <span>{footer}</span>
                             <span>{d.tier ? TIER_COLORS[d.tier].label : ""}</span>
