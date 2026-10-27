@@ -28,7 +28,7 @@ export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
   const modal = !!onClose;
   const dom = c.kind === "dominio";
   // Ascendencias y comunidades usan el mismo diseño que las de dominio, sin cinta de nivel ni coste.
-  const gen = c.kind === "ascendencia" || c.kind === "comunidad" || c.kind === "transformacion";
+  const gen = c.kind === "ascendencia" || c.kind === "comunidad" || c.kind === "transformacion" || c.kind === "accion";
   const sub = c.kind === "subclase"; // cinta con el rango en numeral romano: I Fundación, II Especialización, III Maestría
   const bst = c.kind === "forma"; // cinta con el rango de la forma
   const wpn = c.kind === "arma" || c.kind === "armadura"; // armas y armaduras: cinta con el rango (I Común … IV Legendario) y el mismo diseño que en la hoja
