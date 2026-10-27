@@ -8,7 +8,7 @@ import SceneFx, { SCENE_FX } from "./SceneFx";
 import Ambient from "./Ambient";
 import { Info, Lightbulb, Sprout, Bot, Pickaxe, TreePine, Cog, Ear, Angry, Axe, Banana, Cloud } from "lucide-react";
 import { Squirrel, Layers, CalendarDays, Vote, ScrollText as ChronIcon, Megaphone, Link2 } from "lucide-react";
-import { History, LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus, Box, LayoutGrid, Bird, Fish, Bug, Rabbit, Cat, Turtle, Clock, CircleDashed, Slash } from "lucide-react";
+import { Award, History, LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus, Box, LayoutGrid, Bird, Fish, Bug, Rabbit, Cat, Turtle, Clock, CircleDashed, Slash } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { NotificationBell, NoticeToasts, FriendsPanel, AccountButton, avatarColor } from "./Social";
 import { ResetDiceCard, DeleteAccountCard } from "./AccountDanger";
@@ -27,6 +27,7 @@ import { Generators } from "./Generators";
 import { CampaignCalendar, HomeNextSession } from "./Calendar";
 import { HomeHero } from "./HomeHero";
 import { PollsGm, ActivePoll, PollSwap, PollResultCard } from "./Polls";
+import { MedalsGm, MedalWatcher, MedalChatCard, MedalShelf, medalOf } from "./Medals";
 import { RestGm, RestQuick, RestBanner, GroupRestDialog, RestLock } from "./GroupRest";
 import NpcStatsEditor, { npcStatsSummary, npcTokenStats, NpcStatsView } from "./NpcStats";
 import { Chronicle, Timeline } from "./Chronicle";
@@ -5597,6 +5598,20 @@ const sharedStyles = `
   .cgp-n { min-width: 24px; padding: 2px 8px; border-radius: 99px; text-align: center; font-size: 12px; font-weight: 700; color: var(--mh-ink3); background: var(--mh-panel3); } .cgp-note { font-size: 12px; color: var(--mh-muted); }
   .cgp-seg { display: inline-flex; gap: 3px; padding: 3px; border-radius: 12px; background: var(--mh-input); border: 1px solid var(--mh-line); } .cgp-seg button { all: unset; cursor: pointer; padding: 6px 14px; border-radius: 9px; font-size: 12.5px; font-weight: 600; color: var(--mh-muted); } .cgp-seg button:hover { color: var(--mh-ink); } .cgp-seg button.is-on { background: var(--mh-panel3); color: var(--mh-ink); } .cgp-seg button:focus-visible { outline: 2px solid #E3B04B; outline-offset: 1px; } .cgp-seg.is-wide { display: flex; } .cgp-seg.is-wide button { flex: 1; text-align: center; }
   .cgp-list { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; padding: 2px 4px 2px 2px; margin: 0 -4px 0 -2px; align-content: start; }
+  /* Medallas de la sesión */
+  .md-disc { --c: #E3B04B; position: relative; flex: none; display: inline-grid; place-items: center; border-radius: 50%; background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--c) 70%, #fff), var(--c)); border: 2px solid color-mix(in srgb, var(--c) 70%, #fff); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 25%, transparent), 0 6px 14px -6px var(--c); line-height: 1; } .md-disc sup { position: absolute; right: -6px; bottom: -5px; background: var(--mh-panel); color: var(--mh-ink2); border: 1px solid var(--mh-line2); border-radius: 99px; font: 700 10px 'Inter', sans-serif; padding: 1px 5px; }
+  .md-shelf { display: inline-flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 6px 0 2px; } .md-none { font-size: 11.5px; color: var(--mh-muted); }
+  .md-ov { position: fixed !important; inset: 0; z-index: 9000; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(8,6,12,.7); }
+  .md-box { width: min(560px, 100%); max-height: 92vh; overflow-y: auto; padding: 20px 22px; border-radius: 22px; background: var(--mh-panel); border: 1px solid var(--mh-line2); color: var(--mh-ink); box-shadow: 0 30px 70px -20px #000c; }
+  .md-h { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; } .md-h h3 { margin: 0; flex: 1; font-size: 17px; display: flex; align-items: center; gap: 8px; } .md-x { padding: 4px 8px; }
+  .md-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; } @media (max-width: 520px) { .md-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .md-opt { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 6px 9px; text-align: center; border-radius: 16px; border: 1px solid var(--mh-line); background: var(--mh-panel2); color: var(--mh-ink); } .md-opt b { font-size: 12px; line-height: 1.2; } .md-opt small { font-size: 10.5px; color: #7FB77A; font-weight: 600; min-height: 13px; } .md-opt:hover:not(:disabled) { border-color: var(--mh-line2); } .md-opt.is-sel { border-color: var(--c); box-shadow: 0 0 0 2px color-mix(in srgb, var(--c) 40%, transparent); } .md-opt.is-used { opacity: .55; cursor: default; } .md-opt.is-used .md-disc { filter: grayscale(1); } .md-opt:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
+  .md-pick { display: flex; flex-wrap: wrap; gap: 8px; } .md-who { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; padding: 6px 13px 6px 6px; border-radius: 99px; border: 1px solid var(--mh-line2); background: var(--mh-panel2); font-size: 12.5px; font-weight: 600; color: var(--mh-ink); } .md-who i { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font: 700 11px 'Inter', sans-serif; font-style: normal; background: var(--c); color: #fff; } .md-who.is-on { border-color: #E3B04B; background: #E3B04B1c; } .md-who:disabled { opacity: .4; cursor: default; } .md-who:focus-visible { outline: 2px solid #E3B04B; }
+  .md-acts { display: flex; gap: 8px; margin-top: 16px; } .md-acts button { display: inline-flex; align-items: center; gap: 7px; }
+  .md-chat { --c: #E3B04B; display: flex; align-items: center; gap: 12px; margin: 4px 0; padding: 12px 14px; border-radius: 16px; border: 1.5px solid #E3B04Baa; background: linear-gradient(180deg, #E3B04B1c, #E3B04B06 70%); } .md-chat small { display: block; font: 700 10px 'Inter', sans-serif; letter-spacing: .12em; text-transform: uppercase; color: #E3B04B; } .md-chat b { display: block; font-size: 14px; color: var(--mh-ink); } .md-chat em { display: block; font-style: normal; font-size: 12px; color: var(--mh-ink3); }
+  .md-pop { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 9999; width: min(320px, 92vw); text-align: center; padding: 26px 22px 20px; border-radius: 26px; border: 1px solid #E3B04B99; background: radial-gradient(120% 90% at 50% 0%, #E3B04B30, transparent 70%), var(--mh-panel); color: var(--mh-ink); box-shadow: 0 30px 60px -20px #000c; cursor: pointer; animation: md-in .45s cubic-bezier(.2,1.3,.4,1); overflow: hidden; } .md-pop .md-disc { margin-bottom: 12px; border-width: 3px; box-shadow: 0 0 0 7px color-mix(in srgb, var(--c) 22%, transparent), 0 0 60px -6px var(--c); } .md-pop small { display: block; font: 700 10.5px 'Inter', sans-serif; letter-spacing: .14em; text-transform: uppercase; color: #E3B04B; } .md-pop h3 { margin: 6px 0 4px; font-size: 22px; } .md-pop p { margin: 0; font-size: 13px; color: var(--mh-ink3); } .md-sp { position: absolute; color: #F0C874; font-size: 14px; opacity: .85; }
+  @keyframes md-in { from { opacity: 0; transform: translate(-50%, -46%) scale(.85); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } } @media (prefers-reduced-motion: reduce) { .md-pop { animation: none; } }
+  html[data-mh-theme="light"] .md-chat small, html[data-mh-theme="light"] .md-pop small { color: #97680F; }
   .cgp-list.is-gal { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); grid-auto-rows: minmax(380px, 1fr); gap: 16px; padding: 2px 6px 2px 2px; } .cgp-list.is-gal .mh-gc { cursor: pointer; } .cgp-list.is-gal .mh-gc-del { opacity: .7; } .mh-gc-acc { display: inline-flex; align-items: center; gap: 6px; margin-top: auto; padding: 7px 14px; border-radius: 99px; max-width: 100%; font-size: 12.5px; font-weight: 600; color: var(--mh-ink2); background: var(--mh-panel3); border: 1px solid var(--mh-line2); } .mh-gc-acc svg { color: var(--mh-gold-ink); flex: none; }
   .cgp-list.is-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; } .cgp-list.is-rows { display: flex; flex-direction: column; gap: 8px; }
   .cgp-none { grid-column: 1 / -1; color: var(--mh-muted); font-size: 13px; padding: 14px 4px; }
@@ -8080,7 +8095,7 @@ const sharedStyles = `
   .pf-head { display: flex; gap: 20px; align-items: flex-start; padding: 0 28px; margin-top: -50px; position: relative; flex-wrap: wrap; } .pf-head .so-av, .pf-head > :first-child { flex: none; } .pf-who { flex: 1; min-width: 220px; padding-top: 58px; } .pf-who h1 { margin: 0; font-size: 28px; font-weight: 600; letter-spacing: .02em; color: var(--mh-ink); } .pf-who small { color: var(--mh-muted); }
   .pf-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; } .pf-pill { font-size: 11.5px; font-weight: 600; padding: 3px 10px; border-radius: 99px; border: 1px solid var(--mh-line2); color: var(--mh-ink3, var(--mh-muted)); } .pf-acts { display: flex; gap: 8px; padding-top: 58px; flex-wrap: wrap; }
   .pf-bio { padding: 10px 28px 0; margin: 0; color: var(--mh-ink2, var(--mh-ink)); max-width: 70ch; } .pf-edit { padding: 12px 28px 0; } .pf-edit textarea { width: 100%; min-height: 70px; resize: vertical; }
-  .pf-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 18px 28px 4px; } .pf-stats > div { background: var(--mh-panel2); border: 1px solid var(--mh-line); border-radius: 14px; padding: 10px 14px; } .pf-stats b { display: block; font: 600 22px 'Cinzel', Georgia, serif; color: var(--mh-gold-ink, #E3B04B); } .pf-stats span { font-size: 12px; color: var(--mh-muted); }
+  .pf-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; padding: 18px 28px 4px; } .pf-stats > div { background: var(--mh-panel2); border: 1px solid var(--mh-line); border-radius: 14px; padding: 10px 14px; } .pf-stats b { display: block; font: 600 22px 'Cinzel', Georgia, serif; color: var(--mh-gold-ink, #E3B04B); } .pf-stats span { font-size: 12px; color: var(--mh-muted); }
   .pf-tabs { display: flex; gap: 4px; padding: 14px 28px 0; border-bottom: 1px solid var(--mh-line); margin-top: 10px; } .pf-tab { padding: 9px 16px; border: 1px solid transparent; border-bottom: 0; border-radius: 10px 10px 0 0; background: transparent; color: var(--mh-muted); font: 600 13.5px 'Inter', system-ui, sans-serif; cursor: pointer; white-space: nowrap; } .pf-tab.on { color: var(--mh-gold-ink, #E3B04B); background: var(--mh-panel2); border-color: var(--mh-line); margin-bottom: -1px; }
   .pf-body { padding: 22px 28px 26px; display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(220px, 1fr); gap: 24px; } .pf-wide { grid-column: 1 / -1; } .pf-side > div { margin-bottom: 22px; }
   .pf-h { margin: 0 0 10px; font: 700 11px 'Inter', system-ui, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--mh-muted); } .pf-mut { color: var(--mh-muted); display: inline-flex; gap: 5px; align-items: center; }
@@ -11281,6 +11296,7 @@ export default function App({ onSignOut }) {
   const [cgCompact, setCgCompact] = useState(true); // pestañas con solo el icono salvo la activa
   const ambBtn = useRef(null);
   const [ambOpen, setAmbOpen] = useState(false); // ventana de «Ambiente» (audio de la mesa)
+  const [medalsOpen, setMedalsOpen] = useState(false);
   const [djWorldEdit, setDjWorldEdit] = useState(false);
   const [djCastEdit, setDjCastEdit] = useState(null);
   const [djDragTok, setDjDragTok] = useState(null); // ficha de jugador que el DJ está arrastrando por el mapa: { id, over }
@@ -14068,6 +14084,7 @@ export default function App({ onSignOut }) {
     });
   };
   const renderChatItem = (list, meCharId, m, i) => {
+      if (m.medal) return <div key={(m.ts || 0) + "-" + i} className="mh-chat-poll"><span className="mh-chat-who"><b>{m.author || "El DJ"}</b> · {new Date(m.ts).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}</span><MedalChatCard md={m.medal} /></div>;
       if (m.poll) return <div key={(m.ts || 0) + "-" + i} className="mh-chat-poll"><span className="mh-chat-who"><b>{m.author || "El DJ"}</b> · {new Date(m.ts).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}</span><PollResultCard s={m.poll} me={meCharId} /></div>;
       const kind = m.kind || (CHAT_EMOJI_RE.test(m.text || "") ? "event" : "msg");
       const col = chatColor(m);
@@ -28801,6 +28818,9 @@ export default function App({ onSignOut }) {
                             <button type="button" className={"mh-dir-pause" + (campaignStage.xcard?.on ? " is-on" : "")} onClick={toggleXCard} aria-pressed={!!campaignStage.xcard?.on} title={campaignStage.xcard?.on ? "Retirar el aviso de X-Card" : "X-Card: avisa en la escena de que un jugador no está cómodo con lo que se trata"}>
                               <X size={14} /> <span>{campaignStage.xcard?.on ? "Retirar X-Card" : "X-Card"}</span>
                             </button>
+                            <button type="button" className="mh-cg-btn" aria-haspopup="dialog" onClick={() => setMedalsOpen(true)} title="Dar una medalla a un jugador">
+                              <Award size={14} /> <span>Medallas</span>
+                            </button>
                             <button type="button" className="mh-cg-btn" ref={ambBtn} aria-expanded={ambOpen} onClick={() => setAmbOpen((v) => !v)}>
                               <Music size={14} /> <span>Ambiente</span>
                             </button>
@@ -30730,6 +30750,7 @@ export default function App({ onSignOut }) {
                                   {ch.f_is_dead === "1" && <span className="is-dead">Caído</span>}
                                   {ch.f_transformation && <span className="is-tf">{ch.f_transformation}</span>}
                                 </div>
+                                <MedalShelf campaignId={viewingCampaignId} charId={id} size={26} />
                                 <span className="mh-gc-acc" title="Cuenta del jugador"><User size={13} /> {acct}</span>
                               </div>
                             );
@@ -31306,7 +31327,9 @@ export default function App({ onSignOut }) {
                     );
                   })()}
 
-                  {campaignDetailTab === "cronica" && <Chronicle key={viewingCampaignId} campaignId={viewingCampaignId} members={(campaigns[viewingCampaignId]?.characterIds || []).map((id) => characters[id]?.f_name).filter(Boolean)} onShare={(text) => postChat(viewingCampaignId, { kind: "msg", text, author: "El DJ", gm: true })} />}
+                  {medalsOpen && viewingCampaignId && <MedalsGm campaignId={viewingCampaignId} members={(campaigns[viewingCampaignId]?.characterIds || []).filter((id) => characters[id]).map((id) => ({ id, name: characters[id].f_name || "Sin nombre", cls: characters[id].f_class || "", color: characters[id].f_class ? classColor(characters[id].f_class) : "#C9A24A" }))} onGive={(e) => postChat(viewingCampaignId, { kind: "msg", text: "🏅 " + e.charName + " recibe la medalla «" + medalOf(e.medal).name + "»" + (e.note ? " — " + e.note : ""), author: "El DJ", gm: true, medal: { medal: e.medal, charName: e.charName, note: e.note } })} onClose={() => setMedalsOpen(false)} />}
+
+                  {campaignDetailTab === "cronica" && <Chronicle key={viewingCampaignId} campaignId={viewingCampaignId} onMedals={() => setMedalsOpen(true)} members={(campaigns[viewingCampaignId]?.characterIds || []).map((id) => characters[id]?.f_name).filter(Boolean)} onShare={(text) => postChat(viewingCampaignId, { kind: "msg", text, author: "El DJ", gm: true })} />}
 
                   {campaignDetailTab === "linea" && <Timeline key={viewingCampaignId} campaignId={viewingCampaignId} />}
 
@@ -31542,6 +31565,7 @@ export default function App({ onSignOut }) {
             });
             return (
               <>
+                <MedalWatcher key={"mw" + cp.id} campaignId={cp.id} mineIds={(cp.characterIds || []).filter((id) => characters[id])} />
                 <RestBanner key={"rb" + cp.id} campaignId={cp.id} mine={mine} ids={cp.characterIds || []} onOpen={() => setRestPlayerOpen(true)} onPending={setRestPending} />
                 <GroupRestDialog key={cp.id} campaignId={cp.id} mine={mine} open={restPlayerOpen} onClose={() => setRestPlayerOpen(false)} onRest={(id, type, p) => (performRest(id, type, p[0], p[1], p[2]), postCampaignEvent(id, "Hace un descanso " + (type === "long" ? "largo" : "corto") + " con el grupo"))} />
               </>

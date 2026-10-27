@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { ScrollText, History, Clapperboard, Swords, KeyRound, ChevronsUp, Dices, Moon, Vote, Share2 } from "lucide-react";
+import { ScrollText, History, Clapperboard, Swords, KeyRound, ChevronsUp, Dices, Moon, Vote, Share2, Award } from "lucide-react";
+import { medalsKey, MedalDisc, medalOf } from "@/components/Medals";
 import { useDoc } from "@/lib/campaignDocs";
 import { logKey, chronKey, TYPES, dayOf } from "@/lib/chronicle";
 
 // Crónica y línea de tiempo: se alimentan solas con los hitos que la mesa va dejando en el chat.
-const ICONS = { escena: Clapperboard, combate: Swords, pista: KeyRound, nivel: ChevronsUp, critico: Dices, descanso: Moon, voto: Vote };
+const ICONS = { escena: Clapperboard, combate: Swords, pista: KeyRound, nivel: ChevronsUp, critico: Dices, descanso: Moon, voto: Vote, medalla: Award };
 const MONTHS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
 const dayLabel = (k) => { const [y, m, d] = k.split("-").map(Number); return d + " de " + MONTHS[m - 1] + " de " + y; };
 const hhmm = (ts) => new Date(ts).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
@@ -34,10 +35,8 @@ function autoSummary(events) {
   return out.join(" ") || "Todavía no hay hitos en esta sesión.";
 }
 
-const SEALS = ["MVP de la sesión", "Mejor interpretación", "Idea brillante", "Golpe de efecto", "Alma de la mesa"];
-export function Chronicle({ campaignId, onShare, members = [] }) {
-  const [sealWho, setSealWho] = useState("");
-  const [sealTxt, setSealTxt] = useState(SEALS[0]);
+export function Chronicle({ campaignId, onShare, onMedals }) {
+  const [medalDoc] = useDoc(medalsKey(campaignId), { list: [] }, 6000);
   const [log] = useDoc(logKey(campaignId), [], 6000);
   const [chron, update] = useDoc(chronKey(campaignId), { days: {} }, 8000);
   const sess = sessionsOf(Array.isArray(log) ? log : []);
@@ -52,8 +51,9 @@ export function Chronicle({ campaignId, onShare, members = [] }) {
   const events = cur.events.filter((e) => !hidden.has(e.ts));
   const summary = meta.summary != null ? meta.summary : autoSummary(events);
   const who = [...new Set(cur.events.filter((e) => e.who && e.who !== "El DJ").map((e) => e.who))];
-  const seals = meta.seals || [];
-  const sealLine = seals.length ? " Sellos: " + seals.map((x) => x.who + " (" + x.t + ")").join(", ") + "." : "";
+  const seals = meta.seals || []; // sellos antiguos (antes de las medallas)
+  const dayMedals = (medalDoc.list || []).filter((x) => x.day === cur.key);
+  const sealLine = (dayMedals.length ? " Medallas: " + dayMedals.map((x) => x.charName + " (" + medalOf(x.medal).name + ")").join(", ") + "." : "") + (seals.length ? " Sellos: " + seals.map((x) => x.who + " (" + x.t + ")").join(", ") + "." : "");
   const decLine = (meta.decisions || []).length ? " Decisiones: " + meta.decisions.map((x) => x.text).join("; ") + "." : "";
   return (
     <div className="mh-card gx" style={{ margin: 0 }}>
@@ -89,13 +89,11 @@ export function Chronicle({ campaignId, onShare, members = [] }) {
           )}
           <span className="gx-lab">Quién estuvo</span>
           <div className="gx-row">{who.length ? who.map((w) => <span key={w} className="cx-chip">{w}</span>) : <span className="gx-fact">Sin datos todavía</span>}</div>
-          <span className="gx-lab">Sellos de la sesión · los reparte el DJ</span>
+          <span className="gx-lab">Medallas de la sesión</span>
+          {dayMedals.map((x) => <div key={x.id} className="ch-ev" style={{ "--c": medalOf(x.medal).color }}><span className="ch-ic"><MedalDisc medal={x.medal} size={28} /></span><span className="ch-tx"><b>{x.charName} · {medalOf(x.medal).name}</b><em>{hhmm(x.ts)}{x.note ? " · " + x.note : ""}</em></span></div>)}
           {seals.map((x, i) => <div key={i} className="ch-ev" style={{ "--c": "#E3B04B" }}><span className="ch-ic">🏅</span><span className="ch-tx"><b>{x.who}</b><em>{x.t}</em></span><button type="button" className="cx-chip" onClick={() => patch(cur.key, { seals: seals.filter((_, j) => j !== i) })}>Quitar</button></div>)}
-          <div className="gx-row" style={{ marginTop: 8 }}>
-            <select className="mh-input" value={sealWho} onChange={(e) => setSealWho(e.target.value)} aria-label="Quién recibe el sello"><option value="">Elige a quién…</option>{members.map((m) => <option key={m} value={m}>{m}</option>)}</select>
-            <select className="mh-input" value={sealTxt} onChange={(e) => setSealTxt(e.target.value)} aria-label="Sello">{SEALS.map((x) => <option key={x}>{x}</option>)}</select>
-            <button type="button" className="mh-btn-ghost" disabled={!sealWho} onClick={() => (patch(cur.key, { seals: [...seals, { who: sealWho, t: sealTxt }] }), setSealWho(""))}>Dar sello</button>
-          </div>
+          {dayMedals.length === 0 && seals.length === 0 && <p className="gx-note" style={{ margin: "2px 0 6px" }}>Esta sesión aún no tiene medallas.</p>}
+          {onMedals && <button type="button" className="mh-btn-ghost" style={{ marginTop: 8, marginBottom: 6, display: "inline-flex", alignItems: "center", gap: 6 }} onClick={onMedals}><Award size={14} /> Dar una medalla</button>}
           <span className="gx-lab">Notas del DJ (solo las ves tú)</span>
           <textarea key={cur.key} className="mh-input" style={{ minHeight: 70, width: "100%", resize: "vertical" }} placeholder="Ganchos para la próxima sesión…" defaultValue={meta.notes || ""} onBlur={(e) => patch(cur.key, { notes: e.target.value })} />
         </div>
