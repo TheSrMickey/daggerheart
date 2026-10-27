@@ -5012,6 +5012,14 @@ const sharedStyles = `
   .mh-fan-card:hover { transform: translateY(-60px) rotate(0deg) scale(1.15); z-index: 2; }
   .mh-fan-card.is-lifted { opacity: .25; transition: opacity .25s; }
   .mh-fan-ghost { position: fixed; z-index: 9999; pointer-events: none; transform: translate(-50%, -50%) rotate(-6deg); padding: 8px 12px; border-radius: 8px; border: 2px solid var(--c); background: #1B1824; color: #F3EBDD; font-size: 12px; box-shadow: 0 0 18px var(--c); }
+  .mh-roots { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; } .mh-roots.is-under { z-index: 1; } .mh-roots.is-over { z-index: 4; }
+  .mh-root-p { fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; animation: mh-root-grow .7s cubic-bezier(.3,.8,.4,1) var(--rd, 0s) forwards; } .mh-root-p.is-sh { stroke: rgba(0,0,0,.5); stroke-width: 6.4; transform: translate(.8px, 1.2px); } .mh-root-p.is-body { stroke: #5f7d3c; stroke-width: 4.4; } .mh-roots.is-over .mh-root-p.is-body { stroke: #6fa04a; }
+  .mh-root-leaf { fill: #5fbf6a; opacity: 0; animation: mh-root-leaf .35s ease calc(var(--rd, 0s) + .55s) forwards; }
+  @keyframes mh-root-grow { to { stroke-dashoffset: 0; } } @keyframes mh-root-leaf { to { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .mh-root-p { animation-duration: .01s; } }
+  .mh-fan-card.is-ghostcard { filter: drop-shadow(0 0 14px #7fcf8688); } .mh-fan-card.is-ghostcard .mh-fan-in { opacity: .6; filter: saturate(.55) brightness(1.15); } .mh-fan-card.is-ghostcard::after { content: ""; position: absolute; inset: 0; border: 2px dashed #7fcf86; border-radius: 22px; pointer-events: none; animation: mh-ghost-pulse 2.4s ease-in-out infinite; } .mh-fan-card.is-ghostcard.is-nohope { filter: grayscale(1); opacity: .6; }
+  .mh-fan-ghostlab { position: absolute; left: 0; right: 0; bottom: 6px; text-align: center; font: 700 9px Inter, sans-serif; letter-spacing: .1em; color: #9ce6a2; text-transform: uppercase; z-index: 3; pointer-events: none; text-shadow: 0 1px 4px #000; }
+  @keyframes mh-ghost-pulse { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
   .mh-aim { position: fixed; inset: 0; z-index: 9998; pointer-events: none; } .mh-aim-l { animation: mh-aim-dash .6s linear infinite; } @keyframes mh-aim-dash { to { stroke-dashoffset: -12; } }
   .mh-fan-ghost.is-card { padding: 0; border: 0; background: none; box-shadow: none; width: 150px; height: 210px; transform: translate(-50%, -50%) rotate(-4deg) scale(1.02); filter: drop-shadow(0 16px 26px rgba(0,0,0,.65)); } .mh-fan-ghost.is-card > div { transform-origin: top left; transform: scale(.5); width: 300px !important; height: 420px !important; }
   .mh-fan-ret { position: fixed; z-index: 9999; pointer-events: none; width: 150px; height: 210px; margin: -105px 0 0 -75px; animation: mh-fan-ret 1.1s cubic-bezier(.5,0,.3,1) .15s both; filter: drop-shadow(0 12px 22px rgba(0,0,0,.6)); } .mh-fan-ret > div { transform-origin: top left; transform: scale(.5); width: 300px !important; height: 420px !important; }
@@ -9870,7 +9878,7 @@ function FanFace({ c, col }) {
     it = found ? { ...found, color: col } : { id: "r-" + c.key, kind, key: c.key, sub: kind === "accion" ? k || "Acción" : kind === "ascendencia" ? "Ascendencia" : kind === "comunidad" ? "Comunidad" : kind === "transformacion" ? "Transformación" : (cls || "") + " · Subclase", cls, rank: /Maestr/.test(k) ? 2 : /Especializ/.test(k) ? 1 : 0, rankLabel: /Maestr/.test(k) ? "Maestría" : /Especializ/.test(k) ? "Especialización" : "Fundación", text: dt.text || c.text, features: dt.features || [], image: dt.image || FAN_CLASS_IMG[c.myClass] || null, color: col, Icon: c.Icon };
     if (!it.image && kind === "accion") it = { ...it, image: dt.image || FAN_CLASS_IMG[c.myClass] || null };
   }
-  else it = cat.find((x) => x.kind === "dominio" && x.key === c.key && (!c.domain || x.domain === c.domain));
+  else it = cat.find((x) => x.kind === "dominio" && x.key === (c.baseKey || c.key) && (!c.domain || x.domain === c.domain));
   if (!it) it = { id: "x-" + c.key, kind: "dominio", key: c.key, sub: (c.domain || "") + " · " + (c.type || ""), domain: c.domain, type: c.type, level: c.level, recall: c.recall, text: c.text, image: c.image, color: col };
   const I = it.Icon || DOMAIN_ICONS[it.domain] || Sparkles;
   return (
@@ -10228,7 +10236,7 @@ function HomeDice({ stats }) {
 // Abanico de cartas de dominio en el borde inferior del mapa: se arrastran hasta una casilla para usarlas.
 // Cartas que se lanzan apuntando: una línea de guiones sale del personaje hasta el ratón.
 const AIM_CARD = "Enredo Feroz";
-function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack, cardBorder }) {
+function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack, cardBorder, aimOk }) {
   const cardsRef = useRef(cards);
   cardsRef.current = cards;
   const [drag, setDrag] = useState(null); // { card, x, y, cell, moved }
@@ -10293,7 +10301,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
     const cell = inHand(ev.clientX, ev.clientY) ? null : cellAt(ev.clientX, ev.clientY);
     if (!cell) return;
     if (d.card.subclass) return setOpen({ ...d.card, choose: true });
-    if (d.card.key === AIM_CARD && (!rangeOf(cell) || !tokens.find((t) => !t.hidden && t.x === cell.x && t.y === cell.y && t.id !== me?.id && (t.kind === "foe" || t.kind === "npc")))) return; // sin objetivo válido o fuera de alcance: se cancela
+    if ((d.card.key === AIM_CARD || d.card.ghost) && (!rangeOf(cell) || !tokens.find((t) => !t.hidden && t.x === cell.x && t.y === cell.y && t.id !== me?.id && (t.kind === "foe" || t.kind === "npc")))) return; // sin objetivo válido o fuera de alcance: se cancela
     const target = tokens.find((t) => !t.hidden && t.x === cell.x && t.y === cell.y && t.id !== me?.id) || null;
     window.__mhFlyTo = { key: d.card.key, x: d.home.x, y: d.home.y, w: d.home.w, t: Date.now() };
     const res = onUse(d.card, cell, target, rangeOf(cell));
@@ -10372,7 +10380,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
   const stepR = Math.min(5, 36 / Math.max(1, n - 1));
   const stepY = Math.min(5, 30 / Math.max(1, n - 1));
   const rng = drag ? rangeOf(drag.cell) : null;
-  const aim = !!drag?.moved && drag.card.key === AIM_CARD && !inHand(drag.x, drag.y);
+  const aim = !!drag?.moved && (drag.card.key === AIM_CARD || drag.card.ghost) && !inHand(drag.x, drag.y);
   const aimTarget = aim && drag.cell ? tokens.find((t) => !t.hidden && t.x === drag.cell.x && t.y === drag.cell.y && t.id !== me?.id && (t.kind === "foe" || t.kind === "npc")) : null;
   const target = drag?.cell ? tokens.find((t) => !t.hidden && t.x === drag.cell.x && t.y === drag.cell.y && t.id !== me?.id) : null;
   return (
@@ -10396,12 +10404,13 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
           return (
             <div
               key={c.key}
-              className={"mh-fan-card" + (lifting ? " is-lifted" : "") + (shown[i + 1] && grp(shown[i + 1]) !== grp(c) ? " is-last-weapon" : "")}
+              className={"mh-fan-card" + (c.ghost ? " is-ghostcard" + (c.noHope ? " is-nohope" : "") : "") + (lifting ? " is-lifted" : "") + (shown[i + 1] && grp(shown[i + 1]) !== grp(c) ? " is-last-weapon" : "")}
               style={{ "--i": i, "--r": `${(i - mid) * stepR}deg`, "--y": `${Math.abs(i - mid) * stepY}px`, "--cc": col, "--m": gap / 2 + "px" }}
               onPointerDown={(e) => start(e, c)}
               title="Púlsala para verla en grande · arrástrala al mapa para usarla"
             >
               <FanFace c={c} col={col} />
+              {c.ghost && <span className="mh-fan-ghostlab">{c.noHope ? "Sin Esperanza" : "Extra · 1 Esperanza"}</span>}
             </div>
           );
         })}
@@ -10440,7 +10449,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
             const r = el?.getBoundingClientRect();
             if (!r) return null;
             const x1 = r.left + r.width / 2, y1 = r.top + r.height / 2;
-            const ok = !!rng && !!aimTarget;
+            const ok = !!rng && !!aimTarget && (!aimOk || aimOk(drag.card, aimTarget));
             const col = ok ? "#7fcf86" : rng ? "#E3B04B" : "#E0544A";
             return (
               <svg className="mh-aim" width="100%" height="100%" aria-hidden="true">
@@ -10479,6 +10488,28 @@ function MapBackdrop({ bg, sharp }) {
   );
 }
 
+// Raíces de Enredo Feroz: asoman de debajo de la ficha, la rodean en espiral y la abrazan; se quedan mientras siga inmovilizada.
+const ROOT_SHAPES = Array.from({ length: 6 }, (_, i) => {
+  const a0 = (i / 6) * Math.PI * 2 + 0.3, dir = i % 2 ? 1 : -1, N = 26, pts = [];
+  for (let k = 0; k <= N; k++) { const f = k / N, ang = a0 + dir * f * 1.9, rad = 33 + Math.sin(f * Math.PI) * 5 + f * 6 + Math.sin(k * 1.3 + i) * 0.7; pts.push([50 + Math.cos(ang) * rad, 50 + Math.sin(ang) * rad]); }
+  const d = (a) => a.map((q, j) => (j ? "L" : "M") + q[0].toFixed(1) + " " + q[1].toFixed(1)).join(" ");
+  const h = Math.floor(N / 2);
+  return { under: d(pts.slice(0, h + 1)), over: d(pts.slice(h)), delay: i * 0.07, leaf: pts[Math.floor(N * 0.7)], rot: (a0 + dir * 1.3) * 57.3 + 90 };
+});
+function RootsFx() {
+  const layer = (kind) => (
+    <svg className={"mh-roots is-" + kind} viewBox="0 0 100 100" aria-hidden="true">
+      {ROOT_SHAPES.map((s, i) => (
+        <g key={i} style={{ "--rd": s.delay + (kind === "over" ? 0.45 : 0) + "s" }}>
+          <path className="mh-root-p is-sh" d={s[kind]} pathLength="1" />
+          <path className="mh-root-p is-body" d={s[kind]} pathLength="1" />
+          {kind === "over" && <ellipse className="mh-root-leaf" cx={s.leaf[0]} cy={s.leaf[1]} rx="3.6" ry="1.9" transform={"rotate(" + s.rot.toFixed(0) + " " + s.leaf[0].toFixed(1) + " " + s.leaf[1].toFixed(1) + ")"} />}
+        </g>
+      ))}
+    </svg>
+  );
+  return <>{layer("under")}{layer("over")}</>;
+}
 // Modo combate a pantalla completa del móvil: el mapa sale del flujo de la hoja y se pinta sobre toda la pantalla (dentro de la raíz del tema).
 function MapPortal({ on, children }) {
   if (!on || typeof document === "undefined") return <div className="mh-mcb-off">{children}</div>;
@@ -10817,6 +10848,7 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
               </span>
             )}
             {cAnim && meCharId && cAnim.charId === meCharId && t.kind === "pc" && t.charId === meCharId && !t.vanished && <span key={cAnim.key} className="mh-map-cpulse" aria-hidden="true"><i /><i /><i /></span>}
+            {t.rootedBy && mapConds(t).includes("Inmovilizado") && !t.vanished && <RootsFx />}
             {spotTok && spotTok.id === t.id && !t.vanished && <span className="mh-map-spot" aria-hidden="true" />}
             {t.kind === "pc" && spotHands[t.charId] && !t.vanished && (
               <span className={"mh-map-hand" + (kindOf(spotHands[t.charId].kind).urgent ? " is-urgent" : "")} aria-hidden="true">
@@ -14821,6 +14853,24 @@ export default function App({ onSignOut }) {
     const mods = getEquipmentMods(PRIMARY_WEAPONS.find((w) => w.key === c.f_primary_weapon), SECONDARY_WEAPONS.find((w) => w.key === c.f_secondary_weapon), ARMORS.find((a) => a.key === c.f_armor));
     postCampaignEvent(charId, "🌿 Lanza Enredo Feroz sobre " + (target.name || "un adversario"));
     rollTraitCheck(charId, label, Number(c[sk] || 0) + (mods[sk] || 0), { name: "Enredo Feroz", damage: "d8+1 físico", spell: true, fixedDice: 1, targetChosen: true, targetId: target.id, targetName: target.name, targetDc: target.stats?.difficulty || null });
+    return "ok";
+  };
+  // Enredo Feroz · carta extra: gasta 1 Esperanza para inmovilizar a otro adversario Muy cercano de un objetivo ya enraizado por ti.
+  const canExtraRoot = (charId, tg) => {
+    const toks = campaignMapRef.current.tokens || [];
+    if (!tg || !(tg.kind === "foe" || tg.kind === "npc") || (tg.conds || []).includes("Inmovilizado")) return false;
+    return toks.some((r) => r.rootedBy === charId && (r.conds || []).includes("Inmovilizado") && r.id !== tg.id && cellDist(r, tg) <= RANGE_CELLS["Muy cercano"]);
+  };
+  const castEnredoExtra = (charId, target) => {
+    const c = charsRef.current[charId];
+    const toks = campaignMapRef.current.tokens || [];
+    const me = toks.find((t) => t.kind === "pc" && t.charId === charId);
+    if (!c || !me || !canExtraRoot(charId, target) || cellDist(me, target) > RANGE_CELLS["Lejano"]) return "cancel";
+    if (Number(c.hope_marked ?? HOPE_DEFAULT) < 1) { pushMapLog(sheetCampaignId, "Enredo Feroz: no tienes Esperanza", "info"); return "cancel"; }
+    updateCharacterField(charId, "hope_marked", String(Number(c.hope_marked ?? HOPE_DEFAULT) - 1));
+        setTimeout(() => mutateMap(sheetCampaignId, (ts) => ts.map((x) => (x.id === target.id ? { ...x, conds: [...new Set([...(x.conds || []), "Inmovilizado"])], rootedBy: charId } : x))), 700);
+    postCampaignEvent(charId, "🌿 Gasta 1 Esperanza: Enredo Feroz también inmoviliza a " + (target.name || "otro adversario"));
+    pushMapLog(sheetCampaignId, "🌿 Enredo Feroz: " + (target.name || "un adversario") + " queda inmovilizado", "info");
     return "ok";
   };
   // Carta de dominio jugada sobre el mapa: lo anota el chat y el tablero lo muestra a toda la mesa (pulso para quien la juega, revelado para los demás).
@@ -21492,17 +21542,21 @@ export default function App({ onSignOut }) {
                                               ? subCard
                                               : { key: it.title, rowCard: true, myClass: me?.f_class, detail: it.onClick?.detail, rowKey: it.key, Icon: it.Icon, kicker: it.kicker, text: it.summary, color: rowColor(it.color), domain: "Sabio", level: "", type: "Acción", open: () => (it.onClick(), setViewingCardDetail((d) => (d && !d.rowIcon ? { ...d, rowIcon: it.Icon } : d))) }
                                           );
-                                          const cards = [wp(me?.f_primary_weapon, PRIMARY_WEAPONS, "Principal"), wp(me?.f_secondary_weapon, SECONDARY_WEAPONS, "Secundaria"), ...actionCards, ...keys.map((k) => findDomainCardAny(k))].filter(Boolean);
+                                          const rootedMine = (campaignMap.tokens || []).filter((t) => t.rootedBy === viewingCharId && (t.conds || []).includes("Inmovilizado"));
+                                          const ghostCard = rootedMine.length && keys.includes("Enredo Feroz") ? (() => { const base = findDomainCardAny("Enredo Feroz"); return base ? { ...base, key: "Enredo Feroz · extra", baseKey: "Enredo Feroz", ghost: true, noHope: Number(me?.hope_marked ?? HOPE_DEFAULT) < 1 } : null; })() : null;
+                                          const cards = [wp(me?.f_primary_weapon, PRIMARY_WEAPONS, "Principal"), wp(me?.f_secondary_weapon, SECONDARY_WEAPONS, "Secundaria"), ...actionCards, ...keys.map((k) => findDomainCardAny(k)), ghostCard].filter(Boolean);
                                           return (
                                             <CardFan
                                               cards={cards}
                                               cardBack={cardBack}
+                                              aimOk={(card, tg) => !card.ghost || canExtraRoot(viewingCharId, tg)}
                                               cardBorder={cardBorder}
                                               onElement={(el, on) => toggleElemental(viewingCharId, el, on)}
                                               activeElement={me?.f_elemental_active || ""}
                                               me={myToken}
                                               tokens={mapTokens}
                                               onUse={(card, cell, target, rng) =>
+                                                card.ghost ? castEnredoExtra(viewingCharId, target) :
                                                 card.key === "Enredo Feroz" && !card.weapon ? castEnredo(viewingCharId, target) :
                                                 card.key === "Lengua de la Naturaleza" && !card.weapon && !card.rowCard && !card.subclass ? (playCardOnMap(charCampaign.id, viewingCharId, card), "reveal") :
                                                 card.domain && !card.weapon && !card.rowCard && !card.subclass ? postCardUse(viewingCharId, card, (target ? "sobre " + (target.name || "una ficha") : "en la casilla " + (cell.x + 1) + "," + (cell.y + 1)) + (rng ? " (" + rng.label + ")" : "")) :
@@ -24589,10 +24643,10 @@ export default function App({ onSignOut }) {
                                 return extra ? [first, extra.id] : [first];
                               })() : null;
                               const fxKind = snareIds ? "roots" : /mágic/i.test(damage || "") ? "magic" : reachNow && reachNow !== "Cuerpo a cuerpo" ? "shot" : "melee";
-                              if (fromTok) mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: fromTok.id, to: traitRollResult.weapon.targetId, kind: fxKind, ...(snareIds && snareIds[1] ? { to2: snareIds[1] } : {}) }), "fx");
+                              if (fromTok && !snareIds) mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: fromTok.id, to: traitRollResult.weapon.targetId, kind: fxKind, ...(snareIds && snareIds[1] ? { to2: snareIds[1] } : {}) }), "fx");
                               if (snareIds) {
                                 // Las raíces inmovilizan al objetivo (y al segundo adversario si se gasta una Esperanza).
-                                setTimeout(() => mutateMap(sheetCampaignId, (ts) => ts.map((x) => (snareIds.includes(x.id) ? { ...x, conds: [...new Set([...(x.conds || []), "Inmovilizado"])] } : x))), 900);
+                                setTimeout(() => mutateMap(sheetCampaignId, (ts) => ts.map((x) => (snareIds.includes(x.id) ? { ...x, conds: [...new Set([...(x.conds || []), "Inmovilizado"])], rootedBy: charId } : x))), 900);
                                 pushMapLog(sheetCampaignId, "🌿 Enredo Feroz: " + snareIds.map((id) => (campaignMap.tokens || []).find((x) => x.id === id)?.name || "un adversario").join(" y ") + " queda inmovilizado", "info");
                                 if (snareIds[1] && rc) updateCharacterField(charId, "hope_marked", String(Math.max(0, Number(rc.hope_marked ?? HOPE_DEFAULT) - 1)));
                               }
