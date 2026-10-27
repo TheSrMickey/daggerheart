@@ -5005,6 +5005,12 @@ const sharedStyles = `
   .mh-fan-card:hover { transform: translateY(-60px) rotate(0deg) scale(1.15); z-index: 2; }
   .mh-fan-card.is-lifted { opacity: .25; }
   .mh-fan-ghost { position: fixed; z-index: 9999; pointer-events: none; transform: translate(-50%, -50%) rotate(-6deg); padding: 8px 12px; border-radius: 8px; border: 2px solid var(--c); background: #1B1824; color: #F3EBDD; font-size: 12px; box-shadow: 0 0 18px var(--c); }
+  .mh-fan-ghost.is-card { padding: 0; border: 0; background: none; box-shadow: none; width: 150px; height: 210px; transform: translate(-50%, -50%) rotate(-4deg) scale(1.02); filter: drop-shadow(0 16px 26px rgba(0,0,0,.65)); } .mh-fan-ghost.is-card > div { transform-origin: top left; transform: scale(.5); width: 300px !important; height: 420px !important; }
+  .mh-fan-ret { position: fixed; z-index: 9999; pointer-events: none; width: 150px; height: 210px; margin: -105px 0 0 -75px; animation: mh-fan-ret 1.1s cubic-bezier(.5,0,.3,1) .15s both; filter: drop-shadow(0 12px 22px rgba(0,0,0,.6)); } .mh-fan-ret > div { transform-origin: top left; transform: scale(.5); width: 300px !important; height: 420px !important; }
+  @keyframes mh-fan-ret { 0% { opacity: 1; transform: translate(0, 0) scale(1.02); } 70% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(.75) rotate(4deg); } }
+  .mh-cuse { display: flex; gap: 12px; align-items: stretch; padding: 8px 12px 8px 8px; border-radius: 16px; border: 1.5px solid color-mix(in srgb, var(--cc) 70%, transparent); background: linear-gradient(135deg, color-mix(in srgb, var(--cc) 20%, transparent), transparent 70%), var(--mh-panel2); max-width: 340px; }
+  .mh-cuse-th { flex: none; width: 52px; height: 72px; border-radius: 10px; background: color-mix(in srgb, var(--cc) 25%, #10112a) center / cover; border: 1px solid color-mix(in srgb, var(--cc) 80%, transparent); box-shadow: 0 6px 14px -6px #000a; }
+  .mh-cuse-tx { display: flex; flex-direction: column; justify-content: center; min-width: 0; gap: 1px; } .mh-cuse-tx small { font: 700 9.5px 'Inter', sans-serif; letter-spacing: .12em; text-transform: uppercase; color: color-mix(in srgb, var(--cc) 70%, var(--mh-ink)); } .mh-cuse-tx b { font-size: 15px; color: var(--mh-ink); } .mh-cuse-tx em { font-style: normal; font-size: 11.5px; color: var(--mh-muted); } .mh-cuse-tx i { font-style: normal; font-size: 11.5px; color: var(--mh-ink3); margin-top: 2px; }
   .mh-fan-tip { position: fixed; z-index: 9999; pointer-events: none; transform: translate(-50%, -150%); padding: 6px 10px; border-radius: 8px; background: rgba(20,17,26,.92); color: #F3EBDD; font-size: 12px; white-space: nowrap; }
   .mh-fan-tip small { display: block; font-size: 10px; opacity: .7; }
   /* Carta jugada en el mapa (la ve el resto de la mesa): tablero oscurecido, reverso y revelado. Dura ~4,4 s. */
@@ -10194,6 +10200,12 @@ function HomeDice({ stats }) {
 function CardFan({ cards, me, tokens, onUse, onElement, activeElement }) {
   const [drag, setDrag] = useState(null); // { card, x, y, cell, moved }
   const [open, setOpen] = useState(null); // carta mostrada en grande
+  const [back, setBack] = useState(null); // carta que vuelve a la mano tras usarse
+  useEffect(() => {
+    if (!back) return;
+    const t = setTimeout(() => setBack(null), 1300);
+    return () => clearTimeout(t);
+  }, [back?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const dragRef = useRef(null);
   // Casilla bajo el puntero, calculada con el rectángulo del tablero (que ya incluye el zoom y el desplazamiento).
   const cellAt = (x, y) => {
@@ -10202,6 +10214,11 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement }) {
     const r = el.getBoundingClientRect();
     if (!r.width || x < r.left || x > r.right || y < r.top || y > r.bottom) return null;
     return { x: Math.min(MAP_COLS - 1, Math.floor(((x - r.left) / r.width) * MAP_COLS)), y: Math.min(MAP_ROWS - 1, Math.floor(((y - r.top) / r.height) * MAP_ROWS)) };
+  };
+  // Sobre la mano (el abanico) no se lanza nada: solo cuenta lo que se suelta en el tablero.
+  const inHand = (x, y) => {
+    const r = fanRef.current?.getBoundingClientRect();
+    return !!r && x >= r.left - 30 && x <= r.right + 30 && y >= r.top - 24 && y <= r.bottom + 24;
   };
   const rangeOf = (cell) => {
     if (!me || !cell) return null;
@@ -10221,11 +10238,13 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement }) {
       return;
     }
     if (!d.moved) return setOpen(d.card);
-    const cell = cellAt(ev.clientX, ev.clientY);
+    const cell = inHand(ev.clientX, ev.clientY) ? null : cellAt(ev.clientX, ev.clientY);
     if (!cell) return;
     if (d.card.subclass) return setOpen({ ...d.card, choose: true });
     const target = tokens.find((t) => !t.hidden && t.x === cell.x && t.y === cell.y && t.id !== me?.id) || null;
     onUse(d.card, cell, target, rangeOf(cell));
+    // La carta usada vuelve volando a la mano.
+    if (d.home) setBack({ card: d.card, x: ev.clientX, y: ev.clientY, to: d.home, id: Date.now() });
   };
   const move = (ev) => {
     const cell = cellAt(ev.clientX, ev.clientY);
@@ -10242,7 +10261,8 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement }) {
   const start = (ev, card) => {
     if (ev.button > 0) return;
     ev.preventDefault();
-    dragRef.current = { card, x: ev.clientX, y: ev.clientY, x0: ev.clientX, y0: ev.clientY, cell: null, moved: false };
+    const hr = ev.currentTarget.getBoundingClientRect();
+    dragRef.current = { home: { x: hr.left + hr.width / 2, y: hr.top + hr.height / 2 }, card, x: ev.clientX, y: ev.clientY, x0: ev.clientX, y0: ev.clientY, cell: null, moved: false };
     setDrag(dragRef.current);
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", up);
@@ -10352,13 +10372,18 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement }) {
           </div>
         </div>
       )}
+      {back && (
+        <div key={back.id} className="mh-fan-ret" style={{ left: back.x, top: back.y, "--tx": back.to.x - back.x + "px", "--ty": back.to.y - back.y + "px" }} aria-hidden="true">
+          <FanFace c={back.card} col={colOf(back.card)} />
+        </div>
+      )}
       {drag?.moved && (
         <>
-          <div className="mh-fan-ghost" style={{ left: drag.x, top: drag.y, "--c": drag.card.weapon ? TIER_COLORS[drag.card.level]?.color || "#C9A24B" : drag.card.rowCard ? drag.card.color : DOMAIN_COLORS[drag.card.domain] || "#C9A24B" }}>
-            <b>{drag.card.key}</b>
+          <div className="mh-fan-ghost is-card" style={{ left: drag.x, top: drag.y }}>
+            <FanFace c={drag.card} col={colOf(drag.card)} />
           </div>
-          {drag.cell && (
-            <div className="mh-fan-tip" style={{ left: drag.x, top: drag.y }}>
+          {drag.cell && !inHand(drag.x, drag.y) && (
+            <div className="mh-fan-tip" style={{ left: drag.x, top: drag.y - 112 }}>
               {drag.card.rowCard ? "Abrir «" + drag.card.key + "»" : drag.card.subclass ? "Activar Encarnación Elemental" : <>{target ? `Objetivo: ${target.name || "Ficha"}` : "Casilla"} {rng ? `(${rng.label})` : "(fuera de alcance)"}</>}
               <small>{drag.card.rowCard ? "Suelta en cualquier casilla · Esc para cancelar" : drag.card.subclass ? "Suelta en cualquier casilla · Esc para cancelar" : "Suelta para usar · Esc para cancelar"}</small>
             </div>
@@ -14128,6 +14153,24 @@ export default function App({ onSignOut }) {
     });
   };
   const renderChatItem = (list, meCharId, m, i) => {
+      if (m.cardUse) {
+        const cu = m.cardUse;
+        const cc = DOMAIN_COLORS[cu.domain] || "#C9A24B";
+        return (
+          <div key={(m.ts || 0) + "-" + i} className="mh-chat-poll">
+            <span className="mh-chat-who"><b style={{ color: classColor(m.cls) }}>{m.author}</b> · {new Date(m.ts).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}</span>
+            <div className="mh-cuse" style={{ "--cc": cc }}>
+              <span className="mh-cuse-th" style={cu.image ? { backgroundImage: "url(" + cu.image + ")" } : undefined} />
+              <span className="mh-cuse-tx">
+                <small>Usa una carta</small>
+                <b className="mh-serif">{cu.key}</b>
+                <em>{[cu.domain, cu.type, cu.level !== "" ? "Nivel " + cu.level : ""].filter(Boolean).join(" · ")}</em>
+                {cu.detail && <i>{cu.detail}</i>}
+              </span>
+            </div>
+          </div>
+        );
+      }
       if (m.medal) return <div key={(m.ts || 0) + "-" + i} className="mh-chat-poll"><span className="mh-chat-who"><b>{m.author || "El DJ"}</b> · {new Date(m.ts).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}</span><MedalChatCard md={m.medal} /></div>;
       if (m.poll) return <div key={(m.ts || 0) + "-" + i} className="mh-chat-poll"><span className="mh-chat-who"><b>{m.author || "El DJ"}</b> · {new Date(m.ts).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}</span><PollResultCard s={m.poll} me={meCharId} /></div>;
       const kind = m.kind || (CHAT_EMOJI_RE.test(m.text || "") ? "event" : "msg");
@@ -14661,10 +14704,17 @@ export default function App({ onSignOut }) {
     await postChat(camp.id, { kind: "event", author: ch?.f_name || "Un personaje", charId, cls: ch?.f_class || "", text, ...extra });
   };
 
+  // Mensaje del chat al usar una carta de dominio: tarjeta con la miniatura, el nombre y de qué dominio es.
+  const postCardUse = async (charId, card, detail) => {
+    const camp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(charId));
+    if (!camp) return;
+    const ch = characters[charId];
+    await postChat(camp.id, { kind: "msg", author: ch?.f_name || "Un personaje", charId, cls: ch?.f_class || "", text: "usa la carta «" + card.key + "»" + (detail ? " " + detail : ""), cardUse: { key: card.key, domain: card.domain || "", type: card.type || "", level: card.level ?? "", image: card.image || "", detail: detail || "" } });
+  };
   // Carta de dominio jugada sobre el mapa: lo anota el chat y el tablero lo muestra a toda la mesa (pulso para quien la juega, revelado para los demás).
   const playCardOnMap = (campaignId, charId, card) => {
     const ch = characters[charId];
-    postCampaignEvent(charId, "usa la carta «" + card.key + "»");
+    postCardUse(charId, card);
     const slim = { key: card.key, domain: card.domain, type: card.type, level: card.level, recall: card.recall, text: card.text, image: card.image };
     mutateMap(campaignId, () => ({ key: Date.now(), charId, name: ch?.f_name || "Alguien", back: cardBack, card: slim }), "cfx");
   };
@@ -21330,6 +21380,7 @@ export default function App({ onSignOut }) {
                                               tokens={mapTokens}
                                               onUse={(card, cell, target, rng) =>
                                                 card.key === "Lengua de la Naturaleza" && !card.weapon && !card.rowCard && !card.subclass ? playCardOnMap(charCampaign.id, viewingCharId, card) :
+                                                card.domain && !card.weapon && !card.rowCard && !card.subclass ? postCardUse(viewingCharId, card, (target ? "sobre " + (target.name || "una ficha") : "en la casilla " + (cell.x + 1) + "," + (cell.y + 1)) + (rng ? " (" + rng.label + ")" : "")) :
                                                 postCampaignEvent(viewingCharId, `${card.weapon ? "ataca con" : "usa la carta"} «${card.key}»${target ? ` sobre ${target.name || "una ficha"}` : ` en la casilla ${cell.x + 1},${cell.y + 1}`}${rng ? ` (${rng.label})` : ""}.`)
                                               }
                                             />
