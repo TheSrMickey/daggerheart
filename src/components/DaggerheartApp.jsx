@@ -5012,6 +5012,7 @@ const sharedStyles = `
   .mh-fan-card:hover { transform: translateY(-60px) rotate(0deg) scale(1.15); z-index: 2; }
   .mh-fan-card.is-lifted { opacity: .25; transition: opacity .25s; }
   .mh-fan-ghost { position: fixed; z-index: 9999; pointer-events: none; transform: translate(-50%, -50%) rotate(-6deg); padding: 8px 12px; border-radius: 8px; border: 2px solid var(--c); background: #1B1824; color: #F3EBDD; font-size: 12px; box-shadow: 0 0 18px var(--c); }
+  .mh-aim { position: fixed; inset: 0; z-index: 9998; pointer-events: none; } .mh-aim-l { animation: mh-aim-dash .6s linear infinite; } @keyframes mh-aim-dash { to { stroke-dashoffset: -12; } }
   .mh-fan-ghost.is-card { padding: 0; border: 0; background: none; box-shadow: none; width: 150px; height: 210px; transform: translate(-50%, -50%) rotate(-4deg) scale(1.02); filter: drop-shadow(0 16px 26px rgba(0,0,0,.65)); } .mh-fan-ghost.is-card > div { transform-origin: top left; transform: scale(.5); width: 300px !important; height: 420px !important; }
   .mh-fan-ret { position: fixed; z-index: 9999; pointer-events: none; width: 150px; height: 210px; margin: -105px 0 0 -75px; animation: mh-fan-ret 1.1s cubic-bezier(.5,0,.3,1) .15s both; filter: drop-shadow(0 12px 22px rgba(0,0,0,.6)); } .mh-fan-ret > div { transform-origin: top left; transform: scale(.5); width: 300px !important; height: 420px !important; }
   @keyframes mh-fan-ret { 0% { opacity: 1; transform: translate(0, 0) scale(1.02); } 70% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(.75) rotate(4deg); } }
@@ -10225,6 +10226,8 @@ function HomeDice({ stats }) {
 }
 
 // Abanico de cartas de dominio en el borde inferior del mapa: se arrastran hasta una casilla para usarlas.
+// Cartas que se lanzan apuntando: una línea de guiones sale del personaje hasta el ratón.
+const AIM_CARD = "Enredo Feroz";
 function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack, cardBorder }) {
   const cardsRef = useRef(cards);
   cardsRef.current = cards;
@@ -10290,10 +10293,11 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
     const cell = inHand(ev.clientX, ev.clientY) ? null : cellAt(ev.clientX, ev.clientY);
     if (!cell) return;
     if (d.card.subclass) return setOpen({ ...d.card, choose: true });
+    if (d.card.key === AIM_CARD && (!rangeOf(cell) || !tokens.find((t) => !t.hidden && t.x === cell.x && t.y === cell.y && t.id !== me?.id && (t.kind === "foe" || t.kind === "npc")))) return; // sin objetivo válido o fuera de alcance: se cancela
     const target = tokens.find((t) => !t.hidden && t.x === cell.x && t.y === cell.y && t.id !== me?.id) || null;
     window.__mhFlyTo = { key: d.card.key, x: d.home.x, y: d.home.y, w: d.home.w, t: Date.now() };
     const res = onUse(d.card, cell, target, rangeOf(cell));
-    if (!d.home) return;
+    if (res === "cancel" || !d.home) return;
     // La carta usada vuelve volando a la mano; si se revela en el mapa, lo hace cuando acaba esa animación.
     setHeld({ key: d.card.key, home: d.home, from: { x: ev.clientX, y: ev.clientY }, wait: res === "reveal", at: Date.now() });
     if (res !== "reveal") flyBack(d.card, { x: ev.clientX, y: ev.clientY }, d.home);
@@ -10368,6 +10372,8 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
   const stepR = Math.min(5, 36 / Math.max(1, n - 1));
   const stepY = Math.min(5, 30 / Math.max(1, n - 1));
   const rng = drag ? rangeOf(drag.cell) : null;
+  const aim = !!drag?.moved && drag.card.key === AIM_CARD && !inHand(drag.x, drag.y);
+  const aimTarget = aim && drag.cell ? tokens.find((t) => !t.hidden && t.x === drag.cell.x && t.y === drag.cell.y && t.id !== me?.id && (t.kind === "foe" || t.kind === "npc")) : null;
   const target = drag?.cell ? tokens.find((t) => !t.hidden && t.x === drag.cell.x && t.y === drag.cell.y && t.id !== me?.id) : null;
   return (
     <>
@@ -10429,12 +10435,28 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
       )}
       {drag?.moved && (
         <>
+          {aim ? (() => {
+            const el = me ? document.querySelector('.mh-map-tk[data-tid="' + me.id + '"]') : null;
+            const r = el?.getBoundingClientRect();
+            if (!r) return null;
+            const x1 = r.left + r.width / 2, y1 = r.top + r.height / 2;
+            const ok = !!rng && !!aimTarget;
+            const col = ok ? "#7fcf86" : rng ? "#E3B04B" : "#E0544A";
+            return (
+              <svg className="mh-aim" width="100%" height="100%" aria-hidden="true">
+                <line x1={x1} y1={y1} x2={drag.x} y2={drag.y} stroke="#000" strokeOpacity=".45" strokeWidth="6" strokeLinecap="round" />
+                <line className="mh-aim-l" x1={x1} y1={y1} x2={drag.x} y2={drag.y} stroke={col} strokeWidth="3.5" strokeLinecap="round" strokeDasharray="2 10" />
+                <circle cx={drag.x} cy={drag.y} r={ok ? 16 : 9} fill="none" stroke={col} strokeWidth="2.5" />
+              </svg>
+            );
+          })() : (
           <div className="mh-fan-ghost is-card" style={{ left: drag.x, top: drag.y, "--cc": colOf(drag.card) }}>
             <FanFace c={drag.card} col={colOf(drag.card)} />
           </div>
+          )}
           {drag.cell && !inHand(drag.x, drag.y) && (
-            <div className="mh-fan-tip" style={{ left: drag.x, top: drag.y - 112 }}>
-              {drag.card.rowCard ? "Abrir «" + drag.card.key + "»" : drag.card.subclass ? "Activar Encarnación Elemental" : <>{target ? `Objetivo: ${target.name || "Ficha"}` : "Casilla"} {rng ? `(${rng.label})` : "(fuera de alcance)"}</>}
+            <div className="mh-fan-tip" style={{ left: Math.max(130, Math.min(window.innerWidth - 130, drag.x)), top: aim ? drag.y - 40 : drag.y - 112 }}>
+              {aim ? (!rng ? "Fuera de alcance Lejano" : aimTarget ? "Lanzar sobre " + (aimTarget.name || "el objetivo") : "Suéltala sobre un adversario") : drag.card.rowCard ? "Abrir «" + drag.card.key + "»" : drag.card.subclass ? "Activar Encarnación Elemental" : <>{target ? `Objetivo: ${target.name || "Ficha"}` : "Casilla"} {rng ? `(${rng.label})` : "(fuera de alcance)"}</>}
               <small>{drag.card.rowCard ? "Suelta en cualquier casilla · Esc para cancelar" : drag.card.subclass ? "Suelta en cualquier casilla · Esc para cancelar" : "Suelta para usar · Esc para cancelar"}</small>
             </div>
           )}
@@ -10769,6 +10791,7 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
           <button
             key={t.id}
             type="button"
+            data-tid={t.id}
             className={"mh-map-tk is-" + t.kind + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
             style={{ ...at(pos.x, pos.y), "--tc": t.color, ...(anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); return tg ? { "--ax": (tg.x - t.x) * 100 + "%", "--ay": (tg.y - t.y) * 100 + "%" } : {}; })() : {}) }}
             onPointerDown={(e) => startDrag(e, t)}
@@ -14786,6 +14809,19 @@ export default function App({ onSignOut }) {
     if (!camp) return;
     const ch = characters[charId];
     await postChat(camp.id, { kind: "msg", author: ch?.f_name || "Un personaje", charId, cls: ch?.f_class || "", text: "usa la carta «" + card.key + "»" + (detail ? " " + detail : ""), cardUse: { key: card.key, domain: card.domain || "", type: card.type || "", level: card.level ?? "", image: card.image || "", detail: detail || "" } });
+  };
+  // Enredo Feroz arrastrada a un adversario: tirada de conjuro contra él (alcance Lejano); si acierta, raíces (1d8+1) e Inmovilizado.
+  const castEnredo = (charId, target) => {
+    const c = charsRef.current[charId];
+    const me = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
+    if (!c || !me || !target || !(target.kind === "foe" || target.kind === "npc") || cellDist(me, target) > RANGE_CELLS["Lejano"]) return "cancel";
+    const sk = charSpellTrait(c);
+    const label = TRAITS.find((tr) => tr.key === sk)?.label;
+    if (!label || c.f_beastform) return "cancel";
+    const mods = getEquipmentMods(PRIMARY_WEAPONS.find((w) => w.key === c.f_primary_weapon), SECONDARY_WEAPONS.find((w) => w.key === c.f_secondary_weapon), ARMORS.find((a) => a.key === c.f_armor));
+    postCampaignEvent(charId, "🌿 Lanza Enredo Feroz sobre " + (target.name || "un adversario"));
+    rollTraitCheck(charId, label, Number(c[sk] || 0) + (mods[sk] || 0), { name: "Enredo Feroz", damage: "d8+1 físico", spell: true, fixedDice: 1, targetChosen: true, targetId: target.id, targetName: target.name, targetDc: target.stats?.difficulty || null });
+    return "ok";
   };
   // Carta de dominio jugada sobre el mapa: lo anota el chat y el tablero lo muestra a toda la mesa (pulso para quien la juega, revelado para los demás).
   const playCardOnMap = (campaignId, charId, card) => {
@@ -21467,6 +21503,7 @@ export default function App({ onSignOut }) {
                                               me={myToken}
                                               tokens={mapTokens}
                                               onUse={(card, cell, target, rng) =>
+                                                card.key === "Enredo Feroz" && !card.weapon ? castEnredo(viewingCharId, target) :
                                                 card.key === "Lengua de la Naturaleza" && !card.weapon && !card.rowCard && !card.subclass ? (playCardOnMap(charCampaign.id, viewingCharId, card), "reveal") :
                                                 card.domain && !card.weapon && !card.rowCard && !card.subclass ? postCardUse(viewingCharId, card, (target ? "sobre " + (target.name || "una ficha") : "en la casilla " + (cell.x + 1) + "," + (cell.y + 1)) + (rng ? " (" + rng.label + ")" : "")) :
                                                 postCampaignEvent(viewingCharId, `${card.weapon ? "ataca con" : "usa la carta"} «${card.key}»${target ? ` sobre ${target.name || "una ficha"}` : ` en la casilla ${cell.x + 1},${cell.y + 1}`}${rng ? ` (${rng.label})` : ""}.`)
