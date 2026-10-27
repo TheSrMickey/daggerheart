@@ -9,6 +9,7 @@ export const CHANGELOG = [
     title: "Combate en el móvil y cartas jugables",
     blurb: "El móvil estrena un modo combate a pantalla completa y en vertical, y ya puedes arrastrar cartas al mapa con su animación para toda la mesa.",
     items: [
+      { tag: "nuevo", text: "Combate · «Enredo Feroz» se lanza apuntando: al arrastrarla al tablero sale una línea de guiones desde tu ficha hasta el ratón (verde sobre un adversario en alcance, roja si está fuera del alcance Lejano); al soltarla sobre un adversario haces la tirada de conjuro contra él y, si aciertas, 1d8+1 de daño físico e Inmovilizado. Si la sueltas en la mano o sin objetivo, se cancela." },
       { tag: "mejora", text: "Personalización · el reverso «Noche y oro» ahora se adapta al modo claro (fondo crema y filete dorado) en vez de quedarse azul oscuro." },
       { tag: "nuevo", text: "Móvil · cuando el DJ muestra el combate, la ficha de tu personaje en «Campaña» pasa a un modo combate a pantalla completa y en vertical: el mapa se gira para ocupar todo el alto (casillas más grandes), con tu Vida/Estrés/Esperanza arriba, la mano de cartas en abanico abajo, el chat en una hoja que se abre con un botón, y botones para salir o girar el mapa." },
       { tag: "arreglo", text: "Combate · el círculo de vida de las fichas ahora se mueve con ellas (bote, arrastre, vuelo y reducción) y encaja justo en el borde de la ficha, sin dejar ver el borde por debajo. Al cambiar de grupo de cartas, la mano y las pilas de los lados entran con una animación según el lado desde el que llegan." },
