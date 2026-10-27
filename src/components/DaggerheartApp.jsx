@@ -5003,7 +5003,7 @@ const sharedStyles = `
   .mh-fan-card.is-last-weapon { margin-right: calc(var(--m, -26px) + 16px); }
   @media (max-width: 760px) { .mh-fan-card { --s: .36; margin: 0 -20px; } }
   .mh-fan-card:hover { transform: translateY(-60px) rotate(0deg) scale(1.15); z-index: 2; }
-  .mh-fan-card.is-lifted { opacity: .25; }
+  .mh-fan-card.is-lifted { opacity: .25; transition: opacity .25s; }
   .mh-fan-ghost { position: fixed; z-index: 9999; pointer-events: none; transform: translate(-50%, -50%) rotate(-6deg); padding: 8px 12px; border-radius: 8px; border: 2px solid var(--c); background: #1B1824; color: #F3EBDD; font-size: 12px; box-shadow: 0 0 18px var(--c); }
   .mh-fan-ghost.is-card { padding: 0; border: 0; background: none; box-shadow: none; width: 150px; height: 210px; transform: translate(-50%, -50%) rotate(-4deg) scale(1.02); filter: drop-shadow(0 16px 26px rgba(0,0,0,.65)); } .mh-fan-ghost.is-card > div { transform-origin: top left; transform: scale(.5); width: 300px !important; height: 420px !important; }
   .mh-fan-ret { position: fixed; z-index: 9999; pointer-events: none; width: 150px; height: 210px; margin: -105px 0 0 -75px; animation: mh-fan-ret 1.1s cubic-bezier(.5,0,.3,1) .15s both; filter: drop-shadow(0 12px 22px rgba(0,0,0,.6)); } .mh-fan-ret > div { transform-origin: top left; transform: scale(.5); width: 300px !important; height: 420px !important; }
@@ -5015,21 +5015,20 @@ const sharedStyles = `
   .mh-fan-tip small { display: block; font-size: 10px; opacity: .7; }
   /* Carta jugada en el mapa (la ve el resto de la mesa): tablero oscurecido, reverso y revelado. Dura ~4,4 s. */
   .mh-cpf { position: absolute; inset: 0; z-index: 30; pointer-events: none; display: grid; place-items: center; overflow: hidden; }
-  .mh-cpf-dim { position: absolute; inset: 0; background: radial-gradient(70% 70% at 50% 50%, rgba(6,6,18,.55), rgba(6,6,18,.82)); opacity: 0; animation: mh-cpf-dim 4.4s ease both; }
+  .mh-cpf-dim { position: absolute; inset: 0; background: radial-gradient(70% 70% at 50% 50%, rgba(6,6,18,.55), rgba(6,6,18,.82)); opacity: 0; animation: mh-cpf-dim 4.5s ease both; }
   .mh-cpf-stage { position: relative; display: flex; flex-direction: column; align-items: center; gap: 14px; }
-  .mh-cpf-card { position: relative; width: 168px; height: 236px; transform-style: preserve-3d; perspective: 900px; opacity: 0; animation: mh-cpf-card 4.4s cubic-bezier(.3,.9,.3,1) both; }
-  .mh-cpf-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 16px; overflow: hidden; box-shadow: 0 22px 50px -14px #000d, 0 0 46px -8px var(--cc); } .mh-cpf-face > svg, .mh-cpf-face > div { display: block; width: 100%; height: 100%; }
-  .mh-cpf-back { animation: mh-cpf-back 4.4s ease both; transform: rotateY(0deg); }
-  .mh-cpf-front { animation: mh-cpf-front 4.4s ease both; transform: rotateY(180deg); } .mh-cpf-front > div { transform-origin: top left; transform: scale(.56); width: 300px !important; height: 420px !important; }
-  .mh-cpf-nm { color: #fff; font-size: 13px; text-shadow: 0 2px 10px #000; opacity: 0; animation: mh-cpf-nm 4.4s ease both; } .mh-cpf-nm em { font-style: normal; font-weight: 700; color: var(--cc); filter: brightness(1.25); }
-  @keyframes mh-cpf-dim { 0% { opacity: 0; } 10% { opacity: 1; } 86% { opacity: 1; } 100% { opacity: 0; } }
-  @keyframes mh-cpf-card { 0% { opacity: 0; transform: translateY(26px) scale(.82); } 10% { opacity: 1; transform: translateY(0) scale(1); } 86% { opacity: 1; transform: translateY(0) scale(1.04); } 100% { opacity: 0; transform: translateY(-10px) scale(1.04); } }
-  @keyframes mh-cpf-back { 0%, 34% { transform: rotateY(0deg); } 52%, 100% { transform: rotateY(180deg); } }
-  @keyframes mh-cpf-front { 0%, 34% { transform: rotateY(180deg); } 52%, 100% { transform: rotateY(360deg); } }
+  .mh-cpf-card { position: relative; width: 168px; height: 236px; perspective: 1000px; opacity: 0; animation: mh-cpf-card 4.5s cubic-bezier(.3,.9,.3,1) both; }
+  .mh-cpf-flip { position: absolute; inset: 0; transform-style: preserve-3d; animation: mh-cpf-flip 4.5s cubic-bezier(.45,0,.25,1) both; }
+  .mh-cpf-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 12px; overflow: hidden; background: #10112a; transform: translateZ(0.1px); box-shadow: 0 22px 50px -14px #000d, 0 0 46px -8px var(--cc); } .mh-cpf-face > svg { display: block; width: 100%; height: 100%; }
+  .mh-cpf-front { transform: rotateY(180deg) translateZ(0.1px); } .mh-cpf-front > div { transform-origin: top left; transform: scale(.56); width: 300px !important; height: 420px !important; border-color: var(--edge) !important; border-radius: 22px !important; }
+  .mh-cpf-nm { color: #fff; font-size: 13px; text-shadow: 0 2px 10px #000; opacity: 0; animation: mh-cpf-nm 4.5s ease both; } .mh-cpf-nm em { font-style: normal; font-weight: 700; color: var(--cc); filter: brightness(1.25); }
+  @keyframes mh-cpf-dim { 0% { opacity: 0; } 10% { opacity: 1; } 88% { opacity: 1; } 100% { opacity: 0; } }
+  @keyframes mh-cpf-card { 0% { opacity: 0; transform: translateY(26px) scale(.82); } 10% { opacity: 1; transform: translateY(0) scale(1); } 88% { opacity: 1; transform: translateY(0) scale(1.04); } 100% { opacity: 0; transform: translateY(-10px) scale(1.04); } }
+  @keyframes mh-cpf-flip { 0%, 30% { transform: rotateY(0deg); } 52%, 100% { transform: rotateY(180deg); } }
   @keyframes mh-cpf-nm { 0%, 50% { opacity: 0; } 60%, 86% { opacity: 1; } 100% { opacity: 0; } }
   .mh-map-cpulse { position: absolute; inset: -4px; pointer-events: none; z-index: 0; } .mh-map-cpulse i { position: absolute; inset: 0; border-radius: 50%; border: 2px solid #E3B04B; box-shadow: 0 0 18px #E3B04B88; opacity: 0; animation: mh-cpulse 1.5s ease-out both; } .mh-map-cpulse i:nth-child(2) { animation-delay: .35s; } .mh-map-cpulse i:nth-child(3) { animation-delay: .7s; }
   @keyframes mh-cpulse { 0% { opacity: .9; transform: scale(.9); } 100% { opacity: 0; transform: scale(2.6); } }
-  @media (prefers-reduced-motion: reduce) { .mh-cpf-card, .mh-cpf-back, .mh-cpf-front, .mh-map-cpulse i { animation-duration: .01s; } .mh-cpf-card { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .mh-cpf-card, .mh-cpf-flip, .mh-map-cpulse i { animation-duration: .01s; } .mh-cpf-card { opacity: 1; } }
   .mh-map-stage { position: relative; flex: 1 1 auto; min-height: 200px; border-radius: 12px; overflow: hidden; background: #1B1824; }
   .mh-map-view { position: absolute; inset: 0; overflow: auto; scrollbar-width: none; container-type: size; }
   .mh-map-view::-webkit-scrollbar { display: none; }
@@ -9673,6 +9672,38 @@ function useElemEvent(efx, ms = 2800) {
   }, [efx?.key]);
   return anim;
 }
+// Cartas jugadas en el mapa: se enseñan una detrás de otra, por orden de llegada, sin cortarse entre sí. Al acabar cada una avisa a la mano del jugador.
+function useCardQueue(list) {
+  const [cur, setCur] = useState(null);
+  const seen = useRef(new Set());
+  const queue = useRef([]);
+  const busy = useRef(false);
+  const timer = useRef(null);
+  const pump = () => {
+    if (busy.current || !queue.current.length) return;
+    busy.current = true;
+    const it = queue.current.shift();
+    setCur(it);
+    timer.current = setTimeout(() => {
+      busy.current = false;
+      setCur(null);
+      window.dispatchEvent(new CustomEvent("mh-cardplay-end", { detail: { key: it.key, charId: it.charId, card: it.card?.key } }));
+      pump();
+    }, 4500);
+  };
+  useEffect(() => {
+    const arr = Array.isArray(list) ? list : list && list.key ? [list] : [];
+    arr.forEach((it) => {
+      if (seen.current.has(it.key)) return;
+      seen.current.add(it.key);
+      if (Date.now() - it.key < 20000) queue.current.push(it);
+    });
+    queue.current.sort((a, b) => a.key - b.key);
+    pump();
+  }, [list]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => () => clearTimeout(timer.current), []);
+  return cur;
+}
 function useAttackFx(fx) {
   const [anim, setAnim] = useState(null);
   const last = useRef(null);
@@ -10198,14 +10229,36 @@ function HomeDice({ stats }) {
 
 // Abanico de cartas de dominio en el borde inferior del mapa: se arrastran hasta una casilla para usarlas.
 function CardFan({ cards, me, tokens, onUse, onElement, activeElement }) {
+  const cardsRef = useRef(cards);
+  cardsRef.current = cards;
   const [drag, setDrag] = useState(null); // { card, x, y, cell, moved }
   const [open, setOpen] = useState(null); // carta mostrada en grande
   const [back, setBack] = useState(null); // carta que vuelve a la mano tras usarse
+  const [held, setHeld] = useState(null); // carta usada: su hueco en la mano queda vacío hasta que vuelve
+  const heldRef = useRef(null);
+  heldRef.current = held;
+  const flyBack = (card, from, to) => {
+    const id = Date.now();
+    setBack({ card, x: from.x, y: from.y, to, id });
+    setTimeout(() => setHeld((h) => (h && h.key === card.key ? null : h)), 1300);
+    setTimeout(() => setBack((b) => (b && b.id === id ? null : b)), 1300);
+  };
   useEffect(() => {
-    if (!back) return;
-    const t = setTimeout(() => setBack(null), 1300);
+    const onEnd = (e) => {
+      const h = heldRef.current;
+      if (!h || !h.wait || e.detail.card !== h.key) return;
+      const r = document.querySelector(".mh-map-stage")?.getBoundingClientRect();
+      const from = r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : h.from;
+      flyBack({ ...cardsRef.current.find((c) => c.key === h.key) }, from, h.home);
+    };
+    window.addEventListener("mh-cardplay-end", onEnd);
+    return () => window.removeEventListener("mh-cardplay-end", onEnd);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!held) return;
+    const t = setTimeout(() => setHeld(null), 15000);
     return () => clearTimeout(t);
-  }, [back?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [held?.at]);
   const dragRef = useRef(null);
   // Casilla bajo el puntero, calculada con el rectángulo del tablero (que ya incluye el zoom y el desplazamiento).
   const cellAt = (x, y) => {
@@ -10242,9 +10295,11 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement }) {
     if (!cell) return;
     if (d.card.subclass) return setOpen({ ...d.card, choose: true });
     const target = tokens.find((t) => !t.hidden && t.x === cell.x && t.y === cell.y && t.id !== me?.id) || null;
-    onUse(d.card, cell, target, rangeOf(cell));
-    // La carta usada vuelve volando a la mano.
-    if (d.home) setBack({ card: d.card, x: ev.clientX, y: ev.clientY, to: d.home, id: Date.now() });
+    const res = onUse(d.card, cell, target, rangeOf(cell));
+    if (!d.home) return;
+    // La carta usada vuelve volando a la mano; si se revela en el mapa, lo hace cuando acaba esa animación.
+    setHeld({ key: d.card.key, home: d.home, from: { x: ev.clientX, y: ev.clientY }, wait: res === "reveal", at: Date.now() });
+    if (res !== "reveal") flyBack(d.card, { x: ev.clientX, y: ev.clientY }, d.home);
   };
   const move = (ev) => {
     const cell = cellAt(ev.clientX, ev.clientY);
@@ -10336,7 +10391,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement }) {
         {shown.map((c, i) => {
           const mid = (n - 1) / 2;
           const col = colOf(c);
-          const lifting = drag?.moved && drag.card.key === c.key;
+          const lifting = (drag?.moved && drag.card.key === c.key) || (held && held.key === c.key);
           return (
             <div
               key={c.key}
@@ -10373,13 +10428,13 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement }) {
         </div>
       )}
       {back && (
-        <div key={back.id} className="mh-fan-ret" style={{ left: back.x, top: back.y, "--tx": back.to.x - back.x + "px", "--ty": back.to.y - back.y + "px" }} aria-hidden="true">
+        <div key={back.id} className="mh-fan-ret" style={{ "--cc": colOf(back.card), left: back.x, top: back.y, "--tx": back.to.x - back.x + "px", "--ty": back.to.y - back.y + "px" }} aria-hidden="true">
           <FanFace c={back.card} col={colOf(back.card)} />
         </div>
       )}
       {drag?.moved && (
         <>
-          <div className="mh-fan-ghost is-card" style={{ left: drag.x, top: drag.y }}>
+          <div className="mh-fan-ghost is-card" style={{ left: drag.x, top: drag.y, "--cc": colOf(drag.card) }}>
             <FanFace c={drag.card} col={colOf(drag.card)} />
           </div>
           {drag.cell && !inHand(drag.x, drag.y) && (
@@ -10411,15 +10466,18 @@ function MapBackdrop({ bg, sharp }) {
 function CardPlayView({ anim }) {
   const card = anim.card || {};
   const col = card.weapon ? TIER_COLORS[card.level]?.color || "#C9A24B" : DOMAIN_COLORS[card.domain] || "#C9A24B";
+  const edge = anim.edge || "#E3B04B"; // el borde que ese jugador tiene configurado en Personalización
   return (
-    <div key={anim.key} className="mh-cpf" style={{ "--cc": col }} aria-hidden="true">
+    <div key={anim.key} className="mh-cpf" style={{ "--cc": col, "--edge": edge }} aria-hidden="true">
       <div className="mh-cpf-dim" />
       <div className="mh-cpf-stage">
-        <div className="mh-cpf-card">
-          <div className="mh-cpf-face mh-cpf-back"><CardBack kind={anim.back || "noche"} /></div>
-          <div className="mh-cpf-face mh-cpf-front"><FanFace c={card} col={col} /></div>
-        </div>
         <div className="mh-cpf-nm"><b>{anim.name || "Alguien"}</b> usa <em>{card.key}</em></div>
+        <div className="mh-cpf-card">
+          <div className="mh-cpf-flip">
+            <div className="mh-cpf-face mh-cpf-back"><CardBack kind={anim.back || "noche"} edge={edge} /></div>
+            <div className="mh-cpf-face mh-cpf-front"><FanFace c={card} col={col} /></div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -10439,7 +10497,7 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
   const anim = useAttackFx(fx);
   const eAnim = useElemEvent(efx);
   const hAnim = useElemEvent(hfx);
-  const cAnim = useElemEvent(cfx, 4400);
+  const cAnim = useCardQueue(cfx);
   const steps = useMoveFx(tokens.map((t) => [t.id, t.x, t.y]));
   const vis = useVisFx(tokens);
   const { measure, measureDown, measureSuppressed } = useMeasure(
@@ -10776,7 +10834,7 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
         );
       })()}
       <MapLog log={log} />
-      {cAnim && cAnim.charId !== meCharId && overlayEl && createPortal(<CardPlayView anim={cAnim} />, overlayEl)}
+      {cAnim && overlayEl && createPortal(<CardPlayView anim={cAnim} />, overlayEl)}
       {rangeTok && overlayEl && createPortal(
         <div className="mh-map-legend" onPointerDown={(e) => e.stopPropagation()}>
           {MAP_RANGES.map((r) => (
@@ -14716,7 +14774,9 @@ export default function App({ onSignOut }) {
     const ch = characters[charId];
     postCardUse(charId, card);
     const slim = { key: card.key, domain: card.domain, type: card.type, level: card.level, recall: card.recall, text: card.text, image: card.image };
-    mutateMap(campaignId, () => ({ key: Date.now(), charId, name: ch?.f_name || "Alguien", back: cardBack, card: slim }), "cfx");
+    const edge = cardBorder === "domain" ? DOMAIN_COLORS[card.domain] || "#E3B04B" : "#E3B04B";
+    const playKey = Date.now(); // una sola vez: mutateMap ejecuta la función dos veces (en local y al guardar)
+    mutateMap(campaignId, (prev) => [...(Array.isArray(prev) ? prev : []).filter((x) => x.key !== playKey && playKey - x.key < 40000), { key: playKey, charId, name: ch?.f_name || "Alguien", back: cardBack, edge, card: slim }].slice(-8), "cfx");
   };
 
   // Cambia el tablero partiendo de lo último guardado (otro jugador puede haber movido su ficha).
@@ -21379,7 +21439,7 @@ export default function App({ onSignOut }) {
                                               me={myToken}
                                               tokens={mapTokens}
                                               onUse={(card, cell, target, rng) =>
-                                                card.key === "Lengua de la Naturaleza" && !card.weapon && !card.rowCard && !card.subclass ? playCardOnMap(charCampaign.id, viewingCharId, card) :
+                                                card.key === "Lengua de la Naturaleza" && !card.weapon && !card.rowCard && !card.subclass ? (playCardOnMap(charCampaign.id, viewingCharId, card), "reveal") :
                                                 card.domain && !card.weapon && !card.rowCard && !card.subclass ? postCardUse(viewingCharId, card, (target ? "sobre " + (target.name || "una ficha") : "en la casilla " + (cell.x + 1) + "," + (cell.y + 1)) + (rng ? " (" + rng.label + ")" : "")) :
                                                 postCampaignEvent(viewingCharId, `${card.weapon ? "ataca con" : "usa la carta"} «${card.key}»${target ? ` sobre ${target.name || "una ficha"}` : ` en la casilla ${cell.x + 1},${cell.y + 1}`}${rng ? ` (${rng.label})` : ""}.`)
                                               }
