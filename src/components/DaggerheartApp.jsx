@@ -4876,9 +4876,9 @@ const sharedStyles = `
   .mh-map-tk.is-hidden .mh-map-face, .mh-iso-tk.is-hidden { opacity: .45; }
   .mh-map-tk.is-hidden .mh-map-face { outline: 2px dashed rgba(255,255,255,.85); outline-offset: 2px; filter: saturate(.4); }
   .mh-map-tk.is-hidden::after { content: ""; position: absolute; right: 2%; top: 2%; width: 34%; height: 34%; border-radius: 50%; background: #2a2333 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.9 4.2A10 10 0 0 1 12 4c7 0 10 8 10 8a13 13 0 0 1-1.7 2.7M6.6 6.6C3.6 8.6 2 12 2 12s3 8 10 8a9.7 9.7 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2M2 2l20 20'/%3E%3C/svg%3E") center / 64% no-repeat; box-shadow: 0 1px 3px rgba(0,0,0,.4); pointer-events: none; }
-  .mh-map-tk > .mh-map-face, .mh-map-tk > .mh-map-hp, .mh-map-tk > .mh-map-nm { transition: opacity .55s ease, scale .55s ease, filter .55s ease; }
+  .mh-map-tk > .mh-map-face, .mh-map-tk > .mh-map-ring, .mh-map-tk > .mh-map-hp, .mh-map-tk > .mh-map-nm { transition: opacity .55s ease, scale .55s ease, filter .55s ease; }
   .mh-map-tk.is-vanished { pointer-events: none; }
-  .mh-map-tk.is-vanished > .mh-map-face, .mh-map-tk.is-vanished > .mh-map-hp, .mh-map-tk.is-vanished > .mh-map-nm { opacity: 0; scale: .55; filter: blur(4px); }
+  .mh-map-tk.is-vanished > .mh-map-face, .mh-map-tk.is-vanished > .mh-map-ring, .mh-map-tk.is-vanished > .mh-map-hp, .mh-map-tk.is-vanished > .mh-map-nm { opacity: 0; scale: .55; filter: blur(4px); }
   .mh-map-tk.is-poof-show > .mh-map-face { animation: mh-pop-in .55s cubic-bezier(.3,1.5,.5,1); }
   @keyframes mh-pop-in { 0% { scale: .5; filter: blur(4px); } 60% { scale: 1.12; filter: none; } 100% { scale: 1; } }
   .mh-map-puff { position: absolute; inset: -15%; pointer-events: none; z-index: 2; }
@@ -4889,8 +4889,8 @@ const sharedStyles = `
   .mh-map-puff i:nth-child(4) { left: 14%; top: 52%; --px: -30%; --py: 30%; animation-delay: .04s; }
   .mh-map-puff i:nth-child(5) { left: 42%; top: 52%; --px: 30%; --py: 30%; animation-delay: .08s; }
   @keyframes mh-puff { 0% { opacity: 0; scale: .3; translate: 0 0; } 25% { opacity: 1; scale: 1; } 100% { opacity: 0; scale: 1.5; translate: var(--px) var(--py); } }
-  .mh-map-tk.is-step0 .mh-map-face { animation: mh-hop0 .38s ease-out; }
-  .mh-map-tk.is-step1 .mh-map-face { animation: mh-hop1 .38s ease-out; }
+  .mh-map-tk.is-step0 .mh-map-face, .mh-map-tk.is-step0 .mh-map-ring { animation: mh-hop0 .38s ease-out; }
+  .mh-map-tk.is-step1 .mh-map-face, .mh-map-tk.is-step1 .mh-map-ring { animation: mh-hop1 .38s ease-out; }
   @keyframes mh-hop0 { 0% { translate: 0 0; scale: 1; } 45% { translate: 0 -28%; scale: 1.06; } 80% { translate: 0 0; scale: 1.04 .94; } 100% { translate: 0 0; scale: 1; } }
   @keyframes mh-hop1 { 0% { translate: 0 0; scale: 1; } 45% { translate: 0 -28%; scale: 1.06; } 80% { translate: 0 0; scale: 1.04 .94; } 100% { translate: 0 0; scale: 1; } }
   .mh-map-tk.is-attack { z-index: 5; animation: mh-lunge .7s cubic-bezier(.5,0,.3,1) both; }
@@ -4899,7 +4899,7 @@ const sharedStyles = `
   .mh-map-tk.is-hit .mh-map-face { animation: mh-tk-flash .55s .32s ease both; }
   @keyframes mh-tk-hit { 0%, 100% { translate: 0 0; } 20% { translate: -10% 4%; } 40% { translate: 9% -3%; } 60% { translate: -6% 2%; } 80% { translate: 4% 0; } }
   @keyframes mh-tk-flash { 0%, 100% { filter: none; } 25% { filter: brightness(1.8) saturate(.4) drop-shadow(0 0 6px #ff4a3d); } }
-  @media (prefers-reduced-motion: reduce) { .mh-map-tk.is-attack, .mh-map-tk.is-hit, .mh-map-tk.is-hit .mh-map-face, .mh-iso-tk.is-attack, .mh-iso-tk.is-hit, .mh-map-tk[class*="is-step"] .mh-map-face, .mh-iso-tk[class*="is-step"], .mh-map-puff i, .mh-iso-puff circle, .mh-map-tk.is-poof-show > .mh-map-face { animation: none; } .mh-map .mh-map-tk { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { .mh-map-tk.is-attack, .mh-map-tk.is-hit, .mh-map-tk.is-hit .mh-map-face, .mh-iso-tk.is-attack, .mh-iso-tk.is-hit, .mh-map-tk[class*="is-step"] .mh-map-face, .mh-map-tk[class*="is-step"] .mh-map-ring, .mh-iso-tk[class*="is-step"], .mh-map-puff i, .mh-iso-puff circle, .mh-map-tk.is-poof-show > .mh-map-face { animation: none; } .mh-map .mh-map-tk { transition: none; } }
   .mh-map-props-sep { font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-muted); margin: 0 2px 0 8px; }
   html[data-mh-theme="light"] .mh-map-stage { background: #EFE8DB; }
   .mh-map-reach { position: absolute; background: rgba(111,191,115,.26); box-shadow: inset 0 0 0 1px rgba(111,191,115,.6); pointer-events: none; }
@@ -4908,6 +4908,7 @@ const sharedStyles = `
   .mh-map-tk { position: absolute; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; background: none; cursor: default; transition: left .3s cubic-bezier(.3,.7,.4,1), top .3s cubic-bezier(.3,.7,.4,1); }
   .mh-map-tk.is-movable { cursor: grab; }
   .mh-map-tk.is-drag { cursor: grabbing; transition: none; z-index: 6; }
+  .mh-map-tk.is-drag .mh-map-ring { scale: 1.12; transition: scale .15s ease; }
   .mh-map-tk.is-drag .mh-map-face { scale: 1.12; box-shadow: 0 10px 18px rgba(0,0,0,.45); transition: scale .15s ease; }
   .mh-map-drop { transition: left .12s ease, top .12s ease; }
   .mh-map-tk:focus-visible { outline: none; }
@@ -4928,11 +4929,11 @@ const sharedStyles = `
   .mh-map-fx.fx-ko b { position: absolute; right: -8%; top: -10%; color: #E9DDFB; font: 800 clamp(9px, 1.2vw, 13px)/1 Inter, system-ui, sans-serif; text-shadow: 0 1px 2px rgba(0,0,0,.6); opacity: 0; animation: mh-zz 2.4s ease-in-out infinite; }
   .mh-map-fx.fx-ko b + b { animation-delay: 1.2s; }
   @keyframes mh-zz { 0% { opacity: 0; translate: 0 0; scale: .6; } 30% { opacity: 1; } 100% { opacity: 0; translate: 40% -120%; scale: 1.2; } }
-  .mh-map-tk.is-c-fly .mh-map-face { animation: mh-fly 2.2s ease-in-out infinite; }
+  .mh-map-tk.is-c-fly .mh-map-face, .mh-map-tk.is-c-fly .mh-map-ring { animation: mh-fly 2.2s ease-in-out infinite; }
   @keyframes mh-fly { 0%, 100% { translate: 0 -12%; } 50% { translate: 0 -22%; } }
   .mh-map-fx.fx-fly { z-index: 1; left: 22%; width: 56%; top: auto; bottom: 0; height: 12%; border-radius: 50%; background: rgba(0,0,0,.45); filter: blur(2px); animation: mh-fly-shadow 2.2s ease-in-out infinite; }
   @keyframes mh-fly-shadow { 0%, 100% { scale: 1; opacity: .8; } 50% { scale: .8; opacity: .55; } }
-  .mh-map-tk.is-c-shell .mh-map-face { scale: .82; }
+  .mh-map-tk.is-c-shell .mh-map-face, .mh-map-tk.is-c-shell .mh-map-ring { scale: .82; }
   .mh-map-fx.fx-shell { z-index: 3; inset: 6%; width: auto; height: auto; border-radius: 50% 50% 30% 30%; border: 3px solid #6E8B5A; background: repeating-linear-gradient(45deg, rgba(110,139,90,.35) 0 4px, rgba(110,139,90,.15) 4px 8px); }
   .mh-map-conds { position: absolute; z-index: 4; left: 2%; top: 2%; display: flex; gap: 1px; width: 100%; pointer-events: none; }
   .mh-map-conds i { width: 28%; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; color: #fff; border: 1.5px solid #fff; box-sizing: border-box; box-shadow: 0 1px 3px rgba(0,0,0,.45); }
@@ -4957,6 +4958,11 @@ const sharedStyles = `
   .mh-fan-pile { all: unset; cursor: pointer; position: absolute; bottom: 46px; width: 74px; height: 104px; z-index: 7; } .mh-fan-pile.is-l { left: 12px; } .mh-fan-pile.is-r { right: 12px; }
   .mh-fan-pile span { position: absolute; width: 62px; height: 90px; border-radius: 9px; border: 2px solid var(--pc); background: linear-gradient(160deg, color-mix(in srgb, var(--pc) 30%, #1d1827), #15111c); box-shadow: 0 3px 8px rgba(0,0,0,.5); left: calc(var(--q) * 6px); top: calc(10px - var(--q) * 4px); transform: rotate(calc(-6deg + var(--q) * 6deg)); transition: transform .15s; }
   .mh-fan-pile span.is-back { width: 62px; height: 87px; border: 0; background: none; overflow: hidden; border-radius: 9px; } .mh-fan-pile span.is-back svg { display: block; width: 100%; height: 100%; }
+  .mh-fan-card { animation: mh-fan-deal .42s cubic-bezier(.2,.9,.3,1) backwards; animation-delay: calc(var(--i, 0) * 40ms); }
+  @keyframes mh-fan-deal { from { opacity: 0; translate: calc(var(--dir, 0) * 110px) 46px; scale: .88; } to { opacity: 1; translate: 0 0; scale: 1; } }
+  .mh-fan-pile { animation: mh-pile-in .4s cubic-bezier(.2,.9,.3,1) backwards; } .mh-fan-pile.is-l { --pd: -1; } .mh-fan-pile.is-r { --pd: 1; }
+  @keyframes mh-pile-in { from { opacity: 0; translate: calc(var(--pd, 0) * -50px) 0; scale: .85; } to { opacity: 1; translate: 0 0; scale: 1; } }
+  @media (prefers-reduced-motion: reduce) { .mh-fan-card, .mh-fan-pile { animation: none; } }
   .mh-fan-pile:hover span { transform: translateY(-6px) rotate(calc(-6deg + var(--q) * 6deg)); }
   .mh-fan-pile em { position: absolute; left: -6px; right: -6px; bottom: -22px; text-align: center; font: 600 10.5px Inter, system-ui, sans-serif; font-style: normal; color: #fff; background: rgba(21,17,28,.9); border-radius: 6px; padding: 2px 4px; white-space: nowrap; }
   .dsw { position: fixed; z-index: 60; display: flex; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box; overflow: hidden; background: radial-gradient(ellipse at 50% 40%, color-mix(in srgb, var(--mh-panel, #1b1830) 70%, #2b2152), var(--mh-bg, #0b0c1b) 78%); animation: dsw-bg .3s ease both; }
@@ -5055,7 +5061,7 @@ const sharedStyles = `
   .mh-map-fog { position: absolute; pointer-events: none; z-index: 3; background: rgba(24,20,38,.97); box-shadow: 0 0 14px 6px rgba(24,20,38,.97); }
   .mh-map-fog.is-gm { background: repeating-linear-gradient(45deg, rgba(30,26,45,.5) 0 6px, rgba(30,26,45,.38) 6px 12px); box-shadow: none; }
   .mh-map-tk { z-index: 4; }
-  .mh-map-ring { position: absolute; z-index: 3; inset: 9%; width: 82%; height: 82%; transform: rotate(-90deg); pointer-events: none; overflow: visible; }
+  .mh-map-ring { position: absolute; z-index: 3; inset: 14%; width: 72%; height: 72%; transform: rotate(-90deg); pointer-events: none; overflow: visible; }
   .mh-map-face { width: 70%; height: 70%; border-radius: 50%; border: 2px solid var(--tc); background: radial-gradient(circle at 35% 28%, color-mix(in srgb, var(--tc) 34%, #12143a), color-mix(in srgb, var(--tc) 14%, #0c0d2a) 72%); backdrop-filter: blur(6px); color: var(--tc); box-shadow: 0 6px 14px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.3); }
   .mh-map-tk.is-foe .mh-map-face { background: radial-gradient(circle at 35% 28%, rgba(192,80,74,.5), #3a1216 72%); }
   .mh-map-tk.is-npc .mh-map-face { background: radial-gradient(circle at 35% 28%, rgba(201,162,74,.4), #2a210c 72%); }
@@ -10307,6 +10313,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
     return () => window.removeEventListener("keydown", esc);
   }, [open]);
   const fanRef = useRef(null);
+  const [dir, setDir] = useState(0); // lado desde el que entra el grupo nuevo
   const [grpSel, setGrpSel] = useState(null); // grupo abierto del abanico cuando hay muchas cartas
   const [fanW, setFanW] = useState(760);
   useLayoutEffect(() => {
@@ -10348,7 +10355,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
       {others.map((k, j) => {
         const list = cards.filter((c) => grp(c) === k);
         return (
-          <button key={k} type="button" className={"mh-fan-pile " + (k === sideL ? "is-l" : "is-r")} onClick={() => setGrpSel(k)} title={"Abrir " + GN[k].toLowerCase() + " (" + list.length + ")"} aria-label={"Abrir " + GN[k] + ", " + list.length + " cartas"}>
+          <button key={k} type="button" className={"mh-fan-pile " + (k === sideL ? "is-l" : "is-r")} onClick={() => (setDir(k === sideL ? -1 : 1), setGrpSel(k))} title={"Abrir " + GN[k].toLowerCase() + " (" + list.length + ")"} aria-label={"Abrir " + GN[k] + ", " + list.length + " cartas"}>
             {list.slice(0, 3).map((c, q) => (
               <span key={c.key} className="is-back" style={{ "--pc": colOf(c), "--q": q }}><CardBack kind={cardBack || "noche"} edge={cardBorder === "domain" ? colOf(c) : undefined} /></span>
             ))}
@@ -10356,7 +10363,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
           </button>
         );
       })}
-      <div className="mh-fan" ref={fanRef} aria-label="Tus cartas">
+      <div key={act || "all"} className="mh-fan" ref={fanRef} aria-label="Tus cartas" style={{ "--dir": dir }}>
         {shown.map((c, i) => {
           const mid = (n - 1) / 2;
           const col = colOf(c);
@@ -10365,7 +10372,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
             <div
               key={c.key}
               className={"mh-fan-card" + (lifting ? " is-lifted" : "") + (shown[i + 1] && grp(shown[i + 1]) !== grp(c) ? " is-last-weapon" : "")}
-              style={{ "--r": `${(i - mid) * stepR}deg`, "--y": `${Math.abs(i - mid) * stepY}px`, "--cc": col, "--m": gap / 2 + "px" }}
+              style={{ "--i": i, "--r": `${(i - mid) * stepR}deg`, "--y": `${Math.abs(i - mid) * stepY}px`, "--cc": col, "--m": gap / 2 + "px" }}
               onPointerDown={(e) => start(e, c)}
               title="Púlsala para verla en grande · arrástrala al mapa para usarla"
             >
@@ -10772,8 +10779,8 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
             )}
             {hpLeft != null && !plain && (
               <svg className="mh-map-ring" viewBox="0 0 100 100" aria-hidden="true">
-                <circle cx="50" cy="50" r="46" fill="none" stroke="rgba(0,0,0,.45)" strokeWidth="6" />
-                <circle cx="50" cy="50" r="46" fill="none" stroke={hpCol} strokeWidth="6" strokeLinecap="round" strokeDasharray={`${hpLeft * 289} 289`} />
+                <circle cx="50" cy="50" r="47" fill="none" stroke="#1b1219" strokeWidth="6" />
+                <circle cx="50" cy="50" r="47" fill="none" stroke={hpCol} strokeWidth="6" strokeLinecap="round" strokeDasharray={`${hpLeft * 295.3} 295.3`} />
               </svg>
             )}
             <span className="mh-map-face" title={hpLeft != null && !plain ? `Vida: ${t.hp[1] - t.hp[0]} de ${t.hp[1]}` : undefined}>{t.img && t.kind !== "pc" ? <img src={t.img} alt="" draggable={false} /> : <Emb size="52%" strokeWidth={2.1} />}</span>
