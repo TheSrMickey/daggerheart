@@ -8,7 +8,7 @@ import SceneFx, { SCENE_FX } from "./SceneFx";
 import Ambient from "./Ambient";
 import { Info, Lightbulb, Sprout, Bot, Pickaxe, TreePine, Cog, Ear, Angry, Axe, Banana, Cloud } from "lucide-react";
 import { Squirrel, Layers, CalendarDays, Vote, ScrollText as ChronIcon, Megaphone, Link2 } from "lucide-react";
-import { Award, History, LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus, Box, LayoutGrid, Bird, Fish, Bug, Rabbit, Cat, Turtle, Clock, CircleDashed, Slash } from "lucide-react";
+import { RefreshCw, Award, History, LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus, Box, LayoutGrid, Bird, Fish, Bug, Rabbit, Cat, Turtle, Clock, CircleDashed, Slash } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { NotificationBell, NoticeToasts, FriendsPanel, AccountButton, avatarColor } from "./Social";
 import { ResetDiceCard, DeleteAccountCard } from "./AccountDanger";
@@ -5038,6 +5038,18 @@ const sharedStyles = `
   .mh-map-cpulse { position: absolute; inset: -4px; pointer-events: none; z-index: 0; } .mh-map-cpulse i { position: absolute; inset: 0; border-radius: 50%; border: 2px solid #E3B04B; box-shadow: 0 0 18px #E3B04B88; opacity: 0; animation: mh-cpulse 1.5s ease-out both; } .mh-map-cpulse i:nth-child(2) { animation-delay: .35s; } .mh-map-cpulse i:nth-child(3) { animation-delay: .7s; }
   @keyframes mh-cpulse { 0% { opacity: .9; transform: scale(.9); } 100% { opacity: 0; transform: scale(2.6); } }
   @media (prefers-reduced-motion: reduce) { .mh-cpf-card, .mh-cpf-flip, .mh-map-cpulse i { animation-duration: .01s; } .mh-cpf-card { opacity: 1; } }
+  /* Móvil · modo combate a pantalla completa y en vertical: el tablero se gira 90° para ocupar el alto del teléfono. */
+  .mh-mcb-off, .mh-rotoff { display: contents; }
+  .mh-mcb { position: fixed; inset: 0; z-index: 80; background: #0a0a1c; display: block; }
+  .mh-mcb .mh-map-stage { position: absolute; inset: 0; border-radius: 0; min-height: 0; }
+  .mh-rotwrap { position: absolute; width: 100dvh; height: 100dvw; left: calc(50% - 50dvh); top: calc(50% - 50dvw); transform: rotate(90deg); }
+  .mh-rotwrap .mh-map-nm { display: none; } .mh-rotwrap .mh-map-face > * { rotate: -90deg; } .mh-rotwrap .mh-cpf-stage { rotate: -90deg; } .mh-rotwrap .mh-map-overlay { z-index: 9; }
+  .mh-mcb > .fb { position: absolute; z-index: 12; left: 8px; right: 60px; top: calc(60px + env(safe-area-inset-top)); }
+  .mh-mcb > .mh-map-ptray { position: absolute; z-index: 12; left: 8px; right: 8px; bottom: calc(10px + env(safe-area-inset-bottom)); }
+  .mh-mcb .mh-map-hud { top: calc(10px + env(safe-area-inset-top)); left: 8px; transform: scale(.88); transform-origin: top left; }
+  .mh-mcb-ctl { position: absolute; z-index: 20; right: 10px; top: calc(10px + env(safe-area-inset-top)); display: flex; flex-direction: column; gap: 8px; } .mh-mcb-ctl button { all: unset; cursor: pointer; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; background: #0c0c20ee; border: 1px solid #ffffff33; color: #fff; } .mh-mcb-ctl button.is-on { border-color: #E3B04B; color: #E3B04B; } .mh-mcb-ctl button:focus-visible { outline: 2px solid #E3B04B; }
+  .mh-mcb-sheet { position: absolute; z-index: 30; left: 0; right: 0; bottom: 0; height: min(58dvh, 460px); display: flex; flex-direction: column; gap: 8px; padding: 10px 12px calc(12px + env(safe-area-inset-bottom)); border-radius: 18px 18px 0 0; background: var(--mh-panel); border-top: 1px solid var(--mh-line2); box-shadow: 0 -16px 40px -14px #000c; } .mh-mcb-sheet .mh-chat-feed { flex: 1; min-height: 0; } .mh-mcb-sh { display: flex; align-items: center; justify-content: space-between; } .mh-mcb-sh b { font-size: 14px; color: var(--mh-ink); } .mh-mcb-sh button { all: unset; cursor: pointer; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; color: var(--mh-ink3); }
+  .mh-mcb .mh-fan { z-index: 11; }
   .mh-map-stage { position: relative; flex: 1 1 auto; min-height: 200px; border-radius: 12px; overflow: hidden; background: #1B1824; }
   .mh-map-view { position: absolute; inset: 0; overflow: auto; scrollbar-width: none; container-type: size; }
   .mh-map-view::-webkit-scrollbar { display: none; }
@@ -9398,6 +9410,13 @@ const mapConds = (t) => (t.conds || []).filter((c) => MAP_COND_FX[c]);
 const rangeBandOf = (d) => MAP_RANGES.find((r) => d <= r.max) || { key: "vfar", label: "Muy lejano", color: "#A58BE8" };
 // Regla del clic derecho mantenido: al arrastrar con el botón derecho se mide desde la casilla inicial.
 // toCell(ev) da la casilla bajo el puntero y toPoint(ev) el punto en las coordenadas del tablero.
+// Posición normalizada (0–1) de un punto de la pantalla sobre un tablero; con el mapa girado 90° (modo combate vertical del móvil) los ejes se cambian.
+function mapNorm(el, cx, cy) {
+  if (!el) return null;
+  const r = el.getBoundingClientRect();
+  if (!r.width || !r.height) return null;
+  return el.closest(".mh-rotwrap") ? { a: (cy - r.top) / r.height, b: 1 - (cx - r.left) / r.width } : { a: (cx - r.left) / r.width, b: (cy - r.top) / r.height };
+}
 function useMeasure(toCell, toPoint) {
   const [measure, setMeasure] = useState(null);
   const suppressUntil = useRef(0);
@@ -10241,9 +10260,9 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
   const cellAt = (x, y) => {
     const el = fanRef.current?.closest(".mh-map-stage")?.querySelector(".mh-map");
     if (!el) return null;
-    const r = el.getBoundingClientRect();
-    if (!r.width || x < r.left || x > r.right || y < r.top || y > r.bottom) return null;
-    return { x: Math.min(MAP_COLS - 1, Math.floor(((x - r.left) / r.width) * MAP_COLS)), y: Math.min(MAP_ROWS - 1, Math.floor(((y - r.top) / r.height) * MAP_ROWS)) };
+    const n = mapNorm(el, x, y);
+    if (!n || n.a < 0 || n.a > 1 || n.b < 0 || n.b > 1) return null;
+    return { x: Math.min(MAP_COLS - 1, Math.floor(n.a * MAP_COLS)), y: Math.min(MAP_ROWS - 1, Math.floor(n.b * MAP_ROWS)) };
   };
   // Sobre la mano (el abanico) no se lanza nada: solo cuenta lo que se suelta en el tablero.
   const inHand = (x, y) => {
@@ -10438,6 +10457,11 @@ function MapBackdrop({ bg, sharp }) {
   );
 }
 
+// Modo combate a pantalla completa del móvil: el mapa sale del flujo de la hoja y se pinta sobre toda la pantalla (dentro de la raíz del tema).
+function MapPortal({ on, children }) {
+  if (!on || typeof document === "undefined") return <div className="mh-mcb-off">{children}</div>;
+  return createPortal(<div className="mh-mcb">{children}</div>, document.querySelector(".mh-root") || document.body);
+}
 // Carta jugada en el mapa: el resto de la mesa ve oscurecerse el tablero, el reverso de quien la juega y cómo se revela.
 function CardPlayView({ anim, own }) {
   const cardRef = useRef(null);
@@ -10488,13 +10512,13 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
   const vis = useVisFx(tokens);
   const { measure, measureDown, measureSuppressed } = useMeasure(
     (ev) => {
-      const r = ref.current?.getBoundingClientRect();
-      if (!r) return null;
-      return { x: Math.max(0, Math.min(MAP_COLS - 1, Math.floor(((ev.clientX - r.left) / r.width) * MAP_COLS))), y: Math.max(0, Math.min(MAP_ROWS - 1, Math.floor(((ev.clientY - r.top) / r.height) * MAP_ROWS))) };
+      const n = mapNorm(ref.current, ev.clientX, ev.clientY);
+      if (!n) return null;
+      return { x: Math.max(0, Math.min(MAP_COLS - 1, Math.floor(n.a * MAP_COLS))), y: Math.max(0, Math.min(MAP_ROWS - 1, Math.floor(n.b * MAP_ROWS))) };
     },
     (ev) => {
-      const r = ref.current.getBoundingClientRect();
-      return { x: ((ev.clientX - r.left) / r.width) * MAP_COLS, y: ((ev.clientY - r.top) / r.height) * MAP_ROWS };
+      const n = mapNorm(ref.current, ev.clientX, ev.clientY);
+      return { x: n.a * MAP_COLS, y: n.b * MAP_ROWS };
     }
   );
   // Foco de la mesa: quién tiene la palabra y quién levanta la mano.
@@ -10538,8 +10562,8 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
   };
   const clamp = (v, max) => Math.max(0, Math.min(max - 1, v));
   const cellAt = (e) => {
-    const r = ref.current.getBoundingClientRect();
-    return { x: clamp(Math.floor(((e.clientX - r.left) / r.width) * MAP_COLS), MAP_COLS), y: clamp(Math.floor(((e.clientY - r.top) / r.height) * MAP_ROWS), MAP_ROWS) };
+    const n = mapNorm(ref.current, e.clientX, e.clientY);
+    return { x: clamp(Math.floor(n.a * MAP_COLS), MAP_COLS), y: clamp(Math.floor(n.b * MAP_ROWS), MAP_ROWS) };
   };
   const occupied = (x, y, exceptId) => {
     const mv = tokens.find((t) => t.id === exceptId);
@@ -10571,9 +10595,9 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
       const moved = d.moved || Math.hypot(ev.clientX - sx, ev.clientY - sy) > 4;
       if (!moved) return;
       // La ficha va pegada al puntero (posición libre); la casilla de destino solo se marca.
-      const r = ref.current.getBoundingClientRect();
-      const fx = Math.max(-0.4, Math.min(MAP_COLS - 0.6, ((ev.clientX - r.left) / r.width) * MAP_COLS - 0.5));
-      const fy = Math.max(-0.4, Math.min(MAP_ROWS - 0.6, ((ev.clientY - r.top) / r.height) * MAP_ROWS - 0.5));
+      const nm = mapNorm(ref.current, ev.clientX, ev.clientY);
+      const fx = Math.max(-0.4, Math.min(MAP_COLS - 0.6, nm.a * MAP_COLS - 0.5));
+      const fy = Math.max(-0.4, Math.min(MAP_ROWS - 0.6, nm.b * MAP_ROWS - 0.5));
       const c = cellAt(ev);
       dragRef.current = { ...d, ...(c || {}), fx, fy, moved: true };
       setDrag(dragRef.current);
@@ -10930,10 +10954,13 @@ function MapViewport({ focus, noZoom, children }) {
   const move = (e) => {
     const p = pan.current;
     if (!p) return;
-    const dx = e.clientX - p.x, dy = e.clientY - p.y;
-    if (!p.moved && Math.hypot(dx, dy) < 6) return;
+    const sx = e.clientX - p.x, sy = e.clientY - p.y;
+    if (!p.moved && Math.hypot(sx, sy) < 6) return;
     p.moved = true;
     userMoved.current = true;
+    // Con el mapa girado 90° (modo combate vertical), un dedo hacia abajo desplaza el eje horizontal del tablero y hacia la izquierda el vertical.
+    const rot = !!ref.current.closest(".mh-rotwrap");
+    const dx = rot ? sy : sx, dy = rot ? -sx : sy;
     ref.current.scrollLeft = p.l - dx;
     ref.current.scrollTop = p.t - dy;
   };
@@ -11412,6 +11439,9 @@ export default function App({ onSignOut }) {
   const ambBtn = useRef(null);
   const [ambOpen, setAmbOpen] = useState(false); // ventana de «Ambiente» (audio de la mesa)
   const [medalsOpen, setMedalsOpen] = useState(false);
+  const [mcbOff, setMcbOff] = useState(false); // móvil: salir del modo combate a pantalla completa
+  const [mcbRot, setMcbRot] = useState(true); // móvil: mapa girado 90° (vertical)
+  const [mcbChat, setMcbChat] = useState(false); // móvil: hoja del chat sobre el mapa
   const [djWorldEdit, setDjWorldEdit] = useState(false);
   const [djCastEdit, setDjCastEdit] = useState(null);
   const [djDragTok, setDjDragTok] = useState(null); // ficha de jugador que el DJ está arrastrando por el mapa: { id, over }
@@ -15526,6 +15556,11 @@ export default function App({ onSignOut }) {
     postChat(viewingCampaignId, on ? { kind: "event", author: "El DJ", gm: true, icon: "xcard-off", text: "retira la X-Card" } : { kind: "event", author: "El DJ", gm: true, icon: "xcard", text: "activa la X-Card" });
   };
 
+  // Cuando el DJ vuelve a mostrar un mapa de combate, el modo a pantalla completa del móvil se reactiva.
+  useEffect(() => {
+    setMcbOff(false);
+    setMcbChat(false);
+  }, [campaignStage.live]);
   // Si cambia lo que ven los jugadores (o de campaña), la vista del DJ vuelve a seguirlo.
   useEffect(() => {
     setDjView(null);
@@ -21220,6 +21255,7 @@ export default function App({ onSignOut }) {
                         const stage = campaignStage;
                         const live = stage.live || "escena";
                         const stTab = live; // los jugadores ven lo que el DJ tiene en directo, sin selector
+                        const mcb = isMobile && stTab === "mapa" && !mcbOff; // modo combate a pantalla completa (móvil)
                         const scene = shownScene ? { ...shownScene, fx: (stage.scene || {}).fx || [] } : stage.scene || {};
                         const handouts = (stage.handouts || []).filter((h) => !h.hidden);
                         const dlg = stage.dialogue && hiddenDialogue !== stage.dialogue.id ? stage.dialogue : null;
@@ -21325,10 +21361,11 @@ export default function App({ onSignOut }) {
 
                                 {stTab === "mapa" &&
                                   (mapTokens.length || scene.image || (campaignMap.tokens || []).length || campaignMap.fog?.on ? (
-                                    <>
+                                    <MapPortal on={mcb}>
                                       {/* La escena llena la caja (difuminada por detrás) y el tablero, con casillas cuadradas, se ajusta dentro */}
                                       <FocusBar spot={campaignMap.spot} pcs={focusPcs(campaignMap.tokens)} myCharId={viewingCharId} isGm={false} onPass={(t, why) => passFocus(charCampaign.id, t, why)} onClear={() => {}} />
                                       <div className="mh-map-stage">
+                                        <div className={mcb && mcbRot ? "mh-rotwrap" : "mh-rotoff"}>
                                         <MapBackdrop bg={mapBgOf(campaignMap, scene.image).src} sharp={mapBgOf(campaignMap, scene.image).sharp} />
                                         <MapViewport focus={myToken ? { x: myToken.x, y: myToken.y } : null}>
                                           <MapBoard
@@ -21351,6 +21388,7 @@ export default function App({ onSignOut }) {
                                             menuFor={(t) => (t.kind === "pc" && t.charId === viewingCharId ? boardActions(t) : [])}
                                           />
                                         </MapViewport>
+                                        </div>
                                         {/* Avisos de tiradas y golpes, centrados en la parte visible del mapa */}
                                         <MapLog log={campaignMap.log} />
                                         <MapCounters list={campaignMap.counters} />
@@ -21437,6 +21475,23 @@ export default function App({ onSignOut }) {
                                           );
                                         })()}
                                         <AreaCards campaignId={charCampaign.id} />
+                                        {mcb && (
+                                          <div className="mh-mcb-ctl">
+                                            <button type="button" aria-label="Salir del modo combate" title="Salir del modo combate" onClick={() => setMcbOff(true)}><X size={17} /></button>
+                                            <button type="button" aria-label="Abrir el chat" title="Chat" className={mcbChat ? "is-on" : ""} onClick={() => setMcbChat((v) => !v)}><MessageCircle size={17} /></button>
+                                            <button type="button" aria-label="Girar el mapa" title={mcbRot ? "Ver el mapa apaisado" : "Ver el mapa en vertical"} onClick={() => setMcbRot((v) => !v)}><RefreshCw size={17} /></button>
+                                          </div>
+                                        )}
+                                        {mcb && mcbChat && (
+                                          <div className="mh-mcb-sheet" role="dialog" aria-label="Chat de la mesa">
+                                            <div className="mh-mcb-sh"><b className="mh-serif">Chat de la mesa</b><button type="button" aria-label="Cerrar el chat" onClick={() => setMcbChat(false)}><X size={15} /></button></div>
+                                            <div className="mh-chat-feed" ref={chatScrollRef}>{renderChatFeed(campaignChat, viewingCharId)}</div>
+                                            <div className="mh-chat-inp">
+                                              <input className="mh-input" style={{ flex: 1, minWidth: 0 }} placeholder="Escribe un mensaje…" value={campaignChatDraft} onChange={(e) => onChatTyping(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendCampaignChat()} />
+                                              <button type="button" className="mh-chat-send" aria-label="Enviar" onClick={sendCampaignChat}><Send size={15} /></button>
+                                            </div>
+                                          </div>
+                                        )}
                                         {areaTool && <div className="mh-area-hint">Pulsa una casilla para colocar el área <button type="button" onClick={() => setAreaTool(null)}>Cancelar</button></div>}
                                       </div>
                                       {(() => {
@@ -21491,7 +21546,7 @@ export default function App({ onSignOut }) {
                                           </div>
                                         );
                                       })()}
-                                    </>
+                                    </MapPortal>
                                   ) : (
                                     empty(MapPinned, "El DJ todavía no ha preparado el mapa.")
                                   ))}
