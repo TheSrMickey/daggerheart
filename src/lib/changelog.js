@@ -7,6 +7,7 @@ export const CHANGELOG = [
     title: "Grupos y notificaciones nuevas",
     blurb: "Chatea con toda tu mesa en un grupo compartido y recibe los avisos como tarjetas, también flotando mientras juegas.",
     items: [
+      { tag: "arreglo", text: "Combate · el círculo de vida de las fichas ahora se mueve con ellas (bote, arrastre, vuelo y reducción) y encaja justo en el borde de la ficha, sin dejar ver el borde por debajo. Al cambiar de grupo de cartas, la mano y las pilas de los lados entran con una animación según el lado desde el que llegan." },
       { tag: "mejora", text: "Combate · las pilas de cartas de los lados llevan el reverso que tengas equipado; al arrastrar una ficha ya no sale el recuadro naranja (sigue fijándose a la casilla al soltarla); y la carta que usas sale de la mano mientras la animación (las demás se recolocan) y se vuelve a ordenar cuando regresa." },
       { tag: "mejora", text: "Combate · se quita el selector «Dominio · Armas · Clase»: los otros dos grupos de cartas quedan como pilas a los lados y, al pulsar una, pasa al centro y los demás rotan (carrusel). Además las cartas de característica de clase, ascendencia, comunidad, transformación y subclase de la mano ya muestran su ilustración." },
       { tag: "mejora", text: "Combate · las cartas de la mano (dominio, armas, subclase y acciones de clase) usan el mismo diseño que la pestaña Cartas; se quita el zoom con la rueda en los mapas de combate; y la carta que juegas ya no desaparece y reaparece: se revela y viaja sin cortes hasta su sitio en tu mano." },
