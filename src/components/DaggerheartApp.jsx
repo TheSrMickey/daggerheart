@@ -22,7 +22,7 @@ import { DialoguePromptHelper, CombatBgPromptHelper, describeMapForPrompt } from
 import { LevelUpDialog, parseAdvances, ownedCards, getMulticlass, MAX_LEVEL, rankOf } from "./LevelUp";
 import { RulesPanel } from "./MapRules";
 import { Changelog } from "./Changelog";
-import { CardsPage } from "./Cards";
+import { CardsPage, CardFace } from "./Cards";
 import { Generators } from "./Generators";
 import { CampaignCalendar, HomeNextSession } from "./Calendar";
 import { HomeHero } from "./HomeHero";
@@ -5018,9 +5018,11 @@ const sharedStyles = `
   .mh-cpf-dim { position: absolute; inset: 0; background: radial-gradient(70% 70% at 50% 50%, rgba(6,6,18,.55), rgba(6,6,18,.82)); opacity: 0; animation: mh-cpf-dim 4.5s ease both; }
   .mh-cpf-stage { position: relative; display: flex; flex-direction: column; align-items: center; gap: 14px; }
   .mh-cpf-card { position: relative; width: 168px; height: 236px; perspective: 1000px; opacity: 0; animation: mh-cpf-card 4.5s cubic-bezier(.3,.9,.3,1) both; }
+  .mh-cpf-card.is-own { animation-name: mh-cpf-card-own; }
+  @keyframes mh-cpf-card-own { 0% { opacity: 0; transform: translateY(26px) scale(.82); } 10% { opacity: 1; transform: translateY(0) scale(1); } 76% { opacity: 1; transform: translateY(0) scale(1.04); } 100% { opacity: 1; transform: translate(var(--fx), var(--fy)) scale(var(--fs)); } }
   .mh-cpf-flip { position: absolute; inset: 0; transform-style: preserve-3d; animation: mh-cpf-flip 4.5s cubic-bezier(.45,0,.25,1) both; }
   .mh-cpf-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 12px; overflow: hidden; background: #10112a; transform: translateZ(0.1px); box-shadow: 0 22px 50px -14px #000d, 0 0 46px -8px var(--cc); } .mh-cpf-face > svg { display: block; width: 100%; height: 100%; }
-  .mh-cpf-front { transform: rotateY(180deg) translateZ(0.1px); } .mh-cpf-front > div { transform-origin: top left; transform: scale(.56); width: 300px !important; height: 420px !important; border-color: var(--edge) !important; border-radius: 22px !important; }
+  .mh-cpf-front { transform: rotateY(180deg) translateZ(0.1px); } .mh-cpf-front > div { transform-origin: top left; transform: scale(.56); width: 300px !important; height: 420px !important; } .mh-cpf .mh-cpf-front .mh-cardc { border-color: var(--edge) !important; }
   .mh-cpf-nm { color: #fff; font-size: 13px; text-shadow: 0 2px 10px #000; opacity: 0; animation: mh-cpf-nm 4.5s ease both; } .mh-cpf-nm em { font-style: normal; font-weight: 700; color: var(--cc); filter: brightness(1.25); }
   @keyframes mh-cpf-dim { 0% { opacity: 0; } 10% { opacity: 1; } 88% { opacity: 1; } 100% { opacity: 0; } }
   @keyframes mh-cpf-card { 0% { opacity: 0; transform: translateY(26px) scale(.82); } 10% { opacity: 1; transform: translateY(0) scale(1); } 88% { opacity: 1; transform: translateY(0) scale(1.04); } 100% { opacity: 0; transform: translateY(-10px) scale(1.04); } }
@@ -9824,61 +9826,20 @@ function TokenMenu({ menu, items, onClose }) {
   );
 }
 // Tablero con fichas cuadradas. Se arrastran, o se elige una y se pulsa la casilla; también con las flechas.
+// Carta de la mano / del revelado: exactamente el mismo diseño que en la pestaña «Cartas» (CardFace).
 function FanFace({ c, col }) {
-  const Art = c.weapon ? weaponIcon(c.key) : c.rowCard ? c.Icon || Sparkles : c.subclass ? Flame : DOMAIN_ICONS[c.domain] || Sparkles;
-  const dmg = c.weapon ? c.damage.match(/^(\S+)\s*(.*)$/) : null;
-  const bgArt = !c.weapon && !c.subclass && !c.rowCard && !!c.domain; // carta de dominio: la ilustración es el fondo
+  const cat = buildCardCatalog();
+  let it = null;
+  if (c.weapon) it = cat.find((x) => x.kind === "arma" && x.key === c.key);
+  else if (c.subclass) it = cat.find((x) => x.kind === "subclase" && x.key === c.key && (!c.kicker || c.kicker.includes(x.rankLabel))) || cat.find((x) => x.kind === "subclase" && x.key === c.key);
+  else if (c.rowCard) it = { id: "r-" + c.key, kind: "accion", key: c.key, sub: c.kicker || "Acción", text: c.text, features: [], image: null, color: col, Icon: c.Icon };
+  else it = cat.find((x) => x.kind === "dominio" && x.key === c.key && (!c.domain || x.domain === c.domain));
+  if (!it) it = { id: "x-" + c.key, kind: "dominio", key: c.key, sub: (c.domain || "") + " · " + (c.type || ""), domain: c.domain, type: c.type, level: c.level, recall: c.recall, text: c.text, image: c.image, color: col };
+  const I = it.Icon || DOMAIN_ICONS[it.domain] || Sparkles;
   return (
-              <div className={"mh-card mh-cardc mh-fan-in" + (bgArt ? " is-bg" : "")} style={{ margin: 0, padding: 0, overflow: "hidden", borderRadius: 22, display: "flex", flexDirection: "column", border: (c.weapon ? "3px" : "2px") + " solid " + col, position: "relative" }}>
-                <div className="mh-cardc-art" style={{ height: 124, "--ah": "124px" }}>
-                  {c.image ? (
-                    <img src={c.image} alt={c.key} />
-                  ) : (
-                    <div className="mh-cardc-noart">
-                      <Art size={50} strokeWidth={1.5} />
-                    </div>
-                  )}
-                </div>
-                <div className="mh-cardc-badge">
-                  {c.subclass || c.rowCard ? null : c.weapon ? <span className="mh-cardc-tier" style={{ background: col }}>{TIER_COLORS[c.level]?.label}</span> : <span className="mh-cardc-gem">{c.level}{bgArt && <Art size={19} strokeWidth={1.8} />}</span>}
-                </div>
-                {bgArt && <span className="mh-cardc-dom">{c.type}</span>}
-                {bgArt && <span className="mh-cardc-cost" title="Coste de recuperación">{c.recall ?? "—"}<Zap size={12} fill="currentColor" /></span>}
-                <div style={{ padding: "0 18px", textAlign: "center", flexShrink: 0, marginTop: c.subclass || c.rowCard ? 8 : 16 }}>
-                  <FitTitle text={c.key} max={19} min={14} className="mh-serif" style={{ fontWeight: 700, color: "var(--mh-ink)", maxHeight: "2.4em", overflow: "hidden" }} />
-                  <div className="mh-cardc-sub">{c.weapon ? `${c.type} · ${c.hands}` : c.subclass || c.rowCard ? c.kicker : `${c.domain} · ${c.type}`}</div>
-                  <div className="mh-cardc-orn" />
-                </div>
-                <div style={{ flex: 1, minHeight: 0, overflow: "hidden", padding: "10px 18px 12px", display: "flex", flexDirection: "column", justifyContent: c.weapon ? "center" : "flex-start", textAlign: "center", gap: "0.7em", lineHeight: 1.5, fontSize: 12, color: "var(--mh-ink)" }}>
-                  {c.weapon ? (
-                    <>
-                      <div>
-                        <div className="mh-cardc-label">Daño</div>
-                        <div className="mh-cardc-big">{dmg?.[1] || c.damage}</div>
-                        {dmg?.[2] && <div style={{ fontSize: "0.88em", color: "var(--mh-muted)" }}>{dmg[2]}</div>}
-                      </div>
-                      <div>{c.feature}</div>
-                    </>
-                  ) : c.rowCard ? (
-                    <div style={{ textAlign: "center", fontSize: 12 }}>{c.text}</div>
-                  ) : c.subclass ? (
-                    <div style={{ textAlign: "left", display: "flex", flexDirection: "column", gap: "0.3em", fontSize: 9.6, lineHeight: 1.32 }}>
-                      <div style={{ textAlign: "center" }}>{c.text}</div>
-                      {c.features.map((ft) => (
-                        <div key={ft.name}><b style={{ color: ELEM_COL[ft.name] || col }}>{ft.name}:</b> {ft.text}</div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div>{c.text}</div>
-                  )}
-                </div>
-                {bgArt && (
-                  <div className="mh-cardc-sig">
-                    <span>Dominio {c.domain}</span>
-                    <span>Nivel {c.level} · Recuperación {c.recall ?? "—"}</span>
-                  </div>
-                )}
-              </div>
+    <div className="mh-fan-in">
+      <CardFace c={it} I={I} FitTitle={FitTitle} FitBox={FitBox} />
+    </div>
   );
 }
 
@@ -10247,9 +10208,8 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement }) {
     const onEnd = (e) => {
       const h = heldRef.current;
       if (!h || !h.wait || e.detail.card !== h.key) return;
-      const r = document.querySelector(".mh-map-stage")?.getBoundingClientRect();
-      const from = r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : h.from;
-      flyBack({ ...cardsRef.current.find((c) => c.key === h.key) }, from, h.home);
+      // La carta ya ha viajado hasta su hueco dentro de la propia animación: solo queda mostrarla en la mano.
+      setHeld(null);
     };
     window.addEventListener("mh-cardplay-end", onEnd);
     return () => window.removeEventListener("mh-cardplay-end", onEnd);
@@ -10295,6 +10255,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement }) {
     if (!cell) return;
     if (d.card.subclass) return setOpen({ ...d.card, choose: true });
     const target = tokens.find((t) => !t.hidden && t.x === cell.x && t.y === cell.y && t.id !== me?.id) || null;
+    window.__mhFlyTo = { key: d.card.key, x: d.home.x, y: d.home.y, w: d.home.w, t: Date.now() };
     const res = onUse(d.card, cell, target, rangeOf(cell));
     if (!d.home) return;
     // La carta usada vuelve volando a la mano; si se revela en el mapa, lo hace cuando acaba esa animación.
@@ -10317,7 +10278,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement }) {
     if (ev.button > 0) return;
     ev.preventDefault();
     const hr = ev.currentTarget.getBoundingClientRect();
-    dragRef.current = { home: { x: hr.left + hr.width / 2, y: hr.top + hr.height / 2 }, card, x: ev.clientX, y: ev.clientY, x0: ev.clientX, y0: ev.clientY, cell: null, moved: false };
+    dragRef.current = { home: { x: hr.left + hr.width / 2, y: hr.top + hr.height / 2, w: ev.currentTarget.offsetWidth }, card, x: ev.clientX, y: ev.clientY, x0: ev.clientX, y0: ev.clientY, cell: null, moved: false };
     setDrag(dragRef.current);
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", up);
@@ -10463,7 +10424,17 @@ function MapBackdrop({ bg, sharp }) {
 }
 
 // Carta jugada en el mapa: el resto de la mesa ve oscurecerse el tablero, el reverso de quien la juega y cómo se revela.
-function CardPlayView({ anim }) {
+function CardPlayView({ anim, own }) {
+  const cardRef = useRef(null);
+  const [fly, setFly] = useState(null);
+  useLayoutEffect(() => {
+    const t = typeof window !== "undefined" ? window.__mhFlyTo : null;
+    const el = cardRef.current;
+    if (!own || !t || !el || t.key !== anim.card?.key || Date.now() - t.t > 8000) return;
+    const r = el.getBoundingClientRect();
+    // La animación de entrada arranca 26 px más abajo; el centro real es el del tablero.
+    setFly({ x: t.x - (r.left + r.width / 2), y: t.y - (r.top + r.height / 2 - 26), s: Math.max(.4, Math.min(1, (t.w || 150) / 168)) });
+  }, [anim.key]); // eslint-disable-line react-hooks/exhaustive-deps
   const card = anim.card || {};
   const col = card.weapon ? TIER_COLORS[card.level]?.color || "#C9A24B" : DOMAIN_COLORS[card.domain] || "#C9A24B";
   const edge = anim.edge || "#E3B04B"; // el borde que ese jugador tiene configurado en Personalización
@@ -10472,7 +10443,7 @@ function CardPlayView({ anim }) {
       <div className="mh-cpf-dim" />
       <div className="mh-cpf-stage">
         <div className="mh-cpf-nm"><b>{anim.name || "Alguien"}</b> usa <em>{card.key}</em></div>
-        <div className="mh-cpf-card">
+        <div ref={cardRef} className={"mh-cpf-card" + (own && fly ? " is-own" : "")} style={fly ? { "--fx": fly.x + "px", "--fy": fly.y + "px", "--fs": fly.s } : undefined}>
           <div className="mh-cpf-flip">
             <div className="mh-cpf-face mh-cpf-back"><CardBack kind={anim.back || "noche"} edge={edge} /></div>
             <div className="mh-cpf-face mh-cpf-front"><FanFace c={card} col={col} /></div>
@@ -10834,7 +10805,7 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
         );
       })()}
       <MapLog log={log} />
-      {cAnim && overlayEl && createPortal(<CardPlayView anim={cAnim} />, overlayEl)}
+      {cAnim && overlayEl && createPortal(<CardPlayView anim={cAnim} own={!!meCharId && cAnim.charId === meCharId} />, overlayEl)}
       {rangeTok && overlayEl && createPortal(
         <div className="mh-map-legend" onPointerDown={(e) => e.stopPropagation()}>
           {MAP_RANGES.map((r) => (
@@ -10874,6 +10845,8 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
 }
 
 const MapOverlayCtx = createContext(null);
+// El zoom con la rueda está desactivado en los mapas de combate.
+const MAP_ZOOM_ON = false;
 function MapViewport({ focus, noZoom, children }) {
   const ref = useRef(null);
   const pan = useRef(null);
@@ -10912,7 +10885,7 @@ function MapViewport({ focus, noZoom, children }) {
   // La rueda del ratón acerca y aleja el mapa alrededor del puntero.
   useEffect(() => {
     const el = ref.current;
-    if (!el || noZoom) return;
+    if (!el || noZoom || !MAP_ZOOM_ON) return;
     const onWheel = (e) => {
       // Dentro del menú del clic derecho, la rueda desplaza el menú.
       if (e.target.closest && e.target.closest(".mh-map-menu")) return;
