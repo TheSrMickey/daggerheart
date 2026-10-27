@@ -4956,6 +4956,7 @@ const sharedStyles = `
   .mh-fan-tabs button { all: unset; cursor: pointer; box-sizing: border-box; padding: 5px 12px; border-radius: 7px; font: 600 12px Inter, system-ui, sans-serif; color: #b9afc8; } .mh-fan-tabs button small { opacity: .7; margin-left: 2px; } .mh-fan-tabs button.on { background: #3a2f55; color: #E3B04B; } .mh-fan-tabs button:not(.on):hover { color: #fff; }
   .mh-fan-pile { all: unset; cursor: pointer; position: absolute; bottom: 46px; width: 74px; height: 104px; z-index: 7; } .mh-fan-pile.is-l { left: 12px; } .mh-fan-pile.is-r { right: 12px; }
   .mh-fan-pile span { position: absolute; width: 62px; height: 90px; border-radius: 9px; border: 2px solid var(--pc); background: linear-gradient(160deg, color-mix(in srgb, var(--pc) 30%, #1d1827), #15111c); box-shadow: 0 3px 8px rgba(0,0,0,.5); left: calc(var(--q) * 6px); top: calc(10px - var(--q) * 4px); transform: rotate(calc(-6deg + var(--q) * 6deg)); transition: transform .15s; }
+  .mh-fan-pile span.is-back { width: 62px; height: 87px; border: 0; background: none; overflow: hidden; border-radius: 9px; } .mh-fan-pile span.is-back svg { display: block; width: 100%; height: 100%; }
   .mh-fan-pile:hover span { transform: translateY(-6px) rotate(calc(-6deg + var(--q) * 6deg)); }
   .mh-fan-pile em { position: absolute; left: -6px; right: -6px; bottom: -22px; text-align: center; font: 600 10.5px Inter, system-ui, sans-serif; font-style: normal; color: #fff; background: rgba(21,17,28,.9); border-radius: 6px; padding: 2px 4px; white-space: nowrap; }
   .dsw { position: fixed; z-index: 60; display: flex; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box; overflow: hidden; background: radial-gradient(ellipse at 50% 40%, color-mix(in srgb, var(--mh-panel, #1b1830) 70%, #2b2152), var(--mh-bg, #0b0c1b) 78%); animation: dsw-bg .3s ease both; }
@@ -10199,7 +10200,7 @@ function HomeDice({ stats }) {
 }
 
 // Abanico de cartas de dominio en el borde inferior del mapa: se arrastran hasta una casilla para usarlas.
-function CardFan({ cards, me, tokens, onUse, onElement, activeElement }) {
+function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack, cardBorder }) {
   const cardsRef = useRef(cards);
   cardsRef.current = cards;
   const [drag, setDrag] = useState(null); // { card, x, y, cell, moved }
@@ -10324,7 +10325,8 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement }) {
   const present = ["d", "w", "a"].filter((k) => cards.some((c) => grp(c) === k));
   const grouped = cards.length > 6 && present.length > 1;
   const act = grouped ? (present.includes(grpSel) ? grpSel : present[0]) : null;
-  const shown = grouped ? cards.filter((c) => grp(c) === act) : cards;
+  // La carta que se está usando sale de la mano (y las demás se recolocan) hasta que vuelve.
+  const shown = (grouped ? cards.filter((c) => grp(c) === act) : cards).filter((c) => !(held && held.key === c.key));
   // Carrusel: los otros grupos quedan a los lados (izquierda y derecha); al pulsar uno pasa al centro y los demás rotan.
   const ring = ["w", "d", "a"].filter((k) => present.includes(k));
   const ri = ring.indexOf(act);
@@ -10348,7 +10350,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement }) {
         return (
           <button key={k} type="button" className={"mh-fan-pile " + (k === sideL ? "is-l" : "is-r")} onClick={() => setGrpSel(k)} title={"Abrir " + GN[k].toLowerCase() + " (" + list.length + ")"} aria-label={"Abrir " + GN[k] + ", " + list.length + " cartas"}>
             {list.slice(0, 3).map((c, q) => (
-              <span key={c.key} style={{ "--pc": colOf(c), "--q": q }} />
+              <span key={c.key} className="is-back" style={{ "--pc": colOf(c), "--q": q }}><CardBack kind={cardBack || "noche"} edge={cardBorder === "domain" ? colOf(c) : undefined} /></span>
             ))}
             <em>{GN[k]} · {list.length}</em>
           </button>
@@ -10358,7 +10360,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement }) {
         {shown.map((c, i) => {
           const mid = (n - 1) / 2;
           const col = colOf(c);
-          const lifting = (drag?.moved && drag.card.key === c.key) || (held && held.key === c.key);
+          const lifting = drag?.moved && drag.card.key === c.key;
           return (
             <div
               key={c.key}
@@ -10725,7 +10727,7 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
       {!rangeTok && reach.map(([x, y]) => (
         <div key={x + "," + y} className="mh-map-reach" style={at(x, y)} />
       ))}
-      {drag?.moved && <div className={"mh-map-drop" + (occupied(drag.x, drag.y, drag.id) ? " is-bad" : "")} style={at(drag.x, drag.y)} />}
+      {drag?.moved && occupied(drag.x, drag.y, drag.id) && <div className="mh-map-drop is-bad" style={at(drag.x, drag.y)} />}
       {tokens.filter((t) => !(fogHide && inFog(t.x, t.y))).map((t) => {
         const pos = drag && drag.id === t.id && drag.moved ? { x: drag.fx, y: drag.fy } : t;
         const movable = canMove(t);
@@ -21413,6 +21415,8 @@ export default function App({ onSignOut }) {
                                           return (
                                             <CardFan
                                               cards={cards}
+                                              cardBack={cardBack}
+                                              cardBorder={cardBorder}
                                               onElement={(el, on) => toggleElemental(viewingCharId, el, on)}
                                               activeElement={me?.f_elemental_active || ""}
                                               me={myToken}
