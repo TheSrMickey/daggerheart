@@ -5700,6 +5700,9 @@ const sharedStyles = `
   .mh-cg.is-flat .mh-cg-body.is-pane .cal-main, .mh-cg.is-flat .mh-cg-body.is-pane .cal-month { background: var(--mh-panel); border: 1px solid var(--mh-line); border-radius: 22px; padding: 18px 20px; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
   /* Banner de la campaña (mismo tamaño y estilo que el de la hoja de personaje) y pestañas de la hoja. */
   .mh-cg.is-flat { display: flex; flex-direction: column; gap: 0; }
+  .mh-cg.has-banner > .mh-cg-head { display: none; }
+  .mh-cgb-lv { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; margin-left: 8px; padding: 2px 9px; border-radius: 99px; font-size: 11px; font-weight: 600; color: #fff; background: #ffffff1c; border: 1px solid #ffffff33; } .mh-cgb-lv:hover, .mh-cgb-lv.is-on { background: #ffffff33; } .mh-cgb-lv:focus-visible { outline: 2px solid #E3B04B; }
+  html[data-mh-theme="light"] .mh-cgb-lv { color: var(--mh-ink2); background: #FFFFFFcc; border-color: #BFB197; }
   .mh-cg.is-flat > .mh-cg-head, .mh-cg.is-flat > .mh-cg-navrow, .mh-cg.is-flat > .mh-cg-sub, .mh-cg.is-flat > .mh-cg-subrow, .mh-cg.is-flat > .mh-cg-pg { display: none; }
   .mh-cgb { flex: none; position: relative; overflow: hidden; height: 136px; box-sizing: border-box; border-radius: 16px; padding: 14px 20px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid color-mix(in srgb, var(--cc) 40%, #ffffff14); background: linear-gradient(135deg, color-mix(in srgb, var(--cc) 40%, #0d1a1a), #0c0c20 80%); margin-bottom: 10px; color: #fff; }
   .mh-cgb::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(0deg, #0c0c2099, transparent 55%); }
@@ -5798,8 +5801,8 @@ const sharedStyles = `
   /* Directo */
   .mh-dir { display: flex; flex-direction: column; gap: 16px; }
   @media (min-width: 901px) {
-    .mh-cg:has(> .mh-dir:not(.is-imm)) { display: flex; flex-direction: column; height: calc(100dvh - 44px); }
-    .mh-cg:has(> .mh-dir:not(.is-imm)) > .mh-dir { flex: 1; min-height: 0; }
+    .mh-cg:has(> .mh-dir:not(.is-imm)), .mh-cg:has(> .mh-cg-body > .mh-dir:not(.is-imm)) { display: flex; flex-direction: column; height: calc(100dvh - 30px); min-height: 640px; }
+    .mh-cg:has(> .mh-dir:not(.is-imm)) > .mh-dir, .mh-cg:has(> .mh-cg-body > .mh-dir:not(.is-imm)) > .mh-cg-body > .mh-dir { flex: 1; min-height: 0; }
     .mh-dir:not(.is-imm) > .mh-dir-top { flex: 1; min-height: 0; height: auto; }
   }
   .mh-dir-top { display: grid; grid-template-columns: minmax(0, 1fr) clamp(372px, 26vw, 480px); grid-template-rows: minmax(0, 1fr) auto; gap: 14px; height: clamp(600px, calc(100dvh - 190px), 1200px); }
@@ -28420,7 +28423,7 @@ export default function App({ onSignOut }) {
             </div>
           </div>
         )}
-        <div data-mh-main className={(showTopbar ? "mh-scroll-hidden" : "") + (view === "inicio" ? " mh-main-fit" : "") + (campFlat ? " mh-main-flat" : "") || undefined} style={{ position: "absolute", top: showTopbar ? (view === "perfil" || view === "inicio" || view === "ficha" || campFlat ? EDGE : EDGE + 74) : 0, left: 0, bottom: 0, right: railW, transition: "right .22s ease", overflowY: (view === "ficha" && !viewingCharId && !modernCharId && showRail) || campFlat ? "hidden" : "auto", padding: isMobile ? (campDetail ? "10px 12px 18px" : "18px 14px") : showTopbar ? "0 " + padX + " " + EDGE + "px" : campDetail ? (campaignDetailTab === "mesa" ? "18px 24px 24px 14px" : EDGE + "px " + padX + " " + EDGE + "px") : "24px 28px" }}>
+        <div data-mh-main className={(showTopbar ? "mh-scroll-hidden" : "") + (view === "inicio" ? " mh-main-fit" : "") + (campFlat ? " mh-main-flat" : "") || undefined} style={{ position: "absolute", top: showTopbar ? (view === "perfil" || view === "inicio" || view === "ficha" || campFlat ? EDGE : EDGE + 74) : 0, left: 0, bottom: 0, right: railW, transition: "right .22s ease", overflowY: (view === "ficha" && !viewingCharId && !modernCharId && showRail) || campFlat ? "hidden" : "auto", padding: isMobile ? (campDetail ? "10px 12px 18px" : "18px 14px") : showTopbar ? "0 " + padX + " " + EDGE + "px" : campDetail ? (campaignDetailTab === "mesa" ? "18px 24px 12px 14px" : EDGE + "px " + padX + " " + EDGE + "px") : "24px 28px" }}>
           <div ref={setWizSlot} style={{ maxWidth: contentMax, margin: "0 auto" }} />
           <div key={view + (view === "ficha" && modernCharId ? ":hoja" : "")} className={"mh-view-in" + (view === "ficha" && modernCharId ? " mh-sheet-in" : "")} style={{ display: showNewCharModal ? "none" : undefined, maxWidth: contentMax, margin: "0 auto" }}>
             {!showTopbar && view !== "inicio" && view !== "perfil" && !campDetail && <div className="mh-pagetitle">{viewLabel}</div>}
@@ -28623,10 +28626,12 @@ export default function App({ onSignOut }) {
               const cgScenes = stageScenesOf(campaignStage);
               const cgCur = cgScenes.find((x) => x.id === activeSceneIdOf(campaignStage)) || null;
               const cgOnline = table.filter((e) => tableStatus(e) === "on").length;
+              // Mismo banner que en el resto de pestañas, también en «Directo» (el combate sigue con la cabecera antigua por ahora).
+              const cgBanner = campFlat || (!isMobile && campaignDetailTab === "mesa");
               return (
-                <div className={"mh-cg" + (campFlat ? " is-flat" : "")} style={{ "--hc": campColor(viewingCampaignId) }}>
+                <div className={"mh-cg" + (campFlat ? " is-flat" : "") + (cgBanner ? " has-banner" : "")} style={{ "--hc": campColor(viewingCampaignId) }}>
                   {soonMsg && <div className="mh-cg-soon" role="status">{soonMsg} · próximamente</div>}
-                  {campFlat && (
+                  {cgBanner && (
                     <header className="mh-cgb" style={{ "--cc": campColor(viewingCampaignId) }}>
                       <span className="mh-cgb-emb" aria-hidden="true"><BookOpen size={190} strokeWidth={1} /></span>
                       <div className="mh-cgb-top">
@@ -28638,6 +28643,11 @@ export default function App({ onSignOut }) {
                             <span> · {memberIds.length} personaje{memberIds.length === 1 ? "" : "s"}</span>
                             {cgScenes.length > 0 && <span> · {cgScenes.length} capítulo{cgScenes.length === 1 ? "" : "s"}</span>}
                             {activeCampaign.aiImages && <span className="mh-cgb-ai" title="Imágenes creadas con IA"><Sparkles size={11} /> IA</span>}
+                            {limitsCount(activeCampaign) > 0 && (
+                              <button type="button" className={"mh-cgb-lv" + (cgLimitsOpen ? " is-on" : "")} aria-expanded={cgLimitsOpen} onClick={() => setCgLimitsOpen((v) => !v)} title="Líneas y velos acordados para la mesa">
+                                <ShieldCheck size={11} /> Líneas y velos · {limitsCount(activeCampaign)}
+                              </button>
+                            )}
                           </p>
                         </div>
                         <span className="mh-cgb-sp" />
