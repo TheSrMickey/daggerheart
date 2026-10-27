@@ -219,6 +219,7 @@ export default function ProfilePage({ id, name }) {
           <div><b>{camps}</b><span>Campañas</span></div>
           <div><b>{nChars}</b><span>Personajes</span></div>
           <div><b>{ach.stats.crit || 0}</b><span>Críticos</span></div>
+          <div><b>{ach.stats.medals || 0}</b><span>Medallas</span></div>
           <div><b>{unlockedIds.length}/{ACHIEVEMENTS.length}</b><span>Logros</span></div>
         </div>
         <div className="pf-tabs" role="tablist">

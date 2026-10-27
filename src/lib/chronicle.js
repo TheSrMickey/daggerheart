@@ -12,6 +12,7 @@ export const TYPES = {
   critico: { label: "Crítico", color: "#F0786A" },
   descanso: { label: "Descanso", color: "#8E6FC4" },
   voto: { label: "Votación", color: "#5E93C9" },
+  medalla: { label: "Medalla", color: "#E3B04B" },
 };
 
 const clean = (t) => String(t || "").replace(/^\s*\p{Extended_Pictographic}(?:️|‍\p{Extended_Pictographic})*\s*/u, "").trim();
@@ -20,6 +21,7 @@ const clean = (t) => String(t || "").replace(/^\s*\p{Extended_Pictographic}(?:�
 export function classify(e) {
   const text = String(e.text || "");
   const who = e.author || "";
+  if (e.medal) return { type: "medalla", who: e.medal.charName, text: clean(e.text) };
   if (e.kind === "event" && e.gm && e.icon === "escena") return { type: "escena", who: "El DJ", text: (text.match(/«(.+?)»/) || [])[1] || clean(text), long: text };
   if (e.kind === "event" && e.gm && e.icon === "pistas") return { type: "pista", who: "El DJ", text: clean(text) };
   if (e.kind === "share" && e.share?.type === "handout") return { type: "pista", who, text: (e.share.name || e.share.handout?.title || "Pista") + " entregada" };
