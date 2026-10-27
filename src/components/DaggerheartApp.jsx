@@ -5012,6 +5012,10 @@ const sharedStyles = `
   .mh-fan-card:hover { transform: translateY(-60px) rotate(0deg) scale(1.15); z-index: 2; }
   .mh-fan-card.is-lifted { opacity: .25; transition: opacity .25s; }
   .mh-fan-ghost { position: fixed; z-index: 9999; pointer-events: none; transform: translate(-50%, -50%) rotate(-6deg); padding: 8px 12px; border-radius: 8px; border: 2px solid var(--c); background: #1B1824; color: #F3EBDD; font-size: 12px; box-shadow: 0 0 18px var(--c); }
+  .mh-thread { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; overflow: visible; } .mh-thread line { stroke: #7fcf86; stroke-width: 2.2; stroke-dasharray: 2 8; stroke-linecap: round; vector-effect: non-scaling-stroke; opacity: .85; filter: drop-shadow(0 0 3px #000a); animation: mh-thread 1.4s linear infinite; } @keyframes mh-thread { to { stroke-dashoffset: -20; } }
+  .mh-root-tag { position: absolute; z-index: 30; left: 50%; top: 100%; transform: translate(-50%, 8px); min-width: 200px; max-width: 260px; padding: 7px 10px; border-radius: 11px; background: rgba(12,12,32,.96); border: 1px solid #7fcf8688; box-shadow: 0 10px 22px -8px #000; text-align: left; pointer-events: none; opacity: 0; visibility: hidden; transition: opacity .12s; } .mh-root-tag b { display: block; font-size: 12px; color: #fff; } .mh-root-tag small { display: block; font-size: 10.5px; line-height: 1.35; color: #b5b4d0; margin-top: 2px; }
+  .mh-map-tk:hover .mh-root-tag, .mh-map-tk:focus-visible .mh-root-tag, .mh-map-tk.is-sel .mh-root-tag { opacity: 1; visibility: visible; } .mh-map-tk:hover, .mh-map-tk:focus-visible { z-index: 8; }
+  .mh-rotwrap .mh-root-tag { rotate: -90deg; }
   .mh-fan-card.is-ghostcard { filter: drop-shadow(0 0 14px #7fcf8688); } .mh-fan-card.is-ghostcard .mh-fan-in { opacity: .6; filter: saturate(.55) brightness(1.15); } .mh-fan-card.is-ghostcard::after { content: ""; position: absolute; inset: 0; border: 2px dashed #7fcf86; border-radius: 22px; pointer-events: none; animation: mh-ghost-pulse 2.4s ease-in-out infinite; } .mh-fan-card.is-ghostcard.is-nohope { filter: grayscale(1); opacity: .6; }
   .mh-fan-ghostlab { position: absolute; left: 0; right: 0; bottom: 6px; text-align: center; font: 700 9px Inter, sans-serif; letter-spacing: .1em; color: #9ce6a2; text-transform: uppercase; z-index: 3; pointer-events: none; text-shadow: 0 1px 4px #000; }
   @keyframes mh-ghost-pulse { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
@@ -8040,6 +8044,12 @@ const sharedStyles = `
   .gx2 { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 16px; align-items: start; }
   .gx2-nav { display: flex; flex-direction: column; gap: 6px; padding: 12px; border-radius: 20px; border: 1px solid var(--mh-line); background: var(--mh-panel); position: sticky; top: 12px; } .gx2-title { display: flex; align-items: center; gap: 8px; padding: 4px 6px 8px; font-size: 15px; color: var(--mh-ink); } .gx2-title svg { color: var(--mh-gold-ink); }
   .gx2-tab { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 14px; border: 1px solid transparent; color: var(--mh-ink3); transition: background .15s, border-color .15s; } .gx2-tab:hover { background: var(--mh-panel2); } .gx2-tab:focus-visible { outline: 2px solid var(--acc, #E3B04B); outline-offset: 2px; } .gx2-tab b { display: block; font: 600 13px 'Inter', system-ui, sans-serif; color: var(--mh-ink); } .gx2-tab small { display: block; font-size: 11px; color: var(--mh-muted); } .gx2-ic { flex: none; width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; background: var(--mh-panel2); color: var(--mh-gold-ink); } .gx2-tab.is-on { background: color-mix(in srgb, var(--acc, #E3B04B) 14%, var(--mh-panel)); border-color: var(--acc, #E3B04B); } .gx2-tab.is-on .gx2-ic { background: var(--acc, #E3B04B); color: var(--acc-on, #1F1606); }
+  .gx2-step { display: inline-flex; align-items: center; gap: 4px; padding: 3px; border-radius: 999px; background: var(--mh-panel); border: 1px solid var(--mh-line); } .gx2-step b { min-width: 26px; text-align: center; font-size: 14px; } .gx2-step button { all: unset; cursor: pointer; width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; color: var(--mh-ink3); } .gx2-step button:hover:not(:disabled) { background: var(--mh-panel3); color: var(--mh-ink); } .gx2-step button:disabled { opacity: .35; cursor: default; } .gx2-step button:focus-visible { outline: 2px solid #E3B04B; }
+  .gx2-mesa { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; } .gx2-mesa .gx-lab { width: 100%; margin: 0; }
+  .gx2-parts li.gx2-part { display: block; padding: 0; } .gx2-part-b { all: unset; box-sizing: border-box; cursor: pointer; width: 100%; display: flex; align-items: center; gap: 8px; padding: 7px 10px 2px; } .gx2-part-b:focus-visible { outline: 2px solid #E3B04B; border-radius: 12px; } .gx2-part-b small { margin-left: auto; } .gx2-sum { display: block; padding: 0 10px 7px 32px; font-size: 11px; color: var(--mh-muted); } .gx2-part .mh-nsv { margin: 0 10px 10px; }
+  .gx2-npc .gx2-sum { padding: 0; }
+  /* Generadores: una sola caja con las pestañas arriba (sin hueco entre el submenú y el contenido) */
+  .mh-cg.is-flat .gx2 { gap: 0; padding: 12px 14px 14px; border-radius: 22px; border: 1px solid var(--mh-line); background: var(--mh-panel); } .mh-cg.is-flat .gx2-nav { border: 0; background: none; padding: 0 0 10px; border-bottom: 1px solid var(--mh-line); border-radius: 0; margin-bottom: 12px; } .mh-cg.is-flat .gx2-main { border: 0; background: none; padding: 0 2px 0 0; border-radius: 0; }
   .gx2-main { min-width: 0; display: flex; flex-direction: column; gap: 14px; padding: 18px; border-radius: 22px; border: 1px solid var(--mh-line); background: var(--mh-panel); }
   .gx2-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; } .gx2-head h3 { margin: 0; font-size: 22px; } .gx2-head p { margin: 2px 0 0; font-size: 12.5px; color: var(--mh-muted); } .gx2-again { display: inline-flex; align-items: center; gap: 7px; }
   .gx2-opts { display: flex; flex-wrap: wrap; gap: 14px 26px; padding: 12px 14px; border-radius: 16px; border: 1px solid var(--mh-line); background: var(--mh-panel2); } .gx2-mesa b { color: var(--mh-gold-ink); }
@@ -10785,6 +10795,16 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
       {!rangeTok && reach.map(([x, y]) => (
         <div key={x + "," + y} className="mh-map-reach" style={at(x, y)} />
       ))}
+      {(() => {
+        // Hilo de guiones entre quien enraizó y el enraizado (Enredo Feroz) mientras dure la inmovilización.
+        const links = tokens.filter((t) => t.rootedBy && !t.vanished && mapConds(t).includes("Inmovilizado")).map((t) => ({ t, src: tokens.find((s) => s.kind === "pc" && s.charId === t.rootedBy && !s.vanished) })).filter((l) => l.src);
+        if (!links.length) return null;
+        return (
+          <svg className="mh-thread" viewBox={"0 0 " + MAP_COLS + " " + MAP_ROWS} preserveAspectRatio="none" aria-hidden="true">
+            {links.map(({ t, src }) => <line key={t.id} x1={src.x + 0.5} y1={src.y + 0.5} x2={t.x + 0.5} y2={t.y + 0.5} />)}
+          </svg>
+        );
+      })()}
       {drag?.moved && occupied(drag.x, drag.y, drag.id) && <div className="mh-map-drop is-bad" style={at(drag.x, drag.y)} />}
       {tokens.filter((t) => !(fogHide && inFog(t.x, t.y))).map((t) => {
         const pos = drag && drag.id === t.id && drag.moved ? { x: drag.fx, y: drag.fy } : t;
@@ -10822,6 +10842,12 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
               </span>
             )}
             {cAnim && meCharId && cAnim.charId === meCharId && t.kind === "pc" && t.charId === meCharId && !t.vanished && <span key={cAnim.key} className="mh-map-cpulse" aria-hidden="true"><i /><i /><i /></span>}
+            {t.rootedBy && mapConds(t).includes("Inmovilizado") && !t.vanished && (
+              <span className="mh-root-tag" role="tooltip">
+                <b>🌿 Enredo Feroz</b>
+                <small>Inmovilizado por {(tokens.find((s) => s.kind === "pc" && s.charId === t.rootedBy) || {}).name || "un personaje"} · hasta que el DJ lo libere</small>
+              </span>
+            )}
             {spotTok && spotTok.id === t.id && !t.vanished && <span className="mh-map-spot" aria-hidden="true" />}
             {t.kind === "pc" && spotHands[t.charId] && !t.vanished && (
               <span className={"mh-map-hand" + (kindOf(spotHands[t.charId].kind).urgent ? " is-urgent" : "")} aria-hidden="true">
@@ -14908,7 +14934,8 @@ export default function App({ onSignOut }) {
       let cur = tokens;
       names.forEach((name, i) => {
         const [x, y] = freeCell(cur);
-        cur = [...cur, { id: "t" + Date.now() + i + Math.random().toString(36).slice(2, 5), x, y, kind: "foe", name, stats: { ...newFoeStats(), base: name }, size: "m" }];
+        const nm = typeof name === "string" ? name : name.name;
+        cur = [...cur, { id: "t" + Date.now() + i + Math.random().toString(36).slice(2, 5), x, y, kind: "foe", name: nm, stats: typeof name === "string" ? { ...newFoeStats(), base: nm } : { ...newFoeStats(), ...npcTokenStats({ name: nm, stats: name.stats }) }, size: "m" }];
       });
       return cur;
     });
