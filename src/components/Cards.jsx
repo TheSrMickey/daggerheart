@@ -54,7 +54,7 @@ export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
         {bst && <span className="mh-cardc-gem is-rank" title={"Rango " + c.tier}>{roman[(c.tier || 1) - 1]}<I size={19} strokeWidth={1.8} /></span>}
       </div>
       {bg && <span className="mh-cardc-dom">{dom ? c.type : sub ? c.rankLabel : wpn ? g?.pill : bst ? "Forma de Bestia" : c.kind === "transformacion" ? "Transformación" : c.sub}</span>}
-      {dom && <span className="mh-cardc-cost" title="Coste de recuperación">{c.recall ?? "—"}<Zap size={12} fill="currentColor" /></span>}
+      {dom && !c.noCost && <span className="mh-cardc-cost" title="Coste de recuperación">{c.recall ?? "—"}<Zap size={12} fill="currentColor" /></span>}
       <div style={{ padding: "0 18px", textAlign: "center", flexShrink: 0, marginTop: bg ? 16 : 8 }}>
         <FitTitle text={c.key} max={19} min={14} className="mh-serif" style={{ fontWeight: 700, color: "var(--mh-ink)", maxHeight: "2.4em", overflow: "hidden" }} />
         <div className="mh-cardc-sub">{c.sub}</div>
@@ -80,7 +80,7 @@ export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
       {dom && (
         <div className="mh-cardc-sig">
           <span>Dominio {c.domain}</span>
-          <span>Nivel {c.level} · Recuperación {c.recall ?? "—"}</span>
+          <span>{c.noCost ? "Hechizo" : "Nivel " + c.level + " · Recuperación " + (c.recall ?? "—")}</span>
         </div>
       )}
       {(gen || sub) && (

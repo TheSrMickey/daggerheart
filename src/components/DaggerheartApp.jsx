@@ -5012,11 +5012,6 @@ const sharedStyles = `
   .mh-fan-card:hover { transform: translateY(-60px) rotate(0deg) scale(1.15); z-index: 2; }
   .mh-fan-card.is-lifted { opacity: .25; transition: opacity .25s; }
   .mh-fan-ghost { position: fixed; z-index: 9999; pointer-events: none; transform: translate(-50%, -50%) rotate(-6deg); padding: 8px 12px; border-radius: 8px; border: 2px solid var(--c); background: #1B1824; color: #F3EBDD; font-size: 12px; box-shadow: 0 0 18px var(--c); }
-  .mh-roots { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; } .mh-roots.is-under { z-index: 1; } .mh-roots.is-over { z-index: 4; }
-  .mh-root-p { fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; animation: mh-root-grow .7s cubic-bezier(.3,.8,.4,1) var(--rd, 0s) forwards; } .mh-root-p.is-sh { stroke: rgba(0,0,0,.5); stroke-width: 6.4; transform: translate(.8px, 1.2px); } .mh-root-p.is-body { stroke: #5f7d3c; stroke-width: 4.4; } .mh-roots.is-over .mh-root-p.is-body { stroke: #6fa04a; }
-  .mh-root-leaf { fill: #5fbf6a; opacity: 0; animation: mh-root-leaf .35s ease calc(var(--rd, 0s) + .55s) forwards; }
-  @keyframes mh-root-grow { to { stroke-dashoffset: 0; } } @keyframes mh-root-leaf { to { opacity: 1; } }
-  @media (prefers-reduced-motion: reduce) { .mh-root-p { animation-duration: .01s; } }
   .mh-fan-card.is-ghostcard { filter: drop-shadow(0 0 14px #7fcf8688); } .mh-fan-card.is-ghostcard .mh-fan-in { opacity: .6; filter: saturate(.55) brightness(1.15); } .mh-fan-card.is-ghostcard::after { content: ""; position: absolute; inset: 0; border: 2px dashed #7fcf86; border-radius: 22px; pointer-events: none; animation: mh-ghost-pulse 2.4s ease-in-out infinite; } .mh-fan-card.is-ghostcard.is-nohope { filter: grayscale(1); opacity: .6; }
   .mh-fan-ghostlab { position: absolute; left: 0; right: 0; bottom: 6px; text-align: center; font: 700 9px Inter, sans-serif; letter-spacing: .1em; color: #9ce6a2; text-transform: uppercase; z-index: 3; pointer-events: none; text-shadow: 0 1px 4px #000; }
   @keyframes mh-ghost-pulse { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
@@ -9879,6 +9874,7 @@ function FanFace({ c, col }) {
     if (!it.image && kind === "accion") it = { ...it, image: dt.image || FAN_CLASS_IMG[c.myClass] || null };
   }
   else it = cat.find((x) => x.kind === "dominio" && x.key === (c.baseKey || c.key) && (!c.domain || x.domain === c.domain));
+  if (c.noCost) it = { ...it, key: c.key, text: c.text, recall: null, noCost: true };
   if (!it) it = { id: "x-" + c.key, kind: "dominio", key: c.key, sub: (c.domain || "") + " · " + (c.type || ""), domain: c.domain, type: c.type, level: c.level, recall: c.recall, text: c.text, image: c.image, color: col };
   const I = it.Icon || DOMAIN_ICONS[it.domain] || Sparkles;
   return (
@@ -10410,7 +10406,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
               title="Púlsala para verla en grande · arrástrala al mapa para usarla"
             >
               <FanFace c={c} col={col} />
-              {c.ghost && <span className="mh-fan-ghostlab">{c.noHope ? "Sin Esperanza" : "Extra · 1 Esperanza"}</span>}
+              {c.ghost && <span className="mh-fan-ghostlab">{c.noHope ? "Sin Esperanza" : "1 Esperanza"}</span>}
             </div>
           );
         })}
@@ -10488,28 +10484,6 @@ function MapBackdrop({ bg, sharp }) {
   );
 }
 
-// Raíces de Enredo Feroz: asoman de debajo de la ficha, la rodean en espiral y la abrazan; se quedan mientras siga inmovilizada.
-const ROOT_SHAPES = Array.from({ length: 6 }, (_, i) => {
-  const a0 = (i / 6) * Math.PI * 2 + 0.3, dir = i % 2 ? 1 : -1, N = 26, pts = [];
-  for (let k = 0; k <= N; k++) { const f = k / N, ang = a0 + dir * f * 1.9, rad = 33 + Math.sin(f * Math.PI) * 5 + f * 6 + Math.sin(k * 1.3 + i) * 0.7; pts.push([50 + Math.cos(ang) * rad, 50 + Math.sin(ang) * rad]); }
-  const d = (a) => a.map((q, j) => (j ? "L" : "M") + q[0].toFixed(1) + " " + q[1].toFixed(1)).join(" ");
-  const h = Math.floor(N / 2);
-  return { under: d(pts.slice(0, h + 1)), over: d(pts.slice(h)), delay: i * 0.07, leaf: pts[Math.floor(N * 0.7)], rot: (a0 + dir * 1.3) * 57.3 + 90 };
-});
-function RootsFx() {
-  const layer = (kind) => (
-    <svg className={"mh-roots is-" + kind} viewBox="0 0 100 100" aria-hidden="true">
-      {ROOT_SHAPES.map((s, i) => (
-        <g key={i} style={{ "--rd": s.delay + (kind === "over" ? 0.45 : 0) + "s" }}>
-          <path className="mh-root-p is-sh" d={s[kind]} pathLength="1" />
-          <path className="mh-root-p is-body" d={s[kind]} pathLength="1" />
-          {kind === "over" && <ellipse className="mh-root-leaf" cx={s.leaf[0]} cy={s.leaf[1]} rx="3.6" ry="1.9" transform={"rotate(" + s.rot.toFixed(0) + " " + s.leaf[0].toFixed(1) + " " + s.leaf[1].toFixed(1) + ")"} />}
-        </g>
-      ))}
-    </svg>
-  );
-  return <>{layer("under")}{layer("over")}</>;
-}
 // Modo combate a pantalla completa del móvil: el mapa sale del flujo de la hoja y se pinta sobre toda la pantalla (dentro de la raíz del tema).
 function MapPortal({ on, children }) {
   if (!on || typeof document === "undefined") return <div className="mh-mcb-off">{children}</div>;
@@ -10848,7 +10822,6 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
               </span>
             )}
             {cAnim && meCharId && cAnim.charId === meCharId && t.kind === "pc" && t.charId === meCharId && !t.vanished && <span key={cAnim.key} className="mh-map-cpulse" aria-hidden="true"><i /><i /><i /></span>}
-            {t.rootedBy && mapConds(t).includes("Inmovilizado") && !t.vanished && <RootsFx />}
             {spotTok && spotTok.id === t.id && !t.vanished && <span className="mh-map-spot" aria-hidden="true" />}
             {t.kind === "pc" && spotHands[t.charId] && !t.vanished && (
               <span className={"mh-map-hand" + (kindOf(spotHands[t.charId].kind).urgent ? " is-urgent" : "")} aria-hidden="true">
@@ -21543,7 +21516,7 @@ export default function App({ onSignOut }) {
                                               : { key: it.title, rowCard: true, myClass: me?.f_class, detail: it.onClick?.detail, rowKey: it.key, Icon: it.Icon, kicker: it.kicker, text: it.summary, color: rowColor(it.color), domain: "Sabio", level: "", type: "Acción", open: () => (it.onClick(), setViewingCardDetail((d) => (d && !d.rowIcon ? { ...d, rowIcon: it.Icon } : d))) }
                                           );
                                           const rootedMine = (campaignMap.tokens || []).filter((t) => t.rootedBy === viewingCharId && (t.conds || []).includes("Inmovilizado"));
-                                          const ghostCard = rootedMine.length && keys.includes("Enredo Feroz") ? (() => { const base = findDomainCardAny("Enredo Feroz"); return base ? { ...base, key: "Enredo Feroz · extra", baseKey: "Enredo Feroz", ghost: true, noHope: Number(me?.hope_marked ?? HOPE_DEFAULT) < 1 } : null; })() : null;
+                                          const ghostCard = rootedMine.length && keys.includes("Enredo Feroz") ? (() => { const base = findDomainCardAny("Enredo Feroz"); return base ? { ...base, key: "Inmovilizar", baseKey: "Enredo Feroz", text: "Puedes gastar una Esperanza para inmovilizar temporalmente a otro adversario en alcance Muy Cercano del objetivo de Enredo Feroz.", recall: null, noCost: true, ghost: true, noHope: Number(me?.hope_marked ?? HOPE_DEFAULT) < 1 } : null; })() : null;
                                           const cards = [wp(me?.f_primary_weapon, PRIMARY_WEAPONS, "Principal"), wp(me?.f_secondary_weapon, SECONDARY_WEAPONS, "Secundaria"), ...actionCards, ...keys.map((k) => findDomainCardAny(k)), ghostCard].filter(Boolean);
                                           return (
                                             <CardFan
