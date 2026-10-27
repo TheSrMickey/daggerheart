@@ -1,12 +1,15 @@
 // Historial de versiones que se muestra en «Actualizaciones». La primera entrada es la más reciente.
 // Cada cambio nuevo se anota aquí (tags: nuevo, mejora, arreglo).
+// Cuando un cambio sea importante (una vista o función grande) se abre una versión nueva (1.51, 1.52…) con título y «blurb» sobre lo destacado:
+// la diapositiva de la última actualización en Inicio y el número de versión de la barra lateral salen solos de la primera entrada.
 export const CHANGELOG = [
   {
-    version: "1.50",
-    date: "2026-10-15",
-    title: "Grupos y notificaciones nuevas",
-    blurb: "Chatea con toda tu mesa en un grupo compartido y recibe los avisos como tarjetas, también flotando mientras juegas.",
+    version: "1.51",
+    date: "2026-10-28",
+    title: "Combate en el móvil y cartas jugables",
+    blurb: "El móvil estrena un modo combate a pantalla completa y en vertical, y ya puedes arrastrar cartas al mapa con su animación para toda la mesa.",
     items: [
+      { tag: "mejora", text: "Personalización · el reverso «Noche y oro» ahora se adapta al modo claro (fondo crema y filete dorado) en vez de quedarse azul oscuro." },
       { tag: "nuevo", text: "Móvil · cuando el DJ muestra el combate, la ficha de tu personaje en «Campaña» pasa a un modo combate a pantalla completa y en vertical: el mapa se gira para ocupar todo el alto (casillas más grandes), con tu Vida/Estrés/Esperanza arriba, la mano de cartas en abanico abajo, el chat en una hoja que se abre con un botón, y botones para salir o girar el mapa." },
       { tag: "arreglo", text: "Combate · el círculo de vida de las fichas ahora se mueve con ellas (bote, arrastre, vuelo y reducción) y encaja justo en el borde de la ficha, sin dejar ver el borde por debajo. Al cambiar de grupo de cartas, la mano y las pilas de los lados entran con una animación según el lado desde el que llegan." },
       { tag: "mejora", text: "Combate · las pilas de cartas de los lados llevan el reverso que tengas equipado; al arrastrar una ficha ya no sale el recuadro naranja (sigue fijándose a la casilla al soltarla); y la carta que usas sale de la mano mientras la animación (las demás se recolocan) y se vuelve a ordenar cuando regresa." },
@@ -18,6 +21,14 @@ export const CHANGELOG = [
       { tag: "mejora", text: "Campañas · «Directo» usa ahora el mismo banner que el resto de pestañas (nombre, Miedo, jugadores, invitar y borrar, y el acceso a «Líneas y velos») y ocupa hasta el borde inferior, con el mismo margen que el menú lateral izquierdo." },
       { tag: "nuevo", text: "Medallas de la sesión · el DJ tiene 8 medallas (Tirada exacta, Idea brillante, Gran interpretación, Jugada increíble, Salvó al grupo, Alma de la mesa, Plan perfecto y Última gota) y cada una solo se puede dar a una persona por sesión, con un botón «Medallas» en Directo y en la Crónica. El jugador la ve con un aviso en pantalla y una tarjeta en el chat, y su colección sale en la pestaña Jugadores. El perfil cuenta las medallas recibidas y hay dos logros nuevos. Sustituye a los sellos de la Crónica." },
       { tag: "mejora", text: "Armas y armaduras · todas se ven ahora con el mismo diseño que al abrir un arma en la hoja (cinta de rango, arte arriba, daño o puntuación en grande y característica), tanto en la hoja como en la pestaña Cartas, que además estrena el filtro «Armadura» con todas las armaduras por rango." },
+    ],
+  },
+  {
+    version: "1.50",
+    date: "2026-10-15",
+    title: "Grupos y notificaciones nuevas",
+    blurb: "Chatea con toda tu mesa en un grupo compartido y recibe los avisos como tarjetas, también flotando mientras juegas.",
+    items: [
       { tag: "arreglo", text: "Campañas · el chat ocupa todo el ancho (mismo margen a la derecha que a la izquierda) y ya no aparece la barra de desplazamiento de fuera; solo se desplazan los mensajes dentro del chat." },
       { tag: "mejora", text: "Campañas · PNJ y criaturas: los adversarios se abren para ver sus estadísticas (nivel, tipo, dificultad, umbrales, vida, estrés, ataque y notas). Pistas: tarjetas más compactas; una imagen solo necesita la imagen (sin título ni descripción), un personaje se elige entre tus PNJ y adversarios, y un objeto se crea y se entrega a un personaje de la partida, que lo guarda en su inventario desde el chat." },
       { tag: "mejora", text: "Inicio · la diapositiva de la última actualización está siempre en la caja de novedades (ya no desaparece al verla) y se renueva sola con cada versión grande del historial." },

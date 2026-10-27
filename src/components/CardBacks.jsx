@@ -10,7 +10,7 @@ import { DicePage } from "./DiceSkins";
 
 // Reversos de carta. Sin texto: solo el logo de la plataforma (la estrella de cuatro puntas) sobre los colores de Enaris.
 export const CARD_BACKS = [
-  { key: "noche", label: "Noche y oro", desc: "Azul noche liso con la estrella dorada y un único filete. Sobrio, como el resto de la interfaz. Es el reverso por defecto.", color: "#6f9bff" },
+  { key: "noche", label: "Noche y oro", desc: "Azul noche (o crema en modo claro) liso con la estrella dorada y un único filete. Sobrio, como el resto de la interfaz. Es el reverso por defecto.", color: "#6f9bff" },
   { key: "clasico", label: "Clásico Enaris", desc: "El logo dorado sobre un emblema, con marco doble y trama de rombos. Se adapta al modo claro y al oscuro.", color: "#E3B04B", req: "founder", reward: "Desde los comienzos" },
 ];
 export const DEFAULT_BACK = "noche";
@@ -63,8 +63,13 @@ export function CardBack({ kind = "clasico", edge }) {
         <stop offset="1" stopColor="#E7DCC3" />
       </radialGradient>
       <linearGradient id={u("bgn")} x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stopColor="#131329" />
-        <stop offset="1" stopColor="#0a0a1c" />
+        <stop offset="0" stopColor={light ? "#FBF6EA" : "#131329"} />
+        <stop offset="1" stopColor={light ? "#E9DDBF" : "#0a0a1c"} />
+      </linearGradient>
+      <linearGradient id={u("gdl")} x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stopColor="#D9A53D" />
+        <stop offset=".55" stopColor="#B8892F" />
+        <stop offset="1" stopColor="#7A5416" />
       </linearGradient>
       <pattern id={u("lat")} width="22" height="22" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
         <path d="M0 0H22M0 0V22" stroke={light ? "#B8892F" : "#E3B04B"} strokeOpacity={light ? 0.16 : 0.1} strokeWidth="1" />
@@ -87,9 +92,9 @@ export function CardBack({ kind = "clasico", edge }) {
     body = (
       <>
         <rect width="300" height="420" rx="22" fill={"url(#" + u("bgn") + ")"} />
-        <rect x="1" y="1" width="298" height="418" rx="21" fill="none" stroke={edge || "#E3B04B"} strokeOpacity=".8" strokeWidth="2" />
-        <rect x="12" y="12" width="276" height="396" rx="14" fill="none" stroke="#24244a" strokeWidth="1.5" />
-        {star(150, 210, 0.42, "url(#" + u("gd") + ")", { style: { filter: "drop-shadow(0 0 10px #E3B04B88)" } })}
+        <rect x="1" y="1" width="298" height="418" rx="21" fill="none" stroke={edge || (light ? "#B8892F" : "#E3B04B")} strokeOpacity=".8" strokeWidth="2" />
+        <rect x="12" y="12" width="276" height="396" rx="14" fill="none" stroke={light ? "#B8892F" : "#24244a"} strokeOpacity={light ? 0.45 : 1} strokeWidth="1.5" />
+        {star(150, 210, 0.42, "url(#" + u(light ? "gdl" : "gd") + ")", { style: { filter: light ? "drop-shadow(0 2px 4px #7A541655)" : "drop-shadow(0 0 10px #E3B04B88)" } })}
       </>
     );
   } else {
