@@ -9826,13 +9826,23 @@ function TokenMenu({ menu, items, onClose }) {
   );
 }
 // Tablero con fichas cuadradas. Se arrastran, o se elige una y se pulsa la casilla; también con las flechas.
+// Ilustración de la clase del personaje para las cartas de característica sin imagen propia.
+const FAN_CLASS_IMG = new Proxy({}, { get: (_, k) => CLASS_HEADER_ART[k] || CLASS_ART[k] || null });
 // Carta de la mano / del revelado: exactamente el mismo diseño que en la pestaña «Cartas» (CardFace).
 function FanFace({ c, col }) {
   const cat = buildCardCatalog();
   let it = null;
   if (c.weapon) it = cat.find((x) => x.kind === "arma" && x.key === c.key);
   else if (c.subclass) it = cat.find((x) => x.kind === "subclase" && x.key === c.key && (!c.kicker || c.kicker.includes(x.rankLabel))) || cat.find((x) => x.kind === "subclase" && x.key === c.key);
-  else if (c.rowCard) it = { id: "r-" + c.key, kind: "accion", key: c.key, sub: c.kicker || "Acción", text: c.text, features: [], image: null, color: col, Icon: c.Icon };
+  else if (c.rowCard) {
+    const dt = c.detail || {};
+    const k = dt.kicker || c.kicker || "";
+    const kind = /^Ascendencia/.test(k) ? "ascendencia" : /^Comunidad/.test(k) ? "comunidad" : /^Transformaci/.test(k) ? "transformacion" : /^(Subclase|Multiclase)/.test(k) ? "subclase" : "accion";
+    const found = kind !== "accion" && kind !== "subclase" ? cat.find((x) => x.kind === kind && x.key === c.key) : null;
+    const cls = (/^Multiclase · ([^·]+)/.exec(k) || [])[1]?.trim();
+    it = found ? { ...found, color: col } : { id: "r-" + c.key, kind, key: c.key, sub: kind === "accion" ? k || "Acción" : kind === "ascendencia" ? "Ascendencia" : kind === "comunidad" ? "Comunidad" : kind === "transformacion" ? "Transformación" : (cls || "") + " · Subclase", cls, rank: /Maestr/.test(k) ? 2 : /Especializ/.test(k) ? 1 : 0, rankLabel: /Maestr/.test(k) ? "Maestría" : /Especializ/.test(k) ? "Especialización" : "Fundación", text: dt.text || c.text, features: dt.features || [], image: dt.image || FAN_CLASS_IMG[c.myClass] || null, color: col, Icon: c.Icon };
+    if (!it.image && kind === "accion") it = { ...it, image: dt.image || FAN_CLASS_IMG[c.myClass] || null };
+  }
   else it = cat.find((x) => x.kind === "dominio" && x.key === c.key && (!c.domain || x.domain === c.domain));
   if (!it) it = { id: "x-" + c.key, kind: "dominio", key: c.key, sub: (c.domain || "") + " · " + (c.type || ""), domain: c.domain, type: c.type, level: c.level, recall: c.recall, text: c.text, image: c.image, color: col };
   const I = it.Icon || DOMAIN_ICONS[it.domain] || Sparkles;
@@ -10315,7 +10325,12 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement }) {
   const grouped = cards.length > 6 && present.length > 1;
   const act = grouped ? (present.includes(grpSel) ? grpSel : present[0]) : null;
   const shown = grouped ? cards.filter((c) => grp(c) === act) : cards;
-  const others = grouped ? present.filter((k) => k !== act) : [];
+  // Carrusel: los otros grupos quedan a los lados (izquierda y derecha); al pulsar uno pasa al centro y los demás rotan.
+  const ring = ["w", "d", "a"].filter((k) => present.includes(k));
+  const ri = ring.indexOf(act);
+  const sideL = grouped && ring.length > 2 ? ring[(ri + ring.length - 1) % ring.length] : null;
+  const sideR = grouped ? (ring.length > 2 ? ring[(ri + 1) % ring.length] : ring.find((k) => k !== act) || null) : null;
+  const others = [sideL, sideR].filter(Boolean);
   const colOf = (c) => (c.weapon ? TIER_COLORS[c.level]?.color || "#C9A24B" : c.rowCard ? c.color : DOMAIN_COLORS[c.domain] || "#C9A24B");
   const n = shown.length;
   // Separación entre cartas: la de siempre, o más junta si no caben en el ancho del mapa.
@@ -10328,19 +10343,10 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement }) {
   const target = drag?.cell ? tokens.find((t) => !t.hidden && t.x === drag.cell.x && t.y === drag.cell.y && t.id !== me?.id) : null;
   return (
     <>
-      {grouped && (
-        <div className="mh-fan-tabs" role="tablist" aria-label="Grupos de cartas">
-          {present.map((k) => (
-            <button key={k} type="button" role="tab" aria-selected={k === act} className={k === act ? "on" : ""} onClick={() => setGrpSel(k)}>
-              {GN[k]} <small>{cards.filter((c) => grp(c) === k).length}</small>
-            </button>
-          ))}
-        </div>
-      )}
       {others.map((k, j) => {
         const list = cards.filter((c) => grp(c) === k);
         return (
-          <button key={k} type="button" className={"mh-fan-pile " + (j === 0 ? "is-l" : "is-r")} onClick={() => setGrpSel(k)} title={"Abrir " + GN[k].toLowerCase() + " (" + list.length + ")"} aria-label={"Abrir " + GN[k] + ", " + list.length + " cartas"}>
+          <button key={k} type="button" className={"mh-fan-pile " + (k === sideL ? "is-l" : "is-r")} onClick={() => setGrpSel(k)} title={"Abrir " + GN[k].toLowerCase() + " (" + list.length + ")"} aria-label={"Abrir " + GN[k] + ", " + list.length + " cartas"}>
             {list.slice(0, 3).map((c, q) => (
               <span key={c.key} style={{ "--pc": colOf(c), "--q": q }} />
             ))}
@@ -17918,7 +17924,7 @@ export default function App({ onSignOut }) {
                   // También las usa el menú del clic derecho del tablero.
                   const buildActionRows = () => {
                     const items = [];
-                    const openDetail = (detail) => () => setViewingCardDetail(detail);
+                    const openDetail = (detail) => Object.assign(() => setViewingCardDetail(detail), { detail });
 
                   if (subclassEntry) {
                     const subclassBadge = currentTier <= 1 ? "Fundación" : currentTier === 2 ? "Especialización" : "Maestría";
@@ -21401,7 +21407,7 @@ export default function App({ onSignOut }) {
                                           const actionCards = buildActionRows().map((it) =>
                                             it.key === "subclass" && subCard
                                               ? subCard
-                                              : { key: it.title, rowCard: true, rowKey: it.key, Icon: it.Icon, kicker: it.kicker, text: it.summary, color: rowColor(it.color), domain: "Sabio", level: "", type: "Acción", open: () => (it.onClick(), setViewingCardDetail((d) => (d && !d.rowIcon ? { ...d, rowIcon: it.Icon } : d))) }
+                                              : { key: it.title, rowCard: true, myClass: me?.f_class, detail: it.onClick?.detail, rowKey: it.key, Icon: it.Icon, kicker: it.kicker, text: it.summary, color: rowColor(it.color), domain: "Sabio", level: "", type: "Acción", open: () => (it.onClick(), setViewingCardDetail((d) => (d && !d.rowIcon ? { ...d, rowIcon: it.Icon } : d))) }
                                           );
                                           const cards = [wp(me?.f_primary_weapon, PRIMARY_WEAPONS, "Principal"), wp(me?.f_secondary_weapon, SECONDARY_WEAPONS, "Secundaria"), ...actionCards, ...keys.map((k) => findDomainCardAny(k))].filter(Boolean);
                                           return (
