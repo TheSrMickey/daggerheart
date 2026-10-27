@@ -15,8 +15,9 @@ export const KINDS = [
   { key: "transformacion", label: "Transformación", plural: "Transformaciones" },
   { key: "forma", label: "Forma de Bestia", plural: "Formas de Bestia" },
   { key: "arma", label: "Arma", plural: "Armas" },
+  { key: "armadura", label: "Armadura", plural: "Armaduras" },
 ];
-const KIND_COLOR = { dominio: "#C9A24A", ascendencia: "#6FA3C0", comunidad: "#C08B5C", subclase: "#7FB77A", transformacion: "#A58BE8", forma: "#E0A04A", arma: "#C9A24A" };
+const KIND_COLOR = { dominio: "#C9A24A", ascendencia: "#6FA3C0", comunidad: "#C08B5C", subclase: "#7FB77A", transformacion: "#A58BE8", forma: "#E0A04A", arma: "#C9A24A", armadura: "#C9A24A" };
 
 // La carta, tal cual se ve al abrirla; en la cuadrícula tiene exactamente el mismo tamaño (300 × 420).
 export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
@@ -30,12 +31,13 @@ export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
   const gen = c.kind === "ascendencia" || c.kind === "comunidad" || c.kind === "transformacion";
   const sub = c.kind === "subclase"; // cinta con el rango en numeral romano: I Fundación, II Especialización, III Maestría
   const bst = c.kind === "forma"; // cinta con el rango de la forma
-  const wpn = c.kind === "arma"; // cinta con el rango del arma (I Común … IV Legendario)
+  const wpn = c.kind === "arma" || c.kind === "armadura"; // armas y armaduras: cinta con el rango (I Común … IV Legendario) y el mismo diseño que en la hoja
+  const g = c.gear;
   const roman = ["I", "II", "III", "IV"];
   const bg = dom || gen || sub || bst || wpn;
   return (
     <div
-      className={"mh-card mh-cardc" + (modal ? " mh-card-anim" : "") + (modal || legend || bg ? " mh-tilt" : "") + (bg ? " is-bg" : "") + (legend ? " is-legend" : "")}
+      className={"mh-card mh-cardc" + (modal ? " mh-card-anim" : "") + (modal || legend || bg ? " mh-tilt" : "") + (bg ? " is-bg" : "") + (wpn ? " is-wp" : "") + (legend ? " is-legend" : "")}
       style={{ "--glow": alpha(col, 51), "--cc": col, margin: 0, width: modal ? "min(300px, 100%)" : 300, height: modal ? "min(420px, 80vh)" : 420, maxWidth: "100%", padding: 0, overflow: "hidden", borderRadius: 22, display: "flex", flexDirection: "column", border: "2px solid " + col, position: "relative", textAlign: "left" }}
       {...(tilt || {})}
     >
@@ -51,19 +53,30 @@ export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
         {wpn && <span className="mh-cardc-gem is-rank" title={"Rango " + c.tier}>{roman[(c.tier || 1) - 1]}<I size={19} strokeWidth={1.8} /></span>}
         {bst && <span className="mh-cardc-gem is-rank" title={"Rango " + c.tier}>{roman[(c.tier || 1) - 1]}<I size={19} strokeWidth={1.8} /></span>}
       </div>
-      {bg && <span className="mh-cardc-dom">{dom ? c.type : sub ? c.rankLabel : wpn ? c.sub.split(" · ")[1] : bst ? "Forma de Bestia" : c.kind === "transformacion" ? "Transformación" : c.sub}</span>}
+      {bg && <span className="mh-cardc-dom">{dom ? c.type : sub ? c.rankLabel : wpn ? g?.pill : bst ? "Forma de Bestia" : c.kind === "transformacion" ? "Transformación" : c.sub}</span>}
       {dom && <span className="mh-cardc-cost" title="Coste de recuperación">{c.recall ?? "—"}<Zap size={12} fill="currentColor" /></span>}
       <div style={{ padding: "0 18px", textAlign: "center", flexShrink: 0, marginTop: bg ? 16 : 8 }}>
         <FitTitle text={c.key} max={19} min={14} className="mh-serif" style={{ fontWeight: 700, color: "var(--mh-ink)", maxHeight: "2.4em", overflow: "hidden" }} />
         <div className="mh-cardc-sub">{c.sub}</div>
         <div className="mh-cardc-orn" />
       </div>
+      {wpn && g ? (
+        <FitBox fitKey={c.key + g.feature} max={13} min={8.5} style={{ flex: 1, minHeight: 0, overflow: "hidden", padding: "10px 18px 12px", display: "flex", flexDirection: "column", justifyContent: "center", textAlign: "center", gap: "0.7em", lineHeight: 1.45, color: "var(--mh-ink)" }}>
+          <div>
+            <div className="mh-cardc-label">{g.label}</div>
+            <div className="mh-cardc-big">{g.big}</div>
+            {g.small && <div style={{ fontSize: "0.88em", color: "var(--mh-muted)" }}>{g.small}</div>}
+          </div>
+          {g.feature ? <div style={{ fontSize: "0.95em" }}>{g.feature}</div> : <div style={{ fontSize: "0.93em", color: "var(--mh-muted2)", fontStyle: "italic" }}>Sin característica especial.</div>}
+        </FitBox>
+      ) : (
       <FitBox fitKey={c.key + total} max={13} min={8.5} style={{ flex: 1, minHeight: 0, overflow: "hidden", padding: "10px 18px 12px", display: "flex", flexDirection: "column", justifyContent: "flex-start", textAlign: feats.length ? "left" : "center", gap: "0.7em", lineHeight: 1.45, color: "var(--mh-ink)" }}>
         {c.text && <div style={{ color: "var(--mh-ink)", textAlign: "center" }}>{c.text}</div>}
         {feats.map((f) => (
           <div key={f.name} style={{ fontSize: "0.95em", lineHeight: 1.4 }}><b style={{ color: "var(--mh-gold-ink)" }}>{f.name}</b>{f.text ? ": " + f.text : ""}</div>
         ))}
       </FitBox>
+      )}
       {dom && (
         <div className="mh-cardc-sig">
           <span>Dominio {c.domain}</span>
@@ -78,8 +91,8 @@ export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
       )}
       {wpn && (
         <div className="mh-cardc-sig">
-          <span>{c.sub.split(" · ")[0]}</span>
-          <span>Rango {c.tier}</span>
+          <span>{g?.foot}</span>
+          <span>{g?.pill}</span>
         </div>
       )}
       {bst && (
@@ -212,7 +225,7 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
     if (kinds.length && !kinds.includes(c.kind)) return false;
     if (c.kind === "subclase" && c.rank) return false;
     const group = c.kind === "subclase" ? subSet(c) : [c];
-    return !q || group.some((g) => norm(g.key + " " + g.text + " " + (g.features || []).map((f) => f.name + " " + f.text).join(" ") + " " + g.sub).includes(q));
+    return !q || group.some((g) => norm(g.key + " " + g.text + " " + (g.features || []).map((f) => f.name + " " + f.text).join(" ") + " " + g.sub + " " + (g.gear ? g.gear.feature + " " + g.gear.big + " " + g.gear.foot : "")).includes(q));
   };
   const shown = all.filter((c) => matches(c) && (!sel.length || !q || norm(c.key + " " + c.text).includes(q)));
   const openCard = (c) => (setDeckIdx(0), setOpen(c));
@@ -224,9 +237,10 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
   // Secciones: cartas de dominio por nivel y, después, cada otro tipo.
   const sections = [
     ...[...new Set(shown.filter((c) => c.kind === "dominio").map((c) => c.level))].sort((a, b) => a - b).map((lv) => ({ id: "n" + lv, title: "Nivel " + lv, list: shown.filter((c) => c.kind === "dominio" && c.level === lv) })),
-    ...KINDS.filter((k) => k.key !== "dominio" && k.key !== "arma").map((k) => ({ id: k.key, title: k.plural, list: shown.filter((c) => c.kind === k.key) })).filter((s) => s.list.length),
+    ...KINDS.filter((k) => k.key !== "dominio" && k.key !== "arma" && k.key !== "armadura").map((k) => ({ id: k.key, title: k.plural, list: shown.filter((c) => c.kind === k.key) })).filter((s) => s.list.length),
     // Las armas van por rango, como los dominios por nivel.
     ...[1, 2, 3, 4].map((t) => ({ id: "arma" + t, title: "Armas · Rango " + t, list: shown.filter((c) => c.kind === "arma" && c.tier === t) })).filter((s) => s.list.length),
+    ...[1, 2, 3, 4].map((t) => ({ id: "armadura" + t, title: "Armaduras · Rango " + t, list: shown.filter((c) => c.kind === "armadura" && c.tier === t) })).filter((s) => s.list.length),
   ];
   const close = () => {
     if (closing) return;
@@ -264,7 +278,7 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
       <div className="cx-h">
         <div>
           <h1 className="mh-serif">Cartas</h1>
-          <p>Todas las cartas del juego: dominio, ascendencia, comunidad, subclase, transformación, formas de bestia y armas. Pulsa una para verla a tamaño completo.</p>
+          <p>Todas las cartas del juego: dominio, ascendencia, comunidad, subclase, transformación, formas de bestia, armas y armaduras. Pulsa una para verla a tamaño completo.</p>
         </div>
         <label className="cx-search">
           <Search size={15} />
