@@ -2,6 +2,7 @@
 
 import { Fragment, useState, useEffect, useLayoutEffect, useRef, useCallback, createContext, useContext } from "react";
 import { createPortal } from "react-dom";
+import { GripVertical } from "lucide-react";
 import { Globe, Tent, Haze, CloudFog, CloudRain, CloudLightning, Beer } from "lucide-react";
 import SceneFx, { SCENE_FX } from "./SceneFx";
 import Ambient from "./Ambient";
@@ -27,7 +28,7 @@ import { CampaignCalendar, HomeNextSession } from "./Calendar";
 import { HomeHero } from "./HomeHero";
 import { PollsGm, ActivePoll, PollSwap, PollResultCard } from "./Polls";
 import { RestGm, RestQuick, RestBanner, GroupRestDialog, RestLock } from "./GroupRest";
-import NpcStatsEditor, { npcStatsSummary, npcTokenStats } from "./NpcStats";
+import NpcStatsEditor, { npcStatsSummary, npcTokenStats, NpcStatsView } from "./NpcStats";
 import { Chronicle, Timeline } from "./Chronicle";
 import { appendLog } from "@/lib/chronicle";
 import { SpotPlayer, SpotPause, SpotPanel, FocusBar, normSpot, liveHands, kindOf } from "./Spotlight";
@@ -2177,6 +2178,19 @@ const KIN = [
 const kinOf = (key) => KIN.find((k) => k.key === key) || null;
 const stageScenesOf = (st) => st.scenes || (st.scene?.title || st.scene?.image ? [{ id: "s-legacy", title: st.scene.title || "", image: st.scene.image || "" }] : []);
 // Un capítulo puede tener varias escenas: la suya (imagen y efectos del capítulo) y las que se añadan en «extras».
+// Contenido de un capítulo en el orden de la historia: escenas y mapas de combate mezclados (`order` guarda las claves s:… / m:…).
+const chapterItems = (ch, maps) => {
+  if (!ch) return [];
+  const all = [
+    ...chapterScenes(ch).map((x) => ({ key: "s:" + (x.main ? "main" : x.id), kind: "scene", x })),
+    ...(maps || []).filter((m) => m.sceneId === ch.id).map((m) => ({ key: "m:" + m.id, kind: "map", m })),
+  ];
+  const byKey = new Map(all.map((i) => [i.key, i]));
+  const out = [];
+  (ch.order || []).forEach((k) => { if (byKey.has(k)) { out.push(byKey.get(k)); byKey.delete(k); } });
+  all.forEach((i) => { if (byKey.has(i.key)) out.push(i); });
+  return out;
+};
 const chapterScenes = (sc) => (sc ? [{ id: sc.id, title: sc.title, image: sc.image, fx: sc.fx || [], main: true }, ...(sc.extras || []).map((e) => ({ ...e, fx: e.fx || [] }))] : []);
 const activeSceneIdOf = (st) => (st.activeSceneId !== undefined ? st.activeSceneId : st.scenes ? null : stageScenesOf(st)[0]?.id || null);
 
@@ -5525,7 +5539,7 @@ const sharedStyles = `
   .mh-pl-empty { font-size: 13px; color: var(--mh-muted); padding: 18px 0; }
   .mh-pl-add { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--mh-line); } .mh-pl-add > span { font-size: 12.5px; color: var(--mh-muted); margin-right: 4px; } .mh-pl-add small { font-size: 12.5px; color: var(--mh-muted); }
   .mh-pl-add button { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 99px; border: 1px dashed var(--mh-line2); font-size: 12.5px; color: var(--mh-ink3); } .mh-pl-add button:hover { border-color: #E3B04B; color: var(--mh-ink); }
-  .mh-root:not(.is-mobile) .mh-chatpg { display: flex; flex-direction: column; min-height: 0; } .mh-chatcard { flex: 1; min-height: 0; display: flex; flex-direction: column; max-width: 860px; width: 100%; } .mh-chatcard .mh-chat-feed { flex: 1; min-height: 0; max-height: none; overflow-y: auto; }
+  .mh-root:not(.is-mobile) .mh-chatpg { display: flex; flex-direction: column; min-height: 0; } .mh-chatcard { flex: 1; min-height: 0; display: flex; flex-direction: column; max-width: none; width: 100%; } .mh-chatcard .mh-chat-feed { flex: 1; min-height: 0; max-height: none; overflow-y: auto; }
   .mh-cg-pg { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; margin: 2px 0 16px; } .mh-cg-pg h3 { margin: 0; font-size: 20px; line-height: 1.15; color: var(--mh-ink); } .mh-cg-pg p { margin: 3px 0 0; font-size: 13px; color: var(--mh-muted); }
   .mh-cg-sub { display: flex; gap: 4px; margin: 0 0 16px; overflow-x: auto; scrollbar-width: none; padding: 4px; width: max-content; max-width: 100%; border-radius: 14px; background: var(--mh-input); border: 1px solid var(--mh-line); }
   .mh-cg-sub::-webkit-scrollbar { display: none; }
@@ -5559,6 +5573,7 @@ const sharedStyles = `
   .mh-cg.is-flat { height: 100%; min-height: 0; display: flex; flex-direction: column; }
   .mh-cg.is-flat .mh-cg-body { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; padding: 2px 4px 2px 2px; margin: 0 -4px 0 -2px; }
   .mh-cg.is-flat .mh-cg-body > * { flex-shrink: 0; }
+  .mh-cg.is-flat .mh-cg-body:has(.mh-chatpg) { overflow: hidden; padding: 0; margin: 0; }
   .mh-cg.is-flat .mh-cg-head { flex: none; margin-bottom: 12px; padding: 10px 14px; gap: 10px; } .mh-cg.is-flat .mh-cg-emb { width: 42px; height: 42px; } .mh-cg.is-flat .mh-cg-name { font-size: 20px; }
   .mh-cg.is-flat .mh-cg-fear, .mh-cg.is-flat .mh-cg-pg { display: none; }
   .mh-cg.is-flat .mh-cg-tit { margin-right: auto; }
@@ -5685,6 +5700,9 @@ const sharedStyles = `
   /* Capítulo: escenas y mapas de combate como tarjetas. */
   .cgs-secs { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; display: flex; flex-direction: column; gap: 16px; padding-right: 4px; }
   .cgs-sec > header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; } .cgs-sec > header > b { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--mh-ink2); } .cgs-sec > header .mh-btn-ghost { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; }
+  .cgs-card { position: relative; cursor: grab; } .cgs-card.is-dragging { opacity: .4; } .cgs-card.is-over { box-shadow: 0 -3px 0 0 #E3B04B; }
+  .cgs-grip { flex: none; display: grid; place-items: center; color: var(--mh-muted2); } .cgs-card:hover .cgs-grip { color: var(--mh-ink2); }
+  .cgs-num { flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font: 700 11.5px 'Inter', system-ui, sans-serif; background: var(--mh-panel); border: 1px solid var(--mh-line2); color: var(--mh-ink2); }
   .cgs-cards { display: flex; flex-direction: column; gap: 8px; }
   .cgs-card { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 16px; border: 1px solid var(--mh-line); background: var(--mh-panel2); }
   .cgs-card-th { all: unset; cursor: pointer; width: 76px; height: 50px; border-radius: 10px; flex: none; background: #2B3A4F center / cover no-repeat; border: 1px solid var(--mh-line2); } .cgs-card-th.is-blank { background-image: linear-gradient(#2B3A4F, #6E7F8C 58%, #C9A879); } .cgs-card-th:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
@@ -5959,6 +5977,17 @@ const sharedStyles = `
   .mh-pst { display: grid; grid-template-columns: minmax(280px, 340px) minmax(0, 1fr); gap: 16px; align-items: start; } .mh-pst-new { margin: 0 !important; display: flex; flex-direction: column; gap: 10px; position: sticky; top: 12px; } .mh-pst-h { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--mh-ink); } .mh-pst-h small { margin-left: 6px; font-size: 11.5px; color: var(--mh-muted); } .mh-pst-h svg { color: var(--mh-gold-ink); }
   .mh-pst-kinds { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; } .mh-pst-kinds button { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 9px 4px; border-radius: 12px; border: 1px solid var(--mh-line2); background: var(--mh-panel2); color: var(--mh-ink3); font-size: 11px; font-weight: 600; text-align: center; transition: border-color .15s, background .15s; } .mh-pst-kinds button:hover { border-color: var(--acc, #E3B04B); } .mh-pst-kinds button.is-on { border-color: var(--acc, #E3B04B); background: color-mix(in srgb, var(--acc, #E3B04B) 16%, var(--mh-panel2)); color: var(--mh-ink); } .mh-pst-kinds button:focus-visible { outline: 2px solid var(--acc, #E3B04B); outline-offset: 2px; }
   .mh-pst-img { display: flex; gap: 8px; align-items: center; } .mh-pst-img .mh-input { flex: 1; min-width: 0; } .mh-pst-prev { flex: none; width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--mh-line2); background: #1b1c3a center / cover no-repeat; } .mh-pst-go { display: inline-flex; align-items: center; justify-content: center; gap: 6px; } .mh-pst-hint { color: var(--mh-muted); font-size: 11.5px; line-height: 1.4; }
+  .mh-nsv { display: flex; flex-direction: column; gap: 12px; } .mh-nsv-g { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; } .mh-nsv-c { display: flex; flex-direction: column; gap: 2px; padding: 9px 11px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel2); } .mh-nsv-c span { font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--mh-muted); } .mh-nsv-c b { font-size: 15px; color: var(--mh-ink); font-weight: 600; }
+  .mh-nsv-a { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; border: 1px solid color-mix(in srgb, #D9644E 45%, var(--mh-line)); background: color-mix(in srgb, #D9644E 8%, var(--mh-panel2)); color: #D9644E; } .mh-nsv-a div { display: flex; flex-direction: column; } .mh-nsv-a b { font-size: 13.5px; color: var(--mh-ink); } .mh-nsv-a small { font-size: 12px; color: var(--mh-ink3); }
+  .mh-nsv p { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--mh-ink2); } .mh-nsv p b { display: block; font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--mh-muted); margin-bottom: 2px; font-weight: 700; }
+  .cgp .mh-pst-art { height: 64px; } .cgp .mh-pst-cards { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; } .cgp .mh-pst-list { padding-bottom: 8px; } .cgp .mh-pst-card.is-imagen-only .mh-pst-art { height: 110px; }
+  .mh-pst-for { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--mh-gold-ink); }
+  .mh-pst-up { display: flex; flex-direction: column; gap: 8px; } .mh-pst-drop { cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 22px 12px; border-radius: 14px; border: 1.5px dashed var(--mh-line2); color: var(--mh-ink3); text-align: center; font-size: 13px; } .mh-pst-drop:hover { border-color: #E3B04B; color: var(--mh-ink); } .mh-pst-drop small { font-size: 11px; color: var(--mh-muted); }
+  .mh-pst-up-has { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel2); } .mh-pst-up-has b { flex: 1; font-size: 13px; color: var(--mh-ink); } .mh-pst-up-prev { width: 64px; height: 44px; border-radius: 8px; background: #1b1c3a center / cover no-repeat; flex: none; }
+  .mh-pst-pick { display: flex; flex-direction: column; gap: 10px; max-height: 300px; overflow-y: auto; scrollbar-width: thin; } .mh-pst-pick-h { font: 700 10.5px 'Inter', system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-muted); margin-bottom: 5px; } .mh-pst-pick-g { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .mh-pst-pick-g button { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 7px 9px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel2); min-width: 0; } .mh-pst-pick-g button:hover { border-color: var(--mh-line2); } .mh-pst-pick-g button.is-on { border-color: #E3B04B; background: #E3B04B1c; }
+  .mh-pst-pick-av { flex: none; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--mh-panel) center / cover no-repeat; border: 1px solid var(--mh-line2); font: 700 13px 'Cinzel', Georgia, serif; color: var(--mh-ink2); } .mh-pst-pick-t { display: flex; flex-direction: column; min-width: 0; } .mh-pst-pick-t b { font-size: 12.5px; color: var(--mh-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .mh-pst-pick-t small { font-size: 10.5px; color: var(--mh-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mh-pst-to { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--mh-muted); }
   .mh-pst-list { display: flex; flex-direction: column; gap: 14px; min-width: 0; } .mh-pst-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
   .mh-pst-gh { display: flex; align-items: center; gap: 8px; font: 700 11px 'Inter', system-ui, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: var(--mh-muted); margin-bottom: 8px; } .mh-pst-gh i { font-style: normal; letter-spacing: 0; text-transform: none; font-size: 10.5px; padding: 2px 8px; border-radius: 99px; background: color-mix(in srgb, var(--acc, #E3B04B) 20%, transparent); color: var(--mh-gold-ink); }
   .mh-pst-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; } .mh-pst-card { display: flex; flex-direction: column; border-radius: 16px; overflow: hidden; border: 1px solid var(--mh-line); background: var(--mh-panel); transition: border-color .15s, transform .15s; } .mh-pst-card:hover { border-color: var(--mh-line2); transform: translateY(-1px); } .mh-pst-card.is-hid { border-style: dashed; }
@@ -11185,6 +11214,9 @@ export default function App({ onSignOut }) {
   const [characters, setCharacters] = useState({});
   // Copia siempre al día de los personajes: evita que dos cambios seguidos se pisen.
   const charsRef = useRef({});
+  const [addContentFor, setAddContentFor] = useState(null); // capítulo al que se está añadiendo contenido (escena o mapa de combate)
+  const [dragKey, setDragKey] = useState(null);
+  const [overKey, setOverKey] = useState(null);
   const [newChOpen, setNewChOpen] = useState(0); // 0 cerrado · 1 elegir cómo crear el capítulo · 2 elegir plantilla
   charsRef.current = characters;
   const [currentCharId, setCurrentCharId] = useState(null);
@@ -11238,6 +11270,7 @@ export default function App({ onSignOut }) {
   const [pnjView, setPnjView] = useState("reparto"); // PNJ · «reparto» o «enemigos»
   const [pnjNew, setPnjNew] = useState(false); // ventana «Nuevo PNJ»
   const [pnjOpen, setPnjOpen] = useState(null); // PNJ abierto para editar
+  const [foeOpen, setFoeOpen] = useState(null); // adversario cuya ficha se está viendo en PNJ
   const [pstNew, setPstNew] = useState(false); // ventana «Nueva pista»
   const [chScene, setChScene] = useState(null); // escena del capítulo que se edita en «Ambiente» (null = la principal)
   const [chTab, setChTab] = useState("dialogos"); // pestaña abierta del capítulo en «Historia»
@@ -14385,6 +14418,9 @@ export default function App({ onSignOut }) {
         const img = sh.type === "handout" ? sh.handout?.image : sh.image;
         const canOpen = sh.type !== "handout" || !gmViewing;
         const tag = { handout: "Pista", weapon: "Arma", armor: "Armadura", item: "Objeto" }[sh.type] || "Carta";
+        const hItem = sh.type === "handout" ? sh.handout?.item : null;
+        const hMine = !!hItem && !!sh.handout.toCharId && sh.handout.toCharId === meCharId;
+        const hGot = hMine && getGiftsGot(characters[meCharId] || {}).includes(sh.handout.id);
         const tone = String(vis.color || "").startsWith("#") ? vis.color : "#2FA6A8";
         return chatCard(
           tone,
@@ -14402,12 +14438,19 @@ export default function App({ onSignOut }) {
               {m.text && <div className="mh-chat-share-c">«{m.text}»</div>}
             </div>
           </div>,
-          canOpen ? (
+          canOpen || hItem ? (
             <>
-              <span>{sh.type === "handout" ? "Pista de la mesa" : "Ábrela en grande"}</span>
-              <button type="button" className="mh-chat-open" title={sh.type === "handout" ? "Ver la pista" : "Ver la carta"} onClick={() => (sh.type === "handout" ? setOpenHandout(sh.handout) : setViewingCardDetail({ ...sh.detail, fromChat: true }))}>
-                <Eye size={12} /> Ver
-              </button>
+              <span>{hItem ? (hMine ? (hGot ? "Ya está en tu inventario" : "Es para ti") : "Para " + (characters[sh.handout.toCharId]?.f_name || "un personaje")) : sh.type === "handout" ? "Pista de la mesa" : "Ábrela en grande"}</span>
+              {hMine && !hGot && (
+                <button type="button" className="mh-chat-open" onClick={() => claimHandoutItem(meCharId, sh.handout)}>
+                  <Check size={12} /> Guardar
+                </button>
+              )}
+              {canOpen && (
+                <button type="button" className="mh-chat-open" title={sh.type === "handout" ? "Ver la pista" : "Ver la carta"} onClick={() => (sh.type === "handout" ? setOpenHandout(sh.handout) : setViewingCardDetail({ ...sh.detail, fromChat: true }))}>
+                  <Eye size={12} /> Ver
+                </button>
+              )}
             </>
           ) : null
         );
@@ -14866,13 +14909,62 @@ export default function App({ onSignOut }) {
     await safeSet("campaign-stage:" + campaignId, JSON.stringify(next), true);
   };
 
+  // Sube una imagen para una pista: se reduce y se guarda dentro de la propia pista.
+  const pickHandoutImage = async (file) => {
+    if (!file || !/^image\//.test(file.type)) return;
+    try {
+      const data = await readSceneImage(file, 900);
+      setHandoutDraft((d) => ({ ...d, image: data }));
+    } catch (e) {}
+  };
+  // Adversarios que aparecen en los mapas de combate (para elegirlos como pista de tipo personaje).
+  const handoutFoes = () => {
+    const seen = new Map();
+    const add = (tokens) => (tokens || []).filter((t) => t.kind === "foe" && (t.name || "").trim()).forEach((t) => { const k = t.name.trim().toLowerCase(); if (!seen.has(k)) seen.set(k, { name: t.name.trim(), stats: t.stats || null }); else if (!seen.get(k).stats && t.stats) seen.get(k).stats = t.stats; });
+    campaignMaps.forEach((mp) => add(mp.map?.tokens));
+    add(campaignMap.tokens);
+    return [...seen.values()].filter((e) => !campaignCast.some((m) => (m.name || "").trim().toLowerCase() === e.name.toLowerCase()));
+  };
+  const handoutPickList = () => [
+    ...campaignCast.map((m) => ({ key: "c:" + m.id, group: "PNJ", name: m.name, sub: ({ Aliado: "Amistoso", Neutral: "Neutral", Enemigo: "Enemigo" }[m.kind || "Neutral"]) + (m.role ? " · " + m.role : ""), image: castImgs[castImgIdFor(m, "tranquila")] || "" })),
+    ...handoutFoes().map((e) => ({ key: "f:" + e.name, group: "Adversarios", name: e.name, sub: e.stats ? "Adversario · Nv " + e.stats.tier + " · " + e.stats.type : "Adversario", image: "" })),
+  ];
   const addHandout = async () => {
     const d = handoutDraft;
-    if (!d.title.trim() || !viewingCampaignId) return;
-    const handout = { id: "h" + Date.now(), kind: d.kind, title: d.title.trim(), image: d.image.trim(), text: d.text.trim(), sceneId: d.sceneId === undefined ? activeSceneIdOf(campaignStage) : d.sceneId || null, ts: Date.now() };
+    if (!viewingCampaignId) return;
+    let title = d.title.trim(), text = d.text.trim(), image = d.image.trim(), item = null, toCharId = null;
+    if (d.kind === "imagen") {
+      if (!image) return;
+      title = title || "Imagen";
+      text = "";
+    } else if (d.kind === "personaje") {
+      const p = handoutPickList().find((x) => x.key === d.castKey);
+      if (!p) return;
+      title = p.name; text = p.sub; image = p.image || "";
+    } else if (d.kind === "objeto") {
+      if (!title) return;
+      item = { name: title, description: text };
+      toCharId = d.toCharId || null;
+    } else if (!title) return;
+    const handout = { id: "h" + Date.now(), kind: d.kind, title, image, text, ...(item ? { item, toCharId } : {}), sceneId: d.sceneId === undefined ? activeSceneIdOf(campaignStage) : d.sceneId || null, ts: Date.now() };
     await saveStage(viewingCampaignId, { handouts: [handout, ...(campaignStage.handouts || [])] });
     setHandoutDraft({ kind: d.kind, title: "", image: "", text: "" });
-    postChat(viewingCampaignId, { kind: "share", author: "El DJ", gm: true, text: "", share: { type: "handout", name: handout.title, sub: "Pista · " + (HANDOUT_KINDS.find((k) => k.key === handout.kind)?.label || ""), handout } });
+    const who = toCharId ? characters[toCharId]?.f_name : "";
+    postChat(viewingCampaignId, { kind: "share", author: "El DJ", gm: true, text: "", share: { type: "handout", name: handout.title, sub: (item ? "Objeto" + (who ? " para " + who : "") : "Pista · " + (HANDOUT_KINDS.find((k) => k.key === handout.kind)?.label || "")), handout } });
+  };
+  // El jugador al que se le entrega un objeto lo guarda en su inventario desde el chat.
+  const claimHandoutItem = (charId, h) => {
+    const cur = charsRef.current[charId];
+    if (!cur || !h?.item || getGiftsGot(cur).includes(h.id)) return;
+    const belt = getItems(cur);
+    const pack = getBackpackItems(cur);
+    const item = { name: h.item.name, description: h.item.description || "", count: 1 };
+    const patch = { f_gifts_got: JSON.stringify([...getGiftsGot(cur), h.id].slice(-40)) };
+    if (belt.length < ITEM_SLOTS) patch.f_items = JSON.stringify([...belt, item]);
+    else if (pack.length < ITEM_SLOTS) patch.f_backpack_items = JSON.stringify([...pack, item]);
+    else { window.alert("Tu inventario está lleno."); return; }
+    updateCharacterFields(charId, patch);
+    postCampaignEvent(charId, "🎒 Guarda «" + item.name + "» en su inventario");
   };
 
   // Reduce la imagen de la escena en el navegador (máx. 1600 px, JPEG) para que pese poco en la base de datos.
@@ -14959,17 +15051,23 @@ export default function App({ onSignOut }) {
     const n = campaignMaps.filter((m) => m.sceneId === chId).length + 1;
     const m = { id: "m" + Date.now(), sceneId: chId, name: "Combate " + n, map: { tokens: [], props: [], terrain: [], counters: [] } };
     await saveMapsLib([...campaignMaps, m]);
+    const chp = stageScenesOf(campaignStage).find((x) => x.id === chId);
+    if (chp) setChapterOrder(chId, chapterItems(chp, [...campaignMaps, m]).map((i) => i.key));
     if ((campaignStage.live || "escena") !== "mapa") {
       await loadSavedMap(m, true);
       setCombatBack(chId);
       setCampaignDetailTab("mapa");
     }
   };
+  const setChapterOrder = (chId, keys) => {
+    saveStage(viewingCampaignId, { scenes: stageScenesOf(campaignStage).map((sc) => (sc.id === chId ? { ...sc, order: keys } : sc)), activeSceneId: activeSceneIdOf(campaignStage) });
+  };
   const addExtraScene = (chId, preset) => {
     const ch = stageScenesOf(campaignStage).find((x) => x.id === chId);
     if (!ch) return null;
     const extra = { id: "x" + Date.now(), title: preset?.title || "Escena " + (chapterScenes(ch).length + 1), image: preset?.image || "", fx: preset?.fx || [] };
-    saveStage(viewingCampaignId, { scenes: stageScenesOf(campaignStage).map((sc) => (sc.id === chId ? { ...sc, extras: [...(sc.extras || []), extra] } : sc)), activeSceneId: activeSceneIdOf(campaignStage) });
+    const order = [...chapterItems(ch, campaignMaps).map((i) => i.key), "s:" + extra.id];
+    saveStage(viewingCampaignId, { scenes: stageScenesOf(campaignStage).map((sc) => (sc.id === chId ? { ...sc, extras: [...(sc.extras || []), extra], order } : sc)), activeSceneId: activeSceneIdOf(campaignStage) });
     return extra.id;
   };
   const removeExtraScene = (chId, subId) => {
@@ -29448,6 +29546,20 @@ export default function App({ onSignOut }) {
                     );
                   })()}
 
+                  {addContentFor && (
+                    <div className="mh-chn-ov" role="dialog" aria-modal="true" aria-label="Añadir contenido" onClick={() => setAddContentFor(null)}>
+                      <div className="mh-chn" style={{ width: "min(460px, 100%)" }} onClick={(e) => e.stopPropagation()}>
+                        <button type="button" className="mh-inv-x mh-chn-x" aria-label="Cerrar" onClick={() => setAddContentFor(null)}><X size={16} /></button>
+                        <h3 className="mh-serif">Añadir contenido</h3>
+                        <p>Se añade al final del capítulo. Después puedes arrastrarlo para cambiar el orden.</p>
+                        <div className="mh-chn-opts" style={{ gridTemplateColumns: "1fr 1fr" }}>
+                          <button type="button" onClick={() => { const id = addExtraScene(addContentFor); setAddContentFor(null); if (id) { setChScene(id); setChTab("ambiente"); setChOpen(true); } }}><ImageIcon size={22} /><b>Escena</b><small>Una imagen con efectos y diálogos</small></button>
+                          <button type="button" onClick={() => { const c = addContentFor; setAddContentFor(null); createCombat(c); }}><Swords size={22} /><b>Mapa de combate</b><small>Un tablero para una pelea</small></button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {newChOpen > 0 && (
                     <div className="mh-chn-ov" role="dialog" aria-modal="true" aria-label="Nuevo capítulo" onClick={() => setNewChOpen(0)}>
                       <form
@@ -29575,24 +29687,59 @@ export default function App({ onSignOut }) {
                           </div>
                         </div>
                         {!isMobile && (() => {
-                          const scnList = chapterScenes(sel);
+                          const items = chapterItems(sel, campaignMaps);
                           const convsAll = dialogueConvs.filter((cv) => cv.sceneId === sel.id);
                           const openEd = (sub, tab) => (setChScene(sub), setChTab(tab), setChOpen(true));
+                          const dropItem = (toKey) => {
+                            const from = dragKey;
+                            setDragKey(null); setOverKey(null);
+                            if (!from || from === toKey) return;
+                            const keys = items.map((i) => i.key).filter((k) => k !== from);
+                            keys.splice(keys.indexOf(toKey), 0, from);
+                            setChapterOrder(sel.id, keys);
+                          };
                           return (
                             <div className="cgs-secs">
                               <section className="cgs-sec">
                                 <header>
-                                  <b>Escenas</b><span className="cgp-n">{scnList.length}</span><span className="cgp-sp" />
-                                  <button type="button" className="mh-btn-ghost" onClick={() => { const id = addExtraScene(sel.id); if (id) openEd(id, "ambiente"); }}><Plus size={13} /> Añadir escena</button>
+                                  <b>Contenido del capítulo</b><span className="cgp-sp" />
+                                  <button type="button" className="mh-btn-ghost" onClick={() => setAddContentFor(sel.id)}><Plus size={13} /> Añadir contenido</button>
                                 </header>
                                 <div className="cgs-cards">
-                                  {scnList.map((x, i) => {
+                                  {items.map((it, i) => {
+                                    const drag = {
+                                      draggable: true,
+                                      onDragStart: (e) => { setDragKey(it.key); e.dataTransfer.effectAllowed = "move"; try { e.dataTransfer.setData("text/plain", it.key); } catch (er) {} },
+                                      onDragOver: (e) => { if (dragKey && dragKey !== it.key) { e.preventDefault(); setOverKey(it.key); } },
+                                      onDragLeave: () => setOverKey((k) => (k === it.key ? null : k)),
+                                      onDrop: (e) => { e.preventDefault(); dropItem(it.key); },
+                                      onDragEnd: () => { setDragKey(null); setOverKey(null); },
+                                    };
+                                    const cls = (dragKey === it.key ? " is-dragging" : "") + (overKey === it.key ? " is-over" : "");
+                                    if (it.kind === "map") {
+                                      const m = it.m;
+                                      return (
+                                        <article key={it.key} className={"cgs-card is-map" + cls} {...drag}>
+                                          <span className="cgs-grip" title="Arrastra para cambiar el orden" aria-hidden="true"><GripVertical size={16} /></span>
+                                          <span className="cgs-num">{i + 1}</span>
+                                          <span className="cgs-card-ic"><MapPinned size={20} /></span>
+                                          <div className="cgs-card-t"><b>{m.name}</b><small>Mapa de combate · {(m.map.tokens || []).length} fichas</small></div>
+                                          <div className="cgs-card-a">
+                                            <button type="button" className="mh-btn" onClick={() => startCombat(sel.id, m)}><Swords size={13} /> Combatir</button>
+                                            <button type="button" className="mh-gm-ib is-del" aria-label={"Borrar " + m.name} title="Borrar el mapa" onClick={() => window.confirm("¿Borrar el mapa «" + m.name + "»?") && saveMapsLib(campaignMaps.filter((x) => x.id !== m.id))}><Trash2 size={14} /></button>
+                                          </div>
+                                        </article>
+                                      );
+                                    }
+                                    const x = it.x;
                                     const sub = x.main ? null : x.id;
                                     const nd = convsAll.filter((cv) => (cv.subId || null) === sub).length;
                                     return (
-                                      <article key={x.id} className="cgs-card">
-                                        <button type="button" className={"cgs-card-th" + (x.image ? "" : " is-blank")} style={bgStyle(x.image)} aria-label={"Editar " + (x.title || "escena " + (i + 1))} onClick={() => openEd(sub, "ambiente")} />
-                                        <div className="cgs-card-t"><b>{x.title || "Escena " + (i + 1)}</b><small>{x.image ? "Con imagen" : "Sin imagen"}{(x.fx || []).length ? " · " + x.fx.length + (x.fx.length === 1 ? " efecto" : " efectos") : ""}</small></div>
+                                      <article key={it.key} className={"cgs-card" + cls} {...drag}>
+                                        <span className="cgs-grip" title="Arrastra para cambiar el orden" aria-hidden="true"><GripVertical size={16} /></span>
+                                        <span className="cgs-num">{i + 1}</span>
+                                        <button type="button" className={"cgs-card-th" + (x.image ? "" : " is-blank")} style={bgStyle(x.image)} aria-label={"Editar " + (x.title || "escena")} onClick={() => openEd(sub, "ambiente")} />
+                                        <div className="cgs-card-t"><b>{x.title || "Escena"}</b><small>Escena · {x.image ? "con imagen" : "sin imagen"}{(x.fx || []).length ? " · " + x.fx.length + (x.fx.length === 1 ? " efecto" : " efectos") : ""}</small></div>
                                         <div className="cgs-card-a">
                                           <button type="button" className="mh-btn-ghost" onClick={() => openEd(sub, "dialogos")}><MessageSquareQuote size={13} /> Diálogos{nd ? " · " + nd : ""}</button>
                                           <button type="button" className="mh-btn-ghost" onClick={() => openEd(sub, "ambiente")}><PenLine size={13} /> Editar</button>
@@ -29602,28 +29749,6 @@ export default function App({ onSignOut }) {
                                     );
                                   })}
                                 </div>
-                              </section>
-                              <section className="cgs-sec">
-                                <header>
-                                  <b>Mapas de combate</b><span className="cgp-n">{chMaps.length}</span><span className="cgp-sp" />
-                                  <button type="button" className="mh-btn-ghost" onClick={() => createCombat(sel.id)}><Plus size={13} /> Añadir mapa</button>
-                                </header>
-                                {chMaps.length === 0 ? (
-                                  <button type="button" className="cgs-none" onClick={() => createCombat(sel.id)}><Swords size={16} /> Añadir un mapa de combate</button>
-                                ) : (
-                                  <div className="cgs-cards">
-                                    {chMaps.map((m) => (
-                                      <article key={m.id} className="cgs-card is-map">
-                                        <span className="cgs-card-ic"><MapPinned size={20} /></span>
-                                        <div className="cgs-card-t"><b>{m.name}</b><small>{(m.map.tokens || []).length} fichas</small></div>
-                                        <div className="cgs-card-a">
-                                          <button type="button" className="mh-btn" onClick={() => startCombat(sel.id, m)}><Swords size={13} /> Combatir</button>
-                                          <button type="button" className="mh-gm-ib is-del" aria-label={"Borrar " + m.name} title="Borrar el mapa" onClick={() => window.confirm("¿Borrar el mapa «" + m.name + "»?") && saveMapsLib(campaignMaps.filter((x) => x.id !== m.id))}><Trash2 size={14} /></button>
-                                        </div>
-                                      </article>
-                                    ))}
-                                  </div>
-                                )}
                               </section>
                             </div>
                           );
@@ -30250,7 +30375,8 @@ export default function App({ onSignOut }) {
                                       </div>
                                       <div className="mh-pst-body">
                                         <b>{h.title}</b>
-                                        {h.text ? <p>{h.text}</p> : <p className="is-none">Sin descripción</p>}
+                                        {h.item && h.toCharId && characters[h.toCharId] && <small className="mh-pst-for"><Gem size={11} /> Para {characters[h.toCharId].f_name}</small>}
+                                        {h.text ? <p>{h.text}</p> : h.kind === "imagen" ? null : <p className="is-none">Sin descripción</p>}
                                       </div>
                                       <div className="mh-pst-acts">
                                         {h.hidden ? (
@@ -30289,18 +30415,76 @@ export default function App({ onSignOut }) {
                               );
                             })}
                           </div>
-                          <input className="mh-input" placeholder="Título (p. ej. Carta sellada)" value={handoutDraft.title} onChange={(e) => setHandoutDraft({ ...handoutDraft, title: e.target.value })} />
-                          <textarea className="mh-input" rows={3} placeholder="Texto o descripción (opcional)" value={handoutDraft.text} onChange={(e) => setHandoutDraft({ ...handoutDraft, text: e.target.value })} />
-                          <div className="mh-pst-img">
-                            <input className="mh-input" placeholder="Imagen (enlace, opcional)" value={handoutDraft.image} onChange={(e) => setHandoutDraft({ ...handoutDraft, image: e.target.value })} />
-                            {handoutDraft.image.trim() && <span className="mh-pst-prev" style={{ backgroundImage: `url("${handoutDraft.image.trim().replace(/"/g, "%22")}")` }} aria-hidden="true" />}
-                          </div>
+                          {(() => {
+                            const dk = handoutDraft.kind;
+                            const imgBox = (label) => (
+                              <div className="mh-pst-up">
+                                {handoutDraft.image ? (
+                                  <div className="mh-pst-up-has">
+                                    <span className="mh-pst-up-prev" style={{ backgroundImage: `url("${handoutDraft.image.replace(/"/g, "%22")}")` }} aria-hidden="true" />
+                                    <b>Imagen lista</b>
+                                    <button type="button" className="mh-btn-ghost" onClick={() => setHandoutDraft({ ...handoutDraft, image: "" })}><X size={12} /> Quitar</button>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <label className="mh-pst-drop"><Upload size={18} /><span>{label}</span><small>JPG, PNG o WebP</small>
+                                      <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { pickHandoutImage(e.target.files?.[0]); e.target.value = ""; }} />
+                                    </label>
+                                    <input className="mh-input" placeholder="O pega el enlace de una imagen" value={handoutDraft.image} onChange={(e) => setHandoutDraft({ ...handoutDraft, image: e.target.value })} />
+                                  </>
+                                )}
+                              </div>
+                            );
+                            if (dk === "imagen") return imgBox("Sube la imagen que verán los jugadores");
+                            if (dk === "personaje") {
+                              const list = handoutPickList();
+                              if (!list.length) return <p className="mh-pst-hint">Aún no hay PNJ ni adversarios. Créalos en la pestaña PNJ y vuelve aquí.</p>;
+                              return (
+                                <div className="mh-pst-pick" role="radiogroup" aria-label="Personaje de la pista">
+                                  {["PNJ", "Adversarios"].map((g) => list.some((x) => x.group === g) && (
+                                    <div key={g}>
+                                      <div className="mh-pst-pick-h">{g}</div>
+                                      <div className="mh-pst-pick-g">
+                                        {list.filter((x) => x.group === g).map((x) => (
+                                          <button key={x.key} type="button" role="radio" aria-checked={handoutDraft.castKey === x.key} className={handoutDraft.castKey === x.key ? "is-on" : ""} onClick={() => setHandoutDraft({ ...handoutDraft, castKey: x.key })}>
+                                            <span className="mh-pst-pick-av" style={x.image ? { backgroundImage: `url("${x.image.replace(/"/g, "%22")}")` } : undefined}>{!x.image && (g === "PNJ" ? x.name.charAt(0).toUpperCase() : <Skull size={14} />)}</span>
+                                            <span className="mh-pst-pick-t"><b>{x.name}</b><small>{x.sub}</small></span>
+                                          </button>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              );
+                            }
+                            if (dk === "objeto")
+                              return (
+                                <>
+                                  <input className="mh-input" placeholder="Nombre del objeto (p. ej. Llave oxidada)" value={handoutDraft.title} onChange={(e) => setHandoutDraft({ ...handoutDraft, title: e.target.value })} />
+                                  <textarea className="mh-input" rows={3} placeholder="Descripción (opcional)" value={handoutDraft.text} onChange={(e) => setHandoutDraft({ ...handoutDraft, text: e.target.value })} />
+                                  {imgBox("Imagen del objeto (opcional)")}
+                                  <label className="mh-pst-to">
+                                    <span>Entregar a</span>
+                                    <select className="mh-input" value={handoutDraft.toCharId || ""} onChange={(e) => setHandoutDraft({ ...handoutDraft, toCharId: e.target.value })}>
+                                      <option value="">Nadie en concreto (solo mostrarlo)</option>
+                                      {memberIds.filter((id) => characters[id]).map((id) => <option key={id} value={id}>{characters[id].f_name || "Sin nombre"}</option>)}
+                                    </select>
+                                  </label>
+                                </>
+                              );
+                            return (
+                              <>
+                                <input className="mh-input" placeholder="Título (p. ej. Carta sellada)" value={handoutDraft.title} onChange={(e) => setHandoutDraft({ ...handoutDraft, title: e.target.value })} />
+                                <textarea className="mh-input" rows={3} placeholder="Texto de la nota" value={handoutDraft.text} onChange={(e) => setHandoutDraft({ ...handoutDraft, text: e.target.value })} />
+                              </>
+                            );
+                          })()}
                           <select className="mh-input" aria-label="Capítulo de la pista" value={draftScene} onChange={(e) => setHandoutDraft({ ...handoutDraft, sceneId: e.target.value })}>
                             <option value="">Sin capítulo</option>
                             {scs.map((sc, i) => <option key={sc.id} value={sc.id}>{"Cap. " + (i + 1) + " · " + (sc.title || "Sin título")}</option>)}
                           </select>
-                          <button type="button" className="mh-btn mh-pst-go" disabled={!handoutDraft.title.trim()} onClick={() => { addHandout(); setPstNew(false); }}>
-                            <Send size={14} /> Entregar a los jugadores
+                          <button type="button" className="mh-btn mh-pst-go" disabled={handoutDraft.kind === "imagen" ? !handoutDraft.image.trim() : handoutDraft.kind === "personaje" ? !handoutDraft.castKey : !handoutDraft.title.trim()} onClick={() => { addHandout(); setPstNew(false); }}>
+                            <Send size={14} /> {handoutDraft.kind === "objeto" && handoutDraft.toCharId ? "Entregar a " + (characters[handoutDraft.toCharId]?.f_name || "personaje") : "Entregar a los jugadores"}
                           </button>
                               </div>
                             </div>
@@ -30367,13 +30551,14 @@ export default function App({ onSignOut }) {
                                 const e = x.foe;
                                 return (
                                   <article key={"f" + e.name} className="cgp-npc is-enemigo">
-                                    <div className="cgp-npc-top" style={{ cursor: "default" }}>
+                                    <div className="cgp-npc-top" style={{ cursor: "pointer" }} role="button" tabIndex={0} aria-label={"Ver las estadísticas de " + e.name} onClick={() => setFoeOpen(e.name)} onKeyDown={(ev) => ev.key === "Enter" && setFoeOpen(e.name)}>
                                       <span className="cgp-npc-img"><Skull size={22} /></span>
                                       <span className="cgp-npc-id"><b className="mh-serif">{e.name}</b><small>{e.stats ? "Nivel " + e.stats.tier + " · " + e.stats.type : "Criatura de mapa"}</small></span>
                                       <i className="cgp-kind">Enemigo</i>
                                     </div>
                                     <small className="cgp-npc-w">{e.chapters.size ? "En " + [...e.chapters].sort((a, b) => a - b).map((n) => "cap. " + n).join(", ") : "Solo en el tablero actual"} · {e.total} ficha{e.total === 1 ? "" : "s"}</small>
                                     <div className="cgp-npc-acts">
+                                      <button type="button" className="mh-btn-ghost" onClick={() => setFoeOpen(e.name)}><Swords size={13} /> Estadísticas</button>
                                       <button type="button" className="mh-btn-ghost" title="Añade una copia al tablero actual" onClick={() => mutateMap(viewingCampaignId, (tokens) => { const [fx, fy] = freeCell(tokens); return [...tokens, { id: "t" + Date.now() + Math.random().toString(36).slice(2, 5), x: fx, y: fy, kind: "foe", name: e.name, stats: { ...(e.stats || newFoeStats()), hpMarked: 0, stressMarked: 0 }, size: "m" }]; })}><Plus size={13} /> Al tablero</button>
                                     </div>
                                   </article>
@@ -30421,6 +30606,20 @@ export default function App({ onSignOut }) {
                             </div>
                           </div>
                         )}
+                        {(() => {
+                          const fo = foeOpen ? foeList.find((x) => x.name === foeOpen) : null;
+                          if (!fo) return null;
+                          return (
+                            <div className="mh-chn-ov" role="dialog" aria-modal="true" aria-label={"Estadísticas de " + fo.name} onClick={() => setFoeOpen(null)}>
+                              <div className="mh-chn cgp-modal" onClick={(e) => e.stopPropagation()}>
+                                <button type="button" className="mh-inv-x mh-chn-x" aria-label="Cerrar" onClick={() => setFoeOpen(null)}><X size={16} /></button>
+                                <h3 className="mh-serif">{fo.name}</h3>
+                                <p className="mh-pst-hint">{fo.chapters.size ? "En " + [...fo.chapters].sort((a, b) => a - b).map((n) => "cap. " + n).join(", ") : "Solo en el tablero actual"} · {fo.total} ficha{fo.total === 1 ? "" : "s"} en los mapas</p>
+                                {fo.stats ? <NpcStatsView stats={fo.stats} /> : <p className="mh-pst-hint">Este adversario se colocó sin ficha de estadísticas.</p>}
+                              </div>
+                            </div>
+                          );
+                        })()}
                         {sel && (
                           <div className="mh-chn-ov" role="dialog" aria-modal="true" aria-label={"Editar " + sel.name} onClick={() => setPnjOpen(null)}>
                             <div className="mh-chn cgp-modal is-wide" onClick={(e) => e.stopPropagation()}>

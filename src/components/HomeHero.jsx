@@ -137,7 +137,7 @@ export function HomeHero({ camps, characters, featId, cards, color, icons, FitTi
   useEffect(() => { if (!gone) return undefined; const t = setTimeout(() => setGone(null), 500); return () => clearTimeout(t); }, [gone]);
 
   const slides = Date.now() < DP_UNTIL ? [{ id: "dp" }, { id: "exp" }] : [{ id: "exp" }]; // el avance de Darrington Press va primero mientras dure
-  if (seenVer && seenVer !== latest.version) slides.push({ id: "ver" });
+  slides.push({ id: "ver" }); // la última actualización grande está siempre; se renueva sola con cada versión nueva del historial
   if (sess) slides.push({ id: "ses" });
   if (camps.length === 0) slides.push({ id: "mesa" });
   if (card) slides.push({ id: "card" });
@@ -182,7 +182,7 @@ export function HomeHero({ camps, characters, featId, cards, color, icons, FitTi
     body = (
       <>
         <div className="mh-news-orb" aria-hidden="true"><span>v{latest.version}</span></div>
-        <span className="mh-news-tag"><Sparkles size={12} /> Novedad · v{latest.version}</span>
+        <span className="mh-news-tag"><Sparkles size={12} /> {seenVer && seenVer !== latest.version ? "Novedad" : "Última actualización"} · v{latest.version}</span>
         <h2 className="mh-serif">{latest.title}</h2>
         <p>{latest.blurb || short(first?.text, 170)}</p>
         <div className="mh-home-cta"><button type="button" className="mh-home-btn" onClick={seeNews}>Ver novedades</button></div>
