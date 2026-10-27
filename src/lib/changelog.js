@@ -7,6 +7,7 @@ export const CHANGELOG = [
     title: "Grupos y notificaciones nuevas",
     blurb: "Chatea con toda tu mesa en un grupo compartido y recibe los avisos como tarjetas, también flotando mientras juegas.",
     items: [
+      { tag: "mejora", text: "Campañas · «Directo» usa ahora el mismo banner que el resto de pestañas (nombre, Miedo, jugadores, invitar y borrar, y el acceso a «Líneas y velos») y ocupa hasta el borde inferior, con el mismo margen que el menú lateral izquierdo." },
       { tag: "nuevo", text: "Medallas de la sesión · el DJ tiene 8 medallas (Tirada exacta, Idea brillante, Gran interpretación, Jugada increíble, Salvó al grupo, Alma de la mesa, Plan perfecto y Última gota) y cada una solo se puede dar a una persona por sesión, con un botón «Medallas» en Directo y en la Crónica. El jugador la ve con un aviso en pantalla y una tarjeta en el chat, y su colección sale en la pestaña Jugadores. El perfil cuenta las medallas recibidas y hay dos logros nuevos. Sustituye a los sellos de la Crónica." },
       { tag: "mejora", text: "Armas y armaduras · todas se ven ahora con el mismo diseño que al abrir un arma en la hoja (cinta de rango, arte arriba, daño o puntuación en grande y característica), tanto en la hoja como en la pestaña Cartas, que además estrena el filtro «Armadura» con todas las armaduras por rango." },
       { tag: "arreglo", text: "Campañas · el chat ocupa todo el ancho (mismo margen a la derecha que a la izquierda) y ya no aparece la barra de desplazamiento de fuera; solo se desplazan los mensajes dentro del chat." },
