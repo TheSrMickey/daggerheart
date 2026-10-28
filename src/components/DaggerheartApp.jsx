@@ -5717,6 +5717,15 @@ const sharedStyles = `
   .mh-cg.is-flat .mh-cg-nav button:hover { color: var(--mh-ink); background: none; }
   .mh-cg.is-flat .mh-cg-nav button.is-on { color: var(--mh-ink); background: none; border: 0; box-shadow: none; } .mh-cg.is-flat .mh-cg-nav button.is-on::after { transform: scaleX(1); } .mh-cg.is-flat .mh-cg-nav button.is-on svg { color: #E3B04B; }
   .mh-cg.is-flat .mh-cg-nav button:focus-visible { outline: 2px solid #E3B04B; outline-offset: -2px; border-radius: 6px; }
+  .mh-cg.has-banner:not(.is-flat) .mh-cg-navrow { display: flex; align-items: flex-end; gap: 0; padding: 0; margin: 0 0 4px !important; border: 0; border-bottom: 1px solid var(--mh-line); flex-wrap: nowrap; }
+  .mh-cg.has-banner:not(.is-flat) .mh-cg-nav { display: flex; gap: 26px; padding: 0; margin: 0; background: none; border: 0; border-radius: 0; overflow: visible; }
+  .mh-cg.has-banner:not(.is-flat) .mh-cg-nav button { position: relative; display: inline-flex; align-items: center; gap: 9px; padding: 10px 2px 13px; margin: 0; border: 0; border-radius: 0; background: none; box-shadow: none; color: var(--mh-muted); font: 700 15px 'Inter', system-ui, sans-serif; transition: color .15s; }
+  .mh-cg.has-banner:not(.is-flat) .mh-cg-nav button::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; border-radius: 3px 3px 0 0; background: #E3B04B; transform: scaleX(0); transition: transform .2s ease; }
+  .mh-cg.has-banner:not(.is-flat) .mh-cg-nav button:hover { color: var(--mh-ink); background: none; }
+  .mh-cg.has-banner:not(.is-flat) .mh-cg-nav button.is-on { color: var(--mh-ink); background: none; border: 0; box-shadow: none; } .mh-cg.has-banner:not(.is-flat) .mh-cg-nav button.is-on::after { transform: scaleX(1); } .mh-cg.has-banner:not(.is-flat) .mh-cg-nav button.is-on svg { color: #E3B04B; }
+  .mh-cg.has-banner:not(.is-flat) .mh-cg-nav button:focus-visible { outline: 2px solid #E3B04B; outline-offset: -2px; border-radius: 6px; }
+  .mh-cg-nav button.is-live svg { color: #E8776F; animation: mh-pulse 2.2s ease-in-out infinite; } .mh-cg-nav button.is-live.is-on svg { color: #E8776F; }
+  .mh-cg-nav-sep { align-self: center; flex: none; width: 1px; height: 22px; background: var(--mh-line2); margin: 0 4px; }
   .mh-cg.is-flat .mh-cg-nav.is-live { margin-left: auto; background: none; border: 0; }
   .mh-cg.is-flat .mh-cg-nav.is-live button { color: #E8776F; } .mh-cg.is-flat .mh-cg-nav.is-live button::after { background: #E0544A; } .mh-cg.is-flat .mh-cg-nav.is-live button:hover { color: #ff9b94; background: none; }
   .mh-cg.is-flat .mh-cg-subrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 14px; }
@@ -5958,7 +5967,7 @@ const sharedStyles = `
   .mh-hs-tl-ar { flex: none; align-self: center; width: 1px; height: 28px; background: var(--mh-line2); }
   .mh-hs-scns { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; } .mh-hs-scns button { display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px 5px 5px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel2); color: var(--mh-ink); font: 700 12px 'Inter', system-ui, sans-serif; cursor: pointer; } .mh-hs-scns button.is-on { border-color: var(--mh-gold-ink); background: color-mix(in srgb, var(--mh-gold-ink) 10%, var(--mh-panel)); } .mh-hs-scns .mh-hs-scn-add { border-style: dashed; padding: 8px 14px; color: var(--mh-ink3); }
   .mh-hs-scn-th { width: 44px; height: 30px; border-radius: 7px; background: center / cover no-repeat #2B3A4F; } .mh-hs-scn-th.is-blank { background: var(--mh-panel); }
-  .mh-tl { display: flex; align-items: center; justify-content: center; min-height: 100%; } .mh-tl .mh-tlr { flex: 1; min-width: 0; margin: 0; padding: 20px 14px 8px; justify-content: safe center; scrollbar-width: none; -ms-overflow-style: none; -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 22px, #000 calc(100% - 22px), transparent 100%); mask-image: linear-gradient(90deg, transparent 0, #000 22px, #000 calc(100% - 22px), transparent 100%); } .mh-tl .mh-tlr::-webkit-scrollbar { display: none; }
+  .mh-tl { display: flex; align-items: center; justify-content: center; min-height: 100%; } .mh-tl .mh-tlr { flex: 1; min-width: 0; margin: 0; padding: 8px 14px; justify-content: safe center; scrollbar-width: none; -ms-overflow-style: none; -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 22px, #000 calc(100% - 22px), transparent 100%); mask-image: linear-gradient(90deg, transparent 0, #000 22px, #000 calc(100% - 22px), transparent 100%); } .mh-tl .mh-tlr::-webkit-scrollbar { display: none; }
   .mh-dir-monwrap { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; } .mh-dir-monwrap > .mh-dir-mon { flex: 1; min-height: 0; } .mh-dir-hov { position: absolute; left: 12px; top: 44px; z-index: 8; display: flex; gap: 6px; pointer-events: none; } .mh-dir-fxbtn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 99px; border: 1px solid var(--mh-line2); background: color-mix(in srgb, var(--mh-panel) 92%, transparent); color: var(--mh-ink); font: 600 12px 'Inter', system-ui, sans-serif; cursor: pointer; opacity: 0; transform: translateY(-4px); pointer-events: none; transition: opacity .18s ease, transform .18s ease, border-color .15s; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); } .mh-dir-monwrap:hover .mh-dir-fxbtn, .mh-dir-fxbtn:focus-visible, .mh-dir-fxbtn.is-on { opacity: 1; transform: none; pointer-events: auto; } .mh-dir-fxbtn:hover, .mh-dir-fxbtn.is-on { border-color: var(--acc, #E3B04B); } .mh-dir-fxbtn:focus-visible { outline: 2px solid var(--acc, #E3B04B); outline-offset: 2px; } .mh-dir-fxbtn svg { color: var(--mh-gold-ink); } @media (hover: none) { .mh-dir-fxbtn { opacity: 1; transform: none; pointer-events: auto; } } @media (prefers-reduced-motion: reduce) { .mh-dir-fxbtn { transition: none; } }
   .mh-tlr { display: flex; align-items: center; gap: 8px; overflow-x: auto; padding: 22px 2px 8px; margin-bottom: 4px; scrollbar-width: thin; }
   .mh-tlr-ch { flex: none; display: flex; align-items: center; padding: 5px 9px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel2); }
@@ -29169,37 +29178,22 @@ export default function App({ onSignOut }) {
                       <>
                         <div className="mh-cg-navrow">
                         <nav className="mh-cg-nav" role="tablist" aria-label="Espacios de la campaña">
-                          {CAMP_SPACES.filter((sp) => sp.key !== "directo").map((sp) => (
-                            <button
-                              key={sp.key}
-                              type="button"
-                              role="tab"
-                              aria-selected={sp === space}
-                              className={sp === space ? "is-on" : ""}
-                              onClick={() => {
-                                campLeafMem.current[space.key] = campaignDetailTab;
-                                setCampaignDetailTab(sp === space ? sp.tabs[0].key : campLeafMem.current[sp.key] || sp.tabs[0].key);
-                              }}
-                            >
-                              <sp.Icon size={16} strokeWidth={1.9} /> <span>{sp.label}</span>
-                            </button>
-                          ))}
-                        </nav>
-                        <nav className="mh-cg-nav is-live" role="tablist" aria-label="Directo">
-                          {CAMP_SPACES.filter((sp) => sp.key === "directo").map((sp) => (
-                            <button
-                              key={sp.key}
-                              type="button"
-                              role="tab"
-                              aria-selected={sp === space}
-                              className={sp === space ? "is-on" : ""}
-                              onClick={() => {
-                                campLeafMem.current[space.key] = campaignDetailTab;
-                                setCampaignDetailTab(sp === space ? sp.tabs[0].key : campLeafMem.current[sp.key] || sp.tabs[0].key);
-                              }}
-                            >
-                              <sp.Icon size={16} strokeWidth={1.9} /> <span>{sp.label}</span>
-                            </button>
+                          {CAMP_SPACES.map((sp) => (
+                            <Fragment key={sp.key}>
+                              {sp.key === "directo" && <span className="mh-cg-nav-sep" role="separator" aria-hidden="true" />}
+                              <button
+                                type="button"
+                                role="tab"
+                                aria-selected={sp === space}
+                                className={(sp === space ? "is-on" : "") + (sp.key === "directo" ? " is-live" : "")}
+                                onClick={() => {
+                                  campLeafMem.current[space.key] = campaignDetailTab;
+                                  setCampaignDetailTab(sp === space ? sp.tabs[0].key : campLeafMem.current[sp.key] || sp.tabs[0].key);
+                                }}
+                              >
+                                <sp.Icon size={16} strokeWidth={1.9} /> <span>{sp.label}</span>
+                              </button>
+                            </Fragment>
                           ))}
                         </nav>
                         {space.key === "directo" && (
@@ -29696,9 +29690,20 @@ export default function App({ onSignOut }) {
                             }}
                           >
                             <div className="mh-tlr-ch">
+                              <span className="mh-tlr-c">ESCENA</span>
+                              {(() => {
+                                const meNone = !vc && view === "escena", plNone = !cur && live === "escena";
+                                return (
+                                  <button type="button" className={"mh-tlr-n " + (meNone && plNone ? "both" : meNone ? "me" : plNone ? "pl" : "")} onClick={() => (setDjStep(null), setDjCh("__none"), setDjView(live === "escena" ? null : "escena"))} title={"Sin escena (solo lo ves tú; Mostrar para publicarlo)" + (meNone && plNone ? " · Estás tú y los jugadores" : meNone ? " · Estás tú" : plNone ? " · Están los jugadores" : "")}>
+                                    <i />
+                                    Sin escena
+                                  </button>
+                                );
+                              })()}
+                            </div>
+                            <div className="mh-tlr-ch">
                               <span className="mh-tlr-c">MAPA</span>
                               <button type="button" className={"mh-tlr-n " + (view === "mundo" && live === "mundo" ? "both" : view === "mundo" ? "me" : live === "mundo" ? "pl" : "")} onClick={() => setDjView(live === "mundo" ? null : "mundo")} title="Mapa del mundo (solo lo ves tú; Mostrar para publicarlo)">
-                                {view === "mundo" && live === "mundo" ? <em>Tú y jugadores</em> : view === "mundo" ? <em>Tú</em> : live === "mundo" ? <em>Jugadores</em> : null}
                                 <i />
                                 Mundo
                               </button>
@@ -29711,12 +29716,11 @@ export default function App({ onSignOut }) {
                                   const isMe = gi === myIdx && view !== "mundo";
                                   const isPl = gi === tlCur && live !== "mundo";
                                   const cls = isMe && isPl ? "both" : isMe ? "me" : isPl ? "pl" : "";
-                                  const lab = isMe && isPl ? "Tú y jugadores" : isMe ? "Tú" : isPl ? "Jugadores" : "";
+                                  const lab = isMe && isPl ? "Estás tú y los jugadores" : isMe ? "Estás tú" : isPl ? "Están los jugadores" : "";
                                   return (
                                     <Fragment key={x.id}>
                                       {si > 0 && <span className="mh-tlr-ln" />}
-                                      <button type="button" className={"mh-tlr-n " + cls} onClick={() => jumpTo(x)} title={STEP_META[x.k].n + " · Cap. " + (ci + 1) + " (solo lo ves tú; Mostrar para publicarlo)"}>
-                                        {lab && <em>{lab}</em>}
+                                      <button type="button" className={"mh-tlr-n " + cls} onClick={() => jumpTo(x)} title={STEP_META[x.k].n + " · Cap. " + (ci + 1) + (lab ? " · " + lab : " (solo lo ves tú; Mostrar para publicarlo)")}>
                                         <i />
                                         {x.k === "img" ? (x.nTot > 1 ? "Escena " + (x.n + 1) : "Imagen") : x.k === "dlg" ? "Diálogo" : x.nTot > 1 ? "Combate " + (x.n + 1) : "Combate"}
                                       </button>
