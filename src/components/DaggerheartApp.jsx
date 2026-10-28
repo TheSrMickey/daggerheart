@@ -17331,11 +17331,13 @@ export default function App({ onSignOut }) {
   useEffect(() => {
     const el = cgNavRef.current;
     if (!el || typeof ResizeObserver === "undefined") return undefined;
-    const ro = new ResizeObserver(() => setCgCompact(el.clientWidth < 1180));
+    // En «Directo» la barra comparte la fila con X-Card, Medallas y Ambiente, así que necesita más ancho para mostrar todos los nombres.
+    const need = campaignDetailTab === "mesa" ? 1640 : 1340;
+    const ro = new ResizeObserver(() => setCgCompact(el.clientWidth < need));
     ro.observe(el);
-    setCgCompact(el.clientWidth < 1180);
+    setCgCompact(el.clientWidth < need);
     return () => ro.disconnect();
-  }, [campFlat, viewingCampaignId]);
+  }, [campFlat, viewingCampaignId, campaignDetailTab === "mesa"]); // eslint-disable-line react-hooks/exhaustive-deps
   const showRail = showTopbar;
   const modernCamp = view === "ficha" && modernCharId && detailTab === "campaign" ? Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(modernCharId)) : null;
   const railFold = showRail && !modernCamp; // plegable salvo con el chat de la campaña, que necesita todo el ancho
