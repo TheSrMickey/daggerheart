@@ -9,7 +9,7 @@ export const CHANGELOG = [
     title: "Combate en el móvil y cartas jugables",
     blurb: "El móvil estrena un modo combate a pantalla completa y en vertical, y ya puedes arrastrar cartas al mapa con su animación para toda la mesa.",
     items: [
-      { tag: "mejora", text: "Campañas · el menú de «Directo» usa ya el mismo estilo que el resto de la campaña: «Directo» queda al final del menú, separado por una línea vertical, y dentro de él siguen a la derecha X-Card, Medallas y Ambiente." },
+      { tag: "mejora", text: "Campañas · «Directo» usa exactamente el mismo menú que el resto de la campaña (los mismos iconos agrupados por espacios, con la pestaña activa en dorado y la misma separación respecto a las cajas de abajo). «Directo» queda al final del menú, separado por una línea vertical, y dentro de él X-Card, Medallas y Ambiente siguen a la derecha del todo." },
       { tag: "mejora", text: "Directo · en la línea de tiempo se quitan las etiquetas «Tú» y «Jugadores» (la línea queda centrada en la caja; los nodos siguen marcados en color y al pasar el ratón lo explican) y se añade el paso «Sin escena» antes de «Mapa»." },
       { tag: "arreglo", text: "Capítulos · el contenido del capítulo ya se desliza en vertical (antes quedaba cortado y no se podía bajar) y el difuminado inferior se queda fijo en el borde de abajo mientras desplazas, sin tapar el último elemento al llegar al final." },
       { tag: "mejora", text: "Capítulos · las conversaciones se ven ahora bajo la escena en la que se crearon (con su número de líneas y un acceso directo para abrirlas) y el contenido del capítulo se desliza en vertical con un difuminado en la parte inferior." },

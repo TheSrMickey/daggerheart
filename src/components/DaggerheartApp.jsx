@@ -5725,6 +5725,8 @@ const sharedStyles = `
   .mh-cg.has-banner:not(.is-flat) .mh-cg-nav button.is-on { color: var(--mh-ink); background: none; border: 0; box-shadow: none; } .mh-cg.has-banner:not(.is-flat) .mh-cg-nav button.is-on::after { transform: scaleX(1); } .mh-cg.has-banner:not(.is-flat) .mh-cg-nav button.is-on svg { color: #E3B04B; }
   .mh-cg.has-banner:not(.is-flat) .mh-cg-nav button:focus-visible { outline: 2px solid #E3B04B; outline-offset: -2px; border-radius: 6px; }
   .mh-cg-nav button.is-live svg { color: #E8776F; animation: mh-pulse 2.2s ease-in-out infinite; } .mh-cg-nav button.is-live.is-on svg { color: #E8776F; }
+  .mh-cg.has-banner > .mh-cg-navrow { display: none !important; }
+  .mh-cgt .mh-cg-acts { flex: none; align-self: center; margin-left: 0; }
   .mh-cg-nav-sep { align-self: center; flex: none; width: 1px; height: 22px; background: var(--mh-line2); margin: 0 4px; }
   .mh-cg.is-flat .mh-cg-nav.is-live { margin-left: auto; background: none; border: 0; }
   .mh-cg.is-flat .mh-cg-nav.is-live button { color: #E8776F; } .mh-cg.is-flat .mh-cg-nav.is-live button::after { background: #E0544A; } .mh-cg.is-flat .mh-cg-nav.is-live button:hover { color: #ff9b94; background: none; }
@@ -29196,7 +29198,7 @@ export default function App({ onSignOut }) {
                             </Fragment>
                           ))}
                         </nav>
-                        {space.key === "directo" && (
+                        {space.key === "directo" && isMobile && (
                           <div className="mh-cg-acts">
                             <button type="button" className={"mh-dir-pause" + (campaignStage.xcard?.on ? " is-on" : "")} onClick={toggleXCard} aria-pressed={!!campaignStage.xcard?.on} title={campaignStage.xcard?.on ? "Retirar el aviso de X-Card" : "X-Card: avisa en la escena de que un jugador no está cómodo con lo que se trata"}>
                               <X size={14} /> <span>{campaignStage.xcard?.on ? "Retirar X-Card" : "X-Card"}</span>
@@ -29238,7 +29240,7 @@ export default function App({ onSignOut }) {
                     );
                   })()}
 
-                  {campFlat && (() => {
+                  {(campFlat || (!isMobile && campaignDetailTab === "mesa")) && (() => {
                     const groups = CAMP_SPACES.filter((sp) => sp.key !== "directo");
                     const live = CAMP_SPACES.find((sp) => sp.key === "directo");
                     return (
@@ -29253,10 +29255,28 @@ export default function App({ onSignOut }) {
                             ))}
                           </span>
                         ))}
-                        <span className="mhm-spacer" />
-                        <button type="button" role="tab" aria-selected={false} className="is-live" style={{ "--tone": "#E8776F" }} onClick={() => setCampaignDetailTab(live.tabs[0].key)}>
-                          <Radio size={15} strokeWidth={1.8} /> <span className="lbl-full">Directo</span>
-                        </button>
+                        <span className="mh-cgt-g">
+                          <span className="mh-cgt-sep" aria-hidden="true" />
+                          <button type="button" role="tab" aria-selected={campaignDetailTab === "mesa"} className={"is-live" + (campaignDetailTab === "mesa" ? " is-on" : "")} style={{ "--tone": "#E8776F" }} onClick={() => setCampaignDetailTab(live.tabs[0].key)}>
+                            <Radio size={15} strokeWidth={1.8} /> <span className="lbl-full">Directo</span>
+                          </button>
+                        </span>
+                        {campaignDetailTab === "mesa" && (
+                          <>
+                            <span className="mhm-spacer" />
+                          <div className="mh-cg-acts">
+                                <button type="button" className={"mh-dir-pause" + (campaignStage.xcard?.on ? " is-on" : "")} onClick={toggleXCard} aria-pressed={!!campaignStage.xcard?.on} title={campaignStage.xcard?.on ? "Retirar el aviso de X-Card" : "X-Card: avisa en la escena de que un jugador no está cómodo con lo que se trata"}>
+                                  <X size={14} /> <span>{campaignStage.xcard?.on ? "Retirar X-Card" : "X-Card"}</span>
+                                </button>
+                                <button type="button" className="mh-cg-btn" aria-haspopup="dialog" onClick={() => setMedalsOpen(true)} title="Dar una medalla a un jugador">
+                                  <Award size={14} /> <span>Medallas</span>
+                                </button>
+                                <button type="button" className="mh-cg-btn" ref={ambBtn} aria-expanded={ambOpen} onClick={() => setAmbOpen((v) => !v)}>
+                                  <Music size={14} /> <span>Ambiente</span>
+                                </button>
+                              </div>
+                          </>
+                        )}
                       </nav>
                     );
                   })()}
