@@ -2192,6 +2192,14 @@ const chapterItems = (ch, maps) => {
   all.forEach((i) => { if (byKey.has(i.key)) out.push(i); });
   return out;
 };
+// Orden de lectura de un capítulo: escenas y combates como los haya ordenado el DJ; los diálogos van justo antes del primer combate (o al final).
+const chapterFlow = (ch, maps, hasDlg) => {
+  const items = chapterItems(ch, maps);
+  if (!hasDlg) return items;
+  const at = items.findIndex((i) => i.kind === "map");
+  const dlg = { key: "dlg", kind: "dlg" };
+  return at < 0 ? [...items, dlg] : [...items.slice(0, at), dlg, ...items.slice(at)];
+};
 const chapterScenes = (sc) => (sc ? [{ id: sc.id, title: sc.title, image: sc.image, fx: sc.fx || [], main: true }, ...(sc.extras || []).map((e) => ({ ...e, fx: e.fx || [] }))] : []);
 const activeSceneIdOf = (st) => (st.activeSceneId !== undefined ? st.activeSceneId : st.scenes ? null : stageScenesOf(st)[0]?.id || null);
 
@@ -5671,7 +5679,11 @@ const sharedStyles = `
   .md-pop { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 9999; width: min(320px, 92vw); text-align: center; padding: 26px 22px 20px; border-radius: 26px; border: 1px solid #E3B04B99; background: radial-gradient(120% 90% at 50% 0%, #E3B04B30, transparent 70%), var(--mh-panel); color: var(--mh-ink); box-shadow: 0 30px 60px -20px #000c; cursor: pointer; animation: md-in .45s cubic-bezier(.2,1.3,.4,1); overflow: hidden; } .md-pop .md-disc { margin-bottom: 12px; border-width: 3px; box-shadow: 0 0 0 7px color-mix(in srgb, var(--c) 22%, transparent), 0 0 60px -6px var(--c); } .md-pop small { display: block; font: 700 10.5px 'Inter', sans-serif; letter-spacing: .14em; text-transform: uppercase; color: #E3B04B; } .md-pop h3 { margin: 6px 0 4px; font-size: 22px; } .md-pop p { margin: 0; font-size: 13px; color: var(--mh-ink3); } .md-sp { position: absolute; color: #F0C874; font-size: 14px; opacity: .85; }
   @keyframes md-in { from { opacity: 0; transform: translate(-50%, -46%) scale(.85); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } } @media (prefers-reduced-motion: reduce) { .md-pop { animation: none; } }
   html[data-mh-theme="light"] .md-chat small, html[data-mh-theme="light"] .md-pop small { color: #97680F; }
-  .cgp-list.is-gal { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); grid-auto-rows: minmax(380px, 1fr); gap: 16px; padding: 22px 26px 26px 22px; margin: -20px -24px -24px -20px; } .cgp-list.is-gal .mh-gc { cursor: default; } .cgp-list.is-gal .mh-gc:hover, .cgp-list.is-gal .mh-gc:focus-visible { box-shadow: 0 18px 36px -16px #000a, 0 0 0 1px color-mix(in srgb, var(--k) 60%, transparent), 0 0 26px color-mix(in srgb, var(--k) 26%, transparent), inset 0 1px 0 #ffffff22; } .mh-gc .md-shelf { margin: 16px 0 14px; } .cgp-list.is-gal .mh-gc-del { opacity: .7; } .mh-gc-acc { display: inline-flex; align-items: center; gap: 6px; margin-top: auto; padding: 7px 14px; border-radius: 99px; max-width: 100%; font-size: 12.5px; font-weight: 600; color: var(--mh-ink2); background: var(--mh-panel3); border: 1px solid var(--mh-line2); } .mh-gc-acc svg { color: var(--mh-gold-ink); flex: none; }
+  .mh-gc-new { border-style: dashed; background: transparent; box-shadow: none; justify-content: center; cursor: default; } .mh-gc-new:hover { box-shadow: none; }
+  .mh-gc-plus { all: unset; box-sizing: border-box; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer; color: var(--mh-ink2); } .mh-gc-plus span { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; color: #E3B04B; background: #E3B04B14; border: 1px solid #E3B04B40; } .mh-gc-plus b { font-size: 14px; color: var(--mh-ink); } .mh-gc-plus small { font-size: 12px; color: var(--mh-muted); } .mh-gc-plus:hover span { background: #E3B04B26; }
+  .mh-gc-pick { width: 100%; display: flex; flex-direction: column; gap: 6px; max-height: 100%; overflow-y: auto; scrollbar-width: thin; } .mh-gc-pick-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; } .mh-gc-pick-h b { font-size: 13px; } .mh-gc-pick-h button { all: unset; cursor: pointer; color: var(--mh-muted); display: grid; place-items: center; width: 24px; height: 24px; } .mh-gc-pick > button { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 12px; font-size: 12.5px; font-weight: 600; color: var(--mh-ink); background: var(--mh-panel3); border: 1px solid var(--mh-line2); } .mh-gc-pick > button:hover { border-color: #E3B04B; } .mh-gc-pick small { font-size: 12px; color: var(--mh-muted); line-height: 1.4; }
+  .mh-gc-accn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cgp-list.is-gal { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); grid-auto-rows: minmax(340px, 1fr); gap: 16px; padding: 20px 20px 22px; overflow-x: hidden; } .cgp-list.is-gal .mh-gc { cursor: default; } .cgp-list.is-gal .mh-gc:hover, .cgp-list.is-gal .mh-gc:focus-visible { box-shadow: 0 18px 36px -16px #000a, 0 0 0 1px color-mix(in srgb, var(--k) 60%, transparent), 0 0 26px color-mix(in srgb, var(--k) 26%, transparent), inset 0 1px 0 #ffffff22; } .mh-gc .md-shelf { margin: 16px 0 14px; } .cgp-list.is-gal .mh-gc-del { opacity: .7; } .mh-gc-acc { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 7px 14px; border-radius: 99px; max-width: 100%; font-size: 12.5px; font-weight: 600; color: var(--mh-ink2); background: var(--mh-panel3); border: 1px solid var(--mh-line2); } .mh-gc-acc svg { color: var(--mh-gold-ink); flex: none; }
   .cgp-list.is-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; } .cgp-list.is-rows { display: flex; flex-direction: column; gap: 8px; }
   .cgp-none { grid-column: 1 / -1; color: var(--mh-muted); font-size: 13px; padding: 14px 4px; }
   .cgp-empty { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; padding: 20px; border-radius: 18px; border: 1px dashed var(--mh-line2); } .cgp-empty b { font-size: 16px; color: var(--mh-ink); } .cgp-empty small { font-size: 13px; color: var(--mh-muted); max-width: 380px; line-height: 1.5; } .cgp-empty .mh-btn { margin-top: 8px; display: inline-flex; align-items: center; gap: 6px; }
@@ -8292,7 +8304,7 @@ const sharedStyles = `
   .mh-gc-lv { padding: 4px 11px; border-radius: 20px; font-size: 11.5px; font-weight: 700; color: var(--mh-ink); background: color-mix(in srgb, var(--k) 24%, var(--mh-panel)); border: 1px solid color-mix(in srgb, var(--k) 50%, transparent); }
   .mh-gc-del { all: unset; box-sizing: border-box; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--mh-muted2); opacity: 0; transition: opacity .15s, background .15s; }
   .mh-gc:hover .mh-gc-del, .mh-gc-del:focus-visible { opacity: 1; } .mh-gc-del:hover { background: #C0443A33; color: #E8685C; }
-  .mh-gc-mid { flex: 1 1 auto; min-height: 150px; display: flex; align-items: center; justify-content: center; }
+  .mh-gc-mid { flex: 1 1 auto; min-height: 90px; display: flex; align-items: center; justify-content: center; }
   .mh-gc-emb { width: clamp(124px, 22vh, 176px); aspect-ratio: 1; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--k); background: radial-gradient(circle at 35% 28%, color-mix(in srgb, var(--k) 30%, var(--mh-panel2)), var(--mh-panel) 72%); border: 2px solid var(--k); box-shadow: 0 0 0 7px color-mix(in srgb, var(--k) 14%, transparent), 0 0 40px color-mix(in srgb, var(--k) 36%, transparent); }
   .mh-gc-emb svg { width: 42%; height: 42%; }
   .mh-gc-nm { font-size: 22px; font-weight: 600; letter-spacing: .03em; text-transform: uppercase; color: var(--mh-ink); }
@@ -11488,6 +11500,7 @@ export default function App({ onSignOut }) {
   const [stageWide, setStageWide] = useState(false);
   const [editingSceneId, setEditingSceneId] = useState(null);
   const [chapterId, setChapterId] = useState(null); // capítulo (escena) que el DJ prepara en «Historia»
+  const [gAddOpen, setGAddOpen] = useState(false);
   const [editMapId, setEditMapId] = useState(null); // mapa de combate de la biblioteca que se está editando en el tablero
   const [mapSaved, setMapSaved] = useState(false);
   const [combatBack, setCombatBack] = useState(null); // capítulo desde el que se abrió el tablero de combate
@@ -29590,13 +29603,15 @@ export default function App({ onSignOut }) {
                       const cvs = dialogueConvs.filter((c) => c.sceneId === sc.id && c.lines.some((l) => campaignCast.some((m) => m.id === l.castId)));
                       const pick = dlgStart[sc.id];
                       const cv = cvs.find((c) => c.id === pick?.convId) || cvs[0];
-                      const mp = campaignMaps.filter((m) => m.sceneId === sc.id);
-                      const scns = chapterScenes(sc);
-                      return [
-                        ...scns.map((scn, si) => ({ k: "img", sc, scn, sub: scn.main ? null : scn.id, n: si, nTot: scns.length, id: sc.id + ":img:" + scn.id })),
-                        ...(cv ? [{ k: "dlg", sc, conv: cv, convs: cvs, id: sc.id + ":dlg" }] : []),
-                        ...mp.map((m, mi) => ({ k: "cmb", sc, maps: [m], map: m, n: mi, nTot: mp.length, id: sc.id + ":cmb:" + m.id })),
-                      ];
+                      const flow = chapterFlow(sc, campaignMaps, !!cv);
+                      const nS = flow.filter((i) => i.kind === "scene").length;
+                      const nM = flow.filter((i) => i.kind === "map").length;
+                      let si = 0, mi = 0;
+                      return flow.map((i) => {
+                        if (i.kind === "scene") return { k: "img", sc, scn: i.x, sub: i.x.main ? null : i.x.id, n: si++, nTot: nS, id: sc.id + ":img:" + i.x.id };
+                        if (i.kind === "map") return { k: "cmb", sc, maps: [i.m], map: i.m, n: mi++, nTot: nM, id: sc.id + ":cmb:" + i.m.id };
+                        return { k: "dlg", sc, conv: cv, convs: cvs, id: sc.id + ":dlg" };
+                      });
                     });
                     const posIdx = (chId, want, sub) => {
                       if (!chId) return -1;
@@ -30161,13 +30176,14 @@ export default function App({ onSignOut }) {
                             <div className="mh-hs-tl" role="group" aria-label="Línea de tiempo del capítulo">
                               <span className="mh-dir-lbl">Línea de tiempo</span>
                               <div className="mh-hs-tl-row">
-                                {scnList.map((x, i) => item("s" + x.id, ImageIcon, x.main ? "Escena 1" : "Escena " + (i + 1), x.title || "Sin título", () => (setChTab("ambiente"), setChScene(x.main ? null : x.id)), x.image || ""))}
+                                {chapterFlow(sel, campaignMaps, convs.length > 0).map((f, fi) => {
+                                  const arrow = fi > 0 ? <span key={"ar" + f.key} className="mh-hs-tl-ar" /> : null;
+                                  if (f.kind === "scene") { const x = f.x; return [arrow, item("s" + x.id, ImageIcon, "Escena " + (scnList.findIndex((y) => y.id === x.id) + 1), x.title || "Sin título", () => (setChTab("ambiente"), setChScene(x.main ? null : x.id)), x.image || "")]; }
+                                  if (f.kind === "map") return [arrow, item("m" + f.m.id, Swords, f.m.name, (f.m.map.tokens || []).length + " fichas", () => setChTab("combate"))];
+                                  return [arrow, ...convs.map((cv) => item("d" + cv.id, MessageSquareQuote, cv.title || "Diálogo", cv.lines.length + " línea" + (cv.lines.length === 1 ? "" : "s"), () => setChTab("dialogos")))];
+                                })}
                                 <button type="button" className="mh-hs-tl-add" onClick={() => { const id = addExtraScene(sel.id); if (id) (setChScene(id), setChTab("ambiente")); }}><Plus size={13} /> Escena</button>
-                                <span className="mh-hs-tl-ar" />
-                                {convs.map((c) => item("d" + c.id, MessageSquareQuote, c.title || "Diálogo", c.lines.length + " línea" + (c.lines.length === 1 ? "" : "s"), () => setChTab("dialogos")))}
                                 <button type="button" className="mh-hs-tl-add" onClick={() => setChTab("dialogos")}><Plus size={13} /> Diálogo</button>
-                                <span className="mh-hs-tl-ar" />
-                                {chMaps.map((m) => item("m" + m.id, Swords, m.name, (m.map.tokens || []).length + " fichas", () => setChTab("combate")))}
                                 <button type="button" className="mh-hs-tl-add" onClick={() => (setChTab("combate"), createCombat(sel.id))}><Plus size={13} /> Combate</button>
                               </div>
                             </div>
@@ -30580,18 +30596,17 @@ export default function App({ onSignOut }) {
                           <span className="cgs-tl-l">Línea de tiempo</span>
                           <div className="cgs-tl-r">
                             {scenes.map((sc, i) => {
-                              const scns = chapterScenes(sc);
                               const nd = dialogueConvs.filter((cv) => cv.sceneId === sc.id).length;
-                              const mps = campaignMaps.filter((m) => m.sceneId === sc.id);
+                              const flow = chapterFlow(sc, campaignMaps, nd > 0);
                               return (
                                 <span key={sc.id} className="cgs-tl-w">
                                   {i > 0 && <span className="cgs-tl-ar" aria-hidden="true" />}
                                   <button type="button" className={"cgs-tl-ch" + (sel?.id === sc.id ? " is-on" : "")} onClick={() => openChapter(sc.id)} title={"Capítulo " + (i + 1) + " · " + (sc.title || "Sin título")}>
                                     <span className="cgs-tl-n">{i + 1}</span>
                                     <span className="cgs-tl-nodes">
-                                      {scns.map((x) => <i key={x.id} className={"is-img" + (x.image ? " is-set" : "")} title={x.title || "Escena"}><ImageIcon size={11} /></i>)}
-                                      {nd > 0 && <i className="is-dlg is-set" title={nd + " diálogo" + (nd === 1 ? "" : "s")}><MessageSquareQuote size={11} /></i>}
-                                      {mps.map((m) => <i key={m.id} className="is-cmb is-set" title={m.name}><Swords size={11} /></i>)}
+                                      {flow.map((f) => f.kind === "scene" ? <i key={f.key} className={"is-img" + (f.x.image ? " is-set" : "")} title={f.x.title || "Escena"}><ImageIcon size={11} /></i>
+                                        : f.kind === "map" ? <i key={f.key} className="is-cmb is-set" title={f.m.name}><Swords size={11} /></i>
+                                        : <i key="dlg" className="is-dlg is-set" title={nd + " diálogo" + (nd === 1 ? "" : "s")}><MessageSquareQuote size={11} /></i>)}
                                     </span>
                                     <b>{sc.title || "Sin título"}</b>
                                   </button>
@@ -31082,14 +31097,6 @@ export default function App({ onSignOut }) {
                         <h3 className="mh-serif">Jugadores</h3>
                         {memberIds.length > 0 && <span className="cgp-n">{memberIds.length}</span>}
                         <span className="cgp-sp" />
-                        {availableIds.length > 0 && (
-                          <div className="cgp-add" aria-label="Añadir personaje a la campaña">
-                            <span>Añadir</span>
-                            {availableIds.map((id) => (
-                              <button key={id} type="button" onClick={() => addCharacterToCampaign(viewingCampaignId, id)}><Plus size={12} /> {characters[id].f_name || "Sin nombre"}</button>
-                            ))}
-                          </div>
-                        )}
                       </header>
                       {memberIds.length === 0 ? (
                         <div className="cgp-empty">
@@ -31120,15 +31127,32 @@ export default function App({ onSignOut }) {
                                 <div className="mh-serif mh-gc-nm">{ch.f_name || "Sin nombre"}</div>
                                 <div className="mh-gc-cl">{ch.f_class ? ch.f_class + (ch.f_subclass ? " · " + ch.f_subclass : "") : "Sin clase asignada"}</div>
                                 {origin && <div className="mh-gc-or">{origin}</div>}
+                                <span className="mh-gc-acc" title="Cuenta del jugador"><User size={13} /> <span className="mh-gc-accn">{acct}</span></span>
                                 <div className="mh-gc-tags">
                                   {ch.f_is_dead === "1" && <span className="is-dead">Caído</span>}
                                   {ch.f_transformation && <span className="is-tf">{ch.f_transformation}</span>}
                                 </div>
                                 <MedalShelf campaignId={viewingCampaignId} charId={id} size={26} />
-                                <span className="mh-gc-acc" title="Cuenta del jugador"><User size={13} /> {acct}</span>
                               </div>
                             );
                           })}
+                          <div className={"mh-gc mh-gc-new" + (gAddOpen ? " is-open" : "")}>
+                            {!gAddOpen ? (
+                              <button type="button" className="mh-gc-plus" onClick={() => setGAddOpen(true)} aria-label="Añadir otro personaje a la campaña">
+                                <span><Plus size={30} strokeWidth={1.6} /></span>
+                                <b>Añadir personaje</b>
+                                <small>{availableIds.length ? availableIds.length + " disponible" + (availableIds.length === 1 ? "" : "s") : "Ninguno disponible"}</small>
+                              </button>
+                            ) : (
+                              <div className="mh-gc-pick">
+                                <div className="mh-gc-pick-h"><b>Añadir a la mesa</b><button type="button" aria-label="Cerrar" onClick={() => setGAddOpen(false)}><X size={14} /></button></div>
+                                {availableIds.length === 0 && <small>No tienes más personajes que añadir. Crea uno desde «Personajes».</small>}
+                                {availableIds.map((id) => (
+                                  <button key={id} type="button" onClick={() => (addCharacterToCampaign(viewingCampaignId, id), setGAddOpen(false))}><Plus size={12} /> {characters[id].f_name || "Sin nombre"}</button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
                     </section>

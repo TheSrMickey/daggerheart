@@ -9,6 +9,9 @@ export const CHANGELOG = [
     title: "Combate en el móvil y cartas jugables",
     blurb: "El móvil estrena un modo combate a pantalla completa y en vertical, y ya puedes arrastrar cartas al mapa con su animación para toda la mesa.",
     items: [
+      { tag: "arreglo", text: "Jugadores · se quitan las barras de desplazamiento sobrantes de la pestaña y el nombre de la cuenta de cada personaje vuelve a verse (ahora justo bajo la clase)." },
+      { tag: "nuevo", text: "Jugadores · nueva tarjeta con un «+» del tamaño de las de los jugadores para añadir otro personaje a la campaña." },
+      { tag: "arreglo", text: "Línea de tiempo · escenas, diálogos y combates respetan el orden que les des (si un combate va antes que una escena, sale antes) en la línea de tiempo de Capítulos, en la del capítulo y en la de Directo, y se reordena al moverlos." },
       { tag: "arreglo", text: "Campañas · al entrar en una campaña propia ya aterrizas directamente en «Capítulos», sin pasar un instante por «Directo»." },
       { tag: "mejora", text: "Capítulos · los mapas de combate ahora se «Editan» en lugar de «Combatir»: se abren en el tablero sin lanzar el combate, hay un botón «Guardar» y, al volver al capítulo, te pregunta si guardar los cambios, así que lo que añades ya no se reinicia. Un mapa nuevo se abre directamente en edición." },
       { tag: "mejora", text: "PNJ · se quitan los botones de diálogo y de combate de cada PNJ; solo se pueden editar." },
