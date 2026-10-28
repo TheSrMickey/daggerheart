@@ -5788,6 +5788,9 @@ const sharedStyles = `
   .mh-cgt button.is-base { color: var(--mh-muted); } .mh-cgt .is-on { --cc: #E3B04B; } .mh-cgt .is-live { color: #E8776F; } .mh-cgt .is-live:hover { color: #ff9b94; }
   /* Capítulo: escenas y mapas de combate como tarjetas. */
   .cgs-secs { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; display: flex; flex-direction: column; gap: 16px; padding-right: 4px; }
+  .cgs-secs::after { content: ""; position: sticky; bottom: -1px; flex: none; height: 44px; margin-top: -60px; pointer-events: none; -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px); -webkit-mask-image: linear-gradient(180deg, transparent, #000 85%); mask-image: linear-gradient(180deg, transparent, #000 85%); background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--mh-panel) 70%, transparent)); }
+  .cgs-convs { display: flex; flex-direction: column; gap: 5px; margin: -2px 0 4px 56px; padding-left: 12px; border-left: 2px solid color-mix(in srgb, #E3B04B 40%, var(--mh-line)); }
+  .cgs-conv { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 9px; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel); color: var(--mh-ink2); } .cgs-conv:hover { border-color: #E3B04B; } .cgs-conv > svg:first-child { color: #E3B04B; flex: none; } .cgs-conv b { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; color: var(--mh-ink); } .cgs-conv small { font-size: 11.5px; color: var(--mh-muted); }
   .cgs-sec > header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; } .cgs-sec > header > b { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--mh-ink2); } .cgs-sec > header .mh-btn-ghost { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; }
   .cgs-card { position: relative; cursor: grab; } .cgs-card.is-dragging { opacity: .4; } .cgs-card.is-over { box-shadow: 0 -3px 0 0 #E3B04B; }
   .cgs-grip { flex: none; display: grid; place-items: center; color: var(--mh-muted2); } .cgs-card:hover .cgs-grip { color: var(--mh-ink2); }
@@ -30141,9 +30144,12 @@ export default function App({ onSignOut }) {
                                     }
                                     const x = it.x;
                                     const sub = x.main ? null : x.id;
-                                    const nd = convsAll.filter((cv) => (cv.subId || null) === sub).length;
+                                    const subIds = chapterScenes(sel).filter((s) => !s.main).map((s) => s.id);
+                                    const myConvs = convsAll.filter((cv) => (x.main ? !cv.subId || !subIds.includes(cv.subId) : cv.subId === x.id));
+                                    const nd = myConvs.length;
                                     return (
-                                      <article key={it.key} className={"cgs-card" + cls} {...drag}>
+                                      <Fragment key={it.key}>
+                                      <article className={"cgs-card" + cls} {...drag}>
                                         <span className="cgs-grip" title="Arrastra para cambiar el orden" aria-hidden="true"><GripVertical size={16} /></span>
                                         <span className="cgs-num">{i + 1}</span>
                                         <button type="button" className={"cgs-card-th" + (x.image ? "" : " is-blank")} style={bgStyle(x.image)} aria-label={"Editar " + (x.title || "escena")} onClick={() => openEd(sub, "ambiente")} />
@@ -30154,6 +30160,19 @@ export default function App({ onSignOut }) {
                                           {!x.main && <button type="button" className="mh-gm-ib is-del" aria-label={"Quitar " + (x.title || "escena")} title="Quitar escena" onClick={() => removeExtraScene(sel.id, x.id)}><Trash2 size={14} /></button>}
                                         </div>
                                       </article>
+                                      {myConvs.length > 0 && (
+                                        <div className="cgs-convs" role="group" aria-label={"Diálogos de " + (x.title || "la escena")}>
+                                          {myConvs.map((cv) => (
+                                            <button key={cv.id} type="button" className="cgs-conv" onClick={() => (setConvId(cv.id), openEd(sub, "dialogos"))} title="Abrir el diálogo">
+                                              <MessageSquareQuote size={14} />
+                                              <b>{cv.title || "Conversación"}</b>
+                                              <small>{cv.lines.length} línea{cv.lines.length === 1 ? "" : "s"}</small>
+                                              <ChevronRight size={14} />
+                                            </button>
+                                          ))}
+                                        </div>
+                                      )}
+                                      </Fragment>
                                     );
                                   })}
                                 </div>
