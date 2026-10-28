@@ -50,10 +50,10 @@ export const useMedalCount = (campaignId, charId) => {
 };
 
 // Tarjeta del chat.
-export function MedalChatCard({ md }) {
+export function MedalChatCard({ md, bare }) {
   const m = medalOf(md.medal);
   return (
-    <div className="md-chat" style={{ "--c": m.color }} role="group" aria-label="Medalla">
+    <div className={"md-chat" + (bare ? " is-bare" : "")} style={{ "--c": m.color }} role="group" aria-label="Medalla">
       <MedalDisc medal={md.medal} size={46} />
       <span>
         <small>Medalla</small>

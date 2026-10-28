@@ -26,7 +26,7 @@ import { CardsPage, CardFace } from "./Cards";
 import { Generators } from "./Generators";
 import { CampaignCalendar, HomeNextSession } from "./Calendar";
 import { HomeHero } from "./HomeHero";
-import { PollsGm, ActivePoll, PollSwap, PollResultCard } from "./Polls";
+import { PollsGm, ActivePoll, PollSwap, PollResultCard, pollFoot, outcome as pollOutcome } from "./Polls";
 import { MedalsGm, MedalWatcher, MedalChatCard, MedalShelf, medalOf } from "./Medals";
 import { RestGm, RestQuick, RestBanner, GroupRestDialog, RestLock } from "./GroupRest";
 import NpcStatsEditor, { npcStatsSummary, npcTokenStats, NpcStatsView } from "./NpcStats";
@@ -5058,6 +5058,9 @@ const sharedStyles = `
   .mh-mcb-ctl { position: absolute; z-index: 20; right: 10px; top: calc(10px + env(safe-area-inset-top)); display: flex; flex-direction: column; gap: 8px; } .mh-mcb-ctl button { all: unset; cursor: pointer; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; background: #0c0c20ee; border: 1px solid #ffffff33; color: #fff; } .mh-mcb-ctl button.is-on { border-color: #E3B04B; color: #E3B04B; } .mh-mcb-ctl button:focus-visible { outline: 2px solid #E3B04B; }
   .mh-mcb-sheet { position: absolute; z-index: 30; left: 0; right: 0; bottom: 0; height: min(58dvh, 460px); display: flex; flex-direction: column; gap: 8px; padding: 10px 12px calc(12px + env(safe-area-inset-bottom)); border-radius: 18px 18px 0 0; background: var(--mh-panel); border-top: 1px solid var(--mh-line2); box-shadow: 0 -16px 40px -14px #000c; } .mh-mcb-sheet .mh-chat-feed { flex: 1; min-height: 0; } .mh-mcb-sh { display: flex; align-items: center; justify-content: space-between; } .mh-mcb-sh b { font-size: 14px; color: var(--mh-ink); } .mh-mcb-sh button { all: unset; cursor: pointer; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; color: var(--mh-ink3); }
   .mh-mcb .mh-fan { z-index: 11; }
+  /* En el modo combate (móvil) las ventanas de tiradas y de resultados van por encima del mapa a pantalla completa */
+  body:has(.mh-mcb) .mh-overlay, body:has(.mh-mcb) .mh-rollov { position: fixed !important; inset: 0 !important; z-index: 95 !important; }
+  .mh-mcb-back { position: absolute; z-index: 6; right: 10px; bottom: 10px; display: inline-flex; align-items: center; gap: 7px; padding: 9px 14px; border-radius: 22px; border: 1px solid var(--mh-line); background: var(--mh-panel); color: var(--mh-ink); font: 700 12.5px 'Inter', sans-serif; box-shadow: 0 8px 20px -8px #000; cursor: pointer; }
   .mh-map-stage { position: relative; flex: 1 1 auto; min-height: 200px; border-radius: 12px; overflow: hidden; background: #1B1824; }
   .mh-map-view { position: absolute; inset: 0; overflow: auto; scrollbar-width: none; container-type: size; }
   .mh-map-view::-webkit-scrollbar { display: none; }
@@ -5461,6 +5464,10 @@ const sharedStyles = `
   .mh-chat-c-hp i.is-old { background: #D9644E; }
   .mh-chat-c-hp i.is-new { background: #F2A493; border-color: #E07A63; animation: mh-hp-new 1s ease-out 2; }
   @keyframes mh-hp-new { 50% { background: #D9644E; } }
+  .md-chat.is-bare { margin: 0; padding: 5px 12px 10px; border: 0; border-radius: 0; background: none; } .md-chat.is-bare small { display: none; }
+  .pr-card.is-bare { margin: 0; padding: 5px 12px 10px; border: 0; border-radius: 0; background: none; } .pr-card.is-bare .pr-t, .pr-card.is-bare .pr-you { display: none; } .pr-card.is-bare .pr-q { margin: 0 0 6px; font-size: 12px; }
+  .mh-cuse-th.is-chat { width: 40px; height: 54px; border-radius: 8px; box-shadow: none; flex: none; background-color: color-mix(in srgb, var(--rc) 25%, #10112a); background-size: cover; background-position: center; border: 1px solid var(--rc); }
+  .mh-chat-c.is-alert { border-color: color-mix(in srgb, var(--rc) 60%, var(--mh-line)); }
   .mh-chat-c-share { display: flex; align-items: center; gap: 10px; padding: 5px 12px 10px; }
   .mh-chat-c .mh-chat-roll-f { align-items: center; }
   .mh-chat-c .mh-chat-open { margin: -3px -4px -3px 0; }
@@ -14283,35 +14290,10 @@ export default function App({ onSignOut }) {
     });
   };
   const renderChatItem = (list, meCharId, m, i) => {
-      if (m.cardUse) {
-        const cu = m.cardUse;
-        const cc = DOMAIN_COLORS[cu.domain] || "#C9A24B";
-        return (
-          <div key={(m.ts || 0) + "-" + i} className="mh-chat-poll">
-            <span className="mh-chat-who"><b style={{ color: classColor(m.cls) }}>{m.author}</b> · {new Date(m.ts).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}</span>
-            <div className="mh-cuse" style={{ "--cc": cc }}>
-              <span className="mh-cuse-th" style={cu.image ? { backgroundImage: "url(" + cu.image + ")" } : undefined} />
-              <span className="mh-cuse-tx">
-                <small>Usa una carta</small>
-                <b className="mh-serif">{cu.key}</b>
-                <em>{[cu.domain, cu.type, cu.level !== "" ? "Nivel " + cu.level : ""].filter(Boolean).join(" · ")}</em>
-                {cu.detail && <i>{cu.detail}</i>}
-              </span>
-            </div>
-          </div>
-        );
-      }
-      if (m.medal) return <div key={(m.ts || 0) + "-" + i} className="mh-chat-poll"><span className="mh-chat-who"><b>{m.author || "El DJ"}</b> · {new Date(m.ts).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}</span><MedalChatCard md={m.medal} /></div>;
-      if (m.poll) return <div key={(m.ts || 0) + "-" + i} className="mh-chat-poll"><span className="mh-chat-who"><b>{m.author || "El DJ"}</b> · {new Date(m.ts).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}</span><PollResultCard s={m.poll} me={meCharId} /></div>;
       const kind = m.kind || (CHAT_EMOJI_RE.test(m.text || "") ? "event" : "msg");
       const col = chatColor(m);
       const time = new Date(m.ts).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
       const key = (m.ts || 0) + "-" + i;
-      const avatar = (size) => (
-        <span className="mh-chat-av" style={{ width: size, height: size, fontSize: m.gm ? size * 0.36 : size * 0.45, background: col, color: m.gm ? "#fff" : onColor(col.startsWith("#") ? col : "#C9A24A") }}>
-          {chatInitial(m)}
-        </span>
-      );
 
       if (kind === "roll" && m.roll) {
         const r = m.roll;
@@ -14549,6 +14531,47 @@ export default function App({ onSignOut }) {
         </b>
       );
 
+      if (m.cardUse) {
+        const cu = m.cardUse;
+        const cc = DOMAIN_COLORS[cu.domain] || "#C9A24B";
+        return chatCard(
+          cc,
+          <>{whoB} usa una carta</>,
+          "Carta",
+          <div className="mh-chat-c-share">
+            <span className="mh-cuse-th is-chat" style={cu.image ? { backgroundImage: "url(" + cu.image + ")" } : undefined} />
+            <div className="mh-chat-grow" style={{ minWidth: 0 }}>
+              <div className="mh-chat-share-t">{cu.key}</div>
+              <div className="mh-chat-share-s">{[cu.domain, cu.type, cu.level !== "" ? "Nivel " + cu.level : ""].filter(Boolean).join(" · ")}</div>
+            </div>
+          </div>,
+          <span>{cu.detail || "Jugada en la mesa"}</span>
+        );
+      }
+      if (m.medal) {
+        const mm = m.medal;
+        return chatCard(
+          medalOf(mm.medal).color,
+          <>{whoB} da una medalla</>,
+          "Medalla",
+          <MedalChatCard md={mm} bare />,
+          <>
+            <span>{mm.note || "Dada por el DJ"}</span>
+            <span>Una por sesión</span>
+          </>
+        );
+      }
+      if (m.poll) {
+        const po = pollOutcome(m.poll.t, m.poll.decided);
+        return chatCard(
+          po.tie ? "#A58BE8" : po.none ? "#857C90" : "#8E6FC4",
+          <>{whoB} {po.tie ? "deja un empate" : po.decided ? "desempata la votación" : "cierra la votación"}</>,
+          "Votación",
+          <PollResultCard s={m.poll} me={meCharId} bare />,
+          <span>{pollFoot(m.poll, meCharId)}</span>
+        );
+      }
+
       if (kind === "rally") {
         const me = meCharId ? characters[meCharId] : null;
         const inCamp = me && m.campId && (campaigns[m.campId]?.characterIds || []).includes(meCharId);
@@ -14700,27 +14723,30 @@ export default function App({ onSignOut }) {
           const long = m.icon === "rest-long";
           const lastRest = [...(campaignChat || [])].reverse().find((x) => x.icon === "rest-short" || x.icon === "rest-long");
           const canAct = !gmViewing && restPending && lastRest && lastRest.ts === m.ts;
-          return (
-            <div className={"mh-chat-rc" + (long ? " is-long" : "")} role="status">
-              <span className="mh-chat-rc-i">{long ? <Moon size={14} /> : <Sun size={14} />}</span>
-              <div>
-                <b>{long ? "Descanso largo propuesto" : "Descanso corto propuesto"}</b>
-                <span>{long ? "El DJ propone un descanso largo. Elige tus acciones y descansa." : "El DJ propone un respiro. Elige tus acciones y descansa."}</span>
-                {canAct && <button type="button" className="mh-btn mh-chat-rc-go" onClick={() => setRestPlayerOpen(true)}><BedDouble size={13} /> Descansar ahora</button>}
-              </div>
-            </div>
+          return chatCard(
+            long ? "#8E6FC4" : "#E3B04B",
+            <>{whoB} propone un descanso {long ? "largo" : "corto"}</>,
+            "Descanso",
+            <div className="mh-chat-c-t">{long ? "Un descanso largo: elige tus acciones y descansa." : "Un respiro: elige tus acciones y descansa."}</div>,
+            <>
+              <span>{canAct ? "Es tu turno de descansar" : "Pendiente de la mesa"}</span>
+              {canAct && (
+                <button type="button" className="mh-chat-open" onClick={() => setRestPlayerOpen(true)}>
+                  <BedDouble size={12} /> Descansar ahora
+                </button>
+              )}
+            </>
           );
         }
         if (m.gm && (m.icon === "xcard" || m.icon === "xcard-off")) {
           const off = m.icon === "xcard-off";
-          return (
-            <div className={"mh-chat-xc" + (off ? " is-off" : "")} role={off ? "status" : "alert"}>
-              <span className="mh-chat-xc-i">{off ? <Check size={13} strokeWidth={2.6} /> : <X size={13} strokeWidth={2.6} />}</span>
-              <div>
-                <b>{off ? "X-Card retirada" : "X-Card activada"}</b>
-                <span>{off ? "Gracias por cuidar la mesa. Seguimos." : "Pausa en la mesa: alguien necesita cambiar el rumbo de la escena. Sin preguntas ni explicaciones."}</span>
-              </div>
-            </div>
+          return chatCard(
+            off ? "#5BAA73" : "#D9644E",
+            <>{whoB} {off ? "retira la X-Card" : "activa la X-Card"}</>,
+            "X-Card",
+            <div className="mh-chat-c-t">{off ? "Gracias por cuidar la mesa. Seguimos." : "Pausa en la mesa: alguien necesita cambiar el rumbo de la escena. Sin preguntas ni explicaciones."}</div>,
+            <span>{off ? "La escena continúa" : "Seguimos cuando se retire"}</span>,
+            off ? "" : " is-alert"
           );
         }
         if (m.gm) {
@@ -14728,7 +14754,7 @@ export default function App({ onSignOut }) {
           const sceneTitle = m.icon === "escena" ? (body.match(/«(.+)»/) || [])[1] : null;
           const sc = sceneTitle ? stageScenesOf(campaignStage).find((x) => x.title === sceneTitle) : null;
           return chatCard(
-            "#C9A24A",
+            "#6D83A8",
             <>
               {whoB} {sceneTitle ? "cambia de escena" : body}
             </>,
@@ -14781,13 +14807,15 @@ export default function App({ onSignOut }) {
             : emoji === "😰" || emoji === "⚠️"
             ? ["Estrés", "#6FA3C0"]
             : emoji === "🎲" || emoji === "🃏" || emoji === "🗡️"
-            ? ["Tirada", "#857C90"]
+            ? ["Tirada", "#B07A4F"]
             : ["Suceso", "#857C90"];
+        const evText = named ? body.slice(m.author.length).trim() : body;
+        const evLong = evText.length > 90;
         return chatCard(
           type[1],
-          <>{whoB}</>,
+          <>{whoB}{evLong ? "" : " " + evText}</>,
           type[0],
-          <div className="mh-chat-c-t">{named ? body.slice(m.author.length).trim() : body}</div>,
+          evLong ? <div className="mh-chat-c-t">{evText}</div> : null,
           null,
           " is-event"
         );
@@ -21566,6 +21594,9 @@ export default function App({ onSignOut }) {
                                           );
                                         })()}
                                         <AreaCards campaignId={charCampaign.id} />
+                                        {isMobile && !mcb && (
+                                          <button type="button" className="mh-mcb-back" onClick={() => setMcbOff(false)}><Maximize2 size={15} /> Combate a pantalla completa</button>
+                                        )}
                                         {mcb && (
                                           <div className="mh-mcb-ctl">
                                             <button type="button" aria-label="Salir del modo combate" title="Salir del modo combate" onClick={() => setMcbOff(true)}><X size={17} /></button>
@@ -23831,7 +23862,7 @@ export default function App({ onSignOut }) {
                   zIndex: 30,
                   ...(rollDock ? ROLL_DOCK : {}),
                 }}
-                className={rollDock ? "mh-docked" : undefined}
+                className={"mh-rollov" + (rollDock ? " mh-docked" : "")}
                 onClick={() => setTraitRollResult(null)}
               >
                 <div style={{ display: "flex", gap: 16, alignItems: "stretch", flexWrap: "wrap", justifyContent: "center" }}>
@@ -24742,7 +24773,7 @@ export default function App({ onSignOut }) {
                   zIndex: 30,
                   ...(rollDock ? ROLL_DOCK : {}),
                 }}
-                className={rollDock ? "mh-docked" : undefined}
+                className={"mh-rollov" + (rollDock ? " mh-docked" : "")}
                 onClick={() => setDamageRollResult(null)}
               >
                 <div

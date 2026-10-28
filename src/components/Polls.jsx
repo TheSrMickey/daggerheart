@@ -65,9 +65,15 @@ async function saveDecision(campaignId, p, total) {
 const Mark = ({ s, big }) => (s.none ? <Hourglass size={big ? 22 : 20} /> : s.tie ? <Scale size={big ? 22 : 20} /> : <Crown size={big ? 22 : 20} />);
 
 // Tarjeta del resultado para el chat de la mesa y el aviso en pantalla.
-export function PollResultCard({ s, me }) {
+export function pollFoot(s, me) {
   const o = outcome(s.t, s.decided), mine = s.votes && me != null ? s.votes[me] : null;
-  const cls = o.none ? " is-none" : o.tie ? " is-tie" : "";
+  if (o.tie) return "El DJ decidirá el desempate";
+  if (o.none) return "El DJ seguirá la historia";
+  return mine != null ? "Tú votaste «" + s.opts[mine] + "»" : (o.voted || 0) + (o.voted === 1 ? " voto" : " votos");
+}
+export function PollResultCard({ s, me, bare }) {
+  const o = outcome(s.t, s.decided), mine = s.votes && me != null ? s.votes[me] : null;
+  const cls = (o.none ? " is-none" : o.tie ? " is-tie" : "") + (bare ? " is-bare" : "");
   const names = o.winner != null ? [s.opts[o.winner]] : o.win.map((i) => s.opts[i]);
   return (
     <div className={"pr-card" + cls} role="group" aria-label="Resultado de la votación">

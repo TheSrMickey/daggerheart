@@ -9,6 +9,8 @@ export const CHANGELOG = [
     title: "Combate en el móvil y cartas jugables",
     blurb: "El móvil estrena un modo combate a pantalla completa y en vertical, y ya puedes arrastrar cartas al mapa con su animación para toda la mesa.",
     items: [
+      { tag: "mejora", text: "Chat · todos los mensajes de la mesa comparten la misma tarjeta (quién y qué hace, hora, etiqueta de color y pie): descansos, X-Card, uso de cartas, medallas y resultados de votación dejan de tener formatos propios, los eventos llevan la acción en la cabecera y «Escena» ya no repite el color de «Habilidad»." },
+      { tag: "arreglo", text: "Móvil · en el modo combate a pantalla completa ya se ven las ventanas de tiradas y de resultados sin tener que salir, y si sales del modo combate hay un botón «Combate a pantalla completa» para volver sin recargar la página." },
       { tag: "nuevo", text: "Generadores · los enemigos de los encuentros salen con estadísticas (dificultad, PV, Estrés, umbrales, ataque y motivaciones) según su rol y el rango del encuentro, y se pueden desplegar. Nuevo selector de «Jugadores en la mesa» (1–8) que ajusta los puntos de combate y la dificultad. Al colocarlos en el mapa las fichas llevan sus estadísticas." },
       { tag: "nuevo", text: "Generadores · cada PNJ viene con estadísticas y con su propio prompt para generar su imagen (con selector de estilo). Además el panel es ahora una sola caja, sin el hueco entre el submenú y el contenido." },
       { tag: "nuevo", text: "Combate · mientras alguien esté inmovilizado por «Enredo Feroz» se dibuja un hilo de guiones verde entre quien lo lanzó y el enraizado, y al pasar el ratón (o pulsar) sobre la ficha aparece una etiqueta: «Inmovilizado por <personaje> · hasta que el DJ lo libere»." },
