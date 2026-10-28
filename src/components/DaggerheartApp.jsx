@@ -47,7 +47,7 @@ const QUICKSTARTS = [
   { key: "sablewood", name: "Los mensajeros de Sablewood", build: buildSablewood, ai: true, text: "Aventura de inicio ya preparada: escenas, pistas ocultas, reparto con diálogos, notas por acto y mapas con enemigos." },
   { key: "wishthief", name: "La ladrona de deseos", build: buildWishThief, ai: false, text: "Aventura de nivel 1 para 3-5 jugadores: escenas por acto, pistas ocultas, reparto con estadísticas y mapas listos." },
 ];
-import { Wand, CircleDot, MoveUpRight, Archive, Shell, Compass, Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp, Trophy, Star } from "lucide-react";
+import { Wand, CircleDot, MoveUpRight, Archive, Shell, Compass, Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp, Trophy, Star, Pencil } from "lucide-react";
 
 // Color de cada campaña (se reparte según su id).
 const CAMP_COLORS = ["#A58BE8", "#6FA3C0", "#E0A04A", "#7FB77A", "#D9644E", "#E07FB0"];
@@ -5467,6 +5467,7 @@ const sharedStyles = `
   .md-chat.is-bare { margin: 0; padding: 5px 12px 10px; border: 0; border-radius: 0; background: none; } .md-chat.is-bare small { display: none; }
   .pr-card.is-bare { margin: 0; padding: 5px 12px 10px; border: 0; border-radius: 0; background: none; } .pr-card.is-bare .pr-t, .pr-card.is-bare .pr-you { display: none; } .pr-card.is-bare .pr-q { margin: 0 0 6px; font-size: 12px; }
   .mh-cuse-th.is-chat { width: 40px; height: 54px; border-radius: 8px; box-shadow: none; flex: none; background-color: color-mix(in srgb, var(--rc) 25%, #10112a); background-size: cover; background-position: center; border: 1px solid var(--rc); }
+  .mh-map-editbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 8px 10px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel2); } .mh-map-editbar span { display: inline-flex; align-items: center; gap: 7px; font-weight: 700; font-size: 13px; }
   .mh-chat-c.is-alert { border-color: color-mix(in srgb, var(--rc) 60%, var(--mh-line)); }
   .mh-chat-c-share { display: flex; align-items: center; gap: 10px; padding: 5px 12px 10px; }
   .mh-chat-c .mh-chat-roll-f { align-items: center; }
@@ -5670,7 +5671,7 @@ const sharedStyles = `
   .md-pop { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 9999; width: min(320px, 92vw); text-align: center; padding: 26px 22px 20px; border-radius: 26px; border: 1px solid #E3B04B99; background: radial-gradient(120% 90% at 50% 0%, #E3B04B30, transparent 70%), var(--mh-panel); color: var(--mh-ink); box-shadow: 0 30px 60px -20px #000c; cursor: pointer; animation: md-in .45s cubic-bezier(.2,1.3,.4,1); overflow: hidden; } .md-pop .md-disc { margin-bottom: 12px; border-width: 3px; box-shadow: 0 0 0 7px color-mix(in srgb, var(--c) 22%, transparent), 0 0 60px -6px var(--c); } .md-pop small { display: block; font: 700 10.5px 'Inter', sans-serif; letter-spacing: .14em; text-transform: uppercase; color: #E3B04B; } .md-pop h3 { margin: 6px 0 4px; font-size: 22px; } .md-pop p { margin: 0; font-size: 13px; color: var(--mh-ink3); } .md-sp { position: absolute; color: #F0C874; font-size: 14px; opacity: .85; }
   @keyframes md-in { from { opacity: 0; transform: translate(-50%, -46%) scale(.85); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } } @media (prefers-reduced-motion: reduce) { .md-pop { animation: none; } }
   html[data-mh-theme="light"] .md-chat small, html[data-mh-theme="light"] .md-pop small { color: #97680F; }
-  .cgp-list.is-gal { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); grid-auto-rows: minmax(380px, 1fr); gap: 16px; padding: 2px 6px 2px 2px; } .cgp-list.is-gal .mh-gc { cursor: pointer; } .cgp-list.is-gal .mh-gc-del { opacity: .7; } .mh-gc-acc { display: inline-flex; align-items: center; gap: 6px; margin-top: auto; padding: 7px 14px; border-radius: 99px; max-width: 100%; font-size: 12.5px; font-weight: 600; color: var(--mh-ink2); background: var(--mh-panel3); border: 1px solid var(--mh-line2); } .mh-gc-acc svg { color: var(--mh-gold-ink); flex: none; }
+  .cgp-list.is-gal { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); grid-auto-rows: minmax(380px, 1fr); gap: 16px; padding: 22px 26px 26px 22px; margin: -20px -24px -24px -20px; } .cgp-list.is-gal .mh-gc { cursor: default; } .cgp-list.is-gal .mh-gc:hover, .cgp-list.is-gal .mh-gc:focus-visible { box-shadow: 0 18px 36px -16px #000a, 0 0 0 1px color-mix(in srgb, var(--k) 60%, transparent), 0 0 26px color-mix(in srgb, var(--k) 26%, transparent), inset 0 1px 0 #ffffff22; } .mh-gc .md-shelf { margin: 16px 0 14px; } .cgp-list.is-gal .mh-gc-del { opacity: .7; } .mh-gc-acc { display: inline-flex; align-items: center; gap: 6px; margin-top: auto; padding: 7px 14px; border-radius: 99px; max-width: 100%; font-size: 12.5px; font-weight: 600; color: var(--mh-ink2); background: var(--mh-panel3); border: 1px solid var(--mh-line2); } .mh-gc-acc svg { color: var(--mh-gold-ink); flex: none; }
   .cgp-list.is-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; } .cgp-list.is-rows { display: flex; flex-direction: column; gap: 8px; }
   .cgp-none { grid-column: 1 / -1; color: var(--mh-muted); font-size: 13px; padding: 14px 4px; }
   .cgp-empty { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; padding: 20px; border-radius: 18px; border: 1px dashed var(--mh-line2); } .cgp-empty b { font-size: 16px; color: var(--mh-ink); } .cgp-empty small { font-size: 13px; color: var(--mh-muted); max-width: 380px; line-height: 1.5; } .cgp-empty .mh-btn { margin-top: 8px; display: inline-flex; align-items: center; gap: 6px; }
@@ -11454,8 +11455,14 @@ export default function App({ onSignOut }) {
   const [newCampaignAI, setNewCampaignAI] = useState(false); // ¿las imágenes de la campaña están hechas con IA?
   const [newCampaignLimits, setNewCampaignLimits] = useState({ lines: [], veils: [] }); // líneas y velos de la mesa
   const [pendingDeleteCampaignId, setPendingDeleteCampaignId] = useState(null);
-  const [campaignDetailTab, setCampaignDetailTab] = useState("mesa");
+  const [campaignDetailTab, setCampaignDetailTab] = useState("historia");
   const campTabNext = useRef(null); // pestaña a la que abrir la próxima campaña (p. ej. el calendario desde Inicio); si no, «historia»
+  // Al abrir una campaña se aterriza ya en su pestaña inicial (sin pasar por «Directo» mientras cargan los datos).
+  const [campTabFor, setCampTabFor] = useState(null);
+  if (viewingCampaignId !== campTabFor) {
+    setCampTabFor(viewingCampaignId);
+    if (viewingCampaignId) setCampaignDetailTab(campTabNext.current || "historia");
+  }
   const [campaignChat, setCampaignChat] = useState([]);
   const [campaignChatDraft, setCampaignChatDraft] = useState("");
   const [showShareTray, setShowShareTray] = useState(false);
@@ -11481,6 +11488,8 @@ export default function App({ onSignOut }) {
   const [stageWide, setStageWide] = useState(false);
   const [editingSceneId, setEditingSceneId] = useState(null);
   const [chapterId, setChapterId] = useState(null); // capítulo (escena) que el DJ prepara en «Historia»
+  const [editMapId, setEditMapId] = useState(null); // mapa de combate de la biblioteca que se está editando en el tablero
+  const [mapSaved, setMapSaved] = useState(false);
   const [combatBack, setCombatBack] = useState(null); // capítulo desde el que se abrió el tablero de combate
   const [dataReadyFor, setDataReadyFor] = useState(null);
   const [stageReadyFor, setStageReadyFor] = useState(null);
@@ -11691,7 +11700,6 @@ export default function App({ onSignOut }) {
       setConvSceneId(null);
       setConvId(null);
       setEditingConvId(null);
-      setCampaignDetailTab(campTabNext.current || "historia");
       campTabNext.current = null;
       setChapterId(null);
       setCombatBack(null);
@@ -15240,7 +15248,7 @@ export default function App({ onSignOut }) {
     ...campaignCast.map((m) => ({ key: "c:" + m.id, group: "PNJ", name: m.name, sub: ({ Aliado: "Amistoso", Neutral: "Neutral", Enemigo: "Enemigo" }[m.kind || "Neutral"]) + (m.role ? " · " + m.role : ""), image: castImgs[castImgIdFor(m, "tranquila")] || "" })),
     ...handoutFoes().map((e) => ({ key: "f:" + e.name, group: "Adversarios", name: e.name, sub: e.stats ? "Adversario · Nv " + e.stats.tier + " · " + e.stats.type : "Adversario", image: "" })),
   ];
-  const addHandout = async () => {
+  const addHandout = async (deliver = true) => {
     const d = handoutDraft;
     if (!viewingCampaignId) return;
     let title = d.title.trim(), text = d.text.trim(), image = d.image.trim(), item = null, toCharId = null;
@@ -15257,9 +15265,10 @@ export default function App({ onSignOut }) {
       item = { name: title, description: text };
       toCharId = d.toCharId || null;
     } else if (!title) return;
-    const handout = { id: "h" + Date.now(), kind: d.kind, title, image, text, ...(item ? { item, toCharId } : {}), sceneId: d.sceneId === undefined ? activeSceneIdOf(campaignStage) : d.sceneId || null, ts: Date.now() };
+    const handout = { id: "h" + Date.now(), kind: d.kind, title, image, text, ...(item ? { item, toCharId } : {}), sceneId: d.sceneId === undefined ? activeSceneIdOf(campaignStage) : d.sceneId || null, ts: Date.now(), ...(deliver ? {} : { hidden: true }) };
     await saveStage(viewingCampaignId, { handouts: [handout, ...(campaignStage.handouts || [])] });
     setHandoutDraft({ kind: d.kind, title: "", image: "", text: "" });
+    if (!deliver) return;
     const who = toCharId ? characters[toCharId]?.f_name : "";
     postChat(viewingCampaignId, { kind: "share", author: "El DJ", gm: true, text: "", share: { type: "handout", name: handout.title, sub: (item ? "Objeto" + (who ? " para " + who : "") : "Pista · " + (HANDOUT_KINDS.find((k) => k.key === handout.kind)?.label || "")), handout } });
   };
@@ -15365,7 +15374,9 @@ export default function App({ onSignOut }) {
     const chp = stageScenesOf(campaignStage).find((x) => x.id === chId);
     if (chp) setChapterOrder(chId, chapterItems(chp, [...campaignMaps, m]).map((i) => i.key));
     if ((campaignStage.live || "escena") !== "mapa") {
-      await loadSavedMap(m, true);
+      await loadSavedMap(m, true, true);
+      setEditMapId(m.id);
+      setMapSaved(false);
       setCombatBack(chId);
       setCampaignDetailTab("mapa");
     }
@@ -15843,7 +15854,7 @@ export default function App({ onSignOut }) {
     await safeSet("campaign-maps:" + viewingCampaignId, JSON.stringify(next), true);
   };
   // Cargar un mapa guardado: sustituye terreno, decorados, enemigos y cuentas atrás; las fichas de los jugadores se quedan.
-  const loadSavedMap = async (m, skipConfirm) => {
+  const loadSavedMap = async (m, skipConfirm, quiet) => {
     if (!viewingCampaignId || (!skipConfirm && !window.confirm("¿Cargar «" + m.name + "»? Sustituye el mapa actual (las fichas de los jugadores se quedan)."))) return false;
     const keep = (campaignMap.tokens || []).filter((t) => t.kind === "pc" || t.kind === "pet");
     const next = { tokens: [...(m.map.tokens || []).map((t) => ({ ...t })), ...keep], props: m.map.props || [], terrain: m.map.terrain || [], counters: m.map.counters || [], ...(m.map.fog ? { fog: m.map.fog } : {}), bg: m.map.bg || "", mapId: m.id, areas: [], hits: [], log: [] };
@@ -15851,7 +15862,28 @@ export default function App({ onSignOut }) {
     setCampaignMap(next);
     await safeSet("campaign-map:" + viewingCampaignId, JSON.stringify(next), true);
     setMapSel(null);
-    postChat(viewingCampaignId, { kind: "event", author: "El DJ", gm: true, icon: "escena", text: "prepara el mapa «" + m.name + "»" });
+    if (!quiet) postChat(viewingCampaignId, { kind: "event", author: "El DJ", gm: true, icon: "escena", text: "prepara el mapa «" + m.name + "»" });
+    return true;
+  };
+  // Lo que se guarda de un tablero: todo menos las fichas de los jugadores y sus mascotas.
+  const boardSnap = () => ({ tokens: (campaignMap.tokens || []).filter((t) => t.kind !== "pc" && t.kind !== "pet"), props: campaignMap.props || [], terrain: campaignMap.terrain || [], counters: campaignMap.counters || [], ...(campaignMap.fog ? { fog: campaignMap.fog } : {}), ...(campaignMap.bg ? { bg: campaignMap.bg } : {}) });
+  // Editar un mapa de combate del capítulo: se abre en el tablero (sin lanzar el combate) y se guarda de vuelta en el mismo mapa.
+  const editMap = async (m) => {
+    if (!viewingCampaignId) return;
+    if (campaignMap.mapId !== m.id) {
+      if ((campaignStage.live || "escena") === "mapa" && !window.confirm("Ahora hay un combate en directo. Editar «" + m.name + "» sustituye el tablero que ven los jugadores. ¿Continuar?")) return;
+      if (!(await loadSavedMap(m, true, true))) return;
+    }
+    setEditMapId(m.id);
+    setMapSaved(false);
+    setCombatBack(m.sceneId);
+    setCampaignDetailTab("mapa");
+  };
+  const saveEditedMap = async () => {
+    const m = campaignMaps.find((x) => x.id === editMapId);
+    if (!m) return false;
+    await saveMapsLib(campaignMaps.map((x) => (x.id === m.id ? { ...x, map: boardSnap() } : x)));
+    setMapSaved(true);
     return true;
   };
   const saveCurrentMap = async () => {
@@ -30086,7 +30118,7 @@ export default function App({ onSignOut }) {
                                           <span className="cgs-card-ic"><MapPinned size={20} /></span>
                                           <div className="cgs-card-t"><b>{m.name}</b><small>Mapa de combate · {(m.map.tokens || []).length} fichas</small></div>
                                           <div className="cgs-card-a">
-                                            <button type="button" className="mh-btn" onClick={() => startCombat(sel.id, m)}><Swords size={13} /> Combatir</button>
+                                            <button type="button" className="mh-btn" onClick={() => editMap(m)}><Pencil size={13} /> Editar</button>
                                             <button type="button" className="mh-gm-ib is-del" aria-label={"Borrar " + m.name} title="Borrar el mapa" onClick={() => window.confirm("¿Borrar el mapa «" + m.name + "»?") && saveMapsLib(campaignMaps.filter((x) => x.id !== m.id))}><Trash2 size={14} /></button>
                                           </div>
                                         </article>
@@ -30495,8 +30527,8 @@ export default function App({ onSignOut }) {
                                       <option key={sc.id} value={sc.id}>{"Cap. " + (i + 1) + " · " + (sc.title || "Sin título")}</option>
                                     ))}
                                   </select>
-                                  <button type="button" className="mh-btn" onClick={() => startCombat(chapter.id, m)}>
-                                    <Swords size={13} /> Pasar al combate
+                                  <button type="button" className="mh-btn" onClick={() => editMap(m)}>
+                                    <Pencil size={13} /> Editar
                                   </button>
                                   <button type="button" className="mh-gm-ib is-del" aria-label={"Borrar " + m.name} title="Borrar el mapa" onClick={() => window.confirm("¿Borrar el mapa guardado «" + m.name + "»?") && saveMapsLib(campaignMaps.filter((x) => x.id !== m.id))}>
                                     <Trash2 size={14} />
@@ -30670,8 +30702,8 @@ export default function App({ onSignOut }) {
                                       <option key={sc.id} value={sc.id}>{"Cap. " + (i + 1) + " · " + (sc.title || "Sin título")}</option>
                                     ))}
                                   </select>
-                                  <button type="button" className="mh-btn" disabled={si < 0} onClick={() => startCombat(m.sceneId, m)}>
-                                    <Swords size={13} /> Combatir
+                                  <button type="button" className="mh-btn" disabled={si < 0} onClick={() => editMap(m)}>
+                                    <Pencil size={13} /> Editar
                                   </button>
                                   <button type="button" className="mh-gm-ib is-del" aria-label={"Borrar " + m.name} title="Borrar el mapa" onClick={() => window.confirm("¿Borrar el mapa guardado «" + m.name + "»?") && saveMapsLib(campaignMaps.filter((x) => x.id !== m.id))}>
                                     <Trash2 size={14} />
@@ -30732,7 +30764,7 @@ export default function App({ onSignOut }) {
                                       <div className={"mh-pst-art is-" + h.kind} style={h.image ? { backgroundImage: `url("${h.image.replace(/"/g, "%22")}")` } : undefined}>
                                         {!h.image && <KIcon size={26} strokeWidth={1.4} />}
                                         <span className="mh-pst-k"><KIcon size={11} /> {kind.label}</span>
-                                        <span className={"mh-pst-st" + (h.hidden ? "" : " is-on")}>{h.hidden ? <><EyeOff size={11} /> Oculta</> : <><Eye size={11} /> Entregada</>}</span>
+                                        <span className={"mh-pst-st" + (h.hidden ? "" : " is-on")}>{h.hidden ? <><EyeOff size={11} /> Guardada</> : <><Eye size={11} /> Entregada</>}</span>
                                       </div>
                                       <div className="mh-pst-body">
                                         <b>{h.title}</b>
@@ -30745,7 +30777,7 @@ export default function App({ onSignOut }) {
                                         ) : (
                                           <>
                                             <button type="button" className="mh-btn-ghost" onClick={() => sendNote(h.id)} title="Volver a enviarla al chat"><Send size={13} /> Reenviar</button>
-                                            <button type="button" className="mh-btn-ghost" onClick={() => toggleHandout(h.id)} title="Ocultarla a los jugadores"><EyeOff size={13} /> Ocultar</button>
+                                            <button type="button" className="mh-btn-ghost" onClick={() => toggleHandout(h.id)} title="Retirarla: los jugadores dejan de verla y queda guardada"><EyeOff size={13} /> Retirar</button>
                                           </>
                                         )}
                                         <button type="button" className="mh-pst-del" aria-label={"Quitar " + h.title} title="Quitar" onClick={() => removeHandout(h.id)}><Trash2 size={14} /></button>
@@ -30844,8 +30876,11 @@ export default function App({ onSignOut }) {
                             <option value="">Sin capítulo</option>
                             {scs.map((sc, i) => <option key={sc.id} value={sc.id}>{"Cap. " + (i + 1) + " · " + (sc.title || "Sin título")}</option>)}
                           </select>
-                          <button type="button" className="mh-btn mh-pst-go" disabled={handoutDraft.kind === "imagen" ? !handoutDraft.image.trim() : handoutDraft.kind === "personaje" ? !handoutDraft.castKey : !handoutDraft.title.trim()} onClick={() => { addHandout(); setPstNew(false); }}>
-                            <Send size={14} /> {handoutDraft.kind === "objeto" && handoutDraft.toCharId ? "Entregar a " + (characters[handoutDraft.toCharId]?.f_name || "personaje") : "Entregar a los jugadores"}
+                          <button type="button" className="mh-btn-ghost mh-pst-go" disabled={handoutDraft.kind === "imagen" ? !handoutDraft.image.trim() : handoutDraft.kind === "personaje" ? !handoutDraft.castKey : !handoutDraft.title.trim()} onClick={() => { addHandout(false); setPstNew(false); }}>
+                            <Archive size={14} /> Guardar para más tarde
+                          </button>
+                          <button type="button" className="mh-btn mh-pst-go" disabled={handoutDraft.kind === "imagen" ? !handoutDraft.image.trim() : handoutDraft.kind === "personaje" ? !handoutDraft.castKey : !handoutDraft.title.trim()} onClick={() => { addHandout(true); setPstNew(false); }}>
+                            <Send size={14} /> {handoutDraft.kind === "objeto" && handoutDraft.toCharId ? "Entregar a " + (characters[handoutDraft.toCharId]?.f_name || "personaje") : "Entregar ahora"}
                           </button>
                               </div>
                             </div>
@@ -30938,8 +30973,6 @@ export default function App({ onSignOut }) {
                                   </div>
                                   <small className="cgp-npc-w">{w.length ? "En " + w.map(({ i }) => "cap. " + (i + 1)).join(", ") : "Sin usar todavía"}</small>
                                   <div className="cgp-npc-acts">
-                                    <button type="button" className="mh-btn-ghost" disabled={!target} title={target ? "Escribir un diálogo en «" + (target.title || "Sin título") + "»" : "Crea antes un capítulo en «Historia»"} onClick={() => (setDialogueDraft((d) => ({ ...d, castId: m.id, expr: "tranquila" })), openChapter(target.id))}><MessageSquareQuote size={13} /> Diálogo</button>
-                                    <button type="button" className="mh-btn-ghost" disabled={!target} title={target ? "Abrir el combate de «" + (target.title || "Sin título") + "»" : "Crea antes un capítulo en «Historia»"} onClick={() => (setCombatBack(target.id), setCampaignDetailTab("mapa"))}><Swords size={13} /> Combate</button>
                                     <button type="button" className="mh-btn-ghost" onClick={() => castOpen(m)}><PenLine size={13} /> Editar</button>
                                   </div>
                                 </article>
@@ -31076,7 +31109,7 @@ export default function App({ onSignOut }) {
                             const origin = [ch.f_ancestry, ch.f_community].filter(Boolean).join(" · ");
                             const acct = table.find((e) => (e.chars || []).includes(id))?.name || playerName || "Sin cuenta";
                             return (
-                              <div key={id} className={"mh-card mh-gc" + (ch.f_is_dead === "1" ? " is-dead" : "") + (hasArt ? " has-art" : "")} style={{ "--k": col }} role="button" tabIndex={0} onClick={() => openModern(id)} onKeyDown={(e) => e.key === "Enter" && e.target === e.currentTarget && openModern(id)}>
+                              <div key={id} className={"mh-card mh-gc" + (ch.f_is_dead === "1" ? " is-dead" : "") + (hasArt ? " has-art" : "")} style={{ "--k": col }}>
                                 {hasArt && <div className="mh-gc-art" aria-hidden="true" style={art ? { backgroundImage: "url(" + art + ")", backgroundPosition: "58% 6%" } : { backgroundImage: "url(" + CLASS_ART[ch.f_class] + ")", backgroundPosition: "50% " + (CLASS_ART_Y[ch.f_class] ?? 20) + "%" }} />}
                                 <div className="mh-gc-top">
                                   {ch.f_class ? <span className="mh-gc-lv" title={"Nivel " + (ch.f_level || "1")}>Nv {ch.f_level || "1"}</span> : <span />}
@@ -31162,9 +31195,21 @@ export default function App({ onSignOut }) {
                     );
                     return (
                       <div className="mh-card mh-gm-box mh-map-gm" style={{ margin: 0 }}>
+                        {editMapId && campaignMaps.some((x) => x.id === editMapId) && (
+                          <div className="mh-ch-bar mh-map-editbar">
+                            <span><Pencil size={13} /> Editando «{campaignMaps.find((x) => x.id === editMapId).name}»</span>
+                            <button type="button" className="mh-btn" onClick={saveEditedMap}><Check size={13} /> {mapSaved ? "Guardado" : "Guardar"}</button>
+                          </div>
+                        )}
                         {backTo && (
                           <div className="mh-ch-bar">
-                            <button type="button" className="mh-btn-ghost" onClick={() => (setChapterId(backTo.id), setConvSceneId(backTo.id), setCampaignDetailTab("historia"))}>
+                            <button type="button" className="mh-btn-ghost" onClick={async () => {
+                              if (editMapId) {
+                                if (!mapSaved && window.confirm("¿Guardar los cambios del mapa antes de volver al capítulo?")) await saveEditedMap();
+                                setEditMapId(null);
+                              }
+                              setChapterId(backTo.id); setConvSceneId(backTo.id); setCampaignDetailTab("historia");
+                            }}>
                               <ChevronLeft size={14} /> Volver al capítulo «{backTo.title || "Sin título"}»
                             </button>
                           </div>
