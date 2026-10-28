@@ -17331,8 +17331,8 @@ export default function App({ onSignOut }) {
   useEffect(() => {
     const el = cgNavRef.current;
     if (!el || typeof ResizeObserver === "undefined") return undefined;
-    // En «Directo» la barra comparte la fila con X-Card, Medallas y Ambiente, así que necesita más ancho para mostrar todos los nombres.
-    const need = campaignDetailTab === "mesa" ? 1640 : 1340;
+    // El resto de la campaña no supera 1337 px de barra, así que ahí siempre se compacta; «Directo» (máx. 1760 px, con X-Card, Medallas y Ambiente en la misma fila) sigue el mismo criterio para que ambos menús se vean igual.
+    const need = campaignDetailTab === "mesa" ? 1780 : 1340;
     const ro = new ResizeObserver(() => setCgCompact(el.clientWidth < need));
     ro.observe(el);
     setCgCompact(el.clientWidth < need);
