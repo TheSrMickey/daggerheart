@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useState, useEffect, useLayoutEffect, useRef, useCallback, createContext, useContext } from "react";
-import { createPortal } from "react-dom";
+import { createPortal, flushSync } from "react-dom";
 import { GripVertical } from "lucide-react";
 import { Globe, Tent, Haze, CloudFog, CloudRain, CloudLightning, Beer } from "lucide-react";
 import SceneFx, { SCENE_FX } from "./SceneFx";
@@ -5725,6 +5725,15 @@ const sharedStyles = `
   .mh-cg.has-banner:not(.is-flat) .mh-cg-nav button.is-on { color: var(--mh-ink); background: none; border: 0; box-shadow: none; } .mh-cg.has-banner:not(.is-flat) .mh-cg-nav button.is-on::after { transform: scaleX(1); } .mh-cg.has-banner:not(.is-flat) .mh-cg-nav button.is-on svg { color: #E3B04B; }
   .mh-cg.has-banner:not(.is-flat) .mh-cg-nav button:focus-visible { outline: 2px solid #E3B04B; outline-offset: -2px; border-radius: 6px; }
   .mh-cg-nav button.is-live svg { color: #E8776F; animation: mh-pulse 2.2s ease-in-out infinite; } .mh-cg-nav button.is-live.is-on svg { color: #E8776F; }
+  /* Transición entre «Directo» y el resto de pestañas de la campaña */
+  .mh-vt-cg .mh-cgb { view-transition-name: cg-banner; } .mh-vt-cg .mh-cgt { view-transition-name: cg-menu; } .mh-vt-cg .mh-cg-body { view-transition-name: cg-body; }
+  ::view-transition-group(cg-banner), ::view-transition-group(cg-menu) { animation-duration: .42s; animation-timing-function: cubic-bezier(.3,.8,.25,1); }
+  ::view-transition-old(cg-body) { animation: mh-vt-out .2s ease both; } ::view-transition-new(cg-body) { animation: mh-vt-in .42s cubic-bezier(.2,.8,.2,1) .06s both; }
+  @keyframes mh-vt-out { to { opacity: 0; transform: translateY(6px) scale(.992); } } @keyframes mh-vt-in { from { opacity: 0; transform: translateY(14px) scale(.985); } }
+  /* Botones de la fila del menú en «Directo» */
+  .mh-cgt .mh-cg-acts { gap: 6px; } .mh-cgt .mh-cg-acts button { margin: 0; padding: 7px 13px; border-radius: 10px; border: 1px solid transparent; font: 600 12.5px 'Inter', system-ui, sans-serif; color: var(--mh-muted); transition: background .15s, color .15s, border-color .15s; } .mh-cgt .mh-cg-acts button:hover { color: var(--mh-ink); background: color-mix(in srgb, var(--mh-ink) 7%, transparent); }
+  .mh-cgt .mh-cg-acts .mh-dir-pause.is-on { background: #D9644E; border-color: #F08A78; color: #fff; box-shadow: 0 0 0 3px #D9644E33, 0 8px 18px -8px #D9644E; animation: mh-xc-pulse 1.8s ease-in-out infinite; } .mh-cgt .mh-cg-acts .mh-dir-pause.is-on:hover { background: #E2755F; }
+  @keyframes mh-xc-pulse { 50% { box-shadow: 0 0 0 6px #D9644E1f, 0 8px 18px -8px #D9644E; } } @media (prefers-reduced-motion: reduce) { .mh-cgt .mh-cg-acts .mh-dir-pause.is-on { animation: none; } }
   .mh-cg.has-banner > .mh-cg-navrow { display: none !important; }
   .mh-cgt .mh-cg-acts { flex: none; align-self: center; margin-left: 0; }
   .mh-cg-nav-sep { align-self: center; flex: none; width: 1px; height: 22px; background: var(--mh-line2); margin: 0 4px; }
@@ -11484,6 +11493,17 @@ export default function App({ onSignOut }) {
   const [pendingDeleteCampaignId, setPendingDeleteCampaignId] = useState(null);
   const [campaignDetailTab, setCampaignDetailTab] = useState("historia");
   const campTabNext = useRef(null); // pestaña a la que abrir la próxima campaña (p. ej. el calendario desde Inicio); si no, «historia»
+  // Entrar o salir de «Directo» con una transición suave de toda la vista (View Transitions) si el navegador la admite.
+  const goCgTab = (key) => {
+    const run = () => setCampaignDetailTab(key);
+    const smooth = typeof document !== "undefined" && typeof document.startViewTransition === "function" && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!smooth || key === campaignDetailTab || (key !== "mesa" && campaignDetailTab !== "mesa")) return run();
+    const root = document.documentElement;
+    root.classList.add("mh-vt-cg");
+    const t = document.startViewTransition(() => flushSync(run));
+    const done = () => root.classList.remove("mh-vt-cg");
+    t.finished.then(done, done);
+  };
   // Al abrir una campaña se aterriza ya en su pestaña inicial (sin pasar por «Directo» mientras cargan los datos).
   const [campTabFor, setCampTabFor] = useState(null);
   if (viewingCampaignId !== campTabFor) {
@@ -29251,7 +29271,7 @@ export default function App({ onSignOut }) {
                           <span key={sp.key} className="mh-cgt-g">
                             {gi > 0 && <span className="mh-cgt-sep" aria-hidden="true" />}
                             {sp.tabs.filter((t) => t.key !== "mapas").map((t) => (
-                              <button key={t.key} type="button" role="tab" aria-selected={campaignDetailTab === t.key} className={"is-base" + (campaignDetailTab === t.key ? " is-on" : "")} title={t.label} onClick={() => setCampaignDetailTab(t.key)}>
+                              <button key={t.key} type="button" role="tab" aria-selected={campaignDetailTab === t.key} className={"is-base" + (campaignDetailTab === t.key ? " is-on" : "")} title={t.label} onClick={() => goCgTab(t.key)}>
                                 <t.Icon size={15} strokeWidth={1.8} /> <span className="lbl">{t.label}</span>
                               </button>
                             ))}
@@ -29259,7 +29279,7 @@ export default function App({ onSignOut }) {
                         ))}
                         <span className="mh-cgt-g">
                           <span className="mh-cgt-sep" aria-hidden="true" />
-                          <button type="button" role="tab" aria-selected={campaignDetailTab === "mesa"} className={"is-live" + (campaignDetailTab === "mesa" ? " is-on" : "")} style={{ "--tone": "#E8776F" }} onClick={() => setCampaignDetailTab(live.tabs[0].key)}>
+                          <button type="button" role="tab" aria-selected={campaignDetailTab === "mesa"} className={"is-live" + (campaignDetailTab === "mesa" ? " is-on" : "")} style={{ "--tone": "#E8776F" }} onClick={() => goCgTab(live.tabs[0].key)}>
                             <Radio size={15} strokeWidth={1.8} /> <span className="lbl-full">Directo</span>
                           </button>
                         </span>
@@ -29326,7 +29346,6 @@ export default function App({ onSignOut }) {
                     );
                     const renderBar = () => (
                       <div className="mh-dir-bar">
-                        <span className="mh-dir-lbl">Voy a</span>
                         <div className="mh-dir-live" role="tablist" aria-label="Qué estás viendo tú" inert={xLock || undefined}>
                           {STAGE_TABS.map((t) => {
                             const TI = t.Icon;
@@ -29345,9 +29364,7 @@ export default function App({ onSignOut }) {
                               <Play size={13} /> Mostrar
                             </button>
                           </>
-                        ) : (
-                          <span className="mh-dir-seen2"><Check size={13} /> Ven lo mismo que tú</span>
-                        )}
+                        ) : null}
                         {scenes.length > 0 && (
                           <div className="mh-dir-chnav" inert={xLock || undefined}>
                             <button type="button" className="mh-gm-ib" aria-label={vcIdx === 0 ? "Sin escena" : "Capítulo anterior"} title={vcIdx === 0 ? "Sin escena (solo lo ves tú hasta que pulses Mostrar)" : "Capítulo anterior (solo tú)"} disabled={vcIdx < 0} onClick={() => (setDjStep(null), setDjCh(vcIdx === 0 ? "__none" : scenes[vcIdx - 1].id))}>
