@@ -9,6 +9,11 @@ export const CHANGELOG = [
     title: "Combate en el móvil y cartas jugables",
     blurb: "El móvil estrena un modo combate a pantalla completa y en vertical, y ya puedes arrastrar cartas al mapa con su animación para toda la mesa.",
     items: [
+      { tag: "arreglo", text: "Campañas · al entrar en una campaña propia ya aterrizas directamente en «Capítulos», sin pasar un instante por «Directo»." },
+      { tag: "mejora", text: "Capítulos · los mapas de combate ahora se «Editan» en lugar de «Combatir»: se abren en el tablero sin lanzar el combate, hay un botón «Guardar» y, al volver al capítulo, te pregunta si guardar los cambios, así que lo que añades ya no se reinicia. Un mapa nuevo se abre directamente en edición." },
+      { tag: "mejora", text: "PNJ · se quitan los botones de diálogo y de combate de cada PNJ; solo se pueden editar." },
+      { tag: "nuevo", text: "Pistas · al crear una pista puedes «Guardar para más tarde» (queda guardada y oculta) o «Entregar ahora»; las guardadas se entregan cuando quieras con «Entregar», y «Retirar» las vuelve a guardar." },
+      { tag: "mejora", text: "Jugadores · el destello al pasar el ratón ya no se corta por arriba, las medallas tienen más aire respecto al nombre y las tarjetas ya no abren la hoja del personaje." },
       { tag: "mejora", text: "Chat · todos los mensajes de la mesa comparten la misma tarjeta (quién y qué hace, hora, etiqueta de color y pie): descansos, X-Card, uso de cartas, medallas y resultados de votación dejan de tener formatos propios, los eventos llevan la acción en la cabecera y «Escena» ya no repite el color de «Habilidad»." },
       { tag: "arreglo", text: "Móvil · en el modo combate a pantalla completa ya se ven las ventanas de tiradas y de resultados sin tener que salir, y si sales del modo combate hay un botón «Combate a pantalla completa» para volver sin recargar la página." },
       { tag: "nuevo", text: "Generadores · los enemigos de los encuentros salen con estadísticas (dificultad, PV, Estrés, umbrales, ataque y motivaciones) según su rol y el rango del encuentro, y se pueden desplegar. Nuevo selector de «Jugadores en la mesa» (1–8) que ajusta los puntos de combate y la dificultad. Al colocarlos en el mapa las fichas llevan sus estadísticas." },
