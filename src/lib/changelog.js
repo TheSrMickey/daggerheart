@@ -9,6 +9,7 @@ export const CHANGELOG = [
     title: "Combate en el móvil y cartas jugables",
     blurb: "El móvil estrena un modo combate a pantalla completa y en vertical, y ya puedes arrastrar cartas al mapa con su animación para toda la mesa.",
     items: [
+      { tag: "mejora", text: "Capítulos · las conversaciones se ven ahora bajo la escena en la que se crearon (con su número de líneas y un acceso directo para abrirlas) y el contenido del capítulo se desliza en vertical con un difuminado en la parte inferior." },
       { tag: "arreglo", text: "Jugadores · se quitan las barras de desplazamiento sobrantes de la pestaña y el nombre de la cuenta de cada personaje vuelve a verse (ahora justo bajo la clase)." },
       { tag: "nuevo", text: "Jugadores · nueva tarjeta con un «+» del tamaño de las de los jugadores para añadir otro personaje a la campaña." },
       { tag: "arreglo", text: "Línea de tiempo · escenas, diálogos y combates respetan el orden que les des (si un combate va antes que una escena, sale antes) en la línea de tiempo de Capítulos, en la del capítulo y en la de Directo, y se reordena al moverlos." },
