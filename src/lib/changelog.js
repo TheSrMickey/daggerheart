@@ -9,6 +9,7 @@ export const CHANGELOG = [
     title: "El Oráculo del DJ",
     blurb: "Un anillo de luz que responde a las preguntas de la mesa: Sí / No, con matices o con una tirada de destino, solo para el DJ y a un toque bajo el chat.",
     items: [
+      { tag: "mejora", text: "Campaña desde la hoja de personaje · ahora sigue la estructura de la vista Directo del DJ: el banner de tu hoja se queda arriba, y debajo una barra con lo que muestra el DJ (Escena, Combate, Mundo...), el capítulo, quién tiene el foco y el Miedo, y la zona de juego con tus cartas como antes." },
       { tag: "mejora", text: "Directo · barra del DJ reorganizada en una sola fila sin huecos: menú de vista, capítulo, una franja de estado que se estira («Ven: Cap. 1 · Combate» con «Mostrar» cuando tú y los jugadores veis cosas distintas, o «Todos ven: …» en verde cuando coincidís) y el foco al final." },
       { tag: "nuevo", text: "Directo · el foco de la mesa tiene ahora una píldora en la barra del DJ, junto al menú Escena · Combate · Mundo · Personajes: muestra quién tiene el foco y desde cuándo, las manos levantadas y un botón «Pasar el foco» con el mismo menú del banner (jugadores, DJ o apagar el foco)." },
       { tag: "mejora", text: "Directo · el logo de «Sin escena» (en la pantalla del DJ y en la de los jugadores) ahora respira despacio —brilla y se apaga— mientras a su alrededor aparecen y se desvanecen pequeñas chispas, y los puntos de «A la espera de una escena…» se animan. Se detiene si tienes activada la reducción de movimiento." },

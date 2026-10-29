@@ -150,7 +150,7 @@ export function ModernSheet({ d, actions, content, tab, onTab, fill }) {
           {li.maxed ? <div className="max">Has llegado al nivel máximo.</div> : <button type="button" onClick={() => (setLvOpen(false), actions.levelUp())}>Subir al nivel {d.level + 1}</button>}
         </div>
       )}
-      <div className={"mhm-headwrap" + (fill ? " is-collapsed" : "")}>
+      <div className={"mhm-headwrap" + (fill && mobile ? " is-collapsed" : "")}>
       <section className={"mhm-head" + (d.color2 ? " is-multi" : "")}>
         {d.art ? (
           <>
