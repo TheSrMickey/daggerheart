@@ -6015,9 +6015,16 @@ const sharedStyles = `
   .mh-dir-mapout > .mh-stg-live.is-prev { position: absolute; left: 12px; top: 12px; z-index: 6; }
   /* La barra no se parte en dos líneas: «Ven…» y el selector de capítulo se encogen y, si aun así no cabe, las pestañas inactivas quedan solo con el icono */
   .mh-dir-bar { flex-wrap: nowrap; container: dirbar / inline-size; } .mh-dir-live, .mh-dir-show { flex: none; } .mh-dir-ven { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-  .mh-dir-chnav { flex: 0 1 auto; min-width: 0; } .mh-dir-chpill { flex: 0 1 230px; width: auto; min-width: 64px; }
+  .mh-dir-chnav { flex: 0 1 auto; min-width: 0; margin-left: 0; } .mh-dir-chpill { flex: 0 1 190px; width: auto; min-width: 64px; }
+  .mh-dir-st { flex: 1 1 0; min-width: 0; display: flex; align-items: center; gap: 8px; height: 37px; padding: 3px 3px 3px 12px; border-radius: 999px; border: 1px dashed var(--mh-line2); font-size: 12px; font-weight: 600; color: var(--mh-ink3); }
+  .mh-dir-st > i { flex: none; width: 8px; height: 8px; border-radius: 50%; background: #58d68d; box-shadow: 0 0 0 3px rgba(88,214,141,.22); }
+  .mh-dir-st-t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mh-dir-st.is-diff { border-style: solid; border-color: rgba(224,84,74,.5); background: rgba(224,84,74,.12); color: var(--mh-ink); } .mh-dir-st.is-diff > i { background: #E0544A; box-shadow: 0 0 0 3px rgba(224,84,74,.28); }
+  .mh-dir-st .mh-dir-show { flex: none; height: 29px; padding: 0 13px; border-radius: 999px; }
+  .mh-dir-bar .fp { margin-left: 0; }
   @container dirbar (max-width: 880px) { .mh-dir-live button:not(.is-on) span { display: none; } .mh-dir-live button:not(.is-on) { padding: 6px 9px; } .mh-dir-chpill { flex-basis: 150px; } }
-  @container dirbar (max-width: 700px) { .mh-dir-ven { display: none; } }
+  @container dirbar (max-width: 780px) { .mh-dir-st .mh-dir-show span { display: none; } .mh-dir-st .mh-dir-show { padding: 0 9px; } }
+  @container dirbar (max-width: 640px) { .mh-dir-st-t { display: none; } .mh-dir-st { flex: none; padding-left: 10px; } }
   .mh-tl-sub { text-transform: none !important; letter-spacing: 0 !important; color: var(--mh-ink3) !important; }
   @keyframes mhTlIn { from { transform: translateX(38%); opacity: .35; } to { transform: none; opacity: 1; } }
   @media (prefers-reduced-motion: reduce) { .mh-tl-track { animation: none; } }
@@ -29425,14 +29432,6 @@ export default function App({ onSignOut }) {
                             );
                           })}
                         </div>
-                        {diverged ? (
-                          <>
-                            <span className="mh-dir-ven" title="Lo que ven ahora los jugadores"><i />Ven: {cur ? "Cap. " + (idx + 1) + " · " : ""}{{ escena: "Escena", mapa: "Combate", mundo: "Mundo", pistas: "Pistas", personajes: "Personajes" }[live]}</span>
-                            <button type="button" className="mh-btn mh-dir-show" onClick={publishMine} title="Los jugadores pasarán a ver lo que tienes tú ahora">
-                              <Play size={13} /> Mostrar
-                            </button>
-                          </>
-                        ) : null}
                         {scenes.length > 0 && (
                           <div className="mh-dir-chnav" inert={xLock || undefined}>
                             <button type="button" className="mh-gm-ib" aria-label={vcIdx === 0 ? "Sin escena" : "Capítulo anterior"} title={vcIdx === 0 ? "Sin escena (solo lo ves tú hasta que pulses Mostrar)" : "Capítulo anterior (solo tú)"} disabled={vcIdx < 0} onClick={() => (setDjStep(null), setDjCh(vcIdx === 0 ? "__none" : scenes[vcIdx - 1].id))}>
@@ -29446,6 +29445,17 @@ export default function App({ onSignOut }) {
                             </button>
                           </div>
                         )}
+                        <div className={"mh-dir-st " + (diverged ? "is-diff" : "is-sync")} inert={xLock || undefined}>
+                          <i aria-hidden="true" />
+                          <span className="mh-dir-st-t" title={diverged ? "Lo que ven ahora los jugadores" : "Tú y los jugadores veis lo mismo"}>
+                            {diverged ? "Ven: " : "Todos ven: "}{cur ? "Cap. " + (idx + 1) + " · " : ""}{{ escena: "Escena", mapa: "Combate", mundo: "Mundo", pistas: "Pistas", personajes: "Personajes" }[live]}
+                          </span>
+                          {diverged && (
+                            <button type="button" className="mh-btn mh-dir-show" onClick={publishMine} title="Los jugadores pasarán a ver lo que tienes tú ahora">
+                              <Play size={13} /> <span>Mostrar</span>
+                            </button>
+                          )}
+                        </div>
                         {!xLock && (
                           <FocusPill
                             spot={campaignMap.spot}
