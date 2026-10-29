@@ -27,7 +27,8 @@ import { Generators } from "./Generators";
 import { CampaignCalendar, HomeNextSession } from "./Calendar";
 import { HomeHero } from "./HomeHero";
 import { PollsGm, ActivePoll, PollSwap, PollResultCard, pollFoot, outcome as pollOutcome } from "./Polls";
-import Oracle, { OracleChatBody } from "./Oracle";
+import { useDoc } from "@/lib/campaignDocs";
+import OracleDj, { OracleChatBody, OraclePlayers } from "./Oracle";
 import { MedalsGm, MedalWatcher, MedalChatCard, MedalShelf, medalOf } from "./Medals";
 import { RestGm, RestQuick, RestBanner, GroupRestDialog, RestLock } from "./GroupRest";
 import NpcStatsEditor, { npcStatsSummary, npcTokenStats, NpcStatsView } from "./NpcStats";
@@ -6012,7 +6013,11 @@ const sharedStyles = `
   .mh-dir-seen2 { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; color: var(--mh-green-ink, #4cc36b); white-space: nowrap; }
   .mh-dir-prevbar { position: absolute; right: 12px; top: 12px; z-index: 6; display: flex; gap: 6px; align-items: center; } .mh-dir-prevbar .mh-btn-ghost { background: var(--mh-panel); display: inline-flex; gap: 5px; align-items: center; font-size: 12px; padding: 6px 11px; } .mh-dir-prevbar select { padding: 5px 8px; font-size: 12px; max-width: 200px; }
   .mh-dir-mapout > .mh-stg-live.is-prev { position: absolute; left: 12px; top: 12px; z-index: 6; }
-  .mh-dir-bar { row-gap: 6px; }
+  /* La barra no se parte en dos líneas: «Ven…» y el selector de capítulo se encogen y, si aun así no cabe, las pestañas inactivas quedan solo con el icono */
+  .mh-dir-bar { flex-wrap: nowrap; container: dirbar / inline-size; } .mh-dir-live, .mh-dir-show { flex: none; } .mh-dir-ven { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .mh-dir-chnav { flex: 0 1 auto; min-width: 0; } .mh-dir-chpill { flex: 0 1 230px; width: auto; min-width: 64px; }
+  @container dirbar (max-width: 880px) { .mh-dir-live button:not(.is-on) span { display: none; } .mh-dir-live button:not(.is-on) { padding: 6px 9px; } .mh-dir-chpill { flex-basis: 150px; } }
+  @container dirbar (max-width: 700px) { .mh-dir-ven { display: none; } }
   .mh-tl-sub { text-transform: none !important; letter-spacing: 0 !important; color: var(--mh-ink3) !important; }
   @keyframes mhTlIn { from { transform: translateX(38%); opacity: .35; } to { transform: none; opacity: 1; } }
   @media (prefers-reduced-motion: reduce) { .mh-tl-track { animation: none; } }
@@ -11552,7 +11557,6 @@ export default function App({ onSignOut }) {
   const [stageWide, setStageWide] = useState(false);
   const [editingSceneId, setEditingSceneId] = useState(null);
   const [chapterId, setChapterId] = useState(null); // capítulo (escena) que el DJ prepara en «Historia»
-  const [oracleOpen, setOracleOpen] = useState(false); // el Oráculo del DJ (respuestas aleatorias)
   const [gAddOpen, setGAddOpen] = useState(false);
   const [editMapId, setEditMapId] = useState(null); // mapa de combate de la biblioteca que se está editando en el tablero
   const [mapSaved, setMapSaved] = useState(false);
@@ -11570,6 +11574,7 @@ export default function App({ onSignOut }) {
   const [chOpen, setChOpen] = useState(false); // ventana de edición del capítulo (escena o diálogos)
   const [newChName, setNewChName] = useState(""); // nombre del capítulo que se está creando
   const [chAsk, setChAsk] = useState(false); // tras crear un capítulo: ¿escena o mapa de combate?
+  const [worldDoc] = useDoc("campaign-worldmap:" + (viewingCampaignId || "none"), { image: "", seasons: {}, hex: null }, 6000); // para saber si la campaña tiene mapa del mundo
   const cgNavRef = useRef(null); // barra de pestañas de la campaña
   const [cgCompact, setCgCompact] = useState(true); // pestañas con solo el icono salvo la activa
   const ambBtn = useRef(null);
@@ -14310,7 +14315,7 @@ export default function App({ onSignOut }) {
     return ch
       ? { author: ch.f_name || "Un personaje", charId: viewingCharId, cls: ch.f_class || "", player: playerName || "" }
       : gmViewing
-      ? { author: "El DJ", gm: true, player: playerName || "" }
+      ? { author: "Director de Juego", gm: true, player: playerName || "" }
       : { author: playerName || "Alguien en la mesa", player: playerName || "" };
   };
 
@@ -14324,6 +14329,7 @@ export default function App({ onSignOut }) {
     await postChat(campaignId, { kind: "msg", text, ...chatAuthor() });
   };
 
+  const chatName = (m) => (m.author === "El DJ" ? "Director de Juego" : m.author); // los mensajes antiguos siguen diciendo «El DJ»
   const chatColor = (m) => (m.gm ? "#6A4DC2" : m.cls ? classColor(m.cls) : "#C9A24A");
   const chatInitial = (m) => (m.gm && !m.npc ? "DJ" : (m.author || "?").trim().charAt(0).toUpperCase());
   const shareVisual = (sh) => {
@@ -14371,7 +14377,7 @@ export default function App({ onSignOut }) {
 
       if (kind === "roll" && m.roll) {
         const r = m.roll;
-        const who = <b style={{ color: ink(col) }}>{m.author}</b>;
+        const who = <b style={{ color: ink(col) }}>{chatName(m)}</b>;
         const square = (v, k, cls = "") => (
           <span key={k} className={"mh-chat-sq" + cls}>
             {v}
@@ -14458,7 +14464,7 @@ export default function App({ onSignOut }) {
         const success = r.charm ? true : r.dc ? crit || r.total >= r.dc : null;
         const hopeSide = withHope || !!r.aura;
         const base = r.charm ? "Éxito con Miedo" : crit ? "Éxito crítico" : r.reaction ? "Tirada de reacción" : (success === null ? "Con " : success ? "Éxito con " : "Fallo con ") + (hopeSide ? "Esperanza" : "Miedo");
-        const note = r.aura ? "+1 Esperanza (el DJ no gana Miedo)" : r.charm ? "El DJ gana 1 Miedo" : r.reaction ? (crit ? "Ignora los efectos" : "Sin Esperanza ni Miedo") : crit ? "+1 Esperanza y −1 Estrés" : withHope ? "+1 Esperanza" : "El DJ gana 1 Miedo";
+        const note = r.aura ? "+1 Esperanza (el Director de Juego no gana Miedo)" : r.charm ? "El Director de Juego gana 1 Miedo" : r.reaction ? (crit ? "Ignora los efectos" : "Sin Esperanza ni Miedo") : crit ? "+1 Esperanza y −1 Estrés" : withHope ? "+1 Esperanza" : "El Director de Juego gana 1 Miedo";
         const vcol = r.aura ? "#E3B04B" : r.charm ? "#A58BE8" : crit ? "#6FBF73" : r.reaction ? "#5E8FC9" : withHope ? "#E3B04B" : "#A58BE8";
         const tag = r.luck ? (REROLL_META[r.luck.kind] || REROLL_META.luck).tag : r.weapon ? "Ataque" : r.card ? "Habilidad" : r.reaction ? "Reacción" : "Rasgo";
         // Hada · Doblega la Suerte: botón bajo las tiradas de acción recientes (tuyas o de aliados).
@@ -14601,7 +14607,7 @@ export default function App({ onSignOut }) {
       );
       const whoB = (
         <b style={{ color: ink(col) }} title={m.player && m.player !== m.author ? "Jugador: " + m.player : undefined}>
-          {m.author}
+          {chatName(m)}
         </b>
       );
 
@@ -14643,7 +14649,7 @@ export default function App({ onSignOut }) {
           "Medalla",
           <MedalChatCard md={mm} bare />,
           <>
-            <span>{mm.note || "Dada por el DJ"}</span>
+            <span>{mm.note || "Dada por el Director de Juego"}</span>
             <span>Una por sesión</span>
           </>
         );
@@ -14917,7 +14923,7 @@ export default function App({ onSignOut }) {
           </span>
           <div className="mh-chat-mb">
             <div className="mh-chat-mh">
-              <b style={{ color: ink(col) }}>{m.author}</b>
+              <b style={{ color: ink(col) }}>{chatName(m)}</b>
               {!m.gm && (m.cls || (m.player && m.player !== m.author)) && <em>{[m.cls, m.player !== m.author ? m.player : ""].filter(Boolean).join(" · ")}</em>}
               <time>{time}</time>
             </div>
@@ -15349,7 +15355,7 @@ export default function App({ onSignOut }) {
     setHandoutDraft({ kind: d.kind, title: "", image: "", text: "" });
     if (!deliver) return;
     const who = toCharId ? characters[toCharId]?.f_name : "";
-    postChat(viewingCampaignId, { kind: "share", author: "El DJ", gm: true, text: "", share: { type: "handout", name: handout.title, sub: (item ? "Objeto" + (who ? " para " + who : "") : "Pista · " + (HANDOUT_KINDS.find((k) => k.key === handout.kind)?.label || "")), handout } });
+    postChat(viewingCampaignId, { kind: "share", author: "Director de Juego", gm: true, text: "", share: { type: "handout", name: handout.title, sub: (item ? "Objeto" + (who ? " para " + who : "") : "Pista · " + (HANDOUT_KINDS.find((k) => k.key === handout.kind)?.label || "")), handout } });
   };
   // El jugador al que se le entrega un objeto lo guarda en su inventario desde el chat.
   const claimHandoutItem = (charId, h) => {
@@ -15496,7 +15502,7 @@ export default function App({ onSignOut }) {
     const scn = (subId && (sc.extras || []).find((e) => e.id === subId)) || sc;
     const sameChapter = activeSceneIdOf(campaignStage) === id;
     await saveStage(viewingCampaignId, { scenes, activeSceneId: id, scene: { title: scn.title || sc.title, image: scn.image, fx: scn.fx || [] }, live: "escena", dialogue: null, tlStep: "img", tlSub: scn.id === sc.id ? null : scn.id });
-    postChat(viewingCampaignId, { kind: "event", author: "El DJ", gm: true, icon: "escena", text: "muestra la escena «" + ((sameChapter && scn !== sc ? scn.title : sc.title) || "Sin título") + "»" });
+    postChat(viewingCampaignId, { kind: "event", author: "Director de Juego", gm: true, icon: "escena", text: "muestra la escena «" + ((sameChapter && scn !== sc ? scn.title : sc.title) || "Sin título") + "»" });
   };
 
   // Reduce la imagen en el navegador (máx. 720 px) conservando la transparencia, para que pese poco.
@@ -15700,7 +15706,7 @@ export default function App({ onSignOut }) {
       tlStep: "dlg",
       ...(switchScene ? { scenes, activeSceneId: sc.id, scene: { title: sc.title, image: sc.image, fx: sc.fx || [] } } : {}),
     });
-    if (switchScene) postChat(viewingCampaignId, { kind: "event", author: "El DJ", gm: true, icon: "escena", text: "muestra la escena «" + (sc.title || "Sin título") + "»" });
+    if (switchScene) postChat(viewingCampaignId, { kind: "event", author: "Director de Juego", gm: true, icon: "escena", text: "muestra la escena «" + (sc.title || "Sin título") + "»" });
     postChat(viewingCampaignId, { kind: "msg", author: m.name, gm: true, npc: true, text: line.text });
   };
 
@@ -15740,7 +15746,7 @@ export default function App({ onSignOut }) {
     const sc = scenes.find((x) => x.id === sceneId);
     if (savedMap && !(await loadSavedMap(savedMap, true))) return;
     await saveStage(viewingCampaignId, { live: "mapa", tlStep: "cmb", tlSub: savedMap?.id || campaignMap.mapId || null, ...(sc ? { scenes, activeSceneId: sc.id, scene: { title: sc.title, image: sc.image, fx: sc.fx || [] } } : {}) });
-    postChat(viewingCampaignId, { kind: "event", author: "El DJ", gm: true, icon: "mapa", text: "pasa al combate" + (sc ? " en «" + (sc.title || "Sin título") + "»" : "") });
+    postChat(viewingCampaignId, { kind: "event", author: "Director de Juego", gm: true, icon: "mapa", text: "pasa al combate" + (sc ? " en «" + (sc.title || "Sin título") + "»" : "") });
     setCombatBack(sceneId);
     if (!stay) setCampaignDetailTab("mapa");
   };
@@ -15757,8 +15763,13 @@ export default function App({ onSignOut }) {
     if (!viewingCampaignId) return;
     const on = !!campaignStage.xcard?.on;
     await saveStage(viewingCampaignId, { xcard: on ? null : { on: true, ts: Date.now() } });
-    postChat(viewingCampaignId, on ? { kind: "event", author: "El DJ", gm: true, icon: "xcard-off", text: "retira la X-Card" } : { kind: "event", author: "El DJ", gm: true, icon: "xcard", text: "activa la X-Card" });
+    postChat(viewingCampaignId, on ? { kind: "event", author: "Director de Juego", gm: true, icon: "xcard-off", text: "retira la X-Card" } : { kind: "event", author: "Director de Juego", gm: true, icon: "xcard", text: "activa la X-Card" });
   };
+
+  // Oráculo: el DJ lo abre sobre el espacio de juego (lo ven todos) y lo controla él; el estado compartido va en el escenario.
+  const toggleOracle = () => viewingCampaignId && saveStage(viewingCampaignId, { oracle: campaignStage.oracle ? null : { sid: Date.now(), phase: "idle", mode: "yn", answered: false, res: null, ts: Date.now() } });
+  const patchOracle = (next) => viewingCampaignId && saveStage(viewingCampaignId, { oracle: { ...next, ts: Date.now() } });
+  const publishOracle = (r) => postChat(viewingCampaignId, { kind: "msg", author: "Director de Juego", gm: true, text: "Oráculo: " + r.label, oracle: { label: r.label, tone: r.tone, hint: r.hint || "", text: r.text, mode: r.mode, n: r.n || null } });
 
   // Cuando el DJ vuelve a mostrar un mapa de combate, el modo a pantalla completa del móvil se reactiva.
   useEffect(() => {
@@ -15778,7 +15789,7 @@ export default function App({ onSignOut }) {
     await saveStage(viewingCampaignId, { live: key });
     const title = campaignStage.scene?.title;
     const what = { escena: title ? "la escena «" + title + "»" : "la escena", mapa: "el mapa de combate", mundo: "el mapa de mundo", pistas: "las pistas", personajes: "los personajes" }[key];
-    postChat(viewingCampaignId, { kind: "event", author: "El DJ", gm: true, icon: key, text: "muestra " + what });
+    postChat(viewingCampaignId, { kind: "event", author: "Director de Juego", gm: true, icon: key, text: "muestra " + what });
   };
 
   // Las pistas preparadas pueden estar ocultas: el DJ las muestra cuando toque (y se avisa en el chat).
@@ -15788,7 +15799,7 @@ export default function App({ onSignOut }) {
     if (!h) return;
     const reveal = !!h.hidden;
     saveStage(viewingCampaignId, { handouts: list.map((x) => (x.id === id ? { ...x, hidden: !reveal, ...(reveal ? { ts: Date.now() } : {}) } : x)) });
-    if (reveal) postChat(viewingCampaignId, { kind: "share", author: "El DJ", gm: true, text: "", share: { type: "handout", name: h.title, sub: "Pista · " + (HANDOUT_KINDS.find((k) => k.key === h.kind)?.label || ""), handout: { ...h, hidden: false } } });
+    if (reveal) postChat(viewingCampaignId, { kind: "share", author: "Director de Juego", gm: true, text: "", share: { type: "handout", name: h.title, sub: "Pista · " + (HANDOUT_KINDS.find((k) => k.key === h.kind)?.label || ""), handout: { ...h, hidden: false } } });
   };
   // Popup «Pista»: crea una pista rápida en el capítulo en pantalla (oculta hasta que se envíe) y la envía al chat.
   const sendNote = async (id) => {
@@ -15797,7 +15808,7 @@ export default function App({ onSignOut }) {
     if (!h || !viewingCampaignId) return;
     const shown = { ...h, hidden: false, ts: Date.now() };
     await saveStage(viewingCampaignId, { handouts: list.map((x) => (x.id === id ? shown : x)) });
-    postChat(viewingCampaignId, { kind: "share", author: "El DJ", gm: true, text: "", share: { type: "handout", name: h.title, sub: "Nota · " + (HANDOUT_KINDS.find((k) => k.key === h.kind)?.label || ""), handout: shown } });
+    postChat(viewingCampaignId, { kind: "share", author: "Director de Juego", gm: true, text: "", share: { type: "handout", name: h.title, sub: "Nota · " + (HANDOUT_KINDS.find((k) => k.key === h.kind)?.label || ""), handout: shown } });
   };
   // Personajes de la campaña que el DJ muestra a los jugadores (copia en el escenario: nombre, rol, tipo e imagen).
   const castSnap = (m) => ({ id: m.id, name: m.name, role: m.role || "", kind: m.kind || "Neutral", imgId: castImgIdFor(m, "tranquila") || null });
@@ -15805,7 +15816,7 @@ export default function App({ onSignOut }) {
     const cur = campaignStage.cast || [];
     const on = cur.some((c) => c.id === m.id);
     saveStage(viewingCampaignId, { cast: on ? cur.filter((c) => c.id !== m.id) : [...cur, castSnap(m)] });
-    if (!on) postChat(viewingCampaignId, { kind: "event", author: "El DJ", gm: true, icon: "personaje", text: "El DJ presenta a " + m.name + "." });
+    if (!on) postChat(viewingCampaignId, { kind: "event", author: "Director de Juego", gm: true, icon: "personaje", text: "presenta a " + m.name + "." });
   };
   const syncCastShown = (id, patch) => {
     const cur = campaignStage.cast || [];
@@ -15817,7 +15828,7 @@ export default function App({ onSignOut }) {
     if (!d || !d.title.trim() || !viewingCampaignId) return;
     const h = { id: "h" + Date.now(), kind: "nota", title: d.title.trim(), image: "", text: d.text.trim(), sceneId: activeSceneIdOf(campaignStage), hidden: !send, ts: Date.now() };
     await saveStage(viewingCampaignId, { handouts: [h, ...(campaignStage.handouts || [])] });
-    if (send) postChat(viewingCampaignId, { kind: "share", author: "El DJ", gm: true, text: "", share: { type: "handout", name: h.title, sub: "Nota · Nota", handout: h } });
+    if (send) postChat(viewingCampaignId, { kind: "share", author: "Director de Juego", gm: true, text: "", share: { type: "handout", name: h.title, sub: "Nota · Nota", handout: h } });
     setClueDlg((x) => ({ ...x, title: "", text: "" }));
   };
   useEffect(() => {
@@ -15941,7 +15952,7 @@ export default function App({ onSignOut }) {
     setCampaignMap(next);
     await safeSet("campaign-map:" + viewingCampaignId, JSON.stringify(next), true);
     setMapSel(null);
-    if (!quiet) postChat(viewingCampaignId, { kind: "event", author: "El DJ", gm: true, icon: "escena", text: "prepara el mapa «" + m.name + "»" });
+    if (!quiet) postChat(viewingCampaignId, { kind: "event", author: "Director de Juego", gm: true, icon: "escena", text: "prepara el mapa «" + m.name + "»" });
     return true;
   };
   // Lo que se guarda de un tablero: todo menos las fichas de los jugadores y sus mascotas.
@@ -21955,7 +21966,7 @@ export default function App({ onSignOut }) {
                                     campaignId={sheetCampaignId}
                                     mine={(campaigns[sheetCampaignId]?.characterIds || []).filter((id) => characters[id]).map((id) => ({ id }))}
                                     total={(campaigns[sheetCampaignId]?.characterIds || []).length}
-                                    onResult={(text, poll) => postChat(sheetCampaignId, { kind: "msg", text, author: "El DJ", gm: true, poll })}
+                                    onResult={(text, poll) => postChat(sheetCampaignId, { kind: "msg", text, author: "Director de Juego", gm: true, poll })}
                                   />
                                 )}
                                 <div className="mh-chat-box">
@@ -28311,7 +28322,7 @@ export default function App({ onSignOut }) {
             <RestQuick
               campaignId={viewingCampaignId}
               members={members}
-              onAnnounce={(text, meta) => postChat(viewingCampaignId, meta?.rest ? { kind: "event", author: "El DJ", gm: true, icon: "rest-" + meta.rest, text } : { kind: "msg", text, author: "El DJ", gm: true })}
+              onAnnounce={(text, meta) => postChat(viewingCampaignId, meta?.rest ? { kind: "event", author: "Director de Juego", gm: true, icon: "rest-" + meta.rest, text } : { kind: "msg", text, author: "Director de Juego", gm: true })}
               onClose={() => setRestDlg(null)}
               onOpenFull={() => (setRestDlg(null), setCampaignDetailTab("descanso"))}
             />
@@ -28400,6 +28411,7 @@ export default function App({ onSignOut }) {
           </div>
         );
       })()}
+      {stageCampaignId && !gmViewing && campaignStage.oracle && !campaignStage.xcard?.on && Date.now() - (campaignStage.oracle.ts || 0) < 20 * 60 * 1000 && <OraclePlayers o={campaignStage.oracle} />}
       {stageCampaignId && !gmViewing && campaignStage.xcard?.on && typeof document !== "undefined" && createPortal(
         <div className="mh-xcard is-global" role="alert" aria-live="assertive">
           <span className="mh-xcard-x"><X size={36} strokeWidth={2.2} /></span>
@@ -29378,7 +29390,12 @@ export default function App({ onSignOut }) {
                     const renderBar = () => (
                       <div className="mh-dir-bar">
                         <div className="mh-dir-live" role="tablist" aria-label="Qué estás viendo tú" inert={xLock || undefined}>
-                          {STAGE_TABS.map((t) => {
+                          {STAGE_TABS.filter((t) => {
+                            // Los accesos dependen del capítulo y de lo que exista: sin mapa del mundo o sin mapas de combate en el capítulo no salen (salvo que ya se esté mostrando).
+                            if (t.key === "mapa") return live === "mapa" || view === "mapa" || (!!vc && campaignMaps.some((m) => m.sceneId === vc.id));
+                            if (t.key === "mundo") return live === "mundo" || view === "mundo" || !!(worldDoc.image || worldDoc.hex || Object.values(worldDoc.seasons || {}).some(Boolean));
+                            return true;
+                          }).map((t) => {
                             const TI = t.Icon;
                             return (
                               <button key={t.key} type="button" role="tab" aria-selected={view === t.key} className={(view === t.key ? "is-on" : "") + (live === t.key ? " is-live" : "")} onClick={() => setDjView(t.key === live ? null : t.key)} title={t.label + (live === t.key ? " · es lo que ven los jugadores" : "")}>
@@ -29652,7 +29669,7 @@ export default function App({ onSignOut }) {
                           </div>
                         ) : view === "mundo" ? (
                           <div className="mh-dir-world">
-                            <WorldMap fit compact showHidden seasonMenu edit={djWorldEdit} key={viewingCampaignId} campaignId={viewingCampaignId} scenes={stageScenesOf(campaignStage).map((x) => ({ id: x.id, title: x.title }))} imgSrc={imgSrc} ensureImg={worldEnsureImg} saveImage={saveSceneImage} dropImage={worldDropImg} onOpenScene={(id) => openChapter(id)} onLog={(t) => postChat(viewingCampaignId, { kind: "event", author: "El DJ", gm: true, icon: "mundo", text: t })} />
+                            <WorldMap fit compact showHidden seasonMenu edit={djWorldEdit} key={viewingCampaignId} campaignId={viewingCampaignId} scenes={stageScenesOf(campaignStage).map((x) => ({ id: x.id, title: x.title }))} imgSrc={imgSrc} ensureImg={worldEnsureImg} saveImage={saveSceneImage} dropImage={worldDropImg} onOpenScene={(id) => openChapter(id)} onLog={(t) => postChat(viewingCampaignId, { kind: "event", author: "Director de Juego", gm: true, icon: "mundo", text: t })} />
                             {view === live && !chDiverge ? <span className="mh-stg-live"><i />En directo</span> : <span className="mh-stg-live is-prev"><i />Solo tú lo ves</span>}
                             <button type="button" className="mh-btn-ghost mh-dir-mapbtn" onClick={() => setDjWorldEdit((v) => !v)}><Globe size={13} /> {djWorldEdit ? "Listo" : "Editar mapa"}</button>
                           </div>
@@ -29664,6 +29681,7 @@ export default function App({ onSignOut }) {
                           </div>
                         )}
                         {stage.xcard?.on && xcardEl}
+                        {stage.oracle && !stage.xcard?.on && <OracleDj key={stage.oracle.sid} o={stage.oracle} onPatch={patchOracle} onPublish={publishOracle} onClose={toggleOracle} />}
                       </div>
                     );
                     // Línea de tiempo: Imagen → Diálogo → Combate de cada capítulo y después el siguiente capítulo. A la izquierda va siempre el paso actual.
@@ -29976,7 +29994,7 @@ export default function App({ onSignOut }) {
                       );
                     })();
                     const groupEl = (
-                      <PollSwap campaignId={viewingCampaignId} total={members.length} names={Object.fromEntries((campaigns[viewingCampaignId]?.characterIds || []).filter((id) => characters[id]).map((id) => [id, characters[id].f_name || "Sin nombre"]))} onResult={(text, poll) => postChat(viewingCampaignId, { kind: "msg", text, author: "El DJ", gm: true, poll })}>
+                      <PollSwap campaignId={viewingCampaignId} total={members.length} names={Object.fromEntries((campaigns[viewingCampaignId]?.characterIds || []).filter((id) => characters[id]).map((id) => [id, characters[id].f_name || "Sin nombre"]))} onResult={(text, poll) => postChat(viewingCampaignId, { kind: "msg", text, author: "Director de Juego", gm: true, poll })}>
                         {quickSheet || foeSheet || groupBox}
                       </PollSwap>
                     );
@@ -29999,7 +30017,7 @@ export default function App({ onSignOut }) {
                           { k: "pista", l: "Pistas", I: ScrollText, go: (e) => (clueDlg ? setClueDlg(null) : (setDiceDlg(null), setClueDlg({ rect: e.currentTarget.getBoundingClientRect(), sel: null, title: "", text: "" }))) },
                           { k: "dados", l: "Dados", I: Dices, go: (e) => (diceDlg ? setDiceDlg(null) : (setClueDlg(null), setDiceDlg({ counts: { 4: 0, 6: 0, 8: 0, 10: 0, 12: 0, 20: 1 }, priv: false, rect: e.currentTarget.getBoundingClientRect() }))) },
                           { k: "desc", l: "Descanso", I: BedDouble, go: (e) => (restDlg ? setRestDlg(null) : (setClueDlg(null), setDiceDlg(null), setRestDlg({ rect: e.currentTarget.getBoundingClientRect() }))) },
-                          { k: "orac", l: "Oráculo", I: Sparkles, go: () => (setClueDlg(null), setDiceDlg(null), setRestDlg(null), setOracleOpen(true)) },
+                          { k: "orac", l: "Oráculo", I: Sparkles, go: () => (setClueDlg(null), setDiceDlg(null), setRestDlg(null), toggleOracle()) },
                         ].map((q) => (
                           <button key={q.k} type="button" data-dice-btn={q.k === "dados" ? "1" : undefined} data-clue-btn={q.k === "pista" ? "1" : undefined} data-rest-btn={q.k === "desc" ? "1" : undefined} onClick={q.go}>
                             <q.I size={15} /> {q.l}
@@ -31295,7 +31313,7 @@ export default function App({ onSignOut }) {
                         saveImage={saveSceneImage}
                         dropImage={worldDropImg}
                         onOpenScene={(id) => openChapter(id)}
-                        onLog={(t) => postChat(viewingCampaignId, { kind: "event", author: "El DJ", gm: true, icon: "mundo", text: t })}
+                        onLog={(t) => postChat(viewingCampaignId, { kind: "event", author: "Director de Juego", gm: true, icon: "mundo", text: t })}
                       /></div>
                     </FitBelow>
                   )}
@@ -31835,10 +31853,9 @@ export default function App({ onSignOut }) {
                     );
                   })()}
 
-                  {oracleOpen && viewingCampaignId && <Oracle onClose={() => setOracleOpen(false)} onPublish={(r) => postChat(viewingCampaignId, { kind: "msg", author: "El DJ", gm: true, text: "Oráculo: " + r.label, oracle: { label: r.label, tone: r.tone, hint: r.hint || "", text: r.text, mode: r.mode, n: r.n || null } })} />}
-                  {medalsOpen && viewingCampaignId && <MedalsGm campaignId={viewingCampaignId} members={(campaigns[viewingCampaignId]?.characterIds || []).filter((id) => characters[id]).map((id) => ({ id, name: characters[id].f_name || "Sin nombre", cls: characters[id].f_class || "", color: characters[id].f_class ? classColor(characters[id].f_class) : "#C9A24A" }))} onGive={(e) => postChat(viewingCampaignId, { kind: "msg", text: "🏅 " + e.charName + " recibe la medalla «" + medalOf(e.medal).name + "»" + (e.note ? " — " + e.note : ""), author: "El DJ", gm: true, medal: { medal: e.medal, charName: e.charName, note: e.note } })} onClose={() => setMedalsOpen(false)} />}
+                  {medalsOpen && viewingCampaignId && <MedalsGm campaignId={viewingCampaignId} members={(campaigns[viewingCampaignId]?.characterIds || []).filter((id) => characters[id]).map((id) => ({ id, name: characters[id].f_name || "Sin nombre", cls: characters[id].f_class || "", color: characters[id].f_class ? classColor(characters[id].f_class) : "#C9A24A" }))} onGive={(e) => postChat(viewingCampaignId, { kind: "msg", text: "🏅 " + e.charName + " recibe la medalla «" + medalOf(e.medal).name + "»" + (e.note ? " — " + e.note : ""), author: "Director de Juego", gm: true, medal: { medal: e.medal, charName: e.charName, note: e.note } })} onClose={() => setMedalsOpen(false)} />}
 
-                  {campaignDetailTab === "cronica" && <Chronicle key={viewingCampaignId} campaignId={viewingCampaignId} onMedals={() => setMedalsOpen(true)} members={(campaigns[viewingCampaignId]?.characterIds || []).map((id) => characters[id]?.f_name).filter(Boolean)} onShare={(text) => postChat(viewingCampaignId, { kind: "msg", text, author: "El DJ", gm: true })} />}
+                  {campaignDetailTab === "cronica" && <Chronicle key={viewingCampaignId} campaignId={viewingCampaignId} onMedals={() => setMedalsOpen(true)} members={(campaigns[viewingCampaignId]?.characterIds || []).map((id) => characters[id]?.f_name).filter(Boolean)} onShare={(text) => postChat(viewingCampaignId, { kind: "msg", text, author: "Director de Juego", gm: true })} />}
 
                   {campaignDetailTab === "linea" && <Timeline key={viewingCampaignId} campaignId={viewingCampaignId} />}
 
@@ -31847,7 +31864,7 @@ export default function App({ onSignOut }) {
                       key={viewingCampaignId}
                       campaignId={viewingCampaignId}
                       members={(campaigns[viewingCampaignId]?.characterIds || []).filter((id) => characters[id]).map((id) => ({ id, name: characters[id].f_name || "Sin nombre", cls: characters[id].f_class || "", color: characters[id].f_class ? classColor(characters[id].f_class) : "#C9A24A" }))}
-                      onAnnounce={(text, meta) => postChat(viewingCampaignId, meta?.rest ? { kind: "event", author: "El DJ", gm: true, icon: "rest-" + meta.rest, text } : { kind: "msg", text, author: "El DJ", gm: true })}
+                      onAnnounce={(text, meta) => postChat(viewingCampaignId, meta?.rest ? { kind: "event", author: "Director de Juego", gm: true, icon: "rest-" + meta.rest, text } : { kind: "msg", text, author: "Director de Juego", gm: true })}
                     />
                   )}
 
@@ -31857,8 +31874,8 @@ export default function App({ onSignOut }) {
                       campaignId={viewingCampaignId}
                       total={(campaigns[viewingCampaignId]?.characterIds || []).filter((id) => characters[id]).length}
                       names={Object.fromEntries((campaigns[viewingCampaignId]?.characterIds || []).filter((id) => characters[id]).map((id) => [id, characters[id].f_name || "Sin nombre"]))}
-                      onAnnounce={(text) => postChat(viewingCampaignId, { kind: "msg", text, author: "El DJ", gm: true })}
-                      onResult={(text, poll) => postChat(viewingCampaignId, { kind: "msg", text, author: "El DJ", gm: true, poll })}
+                      onAnnounce={(text) => postChat(viewingCampaignId, { kind: "msg", text, author: "Director de Juego", gm: true })}
+                      onResult={(text, poll) => postChat(viewingCampaignId, { kind: "msg", text, author: "Director de Juego", gm: true, poll })}
                     />
                   )}
 
