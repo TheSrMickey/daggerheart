@@ -5922,8 +5922,9 @@ const sharedStyles = `
   .mh-dir-xlock { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 99px; background: #D9644E; color: #fff; } .mh-dir.is-xlock .mh-dir-live, .mh-dir.is-xlock .mh-dir-chnav, .mh-dir.is-xlock .mh-dir-show, .mh-dir.is-xlock .mh-dir-below .mh-tl, .mh-dir.is-xlock .mh-dir-dock .mh-tl { opacity: .45; } .mh-dir.is-xlock .mh-dir-show { pointer-events: none; }
   html[data-mh-theme="light"] .mh-dir-mon.is-blank { background: radial-gradient(60% 70% at 28% 18%, #FFFAEE 0%, rgba(255, 250, 238, 0) 70%), radial-gradient(55% 60% at 82% 88%, color-mix(in srgb, var(--acc, #E3B04B) 22%, #FFF3D6) 0%, rgba(255, 243, 214, 0) 70%), linear-gradient(160deg, #F6EEDB, #E7D9BB); border: 1px solid var(--mh-line2); } html[data-mh-theme="light"] .mh-dir-mon.is-blank::before { opacity: .12; mix-blend-mode: multiply; }
   .mh-dir-below { grid-column: 1; padding: 10px; border-radius: 22px; background: var(--mh-panel); border: 1px solid var(--mh-line); }
-  .mh-dir-side { grid-column: 2; grid-row: 1 / span 2; display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+  .mh-dir-side { grid-column: 2; grid-row: 1; display: flex; flex-direction: column; gap: 12px; min-height: 0; }
   .mh-dir-side .mh-dir-chat { flex: 1; min-height: 0; } .mh-dir-side .mh-dir-chat .mh-dir-feed { flex: 1; max-height: none; min-height: 0; }
+  .mh-dir-top > .mh-dir-quick { grid-column: 2; grid-row: 2; align-items: center; } /* misma altura que la caja de la línea de tiempo (fila 2) */
   .mh-dir-pistas { grid-column: 1 / -1; }
   .mh-dir-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 0 4px; }
   .mh-dir-lbl { font-size: 10px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: var(--mh-muted); }
@@ -30020,11 +30021,13 @@ export default function App({ onSignOut }) {
                         </section>
                         {!imm && <div className="mh-dir-below">{stepsEl}</div>}
                         {!imm && (
-                          <aside className="mh-dir-side">
-                            {groupEl}
-                            {chatEl}
+                          <>
+                            <aside className="mh-dir-side">
+                              {groupEl}
+                              {chatEl}
+                            </aside>
                             {quickEl}
-                          </aside>
+                          </>
                         )}
                         {imm && <div className="mh-dir-below">{quickEl}</div>}
                         </div>
