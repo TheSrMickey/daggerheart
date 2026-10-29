@@ -9,7 +9,7 @@ export const CHANGELOG = [
     title: "El Oráculo del DJ",
     blurb: "Un anillo de luz que responde a las preguntas de la mesa: Sí / No, con matices o con una tirada de destino, solo para el DJ y a un toque bajo el chat.",
     items: [
-      { tag: "mejora", text: "Directo · prueba de banner más bajo: la barra de Miedo y los iconos de los jugadores pasan a la derecha del nombre de la campaña, y el banner de «Directo» mide unos 50 px menos para dejar más sitio al escenario y al mapa." },
+      { tag: "mejora", text: "Directo · banner más bajo (84 px en lugar de 136 px) en una sola fila: volver, nombre y estado a la izquierda y, a la derecha, Invitar, papelera, la barra de Miedo y los iconos de los jugadores, con el mismo estilo de siempre. Deja más sitio al escenario y al mapa." },
       { tag: "nuevo", text: "Oráculo · nuevo acceso rápido «Oráculo» bajo el chat de Directo (solo DJ). Se abre un anillo de luz que «habla» (pulsa y se agita como una voz) y dice «Hazme una pregunta y pulsa el botón»; al consultarlo reflexiona un par de segundos y responde con el color de la respuesta. Tres modos: Sí / No, Sí / No con matices (sí y además, sí pero, quizá, no pero, no y además) y Destino (1d100). Tras la respuesta el DJ decide si la publica en el chat (tarjeta «Oráculo») o no, y el historial guarda las últimas respuestas." },
     ],
   },
