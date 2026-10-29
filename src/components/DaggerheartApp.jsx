@@ -5797,6 +5797,14 @@ const sharedStyles = `
   .mh-cgb-lv { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; margin-left: 8px; padding: 2px 9px; border-radius: 99px; font-size: 11px; font-weight: 600; color: #fff; background: #ffffff1c; border: 1px solid #ffffff33; } .mh-cgb-lv:hover, .mh-cgb-lv.is-on { background: #ffffff33; } .mh-cgb-lv:focus-visible { outline: 2px solid #E3B04B; }
   html[data-mh-theme="light"] .mh-cgb-lv { color: var(--mh-ink2); background: #FFFFFFcc; border-color: #BFB197; }
   .mh-cg.is-flat > .mh-cg-head, .mh-cg.is-flat > .mh-cg-navrow, .mh-cg.is-flat > .mh-cg-sub, .mh-cg.is-flat > .mh-cg-subrow, .mh-cg.is-flat > .mh-cg-pg { display: none; }
+  /* Banner bajo en «Directo»: Miedo y jugadores junto al nombre, para dejar más sitio al escenario y al mapa */
+  .mh-cgb.is-slim { height: 84px; padding: 0 18px; flex-direction: row; align-items: center; justify-content: flex-start; gap: 14px; }
+  .mh-cgb.is-slim .mh-cgb-top, .mh-cgb.is-slim .mh-cgb-row { display: contents; }
+  .mh-cgb.is-slim .mh-cgb-back { order: 0; } .mh-cgb.is-slim .mh-cgb-tit { order: 1; flex: 0 1 auto; position: relative; z-index: 1; } .mh-cgb.is-slim .mh-cgb-name { font-size: 21px; max-width: 560px; }
+  .mh-cgb.is-slim .mh-cgb-fear { order: 2; position: relative; z-index: 1; flex: none; } .mh-cgb.is-slim .mh-cg-avs { order: 3; position: relative; z-index: 1; flex: none; }
+  .mh-cgb.is-slim .mh-cgb-top > .mh-cgb-sp { order: 4; flex: 1; } .mh-cgb.is-slim .mh-cgb-row > .mh-cgb-sp { display: none; }
+  .mh-cgb.is-slim .mh-cgb-btn { order: 5; position: relative; z-index: 1; } .mh-cgb.is-slim .mh-cgb-btn.is-del { order: 6; }
+  .mh-cgb.is-slim .mh-cgb-emb { display: none; } .mh-cgb.is-slim .mh-cgb-tit p { margin-top: 2px; font-size: 12px; white-space: nowrap; }
   .mh-cgb { flex: none; position: relative; overflow: hidden; height: 136px; box-sizing: border-box; border-radius: 16px; padding: 14px 20px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid color-mix(in srgb, var(--cc) 40%, #ffffff14); background: linear-gradient(135deg, color-mix(in srgb, var(--cc) 40%, #0d1a1a), #0c0c20 80%); margin-bottom: 10px; color: #fff; }
   .mh-cgb::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(0deg, #0c0c2099, transparent 55%); }
   .mh-cgb-emb { position: absolute; right: 18px; top: 50%; translate: 0 -50%; color: #ffffff12; } .mh-cgb-top, .mh-cgb-row { position: relative; z-index: 1; display: flex; align-items: center; gap: 12px; } .mh-cgb-sp { flex: 1; }
@@ -29060,7 +29068,7 @@ export default function App({ onSignOut }) {
                 <div className={"mh-cg" + (campFlat ? " is-flat" : "") + (cgBanner ? " has-banner" : "")} style={{ "--hc": campColor(viewingCampaignId) }}>
                   {soonMsg && <div className="mh-cg-soon" role="status">{soonMsg} · próximamente</div>}
                   {cgBanner && (
-                    <header className="mh-cgb" style={{ "--cc": campColor(viewingCampaignId) }}>
+                    <header className={"mh-cgb" + (campaignDetailTab === "mesa" ? " is-slim" : "")} style={{ "--cc": campColor(viewingCampaignId) }}>
                       <span className="mh-cgb-emb" aria-hidden="true"><BookOpen size={190} strokeWidth={1} /></span>
                       <div className="mh-cgb-top">
                         <button type="button" className="mh-cgb-back" aria-label="Volver a Campañas" title="Campañas" onClick={() => setViewingCampaignId(null)}><ArrowLeft size={16} /></button>
