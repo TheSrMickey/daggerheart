@@ -6022,6 +6022,14 @@ const sharedStyles = `
   @keyframes mhTlIn { from { transform: translateX(38%); opacity: .35; } to { transform: none; opacity: 1; } }
   @media (prefers-reduced-motion: reduce) { .mh-tl-track { animation: none; } }
   @media (max-width: 760px) { .mh-tl .mh-tl-cur { flex: 0 0 82%; } .mh-tl .mh-tl-nx { flex: 0 0 38%; } }
+  /* Logo de «Sin escena»: respira y suelta chispas */
+  .mh-wait-lg { position: relative; display: inline-grid; place-items: center; } .mh-wait-lg img { animation: mh-wait-br 4.4s ease-in-out infinite; }
+  @keyframes mh-wait-br { 0%, 100% { opacity: .14; transform: scale(.94); } 50% { opacity: .5; transform: scale(1.04); } }
+  .mh-wait-lg i { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: #fff; box-shadow: 0 0 8px 2px #9db8ffaa; opacity: 0; animation: mh-wait-tw 3.6s ease-in-out infinite; } .mh-wait-lg i:nth-of-type(1) { left: -30px; top: 14px; animation-delay: .2s; } .mh-wait-lg i:nth-of-type(2) { right: -34px; top: 34px; width: 4px; height: 4px; animation-delay: 1.1s; } .mh-wait-lg i:nth-of-type(3) { left: -20px; bottom: 10px; animation-delay: 2s; } .mh-wait-lg i:nth-of-type(4) { right: -22px; bottom: -2px; width: 3px; height: 3px; animation-delay: 2.7s; }
+  @keyframes mh-wait-tw { 0%, 100% { opacity: 0; transform: scale(.4); } 40% { opacity: 1; transform: scale(1); } 70% { opacity: 0; transform: scale(.6) translateY(-6px); } }
+  .mh-wait-dots { display: inline-block; width: 1.1em; overflow: hidden; vertical-align: bottom; text-align: left; animation: mh-wait-dots 1.6s steps(4) infinite; } @keyframes mh-wait-dots { 0% { width: 0; } 100% { width: 1.1em; } }
+  html[data-mh-theme="light"] .mh-wait-lg i { background: #5b6fb0; box-shadow: 0 0 8px 2px #5b6fb066; } html[data-mh-theme="light"] .mh-wait-lg img { animation-name: mh-wait-br-l; } @keyframes mh-wait-br-l { 0%, 100% { opacity: .12; transform: scale(.94); } 50% { opacity: .4; transform: scale(1.04); } }
+  @media (prefers-reduced-motion: reduce) { .mh-wait-lg img, .mh-wait-lg i, .mh-wait-dots { animation: none !important; } .mh-wait-lg i { display: none; } .mh-wait-dots { width: 1.1em; } }
   .mh-dir-wait img { width: 84px; height: 84px; object-fit: contain; opacity: .2; filter: drop-shadow(0 0 12px #9db8ff55); } html[data-mh-theme="light"] .mh-dir-wait img { filter: invert(1); opacity: .22; }
   .mh-xcard { position: absolute !important; inset: 0; z-index: 80 !important; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 24px; text-align: center; color: #fff; background: rgba(40,8,12,.86); backdrop-filter: blur(6px); animation: mhXIn .35s ease; }
   .mh-xcard b { font: 700 28px 'Cormorant Garamond', Georgia, serif; letter-spacing: .08em; } .mh-xcard p { margin: 0; font-size: 16px; max-width: 420px; } .mh-xcard small { opacity: .75; font-size: 12.5px; }
@@ -21590,9 +21598,12 @@ export default function App({ onSignOut }) {
                                   ) : (
                                     (
                                       <div className="mh-stg-empty mh-dir-wait">
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img src="/logo.svg" alt="" />
-                                        <div>A la espera de una escena</div>
+                                        <span className="mh-wait-lg">
+                                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                                          <img src="/logo.svg" alt="" />
+                                          <i /><i /><i /><i />
+                                        </span>
+                                        <div>A la espera de una escena<span className="mh-wait-dots" aria-hidden="true">...</span></div>
                                       </div>
                                     )
                                   ))}
@@ -29456,9 +29467,12 @@ export default function App({ onSignOut }) {
                             {(vc || vcImg) && (view === live && !chDiverge ? <span className="mh-stg-live"><i />En directo</span> : <span className="mh-stg-live is-prev"><i />Solo tú lo ves{vc ? " · Cap. " + (vcIdx + 1) : ""}</span>)}
                             {!vc && !vcImg && (
                               <div className="mh-dir-empty mh-dir-wait">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src="/logo.svg" alt="" />
-                                <div>A la espera de una escena</div>
+                                <span className="mh-wait-lg">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img src="/logo.svg" alt="" />
+                                  <i /><i /><i /><i />
+                                </span>
+                                <div>A la espera de una escena<span className="mh-wait-dots" aria-hidden="true">...</span></div>
                               </div>
                             )}
                             {dlg && !chDiverge && (
