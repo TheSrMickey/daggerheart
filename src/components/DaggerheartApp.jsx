@@ -27,6 +27,7 @@ import { Generators } from "./Generators";
 import { CampaignCalendar, HomeNextSession } from "./Calendar";
 import { HomeHero } from "./HomeHero";
 import { PollsGm, ActivePoll, PollSwap, PollResultCard, pollFoot, outcome as pollOutcome } from "./Polls";
+import Oracle, { OracleChatBody } from "./Oracle";
 import { MedalsGm, MedalWatcher, MedalChatCard, MedalShelf, medalOf } from "./Medals";
 import { RestGm, RestQuick, RestBanner, GroupRestDialog, RestLock } from "./GroupRest";
 import NpcStatsEditor, { npcStatsSummary, npcTokenStats, NpcStatsView } from "./NpcStats";
@@ -5472,6 +5473,7 @@ const sharedStyles = `
   .mh-chat-c-hp i.is-old { background: #D9644E; }
   .mh-chat-c-hp i.is-new { background: #F2A493; border-color: #E07A63; animation: mh-hp-new 1s ease-out 2; }
   @keyframes mh-hp-new { 50% { background: #D9644E; } }
+  .or2-chat { padding: 4px 12px 10px; display: flex; flex-direction: column; gap: 2px; } .or2-chat b { font-size: 20px; color: var(--mh-ink); } .or2-chat span { font-size: 12.5px; color: var(--mh-ink3); }
   .md-chat.is-bare { margin: 0; padding: 5px 12px 10px; border: 0; border-radius: 0; background: none; } .md-chat.is-bare small { display: none; }
   .pr-card.is-bare { margin: 0; padding: 5px 12px 10px; border: 0; border-radius: 0; background: none; } .pr-card.is-bare .pr-t, .pr-card.is-bare .pr-you { display: none; } .pr-card.is-bare .pr-q { margin: 0 0 6px; font-size: 12px; }
   .mh-cuse-th.is-chat { width: 40px; height: 54px; border-radius: 8px; box-shadow: none; flex: none; background-color: color-mix(in srgb, var(--rc) 25%, #10112a); background-size: cover; background-position: center; border: 1px solid var(--rc); }
@@ -11535,6 +11537,7 @@ export default function App({ onSignOut }) {
   const [stageWide, setStageWide] = useState(false);
   const [editingSceneId, setEditingSceneId] = useState(null);
   const [chapterId, setChapterId] = useState(null); // capítulo (escena) que el DJ prepara en «Historia»
+  const [oracleOpen, setOracleOpen] = useState(false); // el Oráculo del DJ (respuestas aleatorias)
   const [gAddOpen, setGAddOpen] = useState(false);
   const [editMapId, setEditMapId] = useState(null); // mapa de combate de la biblioteca que se está editando en el tablero
   const [mapSaved, setMapSaved] = useState(false);
@@ -14602,6 +14605,19 @@ export default function App({ onSignOut }) {
             </div>
           </div>,
           <span>{cu.detail || "Jugada en la mesa"}</span>
+        );
+      }
+      if (m.oracle) {
+        const o = m.oracle;
+        return chatCard(
+          { yes: "#5EE6A0", no: "#FF6F7D", maybe: "#FFC66B" }[o.tone] || "#6FE3FF",
+          <>{whoB} consulta al Oráculo</>,
+          "Oráculo",
+          <OracleChatBody o={o} />,
+          <>
+            <span>{o.hint || "Respuesta del Oráculo"}</span>
+            <span>{{ yn: "Sí / No", nuance: "Con matices", fate: "Destino " + (o.n || "") }[o.mode] || ""}</span>
+          </>
         );
       }
       if (m.medal) {
@@ -29968,6 +29984,7 @@ export default function App({ onSignOut }) {
                           { k: "pista", l: "Pistas", I: ScrollText, go: (e) => (clueDlg ? setClueDlg(null) : (setDiceDlg(null), setClueDlg({ rect: e.currentTarget.getBoundingClientRect(), sel: null, title: "", text: "" }))) },
                           { k: "dados", l: "Dados", I: Dices, go: (e) => (diceDlg ? setDiceDlg(null) : (setClueDlg(null), setDiceDlg({ counts: { 4: 0, 6: 0, 8: 0, 10: 0, 12: 0, 20: 1 }, priv: false, rect: e.currentTarget.getBoundingClientRect() }))) },
                           { k: "desc", l: "Descanso", I: BedDouble, go: (e) => (restDlg ? setRestDlg(null) : (setClueDlg(null), setDiceDlg(null), setRestDlg({ rect: e.currentTarget.getBoundingClientRect() }))) },
+                          { k: "orac", l: "Oráculo", I: Sparkles, go: () => (setClueDlg(null), setDiceDlg(null), setRestDlg(null), setOracleOpen(true)) },
                         ].map((q) => (
                           <button key={q.k} type="button" data-dice-btn={q.k === "dados" ? "1" : undefined} data-clue-btn={q.k === "pista" ? "1" : undefined} data-rest-btn={q.k === "desc" ? "1" : undefined} onClick={q.go}>
                             <q.I size={15} /> {q.l}
@@ -31801,6 +31818,7 @@ export default function App({ onSignOut }) {
                     );
                   })()}
 
+                  {oracleOpen && viewingCampaignId && <Oracle onClose={() => setOracleOpen(false)} onPublish={(r) => postChat(viewingCampaignId, { kind: "msg", author: "El DJ", gm: true, text: "Oráculo: " + r.label, oracle: { label: r.label, tone: r.tone, hint: r.hint || "", text: r.text, mode: r.mode, n: r.n || null } })} />}
                   {medalsOpen && viewingCampaignId && <MedalsGm campaignId={viewingCampaignId} members={(campaigns[viewingCampaignId]?.characterIds || []).filter((id) => characters[id]).map((id) => ({ id, name: characters[id].f_name || "Sin nombre", cls: characters[id].f_class || "", color: characters[id].f_class ? classColor(characters[id].f_class) : "#C9A24A" }))} onGive={(e) => postChat(viewingCampaignId, { kind: "msg", text: "🏅 " + e.charName + " recibe la medalla «" + medalOf(e.medal).name + "»" + (e.note ? " — " + e.note : ""), author: "El DJ", gm: true, medal: { medal: e.medal, charName: e.charName, note: e.note } })} onClose={() => setMedalsOpen(false)} />}
 
                   {campaignDetailTab === "cronica" && <Chronicle key={viewingCampaignId} campaignId={viewingCampaignId} onMedals={() => setMedalsOpen(true)} members={(campaigns[viewingCampaignId]?.characterIds || []).map((id) => characters[id]?.f_name).filter(Boolean)} onShare={(text) => postChat(viewingCampaignId, { kind: "msg", text, author: "El DJ", gm: true })} />}
