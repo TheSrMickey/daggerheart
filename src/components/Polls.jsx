@@ -67,8 +67,8 @@ const Mark = ({ s, big }) => (s.none ? <Hourglass size={big ? 22 : 20} /> : s.ti
 // Tarjeta del resultado para el chat de la mesa y el aviso en pantalla.
 export function pollFoot(s, me) {
   const o = outcome(s.t, s.decided), mine = s.votes && me != null ? s.votes[me] : null;
-  if (o.tie) return "El DJ decidirá el desempate";
-  if (o.none) return "El DJ seguirá la historia";
+  if (o.tie) return "El Director de Juego decidirá el desempate";
+  if (o.none) return "El Director de Juego seguirá la historia";
   return mine != null ? "Tú votaste «" + s.opts[mine] + "»" : (o.voted || 0) + (o.voted === 1 ? " voto" : " votos");
 }
 export function PollResultCard({ s, me, bare }) {

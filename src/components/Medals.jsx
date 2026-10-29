@@ -58,7 +58,7 @@ export function MedalChatCard({ md, bare }) {
       <span>
         <small>Medalla</small>
         <b>{md.charName} · {m.name}</b>
-        <em>{md.note || "Dada por el DJ"}</em>
+        <em>{md.note || "Dada por el Director de Juego"}</em>
       </span>
     </div>
   );
