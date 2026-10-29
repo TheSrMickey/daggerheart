@@ -34,7 +34,7 @@ import { RestGm, RestQuick, RestBanner, GroupRestDialog, RestLock } from "./Grou
 import NpcStatsEditor, { npcStatsSummary, npcTokenStats, NpcStatsView } from "./NpcStats";
 import { Chronicle, Timeline } from "./Chronicle";
 import { appendLog } from "@/lib/chronicle";
-import { SpotPlayer, SpotPause, SpotPanel, FocusBar, normSpot, liveHands, kindOf } from "./Spotlight";
+import { SpotPlayer, SpotPause, SpotPanel, FocusBar, FocusPill, normSpot, liveHands, kindOf } from "./Spotlight";
 import { APP_VERSION } from "@/lib/changelog";
 import { setPresence, setPresenceMaking, startPresence, stopPresence, publishTable, loadTable, myUid, setPresenceCamp, bridge, logActivity, trackStat, loadReactions, toggleReaction } from "@/lib/social";
 import ProfilePage from "./Profile";
@@ -8029,6 +8029,15 @@ const sharedStyles = `
   .fb-av { display: inline-flex; align-items: center; justify-content: center; flex: none; border-radius: 50%; border: 1.5px solid var(--c); background: color-mix(in srgb, var(--c) 28%, var(--mh-panel)); color: var(--mh-ink); font-weight: 700; font-family: 'Inter', sans-serif; }
   .fb-av.is-ring { box-shadow: 0 0 0 3px var(--mh-panel), 0 0 0 5px var(--c), 0 0 16px 3px color-mix(in srgb, var(--c) 60%, transparent); }
   .fb-chain > div { display: flex; align-items: center; gap: 4px; } .fb-link { display: inline-flex; align-items: center; gap: 4px; } .fb-link i { font-style: normal; color: var(--mh-muted); } .fb-link em { font-style: normal; font-size: 11px; color: #E3B04B; }
+  .fp { position: relative; display: flex; align-items: center; gap: 8px; flex: none; height: 37px; margin-left: auto; padding: 3px 4px 3px 12px; border-radius: 999px; background: var(--mh-panel2); border: 1px solid color-mix(in srgb, #E3B04B 60%, var(--mh-line)); white-space: nowrap; z-index: 14; }
+  .fp.is-none { border-style: dashed; border-color: var(--mh-line2); } .fp-nobody { font-size: 12.5px; color: var(--mh-muted); }
+  .fp-cur { display: inline-flex; align-items: center; gap: 8px; } .fp-ring .fb-av { box-shadow: 0 0 0 2px var(--mh-panel2), 0 0 0 3.5px var(--c), 0 0 10px 2px color-mix(in srgb, var(--c) 55%, transparent); }
+  .fp-who { display: flex; flex-direction: column; line-height: 1.15; } .fp-who b { font-size: 12.5px; color: var(--mh-ink); } .fp-who small { font-size: 10.5px; color: var(--mh-muted); }
+  .fp-hand { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 10px 0 8px; border-radius: 999px; background: var(--mh-panel); border: 1px solid var(--mh-line2); font: 600 11.5px 'Inter', system-ui, sans-serif; color: var(--mh-ink2); } .fp-hand.is-u { background: #5a2420; border-color: #9b4137; color: #ffc7bd; } html[data-mh-theme="light"] .fp-hand.is-u { background: #FDEEEA; border-color: #C0504A; color: #9B2F27; }
+  .fp-more { font-size: 11px; color: var(--mh-muted); }
+  .fp-go { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; height: 29px; padding: 0 13px; border-radius: 999px; background: linear-gradient(180deg, #f0c264, #d9a23c); color: #1c1405; font: 800 12px 'Inter', system-ui, sans-serif; }
+  @container dirbar (max-width: 560px) { .fp-hand, .fp-more, .fp-who small { display: none; } }
+  @container dirbar (max-width: 430px) { .fp-who { display: none; } .fp { padding-left: 6px; } }
   .fb-pass { position: relative; } .fb-bg { position: fixed; inset: 0; z-index: 30; }
   .fb-menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 31; width: 290px; padding: 10px 12px; border: 1px solid var(--mh-line); border-radius: 14px; background: var(--mh-panel); box-shadow: 0 16px 40px rgba(0,0,0,.4); }
   .fb-menu > button { appearance: none; width: 100%; display: flex; align-items: center; gap: 10px; text-align: left; font: inherit; color: var(--mh-ink); background: transparent; border: 0; padding: 7px 6px; border-radius: 10px; cursor: pointer; } .fb-menu > button:hover { background: var(--mh-panel3); }
@@ -29436,6 +29445,18 @@ export default function App({ onSignOut }) {
                               <ChevronRight size={14} />
                             </button>
                           </div>
+                        )}
+                        {!xLock && (
+                          <FocusPill
+                            spot={campaignMap.spot}
+                            pcs={(() => {
+                              const onMap = focusPcs(campaignMap.tokens);
+                              if (onMap.length) return onMap;
+                              return (activeCampaign?.characterIds || []).filter((id) => characters[id]).map((id) => ({ tokenId: null, charId: id, name: characters[id].f_name || "Jugador", cls: characters[id].f_class || "", color: characters[id].f_class ? classColor(characters[id].f_class) : "#C9A24A" }));
+                            })()}
+                            onPass={(t, why) => passFocus(viewingCampaignId, t, why)}
+                            onClear={() => clearSpotFocus(viewingCampaignId, "")}
+                          />
                         )}
                         {imm && (
                           <div className="mh-dir-dtog">
