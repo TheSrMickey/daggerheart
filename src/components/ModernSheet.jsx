@@ -39,7 +39,7 @@ function ZoomFit({ children, isGeneral, natural, onNatural, fill }) {
       // Pestaña de campaña: sin escala, la escena o el mapa llenan el hueco disponible.
       if (fill) {
         cur.current = 1;
-        setFit({ s: 1, h: Math.max(320, availH), w: ow });
+        setFit({ s: 1, h: Math.max(320, availH + 24), w: ow }); // en la campaña el margen inferior es 12 (el resto de páginas, 36)
         return;
       }
       const nat = readsZoomed() ? i.offsetHeight / cur.current : i.offsetHeight; // alto sin zoom
