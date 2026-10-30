@@ -34,6 +34,7 @@ import { RestGm, RestQuick, RestBanner, GroupRestDialog, RestLock } from "./Grou
 import NpcStatsEditor, { npcStatsSummary, npcTokenStats, NpcStatsView } from "./NpcStats";
 import { Chronicle, Timeline } from "./Chronicle";
 import { appendLog } from "@/lib/chronicle";
+import CampInvite from "./CampInvite";
 import { SpotPlayer, SpotPause, SpotPanel, FocusBar, FocusPill, normSpot, liveHands, kindOf } from "./Spotlight";
 import { APP_VERSION } from "@/lib/changelog";
 import { setPresence, setPresenceMaking, startPresence, stopPresence, publishTable, loadTable, myUid, setPresenceCamp, bridge, logActivity, trackStat, loadReactions, toggleReaction } from "@/lib/social";
@@ -11523,6 +11524,7 @@ export default function App({ onSignOut }) {
   const [characters, setCharacters] = useState({});
   // Copia siempre al día de los personajes: evita que dos cambios seguidos se pisen.
   const charsRef = useRef({});
+  const [campInvOpen, setCampInvOpen] = useState(false);
   const [addContentFor, setAddContentFor] = useState(null); // capítulo al que se está añadiendo contenido (escena o mapa de combate)
   const [dragKey, setDragKey] = useState(null);
   const [overKey, setOverKey] = useState(null);
@@ -29215,7 +29217,7 @@ export default function App({ onSignOut }) {
                           </p>
                         </div>
                         <span className="mh-cgb-sp" />
-                        <button type="button" className="mh-cgb-btn" onClick={() => soon("Invitar jugadores por enlace")}><Plus size={14} /> <span>Invitar</span></button>
+                        <button type="button" className="mh-cgb-btn" onClick={() => setCampInvOpen(true)}><Plus size={14} /> <span>Invitar</span></button>
                         <button
                           type="button"
                           className={"mh-cgb-btn is-del" + (pendingDeleteCampaignId === viewingCampaignId ? " is-confirm" : "")}
@@ -29316,7 +29318,7 @@ export default function App({ onSignOut }) {
                         );
                       })}
                     </div>
-                    <button type="button" className="mh-cg-btn" onClick={() => soon("Invitar jugadores por enlace")}>
+                    <button type="button" className="mh-cg-btn" onClick={() => setCampInvOpen(true)}>
                       <Plus size={14} /> <span>Invitar</span>
                     </button>
                     <button
@@ -30179,6 +30181,8 @@ export default function App({ onSignOut }) {
                       </div>
                     );
                   })()}
+
+                  {campInvOpen && activeCampaign && <CampInvite camp={activeCampaign} players={(activeCampaign.characterIds || []).length} onClose={() => setCampInvOpen(false)} />}
 
                   {addContentFor && (
                     <div className="mh-chn-ov" role="dialog" aria-modal="true" aria-label="Añadir contenido" onClick={() => setAddContentFor(null)}>
@@ -31344,7 +31348,13 @@ export default function App({ onSignOut }) {
                         <div className="cgp-empty">
                           <span className="cgp-empty-ic"><Users size={26} strokeWidth={1.4} /></span>
                           <b>Aún no hay personajes en la mesa</b>
-                          
+                          <span>Invita a tus amigos para que se unan con sus personajes{availableIds.length ? " o añade uno tuyo" : ""}.</span>
+                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", marginTop: 6 }}>
+                            <button type="button" className="mh-btn" onClick={() => setCampInvOpen(true)}><Plus size={14} /> Invitar jugadores</button>
+                            {availableIds.map((id) => (
+                              <button key={id} type="button" className="mh-btn-ghost" onClick={() => addCharacterToCampaign(viewingCampaignId, id)}><Plus size={13} /> {characters[id].f_name || "Sin nombre"}</button>
+                            ))}
+                          </div>
                         </div>
                       ) : (
                         <div className="cgp-list is-gal">
