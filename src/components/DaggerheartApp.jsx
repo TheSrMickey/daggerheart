@@ -14316,10 +14316,55 @@ export default function App({ onSignOut }) {
     updateCampaign(campaignId, { characterIds: [...camp.characterIds, charId] });
   };
 
+  // Al salir un personaje de la campaña (o borrarse) desaparece todo lo suyo del tablero: ficha, compañero, áreas, efectos, cartas jugadas,
+  // enemigos que había inmovilizado y su sitio en el foco. Se hace sobre lo guardado, aunque esa campaña no sea la abierta.
+  const purgeCharFromMap = (campaignId, charId) => {
+    const apply = (m) => {
+      const old = m.tokens || [];
+      const gone = new Set(old.filter((t) => t.charId === charId || t.ownerCharId === charId).map((t) => t.id));
+      const out = { ...m };
+      out.tokens = old
+        .filter((t) => !gone.has(t.id))
+        .map((t) => (t.rootedBy === charId ? { ...t, rootedBy: undefined, conds: (t.conds || []).filter((c) => c !== "Inmovilizado") } : t));
+      if (Array.isArray(m.areas)) out.areas = m.areas.filter((a) => a.owner !== charId);
+      if (Array.isArray(m.cfx)) out.cfx = m.cfx.filter((c) => c.charId !== charId);
+      ["fx", "efx", "hfx"].forEach((k) => {
+        const e = m[k];
+        if (e && !Array.isArray(e) && (gone.has(e.from) || gone.has(e.to) || gone.has(e.to2) || (e.ids || []).some((i) => gone.has(i)))) out[k] = [];
+      });
+      const sp = m.spot;
+      if (sp && !Array.isArray(sp) && typeof sp === "object") {
+        const last = { ...(sp.last || {}) };
+        const snooze = { ...(sp.snooze || {}) };
+        delete last[charId];
+        delete snooze[charId];
+        out.spot = {
+          ...sp,
+          focus: sp.focus && sp.focus.charId === charId ? null : sp.focus || null,
+          hands: (sp.hands || []).filter((h) => h.charId !== charId),
+          chain: (sp.chain || []).filter((c) => (c && c.charId) !== charId),
+          last,
+          snooze,
+        };
+      }
+      return out;
+    };
+    mapQueue.current = mapQueue.current.then(async () => {
+      try {
+        const r = await safeGet("campaign-map:" + campaignId, true);
+        if (!r) return;
+        const next = apply(JSON.parse(r.value));
+        await safeSet("campaign-map:" + campaignId, JSON.stringify(next), true);
+      } catch (e) {}
+    });
+    if (campaignId === stageCampaignId || campaignId === viewingCampaignId) setCampaignMap((m) => apply(m || {}));
+  };
+
   const removeCharacterFromCampaign = (campaignId, charId) => {
     const camp = campaigns[campaignId];
     if (!camp) return;
     updateCampaign(campaignId, { characterIds: camp.characterIds.filter((cid) => cid !== charId) });
+    purgeCharFromMap(campaignId, charId);
   };
 
   const getActiveCampaignIdForChat = () => stageCampaignId;
