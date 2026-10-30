@@ -6023,14 +6023,6 @@ const sharedStyles = `
   .mh-dir-st.is-diff { border-style: solid; border-color: rgba(224,84,74,.5); background: rgba(224,84,74,.12); color: var(--mh-ink); } .mh-dir-st.is-diff > i { background: #E0544A; box-shadow: 0 0 0 3px rgba(224,84,74,.28); }
   .mh-dir-st .mh-dir-show { flex: none; height: 29px; padding: 0 13px; border-radius: 999px; }
   .mh-dir-bar .fp { margin-left: 0; }
-  .mh-pl-bar { margin-bottom: 10px; }
-  .mh-dir-st.is-none > i { background: var(--mh-muted2, #8a8696); box-shadow: none; }
-  .mh-dir-st.is-mine { border-style: solid; border-color: rgba(227,176,75,.6); background: rgba(227,176,75,.14); color: var(--mh-ink); } .mh-dir-st.is-mine > i { background: #E3B04B; box-shadow: 0 0 0 3px rgba(227,176,75,.28); }
-  .mh-stg-fear.is-over.is-bar { position: static; transform: none; flex: none; height: 37px; padding: 0 13px; border-radius: 999px; background: var(--mh-panel2); border: 1px solid var(--mh-line); box-shadow: none; backdrop-filter: none; }
-  .mh-stg-fear.is-over.is-bar > span:first-child, .mh-stg-fear.is-over.is-bar b { color: var(--mh-purple-ink); }
-  .mh-stg-fear.is-bar .mh-stg-fear-pips svg { width: 14px; height: 14px; }
-  @container dirbar (max-width: 760px) { .mh-stg-fear.is-bar .mh-stg-fear-pips { display: none; } }
-  @container dirbar (max-width: 560px) { .mh-pl-bar .mh-dir-st-t { display: none; } .mh-pl-bar .mh-dir-st { flex: none; padding-left: 10px; } .mh-pl-bar .mh-dir-live button span { display: none; } }
   @container dirbar (max-width: 880px) { .mh-dir-live button:not(.is-on) span { display: none; } .mh-dir-live button:not(.is-on) { padding: 6px 9px; } .mh-dir-chpill { flex-basis: 150px; } }
   @container dirbar (max-width: 780px) { .mh-dir-st .mh-dir-show span { display: none; } .mh-dir-st .mh-dir-show { padding: 0 9px; } }
   @container dirbar (max-width: 640px) { .mh-dir-st-t { display: none; } .mh-dir-st { flex: none; padding-left: 10px; } }
@@ -21643,38 +21635,9 @@ export default function App({ onSignOut }) {
                                   <Minimize2 size={13} /> Reducir
                                 </button>
                               )}
-                              {!isMobile && (() => {
-                                const stScenes = stageScenesOf(stage);
-                                const curCh = stScenes.find((x) => x.id === activeSceneIdOf(stage)) || null;
-                                const curIdx = curCh ? stScenes.indexOf(curCh) : -1;
-                                const LT = STAGE_TABS.find((t) => t.key === stTab) || { Icon: ScrollText };
-                                const sp = normSpot(campaignMap.spot);
-                                const fo = sp.focus;
-                                const mineF = !!fo && !fo.dm && fo.charId === viewingCharId;
-                                return (
-                                  <div className="mh-dir-bar mh-pl-bar">
-                                    <div className="mh-dir-live" role="status" aria-label="Lo que muestra el DJ">
-                                      <button type="button" className="is-on is-live" tabIndex={-1} title="Lo que el DJ está mostrando a la mesa">
-                                        <LT.Icon size={14} /> <span>{{ mapa: "Combate", mundo: "Mundo", pistas: "Pistas" }[stTab] || (STAGE_TABS.find((t) => t.key === stTab) || {}).label}</span>
-                                        <i className="mh-dir-livedot" aria-hidden="true" />
-                                      </button>
-                                    </div>
-                                    {curCh && (
-                                      <div className="mh-dir-chnav">
-                                        <span className="mh-dir-chpill" style={{ cursor: "default" }} title={curCh.title || "Capítulo " + (curIdx + 1)}>{"Cap. " + (curIdx + 1) + " · " + (curCh.title || "Sin título")}</span>
-                                      </div>
-                                    )}
-                                    <div className={"mh-dir-st " + (mineF ? "is-mine" : fo ? "is-sync" : "is-none")}>
-                                      <i aria-hidden="true" />
-                                      <span className="mh-dir-st-t">{mineF ? "Tienes el foco" : fo ? "Foco: " + (fo.dm ? "el DJ" : fo.name) : "Nadie tiene el foco"}</span>
-                                    </div>
-                                    {fearEl(" is-bar")}
-                                  </div>
-                                );
-                              })()}
                               <div className={"mh-stg-body" + (sceneOut && stTab === "escena" ? " is-out" : "")}>
                                 <ChapterBanner id={activeSceneIdOf(stage)} num={stageScenesOf(stage).findIndex((x) => x.id === activeSceneIdOf(stage)) + 1} title={stageScenesOf(stage).find((x) => x.id === activeSceneIdOf(stage))?.title} />
-                                {isMobile && !fearInCap && fearEl(" is-flow")}
+                                {(!isMobile || !fearInCap) && fearEl(" is-flow")}
                                 {stTab === "escena" &&
                                   (scene.title || scene.image || dlg ? (
                                     <>

@@ -9,6 +9,7 @@ export const CHANGELOG = [
     title: "El Oráculo del DJ",
     blurb: "Un anillo de luz que responde a las preguntas de la mesa: Sí / No, con matices o con una tirada de destino, solo para el DJ y a un toque bajo el chat.",
     items: [
+      { tag: "mejora", text: "Campaña desde la hoja de personaje · se quita la barra de Escena, capítulo y foco, y el Miedo vuelve a la esquina superior derecha de la escena. El banner de la hoja se mantiene arriba." },
       { tag: "arreglo", text: "Campañas · el botón «Invitar» ya funciona: abre la lista de tus amigos y les envía la invitación a la campaña. Una campaña sin jugadores muestra además «Invitar jugadores» y tus personajes disponibles para añadirlos a la mesa." },
       { tag: "arreglo", text: "Campañas · al borrar un personaje o quitarlo de la campaña desaparece todo lo suyo del tablero: su ficha (sin dejar una ficha temporal), su compañero, áreas, efectos, cartas jugadas y su sitio en el foco. Los enemigos que había inmovilizado con Enredo Feroz quedan libres." },
       { tag: "mejora", text: "Campaña desde la hoja de personaje · ahora sigue la estructura de la vista Directo del DJ: el banner de tu hoja se queda arriba, y debajo una barra con lo que muestra el DJ (Escena, Combate, Mundo...), el capítulo, quién tiene el foco y el Miedo, y la zona de juego con tus cartas como antes." },
