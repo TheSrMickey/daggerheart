@@ -17471,12 +17471,13 @@ export default function App({ onSignOut }) {
     setCgCompact(el.clientWidth < need);
     return () => ro.disconnect();
   }, [campFlat, viewingCampaignId, campaignDetailTab === "mesa"]); // eslint-disable-line react-hooks/exhaustive-deps
-  const showRail = showTopbar;
   const modernCamp = view === "ficha" && modernCharId && detailTab === "campaign" ? Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(modernCharId)) : null;
+  // En la campaña de la hoja de personaje no hay barra derecha: el chat va dentro de la página, como en el Directo del DJ.
+  const showRail = showTopbar && !(modernCamp && !isMobile);
   const railFold = showRail && !modernCamp; // plegable salvo con el chat de la campaña, que necesita todo el ancho
   const railW = !showRail ? 0 : railFold && !railPin ? 86 : 290;
   const padX = showRail ? "clamp(28px, 3.4vw, 48px)" : "28px";
-  const contentMax = campDetail && !campFlat ? 1760 : showRail ? 1320 : view === "ficha" ? 1160 : 960;
+  const contentMax = (campDetail && !campFlat) || (modernCamp && !isMobile) ? 1760 : showRail ? 1320 : view === "ficha" ? 1160 : 960;
   // Datos de la hoja moderna: valores base con lo que aportan armas y armadura (las reglas especiales de subclase siguen en la clásica).
   const getKeys = (raw) => {
     try {
@@ -21612,7 +21613,7 @@ export default function App({ onSignOut }) {
                             style={{
                               display: "grid",
                               // Ampliada, el chat mide lo mismo que en la rejilla normal: 5 de 12 columnas del hueco que queda sin las estadísticas.
-                              gridTemplateColumns: isMobile || embedded ? "1fr" : wide ? `minmax(0, 1fr) calc((100% - ${(armaduraWidth || 320) + 18 + 11 * 18}px) * 5 / 12 + ${4 * 18}px)` : "repeat(12, 1fr)",
+                              gridTemplateColumns: isMobile ? "1fr" : embedded ? "minmax(0, 1fr) clamp(372px, 26vw, 480px)" : wide ? `minmax(0, 1fr) calc((100% - ${(armaduraWidth || 320) + 18 + 11 * 18}px) * 5 / 12 + ${4 * 18}px)` : "repeat(12, 1fr)",
                               gap: 18,
                               flex: wide && armaduraHeight ? "0 0 auto" : 1,
                               minHeight: 0,
@@ -21621,7 +21622,7 @@ export default function App({ onSignOut }) {
                             }}
                           >
                             <Panel
-                              span={wide ? 1 : 7}
+                              span={wide || (embedded && !isMobile) ? 1 : 7}
                               bare
                               hidden={conditions.includes("Escondido") || conditions.includes("Oculto")}
                               restrained={conditions.includes("Inmovilizado")}
@@ -21988,11 +21989,11 @@ export default function App({ onSignOut }) {
                               )}
                             </Panel>
 
-                            <ChatHost embedded={embedded && !isMobile} slot={chatSlot}>
+                            <ChatHost embedded={false} slot={chatSlot}>
                             <Panel
-                              span={wide ? 1 : 5}
+                              span={wide || (embedded && !isMobile) ? 1 : 5}
                               fill={embedded && !isMobile}
-                              title="Chat"
+                              title={embedded && !isMobile ? "Chat de la mesa" : "Chat"}
                               titleRight={
                                 table.length > 0 && (
                                   <button type="button" className="mh-chat-grp" aria-label="La mesa: ver quién está" aria-expanded={tableOpen} onClick={() => setTableOpen((v) => !v)}>

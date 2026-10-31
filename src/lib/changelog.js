@@ -9,6 +9,7 @@ export const CHANGELOG = [
     title: "El Oráculo del DJ",
     blurb: "Un anillo de luz que responde a las preguntas de la mesa: Sí / No, con matices o con una tirada de destino, solo para el DJ y a un toque bajo el chat.",
     items: [
+      { tag: "mejora", text: "Campaña desde la hoja de personaje · desaparece la barra derecha: el banner de la hoja se alarga hasta el borde, la página gana ancho al cerrar el menú izquierdo (como en Directo) y el chat pasa a una columna dentro de la página, con el aspecto del chat de la mesa del DJ." },
       { tag: "mejora", text: "Campaña desde la hoja de personaje · la pestaña de la campaña usa los mismos márgenes que la vista Directo del DJ (arriba, a los lados y abajo); el resto de pestañas de la hoja no cambian." },
       { tag: "mejora", text: "Campaña desde la hoja de personaje · se quita la barra de Escena, capítulo y foco, y el Miedo vuelve a la esquina superior derecha de la escena. El banner de la hoja se mantiene arriba." },
       { tag: "arreglo", text: "Campañas · el botón «Invitar» ya funciona: abre la lista de tus amigos y les envía la invitación a la campaña. Una campaña sin jugadores muestra además «Invitar jugadores» y tus personajes disponibles para añadirlos a la mesa." },
