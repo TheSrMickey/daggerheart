@@ -9731,6 +9731,39 @@ function ShotFx({ kind, a, b, b2, size: S }) {
   const q = p > 0.5 ? (p - 0.5) / 0.5 : 0;
   const magic = kind === "magic";
   const [x, y] = at(f);
+  if (kind === "free") {
+    // Liberar: el hilo verde se tensa, se rompe y se recoge a los dos lados; el aro marrón de raíces estalla y suelta ramitas y hojas.
+    const L = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+    const ux = (b[0] - a[0]) / L, uy = (b[1] - a[1]) / L;
+    const x0 = a[0] + ux * S * 0.42, y0 = a[1] + uy * S * 0.42, x1 = b[0] - ux * S * 0.47, y1 = b[1] - uy * S * 0.47;
+    const mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+    const tens = Math.min(1, p / 0.22);
+    const qq = p < 0.22 ? 0 : Math.min(1, (p - 0.22) / 0.5);
+    const eq = 1 - Math.pow(1 - qq, 3);
+    const fd = p > 0.7 ? Math.max(0, 1 - (p - 0.7) / 0.3) : 1;
+    const vib = qq > 0 ? Math.sin(qq * Math.PI * 6) * (1 - qq) * S * 0.12 : Math.sin(tens * Math.PI * 8) * S * 0.03 * tens;
+    const seg = (sx, sy, ex, ey, sg, k) => (
+      <path key={k} d={"M" + sx + " " + sy + " Q" + ((sx + ex) / 2 - uy * vib * sg) + " " + ((sy + ey) / 2 + ux * vib * sg) + " " + ex + " " + ey} fill="none" stroke="#9ce6a2" strokeWidth={S * 0.07 * (1 + 0.6 * tens * (1 - qq))} strokeDasharray={"0.1 " + S * 0.17} strokeLinecap="round" opacity={fd * (1 - qq * 0.45)} />
+    );
+    const twigs = Array.from({ length: 8 }, (_, i) => (i * Math.PI) / 4 + 0.3);
+    return (
+      <g pointerEvents="none">
+        {qq === 0 ? seg(x0, y0, x1, y1, 1, "w") : [seg(x0, y0, x0 + (mx - x0) * (1 - eq), y0 + (my - y0) * (1 - eq), 1, "a"), seg(x1, y1, x1 + (mx - x1) * (1 - eq), y1 + (my - y1) * (1 - eq), -1, "b")]}
+        {qq > 0 && qq < 0.7 && <circle cx={mx} cy={my} r={S * (0.1 + 0.5 * qq)} fill="#e3ffe5" opacity={(1 - qq / 0.7) * 0.75} />}
+        {qq > 0 && (
+          <>
+            <circle cx={b[0]} cy={b[1]} r={S * (0.47 + 0.55 * eq)} fill="none" stroke="#C08B5C" strokeWidth="2.5" strokeDasharray="5 4" opacity={(1 - eq) * fd} />
+            {twigs.map((an, i) => (
+              <line key={"t" + i} x1={b[0] + Math.cos(an) * S * 0.47} y1={b[1] + Math.sin(an) * S * 0.47} x2={b[0] + Math.cos(an) * S * (0.47 + 0.15 + 0.5 * eq)} y2={b[1] + Math.sin(an) * S * (0.47 + 0.15 + 0.5 * eq)} stroke={i % 2 ? "#8a5a35" : "#7fcf86"} strokeWidth={S * 0.05} strokeLinecap="round" opacity={(1 - eq) * fd} />
+            ))}
+            {twigs.slice(0, 6).map((an, i) => (
+              <circle key={"l" + i} cx={b[0] + Math.cos(an + 0.4) * S * (0.5 + 0.7 * eq)} cy={b[1] + Math.sin(an + 0.4) * S * (0.5 + 0.7 * eq) - S * 0.3 * eq} r={S * 0.05} fill="#9ce6a2" opacity={(1 - eq) * fd} />
+            ))}
+          </>
+        )}
+      </g>
+    );
+  }
   if (kind === "web") return null; // Enredo Feroz: solo sacude la ficha; el hilo lo dibuja RootThreads
   if (kind === "roots") {
     // Enredo Feroz: un destello verde llega al objetivo y brotan raíces del suelo; con Esperanza, una enredadera salta al segundo.
@@ -10611,7 +10644,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
               title="Púlsala para verla en grande · arrástrala al mapa para usarla"
             >
               <FanFace c={c} col={col} />
-              {c.ghost && <span className="mh-fan-ghostlab">{c.noHope ? "Sin Esperanza" : "1 Esperanza"}</span>}
+              {c.ghost && <span className="mh-fan-ghostlab">{c.noHope ? "Sin Esperanza" : c.ghostLab || "1 Esperanza"}</span>}
             </div>
           );
         })}
@@ -10666,7 +10699,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
           )}
           {drag.cell && !inHand(drag.x, drag.y) && (
             <div className="mh-fan-tip" style={{ left: Math.max(130, Math.min(window.innerWidth - 130, drag.x)), top: aim ? drag.y - 40 : drag.y - 112 }}>
-              {aim ? (!aimIn ? "Fuera de alcance " + aimReach(drag.card).label : aimTarget ? (drag.card.weapon ? "Atacar a " : "Lanzar sobre ") + (aimTarget.name || "el objetivo") : "Suéltala sobre un adversario") : drag.card.rowCard ? "Abrir «" + drag.card.key + "»" : drag.card.subclass ? "Activar Encarnación Elemental" : <>{target ? `Objetivo: ${target.name || "Ficha"}` : "Casilla"} {rng ? `(${rng.label})` : "(fuera de alcance)"}</>}
+              {aim ? (!aimIn ? "Fuera de alcance " + aimReach(drag.card).label : aimTarget ? (drag.card.weapon ? "Atacar a " : drag.card.release ? "Liberar a " : "Lanzar sobre ") + (aimTarget.name || "el objetivo") : "Suéltala sobre un adversario") : drag.card.rowCard ? "Abrir «" + drag.card.key + "»" : drag.card.subclass ? "Activar Encarnación Elemental" : <>{target ? `Objetivo: ${target.name || "Ficha"}` : "Casilla"} {rng ? `(${rng.label})` : "(fuera de alcance)"}</>}
               <small>{drag.card.rowCard ? "Suelta en cualquier casilla · Esc para cancelar" : drag.card.subclass ? "Suelta en cualquier casilla · Esc para cancelar" : "Suelta para usar · Esc para cancelar"}</small>
             </div>
           )}
@@ -11024,7 +11057,7 @@ function MapBoard({ aimRange, rangeMenu, cfx, meCharId, onDragInfo, onStore, pla
             key={t.id}
             type="button"
             data-tid={t.id}
-            className={"mh-map-tk is-" + t.kind + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") + (anim.kind === "web" ? " is-web" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
+            className={"mh-map-tk is-" + t.kind + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id && anim.kind !== "free" ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") + (anim.kind === "web" ? " is-web" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
             style={{ ...at(pos.x, pos.y), "--tc": t.color, ...(anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); return tg ? { "--ax": (tg.x - t.x) * 100 + "%", "--ay": (tg.y - t.y) * 100 + "%" } : {}; })() : {}) }}
             onPointerDown={(e) => startDrag(e, t)}
             onContextMenu={(e) => openMenu(e, t)}
@@ -15186,6 +15219,22 @@ export default function App({ onSignOut }) {
     // Primero la carta se revela a toda la mesa y, cuando acaba, se hace la tirada de conjuro.
     playCardOnMap(sheetCampaignId, charId, card, { noChat: true, short: true });
     afterReveal(charId, card.key, () => rollTraitCheck(charId, label, Number(c[sk] || 0) + (mods[sk] || 0), { name: "Enredo Feroz", damage: "d8+1 físico", spell: true, fixedDice: 1, targetChosen: true, targetId: target.id, targetName: target.name, targetDc: target.stats?.difficulty || null }));
+    return "reveal";
+  };
+  // Carta fantasma «Liberar»: suelta a un adversario que tú enraizaste con Enredo Feroz (sin coste).
+  const canRelease = (charId, tg) => !!tg && tg.rootedBy === charId && (tg.conds || []).includes("Inmovilizado");
+  const castLiberar = (charId, target, card) => {
+    const toks = campaignMapRef.current.tokens || [];
+    const me = toks.find((t) => t.kind === "pc" && t.charId === charId);
+    if (!me || !canRelease(charId, target) || cellDist(me, target) > RANGE_CELLS["Lejano"]) return "cancel";
+    postCampaignEvent(charId, "🌿 Libera a " + (target.name || "un adversario") + " del Enredo Feroz");
+    playCardOnMap(sheetCampaignId, charId, card, { noChat: true, short: true });
+    afterReveal(charId, card.key, () => {
+      mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: me.id, to: target.id, kind: "free" }), "fx");
+      // El aro de raíces aguanta mientras el hilo se tensa y se va justo cuando se rompe.
+      setTimeout(() => mutateMap(sheetCampaignId, (ts) => ts.map((x) => (x.id === target.id ? { ...x, rootedBy: undefined, conds: (x.conds || []).filter((c) => c !== "Inmovilizado") } : x))), 290);
+      pushMapLog(sheetCampaignId, "🌿 Enredo Feroz: " + (target.name || "un adversario") + " queda libre", "info");
+    });
     return "reveal";
   };
   // Carta de arma arrastrada a un adversario dentro del alcance del arma: se revela la carta y después se hace la tirada de ataque.
@@ -22059,12 +22108,13 @@ export default function App({ onSignOut }) {
                                           );
                                           const rootedMine = (campaignMap.tokens || []).filter((t) => t.rootedBy === viewingCharId && (t.conds || []).includes("Inmovilizado"));
                                           const ghostCard = rootedMine.length && keys.includes("Enredo Feroz") ? (() => { const base = findDomainCardAny("Enredo Feroz"); return base ? { ...base, key: "Inmovilizar", baseKey: "Enredo Feroz", text: "Puedes gastar una Esperanza para inmovilizar temporalmente a otro adversario en alcance Muy Cercano del objetivo de Enredo Feroz.", recall: null, noCost: true, ghost: true, noHope: Number(me?.hope_marked ?? HOPE_DEFAULT) < 1 } : null; })() : null;
-                                          const cards = [wp(me?.f_primary_weapon, PRIMARY_WEAPONS, "Principal"), wp(me?.f_secondary_weapon, SECONDARY_WEAPONS, "Secundaria"), ...actionCards, ...keys.map((k) => { const d = findDomainCardAny(k); return d && mcDom && d.domain === mcDom && !(CLASS_DOMAINS[me?.f_class] || []).includes(mcDom) ? { ...d, multi: true } : d; }), ghostCard].filter(Boolean);
+                                          const releaseCard = ghostCard ? { ...ghostCard, key: "Liberar", text: "Libera al objetivo del Enredo Feroz.", ghostLab: "Gratis", noHope: false, release: true } : null;
+                                          const cards = [wp(me?.f_primary_weapon, PRIMARY_WEAPONS, "Principal"), wp(me?.f_secondary_weapon, SECONDARY_WEAPONS, "Secundaria"), ...actionCards, ...keys.map((k) => { const d = findDomainCardAny(k); return d && mcDom && d.domain === mcDom && !(CLASS_DOMAINS[me?.f_class] || []).includes(mcDom) ? { ...d, multi: true } : d; }), ghostCard, releaseCard].filter(Boolean);
                                           return (
                                             <CardFan
                                               cards={cards}
                                               cardBack={cardBack}
-                                              aimOk={(card, tg) => !card.ghost || canExtraRoot(viewingCharId, tg)}
+                                              aimOk={(card, tg) => !card.ghost || (card.release ? canRelease(viewingCharId, tg) : canExtraRoot(viewingCharId, tg))}
                                               onAim={setAimRange}
                                               reachOf={(card) => { if (!card.weapon) return null; const lab = weaponReach(characters[viewingCharId], card.key); return lab ? { label: lab, max: RANGE_CELLS[lab] || 99 } : null; }}
                                               cardBorder={cardBorder}
@@ -22073,6 +22123,7 @@ export default function App({ onSignOut }) {
                                               me={myToken}
                                               tokens={mapTokens}
                                               onUse={(card, cell, target, rng) =>
+                                                card.release ? castLiberar(viewingCharId, target, card) :
                                                 card.ghost ? castEnredoExtra(viewingCharId, target, card) :
                                                 card.weapon ? castWeapon(viewingCharId, target, card) :
                                                 card.key === "Enredo Feroz" && !card.weapon ? castEnredo(viewingCharId, target, card) :
