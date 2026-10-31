@@ -5027,7 +5027,15 @@ const sharedStyles = `
   .mh-root-tag { position: absolute; z-index: 30; left: 50%; top: 100%; transform: translate(-50%, 8px); min-width: 200px; max-width: 260px; padding: 7px 10px; border-radius: 11px; background: rgba(12,12,32,.96); border: 1px solid #7fcf8688; box-shadow: 0 10px 22px -8px #000; text-align: left; pointer-events: none; opacity: 0; visibility: hidden; transition: opacity .12s; } .mh-root-tag b { display: block; font-size: 12px; color: #fff; } .mh-root-tag small { display: block; font-size: 10.5px; line-height: 1.35; color: #b5b4d0; margin-top: 2px; }
   .mh-map-tk:hover .mh-root-tag, .mh-map-tk:focus-visible .mh-root-tag, .mh-map-tk.is-sel .mh-root-tag { opacity: 1; visibility: visible; } .mh-map-tk:hover, .mh-map-tk:focus-visible { z-index: 8; }
   .mh-rotwrap .mh-root-tag { rotate: -90deg; }
-  .mh-fan-card.is-ghostcard { filter: drop-shadow(0 0 14px #7fcf8688); } .mh-fan-card.is-ghostcard .mh-fan-in { opacity: .6; filter: saturate(.55) brightness(1.15); } .mh-fan-card.is-ghostcard::after { content: ""; position: absolute; inset: 0; border: 2px dashed #7fcf86; border-radius: 22px; pointer-events: none; animation: mh-ghost-pulse 2.4s ease-in-out infinite; } .mh-fan-card.is-ghostcard.is-nohope { filter: grayscale(1); opacity: .6; }
+  /* Carta fugaz (al estilo de Runeterra): ondas verdes que se abren desde el borde y un brillo que respira */
+  .mh-fan-card.is-ghostcard { filter: drop-shadow(0 0 14px #7fcf8688); }
+  .mh-fan-card.is-ghostcard .mh-fan-in { opacity: .86; animation: mh-fleet-in 3.2s ease-in-out infinite; }
+  .mh-fan-card.is-ghostcard::before, .mh-fan-card.is-ghostcard::after { content: ""; position: absolute; inset: 0; border-radius: 22px; border: 2px solid #9ce6a2; box-shadow: 0 0 16px #7fcf86aa, inset 0 0 16px #7fcf8655; pointer-events: none; opacity: 0; animation: mh-fleet-wave 2.8s cubic-bezier(.2,.6,.3,1) infinite; }
+  .mh-fan-card.is-ghostcard::after { animation-delay: 1.4s; }
+  .mh-fan-card.is-ghostcard.is-nohope { filter: grayscale(1); opacity: .6; } .mh-fan-card.is-ghostcard.is-nohope::before, .mh-fan-card.is-ghostcard.is-nohope::after { display: none; }
+  @keyframes mh-fleet-wave { 0% { transform: scale(1); opacity: .8; } 100% { transform: scale(1.26, 1.18); opacity: 0; } }
+  @keyframes mh-fleet-in { 0%, 100% { filter: saturate(.7) brightness(1.04); } 50% { filter: saturate(1.05) brightness(1.2) hue-rotate(-14deg); } }
+  @media (prefers-reduced-motion: reduce) { .mh-fan-card.is-ghostcard::before, .mh-fan-card.is-ghostcard::after, .mh-fan-card.is-ghostcard .mh-fan-in { animation: none; } }
   .mh-fan-ghostlab { position: absolute; left: 0; right: 0; bottom: 6px; text-align: center; font: 700 9px Inter, sans-serif; letter-spacing: .1em; color: #9ce6a2; text-transform: uppercase; z-index: 3; pointer-events: none; text-shadow: 0 1px 4px #000; }
   @keyframes mh-ghost-pulse { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
   .mh-aim { position: fixed; inset: 0; z-index: 9998; pointer-events: none; } .mh-aim-l { animation: mh-aim-dash .6s linear infinite; } @keyframes mh-aim-dash { to { stroke-dashoffset: -12; } }
@@ -5207,6 +5215,7 @@ const sharedStyles = `
   @keyframes mh-glow { 0%, 100% { opacity: .25; } 50% { opacity: .55; } }
   .mh-map-tk.is-hit.is-late, .mh-iso-tk.is-hit.is-late { animation-delay: .62s; }
   .mh-map-tk.is-hit.is-late .mh-map-face { animation-delay: .62s; }
+  .mh-map-tk.is-hit.is-web, .mh-iso-tk.is-hit.is-web, .mh-map-tk.is-hit.is-web .mh-map-face { animation-delay: 1.12s; }
   .mh-map-shot { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 8; overflow: visible; }
   .mh-map-tk.is-pet .mh-map-face { width: 56%; height: 56%; background: #8C7A5E; border-color: var(--tc); border-width: 3px; border-radius: 40%; }
   .mh-map-tk.is-dead .mh-map-face { filter: grayscale(.85) brightness(.75); opacity: .8; }
@@ -9627,13 +9636,14 @@ const FOG_RADIUS = 3; // los personajes despejan a su alrededor (alcance Muy cer
 const isFlying = (t) => mapConds(t).includes("Volando");
 const isDeadFoe = (t) => !!(t.stats && Number(t.stats.hp || 0) > 0 && Number(t.stats.hpMarked || 0) >= Number(t.stats.hp || 0));
 // Proyectil de un ataque a distancia (orbe mágico o flecha) en el tablero isométrico: vuela en arco y estalla al llegar.
+const WEB_MS = 2800; // Enredo Feroz: hilo (1,1 s), impacto y telaraña
 function ShotFx({ kind, a, b, b2, size: S }) {
   const [p, setP] = useState(0);
   useEffect(() => {
     let raf;
     const t0 = performance.now();
     const tick = (n) => {
-      const v = Math.min(1, (n - t0) / 1300);
+      const v = Math.min(1, (n - t0) / (kind === "web" ? WEB_MS : 1300));
       setP(v);
       if (v < 1) raf = requestAnimationFrame(tick);
     };
@@ -9647,6 +9657,59 @@ function ShotFx({ kind, a, b, b2, size: S }) {
   const q = p > 0.5 ? (p - 0.5) / 0.5 : 0;
   const magic = kind === "magic";
   const [x, y] = at(f);
+  if (kind === "web") {
+    // Enredo Feroz: un hilo de puntos sale lento y acelera hasta clavarse en el objetivo; al impactar se abre una telaraña.
+    const ms = p * WEB_MS;
+    const u = Math.min(1, ms / 1100);
+    const e = Math.pow(u, 2.6);
+    const sag = (g) => -Math.sin(Math.PI * g) * S * 0.55;
+    const pt = (g) => [a[0] + (b[0] - a[0]) * g, a[1] + (b[1] - a[1]) * g + sag(g)];
+    const upto = (g0, g1) => Array.from({ length: 30 }, (_, i) => pt(g0 + ((g1 - g0) * i) / 29));
+    const line = (pts) => "M" + pts.map((q) => q[0].toFixed(1) + " " + q[1].toFixed(1)).join(" L");
+    const hp = pt(e);
+    const ti = Math.max(0, ms - 1100);
+    const q = Math.min(1, ti / 650);
+    const fade = ms > 2200 ? Math.max(0, 1 - (ms - 2200) / 600) : 1;
+    const R = S * 0.62;
+    const spokes = Array.from({ length: 8 }, (_, i) => (i * Math.PI) / 4 + 0.2);
+    const ring = (k) => "M" + spokes.map((an) => {
+      const rr = R * k * Math.min(1, q * 1.5);
+      return (b[0] + Math.cos(an) * rr).toFixed(1) + " " + (b[1] + Math.sin(an) * rr * 0.8).toFixed(1);
+    }).join(" L") + " Z";
+    return (
+      <g pointerEvents="none" opacity={fade}>
+        {e > 0.002 && (
+          <>
+            <path d={line(upto(0, e))} fill="none" stroke="#bff0c4" strokeWidth={S * 0.03} opacity=".28" strokeLinecap="round" />
+            <path d={line(upto(0, e))} fill="none" stroke="#f1fff0" strokeWidth={S * 0.075} strokeDasharray={`0.1 ${S * 0.17}`} strokeLinecap="round" />
+            {u < 1 && <path d={line(upto(Math.max(0, e - 0.12 * (0.4 + u)), e))} fill="none" stroke="#e3ffe5" strokeWidth={S * (0.05 + 0.08 * u)} strokeLinecap="round" opacity={0.35 + 0.5 * u} />}
+          </>
+        )}
+        {u < 1 && (
+          <>
+            <circle cx={hp[0]} cy={hp[1]} r={S * (0.13 + 0.1 * u)} fill="#7fcf86" opacity=".32" />
+            <circle cx={hp[0]} cy={hp[1]} r={S * 0.07} fill="#f1fff0" />
+          </>
+        )}
+        {ti > 0 && (
+          <>
+            <circle cx={b[0]} cy={b[1]} r={S * (0.15 + 0.85 * q)} fill="none" stroke="#f1fff0" strokeWidth={3.5 * (1 - q) + 0.5} opacity={1 - q} />
+            <circle cx={b[0]} cy={b[1]} r={S * (0.1 + 0.4 * q)} fill="#e3ffe5" opacity={(1 - q) * 0.55} />
+            {spokes.map((an, i) => (
+              <line key={"s" + i} x1={b[0]} y1={b[1]} x2={b[0] + Math.cos(an) * R * Math.min(1, q * 1.8)} y2={b[1] + Math.sin(an) * R * 0.8 * Math.min(1, q * 1.8)} stroke="#e9f8e6" strokeWidth={S * 0.035} strokeLinecap="round" opacity=".9" />
+            ))}
+            {q > 0.3 && <path d={ring(0.5)} fill="none" stroke="#e9f8e6" strokeWidth={S * 0.03} strokeLinejoin="round" opacity=".85" />}
+            {q > 0.3 && <path d={ring(1)} fill="none" stroke="#e9f8e6" strokeWidth={S * 0.03} strokeLinejoin="round" opacity=".7" />}
+            {Array.from({ length: 6 }, (_, i) => {
+              const an = (i * Math.PI) / 3 + 0.6;
+              const d0 = S * (0.2 + 0.6 * q), d1 = d0 + S * 0.16;
+              return <line key={"p" + i} x1={b[0] + Math.cos(an) * d0} y1={b[1] + Math.sin(an) * d0 * 0.8} x2={b[0] + Math.cos(an) * d1} y2={b[1] + Math.sin(an) * d1 * 0.8} stroke="#7fcf86" strokeWidth={S * 0.04} strokeLinecap="round" opacity={1 - q} />;
+            })}
+          </>
+        )}
+      </g>
+    );
+  }
   if (kind === "roots") {
     // Enredo Feroz: un destello verde llega al objetivo y brotan raíces del suelo; con Esperanza, una enredadera salta al segundo.
     const grow = Math.max(0, Math.min(1, (p - 0.3) / 0.35));
@@ -9852,7 +9915,7 @@ function useAttackFx(fx) {
     last.current = fx.key;
     if (Date.now() - fx.key > 15000) return;
     setAnim(fx);
-    const t = setTimeout(() => setAnim(null), 1500);
+    const t = setTimeout(() => setAnim(null), fx.kind === "web" ? WEB_MS + 200 : 1500);
     return () => clearTimeout(t);
   }, [fx?.key]);
   return anim;
@@ -9982,7 +10045,7 @@ function FanFace({ c, col }) {
     if (!it.image && kind === "accion") it = { ...it, image: dt.image || FAN_CLASS_IMG[c.myClass] || null };
   }
   else it = cat.find((x) => x.kind === "dominio" && x.key === (c.baseKey || c.key) && (!c.domain || x.domain === c.domain));
-  if (c.noCost) it = { ...it, key: c.key, text: c.text, recall: null, noCost: true };
+  if (c.noCost) it = { ...it, key: c.key, text: c.text, recall: null, noCost: true, ...(c.ghost ? { image: null } : {}) };
   if (!it) it = { id: "x-" + c.key, kind: "dominio", key: c.key, sub: (c.domain || "") + " · " + (c.type || ""), domain: c.domain, type: c.type, level: c.level, recall: c.recall, text: c.text, image: c.image, color: col };
   const I = it.Icon || DOMAIN_ICONS[it.domain] || Sparkles;
   return (
@@ -10916,7 +10979,7 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
             key={t.id}
             type="button"
             data-tid={t.id}
-            className={"mh-map-tk is-" + t.kind + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
+            className={"mh-map-tk is-" + t.kind + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") + (anim.kind === "web" ? " is-web" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
             style={{ ...at(pos.x, pos.y), "--tc": t.color, ...(anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); return tg ? { "--ax": (tg.x - t.x) * 100 + "%", "--ay": (tg.y - t.y) * 100 + "%" } : {}; })() : {}) }}
             onPointerDown={(e) => startDrag(e, t)}
             onContextMenu={(e) => openMenu(e, t)}
@@ -15075,7 +15138,8 @@ export default function App({ onSignOut }) {
     if (!c || !me || !canExtraRoot(charId, target) || cellDist(me, target) > RANGE_CELLS["Lejano"]) return "cancel";
     if (Number(c.hope_marked ?? HOPE_DEFAULT) < 1) { pushMapLog(sheetCampaignId, "Enredo Feroz: no tienes Esperanza", "info"); return "cancel"; }
     updateCharacterField(charId, "hope_marked", String(Number(c.hope_marked ?? HOPE_DEFAULT) - 1));
-        setTimeout(() => mutateMap(sheetCampaignId, (ts) => ts.map((x) => (x.id === target.id ? { ...x, conds: [...new Set([...(x.conds || []), "Inmovilizado"])], rootedBy: charId } : x))), 700);
+    mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: me.id, to: target.id, kind: "web" }), "fx");
+    setTimeout(() => mutateMap(sheetCampaignId, (ts) => ts.map((x) => (x.id === target.id ? { ...x, conds: [...new Set([...(x.conds || []), "Inmovilizado"])], rootedBy: charId } : x))), 1500);
     postCampaignEvent(charId, "🌿 Gasta 1 Esperanza: Enredo Feroz también inmoviliza a " + (target.name || "otro adversario"));
     pushMapLog(sheetCampaignId, "🌿 Enredo Feroz: " + (target.name || "un adversario") + " queda inmovilizado", "info");
     return "ok";
@@ -17175,11 +17239,11 @@ export default function App({ onSignOut }) {
           const extra = r.weapon.hopeExtra && ft ? (campaignMapRef.current.tokens || []).filter((x) => x.id !== first && (x.kind === "foe" || x.kind === "npc") && !x.gmHidden && cellDist(x, ft) <= RANGE_CELLS["Muy cercano"] && !(x.stats && Number(x.stats.hpMarked || 0) >= Number(x.stats.hp || 0))).sort((p, q) => cellDist(p, ft) - cellDist(q, ft))[0] : null;
           return extra ? [first, extra.id] : [first];
         })() : null;
-        const fxKind = snareIds ? "roots" : /mágic/i.test(damage || "") ? "magic" : reachNow && reachNow !== "Cuerpo a cuerpo" ? "shot" : "melee";
-        if (fromTok && !snareIds) fxLater.push(() => mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: fromTok.id, to: r.weapon.targetId, kind: fxKind, ...(snareIds && snareIds[1] ? { to2: snareIds[1] } : {}) }), "fx"));
+        const fxKind = snareIds ? "web" : /mágic/i.test(damage || "") ? "magic" : reachNow && reachNow !== "Cuerpo a cuerpo" ? "shot" : "melee";
+        if (fromTok) fxLater.push(() => mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: fromTok.id, to: r.weapon.targetId, kind: fxKind, ...(snareIds && snareIds[1] ? { to2: snareIds[1] } : {}) }), "fx"));
         if (snareIds) {
           // Las raíces inmovilizan al objetivo (y al segundo adversario si se gasta una Esperanza).
-          fxLater.push(() => setTimeout(() => mutateMap(sheetCampaignId, (ts) => ts.map((x) => (snareIds.includes(x.id) ? { ...x, conds: [...new Set([...(x.conds || []), "Inmovilizado"])], rootedBy: charId } : x))), 900));
+          fxLater.push(() => setTimeout(() => mutateMap(sheetCampaignId, (ts) => ts.map((x) => (snareIds.includes(x.id) ? { ...x, conds: [...new Set([...(x.conds || []), "Inmovilizado"])], rootedBy: charId } : x))), 1500));
           pushMapLog(sheetCampaignId, "🌿 Enredo Feroz: " + snareIds.map((id) => (campaignMapRef.current.tokens || []).find((x) => x.id === id)?.name || "un adversario").join(" y ") + " queda inmovilizado", "info");
           if (snareIds[1] && rc) updateCharacterField(charId, "hope_marked", String(Math.max(0, Number(rc.hope_marked ?? HOPE_DEFAULT) - 1)));
         }
