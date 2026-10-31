@@ -5048,15 +5048,15 @@ const sharedStyles = `
   .mh-fan-tip { position: fixed; z-index: 9999; pointer-events: none; transform: translate(-50%, -150%); padding: 6px 10px; border-radius: 8px; background: rgba(20,17,26,.92); color: #F3EBDD; font-size: 12px; white-space: nowrap; }
   .mh-fan-tip small { display: block; font-size: 10px; opacity: .7; }
   /* Carta jugada en el mapa (la ve el resto de la mesa): tablero oscurecido, reverso y revelado. Dura ~4,4 s. */
-  .mh-cpf { position: absolute; inset: 0; z-index: 30; pointer-events: none; display: grid; place-items: center; overflow: hidden; }
-  .mh-cpf-dim { position: absolute; inset: 0; background: radial-gradient(70% 70% at 50% 50%, rgba(6,6,18,.55), rgba(6,6,18,.82)); opacity: 0; animation: mh-cpf-dim 4.5s ease both; }
+  .mh-cpf { position: absolute; inset: 0; z-index: 30; pointer-events: none; display: grid; place-items: center; }
+  .mh-cpf-dim { position: absolute; inset: 0; bottom: calc(-1 * var(--ci, 0px)); background: radial-gradient(70% 70% at 50% 50%, rgba(6,6,18,.55), rgba(6,6,18,.82)); opacity: 0; animation: mh-cpf-dim 4.5s ease both; }
   .mh-cpf-stage { position: relative; display: flex; flex-direction: column; align-items: center; gap: 14px; }
-  .mh-cpf-card { position: relative; width: 168px; height: 236px; perspective: 1000px; opacity: 0; animation: mh-cpf-card 4.5s cubic-bezier(.3,.9,.3,1) both; }
+  .mh-cpf-card { position: relative; width: calc(var(--ch, 236px) * .7119); height: var(--ch, 236px); perspective: 1000px; opacity: 0; animation: mh-cpf-card 4.5s cubic-bezier(.3,.9,.3,1) both; }
   .mh-cpf-card.is-own { animation-name: mh-cpf-card-own; }
   @keyframes mh-cpf-card-own { 0% { opacity: 0; transform: translateY(26px) scale(.82); } 10% { opacity: 1; transform: translateY(0) scale(1); } 76% { opacity: 1; transform: translateY(0) scale(1.04); } 100% { opacity: 1; transform: translate(var(--fx), var(--fy)) scale(var(--fs)); } }
   .mh-cpf-flip { position: absolute; inset: 0; transform-style: preserve-3d; animation: mh-cpf-flip 4.5s cubic-bezier(.45,0,.25,1) both; }
   .mh-cpf-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 12px; overflow: hidden; background: #10112a; transform: translateZ(0.1px); box-shadow: 0 22px 50px -14px #000d, 0 0 46px -8px var(--cc); } .mh-cpf-face > svg { display: block; width: 100%; height: 100%; }
-  .mh-cpf-front { transform: rotateY(180deg) translateZ(0.1px); } .mh-cpf-front > div { transform-origin: top left; transform: scale(.56); width: 300px !important; height: 420px !important; } .mh-cpf .mh-cpf-front .mh-cardc { border-color: var(--edge) !important; }
+  .mh-cpf-front { transform: rotateY(180deg) translateZ(0.1px); } .mh-cpf-front > div { transform-origin: top left; transform: scale(var(--cs, .56)); width: 300px !important; height: 420px !important; } .mh-cpf .mh-cpf-front .mh-cardc { border-color: var(--edge) !important; }
   .mh-cpf-nm { color: #fff; font-size: 13px; text-shadow: 0 2px 10px #000; opacity: 0; animation: mh-cpf-nm 4.5s ease both; } .mh-cpf-nm em { font-style: normal; font-weight: 700; color: var(--cc); filter: brightness(1.25); }
   @keyframes mh-cpf-dim { 0% { opacity: 0; } 10% { opacity: 1; } 88% { opacity: 1; } 100% { opacity: 0; } }
   @keyframes mh-cpf-card { 0% { opacity: 0; transform: translateY(26px) scale(.82); } 10% { opacity: 1; transform: translateY(0) scale(1); } 88% { opacity: 1; transform: translateY(0) scale(1.04); } 100% { opacity: 0; transform: translateY(-10px) scale(1.04); } }
@@ -10685,20 +10685,32 @@ function MapPortal({ on, children }) {
 // Carta jugada en el mapa: el resto de la mesa ve oscurecerse el tablero, el reverso de quien la juega y cómo se revela.
 function CardPlayView({ anim, own }) {
   const cardRef = useRef(null);
+  const rootRef = useRef(null);
   const [fly, setFly] = useState(null);
+  const [box, setBox] = useState(null); // { inset, h }: hueco libre sobre la baraja y alto de la carta
+  // La carta se centra en el espacio que queda entre el borde de arriba y la baraja (no en toda la caja) y ocupa casi todo ese alto.
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const r = root.getBoundingClientRect();
+    const fan = root.closest(".mh-map-stage")?.querySelector(".mh-fan");
+    const fr = fan ? fan.getBoundingClientRect() : null;
+    const inset = fr && fr.top > r.top && fr.top < r.bottom ? Math.round(r.bottom - fr.top) : 0;
+    setBox({ inset, h: Math.max(236, Math.min(430, Math.round(r.height - inset - 76))) });
+  }, [anim.key]);
   useLayoutEffect(() => {
     const t = typeof window !== "undefined" ? window.__mhFlyTo : null;
     const el = cardRef.current;
-    if (!own || !t || !el || t.key !== anim.card?.key || Date.now() - t.t > 8000) return;
+    if (!box || !own || !t || !el || t.key !== anim.card?.key || Date.now() - t.t > 8000) return;
     const r = el.getBoundingClientRect();
     // La animación de entrada arranca 26 px más abajo; el centro real es el del tablero.
-    setFly({ x: t.x - (r.left + r.width / 2), y: t.y - (r.top + r.height / 2 - 26), s: Math.max(.4, Math.min(1, (t.w || 150) / 168)) });
-  }, [anim.key]); // eslint-disable-line react-hooks/exhaustive-deps
+    setFly({ x: t.x - (r.left + r.width / 2), y: t.y - (r.top + r.height / 2 - 26), s: Math.max(.3, Math.min(1, (t.w || 150) / el.offsetWidth)) });
+  }, [anim.key, box]); // eslint-disable-line react-hooks/exhaustive-deps
   const card = anim.card || {};
   const col = card.weapon ? TIER_COLORS[card.level]?.color || "#C9A24B" : DOMAIN_COLORS[card.domain] || "#C9A24B";
   const edge = anim.edge || "#E3B04B"; // el borde que ese jugador tiene configurado en Personalización
   return (
-    <div key={anim.key} className="mh-cpf" style={{ "--cc": col, "--edge": edge }} aria-hidden="true">
+    <div key={anim.key} ref={rootRef} className="mh-cpf" style={{ "--cc": col, "--edge": edge, ...(box ? { bottom: box.inset, "--ci": box.inset + "px", "--ch": box.h + "px", "--cs": box.h / 420 } : {}) }} aria-hidden="true">
       <div className="mh-cpf-dim" />
       <div className="mh-cpf-stage">
         <div className="mh-cpf-nm"><b>{anim.name || "Alguien"}</b> usa <em>{card.key}</em></div>
