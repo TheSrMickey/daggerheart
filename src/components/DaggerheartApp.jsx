@@ -5090,6 +5090,13 @@ const sharedStyles = `
   /* Jugador (escritorio): el tablero entero a la vista, sin recortar, y la mano de cartas en su propia franja inferior, sin tapar casillas */
   .mh-map-stage.is-fit .mh-map-view { display: flex; } .mh-map-stage.is-fit.has-hand .mh-map-view { bottom: 150px; }
   .mh-map-stage.is-fit .mh-map-fit { flex: none; margin: auto; width: calc(min(100cqw, 100cqh * ${MAP_COLS} / ${MAP_ROWS}) * var(--mz, 1)); }
+  /* La cuadrícula del tablero continúa, muy tenue, en las barras de los lados (se alinea con las casillas por JS) */
+  html .mh-map-stage.is-fit { background-image: linear-gradient(rgba(150,140,170,.11) 1px, transparent 1px), linear-gradient(90deg, rgba(150,140,170,.11) 1px, transparent 1px); background-size: var(--gc, 56px) var(--gc, 56px); background-position: var(--gx, 0) var(--gy, 0); }
+  /* La mano baja al arrastrar una carta y se asoma menos mientras el puntero trabaja en el mapa */
+  .mh-map-stage.is-fit .mh-fan, .mh-map-stage.is-fit .mh-fan-pile { transition: translate .25s cubic-bezier(.3,.7,.4,1); }
+  .mh-map-stage.is-fit .mh-fan.is-low, .mh-map-stage.is-fit .mh-fan-pile.is-low { translate: 0 54px; }
+  .mh-map-stage.is-fit .mh-fan.is-away, .mh-map-stage.is-fit .mh-fan-pile.is-away { translate: 0 240px; }
+  @media (prefers-reduced-motion: reduce) { .mh-map-stage.is-fit .mh-fan, .mh-map-stage.is-fit .mh-fan-pile { transition: none; } }
   .mh-map-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 6; }
   .mh-map-overlay > * { pointer-events: auto; }
   .mh-map-overlay .mh-map-legend { left: auto; right: 10px; bottom: 10px; top: auto; flex-direction: column; align-items: flex-start; max-width: 150px; }
@@ -10428,6 +10435,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
   const cardsRef = useRef(cards);
   cardsRef.current = cards;
   const [drag, setDrag] = useState(null); // { card, x, y, cell, moved }
+  const [low, setLow] = useState(false); // el puntero trabaja en el mapa: la mano se asoma menos
   const [open, setOpen] = useState(null); // carta mostrada en grande
   const [back, setBack] = useState(null); // carta que vuelve a la mano tras usarse
   const [held, setHeld] = useState(null); // carta usada: su hueco en la mano queda vacío hasta que vuelve
@@ -10455,6 +10463,18 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
     return () => clearTimeout(t);
   }, [held?.at]);
   const dragRef = useRef(null);
+  useEffect(() => {
+    const stage = fanRef.current?.closest(".mh-map-stage.is-fit");
+    if (!stage) return undefined;
+    const mv = (e) => setLow(!!e.target.closest && !!e.target.closest(".mh-map-view") && !e.target.closest(".mh-fan, .mh-fan-pile"));
+    const lv = () => setLow(false);
+    stage.addEventListener("pointermove", mv);
+    stage.addEventListener("pointerleave", lv);
+    return () => {
+      stage.removeEventListener("pointermove", mv);
+      stage.removeEventListener("pointerleave", lv);
+    };
+  }, []);
   // Casilla bajo el puntero, calculada con el rectángulo del tablero (que ya incluye el zoom y el desplazamiento).
   const cellAt = (x, y) => {
     const el = fanRef.current?.closest(".mh-map-stage")?.querySelector(".mh-map");
@@ -10577,7 +10597,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
       {others.map((k, j) => {
         const list = cards.filter((c) => grp(c) === k);
         return (
-          <button key={k} type="button" className={"mh-fan-pile " + (k === sideL ? "is-l" : k === sideR2 ? "is-r is-r2" : "is-r")} onClick={() => (setDir(k === sideL ? -1 : 1), setGrpSel(k))} title={"Abrir " + GN[k].toLowerCase() + " (" + list.length + ")"} aria-label={"Abrir " + GN[k] + ", " + list.length + " cartas"}>
+          <button key={k} type="button" className={"mh-fan-pile " + (k === sideL ? "is-l" : k === sideR2 ? "is-r is-r2" : "is-r") + (drag?.moved ? " is-away" : low ? " is-low" : "")} onClick={() => (setDir(k === sideL ? -1 : 1), setGrpSel(k))} title={"Abrir " + GN[k].toLowerCase() + " (" + list.length + ")"} aria-label={"Abrir " + GN[k] + ", " + list.length + " cartas"}>
             {list.slice(0, 3).map((c, q) => (
               <span key={c.key} className="is-back" style={{ "--pc": colOf(c), "--q": q }}><CardBack kind={cardBack || "noche"} edge={cardBorder === "domain" ? colOf(c) : undefined} /></span>
             ))}
@@ -10585,7 +10605,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
           </button>
         );
       })}
-      <div key={act || "all"} className="mh-fan" ref={fanRef} aria-label="Tus cartas" style={{ "--dir": dir }}>
+      <div key={act || "all"} className={"mh-fan" + (drag?.moved ? " is-away" : low ? " is-low" : "")} ref={fanRef} aria-label="Tus cartas" style={{ "--dir": dir }}>
         {shown.map((c, i) => {
           const mid = (n - 1) / 2;
           const col = colOf(c);
@@ -11154,6 +11174,28 @@ function MapViewport({ focus, noZoom, children }) {
     if (ref.current) ro.observe(ref.current);
     return () => ro.disconnect();
   }, []);
+  // Cuadrícula tenue de las barras: casilla, posición y desplazamiento del tablero respecto al escenario.
+  useLayoutEffect(() => {
+    const el = ref.current;
+    const fit = el && el.querySelector(".mh-map-fit");
+    const stage = el && el.closest(".mh-map-stage.is-fit");
+    if (!stage || !fit) return undefined;
+    const sync = () => {
+      if (!fit.offsetWidth) return;
+      stage.style.setProperty("--gc", (fit.offsetWidth / MAP_COLS).toFixed(2) + "px");
+      stage.style.setProperty("--gx", (el.offsetLeft + fit.offsetLeft - el.scrollLeft).toFixed(1) + "px");
+      stage.style.setProperty("--gy", (el.offsetTop + fit.offsetTop - el.scrollTop).toFixed(1) + "px");
+    };
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(el);
+    ro.observe(fit);
+    el.addEventListener("scroll", sync, { passive: true });
+    return () => {
+      ro.disconnect();
+      el.removeEventListener("scroll", sync);
+    };
+  }, [zoom]);
   // La rueda del ratón acerca y aleja el mapa alrededor del puntero.
   useEffect(() => {
     const el = ref.current;
