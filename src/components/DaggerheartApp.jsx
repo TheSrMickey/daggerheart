@@ -10425,7 +10425,7 @@ function HomeDice({ stats }) {
 // Abanico de cartas de dominio en el borde inferior del mapa: se arrastran hasta una casilla para usarlas.
 // Cartas que se lanzan apuntando: una línea de guiones sale del personaje hasta el ratón.
 const AIM_CARD = "Enredo Feroz";
-function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack, cardBorder, aimOk }) {
+function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack, cardBorder, aimOk, reachOf }) {
   const cardsRef = useRef(cards);
   cardsRef.current = cards;
   const [drag, setDrag] = useState(null); // { card, x, y, cell, moved }
@@ -10469,6 +10469,10 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
     const r = fanRef.current?.getBoundingClientRect();
     return !!r && x >= r.left - 30 && x <= r.right + 30 && y >= r.top - 24 && y <= r.bottom + 24;
   };
+  // Cartas que se apuntan a un adversario: Enredo Feroz, su carta extra y las armas (con el alcance de cada arma).
+  const isAim = (c) => c.key === AIM_CARD || !!c.ghost || !!c.weapon;
+  const aimReach = (c) => (reachOf && reachOf(c)) || { label: "Lejano", max: RANGE_CELLS["Lejano"] };
+  const inAimReach = (c, cell) => !!me && !!cell && Math.max(Math.abs(cell.x - me.x), Math.abs(cell.y - me.y)) <= aimReach(c).max;
   const rangeOf = (cell) => {
     if (!me || !cell) return null;
     const d = Math.max(Math.abs(cell.x - me.x), Math.abs(cell.y - me.y));
@@ -10490,7 +10494,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
     const cell = inHand(ev.clientX, ev.clientY) ? null : cellAt(ev.clientX, ev.clientY);
     if (!cell) return;
     if (d.card.subclass) return setOpen({ ...d.card, choose: true });
-    if ((d.card.key === AIM_CARD || d.card.ghost) && (!rangeOf(cell) || !tokens.find((t) => !t.hidden && t.x === cell.x && t.y === cell.y && t.id !== me?.id && (t.kind === "foe" || t.kind === "npc")))) return; // sin objetivo válido o fuera de alcance: se cancela
+    if (isAim(d.card) && (!inAimReach(d.card, cell) || !tokens.find((t) => !t.hidden && t.x === cell.x && t.y === cell.y && t.id !== me?.id && (t.kind === "foe" || t.kind === "npc")))) return; // sin objetivo válido o fuera de alcance: se cancela
     const target = tokens.find((t) => !t.hidden && t.x === cell.x && t.y === cell.y && t.id !== me?.id) || null;
     window.__mhFlyTo = { key: d.card.key, x: d.home.x, y: d.home.y, w: d.home.w, t: Date.now() };
     const res = onUse(d.card, cell, target, rangeOf(cell));
@@ -10570,7 +10574,8 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
   const stepR = Math.min(5, 36 / Math.max(1, n - 1));
   const stepY = Math.min(5, 30 / Math.max(1, n - 1));
   const rng = drag ? rangeOf(drag.cell) : null;
-  const aim = !!drag?.moved && (drag.card.key === AIM_CARD || drag.card.ghost) && !inHand(drag.x, drag.y);
+  const aim = !!drag?.moved && isAim(drag.card) && !inHand(drag.x, drag.y);
+  const aimIn = aim && inAimReach(drag.card, drag.cell);
   const aimTarget = aim && drag.cell ? tokens.find((t) => !t.hidden && t.x === drag.cell.x && t.y === drag.cell.y && t.id !== me?.id && (t.kind === "foe" || t.kind === "npc")) : null;
   const target = drag?.cell ? tokens.find((t) => !t.hidden && t.x === drag.cell.x && t.y === drag.cell.y && t.id !== me?.id) : null;
   return (
@@ -10639,8 +10644,8 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
             const r = el?.getBoundingClientRect();
             if (!r) return null;
             const x1 = r.left + r.width / 2, y1 = r.top + r.height / 2;
-            const ok = !!rng && !!aimTarget && (!aimOk || aimOk(drag.card, aimTarget));
-            const col = ok ? "#7fcf86" : rng ? "#E3B04B" : "#E0544A";
+            const ok = aimIn && !!aimTarget && (!aimOk || aimOk(drag.card, aimTarget));
+            const col = ok ? "#7fcf86" : aimIn ? "#E3B04B" : "#E0544A";
             return (
               <svg className="mh-aim" width="100%" height="100%" aria-hidden="true">
                 <line x1={x1} y1={y1} x2={drag.x} y2={drag.y} stroke="#000" strokeOpacity=".45" strokeWidth="6" strokeLinecap="round" />
@@ -10655,7 +10660,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
           )}
           {drag.cell && !inHand(drag.x, drag.y) && (
             <div className="mh-fan-tip" style={{ left: Math.max(130, Math.min(window.innerWidth - 130, drag.x)), top: aim ? drag.y - 40 : drag.y - 112 }}>
-              {aim ? (!rng ? "Fuera de alcance Lejano" : aimTarget ? "Lanzar sobre " + (aimTarget.name || "el objetivo") : "Suéltala sobre un adversario") : drag.card.rowCard ? "Abrir «" + drag.card.key + "»" : drag.card.subclass ? "Activar Encarnación Elemental" : <>{target ? `Objetivo: ${target.name || "Ficha"}` : "Casilla"} {rng ? `(${rng.label})` : "(fuera de alcance)"}</>}
+              {aim ? (!aimIn ? "Fuera de alcance " + aimReach(drag.card).label : aimTarget ? (drag.card.weapon ? "Atacar a " : "Lanzar sobre ") + (aimTarget.name || "el objetivo") : "Suéltala sobre un adversario") : drag.card.rowCard ? "Abrir «" + drag.card.key + "»" : drag.card.subclass ? "Activar Encarnación Elemental" : <>{target ? `Objetivo: ${target.name || "Ficha"}` : "Casilla"} {rng ? `(${rng.label})` : "(fuera de alcance)"}</>}
               <small>{drag.card.rowCard ? "Suelta en cualquier casilla · Esc para cancelar" : drag.card.subclass ? "Suelta en cualquier casilla · Esc para cancelar" : "Suelta para usar · Esc para cancelar"}</small>
             </div>
           )}
@@ -15172,6 +15177,22 @@ export default function App({ onSignOut }) {
     afterReveal(charId, card.key, () => rollTraitCheck(charId, label, Number(c[sk] || 0) + (mods[sk] || 0), { name: "Enredo Feroz", damage: "d8+1 físico", spell: true, fixedDice: 1, targetChosen: true, targetId: target.id, targetName: target.name, targetDc: target.stats?.difficulty || null }));
     return "reveal";
   };
+  // Carta de arma arrastrada a un adversario dentro del alcance del arma: se revela la carta y después se hace la tirada de ataque.
+  const castWeapon = (charId, target, card) => {
+    const c = charsRef.current[charId];
+    const w = [...PRIMARY_WEAPONS, ...SECONDARY_WEAPONS].find((x) => x.key === card.key);
+    const me = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
+    if (!c || !w || !me || !target || !(target.kind === "foe" || target.kind === "npc")) return "cancel";
+    const tr = TRAITS.find((x) => x.label === w.trait);
+    if (!tr || !/d\d/.test(w.damage || "")) return "cancel";
+    const range = weaponReach(c, w.key);
+    if (range && cellDist(me, target) > (RANGE_CELLS[range] || 99)) return "cancel";
+    const mods = getEquipmentMods(PRIMARY_WEAPONS.find((x) => x.key === c.f_primary_weapon), SECONDARY_WEAPONS.find((x) => x.key === c.f_secondary_weapon), ARMORS.find((a) => a.key === c.f_armor));
+    postCampaignEvent(charId, "⚔️ Ataca a " + (target.name || "un adversario") + " con " + w.key);
+    playCardOnMap(sheetCampaignId, charId, card, { noChat: true, short: true });
+    afterReveal(charId, card.key, () => rollTraitCheck(charId, w.trait, Number(c[tr.key] || 0) + (mods[tr.key] || 0), { name: w.key, damage: w.damage, targetChosen: true, targetId: target.id, targetName: target.name, targetDc: target.stats?.difficulty || null }));
+    return "reveal";
+  };
   // Enredo Feroz · carta extra: gasta 1 Esperanza para inmovilizar a otro adversario Muy cercano de un objetivo ya enraizado por ti.
   const canExtraRoot = (charId, tg) => {
     const toks = campaignMapRef.current.tokens || [];
@@ -15198,7 +15219,7 @@ export default function App({ onSignOut }) {
   const playCardOnMap = (campaignId, charId, card, opts = {}) => {
     const ch = characters[charId];
     if (!opts.noChat) postCardUse(charId, card);
-    const slim = { key: card.key, domain: card.domain, type: card.type, level: card.level, recall: card.recall, text: card.text, image: card.image, ...(card.ghost ? { baseKey: card.baseKey, noCost: card.noCost, ghost: true } : {}) };
+    const slim = { key: card.key, domain: card.domain, type: card.type, level: card.level, recall: card.recall, text: card.text, image: card.image, ...(card.weapon ? { weapon: true } : {}), ...(card.ghost ? { baseKey: card.baseKey, noCost: card.noCost, ghost: true } : {}) };
     const edge = cardBorder === "domain" ? DOMAIN_COLORS[card.domain] || "#E3B04B" : "#E3B04B";
     const playKey = Date.now(); // una sola vez: mutateMap ejecuta la función dos veces (en local y al guardar)
     mutateMap(campaignId, (prev) => [...(Array.isArray(prev) ? prev : []).filter((x) => x.key !== playKey && playKey - x.key < 40000), { key: playKey, charId, name: ch?.f_name || "Alguien", back: cardBack, edge, card: slim, ...(opts.short ? { short: true } : {}) }].slice(-8), "cfx");
@@ -22032,6 +22053,7 @@ export default function App({ onSignOut }) {
                                               cards={cards}
                                               cardBack={cardBack}
                                               aimOk={(card, tg) => !card.ghost || canExtraRoot(viewingCharId, tg)}
+                                              reachOf={(card) => { if (!card.weapon) return null; const lab = weaponReach(characters[viewingCharId], card.key); return lab ? { label: lab, max: RANGE_CELLS[lab] || 99 } : null; }}
                                               cardBorder={cardBorder}
                                               onElement={(el, on) => toggleElemental(viewingCharId, el, on)}
                                               activeElement={me?.f_elemental_active || ""}
@@ -22039,6 +22061,7 @@ export default function App({ onSignOut }) {
                                               tokens={mapTokens}
                                               onUse={(card, cell, target, rng) =>
                                                 card.ghost ? castEnredoExtra(viewingCharId, target, card) :
+                                                card.weapon ? castWeapon(viewingCharId, target, card) :
                                                 card.key === "Enredo Feroz" && !card.weapon ? castEnredo(viewingCharId, target, card) :
                                                 card.key === "Lengua de la Naturaleza" && !card.weapon && !card.rowCard && !card.subclass ? (playCardOnMap(charCampaign.id, viewingCharId, card), "reveal") :
                                                 card.domain && !card.weapon && !card.rowCard && !card.subclass ? postCardUse(viewingCharId, card, (target ? "sobre " + (target.name || "una ficha") : "en la casilla " + (cell.x + 1) + "," + (cell.y + 1)) + (rng ? " (" + rng.label + ")" : "")) :
