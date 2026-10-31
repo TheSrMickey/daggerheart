@@ -5120,6 +5120,21 @@ const sharedStyles = `
   .mh-map-hand { position: absolute; z-index: 6; right: -2%; top: -6%; display: inline-flex; align-items: center; gap: 2px; padding: 1px 6px; border-radius: 99px; font-size: 12px; background: #E3B04B; color: #241a05; box-shadow: 0 2px 6px rgba(0,0,0,.4); pointer-events: none; } .mh-map-hand.is-urgent { background: #E0544A; color: #fff; } .mh-map-hand b { font: 800 10px 'Inter', system-ui, sans-serif; }
   .mh-map .mh-map-tk.is-pet .mh-map-face { width: 58%; height: 58%; background: radial-gradient(circle at 35% 28%, color-mix(in srgb, var(--tc) 30%, #12143a), #0c0d2a 72%); border-radius: 50%; border-width: 2px; border-color: var(--tc); }
   .mh-map-hp { display: none; }
+  /* Fichas con presencia: base con sombra y la figura un poco levantada, con relieve */
+  .mh-map-tk:not(.is-dead):not(.is-c-ko)::before { content: ""; position: absolute; z-index: 1; left: 13%; width: 74%; top: 60%; height: 28%; border-radius: 50%; background: radial-gradient(ellipse at 50% 45%, rgba(0,0,0,.62), rgba(0,0,0,.28) 62%, transparent 72%); box-shadow: 0 0 0 2px color-mix(in srgb, var(--tc, #888) 42%, transparent); pointer-events: none; }
+  .mh-map-tk:not(.is-dead):not(.is-c-ko) .mh-map-face { top: -5%; box-shadow: 0 7px 9px -3px rgba(0,0,0,.6), inset 0 3px 4px rgba(255,255,255,.34), inset 0 -5px 7px rgba(0,0,0,.34); }
+  .mh-map-tk:not(.is-dead):not(.is-c-ko) .mh-map-ring { top: 9%; }
+  .mh-map-tk.is-me .mh-map-face { box-shadow: 0 0 0 2px rgba(227,176,75,.9), 0 7px 9px -3px rgba(0,0,0,.6), inset 0 3px 4px rgba(255,255,255,.34), inset 0 -5px 7px rgba(0,0,0,.34); }
+  .mh-map-tk.is-turn .mh-map-face { box-shadow: 0 0 0 3px #E3B04B, 0 0 18px 4px rgba(227,176,75,.5), 0 7px 9px -3px rgba(0,0,0,.6); animation: mh-selpulse 1.8s ease-in-out infinite; }
+  .mh-map-tk.is-turn::after { content: "Tu turno"; position: absolute; z-index: 7; left: 50%; top: -14%; translate: -50% 0; padding: 1px 8px; border-radius: 99px; background: #E3B04B; color: #3a2a05; font-size: 10px; font-weight: 700; white-space: nowrap; pointer-events: none; }
+  .mh-rng { position: absolute; pointer-events: none; z-index: 0; border-radius: 8px; }
+  .mh-rng.is-far { background: rgba(143,156,240,.05); box-shadow: inset 0 0 0 1px rgba(143,156,240,.14); }
+  .mh-rng.is-near { background: rgba(143,156,240,.07); box-shadow: inset 0 0 0 1.5px rgba(167,180,255,.34); }
+  .mh-rng.is-close { background: rgba(143,156,240,.1); box-shadow: inset 0 0 0 1.5px rgba(167,180,255,.5); }
+  .mh-rng > i { position: absolute; left: 6px; top: 4px; font-style: normal; font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: rgba(190,200,255,.62); }
+  .mh-rng.is-near > i { top: auto; bottom: 4px; } .mh-map.is-compact .mh-rng > i { display: none; }
+  /* El tablero como escena: baldosas apenas marcadas, luz cálida de antorchas en las esquinas y viñeta en los bordes */
+  .mh-map::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(circle at 7% 10%, rgba(255,176,72,.2), transparent 26%), radial-gradient(circle at 93% 10%, rgba(255,176,72,.16), transparent 22%), radial-gradient(circle at 50% 100%, rgba(255,176,72,.1), transparent 34%), radial-gradient(ellipse at 50% 48%, transparent 52%, rgba(4,3,14,.6) 100%), conic-gradient(rgba(255,255,255,.028) 25%, transparent 0 50%, rgba(255,255,255,.028) 0 75%, transparent 0) 0 0 / 12.5% 22.222%; }
   /* La escena se desenfoca en el sitio y la cuadrícula aparece encima (sin fundido entre imágenes) */
   .mh-map-grid { animation: mh-gridin .9s ease .3s both; }
   @keyframes mh-gridin { from { opacity: 0; } to { opacity: 1; } }
@@ -10975,6 +10990,22 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
           return inFog(x, y) ? <div key={"f" + i} className={"mh-map-fog" + (fogHide ? "" : " is-gm")} style={at(x, y)} /> : null;
         })}
       <div className="mh-map-noise" />
+      {(() => {
+        // Alcance de un vistazo: Muy cercano, Cercano y Lejano alrededor de tu ficha, muy tenues.
+        const mt = !plain && meCharId ? tokens.find((t) => t.kind === "pc" && t.charId === meCharId && !t.vanished) : null;
+        if (!mt) return null;
+        const band = (r, cls, lab) => {
+          const x0 = Math.max(0, mt.x - r), y0 = Math.max(0, mt.y - r), x1 = Math.min(MAP_COLS - 1, mt.x + r), y1 = Math.min(MAP_ROWS - 1, mt.y + r);
+          return <div key={cls} className={"mh-rng " + cls} style={{ left: (x0 * 100) / MAP_COLS + "%", top: (y0 * 100) / MAP_ROWS + "%", width: ((x1 - x0 + 1) * 100) / MAP_COLS + "%", height: ((y1 - y0 + 1) * 100) / MAP_ROWS + "%" }}>{lab && <i>{lab}</i>}</div>;
+        };
+        return (
+          <>
+            {band(RANGE_CELLS["Cercano"], "is-far", "Cercano")}
+            {band(RANGE_CELLS["Muy cercano"], "is-near", "Muy cercano")}
+            {band(RANGE_CELLS["Cuerpo a cuerpo"], "is-close", "")}
+          </>
+        );
+      })()}
       {!rangeTok && reach.map(([x, y]) => (
         <div key={x + "," + y} className="mh-map-reach" style={at(x, y)} />
       ))}
@@ -10996,7 +11027,7 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
             key={t.id}
             type="button"
             data-tid={t.id}
-            className={"mh-map-tk is-" + t.kind + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") + (anim.kind === "web" ? " is-web" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
+            className={"mh-map-tk is-" + t.kind + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") + (anim.kind === "web" ? " is-web" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && meCharId && t.charId === meCharId ? " is-me" : "") + (t.kind === "pc" && spot && normSpot(spot).focus && !normSpot(spot).focus.dm && normSpot(spot).focus.charId === t.charId ? " is-turn" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
             style={{ ...at(pos.x, pos.y), "--tc": t.color, ...(anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); return tg ? { "--ax": (tg.x - t.x) * 100 + "%", "--ay": (tg.y - t.y) * 100 + "%" } : {}; })() : {}) }}
             onPointerDown={(e) => startDrag(e, t)}
             onContextMenu={(e) => openMenu(e, t)}
