@@ -13297,6 +13297,8 @@ export default function App({ onSignOut }) {
     setDamageRollResult({ instantKey: use3d ? dmgKey : null, hybridDmg, hybridDmgSides: ch ? hybridSides(ch) : 0, crimsonRolls, angelRoll, angelSides: opts.angel || 0, knightRolls, attackFear: opts.attackFear || 0, igniteRoll, stanceNow, droppedRoll, favoredBonus, rolls2, die2, comboBase: total, furyRolls, furySides: ch ? patronSides(ch) : 6, fearRolls, rawBonus, sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: dmgKey, weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, doublePick: !!opts.doublePick, charged: ch && ch.f_subclass === "Origen Primigenio" && ch.f_charged === "1" && damageType === "mágico", note: resonance ? "Resonancia Sagrada: los dados repetidos valen el doble" : opts.extraFlat ? "Incluye +" + opts.extraFlat + " de Elementalista" : waxBonus ? "Incluye +2 de la Luna Creciente" : opts.note || "", spirit: !!opts.spirit });
     // El daño al enemigo se aplica al cerrar la escena de dados (o ya, si no hay escena).
     const applyDamage = () => {
+      // La animación de la habilidad sale justo después de ver el daño.
+      if (opts.after) opts.after();
       // Ataque con objetivo en el tablero: el daño se aplica al enemigo según sus umbrales.
       if (opts.targetId && sheetCampaignId) applyFoeDamage(sheetCampaignId, opts.targetId, total, ch?.f_name || "Alguien", weaponName);
       if (opts.targetId && sheetCampaignId && ch && ch.f_elemental_active === "Agua") elementalWave(sheetCampaignId, charId, opts.targetId);
@@ -13335,18 +13337,17 @@ export default function App({ onSignOut }) {
       extra("Furia", furyBonus);
       extra("Miedo", fearBonus);
       setDiceHold(true);
-      pendingOutcome.current = applyDamage;
+      pendingOutcome.current = () => finishDmg();
       setDice3d({
         key: dmgKey,
         dice: dl,
         summary: { parts, total, text: (isCritical ? "Crítico · " : "") + "Daño " + damageType, color: isCritical ? "#7FB77A" : "#E0674F", note: opts.note || (isCritical ? "Sumas el máximo de los dados" : ""), dc: weaponName, outcome: isCritical ? "crit" : "dmg" },
       });
-    } else {
-      applyDamage();
     }
     const who = playerName || "Alguien en la mesa";
     const critLabel = isCritical ? ` · ¡Crítico! (+${critBonus} máx.)` : "";
     const diceLabel = `${dice}d${die} (${rolls.join("+")})` + (rolls2 ? ` + ${dice}d${die2} (${rolls2.join("+")})` : "") + (furyRolls ? ` + Furia ${furyRolls.length}d${patronSides(ch)} (${furyRolls.join("+")})` : "") + (fearRolls ? ` + Enfrenta tu Miedo ${fearRolls.length}d10 (${fearRolls.join("+")}) mágico` : "") + (wolfBonus ? ` + Lobo 1d10 (${wolfBonus})` : "") + (unstopBonus ? ` + Imparable ${unstopBonus}` : "") + (sneakRolls ? ` + Furtivo ${sneakRolls.length}d6 (${sneakRolls.join("+")})` : "");
+    const postDmg = async () => {
     await pushRollLog(
       `**${who}** — Daño de ${weaponName}: ${diceLabel}${bonus ? " + " + bonus : ""}${critLabel} = **${total}** ${damageType}`
     );
@@ -13356,6 +13357,13 @@ export default function App({ onSignOut }) {
         roll: { type: "damage", weapon: weaponName, dice: rolls, dieLabel: dice + "d" + die, bonus, crit: critBonus, wolf: wolfBonus, total, dmgType: damageType },
       });
     }
+    };
+    // Daño al enemigo, efecto y chat salen cuando los dados ya se han revelado.
+    const finishDmg = () => {
+      applyDamage();
+      postDmg();
+    };
+    if (!use3d) finishDmg();
   };
 
   const toggleBeastform = (id, key, isCurrentlySelected) => {
@@ -17128,6 +17136,56 @@ export default function App({ onSignOut }) {
     setTraitRollResult((prev) => (prev ? { ...prev, flipped: kind, text: "Con Esperanza", color: "#E3B04B", note: "Ganas 1 Esperanza (el DJ no gana Miedo)" } : prev));
     postCampaignEvent(r.charId, kind === "fearless" ? "😈 Sin Miedo: marca 2 Estrés y su tirada con Miedo pasa a ser con Esperanza" : "🕊️ Sin Ataduras: su tirada con Miedo pasa a ser con Esperanza");
   };
+  // Acierto con arma: tira el daño solo y, cuando los dados de daño se han mostrado, sale la animación de la habilidad.
+  const resolveWeaponHit = (r) => {
+    const fxLater = [];
+      const { name, damage, focusTarget } = r.weapon;
+      const charId = r.charId;
+      const isCritical = r.hope === r.fear;
+      setTraitRollResult(null);
+      const wasCloaked = r.wasCloaked;
+      if (focusTarget) {
+        updateCharacterField(charId, "f_focus", focusTarget);
+        postCampaignEvent(charId, "🎯 " + focusTarget + " pasa a ser su Foco");
+      }
+      const spirit = !!r.weapon.spirit;
+      const rc = charsRef.current[charId];
+      // Alcance Amenazador termina al acertar con el arma principal.
+      if (rc && rc.f_reach === "1" && name === rc.f_primary_weapon) {
+        updateCharacterField(charId, "f_reach", "");
+        postCampaignEvent(charId, "🗡️ Acierta con su arma principal: termina su Alcance Amenazador");
+      }
+      // Escuela de la Guerra · Enfrenta tu Miedo: éxito con Miedo = +1d10/2d10/3d10 de daño mágico.
+      const fearHit = rc && rc.f_subclass === "Escuela de la Guerra" && !r.reaction && !r.flipped && r.fear > r.hope;
+      const fearDice = fearHit ? tierForLevel(rc.f_level || 1) : 0;
+      // Titán · Gozo del Golpe (Maestría): crítico Cuerpo a cuerpo = +1 Esperanza, −1 Estrés y +1 Competencia.
+      const honedHit = !!r.weapon.honed;
+      const pummel = isCritical && rc && rc.f_subclass === "Titán" && tierForLevel(rc.f_level || 1) >= 3 && isMeleeWeapon(name);
+      if (pummel) {
+        const cur = charsRef.current[charId];
+        updateCharacterFields(charId, { hope_marked: String(Math.min(getHopeMax(cur), Number(cur.hope_marked ?? HOPE_DEFAULT) + 1)), stress_marked: String(Math.max(0, Number(cur.stress_marked || 0) - 1)) });
+        postCampaignEvent(charId, "🥊 Gozo del Golpe: gana 1 Esperanza más, se quita 1 Estrés más y su Competencia sube en 1 en este ataque");
+      }
+      if (r.weapon.targetId && sheetCampaignId) {
+        const fromTok = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
+        const reachNow = weaponReach(rc, name);
+        const snareIds = name === "Enredo Feroz" ? (() => {
+          const first = r.weapon.targetId;
+          const ft = (campaignMapRef.current.tokens || []).find((x) => x.id === first);
+          const extra = r.weapon.hopeExtra && ft ? (campaignMapRef.current.tokens || []).filter((x) => x.id !== first && (x.kind === "foe" || x.kind === "npc") && !x.gmHidden && cellDist(x, ft) <= RANGE_CELLS["Muy cercano"] && !(x.stats && Number(x.stats.hpMarked || 0) >= Number(x.stats.hp || 0))).sort((p, q) => cellDist(p, ft) - cellDist(q, ft))[0] : null;
+          return extra ? [first, extra.id] : [first];
+        })() : null;
+        const fxKind = snareIds ? "roots" : /mágic/i.test(damage || "") ? "magic" : reachNow && reachNow !== "Cuerpo a cuerpo" ? "shot" : "melee";
+        if (fromTok && !snareIds) fxLater.push(() => mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: fromTok.id, to: r.weapon.targetId, kind: fxKind, ...(snareIds && snareIds[1] ? { to2: snareIds[1] } : {}) }), "fx"));
+        if (snareIds) {
+          // Las raíces inmovilizan al objetivo (y al segundo adversario si se gasta una Esperanza).
+          fxLater.push(() => setTimeout(() => mutateMap(sheetCampaignId, (ts) => ts.map((x) => (snareIds.includes(x.id) ? { ...x, conds: [...new Set([...(x.conds || []), "Inmovilizado"])], rootedBy: charId } : x))), 900));
+          pushMapLog(sheetCampaignId, "🌿 Enredo Feroz: " + snareIds.map((id) => (campaignMapRef.current.tokens || []).find((x) => x.id === id)?.name || "un adversario").join(" y ") + " queda inmovilizado", "info");
+          if (snareIds[1] && rc) updateCharacterField(charId, "hope_marked", String(Math.max(0, Number(rc.hope_marked ?? HOPE_DEFAULT) - 1)));
+        }
+      }
+      rollWeaponDamage(name, damage, charId, isCritical, { after: () => fxLater.forEach((fn) => fn()), ...(r.weapon.spell ? { plain: true, fixedDice: r.weapon.fixedDice || 1 } : {}), angel: r.weapon.angel || 0, knight: !!r.weapon.knight, attackFear: r.fear, ...(pummel || honedHit ? { fixedDice: getProficiency(rc) + (pummel ? 1 : 0) + (honedHit ? 1 : 0) } : {}), fearDice, cloaked: wasCloaked, spirit, resonance: spirit && rc && tierForLevel(rc.f_level || 1) >= 3, extraFlat: r.weapon.elemDmg || 0, doublePick: !!r.weapon.manipDouble, targetId: r.weapon.targetId || null, targetIds: r.weapon.hitIds || null });
+  };
   const doTraitRoll = async (charId, traitLabel, traitValue, weapon, cardContext, advantage, extras = {}) => {
     let wasCloaked = false;
     if (weapon && !weapon.charge) {
@@ -17192,7 +17250,8 @@ export default function App({ onSignOut }) {
         ? "Ignoras los efectos que te afectarían aun con éxito"
         : "Las reacciones no generan Esperanza ni Miedo"
       : hope === fear ? "Ganas 1 Esperanza y te quitas 1 Estrés" : hope > fear ? "Ganas 1 Esperanza" : "El DJ gana 1 de Miedo";
-    setTraitRollResult({ key: rollKey, instantKey: use3d ? rollKey : null, hopeSides, traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, tideBonus, hybridRoll, hybridSidesR: extras.hybridSides || 0, hallowRoll, hallowFirst: hopeA, patronRoll, patronSides: extras.patronSides || 0, slayerRoll, slayerRolls, total, text: hope === fear ? "Éxito crítico" : reaction ? "Tirada de reacción" : text, color, note, reaction, card: cardContext ? { name: cardContext.name, dc: cardContext.dc } : dcVal ? { name: "", dc: dcVal } : null, exps: extras.exps || [], honed: extras.honed || [], wasCloaked, weapon: weapon || null, charId });
+    const rr = { key: rollKey, instantKey: use3d ? rollKey : null, hopeSides, traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, tideBonus, hybridRoll, hybridSidesR: extras.hybridSides || 0, hallowRoll, hallowFirst: hopeA, patronRoll, patronSides: extras.patronSides || 0, slayerRoll, slayerRolls, total, text: hope === fear ? "Éxito crítico" : reaction ? "Tirada de reacción" : text, color, note, reaction, card: cardContext ? { name: cardContext.name, dc: cardContext.dc } : dcVal ? { name: "", dc: dcVal } : null, exps: extras.exps || [], honed: extras.honed || [], wasCloaked, weapon: weapon || null, charId };
+    setTraitRollResult(rr);
     if (use3d) {
       // Todos los dados de la tirada: dualidad más ventaja y demás auxiliares.
       const dl = [{ sides: hopeSides, value: hopeA, kind: "hope", main: true }];
@@ -17224,20 +17283,23 @@ export default function App({ onSignOut }) {
     }
 
     // Ataque en área: una tirada contra todos; impacta a quienes tengan Dificultad igual o menor.
+    const mapLogs = [];
+    let areaWeapon = null;
     if (weapon && weapon.targets && sheetCampaignId && !reaction) {
       const who = charsRef.current[charId]?.f_name || "Alguien";
       const hits = weapon.targets.filter((t) => hope === fear || !t.dc || total >= t.dc);
       const miss = weapon.targets.filter((t) => !hits.includes(t));
       setTraitRollResult((r) => (r ? { ...r, weapon: { ...r.weapon, hitIds: hits.map((t) => t.id), hitNames: hits.map((t) => t.name) } } : r));
-      pushMapLog(sheetCampaignId, who + " ataca en área con " + weapon.name + ": " + total + (hits.length ? " · impacta a " + hits.map((t) => t.name).join(", ") : "") + (miss.length ? " · falla contra " + miss.map((t) => t.name).join(", ") : ""), hits.length ? "hit" : "miss");
+      areaWeapon = { ...weapon, hitIds: hits.map((t) => t.id), hitNames: hits.map((t) => t.name) };
+      mapLogs.push(() => pushMapLog(sheetCampaignId, who + " ataca en área con " + weapon.name + ": " + total + (hits.length ? " · impacta a " + hits.map((t) => t.name).join(", ") : "") + (miss.length ? " · falla contra " + miss.map((t) => t.name).join(", ") : ""), hits.length ? "hit" : "miss"));
     }
     // Ataque contra una ficha del tablero: el resultado sale abajo del mapa para todos.
     if (weapon && weapon.targetId && sheetCampaignId && !reaction) {
       const who = charsRef.current[charId]?.f_name || "Alguien";
       const hit = hope === fear || (dcVal ? total >= dcVal : null);
-      pushMapLog(sheetCampaignId, who + " ataca a " + (weapon.targetName || "un enemigo") + " con " + weapon.name + ": " + total + (dcVal ? " contra " + dcVal + " · " + (hope === fear ? "¡crítico!" : hit ? "impacta" : "falla") : ""), hit === false ? "miss" : "hit");
+      mapLogs.push(() => pushMapLog(sheetCampaignId, who + " ataca a " + (weapon.targetName || "un enemigo") + " con " + weapon.name + ": " + total + (dcVal ? " contra " + dcVal + " · " + (hope === fear ? "¡crítico!" : hit ? "impacta" : "falla") : ""), hit === false ? "miss" : "hit"));
     }
-    if (hope === fear && !reaction) logActivity("crit", "ha sacado un crítico (" + hope + "+" + fear + ") con " + (charsRef.current[charId]?.f_name || "su personaje"));
+    if (hope === fear && !reaction) mapLogs.push(() => logActivity("crit", "ha sacado un crítico (" + hope + "+" + fear + ") con " + (charsRef.current[charId]?.f_name || "su personaje")));
     // Con Esperanza (o crítico) ganas 1 Esperanza; con crítico además te quitas 1 Estrés.
     // Esperanza y Miedo no se suman hasta que el jugador cierra la escena de dados.
     const applyOutcome = () => {
@@ -17279,9 +17341,6 @@ export default function App({ onSignOut }) {
         }
       }
     };
-    if (use3d) pendingOutcome.current = applyOutcome;
-    else applyOutcome();
-
     const who = playerName || "Alguien en la mesa";
     const modStr = traitValue > 0 ? "+" + traitValue : traitValue;
     const advStr =
@@ -17294,6 +17353,8 @@ export default function App({ onSignOut }) {
     const rollExtra = { exp: expBonus, expNames: (extras.exps || []).map((e) => e.text), rally: rallyRoll, rallyDie: extras.rallyDie || "", poet: poetRoll, tide: tideBonus };
     const line = `**${who}** — ${reaction ? "Reacción de " : ""}${traitLabel}: Esperanza ${hope} + Miedo ${fear} ${modStr}${advStr} = **${total}** (${text})`;
     recordDice(hope, fear);
+    // El resultado va al chat cuando el dado ya se ha revelado, para no hacer spoiler.
+    const postRoll = async () => {
     await pushRollLog(line);
     if (cardContext) {
       const success = dcVal ? hope === fear || total >= dcVal : null;
@@ -17309,6 +17370,22 @@ export default function App({ onSignOut }) {
         roll: { trait: traitLabel, weapon: weapon?.name || "", reaction, hopeSides, ...(dcVal ? { dc: dcVal } : {}), hope, fear, mod: traitValue, adv: advantageRoll, wolf: wolfBonus, ...rollExtra, total },
       });
     }
+    };
+    // Un acierto claro contra un objetivo del tablero tira el daño solo; si hay una decisión que tomar antes (Ángel, Caballero) se queda la ventana.
+    const chA = charsRef.current[charId];
+    const askFirst = !!chA && ((chA.f_subclass === "Teúrgia" && hope >= fear && Number(getSummons(chA).angel || 0) > 0) || (chA.f_subclass === "Nigromancia" && tierForLevel(chA.f_level || 1) >= 3 && hope > fear && Number(getSummons(chA).knight || 0) > 0));
+    const autoWeapon = !weapon || weapon.charge || reaction || !sheetCampaignId || askFirst ? null : weapon.targets ? ((areaWeapon?.hitIds || []).length ? areaWeapon : null) : weapon.targetId && dcVal != null && (hope === fear || total >= dcVal) ? weapon : null;
+    const finishRoll = () => {
+      applyOutcome();
+      mapLogs.forEach((fn) => fn());
+      postRoll();
+      if (autoWeapon) {
+        setTraitRollResult(null);
+        setTimeout(() => resolveWeaponHit({ ...rr, weapon: autoWeapon }), 80);
+      }
+    };
+    if (use3d) pendingOutcome.current = finishRoll;
+    else finishRoll();
   };
 
   // Suma (o resta) Miedo al contador compartido del DJ, máximo 12.
@@ -24901,54 +24978,7 @@ export default function App({ onSignOut }) {
                         <>
                         <button
                           className="mh-btn"
-                          onClick={() => {
-                            const { name, damage, focusTarget } = traitRollResult.weapon;
-                            const charId = traitRollResult.charId;
-                            const isCritical = traitRollResult.hope === traitRollResult.fear;
-                            setTraitRollResult(null);
-                            const wasCloaked = traitRollResult.wasCloaked;
-                            if (focusTarget) {
-                              updateCharacterField(charId, "f_focus", focusTarget);
-                              postCampaignEvent(charId, "🎯 " + focusTarget + " pasa a ser su Foco");
-                            }
-                            const spirit = !!traitRollResult.weapon.spirit;
-                            const rc = characters[charId];
-                            // Alcance Amenazador termina al acertar con el arma principal.
-                            if (rc && rc.f_reach === "1" && name === rc.f_primary_weapon) {
-                              updateCharacterField(charId, "f_reach", "");
-                              postCampaignEvent(charId, "🗡️ Acierta con su arma principal: termina su Alcance Amenazador");
-                            }
-                            // Escuela de la Guerra · Enfrenta tu Miedo: éxito con Miedo = +1d10/2d10/3d10 de daño mágico.
-                            const fearHit = rc && rc.f_subclass === "Escuela de la Guerra" && !traitRollResult.reaction && !traitRollResult.flipped && traitRollResult.fear > traitRollResult.hope;
-                            const fearDice = fearHit ? tierForLevel(rc.f_level || 1) : 0;
-                            // Titán · Gozo del Golpe (Maestría): crítico Cuerpo a cuerpo = +1 Esperanza, −1 Estrés y +1 Competencia.
-                            const honedHit = !!traitRollResult.weapon.honed;
-                            const pummel = isCritical && rc && rc.f_subclass === "Titán" && tierForLevel(rc.f_level || 1) >= 3 && isMeleeWeapon(name);
-                            if (pummel) {
-                              const cur = charsRef.current[charId];
-                              updateCharacterFields(charId, { hope_marked: String(Math.min(getHopeMax(cur), Number(cur.hope_marked ?? HOPE_DEFAULT) + 1)), stress_marked: String(Math.max(0, Number(cur.stress_marked || 0) - 1)) });
-                              postCampaignEvent(charId, "🥊 Gozo del Golpe: gana 1 Esperanza más, se quita 1 Estrés más y su Competencia sube en 1 en este ataque");
-                            }
-                            if (traitRollResult.weapon.targetId && sheetCampaignId) {
-                              const fromTok = (campaignMap.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
-                              const reachNow = weaponReach(rc, name);
-                              const snareIds = name === "Enredo Feroz" ? (() => {
-                                const first = traitRollResult.weapon.targetId;
-                                const ft = (campaignMap.tokens || []).find((x) => x.id === first);
-                                const extra = traitRollResult.weapon.hopeExtra && ft ? (campaignMap.tokens || []).filter((x) => x.id !== first && (x.kind === "foe" || x.kind === "npc") && !x.gmHidden && cellDist(x, ft) <= RANGE_CELLS["Muy cercano"] && !(x.stats && Number(x.stats.hpMarked || 0) >= Number(x.stats.hp || 0))).sort((p, q) => cellDist(p, ft) - cellDist(q, ft))[0] : null;
-                                return extra ? [first, extra.id] : [first];
-                              })() : null;
-                              const fxKind = snareIds ? "roots" : /mágic/i.test(damage || "") ? "magic" : reachNow && reachNow !== "Cuerpo a cuerpo" ? "shot" : "melee";
-                              if (fromTok && !snareIds) mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: fromTok.id, to: traitRollResult.weapon.targetId, kind: fxKind, ...(snareIds && snareIds[1] ? { to2: snareIds[1] } : {}) }), "fx");
-                              if (snareIds) {
-                                // Las raíces inmovilizan al objetivo (y al segundo adversario si se gasta una Esperanza).
-                                setTimeout(() => mutateMap(sheetCampaignId, (ts) => ts.map((x) => (snareIds.includes(x.id) ? { ...x, conds: [...new Set([...(x.conds || []), "Inmovilizado"])], rootedBy: charId } : x))), 900);
-                                pushMapLog(sheetCampaignId, "🌿 Enredo Feroz: " + snareIds.map((id) => (campaignMap.tokens || []).find((x) => x.id === id)?.name || "un adversario").join(" y ") + " queda inmovilizado", "info");
-                                if (snareIds[1] && rc) updateCharacterField(charId, "hope_marked", String(Math.max(0, Number(rc.hope_marked ?? HOPE_DEFAULT) - 1)));
-                              }
-                            }
-                            rollWeaponDamage(name, damage, charId, isCritical, { ...(traitRollResult.weapon.spell ? { plain: true, fixedDice: traitRollResult.weapon.fixedDice || 1 } : {}), angel: traitRollResult.weapon.angel || 0, knight: !!traitRollResult.weapon.knight, attackFear: traitRollResult.fear, ...(pummel || honedHit ? { fixedDice: getProficiency(rc) + (pummel ? 1 : 0) + (honedHit ? 1 : 0) } : {}), fearDice, cloaked: wasCloaked, spirit, resonance: spirit && rc && tierForLevel(rc.f_level || 1) >= 3, extraFlat: traitRollResult.weapon.elemDmg || 0, doublePick: !!traitRollResult.weapon.manipDouble, targetId: traitRollResult.weapon.targetId || null, targetIds: traitRollResult.weapon.hitIds || null });
-                          }}
+                          onClick={() => resolveWeaponHit(traitRollResult)}
                         >
                           {traitRollResult.weapon.targets || (traitRollResult.weapon.targetId && traitRollResult.card?.dc != null) ? "Tirar daño" : "Sí"}
                         </button>
