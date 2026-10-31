@@ -5049,15 +5049,15 @@ const sharedStyles = `
   .mh-fan-tip small { display: block; font-size: 10px; opacity: .7; }
   /* Carta jugada en el mapa (la ve el resto de la mesa): tablero oscurecido, reverso y revelado. Dura ~4,4 s. */
   .mh-cpf { position: absolute; inset: 0; z-index: 30; pointer-events: none; display: grid; place-items: center; }
-  .mh-cpf-dim { position: absolute; inset: 0; bottom: calc(-1 * var(--ci, 0px)); background: radial-gradient(70% 70% at 50% 50%, rgba(6,6,18,.55), rgba(6,6,18,.82)); opacity: 0; animation: mh-cpf-dim 4.5s ease both; }
+  .mh-cpf-dim { position: absolute; inset: 0; bottom: calc(-1 * var(--ci, 0px)); background: radial-gradient(70% 70% at 50% 50%, rgba(6,6,18,.55), rgba(6,6,18,.82)); opacity: 0; animation: mh-cpf-dim var(--cpd, 4.5s) ease both; }
   .mh-cpf-stage { position: relative; display: flex; flex-direction: column; align-items: center; gap: 14px; }
-  .mh-cpf-card { position: relative; width: calc(var(--ch, 236px) * .7119); height: var(--ch, 236px); perspective: 1000px; opacity: 0; animation: mh-cpf-card 4.5s cubic-bezier(.3,.9,.3,1) both; }
+  .mh-cpf-card { position: relative; width: calc(var(--ch, 236px) * .7119); height: var(--ch, 236px); perspective: 1000px; opacity: 0; animation: mh-cpf-card var(--cpd, 4.5s) cubic-bezier(.3,.9,.3,1) both; }
   .mh-cpf-card.is-own { animation-name: mh-cpf-card-own; }
   @keyframes mh-cpf-card-own { 0% { opacity: 0; transform: translateY(26px) scale(.82); } 10% { opacity: 1; transform: translateY(0) scale(1); } 76% { opacity: 1; transform: translateY(0) scale(1.04); } 100% { opacity: 1; transform: translate(var(--fx), var(--fy)) scale(var(--fs)); } }
-  .mh-cpf-flip { position: absolute; inset: 0; transform-style: preserve-3d; animation: mh-cpf-flip 4.5s cubic-bezier(.45,0,.25,1) both; }
+  .mh-cpf-flip { position: absolute; inset: 0; transform-style: preserve-3d; animation: mh-cpf-flip var(--cpd, 4.5s) cubic-bezier(.45,0,.25,1) both; }
   .mh-cpf-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 12px; overflow: hidden; background: #10112a; transform: translateZ(0.1px); box-shadow: 0 22px 50px -14px #000d, 0 0 46px -8px var(--cc); } .mh-cpf-face > svg { display: block; width: 100%; height: 100%; }
   .mh-cpf-front { transform: rotateY(180deg) translateZ(0.1px); } .mh-cpf-front > div { transform-origin: top left; transform: scale(var(--cs, .56)); width: 300px !important; height: 420px !important; } .mh-cpf .mh-cpf-front .mh-cardc { border-color: var(--edge) !important; }
-  .mh-cpf-nm { color: #fff; font-size: 13px; text-shadow: 0 2px 10px #000; opacity: 0; animation: mh-cpf-nm 4.5s ease both; } .mh-cpf-nm em { font-style: normal; font-weight: 700; color: var(--cc); filter: brightness(1.25); }
+  .mh-cpf-nm { color: #fff; font-size: 13px; text-shadow: 0 2px 10px #000; opacity: 0; animation: mh-cpf-nm var(--cpd, 4.5s) ease both; } .mh-cpf-nm em { font-style: normal; font-weight: 700; color: var(--cc); filter: brightness(1.25); }
   @keyframes mh-cpf-dim { 0% { opacity: 0; } 10% { opacity: 1; } 88% { opacity: 1; } 100% { opacity: 0; } }
   @keyframes mh-cpf-card { 0% { opacity: 0; transform: translateY(26px) scale(.82); } 10% { opacity: 1; transform: translateY(0) scale(1); } 88% { opacity: 1; transform: translateY(0) scale(1.04); } 100% { opacity: 0; transform: translateY(-10px) scale(1.04); } }
   @keyframes mh-cpf-flip { 0%, 30% { transform: rotateY(0deg); } 52%, 100% { transform: rotateY(180deg); } }
@@ -9913,7 +9913,7 @@ function useCardQueue(list) {
       setCur(null);
       window.dispatchEvent(new CustomEvent("mh-cardplay-end", { detail: { key: it.key, charId: it.charId, card: it.card?.key } }));
       pump();
-    }, 4500);
+    }, it.short ? 2300 : 4500);
   };
   useEffect(() => {
     const arr = Array.isArray(list) ? list : list && list.key ? [list] : [];
@@ -10710,7 +10710,7 @@ function CardPlayView({ anim, own }) {
   const col = card.weapon ? TIER_COLORS[card.level]?.color || "#C9A24B" : DOMAIN_COLORS[card.domain] || "#C9A24B";
   const edge = anim.edge || "#E3B04B"; // el borde que ese jugador tiene configurado en Personalización
   return (
-    <div key={anim.key} ref={rootRef} className="mh-cpf" style={{ "--cc": col, "--edge": edge, ...(box ? { bottom: box.inset, "--ci": box.inset + "px", "--ch": box.h + "px", "--cs": box.h / 420 } : {}) }} aria-hidden="true">
+    <div key={anim.key} ref={rootRef} className="mh-cpf" style={{ "--cc": col, "--edge": edge, "--cpd": anim.short ? "2.3s" : "4.5s", ...(box ? { bottom: box.inset, "--ci": box.inset + "px", "--ch": box.h + "px", "--cs": box.h / 420 } : {}) }} aria-hidden="true">
       <div className="mh-cpf-dim" />
       <div className="mh-cpf-stage">
         <div className="mh-cpf-nm"><b>{anim.name || "Alguien"}</b> usa <em>{card.key}</em></div>
@@ -15141,8 +15141,22 @@ export default function App({ onSignOut }) {
     const ch = characters[charId];
     await postChat(camp.id, { kind: "msg", author: ch?.f_name || "Un personaje", charId, cls: ch?.f_class || "", text: "usa la carta «" + card.key + "»" + (detail ? " " + detail : ""), cardUse: { key: card.key, domain: card.domain || "", type: card.type || "", level: card.level ?? "", image: card.image || "", detail: detail || "" } });
   };
+  // Espera a que termine el revelado de la carta (o un máximo de seguridad) y entonces ejecuta fn.
+  const afterReveal = (charId, cardKey, fn) => {
+    let done = false;
+    const go = () => {
+      if (done) return;
+      done = true;
+      window.removeEventListener("mh-cardplay-end", on);
+      clearTimeout(tm);
+      fn();
+    };
+    const on = (e) => e.detail && e.detail.charId === charId && e.detail.card === cardKey && go();
+    window.addEventListener("mh-cardplay-end", on);
+    const tm = setTimeout(go, 9000);
+  };
   // Enredo Feroz arrastrada a un adversario: tirada de conjuro contra él (alcance Lejano); si acierta, raíces (1d8+1) e Inmovilizado.
-  const castEnredo = (charId, target) => {
+  const castEnredo = (charId, target, card) => {
     const c = charsRef.current[charId];
     const me = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
     if (!c || !me || !target || !(target.kind === "foe" || target.kind === "npc") || cellDist(me, target) > RANGE_CELLS["Lejano"]) return "cancel";
@@ -15151,8 +15165,10 @@ export default function App({ onSignOut }) {
     if (!label || c.f_beastform) return "cancel";
     const mods = getEquipmentMods(PRIMARY_WEAPONS.find((w) => w.key === c.f_primary_weapon), SECONDARY_WEAPONS.find((w) => w.key === c.f_secondary_weapon), ARMORS.find((a) => a.key === c.f_armor));
     postCampaignEvent(charId, "🌿 Lanza Enredo Feroz sobre " + (target.name || "un adversario"));
-    rollTraitCheck(charId, label, Number(c[sk] || 0) + (mods[sk] || 0), { name: "Enredo Feroz", damage: "d8+1 físico", spell: true, fixedDice: 1, targetChosen: true, targetId: target.id, targetName: target.name, targetDc: target.stats?.difficulty || null });
-    return "ok";
+    // Primero la carta se revela a toda la mesa y, cuando acaba, se hace la tirada de conjuro.
+    playCardOnMap(sheetCampaignId, charId, card, { noChat: true, short: true });
+    afterReveal(charId, card.key, () => rollTraitCheck(charId, label, Number(c[sk] || 0) + (mods[sk] || 0), { name: "Enredo Feroz", damage: "d8+1 físico", spell: true, fixedDice: 1, targetChosen: true, targetId: target.id, targetName: target.name, targetDc: target.stats?.difficulty || null }));
+    return "reveal";
   };
   // Enredo Feroz · carta extra: gasta 1 Esperanza para inmovilizar a otro adversario Muy cercano de un objetivo ya enraizado por ti.
   const canExtraRoot = (charId, tg) => {
@@ -15160,27 +15176,30 @@ export default function App({ onSignOut }) {
     if (!tg || !(tg.kind === "foe" || tg.kind === "npc") || (tg.conds || []).includes("Inmovilizado")) return false;
     return toks.some((r) => r.rootedBy === charId && (r.conds || []).includes("Inmovilizado") && r.id !== tg.id && cellDist(r, tg) <= RANGE_CELLS["Muy cercano"]);
   };
-  const castEnredoExtra = (charId, target) => {
+  const castEnredoExtra = (charId, target, card) => {
     const c = charsRef.current[charId];
     const toks = campaignMapRef.current.tokens || [];
     const me = toks.find((t) => t.kind === "pc" && t.charId === charId);
     if (!c || !me || !canExtraRoot(charId, target) || cellDist(me, target) > RANGE_CELLS["Lejano"]) return "cancel";
     if (Number(c.hope_marked ?? HOPE_DEFAULT) < 1) { pushMapLog(sheetCampaignId, "Enredo Feroz: no tienes Esperanza", "info"); return "cancel"; }
     updateCharacterField(charId, "hope_marked", String(Number(c.hope_marked ?? HOPE_DEFAULT) - 1));
-    mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: me.id, to: target.id, kind: "web" }), "fx");
-    setTimeout(() => mutateMap(sheetCampaignId, (ts) => ts.map((x) => (x.id === target.id ? { ...x, conds: [...new Set([...(x.conds || []), "Inmovilizado"])], rootedBy: charId } : x))), 150);
     postCampaignEvent(charId, "🌿 Gasta 1 Esperanza: Enredo Feroz también inmoviliza a " + (target.name || "otro adversario"));
-    pushMapLog(sheetCampaignId, "🌿 Enredo Feroz: " + (target.name || "un adversario") + " queda inmovilizado", "info");
-    return "ok";
+    playCardOnMap(sheetCampaignId, charId, card, { noChat: true, short: true });
+    afterReveal(charId, card.key, () => {
+      mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: me.id, to: target.id, kind: "web" }), "fx");
+      setTimeout(() => mutateMap(sheetCampaignId, (ts) => ts.map((x) => (x.id === target.id ? { ...x, conds: [...new Set([...(x.conds || []), "Inmovilizado"])], rootedBy: charId } : x))), 150);
+      pushMapLog(sheetCampaignId, "🌿 Enredo Feroz: " + (target.name || "un adversario") + " queda inmovilizado", "info");
+    });
+    return "reveal";
   };
   // Carta de dominio jugada sobre el mapa: lo anota el chat y el tablero lo muestra a toda la mesa (pulso para quien la juega, revelado para los demás).
-  const playCardOnMap = (campaignId, charId, card) => {
+  const playCardOnMap = (campaignId, charId, card, opts = {}) => {
     const ch = characters[charId];
-    postCardUse(charId, card);
-    const slim = { key: card.key, domain: card.domain, type: card.type, level: card.level, recall: card.recall, text: card.text, image: card.image };
+    if (!opts.noChat) postCardUse(charId, card);
+    const slim = { key: card.key, domain: card.domain, type: card.type, level: card.level, recall: card.recall, text: card.text, image: card.image, ...(card.ghost ? { baseKey: card.baseKey, noCost: card.noCost, ghost: true } : {}) };
     const edge = cardBorder === "domain" ? DOMAIN_COLORS[card.domain] || "#E3B04B" : "#E3B04B";
     const playKey = Date.now(); // una sola vez: mutateMap ejecuta la función dos veces (en local y al guardar)
-    mutateMap(campaignId, (prev) => [...(Array.isArray(prev) ? prev : []).filter((x) => x.key !== playKey && playKey - x.key < 40000), { key: playKey, charId, name: ch?.f_name || "Alguien", back: cardBack, edge, card: slim }].slice(-8), "cfx");
+    mutateMap(campaignId, (prev) => [...(Array.isArray(prev) ? prev : []).filter((x) => x.key !== playKey && playKey - x.key < 40000), { key: playKey, charId, name: ch?.f_name || "Alguien", back: cardBack, edge, card: slim, ...(opts.short ? { short: true } : {}) }].slice(-8), "cfx");
   };
 
   // Cambia el tablero partiendo de lo último guardado (otro jugador puede haber movido su ficha).
@@ -22006,8 +22025,8 @@ export default function App({ onSignOut }) {
                                               me={myToken}
                                               tokens={mapTokens}
                                               onUse={(card, cell, target, rng) =>
-                                                card.ghost ? castEnredoExtra(viewingCharId, target) :
-                                                card.key === "Enredo Feroz" && !card.weapon ? castEnredo(viewingCharId, target) :
+                                                card.ghost ? castEnredoExtra(viewingCharId, target, card) :
+                                                card.key === "Enredo Feroz" && !card.weapon ? castEnredo(viewingCharId, target, card) :
                                                 card.key === "Lengua de la Naturaleza" && !card.weapon && !card.rowCard && !card.subclass ? (playCardOnMap(charCampaign.id, viewingCharId, card), "reveal") :
                                                 card.domain && !card.weapon && !card.rowCard && !card.subclass ? postCardUse(viewingCharId, card, (target ? "sobre " + (target.name || "una ficha") : "en la casilla " + (cell.x + 1) + "," + (cell.y + 1)) + (rng ? " (" + rng.label + ")" : "")) :
                                                 postCampaignEvent(viewingCharId, `${card.weapon ? "ataca con" : "usa la carta"} «${card.key}»${target ? ` sobre ${target.name || "una ficha"}` : ` en la casilla ${cell.x + 1},${cell.y + 1}`}${rng ? ` (${rng.label})` : ""}.`)
