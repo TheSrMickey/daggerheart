@@ -4966,7 +4966,7 @@ const sharedStyles = `
   .mh-fan-in { position: absolute; left: 0; top: 0; width: 300px; height: 420px; transform: scale(var(--s)); transform-origin: 0 0; }
   .mh-fan-tabs { position: absolute; left: 50%; bottom: 176px; transform: translateX(-50%); z-index: 7; display: flex; gap: 4px; padding: 3px; border-radius: 10px; background: rgba(21,17,28,.9); border: 1px solid rgba(255,255,255,.14); }
   .mh-fan-tabs button { all: unset; cursor: pointer; box-sizing: border-box; padding: 5px 12px; border-radius: 7px; font: 600 12px Inter, system-ui, sans-serif; color: #b9afc8; } .mh-fan-tabs button small { opacity: .7; margin-left: 2px; } .mh-fan-tabs button.on { background: #3a2f55; color: #E3B04B; } .mh-fan-tabs button:not(.on):hover { color: #fff; }
-  .mh-fan-pile { all: unset; cursor: pointer; position: absolute; bottom: 46px; width: 74px; height: 104px; z-index: 7; } .mh-fan-pile.is-l { left: 12px; } .mh-fan-pile.is-r { right: 12px; }
+  .mh-fan-pile { all: unset; cursor: pointer; position: absolute; bottom: 46px; width: 74px; height: 104px; z-index: 7; } .mh-fan-pile.is-l { left: 12px; } .mh-fan-pile.is-r { right: 12px; } .mh-fan-pile.is-r2 { right: 98px; }
   .mh-fan-pile span { position: absolute; width: 62px; height: 90px; border-radius: 9px; border: 2px solid var(--pc); background: linear-gradient(160deg, color-mix(in srgb, var(--pc) 30%, #1d1827), #15111c); box-shadow: 0 3px 8px rgba(0,0,0,.5); left: calc(var(--q) * 6px); top: calc(10px - var(--q) * 4px); transform: rotate(calc(-6deg + var(--q) * 6deg)); transition: transform .15s; }
   .mh-fan-pile span.is-back { width: 62px; height: 87px; border: 0; background: none; overflow: hidden; border-radius: 9px; } .mh-fan-pile span.is-back svg { display: block; width: 100%; height: 100%; }
   .mh-fan-card { animation: mh-fan-deal .42s cubic-bezier(.2,.9,.3,1) backwards; animation-delay: calc(var(--i, 0) * 40ms); }
@@ -5987,6 +5987,10 @@ const sharedStyles = `
   .mh-dir-ghost { position: fixed; z-index: 100001; width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 22%; border: 3px solid var(--tc); background: var(--tc); color: #fff; display: grid; place-items: center; font: 700 16px 'Cinzel', Georgia, serif; box-shadow: 0 10px 18px rgba(0,0,0,.45); pointer-events: none; } .mh-dir-ghost i { font-style: normal; }
   .mh-dir-place-all { all: unset; cursor: pointer; padding: 4px 10px; border-radius: 99px; background: var(--acc, #E3B04B); color: var(--acc-on, #1F1606); font: 700 11.5px 'Inter', system-ui, sans-serif; }
   .mh-qs-line { margin: 0; font-size: 12px; line-height: 1.45; color: var(--mh-ink2); } .mh-qs-line b { color: var(--mh-ink); } .mh-qs-empty { margin: 0; font-size: 12.5px; color: var(--mh-muted); }
+  .mh-pl-side { display: flex; flex-direction: column; gap: 12px; min-height: 0; } .mh-pl-side.is-contents { display: contents; } .mh-pl-side > .mh-panel-box { flex: 1; min-height: 0; }
+  .mh-pl-hud { flex: none; } .mh-pl-fear { gap: 2px; flex-wrap: nowrap; } .mh-pl-fear svg { flex: none; }
+  .mh-spot-qwrap { position: relative; flex: none; } .mh-spot-qbtn.is-hand { background: #E3B04B; border-color: #E3B04B; color: #241a05; } .mh-spot-qbtn:disabled { opacity: .5; cursor: default; }
+  .mh-spot-kinds.is-q { position: absolute; left: 0; bottom: 46px; z-index: 20; } .mh-spot-got.is-q { position: absolute; left: 0; bottom: 46px; translate: none; z-index: 20; width: 250px; }
   .mh-qs-btns { display: flex; flex-wrap: wrap; gap: 8px; }
   .mh-qs-chips { display: flex; flex-wrap: wrap; gap: 6px; } .mh-qs-chips span { padding: 3px 9px; border-radius: 99px; font-size: 11px; font-weight: 700; border: 1px solid var(--mh-line2); background: var(--mh-panel2); } .mh-qs-chips span.is-cond { border-color: #E0544A; }
   .mh-qs-acts { display: flex; gap: 6px; flex-wrap: wrap; } .mh-qs-acts button { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; padding: 7px 11px; }
@@ -10457,25 +10461,26 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
     return () => ro.disconnect();
   }, [cards.length]);
   if (!cards.length) return null;
-  const grp = (c) => (c.weapon ? "w" : c.subclass || c.rowCard ? "a" : "d");
+  const grp = (c) => (c.weapon ? "w" : c.multi ? "m" : c.subclass || c.rowCard ? "a" : "d");
   // Con más de 6 cartas se abre un solo grupo (Dominio, Armas o Clase) y los demás quedan en pila a los lados.
-  const GN = { d: "Dominio", w: "Armas", a: "Clase" };
-  const present = ["d", "w", "a"].filter((k) => cards.some((c) => grp(c) === k));
+  const GN = { d: "Dominio", w: "Armas", a: "Clase", m: "Multiclase" };
+  const present = ["d", "w", "a", "m"].filter((k) => cards.some((c) => grp(c) === k));
   const grouped = cards.length > 6 && present.length > 1;
   const act = grouped ? (present.includes(grpSel) ? grpSel : present[0]) : null;
   // La carta que se está usando sale de la mano (y las demás se recolocan) hasta que vuelve.
   const shown = (grouped ? cards.filter((c) => grp(c) === act) : cards).filter((c) => !(held && held.key === c.key));
   // Carrusel: los otros grupos quedan a los lados (izquierda y derecha); al pulsar uno pasa al centro y los demás rotan.
-  const ring = ["w", "d", "a"].filter((k) => present.includes(k));
+  const ring = ["w", "d", "a", "m"].filter((k) => present.includes(k));
   const ri = ring.indexOf(act);
   const sideL = grouped && ring.length > 2 ? ring[(ri + ring.length - 1) % ring.length] : null;
   const sideR = grouped ? (ring.length > 2 ? ring[(ri + 1) % ring.length] : ring.find((k) => k !== act) || null) : null;
-  const others = [sideL, sideR].filter(Boolean);
+  const sideR2 = grouped && ring.length > 3 ? ring[(ri + 2) % ring.length] : null; // con Multiclase hay cuatro grupos: el cuarto queda en otra pila a la derecha
+  const others = [sideL, sideR, sideR2].filter(Boolean);
   const colOf = (c) => (c.weapon ? TIER_COLORS[c.level]?.color || "#C9A24B" : c.rowCard ? c.color : DOMAIN_COLORS[c.domain] || "#C9A24B");
   const n = shown.length;
   // Separación entre cartas: la de siempre, o más junta si no caben en el ancho del mapa.
   const cardW = 150 * (fanW <= 760 ? 0.72 : 1);
-  const pitch = Math.max(28, Math.min(98, (fanW - 90 - cardW - (others.length ? 170 : 0)) / Math.max(1, n - 1)));
+  const pitch = Math.max(28, Math.min(98, (fanW - 90 - cardW - (others.length > 2 ? 256 : others.length ? 170 : 0)) / Math.max(1, n - 1)));
   const gap = pitch - cardW;
   const stepR = Math.min(5, 36 / Math.max(1, n - 1));
   const stepY = Math.min(5, 30 / Math.max(1, n - 1));
@@ -10488,7 +10493,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
       {others.map((k, j) => {
         const list = cards.filter((c) => grp(c) === k);
         return (
-          <button key={k} type="button" className={"mh-fan-pile " + (k === sideL ? "is-l" : "is-r")} onClick={() => (setDir(k === sideL ? -1 : 1), setGrpSel(k))} title={"Abrir " + GN[k].toLowerCase() + " (" + list.length + ")"} aria-label={"Abrir " + GN[k] + ", " + list.length + " cartas"}>
+          <button key={k} type="button" className={"mh-fan-pile " + (k === sideL ? "is-l" : k === sideR2 ? "is-r is-r2" : "is-r")} onClick={() => (setDir(k === sideL ? -1 : 1), setGrpSel(k))} title={"Abrir " + GN[k].toLowerCase() + " (" + list.length + ")"} aria-label={"Abrir " + GN[k] + ", " + list.length + " cartas"}>
             {list.slice(0, 3).map((c, q) => (
               <span key={c.key} className="is-back" style={{ "--pc": colOf(c), "--q": q }}><CardBack kind={cardBack || "noche"} edge={cardBorder === "domain" ? colOf(c) : undefined} /></span>
             ))}
@@ -21605,6 +21610,51 @@ export default function App({ onSignOut }) {
 </div>
                         );
                         const fearInCap = stTab === "escena" && (scene.title || scene.image) && !dlg;
+                        const sideChat = embedded && !isMobile; // columna derecha propia: estadísticas arriba y chat debajo, como en el Directo del DJ
+                        const hudCard = !sideChat ? null : (() => {
+                          const hc = characters[viewingCharId];
+                          if (!hc) return null;
+                          const hm = getEquipmentMods(PRIMARY_WEAPONS.find((w) => w.key === hc.f_primary_weapon), SECONDARY_WEAPONS.find((w) => w.key === hc.f_secondary_weapon), ARMORS.find((a) => a.key === hc.f_armor));
+                          const hpT = Math.max(0, Number(hc.r_hp || 0) + (hm.hp || 0));
+                          const hpLeft = Math.max(0, hpT - Number(hc.hp_marked || 0));
+                          const stT = Math.max(0, Number(hc.r_stress || 0) + (hm.stress || 0));
+                          const stN = Math.min(stT, Number(hc.stress_marked || 0));
+                          const hpeT = getHopeMax(hc) + (hm.hope || 0);
+                          const hpeN = Math.min(hpeT, Number(hc.hope_marked ?? HOPE_DEFAULT));
+                          const rows = [
+                            { k: "hp", label: "Vida", n: hpLeft, t: hpT, col: "#E0544A", on: (i) => markHp(viewingCharId, "hp_marked", i, Number(hc.hp_marked || 0)), inv: true },
+                            { k: "st", label: "Estrés", n: stN, t: stT, col: "#A58BE8", on: (i) => markStressBox(viewingCharId, "stress_marked", i, Number(hc.stress_marked || 0)) },
+                            { k: "ho", label: "Esperanza", n: hpeN, t: hpeT, col: "#E3B04B", on: (i) => updateCharacterField(viewingCharId, "hope_marked", String(hpeN === i + 1 ? i : i + 1)) },
+                          ];
+                          return (
+                            <div className="mh-dir-card mh-pl-hud" role="group" aria-label="Tu Vida, Estrés y Esperanza">
+                              {rows.map((r) => (
+                                <div key={r.k} className="mh-qs-row">
+                                  <em>{r.label}</em>
+                                  <span className="mh-qs-pips">
+                                    {Array.from({ length: r.t }, (_, i) => {
+                                      const on = i < r.n;
+                                      const idx = r.inv ? r.t - (on ? i : i + 1) - 1 : i;
+                                      return <button key={i} type="button" className={"mh-qs-pip" + (on ? " is-on" : "")} style={{ "--pc": r.col }} aria-label={r.label + " " + (i + 1)} onClick={() => r.on(idx)} />;
+                                    })}
+                                  </span>
+                                  <b>{r.n}/{r.t}</b>
+                                </div>
+                              ))}
+                              {stTab === "mapa" && (
+                                <div className="mh-qs-row" title={"Miedo del DJ: " + fearCount + " de 12"}>
+                                  <em>Miedo</em>
+                                  <span className="mh-qs-pips mh-pl-fear">
+                                    {Array.from({ length: 12 }, (_, i) => (
+                                      <Skull key={i} size={14} strokeWidth={i < fearCount ? 1.4 : 1.6} className={"mh-fear-sk" + (i < fearCount ? " on" : "") + (i === fearCount - 1 ? " pulse" : "")} />
+                                    ))}
+                                  </span>
+                                  <b>{fearCount}/12</b>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })();
                         const empty = (Icon, text) => (
                           <div className="mh-stg-empty">
                             <Icon size={26} strokeWidth={1.6} />
@@ -21641,7 +21691,7 @@ export default function App({ onSignOut }) {
                               )}
                               <div className={"mh-stg-body" + (sceneOut && stTab === "escena" ? " is-out" : "")}>
                                 <ChapterBanner id={activeSceneIdOf(stage)} num={stageScenesOf(stage).findIndex((x) => x.id === activeSceneIdOf(stage)) + 1} title={stageScenesOf(stage).find((x) => x.id === activeSceneIdOf(stage))?.title} />
-                                {(!isMobile || !fearInCap) && fearEl(" is-flow")}
+                                {(!isMobile || !fearInCap) && !(sideChat && stTab === "mapa") && fearEl(" is-flow")}
                                 {stTab === "escena" &&
                                   (scene.title || scene.image || dlg ? (
                                     <>
@@ -21708,7 +21758,7 @@ export default function App({ onSignOut }) {
                                         <MapLog log={campaignMap.log} />
                                         <MapCounters list={campaignMap.counters} />
                                         <SpotPause spot={campaignMap.spot} />
-                                        {myToken && (
+                                        {myToken && !sideChat && (
                                           <SpotPlayer
                                             spot={campaignMap.spot}
                                             charId={viewingCharId}
@@ -21717,7 +21767,7 @@ export default function App({ onSignOut }) {
                                             onDone={() => clearSpotFocus(charCampaign.id, characters[viewingCharId]?.f_name)}
                                           />
                                         )}
-                                        {myToken && (() => {
+                                        {myToken && !sideChat && (() => {
                                           // Vida, Estrés y Esperanza de tu personaje en la esquina del mapa (solo tú ves los tuyos).
                                           const hc = characters[viewingCharId];
                                           if (!hc) return null;
@@ -21766,14 +21816,15 @@ export default function App({ onSignOut }) {
                                           const elSub = me?.f_subclass === "Guardián de los Elementos" ? (SUBCLASSES.Druida || []).find((x) => x.key === "Guardián de los Elementos") : null;
                                           const subCard = elSub ? { key: elSub.key, subclass: true, cls: "Druida", level: "", domain: "Sabio", type: "Subclase", kicker: "Subclase · " + (Number(me?.f_level || 1) <= 1 ? "Fundación" : tierForLevel(me?.f_level || 1) === 2 ? "Especialización" : "Maestría"), image: elSub.image, text: elSub.blurb, features: (elSub.features || []).filter((x) => ELEM_COL[x.name]) } : null;
                                           const rowColor = (x) => (typeof x === "string" && /^#[0-9a-f]{6}$/i.test(x) ? x : classColor(me?.f_class));
+                                          const mcDom = getMulticlass(me)?.domain || "";
                                           const actionCards = buildActionRows().map((it) =>
                                             it.key === "subclass" && subCard
                                               ? subCard
-                                              : { key: it.title, rowCard: true, myClass: me?.f_class, detail: it.onClick?.detail, rowKey: it.key, Icon: it.Icon, kicker: it.kicker, text: it.summary, color: rowColor(it.color), domain: "Sabio", level: "", type: "Acción", open: () => (it.onClick(), setViewingCardDetail((d) => (d && !d.rowIcon ? { ...d, rowIcon: it.Icon } : d))) }
+                                              : { key: it.title, rowCard: true, myClass: me?.f_class, detail: it.onClick?.detail, rowKey: it.key, multi: !!it.mc, Icon: it.Icon, kicker: it.kicker, text: it.summary, color: rowColor(it.color), domain: "Sabio", level: "", type: "Acción", open: () => (it.onClick(), setViewingCardDetail((d) => (d && !d.rowIcon ? { ...d, rowIcon: it.Icon } : d))) }
                                           );
                                           const rootedMine = (campaignMap.tokens || []).filter((t) => t.rootedBy === viewingCharId && (t.conds || []).includes("Inmovilizado"));
                                           const ghostCard = rootedMine.length && keys.includes("Enredo Feroz") ? (() => { const base = findDomainCardAny("Enredo Feroz"); return base ? { ...base, key: "Inmovilizar", baseKey: "Enredo Feroz", text: "Puedes gastar una Esperanza para inmovilizar temporalmente a otro adversario en alcance Muy Cercano del objetivo de Enredo Feroz.", recall: null, noCost: true, ghost: true, noHope: Number(me?.hope_marked ?? HOPE_DEFAULT) < 1 } : null; })() : null;
-                                          const cards = [wp(me?.f_primary_weapon, PRIMARY_WEAPONS, "Principal"), wp(me?.f_secondary_weapon, SECONDARY_WEAPONS, "Secundaria"), ...actionCards, ...keys.map((k) => findDomainCardAny(k)), ghostCard].filter(Boolean);
+                                          const cards = [wp(me?.f_primary_weapon, PRIMARY_WEAPONS, "Principal"), wp(me?.f_secondary_weapon, SECONDARY_WEAPONS, "Secundaria"), ...actionCards, ...keys.map((k) => { const d = findDomainCardAny(k); return d && mcDom && d.domain === mcDom && !(CLASS_DOMAINS[me?.f_class] || []).includes(mcDom) ? { ...d, multi: true } : d; }), ghostCard].filter(Boolean);
                                           return (
                                             <CardFan
                                               cards={cards}
@@ -21991,6 +22042,8 @@ export default function App({ onSignOut }) {
                               )}
                             </Panel>
 
+                            <div className={"mh-pl-side" + (sideChat ? "" : " is-contents")}>
+                            {hudCard}
                             <ChatHost embedded={false} slot={chatSlot}>
                             <Panel
                               span={wide || (embedded && !isMobile) ? 1 : 5}
@@ -22177,6 +22230,16 @@ export default function App({ onSignOut }) {
                                   >
                                     <Plus size={16} />
                                   </button>
+                                  {sideChat && (
+                                    <SpotPlayer
+                                      quick
+                                      spot={campaignMap.spot}
+                                      charId={viewingCharId}
+                                      onRaise={(kind) => raiseHand(charCampaign.id, viewingCharId, characters[viewingCharId]?.f_name || "Jugador", kind)}
+                                      onLower={() => lowerHand(charCampaign.id, viewingCharId)}
+                                      onDone={() => clearSpotFocus(charCampaign.id, characters[viewingCharId]?.f_name)}
+                                    />
+                                  )}
                                   <input
                                     className="mh-input"
                                     style={{ flex: 1, minWidth: 0 }}
@@ -22192,6 +22255,7 @@ export default function App({ onSignOut }) {
                               </div>
                             </Panel>
                             </ChatHost>
+                            </div>
                           </div>
                         );
                       })()}

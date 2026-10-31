@@ -58,7 +58,7 @@ export const beep = () => {
 };
 
 // Botón y avisos del jugador, sobre su mapa.
-export function SpotPlayer({ spot, charId, onRaise, onLower, onDone }) {
+export function SpotPlayer({ spot, charId, onRaise, onLower, onDone, quick }) {
   const sp = normSpot(spot);
   const [open, setOpen] = useState(false);
   const [now, setNow] = useState(() => Date.now());
@@ -71,6 +71,34 @@ export function SpotPlayer({ spot, charId, onRaise, onLower, onDone }) {
   const mine = idx >= 0;
   const hasFocus = !!sp.focus && sp.focus.charId === charId;
   const blocked = sp.mode !== "normal";
+  // Acceso rápido junto al «+» del chat: solo el icono de la mano; el menú y el aviso del foco se abren hacia arriba.
+  if (quick) {
+    const title = sp.mode === "silent" ? "El DJ ha pedido silencio" : mine ? "Bajar la mano · vas la " + (idx + 1) + ".ª" : "Pedir la palabra";
+    return (
+      <div className="mh-spot-qwrap" onPointerDown={(e) => e.stopPropagation()}>
+        {hasFocus && (
+          <div className="mh-spot-got is-q">
+            <b>✨ El DJ te da el foco</b>
+            <small>Actúa o habla. Al terminar, pulsa abajo.</small>
+            <button type="button" onClick={onDone}>He terminado</button>
+          </div>
+        )}
+        {open && !mine && !blocked && (
+          <div className="mh-spot-kinds is-q" role="menu">
+            {SPOT_KINDS.map((k) => (
+              <button key={k.key} type="button" role="menuitem" className={k.urgent ? "is-urg" : ""} onClick={() => (setOpen(false), onRaise(k.key))}>
+                <b>{k.icon} {k.label}</b>
+                <small>{k.sub}</small>
+              </button>
+            ))}
+          </div>
+        )}
+        <button type="button" className={"mh-chat-plus mh-spot-qbtn" + (mine ? " is-hand" : "")} title={title} aria-label={title} aria-expanded={open} disabled={sp.mode === "silent" || (blocked && !mine)} onClick={() => (mine ? onLower() : setOpen((v) => !v))}>
+          <Hand size={16} />
+        </button>
+      </div>
+    );
+  }
   return (
     <>
     {hasFocus && (
