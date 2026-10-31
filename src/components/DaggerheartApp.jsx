@@ -5079,6 +5079,9 @@ const sharedStyles = `
   .mh-map-view.is-pannable:active { cursor: grabbing; }
   /* Cubre la caja: el lado que sobra se recorre desplazando */
   .mh-map-fit { position: relative; width: calc(max(100cqw, 100cqh * ${MAP_COLS} / ${MAP_ROWS}) * var(--mz, 1)); }
+  /* Jugador (escritorio): el tablero entero a la vista, sin recortar, y la mano de cartas en su propia franja inferior, sin tapar casillas */
+  .mh-map-stage.is-fit .mh-map-view { display: flex; } .mh-map-stage.is-fit.has-hand .mh-map-view { bottom: 150px; }
+  .mh-map-stage.is-fit .mh-map-fit { flex: none; margin: auto; width: calc(min(100cqw, 100cqh * ${MAP_COLS} / ${MAP_ROWS}) * var(--mz, 1)); }
   .mh-map-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 6; }
   .mh-map-overlay > * { pointer-events: auto; }
   .mh-map-overlay .mh-map-legend { left: auto; right: 10px; bottom: 10px; top: auto; flex-direction: column; align-items: flex-start; max-width: 150px; }
@@ -21676,8 +21679,7 @@ export default function App({ onSignOut }) {
                                   (mapTokens.length || scene.image || (campaignMap.tokens || []).length || campaignMap.fog?.on ? (
                                     <MapPortal on={mcb}>
                                       {/* La escena llena la caja (difuminada por detrás) y el tablero, con casillas cuadradas, se ajusta dentro */}
-                                      <FocusBar spot={campaignMap.spot} pcs={focusPcs(campaignMap.tokens)} myCharId={viewingCharId} isGm={false} onPass={(t, why) => passFocus(charCampaign.id, t, why)} onClear={() => {}} />
-                                      <div className="mh-map-stage">
+                                      <div className={"mh-map-stage" + (!isMobile ? " is-fit" + (myToken ? " has-hand" : "") : "")}>
                                         <div className={mcb && mcbRot ? "mh-rotwrap" : "mh-rotoff"}>
                                         <MapBackdrop bg={mapBgOf(campaignMap, scene.image).src} sharp={mapBgOf(campaignMap, scene.image).sharp} />
                                         <MapViewport focus={myToken ? { x: myToken.x, y: myToken.y } : null}>
