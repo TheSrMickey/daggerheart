@@ -10425,7 +10425,7 @@ function HomeDice({ stats }) {
 // Abanico de cartas de dominio en el borde inferior del mapa: se arrastran hasta una casilla para usarlas.
 // Cartas que se lanzan apuntando: una línea de guiones sale del personaje hasta el ratón.
 const AIM_CARD = "Enredo Feroz";
-function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack, cardBorder, aimOk, reachOf }) {
+function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack, cardBorder, aimOk, reachOf, onAim }) {
   const cardsRef = useRef(cards);
   cardsRef.current = cards;
   const [drag, setDrag] = useState(null); // { card, x, y, cell, moved }
@@ -10576,6 +10576,12 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
   const rng = drag ? rangeOf(drag.cell) : null;
   const aim = !!drag?.moved && isAim(drag.card) && !inHand(drag.x, drag.y);
   const aimIn = aim && inAimReach(drag.card, drag.cell);
+  // Con un arma en la mano, el visor del rango del tablero enseña el alcance de esa arma.
+  const aimMax = aim && drag.card.weapon ? aimReach(drag.card).max : 0;
+  useEffect(() => {
+    if (onAim) onAim(aimMax && me ? { id: me.id, max: aimMax } : null);
+  }, [aimMax, me?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => () => onAim && onAim(null), []); // eslint-disable-line react-hooks/exhaustive-deps
   const aimTarget = aim && drag.cell ? tokens.find((t) => !t.hidden && t.x === drag.cell.x && t.y === drag.cell.y && t.id !== me?.id && (t.kind === "foe" || t.kind === "npc")) : null;
   const target = drag?.cell ? tokens.find((t) => !t.hidden && t.x === drag.cell.x && t.y === drag.cell.y && t.id !== me?.id) : null;
   return (
@@ -10730,7 +10736,7 @@ function CardPlayView({ anim, own }) {
     </div>
   );
 }
-function MapBoard({ rangeMenu, cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, fog, fogView, areas, areaTool, log, menuFor, fx, efx, hfx, spot, bg, tokens, stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
+function MapBoard({ aimRange, rangeMenu, cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, fog, fogView, areas, areaTool, log, menuFor, fx, efx, hfx, spot, bg, tokens, stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
   const ref = useRef(null);
   const dragRef = useRef(null);
   const [drag, setDrag] = useState(null);
@@ -10931,20 +10937,24 @@ function MapBoard({ rangeMenu, cfx, meCharId, onDragInfo, onStore, plain, backdr
   }
   // Casillas coloreadas por rango alrededor de la ficha elegida en el menú.
   const rangeTok = tokens.find((t) => t.id === rangeId);
+  // Mientras se arrastra una carta de arma, el visor enseña el alcance de esa arma alrededor de tu ficha.
+  const aimTok = !rangeTok && aimRange ? tokens.find((t) => t.id === aimRange.id) : null;
+  const rangeSrc = rangeTok || aimTok;
+  const rangeMax = aimTok ? aimRange.max : 99;
   const rangeCells = [];
-  if (rangeTok) {
+  if (rangeSrc) {
     for (let y = 0; y < MAP_ROWS; y++)
       for (let x = 0; x < MAP_COLS; x++) {
-        const d = Math.max(Math.abs(x - rangeTok.x), Math.abs(y - rangeTok.y));
-        const band = d > 0 && MAP_RANGES.find((r) => d <= r.max);
+        const d = Math.max(Math.abs(x - rangeSrc.x), Math.abs(y - rangeSrc.y));
+        const band = d > 0 && d <= rangeMax && MAP_RANGES.find((r) => d <= r.max);
         if (band) rangeCells.push([x, y, band]);
       }
   }
   // Banda de rango de una casilla (para dibujar el contorno donde cambia).
   const bandKey = (x, y) => {
-    if (!rangeTok || x < 0 || y < 0 || x >= MAP_COLS || y >= MAP_ROWS) return null;
-    const d = Math.max(Math.abs(x - rangeTok.x), Math.abs(y - rangeTok.y));
-    return d > 0 ? MAP_RANGES.find((r) => d <= r.max)?.key || null : "self";
+    if (!rangeSrc || x < 0 || y < 0 || x >= MAP_COLS || y >= MAP_ROWS) return null;
+    const d = Math.max(Math.abs(x - rangeSrc.x), Math.abs(y - rangeSrc.y));
+    return d > rangeMax ? null : d > 0 ? MAP_RANGES.find((r) => d <= r.max)?.key || null : "self";
   };
   const at = (x, y) => ({ left: (x * 100) / MAP_COLS + "%", top: (y * 100) / MAP_ROWS + "%", width: 100 / MAP_COLS + "%", height: 100 / MAP_ROWS + "%" });
 
@@ -11096,9 +11106,9 @@ function MapBoard({ rangeMenu, cfx, meCharId, onDragInfo, onStore, plain, backdr
       })()}
       <MapLog log={log} />
       {cAnim && overlayEl && createPortal(<CardPlayView anim={cAnim} own={!!meCharId && cAnim.charId === meCharId} />, overlayEl)}
-      {rangeTok && overlayEl && createPortal(
+      {rangeSrc && overlayEl && createPortal(
         <div className="mh-map-legend" onPointerDown={(e) => e.stopPropagation()}>
-          {MAP_RANGES.map((r) => (
+          {MAP_RANGES.filter((r, i) => i === 0 || MAP_RANGES[i - 1].max < rangeMax).map((r) => (
             <span key={r.key}>
               <i style={{ "--rc": r.color }} />
               {r.label}
@@ -11110,9 +11120,9 @@ function MapBoard({ rangeMenu, cfx, meCharId, onDragInfo, onStore, plain, backdr
         </div>,
         overlayEl
       )}
-      {rangeTok && !overlayEl && (
+      {rangeSrc && !overlayEl && (
         <div className="mh-map-legend" onPointerDown={(e) => e.stopPropagation()}>
-          {MAP_RANGES.map((r) => (
+          {MAP_RANGES.filter((r, i) => i === 0 || MAP_RANGES[i - 1].max < rangeMax).map((r) => (
             <span key={r.key}>
               <i style={{ "--rc": r.color }} />
               {r.label}
@@ -11717,6 +11727,7 @@ export default function App({ onSignOut }) {
   const [mcbChat, setMcbChat] = useState(false); // móvil: hoja del chat sobre el mapa
   const [djWorldEdit, setDjWorldEdit] = useState(false);
   const [djCastEdit, setDjCastEdit] = useState(null);
+  const [aimRange, setAimRange] = useState(null); // alcance del arma que se está apuntando: { id, max }
   const [plDragTok, setPlDragTok] = useState(null); // tu ficha arrastrándose por el mapa de la hoja: { id, over }
   const [djDragTok, setDjDragTok] = useState(null); // ficha de jugador que el DJ está arrastrando por el mapa: { id, over }
   const [chipDrag, setChipDrag] = useState(null); // ficha arrastrada desde la caja «Sin colocar»: { id, name, color, x, y }
@@ -21963,6 +21974,7 @@ export default function App({ onSignOut }) {
                                             onSelect={setMapSel}
                                             compact={!wide}
                                             rangeMenu
+                                            aimRange={aimRange}
                                             onDragInfo={(d) => setPlDragTok(d && mapTokens.find((t) => t.id === d.id && ((t.kind === "pc" && t.charId === viewingCharId) || (t.kind === "pet" && t.ownerCharId === viewingCharId))) ? d : null)}
                                             onStore={(id) => {
                                               const tk = (campaignMap.tokens || []).find((t) => t.id === id);
@@ -22053,6 +22065,7 @@ export default function App({ onSignOut }) {
                                               cards={cards}
                                               cardBack={cardBack}
                                               aimOk={(card, tg) => !card.ghost || canExtraRoot(viewingCharId, tg)}
+                                              onAim={setAimRange}
                                               reachOf={(card) => { if (!card.weapon) return null; const lab = weaponReach(characters[viewingCharId], card.key); return lab ? { label: lab, max: RANGE_CELLS[lab] || 99 } : null; }}
                                               cardBorder={cardBorder}
                                               onElement={(el, on) => toggleElemental(viewingCharId, el, on)}
