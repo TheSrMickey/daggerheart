@@ -10696,7 +10696,7 @@ function CardPlayView({ anim, own }) {
     const fan = root.closest(".mh-map-stage")?.querySelector(".mh-fan");
     const fr = fan ? fan.getBoundingClientRect() : null;
     const inset = fr && fr.top > r.top && fr.top < r.bottom ? Math.round(r.bottom - fr.top) : 0;
-    setBox({ inset, h: Math.max(236, Math.min(430, Math.round(r.height - inset - 76))) });
+    setBox({ inset, h: Math.max(236, Math.min(340, Math.round(r.height - inset - 150))) });
   }, [anim.key]);
   useLayoutEffect(() => {
     const t = typeof window !== "undefined" ? window.__mhFlyTo : null;
@@ -10724,7 +10724,7 @@ function CardPlayView({ anim, own }) {
     </div>
   );
 }
-function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, fog, fogView, areas, areaTool, log, menuFor, fx, efx, hfx, spot, bg, tokens, stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
+function MapBoard({ rangeMenu, cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, fog, fogView, areas, areaTool, log, menuFor, fx, efx, hfx, spot, bg, tokens, stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
   const ref = useRef(null);
   const dragRef = useRef(null);
   const [drag, setDrag] = useState(null);
@@ -10777,7 +10777,7 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
       window.removeEventListener("wheel", close);
     };
   }, [menu]);
-  const menuItems = (t) => [...(plain ? [{ key: "range", Icon: Crosshair, label: rangeId === t.id ? "Ocultar rango" : "Ver rango", sub: rangeId === t.id ? "Quita las bandas de alcance" : "Cuerpo a cuerpo, muy cercano, cercano…", on: rangeId === t.id, run: () => setRangeId((r) => (r === t.id ? null : t.id)) }] : []), ...((menuFor && menuFor(t)) || [])];
+  const menuItems = (t) => rangeMenu ? [{ key: "range", Icon: Crosshair, label: rangeId === t.id ? "Ocultar rango" : "Ver rango", sub: rangeId === t.id ? "Quita las bandas de alcance" : "Cuerpo a cuerpo, muy cercano, cercano…", on: rangeId === t.id, run: () => setRangeId((r) => (r === t.id ? null : t.id)) }] : [...(plain ? [{ key: "range", Icon: Crosshair, label: rangeId === t.id ? "Ocultar rango" : "Ver rango", sub: rangeId === t.id ? "Quita las bandas de alcance" : "Cuerpo a cuerpo, muy cercano, cercano…", on: rangeId === t.id, run: () => setRangeId((r) => (r === t.id ? null : t.id)) }] : []), ...((menuFor && menuFor(t)) || [])];
   const openMenu = (e, t) => {
     if (t.vanished) return;
     e.preventDefault();
@@ -10811,7 +10811,7 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
       return;
     }
     if (!canMove(t)) {
-      setRangeId((r) => (r === t.id ? null : t.id));
+      if (!rangeMenu) setRangeId((r) => (r === t.id ? null : t.id));
       if (onPick) onPick(selectedId === t.id ? null : t.id);
       return;
     }
@@ -10854,8 +10854,8 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
           if (onSelect) onSelect(d.id);
           return;
         }
-        const showing = rangeIdRef.current === d.id;
-        setRangeId(showing ? null : d.id);
+        const showing = rangeMenu ? selectedId === d.id : rangeIdRef.current === d.id;
+        if (!rangeMenu) setRangeId(showing ? null : d.id);
         onSelect(showing ? null : d.id);
       } else if (onStore && ev && overStore(ev) && onStore(d.id)) {
         /* ficha guardada */
@@ -21920,7 +21920,7 @@ export default function App({ onSignOut }) {
                                             selectedId={mapSel}
                                             onSelect={setMapSel}
                                             compact={!wide}
-                                            menuFor={(t) => (t.kind === "pc" && t.charId === viewingCharId ? boardActions(t) : [])}
+                                            rangeMenu
                                           />
                                         </MapViewport>
                                         </div>
