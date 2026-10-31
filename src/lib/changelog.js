@@ -9,6 +9,7 @@ export const CHANGELOG = [
     title: "El Oráculo del DJ",
     blurb: "Un anillo de luz que responde a las preguntas de la mesa: Sí / No, con matices o con una tirada de destino, solo para el DJ y a un toque bajo el chat.",
     items: [
+      { tag: "mejora", text: "Mapa de combate desde la hoja de personaje · el rango se pinta mucho más sutil (se siguen viendo la cuadrícula y el fondo) y su leyenda de colores pasa al lateral izquierdo, junto al mapa. Al pulsar tu ficha ya no aparece abajo «Tus fichas» con el botón de quitar: ahora arrastras tu ficha (o tu compañero) a la esquina inferior izquierda para guardarla, y la bandeja «Tus fichas» te deja volver a colocarla." },
       { tag: "mejora", text: "Combate · Enredo Feroz y su carta extra «Inmovilizar» ahora revelan la carta a toda la mesa justo al soltarla sobre el enemigo (animación corta, unos 2 s) y solo después llega la tirada de conjuro, el daño y el hilo. Antes la carta no se revelaba." },
       { tag: "mejora", text: "Mapa de combate desde la hoja de personaje · pulsar una ficha ya no muestra su rango; el clic derecho sobre cualquier ficha ofrece solo «Ver rango» (y «Ocultar rango»). La carta que se juega sale un poco más pequeña, sigue centrada sobre la baraja." },
       { tag: "mejora", text: "Combate · la carta que se juega en el mapa sale mucho más grande y centrada en el espacio libre sobre tu baraja: el margen de arriba y el de abajo (hasta la baraja, no hasta el borde de la caja) son iguales. El tamaño se adapta al alto disponible." },

@@ -4851,7 +4851,7 @@ const sharedStyles = `
   html[data-mh-theme="light"] .mh-map .mh-map-grid { background: color-mix(in srgb, #fff 52%, transparent); }
   .mh-map-noise { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: overlay; opacity: .3; z-index: 1; animation: mh-gridin 1s ease .3s both; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .55 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23f)'/%3E%3C/svg%3E"); }
   .mh-map-grid { position: absolute; left: calc(50% / ${MAP_COLS}); top: calc(50% / ${MAP_ROWS}); width: calc(100% - 100% / ${MAP_COLS}); height: calc(100% - 100% / ${MAP_ROWS}); pointer-events: none; background: color-mix(in srgb, var(--mh-ink, #fff) 52%, transparent); -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Cdefs%3E%3ClinearGradient%20id='h'%20gradientUnits='userSpaceOnUse'%20x1='17'%20x2='83'%20y1='0'%20y2='0'%3E%3Cstop%20offset='0'%20stop-opacity='0'/%3E%3Cstop%20offset='.32'%20stop-opacity='1'/%3E%3Cstop%20offset='.68'%20stop-opacity='1'/%3E%3Cstop%20offset='1'%20stop-opacity='0'/%3E%3C/linearGradient%3E%3ClinearGradient%20id='v'%20gradientUnits='userSpaceOnUse'%20x1='0'%20x2='0'%20y1='17'%20y2='83'%3E%3Cstop%20offset='0'%20stop-opacity='0'/%3E%3Cstop%20offset='.32'%20stop-opacity='1'/%3E%3Cstop%20offset='.68'%20stop-opacity='1'/%3E%3Cstop%20offset='1'%20stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath%20d='M17%2050H83'%20stroke='url%28%23h%29'%20stroke-width='2.4'/%3E%3Cpath%20d='M50%2017V83'%20stroke='url%28%23v%29'%20stroke-width='2.4'/%3E%3C/svg%3E") 0 0 / calc(100% / ${MAP_COLS - 1}) calc(100% / ${MAP_ROWS - 1}) repeat; mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Cdefs%3E%3ClinearGradient%20id='h'%20gradientUnits='userSpaceOnUse'%20x1='17'%20x2='83'%20y1='0'%20y2='0'%3E%3Cstop%20offset='0'%20stop-opacity='0'/%3E%3Cstop%20offset='.32'%20stop-opacity='1'/%3E%3Cstop%20offset='.68'%20stop-opacity='1'/%3E%3Cstop%20offset='1'%20stop-opacity='0'/%3E%3C/linearGradient%3E%3ClinearGradient%20id='v'%20gradientUnits='userSpaceOnUse'%20x1='0'%20x2='0'%20y1='17'%20y2='83'%3E%3Cstop%20offset='0'%20stop-opacity='0'/%3E%3Cstop%20offset='.32'%20stop-opacity='1'/%3E%3Cstop%20offset='.68'%20stop-opacity='1'/%3E%3Cstop%20offset='1'%20stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath%20d='M17%2050H83'%20stroke='url%28%23h%29'%20stroke-width='2.4'/%3E%3Cpath%20d='M50%2017V83'%20stroke='url%28%23v%29'%20stroke-width='2.4'/%3E%3C/svg%3E") 0 0 / calc(100% / ${MAP_COLS - 1}) calc(100% / ${MAP_ROWS - 1}) repeat; }
-  .mh-map-range { position: absolute; box-sizing: border-box; background: color-mix(in srgb, var(--rc) 58%, transparent); border: 0 solid var(--rc); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rc) 35%, transparent); pointer-events: none; z-index: 1; }
+  .mh-map-range { position: absolute; box-sizing: border-box; background: color-mix(in srgb, var(--rc) 17%, transparent); border: 0 solid color-mix(in srgb, var(--rc) 62%, transparent); box-shadow: inset 0 0 0 1px rgba(255,255,255,.1); pointer-events: none; z-index: 1; }
   .mh-map-menu { min-width: 190px; }
   .mh-map-menu { min-width: 230px; max-width: 280px; }
   .mh-map-menu-list { max-height: 340px; overflow-y: auto; }
@@ -4870,7 +4870,7 @@ const sharedStyles = `
   .mh-map-menu-ck { color: #5FA77A; }
   .mh-map-legend { position: absolute; left: 8px; bottom: 8px; z-index: 6; display: flex; align-items: center; gap: 4px 10px; flex-wrap: wrap; max-width: calc(100% - 16px); padding: 5px 8px; border-radius: 8px; background: rgba(20,14,18,.78); color: #F4EEE2; font: 600 10.5px 'Inter', system-ui, sans-serif; }
   .mh-map-legend span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
-  .mh-map-legend i { width: 10px; height: 10px; border-radius: 3px; }
+  .mh-map-legend i { width: 12px; height: 12px; border-radius: 3px; box-sizing: border-box; background: color-mix(in srgb, var(--rc) 24%, transparent); border: 2px solid color-mix(in srgb, var(--rc) 70%, transparent); }
   .mh-map-legend button { width: 18px; height: 18px; border: 0; border-radius: 50%; background: rgba(255,255,255,.14); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
   .mh-map-menu { position: absolute; z-index: 8; min-width: 160px; padding: 4px; border-radius: 10px; background: var(--mh-panel); border: 1px solid var(--mh-line2); box-shadow: 0 10px 28px rgba(0,0,0,.35); }
   .mh-map-menu button { width: 100%; display: flex; align-items: center; gap: 8px; padding: 7px 10px; border: 0; border-radius: 7px; background: transparent; color: var(--mh-ink); font: 600 12.5px 'Inter', system-ui, sans-serif; cursor: pointer; text-align: left; }
@@ -5094,6 +5094,7 @@ const sharedStyles = `
   .mh-map-overlay > * { pointer-events: auto; }
   .mh-map-overlay .mh-map-legend { left: auto; right: 10px; bottom: 10px; top: auto; flex-direction: column; align-items: flex-start; max-width: 150px; }
   .mh-map-overlay .mh-map-legend button { align-self: flex-end; order: -1; }
+  .mh-map-stage.is-fit .mh-map-overlay .mh-map-legend { left: 10px; right: auto; top: 50%; bottom: auto; transform: translateY(-50%); gap: 7px; padding: 8px 10px; max-width: 132px; }
   .mh-map-zoomwrap { position: relative; aspect-ratio: ${MAP_COLS} / ${MAP_ROWS}; border-radius: 12px; overflow: hidden; }
 
   /* ---- Tablero de combate: escena difuminada, casillas de cristal y fichas circulares ---- */
@@ -10968,10 +10969,10 @@ function MapBoard({ rangeMenu, cfx, meCharId, onDragInfo, onStore, plain, backdr
           style={{
             ...at(x, y),
             "--rc": band.color,
-            borderTopWidth: bandKey(x, y - 1) !== band.key ? 3 : 0,
-            borderBottomWidth: bandKey(x, y + 1) !== band.key ? 3 : 0,
-            borderLeftWidth: bandKey(x - 1, y) !== band.key ? 3 : 0,
-            borderRightWidth: bandKey(x + 1, y) !== band.key ? 3 : 0,
+            borderTopWidth: bandKey(x, y - 1) !== band.key ? 2 : 0,
+            borderBottomWidth: bandKey(x, y + 1) !== band.key ? 2 : 0,
+            borderLeftWidth: bandKey(x - 1, y) !== band.key ? 2 : 0,
+            borderRightWidth: bandKey(x + 1, y) !== band.key ? 2 : 0,
           }}
         />
       ))}
@@ -11094,7 +11095,7 @@ function MapBoard({ rangeMenu, cfx, meCharId, onDragInfo, onStore, plain, backdr
         <div className="mh-map-legend" onPointerDown={(e) => e.stopPropagation()}>
           {MAP_RANGES.map((r) => (
             <span key={r.key}>
-              <i style={{ background: r.color }} />
+              <i style={{ "--rc": r.color }} />
               {r.label}
             </span>
           ))}
@@ -11108,7 +11109,7 @@ function MapBoard({ rangeMenu, cfx, meCharId, onDragInfo, onStore, plain, backdr
         <div className="mh-map-legend" onPointerDown={(e) => e.stopPropagation()}>
           {MAP_RANGES.map((r) => (
             <span key={r.key}>
-              <i style={{ background: r.color }} />
+              <i style={{ "--rc": r.color }} />
               {r.label}
             </span>
           ))}
@@ -11711,6 +11712,7 @@ export default function App({ onSignOut }) {
   const [mcbChat, setMcbChat] = useState(false); // móvil: hoja del chat sobre el mapa
   const [djWorldEdit, setDjWorldEdit] = useState(false);
   const [djCastEdit, setDjCastEdit] = useState(null);
+  const [plDragTok, setPlDragTok] = useState(null); // tu ficha arrastrándose por el mapa de la hoja: { id, over }
   const [djDragTok, setDjDragTok] = useState(null); // ficha de jugador que el DJ está arrastrando por el mapa: { id, over }
   const [chipDrag, setChipDrag] = useState(null); // ficha arrastrada desde la caja «Sin colocar»: { id, name, color, x, y }
   const chipSuppress = useRef(false);
@@ -21940,10 +21942,21 @@ export default function App({ onSignOut }) {
                                             onSelect={setMapSel}
                                             compact={!wide}
                                             rangeMenu
+                                            onDragInfo={(d) => setPlDragTok(d && mapTokens.find((t) => t.id === d.id && ((t.kind === "pc" && t.charId === viewingCharId) || (t.kind === "pet" && t.ownerCharId === viewingCharId))) ? d : null)}
+                                            onStore={(id) => {
+                                              const tk = (campaignMap.tokens || []).find((t) => t.id === id);
+                                              if (!tk || !((tk.kind === "pc" && tk.charId === viewingCharId) || (tk.kind === "pet" && tk.ownerCharId === viewingCharId))) return false;
+                                              removeToken(id, charCampaign.id);
+                                              return true;
+                                            }}
                                           />
                                         </MapViewport>
                                         </div>
                                         {/* Avisos de tiradas y golpes, centrados en la parte visible del mapa */}
+                                        <div className={"mh-dir-store" + (plDragTok ? " is-open" : "") + (plDragTok?.over ? " is-drop" : "")} data-store-zone="1" aria-hidden={!plDragTok}>
+                                          <Archive size={16} />
+                                          <span>{plDragTok?.over ? "Suelta para guardar" : "Arrastra aquí para guardar la ficha"}</span>
+                                        </div>
                                         <MapLog log={campaignMap.log} />
                                         <MapCounters list={campaignMap.counters} />
                                         <SpotPause spot={campaignMap.spot} />
@@ -22060,13 +22073,12 @@ export default function App({ onSignOut }) {
                                       {(() => {
                                         const me = characters[viewingCharId];
                                         const myPets = mapTokens.filter((t) => t.kind === "pet" && t.ownerCharId === viewingCharId);
-                                        const mineSel = mapTokens.find((t) => t.id === mapSel && ((t.kind === "pc" && t.charId === viewingCharId) || (t.kind === "pet" && t.ownerCharId === viewingCharId)));
                                         const col = classColor(me?.f_class);
                                         // Solo el Explorador de Vínculo Bestial tiene compañero animal.
                                         const hasCompanion = me?.f_class === "Explorador" && me?.f_subclass === "Vínculo Bestial";
                                         const companionOn = myPets.length > 0;
-                                        // Con todas tus fichas ya en el mapa, la bandeja desaparece (vuelve si eliges una tuya, para poder quitarla).
-                                        if (myToken && (!hasCompanion || companionOn) && !mineSel) return null;
+                                        // Con todas tus fichas ya en el mapa, la bandeja desaparece; si guardas una (arrastrándola a la esquina), vuelve para colocarla de nuevo.
+                                        if (myToken && (!hasCompanion || companionOn)) return null;
                                         return (
                                           <div className="mh-map-ptray">
                                             <span className="mh-gm-h2">Tus fichas</span>
@@ -22101,11 +22113,6 @@ export default function App({ onSignOut }) {
                                                   <Plus size={12} />
                                                 </button>
                                               ))}
-                                            {mineSel && (
-                                              <button type="button" className="mh-map-chip is-remove" onClick={() => removeToken(mineSel.id, charCampaign.id)}>
-                                                <Trash2 size={12} /> Quitar {mineSel.name}
-                                              </button>
-                                            )}
                                           </div>
                                         );
                                       })()}
