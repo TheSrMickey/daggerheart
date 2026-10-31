@@ -9711,13 +9711,13 @@ function RootThreads({ links, snap }) {
     </svg>
   );
 }
-function ShotFx({ kind, a, b, b2, size: S }) {
+function ShotFx({ kind, a, b, b2, size: S, el }) {
   const [p, setP] = useState(0);
   useEffect(() => {
     let raf;
     const t0 = performance.now();
     const tick = (n) => {
-      const v = Math.min(1, (n - t0) / 1300);
+      const v = Math.min(1, (n - t0) / (kind === "elem" ? 1800 : 1300));
       setP(v);
       if (v < 1) raf = requestAnimationFrame(tick);
     };
@@ -9731,6 +9731,66 @@ function ShotFx({ kind, a, b, b2, size: S }) {
   const q = p > 0.5 ? (p - 0.5) / 0.5 : 0;
   const magic = kind === "magic";
   const [x, y] = at(f);
+  if (kind === "elem") {
+    // Encarnación Elemental: según el elemento, llamas, rocas, olas o ráfagas alrededor de tu ficha.
+    const col = ELEM_COL[el] || "#E3B04B";
+    const [cx, cy] = a;
+    const k = Math.min(1, p / 0.8);
+    const ez = 1 - Math.pow(1 - k, 3);
+    const fd = p > 0.78 ? Math.max(0, 1 - (p - 0.78) / 0.22) : 1;
+    const rise = Math.sin(Math.min(1, p / 0.55) * Math.PI * 0.5);
+    const n = (len, fn) => Array.from({ length: len }, (_, i) => fn(i));
+    const pulse = <circle key="pulse" cx={cx} cy={cy} r={S * (0.3 + 0.9 * ez)} fill="none" stroke={col} strokeWidth="3" opacity={(1 - ez) * fd * 0.85} />;
+    const glow = <circle key="glow" cx={cx} cy={cy} r={S * 0.75} fill={col} opacity={Math.sin(Math.min(1, p / 0.7) * Math.PI) * 0.28 * fd} />;
+    let body = null;
+    if (el === "Fuego") {
+      body = [
+        ...n(10, (i) => {
+          const an = (i * Math.PI * 2) / 10, bx = cx + Math.cos(an) * S * 0.5, by = cy + Math.sin(an) * S * 0.4;
+          const h = S * (0.2 + 0.55 * rise) * (0.72 + 0.28 * Math.sin(p * 26 + i * 1.7)), w = S * 0.1;
+          return <path key={"f" + i} d={"M" + (bx - w) + " " + by + " Q" + (bx - w * 0.2) + " " + (by - h * 0.55) + " " + bx + " " + (by - h) + " Q" + (bx + w * 0.2) + " " + (by - h * 0.55) + " " + (bx + w) + " " + by + " Z"} fill={i % 2 ? "#FFD05A" : "#FF7A2E"} opacity={fd * 0.92} />;
+        }),
+        ...n(9, (i) => <circle key={"e" + i} cx={cx + Math.cos(i * 2.1) * S * (0.25 + 0.45 * ez)} cy={cy - S * (0.1 + 0.95 * ez) * (0.5 + (i % 3) * 0.25)} r={S * 0.04} fill="#FFD05A" opacity={(1 - ez) * fd} />),
+      ];
+    } else if (el === "Tierra") {
+      body = [
+        <ellipse key="dust" cx={cx} cy={cy + S * 0.15} rx={S * (0.5 + 0.8 * ez)} ry={S * (0.3 + 0.4 * ez)} fill="#C9A66B" opacity={0.38 * (1 - ez) * fd} />,
+        ...n(7, (i) => {
+          const an = (i * Math.PI * 2) / 7 + 0.3, bx = cx + Math.cos(an) * S * 0.55, by = cy + Math.sin(an) * S * 0.45 + S * 0.1;
+          const h = S * (0.12 + 0.45 * rise) * (0.8 + (i % 3) * 0.15), w = S * 0.11;
+          return <path key={"r" + i} d={"M" + (bx - w) + " " + by + " L" + (bx + (i % 2 ? 1 : -1) * w * 0.3) + " " + (by - h) + " L" + (bx + w) + " " + by + " Z"} fill={i % 2 ? "#A9742F" : "#7a5320"} stroke="#3d2a10" strokeWidth="1" opacity={fd} />;
+        }),
+        ...n(8, (i) => <circle key={"d" + i} cx={cx + Math.cos(i * 0.8) * S * (0.35 + 0.6 * ez)} cy={cy + Math.sin(i * 0.8) * S * (0.3 + 0.35 * ez) - S * 0.3 * Math.sin(k * Math.PI)} r={S * 0.035} fill="#C9A66B" opacity={(1 - ez) * fd} />),
+      ];
+    } else if (el === "Agua") {
+      body = [
+        ...n(3, (i) => {
+          const e = Math.max(0, Math.min(1, (k - i * 0.16) / (1 - i * 0.16)));
+          return <circle key={"w" + i} cx={cx} cy={cy} r={S * (0.25 + 0.95 * e)} fill="none" stroke={col} strokeWidth={3 - i * 0.6} opacity={(1 - e) * fd * 0.9} />;
+        }),
+        ...n(9, (i) => {
+          const an = (i * Math.PI * 2) / 9;
+          return <circle key={"g" + i} cx={cx + Math.cos(an) * S * (0.3 + 0.55 * k)} cy={cy + Math.sin(an) * S * 0.25 - S * 0.95 * Math.sin(k * Math.PI) * (0.6 + (i % 3) * 0.2)} r={S * 0.055} fill="#9fd6ff" opacity={(1 - k * 0.5) * fd} />;
+        }),
+      ];
+    } else {
+      body = [
+        ...n(3, (i) => {
+          const pts = n(22, (j) => {
+            const t = (j / 21) * Math.min(1, 0.25 + k);
+            const an = (i * Math.PI * 2) / 3 + t * 5.2 + p * 7;
+            return [cx + Math.cos(an) * S * (0.15 + 0.85 * t), cy + Math.sin(an) * S * (0.15 + 0.85 * t) * 0.8];
+          });
+          return <path key={"a" + i} d={"M" + pts.map((q) => q[0].toFixed(1) + " " + q[1].toFixed(1)).join(" L")} fill="none" stroke={i % 2 ? "#E8F8FF" : "#BFE6F5"} strokeWidth={S * 0.05} strokeLinecap="round" opacity={(1 - ez * 0.6) * fd * 0.9} />;
+        }),
+        ...n(7, (i) => {
+          const an = i * 0.9 + p * 6;
+          return <ellipse key={"l" + i} cx={cx + Math.cos(an) * S * (0.35 + 0.55 * ez)} cy={cy + Math.sin(an) * S * (0.3 + 0.4 * ez) - S * 0.3 * ez} rx={S * 0.06} ry={S * 0.025} transform={"rotate(" + ((an * 180) / Math.PI + 40) + " " + (cx + Math.cos(an) * S * (0.35 + 0.55 * ez)) + " " + (cy + Math.sin(an) * S * (0.3 + 0.4 * ez) - S * 0.3 * ez) + ")"} fill="#E8F8FF" opacity={(1 - ez) * fd} />;
+        }),
+      ];
+    }
+    return <g pointerEvents="none">{glow}{body}{pulse}</g>;
+  }
   if (kind === "free") {
     // Liberar: el hilo verde se tensa, se rompe y se recoge a los dos lados; el aro marrón de raíces estalla y suelta ramitas y hojas.
     const L = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
@@ -9970,7 +10030,7 @@ function useAttackFx(fx) {
     last.current = fx.key;
     if (Date.now() - fx.key > 15000) return;
     setAnim(fx);
-    const t = setTimeout(() => setAnim(null), 1500);
+    const t = setTimeout(() => setAnim(null), fx.kind === "elem" ? 2000 : 1500);
     return () => clearTimeout(t);
   }, [fx?.key]);
   return anim;
@@ -10660,7 +10720,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
                   const on = activeElement === el;
                   const EI = HEADER_ELEMENTS[el].Icon;
                   return (
-                    <button key={el} type="button" className={on ? "is-on" : ""} style={{ "--ec": ELEM_COL[el] }} onClick={() => (onElement(el, on), setOpen(null))} title={on ? "Dejar de canalizar " + el : "Canalizar " + el + " (1 Estrés)"}>
+                    <button key={el} type="button" className={on ? "is-on" : ""} style={{ "--ec": ELEM_COL[el] }} onClick={() => (onElement(el, on, open), setOpen(null))} title={on ? "Dejar de canalizar " + el : "Canalizar " + el + " (1 Estrés)"}>
                       <EI size={18} />
                       <span>{on ? "Quitar" : el}</span>
                     </button>
@@ -11057,7 +11117,7 @@ function MapBoard({ aimRange, rangeMenu, cfx, meCharId, onDragInfo, onStore, pla
             key={t.id}
             type="button"
             data-tid={t.id}
-            className={"mh-map-tk is-" + t.kind + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id && anim.kind !== "free" ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") + (anim.kind === "web" ? " is-web" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
+            className={"mh-map-tk is-" + t.kind + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id && anim.kind !== "free" && anim.kind !== "elem" ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") + (anim.kind === "web" ? " is-web" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
             style={{ ...at(pos.x, pos.y), "--tc": t.color, ...(anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); return tg ? { "--ax": (tg.x - t.x) * 100 + "%", "--ay": (tg.y - t.y) * 100 + "%" } : {}; })() : {}) }}
             onPointerDown={(e) => startDrag(e, t)}
             onContextMenu={(e) => openMenu(e, t)}
@@ -11113,7 +11173,7 @@ function MapBoard({ aimRange, rangeMenu, cfx, meCharId, onDragInfo, onStore, pla
         if (!fa || !fb) return null;
         return (
           <svg className="mh-map-shot" viewBox={`0 0 ${MAP_COLS * 40} ${MAP_ROWS * 40}`} preserveAspectRatio="none">
-            <ShotFx key={anim.key} kind={anim.kind} a={[(fa.x + 0.5) * 40, (fa.y + 0.5) * 40]} b={[(fb.x + 0.5) * 40, (fb.y + 0.5) * 40]} size={40} />
+            <ShotFx key={anim.key} kind={anim.kind} el={anim.el} a={[(fa.x + 0.5) * 40, (fa.y + 0.5) * 40]} b={[(fb.x + 0.5) * 40, (fb.y + 0.5) * 40]} size={40} />
           </svg>
         );
       })()}
@@ -13533,6 +13593,16 @@ export default function App({ onSignOut }) {
     postCampaignEvent(id, `✨ Activa ${formName}`);
   };
 
+  // Encarnación Elemental desde la carta: primero se revela la carta y después se aplica el elemento con su animación.
+  const embodyElement = (charId, el, card) => {
+    const me = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
+    if (!sheetCampaignId || !me || !card) return toggleElemental(charId, el, false);
+    playCardOnMap(sheetCampaignId, charId, card, { noChat: true, short: true });
+    afterReveal(charId, card.key, () => {
+      toggleElemental(charId, el, false);
+      mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: me.id, to: me.id, kind: "elem", el }), "fx");
+    });
+  };
   const toggleElemental = (id, elementName, isCurrentlyActive) => {
     const c = characters[id];
     if (!c) return;
@@ -15279,7 +15349,7 @@ export default function App({ onSignOut }) {
   const playCardOnMap = (campaignId, charId, card, opts = {}) => {
     const ch = characters[charId];
     if (!opts.noChat) postCardUse(charId, card);
-    const slim = { key: card.key, domain: card.domain, type: card.type, level: card.level, recall: card.recall, text: card.text, image: card.image, ...(card.weapon ? { weapon: true } : {}), ...(card.ghost ? { baseKey: card.baseKey, noCost: card.noCost, ghost: true } : {}) };
+    const slim = { key: card.key, domain: card.domain, type: card.type, level: card.level, recall: card.recall, text: card.text, image: card.image, ...(card.weapon ? { weapon: true } : {}), ...(card.subclass ? { subclass: true, kicker: card.kicker, cls: card.cls } : {}), ...(card.ghost ? { baseKey: card.baseKey, noCost: card.noCost, ghost: true } : {}) };
     const edge = cardBorder === "domain" ? DOMAIN_COLORS[card.domain] || "#E3B04B" : "#E3B04B";
     const playKey = Date.now(); // una sola vez: mutateMap ejecuta la función dos veces (en local y al guardar)
     mutateMap(campaignId, (prev) => [...(Array.isArray(prev) ? prev : []).filter((x) => x.key !== playKey && playKey - x.key < 40000), { key: playKey, charId, name: ch?.f_name || "Alguien", back: cardBack, edge, card: slim, ...(opts.short ? { short: true } : {}) }].slice(-8), "cfx");
@@ -22118,7 +22188,7 @@ export default function App({ onSignOut }) {
                                               onAim={setAimRange}
                                               reachOf={(card) => { if (!card.weapon) return null; const lab = weaponReach(characters[viewingCharId], card.key); return lab ? { label: lab, max: RANGE_CELLS[lab] || 99 } : null; }}
                                               cardBorder={cardBorder}
-                                              onElement={(el, on) => toggleElemental(viewingCharId, el, on)}
+                                              onElement={(el, on, card) => (on ? toggleElemental(viewingCharId, el, true) : embodyElement(viewingCharId, el, card))}
                                               activeElement={me?.f_elemental_active || ""}
                                               me={myToken}
                                               tokens={mapTokens}
