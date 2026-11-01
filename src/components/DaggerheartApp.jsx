@@ -10687,6 +10687,8 @@ function HomeDice({ stats }) {
 
 // Abanico de cartas de dominio en el borde inferior del mapa: se arrastran hasta una casilla para usarlas.
 // Cartas que se lanzan apuntando: una línea de guiones sale del personaje hasta el ratón.
+// Criatura o PNJ con todos sus PV marcados: ya no es un objetivo válido de ataques ni hechizos.
+const deadTok = (t) => !!t && !!t.stats && Number(t.stats.hp || 0) > 0 && Number(t.stats.hpMarked || 0) >= Number(t.stats.hp || 0);
 const AIM_CARD = "Enredo Feroz";
 // Ficha de carta con forma de dado d10 (sin número, del color del dominio); apagada es solo la sombra y un contorno tenue.
 function ChaosDie({ on, i, color }) {
@@ -10920,7 +10922,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
     const cell = inHand(ev.clientX, ev.clientY) ? null : cellAt(ev.clientX, ev.clientY);
     if (!cell) return;
     if (d.card.subclass) return setOpen({ ...d.card, choose: true });
-    if (isAim(d.card) && (!inAimReach(d.card, cell) || !tokens.find((t) => !t.hidden && t.x === cell.x && t.y === cell.y && t.id !== me?.id && (t.kind === "foe" || t.kind === "npc")))) return; // sin objetivo válido o fuera de alcance: se cancela
+    if (isAim(d.card) && (!inAimReach(d.card, cell) || !tokens.find((t) => !t.hidden && t.x === cell.x && t.y === cell.y && t.id !== me?.id && (t.kind === "foe" || t.kind === "npc") && !deadTok(t)))) return; // sin objetivo válido o fuera de alcance: se cancela
     const target = tokens.find((t) => !t.hidden && t.x === cell.x && t.y === cell.y && t.id !== me?.id) || null;
     window.__mhFlyTo = { key: d.card.key, x: d.home.x, y: d.home.y, w: d.home.w, t: Date.now() };
     const res = onUse(d.card, cell, target, rangeOf(cell));
@@ -11008,7 +11010,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
     if (onAim) onAim(aimMax && me ? { id: me.id, max: aimMax } : null);
   }, [aimMax, me?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => onAim && onAim(null), []); // eslint-disable-line react-hooks/exhaustive-deps
-  const aimTarget = aim && drag.cell ? tokens.find((t) => !t.hidden && t.x === drag.cell.x && t.y === drag.cell.y && t.id !== me?.id && (t.kind === "foe" || t.kind === "npc")) : null;
+  const aimTarget = aim && drag.cell ? tokens.find((t) => !t.hidden && t.x === drag.cell.x && t.y === drag.cell.y && t.id !== me?.id && (t.kind === "foe" || t.kind === "npc") && !deadTok(t)) : null;
   const target = drag?.cell ? tokens.find((t) => !t.hidden && t.x === drag.cell.x && t.y === drag.cell.y && t.id !== me?.id) : null;
   return (
     <>
@@ -14205,7 +14207,7 @@ export default function App({ onSignOut }) {
   const castChaos = (charId, target, card) => {
     const c = charsRef.current[charId];
     const me = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
-    if (!c || !me || !target || !(target.kind === "foe" || target.kind === "npc") || cellDist(me, target) > RANGE_CELLS["Lejano"] || c.f_beastform) return "cancel";
+    if (!c || !me || !target || !(target.kind === "foe" || target.kind === "npc") || deadTok(target) || cellDist(me, target) > RANGE_CELLS["Lejano"] || c.f_beastform) return "cancel";
     const info = cardTokInfo(c, "Desatar el Caos");
     if (!info) return "cancel";
     setChaosN(1); // hay que gastar al menos 1 ficha; sin fichas el aviso ofrece recargar
@@ -16025,7 +16027,7 @@ export default function App({ onSignOut }) {
   const castEnredo = (charId, target, card) => {
     const c = charsRef.current[charId];
     const me = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
-    if (!c || !me || !target || !(target.kind === "foe" || target.kind === "npc") || cellDist(me, target) > RANGE_CELLS["Lejano"]) return "cancel";
+    if (!c || !me || !target || !(target.kind === "foe" || target.kind === "npc") || deadTok(target) || cellDist(me, target) > RANGE_CELLS["Lejano"]) return "cancel";
     const sk = charSpellTrait(c);
     const label = TRAITS.find((tr) => tr.key === sk)?.label;
     if (!label || c.f_beastform) return "cancel";
@@ -16059,7 +16061,7 @@ export default function App({ onSignOut }) {
     const bfp = bf ? bf.attack.split(" · ") : null;
     const w = bf ? { key: bf.key, trait: bfp[1], damage: bfp[2] } : [...PRIMARY_WEAPONS, ...SECONDARY_WEAPONS].find((x) => x.key === card.key);
     const me = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
-    if (!c || !w || !me || !target || !(target.kind === "foe" || target.kind === "npc")) return "cancel";
+    if (!c || !w || !me || !target || !(target.kind === "foe" || target.kind === "npc") || deadTok(target)) return "cancel";
     const tr = TRAITS.find((x) => x.label === w.trait);
     if (!tr || !/d\d/.test(w.damage || "")) return "cancel";
     const range = weaponReach(c, w.key);
@@ -16073,7 +16075,7 @@ export default function App({ onSignOut }) {
   // Enredo Feroz · carta extra: gasta 1 Esperanza para inmovilizar a otro adversario Muy cercano de un objetivo ya enraizado por ti.
   const canExtraRoot = (charId, tg) => {
     const toks = campaignMapRef.current.tokens || [];
-    if (!tg || !(tg.kind === "foe" || tg.kind === "npc") || (tg.conds || []).includes("Inmovilizado")) return false;
+    if (!tg || !(tg.kind === "foe" || tg.kind === "npc") || deadTok(tg) || (tg.conds || []).includes("Inmovilizado")) return false;
     return toks.some((r) => r.rootedBy === charId && (r.conds || []).includes("Inmovilizado") && r.id !== tg.id && cellDist(r, tg) <= RANGE_CELLS["Muy cercano"]);
   };
   const castEnredoExtra = (charId, target, card) => {
@@ -17203,7 +17205,7 @@ export default function App({ onSignOut }) {
         {list.map((a) => {
           const cells = areaCells(a, campaignMap.tokens || []);
           const inside = view.filter((t) => !t.vanished && cells.has(t.x + "," + t.y) && !(t.kind === "pc" && t.charId === a.owner) && (gm || (!fogAt(campaignMap, t.x, t.y) && !t.gmHidden)));
-          const foes = inside.filter((t) => t.kind === "foe" || t.kind === "npc");
+          const foes = inside.filter((t) => (t.kind === "foe" || t.kind === "npc") && !deadTok(t));
           const me = !gm && characters[a.owner];
           const w = me ? PRIMARY_WEAPONS.find((x) => x.key === me.f_primary_weapon) : null;
           return (
@@ -17904,7 +17906,7 @@ export default function App({ onSignOut }) {
     if (!gmViewing && sheetCampaignId && normSpot(campaignMapRef.current.spot).mode === "paused") return;
     // En una campaña con enemigos en el tablero, primero se elige a quién se ataca.
     if (weapon && !weapon.targetChosen && sheetCampaignId) {
-      const foes = mapTokensView(campaignMap.tokens || []).filter((t) => (t.kind === "foe" || t.kind === "npc") && !t.gmHidden && !fogAt(campaignMap, t.x, t.y)).map((t) => ({ ...t, reach: reachInfo(charId, weapon.name, t) }));
+      const foes = mapTokensView(campaignMap.tokens || []).filter((t) => (t.kind === "foe" || t.kind === "npc") && !t.gmHidden && !deadTok(t) && !fogAt(campaignMap, t.x, t.y)).map((t) => ({ ...t, reach: reachInfo(charId, weapon.name, t) }));
       if (foes.length) {
         setTargetDlg({ args: [charId, traitLabel, traitValue, weapon, cardContext, advantage], foes });
         return;
@@ -19574,6 +19576,7 @@ export default function App({ onSignOut }) {
                   // Menú del clic derecho en el tablero: atacar con tus armas y abrir tus cartas con acciones.
                   const boardActions = (t) => {
                     const foe = t.kind === "foe" || t.kind === "npc";
+                    const dead = foe && deadTok(t);
                     const out = [];
                     const weapons = [primaryWeapon, secondaryWeapon].filter((w) => w && w.trait && w.trait !== "—" && /d\d/.test(w.damage || ""));
                     const target = foe ? { targetChosen: true, targetId: t.id, targetName: t.name, targetDc: t.stats?.difficulty || null } : {};
@@ -19584,11 +19587,11 @@ export default function App({ onSignOut }) {
                     weapons.forEach((w) => {
                       const tk = TRAITS.find((tr) => tr.label === w.trait)?.key;
                       const ri = foe ? reachInfo(viewingCharId, w.key, t) : { ok: true };
-                      out.push({ section: foe ? "Atacar a " + t.name : "Armas", key: "atk-" + w.key, Icon: Swords, color: "#C0504A", label: (foe ? "Con " : "Atacar con ") + w.key, sub: ri.ok ? w.trait + " · " + w.damage : "Fuera de alcance (" + ri.range + ", está a " + ri.dist + ")", disabled: !ri.ok, run: attack(w.key, w.trait, Number(c[tk] || 0) + (equipMods[tk] || 0), w.damage) });
+                      out.push({ section: foe ? "Atacar a " + t.name : "Armas", key: "atk-" + w.key, Icon: Swords, color: "#C0504A", label: (foe ? "Con " : "Atacar con ") + w.key, sub: dead ? "Objetivo muerto" : ri.ok ? w.trait + " · " + w.damage : "Fuera de alcance (" + ri.range + ", está a " + ri.dist + ")", disabled: !ri.ok || dead, run: attack(w.key, w.trait, Number(c[tk] || 0) + (equipMods[tk] || 0), w.damage) });
                     });
                     if (brawlerArmed(c)) {
                       const bt = TRAITS.find((tr) => tr.label === (c.f_brawl_trait || "Fuerza")) || TRAITS[1];
-                      out.push({ section: foe ? "Atacar a " + t.name : "Armas", key: "atk-brawl", Icon: HandFist, color: "#C0504A", label: (foe ? "Con " : "Atacar con ") + BRAWLER_STRIKE, sub: bt.label, run: attack(BRAWLER_STRIKE, bt.label, Number(c[bt.key] || 0) + (equipMods[bt.key] || 0), "d8+d6 físico") });
+                      out.push({ section: foe ? "Atacar a " + t.name : "Armas", key: "atk-brawl", Icon: HandFist, color: "#C0504A", label: (foe ? "Con " : "Atacar con ") + BRAWLER_STRIKE, sub: dead ? "Objetivo muerto" : bt.label, disabled: dead, run: attack(BRAWLER_STRIKE, bt.label, Number(c[bt.key] || 0) + (equipMods[bt.key] || 0), "d8+d6 físico") });
                     }
                     const openRow = (row) => () => {
                       row.onClick();
