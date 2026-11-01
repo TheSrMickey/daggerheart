@@ -15,6 +15,7 @@ import { ResetDiceCard, DeleteAccountCard } from "./AccountDanger";
 import { ModernSheet } from "./ModernSheet";
 import { Tour } from "./Tour";
 import { Dice3D, canDice3d, DICE3D_SIDES } from "./Dice3D";
+import { d10Sprites } from "./D10Sprites";
 import { warmDiceAssets } from "./DiceSkins";
 import { Personalizacion, CARD_BACK_KEYS, CardBack } from "./CardBacks";
 import WorldMap from "./WorldMap";
@@ -5021,7 +5022,7 @@ const sharedStyles = `
   .mh-sheet.is-embedded .mh-toast-warn { zoom: calc(1 / var(--mhz, 1)); }
   @keyframes mh-toast-in { from { opacity: 0; translate: -50% 10px; } }
   .mh-fan-toks { position: absolute; left: 50%; bottom: 4%; translate: -50% 0; z-index: 3; display: flex; padding: 0; pointer-events: none; max-width: 96%; flex-wrap: wrap; justify-content: center; }
-  .mh-die { all: unset; box-sizing: border-box; display: block; flex: none; width: calc(46px * var(--s, 1)); margin: 0 calc(-4px * var(--s, 1)); filter: drop-shadow(0 2px 2px rgba(0,0,0,.45)); } .mh-die svg { display: block; width: 100%; height: auto; overflow: visible; } button.mh-die { cursor: pointer; transition: transform .12s ease; } button.mh-die:hover { transform: translateY(-3px); }
+  .mh-die { all: unset; box-sizing: border-box; display: block; flex: none; width: calc(46px * var(--s, 1)); margin: 0 calc(-4px * var(--s, 1)); filter: drop-shadow(0 2px 2px rgba(0,0,0,.45)); } .mh-die svg, .mh-die img { display: block; width: 100%; height: auto; overflow: visible; pointer-events: none; } button.mh-die { cursor: pointer; transition: transform .12s ease; } button.mh-die:hover { transform: translateY(-3px); }
   .mh-die.is-gone { position: relative; z-index: 6; animation: mh-die-gone .65s ease-in forwards; pointer-events: none; }
   @keyframes mh-die-gone { 0% { transform: translateY(0) rotate(0); opacity: 1; } 100% { transform: translateY(calc(-150px * var(--s, 1))) rotate(300deg) scale(.4); opacity: 0; } }
   @media (prefers-reduced-motion: reduce) { .mh-die.is-gone { animation: none; opacity: 0; } }
@@ -10689,6 +10690,15 @@ const DIE_NUMS = [10, 7, 4, 9, 6, 3, 8, 5, 2, 1];
 // Ficha de carta con forma de dado d10 (marfil, con sombra y número); apagada es solo la sombra y un contorno tenue.
 function ChaosDie({ on, i }) {
   const K = "M50 3 L93 38 L50 97 L7 38 Z";
+  const [sprites, setSprites] = useState(null);
+  useEffect(() => {
+    let live = true;
+    if (on) d10Sprites().then((u) => live && u && setSprites(u));
+    return () => {
+      live = false;
+    };
+  }, [on]);
+  if (on && sprites) return <img src={sprites[DIE_NUMS[i % DIE_NUMS.length] - 1]} alt="" draggable={false} style={{ rotate: ((i * 47) % 50) - 25 + "deg" }} />;
   if (!on)
     return (
       <svg viewBox="0 0 100 100" aria-hidden="true">
