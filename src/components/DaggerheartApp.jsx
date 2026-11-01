@@ -5124,6 +5124,13 @@ const sharedStyles = `
   .mh-map-hp { display: none; }
   /* Transformaciones (Forma de Bestia, Hombre Lobo, Vampiro…): la ficha pasa de circular a cuadrada */
   .mh-map-tk.is-trf .mh-map-face { border-radius: 22%; }
+  .mh-map-tk.is-morph .mh-map-face { animation: mh-morph .9s cubic-bezier(.3,.8,.3,1) both; }
+  .mh-map-tk.is-morph .mh-map-ring { animation: mh-morph-ring .9s ease both; }
+  .mh-map-tk.is-morph::before { content: ""; position: absolute; z-index: 6; inset: 12%; border: 3px solid #fff; border-radius: 50%; pointer-events: none; animation: mh-morph-burst .9s ease-out both; }
+  @keyframes mh-morph { 0% { scale: 1; rotate: 0deg; filter: none; } 35% { scale: .6; rotate: 50deg; filter: brightness(2.4) saturate(.4); } 70% { scale: 1.18; rotate: -8deg; filter: brightness(1.3); } 100% { scale: 1; rotate: 0deg; filter: none; } }
+  @keyframes mh-morph-ring { 0%, 35% { opacity: 0; } 100% { opacity: 1; } }
+  @keyframes mh-morph-burst { 0% { opacity: .95; scale: .6; } 100% { opacity: 0; scale: 2.1; } }
+  @media (prefers-reduced-motion: reduce) { .mh-map-tk.is-morph .mh-map-face, .mh-map-tk.is-morph .mh-map-ring, .mh-map-tk.is-morph::before { animation: none; } }
   /* Elementos activos: Fuego y Agua dibujan una línea viva en rango cuerpo a cuerpo; Tierra y Aire cambian el color de la ficha y la cruzan con rayas */
   @property --mh-ea { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
   .mh-elwrap { position: absolute; z-index: 3; pointer-events: none; transition: left .3s cubic-bezier(.3,.7,.4,1), top .3s cubic-bezier(.3,.7,.4,1); animation: mh-elring-in .65s cubic-bezier(.2,.9,.3,1) both; }
@@ -5136,7 +5143,7 @@ const sharedStyles = `
   @keyframes mh-elring-in { 0% { opacity: 0; scale: .35; } 60% { opacity: 1; scale: 1.06; } 100% { opacity: 1; scale: 1; } }
   @keyframes mh-elring-out { 0% { opacity: 1; scale: 1; } 100% { opacity: 0; scale: 1.5; } }
   /* Tierra y Aire: una capa de color con rayas que se abre desde el centro al activarse y se cierra al apagarse */
-  .mh-map-tk.is-pc > .mh-map-face { transition: opacity .55s ease, scale .55s ease, filter .55s ease, border-color .5s ease; }
+  .mh-map-tk.is-pc > .mh-map-face { transition: opacity .55s ease, scale .55s ease, filter .55s ease, border-color .5s ease, border-radius .6s cubic-bezier(.3,1.5,.5,1); }
   .mh-map-tk.is-el-tierra .mh-map-face, .mh-map-tk.is-el-aire .mh-map-face { border-color: var(--elb); }
   .mh-map-tk.is-el-tierra, .mh-map-tk.is-el-p-tierra { --elb: #8A5A2B; --elf: radial-gradient(circle at 35% 28%, #B98446, #5B3A18 78%); --els: repeating-linear-gradient(135deg, rgba(40,20,5,.42) 0 2px, transparent 2px 6px); }
   .mh-map-tk.is-el-aire, .mh-map-tk.is-el-p-aire { --elb: #F2F6F8; --elf: radial-gradient(circle at 35% 28%, #FFFFFF, #CFD8DE 78%); --els: repeating-linear-gradient(135deg, rgba(90,125,150,.5) 0 2px, transparent 2px 6px); }
@@ -10017,6 +10024,25 @@ function useLeaving(items, ms = 600) {
   }, [sig]); // eslint-disable-line react-hooks/exhaustive-deps
   return [...items, ...Object.values(gone).map((i) => ({ ...i, leaving: true }))];
 }
+// Fichas que acaban de transformarse (o destransformarse): se marcan unos instantes para animar el cambio de forma.
+function useMorph(tokens) {
+  const [m, setM] = useState({});
+  const prev = useRef(null);
+  const sig = tokens.map((t) => t.id + ":" + (t.beast || t.trf || "")).join("|");
+  useEffect(() => {
+    const cur = {};
+    tokens.forEach((t) => (cur[t.id] = t.beast || t.trf || ""));
+    if (prev.current) {
+      Object.keys(cur).forEach((id) => {
+        if (!(id in prev.current) || prev.current[id] === cur[id]) return;
+        setM((x) => ({ ...x, [id]: 1 }));
+        setTimeout(() => setM((x) => { const n = { ...x }; delete n[id]; return n; }), 950);
+      });
+    }
+    prev.current = cur;
+  }, [sig]); // eslint-disable-line react-hooks/exhaustive-deps
+  return m;
+}
 function useAttackFx(fx) {
   const [anim, setAnim] = useState(null);
   const last = useRef(null);
@@ -10841,6 +10867,7 @@ function MapBoard({ aimRange, rangeMenu, cfx, meCharId, onDragInfo, onStore, pla
   // Líneas de Fuego y Agua (con su animación de salida) y color de Tierra y Aire al apagarse el elemento.
   const ringItems = useLeaving(tokens.filter((t) => t.kind === "pc" && !t.vanished && (t.elem === "Fuego" || t.elem === "Agua")).map((t) => ({ id: t.id, el: t.elem, x: t.x, y: t.y })));
   const outItems = useLeaving(tokens.filter((t) => t.kind === "pc" && (t.elem === "Tierra" || t.elem === "Aire")).map((t) => ({ id: t.id, el: t.elem, x: 0, y: 0 })));
+  const morphs = useMorph(tokens);
   const elemOut = {};
   outItems.forEach((i) => i.leaving && (elemOut[i.id] = i.el));
   const hAnim = useElemEvent(hfx);
@@ -11131,7 +11158,7 @@ function MapBoard({ aimRange, rangeMenu, cfx, meCharId, onDragInfo, onStore, pla
             key={t.id}
             type="button"
             data-tid={t.id}
-            className={"mh-map-tk is-" + t.kind + (t.beast || t.trf ? " is-trf" : "") + (t.elem ? " is-el-" + String(t.elem).toLowerCase() : elemOut[t.id] ? " is-el-out is-el-p-" + elemOut[t.id].toLowerCase() : "") + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id && anim.kind !== "free" ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") + (anim.kind === "web" ? " is-web" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
+            className={"mh-map-tk is-" + t.kind + (t.beast || t.trf ? " is-trf" : "") + (morphs[t.id] ? " is-morph" : "") + (t.elem ? " is-el-" + String(t.elem).toLowerCase() : elemOut[t.id] ? " is-el-out is-el-p-" + elemOut[t.id].toLowerCase() : "") + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id && anim.kind !== "free" ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") + (anim.kind === "web" ? " is-web" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
             style={{ ...at(pos.x, pos.y), "--tc": t.color, ...(anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); return tg ? { "--ax": (tg.x - t.x) * 100 + "%", "--ay": (tg.y - t.y) * 100 + "%" } : {}; })() : {}) }}
             onPointerDown={(e) => startDrag(e, t)}
             onContextMenu={(e) => openMenu(e, t)}
@@ -15330,7 +15357,9 @@ export default function App({ onSignOut }) {
   // Carta de arma arrastrada a un adversario dentro del alcance del arma: se revela la carta y después se hace la tirada de ataque.
   const castWeapon = (charId, target, card) => {
     const c = charsRef.current[charId];
-    const w = [...PRIMARY_WEAPONS, ...SECONDARY_WEAPONS].find((x) => x.key === card.key);
+    const bf = card.beast ? BEASTFORMS.find((x) => x.key === card.key) : null;
+    const bfp = bf ? bf.attack.split(" · ") : null;
+    const w = bf ? { key: bf.key, trait: bfp[1], damage: bfp[2] } : [...PRIMARY_WEAPONS, ...SECONDARY_WEAPONS].find((x) => x.key === card.key);
     const me = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
     if (!c || !w || !me || !target || !(target.kind === "foe" || target.kind === "npc")) return "cancel";
     const tr = TRAITS.find((x) => x.label === w.trait);
@@ -15471,6 +15500,8 @@ export default function App({ onSignOut }) {
   const weaponReach = (c, weaponName) => {
     if (weaponName === "Enredo Feroz") return "Lejano";
     if (weaponName === BRAWLER_STRIKE) return "Cuerpo a cuerpo";
+    const bfm = BEASTFORMS.find((x) => x.key === weaponName);
+    if (bfm) return reachFor(c, bfm.attack.split(" · ")[0]);
     const w = [...PRIMARY_WEAPONS, ...SECONDARY_WEAPONS].find((x) => x.key === weaponName);
     if (!w || !w.range) return null;
     const r = reachFor(c, w.range);
@@ -22199,7 +22230,10 @@ export default function App({ onSignOut }) {
                                           const rootedMine = (campaignMap.tokens || []).filter((t) => t.rootedBy === viewingCharId && (t.conds || []).includes("Inmovilizado"));
                                           const ghostCard = rootedMine.length && keys.includes("Enredo Feroz") ? (() => { const base = findDomainCardAny("Enredo Feroz"); return base ? { ...base, key: "Inmovilizar", baseKey: "Enredo Feroz", text: "Puedes gastar una Esperanza para inmovilizar temporalmente a otro adversario en alcance Muy Cercano del objetivo de Enredo Feroz.", recall: null, noCost: true, ghost: true, noHope: Number(me?.hope_marked ?? HOPE_DEFAULT) < 1 } : null; })() : null;
                                           const releaseCard = ghostCard ? { ...ghostCard, key: "Liberar", text: "Libera al objetivo del Enredo Feroz.", ghostLab: "Gratis", noHope: false, release: true } : null;
-                                          const cards = [wp(me?.f_primary_weapon, PRIMARY_WEAPONS, "Principal"), wp(me?.f_secondary_weapon, SECONDARY_WEAPONS, "Secundaria"), ...actionCards, ...keys.map((k) => { const d = findDomainCardAny(k); return d && mcDom && d.domain === mcDom && !(CLASS_DOMAINS[me?.f_class] || []).includes(mcDom) ? { ...d, multi: true } : d; }), ghostCard, releaseCard].filter(Boolean);
+                                          // En Forma de Bestia no se usan las armas: la carta de arma pasa a ser el ataque de la forma.
+                                          const bfForm = me?.f_beastform ? BEASTFORMS.find((b) => b.key === me.f_beastform) : null;
+                                          const bfCard = bfForm ? (() => { const [, bfT, bfD] = String(bfForm.attack).split(" · "); return { key: bfForm.key, level: bfForm.tier, type: "Ataque de forma", domain: "", image: bfForm.image, text: "Ataque: " + bfForm.attack + ". " + (bfT ? "Tirada de " + bfT + ", daño " + bfD + "." : ""), damage: bfD, hands: "Forma de Bestia", weapon: true, beast: true }; })() : null;
+                                          const cards = [...(bfCard ? [bfCard] : [wp(me?.f_primary_weapon, PRIMARY_WEAPONS, "Principal"), wp(me?.f_secondary_weapon, SECONDARY_WEAPONS, "Secundaria")]), ...actionCards, ...keys.map((k) => { const d = findDomainCardAny(k); return d && mcDom && d.domain === mcDom && !(CLASS_DOMAINS[me?.f_class] || []).includes(mcDom) ? { ...d, multi: true } : d; }), ghostCard, releaseCard].filter(Boolean);
                                           return (
                                             <CardFan
                                               cards={cards}
