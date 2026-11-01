@@ -4888,10 +4888,10 @@ const sharedStyles = `
   .mh-map-tk.is-hidden .mh-map-face, .mh-iso-tk.is-hidden { opacity: .45; }
   .mh-map-tk.is-hidden .mh-map-face { outline: 2px dashed rgba(255,255,255,.85); outline-offset: 2px; filter: saturate(.4); }
   .mh-map-tk.is-hidden::after { content: ""; position: absolute; right: 2%; top: 2%; width: 34%; height: 34%; border-radius: 50%; background: #2a2333 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.9 4.2A10 10 0 0 1 12 4c7 0 10 8 10 8a13 13 0 0 1-1.7 2.7M6.6 6.6C3.6 8.6 2 12 2 12s3 8 10 8a9.7 9.7 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2M2 2l20 20'/%3E%3C/svg%3E") center / 64% no-repeat; box-shadow: 0 1px 3px rgba(0,0,0,.4); pointer-events: none; }
-  .mh-map-tk > .mh-map-face, .mh-map-tk > .mh-map-ring, .mh-map-tk > .mh-map-hp, .mh-map-tk > .mh-map-nm { transition: opacity .55s ease, scale .55s ease, filter .55s ease; }
+  .mh-map-tk > .mh-map-face, .mh-map-tk > .mh-map-ring, .mh-map-tk > .mh-map-rank, .mh-map-tk > .mh-map-hp, .mh-map-tk > .mh-map-nm { transition: opacity .55s ease, scale .55s ease, filter .55s ease; }
   .mh-map-tk.is-vanished { pointer-events: none; }
-  .mh-map-tk.is-vanished > .mh-map-face, .mh-map-tk.is-vanished > .mh-map-ring, .mh-map-tk.is-vanished > .mh-map-hp, .mh-map-tk.is-vanished > .mh-map-nm { opacity: 0; scale: .55; filter: blur(4px); }
-  .mh-map-tk.is-poof-show > .mh-map-face { animation: mh-pop-in .55s cubic-bezier(.3,1.5,.5,1); }
+  .mh-map-tk.is-vanished > .mh-map-face, .mh-map-tk.is-vanished > .mh-map-ring, .mh-map-tk.is-vanished > .mh-map-rank, .mh-map-tk.is-vanished > .mh-map-hp, .mh-map-tk.is-vanished > .mh-map-nm { opacity: 0; scale: .55; filter: blur(4px); }
+  .mh-map-tk.is-poof-show > .mh-map-rank, .mh-map-tk.is-poof-show > .mh-map-face { animation: mh-pop-in .55s cubic-bezier(.3,1.5,.5,1); }
   @keyframes mh-pop-in { 0% { scale: .5; filter: blur(4px); } 60% { scale: 1.12; filter: none; } 100% { scale: 1; } }
   .mh-map-puff { position: absolute; inset: -15%; pointer-events: none; z-index: 2; }
   .mh-map-puff i { position: absolute; width: 46%; height: 46%; border-radius: 50%; background: radial-gradient(circle, rgba(225,222,235,.95) 0%, rgba(190,185,205,.7) 45%, rgba(160,155,180,0) 72%); opacity: 0; animation: mh-puff .8s ease-out forwards; }
@@ -4901,8 +4901,8 @@ const sharedStyles = `
   .mh-map-puff i:nth-child(4) { left: 14%; top: 52%; --px: -30%; --py: 30%; animation-delay: .04s; }
   .mh-map-puff i:nth-child(5) { left: 42%; top: 52%; --px: 30%; --py: 30%; animation-delay: .08s; }
   @keyframes mh-puff { 0% { opacity: 0; scale: .3; translate: 0 0; } 25% { opacity: 1; scale: 1; } 100% { opacity: 0; scale: 1.5; translate: var(--px) var(--py); } }
-  .mh-map-tk.is-step0 .mh-map-face, .mh-map-tk.is-step0 .mh-map-ring { animation: mh-hop0 .38s ease-out; }
-  .mh-map-tk.is-step1 .mh-map-face, .mh-map-tk.is-step1 .mh-map-ring { animation: mh-hop1 .38s ease-out; }
+  .mh-map-tk.is-step0 .mh-map-face, .mh-map-tk.is-step0 .mh-map-ring, .mh-map-tk.is-step0 .mh-map-rank { animation: mh-hop0 .38s ease-out; }
+  .mh-map-tk.is-step1 .mh-map-face, .mh-map-tk.is-step1 .mh-map-ring, .mh-map-tk.is-step1 .mh-map-rank { animation: mh-hop1 .38s ease-out; }
   @keyframes mh-hop0 { 0% { translate: 0 0; scale: 1; } 45% { translate: 0 -28%; scale: 1.06; } 80% { translate: 0 0; scale: 1.04 .94; } 100% { translate: 0 0; scale: 1; } }
   @keyframes mh-hop1 { 0% { translate: 0 0; scale: 1; } 45% { translate: 0 -28%; scale: 1.06; } 80% { translate: 0 0; scale: 1.04 .94; } 100% { translate: 0 0; scale: 1; } }
   .mh-map-tk.is-attack { z-index: 5; animation: mh-lunge .7s cubic-bezier(.5,0,.3,1) both; }
@@ -4911,7 +4911,7 @@ const sharedStyles = `
   .mh-map-tk.is-hit .mh-map-face { animation: mh-tk-flash .55s .32s ease both; }
   @keyframes mh-tk-hit { 0%, 100% { translate: 0 0; } 20% { translate: -10% 4%; } 40% { translate: 9% -3%; } 60% { translate: -6% 2%; } 80% { translate: 4% 0; } }
   @keyframes mh-tk-flash { 0%, 100% { filter: none; } 25% { filter: brightness(1.8) saturate(.4) drop-shadow(0 0 6px #ff4a3d); } }
-  @media (prefers-reduced-motion: reduce) { .mh-map-tk.is-attack, .mh-map-tk.is-hit, .mh-map-tk.is-hit .mh-map-face, .mh-iso-tk.is-attack, .mh-iso-tk.is-hit, .mh-map-tk[class*="is-step"] .mh-map-face, .mh-map-tk[class*="is-step"] .mh-map-ring, .mh-iso-tk[class*="is-step"], .mh-map-puff i, .mh-iso-puff circle, .mh-map-tk.is-poof-show > .mh-map-face { animation: none; } .mh-map .mh-map-tk { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { .mh-map-tk.is-attack, .mh-map-tk.is-hit, .mh-map-tk.is-hit .mh-map-face, .mh-iso-tk.is-attack, .mh-iso-tk.is-hit, .mh-map-tk[class*="is-step"] .mh-map-face, .mh-map-tk[class*="is-step"] .mh-map-ring, .mh-map-tk[class*="is-step"] .mh-map-rank, .mh-iso-tk[class*="is-step"], .mh-map-puff i, .mh-iso-puff circle, .mh-map-tk.is-poof-show > .mh-map-face { animation: none; } .mh-map .mh-map-tk { transition: none; } }
   .mh-map-props-sep { font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-muted); margin: 0 2px 0 8px; }
   html[data-mh-theme="light"] .mh-map-stage { background: #EFE8DB; }
   .mh-map-reach { position: absolute; background: rgba(111,191,115,.26); box-shadow: inset 0 0 0 1px rgba(111,191,115,.6); pointer-events: none; }
@@ -4920,17 +4920,19 @@ const sharedStyles = `
   .mh-map-tk { position: absolute; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; background: none; cursor: default; transition: left .3s cubic-bezier(.3,.7,.4,1), top .3s cubic-bezier(.3,.7,.4,1); }
   .mh-map-tk.is-movable { cursor: grab; }
   .mh-map-tk.is-drag { cursor: grabbing; transition: none; z-index: 6; }
-  .mh-map-tk.is-drag .mh-map-ring { scale: 1.12; transition: scale .15s ease; }
+  .mh-map-tk.is-drag .mh-map-ring, .mh-map-tk.is-drag .mh-map-rank { scale: 1.12; transition: scale .15s ease; }
   .mh-map-tk.is-drag .mh-map-face { scale: 1.12; box-shadow: 0 10px 18px rgba(0,0,0,.45); transition: scale .15s ease; }
   .mh-map-drop { transition: left .12s ease, top .12s ease; }
   .mh-map-tk:focus-visible { outline: none; }
   .mh-map-tk:focus-visible .mh-map-face { box-shadow: 0 0 0 3px #fff, 0 3px 8px rgba(0,0,0,.5); }
   /* Rango de la subclase: uno, dos o tres rombos del color de la clase sobre el borde superior de la ficha, siguiendo su curvatura. Van dentro de la ficha, así que se mueven, rebotan y se animan con ella. */
-  .mh-map-face.has-rank { overflow: visible; }
-  .mh-map-rk { position: absolute; z-index: 4; width: 17%; aspect-ratio: 1; left: calc(50% + 50% * sin(var(--a))); top: calc(50% - 50% * cos(var(--a))); translate: -50% -50%; rotate: calc(var(--a) + 45deg); background: var(--tc); border: 1.5px solid #fff; box-sizing: border-box; box-shadow: 0 1px 3px rgba(0,0,0,.6); pointer-events: none; }
-  .mh-map-tk.is-trf .mh-map-rk { left: calc(50% + var(--k) * 24%); top: 0; rotate: 45deg; }
+  .mh-map-rank { position: absolute; z-index: 5; inset: 10%; pointer-events: none; }
+  .mh-map-rk { position: absolute; width: 15%; aspect-ratio: 1; left: calc(50% + 50% * sin(var(--a))); top: calc(50% - 50% * cos(var(--a))); translate: -50% -50%; rotate: calc(var(--a) + 45deg); background: var(--tc); border: 1.5px solid #fff; box-sizing: border-box; box-shadow: 0 1px 3px rgba(0,0,0,.6); pointer-events: none; }
+  .mh-map-tk.is-trf .mh-map-rk { left: calc(50% + var(--k) * 30%); top: 0; rotate: 45deg; }
+  /* El emblema de la clase siempre en blanco, con una sombra fina para leerse sobre cualquier color. */
+  .mh-map-tk.is-pc .mh-map-face > svg { color: #fff !important; filter: drop-shadow(0 1px 2px rgba(0,0,0,.6)); }
   /* Multiclase: degradado suave entre el color de la clase principal y el de la segunda; el emblema lleva sombra para leerse sobre los dos. */
-  .mh-map-face.is-mc { background: linear-gradient(135deg, var(--tc) 22%, var(--tc2, var(--tc)) 78%) border-box; border-color: transparent; } .mh-map-face.is-mc > svg { filter: drop-shadow(0 1px 2px rgba(0,0,0,.65)); }
+  .mh-map-face.is-mc { background: linear-gradient(135deg, var(--tc) 22%, var(--tc2, var(--tc)) 78%) border-box; border-color: transparent; } 
   .mh-map-face { position: relative; z-index: 2; width: 80%; height: 80%; border-radius: 22%; border: 3px solid var(--tc); box-sizing: border-box; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--tc); color: #fff; font-family: 'Cinzel', Georgia, serif; font-weight: 700; font-size: clamp(10px, 1.6vw, 17px); box-shadow: 0 3px 8px rgba(0,0,0,.5); }
   .mh-map-tk.is-npc .mh-map-face, .mh-map-tk.is-foe .mh-map-face { background: #221C2B; }
   .mh-map-tk.is-foe .mh-map-face { background: #6B2F2F; }
@@ -4941,17 +4943,17 @@ const sharedStyles = `
   @keyframes mh-rooted { 0%, 100% { scale: 1; opacity: .9; } 50% { scale: .94; opacity: 1; } }
   .mh-map-fx.fx-vuln { z-index: 1; box-shadow: 0 0 10px 4px rgba(217,100,78,.8); animation: mh-vuln 1.3s ease-in-out infinite; }
   @keyframes mh-vuln { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
-  .mh-map-tk.is-c-ko .mh-map-face { filter: grayscale(.9) brightness(.8); rotate: -90deg; }
+  .mh-map-tk.is-c-ko .mh-map-rank, .mh-map-tk.is-c-ko .mh-map-face { filter: grayscale(.9) brightness(.8); rotate: -90deg; }
   .mh-map-tk.is-c-ko .mh-map-face > span { rotate: 0deg; }
   .mh-map-fx.fx-ko { z-index: 3; overflow: visible; }
   .mh-map-fx.fx-ko b { position: absolute; right: -8%; top: -10%; color: #E9DDFB; font: 800 clamp(9px, 1.2vw, 13px)/1 Inter, system-ui, sans-serif; text-shadow: 0 1px 2px rgba(0,0,0,.6); opacity: 0; animation: mh-zz 2.4s ease-in-out infinite; }
   .mh-map-fx.fx-ko b + b { animation-delay: 1.2s; }
   @keyframes mh-zz { 0% { opacity: 0; translate: 0 0; scale: .6; } 30% { opacity: 1; } 100% { opacity: 0; translate: 40% -120%; scale: 1.2; } }
-  .mh-map-tk.is-c-fly .mh-map-face, .mh-map-tk.is-c-fly .mh-map-ring { animation: mh-fly 2.2s ease-in-out infinite; }
+  .mh-map-tk.is-c-fly .mh-map-face, .mh-map-tk.is-c-fly .mh-map-ring, .mh-map-tk.is-c-fly .mh-map-rank { animation: mh-fly 2.2s ease-in-out infinite; }
   @keyframes mh-fly { 0%, 100% { translate: 0 -12%; } 50% { translate: 0 -22%; } }
   .mh-map-fx.fx-fly { z-index: 1; left: 22%; width: 56%; top: auto; bottom: 0; height: 12%; border-radius: 50%; background: rgba(0,0,0,.45); filter: blur(2px); animation: mh-fly-shadow 2.2s ease-in-out infinite; }
   @keyframes mh-fly-shadow { 0%, 100% { scale: 1; opacity: .8; } 50% { scale: .8; opacity: .55; } }
-  .mh-map-tk.is-c-shell .mh-map-face, .mh-map-tk.is-c-shell .mh-map-ring { scale: .82; }
+  .mh-map-tk.is-c-shell .mh-map-face, .mh-map-tk.is-c-shell .mh-map-ring, .mh-map-tk.is-c-shell .mh-map-rank { scale: .82; }
   .mh-map-fx.fx-shell { z-index: 3; inset: 6%; width: auto; height: auto; border-radius: 50% 50% 30% 30%; border: 3px solid #6E8B5A; background: repeating-linear-gradient(45deg, rgba(110,139,90,.35) 0 4px, rgba(110,139,90,.15) 4px 8px); }
   .mh-map-conds { position: absolute; z-index: 4; left: 2%; top: 2%; display: flex; gap: 1px; width: 100%; pointer-events: none; }
   .mh-map-conds i { width: 28%; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; color: #fff; border: 1.5px solid #fff; box-sizing: border-box; box-shadow: 0 1px 3px rgba(0,0,0,.45); }
@@ -11608,7 +11610,12 @@ function MapBoard({ showHp, aimRange, rangeMenu, cfx, meCharId, onDragInfo, onSt
                 )}
               </svg>
             )}
-            <span className={"mh-map-face" + (t.kind === "pc" && t.color2 ? " is-mc" : "") + (t.kind === "pc" && t.rank > 0 ? " has-rank" : "")} title={hpLeft != null && (!plain || showHp) ? `Vida: ${t.hp[1] - t.hp[0]} de ${t.hp[1]}` : undefined}>{t.img && t.kind !== "pc" ? <img src={t.img} alt="" draggable={false} /> : <Emb size="52%" strokeWidth={2.1} />}{t.kind === "pc" && t.rank > 0 && (() => { const A = [[0], [-10, 10], [-21, 0, 21]][t.rank - 1]; return A.map((a, i) => <i key={i} className="mh-map-rk" aria-hidden="true" style={{ "--a": a + "deg", "--k": a / 21 }} />); })()}</span>
+            <span className={"mh-map-face" + (t.kind === "pc" && t.color2 ? " is-mc" : "")} title={hpLeft != null && (!plain || showHp) ? `Vida: ${t.hp[1] - t.hp[0]} de ${t.hp[1]}` : undefined}>{t.img && t.kind !== "pc" ? <img src={t.img} alt="" draggable={false} /> : <Emb size="52%" strokeWidth={2.1} />}</span>
+            {t.kind === "pc" && t.rank > 0 && (
+              <span className="mh-map-rank" aria-hidden="true" title={["Fundación", "Especialización", "Maestría"][t.rank - 1]}>
+                {[[0], [-15, 15], [-30, 0, 30]][t.rank - 1].map((a, i) => <i key={i} className="mh-map-rk" style={{ "--a": a + "deg", "--k": a / 30 }} />)}
+              </span>
+            )}
             {t.name && <span className="mh-map-nm">{t.name}</span>}
           </button>
         );
