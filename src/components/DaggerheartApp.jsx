@@ -9810,13 +9810,13 @@ function RootThreads({ links, snap }) {
     </svg>
   );
 }
-function ShotFx({ kind, a, b, b2, size: S }) {
+function ShotFx({ kind, a, b, b2, size: S, n: bolts = 3 }) {
   const [p, setP] = useState(0);
   useEffect(() => {
     let raf;
     const t0 = performance.now();
     const tick = (n) => {
-      const v = Math.min(1, (n - t0) / (kind === "howl" ? 1700 : 1300));
+      const v = Math.min(1, (n - t0) / (kind === "howl" ? 1700 : kind === "chaos" ? 1600 : 1300));
       setP(v);
       if (v < 1) raf = requestAnimationFrame(tick);
     };
@@ -9830,6 +9830,53 @@ function ShotFx({ kind, a, b, b2, size: S }) {
   const q = p > 0.5 ? (p - 0.5) / 0.5 : 0;
   const magic = kind === "magic";
   const [x, y] = at(f);
+  if (kind === "chaos") {
+    // Desatar el Caos: una descarga arcana por ficha gastada, que parpadea entre el lanzador y el objetivo; al llegar, el impacto se abre en ondas y un fogonazo.
+    const N = Math.max(1, Math.min(8, Number(bolts) || 1));
+    const COLS = ["#B7A8F5", "#E05FD0", "#5FE0F0"];
+    const L = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+    const ux = (b[0] - a[0]) / L, uy = (b[1] - a[1]) / L, nx = -uy, ny = ux;
+    const x0 = a[0] + ux * S * 0.45, y0 = a[1] + uy * S * 0.45, x1 = b[0] - ux * S * 0.45, y1 = b[1] - uy * S * 0.45;
+    const tick = Math.floor(p * 22);
+    const rnd = (i, k) => { const v = Math.sin((i + 1) * 127.1 + k * 311.7 + tick * 17.3) * 43758.5453; return v - Math.floor(v); };
+    const fd = p > 0.78 ? Math.max(0, 1 - (p - 0.78) / 0.22) : 1;
+    const bolt = (i) => {
+      const t0 = 0.06 + (i / N) * 0.16, vis = p - t0;
+      if (vis < 0 || vis > 0.36) return null;
+      const on = vis < 0.05 || Math.floor(vis * 22) % 3 !== 1; // parpadeo
+      if (!on) return null;
+      const seg = 9, amp = S * (0.7 + (i % 3) * 0.2);
+      let d = "M" + x0 + " " + y0;
+      for (let s = 1; s < seg; s++) {
+        const f = s / seg, off = (rnd(i, s) - 0.5) * 2 * amp * Math.sin(f * Math.PI);
+        d += " L" + (x0 + (x1 - x0) * f + nx * off) + " " + (y0 + (y1 - y0) * f + ny * off);
+      }
+      d += " L" + x1 + " " + y1;
+      const col = COLS[i % 3], fade = 1 - Math.max(0, (vis - 0.26) / 0.1);
+      return (
+        <g key={"b" + i} opacity={fade}>
+          <path d={d} fill="none" stroke={col} strokeWidth={S * 0.16} strokeLinejoin="round" strokeLinecap="round" opacity=".28" />
+          <path d={d} fill="none" stroke={col} strokeWidth={S * 0.065} strokeLinejoin="round" strokeLinecap="round" />
+          <path d={d} fill="none" stroke="#fff" strokeWidth={S * 0.022} strokeLinejoin="round" strokeLinecap="round" opacity=".9" />
+        </g>
+      );
+    };
+    const castK = Math.max(0, Math.min(1, p / 0.22));
+    const ik = Math.max(0, Math.min(1, (p - 0.2) / 0.55)); // avance del impacto
+    const ring = (j) => {
+      const e = Math.max(0, Math.min(1, (ik - j * 0.16) / (1 - j * 0.16)));
+      return e > 0 && e < 1 ? <circle key={"r" + j} cx={b[0]} cy={b[1]} r={S * (0.2 + 0.95 * e)} fill="none" stroke={COLS[j % 3]} strokeWidth={S * (0.09 - j * 0.02)} opacity={(1 - e) * fd} /> : null;
+    };
+    return (
+      <g pointerEvents="none">
+        {castK < 1 && <circle cx={a[0]} cy={a[1]} r={S * (0.5 + 0.35 * castK)} fill="none" stroke="#B7A8F5" strokeWidth="2.5" opacity={(1 - castK) * 0.9} />}
+        {Array.from({ length: N }, (_, i) => bolt(i))}
+        {ik > 0 && ik < 1 && <circle cx={b[0]} cy={b[1]} r={S * (0.25 + 0.55 * Math.sin(ik * Math.PI))} fill="#E05FD0" opacity={Math.sin(ik * Math.PI) * 0.55 * fd} />}
+        {ik > 0 && ik < 0.5 && <circle cx={b[0]} cy={b[1]} r={S * 0.3 * Math.sin(ik * 2 * Math.PI)} fill="#fff" opacity={0.85 * fd} />}
+        {[0, 1, 2].map(ring)}
+      </g>
+    );
+  }
   if (kind === "howl") {
     // Ataque Aullante: ondas de choque cuadradas que salen de la ficha hasta el alcance Muy cercano y zarpazos dentro del área.
     const [cx, cy] = a;
@@ -10144,7 +10191,7 @@ function useAttackFx(fx) {
     last.current = fx.key;
     if (Date.now() - fx.key > 15000) return;
     setAnim(fx);
-    const t = setTimeout(() => setAnim(null), fx.kind === "howl" ? 1900 : 1500);
+    const t = setTimeout(() => setAnim(null), fx.kind === "howl" ? 1900 : fx.kind === "chaos" ? 1800 : 1500);
     return () => clearTimeout(t);
   }, [fx?.key]);
   return anim;
@@ -11404,7 +11451,7 @@ function MapBoard({ showHp, aimRange, rangeMenu, cfx, meCharId, onDragInfo, onSt
         if (!fa || !fb) return null;
         return (
           <svg className="mh-map-shot" viewBox={`0 0 ${MAP_COLS * 40} ${MAP_ROWS * 40}`} preserveAspectRatio="none">
-            <ShotFx key={anim.key} kind={anim.kind} a={[(fa.x + 0.5) * 40, (fa.y + 0.5) * 40]} b={[(fb.x + 0.5) * 40, (fb.y + 0.5) * 40]} size={40} />
+            <ShotFx key={anim.key} kind={anim.kind} n={anim.n} a={[(fa.x + 0.5) * 40, (fa.y + 0.5) * 40]} b={[(fb.x + 0.5) * 40, (fb.y + 0.5) * 40]} size={40} />
           </svg>
         );
       })()}
@@ -17969,8 +18016,8 @@ export default function App({ onSignOut }) {
           const extra = r.weapon.hopeExtra && ft ? (campaignMapRef.current.tokens || []).filter((x) => x.id !== first && (x.kind === "foe" || x.kind === "npc") && !x.gmHidden && cellDist(x, ft) <= RANGE_CELLS["Muy cercano"] && !(x.stats && Number(x.stats.hpMarked || 0) >= Number(x.stats.hp || 0))).sort((p, q) => cellDist(p, ft) - cellDist(q, ft))[0] : null;
           return extra ? [first, extra.id] : [first];
         })() : null;
-        const fxKind = snareIds ? "web" : /mágic/i.test(damage || "") ? "magic" : reachNow && reachNow !== "Cuerpo a cuerpo" ? "shot" : "melee";
-        if (fromTok) fxLater.push(() => mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: fromTok.id, to: r.weapon.targetId, kind: fxKind, ...(snareIds && snareIds[1] ? { to2: snareIds[1] } : {}) }), "fx"));
+        const fxKind = snareIds ? "web" : name === "Desatar el Caos" ? "chaos" : /mágic/i.test(damage || "") ? "magic" : reachNow && reachNow !== "Cuerpo a cuerpo" ? "shot" : "melee";
+        if (fromTok) fxLater.push(() => mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: fromTok.id, to: r.weapon.targetId, kind: fxKind, ...(fxKind === "chaos" ? { n: r.weapon.fixedDice || 1 } : {}), ...(snareIds && snareIds[1] ? { to2: snareIds[1] } : {}) }), "fx"));
         if (snareIds) {
           // Las raíces inmovilizan al objetivo (y al segundo adversario si se gasta una Esperanza).
           fxLater.push(() => setTimeout(() => mutateMap(sheetCampaignId, (ts) => ts.map((x) => (snareIds.includes(x.id) ? { ...x, conds: [...new Set([...(x.conds || []), "Inmovilizado"])], rootedBy: charId } : x))), 150));
