@@ -5028,7 +5028,8 @@ const sharedStyles = `
   @keyframes mh-die-drop { 0% { transform: translateY(calc(-220px * var(--s, 1))) rotate(-540deg) scale(1.35); opacity: 0; } 8% { opacity: 1; } 52% { transform: translateY(0) rotate(0); } 68% { transform: translateY(calc(-26px * var(--s, 1))) rotate(40deg); } 82% { transform: translateY(0) rotate(-12deg); } 91% { transform: translateY(calc(-7px * var(--s, 1))) rotate(5deg); } 100% { transform: translateY(0) rotate(0); } }
   @keyframes mh-die-gone { 0% { transform: translateY(0) rotate(0); opacity: 1; } 100% { transform: translateY(calc(-150px * var(--s, 1))) rotate(300deg) scale(.4); opacity: 0; } }
   @media (prefers-reduced-motion: reduce) { .mh-die.is-gone { animation: none; opacity: 0; } .mh-die.is-drop { animation: none; } }
-  .mh-fan-tokctl { position: absolute; left: 0; right: 0; top: calc(100% + 12px); display: flex; flex-direction: column; align-items: center; gap: 8px; } .mh-fan-tray { --s: 1.15; position: absolute; left: calc(100% + 14px); top: 3%; bottom: 3%; z-index: 4; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; pointer-events: none; } .mh-fan-tray .mh-die { margin: calc(-3px * var(--s)) 0; } @media (max-width: 640px) { .mh-fan-tray { left: 0; right: 0; top: auto; bottom: 3%; flex-direction: row; justify-content: center; --s: .95; } .mh-fan-tray .mh-die { margin: 0 calc(-8px * var(--s)); } } .mh-fan-tray .mh-die { pointer-events: auto; } .mh-die.is-drag { touch-action: none; cursor: grab; } .mh-die.is-drag:active { cursor: grabbing; z-index: 8; } .mh-fan-tokctl .rc:disabled { opacity: .4; cursor: not-allowed; } .mh-fan-tokctl .rc { all: unset; cursor: pointer; padding: 7px 16px; border-radius: 99px; background: #E3B04B; color: #1f1606; font: 700 12.5px Inter, system-ui, sans-serif; }
+  .mh-fan-tokctl { position: absolute; left: 0; right: 0; top: calc(100% + 12px); display: flex; flex-direction: column; align-items: center; gap: 8px; }  .mh-fan-tokn { position: absolute; z-index: 3; top: 5%; right: 6%; min-width: calc(54px * var(--s, .5)); height: calc(44px * var(--s, .5)); padding: 0 calc(10px * var(--s, .5)); display: grid; place-items: center; border-radius: 99px; background: rgba(20,17,26,.9); border: 2px solid var(--tc, #C9A24B); color: #fff; font: 800 calc(26px * var(--s, .5)) Inter, system-ui, sans-serif; letter-spacing: .02em; pointer-events: none; box-shadow: 0 2px 8px rgba(0,0,0,.5); }
+  .mh-fan-tray { --s: 1.15; position: absolute; left: calc(100% + 14px); top: 3%; bottom: 3%; z-index: 4; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; pointer-events: none; } .mh-fan-tray .mh-die { margin: calc(-3px * var(--s)) 0; } @media (max-width: 640px) { .mh-fan-tray { left: 0; right: 0; top: auto; bottom: 3%; flex-direction: row; justify-content: center; --s: .95; } .mh-fan-tray .mh-die { margin: 0 calc(-8px * var(--s)); } } .mh-fan-tray .mh-die { pointer-events: auto; } .mh-die.is-drag { touch-action: none; cursor: grab; } .mh-die.is-drag:active { cursor: grabbing; z-index: 8; } .mh-fan-tokctl .rc:disabled { opacity: .4; cursor: not-allowed; } .mh-fan-tokctl .rc { all: unset; cursor: pointer; padding: 7px 16px; border-radius: 99px; background: #E3B04B; color: #1f1606; font: 700 12.5px Inter, system-ui, sans-serif; }
   .mh-sess { width: min(560px, 94vw); }
   .mh-sess-list { display: flex; flex-direction: column; gap: 8px; } .mh-sess-it { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--mh-panel, #1b1824) 70%, transparent); border: 1px solid var(--mh-line2, rgba(255,255,255,.14)); } .mh-sess-it > svg { color: #E3B04B; flex: none; } .mh-sess-it span { display: flex; flex-direction: column; } .mh-sess-it small { color: var(--mh-muted, #aaa); font-size: 11.5px; }
   .mh-sess-toks { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; } .mh-sess-toks button { all: unset; box-sizing: border-box; cursor: pointer; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; font: 700 15px Inter, system-ui, sans-serif; border: 2px solid #E3B04B; color: #E3B04B; } .mh-sess-toks button.is-on { background: #E3B04B; color: #1f1606; }
@@ -10841,7 +10842,7 @@ function TokDice({ have, max, onPick, color = "#d9482a" }) {
     );
   });
 }
-function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack, cardBorder, aimOk, reachOf, onAim, beast, onBeast, onEvolve, onWolf, cardToks, onCardTok, onRecharge }) {
+function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack, cardBorder, aimOk, reachOf, onAim, beast, onBeast, onEvolve, onWolf, cardToks, onCardTok }) {
   const cardsRef = useRef(cards);
   cardsRef.current = cards;
   const [drag, setDrag] = useState(null); // { card, x, y, cell, moved }
@@ -10889,7 +10890,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
     return !!r && x >= r.left - 30 && x <= r.right + 30 && y >= r.top - 24 && y <= r.bottom + 24;
   };
   // Cartas que se apuntan a un adversario: Enredo Feroz, su carta extra y las armas (con el alcance de cada arma).
-  const isAim = (c) => c.key === AIM_CARD || !!c.ghost || !!c.weapon || (c.key === "Desatar el Caos" && !c.rowCard);
+  const isAim = (c) => c.key === AIM_CARD || (!!c.ghost && !c.recharge) || !!c.weapon || (c.key === "Desatar el Caos" && !c.rowCard);
   const aimReach = (c) => (reachOf && reachOf(c)) || { label: "Lejano", max: RANGE_CELLS["Lejano"] };
   const inAimReach = (c, cell) => !!me && !!cell && Math.max(Math.abs(cell.x - me.x), Math.abs(cell.y - me.y)) <= aimReach(c).max;
   const rangeOf = (cell) => {
@@ -11037,11 +11038,15 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
               title="Púlsala para verla en grande · arrástrala al mapa para usarla"
             >
               <FanFace c={c} col={col} />
+              {cardToks && !c.weapon && !c.rowCard && !c.ghost && (() => {
+                const ti = cardToks(c);
+                return ti ? <span className="mh-fan-tokn" aria-hidden="true" style={{ "--tc": DOMAIN_COLORS[c.domain] || "#C9A24B" }}>{ti.have}/{ti.max}</span> : null;
+              })()}
               {cardToks && !c.weapon && !c.rowCard && (() => {
                 const ti = cardToks(c);
                 return ti ? <span className="mh-fan-toks" title={ti.have + " de " + ti.max + " fichas"} aria-label={ti.have + " de " + ti.max + " fichas"}><TokDice have={ti.have} max={ti.max} color={DOMAIN_COLORS[c.domain] || "#C9A24B"} /></span> : null;
               })()}
-              {c.ghost && <span className="mh-fan-ghostlab">{c.noHope ? "Sin Esperanza" : c.ghostLab || "1 Esperanza"}</span>}
+              {c.ghost && <span className="mh-fan-ghostlab">{c.noHope ? c.noLab || "Sin Esperanza" : c.ghostLab || "1 Esperanza"}</span>}
             </div>
           );
         })}
@@ -11059,8 +11064,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
                   <TokDice have={ti.have} max={ti.max} color={DOMAIN_COLORS[open.domain] || "#C9A24B"} onPick={(k) => onCardTok(open.key, k + 1 === ti.have ? k : k + 1)} />
                 </div>
                 <div className="mh-fan-tokctl">
-                  <span className="mh-fan-ask">{ti.have} de {ti.max} {ti.cfg.label} · lanza los dados con el ratón si te estorban</span>
-                  <button type="button" className="rc" disabled={ti.have >= ti.max} title={ti.have >= ti.max ? "Ya tienes todas las fichas" : "Marca 1 Estrés y recupera las fichas"} onClick={() => onRecharge && onRecharge(open.key)}>Recargar · 1 Estrés</button>
+                  <span className="mh-fan-ask">{ti.have} de {ti.max} {ti.cfg.label} · lanza los dados si te estorban para leer</span>
                 </div>
                 </>
               );
@@ -14189,6 +14193,19 @@ export default function App({ onSignOut }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sheetCharId, sheetCampaignId, campSession, sheetCharId && characters[sheetCharId]?.f_session_seen, sheetCharId && characters[sheetCharId]?.f_session_end]);
+  // Carta suplementaria «Recargar fichas»: aparece cuando has gastado fichas de Desatar el Caos; al usarla marcas 1 Estrés y las recuperas todas.
+  const castRecharge = (charId, card) => {
+    const c = charsRef.current[charId];
+    const info = c && cardTokInfo(c, "Desatar el Caos");
+    if (!info || info.have >= info.max) return "cancel";
+    if (Number(c.stress_marked || 0) >= Number(c.r_stress || 0)) {
+      if (sheetCampaignId) pushMapLog(sheetCampaignId, "Recargar fichas: no tienes Estrés libre que marcar", "info");
+      return "cancel";
+    }
+    playCardOnMap(sheetCampaignId, charId, card, { noChat: true, short: true });
+    afterReveal(charId, card.key, () => rechargeCardTokens(charId, "Desatar el Caos"));
+    return "reveal";
+  };
   // Desatar el Caos arrastrada a un adversario en alcance Lejano: se elige cuántas fichas gastar, se revela la carta y se hace la tirada de conjuro.
   const castChaos = (charId, target, card) => {
     const c = charsRef.current[charId];
@@ -22916,10 +22933,12 @@ export default function App({ onSignOut }) {
                                           const rootedMine = (campaignMap.tokens || []).filter((t) => t.rootedBy === viewingCharId && (t.conds || []).includes("Inmovilizado"));
                                           const ghostCard = rootedMine.length && keys.includes("Enredo Feroz") ? (() => { const base = findDomainCardAny("Enredo Feroz"); return base ? { ...base, key: "Inmovilizar", baseKey: "Enredo Feroz", text: "Puedes gastar una Esperanza para inmovilizar temporalmente a otro adversario en alcance Muy Cercano del objetivo de Enredo Feroz.", recall: null, noCost: true, ghost: true, noHope: Number(me?.hope_marked ?? HOPE_DEFAULT) < 1 } : null; })() : null;
                                           const releaseCard = ghostCard ? { ...ghostCard, key: "Liberar", text: "Libera al objetivo del Enredo Feroz.", ghostLab: "Gratis", noHope: false, release: true } : null;
+                                          const chaosTok = keys.includes("Desatar el Caos") ? cardTokInfo(me, "Desatar el Caos") : null;
+                                          const rechargeCard = chaosTok && chaosTok.have < chaosTok.max ? (() => { const base = findDomainCardAny("Desatar el Caos"); return base ? { ...base, key: "Recargar fichas", baseKey: "Desatar el Caos", text: "Marca 1 Estrés para recuperar todas las fichas de Desatar el Caos, hasta tu rasgo de conjuro. Suéltala en el mapa para usarla.", recall: null, noCost: true, ghost: true, recharge: true, ghostLab: "1 Estrés", noHope: Number(me?.stress_marked || 0) >= Number(me?.r_stress || 0), noLab: "Estrés lleno" } : null; })() : null;
                                           // En Forma de Bestia no se usan las armas: la carta de arma pasa a ser el ataque de la forma.
                                           const bfForm = me?.f_beastform ? BEASTFORMS.find((b) => b.key === me.f_beastform) : null;
                                           const bfCard = bfForm ? (() => { const [, bfT, bfD] = String(bfForm.attack).split(" · "); return { key: bfForm.key, level: bfForm.tier, type: "Ataque de forma", domain: "", image: bfForm.image, text: "Ataque: " + bfForm.attack + ". " + (bfT ? "Tirada de " + bfT + ", daño " + bfD + "." : ""), damage: bfD, hands: "Forma de Bestia", weapon: true, beast: true }; })() : null;
-                                          const cards = [...(bfCard ? [bfCard] : [wp(me?.f_primary_weapon, PRIMARY_WEAPONS, "Principal"), wp(me?.f_secondary_weapon, SECONDARY_WEAPONS, "Secundaria")]), ...actionCards, ...keys.map((k) => { const d = findDomainCardAny(k); return d && mcDom && d.domain === mcDom && !(CLASS_DOMAINS[me?.f_class] || []).includes(mcDom) ? { ...d, multi: true } : d; }), ghostCard, releaseCard].filter(Boolean);
+                                          const cards = [...(bfCard ? [bfCard] : [wp(me?.f_primary_weapon, PRIMARY_WEAPONS, "Principal"), wp(me?.f_secondary_weapon, SECONDARY_WEAPONS, "Secundaria")]), ...actionCards, ...keys.map((k) => { const d = findDomainCardAny(k); return d && mcDom && d.domain === mcDom && !(CLASS_DOMAINS[me?.f_class] || []).includes(mcDom) ? { ...d, multi: true } : d; }), ghostCard, releaseCard, rechargeCard].filter(Boolean);
                                           return (
                                             <CardFan
                                               cards={cards}
@@ -22931,7 +22950,6 @@ export default function App({ onSignOut }) {
                                               beast={{ forms: BEASTFORMS, tier: tierForLevel(me?.f_level || 1), active: me?.f_beastform || "", stressFull: Number(me?.stress_marked || 0) >= Number(me?.r_stress || 0) }}
                                               cardToks={(card) => cardTokInfo(characters[viewingCharId], card.key)}
                                               onCardTok={(key, n) => setCardTok(viewingCharId, key, n)}
-                                              onRecharge={(key) => rechargeCardTokens(viewingCharId, key)}
                                               onEvolve={(card) => openEvolutionModal(viewingCharId, card)}
                                               onWolf={(card) => activateWolf(viewingCharId, card)}
                                               onBeast={(key, sel, card) => (sel ? toggleBeastform(viewingCharId, key, true) : morphToBeast(viewingCharId, key, card))}
@@ -22941,6 +22959,7 @@ export default function App({ onSignOut }) {
                                               tokens={mapTokens}
                                               onUse={(card, cell, target, rng) =>
                                                 card.key === "Desatar el Caos" && !card.weapon && !card.rowCard && !card.subclass ? castChaos(viewingCharId, target, card) :
+                                                card.recharge ? castRecharge(viewingCharId, card) :
                                                 card.release ? castLiberar(viewingCharId, target, card) :
                                                 card.ghost ? castEnredoExtra(viewingCharId, target, card) :
                                                 card.weapon ? castWeapon(viewingCharId, target, card) :
@@ -27132,10 +27151,9 @@ export default function App({ onSignOut }) {
                         <b>Desatar el Caos</b>
                         <span>No te quedan fichas sobre la carta: hay que gastar al menos una para lanzarla</span>
                       </div>
-                      <div className="mh-evo-sum">Marca 1 Estrés para recargar la carta hasta <b>{info.max}</b> fichas y lánzala sobre {tg.name || "el adversario"}.</div>
+                      <div className="mh-evo-sum">Usa la carta <b>«Recargar fichas»</b> de tu mano (1 Estrés) para volver a tener <b>{info.max}</b> fichas y lanza el conjuro sobre {tg.name || "el adversario"}.</div>
                       <div className="mh-evo-act">
-                        <button type="button" className="mh-elpick-x" onClick={() => setChaosAsk(null)}>Cancelar</button>
-                        <button type="button" className="mh-evo-go" onClick={() => rechargeCardTokens(chaosAsk.charId, "Desatar el Caos")}>Recargar · 1 Estrés</button>
+                        <button type="button" className="mh-evo-go" onClick={() => setChaosAsk(null)}>Entendido</button>
                       </div>
                     </div>
                   </div>
