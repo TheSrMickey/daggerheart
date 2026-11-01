@@ -9831,38 +9831,40 @@ function ShotFx({ kind, a, b, b2, size: S, n: bolts = 3 }) {
   const magic = kind === "magic";
   const [x, y] = at(f);
   if (kind === "chaos") {
-    // Desatar el Caos: una descarga arcana por ficha gastada, que parpadea entre el lanzador y el objetivo; al llegar, el impacto se abre en ondas y un fogonazo.
+    // Desatar el Caos: un orbe arcano por ficha gastada (uno si no gastas ninguna) zigzaguea hasta el objetivo; al llegar, el impacto se abre en ondas y un fogonazo.
     const N = Math.max(1, Math.min(8, Number(bolts) || 1));
     const COLS = ["#B7A8F5", "#E05FD0", "#5FE0F0"];
     const L = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
     const ux = (b[0] - a[0]) / L, uy = (b[1] - a[1]) / L, nx = -uy, ny = ux;
     const x0 = a[0] + ux * S * 0.45, y0 = a[1] + uy * S * 0.45, x1 = b[0] - ux * S * 0.45, y1 = b[1] - uy * S * 0.45;
-    const tick = Math.floor(p * 22);
-    const rnd = (i, k) => { const v = Math.sin((i + 1) * 127.1 + k * 311.7 + tick * 17.3) * 43758.5453; return v - Math.floor(v); };
-    const fd = p > 0.78 ? Math.max(0, 1 - (p - 0.78) / 0.22) : 1;
-    const bolt = (i) => {
-      const t0 = 0.06 + (i / N) * 0.16, vis = p - t0;
-      if (vis < 0 || vis > 0.36) return null;
-      const on = vis < 0.05 || Math.floor(vis * 22) % 3 !== 1; // parpadeo
-      if (!on) return null;
-      const seg = 9, amp = S * (0.7 + (i % 3) * 0.2);
-      let d = "M" + x0 + " " + y0;
-      for (let s = 1; s < seg; s++) {
-        const f = s / seg, off = (rnd(i, s) - 0.5) * 2 * amp * Math.sin(f * Math.PI);
-        d += " L" + (x0 + (x1 - x0) * f + nx * off) + " " + (y0 + (y1 - y0) * f + ny * off);
-      }
-      d += " L" + x1 + " " + y1;
-      const col = COLS[i % 3], fade = 1 - Math.max(0, (vis - 0.26) / 0.1);
+    const fd = p > 0.8 ? Math.max(0, 1 - (p - 0.8) / 0.2) : 1;
+    const FLY = 0.4;
+    // Cada orbe zigzaguea por su propio camino (fase y amplitud distintas) y deja una estela de puntos.
+    const orbPos = (i, t) => {
+      const w = Math.sin(t * Math.PI) * S * (0.75 + (i % 3) * 0.25) * (i % 2 ? -1 : 1);
+      const off = w * Math.sin(t * Math.PI * (2.2 + (i % 3) * 0.5) + i * 1.7);
+      return [x0 + (x1 - x0) * t + nx * off, y0 + (y1 - y0) * t + ny * off];
+    };
+    const orb = (i) => {
+      const t0 = 0.06 + i * Math.min(0.05, 0.3 / N), t = (p - t0) / FLY;
+      if (t < 0 || t > 1) return null;
+      const col = COLS[i % 3], [ox, oy] = orbPos(i, t);
       return (
-        <g key={"b" + i} opacity={fade}>
-          <path d={d} fill="none" stroke={col} strokeWidth={S * 0.16} strokeLinejoin="round" strokeLinecap="round" opacity=".28" />
-          <path d={d} fill="none" stroke={col} strokeWidth={S * 0.065} strokeLinejoin="round" strokeLinecap="round" />
-          <path d={d} fill="none" stroke="#fff" strokeWidth={S * 0.022} strokeLinejoin="round" strokeLinecap="round" opacity=".9" />
+        <g key={"o" + i}>
+          {[1, 2, 3, 4].map((k) => {
+            const tt = t - k * 0.045;
+            if (tt <= 0) return null;
+            const [tx, ty] = orbPos(i, tt);
+            return <circle key={k} cx={tx} cy={ty} r={S * (0.09 - k * 0.015)} fill={col} opacity={0.5 - k * 0.1} />;
+          })}
+          <circle cx={ox} cy={oy} r={S * 0.3} fill={col} opacity=".25" />
+          <circle cx={ox} cy={oy} r={S * 0.15} fill={col} />
+          <circle cx={ox} cy={oy} r={S * 0.06} fill="#fff" opacity=".9" />
         </g>
       );
     };
     const castK = Math.max(0, Math.min(1, p / 0.22));
-    const ik = Math.max(0, Math.min(1, (p - 0.2) / 0.55)); // avance del impacto
+    const ik = Math.max(0, Math.min(1, (p - (0.06 + (N - 1) * Math.min(0.05, 0.3 / N) + FLY * 0.95)) / 0.4)); // avance del impacto, cuando llega el último orbe
     const ring = (j) => {
       const e = Math.max(0, Math.min(1, (ik - j * 0.16) / (1 - j * 0.16)));
       return e > 0 && e < 1 ? <circle key={"r" + j} cx={b[0]} cy={b[1]} r={S * (0.2 + 0.95 * e)} fill="none" stroke={COLS[j % 3]} strokeWidth={S * (0.09 - j * 0.02)} opacity={(1 - e) * fd} /> : null;
@@ -9870,7 +9872,7 @@ function ShotFx({ kind, a, b, b2, size: S, n: bolts = 3 }) {
     return (
       <g pointerEvents="none">
         {castK < 1 && <circle cx={a[0]} cy={a[1]} r={S * (0.5 + 0.35 * castK)} fill="none" stroke="#B7A8F5" strokeWidth="2.5" opacity={(1 - castK) * 0.9} />}
-        {Array.from({ length: N }, (_, i) => bolt(i))}
+        {Array.from({ length: N }, (_, i) => orb(i))}
         {ik > 0 && ik < 1 && <circle cx={b[0]} cy={b[1]} r={S * (0.25 + 0.55 * Math.sin(ik * Math.PI))} fill="#E05FD0" opacity={Math.sin(ik * Math.PI) * 0.55 * fd} />}
         {ik > 0 && ik < 0.5 && <circle cx={b[0]} cy={b[1]} r={S * 0.3 * Math.sin(ik * 2 * Math.PI)} fill="#fff" opacity={0.85 * fd} />}
         {[0, 1, 2].map(ring)}
@@ -14029,11 +14031,8 @@ export default function App({ onSignOut }) {
     const me = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
     if (!c || !me || !target || !(target.kind === "foe" || target.kind === "npc") || cellDist(me, target) > RANGE_CELLS["Lejano"] || c.f_beastform) return "cancel";
     const info = cardTokInfo(c, "Desatar el Caos");
-    if (!info || info.have < 1) {
-      if (sheetCampaignId) pushMapLog(sheetCampaignId, "Desatar el Caos: no te quedan fichas (recarga con 1 Estrés)", "info");
-      return "cancel";
-    }
-    setChaosN(1);
+    if (!info) return "cancel";
+    setChaosN(info.have > 0 ? 1 : 0); // se puede lanzar sin gastar fichas: la tirada se hace, pero no hay d10 de daño
     setChaosAsk({ charId, targetId: target.id, card });
     return "cancel";
   };
@@ -14045,15 +14044,15 @@ export default function App({ onSignOut }) {
     const info = c && cardTokInfo(c, "Desatar el Caos");
     const target = (campaignMapRef.current.tokens || []).find((t) => t.id === a.targetId);
     if (!c || !info || !target) return;
-    const n = Math.max(1, Math.min(chaosN, info.have));
+    const n = Math.max(0, Math.min(chaosN, info.have));
     const sk = charSpellTrait(c);
     const label = TRAITS.find((tr) => tr.key === sk)?.label;
     if (!label) return;
     const mods = getEquipmentMods(PRIMARY_WEAPONS.find((w) => w.key === c.f_primary_weapon), SECONDARY_WEAPONS.find((w) => w.key === c.f_secondary_weapon), ARMORS.find((x) => x.key === c.f_armor));
     setCardTok(a.charId, "Desatar el Caos", info.have - n);
-    postCampaignEvent(a.charId, "✨ Desatar el Caos sobre " + (target.name || "un adversario") + ": gasta " + n + " ficha" + (n > 1 ? "s" : "") + " (" + n + "d10 si acierta)");
+    postCampaignEvent(a.charId, "✨ Desatar el Caos sobre " + (target.name || "un adversario") + (n ? ": gasta " + n + " ficha" + (n > 1 ? "s" : "") + " (" + n + "d10 si acierta)" : ": sin gastar fichas (no inflige daño)"));
     playCardOnMap(sheetCampaignId, a.charId, a.card, { noChat: true, short: true });
-    afterReveal(a.charId, a.card.key, () => rollTraitCheck(a.charId, label, Number(c[sk] || 0) + (mods[sk] || 0), { name: "Desatar el Caos", damage: "d10 mágico", spell: true, fixedDice: n, targetChosen: true, targetId: target.id, targetName: target.name, targetDc: target.stats?.difficulty || null }));
+    afterReveal(a.charId, a.card.key, () => rollTraitCheck(a.charId, label, Number(c[sk] || 0) + (mods[sk] || 0), { name: "Desatar el Caos", damage: "d10 mágico", spell: true, fixedDice: n, noDamage: n === 0, targetChosen: true, targetId: target.id, targetName: target.name, targetDc: target.stats?.difficulty || null }));
   };
   // Evasión de un personaje tal y como la ve el DJ (la hoja del jugador calcula más matices).
   const foeEvasionOf = (ch) => {
@@ -18024,6 +18023,12 @@ export default function App({ onSignOut }) {
           pushMapLog(sheetCampaignId, "🌿 Enredo Feroz: " + snareIds.map((id) => (campaignMapRef.current.tokens || []).find((x) => x.id === id)?.name || "un adversario").join(" y ") + " queda inmovilizado", "info");
           if (snareIds[1] && rc) updateCharacterField(charId, "hope_marked", String(Math.max(0, Number(rc.hope_marked ?? HOPE_DEFAULT) - 1)));
         }
+      }
+      if (r.weapon.noDamage) {
+        // Desatar el Caos sin fichas gastadas: acierta, pero no hay d10 que tirar.
+        fxLater.forEach((fn) => fn());
+        postCampaignEvent(charId, "✨ " + name + " acierta, pero sin fichas gastadas no inflige daño");
+        return;
       }
       rollWeaponDamage(name, damage, charId, isCritical, { after: () => fxLater.forEach((fn) => fn()), ...(r.weapon.spell ? { plain: true, fixedDice: r.weapon.fixedDice || 1 } : {}), angel: r.weapon.angel || 0, knight: !!r.weapon.knight, attackFear: r.fear, ...(pummel || honedHit ? { fixedDice: getProficiency(rc) + (pummel ? 1 : 0) + (honedHit ? 1 : 0) } : {}), fearDice, cloaked: wasCloaked, spirit, resonance: spirit && rc && tierForLevel(rc.f_level || 1) >= 3, extraFlat: r.weapon.elemDmg || 0, doublePick: !!r.weapon.manipDouble, targetId: r.weapon.targetId || null, targetIds: r.weapon.hitIds || null });
   };
@@ -26960,7 +26965,7 @@ export default function App({ onSignOut }) {
               const info = cc && cardTokInfo(cc, "Desatar el Caos");
               const tg = (campaignMap.tokens || []).find((t) => t.id === chaosAsk.targetId);
               if (!info || !tg) return null;
-              const n = Math.max(1, Math.min(chaosN, info.have));
+              const n = Math.max(0, Math.min(chaosN, info.have));
               return (
                 <div className="mh-evo-wrap" onClick={() => setChaosAsk(null)}>
                   <div className="mh-bpick mh-sess" role="dialog" aria-label="Desatar el Caos" onClick={(e) => e.stopPropagation()}>
@@ -26969,14 +26974,15 @@ export default function App({ onSignOut }) {
                       <span>Lanzas sobre {tg.name || "el adversario"}: tirada de conjuro y, si aciertas, un d10 por ficha gastada</span>
                     </div>
                     <div className="mh-sess-toks" role="group" aria-label="Fichas a gastar">
+                      <button type="button" className={n === 0 ? "is-on" : ""} onClick={() => setChaosN(0)} aria-label="No gastar fichas">0</button>
                       {Array.from({ length: info.have }, (_, k) => (
                         <button key={k} type="button" className={k < n ? "is-on" : ""} onClick={() => setChaosN(k + 1)} aria-label={"Gastar " + (k + 1) + " fichas"}>{k + 1}</button>
                       ))}
                     </div>
-                    <div className="mh-evo-sum is-ready">Gastas <b>{n} ficha{n > 1 ? "s" : ""}</b> de {info.have}: <b>{n}d10</b> de daño mágico si aciertas. Te quedarán {info.have - n}.</div>
+                    <div className="mh-evo-sum is-ready">{n === 0 ? <>No gastas fichas ({info.have} disponibles): la tirada se hace, pero <b>no inflige daño</b>.</> : <>Gastas <b>{n} ficha{n > 1 ? "s" : ""}</b> de {info.have}: <b>{n}d10</b> de daño mágico si aciertas. Te quedarán {info.have - n}.</>}</div>
                     <div className="mh-evo-act">
                       <button type="button" className="mh-elpick-x" onClick={() => setChaosAsk(null)}>Cancelar</button>
-                      <button type="button" className="mh-evo-go" onClick={confirmChaos}>Lanzar · {n} ficha{n > 1 ? "s" : ""}</button>
+                      <button type="button" className="mh-evo-go" onClick={confirmChaos}>Lanzar · {n} ficha{n === 1 ? "" : "s"}</button>
                     </div>
                   </div>
                 </div>
