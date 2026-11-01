@@ -5017,6 +5017,7 @@ const sharedStyles = `
   .mh-fan-elems button { all: unset; box-sizing: border-box; cursor: pointer; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 9px 4px; border-radius: 12px; font: 600 11.5px Inter, system-ui, sans-serif; color: #fff; background: color-mix(in srgb, var(--ec) 30%, #141018); border: 1.5px solid color-mix(in srgb, var(--ec) 70%, transparent); }
   .mh-fan-elems button:hover { background: color-mix(in srgb, var(--ec) 48%, #141018); } .mh-fan-elems button.is-on { background: var(--ec); color: #1a1206; }
   .mh-fan-big { position: relative; width: 300px; height: 420px; max-height: 88vh; --s: 1; }
+  .mh-fan-big.is-choose { width: min(440px, 92vw); height: auto; max-height: none; } .mh-fan-big.is-choose .mh-fan-elems { position: static; } .mh-fan-big.is-choose .mh-fan-elems button { padding: 16px 6px; } .mh-fan-big.is-choose .mh-fan-ask { font-size: 15px; margin-bottom: 4px; }
   @media (max-height: 520px) { .mh-fan-big { --s: .7; width: 210px; height: 294px; } }
   .mh-fan-card.is-last-weapon { margin-right: calc(var(--m, -26px) + 16px); }
   @media (max-width: 760px) { .mh-fan-card { --s: .36; margin: 0 -20px; } }
@@ -5121,6 +5122,19 @@ const sharedStyles = `
   .mh-map-hand { position: absolute; z-index: 6; right: -2%; top: -6%; display: inline-flex; align-items: center; gap: 2px; padding: 1px 6px; border-radius: 99px; font-size: 12px; background: #E3B04B; color: #241a05; box-shadow: 0 2px 6px rgba(0,0,0,.4); pointer-events: none; } .mh-map-hand.is-urgent { background: #E0544A; color: #fff; } .mh-map-hand b { font: 800 10px 'Inter', system-ui, sans-serif; }
   .mh-map .mh-map-tk.is-pet .mh-map-face { width: 58%; height: 58%; background: radial-gradient(circle at 35% 28%, color-mix(in srgb, var(--tc) 30%, #12143a), #0c0d2a 72%); border-radius: 50%; border-width: 2px; border-color: var(--tc); }
   .mh-map-hp { display: none; }
+  /* Elementos activos: Fuego y Agua dibujan una línea viva en rango cuerpo a cuerpo; Tierra y Aire cambian el color de la ficha y la cruzan con rayas */
+  @property --mh-ea { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+  .mh-elring { position: absolute; z-index: 3; pointer-events: none; box-sizing: border-box; padding: 3px; border-radius: 18%; transition: left .3s cubic-bezier(.3,.7,.4,1), top .3s cubic-bezier(.3,.7,.4,1); background: conic-gradient(from var(--mh-ea), var(--e1), var(--e2), var(--e3), var(--e2), var(--e1)); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); mask-composite: exclude; filter: drop-shadow(0 0 5px var(--e2)); animation: mh-elring-spin 2.4s linear infinite, mh-elring-flick 1.1s ease-in-out infinite; }
+  .mh-elring.is-fuego { --e1: #E8301A; --e2: #FF7A2E; --e3: #FFD05A; }
+  .mh-elring.is-agua { --e1: #1E6FD0; --e2: #4FA8E8; --e3: #BFE9FF; }
+  @keyframes mh-elring-spin { to { --mh-ea: 360deg; } }
+  @keyframes mh-elring-flick { 0%, 100% { opacity: .95; } 50% { opacity: .65; } }
+  .mh-map-tk.is-el-tierra .mh-map-face { background: radial-gradient(circle at 35% 28%, #B98446, #5B3A18 78%); border-color: #8A5A2B; color: #FFF3E0; }
+  .mh-map-tk.is-el-aire .mh-map-face { background: radial-gradient(circle at 35% 28%, #FFFFFF, #CFD8DE 78%); border-color: #F2F6F8; color: #34495A; }
+  .mh-map-tk.is-el-tierra .mh-map-face::after, .mh-map-tk.is-el-aire .mh-map-face::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; }
+  .mh-map-tk.is-el-tierra .mh-map-face::after { background: repeating-linear-gradient(135deg, rgba(40,20,5,.42) 0 2px, transparent 2px 6px); }
+  .mh-map-tk.is-el-aire .mh-map-face::after { background: repeating-linear-gradient(135deg, rgba(90,125,150,.5) 0 2px, transparent 2px 6px); }
+  @media (prefers-reduced-motion: reduce) { .mh-elring { animation: none; } }
   /* La escena se desenfoca en el sitio y la cuadrícula aparece encima (sin fundido entre imágenes) */
   .mh-map-grid { animation: mh-gridin .9s ease .3s both; }
   @keyframes mh-gridin { from { opacity: 0; } to { opacity: 1; } }
@@ -10711,8 +10725,8 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
       </div>
       {open && (
         <div className="mh-fan-zoom" onClick={() => setOpen(null)}>
-          <div className="mh-fan-big" style={{ "--cc": open.weapon ? TIER_COLORS[open.level]?.color || "#C9A24B" : open.rowCard ? open.color : DOMAIN_COLORS[open.domain] || "#C9A24B" }} onClick={(e) => e.stopPropagation()}>
-            <FanFace c={open} col={open.weapon ? TIER_COLORS[open.level]?.color || "#C9A24B" : open.rowCard ? open.color : DOMAIN_COLORS[open.domain] || "#C9A24B"} />
+          <div className={"mh-fan-big" + (open.choose ? " is-choose" : "")} style={{ "--cc": open.weapon ? TIER_COLORS[open.level]?.color || "#C9A24B" : open.rowCard ? open.color : DOMAIN_COLORS[open.domain] || "#C9A24B" }} onClick={(e) => e.stopPropagation()}>
+            {!open.choose && <FanFace c={open} col={open.weapon ? TIER_COLORS[open.level]?.color || "#C9A24B" : open.rowCard ? open.color : DOMAIN_COLORS[open.domain] || "#C9A24B"} />}
             {open.subclass && onElement && (
               <div className="mh-fan-elems">
                 <span className="mh-fan-ask">{open.choose ? "¿Qué elemento quieres activar?" : "Elige un elemento"}</span>
@@ -11106,6 +11120,18 @@ function MapBoard({ aimRange, rangeMenu, cfx, meCharId, onDragInfo, onStore, pla
         return <RootThreads links={links} snap={drag && drag.moved ? new Set([drag.id]) : null} />;
       })()}
       {drag?.moved && occupied(drag.x, drag.y, drag.id) && <div className="mh-map-drop is-bad" style={at(drag.x, drag.y)} />}
+      {tokens.filter((t) => t.kind === "pc" && !t.vanished && (t.elem === "Fuego" || t.elem === "Agua")).map((t) => {
+        const pos = drag && drag.id === t.id && drag.moved ? { x: drag.fx, y: drag.fy } : t;
+        const r = RANGE_CELLS["Cuerpo a cuerpo"];
+        return (
+          <div
+            key={"er" + t.id}
+            className={"mh-elring is-" + t.elem.toLowerCase()}
+            style={{ left: ((pos.x - r) * 100) / MAP_COLS + "%", top: ((pos.y - r) * 100) / MAP_ROWS + "%", width: ((2 * r + 1) * 100) / MAP_COLS + "%", height: ((2 * r + 1) * 100) / MAP_ROWS + "%" }}
+            aria-hidden="true"
+          />
+        );
+      })}
       {tokens.filter((t) => !(fogHide && inFog(t.x, t.y))).map((t) => {
         const pos = drag && drag.id === t.id && drag.moved ? { x: drag.fx, y: drag.fy } : t;
         const movable = canMove(t);
@@ -11117,7 +11143,7 @@ function MapBoard({ aimRange, rangeMenu, cfx, meCharId, onDragInfo, onStore, pla
             key={t.id}
             type="button"
             data-tid={t.id}
-            className={"mh-map-tk is-" + t.kind + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id && anim.kind !== "free" && anim.kind !== "elem" ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") + (anim.kind === "web" ? " is-web" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
+            className={"mh-map-tk is-" + t.kind + (t.elem ? " is-el-" + String(t.elem).toLowerCase() : "") + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id && anim.kind !== "free" && anim.kind !== "elem" ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") + (anim.kind === "web" ? " is-web" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
             style={{ ...at(pos.x, pos.y), "--tc": t.color, ...(anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); return tg ? { "--ax": (tg.x - t.x) * 100 + "%", "--ay": (tg.y - t.y) * 100 + "%" } : {}; })() : {}) }}
             onPointerDown={(e) => startDrag(e, t)}
             onContextMenu={(e) => openMenu(e, t)}
