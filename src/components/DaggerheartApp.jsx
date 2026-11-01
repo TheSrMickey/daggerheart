@@ -15116,21 +15116,23 @@ export default function App({ onSignOut }) {
 
   const addInventoryItem = () => {
     const val = newItemDraft.trim();
-    if (!val || !viewingCharId) return;
-    const c = characters[viewingCharId];
+    const cid = viewingCharId || modernCharId;
+    if (!val || !cid) return;
+    const c = characters[cid];
     if (!c) return;
     const list = getItems(c);
     if (list.length >= ITEM_SLOTS) return;
     list.push({ name: val, description: newItemDescDraft.trim(), count: 1 });
-    updateCharacterField(viewingCharId, "f_items", JSON.stringify(list));
+    updateCharacterField(cid, "f_items", JSON.stringify(list));
     setNewItemDraft("");
     setNewItemDescDraft("");
     setShowAddItemModal(false);
   };
 
   const addCatalogItemToInventory = (name, description) => {
-    if (!viewingCharId) return;
-    const c = characters[viewingCharId];
+    const cid = viewingCharId || modernCharId;
+    if (!cid) return;
+    const c = characters[cid];
     if (!c) return;
     const list = getItems(c);
     if (list.length >= ITEM_SLOTS) return;
@@ -15140,7 +15142,7 @@ export default function App({ onSignOut }) {
     } else {
       list.push({ name, description: description || "", count: 1 });
     }
-    updateCharacterField(viewingCharId, "f_items", JSON.stringify(list));
+    updateCharacterField(cid, "f_items", JSON.stringify(list));
     setShowAddItemModal(false);
   };
 
@@ -15244,13 +15246,14 @@ export default function App({ onSignOut }) {
 
   const addBackpackItem = () => {
     const val = newBackpackItemDraft.trim();
-    if (!val || !viewingCharId) return;
-    const c = characters[viewingCharId];
+    const cid = viewingCharId || modernCharId;
+    if (!val || !cid) return;
+    const c = characters[cid];
     if (!c) return;
     const list = getBackpackItems(c);
     if (list.length >= ITEM_SLOTS) return;
     list.push({ name: val, description: newBackpackItemDescDraft.trim(), count: 1 });
-    updateCharacterField(viewingCharId, "f_backpack_items", JSON.stringify(list));
+    updateCharacterField(cid, "f_backpack_items", JSON.stringify(list));
     setNewBackpackItemDraft("");
     setNewBackpackItemDescDraft("");
     setShowAddBackpackItemForm(false);
