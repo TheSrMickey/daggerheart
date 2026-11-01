@@ -10564,7 +10564,7 @@ function HomeDice({ stats }) {
 // Abanico de cartas de dominio en el borde inferior del mapa: se arrastran hasta una casilla para usarlas.
 // Cartas que se lanzan apuntando: una línea de guiones sale del personaje hasta el ratón.
 const AIM_CARD = "Enredo Feroz";
-function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack, cardBorder, aimOk, reachOf, onAim, beast, onBeast }) {
+function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack, cardBorder, aimOk, reachOf, onAim, beast, onBeast, onEvolve }) {
   const cardsRef = useRef(cards);
   cardsRef.current = cards;
   const [drag, setDrag] = useState(null); // { card, x, y, cell, moved }
@@ -10628,7 +10628,8 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
     window.removeEventListener("pointerup", up);
     window.removeEventListener("keydown", key);
     if (!d || cancel) return;
-    if (d.card.rowCard) {
+    if (d.card.rowCard && !(d.moved && d.card.mapUse)) {
+      if (d.moved && onEvolve && d.card.evo && cellAt(ev.clientX, ev.clientY)) return onEvolve(d.card);
       if (d.moved && beast && d.card.key === "Forma de Bestia" && cellAt(ev.clientX, ev.clientY)) {
         setBTier((beast.forms.find((b) => b.key === beast.active) || {}).tier || beast.tier || 1);
         setBeastCard(d.card);
@@ -13893,7 +13894,11 @@ export default function App({ onSignOut }) {
   const [evoTrait, setEvoTrait] = useState("");
   const [evolutionWarning, setEvolutionWarning] = useState("");
 
-  const openEvolutionModal = (id) => {
+  const evoCardRef = useRef(null); // carta de Evolución arrastrada al mapa (para revelarla al confirmar)
+  const evoCharRef = useRef(null); // personaje que usa Evolución (el de la hoja abierta)
+  const openEvolutionModal = (id, card) => {
+    evoCardRef.current = card || null;
+    evoCharRef.current = id;
     const c = characters[id];
     if (!c) return;
     if (Number(c.hope_marked || 0) < 3) {
@@ -13908,16 +13913,28 @@ export default function App({ onSignOut }) {
 
   const confirmEvolution = () => {
     if (!evoBeastform || !evoTrait) return;
-    const c = characters[viewingCharId];
+    const charId = evoCharRef.current || viewingCharId;
+    const c = characters[charId];
     if (!c) return;
-    const hopeCurrent = Number(c.hope_marked || 0);
-    updateCharacterFields(viewingCharId, {
-      f_beastform: evoBeastform,
-      f_evolution_trait: evoTrait,
-      hope_marked: String(Math.max(0, hopeCurrent - 3)),
-    });
+    const form = evoBeastform, trait = evoTrait;
+    const apply = () => {
+      const cur = charsRef.current[charId] || c;
+      updateCharacterFields(charId, {
+        f_beastform: form,
+        f_evolution_trait: trait,
+        hope_marked: String(Math.max(0, Number(cur.hope_marked || 0) - 3)),
+      });
+      postCampaignEvent(charId, `🌙 Usa Evolución: adopta la forma de ${form}`);
+    };
     setShowEvolutionModal(false);
-    postCampaignEvent(viewingCharId, `🌙 Usa Evolución: adopta la forma de ${evoBeastform}`);
+    // Desde el mapa: primero se revela la carta y después te transformas.
+    const card = evoCardRef.current;
+    evoCardRef.current = null;
+    const me = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
+    if (card && sheetCampaignId && me) {
+      playCardOnMap(sheetCampaignId, charId, card, { noChat: true, short: true });
+      afterReveal(charId, card.key, apply);
+    } else apply();
   };
 
   const armorMaxFor = (c) => {
@@ -22309,10 +22326,10 @@ export default function App({ onSignOut }) {
                                           const subCard = elSub ? { key: elSub.key, subclass: true, cls: "Druida", level: "", domain: "Sabio", type: "Subclase", kicker: "Subclase · " + (Number(me?.f_level || 1) <= 1 ? "Fundación" : tierForLevel(me?.f_level || 1) === 2 ? "Especialización" : "Maestría"), image: elSub.image, text: elSub.blurb, features: (elSub.features || []).filter((x) => ELEM_COL[x.name]) } : null;
                                           const rowColor = (x) => (typeof x === "string" && /^#[0-9a-f]{6}$/i.test(x) ? x : classColor(me?.f_class));
                                           const mcDom = getMulticlass(me)?.domain || "";
-                                          const actionCards = buildActionRows().map((it) =>
+                                          const actionCards = buildActionRows().filter((it) => !/^(Ascendencia|Comunidad)/.test(it.kicker || "")).map((it) =>
                                             it.key === "subclass" && subCard
                                               ? subCard
-                                              : { key: it.title, rowCard: true, myClass: me?.f_class, detail: it.onClick?.detail, rowKey: it.key, multi: !!it.mc, Icon: it.Icon, kicker: it.kicker, text: it.summary, color: rowColor(it.color), domain: "Sabio", level: "", type: "Acción", open: () => (it.onClick(), setViewingCardDetail((d) => (d && !d.rowIcon ? { ...d, rowIcon: it.Icon } : d))) }
+                                              : { key: it.title, rowCard: true, myClass: me?.f_class, detail: it.onClick?.detail, rowKey: it.key, multi: !!it.mc, mapUse: it.title === "Toque Salvaje", evo: it.title === "Evolución", Icon: it.Icon, kicker: it.kicker, text: it.summary, color: rowColor(it.color), domain: "Sabio", level: "", type: "Acción", open: () => (it.onClick(), setViewingCardDetail((d) => (d && !d.rowIcon ? { ...d, rowIcon: it.Icon } : d))) }
                                           );
                                           const rootedMine = (campaignMap.tokens || []).filter((t) => t.rootedBy === viewingCharId && (t.conds || []).includes("Inmovilizado"));
                                           const ghostCard = rootedMine.length && keys.includes("Enredo Feroz") ? (() => { const base = findDomainCardAny("Enredo Feroz"); return base ? { ...base, key: "Inmovilizar", baseKey: "Enredo Feroz", text: "Puedes gastar una Esperanza para inmovilizar temporalmente a otro adversario en alcance Muy Cercano del objetivo de Enredo Feroz.", recall: null, noCost: true, ghost: true, noHope: Number(me?.hope_marked ?? HOPE_DEFAULT) < 1 } : null; })() : null;
@@ -22330,6 +22347,7 @@ export default function App({ onSignOut }) {
                                               reachOf={(card) => { if (!card.weapon) return null; const lab = weaponReach(characters[viewingCharId], card.key); return lab ? { label: lab, max: RANGE_CELLS[lab] || 99 } : null; }}
                                               cardBorder={cardBorder}
                                               beast={{ forms: BEASTFORMS, tier: tierForLevel(me?.f_level || 1), active: me?.f_beastform || "", stressFull: Number(me?.stress_marked || 0) >= Number(me?.r_stress || 0) }}
+                                              onEvolve={(card) => openEvolutionModal(viewingCharId, card)}
                                               onBeast={(key, sel, card) => (sel ? toggleBeastform(viewingCharId, key, true) : morphToBeast(viewingCharId, key, card))}
                                               onElement={(el, on, card) => (on ? toggleElemental(viewingCharId, el, true) : embodyElement(viewingCharId, el, card))}
                                               activeElement={me?.f_elemental_active || ""}
@@ -22341,6 +22359,7 @@ export default function App({ onSignOut }) {
                                                 card.weapon ? castWeapon(viewingCharId, target, card) :
                                                 card.key === "Enredo Feroz" && !card.weapon ? castEnredo(viewingCharId, target, card) :
                                                 card.key === "Lengua de la Naturaleza" && !card.weapon && !card.rowCard && !card.subclass ? (playCardOnMap(charCampaign.id, viewingCharId, card), "reveal") :
+                                                card.rowCard && card.mapUse ? (playCardOnMap(charCampaign.id, viewingCharId, card), "reveal") :
                                                 card.domain && !card.weapon && !card.rowCard && !card.subclass ? postCardUse(viewingCharId, card, (target ? "sobre " + (target.name || "una ficha") : "en la casilla " + (cell.x + 1) + "," + (cell.y + 1)) + (rng ? " (" + rng.label + ")" : "")) :
                                                 postCampaignEvent(viewingCharId, `${card.weapon ? "ataca con" : "usa la carta"} «${card.key}»${target ? ` sobre ${target.name || "una ficha"}` : ` en la casilla ${cell.x + 1},${cell.y + 1}`}${rng ? ` (${rng.label})` : ""}.`)
                                               }
