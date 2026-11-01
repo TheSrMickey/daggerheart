@@ -5020,6 +5020,12 @@ const sharedStyles = `
   .mh-toast-warn { position: fixed; left: 50%; bottom: 28px; translate: -50% 0; z-index: 9999; max-width: min(520px, 92vw); padding: 10px 16px; border-radius: 12px; background: #3a1a1a; color: #ffd9d2; border: 1px solid #D9644E; font: 600 13px Inter, system-ui, sans-serif; box-shadow: 0 12px 34px rgba(0,0,0,.5); pointer-events: none; animation: mh-toast-in .25s ease both; }
   .mh-sheet.is-embedded .mh-toast-warn { zoom: calc(1 / var(--mhz, 1)); }
   @keyframes mh-toast-in { from { opacity: 0; translate: -50% 10px; } }
+  .mh-fan-toks { position: absolute; left: 50%; bottom: 7%; translate: -50% 0; z-index: 3; display: flex; gap: 3px; padding: 3px 7px; border-radius: 99px; background: rgba(20,17,26,.82); pointer-events: none; max-width: 92%; flex-wrap: wrap; justify-content: center; } .mh-fan-toks i { width: 11px; height: 11px; border-radius: 50%; border: 1.5px solid #E3B04B; box-sizing: border-box; } .mh-fan-toks i.is-on { background: #E3B04B; }
+  .mh-fan-tokctl { position: absolute; left: 0; right: 0; top: calc(100% + 12px); display: flex; flex-direction: column; align-items: center; gap: 8px; } .mh-fan-tokctl .pips { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; } .mh-fan-tokctl .pips button { all: unset; box-sizing: border-box; width: 24px; height: 24px; border-radius: 50%; border: 2px solid #E3B04B; cursor: pointer; } .mh-fan-tokctl .pips button.is-on { background: #E3B04B; } .mh-fan-tokctl .rc { all: unset; cursor: pointer; padding: 7px 16px; border-radius: 99px; background: #E3B04B; color: #1f1606; font: 700 12.5px Inter, system-ui, sans-serif; }
+  .mh-sess { width: min(560px, 94vw); }
+  .mh-sess-list { display: flex; flex-direction: column; gap: 8px; } .mh-sess-it { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--mh-panel, #1b1824) 70%, transparent); border: 1px solid var(--mh-line2, rgba(255,255,255,.14)); } .mh-sess-it > svg { color: #E3B04B; flex: none; } .mh-sess-it span { display: flex; flex-direction: column; } .mh-sess-it small { color: var(--mh-muted, #aaa); font-size: 11.5px; }
+  .mh-sess-toks { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; } .mh-sess-toks button { all: unset; box-sizing: border-box; cursor: pointer; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; font: 700 15px Inter, system-ui, sans-serif; border: 2px solid #E3B04B; color: #E3B04B; } .mh-sess-toks button.is-on { background: #E3B04B; color: #1f1606; }
+  .mh-dir-sess.is-on { border-color: #E3B04B; color: var(--mh-gold-ink, #E3B04B); }
   .mh-evo-wrap { position: fixed; inset: 0; z-index: 9998; background: rgba(8,6,12,.72); display: flex; align-items: center; justify-content: center; padding: 14px; }
   .mh-sheet.is-embedded .mh-evo-wrap { zoom: calc(1 / var(--mhz, 1)); }
   .mh-evo { width: min(820px, 96%); max-height: 92vh; padding: 18px 22px; gap: 12px; } .mh-evo .mh-bpick-img { height: 62px; } .mh-evo .mh-bpick-g { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
@@ -10626,7 +10632,7 @@ function HomeDice({ stats }) {
 // Abanico de cartas de dominio en el borde inferior del mapa: se arrastran hasta una casilla para usarlas.
 // Cartas que se lanzan apuntando: una línea de guiones sale del personaje hasta el ratón.
 const AIM_CARD = "Enredo Feroz";
-function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack, cardBorder, aimOk, reachOf, onAim, beast, onBeast, onEvolve, onWolf }) {
+function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack, cardBorder, aimOk, reachOf, onAim, beast, onBeast, onEvolve, onWolf, cardToks, onCardTok, onRecharge }) {
   const cardsRef = useRef(cards);
   cardsRef.current = cards;
   const [drag, setDrag] = useState(null); // { card, x, y, cell, moved }
@@ -10674,7 +10680,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
     return !!r && x >= r.left - 30 && x <= r.right + 30 && y >= r.top - 24 && y <= r.bottom + 24;
   };
   // Cartas que se apuntan a un adversario: Enredo Feroz, su carta extra y las armas (con el alcance de cada arma).
-  const isAim = (c) => c.key === AIM_CARD || !!c.ghost || !!c.weapon;
+  const isAim = (c) => c.key === AIM_CARD || !!c.ghost || !!c.weapon || (c.key === "Desatar el Caos" && !c.rowCard);
   const aimReach = (c) => (reachOf && reachOf(c)) || { label: "Lejano", max: RANGE_CELLS["Lejano"] };
   const inAimReach = (c, cell) => !!me && !!cell && Math.max(Math.abs(cell.x - me.x), Math.abs(cell.y - me.y)) <= aimReach(c).max;
   const rangeOf = (cell) => {
@@ -10822,6 +10828,10 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
               title="Púlsala para verla en grande · arrástrala al mapa para usarla"
             >
               <FanFace c={c} col={col} />
+              {cardToks && !c.weapon && !c.rowCard && (() => {
+                const ti = cardToks(c);
+                return ti ? <span className="mh-fan-toks" title={ti.have + " de " + ti.max + " fichas"} aria-label={ti.have + " de " + ti.max + " fichas"}>{Array.from({ length: ti.max }, (_, k) => <i key={k} className={k < ti.have ? "is-on" : ""} />)}</span> : null;
+              })()}
               {c.ghost && <span className="mh-fan-ghostlab">{c.noHope ? "Sin Esperanza" : c.ghostLab || "1 Esperanza"}</span>}
             </div>
           );
@@ -10831,6 +10841,21 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
         <div className="mh-fan-zoom" onClick={() => setOpen(null)}>
           <div className="mh-fan-big" style={{ "--cc": open.weapon ? TIER_COLORS[open.level]?.color || "#C9A24B" : open.rowCard ? open.color : DOMAIN_COLORS[open.domain] || "#C9A24B" }} onClick={(e) => e.stopPropagation()}>
             <FanFace c={open} col={open.weapon ? TIER_COLORS[open.level]?.color || "#C9A24B" : open.rowCard ? open.color : DOMAIN_COLORS[open.domain] || "#C9A24B"} />
+            {cardToks && !open.weapon && !open.rowCard && (() => {
+              const ti = cardToks(open);
+              if (!ti || !onCardTok) return null;
+              return (
+                <div className="mh-fan-tokctl">
+                  <span className="mh-fan-ask">{ti.have} de {ti.max} {ti.cfg.label}</span>
+                  <span className="pips" role="group" aria-label="Fichas sobre la carta">
+                    {Array.from({ length: ti.max }, (_, k) => (
+                      <button key={k} type="button" className={k < ti.have ? "is-on" : ""} aria-label={k < ti.have ? "Quitar ficha" : "Poner ficha"} onClick={() => onCardTok(open.key, k + 1 === ti.have ? k : k + 1)} />
+                    ))}
+                  </span>
+                  <button type="button" className="rc" onClick={() => onRecharge && onRecharge(open.key)}>Recargar · 1 Estrés</button>
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
@@ -12027,6 +12052,11 @@ export default function App({ onSignOut }) {
   const [djWorldEdit, setDjWorldEdit] = useState(false);
   const [djCastEdit, setDjCastEdit] = useState(null);
   const [aimRange, setAimRange] = useState(null); // alcance del arma que se está apuntando: { id, max }
+  const [campSession, setCampSession] = useState(null); // sesión de la campaña: { n, active, startedAt, endedAt }
+  const [sessAsk, setSessAsk] = useState(null); // aviso de inicio de sesión para el jugador: { charId, key, n, items }
+  const sessDismiss = useRef({});
+  const [chaosAsk, setChaosAsk] = useState(null); // Desatar el Caos: elegir cuántas fichas gastar { charId, targetId, card }
+  const [chaosN, setChaosN] = useState(1);
   const [foeAtk, setFoeAtk] = useState(null); // el DJ elige a quién ataca una criatura: { foeId }
   const [aboveAsk, setAboveAsk] = useState(null); // «Desde arriba» tras un ataque con éxito: { foeId, tgId, r, atk, crit, expr, base, feat }
   const [plDragTok, setPlDragTok] = useState(null); // tu ficha arrastrándose por el mapa de la hoja: { id, over }
@@ -12465,6 +12495,14 @@ export default function App({ onSignOut }) {
       } catch (e) {}
     };
     const load = async () => {
+      safeGet("campaign-session:" + stageCampaignId, true).then((rs) => {
+        if (!alive) return;
+        let v = null;
+        try {
+          v = rs ? JSON.parse(rs.value) : null;
+        } catch (e) {}
+        setCampSession((prev) => (JSON.stringify(prev) === JSON.stringify(v) ? prev : v));
+      });
       const r = await safeGet("campaign-stage:" + stageCampaignId, true);
       let s = EMPTY_STAGE;
       try {
@@ -12509,6 +12547,7 @@ export default function App({ onSignOut }) {
       setCampaignMap(m);
     };
     setCampaignMap({ tokens: [] });
+    setCampSession(null);
     setMapSel(null);
     load();
     loadChat();
@@ -13805,6 +13844,170 @@ export default function App({ onSignOut }) {
     postCampaignEvent(id, `✨ Activa ${formName}`);
   };
 
+  // ---- Fichas sobre las cartas (Desatar el Caos y las que se vayan añadiendo) ----
+  const CARD_TOKEN_CFG = { "Desatar el Caos": { label: "fichas de caos", session: true, lose: true } };
+  const getCardTokens = (c) => {
+    try {
+      return JSON.parse(c?.f_card_tokens || "{}") || {};
+    } catch (e) {
+      return {};
+    }
+  };
+  const cardTokMax = (c, key) => {
+    if (key === "Desatar el Caos") {
+      const k = charSpellTrait(c);
+      const mods = getEquipmentMods(PRIMARY_WEAPONS.find((x) => x.key === c.f_primary_weapon), SECONDARY_WEAPONS.find((x) => x.key === c.f_secondary_weapon), ARMORS.find((x) => x.key === c.f_armor));
+      return Math.max(1, Number(c[k] || 0) + (mods[k] || 0));
+    }
+    return 0;
+  };
+  const cardTokInfo = (c, key) => {
+    if (!c || !CARD_TOKEN_CFG[key]) return null;
+    const max = cardTokMax(c, key);
+    return { have: Math.min(Number(getCardTokens(c)[key] || 0), max), max, cfg: CARD_TOKEN_CFG[key] };
+  };
+  const setCardTok = (id, key, n, extra) => {
+    const c = charsRef.current[id];
+    if (!c) return;
+    const info = cardTokInfo(c, key);
+    const v = Math.max(0, Math.min(info ? info.max : 99, n));
+    updateCharacterFields(id, { f_card_tokens: JSON.stringify({ ...getCardTokens(c), [key]: v }), ...(extra || {}) });
+  };
+  // Recargar: marcas 1 Estrés y las fichas vuelven al máximo.
+  const rechargeCardTokens = (id, key) => {
+    const c = charsRef.current[id];
+    const info = c && cardTokInfo(c, key);
+    if (!info) return;
+    markStress(id, 1, { f_card_tokens: JSON.stringify({ ...getCardTokens(c), [key]: info.max }) });
+    postCampaignEvent(id, "✨ " + key + ": marca 1 Estrés y recarga sus fichas hasta " + info.max);
+  };
+  // ---- Sesiones: las empieza y termina el DJ; cada jugador recibe un aviso con lo que se activa ----
+  const startSession = async () => {
+    const id = viewingCampaignId;
+    if (!id) return;
+    const next = { n: ((campSession && campSession.n) || 0) + 1, active: true, startedAt: Date.now() };
+    setCampSession(next);
+    await safeSet("campaign-session:" + id, JSON.stringify(next), true);
+    pushMapLog(id, "Empieza la sesión " + next.n, "info");
+  };
+  const endSession = async () => {
+    const id = viewingCampaignId;
+    if (!id || !campSession) return;
+    const next = { ...campSession, active: false, endedAt: Date.now() };
+    setCampSession(next);
+    await safeSet("campaign-session:" + id, JSON.stringify(next), true);
+    pushMapLog(id, "Termina la sesión " + next.n + ": se pierden las fichas sin usar", "info");
+  };
+  // Lo que se activa al empezar la sesión en un personaje.
+  const sessionItemsFor = (c) => {
+    const items = [];
+    let keys = [];
+    try {
+      keys = JSON.parse(c.f_domain_cards || "[]");
+    } catch (e) {}
+    Object.keys(CARD_TOKEN_CFG).forEach((k) => {
+      if (CARD_TOKEN_CFG[k].session && keys.includes(k)) items.push({ k: "tok:" + k, icon: "sparkles", label: k, text: "coloca " + cardTokMax(c, k) + " fichas sobre la carta" });
+    });
+    if (c.f_class === "Serafín" && prayerCountFor(c) > 0) items.push({ k: "prayer", icon: "feather", label: "Dados de Oración", text: "tira " + prayerCountFor(c) + "d4 y colócalos en tu ficha" });
+    if (ancFeat(c, "Mediano", 0)) items.push({ k: "luck", icon: "heart", label: "Trae Suerte", text: "todo el grupo gana 1 Esperanza" });
+    return items;
+  };
+  const applySession = (id, key, items) => {
+    const c = charsRef.current[id];
+    if (!c) return;
+    const patch = { f_session_seen: key };
+    const toks = { ...getCardTokens(c) };
+    let tokChanged = false;
+    items.forEach((it) => {
+      if (it.k.startsWith("tok:")) {
+        const ck = it.k.slice(4);
+        toks[ck] = cardTokMax(c, ck);
+        tokChanged = true;
+        postCampaignEvent(id, "✨ Empieza la sesión: " + ck + " recibe " + toks[ck] + " fichas");
+      }
+    });
+    if (tokChanged) patch.f_card_tokens = JSON.stringify(toks);
+    if (items.some((i) => i.k === "prayer")) {
+      patch.f_prayer = "";
+      patch.f_prayer_rolled = "";
+    }
+    if (items.some((i) => i.k === "luck")) {
+      patch.hope_marked = String(Math.min(getHopeMax(c), Number(c.hope_marked ?? HOPE_DEFAULT) + 1));
+      patch.f_luck_given = "1";
+      patch.f_luck_posted = "1";
+      const camp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(id));
+      const allies = camp ? (camp.characterIds || []).filter((cid) => cid !== id) : [];
+      if (camp && allies.length) postChat(camp.id, { kind: "gift", sid: String(Date.now()), campId: camp.id, author: c.f_name || "El mediano", charId: id, cls: c.f_class, title: "Trae Suerte", text: "Al comienzo de la sesión, todo el grupo gana 1 Esperanza.", targets: Object.fromEntries(allies.map((cid) => [cid, { hope: 1 }])), tag: "Mediano" });
+      postCampaignEvent(id, "🍀 Trae Suerte: empieza la sesión con 1 Esperanza más");
+    }
+    updateCharacterFields(id, patch);
+    if (items.some((i) => i.k === "prayer")) setTimeout(() => rollPrayerDice(id), 400);
+  };
+  // Al terminar la sesión se pierden las fichas sin usar.
+  const endSessionFor = (id, key) => {
+    const c = charsRef.current[id];
+    if (!c) return;
+    const toks = { ...getCardTokens(c) };
+    const lost = [];
+    Object.keys(CARD_TOKEN_CFG).forEach((k) => {
+      if (CARD_TOKEN_CFG[k].lose && Number(toks[k] || 0) > 0) {
+        lost.push(toks[k] + " de " + k);
+        toks[k] = 0;
+      }
+    });
+    updateCharacterFields(id, { f_session_end: key, ...(lost.length ? { f_card_tokens: JSON.stringify(toks) } : {}) });
+    if (lost.length) postCampaignEvent(id, "⌛ Termina la sesión: pierde las fichas sin usar (" + lost.join(", ") + ")");
+  };
+  useEffect(() => {
+    const id = sheetCharId;
+    const c = id ? characters[id] : null;
+    if (!c || !sheetCampaignId || !campSession || !campSession.n) return;
+    const key = sheetCampaignId + ":" + campSession.n;
+    if (campSession.active) {
+      if (c.f_session_seen === key || sessDismiss.current[key + id] || sessAsk) return;
+      const items = sessionItemsFor(c);
+      if (!items.length) {
+        updateCharacterField(id, "f_session_seen", key);
+        return;
+      }
+      setSessAsk({ charId: id, key, n: campSession.n, items });
+    } else if (c.f_session_end !== key) {
+      endSessionFor(id, key);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sheetCharId, sheetCampaignId, campSession, sheetCharId && characters[sheetCharId]?.f_session_seen, sheetCharId && characters[sheetCharId]?.f_session_end]);
+  // Desatar el Caos arrastrada a un adversario en alcance Lejano: se elige cuántas fichas gastar, se revela la carta y se hace la tirada de conjuro.
+  const castChaos = (charId, target, card) => {
+    const c = charsRef.current[charId];
+    const me = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
+    if (!c || !me || !target || !(target.kind === "foe" || target.kind === "npc") || cellDist(me, target) > RANGE_CELLS["Lejano"] || c.f_beastform) return "cancel";
+    const info = cardTokInfo(c, "Desatar el Caos");
+    if (!info || info.have < 1) {
+      if (sheetCampaignId) pushMapLog(sheetCampaignId, "Desatar el Caos: no te quedan fichas (recarga con 1 Estrés)", "info");
+      return "cancel";
+    }
+    setChaosN(1);
+    setChaosAsk({ charId, targetId: target.id, card });
+    return "cancel";
+  };
+  const confirmChaos = () => {
+    const a = chaosAsk;
+    setChaosAsk(null);
+    if (!a) return;
+    const c = charsRef.current[a.charId];
+    const info = c && cardTokInfo(c, "Desatar el Caos");
+    const target = (campaignMapRef.current.tokens || []).find((t) => t.id === a.targetId);
+    if (!c || !info || !target) return;
+    const n = Math.max(1, Math.min(chaosN, info.have));
+    const sk = charSpellTrait(c);
+    const label = TRAITS.find((tr) => tr.key === sk)?.label;
+    if (!label) return;
+    const mods = getEquipmentMods(PRIMARY_WEAPONS.find((w) => w.key === c.f_primary_weapon), SECONDARY_WEAPONS.find((w) => w.key === c.f_secondary_weapon), ARMORS.find((x) => x.key === c.f_armor));
+    setCardTok(a.charId, "Desatar el Caos", info.have - n);
+    postCampaignEvent(a.charId, "✨ Desatar el Caos sobre " + (target.name || "un adversario") + ": gasta " + n + " ficha" + (n > 1 ? "s" : "") + " (" + n + "d10 si acierta)");
+    playCardOnMap(sheetCampaignId, a.charId, a.card, { noChat: true, short: true });
+    afterReveal(a.charId, a.card.key, () => rollTraitCheck(a.charId, label, Number(c[sk] || 0) + (mods[sk] || 0), { name: "Desatar el Caos", damage: "d10 mágico", spell: true, fixedDice: n, targetChosen: true, targetId: target.id, targetName: target.name, targetDc: target.stats?.difficulty || null }));
+  };
   // Evasión de un personaje tal y como la ve el DJ (la hoja del jugador calcula más matices).
   const foeEvasionOf = (ch) => {
     if (!ch.r_evasion) return 10;
@@ -17067,11 +17270,12 @@ export default function App({ onSignOut }) {
     if (isLong && c.f_enchant_used) restPatch.f_enchant_used = "";
     if (isLong && c.f_charged) restPatch.f_charged = "";
     // Trae Suerte vuelve a repartirse en la «sesión» siguiente.
-    if (isLong && (c.f_luck_given || c.f_luck_posted)) {
+    const inCampaign = Object.values(campaigns).some((cp) => (cp.characterIds || []).includes(id));
+    if (isLong && !inCampaign && (c.f_luck_given || c.f_luck_posted)) {
       restPatch.f_luck_given = "";
       restPatch.f_luck_posted = "";
     }
-    if (isLong && (c.f_prayer || c.f_prayer_rolled)) {
+    if (isLong && !inCampaign && (c.f_prayer || c.f_prayer_rolled)) {
       restPatch.f_prayer = "";
       restPatch.f_prayer_rolled = "";
     }
@@ -22515,6 +22719,9 @@ export default function App({ onSignOut }) {
                                               reachOf={(card) => { if (!card.weapon) return null; const lab = weaponReach(characters[viewingCharId], card.key); return lab ? { label: lab, max: RANGE_CELLS[lab] || 99 } : null; }}
                                               cardBorder={cardBorder}
                                               beast={{ forms: BEASTFORMS, tier: tierForLevel(me?.f_level || 1), active: me?.f_beastform || "", stressFull: Number(me?.stress_marked || 0) >= Number(me?.r_stress || 0) }}
+                                              cardToks={(card) => cardTokInfo(characters[viewingCharId], card.key)}
+                                              onCardTok={(key, n) => setCardTok(viewingCharId, key, n)}
+                                              onRecharge={(key) => rechargeCardTokens(viewingCharId, key)}
                                               onEvolve={(card) => openEvolutionModal(viewingCharId, card)}
                                               onWolf={(card) => activateWolf(viewingCharId, card)}
                                               onBeast={(key, sel, card) => (sel ? toggleBeastform(viewingCharId, key, true) : morphToBeast(viewingCharId, key, card))}
@@ -22523,6 +22730,7 @@ export default function App({ onSignOut }) {
                                               me={myToken}
                                               tokens={mapTokens}
                                               onUse={(card, cell, target, rng) =>
+                                                card.key === "Desatar el Caos" && !card.weapon && !card.rowCard && !card.subclass ? castChaos(viewingCharId, target, card) :
                                                 card.release ? castLiberar(viewingCharId, target, card) :
                                                 card.ghost ? castEnredoExtra(viewingCharId, target, card) :
                                                 card.weapon ? castWeapon(viewingCharId, target, card) :
@@ -26675,6 +26883,58 @@ export default function App({ onSignOut }) {
               );
             })()}
 
+            {sessAsk && sessAsk.charId === viewingCharId && (
+              <div className="mh-evo-wrap" onClick={() => { sessDismiss.current[sessAsk.key + sessAsk.charId] = true; setSessAsk(null); }}>
+                <div className="mh-bpick mh-sess" role="dialog" aria-label="Empieza la sesión" onClick={(e) => e.stopPropagation()}>
+                  <div className="mh-elpick-h">
+                    <b>Empieza la sesión {sessAsk.n}</b>
+                    <span>El DJ ha empezado la sesión. Esto se activa en tu personaje:</span>
+                  </div>
+                  <div className="mh-sess-list">
+                    {sessAsk.items.map((it) => {
+                      const IC = it.icon === "feather" ? Feather : it.icon === "heart" ? Heart : Sparkles;
+                      return (
+                        <div key={it.k} className="mh-sess-it">
+                          <IC size={17} />
+                          <span><b>{it.label}</b><small>{it.text}</small></span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="mh-evo-act">
+                    <button type="button" className="mh-elpick-x" onClick={() => { sessDismiss.current[sessAsk.key + sessAsk.charId] = true; setSessAsk(null); }}>Ahora no</button>
+                    <button type="button" className="mh-evo-go" onClick={() => { const a = sessAsk; setSessAsk(null); applySession(a.charId, a.key, a.items); }}>Aplicar a mi personaje</button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {chaosAsk && chaosAsk.charId === viewingCharId && (() => {
+              const cc = characters[chaosAsk.charId];
+              const info = cc && cardTokInfo(cc, "Desatar el Caos");
+              const tg = (campaignMap.tokens || []).find((t) => t.id === chaosAsk.targetId);
+              if (!info || !tg) return null;
+              const n = Math.max(1, Math.min(chaosN, info.have));
+              return (
+                <div className="mh-evo-wrap" onClick={() => setChaosAsk(null)}>
+                  <div className="mh-bpick mh-sess" role="dialog" aria-label="Desatar el Caos" onClick={(e) => e.stopPropagation()}>
+                    <div className="mh-elpick-h">
+                      <b>Desatar el Caos</b>
+                      <span>Lanzas sobre {tg.name || "el adversario"}: tirada de conjuro y, si aciertas, un d10 por ficha gastada</span>
+                    </div>
+                    <div className="mh-sess-toks" role="group" aria-label="Fichas a gastar">
+                      {Array.from({ length: info.have }, (_, k) => (
+                        <button key={k} type="button" className={k < n ? "is-on" : ""} onClick={() => setChaosN(k + 1)} aria-label={"Gastar " + (k + 1) + " fichas"}>{k + 1}</button>
+                      ))}
+                    </div>
+                    <div className="mh-evo-sum is-ready">Gastas <b>{n} ficha{n > 1 ? "s" : ""}</b> de {info.have}: <b>{n}d10</b> de daño mágico si aciertas. Te quedarán {info.have - n}.</div>
+                    <div className="mh-evo-act">
+                      <button type="button" className="mh-elpick-x" onClick={() => setChaosAsk(null)}>Cancelar</button>
+                      <button type="button" className="mh-evo-go" onClick={confirmChaos}>Lanzar · {n} ficha{n > 1 ? "s" : ""}</button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
             {deathMoveCharId === viewingCharId && (
               <div
                 style={{
@@ -30192,6 +30452,11 @@ export default function App({ onSignOut }) {
                             onPass={(t, why) => passFocus(viewingCampaignId, t, why)}
                             onClear={() => clearSpotFocus(viewingCampaignId, "")}
                           />
+                        )}
+                        {!xLock && (
+                          <button type="button" className={"mh-btn-ghost mh-dir-sess" + (campSession && campSession.active ? " is-on" : "")} onClick={campSession && campSession.active ? endSession : startSession} title={campSession && campSession.active ? "Termina la sesión: los jugadores pierden las fichas sin usar" : "Empieza la sesión: se activan las cartas y rasgos de «al empezar la sesión»"}>
+                            {campSession && campSession.active ? <><X size={13} /> <span>Terminar sesión {campSession.n}</span></> : <><Play size={13} /> <span>Empezar sesión</span></>}
+                          </button>
                         )}
                         {imm && (
                           <div className="mh-dir-dtog">
