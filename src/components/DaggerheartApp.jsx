@@ -5036,7 +5036,9 @@ const sharedStyles = `
   @keyframes mh-die-drop { 0% { transform: translateY(calc(-220px * var(--s, 1))) rotate(-540deg) scale(1.35); opacity: 0; } 8% { opacity: 1; } 52% { transform: translateY(0) rotate(0); } 68% { transform: translateY(calc(-26px * var(--s, 1))) rotate(40deg); } 82% { transform: translateY(0) rotate(-12deg); } 91% { transform: translateY(calc(-7px * var(--s, 1))) rotate(5deg); } 100% { transform: translateY(0) rotate(0); } }
   @keyframes mh-die-gone { 0% { transform: translateY(0) rotate(0); opacity: 1; } 100% { transform: translateY(calc(-150px * var(--s, 1))) rotate(300deg) scale(.4); opacity: 0; } }
   @media (prefers-reduced-motion: reduce) { .mh-die.is-gone { animation: none; opacity: 0; } .mh-die.is-drop { animation: none; } }
-  .mh-fan-tokctl { position: absolute; left: 0; right: 0; top: calc(100% + 12px); display: flex; flex-direction: column; align-items: center; gap: 8px; }  .mh-fan-tray { --s: 1.15; position: absolute; left: calc(100% + 14px); top: 3%; bottom: 3%; z-index: 4; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; pointer-events: none; } .mh-fan-tray .mh-die { margin: calc(-3px * var(--s)) 0; } @media (max-width: 640px) { .mh-fan-tray { left: 0; right: 0; top: auto; bottom: 3%; flex-direction: row; justify-content: center; --s: .95; } .mh-fan-tray .mh-die { margin: 0 calc(-8px * var(--s)); } } .mh-fan-tray .mh-die { pointer-events: auto; } .mh-die.is-drag { touch-action: none; cursor: grab; } .mh-die.is-drag:active { cursor: grabbing; z-index: 8; } .mh-fan-tokctl .rc:disabled { opacity: .4; cursor: not-allowed; } .mh-fan-tokctl .rc { all: unset; cursor: pointer; padding: 7px 16px; border-radius: 99px; background: #E3B04B; color: #1f1606; font: 700 12.5px Inter, system-ui, sans-serif; }
+  .mh-fan-tokctl { position: absolute; left: 0; right: 0; top: calc(100% + 12px); display: flex; flex-direction: column; align-items: center; gap: 8px; }    .mh-fan-ward { position: absolute; z-index: 3; left: 50%; bottom: calc(100% + 5px); translate: -50% 0; display: inline-flex; align-items: center; gap: 4px; max-width: 150%; padding: 2px 8px; border-radius: 99px; background: rgba(20,17,26,.92); border: 1.5px solid var(--cc, #9D8BF0); color: #fff; font: 700 10.5px Inter, system-ui, sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; box-shadow: 0 2px 8px rgba(0,0,0,.5); } .mh-fan-ward.is-spent { opacity: .6; filter: grayscale(.7); }
+  .mh-fan-chip { position: absolute; z-index: 7; left: 12px; bottom: 12px; display: inline-flex; align-items: center; gap: 5px; padding: 4px 11px; border-radius: 99px; background: rgba(20,17,26,.92); border: 1.5px solid #9D8BF0; color: #fff; font: 700 11.5px Inter, system-ui, sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,.5); pointer-events: auto; }
+  .mh-fan-tray { --s: 1.15; position: absolute; left: calc(100% + 14px); top: 3%; bottom: 3%; z-index: 4; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; pointer-events: none; } .mh-fan-tray .mh-die { margin: calc(-3px * var(--s)) 0; } @media (max-width: 640px) { .mh-fan-tray { left: 0; right: 0; top: auto; bottom: 3%; flex-direction: row; justify-content: center; --s: .95; } .mh-fan-tray .mh-die { margin: 0 calc(-8px * var(--s)); } } .mh-fan-tray .mh-die { pointer-events: auto; } .mh-die.is-drag { touch-action: none; cursor: grab; } .mh-die.is-drag:active { cursor: grabbing; z-index: 8; } .mh-fan-tokctl .rc:disabled { opacity: .4; cursor: not-allowed; } .mh-fan-tokctl .rc { all: unset; cursor: pointer; padding: 7px 16px; border-radius: 99px; background: #E3B04B; color: #1f1606; font: 700 12.5px Inter, system-ui, sans-serif; }
   .mh-sess { width: min(560px, 94vw); }
   .mh-sess-list { display: flex; flex-direction: column; gap: 8px; } .mh-sess-it { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--mh-panel, #1b1824) 70%, transparent); border: 1px solid var(--mh-line2, rgba(255,255,255,.14)); } .mh-sess-it > svg { color: #E3B04B; flex: none; } .mh-sess-it span { display: flex; flex-direction: column; } .mh-sess-it small { color: var(--mh-muted, #aaa); font-size: 11.5px; }
   .mh-sess-toks { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; } .mh-sess-toks button { all: unset; box-sizing: border-box; cursor: pointer; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; font: 700 15px Inter, system-ui, sans-serif; border: 2px solid #E3B04B; color: #E3B04B; } .mh-sess-toks button.is-on { background: #E3B04B; color: #1f1606; }
@@ -10851,7 +10853,7 @@ function TokDice({ have, max, onPick, color = "#d9482a" }) {
     );
   });
 }
-function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack, cardBorder, aimOk, reachOf, onAim, beast, onBeast, onEvolve, onWolf, cardToks, onCardTok }) {
+function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack, cardBorder, aimOk, reachOf, onAim, beast, onBeast, onEvolve, onWolf, cardToks, onCardTok, wardChip }) {
   const cardsRef = useRef(cards);
   cardsRef.current = cards;
   const [drag, setDrag] = useState(null); // { card, x, y, cell, moved }
@@ -11033,6 +11035,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
           </button>
         );
       })}
+      {wardChip && <span className="mh-fan-chip" title="Tienes un objeto imbuido de magia protectora: podrás usarlo al recibir un ataque"><Shield size="1em" /> Guarda Rúnica · {wardChip.text}</span>}
       <div key={act || "all"} className="mh-fan" ref={fanRef} aria-label="Tus cartas" style={{ "--dir": dir }}>
         {shown.map((c, i) => {
           const mid = (n - 1) / 2;
@@ -11051,6 +11054,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
                 const ti = cardToks(c);
                 return ti ? <span className="mh-fan-toks" title={ti.have + " de " + ti.max + " fichas"} aria-label={ti.have + " de " + ti.max + " fichas"}><TokDice have={ti.have} max={ti.max} color={DOMAIN_COLORS[c.domain] || "#C9A24B"} /></span> : null;
               })()}
+              {c.wardTag && <span className={"mh-fan-ward" + (c.wardTag.spent ? " is-spent" : "")} title={"Amuleto imbuido: " + c.wardTag.item + (c.wardTag.holder ? " · lo lleva " + c.wardTag.holder : " · lo llevas tú") + (c.wardTag.spent ? " · agotado hasta tu próximo descanso" : "")}><Shield size="1em" /> {c.wardTag.item}{c.wardTag.holder ? " · " + c.wardTag.holder : ""}{c.wardTag.spent ? " · agotado" : ""}</span>}
               {c.ghost && <span className="mh-fan-ghostlab">{c.noHope ? c.noLab || "Sin Esperanza" : c.ghostLab || "1 Esperanza"}</span>}
             </div>
           );
@@ -14219,35 +14223,27 @@ export default function App({ onSignOut }) {
     if (w.spent && Number(by.f_rest_n || 0) <= Number(w.restN || 0)) return null;
     return { ward: w, item: w.item, byName: by.f_name || "un aliado" };
   };
-  // Usar la carta auxiliar: gastas 1 Esperanza y la guarda queda lista para el próximo daño.
-  const castWardArm = (charId, card) => {
-    const c = charsRef.current[charId];
-    if (!c || !wardInfo(charId)) return "cancel";
-    if (c.f_ward_armed === "1") {
-      if (sheetCampaignId) pushMapLog(sheetCampaignId, "Guarda Rúnica: ya está lista para el próximo daño", "info");
-      return "cancel";
-    }
-    const hope = Number(c.hope_marked ?? HOPE_DEFAULT);
-    if (hope < 1) {
-      if (sheetCampaignId) pushMapLog(sheetCampaignId, "Guarda Rúnica: necesitas 1 Esperanza", "info");
-      return "cancel";
-    }
-    updateCharacterFields(charId, { hope_marked: String(hope - 1), f_ward_armed: "1" });
-    postCampaignEvent(charId, "🛡️ Activa su Guarda Rúnica (" + wardInfo(charId).item + "): reducirá el próximo daño que reciba");
-    playCardOnMap(sheetCampaignId, charId, card, { noChat: true, short: true });
-    return "reveal";
+  // Lo que ve quien imbuyó el amuleto: qué objeto es, quién lo lleva y si está agotado.
+  const wardOutOf = (id) => {
+    const c = characters[id];
+    const to = c?.f_runeward_to && characters[c.f_runeward_to];
+    let w = null;
+    try {
+      w = JSON.parse(to?.f_runeward || "null");
+    } catch (e) {}
+    if (!c || !to || !w || w.by !== id || String(w.gen) !== String(c.f_runeward_gen || 0)) return null;
+    return { item: w.item, holder: c.f_runeward_to === id ? "" : to.f_name || "un aliado", spent: !!w.spent && Number(c.f_rest_n || 0) <= Number(w.restN || 0) };
   };
-  // Tirar la reducción cuando te golpean (con la guarda ya lista, o gastando 1 Esperanza en ese momento).
+  // Cuando te golpean, usar la Guarda Rúnica: gastas 1 Esperanza y tiras 1d8 de reducción.
   const rollWard = (charId) => {
     const c = charsRef.current[charId];
     const wi = c && wardInfo(charId);
     if (!wi) return;
-    const armed = c.f_ward_armed === "1";
     const hope = Number(c.hope_marked ?? HOPE_DEFAULT);
-    if (!armed && hope < 1) return;
+    if (hope < 1) return;
     const n = Math.floor(Math.random() * 8) + 1;
     const by = characters[wi.ward.by];
-    const patch = { f_ward_armed: "", ...(armed ? {} : { hope_marked: String(hope - 1) }), ...(n === 8 ? { f_runeward: JSON.stringify({ ...wi.ward, spent: true, restN: Number(by?.f_rest_n || 0) }) } : {}) };
+    const patch = { hope_marked: String(hope - 1), ...(n === 8 ? { f_runeward: JSON.stringify({ ...wi.ward, spent: true, restN: Number(by?.f_rest_n || 0) }) } : {}) };
     updateCharacterFields(charId, patch);
     setHitWard({ n });
     postCampaignEvent(charId, "🛡️ Guarda Rúnica (" + wi.item + "): reduce el daño en " + n + " (1d8)" + (n === 8 ? " · ¡el amuleto se agota hasta el próximo descanso de " + wi.byName + "!" : ""));
@@ -23016,14 +23012,16 @@ export default function App({ onSignOut }) {
                                           const rootedMine = (campaignMap.tokens || []).filter((t) => t.rootedBy === viewingCharId && (t.conds || []).includes("Inmovilizado"));
                                           const ghostCard = rootedMine.length && keys.includes("Enredo Feroz") ? (() => { const base = findDomainCardAny("Enredo Feroz"); return base ? { ...base, key: "Inmovilizar", baseKey: "Enredo Feroz", text: "Puedes gastar una Esperanza para inmovilizar temporalmente a otro adversario en alcance Muy Cercano del objetivo de Enredo Feroz.", recall: null, noCost: true, ghost: true, noHope: Number(me?.hope_marked ?? HOPE_DEFAULT) < 1 } : null; })() : null;
                                           const releaseCard = ghostCard ? { ...ghostCard, key: "Liberar", text: "Libera al objetivo del Enredo Feroz.", ghostLab: "Gratis", noHope: false, release: true } : null;
-                                          const wi = wardInfo(viewingCharId);
-                                          const wardCard = wi ? (() => { const base = findDomainCardAny("Guarda Rúnica"); return base ? { ...base, key: "Reducir daño", baseKey: "Guarda Rúnica", text: "Tu amuleto «" + wi.item + "» (imbuido por " + wi.byName + "). Gasta una Esperanza para reducir el daño recibido en 1d8. Con un 8, el amuleto se agota hasta el próximo descanso de quien lo imbuyó.", recall: null, noCost: true, ghost: true, ward: true, ghostLab: me?.f_ward_armed === "1" ? "Lista" : "1 Esperanza", noHope: me?.f_ward_armed !== "1" && Number(me?.hope_marked ?? HOPE_DEFAULT) < 1 } : null; })() : null;
+                                          // Indicador de la Guarda Rúnica: sobre la carta de quien la imbuyó, o suelto si tienes un amuleto de otra persona.
+                                          const wardOut = wardOutOf(viewingCharId);
+                                          const wardMine = wardInfo(viewingCharId);
+                                          const wardChip = wardMine && !keys.includes("Guarda Rúnica") ? { text: wardMine.item + " · de " + wardMine.byName } : null;
                                           const chaosTok = keys.includes("Desatar el Caos") ? cardTokInfo(me, "Desatar el Caos") : null;
                                           const rechargeCard = chaosTok && chaosTok.have < chaosTok.max ? (() => { const base = findDomainCardAny("Desatar el Caos"); return base ? { ...base, key: "Recargar fichas", baseKey: "Desatar el Caos", text: "Marca 1 Estrés para recuperar todas las fichas de Desatar el Caos, hasta tu rasgo de conjuro. Suéltala en el mapa para usarla.", recall: null, noCost: true, ghost: true, recharge: true, ghostLab: "1 Estrés", noHope: Number(me?.stress_marked || 0) >= Number(me?.r_stress || 0), noLab: "Estrés lleno" } : null; })() : null;
                                           // En Forma de Bestia no se usan las armas: la carta de arma pasa a ser el ataque de la forma.
                                           const bfForm = me?.f_beastform ? BEASTFORMS.find((b) => b.key === me.f_beastform) : null;
                                           const bfCard = bfForm ? (() => { const [, bfT, bfD] = String(bfForm.attack).split(" · "); return { key: bfForm.key, level: bfForm.tier, type: "Ataque de forma", domain: "", image: bfForm.image, text: "Ataque: " + bfForm.attack + ". " + (bfT ? "Tirada de " + bfT + ", daño " + bfD + "." : ""), damage: bfD, hands: "Forma de Bestia", weapon: true, beast: true }; })() : null;
-                                          const cards = [...(bfCard ? [bfCard] : [wp(me?.f_primary_weapon, PRIMARY_WEAPONS, "Principal"), wp(me?.f_secondary_weapon, SECONDARY_WEAPONS, "Secundaria")]), ...actionCards, ...keys.map((k) => { const d = findDomainCardAny(k); return d && mcDom && d.domain === mcDom && !(CLASS_DOMAINS[me?.f_class] || []).includes(mcDom) ? { ...d, multi: true } : d; }), ghostCard, releaseCard, rechargeCard, wardCard].filter(Boolean);
+                                          const cards = [...(bfCard ? [bfCard] : [wp(me?.f_primary_weapon, PRIMARY_WEAPONS, "Principal"), wp(me?.f_secondary_weapon, SECONDARY_WEAPONS, "Secundaria")]), ...actionCards, ...keys.map((k) => { const d0 = findDomainCardAny(k); const d = d0 && k === "Guarda Rúnica" && wardOut ? { ...d0, wardTag: wardOut } : d0; return d && mcDom && d.domain === mcDom && !(CLASS_DOMAINS[me?.f_class] || []).includes(mcDom) ? { ...d, multi: true } : d; }), ghostCard, releaseCard, rechargeCard].filter(Boolean);
                                           return (
                                             <CardFan
                                               cards={cards}
@@ -23033,6 +23031,7 @@ export default function App({ onSignOut }) {
                                               reachOf={(card) => { if (!card.weapon) return null; const lab = weaponReach(characters[viewingCharId], card.key); return lab ? { label: lab, max: RANGE_CELLS[lab] || 99 } : null; }}
                                               cardBorder={cardBorder}
                                               beast={{ forms: BEASTFORMS, tier: tierForLevel(me?.f_level || 1), active: me?.f_beastform || "", stressFull: Number(me?.stress_marked || 0) >= Number(me?.r_stress || 0) }}
+                                              wardChip={wardChip}
                                               cardToks={(card) => cardTokInfo(characters[viewingCharId], card.key)}
                                               onCardTok={(key, n) => setCardTok(viewingCharId, key, n)}
                                               onEvolve={(card) => openEvolutionModal(viewingCharId, card)}
@@ -23044,7 +23043,6 @@ export default function App({ onSignOut }) {
                                               tokens={mapTokens}
                                               onUse={(card, cell, target, rng) =>
                                                 card.key === "Desatar el Caos" && !card.weapon && !card.rowCard && !card.subclass ? castChaos(viewingCharId, target, card) :
-                                                card.ward ? castWardArm(viewingCharId, card) :
                                                 card.key === "Guarda Rúnica" && !card.weapon && !card.rowCard && !card.subclass ? (setWardAsk({ charId: viewingCharId, card, step: 1, bearerId: "", item: "", custom: "" }), "cancel") :
                                                 card.recharge ? castRecharge(viewingCharId, card) :
                                                 card.release ? castLiberar(viewingCharId, target, card) :
@@ -23776,9 +23774,9 @@ export default function App({ onSignOut }) {
                         </p>
                         {hitWard && <p className="mh-hit-msg">🛡️ Guarda Rúnica: reduce el daño en <b>{hitWard.n}</b> (1d8){hitWard.n === 8 ? " · el amuleto se agota hasta el próximo descanso de " + (wd?.byName || "quien lo imbuyó") : ""}. Quedan <b>{dmgEff}</b> de daño.</p>}
                         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                          {wd && !hitWard && (c.f_ward_armed === "1" || Number(c.hope_marked ?? HOPE_DEFAULT) >= 1) && (
+                          {wd && !hitWard && Number(c.hope_marked ?? HOPE_DEFAULT) >= 1 && (
                             <button type="button" className="mh-btn-ghost" onClick={() => rollWard(H.charId)}>
-                              <Shield size={14} /> Guarda Rúnica · reducir 1d8 ({c.f_ward_armed === "1" ? "ya activada" : "1 Esperanza"})
+                              <Shield size={14} /> Usar la Guarda Rúnica «{wd.item}» · gastar 1 Esperanza y reducir el daño 1d8
                             </button>
                           )}
                           <button type="button" className="mh-btn" onClick={() => done(false)}>
