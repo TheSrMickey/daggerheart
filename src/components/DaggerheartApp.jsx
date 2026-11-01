@@ -10776,8 +10776,8 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
   const rng = drag ? rangeOf(drag.cell) : null;
   const aim = !!drag?.moved && isAim(drag.card) && !inHand(drag.x, drag.y);
   const aimIn = aim && inAimReach(drag.card, drag.cell);
-  // Con un arma en la mano, el visor del rango del tablero enseña el alcance de esa arma.
-  const aimMax = aim && drag.card.weapon ? aimReach(drag.card).max : 0;
+  // Al apuntar (arma, Enredo Feroz o sus cartas extra), el visor del rango del tablero enseña el alcance de la carta.
+  const aimMax = aim ? aimReach(drag.card).max : 0;
   useEffect(() => {
     if (onAim) onAim(aimMax && me ? { id: me.id, max: aimMax } : null);
   }, [aimMax, me?.id]); // eslint-disable-line react-hooks/exhaustive-deps
