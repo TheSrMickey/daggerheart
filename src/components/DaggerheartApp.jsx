@@ -5022,11 +5022,11 @@ const sharedStyles = `
   .mh-sheet.is-embedded .mh-toast-warn { zoom: calc(1 / var(--mhz, 1)); }
   @keyframes mh-toast-in { from { opacity: 0; translate: -50% 10px; } }
   .mh-fan-toks { position: absolute; left: 50%; bottom: 4%; translate: -50% 0; z-index: 3; display: flex; padding: 0; pointer-events: none; max-width: 96%; flex-wrap: wrap; justify-content: center; }
-  .mh-die { all: unset; box-sizing: border-box; display: block; flex: none; width: calc(46px * var(--s, 1)); margin: 0 calc(-4px * var(--s, 1)); filter: drop-shadow(0 2px 2px rgba(0,0,0,.45)); } .mh-die svg, .mh-die img { display: block; width: 100%; height: auto; overflow: visible; pointer-events: none; } button.mh-die { cursor: pointer; transition: transform .12s ease; } button.mh-die:hover { transform: translateY(-3px); }
+  .mh-die { all: unset; box-sizing: border-box; display: block; flex: none; width: calc(62px * var(--s, 1)); margin: 0 calc(-8px * var(--s, 1)); filter: drop-shadow(0 2px 2px rgba(0,0,0,.45)); } .mh-die svg, .mh-die img { display: block; width: 100%; height: auto; overflow: visible; pointer-events: none; } button.mh-die { cursor: pointer; transition: transform .12s ease; } button.mh-die:hover { transform: translateY(-3px); }
   .mh-die.is-gone { position: relative; z-index: 6; animation: mh-die-gone .65s ease-in forwards; pointer-events: none; }
   @keyframes mh-die-gone { 0% { transform: translateY(0) rotate(0); opacity: 1; } 100% { transform: translateY(calc(-150px * var(--s, 1))) rotate(300deg) scale(.4); opacity: 0; } }
   @media (prefers-reduced-motion: reduce) { .mh-die.is-gone { animation: none; opacity: 0; } }
-  .mh-fan-tokctl { position: absolute; left: 0; right: 0; top: calc(100% + 12px); display: flex; flex-direction: column; align-items: center; gap: 8px; } .mh-fan-tokctl .pips { --s: .7; display: flex; flex-wrap: wrap; justify-content: center; } .mh-fan-tokctl .rc { all: unset; cursor: pointer; padding: 7px 16px; border-radius: 99px; background: #E3B04B; color: #1f1606; font: 700 12.5px Inter, system-ui, sans-serif; }
+  .mh-fan-tokctl { position: absolute; left: 0; right: 0; top: calc(100% + 12px); display: flex; flex-direction: column; align-items: center; gap: 8px; } .mh-fan-tray { --s: 1.15; position: absolute; left: 0; right: 0; bottom: 4%; z-index: 4; display: flex; justify-content: center; pointer-events: none; } .mh-fan-tray .mh-die { pointer-events: auto; } .mh-die.is-drag { touch-action: none; cursor: grab; } .mh-die.is-drag:active { cursor: grabbing; z-index: 8; } .mh-fan-tokctl .rc { all: unset; cursor: pointer; padding: 7px 16px; border-radius: 99px; background: #E3B04B; color: #1f1606; font: 700 12.5px Inter, system-ui, sans-serif; }
   .mh-sess { width: min(560px, 94vw); }
   .mh-sess-list { display: flex; flex-direction: column; gap: 8px; } .mh-sess-it { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--mh-panel, #1b1824) 70%, transparent); border: 1px solid var(--mh-line2, rgba(255,255,255,.14)); } .mh-sess-it > svg { color: #E3B04B; flex: none; } .mh-sess-it span { display: flex; flex-direction: column; } .mh-sess-it small { color: var(--mh-muted, #aaa); font-size: 11.5px; }
   .mh-sess-toks { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; } .mh-sess-toks button { all: unset; box-sizing: border-box; cursor: pointer; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; font: 700 15px Inter, system-ui, sans-serif; border: 2px solid #E3B04B; color: #E3B04B; } .mh-sess-toks button.is-on { background: #E3B04B; color: #1f1606; }
@@ -10731,11 +10731,44 @@ function TokDice({ have, max, onPick }) {
     }
     prev.current = have;
   }, [have]);
+  // Con la carta abierta los dados se pueden arrastrar para despejar el texto; un toque sin mover pone o quita la ficha.
+  const [off, setOff] = useState({});
+  const drag = useRef(null);
+  const down = (e, k) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    drag.current = { k, sx: e.clientX, sy: e.clientY, ox: off[k]?.x || 0, oy: off[k]?.y || 0, moved: false };
+  };
+  const move = (e) => {
+    const d = drag.current;
+    if (!d) return;
+    const dx = e.clientX - d.sx, dy = e.clientY - d.sy;
+    if (!d.moved && Math.hypot(dx, dy) < 5) return;
+    d.moved = true;
+    setOff((o) => ({ ...o, [d.k]: { x: d.ox + dx, y: d.oy + dy } }));
+  };
+  const up = () => {
+    const d = drag.current;
+    drag.current = null;
+    if (d && !d.moved) onPick(d.k);
+  };
   return Array.from({ length: max }, (_, k) => {
     const face = k < have || gone.includes(k);
     const cls = "mh-die" + (face ? " is-on" : " is-off") + (gone.includes(k) ? " is-gone" : "");
     return onPick ? (
-      <button key={k} type="button" className={cls} aria-label={k < have ? "Quitar ficha" : "Poner ficha"} onClick={() => onPick(k)}><ChaosDie on={face} i={k} /></button>
+      <button
+        key={k}
+        type="button"
+        className={cls + " is-drag"}
+        style={off[k] ? { translate: off[k].x + "px " + off[k].y + "px" } : undefined}
+        aria-label={k < have ? "Quitar ficha (arrastra para apartar el dado)" : "Poner ficha"}
+        onPointerDown={(e) => down(e, k)}
+        onPointerMove={move}
+        onPointerUp={up}
+        onPointerCancel={() => (drag.current = null)}
+        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), onPick(k))}
+      >
+        <ChaosDie on={face} i={k} />
+      </button>
     ) : (
       <span key={k} className={cls}><ChaosDie on={face} i={k} /></span>
     );
@@ -10954,13 +10987,15 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
               const ti = cardToks(open);
               if (!ti || !onCardTok) return null;
               return (
+                <>
+                <div className="mh-fan-tray" role="group" aria-label="Fichas sobre la carta">
+                  <TokDice have={ti.have} max={ti.max} onPick={(k) => onCardTok(open.key, k + 1 === ti.have ? k : k + 1)} />
+                </div>
                 <div className="mh-fan-tokctl">
-                  <span className="mh-fan-ask">{ti.have} de {ti.max} {ti.cfg.label}</span>
-                  <span className="pips" role="group" aria-label="Fichas sobre la carta">
-                    <TokDice have={ti.have} max={ti.max} onPick={(k) => onCardTok(open.key, k + 1 === ti.have ? k : k + 1)} />
-                  </span>
+                  <span className="mh-fan-ask">{ti.have} de {ti.max} {ti.cfg.label} · arrastra los dados para leer la carta</span>
                   <button type="button" className="rc" onClick={() => onRecharge && onRecharge(open.key)}>Recargar · 1 Estrés</button>
                 </div>
+                </>
               );
             })()}
           </div>
