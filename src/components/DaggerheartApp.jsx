@@ -5021,7 +5021,7 @@ const sharedStyles = `
   .mh-toast-warn { position: fixed; left: 50%; bottom: 28px; translate: -50% 0; z-index: 9999; max-width: min(520px, 92vw); padding: 10px 16px; border-radius: 12px; background: #3a1a1a; color: #ffd9d2; border: 1px solid #D9644E; font: 600 13px Inter, system-ui, sans-serif; box-shadow: 0 12px 34px rgba(0,0,0,.5); pointer-events: none; animation: mh-toast-in .25s ease both; }
   .mh-sheet.is-embedded .mh-toast-warn { zoom: calc(1 / var(--mhz, 1)); }
   @keyframes mh-toast-in { from { opacity: 0; translate: -50% 10px; } }
-  .mh-fan-toks { position: absolute; left: 50%; bottom: calc(100% - 6px); translate: -50% 0; z-index: 3; display: flex; padding: 0; pointer-events: none; max-width: 96%; flex-wrap: wrap; justify-content: center; }
+  .mh-fan-toks { position: absolute; left: 50%; bottom: calc(100% + 5px); translate: -50% 0; z-index: 3; display: flex; padding: 0; pointer-events: none; max-width: 96%; flex-wrap: wrap; justify-content: center; }
   .mh-die { all: unset; box-sizing: border-box; display: block; flex: none; width: calc(62px * var(--s, 1)); margin: 0 calc(-8px * var(--s, 1)); filter: drop-shadow(0 2px 2px rgba(0,0,0,.45)); } .mh-die svg, .mh-die img { display: block; width: 100%; height: auto; overflow: visible; pointer-events: none; } button.mh-die { cursor: pointer; transition: transform .12s ease; } button.mh-die:hover { transform: translateY(-3px); }
   .mh-die.is-gone { position: relative; z-index: 6; animation: mh-die-gone .65s ease-in forwards; pointer-events: none; }
   .mh-die.is-drop { animation: mh-die-drop .85s cubic-bezier(.3,.1,.5,1) backwards; }
@@ -5092,15 +5092,15 @@ const sharedStyles = `
   .mh-map-tk:hover .mh-root-tag, .mh-map-tk:focus-visible .mh-root-tag, .mh-map-tk.is-sel .mh-root-tag { opacity: 1; visibility: visible; } .mh-map-tk:hover, .mh-map-tk:focus-visible { z-index: 8; }
   .mh-rotwrap .mh-root-tag { rotate: -90deg; }
   /* Carta fugaz (al estilo de Runeterra): ondas verdes que se abren desde el borde y un brillo que respira */
-  .mh-fan-card.is-ghostcard { filter: drop-shadow(0 0 14px #7fcf8688); }
+  .mh-fan-card.is-ghostcard { filter: drop-shadow(0 0 14px color-mix(in srgb, var(--cc, #7fcf86) 55%, transparent)); }
   .mh-fan-card.is-ghostcard .mh-fan-in { opacity: .86; animation: mh-fleet-in 3.2s ease-in-out infinite; }
-  .mh-fan-card.is-ghostcard::before, .mh-fan-card.is-ghostcard::after { content: ""; position: absolute; inset: 0; border-radius: 22px; border: 2px solid #9ce6a2; box-shadow: 0 0 16px #7fcf86aa, inset 0 0 16px #7fcf8655; pointer-events: none; opacity: 0; animation: mh-fleet-wave 2.8s cubic-bezier(.2,.6,.3,1) infinite; }
+  .mh-fan-card.is-ghostcard::before, .mh-fan-card.is-ghostcard::after { content: ""; position: absolute; inset: 0; border-radius: 22px; border: 2px solid color-mix(in srgb, var(--cc, #9ce6a2) 70%, #fff); box-shadow: 0 0 16px color-mix(in srgb, var(--cc, #7fcf86) 67%, transparent), inset 0 0 16px color-mix(in srgb, var(--cc, #7fcf86) 33%, transparent); pointer-events: none; opacity: 0; animation: mh-fleet-wave 2.8s cubic-bezier(.2,.6,.3,1) infinite; }
   .mh-fan-card.is-ghostcard::after { animation-delay: 1.4s; }
   .mh-fan-card.is-ghostcard.is-nohope { filter: grayscale(1); opacity: .6; } .mh-fan-card.is-ghostcard.is-nohope::before, .mh-fan-card.is-ghostcard.is-nohope::after { display: none; }
   @keyframes mh-fleet-wave { 0% { transform: scale(1); opacity: .8; } 100% { transform: scale(1.26, 1.18); opacity: 0; } }
   @keyframes mh-fleet-in { 0%, 100% { filter: saturate(.7) brightness(1.04); } 50% { filter: saturate(1.05) brightness(1.2) hue-rotate(-14deg); } }
   @media (prefers-reduced-motion: reduce) { .mh-fan-card.is-ghostcard::before, .mh-fan-card.is-ghostcard::after, .mh-fan-card.is-ghostcard .mh-fan-in { animation: none; } }
-  .mh-fan-ghostlab { position: absolute; left: 0; right: 0; bottom: 6px; text-align: center; font: 700 9px Inter, sans-serif; letter-spacing: .1em; color: #9ce6a2; text-transform: uppercase; z-index: 3; pointer-events: none; text-shadow: 0 1px 4px #000; }
+  .mh-fan-ghostlab { position: absolute; left: 0; right: 0; bottom: 6px; text-align: center; font: 700 9px Inter, sans-serif; letter-spacing: .1em; color: color-mix(in srgb, var(--cc, #9ce6a2) 70%, #fff); text-transform: uppercase; z-index: 3; pointer-events: none; text-shadow: 0 1px 4px #000; }
   @keyframes mh-ghost-pulse { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
   .mh-aim { position: fixed; inset: 0; z-index: 9998; pointer-events: none; } .mh-aim-l { animation: mh-aim-dash .6s linear infinite; } @keyframes mh-aim-dash { to { stroke-dashoffset: -12; } }
   .mh-fan-ghost.is-card { padding: 0; border: 0; background: none; box-shadow: none; width: 150px; height: 210px; transform: translate(-50%, -50%) rotate(-4deg) scale(1.02); filter: drop-shadow(0 16px 26px rgba(0,0,0,.65)); } .mh-fan-ghost.is-card > div { transform-origin: top left; transform: scale(.5); width: 300px !important; height: 420px !important; }
