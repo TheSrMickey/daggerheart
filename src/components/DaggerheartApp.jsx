@@ -10899,7 +10899,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
     return !!r && x >= r.left - 30 && x <= r.right + 30 && y >= r.top - 24 && y <= r.bottom + 24;
   };
   // Cartas que se apuntan a un adversario: Enredo Feroz, su carta extra y las armas (con el alcance de cada arma).
-  const isAim = (c) => c.key === AIM_CARD || (!!c.ghost && !c.recharge) || !!c.weapon || (c.key === "Desatar el Caos" && !c.rowCard);
+  const isAim = (c) => c.key === AIM_CARD || (!!c.ghost && !c.recharge && !c.ward) || !!c.weapon || (c.key === "Desatar el Caos" && !c.rowCard);
   const aimReach = (c) => (reachOf && reachOf(c)) || { label: "Lejano", max: RANGE_CELLS["Lejano"] };
   const inAimReach = (c, cell) => !!me && !!cell && Math.max(Math.abs(cell.x - me.x), Math.abs(cell.y - me.y)) <= aimReach(c).max;
   const rangeOf = (cell) => {
@@ -12278,6 +12278,8 @@ export default function App({ onSignOut }) {
   const [campSession, setCampSession] = useState(null); // sesión de la campaña: { n, active, startedAt, endedAt }
   const [sessAsk, setSessAsk] = useState(null); // aviso de inicio de sesión para el jugador: { charId, key, n, items }
   const sessDismiss = useRef({});
+  const [wardAsk, setWardAsk] = useState(null); // Guarda Rúnica: elegir portador y objeto { charId, card, step, bearerId, item, custom }
+  const [hitWard, setHitWard] = useState(null); // Guarda Rúnica aplicada al golpe que se está resolviendo { n }
   const [chaosAsk, setChaosAsk] = useState(null); // Desatar el Caos: elegir cuántas fichas gastar { charId, targetId, card }
   const [chaosN, setChaosN] = useState(1);
   const [foeAtk, setFoeAtk] = useState(null); // el DJ elige a quién ataca una criatura: { foeId }
@@ -14203,6 +14205,68 @@ export default function App({ onSignOut }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sheetCharId, sheetCampaignId, campSession, sheetCharId && characters[sheetCharId]?.f_session_seen, sheetCharId && characters[sheetCharId]?.f_session_end]);
+  // ---- Guarda Rúnica: un objeto imbuido de magia protectora. Quien lo porta (tú o un aliado) tiene una carta auxiliar para reducir el daño en 1d8. ----
+  // El amuleto vive en el portador (f_runeward: { item, by, gen, spent, restN }); quien lo imbuye guarda a quién se lo dio (f_runeward_to, f_runeward_gen)
+  // y cuenta sus descansos (f_rest_n): un amuleto agotado vuelve en el siguiente descanso de quien lo imbuyó.
+  const wardInfo = (id) => {
+    const c = characters[id];
+    let w = null;
+    try {
+      w = JSON.parse(c?.f_runeward || "null");
+    } catch (e) {}
+    const by = w && characters[w.by];
+    if (!w || !by || by.f_runeward_to !== id || String(by.f_runeward_gen || 0) !== String(w.gen)) return null;
+    if (w.spent && Number(by.f_rest_n || 0) <= Number(w.restN || 0)) return null;
+    return { ward: w, item: w.item, byName: by.f_name || "un aliado" };
+  };
+  // Usar la carta auxiliar: gastas 1 Esperanza y la guarda queda lista para el próximo daño.
+  const castWardArm = (charId, card) => {
+    const c = charsRef.current[charId];
+    if (!c || !wardInfo(charId)) return "cancel";
+    if (c.f_ward_armed === "1") {
+      if (sheetCampaignId) pushMapLog(sheetCampaignId, "Guarda Rúnica: ya está lista para el próximo daño", "info");
+      return "cancel";
+    }
+    const hope = Number(c.hope_marked ?? HOPE_DEFAULT);
+    if (hope < 1) {
+      if (sheetCampaignId) pushMapLog(sheetCampaignId, "Guarda Rúnica: necesitas 1 Esperanza", "info");
+      return "cancel";
+    }
+    updateCharacterFields(charId, { hope_marked: String(hope - 1), f_ward_armed: "1" });
+    postCampaignEvent(charId, "🛡️ Activa su Guarda Rúnica (" + wardInfo(charId).item + "): reducirá el próximo daño que reciba");
+    playCardOnMap(sheetCampaignId, charId, card, { noChat: true, short: true });
+    return "reveal";
+  };
+  // Tirar la reducción cuando te golpean (con la guarda ya lista, o gastando 1 Esperanza en ese momento).
+  const rollWard = (charId) => {
+    const c = charsRef.current[charId];
+    const wi = c && wardInfo(charId);
+    if (!wi) return;
+    const armed = c.f_ward_armed === "1";
+    const hope = Number(c.hope_marked ?? HOPE_DEFAULT);
+    if (!armed && hope < 1) return;
+    const n = Math.floor(Math.random() * 8) + 1;
+    const by = characters[wi.ward.by];
+    const patch = { f_ward_armed: "", ...(armed ? {} : { hope_marked: String(hope - 1) }), ...(n === 8 ? { f_runeward: JSON.stringify({ ...wi.ward, spent: true, restN: Number(by?.f_rest_n || 0) }) } : {}) };
+    updateCharacterFields(charId, patch);
+    setHitWard({ n });
+    postCampaignEvent(charId, "🛡️ Guarda Rúnica (" + wi.item + "): reduce el daño en " + n + " (1d8)" + (n === 8 ? " · ¡el amuleto se agota hasta el próximo descanso de " + wi.byName + "!" : ""));
+  };
+  const confirmWard = () => {
+    const A = wardAsk;
+    if (!A) return;
+    const c = charsRef.current[A.charId];
+    const bearer = characters[A.bearerId];
+    const item = (A.custom || "").trim() || A.item;
+    if (!c || !bearer || !item) return;
+    const gen = Number(c.f_runeward_gen || 0) + 1;
+    const ward = { item, by: A.charId, gen, spent: false };
+    setWardAsk(null);
+    updateCharacterFields(A.charId, { f_runeward_to: A.bearerId, f_runeward_gen: String(gen), ...(A.bearerId === A.charId ? { f_runeward: JSON.stringify(ward) } : {}) });
+    if (A.bearerId !== A.charId) giveToParty(A.charId, { [A.bearerId]: { ward } }, "Guarda Rúnica", "Imbuye «" + item + "» con magia protectora. Quien lo porta puede gastar 1 Esperanza para reducir el daño recibido en 1d8; con un 8, se agota hasta el próximo descanso de " + (c.f_name || "quien lo imbuyó") + ".", "Arcano");
+    postCampaignEvent(A.charId, "🛡️ Imbuye «" + item + "»" + (A.bearerId === A.charId ? "" : " de " + (bearer.f_name || "un aliado")) + " con magia protectora");
+    playCardOnMap(sheetCampaignId, A.charId, A.card, { noChat: true, short: true });
+  };
   // Carta suplementaria «Recargar fichas»: aparece cuando has gastado fichas de Desatar el Caos; al usarla marcas 1 Estrés y las recuperas todas.
   const castRecharge = (charId, card) => {
     const c = charsRef.current[charId];
@@ -15751,7 +15815,7 @@ export default function App({ onSignOut }) {
         const me = meCharId ? characters[meCharId] : null;
         const mineT = me && m.targets[meCharId];
         const got = me && getGiftsGot(me).includes(m.sid);
-        const desc = (t) => [t.hp ? t.hp + " PV" : "", t.stress ? t.stress + " de Estrés" : "", t.hope ? t.hope + " de Esperanza" : ""].filter(Boolean).join(" y ");
+        const desc = (t) => [t.hp ? t.hp + " PV" : "", t.stress ? t.stress + " de Estrés" : "", t.hope ? t.hope + " de Esperanza" : "", t.ward ? "el amuleto «" + t.ward.item + "»" : ""].filter(Boolean).join(" y ");
         return chatCard(
           "#6FBF73",
           <>
@@ -15763,7 +15827,7 @@ export default function App({ onSignOut }) {
             <div style={{ marginTop: 4 }}>
               {Object.entries(m.targets).map(([cid, t]) => (
                 <div key={cid}>
-                  <b>{characters[cid]?.f_name || "Aliado"}</b>: {t.hope ? "gana " : t.hp ? "recupera " : "se quita "}
+                  <b>{characters[cid]?.f_name || "Aliado"}</b>: {t.ward ? "recibe " : t.hope ? "gana " : t.hp ? "recupera " : "se quita "}
                   {desc(t)}
                 </div>
               ))}
@@ -15782,6 +15846,7 @@ export default function App({ onSignOut }) {
                     ...(mineT.hp ? { hp_marked: String(Math.max(0, Number(cur.hp_marked || 0) - mineT.hp)) } : {}),
                     ...(mineT.stress ? { stress_marked: String(Math.max(0, Number(cur.stress_marked || 0) - mineT.stress)) } : {}),
                     ...(mineT.hope ? { hope_marked: String(Math.min(getHopeMax(cur), Number(cur.hope_marked ?? HOPE_DEFAULT) + mineT.hope)) } : {}),
+                    ...(mineT.ward ? { f_runeward: JSON.stringify(mineT.ward) } : {}),
                     f_gifts_got: JSON.stringify([...getGiftsGot(cur), m.sid].slice(-40)),
                   });
                 }}
@@ -17252,6 +17317,9 @@ export default function App({ onSignOut }) {
     );
   };
   const rollDock = false;
+  useEffect(() => {
+    setHitWard(null); // la guarda rúnica se aplica golpe a golpe
+  }, [incomingHit?.key]);
   // Un enemigo del DJ ataca a tu personaje: se abre el aviso para resolverlo (solo con su hoja abierta).
   useEffect(() => {
     if (!sheetCampaignId || !sheetCharId || incomingHit) return;
@@ -17321,7 +17389,7 @@ export default function App({ onSignOut }) {
       if (mine.stress) patch.stress_marked = String(Math.max(0, Number(c.stress_marked || 0) - mine.stress));
       if (Object.keys(patch).length) updateCharacterFields(fromId, patch);
     }
-    const others = Object.fromEntries(Object.entries(targets).filter(([k, v]) => k !== fromId && (v.hp || v.stress || v.hope)));
+    const others = Object.fromEntries(Object.entries(targets).filter(([k, v]) => k !== fromId && (v.hp || v.stress || v.hope || v.ward)));
     const camp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(fromId));
     if (camp && Object.keys(others).length) {
       postChat(camp.id, { kind: "gift", sid: String(Date.now()), campId: camp.id, author: c.f_name || "El Druida", charId: fromId, cls: c.f_class, title, text, targets: others, ...(tag ? { tag } : {}) });
@@ -17493,6 +17561,7 @@ export default function App({ onSignOut }) {
     if (c.f_ire_used) restPatch.f_ire_used = "";
     if (c.f_celestial_used) restPatch.f_celestial_used = "";
     if (isLong && c.f_aura_used) restPatch.f_aura_used = "";
+    restPatch.f_rest_n = String(Number(c.f_rest_n || 0) + 1);
     if (c.f_embrace_used) restPatch.f_embrace_used = "";
     if (c.f_sink_used) restPatch.f_sink_used = "";
     if (isLong && c.f_aegis_used) restPatch.f_aegis_used = "";
@@ -22944,12 +23013,14 @@ export default function App({ onSignOut }) {
                                           const rootedMine = (campaignMap.tokens || []).filter((t) => t.rootedBy === viewingCharId && (t.conds || []).includes("Inmovilizado"));
                                           const ghostCard = rootedMine.length && keys.includes("Enredo Feroz") ? (() => { const base = findDomainCardAny("Enredo Feroz"); return base ? { ...base, key: "Inmovilizar", baseKey: "Enredo Feroz", text: "Puedes gastar una Esperanza para inmovilizar temporalmente a otro adversario en alcance Muy Cercano del objetivo de Enredo Feroz.", recall: null, noCost: true, ghost: true, noHope: Number(me?.hope_marked ?? HOPE_DEFAULT) < 1 } : null; })() : null;
                                           const releaseCard = ghostCard ? { ...ghostCard, key: "Liberar", text: "Libera al objetivo del Enredo Feroz.", ghostLab: "Gratis", noHope: false, release: true } : null;
+                                          const wi = wardInfo(viewingCharId);
+                                          const wardCard = wi ? (() => { const base = findDomainCardAny("Guarda Rúnica"); return base ? { ...base, key: "Reducir daño", baseKey: "Guarda Rúnica", text: "Tu amuleto «" + wi.item + "» (imbuido por " + wi.byName + "). Gasta una Esperanza para reducir el daño recibido en 1d8. Con un 8, el amuleto se agota hasta el próximo descanso de quien lo imbuyó.", recall: null, noCost: true, ghost: true, ward: true, ghostLab: me?.f_ward_armed === "1" ? "Lista" : "1 Esperanza", noHope: me?.f_ward_armed !== "1" && Number(me?.hope_marked ?? HOPE_DEFAULT) < 1 } : null; })() : null;
                                           const chaosTok = keys.includes("Desatar el Caos") ? cardTokInfo(me, "Desatar el Caos") : null;
                                           const rechargeCard = chaosTok && chaosTok.have < chaosTok.max ? (() => { const base = findDomainCardAny("Desatar el Caos"); return base ? { ...base, key: "Recargar fichas", baseKey: "Desatar el Caos", text: "Marca 1 Estrés para recuperar todas las fichas de Desatar el Caos, hasta tu rasgo de conjuro. Suéltala en el mapa para usarla.", recall: null, noCost: true, ghost: true, recharge: true, ghostLab: "1 Estrés", noHope: Number(me?.stress_marked || 0) >= Number(me?.r_stress || 0), noLab: "Estrés lleno" } : null; })() : null;
                                           // En Forma de Bestia no se usan las armas: la carta de arma pasa a ser el ataque de la forma.
                                           const bfForm = me?.f_beastform ? BEASTFORMS.find((b) => b.key === me.f_beastform) : null;
                                           const bfCard = bfForm ? (() => { const [, bfT, bfD] = String(bfForm.attack).split(" · "); return { key: bfForm.key, level: bfForm.tier, type: "Ataque de forma", domain: "", image: bfForm.image, text: "Ataque: " + bfForm.attack + ". " + (bfT ? "Tirada de " + bfT + ", daño " + bfD + "." : ""), damage: bfD, hands: "Forma de Bestia", weapon: true, beast: true }; })() : null;
-                                          const cards = [...(bfCard ? [bfCard] : [wp(me?.f_primary_weapon, PRIMARY_WEAPONS, "Principal"), wp(me?.f_secondary_weapon, SECONDARY_WEAPONS, "Secundaria")]), ...actionCards, ...keys.map((k) => { const d = findDomainCardAny(k); return d && mcDom && d.domain === mcDom && !(CLASS_DOMAINS[me?.f_class] || []).includes(mcDom) ? { ...d, multi: true } : d; }), ghostCard, releaseCard, rechargeCard].filter(Boolean);
+                                          const cards = [...(bfCard ? [bfCard] : [wp(me?.f_primary_weapon, PRIMARY_WEAPONS, "Principal"), wp(me?.f_secondary_weapon, SECONDARY_WEAPONS, "Secundaria")]), ...actionCards, ...keys.map((k) => { const d = findDomainCardAny(k); return d && mcDom && d.domain === mcDom && !(CLASS_DOMAINS[me?.f_class] || []).includes(mcDom) ? { ...d, multi: true } : d; }), ghostCard, releaseCard, rechargeCard, wardCard].filter(Boolean);
                                           return (
                                             <CardFan
                                               cards={cards}
@@ -22970,12 +23041,14 @@ export default function App({ onSignOut }) {
                                               tokens={mapTokens}
                                               onUse={(card, cell, target, rng) =>
                                                 card.key === "Desatar el Caos" && !card.weapon && !card.rowCard && !card.subclass ? castChaos(viewingCharId, target, card) :
+                                                card.ward ? castWardArm(viewingCharId, card) :
+                                                card.key === "Guarda Rúnica" && !card.weapon && !card.rowCard && !card.subclass ? (setWardAsk({ charId: viewingCharId, card, step: 1, bearerId: "", item: "", custom: "" }), "cancel") :
                                                 card.recharge ? castRecharge(viewingCharId, card) :
                                                 card.release ? castLiberar(viewingCharId, target, card) :
                                                 card.ghost ? castEnredoExtra(viewingCharId, target, card) :
                                                 card.weapon ? castWeapon(viewingCharId, target, card) :
                                                 card.key === "Enredo Feroz" && !card.weapon ? castEnredo(viewingCharId, target, card) :
-                                                (card.key === "Lengua de la Naturaleza" || card.key === "Rastreador Dotado") && !card.weapon && !card.rowCard && !card.subclass ? (playCardOnMap(charCampaign.id, viewingCharId, card), "reveal") :
+                                                (card.key === "Lengua de la Naturaleza" || card.key === "Rastreador Dotado" || card.key === "Caminar por Paredes") && !card.weapon && !card.rowCard && !card.subclass ? (playCardOnMap(charCampaign.id, viewingCharId, card), "reveal") :
                                                 card.rowCard && card.mapUse ? (playCardOnMap(charCampaign.id, viewingCharId, card), "reveal") :
                                                 card.domain && !card.weapon && !card.rowCard && !card.subclass ? postCardUse(viewingCharId, card, (target ? "sobre " + (target.name || "una ficha") : "en la casilla " + (cell.x + 1) + "," + (cell.y + 1)) + (rng ? " (" + rng.label + ")" : "")) :
                                                 postCampaignEvent(viewingCharId, `${card.weapon ? "ataca con" : "usa la carta"} «${card.key}»${target ? ` sobre ${target.name || "una ficha"}` : ` en la casilla ${cell.x + 1},${cell.y + 1}`}${rng ? ` (${rng.label})` : ""}.`)
@@ -23647,7 +23720,9 @@ export default function App({ onSignOut }) {
               const c = characters[H.charId];
               const def = defenseRef.current && defenseRef.current.id === H.charId ? defenseRef.current : { evasion: Number(c.r_evasion || 10), major: 0, severe: 0 };
               const hit = H.crit || H.atk >= def.evasion;
-              const sev = hit ? severityOf(H.dmg, def.major, def.severe) : 0;
+              const wd = wardInfo(H.charId);
+              const dmgEff = Math.max(0, H.dmg - (hitWard ? hitWard.n : 0));
+              const sev = hit ? severityOf(dmgEff, def.major, def.severe) : 0;
               const armor = Number(c.armor_marked || 0);
               const done = (useArmor) => {
                 setIncomingHit(null);
@@ -23667,7 +23742,7 @@ export default function App({ onSignOut }) {
                   const foeTok = (campaignMap.tokens || []).find((t) => t.id === H.foeId);
                   if (foeTok && cellDist(foeTok, me) <= RANGE_CELLS["Cuerpo a cuerpo"]) elementalBurn(H.campaignId, H.charId, foeTok);
                 }
-                pushMapLog(H.campaignId, H.from + " golpea a " + name + (H.crit ? " (¡crítico!)" : "") + ": " + H.dmg + " de daño (" + SEVERITY_LABEL[sev] + ")" + (useArmor ? " · usa 1 de Armadura" : "") + " · " + final + " PV", "dmg");
+                pushMapLog(H.campaignId, H.from + " golpea a " + name + (H.crit ? " (¡crítico!)" : "") + ": " + H.dmg + " de daño" + (hitWard ? " − " + hitWard.n + " (Guarda Rúnica)" : "") + " (" + SEVERITY_LABEL[sev] + ")" + (useArmor ? " · usa 1 de Armadura" : "") + " · " + final + " PV", "dmg");
                 postCampaignEvent(H.charId, "🩸 " + H.from + " le golpea con " + H.weapon + ": " + H.dmg + " de daño · marca " + final + " PV" + (useArmor ? " (usa 1 de Armadura)" : ""));
               };
               return (
@@ -23696,7 +23771,13 @@ export default function App({ onSignOut }) {
                         <p className="mh-hit-msg">
                           Te golpea: <b>{H.dmg}</b> de daño ({H.dmgRolls?.join(" + ")}{H.dmgMod ? " + " + H.dmgMod : ""}{H.crit ? " + máximo por crítico" : ""}). Es daño <b>{SEVERITY_LABEL[sev]}</b> con tus umbrales {def.major}/{def.severe}.
                         </p>
+                        {hitWard && <p className="mh-hit-msg">🛡️ Guarda Rúnica: reduce el daño en <b>{hitWard.n}</b> (1d8){hitWard.n === 8 ? " · el amuleto se agota hasta el próximo descanso de " + (wd?.byName || "quien lo imbuyó") : ""}. Quedan <b>{dmgEff}</b> de daño.</p>}
                         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                          {wd && !hitWard && (c.f_ward_armed === "1" || Number(c.hope_marked ?? HOPE_DEFAULT) >= 1) && (
+                            <button type="button" className="mh-btn-ghost" onClick={() => rollWard(H.charId)}>
+                              <Shield size={14} /> Guarda Rúnica · reducir 1d8 ({c.f_ward_armed === "1" ? "ya activada" : "1 Esperanza"})
+                            </button>
+                          )}
                           <button type="button" className="mh-btn" onClick={() => done(false)}>
                             <Heart size={14} /> Marcar {sev} PV
                           </button>
@@ -27148,6 +27229,58 @@ export default function App({ onSignOut }) {
                 </div>
               </div>
             )}
+            {wardAsk && wardAsk.charId === viewingCharId && (() => {
+              const A = wardAsk;
+              const ids = (campaigns[sheetCampaignId]?.characterIds || []).filter((id) => characters[id]);
+              const bearer = A.bearerId ? characters[A.bearerId] : null;
+              const items = bearer ? getItems(bearer) : [];
+              const ready = !!((A.custom || "").trim() || A.item);
+              const close = () => setWardAsk(null);
+              return (
+                <div className="mh-evo-wrap" onClick={close}>
+                  <div className="mh-bpick mh-sess" role="dialog" aria-label="Guarda Rúnica" onClick={(e) => e.stopPropagation()}>
+                    <div className="mh-elpick-h">
+                      <b>Guarda Rúnica</b>
+                      <span>{A.step === 1 ? "1 · ¿Quién llevará el amuleto?" : "2 · ¿Qué objeto de " + (A.bearerId === A.charId ? "ti" : bearer?.f_name || "esa persona") + " se imbuye?"}</span>
+                    </div>
+                    {A.step === 1 ? (
+                      <div className="mh-renew-list">
+                        {ids.map((id) => (
+                          <button key={id} type="button" className="mh-renew-row is-pick" onClick={() => setWardAsk({ ...A, step: 2, bearerId: id, item: "", custom: "" })}>
+                            <span className="mh-renew-av" style={{ background: classColor(characters[id].f_class) }}>{(characters[id].f_name || "?").charAt(0)}</span>
+                            <div className="mh-renew-t">
+                              <b>{id === A.charId ? "Tú" : characters[id].f_name}</b>
+                              <small>{characters[id].f_class || ""}{id === A.charId ? " · " + (characters[id].f_name || "") : ""}</small>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <>
+                        <div className="mh-renew-list">
+                          {items.map((it, i) => (
+                            <button key={it.name + i} type="button" className={"mh-renew-row is-pick" + (A.item === it.name && !(A.custom || "").trim() ? " is-on" : "")} onClick={() => setWardAsk({ ...A, item: it.name, custom: "" })}>
+                              <span className="mh-renew-av" style={{ background: "#7D8BA3" }}><Gem size={14} /></span>
+                              <div className="mh-renew-t"><b>{it.name}</b><small>De su inventario</small></div>
+                            </button>
+                          ))}
+                          {items.length === 0 && <small style={{ color: "var(--mh-muted)" }}>No tiene objetos en el inventario: crea uno nuevo.</small>}
+                        </div>
+                        <input className="mh-input" value={A.custom || ""} placeholder="O crea un objeto nuevo (por ejemplo, un colgante)" maxLength={60} onChange={(e) => setWardAsk({ ...A, custom: e.target.value })} />
+                      </>
+                    )}
+                    <div className="mh-evo-act">
+                      <button type="button" className="mh-elpick-x" onClick={() => (A.step === 2 ? setWardAsk({ ...A, step: 1 }) : close())}>{A.step === 2 ? "Atrás" : "Cancelar"}</button>
+                      {A.step === 2 && (
+                        <button type="button" className="mh-evo-go" disabled={!ready} onClick={confirmWard}>
+                          Imbuir
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
             {chaosAsk && chaosAsk.charId === viewingCharId && (() => {
               const cc = characters[chaosAsk.charId];
               const info = cc && cardTokInfo(cc, "Desatar el Caos");
