@@ -22527,7 +22527,7 @@ export default function App({ onSignOut }) {
                                                 card.ghost ? castEnredoExtra(viewingCharId, target, card) :
                                                 card.weapon ? castWeapon(viewingCharId, target, card) :
                                                 card.key === "Enredo Feroz" && !card.weapon ? castEnredo(viewingCharId, target, card) :
-                                                card.key === "Lengua de la Naturaleza" && !card.weapon && !card.rowCard && !card.subclass ? (playCardOnMap(charCampaign.id, viewingCharId, card), "reveal") :
+                                                (card.key === "Lengua de la Naturaleza" || card.key === "Rastreador Dotado") && !card.weapon && !card.rowCard && !card.subclass ? (playCardOnMap(charCampaign.id, viewingCharId, card), "reveal") :
                                                 card.rowCard && card.mapUse ? (playCardOnMap(charCampaign.id, viewingCharId, card), "reveal") :
                                                 card.domain && !card.weapon && !card.rowCard && !card.subclass ? postCardUse(viewingCharId, card, (target ? "sobre " + (target.name || "una ficha") : "en la casilla " + (cell.x + 1) + "," + (cell.y + 1)) + (rng ? " (" + rng.label + ")" : "")) :
                                                 postCampaignEvent(viewingCharId, `${card.weapon ? "ataca con" : "usa la carta"} «${card.key}»${target ? ` sobre ${target.name || "una ficha"}` : ` en la casilla ${cell.x + 1},${cell.y + 1}`}${rng ? ` (${rng.label})` : ""}.`)
