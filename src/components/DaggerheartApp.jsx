@@ -4925,6 +4925,10 @@ const sharedStyles = `
   .mh-map-drop { transition: left .12s ease, top .12s ease; }
   .mh-map-tk:focus-visible { outline: none; }
   .mh-map-tk:focus-visible .mh-map-face { box-shadow: 0 0 0 3px #fff, 0 3px 8px rgba(0,0,0,.5); }
+  /* Rango de la subclase: uno, dos o tres rombos centrados sobre el borde superior de la ficha. */
+  .mh-map-rank { position: absolute; z-index: 4; left: 0; right: 0; top: 10%; translate: 0 -50%; display: flex; justify-content: center; align-items: center; gap: 8%; pointer-events: none; } .mh-map-rank i { width: 13%; aspect-ratio: 1; rotate: 45deg; background: #F5E4A6; border: 1.5px solid #14101c; box-sizing: border-box; box-shadow: 0 1px 3px rgba(0,0,0,.5); }
+  /* Multiclase: la ficha lleva los dos colores, el de la clase principal y el de la segunda clase; el emblema sigue siendo el de la principal. */
+  .mh-map-face.is-mc { background: linear-gradient(135deg, var(--tc) 50%, var(--tc2, var(--tc)) 50%) border-box; border-color: transparent; }
   .mh-map-face { position: relative; z-index: 2; width: 80%; height: 80%; border-radius: 22%; border: 3px solid var(--tc); box-sizing: border-box; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--tc); color: #fff; font-family: 'Cinzel', Georgia, serif; font-weight: 700; font-size: clamp(10px, 1.6vw, 17px); box-shadow: 0 3px 8px rgba(0,0,0,.5); }
   .mh-map-tk.is-npc .mh-map-face, .mh-map-tk.is-foe .mh-map-face { background: #221C2B; }
   .mh-map-tk.is-foe .mh-map-face { background: #6B2F2F; }
@@ -11537,7 +11541,7 @@ function MapBoard({ showHp, aimRange, rangeMenu, cfx, meCharId, onDragInfo, onSt
             type="button"
             data-tid={t.id}
             className={"mh-map-tk is-" + t.kind + (hAnim && hAnim.to === t.id ? " is-hurt" : "") + (eAnim && eAnim.kind === "burn" && eAnim.to === t.id ? " is-burn" : "") + (t.beast || t.trf ? " is-trf" : "") + (morphs[t.id] ? " is-morph" : "") + (t.elem ? " is-el-" + String(t.elem).toLowerCase() : elemOut[t.id] ? " is-el-out is-el-p-" + elemOut[t.id].toLowerCase() : "") + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id && anim.kind !== "free" && anim.kind !== "howl" ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") + (anim.kind === "web" ? " is-web" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
-            style={{ ...at(pos.x, pos.y), "--tc": t.color, ...(anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); return tg ? { "--ax": (tg.x - t.x) * 100 + "%", "--ay": (tg.y - t.y) * 100 + "%" } : {}; })() : {}) }}
+            style={{ ...at(pos.x, pos.y), "--tc": t.color, ...(t.color2 ? { "--tc2": t.color2 } : {}), ...(anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); return tg ? { "--ax": (tg.x - t.x) * 100 + "%", "--ay": (tg.y - t.y) * 100 + "%" } : {}; })() : {}) }}
             onPointerDown={(e) => startDrag(e, t)}
             onContextMenu={(e) => openMenu(e, t)}
             onKeyDown={(e) => keyMove(e, t)}
@@ -11602,7 +11606,8 @@ function MapBoard({ showHp, aimRange, rangeMenu, cfx, meCharId, onDragInfo, onSt
                 )}
               </svg>
             )}
-            <span className="mh-map-face" title={hpLeft != null && (!plain || showHp) ? `Vida: ${t.hp[1] - t.hp[0]} de ${t.hp[1]}` : undefined}>{t.img && t.kind !== "pc" ? <img src={t.img} alt="" draggable={false} /> : <Emb size="52%" strokeWidth={2.1} />}</span>
+            <span className={"mh-map-face" + (t.kind === "pc" && t.color2 ? " is-mc" : "")} title={hpLeft != null && (!plain || showHp) ? `Vida: ${t.hp[1] - t.hp[0]} de ${t.hp[1]}` : undefined}>{t.img && t.kind !== "pc" ? <img src={t.img} alt="" draggable={false} /> : <Emb size="52%" strokeWidth={2.1} />}</span>
+            {t.kind === "pc" && t.rank > 0 && <span className="mh-map-rank" aria-hidden="true" title={["Fundación", "Especialización", "Maestría"][t.rank - 1]}>{Array.from({ length: t.rank }, (_, i) => <i key={i} />)}</span>}
             {t.name && <span className="mh-map-nm">{t.name}</span>}
           </button>
         );
@@ -16386,7 +16391,7 @@ export default function App({ onSignOut }) {
         const beast = ch && t.charId === viewingCharId && !gmViewing ? ch.f_beastform || "" : t.beast || "";
         const trf = ch && t.charId === viewingCharId && !gmViewing ? visibleTransform(ch) : t.trf || "";
         const elem = ch && t.charId === viewingCharId && !gmViewing ? ch.f_elemental_active || "" : t.elem || "";
-        return { ...t, hidden, conds, beast, trf, elem, name: ch?.f_name || t.name || "Personaje", cls: ch?.f_class || "", color: classColor(ch?.f_class), hp: ch ? [Number(ch.hp_marked || 0), Number(ch.r_hp || 0)] : null };
+        return { ...t, hidden, conds, beast, trf, elem, name: ch?.f_name || t.name || "Personaje", cls: ch?.f_class || "", color: classColor(ch?.f_class), rank: ch ? (Number(ch.f_level || 1) <= 1 ? 1 : tierForLevel(ch.f_level || 1) === 2 ? 2 : 3) : 0, color2: (() => { const mc = getMulticlass(ch); return mc ? classColor(mc.cls) : null; })(), hp: ch ? [Number(ch.hp_marked || 0), Number(ch.r_hp || 0)] : null };
       }
       if (t.kind === "pet") return { ...t, cls: characters[t.ownerCharId]?.f_class || "", color: classColor(characters[t.ownerCharId]?.f_class) };
       return { ...t, color: t.kind === "foe" ? "#C0504A" : "#C9A24A", img: t.imgId ? castImgs[t.imgId] : null, ...(t.stats ? { hp: [Number(t.stats.hpMarked || 0), Number(t.stats.hp || 0)] } : {}) };
