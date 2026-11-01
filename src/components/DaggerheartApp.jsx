@@ -5017,6 +5017,27 @@ const sharedStyles = `
   .mh-fan-elems button { all: unset; box-sizing: border-box; cursor: pointer; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 9px 4px; border-radius: 12px; font: 600 11.5px Inter, system-ui, sans-serif; color: #fff; background: color-mix(in srgb, var(--ec) 30%, #141018); border: 1.5px solid color-mix(in srgb, var(--ec) 70%, transparent); }
   .mh-fan-elems button:hover { background: color-mix(in srgb, var(--ec) 48%, #141018); } .mh-fan-elems button.is-on { background: var(--ec); color: #1a1206; }
   .mh-fan-big { position: relative; width: 300px; height: 420px; max-height: 88vh; --s: 1; }
+  .mh-toast-warn { position: fixed; left: 50%; bottom: 28px; translate: -50% 0; z-index: 9999; max-width: min(520px, 92vw); padding: 10px 16px; border-radius: 12px; background: #3a1a1a; color: #ffd9d2; border: 1px solid #D9644E; font: 600 13px Inter, system-ui, sans-serif; box-shadow: 0 12px 34px rgba(0,0,0,.5); pointer-events: none; animation: mh-toast-in .25s ease both; }
+  .mh-sheet.is-embedded .mh-toast-warn { zoom: calc(1 / var(--mhz, 1)); }
+  @keyframes mh-toast-in { from { opacity: 0; translate: -50% 10px; } }
+  .mh-evo-wrap { position: fixed; inset: 0; z-index: 9998; background: rgba(8,6,12,.72); display: flex; align-items: center; justify-content: center; padding: 14px; }
+  .mh-sheet.is-embedded .mh-evo-wrap { zoom: calc(1 / var(--mhz, 1)); }
+  .mh-evo { width: min(820px, 96%); max-height: 92vh; padding: 18px 22px; gap: 12px; } .mh-evo .mh-bpick-img { height: 62px; } .mh-evo .mh-bpick-g { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .mh-evo-hope { display: flex; align-items: center; justify-content: center; gap: 10px; font: 600 12.5px Inter, system-ui, sans-serif; color: var(--mh-muted, #aaa); } .mh-evo-hope b { color: var(--mh-ink, #fff); }
+  .mh-evo-pips { display: inline-flex; gap: 4px; } .mh-evo-pips i { width: 14px; height: 14px; rotate: 45deg; border-radius: 3px; border: 1.5px solid #E3B04B; } .mh-evo-pips i.is-on { background: #E3B04B; } .mh-evo-pips i.is-spend { background: #D9644E; border-color: #D9644E; }
+  .mh-evo-h { display: flex; align-items: center; gap: 8px; font: 700 13px Inter, system-ui, sans-serif; } .mh-evo-h i { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-size: 11.5px; background: var(--acc, #E3B04B); color: var(--acc-on, #1F1606); }
+  .mh-evo-traits { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+  .mh-evo-traits button { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 9px 6px; border-radius: 12px; border: 1px solid var(--mh-line2, rgba(255,255,255,.18)); background: color-mix(in srgb, var(--mh-panel, #1b1824) 70%, transparent); font: 600 12.5px Inter, system-ui, sans-serif; transition: transform .12s ease, border-color .12s ease; } .mh-evo-traits button:hover { transform: translateY(-2px); } .mh-evo-traits button b { font-size: 12px; color: var(--mh-muted, #aaa); } .mh-evo-traits button.is-on { border-color: #7FB77A; background: color-mix(in srgb, #7FB77A 22%, transparent); } .mh-evo-traits button.is-on b { color: #A9E3A4; }
+  .mh-evo-sum { padding: 10px 14px; border-radius: 12px; text-align: center; font: 500 12.5px/1.45 Inter, system-ui, sans-serif; color: var(--mh-muted, #aaa); border: 1px dashed var(--mh-line2, rgba(255,255,255,.2)); } .mh-evo-sum.is-ready { color: var(--mh-ink, #fff); border-style: solid; border-color: #7FB77A; background: color-mix(in srgb, #7FB77A 14%, transparent); } .mh-evo-sum b { color: #E3B04B; }
+  .mh-evo-act { display: flex; justify-content: center; align-items: center; gap: 12px; }
+  .mh-evo-go { all: unset; cursor: pointer; padding: 10px 22px; border-radius: 99px; font: 700 13.5px Inter, system-ui, sans-serif; background: #7FB77A; color: #10200e; box-shadow: 0 6px 18px -6px #7FB77A; transition: transform .12s ease, opacity .12s ease; } .mh-evo-go:hover:not(:disabled) { transform: translateY(-2px); } .mh-evo-go:disabled { opacity: .4; cursor: not-allowed; box-shadow: none; }
+  /* Daño en la ficha del mapa al marcar vida: sacudida, destello rojo, onda y cifra que sube */
+  .mh-map-tk.is-hurt { animation: mh-tk-hit .5s ease both; } .mh-map-tk.is-hurt .mh-map-face { animation: mh-tk-flash .6s ease both; }
+  .mh-map-dmgring { position: absolute; z-index: 6; inset: 14%; border: 3px solid #F0615A; border-radius: 50%; pointer-events: none; animation: mh-dmg-ring .7s ease-out both; }
+  .mh-map-dmg { position: absolute; z-index: 7; left: 50%; top: 8%; translate: -50% 0; font: 800 17px 'Inter', system-ui, sans-serif; color: #FF6B62; text-shadow: 0 0 6px #000, 0 2px 3px #000; pointer-events: none; animation: mh-dmg-float 1.2s ease-out both; }
+  @keyframes mh-dmg-ring { 0% { opacity: .95; scale: .7; } 100% { opacity: 0; scale: 2; } }
+  @keyframes mh-dmg-float { 0% { opacity: 0; translate: -50% 6px; scale: .6; } 18% { opacity: 1; scale: 1.3; } 100% { opacity: 0; translate: -50% -34px; scale: 1; } }
+  @media (prefers-reduced-motion: reduce) { .mh-map-tk.is-hurt, .mh-map-tk.is-hurt .mh-map-face, .mh-map-dmgring, .mh-map-dmg { animation: none; } }
   .mh-elpick, .mh-bpick { box-sizing: border-box; width: min(660px, 94vw); max-height: 88vh; overflow: auto; padding: 22px; border-radius: 20px; display: flex; flex-direction: column; gap: 16px; color: var(--mh-ink, #fff); background: color-mix(in srgb, var(--mh-panel, #1b1824) 96%, #000); border: 1px solid var(--mh-line2, rgba(255,255,255,.14)); box-shadow: 0 30px 90px rgba(0,0,0,.65); scrollbar-width: thin; }
   .mh-bpick { width: min(780px, 94vw); }
   .mh-elpick-h { display: flex; flex-direction: column; gap: 4px; text-align: center; } .mh-elpick-h b { font: 700 19px 'Cinzel', Georgia, serif; letter-spacing: .02em; } .mh-elpick-h span { font: 500 12.5px Inter, system-ui, sans-serif; color: var(--mh-muted, #aaa); }
@@ -11270,7 +11291,7 @@ function MapBoard({ aimRange, rangeMenu, cfx, meCharId, onDragInfo, onStore, pla
             key={t.id}
             type="button"
             data-tid={t.id}
-            className={"mh-map-tk is-" + t.kind + (t.beast || t.trf ? " is-trf" : "") + (morphs[t.id] ? " is-morph" : "") + (t.elem ? " is-el-" + String(t.elem).toLowerCase() : elemOut[t.id] ? " is-el-out is-el-p-" + elemOut[t.id].toLowerCase() : "") + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id && anim.kind !== "free" && anim.kind !== "howl" ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") + (anim.kind === "web" ? " is-web" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
+            className={"mh-map-tk is-" + t.kind + (hAnim && hAnim.to === t.id ? " is-hurt" : "") + (t.beast || t.trf ? " is-trf" : "") + (morphs[t.id] ? " is-morph" : "") + (t.elem ? " is-el-" + String(t.elem).toLowerCase() : elemOut[t.id] ? " is-el-out is-el-p-" + elemOut[t.id].toLowerCase() : "") + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id && anim.kind !== "free" && anim.kind !== "howl" ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") + (anim.kind === "web" ? " is-web" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
             style={{ ...at(pos.x, pos.y), "--tc": t.color, ...(anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); return tg ? { "--ax": (tg.x - t.x) * 100 + "%", "--ay": (tg.y - t.y) * 100 + "%" } : {}; })() : {}) }}
             onPointerDown={(e) => startDrag(e, t)}
             onContextMenu={(e) => openMenu(e, t)}
@@ -11280,6 +11301,12 @@ function MapBoard({ aimRange, rangeMenu, cfx, meCharId, onDragInfo, onStore, pla
             tabIndex={t.vanished ? -1 : movable || onPick ? 0 : -1}
             aria-hidden={t.vanished || undefined}
           >
+            {hAnim && hAnim.to === t.id && (
+              <>
+                <span key={"dr" + hAnim.key} className="mh-map-dmgring" aria-hidden="true" />
+                <span key={"dn" + hAnim.key} className="mh-map-dmg" aria-hidden="true">−{hAnim.amount || 1}</span>
+              </>
+            )}
             {vis[t.id] && <span key={vis[t.id].n} className="mh-map-puff" aria-hidden="true"><i /><i /><i /><i /><i /></span>}
             {mapConds(t).map((c) => (
               <span key={c} className={"mh-map-fx fx-" + MAP_COND_FX[c].cls} aria-hidden="true">
@@ -13947,9 +13974,10 @@ export default function App({ onSignOut }) {
     evoCharRef.current = id;
     const c = characters[id];
     if (!c) return;
-    if (Number(c.hope_marked || 0) < 3) {
+    if (Number(c.hope_marked ?? HOPE_DEFAULT) < 3) {
       setEvolutionWarning("Necesitas al menos 3 de Esperanza disponible para usar Evolución.");
       setTimeout(() => setEvolutionWarning(""), 3000);
+      if (sheetCampaignId) pushMapLog(sheetCampaignId, "Evolución: necesitas al menos 3 de Esperanza", "info");
       return;
     }
     setEvoBeastform("");
@@ -13968,7 +13996,7 @@ export default function App({ onSignOut }) {
       updateCharacterFields(charId, {
         f_beastform: form,
         f_evolution_trait: trait,
-        hope_marked: String(Math.max(0, Number(cur.hope_marked || 0) - 3)),
+        hope_marked: String(Math.max(0, Number(cur.hope_marked ?? HOPE_DEFAULT) - 3)),
       });
       postCampaignEvent(charId, `🌙 Usa Evolución: adopta la forma de ${form}`);
     };
@@ -18752,9 +18780,7 @@ export default function App({ onSignOut }) {
             {/* Body */}
             <div className="mh-sheet-body" style={embedded ? { position: "relative", zIndex: 1 } : { position: "relative", zIndex: 1, flex: 1, overflowY: "auto", padding: "22px 26px", scrollbarGutter: "stable" }}>
               <div style={{ maxWidth: embedded ? "none" : 1300, margin: "0 auto" }}>
-                {evolutionWarning && (
-                  <div style={{ fontSize: 12.5, color: "#D9644E", marginBottom: 14, fontWeight: 600 }}>{evolutionWarning}</div>
-                )}
+                {evolutionWarning && <div className="mh-toast-warn" role="alert">{evolutionWarning}</div>}
                 {(() => {
                   const tabs = [
                     { key: "general", label: "Detalles generales", Icon: Home },
@@ -26490,94 +26516,68 @@ export default function App({ onSignOut }) {
               </div>
             )}
 
-            {showEvolutionModal && (
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  background: "rgba(8,6,12,0.70)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  zIndex: 40,
-                  padding: 20,
-                }}
-                onClick={() => setShowEvolutionModal(false)}
-              >
-                <div
-                  className="mh-card"
-                  style={{ margin: 0, width: "min(560px, 100%)", maxHeight: "82%", overflowY: "auto", padding: "22px 24px" }}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div style={{ fontSize: 11.5, color: "var(--mh-muted)", marginBottom: 2 }}>Característica de Esperanza · 3 de Esperanza</div>
-                  <h2 className="mh-serif" style={{ margin: "0 0 4px", fontSize: 19, fontWeight: 600 }}>
-                    Evolución
-                  </h2>
-                  <div style={{ fontSize: 12.5, color: "var(--mh-ink3)", marginBottom: 18 }}>
-                    Te transformas en una Forma de Bestia sin marcar Estrés. Elige un rasgo para subirlo +1 mientras
-                    mantengas esa forma.
-                  </div>
-
-                  <label className="mh-label">Forma de bestia</label>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 18 }}>
-                    {BEASTFORMS.filter((b) => b.tier <= tierForLevel(c.f_level || 1)).map((b) => (
-                      <div
-                        key={b.key}
-                        onClick={() => setEvoBeastform(b.key)}
-                        style={{
-                          padding: "7px 13px",
-                          borderRadius: 20,
-                          border: "1px solid " + (evoBeastform === b.key ? b.color : "var(--mh-line2)"),
-                          background: evoBeastform === b.key ? alpha(b.color, 10) : "var(--mh-panel)",
-                          color: ink(evoBeastform === b.key ? b.color : "var(--mh-ink)"),
-                          fontSize: 13,
-                          fontWeight: evoBeastform === b.key ? 600 : 500,
-                          cursor: "pointer",
-                        }}
-                      >
-                        {b.key}
-                      </div>
-                    ))}
-                  </div>
-
-                  <label className="mh-label">Rasgo a mejorar (+1)</label>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 22 }}>
-                    {TRAITS.map((t) => (
-                      <div
-                        key={t.key}
-                        onClick={() => setEvoTrait(t.key)}
-                        style={{
-                          padding: "7px 13px",
-                          borderRadius: 20,
-                          border: "1px solid " + (evoTrait === t.key ? "#7FB77A" : "var(--mh-line2)"),
-                          background: evoTrait === t.key ? "#7FB77A14" : "var(--mh-panel)",
-                          color: ink(evoTrait === t.key ? "#7FB77A" : "var(--mh-ink)"),
-                          fontSize: 13,
-                          fontWeight: evoTrait === t.key ? 600 : 500,
-                          cursor: "pointer",
-                        }}
-                      >
-                        {t.label}
-                      </div>
-                    ))}
-                  </div>
-
-                  <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
-                    <button className="mh-btn-ghost" onClick={() => setShowEvolutionModal(false)}>
-                      Cancelar
-                    </button>
-                    <button
-                      className="mh-btn"
-                      disabled={!evoBeastform || !evoTrait}
-                      style={{ opacity: evoBeastform && evoTrait ? 1 : 0.5, cursor: evoBeastform && evoTrait ? "pointer" : "not-allowed" }}
-                      onClick={confirmEvolution}
-                    >
-                      Confirmar Evolución
-                    </button>
+            {showEvolutionModal && (() => {
+              const tierN = tierForLevel(c.f_level || 1);
+              const hopeNow = Number(c.hope_marked ?? HOPE_DEFAULT);
+              const forms = BEASTFORMS.filter((b) => b.tier <= tierN);
+              const selForm = BEASTFORMS.find((b) => b.key === evoBeastform);
+              const selTrait = TRAITS.find((t) => t.key === evoTrait);
+              const ready = !!selForm && !!selTrait;
+              return (
+                <div className="mh-evo-wrap" onClick={() => setShowEvolutionModal(false)}>
+                  <div className="mh-bpick mh-evo" role="dialog" aria-label="Evolución" onClick={(e) => e.stopPropagation()}>
+                    <div className="mh-elpick-h">
+                      <b>Evolución</b>
+                      <span>Característica de Esperanza · te transformas en una Forma de Bestia sin marcar Estrés</span>
+                    </div>
+                    <div className="mh-evo-hope" title="Coste de la Evolución">
+                      <span>Esperanza</span>
+                      <span className="mh-evo-pips">
+                        {Array.from({ length: Math.max(hopeNow, 3) }, (_, i) => (
+                          <i key={i} className={i < hopeNow ? (i >= hopeNow - 3 ? "is-spend" : "is-on") : ""} />
+                        ))}
+                      </span>
+                      <b>{hopeNow} → {Math.max(0, hopeNow - 3)}</b>
+                    </div>
+                    <div className="mh-evo-h"><i>1</i> Elige la forma</div>
+                    <div className="mh-bpick-g">
+                      {forms.map((b) => (
+                        <button key={b.key} type="button" className={"mh-bpick-c" + (evoBeastform === b.key ? " is-on" : "")} style={{ "--bc": b.color }} onClick={() => setEvoBeastform(b.key)} title={b.animals}>
+                          <span className="mh-bpick-img" style={b.image ? { backgroundImage: 'url("' + b.image + '")' } : undefined} />
+                          <b>{b.key}</b>
+                          <small>{b.animals}</small>
+                          <em>{b.bonus}</em>
+                          {evoBeastform === b.key && <span className="mh-bpick-on">Elegida</span>}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="mh-evo-h"><i>2</i> Mejora un rasgo (+1 mientras mantengas la forma)</div>
+                    <div className="mh-evo-traits">
+                      {TRAITS.map((t) => {
+                        const v = Number(c[t.key] || 0);
+                        return (
+                          <button key={t.key} type="button" className={evoTrait === t.key ? "is-on" : ""} onClick={() => setEvoTrait(t.key)}>
+                            <span>{t.label}</span>
+                            <b>{v >= 0 ? "+" + v : v}{evoTrait === t.key ? " → " + (v + 1 >= 0 ? "+" + (v + 1) : v + 1) : ""}</b>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className={"mh-evo-sum" + (ready ? " is-ready" : "")}>
+                      {ready ? (
+                        <>Te transformarás en <b>{selForm.key}</b>, con <b>{selTrait.label} +1</b>. Gastas <b>3 de Esperanza</b> y no marcas Estrés.</>
+                      ) : (
+                        <>{!selForm && !selTrait ? "Elige una forma y un rasgo para continuar." : selForm ? "Elige un rasgo para continuar." : "Elige una forma para continuar."}</>
+                      )}
+                    </div>
+                    <div className="mh-evo-act">
+                      <button type="button" className="mh-elpick-x" onClick={() => setShowEvolutionModal(false)}>Cancelar</button>
+                      <button type="button" className="mh-evo-go" disabled={!ready} onClick={confirmEvolution}>Evolucionar · 3 de Esperanza</button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {deathMoveCharId === viewingCharId && (
               <div
