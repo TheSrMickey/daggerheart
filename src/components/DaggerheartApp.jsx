@@ -15,7 +15,7 @@ import { ResetDiceCard, DeleteAccountCard } from "./AccountDanger";
 import { ModernSheet } from "./ModernSheet";
 import { Tour } from "./Tour";
 import { Dice3D, canDice3d, DICE3D_SIDES } from "./Dice3D";
-import { d10Sprites } from "./D10Sprites";
+import { d10Sprite } from "./D10Sprites";
 import { warmDiceAssets } from "./DiceSkins";
 import { Personalizacion, CARD_BACK_KEYS, CardBack } from "./CardBacks";
 import WorldMap from "./WorldMap";
@@ -5026,7 +5026,7 @@ const sharedStyles = `
   .mh-die.is-gone { position: relative; z-index: 6; animation: mh-die-gone .65s ease-in forwards; pointer-events: none; }
   @keyframes mh-die-gone { 0% { transform: translateY(0) rotate(0); opacity: 1; } 100% { transform: translateY(calc(-150px * var(--s, 1))) rotate(300deg) scale(.4); opacity: 0; } }
   @media (prefers-reduced-motion: reduce) { .mh-die.is-gone { animation: none; opacity: 0; } }
-  .mh-fan-tokctl { position: absolute; left: 0; right: 0; top: calc(100% + 12px); display: flex; flex-direction: column; align-items: center; gap: 8px; } .mh-fan-tray { --s: 1.15; position: absolute; left: 0; right: 0; bottom: 4%; z-index: 4; display: flex; justify-content: center; pointer-events: none; } .mh-fan-tray .mh-die { pointer-events: auto; } .mh-die.is-drag { touch-action: none; cursor: grab; } .mh-die.is-drag:active { cursor: grabbing; z-index: 8; } .mh-fan-tokctl .rc { all: unset; cursor: pointer; padding: 7px 16px; border-radius: 99px; background: #E3B04B; color: #1f1606; font: 700 12.5px Inter, system-ui, sans-serif; }
+  .mh-fan-tokctl { position: absolute; left: 0; right: 0; top: calc(100% + 12px); display: flex; flex-direction: column; align-items: center; gap: 8px; } .mh-fan-tray { --s: 1.15; position: absolute; left: calc(100% + 14px); top: 3%; bottom: 3%; z-index: 4; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; pointer-events: none; } .mh-fan-tray .mh-die { margin: calc(-3px * var(--s)) 0; } @media (max-width: 640px) { .mh-fan-tray { left: 0; right: 0; top: auto; bottom: 3%; flex-direction: row; justify-content: center; --s: .95; } .mh-fan-tray .mh-die { margin: 0 calc(-8px * var(--s)); } } .mh-fan-tray .mh-die { pointer-events: auto; } .mh-die.is-drag { touch-action: none; cursor: grab; } .mh-die.is-drag:active { cursor: grabbing; z-index: 8; } .mh-fan-tokctl .rc { all: unset; cursor: pointer; padding: 7px 16px; border-radius: 99px; background: #E3B04B; color: #1f1606; font: 700 12.5px Inter, system-ui, sans-serif; }
   .mh-sess { width: min(560px, 94vw); }
   .mh-sess-list { display: flex; flex-direction: column; gap: 8px; } .mh-sess-it { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--mh-panel, #1b1824) 70%, transparent); border: 1px solid var(--mh-line2, rgba(255,255,255,.14)); } .mh-sess-it > svg { color: #E3B04B; flex: none; } .mh-sess-it span { display: flex; flex-direction: column; } .mh-sess-it small { color: var(--mh-muted, #aaa); font-size: 11.5px; }
   .mh-sess-toks { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; } .mh-sess-toks button { all: unset; box-sizing: border-box; cursor: pointer; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; font: 700 15px Inter, system-ui, sans-serif; border: 2px solid #E3B04B; color: #E3B04B; } .mh-sess-toks button.is-on { background: #E3B04B; color: #1f1606; }
@@ -10686,19 +10686,18 @@ function HomeDice({ stats }) {
 // Abanico de cartas de dominio en el borde inferior del mapa: se arrastran hasta una casilla para usarlas.
 // Cartas que se lanzan apuntando: una línea de guiones sale del personaje hasta el ratón.
 const AIM_CARD = "Enredo Feroz";
-const DIE_NUMS = [10, 7, 4, 9, 6, 3, 8, 5, 2, 1];
-// Ficha de carta con forma de dado d10 (marfil, con sombra y número); apagada es solo la sombra y un contorno tenue.
-function ChaosDie({ on, i }) {
+// Ficha de carta con forma de dado d10 (sin número, del color del dominio); apagada es solo la sombra y un contorno tenue.
+function ChaosDie({ on, i, color }) {
   const K = "M50 3 L93 38 L50 97 L7 38 Z";
-  const [sprites, setSprites] = useState(null);
+  const [sprite, setSprite] = useState(null);
   useEffect(() => {
     let live = true;
-    if (on) d10Sprites().then((u) => live && u && setSprites(u));
+    if (on) d10Sprite(color).then((u) => live && u && setSprite(u));
     return () => {
       live = false;
     };
-  }, [on]);
-  if (on && sprites) return <img src={sprites[DIE_NUMS[i % DIE_NUMS.length] - 1]} alt="" draggable={false} style={{ rotate: ((i * 47) % 50) - 25 + "deg" }} />;
+  }, [on, color]);
+  if (on && sprite) return <img src={sprite} alt="" draggable={false} style={{ rotate: ((i * 47) % 50) - 25 + "deg" }} />;
   if (!on)
     return (
       <svg viewBox="0 0 100 100" aria-hidden="true">
@@ -10706,20 +10705,20 @@ function ChaosDie({ on, i }) {
         <path d={K} fill="none" stroke="#fff" strokeOpacity=".28" strokeWidth="3" strokeDasharray="6 5" strokeLinejoin="round" />
       </svg>
     );
-  const fill = ["#EDE6FF", "#E2D9FA", "#F1EBFF"][i % 3];
   return (
     <svg viewBox="0 0 100 100" aria-hidden="true" style={{ rotate: ((i * 47) % 60) - 25 + "deg" }}>
       <ellipse cx="50" cy="94" rx="30" ry="6" fill="#000" opacity=".4" />
-      <path d={K} fill={fill} stroke="#4a3a8f" strokeWidth="3" strokeLinejoin="round" />
-      <path d="M7 38 L50 56 L93 38 M50 3 L50 56 M50 56 L50 97" fill="none" stroke="#4a3a8f" strokeWidth="2.5" strokeLinejoin="round" />
-      <path d="M50 56 L93 38 L50 97 Z" fill="#000" opacity=".12" />
-      <path d="M7 38 L50 56 L50 97 Z" fill="#000" opacity=".22" />
-      <text x="50" y="36" textAnchor="middle" fontSize="22" fontWeight="700" fill="#3a2a7a">{DIE_NUMS[i % DIE_NUMS.length]}</text>
+      <path d={K} fill={color} fillOpacity=".8" stroke="#fff" strokeOpacity=".7" strokeWidth="3" strokeLinejoin="round" />
+      <path d="M7 38 L50 56 L93 38 M50 3 L50 56 M50 56 L50 97" fill="none" stroke="#fff" strokeOpacity=".6" strokeWidth="2.5" strokeLinejoin="round" />
+      <path d="M50 56 L93 38 L50 97 Z" fill="#000" opacity=".15" />
+      <path d="M7 38 L50 56 L50 97 Z" fill="#000" opacity=".28" />
     </svg>
   );
 }
 // Fichas de una carta como dados; al bajar el número, los dados gastados salen despedidos.
-function TokDice({ have, max, onPick }) {
+// Con onPick (carta abierta) los dados se pueden agarrar y lanzar: llevan la inercia del gesto, giran, rebotan en los bordes de la pantalla y
+// se van frenando como un dado sobre la mesa; un toque sin mover pone o quita la ficha.
+function TokDice({ have, max, onPick, color = "#d9482a" }) {
   const prev = useRef(have);
   const [gone, setGone] = useState([]);
   useEffect(() => {
@@ -10731,46 +10730,103 @@ function TokDice({ have, max, onPick }) {
     }
     prev.current = have;
   }, [have]);
-  // Con la carta abierta los dados se pueden arrastrar para despejar el texto; un toque sin mover pone o quita la ficha.
-  const [off, setOff] = useState({});
+  const [pose, setPose] = useState({});
+  const st = useRef({}); // k -> { x, y, r, vx, vy, vr, minX, maxX, minY, maxY, drag }
+  const raf = useRef(0);
   const drag = useRef(null);
+  const loop = useRef(null);
+  loop.current = () => {
+    let alive = false;
+    Object.values(st.current).forEach((d) => {
+      if (d.drag) return void (alive = true);
+      if (Math.abs(d.vx) + Math.abs(d.vy) + Math.abs(d.vr) < 0.2) return void (d.vx = d.vy = d.vr = 0);
+      alive = true;
+      d.x += d.vx;
+      d.y += d.vy;
+      d.r += d.vr;
+      if (d.x < d.minX || d.x > d.maxX) {
+        d.x = Math.max(d.minX, Math.min(d.maxX, d.x));
+        d.vx *= -0.55;
+        d.vr = -d.vr * 0.6 + d.vy * 0.05;
+      }
+      if (d.y < d.minY || d.y > d.maxY) {
+        d.y = Math.max(d.minY, Math.min(d.maxY, d.y));
+        d.vy *= -0.55;
+        d.vr = -d.vr * 0.6 + d.vx * 0.05;
+      }
+      d.vx *= 0.955;
+      d.vy *= 0.955;
+      d.vr *= 0.95;
+    });
+    setPose(Object.fromEntries(Object.entries(st.current).map(([k, d]) => [k, { x: d.x, y: d.y, r: d.r }])));
+    raf.current = alive ? requestAnimationFrame(() => loop.current()) : 0;
+  };
+  useEffect(() => () => cancelAnimationFrame(raf.current), []);
   const down = (e, k) => {
     e.currentTarget.setPointerCapture(e.pointerId);
-    drag.current = { k, sx: e.clientX, sy: e.clientY, ox: off[k]?.x || 0, oy: off[k]?.y || 0, moved: false };
+    const d = st.current[k] || (st.current[k] = { x: 0, y: 0, r: 0, vx: 0, vy: 0, vr: 0 });
+    const rc = e.currentTarget.getBoundingClientRect();
+    const vw = window.innerWidth, vh = window.innerHeight;
+    Object.assign(d, { vx: 0, vy: 0, vr: 0, drag: true, minX: -(rc.left - d.x), maxX: 0, minY: -(rc.top - d.y), maxY: vh - (rc.top - d.y) - rc.height });
+    d.maxX = vw - (rc.left - d.x) - rc.width;
+    drag.current = { k, sx: e.clientX, sy: e.clientY, ox: d.x, oy: d.y, moved: false, lx: e.clientX, ly: e.clientY, lt: performance.now(), vx: 0, vy: 0 };
   };
   const move = (e) => {
-    const d = drag.current;
-    if (!d) return;
-    const dx = e.clientX - d.sx, dy = e.clientY - d.sy;
-    if (!d.moved && Math.hypot(dx, dy) < 5) return;
-    d.moved = true;
-    setOff((o) => ({ ...o, [d.k]: { x: d.ox + dx, y: d.oy + dy } }));
+    const g = drag.current;
+    if (!g) return;
+    const dx = e.clientX - g.sx, dy = e.clientY - g.sy;
+    if (!g.moved && Math.hypot(dx, dy) < 5) return;
+    g.moved = true;
+    const now = performance.now(), dt = Math.max(1, now - g.lt);
+    g.vx = g.vx * 0.5 + ((e.clientX - g.lx) / dt) * 16 * 0.5; // px por fotograma, suavizado
+    g.vy = g.vy * 0.5 + ((e.clientY - g.ly) / dt) * 16 * 0.5;
+    g.lx = e.clientX;
+    g.ly = e.clientY;
+    g.lt = now;
+    const d = st.current[g.k];
+    d.x = Math.max(d.minX, Math.min(d.maxX, g.ox + dx));
+    d.y = Math.max(d.minY, Math.min(d.maxY, g.oy + dy));
+    d.r += g.vx * 0.6;
+    setPose(Object.fromEntries(Object.entries(st.current).map(([kk, v]) => [kk, { x: v.x, y: v.y, r: v.r }])));
   };
   const up = () => {
-    const d = drag.current;
+    const g = drag.current;
     drag.current = null;
-    if (d && !d.moved) onPick(d.k);
+    if (!g) return;
+    const d = st.current[g.k];
+    d.drag = false;
+    if (!g.moved) return onPick(g.k);
+    // si se suelta parado no hay lanzamiento
+    const still = performance.now() - g.lt > 90;
+    d.vx = still ? 0 : g.vx;
+    d.vy = still ? 0 : g.vy;
+    d.vr = still ? 0 : (g.vx + g.vy) * 0.9;
+    if (!raf.current) raf.current = requestAnimationFrame(() => loop.current());
   };
   return Array.from({ length: max }, (_, k) => {
     const face = k < have || gone.includes(k);
     const cls = "mh-die" + (face ? " is-on" : " is-off") + (gone.includes(k) ? " is-gone" : "");
+    const p = pose[k];
     return onPick ? (
       <button
         key={k}
         type="button"
         className={cls + " is-drag"}
-        style={off[k] ? { translate: off[k].x + "px " + off[k].y + "px" } : undefined}
-        aria-label={k < have ? "Quitar ficha (arrastra para apartar el dado)" : "Poner ficha"}
+        style={p ? { translate: p.x + "px " + p.y + "px", rotate: p.r + "deg" } : undefined}
+        aria-label={k < have ? "Quitar ficha (arrastra o lanza el dado para apartarlo)" : "Poner ficha"}
         onPointerDown={(e) => down(e, k)}
         onPointerMove={move}
         onPointerUp={up}
-        onPointerCancel={() => (drag.current = null)}
+        onPointerCancel={() => {
+          if (drag.current) st.current[drag.current.k].drag = false;
+          drag.current = null;
+        }}
         onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), onPick(k))}
       >
-        <ChaosDie on={face} i={k} />
+        <ChaosDie on={face} i={k} color={color} />
       </button>
     ) : (
-      <span key={k} className={cls}><ChaosDie on={face} i={k} /></span>
+      <span key={k} className={cls}><ChaosDie on={face} i={k} color={color} /></span>
     );
   });
 }
@@ -10972,7 +11028,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
               <FanFace c={c} col={col} />
               {cardToks && !c.weapon && !c.rowCard && (() => {
                 const ti = cardToks(c);
-                return ti ? <span className="mh-fan-toks" title={ti.have + " de " + ti.max + " fichas"} aria-label={ti.have + " de " + ti.max + " fichas"}><TokDice have={ti.have} max={ti.max} /></span> : null;
+                return ti ? <span className="mh-fan-toks" title={ti.have + " de " + ti.max + " fichas"} aria-label={ti.have + " de " + ti.max + " fichas"}><TokDice have={ti.have} max={ti.max} color={DOMAIN_COLORS[c.domain] || "#C9A24B"} /></span> : null;
               })()}
               {c.ghost && <span className="mh-fan-ghostlab">{c.noHope ? "Sin Esperanza" : c.ghostLab || "1 Esperanza"}</span>}
             </div>
@@ -10988,11 +11044,11 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
               if (!ti || !onCardTok) return null;
               return (
                 <>
-                <div className="mh-fan-tray" role="group" aria-label="Fichas sobre la carta">
-                  <TokDice have={ti.have} max={ti.max} onPick={(k) => onCardTok(open.key, k + 1 === ti.have ? k : k + 1)} />
+                <div className="mh-fan-tray" role="group" aria-label="Fichas sobre la carta" style={{ "--s": ti.max > 5 ? Math.max(0.6, (5.2 / ti.max) * 1.15) : undefined }}>
+                  <TokDice have={ti.have} max={ti.max} color={DOMAIN_COLORS[open.domain] || "#C9A24B"} onPick={(k) => onCardTok(open.key, k + 1 === ti.have ? k : k + 1)} />
                 </div>
                 <div className="mh-fan-tokctl">
-                  <span className="mh-fan-ask">{ti.have} de {ti.max} {ti.cfg.label} · arrastra los dados para leer la carta</span>
+                  <span className="mh-fan-ask">{ti.have} de {ti.max} {ti.cfg.label} · lanza los dados con el ratón si te estorban</span>
                   <button type="button" className="rc" onClick={() => onRecharge && onRecharge(open.key)}>Recargar · 1 Estrés</button>
                 </div>
                 </>

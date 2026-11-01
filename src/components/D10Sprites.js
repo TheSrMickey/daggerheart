@@ -1,14 +1,14 @@
 "use client";
 
-// Imágenes de los d10 que hacen de fichas sobre las cartas. Se renderizan una sola vez con three.js y el mismo vidrio
-// que los dados de daño de las tiradas (Dice3D), con el número hacia arriba y la cámara algo inclinada. Si no hay
-// WebGL devuelve null y la carta usa el dibujo plano.
-let cache = null;
+// Imagen del d10 (sin número) que hace de ficha sobre las cartas, teñida con el color del dominio. Se renderiza una vez
+// por color con three.js y el mismo vidrio que los dados de las tiradas (Dice3D). Si no hay WebGL devuelve null y la
+// carta usa el dibujo plano.
+const cache = new Map();
 
-export function d10Sprites() {
+export function d10Sprite(color = "#d9482a") {
   if (typeof window === "undefined") return Promise.resolve(null);
-  if (cache) return cache;
-  cache = (async () => {
+  if (cache.has(color)) return cache.get(color);
+  const job = (async () => {
     const [THREE, { RoomEnvironment }] = await Promise.all([import("three"), import("three/examples/jsm/environments/RoomEnvironment.js")]);
     const SIZE = 192;
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
@@ -64,83 +64,31 @@ export function d10Sprites() {
       byKey.get(key2).pts.push(a, b, d);
     }
     const faces = [...byKey.values()].map((f) => {
-      const uniq = [];
-      f.pts.forEach((p) => {
-        if (!uniq.some((q) => q.distanceTo(p) < 1e-4)) uniq.push(p);
-      });
-      const ctr = uniq.reduce((s, p) => s.add(p), new THREE.Vector3()).divideScalar(uniq.length);
-      // vértices en orden alrededor del centro, para medir el radio interior de la cometa
-      const u0 = uniq[0].clone().sub(ctr).normalize();
-      const w0 = new THREE.Vector3().crossVectors(f.n, u0);
-      const ang = (q) => Math.atan2(q.clone().sub(ctr).dot(w0), q.clone().sub(ctr).dot(u0));
-      uniq.sort((a, b) => ang(a) - ang(b));
-      let inr = 9;
-      for (let i = 0; i < uniq.length; i++) {
-        const p = uniq[i];
-        const q = uniq[(i + 1) % uniq.length];
-        const e = q.clone().sub(p).normalize();
-        const v = ctr.clone().sub(p);
-        inr = Math.min(inr, v.clone().sub(e.clone().multiplyScalar(v.dot(e))).length());
-      }
-      return { n: f.n, ctr, size: Math.min(inr * 1.35, 0.7) };
+      return { n: f.n };
     });
 
-    const numTex = (n) => {
-      const cv = document.createElement("canvas");
-      cv.width = cv.height = 128;
-      const g = cv.getContext("2d");
-      g.font = "bold 80px Georgia, serif";
-      g.textAlign = "center";
-      g.textBaseline = "middle";
-      g.lineJoin = "round";
-      g.lineWidth = 12;
-      g.strokeStyle = "#5a0f05";
-      g.strokeText(String(n), 64, 70);
-      g.fillStyle = "#fff6ee";
-      g.fillText(String(n), 64, 70);
-      if (n === 6 || n === 9) {
-        g.fillRect(52, 112, 24, 6);
-      }
-      return new THREE.CanvasTexture(cv);
-    };
-
-    const mat = new THREE.MeshPhysicalMaterial({ color: 0xffd6c8, transmission: 1, thickness: 1.6, ior: 1.5, roughness: 0.06, attenuationColor: 0xd9482a, attenuationDistance: 1.4, clearcoat: 1, clearcoatRoughness: 0.04, iridescence: 0.6, iridescenceIOR: 1.4, envMapIntensity: 1.1, transparent: true });
+    const mat = new THREE.MeshPhysicalMaterial({ color: new THREE.Color(color).lerp(new THREE.Color(0xffffff), 0.55), transmission: 1, thickness: 1.6, ior: 1.5, roughness: 0.06, attenuationColor: new THREE.Color(color), attenuationDistance: 1.4, clearcoat: 1, clearcoatRoughness: 0.04, iridescence: 0.6, iridescenceIOR: 1.4, envMapIntensity: 1.1, transparent: true });
     const edgeMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55 });
-    // Pose: apoyado sobre un polo, con una cara superior mirando a la cámara y el número derecho (su parte alta hacia el polo).
+    // Pose: apoyado sobre un polo, con una cara superior mirando a la cámara.
     const f = faces.filter((x) => x.n.y > 0.2).sort((p, q) => q.n.y - p.n.y)[0];
-    const yA = new THREE.Vector3(0, 1, 0).sub(f.n.clone().multiplyScalar(f.n.y)).normalize();
-    const xA = new THREE.Vector3().crossVectors(yA, f.n);
-    const local = new THREE.Matrix4().makeBasis(xA, yA, f.n);
-    const yaw = Math.atan2(-f.n.x, f.n.z);
     const phi = Math.asin(f.n.y) - 0.4;
     const D = 4.4;
     cam.position.set(Math.sin(0.35) * Math.cos(phi) * D, Math.sin(phi) * D, Math.cos(0.35) * Math.cos(phi) * D);
     cam.lookAt(0, 0, 0);
-    const urls = [];
-    for (let n = 1; n <= 10; n++) {
-      const body = new THREE.Group();
-      body.add(new THREE.Mesh(geo, mat));
-      body.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeMat));
-      const tex = numTex(n);
-      const pl = new THREE.Mesh(new THREE.PlaneGeometry(f.size, f.size), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, opacity: 0.95 }));
-      pl.quaternion.setFromRotationMatrix(local);
-      pl.position.copy(f.ctr.clone().add(f.n.clone().multiplyScalar(0.012)));
-      body.add(pl);
-      body.rotation.y = yaw;
-      scene.add(body);
-      renderer.render(scene, cam);
-      urls.push(renderer.domElement.toDataURL("image/png"));
-      scene.remove(body);
-      tex.dispose();
-      pl.geometry.dispose();
-      pl.material.dispose();
-    }
+    const body = new THREE.Group();
+    body.add(new THREE.Mesh(geo, mat));
+    body.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeMat));
+    body.rotation.y = Math.atan2(-f.n.x, f.n.z);
+    scene.add(body);
+    renderer.render(scene, cam);
+    const url = renderer.domElement.toDataURL("image/png");
     mat.dispose();
     edgeMat.dispose();
     pm.dispose();
     renderer.dispose();
     renderer.forceContextLoss();
-    return urls;
+    return url;
   })().catch(() => null);
-  return cache;
+  cache.set(color, job);
+  return job;
 }
