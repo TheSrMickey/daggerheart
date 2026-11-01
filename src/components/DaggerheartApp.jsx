@@ -4926,8 +4926,8 @@ const sharedStyles = `
   .mh-map-tk:focus-visible { outline: none; }
   .mh-map-tk:focus-visible .mh-map-face { box-shadow: 0 0 0 3px #fff, 0 3px 8px rgba(0,0,0,.5); }
   /* Rango de la subclase: uno, dos o tres rombos del color de la clase sobre el borde superior de la ficha, siguiendo su curvatura. Van dentro de la ficha, así que se mueven, rebotan y se animan con ella. */
-  .mh-map-rank { position: absolute; z-index: 5; inset: 10%; pointer-events: none; }
-  .mh-map-rk { position: absolute; width: 15%; aspect-ratio: 1; left: calc(50% + 50% * sin(var(--a))); top: calc(50% - 50% * cos(var(--a))); translate: -50% -50%; rotate: calc(var(--a) + 45deg); background: var(--tc); border: 1.5px solid #fff; box-sizing: border-box; box-shadow: 0 1px 3px rgba(0,0,0,.6); pointer-events: none; }
+  .mh-map-rank { position: absolute; z-index: 5; inset: 15%; pointer-events: none; } /* misma caja que la ficha (70 % de la casilla): el centro de cada rombo cae justo sobre su borde */
+  .mh-map-rk { position: absolute; width: 15%; aspect-ratio: 1; left: calc(50% + 50% * sin(var(--a))); top: calc(50% - 50% * cos(var(--a))); translate: -50% -50%; rotate: calc(var(--a) + 45deg); background: var(--tc); box-shadow: 0 1px 2px rgba(0,0,0,.45); pointer-events: none; }
   .mh-map-tk.is-trf .mh-map-rk { left: calc(50% + var(--k) * 30%); top: 0; rotate: 45deg; }
   /* El emblema de la clase siempre en blanco, con una sombra fina para leerse sobre cualquier color. */
   .mh-map-tk.is-pc .mh-map-face > svg { color: #fff !important; filter: drop-shadow(0 1px 2px rgba(0,0,0,.6)); }
@@ -11613,7 +11613,7 @@ function MapBoard({ showHp, aimRange, rangeMenu, cfx, meCharId, onDragInfo, onSt
             <span className={"mh-map-face" + (t.kind === "pc" && t.color2 ? " is-mc" : "")} title={hpLeft != null && (!plain || showHp) ? `Vida: ${t.hp[1] - t.hp[0]} de ${t.hp[1]}` : undefined}>{t.img && t.kind !== "pc" ? <img src={t.img} alt="" draggable={false} /> : <Emb size="52%" strokeWidth={2.1} />}</span>
             {t.kind === "pc" && t.rank > 0 && (
               <span className="mh-map-rank" aria-hidden="true" title={["Fundación", "Especialización", "Maestría"][t.rank - 1]}>
-                {[[0], [-15, 15], [-30, 0, 30]][t.rank - 1].map((a, i) => <i key={i} className="mh-map-rk" style={{ "--a": a + "deg", "--k": a / 30 }} />)}
+                {[[0], [-17, 17], [-34, 0, 34]][t.rank - 1].map((a, i) => <i key={i} className="mh-map-rk" style={{ "--a": a + "deg", "--k": a / 34 }} />)}
               </span>
             )}
             {t.name && <span className="mh-map-nm">{t.name}</span>}
