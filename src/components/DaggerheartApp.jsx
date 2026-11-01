@@ -5045,6 +5045,7 @@ const sharedStyles = `
   @media (max-width: 760px) { .mh-fan-card { --s: .36; margin: 0 -20px; } }
   .mh-fan-card:hover { transform: translateY(-60px) rotate(0deg) scale(1.15); z-index: 2; }
   .mh-fan-card.is-lifted { opacity: .25; transition: opacity .25s; }
+  .mh-fan-card.is-locked { filter: grayscale(1) brightness(.85); opacity: .6; }
   .mh-fan-ghost { position: fixed; z-index: 9999; pointer-events: none; transform: translate(-50%, -50%) rotate(-6deg); padding: 8px 12px; border-radius: 8px; border: 2px solid var(--c); background: #1B1824; color: #F3EBDD; font-size: 12px; box-shadow: 0 0 18px var(--c); }
   .mh-thread { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; overflow: visible; } .mh-thread line, .mh-thread path { stroke: #7fcf86; stroke-width: 2.2; stroke-dasharray: 2 8; stroke-linecap: round; vector-effect: non-scaling-stroke; opacity: .85; filter: drop-shadow(0 0 3px #000a); animation: mh-thread 1.4s linear infinite; } @keyframes mh-thread { to { stroke-dashoffset: -20; } }
   .mh-root-tag { position: absolute; z-index: 30; left: 50%; top: 100%; transform: translate(-50%, 8px); min-width: 200px; max-width: 260px; padding: 7px 10px; border-radius: 11px; background: rgba(12,12,32,.96); border: 1px solid #7fcf8688; box-shadow: 0 10px 22px -8px #000; text-align: left; pointer-events: none; opacity: 0; visibility: hidden; transition: opacity .12s; } .mh-root-tag b { display: block; font-size: 12px; color: #fff; } .mh-root-tag small { display: block; font-size: 10.5px; line-height: 1.35; color: #b5b4d0; margin-top: 2px; }
@@ -9777,7 +9778,7 @@ function ShotFx({ kind, a, b, b2, size: S }) {
     let raf;
     const t0 = performance.now();
     const tick = (n) => {
-      const v = Math.min(1, (n - t0) / 1300);
+      const v = Math.min(1, (n - t0) / (kind === "howl" ? 1700 : 1300));
       setP(v);
       if (v < 1) raf = requestAnimationFrame(tick);
     };
@@ -9791,6 +9792,35 @@ function ShotFx({ kind, a, b, b2, size: S }) {
   const q = p > 0.5 ? (p - 0.5) / 0.5 : 0;
   const magic = kind === "magic";
   const [x, y] = at(f);
+  if (kind === "howl") {
+    // Ataque Aullante: ondas de choque cuadradas que salen de la ficha hasta el alcance Muy cercano y zarpazos dentro del área.
+    const [cx, cy] = a;
+    const Rr = S * (RANGE_CELLS["Muy cercano"] + 0.5);
+    const k = Math.min(1, p / 0.7);
+    const fd = p > 0.72 ? Math.max(0, 1 - (p - 0.72) / 0.28) : 1;
+    const wave = (i) => {
+      const e = Math.max(0, Math.min(1, (k - i * 0.14) / (1 - i * 0.14)));
+      const h = Rr * (0.18 + 0.82 * e);
+      return <rect key={"w" + i} x={cx - h} y={cy - h} width={2 * h} height={2 * h} rx={S * 0.5} fill="none" stroke={i ? "#FF9A5A" : "#FFE2B0"} strokeWidth={4 - i} opacity={(1 - e) * fd * 0.95} />;
+    };
+    const slashes = Array.from({ length: 5 }, (_, i) => {
+      const ang = (i * Math.PI * 2) / 5 + 0.5, dist = Rr * (0.42 + (i % 2) * 0.22);
+      const mx = cx + Math.cos(ang) * dist, my = cy + Math.sin(ang) * dist;
+      const t = Math.max(0, Math.min(1, (p - 0.14 - i * 0.05) / 0.22));
+      const L = S * 1.1, dx = Math.cos(0.7), dy = Math.sin(0.7);
+      return [-1, 0, 1].map((j) => {
+        const ox = -dy * j * S * 0.13, oy = dx * j * S * 0.13;
+        return <line key={"c" + i + j} x1={mx - dx * L / 2 + ox} y1={my - dy * L / 2 + oy} x2={mx - dx * L / 2 + ox + dx * L * t} y2={my - dy * L / 2 + oy + dy * L * t} stroke="#FFE2B0" strokeWidth={S * 0.05} strokeLinecap="round" opacity={fd * (t > 0 ? 0.95 : 0)} />;
+      });
+    });
+    return (
+      <g pointerEvents="none">
+        <rect x={cx - Rr} y={cy - Rr} width={2 * Rr} height={2 * Rr} rx={S * 0.5} fill="#E0674F" opacity={Math.sin(Math.min(1, p / 0.6) * Math.PI) * 0.22 * fd} />
+        {[0, 1, 2].map(wave)}
+        {slashes}
+      </g>
+    );
+  }
   if (kind === "free") {
     // Liberar: el hilo verde se tensa, se rompe y se recoge a los dos lados; el aro marrón de raíces estalla y suelta ramitas y hojas.
     const L = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
@@ -10076,7 +10106,7 @@ function useAttackFx(fx) {
     last.current = fx.key;
     if (Date.now() - fx.key > 15000) return;
     setAnim(fx);
-    const t = setTimeout(() => setAnim(null), 1500);
+    const t = setTimeout(() => setAnim(null), fx.kind === "howl" ? 1900 : 1500);
     return () => clearTimeout(t);
   }, [fx?.key]);
   return anim;
@@ -10564,7 +10594,7 @@ function HomeDice({ stats }) {
 // Abanico de cartas de dominio en el borde inferior del mapa: se arrastran hasta una casilla para usarlas.
 // Cartas que se lanzan apuntando: una línea de guiones sale del personaje hasta el ratón.
 const AIM_CARD = "Enredo Feroz";
-function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack, cardBorder, aimOk, reachOf, onAim, beast, onBeast, onEvolve }) {
+function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack, cardBorder, aimOk, reachOf, onAim, beast, onBeast, onEvolve, onWolf }) {
   const cardsRef = useRef(cards);
   cardsRef.current = cards;
   const [drag, setDrag] = useState(null); // { card, x, y, cell, moved }
@@ -10630,6 +10660,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
     if (!d || cancel) return;
     if (d.card.rowCard && !(d.moved && d.card.mapUse)) {
       if (d.moved && onEvolve && d.card.evo && cellAt(ev.clientX, ev.clientY)) return onEvolve(d.card);
+      if (d.moved && onWolf && d.card.wolf && cellAt(ev.clientX, ev.clientY)) return onWolf(d.card);
       if (d.moved && beast && d.card.key === "Forma de Bestia" && cellAt(ev.clientX, ev.clientY)) {
         setBTier((beast.forms.find((b) => b.key === beast.active) || {}).tier || beast.tier || 1);
         setBeastCard(d.card);
@@ -10753,7 +10784,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
           return (
             <div
               key={c.key}
-              className={"mh-fan-card" + (c.ghost ? " is-ghostcard" + (c.noHope ? " is-nohope" : "") : "") + (lifting ? " is-lifted" : "") + (shown[i + 1] && grp(shown[i + 1]) !== grp(c) ? " is-last-weapon" : "")}
+              className={"mh-fan-card" + (c.locked ? " is-locked" : "") + (c.ghost ? " is-ghostcard" + (c.noHope ? " is-nohope" : "") : "") + (lifting ? " is-lifted" : "") + (shown[i + 1] && grp(shown[i + 1]) !== grp(c) ? " is-last-weapon" : "")}
               style={{ "--i": i, "--r": `${(i - mid) * stepR}deg`, "--y": `${Math.abs(i - mid) * stepY}px`, "--cc": col, "--m": gap / 2 + "px" }}
               onPointerDown={(e) => start(e, c)}
               title="Púlsala para verla en grande · arrástrala al mapa para usarla"
@@ -11239,7 +11270,7 @@ function MapBoard({ aimRange, rangeMenu, cfx, meCharId, onDragInfo, onStore, pla
             key={t.id}
             type="button"
             data-tid={t.id}
-            className={"mh-map-tk is-" + t.kind + (t.beast || t.trf ? " is-trf" : "") + (morphs[t.id] ? " is-morph" : "") + (t.elem ? " is-el-" + String(t.elem).toLowerCase() : elemOut[t.id] ? " is-el-out is-el-p-" + elemOut[t.id].toLowerCase() : "") + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id && anim.kind !== "free" ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") + (anim.kind === "web" ? " is-web" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
+            className={"mh-map-tk is-" + t.kind + (t.beast || t.trf ? " is-trf" : "") + (morphs[t.id] ? " is-morph" : "") + (t.elem ? " is-el-" + String(t.elem).toLowerCase() : elemOut[t.id] ? " is-el-out is-el-p-" + elemOut[t.id].toLowerCase() : "") + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id && anim.kind !== "free" && anim.kind !== "howl" ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") + (anim.kind === "web" ? " is-web" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
             style={{ ...at(pos.x, pos.y), "--tc": t.color, ...(anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); return tg ? { "--ax": (tg.x - t.x) * 100 + "%", "--ay": (tg.y - t.y) * 100 + "%" } : {}; })() : {}) }}
             onPointerDown={(e) => startDrag(e, t)}
             onContextMenu={(e) => openMenu(e, t)}
@@ -13174,6 +13205,10 @@ export default function App({ onSignOut }) {
         summary: { parts: [{ label: tier + "d20", v: total, plain: true }], total, text: "¡Aullido Frenético!", color: "#E0674F", note: "Daño físico a todo en alcance Muy cercano", dc: who + " sale de la Forma de Lobo", outcome: "dmg" },
       });
     }
+    // El efecto sobre el mapa sale cuando se han mostrado los dados.
+    const meTok = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === id);
+    const fireHowl = () => meTok && sheetCampaignId && mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: meTok.id, to: meTok.id, kind: "howl" }), "fx");
+    if (use3d) pendingOutcome.current = fireHowl; else fireHowl();
     const detail = `${tier}d20 (${rolls.join("+")}) = ${total}`;
     pushRollLog(`**${who}** — ¡Aullido Frenético! ${detail} de daño físico a todo en alcance Muy cercano`);
     postCampaignEvent(id, `🐺 ¡Aullido Frenético! ${detail} de daño físico a todas las criaturas en alcance Muy cercano. Sale de la Forma de Lobo.`, {
@@ -13724,6 +13759,17 @@ export default function App({ onSignOut }) {
     postCampaignEvent(id, `✨ Activa ${formName}`);
   };
 
+  // Hombre Lobo desde la carta: solo con 1 o más PV marcados. Primero se revela la carta y después entras en Forma de Lobo (1 Estrés).
+  const activateWolf = (charId, card) => {
+    const c = charsRef.current[charId];
+    if (!c || !sheetCampaignId) return;
+    if (c.f_transformation_form_active === "Forma de Lobo") return pushMapLog(sheetCampaignId, "Ya estás en Forma de Lobo: dura hasta el Ataque Aullante o un descanso", "info");
+    if (Number(c.hp_marked || 0) < 1) return pushMapLog(sheetCampaignId, "Forma de Lobo: necesitas tener marcado al menos 1 Punto de vida", "info");
+    const me = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
+    if (!me) return toggleTransformationForm(charId, "Forma de Lobo", false);
+    playCardOnMap(sheetCampaignId, charId, card, { noChat: true, short: true });
+    afterReveal(charId, card.key, () => toggleTransformationForm(charId, "Forma de Lobo", false));
+  };
   // Forma de Bestia desde la carta: primero se revela la carta y después te transformas (salir de la forma es inmediato).
   const morphToBeast = (charId, key, card) => {
     const me = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
@@ -22329,7 +22375,7 @@ export default function App({ onSignOut }) {
                                           const actionCards = buildActionRows().filter((it) => !/^(Ascendencia|Comunidad)/.test(it.kicker || "")).map((it) =>
                                             it.key === "subclass" && subCard
                                               ? subCard
-                                              : { key: it.title, rowCard: true, myClass: me?.f_class, detail: it.onClick?.detail, rowKey: it.key, multi: !!it.mc, mapUse: it.title === "Toque Salvaje", evo: it.title === "Evolución", Icon: it.Icon, kicker: it.kicker, text: it.summary, color: rowColor(it.color), domain: "Sabio", level: "", type: "Acción", open: () => (it.onClick(), setViewingCardDetail((d) => (d && !d.rowIcon ? { ...d, rowIcon: it.Icon } : d))) }
+                                              : { key: it.title, rowCard: true, myClass: me?.f_class, detail: it.onClick?.detail, rowKey: it.key, multi: !!it.mc, mapUse: it.title === "Toque Salvaje", evo: it.title === "Evolución", wolf: it.title === "Hombre Lobo", locked: it.title === "Hombre Lobo" && (me?.f_transformation_form_active === "Forma de Lobo" || Number(me?.hp_marked || 0) < 1), Icon: it.Icon, kicker: it.kicker, text: it.summary, color: rowColor(it.color), domain: "Sabio", level: "", type: "Acción", open: () => (it.onClick(), setViewingCardDetail((d) => (d && !d.rowIcon ? { ...d, rowIcon: it.Icon } : d))) }
                                           );
                                           const rootedMine = (campaignMap.tokens || []).filter((t) => t.rootedBy === viewingCharId && (t.conds || []).includes("Inmovilizado"));
                                           const ghostCard = rootedMine.length && keys.includes("Enredo Feroz") ? (() => { const base = findDomainCardAny("Enredo Feroz"); return base ? { ...base, key: "Inmovilizar", baseKey: "Enredo Feroz", text: "Puedes gastar una Esperanza para inmovilizar temporalmente a otro adversario en alcance Muy Cercano del objetivo de Enredo Feroz.", recall: null, noCost: true, ghost: true, noHope: Number(me?.hope_marked ?? HOPE_DEFAULT) < 1 } : null; })() : null;
@@ -22348,6 +22394,7 @@ export default function App({ onSignOut }) {
                                               cardBorder={cardBorder}
                                               beast={{ forms: BEASTFORMS, tier: tierForLevel(me?.f_level || 1), active: me?.f_beastform || "", stressFull: Number(me?.stress_marked || 0) >= Number(me?.r_stress || 0) }}
                                               onEvolve={(card) => openEvolutionModal(viewingCharId, card)}
+                                              onWolf={(card) => activateWolf(viewingCharId, card)}
                                               onBeast={(key, sel, card) => (sel ? toggleBeastform(viewingCharId, key, true) : morphToBeast(viewingCharId, key, card))}
                                               onElement={(el, on, card) => (on ? toggleElemental(viewingCharId, el, true) : embodyElement(viewingCharId, el, card))}
                                               activeElement={me?.f_elemental_active || ""}
