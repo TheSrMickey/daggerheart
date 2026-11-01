@@ -5122,6 +5122,8 @@ const sharedStyles = `
   .mh-map-hand { position: absolute; z-index: 6; right: -2%; top: -6%; display: inline-flex; align-items: center; gap: 2px; padding: 1px 6px; border-radius: 99px; font-size: 12px; background: #E3B04B; color: #241a05; box-shadow: 0 2px 6px rgba(0,0,0,.4); pointer-events: none; } .mh-map-hand.is-urgent { background: #E0544A; color: #fff; } .mh-map-hand b { font: 800 10px 'Inter', system-ui, sans-serif; }
   .mh-map .mh-map-tk.is-pet .mh-map-face { width: 58%; height: 58%; background: radial-gradient(circle at 35% 28%, color-mix(in srgb, var(--tc) 30%, #12143a), #0c0d2a 72%); border-radius: 50%; border-width: 2px; border-color: var(--tc); }
   .mh-map-hp { display: none; }
+  /* Transformaciones (Forma de Bestia, Hombre Lobo, Vampiro…): la ficha pasa de circular a cuadrada */
+  .mh-map-tk.is-trf .mh-map-face { border-radius: 22%; }
   /* Elementos activos: Fuego y Agua dibujan una línea viva en rango cuerpo a cuerpo; Tierra y Aire cambian el color de la ficha y la cruzan con rayas */
   @property --mh-ea { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
   .mh-elwrap { position: absolute; z-index: 3; pointer-events: none; transition: left .3s cubic-bezier(.3,.7,.4,1), top .3s cubic-bezier(.3,.7,.4,1); animation: mh-elring-in .65s cubic-bezier(.2,.9,.3,1) both; }
@@ -11129,7 +11131,7 @@ function MapBoard({ aimRange, rangeMenu, cfx, meCharId, onDragInfo, onStore, pla
             key={t.id}
             type="button"
             data-tid={t.id}
-            className={"mh-map-tk is-" + t.kind + (t.elem ? " is-el-" + String(t.elem).toLowerCase() : elemOut[t.id] ? " is-el-out is-el-p-" + elemOut[t.id].toLowerCase() : "") + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id && anim.kind !== "free" ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") + (anim.kind === "web" ? " is-web" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
+            className={"mh-map-tk is-" + t.kind + (t.beast || t.trf ? " is-trf" : "") + (t.elem ? " is-el-" + String(t.elem).toLowerCase() : elemOut[t.id] ? " is-el-out is-el-p-" + elemOut[t.id].toLowerCase() : "") + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id && anim.kind !== "free" ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") + (anim.kind === "web" ? " is-web" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
             style={{ ...at(pos.x, pos.y), "--tc": t.color, ...(anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); return tg ? { "--ax": (tg.x - t.x) * 100 + "%", "--ay": (tg.y - t.y) * 100 + "%" } : {}; })() : {}) }}
             onPointerDown={(e) => startDrag(e, t)}
             onContextMenu={(e) => openMenu(e, t)}
@@ -11169,8 +11171,17 @@ function MapBoard({ aimRange, rangeMenu, cfx, meCharId, onDragInfo, onStore, pla
             )}
             {hpLeft != null && !plain && (
               <svg className="mh-map-ring" viewBox="0 0 100 100" aria-hidden="true">
-                <circle cx="50" cy="50" r="47" fill="none" stroke="#1b1219" strokeWidth="6" />
-                <circle cx="50" cy="50" r="47" fill="none" stroke={hpCol} strokeWidth="6" strokeLinecap="round" strokeDasharray={`${hpLeft * 295.3} 295.3`} />
+                {t.beast || t.trf ? (
+                  <>
+                    <rect x="3" y="3" width="94" height="94" rx="20" fill="none" stroke="#1b1219" strokeWidth="6" />
+                    <rect x="3" y="3" width="94" height="94" rx="20" fill="none" stroke={hpCol} strokeWidth="6" strokeLinecap="round" pathLength="100" strokeDasharray={`${hpLeft * 100} 100`} />
+                  </>
+                ) : (
+                  <>
+                    <circle cx="50" cy="50" r="47" fill="none" stroke="#1b1219" strokeWidth="6" />
+                    <circle cx="50" cy="50" r="47" fill="none" stroke={hpCol} strokeWidth="6" strokeLinecap="round" strokeDasharray={`${hpLeft * 295.3} 295.3`} />
+                  </>
+                )}
               </svg>
             )}
             <span className="mh-map-face" title={hpLeft != null && !plain ? `Vida: ${t.hp[1] - t.hp[0]} de ${t.hp[1]}` : undefined}>{t.img && t.kind !== "pc" ? <img src={t.img} alt="" draggable={false} /> : <Emb size="52%" strokeWidth={2.1} />}</span>
