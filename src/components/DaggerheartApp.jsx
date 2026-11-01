@@ -4925,10 +4925,12 @@ const sharedStyles = `
   .mh-map-drop { transition: left .12s ease, top .12s ease; }
   .mh-map-tk:focus-visible { outline: none; }
   .mh-map-tk:focus-visible .mh-map-face { box-shadow: 0 0 0 3px #fff, 0 3px 8px rgba(0,0,0,.5); }
-  /* Rango de la subclase: uno, dos o tres rombos centrados sobre el borde superior de la ficha. */
-  .mh-map-rank { position: absolute; z-index: 4; left: 0; right: 0; top: 10%; translate: 0 -50%; display: flex; justify-content: center; align-items: center; gap: 8%; pointer-events: none; } .mh-map-rank i { width: 13%; aspect-ratio: 1; rotate: 45deg; background: #F5E4A6; border: 1.5px solid #14101c; box-sizing: border-box; box-shadow: 0 1px 3px rgba(0,0,0,.5); }
-  /* Multiclase: la ficha lleva los dos colores, el de la clase principal y el de la segunda clase; el emblema sigue siendo el de la principal. */
-  .mh-map-face.is-mc { background: linear-gradient(135deg, var(--tc) 50%, var(--tc2, var(--tc)) 50%) border-box; border-color: transparent; }
+  /* Rango de la subclase: uno, dos o tres rombos del color de la clase sobre el borde superior de la ficha, siguiendo su curvatura. Van dentro de la ficha, así que se mueven, rebotan y se animan con ella. */
+  .mh-map-face.has-rank { overflow: visible; }
+  .mh-map-rk { position: absolute; z-index: 4; width: 17%; aspect-ratio: 1; left: calc(50% + 50% * sin(var(--a))); top: calc(50% - 50% * cos(var(--a))); translate: -50% -50%; rotate: calc(var(--a) + 45deg); background: var(--tc); border: 1.5px solid #fff; box-sizing: border-box; box-shadow: 0 1px 3px rgba(0,0,0,.6); pointer-events: none; }
+  .mh-map-tk.is-trf .mh-map-rk { left: calc(50% + var(--k) * 24%); top: 0; rotate: 45deg; }
+  /* Multiclase: degradado suave entre el color de la clase principal y el de la segunda; el emblema lleva sombra para leerse sobre los dos. */
+  .mh-map-face.is-mc { background: linear-gradient(135deg, var(--tc) 22%, var(--tc2, var(--tc)) 78%) border-box; border-color: transparent; } .mh-map-face.is-mc > svg { filter: drop-shadow(0 1px 2px rgba(0,0,0,.65)); }
   .mh-map-face { position: relative; z-index: 2; width: 80%; height: 80%; border-radius: 22%; border: 3px solid var(--tc); box-sizing: border-box; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--tc); color: #fff; font-family: 'Cinzel', Georgia, serif; font-weight: 700; font-size: clamp(10px, 1.6vw, 17px); box-shadow: 0 3px 8px rgba(0,0,0,.5); }
   .mh-map-tk.is-npc .mh-map-face, .mh-map-tk.is-foe .mh-map-face { background: #221C2B; }
   .mh-map-tk.is-foe .mh-map-face { background: #6B2F2F; }
@@ -11606,8 +11608,7 @@ function MapBoard({ showHp, aimRange, rangeMenu, cfx, meCharId, onDragInfo, onSt
                 )}
               </svg>
             )}
-            <span className={"mh-map-face" + (t.kind === "pc" && t.color2 ? " is-mc" : "")} title={hpLeft != null && (!plain || showHp) ? `Vida: ${t.hp[1] - t.hp[0]} de ${t.hp[1]}` : undefined}>{t.img && t.kind !== "pc" ? <img src={t.img} alt="" draggable={false} /> : <Emb size="52%" strokeWidth={2.1} />}</span>
-            {t.kind === "pc" && t.rank > 0 && <span className="mh-map-rank" aria-hidden="true" title={["Fundación", "Especialización", "Maestría"][t.rank - 1]}>{Array.from({ length: t.rank }, (_, i) => <i key={i} />)}</span>}
+            <span className={"mh-map-face" + (t.kind === "pc" && t.color2 ? " is-mc" : "") + (t.kind === "pc" && t.rank > 0 ? " has-rank" : "")} title={hpLeft != null && (!plain || showHp) ? `Vida: ${t.hp[1] - t.hp[0]} de ${t.hp[1]}` : undefined}>{t.img && t.kind !== "pc" ? <img src={t.img} alt="" draggable={false} /> : <Emb size="52%" strokeWidth={2.1} />}{t.kind === "pc" && t.rank > 0 && (() => { const A = [[0], [-10, 10], [-21, 0, 21]][t.rank - 1]; return A.map((a, i) => <i key={i} className="mh-map-rk" aria-hidden="true" style={{ "--a": a + "deg", "--k": a / 21 }} />); })()}</span>
             {t.name && <span className="mh-map-nm">{t.name}</span>}
           </button>
         );
