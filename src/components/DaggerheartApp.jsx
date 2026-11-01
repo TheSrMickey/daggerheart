@@ -5017,6 +5017,28 @@ const sharedStyles = `
   .mh-fan-elems button { all: unset; box-sizing: border-box; cursor: pointer; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 9px 4px; border-radius: 12px; font: 600 11.5px Inter, system-ui, sans-serif; color: #fff; background: color-mix(in srgb, var(--ec) 30%, #141018); border: 1.5px solid color-mix(in srgb, var(--ec) 70%, transparent); }
   .mh-fan-elems button:hover { background: color-mix(in srgb, var(--ec) 48%, #141018); } .mh-fan-elems button.is-on { background: var(--ec); color: #1a1206; }
   .mh-fan-big { position: relative; width: 300px; height: 420px; max-height: 88vh; --s: 1; }
+  .mh-elpick, .mh-bpick { box-sizing: border-box; width: min(660px, 94vw); max-height: 88vh; overflow: auto; padding: 22px; border-radius: 20px; display: flex; flex-direction: column; gap: 16px; color: var(--mh-ink, #fff); background: color-mix(in srgb, var(--mh-panel, #1b1824) 96%, #000); border: 1px solid var(--mh-line2, rgba(255,255,255,.14)); box-shadow: 0 30px 90px rgba(0,0,0,.65); scrollbar-width: thin; }
+  .mh-bpick { width: min(780px, 94vw); }
+  .mh-elpick-h { display: flex; flex-direction: column; gap: 4px; text-align: center; } .mh-elpick-h b { font: 700 19px 'Cinzel', Georgia, serif; letter-spacing: .02em; } .mh-elpick-h span { font: 500 12.5px Inter, system-ui, sans-serif; color: var(--mh-muted, #aaa); }
+  .mh-elpick-g { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  .mh-elpick-t { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 18px 10px 12px; border-radius: 16px; text-align: center; border: 1px solid color-mix(in srgb, var(--ec) 45%, transparent); background: linear-gradient(180deg, color-mix(in srgb, var(--ec) 22%, transparent), color-mix(in srgb, var(--ec) 5%, transparent)); transition: transform .15s ease, box-shadow .15s ease; }
+  .mh-elpick-t:hover, .mh-elpick-t:focus-visible { transform: translateY(-3px); box-shadow: 0 12px 26px -10px var(--ec), 0 0 0 1px var(--ec); }
+  .mh-elpick-t i { width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center; color: var(--ec); background: color-mix(in srgb, var(--ec) 24%, #0f0c14); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--ec) 60%, transparent), 0 0 20px -4px var(--ec); }
+  .mh-elpick-t b { font: 700 15.5px Inter, system-ui, sans-serif; }
+  .mh-elpick-t small { font: 500 11px/1.4 Inter, system-ui, sans-serif; color: var(--mh-muted, #aaa); display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; min-height: 4.4em; }
+  .mh-elpick-t em { font: 700 11.5px Inter, system-ui, sans-serif; font-style: normal; padding: 4px 11px; border-radius: 99px; background: color-mix(in srgb, var(--ec) 32%, transparent); color: #fff; }
+  .mh-elpick-t.is-on { background: color-mix(in srgb, var(--ec) 30%, #14101a); box-shadow: 0 0 0 2px var(--ec); } .mh-elpick-t.is-on em { background: var(--ec); color: #1a1206; }
+  .mh-elpick-x { all: unset; cursor: pointer; align-self: center; padding: 7px 18px; border-radius: 99px; font: 600 12.5px Inter, system-ui, sans-serif; color: var(--mh-muted, #aaa); border: 1px solid var(--mh-line2, rgba(255,255,255,.18)); } .mh-elpick-x:hover { color: var(--mh-ink, #fff); }
+  .mh-bpick-tabs { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; } .mh-bpick-tabs button { all: unset; cursor: pointer; padding: 6px 14px; border-radius: 99px; font: 600 12px Inter, system-ui, sans-serif; color: var(--mh-muted, #aaa); border: 1px solid var(--mh-line2, rgba(255,255,255,.18)); } .mh-bpick-tabs button.is-on { background: var(--acc, #E3B04B); color: var(--acc-on, #1F1606); border-color: transparent; }
+  .mh-bpick-g { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 10px; }
+  .mh-bpick-c { all: unset; box-sizing: border-box; cursor: pointer; position: relative; display: flex; flex-direction: column; gap: 4px; padding: 0 0 10px; border-radius: 14px; overflow: hidden; border: 1px solid color-mix(in srgb, var(--bc) 50%, transparent); background: color-mix(in srgb, var(--bc) 8%, #15111b); transition: transform .15s ease, box-shadow .15s ease; }
+  .mh-bpick-c:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 12px 26px -10px var(--bc); }
+  .mh-bpick-c:disabled { opacity: .45; cursor: not-allowed; }
+  .mh-bpick-img { display: block; height: 96px; background: color-mix(in srgb, var(--bc) 30%, #0f0c14) center / cover no-repeat; }
+  .mh-bpick-c b, .mh-bpick-c small, .mh-bpick-c em { padding: 0 11px; } .mh-bpick-c b { font: 700 14px Inter, system-ui, sans-serif; margin-top: 4px; } .mh-bpick-c small { font: 500 11px/1.35 Inter, system-ui, sans-serif; color: var(--mh-muted, #aaa); } .mh-bpick-c em { font: 600 11px Inter, system-ui, sans-serif; font-style: normal; color: color-mix(in srgb, var(--bc) 70%, #fff); } .mh-bpick-c em.is-atk { color: var(--mh-ink, #fff); }
+  .mh-bpick-c.is-on { box-shadow: 0 0 0 2px var(--bc); } .mh-bpick-on { position: absolute; top: 8px; right: 8px; padding: 3px 9px; border-radius: 99px; background: var(--bc); color: #1a1206; font: 700 10.5px Inter, system-ui, sans-serif; }
+  .mh-bpick-empty { grid-column: 1 / -1; text-align: center; color: var(--mh-muted, #aaa); font: 500 12.5px Inter, system-ui, sans-serif; margin: 10px 0; }
+  @media (max-width: 640px) { .mh-elpick-g { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   .mh-fan-big.is-choose { width: min(440px, 92vw); height: auto; max-height: none; } .mh-fan-big.is-choose .mh-fan-elems { position: static; } .mh-fan-big.is-choose .mh-fan-elems button { padding: 16px 6px; } .mh-fan-big.is-choose .mh-fan-ask { font-size: 15px; margin-bottom: 4px; }
   @media (max-height: 520px) { .mh-fan-big { --s: .7; width: 210px; height: 294px; } }
   .mh-fan-card.is-last-weapon { margin-right: calc(var(--m, -26px) + 16px); }
@@ -10539,11 +10561,13 @@ function HomeDice({ stats }) {
 // Abanico de cartas de dominio en el borde inferior del mapa: se arrastran hasta una casilla para usarlas.
 // Cartas que se lanzan apuntando: una línea de guiones sale del personaje hasta el ratón.
 const AIM_CARD = "Enredo Feroz";
-function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack, cardBorder, aimOk, reachOf, onAim }) {
+function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack, cardBorder, aimOk, reachOf, onAim, beast, onBeast }) {
   const cardsRef = useRef(cards);
   cardsRef.current = cards;
   const [drag, setDrag] = useState(null); // { card, x, y, cell, moved }
   const [open, setOpen] = useState(null); // carta mostrada en grande
+  const [beastOpen, setBeastOpen] = useState(false); // selector de Forma de Bestia (al arrastrar esa carta al mapa)
+  const [bTier, setBTier] = useState(1);
   const [back, setBack] = useState(null); // carta que vuelve a la mano tras usarse
   const [held, setHeld] = useState(null); // carta usada: su hueco en la mano queda vacío hasta que vuelve
   const heldRef = useRef(null);
@@ -10601,6 +10625,10 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
     window.removeEventListener("keydown", key);
     if (!d || cancel) return;
     if (d.card.rowCard) {
+      if (d.moved && beast && d.card.key === "Forma de Bestia" && cellAt(ev.clientX, ev.clientY)) {
+        setBTier((beast.forms.find((b) => b.key === beast.active) || {}).tier || beast.tier || 1);
+        return setBeastOpen(true);
+      }
       if (!d.moved || cellAt(ev.clientX, ev.clientY)) d.card.open();
       return;
     }
@@ -10730,25 +10758,72 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
           );
         })}
       </div>
-      {open && (
+      {open && !open.choose && (
         <div className="mh-fan-zoom" onClick={() => setOpen(null)}>
-          <div className={"mh-fan-big" + (open.choose ? " is-choose" : "")} style={{ "--cc": open.weapon ? TIER_COLORS[open.level]?.color || "#C9A24B" : open.rowCard ? open.color : DOMAIN_COLORS[open.domain] || "#C9A24B" }} onClick={(e) => e.stopPropagation()}>
-            {!open.choose && <FanFace c={open} col={open.weapon ? TIER_COLORS[open.level]?.color || "#C9A24B" : open.rowCard ? open.color : DOMAIN_COLORS[open.domain] || "#C9A24B"} />}
-            {open.subclass && onElement && (
-              <div className="mh-fan-elems">
-                <span className="mh-fan-ask">{open.choose ? "¿Qué elemento quieres activar?" : "Elige un elemento"}</span>
-                {["Fuego", "Tierra", "Agua", "Aire"].map((el) => {
-                  const on = activeElement === el;
-                  const EI = HEADER_ELEMENTS[el].Icon;
-                  return (
-                    <button key={el} type="button" className={on ? "is-on" : ""} style={{ "--ec": ELEM_COL[el] }} onClick={() => (onElement(el, on, open), setOpen(null))} title={on ? "Dejar de canalizar " + el : "Canalizar " + el + " (1 Estrés)"}>
-                      <EI size={18} />
-                      <span>{on ? "Quitar" : el}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+          <div className="mh-fan-big" style={{ "--cc": open.weapon ? TIER_COLORS[open.level]?.color || "#C9A24B" : open.rowCard ? open.color : DOMAIN_COLORS[open.domain] || "#C9A24B" }} onClick={(e) => e.stopPropagation()}>
+            <FanFace c={open} col={open.weapon ? TIER_COLORS[open.level]?.color || "#C9A24B" : open.rowCard ? open.color : DOMAIN_COLORS[open.domain] || "#C9A24B"} />
+          </div>
+        </div>
+      )}
+      {open && open.choose && onElement && (
+        <div className="mh-fan-zoom" onClick={() => setOpen(null)}>
+          <div className="mh-elpick" role="dialog" aria-label="Encarnación Elemental" onClick={(e) => e.stopPropagation()}>
+            <div className="mh-elpick-h">
+              <b>Encarnación Elemental</b>
+              <span>Elige el elemento que vas a canalizar · cuesta 1 Estrés</span>
+            </div>
+            <div className="mh-elpick-g">
+              {["Fuego", "Tierra", "Agua", "Aire"].map((el) => {
+                const on = activeElement === el;
+                const EI = HEADER_ELEMENTS[el].Icon;
+                const feat = (open.features || []).find((x) => x.name === el);
+                return (
+                  <button key={el} type="button" className={"mh-elpick-t" + (on ? " is-on" : "")} style={{ "--ec": ELEM_COL[el] }} onClick={() => (onElement(el, on, open), setOpen(null))} title={on ? "Dejar de canalizar " + el : "Canalizar " + el + " (1 Estrés)"}>
+                    <i><EI size={30} strokeWidth={1.6} /></i>
+                    <b>{el}</b>
+                    <small>{feat ? feat.text : ""}</small>
+                    <em>{on ? "Activo · Quitar" : "Canalizar"}</em>
+                  </button>
+                );
+              })}
+            </div>
+            <button type="button" className="mh-elpick-x" onClick={() => setOpen(null)}>Cancelar</button>
+          </div>
+        </div>
+      )}
+      {beastOpen && beast && (
+        <div className="mh-fan-zoom" onClick={() => setBeastOpen(false)}>
+          <div className="mh-bpick" role="dialog" aria-label="Forma de Bestia" onClick={(e) => e.stopPropagation()}>
+            <div className="mh-elpick-h">
+              <b>Forma de Bestia</b>
+              <span>{beast.active ? "Ahora estás en " + beast.active + " · pulsa otra para cambiar o la misma para salir" : "Elige en qué bestia te transformas · cuesta 1 Estrés"}</span>
+            </div>
+            <div className="mh-bpick-tabs" role="tablist" aria-label="Rango">
+              {[1, 2, 3, 4].map((t) => (
+                <button key={t} type="button" role="tab" aria-selected={bTier === t} className={bTier === t ? "is-on" : ""} onClick={() => setBTier(t)}>
+                  Rango {t}{t > beast.tier ? " · bloqueado" : ""}
+                </button>
+              ))}
+            </div>
+            <div className="mh-bpick-g">
+              {beast.forms.filter((x) => x.tier === bTier).map((x) => {
+                const sel = beast.active === x.key;
+                const locked = x.tier > beast.tier || (!sel && beast.stressFull);
+                const atk = String(x.attack || "").split("·").map((v) => v.trim());
+                return (
+                  <button key={x.key} type="button" disabled={locked} className={"mh-bpick-c" + (sel ? " is-on" : "")} style={{ "--bc": x.color }} onClick={() => (onBeast(x.key, sel), setBeastOpen(false))} title={x.tier > beast.tier ? "Se desbloquea en Rango " + x.tier : !sel && beast.stressFull ? "Sin Estrés disponible" : x.animals}>
+                    <span className="mh-bpick-img" style={x.image ? { backgroundImage: 'url("' + x.image + '")' } : undefined} />
+                    <b>{x.key}</b>
+                    <small>{x.animals}</small>
+                    <em>{x.bonus}</em>
+                    <em className="is-atk">{(atk[1] || "") + " · " + (atk[2] || "")}</em>
+                    {sel && <span className="mh-bpick-on">Activa · salir</span>}
+                  </button>
+                );
+              })}
+              {beast.forms.filter((x) => x.tier === bTier).length === 0 && <p className="mh-bpick-empty">Todavía no hay formas cargadas para el Rango {bTier}.</p>}
+            </div>
+            <button type="button" className="mh-elpick-x" onClick={() => setBeastOpen(false)}>Cancelar</button>
           </div>
         </div>
       )}
@@ -22242,6 +22317,8 @@ export default function App({ onSignOut }) {
                                               onAim={setAimRange}
                                               reachOf={(card) => { if (!card.weapon) return null; const lab = weaponReach(characters[viewingCharId], card.key); return lab ? { label: lab, max: RANGE_CELLS[lab] || 99 } : null; }}
                                               cardBorder={cardBorder}
+                                              beast={{ forms: BEASTFORMS, tier: tierForLevel(me?.f_level || 1), active: me?.f_beastform || "", stressFull: Number(me?.stress_marked || 0) >= Number(me?.r_stress || 0) }}
+                                              onBeast={(key, sel) => toggleBeastform(viewingCharId, key, sel)}
                                               onElement={(el, on, card) => (on ? toggleElemental(viewingCharId, el, true) : embodyElement(viewingCharId, el, card))}
                                               activeElement={me?.f_elemental_active || ""}
                                               me={myToken}
