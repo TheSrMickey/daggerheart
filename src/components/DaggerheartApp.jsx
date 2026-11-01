@@ -14032,7 +14032,7 @@ export default function App({ onSignOut }) {
     if (!c || !me || !target || !(target.kind === "foe" || target.kind === "npc") || cellDist(me, target) > RANGE_CELLS["Lejano"] || c.f_beastform) return "cancel";
     const info = cardTokInfo(c, "Desatar el Caos");
     if (!info) return "cancel";
-    setChaosN(info.have > 0 ? 1 : 0); // se puede lanzar sin gastar fichas: la tirada se hace, pero no hay d10 de daño
+    setChaosN(1); // hay que gastar al menos 1 ficha; sin fichas el aviso ofrece recargar
     setChaosAsk({ charId, targetId: target.id, card });
     return "cancel";
   };
@@ -14043,16 +14043,16 @@ export default function App({ onSignOut }) {
     const c = charsRef.current[a.charId];
     const info = c && cardTokInfo(c, "Desatar el Caos");
     const target = (campaignMapRef.current.tokens || []).find((t) => t.id === a.targetId);
-    if (!c || !info || !target) return;
-    const n = Math.max(0, Math.min(chaosN, info.have));
+    if (!c || !info || !target || info.have < 1) return;
+    const n = Math.max(1, Math.min(chaosN, info.have));
     const sk = charSpellTrait(c);
     const label = TRAITS.find((tr) => tr.key === sk)?.label;
     if (!label) return;
     const mods = getEquipmentMods(PRIMARY_WEAPONS.find((w) => w.key === c.f_primary_weapon), SECONDARY_WEAPONS.find((w) => w.key === c.f_secondary_weapon), ARMORS.find((x) => x.key === c.f_armor));
     setCardTok(a.charId, "Desatar el Caos", info.have - n);
-    postCampaignEvent(a.charId, "✨ Desatar el Caos sobre " + (target.name || "un adversario") + (n ? ": gasta " + n + " ficha" + (n > 1 ? "s" : "") + " (" + n + "d10 si acierta)" : ": sin gastar fichas (no inflige daño)"));
+    postCampaignEvent(a.charId, "✨ Desatar el Caos sobre " + (target.name || "un adversario") + ": gasta " + n + " ficha" + (n > 1 ? "s" : "") + " (" + n + "d10 si acierta)");
     playCardOnMap(sheetCampaignId, a.charId, a.card, { noChat: true, short: true });
-    afterReveal(a.charId, a.card.key, () => rollTraitCheck(a.charId, label, Number(c[sk] || 0) + (mods[sk] || 0), { name: "Desatar el Caos", damage: "d10 mágico", spell: true, fixedDice: n, noDamage: n === 0, targetChosen: true, targetId: target.id, targetName: target.name, targetDc: target.stats?.difficulty || null }));
+    afterReveal(a.charId, a.card.key, () => rollTraitCheck(a.charId, label, Number(c[sk] || 0) + (mods[sk] || 0), { name: "Desatar el Caos", damage: "d10 mágico", spell: true, fixedDice: n, targetChosen: true, targetId: target.id, targetName: target.name, targetDc: target.stats?.difficulty || null }));
   };
   // Evasión de un personaje tal y como la ve el DJ (la hoja del jugador calcula más matices).
   const foeEvasionOf = (ch) => {
@@ -18023,12 +18023,6 @@ export default function App({ onSignOut }) {
           pushMapLog(sheetCampaignId, "🌿 Enredo Feroz: " + snareIds.map((id) => (campaignMapRef.current.tokens || []).find((x) => x.id === id)?.name || "un adversario").join(" y ") + " queda inmovilizado", "info");
           if (snareIds[1] && rc) updateCharacterField(charId, "hope_marked", String(Math.max(0, Number(rc.hope_marked ?? HOPE_DEFAULT) - 1)));
         }
-      }
-      if (r.weapon.noDamage) {
-        // Desatar el Caos sin fichas gastadas: acierta, pero no hay d10 que tirar.
-        fxLater.forEach((fn) => fn());
-        postCampaignEvent(charId, "✨ " + name + " acierta, pero sin fichas gastadas no inflige daño");
-        return;
       }
       rollWeaponDamage(name, damage, charId, isCritical, { after: () => fxLater.forEach((fn) => fn()), ...(r.weapon.spell ? { plain: true, fixedDice: r.weapon.fixedDice || 1 } : {}), angel: r.weapon.angel || 0, knight: !!r.weapon.knight, attackFear: r.fear, ...(pummel || honedHit ? { fixedDice: getProficiency(rc) + (pummel ? 1 : 0) + (honedHit ? 1 : 0) } : {}), fearDice, cloaked: wasCloaked, spirit, resonance: spirit && rc && tierForLevel(rc.f_level || 1) >= 3, extraFlat: r.weapon.elemDmg || 0, doublePick: !!r.weapon.manipDouble, targetId: r.weapon.targetId || null, targetIds: r.weapon.hitIds || null });
   };
@@ -26965,7 +26959,23 @@ export default function App({ onSignOut }) {
               const info = cc && cardTokInfo(cc, "Desatar el Caos");
               const tg = (campaignMap.tokens || []).find((t) => t.id === chaosAsk.targetId);
               if (!info || !tg) return null;
-              const n = Math.max(0, Math.min(chaosN, info.have));
+              const n = Math.max(1, Math.min(chaosN, info.have));
+              if (info.have < 1)
+                return (
+                  <div className="mh-evo-wrap" onClick={() => setChaosAsk(null)}>
+                    <div className="mh-bpick mh-sess" role="dialog" aria-label="Desatar el Caos" onClick={(e) => e.stopPropagation()}>
+                      <div className="mh-elpick-h">
+                        <b>Desatar el Caos</b>
+                        <span>No te quedan fichas sobre la carta: hay que gastar al menos una para lanzarla</span>
+                      </div>
+                      <div className="mh-evo-sum">Marca 1 Estrés para recargar la carta hasta <b>{info.max}</b> fichas y lánzala sobre {tg.name || "el adversario"}.</div>
+                      <div className="mh-evo-act">
+                        <button type="button" className="mh-elpick-x" onClick={() => setChaosAsk(null)}>Cancelar</button>
+                        <button type="button" className="mh-evo-go" onClick={() => rechargeCardTokens(chaosAsk.charId, "Desatar el Caos")}>Recargar · 1 Estrés</button>
+                      </div>
+                    </div>
+                  </div>
+                );
               return (
                 <div className="mh-evo-wrap" onClick={() => setChaosAsk(null)}>
                   <div className="mh-bpick mh-sess" role="dialog" aria-label="Desatar el Caos" onClick={(e) => e.stopPropagation()}>
@@ -26974,15 +26984,14 @@ export default function App({ onSignOut }) {
                       <span>Lanzas sobre {tg.name || "el adversario"}: tirada de conjuro y, si aciertas, un d10 por ficha gastada</span>
                     </div>
                     <div className="mh-sess-toks" role="group" aria-label="Fichas a gastar">
-                      <button type="button" className={n === 0 ? "is-on" : ""} onClick={() => setChaosN(0)} aria-label="No gastar fichas">0</button>
                       {Array.from({ length: info.have }, (_, k) => (
                         <button key={k} type="button" className={k < n ? "is-on" : ""} onClick={() => setChaosN(k + 1)} aria-label={"Gastar " + (k + 1) + " fichas"}>{k + 1}</button>
                       ))}
                     </div>
-                    <div className="mh-evo-sum is-ready">{n === 0 ? <>No gastas fichas ({info.have} disponibles): la tirada se hace, pero <b>no inflige daño</b>.</> : <>Gastas <b>{n} ficha{n > 1 ? "s" : ""}</b> de {info.have}: <b>{n}d10</b> de daño mágico si aciertas. Te quedarán {info.have - n}.</>}</div>
+                    <div className="mh-evo-sum is-ready">Gastas <b>{n} ficha{n > 1 ? "s" : ""}</b> de {info.have}: <b>{n}d10</b> de daño mágico si aciertas. Te quedarán {info.have - n}.</div>
                     <div className="mh-evo-act">
                       <button type="button" className="mh-elpick-x" onClick={() => setChaosAsk(null)}>Cancelar</button>
-                      <button type="button" className="mh-evo-go" onClick={confirmChaos}>Lanzar · {n} ficha{n === 1 ? "" : "s"}</button>
+                      <button type="button" className="mh-evo-go" onClick={confirmChaos}>Lanzar · {n} ficha{n > 1 ? "s" : ""}</button>
                     </div>
                   </div>
                 </div>
