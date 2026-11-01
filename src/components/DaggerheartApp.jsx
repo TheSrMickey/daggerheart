@@ -5391,6 +5391,8 @@ const sharedStyles = `
   .mh-foe-tg-b small { color: var(--mh-muted); font-weight: 500; }
   .mh-foe-tg-b.is-on { border-color: #C0504A; background: color-mix(in srgb, #C0504A 12%, var(--mh-panel)); }
   .mh-foe-tg-b:disabled { opacity: .45; cursor: not-allowed; }
+  .mh-foe-pick { position: absolute; z-index: 13; left: 12px; top: 12px; width: min(380px, calc(100% - 24px)); padding: 12px 14px; border-radius: 14px; display: flex; flex-direction: column; gap: 8px; background: var(--mh-panel); border: 1px solid color-mix(in srgb, #C0504A 55%, var(--mh-line)); box-shadow: 0 16px 44px rgba(0,0,0,.55); } .mh-foe-pick > b { color: var(--mh-ink); font-size: 14px; } .mh-foe-pick > small { color: var(--mh-muted); font-size: 11.5px; line-height: 1.4; } .mh-foe-pick .mh-btn-ghost { align-self: flex-start; }
+  .mh-foe-pick.mh-above { left: 50%; top: 50%; translate: -50% -50%; border-color: #E3B04B; } .mh-above-b { display: flex; gap: 8px; flex-wrap: wrap; }
   .mh-foe-quick i { background: #C0504A !important; color: #fff; }
   .mh-foe { margin-top: 10px; padding: 12px 14px; border-radius: 12px; border: 1px solid color-mix(in srgb, #C0504A 35%, var(--mh-line)); background: color-mix(in srgb, #C0504A 5%, var(--mh-panel)); display: flex; flex-direction: column; gap: 7px; font-size: 12.5px; color: var(--mh-ink2); }
   .mh-foe.is-down { opacity: .7; }
@@ -12010,6 +12012,8 @@ export default function App({ onSignOut }) {
   const [djWorldEdit, setDjWorldEdit] = useState(false);
   const [djCastEdit, setDjCastEdit] = useState(null);
   const [aimRange, setAimRange] = useState(null); // alcance del arma que se está apuntando: { id, max }
+  const [foeAtk, setFoeAtk] = useState(null); // el DJ elige a quién ataca una criatura: { foeId }
+  const [aboveAsk, setAboveAsk] = useState(null); // «Desde arriba» tras un ataque con éxito: { foeId, tgId, r, atk, crit, expr, base, feat }
   const [plDragTok, setPlDragTok] = useState(null); // tu ficha arrastrándose por el mapa de la hoja: { id, over }
   const [djDragTok, setDjDragTok] = useState(null); // ficha de jugador que el DJ está arrastrando por el mapa: { id, over }
   const [chipDrag, setChipDrag] = useState(null); // ficha arrastrada desde la caja «Sin colocar»: { id, name, color, x, y }
@@ -13786,6 +13790,51 @@ export default function App({ onSignOut }) {
     postCampaignEvent(id, `✨ Activa ${formName}`);
   };
 
+  // Evasión de un personaje tal y como la ve el DJ (la hoja del jugador calcula más matices).
+  const foeEvasionOf = (ch) => {
+    if (!ch.r_evasion) return 10;
+    const eq = getEquipmentMods(PRIMARY_WEAPONS.find((w) => w.key === ch.f_primary_weapon), SECONDARY_WEAPONS.find((w) => w.key === ch.f_secondary_weapon), ARMORS.find((a) => a.key === ch.f_armor));
+    const bf = BEASTFORMS.find((b) => b.key === ch.f_beastform);
+    return Number(ch.r_evasion) + (bf?.evasionBonus || 0) + (eq.evasion || 0) + Number(ch.f_natural_evade || 0) + (ch.f_class === "Pícaro" && ch.f_dodge === "1" ? 2 : 0);
+  };
+  // El golpe ya tirado (con crítico: máximo de los dados + la tirada) llega al jugador, que lo resuelve con su Evasión.
+  const finishFoeAttack = (foe, tg, r, atk, crit, dmgExpr, tag) => {
+    const st = foe.stats;
+    const d = rollExpr(dmgExpr);
+    const m = String(dmgExpr).match(/(\d*)d(\d+)/);
+    const critExtra = crit && m ? Number(m[1] || 1) * Number(m[2]) : 0;
+    const hitEntry = { key: Date.now() + "-" + Math.random().toString(36).slice(2, 6), charId: tg.charId, foeId: foe.id, from: foe.name || "Una criatura", weapon: st.attack.name + (tag ? " (" + tag + ")" : ""), d20: r.rolls[0], atk, crit, dmg: d.total + critExtra, dmgRolls: d.rolls, dmgMod: d.mod };
+    mutateMap(viewingCampaignId, (hs) => [...(Array.isArray(hs) ? hs : []).slice(-19), hitEntry], "hits");
+    const tn = mapTokensView([tg])[0].name;
+    pushMapLog(viewingCampaignId, (foe.name || "La criatura") + " ataca a " + tn + " con " + st.attack.name + ": " + atk + (crit ? " · ¡crítico!" : "") + (tag ? " · " + tag : "") + " · esperando al jugador", "hit");
+  };
+  const foeAttack = (foeId, tgId) => {
+    const toks = campaignMapRef.current.tokens || [];
+    const foe = toks.find((t) => t.id === foeId);
+    const tg = toks.find((t) => t.id === tgId);
+    setFoeAtk(null);
+    if (!foe || !foe.stats || !tg || !tg.charId) return;
+    const st = foe.stats;
+    const r = rollExpr("1d20");
+    const atk = r.rolls[0] + Number(st.atk || 0);
+    const crit = r.rolls[0] === 20;
+    const ch = characters[tg.charId];
+    const success = crit || (ch ? atk >= foeEvasionOf(ch) : true);
+    // Bandido · Desde arriba: si el ataque tiene éxito, el DJ decide si lo aplica (cambia el daño).
+    const above = (st.features || []).find((x) => /desde arriba/i.test(x.name));
+    const expr = above && (String(above.text).match(/(\d+d\d+(?:\s*\+\s*\d+)?)/) || [])[1];
+    if (success && expr) return setAboveAsk({ foeId, tgId, r, atk, crit, expr: expr.replace(/\s/g, ""), base: st.attack.damage, feat: above.name });
+    finishFoeAttack(foe, tg, r, atk, crit, st.attack.damage, "");
+  };
+  const answerAbove = (apply) => {
+    const a = aboveAsk;
+    setAboveAsk(null);
+    if (!a) return;
+    const toks = campaignMapRef.current.tokens || [];
+    const foe = toks.find((t) => t.id === a.foeId);
+    const tg = toks.find((t) => t.id === a.tgId);
+    if (foe && tg) finishFoeAttack(foe, tg, a.r, a.atk, a.crit, apply ? a.expr : a.base, apply ? a.feat : "");
+  };
   // Hombre Lobo desde la carta: solo con 1 o más PV marcados. Primero se revela la carta y después entras en Forma de Lobo (1 Estrés).
   const activateWolf = (charId, card) => {
     const c = charsRef.current[charId];
@@ -30189,6 +30238,8 @@ export default function App({ onSignOut }) {
                               <MapBoard
                                 cfx={campaignMap.cfx}
                                 plain
+                                aimRange={foeAtk ? (() => { const ft = (campaignMap.tokens || []).find((t) => t.id === foeAtk.foeId); return ft && ft.stats ? { id: ft.id, max: RANGE_CELLS[ft.stats.attack.range] || 1 } : null; })() : null}
+                                menuFor={(t) => (t.kind === "foe" && t.stats && t.stats.attack && !(Number(t.stats.hp || 0) > 0 && Number(t.stats.hpMarked || 0) >= Number(t.stats.hp || 0)) ? [{ key: "foe-atk", Icon: Swords, color: "#C0504A", label: "Atacar con " + t.stats.attack.name, sub: t.stats.attack.range + " · " + t.stats.attack.damage + " " + (t.stats.attack.type || ""), run: () => setFoeAtk({ foeId: t.id }) }] : [])}
                                 onDragInfo={(d) => setDjDragTok(d && (campaignMap.tokens || []).find((t) => t.id === d.id)?.kind === "pc" ? d : null)}
                                 onStore={(id) => {
                                   const tk = (campaignMap.tokens || []).find((t) => t.id === id);
@@ -30216,6 +30267,48 @@ export default function App({ onSignOut }) {
                                 compact
                               />
                             </MapViewport>
+                            {foeAtk && (() => {
+                              const toks = campaignMap.tokens || [];
+                              const foe = toks.find((t) => t.id === foeAtk.foeId);
+                              if (!foe || !foe.stats) return null;
+                              const reach = RANGE_CELLS[foe.stats.attack.range] || 1;
+                              const pcs = mapTokensView(toks.filter((t) => t.kind === "pc" && !t.vanished));
+                              return (
+                                <div className="mh-foe-pick" role="dialog" aria-label="Elige a quién ataca" onPointerDown={(e) => e.stopPropagation()}>
+                                  <b>{foe.name || "Criatura"} ataca con {foe.stats.attack.name}</b>
+                                  <small>{foe.stats.attack.range} · {foe.stats.attack.damage} · elige a quién (el rango sale marcado en el mapa)</small>
+                                  <div className="mh-foe-tg">
+                                    {pcs.length === 0 && <small>No hay personajes en el tablero.</small>}
+                                    {pcs.map((t) => {
+                                      const dist = cellDist(foe, t);
+                                      const ok = dist <= reach;
+                                      return (
+                                        <button key={t.id} type="button" className="mh-foe-tg-b" disabled={!ok} title={ok ? "A " + dist + " casilla" + (dist === 1 ? "" : "s") : "Fuera de alcance (" + foe.stats.attack.range + ")"} onClick={() => foeAttack(foe.id, t.id)}>
+                                          <i style={{ background: t.color }}>{(t.name || "?").charAt(0)}</i>
+                                          {t.name}
+                                          <small>{ok ? dist + " c." : "lejos"}</small>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                  <button type="button" className="mh-btn-ghost" onClick={() => setFoeAtk(null)}>Cancelar</button>
+                                </div>
+                              );
+                            })()}
+                            {aboveAsk && (() => {
+                              const foe = (campaignMap.tokens || []).find((t) => t.id === aboveAsk.foeId);
+                              const tg = mapTokensView((campaignMap.tokens || []).filter((t) => t.id === aboveAsk.tgId))[0];
+                              return (
+                                <div className="mh-foe-pick mh-above" role="dialog" aria-label="Desde arriba" onPointerDown={(e) => e.stopPropagation()}>
+                                  <b>¡{foe?.name || "La criatura"} acierta a {tg?.name || "su objetivo"}!</b>
+                                  <small>Ataque {aboveAsk.atk}{aboveAsk.crit ? " · crítico" : ""}. ¿Aplicas «{aboveAsk.feat}»? Hace {aboveAsk.expr} en lugar de {aboveAsk.base}.</small>
+                                  <div className="mh-above-b">
+                                    <button type="button" className="mh-btn" onClick={() => answerAbove(true)}>Sí, desde arriba · {aboveAsk.expr}</button>
+                                    <button type="button" className="mh-btn-ghost" onClick={() => answerAbove(false)}>No · {aboveAsk.base}</button>
+                                  </div>
+                                </div>
+                              );
+                            })()}
                             {(() => {
                               // Jugadores sin ficha en el tablero: el DJ los coloca pulsando o arrastrándolos a una casilla. Arrastrar una ficha a la caja (o al cajón, si no hay caja) la guarda.
                               const placed = new Set((campaignMap.tokens || []).filter((t) => t.kind === "pc").map((t) => t.charId));
