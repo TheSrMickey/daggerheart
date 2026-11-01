@@ -5124,16 +5124,28 @@ const sharedStyles = `
   .mh-map-hp { display: none; }
   /* Elementos activos: Fuego y Agua dibujan una línea viva en rango cuerpo a cuerpo; Tierra y Aire cambian el color de la ficha y la cruzan con rayas */
   @property --mh-ea { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
-  .mh-elring { position: absolute; z-index: 3; pointer-events: none; box-sizing: border-box; padding: 3px; border-radius: 18%; transition: left .3s cubic-bezier(.3,.7,.4,1), top .3s cubic-bezier(.3,.7,.4,1); background: conic-gradient(from var(--mh-ea), var(--e1), var(--e2), var(--e3), var(--e2), var(--e1)); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); mask-composite: exclude; filter: drop-shadow(0 0 5px var(--e2)); animation: mh-elring-spin 2.4s linear infinite, mh-elring-flick 1.1s ease-in-out infinite; }
+  .mh-elwrap { position: absolute; z-index: 3; pointer-events: none; transition: left .3s cubic-bezier(.3,.7,.4,1), top .3s cubic-bezier(.3,.7,.4,1); animation: mh-elring-in .65s cubic-bezier(.2,.9,.3,1) both; }
+  .mh-elwrap.is-out { animation: mh-elring-out .55s cubic-bezier(.5,0,.8,.4) both; }
+  .mh-elring { position: absolute; inset: 0; box-sizing: border-box; padding: 3px; border-radius: 18%; background: conic-gradient(from var(--mh-ea), var(--e1), var(--e2), var(--e3), var(--e2), var(--e1)); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); mask-composite: exclude; filter: drop-shadow(0 0 5px var(--e2)); animation: mh-elring-spin 2.4s linear infinite, mh-elring-flick 1.1s ease-in-out infinite; }
   .mh-elring.is-fuego { --e1: #E8301A; --e2: #FF7A2E; --e3: #FFD05A; }
   .mh-elring.is-agua { --e1: #1E6FD0; --e2: #4FA8E8; --e3: #BFE9FF; }
   @keyframes mh-elring-spin { to { --mh-ea: 360deg; } }
   @keyframes mh-elring-flick { 0%, 100% { opacity: .95; } 50% { opacity: .65; } }
-  .mh-map-tk.is-el-tierra .mh-map-face { background: radial-gradient(circle at 35% 28%, #B98446, #5B3A18 78%); border-color: #8A5A2B; color: #FFF3E0; }
-  .mh-map-tk.is-el-aire .mh-map-face { background: radial-gradient(circle at 35% 28%, #FFFFFF, #CFD8DE 78%); border-color: #F2F6F8; color: #34495A; }
-  .mh-map-tk.is-el-tierra .mh-map-face::after, .mh-map-tk.is-el-aire .mh-map-face::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; }
-  .mh-map-tk.is-el-tierra .mh-map-face::after { background: repeating-linear-gradient(135deg, rgba(40,20,5,.42) 0 2px, transparent 2px 6px); }
-  .mh-map-tk.is-el-aire .mh-map-face::after { background: repeating-linear-gradient(135deg, rgba(90,125,150,.5) 0 2px, transparent 2px 6px); }
+  @keyframes mh-elring-in { 0% { opacity: 0; scale: .35; } 60% { opacity: 1; scale: 1.06; } 100% { opacity: 1; scale: 1; } }
+  @keyframes mh-elring-out { 0% { opacity: 1; scale: 1; } 100% { opacity: 0; scale: 1.5; } }
+  /* Tierra y Aire: una capa de color con rayas que se abre desde el centro al activarse y se cierra al apagarse */
+  .mh-map-tk.is-pc > .mh-map-face { transition: opacity .55s ease, scale .55s ease, filter .55s ease, border-color .5s ease; }
+  .mh-map-tk.is-el-tierra .mh-map-face, .mh-map-tk.is-el-aire .mh-map-face { border-color: var(--elb); }
+  .mh-map-tk.is-el-tierra, .mh-map-tk.is-el-p-tierra { --elb: #8A5A2B; --elf: radial-gradient(circle at 35% 28%, #B98446, #5B3A18 78%); --els: repeating-linear-gradient(135deg, rgba(40,20,5,.42) 0 2px, transparent 2px 6px); }
+  .mh-map-tk.is-el-aire, .mh-map-tk.is-el-p-aire { --elb: #F2F6F8; --elf: radial-gradient(circle at 35% 28%, #FFFFFF, #CFD8DE 78%); --els: repeating-linear-gradient(135deg, rgba(90,125,150,.5) 0 2px, transparent 2px 6px); }
+  .mh-map-tk.is-el-tierra .mh-map-face::before, .mh-map-tk.is-el-aire .mh-map-face::before, .mh-map-tk.is-el-p-tierra .mh-map-face::before, .mh-map-tk.is-el-p-aire .mh-map-face::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: var(--elf); z-index: -1; }
+  .mh-map-tk.is-el-tierra .mh-map-face::after, .mh-map-tk.is-el-aire .mh-map-face::after, .mh-map-tk.is-el-p-tierra .mh-map-face::after, .mh-map-tk.is-el-p-aire .mh-map-face::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: var(--els); z-index: 1; }
+  .mh-map-tk.is-el-tierra .mh-map-face::before, .mh-map-tk.is-el-aire .mh-map-face::before, .mh-map-tk.is-el-tierra .mh-map-face::after, .mh-map-tk.is-el-aire .mh-map-face::after { animation: mh-el-open .7s cubic-bezier(.2,.8,.2,1) both; }
+  .mh-map-tk.is-el-out .mh-map-face::before, .mh-map-tk.is-el-out .mh-map-face::after { animation: mh-el-close .55s cubic-bezier(.5,0,.8,.4) both; }
+  .mh-map-tk.is-el-tierra .mh-map-face, .mh-map-tk.is-el-aire .mh-map-face { color: #FFF3E0; } .mh-map-tk.is-el-aire .mh-map-face { color: #34495A; }
+  @keyframes mh-el-open { from { clip-path: circle(0% at 50% 50%); } to { clip-path: circle(75% at 50% 50%); } }
+  @keyframes mh-el-close { from { clip-path: circle(75% at 50% 50%); } to { clip-path: circle(0% at 50% 50%); } }
+  @media (prefers-reduced-motion: reduce) { .mh-elring, .mh-elwrap, .mh-map-tk .mh-map-face::before, .mh-map-tk .mh-map-face::after { animation: none; } }
   @media (prefers-reduced-motion: reduce) { .mh-elring { animation: none; } }
   /* La escena se desenfoca en el sitio y la cuadrícula aparece encima (sin fundido entre imágenes) */
   .mh-map-grid { animation: mh-gridin .9s ease .3s both; }
@@ -9725,13 +9737,13 @@ function RootThreads({ links, snap }) {
     </svg>
   );
 }
-function ShotFx({ kind, a, b, b2, size: S, el }) {
+function ShotFx({ kind, a, b, b2, size: S }) {
   const [p, setP] = useState(0);
   useEffect(() => {
     let raf;
     const t0 = performance.now();
     const tick = (n) => {
-      const v = Math.min(1, (n - t0) / (kind === "elem" ? 1800 : 1300));
+      const v = Math.min(1, (n - t0) / 1300);
       setP(v);
       if (v < 1) raf = requestAnimationFrame(tick);
     };
@@ -9745,66 +9757,6 @@ function ShotFx({ kind, a, b, b2, size: S, el }) {
   const q = p > 0.5 ? (p - 0.5) / 0.5 : 0;
   const magic = kind === "magic";
   const [x, y] = at(f);
-  if (kind === "elem") {
-    // Encarnación Elemental: según el elemento, llamas, rocas, olas o ráfagas alrededor de tu ficha.
-    const col = ELEM_COL[el] || "#E3B04B";
-    const [cx, cy] = a;
-    const k = Math.min(1, p / 0.8);
-    const ez = 1 - Math.pow(1 - k, 3);
-    const fd = p > 0.78 ? Math.max(0, 1 - (p - 0.78) / 0.22) : 1;
-    const rise = Math.sin(Math.min(1, p / 0.55) * Math.PI * 0.5);
-    const n = (len, fn) => Array.from({ length: len }, (_, i) => fn(i));
-    const pulse = <circle key="pulse" cx={cx} cy={cy} r={S * (0.3 + 0.9 * ez)} fill="none" stroke={col} strokeWidth="3" opacity={(1 - ez) * fd * 0.85} />;
-    const glow = <circle key="glow" cx={cx} cy={cy} r={S * 0.75} fill={col} opacity={Math.sin(Math.min(1, p / 0.7) * Math.PI) * 0.28 * fd} />;
-    let body = null;
-    if (el === "Fuego") {
-      body = [
-        ...n(10, (i) => {
-          const an = (i * Math.PI * 2) / 10, bx = cx + Math.cos(an) * S * 0.5, by = cy + Math.sin(an) * S * 0.4;
-          const h = S * (0.2 + 0.55 * rise) * (0.72 + 0.28 * Math.sin(p * 26 + i * 1.7)), w = S * 0.1;
-          return <path key={"f" + i} d={"M" + (bx - w) + " " + by + " Q" + (bx - w * 0.2) + " " + (by - h * 0.55) + " " + bx + " " + (by - h) + " Q" + (bx + w * 0.2) + " " + (by - h * 0.55) + " " + (bx + w) + " " + by + " Z"} fill={i % 2 ? "#FFD05A" : "#FF7A2E"} opacity={fd * 0.92} />;
-        }),
-        ...n(9, (i) => <circle key={"e" + i} cx={cx + Math.cos(i * 2.1) * S * (0.25 + 0.45 * ez)} cy={cy - S * (0.1 + 0.95 * ez) * (0.5 + (i % 3) * 0.25)} r={S * 0.04} fill="#FFD05A" opacity={(1 - ez) * fd} />),
-      ];
-    } else if (el === "Tierra") {
-      body = [
-        <ellipse key="dust" cx={cx} cy={cy + S * 0.15} rx={S * (0.5 + 0.8 * ez)} ry={S * (0.3 + 0.4 * ez)} fill="#C9A66B" opacity={0.38 * (1 - ez) * fd} />,
-        ...n(7, (i) => {
-          const an = (i * Math.PI * 2) / 7 + 0.3, bx = cx + Math.cos(an) * S * 0.55, by = cy + Math.sin(an) * S * 0.45 + S * 0.1;
-          const h = S * (0.12 + 0.45 * rise) * (0.8 + (i % 3) * 0.15), w = S * 0.11;
-          return <path key={"r" + i} d={"M" + (bx - w) + " " + by + " L" + (bx + (i % 2 ? 1 : -1) * w * 0.3) + " " + (by - h) + " L" + (bx + w) + " " + by + " Z"} fill={i % 2 ? "#A9742F" : "#7a5320"} stroke="#3d2a10" strokeWidth="1" opacity={fd} />;
-        }),
-        ...n(8, (i) => <circle key={"d" + i} cx={cx + Math.cos(i * 0.8) * S * (0.35 + 0.6 * ez)} cy={cy + Math.sin(i * 0.8) * S * (0.3 + 0.35 * ez) - S * 0.3 * Math.sin(k * Math.PI)} r={S * 0.035} fill="#C9A66B" opacity={(1 - ez) * fd} />),
-      ];
-    } else if (el === "Agua") {
-      body = [
-        ...n(3, (i) => {
-          const e = Math.max(0, Math.min(1, (k - i * 0.16) / (1 - i * 0.16)));
-          return <circle key={"w" + i} cx={cx} cy={cy} r={S * (0.25 + 0.95 * e)} fill="none" stroke={col} strokeWidth={3 - i * 0.6} opacity={(1 - e) * fd * 0.9} />;
-        }),
-        ...n(9, (i) => {
-          const an = (i * Math.PI * 2) / 9;
-          return <circle key={"g" + i} cx={cx + Math.cos(an) * S * (0.3 + 0.55 * k)} cy={cy + Math.sin(an) * S * 0.25 - S * 0.95 * Math.sin(k * Math.PI) * (0.6 + (i % 3) * 0.2)} r={S * 0.055} fill="#9fd6ff" opacity={(1 - k * 0.5) * fd} />;
-        }),
-      ];
-    } else {
-      body = [
-        ...n(3, (i) => {
-          const pts = n(22, (j) => {
-            const t = (j / 21) * Math.min(1, 0.25 + k);
-            const an = (i * Math.PI * 2) / 3 + t * 5.2 + p * 7;
-            return [cx + Math.cos(an) * S * (0.15 + 0.85 * t), cy + Math.sin(an) * S * (0.15 + 0.85 * t) * 0.8];
-          });
-          return <path key={"a" + i} d={"M" + pts.map((q) => q[0].toFixed(1) + " " + q[1].toFixed(1)).join(" L")} fill="none" stroke={i % 2 ? "#E8F8FF" : "#BFE6F5"} strokeWidth={S * 0.05} strokeLinecap="round" opacity={(1 - ez * 0.6) * fd * 0.9} />;
-        }),
-        ...n(7, (i) => {
-          const an = i * 0.9 + p * 6;
-          return <ellipse key={"l" + i} cx={cx + Math.cos(an) * S * (0.35 + 0.55 * ez)} cy={cy + Math.sin(an) * S * (0.3 + 0.4 * ez) - S * 0.3 * ez} rx={S * 0.06} ry={S * 0.025} transform={"rotate(" + ((an * 180) / Math.PI + 40) + " " + (cx + Math.cos(an) * S * (0.35 + 0.55 * ez)) + " " + (cy + Math.sin(an) * S * (0.3 + 0.4 * ez) - S * 0.3 * ez) + ")"} fill="#E8F8FF" opacity={(1 - ez) * fd} />;
-        }),
-      ];
-    }
-    return <g pointerEvents="none">{glow}{body}{pulse}</g>;
-  }
   if (kind === "free") {
     // Liberar: el hilo verde se tensa, se rompe y se recoge a los dos lados; el aro marrón de raíces estalla y suelta ramitas y hojas.
     const L = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
@@ -10036,6 +9988,33 @@ function useCardQueue(list) {
   useEffect(() => () => clearTimeout(timer.current), []);
   return cur;
 }
+// Elementos visibles en el tablero: para que puedan animar su salida, un elemento que desaparece se conserva ms milisegundos marcado como «leaving».
+function useLeaving(items, ms = 600) {
+  const [gone, setGone] = useState({});
+  const prev = useRef({});
+  const sig = items.map((i) => i.id + "|" + i.el + "|" + i.x + "|" + i.y).join(";");
+  useLayoutEffect(() => {
+    const cur = {};
+    items.forEach((i) => (cur[i.id + "|" + i.el] = i));
+    const timers = [];
+    Object.keys(prev.current).forEach((k) => {
+      if (cur[k]) return;
+      const old = prev.current[k];
+      setGone((g) => ({ ...g, [k]: old }));
+      timers.push(setTimeout(() => setGone((g) => { const n = { ...g }; delete n[k]; return n; }), ms));
+    });
+    setGone((g) => {
+      const back = Object.keys(g).filter((k) => cur[k]);
+      if (!back.length) return g;
+      const n = { ...g };
+      back.forEach((k) => delete n[k]);
+      return n;
+    });
+    prev.current = cur;
+    return undefined; // los temporizadores terminan solos
+  }, [sig]); // eslint-disable-line react-hooks/exhaustive-deps
+  return [...items, ...Object.values(gone).map((i) => ({ ...i, leaving: true }))];
+}
 function useAttackFx(fx) {
   const [anim, setAnim] = useState(null);
   const last = useRef(null);
@@ -10044,7 +10023,7 @@ function useAttackFx(fx) {
     last.current = fx.key;
     if (Date.now() - fx.key > 15000) return;
     setAnim(fx);
-    const t = setTimeout(() => setAnim(null), fx.kind === "elem" ? 2000 : 1500);
+    const t = setTimeout(() => setAnim(null), 1500);
     return () => clearTimeout(t);
   }, [fx?.key]);
   return anim;
@@ -10857,6 +10836,11 @@ function MapBoard({ aimRange, rangeMenu, cfx, meCharId, onDragInfo, onStore, pla
   const overlayEl = useContext(MapOverlayCtx);
   const anim = useAttackFx(fx);
   const eAnim = useElemEvent(efx);
+  // Líneas de Fuego y Agua (con su animación de salida) y color de Tierra y Aire al apagarse el elemento.
+  const ringItems = useLeaving(tokens.filter((t) => t.kind === "pc" && !t.vanished && (t.elem === "Fuego" || t.elem === "Agua")).map((t) => ({ id: t.id, el: t.elem, x: t.x, y: t.y })));
+  const outItems = useLeaving(tokens.filter((t) => t.kind === "pc" && (t.elem === "Tierra" || t.elem === "Aire")).map((t) => ({ id: t.id, el: t.elem, x: 0, y: 0 })));
+  const elemOut = {};
+  outItems.forEach((i) => i.leaving && (elemOut[i.id] = i.el));
   const hAnim = useElemEvent(hfx);
   const cAnim = useCardQueue(cfx);
   const steps = useMoveFx(tokens.map((t) => [t.id, t.x, t.y]));
@@ -11120,16 +11104,18 @@ function MapBoard({ aimRange, rangeMenu, cfx, meCharId, onDragInfo, onStore, pla
         return <RootThreads links={links} snap={drag && drag.moved ? new Set([drag.id]) : null} />;
       })()}
       {drag?.moved && occupied(drag.x, drag.y, drag.id) && <div className="mh-map-drop is-bad" style={at(drag.x, drag.y)} />}
-      {tokens.filter((t) => t.kind === "pc" && !t.vanished && (t.elem === "Fuego" || t.elem === "Agua")).map((t) => {
-        const pos = drag && drag.id === t.id && drag.moved ? { x: drag.fx, y: drag.fy } : t;
+      {ringItems.map((t) => {
+        const pos = drag && drag.id === t.id && drag.moved && !t.leaving ? { x: drag.fx, y: drag.fy } : t;
         const r = RANGE_CELLS["Cuerpo a cuerpo"];
         return (
           <div
-            key={"er" + t.id}
-            className={"mh-elring is-" + t.elem.toLowerCase()}
+            key={"er" + t.id + t.el}
+            className={"mh-elwrap" + (t.leaving ? " is-out" : "")}
             style={{ left: ((pos.x - r) * 100) / MAP_COLS + "%", top: ((pos.y - r) * 100) / MAP_ROWS + "%", width: ((2 * r + 1) * 100) / MAP_COLS + "%", height: ((2 * r + 1) * 100) / MAP_ROWS + "%" }}
             aria-hidden="true"
-          />
+          >
+            <div className={"mh-elring is-" + t.el.toLowerCase()} />
+          </div>
         );
       })}
       {tokens.filter((t) => !(fogHide && inFog(t.x, t.y))).map((t) => {
@@ -11143,7 +11129,7 @@ function MapBoard({ aimRange, rangeMenu, cfx, meCharId, onDragInfo, onStore, pla
             key={t.id}
             type="button"
             data-tid={t.id}
-            className={"mh-map-tk is-" + t.kind + (t.elem ? " is-el-" + String(t.elem).toLowerCase() : "") + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id && anim.kind !== "free" && anim.kind !== "elem" ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") + (anim.kind === "web" ? " is-web" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
+            className={"mh-map-tk is-" + t.kind + (t.elem ? " is-el-" + String(t.elem).toLowerCase() : elemOut[t.id] ? " is-el-out is-el-p-" + elemOut[t.id].toLowerCase() : "") + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id && anim.kind !== "free" ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") + (anim.kind === "web" ? " is-web" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
             style={{ ...at(pos.x, pos.y), "--tc": t.color, ...(anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); return tg ? { "--ax": (tg.x - t.x) * 100 + "%", "--ay": (tg.y - t.y) * 100 + "%" } : {}; })() : {}) }}
             onPointerDown={(e) => startDrag(e, t)}
             onContextMenu={(e) => openMenu(e, t)}
@@ -11199,7 +11185,7 @@ function MapBoard({ aimRange, rangeMenu, cfx, meCharId, onDragInfo, onStore, pla
         if (!fa || !fb) return null;
         return (
           <svg className="mh-map-shot" viewBox={`0 0 ${MAP_COLS * 40} ${MAP_ROWS * 40}`} preserveAspectRatio="none">
-            <ShotFx key={anim.key} kind={anim.kind} el={anim.el} a={[(fa.x + 0.5) * 40, (fa.y + 0.5) * 40]} b={[(fb.x + 0.5) * 40, (fb.y + 0.5) * 40]} size={40} />
+            <ShotFx key={anim.key} kind={anim.kind} a={[(fa.x + 0.5) * 40, (fa.y + 0.5) * 40]} b={[(fb.x + 0.5) * 40, (fb.y + 0.5) * 40]} size={40} />
           </svg>
         );
       })()}
@@ -13619,15 +13605,12 @@ export default function App({ onSignOut }) {
     postCampaignEvent(id, `✨ Activa ${formName}`);
   };
 
-  // Encarnación Elemental desde la carta: primero se revela la carta y después se aplica el elemento con su animación.
+  // Encarnación Elemental desde la carta: primero se revela la carta y después se aplica el elemento.
   const embodyElement = (charId, el, card) => {
     const me = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
     if (!sheetCampaignId || !me || !card) return toggleElemental(charId, el, false);
     playCardOnMap(sheetCampaignId, charId, card, { noChat: true, short: true });
-    afterReveal(charId, card.key, () => {
-      toggleElemental(charId, el, false);
-      mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: me.id, to: me.id, kind: "elem", el }), "fx");
-    });
+    afterReveal(charId, card.key, () => toggleElemental(charId, el, false));
   };
   const toggleElemental = (id, elementName, isCurrentlyActive) => {
     const c = characters[id];
