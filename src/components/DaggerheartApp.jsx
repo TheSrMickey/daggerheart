@@ -5024,9 +5024,11 @@ const sharedStyles = `
   .mh-fan-toks { position: absolute; left: 50%; bottom: 4%; translate: -50% 0; z-index: 3; display: flex; padding: 0; pointer-events: none; max-width: 96%; flex-wrap: wrap; justify-content: center; }
   .mh-die { all: unset; box-sizing: border-box; display: block; flex: none; width: calc(62px * var(--s, 1)); margin: 0 calc(-8px * var(--s, 1)); filter: drop-shadow(0 2px 2px rgba(0,0,0,.45)); } .mh-die svg, .mh-die img { display: block; width: 100%; height: auto; overflow: visible; pointer-events: none; } button.mh-die { cursor: pointer; transition: transform .12s ease; } button.mh-die:hover { transform: translateY(-3px); }
   .mh-die.is-gone { position: relative; z-index: 6; animation: mh-die-gone .65s ease-in forwards; pointer-events: none; }
+  .mh-die.is-drop { animation: mh-die-drop .85s cubic-bezier(.3,.1,.5,1) backwards; }
+  @keyframes mh-die-drop { 0% { transform: translateY(calc(-220px * var(--s, 1))) rotate(-540deg) scale(1.35); opacity: 0; } 8% { opacity: 1; } 52% { transform: translateY(0) rotate(0); } 68% { transform: translateY(calc(-26px * var(--s, 1))) rotate(40deg); } 82% { transform: translateY(0) rotate(-12deg); } 91% { transform: translateY(calc(-7px * var(--s, 1))) rotate(5deg); } 100% { transform: translateY(0) rotate(0); } }
   @keyframes mh-die-gone { 0% { transform: translateY(0) rotate(0); opacity: 1; } 100% { transform: translateY(calc(-150px * var(--s, 1))) rotate(300deg) scale(.4); opacity: 0; } }
-  @media (prefers-reduced-motion: reduce) { .mh-die.is-gone { animation: none; opacity: 0; } }
-  .mh-fan-tokctl { position: absolute; left: 0; right: 0; top: calc(100% + 12px); display: flex; flex-direction: column; align-items: center; gap: 8px; } .mh-fan-tray { --s: 1.15; position: absolute; left: calc(100% + 14px); top: 3%; bottom: 3%; z-index: 4; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; pointer-events: none; } .mh-fan-tray .mh-die { margin: calc(-3px * var(--s)) 0; } @media (max-width: 640px) { .mh-fan-tray { left: 0; right: 0; top: auto; bottom: 3%; flex-direction: row; justify-content: center; --s: .95; } .mh-fan-tray .mh-die { margin: 0 calc(-8px * var(--s)); } } .mh-fan-tray .mh-die { pointer-events: auto; } .mh-die.is-drag { touch-action: none; cursor: grab; } .mh-die.is-drag:active { cursor: grabbing; z-index: 8; } .mh-fan-tokctl .rc { all: unset; cursor: pointer; padding: 7px 16px; border-radius: 99px; background: #E3B04B; color: #1f1606; font: 700 12.5px Inter, system-ui, sans-serif; }
+  @media (prefers-reduced-motion: reduce) { .mh-die.is-gone { animation: none; opacity: 0; } .mh-die.is-drop { animation: none; } }
+  .mh-fan-tokctl { position: absolute; left: 0; right: 0; top: calc(100% + 12px); display: flex; flex-direction: column; align-items: center; gap: 8px; } .mh-fan-tray { --s: 1.15; position: absolute; left: calc(100% + 14px); top: 3%; bottom: 3%; z-index: 4; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; pointer-events: none; } .mh-fan-tray .mh-die { margin: calc(-3px * var(--s)) 0; } @media (max-width: 640px) { .mh-fan-tray { left: 0; right: 0; top: auto; bottom: 3%; flex-direction: row; justify-content: center; --s: .95; } .mh-fan-tray .mh-die { margin: 0 calc(-8px * var(--s)); } } .mh-fan-tray .mh-die { pointer-events: auto; } .mh-die.is-drag { touch-action: none; cursor: grab; } .mh-die.is-drag:active { cursor: grabbing; z-index: 8; } .mh-fan-tokctl .rc:disabled { opacity: .4; cursor: not-allowed; } .mh-fan-tokctl .rc { all: unset; cursor: pointer; padding: 7px 16px; border-radius: 99px; background: #E3B04B; color: #1f1606; font: 700 12.5px Inter, system-ui, sans-serif; }
   .mh-sess { width: min(560px, 94vw); }
   .mh-sess-list { display: flex; flex-direction: column; gap: 8px; } .mh-sess-it { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--mh-panel, #1b1824) 70%, transparent); border: 1px solid var(--mh-line2, rgba(255,255,255,.14)); } .mh-sess-it > svg { color: #E3B04B; flex: none; } .mh-sess-it span { display: flex; flex-direction: column; } .mh-sess-it small { color: var(--mh-muted, #aaa); font-size: 11.5px; }
   .mh-sess-toks { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; } .mh-sess-toks button { all: unset; box-sizing: border-box; cursor: pointer; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; font: 700 15px Inter, system-ui, sans-serif; border: 2px solid #E3B04B; color: #E3B04B; } .mh-sess-toks button.is-on { background: #E3B04B; color: #1f1606; }
@@ -10721,10 +10723,17 @@ function ChaosDie({ on, i, color }) {
 function TokDice({ have, max, onPick, color = "#d9482a" }) {
   const prev = useRef(have);
   const [gone, setGone] = useState([]);
+  const [dropped, setDropped] = useState(null); // { from, to }: dados que acaban de recargarse y caen a su sitio
   useEffect(() => {
     if (have < prev.current) {
       setGone(Array.from({ length: prev.current - have }, (_, k) => have + k));
       const t = setTimeout(() => setGone([]), 700);
+      prev.current = have;
+      return () => clearTimeout(t);
+    }
+    if (have > prev.current) {
+      setDropped({ from: prev.current, to: have });
+      const t = setTimeout(() => setDropped(null), 1400);
       prev.current = have;
       return () => clearTimeout(t);
     }
@@ -10805,14 +10814,16 @@ function TokDice({ have, max, onPick, color = "#d9482a" }) {
   };
   return Array.from({ length: max }, (_, k) => {
     const face = k < have || gone.includes(k);
-    const cls = "mh-die" + (face ? " is-on" : " is-off") + (gone.includes(k) ? " is-gone" : "");
+    const dropping = dropped && k >= dropped.from && k < dropped.to;
+    const cls = "mh-die" + (face ? " is-on" : " is-off") + (gone.includes(k) ? " is-gone" : "") + (dropping ? " is-drop" : "");
+    const dly = dropping ? { animationDelay: (k - dropped.from) * 110 + "ms" } : null;
     const p = pose[k];
     return onPick ? (
       <button
         key={k}
         type="button"
         className={cls + " is-drag"}
-        style={p ? { translate: p.x + "px " + p.y + "px", rotate: p.r + "deg" } : undefined}
+        style={p || dly ? { ...(p ? { translate: p.x + "px " + p.y + "px", rotate: p.r + "deg" } : null), ...dly } : undefined}
         aria-label={k < have ? "Quitar ficha (arrastra o lanza el dado para apartarlo)" : "Poner ficha"}
         onPointerDown={(e) => down(e, k)}
         onPointerMove={move}
@@ -10826,7 +10837,7 @@ function TokDice({ have, max, onPick, color = "#d9482a" }) {
         <ChaosDie on={face} i={k} color={color} />
       </button>
     ) : (
-      <span key={k} className={cls}><ChaosDie on={face} i={k} color={color} /></span>
+      <span key={k} className={cls} style={dly || undefined}><ChaosDie on={face} i={k} color={color} /></span>
     );
   });
 }
@@ -11049,7 +11060,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
                 </div>
                 <div className="mh-fan-tokctl">
                   <span className="mh-fan-ask">{ti.have} de {ti.max} {ti.cfg.label} · lanza los dados con el ratón si te estorban</span>
-                  <button type="button" className="rc" onClick={() => onRecharge && onRecharge(open.key)}>Recargar · 1 Estrés</button>
+                  <button type="button" className="rc" disabled={ti.have >= ti.max} title={ti.have >= ti.max ? "Ya tienes todas las fichas" : "Marca 1 Estrés y recupera las fichas"} onClick={() => onRecharge && onRecharge(open.key)}>Recargar · 1 Estrés</button>
                 </div>
                 </>
               );
@@ -14076,6 +14087,10 @@ export default function App({ onSignOut }) {
     const c = charsRef.current[id];
     const info = c && cardTokInfo(c, key);
     if (!info) return;
+    if (info.have >= info.max) {
+      if (sheetCampaignId) pushMapLog(sheetCampaignId, key + ": ya tienes todas las fichas, no hace falta recargar", "info");
+      return;
+    }
     markStress(id, 1, { f_card_tokens: JSON.stringify({ ...getCardTokens(c), [key]: info.max }) });
     postCampaignEvent(id, "✨ " + key + ": marca 1 Estrés y recarga sus fichas hasta " + info.max);
   };
