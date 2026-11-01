@@ -5033,6 +5033,12 @@ const sharedStyles = `
   .mh-evo-go { all: unset; cursor: pointer; padding: 10px 22px; border-radius: 99px; font: 700 13.5px Inter, system-ui, sans-serif; background: #7FB77A; color: #10200e; box-shadow: 0 6px 18px -6px #7FB77A; transition: transform .12s ease, opacity .12s ease; } .mh-evo-go:hover:not(:disabled) { transform: translateY(-2px); } .mh-evo-go:disabled { opacity: .4; cursor: not-allowed; box-shadow: none; }
   /* Daño en la ficha del mapa al marcar vida: sacudida, destello rojo, onda y cifra que sube */
   .mh-map-tk.is-hurt { animation: mh-tk-hit .5s ease both; } .mh-map-tk.is-hurt .mh-map-face { animation: mh-tk-flash .6s ease both; }
+  .mh-map-tk.is-burn .mh-map-face { animation: mh-burn-flash .9s ease both; }
+  @keyframes mh-burn-flash { 0%, 100% { filter: none; } 30% { filter: brightness(1.6) saturate(1.8) drop-shadow(0 0 8px #FF7A2E); } }
+  .mh-map-burnring { position: absolute; z-index: 6; inset: 10%; border: 3px solid #FF7A2E; border-radius: 50%; box-shadow: 0 0 14px #FF7A2E, inset 0 0 12px #FFD05A; pointer-events: none; animation: mh-dmg-ring .9s ease-out both; }
+  .mh-map-burn { position: absolute; z-index: 7; left: 50%; top: 4%; translate: -50% 0; font: 800 17px 'Inter', system-ui, sans-serif; color: #FFB04A; text-shadow: 0 0 8px #FF5A1F, 0 2px 3px #000; pointer-events: none; animation: mh-dmg-float 1.3s ease-out both; }
+  .mh-map-wavering { position: absolute; z-index: 6; inset: 12%; border: 3px solid #4FA8E8; border-radius: 50%; box-shadow: 0 0 12px #4FA8E8; pointer-events: none; animation: mh-dmg-ring .9s ease-out both; }
+  @media (prefers-reduced-motion: reduce) { .mh-map-tk.is-burn .mh-map-face, .mh-map-burnring, .mh-map-burn, .mh-map-wavering, .mh-foe-wait-r i { animation: none; } }
   .mh-map-dmgring { position: absolute; z-index: 6; inset: 14%; border: 3px solid #F0615A; border-radius: 50%; pointer-events: none; animation: mh-dmg-ring .7s ease-out both; }
   .mh-map-dmg { position: absolute; z-index: 7; left: 50%; top: 8%; translate: -50% 0; font: 800 17px 'Inter', system-ui, sans-serif; color: #FF6B62; text-shadow: 0 0 6px #000, 0 2px 3px #000; pointer-events: none; animation: mh-dmg-float 1.2s ease-out both; }
   @keyframes mh-dmg-ring { 0% { opacity: .95; scale: .7; } 100% { opacity: 0; scale: 2; } }
@@ -5391,6 +5397,9 @@ const sharedStyles = `
   .mh-foe-tg-b small { color: var(--mh-muted); font-weight: 500; }
   .mh-foe-tg-b.is-on { border-color: #C0504A; background: color-mix(in srgb, #C0504A 12%, var(--mh-panel)); }
   .mh-foe-tg-b:disabled { opacity: .45; cursor: not-allowed; }
+  .mh-foe-wait { position: absolute; z-index: 12; right: 12px; top: 12px; width: min(300px, calc(100% - 24px)); padding: 10px 12px; border-radius: 12px; display: flex; flex-direction: column; gap: 6px; background: var(--mh-panel); border: 1px solid color-mix(in srgb, #E3B04B 50%, var(--mh-line)); box-shadow: 0 12px 32px rgba(0,0,0,.5); } .mh-foe-wait > b { font-size: 12px; color: var(--mh-gold-ink, #E3B04B); text-transform: uppercase; letter-spacing: .05em; }
+  .mh-foe-wait-r { display: flex; align-items: flex-start; gap: 9px; font-size: 12.5px; color: var(--mh-ink); } .mh-foe-wait-r small { display: block; color: var(--mh-muted); font-size: 11px; margin-top: 1px; }
+  .mh-foe-wait-r i { flex: none; width: 14px; height: 14px; margin-top: 2px; border-radius: 50%; border: 2px solid #E3B04B; border-top-color: transparent; animation: mh-spin .9s linear infinite; } @keyframes mh-spin { to { rotate: 360deg; } }
   .mh-foe-pick { position: absolute; z-index: 13; left: 12px; top: 12px; width: min(380px, calc(100% - 24px)); padding: 12px 14px; border-radius: 14px; display: flex; flex-direction: column; gap: 8px; background: var(--mh-panel); border: 1px solid color-mix(in srgb, #C0504A 55%, var(--mh-line)); box-shadow: 0 16px 44px rgba(0,0,0,.55); } .mh-foe-pick > b { color: var(--mh-ink); font-size: 14px; } .mh-foe-pick > small { color: var(--mh-muted); font-size: 11.5px; line-height: 1.4; } .mh-foe-pick .mh-btn-ghost { align-self: flex-start; }
   .mh-foe-pick.mh-above { left: 50%; top: 50%; translate: -50% -50%; border-color: #E3B04B; } .mh-above-b { display: flex; gap: 8px; flex-wrap: wrap; }
   .mh-foe-quick i { background: #C0504A !important; color: #fff; }
@@ -10985,7 +10994,7 @@ function CardPlayView({ anim, own }) {
     </div>
   );
 }
-function MapBoard({ aimRange, rangeMenu, cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, fog, fogView, areas, areaTool, log, menuFor, fx, efx, hfx, spot, bg, tokens, stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
+function MapBoard({ showHp, aimRange, rangeMenu, cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, fog, fogView, areas, areaTool, log, menuFor, fx, efx, hfx, spot, bg, tokens, stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
   const ref = useRef(null);
   const dragRef = useRef(null);
   const [drag, setDrag] = useState(null);
@@ -11293,7 +11302,7 @@ function MapBoard({ aimRange, rangeMenu, cfx, meCharId, onDragInfo, onStore, pla
             key={t.id}
             type="button"
             data-tid={t.id}
-            className={"mh-map-tk is-" + t.kind + (hAnim && hAnim.to === t.id ? " is-hurt" : "") + (t.beast || t.trf ? " is-trf" : "") + (morphs[t.id] ? " is-morph" : "") + (t.elem ? " is-el-" + String(t.elem).toLowerCase() : elemOut[t.id] ? " is-el-out is-el-p-" + elemOut[t.id].toLowerCase() : "") + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id && anim.kind !== "free" && anim.kind !== "howl" ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") + (anim.kind === "web" ? " is-web" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
+            className={"mh-map-tk is-" + t.kind + (hAnim && hAnim.to === t.id ? " is-hurt" : "") + (eAnim && eAnim.kind === "burn" && eAnim.to === t.id ? " is-burn" : "") + (t.beast || t.trf ? " is-trf" : "") + (morphs[t.id] ? " is-morph" : "") + (t.elem ? " is-el-" + String(t.elem).toLowerCase() : elemOut[t.id] ? " is-el-out is-el-p-" + elemOut[t.id].toLowerCase() : "") + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id && anim.kind !== "free" && anim.kind !== "howl" ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") + (anim.kind === "web" ? " is-web" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
             style={{ ...at(pos.x, pos.y), "--tc": t.color, ...(anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); return tg ? { "--ax": (tg.x - t.x) * 100 + "%", "--ay": (tg.y - t.y) * 100 + "%" } : {}; })() : {}) }}
             onPointerDown={(e) => startDrag(e, t)}
             onContextMenu={(e) => openMenu(e, t)}
@@ -11303,6 +11312,13 @@ function MapBoard({ aimRange, rangeMenu, cfx, meCharId, onDragInfo, onStore, pla
             tabIndex={t.vanished ? -1 : movable || onPick ? 0 : -1}
             aria-hidden={t.vanished || undefined}
           >
+            {eAnim && eAnim.kind === "burn" && eAnim.to === t.id && (
+              <>
+                <span key={"br" + eAnim.key} className="mh-map-burnring" aria-hidden="true" />
+                <span key={"bn" + eAnim.key} className="mh-map-burn" aria-hidden="true">−{eAnim.roll}</span>
+              </>
+            )}
+            {eAnim && eAnim.kind === "wave" && (eAnim.ids || []).includes(t.id) && <span key={"wv" + eAnim.key} className="mh-map-wavering" aria-hidden="true" />}
             {hAnim && hAnim.to === t.id && (
               <>
                 <span key={"dr" + hAnim.key} className="mh-map-dmgring" aria-hidden="true" />
@@ -11337,7 +11353,7 @@ function MapBoard({ aimRange, rangeMenu, cfx, meCharId, onDragInfo, onStore, pla
                 <b>{spotHands[t.charId].n}</b>
               </span>
             )}
-            {hpLeft != null && !plain && (
+            {hpLeft != null && (!plain || showHp) && (
               <svg className="mh-map-ring" viewBox="0 0 100 100" aria-hidden="true">
                 {t.beast || t.trf ? (
                   <>
@@ -11352,7 +11368,7 @@ function MapBoard({ aimRange, rangeMenu, cfx, meCharId, onDragInfo, onStore, pla
                 )}
               </svg>
             )}
-            <span className="mh-map-face" title={hpLeft != null && !plain ? `Vida: ${t.hp[1] - t.hp[0]} de ${t.hp[1]}` : undefined}>{t.img && t.kind !== "pc" ? <img src={t.img} alt="" draggable={false} /> : <Emb size="52%" strokeWidth={2.1} />}</span>
+            <span className="mh-map-face" title={hpLeft != null && (!plain || showHp) ? `Vida: ${t.hp[1] - t.hp[0]} de ${t.hp[1]}` : undefined}>{t.img && t.kind !== "pc" ? <img src={t.img} alt="" draggable={false} /> : <Emb size="52%" strokeWidth={2.1} />}</span>
             {t.name && <span className="mh-map-nm">{t.name}</span>}
           </button>
         );
@@ -13798,15 +13814,31 @@ export default function App({ onSignOut }) {
     return Number(ch.r_evasion) + (bf?.evasionBonus || 0) + (eq.evasion || 0) + Number(ch.f_natural_evade || 0) + (ch.f_class === "Pícaro" && ch.f_dodge === "1" ? 2 : 0);
   };
   // El golpe ya tirado (con crítico: máximo de los dados + la tirada) llega al jugador, que lo resuelve con su Evasión.
-  const finishFoeAttack = (foe, tg, r, atk, crit, dmgExpr, tag) => {
+  // Si hay dados 3D, el DJ ve primero los dados de daño y solo entonces el golpe sale hacia el jugador.
+  const finishFoeAttack = (foe, tg, r, atk, crit, dmgExpr, tag, ev, success, quiet) => {
     const st = foe.stats;
     const d = rollExpr(dmgExpr);
     const m = String(dmgExpr).match(/(\d*)d(\d+)/);
-    const critExtra = crit && m ? Number(m[1] || 1) * Number(m[2]) : 0;
-    const hitEntry = { key: Date.now() + "-" + Math.random().toString(36).slice(2, 6), charId: tg.charId, foeId: foe.id, from: foe.name || "Una criatura", weapon: st.attack.name + (tag ? " (" + tag + ")" : ""), d20: r.rolls[0], atk, crit, dmg: d.total + critExtra, dmgRolls: d.rolls, dmgMod: d.mod };
-    mutateMap(viewingCampaignId, (hs) => [...(Array.isArray(hs) ? hs : []).slice(-19), hitEntry], "hits");
+    const nDice = m ? Number(m[1] || 1) : 0, sides = m ? Number(m[2]) : 0;
+    const critExtra = crit && m ? nDice * sides : 0;
+    const total = d.total + critExtra;
+    const fname = foe.name || "La criatura";
     const tn = mapTokensView([tg])[0].name;
-    pushMapLog(viewingCampaignId, (foe.name || "La criatura") + " ataca a " + tn + " con " + st.attack.name + ": " + atk + (crit ? " · ¡crítico!" : "") + (tag ? " · " + tag : "") + " · esperando al jugador", "hit");
+    const hitEntry = { key: Date.now() + "-" + Math.random().toString(36).slice(2, 6), charId: tg.charId, foeId: foe.id, from: fname, weapon: st.attack.name + (tag ? " (" + tag + ")" : ""), d20: r.rolls[0], atk, crit, dmg: total, dmgRolls: d.rolls, dmgMod: d.mod };
+    const send = () => {
+      mutateMap(viewingCampaignId, (hs) => [...(Array.isArray(hs) ? hs : []).slice(-19), hitEntry], "hits");
+      pushMapLog(viewingCampaignId, fname + " ataca a " + tn + " con " + st.attack.name + (tag ? " (" + tag + ")" : "") + ": " + atk + (ev != null ? " contra Evasión " + ev : "") + (crit ? " · ¡crítico!" : "") + " · " + (success ? total + " de daño · esperando a " + tn : "parece fallar · esperando a " + tn), success ? "hit" : "miss");
+    };
+    const dl = d.rolls.map((v) => ({ sides, value: v, kind: crit ? "crit" : "dmg", main: true })).filter((x) => DICE3D_SIDES.includes(x.sides));
+    if (!quiet && dl.length && canDice3d()) {
+      flushOutcome();
+      setDiceHold(true);
+      const parts = [{ label: nDice + "d" + sides, v: d.rolls.reduce((x, y) => x + y, 0), plain: true }];
+      if (d.mod) parts.push({ label: "Bonificador", v: d.mod });
+      if (critExtra) parts.push({ label: "Crítico", v: critExtra });
+      pendingOutcome.current = send;
+      setDice3d({ key: Date.now(), dice: dl, summary: { parts, total, text: (crit ? "Crítico · " : "") + "Daño " + (st.attack.type || "físico"), color: crit ? "#7FB77A" : "#E0674F", note: fname + " golpea a " + tn, dc: st.attack.name + (tag ? " · " + tag : ""), outcome: crit ? "crit" : "dmg" } });
+    } else send();
   };
   const foeAttack = (foeId, tgId) => {
     const toks = campaignMapRef.current.tokens || [];
@@ -13819,12 +13851,27 @@ export default function App({ onSignOut }) {
     const atk = r.rolls[0] + Number(st.atk || 0);
     const crit = r.rolls[0] === 20;
     const ch = characters[tg.charId];
-    const success = crit || (ch ? atk >= foeEvasionOf(ch) : true);
+    const ev = ch ? foeEvasionOf(ch) : null;
+    const success = crit || ev == null || atk >= ev;
+    const fname = foe.name || "La criatura";
+    const tn = mapTokensView([tg])[0].name;
     // Bandido · Desde arriba: si el ataque tiene éxito, el DJ decide si lo aplica (cambia el daño).
     const above = (st.features || []).find((x) => /desde arriba/i.test(x.name));
     const expr = above && (String(above.text).match(/(\d+d\d+(?:\s*\+\s*\d+)?)/) || [])[1];
-    if (success && expr) return setAboveAsk({ foeId, tgId, r, atk, crit, expr: expr.replace(/\s/g, ""), base: st.attack.damage, feat: above.name });
-    finishFoeAttack(foe, tg, r, atk, crit, st.attack.damage, "");
+    const next = () =>
+      setTimeout(() => {
+        if (success && expr) return setAboveAsk({ foeId, tgId, r, atk, crit, ev, expr: expr.replace(/\s/g, ""), base: st.attack.damage, feat: above.name });
+        finishFoeAttack(foe, tg, r, atk, crit, st.attack.damage, "", ev, success, !success);
+      }, 80);
+    if (canDice3d()) {
+      flushOutcome();
+      setDiceHold(true);
+      pendingOutcome.current = next;
+      setDice3d({ key: Date.now(), dice: [{ sides: 20, value: r.rolls[0], kind: crit ? "crit" : "bonus", main: true }], summary: { parts: [{ label: "d20", v: r.rolls[0], plain: true }, { label: "Ataque", v: Number(st.atk || 0) }], total: atk, text: crit ? "¡Crítico!" : success ? "¡Acierta!" : "Falla", color: success ? "#E3B04B" : "#7D8BA3", note: fname + " ataca a " + tn + " con " + st.attack.name, dc: ev != null ? "Evasión de " + tn + ": " + ev + " · " + (success ? "acierta" : "falla") : "", outcome: crit ? "crit" : success ? "hope" : "fear" } });
+    } else {
+      pushMapLog(viewingCampaignId, fname + " tira d20: " + r.rolls[0] + (st.atk ? (st.atk > 0 ? " + " : " − ") + Math.abs(st.atk) : "") + " = " + atk + (ev != null ? " contra Evasión " + ev + " de " + tn + " · " + (success ? "acierta" : "falla") : ""), success ? "hit" : "miss");
+      next();
+    }
   };
   const answerAbove = (apply) => {
     const a = aboveAsk;
@@ -13833,7 +13880,7 @@ export default function App({ onSignOut }) {
     const toks = campaignMapRef.current.tokens || [];
     const foe = toks.find((t) => t.id === a.foeId);
     const tg = toks.find((t) => t.id === a.tgId);
-    if (foe && tg) finishFoeAttack(foe, tg, a.r, a.atk, a.crit, apply ? a.expr : a.base, apply ? a.feat : "");
+    if (foe && tg) finishFoeAttack(foe, tg, a.r, a.atk, a.crit, apply ? a.expr : a.base, apply ? a.feat : "", a.ev, true, false);
   };
   // Hombre Lobo desde la carta: solo con 1 o más PV marcados. Primero se revela la carta y después entras en Forma de Lobo (1 Estrés).
   const activateWolf = (charId, card) => {
@@ -15749,6 +15796,7 @@ export default function App({ onSignOut }) {
     const roll = 1 + Math.floor(Math.random() * 10);
     mutateMap(campaignId, () => ({ key: Date.now(), kind: "burn", to: foe.id, roll }), "efx");
     postCampaignEvent(charId, "🔥 Fuego: " + foe.name + " se quema al herirle: 1d10 = " + roll + " de daño mágico");
+    pushMapLog(campaignId, "Fuego de " + (c?.f_name || "un druida") + ": " + (foe.name || "la criatura") + " recibe 1d10 = " + roll + " de daño mágico", "dmg");
     setTimeout(() => applyFoeDamage(campaignId, foe.id, roll, (c?.f_name || "Alguien") + " · Fuego", "Fuego"), 1300);
   };
   // Agua: al dañar a un adversario cuerpo a cuerpo, los demás Muy cercanos al objetivo marcan 1 Estrés.
@@ -30238,6 +30286,8 @@ export default function App({ onSignOut }) {
                               <MapBoard
                                 cfx={campaignMap.cfx}
                                 plain
+                                showHp
+                                log={campaignMap.log}
                                 aimRange={foeAtk ? (() => { const ft = (campaignMap.tokens || []).find((t) => t.id === foeAtk.foeId); return ft && ft.stats ? { id: ft.id, max: RANGE_CELLS[ft.stats.attack.range] || 1 } : null; })() : null}
                                 menuFor={(t) => (t.kind === "foe" && t.stats && t.stats.attack && !(Number(t.stats.hp || 0) > 0 && Number(t.stats.hpMarked || 0) >= Number(t.stats.hp || 0)) ? [{ key: "foe-atk", Icon: Swords, color: "#C0504A", label: "Atacar con " + t.stats.attack.name, sub: t.stats.attack.range + " · " + t.stats.attack.damage + " " + (t.stats.attack.type || ""), run: () => setFoeAtk({ foeId: t.id }) }] : [])}
                                 onDragInfo={(d) => setDjDragTok(d && (campaignMap.tokens || []).find((t) => t.id === d.id)?.kind === "pc" ? d : null)}
@@ -30286,7 +30336,7 @@ export default function App({ onSignOut }) {
                                         <button key={t.id} type="button" className="mh-foe-tg-b" disabled={!ok} title={ok ? "A " + dist + " casilla" + (dist === 1 ? "" : "s") : "Fuera de alcance (" + foe.stats.attack.range + ")"} onClick={() => foeAttack(foe.id, t.id)}>
                                           <i style={{ background: t.color }}>{(t.name || "?").charAt(0)}</i>
                                           {t.name}
-                                          <small>{ok ? dist + " c." : "lejos"}</small>
+                                          <small>{ok ? dist + " c." + (characters[t.charId] ? " · Ev " + foeEvasionOf(characters[t.charId]) : "") : "lejos"}</small>
                                         </button>
                                       );
                                     })}
@@ -30295,6 +30345,20 @@ export default function App({ onSignOut }) {
                                 </div>
                               );
                             })()}
+                            {(campaignMap.hits || []).length > 0 && (
+                              <div className="mh-foe-wait" role="status" aria-live="polite">
+                                <b>Esperando a los jugadores</b>
+                                {(campaignMap.hits || []).map((h) => (
+                                  <div key={h.key} className="mh-foe-wait-r">
+                                    <i aria-hidden="true" />
+                                    <span>
+                                      <b>{(characters[h.charId] && characters[h.charId].f_name) || "Jugador"}</b> decide cómo recibe el golpe
+                                      <small>{h.from} · {h.weapon} · ataque {h.atk}{h.crit ? " (crítico)" : ""} · {h.dmg} de daño</small>
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                             {aboveAsk && (() => {
                               const foe = (campaignMap.tokens || []).find((t) => t.id === aboveAsk.foeId);
                               const tg = mapTokensView((campaignMap.tokens || []).filter((t) => t.id === aboveAsk.tgId))[0];
