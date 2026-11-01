@@ -5020,8 +5020,12 @@ const sharedStyles = `
   .mh-toast-warn { position: fixed; left: 50%; bottom: 28px; translate: -50% 0; z-index: 9999; max-width: min(520px, 92vw); padding: 10px 16px; border-radius: 12px; background: #3a1a1a; color: #ffd9d2; border: 1px solid #D9644E; font: 600 13px Inter, system-ui, sans-serif; box-shadow: 0 12px 34px rgba(0,0,0,.5); pointer-events: none; animation: mh-toast-in .25s ease both; }
   .mh-sheet.is-embedded .mh-toast-warn { zoom: calc(1 / var(--mhz, 1)); }
   @keyframes mh-toast-in { from { opacity: 0; translate: -50% 10px; } }
-  .mh-fan-toks { position: absolute; left: 50%; bottom: 7%; translate: -50% 0; z-index: 3; display: flex; gap: 3px; padding: 3px 7px; border-radius: 99px; background: rgba(20,17,26,.82); pointer-events: none; max-width: 92%; flex-wrap: wrap; justify-content: center; } .mh-fan-toks i { width: 11px; height: 11px; border-radius: 50%; border: 1.5px solid #E3B04B; box-sizing: border-box; } .mh-fan-toks i.is-on { background: #E3B04B; }
-  .mh-fan-tokctl { position: absolute; left: 0; right: 0; top: calc(100% + 12px); display: flex; flex-direction: column; align-items: center; gap: 8px; } .mh-fan-tokctl .pips { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; } .mh-fan-tokctl .pips button { all: unset; box-sizing: border-box; width: 24px; height: 24px; border-radius: 50%; border: 2px solid #E3B04B; cursor: pointer; } .mh-fan-tokctl .pips button.is-on { background: #E3B04B; } .mh-fan-tokctl .rc { all: unset; cursor: pointer; padding: 7px 16px; border-radius: 99px; background: #E3B04B; color: #1f1606; font: 700 12.5px Inter, system-ui, sans-serif; }
+  .mh-fan-toks { position: absolute; left: 50%; bottom: 4%; translate: -50% 0; z-index: 3; display: flex; padding: 0; pointer-events: none; max-width: 96%; flex-wrap: wrap; justify-content: center; }
+  .mh-die { all: unset; box-sizing: border-box; display: block; flex: none; width: calc(46px * var(--s, 1)); margin: 0 calc(-4px * var(--s, 1)); filter: drop-shadow(0 2px 2px rgba(0,0,0,.45)); } .mh-die svg { display: block; width: 100%; height: auto; overflow: visible; } button.mh-die { cursor: pointer; transition: transform .12s ease; } button.mh-die:hover { transform: translateY(-3px); }
+  .mh-die.is-gone { position: relative; z-index: 6; animation: mh-die-gone .65s ease-in forwards; pointer-events: none; }
+  @keyframes mh-die-gone { 0% { transform: translateY(0) rotate(0); opacity: 1; } 100% { transform: translateY(calc(-150px * var(--s, 1))) rotate(300deg) scale(.4); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .mh-die.is-gone { animation: none; opacity: 0; } }
+  .mh-fan-tokctl { position: absolute; left: 0; right: 0; top: calc(100% + 12px); display: flex; flex-direction: column; align-items: center; gap: 8px; } .mh-fan-tokctl .pips { --s: .7; display: flex; flex-wrap: wrap; justify-content: center; } .mh-fan-tokctl .rc { all: unset; cursor: pointer; padding: 7px 16px; border-radius: 99px; background: #E3B04B; color: #1f1606; font: 700 12.5px Inter, system-ui, sans-serif; }
   .mh-sess { width: min(560px, 94vw); }
   .mh-sess-list { display: flex; flex-direction: column; gap: 8px; } .mh-sess-it { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--mh-panel, #1b1824) 70%, transparent); border: 1px solid var(--mh-line2, rgba(255,255,255,.14)); } .mh-sess-it > svg { color: #E3B04B; flex: none; } .mh-sess-it span { display: flex; flex-direction: column; } .mh-sess-it small { color: var(--mh-muted, #aaa); font-size: 11.5px; }
   .mh-sess-toks { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; } .mh-sess-toks button { all: unset; box-sizing: border-box; cursor: pointer; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; font: 700 15px Inter, system-ui, sans-serif; border: 2px solid #E3B04B; color: #E3B04B; } .mh-sess-toks button.is-on { background: #E3B04B; color: #1f1606; }
@@ -10681,6 +10685,52 @@ function HomeDice({ stats }) {
 // Abanico de cartas de dominio en el borde inferior del mapa: se arrastran hasta una casilla para usarlas.
 // Cartas que se lanzan apuntando: una línea de guiones sale del personaje hasta el ratón.
 const AIM_CARD = "Enredo Feroz";
+const DIE_NUMS = [10, 7, 4, 9, 6, 3, 8, 5, 2, 1];
+// Ficha de carta con forma de dado d10 (marfil, con sombra y número); apagada es solo la sombra y un contorno tenue.
+function ChaosDie({ on, i }) {
+  const K = "M50 3 L93 38 L50 97 L7 38 Z";
+  if (!on)
+    return (
+      <svg viewBox="0 0 100 100" aria-hidden="true">
+        <ellipse cx="50" cy="94" rx="30" ry="6" fill="#000" opacity=".2" />
+        <path d={K} fill="none" stroke="#fff" strokeOpacity=".28" strokeWidth="3" strokeDasharray="6 5" strokeLinejoin="round" />
+      </svg>
+    );
+  const fill = ["#EDE6FF", "#E2D9FA", "#F1EBFF"][i % 3];
+  return (
+    <svg viewBox="0 0 100 100" aria-hidden="true" style={{ rotate: ((i * 47) % 60) - 25 + "deg" }}>
+      <ellipse cx="50" cy="94" rx="30" ry="6" fill="#000" opacity=".4" />
+      <path d={K} fill={fill} stroke="#4a3a8f" strokeWidth="3" strokeLinejoin="round" />
+      <path d="M7 38 L50 56 L93 38 M50 3 L50 56 M50 56 L50 97" fill="none" stroke="#4a3a8f" strokeWidth="2.5" strokeLinejoin="round" />
+      <path d="M50 56 L93 38 L50 97 Z" fill="#000" opacity=".12" />
+      <path d="M7 38 L50 56 L50 97 Z" fill="#000" opacity=".22" />
+      <text x="50" y="36" textAnchor="middle" fontSize="22" fontWeight="700" fill="#3a2a7a">{DIE_NUMS[i % DIE_NUMS.length]}</text>
+    </svg>
+  );
+}
+// Fichas de una carta como dados; al bajar el número, los dados gastados salen despedidos.
+function TokDice({ have, max, onPick }) {
+  const prev = useRef(have);
+  const [gone, setGone] = useState([]);
+  useEffect(() => {
+    if (have < prev.current) {
+      setGone(Array.from({ length: prev.current - have }, (_, k) => have + k));
+      const t = setTimeout(() => setGone([]), 700);
+      prev.current = have;
+      return () => clearTimeout(t);
+    }
+    prev.current = have;
+  }, [have]);
+  return Array.from({ length: max }, (_, k) => {
+    const face = k < have || gone.includes(k);
+    const cls = "mh-die" + (face ? " is-on" : " is-off") + (gone.includes(k) ? " is-gone" : "");
+    return onPick ? (
+      <button key={k} type="button" className={cls} aria-label={k < have ? "Quitar ficha" : "Poner ficha"} onClick={() => onPick(k)}><ChaosDie on={face} i={k} /></button>
+    ) : (
+      <span key={k} className={cls}><ChaosDie on={face} i={k} /></span>
+    );
+  });
+}
 function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack, cardBorder, aimOk, reachOf, onAim, beast, onBeast, onEvolve, onWolf, cardToks, onCardTok, onRecharge }) {
   const cardsRef = useRef(cards);
   cardsRef.current = cards;
@@ -10879,7 +10929,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
               <FanFace c={c} col={col} />
               {cardToks && !c.weapon && !c.rowCard && (() => {
                 const ti = cardToks(c);
-                return ti ? <span className="mh-fan-toks" title={ti.have + " de " + ti.max + " fichas"} aria-label={ti.have + " de " + ti.max + " fichas"}>{Array.from({ length: ti.max }, (_, k) => <i key={k} className={k < ti.have ? "is-on" : ""} />)}</span> : null;
+                return ti ? <span className="mh-fan-toks" title={ti.have + " de " + ti.max + " fichas"} aria-label={ti.have + " de " + ti.max + " fichas"}><TokDice have={ti.have} max={ti.max} /></span> : null;
               })()}
               {c.ghost && <span className="mh-fan-ghostlab">{c.noHope ? "Sin Esperanza" : c.ghostLab || "1 Esperanza"}</span>}
             </div>
@@ -10897,9 +10947,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
                 <div className="mh-fan-tokctl">
                   <span className="mh-fan-ask">{ti.have} de {ti.max} {ti.cfg.label}</span>
                   <span className="pips" role="group" aria-label="Fichas sobre la carta">
-                    {Array.from({ length: ti.max }, (_, k) => (
-                      <button key={k} type="button" className={k < ti.have ? "is-on" : ""} aria-label={k < ti.have ? "Quitar ficha" : "Poner ficha"} onClick={() => onCardTok(open.key, k + 1 === ti.have ? k : k + 1)} />
-                    ))}
+                    <TokDice have={ti.have} max={ti.max} onPick={(k) => onCardTok(open.key, k + 1 === ti.have ? k : k + 1)} />
                   </span>
                   <button type="button" className="rc" onClick={() => onRecharge && onRecharge(open.key)}>Recargar · 1 Estrés</button>
                 </div>
