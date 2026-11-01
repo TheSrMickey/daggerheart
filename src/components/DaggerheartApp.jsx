@@ -5157,6 +5157,9 @@ const sharedStyles = `
   @property --mh-ea { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
   .mh-elwrap { position: absolute; z-index: 3; pointer-events: none; transition: left .3s cubic-bezier(.3,.7,.4,1), top .3s cubic-bezier(.3,.7,.4,1); animation: mh-elring-in .65s cubic-bezier(.2,.9,.3,1) both; }
   .mh-elwrap.is-out { animation: mh-elring-out .55s cubic-bezier(.5,0,.8,.4) both; }
+  .mh-elwrap::before { content: ""; position: absolute; inset: 0; border-radius: 18%; background: var(--ef); }
+  .mh-elwrap.is-fuego { --ef: radial-gradient(circle at 50% 50%, rgba(255,214,150,.2), rgba(255,170,90,.1)); }
+  .mh-elwrap.is-agua { --ef: radial-gradient(circle at 50% 50%, rgba(190,230,255,.22), rgba(120,190,240,.1)); }
   .mh-elring { position: absolute; inset: 0; box-sizing: border-box; padding: 3px; border-radius: 18%; background: conic-gradient(from var(--mh-ea), var(--e1), var(--e2), var(--e3), var(--e2), var(--e1)); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); mask-composite: exclude; filter: drop-shadow(0 0 5px var(--e2)); animation: mh-elring-spin 2.4s linear infinite, mh-elring-flick 1.1s ease-in-out infinite; }
   .mh-elring.is-fuego { --e1: #E8301A; --e2: #FF7A2E; --e3: #FFD05A; }
   .mh-elring.is-agua { --e1: #1E6FD0; --e2: #4FA8E8; --e3: #BFE9FF; }
@@ -10566,6 +10569,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
   cardsRef.current = cards;
   const [drag, setDrag] = useState(null); // { card, x, y, cell, moved }
   const [open, setOpen] = useState(null); // carta mostrada en grande
+  const [beastCard, setBeastCard] = useState(null); // carta «Forma de Bestia» que se ha arrastrado (para revelarla)
   const [beastOpen, setBeastOpen] = useState(false); // selector de Forma de Bestia (al arrastrar esa carta al mapa)
   const [bTier, setBTier] = useState(1);
   const [back, setBack] = useState(null); // carta que vuelve a la mano tras usarse
@@ -10627,6 +10631,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
     if (d.card.rowCard) {
       if (d.moved && beast && d.card.key === "Forma de Bestia" && cellAt(ev.clientX, ev.clientY)) {
         setBTier((beast.forms.find((b) => b.key === beast.active) || {}).tier || beast.tier || 1);
+        setBeastCard(d.card);
         return setBeastOpen(true);
       }
       if (!d.moved || cellAt(ev.clientX, ev.clientY)) d.card.open();
@@ -10811,7 +10816,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
                 const locked = x.tier > beast.tier || (!sel && beast.stressFull);
                 const atk = String(x.attack || "").split("·").map((v) => v.trim());
                 return (
-                  <button key={x.key} type="button" disabled={locked} className={"mh-bpick-c" + (sel ? " is-on" : "")} style={{ "--bc": x.color }} onClick={() => (onBeast(x.key, sel), setBeastOpen(false))} title={x.tier > beast.tier ? "Se desbloquea en Rango " + x.tier : !sel && beast.stressFull ? "Sin Estrés disponible" : x.animals}>
+                  <button key={x.key} type="button" disabled={locked} className={"mh-bpick-c" + (sel ? " is-on" : "")} style={{ "--bc": x.color }} onClick={() => (onBeast(x.key, sel, beastCard), setBeastOpen(false))} title={x.tier > beast.tier ? "Se desbloquea en Rango " + x.tier : !sel && beast.stressFull ? "Sin Estrés disponible" : x.animals}>
                     <span className="mh-bpick-img" style={x.image ? { backgroundImage: 'url("' + x.image + '")' } : undefined} />
                     <b>{x.key}</b>
                     <small>{x.animals}</small>
@@ -10908,7 +10913,7 @@ function CardPlayView({ anim, own }) {
     setFly({ x: t.x - (r.left + r.width / 2), y: t.y - (r.top + r.height / 2 - 26), s: Math.max(.3, Math.min(1, (t.w || 150) / el.offsetWidth)) });
   }, [anim.key, box]); // eslint-disable-line react-hooks/exhaustive-deps
   const card = anim.card || {};
-  const col = card.weapon ? TIER_COLORS[card.level]?.color || "#C9A24B" : DOMAIN_COLORS[card.domain] || "#C9A24B";
+  const col = card.weapon ? TIER_COLORS[card.level]?.color || "#C9A24B" : card.rowCard ? card.color || "#C9A24B" : DOMAIN_COLORS[card.domain] || "#C9A24B";
   const edge = anim.edge || "#E3B04B"; // el borde que ese jugador tiene configurado en Personalización
   return (
     <div key={anim.key} ref={rootRef} className="mh-cpf" style={{ "--cc": col, "--edge": edge, "--cpd": anim.short ? "2.3s" : "4.5s", ...(box ? { bottom: box.inset, "--ci": box.inset + "px", "--ch": box.h + "px", "--cs": box.h / 420 } : {}) }} aria-hidden="true">
@@ -11214,7 +11219,7 @@ function MapBoard({ aimRange, rangeMenu, cfx, meCharId, onDragInfo, onStore, pla
         return (
           <div
             key={"er" + t.id + t.el}
-            className={"mh-elwrap" + (t.leaving ? " is-out" : "")}
+            className={"mh-elwrap is-" + t.el.toLowerCase() + (t.leaving ? " is-out" : "")}
             style={{ left: ((pos.x - r) * 100) / MAP_COLS + "%", top: ((pos.y - r) * 100) / MAP_ROWS + "%", width: ((2 * r + 1) * 100) / MAP_COLS + "%", height: ((2 * r + 1) * 100) / MAP_ROWS + "%" }}
             aria-hidden="true"
           >
@@ -13718,6 +13723,13 @@ export default function App({ onSignOut }) {
     postCampaignEvent(id, `✨ Activa ${formName}`);
   };
 
+  // Forma de Bestia desde la carta: primero se revela la carta y después te transformas (salir de la forma es inmediato).
+  const morphToBeast = (charId, key, card) => {
+    const me = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
+    if (!sheetCampaignId || !me || !card) return toggleBeastform(charId, key, false);
+    playCardOnMap(sheetCampaignId, charId, card, { noChat: true, short: true });
+    afterReveal(charId, card.key, () => toggleBeastform(charId, key, false));
+  };
   // Encarnación Elemental desde la carta: primero se revela la carta y después se aplica el elemento.
   const embodyElement = (charId, el, card) => {
     const me = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
@@ -15473,7 +15485,7 @@ export default function App({ onSignOut }) {
   const playCardOnMap = (campaignId, charId, card, opts = {}) => {
     const ch = characters[charId];
     if (!opts.noChat) postCardUse(charId, card);
-    const slim = { key: card.key, domain: card.domain, type: card.type, level: card.level, recall: card.recall, text: card.text, image: card.image, ...(card.weapon ? { weapon: true } : {}), ...(card.subclass ? { subclass: true, kicker: card.kicker, cls: card.cls } : {}), ...(card.ghost ? { baseKey: card.baseKey, noCost: card.noCost, ghost: true } : {}) };
+    const slim = { key: card.key, domain: card.domain, type: card.type, level: card.level, recall: card.recall, text: card.text, image: card.image, ...(card.rowCard ? { rowCard: true, myClass: card.myClass, kicker: card.kicker, color: card.color, detail: card.detail ? { kicker: card.detail.kicker, text: card.detail.text, image: card.detail.image, features: card.detail.features } : undefined } : {}), ...(card.weapon ? { weapon: true } : {}), ...(card.subclass ? { subclass: true, kicker: card.kicker, cls: card.cls } : {}), ...(card.ghost ? { baseKey: card.baseKey, noCost: card.noCost, ghost: true } : {}) };
     const edge = cardBorder === "domain" ? DOMAIN_COLORS[card.domain] || "#E3B04B" : "#E3B04B";
     const playKey = Date.now(); // una sola vez: mutateMap ejecuta la función dos veces (en local y al guardar)
     mutateMap(campaignId, (prev) => [...(Array.isArray(prev) ? prev : []).filter((x) => x.key !== playKey && playKey - x.key < 40000), { key: playKey, charId, name: ch?.f_name || "Alguien", back: cardBack, edge, card: slim, ...(opts.short ? { short: true } : {}) }].slice(-8), "cfx");
@@ -22318,7 +22330,7 @@ export default function App({ onSignOut }) {
                                               reachOf={(card) => { if (!card.weapon) return null; const lab = weaponReach(characters[viewingCharId], card.key); return lab ? { label: lab, max: RANGE_CELLS[lab] || 99 } : null; }}
                                               cardBorder={cardBorder}
                                               beast={{ forms: BEASTFORMS, tier: tierForLevel(me?.f_level || 1), active: me?.f_beastform || "", stressFull: Number(me?.stress_marked || 0) >= Number(me?.r_stress || 0) }}
-                                              onBeast={(key, sel) => toggleBeastform(viewingCharId, key, sel)}
+                                              onBeast={(key, sel, card) => (sel ? toggleBeastform(viewingCharId, key, true) : morphToBeast(viewingCharId, key, card))}
                                               onElement={(el, on, card) => (on ? toggleElemental(viewingCharId, el, true) : embodyElement(viewingCharId, el, card))}
                                               activeElement={me?.f_elemental_active || ""}
                                               me={myToken}
