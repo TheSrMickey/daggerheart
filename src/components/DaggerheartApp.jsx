@@ -112,7 +112,7 @@ function FitBelow({ className, children, bottom = EDGE, min = 360, off = false }
   return <div ref={ref} className={className} style={!off && h ? { height: h } : undefined}>{children}</div>;
 }
 const RAIL_MINI = ".mh-rail.is-fold:not(.is-open):not(:has(.mh-gp)):not(:has(.mh-dm))";
-const DEFAULT_SETTINGS = { classColors: true, tutorial: false, headerArt: true, immersive: false, officialArt: true };
+const DEFAULT_SETTINGS = { classColors: true, tutorial: false, headerArt: true, immersive: false, officialArt: true, mapDim: 0 };
 // Ilustraciones oficiales del juego: se ocultan por CSS con `html[data-mh-art="off"]` (y se recuerda en este navegador para no parpadear al cargar).
 const applyOfficialArt = (off) => {
   try {
@@ -4847,7 +4847,7 @@ const sharedStyles = `
   .mh-map-backdrop { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; } .mh-map-sharp { position: absolute; inset: 0; background: center / cover no-repeat; }
   .mh-map-backdrop .mh-map-bg { inset: 0; } .mh-map-tint.is-light { background: rgba(8,8,26,.16); animation: none; } .mh-map-flat .mh-map-sharp { position: absolute; inset: 0; background: center / cover no-repeat; pointer-events: none; }
   .mh-map-backdrop.is-battlemap .mh-map-tint { background: rgba(8,8,26,.42); } .mh-map-stage .mh-map { background: transparent !important; }
-  .mh-map-tint { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(20,22,64,.32), rgba(10,10,34,.52)); animation: mh-gridin .9s ease .15s both; }
+  .mh-map-tint { position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 0 9999px rgba(8,8,26,var(--mh-map-veil, 0)); background: linear-gradient(180deg, rgba(20,22,64,.32), rgba(10,10,34,.52)); animation: mh-gridin .9s ease .15s both; }
   /* El tablero se ve igual en modo claro y oscuro: fondo oscurecido y cuadrícula clara */
   html[data-mh-theme="light"] .mh-map .mh-map-grid { background: color-mix(in srgb, #fff 52%, transparent); }
   .mh-map-noise { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: overlay; opacity: .3; z-index: 1; animation: mh-gridin 1s ease .3s both; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .55 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23f)'/%3E%3C/svg%3E"); }
@@ -12393,6 +12393,10 @@ export default function App({ onSignOut }) {
       return next;
     });
   };
+  // Atenuación de la imagen de fondo del mapa de combate (ajuste personal): un velo oscuro extra sobre la imagen.
+  useEffect(() => {
+    document.documentElement.style.setProperty("--mh-map-veil", String(Math.max(0, Math.min(85, Number(settings.mapDim) || 0)) / 100));
+  }, [settings.mapDim]);
   const classColor = (cls) => (settings.classColors && CLASS_COLORS[cls]) || "#E3B04B";
 
   useEffect(() => {
@@ -33545,6 +33549,24 @@ export default function App({ onSignOut }) {
                   >
                     <span className="mh-switch-knob" />
                   </button>
+                </div>
+              </div>
+              <div className="mh-card" style={{ margin: 0 }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--mh-panel3)", color: "var(--mh-gold-ink)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <ImageIcon size={18} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14.5, fontWeight: 600, color: "var(--mh-ink)" }}>Imagen de fondo del mapa de combate</div>
+                    <div style={{ fontSize: 12.5, color: "var(--mh-muted)", marginTop: 3, lineHeight: 1.5 }}>
+                      Oscurece la imagen de fondo del mapa para que se vean mejor la cuadrícula y las fichas. Solo cambia lo que ves tú.
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 10 }}>
+                      <input type="range" min="0" max="85" step="5" value={Number(settings.mapDim) || 0} aria-label="Atenuación de la imagen de fondo del mapa" onChange={(e) => updateSetting("mapDim", Number(e.target.value))} style={{ flex: 1, accentColor: "var(--mh-gold-ink)" }} />
+                      <b style={{ minWidth: 44, textAlign: "right", fontSize: 13, color: "var(--mh-ink)" }}>{Number(settings.mapDim) || 0}%</b>
+                      <button type="button" className="mh-btn-ghost" disabled={!Number(settings.mapDim)} onClick={() => updateSetting("mapDim", 0)}>Restablecer</button>
+                    </div>
+                  </div>
                 </div>
               </div>
               <div className="mh-card" style={{ margin: 0 }}>
