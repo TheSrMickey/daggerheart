@@ -7600,6 +7600,14 @@ const sharedStyles = `
   .mh-wz-page .mh-wz-steps { margin-top: 14px; }
   .mh-wz-page .mh-wz-grp button { height: 6px; }
   .mh-wz-page .mh-wz-body { padding: 4px 2px 18px; }
+  /* Cambio de paso: el contenido entra desde un lado (según se avance o se retroceda), el título sube y las elecciones aparecen abajo */
+  .mh-wz-body.is-in-fwd { animation: mh-wz-in-fwd .45s cubic-bezier(.2,.8,.2,1) both; } .mh-wz-body.is-in-back { animation: mh-wz-in-back .45s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes mh-wz-in-fwd { from { opacity: 0; transform: translateX(46px) scale(.985); } } @keyframes mh-wz-in-back { from { opacity: 0; transform: translateX(-46px) scale(.985); } }
+  .mh-wz-tt { animation: mh-wz-tt .4s cubic-bezier(.2,.8,.2,1) both; } @keyframes mh-wz-tt { from { opacity: 0; transform: translateY(10px); } }
+  .mh-wz-sum em { animation: mh-wz-chip .45s cubic-bezier(.2,.9,.3,1.3) both; } @keyframes mh-wz-chip { from { opacity: 0; transform: translateY(10px) scale(.8); } }
+  .mh-wz-page .mh-wz-grp { transition: background .3s ease, box-shadow .3s ease; } .mh-wz-page .mh-wz-grp button { transition: flex .35s ease, background .3s ease, box-shadow .3s ease; }
+  .mh-dk-realcard { width: 300px; flex: none; transform-origin: 50% 100%; animation: mh-dk-cardin .6s cubic-bezier(.2,.9,.3,1.1) both; filter: drop-shadow(0 14px 26px rgba(0,0,0,.5)); } @keyframes mh-dk-cardin { from { opacity: 0; transform: translateY(30px) rotateY(-28deg) scale(.92); } }
+  @media (prefers-reduced-motion: reduce) { .mh-wz-body.is-in-fwd, .mh-wz-body.is-in-back, .mh-wz-tt, .mh-wz-sum em, .mh-dk-realcard { animation: none; } }
   .mh-wz-page .mh-wz-body.is-split { border: 0; background: none; border-radius: 0; }
   .mh-wz-page .mh-wz-list { border-right: 0; padding: 4px 18px 4px 0; }
   .mh-wz-page .mh-wz-det { padding: 4px 4px 4px 12px; }
@@ -12784,6 +12792,7 @@ export default function App({ onSignOut }) {
   };
 
   const [showNewCharModal, setShowNewCharModal] = useState(false);
+  const wzNav = useRef({ idx: 0, dir: 1 }); // paso en el que está el asistente y hacia dónde se ha movido: orienta la animación
   const [wizSlot, setWizSlot] = useState(null); // hueco de la columna central donde va la creación de personaje
   const [wizardStep, setWizardStep] = useState("class");
   const [originTab, setOriginTab] = useState("ancestry");
@@ -13177,6 +13186,7 @@ export default function App({ onSignOut }) {
       return;
     }
     setCharWarning("");
+    wzNav.current = { idx: 0, dir: 1 };
     setCarouselIndex(0);
     setSubclassIndex(0);
     setLevelChoice(1);
@@ -34821,6 +34831,9 @@ export default function App({ onSignOut }) {
         const current = stepItems[stepIndex] || { key: "", blurb: "" };
         // Vista previa del personaje a la derecha, salvo en los pasos con ilustración a pantalla ancha.
         const showPv = !["class", "subclass", "ancestry", "community", "transformation", "domain"].includes(wizardStep);
+        const wzI = Math.max(0, steps.findIndex((st) => st.key === wizardStep));
+        if (wzNav.current.idx !== wzI) wzNav.current = { idx: wzI, dir: wzI > wzNav.current.idx ? 1 : -1 };
+        const wzDir = wzNav.current.dir > 0 ? "fwd" : "back";
         if (!wizSlot) return null;
         return createPortal(
           <div className="mh-wz-page">
@@ -34837,7 +34850,7 @@ export default function App({ onSignOut }) {
                 return (
                   <div className="mh-wz-top">
                     <div className="mh-wz-title">
-                      <span className="mh-serif">{wizardStep === "subclass" ? "Elige tu subclase de " + CLASSES[carouselIndex].key : steps[idx].title}</span>
+                      <span key={wizardStep} className="mh-serif mh-wz-tt">{wizardStep === "subclass" ? "Elige tu subclase de " + CLASSES[carouselIndex].key : steps[idx].title}</span>
                       <small>Paso {idx + 1} de {steps.length}</small>
                       <button type="button" className="mh-wz-x" aria-label="Cerrar" onClick={() => setShowNewCharModal(false)}>
                         <X size={16} />
@@ -34869,7 +34882,7 @@ export default function App({ onSignOut }) {
                 );
               })()}
               <div className={"mh-wz-main" + (showPv ? " has-pv" : "")}>
-              <div className={"mh-wz-body" + (["ancestry", "community"].includes(wizardStep) ? " is-split" : "")}>
+              <div key={wizardStep} className={"mh-wz-body is-in-" + wzDir + (["ancestry", "community"].includes(wizardStep) ? " is-split" : "")}>
 
               {wizardStep === "subclass" ? (
                 (() => {
@@ -34931,13 +34944,27 @@ export default function App({ onSignOut }) {
                         )}
                       </div>
                       <div className="mh-dk-side">
-                        <div className="mh-dk-sh">{cur.key} · Fundación</div>
-                        {featsOf(cur).map((f) => (
-                          <div key={f.name} className="mh-dk-fe">
-                            <b>{f.name}</b>
-                            <p>{f.text}</p>
-                          </div>
-                        ))}
+                        {(() => {
+                          // La carta de la subclase elegida, la misma que se ve en la pestaña «Cartas» (Fundación).
+                          const ent = buildCardCatalog().find((x) => x.kind === "subclase" && x.cls === cls && x.key === cur.key && x.rank === 0);
+                          if (ent)
+                            return (
+                              <div key={cur.key} className="mh-dk-realcard">
+                                <CardFace c={ent} I={Em} FitTitle={FitTitle} FitBox={FitBox} />
+                              </div>
+                            );
+                          return (
+                            <>
+                              <div className="mh-dk-sh">{cur.key} · Fundación</div>
+                              {featsOf(cur).map((f) => (
+                                <div key={f.name} className="mh-dk-fe">
+                                  <b>{f.name}</b>
+                                  <p>{f.text}</p>
+                                </div>
+                              ))}
+                            </>
+                          );
+                        })()}
                         {cur.key === "Origen Elemental" && (
                           <div className="mh-sc-elem">
                             <b className="mh-serif">Elige tu elemento</b>
@@ -35913,8 +35940,9 @@ export default function App({ onSignOut }) {
                   const idx = WIZARD_STEPS.findIndex((st) => st.key === wizardStep);
                   const cls = CLASSES[carouselIndex].key;
                   const chips = [];
-                  if (idx >= 0) chips.push(cls);
-                  if (idx >= 1) chips.push((SUBCLASSES[cls] || [])[subclassIndex]?.key);
+                  // Cada elección aparece al terminar su paso (no mientras se está eligiendo).
+                  if (idx >= 1) chips.push(cls);
+                  if (idx >= 2) chips.push((SUBCLASSES[cls] || [])[subclassIndex]?.key);
                   if (idx >= 3) chips.push("Nivel " + levelChoice);
                   if (idx >= 4 && draftName.trim()) chips.push(draftName.trim());
                   if (idx >= 5) chips.push([draftAncestries.join(" + "), idx >= 6 && draftCommunity].filter(Boolean).join(" · "));
@@ -35922,11 +35950,12 @@ export default function App({ onSignOut }) {
                   if (idx >= 11 && draftPrimaryWeapon) chips.push(draftPrimaryWeapon);
                   if (idx >= 12 && !twoHandedPrimary && draftSecondaryWeapon && draftSecondaryWeapon !== "Ninguna") chips.push(draftSecondaryWeapon);
                   if (idx >= 13 && draftArmor && draftArmor !== "Ninguna") chips.push(draftArmor);
+                  const shown = chips.filter(Boolean);
                   return (
                     <div className="mh-wz-sum">
-                      <span>Tu personaje</span>
-                      {chips.filter(Boolean).map((t, k) => (
-                        <em key={k} title={t}>{t}</em>
+                      {shown.length > 0 && <span>Tu personaje</span>}
+                      {shown.map((t) => (
+                        <em key={t} title={t}>{t}</em>
                       ))}
                     </div>
                   );
