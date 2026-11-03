@@ -9,6 +9,9 @@ export const CHANGELOG = [
     title: "El Oráculo del DJ",
     blurb: "Un anillo de luz que responde a las preguntas de la mesa: Sí / No, con matices o con una tirada de destino, solo para el DJ y a un toque bajo el chat.",
     items: [
+      { tag: "nuevo", text: "Combate · si cambias tus cartas de dominio, los efectos en el mapa de las que ya no llevas se quitan solos (embeleso, raíces, sueño, telepatía y Armadura de Tava)." },
+      { tag: "mejora", text: "Combate · el estado Dormido (Sopor) ahora suelta partículas de «Z» que suben y se desvanecen sobre la ficha, que se ve algo apagada." },
+      { tag: "nuevo", text: "Combate · con Telepatía activa aparece en tu mano la carta fugaz «Cortar la telepatía» (gratis): suéltala sobre el objetivo del vínculo para romperlo." },
       { tag: "nuevo", text: "Combate · «Libro de Ava» y «Libro de Illiat» se juegan desde el mapa: arrastra el libro a una ficha y, al soltarlo, eliges el hechizo en una ventana (los que no valen para ese objetivo salen atenuados con el motivo). Ava: Empujón de Poder (tirada; si aciertas, el adversario sale despedido hasta alcance Lejano y recibe d10+2 mágico), Armadura de Tava (1 Esperanza: +1 de Armadura a un aliado o a ti hasta el descanso) y Pico de Hielo (tirada a distancia, d6 físico). Illiat: Sopor (tirada; el adversario queda Dormido hasta recibir daño o hasta que el DJ lo despierte), Descarga Arcana (una vez por descanso, d6 mágico por Esperanza que gastes) y Telepatía (1 Esperanza: hilo violeta de vínculo mental hasta el descanso)." },
       { tag: "mejora", text: "Combate · «Palabras Inspiradoras» se apunta como Embelesar y las armas: al arrastrarla sale el alcance Cercano y una línea de puntos que se pone verde sobre un aliado válido; si la sueltas fuera de alcance o sin aliado se cancela." },
       { tag: "mejora", text: "Combate · las cartas con fichas ya no muestran el texto de abajo al abrirlas (solo las fichas)." },
