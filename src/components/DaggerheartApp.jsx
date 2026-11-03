@@ -5001,6 +5001,11 @@ const sharedStyles = `
   .mh-fan-pile { all: unset; cursor: pointer; position: absolute; bottom: 46px; width: 74px; height: 104px; z-index: 7; } .mh-fan-pile.is-l { left: 12px; } .mh-fan-pile.is-r { right: 12px; } .mh-fan-pile.is-r2 { right: 98px; }
   .mh-fan-pile span { position: absolute; width: 62px; height: 90px; border-radius: 9px; border: 2px solid var(--pc); background: linear-gradient(160deg, color-mix(in srgb, var(--pc) 30%, #1d1827), #15111c); box-shadow: 0 3px 8px rgba(0,0,0,.5); left: calc(var(--q) * 6px); top: calc(10px - var(--q) * 4px); transform: rotate(calc(-6deg + var(--q) * 6deg)); transition: transform .15s; }
   .mh-fan-pile span.is-back { width: 62px; height: 87px; border: 0; background: none; overflow: hidden; border-radius: 9px; } .mh-fan-pile span.is-back svg { display: block; width: 100%; height: 100%; }
+  /* Carta pasiva: halo dorado que respira cuando está activa; apagada y en gris cuando no */
+  .mh-fan-card.is-pas-on .mh-fan-in { border-radius: 14px; animation: mh-pas-breathe 2.6s ease-in-out infinite; }
+  @keyframes mh-pas-breathe { 0%, 100% { box-shadow: 0 0 0 3px #E3B04B, 0 0 30px 6px rgba(227,176,75,.5); } 50% { box-shadow: 0 0 0 3px #FFE3A0, 0 0 52px 16px rgba(227,176,75,.68); } }
+  .mh-fan-card.is-pas-off .mh-fan-in { filter: grayscale(.85) brightness(.7); }
+  @media (prefers-reduced-motion: reduce) { .mh-fan-card.is-pas-on .mh-fan-in { animation: none; box-shadow: 0 0 0 3px #E3B04B, 0 0 30px 6px rgba(227,176,75,.5); } }
   .mh-fan-card { animation: mh-fan-deal .42s cubic-bezier(.2,.9,.3,1) backwards; animation-delay: calc(var(--i, 0) * 40ms); }
   @keyframes mh-fan-deal { from { opacity: 0; translate: calc(var(--dir, 0) * 110px) 46px; scale: .88; } to { opacity: 1; translate: 0 0; scale: 1; } }
   .mh-fan-pile { animation: mh-pile-in .4s cubic-bezier(.2,.9,.3,1) backwards; } .mh-fan-pile.is-l { --pd: -1; } .mh-fan-pile.is-r { --pd: 1; }
@@ -11169,7 +11174,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
           return (
             <div
               key={c.key}
-              className={"mh-fan-card" + (c.locked ? " is-locked" : "") + (c.ghost ? " is-ghostcard" + (c.noHope ? " is-nohope" : "") : "") + (lifting ? " is-lifted" : "") + (shown[i + 1] && grp(shown[i + 1]) !== grp(c) ? " is-last-weapon" : "")}
+              className={"mh-fan-card" + (c.locked ? " is-locked" : "") + (c.ghost ? " is-ghostcard" + (c.noHope ? " is-nohope" : "") : "") + (c.passive ? " is-pas-" + c.passive : "") + (lifting ? " is-lifted" : "") + (shown[i + 1] && grp(shown[i + 1]) !== grp(c) ? " is-last-weapon" : "")}
               style={{ "--i": i, "--r": `${(i - mid) * stepR}deg`, "--y": `${Math.abs(i - mid) * stepY}px`, "--cc": col, "--m": gap / 2 + "px" }}
               onPointerDown={(e) => start(e, c)}
               title="Púlsala para verla en grande · arrástrala al mapa para usarla"
@@ -23568,7 +23573,7 @@ export default function App({ onSignOut }) {
                                           // En Forma de Bestia no se usan las armas: la carta de arma pasa a ser el ataque de la forma.
                                           const bfForm = me?.f_beastform ? BEASTFORMS.find((b) => b.key === me.f_beastform) : null;
                                           const bfCard = bfForm ? (() => { const [, bfT, bfD] = String(bfForm.attack).split(" · "); return { key: bfForm.key, level: bfForm.tier, type: "Ataque de forma", domain: "", image: bfForm.image, text: "Ataque: " + bfForm.attack + ". " + (bfT ? "Tirada de " + bfT + ", daño " + bfD + "." : ""), damage: bfD, hands: "Forma de Bestia", weapon: true, beast: true }; })() : null;
-                                          const cards = [...(bfCard ? [bfCard] : [wp(me?.f_primary_weapon, PRIMARY_WEAPONS, "Principal"), wp(me?.f_secondary_weapon, SECONDARY_WEAPONS, "Secundaria")]), ...actionCards, ...keys.map((k) => { const d0 = findDomainCardAny(k); const d = d0 && k === "Guarda Rúnica" && wardOut ? { ...d0, wardTag: wardOut } : d0; if (d && BOOK_SPELLS.some((sp) => sp.book === k)) return { ...d, bookCard: true, spellReach: "Muy lejano" };
+                                          const cards = [...(bfCard ? [bfCard] : [wp(me?.f_primary_weapon, PRIMARY_WEAPONS, "Principal"), wp(me?.f_secondary_weapon, SECONDARY_WEAPONS, "Secundaria")]), ...actionCards, ...keys.map((k) => { const d0 = findDomainCardAny(k); const d = d0 && k === "Guarda Rúnica" && wardOut ? { ...d0, wardTag: wardOut } : d0 && k === "Huesos Desnudos" ? { ...d0, passive: bonesActive(me) ? "on" : "off" } : d0; if (d && BOOK_SPELLS.some((sp) => sp.book === k)) return { ...d, bookCard: true, spellReach: "Muy lejano" };
                                             return d && mcDom && d.domain === mcDom && !(CLASS_DOMAINS[me?.f_class] || []).includes(mcDom) ? { ...d, multi: true } : d; }), ghostCard, releaseCard, unCharmCard, rechargeCard, unTeleCard].filter(Boolean);
                                           return (
                                             <CardFan

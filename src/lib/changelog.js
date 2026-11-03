@@ -9,6 +9,7 @@ export const CHANGELOG = [
     title: "El Oráculo del DJ",
     blurb: "Un anillo de luz que responde a las preguntas de la mesa: Sí / No, con matices o con una tirada de destino, solo para el DJ y a un toque bajo el chat.",
     items: [
+      { tag: "mejora", text: "Combate · la carta «Huesos Desnudos» en la mano muestra si está activa: un halo dorado que respira alrededor de la carta cuando no llevas armadura, y la carta apagada y en gris cuando llevas una." },
       { tag: "nuevo", text: "Hoja · «Huesos Desnudos» ya funciona: si llevas la carta y no tienes armadura equipada, tu Puntuación de Armadura es 3 + tu Fuerza y los umbrales de daño base son los de tu rango (9/19, 11/24, 13/31 o 15/38, más tu nivel). Al equipar una armadura, vuelve lo normal." },
       { tag: "mejora", text: "Combate · una carta o se puede usar en el mapa o no: las que no tienen función ya no se arrastran (solo se abren al pulsarlas), y al arrastrar las demás ya no sale el cartel «Casilla (alcance)» sino «Usar» con el nombre de la carta." },
       { tag: "nuevo", text: "Combate · «Empujón Contundente» se juega desde el mapa: arrástrala a un adversario Cuerpo a cuerpo y, tras revelarse la carta, atacas con tu arma principal. Si aciertas, hace su daño (+d6 si es con Esperanza) y el adversario sale empujado hasta alcance Cercano; después puedes gastar 1 Esperanza para dejarlo Vulnerable, y el DJ lo quita con «Quitar Vulnerable»." },
