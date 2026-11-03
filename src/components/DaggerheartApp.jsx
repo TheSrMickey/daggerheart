@@ -10977,8 +10977,10 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
     return !!r && x >= r.left - 30 && x <= r.right + 30 && y >= r.top - 24 && y <= r.bottom + 24;
   };
   // Cartas que se apuntan a un adversario: Enredo Feroz, su carta extra y las armas (con el alcance de cada arma).
-  const isAim = (c) => c.key === AIM_CARD || (c.key === "Embelesar" && !c.rowCard) || (!!c.ghost && !c.recharge && !c.ward) || !!c.weapon || (c.key === "Desatar el Caos" && !c.rowCard);
+  const isAim = (c) => c.key === AIM_CARD || ((c.key === "Embelesar" || c.key === "Palabras Inspiradoras") && !c.rowCard) || (!!c.ghost && !c.recharge && !c.ward) || !!c.weapon || (c.key === "Desatar el Caos" && !c.rowCard);
   const aimReach = (c) => (reachOf && reachOf(c)) || { label: "Lejano", max: RANGE_CELLS["Lejano"] };
+  // Objetivo válido de una carta que se apunta: aliado (otro personaje) para Palabras Inspiradoras; adversario vivo para el resto.
+  const aimTok = (c, t) => !t.hidden && t.id !== me?.id && (c.key === "Palabras Inspiradoras" && !c.rowCard ? t.kind === "pc" && !t.vanished : (t.kind === "foe" || t.kind === "npc") && !deadTok(t));
   const inAimReach = (c, cell) => !!me && !!cell && Math.max(Math.abs(cell.x - me.x), Math.abs(cell.y - me.y)) <= aimReach(c).max;
   const rangeOf = (cell) => {
     if (!me || !cell) return null;
@@ -11008,7 +11010,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
     const cell = inHand(ev.clientX, ev.clientY) ? null : cellAt(ev.clientX, ev.clientY);
     if (!cell) return;
     if (d.card.subclass) return setOpen({ ...d.card, choose: true });
-    if (isAim(d.card) && (!inAimReach(d.card, cell) || !tokens.find((t) => !t.hidden && t.x === cell.x && t.y === cell.y && t.id !== me?.id && (t.kind === "foe" || t.kind === "npc") && !deadTok(t)))) return; // sin objetivo válido o fuera de alcance: se cancela
+    if (isAim(d.card) && (!inAimReach(d.card, cell) || !tokens.find((t) => t.x === cell.x && t.y === cell.y && aimTok(d.card, t)))) return; // sin objetivo válido o fuera de alcance: se cancela
     const target = tokens.find((t) => !t.hidden && t.x === cell.x && t.y === cell.y && t.id !== me?.id) || null;
     window.__mhFlyTo = { key: d.card.key, x: d.home.x, y: d.home.y, w: d.home.w, t: Date.now() };
     const res = onUse(d.card, cell, target, rangeOf(cell));
@@ -11096,7 +11098,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
     if (onAim) onAim(aimMax && me ? { id: me.id, max: aimMax } : null);
   }, [aimMax, me?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => onAim && onAim(null), []); // eslint-disable-line react-hooks/exhaustive-deps
-  const aimTarget = aim && drag.cell ? tokens.find((t) => !t.hidden && t.x === drag.cell.x && t.y === drag.cell.y && t.id !== me?.id && (t.kind === "foe" || t.kind === "npc") && !deadTok(t)) : null;
+  const aimTarget = aim && drag.cell ? tokens.find((t) => t.x === drag.cell.x && t.y === drag.cell.y && aimTok(drag.card, t)) : null;
   const target = drag?.cell ? tokens.find((t) => !t.hidden && t.x === drag.cell.x && t.y === drag.cell.y && t.id !== me?.id) : null;
   return (
     <>
@@ -11148,9 +11150,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
                 <div className="mh-fan-tray" role="group" aria-label="Fichas sobre la carta" style={{ "--s": ti.max > 5 ? Math.max(0.6, (5.2 / ti.max) * 1.15) : undefined }}>
                   <TokDice have={ti.have} max={ti.max} color={DOMAIN_COLORS[open.domain] || "#C9A24B"} onPick={(k) => onCardTok(open.key, k + 1 === ti.have ? k : k + 1)} />
                 </div>
-                <div className="mh-fan-tokctl">
-                  <span className="mh-fan-ask">{ti.have} de {ti.max} {ti.cfg.label} · lanza los dados si te estorban para leer</span>
-                </div>
+                
                 </>
               );
             })()}
@@ -11247,7 +11247,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
           )}
           {drag.cell && !inHand(drag.x, drag.y) && (
             <div className="mh-fan-tip" style={{ left: Math.max(130, Math.min(window.innerWidth - 130, drag.x)), top: aim ? drag.y - 40 : drag.y - 112 }}>
-              {aim ? (!aimIn ? "Fuera de alcance " + aimReach(drag.card).label : aimTarget ? (drag.card.weapon ? "Atacar a " : (drag.card.release || drag.card.unCharm) ? "Liberar a " : "Lanzar sobre ") + (aimTarget.name || "el objetivo") : "Suéltala sobre un adversario") : drag.card.rowCard ? "Abrir «" + drag.card.key + "»" : drag.card.subclass ? "Activar Encarnación Elemental" : <>{target ? `Objetivo: ${target.name || "Ficha"}` : "Casilla"} {rng ? `(${rng.label})` : "(fuera de alcance)"}</>}
+              {aim ? (!aimIn ? "Fuera de alcance " + aimReach(drag.card).label : aimTarget ? (drag.card.weapon ? "Atacar a " : (drag.card.release || drag.card.unCharm) ? "Liberar a " : drag.card.key === "Palabras Inspiradoras" ? "Inspirar a " : "Lanzar sobre ") + (aimTarget.name || "el objetivo") : (drag.card.key === "Palabras Inspiradoras" ? "Suéltala sobre un aliado" : "Suéltala sobre un adversario")) : drag.card.rowCard ? "Abrir «" + drag.card.key + "»" : drag.card.subclass ? "Activar Encarnación Elemental" : <>{target ? `Objetivo: ${target.name || "Ficha"}` : "Casilla"} {rng ? `(${rng.label})` : "(fuera de alcance)"}</>}
               <small>{drag.card.rowCard ? "Suelta en cualquier casilla · Esc para cancelar" : drag.card.subclass ? "Suelta en cualquier casilla · Esc para cancelar" : "Suelta para usar · Esc para cancelar"}</small>
             </div>
           )}
@@ -12377,6 +12377,7 @@ export default function App({ onSignOut }) {
   const [campSession, setCampSession] = useState(null); // sesión de la campaña: { n, active, startedAt, endedAt }
   const [sessAsk, setSessAsk] = useState(null); // aviso de inicio de sesión para el jugador: { charId, key, n, items }
   const sessDismiss = useRef({});
+  const [charmAsk, setCharmAsk] = useState(null); // Embelesar: ¿marcar 1 Estrés para que el objetivo también lo marque? { charId, targetId }
   const [inspireAsk, setInspireAsk] = useState(null); // Palabras Inspiradoras: elegir el beneficio { charId, card, target }
   const [wardAsk, setWardAsk] = useState(null); // Guarda Rúnica: elegir portador y objeto { charId, card, step, bearerId, item, custom }
   const [hitWard, setHitWard] = useState(null); // Guarda Rúnica aplicada al golpe que se está resolviendo { n }
@@ -16243,11 +16244,19 @@ export default function App({ onSignOut }) {
     setTimeout(() => mutateMap(cid, (ts) => ts.map((x) => (x.id === tg.id ? { ...x, conds: [...new Set([...(x.conds || []), "Embelesado"])], charmedBy: charId } : x))), 900);
     pushMapLog(cid, "💗 Embelesar: " + (tg.name || "un adversario") + " queda embelesado", "info");
     postCampaignEvent(charId, "💗 " + (tg.name || "Un adversario") + " queda embelesado");
-    if (c && !c.f_charm_used && Number(c.stress_marked || 0) < Number(c.r_stress || 0) && window.confirm("Embelesar · una vez por descanso puedes marcar 1 Estrés para que " + (tg.name || "el objetivo") + " también marque 1. ¿Lo haces?")) {
-      markStress(charId, 1, { f_charm_used: "1" });
-      mutateMap(cid, (ts) => ts.map((x) => (x.id === tg.id && x.stats ? { ...x, stats: { ...x.stats, stressMarked: Math.min(Number(x.stats.stress || 0) || 99, Number(x.stats.stressMarked || 0) + 1) } } : x)));
-      postCampaignEvent(charId, "💗 Marca 1 Estrés: " + (tg.name || "el objetivo") + " también marca 1 Estrés");
-    }
+    if (c && !c.f_charm_used && Number(c.stress_marked || 0) < Number(c.r_stress || 0)) setCharmAsk({ charId, targetId });
+  };
+  const confirmCharmStress = (yes) => {
+    const A = charmAsk;
+    setCharmAsk(null);
+    if (!yes || !A) return;
+    const cid = sheetCampaignId;
+    const tg = (campaignMapRef.current.tokens || []).find((t) => t.id === A.targetId);
+    const c = charsRef.current[A.charId];
+    if (!cid || !tg || !c || c.f_charm_used) return;
+    markStress(A.charId, 1, { f_charm_used: "1" });
+    mutateMap(cid, (ts) => ts.map((x) => (x.id === tg.id && x.stats ? { ...x, stats: { ...x.stats, stressMarked: Math.min(Number(x.stats.stress || 0) || 99, Number(x.stats.stressMarked || 0) + 1) } } : x)));
+    postCampaignEvent(A.charId, "💗 Marca 1 Estrés: " + (tg.name || "el objetivo") + " también marca 1 Estrés");
   };
   // Carta auxiliar «Romper el embeleso»: suelta al adversario que embelesaste con Embelesar (sin coste).
   const canUnCharm = (charId, tg) => !!tg && tg.charmedBy === charId && (tg.conds || []).includes("Embelesado");
@@ -23230,7 +23239,7 @@ export default function App({ onSignOut }) {
                                               cardBack={cardBack}
                                               aimOk={(card, tg) => !card.ghost || (card.unCharm ? canUnCharm(viewingCharId, tg) : card.release ? canRelease(viewingCharId, tg) : canExtraRoot(viewingCharId, tg))}
                                               onAim={setAimRange}
-                                              reachOf={(card) => { if (card.key === "Embelesar" && !card.weapon && !card.rowCard) return { label: "Cercano", max: RANGE_CELLS["Cercano"] }; if (!card.weapon) return null; const lab = weaponReach(characters[viewingCharId], card.key); return lab ? { label: lab, max: RANGE_CELLS[lab] || 99 } : null; }}
+                                              reachOf={(card) => { if ((card.key === "Embelesar" || card.key === "Palabras Inspiradoras") && !card.weapon && !card.rowCard) return { label: "Cercano", max: RANGE_CELLS["Cercano"] }; if (!card.weapon) return null; const lab = weaponReach(characters[viewingCharId], card.key); return lab ? { label: lab, max: RANGE_CELLS[lab] || 99 } : null; }}
                                               cardBorder={cardBorder}
                                               beast={{ forms: BEASTFORMS, tier: tierForLevel(me?.f_level || 1), active: me?.f_beastform || "", stressFull: Number(me?.stress_marked || 0) >= Number(me?.r_stress || 0) }}
                                               wardChip={wardChip}
@@ -25493,10 +25502,10 @@ export default function App({ onSignOut }) {
                         </details>
                         <div className="mh-pre-sum">
                           <b>{formula}</b>
-                          {preRoll.cardContext?.dc != null ? (
-                            <span className="mh-pre-dc is-fixed" title="La Dificultad la marca la habilidad">
+                          {preRoll.cardContext?.dc != null || (preRoll.weapon && preRoll.weapon.targetId) ? (
+                            <span className="mh-pre-dc is-fixed" title={preRoll.cardContext?.dc != null ? "La Dificultad la marca la habilidad" : "La Dificultad es la del objetivo elegido en el mapa y no se puede cambiar"}>
                               <small>Dificultad</small>
-                              <em>{preRoll.cardContext.dc}</em>
+                              <em>{preRoll.cardContext?.dc != null ? preRoll.cardContext.dc : preRoll.dc || "—"}</em>
                               <Lock size={11} />
                             </span>
                           ) : (
@@ -27435,6 +27444,24 @@ export default function App({ onSignOut }) {
                 </div>
               </div>
             )}
+            {charmAsk && charmAsk.charId === viewingCharId && (() => {
+              const A = charmAsk;
+              const tg = (campaignMap.tokens || []).find((t) => t.id === A.targetId);
+              return (
+                <div className="mh-evo-wrap" onClick={() => confirmCharmStress(false)}>
+                  <div className="mh-bpick mh-sess" role="dialog" aria-label="Embelesar" onClick={(e) => e.stopPropagation()}>
+                    <div className="mh-elpick-h">
+                      <b>Embelesar</b>
+                      <span>{(tg?.name || "El objetivo") + " queda embelesado. Una vez por descanso puedes marcar 1 Estrés para que también marque 1."}</span>
+                    </div>
+                    <div className="mh-evo-act">
+                      <button type="button" className="mh-elpick-x" onClick={() => confirmCharmStress(false)}>No, gracias</button>
+                      <button type="button" className="mh-evo-go" onClick={() => confirmCharmStress(true)}>Marcar 1 Estrés</button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
             {inspireAsk && inspireAsk.charId === viewingCharId && (() => {
               const A = inspireAsk;
               const ally = characters[A.allyId];
