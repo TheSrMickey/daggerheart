@@ -7611,10 +7611,23 @@ const sharedStyles = `
   .mh-wz-page .mh-wz-steps { margin-top: 14px; }
   .mh-wz-page .mh-wz-grp button { height: 6px; }
   .mh-wz-page .mh-wz-body { padding: 4px 2px 18px; }
+  /* Paso de clase: dos cajas. A la izquierda todas las clases; a la derecha, una caja horizontal con la clase y debajo el detalle */
+  .mh-root:not(.is-mobile) .mh-wz-page .mh-wz-main .mh-wz-body.is-cls { padding: 0; background: none; border: 0; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; overflow: visible; }
+  .mh-root:not(.is-mobile) .mh-wz-page .mh-wz-cls { height: 100%; grid-template-columns: 340px minmax(0, 1fr); gap: 16px; }
+  .mh-root:not(.is-mobile) .mh-wz-page .mh-wz-cls .mh-wz-tiles, .mh-root:not(.is-mobile) .mh-wz-page .mh-wz-rcol .mh-wz-det, .mh-wz-hd { border: 1px solid var(--mh-line2); background: color-mix(in srgb, var(--mh-panel) 80%, transparent); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: 0 18px 44px #0007, inset 0 1px 0 #ffffff12; }
+  .mh-root:not(.is-mobile) .mh-wz-page .mh-wz-cls .mh-wz-tiles { margin: 0; padding: 16px; border-radius: 26px; }
+  .mh-wz-rcol { display: flex; flex-direction: column; gap: 16px; min-width: 0; min-height: 0; }
+  .mh-root:not(.is-mobile) .mh-wz-page .mh-wz-rcol .mh-wz-det { flex: 1; min-height: 0; border-radius: 26px; padding: 22px 26px; overflow-y: auto; scrollbar-width: none; }
+  .mh-wz-hd { flex: none; display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 26px; }
+  .mh-wz-hd-ic { flex: none; width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center; color: #fff; box-shadow: 0 8px 20px color-mix(in srgb, var(--tc) 42%, transparent), inset 0 0 0 2px #ffffff30; }
+  .mh-wz-hd-id { flex: 1; min-width: 0; } .mh-wz-hd .mh-wz-dn { font-size: 26px; line-height: 1.1; }
+  .mh-wz-hd-st { flex: none; display: flex; gap: 8px; }
+  .mh-wz-stat { min-width: 70px; padding: 8px 10px; border-radius: 16px; border: 1px solid var(--mh-line2); background: color-mix(in srgb, var(--mh-ink) 6%, transparent); text-align: center; display: flex; flex-direction: column; gap: 4px; } .mh-wz-stat small { font: 700 10px Inter, system-ui, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: var(--mh-muted); } .mh-wz-stat b { font: 700 25px/1 'Cinzel', Georgia, serif; color: var(--mh-ink); }
+  .mh-root.is-mobile .mh-wz-hd { margin-bottom: 12px; flex-wrap: wrap; }
   /* Dominios de la clase: una línea y dos pills con el icono oficial de cada dominio */
   .mh-dom-ic { display: inline-block; flex: none; vertical-align: middle; background: currentColor; -webkit-mask: var(--m) center / contain no-repeat; mask: var(--m) center / contain no-repeat; }
   .mh-wz-doms { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 0; padding-top: 10px; border-top: 1px solid color-mix(in srgb, var(--mh-ink, #fff) 24%, transparent); }
-  .mh-wz-dpill { display: inline-flex; align-items: center; gap: 7px; padding: 6px 13px 6px 10px; border-radius: 99px; border: 1px solid color-mix(in srgb, var(--dc) 55%, transparent); background: color-mix(in srgb, var(--dc) 14%, transparent); color: var(--mh-ink); font: 600 12.5px/1 Inter, system-ui, sans-serif; letter-spacing: .01em; } .mh-wz-dpill .mh-dom-ic, .mh-wz-dpill svg { color: var(--dc); }
+  .mh-wz-dpill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px 5px 8px; border-radius: 99px; border: 1px solid color-mix(in srgb, var(--dc) 55%, transparent); background: color-mix(in srgb, var(--dc) 14%, transparent); color: var(--mh-ink); font: 600 12.5px/1 Inter, system-ui, sans-serif; letter-spacing: .01em; } .mh-wz-dpill .mh-dom-ic, .mh-wz-dpill svg { color: var(--dc); }
   /* Cambio de paso: el contenido entra desde un lado (según se avance o se retroceda), el título sube y las elecciones aparecen abajo */
   .mh-wz-body.is-in-fwd { animation: mh-wz-in-fwd .45s cubic-bezier(.2,.8,.2,1) both; } .mh-wz-body.is-in-back { animation: mh-wz-in-back .45s cubic-bezier(.2,.8,.2,1) both; }
   @keyframes mh-wz-in-fwd { from { opacity: 0; transform: translateY(20px) scale(.985); } } @keyframes mh-wz-in-back { from { opacity: 0; transform: translateY(-14px) scale(.985); } }
@@ -34899,7 +34912,7 @@ export default function App({ onSignOut }) {
                 );
               })()}
               <div className={"mh-wz-main" + (showPv ? " has-pv" : "")}>
-              <div key={wizardStep} className={"mh-wz-body is-in-" + wzDir + (["ancestry", "community"].includes(wizardStep) ? " is-split" : "")}>
+              <div key={wizardStep} className={"mh-wz-body is-in-" + wzDir + (["ancestry", "community"].includes(wizardStep) ? " is-split" : "") + (wizardStep === "class" ? " is-cls" : "")}>
 
               {wizardStep === "subclass" ? (
                 (() => {
@@ -35016,6 +35029,34 @@ export default function App({ onSignOut }) {
                       );
                     })}
                   </div>
+                  <div className="mh-wz-rcol">
+                  {wizardStep === "class" && (() => {
+                    // Caja superior: icono circular de la clase, nombre con la línea y los dominios, y Evasión y Vida iniciales.
+                    const cls = CLASSES[carouselIndex].key;
+                    const col = CLASS_COLORS[cls] || "#E3B04B";
+                    const Em = CLASS_EMBLEMS[cls] || User;
+                    return (
+                      <div className="mh-wz-hd" style={{ "--tc": col }}>
+                        <span className="mh-wz-hd-ic" style={{ background: col }} aria-hidden="true"><Em size={30} strokeWidth={1.8} /></span>
+                        <div className="mh-wz-hd-id">
+                          <div className="mh-serif mh-wz-dn">{cls}</div>
+                          {current.expansion && <div className="mh-wz-dm">Expansión {current.expansion}</div>}
+                          <div className="mh-wz-doms" aria-label={"Dominios de " + cls}>
+                            {(CLASS_DOMAINS[cls] || []).map((d) => (
+                              <span key={d} className="mh-wz-dpill" style={{ "--dc": DOMAIN_COLORS[d] || "#C9A24B" }}>
+                                <DomainIcon name={d} size={17} />
+                                {d}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="mh-wz-hd-st">
+                          <div className="mh-wz-stat" title="Evasión inicial de la clase"><small>Evasión</small><b>{CLASS_EVASION[cls] ?? 10}</b></div>
+                          <div className="mh-wz-stat" title="Puntos de vida iniciales de la clase"><small>Vida</small><b>{CLASS_HP[cls] ?? 6}</b></div>
+                        </div>
+                      </div>
+                    );
+                  })()}
                   <div style={wizardStep === "class" && CLASS_ART[CLASSES[carouselIndex].key] ? { "--art": "url(" + CLASS_ART[CLASSES[carouselIndex].key] + ")" } : undefined} className={"mh-wz-det mh-noscroll" + ((wizardStep === "class" && CLASS_ART[CLASSES[carouselIndex].key]) || (wizardStep === "subclass" && SUBCLASS_ART[current?.key]) ? " has-art" : "")}>
                     {(() => {
                       const cls = CLASSES[carouselIndex].key;
@@ -35024,21 +35065,6 @@ export default function App({ onSignOut }) {
                         const hope = CLASS_HOPE_FEATURE[cls];
                         return (
                           <>
-                            <div className="mh-wz-dh">
-                              <span className="mh-wz-badge" style={{ background: col }} aria-hidden="true">{(() => { const Em = CLASS_EMBLEMS[cls] || User; return <Em size={26} strokeWidth={1.8} />; })()}</span>
-                              <div>
-                                <div className="mh-serif mh-wz-dn">{cls}</div>
-                                {current.expansion && <div className="mh-wz-dm">Expansión {current.expansion}</div>}
-                                <div className="mh-wz-doms" aria-label={"Dominios de " + cls}>
-                                  {(CLASS_DOMAINS[cls] || []).map((d) => (
-                                    <span key={d} className="mh-wz-dpill" style={{ "--dc": DOMAIN_COLORS[d] || "#C9A24B" }}>
-                                      <DomainIcon name={d} size={17} />
-                                      {d}
-                                    </span>
-                                  ))}
-                                </div>
-                              </div>
-                            </div>
                             <p className="mh-wz-blurb">{current.blurb}</p>
                             <div className="mh-wz-feats">
                               {hope && (
@@ -35079,6 +35105,7 @@ export default function App({ onSignOut }) {
                         </>
                       );
                     })()}
+                  </div>
                   </div>
                 </div>
               ) : wizardStep === "level" ? (
