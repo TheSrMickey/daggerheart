@@ -4935,6 +4935,13 @@ const sharedStyles = `
   @keyframes mh-vuln { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
   .mh-map-tk.is-c-ko .mh-map-face { filter: grayscale(.9) brightness(.8); rotate: -90deg; }
   .mh-map-tk.is-c-ko .mh-map-face > span { rotate: 0deg; }
+  .mh-map-fx.fx-charm { z-index: 3; inset: 3%; width: auto; height: auto; overflow: visible; border: 2px solid rgba(224,127,176,.65); border-radius: 30%; box-shadow: 0 0 9px 2px rgba(224,127,176,.4); animation: mh-charm 2.6s ease-in-out infinite; }
+  .mh-map-fx.fx-charm b { position: absolute; left: 46%; top: -4%; color: #F3A6CB; font: 700 clamp(8px, 1vw, 12px)/1 Inter, system-ui, sans-serif; text-shadow: 0 1px 2px rgba(0,0,0,.5); opacity: 0; animation: mh-hearts 3.2s ease-in infinite; } .mh-map-fx.fx-charm b:nth-child(2) { left: 16%; animation-delay: 1.1s; } .mh-map-fx.fx-charm b:nth-child(3) { left: 72%; animation-delay: 2.1s; }
+  @keyframes mh-charm { 50% { box-shadow: 0 0 13px 4px rgba(224,127,176,.58); border-color: rgba(224,127,176,.9); } } @keyframes mh-hearts { 0% { opacity: 0; transform: translateY(8px) scale(.6); } 25% { opacity: .9; } 100% { opacity: 0; transform: translateY(-16px) scale(1); } }
+  .mh-thread line.is-charm { stroke: #E07FB0; }
+  /* Pasiva de «Engañador Hábil»: de vez en cuando un reflejo tenue de la ficha se desdobla a un lado */
+  .mh-map-pas { position: absolute; inset: 0; pointer-events: none; z-index: 2; } .mh-map-pas i { position: absolute; inset: 10%; border-radius: 50%; border: 1.5px solid var(--gc); background: color-mix(in srgb, var(--gc) 14%, transparent); opacity: 0; } .mh-map-pas i:nth-child(1) { animation: mh-pas-a 7s ease-in-out infinite; } .mh-map-pas i:nth-child(2) { animation: mh-pas-b 7s ease-in-out 3.5s infinite; }
+  @keyframes mh-pas-a { 0%, 62%, 100% { opacity: 0; transform: translate(0, 0); } 72% { opacity: .5; transform: translate(10%, -5%); } 86% { opacity: 0; transform: translate(16%, -8%); } } @keyframes mh-pas-b { 0%, 62%, 100% { opacity: 0; transform: translate(0, 0); } 72% { opacity: .5; transform: translate(-10%, 5%); } 86% { opacity: 0; transform: translate(-16%, 8%); } }
   .mh-map-fx.fx-ko { z-index: 3; overflow: visible; }
   .mh-map-fx.fx-ko b { position: absolute; right: -8%; top: -10%; color: #E9DDFB; font: 800 clamp(9px, 1.2vw, 13px)/1 Inter, system-ui, sans-serif; text-shadow: 0 1px 2px rgba(0,0,0,.6); opacity: 0; animation: mh-zz 2.4s ease-in-out infinite; }
   .mh-map-fx.fx-ko b + b { animation-delay: 1.2s; }
@@ -4954,7 +4961,7 @@ const sharedStyles = `
 
   .mh-iso-tk.is-c-fly > .mh-iso-shadow { transform-box: fill-box; transform-origin: center; animation: mh-fly-shadow 2.2s ease-in-out infinite; }
   .mh-iso-tk.is-c-shell > rect { opacity: .85; }
-  @media (prefers-reduced-motion: reduce) { .mh-map-fx, .mh-map-fx b, .mh-map-tk.is-c-fly .mh-map-face, .mh-iso-ring, .mh-iso-zz text, .mh-iso-tk[class*="is-c-"] > * { animation: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .mh-map-pas i, .mh-map-fx, .mh-map-fx b, .mh-map-tk.is-c-fly .mh-map-face, .mh-iso-ring, .mh-iso-zz text, .mh-iso-tk[class*="is-c-"] > * { animation: none !important; } }
   .mh-map-tk.is-sel .mh-map-face { box-shadow: 0 0 0 2px #F3C24A, 0 3px 10px rgba(0,0,0,.55); }
   .mh-map-hp { position: absolute; z-index: 3; left: 20%; right: 20%; bottom: 6%; height: 9%; min-height: 3px; border-radius: 3px; background: #2a1f25; overflow: hidden; box-shadow: 0 0 0 1px rgba(0,0,0,.5); }
   .mh-map-hp i { display: block; height: 100%; background: #E24B4A; }
@@ -9492,6 +9499,7 @@ const MAP_COND_FX = {
   Inconsciente: { cls: "ko", Icon: ZapOff, color: "#A58BE8" },
   Volando: { cls: "fly", Icon: Feather, color: "#5FA77A" },
   Retraído: { cls: "shell", Icon: Shell, color: "#6E8B5A" },
+  Embelesado: { cls: "charm", Icon: Heart, color: "#E07FB0" },
 };
 const mapConds = (t) => (t.conds || []).filter((c) => MAP_COND_FX[c]);
 // Banda de alcance para una distancia en casillas (más allá de Lejano es Muy lejano).
@@ -9623,6 +9631,34 @@ function ShotFx({ kind, a, b, b2, size: S }) {
   const q = p > 0.5 ? (p - 0.5) / 0.5 : 0;
   const magic = kind === "magic";
   const [x, y] = at(f);
+  if (kind === "charm") {
+    // Embelesar: motas rosas flotan hasta el objetivo y se abren dos ondas suaves a su alrededor.
+    const ring = Math.max(0, Math.min(1, (p - 0.4) / 0.5));
+    const fade = p > 0.9 ? (1 - p) / 0.1 : 1;
+    return (
+      <g pointerEvents="none">
+        {f < 1 &&
+          [0, 0.06, 0.12, 0.18].map((d, i) => {
+            if (f - d <= 0) return null;
+            const [tx, ty] = at(f - d);
+            return <circle key={i} cx={tx} cy={ty + Math.sin((f - d) * 14) * S * 0.08} r={S * (0.1 - i * 0.015)} fill="#F3A6CB" opacity={0.85 - i * 0.18} />;
+          })}
+        {ring > 0 && (
+          <g opacity={fade}>
+            {[0, 0.35].map((o, i) => {
+              const q2 = Math.max(0, Math.min(1, ring - o) / (1 - o));
+              return <circle key={i} cx={b[0]} cy={b[1]} r={S * (0.3 + 0.55 * q2)} fill="none" stroke="#E07FB0" strokeWidth={S * 0.05} opacity={(1 - q2) * 0.7} />;
+            })}
+            <circle cx={b[0]} cy={b[1]} r={S * 0.4} fill="#E07FB0" opacity={0.18 * (1 - ring)} />
+            {[0, 1, 2, 3, 4].map((k) => {
+              const a2 = (k / 5) * Math.PI * 2 + ring * 2.2;
+              return <circle key={k} cx={b[0] + Math.cos(a2) * S * 0.5 * (0.6 + ring * 0.4)} cy={b[1] + Math.sin(a2) * S * 0.5 * (0.6 + ring * 0.4) - ring * S * 0.1} r={S * 0.045} fill="#FFD3E8" opacity={1 - ring * 0.6} />;
+            })}
+          </g>
+        )}
+      </g>
+    );
+  }
   if (kind === "roots") {
     // Enredo Feroz: un destello verde llega al objetivo y brotan raíces del suelo; con Esperanza, una enredadera salta al segundo.
     const grow = Math.max(0, Math.min(1, (p - 0.3) / 0.35));
@@ -10315,7 +10351,9 @@ function HomeDice({ stats }) {
 
 // Abanico de cartas de dominio en el borde inferior del mapa: se arrastran hasta una casilla para usarlas.
 // Cartas que se lanzan apuntando: una línea de guiones sale del personaje hasta el ratón.
-const AIM_CARD = "Enredo Feroz";
+// Cartas que se lanzan apuntando a un adversario: alcance máximo en casillas (Lejano = 12, Cercano = 6).
+const AIM_CARDS = { "Enredo Feroz": 12, "Embelesar": 6 };
+const aimMaxOf = (card) => (card && !card.weapon && !card.rowCard && !card.subclass ? (card.ghost ? 12 : AIM_CARDS[card.key] || 0) : 0);
 function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack, cardBorder, aimOk }) {
   const cardsRef = useRef(cards);
   cardsRef.current = cards;
@@ -10360,9 +10398,11 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
     const r = fanRef.current?.getBoundingClientRect();
     return !!r && x >= r.left - 30 && x <= r.right + 30 && y >= r.top - 24 && y <= r.bottom + 24;
   };
-  const rangeOf = (cell) => {
+  const rangeOf = (cell, card) => {
     if (!me || !cell) return null;
     const d = Math.max(Math.abs(cell.x - me.x), Math.abs(cell.y - me.y));
+    const lim = aimMaxOf(card);
+    if (lim && d > lim) return null;
     return MAP_RANGES.find((r) => d <= r.max) || null;
   };
   const end = (ev, cancel) => {
@@ -10381,10 +10421,10 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
     const cell = inHand(ev.clientX, ev.clientY) ? null : cellAt(ev.clientX, ev.clientY);
     if (!cell) return;
     if (d.card.subclass) return setOpen({ ...d.card, choose: true });
-    if ((d.card.key === AIM_CARD || d.card.ghost) && (!rangeOf(cell) || !tokens.find((t) => !t.hidden && t.x === cell.x && t.y === cell.y && t.id !== me?.id && (t.kind === "foe" || t.kind === "npc")))) return; // sin objetivo válido o fuera de alcance: se cancela
+    if (aimMaxOf(d.card) && (!rangeOf(cell, d.card) || !tokens.find((t) => !t.hidden && t.x === cell.x && t.y === cell.y && t.id !== me?.id && (t.kind === "foe" || t.kind === "npc")))) return; // sin objetivo válido o fuera de alcance: se cancela
     const target = tokens.find((t) => !t.hidden && t.x === cell.x && t.y === cell.y && t.id !== me?.id) || null;
     window.__mhFlyTo = { key: d.card.key, x: d.home.x, y: d.home.y, w: d.home.w, t: Date.now() };
-    const res = onUse(d.card, cell, target, rangeOf(cell));
+    const res = onUse(d.card, cell, target, rangeOf(cell, d.card));
     if (res === "cancel" || !d.home) return;
     // La carta usada vuelve volando a la mano; si se revela en el mapa, lo hace cuando acaba esa animación.
     setHeld({ key: d.card.key, home: d.home, from: { x: ev.clientX, y: ev.clientY }, wait: res === "reveal", at: Date.now() });
@@ -10459,8 +10499,8 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
   const gap = pitch - cardW;
   const stepR = Math.min(5, 36 / Math.max(1, n - 1));
   const stepY = Math.min(5, 30 / Math.max(1, n - 1));
-  const rng = drag ? rangeOf(drag.cell) : null;
-  const aim = !!drag?.moved && (drag.card.key === AIM_CARD || drag.card.ghost) && !inHand(drag.x, drag.y);
+  const rng = drag ? rangeOf(drag.cell, drag.card) : null;
+  const aim = !!drag?.moved && !!aimMaxOf(drag.card) && !inHand(drag.x, drag.y);
   const aimTarget = aim && drag.cell ? tokens.find((t) => !t.hidden && t.x === drag.cell.x && t.y === drag.cell.y && t.id !== me?.id && (t.kind === "foe" || t.kind === "npc")) : null;
   const target = drag?.cell ? tokens.find((t) => !t.hidden && t.x === drag.cell.x && t.y === drag.cell.y && t.id !== me?.id) : null;
   return (
@@ -10495,7 +10535,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
           );
         })}
       </div>
-      {open && (
+      {open && typeof document !== "undefined" && createPortal(
         <div className="mh-fan-zoom" onClick={() => setOpen(null)}>
           <div className="mh-fan-big" style={{ "--cc": open.weapon ? TIER_COLORS[open.level]?.color || "#C9A24B" : open.rowCard ? open.color : DOMAIN_COLORS[open.domain] || "#C9A24B" }} onClick={(e) => e.stopPropagation()}>
             <FanFace c={open} col={open.weapon ? TIER_COLORS[open.level]?.color || "#C9A24B" : open.rowCard ? open.color : DOMAIN_COLORS[open.domain] || "#C9A24B"} />
@@ -10515,7 +10555,8 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.querySelector(".mh-root") || document.body
       )}
       {back && (
         <div key={back.id} className="mh-fan-ret" style={{ "--cc": colOf(back.card), left: back.x, top: back.y, "--tx": back.to.x - back.x + "px", "--ty": back.to.y - back.y + "px" }} aria-hidden="true">
@@ -10545,7 +10586,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
           )}
           {drag.cell && !inHand(drag.x, drag.y) && (
             <div className="mh-fan-tip" style={{ left: Math.max(130, Math.min(window.innerWidth - 130, drag.x)), top: aim ? drag.y - 40 : drag.y - 112 }}>
-              {aim ? (!rng ? "Fuera de alcance Lejano" : aimTarget ? "Lanzar sobre " + (aimTarget.name || "el objetivo") : "Suéltala sobre un adversario") : drag.card.rowCard ? "Abrir «" + drag.card.key + "»" : drag.card.subclass ? "Activar Encarnación Elemental" : <>{target ? `Objetivo: ${target.name || "Ficha"}` : "Casilla"} {rng ? `(${rng.label})` : "(fuera de alcance)"}</>}
+              {aim ? (!rng ? "Fuera de alcance " + (aimMaxOf(drag.card) <= 6 ? "Cercano" : "Lejano") : aimTarget ? "Lanzar sobre " + (aimTarget.name || "el objetivo") : "Suéltala sobre un adversario") : drag.card.rowCard ? "Abrir «" + drag.card.key + "»" : drag.card.subclass ? "Activar Encarnación Elemental" : <>{target ? `Objetivo: ${target.name || "Ficha"}` : "Casilla"} {rng ? `(${rng.label})` : "(fuera de alcance)"}</>}
               <small>{drag.card.rowCard ? "Suelta en cualquier casilla · Esc para cancelar" : drag.card.subclass ? "Suelta en cualquier casilla · Esc para cancelar" : "Suelta para usar · Esc para cancelar"}</small>
             </div>
           )}
@@ -10870,12 +10911,13 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
         <div key={x + "," + y} className="mh-map-reach" style={at(x, y)} />
       ))}
       {(() => {
-        // Hilo de guiones entre quien enraizó y el enraizado (Enredo Feroz) mientras dure la inmovilización.
-        const links = tokens.filter((t) => t.rootedBy && !t.vanished && mapConds(t).includes("Inmovilizado")).map((t) => ({ t, src: tokens.find((s) => s.kind === "pc" && s.charId === t.rootedBy && !s.vanished) })).filter((l) => l.src);
+        // Hilo de guiones entre quien enraizó (Enredo Feroz) o embelesó (Embelesar) y su objetivo mientras dure el efecto.
+        const linkOf = (t, who, cond, cls) => (who && !t.vanished && mapConds(t).includes(cond) ? { t, cls, src: tokens.find((s) => s.kind === "pc" && s.charId === who && !s.vanished) } : null);
+        const links = tokens.flatMap((t) => [linkOf(t, t.rootedBy, "Inmovilizado", ""), linkOf(t, t.charmedBy, "Embelesado", "is-charm")]).filter((l) => l && l.src);
         if (!links.length) return null;
         return (
           <svg className="mh-thread" viewBox={"0 0 " + MAP_COLS + " " + MAP_ROWS} preserveAspectRatio="none" aria-hidden="true">
-            {links.map(({ t, src }) => <line key={t.id} x1={src.x + 0.5} y1={src.y + 0.5} x2={t.x + 0.5} y2={t.y + 0.5} />)}
+            {links.map(({ t, src, cls }) => <line key={t.id + cls} className={cls} x1={src.x + 0.5} y1={src.y + 0.5} x2={t.x + 0.5} y2={t.y + 0.5} />)}
           </svg>
         );
       })()}
@@ -10905,6 +10947,7 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
             {mapConds(t).map((c) => (
               <span key={c} className={"mh-map-fx fx-" + MAP_COND_FX[c].cls} aria-hidden="true">
                 {c === "Inconsciente" && <><b>z</b><b>z</b></>}
+                {c === "Embelesado" && <><b>♥</b><b>♥</b><b>♥</b></>}
               </span>
             ))}
             {mapConds(t).length > 0 && (
@@ -10916,6 +10959,13 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
               </span>
             )}
             {cAnim && meCharId && cAnim.charId === meCharId && t.kind === "pc" && t.charId === meCharId && !t.vanished && <span key={cAnim.key} className="mh-map-cpulse" aria-hidden="true"><i /><i /><i /></span>}
+            {t.pas === "gracia" && !t.vanished && <span className="mh-map-pas" style={{ "--gc": DOMAIN_COLORS.Gracia }} aria-hidden="true"><i /><i /></span>}
+            {t.charmedBy && mapConds(t).includes("Embelesado") && !t.vanished && (
+              <span className="mh-root-tag" role="tooltip">
+                <b>💗 Embelesar</b>
+                <small>Embelesado por {(tokens.find((s) => s.kind === "pc" && s.charId === t.charmedBy) || {}).name || "un personaje"} · hasta que el DJ lo libere</small>
+              </span>
+            )}
             {t.rootedBy && mapConds(t).includes("Inmovilizado") && !t.vanished && (
               <span className="mh-root-tag" role="tooltip">
                 <b>🌿 Enredo Feroz</b>
@@ -12098,13 +12148,14 @@ export default function App({ onSignOut }) {
     const beast = me.f_beastform || "";
     const trf = visibleTransform(me);
     const elem = me.f_elemental_active || "";
-    const wrong = (campaignMap.tokens || []).some((t) => t.kind === "pc" && t.charId === sheetCharId && (!!t.hidden !== hid || !sameConds(t.conds) || !!t.down !== down || (t.beast || "") !== beast || (t.trf || "") !== trf || (t.elem || "") !== elem));
+    const pas = getKeys(me.f_domain_cards).includes("Engañador Hábil") ? "gracia" : ""; // pasiva visible para toda la mesa
+    const wrong = (campaignMap.tokens || []).some((t) => t.kind === "pc" && t.charId === sheetCharId && ((t.pas || "") !== pas || !!t.hidden !== hid || !sameConds(t.conds) || !!t.down !== down || (t.beast || "") !== beast || (t.trf || "") !== trf || (t.elem || "") !== elem));
     if (!wrong) return;
     mutateMap(sheetCampaignId, (ts) =>
       ts.map((t) => {
         if (t.kind !== "pc" || t.charId !== sheetCharId) return t;
-        const { hidden, conds: _c, down: _d, beast: _b, trf: _t, elem: _e, ...rest } = t;
-        return { ...rest, ...(hid ? { hidden: true } : {}), ...(conds.length ? { conds } : {}), ...(down ? { down: true } : {}), ...(beast ? { beast } : {}), ...(trf ? { trf } : {}), ...(elem ? { elem } : {}) };
+        const { hidden, conds: _c, down: _d, beast: _b, trf: _t, elem: _e, pas: _p, ...rest } = t;
+        return { ...rest, ...(pas ? { pas } : {}), ...(hid ? { hidden: true } : {}), ...(conds.length ? { conds } : {}), ...(down ? { down: true } : {}), ...(beast ? { beast } : {}), ...(trf ? { trf } : {}), ...(elem ? { elem } : {}) };
       })
     );
   }, [campaignMap, characters, sheetCampaignId, sheetCharId]);
@@ -14474,7 +14525,7 @@ export default function App({ onSignOut }) {
         const base = r.charm ? "Éxito con Miedo" : crit ? "Éxito crítico" : r.reaction ? "Tirada de reacción" : (success === null ? "Con " : success ? "Éxito con " : "Fallo con ") + (hopeSide ? "Esperanza" : "Miedo");
         const note = r.aura ? "+1 Esperanza (el Director de Juego no gana Miedo)" : r.charm ? "El Director de Juego gana 1 Miedo" : r.reaction ? (crit ? "Ignora los efectos" : "Sin Esperanza ni Miedo") : crit ? "+1 Esperanza y −1 Estrés" : withHope ? "+1 Esperanza" : "El Director de Juego gana 1 Miedo";
         const vcol = r.aura ? "#E3B04B" : r.charm ? "#A58BE8" : crit ? "#6FBF73" : r.reaction ? "#5E8FC9" : withHope ? "#E3B04B" : "#A58BE8";
-        const tag = r.luck ? (REROLL_META[r.luck.kind] || REROLL_META.luck).tag : r.weapon ? "Ataque" : r.card ? "Habilidad" : r.reaction ? "Reacción" : "Rasgo";
+        const tag = r.luck ? (REROLL_META[r.luck.kind] || REROLL_META.luck).tag : r.weapon ? (r.cast ? "Conjuro" : "Ataque") : r.card ? "Habilidad" : r.reaction ? "Reacción" : "Rasgo";
         // Hada · Doblega la Suerte: botón bajo las tiradas de acción recientes (tuyas o de aliados).
         const meC = meCharId ? characters[meCharId] : null;
         const luckable = meC && ancFeat(meC, "Hada", 0) && !r.reaction && !r.luck && m.charId && Date.now() - (m.ts || 0) < 10 * 60 * 1000;
@@ -14547,7 +14598,7 @@ export default function App({ onSignOut }) {
           </>
         ) : r.weapon ? (
           <>
-            {who} ataca con {r.weapon}
+            {who} {r.cast ? "lanza" : "ataca con"} {r.weapon}
           </>
         ) : r.card ? (
           <>
@@ -14982,6 +15033,36 @@ export default function App({ onSignOut }) {
     postCampaignEvent(charId, "🌿 Lanza Enredo Feroz sobre " + (target.name || "un adversario"));
     rollTraitCheck(charId, label, Number(c[sk] || 0) + (mods[sk] || 0), { name: "Enredo Feroz", damage: "d8+1 físico", spell: true, fixedDice: 1, targetChosen: true, targetId: target.id, targetName: target.name, targetDc: target.stats?.difficulty || null });
     return "ok";
+  };
+  // Embelesar arrastrada a un adversario: tirada de conjuro contra él (alcance Cercano); si acierta, queda Embelesado hasta que el DJ lo libere.
+  const castEmbelesar = (charId, target) => {
+    const c = charsRef.current[charId];
+    const me = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
+    if (!c || !me || !target || !(target.kind === "foe" || target.kind === "npc") || cellDist(me, target) > RANGE_CELLS["Cercano"]) return "cancel";
+    const sk = charSpellTrait(c);
+    const label = TRAITS.find((tr) => tr.key === sk)?.label;
+    if (!label || c.f_beastform) return "cancel";
+    const mods = getEquipmentMods(PRIMARY_WEAPONS.find((w) => w.key === c.f_primary_weapon), SECONDARY_WEAPONS.find((w) => w.key === c.f_secondary_weapon), ARMORS.find((a) => a.key === c.f_armor));
+    postCampaignEvent(charId, "💗 Lanza Embelesar sobre " + (target.name || "un adversario"));
+    rollTraitCheck(charId, label, Number(c[sk] || 0) + (mods[sk] || 0), { name: "Embelesar", damage: "", spell: true, charm: true, targetChosen: true, targetId: target.id, targetName: target.name, targetDc: target.stats?.difficulty || null });
+    return "ok";
+  };
+  // Éxito de Embelesar: el objetivo queda Embelesado (con un Estrés, una vez por descanso, el objetivo también marca uno).
+  const applyCharm = (charId, targetId, withStress) => {
+    const cid = sheetCampaignId;
+    const toks = campaignMapRef.current.tokens || [];
+    const tg = toks.find((t) => t.id === targetId);
+    const me = toks.find((t) => t.kind === "pc" && t.charId === charId);
+    const c = charsRef.current[charId];
+    if (!cid || !tg) return;
+    if (me) mutateMap(cid, () => ({ key: Date.now(), from: me.id, to: tg.id, kind: "charm" }), "fx");
+    setTimeout(() => mutateMap(cid, (ts) => ts.map((x) => (x.id === tg.id ? { ...x, conds: [...new Set([...(x.conds || []), "Embelesado"])], charmedBy: charId, ...(withStress && x.stats ? { stats: { ...x.stats, stressMarked: Math.min(Number(x.stats.stress || 0) || 99, Number(x.stats.stressMarked || 0) + 1) } } : {}) } : x))), 900);
+    if (withStress && c) {
+      markStress(charId, 1, { f_charm_used: "1" });
+      postCampaignEvent(charId, "💗 Marca 1 Estrés: " + (tg.name || "el objetivo") + " también marca 1 Estrés");
+    }
+    pushMapLog(cid, "💗 Embelesar: " + (tg.name || "un adversario") + " queda embelesado", "info");
+    postCampaignEvent(charId, "💗 " + (tg.name || "Un adversario") + " queda embelesado");
   };
   // Enredo Feroz · carta extra: gasta 1 Esperanza para inmovilizar a otro adversario Muy cercano de un objetivo ya enraizado por ti.
   const canExtraRoot = (charId, tg) => {
@@ -16345,6 +16426,7 @@ export default function App({ onSignOut }) {
     }
     // Doblega la Suerte es una vez por sesión: la app lo recupera con el descanso largo.
     if (isLong && c.f_luck_used) restPatch.f_luck_used = "";
+    if (c.f_charm_used) restPatch.f_charm_used = ""; // Embelesar: una vez por descanso
     if (isLong && c.f_pack_used) restPatch.f_pack_used = "";
     if (isLong && c.f_sparing_used) restPatch.f_sparing_used = "";
     if (isLong && c.f_closeknit_used) restPatch.f_closeknit_used = "";
@@ -17235,7 +17317,7 @@ export default function App({ onSignOut }) {
       const dcStr = dcVal ? ` vs Dificultad ${dcVal}: ${hope === fear || total >= dcVal ? "Éxito" : "Fracaso"}` : "";
       await postCampaignEvent(charId, `🎲 ${reaction ? "Reacción" : "Tirada"} de ${traitLabel}: ${hope} + ${fear} ${modStr}${advStr} = ${total} (${text})${dcStr}`, {
         kind: "roll",
-        roll: { trait: traitLabel, weapon: weapon?.name || "", reaction, hopeSides, ...(dcVal ? { dc: dcVal } : {}), hope, fear, mod: traitValue, adv: advantageRoll, wolf: wolfBonus, ...rollExtra, total },
+        roll: { trait: traitLabel, weapon: weapon?.name || "", ...(weapon?.charm ? { cast: true } : {}), reaction, hopeSides, ...(dcVal ? { dc: dcVal } : {}), hope, fear, mod: traitValue, adv: advantageRoll, wolf: wolfBonus, ...rollExtra, total },
       });
     }
   };
@@ -21721,6 +21803,7 @@ export default function App({ onSignOut }) {
                                               onUse={(card, cell, target, rng) =>
                                                 card.ghost ? castEnredoExtra(viewingCharId, target) :
                                                 card.key === "Enredo Feroz" && !card.weapon ? castEnredo(viewingCharId, target) :
+                                                card.key === "Embelesar" && !card.weapon && !card.rowCard && !card.subclass ? castEmbelesar(viewingCharId, target) :
                                                 card.key === "Lengua de la Naturaleza" && !card.weapon && !card.rowCard && !card.subclass ? (playCardOnMap(charCampaign.id, viewingCharId, card), "reveal") :
                                                 card.domain && !card.weapon && !card.rowCard && !card.subclass ? postCardUse(viewingCharId, card, (target ? "sobre " + (target.name || "una ficha") : "en la casilla " + (cell.x + 1) + "," + (cell.y + 1)) + (rng ? " (" + rng.label + ")" : "")) :
                                                 postCampaignEvent(viewingCharId, `${card.weapon ? "ataca con" : "usa la carta"} «${card.key}»${target ? ` sobre ${target.name || "una ficha"}` : ` en la casilla ${cell.x + 1},${cell.y + 1}`}${rng ? ` (${rng.label})` : ""}.`)
@@ -24759,7 +24842,7 @@ export default function App({ onSignOut }) {
                             ? "Impactas a " + (traitRollResult.weapon.hitNames || []).join(", ")
                             : "Fallas contra todos"
                           : traitRollResult.weapon.targetId && traitRollResult.card?.dc != null
-                          ? (traitRollResult.hope === traitRollResult.fear || traitRollResult.total >= traitRollResult.card.dc ? "Impactas a " : "Fallas contra ") + traitRollResult.weapon.targetName
+                          ? (traitRollResult.hope === traitRollResult.fear || traitRollResult.total >= traitRollResult.card.dc ? (traitRollResult.weapon.charm ? "Embelesas a " : "Impactas a ") : "Fallas contra ") + traitRollResult.weapon.targetName
                           : "¿Impactó el ataque con " + traitRollResult.weapon.name + "?"}
                       </div>
                       <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
@@ -24776,6 +24859,7 @@ export default function App({ onSignOut }) {
                             const charId = traitRollResult.charId;
                             const isCritical = traitRollResult.hope === traitRollResult.fear;
                             setTraitRollResult(null);
+                            if (traitRollResult.weapon.charm) return applyCharm(charId, traitRollResult.weapon.targetId, false);
                             const wasCloaked = traitRollResult.wasCloaked;
                             if (focusTarget) {
                               updateCharacterField(charId, "f_focus", focusTarget);
@@ -24820,8 +24904,13 @@ export default function App({ onSignOut }) {
                             rollWeaponDamage(name, damage, charId, isCritical, { ...(traitRollResult.weapon.spell ? { plain: true, fixedDice: traitRollResult.weapon.fixedDice || 1 } : {}), angel: traitRollResult.weapon.angel || 0, knight: !!traitRollResult.weapon.knight, attackFear: traitRollResult.fear, ...(pummel || honedHit ? { fixedDice: getProficiency(rc) + (pummel ? 1 : 0) + (honedHit ? 1 : 0) } : {}), fearDice, cloaked: wasCloaked, spirit, resonance: spirit && rc && tierForLevel(rc.f_level || 1) >= 3, extraFlat: traitRollResult.weapon.elemDmg || 0, doublePick: !!traitRollResult.weapon.manipDouble, targetId: traitRollResult.weapon.targetId || null, targetIds: traitRollResult.weapon.hitIds || null });
                           }}
                         >
-                          {traitRollResult.weapon.targets || (traitRollResult.weapon.targetId && traitRollResult.card?.dc != null) ? "Tirar daño" : "Sí"}
+                          {traitRollResult.weapon.charm ? "Embelesar" : traitRollResult.weapon.targets || (traitRollResult.weapon.targetId && traitRollResult.card?.dc != null) ? "Tirar daño" : "Sí"}
                         </button>
+                        {traitRollResult.weapon.charm && !charsRef.current[traitRollResult.charId]?.f_charm_used && Number(charsRef.current[traitRollResult.charId]?.stress_marked || 0) < Number(charsRef.current[traitRollResult.charId]?.r_stress || 0) && (
+                          <button className="mh-btn-ghost" title="Una vez por descanso: marcas 1 Estrés y el objetivo embelesado también marca 1" onClick={() => { const cid = traitRollResult.charId, tid = traitRollResult.weapon.targetId; setTraitRollResult(null); applyCharm(cid, tid, true); }}>
+                            1 Estrés: él también
+                          </button>
+                        )}
                         <button className="mh-btn-ghost" onClick={() => setTraitRollResult(null)}>
                           {traitRollResult.weapon.targets || (traitRollResult.weapon.targetId && traitRollResult.card?.dc != null) ? "Cerrar" : "No"}
                         </button>
@@ -31715,6 +31804,9 @@ export default function App({ onSignOut }) {
                                           </button>
                                           <button type="button" className="mh-crit-n" onClick={() => setMapSel(t.id)}>{t.name}{groups[nm].length > 1 ? " " + (i + 1) : ""}</button>
                                           {t.stats && <small>{Math.max(0, Number(t.stats.hp || 0) - Number(t.stats.hpMarked || 0))}/{t.stats.hp} PV</small>}
+                                          {(t.conds || []).includes("Embelesado") && (
+                                            <button type="button" className="mh-btn-ghost" onClick={() => mutateMap(viewingCampaignId, (ts) => ts.map((x) => (x.id === t.id ? { ...x, conds: (x.conds || []).filter((c) => c !== "Embelesado"), charmedBy: undefined } : x)))}>Liberar del embeleso</button>
+                                          )}
                                           {(t.conds || []).includes("Inmovilizado") && (
                                             <button type="button" className="mh-btn-ghost" onClick={() => mutateMap(viewingCampaignId, (ts) => ts.map((x) => (x.id === t.id ? { ...x, conds: (x.conds || []).filter((c) => c !== "Inmovilizado") } : x)))}>Liberar</button>
                                           )}
