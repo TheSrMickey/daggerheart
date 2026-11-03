@@ -4948,6 +4948,7 @@ const sharedStyles = `
   .mh-map-fx.fx-charm { z-index: 3; inset: 3%; width: auto; height: auto; overflow: visible; border: 2px solid rgba(224,127,176,.65); border-radius: 30%; box-shadow: 0 0 9px 2px rgba(224,127,176,.4); animation: mh-charm 2.6s ease-in-out infinite; }
   .mh-map-fx.fx-charm b { position: absolute; left: 46%; top: -4%; color: #F3A6CB; font: 700 clamp(8px, 1vw, 12px)/1 Inter, system-ui, sans-serif; text-shadow: 0 1px 2px rgba(0,0,0,.5); opacity: 0; animation: mh-hearts 3.2s ease-in infinite; } .mh-map-fx.fx-charm b:nth-child(2) { left: 16%; animation-delay: 1.1s; } .mh-map-fx.fx-charm b:nth-child(3) { left: 72%; animation-delay: 2.1s; }
   @keyframes mh-charm { 50% { box-shadow: 0 0 13px 4px rgba(224,127,176,.58); border-color: rgba(224,127,176,.9); } } @keyframes mh-hearts { 0% { opacity: 0; transform: translateY(8px) scale(.6); } 25% { opacity: .9; } 100% { opacity: 0; transform: translateY(-16px) scale(1); } }
+  .mh-thread.mh-telelink line { stroke: #A58BE8; }
   .mh-thread.mh-charmlink line { stroke: #E07FB0; stroke-width: 2; stroke-dasharray: 2 8; stroke-linecap: round; vector-effect: non-scaling-stroke; opacity: .8; animation: mh-thread 1.4s linear infinite; }
   /* Pasiva de «Engañador Hábil»: de vez en cuando un reflejo tenue de la ficha se desdobla a un lado */
   .mh-map-pas { position: absolute; inset: 0; pointer-events: none; z-index: 2; } .mh-map-pas i { position: absolute; inset: 10%; border-radius: 50%; border: 1.5px solid var(--gc); background: color-mix(in srgb, var(--gc) 14%, transparent); opacity: 0; } .mh-map-pas i:nth-child(1) { animation: mh-pas-a 7s ease-in-out infinite; } .mh-map-pas i:nth-child(2) { animation: mh-pas-b 7s ease-in-out 3.5s infinite; }
@@ -9601,6 +9602,15 @@ const newFoeStats = () => ({ ...FOE_BASE, hpMarked: 0, stressMarked: 0 });
 // Alcances en casillas del tablero (igual que las bandas de colores) y distancia entre casillas.
 // En la pestaña de la campaña las ventanas de tirada se apartan a la derecha (sobre el chat) para no tapar el tablero.
 const ROLL_DOCK = { justifyContent: "flex-end", alignItems: "center", background: "transparent", padding: "20px 22px" };
+// Hechizos de los grimorios Libro de Ava y Libro de Illiat, jugables en el mapa como cartas auxiliares.
+const BOOK_SPELLS = [
+  { id: "push", book: "Libro de Ava", name: "Empujón de Poder", reach: "Cuerpo a cuerpo", lab: "Tirada", text: "Tirada de conjuro contra un adversario Cuerpo a cuerpo. Si aciertas, sale despedido hasta alcance Lejano y sufre d10+2 de daño mágico (dados = tu Competencia)." },
+  { id: "tava", book: "Libro de Ava", name: "Armadura de Tava", reach: "Cuerpo a cuerpo", ally: true, hope: true, lab: "1 Esperanza", text: "Gasta 1 Esperanza: un aliado que toques (o tú) gana +1 a su Puntuación de Armadura hasta el próximo descanso o hasta que vuelvas a lanzarlo." },
+  { id: "ice", book: "Libro de Ava", name: "Pico de Hielo", reach: "Lejano", lab: "Tirada", text: "Invoca un pico de hielo sobre un adversario en alcance Lejano: tirada de conjuro contra su Dificultad; si aciertas, d6 de daño físico (dados = tu Competencia)." },
+  { id: "sleep", book: "Libro de Illiat", name: "Sopor", reach: "Muy cercano", lab: "Tirada", text: "Tirada de conjuro contra un adversario Muy cercano. Si aciertas, queda Dormido hasta que sufra daño o el DJ gaste un Miedo." },
+  { id: "arcane", book: "Libro de Illiat", name: "Descarga Arcana", reach: "Cercano", hope: true, once: "f_arcane_used", lab: "Esperanza", text: "Una vez por descanso, gasta cuanta Esperanza quieras: d6 de daño mágico por cada una a un objetivo en alcance Cercano." },
+  { id: "tele", book: "Libro de Illiat", name: "Telepatía", reach: "Muy lejano", any: true, hope: true, lab: "1 Esperanza", text: "Gasta 1 Esperanza para crear un vínculo mental con un objetivo que veas, hasta el próximo descanso o hasta que lo lances de nuevo." },
+];
 const RANGE_CELLS = { "Cuerpo a cuerpo": 1, "Muy cercano": 3, "Cercano": 6, "Lejano": 12, "Muy lejano": 99 };
 const cellDist = (a, b) => Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
 // Gravedad del daño según los umbrales: Menor 1 PV, Mayor 2 PV, Grave 3 PV.
@@ -9650,6 +9660,7 @@ const MAP_COND_FX = {
   Volando: { cls: "fly", Icon: Feather, color: "#5FA77A" },
   Retraído: { cls: "shell", Icon: Shell, color: "#6E8B5A" },
   Embelesado: { cls: "charm", Icon: Heart, color: "#E07FB0" },
+  Dormido: { cls: "ko", Icon: Moon, color: "#A58BE8" },
 };
 const mapConds = (t) => (t.conds || []).filter((c) => MAP_COND_FX[c]);
 // Banda de alcance para una distancia en casillas (más allá de Lejano es Muy lejano).
@@ -10977,10 +10988,10 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
     return !!r && x >= r.left - 30 && x <= r.right + 30 && y >= r.top - 24 && y <= r.bottom + 24;
   };
   // Cartas que se apuntan a un adversario: Enredo Feroz, su carta extra y las armas (con el alcance de cada arma).
-  const isAim = (c) => c.key === AIM_CARD || ((c.key === "Embelesar" || c.key === "Palabras Inspiradoras") && !c.rowCard) || (!!c.ghost && !c.recharge && !c.ward) || !!c.weapon || (c.key === "Desatar el Caos" && !c.rowCard);
+  const isAim = (c) => c.key === AIM_CARD || ((c.key === "Embelesar" || c.key === "Palabras Inspiradoras") && !c.rowCard) || (!!c.ghost && !c.recharge && !c.ward) || !!c.spellId || !!c.weapon || (c.key === "Desatar el Caos" && !c.rowCard);
   const aimReach = (c) => (reachOf && reachOf(c)) || { label: "Lejano", max: RANGE_CELLS["Lejano"] };
   // Objetivo válido de una carta que se apunta: aliado (otro personaje) para Palabras Inspiradoras; adversario vivo para el resto.
-  const aimTok = (c, t) => !t.hidden && t.id !== me?.id && (c.key === "Palabras Inspiradoras" && !c.rowCard ? t.kind === "pc" && !t.vanished : (t.kind === "foe" || t.kind === "npc") && !deadTok(t));
+  const aimTok = (c, t) => !t.hidden && (c.spellAny ? !t.vanished && t.id !== me?.id : c.spellAlly ? t.kind === "pc" && !t.vanished : t.id !== me?.id && (c.key === "Palabras Inspiradoras" && !c.rowCard ? t.kind === "pc" && !t.vanished : (t.kind === "foe" || t.kind === "npc") && !deadTok(t)));
   const inAimReach = (c, cell) => !!me && !!cell && Math.max(Math.abs(cell.x - me.x), Math.abs(cell.y - me.y)) <= aimReach(c).max;
   const rangeOf = (cell) => {
     if (!me || !cell) return null;
@@ -11606,6 +11617,17 @@ function MapBoard({ showHp, aimRange, rangeMenu, cfx, meCharId, onDragInfo, onSt
         return (
           <svg className="mh-thread mh-charmlink" viewBox={"0 0 " + MAP_COLS + " " + MAP_ROWS} preserveAspectRatio="none" aria-hidden="true">
             {cl.map(({ t, src }) => { const a = posOf(src), b = posOf(t); return <line key={t.id} x1={a.x + 0.5} y1={a.y + 0.5} x2={b.x + 0.5} y2={b.y + 0.5} />; })}
+          </svg>
+        );
+      })()}
+      {(() => {
+        // Hilo violeta de la Telepatía (Libro de Illiat) entre quien la lanzó y su objetivo.
+        const posOf = (t) => (drag && drag.id === t.id && drag.moved ? { x: drag.fx, y: drag.fy } : { x: t.x, y: t.y });
+        const tl = tokens.filter((t) => t.kind === "pc" && t.tele && !t.vanished).map((t) => ({ t, dst: tokens.find((s) => s.id === t.tele && !s.vanished) })).filter((l) => l.dst);
+        if (!tl.length) return null;
+        return (
+          <svg className="mh-thread mh-charmlink mh-telelink" viewBox={"0 0 " + MAP_COLS + " " + MAP_ROWS} preserveAspectRatio="none" aria-hidden="true">
+            {tl.map(({ t, dst }) => { const a = posOf(t), b = posOf(dst); return <line key={t.id} x1={a.x + 0.5} y1={a.y + 0.5} x2={b.x + 0.5} y2={b.y + 0.5} />; })}
           </svg>
         );
       })()}
@@ -12378,6 +12400,7 @@ export default function App({ onSignOut }) {
   const [sessAsk, setSessAsk] = useState(null); // aviso de inicio de sesión para el jugador: { charId, key, n, items }
   const sessDismiss = useRef({});
   const [charmAsk, setCharmAsk] = useState(null); // Embelesar: ¿marcar 1 Estrés para que el objetivo también lo marque? { charId, targetId }
+  const [arcaneAsk, setArcaneAsk] = useState(null); // Descarga Arcana: cuánta Esperanza gastar { charId, card, targetId }
   const [inspireAsk, setInspireAsk] = useState(null); // Palabras Inspiradoras: elegir el beneficio { charId, card, target }
   const [wardAsk, setWardAsk] = useState(null); // Guarda Rúnica: elegir portador y objeto { charId, card, step, bearerId, item, custom }
   const [hitWard, setHitWard] = useState(null); // Guarda Rúnica aplicada al golpe que se está resolviendo { n }
@@ -12900,14 +12923,15 @@ export default function App({ onSignOut }) {
     const beast = me.f_beastform || "";
     const trf = visibleTransform(me);
     const elem = me.f_elemental_active || "";
+    const tele = me.f_tele || "";
     const pas = getKeys(me.f_domain_cards).includes("Engañador Hábil") ? "gracia" : ""; // pasiva visible para toda la mesa
-    const wrong = (campaignMap.tokens || []).some((t) => t.kind === "pc" && t.charId === sheetCharId && ((t.pas || "") !== pas || !!t.hidden !== hid || !sameConds(t.conds) || !!t.down !== down || (t.beast || "") !== beast || (t.trf || "") !== trf || (t.elem || "") !== elem));
+    const wrong = (campaignMap.tokens || []).some((t) => t.kind === "pc" && t.charId === sheetCharId && ((t.pas || "") !== pas || (t.tele || "") !== tele || !!t.hidden !== hid || !sameConds(t.conds) || !!t.down !== down || (t.beast || "") !== beast || (t.trf || "") !== trf || (t.elem || "") !== elem));
     if (!wrong) return;
     mutateMap(sheetCampaignId, (ts) =>
       ts.map((t) => {
         if (t.kind !== "pc" || t.charId !== sheetCharId) return t;
-        const { hidden, conds: _c, down: _d, beast: _b, trf: _t, elem: _e, pas: _p, ...rest } = t;
-        return { ...rest, ...(pas ? { pas } : {}), ...(hid ? { hidden: true } : {}), ...(conds.length ? { conds } : {}), ...(down ? { down: true } : {}), ...(beast ? { beast } : {}), ...(trf ? { trf } : {}), ...(elem ? { elem } : {}) };
+        const { hidden, conds: _c, down: _d, beast: _b, trf: _t, elem: _e, pas: _p, tele: _tl, ...rest } = t;
+        return { ...rest, ...(pas ? { pas } : {}), ...(tele ? { tele } : {}), ...(hid ? { hidden: true } : {}), ...(conds.length ? { conds } : {}), ...(down ? { down: true } : {}), ...(beast ? { beast } : {}), ...(trf ? { trf } : {}), ...(elem ? { elem } : {}) };
       })
     );
   }, [campaignMap, characters, sheetCampaignId, sheetCharId]);
@@ -14713,7 +14737,7 @@ export default function App({ onSignOut }) {
     const armorEntry = ARMORS.find((a) => a.key === c.f_armor);
     if (!armorEntry) return 0;
     const mods = getEquipmentMods(PRIMARY_WEAPONS.find((w) => w.key === c.f_primary_weapon), SECONDARY_WEAPONS.find((w) => w.key === c.f_secondary_weapon), armorEntry);
-    return armorEntry.score + (mods.armor || 0);
+    return armorEntry.score + (mods.armor || 0) + (c.f_tava ? 1 : 0);
   };
   const doFrontline = (id) => {
     const c = characters[id];
@@ -15917,7 +15941,7 @@ export default function App({ onSignOut }) {
         const me = meCharId ? characters[meCharId] : null;
         const mineT = me && m.targets[meCharId];
         const got = me && getGiftsGot(me).includes(m.sid);
-        const desc = (t) => [t.hp ? t.hp + " PV" : "", t.stress ? t.stress + " de Estrés" : "", t.hope ? t.hope + " de Esperanza" : "", t.ward ? "el amuleto «" + t.ward.item + "»" : ""].filter(Boolean).join(" y ");
+        const desc = (t) => [t.hp ? t.hp + " PV" : "", t.stress ? t.stress + " de Estrés" : "", t.hope ? t.hope + " de Esperanza" : "", t.armor ? "+" + t.armor + " de Armadura hasta el descanso" : "", t.ward ? "el amuleto «" + t.ward.item + "»" : ""].filter(Boolean).join(" y ");
         return chatCard(
           "#6FBF73",
           <>
@@ -15929,7 +15953,7 @@ export default function App({ onSignOut }) {
             <div style={{ marginTop: 4 }}>
               {Object.entries(m.targets).map(([cid, t]) => (
                 <div key={cid}>
-                  <b>{characters[cid]?.f_name || "Aliado"}</b>: {t.ward ? "recibe " : t.hope ? "gana " : t.hp ? "recupera " : "se quita "}
+                  <b>{characters[cid]?.f_name || "Aliado"}</b>: {t.ward || t.armor ? "recibe " : t.hope ? "gana " : t.hp ? "recupera " : "se quita "}
                   {desc(t)}
                 </div>
               ))}
@@ -15949,6 +15973,7 @@ export default function App({ onSignOut }) {
                     ...(mineT.stress ? { stress_marked: String(Math.max(0, Number(cur.stress_marked || 0) - mineT.stress)) } : {}),
                     ...(mineT.hope ? { hope_marked: String(Math.min(getHopeMax(cur), Number(cur.hope_marked ?? HOPE_DEFAULT) + mineT.hope)) } : {}),
                     ...(mineT.ward ? { f_runeward: JSON.stringify(mineT.ward) } : {}),
+                    ...(mineT.armor && !cur.f_tava ? { f_tava: "1", armor_marked: String(Number(cur.armor_marked || 0) + 1) } : {}),
                     f_gifts_got: JSON.stringify([...getGiftsGot(cur), m.sid].slice(-40)),
                   });
                 }}
@@ -16231,6 +16256,87 @@ export default function App({ onSignOut }) {
     playCardOnMap(sheetCampaignId, charId, card, { noChat: true, short: true });
     afterReveal(charId, card.key, () => rollTraitCheck(charId, label, Number(c[sk] || 0) + (mods[sk] || 0), { name: "Embelesar", damage: "", spell: true, charm: true, targetChosen: true, targetId: target.id, targetName: target.name, targetDc: target.stats?.difficulty || null }));
     return "reveal";
+  };
+  // Hechizos de los libros de Ava e Illiat arrastrados al mapa.
+  const spendHope = (charId, n) => {
+    const cur = charsRef.current[charId];
+    updateCharacterField(charId, "hope_marked", String(Math.max(0, Number(cur?.hope_marked ?? HOPE_DEFAULT) - n)));
+  };
+  const castBookSpell = (charId, target, card) => {
+    const sp = BOOK_SPELLS.find((x) => x.id === card.spellId);
+    const c = charsRef.current[charId];
+    const toks = campaignMapRef.current.tokens || [];
+    const me = toks.find((t) => t.kind === "pc" && t.charId === charId);
+    if (!sp || !c || !me || !target || !sheetCampaignId || c.f_beastform) return "cancel";
+    if (cellDist(me, target) > RANGE_CELLS[sp.reach]) return "cancel";
+    const foe = (target.kind === "foe" || target.kind === "npc") && !deadTok(target);
+    const hope = Number(c.hope_marked ?? HOPE_DEFAULT);
+    const nm = target.name || "un objetivo";
+    const reveal = (fn) => {
+      playCardOnMap(sheetCampaignId, charId, card, { noChat: true, short: true });
+      afterReveal(charId, card.key, fn);
+      return "reveal";
+    };
+    if (sp.id === "push" || sp.id === "ice" || sp.id === "sleep") {
+      if (!foe) return "cancel";
+      const sk = charSpellTrait(c);
+      const label = TRAITS.find((tr) => tr.key === sk)?.label;
+      if (!label) return "cancel";
+      const mods = getEquipmentMods(PRIMARY_WEAPONS.find((w) => w.key === c.f_primary_weapon), SECONDARY_WEAPONS.find((w) => w.key === c.f_secondary_weapon), ARMORS.find((a) => a.key === c.f_armor));
+      postCampaignEvent(charId, "📖 Lanza " + sp.name + " sobre " + nm);
+      const w = { name: sp.name, damage: sp.id === "push" ? "d10+2 mágico" : sp.id === "ice" ? "d6 físico" : "", spell: true, book: sp.id, fixedDice: getProficiency(c), targetChosen: true, targetId: target.id, targetName: target.name, targetDc: target.stats?.difficulty || null };
+      return reveal(() => rollTraitCheck(charId, label, Number(c[sk] || 0) + (mods[sk] || 0), w));
+    }
+    if (sp.id === "tava") {
+      if (target.kind !== "pc" || !characters[target.charId] || hope < 1) return "cancel";
+      const ally = characters[target.charId];
+      spendHope(charId, 1);
+      postCampaignEvent(charId, "🛡️ Armadura de Tava sobre " + (ally.f_name || nm) + ": +1 a su Puntuación de Armadura hasta el próximo descanso");
+      return reveal(() => {
+        mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: me.id, to: target.id, kind: "inspire" }), "fx");
+        if (target.charId === charId) {
+          const cur = charsRef.current[charId];
+          if (!cur.f_tava) updateCharacterFields(charId, { f_tava: "1", armor_marked: String(Number(cur.armor_marked || 0) + 1) });
+        } else {
+          const camp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(charId));
+          if (camp) postChat(camp.id, { kind: "gift", sid: String(Date.now()), campId: camp.id, author: c.f_name || "Un aliado", charId, cls: c.f_class, title: "Armadura de Tava", text: "Un velo de runas protege a " + (ally.f_name || "su aliado") + " hasta el próximo descanso.", targets: { [target.charId]: { armor: 1 } }, tag: "Protección" });
+        }
+      });
+    }
+    if (sp.id === "arcane") {
+      if (!foe || hope < 1 || c.f_arcane_used) return "cancel";
+      setArcaneAsk({ charId, card, targetId: target.id });
+      return "cancel";
+    }
+    if (sp.id === "tele") {
+      if (hope < 1) return "cancel";
+      spendHope(charId, 1);
+      postCampaignEvent(charId, "🔮 Telepatía: crea un vínculo mental con " + nm);
+      return reveal(() => {
+        mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: me.id, to: target.id, kind: "inspire" }), "fx");
+        updateCharacterField(charId, "f_tele", target.id);
+        pushMapLog(sheetCampaignId, "🔮 Telepatía: " + (me.name || "Alguien") + " y " + nm + " comparten un vínculo mental", "info");
+      });
+    }
+    return "cancel";
+  };
+  const confirmArcane = (n) => {
+    const A = arcaneAsk;
+    setArcaneAsk(null);
+    if (!A || !n) return;
+    const c = charsRef.current[A.charId];
+    const toks = campaignMapRef.current.tokens || [];
+    const me = toks.find((t) => t.kind === "pc" && t.charId === A.charId);
+    const tg = toks.find((t) => t.id === A.targetId);
+    const hope = Number(c?.hope_marked ?? HOPE_DEFAULT);
+    if (!c || !me || !tg || c.f_arcane_used || n > hope) return;
+    spendHope(A.charId, n);
+    updateCharacterField(A.charId, "f_arcane_used", "1");
+    postCampaignEvent(A.charId, "✨ Descarga Arcana sobre " + (tg.name || "un objetivo") + ": gasta " + n + " de Esperanza (" + n + "d6 mágico)");
+    playCardOnMap(sheetCampaignId, A.charId, A.card, { noChat: true, short: true });
+    afterReveal(A.charId, A.card.key, () => {
+      rollWeaponDamage("Descarga Arcana", "d6 mágico", A.charId, false, { fixedDice: n, plain: true, targetId: tg.id, note: n + " de Esperanza gastada" + (n === 1 ? "" : "s"), after: () => mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: me.id, to: tg.id, kind: "magic" }), "fx") });
+    });
   };
   // Éxito de Embelesar: el objetivo queda Embelesado. Una vez por descanso se puede marcar 1 Estrés para que el objetivo también marque uno.
   const applyCharm = (charId, targetId) => {
@@ -16527,7 +16633,7 @@ export default function App({ onSignOut }) {
     const sev = severityOf(dmg, st.thresholds?.[0], st.thresholds?.[1]);
     const max = Number(st.hp || 0);
     const marked = Math.min(max, Number(st.hpMarked || 0) + sev);
-    mutateMap(campaignId, (ts) => ts.map((t) => (t.id === foeId && t.stats ? { ...t, stats: { ...t.stats, hpMarked: Math.min(Number(t.stats.hp || 0), Number(t.stats.hpMarked || 0) + sev) } } : t)));
+    mutateMap(campaignId, (ts) => ts.map((t) => (t.id === foeId && t.stats ? { ...t, ...(sev > 0 && (t.conds || []).includes("Dormido") ? { conds: t.conds.filter((c) => c !== "Dormido") } : {}), stats: { ...t.stats, hpMarked: Math.min(Number(t.stats.hp || 0), Number(t.stats.hpMarked || 0) + sev) } } : t)));
     const pctLeft = max > 0 ? Math.round(((max - marked) / max) * 100) : 0;
     setTimeout(() => {
       fireMapEvent(campaignId, { type: "damage", tokenId: foeId, pct: pctLeft });
@@ -17725,6 +17831,9 @@ export default function App({ onSignOut }) {
     // Palabras Inspiradoras: tras el descanso largo se descartan las fichas sin gastar y se colocan tantas como tu Presencia.
     if (isLong && getKeys(c.f_domain_cards).includes("Palabras Inspiradoras")) restPatch.f_card_tokens = JSON.stringify({ ...getCardTokens(c), "Palabras Inspiradoras": cardTokMax(c, "Palabras Inspiradoras") });
     if (c.f_charm_used) restPatch.f_charm_used = ""; // Embelesar: una vez por descanso
+    if (c.f_arcane_used) restPatch.f_arcane_used = ""; // Descarga Arcana: una vez por descanso
+    if (c.f_tele) restPatch.f_tele = ""; // Telepatía: dura hasta el próximo descanso
+    if (c.f_tava) { restPatch.f_tava = ""; restPatch.armor_marked = String(Math.min(Number(restPatch.armor_marked || 0), armorTotal)); } // Armadura de Tava: hasta el próximo descanso
     if (isLong && c.f_pack_used) restPatch.f_pack_used = "";
     if (isLong && c.f_sparing_used) restPatch.f_sparing_used = "";
     if (isLong && c.f_closeknit_used) restPatch.f_closeknit_used = "";
@@ -18446,6 +18555,18 @@ export default function App({ onSignOut }) {
       setTraitRollResult(null);
       return applyCharm(r.charId, r.weapon.targetId);
     }
+    // Sopor no hace daño: un acierto deja al objetivo Dormido hasta que sufra daño o el DJ lo despierte.
+    if (r.weapon?.book === "sleep") {
+      setTraitRollResult(null);
+      const tg = (campaignMapRef.current.tokens || []).find((t) => t.id === r.weapon.targetId);
+      const from = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === r.charId);
+      if (!tg) return;
+      if (from) mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: from.id, to: tg.id, kind: "magic" }), "fx");
+      setTimeout(() => mutateMap(sheetCampaignId, (ts) => ts.map((x) => (x.id === tg.id ? { ...x, conds: [...new Set([...(x.conds || []), "Dormido"])] } : x))), 900);
+      pushMapLog(sheetCampaignId, "💤 Sopor: " + (tg.name || "un adversario") + " cae dormido", "info");
+      postCampaignEvent(r.charId, "💤 " + (tg.name || "Un adversario") + " queda dormido");
+      return;
+    }
     const fxLater = [];
       const { name, damage, focusTarget } = r.weapon;
       const charId = r.charId;
@@ -18483,8 +18604,27 @@ export default function App({ onSignOut }) {
           const extra = r.weapon.hopeExtra && ft ? (campaignMapRef.current.tokens || []).filter((x) => x.id !== first && (x.kind === "foe" || x.kind === "npc") && !x.gmHidden && cellDist(x, ft) <= RANGE_CELLS["Muy cercano"] && !(x.stats && Number(x.stats.hpMarked || 0) >= Number(x.stats.hp || 0))).sort((p, q) => cellDist(p, ft) - cellDist(q, ft))[0] : null;
           return extra ? [first, extra.id] : [first];
         })() : null;
-        const fxKind = snareIds ? "web" : name === "Desatar el Caos" ? "chaos" : /mágic/i.test(damage || "") ? "magic" : reachNow && reachNow !== "Cuerpo a cuerpo" ? "shot" : "melee";
+        const fxKind = snareIds ? "web" : r.weapon.book === "ice" ? "shot" : name === "Desatar el Caos" ? "chaos" : /mágic/i.test(damage || "") ? "magic" : reachNow && reachNow !== "Cuerpo a cuerpo" ? "shot" : "melee";
         if (fromTok) fxLater.push(() => mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: fromTok.id, to: r.weapon.targetId, kind: fxKind, ...(fxKind === "chaos" ? { n: r.weapon.fixedDice || 1 } : {}), ...(snareIds && snareIds[1] ? { to2: snareIds[1] } : {}) }), "fx"));
+        if (r.weapon.book === "push" && fromTok) {
+          // Empujón de Poder: el adversario sale despedido en línea recta, lejos de quien lo lanza, hasta alcance Lejano (o hasta topar con algo).
+          fxLater.push(() => setTimeout(() => mutateMap(sheetCampaignId, (ts) => {
+            const tk = ts.find((x) => x.id === r.weapon.targetId);
+            const src = ts.find((x) => x.id === fromTok.id);
+            if (!tk || !src) return ts;
+            const dx = tk.x - src.x, dy = tk.y - src.y, m = Math.max(Math.abs(dx), Math.abs(dy)) || 1;
+            let best = { x: tk.x, y: tk.y };
+            for (let k = 1; k <= 12; k++) {
+              const nx = Math.round(tk.x + (dx / m) * k), ny = Math.round(tk.y + (dy / m) * k);
+              if (nx < 0 || ny < 0 || nx >= MAP_COLS || ny >= MAP_ROWS) break;
+              if (Math.max(Math.abs(nx - src.x), Math.abs(ny - src.y)) > RANGE_CELLS["Lejano"]) break;
+              if (ts.some((x) => x.id !== tk.id && !x.vanished && x.x === nx && x.y === ny)) break;
+              best = { x: nx, y: ny };
+            }
+            return ts.map((x) => (x.id === tk.id ? { ...x, ...best } : x));
+          }), 450));
+          pushMapLog(sheetCampaignId, "💥 Empujón de Poder: " + (campaignMapRef.current.tokens || []).find((x) => x.id === r.weapon.targetId)?.name + " sale despedido", "info");
+        }
         if (snareIds) {
           // Las raíces inmovilizan al objetivo (y al segundo adversario si se gasta una Esperanza).
           fxLater.push(() => setTimeout(() => mutateMap(sheetCampaignId, (ts) => ts.map((x) => (snareIds.includes(x.id) ? { ...x, conds: [...new Set([...(x.conds || []), "Inmovilizado"])], rootedBy: charId } : x))), 150));
@@ -18937,7 +19077,7 @@ export default function App({ onSignOut }) {
         };
       }),
       evasion: c.r_evasion ? Number(c.r_evasion) + (beast?.evasionBonus || 0) + (mods.evasion || 0) + Number(c.f_natural_evade || 0) : "—",
-      armorTotal: armor ? armor.score + (mods.armor || 0) : 0,
+      armorTotal: armor ? armor.score + (mods.armor || 0) + (c.f_tava ? 1 : 0) : 0,
       armorLeft: Number(c.armor_marked || 0),
       minor: Math.max(1, major - 1),
       major,
@@ -19319,6 +19459,7 @@ export default function App({ onSignOut }) {
         const secondaryWeapon = SECONDARY_WEAPONS.find((w) => w.key === c.f_secondary_weapon);
         const armorEntry = ARMORS.find((a) => a.key === c.f_armor);
         const equipMods = { ...getEquipmentMods(primaryWeapon, secondaryWeapon, armorEntry) };
+        if (c.f_tava) equipMods.armor = (equipMods.armor || 0) + 1; // Armadura de Tava
         // Origen Elemental · Trascendencia: beneficios hasta el próximo descanso.
         const transc = getTranscend(c);
         if (transc) {
@@ -23222,6 +23363,14 @@ export default function App({ onSignOut }) {
                                           const ghostCard = rootedMine.length && keys.includes("Enredo Feroz") ? (() => { const base = findDomainCardAny("Enredo Feroz"); return base ? { ...base, key: "Inmovilizar", baseKey: "Enredo Feroz", text: "Puedes gastar una Esperanza para inmovilizar temporalmente a otro adversario en alcance Muy Cercano del objetivo de Enredo Feroz.", recall: null, noCost: true, ghost: true, noHope: Number(me?.hope_marked ?? HOPE_DEFAULT) < 1 } : null; })() : null;
                                           const charmedMine = (campaignMap.tokens || []).filter((t) => t.charmedBy === viewingCharId && (t.conds || []).includes("Embelesado"));
                                           const unCharmCard = charmedMine.length && keys.includes("Embelesar") ? (() => { const base = findDomainCardAny("Embelesar"); return base ? { ...base, key: "Romper el embeleso", baseKey: "Embelesar", text: "Libera al objetivo del embeleso de Embelesar. Suéltala sobre él.", recall: null, noCost: true, ghost: true, ghostLab: "Gratis", noHope: false, unCharm: true } : null; })() : null;
+                                          const hopeNow = Number(me?.hope_marked ?? HOPE_DEFAULT);
+                                          const bookSpells = BOOK_SPELLS.filter((sp) => keys.includes(sp.book)).map((sp) => {
+                                            const base = findDomainCardAny(sp.book);
+                                            if (!base) return null;
+                                            const noH = sp.hope && hopeNow < 1;
+                                            const used = sp.once && me?.[sp.once];
+                                            return { ...base, key: sp.name, baseKey: sp.book, text: sp.text, recall: null, noCost: true, ghost: true, spellId: sp.id, spellReach: sp.reach, spellAlly: !!sp.ally, spellAny: !!sp.any, ghostLab: sp.lab, noHope: !!noH || !!used, noLab: used ? "Ya usada" : "Sin Esperanza" };
+                                          }).filter(Boolean);
                                           const releaseCard = ghostCard ? { ...ghostCard, key: "Liberar", text: "Libera al objetivo del Enredo Feroz.", ghostLab: "Gratis", noHope: false, release: true } : null;
                                           // Indicador de la Guarda Rúnica: sobre la carta de quien la imbuyó, o suelto si tienes un amuleto de otra persona.
                                           const wardOut = wardOutOf(viewingCharId);
@@ -23232,14 +23381,14 @@ export default function App({ onSignOut }) {
                                           // En Forma de Bestia no se usan las armas: la carta de arma pasa a ser el ataque de la forma.
                                           const bfForm = me?.f_beastform ? BEASTFORMS.find((b) => b.key === me.f_beastform) : null;
                                           const bfCard = bfForm ? (() => { const [, bfT, bfD] = String(bfForm.attack).split(" · "); return { key: bfForm.key, level: bfForm.tier, type: "Ataque de forma", domain: "", image: bfForm.image, text: "Ataque: " + bfForm.attack + ". " + (bfT ? "Tirada de " + bfT + ", daño " + bfD + "." : ""), damage: bfD, hands: "Forma de Bestia", weapon: true, beast: true }; })() : null;
-                                          const cards = [...(bfCard ? [bfCard] : [wp(me?.f_primary_weapon, PRIMARY_WEAPONS, "Principal"), wp(me?.f_secondary_weapon, SECONDARY_WEAPONS, "Secundaria")]), ...actionCards, ...keys.map((k) => { const d0 = findDomainCardAny(k); const d = d0 && k === "Guarda Rúnica" && wardOut ? { ...d0, wardTag: wardOut } : d0; return d && mcDom && d.domain === mcDom && !(CLASS_DOMAINS[me?.f_class] || []).includes(mcDom) ? { ...d, multi: true } : d; }), ghostCard, releaseCard, unCharmCard, rechargeCard].filter(Boolean);
+                                          const cards = [...(bfCard ? [bfCard] : [wp(me?.f_primary_weapon, PRIMARY_WEAPONS, "Principal"), wp(me?.f_secondary_weapon, SECONDARY_WEAPONS, "Secundaria")]), ...actionCards, ...keys.map((k) => { const d0 = findDomainCardAny(k); const d = d0 && k === "Guarda Rúnica" && wardOut ? { ...d0, wardTag: wardOut } : d0; return d && mcDom && d.domain === mcDom && !(CLASS_DOMAINS[me?.f_class] || []).includes(mcDom) ? { ...d, multi: true } : d; }), ghostCard, releaseCard, unCharmCard, rechargeCard, ...bookSpells].filter(Boolean);
                                           return (
                                             <CardFan
                                               cards={cards}
                                               cardBack={cardBack}
-                                              aimOk={(card, tg) => !card.ghost || (card.unCharm ? canUnCharm(viewingCharId, tg) : card.release ? canRelease(viewingCharId, tg) : canExtraRoot(viewingCharId, tg))}
+                                              aimOk={(card, tg) => !card.ghost || !!card.spellId || (card.unCharm ? canUnCharm(viewingCharId, tg) : card.release ? canRelease(viewingCharId, tg) : canExtraRoot(viewingCharId, tg))}
                                               onAim={setAimRange}
-                                              reachOf={(card) => { if ((card.key === "Embelesar" || card.key === "Palabras Inspiradoras") && !card.weapon && !card.rowCard) return { label: "Cercano", max: RANGE_CELLS["Cercano"] }; if (!card.weapon) return null; const lab = weaponReach(characters[viewingCharId], card.key); return lab ? { label: lab, max: RANGE_CELLS[lab] || 99 } : null; }}
+                                              reachOf={(card) => { if (card.spellReach) return { label: card.spellReach, max: RANGE_CELLS[card.spellReach] }; if ((card.key === "Embelesar" || card.key === "Palabras Inspiradoras") && !card.weapon && !card.rowCard) return { label: "Cercano", max: RANGE_CELLS["Cercano"] }; if (!card.weapon) return null; const lab = weaponReach(characters[viewingCharId], card.key); return lab ? { label: lab, max: RANGE_CELLS[lab] || 99 } : null; }}
                                               cardBorder={cardBorder}
                                               beast={{ forms: BEASTFORMS, tier: tierForLevel(me?.f_level || 1), active: me?.f_beastform || "", stressFull: Number(me?.stress_marked || 0) >= Number(me?.r_stress || 0) }}
                                               wardChip={wardChip}
@@ -23253,6 +23402,7 @@ export default function App({ onSignOut }) {
                                               me={myToken}
                                               tokens={mapTokens}
                                               onUse={(card, cell, target, rng) =>
+                                                card.spellId ? castBookSpell(viewingCharId, target, card) :
                                                 card.key === "Desatar el Caos" && !card.weapon && !card.rowCard && !card.subclass ? castChaos(viewingCharId, target, card) :
                                                 card.key === "Guarda Rúnica" && !card.weapon && !card.rowCard && !card.subclass ? (setWardAsk({ charId: viewingCharId, card, step: 1, bearerId: "", item: "", custom: "" }), "cancel") :
                                                 card.unCharm ? castUnCharm(viewingCharId, target, card) :
@@ -27457,6 +27607,34 @@ export default function App({ onSignOut }) {
                     <div className="mh-evo-act">
                       <button type="button" className="mh-elpick-x" onClick={() => confirmCharmStress(false)}>No, gracias</button>
                       <button type="button" className="mh-evo-go" onClick={() => confirmCharmStress(true)}>Marcar 1 Estrés</button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+            {arcaneAsk && arcaneAsk.charId === viewingCharId && (() => {
+              const A = arcaneAsk;
+              const c = characters[A.charId];
+              const tg = (campaignMap.tokens || []).find((t) => t.id === A.targetId);
+              const hope = Number(c?.hope_marked ?? HOPE_DEFAULT);
+              const close = () => setArcaneAsk(null);
+              return (
+                <div className="mh-evo-wrap" onClick={close}>
+                  <div className="mh-bpick mh-sess" role="dialog" aria-label="Descarga Arcana" onClick={(e) => e.stopPropagation()}>
+                    <div className="mh-elpick-h">
+                      <b>Descarga Arcana</b>
+                      <span>{"Sobre " + (tg?.name || "el objetivo") + " · d6 de daño mágico por cada Esperanza que gastes (tienes " + hope + "). Solo una vez por descanso."}</span>
+                    </div>
+                    <div className="mh-renew-list">
+                      {Array.from({ length: hope }, (_, i) => i + 1).map((n) => (
+                        <button key={n} type="button" className="mh-renew-row is-pick" onClick={() => confirmArcane(n)}>
+                          <span className="mh-renew-av" style={{ background: "#A58BE8" }}><Sparkles size={14} /></span>
+                          <div className="mh-renew-t"><b>{n} de Esperanza</b><small>{n + "d6 de daño mágico"}</small></div>
+                        </button>
+                      ))}
+                    </div>
+                    <div className="mh-evo-act">
+                      <button type="button" className="mh-elpick-x" onClick={close}>Cancelar</button>
                     </div>
                   </div>
                 </div>
@@ -33459,6 +33637,9 @@ export default function App({ onSignOut }) {
                                           {t.stats && <small>{Math.max(0, Number(t.stats.hp || 0) - Number(t.stats.hpMarked || 0))}/{t.stats.hp} PV</small>}
                                           {(t.conds || []).includes("Embelesado") && (
                                             <button type="button" className="mh-btn-ghost" onClick={() => mutateMap(viewingCampaignId, (ts) => ts.map((x) => (x.id === t.id ? { ...x, conds: (x.conds || []).filter((c) => c !== "Embelesado"), charmedBy: undefined } : x)))}>Liberar del embeleso</button>
+                                          )}
+                                          {(t.conds || []).includes("Dormido") && (
+                                            <button type="button" className="mh-btn-ghost" onClick={() => mutateMap(viewingCampaignId, (ts) => ts.map((x) => (x.id === t.id ? { ...x, conds: (x.conds || []).filter((c) => c !== "Dormido") } : x)))}>Despertar</button>
                                           )}
                                           {(t.conds || []).includes("Inmovilizado") && (
                                             <button type="button" className="mh-btn-ghost" onClick={() => mutateMap(viewingCampaignId, (ts) => ts.map((x) => (x.id === t.id ? { ...x, conds: (x.conds || []).filter((c) => c !== "Inmovilizado") } : x)))}>Liberar</button>
