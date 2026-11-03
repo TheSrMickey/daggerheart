@@ -10988,10 +10988,10 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
     return !!r && x >= r.left - 30 && x <= r.right + 30 && y >= r.top - 24 && y <= r.bottom + 24;
   };
   // Cartas que se apuntan a un adversario: Enredo Feroz, su carta extra y las armas (con el alcance de cada arma).
-  const isAim = (c) => c.key === AIM_CARD || ((c.key === "Embelesar" || c.key === "Palabras Inspiradoras") && !c.rowCard) || (!!c.ghost && !c.recharge && !c.ward) || !!c.spellId || !!c.weapon || (c.key === "Desatar el Caos" && !c.rowCard);
+  const isAim = (c) => c.key === AIM_CARD || ((c.key === "Embelesar" || c.key === "Palabras Inspiradoras") && !c.rowCard) || (!!c.ghost && !c.recharge && !c.ward) || !!c.bookCard || !!c.weapon || (c.key === "Desatar el Caos" && !c.rowCard);
   const aimReach = (c) => (reachOf && reachOf(c)) || { label: "Lejano", max: RANGE_CELLS["Lejano"] };
   // Objetivo válido de una carta que se apunta: aliado (otro personaje) para Palabras Inspiradoras; adversario vivo para el resto.
-  const aimTok = (c, t) => !t.hidden && (c.spellAny ? !t.vanished && t.id !== me?.id : c.spellAlly ? t.kind === "pc" && !t.vanished : t.id !== me?.id && (c.key === "Palabras Inspiradoras" && !c.rowCard ? t.kind === "pc" && !t.vanished : (t.kind === "foe" || t.kind === "npc") && !deadTok(t)));
+  const aimTok = (c, t) => !t.hidden && (c.bookCard ? !t.vanished : t.id !== me?.id && (c.key === "Palabras Inspiradoras" && !c.rowCard ? t.kind === "pc" && !t.vanished : (t.kind === "foe" || t.kind === "npc") && !deadTok(t)));
   const inAimReach = (c, cell) => !!me && !!cell && Math.max(Math.abs(cell.x - me.x), Math.abs(cell.y - me.y)) <= aimReach(c).max;
   const rangeOf = (cell) => {
     if (!me || !cell) return null;
@@ -12400,6 +12400,7 @@ export default function App({ onSignOut }) {
   const [sessAsk, setSessAsk] = useState(null); // aviso de inicio de sesión para el jugador: { charId, key, n, items }
   const sessDismiss = useRef({});
   const [charmAsk, setCharmAsk] = useState(null); // Embelesar: ¿marcar 1 Estrés para que el objetivo también lo marque? { charId, targetId }
+  const [bookAsk, setBookAsk] = useState(null); // Libros de Ava/Illiat: elegir el hechizo tras soltar la carta { charId, card, targetId }
   const [arcaneAsk, setArcaneAsk] = useState(null); // Descarga Arcana: cuánta Esperanza gastar { charId, card, targetId }
   const [inspireAsk, setInspireAsk] = useState(null); // Palabras Inspiradoras: elegir el beneficio { charId, card, target }
   const [wardAsk, setWardAsk] = useState(null); // Guarda Rúnica: elegir portador y objeto { charId, card, step, bearerId, item, custom }
@@ -16262,8 +16263,8 @@ export default function App({ onSignOut }) {
     const cur = charsRef.current[charId];
     updateCharacterField(charId, "hope_marked", String(Math.max(0, Number(cur?.hope_marked ?? HOPE_DEFAULT) - n)));
   };
-  const castBookSpell = (charId, target, card) => {
-    const sp = BOOK_SPELLS.find((x) => x.id === card.spellId);
+  const castBookSpell = (charId, target, card, spellId) => {
+    const sp = BOOK_SPELLS.find((x) => x.id === spellId);
     const c = charsRef.current[charId];
     const toks = campaignMapRef.current.tokens || [];
     const me = toks.find((t) => t.kind === "pc" && t.charId === charId);
@@ -23363,14 +23364,6 @@ export default function App({ onSignOut }) {
                                           const ghostCard = rootedMine.length && keys.includes("Enredo Feroz") ? (() => { const base = findDomainCardAny("Enredo Feroz"); return base ? { ...base, key: "Inmovilizar", baseKey: "Enredo Feroz", text: "Puedes gastar una Esperanza para inmovilizar temporalmente a otro adversario en alcance Muy Cercano del objetivo de Enredo Feroz.", recall: null, noCost: true, ghost: true, noHope: Number(me?.hope_marked ?? HOPE_DEFAULT) < 1 } : null; })() : null;
                                           const charmedMine = (campaignMap.tokens || []).filter((t) => t.charmedBy === viewingCharId && (t.conds || []).includes("Embelesado"));
                                           const unCharmCard = charmedMine.length && keys.includes("Embelesar") ? (() => { const base = findDomainCardAny("Embelesar"); return base ? { ...base, key: "Romper el embeleso", baseKey: "Embelesar", text: "Libera al objetivo del embeleso de Embelesar. Suéltala sobre él.", recall: null, noCost: true, ghost: true, ghostLab: "Gratis", noHope: false, unCharm: true } : null; })() : null;
-                                          const hopeNow = Number(me?.hope_marked ?? HOPE_DEFAULT);
-                                          const bookSpells = BOOK_SPELLS.filter((sp) => keys.includes(sp.book)).map((sp) => {
-                                            const base = findDomainCardAny(sp.book);
-                                            if (!base) return null;
-                                            const noH = sp.hope && hopeNow < 1;
-                                            const used = sp.once && me?.[sp.once];
-                                            return { ...base, key: sp.name, baseKey: sp.book, text: sp.text, recall: null, noCost: true, ghost: true, spellId: sp.id, spellReach: sp.reach, spellAlly: !!sp.ally, spellAny: !!sp.any, ghostLab: sp.lab, noHope: !!noH || !!used, noLab: used ? "Ya usada" : "Sin Esperanza" };
-                                          }).filter(Boolean);
                                           const releaseCard = ghostCard ? { ...ghostCard, key: "Liberar", text: "Libera al objetivo del Enredo Feroz.", ghostLab: "Gratis", noHope: false, release: true } : null;
                                           // Indicador de la Guarda Rúnica: sobre la carta de quien la imbuyó, o suelto si tienes un amuleto de otra persona.
                                           const wardOut = wardOutOf(viewingCharId);
@@ -23381,12 +23374,13 @@ export default function App({ onSignOut }) {
                                           // En Forma de Bestia no se usan las armas: la carta de arma pasa a ser el ataque de la forma.
                                           const bfForm = me?.f_beastform ? BEASTFORMS.find((b) => b.key === me.f_beastform) : null;
                                           const bfCard = bfForm ? (() => { const [, bfT, bfD] = String(bfForm.attack).split(" · "); return { key: bfForm.key, level: bfForm.tier, type: "Ataque de forma", domain: "", image: bfForm.image, text: "Ataque: " + bfForm.attack + ". " + (bfT ? "Tirada de " + bfT + ", daño " + bfD + "." : ""), damage: bfD, hands: "Forma de Bestia", weapon: true, beast: true }; })() : null;
-                                          const cards = [...(bfCard ? [bfCard] : [wp(me?.f_primary_weapon, PRIMARY_WEAPONS, "Principal"), wp(me?.f_secondary_weapon, SECONDARY_WEAPONS, "Secundaria")]), ...actionCards, ...keys.map((k) => { const d0 = findDomainCardAny(k); const d = d0 && k === "Guarda Rúnica" && wardOut ? { ...d0, wardTag: wardOut } : d0; return d && mcDom && d.domain === mcDom && !(CLASS_DOMAINS[me?.f_class] || []).includes(mcDom) ? { ...d, multi: true } : d; }), ghostCard, releaseCard, unCharmCard, rechargeCard, ...bookSpells].filter(Boolean);
+                                          const cards = [...(bfCard ? [bfCard] : [wp(me?.f_primary_weapon, PRIMARY_WEAPONS, "Principal"), wp(me?.f_secondary_weapon, SECONDARY_WEAPONS, "Secundaria")]), ...actionCards, ...keys.map((k) => { const d0 = findDomainCardAny(k); const d = d0 && k === "Guarda Rúnica" && wardOut ? { ...d0, wardTag: wardOut } : d0; if (d && BOOK_SPELLS.some((sp) => sp.book === k)) return { ...d, bookCard: true, spellReach: "Muy lejano" };
+                                            return d && mcDom && d.domain === mcDom && !(CLASS_DOMAINS[me?.f_class] || []).includes(mcDom) ? { ...d, multi: true } : d; }), ghostCard, releaseCard, unCharmCard, rechargeCard].filter(Boolean);
                                           return (
                                             <CardFan
                                               cards={cards}
                                               cardBack={cardBack}
-                                              aimOk={(card, tg) => !card.ghost || !!card.spellId || (card.unCharm ? canUnCharm(viewingCharId, tg) : card.release ? canRelease(viewingCharId, tg) : canExtraRoot(viewingCharId, tg))}
+                                              aimOk={(card, tg) => !card.ghost || (card.unCharm ? canUnCharm(viewingCharId, tg) : card.release ? canRelease(viewingCharId, tg) : canExtraRoot(viewingCharId, tg))}
                                               onAim={setAimRange}
                                               reachOf={(card) => { if (card.spellReach) return { label: card.spellReach, max: RANGE_CELLS[card.spellReach] }; if ((card.key === "Embelesar" || card.key === "Palabras Inspiradoras") && !card.weapon && !card.rowCard) return { label: "Cercano", max: RANGE_CELLS["Cercano"] }; if (!card.weapon) return null; const lab = weaponReach(characters[viewingCharId], card.key); return lab ? { label: lab, max: RANGE_CELLS[lab] || 99 } : null; }}
                                               cardBorder={cardBorder}
@@ -23402,7 +23396,7 @@ export default function App({ onSignOut }) {
                                               me={myToken}
                                               tokens={mapTokens}
                                               onUse={(card, cell, target, rng) =>
-                                                card.spellId ? castBookSpell(viewingCharId, target, card) :
+                                                card.bookCard && !card.weapon && !card.rowCard ? (setBookAsk({ charId: viewingCharId, card, targetId: target.id }), "cancel") :
                                                 card.key === "Desatar el Caos" && !card.weapon && !card.rowCard && !card.subclass ? castChaos(viewingCharId, target, card) :
                                                 card.key === "Guarda Rúnica" && !card.weapon && !card.rowCard && !card.subclass ? (setWardAsk({ charId: viewingCharId, card, step: 1, bearerId: "", item: "", custom: "" }), "cancel") :
                                                 card.unCharm ? castUnCharm(viewingCharId, target, card) :
@@ -27607,6 +27601,50 @@ export default function App({ onSignOut }) {
                     <div className="mh-evo-act">
                       <button type="button" className="mh-elpick-x" onClick={() => confirmCharmStress(false)}>No, gracias</button>
                       <button type="button" className="mh-evo-go" onClick={() => confirmCharmStress(true)}>Marcar 1 Estrés</button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+            {bookAsk && bookAsk.charId === viewingCharId && (() => {
+              const A = bookAsk;
+              const c = characters[A.charId];
+              const toks = campaignMap.tokens || [];
+              const me0 = toks.find((t) => t.kind === "pc" && t.charId === A.charId);
+              const tg = toks.find((t) => t.id === A.targetId);
+              const hope = Number(c?.hope_marked ?? HOPE_DEFAULT);
+              const close = () => setBookAsk(null);
+              const why = (sp) => {
+                if (!me0 || !tg) return "Sin objetivo";
+                if (c?.f_beastform) return "En Forma de Bestia";
+                const foe = (tg.kind === "foe" || tg.kind === "npc") && !deadTok(tg);
+                if (sp.any) { if (tg.id === me0.id) return "Elige otra ficha"; }
+                else if (sp.ally ? tg.kind !== "pc" : !foe) return sp.ally ? "Necesita un aliado" : "Necesita un adversario";
+                if (cellDist(me0, tg) > RANGE_CELLS[sp.reach]) return "Fuera de alcance " + sp.reach;
+                if (sp.once && c?.[sp.once]) return "Ya usada";
+                if (sp.hope && hope < 1) return "Sin Esperanza";
+                return "";
+              };
+              return (
+                <div className="mh-evo-wrap" onClick={close}>
+                  <div className="mh-bpick mh-sess" role="dialog" aria-label={A.card.key} onClick={(e) => e.stopPropagation()}>
+                    <div className="mh-elpick-h">
+                      <b>{A.card.key}</b>
+                      <span>{"Sobre " + (tg?.name || "el objetivo") + " · elige el hechizo"}</span>
+                    </div>
+                    <div className="mh-renew-list">
+                      {BOOK_SPELLS.filter((sp) => sp.book === A.card.key).map((sp) => {
+                        const bad = why(sp);
+                        return (
+                          <button key={sp.id} type="button" className="mh-renew-row is-pick" disabled={!!bad} style={bad ? { opacity: 0.5 } : undefined} onClick={() => { setBookAsk(null); if (tg) castBookSpell(A.charId, tg, A.card, sp.id); }}>
+                            <span className="mh-renew-av" style={{ background: "#A58BE8" }}><Sparkles size={14} /></span>
+                            <div className="mh-renew-t"><b>{sp.name} · {sp.lab}</b><small>{bad || sp.text}</small></div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="mh-evo-act">
+                      <button type="button" className="mh-elpick-x" onClick={close}>Cancelar</button>
                     </div>
                   </div>
                 </div>
