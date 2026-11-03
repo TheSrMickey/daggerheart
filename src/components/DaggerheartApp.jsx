@@ -4936,6 +4936,12 @@ const sharedStyles = `
   .mh-map-tk:focus-visible { outline: none; }
   .mh-map-tk:focus-visible .mh-map-face { box-shadow: 0 0 0 3px #fff, 0 3px 8px rgba(0,0,0,.5); }
   /* Rango de la subclase: uno, dos o tres rombos del color de la clase sobre el borde superior de la ficha, siguiendo su curvatura. Van dentro de la ficha, así que se mueven, rebotan y se animan con ella. */
+  /* Escarabajos Blindados: cuatro escarabajos con caparazón orbitan la ficha. */
+  .mh-map-beetles { position: absolute; z-index: 5; inset: 3%; pointer-events: none; animation: mh-beetle-orbit 9s linear infinite; } .mh-map-beetles i { position: absolute; inset: 0; rotate: var(--a); }
+  .mh-map-beetles b { position: absolute; left: 50%; top: 0; width: 17%; aspect-ratio: 1; translate: -50% -50%; rotate: 90deg; border-radius: 50% 50% 46% 46%; background: radial-gradient(circle at 35% 30%, #7fe0d8, #2b6460 70%); border: 1px solid #bdf2ec; box-shadow: 0 1px 3px rgba(0,0,0,.55); animation: mh-beetle-bob 1.4s ease-in-out infinite; } .mh-map-beetles b::after { content: ""; position: absolute; left: 50%; top: 8%; bottom: 8%; width: 1px; background: #bdf2ec; opacity: .85; }
+  @keyframes mh-beetle-orbit { to { rotate: 360deg; } } @keyframes mh-beetle-bob { 0%, 100% { scale: 1; } 50% { scale: 1.12; } }
+  @media (prefers-reduced-motion: reduce) { .mh-map-beetles, .mh-map-beetles b { animation: none; } }
+  .mh-btn-ghost.is-on { border-color: #6fbf73; background: color-mix(in srgb, #6fbf73 18%, transparent); }
   .mh-map-rank { position: absolute; z-index: 5; inset: 15%; pointer-events: none; } /* misma caja que la ficha (70 % de la casilla): el centro de cada rombo cae justo sobre su borde */
   .mh-map-rk { position: absolute; width: 15%; aspect-ratio: 1; left: calc(50% + 50% * sin(var(--a))); top: calc(50% - 50% * cos(var(--a))); translate: -50% -50%; rotate: calc(var(--a) + 45deg); background: var(--tc); box-shadow: 0 1px 2px rgba(0,0,0,.45); pointer-events: none; }
   .mh-map-tk.is-trf .mh-map-rk { left: calc(50% + var(--k) * 30%); top: 0; rotate: 45deg; }
@@ -9883,13 +9889,13 @@ function RootThreads({ links, snap }) {
     </svg>
   );
 }
-function ShotFx({ kind, a, b, b2, size: S, n: bolts = 3 }) {
+function ShotFx({ kind, a, b, b2, size: S, n: bolts = 3, bs, hits }) {
   const [p, setP] = useState(0);
   useEffect(() => {
     let raf;
     const t0 = performance.now();
     const tick = (n) => {
-      const v = Math.min(1, (n - t0) / (kind === "howl" ? 1700 : kind === "chaos" ? 1600 : 1300));
+      const v = Math.min(1, (n - t0) / (kind === "howl" ? 1700 : kind === "chaos" ? 1600 : kind === "swarm" ? 2300 : 1300));
       setP(v);
       if (v < 1) raf = requestAnimationFrame(tick);
     };
@@ -10028,6 +10034,59 @@ function ShotFx({ kind, a, b, b2, size: S, n: bolts = 3 }) {
         {ik > 0 && ik < 1 && <circle cx={b[0]} cy={b[1]} r={S * (0.25 + 0.55 * Math.sin(ik * Math.PI))} fill="#E05FD0" opacity={Math.sin(ik * Math.PI) * 0.55 * fd} />}
         {ik > 0 && ik < 0.5 && <circle cx={b[0]} cy={b[1]} r={S * 0.3 * Math.sin(ik * 2 * Math.PI)} fill="#fff" opacity={0.85 * fd} />}
         {[0, 1, 2].map(ring)}
+      </g>
+    );
+  }
+  if (kind === "swarm") {
+    // Conjurar Enjambre · Luciérnagas: una onda de luz marca el alcance Cercano y varias luciérnagas salen hacia cada adversario;
+    // en los que aciertas estallan en luz, y en los que fallas se apagan.
+    const targets = bs && bs.length ? bs : [b];
+    const M = 6;
+    const Rr = S * (RANGE_CELLS["Cercano"] + 0.5);
+    const kk = Math.min(1, p / 0.28);
+    const fd = p > 0.84 ? Math.max(0, 1 - (p - 0.84) / 0.16) : 1;
+    const flies = [];
+    const bursts = [];
+    targets.forEach((tg, j) => {
+      const ok = !hits || hits[j] !== false;
+      const dx = tg[0] - a[0], dy = tg[1] - a[1], L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L;
+      let tEnd = 0;
+      for (let i = 0; i < M; i++) {
+        const t0 = 0.08 + i * 0.025 + j * 0.02;
+        const f = Math.max(0, Math.min(1, (p - t0) / 0.36));
+        tEnd = Math.max(tEnd, t0 + 0.36);
+        if (f <= 0) continue;
+        const wob = Math.sin(f * Math.PI) * S * 0.55 * Math.sin(f * 7 + i * 1.9 + j);
+        const px = a[0] + dx * f + nx * wob, py = a[1] + dy * f + ny * wob;
+        const tw = 0.6 + 0.4 * Math.sin(p * 38 + i * 2.1 + j);
+        const after = p - (t0 + 0.36);
+        const al = f < 1 ? 1 : ok ? Math.max(0, 1 - after / 0.07) : Math.max(0, 1 - after / 0.14);
+        if (al <= 0) continue;
+        const dim = !ok && f >= 1 ? 0.5 : 1;
+        flies.push(
+          <g key={"f" + j + "_" + i} opacity={al * fd * tw * dim}>
+            <circle cx={px} cy={py} r={S * 0.26} fill="#e9f56a" opacity=".28" />
+            <circle cx={px} cy={py} r={S * 0.11} fill="#f4ff9a" />
+            <circle cx={px} cy={py} r={S * 0.045} fill="#fff" />
+          </g>
+        );
+      }
+      if (ok) {
+        const e = Math.max(0, Math.min(1, (p - (tEnd - 0.04)) / 0.3));
+        if (e > 0 && e < 1)
+          bursts.push(
+            <g key={"b" + j} opacity={(1 - e) * fd}>
+              <circle cx={tg[0]} cy={tg[1]} r={S * (0.25 + 0.75 * e)} fill="#f4ff9a" opacity=".55" />
+              <circle cx={tg[0]} cy={tg[1]} r={S * (0.35 + 1.0 * e)} fill="none" stroke="#e9f56a" strokeWidth={S * 0.07 * (1 - e) + 1} />
+            </g>
+          );
+      }
+    });
+    return (
+      <g pointerEvents="none">
+        {kk < 1 && <circle cx={a[0]} cy={a[1]} r={Rr * kk} fill="#e9f56a" fillOpacity={(1 - kk) * 0.1} stroke="#e9f56a" strokeWidth="2.5" opacity={(1 - kk) * 0.9 * fd} />}
+        {flies}
+        {bursts}
       </g>
     );
   }
@@ -10345,7 +10404,7 @@ function useAttackFx(fx) {
     last.current = fx.key;
     if (Date.now() - fx.key > 15000) return;
     setAnim(fx);
-    const t = setTimeout(() => setAnim(null), fx.kind === "howl" ? 1900 : fx.kind === "chaos" ? 1800 : 1500);
+    const t = setTimeout(() => setAnim(null), fx.kind === "howl" ? 1900 : fx.kind === "chaos" ? 1800 : fx.kind === "swarm" ? 2600 : 1500);
     return () => clearTimeout(t);
   }, [fx?.key]);
   return anim;
@@ -11040,7 +11099,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
   // Cartas que se apuntan a un adversario: Enredo Feroz, su carta extra y las armas (con el alcance de cada arma).
   const isAim = (c) => c.key === AIM_CARD || ((c.key === "Embelesar" || c.key === "Palabras Inspiradoras") && !c.rowCard) || (!!c.ghost && !c.recharge && !c.ward) || !!c.bookCard || (c.key === "Empujón Contundente" && !c.rowCard) || !!c.weapon || (c.key === "Desatar el Caos" && !c.rowCard);
   // Una carta o se puede usar (y entonces se arrastra al mapa) o solo se abre al pulsarla: las que no tienen función en el mapa no se arrastran.
-  const PLAYABLE = ["Enredo Feroz", "Embelesar", "Palabras Inspiradoras", "Desatar el Caos", "Guarda Rúnica", "Lengua de la Naturaleza", "Rastreador Dotado", "Caminar por Paredes", "Engañador Hábil", "Empujón Contundente"];
+  const PLAYABLE = ["Enredo Feroz", "Embelesar", "Palabras Inspiradoras", "Desatar el Caos", "Guarda Rúnica", "Lengua de la Naturaleza", "Rastreador Dotado", "Caminar por Paredes", "Engañador Hábil", "Empujón Contundente", "Conjurar Enjambre"];
   const usable = (c) => !c.passive && (!!c.weapon || !!c.ghost || !!c.bookCard || !!c.subclass || (c.rowCard ? !!(c.evo || c.wolf || c.mapUse || c.key === "Forma de Bestia") : PLAYABLE.includes(c.key)));
   const aimReach = (c) => (reachOf && reachOf(c)) || { label: "Lejano", max: RANGE_CELLS["Lejano"] };
   // Objetivo válido de una carta que se apunta: aliado (otro personaje) para Palabras Inspiradoras; adversario vivo para el resto.
@@ -11711,7 +11770,7 @@ function MapBoard({ showHp, aimRange, rangeMenu, cfx, meCharId, onDragInfo, onSt
             key={t.id}
             type="button"
             data-tid={t.id}
-            className={"mh-map-tk is-" + t.kind + (t.hand ? " is-hand" : "") + (hAnim && hAnim.to === t.id ? " is-hurt" : "") + (eAnim && eAnim.kind === "burn" && eAnim.to === t.id ? " is-burn" : "") + (t.beast || t.trf ? " is-trf" : "") + (morphs[t.id] ? " is-morph" : "") + (t.elem ? " is-el-" + String(t.elem).toLowerCase() : elemOut[t.id] ? " is-el-out is-el-p-" + elemOut[t.id].toLowerCase() : "") + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && (anim.to === t.id || (anim.tos || []).includes(t.id)) && anim.kind !== "free" && anim.kind !== "howl" && anim.kind !== "gold" ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") + (anim.kind === "web" ? " is-web" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
+            className={"mh-map-tk is-" + t.kind + (t.hand ? " is-hand" : "") + (hAnim && hAnim.to === t.id ? " is-hurt" : "") + (eAnim && eAnim.kind === "burn" && eAnim.to === t.id ? " is-burn" : "") + (t.beast || t.trf ? " is-trf" : "") + (morphs[t.id] ? " is-morph" : "") + (t.elem ? " is-el-" + String(t.elem).toLowerCase() : elemOut[t.id] ? " is-el-out is-el-p-" + elemOut[t.id].toLowerCase() : "") + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && (anim.to === t.id || (anim.tos || []).includes(t.id)) && anim.kind !== "free" && anim.kind !== "howl" && anim.kind !== "swarm" && anim.kind !== "gold" ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") + (anim.kind === "web" ? " is-web" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
             style={{ ...at(pos.x, pos.y), "--tc": t.color, ...(t.color2 ? { "--tc2": t.color2 } : {}), ...(anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); return tg ? { "--ax": (tg.x - t.x) * 100 + "%", "--ay": (tg.y - t.y) * 100 + "%" } : {}; })() : {}) }}
             onPointerDown={(e) => startDrag(e, t)}
             onContextMenu={(e) => openMenu(e, t)}
@@ -11791,6 +11850,11 @@ function MapBoard({ showHp, aimRange, rangeMenu, cfx, meCharId, onDragInfo, onSt
                 {[[0], [-17, 17], [-34, 0, 34]][t.rank - 1].map((a, i) => <i key={i} className="mh-map-rk" style={{ "--a": a + "deg", "--k": a / 34 }} />)}
               </span>
             )}
+            {t.kind === "pc" && t.beetles && !t.vanished && (
+              <span className="mh-map-beetles" aria-hidden="true" title="Escarabajos Blindados: el próximo daño baja un umbral">
+                {[0, 90, 180, 270].map((a) => <i key={a} style={{ "--a": a + "deg" }}><b /></i>)}
+              </span>
+            )}
             {t.name && <span className="mh-map-nm">{t.name}</span>}
           </button>
         );
@@ -11803,7 +11867,11 @@ function MapBoard({ showHp, aimRange, rangeMenu, cfx, meCharId, onDragInfo, onSt
         if (!fa || !fbs.length) return null;
         return (
           <svg className="mh-map-shot" viewBox={`0 0 ${MAP_COLS * 40} ${MAP_ROWS * 40}`} preserveAspectRatio="none">
-            {fbs.map((fb) => <ShotFx key={anim.key + fb.id} kind={anim.kind} n={anim.n} a={[(fa.x + 0.5) * 40, (fa.y + 0.5) * 40]} b={[(fb.x + 0.5) * 40, (fb.y + 0.5) * 40]} size={40} />)}
+            {anim.kind === "swarm" ? (
+              <ShotFx key={anim.key} kind="swarm" a={[(fa.x + 0.5) * 40, (fa.y + 0.5) * 40]} b={[(fbs[0].x + 0.5) * 40, (fbs[0].y + 0.5) * 40]} bs={fbs.map((fb) => [(fb.x + 0.5) * 40, (fb.y + 0.5) * 40])} hits={fbs.map((fb) => !!(anim.hits || [])[(anim.tos || []).indexOf(fb.id)])} size={40} />
+            ) : (
+              fbs.map((fb) => <ShotFx key={anim.key + fb.id} kind={anim.kind} n={anim.n} a={[(fa.x + 0.5) * 40, (fa.y + 0.5) * 40]} b={[(fb.x + 0.5) * 40, (fb.y + 0.5) * 40]} size={40} />)
+            )}
           </svg>
         );
       })()}
@@ -12459,6 +12527,8 @@ export default function App({ onSignOut }) {
   const [shoveAsk, setShoveAsk] = useState(null); // Empujón Contundente: ¿gastar Esperanza para dejarlo Vulnerable? { charId, targetId }
   const [arcaneAsk, setArcaneAsk] = useState(null); // Descarga Arcana: cuánta Esperanza gastar { charId, card, targetId }
   const [inspireAsk, setInspireAsk] = useState(null); // Palabras Inspiradoras: elegir el beneficio { charId, card, target }
+  const [swarmAsk, setSwarmAsk] = useState(null); // Conjurar Enjambre: { charId, card, mode: "" | "beetles" | "fireflies", hope }
+  const [beetleKeep, setBeetleKeep] = useState(false); // mantener los escarabajos tras este golpe (1 Esperanza)
   const [wardAsk, setWardAsk] = useState(null); // Guarda Rúnica: elegir portador y objeto { charId, card, step, bearerId, item, custom }
   const [hitWard, setHitWard] = useState(null); // Guarda Rúnica aplicada al golpe que se está resolviendo { n }
   const [chaosAsk, setChaosAsk] = useState(null); // Desatar el Caos: elegir cuántas fichas gastar { charId, targetId, card }
@@ -14431,6 +14501,49 @@ export default function App({ onSignOut }) {
     if (!w || !by || by.f_runeward_to !== id || String(by.f_runeward_gen || 0) !== String(w.gen)) return null;
     if (w.spent && Number(by.f_rest_n || 0) <= Number(w.restN || 0)) return null;
     return { ward: w, item: w.item, byName: by.f_name || "un aliado" };
+  };
+  // ---- Conjurar Enjambre: Escarabajos Blindados (1 Estrés, f_beetles) o Luciérnagas (tirada de conjuro en Cercano) ----
+  const swarmFoes = (charId) => {
+    const m = campaignMapRef.current;
+    const me = (m.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
+    if (!me) return [];
+    return (m.tokens || []).filter((t) => (t.kind === "foe" || t.kind === "npc") && !t.gmHidden && !deadTok(t) && !fogAt(m, t.x, t.y) && cellDist(me, t) <= RANGE_CELLS["Cercano"]);
+  };
+  // Con las luciérnagas elegidas se marca el alcance Cercano en el mapa mientras decides.
+  useEffect(() => {
+    if (!swarmAsk || swarmAsk.mode !== "fireflies") return;
+    const me = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === swarmAsk.charId);
+    if (!me) return;
+    setAimRange({ id: me.id, max: RANGE_CELLS["Cercano"] });
+    return () => setAimRange(null);
+  }, [swarmAsk?.mode, swarmAsk?.charId]);
+  const confirmSwarm = () => {
+    const A = swarmAsk;
+    if (!A || !A.mode) return;
+    const c = charsRef.current[A.charId];
+    if (!c || !sheetCampaignId) return;
+    if (A.mode === "beetles") {
+      if (c.f_beetles === "1") return pushMapLog(sheetCampaignId, "Escarabajos Blindados: ya te rodean", "info");
+      if (Number(c.stress_marked || 0) >= Number(c.r_stress || 0)) return pushMapLog(sheetCampaignId, "Escarabajos Blindados: no tienes Estrés libre que marcar", "info");
+      setSwarmAsk(null);
+      markStress(A.charId, 1, { f_beetles: "1" });
+      postCampaignEvent(A.charId, "🪲 Conjura Escarabajos Blindados (marca 1 Estrés): el próximo daño que reciba bajará un umbral de gravedad");
+      playCardOnMap(sheetCampaignId, A.charId, A.card, { noChat: true, short: true });
+      return;
+    }
+    const foes = swarmFoes(A.charId);
+    if (!foes.length) return pushMapLog(sheetCampaignId, "Luciérnagas: no hay adversarios en alcance Cercano", "info");
+    const hope = Number(c.hope_marked ?? HOPE_DEFAULT);
+    if (A.hope && hope < 1) return pushMapLog(sheetCampaignId, "Luciérnagas: necesitas 1 Esperanza para infligir daño", "info");
+    const sk = charSpellTrait(c);
+    const label = TRAITS.find((tr) => tr.key === sk)?.label;
+    if (!label) return;
+    const mods = getEquipmentMods(PRIMARY_WEAPONS.find((w) => w.key === c.f_primary_weapon), SECONDARY_WEAPONS.find((w) => w.key === c.f_secondary_weapon), ARMORS.find((x) => x.key === c.f_armor));
+    setSwarmAsk(null);
+    if (A.hope) updateCharacterField(A.charId, "hope_marked", String(hope - 1));
+    postCampaignEvent(A.charId, "✨ Conjura Luciérnagas sobre " + foes.map((t) => t.name || "un adversario").join(", ") + (A.hope ? " (gasta 1 Esperanza: 2d8+3 de daño mágico a quien acierte)" : " (sin gastar Esperanza: no infligen daño)"));
+    playCardOnMap(sheetCampaignId, A.charId, A.card, { noChat: true, short: true });
+    afterReveal(A.charId, A.card.key, () => rollTraitCheck(A.charId, label, Number(c[sk] || 0) + (mods[sk] || 0), { name: "Conjurar Enjambre", damage: A.hope ? "d8+3 mágico" : "", spell: true, fixedDice: 2, targetChosen: true, targets: foes.map((t) => ({ id: t.id, name: t.name, dc: t.stats?.difficulty || null })) }));
   };
   // Lo que ve quien imbuyó el amuleto: qué objeto es, quién lo lleva y si está agotado.
   const wardOutOf = (id) => {
@@ -16931,7 +17044,7 @@ export default function App({ onSignOut }) {
         const beast = ch && t.charId === viewingCharId && !gmViewing ? ch.f_beastform || "" : t.beast || "";
         const trf = ch && t.charId === viewingCharId && !gmViewing ? visibleTransform(ch) : t.trf || "";
         const elem = ch && t.charId === viewingCharId && !gmViewing ? ch.f_elemental_active || "" : t.elem || "";
-        return { ...t, hidden, conds, beast, trf, elem, name: ch?.f_name || t.name || "Personaje", cls: ch?.f_class || "", color: classColor(ch?.f_class), rank: ch ? (Number(ch.f_level || 1) <= 1 ? 1 : tierForLevel(ch.f_level || 1) === 2 ? 2 : 3) : 0, color2: (() => { const mc = getMulticlass(ch); return mc ? classColor(mc.cls) : null; })(), hp: ch ? [Number(ch.hp_marked || 0), Number(ch.r_hp || 0)] : null };
+        return { ...t, hidden, conds, beast, trf, elem, name: ch?.f_name || t.name || "Personaje", cls: ch?.f_class || "", color: classColor(ch?.f_class), rank: ch ? (Number(ch.f_level || 1) <= 1 ? 1 : tierForLevel(ch.f_level || 1) === 2 ? 2 : 3) : 0, color2: (() => { const mc = getMulticlass(ch); return mc ? classColor(mc.cls) : null; })(), beetles: ch?.f_beetles === "1", hp: ch ? [Number(ch.hp_marked || 0), Number(ch.r_hp || 0)] : null };
       }
       if (t.kind === "pet") return { ...t, cls: characters[t.ownerCharId]?.f_class || "", color: classColor(characters[t.ownerCharId]?.f_class) };
       return { ...t, color: t.kind === "foe" ? "#C0504A" : "#C9A24A", img: t.imgId ? castImgs[t.imgId] : null, ...(t.stats ? { hp: [Number(t.stats.hpMarked || 0), Number(t.stats.hp || 0)] } : {}) };
@@ -17805,6 +17918,7 @@ export default function App({ onSignOut }) {
   const rollDock = false;
   useEffect(() => {
     setHitWard(null); // la guarda rúnica se aplica golpe a golpe
+    setBeetleKeep(false);
   }, [incomingHit?.key]);
   // Un enemigo del DJ ataca a tu personaje: se abre el aviso para resolverlo (solo con su hoja abierta).
   useEffect(() => {
@@ -18842,6 +18956,18 @@ export default function App({ onSignOut }) {
           pushMapLog(sheetCampaignId, "🌿 Enredo Feroz: " + snareIds.map((id) => (campaignMapRef.current.tokens || []).find((x) => x.id === id)?.name || "un adversario").join(" y ") + " queda inmovilizado", "info");
           if (snareIds[1] && rc) updateCharacterField(charId, "hope_marked", String(Math.max(0, Number(rc.hope_marked ?? HOPE_DEFAULT) - 1)));
         }
+      }
+      // Conjurar Enjambre · Luciérnagas: la nube sale hacia todos los adversarios de la tirada; estallan solo los que has acertado.
+      if (name === "Conjurar Enjambre" && r.weapon.targets && sheetCampaignId) {
+        const fromTokS = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
+        const ids = r.weapon.targets.map((t) => t.id);
+        const hitIds = r.weapon.hitIds || [];
+        if (fromTokS && ids.length) fxLater.push(() => mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: fromTokS.id, to: ids[0], tos: ids, hits: ids.map((id) => hitIds.includes(id)), kind: "swarm" }), "fx"));
+      }
+      // Sin dados de daño (no se gasta la Esperanza que lo permite): solo sale el efecto.
+      if (!/d\d/.test(damage || "")) {
+        fxLater.forEach((fn) => fn());
+        return;
       }
       rollWeaponDamage(name, damage, charId, isCritical, { after: () => fxLater.forEach((fn) => fn()), ...(r.weapon.spell ? { plain: true, fixedDice: r.weapon.fixedDice || 1 } : {}), angel: r.weapon.angel || 0, knight: !!r.weapon.knight, attackFear: r.fear, ...(pummel || honedHit ? { fixedDice: getProficiency(rc) + (pummel ? 1 : 0) + (honedHit ? 1 : 0) } : {}), fearDice, cloaked: wasCloaked, spirit, resonance: spirit && rc && tierForLevel(rc.f_level || 1) >= 3, extraFlat: (r.weapon.elemDmg || 0) + shoveBonus, doublePick: !!r.weapon.manipDouble, targetId: r.weapon.targetId || null, targetIds: r.weapon.hitIds || null });
   };
@@ -23614,6 +23740,7 @@ export default function App({ onSignOut }) {
                                                 card.bookCard && !card.weapon && !card.rowCard ? (setBookAsk({ charId: viewingCharId, card, targetId: target.id }), "cancel") :
                                                 card.key === "Desatar el Caos" && !card.weapon && !card.rowCard && !card.subclass ? castChaos(viewingCharId, target, card) :
                                                 card.key === "Guarda Rúnica" && !card.weapon && !card.rowCard && !card.subclass ? (setWardAsk({ charId: viewingCharId, card, step: 1, bearerId: "", item: "", custom: "" }), "cancel") :
+                                                card.key === "Conjurar Enjambre" && !card.weapon && !card.rowCard && !card.subclass ? (setSwarmAsk({ charId: viewingCharId, card, mode: "", hope: false }), "cancel") :
                                                 card.unCharm ? castUnCharm(viewingCharId, target, card) :
                                                 card.key === "Palabras Inspiradoras" && !card.weapon && !card.rowCard && !card.subclass ? castInspire(viewingCharId, target, card) :
                                                 card.recharge ? castRecharge(viewingCharId, card) :
@@ -24296,7 +24423,10 @@ export default function App({ onSignOut }) {
               const hit = H.crit || H.atk >= def.evasion;
               const wd = wardInfo(H.charId);
               const dmgEff = Math.max(0, H.dmg - (hitWard ? hitWard.n : 0));
-              const sev = hit ? severityOf(dmgEff, def.major, def.severe) : 0;
+              const sevBase = hit ? severityOf(dmgEff, def.major, def.severe) : 0;
+              // Conjurar Enjambre · Escarabajos Blindados: el próximo daño baja un umbral de gravedad.
+              const beetlesOn = hit && c.f_beetles === "1" && sevBase > 0;
+              const sev = beetlesOn ? sevBase - 1 : sevBase;
               const armor = Number(c.armor_marked || 0);
               const done = (useArmor) => {
                 setIncomingHit(null);
@@ -24305,6 +24435,11 @@ export default function App({ onSignOut }) {
                 if (!hit) {
                   pushMapLog(H.campaignId, H.from + " ataca a " + name + ": " + H.atk + " contra Evasión " + def.evasion + " · falla", "miss");
                   return;
+                }
+                if (beetlesOn) {
+                  const cur = charsRef.current[H.charId] || c;
+                  updateCharacterFields(H.charId, { f_beetles: beetleKeep ? "1" : "", ...(beetleKeep ? { hope_marked: String(Math.max(0, Number(cur.hope_marked ?? HOPE_DEFAULT) - 1)) } : {}) });
+                  postCampaignEvent(H.charId, "🪲 Los Escarabajos Blindados reducen la gravedad un umbral" + (beetleKeep ? " y se quedan (1 Esperanza)" : " y se desvanecen"));
                 }
                 const final = Math.max(0, sev - (useArmor ? 1 : 0));
                 if (useArmor) updateCharacterField(H.charId, "armor_marked", String(Math.max(0, armor - 1)));
@@ -24316,7 +24451,7 @@ export default function App({ onSignOut }) {
                   const foeTok = (campaignMap.tokens || []).find((t) => t.id === H.foeId);
                   if (foeTok && cellDist(foeTok, me) <= RANGE_CELLS["Cuerpo a cuerpo"]) elementalBurn(H.campaignId, H.charId, foeTok);
                 }
-                pushMapLog(H.campaignId, H.from + " golpea a " + name + (H.crit ? " (¡crítico!)" : "") + ": " + H.dmg + " de daño" + (hitWard ? " − " + hitWard.n + " (Guarda Rúnica)" : "") + " (" + SEVERITY_LABEL[sev] + ")" + (useArmor ? " · usa 1 de Armadura" : "") + " · " + final + " PV", "dmg");
+                pushMapLog(H.campaignId, H.from + " golpea a " + name + (H.crit ? " (¡crítico!)" : "") + ": " + H.dmg + " de daño" + (hitWard ? " − " + hitWard.n + " (Guarda Rúnica)" : "") + " (" + SEVERITY_LABEL[sev] + ")" + (beetlesOn ? " · escarabajos: −1 umbral" : "") + (useArmor ? " · usa 1 de Armadura" : "") + " · " + final + " PV", "dmg");
                 postCampaignEvent(H.charId, "🩸 " + H.from + " le golpea con " + H.weapon + ": " + H.dmg + " de daño · marca " + final + " PV" + (useArmor ? " (usa 1 de Armadura)" : ""));
               };
               return (
@@ -24345,11 +24480,17 @@ export default function App({ onSignOut }) {
                         <p className="mh-hit-msg">
                           Te golpea: <b>{H.dmg}</b> de daño ({H.dmgRolls?.join(" + ")}{H.dmgMod ? " + " + H.dmgMod : ""}{H.crit ? " + máximo por crítico" : ""}). Es daño <b>{SEVERITY_LABEL[sev]}</b> con tus umbrales {def.major}/{def.severe}.
                         </p>
+                        {beetlesOn && <p className="mh-hit-msg">🪲 Escarabajos Blindados: la gravedad baja un umbral ({SEVERITY_LABEL[sevBase]} → <b>{SEVERITY_LABEL[sev]}</b>).</p>}
                         {hitWard && <p className="mh-hit-msg">🛡️ Guarda Rúnica: reduce el daño en <b>{hitWard.n}</b> (1d8){hitWard.n === 8 ? " · el amuleto se agota hasta el próximo descanso de " + (wd?.byName || "quien lo imbuyó") : ""}. Quedan <b>{dmgEff}</b> de daño.</p>}
                         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                           {wd && !hitWard && Number(c.hope_marked ?? HOPE_DEFAULT) >= 1 && (
                             <button type="button" className="mh-btn-ghost" onClick={() => rollWard(H.charId)}>
                               <Shield size={14} /> Usar la Guarda Rúnica «{wd.item}» · gastar 1 Esperanza y reducir el daño 1d8
+                            </button>
+                          )}
+                          {beetlesOn && (
+                            <button type="button" className={"mh-btn-ghost" + (beetleKeep ? " is-on" : "")} disabled={!beetleKeep && Number(c.hope_marked ?? HOPE_DEFAULT) < 1} onClick={() => setBeetleKeep((v) => !v)}>
+                              🪲 {beetleKeep ? "Los escarabajos se quedan tras el golpe (1 Esperanza)" : "Mantener los escarabajos · 1 Esperanza"}
                             </button>
                           )}
                           <button type="button" className="mh-btn" onClick={() => done(false)}>
@@ -27935,6 +28076,47 @@ export default function App({ onSignOut }) {
                     </div>
                     <div className="mh-evo-act">
                       <button type="button" className="mh-elpick-x" onClick={close}>Cancelar</button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+            {swarmAsk && swarmAsk.charId === viewingCharId && (() => {
+              const A = swarmAsk;
+              const cc = characters[A.charId];
+              const close = () => setSwarmAsk(null);
+              const foes = swarmFoes(A.charId);
+              const hope = Number(cc?.hope_marked ?? HOPE_DEFAULT);
+              const stressFull = Number(cc?.stress_marked || 0) >= Number(cc?.r_stress || 0);
+              const hasBeetles = cc?.f_beetles === "1";
+              const canGo = A.mode === "beetles" ? !stressFull && !hasBeetles : A.mode === "fireflies" ? foes.length > 0 && (!A.hope || hope >= 1) : false;
+              return (
+                <div className="mh-evo-wrap" onClick={close}>
+                  <div className="mh-bpick mh-sess" role="dialog" aria-label="Conjurar Enjambre" onClick={(e) => e.stopPropagation()}>
+                    <div className="mh-elpick-h">
+                      <b>Conjurar Enjambre</b>
+                      <span>Elige qué enjambre conjuras</span>
+                    </div>
+                    <div className="mh-renew-list">
+                      <button type="button" className={"mh-renew-row is-pick" + (A.mode === "beetles" ? " is-on" : "")} onClick={() => setSwarmAsk({ ...A, mode: "beetles" })}>
+                        <span className="mh-renew-av" style={{ background: "#3d8f8a" }}>🪲</span>
+                        <div className="mh-renew-t"><b>Escarabajos Blindados de Tekaira</b><small>Marcas 1 Estrés. El próximo daño que recibas baja un umbral de gravedad; gasta 1 Esperanza para que se queden tras el golpe.</small></div>
+                      </button>
+                      <button type="button" className={"mh-renew-row is-pick" + (A.mode === "fireflies" ? " is-on" : "")} onClick={() => setSwarmAsk({ ...A, mode: "fireflies" })}>
+                        <span className="mh-renew-av" style={{ background: "#9aa83a" }}>✨</span>
+                        <div className="mh-renew-t"><b>Luciérnagas</b><small>Tirada de conjuro contra todos los adversarios en alcance Cercano ({foes.length} ahora). Con 1 Esperanza, 2d8+3 de daño mágico a quien aciertes.</small></div>
+                      </button>
+                    </div>
+                    {A.mode === "fireflies" && (
+                      <button type="button" className={"mh-btn-ghost" + (A.hope ? " is-on" : "")} disabled={hope < 1 && !A.hope} onClick={() => setSwarmAsk({ ...A, hope: !A.hope })}>
+                        {A.hope ? "✓ Gastar 1 Esperanza: 2d8+3 de daño (se gasta al lanzar)" : "Gastar 1 Esperanza para infligir 2d8+3 de daño"}
+                      </button>
+                    )}
+                    {A.mode === "beetles" && (hasBeetles || stressFull) && <small style={{ color: "#D9644E" }}>{hasBeetles ? "Los escarabajos ya te rodean." : "No tienes Estrés libre que marcar."}</small>}
+                    {A.mode === "fireflies" && foes.length === 0 && <small style={{ color: "#D9644E" }}>No hay adversarios vivos en alcance Cercano.</small>}
+                    <div className="mh-evo-act">
+                      <button type="button" className="mh-elpick-x" onClick={close}>Cancelar</button>
+                      <button type="button" className="mh-evo-go" disabled={!canGo} onClick={confirmSwarm}>{A.mode === "beetles" ? "Conjurar · 1 Estrés" : A.mode === "fireflies" ? "Lanzar luciérnagas" : "Elige una opción"}</button>
                     </div>
                   </div>
                 </div>

@@ -14,6 +14,7 @@ export const CARD_STATUS = {
   "Caminar por Paredes": { sheet: NO, hand: "Se arrastra al mapa", map: "Se revela a la mesa (sin efecto de reglas)" },
   "Engañador Hábil": { sheet: NO, hand: "Se arrastra al mapa", map: "Gasta 1 Esperanza, revelación y onda dorada" },
   "Empujón Contundente": { sheet: NO, hand: "Se arrastra a un adversario", map: "Ataque con el arma principal, empuje a Cercano, +d6 y Vulnerable" },
+  "Conjurar Enjambre": { sheet: "Escarabajos Blindados: marca de escarabajos en la ficha", hand: "Se arrastra al mapa y se elige el enjambre", map: "Escarabajos orbitando (bajan un umbral el próximo daño, con Esperanza se quedan) o Luciérnagas en Cercano con 2d8+3 y nube de luz" },
   "Huesos Desnudos": { sheet: "Armadura 3 + Fuerza y umbrales por rango sin armadura", hand: "Cartel «Pasiva» y halo activa/inactiva", map: NO },
   "Libro de Ava": { sheet: "Armadura de Tava suma +1 a la Armadura hasta el descanso", hand: "Se arrastra a una ficha y se elige el hechizo", map: "Empujón de Poder, Armadura de Tava y Pico de Hielo" },
   "Libro de Illiat": { sheet: "Descarga Arcana y Telepatía se reinician con el descanso", hand: "Se arrastra a una ficha; carta fugaz «Cortar la telepatía»", map: "Sopor (Dormido), Descarga Arcana y Telepatía (hilo)" },
