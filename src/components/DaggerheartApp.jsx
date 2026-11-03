@@ -51,7 +51,7 @@ const QUICKSTARTS = [
   { key: "sablewood", name: "Los mensajeros de Sablewood", build: buildSablewood, ai: true, text: "Aventura de inicio ya preparada: escenas, pistas ocultas, reparto con diálogos, notas por acto y mapas con enemigos." },
   { key: "wishthief", name: "La ladrona de deseos", build: buildWishThief, ai: false, text: "Aventura de nivel 1 para 3-5 jugadores: escenas por acto, pistas ocultas, reparto con estadísticas y mapas listos." },
 ];
-import { Wand, CircleDot, MoveUpRight, Archive, Shell, Compass, Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp, Trophy, Star, Pencil } from "lucide-react";
+import { Hand, Wand, CircleDot, MoveUpRight, Archive, Shell, Compass, Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp, Trophy, Star, Pencil } from "lucide-react";
 
 // Color de cada campaña (se reparte según su id).
 const CAMP_COLORS = ["#A58BE8", "#6FA3C0", "#E0A04A", "#7FB77A", "#D9644E", "#E07FB0"];
@@ -5291,6 +5291,8 @@ const sharedStyles = `
   .mh-map-chip.is-placed > svg { color: #6FBF73; }
   .mh-map-chip.is-remove { padding: 5px 10px; color: #C0504A; }
   .mh-map-chip.is-remove > svg { color: #C0504A; }
+  .mh-map .mh-map-tk.is-pet.is-hand .mh-map-face { width: 62%; height: 62%; rotate: 45deg; border-radius: 14%; border: 2px solid var(--tc); background: linear-gradient(135deg, color-mix(in srgb, var(--tc) 55%, #1a1630), color-mix(in srgb, var(--tc) 22%, #0c0d2a)); box-shadow: 0 0 10px color-mix(in srgb, var(--tc) 60%, transparent); }
+  .mh-map .mh-map-tk.is-hand .mh-map-face > * { rotate: -45deg; color: #fff; }
   .mh-map-tk.is-pet .mh-map-face { width: 66%; height: 66%; border-radius: 50%; background: color-mix(in srgb, var(--tc) 35%, #221C2B); }
   .mh-map-hint { flex-shrink: 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--mh-ink3); }
   .mh-map-hint .mh-stg-live { margin-left: auto; }
@@ -9613,7 +9615,7 @@ const BOOK_SPELLS = [
   { id: "tava", book: "Libro de Ava", name: "Armadura de Tava", reach: "Cuerpo a cuerpo", ally: true, hope: true, lab: "1 Esperanza", text: "Gasta 1 Esperanza: un aliado que toques (o tú) gana +1 a su Puntuación de Armadura hasta el próximo descanso o hasta que vuelvas a lanzarlo." },
   { id: "ice", book: "Libro de Ava", name: "Pico de Hielo", reach: "Lejano", lab: "Tirada", text: "Invoca un pico de hielo sobre un adversario en alcance Lejano: tirada de conjuro contra su Dificultad; si aciertas, d6 de daño físico (dados = tu Competencia)." },
   { id: "flame", book: "Libro de Tyfar", name: "Llama Salvaje", reach: "Cuerpo a cuerpo", lab: "Tirada", text: "Tirada de conjuro contra hasta tres adversarios Cuerpo a cuerpo (el que eliges y los más cercanos). A quienes superes: 2d6 mágico y marcan 1 Estrés." },
-  { id: "hand", book: "Libro de Tyfar", name: "Mano Mágica", reach: "Lejano", any: true, self: true, lab: "Gratis", text: "Conjuras una mano mágica del tamaño y la fuerza de la tuya junto a la ficha elegida, en alcance Lejano." },
+  { id: "hand", book: "Libro de Tyfar", name: "Mano Mágica", reach: "Lejano", any: true, self: true, cell: true, lab: "Gratis", text: "Conjuras una mano mágica del tamaño y la fuerza de la tuya en la casilla que indiques, en alcance Lejano. Es una ficha que puedes mover." },
   { id: "mist", book: "Libro de Tyfar", name: "Niebla Misteriosa", reach: "Muy cercano", any: true, self: true, lab: "Tirada 13", text: "Tirada de conjuro (13): una niebla densa cubre la zona (3×3) alrededor de la ficha elegida, en alcance Muy cercano. Oscurece todo lo que hay dentro." },
   { id: "sleep", book: "Libro de Illiat", name: "Sopor", reach: "Muy cercano", lab: "Tirada", text: "Tirada de conjuro contra un adversario Muy cercano. Si aciertas, queda Dormido hasta que sufra daño o el DJ gaste un Miedo." },
   { id: "arcane", book: "Libro de Illiat", name: "Descarga Arcana", reach: "Cercano", hope: true, once: "f_arcane_used", lab: "Esperanza", text: "Una vez por descanso, gasta cuanta Esperanza quieras: d6 de daño mágico por cada una a un objetivo en alcance Cercano." },
@@ -11670,7 +11672,7 @@ function MapBoard({ showHp, aimRange, rangeMenu, cfx, meCharId, onDragInfo, onSt
       {tokens.filter((t) => !(fogHide && inFog(t.x, t.y))).map((t) => {
         const pos = drag && drag.id === t.id && drag.moved ? { x: drag.fx, y: drag.fy } : t;
         const movable = canMove(t);
-        const Emb = t.kind === "pc" ? CLASS_EMBLEMS[t.cls] || User : t.kind === "pet" ? PawPrint : t.kind === "foe" ? Skull : Drama;
+        const Emb = t.kind === "pc" ? CLASS_EMBLEMS[t.cls] || User : t.kind === "pet" ? (t.hand ? Hand : PawPrint) : t.kind === "foe" ? Skull : Drama;
         const hpLeft = t.hp && t.hp[1] > 0 ? Math.max(0, (t.hp[1] - t.hp[0]) / t.hp[1]) : null;
         const hpCol = hpLeft == null ? "" : hpLeft > 0.5 ? "#5FD38C" : hpLeft > 0.25 ? "#F0B94A" : "#F0615A";
         return (
@@ -11678,7 +11680,7 @@ function MapBoard({ showHp, aimRange, rangeMenu, cfx, meCharId, onDragInfo, onSt
             key={t.id}
             type="button"
             data-tid={t.id}
-            className={"mh-map-tk is-" + t.kind + (hAnim && hAnim.to === t.id ? " is-hurt" : "") + (eAnim && eAnim.kind === "burn" && eAnim.to === t.id ? " is-burn" : "") + (t.beast || t.trf ? " is-trf" : "") + (morphs[t.id] ? " is-morph" : "") + (t.elem ? " is-el-" + String(t.elem).toLowerCase() : elemOut[t.id] ? " is-el-out is-el-p-" + elemOut[t.id].toLowerCase() : "") + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id && anim.kind !== "free" && anim.kind !== "howl" && anim.kind !== "gold" ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") + (anim.kind === "web" ? " is-web" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
+            className={"mh-map-tk is-" + t.kind + (t.hand ? " is-hand" : "") + (hAnim && hAnim.to === t.id ? " is-hurt" : "") + (eAnim && eAnim.kind === "burn" && eAnim.to === t.id ? " is-burn" : "") + (t.beast || t.trf ? " is-trf" : "") + (morphs[t.id] ? " is-morph" : "") + (t.elem ? " is-el-" + String(t.elem).toLowerCase() : elemOut[t.id] ? " is-el-out is-el-p-" + elemOut[t.id].toLowerCase() : "") + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id && anim.kind !== "free" && anim.kind !== "howl" && anim.kind !== "gold" ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") + (anim.kind === "web" ? " is-web" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
             style={{ ...at(pos.x, pos.y), "--tc": t.color, ...(t.color2 ? { "--tc2": t.color2 } : {}), ...(anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); return tg ? { "--ax": (tg.x - t.x) * 100 + "%", "--ay": (tg.y - t.y) * 100 + "%" } : {}; })() : {}) }}
             onPointerDown={(e) => startDrag(e, t)}
             onContextMenu={(e) => openMenu(e, t)}
@@ -12971,6 +12973,7 @@ export default function App({ onSignOut }) {
     if (Object.keys(patch).length) updateCharacterFields(sheetCharId, patch);
     const mine = (t, f, cond) => t[f] === sheetCharId && (t.conds || []).includes(cond);
     if (!has("Libro de Tyfar") && (campaignMap.areas || []).some((a) => a.owner === sheetCharId && a.mist)) mutateMap(sheetCampaignId, (as) => (Array.isArray(as) ? as : []).filter((a) => !(a.owner === sheetCharId && a.mist)), "areas");
+    if (!has("Libro de Tyfar") && toks.some((t) => t.hand && t.ownerCharId === sheetCharId)) mutateMap(sheetCampaignId, (ts) => ts.filter((t) => !(t.hand && t.ownerCharId === sheetCharId)));
     const stale = toks.some((t) => (!has("Embelesar") && mine(t, "charmedBy", "Embelesado")) || (!has("Enredo Feroz") && mine(t, "rootedBy", "Inmovilizado")) || (!has("Libro de Illiat") && mine(t, "sleptBy", "Dormido")));
     if (!stale) return;
     mutateMap(sheetCampaignId, (ts) => ts.map((t) => {
@@ -16346,11 +16349,9 @@ export default function App({ onSignOut }) {
       return reveal(() => rollTraitCheck(charId, label, Number(c[sk] || 0) + (mods[sk] || 0), w));
     }
     if (sp.id === "hand") {
-      postCampaignEvent(charId, "🖐️ Mano Mágica: conjura una mano mágica junto a " + (target.id === me.id ? "sí mismo" : nm));
-      return reveal(() => {
-        mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: me.id, to: target.id, kind: target.id === me.id ? "gold" : "magic" }), "fx");
-        pushMapLog(sheetCampaignId, "🖐️ Mano Mágica: " + (me.name || "Alguien") + " conjura una mano mágica junto a " + (target.id === me.id ? "sí mismo" : nm), "info");
-      });
+      setAreaTool({ campaignId: sheetCampaignId, hand: true, charId, card });
+      pushMapLog(sheetCampaignId, "🖐️ Mano Mágica: pulsa la casilla donde quieres conjurarla (alcance Lejano)", "info");
+      return "cancel";
     }
     if (sp.id === "mist") {
       const sk = charSpellTrait(c);
@@ -17624,7 +17625,26 @@ export default function App({ onSignOut }) {
     setViewingCampaignId(id);
   };
   // Pone el área elegida en la casilla pulsada (las ven todos en el tablero).
+  // Mano Mágica: la ficha aparece en la casilla pulsada, con el color de la clase y forma de rombo.
+  const placeHand = (cfg, x, y) => {
+    const toks = campaignMapRef.current.tokens || [];
+    const me = toks.find((t) => t.kind === "pc" && t.charId === cfg.charId);
+    if (!me) return setAreaTool(null);
+    if (Math.max(Math.abs(x - me.x), Math.abs(y - me.y)) > RANGE_CELLS["Lejano"]) return pushMapLog(cfg.campaignId, "Mano Mágica: esa casilla está fuera de alcance Lejano", "info");
+    const mine = (t) => t.kind === "pet" && t.hand && t.ownerCharId === cfg.charId;
+    if (toks.some((t) => !t.vanished && !mine(t) && t.x === x && t.y === y)) return pushMapLog(cfg.campaignId, "Mano Mágica: esa casilla está ocupada", "info");
+    setAreaTool(null);
+    const hid = "h" + Date.now() + Math.random().toString(36).slice(2, 5);
+    postCampaignEvent(cfg.charId, "🖐️ Mano Mágica: conjura una mano mágica a distancia");
+    playCardOnMap(cfg.campaignId, cfg.charId, cfg.card, { noChat: true, short: true });
+    afterReveal(cfg.charId, cfg.card.key, () => {
+      mutateMap(cfg.campaignId, (ts) => [...ts.filter((t) => !mine(t)), { id: hid, kind: "pet", hand: true, ownerCharId: cfg.charId, name: "Mano Mágica", x, y }]);
+      setTimeout(() => mutateMap(cfg.campaignId, () => ({ key: Date.now(), from: me.id, to: hid, kind: "magic" }), "fx"), 120);
+      pushMapLog(cfg.campaignId, "🖐️ Mano Mágica: " + (me.name || "Alguien") + " conjura una mano mágica", "info");
+    });
+  };
   const placeArea = (cfg, x, y) => {
+    if (cfg.hand) return placeHand(cfg, x, y);
     const area = { id: "a" + Date.now() + Math.random().toString(36).slice(2, 5), owner: cfg.owner, ownerName: cfg.name, shape: cfg.shape, range: cfg.range, color: cfg.color, x, y };
     mutateMap(cfg.campaignId, (as) => [...(Array.isArray(as) ? as : []).filter((a) => a.owner !== cfg.owner), area], "areas");
     setAreaTool(null);
@@ -18714,7 +18734,8 @@ export default function App({ onSignOut }) {
         const fromF = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
         fxLater.push(() => {
           ids.forEach((id) => mutateMap(sheetCampaignId, (ts) => ts.map((x) => (x.id === id && x.stats ? { ...x, stats: { ...x.stats, stressMarked: Math.min(Number(x.stats.stress || 0) || 99, Number(x.stats.stressMarked || 0) + 1) } } : x))));
-          if (fromF && ids[0]) mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: fromF.id, to: ids[0], kind: "magic" }), "fx");
+          // El efecto del mapa es uno solo: se lanza uno tras otro hacia cada adversario alcanzado.
+          if (fromF) ids.forEach((id, i) => setTimeout(() => mutateMap(sheetCampaignId, () => ({ key: Date.now() + i, from: fromF.id, to: id, kind: "magic" }), "fx"), i * 420));
         });
       }
       if (r.weapon.targetId && sheetCampaignId) {
@@ -23561,11 +23582,11 @@ export default function App({ onSignOut }) {
                                             </div>
                                           </div>
                                         )}
-                                        {areaTool && <div className="mh-area-hint">Pulsa una casilla para colocar el área <button type="button" onClick={() => setAreaTool(null)}>Cancelar</button></div>}
+                                        {areaTool && <div className="mh-area-hint">{areaTool.hand ? "Pulsa la casilla donde conjurar la mano" : "Pulsa una casilla para colocar el área"} <button type="button" onClick={() => setAreaTool(null)}>Cancelar</button></div>}
                                       </div>
                                       {(() => {
                                         const me = characters[viewingCharId];
-                                        const myPets = mapTokens.filter((t) => t.kind === "pet" && t.ownerCharId === viewingCharId);
+                                        const myPets = mapTokens.filter((t) => t.kind === "pet" && !t.hand && t.ownerCharId === viewingCharId);
                                         const col = classColor(me?.f_class);
                                         // Solo el Explorador de Vínculo Bestial tiene compañero animal.
                                         const hasCompanion = me?.f_class === "Explorador" && me?.f_subclass === "Vínculo Bestial";
@@ -27743,6 +27764,7 @@ export default function App({ onSignOut }) {
                 if (!me0 || !tg) return "Sin objetivo";
                 if (c?.f_beastform) return "En Forma de Bestia";
                 const foe = (tg.kind === "foe" || tg.kind === "npc") && !deadTok(tg);
+                if (sp.cell) return "";
                 if (sp.any) { if (tg.id === me0.id && !sp.self) return "Elige otra ficha"; }
                 else if (sp.ally ? tg.kind !== "pc" : !foe) return sp.ally ? "Necesita un aliado" : "Necesita un adversario";
                 if (cellDist(me0, tg) > RANGE_CELLS[sp.reach]) return "Fuera de alcance " + sp.reach;
