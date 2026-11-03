@@ -9,6 +9,7 @@ export const CHANGELOG = [
     title: "El Oráculo del DJ",
     blurb: "Un anillo de luz que responde a las preguntas de la mesa: Sí / No, con matices o con una tirada de destino, solo para el DJ y a un toque bajo el chat.",
     items: [
+      { tag: "nuevo", text: "Combate · «Libro de Ava» y «Libro de Illiat» se juegan desde el mapa: al llevarlos aparecen sus hechizos como cartas auxiliares que se arrastran con línea de alcance. Ava: Empujón de Poder (tirada; si aciertas, el adversario sale despedido hasta alcance Lejano y recibe d10+2 mágico), Armadura de Tava (1 Esperanza: +1 de Armadura a un aliado o a ti hasta el descanso) y Pico de Hielo (tirada a distancia, d6 físico). Illiat: Sopor (tirada; el adversario queda Dormido hasta recibir daño o hasta que el DJ lo despierte), Descarga Arcana (una vez por descanso, d6 mágico por Esperanza que gastes) y Telepatía (1 Esperanza: hilo violeta de vínculo mental hasta el descanso)." },
       { tag: "mejora", text: "Combate · «Palabras Inspiradoras» se apunta como Embelesar y las armas: al arrastrarla sale el alcance Cercano y una línea de puntos que se pone verde sobre un aliado válido; si la sueltas fuera de alcance o sin aliado se cancela." },
       { tag: "mejora", text: "Combate · las cartas con fichas ya no muestran el texto de abajo al abrirlas (solo las fichas)." },
       { tag: "arreglo", text: "Tiradas · cuando la tirada es contra un objetivo elegido en el mapa (cartas o armas), la Dificultad es la del objetivo y ya no se puede cambiar en la ventana de tirada." },
