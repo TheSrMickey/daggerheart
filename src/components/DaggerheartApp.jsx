@@ -7613,7 +7613,7 @@ const sharedStyles = `
   .mh-wz-page .mh-wz-body { padding: 4px 2px 18px; }
   /* Dominios de la clase: una línea y dos pills con el icono oficial de cada dominio */
   .mh-dom-ic { display: inline-block; flex: none; vertical-align: middle; background: currentColor; -webkit-mask: var(--m) center / contain no-repeat; mask: var(--m) center / contain no-repeat; }
-  .mh-wz-doms { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 2px; padding-top: 12px; border-top: 1px solid color-mix(in srgb, var(--mh-ink, #fff) 24%, transparent); }
+  .mh-wz-doms { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 0; padding-top: 10px; border-top: 1px solid color-mix(in srgb, var(--mh-ink, #fff) 24%, transparent); }
   .mh-wz-dpill { display: inline-flex; align-items: center; gap: 7px; padding: 6px 13px 6px 10px; border-radius: 99px; border: 1px solid color-mix(in srgb, var(--dc) 55%, transparent); background: color-mix(in srgb, var(--dc) 14%, transparent); color: var(--mh-ink); font: 600 12.5px/1 Inter, system-ui, sans-serif; letter-spacing: .01em; } .mh-wz-dpill .mh-dom-ic, .mh-wz-dpill svg { color: var(--dc); }
   /* Cambio de paso: el contenido entra desde un lado (según se avance o se retroceda), el título sube y las elecciones aparecen abajo */
   .mh-wz-body.is-in-fwd { animation: mh-wz-in-fwd .45s cubic-bezier(.2,.8,.2,1) both; } .mh-wz-body.is-in-back { animation: mh-wz-in-back .45s cubic-bezier(.2,.8,.2,1) both; }
@@ -35029,24 +35029,16 @@ export default function App({ onSignOut }) {
                               <div>
                                 <div className="mh-serif mh-wz-dn">{cls}</div>
                                 {current.expansion && <div className="mh-wz-dm">Expansión {current.expansion}</div>}
+                                <div className="mh-wz-doms" aria-label={"Dominios de " + cls}>
+                                  {(CLASS_DOMAINS[cls] || []).map((d) => (
+                                    <span key={d} className="mh-wz-dpill" style={{ "--dc": DOMAIN_COLORS[d] || "#C9A24B" }}>
+                                      <DomainIcon name={d} size={17} />
+                                      {d}
+                                    </span>
+                                  ))}
+                                </div>
                               </div>
                             </div>
-                            <div className="mh-wz-doms" aria-label={"Dominios de " + cls}>
-                              {(CLASS_DOMAINS[cls] || []).map((d) => (
-                                <span key={d} className="mh-wz-dpill" style={{ "--dc": DOMAIN_COLORS[d] || "#C9A24B" }}>
-                                  <DomainIcon name={d} size={17} />
-                                  {d}
-                                </span>
-                              ))}
-                            </div>
-                            {(SUBCLASSES[cls] || []).length > 0 && (
-                              <div className="mh-wz-subs">
-                                <span>Subclases</span>
-                                {(SUBCLASSES[cls] || []).map((sc) => (
-                                  <em key={sc.key}>{sc.key}</em>
-                                ))}
-                              </div>
-                            )}
                             <p className="mh-wz-blurb">{current.blurb}</p>
                             <div className="mh-wz-feats">
                               {hope && (
