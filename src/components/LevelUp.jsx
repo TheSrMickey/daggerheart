@@ -43,6 +43,7 @@ export const totalSlots = (opt, rank) => opt.slots * Math.max(0, rank - opt.rank
 export const getMulticlass = (c) => {
   try {
     const m = JSON.parse(c?.f_multiclass || "");
+    if (m && m.domain === "Sabio") m.domain = "Naturaleza"; // el dominio se llamaba «Sabio»
     return m && m.cls ? m : null;
   } catch (e) {
     return null;

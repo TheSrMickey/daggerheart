@@ -2318,15 +2318,15 @@ const STARTER_ITEMS = [
 
 const CLASS_DOMAINS = {
   Bardo: ["Gracia", "Códice"],
-  Druida: ["Sabio", "Arcano"],
+  Druida: ["Naturaleza", "Arcano"],
   Guardián: ["Valor", "Filo"],
-  Explorador: ["Hueso", "Sabio"],
+  Explorador: ["Hueso", "Naturaleza"],
   Pícaro: ["Medianoche", "Gracia"],
   Serafín: ["Esplendor", "Valor"],
   Hechicero: ["Arcano", "Medianoche"],
   Guerrero: ["Filo", "Hueso"],
   Mago: ["Códice", "Esplendor"],
-  Bruja: ["Sabio", "Pavor"],
+  Bruja: ["Naturaleza", "Pavor"],
   Brujo: ["Pavor", "Gracia"],
   Camorrista: ["Valor", "Hueso"],
   Asesino: ["Filo", "Medianoche"],
@@ -2342,7 +2342,7 @@ const maxLoadoutCards = (level) => Math.min(5, Number(level || 1) + 1);
 const DOMAIN_COLORS = {
   Sangre: "#A8323E",
   Arcano: "#C77DDB",
-  Sabio: "#7FB77A",
+  Naturaleza: "#7FB77A",
   Filo: "#C0504A",
   Hueso: "#9AA3B5",
   Códice: "#5E93C9",
@@ -2356,7 +2356,7 @@ const DOMAIN_COLORS = {
 const DOMAIN_ICONS = {
   Sangre: Droplets,
   Arcano: Sparkles,
-  Sabio: Leaf,
+  Naturaleza: Leaf,
   Filo: Swords,
   Hueso: Footprints,
   Códice: BookOpen,
@@ -2538,7 +2538,7 @@ const DOMAIN_CARDS = {
       text: "Haz una tirada de conjuro contra todos los adversarios en alcance Lejano. Marca cualquier cantidad de Estrés para hacer llover fragmentos de arcano desde lo alto. Los objetivos contra los que tengas éxito sufren 1d20+2 de daño mágico por cada Estrés marcado.",
     },
   ],
-  Sabio: [
+  Naturaleza: [
     {
       key: "Rastreador Dotado",
       image: "/cartas-dominio/rastreador-dotado.webp",
@@ -2651,7 +2651,7 @@ const DOMAIN_CARDS = {
       type: "Habilidad",
       image: "/cartas-dominio/tocado-por-la-sabiduria.webp",
       recall: 2,
-      text: "Cuando 4 o más de las cartas de dominio de tu equipo sean del dominio Sabio, ganas estos beneficios: mientras estés en un entorno natural, ganas un bonificador de +2 a tus tiradas de conjuro; una vez por descanso, puedes doblar tu Agilidad o tu Instinto al hacer una tirada que use ese rasgo (debes elegirlo antes de tirar).",
+      text: "Cuando 4 o más de las cartas de dominio de tu equipo sean del dominio Naturaleza, ganas estos beneficios: mientras estés en un entorno natural, ganas un bonificador de +2 a tus tiradas de conjuro; una vez por descanso, puedes doblar tu Agilidad o tu Instinto al hacer una tirada que use ese rasgo (debes elegirlo antes de tirar).",
     },
     {
       key: "Oleada Salvaje",
@@ -2683,7 +2683,7 @@ const DOMAIN_CARDS = {
       type: "Habilidad",
       image: "/cartas-dominio/santuario-de-lo-salvaje.webp",
       recall: 2,
-      text: "Tras un descanso largo, coloca sobre esta carta tantas fichas como cartas de dominio Sabio haya en tu equipo y en tu bóveda. Cuando fueras a hacer una tirada de conjuro, puedes gastar cualquier número de fichas tras la tirada para ganar un bonificador de +1 por cada ficha gastada. Cuando logres un éxito crítico en una tirada de conjuro de un hechizo del dominio Sabio, gana una ficha. Cuando hagas un descanso largo, retira todas las fichas sin gastar.",
+      text: "Tras un descanso largo, coloca sobre esta carta tantas fichas como cartas de dominio Naturaleza haya en tu equipo y en tu bóveda. Cuando fueras a hacer una tirada de conjuro, puedes gastar cualquier número de fichas tras la tirada para ganar un bonificador de +1 por cada ficha gastada. Cuando logres un éxito crítico en una tirada de conjuro de un hechizo del dominio Naturaleza, gana una ficha. Cuando hagas un descanso largo, retira todas las fichas sin gastar.",
     },
     {
       key: "Dominio Vegetal",
@@ -7602,12 +7602,14 @@ const sharedStyles = `
   .mh-wz-page .mh-wz-body { padding: 4px 2px 18px; }
   /* Cambio de paso: el contenido entra desde un lado (según se avance o se retroceda), el título sube y las elecciones aparecen abajo */
   .mh-wz-body.is-in-fwd { animation: mh-wz-in-fwd .45s cubic-bezier(.2,.8,.2,1) both; } .mh-wz-body.is-in-back { animation: mh-wz-in-back .45s cubic-bezier(.2,.8,.2,1) both; }
-  @keyframes mh-wz-in-fwd { from { opacity: 0; transform: translateX(46px) scale(.985); } } @keyframes mh-wz-in-back { from { opacity: 0; transform: translateX(-46px) scale(.985); } }
+  @keyframes mh-wz-in-fwd { from { opacity: 0; transform: translateY(20px) scale(.985); } } @keyframes mh-wz-in-back { from { opacity: 0; transform: translateY(-14px) scale(.985); } }
   .mh-wz-tt { animation: mh-wz-tt .4s cubic-bezier(.2,.8,.2,1) both; } @keyframes mh-wz-tt { from { opacity: 0; transform: translateY(10px); } }
-  .mh-wz-sum em { animation: mh-wz-chip .45s cubic-bezier(.2,.9,.3,1.3) both; } @keyframes mh-wz-chip { from { opacity: 0; transform: translateY(10px) scale(.8); } }
+  .mh-wz-sum { padding: 7px 4px; margin: -7px -4px; } .mh-wz-sum em { animation: mh-wz-chip .45s cubic-bezier(.2,.9,.3,1.2) both; } @keyframes mh-wz-chip { from { opacity: 0; transform: translateY(5px) scale(.9); } }
   .mh-wz-page .mh-wz-grp { transition: background .3s ease, box-shadow .3s ease; } .mh-wz-page .mh-wz-grp button { transition: flex .35s ease, background .3s ease, box-shadow .3s ease; }
-  .mh-dk-realcard { width: 300px; flex: none; transform-origin: 50% 100%; animation: mh-dk-cardin .6s cubic-bezier(.2,.9,.3,1.1) both; filter: drop-shadow(0 14px 26px rgba(0,0,0,.5)); } @keyframes mh-dk-cardin { from { opacity: 0; transform: translateY(30px) rotateY(-28deg) scale(.92); } }
-  @media (prefers-reduced-motion: reduce) { .mh-wz-body.is-in-fwd, .mh-wz-body.is-in-back, .mh-wz-tt, .mh-wz-sum em, .mh-dk-realcard { animation: none; } }
+  /* Mazo de subclases con las cartas reales de la pestaña Cartas */
+  .mh-dk-card.is-cf { width: 300px; height: 420px; margin: -210px 0 0 -150px; border: 0; background: none; border-radius: 22px; overflow: visible; box-shadow: none; } .mh-dk-card.is-cf.is-front { box-shadow: none; filter: drop-shadow(0 0 22px color-mix(in srgb, var(--tc) 45%, transparent)) drop-shadow(0 18px 24px rgba(0,0,0,.65)); } .mh-dk-card.is-cf .mh-tick, .mh-dk-card.is-cf .mh-dk-tick { z-index: 5; }
+  .mh-root.is-mobile .mh-dk-card.is-cf { width: min(300px, 80vw); height: 420px; margin: -210px 0 0 calc(min(300px, 80vw) / -2); }
+  @media (prefers-reduced-motion: reduce) { .mh-wz-body.is-in-fwd, .mh-wz-body.is-in-back, .mh-wz-tt, .mh-wz-sum em { animation: none; } }
   .mh-wz-page .mh-wz-body.is-split { border: 0; background: none; border-radius: 0; }
   .mh-wz-page .mh-wz-list { border-right: 0; padding: 4px 18px 4px 0; }
   .mh-wz-page .mh-wz-det { padding: 4px 4px 4px 12px; }
@@ -20468,7 +20470,7 @@ export default function App({ onSignOut }) {
                         })
                       );
                     }
-                    // Enredo Feroz (Sabio): conjuro a alcance Lejano que inmoviliza; con una Esperanza, también a otro adversario Muy cercano del objetivo.
+                    // Enredo Feroz (Naturaleza): conjuro a alcance Lejano que inmoviliza; con una Esperanza, también a otro adversario Muy cercano del objetivo.
                     const enredoSk = charSpellTrait(c);
                     const enredoLabel = TRAITS.find((tr) => tr.key === enredoSk)?.label;
                     const enredoOn = !foe && !c.f_beastform && domainCardKeys.includes("Enredo Feroz") && !!enredoLabel;
@@ -20479,8 +20481,8 @@ export default function App({ onSignOut }) {
                         rollTraitCheck(viewingCharId, enredoLabel, spVal, { name: "Enredo Feroz", damage: "d8+1 físico", spell: true, fixedDice: 1, hopeExtra: !!hopeExtra });
                       };
                       const hopeNow = Number(c.hope_marked ?? HOPE_DEFAULT);
-                      out.push({ section: "Cartas de dominio", key: "enredo", Icon: Leaf, color: DOMAIN_COLORS.Sabio, label: "Enredo Feroz", sub: enredoLabel + " · 1d8+1 · inmoviliza · Lejano", run: cast(false) });
-                      out.push({ section: "Cartas de dominio", key: "enredo2", Icon: Leaf, color: DOMAIN_COLORS.Sabio, label: "Enredo Feroz + Esperanza", sub: hopeNow < 1 ? "Necesitas 1 Esperanza" : "Inmoviliza también a otro adversario Muy cercano", disabled: hopeNow < 1, run: cast(true) });
+                      out.push({ section: "Cartas de dominio", key: "enredo", Icon: Leaf, color: DOMAIN_COLORS.Naturaleza, label: "Enredo Feroz", sub: enredoLabel + " · 1d8+1 · inmoviliza · Lejano", run: cast(false) });
+                      out.push({ section: "Cartas de dominio", key: "enredo2", Icon: Leaf, color: DOMAIN_COLORS.Naturaleza, label: "Enredo Feroz + Esperanza", sub: hopeNow < 1 ? "Necesitas 1 Esperanza" : "Inmoviliza también a otro adversario Muy cercano", disabled: hopeNow < 1, run: cast(true) });
                     }
                     domainCardKeys.forEach((k) => {
                       const cd = findDomainCard(k);
@@ -23748,13 +23750,13 @@ export default function App({ onSignOut }) {
                                             return f ? { key: f.key, level: f.tier, type, damage: f.damage, hands: f.hands === 2 ? "Dos manos" : "Una mano", feature: f.feature, weapon: true } : null;
                                           };
                                           const elSub = me?.f_subclass === "Guardián de los Elementos" ? (SUBCLASSES.Druida || []).find((x) => x.key === "Guardián de los Elementos") : null;
-                                          const subCard = elSub ? { key: elSub.key, subclass: true, cls: "Druida", level: "", domain: "Sabio", type: "Subclase", kicker: "Subclase · " + (Number(me?.f_level || 1) <= 1 ? "Fundación" : tierForLevel(me?.f_level || 1) === 2 ? "Especialización" : "Maestría"), image: elSub.image, text: elSub.blurb, features: (elSub.features || []).filter((x) => ELEM_COL[x.name]) } : null;
+                                          const subCard = elSub ? { key: elSub.key, subclass: true, cls: "Druida", level: "", domain: "Naturaleza", type: "Subclase", kicker: "Subclase · " + (Number(me?.f_level || 1) <= 1 ? "Fundación" : tierForLevel(me?.f_level || 1) === 2 ? "Especialización" : "Maestría"), image: elSub.image, text: elSub.blurb, features: (elSub.features || []).filter((x) => ELEM_COL[x.name]) } : null;
                                           const rowColor = (x) => (typeof x === "string" && /^#[0-9a-f]{6}$/i.test(x) ? x : classColor(me?.f_class));
                                           const mcDom = getMulticlass(me)?.domain || "";
                                           const actionCards = buildActionRows().filter((it) => !/^(Ascendencia|Comunidad)/.test(it.kicker || "")).map((it) =>
                                             it.key === "subclass" && subCard
                                               ? subCard
-                                              : { key: it.title, rowCard: true, myClass: me?.f_class, detail: it.onClick?.detail, rowKey: it.key, multi: !!it.mc, mapUse: it.title === "Toque Salvaje", evo: it.title === "Evolución", wolf: it.title === "Hombre Lobo", locked: it.title === "Hombre Lobo" && (me?.f_transformation_form_active === "Forma de Lobo" || Number(me?.hp_marked || 0) < 1), Icon: it.Icon, kicker: it.kicker, text: it.summary, color: rowColor(it.color), domain: "Sabio", level: "", type: "Acción", open: () => (it.onClick(), setViewingCardDetail((d) => (d && !d.rowIcon ? { ...d, rowIcon: it.Icon } : d))) }
+                                              : { key: it.title, rowCard: true, myClass: me?.f_class, detail: it.onClick?.detail, rowKey: it.key, multi: !!it.mc, mapUse: it.title === "Toque Salvaje", evo: it.title === "Evolución", wolf: it.title === "Hombre Lobo", locked: it.title === "Hombre Lobo" && (me?.f_transformation_form_active === "Forma de Lobo" || Number(me?.hp_marked || 0) < 1), Icon: it.Icon, kicker: it.kicker, text: it.summary, color: rowColor(it.color), domain: "Naturaleza", level: "", type: "Acción", open: () => (it.onClick(), setViewingCardDetail((d) => (d && !d.rowIcon ? { ...d, rowIcon: it.Icon } : d))) }
                                           );
                                           const rootedMine = (campaignMap.tokens || []).filter((t) => t.rootedBy === viewingCharId && (t.conds || []).includes("Inmovilizado"));
                                           const ghostCard = rootedMine.length && keys.includes("Enredo Feroz") ? (() => { const base = findDomainCardAny("Enredo Feroz"); return base ? { ...base, key: "Inmovilizar", baseKey: "Enredo Feroz", text: "Puedes gastar una Esperanza para inmovilizar temporalmente a otro adversario en alcance Muy Cercano del objetivo de Enredo Feroz.", recall: null, noCost: true, ghost: true, noHope: Number(me?.hope_marked ?? HOPE_DEFAULT) < 1 } : null; })() : null;
@@ -34910,20 +34912,26 @@ export default function App({ onSignOut }) {
                         {stepItems.map((it, i) => {
                           const d = i - stepIndex;
                           const ad = Math.abs(d);
+                          // La carta de la subclase es la misma que se ve en la pestaña «Cartas» (Fundación).
+                          const ent = buildCardCatalog().find((x) => x.kind === "subclase" && x.cls === cls && x.key === it.key && x.rank === 0);
                           return (
                             <button
                               key={it.key}
                               type="button"
                               role="radio"
                               aria-checked={d === 0}
-                              className={"mh-dk-card" + (d === 0 ? " is-front" : "")}
+                              className={"mh-dk-card" + (d === 0 ? " is-front" : "") + (ent ? " is-cf" : "")}
                               style={{ "--d": d, "--a": ad, zIndex: 10 - ad }}
                               onClick={() => goTo(i)}
                             >
+                              {ent && <CardFace c={ent} I={Em} FitTitle={FitTitle} FitBox={FitBox} />}
+                              {!ent && (
                               <span className="mh-dk-im" aria-hidden="true" style={SUBCLASS_CARD_ART[it.key] ? { backgroundImage: "url(" + SUBCLASS_CARD_ART[it.key] + ")" } : undefined}>
                                 {!SUBCLASS_CARD_ART[it.key] && <Em size={64} strokeWidth={1.4} />}
                               </span>
+                              )}
                               {d === 0 && <span className="mh-dk-tick" aria-hidden="true"><Check size={16} strokeWidth={3} /></span>}
+                              {!ent && (
                               <span className="mh-dk-tx">
                                 <span className="mh-serif mh-dk-n">{it.key}</span>
                                 {it.expansion && <span className="mh-dk-k">{it.expansion}</span>}
@@ -34934,6 +34942,7 @@ export default function App({ onSignOut }) {
                                   </span>
                                 )}
                               </span>
+                              )}
                             </button>
                           );
                         })}
@@ -34944,27 +34953,13 @@ export default function App({ onSignOut }) {
                         )}
                       </div>
                       <div className="mh-dk-side">
-                        {(() => {
-                          // La carta de la subclase elegida, la misma que se ve en la pestaña «Cartas» (Fundación).
-                          const ent = buildCardCatalog().find((x) => x.kind === "subclase" && x.cls === cls && x.key === cur.key && x.rank === 0);
-                          if (ent)
-                            return (
-                              <div key={cur.key} className="mh-dk-realcard">
-                                <CardFace c={ent} I={Em} FitTitle={FitTitle} FitBox={FitBox} />
-                              </div>
-                            );
-                          return (
-                            <>
-                              <div className="mh-dk-sh">{cur.key} · Fundación</div>
-                              {featsOf(cur).map((f) => (
-                                <div key={f.name} className="mh-dk-fe">
-                                  <b>{f.name}</b>
-                                  <p>{f.text}</p>
-                                </div>
-                              ))}
-                            </>
-                          );
-                        })()}
+                        <div className="mh-dk-sh">{cur.key} · Fundación</div>
+                        {featsOf(cur).map((f) => (
+                          <div key={f.name} className="mh-dk-fe">
+                            <b>{f.name}</b>
+                            <p>{f.text}</p>
+                          </div>
+                        ))}
                         {cur.key === "Origen Elemental" && (
                           <div className="mh-sc-elem">
                             <b className="mh-serif">Elige tu elemento</b>
