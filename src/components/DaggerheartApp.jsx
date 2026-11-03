@@ -11101,10 +11101,10 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
   }, [cards.length]);
   if (!cards.length) return null;
   const grp = (c) => (c.weapon ? "w" : c.multi ? "m" : c.subclass || c.rowCard ? "a" : "d");
-  // Con más de 6 cartas se abre un solo grupo (Dominio, Armas o Clase) y los demás quedan en pila a los lados.
+  // Se abre un solo grupo (Dominio, Armas o Clase) y los demás quedan en pila a los lados, con pocas o muchas cartas.
   const GN = { d: "Dominio", w: "Armas", a: "Clase", m: "Multiclase" };
   const present = ["d", "w", "a", "m"].filter((k) => cards.some((c) => grp(c) === k));
-  const grouped = cards.length > 6 && present.length > 1;
+  const grouped = present.length > 1;
   const act = grouped ? (present.includes(grpSel) ? grpSel : present[0]) : null;
   // La carta que se está usando sale de la mano (y las demás se recolocan) hasta que vuelve.
   const shown = (grouped ? cards.filter((c) => grp(c) === act) : cards).filter((c) => !(held && held.key === c.key));
@@ -11680,7 +11680,7 @@ function MapBoard({ showHp, aimRange, rangeMenu, cfx, meCharId, onDragInfo, onSt
             key={t.id}
             type="button"
             data-tid={t.id}
-            className={"mh-map-tk is-" + t.kind + (t.hand ? " is-hand" : "") + (hAnim && hAnim.to === t.id ? " is-hurt" : "") + (eAnim && eAnim.kind === "burn" && eAnim.to === t.id ? " is-burn" : "") + (t.beast || t.trf ? " is-trf" : "") + (morphs[t.id] ? " is-morph" : "") + (t.elem ? " is-el-" + String(t.elem).toLowerCase() : elemOut[t.id] ? " is-el-out is-el-p-" + elemOut[t.id].toLowerCase() : "") + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id && anim.kind !== "free" && anim.kind !== "howl" && anim.kind !== "gold" ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") + (anim.kind === "web" ? " is-web" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
+            className={"mh-map-tk is-" + t.kind + (t.hand ? " is-hand" : "") + (hAnim && hAnim.to === t.id ? " is-hurt" : "") + (eAnim && eAnim.kind === "burn" && eAnim.to === t.id ? " is-burn" : "") + (t.beast || t.trf ? " is-trf" : "") + (morphs[t.id] ? " is-morph" : "") + (t.elem ? " is-el-" + String(t.elem).toLowerCase() : elemOut[t.id] ? " is-el-out is-el-p-" + elemOut[t.id].toLowerCase() : "") + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && (anim.to === t.id || (anim.tos || []).includes(t.id)) && anim.kind !== "free" && anim.kind !== "howl" && anim.kind !== "gold" ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") + (anim.kind === "web" ? " is-web" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
             style={{ ...at(pos.x, pos.y), "--tc": t.color, ...(t.color2 ? { "--tc2": t.color2 } : {}), ...(anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); return tg ? { "--ax": (tg.x - t.x) * 100 + "%", "--ay": (tg.y - t.y) * 100 + "%" } : {}; })() : {}) }}
             onPointerDown={(e) => startDrag(e, t)}
             onContextMenu={(e) => openMenu(e, t)}
@@ -11767,11 +11767,12 @@ function MapBoard({ showHp, aimRange, rangeMenu, cfx, meCharId, onDragInfo, onSt
       </div>
 
       {anim && (anim.kind || "melee") !== "melee" && (() => {
-        const fa = tokens.find((x) => x.id === anim.from), fb = tokens.find((x) => x.id === anim.to);
-        if (!fa || !fb) return null;
+        const fa = tokens.find((x) => x.id === anim.from);
+        const fbs = (anim.tos && anim.tos.length ? anim.tos : [anim.to]).map((id) => tokens.find((x) => x.id === id)).filter(Boolean);
+        if (!fa || !fbs.length) return null;
         return (
           <svg className="mh-map-shot" viewBox={`0 0 ${MAP_COLS * 40} ${MAP_ROWS * 40}`} preserveAspectRatio="none">
-            <ShotFx key={anim.key} kind={anim.kind} n={anim.n} a={[(fa.x + 0.5) * 40, (fa.y + 0.5) * 40]} b={[(fb.x + 0.5) * 40, (fb.y + 0.5) * 40]} size={40} />
+            {fbs.map((fb) => <ShotFx key={anim.key + fb.id} kind={anim.kind} n={anim.n} a={[(fa.x + 0.5) * 40, (fa.y + 0.5) * 40]} b={[(fb.x + 0.5) * 40, (fb.y + 0.5) * 40]} size={40} />)}
           </svg>
         );
       })()}
@@ -18735,7 +18736,7 @@ export default function App({ onSignOut }) {
         fxLater.push(() => {
           ids.forEach((id) => mutateMap(sheetCampaignId, (ts) => ts.map((x) => (x.id === id && x.stats ? { ...x, stats: { ...x.stats, stressMarked: Math.min(Number(x.stats.stress || 0) || 99, Number(x.stats.stressMarked || 0) + 1) } } : x))));
           // El efecto del mapa es uno solo: se lanza uno tras otro hacia cada adversario alcanzado.
-          if (fromF) ids.forEach((id, i) => setTimeout(() => mutateMap(sheetCampaignId, () => ({ key: Date.now() + i, from: fromF.id, to: id, kind: "magic" }), "fx"), i * 420));
+          if (fromF && ids.length) { const fxKey = Date.now(); mutateMap(sheetCampaignId, () => ({ key: fxKey, from: fromF.id, to: ids[0], tos: ids, kind: "magic" }), "fx"); }
         });
       }
       if (r.weapon.targetId && sheetCampaignId) {
