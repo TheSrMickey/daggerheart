@@ -9,6 +9,8 @@ export const CHANGELOG = [
     title: "El Oráculo del DJ",
     blurb: "Un anillo de luz que responde a las preguntas de la mesa: Sí / No, con matices o con una tirada de destino, solo para el DJ y a un toque bajo el chat.",
     items: [
+      { tag: "arreglo", text: "Combate · el halo de «Huesos Desnudos» ahora sigue exactamente el borde redondeado de la carta." },
+      { tag: "mejora", text: "Combate · si intentas arrastrar al mapa una carta que no se lanza (pasivas y demás), la carta se sacude como un «no» y un aviso lo explica; además el cursor ya no sugiere que se pueda arrastrar." },
       { tag: "mejora", text: "Combate · la carta «Huesos Desnudos» en la mano muestra si está activa: un halo dorado que respira alrededor de la carta cuando no llevas armadura, y la carta apagada y en gris cuando llevas una." },
       { tag: "nuevo", text: "Hoja · «Huesos Desnudos» ya funciona: si llevas la carta y no tienes armadura equipada, tu Puntuación de Armadura es 3 + tu Fuerza y los umbrales de daño base son los de tu rango (9/19, 11/24, 13/31 o 15/38, más tu nivel). Al equipar una armadura, vuelve lo normal." },
       { tag: "mejora", text: "Combate · una carta o se puede usar en el mapa o no: las que no tienen función ya no se arrastran (solo se abren al pulsarlas), y al arrastrar las demás ya no sale el cartel «Casilla (alcance)» sino «Usar» con el nombre de la carta." },
