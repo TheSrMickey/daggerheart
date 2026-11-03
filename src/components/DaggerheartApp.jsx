@@ -7591,11 +7591,11 @@ const sharedStyles = `
   .mh-root.is-mobile .mh-wz-ga { padding: 14px; }
   .mh-root.is-mobile .mh-wz-gn { font-size: 46px; } .mh-root.is-mobile .mh-wz-gw { min-height: 0; }
   .mh-root.is-mobile .mh-wz-body div[style*="cursor: pointer"][style*="space-between"] { flex-wrap: wrap; gap: 4px 10px; }
-  .mh-wz-page { animation: mh-view-in .3s cubic-bezier(.2,.8,.2,1) backwards; } .mh-wz-page .mh-wz { width: 100%; height: calc(100vh - 150px); min-height: 520px; max-height: none; }
+  .mh-wz-page { animation: mh-view-in .3s cubic-bezier(.2,.8,.2,1) backwards; } .mh-wz-page .mh-wz { width: 100%; height: calc(100vh - 72px); min-height: 520px; max-height: none; } /* 36 px arriba y 36 px abajo, igual que Inicio */
   /* La creación de personaje vive en la columna central, sin caja alrededor (como el resto de páginas). */
   .mh-wz-page .mh-card.mh-wz { background: none !important; border: 0 !important; box-shadow: none !important; border-radius: 0; overflow: visible; backdrop-filter: none; -webkit-backdrop-filter: none; }
-  .mh-wz-page .mh-wz-top { padding: 2px 0 16px; border-bottom: 0; }
-  .mh-wz-page .mh-wz-title .mh-serif { font-size: 28px; }
+  .mh-wz-page .mh-wz-top { padding: 0 0 14px; border-bottom: 0; }
+  .mh-wz-page .mh-wz-title .mh-serif { font-size: 28px; line-height: 1.15; }
   .mh-wz-page .mh-wz-title small { font-size: 13px; }
   .mh-wz-page .mh-wz-steps { margin-top: 14px; }
   .mh-wz-page .mh-wz-grp button { height: 6px; }
