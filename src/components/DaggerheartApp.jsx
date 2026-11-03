@@ -4481,8 +4481,8 @@ const sharedStyles = `
   .mh-cardc-big { font-size: 30px; font-weight: 700; line-height: 1.1; color: color-mix(in srgb, var(--cc) var(--mh-accent-keep, 100%), #000); }
   /* Carta de dominio (diseño oficial adaptado): cinta de nivel, tipo en cápsula, coste arriba a la derecha y texto sobre un fundido */
   .mh-cardc.is-bg { background: #10112a !important; }
-  .mh-cardc.is-bg .mh-cardc-art { height: 188px !important; min-height: 188px; }
-  .mh-cardc.is-bg .mh-cardc-art img, .mh-cardc.is-bg .mh-cardc-noart { bottom: auto; height: 222px; object-position: 46% 28%; }
+  .mh-cardc.is-bg .mh-cardc-art { height: var(--abg, 188px) !important; min-height: var(--abg, 188px); }
+  .mh-cardc.is-bg .mh-cardc-art img, .mh-cardc.is-bg .mh-cardc-noart { bottom: auto; height: calc(var(--abg, 188px) + 34px); object-position: 46% 28%; }
   .mh-cardc.is-bg .mh-cardc-noart { padding-top: 0; align-items: center; }
   .mh-cardc.is-bg .mh-cardc-art img, .mh-cardc.is-bg .mh-cardc-noart { -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 52%, transparent 100%); mask-image: linear-gradient(180deg, #000 0%, #000 52%, transparent 100%); }
   .mh-cardc.is-bg .mh-cardc-art::after { top: 70px; bottom: auto; height: 170px; background: linear-gradient(180deg, rgba(16,17,42,0) 0%, rgba(16,17,42,.12) 18%, rgba(16,17,42,.4) 40%, rgba(16,17,42,.72) 62%, rgba(16,17,42,.93) 82%, #10112a 100%); }
@@ -7634,7 +7634,9 @@ const sharedStyles = `
   .mh-root:not(.is-mobile) .mh-wz-page .mh-wz-cls .mh-wz-tiles, .mh-root:not(.is-mobile) .mh-wz-page .mh-wz-rcol .mh-wz-det, .mh-wz-hd { border: 1px solid var(--mh-line2); background: color-mix(in srgb, var(--mh-panel) 80%, transparent); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: 0 18px 44px #0007, inset 0 1px 0 #ffffff12; }
   .mh-root:not(.is-mobile) .mh-wz-page .mh-wz-cls .mh-wz-tiles { margin: 0; padding: 16px; border-radius: 26px; }
   .mh-wz-rcol { display: flex; flex-direction: column; gap: 16px; min-width: 0; min-height: 0; }
-  .mh-root:not(.is-mobile) .mh-wz-page .mh-wz-rcol .mh-wz-det { flex: 1; min-height: 0; border-radius: 26px; padding: 22px 26px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--mh-line2, #ffffff30) transparent; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .mh-root:not(.is-mobile) .mh-wz-page .mh-wz-rcol .mh-wz-det { flex: 1; min-height: 0; border-radius: 26px; padding: 22px 26px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--mh-line2, #ffffff30) transparent; -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--mh-panel); }
+  .mh-wz-rcol .mh-wz-det::before { display: none; }
+  .mh-root:not(.is-mobile) .mh-wz-page .mh-wz-cls .mh-wz-tiles, .mh-wz-hd { -webkit-backdrop-filter: none; backdrop-filter: none; }
   .mh-wz-desc { font-size: 13px; line-height: 1.6; margin: 0 0 14px; } .mh-wz-fh { font: 700 10.5px Inter, system-ui, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--mh-muted); margin: 2px 0 8px; }
   .mh-wz-hd { flex: none; display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 26px; }
   .mh-wz-hd-ic { flex: none; width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center; color: #fff; box-shadow: 0 8px 20px color-mix(in srgb, var(--tc) 42%, transparent), inset 0 0 0 2px #ffffff30; }
@@ -35000,6 +35002,17 @@ export default function App({ onSignOut }) {
                       </div>
                       <div className="mh-dk-side">
                         <div className="mh-dk-sh">{cur.key} · Fundación</div>
+                        {(() => {
+                          // La habilidad de la subclase va primero («Nombre: texto» en la descripción) y debajo sus opciones o características.
+                          const am = /^([^:.]{3,40}): (.+)$/.exec(cur.blurb || "");
+                          return am ? (
+                            <div className="mh-dk-fe">
+                              <b>{am[1]}</b>
+                              <p>{am[2].charAt(0).toUpperCase() + am[2].slice(1)}</p>
+                            </div>
+                          ) : null;
+                        })()}
+                        {cur.key === "Guardián de los Elementos" && <div className="mh-dk-sh">Elementos que puedes canalizar</div>}
                         {featsOf(cur).map((f) => (
                           <div key={f.name} className="mh-dk-fe">
                             <b>{f.name}</b>

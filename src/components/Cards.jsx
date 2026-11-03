@@ -64,7 +64,7 @@ export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
       <div className="mh-glare" />
       {legend && <div className="mh-holo is-idle" />}
       {legend && <div className="mh-legend-sheen" />}
-      <div className="mh-cardc-art" style={{ height: total > 600 ? 84 : total > 320 ? 100 : 124, "--ah": (total > 600 ? 84 : total > 320 ? 100 : 124) + "px" }}>
+      <div className="mh-cardc-art" style={{ height: total > 600 ? 84 : total > 320 ? 100 : 124, "--ah": (total > 600 ? 84 : total > 320 ? 100 : 124) + "px", ...(sub && total > 400 ? { "--abg": (total > 520 ? 128 : total > 450 ? 140 : 156) + "px" } : null) }}>
         {c.image ? <img src={c.image} alt={modal ? c.key : ""} /> : <div className="mh-cardc-noart" style={{ color: col }}><I size={50} strokeWidth={1.5} /></div>}
       </div>
       <div className="mh-cardc-badge">
