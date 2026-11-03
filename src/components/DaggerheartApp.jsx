@@ -7635,7 +7635,8 @@ const sharedStyles = `
   .mh-root:not(.is-mobile) .mh-wz-page .mh-wz-cls .mh-wz-tiles { margin: 0; padding: 16px; border-radius: 26px; }
   .mh-wz-rcol { display: flex; flex-direction: column; gap: 16px; min-width: 0; min-height: 0; }
   .mh-root:not(.is-mobile) .mh-wz-page .mh-wz-rcol .mh-wz-det { flex: 1; min-height: 0; border-radius: 26px; padding: 22px 26px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--mh-line2, #ffffff30) transparent; -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--mh-panel); }
-  .mh-wz-rcol .mh-wz-det::before { display: none; }
+  /* El texto del detalle ya no se desvanece abajo (la máscara de .mh-noscroll parecía un difuminado) */
+  .mh-root:not(.is-mobile) .mh-wz-page .mh-wz-rcol .mh-wz-det.mh-noscroll { -webkit-mask-image: none !important; mask-image: none !important; }
   .mh-root:not(.is-mobile) .mh-wz-page .mh-wz-cls .mh-wz-tiles, .mh-wz-hd { -webkit-backdrop-filter: none; backdrop-filter: none; }
   .mh-wz-desc { font-size: 13px; line-height: 1.6; margin: 0 0 14px; } .mh-wz-fh { font: 700 10.5px Inter, system-ui, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--mh-muted); margin: 2px 0 8px; }
   .mh-wz-hd { flex: none; display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 26px; }
