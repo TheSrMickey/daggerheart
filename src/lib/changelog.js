@@ -9,6 +9,10 @@ export const CHANGELOG = [
     title: "El Oráculo del DJ",
     blurb: "Un anillo de luz que responde a las preguntas de la mesa: Sí / No, con matices o con una tirada de destino, solo para el DJ y a un toque bajo el chat.",
     items: [
+      { tag: "mejora", text: "Combate · «Palabras Inspiradoras» se apunta como Embelesar y las armas: al arrastrarla sale el alcance Cercano y una línea de puntos que se pone verde sobre un aliado válido; si la sueltas fuera de alcance o sin aliado se cancela." },
+      { tag: "mejora", text: "Combate · las cartas con fichas ya no muestran el texto de abajo al abrirlas (solo las fichas)." },
+      { tag: "arreglo", text: "Tiradas · cuando la tirada es contra un objetivo elegido en el mapa (cartas o armas), la Dificultad es la del objetivo y ya no se puede cambiar en la ventana de tirada." },
+      { tag: "mejora", text: "Combate · el aviso de «Embelesar» (marcar 1 Estrés para que el objetivo también lo marque) ya no es una ventana del navegador: es un aviso de la propia plataforma con «Marcar 1 Estrés» y «No, gracias»." },
       { tag: "nuevo", text: "Combate · al embelesar a un adversario aparece en tu mano la carta auxiliar «Romper el embeleso» (gratis): suéltala sobre él para liberarlo con una onda rosa que se pliega. Desaparece sola cuando ya no hay nadie embelesado por ti (también si el DJ lo libera)." },
       { tag: "nuevo", text: "Combate · «Palabras Inspiradoras» se juega desde el mapa: arrástrala a un aliado en alcance Cercano, elige el beneficio (libera 1 Estrés, cura 1 Punto de Vida o gana 1 Esperanza) y se gasta una ficha de la carta. Unas chispas doradas viajan hasta tu aliado y le llega una tarjeta al chat para que reciba el beneficio. Las fichas son tu Presencia y se colocan solas tras un descanso largo (las sobrantes se descartan)." },
       { tag: "arreglo", text: "Combate · al pulsar una carta de tu mano en el mapa, la vista ampliada ahora oscurece toda la pantalla, también el menú lateral izquierdo (antes quedaba sin oscurecer)." },
