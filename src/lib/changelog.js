@@ -9,6 +9,7 @@ export const CHANGELOG = [
     title: "El Oráculo del DJ",
     blurb: "Un anillo de luz que responde a las preguntas de la mesa: Sí / No, con matices o con una tirada de destino, solo para el DJ y a un toque bajo el chat.",
     items: [
+      { tag: "nuevo", text: "Combate · «Empujón Contundente» se juega desde el mapa: arrástrala a un adversario Cuerpo a cuerpo y, tras revelarse la carta, atacas con tu arma principal. Si aciertas, hace su daño (+d6 si es con Esperanza) y el adversario sale empujado hasta alcance Cercano; después puedes gastar 1 Esperanza para dejarlo Vulnerable, y el DJ lo quita con «Quitar Vulnerable»." },
       { tag: "arreglo", text: "Combate · «Llama Salvaje» ahora lanza el efecto de fuego a la vez sobre todos los adversarios alcanzados (hasta tres) y todos reaccionan al impacto, no solo uno." },
       { tag: "arreglo", text: "Combate · la mano de cartas se organiza siempre en grupos (Armas, Clase, Dominio…) con las pilas a los lados. Antes solo se agrupaba con más de 6 cartas, así que con pocas (como en el Guardián) salían todas mezcladas." },
       { tag: "arreglo", text: "Combate · «Llama Salvaje» ahora muestra el fuego en cada adversario alcanzado (hasta tres), uno tras otro, y no solo en el primero." },

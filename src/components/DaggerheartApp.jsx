@@ -11011,7 +11011,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
     return !!r && x >= r.left - 30 && x <= r.right + 30 && y >= r.top - 24 && y <= r.bottom + 24;
   };
   // Cartas que se apuntan a un adversario: Enredo Feroz, su carta extra y las armas (con el alcance de cada arma).
-  const isAim = (c) => c.key === AIM_CARD || ((c.key === "Embelesar" || c.key === "Palabras Inspiradoras") && !c.rowCard) || (!!c.ghost && !c.recharge && !c.ward) || !!c.bookCard || !!c.weapon || (c.key === "Desatar el Caos" && !c.rowCard);
+  const isAim = (c) => c.key === AIM_CARD || ((c.key === "Embelesar" || c.key === "Palabras Inspiradoras") && !c.rowCard) || (!!c.ghost && !c.recharge && !c.ward) || !!c.bookCard || (c.key === "Empujón Contundente" && !c.rowCard) || !!c.weapon || (c.key === "Desatar el Caos" && !c.rowCard);
   const aimReach = (c) => (reachOf && reachOf(c)) || { label: "Lejano", max: RANGE_CELLS["Lejano"] };
   // Objetivo válido de una carta que se apunta: aliado (otro personaje) para Palabras Inspiradoras; adversario vivo para el resto.
   const aimTok = (c, t) => !t.hidden && (c.unTele ? t.id === c.unTele : c.bookCard ? !t.vanished : t.id !== me?.id && (c.key === "Palabras Inspiradoras" && !c.rowCard ? t.kind === "pc" && !t.vanished : (t.kind === "foe" || t.kind === "npc") && !deadTok(t)));
@@ -12425,6 +12425,7 @@ export default function App({ onSignOut }) {
   const sessDismiss = useRef({});
   const [charmAsk, setCharmAsk] = useState(null); // Embelesar: ¿marcar 1 Estrés para que el objetivo también lo marque? { charId, targetId }
   const [bookAsk, setBookAsk] = useState(null); // Libros de Ava/Illiat: elegir el hechizo tras soltar la carta { charId, card, targetId }
+  const [shoveAsk, setShoveAsk] = useState(null); // Empujón Contundente: ¿gastar Esperanza para dejarlo Vulnerable? { charId, targetId }
   const [arcaneAsk, setArcaneAsk] = useState(null); // Descarga Arcana: cuánta Esperanza gastar { charId, card, targetId }
   const [inspireAsk, setInspireAsk] = useState(null); // Palabras Inspiradoras: elegir el beneficio { charId, card, target }
   const [wardAsk, setWardAsk] = useState(null); // Guarda Rúnica: elegir portador y objeto { charId, card, step, bearerId, item, custom }
@@ -16423,6 +16424,32 @@ export default function App({ onSignOut }) {
     afterReveal(charId, card.key, () => mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: me.id, to: me.id, kind: "gold" }), "fx"));
     return "reveal";
   };
+  // Empujón Contundente: ataque con el arma principal Cuerpo a cuerpo; si aciertas, daño y el adversario sale empujado hasta alcance Cercano.
+  const castShove = (charId, target, card) => {
+    const c = charsRef.current[charId];
+    const me = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
+    const w = c ? PRIMARY_WEAPONS.find((x) => x.key === c.f_primary_weapon) : null;
+    if (!c || !me || !w || c.f_beastform || !target || !(target.kind === "foe" || target.kind === "npc") || deadTok(target) || cellDist(me, target) > RANGE_CELLS["Cuerpo a cuerpo"]) return "cancel";
+    const tr = TRAITS.find((x) => x.label === w.trait);
+    if (!tr || !/d\d/.test(w.damage || "")) return "cancel";
+    const mods = getEquipmentMods(w, SECONDARY_WEAPONS.find((x) => x.key === c.f_secondary_weapon), ARMORS.find((a) => a.key === c.f_armor));
+    postCampaignEvent(charId, "💥 Empujón Contundente sobre " + (target.name || "un adversario") + " con " + w.key);
+    playCardOnMap(sheetCampaignId, charId, card, { noChat: true, short: true });
+    afterReveal(charId, card.key, () => rollTraitCheck(charId, w.trait, Number(c[tr.key] || 0) + (mods[tr.key] || 0), { name: w.key, damage: w.damage, shove: true, targetChosen: true, targetId: target.id, targetName: target.name, targetDc: target.stats?.difficulty || null }));
+    return "reveal";
+  };
+  const confirmShoveVuln = (yes) => {
+    const A = shoveAsk;
+    setShoveAsk(null);
+    if (!yes || !A) return;
+    const c = charsRef.current[A.charId];
+    const tg = (campaignMapRef.current.tokens || []).find((t) => t.id === A.targetId);
+    if (!c || !tg || Number(c.hope_marked ?? HOPE_DEFAULT) < 1) return;
+    spendHope(A.charId, 1);
+    mutateMap(sheetCampaignId, (ts) => ts.map((x) => (x.id === tg.id ? { ...x, conds: [...new Set([...(x.conds || []), "Vulnerable"])] } : x)));
+    postCampaignEvent(A.charId, "💥 Gasta 1 Esperanza: " + (tg.name || "el adversario") + " queda temporalmente Vulnerable");
+    pushMapLog(sheetCampaignId, "💥 Empujón Contundente: " + (tg.name || "un adversario") + " queda Vulnerable", "info");
+  };
   const confirmArcane = (n) => {
     const A = arcaneAsk;
     setArcaneAsk(null);
@@ -18739,6 +18766,14 @@ export default function App({ onSignOut }) {
           if (fromF && ids.length) { const fxKey = Date.now(); mutateMap(sheetCampaignId, () => ({ key: fxKey, from: fromF.id, to: ids[0], tos: ids, kind: "magic" }), "fx"); }
         });
       }
+      let shoveBonus = 0;
+      if (r.weapon.shove) {
+        if (r.hope >= r.fear) {
+          shoveBonus = 1 + Math.floor(Math.random() * 6);
+          postCampaignEvent(charId, "💥 Éxito con Esperanza: suma un d6 al daño (" + shoveBonus + ")");
+        }
+        if (Number(rc?.hope_marked ?? HOPE_DEFAULT) >= 1) setShoveAsk({ charId, targetId: r.weapon.targetId });
+      }
       if (r.weapon.targetId && sheetCampaignId) {
         const fromTok = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
         const reachNow = weaponReach(rc, name);
@@ -18750,7 +18785,8 @@ export default function App({ onSignOut }) {
         })() : null;
         const fxKind = snareIds ? "web" : r.weapon.book === "ice" ? "shot" : name === "Desatar el Caos" ? "chaos" : /mágic/i.test(damage || "") ? "magic" : reachNow && reachNow !== "Cuerpo a cuerpo" ? "shot" : "melee";
         if (fromTok) fxLater.push(() => mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: fromTok.id, to: r.weapon.targetId, kind: fxKind, ...(fxKind === "chaos" ? { n: r.weapon.fixedDice || 1 } : {}), ...(snareIds && snareIds[1] ? { to2: snareIds[1] } : {}) }), "fx"));
-        if (r.weapon.book === "push" && fromTok) {
+        if ((r.weapon.book === "push" || r.weapon.shove) && fromTok) {
+          const pushMax = r.weapon.shove ? RANGE_CELLS["Cercano"] : RANGE_CELLS["Lejano"];
           // Empujón de Poder: el adversario sale despedido en línea recta, lejos de quien lo lanza, hasta alcance Lejano (o hasta topar con algo).
           fxLater.push(() => setTimeout(() => mutateMap(sheetCampaignId, (ts) => {
             const tk = ts.find((x) => x.id === r.weapon.targetId);
@@ -18758,16 +18794,16 @@ export default function App({ onSignOut }) {
             if (!tk || !src) return ts;
             const dx = tk.x - src.x, dy = tk.y - src.y, m = Math.max(Math.abs(dx), Math.abs(dy)) || 1;
             let best = { x: tk.x, y: tk.y };
-            for (let k = 1; k <= 12; k++) {
+            for (let k = 1; k <= pushMax; k++) {
               const nx = Math.round(tk.x + (dx / m) * k), ny = Math.round(tk.y + (dy / m) * k);
               if (nx < 0 || ny < 0 || nx >= MAP_COLS || ny >= MAP_ROWS) break;
-              if (Math.max(Math.abs(nx - src.x), Math.abs(ny - src.y)) > RANGE_CELLS["Lejano"]) break;
+              if (Math.max(Math.abs(nx - src.x), Math.abs(ny - src.y)) > pushMax) break;
               if (ts.some((x) => x.id !== tk.id && !x.vanished && x.x === nx && x.y === ny)) break;
               best = { x: nx, y: ny };
             }
             return ts.map((x) => (x.id === tk.id ? { ...x, ...best } : x));
           }), 450));
-          pushMapLog(sheetCampaignId, "💥 Empujón de Poder: " + (campaignMapRef.current.tokens || []).find((x) => x.id === r.weapon.targetId)?.name + " sale despedido", "info");
+          pushMapLog(sheetCampaignId, "💥 " + (r.weapon.shove ? "Empujón Contundente" : "Empujón de Poder") + ": " + (campaignMapRef.current.tokens || []).find((x) => x.id === r.weapon.targetId)?.name + " sale despedido", "info");
         }
         if (snareIds) {
           // Las raíces inmovilizan al objetivo (y al segundo adversario si se gasta una Esperanza).
@@ -18776,7 +18812,7 @@ export default function App({ onSignOut }) {
           if (snareIds[1] && rc) updateCharacterField(charId, "hope_marked", String(Math.max(0, Number(rc.hope_marked ?? HOPE_DEFAULT) - 1)));
         }
       }
-      rollWeaponDamage(name, damage, charId, isCritical, { after: () => fxLater.forEach((fn) => fn()), ...(r.weapon.spell ? { plain: true, fixedDice: r.weapon.fixedDice || 1 } : {}), angel: r.weapon.angel || 0, knight: !!r.weapon.knight, attackFear: r.fear, ...(pummel || honedHit ? { fixedDice: getProficiency(rc) + (pummel ? 1 : 0) + (honedHit ? 1 : 0) } : {}), fearDice, cloaked: wasCloaked, spirit, resonance: spirit && rc && tierForLevel(rc.f_level || 1) >= 3, extraFlat: r.weapon.elemDmg || 0, doublePick: !!r.weapon.manipDouble, targetId: r.weapon.targetId || null, targetIds: r.weapon.hitIds || null });
+      rollWeaponDamage(name, damage, charId, isCritical, { after: () => fxLater.forEach((fn) => fn()), ...(r.weapon.spell ? { plain: true, fixedDice: r.weapon.fixedDice || 1 } : {}), angel: r.weapon.angel || 0, knight: !!r.weapon.knight, attackFear: r.fear, ...(pummel || honedHit ? { fixedDice: getProficiency(rc) + (pummel ? 1 : 0) + (honedHit ? 1 : 0) } : {}), fearDice, cloaked: wasCloaked, spirit, resonance: spirit && rc && tierForLevel(rc.f_level || 1) >= 3, extraFlat: (r.weapon.elemDmg || 0) + shoveBonus, doublePick: !!r.weapon.manipDouble, targetId: r.weapon.targetId || null, targetIds: r.weapon.hitIds || null });
   };
   const doTraitRoll = async (charId, traitLabel, traitValue, weapon, cardContext, advantage, extras = {}) => {
     let wasCloaked = false;
@@ -23527,7 +23563,7 @@ export default function App({ onSignOut }) {
                                               cardBack={cardBack}
                                               aimOk={(card, tg) => !card.ghost || !!card.unTele || (card.unCharm ? canUnCharm(viewingCharId, tg) : card.release ? canRelease(viewingCharId, tg) : canExtraRoot(viewingCharId, tg))}
                                               onAim={setAimRange}
-                                              reachOf={(card) => { if (card.spellReach) return { label: card.spellReach, max: RANGE_CELLS[card.spellReach] }; if ((card.key === "Embelesar" || card.key === "Palabras Inspiradoras") && !card.weapon && !card.rowCard) return { label: "Cercano", max: RANGE_CELLS["Cercano"] }; if (!card.weapon) return null; const lab = weaponReach(characters[viewingCharId], card.key); return lab ? { label: lab, max: RANGE_CELLS[lab] || 99 } : null; }}
+                                              reachOf={(card) => { if (card.key === "Empujón Contundente" && !card.weapon && !card.rowCard) return { label: "Cuerpo a cuerpo", max: RANGE_CELLS["Cuerpo a cuerpo"] }; if (card.spellReach) return { label: card.spellReach, max: RANGE_CELLS[card.spellReach] }; if ((card.key === "Embelesar" || card.key === "Palabras Inspiradoras") && !card.weapon && !card.rowCard) return { label: "Cercano", max: RANGE_CELLS["Cercano"] }; if (!card.weapon) return null; const lab = weaponReach(characters[viewingCharId], card.key); return lab ? { label: lab, max: RANGE_CELLS[lab] || 99 } : null; }}
                                               cardBorder={cardBorder}
                                               beast={{ forms: BEASTFORMS, tier: tierForLevel(me?.f_level || 1), active: me?.f_beastform || "", stressFull: Number(me?.stress_marked || 0) >= Number(me?.r_stress || 0) }}
                                               wardChip={wardChip}
@@ -23542,6 +23578,7 @@ export default function App({ onSignOut }) {
                                               tokens={mapTokens}
                                               onUse={(card, cell, target, rng) =>
                                                 card.key === "Engañador Hábil" && !card.weapon && !card.rowCard && !card.subclass ? castDeceiver(viewingCharId, card) :
+                                                card.key === "Empujón Contundente" && !card.weapon && !card.rowCard && !card.subclass ? castShove(viewingCharId, target, card) :
                                                 card.unTele ? castUnTele(viewingCharId, target, card) :
                                                 card.bookCard && !card.weapon && !card.rowCard ? (setBookAsk({ charId: viewingCharId, card, targetId: target.id }), "cancel") :
                                                 card.key === "Desatar el Caos" && !card.weapon && !card.rowCard && !card.subclass ? castChaos(viewingCharId, target, card) :
@@ -27798,6 +27835,20 @@ export default function App({ onSignOut }) {
                 </div>
               );
             })()}
+            {shoveAsk && shoveAsk.charId === viewingCharId && (
+              <div className="mh-evo-wrap" onClick={() => confirmShoveVuln(false)}>
+                <div className="mh-bpick mh-sess" role="dialog" aria-label="Empujón Contundente" onClick={(e) => e.stopPropagation()}>
+                  <div className="mh-elpick-h">
+                    <b>Empujón Contundente</b>
+                    <span>{((campaignMap.tokens || []).find((t) => t.id === shoveAsk.targetId)?.name || "El adversario") + " sale empujado. ¿Gastas 1 Esperanza para dejarlo temporalmente Vulnerable?"}</span>
+                  </div>
+                  <div className="mh-evo-act">
+                    <button type="button" className="mh-elpick-x" onClick={() => confirmShoveVuln(false)}>No, gracias</button>
+                    <button type="button" className="mh-evo-go" onClick={() => confirmShoveVuln(true)}>Gastar 1 Esperanza</button>
+                  </div>
+                </div>
+              </div>
+            )}
             {arcaneAsk && arcaneAsk.charId === viewingCharId && (() => {
               const A = arcaneAsk;
               const c = characters[A.charId];
@@ -33823,6 +33874,9 @@ export default function App({ onSignOut }) {
                                           {t.stats && <small>{Math.max(0, Number(t.stats.hp || 0) - Number(t.stats.hpMarked || 0))}/{t.stats.hp} PV</small>}
                                           {(t.conds || []).includes("Embelesado") && (
                                             <button type="button" className="mh-btn-ghost" onClick={() => mutateMap(viewingCampaignId, (ts) => ts.map((x) => (x.id === t.id ? { ...x, conds: (x.conds || []).filter((c) => c !== "Embelesado"), charmedBy: undefined } : x)))}>Liberar del embeleso</button>
+                                          )}
+                                          {(t.conds || []).includes("Vulnerable") && (
+                                            <button type="button" className="mh-btn-ghost" onClick={() => mutateMap(viewingCampaignId, (ts) => ts.map((x) => (x.id === t.id ? { ...x, conds: (x.conds || []).filter((c) => c !== "Vulnerable") } : x)))}>Quitar Vulnerable</button>
                                           )}
                                           {(t.conds || []).includes("Dormido") && (
                                             <button type="button" className="mh-btn-ghost" onClick={() => mutateMap(viewingCampaignId, (ts) => ts.map((x) => (x.id === t.id ? { ...x, conds: (x.conds || []).filter((c) => c !== "Dormido") } : x)))}>Despertar</button>
