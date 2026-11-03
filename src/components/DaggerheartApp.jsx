@@ -51,7 +51,7 @@ const QUICKSTARTS = [
   { key: "sablewood", name: "Los mensajeros de Sablewood", build: buildSablewood, ai: true, text: "Aventura de inicio ya preparada: escenas, pistas ocultas, reparto con diálogos, notas por acto y mapas con enemigos." },
   { key: "wishthief", name: "La ladrona de deseos", build: buildWishThief, ai: false, text: "Aventura de nivel 1 para 3-5 jugadores: escenas por acto, pistas ocultas, reparto con estadísticas y mapas listos." },
 ];
-import { Hand, Wand, CircleDot, MoveUpRight, Archive, Shell, Compass, Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp, Trophy, Star, Pencil } from "lucide-react";
+import { ShieldX, Hand, Wand, CircleDot, MoveUpRight, Archive, Shell, Compass, Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp, Trophy, Star, Pencil } from "lucide-react";
 
 // Color de cada campaña (se reparte según su id).
 const CAMP_COLORS = ["#A58BE8", "#6FA3C0", "#E0A04A", "#7FB77A", "#D9644E", "#E07FB0"];
@@ -21044,7 +21044,7 @@ export default function App({ onSignOut }) {
                                   const profDamage = hasDice ? (w.virtual ? proficiency + "d8+" + proficiency + "d6" : String(proficiency) + (dmgParts?.[1] || w.damage).replace(/^\d*/, "")) : "";
                                   const [featName, ...featRest] = (w.feature || "").split(":");
                                   const featTone = w.mods && Object.values(w.mods).some((v) => v < 0) ? " is-neg" : w.mods ? " is-pos" : "";
-                                  const TileIcon = w.virtual ? HandFist : isArmor ? armorIcon(w.key) : weaponIcon(w.key);
+                                  const TileIcon = w.virtual ? HandFist : w.bones ? ShieldX : isArmor ? armorIcon(w.key) : weaponIcon(w.key);
                                   const rng = !isArmor && slot.label === "Arma principal" && c.f_reach === "1" ? reachStep(reachFor(c, w.range)) : reachFor(c, w.range);
                                   const desc = isArmor
                                     ? `Puntuación ${w.score} · Umbrales base ${w.major}/${w.severe}`
@@ -21070,8 +21070,8 @@ export default function App({ onSignOut }) {
                                   return (
                                     <div
                                       key={idx + "-" + w.key}
-                                      className={"mh-eq" + (stashFx === (isArmor ? "armor" : idx === 0 ? "primary" : "secondary") ? " is-stashing" : "") + (w.virtual ? " mh-eq-bare" : "") + (!isArmor && slot.label === "Arma principal" && c.f_ignite === "1" ? " mh-eq-ablaze" : "") + (!isArmor && c.f_crimson && c.f_crimson === w.key ? " mh-eq-crimson" : "")}
-                                      style={{ "--cc": w.virtual ? "#C08B5C" : TIER_COLORS[tier].color }}
+                                      className={"mh-eq" + (stashFx === (isArmor ? "armor" : idx === 0 ? "primary" : "secondary") ? " is-stashing" : "") + (w.virtual || w.bones ? " mh-eq-bare" : "") + (!isArmor && slot.label === "Arma principal" && c.f_ignite === "1" ? " mh-eq-ablaze" : "") + (!isArmor && c.f_crimson && c.f_crimson === w.key ? " mh-eq-crimson" : "")}
+                                      style={{ "--cc": w.virtual || w.bones ? "#C08B5C" : TIER_COLORS[tier].color }}
                                       role="button"
                                       tabIndex={0}
                                       aria-label={`Ver la carta de ${w.key}`}
@@ -21090,7 +21090,7 @@ export default function App({ onSignOut }) {
                                             <Flame size={11} /> +1d6
                                           </span>
                                         )}
-                                        <span className="mh-eq-tier" style={{ background: w.virtual ? "#C08B5C" : TIER_COLORS[tier].color }}>{w.virtual ? "Sin arma" : TIER_COLORS[tier].label}</span>
+                                        <span className="mh-eq-tier" style={{ background: w.virtual || w.bones ? "#C08B5C" : TIER_COLORS[tier].color }}>{w.virtual ? "Sin arma" : w.bones ? "Sin armadura" : TIER_COLORS[tier].label}</span>
                                       </div>
                                       <div className="mh-eq-body">
                                         <div className="mh-eq-sub">{isArmor ? "Armadura" : `${slot.label} · ${handsLabel}`}</div>
@@ -21151,17 +21151,17 @@ export default function App({ onSignOut }) {
                                           </div>
                                         )}
                                       </div>
-                                      {w.virtual ? (() => {
-                                        const matching = items.filter((it) => PRIMARY_WEAPONS.some((pw) => pw.key === it.name) || SECONDARY_WEAPONS.some((sw) => sw.key === it.name));
-                                        const open = equipPickerSlot === "brawl";
+                                      {w.virtual || w.bones ? (() => {
+                                        const matching = w.bones ? items.filter((it) => ARMORS.some((a) => a.key === it.name)) : items.filter((it) => PRIMARY_WEAPONS.some((pw) => pw.key === it.name) || SECONDARY_WEAPONS.some((sw) => sw.key === it.name));
+                                        const open = equipPickerSlot === (w.bones ? "bones" : "brawl");
                                         if (!matching.length) return null;
                                         return (
                                           <div className="mh-eq-stash" onClick={(e) => e.stopPropagation()}>
-                                            <ArrowLeft size={15} color="var(--acc)" title="Equipar un arma del inventario" style={{ cursor: "pointer", transform: "rotate(180deg)" }} onClick={() => setEquipPickerSlot(open ? null : "brawl")} />
+                                            <ArrowLeft size={15} color="var(--acc)" title={w.bones ? "Equipar una armadura del inventario" : "Equipar un arma del inventario"} style={{ cursor: "pointer", transform: "rotate(180deg)" }} onClick={() => setEquipPickerSlot(open ? null : w.bones ? "bones" : "brawl")} />
                                             {open && (
                                               <div className="mh-brawl-pick">
                                                 {matching.map((it, i) => (
-                                                  <div key={i} onClick={() => { equipFromInventory(viewingCharId, PRIMARY_WEAPONS.some((pw) => pw.key === it.name) ? "primary" : "secondary", it.name); setEquipPickerSlot(null); }}>
+                                                  <div key={i} onClick={() => { equipFromInventory(viewingCharId, w.bones ? "armor" : PRIMARY_WEAPONS.some((pw) => pw.key === it.name) ? "primary" : "secondary", it.name); setEquipPickerSlot(null); }}>
                                                     {it.name} {it.count > 1 ? `(x${it.count})` : ""}
                                                   </div>
                                                 ))}
