@@ -9,6 +9,8 @@ export const CHANGELOG = [
     title: "El Oráculo del DJ",
     blurb: "Un anillo de luz que responde a las preguntas de la mesa: Sí / No, con matices o con una tirada de destino, solo para el DJ y a un toque bajo el chat.",
     items: [
+      { tag: "arreglo", text: "Combate · «Llama Salvaje» ahora lanza el efecto de fuego a la vez sobre todos los adversarios alcanzados (hasta tres) y todos reaccionan al impacto, no solo uno." },
+      { tag: "arreglo", text: "Combate · la mano de cartas se organiza siempre en grupos (Armas, Clase, Dominio…) con las pilas a los lados. Antes solo se agrupaba con más de 6 cartas, así que con pocas (como en el Guardián) salían todas mezcladas." },
       { tag: "arreglo", text: "Combate · «Llama Salvaje» ahora muestra el fuego en cada adversario alcanzado (hasta tres), uno tras otro, y no solo en el primero." },
       { tag: "mejora", text: "Combate · «Mano Mágica» invoca una ficha en la casilla que pulses (alcance Lejano): un rombo del color de tu clase con un icono de mano, que puedes mover. Si la lanzas otra vez, la anterior desaparece." },
       { tag: "mejora", text: "Combate · «Engañador Hábil» ya no tiene efecto pasivo: ahora se lanza desde el mapa. Arrástrala al tablero, gasta 1 Esperanza, se revela la carta a la mesa y una onda dorada se expande desde tu ficha." },
