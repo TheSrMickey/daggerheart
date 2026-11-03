@@ -11012,6 +11012,9 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
   };
   // Cartas que se apuntan a un adversario: Enredo Feroz, su carta extra y las armas (con el alcance de cada arma).
   const isAim = (c) => c.key === AIM_CARD || ((c.key === "Embelesar" || c.key === "Palabras Inspiradoras") && !c.rowCard) || (!!c.ghost && !c.recharge && !c.ward) || !!c.bookCard || (c.key === "Empujón Contundente" && !c.rowCard) || !!c.weapon || (c.key === "Desatar el Caos" && !c.rowCard);
+  // Una carta o se puede usar (y entonces se arrastra al mapa) o solo se abre al pulsarla: las que no tienen función en el mapa no se arrastran.
+  const PLAYABLE = ["Enredo Feroz", "Embelesar", "Palabras Inspiradoras", "Desatar el Caos", "Guarda Rúnica", "Lengua de la Naturaleza", "Rastreador Dotado", "Caminar por Paredes", "Engañador Hábil", "Empujón Contundente"];
+  const usable = (c) => !!c.weapon || !!c.ghost || !!c.bookCard || !!c.subclass || (c.rowCard ? !!(c.evo || c.wolf || c.mapUse || c.key === "Forma de Bestia") : PLAYABLE.includes(c.key));
   const aimReach = (c) => (reachOf && reachOf(c)) || { label: "Lejano", max: RANGE_CELLS["Lejano"] };
   // Objetivo válido de una carta que se apunta: aliado (otro personaje) para Palabras Inspiradoras; adversario vivo para el resto.
   const aimTok = (c, t) => !t.hidden && (c.unTele ? t.id === c.unTele : c.bookCard ? !t.vanished : t.id !== me?.id && (c.key === "Palabras Inspiradoras" && !c.rowCard ? t.kind === "pc" && !t.vanished : (t.kind === "foe" || t.kind === "npc") && !deadTok(t)));
@@ -11056,7 +11059,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
   const move = (ev) => {
     const cell = cellAt(ev.clientX, ev.clientY);
     const cur = dragRef.current;
-    const moved = cur.moved || Math.hypot(ev.clientX - cur.x0, ev.clientY - cur.y0) > 6;
+    const moved = usable(cur.card) && (cur.moved || Math.hypot(ev.clientX - cur.x0, ev.clientY - cur.y0) > 6);
     const next = { ...cur, x: ev.clientX, y: ev.clientY, cell, moved };
     dragRef.current = next;
     setDrag(next);
@@ -11281,7 +11284,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
           )}
           {drag.cell && !inHand(drag.x, drag.y) && (
             <div className="mh-fan-tip" style={{ left: Math.max(130, Math.min(window.innerWidth - 130, drag.x)), top: aim ? drag.y - 40 : drag.y - 112 }}>
-              {aim ? (!aimIn ? "Fuera de alcance " + aimReach(drag.card).label : aimTarget ? (drag.card.weapon ? "Atacar a " : (drag.card.release || drag.card.unCharm) ? "Liberar a " : drag.card.key === "Palabras Inspiradoras" ? "Inspirar a " : "Lanzar sobre ") + (aimTarget.name || "el objetivo") : (drag.card.key === "Palabras Inspiradoras" ? "Suéltala sobre un aliado" : "Suéltala sobre un adversario")) : drag.card.rowCard ? "Abrir «" + drag.card.key + "»" : drag.card.subclass ? "Activar Encarnación Elemental" : <>{target ? `Objetivo: ${target.name || "Ficha"}` : "Casilla"} {rng ? `(${rng.label})` : "(fuera de alcance)"}</>}
+              {aim ? (!aimIn ? "Fuera de alcance " + aimReach(drag.card).label : aimTarget ? (drag.card.weapon ? "Atacar a " : (drag.card.release || drag.card.unCharm) ? "Liberar a " : drag.card.key === "Palabras Inspiradoras" ? "Inspirar a " : "Lanzar sobre ") + (aimTarget.name || "el objetivo") : (drag.card.key === "Palabras Inspiradoras" ? "Suéltala sobre un aliado" : "Suéltala sobre un adversario")) : drag.card.rowCard ? "Abrir «" + drag.card.key + "»" : drag.card.subclass ? "Activar Encarnación Elemental" : "Usar «" + drag.card.key + "»"}
               <small>{drag.card.rowCard ? "Suelta en cualquier casilla · Esc para cancelar" : drag.card.subclass ? "Suelta en cualquier casilla · Esc para cancelar" : "Suelta para usar · Esc para cancelar"}</small>
             </div>
           )}
