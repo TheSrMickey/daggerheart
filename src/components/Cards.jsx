@@ -1,7 +1,27 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowUp, Layers, Search, Zap } from "lucide-react";
+import { ArrowUp, Check, Layers, Search, X, Zap } from "lucide-react";
+import { useSocial } from "./Social";
+import { cardStatus, isAdminName } from "@/lib/cardStatus";
+
+// Panel de administrador: qué funciones tiene aplicadas la carta abierta.
+function AdminCardPanel({ c }) {
+  const st = cardStatus(c);
+  const rows = [["Hoja de personaje", st.sheet], ["Mano de la baraja", st.hand], ["Mapa de combate", st.map]];
+  return (
+    <aside className="cx-adm" onClick={(e) => e.stopPropagation()} aria-label="Funciones de la carta (administrador)">
+      <small>Administrador</small>
+      <b className="mh-serif">{c.key}</b>
+      {rows.map(([label, v]) => (
+        <div key={label} className={"cx-adm-r" + (v ? " is-on" : "")}>
+          <i>{v ? <Check size={13} strokeWidth={3} /> : <X size={13} strokeWidth={3} />}</i>
+          <span><em>{label}</em>{v || (st.registered ? "Sin función" : "Sin registrar")}</span>
+        </div>
+      ))}
+    </aside>
+  );
+}
 
 // Pestaña «Cartas»: todas las cartas del juego (dominio, ascendencia, comunidad, subclase y transformación),
 // con filtros y buscador. Al pulsar una carta se ve en grande, con el mismo diseño que en la hoja.
@@ -124,6 +144,7 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
   const [sel, setSel] = useState([]);
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(null);
+  const admin = isAdminName(useSocial().me?.username);
   const [closing, setClosing] = useState(false);
   const [deckIdx, setDeckIdx] = useState(0); // subclase abierta: qué carta del mazo está delante (0 Fundación, 1 Especialización, 2 Maestría)
   const rootRef = useRef(null);
@@ -372,8 +393,11 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
         }
         return (
           <div className={"mh-overlay" + (closing ? " is-closing" : "")} style={{ background: "rgba(8,6,12,0.70)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 60, padding: 20 }} onClick={close} role="dialog" aria-modal="true" aria-label={c.key}>
-            <div className="mh-cardc-wrap" onClick={(e) => e.stopPropagation()}>
-              <CardFace c={c} I={I} FitTitle={FitTitle} FitBox={FitBox} onClose={close} tilt={{ onPointerMove: tilt, onPointerLeave: untilt, onPointerUp: (e) => e.pointerType !== "mouse" && untilt(e) }} />
+            <div className={admin ? "cx-admwrap" : undefined} style={admin ? undefined : { display: "contents" }}>
+              <div className="mh-cardc-wrap" onClick={(e) => e.stopPropagation()}>
+                <CardFace c={c} I={I} FitTitle={FitTitle} FitBox={FitBox} onClose={close} tilt={{ onPointerMove: tilt, onPointerLeave: untilt, onPointerUp: (e) => e.pointerType !== "mouse" && untilt(e) }} />
+              </div>
+              {admin && <AdminCardPanel c={c} />}
             </div>
           </div>
         );
