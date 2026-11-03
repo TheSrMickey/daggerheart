@@ -9,6 +9,7 @@ export const CHANGELOG = [
     title: "El Oráculo del DJ",
     blurb: "Un anillo de luz que responde a las preguntas de la mesa: Sí / No, con matices o con una tirada de destino, solo para el DJ y a un toque bajo el chat.",
     items: [
+      { tag: "mejora", text: "Rendimiento · tiradas de dados más fluidas. Los dados 3D reutilizan el renderer y los shaders ya compilados en vez de crearlos en cada tirada (antes cada una abría un contexto WebGL nuevo y compilaba todo de cero), y se preparan al arrancar la app. Además, la app ya no se repinta entera cada pocos segundos con datos que no han cambiado (tablero, escena, mesa y reacciones del chat), que era lo que provocaba los tirones antes y durante las tiradas." },
       { tag: "nuevo", text: "Cartas · vista de administrador (solo para la cuenta de Mickey): al abrir una carta aparece un panel lateral que indica si tiene función aplicada en la hoja de personaje, en la mano de la baraja y en el mapa de combate, con lo que hace en cada sitio." },
       { tag: "mejora", text: "Hoja · con «Huesos Desnudos», la casilla de armadura muestra un escudo con una X («Sin armadura»), no se puede guardar en la mochila y deja equipar una armadura del inventario cuando quieras; al quitarla, vuelves a Huesos Desnudos." },
       { tag: "arreglo", text: "Combate · el halo de «Huesos Desnudos» ahora sigue exactamente el borde redondeado de la carta." },

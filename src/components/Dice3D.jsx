@@ -9,15 +9,23 @@ import { makeCosmicMaterial, makeMarbleMaterial, makeResinMaterial } from "./Dic
 // número se lea derecho y se atenúan los demás. Después los dados se acercan a la pantalla, el borde se anima según sea
 // Esperanza, Miedo o crítico y se muestra la suma con todas las bonificaciones. Se queda así hasta que el jugador toca
 // la pantalla; solo entonces (onReveal + onEnd) se cierra y aparece el resultado en la ficha.
+let glOk = null;
 export function canDice3d() {
   if (typeof window === "undefined") return false;
   if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return false;
-  try {
-    const c = document.createElement("canvas");
-    return !!(c.getContext("webgl2") || c.getContext("webgl"));
-  } catch {
-    return false;
+  if (glOk === null) {
+    // Crear un contexto WebGL es caro (y se llamaba en cada tirada): se comprueba una sola vez y se libera.
+    try {
+      const c = document.createElement("canvas");
+      const gl = c.getContext("webgl2") || c.getContext("webgl");
+      glOk = !!gl;
+      const lose = gl && gl.getExtension && gl.getExtension("WEBGL_lose_context");
+      if (lose) lose.loseContext();
+    } catch {
+      glOk = false;
+    }
   }
+  return glOk;
 }
 export const DICE3D_SIDES = [4, 6, 8, 10, 12, 20];
 
@@ -41,6 +49,222 @@ const TINTS = {
   dmg: [0xffd6c8, 0xd9482a, "#fff0ea"],
   crit: [0xd2f5d0, 0x2f9e44, "#eaffe8"],
 };
+
+
+// ---- Recursos compartidos entre tiradas ----
+// Crear un renderer WebGL, el entorno y compilar los shaders del cristal en cada tirada tardaba entre 0,3 y 1 s (y los contextos
+// WebGL se iban acumulando). Se crean una sola vez y se reutilizan; las geometrías, los materiales y las texturas de los números
+// también se guardan, para que los programas ya compilados no se tiren al terminar cada tirada.
+// ---------- Geometrías de los dados ----------
+const polyGeo = (THREE, sides) => {
+  if (sides === 4) return new THREE.TetrahedronGeometry(1);
+  if (sides === 6) {
+    const g = new THREE.BoxGeometry(1, 1, 1).toNonIndexed();
+    g.scale(2 / Math.sqrt(3), 2 / Math.sqrt(3), 2 / Math.sqrt(3));
+    return g;
+  }
+  if (sides === 8) return new THREE.OctahedronGeometry(1);
+  if (sides === 12) return new THREE.DodecahedronGeometry(1);
+  if (sides === 20) return new THREE.IcosahedronGeometry(1);
+  // d10: trapezoedro pentagonal (10 caras en cometa)
+  const c = 0.105;
+  const U = (i) => new THREE.Vector3(Math.cos((i * 2 * Math.PI) / 5), c, Math.sin((i * 2 * Math.PI) / 5));
+  const L = (i) => new THREE.Vector3(Math.cos(((i * 2 + 1) * Math.PI) / 5), -c, Math.sin(((i * 2 + 1) * Math.PI) / 5));
+  const n = new THREE.Vector3().crossVectors(U(1).clone().sub(U(0)), L(0).clone().sub(U(0)));
+  const h = c + (n.x * U(0).x + n.z * U(0).z) / n.y;
+  const T = new THREE.Vector3(0, h, 0);
+  const B = new THREE.Vector3(0, -h, 0);
+  const pts = [];
+  const tri = (a, b, d) => {
+    const nn = new THREE.Vector3().crossVectors(b.clone().sub(a), d.clone().sub(a));
+    const ctr = a.clone().add(b).add(d).divideScalar(3);
+    if (nn.dot(ctr) < 0) pts.push(a, d, b);
+    else pts.push(a, b, d);
+  };
+  for (let i = 0; i < 5; i++) {
+    tri(T, U(i), L(i));
+    tri(T, L(i), U(i + 1));
+    tri(B, L(i), U(i + 1));
+    tri(B, U(i + 1), L(i + 1));
+  }
+  const g = new THREE.BufferGeometry().setFromPoints(pts);
+  const m = Math.max(...pts.map((p) => p.length()));
+  g.scale(1 / m, 1 / m, 1 / m);
+  return g;
+};
+
+// Caras agrupadas (triángulos coplanares) + «ranuras» de número. Un d4 se lee por el vértice de arriba.
+const buildType = (THREE, sides) => {
+  const geo = polyGeo(THREE, sides);
+  const pos = geo.attributes.position;
+  const tris = [];
+  for (let i = 0; i < pos.count; i += 3) {
+    const a = new THREE.Vector3().fromBufferAttribute(pos, i);
+    const b = new THREE.Vector3().fromBufferAttribute(pos, i + 1);
+    const c = new THREE.Vector3().fromBufferAttribute(pos, i + 2);
+    const nrm = new THREE.Vector3().crossVectors(b.clone().sub(a), c.clone().sub(a)).normalize();
+    tris.push({ pts: [a, b, c], nrm, key: nrm.toArray().map((v) => Math.round(v * 200)).join(",") });
+  }
+  const byKey = new Map();
+  tris.forEach((t) => {
+    if (!byKey.has(t.key)) byKey.set(t.key, []);
+    byKey.get(t.key).push(t);
+  });
+  const uniq = [];
+  const idx = (p) => {
+    const i = uniq.findIndex((u) => u.distanceTo(p) < 1e-4);
+    if (i >= 0) return i;
+    uniq.push(p.clone());
+    return uniq.length - 1;
+  };
+  const faces = [];
+  byKey.forEach((ts) => {
+    const ids = [...new Set(ts.flatMap((t) => t.pts.map(idx)))];
+    const ctr = ids.reduce((s, i) => s.add(uniq[i]), new THREE.Vector3()).divideScalar(ids.length);
+    const n = ts[0].nrm.clone();
+    const u = uniq[ids[0]].clone().sub(ctr).normalize();
+    const w = new THREE.Vector3().crossVectors(n, u);
+    const ang = (p) => Math.atan2(uniq[p].clone().sub(ctr).dot(w), uniq[p].clone().sub(ctr).dot(u));
+    const order = [...ids].sort((a, b) => ang(a) - ang(b));
+    // radio interior de la cara (para el tamaño del número)
+    let inr = 9;
+    for (let i = 0; i < order.length; i++) {
+      const p = uniq[order[i]];
+      const q = uniq[order[(i + 1) % order.length]];
+      const e = q.clone().sub(p).normalize();
+      const v = ctr.clone().sub(p);
+      inr = Math.min(inr, v.clone().sub(e.clone().multiplyScalar(v.dot(e))).length());
+    }
+    faces.push({ ids, order, ctr, n, inr, u });
+  });
+  // Ranuras: una por cara; en el d4, tres por vértice (cerca del vértice, en cada cara que lo toca).
+  let groups;
+  if (sides === 4) {
+    groups = uniq.map((v) => ({
+      dir: v.clone().normalize(),
+      slots: faces
+        .filter((f) => f.ids.some((i) => uniq[i] === v))
+        .map((f) => ({ pos: f.ctr.clone().add(v.clone().sub(f.ctr).multiplyScalar(0.5)), n: f.n, up: v.clone().sub(f.ctr).normalize(), size: f.inr * 0.8 })),
+    }));
+  } else {
+    groups = faces.map((f) => ({ dir: f.n.clone(), slots: [{ pos: f.ctr.clone(), n: f.n, up: f.u.clone(), size: Math.min(f.inr * 1.35, 0.7) }] }));
+  }
+  return { geo, uniq, faces, groups };
+};
+
+let S3 = null;
+let S3p = null;
+async function getShared() {
+  if (S3) return S3;
+  if (!S3p) {
+    S3p = (async () => {
+      const [THREE, CANNON, { RoomEnvironment }] = await Promise.all([import("three"), import("cannon-es"), import("three/examples/jsm/environments/RoomEnvironment.js")]);
+      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      const pm = new THREE.PMREMGenerator(renderer);
+      const env = pm.fromScene(new RoomEnvironment(), 0.04).texture;
+      const key = new THREE.DirectionalLight(0xffffff, 2.2);
+      key.castShadow = true;
+      key.shadow.mapSize.set(1024, 1024);
+      key.shadow.radius = 4;
+      const catcher = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), new THREE.ShadowMaterial({ opacity: 0.42 }));
+      catcher.rotation.x = -Math.PI / 2;
+      catcher.receiveShadow = true;
+      const glassC = {};
+      const edgeC = {};
+      const skinC = {};
+      const sh = {
+        THREE,
+        CANNON,
+        renderer,
+        pm,
+        env,
+        key,
+        catcher,
+        types: {},
+        texCache: new Map(),
+        glass: (kind) => {
+          const tint = TINTS[kind] || TINTS.bonus;
+          return (glassC[kind] = glassC[kind] || new THREE.MeshPhysicalMaterial({ color: tint[0], transmission: 1, thickness: 1.6, ior: 1.5, roughness: 0.06, attenuationColor: tint[1], attenuationDistance: 1.4, clearcoat: 1, clearcoatRoughness: 0.04, iridescence: 0.6, iridescenceIOR: 1.4, envMapIntensity: 1.6, transparent: true }));
+        },
+        edgeMat: (o) => (edgeC[o] = edgeC[o] || new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: o })),
+        skinMat: (k, make) => (skinC[k] = skinC[k] || make()),
+      };
+      // Si el navegador pierde el contexto (falta de memoria de vídeo, cambio de GPU…), la siguiente tirada lo vuelve a crear.
+      renderer.domElement.addEventListener("webglcontextlost", (e) => {
+        e.preventDefault();
+        S3 = null;
+        S3p = null;
+      });
+      S3 = sh;
+      return sh;
+    })().catch((e) => {
+      S3p = null;
+      throw e;
+    });
+  }
+  return S3p;
+}
+// Aspecto de dado (cósmico u oficial) para un dado concreto; null = cristal. Los materiales se crean una vez.
+function skinFor(sh, skin, kind, sides) {
+  const duality = sides === 12 && (kind === "hope" || kind === "fear");
+  if (skin === "cosmico")
+    return sh.skinMat("cos" + (kind === "hope" ? 1 : 0), () => {
+      const m = makeCosmicMaterial(sh.THREE, kind === "hope" ? 0.75 : 0);
+      m.mat.envMapIntensity = 0.55;
+      return m;
+    });
+  if (skin === "oficial") return sh.skinMat(duality ? "res" + kind : "mar", () => (duality ? makeResinMaterial(sh.THREE, kind) : makeMarbleMaterial(sh.THREE)));
+  return null;
+}
+// Precarga: con el navegador libre se crea el renderer y se compilan los shaders (cristal y el aspecto elegido) para que la primera tirada no se atasque.
+let warmedKey = "";
+export function warmDice3D(skin) {
+  if (typeof window === "undefined" || warmedKey === String(skin)) return;
+  if (!canDice3d()) return;
+  warmedKey = String(skin);
+  const go = async () => {
+    try {
+      const sh = await getShared();
+      const { THREE } = sh;
+      const scene = new THREE.Scene();
+      scene.environment = sh.env;
+      const cam = new THREE.PerspectiveCamera(38, 1, 0.1, 120);
+      cam.position.set(0, 16, 11);
+      cam.lookAt(0, 0, 0);
+      const T12 = (sh.types[12] = sh.types[12] || buildType(THREE, 12));
+      const combos = [["bonus", 6], ["hope", 12], ["fear", 12]];
+      const made = [];
+      combos.forEach(([kind, sides], i) => {
+        const cm = skinFor(sh, skin, kind, sides);
+        const mat = cm ? cm.mat : sh.glass(kind);
+        const m = new THREE.Mesh(T12.geo, mat);
+        m.position.set(i * 2 - 2, 1, 0);
+        m.castShadow = true;
+        scene.add(m);
+        made.push(m);
+      });
+      if (!sh.anchorPlane) {
+        const c = document.createElement("canvas");
+        c.width = c.height = 8;
+        const tex = new THREE.CanvasTexture(c);
+        sh.anchorPlane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, opacity: 0.95 }));
+        sh.anchorEdges = new THREE.LineSegments(new THREE.EdgesGeometry(T12.geo), sh.edgeMat(0.55));
+      }
+      scene.add(sh.anchorPlane, sh.anchorEdges, sh.key, sh.catcher);
+      sh.renderer.setSize(96, 96);
+      sh.renderer.render(scene, cam);
+      scene.remove(sh.anchorPlane, sh.anchorEdges, sh.key, sh.catcher);
+      made.forEach((m) => scene.remove(m));
+    } catch (e) {
+      warmedKey = "";
+    }
+  };
+  if (window.requestIdleCallback) window.requestIdleCallback(go, { timeout: 4000 });
+  else setTimeout(go, 1500);
+}
 
 export function Dice3D({ dice, summary, skin, onReveal, onEnd }) {
   const host = useRef(null);
@@ -68,9 +292,11 @@ export function Dice3D({ dice, summary, skin, onReveal, onEnd }) {
       cb.current.onReveal && cb.current.onReveal();
     };
     (async () => {
-      let THREE, CANNON, RoomEnvironment;
+      let THREE, CANNON, sh;
       try {
-        [THREE, CANNON, { RoomEnvironment }] = await Promise.all([import("three"), import("cannon-es"), import("three/examples/jsm/environments/RoomEnvironment.js")]);
+        sh = await getShared();
+        THREE = sh.THREE;
+        CANNON = sh.CANNON;
       } catch {
         reveal();
         cb.current.onEnd && cb.current.onEnd();
@@ -94,104 +320,7 @@ export function Dice3D({ dice, summary, skin, onReveal, onEnd }) {
         const halfX = Math.min(7.4, 0.44 * 2 * Math.tan((FOV / 2) * (Math.PI / 180)) * dist * aspect * 1.1);
         const halfZ = Math.min(5.2 * k, 8);
 
-        // ---------- Geometrías de los dados ----------
-        const polyGeo = (sides) => {
-          if (sides === 4) return new THREE.TetrahedronGeometry(1);
-          if (sides === 6) {
-            const g = new THREE.BoxGeometry(1, 1, 1).toNonIndexed();
-            g.scale(2 / Math.sqrt(3), 2 / Math.sqrt(3), 2 / Math.sqrt(3));
-            return g;
-          }
-          if (sides === 8) return new THREE.OctahedronGeometry(1);
-          if (sides === 12) return new THREE.DodecahedronGeometry(1);
-          if (sides === 20) return new THREE.IcosahedronGeometry(1);
-          // d10: trapezoedro pentagonal (10 caras en cometa)
-          const c = 0.105;
-          const U = (i) => new THREE.Vector3(Math.cos((i * 2 * Math.PI) / 5), c, Math.sin((i * 2 * Math.PI) / 5));
-          const L = (i) => new THREE.Vector3(Math.cos(((i * 2 + 1) * Math.PI) / 5), -c, Math.sin(((i * 2 + 1) * Math.PI) / 5));
-          const n = new THREE.Vector3().crossVectors(U(1).clone().sub(U(0)), L(0).clone().sub(U(0)));
-          const h = c + (n.x * U(0).x + n.z * U(0).z) / n.y;
-          const T = new THREE.Vector3(0, h, 0);
-          const B = new THREE.Vector3(0, -h, 0);
-          const pts = [];
-          const tri = (a, b, d) => {
-            const nn = new THREE.Vector3().crossVectors(b.clone().sub(a), d.clone().sub(a));
-            const ctr = a.clone().add(b).add(d).divideScalar(3);
-            if (nn.dot(ctr) < 0) pts.push(a, d, b);
-            else pts.push(a, b, d);
-          };
-          for (let i = 0; i < 5; i++) {
-            tri(T, U(i), L(i));
-            tri(T, L(i), U(i + 1));
-            tri(B, L(i), U(i + 1));
-            tri(B, U(i + 1), L(i + 1));
-          }
-          const g = new THREE.BufferGeometry().setFromPoints(pts);
-          const m = Math.max(...pts.map((p) => p.length()));
-          g.scale(1 / m, 1 / m, 1 / m);
-          return g;
-        };
-
-        // Caras agrupadas (triángulos coplanares) + «ranuras» de número. Un d4 se lee por el vértice de arriba.
-        const buildType = (sides) => {
-          const geo = polyGeo(sides);
-          const pos = geo.attributes.position;
-          const tris = [];
-          for (let i = 0; i < pos.count; i += 3) {
-            const a = new THREE.Vector3().fromBufferAttribute(pos, i);
-            const b = new THREE.Vector3().fromBufferAttribute(pos, i + 1);
-            const c = new THREE.Vector3().fromBufferAttribute(pos, i + 2);
-            const nrm = new THREE.Vector3().crossVectors(b.clone().sub(a), c.clone().sub(a)).normalize();
-            tris.push({ pts: [a, b, c], nrm, key: nrm.toArray().map((v) => Math.round(v * 200)).join(",") });
-          }
-          const byKey = new Map();
-          tris.forEach((t) => {
-            if (!byKey.has(t.key)) byKey.set(t.key, []);
-            byKey.get(t.key).push(t);
-          });
-          const uniq = [];
-          const idx = (p) => {
-            const i = uniq.findIndex((u) => u.distanceTo(p) < 1e-4);
-            if (i >= 0) return i;
-            uniq.push(p.clone());
-            return uniq.length - 1;
-          };
-          const faces = [];
-          byKey.forEach((ts) => {
-            const ids = [...new Set(ts.flatMap((t) => t.pts.map(idx)))];
-            const ctr = ids.reduce((s, i) => s.add(uniq[i]), new THREE.Vector3()).divideScalar(ids.length);
-            const n = ts[0].nrm.clone();
-            const u = uniq[ids[0]].clone().sub(ctr).normalize();
-            const w = new THREE.Vector3().crossVectors(n, u);
-            const ang = (p) => Math.atan2(uniq[p].clone().sub(ctr).dot(w), uniq[p].clone().sub(ctr).dot(u));
-            const order = [...ids].sort((a, b) => ang(a) - ang(b));
-            // radio interior de la cara (para el tamaño del número)
-            let inr = 9;
-            for (let i = 0; i < order.length; i++) {
-              const p = uniq[order[i]];
-              const q = uniq[order[(i + 1) % order.length]];
-              const e = q.clone().sub(p).normalize();
-              const v = ctr.clone().sub(p);
-              inr = Math.min(inr, v.clone().sub(e.clone().multiplyScalar(v.dot(e))).length());
-            }
-            faces.push({ ids, order, ctr, n, inr, u });
-          });
-          // Ranuras: una por cara; en el d4, tres por vértice (cerca del vértice, en cada cara que lo toca).
-          let groups;
-          if (sides === 4) {
-            groups = uniq.map((v) => ({
-              dir: v.clone().normalize(),
-              slots: faces
-                .filter((f) => f.ids.some((i) => uniq[i] === v))
-                .map((f) => ({ pos: f.ctr.clone().add(v.clone().sub(f.ctr).multiplyScalar(0.5)), n: f.n, up: v.clone().sub(f.ctr).normalize(), size: f.inr * 0.8 })),
-            }));
-          } else {
-            groups = faces.map((f) => ({ dir: f.n.clone(), slots: [{ pos: f.ctr.clone(), n: f.n, up: f.u.clone(), size: Math.min(f.inr * 1.35, 0.7) }] }));
-          }
-          return { geo, uniq, faces, groups };
-        };
-        const types = {};
-        const typeOf = (sides) => (types[sides] = types[sides] || buildType(sides));
+        const typeOf = (sides) => (sh.types[sides] = sh.types[sides] || buildType(THREE, sides));
 
         // ---------- Física: se simula entera por adelantado ----------
         const world = new CANNON.World({ gravity: new CANNON.Vec3(0, -34, 0) });
@@ -259,36 +388,28 @@ export function Dice3D({ dice, summary, skin, onReveal, onEnd }) {
         };
 
         // ---------- Escena ----------
-        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        const renderer = sh.renderer;
         const dpr = Math.min(window.devicePixelRatio || 1, W < 820 ? 1.5 : 2);
         renderer.setPixelRatio(dpr);
         renderer.setSize(W, H);
-        renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         renderer.domElement.style.cssText = "position:absolute;inset:0;width:100%;height:100%;display:block";
         host.current.appendChild(renderer.domElement);
         const scene = new THREE.Scene();
-        const pm = new THREE.PMREMGenerator(renderer);
-        scene.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture;
+        scene.environment = sh.env;
         const cam = new THREE.PerspectiveCamera(FOV, aspect, 0.1, 120);
         cam.position.copy(camPos);
         cam.lookAt(0, 0, 0);
-        const key = new THREE.DirectionalLight(0xffffff, 2.2);
+        const key = sh.key;
         key.position.set(-4 * k, 11 * k, 4 * k);
-        key.castShadow = true;
-        key.shadow.mapSize.set(1024, 1024);
         const sc = 12 * k;
         Object.assign(key.shadow.camera, { left: -sc, right: sc, top: sc, bottom: -sc, far: 60 });
-        key.shadow.radius = 4;
         scene.add(key);
-        const catcher = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), new THREE.ShadowMaterial({ opacity: 0.42 }));
-        catcher.rotation.x = -Math.PI / 2;
-        catcher.receiveShadow = true;
+        const catcher = sh.catcher;
+        catcher.visible = true;
         scene.add(catcher);
 
         const disposables = [];
-        const texCache = new Map();
+        const texCache = sh.texCache;
         const numTex = (n, col, logo) => {
           const id = n + col + (logo ? "L" : "");
           if (texCache.has(id)) return texCache.get(id);
@@ -315,7 +436,6 @@ export function Dice3D({ dice, summary, skin, onReveal, onEnd }) {
           }
           const t = new THREE.CanvasTexture(c);
           texCache.set(id, t);
-          disposables.push(t);
           return t;
         };
 
@@ -324,32 +444,28 @@ export function Dice3D({ dice, summary, skin, onReveal, onEnd }) {
           // Aspectos de dado: valen para todos los dados. «cosmico»: nebulosa, el logo en el 12.
           // «oficial»: resina marmoleada (morada y azul, números amarillos), D12 de Esperanza ámbar y de Miedo azul marino (números blancos); logo en el 12 de los D12 y en el 20.
           const duality = d.sides === 12 && (d.kind === "hope" || d.kind === "fear");
-          let cm = null;
+          const cm = skinFor(sh, skin, d.kind, d.sides);
           let numCol = null;
           let logoOn = 0;
           if (skin === "cosmico") {
-            cm = makeCosmicMaterial(THREE, d.kind === "hope" ? 0.75 : 0);
-            cm.mat.envMapIntensity = 0.55;
             numCol = "#ffe3a1";
             logoOn = d.sides === 12 ? 12 : 0;
           } else if (skin === "oficial") {
-            cm = duality ? makeResinMaterial(THREE, d.kind) : makeMarbleMaterial(THREE);
             numCol = duality ? "#ffffff" : "#ffc21a";
             logoOn = duality ? 12 : d.sides === 20 ? 20 : 0;
           }
           const tint = cm ? [0, 0, numCol] : TINTS[d.kind] || TINTS.bonus;
           const group = new THREE.Group();
           if (cm) cosmics.push(cm.uniforms);
-          const mat = cm ? cm.mat : new THREE.MeshPhysicalMaterial({ color: tint[0], transmission: 1, thickness: 1.6, ior: 1.5, roughness: 0.06, attenuationColor: tint[1], attenuationDistance: 1.4, clearcoat: 1, clearcoatRoughness: 0.04, iridescence: 0.6, iridescenceIOR: 1.4, envMapIntensity: 1.6, transparent: true });
+          const mat = cm ? cm.mat : sh.glass(d.kind);
           const body = new THREE.Group();
           body.scale.setScalar(scale);
           const mesh = new THREE.Mesh(T.geo, mat);
           mesh.castShadow = true;
           body.add(mesh);
-          const edges = new THREE.LineSegments(new THREE.EdgesGeometry(T.geo), new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: cm ? 0.16 : 0.55 }));
+          const edges = new THREE.LineSegments(T.edges || (T.edges = new THREE.EdgesGeometry(T.geo)), sh.edgeMat(cm ? 0.16 : 0.55));
           body.add(edges);
           group.add(body);
-          disposables.push(mat, edges.material, edges.geometry);
           // Numeración: cada grupo lleva un número; el que queda arriba al final recibe el valor decidido.
           const labels = Array.from({ length: d.sides }, (_, i) => i + 1);
           const topI = topGroup(T, last[items.findIndex((x) => x.b === b)]);
@@ -501,9 +617,8 @@ export function Dice3D({ dice, summary, skin, onReveal, onEnd }) {
         cleanup = () => {
           cancelAnimationFrame(raf);
           disposables.forEach((d) => d.dispose && d.dispose());
-          Object.values(types).forEach((T) => T.geo.dispose());
-          pm.dispose();
-          renderer.dispose();
+          objs.forEach((o) => scene.remove(o.group));
+          scene.remove(key, catcher);
           renderer.domElement.remove();
         };
       } catch (e) {

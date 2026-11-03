@@ -14,7 +14,7 @@ import { NotificationBell, NoticeToasts, FriendsPanel, AccountButton, avatarColo
 import { ResetDiceCard, DeleteAccountCard } from "./AccountDanger";
 import { ModernSheet } from "./ModernSheet";
 import { Tour } from "./Tour";
-import { Dice3D, canDice3d, DICE3D_SIDES } from "./Dice3D";
+import { Dice3D, canDice3d, warmDice3D, DICE3D_SIDES } from "./Dice3D";
 import { d10Sprite } from "./D10Sprites";
 import { warmDiceAssets } from "./DiceSkins";
 import { Personalizacion, CARD_BACK_KEYS, CardBack } from "./CardBacks";
@@ -12893,10 +12893,18 @@ export default function App({ onSignOut }) {
       return publishTable(tableCampId, { name: playerName || "", as: cur.f_name || playerName || "Jugador", cls: cur.f_class || "", chars: mine, typing: typingRef.current }, off);
     };
     tablePubRef.current = pub;
+    let lastSig = "";
     const pull = async () => {
       try {
         const t = await loadTable(tableCampId);
-        if (alive) (setTable(t), setTableNow(Date.now()));
+        if (!alive) return;
+        const sig = JSON.stringify(t);
+        // El reloj solo hace falta mientras alguien escribe (para que el «escribiendo…» caduque).
+        if (sig !== lastSig) {
+          lastSig = sig;
+          setTable(t);
+          setTableNow(Date.now());
+        } else if (Array.isArray(t) && t.some((e) => e && e.typing)) setTableNow(Date.now());
       } catch (e) {}
     };
     myUid().then((u) => alive && setTableMe(u));
@@ -12915,10 +12923,17 @@ export default function App({ onSignOut }) {
   useEffect(() => {
     if (!gmViewing || !viewingCampaignId) return;
     let alive = true;
+    let lastSig = "";
     const pull = async () => {
       try {
         const t = await loadTable(viewingCampaignId);
-        if (alive) (setTable(t), setTableNow(Date.now()));
+        if (!alive) return;
+        const sig = JSON.stringify(t);
+        if (sig !== lastSig) {
+          lastSig = sig;
+          setTable(t);
+          setTableNow(Date.now());
+        } else if (Array.isArray(t) && t.some((e) => e && e.typing)) setTableNow(Date.now());
       } catch (e) {}
     };
     pull();
@@ -12974,6 +12989,8 @@ export default function App({ onSignOut }) {
       setHandoutsSeen([]);
     }
     // El chat se refresca en las dos vistas; la mesa, solo en la del jugador (el DJ es quien la edita).
+    let lastStageRaw; // lo último recibido: si no ha cambiado no se repinta la app (se consultaba cada 6 s)
+    let lastMapRaw; // ídem para el tablero (cada 2,5 s)
     const loadChat = async () => {
       const ch = await safeGet("campaign-chat:" + stageCampaignId, true);
       if (!alive || !ch) return;
@@ -13016,7 +13033,11 @@ export default function App({ onSignOut }) {
       if (liveImg) await ensureCastImg(liveImg);
       (s.scenes || []).forEach((x) => sceneImgId(x.image) && ensureCastImg(sceneImgId(x.image)));
       if (!alive) return;
-      setCampaignStage(s);
+      const stageRaw = r ? r.value : null;
+      if (stageRaw !== lastStageRaw) {
+        lastStageRaw = stageRaw;
+        setCampaignStage(s);
+      }
       setStageReadyFor(stageCampaignId);
       if (!isPlayer) return;
       const f = await safeGet("fear-track", true);
@@ -13026,6 +13047,9 @@ export default function App({ onSignOut }) {
     const loadMap = async () => {
       const mp = await safeGet("campaign-map:" + stageCampaignId, true);
       if (!alive || mapBusy.current) return;
+      const mapRaw = mp ? mp.value : null;
+      if (mapRaw === lastMapRaw) return; // nada nuevo en el servidor: no se repinta toda la app
+      lastMapRaw = mapRaw;
       let m = { tokens: [] };
       try {
         if (mp) m = JSON.parse(mp.value);
@@ -18518,6 +18542,10 @@ export default function App({ onSignOut }) {
   const [dice3d, setDice3d] = useState(null);
   // Aspecto de dado equipado (privado de cada cuenta): «cristal», «cosmico» u «oficial».
   const [diceSkin, setDiceSkin] = useState("cristal");
+  // Se prepara el renderer 3D y se compilan los shaders de los dados con el navegador libre, para que la primera tirada no se atasque.
+  useEffect(() => {
+    warmDice3D(diceSkin);
+  }, [diceSkin]);
   useEffect(() => {
     safeGet("dice-skin", false).then((r) => {
       if (["cristal", "cosmico", "oficial"].includes(r?.value)) setDiceSkin(r.value);
@@ -19585,7 +19613,17 @@ export default function App({ onSignOut }) {
   useEffect(() => {
     if (!stageCampaignId) return;
     let alive = true;
-    const pull = () => loadReactions(stageCampaignId).then((r) => alive && setRx(r)).catch(() => {});
+    let lastRx = "";
+    const pull = () =>
+      loadReactions(stageCampaignId)
+        .then((r) => {
+          if (!alive) return;
+          const sig = JSON.stringify(r);
+          if (sig === lastRx) return;
+          lastRx = sig;
+          setRx(r);
+        })
+        .catch(() => {});
     pull();
     const t = setInterval(pull, 5000);
     return () => {
