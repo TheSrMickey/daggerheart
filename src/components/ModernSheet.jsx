@@ -39,7 +39,7 @@ function ZoomFit({ children, isGeneral, natural, onNatural, fill }) {
       // Pestaña de campaña: sin escala, la escena o el mapa llenan el hueco disponible.
       if (fill) {
         cur.current = 1;
-        setFit({ s: 1, h: Math.max(320, availH), w: ow });
+        setFit({ s: 1, h: Math.max(320, availH + 24), w: ow }); // en la campaña el margen inferior es 12 (el resto de páginas, 36)
         return;
       }
       const nat = readsZoomed() ? i.offsetHeight / cur.current : i.offsetHeight; // alto sin zoom
@@ -150,7 +150,7 @@ export function ModernSheet({ d, actions, content, tab, onTab, fill }) {
           {li.maxed ? <div className="max">Has llegado al nivel máximo.</div> : <button type="button" onClick={() => (setLvOpen(false), actions.levelUp())}>Subir al nivel {d.level + 1}</button>}
         </div>
       )}
-      <div className={"mhm-headwrap" + (fill ? " is-collapsed" : "")}>
+      <div className={"mhm-headwrap" + (fill && mobile ? " is-collapsed" : "")}>
       <section className={"mhm-head" + (d.color2 ? " is-multi" : "")}>
         {d.art ? (
           <>

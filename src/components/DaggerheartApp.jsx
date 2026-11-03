@@ -15,6 +15,7 @@ import { ResetDiceCard, DeleteAccountCard } from "./AccountDanger";
 import { ModernSheet } from "./ModernSheet";
 import { Tour } from "./Tour";
 import { Dice3D, canDice3d, DICE3D_SIDES } from "./Dice3D";
+import { d10Sprite } from "./D10Sprites";
 import { warmDiceAssets } from "./DiceSkins";
 import { Personalizacion, CARD_BACK_KEYS, CardBack } from "./CardBacks";
 import WorldMap from "./WorldMap";
@@ -34,7 +35,8 @@ import { RestGm, RestQuick, RestBanner, GroupRestDialog, RestLock } from "./Grou
 import NpcStatsEditor, { npcStatsSummary, npcTokenStats, NpcStatsView } from "./NpcStats";
 import { Chronicle, Timeline } from "./Chronicle";
 import { appendLog } from "@/lib/chronicle";
-import { SpotPlayer, SpotPause, SpotPanel, FocusBar, normSpot, liveHands, kindOf } from "./Spotlight";
+import CampInvite from "./CampInvite";
+import { SpotPlayer, SpotPause, SpotPanel, FocusBar, FocusPill, normSpot, liveHands, kindOf } from "./Spotlight";
 import { APP_VERSION } from "@/lib/changelog";
 import { setPresence, setPresenceMaking, startPresence, stopPresence, publishTable, loadTable, myUid, setPresenceCamp, bridge, logActivity, trackStat, loadReactions, toggleReaction } from "@/lib/social";
 import ProfilePage from "./Profile";
@@ -4843,14 +4845,14 @@ const sharedStyles = `
   .mh-map.is-blank { background-image: linear-gradient(#3F4B5E, #2B3A4F); }
   .mh-map-bg { position: absolute; inset: -16px; background: center / cover no-repeat; filter: blur(9px) saturate(1.05) brightness(.82); pointer-events: none; animation: mh-gridin 1.2s ease both; }
   .mh-map-backdrop { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; } .mh-map-sharp { position: absolute; inset: 0; background: center / cover no-repeat; }
-  .mh-map-backdrop .mh-map-bg { inset: 0; } .mh-map-backdrop.is-battlemap .mh-map-bg { display: none; } .mh-map-tint.is-light { background: rgba(8,8,26,.16); animation: none; } .mh-map-flat .mh-map-sharp { position: absolute; inset: 0; background: center / cover no-repeat; pointer-events: none; }
-  .mh-map-backdrop.is-battlemap .mh-map-tint { background: rgba(8,8,26,.16); } .mh-map-stage .mh-map { background: transparent !important; }
-  .mh-map-tint { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(20,22,64,.32), rgba(10,10,34,.52)); animation: mh-gridin .9s ease .15s both; }
+  .mh-map-backdrop .mh-map-bg { inset: 0; } .mh-map-tint.is-light { background: rgba(8,8,26,.16); animation: none; } .mh-map-flat .mh-map-sharp { position: absolute; inset: 0; background: center / cover no-repeat; pointer-events: none; }
+  .mh-map-backdrop.is-battlemap .mh-map-tint { background: rgba(8,8,26,.42); } .mh-map-stage .mh-map { background: transparent !important; }
+  .mh-map-tint { position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 0 9999px rgba(8,8,26,.7); /* la imagen de fondo del mapa se ve siempre atenuada al 70 % */ background: linear-gradient(180deg, rgba(20,22,64,.32), rgba(10,10,34,.52)); animation: mh-gridin .9s ease .15s both; }
   /* El tablero se ve igual en modo claro y oscuro: fondo oscurecido y cuadrícula clara */
   html[data-mh-theme="light"] .mh-map .mh-map-grid { background: color-mix(in srgb, #fff 52%, transparent); }
   .mh-map-noise { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: overlay; opacity: .3; z-index: 1; animation: mh-gridin 1s ease .3s both; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .55 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23f)'/%3E%3C/svg%3E"); }
   .mh-map-grid { position: absolute; left: calc(50% / ${MAP_COLS}); top: calc(50% / ${MAP_ROWS}); width: calc(100% - 100% / ${MAP_COLS}); height: calc(100% - 100% / ${MAP_ROWS}); pointer-events: none; background: color-mix(in srgb, var(--mh-ink, #fff) 52%, transparent); -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Cdefs%3E%3ClinearGradient%20id='h'%20gradientUnits='userSpaceOnUse'%20x1='17'%20x2='83'%20y1='0'%20y2='0'%3E%3Cstop%20offset='0'%20stop-opacity='0'/%3E%3Cstop%20offset='.32'%20stop-opacity='1'/%3E%3Cstop%20offset='.68'%20stop-opacity='1'/%3E%3Cstop%20offset='1'%20stop-opacity='0'/%3E%3C/linearGradient%3E%3ClinearGradient%20id='v'%20gradientUnits='userSpaceOnUse'%20x1='0'%20x2='0'%20y1='17'%20y2='83'%3E%3Cstop%20offset='0'%20stop-opacity='0'/%3E%3Cstop%20offset='.32'%20stop-opacity='1'/%3E%3Cstop%20offset='.68'%20stop-opacity='1'/%3E%3Cstop%20offset='1'%20stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath%20d='M17%2050H83'%20stroke='url%28%23h%29'%20stroke-width='2.4'/%3E%3Cpath%20d='M50%2017V83'%20stroke='url%28%23v%29'%20stroke-width='2.4'/%3E%3C/svg%3E") 0 0 / calc(100% / ${MAP_COLS - 1}) calc(100% / ${MAP_ROWS - 1}) repeat; mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Cdefs%3E%3ClinearGradient%20id='h'%20gradientUnits='userSpaceOnUse'%20x1='17'%20x2='83'%20y1='0'%20y2='0'%3E%3Cstop%20offset='0'%20stop-opacity='0'/%3E%3Cstop%20offset='.32'%20stop-opacity='1'/%3E%3Cstop%20offset='.68'%20stop-opacity='1'/%3E%3Cstop%20offset='1'%20stop-opacity='0'/%3E%3C/linearGradient%3E%3ClinearGradient%20id='v'%20gradientUnits='userSpaceOnUse'%20x1='0'%20x2='0'%20y1='17'%20y2='83'%3E%3Cstop%20offset='0'%20stop-opacity='0'/%3E%3Cstop%20offset='.32'%20stop-opacity='1'/%3E%3Cstop%20offset='.68'%20stop-opacity='1'/%3E%3Cstop%20offset='1'%20stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath%20d='M17%2050H83'%20stroke='url%28%23h%29'%20stroke-width='2.4'/%3E%3Cpath%20d='M50%2017V83'%20stroke='url%28%23v%29'%20stroke-width='2.4'/%3E%3C/svg%3E") 0 0 / calc(100% / ${MAP_COLS - 1}) calc(100% / ${MAP_ROWS - 1}) repeat; }
-  .mh-map-range { position: absolute; box-sizing: border-box; background: color-mix(in srgb, var(--rc) 58%, transparent); border: 0 solid var(--rc); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rc) 35%, transparent); pointer-events: none; z-index: 1; }
+  .mh-map-range { position: absolute; box-sizing: border-box; background: color-mix(in srgb, var(--rc) 17%, transparent); border: 0 solid color-mix(in srgb, var(--rc) 62%, transparent); box-shadow: inset 0 0 0 1px rgba(255,255,255,.1); pointer-events: none; z-index: 1; }
   .mh-map-menu { min-width: 190px; }
   .mh-map-menu { min-width: 230px; max-width: 280px; }
   .mh-map-menu-list { max-height: 340px; overflow-y: auto; }
@@ -4869,7 +4871,7 @@ const sharedStyles = `
   .mh-map-menu-ck { color: #5FA77A; }
   .mh-map-legend { position: absolute; left: 8px; bottom: 8px; z-index: 6; display: flex; align-items: center; gap: 4px 10px; flex-wrap: wrap; max-width: calc(100% - 16px); padding: 5px 8px; border-radius: 8px; background: rgba(20,14,18,.78); color: #F4EEE2; font: 600 10.5px 'Inter', system-ui, sans-serif; }
   .mh-map-legend span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
-  .mh-map-legend i { width: 10px; height: 10px; border-radius: 3px; }
+  .mh-map-legend i { width: 12px; height: 12px; border-radius: 3px; box-sizing: border-box; background: color-mix(in srgb, var(--rc) 24%, transparent); border: 2px solid color-mix(in srgb, var(--rc) 70%, transparent); }
   .mh-map-legend button { width: 18px; height: 18px; border: 0; border-radius: 50%; background: rgba(255,255,255,.14); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
   .mh-map-menu { position: absolute; z-index: 8; min-width: 160px; padding: 4px; border-radius: 10px; background: var(--mh-panel); border: 1px solid var(--mh-line2); box-shadow: 0 10px 28px rgba(0,0,0,.35); }
   .mh-map-menu button { width: 100%; display: flex; align-items: center; gap: 8px; padding: 7px 10px; border: 0; border-radius: 7px; background: transparent; color: var(--mh-ink); font: 600 12.5px 'Inter', system-ui, sans-serif; cursor: pointer; text-align: left; }
@@ -4886,10 +4888,10 @@ const sharedStyles = `
   .mh-map-tk.is-hidden .mh-map-face, .mh-iso-tk.is-hidden { opacity: .45; }
   .mh-map-tk.is-hidden .mh-map-face { outline: 2px dashed rgba(255,255,255,.85); outline-offset: 2px; filter: saturate(.4); }
   .mh-map-tk.is-hidden::after { content: ""; position: absolute; right: 2%; top: 2%; width: 34%; height: 34%; border-radius: 50%; background: #2a2333 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.9 4.2A10 10 0 0 1 12 4c7 0 10 8 10 8a13 13 0 0 1-1.7 2.7M6.6 6.6C3.6 8.6 2 12 2 12s3 8 10 8a9.7 9.7 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2M2 2l20 20'/%3E%3C/svg%3E") center / 64% no-repeat; box-shadow: 0 1px 3px rgba(0,0,0,.4); pointer-events: none; }
-  .mh-map-tk > .mh-map-face, .mh-map-tk > .mh-map-ring, .mh-map-tk > .mh-map-hp, .mh-map-tk > .mh-map-nm { transition: opacity .55s ease, scale .55s ease, filter .55s ease; }
+  .mh-map-tk > .mh-map-face, .mh-map-tk > .mh-map-ring, .mh-map-tk > .mh-map-rank, .mh-map-tk > .mh-map-hp, .mh-map-tk > .mh-map-nm { transition: opacity .55s ease, scale .55s ease, filter .55s ease; }
   .mh-map-tk.is-vanished { pointer-events: none; }
-  .mh-map-tk.is-vanished > .mh-map-face, .mh-map-tk.is-vanished > .mh-map-ring, .mh-map-tk.is-vanished > .mh-map-hp, .mh-map-tk.is-vanished > .mh-map-nm { opacity: 0; scale: .55; filter: blur(4px); }
-  .mh-map-tk.is-poof-show > .mh-map-face { animation: mh-pop-in .55s cubic-bezier(.3,1.5,.5,1); }
+  .mh-map-tk.is-vanished > .mh-map-face, .mh-map-tk.is-vanished > .mh-map-ring, .mh-map-tk.is-vanished > .mh-map-rank, .mh-map-tk.is-vanished > .mh-map-hp, .mh-map-tk.is-vanished > .mh-map-nm { opacity: 0; scale: .55; filter: blur(4px); }
+  .mh-map-tk.is-poof-show > .mh-map-rank, .mh-map-tk.is-poof-show > .mh-map-face { animation: mh-pop-in .55s cubic-bezier(.3,1.5,.5,1); }
   @keyframes mh-pop-in { 0% { scale: .5; filter: blur(4px); } 60% { scale: 1.12; filter: none; } 100% { scale: 1; } }
   .mh-map-puff { position: absolute; inset: -15%; pointer-events: none; z-index: 2; }
   .mh-map-puff i { position: absolute; width: 46%; height: 46%; border-radius: 50%; background: radial-gradient(circle, rgba(225,222,235,.95) 0%, rgba(190,185,205,.7) 45%, rgba(160,155,180,0) 72%); opacity: 0; animation: mh-puff .8s ease-out forwards; }
@@ -4899,8 +4901,8 @@ const sharedStyles = `
   .mh-map-puff i:nth-child(4) { left: 14%; top: 52%; --px: -30%; --py: 30%; animation-delay: .04s; }
   .mh-map-puff i:nth-child(5) { left: 42%; top: 52%; --px: 30%; --py: 30%; animation-delay: .08s; }
   @keyframes mh-puff { 0% { opacity: 0; scale: .3; translate: 0 0; } 25% { opacity: 1; scale: 1; } 100% { opacity: 0; scale: 1.5; translate: var(--px) var(--py); } }
-  .mh-map-tk.is-step0 .mh-map-face, .mh-map-tk.is-step0 .mh-map-ring { animation: mh-hop0 .38s ease-out; }
-  .mh-map-tk.is-step1 .mh-map-face, .mh-map-tk.is-step1 .mh-map-ring { animation: mh-hop1 .38s ease-out; }
+  .mh-map-tk.is-step0 .mh-map-face, .mh-map-tk.is-step0 .mh-map-ring, .mh-map-tk.is-step0 .mh-map-rank { animation: mh-hop0 .38s ease-out; }
+  .mh-map-tk.is-step1 .mh-map-face, .mh-map-tk.is-step1 .mh-map-ring, .mh-map-tk.is-step1 .mh-map-rank { animation: mh-hop1 .38s ease-out; }
   @keyframes mh-hop0 { 0% { translate: 0 0; scale: 1; } 45% { translate: 0 -28%; scale: 1.06; } 80% { translate: 0 0; scale: 1.04 .94; } 100% { translate: 0 0; scale: 1; } }
   @keyframes mh-hop1 { 0% { translate: 0 0; scale: 1; } 45% { translate: 0 -28%; scale: 1.06; } 80% { translate: 0 0; scale: 1.04 .94; } 100% { translate: 0 0; scale: 1; } }
   .mh-map-tk.is-attack { z-index: 5; animation: mh-lunge .7s cubic-bezier(.5,0,.3,1) both; }
@@ -4909,7 +4911,7 @@ const sharedStyles = `
   .mh-map-tk.is-hit .mh-map-face { animation: mh-tk-flash .55s .32s ease both; }
   @keyframes mh-tk-hit { 0%, 100% { translate: 0 0; } 20% { translate: -10% 4%; } 40% { translate: 9% -3%; } 60% { translate: -6% 2%; } 80% { translate: 4% 0; } }
   @keyframes mh-tk-flash { 0%, 100% { filter: none; } 25% { filter: brightness(1.8) saturate(.4) drop-shadow(0 0 6px #ff4a3d); } }
-  @media (prefers-reduced-motion: reduce) { .mh-map-tk.is-attack, .mh-map-tk.is-hit, .mh-map-tk.is-hit .mh-map-face, .mh-iso-tk.is-attack, .mh-iso-tk.is-hit, .mh-map-tk[class*="is-step"] .mh-map-face, .mh-map-tk[class*="is-step"] .mh-map-ring, .mh-iso-tk[class*="is-step"], .mh-map-puff i, .mh-iso-puff circle, .mh-map-tk.is-poof-show > .mh-map-face { animation: none; } .mh-map .mh-map-tk { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { .mh-map-tk.is-attack, .mh-map-tk.is-hit, .mh-map-tk.is-hit .mh-map-face, .mh-iso-tk.is-attack, .mh-iso-tk.is-hit, .mh-map-tk[class*="is-step"] .mh-map-face, .mh-map-tk[class*="is-step"] .mh-map-ring, .mh-map-tk[class*="is-step"] .mh-map-rank, .mh-iso-tk[class*="is-step"], .mh-map-puff i, .mh-iso-puff circle, .mh-map-tk.is-poof-show > .mh-map-face { animation: none; } .mh-map .mh-map-tk { transition: none; } }
   .mh-map-props-sep { font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-muted); margin: 0 2px 0 8px; }
   html[data-mh-theme="light"] .mh-map-stage { background: #EFE8DB; }
   .mh-map-reach { position: absolute; background: rgba(111,191,115,.26); box-shadow: inset 0 0 0 1px rgba(111,191,115,.6); pointer-events: none; }
@@ -4918,11 +4920,19 @@ const sharedStyles = `
   .mh-map-tk { position: absolute; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; background: none; cursor: default; transition: left .3s cubic-bezier(.3,.7,.4,1), top .3s cubic-bezier(.3,.7,.4,1); }
   .mh-map-tk.is-movable { cursor: grab; }
   .mh-map-tk.is-drag { cursor: grabbing; transition: none; z-index: 6; }
-  .mh-map-tk.is-drag .mh-map-ring { scale: 1.12; transition: scale .15s ease; }
+  .mh-map-tk.is-drag .mh-map-ring, .mh-map-tk.is-drag .mh-map-rank { scale: 1.12; transition: scale .15s ease; }
   .mh-map-tk.is-drag .mh-map-face { scale: 1.12; box-shadow: 0 10px 18px rgba(0,0,0,.45); transition: scale .15s ease; }
   .mh-map-drop { transition: left .12s ease, top .12s ease; }
   .mh-map-tk:focus-visible { outline: none; }
   .mh-map-tk:focus-visible .mh-map-face { box-shadow: 0 0 0 3px #fff, 0 3px 8px rgba(0,0,0,.5); }
+  /* Rango de la subclase: uno, dos o tres rombos del color de la clase sobre el borde superior de la ficha, siguiendo su curvatura. Van dentro de la ficha, así que se mueven, rebotan y se animan con ella. */
+  .mh-map-rank { position: absolute; z-index: 5; inset: 15%; pointer-events: none; } /* misma caja que la ficha (70 % de la casilla): el centro de cada rombo cae justo sobre su borde */
+  .mh-map-rk { position: absolute; width: 15%; aspect-ratio: 1; left: calc(50% + 50% * sin(var(--a))); top: calc(50% - 50% * cos(var(--a))); translate: -50% -50%; rotate: calc(var(--a) + 45deg); background: var(--tc); box-shadow: 0 1px 2px rgba(0,0,0,.45); pointer-events: none; }
+  .mh-map-tk.is-trf .mh-map-rk { left: calc(50% + var(--k) * 30%); top: 0; rotate: 45deg; }
+  /* El emblema de la clase siempre en blanco, con una sombra fina para leerse sobre cualquier color. */
+  .mh-map-tk.is-pc .mh-map-face > svg { color: #fff !important; filter: drop-shadow(0 1px 2px rgba(0,0,0,.6)); }
+  /* Multiclase: degradado suave entre el color de la clase principal y el de la segunda; el emblema lleva sombra para leerse sobre los dos. */
+  .mh-map-face.is-mc { background: linear-gradient(135deg, var(--tc) 22%, var(--tc2, var(--tc)) 78%) border-box; border-color: transparent; } 
   .mh-map-face { position: relative; z-index: 2; width: 80%; height: 80%; border-radius: 22%; border: 3px solid var(--tc); box-sizing: border-box; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--tc); color: #fff; font-family: 'Cinzel', Georgia, serif; font-weight: 700; font-size: clamp(10px, 1.6vw, 17px); box-shadow: 0 3px 8px rgba(0,0,0,.5); }
   .mh-map-tk.is-npc .mh-map-face, .mh-map-tk.is-foe .mh-map-face { background: #221C2B; }
   .mh-map-tk.is-foe .mh-map-face { background: #6B2F2F; }
@@ -4933,12 +4943,12 @@ const sharedStyles = `
   @keyframes mh-rooted { 0%, 100% { scale: 1; opacity: .9; } 50% { scale: .94; opacity: 1; } }
   .mh-map-fx.fx-vuln { z-index: 1; box-shadow: 0 0 10px 4px rgba(217,100,78,.8); animation: mh-vuln 1.3s ease-in-out infinite; }
   @keyframes mh-vuln { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
-  .mh-map-tk.is-c-ko .mh-map-face { filter: grayscale(.9) brightness(.8); rotate: -90deg; }
+  .mh-map-tk.is-c-ko .mh-map-rank, .mh-map-tk.is-c-ko .mh-map-face { filter: grayscale(.9) brightness(.8); rotate: -90deg; }
   .mh-map-tk.is-c-ko .mh-map-face > span { rotate: 0deg; }
   .mh-map-fx.fx-charm { z-index: 3; inset: 3%; width: auto; height: auto; overflow: visible; border: 2px solid rgba(224,127,176,.65); border-radius: 30%; box-shadow: 0 0 9px 2px rgba(224,127,176,.4); animation: mh-charm 2.6s ease-in-out infinite; }
   .mh-map-fx.fx-charm b { position: absolute; left: 46%; top: -4%; color: #F3A6CB; font: 700 clamp(8px, 1vw, 12px)/1 Inter, system-ui, sans-serif; text-shadow: 0 1px 2px rgba(0,0,0,.5); opacity: 0; animation: mh-hearts 3.2s ease-in infinite; } .mh-map-fx.fx-charm b:nth-child(2) { left: 16%; animation-delay: 1.1s; } .mh-map-fx.fx-charm b:nth-child(3) { left: 72%; animation-delay: 2.1s; }
   @keyframes mh-charm { 50% { box-shadow: 0 0 13px 4px rgba(224,127,176,.58); border-color: rgba(224,127,176,.9); } } @keyframes mh-hearts { 0% { opacity: 0; transform: translateY(8px) scale(.6); } 25% { opacity: .9; } 100% { opacity: 0; transform: translateY(-16px) scale(1); } }
-  .mh-thread line.is-charm { stroke: #E07FB0; }
+  .mh-thread.mh-charmlink line { stroke: #E07FB0; stroke-width: 2; stroke-dasharray: 2 8; stroke-linecap: round; vector-effect: non-scaling-stroke; opacity: .8; animation: mh-thread 1.4s linear infinite; }
   /* Pasiva de «Engañador Hábil»: de vez en cuando un reflejo tenue de la ficha se desdobla a un lado */
   .mh-map-pas { position: absolute; inset: 0; pointer-events: none; z-index: 2; } .mh-map-pas i { position: absolute; inset: 10%; border-radius: 50%; border: 1.5px solid var(--gc); background: color-mix(in srgb, var(--gc) 14%, transparent); opacity: 0; } .mh-map-pas i:nth-child(1) { animation: mh-pas-a 7s ease-in-out infinite; } .mh-map-pas i:nth-child(2) { animation: mh-pas-b 7s ease-in-out 3.5s infinite; }
   @keyframes mh-pas-a { 0%, 62%, 100% { opacity: 0; transform: translate(0, 0); } 72% { opacity: .5; transform: translate(10%, -5%); } 86% { opacity: 0; transform: translate(16%, -8%); } } @keyframes mh-pas-b { 0%, 62%, 100% { opacity: 0; transform: translate(0, 0); } 72% { opacity: .5; transform: translate(-10%, 5%); } 86% { opacity: 0; transform: translate(-16%, 8%); } }
@@ -4946,11 +4956,11 @@ const sharedStyles = `
   .mh-map-fx.fx-ko b { position: absolute; right: -8%; top: -10%; color: #E9DDFB; font: 800 clamp(9px, 1.2vw, 13px)/1 Inter, system-ui, sans-serif; text-shadow: 0 1px 2px rgba(0,0,0,.6); opacity: 0; animation: mh-zz 2.4s ease-in-out infinite; }
   .mh-map-fx.fx-ko b + b { animation-delay: 1.2s; }
   @keyframes mh-zz { 0% { opacity: 0; translate: 0 0; scale: .6; } 30% { opacity: 1; } 100% { opacity: 0; translate: 40% -120%; scale: 1.2; } }
-  .mh-map-tk.is-c-fly .mh-map-face, .mh-map-tk.is-c-fly .mh-map-ring { animation: mh-fly 2.2s ease-in-out infinite; }
+  .mh-map-tk.is-c-fly .mh-map-face, .mh-map-tk.is-c-fly .mh-map-ring, .mh-map-tk.is-c-fly .mh-map-rank { animation: mh-fly 2.2s ease-in-out infinite; }
   @keyframes mh-fly { 0%, 100% { translate: 0 -12%; } 50% { translate: 0 -22%; } }
   .mh-map-fx.fx-fly { z-index: 1; left: 22%; width: 56%; top: auto; bottom: 0; height: 12%; border-radius: 50%; background: rgba(0,0,0,.45); filter: blur(2px); animation: mh-fly-shadow 2.2s ease-in-out infinite; }
   @keyframes mh-fly-shadow { 0%, 100% { scale: 1; opacity: .8; } 50% { scale: .8; opacity: .55; } }
-  .mh-map-tk.is-c-shell .mh-map-face, .mh-map-tk.is-c-shell .mh-map-ring { scale: .82; }
+  .mh-map-tk.is-c-shell .mh-map-face, .mh-map-tk.is-c-shell .mh-map-ring, .mh-map-tk.is-c-shell .mh-map-rank { scale: .82; }
   .mh-map-fx.fx-shell { z-index: 3; inset: 6%; width: auto; height: auto; border-radius: 50% 50% 30% 30%; border: 3px solid #6E8B5A; background: repeating-linear-gradient(45deg, rgba(110,139,90,.35) 0 4px, rgba(110,139,90,.15) 4px 8px); }
   .mh-map-conds { position: absolute; z-index: 4; left: 2%; top: 2%; display: flex; gap: 1px; width: 100%; pointer-events: none; }
   .mh-map-conds i { width: 28%; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; color: #fff; border: 1.5px solid #fff; box-sizing: border-box; box-shadow: 0 1px 3px rgba(0,0,0,.45); }
@@ -4961,7 +4971,7 @@ const sharedStyles = `
 
   .mh-iso-tk.is-c-fly > .mh-iso-shadow { transform-box: fill-box; transform-origin: center; animation: mh-fly-shadow 2.2s ease-in-out infinite; }
   .mh-iso-tk.is-c-shell > rect { opacity: .85; }
-  @media (prefers-reduced-motion: reduce) { .mh-map-pas i, .mh-map-fx, .mh-map-fx b, .mh-map-tk.is-c-fly .mh-map-face, .mh-iso-ring, .mh-iso-zz text, .mh-iso-tk[class*="is-c-"] > * { animation: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .mh-map-pas i, .mh-charmlink line, .mh-map-fx, .mh-map-fx b, .mh-map-tk.is-c-fly .mh-map-face, .mh-iso-ring, .mh-iso-zz text, .mh-iso-tk[class*="is-c-"] > * { animation: none !important; } }
   .mh-map-tk.is-sel .mh-map-face { box-shadow: 0 0 0 2px #F3C24A, 0 3px 10px rgba(0,0,0,.55); }
   .mh-map-hp { position: absolute; z-index: 3; left: 20%; right: 20%; bottom: 6%; height: 9%; min-height: 3px; border-radius: 3px; background: #2a1f25; overflow: hidden; box-shadow: 0 0 0 1px rgba(0,0,0,.5); }
   .mh-map-hp i { display: block; height: 100%; background: #E24B4A; }
@@ -4972,7 +4982,7 @@ const sharedStyles = `
   .mh-fan-in { position: absolute; left: 0; top: 0; width: 300px; height: 420px; transform: scale(var(--s)); transform-origin: 0 0; }
   .mh-fan-tabs { position: absolute; left: 50%; bottom: 176px; transform: translateX(-50%); z-index: 7; display: flex; gap: 4px; padding: 3px; border-radius: 10px; background: rgba(21,17,28,.9); border: 1px solid rgba(255,255,255,.14); }
   .mh-fan-tabs button { all: unset; cursor: pointer; box-sizing: border-box; padding: 5px 12px; border-radius: 7px; font: 600 12px Inter, system-ui, sans-serif; color: #b9afc8; } .mh-fan-tabs button small { opacity: .7; margin-left: 2px; } .mh-fan-tabs button.on { background: #3a2f55; color: #E3B04B; } .mh-fan-tabs button:not(.on):hover { color: #fff; }
-  .mh-fan-pile { all: unset; cursor: pointer; position: absolute; bottom: 46px; width: 74px; height: 104px; z-index: 7; } .mh-fan-pile.is-l { left: 12px; } .mh-fan-pile.is-r { right: 12px; }
+  .mh-fan-pile { all: unset; cursor: pointer; position: absolute; bottom: 46px; width: 74px; height: 104px; z-index: 7; } .mh-fan-pile.is-l { left: 12px; } .mh-fan-pile.is-r { right: 12px; } .mh-fan-pile.is-r2 { right: 98px; }
   .mh-fan-pile span { position: absolute; width: 62px; height: 90px; border-radius: 9px; border: 2px solid var(--pc); background: linear-gradient(160deg, color-mix(in srgb, var(--pc) 30%, #1d1827), #15111c); box-shadow: 0 3px 8px rgba(0,0,0,.5); left: calc(var(--q) * 6px); top: calc(10px - var(--q) * 4px); transform: rotate(calc(-6deg + var(--q) * 6deg)); transition: transform .15s; }
   .mh-fan-pile span.is-back { width: 62px; height: 87px; border: 0; background: none; overflow: hidden; border-radius: 9px; } .mh-fan-pile span.is-back svg { display: block; width: 100%; height: 100%; }
   .mh-fan-card { animation: mh-fan-deal .42s cubic-bezier(.2,.9,.3,1) backwards; animation-delay: calc(var(--i, 0) * 40ms); }
@@ -5023,18 +5033,91 @@ const sharedStyles = `
   .mh-fan-elems button { all: unset; box-sizing: border-box; cursor: pointer; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 9px 4px; border-radius: 12px; font: 600 11.5px Inter, system-ui, sans-serif; color: #fff; background: color-mix(in srgb, var(--ec) 30%, #141018); border: 1.5px solid color-mix(in srgb, var(--ec) 70%, transparent); }
   .mh-fan-elems button:hover { background: color-mix(in srgb, var(--ec) 48%, #141018); } .mh-fan-elems button.is-on { background: var(--ec); color: #1a1206; }
   .mh-fan-big { position: relative; width: 300px; height: 420px; max-height: 88vh; --s: 1; }
+  .mh-toast-warn { position: fixed; left: 50%; bottom: 28px; translate: -50% 0; z-index: 9999; max-width: min(520px, 92vw); padding: 10px 16px; border-radius: 12px; background: #3a1a1a; color: #ffd9d2; border: 1px solid #D9644E; font: 600 13px Inter, system-ui, sans-serif; box-shadow: 0 12px 34px rgba(0,0,0,.5); pointer-events: none; animation: mh-toast-in .25s ease both; }
+  .mh-sheet.is-embedded .mh-toast-warn { zoom: calc(1 / var(--mhz, 1)); }
+  @keyframes mh-toast-in { from { opacity: 0; translate: -50% 10px; } }
+  .mh-fan-toks { position: absolute; left: 50%; bottom: calc(100% + 5px); translate: -50% 0; z-index: 3; display: flex; padding: 0; pointer-events: none; max-width: 96%; flex-wrap: wrap; justify-content: center; }
+  .mh-die { all: unset; box-sizing: border-box; display: block; flex: none; width: calc(62px * var(--s, 1)); margin: 0 calc(-8px * var(--s, 1)); filter: drop-shadow(0 2px 2px rgba(0,0,0,.45)); } .mh-die svg, .mh-die img { display: block; width: 100%; height: auto; overflow: visible; pointer-events: none; } button.mh-die { cursor: pointer; transition: transform .12s ease; } button.mh-die:hover { transform: translateY(-3px); }
+  .mh-die.is-gone { position: relative; z-index: 6; animation: mh-die-gone .65s ease-in forwards; pointer-events: none; }
+  .mh-die.is-drop { animation: mh-die-drop .85s cubic-bezier(.3,.1,.5,1) backwards; }
+  @keyframes mh-die-drop { 0% { transform: translateY(calc(-220px * var(--s, 1))) rotate(-540deg) scale(1.35); opacity: 0; } 8% { opacity: 1; } 52% { transform: translateY(0) rotate(0); } 68% { transform: translateY(calc(-26px * var(--s, 1))) rotate(40deg); } 82% { transform: translateY(0) rotate(-12deg); } 91% { transform: translateY(calc(-7px * var(--s, 1))) rotate(5deg); } 100% { transform: translateY(0) rotate(0); } }
+  @keyframes mh-die-gone { 0% { transform: translateY(0) rotate(0); opacity: 1; } 100% { transform: translateY(calc(-150px * var(--s, 1))) rotate(300deg) scale(.4); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .mh-die.is-gone { animation: none; opacity: 0; } .mh-die.is-drop { animation: none; } }
+  .mh-fan-tokctl { position: absolute; left: 0; right: 0; top: calc(100% + 12px); display: flex; flex-direction: column; align-items: center; gap: 8px; }    .mh-fan-ward { position: absolute; z-index: 3; left: 50%; bottom: calc(100% + 5px); translate: -50% 0; display: inline-flex; align-items: center; gap: 4px; max-width: 150%; padding: 2px 8px; border-radius: 99px; background: rgba(20,17,26,.92); border: 1.5px solid var(--cc, #9D8BF0); color: #fff; font: 700 10.5px Inter, system-ui, sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; box-shadow: 0 2px 8px rgba(0,0,0,.5); } .mh-fan-ward.is-spent { opacity: .6; filter: grayscale(.7); }
+  .mh-fan-chip { position: absolute; z-index: 7; left: 12px; bottom: 12px; display: inline-flex; align-items: center; gap: 5px; padding: 4px 11px; border-radius: 99px; background: rgba(20,17,26,.92); border: 1.5px solid #9D8BF0; color: #fff; font: 700 11.5px Inter, system-ui, sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,.5); pointer-events: auto; }
+  .mh-fan-tray { --s: 1.15; position: absolute; left: calc(100% + 14px); top: 3%; bottom: 3%; z-index: 4; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; pointer-events: none; } .mh-fan-tray .mh-die { margin: calc(-3px * var(--s)) 0; } @media (max-width: 640px) { .mh-fan-tray { left: 0; right: 0; top: auto; bottom: 3%; flex-direction: row; justify-content: center; --s: .95; } .mh-fan-tray .mh-die { margin: 0 calc(-8px * var(--s)); } } .mh-fan-tray .mh-die { pointer-events: auto; } .mh-die.is-drag { touch-action: none; cursor: grab; } .mh-die.is-drag:active { cursor: grabbing; z-index: 8; } .mh-fan-tokctl .rc:disabled { opacity: .4; cursor: not-allowed; } .mh-fan-tokctl .rc { all: unset; cursor: pointer; padding: 7px 16px; border-radius: 99px; background: #E3B04B; color: #1f1606; font: 700 12.5px Inter, system-ui, sans-serif; }
+  .mh-sess { width: min(560px, 94vw); }
+  .mh-sess-list { display: flex; flex-direction: column; gap: 8px; } .mh-sess-it { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--mh-panel, #1b1824) 70%, transparent); border: 1px solid var(--mh-line2, rgba(255,255,255,.14)); } .mh-sess-it > svg { color: #E3B04B; flex: none; } .mh-sess-it span { display: flex; flex-direction: column; } .mh-sess-it small { color: var(--mh-muted, #aaa); font-size: 11.5px; }
+  .mh-sess-toks { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; } .mh-sess-toks button { all: unset; box-sizing: border-box; cursor: pointer; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; font: 700 15px Inter, system-ui, sans-serif; border: 2px solid #E3B04B; color: #E3B04B; } .mh-sess-toks button.is-on { background: #E3B04B; color: #1f1606; }
+  .mh-dir-sess.is-on { border-color: #E3B04B; color: var(--mh-gold-ink, #E3B04B); }
+  .mh-evo-wrap { position: fixed; inset: 0; z-index: 9998; background: rgba(8,6,12,.72); display: flex; align-items: center; justify-content: center; padding: 14px; }
+  .mh-sheet.is-embedded .mh-evo-wrap { zoom: calc(1 / var(--mhz, 1)); }
+  .mh-evo { width: min(820px, 96%); max-height: 92vh; padding: 18px 22px; gap: 12px; } .mh-evo .mh-bpick-img { height: 62px; } .mh-evo .mh-bpick-g { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .mh-evo-hope { display: flex; align-items: center; justify-content: center; gap: 10px; font: 600 12.5px Inter, system-ui, sans-serif; color: var(--mh-muted, #aaa); } .mh-evo-hope b { color: var(--mh-ink, #fff); }
+  .mh-evo-pips { display: inline-flex; gap: 4px; } .mh-evo-pips i { width: 14px; height: 14px; rotate: 45deg; border-radius: 3px; border: 1.5px solid #E3B04B; } .mh-evo-pips i.is-on { background: #E3B04B; } .mh-evo-pips i.is-spend { background: #D9644E; border-color: #D9644E; }
+  .mh-evo-h { display: flex; align-items: center; gap: 8px; font: 700 13px Inter, system-ui, sans-serif; } .mh-evo-h i { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-size: 11.5px; background: var(--acc, #E3B04B); color: var(--acc-on, #1F1606); }
+  .mh-evo-traits { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+  .mh-evo-traits button { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 9px 6px; border-radius: 12px; border: 1px solid var(--mh-line2, rgba(255,255,255,.18)); background: color-mix(in srgb, var(--mh-panel, #1b1824) 70%, transparent); font: 600 12.5px Inter, system-ui, sans-serif; transition: transform .12s ease, border-color .12s ease; } .mh-evo-traits button:hover { transform: translateY(-2px); } .mh-evo-traits button b { font-size: 12px; color: var(--mh-muted, #aaa); } .mh-evo-traits button.is-on { border-color: #7FB77A; background: color-mix(in srgb, #7FB77A 22%, transparent); } .mh-evo-traits button.is-on b { color: #A9E3A4; }
+  .mh-evo-sum { padding: 10px 14px; border-radius: 12px; text-align: center; font: 500 12.5px/1.45 Inter, system-ui, sans-serif; color: var(--mh-muted, #aaa); border: 1px dashed var(--mh-line2, rgba(255,255,255,.2)); } .mh-evo-sum.is-ready { color: var(--mh-ink, #fff); border-style: solid; border-color: #7FB77A; background: color-mix(in srgb, #7FB77A 14%, transparent); } .mh-evo-sum b { color: #E3B04B; }
+  .mh-evo-act { display: flex; justify-content: center; align-items: center; gap: 12px; }
+  .mh-evo-go { all: unset; cursor: pointer; padding: 10px 22px; border-radius: 99px; font: 700 13.5px Inter, system-ui, sans-serif; background: #7FB77A; color: #10200e; box-shadow: 0 6px 18px -6px #7FB77A; transition: transform .12s ease, opacity .12s ease; } .mh-evo-go:hover:not(:disabled) { transform: translateY(-2px); } .mh-evo-go:disabled { opacity: .4; cursor: not-allowed; box-shadow: none; }
+  /* Daño en la ficha del mapa al marcar vida: sacudida, destello rojo, onda y cifra que sube */
+  .mh-map-tk.is-hurt { animation: mh-tk-hit .5s ease both; } .mh-map-tk.is-hurt .mh-map-face { animation: mh-tk-flash .6s ease both; }
+  .mh-map-tk.is-burn .mh-map-face { animation: mh-burn-flash .9s ease both; }
+  @keyframes mh-burn-flash { 0%, 100% { filter: none; } 30% { filter: brightness(1.6) saturate(1.8) drop-shadow(0 0 8px #FF7A2E); } }
+  .mh-map-burnring { position: absolute; z-index: 6; inset: 10%; border: 3px solid #FF7A2E; border-radius: 50%; box-shadow: 0 0 14px #FF7A2E, inset 0 0 12px #FFD05A; pointer-events: none; animation: mh-dmg-ring .9s ease-out both; }
+  .mh-map-burn { position: absolute; z-index: 7; left: 50%; top: 4%; translate: -50% 0; font: 800 17px 'Inter', system-ui, sans-serif; color: #FFB04A; text-shadow: 0 0 8px #FF5A1F, 0 2px 3px #000; pointer-events: none; animation: mh-dmg-float 1.3s ease-out both; }
+  .mh-map-wavering { position: absolute; z-index: 6; inset: 12%; border: 3px solid #4FA8E8; border-radius: 50%; box-shadow: 0 0 12px #4FA8E8; pointer-events: none; animation: mh-dmg-ring .9s ease-out both; }
+  @media (prefers-reduced-motion: reduce) { .mh-map-tk.is-burn .mh-map-face, .mh-map-burnring, .mh-map-burn, .mh-map-wavering, .mh-foe-wait-r i { animation: none; } }
+  .mh-map-dmgring { position: absolute; z-index: 6; inset: 14%; border: 3px solid #F0615A; border-radius: 50%; pointer-events: none; animation: mh-dmg-ring .7s ease-out both; }
+  .mh-map-dmg { position: absolute; z-index: 7; left: 50%; top: 8%; translate: -50% 0; font: 800 17px 'Inter', system-ui, sans-serif; color: #FF6B62; text-shadow: 0 0 6px #000, 0 2px 3px #000; pointer-events: none; animation: mh-dmg-float 1.2s ease-out both; }
+  @keyframes mh-dmg-ring { 0% { opacity: .95; scale: .7; } 100% { opacity: 0; scale: 2; } }
+  @keyframes mh-dmg-float { 0% { opacity: 0; translate: -50% 6px; scale: .6; } 18% { opacity: 1; scale: 1.3; } 100% { opacity: 0; translate: -50% -34px; scale: 1; } }
+  @media (prefers-reduced-motion: reduce) { .mh-map-tk.is-hurt, .mh-map-tk.is-hurt .mh-map-face, .mh-map-dmgring, .mh-map-dmg { animation: none; } }
+  .mh-elpick, .mh-bpick { box-sizing: border-box; width: min(660px, 94vw); max-height: 88vh; overflow: auto; padding: 22px; border-radius: 20px; display: flex; flex-direction: column; gap: 16px; color: var(--mh-ink, #fff); background: color-mix(in srgb, var(--mh-panel, #1b1824) 96%, #000); border: 1px solid var(--mh-line2, rgba(255,255,255,.14)); box-shadow: 0 30px 90px rgba(0,0,0,.65); scrollbar-width: thin; }
+  .mh-bpick { width: min(780px, 94vw); }
+  .mh-elpick-h { display: flex; flex-direction: column; gap: 4px; text-align: center; } .mh-elpick-h b { font: 700 19px 'Cinzel', Georgia, serif; letter-spacing: .02em; } .mh-elpick-h span { font: 500 12.5px Inter, system-ui, sans-serif; color: var(--mh-muted, #aaa); }
+  .mh-elpick-g { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  .mh-elpick-t { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 18px 10px 12px; border-radius: 16px; text-align: center; border: 1px solid color-mix(in srgb, var(--ec) 45%, transparent); background: linear-gradient(180deg, color-mix(in srgb, var(--ec) 22%, transparent), color-mix(in srgb, var(--ec) 5%, transparent)); transition: transform .15s ease, box-shadow .15s ease; }
+  .mh-elpick-t:hover, .mh-elpick-t:focus-visible { transform: translateY(-3px); box-shadow: 0 12px 26px -10px var(--ec), 0 0 0 1px var(--ec); }
+  .mh-elpick-t i { width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center; color: var(--ec); background: color-mix(in srgb, var(--ec) 24%, #0f0c14); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--ec) 60%, transparent), 0 0 20px -4px var(--ec); }
+  .mh-elpick-t b { font: 700 15.5px Inter, system-ui, sans-serif; }
+  .mh-elpick-t small { font: 500 11px/1.4 Inter, system-ui, sans-serif; color: var(--mh-muted, #aaa); display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; min-height: 4.4em; }
+  .mh-elpick-t em { font: 700 11.5px Inter, system-ui, sans-serif; font-style: normal; padding: 4px 11px; border-radius: 99px; background: color-mix(in srgb, var(--ec) 32%, transparent); color: #fff; }
+  .mh-elpick-t.is-on { background: color-mix(in srgb, var(--ec) 30%, #14101a); box-shadow: 0 0 0 2px var(--ec); } .mh-elpick-t.is-on em { background: var(--ec); color: #1a1206; }
+  .mh-elpick-x { all: unset; cursor: pointer; align-self: center; padding: 7px 18px; border-radius: 99px; font: 600 12.5px Inter, system-ui, sans-serif; color: var(--mh-muted, #aaa); border: 1px solid var(--mh-line2, rgba(255,255,255,.18)); } .mh-elpick-x:hover { color: var(--mh-ink, #fff); }
+  .mh-bpick-tabs { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; } .mh-bpick-tabs button { all: unset; cursor: pointer; padding: 6px 14px; border-radius: 99px; font: 600 12px Inter, system-ui, sans-serif; color: var(--mh-muted, #aaa); border: 1px solid var(--mh-line2, rgba(255,255,255,.18)); } .mh-bpick-tabs button.is-on { background: var(--acc, #E3B04B); color: var(--acc-on, #1F1606); border-color: transparent; }
+  .mh-bpick-g { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 10px; }
+  .mh-bpick-c { all: unset; box-sizing: border-box; cursor: pointer; position: relative; display: flex; flex-direction: column; gap: 4px; padding: 0 0 10px; border-radius: 14px; overflow: hidden; border: 1px solid color-mix(in srgb, var(--bc) 50%, transparent); background: color-mix(in srgb, var(--bc) 8%, #15111b); transition: transform .15s ease, box-shadow .15s ease; }
+  .mh-bpick-c:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 12px 26px -10px var(--bc); }
+  .mh-bpick-c:disabled { opacity: .45; cursor: not-allowed; }
+  .mh-bpick-img { display: block; height: 96px; background: color-mix(in srgb, var(--bc) 30%, #0f0c14) center / cover no-repeat; }
+  .mh-bpick-c b, .mh-bpick-c small, .mh-bpick-c em { padding: 0 11px; } .mh-bpick-c b { font: 700 14px Inter, system-ui, sans-serif; margin-top: 4px; } .mh-bpick-c small { font: 500 11px/1.35 Inter, system-ui, sans-serif; color: var(--mh-muted, #aaa); } .mh-bpick-c em { font: 600 11px Inter, system-ui, sans-serif; font-style: normal; color: color-mix(in srgb, var(--bc) 70%, #fff); } .mh-bpick-c em.is-atk { color: var(--mh-ink, #fff); }
+  .mh-bpick-c.is-on { box-shadow: 0 0 0 2px var(--bc); } .mh-bpick-on { position: absolute; top: 8px; right: 8px; padding: 3px 9px; border-radius: 99px; background: var(--bc); color: #1a1206; font: 700 10.5px Inter, system-ui, sans-serif; }
+  .mh-bpick-empty { grid-column: 1 / -1; text-align: center; color: var(--mh-muted, #aaa); font: 500 12.5px Inter, system-ui, sans-serif; margin: 10px 0; }
+  @media (max-width: 640px) { .mh-elpick-g { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .mh-fan-big.is-choose { width: min(440px, 92vw); height: auto; max-height: none; } .mh-fan-big.is-choose .mh-fan-elems { position: static; } .mh-fan-big.is-choose .mh-fan-elems button { padding: 16px 6px; } .mh-fan-big.is-choose .mh-fan-ask { font-size: 15px; margin-bottom: 4px; }
   @media (max-height: 520px) { .mh-fan-big { --s: .7; width: 210px; height: 294px; } }
   .mh-fan-card.is-last-weapon { margin-right: calc(var(--m, -26px) + 16px); }
   @media (max-width: 760px) { .mh-fan-card { --s: .36; margin: 0 -20px; } }
   .mh-fan-card:hover { transform: translateY(-60px) rotate(0deg) scale(1.15); z-index: 2; }
   .mh-fan-card.is-lifted { opacity: .25; transition: opacity .25s; }
+  .mh-fan-card.is-locked { filter: grayscale(1) brightness(.85); opacity: .6; }
   .mh-fan-ghost { position: fixed; z-index: 9999; pointer-events: none; transform: translate(-50%, -50%) rotate(-6deg); padding: 8px 12px; border-radius: 8px; border: 2px solid var(--c); background: #1B1824; color: #F3EBDD; font-size: 12px; box-shadow: 0 0 18px var(--c); }
-  .mh-thread { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; overflow: visible; } .mh-thread line { stroke: #7fcf86; stroke-width: 2.2; stroke-dasharray: 2 8; stroke-linecap: round; vector-effect: non-scaling-stroke; opacity: .85; filter: drop-shadow(0 0 3px #000a); animation: mh-thread 1.4s linear infinite; } @keyframes mh-thread { to { stroke-dashoffset: -20; } }
+  .mh-thread { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; overflow: visible; } .mh-thread line, .mh-thread path { stroke: #7fcf86; stroke-width: 2.2; stroke-dasharray: 2 8; stroke-linecap: round; vector-effect: non-scaling-stroke; opacity: .85; filter: drop-shadow(0 0 3px #000a); animation: mh-thread 1.4s linear infinite; } @keyframes mh-thread { to { stroke-dashoffset: -20; } }
   .mh-root-tag { position: absolute; z-index: 30; left: 50%; top: 100%; transform: translate(-50%, 8px); min-width: 200px; max-width: 260px; padding: 7px 10px; border-radius: 11px; background: rgba(12,12,32,.96); border: 1px solid #7fcf8688; box-shadow: 0 10px 22px -8px #000; text-align: left; pointer-events: none; opacity: 0; visibility: hidden; transition: opacity .12s; } .mh-root-tag b { display: block; font-size: 12px; color: #fff; } .mh-root-tag small { display: block; font-size: 10.5px; line-height: 1.35; color: #b5b4d0; margin-top: 2px; }
   .mh-map-tk:hover .mh-root-tag, .mh-map-tk:focus-visible .mh-root-tag, .mh-map-tk.is-sel .mh-root-tag { opacity: 1; visibility: visible; } .mh-map-tk:hover, .mh-map-tk:focus-visible { z-index: 8; }
   .mh-rotwrap .mh-root-tag { rotate: -90deg; }
-  .mh-fan-card.is-ghostcard { filter: drop-shadow(0 0 14px #7fcf8688); } .mh-fan-card.is-ghostcard .mh-fan-in { opacity: .6; filter: saturate(.55) brightness(1.15); } .mh-fan-card.is-ghostcard::after { content: ""; position: absolute; inset: 0; border: 2px dashed #7fcf86; border-radius: 22px; pointer-events: none; animation: mh-ghost-pulse 2.4s ease-in-out infinite; } .mh-fan-card.is-ghostcard.is-nohope { filter: grayscale(1); opacity: .6; }
-  .mh-fan-ghostlab { position: absolute; left: 0; right: 0; bottom: 6px; text-align: center; font: 700 9px Inter, sans-serif; letter-spacing: .1em; color: #9ce6a2; text-transform: uppercase; z-index: 3; pointer-events: none; text-shadow: 0 1px 4px #000; }
+  /* Carta fugaz (al estilo de Runeterra): ondas verdes que se abren desde el borde y un brillo que respira */
+  .mh-fan-card.is-ghostcard { filter: drop-shadow(0 0 14px color-mix(in srgb, var(--cc, #7fcf86) 55%, transparent)); }
+  .mh-fan-card.is-ghostcard .mh-fan-in { opacity: .86; animation: mh-fleet-in 3.2s ease-in-out infinite; }
+  .mh-fan-card.is-ghostcard::before, .mh-fan-card.is-ghostcard::after { content: ""; position: absolute; inset: 0; border-radius: 22px; border: 2px solid color-mix(in srgb, var(--cc, #9ce6a2) 70%, #fff); box-shadow: 0 0 16px color-mix(in srgb, var(--cc, #7fcf86) 67%, transparent), inset 0 0 16px color-mix(in srgb, var(--cc, #7fcf86) 33%, transparent); pointer-events: none; opacity: 0; animation: mh-fleet-wave 2.8s cubic-bezier(.2,.6,.3,1) infinite; }
+  .mh-fan-card.is-ghostcard::after { animation-delay: 1.4s; }
+  .mh-fan-card.is-ghostcard.is-nohope { filter: grayscale(1); opacity: .6; } .mh-fan-card.is-ghostcard.is-nohope::before, .mh-fan-card.is-ghostcard.is-nohope::after { display: none; }
+  @keyframes mh-fleet-wave { 0% { transform: scale(1); opacity: .8; } 100% { transform: scale(1.26, 1.18); opacity: 0; } }
+  @keyframes mh-fleet-in { 0%, 100% { filter: saturate(.7) brightness(1.04); } 50% { filter: saturate(1.05) brightness(1.2) hue-rotate(-14deg); } }
+  @media (prefers-reduced-motion: reduce) { .mh-fan-card.is-ghostcard::before, .mh-fan-card.is-ghostcard::after, .mh-fan-card.is-ghostcard .mh-fan-in { animation: none; } }
+  .mh-fan-ghostlab { position: absolute; left: 0; right: 0; bottom: 6px; text-align: center; font: 700 9px Inter, sans-serif; letter-spacing: .1em; color: color-mix(in srgb, var(--cc, #9ce6a2) 70%, #fff); text-transform: uppercase; z-index: 3; pointer-events: none; text-shadow: 0 1px 4px #000; }
   @keyframes mh-ghost-pulse { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
   .mh-aim { position: fixed; inset: 0; z-index: 9998; pointer-events: none; } .mh-aim-l { animation: mh-aim-dash .6s linear infinite; } @keyframes mh-aim-dash { to { stroke-dashoffset: -12; } }
   .mh-fan-ghost.is-card { padding: 0; border: 0; background: none; box-shadow: none; width: 150px; height: 210px; transform: translate(-50%, -50%) rotate(-4deg) scale(1.02); filter: drop-shadow(0 16px 26px rgba(0,0,0,.65)); } .mh-fan-ghost.is-card > div { transform-origin: top left; transform: scale(.5); width: 300px !important; height: 420px !important; }
@@ -5046,16 +5129,16 @@ const sharedStyles = `
   .mh-fan-tip { position: fixed; z-index: 9999; pointer-events: none; transform: translate(-50%, -150%); padding: 6px 10px; border-radius: 8px; background: rgba(20,17,26,.92); color: #F3EBDD; font-size: 12px; white-space: nowrap; }
   .mh-fan-tip small { display: block; font-size: 10px; opacity: .7; }
   /* Carta jugada en el mapa (la ve el resto de la mesa): tablero oscurecido, reverso y revelado. Dura ~4,4 s. */
-  .mh-cpf { position: absolute; inset: 0; z-index: 30; pointer-events: none; display: grid; place-items: center; overflow: hidden; }
-  .mh-cpf-dim { position: absolute; inset: 0; background: radial-gradient(70% 70% at 50% 50%, rgba(6,6,18,.55), rgba(6,6,18,.82)); opacity: 0; animation: mh-cpf-dim 4.5s ease both; }
+  .mh-cpf { position: absolute; inset: 0; z-index: 30; pointer-events: none; display: grid; place-items: center; }
+  .mh-cpf-dim { position: absolute; inset: 0; bottom: calc(-1 * var(--ci, 0px)); background: radial-gradient(70% 70% at 50% 50%, rgba(6,6,18,.55), rgba(6,6,18,.82)); opacity: 0; animation: mh-cpf-dim var(--cpd, 4.5s) ease both; }
   .mh-cpf-stage { position: relative; display: flex; flex-direction: column; align-items: center; gap: 14px; }
-  .mh-cpf-card { position: relative; width: 168px; height: 236px; perspective: 1000px; opacity: 0; animation: mh-cpf-card 4.5s cubic-bezier(.3,.9,.3,1) both; }
+  .mh-cpf-card { position: relative; width: calc(var(--ch, 236px) * .7119); height: var(--ch, 236px); perspective: 1000px; opacity: 0; animation: mh-cpf-card var(--cpd, 4.5s) cubic-bezier(.3,.9,.3,1) both; }
   .mh-cpf-card.is-own { animation-name: mh-cpf-card-own; }
   @keyframes mh-cpf-card-own { 0% { opacity: 0; transform: translateY(26px) scale(.82); } 10% { opacity: 1; transform: translateY(0) scale(1); } 76% { opacity: 1; transform: translateY(0) scale(1.04); } 100% { opacity: 1; transform: translate(var(--fx), var(--fy)) scale(var(--fs)); } }
-  .mh-cpf-flip { position: absolute; inset: 0; transform-style: preserve-3d; animation: mh-cpf-flip 4.5s cubic-bezier(.45,0,.25,1) both; }
+  .mh-cpf-flip { position: absolute; inset: 0; transform-style: preserve-3d; animation: mh-cpf-flip var(--cpd, 4.5s) cubic-bezier(.45,0,.25,1) both; }
   .mh-cpf-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 12px; overflow: hidden; background: #10112a; transform: translateZ(0.1px); box-shadow: 0 22px 50px -14px #000d, 0 0 46px -8px var(--cc); } .mh-cpf-face > svg { display: block; width: 100%; height: 100%; }
-  .mh-cpf-front { transform: rotateY(180deg) translateZ(0.1px); } .mh-cpf-front > div { transform-origin: top left; transform: scale(.56); width: 300px !important; height: 420px !important; } .mh-cpf .mh-cpf-front .mh-cardc { border-color: var(--edge) !important; }
-  .mh-cpf-nm { color: #fff; font-size: 13px; text-shadow: 0 2px 10px #000; opacity: 0; animation: mh-cpf-nm 4.5s ease both; } .mh-cpf-nm em { font-style: normal; font-weight: 700; color: var(--cc); filter: brightness(1.25); }
+  .mh-cpf-front { transform: rotateY(180deg) translateZ(0.1px); } .mh-cpf-front > div { transform-origin: top left; transform: scale(var(--cs, .56)); width: 300px !important; height: 420px !important; } .mh-cpf .mh-cpf-front .mh-cardc { border-color: var(--edge) !important; }
+  .mh-cpf-nm { color: #fff; font-size: 13px; text-shadow: 0 2px 10px #000; opacity: 0; animation: mh-cpf-nm var(--cpd, 4.5s) ease both; } .mh-cpf-nm em { font-style: normal; font-weight: 700; color: var(--cc); filter: brightness(1.25); }
   @keyframes mh-cpf-dim { 0% { opacity: 0; } 10% { opacity: 1; } 88% { opacity: 1; } 100% { opacity: 0; } }
   @keyframes mh-cpf-card { 0% { opacity: 0; transform: translateY(26px) scale(.82); } 10% { opacity: 1; transform: translateY(0) scale(1); } 88% { opacity: 1; transform: translateY(0) scale(1.04); } 100% { opacity: 0; transform: translateY(-10px) scale(1.04); } }
   @keyframes mh-cpf-flip { 0%, 30% { transform: rotateY(0deg); } 52%, 100% { transform: rotateY(180deg); } }
@@ -5085,10 +5168,14 @@ const sharedStyles = `
   .mh-map-view.is-pannable:active { cursor: grabbing; }
   /* Cubre la caja: el lado que sobra se recorre desplazando */
   .mh-map-fit { position: relative; width: calc(max(100cqw, 100cqh * ${MAP_COLS} / ${MAP_ROWS}) * var(--mz, 1)); }
+  /* Jugador (escritorio): el tablero entero a la vista, sin recortar, y la mano de cartas en su propia franja inferior, sin tapar casillas */
+  .mh-map-stage.is-fit .mh-map-view { display: flex; } .mh-map-stage.is-fit.has-hand .mh-map-view { bottom: 150px; }
+  .mh-map-stage.is-fit .mh-map-fit { flex: none; margin: auto; width: calc(min(100cqw, 100cqh * ${MAP_COLS} / ${MAP_ROWS}) * var(--mz, 1)); }
   .mh-map-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 6; }
   .mh-map-overlay > * { pointer-events: auto; }
   .mh-map-overlay .mh-map-legend { left: auto; right: 10px; bottom: 10px; top: auto; flex-direction: column; align-items: flex-start; max-width: 150px; }
   .mh-map-overlay .mh-map-legend button { align-self: flex-end; order: -1; }
+  .mh-map-stage.is-fit .mh-map-overlay .mh-map-legend { left: 10px; right: auto; top: 50%; bottom: auto; transform: translateY(-50%); gap: 7px; padding: 8px 10px; max-width: 132px; }
   .mh-map-zoomwrap { position: relative; aspect-ratio: ${MAP_COLS} / ${MAP_ROWS}; border-radius: 12px; overflow: hidden; }
 
   /* ---- Tablero de combate: escena difuminada, casillas de cristal y fichas circulares ---- */
@@ -5115,6 +5202,43 @@ const sharedStyles = `
   .mh-map-hand { position: absolute; z-index: 6; right: -2%; top: -6%; display: inline-flex; align-items: center; gap: 2px; padding: 1px 6px; border-radius: 99px; font-size: 12px; background: #E3B04B; color: #241a05; box-shadow: 0 2px 6px rgba(0,0,0,.4); pointer-events: none; } .mh-map-hand.is-urgent { background: #E0544A; color: #fff; } .mh-map-hand b { font: 800 10px 'Inter', system-ui, sans-serif; }
   .mh-map .mh-map-tk.is-pet .mh-map-face { width: 58%; height: 58%; background: radial-gradient(circle at 35% 28%, color-mix(in srgb, var(--tc) 30%, #12143a), #0c0d2a 72%); border-radius: 50%; border-width: 2px; border-color: var(--tc); }
   .mh-map-hp { display: none; }
+  /* Transformaciones (Forma de Bestia, Hombre Lobo, Vampiro…): la ficha pasa de circular a cuadrada */
+  .mh-map-tk.is-trf .mh-map-face { border-radius: 22%; }
+  .mh-map-tk.is-morph .mh-map-face { animation: mh-morph .9s cubic-bezier(.3,.8,.3,1) both; }
+  .mh-map-tk.is-morph .mh-map-ring { animation: mh-morph-ring .9s ease both; }
+  .mh-map-tk.is-morph::before { content: ""; position: absolute; z-index: 6; inset: 12%; border: 3px solid #fff; border-radius: 50%; pointer-events: none; animation: mh-morph-burst .9s ease-out both; }
+  @keyframes mh-morph { 0% { scale: 1; rotate: 0deg; filter: none; } 35% { scale: .6; rotate: 50deg; filter: brightness(2.4) saturate(.4); } 70% { scale: 1.18; rotate: -8deg; filter: brightness(1.3); } 100% { scale: 1; rotate: 0deg; filter: none; } }
+  @keyframes mh-morph-ring { 0%, 35% { opacity: 0; } 100% { opacity: 1; } }
+  @keyframes mh-morph-burst { 0% { opacity: .95; scale: .6; } 100% { opacity: 0; scale: 2.1; } }
+  @media (prefers-reduced-motion: reduce) { .mh-map-tk.is-morph .mh-map-face, .mh-map-tk.is-morph .mh-map-ring, .mh-map-tk.is-morph::before { animation: none; } }
+  /* Elementos activos: Fuego y Agua dibujan una línea viva en rango cuerpo a cuerpo; Tierra y Aire cambian el color de la ficha y la cruzan con rayas */
+  @property --mh-ea { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+  .mh-elwrap { position: absolute; z-index: 3; pointer-events: none; transition: left .3s cubic-bezier(.3,.7,.4,1), top .3s cubic-bezier(.3,.7,.4,1); animation: mh-elring-in .65s cubic-bezier(.2,.9,.3,1) both; }
+  .mh-elwrap.is-out { animation: mh-elring-out .55s cubic-bezier(.5,0,.8,.4) both; }
+  .mh-elwrap::before { content: ""; position: absolute; inset: 0; border-radius: 18%; background: var(--ef); }
+  .mh-elwrap.is-fuego { --ef: radial-gradient(circle at 50% 50%, rgba(255,214,150,.2), rgba(255,170,90,.1)); }
+  .mh-elwrap.is-agua { --ef: radial-gradient(circle at 50% 50%, rgba(190,230,255,.22), rgba(120,190,240,.1)); }
+  .mh-elring { position: absolute; inset: 0; box-sizing: border-box; padding: 3px; border-radius: 18%; background: conic-gradient(from var(--mh-ea), var(--e1), var(--e2), var(--e3), var(--e2), var(--e1)); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); mask-composite: exclude; filter: drop-shadow(0 0 5px var(--e2)); animation: mh-elring-spin 2.4s linear infinite, mh-elring-flick 1.1s ease-in-out infinite; }
+  .mh-elring.is-fuego { --e1: #E8301A; --e2: #FF7A2E; --e3: #FFD05A; }
+  .mh-elring.is-agua { --e1: #1E6FD0; --e2: #4FA8E8; --e3: #BFE9FF; }
+  @keyframes mh-elring-spin { to { --mh-ea: 360deg; } }
+  @keyframes mh-elring-flick { 0%, 100% { opacity: .95; } 50% { opacity: .65; } }
+  @keyframes mh-elring-in { 0% { opacity: 0; scale: .35; } 60% { opacity: 1; scale: 1.06; } 100% { opacity: 1; scale: 1; } }
+  @keyframes mh-elring-out { 0% { opacity: 1; scale: 1; } 100% { opacity: 0; scale: 1.5; } }
+  /* Tierra y Aire: una capa de color con rayas que se abre desde el centro al activarse y se cierra al apagarse */
+  .mh-map-tk.is-pc > .mh-map-face { transition: opacity .55s ease, scale .55s ease, filter .55s ease, border-color .5s ease, border-radius .6s cubic-bezier(.3,1.5,.5,1); }
+  .mh-map-tk.is-el-tierra .mh-map-face, .mh-map-tk.is-el-aire .mh-map-face { border-color: var(--elb); }
+  .mh-map-tk.is-el-tierra, .mh-map-tk.is-el-p-tierra { --elb: #8A5A2B; --elf: radial-gradient(circle at 35% 28%, #B98446, #5B3A18 78%); --els: repeating-linear-gradient(135deg, rgba(40,20,5,.42) 0 2px, transparent 2px 6px); }
+  .mh-map-tk.is-el-aire, .mh-map-tk.is-el-p-aire { --elb: #F2F6F8; --elf: radial-gradient(circle at 35% 28%, #FFFFFF, #CFD8DE 78%); --els: repeating-linear-gradient(135deg, rgba(90,125,150,.5) 0 2px, transparent 2px 6px); }
+  .mh-map-tk.is-el-tierra .mh-map-face::before, .mh-map-tk.is-el-aire .mh-map-face::before, .mh-map-tk.is-el-p-tierra .mh-map-face::before, .mh-map-tk.is-el-p-aire .mh-map-face::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: var(--elf); z-index: -1; }
+  .mh-map-tk.is-el-tierra .mh-map-face::after, .mh-map-tk.is-el-aire .mh-map-face::after, .mh-map-tk.is-el-p-tierra .mh-map-face::after, .mh-map-tk.is-el-p-aire .mh-map-face::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: var(--els); z-index: 1; }
+  .mh-map-tk.is-el-tierra .mh-map-face::before, .mh-map-tk.is-el-aire .mh-map-face::before, .mh-map-tk.is-el-tierra .mh-map-face::after, .mh-map-tk.is-el-aire .mh-map-face::after { animation: mh-el-open .7s cubic-bezier(.2,.8,.2,1) both; }
+  .mh-map-tk.is-el-out .mh-map-face::before, .mh-map-tk.is-el-out .mh-map-face::after { animation: mh-el-close .55s cubic-bezier(.5,0,.8,.4) both; }
+  .mh-map-tk.is-el-tierra .mh-map-face, .mh-map-tk.is-el-aire .mh-map-face { color: #FFF3E0; } .mh-map-tk.is-el-aire .mh-map-face { color: #34495A; }
+  @keyframes mh-el-open { from { clip-path: circle(0% at 50% 50%); } to { clip-path: circle(75% at 50% 50%); } }
+  @keyframes mh-el-close { from { clip-path: circle(75% at 50% 50%); } to { clip-path: circle(0% at 50% 50%); } }
+  @media (prefers-reduced-motion: reduce) { .mh-elring, .mh-elwrap, .mh-map-tk .mh-map-face::before, .mh-map-tk .mh-map-face::after { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { .mh-elring { animation: none; } }
   /* La escena se desenfoca en el sitio y la cuadrícula aparece encima (sin fundido entre imágenes) */
   .mh-map-grid { animation: mh-gridin .9s ease .3s both; }
   @keyframes mh-gridin { from { opacity: 0; } to { opacity: 1; } }
@@ -5210,6 +5334,7 @@ const sharedStyles = `
   @keyframes mh-glow { 0%, 100% { opacity: .25; } 50% { opacity: .55; } }
   .mh-map-tk.is-hit.is-late, .mh-iso-tk.is-hit.is-late { animation-delay: .62s; }
   .mh-map-tk.is-hit.is-late .mh-map-face { animation-delay: .62s; }
+  .mh-map-tk.is-hit.is-web, .mh-iso-tk.is-hit.is-web, .mh-map-tk.is-hit.is-web .mh-map-face { animation-delay: .7s; }
   .mh-map-shot { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 8; overflow: visible; }
   .mh-map-tk.is-pet .mh-map-face { width: 56%; height: 56%; background: #8C7A5E; border-color: var(--tc); border-width: 3px; border-radius: 40%; }
   .mh-map-tk.is-dead .mh-map-face { filter: grayscale(.85) brightness(.75); opacity: .8; }
@@ -5302,6 +5427,11 @@ const sharedStyles = `
   .mh-foe-tg-b small { color: var(--mh-muted); font-weight: 500; }
   .mh-foe-tg-b.is-on { border-color: #C0504A; background: color-mix(in srgb, #C0504A 12%, var(--mh-panel)); }
   .mh-foe-tg-b:disabled { opacity: .45; cursor: not-allowed; }
+  .mh-foe-wait { position: absolute; z-index: 12; right: 12px; top: 12px; width: min(300px, calc(100% - 24px)); padding: 10px 12px; border-radius: 12px; display: flex; flex-direction: column; gap: 6px; background: var(--mh-panel); border: 1px solid color-mix(in srgb, #E3B04B 50%, var(--mh-line)); box-shadow: 0 12px 32px rgba(0,0,0,.5); } .mh-foe-wait > b { font-size: 12px; color: var(--mh-gold-ink, #E3B04B); text-transform: uppercase; letter-spacing: .05em; }
+  .mh-foe-wait-r { display: flex; align-items: flex-start; gap: 9px; font-size: 12.5px; color: var(--mh-ink); } .mh-foe-wait-r small { display: block; color: var(--mh-muted); font-size: 11px; margin-top: 1px; }
+  .mh-foe-wait-r i { flex: none; width: 14px; height: 14px; margin-top: 2px; border-radius: 50%; border: 2px solid #E3B04B; border-top-color: transparent; animation: mh-spin .9s linear infinite; } @keyframes mh-spin { to { rotate: 360deg; } }
+  .mh-foe-pick { position: absolute; z-index: 13; left: 12px; top: 12px; width: min(380px, calc(100% - 24px)); padding: 12px 14px; border-radius: 14px; display: flex; flex-direction: column; gap: 8px; background: var(--mh-panel); border: 1px solid color-mix(in srgb, #C0504A 55%, var(--mh-line)); box-shadow: 0 16px 44px rgba(0,0,0,.55); } .mh-foe-pick > b { color: var(--mh-ink); font-size: 14px; } .mh-foe-pick > small { color: var(--mh-muted); font-size: 11.5px; line-height: 1.4; } .mh-foe-pick .mh-btn-ghost { align-self: flex-start; }
+  .mh-foe-pick.mh-above { left: 50%; top: 50%; translate: -50% -50%; border-color: #E3B04B; } .mh-above-b { display: flex; gap: 8px; flex-wrap: wrap; }
   .mh-foe-quick i { background: #C0504A !important; color: #fff; }
   .mh-foe { margin-top: 10px; padding: 12px 14px; border-radius: 12px; border: 1px solid color-mix(in srgb, #C0504A 35%, var(--mh-line)); background: color-mix(in srgb, #C0504A 5%, var(--mh-panel)); display: flex; flex-direction: column; gap: 7px; font-size: 12.5px; color: var(--mh-ink2); }
   .mh-foe.is-down { opacity: .7; }
@@ -5971,7 +6101,7 @@ const sharedStyles = `
   .mh-wm.is-fit .mh-wm-canvas { opacity: 0; transform: scale(1.035); transition: opacity .7s ease, transform .9s cubic-bezier(.2,.8,.2,1); } .mh-wm.is-fit .mh-wm-canvas.is-ready { opacity: 1; transform: none; } .mh-wm-bg { opacity: 0; transition: opacity .9s ease; } .mh-wm-bg.is-ready { opacity: 1; }
   @media (prefers-reduced-motion: reduce) { .mh-wm.is-fit .mh-wm-canvas, .mh-wm-bg { transition: none; transform: none; } }
   .mh-wm-box { position: relative; display: flex; flex-direction: column; } .mh-wm-box .mh-wm.is-fit { flex: none; height: auto; margin-top: 0 !important; } .mh-wm-box .mh-wm.is-fit .mh-wm-wrap { flex: none; height: auto; aspect-ratio: var(--dir-r, 1.7778); width: min(100%, calc((100dvh - 380px) * var(--dir-r, 1.7778))); margin: 0 auto; border-radius: 18px; border: 1px solid var(--mh-line2); } .mh-wm-box .mh-wm.is-fit .mh-wm-bar { width: min(100%, calc((100dvh - 380px) * var(--dir-r, 1.7778))); margin: 0 auto; }
-  .mh-dir-world { position: absolute; inset: 0; overflow: hidden; padding: 0; display: flex; } .mh-dir-world .mh-dir-mapbtn { top: 12px; } .mh-wm.is-fit { flex: 1; min-width: 0; min-height: 0; height: 100%; } .mh-wm.is-fit .mh-wm-wrap { height: 100%; border-radius: 0; border: 0; background: transparent; } .mh-wm.is-fit .mh-wm-view { height: 100%; max-height: none; overflow: hidden; container-type: size; display: flex; align-items: center; justify-content: center; } .mh-wm-bg { position: absolute; inset: -30px; background: center / cover no-repeat; filter: blur(28px) brightness(.55) saturate(1.2); pointer-events: none; } .mh-wm.is-fit .mh-wm-canvas { position: relative; z-index: auto; box-shadow: 0 0 40px rgba(0,0,0,.45); } .mh-wm.is-fit .mh-wm-canvas { flex: none; min-width: 0; height: auto; width: max(100cqw, calc(100cqh * var(--wm-r, 1.6))); } .mh-wm.is-fit .mh-wm-canvas img { height: 100%; object-fit: fill; } .mh-dir-mon.is-map { background-color: #1B1824; } .mh-dir-mon > .mh-dir-map { background: transparent; } .mh-dir-mon > .mh-dir-mapout { position: absolute; inset: 0; container-type: size; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #0d0d22; } .mh-dir-mapout > .mh-dir-map { position: relative; flex: none; min-height: 0; width: 100%; height: 100%; border-radius: 0; } .mh-dir-map .mh-map-fit { width: calc(100cqw * var(--mz, 1)); height: calc(100cqh * var(--mz, 1)); } .mh-dir-map .mh-map { aspect-ratio: auto; width: 100%; height: 100%; container-type: size; } .mh-dir-map .mh-map-face { width: calc(min(100cqw / ${MAP_COLS}, 100cqh / ${MAP_ROWS}) * .8); height: calc(min(100cqw / ${MAP_COLS}, 100cqh / ${MAP_ROWS}) * .8); } .mh-dir-mapbtn { position: absolute !important; right: 12px; top: 12px; z-index: 5; display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 6px 11px; background: var(--mh-panel); color: var(--mh-ink); border: 1px solid var(--mh-line2); }
+  .mh-dir-world { position: absolute; inset: 0; overflow: hidden; padding: 0; display: flex; } .mh-dir-world .mh-dir-mapbtn { top: 12px; } .mh-wm.is-fit { flex: 1; min-width: 0; min-height: 0; height: 100%; } .mh-wm.is-fit .mh-wm-wrap { height: 100%; border-radius: 0; border: 0; background: transparent; } .mh-wm.is-fit .mh-wm-view { height: 100%; max-height: none; overflow: hidden; container-type: size; display: flex; align-items: center; justify-content: center; } .mh-wm-bg { position: absolute; inset: -30px; background: center / cover no-repeat; filter: blur(28px) brightness(.55) saturate(1.2); pointer-events: none; } .mh-wm.is-fit .mh-wm-canvas { position: relative; z-index: auto; box-shadow: 0 0 40px rgba(0,0,0,.45); } .mh-wm.is-fit .mh-wm-canvas { flex: none; min-width: 0; height: auto; width: max(100cqw, calc(100cqh * var(--wm-r, 1.6))); } .mh-wm.is-fit .mh-wm-canvas img { height: 100%; object-fit: fill; } .mh-dir-mon.is-map { background-color: #1B1824; } .mh-dir-mon > .mh-dir-map { background: transparent; } .mh-dir-mon > .mh-dir-mapout { position: absolute; inset: 0; container-type: size; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #0d0d22; } .mh-dir-mapout > .mh-dir-map { position: relative; flex: none; min-height: 0; width: 100%; height: 100%; border-radius: 0; } .mh-dir-map .mh-map-view { display: flex; } .mh-dir-map .mh-map-fit { flex: none; margin: auto; width: calc(min(100cqw, 100cqh * ${MAP_COLS} / ${MAP_ROWS}) * var(--mz, 1)); height: auto; } .mh-dir-map .mh-map { aspect-ratio: ${MAP_COLS} / ${MAP_ROWS}; width: 100%; height: auto; container-type: size; } .mh-dir-map .mh-map-face { width: calc(min(100cqw / ${MAP_COLS}, 100cqh / ${MAP_ROWS}) * .8); height: calc(min(100cqw / ${MAP_COLS}, 100cqh / ${MAP_ROWS}) * .8); } .mh-dir-mapbtn { position: absolute !important; right: 12px; top: 12px; z-index: 5; display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 6px 11px; background: var(--mh-panel); color: var(--mh-ink); border: 1px solid var(--mh-line2); }
   .mh-chb { position: absolute; left: 0; right: 0; top: 18%; z-index: 25; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; pointer-events: none; color: #fff; text-shadow: 0 2px 18px rgba(0,0,0,.85); animation: mhChb 3.8s ease both; }
   .mh-chb small { font: 700 12px 'Inter', system-ui, sans-serif; letter-spacing: .32em; text-transform: uppercase; color: #E3B04B; } .mh-chb b { font: 700 clamp(28px, 5vw, 52px)/1.1 'Cormorant Garamond', Georgia, serif; letter-spacing: .04em; padding: 0 16px; } .mh-chb i { display: block; height: 2px; width: 0; background: linear-gradient(90deg, transparent, #E3B04B, transparent); animation: mhChbLine 3.8s ease both; }
   @keyframes mhChb { 0% { opacity: 0; transform: translateY(14px) scale(.96); letter-spacing: .02em; } 14% { opacity: 1; transform: none; } 78% { opacity: 1; } 100% { opacity: 0; transform: translateY(-8px); } }
@@ -5990,6 +6120,10 @@ const sharedStyles = `
   .mh-dir-ghost { position: fixed; z-index: 100001; width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 22%; border: 3px solid var(--tc); background: var(--tc); color: #fff; display: grid; place-items: center; font: 700 16px 'Cinzel', Georgia, serif; box-shadow: 0 10px 18px rgba(0,0,0,.45); pointer-events: none; } .mh-dir-ghost i { font-style: normal; }
   .mh-dir-place-all { all: unset; cursor: pointer; padding: 4px 10px; border-radius: 99px; background: var(--acc, #E3B04B); color: var(--acc-on, #1F1606); font: 700 11.5px 'Inter', system-ui, sans-serif; }
   .mh-qs-line { margin: 0; font-size: 12px; line-height: 1.45; color: var(--mh-ink2); } .mh-qs-line b { color: var(--mh-ink); } .mh-qs-empty { margin: 0; font-size: 12.5px; color: var(--mh-muted); }
+  .mh-pl-side { display: flex; flex-direction: column; gap: 12px; min-height: 0; } .mh-pl-side.is-contents { display: contents; } .mh-pl-side > .mh-panel-box { flex: 1; min-height: 0; }
+  .mh-pl-hud { flex: none; } .mh-pl-fear { gap: 2px; flex-wrap: nowrap; } .mh-pl-fear svg { flex: none; }
+  .mh-spot-qwrap { position: relative; flex: none; } .mh-spot-qbtn.is-hand { background: #E3B04B; border-color: #E3B04B; color: #241a05; } .mh-spot-qbtn:disabled { opacity: .5; cursor: default; }
+  .mh-spot-kinds.is-q { position: absolute; left: 0; bottom: 46px; z-index: 20; } .mh-spot-got.is-q { position: absolute; left: 0; bottom: 46px; translate: none; z-index: 20; width: 250px; }
   .mh-qs-btns { display: flex; flex-wrap: wrap; gap: 8px; }
   .mh-qs-chips { display: flex; flex-wrap: wrap; gap: 6px; } .mh-qs-chips span { padding: 3px 9px; border-radius: 99px; font-size: 11px; font-weight: 700; border: 1px solid var(--mh-line2); background: var(--mh-panel2); } .mh-qs-chips span.is-cond { border-color: #E0544A; }
   .mh-qs-acts { display: flex; gap: 6px; flex-wrap: wrap; } .mh-qs-acts button { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; padding: 7px 11px; }
@@ -6022,9 +6156,16 @@ const sharedStyles = `
   .mh-dir-mapout > .mh-stg-live.is-prev { position: absolute; left: 12px; top: 12px; z-index: 6; }
   /* La barra no se parte en dos líneas: «Ven…» y el selector de capítulo se encogen y, si aun así no cabe, las pestañas inactivas quedan solo con el icono */
   .mh-dir-bar { flex-wrap: nowrap; container: dirbar / inline-size; } .mh-dir-live, .mh-dir-show { flex: none; } .mh-dir-ven { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-  .mh-dir-chnav { flex: 0 1 auto; min-width: 0; } .mh-dir-chpill { flex: 0 1 230px; width: auto; min-width: 64px; }
+  .mh-dir-chnav { flex: 0 1 auto; min-width: 0; margin-left: 0; } .mh-dir-chpill { flex: 0 1 190px; width: auto; min-width: 64px; }
+  .mh-dir-st { flex: 1 1 0; min-width: 0; display: flex; align-items: center; gap: 8px; height: 37px; padding: 3px 3px 3px 12px; border-radius: 999px; border: 1px dashed var(--mh-line2); font-size: 12px; font-weight: 600; color: var(--mh-ink3); }
+  .mh-dir-st > i { flex: none; width: 8px; height: 8px; border-radius: 50%; background: #58d68d; box-shadow: 0 0 0 3px rgba(88,214,141,.22); }
+  .mh-dir-st-t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mh-dir-st.is-diff { border-style: solid; border-color: rgba(224,84,74,.5); background: rgba(224,84,74,.12); color: var(--mh-ink); } .mh-dir-st.is-diff > i { background: #E0544A; box-shadow: 0 0 0 3px rgba(224,84,74,.28); }
+  .mh-dir-st .mh-dir-show { flex: none; height: 29px; padding: 0 13px; border-radius: 999px; }
+  .mh-dir-bar .fp { margin-left: 0; }
   @container dirbar (max-width: 880px) { .mh-dir-live button:not(.is-on) span { display: none; } .mh-dir-live button:not(.is-on) { padding: 6px 9px; } .mh-dir-chpill { flex-basis: 150px; } }
-  @container dirbar (max-width: 700px) { .mh-dir-ven { display: none; } }
+  @container dirbar (max-width: 780px) { .mh-dir-st .mh-dir-show span { display: none; } .mh-dir-st .mh-dir-show { padding: 0 9px; } }
+  @container dirbar (max-width: 640px) { .mh-dir-st-t { display: none; } .mh-dir-st { flex: none; padding-left: 10px; } }
   .mh-tl-sub { text-transform: none !important; letter-spacing: 0 !important; color: var(--mh-ink3) !important; }
   @keyframes mhTlIn { from { transform: translateX(38%); opacity: .35; } to { transform: none; opacity: 1; } }
   @media (prefers-reduced-motion: reduce) { .mh-tl-track { animation: none; } }
@@ -8036,6 +8177,15 @@ const sharedStyles = `
   .fb-av { display: inline-flex; align-items: center; justify-content: center; flex: none; border-radius: 50%; border: 1.5px solid var(--c); background: color-mix(in srgb, var(--c) 28%, var(--mh-panel)); color: var(--mh-ink); font-weight: 700; font-family: 'Inter', sans-serif; }
   .fb-av.is-ring { box-shadow: 0 0 0 3px var(--mh-panel), 0 0 0 5px var(--c), 0 0 16px 3px color-mix(in srgb, var(--c) 60%, transparent); }
   .fb-chain > div { display: flex; align-items: center; gap: 4px; } .fb-link { display: inline-flex; align-items: center; gap: 4px; } .fb-link i { font-style: normal; color: var(--mh-muted); } .fb-link em { font-style: normal; font-size: 11px; color: #E3B04B; }
+  .fp { position: relative; display: flex; align-items: center; gap: 8px; flex: none; height: 37px; margin-left: auto; padding: 3px 4px 3px 12px; border-radius: 999px; background: var(--mh-panel2); border: 1px solid color-mix(in srgb, #E3B04B 60%, var(--mh-line)); white-space: nowrap; z-index: 14; }
+  .fp.is-none { border-style: dashed; border-color: var(--mh-line2); } .fp-nobody { font-size: 12.5px; color: var(--mh-muted); }
+  .fp-cur { display: inline-flex; align-items: center; gap: 8px; } .fp-ring .fb-av { box-shadow: 0 0 0 2px var(--mh-panel2), 0 0 0 3.5px var(--c), 0 0 10px 2px color-mix(in srgb, var(--c) 55%, transparent); }
+  .fp-who { display: flex; flex-direction: column; line-height: 1.15; } .fp-who b { font-size: 12.5px; color: var(--mh-ink); } .fp-who small { font-size: 10.5px; color: var(--mh-muted); }
+  .fp-hand { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 10px 0 8px; border-radius: 999px; background: var(--mh-panel); border: 1px solid var(--mh-line2); font: 600 11.5px 'Inter', system-ui, sans-serif; color: var(--mh-ink2); } .fp-hand.is-u { background: #5a2420; border-color: #9b4137; color: #ffc7bd; } html[data-mh-theme="light"] .fp-hand.is-u { background: #FDEEEA; border-color: #C0504A; color: #9B2F27; }
+  .fp-more { font-size: 11px; color: var(--mh-muted); }
+  .fp-go { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; height: 29px; padding: 0 13px; border-radius: 999px; background: linear-gradient(180deg, #f0c264, #d9a23c); color: #1c1405; font: 800 12px 'Inter', system-ui, sans-serif; }
+  @container dirbar (max-width: 560px) { .fp-hand, .fp-more, .fp-who small { display: none; } }
+  @container dirbar (max-width: 430px) { .fp-who { display: none; } .fp { padding-left: 6px; } }
   .fb-pass { position: relative; } .fb-bg { position: fixed; inset: 0; z-index: 30; }
   .fb-menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 31; width: 290px; padding: 10px 12px; border: 1px solid var(--mh-line); border-radius: 14px; background: var(--mh-panel); box-shadow: 0 16px 40px rgba(0,0,0,.4); }
   .fb-menu > button { appearance: none; width: 100%; display: flex; align-items: center; gap: 10px; text-align: left; font: inherit; color: var(--mh-ink); background: transparent; border: 0; padding: 7px 6px; border-radius: 10px; cursor: pointer; } .fb-menu > button:hover { background: var(--mh-panel3); }
@@ -9611,13 +9761,87 @@ const FOG_RADIUS = 3; // los personajes despejan a su alrededor (alcance Muy cer
 const isFlying = (t) => mapConds(t).includes("Volando");
 const isDeadFoe = (t) => !!(t.stats && Number(t.stats.hp || 0) > 0 && Number(t.stats.hpMarked || 0) >= Number(t.stats.hp || 0));
 // Proyectil de un ataque a distancia (orbe mágico o flecha) en el tablero isométrico: vuela en arco y estalla al llegar.
-function ShotFx({ kind, a, b, b2, size: S }) {
+// Enredo Feroz: hilo de puntos verdes entre quien enraizó y el enraizado. Al crearse sale disparado como una goma elástica
+// hasta el borde de las líneas marrones del enraizado, vibra y se queda tenso; después sigue a las fichas cuando se mueven.
+function RootThreads({ links, snap }) {
+  const [, setT] = useState(0);
+  const st = useRef({ m: {}, first: true, links, snap });
+  st.current.links = links;
+  st.current.snap = snap;
+  const m = st.current.m;
+  links.forEach((l) => {
+    if (!m[l.id]) m[l.id] = { born: st.current.first ? -1e9 : performance.now(), a: { ...l.a }, b: { ...l.b } };
+  });
+  useEffect(() => {
+    st.current.first = false;
+  }, []);
+  const has = links.length > 0;
+  useEffect(() => {
+    if (!has) return undefined;
+    let raf;
+    let last = performance.now();
+    const tick = (now) => {
+      const dt = Math.min(64, now - last);
+      last = now;
+      const { m: mm, links: ls, snap: sn } = st.current;
+      let busy = false;
+      Object.keys(mm).forEach((id) => {
+        const l = ls.find((x) => x.id === id);
+        if (!l) return void delete mm[id];
+        const e = mm[id];
+        const k = 1 - Math.exp(-dt / 55);
+        [["a", l.sa], ["b", l.sb]].forEach(([w, sid]) => {
+          const t = l[w];
+          const snapNow = sn && sn.has(sid);
+          ["x", "y"].forEach((c) => {
+            const d = t[c] - e[w][c];
+            if (Math.abs(d) < 0.002) e[w][c] = t[c];
+            else {
+              e[w][c] = snapNow ? t[c] : e[w][c] + d * k;
+              busy = true;
+            }
+          });
+        });
+        if (now - e.born < 1500) busy = true;
+      });
+      if (busy) setT((n) => n + 1);
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [has]);
+  if (!has) return null;
+  const now = performance.now();
+  return (
+    <svg className="mh-thread" viewBox={"0 0 " + MAP_COLS + " " + MAP_ROWS} preserveAspectRatio="none" aria-hidden="true">
+      {links.map((l) => {
+        const e = m[l.id];
+        if (!e) return null;
+        const dx = e.b.x - e.a.x, dy = e.b.y - e.a.y;
+        const L = Math.hypot(dx, dy);
+        if (L < 0.95) return null;
+        const ux = dx / L, uy = dy / L;
+        // empieza en el borde de la ficha de quien lanza y termina en el borde del aro marrón del enraizado
+        const x0 = e.a.x + 0.5 + ux * 0.42, y0 = e.a.y + 0.5 + uy * 0.42;
+        const x1 = e.b.x + 0.5 - ux * 0.47, y1 = e.b.y + 0.5 - uy * 0.47;
+        const t = Math.max(0, now - e.born);
+        const g = t >= 650 ? 1 : Math.pow(t / 650, 2.2);
+        const tw = t > 650 ? t - 650 : 0;
+        const amp = tw ? 0.32 * Math.sin((tw / 170) * Math.PI * 2) * Math.exp(-tw / 240) : 0.18 * (1 - g);
+        const ex = x0 + (x1 - x0) * g, ey = y0 + (y1 - y0) * g;
+        const cx = (x0 + ex) / 2 - uy * amp, cy = (y0 + ey) / 2 + ux * amp;
+        return <path key={l.id} d={"M" + x0.toFixed(3) + " " + y0.toFixed(3) + " Q" + cx.toFixed(3) + " " + cy.toFixed(3) + " " + ex.toFixed(3) + " " + ey.toFixed(3)} fill="none" />;
+      })}
+    </svg>
+  );
+}
+function ShotFx({ kind, a, b, b2, size: S, n: bolts = 3 }) {
   const [p, setP] = useState(0);
   useEffect(() => {
     let raf;
     const t0 = performance.now();
     const tick = (n) => {
-      const v = Math.min(1, (n - t0) / 1300);
+      const v = Math.min(1, (n - t0) / (kind === "howl" ? 1700 : kind === "chaos" ? 1600 : 1300));
       setP(v);
       if (v < 1) raf = requestAnimationFrame(tick);
     };
@@ -9659,6 +9883,118 @@ function ShotFx({ kind, a, b, b2, size: S }) {
       </g>
     );
   }
+  if (kind === "chaos") {
+    // Desatar el Caos: un orbe arcano por ficha gastada (uno si no gastas ninguna) zigzaguea hasta el objetivo; al llegar, el impacto se abre en ondas y un fogonazo.
+    const N = Math.max(1, Math.min(8, Number(bolts) || 1));
+    const COLS = ["#B7A8F5", "#E05FD0", "#5FE0F0"];
+    const L = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+    const ux = (b[0] - a[0]) / L, uy = (b[1] - a[1]) / L, nx = -uy, ny = ux;
+    const x0 = a[0] + ux * S * 0.45, y0 = a[1] + uy * S * 0.45, x1 = b[0] - ux * S * 0.45, y1 = b[1] - uy * S * 0.45;
+    const fd = p > 0.8 ? Math.max(0, 1 - (p - 0.8) / 0.2) : 1;
+    const FLY = 0.4;
+    // Cada orbe zigzaguea por su propio camino (fase y amplitud distintas) y deja una estela de puntos.
+    const orbPos = (i, t) => {
+      const w = Math.sin(t * Math.PI) * S * (0.75 + (i % 3) * 0.25) * (i % 2 ? -1 : 1);
+      const off = w * Math.sin(t * Math.PI * (2.2 + (i % 3) * 0.5) + i * 1.7);
+      return [x0 + (x1 - x0) * t + nx * off, y0 + (y1 - y0) * t + ny * off];
+    };
+    const orb = (i) => {
+      const t0 = 0.06 + i * Math.min(0.05, 0.3 / N), t = (p - t0) / FLY;
+      if (t < 0 || t > 1) return null;
+      const col = COLS[i % 3], [ox, oy] = orbPos(i, t);
+      return (
+        <g key={"o" + i}>
+          {[1, 2, 3, 4].map((k) => {
+            const tt = t - k * 0.045;
+            if (tt <= 0) return null;
+            const [tx, ty] = orbPos(i, tt);
+            return <circle key={k} cx={tx} cy={ty} r={S * (0.09 - k * 0.015)} fill={col} opacity={0.5 - k * 0.1} />;
+          })}
+          <circle cx={ox} cy={oy} r={S * 0.3} fill={col} opacity=".25" />
+          <circle cx={ox} cy={oy} r={S * 0.15} fill={col} />
+          <circle cx={ox} cy={oy} r={S * 0.06} fill="#fff" opacity=".9" />
+        </g>
+      );
+    };
+    const castK = Math.max(0, Math.min(1, p / 0.22));
+    const ik = Math.max(0, Math.min(1, (p - (0.06 + (N - 1) * Math.min(0.05, 0.3 / N) + FLY * 0.95)) / 0.4)); // avance del impacto, cuando llega el último orbe
+    const ring = (j) => {
+      const e = Math.max(0, Math.min(1, (ik - j * 0.16) / (1 - j * 0.16)));
+      return e > 0 && e < 1 ? <circle key={"r" + j} cx={b[0]} cy={b[1]} r={S * (0.2 + 0.95 * e)} fill="none" stroke={COLS[j % 3]} strokeWidth={S * (0.09 - j * 0.02)} opacity={(1 - e) * fd} /> : null;
+    };
+    return (
+      <g pointerEvents="none">
+        {castK < 1 && <circle cx={a[0]} cy={a[1]} r={S * (0.5 + 0.35 * castK)} fill="none" stroke="#B7A8F5" strokeWidth="2.5" opacity={(1 - castK) * 0.9} />}
+        {Array.from({ length: N }, (_, i) => orb(i))}
+        {ik > 0 && ik < 1 && <circle cx={b[0]} cy={b[1]} r={S * (0.25 + 0.55 * Math.sin(ik * Math.PI))} fill="#E05FD0" opacity={Math.sin(ik * Math.PI) * 0.55 * fd} />}
+        {ik > 0 && ik < 0.5 && <circle cx={b[0]} cy={b[1]} r={S * 0.3 * Math.sin(ik * 2 * Math.PI)} fill="#fff" opacity={0.85 * fd} />}
+        {[0, 1, 2].map(ring)}
+      </g>
+    );
+  }
+  if (kind === "howl") {
+    // Ataque Aullante: ondas de choque cuadradas que salen de la ficha hasta el alcance Muy cercano y zarpazos dentro del área.
+    const [cx, cy] = a;
+    const Rr = S * (RANGE_CELLS["Muy cercano"] + 0.5);
+    const k = Math.min(1, p / 0.7);
+    const fd = p > 0.72 ? Math.max(0, 1 - (p - 0.72) / 0.28) : 1;
+    const wave = (i) => {
+      const e = Math.max(0, Math.min(1, (k - i * 0.14) / (1 - i * 0.14)));
+      const h = Rr * (0.18 + 0.82 * e);
+      return <rect key={"w" + i} x={cx - h} y={cy - h} width={2 * h} height={2 * h} rx={S * 0.5} fill="none" stroke={i ? "#FF9A5A" : "#FFE2B0"} strokeWidth={4 - i} opacity={(1 - e) * fd * 0.95} />;
+    };
+    const slashes = Array.from({ length: 5 }, (_, i) => {
+      const ang = (i * Math.PI * 2) / 5 + 0.5, dist = Rr * (0.42 + (i % 2) * 0.22);
+      const mx = cx + Math.cos(ang) * dist, my = cy + Math.sin(ang) * dist;
+      const t = Math.max(0, Math.min(1, (p - 0.14 - i * 0.05) / 0.22));
+      const L = S * 1.1, dx = Math.cos(0.7), dy = Math.sin(0.7);
+      return [-1, 0, 1].map((j) => {
+        const ox = -dy * j * S * 0.13, oy = dx * j * S * 0.13;
+        return <line key={"c" + i + j} x1={mx - dx * L / 2 + ox} y1={my - dy * L / 2 + oy} x2={mx - dx * L / 2 + ox + dx * L * t} y2={my - dy * L / 2 + oy + dy * L * t} stroke="#FFE2B0" strokeWidth={S * 0.05} strokeLinecap="round" opacity={fd * (t > 0 ? 0.95 : 0)} />;
+      });
+    });
+    return (
+      <g pointerEvents="none">
+        <rect x={cx - Rr} y={cy - Rr} width={2 * Rr} height={2 * Rr} rx={S * 0.5} fill="#E0674F" opacity={Math.sin(Math.min(1, p / 0.6) * Math.PI) * 0.22 * fd} />
+        {[0, 1, 2].map(wave)}
+        {slashes}
+      </g>
+    );
+  }
+  if (kind === "free") {
+    // Liberar: el hilo verde se tensa, se rompe y se recoge a los dos lados; el aro marrón de raíces estalla y suelta ramitas y hojas.
+    const L = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+    const ux = (b[0] - a[0]) / L, uy = (b[1] - a[1]) / L;
+    const x0 = a[0] + ux * S * 0.42, y0 = a[1] + uy * S * 0.42, x1 = b[0] - ux * S * 0.47, y1 = b[1] - uy * S * 0.47;
+    const mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+    const tens = Math.min(1, p / 0.22);
+    const qq = p < 0.22 ? 0 : Math.min(1, (p - 0.22) / 0.5);
+    const eq = 1 - Math.pow(1 - qq, 3);
+    const fd = p > 0.7 ? Math.max(0, 1 - (p - 0.7) / 0.3) : 1;
+    const vib = qq > 0 ? Math.sin(qq * Math.PI * 6) * (1 - qq) * S * 0.12 : Math.sin(tens * Math.PI * 8) * S * 0.03 * tens;
+    const seg = (sx, sy, ex, ey, sg, k) => (
+      <path key={k} d={"M" + sx + " " + sy + " Q" + ((sx + ex) / 2 - uy * vib * sg) + " " + ((sy + ey) / 2 + ux * vib * sg) + " " + ex + " " + ey} fill="none" stroke="#9ce6a2" strokeWidth={S * 0.07 * (1 + 0.6 * tens * (1 - qq))} strokeDasharray={"0.1 " + S * 0.17} strokeLinecap="round" opacity={fd * (1 - qq * 0.45)} />
+    );
+    const twigs = Array.from({ length: 8 }, (_, i) => (i * Math.PI) / 4 + 0.3);
+    return (
+      <g pointerEvents="none">
+        {qq === 0 ? seg(x0, y0, x1, y1, 1, "w") : [seg(x0, y0, x0 + (mx - x0) * (1 - eq), y0 + (my - y0) * (1 - eq), 1, "a"), seg(x1, y1, x1 + (mx - x1) * (1 - eq), y1 + (my - y1) * (1 - eq), -1, "b")]}
+        {qq > 0 && qq < 0.7 && <circle cx={mx} cy={my} r={S * (0.1 + 0.5 * qq)} fill="#e3ffe5" opacity={(1 - qq / 0.7) * 0.75} />}
+        {qq > 0 && (
+          <>
+            <circle cx={b[0]} cy={b[1]} r={S * (0.47 + 0.55 * eq)} fill="none" stroke="#C08B5C" strokeWidth="2.5" strokeDasharray="5 4" opacity={(1 - eq) * fd} />
+            {twigs.map((an, i) => (
+              <line key={"t" + i} x1={b[0] + Math.cos(an) * S * 0.47} y1={b[1] + Math.sin(an) * S * 0.47} x2={b[0] + Math.cos(an) * S * (0.47 + 0.15 + 0.5 * eq)} y2={b[1] + Math.sin(an) * S * (0.47 + 0.15 + 0.5 * eq)} stroke={i % 2 ? "#8a5a35" : "#7fcf86"} strokeWidth={S * 0.05} strokeLinecap="round" opacity={(1 - eq) * fd} />
+            ))}
+            {twigs.slice(0, 6).map((an, i) => (
+              <circle key={"l" + i} cx={b[0] + Math.cos(an + 0.4) * S * (0.5 + 0.7 * eq)} cy={b[1] + Math.sin(an + 0.4) * S * (0.5 + 0.7 * eq) - S * 0.3 * eq} r={S * 0.05} fill="#9ce6a2" opacity={(1 - eq) * fd} />
+            ))}
+          </>
+        )}
+      </g>
+    );
+  }
+  if (kind === "web") return null; // Enredo Feroz: solo sacude la ficha; el hilo lo dibuja RootThreads
   if (kind === "roots") {
     // Enredo Feroz: un destello verde llega al objetivo y brotan raíces del suelo; con Esperanza, una enredadera salta al segundo.
     const grow = Math.max(0, Math.min(1, (p - 0.3) / 0.35));
@@ -9841,7 +10177,7 @@ function useCardQueue(list) {
       setCur(null);
       window.dispatchEvent(new CustomEvent("mh-cardplay-end", { detail: { key: it.key, charId: it.charId, card: it.card?.key } }));
       pump();
-    }, 4500);
+    }, it.short ? 2300 : 4500);
   };
   useEffect(() => {
     const arr = Array.isArray(list) ? list : list && list.key ? [list] : [];
@@ -9856,6 +10192,52 @@ function useCardQueue(list) {
   useEffect(() => () => clearTimeout(timer.current), []);
   return cur;
 }
+// Elementos visibles en el tablero: para que puedan animar su salida, un elemento que desaparece se conserva ms milisegundos marcado como «leaving».
+function useLeaving(items, ms = 600) {
+  const [gone, setGone] = useState({});
+  const prev = useRef({});
+  const sig = items.map((i) => i.id + "|" + i.el + "|" + i.x + "|" + i.y).join(";");
+  useLayoutEffect(() => {
+    const cur = {};
+    items.forEach((i) => (cur[i.id + "|" + i.el] = i));
+    const timers = [];
+    Object.keys(prev.current).forEach((k) => {
+      if (cur[k]) return;
+      const old = prev.current[k];
+      setGone((g) => ({ ...g, [k]: old }));
+      timers.push(setTimeout(() => setGone((g) => { const n = { ...g }; delete n[k]; return n; }), ms));
+    });
+    setGone((g) => {
+      const back = Object.keys(g).filter((k) => cur[k]);
+      if (!back.length) return g;
+      const n = { ...g };
+      back.forEach((k) => delete n[k]);
+      return n;
+    });
+    prev.current = cur;
+    return undefined; // los temporizadores terminan solos
+  }, [sig]); // eslint-disable-line react-hooks/exhaustive-deps
+  return [...items, ...Object.values(gone).map((i) => ({ ...i, leaving: true }))];
+}
+// Fichas que acaban de transformarse (o destransformarse): se marcan unos instantes para animar el cambio de forma.
+function useMorph(tokens) {
+  const [m, setM] = useState({});
+  const prev = useRef(null);
+  const sig = tokens.map((t) => t.id + ":" + (t.beast || t.trf || "")).join("|");
+  useEffect(() => {
+    const cur = {};
+    tokens.forEach((t) => (cur[t.id] = t.beast || t.trf || ""));
+    if (prev.current) {
+      Object.keys(cur).forEach((id) => {
+        if (!(id in prev.current) || prev.current[id] === cur[id]) return;
+        setM((x) => ({ ...x, [id]: 1 }));
+        setTimeout(() => setM((x) => { const n = { ...x }; delete n[id]; return n; }), 950);
+      });
+    }
+    prev.current = cur;
+  }, [sig]); // eslint-disable-line react-hooks/exhaustive-deps
+  return m;
+}
 function useAttackFx(fx) {
   const [anim, setAnim] = useState(null);
   const last = useRef(null);
@@ -9864,7 +10246,7 @@ function useAttackFx(fx) {
     last.current = fx.key;
     if (Date.now() - fx.key > 15000) return;
     setAnim(fx);
-    const t = setTimeout(() => setAnim(null), 1500);
+    const t = setTimeout(() => setAnim(null), fx.kind === "howl" ? 1900 : fx.kind === "chaos" ? 1800 : 1500);
     return () => clearTimeout(t);
   }, [fx?.key]);
   return anim;
@@ -9994,7 +10376,7 @@ function FanFace({ c, col }) {
     if (!it.image && kind === "accion") it = { ...it, image: dt.image || FAN_CLASS_IMG[c.myClass] || null };
   }
   else it = cat.find((x) => x.kind === "dominio" && x.key === (c.baseKey || c.key) && (!c.domain || x.domain === c.domain));
-  if (c.noCost) it = { ...it, key: c.key, text: c.text, recall: null, noCost: true };
+  if (c.noCost) it = { ...it, key: c.key, text: c.text, recall: null, noCost: true, ...(c.ghost ? { image: null } : {}) };
   if (!it) it = { id: "x-" + c.key, kind: "dominio", key: c.key, sub: (c.domain || "") + " · " + (c.type || ""), domain: c.domain, type: c.type, level: c.level, recall: c.recall, text: c.text, image: c.image, color: col };
   const I = it.Icon || DOMAIN_ICONS[it.domain] || Sparkles;
   return (
@@ -10351,14 +10733,172 @@ function HomeDice({ stats }) {
 
 // Abanico de cartas de dominio en el borde inferior del mapa: se arrastran hasta una casilla para usarlas.
 // Cartas que se lanzan apuntando: una línea de guiones sale del personaje hasta el ratón.
-// Cartas que se lanzan apuntando a un adversario: alcance máximo en casillas (Lejano = 12, Cercano = 6).
-const AIM_CARDS = { "Enredo Feroz": 12, "Embelesar": 6 };
-const aimMaxOf = (card) => (card && !card.weapon && !card.rowCard && !card.subclass ? (card.ghost ? 12 : AIM_CARDS[card.key] || 0) : 0);
-function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack, cardBorder, aimOk }) {
+// Criatura o PNJ con todos sus PV marcados: ya no es un objetivo válido de ataques ni hechizos.
+const deadTok = (t) => !!t && !!t.stats && Number(t.stats.hp || 0) > 0 && Number(t.stats.hpMarked || 0) >= Number(t.stats.hp || 0);
+const AIM_CARD = "Enredo Feroz";
+// Las vistas ampliadas de la mano se pintan en la raíz de la app (no dentro del abanico) para que oscurezcan toda la pantalla, menú lateral incluido.
+const ZoomPortal = ({ children }) => (typeof document === "undefined" ? null : createPortal(children, document.querySelector(".mh-root") || document.body));
+// Ficha de carta con forma de dado d10 (sin número, del color del dominio); apagada es solo la sombra y un contorno tenue.
+function ChaosDie({ on, i, color }) {
+  const K = "M50 3 L93 38 L50 97 L7 38 Z";
+  const [sprite, setSprite] = useState(null);
+  useEffect(() => {
+    let live = true;
+    if (on) d10Sprite(color).then((u) => live && u && setSprite(u));
+    return () => {
+      live = false;
+    };
+  }, [on, color]);
+  if (on && sprite) return <img src={sprite} alt="" draggable={false} style={{ rotate: ((i * 47) % 50) - 25 + "deg" }} />;
+  if (!on)
+    return (
+      <svg viewBox="0 0 100 100" aria-hidden="true">
+        <ellipse cx="50" cy="94" rx="30" ry="6" fill="#000" opacity=".2" />
+        <path d={K} fill="none" stroke="#fff" strokeOpacity=".28" strokeWidth="3" strokeDasharray="6 5" strokeLinejoin="round" />
+      </svg>
+    );
+  return (
+    <svg viewBox="0 0 100 100" aria-hidden="true" style={{ rotate: ((i * 47) % 60) - 25 + "deg" }}>
+      <ellipse cx="50" cy="94" rx="30" ry="6" fill="#000" opacity=".4" />
+      <path d={K} fill={color} fillOpacity=".8" stroke="#fff" strokeOpacity=".7" strokeWidth="3" strokeLinejoin="round" />
+      <path d="M7 38 L50 56 L93 38 M50 3 L50 56 M50 56 L50 97" fill="none" stroke="#fff" strokeOpacity=".6" strokeWidth="2.5" strokeLinejoin="round" />
+      <path d="M50 56 L93 38 L50 97 Z" fill="#000" opacity=".15" />
+      <path d="M7 38 L50 56 L50 97 Z" fill="#000" opacity=".28" />
+    </svg>
+  );
+}
+// Fichas de una carta como dados; al bajar el número, los dados gastados salen despedidos.
+// Con onPick (carta abierta) los dados se pueden agarrar y lanzar: llevan la inercia del gesto, giran, rebotan en los bordes de la pantalla y
+// se van frenando como un dado sobre la mesa; un toque sin mover pone o quita la ficha.
+function TokDice({ have, max, onPick, color = "#d9482a" }) {
+  const prev = useRef(have);
+  const [gone, setGone] = useState([]);
+  const [dropped, setDropped] = useState(null); // { from, to }: dados que acaban de recargarse y caen a su sitio
+  useEffect(() => {
+    if (have < prev.current) {
+      setGone(Array.from({ length: prev.current - have }, (_, k) => have + k));
+      const t = setTimeout(() => setGone([]), 700);
+      prev.current = have;
+      return () => clearTimeout(t);
+    }
+    if (have > prev.current) {
+      setDropped({ from: prev.current, to: have });
+      const t = setTimeout(() => setDropped(null), 1400);
+      prev.current = have;
+      return () => clearTimeout(t);
+    }
+    prev.current = have;
+  }, [have]);
+  const [pose, setPose] = useState({});
+  const st = useRef({}); // k -> { x, y, r, vx, vy, vr, minX, maxX, minY, maxY, drag }
+  const raf = useRef(0);
+  const drag = useRef(null);
+  const loop = useRef(null);
+  loop.current = () => {
+    let alive = false;
+    Object.values(st.current).forEach((d) => {
+      if (d.drag) return void (alive = true);
+      if (Math.abs(d.vx) + Math.abs(d.vy) + Math.abs(d.vr) < 0.2) return void (d.vx = d.vy = d.vr = 0);
+      alive = true;
+      d.x += d.vx;
+      d.y += d.vy;
+      d.r += d.vr;
+      if (d.x < d.minX || d.x > d.maxX) {
+        d.x = Math.max(d.minX, Math.min(d.maxX, d.x));
+        d.vx *= -0.55;
+        d.vr = -d.vr * 0.6 + d.vy * 0.05;
+      }
+      if (d.y < d.minY || d.y > d.maxY) {
+        d.y = Math.max(d.minY, Math.min(d.maxY, d.y));
+        d.vy *= -0.55;
+        d.vr = -d.vr * 0.6 + d.vx * 0.05;
+      }
+      d.vx *= 0.955;
+      d.vy *= 0.955;
+      d.vr *= 0.95;
+    });
+    setPose(Object.fromEntries(Object.entries(st.current).map(([k, d]) => [k, { x: d.x, y: d.y, r: d.r }])));
+    raf.current = alive ? requestAnimationFrame(() => loop.current()) : 0;
+  };
+  useEffect(() => () => cancelAnimationFrame(raf.current), []);
+  const down = (e, k) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    const d = st.current[k] || (st.current[k] = { x: 0, y: 0, r: 0, vx: 0, vy: 0, vr: 0 });
+    const rc = e.currentTarget.getBoundingClientRect();
+    const vw = window.innerWidth, vh = window.innerHeight;
+    Object.assign(d, { vx: 0, vy: 0, vr: 0, drag: true, minX: -(rc.left - d.x), maxX: 0, minY: -(rc.top - d.y), maxY: vh - (rc.top - d.y) - rc.height });
+    d.maxX = vw - (rc.left - d.x) - rc.width;
+    drag.current = { k, sx: e.clientX, sy: e.clientY, ox: d.x, oy: d.y, moved: false, lx: e.clientX, ly: e.clientY, lt: performance.now(), vx: 0, vy: 0 };
+  };
+  const move = (e) => {
+    const g = drag.current;
+    if (!g) return;
+    const dx = e.clientX - g.sx, dy = e.clientY - g.sy;
+    if (!g.moved && Math.hypot(dx, dy) < 5) return;
+    g.moved = true;
+    const now = performance.now(), dt = Math.max(1, now - g.lt);
+    g.vx = g.vx * 0.5 + ((e.clientX - g.lx) / dt) * 16 * 0.5; // px por fotograma, suavizado
+    g.vy = g.vy * 0.5 + ((e.clientY - g.ly) / dt) * 16 * 0.5;
+    g.lx = e.clientX;
+    g.ly = e.clientY;
+    g.lt = now;
+    const d = st.current[g.k];
+    d.x = Math.max(d.minX, Math.min(d.maxX, g.ox + dx));
+    d.y = Math.max(d.minY, Math.min(d.maxY, g.oy + dy));
+    d.r += g.vx * 0.6;
+    setPose(Object.fromEntries(Object.entries(st.current).map(([kk, v]) => [kk, { x: v.x, y: v.y, r: v.r }])));
+  };
+  const up = () => {
+    const g = drag.current;
+    drag.current = null;
+    if (!g) return;
+    const d = st.current[g.k];
+    d.drag = false;
+    if (!g.moved) return onPick(g.k);
+    // si se suelta parado no hay lanzamiento
+    const still = performance.now() - g.lt > 90;
+    d.vx = still ? 0 : g.vx;
+    d.vy = still ? 0 : g.vy;
+    d.vr = still ? 0 : (g.vx + g.vy) * 0.9;
+    if (!raf.current) raf.current = requestAnimationFrame(() => loop.current());
+  };
+  return Array.from({ length: max }, (_, k) => {
+    const face = k < have || gone.includes(k);
+    const dropping = dropped && k >= dropped.from && k < dropped.to;
+    const cls = "mh-die" + (face ? " is-on" : " is-off") + (gone.includes(k) ? " is-gone" : "") + (dropping ? " is-drop" : "");
+    const dly = dropping ? { animationDelay: (k - dropped.from) * 110 + "ms" } : null;
+    const p = pose[k];
+    return onPick ? (
+      <button
+        key={k}
+        type="button"
+        className={cls + " is-drag"}
+        style={p || dly ? { ...(p ? { translate: p.x + "px " + p.y + "px", rotate: p.r + "deg" } : null), ...dly } : undefined}
+        aria-label={k < have ? "Quitar ficha (arrastra o lanza el dado para apartarlo)" : "Poner ficha"}
+        onPointerDown={(e) => down(e, k)}
+        onPointerMove={move}
+        onPointerUp={up}
+        onPointerCancel={() => {
+          if (drag.current) st.current[drag.current.k].drag = false;
+          drag.current = null;
+        }}
+        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), onPick(k))}
+      >
+        <ChaosDie on={face} i={k} color={color} />
+      </button>
+    ) : (
+      <span key={k} className={cls} style={dly || undefined}><ChaosDie on={face} i={k} color={color} /></span>
+    );
+  });
+}
+function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack, cardBorder, aimOk, reachOf, onAim, beast, onBeast, onEvolve, onWolf, cardToks, onCardTok, wardChip }) {
   const cardsRef = useRef(cards);
   cardsRef.current = cards;
   const [drag, setDrag] = useState(null); // { card, x, y, cell, moved }
   const [open, setOpen] = useState(null); // carta mostrada en grande
+  const [beastCard, setBeastCard] = useState(null); // carta «Forma de Bestia» que se ha arrastrado (para revelarla)
+  const [beastOpen, setBeastOpen] = useState(false); // selector de Forma de Bestia (al arrastrar esa carta al mapa)
+  const [bTier, setBTier] = useState(1);
   const [back, setBack] = useState(null); // carta que vuelve a la mano tras usarse
   const [held, setHeld] = useState(null); // carta usada: su hueco en la mano queda vacío hasta que vuelve
   const heldRef = useRef(null);
@@ -10398,11 +10938,13 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
     const r = fanRef.current?.getBoundingClientRect();
     return !!r && x >= r.left - 30 && x <= r.right + 30 && y >= r.top - 24 && y <= r.bottom + 24;
   };
-  const rangeOf = (cell, card) => {
+  // Cartas que se apuntan a un adversario: Enredo Feroz, su carta extra y las armas (con el alcance de cada arma).
+  const isAim = (c) => c.key === AIM_CARD || (c.key === "Embelesar" && !c.rowCard) || (!!c.ghost && !c.recharge && !c.ward) || !!c.weapon || (c.key === "Desatar el Caos" && !c.rowCard);
+  const aimReach = (c) => (reachOf && reachOf(c)) || { label: "Lejano", max: RANGE_CELLS["Lejano"] };
+  const inAimReach = (c, cell) => !!me && !!cell && Math.max(Math.abs(cell.x - me.x), Math.abs(cell.y - me.y)) <= aimReach(c).max;
+  const rangeOf = (cell) => {
     if (!me || !cell) return null;
     const d = Math.max(Math.abs(cell.x - me.x), Math.abs(cell.y - me.y));
-    const lim = aimMaxOf(card);
-    if (lim && d > lim) return null;
     return MAP_RANGES.find((r) => d <= r.max) || null;
   };
   const end = (ev, cancel) => {
@@ -10413,7 +10955,14 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
     window.removeEventListener("pointerup", up);
     window.removeEventListener("keydown", key);
     if (!d || cancel) return;
-    if (d.card.rowCard) {
+    if (d.card.rowCard && !(d.moved && d.card.mapUse)) {
+      if (d.moved && onEvolve && d.card.evo && cellAt(ev.clientX, ev.clientY)) return onEvolve(d.card);
+      if (d.moved && onWolf && d.card.wolf && cellAt(ev.clientX, ev.clientY)) return onWolf(d.card);
+      if (d.moved && beast && d.card.key === "Forma de Bestia" && cellAt(ev.clientX, ev.clientY)) {
+        setBTier((beast.forms.find((b) => b.key === beast.active) || {}).tier || beast.tier || 1);
+        setBeastCard(d.card);
+        return setBeastOpen(true);
+      }
       if (!d.moved || cellAt(ev.clientX, ev.clientY)) d.card.open();
       return;
     }
@@ -10421,10 +10970,10 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
     const cell = inHand(ev.clientX, ev.clientY) ? null : cellAt(ev.clientX, ev.clientY);
     if (!cell) return;
     if (d.card.subclass) return setOpen({ ...d.card, choose: true });
-    if (aimMaxOf(d.card) && (!rangeOf(cell, d.card) || !tokens.find((t) => !t.hidden && t.x === cell.x && t.y === cell.y && t.id !== me?.id && (t.kind === "foe" || t.kind === "npc")))) return; // sin objetivo válido o fuera de alcance: se cancela
+    if (isAim(d.card) && (!inAimReach(d.card, cell) || !tokens.find((t) => !t.hidden && t.x === cell.x && t.y === cell.y && t.id !== me?.id && (t.kind === "foe" || t.kind === "npc") && !deadTok(t)))) return; // sin objetivo válido o fuera de alcance: se cancela
     const target = tokens.find((t) => !t.hidden && t.x === cell.x && t.y === cell.y && t.id !== me?.id) || null;
     window.__mhFlyTo = { key: d.card.key, x: d.home.x, y: d.home.y, w: d.home.w, t: Date.now() };
-    const res = onUse(d.card, cell, target, rangeOf(cell, d.card));
+    const res = onUse(d.card, cell, target, rangeOf(cell));
     if (res === "cancel" || !d.home) return;
     // La carta usada vuelve volando a la mano; si se revela en el mapa, lo hace cuando acaba esa animación.
     setHeld({ key: d.card.key, home: d.home, from: { x: ev.clientX, y: ev.clientY }, wait: res === "reveal", at: Date.now() });
@@ -10477,38 +11026,46 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
     return () => ro.disconnect();
   }, [cards.length]);
   if (!cards.length) return null;
-  const grp = (c) => (c.weapon ? "w" : c.subclass || c.rowCard ? "a" : "d");
+  const grp = (c) => (c.weapon ? "w" : c.multi ? "m" : c.subclass || c.rowCard ? "a" : "d");
   // Con más de 6 cartas se abre un solo grupo (Dominio, Armas o Clase) y los demás quedan en pila a los lados.
-  const GN = { d: "Dominio", w: "Armas", a: "Clase" };
-  const present = ["d", "w", "a"].filter((k) => cards.some((c) => grp(c) === k));
+  const GN = { d: "Dominio", w: "Armas", a: "Clase", m: "Multiclase" };
+  const present = ["d", "w", "a", "m"].filter((k) => cards.some((c) => grp(c) === k));
   const grouped = cards.length > 6 && present.length > 1;
   const act = grouped ? (present.includes(grpSel) ? grpSel : present[0]) : null;
   // La carta que se está usando sale de la mano (y las demás se recolocan) hasta que vuelve.
   const shown = (grouped ? cards.filter((c) => grp(c) === act) : cards).filter((c) => !(held && held.key === c.key));
   // Carrusel: los otros grupos quedan a los lados (izquierda y derecha); al pulsar uno pasa al centro y los demás rotan.
-  const ring = ["w", "d", "a"].filter((k) => present.includes(k));
+  const ring = ["w", "d", "a", "m"].filter((k) => present.includes(k));
   const ri = ring.indexOf(act);
   const sideL = grouped && ring.length > 2 ? ring[(ri + ring.length - 1) % ring.length] : null;
   const sideR = grouped ? (ring.length > 2 ? ring[(ri + 1) % ring.length] : ring.find((k) => k !== act) || null) : null;
-  const others = [sideL, sideR].filter(Boolean);
+  const sideR2 = grouped && ring.length > 3 ? ring[(ri + 2) % ring.length] : null; // con Multiclase hay cuatro grupos: el cuarto queda en otra pila a la derecha
+  const others = [sideL, sideR, sideR2].filter(Boolean);
   const colOf = (c) => (c.weapon ? TIER_COLORS[c.level]?.color || "#C9A24B" : c.rowCard ? c.color : DOMAIN_COLORS[c.domain] || "#C9A24B");
   const n = shown.length;
   // Separación entre cartas: la de siempre, o más junta si no caben en el ancho del mapa.
   const cardW = 150 * (fanW <= 760 ? 0.72 : 1);
-  const pitch = Math.max(28, Math.min(98, (fanW - 90 - cardW - (others.length ? 170 : 0)) / Math.max(1, n - 1)));
+  const pitch = Math.max(28, Math.min(98, (fanW - 90 - cardW - (others.length > 2 ? 256 : others.length ? 170 : 0)) / Math.max(1, n - 1)));
   const gap = pitch - cardW;
   const stepR = Math.min(5, 36 / Math.max(1, n - 1));
   const stepY = Math.min(5, 30 / Math.max(1, n - 1));
-  const rng = drag ? rangeOf(drag.cell, drag.card) : null;
-  const aim = !!drag?.moved && !!aimMaxOf(drag.card) && !inHand(drag.x, drag.y);
-  const aimTarget = aim && drag.cell ? tokens.find((t) => !t.hidden && t.x === drag.cell.x && t.y === drag.cell.y && t.id !== me?.id && (t.kind === "foe" || t.kind === "npc")) : null;
+  const rng = drag ? rangeOf(drag.cell) : null;
+  const aim = !!drag?.moved && isAim(drag.card) && !inHand(drag.x, drag.y);
+  const aimIn = aim && inAimReach(drag.card, drag.cell);
+  // Al apuntar (arma, Enredo Feroz o sus cartas extra), el visor del rango del tablero enseña el alcance de la carta.
+  const aimMax = aim ? aimReach(drag.card).max : 0;
+  useEffect(() => {
+    if (onAim) onAim(aimMax && me ? { id: me.id, max: aimMax } : null);
+  }, [aimMax, me?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => () => onAim && onAim(null), []); // eslint-disable-line react-hooks/exhaustive-deps
+  const aimTarget = aim && drag.cell ? tokens.find((t) => !t.hidden && t.x === drag.cell.x && t.y === drag.cell.y && t.id !== me?.id && (t.kind === "foe" || t.kind === "npc") && !deadTok(t)) : null;
   const target = drag?.cell ? tokens.find((t) => !t.hidden && t.x === drag.cell.x && t.y === drag.cell.y && t.id !== me?.id) : null;
   return (
     <>
       {others.map((k, j) => {
         const list = cards.filter((c) => grp(c) === k);
         return (
-          <button key={k} type="button" className={"mh-fan-pile " + (k === sideL ? "is-l" : "is-r")} onClick={() => (setDir(k === sideL ? -1 : 1), setGrpSel(k))} title={"Abrir " + GN[k].toLowerCase() + " (" + list.length + ")"} aria-label={"Abrir " + GN[k] + ", " + list.length + " cartas"}>
+          <button key={k} type="button" className={"mh-fan-pile " + (k === sideL ? "is-l" : k === sideR2 ? "is-r is-r2" : "is-r")} onClick={() => (setDir(k === sideL ? -1 : 1), setGrpSel(k))} title={"Abrir " + GN[k].toLowerCase() + " (" + list.length + ")"} aria-label={"Abrir " + GN[k] + ", " + list.length + " cartas"}>
             {list.slice(0, 3).map((c, q) => (
               <span key={c.key} className="is-back" style={{ "--pc": colOf(c), "--q": q }}><CardBack kind={cardBack || "noche"} edge={cardBorder === "domain" ? colOf(c) : undefined} /></span>
             ))}
@@ -10516,6 +11073,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
           </button>
         );
       })}
+      {wardChip && <span className="mh-fan-chip" title="Tienes un objeto imbuido de magia protectora: podrás usarlo al recibir un ataque"><Shield size="1em" /> Guarda Rúnica · {wardChip.text}</span>}
       <div key={act || "all"} className="mh-fan" ref={fanRef} aria-label="Tus cartas" style={{ "--dir": dir }}>
         {shown.map((c, i) => {
           const mid = (n - 1) / 2;
@@ -10524,39 +11082,104 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
           return (
             <div
               key={c.key}
-              className={"mh-fan-card" + (c.ghost ? " is-ghostcard" + (c.noHope ? " is-nohope" : "") : "") + (lifting ? " is-lifted" : "") + (shown[i + 1] && grp(shown[i + 1]) !== grp(c) ? " is-last-weapon" : "")}
+              className={"mh-fan-card" + (c.locked ? " is-locked" : "") + (c.ghost ? " is-ghostcard" + (c.noHope ? " is-nohope" : "") : "") + (lifting ? " is-lifted" : "") + (shown[i + 1] && grp(shown[i + 1]) !== grp(c) ? " is-last-weapon" : "")}
               style={{ "--i": i, "--r": `${(i - mid) * stepR}deg`, "--y": `${Math.abs(i - mid) * stepY}px`, "--cc": col, "--m": gap / 2 + "px" }}
               onPointerDown={(e) => start(e, c)}
               title="Púlsala para verla en grande · arrástrala al mapa para usarla"
             >
               <FanFace c={c} col={col} />
-              {c.ghost && <span className="mh-fan-ghostlab">{c.noHope ? "Sin Esperanza" : "1 Esperanza"}</span>}
+              {cardToks && !c.weapon && !c.rowCard && (() => {
+                const ti = cardToks(c);
+                return ti ? <span className="mh-fan-toks" title={ti.have + " de " + ti.max + " fichas"} aria-label={ti.have + " de " + ti.max + " fichas"}><TokDice have={ti.have} max={ti.max} color={DOMAIN_COLORS[c.domain] || "#C9A24B"} /></span> : null;
+              })()}
+              {c.wardTag && <span className={"mh-fan-ward" + (c.wardTag.spent ? " is-spent" : "")} title={"Amuleto imbuido: " + c.wardTag.item + (c.wardTag.holder ? " · lo lleva " + c.wardTag.holder : " · lo llevas tú") + (c.wardTag.spent ? " · agotado hasta tu próximo descanso" : "")}><Shield size="1em" /> {c.wardTag.item}{c.wardTag.holder ? " · " + c.wardTag.holder : ""}{c.wardTag.spent ? " · agotado" : ""}</span>}
+              {c.ghost && <span className="mh-fan-ghostlab">{c.noHope ? c.noLab || "Sin Esperanza" : c.ghostLab || "1 Esperanza"}</span>}
             </div>
           );
         })}
       </div>
-      {open && typeof document !== "undefined" && createPortal(
-        <div className="mh-fan-zoom" onClick={() => setOpen(null)}>
+      {open && !open.choose && (
+        <ZoomPortal><div className="mh-fan-zoom" onClick={() => setOpen(null)}>
           <div className="mh-fan-big" style={{ "--cc": open.weapon ? TIER_COLORS[open.level]?.color || "#C9A24B" : open.rowCard ? open.color : DOMAIN_COLORS[open.domain] || "#C9A24B" }} onClick={(e) => e.stopPropagation()}>
             <FanFace c={open} col={open.weapon ? TIER_COLORS[open.level]?.color || "#C9A24B" : open.rowCard ? open.color : DOMAIN_COLORS[open.domain] || "#C9A24B"} />
-            {open.subclass && onElement && (
-              <div className="mh-fan-elems">
-                <span className="mh-fan-ask">{open.choose ? "¿Qué elemento quieres activar?" : "Elige un elemento"}</span>
-                {["Fuego", "Tierra", "Agua", "Aire"].map((el) => {
-                  const on = activeElement === el;
-                  const EI = HEADER_ELEMENTS[el].Icon;
-                  return (
-                    <button key={el} type="button" className={on ? "is-on" : ""} style={{ "--ec": ELEM_COL[el] }} onClick={() => (onElement(el, on), setOpen(null))} title={on ? "Dejar de canalizar " + el : "Canalizar " + el + " (1 Estrés)"}>
-                      <EI size={18} />
-                      <span>{on ? "Quitar" : el}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+            {cardToks && !open.weapon && !open.rowCard && (() => {
+              const ti = cardToks(open);
+              if (!ti || !onCardTok) return null;
+              return (
+                <>
+                <div className="mh-fan-tray" role="group" aria-label="Fichas sobre la carta" style={{ "--s": ti.max > 5 ? Math.max(0.6, (5.2 / ti.max) * 1.15) : undefined }}>
+                  <TokDice have={ti.have} max={ti.max} color={DOMAIN_COLORS[open.domain] || "#C9A24B"} onPick={(k) => onCardTok(open.key, k + 1 === ti.have ? k : k + 1)} />
+                </div>
+                <div className="mh-fan-tokctl">
+                  <span className="mh-fan-ask">{ti.have} de {ti.max} {ti.cfg.label} · lanza los dados si te estorban para leer</span>
+                </div>
+                </>
+              );
+            })()}
           </div>
-        </div>,
-        document.querySelector(".mh-root") || document.body
+        </div></ZoomPortal>
+      )}
+      {open && open.choose && onElement && (
+        <ZoomPortal><div className="mh-fan-zoom" onClick={() => setOpen(null)}>
+          <div className="mh-elpick" role="dialog" aria-label="Encarnación Elemental" onClick={(e) => e.stopPropagation()}>
+            <div className="mh-elpick-h">
+              <b>Encarnación Elemental</b>
+              <span>Elige el elemento que vas a canalizar · cuesta 1 Estrés</span>
+            </div>
+            <div className="mh-elpick-g">
+              {["Fuego", "Tierra", "Agua", "Aire"].map((el) => {
+                const on = activeElement === el;
+                const EI = HEADER_ELEMENTS[el].Icon;
+                const feat = (open.features || []).find((x) => x.name === el);
+                return (
+                  <button key={el} type="button" className={"mh-elpick-t" + (on ? " is-on" : "")} style={{ "--ec": ELEM_COL[el] }} onClick={() => (onElement(el, on, open), setOpen(null))} title={on ? "Dejar de canalizar " + el : "Canalizar " + el + " (1 Estrés)"}>
+                    <i><EI size={30} strokeWidth={1.6} /></i>
+                    <b>{el}</b>
+                    <small>{feat ? feat.text : ""}</small>
+                    <em>{on ? "Activo · Quitar" : "Canalizar"}</em>
+                  </button>
+                );
+              })}
+            </div>
+            <button type="button" className="mh-elpick-x" onClick={() => setOpen(null)}>Cancelar</button>
+          </div>
+        </div></ZoomPortal>
+      )}
+      {beastOpen && beast && (
+        <ZoomPortal><div className="mh-fan-zoom" onClick={() => setBeastOpen(false)}>
+          <div className="mh-bpick" role="dialog" aria-label="Forma de Bestia" onClick={(e) => e.stopPropagation()}>
+            <div className="mh-elpick-h">
+              <b>Forma de Bestia</b>
+              <span>{beast.active ? "Ahora estás en " + beast.active + " · pulsa otra para cambiar o la misma para salir" : "Elige en qué bestia te transformas · cuesta 1 Estrés"}</span>
+            </div>
+            <div className="mh-bpick-tabs" role="tablist" aria-label="Rango">
+              {[1, 2, 3, 4].map((t) => (
+                <button key={t} type="button" role="tab" aria-selected={bTier === t} className={bTier === t ? "is-on" : ""} onClick={() => setBTier(t)}>
+                  Rango {t}{t > beast.tier ? " · bloqueado" : ""}
+                </button>
+              ))}
+            </div>
+            <div className="mh-bpick-g">
+              {beast.forms.filter((x) => x.tier === bTier).map((x) => {
+                const sel = beast.active === x.key;
+                const locked = x.tier > beast.tier || (!sel && beast.stressFull);
+                const atk = String(x.attack || "").split("·").map((v) => v.trim());
+                return (
+                  <button key={x.key} type="button" disabled={locked} className={"mh-bpick-c" + (sel ? " is-on" : "")} style={{ "--bc": x.color }} onClick={() => (onBeast(x.key, sel, beastCard), setBeastOpen(false))} title={x.tier > beast.tier ? "Se desbloquea en Rango " + x.tier : !sel && beast.stressFull ? "Sin Estrés disponible" : x.animals}>
+                    <span className="mh-bpick-img" style={x.image ? { backgroundImage: 'url("' + x.image + '")' } : undefined} />
+                    <b>{x.key}</b>
+                    <small>{x.animals}</small>
+                    <em>{x.bonus}</em>
+                    <em className="is-atk">{(atk[1] || "") + " · " + (atk[2] || "")}</em>
+                    {sel && <span className="mh-bpick-on">Activa · salir</span>}
+                  </button>
+                );
+              })}
+              {beast.forms.filter((x) => x.tier === bTier).length === 0 && <p className="mh-bpick-empty">Todavía no hay formas cargadas para el Rango {bTier}.</p>}
+            </div>
+            <button type="button" className="mh-elpick-x" onClick={() => setBeastOpen(false)}>Cancelar</button>
+          </div>
+        </div></ZoomPortal>
       )}
       {back && (
         <div key={back.id} className="mh-fan-ret" style={{ "--cc": colOf(back.card), left: back.x, top: back.y, "--tx": back.to.x - back.x + "px", "--ty": back.to.y - back.y + "px" }} aria-hidden="true">
@@ -10570,8 +11193,8 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
             const r = el?.getBoundingClientRect();
             if (!r) return null;
             const x1 = r.left + r.width / 2, y1 = r.top + r.height / 2;
-            const ok = !!rng && !!aimTarget && (!aimOk || aimOk(drag.card, aimTarget));
-            const col = ok ? "#7fcf86" : rng ? "#E3B04B" : "#E0544A";
+            const ok = aimIn && !!aimTarget && (!aimOk || aimOk(drag.card, aimTarget));
+            const col = ok ? "#7fcf86" : aimIn ? "#E3B04B" : "#E0544A";
             return (
               <svg className="mh-aim" width="100%" height="100%" aria-hidden="true">
                 <line x1={x1} y1={y1} x2={drag.x} y2={drag.y} stroke="#000" strokeOpacity=".45" strokeWidth="6" strokeLinecap="round" />
@@ -10586,7 +11209,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
           )}
           {drag.cell && !inHand(drag.x, drag.y) && (
             <div className="mh-fan-tip" style={{ left: Math.max(130, Math.min(window.innerWidth - 130, drag.x)), top: aim ? drag.y - 40 : drag.y - 112 }}>
-              {aim ? (!rng ? "Fuera de alcance " + (aimMaxOf(drag.card) <= 6 ? "Cercano" : "Lejano") : aimTarget ? "Lanzar sobre " + (aimTarget.name || "el objetivo") : "Suéltala sobre un adversario") : drag.card.rowCard ? "Abrir «" + drag.card.key + "»" : drag.card.subclass ? "Activar Encarnación Elemental" : <>{target ? `Objetivo: ${target.name || "Ficha"}` : "Casilla"} {rng ? `(${rng.label})` : "(fuera de alcance)"}</>}
+              {aim ? (!aimIn ? "Fuera de alcance " + aimReach(drag.card).label : aimTarget ? (drag.card.weapon ? "Atacar a " : drag.card.release ? "Liberar a " : "Lanzar sobre ") + (aimTarget.name || "el objetivo") : "Suéltala sobre un adversario") : drag.card.rowCard ? "Abrir «" + drag.card.key + "»" : drag.card.subclass ? "Activar Encarnación Elemental" : <>{target ? `Objetivo: ${target.name || "Ficha"}` : "Casilla"} {rng ? `(${rng.label})` : "(fuera de alcance)"}</>}
               <small>{drag.card.rowCard ? "Suelta en cualquier casilla · Esc para cancelar" : drag.card.subclass ? "Suelta en cualquier casilla · Esc para cancelar" : "Suelta para usar · Esc para cancelar"}</small>
             </div>
           )}
@@ -10596,13 +11219,12 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
   );
 }
 
-// Escena de fondo del tablero: la imagen nítida ocupa la misma caja que la escena y, encima, la versión difuminada aparece con fundido (sin cambiar de tamaño ni de posición).
+// Fondo ambiental de la caja (las barras de fuera del tablero): copia difuminada y oscura de la imagen. La imagen nítida va dentro del propio tablero para que coincida siempre con la cuadrícula.
 function MapBackdrop({ bg, sharp }) {
   if (!bg) return null;
   const u = `url("${bg.replace(/"/g, "%22")}")`;
   return (
     <div className={"mh-map-backdrop" + (sharp ? " is-battlemap" : "")} aria-hidden="true">
-      <div className="mh-map-sharp" style={{ backgroundImage: u }} />
       <div key={bg} className="mh-map-bg" style={{ backgroundImage: u }} />
       <div className="mh-map-tint" />
     </div>
@@ -10617,20 +11239,32 @@ function MapPortal({ on, children }) {
 // Carta jugada en el mapa: el resto de la mesa ve oscurecerse el tablero, el reverso de quien la juega y cómo se revela.
 function CardPlayView({ anim, own }) {
   const cardRef = useRef(null);
+  const rootRef = useRef(null);
   const [fly, setFly] = useState(null);
+  const [box, setBox] = useState(null); // { inset, h }: hueco libre sobre la baraja y alto de la carta
+  // La carta se centra en el espacio que queda entre el borde de arriba y la baraja (no en toda la caja) y ocupa casi todo ese alto.
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const r = root.getBoundingClientRect();
+    const fan = root.closest(".mh-map-stage")?.querySelector(".mh-fan");
+    const fr = fan ? fan.getBoundingClientRect() : null;
+    const inset = fr && fr.top > r.top && fr.top < r.bottom ? Math.round(r.bottom - fr.top) : 0;
+    setBox({ inset, h: Math.max(236, Math.min(340, Math.round(r.height - inset - 150))) });
+  }, [anim.key]);
   useLayoutEffect(() => {
     const t = typeof window !== "undefined" ? window.__mhFlyTo : null;
     const el = cardRef.current;
-    if (!own || !t || !el || t.key !== anim.card?.key || Date.now() - t.t > 8000) return;
+    if (!box || !own || !t || !el || t.key !== anim.card?.key || Date.now() - t.t > 8000) return;
     const r = el.getBoundingClientRect();
     // La animación de entrada arranca 26 px más abajo; el centro real es el del tablero.
-    setFly({ x: t.x - (r.left + r.width / 2), y: t.y - (r.top + r.height / 2 - 26), s: Math.max(.4, Math.min(1, (t.w || 150) / 168)) });
-  }, [anim.key]); // eslint-disable-line react-hooks/exhaustive-deps
+    setFly({ x: t.x - (r.left + r.width / 2), y: t.y - (r.top + r.height / 2 - 26), s: Math.max(.3, Math.min(1, (t.w || 150) / el.offsetWidth)) });
+  }, [anim.key, box]); // eslint-disable-line react-hooks/exhaustive-deps
   const card = anim.card || {};
-  const col = card.weapon ? TIER_COLORS[card.level]?.color || "#C9A24B" : DOMAIN_COLORS[card.domain] || "#C9A24B";
+  const col = card.weapon ? TIER_COLORS[card.level]?.color || "#C9A24B" : card.rowCard ? card.color || "#C9A24B" : DOMAIN_COLORS[card.domain] || "#C9A24B";
   const edge = anim.edge || "#E3B04B"; // el borde que ese jugador tiene configurado en Personalización
   return (
-    <div key={anim.key} className="mh-cpf" style={{ "--cc": col, "--edge": edge }} aria-hidden="true">
+    <div key={anim.key} ref={rootRef} className="mh-cpf" style={{ "--cc": col, "--edge": edge, "--cpd": anim.short ? "2.3s" : "4.5s", ...(box ? { bottom: box.inset, "--ci": box.inset + "px", "--ch": box.h + "px", "--cs": box.h / 420 } : {}) }} aria-hidden="true">
       <div className="mh-cpf-dim" />
       <div className="mh-cpf-stage">
         <div className="mh-cpf-nm"><b>{anim.name || "Alguien"}</b> usa <em>{card.key}</em></div>
@@ -10644,7 +11278,7 @@ function CardPlayView({ anim, own }) {
     </div>
   );
 }
-function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, fog, fogView, areas, areaTool, log, menuFor, fx, efx, hfx, spot, bg, tokens, stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
+function MapBoard({ showHp, aimRange, rangeMenu, cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, fog, fogView, areas, areaTool, log, menuFor, fx, efx, hfx, spot, bg, tokens, stampTool, onStamp, onUnstamp, canMove, onMove, selectedId, onSelect, onPick, compact }) {
   const ref = useRef(null);
   const dragRef = useRef(null);
   const [drag, setDrag] = useState(null);
@@ -10658,6 +11292,12 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
   const overlayEl = useContext(MapOverlayCtx);
   const anim = useAttackFx(fx);
   const eAnim = useElemEvent(efx);
+  // Líneas de Fuego y Agua (con su animación de salida) y color de Tierra y Aire al apagarse el elemento.
+  const ringItems = useLeaving(tokens.filter((t) => t.kind === "pc" && !t.vanished && (t.elem === "Fuego" || t.elem === "Agua")).map((t) => ({ id: t.id, el: t.elem, x: t.x, y: t.y })));
+  const outItems = useLeaving(tokens.filter((t) => t.kind === "pc" && (t.elem === "Tierra" || t.elem === "Aire")).map((t) => ({ id: t.id, el: t.elem, x: 0, y: 0 })));
+  const morphs = useMorph(tokens);
+  const elemOut = {};
+  outItems.forEach((i) => i.leaving && (elemOut[i.id] = i.el));
   const hAnim = useElemEvent(hfx);
   const cAnim = useCardQueue(cfx);
   const steps = useMoveFx(tokens.map((t) => [t.id, t.x, t.y]));
@@ -10697,7 +11337,7 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
       window.removeEventListener("wheel", close);
     };
   }, [menu]);
-  const menuItems = (t) => [...(plain ? [{ key: "range", Icon: Crosshair, label: rangeId === t.id ? "Ocultar rango" : "Ver rango", sub: rangeId === t.id ? "Quita las bandas de alcance" : "Cuerpo a cuerpo, muy cercano, cercano…", on: rangeId === t.id, run: () => setRangeId((r) => (r === t.id ? null : t.id)) }] : []), ...((menuFor && menuFor(t)) || [])];
+  const menuItems = (t) => rangeMenu ? [{ key: "range", Icon: Crosshair, label: rangeId === t.id ? "Ocultar rango" : "Ver rango", sub: rangeId === t.id ? "Quita las bandas de alcance" : "Cuerpo a cuerpo, muy cercano, cercano…", on: rangeId === t.id, run: () => setRangeId((r) => (r === t.id ? null : t.id)) }] : [...(plain ? [{ key: "range", Icon: Crosshair, label: rangeId === t.id ? "Ocultar rango" : "Ver rango", sub: rangeId === t.id ? "Quita las bandas de alcance" : "Cuerpo a cuerpo, muy cercano, cercano…", on: rangeId === t.id, run: () => setRangeId((r) => (r === t.id ? null : t.id)) }] : []), ...((menuFor && menuFor(t)) || [])];
   const openMenu = (e, t) => {
     if (t.vanished) return;
     e.preventDefault();
@@ -10731,7 +11371,7 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
       return;
     }
     if (!canMove(t)) {
-      setRangeId((r) => (r === t.id ? null : t.id));
+      if (!rangeMenu) setRangeId((r) => (r === t.id ? null : t.id));
       if (onPick) onPick(selectedId === t.id ? null : t.id);
       return;
     }
@@ -10774,8 +11414,8 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
           if (onSelect) onSelect(d.id);
           return;
         }
-        const showing = rangeIdRef.current === d.id;
-        setRangeId(showing ? null : d.id);
+        const showing = rangeMenu ? selectedId === d.id : rangeIdRef.current === d.id;
+        if (!rangeMenu) setRangeId(showing ? null : d.id);
         onSelect(showing ? null : d.id);
       } else if (onStore && ev && overStore(ev) && onStore(d.id)) {
         /* ficha guardada */
@@ -10845,20 +11485,24 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
   }
   // Casillas coloreadas por rango alrededor de la ficha elegida en el menú.
   const rangeTok = tokens.find((t) => t.id === rangeId);
+  // Mientras se arrastra una carta de arma, el visor enseña el alcance de esa arma alrededor de tu ficha.
+  const aimTok = !rangeTok && aimRange ? tokens.find((t) => t.id === aimRange.id) : null;
+  const rangeSrc = rangeTok || aimTok;
+  const rangeMax = aimTok ? aimRange.max : 99;
   const rangeCells = [];
-  if (rangeTok) {
+  if (rangeSrc) {
     for (let y = 0; y < MAP_ROWS; y++)
       for (let x = 0; x < MAP_COLS; x++) {
-        const d = Math.max(Math.abs(x - rangeTok.x), Math.abs(y - rangeTok.y));
-        const band = d > 0 && MAP_RANGES.find((r) => d <= r.max);
+        const d = Math.max(Math.abs(x - rangeSrc.x), Math.abs(y - rangeSrc.y));
+        const band = d > 0 && d <= rangeMax && MAP_RANGES.find((r) => d <= r.max);
         if (band) rangeCells.push([x, y, band]);
       }
   }
   // Banda de rango de una casilla (para dibujar el contorno donde cambia).
   const bandKey = (x, y) => {
-    if (!rangeTok || x < 0 || y < 0 || x >= MAP_COLS || y >= MAP_ROWS) return null;
-    const d = Math.max(Math.abs(x - rangeTok.x), Math.abs(y - rangeTok.y));
-    return d > 0 ? MAP_RANGES.find((r) => d <= r.max)?.key || null : "self";
+    if (!rangeSrc || x < 0 || y < 0 || x >= MAP_COLS || y >= MAP_ROWS) return null;
+    const d = Math.max(Math.abs(x - rangeSrc.x), Math.abs(y - rangeSrc.y));
+    return d > rangeMax ? null : d > 0 ? MAP_RANGES.find((r) => d <= r.max)?.key || null : "self";
   };
   const at = (x, y) => ({ left: (x * 100) / MAP_COLS + "%", top: (y * 100) / MAP_ROWS + "%", width: 100 / MAP_COLS + "%", height: 100 / MAP_ROWS + "%" });
 
@@ -10879,8 +11523,8 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
     >
       <div className="mh-map-flat">
       {/* La escena va difuminada de fondo; encima van la cuadrícula de color y las fichas */}
-      {bg && !backdrop && (sharp ? <div className="mh-map-sharp" style={{ backgroundImage: `url("${bg.replace(/"/g, "%22")}")` }} /> : <div key={bg} className="mh-map-bg" style={{ backgroundImage: `url("${bg.replace(/"/g, "%22")}")` }} />)}
-      {!backdrop && <div className={"mh-map-tint" + (sharp ? " is-light" : "")} />}
+      {bg && (sharp ? <div className="mh-map-sharp" style={{ backgroundImage: `url("${bg.replace(/"/g, "%22")}")` }} /> : <div key={bg} className="mh-map-bg" style={{ backgroundImage: `url("${bg.replace(/"/g, "%22")}")` }} />)}
+      {(!backdrop || bg) && <div className={"mh-map-tint" + (sharp ? " is-light" : "")} />}
       {rangeCells.map(([x, y, band]) => (
         <div
           key={"r" + x + "," + y}
@@ -10888,10 +11532,10 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
           style={{
             ...at(x, y),
             "--rc": band.color,
-            borderTopWidth: bandKey(x, y - 1) !== band.key ? 3 : 0,
-            borderBottomWidth: bandKey(x, y + 1) !== band.key ? 3 : 0,
-            borderLeftWidth: bandKey(x - 1, y) !== band.key ? 3 : 0,
-            borderRightWidth: bandKey(x + 1, y) !== band.key ? 3 : 0,
+            borderTopWidth: bandKey(x, y - 1) !== band.key ? 2 : 0,
+            borderBottomWidth: bandKey(x, y + 1) !== band.key ? 2 : 0,
+            borderLeftWidth: bandKey(x - 1, y) !== band.key ? 2 : 0,
+            borderRightWidth: bandKey(x + 1, y) !== band.key ? 2 : 0,
           }}
         />
       ))}
@@ -10911,17 +11555,37 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
         <div key={x + "," + y} className="mh-map-reach" style={at(x, y)} />
       ))}
       {(() => {
-        // Hilo de guiones entre quien enraizó (Enredo Feroz) o embelesó (Embelesar) y su objetivo mientras dure el efecto.
-        const linkOf = (t, who, cond, cls) => (who && !t.vanished && mapConds(t).includes(cond) ? { t, cls, src: tokens.find((s) => s.kind === "pc" && s.charId === who && !s.vanished) } : null);
-        const links = tokens.flatMap((t) => [linkOf(t, t.rootedBy, "Inmovilizado", ""), linkOf(t, t.charmedBy, "Embelesado", "is-charm")]).filter((l) => l && l.src);
-        if (!links.length) return null;
+        // Hilo de guiones entre quien enraizó y el enraizado (Enredo Feroz) mientras dure la inmovilización.
+        const posOf = (t) => (drag && drag.id === t.id && drag.moved ? { x: drag.fx, y: drag.fy } : { x: t.x, y: t.y });
+        const links = tokens.filter((t) => t.rootedBy && !t.vanished && mapConds(t).includes("Inmovilizado")).map((t) => ({ t, src: tokens.find((s) => s.kind === "pc" && s.charId === t.rootedBy && !s.vanished) })).filter((l) => l.src).map(({ t, src }) => ({ id: t.id, a: posOf(src), b: posOf(t), sa: src.id, sb: t.id }));
+        return <RootThreads links={links} snap={drag && drag.moved ? new Set([drag.id]) : null} />;
+      })()}
+      {(() => {
+        // Hilo rosa entre quien embelesó (Embelesar) y su objetivo mientras dure el efecto.
+        const posOf = (t) => (drag && drag.id === t.id && drag.moved ? { x: drag.fx, y: drag.fy } : { x: t.x, y: t.y });
+        const cl = tokens.filter((t) => t.charmedBy && !t.vanished && mapConds(t).includes("Embelesado")).map((t) => ({ t, src: tokens.find((s) => s.kind === "pc" && s.charId === t.charmedBy && !s.vanished) })).filter((l) => l.src);
+        if (!cl.length) return null;
         return (
-          <svg className="mh-thread" viewBox={"0 0 " + MAP_COLS + " " + MAP_ROWS} preserveAspectRatio="none" aria-hidden="true">
-            {links.map(({ t, src, cls }) => <line key={t.id + cls} className={cls} x1={src.x + 0.5} y1={src.y + 0.5} x2={t.x + 0.5} y2={t.y + 0.5} />)}
+          <svg className="mh-thread mh-charmlink" viewBox={"0 0 " + MAP_COLS + " " + MAP_ROWS} preserveAspectRatio="none" aria-hidden="true">
+            {cl.map(({ t, src }) => { const a = posOf(src), b = posOf(t); return <line key={t.id} x1={a.x + 0.5} y1={a.y + 0.5} x2={b.x + 0.5} y2={b.y + 0.5} />; })}
           </svg>
         );
       })()}
       {drag?.moved && occupied(drag.x, drag.y, drag.id) && <div className="mh-map-drop is-bad" style={at(drag.x, drag.y)} />}
+      {ringItems.map((t) => {
+        const pos = drag && drag.id === t.id && drag.moved && !t.leaving ? { x: drag.fx, y: drag.fy } : t;
+        const r = RANGE_CELLS["Cuerpo a cuerpo"];
+        return (
+          <div
+            key={"er" + t.id + t.el}
+            className={"mh-elwrap is-" + t.el.toLowerCase() + (t.leaving ? " is-out" : "")}
+            style={{ left: ((pos.x - r) * 100) / MAP_COLS + "%", top: ((pos.y - r) * 100) / MAP_ROWS + "%", width: ((2 * r + 1) * 100) / MAP_COLS + "%", height: ((2 * r + 1) * 100) / MAP_ROWS + "%" }}
+            aria-hidden="true"
+          >
+            <div className={"mh-elring is-" + t.el.toLowerCase()} />
+          </div>
+        );
+      })}
       {tokens.filter((t) => !(fogHide && inFog(t.x, t.y))).map((t) => {
         const pos = drag && drag.id === t.id && drag.moved ? { x: drag.fx, y: drag.fy } : t;
         const movable = canMove(t);
@@ -10933,8 +11597,8 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
             key={t.id}
             type="button"
             data-tid={t.id}
-            className={"mh-map-tk is-" + t.kind + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
-            style={{ ...at(pos.x, pos.y), "--tc": t.color, ...(anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); return tg ? { "--ax": (tg.x - t.x) * 100 + "%", "--ay": (tg.y - t.y) * 100 + "%" } : {}; })() : {}) }}
+            className={"mh-map-tk is-" + t.kind + (hAnim && hAnim.to === t.id ? " is-hurt" : "") + (eAnim && eAnim.kind === "burn" && eAnim.to === t.id ? " is-burn" : "") + (t.beast || t.trf ? " is-trf" : "") + (morphs[t.id] ? " is-morph" : "") + (t.elem ? " is-el-" + String(t.elem).toLowerCase() : elemOut[t.id] ? " is-el-out is-el-p-" + elemOut[t.id].toLowerCase() : "") + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id && anim.kind !== "free" && anim.kind !== "howl" ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") + (anim.kind === "web" ? " is-web" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
+            style={{ ...at(pos.x, pos.y), "--tc": t.color, ...(t.color2 ? { "--tc2": t.color2 } : {}), ...(anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); return tg ? { "--ax": (tg.x - t.x) * 100 + "%", "--ay": (tg.y - t.y) * 100 + "%" } : {}; })() : {}) }}
             onPointerDown={(e) => startDrag(e, t)}
             onContextMenu={(e) => openMenu(e, t)}
             onKeyDown={(e) => keyMove(e, t)}
@@ -10943,6 +11607,19 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
             tabIndex={t.vanished ? -1 : movable || onPick ? 0 : -1}
             aria-hidden={t.vanished || undefined}
           >
+            {eAnim && eAnim.kind === "burn" && eAnim.to === t.id && (
+              <>
+                <span key={"br" + eAnim.key} className="mh-map-burnring" aria-hidden="true" />
+                <span key={"bn" + eAnim.key} className="mh-map-burn" aria-hidden="true">−{eAnim.roll}</span>
+              </>
+            )}
+            {eAnim && eAnim.kind === "wave" && (eAnim.ids || []).includes(t.id) && <span key={"wv" + eAnim.key} className="mh-map-wavering" aria-hidden="true" />}
+            {hAnim && hAnim.to === t.id && (
+              <>
+                <span key={"dr" + hAnim.key} className="mh-map-dmgring" aria-hidden="true" />
+                <span key={"dn" + hAnim.key} className="mh-map-dmg" aria-hidden="true">−{hAnim.amount || 1}</span>
+              </>
+            )}
             {vis[t.id] && <span key={vis[t.id].n} className="mh-map-puff" aria-hidden="true"><i /><i /><i /><i /><i /></span>}
             {mapConds(t).map((c) => (
               <span key={c} className={"mh-map-fx fx-" + MAP_COND_FX[c].cls} aria-hidden="true">
@@ -10979,13 +11656,27 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
                 <b>{spotHands[t.charId].n}</b>
               </span>
             )}
-            {hpLeft != null && !plain && (
+            {hpLeft != null && (!plain || showHp) && (
               <svg className="mh-map-ring" viewBox="0 0 100 100" aria-hidden="true">
-                <circle cx="50" cy="50" r="47" fill="none" stroke="#1b1219" strokeWidth="6" />
-                <circle cx="50" cy="50" r="47" fill="none" stroke={hpCol} strokeWidth="6" strokeLinecap="round" strokeDasharray={`${hpLeft * 295.3} 295.3`} />
+                {t.beast || t.trf ? (
+                  <>
+                    <rect x="3" y="3" width="94" height="94" rx="20" fill="none" stroke="#1b1219" strokeWidth="6" />
+                    <rect x="3" y="3" width="94" height="94" rx="20" fill="none" stroke={hpCol} strokeWidth="6" strokeLinecap="round" pathLength="100" strokeDasharray={`${hpLeft * 100} 100`} />
+                  </>
+                ) : (
+                  <>
+                    <circle cx="50" cy="50" r="47" fill="none" stroke="#1b1219" strokeWidth="6" />
+                    <circle cx="50" cy="50" r="47" fill="none" stroke={hpCol} strokeWidth="6" strokeLinecap="round" strokeDasharray={`${hpLeft * 295.3} 295.3`} />
+                  </>
+                )}
               </svg>
             )}
-            <span className="mh-map-face" title={hpLeft != null && !plain ? `Vida: ${t.hp[1] - t.hp[0]} de ${t.hp[1]}` : undefined}>{t.img && t.kind !== "pc" ? <img src={t.img} alt="" draggable={false} /> : <Emb size="52%" strokeWidth={2.1} />}</span>
+            <span className={"mh-map-face" + (t.kind === "pc" && t.color2 ? " is-mc" : "")} title={hpLeft != null && (!plain || showHp) ? `Vida: ${t.hp[1] - t.hp[0]} de ${t.hp[1]}` : undefined}>{t.img && t.kind !== "pc" ? <img src={t.img} alt="" draggable={false} /> : <Emb size="52%" strokeWidth={2.1} />}</span>
+            {t.kind === "pc" && t.rank > 0 && (
+              <span className="mh-map-rank" aria-hidden="true" title={["Fundación", "Especialización", "Maestría"][t.rank - 1]}>
+                {[[0], [-17, 17], [-34, 0, 34]][t.rank - 1].map((a, i) => <i key={i} className="mh-map-rk" style={{ "--a": a + "deg", "--k": a / 34 }} />)}
+              </span>
+            )}
             {t.name && <span className="mh-map-nm">{t.name}</span>}
           </button>
         );
@@ -10997,7 +11688,7 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
         if (!fa || !fb) return null;
         return (
           <svg className="mh-map-shot" viewBox={`0 0 ${MAP_COLS * 40} ${MAP_ROWS * 40}`} preserveAspectRatio="none">
-            <ShotFx key={anim.key} kind={anim.kind} a={[(fa.x + 0.5) * 40, (fa.y + 0.5) * 40]} b={[(fb.x + 0.5) * 40, (fb.y + 0.5) * 40]} size={40} />
+            <ShotFx key={anim.key} kind={anim.kind} n={anim.n} a={[(fa.x + 0.5) * 40, (fa.y + 0.5) * 40]} b={[(fb.x + 0.5) * 40, (fb.y + 0.5) * 40]} size={40} />
           </svg>
         );
       })()}
@@ -11023,11 +11714,11 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
       })()}
       <MapLog log={log} />
       {cAnim && overlayEl && createPortal(<CardPlayView anim={cAnim} own={!!meCharId && cAnim.charId === meCharId} />, overlayEl)}
-      {rangeTok && overlayEl && createPortal(
+      {rangeSrc && overlayEl && createPortal(
         <div className="mh-map-legend" onPointerDown={(e) => e.stopPropagation()}>
-          {MAP_RANGES.map((r) => (
+          {MAP_RANGES.filter((r, i) => i === 0 || MAP_RANGES[i - 1].max < rangeMax).map((r) => (
             <span key={r.key}>
-              <i style={{ background: r.color }} />
+              <i style={{ "--rc": r.color }} />
               {r.label}
             </span>
           ))}
@@ -11037,11 +11728,11 @@ function MapBoard({ cfx, meCharId, onDragInfo, onStore, plain, backdrop, sharp, 
         </div>,
         overlayEl
       )}
-      {rangeTok && !overlayEl && (
+      {rangeSrc && !overlayEl && (
         <div className="mh-map-legend" onPointerDown={(e) => e.stopPropagation()}>
-          {MAP_RANGES.map((r) => (
+          {MAP_RANGES.filter((r, i) => i === 0 || MAP_RANGES[i - 1].max < rangeMax).map((r) => (
             <span key={r.key}>
-              <i style={{ background: r.color }} />
+              <i style={{ "--rc": r.color }} />
               {r.label}
             </span>
           ))}
@@ -11549,6 +12240,7 @@ export default function App({ onSignOut }) {
   const [characters, setCharacters] = useState({});
   // Copia siempre al día de los personajes: evita que dos cambios seguidos se pisen.
   const charsRef = useRef({});
+  const [campInvOpen, setCampInvOpen] = useState(false);
   const [addContentFor, setAddContentFor] = useState(null); // capítulo al que se está añadiendo contenido (escena o mapa de combate)
   const [dragKey, setDragKey] = useState(null);
   const [overKey, setOverKey] = useState(null);
@@ -11643,6 +12335,17 @@ export default function App({ onSignOut }) {
   const [mcbChat, setMcbChat] = useState(false); // móvil: hoja del chat sobre el mapa
   const [djWorldEdit, setDjWorldEdit] = useState(false);
   const [djCastEdit, setDjCastEdit] = useState(null);
+  const [aimRange, setAimRange] = useState(null); // alcance del arma que se está apuntando: { id, max }
+  const [campSession, setCampSession] = useState(null); // sesión de la campaña: { n, active, startedAt, endedAt }
+  const [sessAsk, setSessAsk] = useState(null); // aviso de inicio de sesión para el jugador: { charId, key, n, items }
+  const sessDismiss = useRef({});
+  const [wardAsk, setWardAsk] = useState(null); // Guarda Rúnica: elegir portador y objeto { charId, card, step, bearerId, item, custom }
+  const [hitWard, setHitWard] = useState(null); // Guarda Rúnica aplicada al golpe que se está resolviendo { n }
+  const [chaosAsk, setChaosAsk] = useState(null); // Desatar el Caos: elegir cuántas fichas gastar { charId, targetId, card }
+  const [chaosN, setChaosN] = useState(1);
+  const [foeAtk, setFoeAtk] = useState(null); // el DJ elige a quién ataca una criatura: { foeId }
+  const [aboveAsk, setAboveAsk] = useState(null); // «Desde arriba» tras un ataque con éxito: { foeId, tgId, r, atk, crit, expr, base, feat }
+  const [plDragTok, setPlDragTok] = useState(null); // tu ficha arrastrándose por el mapa de la hoja: { id, over }
   const [djDragTok, setDjDragTok] = useState(null); // ficha de jugador que el DJ está arrastrando por el mapa: { id, over }
   const [chipDrag, setChipDrag] = useState(null); // ficha arrastrada desde la caja «Sin colocar»: { id, name, color, x, y }
   const chipSuppress = useRef(false);
@@ -12078,6 +12781,14 @@ export default function App({ onSignOut }) {
       } catch (e) {}
     };
     const load = async () => {
+      safeGet("campaign-session:" + stageCampaignId, true).then((rs) => {
+        if (!alive) return;
+        let v = null;
+        try {
+          v = rs ? JSON.parse(rs.value) : null;
+        } catch (e) {}
+        setCampSession((prev) => (JSON.stringify(prev) === JSON.stringify(v) ? prev : v));
+      });
       const r = await safeGet("campaign-stage:" + stageCampaignId, true);
       let s = EMPTY_STAGE;
       try {
@@ -12122,6 +12833,7 @@ export default function App({ onSignOut }) {
       setCampaignMap(m);
     };
     setCampaignMap({ tokens: [] });
+    setCampSession(null);
     setMapSel(null);
     load();
     loadChat();
@@ -12865,6 +13577,10 @@ export default function App({ onSignOut }) {
         summary: { parts: [{ label: tier + "d20", v: total, plain: true }], total, text: "¡Aullido Frenético!", color: "#E0674F", note: "Daño físico a todo en alcance Muy cercano", dc: who + " sale de la Forma de Lobo", outcome: "dmg" },
       });
     }
+    // El efecto sobre el mapa sale cuando se han mostrado los dados.
+    const meTok = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === id);
+    const fireHowl = () => meTok && sheetCampaignId && mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: meTok.id, to: meTok.id, kind: "howl" }), "fx");
+    if (use3d) pendingOutcome.current = fireHowl; else fireHowl();
     const detail = `${tier}d20 (${rolls.join("+")}) = ${total}`;
     pushRollLog(`**${who}** — ¡Aullido Frenético! ${detail} de daño físico a todo en alcance Muy cercano`);
     postCampaignEvent(id, `🐺 ¡Aullido Frenético! ${detail} de daño físico a todas las criaturas en alcance Muy cercano. Sale de la Forma de Lobo.`, {
@@ -13322,6 +14038,8 @@ export default function App({ onSignOut }) {
     setDamageRollResult({ instantKey: use3d ? dmgKey : null, hybridDmg, hybridDmgSides: ch ? hybridSides(ch) : 0, crimsonRolls, angelRoll, angelSides: opts.angel || 0, knightRolls, attackFear: opts.attackFear || 0, igniteRoll, stanceNow, droppedRoll, favoredBonus, rolls2, die2, comboBase: total, furyRolls, furySides: ch ? patronSides(ch) : 6, fearRolls, rawBonus, sneakRolls, sneakWhy: sneakRolls ? "Oculto" : "", rogueTier, key: dmgKey, weaponName, die, dice, rolls, bonus, levelBonus, roll, total, damageType, isCritical: !!isCritical, critBonus, wolfBonus, unstopBonus, unstopMax: ch ? unstopMax(ch) : 0, charId, doublePick: !!opts.doublePick, charged: ch && ch.f_subclass === "Origen Primigenio" && ch.f_charged === "1" && damageType === "mágico", note: resonance ? "Resonancia Sagrada: los dados repetidos valen el doble" : opts.extraFlat ? "Incluye +" + opts.extraFlat + " de Elementalista" : waxBonus ? "Incluye +2 de la Luna Creciente" : opts.note || "", spirit: !!opts.spirit });
     // El daño al enemigo se aplica al cerrar la escena de dados (o ya, si no hay escena).
     const applyDamage = () => {
+      // La animación de la habilidad sale justo después de ver el daño.
+      if (opts.after) opts.after();
       // Ataque con objetivo en el tablero: el daño se aplica al enemigo según sus umbrales.
       if (opts.targetId && sheetCampaignId) applyFoeDamage(sheetCampaignId, opts.targetId, total, ch?.f_name || "Alguien", weaponName);
       if (opts.targetId && sheetCampaignId && ch && ch.f_elemental_active === "Agua") elementalWave(sheetCampaignId, charId, opts.targetId);
@@ -13360,18 +14078,17 @@ export default function App({ onSignOut }) {
       extra("Furia", furyBonus);
       extra("Miedo", fearBonus);
       setDiceHold(true);
-      pendingOutcome.current = applyDamage;
+      pendingOutcome.current = () => finishDmg();
       setDice3d({
         key: dmgKey,
         dice: dl,
         summary: { parts, total, text: (isCritical ? "Crítico · " : "") + "Daño " + damageType, color: isCritical ? "#7FB77A" : "#E0674F", note: opts.note || (isCritical ? "Sumas el máximo de los dados" : ""), dc: weaponName, outcome: isCritical ? "crit" : "dmg" },
       });
-    } else {
-      applyDamage();
     }
     const who = playerName || "Alguien en la mesa";
     const critLabel = isCritical ? ` · ¡Crítico! (+${critBonus} máx.)` : "";
     const diceLabel = `${dice}d${die} (${rolls.join("+")})` + (rolls2 ? ` + ${dice}d${die2} (${rolls2.join("+")})` : "") + (furyRolls ? ` + Furia ${furyRolls.length}d${patronSides(ch)} (${furyRolls.join("+")})` : "") + (fearRolls ? ` + Enfrenta tu Miedo ${fearRolls.length}d10 (${fearRolls.join("+")}) mágico` : "") + (wolfBonus ? ` + Lobo 1d10 (${wolfBonus})` : "") + (unstopBonus ? ` + Imparable ${unstopBonus}` : "") + (sneakRolls ? ` + Furtivo ${sneakRolls.length}d6 (${sneakRolls.join("+")})` : "");
+    const postDmg = async () => {
     await pushRollLog(
       `**${who}** — Daño de ${weaponName}: ${diceLabel}${bonus ? " + " + bonus : ""}${critLabel} = **${total}** ${damageType}`
     );
@@ -13381,6 +14098,13 @@ export default function App({ onSignOut }) {
         roll: { type: "damage", weapon: weaponName, dice: rolls, dieLabel: dice + "d" + die, bonus, crit: critBonus, wolf: wolfBonus, total, dmgType: damageType },
       });
     }
+    };
+    // Daño al enemigo, efecto y chat salen cuando los dados ya se han revelado.
+    const finishDmg = () => {
+      applyDamage();
+      postDmg();
+    };
+    if (!use3d) finishDmg();
   };
 
   const toggleBeastform = (id, key, isCurrentlySelected) => {
@@ -13407,6 +14131,339 @@ export default function App({ onSignOut }) {
     postCampaignEvent(id, `✨ Activa ${formName}`);
   };
 
+  // ---- Fichas sobre las cartas (Desatar el Caos y las que se vayan añadiendo) ----
+  const CARD_TOKEN_CFG = { "Desatar el Caos": { label: "fichas de caos", session: true, lose: true } };
+  const getCardTokens = (c) => {
+    try {
+      return JSON.parse(c?.f_card_tokens || "{}") || {};
+    } catch (e) {
+      return {};
+    }
+  };
+  const cardTokMax = (c, key) => {
+    if (key === "Desatar el Caos") {
+      const k = charSpellTrait(c);
+      const mods = getEquipmentMods(PRIMARY_WEAPONS.find((x) => x.key === c.f_primary_weapon), SECONDARY_WEAPONS.find((x) => x.key === c.f_secondary_weapon), ARMORS.find((x) => x.key === c.f_armor));
+      return Math.max(1, Number(c[k] || 0) + (mods[k] || 0));
+    }
+    return 0;
+  };
+  const cardTokInfo = (c, key) => {
+    if (!c || !CARD_TOKEN_CFG[key]) return null;
+    const max = cardTokMax(c, key);
+    return { have: Math.min(Number(getCardTokens(c)[key] || 0), max), max, cfg: CARD_TOKEN_CFG[key] };
+  };
+  const setCardTok = (id, key, n, extra) => {
+    const c = charsRef.current[id];
+    if (!c) return;
+    const info = cardTokInfo(c, key);
+    const v = Math.max(0, Math.min(info ? info.max : 99, n));
+    updateCharacterFields(id, { f_card_tokens: JSON.stringify({ ...getCardTokens(c), [key]: v }), ...(extra || {}) });
+  };
+  // Recargar: marcas 1 Estrés y las fichas vuelven al máximo.
+  const rechargeCardTokens = (id, key) => {
+    const c = charsRef.current[id];
+    const info = c && cardTokInfo(c, key);
+    if (!info) return;
+    if (info.have >= info.max) {
+      if (sheetCampaignId) pushMapLog(sheetCampaignId, key + ": ya tienes todas las fichas, no hace falta recargar", "info");
+      return;
+    }
+    markStress(id, 1, { f_card_tokens: JSON.stringify({ ...getCardTokens(c), [key]: info.max }) });
+    postCampaignEvent(id, "✨ " + key + ": marca 1 Estrés y recarga sus fichas hasta " + info.max);
+  };
+  // ---- Sesiones: las empieza y termina el DJ; cada jugador recibe un aviso con lo que se activa ----
+  const startSession = async () => {
+    const id = viewingCampaignId;
+    if (!id) return;
+    const next = { n: ((campSession && campSession.n) || 0) + 1, active: true, startedAt: Date.now() };
+    setCampSession(next);
+    await safeSet("campaign-session:" + id, JSON.stringify(next), true);
+    pushMapLog(id, "Empieza la sesión " + next.n, "info");
+  };
+  const endSession = async () => {
+    const id = viewingCampaignId;
+    if (!id || !campSession) return;
+    const next = { ...campSession, active: false, endedAt: Date.now() };
+    setCampSession(next);
+    await safeSet("campaign-session:" + id, JSON.stringify(next), true);
+    pushMapLog(id, "Termina la sesión " + next.n + ": se pierden las fichas sin usar", "info");
+  };
+  // Lo que se activa al empezar la sesión en un personaje.
+  const sessionItemsFor = (c) => {
+    const items = [];
+    let keys = [];
+    try {
+      keys = JSON.parse(c.f_domain_cards || "[]");
+    } catch (e) {}
+    Object.keys(CARD_TOKEN_CFG).forEach((k) => {
+      if (CARD_TOKEN_CFG[k].session && keys.includes(k)) items.push({ k: "tok:" + k, icon: "sparkles", label: k, text: "coloca " + cardTokMax(c, k) + " fichas sobre la carta" });
+    });
+    if (c.f_class === "Serafín" && prayerCountFor(c) > 0) items.push({ k: "prayer", icon: "feather", label: "Dados de Oración", text: "tira " + prayerCountFor(c) + "d4 y colócalos en tu ficha" });
+    if (ancFeat(c, "Mediano", 0)) items.push({ k: "luck", icon: "heart", label: "Trae Suerte", text: "todo el grupo gana 1 Esperanza" });
+    return items;
+  };
+  const applySession = (id, key, items) => {
+    const c = charsRef.current[id];
+    if (!c) return;
+    const patch = { f_session_seen: key };
+    const toks = { ...getCardTokens(c) };
+    let tokChanged = false;
+    items.forEach((it) => {
+      if (it.k.startsWith("tok:")) {
+        const ck = it.k.slice(4);
+        toks[ck] = cardTokMax(c, ck);
+        tokChanged = true;
+        postCampaignEvent(id, "✨ Empieza la sesión: " + ck + " recibe " + toks[ck] + " fichas");
+      }
+    });
+    if (tokChanged) patch.f_card_tokens = JSON.stringify(toks);
+    if (items.some((i) => i.k === "prayer")) {
+      patch.f_prayer = "";
+      patch.f_prayer_rolled = "";
+    }
+    if (items.some((i) => i.k === "luck")) {
+      patch.hope_marked = String(Math.min(getHopeMax(c), Number(c.hope_marked ?? HOPE_DEFAULT) + 1));
+      patch.f_luck_given = "1";
+      patch.f_luck_posted = "1";
+      const camp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(id));
+      const allies = camp ? (camp.characterIds || []).filter((cid) => cid !== id) : [];
+      if (camp && allies.length) postChat(camp.id, { kind: "gift", sid: String(Date.now()), campId: camp.id, author: c.f_name || "El mediano", charId: id, cls: c.f_class, title: "Trae Suerte", text: "Al comienzo de la sesión, todo el grupo gana 1 Esperanza.", targets: Object.fromEntries(allies.map((cid) => [cid, { hope: 1 }])), tag: "Mediano" });
+      postCampaignEvent(id, "🍀 Trae Suerte: empieza la sesión con 1 Esperanza más");
+    }
+    updateCharacterFields(id, patch);
+    if (items.some((i) => i.k === "prayer")) setTimeout(() => rollPrayerDice(id), 400);
+  };
+  // Al terminar la sesión se pierden las fichas sin usar.
+  const endSessionFor = (id, key) => {
+    const c = charsRef.current[id];
+    if (!c) return;
+    const toks = { ...getCardTokens(c) };
+    const lost = [];
+    Object.keys(CARD_TOKEN_CFG).forEach((k) => {
+      if (CARD_TOKEN_CFG[k].lose && Number(toks[k] || 0) > 0) {
+        lost.push(toks[k] + " de " + k);
+        toks[k] = 0;
+      }
+    });
+    updateCharacterFields(id, { f_session_end: key, ...(lost.length ? { f_card_tokens: JSON.stringify(toks) } : {}) });
+    if (lost.length) postCampaignEvent(id, "⌛ Termina la sesión: pierde las fichas sin usar (" + lost.join(", ") + ")");
+  };
+  useEffect(() => {
+    const id = sheetCharId;
+    const c = id ? characters[id] : null;
+    if (!c || !sheetCampaignId || !campSession || !campSession.n) return;
+    const key = sheetCampaignId + ":" + campSession.n;
+    if (campSession.active) {
+      if (c.f_session_seen === key || sessDismiss.current[key + id] || sessAsk) return;
+      const items = sessionItemsFor(c);
+      if (!items.length) {
+        updateCharacterField(id, "f_session_seen", key);
+        return;
+      }
+      setSessAsk({ charId: id, key, n: campSession.n, items });
+    } else if (c.f_session_end !== key) {
+      endSessionFor(id, key);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sheetCharId, sheetCampaignId, campSession, sheetCharId && characters[sheetCharId]?.f_session_seen, sheetCharId && characters[sheetCharId]?.f_session_end]);
+  // ---- Guarda Rúnica: un objeto imbuido de magia protectora. Quien lo porta (tú o un aliado) tiene una carta auxiliar para reducir el daño en 1d8. ----
+  // El amuleto vive en el portador (f_runeward: { item, by, gen, spent, restN }); quien lo imbuye guarda a quién se lo dio (f_runeward_to, f_runeward_gen)
+  // y cuenta sus descansos (f_rest_n): un amuleto agotado vuelve en el siguiente descanso de quien lo imbuyó.
+  const wardInfo = (id) => {
+    const c = characters[id];
+    let w = null;
+    try {
+      w = JSON.parse(c?.f_runeward || "null");
+    } catch (e) {}
+    const by = w && characters[w.by];
+    if (!w || !by || by.f_runeward_to !== id || String(by.f_runeward_gen || 0) !== String(w.gen)) return null;
+    if (w.spent && Number(by.f_rest_n || 0) <= Number(w.restN || 0)) return null;
+    return { ward: w, item: w.item, byName: by.f_name || "un aliado" };
+  };
+  // Lo que ve quien imbuyó el amuleto: qué objeto es, quién lo lleva y si está agotado.
+  const wardOutOf = (id) => {
+    const c = characters[id];
+    const to = c?.f_runeward_to && characters[c.f_runeward_to];
+    let w = null;
+    try {
+      w = JSON.parse(to?.f_runeward || "null");
+    } catch (e) {}
+    if (!c || !to || !w || w.by !== id || String(w.gen) !== String(c.f_runeward_gen || 0)) return null;
+    return { item: w.item, holder: c.f_runeward_to === id ? "" : to.f_name || "un aliado", spent: !!w.spent && Number(c.f_rest_n || 0) <= Number(w.restN || 0) };
+  };
+  // Cuando te golpean, usar la Guarda Rúnica: gastas 1 Esperanza y tiras 1d8 de reducción.
+  const rollWard = (charId) => {
+    const c = charsRef.current[charId];
+    const wi = c && wardInfo(charId);
+    if (!wi) return;
+    const hope = Number(c.hope_marked ?? HOPE_DEFAULT);
+    if (hope < 1) return;
+    const n = Math.floor(Math.random() * 8) + 1;
+    const by = characters[wi.ward.by];
+    const patch = { hope_marked: String(hope - 1), ...(n === 8 ? { f_runeward: JSON.stringify({ ...wi.ward, spent: true, restN: Number(by?.f_rest_n || 0) }) } : {}) };
+    updateCharacterFields(charId, patch);
+    setHitWard({ n });
+    postCampaignEvent(charId, "🛡️ Guarda Rúnica (" + wi.item + "): reduce el daño en " + n + " (1d8)" + (n === 8 ? " · ¡el amuleto se agota hasta el próximo descanso de " + wi.byName + "!" : ""));
+  };
+  const confirmWard = () => {
+    const A = wardAsk;
+    if (!A) return;
+    const c = charsRef.current[A.charId];
+    const bearer = characters[A.bearerId];
+    const item = (A.custom || "").trim() || A.item;
+    if (!c || !bearer || !item) return;
+    const gen = Number(c.f_runeward_gen || 0) + 1;
+    const ward = { item, by: A.charId, gen, spent: false };
+    setWardAsk(null);
+    updateCharacterFields(A.charId, { f_runeward_to: A.bearerId, f_runeward_gen: String(gen), ...(A.bearerId === A.charId ? { f_runeward: JSON.stringify(ward) } : {}) });
+    if (A.bearerId !== A.charId) giveToParty(A.charId, { [A.bearerId]: { ward } }, "Guarda Rúnica", "Imbuye «" + item + "» con magia protectora. Quien lo porta puede gastar 1 Esperanza para reducir el daño recibido en 1d8; con un 8, se agota hasta el próximo descanso de " + (c.f_name || "quien lo imbuyó") + ".", "Arcano");
+    postCampaignEvent(A.charId, "🛡️ Imbuye «" + item + "»" + (A.bearerId === A.charId ? "" : " de " + (bearer.f_name || "un aliado")) + " con magia protectora");
+    playCardOnMap(sheetCampaignId, A.charId, A.card, { noChat: true, short: true });
+  };
+  // Carta suplementaria «Recargar fichas»: aparece cuando has gastado fichas de Desatar el Caos; al usarla marcas 1 Estrés y las recuperas todas.
+  const castRecharge = (charId, card) => {
+    const c = charsRef.current[charId];
+    const info = c && cardTokInfo(c, "Desatar el Caos");
+    if (!info || info.have >= info.max) return "cancel";
+    if (Number(c.stress_marked || 0) >= Number(c.r_stress || 0)) {
+      if (sheetCampaignId) pushMapLog(sheetCampaignId, "Recargar fichas: no tienes Estrés libre que marcar", "info");
+      return "cancel";
+    }
+    playCardOnMap(sheetCampaignId, charId, card, { noChat: true, short: true });
+    afterReveal(charId, card.key, () => rechargeCardTokens(charId, "Desatar el Caos"));
+    return "reveal";
+  };
+  // Desatar el Caos arrastrada a un adversario en alcance Lejano: se elige cuántas fichas gastar, se revela la carta y se hace la tirada de conjuro.
+  const castChaos = (charId, target, card) => {
+    const c = charsRef.current[charId];
+    const me = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
+    if (!c || !me || !target || !(target.kind === "foe" || target.kind === "npc") || deadTok(target) || cellDist(me, target) > RANGE_CELLS["Lejano"] || c.f_beastform) return "cancel";
+    const info = cardTokInfo(c, "Desatar el Caos");
+    if (!info) return "cancel";
+    setChaosN(1); // hay que gastar al menos 1 ficha; sin fichas el aviso ofrece recargar
+    setChaosAsk({ charId, targetId: target.id, card });
+    return "cancel";
+  };
+  const confirmChaos = () => {
+    const a = chaosAsk;
+    setChaosAsk(null);
+    if (!a) return;
+    const c = charsRef.current[a.charId];
+    const info = c && cardTokInfo(c, "Desatar el Caos");
+    const target = (campaignMapRef.current.tokens || []).find((t) => t.id === a.targetId);
+    if (!c || !info || !target || info.have < 1) return;
+    const n = Math.max(1, Math.min(chaosN, info.have));
+    const sk = charSpellTrait(c);
+    const label = TRAITS.find((tr) => tr.key === sk)?.label;
+    if (!label) return;
+    const mods = getEquipmentMods(PRIMARY_WEAPONS.find((w) => w.key === c.f_primary_weapon), SECONDARY_WEAPONS.find((w) => w.key === c.f_secondary_weapon), ARMORS.find((x) => x.key === c.f_armor));
+    setCardTok(a.charId, "Desatar el Caos", info.have - n);
+    postCampaignEvent(a.charId, "✨ Desatar el Caos sobre " + (target.name || "un adversario") + ": gasta " + n + " ficha" + (n > 1 ? "s" : "") + " (" + n + "d10 si acierta)");
+    playCardOnMap(sheetCampaignId, a.charId, a.card, { noChat: true, short: true });
+    afterReveal(a.charId, a.card.key, () => rollTraitCheck(a.charId, label, Number(c[sk] || 0) + (mods[sk] || 0), { name: "Desatar el Caos", damage: "d10 mágico", spell: true, fixedDice: n, targetChosen: true, targetId: target.id, targetName: target.name, targetDc: target.stats?.difficulty || null }));
+  };
+  // Evasión de un personaje tal y como la ve el DJ (la hoja del jugador calcula más matices).
+  const foeEvasionOf = (ch) => {
+    if (!ch.r_evasion) return 10;
+    const eq = getEquipmentMods(PRIMARY_WEAPONS.find((w) => w.key === ch.f_primary_weapon), SECONDARY_WEAPONS.find((w) => w.key === ch.f_secondary_weapon), ARMORS.find((a) => a.key === ch.f_armor));
+    const bf = BEASTFORMS.find((b) => b.key === ch.f_beastform);
+    return Number(ch.r_evasion) + (bf?.evasionBonus || 0) + (eq.evasion || 0) + Number(ch.f_natural_evade || 0) + (ch.f_class === "Pícaro" && ch.f_dodge === "1" ? 2 : 0);
+  };
+  // El golpe ya tirado (con crítico: máximo de los dados + la tirada) llega al jugador, que lo resuelve con su Evasión.
+  // Si hay dados 3D, el DJ ve primero los dados de daño y solo entonces el golpe sale hacia el jugador.
+  const finishFoeAttack = (foe, tg, r, atk, crit, dmgExpr, tag, ev, success, quiet) => {
+    const st = foe.stats;
+    const d = rollExpr(dmgExpr);
+    const m = String(dmgExpr).match(/(\d*)d(\d+)/);
+    const nDice = m ? Number(m[1] || 1) : 0, sides = m ? Number(m[2]) : 0;
+    const critExtra = crit && m ? nDice * sides : 0;
+    const total = d.total + critExtra;
+    const fname = foe.name || "La criatura";
+    const tn = mapTokensView([tg])[0].name;
+    const hitEntry = { key: Date.now() + "-" + Math.random().toString(36).slice(2, 6), charId: tg.charId, foeId: foe.id, from: fname, weapon: st.attack.name + (tag ? " (" + tag + ")" : ""), d20: r.rolls[0], atk, crit, dmg: total, dmgRolls: d.rolls, dmgMod: d.mod };
+    const send = () => {
+      mutateMap(viewingCampaignId, (hs) => [...(Array.isArray(hs) ? hs : []).slice(-19), hitEntry], "hits");
+      pushMapLog(viewingCampaignId, fname + " ataca a " + tn + " con " + st.attack.name + (tag ? " (" + tag + ")" : "") + ": " + atk + (ev != null ? " contra Evasión " + ev : "") + (crit ? " · ¡crítico!" : "") + " · " + (success ? total + " de daño · esperando a " + tn : "parece fallar · esperando a " + tn), success ? "hit" : "miss");
+    };
+    const dl = d.rolls.map((v) => ({ sides, value: v, kind: crit ? "crit" : "dmg", main: true })).filter((x) => DICE3D_SIDES.includes(x.sides));
+    if (!quiet && dl.length && canDice3d()) {
+      flushOutcome();
+      setDiceHold(true);
+      const parts = [{ label: nDice + "d" + sides, v: d.rolls.reduce((x, y) => x + y, 0), plain: true }];
+      if (d.mod) parts.push({ label: "Bonificador", v: d.mod });
+      if (critExtra) parts.push({ label: "Crítico", v: critExtra });
+      pendingOutcome.current = send;
+      setDice3d({ key: Date.now(), dice: dl, summary: { parts, total, text: (crit ? "Crítico · " : "") + "Daño " + (st.attack.type || "físico"), color: crit ? "#7FB77A" : "#E0674F", note: fname + " golpea a " + tn, dc: st.attack.name + (tag ? " · " + tag : ""), outcome: crit ? "crit" : "dmg" } });
+    } else send();
+  };
+  const foeAttack = (foeId, tgId) => {
+    const toks = campaignMapRef.current.tokens || [];
+    const foe = toks.find((t) => t.id === foeId);
+    const tg = toks.find((t) => t.id === tgId);
+    setFoeAtk(null);
+    if (!foe || !foe.stats || !tg || !tg.charId) return;
+    const st = foe.stats;
+    const r = rollExpr("1d20");
+    const atk = r.rolls[0] + Number(st.atk || 0);
+    const crit = r.rolls[0] === 20;
+    const ch = characters[tg.charId];
+    const ev = ch ? foeEvasionOf(ch) : null;
+    const success = crit || ev == null || atk >= ev;
+    const fname = foe.name || "La criatura";
+    const tn = mapTokensView([tg])[0].name;
+    // Bandido · Desde arriba: si el ataque tiene éxito, el DJ decide si lo aplica (cambia el daño).
+    const above = (st.features || []).find((x) => /desde arriba/i.test(x.name));
+    const expr = above && (String(above.text).match(/(\d+d\d+(?:\s*\+\s*\d+)?)/) || [])[1];
+    const next = () =>
+      setTimeout(() => {
+        if (success && expr) return setAboveAsk({ foeId, tgId, r, atk, crit, ev, expr: expr.replace(/\s/g, ""), base: st.attack.damage, feat: above.name });
+        finishFoeAttack(foe, tg, r, atk, crit, st.attack.damage, "", ev, success, !success);
+      }, 80);
+    if (canDice3d()) {
+      flushOutcome();
+      setDiceHold(true);
+      pendingOutcome.current = next;
+      setDice3d({ key: Date.now(), dice: [{ sides: 20, value: r.rolls[0], kind: crit ? "crit" : "bonus", main: true }], summary: { parts: [{ label: "d20", v: r.rolls[0], plain: true }, { label: "Ataque", v: Number(st.atk || 0) }], total: atk, text: crit ? "¡Crítico!" : success ? "¡Acierta!" : "Falla", color: success ? "#E3B04B" : "#7D8BA3", note: fname + " ataca a " + tn + " con " + st.attack.name, dc: ev != null ? "Evasión de " + tn + ": " + ev + " · " + (success ? "acierta" : "falla") : "", outcome: crit ? "crit" : success ? "hope" : "fear" } });
+    } else {
+      pushMapLog(viewingCampaignId, fname + " tira d20: " + r.rolls[0] + (st.atk ? (st.atk > 0 ? " + " : " − ") + Math.abs(st.atk) : "") + " = " + atk + (ev != null ? " contra Evasión " + ev + " de " + tn + " · " + (success ? "acierta" : "falla") : ""), success ? "hit" : "miss");
+      next();
+    }
+  };
+  const answerAbove = (apply) => {
+    const a = aboveAsk;
+    setAboveAsk(null);
+    if (!a) return;
+    const toks = campaignMapRef.current.tokens || [];
+    const foe = toks.find((t) => t.id === a.foeId);
+    const tg = toks.find((t) => t.id === a.tgId);
+    if (foe && tg) finishFoeAttack(foe, tg, a.r, a.atk, a.crit, apply ? a.expr : a.base, apply ? a.feat : "", a.ev, true, false);
+  };
+  // Hombre Lobo desde la carta: solo con 1 o más PV marcados. Primero se revela la carta y después entras en Forma de Lobo (1 Estrés).
+  const activateWolf = (charId, card) => {
+    const c = charsRef.current[charId];
+    if (!c || !sheetCampaignId) return;
+    if (c.f_transformation_form_active === "Forma de Lobo") return pushMapLog(sheetCampaignId, "Ya estás en Forma de Lobo: dura hasta el Ataque Aullante o un descanso", "info");
+    if (Number(c.hp_marked || 0) < 1) return pushMapLog(sheetCampaignId, "Forma de Lobo: necesitas tener marcado al menos 1 Punto de vida", "info");
+    const me = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
+    if (!me) return toggleTransformationForm(charId, "Forma de Lobo", false);
+    playCardOnMap(sheetCampaignId, charId, card, { noChat: true, short: true });
+    afterReveal(charId, card.key, () => toggleTransformationForm(charId, "Forma de Lobo", false));
+  };
+  // Forma de Bestia desde la carta: primero se revela la carta y después te transformas (salir de la forma es inmediato).
+  const morphToBeast = (charId, key, card) => {
+    const me = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
+    if (!sheetCampaignId || !me || !card) return toggleBeastform(charId, key, false);
+    playCardOnMap(sheetCampaignId, charId, card, { noChat: true, short: true });
+    afterReveal(charId, card.key, () => toggleBeastform(charId, key, false));
+  };
+  // Encarnación Elemental desde la carta: primero se revela la carta y después se aplica el elemento.
+  const embodyElement = (charId, el, card) => {
+    const me = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
+    if (!sheetCampaignId || !me || !card) return toggleElemental(charId, el, false);
+    playCardOnMap(sheetCampaignId, charId, card, { noChat: true, short: true });
+    afterReveal(charId, card.key, () => toggleElemental(charId, el, false));
+  };
   const toggleElemental = (id, elementName, isCurrentlyActive) => {
     const c = characters[id];
     if (!c) return;
@@ -13563,12 +14620,17 @@ export default function App({ onSignOut }) {
   const [evoTrait, setEvoTrait] = useState("");
   const [evolutionWarning, setEvolutionWarning] = useState("");
 
-  const openEvolutionModal = (id) => {
+  const evoCardRef = useRef(null); // carta de Evolución arrastrada al mapa (para revelarla al confirmar)
+  const evoCharRef = useRef(null); // personaje que usa Evolución (el de la hoja abierta)
+  const openEvolutionModal = (id, card) => {
+    evoCardRef.current = card || null;
+    evoCharRef.current = id;
     const c = characters[id];
     if (!c) return;
-    if (Number(c.hope_marked || 0) < 3) {
+    if (Number(c.hope_marked ?? HOPE_DEFAULT) < 3) {
       setEvolutionWarning("Necesitas al menos 3 de Esperanza disponible para usar Evolución.");
       setTimeout(() => setEvolutionWarning(""), 3000);
+      if (sheetCampaignId) pushMapLog(sheetCampaignId, "Evolución: necesitas al menos 3 de Esperanza", "info");
       return;
     }
     setEvoBeastform("");
@@ -13578,16 +14640,28 @@ export default function App({ onSignOut }) {
 
   const confirmEvolution = () => {
     if (!evoBeastform || !evoTrait) return;
-    const c = characters[viewingCharId];
+    const charId = evoCharRef.current || viewingCharId;
+    const c = characters[charId];
     if (!c) return;
-    const hopeCurrent = Number(c.hope_marked || 0);
-    updateCharacterFields(viewingCharId, {
-      f_beastform: evoBeastform,
-      f_evolution_trait: evoTrait,
-      hope_marked: String(Math.max(0, hopeCurrent - 3)),
-    });
+    const form = evoBeastform, trait = evoTrait;
+    const apply = () => {
+      const cur = charsRef.current[charId] || c;
+      updateCharacterFields(charId, {
+        f_beastform: form,
+        f_evolution_trait: trait,
+        hope_marked: String(Math.max(0, Number(cur.hope_marked ?? HOPE_DEFAULT) - 3)),
+      });
+      postCampaignEvent(charId, `🌙 Usa Evolución: adopta la forma de ${form}`);
+    };
     setShowEvolutionModal(false);
-    postCampaignEvent(viewingCharId, `🌙 Usa Evolución: adopta la forma de ${evoBeastform}`);
+    // Desde el mapa: primero se revela la carta y después te transformas.
+    const card = evoCardRef.current;
+    evoCardRef.current = null;
+    const me = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
+    if (card && sheetCampaignId && me) {
+      playCardOnMap(sheetCampaignId, charId, card, { noChat: true, short: true });
+      afterReveal(charId, card.key, apply);
+    } else apply();
   };
 
   const armorMaxFor = (c) => {
@@ -14096,21 +15170,23 @@ export default function App({ onSignOut }) {
 
   const addInventoryItem = () => {
     const val = newItemDraft.trim();
-    if (!val || !viewingCharId) return;
-    const c = characters[viewingCharId];
+    const cid = viewingCharId || modernCharId;
+    if (!val || !cid) return;
+    const c = characters[cid];
     if (!c) return;
     const list = getItems(c);
     if (list.length >= ITEM_SLOTS) return;
     list.push({ name: val, description: newItemDescDraft.trim(), count: 1 });
-    updateCharacterField(viewingCharId, "f_items", JSON.stringify(list));
+    updateCharacterField(cid, "f_items", JSON.stringify(list));
     setNewItemDraft("");
     setNewItemDescDraft("");
     setShowAddItemModal(false);
   };
 
   const addCatalogItemToInventory = (name, description) => {
-    if (!viewingCharId) return;
-    const c = characters[viewingCharId];
+    const cid = viewingCharId || modernCharId;
+    if (!cid) return;
+    const c = characters[cid];
     if (!c) return;
     const list = getItems(c);
     if (list.length >= ITEM_SLOTS) return;
@@ -14120,7 +15196,7 @@ export default function App({ onSignOut }) {
     } else {
       list.push({ name, description: description || "", count: 1 });
     }
-    updateCharacterField(viewingCharId, "f_items", JSON.stringify(list));
+    updateCharacterField(cid, "f_items", JSON.stringify(list));
     setShowAddItemModal(false);
   };
 
@@ -14224,13 +15300,14 @@ export default function App({ onSignOut }) {
 
   const addBackpackItem = () => {
     const val = newBackpackItemDraft.trim();
-    if (!val || !viewingCharId) return;
-    const c = characters[viewingCharId];
+    const cid = viewingCharId || modernCharId;
+    if (!val || !cid) return;
+    const c = characters[cid];
     if (!c) return;
     const list = getBackpackItems(c);
     if (list.length >= ITEM_SLOTS) return;
     list.push({ name: val, description: newBackpackItemDescDraft.trim(), count: 1 });
-    updateCharacterField(viewingCharId, "f_backpack_items", JSON.stringify(list));
+    updateCharacterField(cid, "f_backpack_items", JSON.stringify(list));
     setNewBackpackItemDraft("");
     setNewBackpackItemDescDraft("");
     setShowAddBackpackItemForm(false);
@@ -14343,10 +15420,55 @@ export default function App({ onSignOut }) {
     updateCampaign(campaignId, { characterIds: [...camp.characterIds, charId] });
   };
 
+  // Al salir un personaje de la campaña (o borrarse) desaparece todo lo suyo del tablero: ficha, compañero, áreas, efectos, cartas jugadas,
+  // enemigos que había inmovilizado y su sitio en el foco. Se hace sobre lo guardado, aunque esa campaña no sea la abierta.
+  const purgeCharFromMap = (campaignId, charId) => {
+    const apply = (m) => {
+      const old = m.tokens || [];
+      const gone = new Set(old.filter((t) => t.charId === charId || t.ownerCharId === charId).map((t) => t.id));
+      const out = { ...m };
+      out.tokens = old
+        .filter((t) => !gone.has(t.id))
+        .map((t) => (t.rootedBy === charId ? { ...t, rootedBy: undefined, conds: (t.conds || []).filter((c) => c !== "Inmovilizado") } : t));
+      if (Array.isArray(m.areas)) out.areas = m.areas.filter((a) => a.owner !== charId);
+      if (Array.isArray(m.cfx)) out.cfx = m.cfx.filter((c) => c.charId !== charId);
+      ["fx", "efx", "hfx"].forEach((k) => {
+        const e = m[k];
+        if (e && !Array.isArray(e) && (gone.has(e.from) || gone.has(e.to) || gone.has(e.to2) || (e.ids || []).some((i) => gone.has(i)))) out[k] = [];
+      });
+      const sp = m.spot;
+      if (sp && !Array.isArray(sp) && typeof sp === "object") {
+        const last = { ...(sp.last || {}) };
+        const snooze = { ...(sp.snooze || {}) };
+        delete last[charId];
+        delete snooze[charId];
+        out.spot = {
+          ...sp,
+          focus: sp.focus && sp.focus.charId === charId ? null : sp.focus || null,
+          hands: (sp.hands || []).filter((h) => h.charId !== charId),
+          chain: (sp.chain || []).filter((c) => (c && c.charId) !== charId),
+          last,
+          snooze,
+        };
+      }
+      return out;
+    };
+    mapQueue.current = mapQueue.current.then(async () => {
+      try {
+        const r = await safeGet("campaign-map:" + campaignId, true);
+        if (!r) return;
+        const next = apply(JSON.parse(r.value));
+        await safeSet("campaign-map:" + campaignId, JSON.stringify(next), true);
+      } catch (e) {}
+    });
+    if (campaignId === stageCampaignId || campaignId === viewingCampaignId) setCampaignMap((m) => apply(m || {}));
+  };
+
   const removeCharacterFromCampaign = (campaignId, charId) => {
     const camp = campaigns[campaignId];
     if (!camp) return;
     updateCampaign(campaignId, { characterIds: camp.characterIds.filter((cid) => cid !== charId) });
+    purgeCharFromMap(campaignId, charId);
   };
 
   const getActiveCampaignIdForChat = () => stageCampaignId;
@@ -14750,7 +15872,7 @@ export default function App({ onSignOut }) {
         const me = meCharId ? characters[meCharId] : null;
         const mineT = me && m.targets[meCharId];
         const got = me && getGiftsGot(me).includes(m.sid);
-        const desc = (t) => [t.hp ? t.hp + " PV" : "", t.stress ? t.stress + " de Estrés" : "", t.hope ? t.hope + " de Esperanza" : ""].filter(Boolean).join(" y ");
+        const desc = (t) => [t.hp ? t.hp + " PV" : "", t.stress ? t.stress + " de Estrés" : "", t.hope ? t.hope + " de Esperanza" : "", t.ward ? "el amuleto «" + t.ward.item + "»" : ""].filter(Boolean).join(" y ");
         return chatCard(
           "#6FBF73",
           <>
@@ -14762,7 +15884,7 @@ export default function App({ onSignOut }) {
             <div style={{ marginTop: 4 }}>
               {Object.entries(m.targets).map(([cid, t]) => (
                 <div key={cid}>
-                  <b>{characters[cid]?.f_name || "Aliado"}</b>: {t.hope ? "gana " : t.hp ? "recupera " : "se quita "}
+                  <b>{characters[cid]?.f_name || "Aliado"}</b>: {t.ward ? "recibe " : t.hope ? "gana " : t.hp ? "recupera " : "se quita "}
                   {desc(t)}
                 </div>
               ))}
@@ -14781,6 +15903,7 @@ export default function App({ onSignOut }) {
                     ...(mineT.hp ? { hp_marked: String(Math.max(0, Number(cur.hp_marked || 0) - mineT.hp)) } : {}),
                     ...(mineT.stress ? { stress_marked: String(Math.max(0, Number(cur.stress_marked || 0) - mineT.stress)) } : {}),
                     ...(mineT.hope ? { hope_marked: String(Math.min(getHopeMax(cur), Number(cur.hope_marked ?? HOPE_DEFAULT) + mineT.hope)) } : {}),
+                    ...(mineT.ward ? { f_runeward: JSON.stringify(mineT.ward) } : {}),
                     f_gifts_got: JSON.stringify([...getGiftsGot(cur), m.sid].slice(-40)),
                   });
                 }}
@@ -15021,34 +16144,51 @@ export default function App({ onSignOut }) {
     const ch = characters[charId];
     await postChat(camp.id, { kind: "msg", author: ch?.f_name || "Un personaje", charId, cls: ch?.f_class || "", text: "usa la carta «" + card.key + "»" + (detail ? " " + detail : ""), cardUse: { key: card.key, domain: card.domain || "", type: card.type || "", level: card.level ?? "", image: card.image || "", detail: detail || "" } });
   };
+  // Espera a que termine el revelado de la carta (o un máximo de seguridad) y entonces ejecuta fn.
+  const afterReveal = (charId, cardKey, fn) => {
+    let done = false;
+    const go = () => {
+      if (done) return;
+      done = true;
+      window.removeEventListener("mh-cardplay-end", on);
+      clearTimeout(tm);
+      fn();
+    };
+    const on = (e) => e.detail && e.detail.charId === charId && e.detail.card === cardKey && go();
+    window.addEventListener("mh-cardplay-end", on);
+    const tm = setTimeout(go, 9000);
+  };
   // Enredo Feroz arrastrada a un adversario: tirada de conjuro contra él (alcance Lejano); si acierta, raíces (1d8+1) e Inmovilizado.
-  const castEnredo = (charId, target) => {
+  const castEnredo = (charId, target, card) => {
     const c = charsRef.current[charId];
     const me = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
-    if (!c || !me || !target || !(target.kind === "foe" || target.kind === "npc") || cellDist(me, target) > RANGE_CELLS["Lejano"]) return "cancel";
+    if (!c || !me || !target || !(target.kind === "foe" || target.kind === "npc") || deadTok(target) || cellDist(me, target) > RANGE_CELLS["Lejano"]) return "cancel";
     const sk = charSpellTrait(c);
     const label = TRAITS.find((tr) => tr.key === sk)?.label;
     if (!label || c.f_beastform) return "cancel";
     const mods = getEquipmentMods(PRIMARY_WEAPONS.find((w) => w.key === c.f_primary_weapon), SECONDARY_WEAPONS.find((w) => w.key === c.f_secondary_weapon), ARMORS.find((a) => a.key === c.f_armor));
     postCampaignEvent(charId, "🌿 Lanza Enredo Feroz sobre " + (target.name || "un adversario"));
-    rollTraitCheck(charId, label, Number(c[sk] || 0) + (mods[sk] || 0), { name: "Enredo Feroz", damage: "d8+1 físico", spell: true, fixedDice: 1, targetChosen: true, targetId: target.id, targetName: target.name, targetDc: target.stats?.difficulty || null });
-    return "ok";
+    // Primero la carta se revela a toda la mesa y, cuando acaba, se hace la tirada de conjuro.
+    playCardOnMap(sheetCampaignId, charId, card, { noChat: true, short: true });
+    afterReveal(charId, card.key, () => rollTraitCheck(charId, label, Number(c[sk] || 0) + (mods[sk] || 0), { name: "Enredo Feroz", damage: "d8+1 físico", spell: true, fixedDice: 1, targetChosen: true, targetId: target.id, targetName: target.name, targetDc: target.stats?.difficulty || null }));
+    return "reveal";
   };
-  // Embelesar arrastrada a un adversario: tirada de conjuro contra él (alcance Cercano); si acierta, queda Embelesado hasta que el DJ lo libere.
-  const castEmbelesar = (charId, target) => {
+  // Embelesar arrastrada a un adversario: la carta se revela y, al acabar, tirada de conjuro contra él (alcance Cercano); si acierta, queda Embelesado hasta que el DJ lo libere.
+  const castEmbelesar = (charId, target, card) => {
     const c = charsRef.current[charId];
     const me = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
-    if (!c || !me || !target || !(target.kind === "foe" || target.kind === "npc") || cellDist(me, target) > RANGE_CELLS["Cercano"]) return "cancel";
+    if (!c || !me || !target || !(target.kind === "foe" || target.kind === "npc") || deadTok(target) || cellDist(me, target) > RANGE_CELLS["Cercano"]) return "cancel";
     const sk = charSpellTrait(c);
     const label = TRAITS.find((tr) => tr.key === sk)?.label;
     if (!label || c.f_beastform) return "cancel";
     const mods = getEquipmentMods(PRIMARY_WEAPONS.find((w) => w.key === c.f_primary_weapon), SECONDARY_WEAPONS.find((w) => w.key === c.f_secondary_weapon), ARMORS.find((a) => a.key === c.f_armor));
     postCampaignEvent(charId, "💗 Lanza Embelesar sobre " + (target.name || "un adversario"));
-    rollTraitCheck(charId, label, Number(c[sk] || 0) + (mods[sk] || 0), { name: "Embelesar", damage: "", spell: true, charm: true, targetChosen: true, targetId: target.id, targetName: target.name, targetDc: target.stats?.difficulty || null });
-    return "ok";
+    playCardOnMap(sheetCampaignId, charId, card, { noChat: true, short: true });
+    afterReveal(charId, card.key, () => rollTraitCheck(charId, label, Number(c[sk] || 0) + (mods[sk] || 0), { name: "Embelesar", damage: "", spell: true, charm: true, targetChosen: true, targetId: target.id, targetName: target.name, targetDc: target.stats?.difficulty || null }));
+    return "reveal";
   };
-  // Éxito de Embelesar: el objetivo queda Embelesado (con un Estrés, una vez por descanso, el objetivo también marca uno).
-  const applyCharm = (charId, targetId, withStress) => {
+  // Éxito de Embelesar: el objetivo queda Embelesado. Una vez por descanso se puede marcar 1 Estrés para que el objetivo también marque uno.
+  const applyCharm = (charId, targetId) => {
     const cid = sheetCampaignId;
     const toks = campaignMapRef.current.tokens || [];
     const tg = toks.find((t) => t.id === targetId);
@@ -15056,40 +16196,79 @@ export default function App({ onSignOut }) {
     const c = charsRef.current[charId];
     if (!cid || !tg) return;
     if (me) mutateMap(cid, () => ({ key: Date.now(), from: me.id, to: tg.id, kind: "charm" }), "fx");
-    setTimeout(() => mutateMap(cid, (ts) => ts.map((x) => (x.id === tg.id ? { ...x, conds: [...new Set([...(x.conds || []), "Embelesado"])], charmedBy: charId, ...(withStress && x.stats ? { stats: { ...x.stats, stressMarked: Math.min(Number(x.stats.stress || 0) || 99, Number(x.stats.stressMarked || 0) + 1) } } : {}) } : x))), 900);
-    if (withStress && c) {
-      markStress(charId, 1, { f_charm_used: "1" });
-      postCampaignEvent(charId, "💗 Marca 1 Estrés: " + (tg.name || "el objetivo") + " también marca 1 Estrés");
-    }
+    setTimeout(() => mutateMap(cid, (ts) => ts.map((x) => (x.id === tg.id ? { ...x, conds: [...new Set([...(x.conds || []), "Embelesado"])], charmedBy: charId } : x))), 900);
     pushMapLog(cid, "💗 Embelesar: " + (tg.name || "un adversario") + " queda embelesado", "info");
     postCampaignEvent(charId, "💗 " + (tg.name || "Un adversario") + " queda embelesado");
+    if (c && !c.f_charm_used && Number(c.stress_marked || 0) < Number(c.r_stress || 0) && window.confirm("Embelesar · una vez por descanso puedes marcar 1 Estrés para que " + (tg.name || "el objetivo") + " también marque 1. ¿Lo haces?")) {
+      markStress(charId, 1, { f_charm_used: "1" });
+      mutateMap(cid, (ts) => ts.map((x) => (x.id === tg.id && x.stats ? { ...x, stats: { ...x.stats, stressMarked: Math.min(Number(x.stats.stress || 0) || 99, Number(x.stats.stressMarked || 0) + 1) } } : x)));
+      postCampaignEvent(charId, "💗 Marca 1 Estrés: " + (tg.name || "el objetivo") + " también marca 1 Estrés");
+    }
+  };
+  // Carta fantasma «Liberar»: suelta a un adversario que tú enraizaste con Enredo Feroz (sin coste).
+  const canRelease = (charId, tg) => !!tg && tg.rootedBy === charId && (tg.conds || []).includes("Inmovilizado");
+  const castLiberar = (charId, target, card) => {
+    const toks = campaignMapRef.current.tokens || [];
+    const me = toks.find((t) => t.kind === "pc" && t.charId === charId);
+    if (!me || !canRelease(charId, target) || cellDist(me, target) > RANGE_CELLS["Lejano"]) return "cancel";
+    postCampaignEvent(charId, "🌿 Libera a " + (target.name || "un adversario") + " del Enredo Feroz");
+    playCardOnMap(sheetCampaignId, charId, card, { noChat: true, short: true });
+    afterReveal(charId, card.key, () => {
+      mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: me.id, to: target.id, kind: "free" }), "fx");
+      // El aro de raíces aguanta mientras el hilo se tensa y se va justo cuando se rompe.
+      setTimeout(() => mutateMap(sheetCampaignId, (ts) => ts.map((x) => (x.id === target.id ? { ...x, rootedBy: undefined, conds: (x.conds || []).filter((c) => c !== "Inmovilizado") } : x))), 290);
+      pushMapLog(sheetCampaignId, "🌿 Enredo Feroz: " + (target.name || "un adversario") + " queda libre", "info");
+    });
+    return "reveal";
+  };
+  // Carta de arma arrastrada a un adversario dentro del alcance del arma: se revela la carta y después se hace la tirada de ataque.
+  const castWeapon = (charId, target, card) => {
+    const c = charsRef.current[charId];
+    const bf = card.beast ? BEASTFORMS.find((x) => x.key === card.key) : null;
+    const bfp = bf ? bf.attack.split(" · ") : null;
+    const w = bf ? { key: bf.key, trait: bfp[1], damage: bfp[2] } : [...PRIMARY_WEAPONS, ...SECONDARY_WEAPONS].find((x) => x.key === card.key);
+    const me = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
+    if (!c || !w || !me || !target || !(target.kind === "foe" || target.kind === "npc") || deadTok(target)) return "cancel";
+    const tr = TRAITS.find((x) => x.label === w.trait);
+    if (!tr || !/d\d/.test(w.damage || "")) return "cancel";
+    const range = weaponReach(c, w.key);
+    if (range && cellDist(me, target) > (RANGE_CELLS[range] || 99)) return "cancel";
+    const mods = getEquipmentMods(PRIMARY_WEAPONS.find((x) => x.key === c.f_primary_weapon), SECONDARY_WEAPONS.find((x) => x.key === c.f_secondary_weapon), ARMORS.find((a) => a.key === c.f_armor));
+    postCampaignEvent(charId, "⚔️ Ataca a " + (target.name || "un adversario") + " con " + w.key);
+    playCardOnMap(sheetCampaignId, charId, card, { noChat: true, short: true });
+    afterReveal(charId, card.key, () => rollTraitCheck(charId, w.trait, Number(c[tr.key] || 0) + (mods[tr.key] || 0), { name: w.key, damage: w.damage, targetChosen: true, targetId: target.id, targetName: target.name, targetDc: target.stats?.difficulty || null }));
+    return "reveal";
   };
   // Enredo Feroz · carta extra: gasta 1 Esperanza para inmovilizar a otro adversario Muy cercano de un objetivo ya enraizado por ti.
   const canExtraRoot = (charId, tg) => {
     const toks = campaignMapRef.current.tokens || [];
-    if (!tg || !(tg.kind === "foe" || tg.kind === "npc") || (tg.conds || []).includes("Inmovilizado")) return false;
+    if (!tg || !(tg.kind === "foe" || tg.kind === "npc") || deadTok(tg) || (tg.conds || []).includes("Inmovilizado")) return false;
     return toks.some((r) => r.rootedBy === charId && (r.conds || []).includes("Inmovilizado") && r.id !== tg.id && cellDist(r, tg) <= RANGE_CELLS["Muy cercano"]);
   };
-  const castEnredoExtra = (charId, target) => {
+  const castEnredoExtra = (charId, target, card) => {
     const c = charsRef.current[charId];
     const toks = campaignMapRef.current.tokens || [];
     const me = toks.find((t) => t.kind === "pc" && t.charId === charId);
     if (!c || !me || !canExtraRoot(charId, target) || cellDist(me, target) > RANGE_CELLS["Lejano"]) return "cancel";
     if (Number(c.hope_marked ?? HOPE_DEFAULT) < 1) { pushMapLog(sheetCampaignId, "Enredo Feroz: no tienes Esperanza", "info"); return "cancel"; }
     updateCharacterField(charId, "hope_marked", String(Number(c.hope_marked ?? HOPE_DEFAULT) - 1));
-        setTimeout(() => mutateMap(sheetCampaignId, (ts) => ts.map((x) => (x.id === target.id ? { ...x, conds: [...new Set([...(x.conds || []), "Inmovilizado"])], rootedBy: charId } : x))), 700);
     postCampaignEvent(charId, "🌿 Gasta 1 Esperanza: Enredo Feroz también inmoviliza a " + (target.name || "otro adversario"));
-    pushMapLog(sheetCampaignId, "🌿 Enredo Feroz: " + (target.name || "un adversario") + " queda inmovilizado", "info");
-    return "ok";
+    playCardOnMap(sheetCampaignId, charId, card, { noChat: true, short: true });
+    afterReveal(charId, card.key, () => {
+      mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: me.id, to: target.id, kind: "web" }), "fx");
+      setTimeout(() => mutateMap(sheetCampaignId, (ts) => ts.map((x) => (x.id === target.id ? { ...x, conds: [...new Set([...(x.conds || []), "Inmovilizado"])], rootedBy: charId } : x))), 150);
+      pushMapLog(sheetCampaignId, "🌿 Enredo Feroz: " + (target.name || "un adversario") + " queda inmovilizado", "info");
+    });
+    return "reveal";
   };
   // Carta de dominio jugada sobre el mapa: lo anota el chat y el tablero lo muestra a toda la mesa (pulso para quien la juega, revelado para los demás).
-  const playCardOnMap = (campaignId, charId, card) => {
+  const playCardOnMap = (campaignId, charId, card, opts = {}) => {
     const ch = characters[charId];
-    postCardUse(charId, card);
-    const slim = { key: card.key, domain: card.domain, type: card.type, level: card.level, recall: card.recall, text: card.text, image: card.image };
+    if (!opts.noChat) postCardUse(charId, card);
+    const slim = { key: card.key, domain: card.domain, type: card.type, level: card.level, recall: card.recall, text: card.text, image: card.image, ...(card.rowCard ? { rowCard: true, myClass: card.myClass, kicker: card.kicker, color: card.color, detail: card.detail ? { kicker: card.detail.kicker, text: card.detail.text, image: card.detail.image, features: card.detail.features } : undefined } : {}), ...(card.weapon ? { weapon: true } : {}), ...(card.subclass ? { subclass: true, kicker: card.kicker, cls: card.cls } : {}), ...(card.ghost ? { baseKey: card.baseKey, noCost: card.noCost, ghost: true } : {}) };
     const edge = cardBorder === "domain" ? DOMAIN_COLORS[card.domain] || "#E3B04B" : "#E3B04B";
     const playKey = Date.now(); // una sola vez: mutateMap ejecuta la función dos veces (en local y al guardar)
-    mutateMap(campaignId, (prev) => [...(Array.isArray(prev) ? prev : []).filter((x) => x.key !== playKey && playKey - x.key < 40000), { key: playKey, charId, name: ch?.f_name || "Alguien", back: cardBack, edge, card: slim }].slice(-8), "cfx");
+    mutateMap(campaignId, (prev) => [...(Array.isArray(prev) ? prev : []).filter((x) => x.key !== playKey && playKey - x.key < 40000), { key: playKey, charId, name: ch?.f_name || "Alguien", back: cardBack, edge, card: slim, ...(opts.short ? { short: true } : {}) }].slice(-8), "cfx");
   };
 
   // Cambia el tablero partiendo de lo último guardado (otro jugador puede haber movido su ficha).
@@ -15188,6 +16367,8 @@ export default function App({ onSignOut }) {
   const weaponReach = (c, weaponName) => {
     if (weaponName === "Enredo Feroz") return "Lejano";
     if (weaponName === BRAWLER_STRIKE) return "Cuerpo a cuerpo";
+    const bfm = BEASTFORMS.find((x) => x.key === weaponName);
+    if (bfm) return reachFor(c, bfm.attack.split(" · ")[0]);
     const w = [...PRIMARY_WEAPONS, ...SECONDARY_WEAPONS].find((x) => x.key === weaponName);
     if (!w || !w.range) return null;
     const r = reachFor(c, w.range);
@@ -15208,6 +16389,7 @@ export default function App({ onSignOut }) {
     const roll = 1 + Math.floor(Math.random() * 10);
     mutateMap(campaignId, () => ({ key: Date.now(), kind: "burn", to: foe.id, roll }), "efx");
     postCampaignEvent(charId, "🔥 Fuego: " + foe.name + " se quema al herirle: 1d10 = " + roll + " de daño mágico");
+    pushMapLog(campaignId, "Fuego de " + (c?.f_name || "un druida") + ": " + (foe.name || "la criatura") + " recibe 1d10 = " + roll + " de daño mágico", "dmg");
     setTimeout(() => applyFoeDamage(campaignId, foe.id, roll, (c?.f_name || "Alguien") + " · Fuego", "Fuego"), 1300);
   };
   // Agua: al dañar a un adversario cuerpo a cuerpo, los demás Muy cercanos al objetivo marcan 1 Estrés.
@@ -15371,7 +16553,7 @@ export default function App({ onSignOut }) {
         const beast = ch && t.charId === viewingCharId && !gmViewing ? ch.f_beastform || "" : t.beast || "";
         const trf = ch && t.charId === viewingCharId && !gmViewing ? visibleTransform(ch) : t.trf || "";
         const elem = ch && t.charId === viewingCharId && !gmViewing ? ch.f_elemental_active || "" : t.elem || "";
-        return { ...t, hidden, conds, beast, trf, elem, name: ch?.f_name || t.name || "Personaje", cls: ch?.f_class || "", color: classColor(ch?.f_class), hp: ch ? [Number(ch.hp_marked || 0), Number(ch.r_hp || 0)] : null };
+        return { ...t, hidden, conds, beast, trf, elem, name: ch?.f_name || t.name || "Personaje", cls: ch?.f_class || "", color: classColor(ch?.f_class), rank: ch ? (Number(ch.f_level || 1) <= 1 ? 1 : tierForLevel(ch.f_level || 1) === 2 ? 2 : 3) : 0, color2: (() => { const mc = getMulticlass(ch); return mc ? classColor(mc.cls) : null; })(), hp: ch ? [Number(ch.hp_marked || 0), Number(ch.r_hp || 0)] : null };
       }
       if (t.kind === "pet") return { ...t, cls: characters[t.ownerCharId]?.f_class || "", color: classColor(characters[t.ownerCharId]?.f_class) };
       return { ...t, color: t.kind === "foe" ? "#C0504A" : "#C9A24A", img: t.imgId ? castImgs[t.imgId] : null, ...(t.stats ? { hp: [Number(t.stats.hpMarked || 0), Number(t.stats.hp || 0)] } : {}) };
@@ -16190,7 +17372,7 @@ export default function App({ onSignOut }) {
         {list.map((a) => {
           const cells = areaCells(a, campaignMap.tokens || []);
           const inside = view.filter((t) => !t.vanished && cells.has(t.x + "," + t.y) && !(t.kind === "pc" && t.charId === a.owner) && (gm || (!fogAt(campaignMap, t.x, t.y) && !t.gmHidden)));
-          const foes = inside.filter((t) => t.kind === "foe" || t.kind === "npc");
+          const foes = inside.filter((t) => (t.kind === "foe" || t.kind === "npc") && !deadTok(t));
           const me = !gm && characters[a.owner];
           const w = me ? PRIMARY_WEAPONS.find((x) => x.key === me.f_primary_weapon) : null;
           return (
@@ -16224,6 +17406,9 @@ export default function App({ onSignOut }) {
     );
   };
   const rollDock = false;
+  useEffect(() => {
+    setHitWard(null); // la guarda rúnica se aplica golpe a golpe
+  }, [incomingHit?.key]);
   // Un enemigo del DJ ataca a tu personaje: se abre el aviso para resolverlo (solo con su hoja abierta).
   useEffect(() => {
     if (!sheetCampaignId || !sheetCharId || incomingHit) return;
@@ -16293,7 +17478,7 @@ export default function App({ onSignOut }) {
       if (mine.stress) patch.stress_marked = String(Math.max(0, Number(c.stress_marked || 0) - mine.stress));
       if (Object.keys(patch).length) updateCharacterFields(fromId, patch);
     }
-    const others = Object.fromEntries(Object.entries(targets).filter(([k, v]) => k !== fromId && (v.hp || v.stress || v.hope)));
+    const others = Object.fromEntries(Object.entries(targets).filter(([k, v]) => k !== fromId && (v.hp || v.stress || v.hope || v.ward)));
     const camp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(fromId));
     if (camp && Object.keys(others).length) {
       postChat(camp.id, { kind: "gift", sid: String(Date.now()), campId: camp.id, author: c.f_name || "El Druida", charId: fromId, cls: c.f_class, title, text, targets: others, ...(tag ? { tag } : {}) });
@@ -16466,6 +17651,7 @@ export default function App({ onSignOut }) {
     if (c.f_ire_used) restPatch.f_ire_used = "";
     if (c.f_celestial_used) restPatch.f_celestial_used = "";
     if (isLong && c.f_aura_used) restPatch.f_aura_used = "";
+    restPatch.f_rest_n = String(Number(c.f_rest_n || 0) + 1);
     if (c.f_embrace_used) restPatch.f_embrace_used = "";
     if (c.f_sink_used) restPatch.f_sink_used = "";
     if (isLong && c.f_aegis_used) restPatch.f_aegis_used = "";
@@ -16480,11 +17666,12 @@ export default function App({ onSignOut }) {
     if (isLong && c.f_enchant_used) restPatch.f_enchant_used = "";
     if (isLong && c.f_charged) restPatch.f_charged = "";
     // Trae Suerte vuelve a repartirse en la «sesión» siguiente.
-    if (isLong && (c.f_luck_given || c.f_luck_posted)) {
+    const inCampaign = Object.values(campaigns).some((cp) => (cp.characterIds || []).includes(id));
+    if (isLong && !inCampaign && (c.f_luck_given || c.f_luck_posted)) {
       restPatch.f_luck_given = "";
       restPatch.f_luck_posted = "";
     }
-    if (isLong && (c.f_prayer || c.f_prayer_rolled)) {
+    if (isLong && !inCampaign && (c.f_prayer || c.f_prayer_rolled)) {
       restPatch.f_prayer = "";
       restPatch.f_prayer_rolled = "";
     }
@@ -16891,7 +18078,7 @@ export default function App({ onSignOut }) {
     if (!gmViewing && sheetCampaignId && normSpot(campaignMapRef.current.spot).mode === "paused") return;
     // En una campaña con enemigos en el tablero, primero se elige a quién se ataca.
     if (weapon && !weapon.targetChosen && sheetCampaignId) {
-      const foes = mapTokensView(campaignMap.tokens || []).filter((t) => (t.kind === "foe" || t.kind === "npc") && !t.gmHidden && !fogAt(campaignMap, t.x, t.y)).map((t) => ({ ...t, reach: reachInfo(charId, weapon.name, t) }));
+      const foes = mapTokensView(campaignMap.tokens || []).filter((t) => (t.kind === "foe" || t.kind === "npc") && !t.gmHidden && !deadTok(t) && !fogAt(campaignMap, t.x, t.y)).map((t) => ({ ...t, reach: reachInfo(charId, weapon.name, t) }));
       if (foes.length) {
         setTargetDlg({ args: [charId, traitLabel, traitValue, weapon, cardContext, advantage], foes });
         return;
@@ -17139,6 +18326,61 @@ export default function App({ onSignOut }) {
     setTraitRollResult((prev) => (prev ? { ...prev, flipped: kind, text: "Con Esperanza", color: "#E3B04B", note: "Ganas 1 Esperanza (el DJ no gana Miedo)" } : prev));
     postCampaignEvent(r.charId, kind === "fearless" ? "😈 Sin Miedo: marca 2 Estrés y su tirada con Miedo pasa a ser con Esperanza" : "🕊️ Sin Ataduras: su tirada con Miedo pasa a ser con Esperanza");
   };
+  // Acierto con arma: tira el daño solo y, cuando los dados de daño se han mostrado, sale la animación de la habilidad.
+  const resolveWeaponHit = (r) => {
+    // Embelesar no hace daño: un acierto deja al objetivo Embelesado.
+    if (r.weapon?.charm) {
+      setTraitRollResult(null);
+      return applyCharm(r.charId, r.weapon.targetId);
+    }
+    const fxLater = [];
+      const { name, damage, focusTarget } = r.weapon;
+      const charId = r.charId;
+      const isCritical = r.hope === r.fear;
+      setTraitRollResult(null);
+      const wasCloaked = r.wasCloaked;
+      if (focusTarget) {
+        updateCharacterField(charId, "f_focus", focusTarget);
+        postCampaignEvent(charId, "🎯 " + focusTarget + " pasa a ser su Foco");
+      }
+      const spirit = !!r.weapon.spirit;
+      const rc = charsRef.current[charId];
+      // Alcance Amenazador termina al acertar con el arma principal.
+      if (rc && rc.f_reach === "1" && name === rc.f_primary_weapon) {
+        updateCharacterField(charId, "f_reach", "");
+        postCampaignEvent(charId, "🗡️ Acierta con su arma principal: termina su Alcance Amenazador");
+      }
+      // Escuela de la Guerra · Enfrenta tu Miedo: éxito con Miedo = +1d10/2d10/3d10 de daño mágico.
+      const fearHit = rc && rc.f_subclass === "Escuela de la Guerra" && !r.reaction && !r.flipped && r.fear > r.hope;
+      const fearDice = fearHit ? tierForLevel(rc.f_level || 1) : 0;
+      // Titán · Gozo del Golpe (Maestría): crítico Cuerpo a cuerpo = +1 Esperanza, −1 Estrés y +1 Competencia.
+      const honedHit = !!r.weapon.honed;
+      const pummel = isCritical && rc && rc.f_subclass === "Titán" && tierForLevel(rc.f_level || 1) >= 3 && isMeleeWeapon(name);
+      if (pummel) {
+        const cur = charsRef.current[charId];
+        updateCharacterFields(charId, { hope_marked: String(Math.min(getHopeMax(cur), Number(cur.hope_marked ?? HOPE_DEFAULT) + 1)), stress_marked: String(Math.max(0, Number(cur.stress_marked || 0) - 1)) });
+        postCampaignEvent(charId, "🥊 Gozo del Golpe: gana 1 Esperanza más, se quita 1 Estrés más y su Competencia sube en 1 en este ataque");
+      }
+      if (r.weapon.targetId && sheetCampaignId) {
+        const fromTok = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
+        const reachNow = weaponReach(rc, name);
+        const snareIds = name === "Enredo Feroz" ? (() => {
+          const first = r.weapon.targetId;
+          const ft = (campaignMapRef.current.tokens || []).find((x) => x.id === first);
+          const extra = r.weapon.hopeExtra && ft ? (campaignMapRef.current.tokens || []).filter((x) => x.id !== first && (x.kind === "foe" || x.kind === "npc") && !x.gmHidden && cellDist(x, ft) <= RANGE_CELLS["Muy cercano"] && !(x.stats && Number(x.stats.hpMarked || 0) >= Number(x.stats.hp || 0))).sort((p, q) => cellDist(p, ft) - cellDist(q, ft))[0] : null;
+          return extra ? [first, extra.id] : [first];
+        })() : null;
+        const fxKind = snareIds ? "web" : name === "Desatar el Caos" ? "chaos" : /mágic/i.test(damage || "") ? "magic" : reachNow && reachNow !== "Cuerpo a cuerpo" ? "shot" : "melee";
+        if (fromTok) fxLater.push(() => mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: fromTok.id, to: r.weapon.targetId, kind: fxKind, ...(fxKind === "chaos" ? { n: r.weapon.fixedDice || 1 } : {}), ...(snareIds && snareIds[1] ? { to2: snareIds[1] } : {}) }), "fx"));
+        if (snareIds) {
+          // Las raíces inmovilizan al objetivo (y al segundo adversario si se gasta una Esperanza).
+          fxLater.push(() => setTimeout(() => mutateMap(sheetCampaignId, (ts) => ts.map((x) => (snareIds.includes(x.id) ? { ...x, conds: [...new Set([...(x.conds || []), "Inmovilizado"])], rootedBy: charId } : x))), 150));
+          pushMapLog(sheetCampaignId, "🌿 Enredo Feroz: " + snareIds.map((id) => (campaignMapRef.current.tokens || []).find((x) => x.id === id)?.name || "un adversario").join(" y ") + " queda inmovilizado", "info");
+          if (snareIds[1] && rc) updateCharacterField(charId, "hope_marked", String(Math.max(0, Number(rc.hope_marked ?? HOPE_DEFAULT) - 1)));
+        }
+      }
+      rollWeaponDamage(name, damage, charId, isCritical, { after: () => fxLater.forEach((fn) => fn()), ...(r.weapon.spell ? { plain: true, fixedDice: r.weapon.fixedDice || 1 } : {}), angel: r.weapon.angel || 0, knight: !!r.weapon.knight, attackFear: r.fear, ...(pummel || honedHit ? { fixedDice: getProficiency(rc) + (pummel ? 1 : 0) + (honedHit ? 1 : 0) } : {}), fearDice, cloaked: wasCloaked, spirit, resonance: spirit && rc && tierForLevel(rc.f_level || 1) >= 3, extraFlat: r.weapon.elemDmg || 0, doublePick: !!r.weapon.manipDouble, targetId: r.weapon.targetId || null, targetIds: r.weapon.hitIds || null });
+  };
   const doTraitRoll = async (charId, traitLabel, traitValue, weapon, cardContext, advantage, extras = {}) => {
     let wasCloaked = false;
     if (weapon && !weapon.charge) {
@@ -17203,7 +18445,8 @@ export default function App({ onSignOut }) {
         ? "Ignoras los efectos que te afectarían aun con éxito"
         : "Las reacciones no generan Esperanza ni Miedo"
       : hope === fear ? "Ganas 1 Esperanza y te quitas 1 Estrés" : hope > fear ? "Ganas 1 Esperanza" : "El DJ gana 1 de Miedo";
-    setTraitRollResult({ key: rollKey, instantKey: use3d ? rollKey : null, hopeSides, traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, tideBonus, hybridRoll, hybridSidesR: extras.hybridSides || 0, hallowRoll, hallowFirst: hopeA, patronRoll, patronSides: extras.patronSides || 0, slayerRoll, slayerRolls, total, text: hope === fear ? "Éxito crítico" : reaction ? "Tirada de reacción" : text, color, note, reaction, card: cardContext ? { name: cardContext.name, dc: cardContext.dc } : dcVal ? { name: "", dc: dcVal } : null, exps: extras.exps || [], honed: extras.honed || [], wasCloaked, weapon: weapon || null, charId });
+    const rr = { key: rollKey, instantKey: use3d ? rollKey : null, hopeSides, traitLabel, hope, fear, mod: traitValue, edge: advantageRoll, advantageRoll, wolfBonus, expBonus, rallyRoll, rallyDie: extras.rallyDie || "", poetRoll, tideBonus, hybridRoll, hybridSidesR: extras.hybridSides || 0, hallowRoll, hallowFirst: hopeA, patronRoll, patronSides: extras.patronSides || 0, slayerRoll, slayerRolls, total, text: hope === fear ? "Éxito crítico" : reaction ? "Tirada de reacción" : text, color, note, reaction, card: cardContext ? { name: cardContext.name, dc: cardContext.dc } : dcVal ? { name: "", dc: dcVal } : null, exps: extras.exps || [], honed: extras.honed || [], wasCloaked, weapon: weapon || null, charId };
+    setTraitRollResult(rr);
     if (use3d) {
       // Todos los dados de la tirada: dualidad más ventaja y demás auxiliares.
       const dl = [{ sides: hopeSides, value: hopeA, kind: "hope", main: true }];
@@ -17235,20 +18478,23 @@ export default function App({ onSignOut }) {
     }
 
     // Ataque en área: una tirada contra todos; impacta a quienes tengan Dificultad igual o menor.
+    const mapLogs = [];
+    let areaWeapon = null;
     if (weapon && weapon.targets && sheetCampaignId && !reaction) {
       const who = charsRef.current[charId]?.f_name || "Alguien";
       const hits = weapon.targets.filter((t) => hope === fear || !t.dc || total >= t.dc);
       const miss = weapon.targets.filter((t) => !hits.includes(t));
       setTraitRollResult((r) => (r ? { ...r, weapon: { ...r.weapon, hitIds: hits.map((t) => t.id), hitNames: hits.map((t) => t.name) } } : r));
-      pushMapLog(sheetCampaignId, who + " ataca en área con " + weapon.name + ": " + total + (hits.length ? " · impacta a " + hits.map((t) => t.name).join(", ") : "") + (miss.length ? " · falla contra " + miss.map((t) => t.name).join(", ") : ""), hits.length ? "hit" : "miss");
+      areaWeapon = { ...weapon, hitIds: hits.map((t) => t.id), hitNames: hits.map((t) => t.name) };
+      mapLogs.push(() => pushMapLog(sheetCampaignId, who + " ataca en área con " + weapon.name + ": " + total + (hits.length ? " · impacta a " + hits.map((t) => t.name).join(", ") : "") + (miss.length ? " · falla contra " + miss.map((t) => t.name).join(", ") : ""), hits.length ? "hit" : "miss"));
     }
     // Ataque contra una ficha del tablero: el resultado sale abajo del mapa para todos.
     if (weapon && weapon.targetId && sheetCampaignId && !reaction) {
       const who = charsRef.current[charId]?.f_name || "Alguien";
       const hit = hope === fear || (dcVal ? total >= dcVal : null);
-      pushMapLog(sheetCampaignId, who + " ataca a " + (weapon.targetName || "un enemigo") + " con " + weapon.name + ": " + total + (dcVal ? " contra " + dcVal + " · " + (hope === fear ? "¡crítico!" : hit ? "impacta" : "falla") : ""), hit === false ? "miss" : "hit");
+      mapLogs.push(() => pushMapLog(sheetCampaignId, who + " ataca a " + (weapon.targetName || "un enemigo") + " con " + weapon.name + ": " + total + (dcVal ? " contra " + dcVal + " · " + (hope === fear ? "¡crítico!" : hit ? "impacta" : "falla") : ""), hit === false ? "miss" : "hit"));
     }
-    if (hope === fear && !reaction) logActivity("crit", "ha sacado un crítico (" + hope + "+" + fear + ") con " + (charsRef.current[charId]?.f_name || "su personaje"));
+    if (hope === fear && !reaction) mapLogs.push(() => logActivity("crit", "ha sacado un crítico (" + hope + "+" + fear + ") con " + (charsRef.current[charId]?.f_name || "su personaje")));
     // Con Esperanza (o crítico) ganas 1 Esperanza; con crítico además te quitas 1 Estrés.
     // Esperanza y Miedo no se suman hasta que el jugador cierra la escena de dados.
     const applyOutcome = () => {
@@ -17290,9 +18536,6 @@ export default function App({ onSignOut }) {
         }
       }
     };
-    if (use3d) pendingOutcome.current = applyOutcome;
-    else applyOutcome();
-
     const who = playerName || "Alguien en la mesa";
     const modStr = traitValue > 0 ? "+" + traitValue : traitValue;
     const advStr =
@@ -17305,6 +18548,8 @@ export default function App({ onSignOut }) {
     const rollExtra = { exp: expBonus, expNames: (extras.exps || []).map((e) => e.text), rally: rallyRoll, rallyDie: extras.rallyDie || "", poet: poetRoll, tide: tideBonus };
     const line = `**${who}** — ${reaction ? "Reacción de " : ""}${traitLabel}: Esperanza ${hope} + Miedo ${fear} ${modStr}${advStr} = **${total}** (${text})`;
     recordDice(hope, fear);
+    // El resultado va al chat cuando el dado ya se ha revelado, para no hacer spoiler.
+    const postRoll = async () => {
     await pushRollLog(line);
     if (cardContext) {
       const success = dcVal ? hope === fear || total >= dcVal : null;
@@ -17320,6 +18565,22 @@ export default function App({ onSignOut }) {
         roll: { trait: traitLabel, weapon: weapon?.name || "", ...(weapon?.charm ? { cast: true } : {}), reaction, hopeSides, ...(dcVal ? { dc: dcVal } : {}), hope, fear, mod: traitValue, adv: advantageRoll, wolf: wolfBonus, ...rollExtra, total },
       });
     }
+    };
+    // Un acierto claro contra un objetivo del tablero tira el daño solo; si hay una decisión que tomar antes (Ángel, Caballero) se queda la ventana.
+    const chA = charsRef.current[charId];
+    const askFirst = !!chA && ((chA.f_subclass === "Teúrgia" && hope >= fear && Number(getSummons(chA).angel || 0) > 0) || (chA.f_subclass === "Nigromancia" && tierForLevel(chA.f_level || 1) >= 3 && hope > fear && Number(getSummons(chA).knight || 0) > 0));
+    const autoWeapon = !weapon || weapon.charge || reaction || !sheetCampaignId || askFirst ? null : weapon.targets ? ((areaWeapon?.hitIds || []).length ? areaWeapon : null) : weapon.targetId && dcVal != null && (hope === fear || total >= dcVal) ? weapon : null;
+    const finishRoll = () => {
+      applyOutcome();
+      mapLogs.forEach((fn) => fn());
+      postRoll();
+      if (autoWeapon) {
+        setTraitRollResult(null);
+        setTimeout(() => resolveWeaponHit({ ...rr, weapon: autoWeapon }), 80);
+      }
+    };
+    if (use3d) pendingOutcome.current = finishRoll;
+    else finishRoll();
   };
 
   // Suma (o resta) Miedo al contador compartido del DJ, máximo 12.
@@ -17490,12 +18751,13 @@ export default function App({ onSignOut }) {
     setCgCompact(el.clientWidth < need);
     return () => ro.disconnect();
   }, [campFlat, viewingCampaignId, campaignDetailTab === "mesa"]); // eslint-disable-line react-hooks/exhaustive-deps
-  const showRail = showTopbar;
   const modernCamp = view === "ficha" && modernCharId && detailTab === "campaign" ? Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(modernCharId)) : null;
+  // En la campaña de la hoja de personaje no hay barra derecha: el chat va dentro de la página, como en el Directo del DJ.
+  const showRail = showTopbar && !(modernCamp && !isMobile);
   const railFold = showRail && !modernCamp; // plegable salvo con el chat de la campaña, que necesita todo el ancho
   const railW = !showRail ? 0 : railFold && !railPin ? 86 : 290;
   const padX = showRail ? "clamp(28px, 3.4vw, 48px)" : "28px";
-  const contentMax = campDetail && !campFlat ? 1760 : showRail ? 1320 : view === "ficha" ? 1160 : 960;
+  const contentMax = (campDetail && !campFlat) || (modernCamp && !isMobile) ? 1760 : showRail ? 1320 : view === "ficha" ? 1160 : 960;
   // Datos de la hoja moderna: valores base con lo que aportan armas y armadura (las reglas especiales de subclase siguen en la clásica).
   const getKeys = (raw) => {
     try {
@@ -18219,9 +19481,7 @@ export default function App({ onSignOut }) {
             {/* Body */}
             <div className="mh-sheet-body" style={embedded ? { position: "relative", zIndex: 1 } : { position: "relative", zIndex: 1, flex: 1, overflowY: "auto", padding: "22px 26px", scrollbarGutter: "stable" }}>
               <div style={{ maxWidth: embedded ? "none" : 1300, margin: "0 auto" }}>
-                {evolutionWarning && (
-                  <div style={{ fontSize: 12.5, color: "#D9644E", marginBottom: 14, fontWeight: 600 }}>{evolutionWarning}</div>
-                )}
+                {evolutionWarning && <div className="mh-toast-warn" role="alert">{evolutionWarning}</div>}
                 {(() => {
                   const tabs = [
                     { key: "general", label: "Detalles generales", Icon: Home },
@@ -18493,6 +19753,7 @@ export default function App({ onSignOut }) {
                   // Menú del clic derecho en el tablero: atacar con tus armas y abrir tus cartas con acciones.
                   const boardActions = (t) => {
                     const foe = t.kind === "foe" || t.kind === "npc";
+                    const dead = foe && deadTok(t);
                     const out = [];
                     const weapons = [primaryWeapon, secondaryWeapon].filter((w) => w && w.trait && w.trait !== "—" && /d\d/.test(w.damage || ""));
                     const target = foe ? { targetChosen: true, targetId: t.id, targetName: t.name, targetDc: t.stats?.difficulty || null } : {};
@@ -18503,11 +19764,11 @@ export default function App({ onSignOut }) {
                     weapons.forEach((w) => {
                       const tk = TRAITS.find((tr) => tr.label === w.trait)?.key;
                       const ri = foe ? reachInfo(viewingCharId, w.key, t) : { ok: true };
-                      out.push({ section: foe ? "Atacar a " + t.name : "Armas", key: "atk-" + w.key, Icon: Swords, color: "#C0504A", label: (foe ? "Con " : "Atacar con ") + w.key, sub: ri.ok ? w.trait + " · " + w.damage : "Fuera de alcance (" + ri.range + ", está a " + ri.dist + ")", disabled: !ri.ok, run: attack(w.key, w.trait, Number(c[tk] || 0) + (equipMods[tk] || 0), w.damage) });
+                      out.push({ section: foe ? "Atacar a " + t.name : "Armas", key: "atk-" + w.key, Icon: Swords, color: "#C0504A", label: (foe ? "Con " : "Atacar con ") + w.key, sub: dead ? "Objetivo muerto" : ri.ok ? w.trait + " · " + w.damage : "Fuera de alcance (" + ri.range + ", está a " + ri.dist + ")", disabled: !ri.ok || dead, run: attack(w.key, w.trait, Number(c[tk] || 0) + (equipMods[tk] || 0), w.damage) });
                     });
                     if (brawlerArmed(c)) {
                       const bt = TRAITS.find((tr) => tr.label === (c.f_brawl_trait || "Fuerza")) || TRAITS[1];
-                      out.push({ section: foe ? "Atacar a " + t.name : "Armas", key: "atk-brawl", Icon: HandFist, color: "#C0504A", label: (foe ? "Con " : "Atacar con ") + BRAWLER_STRIKE, sub: bt.label, run: attack(BRAWLER_STRIKE, bt.label, Number(c[bt.key] || 0) + (equipMods[bt.key] || 0), "d8+d6 físico") });
+                      out.push({ section: foe ? "Atacar a " + t.name : "Armas", key: "atk-brawl", Icon: HandFist, color: "#C0504A", label: (foe ? "Con " : "Atacar con ") + BRAWLER_STRIKE, sub: dead ? "Objetivo muerto" : bt.label, disabled: dead, run: attack(BRAWLER_STRIKE, bt.label, Number(c[bt.key] || 0) + (equipMods[bt.key] || 0), "d8+d6 físico") });
                     }
                     const openRow = (row) => () => {
                       row.onClick();
@@ -21620,6 +22881,51 @@ export default function App({ onSignOut }) {
 </div>
                         );
                         const fearInCap = stTab === "escena" && (scene.title || scene.image) && !dlg;
+                        const sideChat = embedded && !isMobile; // columna derecha propia: estadísticas arriba y chat debajo, como en el Directo del DJ
+                        const hudCard = !sideChat ? null : (() => {
+                          const hc = characters[viewingCharId];
+                          if (!hc) return null;
+                          const hm = getEquipmentMods(PRIMARY_WEAPONS.find((w) => w.key === hc.f_primary_weapon), SECONDARY_WEAPONS.find((w) => w.key === hc.f_secondary_weapon), ARMORS.find((a) => a.key === hc.f_armor));
+                          const hpT = Math.max(0, Number(hc.r_hp || 0) + (hm.hp || 0));
+                          const hpLeft = Math.max(0, hpT - Number(hc.hp_marked || 0));
+                          const stT = Math.max(0, Number(hc.r_stress || 0) + (hm.stress || 0));
+                          const stN = Math.min(stT, Number(hc.stress_marked || 0));
+                          const hpeT = getHopeMax(hc) + (hm.hope || 0);
+                          const hpeN = Math.min(hpeT, Number(hc.hope_marked ?? HOPE_DEFAULT));
+                          const rows = [
+                            { k: "hp", label: "Vida", n: hpLeft, t: hpT, col: "#E0544A", on: (i) => markHp(viewingCharId, "hp_marked", i, Number(hc.hp_marked || 0)), inv: true },
+                            { k: "st", label: "Estrés", n: stN, t: stT, col: "#A58BE8", on: (i) => markStressBox(viewingCharId, "stress_marked", i, Number(hc.stress_marked || 0)) },
+                            { k: "ho", label: "Esperanza", n: hpeN, t: hpeT, col: "#E3B04B", on: (i) => updateCharacterField(viewingCharId, "hope_marked", String(hpeN === i + 1 ? i : i + 1)) },
+                          ];
+                          return (
+                            <div className="mh-dir-card mh-pl-hud" role="group" aria-label="Tu Vida, Estrés y Esperanza">
+                              {rows.map((r) => (
+                                <div key={r.k} className="mh-qs-row">
+                                  <em>{r.label}</em>
+                                  <span className="mh-qs-pips">
+                                    {Array.from({ length: r.t }, (_, i) => {
+                                      const on = i < r.n;
+                                      const idx = r.inv ? r.t - (on ? i : i + 1) - 1 : i;
+                                      return <button key={i} type="button" className={"mh-qs-pip" + (on ? " is-on" : "")} style={{ "--pc": r.col }} aria-label={r.label + " " + (i + 1)} onClick={() => r.on(idx)} />;
+                                    })}
+                                  </span>
+                                  <b>{r.n}/{r.t}</b>
+                                </div>
+                              ))}
+                              {stTab === "mapa" && (
+                                <div className="mh-qs-row" title={"Miedo del DJ: " + fearCount + " de 12"}>
+                                  <em>Miedo</em>
+                                  <span className="mh-qs-pips mh-pl-fear">
+                                    {Array.from({ length: 12 }, (_, i) => (
+                                      <Skull key={i} size={14} strokeWidth={i < fearCount ? 1.4 : 1.6} className={"mh-fear-sk" + (i < fearCount ? " on" : "") + (i === fearCount - 1 ? " pulse" : "")} />
+                                    ))}
+                                  </span>
+                                  <b>{fearCount}/12</b>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })();
                         const empty = (Icon, text) => (
                           <div className="mh-stg-empty">
                             <Icon size={26} strokeWidth={1.6} />
@@ -21631,7 +22937,7 @@ export default function App({ onSignOut }) {
                             style={{
                               display: "grid",
                               // Ampliada, el chat mide lo mismo que en la rejilla normal: 5 de 12 columnas del hueco que queda sin las estadísticas.
-                              gridTemplateColumns: isMobile || embedded ? "1fr" : wide ? `minmax(0, 1fr) calc((100% - ${(armaduraWidth || 320) + 18 + 11 * 18}px) * 5 / 12 + ${4 * 18}px)` : "repeat(12, 1fr)",
+                              gridTemplateColumns: isMobile ? "1fr" : embedded ? "minmax(0, 1fr) clamp(372px, 26vw, 480px)" : wide ? `minmax(0, 1fr) calc((100% - ${(armaduraWidth || 320) + 18 + 11 * 18}px) * 5 / 12 + ${4 * 18}px)` : "repeat(12, 1fr)",
                               gap: 18,
                               flex: wide && armaduraHeight ? "0 0 auto" : 1,
                               minHeight: 0,
@@ -21640,7 +22946,7 @@ export default function App({ onSignOut }) {
                             }}
                           >
                             <Panel
-                              span={wide ? 1 : 7}
+                              span={wide || (embedded && !isMobile) ? 1 : 7}
                               bare
                               hidden={conditions.includes("Escondido") || conditions.includes("Oculto")}
                               restrained={conditions.includes("Inmovilizado")}
@@ -21656,7 +22962,7 @@ export default function App({ onSignOut }) {
                               )}
                               <div className={"mh-stg-body" + (sceneOut && stTab === "escena" ? " is-out" : "")}>
                                 <ChapterBanner id={activeSceneIdOf(stage)} num={stageScenesOf(stage).findIndex((x) => x.id === activeSceneIdOf(stage)) + 1} title={stageScenesOf(stage).find((x) => x.id === activeSceneIdOf(stage))?.title} />
-                                {!fearInCap && fearEl(" is-flow")}
+                                {(!isMobile || !fearInCap) && !(sideChat && stTab === "mapa") && fearEl(" is-flow")}
                                 {stTab === "escena" &&
                                   (scene.title || scene.image || dlg ? (
                                     <>
@@ -21672,7 +22978,7 @@ export default function App({ onSignOut }) {
                                           <div className="mh-stg-scene-cap">
                                             <div className="mh-stg-kick">{charCampaign.name}</div>
                                             <div className="mh-stg-scene-title">{scene.title || "Sin título"}</div>
-                                            {fearEl(" is-incap")}
+                                            {isMobile && fearEl(" is-incap")}
                                           </div>
                                         )}
                                       </div>
@@ -21694,8 +23000,7 @@ export default function App({ onSignOut }) {
                                   (mapTokens.length || scene.image || (campaignMap.tokens || []).length || campaignMap.fog?.on ? (
                                     <MapPortal on={mcb}>
                                       {/* La escena llena la caja (difuminada por detrás) y el tablero, con casillas cuadradas, se ajusta dentro */}
-                                      <FocusBar spot={campaignMap.spot} pcs={focusPcs(campaignMap.tokens)} myCharId={viewingCharId} isGm={false} onPass={(t, why) => passFocus(charCampaign.id, t, why)} onClear={() => {}} />
-                                      <div className="mh-map-stage">
+                                      <div className={"mh-map-stage" + (!isMobile ? " is-fit" + (myToken ? " has-hand" : "") : "")}>
                                         <div className={mcb && mcbRot ? "mh-rotwrap" : "mh-rotoff"}>
                                         <MapBackdrop bg={mapBgOf(campaignMap, scene.image).src} sharp={mapBgOf(campaignMap, scene.image).sharp} />
                                         <MapViewport focus={myToken ? { x: myToken.x, y: myToken.y } : null}>
@@ -21716,15 +23021,27 @@ export default function App({ onSignOut }) {
                                             selectedId={mapSel}
                                             onSelect={setMapSel}
                                             compact={!wide}
-                                            menuFor={(t) => (t.kind === "pc" && t.charId === viewingCharId ? boardActions(t) : [])}
+                                            rangeMenu
+                                            aimRange={aimRange}
+                                            onDragInfo={(d) => setPlDragTok(d && mapTokens.find((t) => t.id === d.id && ((t.kind === "pc" && t.charId === viewingCharId) || (t.kind === "pet" && t.ownerCharId === viewingCharId))) ? d : null)}
+                                            onStore={(id) => {
+                                              const tk = (campaignMap.tokens || []).find((t) => t.id === id);
+                                              if (!tk || !((tk.kind === "pc" && tk.charId === viewingCharId) || (tk.kind === "pet" && tk.ownerCharId === viewingCharId))) return false;
+                                              removeToken(id, charCampaign.id);
+                                              return true;
+                                            }}
                                           />
                                         </MapViewport>
                                         </div>
                                         {/* Avisos de tiradas y golpes, centrados en la parte visible del mapa */}
+                                        <div className={"mh-dir-store" + (plDragTok ? " is-open" : "") + (plDragTok?.over ? " is-drop" : "")} data-store-zone="1" aria-hidden={!plDragTok}>
+                                          <Archive size={16} />
+                                          <span>{plDragTok?.over ? "Suelta para guardar" : "Arrastra aquí para guardar la ficha"}</span>
+                                        </div>
                                         <MapLog log={campaignMap.log} />
                                         <MapCounters list={campaignMap.counters} />
                                         <SpotPause spot={campaignMap.spot} />
-                                        {myToken && (
+                                        {myToken && !sideChat && (
                                           <SpotPlayer
                                             spot={campaignMap.spot}
                                             charId={viewingCharId}
@@ -21733,7 +23050,7 @@ export default function App({ onSignOut }) {
                                             onDone={() => clearSpotFocus(charCampaign.id, characters[viewingCharId]?.f_name)}
                                           />
                                         )}
-                                        {myToken && (() => {
+                                        {myToken && !sideChat && (() => {
                                           // Vida, Estrés y Esperanza de tu personaje en la esquina del mapa (solo tú ves los tuyos).
                                           const hc = characters[viewingCharId];
                                           if (!hc) return null;
@@ -21782,29 +23099,55 @@ export default function App({ onSignOut }) {
                                           const elSub = me?.f_subclass === "Guardián de los Elementos" ? (SUBCLASSES.Druida || []).find((x) => x.key === "Guardián de los Elementos") : null;
                                           const subCard = elSub ? { key: elSub.key, subclass: true, cls: "Druida", level: "", domain: "Sabio", type: "Subclase", kicker: "Subclase · " + (Number(me?.f_level || 1) <= 1 ? "Fundación" : tierForLevel(me?.f_level || 1) === 2 ? "Especialización" : "Maestría"), image: elSub.image, text: elSub.blurb, features: (elSub.features || []).filter((x) => ELEM_COL[x.name]) } : null;
                                           const rowColor = (x) => (typeof x === "string" && /^#[0-9a-f]{6}$/i.test(x) ? x : classColor(me?.f_class));
-                                          const actionCards = buildActionRows().map((it) =>
+                                          const mcDom = getMulticlass(me)?.domain || "";
+                                          const actionCards = buildActionRows().filter((it) => !/^(Ascendencia|Comunidad)/.test(it.kicker || "")).map((it) =>
                                             it.key === "subclass" && subCard
                                               ? subCard
-                                              : { key: it.title, rowCard: true, myClass: me?.f_class, detail: it.onClick?.detail, rowKey: it.key, Icon: it.Icon, kicker: it.kicker, text: it.summary, color: rowColor(it.color), domain: "Sabio", level: "", type: "Acción", open: () => (it.onClick(), setViewingCardDetail((d) => (d && !d.rowIcon ? { ...d, rowIcon: it.Icon } : d))) }
+                                              : { key: it.title, rowCard: true, myClass: me?.f_class, detail: it.onClick?.detail, rowKey: it.key, multi: !!it.mc, mapUse: it.title === "Toque Salvaje", evo: it.title === "Evolución", wolf: it.title === "Hombre Lobo", locked: it.title === "Hombre Lobo" && (me?.f_transformation_form_active === "Forma de Lobo" || Number(me?.hp_marked || 0) < 1), Icon: it.Icon, kicker: it.kicker, text: it.summary, color: rowColor(it.color), domain: "Sabio", level: "", type: "Acción", open: () => (it.onClick(), setViewingCardDetail((d) => (d && !d.rowIcon ? { ...d, rowIcon: it.Icon } : d))) }
                                           );
                                           const rootedMine = (campaignMap.tokens || []).filter((t) => t.rootedBy === viewingCharId && (t.conds || []).includes("Inmovilizado"));
                                           const ghostCard = rootedMine.length && keys.includes("Enredo Feroz") ? (() => { const base = findDomainCardAny("Enredo Feroz"); return base ? { ...base, key: "Inmovilizar", baseKey: "Enredo Feroz", text: "Puedes gastar una Esperanza para inmovilizar temporalmente a otro adversario en alcance Muy Cercano del objetivo de Enredo Feroz.", recall: null, noCost: true, ghost: true, noHope: Number(me?.hope_marked ?? HOPE_DEFAULT) < 1 } : null; })() : null;
-                                          const cards = [wp(me?.f_primary_weapon, PRIMARY_WEAPONS, "Principal"), wp(me?.f_secondary_weapon, SECONDARY_WEAPONS, "Secundaria"), ...actionCards, ...keys.map((k) => findDomainCardAny(k)), ghostCard].filter(Boolean);
+                                          const releaseCard = ghostCard ? { ...ghostCard, key: "Liberar", text: "Libera al objetivo del Enredo Feroz.", ghostLab: "Gratis", noHope: false, release: true } : null;
+                                          // Indicador de la Guarda Rúnica: sobre la carta de quien la imbuyó, o suelto si tienes un amuleto de otra persona.
+                                          const wardOut = wardOutOf(viewingCharId);
+                                          const wardMine = wardInfo(viewingCharId);
+                                          const wardChip = wardMine && !keys.includes("Guarda Rúnica") ? { text: wardMine.item + " · de " + wardMine.byName } : null;
+                                          const chaosTok = keys.includes("Desatar el Caos") ? cardTokInfo(me, "Desatar el Caos") : null;
+                                          const rechargeCard = chaosTok && chaosTok.have < chaosTok.max ? (() => { const base = findDomainCardAny("Desatar el Caos"); return base ? { ...base, key: "Recargar fichas", baseKey: "Desatar el Caos", text: "Marca 1 Estrés para recuperar todas las fichas de Desatar el Caos, hasta tu rasgo de conjuro. Suéltala en el mapa para usarla.", recall: null, noCost: true, ghost: true, recharge: true, ghostLab: "1 Estrés", noHope: Number(me?.stress_marked || 0) >= Number(me?.r_stress || 0), noLab: "Estrés lleno" } : null; })() : null;
+                                          // En Forma de Bestia no se usan las armas: la carta de arma pasa a ser el ataque de la forma.
+                                          const bfForm = me?.f_beastform ? BEASTFORMS.find((b) => b.key === me.f_beastform) : null;
+                                          const bfCard = bfForm ? (() => { const [, bfT, bfD] = String(bfForm.attack).split(" · "); return { key: bfForm.key, level: bfForm.tier, type: "Ataque de forma", domain: "", image: bfForm.image, text: "Ataque: " + bfForm.attack + ". " + (bfT ? "Tirada de " + bfT + ", daño " + bfD + "." : ""), damage: bfD, hands: "Forma de Bestia", weapon: true, beast: true }; })() : null;
+                                          const cards = [...(bfCard ? [bfCard] : [wp(me?.f_primary_weapon, PRIMARY_WEAPONS, "Principal"), wp(me?.f_secondary_weapon, SECONDARY_WEAPONS, "Secundaria")]), ...actionCards, ...keys.map((k) => { const d0 = findDomainCardAny(k); const d = d0 && k === "Guarda Rúnica" && wardOut ? { ...d0, wardTag: wardOut } : d0; return d && mcDom && d.domain === mcDom && !(CLASS_DOMAINS[me?.f_class] || []).includes(mcDom) ? { ...d, multi: true } : d; }), ghostCard, releaseCard, rechargeCard].filter(Boolean);
                                           return (
                                             <CardFan
                                               cards={cards}
                                               cardBack={cardBack}
-                                              aimOk={(card, tg) => !card.ghost || canExtraRoot(viewingCharId, tg)}
+                                              aimOk={(card, tg) => !card.ghost || (card.release ? canRelease(viewingCharId, tg) : canExtraRoot(viewingCharId, tg))}
+                                              onAim={setAimRange}
+                                              reachOf={(card) => { if (card.key === "Embelesar" && !card.weapon && !card.rowCard) return { label: "Cercano", max: RANGE_CELLS["Cercano"] }; if (!card.weapon) return null; const lab = weaponReach(characters[viewingCharId], card.key); return lab ? { label: lab, max: RANGE_CELLS[lab] || 99 } : null; }}
                                               cardBorder={cardBorder}
-                                              onElement={(el, on) => toggleElemental(viewingCharId, el, on)}
+                                              beast={{ forms: BEASTFORMS, tier: tierForLevel(me?.f_level || 1), active: me?.f_beastform || "", stressFull: Number(me?.stress_marked || 0) >= Number(me?.r_stress || 0) }}
+                                              wardChip={wardChip}
+                                              cardToks={(card) => cardTokInfo(characters[viewingCharId], card.key)}
+                                              onCardTok={(key, n) => setCardTok(viewingCharId, key, n)}
+                                              onEvolve={(card) => openEvolutionModal(viewingCharId, card)}
+                                              onWolf={(card) => activateWolf(viewingCharId, card)}
+                                              onBeast={(key, sel, card) => (sel ? toggleBeastform(viewingCharId, key, true) : morphToBeast(viewingCharId, key, card))}
+                                              onElement={(el, on, card) => (on ? toggleElemental(viewingCharId, el, true) : embodyElement(viewingCharId, el, card))}
                                               activeElement={me?.f_elemental_active || ""}
                                               me={myToken}
                                               tokens={mapTokens}
                                               onUse={(card, cell, target, rng) =>
-                                                card.ghost ? castEnredoExtra(viewingCharId, target) :
-                                                card.key === "Enredo Feroz" && !card.weapon ? castEnredo(viewingCharId, target) :
-                                                card.key === "Embelesar" && !card.weapon && !card.rowCard && !card.subclass ? castEmbelesar(viewingCharId, target) :
-                                                card.key === "Lengua de la Naturaleza" && !card.weapon && !card.rowCard && !card.subclass ? (playCardOnMap(charCampaign.id, viewingCharId, card), "reveal") :
+                                                card.key === "Desatar el Caos" && !card.weapon && !card.rowCard && !card.subclass ? castChaos(viewingCharId, target, card) :
+                                                card.key === "Guarda Rúnica" && !card.weapon && !card.rowCard && !card.subclass ? (setWardAsk({ charId: viewingCharId, card, step: 1, bearerId: "", item: "", custom: "" }), "cancel") :
+                                                card.recharge ? castRecharge(viewingCharId, card) :
+                                                card.release ? castLiberar(viewingCharId, target, card) :
+                                                card.ghost ? castEnredoExtra(viewingCharId, target, card) :
+                                                card.weapon ? castWeapon(viewingCharId, target, card) :
+                                                card.key === "Enredo Feroz" && !card.weapon ? castEnredo(viewingCharId, target, card) :
+                                                card.key === "Embelesar" && !card.weapon && !card.rowCard && !card.subclass ? castEmbelesar(viewingCharId, target, card) :
+                                                (card.key === "Lengua de la Naturaleza" || card.key === "Rastreador Dotado" || card.key === "Caminar por Paredes") && !card.weapon && !card.rowCard && !card.subclass ? (playCardOnMap(charCampaign.id, viewingCharId, card), "reveal") :
+                                                card.rowCard && card.mapUse ? (playCardOnMap(charCampaign.id, viewingCharId, card), "reveal") :
                                                 card.domain && !card.weapon && !card.rowCard && !card.subclass ? postCardUse(viewingCharId, card, (target ? "sobre " + (target.name || "una ficha") : "en la casilla " + (cell.x + 1) + "," + (cell.y + 1)) + (rng ? " (" + rng.label + ")" : "")) :
                                                 postCampaignEvent(viewingCharId, `${card.weapon ? "ataca con" : "usa la carta"} «${card.key}»${target ? ` sobre ${target.name || "una ficha"}` : ` en la casilla ${cell.x + 1},${cell.y + 1}`}${rng ? ` (${rng.label})` : ""}.`)
                                               }
@@ -21837,13 +23180,12 @@ export default function App({ onSignOut }) {
                                       {(() => {
                                         const me = characters[viewingCharId];
                                         const myPets = mapTokens.filter((t) => t.kind === "pet" && t.ownerCharId === viewingCharId);
-                                        const mineSel = mapTokens.find((t) => t.id === mapSel && ((t.kind === "pc" && t.charId === viewingCharId) || (t.kind === "pet" && t.ownerCharId === viewingCharId)));
                                         const col = classColor(me?.f_class);
                                         // Solo el Explorador de Vínculo Bestial tiene compañero animal.
                                         const hasCompanion = me?.f_class === "Explorador" && me?.f_subclass === "Vínculo Bestial";
                                         const companionOn = myPets.length > 0;
-                                        // Con todas tus fichas ya en el mapa, la bandeja desaparece (vuelve si eliges una tuya, para poder quitarla).
-                                        if (myToken && (!hasCompanion || companionOn) && !mineSel) return null;
+                                        // Con todas tus fichas ya en el mapa, la bandeja desaparece; si guardas una (arrastrándola a la esquina), vuelve para colocarla de nuevo.
+                                        if (myToken && (!hasCompanion || companionOn)) return null;
                                         return (
                                           <div className="mh-map-ptray">
                                             <span className="mh-gm-h2">Tus fichas</span>
@@ -21878,11 +23220,6 @@ export default function App({ onSignOut }) {
                                                   <Plus size={12} />
                                                 </button>
                                               ))}
-                                            {mineSel && (
-                                              <button type="button" className="mh-map-chip is-remove" onClick={() => removeToken(mineSel.id, charCampaign.id)}>
-                                                <Trash2 size={12} /> Quitar {mineSel.name}
-                                              </button>
-                                            )}
                                           </div>
                                         );
                                       })()}
@@ -22008,11 +23345,13 @@ export default function App({ onSignOut }) {
                               )}
                             </Panel>
 
-                            <ChatHost embedded={embedded && !isMobile} slot={chatSlot}>
+                            <div className={"mh-pl-side" + (sideChat ? "" : " is-contents")}>
+                            {hudCard}
+                            <ChatHost embedded={false} slot={chatSlot}>
                             <Panel
-                              span={wide ? 1 : 5}
+                              span={wide || (embedded && !isMobile) ? 1 : 5}
                               fill={embedded && !isMobile}
-                              title="Chat"
+                              title={embedded && !isMobile ? "Chat de la mesa" : "Chat"}
                               titleRight={
                                 table.length > 0 && (
                                   <button type="button" className="mh-chat-grp" aria-label="La mesa: ver quién está" aria-expanded={tableOpen} onClick={() => setTableOpen((v) => !v)}>
@@ -22194,6 +23533,16 @@ export default function App({ onSignOut }) {
                                   >
                                     <Plus size={16} />
                                   </button>
+                                  {sideChat && (
+                                    <SpotPlayer
+                                      quick
+                                      spot={campaignMap.spot}
+                                      charId={viewingCharId}
+                                      onRaise={(kind) => raiseHand(charCampaign.id, viewingCharId, characters[viewingCharId]?.f_name || "Jugador", kind)}
+                                      onLower={() => lowerHand(charCampaign.id, viewingCharId)}
+                                      onDone={() => clearSpotFocus(charCampaign.id, characters[viewingCharId]?.f_name)}
+                                    />
+                                  )}
                                   <input
                                     className="mh-input"
                                     style={{ flex: 1, minWidth: 0 }}
@@ -22209,6 +23558,7 @@ export default function App({ onSignOut }) {
                               </div>
                             </Panel>
                             </ChatHost>
+                            </div>
                           </div>
                         );
                       })()}
@@ -22468,7 +23818,9 @@ export default function App({ onSignOut }) {
               const c = characters[H.charId];
               const def = defenseRef.current && defenseRef.current.id === H.charId ? defenseRef.current : { evasion: Number(c.r_evasion || 10), major: 0, severe: 0 };
               const hit = H.crit || H.atk >= def.evasion;
-              const sev = hit ? severityOf(H.dmg, def.major, def.severe) : 0;
+              const wd = wardInfo(H.charId);
+              const dmgEff = Math.max(0, H.dmg - (hitWard ? hitWard.n : 0));
+              const sev = hit ? severityOf(dmgEff, def.major, def.severe) : 0;
               const armor = Number(c.armor_marked || 0);
               const done = (useArmor) => {
                 setIncomingHit(null);
@@ -22488,7 +23840,7 @@ export default function App({ onSignOut }) {
                   const foeTok = (campaignMap.tokens || []).find((t) => t.id === H.foeId);
                   if (foeTok && cellDist(foeTok, me) <= RANGE_CELLS["Cuerpo a cuerpo"]) elementalBurn(H.campaignId, H.charId, foeTok);
                 }
-                pushMapLog(H.campaignId, H.from + " golpea a " + name + (H.crit ? " (¡crítico!)" : "") + ": " + H.dmg + " de daño (" + SEVERITY_LABEL[sev] + ")" + (useArmor ? " · usa 1 de Armadura" : "") + " · " + final + " PV", "dmg");
+                pushMapLog(H.campaignId, H.from + " golpea a " + name + (H.crit ? " (¡crítico!)" : "") + ": " + H.dmg + " de daño" + (hitWard ? " − " + hitWard.n + " (Guarda Rúnica)" : "") + " (" + SEVERITY_LABEL[sev] + ")" + (useArmor ? " · usa 1 de Armadura" : "") + " · " + final + " PV", "dmg");
                 postCampaignEvent(H.charId, "🩸 " + H.from + " le golpea con " + H.weapon + ": " + H.dmg + " de daño · marca " + final + " PV" + (useArmor ? " (usa 1 de Armadura)" : ""));
               };
               return (
@@ -22517,7 +23869,13 @@ export default function App({ onSignOut }) {
                         <p className="mh-hit-msg">
                           Te golpea: <b>{H.dmg}</b> de daño ({H.dmgRolls?.join(" + ")}{H.dmgMod ? " + " + H.dmgMod : ""}{H.crit ? " + máximo por crítico" : ""}). Es daño <b>{SEVERITY_LABEL[sev]}</b> con tus umbrales {def.major}/{def.severe}.
                         </p>
+                        {hitWard && <p className="mh-hit-msg">🛡️ Guarda Rúnica: reduce el daño en <b>{hitWard.n}</b> (1d8){hitWard.n === 8 ? " · el amuleto se agota hasta el próximo descanso de " + (wd?.byName || "quien lo imbuyó") : ""}. Quedan <b>{dmgEff}</b> de daño.</p>}
                         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                          {wd && !hitWard && Number(c.hope_marked ?? HOPE_DEFAULT) >= 1 && (
+                            <button type="button" className="mh-btn-ghost" onClick={() => rollWard(H.charId)}>
+                              <Shield size={14} /> Usar la Guarda Rúnica «{wd.item}» · gastar 1 Esperanza y reducir el daño 1d8
+                            </button>
+                          )}
                           <button type="button" className="mh-btn" onClick={() => done(false)}>
                             <Heart size={14} /> Marcar {sev} PV
                           </button>
@@ -24854,63 +26212,10 @@ export default function App({ onSignOut }) {
                         <>
                         <button
                           className="mh-btn"
-                          onClick={() => {
-                            const { name, damage, focusTarget } = traitRollResult.weapon;
-                            const charId = traitRollResult.charId;
-                            const isCritical = traitRollResult.hope === traitRollResult.fear;
-                            setTraitRollResult(null);
-                            if (traitRollResult.weapon.charm) return applyCharm(charId, traitRollResult.weapon.targetId, false);
-                            const wasCloaked = traitRollResult.wasCloaked;
-                            if (focusTarget) {
-                              updateCharacterField(charId, "f_focus", focusTarget);
-                              postCampaignEvent(charId, "🎯 " + focusTarget + " pasa a ser su Foco");
-                            }
-                            const spirit = !!traitRollResult.weapon.spirit;
-                            const rc = characters[charId];
-                            // Alcance Amenazador termina al acertar con el arma principal.
-                            if (rc && rc.f_reach === "1" && name === rc.f_primary_weapon) {
-                              updateCharacterField(charId, "f_reach", "");
-                              postCampaignEvent(charId, "🗡️ Acierta con su arma principal: termina su Alcance Amenazador");
-                            }
-                            // Escuela de la Guerra · Enfrenta tu Miedo: éxito con Miedo = +1d10/2d10/3d10 de daño mágico.
-                            const fearHit = rc && rc.f_subclass === "Escuela de la Guerra" && !traitRollResult.reaction && !traitRollResult.flipped && traitRollResult.fear > traitRollResult.hope;
-                            const fearDice = fearHit ? tierForLevel(rc.f_level || 1) : 0;
-                            // Titán · Gozo del Golpe (Maestría): crítico Cuerpo a cuerpo = +1 Esperanza, −1 Estrés y +1 Competencia.
-                            const honedHit = !!traitRollResult.weapon.honed;
-                            const pummel = isCritical && rc && rc.f_subclass === "Titán" && tierForLevel(rc.f_level || 1) >= 3 && isMeleeWeapon(name);
-                            if (pummel) {
-                              const cur = charsRef.current[charId];
-                              updateCharacterFields(charId, { hope_marked: String(Math.min(getHopeMax(cur), Number(cur.hope_marked ?? HOPE_DEFAULT) + 1)), stress_marked: String(Math.max(0, Number(cur.stress_marked || 0) - 1)) });
-                              postCampaignEvent(charId, "🥊 Gozo del Golpe: gana 1 Esperanza más, se quita 1 Estrés más y su Competencia sube en 1 en este ataque");
-                            }
-                            if (traitRollResult.weapon.targetId && sheetCampaignId) {
-                              const fromTok = (campaignMap.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
-                              const reachNow = weaponReach(rc, name);
-                              const snareIds = name === "Enredo Feroz" ? (() => {
-                                const first = traitRollResult.weapon.targetId;
-                                const ft = (campaignMap.tokens || []).find((x) => x.id === first);
-                                const extra = traitRollResult.weapon.hopeExtra && ft ? (campaignMap.tokens || []).filter((x) => x.id !== first && (x.kind === "foe" || x.kind === "npc") && !x.gmHidden && cellDist(x, ft) <= RANGE_CELLS["Muy cercano"] && !(x.stats && Number(x.stats.hpMarked || 0) >= Number(x.stats.hp || 0))).sort((p, q) => cellDist(p, ft) - cellDist(q, ft))[0] : null;
-                                return extra ? [first, extra.id] : [first];
-                              })() : null;
-                              const fxKind = snareIds ? "roots" : /mágic/i.test(damage || "") ? "magic" : reachNow && reachNow !== "Cuerpo a cuerpo" ? "shot" : "melee";
-                              if (fromTok && !snareIds) mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: fromTok.id, to: traitRollResult.weapon.targetId, kind: fxKind, ...(snareIds && snareIds[1] ? { to2: snareIds[1] } : {}) }), "fx");
-                              if (snareIds) {
-                                // Las raíces inmovilizan al objetivo (y al segundo adversario si se gasta una Esperanza).
-                                setTimeout(() => mutateMap(sheetCampaignId, (ts) => ts.map((x) => (snareIds.includes(x.id) ? { ...x, conds: [...new Set([...(x.conds || []), "Inmovilizado"])], rootedBy: charId } : x))), 900);
-                                pushMapLog(sheetCampaignId, "🌿 Enredo Feroz: " + snareIds.map((id) => (campaignMap.tokens || []).find((x) => x.id === id)?.name || "un adversario").join(" y ") + " queda inmovilizado", "info");
-                                if (snareIds[1] && rc) updateCharacterField(charId, "hope_marked", String(Math.max(0, Number(rc.hope_marked ?? HOPE_DEFAULT) - 1)));
-                              }
-                            }
-                            rollWeaponDamage(name, damage, charId, isCritical, { ...(traitRollResult.weapon.spell ? { plain: true, fixedDice: traitRollResult.weapon.fixedDice || 1 } : {}), angel: traitRollResult.weapon.angel || 0, knight: !!traitRollResult.weapon.knight, attackFear: traitRollResult.fear, ...(pummel || honedHit ? { fixedDice: getProficiency(rc) + (pummel ? 1 : 0) + (honedHit ? 1 : 0) } : {}), fearDice, cloaked: wasCloaked, spirit, resonance: spirit && rc && tierForLevel(rc.f_level || 1) >= 3, extraFlat: traitRollResult.weapon.elemDmg || 0, doublePick: !!traitRollResult.weapon.manipDouble, targetId: traitRollResult.weapon.targetId || null, targetIds: traitRollResult.weapon.hitIds || null });
-                          }}
+                          onClick={() => resolveWeaponHit(traitRollResult)}
                         >
                           {traitRollResult.weapon.charm ? "Embelesar" : traitRollResult.weapon.targets || (traitRollResult.weapon.targetId && traitRollResult.card?.dc != null) ? "Tirar daño" : "Sí"}
                         </button>
-                        {traitRollResult.weapon.charm && !charsRef.current[traitRollResult.charId]?.f_charm_used && Number(charsRef.current[traitRollResult.charId]?.stress_marked || 0) < Number(charsRef.current[traitRollResult.charId]?.r_stress || 0) && (
-                          <button className="mh-btn-ghost" title="Una vez por descanso: marcas 1 Estrés y el objetivo embelesado también marca 1" onClick={() => { const cid = traitRollResult.charId, tid = traitRollResult.weapon.targetId; setTraitRollResult(null); applyCharm(cid, tid, true); }}>
-                            1 Estrés: él también
-                          </button>
-                        )}
                         <button className="mh-btn-ghost" onClick={() => setTraitRollResult(null)}>
                           {traitRollResult.weapon.targets || (traitRollResult.weapon.targetId && traitRollResult.card?.dc != null) ? "Cerrar" : "No"}
                         </button>
@@ -25934,95 +27239,188 @@ export default function App({ onSignOut }) {
               </div>
             )}
 
-            {showEvolutionModal && (
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  background: "rgba(8,6,12,0.70)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  zIndex: 40,
-                  padding: 20,
-                }}
-                onClick={() => setShowEvolutionModal(false)}
-              >
-                <div
-                  className="mh-card"
-                  style={{ margin: 0, width: "min(560px, 100%)", maxHeight: "82%", overflowY: "auto", padding: "22px 24px" }}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div style={{ fontSize: 11.5, color: "var(--mh-muted)", marginBottom: 2 }}>Característica de Esperanza · 3 de Esperanza</div>
-                  <h2 className="mh-serif" style={{ margin: "0 0 4px", fontSize: 19, fontWeight: 600 }}>
-                    Evolución
-                  </h2>
-                  <div style={{ fontSize: 12.5, color: "var(--mh-ink3)", marginBottom: 18 }}>
-                    Te transformas en una Forma de Bestia sin marcar Estrés. Elige un rasgo para subirlo +1 mientras
-                    mantengas esa forma.
+            {showEvolutionModal && (() => {
+              const tierN = tierForLevel(c.f_level || 1);
+              const hopeNow = Number(c.hope_marked ?? HOPE_DEFAULT);
+              const forms = BEASTFORMS.filter((b) => b.tier <= tierN);
+              const selForm = BEASTFORMS.find((b) => b.key === evoBeastform);
+              const selTrait = TRAITS.find((t) => t.key === evoTrait);
+              const ready = !!selForm && !!selTrait;
+              return (
+                <div className="mh-evo-wrap" onClick={() => setShowEvolutionModal(false)}>
+                  <div className="mh-bpick mh-evo" role="dialog" aria-label="Evolución" onClick={(e) => e.stopPropagation()}>
+                    <div className="mh-elpick-h">
+                      <b>Evolución</b>
+                      <span>Característica de Esperanza · te transformas en una Forma de Bestia sin marcar Estrés</span>
+                    </div>
+                    <div className="mh-evo-hope" title="Coste de la Evolución">
+                      <span>Esperanza</span>
+                      <span className="mh-evo-pips">
+                        {Array.from({ length: Math.max(hopeNow, 3) }, (_, i) => (
+                          <i key={i} className={i < hopeNow ? (i >= hopeNow - 3 ? "is-spend" : "is-on") : ""} />
+                        ))}
+                      </span>
+                      <b>{hopeNow} → {Math.max(0, hopeNow - 3)}</b>
+                    </div>
+                    <div className="mh-evo-h"><i>1</i> Elige la forma</div>
+                    <div className="mh-bpick-g">
+                      {forms.map((b) => (
+                        <button key={b.key} type="button" className={"mh-bpick-c" + (evoBeastform === b.key ? " is-on" : "")} style={{ "--bc": b.color }} onClick={() => setEvoBeastform(b.key)} title={b.animals}>
+                          <span className="mh-bpick-img" style={b.image ? { backgroundImage: 'url("' + b.image + '")' } : undefined} />
+                          <b>{b.key}</b>
+                          <small>{b.animals}</small>
+                          <em>{b.bonus}</em>
+                          {evoBeastform === b.key && <span className="mh-bpick-on">Elegida</span>}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="mh-evo-h"><i>2</i> Mejora un rasgo (+1 mientras mantengas la forma)</div>
+                    <div className="mh-evo-traits">
+                      {TRAITS.map((t) => {
+                        const v = Number(c[t.key] || 0);
+                        return (
+                          <button key={t.key} type="button" className={evoTrait === t.key ? "is-on" : ""} onClick={() => setEvoTrait(t.key)}>
+                            <span>{t.label}</span>
+                            <b>{v >= 0 ? "+" + v : v}{evoTrait === t.key ? " → " + (v + 1 >= 0 ? "+" + (v + 1) : v + 1) : ""}</b>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className={"mh-evo-sum" + (ready ? " is-ready" : "")}>
+                      {ready ? (
+                        <>Te transformarás en <b>{selForm.key}</b>, con <b>{selTrait.label} +1</b>. Gastas <b>3 de Esperanza</b> y no marcas Estrés.</>
+                      ) : (
+                        <>{!selForm && !selTrait ? "Elige una forma y un rasgo para continuar." : selForm ? "Elige un rasgo para continuar." : "Elige una forma para continuar."}</>
+                      )}
+                    </div>
+                    <div className="mh-evo-act">
+                      <button type="button" className="mh-elpick-x" onClick={() => setShowEvolutionModal(false)}>Cancelar</button>
+                      <button type="button" className="mh-evo-go" disabled={!ready} onClick={confirmEvolution}>Evolucionar · 3 de Esperanza</button>
+                    </div>
                   </div>
+                </div>
+              );
+            })()}
 
-                  <label className="mh-label">Forma de bestia</label>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 18 }}>
-                    {BEASTFORMS.filter((b) => b.tier <= tierForLevel(c.f_level || 1)).map((b) => (
-                      <div
-                        key={b.key}
-                        onClick={() => setEvoBeastform(b.key)}
-                        style={{
-                          padding: "7px 13px",
-                          borderRadius: 20,
-                          border: "1px solid " + (evoBeastform === b.key ? b.color : "var(--mh-line2)"),
-                          background: evoBeastform === b.key ? alpha(b.color, 10) : "var(--mh-panel)",
-                          color: ink(evoBeastform === b.key ? b.color : "var(--mh-ink)"),
-                          fontSize: 13,
-                          fontWeight: evoBeastform === b.key ? 600 : 500,
-                          cursor: "pointer",
-                        }}
-                      >
-                        {b.key}
-                      </div>
-                    ))}
+            {sessAsk && sessAsk.charId === viewingCharId && (
+              <div className="mh-evo-wrap" onClick={() => { sessDismiss.current[sessAsk.key + sessAsk.charId] = true; setSessAsk(null); }}>
+                <div className="mh-bpick mh-sess" role="dialog" aria-label="Empieza la sesión" onClick={(e) => e.stopPropagation()}>
+                  <div className="mh-elpick-h">
+                    <b>Empieza la sesión {sessAsk.n}</b>
+                    <span>El DJ ha empezado la sesión. Esto se activa en tu personaje:</span>
                   </div>
-
-                  <label className="mh-label">Rasgo a mejorar (+1)</label>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 22 }}>
-                    {TRAITS.map((t) => (
-                      <div
-                        key={t.key}
-                        onClick={() => setEvoTrait(t.key)}
-                        style={{
-                          padding: "7px 13px",
-                          borderRadius: 20,
-                          border: "1px solid " + (evoTrait === t.key ? "#7FB77A" : "var(--mh-line2)"),
-                          background: evoTrait === t.key ? "#7FB77A14" : "var(--mh-panel)",
-                          color: ink(evoTrait === t.key ? "#7FB77A" : "var(--mh-ink)"),
-                          fontSize: 13,
-                          fontWeight: evoTrait === t.key ? 600 : 500,
-                          cursor: "pointer",
-                        }}
-                      >
-                        {t.label}
-                      </div>
-                    ))}
+                  <div className="mh-sess-list">
+                    {sessAsk.items.map((it) => {
+                      const IC = it.icon === "feather" ? Feather : it.icon === "heart" ? Heart : Sparkles;
+                      return (
+                        <div key={it.k} className="mh-sess-it">
+                          <IC size={17} />
+                          <span><b>{it.label}</b><small>{it.text}</small></span>
+                        </div>
+                      );
+                    })}
                   </div>
-
-                  <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
-                    <button className="mh-btn-ghost" onClick={() => setShowEvolutionModal(false)}>
-                      Cancelar
-                    </button>
-                    <button
-                      className="mh-btn"
-                      disabled={!evoBeastform || !evoTrait}
-                      style={{ opacity: evoBeastform && evoTrait ? 1 : 0.5, cursor: evoBeastform && evoTrait ? "pointer" : "not-allowed" }}
-                      onClick={confirmEvolution}
-                    >
-                      Confirmar Evolución
-                    </button>
+                  <div className="mh-evo-act">
+                    <button type="button" className="mh-elpick-x" onClick={() => { sessDismiss.current[sessAsk.key + sessAsk.charId] = true; setSessAsk(null); }}>Ahora no</button>
+                    <button type="button" className="mh-evo-go" onClick={() => { const a = sessAsk; setSessAsk(null); applySession(a.charId, a.key, a.items); }}>Aplicar a mi personaje</button>
                   </div>
                 </div>
               </div>
             )}
-
+            {wardAsk && wardAsk.charId === viewingCharId && (() => {
+              const A = wardAsk;
+              const ids = (campaigns[sheetCampaignId]?.characterIds || []).filter((id) => characters[id]);
+              const bearer = A.bearerId ? characters[A.bearerId] : null;
+              const items = bearer ? getItems(bearer) : [];
+              const ready = !!((A.custom || "").trim() || A.item);
+              const close = () => setWardAsk(null);
+              return (
+                <div className="mh-evo-wrap" onClick={close}>
+                  <div className="mh-bpick mh-sess" role="dialog" aria-label="Guarda Rúnica" onClick={(e) => e.stopPropagation()}>
+                    <div className="mh-elpick-h">
+                      <b>Guarda Rúnica</b>
+                      <span>{A.step === 1 ? "1 · ¿Quién llevará el amuleto?" : "2 · ¿Qué objeto de " + (A.bearerId === A.charId ? "ti" : bearer?.f_name || "esa persona") + " se imbuye?"}</span>
+                    </div>
+                    {A.step === 1 ? (
+                      <div className="mh-renew-list">
+                        {ids.map((id) => (
+                          <button key={id} type="button" className="mh-renew-row is-pick" onClick={() => setWardAsk({ ...A, step: 2, bearerId: id, item: "", custom: "" })}>
+                            <span className="mh-renew-av" style={{ background: classColor(characters[id].f_class) }}>{(characters[id].f_name || "?").charAt(0)}</span>
+                            <div className="mh-renew-t">
+                              <b>{id === A.charId ? "Tú" : characters[id].f_name}</b>
+                              <small>{characters[id].f_class || ""}{id === A.charId ? " · " + (characters[id].f_name || "") : ""}</small>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <>
+                        <div className="mh-renew-list">
+                          {items.map((it, i) => (
+                            <button key={it.name + i} type="button" className={"mh-renew-row is-pick" + (A.item === it.name && !(A.custom || "").trim() ? " is-on" : "")} onClick={() => setWardAsk({ ...A, item: it.name, custom: "" })}>
+                              <span className="mh-renew-av" style={{ background: "#7D8BA3" }}><Gem size={14} /></span>
+                              <div className="mh-renew-t"><b>{it.name}</b><small>De su inventario</small></div>
+                            </button>
+                          ))}
+                          {items.length === 0 && <small style={{ color: "var(--mh-muted)" }}>No tiene objetos en el inventario: crea uno nuevo.</small>}
+                        </div>
+                        <input className="mh-input" value={A.custom || ""} placeholder="O crea un objeto nuevo (por ejemplo, un colgante)" maxLength={60} onChange={(e) => setWardAsk({ ...A, custom: e.target.value })} />
+                      </>
+                    )}
+                    <div className="mh-evo-act">
+                      <button type="button" className="mh-elpick-x" onClick={() => (A.step === 2 ? setWardAsk({ ...A, step: 1 }) : close())}>{A.step === 2 ? "Atrás" : "Cancelar"}</button>
+                      {A.step === 2 && (
+                        <button type="button" className="mh-evo-go" disabled={!ready} onClick={confirmWard}>
+                          Imbuir
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+            {chaosAsk && chaosAsk.charId === viewingCharId && (() => {
+              const cc = characters[chaosAsk.charId];
+              const info = cc && cardTokInfo(cc, "Desatar el Caos");
+              const tg = (campaignMap.tokens || []).find((t) => t.id === chaosAsk.targetId);
+              if (!info || !tg) return null;
+              const n = Math.max(1, Math.min(chaosN, info.have));
+              if (info.have < 1)
+                return (
+                  <div className="mh-evo-wrap" onClick={() => setChaosAsk(null)}>
+                    <div className="mh-bpick mh-sess" role="dialog" aria-label="Desatar el Caos" onClick={(e) => e.stopPropagation()}>
+                      <div className="mh-elpick-h">
+                        <b>Desatar el Caos</b>
+                        <span>No te quedan fichas sobre la carta: hay que gastar al menos una para lanzarla</span>
+                      </div>
+                      <div className="mh-evo-sum">Usa la carta <b>«Recargar fichas»</b> de tu mano (1 Estrés) para volver a tener <b>{info.max}</b> fichas y lanza el conjuro sobre {tg.name || "el adversario"}.</div>
+                      <div className="mh-evo-act">
+                        <button type="button" className="mh-evo-go" onClick={() => setChaosAsk(null)}>Entendido</button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              return (
+                <div className="mh-evo-wrap" onClick={() => setChaosAsk(null)}>
+                  <div className="mh-bpick mh-sess" role="dialog" aria-label="Desatar el Caos" onClick={(e) => e.stopPropagation()}>
+                    <div className="mh-elpick-h">
+                      <b>Desatar el Caos</b>
+                      <span>Lanzas sobre {tg.name || "el adversario"}: tirada de conjuro y, si aciertas, un d10 por ficha gastada</span>
+                    </div>
+                    <div className="mh-sess-toks" role="group" aria-label="Fichas a gastar">
+                      {Array.from({ length: info.have }, (_, k) => (
+                        <button key={k} type="button" className={k < n ? "is-on" : ""} onClick={() => setChaosN(k + 1)} aria-label={"Gastar " + (k + 1) + " fichas"}>{k + 1}</button>
+                      ))}
+                    </div>
+                    <div className="mh-evo-sum is-ready">Gastas <b>{n} ficha{n > 1 ? "s" : ""}</b> de {info.have}: <b>{n}d10</b> de daño mágico si aciertas. Te quedarán {info.have - n}.</div>
+                    <div className="mh-evo-act">
+                      <button type="button" className="mh-elpick-x" onClick={() => setChaosAsk(null)}>Cancelar</button>
+                      <button type="button" className="mh-evo-go" onClick={confirmChaos}>Lanzar · {n} ficha{n > 1 ? "s" : ""}</button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
             {deathMoveCharId === viewingCharId && (
               <div
                 style={{
@@ -28978,7 +30376,7 @@ export default function App({ onSignOut }) {
             </div>
           </div>
         )}
-        <div data-mh-main className={(showTopbar ? "mh-scroll-hidden" : "") + (view === "inicio" ? " mh-main-fit" : "") + (campFlat ? " mh-main-flat" : "") || undefined} style={{ position: "absolute", top: showTopbar ? (view === "perfil" || view === "inicio" || view === "ficha" || campFlat ? EDGE : EDGE + 74) : 0, left: 0, bottom: 0, right: railW, transition: "right .22s ease", overflowY: (view === "ficha" && !viewingCharId && !modernCharId && showRail) || campFlat ? "hidden" : "auto", padding: isMobile ? (campDetail ? "10px 12px 18px" : "18px 14px") : showTopbar ? "0 " + padX + " " + EDGE + "px" : campDetail ? (campaignDetailTab === "mesa" ? "18px 24px 12px 14px" : EDGE + "px " + padX + " " + EDGE + "px") : "24px 28px" }}>
+        <div data-mh-main className={(showTopbar ? "mh-scroll-hidden" : "") + (view === "inicio" ? " mh-main-fit" : "") + (campFlat ? " mh-main-flat" : "") || undefined} style={{ position: "absolute", top: showTopbar && !(modernCamp && !isMobile) ? (view === "perfil" || view === "inicio" || view === "ficha" || campFlat ? EDGE : EDGE + 74) : 0, left: 0, bottom: 0, right: railW, transition: "right .22s ease", overflowY: (view === "ficha" && !viewingCharId && !modernCharId && showRail) || campFlat ? "hidden" : "auto", padding: isMobile ? (campDetail ? "10px 12px 18px" : "18px 14px") : modernCamp ? "18px 24px 12px 14px" : showTopbar ? "0 " + padX + " " + EDGE + "px" : campDetail ? (campaignDetailTab === "mesa" ? "18px 24px 12px 14px" : EDGE + "px " + padX + " " + EDGE + "px") : "24px 28px" }}>
           <div ref={setWizSlot} style={{ maxWidth: contentMax, margin: "0 auto" }} />
           <div key={view + (view === "ficha" && modernCharId ? ":hoja" : "")} className={"mh-view-in" + (view === "ficha" && modernCharId ? " mh-sheet-in" : "")} style={{ display: showNewCharModal ? "none" : undefined, maxWidth: contentMax, margin: "0 auto" }}>
             {!showTopbar && view !== "inicio" && view !== "perfil" && !campDetail && <div className="mh-pagetitle">{viewLabel}</div>}
@@ -29206,7 +30604,7 @@ export default function App({ onSignOut }) {
                           </p>
                         </div>
                         <span className="mh-cgb-sp" />
-                        <button type="button" className="mh-cgb-btn" onClick={() => soon("Invitar jugadores por enlace")}><Plus size={14} /> <span>Invitar</span></button>
+                        <button type="button" className="mh-cgb-btn" onClick={() => setCampInvOpen(true)}><Plus size={14} /> <span>Invitar</span></button>
                         <button
                           type="button"
                           className={"mh-cgb-btn is-del" + (pendingDeleteCampaignId === viewingCampaignId ? " is-confirm" : "")}
@@ -29307,7 +30705,7 @@ export default function App({ onSignOut }) {
                         );
                       })}
                     </div>
-                    <button type="button" className="mh-cg-btn" onClick={() => soon("Invitar jugadores por enlace")}>
+                    <button type="button" className="mh-cg-btn" onClick={() => setCampInvOpen(true)}>
                       <Plus size={14} /> <span>Invitar</span>
                     </button>
                     <button
@@ -29505,14 +30903,6 @@ export default function App({ onSignOut }) {
                             );
                           })}
                         </div>
-                        {diverged ? (
-                          <>
-                            <span className="mh-dir-ven" title="Lo que ven ahora los jugadores"><i />Ven: {cur ? "Cap. " + (idx + 1) + " · " : ""}{{ escena: "Escena", mapa: "Combate", mundo: "Mundo", pistas: "Pistas", personajes: "Personajes" }[live]}</span>
-                            <button type="button" className="mh-btn mh-dir-show" onClick={publishMine} title="Los jugadores pasarán a ver lo que tienes tú ahora">
-                              <Play size={13} /> Mostrar
-                            </button>
-                          </>
-                        ) : null}
                         {scenes.length > 0 && (
                           <div className="mh-dir-chnav" inert={xLock || undefined}>
                             <button type="button" className="mh-gm-ib" aria-label={vcIdx === 0 ? "Sin escena" : "Capítulo anterior"} title={vcIdx === 0 ? "Sin escena (solo lo ves tú hasta que pulses Mostrar)" : "Capítulo anterior (solo tú)"} disabled={vcIdx < 0} onClick={() => (setDjStep(null), setDjCh(vcIdx === 0 ? "__none" : scenes[vcIdx - 1].id))}>
@@ -29525,6 +30915,34 @@ export default function App({ onSignOut }) {
                               <ChevronRight size={14} />
                             </button>
                           </div>
+                        )}
+                        <div className={"mh-dir-st " + (diverged ? "is-diff" : "is-sync")} inert={xLock || undefined}>
+                          <i aria-hidden="true" />
+                          <span className="mh-dir-st-t" title={diverged ? "Lo que ven ahora los jugadores" : "Tú y los jugadores veis lo mismo"}>
+                            {diverged ? "Ven: " : "Todos ven: "}{cur ? "Cap. " + (idx + 1) + " · " : ""}{{ escena: "Escena", mapa: "Combate", mundo: "Mundo", pistas: "Pistas", personajes: "Personajes" }[live]}
+                          </span>
+                          {diverged && (
+                            <button type="button" className="mh-btn mh-dir-show" onClick={publishMine} title="Los jugadores pasarán a ver lo que tienes tú ahora">
+                              <Play size={13} /> <span>Mostrar</span>
+                            </button>
+                          )}
+                        </div>
+                        {!xLock && (
+                          <FocusPill
+                            spot={campaignMap.spot}
+                            pcs={(() => {
+                              const onMap = focusPcs(campaignMap.tokens);
+                              if (onMap.length) return onMap;
+                              return (activeCampaign?.characterIds || []).filter((id) => characters[id]).map((id) => ({ tokenId: null, charId: id, name: characters[id].f_name || "Jugador", cls: characters[id].f_class || "", color: characters[id].f_class ? classColor(characters[id].f_class) : "#C9A24A" }));
+                            })()}
+                            onPass={(t, why) => passFocus(viewingCampaignId, t, why)}
+                            onClear={() => clearSpotFocus(viewingCampaignId, "")}
+                          />
+                        )}
+                        {!xLock && (
+                          <button type="button" className={"mh-btn-ghost mh-dir-sess" + (campSession && campSession.active ? " is-on" : "")} onClick={campSession && campSession.active ? endSession : startSession} title={campSession && campSession.active ? "Termina la sesión: los jugadores pierden las fichas sin usar" : "Empieza la sesión: se activan las cartas y rasgos de «al empezar la sesión»"}>
+                            {campSession && campSession.active ? <><X size={13} /> <span>Terminar sesión {campSession.n}</span></> : <><Play size={13} /> <span>Empezar sesión</span></>}
+                          </button>
                         )}
                         {imm && (
                           <div className="mh-dir-dtog">
@@ -29618,6 +31036,10 @@ export default function App({ onSignOut }) {
                               <MapBoard
                                 cfx={campaignMap.cfx}
                                 plain
+                                showHp
+                                log={campaignMap.log}
+                                aimRange={foeAtk ? (() => { const ft = (campaignMap.tokens || []).find((t) => t.id === foeAtk.foeId); return ft && ft.stats ? { id: ft.id, max: RANGE_CELLS[ft.stats.attack.range] || 1 } : null; })() : null}
+                                menuFor={(t) => (t.kind === "foe" && t.stats && t.stats.attack && !(Number(t.stats.hp || 0) > 0 && Number(t.stats.hpMarked || 0) >= Number(t.stats.hp || 0)) ? [{ key: "foe-atk", Icon: Swords, color: "#C0504A", label: "Atacar con " + t.stats.attack.name, sub: t.stats.attack.range + " · " + t.stats.attack.damage + " " + (t.stats.attack.type || ""), run: () => setFoeAtk({ foeId: t.id }) }] : [])}
                                 onDragInfo={(d) => setDjDragTok(d && (campaignMap.tokens || []).find((t) => t.id === d.id)?.kind === "pc" ? d : null)}
                                 onStore={(id) => {
                                   const tk = (campaignMap.tokens || []).find((t) => t.id === id);
@@ -29645,6 +31067,62 @@ export default function App({ onSignOut }) {
                                 compact
                               />
                             </MapViewport>
+                            {foeAtk && (() => {
+                              const toks = campaignMap.tokens || [];
+                              const foe = toks.find((t) => t.id === foeAtk.foeId);
+                              if (!foe || !foe.stats) return null;
+                              const reach = RANGE_CELLS[foe.stats.attack.range] || 1;
+                              const pcs = mapTokensView(toks.filter((t) => t.kind === "pc" && !t.vanished));
+                              return (
+                                <div className="mh-foe-pick" role="dialog" aria-label="Elige a quién ataca" onPointerDown={(e) => e.stopPropagation()}>
+                                  <b>{foe.name || "Criatura"} ataca con {foe.stats.attack.name}</b>
+                                  <small>{foe.stats.attack.range} · {foe.stats.attack.damage} · elige a quién (el rango sale marcado en el mapa)</small>
+                                  <div className="mh-foe-tg">
+                                    {pcs.length === 0 && <small>No hay personajes en el tablero.</small>}
+                                    {pcs.map((t) => {
+                                      const dist = cellDist(foe, t);
+                                      const ok = dist <= reach;
+                                      return (
+                                        <button key={t.id} type="button" className="mh-foe-tg-b" disabled={!ok} title={ok ? "A " + dist + " casilla" + (dist === 1 ? "" : "s") : "Fuera de alcance (" + foe.stats.attack.range + ")"} onClick={() => foeAttack(foe.id, t.id)}>
+                                          <i style={{ background: t.color }}>{(t.name || "?").charAt(0)}</i>
+                                          {t.name}
+                                          <small>{ok ? dist + " c." + (characters[t.charId] ? " · Ev " + foeEvasionOf(characters[t.charId]) : "") : "lejos"}</small>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                  <button type="button" className="mh-btn-ghost" onClick={() => setFoeAtk(null)}>Cancelar</button>
+                                </div>
+                              );
+                            })()}
+                            {(campaignMap.hits || []).length > 0 && (
+                              <div className="mh-foe-wait" role="status" aria-live="polite">
+                                <b>Esperando a los jugadores</b>
+                                {(campaignMap.hits || []).map((h) => (
+                                  <div key={h.key} className="mh-foe-wait-r">
+                                    <i aria-hidden="true" />
+                                    <span>
+                                      <b>{(characters[h.charId] && characters[h.charId].f_name) || "Jugador"}</b> decide cómo recibe el golpe
+                                      <small>{h.from} · {h.weapon} · ataque {h.atk}{h.crit ? " (crítico)" : ""} · {h.dmg} de daño</small>
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            {aboveAsk && (() => {
+                              const foe = (campaignMap.tokens || []).find((t) => t.id === aboveAsk.foeId);
+                              const tg = mapTokensView((campaignMap.tokens || []).filter((t) => t.id === aboveAsk.tgId))[0];
+                              return (
+                                <div className="mh-foe-pick mh-above" role="dialog" aria-label="Desde arriba" onPointerDown={(e) => e.stopPropagation()}>
+                                  <b>¡{foe?.name || "La criatura"} acierta a {tg?.name || "su objetivo"}!</b>
+                                  <small>Ataque {aboveAsk.atk}{aboveAsk.crit ? " · crítico" : ""}. ¿Aplicas «{aboveAsk.feat}»? Hace {aboveAsk.expr} en lugar de {aboveAsk.base}.</small>
+                                  <div className="mh-above-b">
+                                    <button type="button" className="mh-btn" onClick={() => answerAbove(true)}>Sí, desde arriba · {aboveAsk.expr}</button>
+                                    <button type="button" className="mh-btn-ghost" onClick={() => answerAbove(false)}>No · {aboveAsk.base}</button>
+                                  </div>
+                                </div>
+                              );
+                            })()}
                             {(() => {
                               // Jugadores sin ficha en el tablero: el DJ los coloca pulsando o arrastrándolos a una casilla. Arrastrar una ficha a la caja (o al cajón, si no hay caja) la guarda.
                               const placed = new Set((campaignMap.tokens || []).filter((t) => t.kind === "pc").map((t) => t.charId));
@@ -30155,6 +31633,8 @@ export default function App({ onSignOut }) {
                       </div>
                     );
                   })()}
+
+                  {campInvOpen && activeCampaign && <CampInvite camp={activeCampaign} players={(activeCampaign.characterIds || []).length} onClose={() => setCampInvOpen(false)} />}
 
                   {addContentFor && (
                     <div className="mh-chn-ov" role="dialog" aria-modal="true" aria-label="Añadir contenido" onClick={() => setAddContentFor(null)}>
@@ -31320,7 +32800,13 @@ export default function App({ onSignOut }) {
                         <div className="cgp-empty">
                           <span className="cgp-empty-ic"><Users size={26} strokeWidth={1.4} /></span>
                           <b>Aún no hay personajes en la mesa</b>
-                          
+                          <span>Invita a tus amigos para que se unan con sus personajes{availableIds.length ? " o añade uno tuyo" : ""}.</span>
+                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", marginTop: 6 }}>
+                            <button type="button" className="mh-btn" onClick={() => setCampInvOpen(true)}><Plus size={14} /> Invitar jugadores</button>
+                            {availableIds.map((id) => (
+                              <button key={id} type="button" className="mh-btn-ghost" onClick={() => addCharacterToCampaign(viewingCampaignId, id)}><Plus size={13} /> {characters[id].f_name || "Sin nombre"}</button>
+                            ))}
+                          </div>
                         </div>
                       ) : (
                         <div className="cgp-list is-gal">

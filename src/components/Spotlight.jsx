@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Hand, ChevronDown, X as XIcon } from "lucide-react";
 
 // Foco (spotlight) de la mesa: los jugadores piden la palabra y el DJ da el foco, interrumpe o silencia.
 // Todo vive en el campo `spot` del estado compartido del mapa.
@@ -57,7 +58,7 @@ export const beep = () => {
 };
 
 // Botón y avisos del jugador, sobre su mapa.
-export function SpotPlayer({ spot, charId, onRaise, onLower, onDone }) {
+export function SpotPlayer({ spot, charId, onRaise, onLower, onDone, quick }) {
   const sp = normSpot(spot);
   const [open, setOpen] = useState(false);
   const [now, setNow] = useState(() => Date.now());
@@ -70,6 +71,34 @@ export function SpotPlayer({ spot, charId, onRaise, onLower, onDone }) {
   const mine = idx >= 0;
   const hasFocus = !!sp.focus && sp.focus.charId === charId;
   const blocked = sp.mode !== "normal";
+  // Acceso rápido junto al «+» del chat: solo el icono de la mano; el menú y el aviso del foco se abren hacia arriba.
+  if (quick) {
+    const title = sp.mode === "silent" ? "El DJ ha pedido silencio" : mine ? "Bajar la mano · vas la " + (idx + 1) + ".ª" : "Pedir la palabra";
+    return (
+      <div className="mh-spot-qwrap" onPointerDown={(e) => e.stopPropagation()}>
+        {hasFocus && (
+          <div className="mh-spot-got is-q">
+            <b>✨ El DJ te da el foco</b>
+            <small>Actúa o habla. Al terminar, pulsa abajo.</small>
+            <button type="button" onClick={onDone}>He terminado</button>
+          </div>
+        )}
+        {open && !mine && !blocked && (
+          <div className="mh-spot-kinds is-q" role="menu">
+            {SPOT_KINDS.map((k) => (
+              <button key={k.key} type="button" role="menuitem" className={k.urgent ? "is-urg" : ""} onClick={() => (setOpen(false), onRaise(k.key))}>
+                <b>{k.icon} {k.label}</b>
+                <small>{k.sub}</small>
+              </button>
+            ))}
+          </div>
+        )}
+        <button type="button" className={"mh-chat-plus mh-spot-qbtn" + (mine ? " is-hand" : "")} title={title} aria-label={title} aria-expanded={open} disabled={sp.mode === "silent" || (blocked && !mine)} onClick={() => (mine ? onLower() : setOpen((v) => !v))}>
+          <Hand size={16} />
+        </button>
+      </div>
+    );
+  }
   return (
     <>
     {hasFocus && (
@@ -278,6 +307,73 @@ export function FocusBar({ spot, pcs, myCharId, isGm, onPass, onClear }) {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+// Foco en formato píldora, del tamaño del menú «Escena · Combate · Mundo · Personajes» de la vista Directo del DJ.
+export function FocusPill({ spot, pcs, onPass, onClear }) {
+  const sp = normSpot(spot);
+  const [now, setNow] = useState(() => Date.now());
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 15000);
+    return () => clearInterval(t);
+  }, []);
+  const f = sp.focus;
+  const dm = !!f?.dm;
+  const hands = liveHands(sp, now);
+  const colorOf = (n) => pcs.find((p) => p.name === n)?.color || "#8E6FC4";
+  const av = (label, c, size) => <span className="fb-av" style={{ "--c": c, width: size, height: size, fontSize: Math.round(size * 0.42) }}>{label}</span>;
+  const mins = f ? Math.max(0, Math.floor((now - (f.since || now)) / 60000)) : 0;
+  const handOf = (charId) => hands.find((h) => h.charId === charId);
+  return (
+    <div className={"fp" + (f ? "" : " is-none")} role="group" aria-label="Foco de la mesa" onPointerDown={(e) => e.stopPropagation()}>
+      {f ? (
+        <span className="fp-cur">
+          <span className="fp-ring" style={{ "--c": dm ? "#8E6FC4" : colorOf(f.name) }}>{av(dm ? "DJ" : (f.name || "?").trim().charAt(0).toUpperCase(), dm ? "#8E6FC4" : colorOf(f.name), 25)}</span>
+          <span className="fp-who"><b>{dm ? "El DJ" : f.name}</b><small>{mins < 1 ? "ahora mismo" : "desde hace " + mins + " min"}</small></span>
+        </span>
+      ) : (
+        <span className="fp-nobody">Sin foco</span>
+      )}
+      {hands.slice(0, 2).map((h) => (
+        <span key={h.charId + h.at} className={"fp-hand" + (h.urgent ? " is-u" : "")} title={h.name + " · " + kindOf(h.kind).label}><Hand size={12} /> {h.name.split(" ")[0]}</span>
+      ))}
+      {hands.length > 2 && <span className="fp-more">+{hands.length - 2}</span>}
+      <div className="fb-pass">
+        <button type="button" className="fp-go" onClick={() => setOpen((v) => !v)} aria-expanded={open}>{f ? "Pasar el foco" : "Dar el foco"} <ChevronDown size={12} /></button>
+        {open && (
+          <>
+            <div className="fb-bg" onClick={() => setOpen(false)} />
+            <div className="fb-menu" role="menu">
+              <div className="fb-lab">¿A quién pasas el foco?</div>
+              {pcs.filter((p) => !(f && !dm && f.charId === p.charId)).map((p) => {
+                const h = handOf(p.charId);
+                return (
+                  <button key={p.charId} type="button" role="menuitem" onClick={() => (setOpen(false), onPass({ tokenId: p.tokenId, charId: p.charId, name: p.name }, "dj"))}>
+                    {av(p.name.trim().charAt(0).toUpperCase(), p.color, 24)}
+                    <span><b>{p.name}</b><small>{h ? "Ha levantado la mano · " + kindOf(h.kind).label.toLowerCase() : p.cls || "Jugador"}</small></span>
+                  </button>
+                );
+              })}
+              {!dm && (
+                <button type="button" role="menuitem" onClick={() => (setOpen(false), onPass({ dm: true }, "dj"))}>
+                  {av("DJ", "#8E6FC4", 24)}
+                  <span><b>El DJ</b><small>Hace un movimiento</small></span>
+                </button>
+              )}
+              {f && (
+                <button type="button" role="menuitem" onClick={() => (setOpen(false), onClear())}>
+                  <span style={{ width: 24, display: "inline-flex", justifyContent: "center" }}><XIcon size={14} /></span>
+                  <span><b>Apagar el foco</b><small>Nadie tiene la palabra</small></span>
+                </button>
+              )}
+              <div className="fb-note">Con <b style={{ color: "#E3B04B" }}>Esperanza</b> el foco sigue en la mesa y eliges quién actúa. Con <b style={{ color: "#A58BE8" }}>Miedo</b> pasa al DJ.</div>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
