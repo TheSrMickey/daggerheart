@@ -2367,6 +2367,17 @@ const DOMAIN_ICONS = {
   Pavor: Skull,
 };
 
+// Iconos oficiales de los dominios (archivos en public/dominios). Sangre no tiene icono oficial: usa el de siempre.
+const DOMAIN_ICON_FILE = { Arcano: "arcana", Filo: "blade", Hueso: "bone", Códice: "codex", Pavor: "dread", Gracia: "grace", Medianoche: "midnight", Naturaleza: "sage", Esplendor: "splendor", Valor: "valor" };
+function DomainIcon({ name, size = 16 }) {
+  const f = DOMAIN_ICON_FILE[name];
+  if (!f) {
+    const Fb = DOMAIN_ICONS[name] || Sparkles;
+    return <Fb size={size} strokeWidth={2} aria-hidden="true" />;
+  }
+  return <span className="mh-dom-ic" aria-hidden="true" style={{ width: size, height: size, "--m": "url(/dominios/" + f + ".svg)" }} />;
+}
+
 const DOMAIN_CARDS = {
   Arcano: [
     {
@@ -7600,6 +7611,10 @@ const sharedStyles = `
   .mh-wz-page .mh-wz-steps { margin-top: 14px; }
   .mh-wz-page .mh-wz-grp button { height: 6px; }
   .mh-wz-page .mh-wz-body { padding: 4px 2px 18px; }
+  /* Dominios de la clase: una línea y dos pills con el icono oficial de cada dominio */
+  .mh-dom-ic { display: inline-block; flex: none; vertical-align: middle; background: currentColor; -webkit-mask: var(--m) center / contain no-repeat; mask: var(--m) center / contain no-repeat; }
+  .mh-wz-doms { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 2px; padding-top: 12px; border-top: 1px solid color-mix(in srgb, var(--mh-ink, #fff) 24%, transparent); }
+  .mh-wz-dpill { display: inline-flex; align-items: center; gap: 7px; padding: 6px 13px 6px 10px; border-radius: 99px; border: 1px solid color-mix(in srgb, var(--dc) 55%, transparent); background: color-mix(in srgb, var(--dc) 14%, transparent); color: var(--mh-ink); font: 600 12.5px/1 Inter, system-ui, sans-serif; letter-spacing: .01em; } .mh-wz-dpill .mh-dom-ic, .mh-wz-dpill svg { color: var(--dc); }
   /* Cambio de paso: el contenido entra desde un lado (según se avance o se retroceda), el título sube y las elecciones aparecen abajo */
   .mh-wz-body.is-in-fwd { animation: mh-wz-in-fwd .45s cubic-bezier(.2,.8,.2,1) both; } .mh-wz-body.is-in-back { animation: mh-wz-in-back .45s cubic-bezier(.2,.8,.2,1) both; }
   @keyframes mh-wz-in-fwd { from { opacity: 0; transform: translateY(20px) scale(.985); } } @keyframes mh-wz-in-back { from { opacity: 0; transform: translateY(-14px) scale(.985); } }
@@ -35013,11 +35028,16 @@ export default function App({ onSignOut }) {
                               <span className="mh-wz-badge" style={{ background: col }} aria-hidden="true">{(() => { const Em = CLASS_EMBLEMS[cls] || User; return <Em size={26} strokeWidth={1.8} />; })()}</span>
                               <div>
                                 <div className="mh-serif mh-wz-dn">{cls}</div>
-                                <div className="mh-wz-dm">
-                                  Dominios {(CLASS_DOMAINS[cls] || []).join(" y ")}
-                                  {current.expansion && " · Expansión " + current.expansion}
-                                </div>
+                                {current.expansion && <div className="mh-wz-dm">Expansión {current.expansion}</div>}
                               </div>
+                            </div>
+                            <div className="mh-wz-doms" aria-label={"Dominios de " + cls}>
+                              {(CLASS_DOMAINS[cls] || []).map((d) => (
+                                <span key={d} className="mh-wz-dpill" style={{ "--dc": DOMAIN_COLORS[d] || "#C9A24B" }}>
+                                  <DomainIcon name={d} size={17} />
+                                  {d}
+                                </span>
+                              ))}
                             </div>
                             {(SUBCLASSES[cls] || []).length > 0 && (
                               <div className="mh-wz-subs">
