@@ -9612,6 +9612,9 @@ const BOOK_SPELLS = [
   { id: "push", book: "Libro de Ava", name: "Empujón de Poder", reach: "Cuerpo a cuerpo", lab: "Tirada", text: "Tirada de conjuro contra un adversario Cuerpo a cuerpo. Si aciertas, sale despedido hasta alcance Lejano y sufre d10+2 de daño mágico (dados = tu Competencia)." },
   { id: "tava", book: "Libro de Ava", name: "Armadura de Tava", reach: "Cuerpo a cuerpo", ally: true, hope: true, lab: "1 Esperanza", text: "Gasta 1 Esperanza: un aliado que toques (o tú) gana +1 a su Puntuación de Armadura hasta el próximo descanso o hasta que vuelvas a lanzarlo." },
   { id: "ice", book: "Libro de Ava", name: "Pico de Hielo", reach: "Lejano", lab: "Tirada", text: "Invoca un pico de hielo sobre un adversario en alcance Lejano: tirada de conjuro contra su Dificultad; si aciertas, d6 de daño físico (dados = tu Competencia)." },
+  { id: "flame", book: "Libro de Tyfar", name: "Llama Salvaje", reach: "Cuerpo a cuerpo", lab: "Tirada", text: "Tirada de conjuro contra hasta tres adversarios Cuerpo a cuerpo (el que eliges y los más cercanos). A quienes superes: 2d6 mágico y marcan 1 Estrés." },
+  { id: "hand", book: "Libro de Tyfar", name: "Mano Mágica", reach: "Lejano", any: true, self: true, lab: "Gratis", text: "Conjuras una mano mágica del tamaño y la fuerza de la tuya junto a la ficha elegida, en alcance Lejano." },
+  { id: "mist", book: "Libro de Tyfar", name: "Niebla Misteriosa", reach: "Muy cercano", any: true, self: true, lab: "Tirada 13", text: "Tirada de conjuro (13): una niebla densa cubre la zona (3×3) alrededor de la ficha elegida, en alcance Muy cercano. Oscurece todo lo que hay dentro." },
   { id: "sleep", book: "Libro de Illiat", name: "Sopor", reach: "Muy cercano", lab: "Tirada", text: "Tirada de conjuro contra un adversario Muy cercano. Si aciertas, queda Dormido hasta que sufra daño o el DJ gaste un Miedo." },
   { id: "arcane", book: "Libro de Illiat", name: "Descarga Arcana", reach: "Cercano", hope: true, once: "f_arcane_used", lab: "Esperanza", text: "Una vez por descanso, gasta cuanta Esperanza quieras: d6 de daño mágico por cada una a un objetivo en alcance Cercano." },
   { id: "tele", book: "Libro de Illiat", name: "Telepatía", reach: "Muy lejano", any: true, hope: true, lab: "1 Esperanza", text: "Gasta 1 Esperanza para crear un vínculo mental con un objetivo que veas, hasta el próximo descanso o hasta que lo lances de nuevo." },
@@ -9871,6 +9874,19 @@ function ShotFx({ kind, a, b, b2, size: S, n: bolts = 3 }) {
   const q = p > 0.5 ? (p - 0.5) / 0.5 : 0;
   const magic = kind === "magic";
   const [x, y] = at(f);
+  if (kind === "gold") {
+    // Engañador Hábil: una onda dorada se expande desde la ficha que usa la carta.
+    const fade = p > 0.7 ? (1 - p) / 0.3 : 1;
+    return (
+      <g pointerEvents="none" opacity={fade}>
+        {[0, 0.22, 0.44].map((o, i) => {
+          const q2 = Math.max(0, Math.min(1, (p - o) / (1 - o)));
+          return <circle key={i} cx={a[0]} cy={a[1]} r={S * (0.25 + 1.1 * q2)} fill="none" stroke="#E3B04B" strokeWidth={S * 0.06 * (1 - q2 * 0.6)} opacity={(1 - q2) * 0.85} />;
+        })}
+        <circle cx={a[0]} cy={a[1]} r={S * 0.5} fill="#E3B04B" opacity={0.22 * (1 - p)} />
+      </g>
+    );
+  }
   if (kind === "uncharm") {
     // Romper el embeleso: las ondas rosas se pliegan hacia el objetivo y se apagan.
     const k = Math.min(1, p / 0.8);
@@ -11662,7 +11678,7 @@ function MapBoard({ showHp, aimRange, rangeMenu, cfx, meCharId, onDragInfo, onSt
             key={t.id}
             type="button"
             data-tid={t.id}
-            className={"mh-map-tk is-" + t.kind + (hAnim && hAnim.to === t.id ? " is-hurt" : "") + (eAnim && eAnim.kind === "burn" && eAnim.to === t.id ? " is-burn" : "") + (t.beast || t.trf ? " is-trf" : "") + (morphs[t.id] ? " is-morph" : "") + (t.elem ? " is-el-" + String(t.elem).toLowerCase() : elemOut[t.id] ? " is-el-out is-el-p-" + elemOut[t.id].toLowerCase() : "") + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id && anim.kind !== "free" && anim.kind !== "howl" ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") + (anim.kind === "web" ? " is-web" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
+            className={"mh-map-tk is-" + t.kind + (hAnim && hAnim.to === t.id ? " is-hurt" : "") + (eAnim && eAnim.kind === "burn" && eAnim.to === t.id ? " is-burn" : "") + (t.beast || t.trf ? " is-trf" : "") + (morphs[t.id] ? " is-morph" : "") + (t.elem ? " is-el-" + String(t.elem).toLowerCase() : elemOut[t.id] ? " is-el-out is-el-p-" + elemOut[t.id].toLowerCase() : "") + (movable ? " is-movable" : "") + (selectedId === t.id ? " is-sel" : "") + (drag?.id === t.id ? " is-drag" : "") + (anim && anim.from === t.id && (anim.kind || "melee") === "melee" ? " is-attack" : "") + (anim && anim.to === t.id && anim.kind !== "free" && anim.kind !== "howl" && anim.kind !== "gold" ? " is-hit" + ((anim.kind || "melee") !== "melee" ? " is-late" : "") + (anim.kind === "web" ? " is-web" : "") : "") + (isDeadFoe(t) ? " is-dead" : "") + (t.kind === "pc" && t.down && !mapConds(t).includes("Inconsciente") ? " is-c-ko" : "") + (isFlying(t) && tokens.some((o) => o.id !== t.id && !o.vanished && o.x === t.x && o.y === t.y) ? " is-shared" : "") + (steps[t.id] ? " is-step" + (steps[t.id].n % 2) : "") + (t.hidden ? " is-hidden" : "") + (t.vanished ? " is-vanished" : "") + (vis[t.id] ? " is-poof-" + vis[t.id].kind : "") + mapConds(t).map((c) => " is-c-" + MAP_COND_FX[c].cls).join("")}
             style={{ ...at(pos.x, pos.y), "--tc": t.color, ...(t.color2 ? { "--tc2": t.color2 } : {}), ...(anim && anim.from === t.id ? (() => { const tg = tokens.find((x) => x.id === anim.to); return tg ? { "--ax": (tg.x - t.x) * 100 + "%", "--ay": (tg.y - t.y) * 100 + "%" } : {}; })() : {}) }}
             onPointerDown={(e) => startDrag(e, t)}
             onContextMenu={(e) => openMenu(e, t)}
@@ -11702,7 +11718,6 @@ function MapBoard({ showHp, aimRange, rangeMenu, cfx, meCharId, onDragInfo, onSt
               </span>
             )}
             {cAnim && meCharId && cAnim.charId === meCharId && t.kind === "pc" && t.charId === meCharId && !t.vanished && <span key={cAnim.key} className="mh-map-cpulse" aria-hidden="true"><i /><i /><i /></span>}
-            {t.pas === "gracia" && !t.vanished && <span className="mh-map-pas" style={{ "--gc": DOMAIN_COLORS.Gracia }} aria-hidden="true"><i /><i /></span>}
             {t.charmedBy && mapConds(t).includes("Embelesado") && !t.vanished && (
               <span className="mh-root-tag" role="tooltip">
                 <b>💗 Embelesar</b>
@@ -12931,7 +12946,7 @@ export default function App({ onSignOut }) {
     const trf = visibleTransform(me);
     const elem = me.f_elemental_active || "";
     const tele = me.f_tele || "";
-    const pas = getKeys(me.f_domain_cards).includes("Engañador Hábil") ? "gracia" : ""; // pasiva visible para toda la mesa
+    const pas = ""; // «Engañador Hábil» ya no tiene pasiva visual (si quedó alguna en el tablero, se limpia)
     const wrong = (campaignMap.tokens || []).some((t) => t.kind === "pc" && t.charId === sheetCharId && ((t.pas || "") !== pas || (t.tele || "") !== tele || !!t.hidden !== hid || !sameConds(t.conds) || !!t.down !== down || (t.beast || "") !== beast || (t.trf || "") !== trf || (t.elem || "") !== elem));
     if (!wrong) return;
     mutateMap(sheetCampaignId, (ts) =>
@@ -12955,6 +12970,7 @@ export default function App({ onSignOut }) {
     if (me.f_tele && !has("Libro de Illiat")) patch.f_tele = "";
     if (Object.keys(patch).length) updateCharacterFields(sheetCharId, patch);
     const mine = (t, f, cond) => t[f] === sheetCharId && (t.conds || []).includes(cond);
+    if (!has("Libro de Tyfar") && (campaignMap.areas || []).some((a) => a.owner === sheetCharId && a.mist)) mutateMap(sheetCampaignId, (as) => (Array.isArray(as) ? as : []).filter((a) => !(a.owner === sheetCharId && a.mist)), "areas");
     const stale = toks.some((t) => (!has("Embelesar") && mine(t, "charmedBy", "Embelesado")) || (!has("Enredo Feroz") && mine(t, "rootedBy", "Inmovilizado")) || (!has("Libro de Illiat") && mine(t, "sleptBy", "Dormido")));
     if (!stale) return;
     mutateMap(sheetCampaignId, (ts) => ts.map((t) => {
@@ -16317,6 +16333,34 @@ export default function App({ onSignOut }) {
       const w = { name: sp.name, damage: sp.id === "push" ? "d10+2 mágico" : sp.id === "ice" ? "d6 físico" : "", spell: true, book: sp.id, fixedDice: getProficiency(c), targetChosen: true, targetId: target.id, targetName: target.name, targetDc: target.stats?.difficulty || null };
       return reveal(() => rollTraitCheck(charId, label, Number(c[sk] || 0) + (mods[sk] || 0), w));
     }
+    if (sp.id === "flame") {
+      if (!foe) return "cancel";
+      const sk = charSpellTrait(c);
+      const label = TRAITS.find((tr) => tr.key === sk)?.label;
+      if (!label) return "cancel";
+      const mods = getEquipmentMods(PRIMARY_WEAPONS.find((w) => w.key === c.f_primary_weapon), SECONDARY_WEAPONS.find((w) => w.key === c.f_secondary_weapon), ARMORS.find((a) => a.key === c.f_armor));
+      const others = toks.filter((x) => x.id !== target.id && (x.kind === "foe" || x.kind === "npc") && !x.gmHidden && !x.vanished && !deadTok(x) && cellDist(me, x) <= RANGE_CELLS["Cuerpo a cuerpo"]).sort((p1, q1) => cellDist(me, p1) - cellDist(me, q1)).slice(0, 2);
+      const foes = [target, ...others];
+      postCampaignEvent(charId, "🔥 Lanza Llama Salvaje sobre " + foes.map((f) => f.name || "un adversario").join(", "));
+      const w = { name: sp.name, damage: "d6 mágico", spell: true, book: "flame", fixedDice: 2, targetChosen: true, targets: foes.map((f) => ({ id: f.id, name: f.name, dc: f.stats?.difficulty || null })) };
+      return reveal(() => rollTraitCheck(charId, label, Number(c[sk] || 0) + (mods[sk] || 0), w));
+    }
+    if (sp.id === "hand") {
+      postCampaignEvent(charId, "🖐️ Mano Mágica: conjura una mano mágica junto a " + (target.id === me.id ? "sí mismo" : nm));
+      return reveal(() => {
+        mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: me.id, to: target.id, kind: target.id === me.id ? "gold" : "magic" }), "fx");
+        pushMapLog(sheetCampaignId, "🖐️ Mano Mágica: " + (me.name || "Alguien") + " conjura una mano mágica junto a " + (target.id === me.id ? "sí mismo" : nm), "info");
+      });
+    }
+    if (sp.id === "mist") {
+      const sk = charSpellTrait(c);
+      const label = TRAITS.find((tr) => tr.key === sk)?.label;
+      if (!label) return "cancel";
+      const mods = getEquipmentMods(PRIMARY_WEAPONS.find((w) => w.key === c.f_primary_weapon), SECONDARY_WEAPONS.find((w) => w.key === c.f_secondary_weapon), ARMORS.find((a) => a.key === c.f_armor));
+      postCampaignEvent(charId, "🌫️ Lanza Niebla Misteriosa junto a " + (target.id === me.id ? "sí mismo" : nm));
+      const w = { name: sp.name, damage: "", spell: true, book: "mist", targetChosen: true, targetId: target.id, targetName: target.name, targetDc: 13 };
+      return reveal(() => rollTraitCheck(charId, label, Number(c[sk] || 0) + (mods[sk] || 0), w));
+    }
     if (sp.id === "tava") {
       if (target.kind !== "pc" || !characters[target.charId] || hope < 1) return "cancel";
       const ally = characters[target.charId];
@@ -16360,6 +16404,21 @@ export default function App({ onSignOut }) {
       updateCharacterField(charId, "f_tele", "");
       pushMapLog(sheetCampaignId, "🔮 Telepatía: el vínculo mental se rompe", "info");
     });
+    return "reveal";
+  };
+  // Engañador Hábil: gasta 1 Esperanza; se revela la carta y una onda dorada sale de tu ficha.
+  const castDeceiver = (charId, card) => {
+    const c = charsRef.current[charId];
+    const me = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
+    if (!c || !me || !sheetCampaignId) return "cancel";
+    if (Number(c.hope_marked ?? HOPE_DEFAULT) < 1) {
+      pushMapLog(sheetCampaignId, "Engañador Hábil: no te queda Esperanza", "info");
+      return "cancel";
+    }
+    spendHope(charId, 1);
+    postCampaignEvent(charId, "🎭 Engañador Hábil: gasta 1 Esperanza y obtiene ventaja en su engaño");
+    playCardOnMap(sheetCampaignId, charId, card, { noChat: true, short: true });
+    afterReveal(charId, card.key, () => mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: me.id, to: me.id, kind: "gold" }), "fx"));
     return "reveal";
   };
   const confirmArcane = (n) => {
@@ -18609,6 +18668,18 @@ export default function App({ onSignOut }) {
       postCampaignEvent(r.charId, "💤 " + (tg.name || "Un adversario") + " queda dormido");
       return;
     }
+    // Niebla Misteriosa no hace daño: un acierto deja una zona de niebla (3×3) alrededor de la ficha elegida.
+    if (r.weapon?.book === "mist") {
+      setTraitRollResult(null);
+      const tg = (campaignMapRef.current.tokens || []).find((t) => t.id === r.weapon.targetId);
+      const src = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === r.charId);
+      if (!tg || !sheetCampaignId) return;
+      const area = { id: "a" + Date.now() + Math.random().toString(36).slice(2, 5), owner: r.charId, ownerName: charsRef.current[r.charId]?.f_name || "Alguien", shape: "circle", range: "Cuerpo a cuerpo", color: "#9FB0C4", x: tg.x, y: tg.y, mist: true };
+      if (src) mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: src.id, to: tg.id, kind: "magic" }), "fx");
+      setTimeout(() => mutateMap(sheetCampaignId, (as) => [...(Array.isArray(as) ? as : []).filter((a) => a.owner !== r.charId), area], "areas"), 700);
+      pushMapLog(sheetCampaignId, "🌫️ Niebla Misteriosa: una niebla densa cubre la zona", "info");
+      return;
+    }
     const fxLater = [];
       const { name, damage, focusTarget } = r.weapon;
       const charId = r.charId;
@@ -18636,6 +18707,15 @@ export default function App({ onSignOut }) {
         const cur = charsRef.current[charId];
         updateCharacterFields(charId, { hope_marked: String(Math.min(getHopeMax(cur), Number(cur.hope_marked ?? HOPE_DEFAULT) + 1)), stress_marked: String(Math.max(0, Number(cur.stress_marked || 0) - 1)) });
         postCampaignEvent(charId, "🥊 Gozo del Golpe: gana 1 Esperanza más, se quita 1 Estrés más y su Competencia sube en 1 en este ataque");
+      }
+      if (r.weapon.book === "flame") {
+        // Llama Salvaje: quienes reciben el golpe también marcan 1 Estrés.
+        const ids = r.weapon.hitIds || [];
+        const fromF = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
+        fxLater.push(() => {
+          ids.forEach((id) => mutateMap(sheetCampaignId, (ts) => ts.map((x) => (x.id === id && x.stats ? { ...x, stats: { ...x.stats, stressMarked: Math.min(Number(x.stats.stress || 0) || 99, Number(x.stats.stressMarked || 0) + 1) } } : x))));
+          if (fromF && ids[0]) mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: fromF.id, to: ids[0], kind: "magic" }), "fx");
+        });
       }
       if (r.weapon.targetId && sheetCampaignId) {
         const fromTok = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
@@ -23439,6 +23519,7 @@ export default function App({ onSignOut }) {
                                               me={myToken}
                                               tokens={mapTokens}
                                               onUse={(card, cell, target, rng) =>
+                                                card.key === "Engañador Hábil" && !card.weapon && !card.rowCard && !card.subclass ? castDeceiver(viewingCharId, card) :
                                                 card.unTele ? castUnTele(viewingCharId, target, card) :
                                                 card.bookCard && !card.weapon && !card.rowCard ? (setBookAsk({ charId: viewingCharId, card, targetId: target.id }), "cancel") :
                                                 card.key === "Desatar el Caos" && !card.weapon && !card.rowCard && !card.subclass ? castChaos(viewingCharId, target, card) :
@@ -27662,7 +27743,7 @@ export default function App({ onSignOut }) {
                 if (!me0 || !tg) return "Sin objetivo";
                 if (c?.f_beastform) return "En Forma de Bestia";
                 const foe = (tg.kind === "foe" || tg.kind === "npc") && !deadTok(tg);
-                if (sp.any) { if (tg.id === me0.id) return "Elige otra ficha"; }
+                if (sp.any) { if (tg.id === me0.id && !sp.self) return "Elige otra ficha"; }
                 else if (sp.ally ? tg.kind !== "pc" : !foe) return sp.ally ? "Necesita un aliado" : "Necesita un adversario";
                 if (cellDist(me0, tg) > RANGE_CELLS[sp.reach]) return "Fuera de alcance " + sp.reach;
                 if (sp.once && c?.[sp.once]) return "Ya usada";

@@ -9,6 +9,8 @@ export const CHANGELOG = [
     title: "El Oráculo del DJ",
     blurb: "Un anillo de luz que responde a las preguntas de la mesa: Sí / No, con matices o con una tirada de destino, solo para el DJ y a un toque bajo el chat.",
     items: [
+      { tag: "mejora", text: "Combate · «Engañador Hábil» ya no tiene efecto pasivo: ahora se lanza desde el mapa. Arrástrala al tablero, gasta 1 Esperanza, se revela la carta a la mesa y una onda dorada se expande desde tu ficha." },
+      { tag: "nuevo", text: "Combate · «Libro de Tyfar» se juega desde el mapa (arrástralo a una ficha y elige): Llama Salvaje (una tirada contra hasta tres adversarios Cuerpo a cuerpo; a quienes superes, 2d6 mágico y 1 Estrés), Mano Mágica (efecto de invocación en alcance Lejano) y Niebla Misteriosa (tirada de 13: una zona 3×3 de niebla alrededor de la ficha elegida, que se retira con las áreas)." },
       { tag: "nuevo", text: "Combate · si cambias tus cartas de dominio, los efectos en el mapa de las que ya no llevas se quitan solos (embeleso, raíces, sueño, telepatía y Armadura de Tava)." },
       { tag: "mejora", text: "Combate · el estado Dormido (Sopor) ahora suelta partículas de «Z» que suben y se desvanecen sobre la ficha, que se ve algo apagada." },
       { tag: "nuevo", text: "Combate · con Telepatía activa aparece en tu mano la carta fugaz «Cortar la telepatía» (gratis): suéltala sobre el objetivo del vínculo para romperlo." },
