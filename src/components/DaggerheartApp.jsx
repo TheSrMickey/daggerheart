@@ -4898,10 +4898,10 @@ const sharedStyles = `
   .mh-map-tk.is-hidden .mh-map-face, .mh-iso-tk.is-hidden { opacity: .45; }
   .mh-map-tk.is-hidden .mh-map-face { outline: 2px dashed rgba(255,255,255,.85); outline-offset: 2px; filter: saturate(.4); }
   .mh-map-tk.is-hidden::after { content: ""; position: absolute; right: 2%; top: 2%; width: 34%; height: 34%; border-radius: 50%; background: #2a2333 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.9 4.2A10 10 0 0 1 12 4c7 0 10 8 10 8a13 13 0 0 1-1.7 2.7M6.6 6.6C3.6 8.6 2 12 2 12s3 8 10 8a9.7 9.7 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2M2 2l20 20'/%3E%3C/svg%3E") center / 64% no-repeat; box-shadow: 0 1px 3px rgba(0,0,0,.4); pointer-events: none; }
-  .mh-map-tk > .mh-map-face, .mh-map-tk > .mh-map-ring, .mh-map-tk > .mh-map-rank, .mh-map-tk > .mh-map-hp, .mh-map-tk > .mh-map-nm { transition: opacity .55s ease, scale .55s ease, filter .55s ease; }
+  .mh-map-tk > .mh-map-face, .mh-map-tk > .mh-map-ring, .mh-map-tk > .mh-map-rank, .mh-map-tk > .mh-map-beetles, .mh-map-tk > .mh-map-conds, .mh-map-tk > .mh-map-hp, .mh-map-tk > .mh-map-nm { transition: opacity .55s ease, scale .55s ease, filter .55s ease; }
   .mh-map-tk.is-vanished { pointer-events: none; }
-  .mh-map-tk.is-vanished > .mh-map-face, .mh-map-tk.is-vanished > .mh-map-ring, .mh-map-tk.is-vanished > .mh-map-rank, .mh-map-tk.is-vanished > .mh-map-hp, .mh-map-tk.is-vanished > .mh-map-nm { opacity: 0; scale: .55; filter: blur(4px); }
-  .mh-map-tk.is-poof-show > .mh-map-rank, .mh-map-tk.is-poof-show > .mh-map-face { animation: mh-pop-in .55s cubic-bezier(.3,1.5,.5,1); }
+  .mh-map-tk.is-vanished > .mh-map-face, .mh-map-tk.is-vanished > .mh-map-ring, .mh-map-tk.is-vanished > .mh-map-rank, .mh-map-tk.is-vanished > .mh-map-beetles, .mh-map-tk.is-vanished > .mh-map-conds, .mh-map-tk.is-vanished > .mh-map-hp, .mh-map-tk.is-vanished > .mh-map-nm { opacity: 0; scale: .55; filter: blur(4px); }
+  .mh-map-tk.is-poof-show > .mh-map-rank, .mh-map-tk.is-poof-show > .mh-map-beetles, .mh-map-tk.is-poof-show > .mh-map-conds, .mh-map-tk.is-poof-show > .mh-map-face { animation: mh-pop-in .55s cubic-bezier(.3,1.5,.5,1); }
   @keyframes mh-pop-in { 0% { scale: .5; filter: blur(4px); } 60% { scale: 1.12; filter: none; } 100% { scale: 1; } }
   .mh-map-puff { position: absolute; inset: -15%; pointer-events: none; z-index: 2; }
   .mh-map-puff i { position: absolute; width: 46%; height: 46%; border-radius: 50%; background: radial-gradient(circle, rgba(225,222,235,.95) 0%, rgba(190,185,205,.7) 45%, rgba(160,155,180,0) 72%); opacity: 0; animation: mh-puff .8s ease-out forwards; }
@@ -4911,8 +4911,8 @@ const sharedStyles = `
   .mh-map-puff i:nth-child(4) { left: 14%; top: 52%; --px: -30%; --py: 30%; animation-delay: .04s; }
   .mh-map-puff i:nth-child(5) { left: 42%; top: 52%; --px: 30%; --py: 30%; animation-delay: .08s; }
   @keyframes mh-puff { 0% { opacity: 0; scale: .3; translate: 0 0; } 25% { opacity: 1; scale: 1; } 100% { opacity: 0; scale: 1.5; translate: var(--px) var(--py); } }
-  .mh-map-tk.is-step0 .mh-map-face, .mh-map-tk.is-step0 .mh-map-ring, .mh-map-tk.is-step0 .mh-map-rank { animation: mh-hop0 .38s ease-out; }
-  .mh-map-tk.is-step1 .mh-map-face, .mh-map-tk.is-step1 .mh-map-ring, .mh-map-tk.is-step1 .mh-map-rank { animation: mh-hop1 .38s ease-out; }
+  .mh-map-tk.is-step0 .mh-map-face, .mh-map-tk.is-step0 .mh-map-ring, .mh-map-tk.is-step0 .mh-map-rank, .mh-map-tk.is-step0 .mh-map-beetles, .mh-map-tk.is-step0 .mh-map-conds { animation: mh-hop0 .38s ease-out; }
+  .mh-map-tk.is-step1 .mh-map-face, .mh-map-tk.is-step1 .mh-map-ring, .mh-map-tk.is-step1 .mh-map-rank, .mh-map-tk.is-step1 .mh-map-beetles, .mh-map-tk.is-step1 .mh-map-conds { animation: mh-hop1 .38s ease-out; }
   @keyframes mh-hop0 { 0% { translate: 0 0; scale: 1; } 45% { translate: 0 -28%; scale: 1.06; } 80% { translate: 0 0; scale: 1.04 .94; } 100% { translate: 0 0; scale: 1; } }
   @keyframes mh-hop1 { 0% { translate: 0 0; scale: 1; } 45% { translate: 0 -28%; scale: 1.06; } 80% { translate: 0 0; scale: 1.04 .94; } 100% { translate: 0 0; scale: 1; } }
   .mh-map-tk.is-attack { z-index: 5; animation: mh-lunge .7s cubic-bezier(.5,0,.3,1) both; }
@@ -4921,7 +4921,7 @@ const sharedStyles = `
   .mh-map-tk.is-hit .mh-map-face { animation: mh-tk-flash .55s .32s ease both; }
   @keyframes mh-tk-hit { 0%, 100% { translate: 0 0; } 20% { translate: -10% 4%; } 40% { translate: 9% -3%; } 60% { translate: -6% 2%; } 80% { translate: 4% 0; } }
   @keyframes mh-tk-flash { 0%, 100% { filter: none; } 25% { filter: brightness(1.8) saturate(.4) drop-shadow(0 0 6px #ff4a3d); } }
-  @media (prefers-reduced-motion: reduce) { .mh-map-tk.is-attack, .mh-map-tk.is-hit, .mh-map-tk.is-hit .mh-map-face, .mh-iso-tk.is-attack, .mh-iso-tk.is-hit, .mh-map-tk[class*="is-step"] .mh-map-face, .mh-map-tk[class*="is-step"] .mh-map-ring, .mh-map-tk[class*="is-step"] .mh-map-rank, .mh-iso-tk[class*="is-step"], .mh-map-puff i, .mh-iso-puff circle, .mh-map-tk.is-poof-show > .mh-map-face { animation: none; } .mh-map .mh-map-tk { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { .mh-map-tk.is-attack, .mh-map-tk.is-hit, .mh-map-tk.is-hit .mh-map-face, .mh-iso-tk.is-attack, .mh-iso-tk.is-hit, .mh-map-tk[class*="is-step"] .mh-map-face, .mh-map-tk[class*="is-step"] .mh-map-ring, .mh-map-tk[class*="is-step"] .mh-map-rank, .mh-map-tk[class*="is-step"] .mh-map-beetles, .mh-map-tk[class*="is-step"] .mh-map-conds, .mh-iso-tk[class*="is-step"], .mh-map-puff i, .mh-iso-puff circle, .mh-map-tk.is-poof-show > .mh-map-face { animation: none; } .mh-map .mh-map-tk { transition: none; } }
   .mh-map-props-sep { font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-muted); margin: 0 2px 0 8px; }
   html[data-mh-theme="light"] .mh-map-stage { background: #EFE8DB; }
   .mh-map-reach { position: absolute; background: rgba(111,191,115,.26); box-shadow: inset 0 0 0 1px rgba(111,191,115,.6); pointer-events: none; }
@@ -4930,18 +4930,30 @@ const sharedStyles = `
   .mh-map-tk { position: absolute; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; background: none; cursor: default; transition: left .3s cubic-bezier(.3,.7,.4,1), top .3s cubic-bezier(.3,.7,.4,1); }
   .mh-map-tk.is-movable { cursor: grab; }
   .mh-map-tk.is-drag { cursor: grabbing; transition: none; z-index: 6; }
-  .mh-map-tk.is-drag .mh-map-ring, .mh-map-tk.is-drag .mh-map-rank { scale: 1.12; transition: scale .15s ease; }
+  .mh-map-tk.is-drag .mh-map-ring, .mh-map-tk.is-drag .mh-map-rank, .mh-map-tk.is-drag .mh-map-beetles, .mh-map-tk.is-drag .mh-map-conds { scale: 1.12; transition: scale .15s ease; }
   .mh-map-tk.is-drag .mh-map-face { scale: 1.12; box-shadow: 0 10px 18px rgba(0,0,0,.45); transition: scale .15s ease; }
   .mh-map-drop { transition: left .12s ease, top .12s ease; }
   .mh-map-tk:focus-visible { outline: none; }
   .mh-map-tk:focus-visible .mh-map-face { box-shadow: 0 0 0 3px #fff, 0 3px 8px rgba(0,0,0,.5); }
   /* Rango de la subclase: uno, dos o tres rombos del color de la clase sobre el borde superior de la ficha, siguiendo su curvatura. Van dentro de la ficha, así que se mueven, rebotan y se animan con ella. */
   /* Escarabajos Blindados: cuatro escarabajos con caparazón orbitan la ficha. */
-  .mh-map-beetles { position: absolute; z-index: 5; inset: 3%; pointer-events: none; animation: mh-beetle-orbit 9s linear infinite; } .mh-map-beetles i { position: absolute; inset: 0; rotate: var(--a); }
-  .mh-map-beetles b { position: absolute; left: 50%; top: 0; width: 17%; aspect-ratio: 1; translate: -50% -50%; rotate: 90deg; border-radius: 50% 50% 46% 46%; background: radial-gradient(circle at 35% 30%, #7fe0d8, #2b6460 70%); border: 1px solid #bdf2ec; box-shadow: 0 1px 3px rgba(0,0,0,.55); animation: mh-beetle-bob 1.4s ease-in-out infinite; } .mh-map-beetles b::after { content: ""; position: absolute; left: 50%; top: 8%; bottom: 8%; width: 1px; background: #bdf2ec; opacity: .85; }
+  .mh-map-beetles { position: absolute; z-index: 5; inset: 3%; pointer-events: none; } .mh-map-orbit { position: absolute; inset: 0; animation: mh-beetle-orbit 9s linear infinite; } .mh-map-orbit i { position: absolute; inset: 0; rotate: var(--a); }
+  .mh-map-orbit b { position: absolute; left: 50%; top: 0; width: 17%; aspect-ratio: 1; translate: -50% -50%; rotate: 90deg; border-radius: 50% 50% 46% 46%; background: radial-gradient(circle at 35% 30%, #7fe0d8, #2b6460 70%); border: 1px solid #bdf2ec; box-shadow: 0 1px 3px rgba(0,0,0,.55); animation: mh-beetle-bob 1.4s ease-in-out infinite; } .mh-map-orbit b::after { content: ""; position: absolute; left: 50%; top: 8%; bottom: 8%; width: 1px; background: #bdf2ec; opacity: .85; }
   @keyframes mh-beetle-orbit { to { rotate: 360deg; } } @keyframes mh-beetle-bob { 0%, 100% { scale: 1; } 50% { scale: 1.12; } }
-  @media (prefers-reduced-motion: reduce) { .mh-map-beetles, .mh-map-beetles b { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { .mh-map-orbit, .mh-map-orbit b { animation: none; } }
   .mh-btn-ghost.is-on { border-color: #6fbf73; background: color-mix(in srgb, #6fbf73 18%, transparent); }
+  /* Conjurar Enjambre: dos cartas flotando en mitad de la pantalla */
+  .mh-swarm-pick { display: flex; gap: 26px; align-items: center; justify-content: center; flex-wrap: wrap; padding: 12px; max-height: 96%; overflow: auto; animation: mh-swarm-in .45s cubic-bezier(.2,.9,.3,1.1) both; }
+  .mh-swarm-card { width: min(250px, 42vw); min-height: 340px; padding: 0 0 14px; border-radius: 20px; border: 2px solid var(--dc, #7FB77A); background: linear-gradient(170deg, #1d2b21, #12171a 70%); box-shadow: 0 18px 46px rgba(0,0,0,.6), 0 0 28px color-mix(in srgb, var(--dc, #7FB77A) 38%, transparent); display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; color: #e7f3e9; overflow: hidden; animation: mh-swarm-float 4.2s ease-in-out infinite; animation-delay: var(--d, 0s); transition: scale .18s ease; } .mh-swarm-card:hover { scale: 1.04; }
+  .mh-swarm-card.is-flies { background: linear-gradient(170deg, #2a2d18, #14160f 70%); }
+  .mh-swarm-art { width: 100%; height: 112px; background: radial-gradient(circle at 50% 70%, color-mix(in srgb, var(--dc, #7FB77A) 45%, #0b0f0c), #0b0f0c 75%); display: grid; place-items: center; margin-bottom: 4px; } .mh-swarm-art svg { width: 86%; height: 100%; overflow: visible; }
+  .mh-swarm-t { padding: 0 14px; font: 700 15px 'Cinzel', Georgia, serif; } .mh-swarm-k { font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: color-mix(in srgb, var(--dc, #7FB77A) 70%, #fff); } .mh-swarm-card p { margin: 2px 16px 4px; font: 500 12px/1.45 Inter, system-ui, sans-serif; color: #cfe0d2; flex: 1; }
+  .mh-swarm-cost { font: 700 11px Inter, system-ui, sans-serif; padding: 3px 11px; border-radius: 99px; border: 1px solid var(--dc, #7FB77A); color: #e7f3e9; }
+  .mh-swarm-warn { color: #ff9c8d; font-size: 11px; }
+  .mh-swarm-go, .mh-swarm-hope { all: unset; box-sizing: border-box; cursor: pointer; text-align: center; font: 700 12.5px Inter, system-ui, sans-serif; border-radius: 99px; padding: 8px 22px; } .mh-swarm-go { background: var(--dc, #7FB77A); color: #10200e; margin-top: 4px; transition: translate .12s ease; } .mh-swarm-go:hover:not(:disabled) { translate: 0 -2px; } .mh-swarm-go:disabled { opacity: .4; cursor: not-allowed; }
+  .mh-swarm-hope { padding: 6px 14px; font-size: 11.5px; border: 1px solid color-mix(in srgb, var(--dc, #7FB77A) 60%, transparent); color: #e7f3e9; } .mh-swarm-hope.is-on { background: color-mix(in srgb, var(--dc, #7FB77A) 30%, transparent); border-color: var(--dc, #7FB77A); } .mh-swarm-hope:disabled { opacity: .4; cursor: not-allowed; }
+  @keyframes mh-swarm-float { 0%, 100% { translate: 0 0; rotate: -1.2deg; } 50% { translate: 0 -9px; rotate: 1.2deg; } } @keyframes mh-swarm-in { from { opacity: 0; transform: translateY(40px) scale(.9); } }
+  @media (prefers-reduced-motion: reduce) { .mh-swarm-card, .mh-swarm-pick { animation: none; } }
   .mh-map-rank { position: absolute; z-index: 5; inset: 15%; pointer-events: none; } /* misma caja que la ficha (70 % de la casilla): el centro de cada rombo cae justo sobre su borde */
   .mh-map-rk { position: absolute; width: 15%; aspect-ratio: 1; left: calc(50% + 50% * sin(var(--a))); top: calc(50% - 50% * cos(var(--a))); translate: -50% -50%; rotate: calc(var(--a) + 45deg); background: var(--tc); box-shadow: 0 1px 2px rgba(0,0,0,.45); pointer-events: none; }
   .mh-map-tk.is-trf .mh-map-rk { left: calc(50% + var(--k) * 30%); top: 0; rotate: 45deg; }
@@ -4959,7 +4971,7 @@ const sharedStyles = `
   @keyframes mh-rooted { 0%, 100% { scale: 1; opacity: .9; } 50% { scale: .94; opacity: 1; } }
   .mh-map-fx.fx-vuln { z-index: 1; box-shadow: 0 0 10px 4px rgba(217,100,78,.8); animation: mh-vuln 1.3s ease-in-out infinite; }
   @keyframes mh-vuln { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
-  .mh-map-tk.is-c-ko .mh-map-rank, .mh-map-tk.is-c-ko .mh-map-face { filter: grayscale(.9) brightness(.8); rotate: -90deg; }
+  .mh-map-tk.is-c-ko .mh-map-rank, .mh-map-tk.is-c-ko .mh-map-beetles, .mh-map-tk.is-c-ko .mh-map-face { filter: grayscale(.9) brightness(.8); rotate: -90deg; }
   .mh-map-tk.is-c-ko .mh-map-face > span { rotate: 0deg; }
   .mh-map-fx.fx-charm { z-index: 3; inset: 3%; width: auto; height: auto; overflow: visible; border: 2px solid rgba(224,127,176,.65); border-radius: 30%; box-shadow: 0 0 9px 2px rgba(224,127,176,.4); animation: mh-charm 2.6s ease-in-out infinite; }
   .mh-map-fx.fx-charm b { position: absolute; left: 46%; top: -4%; color: #F3A6CB; font: 700 clamp(8px, 1vw, 12px)/1 Inter, system-ui, sans-serif; text-shadow: 0 1px 2px rgba(0,0,0,.5); opacity: 0; animation: mh-hearts 3.2s ease-in infinite; } .mh-map-fx.fx-charm b:nth-child(2) { left: 16%; animation-delay: 1.1s; } .mh-map-fx.fx-charm b:nth-child(3) { left: 72%; animation-delay: 2.1s; }
@@ -4978,11 +4990,11 @@ const sharedStyles = `
   .mh-map-fx.fx-ko b { position: absolute; right: -8%; top: -10%; color: #E9DDFB; font: 800 clamp(9px, 1.2vw, 13px)/1 Inter, system-ui, sans-serif; text-shadow: 0 1px 2px rgba(0,0,0,.6); opacity: 0; animation: mh-zz 2.4s ease-in-out infinite; }
   .mh-map-fx.fx-ko b + b { animation-delay: 1.2s; }
   @keyframes mh-zz { 0% { opacity: 0; translate: 0 0; scale: .6; } 30% { opacity: 1; } 100% { opacity: 0; translate: 40% -120%; scale: 1.2; } }
-  .mh-map-tk.is-c-fly .mh-map-face, .mh-map-tk.is-c-fly .mh-map-ring, .mh-map-tk.is-c-fly .mh-map-rank { animation: mh-fly 2.2s ease-in-out infinite; }
+  .mh-map-tk.is-c-fly .mh-map-face, .mh-map-tk.is-c-fly .mh-map-ring, .mh-map-tk.is-c-fly .mh-map-rank, .mh-map-tk.is-c-fly .mh-map-beetles, .mh-map-tk.is-c-fly .mh-map-conds { animation: mh-fly 2.2s ease-in-out infinite; }
   @keyframes mh-fly { 0%, 100% { translate: 0 -12%; } 50% { translate: 0 -22%; } }
   .mh-map-fx.fx-fly { z-index: 1; left: 22%; width: 56%; top: auto; bottom: 0; height: 12%; border-radius: 50%; background: rgba(0,0,0,.45); filter: blur(2px); animation: mh-fly-shadow 2.2s ease-in-out infinite; }
   @keyframes mh-fly-shadow { 0%, 100% { scale: 1; opacity: .8; } 50% { scale: .8; opacity: .55; } }
-  .mh-map-tk.is-c-shell .mh-map-face, .mh-map-tk.is-c-shell .mh-map-ring, .mh-map-tk.is-c-shell .mh-map-rank { scale: .82; }
+  .mh-map-tk.is-c-shell .mh-map-face, .mh-map-tk.is-c-shell .mh-map-ring, .mh-map-tk.is-c-shell .mh-map-rank, .mh-map-tk.is-c-shell .mh-map-beetles, .mh-map-tk.is-c-shell .mh-map-conds { scale: .82; }
   .mh-map-fx.fx-shell { z-index: 3; inset: 6%; width: auto; height: auto; border-radius: 50% 50% 30% 30%; border: 3px solid #6E8B5A; background: repeating-linear-gradient(45deg, rgba(110,139,90,.35) 0 4px, rgba(110,139,90,.15) 4px 8px); }
   .mh-map-conds { position: absolute; z-index: 4; left: 2%; top: 2%; display: flex; gap: 1px; width: 100%; pointer-events: none; }
   .mh-map-conds i { width: 28%; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; color: #fff; border: 1.5px solid #fff; box-sizing: border-box; box-shadow: 0 1px 3px rgba(0,0,0,.45); }
@@ -11852,7 +11864,7 @@ function MapBoard({ showHp, aimRange, rangeMenu, cfx, meCharId, onDragInfo, onSt
             )}
             {t.kind === "pc" && t.beetles && !t.vanished && (
               <span className="mh-map-beetles" aria-hidden="true" title="Escarabajos Blindados: el próximo daño baja un umbral">
-                {[0, 90, 180, 270].map((a) => <i key={a} style={{ "--a": a + "deg" }}><b /></i>)}
+                <span className="mh-map-orbit">{[0, 90, 180, 270].map((a) => <i key={a} style={{ "--a": a + "deg" }}><b /></i>)}</span>
               </span>
             )}
             {t.name && <span className="mh-map-nm">{t.name}</span>}
@@ -14511,14 +14523,14 @@ export default function App({ onSignOut }) {
   };
   // Con las luciérnagas elegidas se marca el alcance Cercano en el mapa mientras decides.
   useEffect(() => {
-    if (!swarmAsk || swarmAsk.mode !== "fireflies") return;
+    if (!swarmAsk) return;
     const me = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === swarmAsk.charId);
     if (!me) return;
     setAimRange({ id: me.id, max: RANGE_CELLS["Cercano"] });
     return () => setAimRange(null);
-  }, [swarmAsk?.mode, swarmAsk?.charId]);
-  const confirmSwarm = () => {
-    const A = swarmAsk;
+  }, [!!swarmAsk, swarmAsk?.charId]);
+  const confirmSwarm = (mode) => {
+    const A = swarmAsk && { ...swarmAsk, mode };
     if (!A || !A.mode) return;
     const c = charsRef.current[A.charId];
     if (!c || !sheetCampaignId) return;
@@ -28089,34 +28101,53 @@ export default function App({ onSignOut }) {
               const hope = Number(cc?.hope_marked ?? HOPE_DEFAULT);
               const stressFull = Number(cc?.stress_marked || 0) >= Number(cc?.r_stress || 0);
               const hasBeetles = cc?.f_beetles === "1";
-              const canGo = A.mode === "beetles" ? !stressFull && !hasBeetles : A.mode === "fireflies" ? foes.length > 0 && (!A.hope || hope >= 1) : false;
+              const dom = DOMAIN_COLORS[A.card?.domain] || "#7FB77A";
+              const canBeetles = !stressFull && !hasBeetles;
+              const canFlies = foes.length > 0 && (!A.hope || hope >= 1);
               return (
                 <div className="mh-evo-wrap" onClick={close}>
-                  <div className="mh-bpick mh-sess" role="dialog" aria-label="Conjurar Enjambre" onClick={(e) => e.stopPropagation()}>
-                    <div className="mh-elpick-h">
-                      <b>Conjurar Enjambre</b>
-                      <span>Elige qué enjambre conjuras</span>
+                  <div className="mh-swarm-pick" role="dialog" aria-label="Conjurar Enjambre" onClick={(e) => e.stopPropagation()} style={{ "--dc": dom }}>
+                    <div className="mh-swarm-card is-beetles" style={{ "--d": "0s" }}>
+                      <div className="mh-swarm-art">
+                        <svg viewBox="0 0 120 80" aria-hidden="true">
+                          {[[34, 48, -18, 0.9], [62, 36, 8, 1.15], [88, 52, 22, 0.9]].map(([x, y, r, sc], i) => (
+                            <g key={i} transform={"translate(" + x + "," + y + ") rotate(" + r + ") scale(" + sc + ")"}>
+                              <path d="M-9 -2 L-20 -9 M9 -2 L20 -9 M-10 4 L-22 6 M10 4 L22 6 M-8 9 L-18 17 M8 9 L18 17" stroke="#bdf2ec" strokeWidth="1.6" strokeLinecap="round" fill="none" />
+                              <ellipse rx="11" ry="14" fill="#3d8f8a" stroke="#bdf2ec" strokeWidth="1.8" />
+                              <path d="M0 -13 V14" stroke="#bdf2ec" strokeWidth="1.4" />
+                              <path d="M-7 -4 Q0 -9 7 -4" stroke="#bdf2ec" strokeWidth="1.2" fill="none" opacity=".7" />
+                              <circle cy="-16" r="5" fill="#2b6460" stroke="#bdf2ec" strokeWidth="1.6" />
+                            </g>
+                          ))}
+                        </svg>
+                      </div>
+                      <b className="mh-swarm-t">Escarabajos Blindados de Tekaira</b>
+                      <small className="mh-swarm-k">Conjurar Enjambre · Hechizo</small>
+                      <p>Te rodean escarabajos con caparazón. La próxima vez que recibas daño, reduce la gravedad en un umbral. Gasta una Esperanza para mantenerlos tras recibir daño.</p>
+                      <span className="mh-swarm-cost">1 Estrés</span>
+                      {(hasBeetles || stressFull) && <small className="mh-swarm-warn">{hasBeetles ? "Ya te rodean." : "No tienes Estrés libre."}</small>}
+                      <button type="button" className="mh-swarm-go" disabled={!canBeetles} onClick={() => confirmSwarm("beetles")}>Conjurar</button>
                     </div>
-                    <div className="mh-renew-list">
-                      <button type="button" className={"mh-renew-row is-pick" + (A.mode === "beetles" ? " is-on" : "")} onClick={() => setSwarmAsk({ ...A, mode: "beetles" })}>
-                        <span className="mh-renew-av" style={{ background: "#3d8f8a" }}>🪲</span>
-                        <div className="mh-renew-t"><b>Escarabajos Blindados de Tekaira</b><small>Marcas 1 Estrés. El próximo daño que recibas baja un umbral de gravedad; gasta 1 Esperanza para que se queden tras el golpe.</small></div>
+                    <div className="mh-swarm-card is-flies" style={{ "--d": "-1.6s" }}>
+                      <div className="mh-swarm-art">
+                        <svg viewBox="0 0 120 80" aria-hidden="true">
+                          {[[22, 56, 6], [48, 24, 8], [74, 50, 7], [98, 22, 5], [60, 66, 4], [102, 60, 6], [32, 30, 4]].map(([x, y, r], i) => (
+                            <g key={i}>
+                              <circle cx={x} cy={y} r={r * 2.6} fill="#e9f56a" opacity=".16" />
+                              <circle cx={x} cy={y} r={r * 1.5} fill="#e9f56a" opacity=".3" />
+                              <circle cx={x} cy={y} r={r * 0.6} fill="#fbffc4" />
+                            </g>
+                          ))}
+                        </svg>
+                      </div>
+                      <b className="mh-swarm-t">Luciérnagas</b>
+                      <small className="mh-swarm-k">Conjurar Enjambre · Hechizo</small>
+                      <p>Haz una tirada de conjuro contra todos los adversarios en alcance Cercano ({foes.length} ahora). Gasta una Esperanza para infligir 2d8+3 de daño mágico a los objetivos contra los que tengas éxito.</p>
+                      <button type="button" className={"mh-swarm-hope" + (A.hope ? " is-on" : "")} disabled={hope < 1 && !A.hope} onClick={() => setSwarmAsk({ ...A, hope: !A.hope })}>
+                        {A.hope ? "✓ Gastar 1 Esperanza (2d8+3)" : "Gastar 1 Esperanza (2d8+3)"}
                       </button>
-                      <button type="button" className={"mh-renew-row is-pick" + (A.mode === "fireflies" ? " is-on" : "")} onClick={() => setSwarmAsk({ ...A, mode: "fireflies" })}>
-                        <span className="mh-renew-av" style={{ background: "#9aa83a" }}>✨</span>
-                        <div className="mh-renew-t"><b>Luciérnagas</b><small>Tirada de conjuro contra todos los adversarios en alcance Cercano ({foes.length} ahora). Con 1 Esperanza, 2d8+3 de daño mágico a quien aciertes.</small></div>
-                      </button>
-                    </div>
-                    {A.mode === "fireflies" && (
-                      <button type="button" className={"mh-btn-ghost" + (A.hope ? " is-on" : "")} disabled={hope < 1 && !A.hope} onClick={() => setSwarmAsk({ ...A, hope: !A.hope })}>
-                        {A.hope ? "✓ Gastar 1 Esperanza: 2d8+3 de daño (se gasta al lanzar)" : "Gastar 1 Esperanza para infligir 2d8+3 de daño"}
-                      </button>
-                    )}
-                    {A.mode === "beetles" && (hasBeetles || stressFull) && <small style={{ color: "#D9644E" }}>{hasBeetles ? "Los escarabajos ya te rodean." : "No tienes Estrés libre que marcar."}</small>}
-                    {A.mode === "fireflies" && foes.length === 0 && <small style={{ color: "#D9644E" }}>No hay adversarios vivos en alcance Cercano.</small>}
-                    <div className="mh-evo-act">
-                      <button type="button" className="mh-elpick-x" onClick={close}>Cancelar</button>
-                      <button type="button" className="mh-evo-go" disabled={!canGo} onClick={confirmSwarm}>{A.mode === "beetles" ? "Conjurar · 1 Estrés" : A.mode === "fireflies" ? "Lanzar luciérnagas" : "Elige una opción"}</button>
+                      {foes.length === 0 && <small className="mh-swarm-warn">No hay adversarios vivos en Cercano.</small>}
+                      <button type="button" className="mh-swarm-go" disabled={!canFlies} onClick={() => confirmSwarm("fireflies")}>Lanzar</button>
                     </div>
                   </div>
                 </div>
