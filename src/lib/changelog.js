@@ -9,6 +9,7 @@ export const CHANGELOG = [
     title: "El Oráculo del DJ",
     blurb: "Un anillo de luz que responde a las preguntas de la mesa: Sí / No, con matices o con una tirada de destino, solo para el DJ y a un toque bajo el chat.",
     items: [
+      { tag: "nuevo", text: "Cartas · vista de administrador (solo para la cuenta de Mickey): al abrir una carta aparece un panel lateral que indica si tiene función aplicada en la hoja de personaje, en la mano de la baraja y en el mapa de combate, con lo que hace en cada sitio." },
       { tag: "mejora", text: "Hoja · con «Huesos Desnudos», la casilla de armadura muestra un escudo con una X («Sin armadura»), no se puede guardar en la mochila y deja equipar una armadura del inventario cuando quieras; al quitarla, vuelves a Huesos Desnudos." },
       { tag: "arreglo", text: "Combate · el halo de «Huesos Desnudos» ahora sigue exactamente el borde redondeado de la carta." },
       { tag: "mejora", text: "Combate · las cartas pasivas (Huesos Desnudos) no se pueden arrastrar al mapa y llevan un cartel «Pasiva» encima de la carta en la mano." },

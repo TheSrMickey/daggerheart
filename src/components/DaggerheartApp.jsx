@@ -8492,6 +8492,15 @@ const sharedStyles = `
   .cx-lv { display: flex; align-items: center; gap: 12px; margin: 22px 0 12px; } .cx-lv b { font: 700 13px 'Cinzel', Georgia, serif; letter-spacing: .06em; text-transform: uppercase; color: var(--mh-ink); }
   .cx-lv span { height: 1px; flex: 1; background: var(--mh-line); } .cx-lv small { color: var(--mh-muted); font-size: 12px; }
   .cx-grid { display: grid; grid-template-columns: repeat(auto-fill, 300px); gap: 16px; justify-content: center; }
+  .cx-admwrap { display: flex; align-items: center; justify-content: center; gap: 18px; flex-wrap: wrap; max-height: 100%; overflow: auto; }
+  .cx-adm { width: 250px; max-width: 100%; padding: 14px; border-radius: 14px; background: var(--mh-panel); border: 1px solid var(--mh-line); color: var(--mh-ink); display: flex; flex-direction: column; gap: 9px; box-shadow: 0 14px 34px rgba(0,0,0,.35); }
+  .cx-adm small { font: 700 10px Inter, system-ui, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--mh-muted); }
+  .cx-adm > b { font-size: 17px; }
+  .cx-adm-r { display: flex; gap: 9px; align-items: flex-start; font-size: 12.5px; line-height: 1.35; color: var(--mh-muted); }
+  .cx-adm-r i { flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, #D9644E 22%, transparent); color: #D9644E; }
+  .cx-adm-r.is-on i { background: color-mix(in srgb, #4f9a62 24%, transparent); color: #4f9a62; }
+  .cx-adm-r.is-on { color: var(--mh-ink); }
+  .cx-adm-r em { display: block; font: 700 11px Inter, system-ui, sans-serif; font-style: normal; letter-spacing: .04em; text-transform: uppercase; color: var(--mh-muted); margin-bottom: 1px; }
   .cx-card { appearance: none; font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; display: block; width: 300px; max-width: 100%; height: 420px; border-radius: 22px; transition: translate .15s, box-shadow .15s; }
   .mh-cardc.is-legend { box-shadow: 0 0 0 1px #F6D675 inset, 0 0 22px -4px #E8C547, 0 8px 24px -8px rgba(232,197,71,.55); }
   .mh-holo.is-idle { opacity: .42; }
