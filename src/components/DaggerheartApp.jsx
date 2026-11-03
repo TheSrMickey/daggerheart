@@ -5002,8 +5002,15 @@ const sharedStyles = `
   .mh-fan-pile span { position: absolute; width: 62px; height: 90px; border-radius: 9px; border: 2px solid var(--pc); background: linear-gradient(160deg, color-mix(in srgb, var(--pc) 30%, #1d1827), #15111c); box-shadow: 0 3px 8px rgba(0,0,0,.5); left: calc(var(--q) * 6px); top: calc(10px - var(--q) * 4px); transform: rotate(calc(-6deg + var(--q) * 6deg)); transition: transform .15s; }
   .mh-fan-pile span.is-back { width: 62px; height: 87px; border: 0; background: none; overflow: hidden; border-radius: 9px; } .mh-fan-pile span.is-back svg { display: block; width: 100%; height: 100%; }
   /* Carta pasiva: halo dorado que respira cuando está activa; apagada y en gris cuando no */
-  .mh-fan-card.is-pas-on .mh-fan-in { border-radius: 14px; animation: mh-pas-breathe 2.6s ease-in-out infinite; }
+  .mh-fan-card.is-pas-on .mh-fan-in { border-radius: 22px; animation: mh-pas-breathe 2.6s ease-in-out infinite; }
   @keyframes mh-pas-breathe { 0%, 100% { box-shadow: 0 0 0 3px #E3B04B, 0 0 30px 6px rgba(227,176,75,.5); } 50% { box-shadow: 0 0 0 3px #FFE3A0, 0 0 52px 16px rgba(227,176,75,.68); } }
+  .mh-fan-card.is-pas-off .mh-fan-in { border-radius: 22px; }
+  /* Intento de arrastrar una carta sin función: se sacude como un «no» y avisa */
+  .mh-fan-card.is-deny .mh-fan-in { animation: mh-deny .42s ease-in-out; }
+  @keyframes mh-deny { 0%, 100% { translate: 0 0; } 18% { translate: -9px 0; } 36% { translate: 8px 0; } 54% { translate: -6px 0; } 72% { translate: 4px 0; } }
+  .mh-fan-deny { position: absolute; left: 50%; top: -34px; translate: -50% 0; white-space: nowrap; padding: 5px 10px; border-radius: 8px; background: rgba(21,17,28,.95); border: 1px solid rgba(255,255,255,.2); color: #fff; font: 600 11.5px Inter, system-ui, sans-serif; pointer-events: none; z-index: 5; animation: mh-deny-tip 1.6s ease both; }
+  @keyframes mh-deny-tip { 0% { opacity: 0; translate: -50% 6px; } 12%, 80% { opacity: 1; translate: -50% 0; } 100% { opacity: 0; } }
+  .mh-fan-card.is-still { cursor: pointer; }
   .mh-fan-card.is-pas-off .mh-fan-in { filter: grayscale(.85) brightness(.7); }
   @media (prefers-reduced-motion: reduce) { .mh-fan-card.is-pas-on .mh-fan-in { animation: none; box-shadow: 0 0 0 3px #E3B04B, 0 0 30px 6px rgba(227,176,75,.5); } }
   .mh-fan-card { animation: mh-fan-deal .42s cubic-bezier(.2,.9,.3,1) backwards; animation-delay: calc(var(--i, 0) * 40ms); }
@@ -10983,6 +10990,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
   cardsRef.current = cards;
   const [drag, setDrag] = useState(null); // { card, x, y, cell, moved }
   const [open, setOpen] = useState(null); // carta mostrada en grande
+  const [deny, setDeny] = useState(null); // carta sin función que se ha intentado arrastrar { key, at }
   const [beastCard, setBeastCard] = useState(null); // carta «Forma de Bestia» que se ha arrastrado (para revelarla)
   const [beastOpen, setBeastOpen] = useState(false); // selector de Forma de Bestia (al arrastrar esa carta al mapa)
   const [bTier, setBTier] = useState(1);
@@ -11074,7 +11082,13 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
   const move = (ev) => {
     const cell = cellAt(ev.clientX, ev.clientY);
     const cur = dragRef.current;
-    const moved = usable(cur.card) && (cur.moved || Math.hypot(ev.clientX - cur.x0, ev.clientY - cur.y0) > 6);
+    const far = Math.hypot(ev.clientX - cur.x0, ev.clientY - cur.y0) > 6;
+    if (far && !usable(cur.card) && !cur.denied) {
+      cur.denied = true;
+      setDeny({ key: cur.card.key, at: Date.now() });
+      setTimeout(() => setDeny((d) => (d && d.key === cur.card.key ? null : d)), 1600);
+    }
+    const moved = usable(cur.card) && (cur.moved || far);
     const next = { ...cur, x: ev.clientX, y: ev.clientY, cell, moved };
     dragRef.current = next;
     setDrag(next);
@@ -11174,12 +11188,13 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
           return (
             <div
               key={c.key}
-              className={"mh-fan-card" + (c.locked ? " is-locked" : "") + (c.ghost ? " is-ghostcard" + (c.noHope ? " is-nohope" : "") : "") + (c.passive ? " is-pas-" + c.passive : "") + (lifting ? " is-lifted" : "") + (shown[i + 1] && grp(shown[i + 1]) !== grp(c) ? " is-last-weapon" : "")}
+              className={"mh-fan-card" + (c.locked ? " is-locked" : "") + (c.ghost ? " is-ghostcard" + (c.noHope ? " is-nohope" : "") : "") + (c.passive ? " is-pas-" + c.passive : "") + (!usable(c) ? " is-still" : "") + (deny && deny.key === c.key ? " is-deny" : "") + (lifting ? " is-lifted" : "") + (shown[i + 1] && grp(shown[i + 1]) !== grp(c) ? " is-last-weapon" : "")}
               style={{ "--i": i, "--r": `${(i - mid) * stepR}deg`, "--y": `${Math.abs(i - mid) * stepY}px`, "--cc": col, "--m": gap / 2 + "px" }}
               onPointerDown={(e) => start(e, c)}
-              title="Púlsala para verla en grande · arrástrala al mapa para usarla"
+              title={usable(c) ? "Púlsala para verla en grande · arrástrala al mapa para usarla" : "Púlsala para verla en grande"}
             >
               <FanFace c={c} col={col} />
+              {deny && deny.key === c.key && <span key={deny.at} className="mh-fan-deny">{c.passive ? "Pasiva: no se lanza" : "Esta carta no se lanza en el mapa"}</span>}
               {cardToks && !c.weapon && !c.rowCard && (() => {
                 const ti = cardToks(c);
                 return ti ? <span className="mh-fan-toks" title={ti.have + " de " + ti.max + " fichas"} aria-label={ti.have + " de " + ti.max + " fichas"}><TokDice have={ti.have} max={ti.max} color={DOMAIN_COLORS[c.domain] || "#C9A24B"} /></span> : null;
