@@ -4953,6 +4953,11 @@ const sharedStyles = `
   /* Pasiva de «Engañador Hábil»: de vez en cuando un reflejo tenue de la ficha se desdobla a un lado */
   .mh-map-pas { position: absolute; inset: 0; pointer-events: none; z-index: 2; } .mh-map-pas i { position: absolute; inset: 10%; border-radius: 50%; border: 1.5px solid var(--gc); background: color-mix(in srgb, var(--gc) 14%, transparent); opacity: 0; } .mh-map-pas i:nth-child(1) { animation: mh-pas-a 7s ease-in-out infinite; } .mh-map-pas i:nth-child(2) { animation: mh-pas-b 7s ease-in-out 3.5s infinite; }
   @keyframes mh-pas-a { 0%, 62%, 100% { opacity: 0; transform: translate(0, 0); } 72% { opacity: .5; transform: translate(10%, -5%); } 86% { opacity: 0; transform: translate(16%, -8%); } } @keyframes mh-pas-b { 0%, 62%, 100% { opacity: 0; transform: translate(0, 0); } 72% { opacity: .5; transform: translate(-10%, 5%); } 86% { opacity: 0; transform: translate(-16%, 8%); } }
+  .mh-map-fx.fx-sleep { z-index: 3; overflow: visible; }
+  .mh-map-fx.fx-sleep b { position: absolute; right: 2%; top: 4%; color: #EDE3FF; font: 800 clamp(8px, 1.1vw, 13px)/1 Inter, system-ui, sans-serif; text-shadow: 0 0 5px rgba(165,139,232,.9), 0 1px 2px rgba(0,0,0,.6); opacity: 0; animation: mh-sleepz 3.2s ease-in-out infinite; }
+  .mh-map-fx.fx-sleep b:nth-child(2) { right: 14%; animation-delay: .8s; font-size: .85em; } .mh-map-fx.fx-sleep b:nth-child(3) { right: -4%; animation-delay: 1.6s; } .mh-map-fx.fx-sleep b:nth-child(4) { right: 8%; animation-delay: 2.4s; font-size: .8em; }
+  @keyframes mh-sleepz { 0% { opacity: 0; translate: 0 30%; scale: .5; rotate: -8deg; } 25% { opacity: 1; } 70% { opacity: .8; } 100% { opacity: 0; translate: 55% -150%; scale: 1.3; rotate: 10deg; } }
+  .mh-map-tk.is-c-sleep .mh-map-face { filter: saturate(.55) brightness(.85); }
   .mh-map-fx.fx-ko { z-index: 3; overflow: visible; }
   .mh-map-fx.fx-ko b { position: absolute; right: -8%; top: -10%; color: #E9DDFB; font: 800 clamp(9px, 1.2vw, 13px)/1 Inter, system-ui, sans-serif; text-shadow: 0 1px 2px rgba(0,0,0,.6); opacity: 0; animation: mh-zz 2.4s ease-in-out infinite; }
   .mh-map-fx.fx-ko b + b { animation-delay: 1.2s; }
@@ -9660,7 +9665,7 @@ const MAP_COND_FX = {
   Volando: { cls: "fly", Icon: Feather, color: "#5FA77A" },
   Retraído: { cls: "shell", Icon: Shell, color: "#6E8B5A" },
   Embelesado: { cls: "charm", Icon: Heart, color: "#E07FB0" },
-  Dormido: { cls: "ko", Icon: Moon, color: "#A58BE8" },
+  Dormido: { cls: "sleep", Icon: Moon, color: "#A58BE8" },
 };
 const mapConds = (t) => (t.conds || []).filter((c) => MAP_COND_FX[c]);
 // Banda de alcance para una distancia en casillas (más allá de Lejano es Muy lejano).
@@ -10991,7 +10996,7 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
   const isAim = (c) => c.key === AIM_CARD || ((c.key === "Embelesar" || c.key === "Palabras Inspiradoras") && !c.rowCard) || (!!c.ghost && !c.recharge && !c.ward) || !!c.bookCard || !!c.weapon || (c.key === "Desatar el Caos" && !c.rowCard);
   const aimReach = (c) => (reachOf && reachOf(c)) || { label: "Lejano", max: RANGE_CELLS["Lejano"] };
   // Objetivo válido de una carta que se apunta: aliado (otro personaje) para Palabras Inspiradoras; adversario vivo para el resto.
-  const aimTok = (c, t) => !t.hidden && (c.bookCard ? !t.vanished : t.id !== me?.id && (c.key === "Palabras Inspiradoras" && !c.rowCard ? t.kind === "pc" && !t.vanished : (t.kind === "foe" || t.kind === "npc") && !deadTok(t)));
+  const aimTok = (c, t) => !t.hidden && (c.unTele ? t.id === c.unTele : c.bookCard ? !t.vanished : t.id !== me?.id && (c.key === "Palabras Inspiradoras" && !c.rowCard ? t.kind === "pc" && !t.vanished : (t.kind === "foe" || t.kind === "npc") && !deadTok(t)));
   const inAimReach = (c, cell) => !!me && !!cell && Math.max(Math.abs(cell.x - me.x), Math.abs(cell.y - me.y)) <= aimReach(c).max;
   const rangeOf = (cell) => {
     if (!me || !cell) return null;
@@ -11684,6 +11689,7 @@ function MapBoard({ showHp, aimRange, rangeMenu, cfx, meCharId, onDragInfo, onSt
             {mapConds(t).map((c) => (
               <span key={c} className={"mh-map-fx fx-" + MAP_COND_FX[c].cls} aria-hidden="true">
                 {c === "Inconsciente" && <><b>z</b><b>z</b></>}
+                {c === "Dormido" && <><b>Z</b><b>z</b><b>Z</b><b>z</b></>}
                 {c === "Embelesado" && <><b>♥</b><b>♥</b><b>♥</b></>}
               </span>
             ))}
@@ -12936,6 +12942,29 @@ export default function App({ onSignOut }) {
       })
     );
   }, [campaignMap, characters, sheetCampaignId, sheetCharId]);
+
+  // Si el jugador cambia sus cartas de dominio, los efectos de las cartas que ya no lleva se quitan del mapa.
+  useEffect(() => {
+    const me = sheetCharId ? characters[sheetCharId] : null;
+    if (!me || !sheetCampaignId) return;
+    const keys = getKeys(me.f_domain_cards);
+    const has = (k) => keys.includes(k);
+    const toks = campaignMap.tokens || [];
+    const patch = {};
+    if (me.f_tava && !has("Libro de Ava")) { patch.f_tava = ""; patch.armor_marked = String(Math.max(0, Number(me.armor_marked || 0) - 1)); }
+    if (me.f_tele && !has("Libro de Illiat")) patch.f_tele = "";
+    if (Object.keys(patch).length) updateCharacterFields(sheetCharId, patch);
+    const mine = (t, f, cond) => t[f] === sheetCharId && (t.conds || []).includes(cond);
+    const stale = toks.some((t) => (!has("Embelesar") && mine(t, "charmedBy", "Embelesado")) || (!has("Enredo Feroz") && mine(t, "rootedBy", "Inmovilizado")) || (!has("Libro de Illiat") && mine(t, "sleptBy", "Dormido")));
+    if (!stale) return;
+    mutateMap(sheetCampaignId, (ts) => ts.map((t) => {
+      let n = t;
+      if (!has("Embelesar") && mine(n, "charmedBy", "Embelesado")) n = { ...n, charmedBy: undefined, conds: n.conds.filter((c) => c !== "Embelesado") };
+      if (!has("Enredo Feroz") && mine(n, "rootedBy", "Inmovilizado")) n = { ...n, rootedBy: undefined, conds: n.conds.filter((c) => c !== "Inmovilizado") };
+      if (!has("Libro de Illiat") && mine(n, "sleptBy", "Dormido")) n = { ...n, sleptBy: undefined, conds: n.conds.filter((c) => c !== "Dormido") };
+      return n;
+    }));
+  }, [characters, campaignMap, sheetCampaignId, sheetCharId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Niebla: al moverse, cada personaje despeja las casillas a su alrededor (lo hace el DJ para todos y cada jugador para el suyo).
   useEffect(() => {
@@ -16321,6 +16350,18 @@ export default function App({ onSignOut }) {
     }
     return "cancel";
   };
+  // Carta fugaz «Cortar la telepatía»: rompe el vínculo mental de Telepatía (gratis).
+  const castUnTele = (charId, target, card) => {
+    const c = charsRef.current[charId];
+    if (!c || !c.f_tele || !target || target.id !== c.f_tele) return "cancel";
+    postCampaignEvent(charId, "🔮 Corta la telepatía con " + (target.name || "su objetivo"));
+    playCardOnMap(sheetCampaignId, charId, card, { noChat: true, short: true });
+    afterReveal(charId, card.key, () => {
+      updateCharacterField(charId, "f_tele", "");
+      pushMapLog(sheetCampaignId, "🔮 Telepatía: el vínculo mental se rompe", "info");
+    });
+    return "reveal";
+  };
   const confirmArcane = (n) => {
     const A = arcaneAsk;
     setArcaneAsk(null);
@@ -18563,7 +18604,7 @@ export default function App({ onSignOut }) {
       const from = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === r.charId);
       if (!tg) return;
       if (from) mutateMap(sheetCampaignId, () => ({ key: Date.now(), from: from.id, to: tg.id, kind: "magic" }), "fx");
-      setTimeout(() => mutateMap(sheetCampaignId, (ts) => ts.map((x) => (x.id === tg.id ? { ...x, conds: [...new Set([...(x.conds || []), "Dormido"])] } : x))), 900);
+      setTimeout(() => mutateMap(sheetCampaignId, (ts) => ts.map((x) => (x.id === tg.id ? { ...x, conds: [...new Set([...(x.conds || []), "Dormido"])], sleptBy: r.charId } : x))), 900);
       pushMapLog(sheetCampaignId, "💤 Sopor: " + (tg.name || "un adversario") + " cae dormido", "info");
       postCampaignEvent(r.charId, "💤 " + (tg.name || "Un adversario") + " queda dormido");
       return;
@@ -23364,6 +23405,8 @@ export default function App({ onSignOut }) {
                                           const ghostCard = rootedMine.length && keys.includes("Enredo Feroz") ? (() => { const base = findDomainCardAny("Enredo Feroz"); return base ? { ...base, key: "Inmovilizar", baseKey: "Enredo Feroz", text: "Puedes gastar una Esperanza para inmovilizar temporalmente a otro adversario en alcance Muy Cercano del objetivo de Enredo Feroz.", recall: null, noCost: true, ghost: true, noHope: Number(me?.hope_marked ?? HOPE_DEFAULT) < 1 } : null; })() : null;
                                           const charmedMine = (campaignMap.tokens || []).filter((t) => t.charmedBy === viewingCharId && (t.conds || []).includes("Embelesado"));
                                           const unCharmCard = charmedMine.length && keys.includes("Embelesar") ? (() => { const base = findDomainCardAny("Embelesar"); return base ? { ...base, key: "Romper el embeleso", baseKey: "Embelesar", text: "Libera al objetivo del embeleso de Embelesar. Suéltala sobre él.", recall: null, noCost: true, ghost: true, ghostLab: "Gratis", noHope: false, unCharm: true } : null; })() : null;
+                                          const teleTok = me?.f_tele ? (campaignMap.tokens || []).find((t) => t.id === me.f_tele && !t.vanished) : null;
+                                          const unTeleCard = teleTok && keys.includes("Libro de Illiat") ? (() => { const base = findDomainCardAny("Libro de Illiat"); return base ? { ...base, key: "Cortar la telepatía", baseKey: "Libro de Illiat", text: "Rompe el vínculo mental de Telepatía. Suéltala sobre el objetivo del vínculo.", recall: null, noCost: true, ghost: true, ghostLab: "Gratis", noHope: false, unTele: teleTok.id, spellReach: "Muy lejano" } : null; })() : null;
                                           const releaseCard = ghostCard ? { ...ghostCard, key: "Liberar", text: "Libera al objetivo del Enredo Feroz.", ghostLab: "Gratis", noHope: false, release: true } : null;
                                           // Indicador de la Guarda Rúnica: sobre la carta de quien la imbuyó, o suelto si tienes un amuleto de otra persona.
                                           const wardOut = wardOutOf(viewingCharId);
@@ -23375,12 +23418,12 @@ export default function App({ onSignOut }) {
                                           const bfForm = me?.f_beastform ? BEASTFORMS.find((b) => b.key === me.f_beastform) : null;
                                           const bfCard = bfForm ? (() => { const [, bfT, bfD] = String(bfForm.attack).split(" · "); return { key: bfForm.key, level: bfForm.tier, type: "Ataque de forma", domain: "", image: bfForm.image, text: "Ataque: " + bfForm.attack + ". " + (bfT ? "Tirada de " + bfT + ", daño " + bfD + "." : ""), damage: bfD, hands: "Forma de Bestia", weapon: true, beast: true }; })() : null;
                                           const cards = [...(bfCard ? [bfCard] : [wp(me?.f_primary_weapon, PRIMARY_WEAPONS, "Principal"), wp(me?.f_secondary_weapon, SECONDARY_WEAPONS, "Secundaria")]), ...actionCards, ...keys.map((k) => { const d0 = findDomainCardAny(k); const d = d0 && k === "Guarda Rúnica" && wardOut ? { ...d0, wardTag: wardOut } : d0; if (d && BOOK_SPELLS.some((sp) => sp.book === k)) return { ...d, bookCard: true, spellReach: "Muy lejano" };
-                                            return d && mcDom && d.domain === mcDom && !(CLASS_DOMAINS[me?.f_class] || []).includes(mcDom) ? { ...d, multi: true } : d; }), ghostCard, releaseCard, unCharmCard, rechargeCard].filter(Boolean);
+                                            return d && mcDom && d.domain === mcDom && !(CLASS_DOMAINS[me?.f_class] || []).includes(mcDom) ? { ...d, multi: true } : d; }), ghostCard, releaseCard, unCharmCard, rechargeCard, unTeleCard].filter(Boolean);
                                           return (
                                             <CardFan
                                               cards={cards}
                                               cardBack={cardBack}
-                                              aimOk={(card, tg) => !card.ghost || (card.unCharm ? canUnCharm(viewingCharId, tg) : card.release ? canRelease(viewingCharId, tg) : canExtraRoot(viewingCharId, tg))}
+                                              aimOk={(card, tg) => !card.ghost || !!card.unTele || (card.unCharm ? canUnCharm(viewingCharId, tg) : card.release ? canRelease(viewingCharId, tg) : canExtraRoot(viewingCharId, tg))}
                                               onAim={setAimRange}
                                               reachOf={(card) => { if (card.spellReach) return { label: card.spellReach, max: RANGE_CELLS[card.spellReach] }; if ((card.key === "Embelesar" || card.key === "Palabras Inspiradoras") && !card.weapon && !card.rowCard) return { label: "Cercano", max: RANGE_CELLS["Cercano"] }; if (!card.weapon) return null; const lab = weaponReach(characters[viewingCharId], card.key); return lab ? { label: lab, max: RANGE_CELLS[lab] || 99 } : null; }}
                                               cardBorder={cardBorder}
@@ -23396,6 +23439,7 @@ export default function App({ onSignOut }) {
                                               me={myToken}
                                               tokens={mapTokens}
                                               onUse={(card, cell, target, rng) =>
+                                                card.unTele ? castUnTele(viewingCharId, target, card) :
                                                 card.bookCard && !card.weapon && !card.rowCard ? (setBookAsk({ charId: viewingCharId, card, targetId: target.id }), "cancel") :
                                                 card.key === "Desatar el Caos" && !card.weapon && !card.rowCard && !card.subclass ? castChaos(viewingCharId, target, card) :
                                                 card.key === "Guarda Rúnica" && !card.weapon && !card.rowCard && !card.subclass ? (setWardAsk({ charId: viewingCharId, card, step: 1, bearerId: "", item: "", custom: "" }), "cancel") :
