@@ -9,6 +9,8 @@ export const CHANGELOG = [
     title: "El Oráculo del DJ",
     blurb: "Un anillo de luz que responde a las preguntas de la mesa: Sí / No, con matices o con una tirada de destino, solo para el DJ y a un toque bajo el chat.",
     items: [
+      { tag: "arreglo", text: "Combate · «Llama Salvaje» ahora muestra el fuego en cada adversario alcanzado (hasta tres), uno tras otro, y no solo en el primero." },
+      { tag: "mejora", text: "Combate · «Mano Mágica» invoca una ficha en la casilla que pulses (alcance Lejano): un rombo del color de tu clase con un icono de mano, que puedes mover. Si la lanzas otra vez, la anterior desaparece." },
       { tag: "mejora", text: "Combate · «Engañador Hábil» ya no tiene efecto pasivo: ahora se lanza desde el mapa. Arrástrala al tablero, gasta 1 Esperanza, se revela la carta a la mesa y una onda dorada se expande desde tu ficha." },
       { tag: "nuevo", text: "Combate · «Libro de Tyfar» se juega desde el mapa (arrástralo a una ficha y elige): Llama Salvaje (una tirada contra hasta tres adversarios Cuerpo a cuerpo; a quienes superes, 2d6 mágico y 1 Estrés), Mano Mágica (efecto de invocación en alcance Lejano) y Niebla Misteriosa (tirada de 13: una zona 3×3 de niebla alrededor de la ficha elegida, que se retira con las áreas)." },
       { tag: "nuevo", text: "Combate · si cambias tus cartas de dominio, los efectos en el mapa de las que ya no llevas se quitan solos (embeleso, raíces, sueño, telepatía y Armadura de Tava)." },
