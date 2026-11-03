@@ -1359,6 +1359,16 @@ function portraitStateOf(ch) {
   return "normal";
 }
 const portraitPick = (imgs, state) => (imgs && (imgs[state] || imgs.normal)) || null;
+// Armadura del personaje: la equipada o, sin armadura y con la carta «Huesos Desnudos», una armadura de 3 + Fuerza con los umbrales base del rango.
+const BONES_THRESHOLDS = { 1: [9, 19], 2: [11, 24], 3: [13, 31], 4: [15, 38] };
+const bonesActive = (c) => !!c && !ARMORS.some((a) => a.key === c.f_armor) && (() => { try { return JSON.parse(c.f_domain_cards || "[]").includes("Huesos Desnudos"); } catch (e) { return false; } })();
+const armorOf = (c) => {
+  if (!c) return undefined;
+  const a = ARMORS.find((x) => x.key === c.f_armor);
+  if (a || !bonesActive(c)) return a;
+  const [major, severe] = BONES_THRESHOLDS[tierForLevel(c.f_level || 1)] || BONES_THRESHOLDS[1];
+  return { key: "Huesos Desnudos", score: 3 + Number(c.t_strength || 0), major, severe, bones: true };
+};
 function getEquipmentMods(primaryWeapon, secondaryWeapon, armorEntry) {
   const totals = { evasion: 0, armor: 0, major: 0, severe: 0, hp: 0, stress: 0, hope: 0 };
   [primaryWeapon, secondaryWeapon, armorEntry].forEach((item) => {
@@ -14788,7 +14798,7 @@ export default function App({ onSignOut }) {
   };
 
   const armorMaxFor = (c) => {
-    const armorEntry = ARMORS.find((a) => a.key === c.f_armor);
+    const armorEntry = armorOf(c);
     if (!armorEntry) return 0;
     const mods = getEquipmentMods(PRIMARY_WEAPONS.find((w) => w.key === c.f_primary_weapon), SECONDARY_WEAPONS.find((w) => w.key === c.f_secondary_weapon), armorEntry);
     return armorEntry.score + (mods.armor || 0) + (c.f_tava ? 1 : 0);
@@ -17493,7 +17503,7 @@ export default function App({ onSignOut }) {
     const current = Number(c[field] || 0);
     let next;
     if (field === "armor_marked") {
-      const total = ARMORS.find((a) => a.key === c.f_armor)?.score || 0;
+      const total = armorOf(c)?.score || 0;
       next = Math.min(total, current + roll);
     } else {
       next = Math.max(0, current - roll);
@@ -17865,7 +17875,7 @@ export default function App({ onSignOut }) {
     let hope = Number(c.hope_marked ?? HOPE_DEFAULT);
     const hpTotal = Number(c.r_hp || 0);
     const stressTotal = Number(c.r_stress || 0);
-    const armorTotal = ARMORS.find((a) => a.key === c.f_armor)?.score || 0;
+    const armorTotal = armorOf(c)?.score || 0;
     const isLong = restType === "long";
     const tier = tierForLevel(c.f_level || 1);
     const messages = [];
@@ -18080,7 +18090,7 @@ export default function App({ onSignOut }) {
 
   const applyLongRest = (id) => {
     const c = characters[id];
-    const armorTotal = c ? ARMORS.find((a) => a.key === c.f_armor)?.score || 0 : 0;
+    const armorTotal = c ? armorOf(c)?.score || 0 : 0;
     updateCharacterFields(id, { hp_marked: "0", stress_marked: "0", armor_marked: String(armorTotal) });
     clearTimeout(restMsgTimer.current);
     setRestMessage("Descanso largo: Vida, Estrés y Armadura totalmente recuperados.");
@@ -19206,7 +19216,7 @@ export default function App({ onSignOut }) {
     const c = characters[id];
     const primary = PRIMARY_WEAPONS.find((w) => w.key === c.f_primary_weapon);
     const secondary = SECONDARY_WEAPONS.find((w) => w.key === c.f_secondary_weapon);
-    const armor = ARMORS.find((a) => a.key === c.f_armor);
+    const armor = armorOf(c);
     const mods = { ...getEquipmentMods(primary, secondary, armor) };
     const beast = BEASTFORMS.find((b) => b.key === c.f_beastform);
     const level = Number(c.f_level || 1);
@@ -19640,7 +19650,7 @@ export default function App({ onSignOut }) {
         const headerAccent = beastformInfo?.color || TRANSFORM_THEMES[activeTransformForm]?.color || hybridThemeOf(c)?.color || null;
         const primaryWeapon = PRIMARY_WEAPONS.find((w) => w.key === c.f_primary_weapon);
         const secondaryWeapon = SECONDARY_WEAPONS.find((w) => w.key === c.f_secondary_weapon);
-        const armorEntry = ARMORS.find((a) => a.key === c.f_armor);
+        const armorEntry = armorOf(c);
         const equipMods = { ...getEquipmentMods(primaryWeapon, secondaryWeapon, armorEntry) };
         if (c.f_tava) equipMods.armor = (equipMods.armor || 0) + 1; // Armadura de Tava
         // Origen Elemental · Trascendencia: beneficios hasta el próximo descanso.
@@ -34262,7 +34272,7 @@ export default function App({ onSignOut }) {
             if (!cp) return null;
             const mine = (cp.characterIds || []).filter((id) => characters[id]).map((id) => {
               const c = characters[id];
-              const armorTotal = ARMORS.find((a) => a.key === c.f_armor)?.score || 0;
+              const armorTotal = armorOf(c)?.score || 0;
               const r = (n, t) => (t ? Math.min(1, Number(n || 0) / t) : 0);
               return {
                 id,
