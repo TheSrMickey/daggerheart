@@ -130,15 +130,9 @@ export function makeResinMaterial(THREE, kind) {
   const mat = new THREE.MeshPhysicalMaterial({
     color: hope ? 0xffb81a : 0x0a0a52,
     roughness: 0.1,
-    transmission: hope ? 0.45 : 0.4,
-    thickness: 1.2,
-    ior: 1.5,
-    attenuationColor: hope ? new THREE.Color(0xff9d00) : new THREE.Color(0x14146e),
-    attenuationDistance: 1.1,
     clearcoat: 1,
     clearcoatRoughness: 0.04,
     envMapIntensity: 0.5,
-    transparent: true,
   });
   const base = hope ? "vec3(.33,.22,.02)" : "vec3(.012,.012,.07)";
   const gl = hope ? "vec3(1.,.95,.6)" : "vec3(.6,.7,1.)";
