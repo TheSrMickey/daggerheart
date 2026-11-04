@@ -7433,6 +7433,7 @@ const sharedStyles = `
   .mh-dk-side::-webkit-scrollbar { display: none; }
   .mh-dk-sh { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--mh-muted2); margin: 4px 4px 2px; }
   .mh-dk-side .mh-wz-feats { grid-template-columns: 1fr; }
+  .mh-dk-tt { font-size: 24px; font-weight: 700; color: var(--mh-ink); margin: 2px 4px 0; line-height: 1.15; }
   .mh-wz-subs-l { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
   .mh-wz-subs-l li { font-size: 11.5px; line-height: 1.45; color: var(--mh-ink3); padding-left: 0; }
   .mh-wz-subs-l li b { color: var(--mh-ink); font-size: 11.5px; }
@@ -35016,7 +35017,7 @@ export default function App({ onSignOut }) {
                         )}
                       </div>
                       <div className="mh-dk-side">
-                        <div className="mh-dk-sh">{cur.key} · Fundación</div>
+                        <div className="mh-serif mh-dk-tt">{cur.key}</div>
                         {(() => {
                           // Misma presentación que las características de clase del primer paso: descripción, «Características» y una línea lateral por cada una.
                           const am = /^([^:.]{3,40}): (.+)$/.exec(cur.blurb || "");
@@ -35030,7 +35031,7 @@ export default function App({ onSignOut }) {
                           return (
                             <>
                               {!am && cur.blurb && <p className="mh-wz-blurb">{cur.blurb}</p>}
-                              <div className="mh-wz-fh">Características</div>
+                              <div className="mh-wz-fh">Fundación</div>
                               <div className="mh-wz-feats">
                                 {am && (
                                   <div>
@@ -35052,10 +35053,11 @@ export default function App({ onSignOut }) {
                                   </div>
                                 ))}
                               </div>
-                              {[["Especialización", spec], ["Maestría", mast]].filter(([, l]) => l.length).map(([lab, l]) => (
+                              {[["Especialización", spec], ["Maestría", mast]].map(([lab, l]) => (
                                 <Fragment key={lab}>
                                   <div className="mh-wz-fh">{lab}</div>
                                   <div className="mh-wz-feats">
+                                    {l.length === 0 && <div><span style={{ fontStyle: "italic", opacity: 0.75 }}>Todavía no hay características cargadas para este apartado.</span></div>}
                                     {l.map((f) => (
                                       <div key={f.name}>
                                         <b>{f.name}</b>

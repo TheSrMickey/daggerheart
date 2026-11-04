@@ -9,6 +9,7 @@ export const CHANGELOG = [
     title: "El Oráculo del DJ",
     blurb: "Un anillo de luz que responde a las preguntas de la mesa: Sí / No, con matices o con una tirada de destino, solo para el DJ y a un toque bajo el chat.",
     items: [
+      { tag: "mejora", text: "Creación de personaje · al elegir subclase, a la derecha salen el nombre, la descripción y los tres apartados Fundación, Especialización y Maestría con las características de cada uno; los que aún no tienen datos (Guardián de los Elementos) lo indican." },
       { tag: "mejora", text: "Creación de personaje · al elegir subclase también se ven las características de Especialización y Maestría; los elementos de la Encarnación Elemental ya no llevan línea lateral." },
       { tag: "arreglo", text: "Creación de personaje · el rótulo «Vista previa» se lee bien sobre cualquier ilustración (va en una pastilla) y en el paso de nivel ya no aparece «Sin nombre», que se elige en el paso siguiente." },
       { tag: "mejora", text: "Creación de personaje · en modo claro, el panel derecho de ascendencia y comunidad usa un degradado crema con texto oscuro y cajas claras en lugar del fondo oscuro del modo oscuro." },
