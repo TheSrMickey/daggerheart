@@ -19594,7 +19594,7 @@ export default function App({ onSignOut }) {
       ...tag("Subclase", groupElems((sub?.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name) || tier >= (/Maestría/.test(f.name) ? 3 : 2))).map((f) => (f.subs ? { name: f.name, text: f.text + " " + f.subs.map((e) => e.name + ": " + e.text).join(" · ") } : f))),
       ...tag("Transformación", tf?.features),
     ];
-    const cardOf = (k, vault) => { const d = findDomainCardAny(k); return d ? { key: d.key, domain: d.domain, level: d.level, recall: d.recall, text: d.text, vault } : null; };
+    const cardOf = (k, vault) => { const d = findDomainCardAny(k); return d ? { key: d.key, domain: d.domain, level: d.level, recall: d.recall, text: d.text, type: d.type, image: d.image ? window.location.origin + d.image : "", color: DOMAIN_COLORS[d.domain], vault } : null; };
     const cards = [...getKeys(c.f_domain_cards).map((k) => cardOf(k, false)), ...getKeys(c.f_domain_vault).map((k) => cardOf(k, true))].filter(Boolean);
     let items = [];
     try { items = [...JSON.parse(c.f_items || "[]"), ...JSON.parse(c.f_backpack_items || "[]")]; } catch (e) { items = []; }
@@ -19612,6 +19612,13 @@ export default function App({ onSignOut }) {
       hpTotal: m.hpTotal, hpMarked: m.hpMarked, stressTotal: m.stressTotal, stressMarked: m.stressMarked,
       weapons: m.weapons, experiences: m.experiences, conditions: getConditions(c), items,
       gold: GOLD_TIERS.map((g) => ({ label: g.label, n: Number(c[g.field] || 0) })), features, cards, background, connections,
+      cut: {
+        domain: cards,
+        gear: [
+          ...[...m.weapons, ...(items.map((it) => [...PRIMARY_WEAPONS, ...SECONDARY_WEAPONS].find((w) => w.key === it.name)).filter(Boolean).slice(0, 2).map((w) => ({ key: w.key, kind: "Arma de inventario", hands: w.hands === 2 ? "Dos manos" : "Una mano", trait: w.trait, range: w.range, damage: w.damage, feature: w.feature, tierLabel: TIER_COLORS[w.tier]?.label, tierColor: TIER_COLORS[w.tier]?.color })))].map((w) => ({ key: w.key, kind: w.kind, tier: w.tierLabel, color: w.tierColor, big: w.damage.replace(/ .*$/, ""), sub: (w.damage.includes(" ") ? w.damage.replace(/^\S+\s*/, "") + " · " : "") + [w.trait && w.trait !== "—" ? w.trait : "", w.range, w.hands].filter(Boolean).join(" · "), feature: w.feature, foot: "Arma" })),
+          ...(armorE && !armorE.bones ? [{ key: armorE.key, kind: "Armadura", tier: TIER_COLORS[armorE.tier]?.label, color: TIER_COLORS[armorE.tier]?.color, big: "Puntuación " + armorE.score, sub: "Umbrales base " + armorE.major + " / " + armorE.severe, feature: armorE.feature, foot: "Armadura" }] : []),
+        ],
+      },
       date: new Date().toLocaleDateString("es-ES"),
     });
   };
