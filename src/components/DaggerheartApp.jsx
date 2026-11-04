@@ -5112,6 +5112,11 @@ const sharedStyles = `
   @media (prefers-reduced-motion: reduce) { .mh-fan-card, .mh-fan-pile { animation: none; } }
   .mh-fan-pile:hover span { transform: translateY(-6px) rotate(calc(-6deg + var(--q) * 6deg)); }
   .mh-fan-pile em { position: absolute; left: -6px; right: -6px; bottom: -22px; text-align: center; font: 600 10.5px Inter, system-ui, sans-serif; font-style: normal; color: #fff; background: rgba(21,17,28,.9); border-radius: 6px; padding: 2px 4px; white-space: nowrap; }
+  .dsw2 { position: fixed; z-index: 60; box-sizing: border-box; display: flex; background: color-mix(in srgb, var(--mh-bg, #0b0c1b) 78%, transparent); -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px); animation: dsw-bg .25s ease both; }
+  .dsw2-p { margin: 14px; flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 12px; padding: 20px 22px 16px; border-radius: 26px; background: var(--mh-panel); border: 1px solid var(--mh-line); box-shadow: 0 24px 50px -24px #000d; color: var(--mh-ink); }
+  .dsw2-h { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; } .dsw2-h h2 { margin: 0 0 3px; font-size: 24px; } .dsw2-h p { margin: 0; font-size: 12.5px; color: var(--mh-muted); max-width: 640px; line-height: 1.45; }
+  .dsw2-b { flex: 1; min-height: 0; display: flex; }
+  .dsw2-f { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
   .dsw { position: fixed; z-index: 60; display: flex; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box; overflow: hidden; background: radial-gradient(ellipse at 50% 40%, color-mix(in srgb, var(--mh-panel, #1b1830) 70%, #2b2152), var(--mh-bg, #0b0c1b) 78%); animation: dsw-bg .3s ease both; }
   @keyframes dsw-bg { from { opacity: 0; } to { opacity: 1; } }
   .dsw-in { position: relative; width: min(1100px, 100%); max-height: 100%; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 8px 12px 18px; scrollbar-width: none; }
@@ -10717,49 +10722,12 @@ function FanFace({ c, col }) {
 // Primero se ve la mano y se decide si cambiar; al cambiar, aparece el estante con las cartas disponibles.
 function DomainSwap({ entries, initial, limit, level, domains, colors, onSave, onClose }) {
   const [sel, setSel] = useState(initial);
-  const [edit, setEdit] = useState(false);
-  const [dom, setDom] = useState(domains[0]);
-  const [pend, setPend] = useState(null); // carta del estante a la espera de elegir a cuál sustituye
-  const [out, setOut] = useState(null); // carta que se está retirando (animación)
-  const [shake, setShake] = useState(0);
-  const byKey = (k) => entries.find((e) => e.key === k);
-  const colOf = (c) => colors[c.domain] || "#C9A24B";
   const changed = sel.length !== initial.length || sel.some((k, i) => k !== initial[i]);
   useEffect(() => {
-    const esc = (e) => {
-      if (e.key !== "Escape") return;
-      if (pend) setPend(null);
-      else onClose();
-    };
+    const esc = (e) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", esc);
     return () => window.removeEventListener("keydown", esc);
-  }, [pend, onClose]);
-  const retire = (k) => {
-    setOut(k);
-    setTimeout(() => {
-      setSel((p) => p.filter((x) => x !== k));
-      setOut(null);
-    }, 330);
-  };
-  const addCard = (k) => {
-    if (sel.includes(k)) return;
-    if (sel.length < limit) setSel((p) => [...p, k]);
-    else if (pend === k) setPend(null);
-    else (setPend(k), setShake((n) => n + 1));
-  };
-  const replaceWith = (oldK) => {
-    if (!pend) return;
-    const nk = pend;
-    setPend(null);
-    setOut(oldK);
-    setTimeout(() => {
-      setSel((p) => p.map((x) => (x === oldK ? nk : x)));
-      setOut(null);
-    }, 300);
-  };
-  const slots = Array.from({ length: limit }, (_, i) => sel[i] || null);
-  const mid = (limit - 1) / 2;
-  const shelf = entries.filter((e) => e.domain === dom);
+  }, [onClose]);
   // Ocupa la columna central (entre el menú y la barra de amigos), no toda la ventana.
   const [box, setBox] = useState(null);
   useLayoutEffect(() => {
@@ -10781,87 +10749,24 @@ function DomainSwap({ entries, initial, limit, level, domains, colors, onSave, o
     };
   }, []);
   return createPortal(
-    <div className="dsw" style={box || { left: 0, top: 0, right: 0, bottom: 0 }} role="dialog" aria-label="Cambiar cartas de dominio" onClick={onClose}>
-      <div className="dsw-in" onClick={(e) => e.stopPropagation()}>
-        <button type="button" className="dsw-x" onClick={onClose} aria-label="Cerrar"><X size={18} /></button>
-        <div className="dsw-head">
-          <h2 className="mh-serif">Cartas de dominio</h2>
-          <p>
-            {pend
-              ? "Elige la carta de tu mano que quieres sustituir."
-              : edit
-              ? "Retira una carta de tu mano y elige otra del estante. Tienes " + sel.length + " de " + limit + " cartas."
-              : "Este es tu momento de descanso para repasar tu mano. ¿Quieres cambiar alguna carta?"}
-          </p>
-        </div>
-        <div className={"dsw-stage" + (pend ? " is-pick" : "")} key={"st" + shake} style={{ "--s": limit >= 5 ? 0.46 : limit === 4 ? 0.54 : 0.62 }}>
-          {slots.map((k, i) => {
-            const c = k ? byKey(k) : null;
-            const col = c ? colOf(c) : "#8d88a3";
-            const style = { "--r": ((i - mid) * 5) + "deg", "--y": Math.abs(i - mid) * 7 + "px", "--d": i * 110 + "ms", "--cc": col };
-            if (!c) {
-              return (
-                <div key={"e" + i} className="dsw-slot" style={style}>
-                  <Plus size={22} />
-                  <span>Hueco libre</span>
-                </div>
-              );
-            }
-            return (
-              <div key={k} className={"dsw-card" + (out === k ? " is-out" : "") + (pend ? " is-target" : "")} style={style} onClick={() => pend && replaceWith(k)}>
-                <FanFace c={c} col={col} />
-                {edit && !pend && (
-                  <button type="button" className="dsw-rm" onClick={() => retire(k)} aria-label={"Retirar " + k} title="Retirar de la mano">
-                    <X size={14} strokeWidth={2.6} />
-                  </button>
-                )}
-              </div>
-            );
-          })}
-        </div>
-        {!edit ? (
-          <div className="dsw-act">
-            <button type="button" className="mh-btn-ghost" onClick={onClose}>
-              <Check size={15} /> Mantener mis cartas
-            </button>
-            <button type="button" className="mh-btn" onClick={() => setEdit(true)}>
-              <ArrowLeftRight size={15} /> Cambiar cartas
-            </button>
+    <div className="dsw2" style={box || { left: 0, top: 0, right: 0, bottom: 0 }} role="dialog" aria-modal="true" aria-label="Cambiar cartas de dominio" onClick={onClose}>
+      <div className="dsw2-p" onClick={(e) => e.stopPropagation()}>
+        <div className="dsw2-h">
+          <div>
+            <h2 className="mh-serif">Cartas de dominio</h2>
+            <p>Es tu momento de descanso para repasar tu mano. Pulsa una carta de tu mano para retirarla o elige otra del estante.</p>
           </div>
-        ) : (
-          <>
-            <div className="dsw-shelf-h">
-              <div className="mh-seg is-fit" role="tablist">
-                {domains.map((d) => (
-                  <button key={d} type="button" role="tab" aria-selected={dom === d} className={dom === d ? "on" : ""} onClick={() => setDom(d)}>
-                    {d} <i>{entries.filter((e) => e.domain === d).length}</i>
-                  </button>
-                ))}
-              </div>
-              <span className="dsw-lv">Hasta nivel {level}</span>
-            </div>
-            <div className="dsw-shelf">
-              {shelf.map((e, i) => {
-                const on = sel.includes(e.key);
-                const col = colOf(e);
-                return (
-                  <button key={e.key} type="button" className={"dsw-mini" + (on ? " is-on" : "") + (pend === e.key ? " is-pend" : "")} style={{ "--cc": col, "--d": Math.min(i, 12) * 40 + "ms" }} onClick={() => !on && addCard(e.key)} aria-pressed={on} title={on ? "Ya está en tu mano" : "Añadir a tu mano"}>
-                    <FanFace c={e} col={col} />
-                    {on && <span className="dsw-tick"><Check size={20} strokeWidth={3} /> En tu mano</span>}
-                  </button>
-                );
-              })}
-            </div>
-            <div className="dsw-act">
-              <button type="button" className="mh-btn-ghost" onClick={() => (setSel(initial), setPend(null), setEdit(false))}>
-                Descartar cambios
-              </button>
-              <button type="button" className="mh-btn" disabled={!changed || sel.length === 0} onClick={() => onSave(sel)}>
-                <Check size={15} /> Guardar mi mano
-              </button>
-            </div>
-          </>
-        )}
+          <button type="button" className="mh-btn-ghost dsw2-x" onClick={onClose} aria-label="Cerrar"><X size={16} /></button>
+        </div>
+        <div className="dsw2-b">
+          <DomainPicker entries={entries} sel={sel} limit={limit} level={level} domains={domains} colors={colors} onChange={setSel} />
+        </div>
+        <div className="dsw2-f">
+          <button type="button" className="mh-btn-ghost" onClick={onClose}>{changed ? "Descartar cambios" : "Mantener mis cartas"}</button>
+          <button type="button" className="mh-btn" disabled={!changed || sel.length < limit} title={sel.length < limit ? "Completa tu mano para guardar" : undefined} onClick={() => onSave(sel)}>
+            <Check size={15} /> Guardar mi mano
+          </button>
+        </div>
       </div>
     </div>,
     document.querySelector(".mh-root") || document.body
