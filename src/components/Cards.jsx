@@ -95,7 +95,7 @@ export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
         {feats.map((f) => (
           <div key={f.name} style={{ fontSize: "0.95em", lineHeight: 1.4 }}>
             <b style={{ color: "var(--mh-gold-ink)" }}>{f.name}</b>{f.text ? ": " + f.text : ""}
-            {f.subs && f.subs.map((e) => <div key={e.name} style={{ marginTop: 3, paddingLeft: 8, borderLeft: "2px solid " + e.color }}><b style={{ color: e.color }}>{e.name}</b>: {e.text}</div>)}
+            {f.subs && f.subs.map((e) => <div key={e.name} style={{ marginTop: 3 }}><b>{e.name}</b>: {e.text}</div>)}
           </div>
         ))}
       </FitBox>
