@@ -4535,6 +4535,14 @@ const sharedStyles = `
   /* Carta de dominio (diseño oficial adaptado): cinta de nivel, tipo en cápsula, coste arriba a la derecha y texto sobre un fundido */
   .mh-cardc.is-bg { background: #10112a !important; }
   .mh-cardc.is-bg .mh-cardc-art { height: var(--abg, 188px) !important; min-height: var(--abg, 188px); }
+  /* Carta full art: la ilustración llena la carta; el texto va abajo sobre un velo degradado (sin difuminado) */
+  .mh-cardc.is-full > .mh-cf-art { position: absolute !important; inset: 0; z-index: 0 !important; overflow: hidden; } .mh-cf-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .mh-cardc.is-full > .mh-cf-top { position: absolute !important; left: 0; right: 0; top: 0; height: 84px; z-index: 1 !important; pointer-events: none; background: linear-gradient(rgba(6,5,14,.62), rgba(6,5,14,0)); }
+  .mh-cardc.is-full > .mh-cf-body { position: absolute !important; left: 0; right: 0; bottom: 0; max-height: 66%; z-index: 3 !important; display: flex; flex-direction: column; justify-content: flex-end; gap: 7px; padding: 0 16px 14px; text-align: center; isolation: isolate; }
+  .mh-cf-body::before { content: ""; position: absolute; left: 0; right: 0; bottom: 0; top: -54px; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10,8,20,0) 0%, rgba(10,8,20,.78) 36%, rgba(10,8,20,.95) 100%); }
+  .mh-cf-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; } .mh-cf-chips span { padding: 2px 8px; border-radius: 99px; background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.22); color: #f4efe2; font: 600 9.5px/1.3 Inter, system-ui, sans-serif; }
+  .mh-cf-p { margin: 0 0 .5em; } .mh-cf-p:last-child { margin-bottom: 0; } .mh-cf-p b { color: #F5CF72; }
+  .mh-cardc.is-full > .mh-cardc-badge, .mh-cardc.is-full > .mh-cardc-cost { z-index: 4 !important; }
   .mh-cardc.is-bg .mh-cardc-art img, .mh-cardc.is-bg .mh-cardc-noart { bottom: auto; height: calc(var(--abg, 188px) + 34px); object-position: 46% 28%; }
   .mh-cardc.is-bg .mh-cardc-noart { padding-top: 0; align-items: center; }
   .mh-cardc.is-bg .mh-cardc-art img, .mh-cardc.is-bg .mh-cardc-noart { -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 52%, transparent 100%); mask-image: linear-gradient(180deg, #000 0%, #000 52%, transparent 100%); }

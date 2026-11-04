@@ -70,7 +70,7 @@ const blank = (type) => {
 // Convierte un elemento del taller en una entrada con el mismo formato que el catálogo de la pestaña Cartas.
 function toEntry(it, ctx, rank) {
   const e = toEntry0(it, ctx, rank);
-  if (e && e.image) { e.imgZoom = Number(it.imgZoom) || 1; e.imgX = it.imgX ?? 50; e.imgY = it.imgY ?? 30; }
+  if (e && e.image) { e.imgZoom = Number(it.imgZoom) || 1; e.imgX = it.imgX ?? 50; e.imgY = it.imgY ?? 30; e.fullArt = !!it.fullArt; }
   return e;
 }
 function toEntry0(it, ctx, rank = 0) {
@@ -297,12 +297,13 @@ export function WorkshopPage({ FitTitle, FitBox, TokDice, domainColors, icons, c
         {draft.image ? <img src={draft.image} alt="" /> : <div className="ws-img-e"><Upload size={16} /></div>}
         <div>
           <button type="button" className="mh-btn-ghost" onClick={() => fileRef.current?.click()}><Upload size={14} /> {draft.image ? "Cambiar imagen" : "Subir imagen"}</button>
-          {draft.image && <button type="button" className="mh-btn-ghost" onClick={() => set({ image: "", imgZoom: 1, imgX: 50, imgY: 30 })}><X size={14} /> Quitar</button>}
+          {draft.image && <button type="button" className="mh-btn-ghost" onClick={() => set({ image: "", imgZoom: 1, imgX: 50, imgY: 30, fullArt: false })}><X size={14} /> Quitar</button>}
         </div>
       </div>
       {draft.image && (
         <>
-          <div className="ws-crop" aria-label="Encuadre en la carta" style={draft.type === "arma" || draft.type === "armadura" ? { aspectRatio: "300 / 420", maxWidth: 170 } : undefined}><img src={draft.image} alt="" style={{ objectPosition: (draft.imgX ?? 50) + "% " + (draft.imgY ?? 30) + "%", transform: "scale(" + (Number(draft.imgZoom) || 1) + ")", transformOrigin: (draft.imgX ?? 50) + "% " + (draft.imgY ?? 30) + "%" }} /></div>
+          <label className="ws-tok-sw"><input type="checkbox" checked={!!draft.fullArt} onChange={(e) => set({ fullArt: e.target.checked })} /> <span>Ilustración a toda la carta (full art): el texto va abajo sobre un velo oscuro</span></label>
+          <div className="ws-crop" aria-label="Encuadre en la carta" style={draft.type === "arma" || draft.type === "armadura" || draft.fullArt ? { aspectRatio: "300 / 420", maxWidth: 170 } : undefined}><img src={draft.image} alt="" style={{ objectPosition: (draft.imgX ?? 50) + "% " + (draft.imgY ?? 30) + "%", transform: "scale(" + (Number(draft.imgZoom) || 1) + ")", transformOrigin: (draft.imgX ?? 50) + "% " + (draft.imgY ?? 30) + "%" }} /></div>
           <div className="ws-zoom">
             <label><span>Zoom <b>{(Number(draft.imgZoom) || 1).toFixed(2)}×</b></span><input type="range" min="1" max="3" step="0.05" value={Number(draft.imgZoom) || 1} onChange={(e) => set({ imgZoom: Number(e.target.value) })} /></label>
             <label><span>Horizontal</span><input type="range" min="0" max="100" value={draft.imgX ?? 50} onChange={(e) => set({ imgX: Number(e.target.value) })} /></label>
