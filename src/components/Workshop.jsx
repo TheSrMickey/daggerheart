@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { BookOpen, Check, Copy, Download, FileText, Gem, Hammer, Home, Layers, Plus, Search, Shield, Swords, Trash2, Upload, User, X, Sparkles } from "lucide-react";
+import { BookOpen, Check, Copy, Download, FileText, Gem, Hammer, Home, Layers, Minus, Pencil, Plus, RotateCcw, Search, Shield, Swords, Trash2, Upload, User, X, Sparkles } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { CardFace } from "./Cards";
 import { weaponIcon, armorIcon } from "./gearIcons";
@@ -101,6 +101,26 @@ function checks(it) {
   return out;
 }
 
+// Simulador de fichas: sumar, restar, vaciar y llenar, para probar la carta como se usaría en la partida.
+function TokSim({ tokens, have, setHave, TokDice, color }) {
+  if (!tokens?.on || !TokDice) return null;
+  const max = tokens.max;
+  const n = Math.min(have, max);
+  return (
+    <div className="ws-toks" title={tokSummary(tokens)}>
+      <div className="ws-dice"><TokDice have={n} max={max} color={color} onPick={(k) => setHave(k + 1 === n ? k : k + 1)} /></div>
+      <div className="ws-tokbar">
+        <button type="button" onClick={() => setHave(Math.max(0, n - 1))} disabled={n <= 0} aria-label="Restar una ficha"><Minus size={14} /></button>
+        <b>{n}<small> / {max}</small> <em>{tokens.label || "fichas"}</em></b>
+        <button type="button" onClick={() => setHave(Math.min(max, n + 1))} disabled={n >= max} aria-label="Sumar una ficha"><Plus size={14} /></button>
+        <button type="button" onClick={() => setHave(0)} title="Vaciar"><RotateCcw size={13} /></button>
+        <button type="button" onClick={() => setHave(max)} title="Llenar">Llenar</button>
+      </div>
+      <small>{tokSummary(tokens)}</small>
+    </div>
+  );
+}
+
 function shrinkImage(file, max = 640) {
   return new Promise((resolve, reject) => {
     const fr = new FileReader();
@@ -133,6 +153,7 @@ export function WorkshopPage({ FitTitle, FitBox, TokDice, domainColors, icons, c
   const [msg, setMsg] = useState("");
   const [dirty, setDirty] = useState(false);
   const [tokHave, setTokHave] = useState(0); // fichas de ejemplo en la vista previa
+  const [mode, setMode] = useState("edit"); // "view": ficha en grande · "edit": editor
   const fileRef = useRef(null);
   const importRef = useRef(null);
 
@@ -158,6 +179,7 @@ export function WorkshopPage({ FitTitle, FitBox, TokDice, domainColors, icons, c
     setSel(it.id);
     setRank(0);
     setTokHave(0);
+    setMode("edit");
     setDirty(true);
   };
   const addTemplate = async (tpl) => {
@@ -167,6 +189,7 @@ export function WorkshopPage({ FitTitle, FitBox, TokDice, domainColors, icons, c
     setSel(it.id);
     setRank(0);
     setTokHave(it.tokens?.start === "full" ? it.tokens.max : 0);
+    setMode("view");
     setDirty(false);
     flash("«" + it.name + "» añadida a tu biblioteca.");
   };
@@ -176,6 +199,7 @@ export function WorkshopPage({ FitTitle, FitBox, TokDice, domainColors, icons, c
     setSel(it.id);
     setRank(0);
     setTokHave(it.tokens?.start === "full" ? it.tokens.max : 0);
+    setMode("view");
     setDirty(false);
   };
   const set = (patch) => { setDraft((d) => ({ ...d, ...patch })); setDirty(true); };
@@ -187,6 +211,7 @@ export function WorkshopPage({ FitTitle, FitBox, TokDice, domainColors, icons, c
     await persist(exists ? items.map((x) => (x.id === next.id ? next : x)) : [next, ...items]);
     setDraft(next);
     setDirty(false);
+    setMode("view");
     flash("Guardado en tu Taller.");
   };
   const remove = async () => {
@@ -203,6 +228,7 @@ export function WorkshopPage({ FitTitle, FitBox, TokDice, domainColors, icons, c
     setDraft(copy);
     setSel(copy.id);
     setDirty(false);
+    setMode("view");
     flash("Copia creada.");
   };
   const exportAll = () => {
@@ -340,6 +366,45 @@ export function WorkshopPage({ FitTitle, FitBox, TokDice, domainColors, icons, c
           </div>
         </aside>
 
+        {draft && mode === "view" && entry ? (
+          <section className="ws-view">
+            <div className="ws-vmain">
+              <div className="ws-ed-h"><span style={{ "--c": tinfo.color }}><tinfo.Icon size={15} /> {tinfo.label}</span>{msg && <em className="ws-msg">{msg}</em>}</div>
+              <h2 className="mh-serif ws-vname">{draft.name || "Sin nombre"}</h2>
+              {draft.type === "subclase" && <div className="ws-rank">{STAGES.map((s, i) => <button key={s} type="button" className={rank === i ? "on" : ""} onClick={() => setRank(i)}>{s}</button>)}</div>}
+              <div className="ws-card ws-card-big"><CardFace c={entry} I={entry.Icon} FitTitle={FitTitle} FitBox={FitBox} /></div>
+              <TokSim tokens={draft.tokens} have={tokHave} setHave={setTokHave} TokDice={TokDice} color={entry.color} />
+              <div className="ws-acts">
+                <button type="button" className="mh-btn" onClick={() => setMode("edit")}><Pencil size={15} /> Modificar</button>
+                <button type="button" className="mh-btn-ghost" onClick={duplicate}><Copy size={14} /> Duplicar</button>
+                <button type="button" className="mh-btn-ghost ws-del" onClick={remove}><Trash2 size={14} /> Eliminar</button>
+              </div>
+            </div>
+            <div className="ws-ctx">
+              <h3>Así se vería en el juego</h3>
+              <div className="ws-ctx-g">
+                {["dominio", "arma", "armadura", "objeto"].includes(draft.type) && (
+                  <div className="ws-cx"><b>En la mano</b><div className="ws-hand"><div className="ws-hand-c"><CardFace c={entry} I={entry.Icon} FitTitle={FitTitle} FitBox={FitBox} /></div></div>{draft.tokens?.on && TokDice && <div className="ws-hand-t"><div className="ws-dice"><TokDice have={Math.min(tokHave, draft.tokens.max)} max={draft.tokens.max} color={entry.color} /></div></div>}</div>
+                )}
+                {["arma", "armadura", "objeto"].includes(draft.type) && (
+                  <div className="ws-cx"><b>En la hoja y la mochila</b>
+                    <div className="ws-row" style={{ "--c": entry.color }}><i><entry.Icon size={18} /></i><span><strong>{entry.key}</strong><small>{entry.sub}</small></span>{entry.gear && <em>{entry.gear.big} {entry.gear.small}</em>}</div>
+                  </div>
+                )}
+                {draft.type === "dominio" && (
+                  <div className="ws-cx"><b>En tu baraja</b>
+                    <div className="ws-row" style={{ "--c": entry.color }}><i><entry.Icon size={18} /></i><span><strong>{entry.key}</strong><small>{entry.sub}</small></span><em>Nv {draft.level}</em></div>
+                  </div>
+                )}
+                <div className="ws-cx"><b>En el mapa</b>
+                  <div className="ws-map"><div className="ws-pawn" style={{ "--c": entry.color }}><entry.Icon size={20} />{draft.tokens?.on && <span>{Math.min(tokHave, draft.tokens.max)}</span>}</div><small>{draft.tokens?.on ? "La insignia muestra las fichas que tiene." : "Aparece como icono sobre el mapa."}</small></div>
+                </div>
+                <div className="ws-cx"><b>En el PDF de la hoja</b><small>Se imprime para recortar con este mismo diseño.</small></div>
+              </div>
+              <p className="ws-note">Vista orientativa: por ahora el contenido del Taller no se puede equipar ni jugar en la hoja, la mano o el mapa.</p>
+            </div>
+          </section>
+        ) : (
         <div className="ws-work">
         <section className="ws-ed">
           {!draft ? (
@@ -430,12 +495,7 @@ export function WorkshopPage({ FitTitle, FitBox, TokDice, domainColors, icons, c
               <h3>Vista previa en vivo</h3>
               {draft.type === "subclase" && <div className="ws-rank">{STAGES.map((s, i) => <button key={s} type="button" className={rank === i ? "on" : ""} onClick={() => setRank(i)}>{s}</button>)}</div>}
               <div className="ws-card"><CardFace c={entry} I={entry.Icon} FitTitle={FitTitle} FitBox={FitBox} /></div>
-              {draft.tokens?.on && TokDice && (
-                <div className="ws-toks" title={tokSummary(draft.tokens)}>
-                  <TokDice have={Math.min(tokHave, draft.tokens.max)} max={draft.tokens.max} color={entry.color} onPick={(k) => setTokHave(k + 1 === tokHave ? k : k + 1)} />
-                  <small>{tokSummary(draft.tokens)}</small>
-                </div>
-              )}
+              <TokSim tokens={draft.tokens} have={tokHave} setHave={setTokHave} TokDice={TokDice} color={entry.color} />
               <span className="ws-tag"><FileText size={12} /> Contenido personalizado</span>
               <div className="ws-chk">
                 <h3>Comprobaciones</h3>
@@ -445,6 +505,7 @@ export function WorkshopPage({ FitTitle, FitBox, TokDice, domainColors, icons, c
           ) : <div className="ws-pv-e"><Sparkles size={22} /><p>Aquí verás tu carta mientras la escribes.</p></div>}
         </aside>
         </div>
+        )}
       </div>
     </div>
   );
@@ -461,6 +522,13 @@ const CSS = `
 .ws-tpl { margin-top: 14px; } .ws-new-g button span small { display: block; font-weight: 400; color: var(--mh-muted2); font-size: 10px; }
 .ws-tok { border: 1px dashed var(--mh-line2); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 10px; } .ws-tok-sw { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; cursor: pointer; } .ws-tok-sw input { width: 16px; height: 16px; accent-color: #E3B04B; }
 .ws-toks { align-self: stretch; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px; border-radius: 12px; background: var(--mh-panel2); border: 1px solid var(--mh-line); } .ws-toks small { font-size: 10.5px; color: var(--mh-muted2); text-align: center; }
+.ws-tokbar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center; } .ws-tokbar button { all: unset; cursor: pointer; box-sizing: border-box; min-width: 30px; height: 30px; padding: 0 9px; display: inline-flex; align-items: center; justify-content: center; border-radius: 9px; border: 1px solid var(--mh-line2); background: var(--mh-panel); color: var(--mh-text); font-size: 11.5px; font-weight: 600; } .ws-tokbar button:disabled { opacity: .35; cursor: default; } .ws-tokbar button:hover:not(:disabled) { border-color: #E3B04B; } .ws-tokbar b { font-size: 15px; padding: 0 6px; } .ws-tokbar b small { font-size: 11px; color: var(--mh-muted2); } .ws-tokbar b em { font-style: normal; font-size: 11px; font-weight: 500; color: var(--mh-muted); }
+.ws-view { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 14px; align-items: start; } .ws-vmain, .ws-ctx { background: var(--mh-panel); border: 1px solid var(--mh-line); border-radius: 18px; padding: 16px; min-width: 0; display: flex; flex-direction: column; gap: 12px; } .ws-vname { margin: 0; font-size: 26px; } .ws-card-big { margin: 4px 0; } .ws-dice { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; min-height: 54px; } .ws-vmain .ws-rank { justify-content: center; }
+.ws-ctx-g { display: flex; flex-direction: column; gap: 10px; } .ws-cx { border: 1px solid var(--mh-line); background: var(--mh-panel2); border-radius: 14px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; } .ws-cx > b { font: 700 10.5px Inter, system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-muted); } .ws-cx small, .ws-note { font-size: 11.5px; color: var(--mh-muted2); margin: 0; }
+.ws-hand { height: 190px; overflow: hidden; display: flex; justify-content: center; } .ws-hand-c { transform: scale(.48); transform-origin: top center; flex: none; } .ws-hand-t { display: flex; justify-content: center; }
+.ws-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel); } .ws-row i { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; color: var(--c); background: color-mix(in srgb, var(--c) 16%, transparent); flex: none; } .ws-row span { flex: 1; min-width: 0; display: flex; flex-direction: column; } .ws-row strong { font-size: 13px; } .ws-row em { font-style: normal; font-weight: 700; font-size: 12px; color: var(--c); white-space: nowrap; }
+.ws-map { display: flex; align-items: center; gap: 12px; } .ws-pawn { position: relative; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: var(--c); border: 3px solid rgba(255,255,255,.85); box-shadow: 0 3px 10px #0006; flex: none; } .ws-pawn span { position: absolute; right: -6px; top: -6px; min-width: 20px; height: 20px; border-radius: 99px; background: #E3B04B; color: #1a1408; font: 800 11px Inter, sans-serif; display: grid; place-items: center; border: 2px solid var(--mh-panel); }
+@media (max-width: 1100px) { .ws-view { grid-template-columns: minmax(0, 1fr); } }
 .ws-lib-h { margin-top: 14px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; } .ws-lib-h h3 { margin: 0; } .ws-lib-h .ws-search { width: 220px; } .ws-lib-h .ws-chips { margin: 0; } .ws-search { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border: 1px solid var(--mh-line); border-radius: 10px; background: var(--mh-input); color: var(--mh-muted); } .ws-search input { all: unset; flex: 1; min-width: 0; font-size: 12.5px; color: var(--mh-ink); }
 .ws-chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0; } .ws-chips button { all: unset; cursor: pointer; font-size: 10.5px; padding: 3px 9px; border-radius: 99px; border: 1px solid var(--mh-line2); color: var(--mh-muted); } .ws-chips button.on { background: #E3B04B; border-color: #E3B04B; color: #1d1606; font-weight: 700; }
 .ws-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 6px; max-height: 176px; overflow-y: auto; scrollbar-width: thin; margin-top: 4px; } .ws-empty { color: var(--mh-muted2); font-size: 12.5px; margin: 6px 2px; line-height: 1.45; }
