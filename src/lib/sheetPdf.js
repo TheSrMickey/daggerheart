@@ -43,6 +43,12 @@ export function sheetHtml(d) {
   const banner = `<div class="bnr"><div class="cn">${esc(d.cls || "Daggerheart")}</div><div class="dd">${esc((d.domains || []).join(" · "))}</div><div class="bl">${LOGO("#fff")}<span>ENARIS</span></div></div>`;
   const fields = (pg) => `<div class="flds"><div class="f w2"><b>${esc(d.name)}</b><small>Nombre</small></div><div class="f"><b>${esc(d.pronouns)}</b><small>Pronombres</small></div><div class="f w2"><b>${esc([d.ancestry, d.community, d.transformation].filter(Boolean).join(" · "))}</b><small>Herencia</small></div><div class="f"><b>${esc(d.cls)}${d.subclass ? " · " + esc(d.subclass) : ""}${d.multi ? " + " + esc(d.multi) : ""}</b><small>Clase y subclase</small></div></div><div class="lvl"><b>${d.level}</b><small>Nivel</small></div>`;
   const weight = pg2Feats.reduce((n, f) => n + f.name.length + f.text.length, 0) + d.cards.reduce((n, c) => n + c.text.length, 0);
+  // Cartas para recortar: 9 por hoja (3 × 3), tamaño de carta de juego (63,5 × 88,9 mm), con líneas de corte.
+  const cutDom = (c) => `<div class="cc" style="--k:${esc(c.color || col)}"><div class="ca">${c.image ? `<img src="${esc(c.image)}" alt="">` : ""}<b class="cg">${c.level}</b><span class="ctp">${esc(c.type || "")}</span></div><div class="cn2">${esc(c.key)}</div><div class="cb2" style="font-size:${c.text.length > 520 ? "5.1pt" : c.text.length > 380 ? "5.5pt" : c.text.length > 260 ? "5.8pt" : "6.3pt"}">${esc(c.text)}</div><div class="cf2"><span>${esc(c.domain)}</span><span>⚡ ${c.recall ?? "–"}${c.vault ? " · bóveda" : ""}</span></div></div>`;
+  const cutGear = (g) => `<div class="cc gear" style="--k:${esc(g.color || col)}"><div class="gh"><span>${esc(g.kind)}</span><i>${esc(g.tier || "")}</i></div><div class="cn2">${esc(g.key)}</div><div class="gbig">${esc(g.big)}</div><div class="gsub">${esc(g.sub)}</div><div class="cb2">${esc(g.feature || "")}</div><div class="cf2"><span>${esc(g.foot || "")}</span><span>Enaris</span></div></div>`;
+  const cutAll = [...(d.cut?.domain || []).map(cutDom), ...(d.cut?.gear || []).map(cutGear)];
+  const cutPages = Array.from({ length: Math.ceil(cutAll.length / 9) }, (_, i) => cutAll.slice(i * 9, i * 9 + 9));
+  const cutHtml = cutPages.map((pg, i) => `<div class="pg cut"><div class="cgrid">${pg.join("")}</div><div class="foot">${LOGO("#8d88a3")} Recorta por las líneas discontinuas · cartas de ${esc(d.name)} · hoja ${i + 1}/${cutPages.length}</div></div>`).join("");
   const sh = (t) => `<div class="sh"><span>${t}</span></div>`;
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>${esc(d.name)} · Hoja de personaje</title><style>
 @page { size: A4 portrait; margin: 8mm; }
@@ -86,6 +92,11 @@ h1, h3 { margin: 0; } p { margin: 0; } em { font-style: normal; color: #6d6478; 
 .tier { border: 1.1pt solid var(--ln); border-radius: 2mm; overflow: hidden; } .tier .th3 { background: var(--dk); color: #fff; padding: 1.2mm 2mm; font: 800 7pt Arial; letter-spacing: .06em; text-transform: uppercase; } .tier .th3 span { font-weight: 500; } .tier .hd3 { font-style: italic; font-size: 6.4pt; text-align: center; padding: 1.2mm 2mm; background: #ebe8f0; } .tier ul { list-style: none; padding: 1.2mm 2mm 1.4mm; margin: 0; } .tier li { display: flex; gap: 1.6mm; font-size: 6.2pt; line-height: 1.25; margin-bottom: .7mm; } .tier li i { flex: none; width: 2.8mm; height: 2.8mm; border: 1pt solid var(--dk); border-radius: .5mm; margin-top: .3mm; }
 .desc div { display: flex; align-items: flex-end; gap: 2mm; font-size: 7pt; } .desc b { white-space: nowrap; }
 .pg.cmp .feats { font-size: 6.5pt !important; } .pg.cmp .cd p { font-size: 6.4pt; } .pg.cmp .cd { padding: .8mm 2mm; } .pg.cmp .qa .ln { height: 3.6mm; } .pg.cmp .tier li { font-size: 5.8pt; margin-bottom: .4mm; } .pg.cmp .tier .hd3 { font-size: 5.8pt; padding: .6mm 2mm; } .pg.cmp .pnl { padding-bottom: 1.2mm; } .pg.cmp .desc { display: none; } .pg.cmp .sh { margin-bottom: 1mm; }
+.pg.cut { height: 280mm; overflow: hidden; gap: 0; } .cgrid { width: 100%; display: grid; grid-template-columns: repeat(3, 63.5mm); grid-auto-rows: 88.9mm; justify-content: center; align-content: start; margin-top: 4mm; }
+.cc { position: relative; width: 63.5mm; height: 88.9mm; border: .5pt dashed #8a8497; padding: 2.2mm; display: flex; flex-direction: column; overflow: hidden; background: #fff; } .cc::before { content: ""; position: absolute; inset: 1.4mm; border: 1.6pt solid var(--k); border-radius: 3mm; pointer-events: none; }
+.ca { position: relative; height: 30mm; margin: .4mm; border-radius: 2.2mm 2.2mm 0 0; background: linear-gradient(135deg, var(--k), #2b2236); overflow: hidden; } .ca img { width: 100%; height: 100%; object-fit: cover; display: block; } .cg { position: absolute; left: 2mm; top: 0; background: var(--k); color: #fff; font: 800 10pt/1 Georgia, serif; padding: 1.4mm 1.6mm 2.4mm; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 1mm), 0 100%); } .ctp { position: absolute; left: 50%; bottom: 1.4mm; transform: translateX(-50%); background: var(--k); color: #fff; font: 800 5.6pt Arial; letter-spacing: .16em; text-transform: uppercase; padding: .6mm 3mm; border-radius: 99px; }
+.cn2 { font: 700 9.6pt/1.15 Georgia, serif; text-align: center; margin: 2mm 2mm .8mm; } .cb2 { flex: 1; font-size: 6.1pt; line-height: 1.28; color: #2b2a35; text-align: center; padding: 0 2.4mm; overflow: hidden; } .cf2 { display: flex; justify-content: space-between; font-size: 5.8pt; color: #6d6478; padding: 0 3mm 1.6mm; }
+.cc.gear .gh { display: flex; justify-content: space-between; align-items: center; background: var(--k); color: #fff; margin: .4mm; padding: 2.6mm 3mm; border-radius: 2.2mm 2.2mm 0 0; font: 800 6.4pt Arial; letter-spacing: .14em; text-transform: uppercase; } .gh i { font-style: normal; opacity: .9; } .gbig { text-align: center; font: 800 20pt/1.1 Georgia, serif; margin-top: 1mm; color: var(--k); } .gsub { text-align: center; font-size: 6.6pt; color: #4a4457; margin-bottom: 1.6mm; }
 .foot { text-align: center; font-size: 6pt; color: #8d88a3; display: flex; align-items: center; justify-content: center; gap: 2mm; } .foot .logo { width: 2mm; height: 3.4mm; }
 </style></head><body>
 <div class="pg p1">
@@ -126,6 +137,7 @@ h1, h3 { margin: 0; } p { margin: 0; } em { font-style: normal; color: #6d6478; 
 <div class="tre">${TIERS.map((t) => `<div class="tier"><div class="th3">Rango ${t.t} <span>· ${t.lv}</span></div><div class="hd3">${t.head}</div><ul>${t.opts.map((o) => `<li><i></i><span>${o}</span></li>`).join("")}</ul></div>`).join("")}</div>
 <div class="foot">${LOGO("#8d88a3")} Enaris · hoja de ${esc(d.name)} · ${esc(d.date)} · 2/2</div>
 </div>
+${cutHtml}
 </body></html>`;
 }
 
@@ -143,9 +155,12 @@ export function printSheet(d) {
   w.document.close();
   const done = () => setTimeout(() => fr.remove(), 1500);
   w.addEventListener("afterprint", done);
-  setTimeout(() => {
+  // Espera a que carguen las ilustraciones de las cartas (máx. 4 s) y abre la impresión.
+  const imgs = [...w.document.images];
+  const ready = Promise.race([Promise.all(imgs.map((im) => (im.complete ? 1 : new Promise((r) => { im.onload = im.onerror = r; })))), new Promise((r) => setTimeout(r, 4000))]);
+  ready.then(() => setTimeout(() => {
     try { w.focus(); w.print(); } catch (e) {}
     setTimeout(done, 60000);
-  }, 350);
+  }, 250));
   return html;
 }
