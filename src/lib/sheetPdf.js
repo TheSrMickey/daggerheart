@@ -4,104 +4,127 @@ const esc = (t) => String(t ?? "").replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "
 const boxes = (total, marked, color) => Array.from({ length: Math.max(0, total) }, (_, i) => `<i style="${i < marked ? `background:${color};border-color:${color}` : ""}"></i>`).join("");
 
 const LOGO = (c) => `<svg class="logo" viewBox="0 0 200 340" aria-hidden="true"><path fill="${c}" d="M100 0C101.5 66 106 109 200 115C106 121 102 164 100 340C98 164 94 121 0 115C94 109 98.5 66 100 0Z"/></svg>`;
-const lines = (n) => Array.from({ length: n }, () => `<div class="ln"></div>`).join("");
+const lines = (n, cls = "") => Array.from({ length: n }, () => `<div class="ln ${cls}"></div>`).join("");
+const TRAIT_ACTIONS = { Agilidad: ["Esprintar", "Saltar", "Maniobrar"], Fuerza: ["Levantar", "Golpear", "Agarrar"], Destreza: ["Controlar", "Esconderse", "Manipular"], Instinto: ["Percibir", "Intuir", "Orientarse"], Presencia: ["Encantar", "Actuar", "Engañar"], Conocimiento: ["Recordar", "Analizar", "Comprender"] };
+const TIERS = [
+  { t: 2, lv: "Niveles 2–4", head: "En el nivel 2, gana una Experiencia adicional con +2 y un +1 a tu Competencia.", opts: ["Gana +1 en dos rasgos sin marcar y márcalos.", "Gana permanentemente un hueco de Punto de vida.", "Gana permanentemente un hueco de Estrés.", "Gana +1 en dos Experiencias.", "Elige una carta de dominio adicional de nivel igual o inferior (hasta nivel 4).", "Gana permanentemente +1 de Evasión."] },
+  { t: 3, lv: "Niveles 5–7", head: "En el nivel 5, gana una Experiencia adicional con +2, borra las marcas de rasgos y gana +1 a tu Competencia.", opts: ["Gana +1 en dos rasgos sin marcar y márcalos.", "Gana permanentemente un hueco de Punto de vida.", "Gana permanentemente un hueco de Estrés.", "Gana +1 en dos Experiencias.", "Elige una carta de dominio adicional de nivel igual o inferior (hasta nivel 7).", "Gana permanentemente +1 de Evasión.", "Toma una carta de subclase mejorada y tacha esta opción en este rango.", "Aumenta tu Competencia en +1.", "Multiclase: elige otra clase y tacha una opción sin usar."] },
+  { t: 4, lv: "Niveles 8–10", head: "En el nivel 8, gana una Experiencia adicional con +2, borra las marcas de rasgos y gana +1 a tu Competencia.", opts: ["Gana +1 en dos rasgos sin marcar y márcalos.", "Gana permanentemente un hueco de Punto de vida.", "Gana permanentemente un hueco de Estrés.", "Gana +1 en dos Experiencias.", "Elige una carta de dominio adicional de nivel igual o inferior.", "Gana permanentemente +1 de Evasión.", "Toma una carta de subclase mejorada y tacha esta opción en este rango.", "Aumenta tu Competencia en +1.", "Multiclase: elige otra clase y tacha una opción sin usar."] },
+];
 
 export function sheetHtml(d) {
   const col = d.color || "#7A5AA6";
-  const feat = (f) => `<p class="ft"><b>${esc(f.name)}.</b> ${esc(f.text)}</p>`;
   const sign = (n) => (n > 0 ? "+" + n : String(n));
-  const traits = d.traits.map((t) => `<div class="tr${t.spell ? " sp" : ""}"><div><small>${esc(t.label)}</small>${t.spell ? "<em>rasgo de conjuro</em>" : ""}</div><b>${sign(t.value)}</b></div>`).join("");
-  const weapon = (w, label) => w
-    ? `<div class="wp"><small>${label}</small><b>${esc(w.key)}</b><div class="mt">${esc(w.trait)}${w.trait && w.trait !== "—" ? " " + sign(w.traitValue) : ""} · ${esc(w.range)} · ${esc(w.hands)}</div><div class="dm">${esc(w.damage)}</div>${w.feature ? `<p>${esc(w.feature)}</p>` : ""}</div>`
-    : `<div class="wp is-empty"><small>${label}</small><div class="ln"></div><div class="ln"></div></div>`;
+  const marks = d.marks || [];
+  const feat = (f) => `<p class="ft"><b>${esc(f.name)}.</b> ${esc(f.text)}</p>`;
+  const traits = d.traits.map((t) => `<div class="tc"><div class="th2"><span>${esc(t.label)}</span><i class="${marks.includes(t.label) ? "on" : ""}"></i></div><div class="tv${t.spell ? " sp" : ""}">${sign(t.value)}${t.spell ? "<em>conjuro</em>" : ""}</div><div class="ta">${(TRAIT_ACTIONS[t.label] || []).map((a) => `<span>${a}</span>`).join("")}</div></div>`).join("");
+  const slotRow = (n, marked, color, max = 12) => Array.from({ length: max }, (_, i) => `<i class="${i < n ? "sl" : "sl off"}" style="${i < marked ? `background:${color};border-color:${color}` : ""}"></i>`).join("");
+  const armorUsed = Math.max(0, d.armorTotal - d.armorLeft);
+  const armorSlots = Array.from({ length: 12 }, (_, i) => `<i class="ar${i < d.armorTotal ? "" : " off"}" style="${i < armorUsed ? `background:${col};border-color:${col}` : ""}"></i>`).join("");
+  const diamonds = Array.from({ length: 6 }, (_, i) => `<i class="dm${i < d.hopeTotal ? "" : " off"}" style="${i < d.hope ? "background:#E3B04B;border-color:#E3B04B" : ""}"></i>`).join("");
+  const exps = Array.from({ length: Math.max(5, d.experiences.length) }, (_, i) => d.experiences[i]).map((e) => `<div class="xr"><span>${e ? esc(e.text) : ""}</span><b>${e ? sign(e.bonus) : ""}</b></div>`).join("");
+  const goldRow = (label, n, max, shape) => `<div class="gr"><div class="gp">${Array.from({ length: max }, (_, i) => `<i class="${shape}" style="${i < n ? `background:#E3B04B;border-color:#E3B04B` : ""}"></i>`).join("")}</div><small>${label}</small></div>`;
+  const g = Object.fromEntries(d.gold.map((x) => [x.label, x.n]));
   const prim = d.weapons.find((w) => /principal/i.test(w.kind));
   const sec = d.weapons.find((w) => /secundaria/i.test(w.kind));
-  const armor = d.armor
-    ? `<div class="wp"><small>Armadura</small><b>${esc(d.armor.key)}</b><div class="mt">Puntuación ${d.armor.score}</div>${d.armor.feature ? `<p>${esc(d.armor.feature)}</p>` : ""}</div>`
-    : `<div class="wp is-empty"><small>Armadura</small><div class="ln"></div></div>`;
-  const expRows = Array.from({ length: Math.max(5, d.experiences.length) }, (_, i) => d.experiences[i]);
-  const exps = expRows.map((e) => `<div class="row">${e ? `<span>${esc(e.text)}</span><b>${sign(e.bonus)}</b>` : `<span></span><b class="mut">+</b>`}</div>`).join("");
-  const slots = 5;
-  const itemRows = Array.from({ length: Math.max(slots, d.items.length) }, (_, i) => d.items[i]);
-  const items = itemRows.map((i) => `<div class="row">${i ? `<span><b>${esc(i.name)}</b>${i.count > 1 ? " ×" + i.count : ""}${i.description ? ` <em>${esc(i.description)}</em>` : ""}</span>` : `<span></span>`}</div>`).join("");
-  const gold = d.gold.map((g) => `<div class="gd"><small>${esc(g.label)}</small><b>${g.n}</b></div>`).join("");
-  const loadout = d.cards.filter((c) => !c.vault);
-  const vault = d.cards.filter((c) => c.vault);
-  const handRows = Array.from({ length: Math.max(5, loadout.length) }, (_, i) => loadout[i]);
-  const hand = handRows.map((c) => `<div class="row">${c ? `<span><b>${esc(c.key)}</b> <em>${esc(c.domain)} · Nv ${c.level}</em></span><b>⚡${c.recall ?? "–"}</b>` : "<span></span>"}</div>`).join("");
+  const wp = (w, label) => `<div class="wb"><div class="wl">${label}</div><div class="fl3"><div><b>${w ? esc(w.key) : ""}</b><small>Nombre</small></div><div><b>${w ? esc(w.trait) + (w.trait && w.trait !== "—" ? " " + sign(w.traitValue) : "") + " · " + esc(w.range) : ""}</b><small>Rasgo y alcance</small></div><div><b>${w ? esc(w.damage) : ""}</b><small>Dados y tipo de daño</small></div></div><div class="fe"><b>${w && w.feature ? esc(w.feature) : ""}</b><small>Característica</small></div></div>`;
+  const invWeapons = (d.invWeapons || []).concat([null, null]).slice(0, 2).map((w) => `<div class="wb"><div class="wl">Arma de inventario <span class="ck"><i></i>Principal <i></i>Secundaria</span></div><div class="fl3"><div><b>${w ? esc(w.key) : ""}</b><small>Nombre</small></div><div><b>${w ? esc(w.trait) + " · " + esc(w.range) : ""}</b><small>Rasgo y alcance</small></div><div><b>${w ? esc(w.damage) : ""}</b><small>Dados y tipo de daño</small></div></div><div class="fe"><b>${w && w.feature ? esc(w.feature) : ""}</b><small>Característica</small></div></div>`).join("");
+  const itemRows = Array.from({ length: Math.max(5, d.items.length) }, (_, i) => d.items[i]).map((i) => `<div class="xr"><span>${i ? `<b>${esc(i.name)}</b>${i.count > 1 ? " ×" + i.count : ""}${i.description ? ` <em>${esc(i.description)}</em>` : ""}` : ""}</span></div>`).join("");
   const card = (c) => `<div class="cd"><div class="ch"><b>${esc(c.key)}</b><span>${esc(c.domain)} · Nv ${c.level}${c.recall != null ? " · ⚡" + c.recall : ""}${c.vault ? " · bóveda" : ""}</span></div><p>${esc(c.text)}</p></div>`;
-  const qa = (list) => list.map((n) => `<div class="qa"><b>${esc(n.q)}</b><p>${n.a ? esc(n.a) : ""}</p>${n.a ? "" : lines(1)}</div>`).join("");
-  const head = (pg) => `<div class="hd"><div class="id"><h1>${esc(d.name)}</h1><div class="sub"><b>${esc(d.cls)}</b>${d.subclass ? " · " + esc(d.subclass) : ""}${d.multi ? " · Multiclase " + esc(d.multi) : ""}${d.pronouns ? " · " + esc(d.pronouns) : ""}</div><div class="sub">${esc([d.ancestry, d.community, d.transformation].filter(Boolean).join(" · "))}</div></div><div class="lv"><b>Nv ${d.level}</b>Rango ${d.rank} · Competencia ${d.proficiency}</div><div class="brand">${LOGO(col)}<span>ENARIS</span><small>Hoja de personaje · ${pg}/2</small></div></div>`;
+  const qa = (list) => list.map((n) => `<div class="qa"><b>${esc(n.q)}</b>${n.a ? `<p>${esc(n.a)}</p>` : lines(2)}</div>`).join("");
+  const cfLen = (d.classFeatures || []).reduce((n, f) => n + f.name.length + f.text.length, 0);
+  // Si el texto de clase no cabe en la página 1, allí se resume y la página 2 lo trae completo.
+  const long = cfLen > 760;
+  const cut = (t, n) => (t.length <= n ? t : t.slice(0, t.lastIndexOf(" ", n)).replace(/[,;:.\s]+$/, "") + "…");
+  const per = Math.floor(560 / Math.max(1, (d.classFeatures || []).length));
+  const classFeat = (d.classFeatures || []).map((f) => feat(long ? { name: f.name, text: cut(f.text, per) } : f)).join("") + (long ? '<p class="ft"><em>Texto completo en la página 2.</em></p>' : "");
+  const cfSize = long ? "7pt" : "7.8pt";
+  const pg2Feats = [...(long ? d.classFeatures.map((f) => ({ name: f.name + " · Clase", text: f.text })) : []), ...d.features];
+  const banner = `<div class="bnr"><div class="cn">${esc(d.cls || "Daggerheart")}</div><div class="dd">${esc((d.domains || []).join(" · "))}</div><div class="bl">${LOGO("#fff")}<span>ENARIS</span></div></div>`;
+  const fields = (pg) => `<div class="flds"><div class="f w2"><b>${esc(d.name)}</b><small>Nombre</small></div><div class="f"><b>${esc(d.pronouns)}</b><small>Pronombres</small></div><div class="f w2"><b>${esc([d.ancestry, d.community, d.transformation].filter(Boolean).join(" · "))}</b><small>Herencia</small></div><div class="f"><b>${esc(d.cls)}${d.subclass ? " · " + esc(d.subclass) : ""}${d.multi ? " + " + esc(d.multi) : ""}</b><small>Clase y subclase</small></div></div><div class="lvl"><b>${d.level}</b><small>Nivel</small></div>`;
+  const weight = pg2Feats.reduce((n, f) => n + f.name.length + f.text.length, 0) + d.cards.reduce((n, c) => n + c.text.length, 0);
+  const sh = (t) => `<div class="sh"><span>${t}</span></div>`;
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>${esc(d.name)} · Hoja de personaje</title><style>
 @page { size: A4 portrait; margin: 8mm; }
 * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 html, body { margin: 0; background: #fff; }
-body { font: 8.2pt/1.34 "Inter", "Segoe UI", Arial, sans-serif; color: #1d1a24; width: 194mm; }
-h1, h3 { font-family: Georgia, "Cinzel", serif; margin: 0; }
-p { margin: 0; } em { font-style: normal; color: #6d6478; font-size: 6.9pt; } small { font-size: 6.2pt; text-transform: uppercase; letter-spacing: .09em; color: #6d6478; }
-.pg { width: 194mm; min-height: 279mm; display: flex; flex-direction: column; gap: 3mm; break-after: page; } .pg:last-child { break-after: auto; } .pg.p1 { height: 279mm; overflow: hidden; } .pg.p1 .bot { min-height: 0; }
-.hd { display: grid; grid-template-columns: 1fr auto auto; align-items: end; gap: 7mm; border-bottom: 2.2pt solid ${col}; padding-bottom: 2mm; }
-.hd h1 { font-size: 22pt; line-height: 1; } .hd .sub { margin-top: 1mm; font-size: 8.6pt; color: #4a4457; } .hd .sub b { color: ${col}; }
-.lv { text-align: right; font-size: 7pt; color: #6d6478; } .lv b { display: block; font: 700 20pt/1 Georgia, serif; color: ${col}; }
-.brand { display: flex; flex-direction: column; align-items: center; gap: .3mm; padding-left: 5mm; border-left: .8pt solid #d9d3e2; } .brand .logo { width: 5.2mm; height: 8.8mm; } .brand span { font: 700 8.5pt/1 Georgia, serif; letter-spacing: .28em; color: #2b2236; padding-left: .28em; } .brand small { font-size: 5.4pt; letter-spacing: .06em; text-transform: none; }
-.box { border: 1pt solid #cfc8da; border-radius: 2mm; padding: 1.8mm 2.4mm; background: #fff; }
-h3 { font-size: 8.8pt; text-transform: uppercase; letter-spacing: .09em; color: ${col}; border-bottom: .8pt solid ${col}66; padding-bottom: .7mm; margin-bottom: 1.2mm; break-after: avoid; }
-.top { display: grid; grid-template-columns: 58mm 1fr; gap: 3.5mm; }
-.col { display: flex; flex-direction: column; gap: 3mm; min-width: 0; }
-.tr { display: flex; align-items: center; justify-content: space-between; gap: 2mm; border: 1pt solid #cfc8da; border-radius: 2mm; padding: 0 3mm; flex: 1; min-height: 14mm; } .tr.sp { border-color: ${col}; background: ${col}12; }
-.tr small { display: block; font-size: 7pt; color: #2b2236; font-weight: 700; } .tr em { display: block; color: ${col}; } .tr b { font: 700 21pt/1 Georgia, serif; min-width: 12mm; text-align: center; border-left: .8pt dotted #b6aec6; padding-left: 3mm; }
-.dfn { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm; } .dfn .big { font: 700 22pt/1 Georgia, serif; margin-top: .6mm; }
-.th { display: flex; gap: 2mm; } .th span { flex: 1; text-align: center; font-size: 6.6pt; color: #6d6478; text-transform: uppercase; letter-spacing: .06em; } .th b { display: block; font: 700 15pt/1.1 Georgia, serif; color: #1d1a24; letter-spacing: 0; }
-.pips { display: flex; flex-wrap: wrap; gap: 1mm; margin-top: 1mm; } .pips i { width: 4.4mm; height: 4.4mm; border: 1.1pt solid #8d88a3; border-radius: .9mm; display: block; } .pips.ci i { border-radius: 50%; }
-.vit { display: flex; flex-direction: column; gap: 3mm; } .vit .box { padding: 1.6mm 2.4mm; } .vit small b { color: #1d1a24; }
-.row { display: flex; justify-content: space-between; align-items: flex-end; gap: 3mm; border-bottom: .6pt solid #d9d3e2; min-height: 5.6mm; padding: .6mm 0 .4mm; } .row b { font-size: 8pt; } .row b.mut { color: #c9c2d6; }
-.two { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm; }
-.wp { border: 1pt solid #cfc8da; border-radius: 2mm; padding: 1.6mm 2.4mm; min-height: 19mm; } .wp b { display: block; font: 700 9.4pt/1.2 Georgia, serif; } .wp .mt { color: #4a4457; font-size: 7.2pt; } .wp .dm { font-weight: 700; color: ${col}; font-size: 8.6pt; } .wp p { color: #5a5368; font-size: 7pt; margin-top: .6mm; }
-.gold { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2mm; margin-top: 1.5mm; } .gd { border: 1pt solid #cfc8da; border-radius: 1.6mm; text-align: center; padding: .8mm 0; } .gd b { display: block; font: 700 11pt/1.1 Georgia, serif; }
-.tags span { display: inline-block; border: .8pt solid ${col}88; border-radius: 99px; padding: 0 2.4mm; margin: 0 1.2mm 1mm 0; font-size: 7pt; }
-.fill { flex: 1; display: flex; flex-direction: column; min-height: 22mm; } .fill .ln { flex: 1; min-height: 5.6mm; }
-.ln { border-bottom: .6pt solid #d9d3e2; height: 5.8mm; }
-.bot { display: grid; grid-template-columns: 1fr 1fr; gap: 3.5mm; flex: 1; } .bot > .box { display: flex; flex-direction: column; }
-.ft { margin-bottom: 1.1mm; } .ft b { color: #2b2236; }
+body { font: 7.8pt/1.3 "Inter", "Segoe UI", Arial, sans-serif; color: #1d1a24; width: 194mm; }
+h1, h3 { margin: 0; } p { margin: 0; } em { font-style: normal; color: #6d6478; font-size: 6.6pt; } small { font-size: 5.8pt; text-transform: uppercase; letter-spacing: .1em; color: #6d6478; }
+:root { --dk: #3b3a3f; --ln: #b9b4c4; }
+.pg { width: 194mm; min-height: 0; display: flex; flex-direction: column; gap: 2.6mm; break-after: page; } .pg:last-child { break-after: auto; } .pg.p1 { height: 280mm; overflow: hidden; }
+.top, .def { flex: none; }
+.top { display: grid; grid-template-columns: 56mm 1fr 19mm; gap: 2.4mm; height: 21mm; align-items: stretch; margin-bottom: .6mm; }
+.bnr { position: relative; background: var(--dk); color: #fff; border-radius: 1.6mm 6mm 1.6mm 1.6mm; padding: 2mm 3.4mm; display: flex; flex-direction: column; justify-content: center; border-bottom: 1.4mm solid ${col}; } .bnr .cn { font: 800 16pt/1 "Inter", Arial, sans-serif; letter-spacing: .03em; text-transform: uppercase; } .bnr .dd { margin-top: 1mm; font-size: 7pt; letter-spacing: .14em; text-transform: uppercase; color: #d8d4e0; } .bnr .bl { position: absolute; right: 3mm; top: 2mm; display: flex; flex-direction: column; align-items: center; gap: .6mm; } .bnr .bl .logo { width: 3.6mm; height: 6.1mm; } .bnr .bl span { font: 700 5.2pt/1 Georgia, serif; letter-spacing: .24em; padding-left: .24em; color: #e9e5f0; }
+.flds { display: grid; grid-template-columns: 1.45fr 1fr; grid-template-rows: 1fr 1fr; gap: 1.8mm; min-width: 0; } .f { border: 1.1pt solid var(--ln); border-radius: 1.4mm; padding: .4mm 2mm 0; display: flex; flex-direction: column; justify-content: space-between; min-height: 0; min-width: 0; overflow: hidden; } .f b { font-size: 7.8pt; padding-top: .8mm; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .f small { margin-bottom: .5mm; }
+.lvl { background: var(--dk); color: #fff; border-radius: 1.6mm 1.6mm 6mm 6mm; text-align: center; display: flex; flex-direction: column; justify-content: center; border-bottom: 1.4mm solid ${col}; } .lvl b { font: 800 19pt/1 Georgia, serif; } .lvl small { color: #d8d4e0; margin-top: .6mm; }
+.def { display: grid; grid-template-columns: 22mm 34mm 1fr; gap: 3mm; padding-bottom: 2.6mm; border-bottom: 1.1pt solid var(--ln); }
+.shld { border: 1.4pt solid var(--dk); border-radius: 2mm 2mm 7mm 7mm; text-align: center; display: flex; flex-direction: column; justify-content: space-between; height: 30mm; padding-top: 3mm; overflow: hidden; } .shld b { font: 800 22pt/1 Georgia, serif; } .shld span { background: var(--dk); color: #fff; font: 700 6.6pt/1 Arial; letter-spacing: .16em; text-transform: uppercase; padding: 1.6mm 0; }
+.arm { display: grid; grid-template-columns: 19mm 1fr; gap: 1.6mm; } .arm .shld span { font-size: 5.4pt; letter-spacing: .05em; } .arm .slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2mm; align-content: start; padding-top: 1.5mm; } .ar { display: block; width: 100%; aspect-ratio: 1; border: 1.1pt solid var(--dk); border-radius: 1mm 1mm 50% 50%; } .ar.off { border-style: dashed; border-color: #cfcad8; }
+.tcs { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1.8mm; } .tc { display: flex; flex-direction: column; align-items: stretch; }
+.th2 { display: flex; align-items: center; justify-content: space-between; gap: 1mm; background: var(--dk); color: #fff; border-radius: 1.2mm 1.2mm 0 0; padding: .9mm 1.2mm .9mm 1.4mm; font: 700 5.2pt/1 Arial; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; } .th2 i { flex: none; width: 2.8mm; height: 2.8mm; border-radius: 50%; border: 1pt solid #fff; background: #fff; display: block; } .th2 i.on { background: ${col}; }
+.tv { border: 1.4pt solid var(--dk); border-top: 0; border-radius: 0 0 4mm 4mm; text-align: center; font: 800 18pt/1 Georgia, serif; padding: 2.4mm 0 2mm; position: relative; } .tv.sp { background: ${col}14; } .tv em { display: block; font: 600 5.4pt Arial; color: ${col}; letter-spacing: .08em; text-transform: uppercase; margin-top: .6mm; }
+.ta { display: flex; flex-direction: column; align-items: center; margin-top: 1.4mm; font-size: 6.6pt; color: #4a4457; line-height: 1.4; }
+.main { display: grid; grid-template-columns: 78mm 1fr; gap: 3.6mm; flex: 1; min-height: 0; } .colx { display: flex; flex-direction: column; gap: 2.6mm; min-height: 0; }
+.sh { display: flex; justify-content: center; margin-bottom: 1.4mm; } .sh span { background: var(--dk); color: #fff; font: 800 8pt/1 Arial; letter-spacing: .14em; text-transform: uppercase; padding: 1.4mm 7mm; clip-path: polygon(4mm 0, calc(100% - 4mm) 0, 100% 50%, calc(100% - 4mm) 100%, 4mm 100%, 0 50%); }
+.pnl { border: 1.1pt solid var(--ln); border-radius: 2mm; padding: 1.4mm 2.4mm 2mm; } .pnl.grow { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.cap { text-align: center; font-size: 6.4pt; color: #6d6478; margin-bottom: 1.6mm; }
+.thr { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.6mm; margin-bottom: 2mm; } .thr div { background: var(--dk); color: #fff; text-align: center; border-radius: 1mm; padding: 1mm 0 .8mm; } .thr b { display: block; font: 800 12pt/1.1 Georgia, serif; } .thr span { font: 700 5.8pt Arial; letter-spacing: .1em; text-transform: uppercase; } .thr small { color: #d8d4e0; font-size: 5.2pt; display: block; }
+.bars { display: flex; align-items: center; gap: 2mm; margin: 1.2mm 0; } .bars b { width: 11mm; font: 800 7.6pt Arial; letter-spacing: .06em; } .bars .rw { display: flex; gap: .9mm; flex: 1; } .sl { display: block; flex: 1; height: 4.2mm; border: 1.1pt solid var(--dk); border-radius: 1.4mm; } .sl.off { border-style: dashed; border-color: #cfcad8; }
+.hope { display: flex; gap: 2mm; justify-content: center; margin: 1mm 0 1.4mm; } .dm { display: block; width: 5.4mm; height: 5.4mm; border: 1.2pt solid var(--dk); transform: rotate(45deg) scale(.82); border-radius: .6mm; } .dm.off { border-style: dashed; border-color: #cfcad8; }
+.xr { display: flex; align-items: flex-end; justify-content: space-between; gap: 2mm; border-bottom: .8pt solid var(--ln); min-height: 5.6mm; padding: 0 1mm .3mm; font-size: 8pt; } .xr > b { font-size: 8.4pt; color: ${col}; min-width: 7mm; text-align: right; } .xr em { margin-left: 1mm; }
+.gr { display: flex; align-items: flex-end; gap: 2mm; margin-bottom: 1.4mm; } .gr small { width: 14mm; text-align: right; } .gp { display: flex; gap: .8mm; flex: 1; } .gp i { display: block; width: 100%; max-width: 4.6mm; aspect-ratio: 1; border: 1.1pt solid var(--dk); } .gp i.c { border-radius: 50%; } .gp i.b { border-radius: 1.4mm 1.4mm 50% 50%; } .gp i.x { border-radius: .8mm; }
+.cf { flex: 1; min-height: 0; overflow: hidden; } .ft { margin-bottom: 1.2mm; } .ft b { color: #2b2236; }
+.prof { display: flex; align-items: center; justify-content: center; gap: 1.2mm; margin: -.4mm 0 1.4mm; font: 700 6.4pt Arial; letter-spacing: .1em; text-transform: uppercase; } .prof i { width: 3.4mm; height: 3.4mm; border-radius: 50%; border: 1.1pt solid var(--dk); display: block; }
+.wb { margin-bottom: 2.2mm; } .wl { font: 800 8pt Arial; letter-spacing: .06em; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; margin-bottom: .6mm; } .ck { font: 600 6pt Arial; letter-spacing: .04em; } .ck i { display: inline-block; width: 2.6mm; height: 2.6mm; border: 1pt solid var(--dk); margin: 0 1mm 0 2mm; vertical-align: -.5mm; }
+.fl3 { display: grid; grid-template-columns: 1.2fr 1.4fr 1.4fr; gap: 2mm; } .fl3 > div, .fe { border-bottom: 1.1pt solid var(--dk); min-height: 6.2mm; display: flex; flex-direction: column; justify-content: flex-end; } .fl3 small, .fe small { border-top: 0; margin-top: .3mm; } .fl3 b { font-size: 8pt; } .fe { margin-top: 1.2mm; min-height: 8mm; } .fe b { font-size: 7pt; font-weight: 500; color: #3a3347; }
+.ln { border-bottom: .8pt solid var(--ln); height: 5.6mm; } .ln.f1 { flex: 1; }
+.fill { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; } .fill .ln { flex: 1; min-height: 5.4mm; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 3.4mm; } .tre { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2.4mm; }
 .feats { column-count: 2; column-gap: 4.5mm; } .feats .ft { break-inside: avoid; }
-.cards { display: grid; grid-template-columns: 1fr 1fr; gap: 2.6mm 3.5mm; } .cd { break-inside: avoid; border: 1pt solid #cfc8da; border-left: 2.4pt solid ${col}; border-radius: 1.6mm; padding: 1.4mm 2.4mm; } .ch { display: flex; justify-content: space-between; gap: 2mm; margin-bottom: .6mm; } .ch b { font: 700 8.6pt Georgia, serif; } .ch span { color: #6d6478; font-size: 6.6pt; white-space: nowrap; } .cd p { color: #3a3347; font-size: 7.4pt; }
-.qa { margin-bottom: 1.2mm; break-inside: avoid; } .qa b { font-size: 7.6pt; color: #2b2236; } .qa p { color: #3a3347; font-size: 7.8pt; border-bottom: .6pt solid #d9d3e2; min-height: 0; }
-.foot { text-align: center; font-size: 6pt; color: #8d88a3; margin-top: auto; padding-top: 1.5mm; }
+.cards { display: grid; grid-template-columns: 1fr 1fr; gap: 2mm 3mm; } .cd { break-inside: avoid; border: 1pt solid var(--ln); border-left: 2.4pt solid ${col}; border-radius: 1.4mm; padding: 1.2mm 2.2mm; } .ch { display: flex; justify-content: space-between; gap: 2mm; margin-bottom: .5mm; } .ch b { font: 700 8pt Georgia, serif; } .ch span { color: #6d6478; font-size: 6.2pt; white-space: nowrap; } .cd p { color: #3a3347; font-size: 7pt; }
+.qa { margin-bottom: 1.6mm; break-inside: avoid; } .qa b { font-size: 7.2pt; color: #2b2236; display: block; } .qa p { color: #3a3347; font-size: 7.4pt; border-bottom: .8pt solid var(--ln); } .qa .ln { height: 4.4mm; }
+.tier { border: 1.1pt solid var(--ln); border-radius: 2mm; overflow: hidden; } .tier .th3 { background: var(--dk); color: #fff; padding: 1.2mm 2mm; font: 800 7pt Arial; letter-spacing: .06em; text-transform: uppercase; } .tier .th3 span { font-weight: 500; } .tier .hd3 { font-style: italic; font-size: 6.4pt; text-align: center; padding: 1.2mm 2mm; background: #ebe8f0; } .tier ul { list-style: none; padding: 1.2mm 2mm 1.4mm; margin: 0; } .tier li { display: flex; gap: 1.6mm; font-size: 6.2pt; line-height: 1.25; margin-bottom: .7mm; } .tier li i { flex: none; width: 2.8mm; height: 2.8mm; border: 1pt solid var(--dk); border-radius: .5mm; margin-top: .3mm; }
+.desc div { display: flex; align-items: flex-end; gap: 2mm; font-size: 7pt; } .desc b { white-space: nowrap; }
+.pg.cmp .feats { font-size: 6.5pt !important; } .pg.cmp .cd p { font-size: 6.4pt; } .pg.cmp .cd { padding: .8mm 2mm; } .pg.cmp .qa .ln { height: 3.6mm; } .pg.cmp .tier li { font-size: 5.8pt; margin-bottom: .4mm; } .pg.cmp .tier .hd3 { font-size: 5.8pt; padding: .6mm 2mm; } .pg.cmp .pnl { padding-bottom: 1.2mm; } .pg.cmp .desc { display: none; } .pg.cmp .sh { margin-bottom: 1mm; }
+.foot { text-align: center; font-size: 6pt; color: #8d88a3; display: flex; align-items: center; justify-content: center; gap: 2mm; } .foot .logo { width: 2mm; height: 3.4mm; }
 </style></head><body>
 <div class="pg p1">
-${head(1)}
-<div class="top">
-<div class="col">${traits}
-<div class="dfn"><div class="box"><small>Evasión</small><div class="big">${esc(d.evasion)}</div></div><div class="box"><small>Armadura · ${d.armorTotal}</small><div class="pips">${boxes(d.armorTotal, d.armorLeft, col)}</div></div></div>
-<div class="box"><small>Umbrales de daño</small><div class="th"><span>Menor<b>${d.minor}</b></span><span>Mayor<b>${d.major}</b></span><span>Grave<b>${d.severe}</b></span></div></div>
+<div class="top">${banner}${fields(1)}</div>
+<div class="def">
+<div class="shld"><b>${esc(d.evasion)}</b><span>Evasión</span></div>
+<div class="arm"><div class="shld"><b>${d.armorTotal}</b><span>Armadura</span></div><div class="slots">${armorSlots}</div></div>
+<div class="tcs">${traits}</div>
 </div>
-<div class="col">
-<div class="vit">
-<div class="box"><small>Puntos de vida · <b>${d.hpMarked}/${d.hpTotal}</b> marcados</small><div class="pips">${boxes(d.hpTotal, d.hpMarked, "#D9644E")}</div></div>
-<div class="box"><small>Estrés · <b>${d.stressMarked}/${d.stressTotal}</b> marcados</small><div class="pips">${boxes(d.stressTotal, d.stressMarked, "#8E6FC4")}</div></div>
-<div class="box"><small>Esperanza · <b>${d.hope}/${d.hopeTotal}</b></small><div class="pips ci">${boxes(d.hopeTotal, d.hope, "#E3B04B")}</div></div>
+<div class="main">
+<div class="colx">
+<div class="pnl">${sh("Daño y salud")}<div class="cap">Suma tu nivel actual a tus umbrales de daño.</div>
+<div class="thr"><div><span>Daño menor</span><b>${d.minor}</b><small>Marca 1 PV</small></div><div><span>Daño mayor</span><b>${d.major}</b><small>Marca 2 PV</small></div><div><span>Daño grave</span><b>${d.severe}</b><small>Marca 3 PV</small></div></div>
+<div class="bars"><b>PV</b><div class="rw">${slotRow(d.hpTotal, d.hpMarked, "#D9644E")}</div></div>
+<div class="bars"><b>ESTRÉS</b><div class="rw">${slotRow(d.stressTotal, d.stressMarked, "#8E6FC4")}</div></div></div>
+<div class="pnl">${sh("Esperanza")}<div class="cap">Gasta 1 Esperanza para usar una experiencia o ayudar a un aliado.</div><div class="hope">${diamonds}</div>${d.hopeFeature ? `<p class="ft" style="margin-top:2mm"><b>${esc(d.hopeFeature.name)}:</b> ${esc(d.hopeFeature.text)}</p>` : ""}</div>
+<div class="pnl">${sh("Experiencia")}${exps}</div>
+<div class="pnl">${sh("Oro")}${goldRow("Puñados", g["Puñados"] || 0, 10, "c")}${goldRow("Bolsas", g["Bolsas"] || 0, 9, "b")}${goldRow("Cofre", g["Cofres"] || 0, 1, "x")}</div>
+<div class="pnl grow">${sh("Característica de clase")}<div class="cf" style="font-size:${cfSize}">${classFeat}</div></div>
 </div>
-<div class="box"><h3>Experiencias</h3>${exps}</div>
-<div class="two">${weapon(prim, "Arma principal")}${weapon(sec, "Arma secundaria")}</div>
-${armor}
-<div class="box"><h3>Inventario</h3>${items}<div class="gold">${gold}</div></div>
+<div class="colx">
+<div class="pnl">${sh("Armas activas")}<div class="prof">Competencia ${Array.from({ length: 6 }, (_, i) => `<i style="${i < d.proficiency ? `background:${col};border-color:${col}` : ""}"></i>`).join("")}</div>${wp(prim, "Principal")}${wp(sec, "Secundaria")}</div>
+<div class="pnl">${sh("Armadura activa")}<div class="wb"><div class="fl3" style="grid-template-columns:1.6fr 1.2fr 1fr"><div><b>${d.armor ? esc(d.armor.key) : ""}</b><small>Nombre</small></div><div><b>${d.armor ? d.armor.major + " / " + d.armor.severe : ""}</b><small>Umbrales base</small></div><div><b>${d.armor ? d.armor.score : ""}</b><small>Puntuación base</small></div></div><div class="fe"><b>${d.armor && d.armor.feature ? esc(d.armor.feature) : ""}</b><small>Característica</small></div></div></div>
+<div class="pnl">${sh("Inventario")}${itemRows}</div>
+<div class="pnl grow">${invWeapons}</div>
 </div>
 </div>
-<div class="bot">
-<div class="box"><h3>Estados y notas rápidas</h3>${d.conditions.length ? `<div class="tags">${d.conditions.map((c) => `<span>${esc(c)}</span>`).join("")}</div>` : ""}<div class="fill">${lines(8)}</div></div>
-<div class="box"><h3>Mano de dominio</h3>${hand}${vault.length ? `<p class="ft" style="margin-top:1.4mm"><em>Bóveda:</em> ${vault.map((c) => esc(c.key)).join(" · ")}</p>` : ""}</div>
+<div class="foot">${LOGO("#8d88a3")} Enaris · hoja de ${esc(d.name)} · ${esc(d.date)} · 1/2</div>
 </div>
-<div class="foot">Enaris · ${esc(d.name)} · ${esc(d.date)}</div>
+<div class="pg ${weight > 2900 ? "cmp" : ""}">
+<div class="top">${banner}${fields(2)}</div>
+<div class="pnl">${sh("Características")}<div class="feats" style="font-size:${pg2Feats.reduce((n, f) => n + f.name.length + f.text.length, 0) > 2600 ? "6.8pt" : "7.8pt"}">${pg2Feats.map(feat).join("")}</div></div>
+<div class="pnl">${sh("Cartas de dominio")}<div class="cards">${d.cards.map(card).join("") || '<p class="ft"><em>Sin cartas de dominio.</em></p>'}</div></div>
+<div class="two">
+<div class="pnl">${sh("Preguntas de trasfondo")}${qa(d.background)}</div>
+<div class="pnl">${sh("Conexiones")}${qa(d.connections)}<div class="desc" style="margin-top:2mm"><div><b>Ropa:</b><span class="ln" style="flex:1"></span></div><div><b>Ojos:</b><span class="ln" style="flex:1"></span></div><div><b>Cuerpo:</b><span class="ln" style="flex:1"></span></div><div><b>Piel:</b><span class="ln" style="flex:1"></span></div><div><b>Actitud:</b><span class="ln" style="flex:1"></span></div></div></div>
 </div>
-<div class="pg">
-${head(2)}
-<div class="box"><h3>Características</h3><div class="feats">${d.features.map(feat).join("")}</div></div>
-<div class="box"><h3>Cartas de dominio</h3><div class="cards">${d.cards.map(card).join("") || '<p class="ft"><em>Sin cartas de dominio.</em></p>'}</div></div>
-<div class="bot" style="grid-template-columns:1fr 1fr">
-<div class="box"><h3>Trasfondo</h3>${qa(d.background)}<div class="fill">${lines(3)}</div></div>
-<div class="box"><h3>Conexiones</h3>${qa(d.connections)}<div class="fill">${lines(3)}</div></div>
-</div>
-<div class="foot">Enaris · ${esc(d.name)} · ${esc(d.date)}</div>
+<div class="tre">${TIERS.map((t) => `<div class="tier"><div class="th3">Rango ${t.t} <span>· ${t.lv}</span></div><div class="hd3">${t.head}</div><ul>${t.opts.map((o) => `<li><i></i><span>${o}</span></li>`).join("")}</ul></div>`).join("")}</div>
+<div class="foot">${LOGO("#8d88a3")} Enaris · hoja de ${esc(d.name)} · ${esc(d.date)} · 2/2</div>
 </div>
 </body></html>`;
 }
