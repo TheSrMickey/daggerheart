@@ -9,6 +9,7 @@ export const CHANGELOG = [
     title: "El Oráculo del DJ",
     blurb: "Un anillo de luz que responde a las preguntas de la mesa: Sí / No, con matices o con una tirada de destino, solo para el DJ y a un toque bajo el chat.",
     items: [
+      { tag: "nuevo", text: "Hoja de personaje · en los ajustes (engranaje) hay una opción «Descargar hoja en PDF»: abre la impresión con la hoja maquetada en A4 vertical (rasgos, defensas, vida, estrés y esperanza con casillas, armas, experiencias, inventario, características, cartas de dominio y trasfondo) para guardarla como PDF." },
       { tag: "mejora", text: "Creación de personaje · Experiencias: las dos cajas ocupan todo el espacio y cada una tiene una última pastilla «Otra al azar» que te da una experiencia distinta cada vez que la pulsas." },
       { tag: "mejora", text: "Creación de personaje · Armas: «A distancia» son las que pegan en alcance Lejano o Muy lejano; el resto cuenta como cuerpo a cuerpo." },
       { tag: "mejora", text: "Creación de personaje · Objetos iniciales: el equipo básico es opcional (interruptor), el objeto de clase tiene solo las dos opciones y el objeto personalizado se añade aparte, hasta completar los 5 huecos." },
