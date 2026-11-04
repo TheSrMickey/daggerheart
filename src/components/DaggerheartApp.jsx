@@ -19688,17 +19688,16 @@ export default function App({ onSignOut }) {
       ...tag("Comunidad", comm?.features),
       ...(hope ? [{ name: hope.name + " · Esperanza", text: "Gasta " + hope.cost + " Esperanza. " + hope.text }] : []),
       ...tag("Clase", CLASS_FEATURES[c.f_class]),
-      ...tag("Subclase", (sub?.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name) || tier >= (/Maestría/.test(f.name) ? 3 : 2))),
+      ...tag("Subclase", groupElems((sub?.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name) || tier >= (/Maestría/.test(f.name) ? 3 : 2))).map((f) => (f.subs ? { name: f.name, text: f.text + " " + f.subs.map((e) => e.name + ": " + e.text).join(" · ") } : f))),
       ...tag("Transformación", tf?.features),
     ];
     const cardOf = (k, vault) => { const d = findDomainCardAny(k); return d ? { key: d.key, domain: d.domain, level: d.level, recall: d.recall, text: d.text, vault } : null; };
     const cards = [...getKeys(c.f_domain_cards).map((k) => cardOf(k, false)), ...getKeys(c.f_domain_vault).map((k) => cardOf(k, true))].filter(Boolean);
     let items = [];
     try { items = [...JSON.parse(c.f_items || "[]"), ...JSON.parse(c.f_backpack_items || "[]")]; } catch (e) { items = []; }
-    const notes = [];
-    [["f_background_qa", CLASS_BACKGROUND_QUESTIONS[c.f_class]], ["f_connection_qa", null]].forEach(([field, qs]) => getQAList(c, field, qs).forEach((r) => r.answer && r.answer.trim() && notes.push({ q: r.question, a: r.answer })));
-    if (c.f_backstory) notes.push({ q: "Historia:", a: c.f_backstory });
-    if (c.f_connections) notes.push({ q: "Conexiones:", a: c.f_connections });
+    const qaOf = (field, qs) => getQAList(c, field, qs).map((r) => ({ q: r.question, a: (r.answer || "").trim() }));
+    const background = [...qaOf("f_background_qa", CLASS_BACKGROUND_QUESTIONS[c.f_class]), ...(c.f_backstory ? [{ q: "Historia", a: c.f_backstory }] : [])];
+    const connections = [...qaOf("f_connection_qa", null), ...(c.f_connections ? [{ q: "Conexiones", a: c.f_connections }] : [])];
     printSheet({
       name: c.f_name || "Personaje", cls: c.f_class, subclass: c.f_subclass, multi: m.multi?.cls || "", pronouns: c.f_pronouns || "",
       ancestry: c.f_ancestry, community: c.f_community, transformation: c.f_transformation, level, rank: tier, proficiency: m.proficiency,
@@ -19706,7 +19705,7 @@ export default function App({ onSignOut }) {
       armorTotal: m.armorTotal, armorLeft: m.armorLeft, minor: m.minor, major: m.major, severe: m.severe, hope: m.hope, hopeTotal: m.hopeTotal,
       hpTotal: m.hpTotal, hpMarked: m.hpMarked, stressTotal: m.stressTotal, stressMarked: m.stressMarked,
       weapons: m.weapons, experiences: m.experiences, conditions: getConditions(c), items,
-      gold: GOLD_TIERS.map((g) => ({ label: g.label, n: Number(c[g.field] || 0) })), features, cards, notes,
+      gold: GOLD_TIERS.map((g) => ({ label: g.label, n: Number(c[g.field] || 0) })), features, cards, background, connections,
       date: new Date().toLocaleDateString("es-ES"),
     });
   };
