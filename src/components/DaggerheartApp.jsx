@@ -1273,7 +1273,8 @@ function StatMods({ base, baseLabel, mods }) {
   );
 }
 const isMagicWeapon = (w) => !!w.magic || /mágico/.test(w.damage || "");
-const isMeleeRange = (w) => (w.range || "Cuerpo a cuerpo") === "Cuerpo a cuerpo";
+// A distancia = las armas que pegan en alcance Lejano o Muy lejano; el resto (Cuerpo a cuerpo, Muy cercano, Cercano) cuenta como cuerpo a cuerpo.
+const isMeleeRange = (w) => !["Lejano", "Muy lejano"].includes(w.range);
 // Fila de arma o armadura del asistente: al elegirla, su característica se despliega debajo para poder leerla.
 function GearRow({ selected, rec, onClick, name, right, feature }) {
   return (
@@ -7557,13 +7558,19 @@ const sharedStyles = `
   .mh-wz-inv-box h4 em { margin-left: auto; font-style: normal; font-size: 9.5px; letter-spacing: .08em; color: var(--mh-muted2); }
   .mh-wz-inv-fixed { display: flex; flex-wrap: wrap; gap: 6px; }
   .mh-wz-inv-fixed > div { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--mh-ink); padding: 4px 10px; border-radius: 99px; background: color-mix(in srgb, #4CAF7A 12%, transparent); border: 1px solid color-mix(in srgb, #4CAF7A 35%, transparent); } .mh-wz-inv-fixed small { margin-left: auto; font-size: 9.5px; color: var(--mh-muted); }
-  .mh-wz-inv-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; } .mh-wz-inv-opts.is-3 { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+  .mh-wz-inv-opts { display: grid; grid-template-columns: 1fr; gap: 7px; } .mh-wz-inv-opts.is-3 { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
   .mh-wz-inv-opt { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 9px; padding: 7px 11px; border-radius: 10px; border: 1px solid var(--mh-line); background: var(--mh-panel); color: var(--mh-ink); font-size: 13px; line-height: 1.3; }
   .mh-wz-inv-opt:hover { border-color: var(--mh-line2); } .mh-wz-inv-opt:focus-visible { outline: 2px solid #E3B04B; }
   .mh-wz-inv-opt.is-on { border-color: #E3B04B; background: #E3B04B14; }
   .mh-wz-inv-opt b { display: block; font-weight: 600; } .mh-wz-inv-opt small { display: block; font-size: 11px; color: var(--mh-muted); margin-top: 1px; }
   .mh-wz-inv-dot { flex: none; width: 17px; height: 17px; border-radius: 50%; border: 1.5px solid var(--mh-line2); display: grid; place-items: center; color: #10101e; } .mh-wz-inv-opt.is-on .mh-wz-inv-dot { background: #E3B04B; border-color: #E3B04B; }
-  .mh-wz-inv-in { margin-top: 8px; width: 100%; box-sizing: border-box; }
+  .mh-wz-inv-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .mh-wz-inv-add { display: flex; gap: 8px; } .mh-wz-inv-add .mh-input { flex: 1; min-width: 0; }
+  .mh-wz-inv-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; } .mh-wz-inv-chips .mh-chip { display: inline-flex; align-items: center; gap: 5px; }
+  .mh-wz-inv-fixed > div.is-off { opacity: .45; text-decoration: line-through; background: transparent; border-color: var(--mh-line); }
+  .mh-wz-inv-sw { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; color: var(--mh-ink2); padding: 4px 4px; } .mh-wz-inv-sw:focus-visible { outline: 2px solid #E3B04B; border-radius: 8px; }
+  .mh-wz-inv-sw i { width: 30px; height: 17px; border-radius: 99px; background: var(--mh-line2); position: relative; transition: background .2s; } .mh-wz-inv-sw i::after { content: ""; position: absolute; top: 2px; left: 2px; width: 13px; height: 13px; border-radius: 50%; background: #fff; transition: transform .2s; }
+  .mh-wz-inv-sw.is-on i { background: #4CAF7A; } .mh-wz-inv-sw.is-on i::after { transform: translateX(13px); }
   @media (max-width: 820px) { .mh-wz-inv-grid { grid-template-columns: minmax(0, 1fr); } }
   .mh-wz-sech { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--mh-muted2); margin: 2px 4px 12px; }
   .mh-wz-body .mh-wz-pane.mh-wz-stats { max-width: none; width: 100%; align-items: stretch; margin: 0; justify-content: flex-start; }
@@ -7600,7 +7607,9 @@ const sharedStyles = `
   .mh-wz-det.has-hero .mh-wz-slot, .mh-wz-det.has-hero .mh-wz-mixwait, .mh-wz-det.has-hero .mh-wz-venn { background: rgba(13,13,34,.66); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
   @media (max-width: 760px) { .mh-wz-gauges { grid-template-columns: minmax(0, 1fr); } }
   .mh-wz-body .mh-wz-pane.mh-wz-xps { max-width: none; width: 100%; margin: 0; align-items: stretch; justify-content: flex-start; }
-  .mh-wz-xps .mh-wz-exprow { justify-content: flex-start; flex-wrap: nowrap; width: 100%; gap: 18px; }
+  .mh-wz-body .mh-wz-pane.mh-wz-xps { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+  .mh-wz-xps .mh-wz-exprow { justify-content: flex-start; flex-wrap: nowrap; width: 100%; gap: 18px; flex: 1; min-height: 0; align-items: stretch; }
+  .mh-wz-xps .mh-wz-exprow > div:first-child > .mh-wz-xp { flex: 1; align-items: center; }
   .mh-wz-xps .mh-wz-exprow > div:first-child { max-width: none; }
   .mh-wz-xp { display: flex; gap: 14px; padding: 16px; border-radius: 22px; background: color-mix(in srgb, var(--mh-ink) 4%, transparent); border: 1px solid var(--mh-line); }
   .mh-wz-xpb { width: 68px; height: 68px; border-radius: 20px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(160deg, #E3B04B, #a97d1e); color: #1F1606; font: 700 26px 'Cinzel', Georgia, serif; box-shadow: 0 8px 20px #E3B04B33; }
@@ -7610,6 +7619,7 @@ const sharedStyles = `
   .mh-wz-xin:focus { outline: none; border-color: #E3B04B; box-shadow: 0 0 0 4px #E3B04B22; }
   .mh-wz-sug { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
   .mh-wz-sug button { all: unset; cursor: pointer; font-size: 11px; padding: 4px 11px; border-radius: 20px; color: var(--mh-ink3); background: color-mix(in srgb, var(--mh-ink) 6%, transparent); border: 1px solid var(--mh-line2); } .mh-wz-sug button:hover { color: var(--mh-ink); background: color-mix(in srgb, var(--mh-ink) 11%, transparent); } .mh-wz-sug button:focus-visible { outline: 2px solid #E3B04B; }
+  .mh-wz-sug button.is-rand { display: inline-flex; align-items: center; gap: 5px; font-weight: 700; color: #E3B04B; border-color: #E3B04B66; border-style: dashed; }
   .mh-wz-sug button.is-pick { background: #E3B04B22; border-color: #E3B04B66; color: #E3B04B; }
   /* Asistente · cartas de dominio: baraja arriba, estante en filas abajo */
   .mh-wz-body:has(.dpk) { display: flex; overflow: hidden; padding-bottom: 16px; }
@@ -7625,7 +7635,7 @@ const sharedStyles = `
   .dpk-slot { border: 2px dashed var(--mh-line2); border-radius: 22px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--mh-muted2); font: 600 12px 'Inter', system-ui, sans-serif; background: color-mix(in srgb, var(--mh-ink) 4%, transparent); }
   .dpk-rm { all: unset; cursor: pointer; position: absolute; right: -6px; top: -6px; z-index: 4; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: #C0504A; box-shadow: 0 4px 10px rgba(0,0,0,.5); opacity: 0; transition: opacity .15s; }
   .dpk-card:hover .dpk-rm, .dpk-rm:focus-visible { opacity: 1; }
-  .dpk-h { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; flex-shrink: 0; }
+  .dpk-h { display: flex; align-items: center; justify-content: flex-start; gap: 10px; flex-wrap: wrap; flex-shrink: 0; } .dpk-h .dpk-lv { margin-left: auto; } .dpk-tabs button { display: inline-flex; align-items: center; gap: 6px; } .dpk-info { margin-left: 0; }
   .dpk-tip { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-radius: 14px; font-size: 12.5px; line-height: 1.4; color: var(--mh-ink2); background: color-mix(in srgb, #E3B04B 12%, transparent); border: 1px solid #E3B04B55; flex-shrink: 0; } .dpk-tip svg { flex-shrink: 0; color: #E3B04B; } .dpk-tip b { color: var(--mh-ink); }
   .dpk-tabs button { position: relative; }
   .dpk-tabs button.is-new { box-shadow: 0 0 0 1.5px #E3B04B, 0 0 16px #E3B04B66; animation: dpk-pulse 1.6s ease-in-out infinite; }
@@ -10947,7 +10957,7 @@ function DomainPicker({ entries, sel, limit, level, domains, colors, onChange })
             );
           }
           return (
-            <div key={k} className={"dpk-card" + (out === k ? " is-out" : "") + (pend ? " is-target" : "")} style={{ ...style, animationDelay: i * 90 + "ms" }} onClick={() => pend && replaceWith(k)}>
+            <div key={k} className={"dpk-card" + (out === k ? " is-out" : "") + (pend ? " is-target" : "")} style={{ ...style, animationDelay: i * 90 + "ms" }} onClick={() => (pend ? replaceWith(k) : retire(k))}>
               <FanFace c={c} col={col} />
               {!pend && (
                 <button type="button" className="dpk-rm" onClick={(e) => (e.stopPropagation(), retire(k))} aria-label={"Retirar " + k} title="Retirar de la mano">
@@ -10958,21 +10968,21 @@ function DomainPicker({ entries, sel, limit, level, domains, colors, onChange })
           );
         })}
       </div>
-      {domains.length > 1 && (
-        <div className="dpk-tip" role="note">
-          <Layers size={15} />
-          <span>Tu clase usa <b>{domains.join(" y ")}</b>. Puedes elegir cartas de <b>cualquiera de los dos dominios</b>: cambia de dominio con las pestañas de abajo para ver las demás.</span>
-        </div>
-      )}
       <div className="dpk-h">
         <div className="mh-seg is-fit dpk-tabs" role="tablist">
           {domains.map((d) => (
             <button key={d} type="button" role="tab" aria-selected={dom === d} className={(dom === d ? "on" : "") + (!seen.has(d) ? " is-new" : "")} onClick={() => (setDom(d), setSeen((p) => new Set([...p, d])))}>
+              {(() => { const TI = DOMAIN_ICONS[d] || Sparkles; return <TI size={14} style={{ color: colors[d] }} />; })()}
               {d} <i>{entries.filter((e) => e.domain === d).length}</i>
-              {!seen.has(d) && <u className="dpk-new">Ver más</u>}
             </button>
           ))}
         </div>
+        {domains.length > 1 && (
+          <span className="mh-tip-anchor mh-wz-info dpk-info" tabIndex={0} aria-label={"Tu clase usa " + domains.join(" y ") + ". Puedes elegir cartas de cualquiera de los dos dominios: cambia de dominio con las pestañas de abajo para ver las demás."}>
+            <Info size={15} />
+            <span className="mh-tip" role="tooltip">Tu clase usa {domains.join(" y ")}. Puedes elegir cartas de cualquiera de los dos dominios: cambia de dominio con las pestañas de abajo para ver las demás.</span>
+          </span>
+        )}
         <span className="dpk-lv">Hasta nivel {level}</span>
       </div>
       <div className="dpk-shelf" onMouseLeave={() => setHov(null)}>
@@ -10989,7 +10999,7 @@ function DomainPicker({ entries, sel, limit, level, domains, colors, onChange })
               onMouseEnter={(ev) => showPv(ev, e)}
               onFocus={(ev) => showPv(ev, e)}
               onBlur={() => setHov(null)}
-              onClick={() => !on && addCard(e.key)}
+              onClick={() => (on ? retire(e.key) : addCard(e.key))}
             >
               <span className="dpk-th" aria-hidden="true" style={e.image ? { backgroundImage: "url(" + e.image + ")" } : undefined}>{!e.image && <DI size={16} />}</span>
               <span className="dpk-rt"><b>{e.key}</b><small>{e.type} · Nv {e.level}</small></span>
@@ -12999,6 +13009,7 @@ export default function App({ onSignOut }) {
   const [draftItems, setDraftItems] = useState([]);
   const [customItem, setCustomItem] = useState("");
   const [draftPotion, setDraftPotion] = useState(""); // poción inicial: de salud o de vigor (obligatoria)
+  const [draftBasic, setDraftBasic] = useState(true); // incluir el equipo básico
   const [draftClassItem, setDraftClassItem] = useState(""); // objeto de clase elegido, o "__custom"
   const [classCustom, setClassCustom] = useState(""); // objeto de clase personalizado
   const [draftExp1, setDraftExp1] = useState("");
@@ -13358,6 +13369,7 @@ export default function App({ onSignOut }) {
     setDraftItems([]);
     setCustomItem("");
     setDraftPotion("");
+    setDraftBasic(true);
     setDraftClassItem("");
     setClassCustom("");
     setDraftDomainCards([]);
@@ -13611,12 +13623,12 @@ export default function App({ onSignOut }) {
       f_items: JSON.stringify([
         ...(draftCommunity === "Errante" ? [{ name: PACK_NAME, description: PACK_DESC, count: 1 }] : []),
         // Inventario inicial de las reglas: antorcha, cuerda, suministros, una poción y un objeto de clase.
-        ...[...BASIC_ITEMS.filter((n) => n !== GOLD_HANDFUL), draftPotion, draftClassItem === "__custom" ? classCustom.trim() : draftClassItem, ...draftItems.filter((n) => !BASIC_ITEMS.includes(n))]
+        ...[...(draftBasic ? BASIC_ITEMS.filter((n) => n !== GOLD_HANDFUL) : []), draftPotion, draftClassItem, ...draftItems.filter((n) => !BASIC_ITEMS.includes(n))]
           .filter(Boolean)
           .map((name) => ({ name, description: STARTER_ITEMS.find((si) => si.name === name)?.description || "", count: 1 })),
       ]),
       // «Un puñado de oro» no ocupa hueco: suma 1 puñado (10 de oro) a la bolsa.
-      f_gold_tens: "1",
+      f_gold_tens: draftBasic ? "1" : "0",
       f_pack_added: draftCommunity === "Errante" ? "1" : "",
       // Tu equipo admite 5 cartas; el resto va a la bóveda.
       f_domain_cards: JSON.stringify(draftDomainCards.slice(0, 5)),
@@ -35739,9 +35751,10 @@ export default function App({ onSignOut }) {
                             <label htmlFor={"mh-exp" + n}>Experiencia {n}</label>
                             <input id={"mh-exp" + n} className="mh-input mh-wz-xin" autoFocus={n === 1} placeholder={n === 1 ? "Ej. Guía de las tierras salvajes…" : "Ej. Protocolo de la corte real…"} value={val} onChange={(e) => setVal(e.target.value)} />
                             <div className="mh-wz-sug">
-                              {expSug.slice((n - 1) * 4, n * 4).map((t) => (
+                              {expSug.slice((n - 1) * 3, n * 3).map((t) => (
                                 <button key={t} type="button" className={val.trim() === t ? "is-pick" : ""} onClick={() => setVal(t)}>{t}</button>
                               ))}
+                              <button type="button" className="is-rand" title="Otra experiencia al azar" onClick={() => { const used = [draftExp1.trim(), draftExp2.trim()]; const free = EXP_POOL.filter((x) => !used.includes(x)); setVal(free[Math.floor(Math.random() * free.length)]); }}><Dices size={12} /> Otra al azar</button>
                             </div>
                           </div>
                         </div>
@@ -35960,16 +35973,21 @@ export default function App({ onSignOut }) {
                         <span><b>{title}</b>{sub && <small>{sub}</small>}</span>
                       </button>
                     );
+                    const used = (draftBasic ? 3 : 0) + (draftPotion ? 1 : 0) + (draftClassItem ? 1 : 0) + draftItems.length;
+                    const full = used >= 5;
                     return (
                       <>
-                        <div className="mh-wz-sech">Inventario inicial · 5 huecos</div>
+                        <div className="mh-wz-sech">Inventario inicial · {Math.min(used, 5)} de 5 huecos</div>
                         <div className="mh-wz-inv-grid">
                           <section className="mh-wz-inv-box">
-                            <h4><Lock size={13} /> Equipo básico <em>siempre</em></h4>
+                            <h4><Lock size={13} /> Equipo básico <em>opcional</em></h4>
                             <div className="mh-wz-inv-fixed">
                               {BASIC_ITEMS.map((n) => (
-                                <div key={n} title={descOf(n)}><Check size={12} /><span>{n}</span>{n === GOLD_HANDFUL && <small>sin hueco</small>}</div>
+                                <div key={n} title={descOf(n)} className={draftBasic ? "" : "is-off"}>{draftBasic ? <Check size={12} /> : <X size={12} />}<span>{n}</span>{n === GOLD_HANDFUL && <small>sin hueco</small>}</div>
                               ))}
+                              <button type="button" role="switch" aria-checked={draftBasic} className={"mh-wz-inv-sw" + (draftBasic ? " is-on" : "")} onClick={() => setDraftBasic((v) => !v)}>
+                                <i /> {draftBasic ? "Lo llevo" : "No lo llevo"}
+                              </button>
                             </div>
                           </section>
                           <section className="mh-wz-inv-box">
@@ -35978,14 +35996,26 @@ export default function App({ onSignOut }) {
                               {POTION_ITEMS.map((n) => <Opt key={n} on={draftPotion === n} onClick={() => setDraftPotion(n)} title={n} sub={descOf(n)} />)}
                             </div>
                           </section>
-                          <section className="mh-wz-inv-box is-wide">
+                          <section className="mh-wz-inv-box">
                             <h4><Backpack size={13} /> Objeto de {cls} <em>elige uno · obligatorio</em></h4>
-                            <div role="radiogroup" aria-label="Objeto de clase" className="mh-wz-inv-opts is-3">
-                              {classItems.map((n) => <Opt key={n} on={draftClassItem === n} onClick={() => setDraftClassItem(n)} title={n} />)}
-                              <Opt on={draftClassItem === "__custom"} onClick={() => setDraftClassItem("__custom")} title="Objeto personalizado" sub="Crea el tuyo propio" />
+                            <div role="radiogroup" aria-label="Objeto de clase" className="mh-wz-inv-opts">
+                              {classItems.slice(0, 2).map((n) => <Opt key={n} on={draftClassItem === n} onClick={() => setDraftClassItem(n)} title={n} />)}
                             </div>
-                            {draftClassItem === "__custom" && (
-                              <input className="mh-input mh-wz-inv-in" autoFocus maxLength={60} placeholder="Escribe el objeto: algo pequeño, con historia y propio de tu personaje…" value={classCustom} onChange={(e) => setClassCustom(e.target.value)} />
+                          </section>
+                          <section className="mh-wz-inv-box">
+                            <h4><Plus size={13} /> Objeto personalizado <em>opcional</em></h4>
+                            <div className="mh-wz-inv-add">
+                              <input className="mh-input" maxLength={60} disabled={full} placeholder={full ? "Inventario lleno (5 huecos)" : "Escribe un objeto y pulsa Añadir…"} value={customItem} onChange={(e) => setCustomItem(e.target.value)} onKeyDown={(e) => e.key === "Enter" && !full && addCustomItem()} />
+                              <button type="button" className="mh-btn-ghost" disabled={full || !customItem.trim()} onClick={addCustomItem}>Añadir</button>
+                            </div>
+                            {draftItems.length > 0 && (
+                              <div className="mh-wz-inv-chips">
+                                {draftItems.map((n) => (
+                                  <button key={n} type="button" className="mh-chip active" onClick={() => toggleItem(n)} title="Quitar">
+                                    <Check size={12} /> {n} <X size={12} />
+                                  </button>
+                                ))}
+                              </div>
                             )}
                           </section>
                         </div>
@@ -36097,7 +36127,7 @@ export default function App({ onSignOut }) {
                       : draftFeat("Autómata", 0) && (!draftCreator.trim() ? "Escribe quién te creó." : !draftPurpose.trim() ? "Escribe con qué propósito te creó." : false),
                   community: !draftCommunity ? "Elige una comunidad para continuar." : draftCommunity === "Del Orden" && draftPrinciples.some((x) => !x.text.trim()) ? "Escribe tus tres principios." : false,
                   experiences: !draftExp1.trim() || !draftExp2.trim() ? "Escribe tus dos Experiencias." : (SUBCLASSES[CLASSES[carouselIndex]?.key] || [])[subclassIndex]?.key === "Vínculo Bestial" && (!draftCompanion.name.trim() || !draftCompanion.exp1.trim() || !draftCompanion.exp2.trim() || !draftCompanion.attack.trim()) ? "Completa a tu compañero: nombre, dos Experiencias y su ataque." : draftAncestries.includes("Autómata") && draftPurposeExp == null ? "Elige la Experiencia que encaja con tu propósito." : false,
-                  items: !draftPotion ? "Elige una poción para continuar." : !draftClassItem ? "Elige tu objeto de clase para continuar." : draftClassItem === "__custom" && !classCustom.trim() ? "Escribe tu objeto personalizado." : false,
+                  items: !draftPotion ? "Elige una poción para continuar." : !draftClassItem ? "Elige tu objeto de clase para continuar." : false,
                   primary: !draftPrimaryWeapon && "Elige un arma principal para continuar.",
                   secondary: !draftSecondaryWeapon && "Elige un arma secundaria o «Ninguna».",
                   armor: !draftArmor && "Elige una armadura para continuar.",
