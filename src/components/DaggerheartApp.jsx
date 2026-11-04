@@ -20440,7 +20440,7 @@ export default function App({ onSignOut }) {
                         title: subclassEntry.key,
                         text: subclassEntry.blurb,
                         accent: CLASS_COLORS[c.f_class] || undefined,
-                        features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento", "Escuela de la Guerra", "Bruja Lunar", "Bruja del Seto", "Pacto del Eterno", "Pacto del Iracundo", "Titán", "Artista Marcial", "Gremio del Verdugo", "Gremio del Envenenador", "Nigromancia", "Teúrgia", "Orden del Licántropo", "Orden del Mutante", "Orden del Espectro"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
+                        features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento", "Escuela de la Guerra", "Bruja Lunar", "Bruja del Seto", "Pacto del Eterno", "Pacto del Iracundo", "Titán", "Artista Marcial", "Gremio del Verdugo", "Gremio del Envenenador", "Nigromancia", "Teúrgia", "Orden del Licántropo", "Orden del Mutante", "Orden del Espectro"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.key === "Guardián de los Elementos" ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name) || tierForLevel(Number(c.f_level || 1)) >= (/Maestría/.test(f.name) ? 3 : 2)) : subclassEntry.features,
                         image: SUBCLASS_CARD_ART[subclassEntry.key] || subclassEntry.image,
                         bigStyle: true,
                         ...(isElemental ? { elementalAction: true } : {}),
@@ -30479,6 +30479,9 @@ export default function App({ onSignOut }) {
                                 ) : null;
                               })()}
                               <span style={{ fontWeight: 700, color: "var(--mh-gold-ink)" }}>:</span> {f.text}
+                              {f.subs && f.subs.map((e) => (
+                                <div key={e.name} style={{ marginLeft: 12, marginTop: 2 }}><b>{e.name}:</b> {e.text}</div>
+                              ))}
                             </div>
                           ))}
                         </div>
@@ -35212,6 +35215,13 @@ export default function App({ onSignOut }) {
                                       <div key={f.name}>
                                         <b>{f.name}</b>
                                         <span>{f.text}</span>
+                                        {f.subs && (
+                                          <ul className="mh-wz-subs-l">
+                                            {f.subs.map((e) => (
+                                              <li key={e.name}><b>{e.name}</b> {e.text}</li>
+                                            ))}
+                                          </ul>
+                                        )}
                                       </div>
                                     ))}
                                   </div>
