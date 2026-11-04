@@ -73,7 +73,7 @@ export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
         {wpn && <span className="mh-cardc-gem is-rank" title={"Rango " + c.tier}>{roman[(c.tier || 1) - 1]}<I size={19} strokeWidth={1.8} /></span>}
         {bst && <span className="mh-cardc-gem is-rank" title={"Rango " + c.tier}>{roman[(c.tier || 1) - 1]}<I size={19} strokeWidth={1.8} /></span>}
       </div>
-      {bg && <span className="mh-cardc-dom">{dom ? c.type : sub ? c.rankLabel : wpn ? g?.pill : bst ? "Forma de Bestia" : c.kind === "transformacion" ? "Transformación" : c.sub}</span>}
+      {bg && <span className="mh-cardc-dom" style={sub && total > 400 ? { top: (total > 520 ? 128 : total > 450 ? 140 : 156) - 12 } : undefined}>{dom ? c.type : sub ? c.rankLabel : wpn ? g?.pill : bst ? "Forma de Bestia" : c.kind === "transformacion" ? "Transformación" : c.sub}</span>}
       {dom && !c.noCost && <span className="mh-cardc-cost" title="Coste de recuperación">{c.recall ?? "—"}<Zap size={12} fill="currentColor" /></span>}
       <div style={{ padding: "0 18px", textAlign: "center", flexShrink: 0, marginTop: bg ? 16 : 8 }}>
         <FitTitle text={c.key} max={19} min={14} className="mh-serif" style={{ fontWeight: 700, color: "var(--mh-ink)", maxHeight: "2.4em", overflow: "hidden" }} />

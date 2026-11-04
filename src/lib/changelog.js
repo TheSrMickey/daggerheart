@@ -9,6 +9,7 @@ export const CHANGELOG = [
     title: "El Oráculo del DJ",
     blurb: "Un anillo de luz que responde a las preguntas de la mesa: Sí / No, con matices o con una tirada de destino, solo para el DJ y a un toque bajo el chat.",
     items: [
+      { tag: "arreglo", text: "Creación de personaje · las pastillas de dominios miden todas lo mismo, y en las subclases con mucho texto (como las del Druida) la pastilla «Fundación» ya no tapa el título de la carta." },
       { tag: "arreglo", text: "Subclases · la carta de Guardián de los Elementos (Druida) cortaba parte del texto: las cartas de subclase con mucho texto acortan la ilustración para que quepa toda la información. En la creación de personaje, la columna de la derecha de esa subclase muestra primero la habilidad (Encarnación Elemental) y debajo los elementos que se pueden canalizar, en vez de solo los elementos; lo mismo para las demás subclases cuya descripción empieza con el nombre de su habilidad." },
       { tag: "arreglo", text: "Crear personaje · en el detalle de la clase el texto ya no se desvanece por abajo (una máscara de degradado que parecía un difuminado) y se quita el difuminado de fondo de las cajas del paso de clase; la ilustración de la clase sigue detrás del texto." },
       { tag: "mejora", text: "Crear personaje · el detalle de la clase muestra la descripción completa de cada clase (traducida del SRD de Daggerheart) y, debajo, sus características. Se quita el difuminado de esa caja y, al ser largos los textos, tiene una barra de desplazamiento fina." },
