@@ -44,7 +44,7 @@ export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
   const col = c.color;
   const legend = c.kind === "arma" && c.tier === 4;
   const feats = c.features || [];
-  const total = (c.text || "").length + feats.reduce((s, f) => s + (f.name || "").length + (f.text || "").length, 0);
+  const total = (c.text || "").length + feats.reduce((s, f) => s + (f.name || "").length + (f.text || "").length + (f.subs || []).reduce((q, e) => q + e.name.length + e.text.length, 0), 0);
   const modal = !!onClose;
   const dom = c.kind === "dominio";
   // Ascendencias y comunidades usan el mismo diseño que las de dominio, sin cinta de nivel ni coste.
@@ -93,7 +93,10 @@ export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
       <FitBox fitKey={c.key + total} max={13} min={8.5} style={{ flex: 1, minHeight: 0, overflow: "hidden", padding: "10px 18px 12px", display: "flex", flexDirection: "column", justifyContent: "flex-start", textAlign: feats.length ? "left" : "center", gap: "0.7em", lineHeight: 1.45, color: "var(--mh-ink)" }}>
         {c.text && <div style={{ color: "var(--mh-ink)", textAlign: "center" }}>{c.text}</div>}
         {feats.map((f) => (
-          <div key={f.name} style={{ fontSize: "0.95em", lineHeight: 1.4 }}><b style={{ color: "var(--mh-gold-ink)" }}>{f.name}</b>{f.text ? ": " + f.text : ""}</div>
+          <div key={f.name} style={{ fontSize: "0.95em", lineHeight: 1.4 }}>
+            <b style={{ color: "var(--mh-gold-ink)" }}>{f.name}</b>{f.text ? ": " + f.text : ""}
+            {f.subs && f.subs.map((e) => <div key={e.name} style={{ marginTop: 3, paddingLeft: 8, borderLeft: "2px solid " + e.color }}><b style={{ color: e.color }}>{e.name}</b>: {e.text}</div>)}
+          </div>
         ))}
       </FitBox>
       )}
