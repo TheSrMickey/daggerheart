@@ -26,14 +26,31 @@ const STAGES = ["Fundación", "Especialización", "Maestría"];
 const TIER_LABEL = { 1: "Común", 2: "Poco común", 3: "Raro", 4: "Legendario" };
 const TIER_COLOR = { 1: "#857C96", 2: "#7FB77A", 3: "#A58BE8", 4: "#E8C547" };
 
+// Fichas de carta (como las de Desatar el Caos o Palabras Inspiradoras): se colocan sobre la carta, se gastan o se ganan y se reponen con una regla.
+const NO_TOK = { on: false, label: "Combo", max: 3, start: "empty", reset: "scene" };
+const RESETS = [["scene", "Fin de la escena"], ["short", "Descanso corto"], ["long", "Descanso largo"], ["session", "Cada sesión"], ["never", "Nunca"]];
+const tokSummary = (t) => t.max + " fichas de " + (t.label || "ficha") + " · empiezan " + (t.start === "full" ? "llenas" : "vacías") + " · " + (t.reset === "never" ? "no se reponen" : "se reponen: " + RESETS.find((r) => r[0] === t.reset)?.[1].toLowerCase());
+// Plantillas listas para añadir a tu biblioteca.
+const TEMPLATES = [
+  {
+    key: "riven",
+    label: "Espada Rota de Riven",
+    sub: "Arma legendaria · fichas de Combo",
+    make: () => ({
+      ...blank("arma"), name: "Espada Rota de Riven", slot: "Principal", hands: 2, tier: 4, trait: "Fuerza", range: "Cuerpo a cuerpo", damage: "d10+9 físico",
+      feature: "Alas Rotas: cuando aciertas con esta arma, gana 1 ficha de Combo (máx. 3). Con la 3.ª, gástalas todas: el objetivo sale despedido hasta alcance Muy cercano y queda Vulnerable temporalmente. Las fichas se pierden al terminar la escena.\nLa Hoja del Exiliado: una vez por descanso largo, gasta 3 de Esperanza y marca 1 Estrés: hasta el final de la escena suma +1d6 al daño, su alcance pasa a Cercano y cada ficha de Combo cuenta como dos.",
+      tokens: { on: true, label: "Combo", max: 3, start: "empty", reset: "scene" },
+    }),
+  },
+];
 const blank = (type) => {
   const base = { id: "w" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), type, name: "", createdAt: Date.now() };
   switch (type) {
-    case "dominio": return { ...base, domain: "Arcano", level: 1, ctype: "Hechizo", recall: 1, text: "", image: "" };
+    case "dominio": return { ...base, domain: "Arcano", level: 1, ctype: "Hechizo", recall: 1, text: "", image: "", tokens: { ...NO_TOK } };
     case "ascendencia": return { ...base, blurb: "", features: [{ name: "", text: "" }, { name: "", text: "" }], image: "" };
     case "comunidad": return { ...base, blurb: "", features: [{ name: "", text: "" }], image: "" };
     case "subclase": return { ...base, cls: "", blurb: "", features: [{ name: "", text: "", stage: "Fundación" }], image: "" };
-    case "arma": return { ...base, slot: "Principal", trait: "Agilidad", range: "Cuerpo a cuerpo", damage: "d8 físico", hands: 1, tier: 1, feature: "" };
+    case "arma": return { ...base, slot: "Principal", trait: "Agilidad", range: "Cuerpo a cuerpo", damage: "d8 físico", hands: 1, tier: 1, feature: "", tokens: { ...NO_TOK } };
     case "armadura": return { ...base, tier: 1, score: 3, major: 7, severe: 15, feature: "" };
     default: return { ...base, text: "", image: "" };
   }
@@ -77,6 +94,7 @@ function checks(it) {
     Number(it.level) >= 1 && Number(it.level) <= 10 ? ok("Nivel entre 1 y 10.") : warn("El nivel debe estar entre 1 y 10.");
   }
   if (it.type === "arma") /^d\d+(\s*[+−-]\s*\d+)?(\s+(físico|mágico))?/i.test(it.damage || "") ? ok("Daño con formato de dados (por ejemplo d8+2 físico).") : warn("El daño debe tener formato de dados, por ejemplo d8+2 físico.");
+  if (it.tokens?.on) { it.tokens.label?.trim() ? ok("Fichas: " + tokSummary(it.tokens) + ".") : warn("Ponle nombre a las fichas."); }
   if (it.type === "armadura") Number(it.major) < Number(it.severe) ? ok("El umbral mayor es menor que el grave.") : warn("El umbral mayor debería ser menor que el grave.");
   if (["ascendencia", "comunidad", "subclase"].includes(it.type)) (it.features || []).some((f) => f.name && f.text) ? ok("Tiene al menos una característica completa.") : warn("Añade al menos una característica con nombre y texto.");
   if (len > 1100) warn("Mucho texto: la carta lo reduce y puede costar leerlo.");
@@ -104,7 +122,7 @@ function shrinkImage(file, max = 640) {
   });
 }
 
-export function WorkshopPage({ FitTitle, FitBox, domainColors, icons, classColors, classes }) {
+export function WorkshopPage({ FitTitle, FitBox, TokDice, domainColors, icons, classColors, classes }) {
   const ctx = { domainColors, icons, classColors };
   const [items, setItems] = useState(null);
   const [sel, setSel] = useState(null); // id del elemento abierto
@@ -114,6 +132,7 @@ export function WorkshopPage({ FitTitle, FitBox, domainColors, icons, classColor
   const [rank, setRank] = useState(0);
   const [msg, setMsg] = useState("");
   const [dirty, setDirty] = useState(false);
+  const [tokHave, setTokHave] = useState(0); // fichas de ejemplo en la vista previa
   const fileRef = useRef(null);
   const importRef = useRef(null);
 
@@ -138,13 +157,25 @@ export function WorkshopPage({ FitTitle, FitBox, domainColors, icons, classColor
     setDraft(it);
     setSel(it.id);
     setRank(0);
+    setTokHave(0);
     setDirty(true);
+  };
+  const addTemplate = async (tpl) => {
+    const it = tpl.make();
+    await persist([it, ...(items || [])]);
+    setDraft(JSON.parse(JSON.stringify(it)));
+    setSel(it.id);
+    setRank(0);
+    setTokHave(it.tokens?.start === "full" ? it.tokens.max : 0);
+    setDirty(false);
+    flash("«" + it.name + "» añadida a tu biblioteca.");
   };
   const open = (it) => {
     if (dirty && !window.confirm("Tienes cambios sin guardar. ¿Descartarlos?")) return;
     setDraft(JSON.parse(JSON.stringify(it)));
     setSel(it.id);
     setRank(0);
+    setTokHave(it.tokens?.start === "full" ? it.tokens.max : 0);
     setDirty(false);
   };
   const set = (patch) => { setDraft((d) => ({ ...d, ...patch })); setDirty(true); };
@@ -220,6 +251,25 @@ export function WorkshopPage({ FitTitle, FitBox, domainColors, icons, classColor
       </div>
     </div>
   ), "Opcional. Se reduce automáticamente.");
+  const TokField = () => {
+    const t = draft.tokens || NO_TOK;
+    const setTok = (patch) => set({ tokens: { ...NO_TOK, ...t, ...patch } });
+    return (
+      <div className="ws-tok">
+        <label className="ws-tok-sw"><input type="checkbox" checked={!!t.on} onChange={(e) => setTok({ on: e.target.checked })} /> <span>Esta carta usa fichas</span></label>
+        {t.on && (
+          <>
+            <div className="ws-r3">
+              {L("Nombre de la ficha", <input className="mh-input" maxLength={24} value={t.label} onChange={(e) => setTok({ label: e.target.value })} placeholder="Combo, Caos, Inspiración…" />)}
+              {L("Cuántas (máx.)", <Seg value={t.max} options={[1, 2, 3, 4, 5, 6]} onChange={(v) => setTok({ max: Number(v) })} />)}
+              {L("Al empezar", <Seg value={t.start} options={["empty", "full"]} onChange={(v) => setTok({ start: v })} fmt={(v) => (v === "full" ? "Llenas" : "Vacías")} />)}
+            </div>
+            {L("Se reponen o se pierden", <Seg value={t.reset} options={RESETS.map((r) => r[0])} onChange={(v) => setTok({ reset: v })} fmt={(v) => RESETS.find((r) => r[0] === v)?.[1]} />, "Explica en el texto de la carta cuándo se ganan y cuándo se gastan.")}
+          </>
+        )}
+      </div>
+    );
+  };
   const Feats = ({ stages }) => (
     <div className="ws-feats">
       {draft.features.map((f, i) => (
@@ -259,6 +309,12 @@ export function WorkshopPage({ FitTitle, FitBox, domainColors, icons, classColor
               {TYPES.map((t) => (
                 <button key={t.key} type="button" onClick={() => create(t.key)} style={{ "--c": t.color }}><t.Icon size={15} /> {t.label}</button>
               ))}
+            </div>
+          </div>
+          <div className="ws-tpl">
+            <h3>Plantillas</h3>
+            <div className="ws-new-g">
+              {TEMPLATES.map((t) => <button key={t.key} type="button" onClick={() => addTemplate(t)} style={{ "--c": "#E8C547" }}><Plus size={15} /> <span>{t.label}<small>{t.sub}</small></span></button>)}
             </div>
           </div>
           <div className="ws-lib-h">
@@ -306,6 +362,7 @@ export function WorkshopPage({ FitTitle, FitBox, domainColors, icons, classColor
                     {L("Coste de recuperación", <Seg value={draft.recall} options={[0, 1, 2, 3, 4, 5]} onChange={(v) => set({ recall: v })} />)}
                   </div>
                   {L("Texto de la carta", <textarea className="mh-input" rows={6} value={draft.text} onChange={(e) => set({ text: e.target.value })} placeholder="Describe qué hace la carta, con el alcance, la tirada y el efecto." />)}
+                  <TokField />
                   <ImageField />
                 </>
               )}
@@ -336,7 +393,8 @@ export function WorkshopPage({ FitTitle, FitBox, domainColors, icons, classColor
                     {L("Alcance", <select className="mh-input" value={draft.range} onChange={(e) => set({ range: e.target.value })}>{RANGES.map((t) => <option key={t}>{t}</option>)}</select>)}
                     {L("Daño", <input className="mh-input" value={draft.damage} onChange={(e) => set({ damage: e.target.value })} placeholder="d8+2 físico" />)}
                   </div>
-                  {L("Característica", <textarea className="mh-input" rows={3} value={draft.feature} onChange={(e) => set({ feature: e.target.value })} placeholder="Opcional: efecto especial del arma." />)}
+                  {L("Característica", <textarea className="mh-input" rows={5} value={draft.feature} onChange={(e) => set({ feature: e.target.value })} placeholder="Opcional: efecto especial del arma. Puedes poner varias, una por línea." />)}
+                  <TokField />
                 </>
               )}
               {draft.type === "armadura" && (
@@ -372,6 +430,12 @@ export function WorkshopPage({ FitTitle, FitBox, domainColors, icons, classColor
               <h3>Vista previa en vivo</h3>
               {draft.type === "subclase" && <div className="ws-rank">{STAGES.map((s, i) => <button key={s} type="button" className={rank === i ? "on" : ""} onClick={() => setRank(i)}>{s}</button>)}</div>}
               <div className="ws-card"><CardFace c={entry} I={entry.Icon} FitTitle={FitTitle} FitBox={FitBox} /></div>
+              {draft.tokens?.on && TokDice && (
+                <div className="ws-toks" title={tokSummary(draft.tokens)}>
+                  <TokDice have={Math.min(tokHave, draft.tokens.max)} max={draft.tokens.max} color={entry.color} onPick={(k) => setTokHave(k + 1 === tokHave ? k : k + 1)} />
+                  <small>{tokSummary(draft.tokens)}</small>
+                </div>
+              )}
               <span className="ws-tag"><FileText size={12} /> Contenido personalizado</span>
               <div className="ws-chk">
                 <h3>Comprobaciones</h3>
@@ -394,6 +458,9 @@ const CSS = `
 .ws-lib, .ws-ed, .ws-pv { background: var(--mh-panel); border: 1px solid var(--mh-line); border-radius: 18px; padding: 14px; min-width: 0; }
 .ws h3 { margin: 0 0 8px; font: 700 11px Inter, system-ui, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--mh-muted); display: flex; align-items: center; gap: 8px; } .ws h3 em { font-style: normal; color: var(--mh-muted2); }
 .ws-new-g { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 6px; } .ws-new-g button { all: unset; cursor: pointer; box-sizing: border-box; display: flex; align-items: center; gap: 7px; padding: 8px 9px; border-radius: 10px; border: 1px solid var(--mh-line); background: var(--mh-panel2); color: var(--mh-ink); font-size: 11.5px; font-weight: 600; } .ws-new-g button svg { color: var(--c); flex: none; } .ws-new-g button:hover { border-color: var(--c); } .ws-new-g button:focus-visible { outline: 2px solid #E3B04B; }
+.ws-tpl { margin-top: 14px; } .ws-new-g button span small { display: block; font-weight: 400; color: var(--mh-muted2); font-size: 10px; }
+.ws-tok { border: 1px dashed var(--mh-line2); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 10px; } .ws-tok-sw { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; cursor: pointer; } .ws-tok-sw input { width: 16px; height: 16px; accent-color: #E3B04B; }
+.ws-toks { align-self: stretch; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px; border-radius: 12px; background: var(--mh-panel2); border: 1px solid var(--mh-line); } .ws-toks small { font-size: 10.5px; color: var(--mh-muted2); text-align: center; }
 .ws-lib-h { margin-top: 14px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; } .ws-lib-h h3 { margin: 0; } .ws-lib-h .ws-search { width: 220px; } .ws-lib-h .ws-chips { margin: 0; } .ws-search { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border: 1px solid var(--mh-line); border-radius: 10px; background: var(--mh-input); color: var(--mh-muted); } .ws-search input { all: unset; flex: 1; min-width: 0; font-size: 12.5px; color: var(--mh-ink); }
 .ws-chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0; } .ws-chips button { all: unset; cursor: pointer; font-size: 10.5px; padding: 3px 9px; border-radius: 99px; border: 1px solid var(--mh-line2); color: var(--mh-muted); } .ws-chips button.on { background: #E3B04B; border-color: #E3B04B; color: #1d1606; font-weight: 700; }
 .ws-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 6px; max-height: 176px; overflow-y: auto; scrollbar-width: thin; margin-top: 4px; } .ws-empty { color: var(--mh-muted2); font-size: 12.5px; margin: 6px 2px; line-height: 1.45; }

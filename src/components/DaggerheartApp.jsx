@@ -4840,6 +4840,7 @@ const sharedStyles = `
   .mh-fear-sk.on path:first-child { fill: var(--mh-panel); stroke: var(--mh-panel); }
   .mh-fear-sk.pulse { animation: mh-fear-pulse 1.4s ease-in-out infinite; transform-origin: center; }
   @keyframes mh-fear-pulse { 50% { filter: drop-shadow(0 0 9px rgba(205,175,255,.95)); transform: scale(1.18); } }
+  .mh-gem { flex: none; display: block; transition: filter .2s, transform .2s; } .mh-gem.on { filter: drop-shadow(0 0 5px rgba(122,79,224,.65)); } .mh-gem.pulse { animation: mh-fear-pulse 1.6s ease-in-out infinite; transform-origin: center; } .mh-fear-btn:hover .mh-gem:not(.on) polygon { stroke: #A58BE8; } .mh-fear-btn:hover .mh-gem { transform: scale(1.08); }
   .mh-fear-btn { all: unset; cursor: pointer; display: inline-flex; padding: 1px; border-radius: 6px; } .mh-fear-btn:hover .mh-fear-sk { color: #A58BE8; }
   .mh-stg-fear b { font-size: 12px; color: var(--mh-purple-ink); min-width: 14px; text-align: right; }
   .mh-stg-seg { display: flex; gap: 3px; padding: 3px; border-radius: 11px; background: var(--mh-panel2); border: 1px solid var(--mh-line); flex-shrink: 0; margin-bottom: 12px; }
@@ -9669,6 +9670,31 @@ async function renderCutCards(entries) {
   root.unmount();
   fr.remove();
   return { cells, styles };
+}
+// Ficha de Miedo: cristal violeta con forma de cubo truncado y vetas irisadas por dentro, como las fichas oficiales; vacía es solo el contorno.
+function FearGem({ size = 17, on, pulse }) {
+  return (
+    <svg viewBox="0 0 40 44" width={size} height={Math.round(size * 1.1)} className={"mh-gem" + (on ? " on" : "") + (pulse ? " pulse" : "")} aria-hidden="true">
+      {on ? (
+        <>
+          <polygon points="20,2 37,12 20,22 3,12" fill="#5a36c8" />
+          <polygon points="3,12 20,22 20,42 3,32" fill="#37199a" />
+          <polygon points="37,12 37,32 20,42 20,22" fill="#22105f" />
+          <polygon points="20,2 37,12 30,15 20,9 10,15 3,12" fill="#8a66ee" opacity=".5" />
+          <polygon points="12,19 17,15 22,18 27,16 29,22 25,28 19,30 14,27" fill="#b99bff" fillOpacity=".14" />
+          <polygon points="14,21 18,18 20,23 16,26" fill="#ffb066" fillOpacity=".55" />
+          <polygon points="21,19 26,18 27,23 22,25" fill="#ff7ad0" fillOpacity=".5" />
+          <polygon points="17,26 22,25 24,29 19,31" fill="#6fe4ff" fillOpacity=".5" />
+          <polygon points="13,16 16,14 15,18" fill="#fff" fillOpacity=".55" />
+          <path d="M12 19 L17 15 L22 18 L27 16 L29 22 L25 28 L19 30 L14 27 Z M14 21 L18 18 L20 23 L16 26 Z M21 19 L26 18 L27 23 L22 25 Z M17 26 L22 25 L24 29 L19 31 Z" fill="none" stroke="#fff" strokeOpacity=".45" strokeWidth=".6" strokeLinejoin="round" />
+          <path d="M20 22 L20 42 M3 12 L20 22 L37 12" fill="none" stroke="#fff" strokeOpacity=".18" strokeWidth=".7" />
+          <polygon points="20,2 37,12 37,32 20,42 3,32 3,12" fill="none" stroke="#c2adff" strokeOpacity=".35" strokeWidth=".9" strokeLinejoin="round" />
+        </>
+      ) : (
+        <polygon points="20,2 37,12 37,32 20,42 3,32 3,12" fill="rgba(165,139,232,.07)" stroke="rgba(165,139,232,.4)" strokeWidth="1.5" strokeLinejoin="round" />
+      )}
+    </svg>
+  );
 }
 function FitTitle({ text, max = 23, min = 14, lines = 2, lineHeight = 1.15, className, style }) {
   const ref = useRef(null);
@@ -23683,7 +23709,7 @@ export default function App({ onSignOut }) {
   <span>Miedo</span>
   <span className="mh-stg-fear-pips">
     {Array.from({ length: 12 }, (_, i) => (
-      <Skull key={i} size={17} strokeWidth={i < fearCount ? 1.4 : 1.6} className={"mh-fear-sk" + (i < fearCount ? " on" : "") + (i === fearCount - 1 ? " pulse" : "")} />
+      <FearGem key={i} size={17} on={i < fearCount} pulse={i === fearCount - 1} />
     ))}
   </span>
   <b>{fearCount}</b>
@@ -23726,7 +23752,7 @@ export default function App({ onSignOut }) {
                                   <em>Miedo</em>
                                   <span className="mh-qs-pips mh-pl-fear">
                                     {Array.from({ length: 12 }, (_, i) => (
-                                      <Skull key={i} size={14} strokeWidth={i < fearCount ? 1.4 : 1.6} className={"mh-fear-sk" + (i < fearCount ? " on" : "") + (i === fearCount - 1 ? " pulse" : "")} />
+                                      <FearGem key={i} size={14} on={i < fearCount} pulse={i === fearCount - 1} />
                                     ))}
                                   </span>
                                   <b>{fearCount}/12</b>
@@ -31662,7 +31688,7 @@ export default function App({ onSignOut }) {
                           <span className="mh-cgb-pips">
                             {Array.from({ length: 12 }, (_, i) => (
                               <button key={i} type="button" aria-label={"Miedo " + (i + 1)} onClick={() => toggleFear(i + 1)}>
-                                <Skull size={16} strokeWidth={i < fearCount ? 1.4 : 1.6} className={"mh-fear-sk" + (i < fearCount ? " on" : "") + (i === fearCount - 1 ? " pulse" : "")} />
+                                <FearGem size={16} on={i < fearCount} pulse={i === fearCount - 1} />
                               </button>
                             ))}
                           </span>
@@ -31718,7 +31744,7 @@ export default function App({ onSignOut }) {
                       <span className="mh-stg-fear-pips">
                         {Array.from({ length: 12 }, (_, i) => (
                           <button key={i} type="button" className="mh-cg-fear-b" aria-label={"Miedo " + (i + 1)} onClick={() => toggleFear(i + 1)}>
-                            <Skull size={17} strokeWidth={i < fearCount ? 1.4 : 1.6} className={"mh-fear-sk" + (i < fearCount ? " on" : "") + (i === fearCount - 1 ? " pulse" : "")} />
+                            <FearGem size={17} on={i < fearCount} pulse={i === fearCount - 1} />
                           </button>
                         ))}
                       </span>
@@ -34735,7 +34761,7 @@ export default function App({ onSignOut }) {
           {view === "perfil" && profileTarget && <ProfilePage key={profileTarget.id} id={profileTarget.id} name={profileTarget.name} />}
 
           {view === "dadosskin" && <Personalizacion skin={diceSkin} onEquip={equipDiceSkin} back={cardBack} onEquipBack={equipCardBack} cardBorder={cardBorder} onCardBorder={equipCardBorder} items={buildCardCatalog()} icons={DOMAIN_ICONS} FitTitle={FitTitle} FitBox={FitBox} />}
-          {view === "taller" && <WorkshopPage FitTitle={FitTitle} FitBox={FitBox} domainColors={DOMAIN_COLORS} icons={DOMAIN_ICONS} classColors={CLASS_COLORS} classes={CLASSES.map((c) => c.key)} />}
+          {view === "taller" && <WorkshopPage FitTitle={FitTitle} FitBox={FitBox} TokDice={TokDice} domainColors={DOMAIN_COLORS} icons={DOMAIN_ICONS} classColors={CLASS_COLORS} classes={CLASSES.map((c) => c.key)} />}
           {view === "cartas" && <CardsPage items={buildCardCatalog()} domainColors={DOMAIN_COLORS} icons={DOMAIN_ICONS} FitTitle={FitTitle} FitBox={FitBox} />}
 
           {view === "ajustes" && (
@@ -34936,7 +34962,7 @@ export default function App({ onSignOut }) {
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                   {Array.from({ length: 12 }, (_, idx) => idx + 1).map((i) => (
                     <button key={i} type="button" className="mh-fear-btn" aria-label={"Poner el Miedo en " + i} onClick={() => toggleFear(i)}>
-                      <Skull size={26} strokeWidth={i <= fearCount ? 1.4 : 1.6} className={"mh-fear-sk" + (i <= fearCount ? " on" : "") + (i === fearCount ? " pulse" : "")} />
+                      <FearGem size={26} on={i <= fearCount} pulse={i === fearCount} />
                     </button>
                   ))}
                 </div>
