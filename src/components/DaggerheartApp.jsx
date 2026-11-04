@@ -25,6 +25,7 @@ import { LevelUpDialog, parseAdvances, ownedCards, getMulticlass, MAX_LEVEL, ran
 import { RulesPanel } from "./MapRules";
 import { Changelog } from "./Changelog";
 import { CardsPage, CardFace } from "./Cards";
+import { WorkshopPage } from "./Workshop";
 import { printSheet } from "@/lib/sheetPdf";
 import { Generators } from "./Generators";
 import { CampaignCalendar, HomeNextSession } from "./Calendar";
@@ -66,6 +67,7 @@ const NAV_ITEMS = [
   { key: "ficha", label: "Personajes", icon: User },
   { key: "campaigns", label: "Campañas", icon: BookOpen },
   { key: "cartas", label: "Cartas", icon: Layers },
+  { key: "taller", label: "Taller", icon: Hammer },
   { key: "dadosskin", label: "Personalización", icon: Dices },
   { key: "mesas", label: "Buscar mesa", icon: Megaphone },
 ];
@@ -34733,6 +34735,7 @@ export default function App({ onSignOut }) {
           {view === "perfil" && profileTarget && <ProfilePage key={profileTarget.id} id={profileTarget.id} name={profileTarget.name} />}
 
           {view === "dadosskin" && <Personalizacion skin={diceSkin} onEquip={equipDiceSkin} back={cardBack} onEquipBack={equipCardBack} cardBorder={cardBorder} onCardBorder={equipCardBorder} items={buildCardCatalog()} icons={DOMAIN_ICONS} FitTitle={FitTitle} FitBox={FitBox} />}
+          {view === "taller" && <WorkshopPage FitTitle={FitTitle} FitBox={FitBox} domainColors={DOMAIN_COLORS} icons={DOMAIN_ICONS} classColors={CLASS_COLORS} classes={CLASSES.map((c) => c.key)} />}
           {view === "cartas" && <CardsPage items={buildCardCatalog()} domainColors={DOMAIN_COLORS} icons={DOMAIN_ICONS} FitTitle={FitTitle} FitBox={FitBox} />}
 
           {view === "ajustes" && (
