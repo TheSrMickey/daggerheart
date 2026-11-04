@@ -9,6 +9,10 @@ export const CHANGELOG = [
     title: "El Oráculo del DJ",
     blurb: "Un anillo de luz que responde a las preguntas de la mesa: Sí / No, con matices o con una tirada de destino, solo para el DJ y a un toque bajo el chat.",
     items: [
+      { tag: "mejora", text: "Creación de personaje · Experiencias: las dos cajas ocupan todo el espacio y cada una tiene una última pastilla «Otra al azar» que te da una experiencia distinta cada vez que la pulsas." },
+      { tag: "mejora", text: "Creación de personaje · Armas: «A distancia» son las que pegan en alcance Lejano o Muy lejano; el resto cuenta como cuerpo a cuerpo." },
+      { tag: "mejora", text: "Creación de personaje · Objetos iniciales: el equipo básico es opcional (interruptor), el objeto de clase tiene solo las dos opciones y el objeto personalizado se añade aparte, hasta completar los 5 huecos." },
+      { tag: "mejora", text: "Creación de personaje · Cartas de dominio: el selector de dominio lleva los iconos de cada dominio, se quita la pastilla «Ver más», la explicación pasa a un icono de información y al pulsar una carta ya elegida se retira de la mano." },
       { tag: "mejora", text: "Creación de personaje · Transformaciones: la baraja usa las mismas cartas que la pestaña «Cartas» (con su descripción), que ahora se ajustan a la altura disponible para no cortarse por arriba ni perder la sombra por abajo; se quita el bloque de aviso de Hope & Fear y las características de la derecha salen como las de las subclases." },
       { tag: "mejora", text: "Creación de personaje · Experiencias: 50 sugerencias aleatorias más (oficios, pasados y rasgos de personalidad); el consejo pasa a un icono de información junto al título, sin caja inferior ni desplazamiento vertical. La vista previa ya no muestra las pastillas." },
       { tag: "mejora", text: "Creación de personaje · Armas: filtros por rango y por tipo de ataque (cuerpo a cuerpo / a distancia), con las armas separadas por tipo dentro de cada rango; al elegir un arma o armadura su característica se despliega debajo para poder leerla." },
