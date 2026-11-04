@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { BookOpen, Check, Copy, Download, FileText, Gem, Hammer, Home, Layers, Minus, Pencil, Plus, RotateCcw, Search, Shield, Swords, Trash2, Upload, User, X, Sparkles } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { CardFace } from "./Cards";
@@ -73,9 +74,9 @@ function toEntry(it, ctx, rank = 0) {
     }
     case "arma": {
       const dm = String(it.damage || "").match(/^(\S+)\s*(.*)$/);
-      return { id: it.id, kind: "arma", key: nm, sub: "Arma " + (it.slot === "Secundaria" ? "secundaria" : "principal") + " · " + (Number(it.hands) === 2 ? "Dos manos" : "Una mano"), tier: Number(it.tier) || 1, text: "", features: [], gear: { label: "Daño", big: dm?.[1] || "—", small: dm?.[2] || "", feature: it.feature || "", foot: [it.trait, it.range].filter(Boolean).join(" · "), pill: TIER_LABEL[it.tier] || "" }, image: null, color: TIER_COLOR[it.tier] || "#C9A24A", Icon: weaponIcon(nm) };
+      return { id: it.id, kind: "arma", key: nm, sub: "Arma " + (it.slot === "Secundaria" ? "secundaria" : "principal") + " · " + (Number(it.hands) === 2 ? "Dos manos" : "Una mano"), tier: Number(it.tier) || 1, text: "", features: [], gear: { label: "Daño", big: dm?.[1] || "—", small: dm?.[2] || "", feature: it.feature || "", foot: [it.trait, it.range].filter(Boolean).join(" · "), pill: TIER_LABEL[it.tier] || "" }, image: it.image || null, color: TIER_COLOR[it.tier] || "#C9A24A", Icon: weaponIcon(nm) };
     }
-    case "armadura": return { id: it.id, kind: "armadura", key: nm, sub: "Armadura", tier: Number(it.tier) || 1, text: "", features: [], gear: { label: "Puntuación", big: String(it.score ?? "—"), small: "", feature: it.feature || "", foot: "Umbrales base " + it.major + " / " + it.severe, pill: TIER_LABEL[it.tier] || "" }, image: null, color: TIER_COLOR[it.tier] || "#857C96", Icon: armorIcon(nm) };
+    case "armadura": return { id: it.id, kind: "armadura", key: nm, sub: "Armadura", tier: Number(it.tier) || 1, text: "", features: [], gear: { label: "Puntuación", big: String(it.score ?? "—"), small: "", feature: it.feature || "", foot: "Umbrales base " + it.major + " / " + it.severe, pill: TIER_LABEL[it.tier] || "" }, image: it.image || null, color: TIER_COLOR[it.tier] || "#857C96", Icon: armorIcon(nm) };
     default: return { id: it.id, kind: "accion", key: nm, sub: "Objeto", text: it.text, features: [], image: it.image || null, color: "#E0A04A", Icon: Gem };
   }
 }
@@ -202,6 +203,13 @@ export function WorkshopPage({ FitTitle, FitBox, TokDice, domainColors, icons, c
     setMode("view");
     setDirty(false);
   };
+  const closeView = () => { setDraft(null); setSel(null); setMode("edit"); };
+  useEffect(() => {
+    if (mode !== "view" || !draft) return;
+    const k = (e) => e.key === "Escape" && closeView();
+    window.addEventListener("keydown", k);
+    return () => window.removeEventListener("keydown", k);
+  }, [mode, draft]);
   const set = (patch) => { setDraft((d) => ({ ...d, ...patch })); setDirty(true); };
   const setFeat = (i, patch) => set({ features: draft.features.map((f, k) => (k === i ? { ...f, ...patch } : f)) });
   const save = async () => {
@@ -351,23 +359,24 @@ export function WorkshopPage({ FitTitle, FitBox, TokDice, domainColors, icons, c
               {TYPES.filter((t) => counts(t.key) > 0).map((t) => <button key={t.key} type="button" className={typeFilter === t.key ? "on" : ""} onClick={() => setTypeFilter(typeFilter === t.key ? "" : t.key)}>{t.plural} · {counts(t.key)}</button>)}
             </div>
           </div>
-          <div className="ws-list">
-            {items === null && <p className="ws-empty">Cargando…</p>}
-            {items && !shown.length && <p className="ws-empty">{items.length ? "Nada con ese filtro." : "Aún no has creado nada. Elige un tipo arriba para empezar."}</p>}
+          {items === null && <p className="ws-empty">Cargando…</p>}
+          {items && !shown.length && <p className="ws-empty">{items.length ? "Nada con ese filtro." : "Aún no has creado nada. Elige un tipo arriba para empezar."}</p>}
+          <div className="cx-grid ws-gal">
             {shown.map((x) => {
-              const t = typeOf(x.type);
+              const e = toEntry(x, ctx, 0);
               return (
-                <button key={x.id} type="button" className={"ws-it" + (sel === x.id ? " on" : "")} onClick={() => open(x)} style={{ "--c": t.color }}>
-                  <i><t.Icon size={15} /></i>
-                  <span><b>{x.name || "Sin nombre"}</b><small>{t.label}{x.type === "dominio" ? " · Nv " + x.level : ""}</small></span>
+                <button type="button" key={x.id} className={"cx-card" + (sel === x.id ? " ws-gsel" : "")} onClick={() => open(x)} aria-label={"Ver " + (x.name || "carta")}>
+                  <CardFace c={e} I={e.Icon} FitTitle={FitTitle} FitBox={FitBox} />
                 </button>
               );
             })}
           </div>
         </aside>
 
-        {draft && mode === "view" && entry ? (
-          <section className="ws-view">
+        {draft && mode === "view" && entry && typeof document !== "undefined" && createPortal(
+          <div className="ws-modal" onClick={closeView} role="dialog" aria-modal="true" aria-label={draft.name}>
+          <button type="button" className="ws-x" onClick={closeView} aria-label="Cerrar"><X size={18} /></button>
+          <section className="ws-view" onClick={(e) => e.stopPropagation()}>
             <div className="ws-vmain">
               <div className="ws-ed-h"><span style={{ "--c": tinfo.color }}><tinfo.Icon size={15} /> {tinfo.label}</span>{msg && <em className="ws-msg">{msg}</em>}</div>
               <h2 className="mh-serif ws-vname">{draft.name || "Sin nombre"}</h2>
@@ -404,7 +413,8 @@ export function WorkshopPage({ FitTitle, FitBox, TokDice, domainColors, icons, c
               <p className="ws-note">Vista orientativa: por ahora el contenido del Taller no se puede equipar ni jugar en la hoja, la mano o el mapa.</p>
             </div>
           </section>
-        ) : (
+          </div>, document.querySelector(".mh-root") || document.body)}
+        {(mode === "edit" || !draft) && (
         <div className="ws-work">
         <section className="ws-ed">
           {!draft ? (
@@ -460,6 +470,7 @@ export function WorkshopPage({ FitTitle, FitBox, TokDice, domainColors, icons, c
                   </div>
                   {L("Característica", <textarea className="mh-input" rows={5} value={draft.feature} onChange={(e) => set({ feature: e.target.value })} placeholder="Opcional: efecto especial del arma. Puedes poner varias, una por línea." />)}
                   <TokField />
+                  <ImageField />
                 </>
               )}
               {draft.type === "armadura" && (
@@ -471,6 +482,7 @@ export function WorkshopPage({ FitTitle, FitBox, TokDice, domainColors, icons, c
                     {L("Umbral grave", <input className="mh-input" type="number" min={1} value={draft.severe} onChange={(e) => set({ severe: e.target.value })} />)}
                   </div>
                   {L("Característica", <textarea className="mh-input" rows={3} value={draft.feature} onChange={(e) => set({ feature: e.target.value })} placeholder="Opcional: efecto especial de la armadura." />)}
+                  <ImageField />
                 </>
               )}
               {draft.type === "objeto" && (
@@ -523,7 +535,9 @@ const CSS = `
 .ws-tok { border: 1px dashed var(--mh-line2); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 10px; } .ws-tok-sw { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; cursor: pointer; } .ws-tok-sw input { width: 16px; height: 16px; accent-color: #E3B04B; }
 .ws-toks { align-self: stretch; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px; border-radius: 12px; background: var(--mh-panel2); border: 1px solid var(--mh-line); } .ws-toks small { font-size: 10.5px; color: var(--mh-muted2); text-align: center; }
 .ws-tokbar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center; } .ws-tokbar button { all: unset; cursor: pointer; box-sizing: border-box; min-width: 30px; height: 30px; padding: 0 9px; display: inline-flex; align-items: center; justify-content: center; border-radius: 9px; border: 1px solid var(--mh-line2); background: var(--mh-panel); color: var(--mh-text); font-size: 11.5px; font-weight: 600; } .ws-tokbar button:disabled { opacity: .35; cursor: default; } .ws-tokbar button:hover:not(:disabled) { border-color: #E3B04B; } .ws-tokbar b { font-size: 15px; padding: 0 6px; } .ws-tokbar b small { font-size: 11px; color: var(--mh-muted2); } .ws-tokbar b em { font-style: normal; font-size: 11px; font-weight: 500; color: var(--mh-muted); }
-.ws-view { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 14px; align-items: start; } .ws-vmain, .ws-ctx { background: var(--mh-panel); border: 1px solid var(--mh-line); border-radius: 18px; padding: 16px; min-width: 0; display: flex; flex-direction: column; gap: 12px; } .ws-vname { margin: 0; font-size: 26px; } .ws-card-big { margin: 4px 0; } .ws-dice { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; min-height: 54px; } .ws-vmain .ws-rank { justify-content: center; }
+.ws-gal { margin-top: 12px; } .ws-gsel { outline: 2px solid #E3B04B; outline-offset: 3px; border-radius: 16px; }
+.ws-modal { position: fixed; inset: 0; z-index: 80; background: rgba(8,6,12,.78); overflow-y: auto; padding: 28px 20px; display: flex; align-items: flex-start; justify-content: center; } .ws-x { all: unset; cursor: pointer; position: fixed; top: 14px; right: 18px; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: var(--mh-panel); border: 1px solid var(--mh-line2); color: var(--mh-text); z-index: 2; }
+.ws-view { width: min(860px, 100%); display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 14px; align-items: start; } .ws-vmain, .ws-ctx { background: var(--mh-panel); border: 1px solid var(--mh-line); border-radius: 18px; padding: 16px; min-width: 0; display: flex; flex-direction: column; gap: 12px; } .ws-vname { margin: 0; font-size: 26px; } .ws-card-big { margin: 4px 0; } .ws-dice { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; min-height: 54px; } .ws-vmain .ws-rank { justify-content: center; }
 .ws-ctx-g { display: flex; flex-direction: column; gap: 10px; } .ws-cx { border: 1px solid var(--mh-line); background: var(--mh-panel2); border-radius: 14px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; } .ws-cx > b { font: 700 10.5px Inter, system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-muted); } .ws-cx small, .ws-note { font-size: 11.5px; color: var(--mh-muted2); margin: 0; }
 .ws-hand { height: 190px; overflow: hidden; display: flex; justify-content: center; } .ws-hand-c { transform: scale(.48); transform-origin: top center; flex: none; } .ws-hand-t { display: flex; justify-content: center; }
 .ws-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel); } .ws-row i { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; color: var(--c); background: color-mix(in srgb, var(--c) 16%, transparent); flex: none; } .ws-row span { flex: 1; min-width: 0; display: flex; flex-direction: column; } .ws-row strong { font-size: 13px; } .ws-row em { font-style: normal; font-weight: 700; font-size: 12px; color: var(--c); white-space: nowrap; }
