@@ -187,7 +187,7 @@ async function getShared() {
         texCache: new Map(),
         glass: (kind) => {
           const tint = TINTS[kind] || TINTS.bonus;
-          return (glassC[kind] = glassC[kind] || new THREE.MeshPhysicalMaterial({ color: new THREE.Color(tint[1]).lerp(new THREE.Color(tint[0]), 0.1), roughness: 0.34, metalness: 0, clearcoat: 0.6, clearcoatRoughness: 0.15, envMapIntensity: 0.55 }));
+          return (glassC[kind] = glassC[kind] || new THREE.MeshPhysicalMaterial({ color: new THREE.Color(tint[1]).lerp(new THREE.Color(tint[0]), 0.06), roughness: 0.62, metalness: 0, clearcoat: 0.08, clearcoatRoughness: 0.6, envMapIntensity: 0.28, emissive: new THREE.Color(tint[1]), emissiveIntensity: 0.16 }));
         },
         edgeMat: (o) => (edgeC[o] = edgeC[o] || new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: o })),
         skinMat: (k, make) => (skinC[k] = skinC[k] || make()),

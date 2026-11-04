@@ -9,7 +9,7 @@ export const CHANGELOG = [
     title: "El Oráculo del DJ",
     blurb: "Un anillo de luz que responde a las preguntas de la mesa: Sí / No, con matices o con una tirada de destino, solo para el DJ y a un toque bajo el chat.",
     items: [
-      { tag: "mejora", text: "Dados 3D · los dados ya no son translúcidos: son opacos, con acabado de resina brillante y el color de cada tipo (Esperanza, Miedo, ventaja, daño…)." },
+      { tag: "mejora", text: "Dados 3D · los dados ya no son translúcidos ni brillantes: son de color sólido y acabado mate, con el color de cada tipo (Esperanza, Miedo, ventaja, daño…)." },
       { tag: "nuevo", text: "Hoja de personaje · en los ajustes (engranaje) hay una opción «Descargar hoja en PDF»: abre la impresión con la hoja maquetada en A4 vertical a dos páginas con el reparto de la hoja oficial de Daggerheart: la 1.ª con cabecera de clase, Evasión y Armadura, los 6 rasgos, daño y salud, Esperanza, Experiencia, Oro, característica de clase, armas, armadura, inventario y armas de inventario; la 2.ª con características, cartas de dominio, trasfondo, conexiones y las tablas de subida de nivel. Lleva el logo de Enaris." },
       { tag: "mejora", text: "Creación de personaje · Experiencias: las dos cajas ocupan todo el espacio y cada una tiene una última pastilla «Otra al azar» que te da una experiencia distinta cada vez que la pulsas." },
       { tag: "mejora", text: "Creación de personaje · Armas: «A distancia» son las que pegan en alcance Lejano o Muy lejano; el resto cuenta como cuerpo a cuerpo." },
