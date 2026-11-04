@@ -33,11 +33,12 @@ export const KINDS = [
   { key: "comunidad", label: "Comunidad", plural: "Comunidades" },
   { key: "subclase", label: "Subclase", plural: "Subclases" },
   { key: "transformacion", label: "Transformación", plural: "Transformaciones" },
+  { key: "salvaje", label: "Salvaje", plural: "Cartas Salvajes" },
   { key: "forma", label: "Forma de Bestia", plural: "Formas de Bestia" },
   { key: "arma", label: "Arma", plural: "Armas" },
   { key: "armadura", label: "Armadura", plural: "Armaduras" },
 ];
-const KIND_COLOR = { dominio: "#C9A24A", ascendencia: "#6FA3C0", comunidad: "#C08B5C", subclase: "#7FB77A", transformacion: "#A58BE8", forma: "#E0A04A", arma: "#C9A24A", armadura: "#C9A24A" };
+const KIND_COLOR = { dominio: "#C9A24A", ascendencia: "#6FA3C0", comunidad: "#C08B5C", subclase: "#7FB77A", transformacion: "#A58BE8", salvaje: "#D94F7A", forma: "#E0A04A", arma: "#C9A24A", armadura: "#C9A24A" };
 
 // La carta, tal cual se ve al abrirla; en la cuadrícula tiene exactamente el mismo tamaño (300 × 420).
 export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
@@ -48,7 +49,7 @@ export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
   const modal = !!onClose;
   const dom = c.kind === "dominio";
   // Ascendencias y comunidades usan el mismo diseño que las de dominio, sin cinta de nivel ni coste.
-  const gen = c.kind === "ascendencia" || c.kind === "comunidad" || c.kind === "transformacion" || c.kind === "accion";
+  const gen = c.kind === "ascendencia" || c.kind === "comunidad" || c.kind === "transformacion" || c.kind === "salvaje" || c.kind === "accion";
   const sub = c.kind === "subclase"; // cinta con el rango en numeral romano: I Fundación, II Especialización, III Maestría
   const bst = c.kind === "forma"; // cinta con el rango de la forma
   const wpn = c.kind === "arma" || c.kind === "armadura"; // armas y armaduras: cinta con el rango (I Común … IV Legendario) y el mismo diseño que en la hoja

@@ -9,6 +9,7 @@ export const CHANGELOG = [
     title: "El Oráculo del DJ",
     blurb: "Un anillo de luz que responde a las preguntas de la mesa: Sí / No, con matices o con una tirada de destino, solo para el DJ y a un toque bajo el chat.",
     items: [
+      { tag: "nuevo", text: "Cartas · nueva categoría «Salvajes» con las dos primeras cartas, limitadas y muy especiales: «Puedes con esto» y «Todo es justo». Se colocan en la bóveda de forma permanente al usarlas." },
       { tag: "nuevo", text: "Imagen del personaje: al subir una foto (en la hoja, Cambiar imagen) se abre un recorte con las proporciones de la ilustración de clase; arrastra para mover, acerca con el control o la rueda y guarda el encuadre que quieras." },
       { tag: "mejora", text: "Dados · el Oficial Set es ahora el aspecto por defecto (el de Cristal sigue disponible en Personalización). El D12 amarillo de Esperanza es más oscuro y menos brillante, para que se lean bien los números y las caras." },
       { tag: "mejora", text: "Elegir cartas de dominio: se quitan las cruces rojas de las cartas de tu mano (se retiran pulsando la carta) y el ratón cambia a la mano al pasar por encima." },

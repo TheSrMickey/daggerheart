@@ -1033,6 +1033,11 @@ const buildCardCatalog = () => {
       Icon: beastIcon(b.key),
     }),
   );
+  // Cartas Salvajes: limitadas y muy especiales; se colocan en la bóveda de forma permanente al usarlas.
+  [
+    { key: "Puedes con esto", text: "Gasta cualquier cantidad de Esperanza. Un aliado a tu elección en alcance Lejano gana una cantidad de Esperanza igual a 1 + la Esperanza que has gastado. Después, coloca esta carta en tu bóveda de forma permanente.", image: "/cartas-salvajes/tienes-esto.webp" },
+    { key: "Todo es justo", text: "El grupo gana una cantidad de Esperanza igual al número de Miedo que hay en la reserva del DJ. Reparte esa Esperanza entre los PJ como quieras y, después, coloca esta carta en tu bóveda de forma permanente.", image: "/cartas-salvajes/todo-es-justo.webp" },
+  ].forEach((w) => out.push({ id: "wild-" + w.key, kind: "salvaje", key: w.key, sub: "Salvaje", text: w.text, features: [], image: w.image, color: "#D94F7A", Icon: Sparkles }));
   // Armas (principales y secundarias), ordenadas por rango.
   const wlist = [...PRIMARY_WEAPONS.map((w) => ({ w, prim: true })), ...SECONDARY_WEAPONS.map((w) => ({ w, prim: false }))];
   wlist.forEach(({ w, prim }, i) => {
