@@ -2,6 +2,7 @@
 
 import { Fragment, useState, useEffect, useLayoutEffect, useRef, useCallback, createContext, useContext } from "react";
 import { createPortal, flushSync } from "react-dom";
+import { createRoot } from "react-dom/client";
 import { GripVertical } from "lucide-react";
 import { Globe, Tent, Haze, CloudFog, CloudRain, CloudLightning, Beer } from "lucide-react";
 import SceneFx, { SCENE_FX } from "./SceneFx";
@@ -9638,6 +9639,35 @@ function DamageResult({ roll }) {
 }
 
 // Título que prueba tamaños de mayor a menor hasta caber en `lines` líneas.
+// Cartas para recortar: se dibujan con el mismo componente de la plataforma (CardFace) en un marco oculto, con el tema claro, y se devuelve el HTML de cada una.
+async function renderCutCards(entries) {
+  const fr = document.createElement("iframe");
+  fr.setAttribute("aria-hidden", "true");
+  fr.style.cssText = "position:fixed;left:-9999px;top:0;width:960px;height:1200px;border:0;visibility:hidden";
+  document.body.appendChild(fr);
+  const styles = [...document.querySelectorAll("style, link[rel=stylesheet]")].map((n) => n.outerHTML).join("");
+  const doc = fr.contentDocument;
+  doc.open();
+  doc.write('<!doctype html><html data-mh-theme="light"><head><meta charset="utf-8"><base href="' + window.location.origin + '/">' + styles + '</head><body style="margin:0;background:#fff"><div id="r" class="mh-root" style="display:block;min-height:0;height:auto;width:auto;background:#fff"></div></body></html>');
+  doc.close();
+  await new Promise((r) => setTimeout(r, 350));
+  const root = createRoot(doc.getElementById("r"));
+  root.render(
+    <div style={{ display: "flex", flexWrap: "wrap", width: 940 }}>
+      {entries.map((c) => (
+        <div key={c.id} className="cutcell">
+          <CardFace c={c} I={c.Icon || DOMAIN_ICONS[c.domain] || Sparkles} FitTitle={FitTitle} FitBox={FitBox} />
+        </div>
+      ))}
+    </div>
+  );
+  await new Promise((r) => setTimeout(r, 1000));
+  try { await doc.fonts?.ready; } catch (e) {}
+  const cells = [...doc.querySelectorAll(".cutcell")].map((e) => e.innerHTML);
+  root.unmount();
+  fr.remove();
+  return { cells, styles };
+}
 function FitTitle({ text, max = 23, min = 14, lines = 2, lineHeight = 1.15, className, style }) {
   const ref = useRef(null);
   useLayoutEffect(() => {
@@ -19574,7 +19604,7 @@ export default function App({ onSignOut }) {
     };
   };
   // Descarga la hoja como PDF (A4 vertical): abre el diálogo de impresión con la hoja ya maquetada.
-  const exportSheetPdf = (id) => {
+  const exportSheetPdf = async (id) => {
     const c = characters[id];
     if (!c) return;
     const m = modernData(id);
@@ -19601,7 +19631,17 @@ export default function App({ onSignOut }) {
     const qaOf = (field, qs) => getQAList(c, field, qs).map((r) => ({ q: r.question, a: (r.answer || "").trim() }));
     const background = [...qaOf("f_background_qa", CLASS_BACKGROUND_QUESTIONS[c.f_class]), ...(c.f_backstory ? [{ q: "Historia", a: c.f_backstory }] : [])];
     const connections = [...qaOf("f_connection_qa", null), ...(c.f_connections ? [{ q: "Conexiones", a: c.f_connections }] : [])];
+    // Cartas para recortar con el diseño real de la plataforma.
+    const cat = buildCardCatalog();
+    const cutEntries = [
+      ...[...getKeys(c.f_domain_cards), ...getKeys(c.f_domain_vault)].map((k) => cat.find((x) => x.kind === "dominio" && x.key === k)),
+      ...[...m.weapons.map((w) => w.key), ...items.map((it) => it.name).filter((n) => [...PRIMARY_WEAPONS, ...SECONDARY_WEAPONS].some((w) => w.key === n)).slice(0, 2)].map((k) => cat.find((x) => x.kind === "arma" && x.key === k)),
+      ...(armorE && !armorE.bones ? [cat.find((x) => x.kind === "armadura" && x.key === armorE.key)] : []),
+    ].filter(Boolean);
+    let cutPack = null;
+    try { cutPack = cutEntries.length ? await renderCutCards(cutEntries) : null; } catch (e) { cutPack = null; }
     printSheet({
+      cutPack, origin: window.location.origin,
       name: c.f_name || "Personaje", cls: c.f_class, subclass: c.f_subclass, multi: m.multi?.cls || "", pronouns: c.f_pronouns || "",
       ancestry: c.f_ancestry, community: c.f_community, transformation: c.f_transformation, level, rank: tier, proficiency: m.proficiency,
       color: m.color, traits: m.traits, evasion: m.evasion, armor: armorE ? { key: armorE.key, score: armorE.score, major: armorE.major, severe: armorE.severe, feature: armorE.feature } : null,
