@@ -43,6 +43,16 @@ const TEMPLATES = [
       tokens: { on: true, label: "Combo", max: 3, start: "empty", reset: "scene" },
     }),
   },
+  {
+    key: "kayn",
+    label: "Guadaña Darkin de Kayn",
+    sub: "Arma legendaria · fichas de Sed",
+    make: () => ({
+      ...blank("arma"), name: "Guadaña Darkin de Kayn", slot: "Principal", hands: 2, tier: 4, trait: "Fuerza", range: "Cuerpo a cuerpo", damage: "d10+9 físico",
+      feature: "Sed del Darkin: cuando infliges daño con esta arma, gana 1 ficha de Sed (máx. 3). Puedes gastar 1 ficha de Sed tras un impacto para recuperar 1 Punto de Vida. Las fichas se pierden al terminar la escena.\nForma Darkin: una vez por descanso largo, gasta 3 de Esperanza: hasta el final de la escena el arma alcanza Cercano, suma +1d8 al daño y cada ficha de Sed que gastes cura 2 Puntos de Vida en vez de 1. Al terminar, marca 1 Estrés.",
+      tokens: { on: true, label: "Sed", max: 3, start: "empty", reset: "scene" },
+    }),
+  },
 ];
 const blank = (type) => {
   const base = { id: "w" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), type, name: "", createdAt: Date.now() };
@@ -58,7 +68,12 @@ const blank = (type) => {
 };
 
 // Convierte un elemento del taller en una entrada con el mismo formato que el catálogo de la pestaña Cartas.
-function toEntry(it, ctx, rank = 0) {
+function toEntry(it, ctx, rank) {
+  const e = toEntry0(it, ctx, rank);
+  if (e && e.image) { e.imgZoom = Number(it.imgZoom) || 1; e.imgX = it.imgX ?? 50; e.imgY = it.imgY ?? 30; }
+  return e;
+}
+function toEntry0(it, ctx, rank = 0) {
   const nm = it.name || "Sin nombre";
   const feats = (it.features || []).filter((f) => f.name || f.text).map((f) => ({ name: f.name || "…", text: f.text, stage: f.stage }));
   switch (it.type) {
@@ -277,14 +292,27 @@ export function WorkshopPage({ FitTitle, FitBox, TokDice, domainColors, icons, c
     </div>
   );
   const ImageField = () => L("Ilustración", (
-    <div className="ws-img">
-      {draft.image ? <img src={draft.image} alt="" /> : <div className="ws-img-e"><Upload size={16} /></div>}
-      <div>
-        <button type="button" className="mh-btn-ghost" onClick={() => fileRef.current?.click()}><Upload size={14} /> {draft.image ? "Cambiar imagen" : "Subir imagen"}</button>
-        {draft.image && <button type="button" className="mh-btn-ghost" onClick={() => set({ image: "" })}><X size={14} /> Quitar</button>}
+    <div className="ws-imgf">
+      <div className="ws-img">
+        {draft.image ? <img src={draft.image} alt="" /> : <div className="ws-img-e"><Upload size={16} /></div>}
+        <div>
+          <button type="button" className="mh-btn-ghost" onClick={() => fileRef.current?.click()}><Upload size={14} /> {draft.image ? "Cambiar imagen" : "Subir imagen"}</button>
+          {draft.image && <button type="button" className="mh-btn-ghost" onClick={() => set({ image: "", imgZoom: 1, imgX: 50, imgY: 30 })}><X size={14} /> Quitar</button>}
+        </div>
       </div>
+      {draft.image && (
+        <>
+          <div className="ws-crop" aria-label="Encuadre en la carta" style={draft.type === "arma" || draft.type === "armadura" ? { aspectRatio: "300 / 420", maxWidth: 170 } : undefined}><img src={draft.image} alt="" style={{ objectPosition: (draft.imgX ?? 50) + "% " + (draft.imgY ?? 30) + "%", transform: "scale(" + (Number(draft.imgZoom) || 1) + ")", transformOrigin: (draft.imgX ?? 50) + "% " + (draft.imgY ?? 30) + "%" }} /></div>
+          <div className="ws-zoom">
+            <label><span>Zoom <b>{(Number(draft.imgZoom) || 1).toFixed(2)}×</b></span><input type="range" min="1" max="3" step="0.05" value={Number(draft.imgZoom) || 1} onChange={(e) => set({ imgZoom: Number(e.target.value) })} /></label>
+            <label><span>Horizontal</span><input type="range" min="0" max="100" value={draft.imgX ?? 50} onChange={(e) => set({ imgX: Number(e.target.value) })} /></label>
+            <label><span>Vertical</span><input type="range" min="0" max="100" value={draft.imgY ?? 30} onChange={(e) => set({ imgY: Number(e.target.value) })} /></label>
+            <button type="button" className="mh-btn-ghost" onClick={() => set({ imgZoom: 1, imgX: 50, imgY: 30 })}><RotateCcw size={13} /> Restablecer</button>
+          </div>
+        </>
+      )}
     </div>
-  ), "Opcional. Se reduce automáticamente.");
+  ), "Opcional. Se reduce automáticamente. Ajusta el zoom y el encuadre para el recuadro de la carta.");
   const TokField = () => {
     const t = draft.tokens || NO_TOK;
     const setTok = (patch) => set({ tokens: { ...NO_TOK, ...t, ...patch } });
@@ -543,6 +571,7 @@ const CSS = `
 .ws-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel); } .ws-row i { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; color: var(--c); background: color-mix(in srgb, var(--c) 16%, transparent); flex: none; } .ws-row span { flex: 1; min-width: 0; display: flex; flex-direction: column; } .ws-row strong { font-size: 13px; } .ws-row em { font-style: normal; font-weight: 700; font-size: 12px; color: var(--c); white-space: nowrap; }
 .ws-map { display: flex; align-items: center; gap: 12px; } .ws-pawn { position: relative; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: var(--c); border: 3px solid rgba(255,255,255,.85); box-shadow: 0 3px 10px #0006; flex: none; } .ws-pawn span { position: absolute; right: -6px; top: -6px; min-width: 20px; height: 20px; border-radius: 99px; background: #E3B04B; color: #1a1408; font: 800 11px Inter, sans-serif; display: grid; place-items: center; border: 2px solid var(--mh-panel); }
 @media (max-width: 1100px) { .ws-view { grid-template-columns: minmax(0, 1fr); } }
+.ws-imgf { display: flex; flex-direction: column; gap: 10px; } .ws-crop { width: 100%; max-width: 300px; aspect-ratio: 300 / 124; overflow: hidden; border-radius: 12px; border: 1px solid var(--mh-line2); background: #000; } .ws-crop img { width: 100%; height: 100%; object-fit: cover; display: block; } .ws-zoom { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; align-items: end; max-width: 520px; } .ws-zoom label { display: flex; flex-direction: column; gap: 3px; font-size: 11px; color: var(--mh-muted); } .ws-zoom label b { color: var(--mh-text); } .ws-zoom input { accent-color: #E3B04B; width: 100%; } .ws-zoom button { display: inline-flex; align-items: center; gap: 5px; justify-self: start; }
 .ws-lib-h { margin-top: 14px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; } .ws-lib-h h3 { margin: 0; } .ws-lib-h .ws-search { width: 220px; } .ws-lib-h .ws-chips { margin: 0; } .ws-search { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border: 1px solid var(--mh-line); border-radius: 10px; background: var(--mh-input); color: var(--mh-muted); } .ws-search input { all: unset; flex: 1; min-width: 0; font-size: 12.5px; color: var(--mh-ink); }
 .ws-chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0; } .ws-chips button { all: unset; cursor: pointer; font-size: 10.5px; padding: 3px 9px; border-radius: 99px; border: 1px solid var(--mh-line2); color: var(--mh-muted); } .ws-chips button.on { background: #E3B04B; border-color: #E3B04B; color: #1d1606; font-weight: 700; }
 .ws-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 6px; max-height: 176px; overflow-y: auto; scrollbar-width: thin; margin-top: 4px; } .ws-empty { color: var(--mh-muted2); font-size: 12.5px; margin: 6px 2px; line-height: 1.45; }
