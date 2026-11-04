@@ -930,6 +930,14 @@ const reachStep = (range) => {
 // Guerrero · Entrenamiento de Combate: ignora la carga (puede llevar arma a dos manos y secundaria).
 const ignoresBurden = (cls) => cls === "Guerrero";
 
+// Baraja del asistente: la carta se encoge para caber entera en la altura disponible (sin cortarse arriba ni abajo).
+function fitDeckRef(el) {
+  if (!el || el.__fitRo) return;
+  const upd = () => el.style.setProperty("--fit", String(Math.max(0.5, Math.min(1, (el.clientHeight - 44) / 420))));
+  upd();
+  el.__fitRo = new ResizeObserver(upd);
+  el.__fitRo.observe(el);
+}
 const WIZARD_STEPS = [
   { key: "class", title: "Elige tu clase", group: "Identidad" },
   { key: "subclass", title: "Elige tu subclase", group: "Identidad" },
@@ -1216,6 +1224,16 @@ const EXP_POOL = [
   "Leyendas antiguas", "Duelista", "Marinero de altura", "Cazador de recompensas", "Erudito de biblioteca", "Aprendiz de alquimista",
   "Pícaro de mercado", "Soldado veterano", "Curandero de aldea", "Cartógrafo curioso", "Cocinero de campamento", "Rastreador de bestias",
   "Mensajero incansable", "Artesano del hierro", "Hablador nato", "Buscador de reliquias", "Criado en el templo", "Domador de caballos",
+  // Una Experiencia es un trasfondo, oficio o rasgo de personalidad concreto que aplicas cuando encaja en una tirada.
+  "Ex soldado de la frontera", "Ladrón de guante blanco", "Pescador de aguas bravas", "Vigía de faro", "Cuidador de enfermos", "Criado entre bestias",
+  "Conozco a gente en todas partes", "Negociador incansable", "Fugitivo de la justicia", "Aprendiz de hechicero", "Guardia de caravanas", "Exiliado de buena cuna",
+  "Cantor de nanas y leyendas", "Minero de las profundidades", "Panadero madrugador", "Espía de taberna", "Mercenario retirado", "Peregrino de tierras lejanas",
+  "Huérfano de puerto", "Tahúr de callejón", "Médico de campaña", "Forjador de espadas", "Bibliotecario curioso", "Ladrón de tumbas",
+  "Capitán de barco mercante", "Pastor de montaña", "Maestro de esgrima", "Cronista de viajes", "Contador de historias", "Sirviente de palacio",
+  "Estratega de guerra", "Cazador furtivo", "Domador de grifos", "Sacerdote de aldea", "Tendero con labia", "Cerrajero habilidoso",
+  "Sobrevivo a cualquier frío", "Nunca olvido un rostro", "Terco como una mula", "Siempre tengo un plan B", "Me llevo bien con los niños", "Dormir al raso no me asusta",
+  "Cicatrices de mil peleas", "Hijo de un traidor", "Corredor de apuestas", "Tejedor de redes", "Escolta de nobles", "Cartero a caballo",
+  "Mago de feria", "Marinero amotinado", "Guardabosques del rey", "Jefe de una banda de callejeros", "Contrabandista de especias", "Estudiante de la academia arcana",
 ];
 const pickExamples = () => [...EXP_POOL].sort(() => Math.random() - 0.5).slice(0, 8);
 const EXP_EXAMPLES = EXP_POOL.slice(0, 8);
@@ -1255,6 +1273,34 @@ function StatMods({ base, baseLabel, mods }) {
   );
 }
 const isMagicWeapon = (w) => !!w.magic || /mágico/.test(w.damage || "");
+const isMeleeRange = (w) => (w.range || "Cuerpo a cuerpo") === "Cuerpo a cuerpo";
+// Fila de arma o armadura del asistente: al elegirla, su característica se despliega debajo para poder leerla.
+function GearRow({ selected, rec, onClick, name, right, feature }) {
+  return (
+    <div
+      onClick={onClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), onClick())}
+      style={{ border: "1px solid " + (selected ? "#E3B04B" : rec ? "#4CAF7A" : "var(--mh-line)"), background: selected ? "#E3B04B14" : rec ? "#4CAF7A18" : "var(--mh-panel2)", borderRadius: 8, padding: "9px 14px", cursor: "pointer" }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {selected && <Check size={13} color="#E3B04B" />}
+          <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--mh-ink)" }}>{name}</span>
+          {rec && <span className="mh-rec-pill">Recomendada</span>}
+        </div>
+        <span style={{ fontSize: 11.5, color: "var(--mh-muted)", textAlign: "right" }}>{right}</span>
+      </div>
+      {selected && feature && <div className="mh-wz-gfeat">{feature}</div>}
+    </div>
+  );
+}
+// Separa por tipo de ataque (cuerpo a cuerpo / a distancia) dentro de un rango, solo si hay de los dos.
+const rangeHead = (list, i) =>
+  new Set(list.map((x) => isMeleeRange(x))).size > 1 && (i === 0 || list[i - 1].tier !== list[i].tier || isMeleeRange(list[i - 1]) !== isMeleeRange(list[i])) ? (
+    <div className="mh-wz-rangehead">{isMeleeRange(list[i]) ? "Cuerpo a cuerpo" : "A distancia"}</div>
+  ) : null;
 // Cabecera de rango dentro de una lista ordenada por rango (solo si hay más de uno).
 const tierHead = (list, i) =>
   new Set(list.map((x) => x.tier)).size > 1 && (i === 0 || list[i - 1].tier !== list[i].tier) ? (
@@ -2320,6 +2366,8 @@ const REST_ACTIONS = [
 ];
 
 const GOLD_HANDFUL = "Un puñado de oro";
+const BASIC_ITEMS = ["Antorcha", "Cuerda de 15 metros", "Suministros básicos", GOLD_HANDFUL];
+const POTION_ITEMS = ["Poción menor de salud", "Poción menor de vigor"];
 const STARTER_ITEMS = [
   { name: "Antorcha", description: "Ilumina a tu alrededor durante un buen rato antes de consumirse." },
   { name: "Cuerda de 15 metros", description: "Cuerda resistente, útil para escalar, atar o improvisar." },
@@ -7411,7 +7459,7 @@ const sharedStyles = `
   /* Asistente · subclase en baraja */
   .mh-wz-body:has(> .mh-dk) { display: flex; }
   .mh-dk { flex: 1; min-height: 0; width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 18px; outline: none; }
-  .mh-dk-deck { position: relative; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .mh-dk-deck { position: relative; min-height: 0; display: flex; align-items: center; justify-content: center; overflow-x: clip; overflow-y: visible; }
   .mh-dk-card { all: unset; box-sizing: border-box; position: absolute; left: 50%; top: 50%; width: 290px; height: min(440px, calc(100% - 36px)); margin: calc(min(440px, 100% - 36px) / -2) 0 0 -145px; border-radius: 26px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; background: color-mix(in srgb, var(--mh-panel) 92%, #000); border: 1.5px solid color-mix(in srgb, var(--tc) 40%, var(--mh-line2)); box-shadow: 0 22px 36px -20px #000d; transform: translate(calc(var(--d) * 150px - 20px), calc(var(--a) * 14px)) rotate(calc(var(--d) * 5deg)) scale(calc(1 - var(--a) * .05)); transition: transform .35s cubic-bezier(.2,.8,.2,1), filter .3s, box-shadow .3s; filter: brightness(calc(1 - var(--a) * .38)) saturate(calc(1 - var(--a) * .2)); }
   .mh-dk-card.is-front { cursor: default; border-color: var(--tc); transform: translate(-20px, -8px) rotate(-1.5deg); box-shadow: 0 0 0 1px var(--tc), 0 0 40px color-mix(in srgb, var(--tc) 36%, transparent), 0 24px 40px -20px #000e; }
   .mh-dk-card:not(.is-front):hover { filter: brightness(.85); }
@@ -7493,6 +7541,30 @@ const sharedStyles = `
   .mh-wz-po.is-none::after { display: none; } .mh-wz-po.is-none b { padding: 0; color: var(--mh-ink2); text-shadow: none; } .mh-wz-po.is-none small { font-size: 10px; }
   .mh-wz-det .mh-wz-note { border-radius: 14px; }
   /* Asistente · estadísticas y experiencias */
+  .mh-wz-info { display: inline-flex; vertical-align: middle; margin-left: 6px; color: var(--mh-muted); cursor: help; outline: none; } .mh-wz-info:hover, .mh-wz-info:focus-visible { color: var(--mh-ink); }
+  .mh-wz-info .mh-tip { width: 280px; white-space: normal; text-transform: none; letter-spacing: 0; font-weight: 500; line-height: 1.45; left: auto; right: -8px; bottom: auto; top: calc(100% + 8px); transform: none; padding: 8px 12px; }
+  .mh-wz-info:focus-visible .mh-tip { display: block; }
+  .mh-wz-gfilters { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-bottom: 10px; }
+  .mh-wz-gfilters .mh-wz-gfilter { margin: 0; flex-wrap: wrap; }
+  .mh-wz-gfeat { margin-top: 7px; padding-top: 7px; border-top: 1px dashed var(--mh-line2); font-size: 12px; line-height: 1.5; color: var(--mh-ink2); animation: mh-gfeat .22s ease-out both; }
+  @keyframes mh-gfeat { from { opacity: 0; transform: translateY(-4px); } }
+  .mh-wz-rangehead { font-size: 9.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--mh-muted2); margin: 6px 4px 0; }
+  .mh-wz-inv { display: flex; flex-direction: column; min-height: 0; }
+  .mh-wz-inv-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 9px; }
+  .mh-wz-inv-box { border: 1px solid var(--mh-line); border-radius: 14px; padding: 9px 12px; background: var(--mh-panel2); min-width: 0; }
+  .mh-wz-inv-box.is-wide { grid-column: 1 / -1; }
+  .mh-wz-inv-box h4 { margin: 0 0 7px; display: flex; align-items: center; gap: 6px; font: 700 12px Inter, system-ui, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: var(--mh-ink2); }
+  .mh-wz-inv-box h4 em { margin-left: auto; font-style: normal; font-size: 9.5px; letter-spacing: .08em; color: var(--mh-muted2); }
+  .mh-wz-inv-fixed { display: flex; flex-wrap: wrap; gap: 6px; }
+  .mh-wz-inv-fixed > div { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--mh-ink); padding: 4px 10px; border-radius: 99px; background: color-mix(in srgb, #4CAF7A 12%, transparent); border: 1px solid color-mix(in srgb, #4CAF7A 35%, transparent); } .mh-wz-inv-fixed small { margin-left: auto; font-size: 9.5px; color: var(--mh-muted); }
+  .mh-wz-inv-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; } .mh-wz-inv-opts.is-3 { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+  .mh-wz-inv-opt { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 9px; padding: 7px 11px; border-radius: 10px; border: 1px solid var(--mh-line); background: var(--mh-panel); color: var(--mh-ink); font-size: 13px; line-height: 1.3; }
+  .mh-wz-inv-opt:hover { border-color: var(--mh-line2); } .mh-wz-inv-opt:focus-visible { outline: 2px solid #E3B04B; }
+  .mh-wz-inv-opt.is-on { border-color: #E3B04B; background: #E3B04B14; }
+  .mh-wz-inv-opt b { display: block; font-weight: 600; } .mh-wz-inv-opt small { display: block; font-size: 11px; color: var(--mh-muted); margin-top: 1px; }
+  .mh-wz-inv-dot { flex: none; width: 17px; height: 17px; border-radius: 50%; border: 1.5px solid var(--mh-line2); display: grid; place-items: center; color: #10101e; } .mh-wz-inv-opt.is-on .mh-wz-inv-dot { background: #E3B04B; border-color: #E3B04B; }
+  .mh-wz-inv-in { margin-top: 8px; width: 100%; box-sizing: border-box; }
+  @media (max-width: 820px) { .mh-wz-inv-grid { grid-template-columns: minmax(0, 1fr); } }
   .mh-wz-sech { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--mh-muted2); margin: 2px 4px 12px; }
   .mh-wz-body .mh-wz-pane.mh-wz-stats { max-width: none; width: 100%; align-items: stretch; margin: 0; justify-content: flex-start; }
   .mh-wz-gauges { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
@@ -7664,7 +7736,7 @@ const sharedStyles = `
   .mh-wz-sum { padding: 7px 4px; margin: -7px -4px; } .mh-wz-sum em { animation: mh-wz-chip .45s cubic-bezier(.2,.9,.3,1.2) both; } @keyframes mh-wz-chip { from { opacity: 0; transform: translateY(5px) scale(.9); } }
   .mh-wz-page .mh-wz-grp { transition: background .3s ease, box-shadow .3s ease; } .mh-wz-page .mh-wz-grp button { transition: flex .35s ease, background .3s ease, box-shadow .3s ease; }
   /* Mazo de subclases con las cartas reales de la pestaña Cartas */
-  .mh-dk-card.is-cf { width: 300px; height: 420px; margin: -210px 0 0 -150px; border: 0; background: none; border-radius: 22px; overflow: visible; box-shadow: none; } .mh-dk-card.is-cf.is-front { box-shadow: none; filter: drop-shadow(0 0 22px color-mix(in srgb, var(--tc) 45%, transparent)) drop-shadow(0 18px 24px rgba(0,0,0,.65)); } .mh-dk-card.is-cf .mh-tick, .mh-dk-card.is-cf .mh-dk-tick { z-index: 5; }
+  .mh-dk-card.is-cf { scale: var(--fit, 1); width: 300px; height: 420px; margin: -210px 0 0 -150px; border: 0; background: none; border-radius: 22px; overflow: visible; box-shadow: none; } .mh-dk-card.is-cf.is-front { box-shadow: none; filter: drop-shadow(0 0 22px color-mix(in srgb, var(--tc) 45%, transparent)) drop-shadow(0 18px 24px rgba(0,0,0,.65)); } .mh-dk-card.is-cf .mh-tick, .mh-dk-card.is-cf .mh-dk-tick { z-index: 5; }
   .mh-root.is-mobile .mh-dk-card.is-cf { width: min(300px, 80vw); height: 420px; margin: -210px 0 0 calc(min(300px, 80vw) / -2); }
   @media (prefers-reduced-motion: reduce) { .mh-wz-body.is-in-fwd, .mh-wz-body.is-in-back, .mh-wz-tt, .mh-wz-sum em { animation: none; } }
   .mh-wz-page .mh-wz-body.is-split { border: 0; background: none; border-radius: 0; }
@@ -12919,11 +12991,16 @@ export default function App({ onSignOut }) {
   const [draggedModifier, setDraggedModifier] = useState(null);
   const [gearTab, setGearTab] = useState("primary");
   const [gearFilter, setGearFilter] = useState("todas");
+  const [gearTier, setGearTier] = useState(0); // 0 = todos los rangos
+  const [gearRange, setGearRange] = useState("todas"); // todas · cuerpo · dist
   const [draftPrimaryWeapon, setDraftPrimaryWeapon] = useState("");
   const [draftSecondaryWeapon, setDraftSecondaryWeapon] = useState("");
   const [draftArmor, setDraftArmor] = useState("");
   const [draftItems, setDraftItems] = useState([]);
   const [customItem, setCustomItem] = useState("");
+  const [draftPotion, setDraftPotion] = useState(""); // poción inicial: de salud o de vigor (obligatoria)
+  const [draftClassItem, setDraftClassItem] = useState(""); // objeto de clase elegido, o "__custom"
+  const [classCustom, setClassCustom] = useState(""); // objeto de clase personalizado
   const [draftExp1, setDraftExp1] = useState("");
   const [draftExp2, setDraftExp2] = useState("");
   const [draftDomainCards, setDraftDomainCards] = useState([]);
@@ -13280,6 +13357,9 @@ export default function App({ onSignOut }) {
     setDraftArmor("");
     setDraftItems([]);
     setCustomItem("");
+    setDraftPotion("");
+    setDraftClassItem("");
+    setClassCustom("");
     setDraftDomainCards([]);
     setOriginTab("ancestry");
     setDraftExp1("");
@@ -13430,8 +13510,8 @@ export default function App({ onSignOut }) {
     const src = kind === "primary" ? PRIMARY_WEAPONS : SECONDARY_WEAPONS;
     const recSet = recommendedGear(cls)[kind === "primary" ? "primary" : "secondary"]; // las recomendadas van primero dentro de cada rango
     return src
-      .filter((w) => w.tier <= tierForLevel(levelChoice) && (kind !== "primary" || !w.magic || canCast) && (mode === "todas" || (mode === "magico") === isMagicWeapon(w)))
-      .sort((x, y) => x.tier - y.tier || (recSet.has(y.key) ? 1 : 0) - (recSet.has(x.key) ? 1 : 0));
+      .filter((w) => w.tier <= tierForLevel(levelChoice) && (!gearTier || w.tier === gearTier) && (gearRange === "todas" || (gearRange === "cuerpo") === isMeleeRange(w)) && (kind !== "primary" || !w.magic || canCast) && (mode === "todas" || (mode === "magico") === isMagicWeapon(w)))
+      .sort((x, y) => x.tier - y.tier || (isMeleeRange(y) ? 1 : 0) - (isMeleeRange(x) ? 1 : 0) || (recSet.has(y.key) ? 1 : 0) - (recSet.has(x.key) ? 1 : 0));
   };
 
   const clearTraits = () => {
@@ -13530,10 +13610,13 @@ export default function App({ onSignOut }) {
       armor_marked: String(draftArmor === "Ninguna" ? 0 : ARMORS.find((a) => a.key === draftArmor)?.score || 0),
       f_items: JSON.stringify([
         ...(draftCommunity === "Errante" ? [{ name: PACK_NAME, description: PACK_DESC, count: 1 }] : []),
-        ...draftItems.filter((name) => name !== GOLD_HANDFUL).map((name) => ({ name, description: STARTER_ITEMS.find((si) => si.name === name)?.description || "", count: 1 })),
+        // Inventario inicial de las reglas: antorcha, cuerda, suministros, una poción y un objeto de clase.
+        ...[...BASIC_ITEMS.filter((n) => n !== GOLD_HANDFUL), draftPotion, draftClassItem === "__custom" ? classCustom.trim() : draftClassItem, ...draftItems.filter((n) => !BASIC_ITEMS.includes(n))]
+          .filter(Boolean)
+          .map((name) => ({ name, description: STARTER_ITEMS.find((si) => si.name === name)?.description || "", count: 1 })),
       ]),
       // «Un puñado de oro» no ocupa hueco: suma 1 puñado (10 de oro) a la bolsa.
-      f_gold_tens: draftItems.includes(GOLD_HANDFUL) ? "1" : "0",
+      f_gold_tens: "1",
       f_pack_added: draftCommunity === "Errante" ? "1" : "",
       // Tu equipo admite 5 cartas; el resto va a la bóveda.
       f_domain_cards: JSON.stringify(draftDomainCards.slice(0, 5)),
@@ -34970,7 +35053,7 @@ export default function App({ onSignOut }) {
                         else if (e.key === "ArrowLeft") (e.preventDefault(), goTo(stepIndex - 1));
                       }}
                     >
-                      <div className="mh-dk-deck" role="radiogroup" aria-label={"Subclases de " + cls} {...swipeProps(goTo, stepIndex)}>
+                      <div className="mh-dk-deck" ref={fitDeckRef} role="radiogroup" aria-label={"Subclases de " + cls} {...swipeProps(goTo, stepIndex)}>
                         {stepIndex > 0 && <button type="button" className="mh-dk-nav is-l" aria-label="Subclase anterior" onClick={() => goTo(stepIndex - 1)}><ChevronLeft size={20} /></button>}
                         {stepIndex < len - 1 && <button type="button" className="mh-dk-nav is-r" aria-label="Subclase siguiente" onClick={() => goTo(stepIndex + 1)}><ChevronRight size={20} /></button>}
                         {stepItems.map((it, i) => {
@@ -35284,6 +35367,7 @@ export default function App({ onSignOut }) {
                     };
                     const cur = list[idx] || list[0];
                     const curArt = TRANSFORMATION_ART[cur.key];
+                    const tfCat = buildCardCatalog().filter((x) => x.kind === "transformacion");
                     return (
                       <div
                         className="mh-dk"
@@ -35294,33 +35378,39 @@ export default function App({ onSignOut }) {
                           else if (e.key === "ArrowLeft") (e.preventDefault(), goTo(idx - 1));
                         }}
                       >
-                        <div className="mh-dk-deck" role="radiogroup" aria-label="Transformaciones" {...swipeProps(goTo, idx)}>
+                        <div className="mh-dk-deck" ref={fitDeckRef} role="radiogroup" aria-label="Transformaciones" {...swipeProps(goTo, idx)}>
                           {idx > 0 && <button type="button" className="mh-dk-nav is-l" aria-label="Transformación anterior" onClick={() => goTo(idx - 1)}><ChevronLeft size={20} /></button>}
                           {idx < len - 1 && <button type="button" className="mh-dk-nav is-r" aria-label="Transformación siguiente" onClick={() => goTo(idx + 1)}><ChevronRight size={20} /></button>}
                           {list.map((it, i) => {
                             const d = i - idx;
                             const ad = Math.abs(d);
                             const ta = TRANSFORMATION_ART[it.key];
+                            // La carta es la misma que se ve en la pestaña «Cartas».
+                            const ent = tfCat.find((x) => x.key === it.key);
                             return (
                               <button
                                 key={it.key}
                                 type="button"
                                 role="radio"
                                 aria-checked={d === 0}
-                                className={"mh-dk-card" + (d === 0 ? " is-front" : "")}
+                                className={"mh-dk-card" + (d === 0 ? " is-front" : "") + (ent ? " is-cf" : "")}
                                 style={{ "--d": d, "--a": ad, "--tc": ta?.color || "#A58BE8", zIndex: 10 - ad }}
                                 onClick={() => goTo(i)}
                               >
-                                <span className="mh-dk-im" aria-hidden="true" style={ta ? { backgroundImage: "url(" + ta.src + ")" } : undefined}>
-                                  {!ta && <CircleDashed size={64} strokeWidth={1.3} />}
-                                </span>
+                                {ent && <CardFace c={ent} I={ent.Icon || Sparkles} FitTitle={FitTitle} FitBox={FitBox} />}
+                                {!ent && (
+                                  <span className="mh-dk-im" aria-hidden="true">
+                                    <CircleDashed size={64} strokeWidth={1.3} />
+                                  </span>
+                                )}
                                 {d === 0 && <span className="mh-dk-tick" aria-hidden="true"><Check size={16} strokeWidth={3} /></span>}
-                                {it.expansion && <span className="mh-dk-hf">H&amp;F</span>}
-                                <span className="mh-dk-tx">
-                                  <span className="mh-serif mh-dk-n">{it.key}</span>
-                                  <span className="mh-dk-k">{it.expansion ? "Expansión " + it.expansion : "Opcional"}</span>
-                                  <span className="mh-dk-b">{it.blurb}</span>
-                                </span>
+                                {!ent && (
+                                  <span className="mh-dk-tx">
+                                    <span className="mh-serif mh-dk-n">{it.key}</span>
+                                    <span className="mh-dk-k">Opcional</span>
+                                    <span className="mh-dk-b">{it.blurb}</span>
+                                  </span>
+                                )}
                               </button>
                             );
                           })}
@@ -35329,20 +35419,20 @@ export default function App({ onSignOut }) {
                           </div>
                         </div>
                         <div className="mh-dk-side">
-                          <div className="mh-dk-note"><Sparkles size={14} /><span>Las transformaciones son de la expansión <b>Hope &amp; Fear</b>. Es opcional: puedes seguir sin ninguna.</span></div>
-                          <div className="mh-dk-sh">{cur.key}{cur.expansion ? " · Características" : ""}</div>
-                          {(cur.features || []).length > 0 ? (
-                            cur.features.map((f) => (
-                              <div key={f.name} className="mh-dk-fe">
-                                <b>{f.name}</b>
-                                <p>{f.text}</p>
+                          <div className="mh-serif mh-dk-tt">{cur.key}</div>
+                          <p className="mh-wz-blurb">{cur.key === "Ninguna" ? "Tu personaje empieza sin ninguna transformación. Podrás adquirir una más adelante si la historia lo pide." : cur.blurb}</p>
+                          {(cur.features || []).length > 0 && (
+                            <>
+                              <div className="mh-wz-fh">Características</div>
+                              <div className="mh-wz-feats">
+                                {cur.features.map((f) => (
+                                  <div key={f.name}>
+                                    <b>{f.name}</b>
+                                    <span>{f.text}</span>
+                                  </div>
+                                ))}
                               </div>
-                            ))
-                          ) : (
-                            <div className="mh-dk-fe">
-                              <b>{cur.expansion ? "Sin características detalladas" : "Sin transformación"}</b>
-                              <p>{cur.expansion ? cur.blurb : "Tu personaje empieza sin ninguna transformación. Podrás adquirir una más adelante si la historia lo pide."}</p>
-                            </div>
+                            </>
                           )}
                           <div className="mh-dk-hint">Desliza o usa las flechas (← →) para cambiar.</div>
                         </div>
@@ -35630,7 +35720,13 @@ export default function App({ onSignOut }) {
                 </div>
               ) : wizardStep === "experiences" ? (
                 <div className="mh-wz-pane mh-wz-xps">
-                  <div className="mh-wz-sech">Dos cosas que se te dan bien gracias a tu pasado · cada una empieza con +2</div>
+                  <div className="mh-wz-sech">
+                    Dos cosas que se te dan bien gracias a tu pasado · cada una empieza con +2
+                    <span className="mh-tip-anchor mh-wz-info" tabIndex={0} aria-label="Piensa en una frase corta y concreta. Las sugerencias son solo ejemplos: pulsa una para rellenar el campo y edítala si quieres.">
+                      <Info size={14} />
+                      <span className="mh-tip" role="tooltip">Piensa en una frase corta y concreta. Las sugerencias son solo ejemplos: pulsa una para rellenar el campo y edítala si quieres.</span>
+                    </span>
+                  </div>
                   <div className="mh-wz-exprow">
                   <div style={{ display: "flex", flexDirection: "column", gap: 14, flex: 1, minWidth: 0 }}>
                     {[1, 2].map((n) => {
@@ -35712,7 +35808,6 @@ export default function App({ onSignOut }) {
                     </div>
                   )}
                   </div>
-                  <div className="mh-wz-callout"><Lightbulb size={16} /><span>Piensa en una frase corta y concreta. Las sugerencias son solo ejemplos: pulsa una para rellenar el campo y edítala si quieres.</span></div>
                 </div>
               ) : ["primary", "secondary", "armor"].includes(wizardStep) ? (
                 <div>
@@ -35733,13 +35828,33 @@ export default function App({ onSignOut }) {
                     const canCast = !!spellcastTraitFor(cls, (SUBCLASSES[cls] || [])[subclassIndex]?.key);
                     const mode = !canCast && gearFilter === "magico" ? "todas" : gearFilter;
                     const opts = [["todas", "Todas"], ["fisico", "Físicas"], ...(canCast ? [["magico", "Mágicas"]] : [])];
+                    const maxT = tierForLevel(levelChoice);
+                    const tiers = maxT > 1 ? [[0, "Todos los rangos"], ...Array.from({ length: maxT }, (_, i) => [i + 1, "Rango " + (i + 1)])] : [];
                     return (
-                      <div className="mh-wz-gfilter" role="radiogroup" aria-label="Filtrar armas por tipo de daño">
-                        {opts.map(([k, label]) => (
-                          <button key={k} type="button" role="radio" aria-checked={mode === k} className={"mh-chip" + (mode === k ? " active" : "")} onClick={() => setGearFilter(k)}>
-                            {label}
-                          </button>
-                        ))}
+                      <div className="mh-wz-gfilters">
+                        <div className="mh-wz-gfilter" role="radiogroup" aria-label="Filtrar armas por tipo de daño">
+                          {opts.map(([k, label]) => (
+                            <button key={k} type="button" role="radio" aria-checked={mode === k} className={"mh-chip" + (mode === k ? " active" : "")} onClick={() => setGearFilter(k)}>
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="mh-wz-gfilter" role="radiogroup" aria-label="Filtrar armas por tipo de ataque">
+                          {[["todas", "Todos los ataques"], ["cuerpo", "Cuerpo a cuerpo"], ["dist", "A distancia"]].map(([k, label]) => (
+                            <button key={k} type="button" role="radio" aria-checked={gearRange === k} className={"mh-chip" + (gearRange === k ? " active" : "")} onClick={() => setGearRange(k)}>
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                        {tiers.length > 0 && (
+                          <div className="mh-wz-gfilter" role="radiogroup" aria-label="Filtrar armas por rango">
+                            {tiers.map(([k, label]) => (
+                              <button key={k} type="button" role="radio" aria-checked={gearTier === k} className={"mh-chip" + (gearTier === k ? " active" : "")} onClick={() => setGearTier(k)}>
+                                {label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     );
                   })()}
@@ -35751,28 +35866,8 @@ export default function App({ onSignOut }) {
                         return (
                           <Fragment key={w.key}>
                           {tierHead(gearList, gi)}
-                          <div
-                            onClick={() => setDraftPrimaryWeapon(w.key)}
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                              border: "1px solid " + (selected ? "#E3B04B" : rec ? "#4CAF7A" : "var(--mh-line)"),
-                              background: selected ? "#E3B04B14" : rec ? "#4CAF7A18" : "var(--mh-panel2)",
-                              borderRadius: 8,
-                              padding: "9px 14px",
-                              cursor: "pointer",
-                            }}
-                          >
-                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                              {selected && <Check size={13} color="#E3B04B" />}
-                              <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--mh-ink)" }}>{w.key}</span>
-                              {rec && <span className="mh-rec-pill">Recomendada</span>}
-                            </div>
-                            <span style={{ fontSize: 11.5, color: "var(--mh-muted)" }}>
-                              {w.trait} · {w.range} · {w.damage}
-                            </span>
-                          </div>
+                          {rangeHead(gearList, gi)}
+                          <GearRow selected={selected} rec={rec} onClick={() => setDraftPrimaryWeapon(w.key)} name={w.key} right={<>{w.trait} · {w.range} · {w.damage}</>} feature={w.feature} />
                           </Fragment>
                         );
                       })}
@@ -35828,28 +35923,8 @@ export default function App({ onSignOut }) {
                         return (
                           <Fragment key={w.key}>
                           {tierHead(gearList, gi)}
-                          <div
-                            onClick={() => setDraftSecondaryWeapon(w.key)}
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                              border: "1px solid " + (selected ? "#E3B04B" : rec ? "#4CAF7A" : "var(--mh-line)"),
-                              background: selected ? "#E3B04B14" : rec ? "#4CAF7A18" : "var(--mh-panel2)",
-                              borderRadius: 8,
-                              padding: "9px 14px",
-                              cursor: "pointer",
-                            }}
-                          >
-                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                              {selected && <Check size={13} color="#E3B04B" />}
-                              <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--mh-ink)" }}>{w.key}</span>
-                              {rec && <span className="mh-rec-pill">Recomendada</span>}
-                            </div>
-                            <span style={{ fontSize: 11.5, color: "var(--mh-muted)" }}>
-                              {w.trait !== "—" ? w.trait + " · " + w.range + " · " + w.damage : w.damage}
-                            </span>
-                          </div>
+                          {rangeHead(gearList, gi)}
+                          <GearRow selected={selected} rec={rec} onClick={() => setDraftSecondaryWeapon(w.key)} name={w.key} right={<>{w.trait !== "—" ? w.trait + " · " + w.range + " · " + w.damage : w.damage}</>} feature={w.feature} />
                           </Fragment>
                         );
                       })}
@@ -35865,26 +35940,8 @@ export default function App({ onSignOut }) {
                         return (
                           <Fragment key={a.key}>
                           {tierHead(gearList, gi)}
-                          <div
-                            onClick={() => setDraftArmor(a.key)}
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                              border: "1px solid " + (selected ? "#E3B04B" : rec ? "#4CAF7A" : "var(--mh-line)"),
-                              background: selected ? "#E3B04B14" : rec ? "#4CAF7A18" : "var(--mh-panel2)",
-                              borderRadius: 8,
-                              padding: "9px 14px",
-                              cursor: "pointer",
-                            }}
-                          >
-                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                              {selected && <Check size={13} color="#E3B04B" />}
-                              <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--mh-ink)" }}>{a.key}</span>
-                              {rec && <span className="mh-rec-pill">Recomendada</span>}
-                            </div>
-                            <span style={{ fontSize: 11.5, color: "var(--mh-muted)" }}>Puntuación {a.score}</span>
-                          </div>
+                          {null}
+                          <GearRow selected={selected} rec={rec} onClick={() => setDraftArmor(a.key)} name={a.key} right={<>Puntuación {a.score}</>} feature={a.feature} />
                           </Fragment>
                         );
                       })}
@@ -35892,103 +35949,49 @@ export default function App({ onSignOut }) {
                   )}
                 </div>
               ) : wizardStep === "items" ? (
-                <div style={{ marginBottom: 20 }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                      marginBottom: 16,
-                      border: "1px solid #E3B04B",
-                      background: "#E3B04B14",
-                      borderRadius: 8,
-                      padding: "10px 12px",
-                    }}
-                  >
-                    <Backpack size={16} color="#E3B04B" />
-                    <div style={{ fontSize: 12.5, color: "var(--mh-ink)" }}>Elige los objetos con los que empieza tu aventura.</div>
-                  </div>
-
-                  {(CLASS_ITEMS[CLASSES[carouselIndex]?.key] || []).length > 0 && (() => {
-                    const classItems = CLASS_ITEMS[CLASSES[carouselIndex].key];
+                <div className="mh-wz-inv">
+                  {(() => {
+                    const cls = CLASSES[carouselIndex]?.key;
+                    const classItems = CLASS_ITEMS[cls] || [];
+                    const descOf = (n) => STARTER_ITEMS.find((x) => x.name === n)?.description || "";
+                    const Opt = ({ on, onClick, title, sub }) => (
+                      <button type="button" role="radio" aria-checked={on} className={"mh-wz-inv-opt" + (on ? " is-on" : "")} onClick={onClick}>
+                        <span className="mh-wz-inv-dot">{on && <Check size={11} strokeWidth={3} />}</span>
+                        <span><b>{title}</b>{sub && <small>{sub}</small>}</span>
+                      </button>
+                    );
                     return (
                       <>
-                        <label className="mh-label">Objeto de clase (elige uno)</label>
-                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
-                          {classItems.map((name) => {
-                            const selected = draftItems.includes(name);
-                            return (
-                              <div
-                                key={name}
-                                onClick={() =>
-                                  setDraftItems((prev) => {
-                                    const others = prev.filter((i) => !classItems.includes(i));
-                                    return selected ? others : [...others, name];
-                                  })
-                                }
-                                className={"mh-chip" + (selected ? " active" : "")}
-                                style={{ display: "inline-flex", alignItems: "center", gap: 5 }}
-                              >
-                                {selected && <Check size={12} />}
-                                {name}
-                              </div>
-                            );
-                          })}
+                        <div className="mh-wz-sech">Inventario inicial · 5 huecos</div>
+                        <div className="mh-wz-inv-grid">
+                          <section className="mh-wz-inv-box">
+                            <h4><Lock size={13} /> Equipo básico <em>siempre</em></h4>
+                            <div className="mh-wz-inv-fixed">
+                              {BASIC_ITEMS.map((n) => (
+                                <div key={n} title={descOf(n)}><Check size={12} /><span>{n}</span>{n === GOLD_HANDFUL && <small>sin hueco</small>}</div>
+                              ))}
+                            </div>
+                          </section>
+                          <section className="mh-wz-inv-box">
+                            <h4><FlaskConical size={13} /> Una poción <em>obligatoria</em></h4>
+                            <div role="radiogroup" aria-label="Poción inicial" className="mh-wz-inv-opts">
+                              {POTION_ITEMS.map((n) => <Opt key={n} on={draftPotion === n} onClick={() => setDraftPotion(n)} title={n} sub={descOf(n)} />)}
+                            </div>
+                          </section>
+                          <section className="mh-wz-inv-box is-wide">
+                            <h4><Backpack size={13} /> Objeto de {cls} <em>elige uno · obligatorio</em></h4>
+                            <div role="radiogroup" aria-label="Objeto de clase" className="mh-wz-inv-opts is-3">
+                              {classItems.map((n) => <Opt key={n} on={draftClassItem === n} onClick={() => setDraftClassItem(n)} title={n} />)}
+                              <Opt on={draftClassItem === "__custom"} onClick={() => setDraftClassItem("__custom")} title="Objeto personalizado" sub="Crea el tuyo propio" />
+                            </div>
+                            {draftClassItem === "__custom" && (
+                              <input className="mh-input mh-wz-inv-in" autoFocus maxLength={60} placeholder="Escribe el objeto: algo pequeño, con historia y propio de tu personaje…" value={classCustom} onChange={(e) => setClassCustom(e.target.value)} />
+                            )}
+                          </section>
                         </div>
-                        <label className="mh-label">Equipo inicial</label>
                       </>
                     );
                   })()}
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
-                    {STARTER_ITEMS.map((item) => {
-                      const selected = draftItems.includes(item.name);
-                      return (
-                        <div
-                          key={item.name}
-                          onClick={() => toggleItem(item.name)}
-                          className={"mh-chip" + (selected ? " active" : "")}
-                          style={{ display: "inline-flex", alignItems: "center", gap: 5 }}
-                          title={item.description}
-                        >
-                          {selected && <Check size={12} />}
-                          {item.name}
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <label className="mh-label">Añadir otro objeto</label>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <input
-                      className="mh-input"
-                      placeholder="Escribe un objeto y pulsa Añadir..."
-                      value={customItem}
-                      onChange={(e) => setCustomItem(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && addCustomItem()}
-                    />
-                    <button className="mh-btn-ghost" onClick={addCustomItem}>
-                      Añadir
-                    </button>
-                  </div>
-
-                  {draftItems.filter((i) => !STARTER_ITEMS.some((si) => si.name === i) && !(CLASS_ITEMS[CLASSES[carouselIndex]?.key] || []).includes(i)).length > 0 && (
-                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
-                      {draftItems
-                        .filter((i) => !STARTER_ITEMS.some((si) => si.name === i) && !(CLASS_ITEMS[CLASSES[carouselIndex]?.key] || []).includes(i))
-                        .map((item) => (
-                          <div
-                            key={item}
-                            className="mh-chip active"
-                            style={{ display: "inline-flex", alignItems: "center", gap: 5 }}
-                            onClick={() => toggleItem(item)}
-                          >
-                            <Check size={12} />
-                            {item}
-                            <X size={12} />
-                          </div>
-                        ))}
-                    </div>
-                  )}
                 </div>
               ) : (
                 <div className="mh-wz-domain">
@@ -36038,7 +36041,6 @@ export default function App({ onSignOut }) {
                     <div className="mh-wz-pv-sp" />
                     {(pname || pidx >= 3) && <div className={"mh-serif mh-wz-pv-nm" + (pname ? "" : " is-ph")}>{pname || "Sin nombre"}</div>}
                     <div className="mh-wz-pv-cl">{pcls}{psub ? " · " + psub : ""}</div>
-                    <div className="mh-wz-pv-tags">{ptags.filter(([t]) => t).map(([t, g], k) => <span key={k} className={g ? "is-g" : ""}>{t}</span>)}</div>
                     {pidx >= 7 && (
                       <div className="mh-wz-pv-trs">
                         {TRAITS.map((t) => {
@@ -36095,6 +36097,7 @@ export default function App({ onSignOut }) {
                       : draftFeat("Autómata", 0) && (!draftCreator.trim() ? "Escribe quién te creó." : !draftPurpose.trim() ? "Escribe con qué propósito te creó." : false),
                   community: !draftCommunity ? "Elige una comunidad para continuar." : draftCommunity === "Del Orden" && draftPrinciples.some((x) => !x.text.trim()) ? "Escribe tus tres principios." : false,
                   experiences: !draftExp1.trim() || !draftExp2.trim() ? "Escribe tus dos Experiencias." : (SUBCLASSES[CLASSES[carouselIndex]?.key] || [])[subclassIndex]?.key === "Vínculo Bestial" && (!draftCompanion.name.trim() || !draftCompanion.exp1.trim() || !draftCompanion.exp2.trim() || !draftCompanion.attack.trim()) ? "Completa a tu compañero: nombre, dos Experiencias y su ataque." : draftAncestries.includes("Autómata") && draftPurposeExp == null ? "Elige la Experiencia que encaja con tu propósito." : false,
+                  items: !draftPotion ? "Elige una poción para continuar." : !draftClassItem ? "Elige tu objeto de clase para continuar." : draftClassItem === "__custom" && !classCustom.trim() ? "Escribe tu objeto personalizado." : false,
                   primary: !draftPrimaryWeapon && "Elige un arma principal para continuar.",
                   secondary: !draftSecondaryWeapon && "Elige un arma secundaria o «Ninguna».",
                   armor: !draftArmor && "Elige una armadura para continuar.",
