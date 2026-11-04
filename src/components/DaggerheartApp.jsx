@@ -7347,7 +7347,7 @@ const sharedStyles = `
   .mh-wz-pv .mh-wz-pv-art { position: absolute; inset: 0 0 auto 0; height: 58%; z-index: 0; background-size: cover; -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent 100%); mask-image: linear-gradient(180deg, #000 55%, transparent 100%); }
   .mh-wz-pv-top { display: flex; align-items: center; justify-content: space-between; width: 100%; }
   .mh-wz-pv-lv { padding: 4px 11px; border-radius: 20px; font-size: 11.5px; font-weight: 700; color: var(--mh-ink); background: color-mix(in srgb, var(--mh-bg) 80%, transparent); border: 1px solid color-mix(in srgb, var(--k) 50%, transparent); }
-  .mh-wz-pv-live { display: flex; align-items: center; gap: 6px; font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: #E3B04B; } .mh-wz-pv-live i { width: 7px; height: 7px; border-radius: 50%; background: #E3B04B; box-shadow: 0 0 8px #E3B04B; }
+  .mh-wz-pv-live { display: flex; align-items: center; gap: 6px; font-size: 9.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--mh-ink); padding: 5px 11px; border-radius: 20px; background: color-mix(in srgb, var(--mh-bg) 82%, transparent); border: 1px solid color-mix(in srgb, #E3B04B 55%, transparent); } .mh-wz-pv-live i { width: 7px; height: 7px; border-radius: 50%; background: #E3B04B; box-shadow: 0 0 8px #E3B04B; }
   .mh-wz-pv-badge { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--k); background: color-mix(in srgb, var(--mh-bg) 80%, transparent); border: 1.5px solid var(--k); }
   .mh-wz-pv-sp { flex: 1; min-height: 80px; }
   .mh-wz-pv-nm { font-size: 21px; font-weight: 600; letter-spacing: .03em; text-transform: uppercase; text-align: center; color: var(--mh-ink); text-shadow: 0 2px 14px #000a; overflow-wrap: anywhere; } .mh-wz-pv-nm.is-ph { opacity: .35; }
@@ -7434,7 +7434,7 @@ const sharedStyles = `
   .mh-dk-sh { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--mh-muted2); margin: 4px 4px 2px; }
   .mh-dk-side .mh-wz-feats { grid-template-columns: 1fr; }
   .mh-wz-subs-l { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
-  .mh-wz-subs-l li { font-size: 11.5px; line-height: 1.45; color: var(--mh-ink3); padding-left: 9px; border-left: 2px solid var(--mh-line2); }
+  .mh-wz-subs-l li { font-size: 11.5px; line-height: 1.45; color: var(--mh-ink3); padding-left: 0; }
   .mh-wz-subs-l li b { color: var(--mh-ink); font-size: 11.5px; }
   .mh-dk-fe { padding: 12px 14px; border-radius: 16px; background: color-mix(in srgb, var(--mh-ink) 5%, transparent); border: 1px solid var(--mh-line); border-left: 3px solid var(--tc); }
   .mh-dk-fe b { display: block; font-size: 13.5px; color: var(--mh-ink); margin-bottom: 2px; } .mh-dk-fe p { margin: 0; font-size: 12px; line-height: 1.5; color: var(--mh-ink3); }
@@ -7509,6 +7509,10 @@ const sharedStyles = `
   .mh-wz-callout.is-center { max-width: 640px; margin: 16px auto 0; justify-content: center; align-items: center; } .mh-wz-callout > p { margin: 0; } .mh-wz-callout.is-center > p { text-align: center; } .mh-wz-callout.is-center svg { margin-top: 0; }
   /* Ascendencia y comunidad: la ilustración es el fondo del detalle */
   .mh-wz-page .mh-wz-det.has-hero { background: linear-gradient(180deg, rgba(10,10,28,0) 0%, rgba(10,10,28,.2) 30%, rgba(10,10,28,.86) 62%, rgba(10,10,28,.96) 100%), var(--hero) 50% 8% / cover no-repeat; --mh-ink: #F4F0FA; --mh-ink2: #E6E0F0; --mh-ink3: #D6CFE3; --mh-muted: #BFB8CE; --mh-muted2: #A59DB8; text-shadow: 0 1px 8px rgba(0,0,0,.8); padding: 22px 24px; border-radius: 0 25px 25px 0; }
+  html[data-mh-theme="light"] .mh-wz-page .mh-wz-det.has-hero { background: linear-gradient(180deg, rgba(251,246,234,0) 0%, rgba(251,246,234,.3) 24%, rgba(251,246,234,.9) 44%, #FBF6EA 60%), var(--hero) 50% 8% / cover no-repeat; --mh-ink: #2B2236; --mh-ink2: #3A3046; --mh-ink3: #4A4057; --mh-muted: #6D6478; --mh-muted2: #857C96; text-shadow: none; }
+  html[data-mh-theme="light"] .mh-wz-page .mh-wz-det.has-hero .mh-wz-feats > div { border-color: var(--mh-line); background: rgba(255,252,246,.8); box-shadow: 0 6px 14px -10px rgba(70,45,20,.35); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  html[data-mh-theme="light"] .mh-wz-det.has-hero .mh-wz-feats b { color: var(--mh-ink); }
+  html[data-mh-theme="light"] .mh-wz-det.has-hero .mh-wz-slot, html[data-mh-theme="light"] .mh-wz-det.has-hero .mh-wz-mixwait, html[data-mh-theme="light"] .mh-wz-det.has-hero .mh-wz-venn { background: rgba(255,252,246,.8); -webkit-backdrop-filter: none; backdrop-filter: none; }
   .mh-wz-det.has-hero > :first-child { margin-top: auto; }
   .mh-wz-det.has-hero .mh-wz-img { display: none; }
   .mh-wz-page .mh-wz-body.is-split .mh-wz-det.mh-noscroll { -webkit-mask-image: none; mask-image: none; padding-bottom: 22px; }
@@ -35016,7 +35020,13 @@ export default function App({ onSignOut }) {
                         {(() => {
                           // Misma presentación que las características de clase del primer paso: descripción, «Características» y una línea lateral por cada una.
                           const am = /^([^:.]{3,40}): (.+)$/.exec(cur.blurb || "");
-                          const feats = groupElems(featsOf(cur));
+                          const allF = cur.features || [];
+                          const isSp = (f) => /\(Especialización\)/.test(f.name);
+                          const isMa = (f) => /\(Maestría\)/.test(f.name);
+                          const strip = (f) => ({ ...f, name: f.name.replace(/\s*\((Especialización|Maestría)\)/, "") });
+                          const feats = groupElems(allF.filter((f) => !isSp(f) && !isMa(f)));
+                          const spec = allF.filter(isSp).map(strip);
+                          const mast = allF.filter(isMa).map(strip);
                           return (
                             <>
                               {!am && cur.blurb && <p className="mh-wz-blurb">{cur.blurb}</p>}
@@ -35042,6 +35052,19 @@ export default function App({ onSignOut }) {
                                   </div>
                                 ))}
                               </div>
+                              {[["Especialización", spec], ["Maestría", mast]].filter(([, l]) => l.length).map(([lab, l]) => (
+                                <Fragment key={lab}>
+                                  <div className="mh-wz-fh">{lab}</div>
+                                  <div className="mh-wz-feats">
+                                    {l.map((f) => (
+                                      <div key={f.name}>
+                                        <b>{f.name}</b>
+                                        <span>{f.text}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </Fragment>
+                              ))}
                             </>
                           );
                         })()}
@@ -36011,7 +36034,7 @@ export default function App({ onSignOut }) {
                       <span className="mh-wz-pv-badge"><PEm size={17} strokeWidth={1.7} /></span>
                     </div>
                     <div className="mh-wz-pv-sp" />
-                    <div className={"mh-serif mh-wz-pv-nm" + (pname ? "" : " is-ph")}>{pname || "Sin nombre"}</div>
+                    {(pname || pidx >= 3) && <div className={"mh-serif mh-wz-pv-nm" + (pname ? "" : " is-ph")}>{pname || "Sin nombre"}</div>}
                     <div className="mh-wz-pv-cl">{pcls}{psub ? " · " + psub : ""}</div>
                     <div className="mh-wz-pv-tags">{ptags.filter(([t]) => t).map(([t, g], k) => <span key={k} className={g ? "is-g" : ""}>{t}</span>)}</div>
                     {pidx >= 7 && (
