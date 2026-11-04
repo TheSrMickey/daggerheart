@@ -203,6 +203,26 @@ const SUBCLASSES = {
         { name: "Tierra", text: "Tus umbrales de daño mejoran en una cantidad igual a tu Competencia." },
         { name: "Agua", text: "Al dañar a un adversario en alcance Cuerpo a Cuerpo, el resto de adversarios en alcance Muy Cercano deben marcar un Estrés." },
         { name: "Aire", text: "Puedes flotar en el aire, con ventaja en las tiradas de Agilidad." },
+        {
+          name: "Aura Elemental (Especialización)",
+          text: "Una vez por descanso, mientras canalizas, puedes adoptar un aura acorde con tu elemento. El aura afecta a los objetivos en alcance Cercano hasta que termine tu canalización.",
+          subs: [
+            { name: "Fuego", text: "Cuando un adversario marque 1 o más Puntos de vida, también debe marcar un Estrés." },
+            { name: "Tierra", text: "Tus aliados obtienen un +1 a Fuerza." },
+            { name: "Agua", text: "Cuando un adversario te haga daño, puedes marcar un Estrés para moverlo a cualquier lugar en alcance Muy Cercano de donde esté." },
+            { name: "Aire", text: "Cuando tú o un aliado recibáis daño de un ataque más allá del alcance Cuerpo a Cuerpo, reduce el daño en 1d8." },
+          ],
+        },
+        {
+          name: "Dominio Elemental (Maestría)",
+          text: "Encarnas aún más tu elemento. Mientras canalizas, obtienes el siguiente beneficio:",
+          subs: [
+            { name: "Fuego", text: "Obtienes un +1 a tu Competencia en los ataques y hechizos que infligen daño." },
+            { name: "Tierra", text: "Cuando fueras a marcar Puntos de vida, tira un d6 por cada Punto de vida marcado. Por cada resultado de 6, reduce en 1 los Puntos de vida que marcas." },
+            { name: "Agua", text: "Cuando un ataque contra ti tenga éxito, puedes marcar un Estrés para dejar al atacante Vulnerable temporalmente." },
+            { name: "Aire", text: "Obtienes un +1 a tu Evasión y puedes volar." },
+          ],
+        },
       ],
     },
     {
