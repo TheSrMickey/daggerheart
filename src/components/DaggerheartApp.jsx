@@ -24,6 +24,7 @@ import { LevelUpDialog, parseAdvances, ownedCards, getMulticlass, MAX_LEVEL, ran
 import { RulesPanel } from "./MapRules";
 import { Changelog } from "./Changelog";
 import { CardsPage, CardFace } from "./Cards";
+import { printSheet } from "@/lib/sheetPdf";
 import { Generators } from "./Generators";
 import { CampaignCalendar, HomeNextSession } from "./Calendar";
 import { HomeHero } from "./HomeHero";
@@ -51,7 +52,7 @@ const QUICKSTARTS = [
   { key: "sablewood", name: "Los mensajeros de Sablewood", build: buildSablewood, ai: true, text: "Aventura de inicio ya preparada: escenas, pistas ocultas, reparto con diálogos, notas por acto y mapas con enemigos." },
   { key: "wishthief", name: "La ladrona de deseos", build: buildWishThief, ai: false, text: "Aventura de nivel 1 para 3-5 jugadores: escenas por acto, pistas ocultas, reparto con estadísticas y mapas listos." },
 ];
-import { ShieldX, Hand, Wand, CircleDot, MoveUpRight, Archive, Shell, Compass, Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp, Trophy, Star, Pencil } from "lucide-react";
+import { Download, ShieldX, Hand, Wand, CircleDot, MoveUpRight, Archive, Shell, Compass, Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp, Trophy, Star, Pencil } from "lucide-react";
 
 // Color de cada campaña (se reparte según su id).
 const CAMP_COLORS = ["#A58BE8", "#6FA3C0", "#E0A04A", "#7FB77A", "#D9644E", "#E07FB0"];
@@ -19667,6 +19668,48 @@ export default function App({ onSignOut }) {
       campLive: Object.values(campaigns).some((cp) => (cp.characterIds || []).includes(id)) && !!(campaignStage.scene && (campaignStage.scene.title || campaignStage.scene.image)),
     };
   };
+  // Descarga la hoja como PDF (A4 vertical): abre el diálogo de impresión con la hoja ya maquetada.
+  const exportSheetPdf = (id) => {
+    const c = characters[id];
+    if (!c) return;
+    const m = modernData(id);
+    const armorE = armorOf(c);
+    const level = Number(c.f_level || 1);
+    const tier = tierForLevel(level);
+    const anc = ancList(c).map((k) => ANCESTRIES.find((a) => a.key === k)).filter(Boolean);
+    const ancFeats = anc.length > 1 ? [anc[0].features?.[0], anc[1].features?.[1]].filter(Boolean) : anc[0]?.features || [];
+    const comm = COMMUNITIES.find((x) => x.key === c.f_community);
+    const sub = (SUBCLASSES[c.f_class] || []).find((x) => x.key === c.f_subclass);
+    const tf = TRANSFORMATIONS.find((x) => x.key === c.f_transformation);
+    const hope = CLASS_HOPE_FEATURE[c.f_class];
+    const tag = (src, list) => (list || []).map((f) => ({ name: f.name + " · " + src, text: f.text }));
+    const features = [
+      ...tag("Ascendencia", ancFeats),
+      ...tag("Comunidad", comm?.features),
+      ...(hope ? [{ name: hope.name + " · Esperanza", text: "Gasta " + hope.cost + " Esperanza. " + hope.text }] : []),
+      ...tag("Clase", CLASS_FEATURES[c.f_class]),
+      ...tag("Subclase", (sub?.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name) || tier >= (/Maestría/.test(f.name) ? 3 : 2))),
+      ...tag("Transformación", tf?.features),
+    ];
+    const cardOf = (k, vault) => { const d = findDomainCardAny(k); return d ? { key: d.key, domain: d.domain, level: d.level, recall: d.recall, text: d.text, vault } : null; };
+    const cards = [...getKeys(c.f_domain_cards).map((k) => cardOf(k, false)), ...getKeys(c.f_domain_vault).map((k) => cardOf(k, true))].filter(Boolean);
+    let items = [];
+    try { items = [...JSON.parse(c.f_items || "[]"), ...JSON.parse(c.f_backpack_items || "[]")]; } catch (e) { items = []; }
+    const notes = [];
+    [["f_background_qa", CLASS_BACKGROUND_QUESTIONS[c.f_class]], ["f_connection_qa", null]].forEach(([field, qs]) => getQAList(c, field, qs).forEach((r) => r.answer && r.answer.trim() && notes.push({ q: r.question, a: r.answer })));
+    if (c.f_backstory) notes.push({ q: "Historia:", a: c.f_backstory });
+    if (c.f_connections) notes.push({ q: "Conexiones:", a: c.f_connections });
+    printSheet({
+      name: c.f_name || "Personaje", cls: c.f_class, subclass: c.f_subclass, multi: m.multi?.cls || "", pronouns: c.f_pronouns || "",
+      ancestry: c.f_ancestry, community: c.f_community, transformation: c.f_transformation, level, rank: tier, proficiency: m.proficiency,
+      color: m.color, traits: m.traits, evasion: m.evasion, armor: armorE ? { key: armorE.key, score: armorE.score, feature: armorE.feature } : null,
+      armorTotal: m.armorTotal, armorLeft: m.armorLeft, minor: m.minor, major: m.major, severe: m.severe, hope: m.hope, hopeTotal: m.hopeTotal,
+      hpTotal: m.hpTotal, hpMarked: m.hpMarked, stressTotal: m.stressTotal, stressMarked: m.stressMarked,
+      weapons: m.weapons, experiences: m.experiences, conditions: getConditions(c), items,
+      gold: GOLD_TIERS.map((g) => ({ label: g.label, n: Number(c[g.field] || 0) })), features, cards, notes,
+      date: new Date().toLocaleDateString("es-ES"),
+    });
+  };
   const modernActions = (id) => ({
     rollTrait: (label, value, t) => {
       if (t?.tongue) setPendingSpellRoll({ charId: id, traitLabel: label, traitValue: value, advantage: !!t.adv });
@@ -31277,6 +31320,9 @@ export default function App({ onSignOut }) {
           <div className="mh-gear-menu" role="menu" style={{ top: gearMenu.top, right: gearMenu.right }}>
             <button type="button" role="menuitem" onClick={() => { setGearMenu(null); window.dispatchEvent(new CustomEvent("mh-share", { detail: { charId: gid } })); }}>
               <Link2 size={15} /> Compartir personaje
+            </button>
+            <button type="button" role="menuitem" onClick={() => { setGearMenu(null); exportSheetPdf(gid); }}>
+              <Download size={15} /> Descargar hoja en PDF
             </button>
             <button type="button" role="menuitem" onClick={() => { setGearMenu(null); setPortraitDlg(gid); }}>
               <Upload size={15} /> Cambiar imagen
