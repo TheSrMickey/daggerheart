@@ -9,6 +9,7 @@ export const CHANGELOG = [
     title: "El Oráculo del DJ",
     blurb: "Un anillo de luz que responde a las preguntas de la mesa: Sí / No, con matices o con una tirada de destino, solo para el DJ y a un toque bajo el chat.",
     items: [
+      { tag: "mejora", text: "Subclases del Druida · los elementos de «Encarnación Elemental» ya no van en colores: usan el mismo color que el resto del texto, sin barras laterales en la carta y sin colores en la vista previa del asistente." },
       { tag: "mejora", text: "Subclases del Druida · el Guardián de los Elementos ya tiene descripción y rasgo de conjuro como el de la Renovación, y su habilidad es «Encarnación Elemental» con los cuatro elementos como opciones dentro de ella (antes parecían habilidades sueltas)." },
       { tag: "mejora", text: "Creación de personaje · al ver una subclase, sus características salen con el mismo estilo que las de clase del primer paso (descripción, «Características» y línea lateral); y la caja inferior con tus elecciones se ve también en los pasos de nivel y nombre." },
       { tag: "arreglo", text: "Creación de personaje · las pastillas de dominios miden todas lo mismo, y en las subclases con mucho texto (como las del Druida) la pastilla «Fundación» ya no tapa el título de la carta." },

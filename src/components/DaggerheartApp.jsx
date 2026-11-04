@@ -7434,8 +7434,8 @@ const sharedStyles = `
   .mh-dk-sh { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--mh-muted2); margin: 4px 4px 2px; }
   .mh-dk-side .mh-wz-feats { grid-template-columns: 1fr; }
   .mh-wz-subs-l { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
-  .mh-wz-subs-l li { font-size: 11.5px; line-height: 1.45; color: var(--mh-ink3); padding-left: 9px; border-left: 2px solid var(--ec, var(--mh-line2)); }
-  .mh-wz-subs-l li b { color: var(--ec, var(--mh-ink)); font-size: 11.5px; }
+  .mh-wz-subs-l li { font-size: 11.5px; line-height: 1.45; color: var(--mh-ink3); padding-left: 9px; border-left: 2px solid var(--mh-line2); }
+  .mh-wz-subs-l li b { color: var(--mh-ink); font-size: 11.5px; }
   .mh-dk-fe { padding: 12px 14px; border-radius: 16px; background: color-mix(in srgb, var(--mh-ink) 5%, transparent); border: 1px solid var(--mh-line); border-left: 3px solid var(--tc); }
   .mh-dk-fe b { display: block; font-size: 13.5px; color: var(--mh-ink); margin-bottom: 2px; } .mh-dk-fe p { margin: 0; font-size: 12px; line-height: 1.5; color: var(--mh-ink3); }
   .mh-dk-hf { position: absolute; top: 14px; left: 14px; z-index: 3; font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 9px; background: rgba(13,13,34,.72); border: 1px solid #A58BE866; color: #B7A2F5; }
@@ -35035,7 +35035,7 @@ export default function App({ onSignOut }) {
                                     {f.subs && (
                                       <ul className="mh-wz-subs-l">
                                         {f.subs.map((e) => (
-                                          <li key={e.name} style={{ "--ec": e.color }}><b>{e.name}</b> {e.text}</li>
+                                          <li key={e.name}><b>{e.name}</b> {e.text}</li>
                                         ))}
                                       </ul>
                                     )}
