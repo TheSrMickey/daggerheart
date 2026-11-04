@@ -34761,7 +34761,7 @@ export default function App({ onSignOut }) {
           {view === "perfil" && profileTarget && <ProfilePage key={profileTarget.id} id={profileTarget.id} name={profileTarget.name} />}
 
           {view === "dadosskin" && <Personalizacion skin={diceSkin} onEquip={equipDiceSkin} back={cardBack} onEquipBack={equipCardBack} cardBorder={cardBorder} onCardBorder={equipCardBorder} items={buildCardCatalog()} icons={DOMAIN_ICONS} FitTitle={FitTitle} FitBox={FitBox} />}
-          {view === "taller" && <WorkshopPage FitTitle={FitTitle} FitBox={FitBox} domainColors={DOMAIN_COLORS} icons={DOMAIN_ICONS} classColors={CLASS_COLORS} classes={CLASSES.map((c) => c.key)} />}
+          {view === "taller" && <WorkshopPage FitTitle={FitTitle} FitBox={FitBox} TokDice={TokDice} domainColors={DOMAIN_COLORS} icons={DOMAIN_ICONS} classColors={CLASS_COLORS} classes={CLASSES.map((c) => c.key)} />}
           {view === "cartas" && <CardsPage items={buildCardCatalog()} domainColors={DOMAIN_COLORS} icons={DOMAIN_ICONS} FitTitle={FitTitle} FitBox={FitBox} />}
 
           {view === "ajustes" && (
