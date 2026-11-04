@@ -19686,8 +19686,6 @@ export default function App({ onSignOut }) {
     const features = [
       ...tag("Ascendencia", ancFeats),
       ...tag("Comunidad", comm?.features),
-      ...(hope ? [{ name: hope.name + " · Esperanza", text: "Gasta " + hope.cost + " Esperanza. " + hope.text }] : []),
-      ...tag("Clase", CLASS_FEATURES[c.f_class]),
       ...tag("Subclase", groupElems((sub?.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name) || tier >= (/Maestría/.test(f.name) ? 3 : 2))).map((f) => (f.subs ? { name: f.name, text: f.text + " " + f.subs.map((e) => e.name + ": " + e.text).join(" · ") } : f))),
       ...tag("Transformación", tf?.features),
     ];
@@ -19701,7 +19699,10 @@ export default function App({ onSignOut }) {
     printSheet({
       name: c.f_name || "Personaje", cls: c.f_class, subclass: c.f_subclass, multi: m.multi?.cls || "", pronouns: c.f_pronouns || "",
       ancestry: c.f_ancestry, community: c.f_community, transformation: c.f_transformation, level, rank: tier, proficiency: m.proficiency,
-      color: m.color, traits: m.traits, evasion: m.evasion, armor: armorE ? { key: armorE.key, score: armorE.score, feature: armorE.feature } : null,
+      color: m.color, traits: m.traits, evasion: m.evasion, armor: armorE ? { key: armorE.key, score: armorE.score, major: armorE.major, severe: armorE.severe, feature: armorE.feature } : null,
+      marks: m.levelInfo.marks, domains: CLASS_DOMAINS[c.f_class] || [], classFeatures: CLASS_FEATURES[c.f_class] || [],
+      hopeFeature: hope ? { name: hope.name, text: "Gasta " + hope.cost + " Esperanza. " + hope.text } : null,
+      invWeapons: items.map((it) => [...PRIMARY_WEAPONS, ...SECONDARY_WEAPONS].find((w) => w.key === it.name)).filter(Boolean).slice(0, 2),
       armorTotal: m.armorTotal, armorLeft: m.armorLeft, minor: m.minor, major: m.major, severe: m.severe, hope: m.hope, hopeTotal: m.hopeTotal,
       hpTotal: m.hpTotal, hpMarked: m.hpMarked, stressTotal: m.stressTotal, stressMarked: m.stressMarked,
       weapons: m.weapons, experiences: m.experiences, conditions: getConditions(c), items,
