@@ -26,6 +26,7 @@ import { RulesPanel } from "./MapRules";
 import { Changelog } from "./Changelog";
 import { CardsPage, CardFace } from "./Cards";
 import { WorkshopPage } from "./Workshop";
+import PortraitCrop from "./PortraitCrop";
 import { printSheet } from "@/lib/sheetPdf";
 import { Generators } from "./Generators";
 import { CampaignCalendar, HomeNextSession } from "./Calendar";
@@ -7666,13 +7667,11 @@ const sharedStyles = `
   .dpk-q { margin: 0; font-size: 13px; color: var(--mh-muted2); text-align: center; line-height: 1.4; flex-shrink: 0; }
   .dpk-deck { position: relative; flex: 1; min-height: 190px; }
   .dpk-card, .dpk-slot { position: absolute; transform: rotate(var(--r)); transform-origin: 50% 90%; transition: transform .25s cubic-bezier(.2,.8,.2,1), filter .2s; }
-  .dpk-card { filter: drop-shadow(0 12px 18px rgba(0,0,0,.55)); animation: dsw-deal .6s cubic-bezier(.2,.9,.25,1.1) backwards; }
+  .dpk-card { cursor: pointer; filter: drop-shadow(0 12px 18px rgba(0,0,0,.55)); animation: dsw-deal .6s cubic-bezier(.2,.9,.25,1.1) backwards; }
   .dpk-card:hover { transform: translateY(-14px) rotate(0deg) scale(1.04); z-index: 50 !important; }
   .dpk-card.is-out { animation: dsw-out .33s cubic-bezier(.5,0,.8,.4) both; pointer-events: none; }
   .dpk-card.is-target { cursor: pointer; animation: dsw-glow 1s ease-in-out infinite alternate; } .dpk-card.is-target:hover { filter: drop-shadow(0 0 22px var(--cc)); }
   .dpk-slot { border: 2px dashed var(--mh-line2); border-radius: 22px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--mh-muted2); font: 600 12px 'Inter', system-ui, sans-serif; background: color-mix(in srgb, var(--mh-ink) 4%, transparent); }
-  .dpk-rm { all: unset; cursor: pointer; position: absolute; right: -6px; top: -6px; z-index: 4; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: #C0504A; box-shadow: 0 4px 10px rgba(0,0,0,.5); opacity: 0; transition: opacity .15s; }
-  .dpk-card:hover .dpk-rm, .dpk-rm:focus-visible { opacity: 1; }
   .dpk-h { display: flex; align-items: center; justify-content: flex-start; gap: 10px; flex-wrap: wrap; flex-shrink: 0; } .dpk-h .dpk-lv { margin-left: auto; } .dpk-tabs button { display: inline-flex; align-items: center; gap: 6px; } .dpk-info { margin-left: 0; }
   .dpk-tip { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-radius: 14px; font-size: 12.5px; line-height: 1.4; color: var(--mh-ink2); background: color-mix(in srgb, #E3B04B 12%, transparent); border: 1px solid #E3B04B55; flex-shrink: 0; } .dpk-tip svg { flex-shrink: 0; color: #E3B04B; } .dpk-tip b { color: var(--mh-ink); }
   .dpk-tabs button { position: relative; }
@@ -7735,7 +7734,6 @@ const sharedStyles = `
   .mh-root.is-mobile .dpk-deck::-webkit-scrollbar { display: none; }
   .mh-root.is-mobile .dpk-card, .mh-root.is-mobile .dpk-slot { position: relative !important; left: auto !important; top: auto !important; flex: none; scroll-snap-align: center; transform: none; animation: none; }
   .mh-root.is-mobile .dpk-card:hover { transform: none; }
-  .mh-root.is-mobile .dpk-rm { opacity: 1; }
   .mh-root.is-mobile .dpk-pv { display: none; }
   .mh-root.is-mobile .dpk-shelf { max-height: none; overflow: visible; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
   .mh-root.is-mobile .dpk-tip { align-items: flex-start; }
@@ -10951,11 +10949,6 @@ function DomainPicker({ entries, sel, limit, level, domains, colors, onChange })
           return (
             <div key={k} className={"dpk-card" + (out === k ? " is-out" : "") + (pend ? " is-target" : "")} style={{ ...style, animationDelay: i * 90 + "ms" }} onClick={() => (pend ? replaceWith(k) : retire(k))}>
               <FanFace c={c} col={col} />
-              {!pend && (
-                <button type="button" className="dpk-rm" onClick={(e) => (e.stopPropagation(), retire(k))} aria-label={"Retirar " + k} title="Retirar de la mano">
-                  <X size={14} strokeWidth={2.6} />
-                </button>
-              )}
             </div>
           );
         })}
@@ -15262,6 +15255,7 @@ export default function App({ onSignOut }) {
   const [portraitDlg, setPortraitDlg] = useState(null); // id del personaje cuyo diálogo de imágenes está abierto
   const [gearMenu, setGearMenu] = useState(null); // menú del engranaje de la ficha
   const [portraitMsg, setPortraitMsg] = useState("");
+  const [portraitCrop, setPortraitCrop] = useState(null); // { id, state, file }: imagen elegida a la espera de encuadrarla
   useEffect(() => {
     if (!portraitMsg) return undefined;
     const t = setTimeout(() => setPortraitMsg(""), 3800);
@@ -18704,7 +18698,7 @@ export default function App({ onSignOut }) {
   // Dados 3D con física (solo en las tiradas de Agilidad, de momento): mientras ruedan, la tarjeta de resultado espera.
   const [dice3d, setDice3d] = useState(null);
   // Aspecto de dado equipado (privado de cada cuenta): «cristal», «cosmico» u «oficial».
-  const [diceSkin, setDiceSkin] = useState("cristal");
+  const [diceSkin, setDiceSkin] = useState("oficial");
   // Se prepara el renderer 3D y se compilan los shaders de los dados con el navegador libre, para que la primera tirada no se atasque.
   useEffect(() => {
     warmDice3D(diceSkin);
@@ -31321,7 +31315,10 @@ export default function App({ onSignOut }) {
           const file = e.target.files?.[0];
           const tg = portraitTarget.current;
           e.target.value = "";
-          if (file && tg) uploadPortrait(tg.id, tg.state, file);
+          if (!file || !tg) return;
+          if (!/^image\//.test(file.type)) return setPortraitMsg("Ese archivo no es una imagen.");
+          if (file.size > 5 * 1024 * 1024) return setPortraitMsg("La imagen pesa más de 5 MB.");
+          setPortraitCrop({ id: tg.id, state: tg.state, file });
         }}
       />
       {gearMenu && (() => {
@@ -31392,6 +31389,7 @@ export default function App({ onSignOut }) {
           document.querySelector(".mh-root") || document.body
         );
       })()}
+      {portraitCrop && <PortraitCrop file={portraitCrop.file} onCancel={() => setPortraitCrop(null)} onDone={(f) => { const j = portraitCrop; setPortraitCrop(null); uploadPortrait(j.id, j.state, f); }} />}
       {portraitMsg && <div className="mh-pt-toast" role="status">{portraitMsg}</div>}
 
       {/* Dock inferior flotante (móvil) */}
