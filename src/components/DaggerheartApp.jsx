@@ -8677,6 +8677,14 @@ const sharedStyles = `
   .mh-cc-sec { padding: 0 0 20px; margin: 0 0 20px; border-bottom: 1px solid var(--mh-line); } .mh-cc-sec:last-child { border: 0; margin: 0; padding: 0; }
   .mh-cc-h { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; font: 700 11px 'Inter', system-ui, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--mh-muted); } .mh-cc-h i { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font: 700 11px 'Inter', system-ui, sans-serif; font-style: normal; letter-spacing: 0; background: color-mix(in srgb, var(--hc) 28%, var(--mh-panel2)); color: var(--mh-ink); }
   .mh-cc-p { margin: -4px 0 12px; font-size: 12.5px; color: var(--mh-muted); }
+  .mh-cc-stp { display: flex; gap: 4px; margin: 0 0 8px; } .mh-cc-stp button { flex: 1; height: 5px; padding: 0; border: 0; border-radius: 3px; background: var(--mh-line); cursor: default; } .mh-cc-stp button.is-done { background: #6FBF73; cursor: pointer; } .mh-cc-stp button.is-done:hover { background: #4E9E52; } .mh-cc-stp button.is-on { background: #E3B04B; }
+  .mh-cc-sn { display: block; margin: 0 0 16px; font-size: 11.5px; color: var(--mh-muted); }
+  .mh-cc-body { min-height: 260px; } .mh-cc-body.is-in-r { animation: mh-cc-in-r .28s cubic-bezier(.2,.8,.2,1) both; } .mh-cc-body.is-in-l { animation: mh-cc-in-l .28s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes mh-cc-in-r { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } } @keyframes mh-cc-in-l { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+  .mh-cc-body .mh-cc-sec { border: 0; margin: 0; padding: 0; }
+  .mh-cc-h2 { margin: 4px 0 8px; font-size: 13px; font-weight: 700; color: var(--mh-ink); }
+  .mh-cc-nav { display: flex; align-items: center; gap: 10px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--mh-line); } .mh-cc-nav .mh-btn, .mh-cc-nav .mh-btn-ghost { display: inline-flex; align-items: center; gap: 6px; }
+  .mh-cc-sum { display: grid; gap: 8px; margin-top: 16px; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--mh-line); background: var(--mh-panel2); } .mh-cc-sum span { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--mh-ink); } .mh-cc-sum b { font-weight: 600; color: var(--mh-muted); }
   .mh-cc-opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; } .mh-cc-opt { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; gap: 5px; padding: 14px 16px; border-radius: 14px; border: 1.5px solid var(--mh-line); background: var(--mh-panel2); color: var(--mh-muted); transition: border-color .15s, background .15s; } .mh-cc-opt b { font-size: 14px; color: var(--mh-ink); } .mh-cc-opt small { font-size: 12px; line-height: 1.45; } .mh-cc-opt svg { color: var(--hc); } .mh-cc-opt:hover { border-color: var(--mh-line2); } .mh-cc-opt.is-on { border-color: var(--hc); background: color-mix(in srgb, var(--hc) 10%, var(--mh-panel2)); } .mh-cc-opt:focus-visible { outline: 2px solid var(--hc); outline-offset: 2px; }
   .mh-cc-f { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; } .mh-cc-f > span { font-size: 12.5px; font-weight: 600; color: var(--mh-ink2, var(--mh-ink)); } .mh-cc-f > span em { font-style: normal; font-weight: 400; color: var(--mh-muted); margin-left: 6px; } .mh-cc-f textarea { min-height: 84px; resize: vertical; }
   .mh-cc-sw { display: flex; gap: 10px; flex-wrap: wrap; } .mh-cc-sw button { all: unset; box-sizing: border-box; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--sw); color: #fff; border: 2px solid transparent; box-shadow: 0 0 0 2px var(--mh-panel); } .mh-cc-sw button.is-on { box-shadow: 0 0 0 2px var(--mh-panel), 0 0 0 4px var(--sw); } .mh-cc-sw button:focus-visible { outline: 2px solid var(--mh-ink); outline-offset: 3px; }
@@ -12686,6 +12694,8 @@ export default function App({ onSignOut }) {
   const [newCampaignName, setNewCampaignName] = useState("");
   const [newCampaignDesc, setNewCampaignDesc] = useState("");
   const [showNewCampaignForm, setShowNewCampaignForm] = useState(false);
+  const [ccStep, setCcStep] = useState(0); // paso del asistente de nueva campaña
+  const [ccDir, setCcDir] = useState(1);
   const [newCampaignColor, setNewCampaignColor] = useState(""); // vacío = el siguiente color de la paleta
   const [newCampaignCover, setNewCampaignCover] = useState(""); // escena de la portada; vacío = automática
   const [newCampaignCustom, setNewCampaignCustom] = useState(false); // permite personajes con contenido del Taller
@@ -15979,6 +15989,7 @@ export default function App({ onSignOut }) {
     setNewCampaignCover("");
     setNewCampaignCustom(false);
     setNewCampaignStart("blank");
+    setCcStep(0);
     setShowNewCampaignForm(false);
   };
 
@@ -34746,6 +34757,7 @@ export default function App({ onSignOut }) {
             const ccColor = newCampaignColor || CAMP_COLORS[nCamps % CAMP_COLORS.length];
             const qs = QUICKSTARTS.find((x) => x.key === newCampaignStart) || null; // aventura de inicio elegida (o null = en blanco)
             const canCreate = !!qs || !!newCampaignName.trim();
+            const ccSteps = ["Cómo empezar", "Nombre", "Aspecto", "La mesa", "Resumen"];
             // Tarjeta de campaña: la misma en la lista y en la vista previa del creador.
             const campCard = (camp, key, members, onOpen, color, big) => (
               <div
@@ -34811,74 +34823,119 @@ export default function App({ onSignOut }) {
                         <button type="button" className="mh-cc-x" aria-label="Cerrar" onClick={resetNewCampaign}><X size={16} /></button>
                       </div>
 
-                      <section className="mh-cc-sec">
-                        <h3 className="mh-cc-h"><i>1</i> Cómo empezar</h3>
-                        <div className="mh-cc-opts" role="radiogroup" aria-label="Cómo empezar">
-                          <button type="button" role="radio" aria-checked={!qs} className={"mh-cc-opt" + (!qs ? " is-on" : "")} onClick={() => setNewCampaignStart("blank")}>
-                            <PenLine size={18} />
-                            <b>Campaña en blanco</b>
-                            <small>Empieza de cero: tú creas la historia, las escenas y los mapas.</small>
-                          </button>
-                          {QUICKSTARTS.map((x) => (
-                            <button key={x.key} type="button" role="radio" aria-checked={qs?.key === x.key} className={"mh-cc-opt" + (qs?.key === x.key ? " is-on" : "")} onClick={() => setNewCampaignStart(x.key)}>
-                              <BookOpen size={18} />
-                              <b>{x.name}</b>
-                              <small>{x.text}</small>
-                            </button>
-                          ))}
-                        </div>
-                      </section>
+                      <div className="mh-cc-stp" role="list" aria-label="Pasos">
+                        {ccSteps.map((t, i) => (
+                          <button key={t} type="button" role="listitem" disabled={i >= ccStep} title={t + (i < ccStep ? " · volver a este paso" : "")} aria-label={t} className={i < ccStep ? "is-done" : i === ccStep ? "is-on" : ""} onClick={() => i < ccStep && (setCcDir(-1), setCcStep(i))} />
+                        ))}
+                      </div>
+                      <small className="mh-cc-sn">Paso {ccStep + 1} de {ccSteps.length} · {ccSteps[ccStep]}</small>
 
-                      <section className="mh-cc-sec">
-                        <h3 className="mh-cc-h"><i>2</i> Datos</h3>
-                        <label className="mh-cc-f">
-                          <span>Nombre{qs ? " (opcional)" : ""}</span>
-                          <input className="mh-input" maxLength={60} placeholder={qs ? qs.name : "Ej. La Marca Rota"} value={newCampaignName} onChange={(e) => setNewCampaignName(e.target.value)} autoFocus />
-                        </label>
-                        <label className="mh-cc-f">
-                          <span>Descripción (opcional) <em>{newCampaignDesc.length}/280</em></span>
-                          <textarea className="mh-input" maxLength={280} placeholder="De qué va la campaña, el tono, cada cuánto jugáis…" value={newCampaignDesc} onChange={(e) => setNewCampaignDesc(e.target.value)} />
-                        </label>
-                        <div className="mh-cc-f">
-                          <span>Color</span>
-                          <div className="mh-cc-sw" role="radiogroup" aria-label="Color de la campaña">
-                            {CAMP_COLORS.map((c) => (
-                              <button key={c} type="button" role="radio" aria-checked={ccColor === c} aria-label={"Color " + c} className={ccColor === c ? "is-on" : ""} style={{ "--sw": c }} onClick={() => setNewCampaignColor(c)}>
-                                {ccColor === c && <Check size={14} />}
+                      <div key={ccStep} className={"mh-cc-body is-in-" + (ccDir > 0 ? "r" : "l")}>
+                        {ccStep === 0 && (
+                          <section className="mh-cc-sec">
+                            <h3 className="mh-cc-h"><i>1</i> Cómo empezar</h3>
+                            <p className="mh-cc-p">Elige si empiezas de cero o con una aventura de inicio ya preparada.</p>
+                            <div className="mh-cc-opts" role="radiogroup" aria-label="Cómo empezar">
+                              <button type="button" role="radio" aria-checked={!qs} className={"mh-cc-opt" + (!qs ? " is-on" : "")} onClick={() => setNewCampaignStart("blank")}>
+                                <PenLine size={18} />
+                                <b>Campaña en blanco</b>
+                                <small>Empieza de cero: tú creas la historia, las escenas y los mapas.</small>
                               </button>
-                            ))}
-                          </div>
-                        </div>
-                        <div className="mh-cc-f">
-                          <span>Portada</span>
-                          <div className="mh-cc-cv" role="radiogroup" aria-label="Escena de la portada">
-                            <button type="button" role="radio" aria-checked={!newCampaignCover} className={!newCampaignCover ? "is-on" : ""} onClick={() => setNewCampaignCover("")}>Al azar</button>
-                            {SCENE_PRESETS.map((sc) => (
-                              <button key={sc.key} type="button" role="radio" aria-checked={newCampaignCover === sc.key} aria-label={sc.title} title={sc.title} className={newCampaignCover === sc.key ? "is-on" : ""} onClick={() => setNewCampaignCover(sc.key)} style={{ backgroundImage: "url(" + sc.image + ")" }} />
-                            ))}
-                          </div>
-                        </div>
-                        <label className={"cc-sw" + (newCampaignCustom ? " is-on" : "")} style={{ marginTop: 4 }}>
-                          <input type="checkbox" checked={newCampaignCustom} onChange={(e) => setNewCampaignCustom(e.target.checked)} />
-                          <i aria-hidden="true" />
-                          <span><b>Permitir contenido personalizado</b><small>Los personajes con creaciones del Taller podrán unirse. Todos verán el aviso en la campaña y podrás ver y revisar ese contenido.</small></span>
-                        </label>
-                      </section>
+                              {QUICKSTARTS.map((x) => (
+                                <button key={x.key} type="button" role="radio" aria-checked={qs?.key === x.key} className={"mh-cc-opt" + (qs?.key === x.key ? " is-on" : "")} onClick={() => setNewCampaignStart(x.key)}>
+                                  <BookOpen size={18} />
+                                  <b>{x.name}</b>
+                                  <small>{x.text}</small>
+                                </button>
+                              ))}
+                            </div>
+                          </section>
+                        )}
 
-                      <section className="mh-cc-sec">
-                        <h3 className="mh-cc-h"><i>3</i> Seguridad en la mesa</h3>
-                        <p className="mh-cc-p">Acordad antes de jugar qué temas quedan fuera. Los jugadores los verán en la campaña.</p>
-                        <LinesVeilsEditor lines={newCampaignLimits.lines} veils={newCampaignLimits.veils} onChange={setNewCampaignLimits} />
-                      </section>
+                        {ccStep === 1 && (
+                          <section className="mh-cc-sec">
+                            <h3 className="mh-cc-h"><i>2</i> Nombre y descripción</h3>
+                            <label className="mh-cc-f">
+                              <span>Nombre{qs ? " (opcional)" : ""}</span>
+                              <input className="mh-input" maxLength={60} placeholder={qs ? qs.name : "Ej. La Marca Rota"} value={newCampaignName} onChange={(e) => setNewCampaignName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && canCreate && (setCcDir(1), setCcStep(2))} autoFocus />
+                            </label>
+                            <label className="mh-cc-f">
+                              <span>Descripción (opcional) <em>{newCampaignDesc.length}/280</em></span>
+                              <textarea className="mh-input" maxLength={280} placeholder="De qué va la campaña, el tono, cada cuánto jugáis…" value={newCampaignDesc} onChange={(e) => setNewCampaignDesc(e.target.value)} />
+                            </label>
+                          </section>
+                        )}
 
-                      <section className="mh-cc-sec">
-                        <h3 className="mh-cc-h"><i>4</i> Imágenes</h3>
-                        <label className="mh-cc-switch">
-                          <input type="checkbox" checked={newCampaignAI || !!qs?.ai} disabled={!!qs?.ai} onChange={(e) => setNewCampaignAI(e.target.checked)} />
-                          <i aria-hidden="true" />
-                          <span><b>Imágenes creadas con IA</b><small>{qs?.ai ? "Esta aventura incluye un mapa de combate generado con IA, así que va marcada." : "Avisa a tus jugadores de que las imágenes de esta campaña (escenas, mapas, personajes) se han generado con inteligencia artificial."}</small></span>
-                        </label>
-                      </section>
+                        {ccStep === 2 && (
+                          <section className="mh-cc-sec">
+                            <h3 className="mh-cc-h"><i>3</i> Aspecto</h3>
+                            <p className="mh-cc-p">Elige el color y la escena de portada; lo verás a la derecha.</p>
+                            <div className="mh-cc-f">
+                              <span>Color</span>
+                              <div className="mh-cc-sw" role="radiogroup" aria-label="Color de la campaña">
+                                {CAMP_COLORS.map((c) => (
+                                  <button key={c} type="button" role="radio" aria-checked={ccColor === c} aria-label={"Color " + c} className={ccColor === c ? "is-on" : ""} style={{ "--sw": c }} onClick={() => setNewCampaignColor(c)}>
+                                    {ccColor === c && <Check size={14} />}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                            <div className="mh-cc-f">
+                              <span>Portada</span>
+                              <div className="mh-cc-cv" role="radiogroup" aria-label="Escena de la portada">
+                                <button type="button" role="radio" aria-checked={!newCampaignCover} className={!newCampaignCover ? "is-on" : ""} onClick={() => setNewCampaignCover("")}>Al azar</button>
+                                {SCENE_PRESETS.map((sc) => (
+                                  <button key={sc.key} type="button" role="radio" aria-checked={newCampaignCover === sc.key} aria-label={sc.title} title={sc.title} className={newCampaignCover === sc.key ? "is-on" : ""} onClick={() => setNewCampaignCover(sc.key)} style={{ backgroundImage: "url(" + sc.image + ")" }} />
+                                ))}
+                              </div>
+                            </div>
+                          </section>
+                        )}
+
+                        {ccStep === 3 && (
+                          <section className="mh-cc-sec">
+                            <h3 className="mh-cc-h"><i>4</i> La mesa</h3>
+                            <label className={"cc-sw" + (newCampaignCustom ? " is-on" : "")} style={{ marginBottom: 18 }}>
+                              <input type="checkbox" checked={newCampaignCustom} onChange={(e) => setNewCampaignCustom(e.target.checked)} />
+                              <i aria-hidden="true" />
+                              <span><b>Permitir contenido personalizado</b><small>Los personajes con creaciones del Taller podrán unirse. Todos verán el aviso en la campaña y podrás ver y revisar ese contenido.</small></span>
+                            </label>
+                            <h4 className="mh-cc-h2">Seguridad en la mesa</h4>
+                            <p className="mh-cc-p">Acordad antes de jugar qué temas quedan fuera. Los jugadores los verán en la campaña.</p>
+                            <LinesVeilsEditor lines={newCampaignLimits.lines} veils={newCampaignLimits.veils} onChange={setNewCampaignLimits} />
+                          </section>
+                        )}
+
+                        {ccStep === 4 && (
+                          <section className="mh-cc-sec">
+                            <h3 className="mh-cc-h"><i>5</i> Imágenes y resumen</h3>
+                            <label className="mh-cc-switch">
+                              <input type="checkbox" checked={newCampaignAI || !!qs?.ai} disabled={!!qs?.ai} onChange={(e) => setNewCampaignAI(e.target.checked)} />
+                              <i aria-hidden="true" />
+                              <span><b>Imágenes creadas con IA</b><small>{qs?.ai ? "Esta aventura incluye un mapa de combate generado con IA, así que va marcada." : "Avisa a tus jugadores de que las imágenes de esta campaña (escenas, mapas, personajes) se han generado con inteligencia artificial."}</small></span>
+                            </label>
+                            <div className="mh-cc-sum">
+                              <span><b>Empiezas con</b>{qs ? qs.name : "Campaña en blanco"}</span>
+                              <span><b>Nombre</b>{newCampaignName.trim() || (qs ? qs.name : "—")}</span>
+                              <span><b>Contenido del Taller</b>{newCampaignCustom ? "Permitido" : "No permitido"}</span>
+                              <span><b>Límites de la mesa</b>{newCampaignLimits.lines.length + newCampaignLimits.veils.length ? newCampaignLimits.lines.length + " línea(s) y " + newCampaignLimits.veils.length + " velo(s)" : "Sin definir"}</span>
+                            </div>
+                          </section>
+                        )}
+                      </div>
+
+                      <div className="mh-cc-nav">
+                        {ccStep > 0 && (
+                          <button type="button" className="mh-btn-ghost" onClick={() => (setCcDir(-1), setCcStep(ccStep - 1))}><ChevronLeft size={14} /> Atrás</button>
+                        )}
+                        <span style={{ flex: 1 }} />
+                        {ccStep === 1 && !canCreate && <small className="mh-cc-hint">Ponle un nombre para continuar.</small>}
+                        {ccStep < ccSteps.length - 1 ? (
+                          <button type="button" className="mh-btn" disabled={ccStep === 1 && !canCreate} onClick={() => (setCcDir(1), setCcStep(ccStep + 1))}>Siguiente <ChevronRight size={14} /></button>
+                        ) : (
+                          <button type="button" className="mh-btn" disabled={!canCreate} onClick={qs ? () => createQuickstart(qs.build) : createCampaign}><Check size={14} /> Crear campaña</button>
+                        )}
+                      </div>
                     </div>
 
                     <aside className="mh-cc-side">
@@ -34897,13 +34954,6 @@ export default function App({ onSignOut }) {
                         null,
                         ccColor
                       )}
-                      <div className="mh-cc-acts">
-                        <button type="button" className="mh-btn" disabled={!canCreate} onClick={qs ? () => createQuickstart(qs.build) : createCampaign}>
-                          <Check size={14} /> Crear campaña
-                        </button>
-                        <button type="button" className="mh-btn-ghost" onClick={resetNewCampaign}>Cancelar</button>
-                      </div>
-                      {!canCreate && <small className="mh-cc-hint">Ponle un nombre para poder crearla.</small>}
                     </aside>
                   </div>
                 )}
