@@ -33,13 +33,14 @@ export const KINDS = [
   { key: "comunidad", label: "Comunidad", plural: "Comunidades" },
   { key: "subclase", label: "Subclase", plural: "Subclases" },
   { key: "transformacion", label: "Transformación", plural: "Transformaciones" },
+  { key: "salvaje", label: "Salvaje", plural: "Cartas Salvajes" },
   { key: "forma", label: "Forma de Bestia", plural: "Formas de Bestia" },
   { key: "arma", label: "Arma", plural: "Armas" },
   { key: "armadura", label: "Armadura", plural: "Armaduras" },
   { key: "adversario", label: "Adversarios", plural: "Adversarios" },
   { key: "entorno", label: "Entornos", plural: "Entornos" },
 ];
-const KIND_COLOR = { dominio: "#C9A24A", ascendencia: "#6FA3C0", comunidad: "#C08B5C", subclase: "#7FB77A", transformacion: "#A58BE8", forma: "#E0A04A", arma: "#C9A24A", armadura: "#C9A24A", adversario: "#D9644E", entorno: "#5FA39A" };
+const KIND_COLOR = { dominio: "#C9A24A", ascendencia: "#6FA3C0", comunidad: "#C08B5C", subclase: "#7FB77A", transformacion: "#A58BE8", salvaje: "#D94F7A", forma: "#E0A04A", arma: "#C9A24A", armadura: "#C9A24A", adversario: "#D9644E", entorno: "#5FA39A" };
 
 // La carta, tal cual se ve al abrirla; en la cuadrícula tiene exactamente el mismo tamaño (300 × 420).
 export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
@@ -50,13 +51,75 @@ export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
   const modal = !!onClose;
   const dom = c.kind === "dominio";
   // Ascendencias y comunidades usan el mismo diseño que las de dominio, sin cinta de nivel ni coste.
-  const gen = c.kind === "ascendencia" || c.kind === "comunidad" || c.kind === "transformacion" || c.kind === "accion" || c.kind === "adversario" || c.kind === "entorno";
+  const gen = c.kind === "ascendencia" || c.kind === "comunidad" || c.kind === "transformacion" || c.kind === "salvaje" || c.kind === "accion" || c.kind === "adversario" || c.kind === "entorno";
   const sub = c.kind === "subclase"; // cinta con el rango en numeral romano: I Fundación, II Especialización, III Maestría
   const bst = c.kind === "forma"; // cinta con el rango de la forma
   const wpn = c.kind === "arma" || c.kind === "armadura"; // armas y armaduras: cinta con el rango (I Común … IV Legendario) y el mismo diseño que en la hoja
   const g = c.gear;
   const roman = ["I", "II", "III", "IV"];
   const bg = dom || gen || sub || bst || wpn;
+  // Opción «Ilustración a toda la carta» (full art): la imagen llena la carta y el texto va abajo sobre un velo degradado.
+  const full = !!(c.fullArt && c.image);
+  if (full) {
+    const chips = (wpn
+      ? [g && g.big && (g.label ? g.label + " " : "") + g.big + (g.small ? " " + g.small : ""), g && g.foot, g && g.pill]
+      : dom
+      ? [c.type, "Nivel " + c.level, !c.noCost && "Recuperación " + (c.recall ?? "—"), "Dominio " + c.domain]
+      : sub
+      ? [c.rankLabel, c.sub]
+      : [c.sub]
+    ).filter(Boolean);
+    const lines = wpn && g ? String(g.feature || "").split("\n").filter(Boolean) : [];
+    const para = (t, i) => {
+      const k = t.indexOf(": ");
+      return (
+        <div key={i} className="mh-cf-p">
+          {k > 0 && k < 40 ? <><b>{t.slice(0, k)}</b>{": " + t.slice(k + 2)}</> : t}
+        </div>
+      );
+    };
+    return (
+      <div
+        className={"mh-card mh-cardc is-bg is-full" + (modal ? " mh-card-anim" : "") + (modal || legend || bg ? " mh-tilt" : "") + (wpn ? " is-wp" : "") + (legend ? " is-legend" : "")}
+        style={{ "--glow": alpha(col, 51), "--cc": col, margin: 0, width: modal ? "min(300px, 100%)" : 300, height: modal ? "min(420px, 80vh)" : 420, maxWidth: "100%", padding: 0, overflow: "hidden", borderRadius: 22, display: "flex", flexDirection: "column", border: "2px solid " + col, position: "relative", textAlign: "left" }}
+        {...(tilt || {})}
+      >
+        <div className="mh-glare" />
+        {legend && <div className="mh-holo is-idle" />}
+        {legend && <div className="mh-legend-sheen" />}
+        <div className="mh-cf-art">
+          <img src={c.image} alt={modal ? c.key : ""} style={{ objectPosition: (c.imgX ?? 50) + "% " + (c.imgY ?? 30) + "%", transform: "scale(" + (c.imgZoom || 1) + ")", transformOrigin: (c.imgX ?? 50) + "% " + (c.imgY ?? 30) + "%" }} />
+        </div>
+        <div className="mh-cf-top" />
+        <div className="mh-cardc-badge">
+          {dom && <span className="mh-cardc-gem" title={"Nivel " + c.level}>{c.level}<I size={19} strokeWidth={1.8} /></span>}
+          {sub && <span className="mh-cardc-gem is-rank" title={c.rankLabel}>{roman[c.rank || 0]}<I size={19} strokeWidth={1.8} /></span>}
+          {wpn && <span className="mh-cardc-gem is-rank" title={"Rango " + c.tier}>{roman[(c.tier || 1) - 1]}<I size={19} strokeWidth={1.8} /></span>}
+          {bst && <span className="mh-cardc-gem is-rank" title={"Rango " + c.tier}>{roman[(c.tier || 1) - 1]}<I size={19} strokeWidth={1.8} /></span>}
+        </div>
+        {dom && !c.noCost && <span className="mh-cardc-cost" title="Coste de recuperación">{c.recall ?? "—"}<Zap size={12} fill="currentColor" /></span>}
+        <div className="mh-cf-body">
+          <FitTitle text={c.key} max={20} min={14} className="mh-serif" style={{ fontWeight: 700, color: "#fff", textShadow: "0 2px 10px #000", maxHeight: "2.4em", overflow: "hidden" }} />
+          {chips.length > 0 && <div className="mh-cf-chips">{chips.map((t) => <span key={t}>{t}</span>)}</div>}
+          <FitBox fitKey={c.key + total + (g ? g.feature : "") + chips.length} max={12.5} min={8} style={{ flex: "0 1 auto", minHeight: 0, overflow: "hidden", textAlign: "center", lineHeight: 1.4, color: "#f4efe2", textShadow: "0 1px 3px #000" }}>
+            {wpn && g ? (
+              lines.length ? lines.map(para) : <div className="mh-cf-p" style={{ fontStyle: "italic", opacity: 0.8 }}>Sin característica especial.</div>
+            ) : (
+              <>
+                {c.text && <div className="mh-cf-p">{c.text}</div>}
+                {feats.map((f) => (
+                  <div key={f.name} className="mh-cf-p">
+                    <b>{f.name}</b>{f.text ? ": " + f.text : ""}
+                    {f.subs && f.subs.map((e) => <div key={e.name} style={{ marginTop: 3 }}><b>{e.name}</b>: {e.text}</div>)}
+                  </div>
+                ))}
+              </>
+            )}
+          </FitBox>
+        </div>
+      </div>
+    );
+  }
   return (
     <div
       className={"mh-card mh-cardc" + (modal ? " mh-card-anim" : "") + (modal || legend || bg ? " mh-tilt" : "") + (bg ? " is-bg" : "") + (wpn ? " is-wp" : "") + (legend ? " is-legend" : "")}

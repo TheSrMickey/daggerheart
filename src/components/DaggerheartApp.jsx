@@ -26,6 +26,7 @@ import { RulesPanel } from "./MapRules";
 import { Changelog } from "./Changelog";
 import { CardsPage, CardFace } from "./Cards";
 import { WorkshopPage } from "./Workshop";
+import PortraitCrop from "./PortraitCrop";
 import { printSheet } from "@/lib/sheetPdf";
 import { Generators } from "./Generators";
 import { CampaignCalendar, HomeNextSession } from "./Calendar";
@@ -203,6 +204,26 @@ const SUBCLASSES = {
         { name: "Tierra", text: "Tus umbrales de daño mejoran en una cantidad igual a tu Competencia." },
         { name: "Agua", text: "Al dañar a un adversario en alcance Cuerpo a Cuerpo, el resto de adversarios en alcance Muy Cercano deben marcar un Estrés." },
         { name: "Aire", text: "Puedes flotar en el aire, con ventaja en las tiradas de Agilidad." },
+        {
+          name: "Aura Elemental (Especialización)",
+          text: "Una vez por descanso, mientras canalizas, puedes adoptar un aura acorde con tu elemento. El aura afecta a los objetivos en alcance Cercano hasta que termine tu canalización.",
+          subs: [
+            { name: "Fuego", text: "Cuando un adversario marque 1 o más Puntos de vida, también debe marcar un Estrés." },
+            { name: "Tierra", text: "Tus aliados obtienen un +1 a Fuerza." },
+            { name: "Agua", text: "Cuando un adversario te haga daño, puedes marcar un Estrés para moverlo a cualquier lugar en alcance Muy Cercano de donde esté." },
+            { name: "Aire", text: "Cuando tú o un aliado recibáis daño de un ataque más allá del alcance Cuerpo a Cuerpo, reduce el daño en 1d8." },
+          ],
+        },
+        {
+          name: "Dominio Elemental (Maestría)",
+          text: "Encarnas aún más tu elemento. Mientras canalizas, obtienes el siguiente beneficio:",
+          subs: [
+            { name: "Fuego", text: "Obtienes un +1 a tu Competencia en los ataques y hechizos que infligen daño." },
+            { name: "Tierra", text: "Cuando fueras a marcar Puntos de vida, tira un d6 por cada Punto de vida marcado. Por cada resultado de 6, reduce en 1 los Puntos de vida que marcas." },
+            { name: "Agua", text: "Cuando un ataque contra ti tenga éxito, puedes marcar un Estrés para dejar al atacante Vulnerable temporalmente." },
+            { name: "Aire", text: "Obtienes un +1 a tu Evasión y puedes volar." },
+          ],
+        },
       ],
     },
     {
@@ -1012,6 +1033,16 @@ const buildCardCatalog = () => {
       Icon: beastIcon(b.key),
     }),
   );
+  // Cartas Salvajes: limitadas y muy especiales; se colocan en la bóveda de forma permanente al usarlas.
+  [
+    { key: "Puedes con esto", text: "Gasta cualquier cantidad de Esperanza. Un aliado a tu elección en alcance Lejano gana una cantidad de Esperanza igual a 1 + la Esperanza que has gastado. Después, coloca esta carta en tu bóveda de forma permanente.", image: "/cartas-salvajes/tienes-esto.webp" },
+    { key: "Todo es justo", text: "El grupo gana una cantidad de Esperanza igual al número de Miedo que hay en la reserva del DJ. Reparte esa Esperanza entre los PJ como quieras y, después, coloca esta carta en tu bóveda de forma permanente.", image: "/cartas-salvajes/todo-es-justo.webp" },
+    { key: "Apoyo comunitario", text: "Al comienzo de una sesión, coloca un dado de ventaja d6 en esta carta. Tú o un aliado podéis usar este dado en cualquier tirada de acción o de reacción y, después, descartarlo. Cuando se use el dado, coloca esta carta en tu bóveda de forma permanente.", image: "/cartas-salvajes/apoyo-comunitario.webp" },
+    { key: "Te cubro las espaldas", text: "Obtienes un bonificador de +5 a cualquier tirada de acción que hagas para calmar a alguien, animarlo o levantarle la moral. Si tiene éxito, esa persona se libra de 1d4+1 de Estrés y esta carta se coloca en tu bóveda de forma permanente.", image: "/cartas-salvajes/te-cubro-las-espaldas.webp" },
+    { key: "Tómate tu tiempo", text: "Tú o un aliado podéis realizar una acción de tiempo libre adicional durante un descanso. Después, coloca esta carta en tu bóveda de forma permanente.", image: "/cartas-salvajes/tomate-tu-tiempo.webp" },
+    { key: "Juntos en esto", text: "Inicia una Tirada en Equipo sin gastar Esperanza. Después, coloca esta carta en tu bóveda de forma permanente.", image: "/cartas-salvajes/juntos-en-esto.webp" },
+    { key: "Solo estamos empezando", text: "Cuando recibas daño, puedes ganar una cantidad de Esperanza igual al número de Puntos de vida que marques. Si lo haces, coloca esta carta en tu bóveda de forma permanente.", image: "/cartas-salvajes/solo-estamos-empezando.webp" },
+  ].forEach((w) => out.push({ id: "wild-" + w.key, kind: "salvaje", key: w.key, sub: "Salvaje", text: w.text, features: [], image: w.image, color: "#D94F7A", Icon: Sparkles }));
   // Armas (principales y secundarias), ordenadas por rango.
   const wlist = [...PRIMARY_WEAPONS.map((w) => ({ w, prim: true })), ...SECONDARY_WEAPONS.map((w) => ({ w, prim: false }))];
   wlist.forEach(({ w, prim }, i) => {
@@ -4556,6 +4587,14 @@ const sharedStyles = `
   /* Carta de dominio (diseño oficial adaptado): cinta de nivel, tipo en cápsula, coste arriba a la derecha y texto sobre un fundido */
   .mh-cardc.is-bg { background: #10112a !important; }
   .mh-cardc.is-bg .mh-cardc-art { height: var(--abg, 188px) !important; min-height: var(--abg, 188px); }
+  /* Carta full art: la ilustración llena la carta; el texto va abajo sobre un velo degradado (sin difuminado) */
+  .mh-cardc.is-full > .mh-cf-art { position: absolute !important; inset: 0; z-index: 0 !important; overflow: hidden; } .mh-cf-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .mh-cardc.is-full > .mh-cf-top { position: absolute !important; left: 0; right: 0; top: 0; height: 84px; z-index: 1 !important; pointer-events: none; background: linear-gradient(rgba(6,5,14,.62), rgba(6,5,14,0)); }
+  .mh-cardc.is-full > .mh-cf-body { position: absolute !important; left: 0; right: 0; bottom: 0; max-height: 66%; z-index: 3 !important; display: flex; flex-direction: column; justify-content: flex-end; gap: 7px; padding: 0 16px 14px; text-align: center; isolation: isolate; }
+  .mh-cf-body::before { content: ""; position: absolute; left: 0; right: 0; bottom: 0; top: -54px; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(10,8,20,0) 0%, rgba(10,8,20,.78) 36%, rgba(10,8,20,.95) 100%); }
+  .mh-cf-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; } .mh-cf-chips span { padding: 2px 8px; border-radius: 99px; background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.22); color: #f4efe2; font: 600 9.5px/1.3 Inter, system-ui, sans-serif; }
+  .mh-cf-p { margin: 0 0 .5em; } .mh-cf-p:last-child { margin-bottom: 0; } .mh-cf-p b { color: #F5CF72; }
+  .mh-cardc.is-full > .mh-cardc-badge, .mh-cardc.is-full > .mh-cardc-cost { z-index: 4 !important; }
   .mh-cardc.is-bg .mh-cardc-art img, .mh-cardc.is-bg .mh-cardc-noart { bottom: auto; height: calc(var(--abg, 188px) + 34px); object-position: 46% 28%; }
   .mh-cardc.is-bg .mh-cardc-noart { padding-top: 0; align-items: center; }
   .mh-cardc.is-bg .mh-cardc-art img, .mh-cardc.is-bg .mh-cardc-noart { -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 52%, transparent 100%); mask-image: linear-gradient(180deg, #000 0%, #000 52%, transparent 100%); }
@@ -7659,13 +7698,11 @@ const sharedStyles = `
   .dpk-q { margin: 0; font-size: 13px; color: var(--mh-muted2); text-align: center; line-height: 1.4; flex-shrink: 0; }
   .dpk-deck { position: relative; flex: 1; min-height: 190px; }
   .dpk-card, .dpk-slot { position: absolute; transform: rotate(var(--r)); transform-origin: 50% 90%; transition: transform .25s cubic-bezier(.2,.8,.2,1), filter .2s; }
-  .dpk-card { filter: drop-shadow(0 12px 18px rgba(0,0,0,.55)); animation: dsw-deal .6s cubic-bezier(.2,.9,.25,1.1) backwards; }
+  .dpk-card { cursor: pointer; filter: drop-shadow(0 12px 18px rgba(0,0,0,.55)); animation: dsw-deal .6s cubic-bezier(.2,.9,.25,1.1) backwards; }
   .dpk-card:hover { transform: translateY(-14px) rotate(0deg) scale(1.04); z-index: 50 !important; }
   .dpk-card.is-out { animation: dsw-out .33s cubic-bezier(.5,0,.8,.4) both; pointer-events: none; }
   .dpk-card.is-target { cursor: pointer; animation: dsw-glow 1s ease-in-out infinite alternate; } .dpk-card.is-target:hover { filter: drop-shadow(0 0 22px var(--cc)); }
   .dpk-slot { border: 2px dashed var(--mh-line2); border-radius: 22px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--mh-muted2); font: 600 12px 'Inter', system-ui, sans-serif; background: color-mix(in srgb, var(--mh-ink) 4%, transparent); }
-  .dpk-rm { all: unset; cursor: pointer; position: absolute; right: -6px; top: -6px; z-index: 4; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: #C0504A; box-shadow: 0 4px 10px rgba(0,0,0,.5); opacity: 0; transition: opacity .15s; }
-  .dpk-card:hover .dpk-rm, .dpk-rm:focus-visible { opacity: 1; }
   .dpk-h { display: flex; align-items: center; justify-content: flex-start; gap: 10px; flex-wrap: wrap; flex-shrink: 0; } .dpk-h .dpk-lv { margin-left: auto; } .dpk-tabs button { display: inline-flex; align-items: center; gap: 6px; } .dpk-info { margin-left: 0; }
   .dpk-tip { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-radius: 14px; font-size: 12.5px; line-height: 1.4; color: var(--mh-ink2); background: color-mix(in srgb, #E3B04B 12%, transparent); border: 1px solid #E3B04B55; flex-shrink: 0; } .dpk-tip svg { flex-shrink: 0; color: #E3B04B; } .dpk-tip b { color: var(--mh-ink); }
   .dpk-tabs button { position: relative; }
@@ -7728,7 +7765,6 @@ const sharedStyles = `
   .mh-root.is-mobile .dpk-deck::-webkit-scrollbar { display: none; }
   .mh-root.is-mobile .dpk-card, .mh-root.is-mobile .dpk-slot { position: relative !important; left: auto !important; top: auto !important; flex: none; scroll-snap-align: center; transform: none; animation: none; }
   .mh-root.is-mobile .dpk-card:hover { transform: none; }
-  .mh-root.is-mobile .dpk-rm { opacity: 1; }
   .mh-root.is-mobile .dpk-pv { display: none; }
   .mh-root.is-mobile .dpk-shelf { max-height: none; overflow: visible; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
   .mh-root.is-mobile .dpk-tip { align-items: flex-start; }
@@ -10944,11 +10980,6 @@ function DomainPicker({ entries, sel, limit, level, domains, colors, onChange })
           return (
             <div key={k} className={"dpk-card" + (out === k ? " is-out" : "") + (pend ? " is-target" : "")} style={{ ...style, animationDelay: i * 90 + "ms" }} onClick={() => (pend ? replaceWith(k) : retire(k))}>
               <FanFace c={c} col={col} />
-              {!pend && (
-                <button type="button" className="dpk-rm" onClick={(e) => (e.stopPropagation(), retire(k))} aria-label={"Retirar " + k} title="Retirar de la mano">
-                  <X size={14} strokeWidth={2.6} />
-                </button>
-              )}
             </div>
           );
         })}
@@ -15255,6 +15286,7 @@ export default function App({ onSignOut }) {
   const [portraitDlg, setPortraitDlg] = useState(null); // id del personaje cuyo diálogo de imágenes está abierto
   const [gearMenu, setGearMenu] = useState(null); // menú del engranaje de la ficha
   const [portraitMsg, setPortraitMsg] = useState("");
+  const [portraitCrop, setPortraitCrop] = useState(null); // { id, state, file }: imagen elegida a la espera de encuadrarla
   useEffect(() => {
     if (!portraitMsg) return undefined;
     const t = setTimeout(() => setPortraitMsg(""), 3800);
@@ -18697,7 +18729,7 @@ export default function App({ onSignOut }) {
   // Dados 3D con física (solo en las tiradas de Agilidad, de momento): mientras ruedan, la tarjeta de resultado espera.
   const [dice3d, setDice3d] = useState(null);
   // Aspecto de dado equipado (privado de cada cuenta): «cristal», «cosmico» u «oficial».
-  const [diceSkin, setDiceSkin] = useState("cristal");
+  const [diceSkin, setDiceSkin] = useState("oficial");
   // Se prepara el renderer 3D y se compilan los shaders de los dados con el navegador libre, para que la primera tirada no se atasque.
   useEffect(() => {
     warmDice3D(diceSkin);
@@ -20433,7 +20465,7 @@ export default function App({ onSignOut }) {
                         title: subclassEntry.key,
                         text: subclassEntry.blurb,
                         accent: CLASS_COLORS[c.f_class] || undefined,
-                        features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento", "Escuela de la Guerra", "Bruja Lunar", "Bruja del Seto", "Pacto del Eterno", "Pacto del Iracundo", "Titán", "Artista Marcial", "Gremio del Verdugo", "Gremio del Envenenador", "Nigromancia", "Teúrgia", "Orden del Licántropo", "Orden del Mutante", "Orden del Espectro"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.features,
+                        features: ["Trovador", "Orador", "Guardián de la Renovación", "Inquebrantable", "Vengador", "Vínculo Bestial", "Rastreador", "Caminante Nocturno", "Sindicato", "Portador Divino", "Centinela Alado", "Origen Elemental", "Origen Primigenio", "Llamado del Valiente", "Llamado del Cazador", "Escuela del Conocimiento", "Escuela de la Guerra", "Bruja Lunar", "Bruja del Seto", "Pacto del Eterno", "Pacto del Iracundo", "Titán", "Artista Marcial", "Gremio del Verdugo", "Gremio del Envenenador", "Nigromancia", "Teúrgia", "Orden del Licántropo", "Orden del Mutante", "Orden del Espectro"].includes(subclassEntry.key) ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name)) : subclassEntry.key === "Guardián de los Elementos" ? (subclassEntry.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name) || tierForLevel(Number(c.f_level || 1)) >= (/Maestría/.test(f.name) ? 3 : 2)) : subclassEntry.features,
                         image: SUBCLASS_CARD_ART[subclassEntry.key] || subclassEntry.image,
                         bigStyle: true,
                         ...(isElemental ? { elementalAction: true } : {}),
@@ -30472,6 +30504,9 @@ export default function App({ onSignOut }) {
                                 ) : null;
                               })()}
                               <span style={{ fontWeight: 700, color: "var(--mh-gold-ink)" }}>:</span> {f.text}
+                              {f.subs && f.subs.map((e) => (
+                                <div key={e.name} style={{ marginLeft: 12, marginTop: 2 }}><b>{e.name}:</b> {e.text}</div>
+                              ))}
                             </div>
                           ))}
                         </div>
@@ -31311,7 +31346,10 @@ export default function App({ onSignOut }) {
           const file = e.target.files?.[0];
           const tg = portraitTarget.current;
           e.target.value = "";
-          if (file && tg) uploadPortrait(tg.id, tg.state, file);
+          if (!file || !tg) return;
+          if (!/^image\//.test(file.type)) return setPortraitMsg("Ese archivo no es una imagen.");
+          if (file.size > 5 * 1024 * 1024) return setPortraitMsg("La imagen pesa más de 5 MB.");
+          setPortraitCrop({ id: tg.id, state: tg.state, file });
         }}
       />
       {gearMenu && (() => {
@@ -31382,6 +31420,7 @@ export default function App({ onSignOut }) {
           document.querySelector(".mh-root") || document.body
         );
       })()}
+      {portraitCrop && <PortraitCrop file={portraitCrop.file} onCancel={() => setPortraitCrop(null)} onDone={(f) => { const j = portraitCrop; setPortraitCrop(null); uploadPortrait(j.id, j.state, f); }} />}
       {portraitMsg && <div className="mh-pt-toast" role="status">{portraitMsg}</div>}
 
       {/* Dock inferior flotante (móvil) */}
@@ -35205,6 +35244,13 @@ export default function App({ onSignOut }) {
                                       <div key={f.name}>
                                         <b>{f.name}</b>
                                         <span>{f.text}</span>
+                                        {f.subs && (
+                                          <ul className="mh-wz-subs-l">
+                                            {f.subs.map((e) => (
+                                              <li key={e.name}><b>{e.name}</b> {e.text}</li>
+                                            ))}
+                                          </ul>
+                                        )}
                                       </div>
                                     ))}
                                   </div>

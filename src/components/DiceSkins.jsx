@@ -128,15 +128,15 @@ export function makeResinMaterial(THREE, kind) {
   const uniforms = { uTime: { value: 0 } };
   const hope = kind === "hope";
   const mat = new THREE.MeshPhysicalMaterial({
-    color: hope ? 0xffb81a : 0x0a0a52,
+    color: hope ? 0x8a4604 : 0x0a0a52,
     roughness: 0.1,
     clearcoat: 1,
     clearcoatRoughness: 0.04,
-    envMapIntensity: 0.5,
+    envMapIntensity: hope ? 0.22 : 0.5,
   });
-  const base = hope ? "vec3(.33,.22,.02)" : "vec3(.012,.012,.07)";
-  const gl = hope ? "vec3(1.,.95,.6)" : "vec3(.6,.7,1.)";
-  injectSet(mat, uniforms, { key: kind, emissive: "totalEmissiveRadiance += " + base + " + sGlitter(vOP, " + (hope ? "20." : "26.") + ") * " + gl + " * 3.0;" });
+  const base = hope ? "vec3(.045,.02,.0)" : "vec3(.012,.012,.07)";
+  const gl = hope ? "vec3(1.,.8,.4)" : "vec3(.6,.7,1.)";
+  injectSet(mat, uniforms, { key: kind, emissive: "totalEmissiveRadiance += " + base + " + sGlitter(vOP, " + (hope ? "20." : "26.") + ") * " + gl + " * " + (hope ? "1.6" : "3.0") + ";" });
   return { mat, uniforms };
 }
 
