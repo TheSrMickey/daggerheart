@@ -6173,7 +6173,8 @@ const sharedStyles = `
   .cgs-convs { display: flex; flex-direction: column; gap: 5px; margin: -2px 0 4px 56px; padding-left: 12px; border-left: 2px solid color-mix(in srgb, #E3B04B 40%, var(--mh-line)); }
   .cgs-conv { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 9px; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel); color: var(--mh-ink2); } .cgs-conv:hover { border-color: #E3B04B; } .cgs-conv > svg:first-child { color: #E3B04B; flex: none; } .cgs-conv b { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; color: var(--mh-ink); } .cgs-conv small { font-size: 11.5px; color: var(--mh-muted); }
   .cgs-sec > header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; } .cgs-sec > header > b { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--mh-ink2); } .cgs-sec > header .mh-btn-ghost { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; }
-  .cgs-card { position: relative; cursor: grab; } .cgs-card.is-dragging { opacity: .4; } .cgs-card.is-over { box-shadow: 0 -3px 0 0 #E3B04B; }
+  .cgs-card { position: relative; cursor: grab; } .cgs-card.is-dragging { opacity: .4; } .cgs-card.is-over { box-shadow: 0 -3px 0 0 #E3B04B; } .cgs-card.is-over-after { box-shadow: 0 3px 0 0 #E3B04B; }
+  .mh-hs-row { position: relative; } .mh-hs-row[draggable="true"] { cursor: grab; } .mh-hs-row.is-dragging { opacity: .4; } .mh-hs-row.is-over-before { box-shadow: 0 -3px 0 0 #E3B04B; } .mh-hs-row.is-over-after { box-shadow: 0 3px 0 0 #E3B04B; } .mh-hs-grip { position: absolute; left: 1px; top: 50%; translate: 0 -50%; z-index: 1; color: var(--mh-muted2); opacity: 0; transition: opacity .15s; pointer-events: none; } .mh-hs-row:hover .mh-hs-grip { opacity: 1; }
   .cgs-grip { flex: none; display: grid; place-items: center; color: var(--mh-muted2); } .cgs-card:hover .cgs-grip { color: var(--mh-ink2); }
   .cgs-num { flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font: 700 11.5px 'Inter', system-ui, sans-serif; background: var(--mh-panel); border: 1px solid var(--mh-line2); color: var(--mh-ink2); }
   .cgs-cards { display: flex; flex-direction: column; gap: 8px; }
@@ -6192,6 +6193,7 @@ const sharedStyles = `
   .cgs-box-th { position: relative; aspect-ratio: 16 / 9; background: #2B3A4F center / cover no-repeat; display: block; } .cgs-box-th.is-blank { background-image: linear-gradient(#2B3A4F, #6E7F8C 58%, #C9A879); }
   .cgs-box-th i { position: absolute; left: 8px; top: 8px; min-width: 24px; height: 24px; padding: 0 6px; box-sizing: border-box; border-radius: 99px; display: grid; place-items: center; font: 800 12px 'Inter', sans-serif; font-style: normal; background: #0c0c20cc; color: #fff; } .cgs-box-th em { position: absolute; right: 8px; top: 8px; font-style: normal; font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: 99px; background: #58d68d; color: #06210f; }
   .cgs-box-t { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 5px; } .cgs-box-t b { font-size: 15px; color: var(--mh-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .cgs-box-t small { display: flex; gap: 12px; font-size: 12px; color: var(--mh-muted); } .cgs-box-t small span { display: inline-flex; align-items: center; gap: 4px; }
+  .cgs-box[draggable="true"] { cursor: grab; } .cgs-box.is-dragging { opacity: .4; } .cgs-box.is-over-before { box-shadow: -5px 0 0 0 #E3B04B; } .cgs-box.is-over-after { box-shadow: 5px 0 0 0 #E3B04B; }
   .cgs-box-mv { position: absolute; right: 8px; bottom: 8px; display: flex; gap: 2px; opacity: 0; transition: opacity .15s; } .cgs-box:hover .cgs-box-mv, .cgs-box:focus-within .cgs-box-mv { opacity: 1; } .cgs-box-mv button { all: unset; cursor: pointer; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 8px; background: var(--mh-panel3); color: var(--mh-ink3); border: 1px solid var(--mh-line2); } .cgs-box-mv button:hover:not(:disabled) { color: var(--mh-ink); } .cgs-box-mv button:disabled { opacity: .3; cursor: default; } .cgs-box-mv button:focus-visible { outline: 2px solid #E3B04B; }
   .cgs-box.is-new { all: unset; box-sizing: border-box; cursor: pointer; min-height: 140px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; border-radius: 18px; border: 1px dashed var(--mh-line2); color: var(--mh-ink3); font-size: 13px; font-weight: 600; } .cgs-box.is-new:hover { border-color: #E3B04B; color: var(--mh-ink); transform: none; } .cgs-box.is-new:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
   .cgs-tl { flex: none; display: flex; align-items: center; gap: 12px; padding-top: 12px; border-top: 1px solid var(--mh-line); } .cgs-tl-l { flex: none; font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-muted); }
@@ -12682,6 +12684,9 @@ export default function App({ onSignOut }) {
   const [addContentFor, setAddContentFor] = useState(null); // capítulo al que se está añadiendo contenido (escena o mapa de combate)
   const [dragKey, setDragKey] = useState(null);
   const [overKey, setOverKey] = useState(null);
+  const [overAfter, setOverAfter] = useState(false); // el contenido arrastrado caería después (true) o antes (false) de overKey
+  const [scDrag, setScDrag] = useState(null); // capítulo que se está arrastrando en la lista
+  const [scOver, setScOver] = useState(null); // { id, after }
   const [newChOpen, setNewChOpen] = useState(0); // 0 cerrado · 1 elegir cómo crear el capítulo · 2 elegir plantilla
   charsRef.current = characters;
   const [currentCharId, setCurrentCharId] = useState(null);
@@ -17846,6 +17851,18 @@ export default function App({ onSignOut }) {
     const j = i + dir;
     if (i < 0 || j < 0 || j >= scenes.length) return;
     [scenes[i], scenes[j]] = [scenes[j], scenes[i]];
+    saveStage(viewingCampaignId, { scenes, activeSceneId: activeSceneIdOf(campaignStage) });
+  };
+  // Arrastrar un capítulo: cae antes o después del que hay debajo, según la mitad que se señale.
+  const reorderScene = (fromId, toId, after) => {
+    if (!fromId || fromId === toId) return;
+    const scenes = [...stageScenesOf(campaignStage)];
+    const from = scenes.findIndex((x) => x.id === fromId);
+    if (from < 0) return;
+    const [mv] = scenes.splice(from, 1);
+    const to = scenes.findIndex((x) => x.id === toId);
+    if (to < 0) return;
+    scenes.splice(to + (after ? 1 : 0), 0, mv);
     saveStage(viewingCampaignId, { scenes, activeSceneId: activeSceneIdOf(campaignStage) });
   };
   const removeChapter = (id) => {
@@ -32996,7 +33013,23 @@ export default function App({ onSignOut }) {
                           const nM = campaignMaps.filter((m) => m.sceneId === sc.id).length;
                           const nE = campaignEncounters.filter((e) => e.sceneId === sc.id).length;
                           return (
-                            <div key={sc.id} className={"mh-hs-row" + (sel?.id === sc.id ? " is-on" : "") + (live ? " is-live" : "")}>
+                            <div
+                              key={sc.id}
+                              className={"mh-hs-row" + (sel?.id === sc.id ? " is-on" : "") + (live ? " is-live" : "") + (scDrag === sc.id ? " is-dragging" : "") + (scOver?.id === sc.id ? (scOver.after ? " is-over-after" : " is-over-before") : "")}
+                              draggable={!isMobile}
+                              onDragStart={(e) => { setScDrag(sc.id); e.dataTransfer.effectAllowed = "move"; try { e.dataTransfer.setData("text/plain", sc.id); } catch (er) {} }}
+                              onDragOver={(e) => {
+                                if (!scDrag || scDrag === sc.id) return;
+                                e.preventDefault();
+                                const b = e.currentTarget.getBoundingClientRect();
+                                const after = e.clientY > b.top + b.height / 2;
+                                setScOver((o) => (o && o.id === sc.id && o.after === after ? o : { id: sc.id, after }));
+                              }}
+                              onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setScOver((o) => (o?.id === sc.id ? null : o)); }}
+                              onDrop={(e) => { e.preventDefault(); const o = scOver; setScDrag(null); setScOver(null); if (o && o.id === sc.id) reorderScene(scDrag, sc.id, o.after); }}
+                              onDragEnd={() => { setScDrag(null); setScOver(null); }}
+                            >
+                              {!isMobile && <span className="mh-hs-grip" title="Arrastra para cambiar el orden" aria-hidden="true"><GripVertical size={14} /></span>}
                               <button type="button" className="mh-hs-row-b" onClick={() => openChapter(sc.id)}>
                                 <span className={"mh-hs-thumb" + (sc.image ? "" : " is-blank")} style={bgStyle(sc.image)} />
                                 <span className="mh-hs-row-t">
@@ -33068,10 +33101,13 @@ export default function App({ onSignOut }) {
                           const openEd = (sub, tab) => (setChScene(sub), setChTab(tab), setChOpen(true));
                           const dropItem = (toKey) => {
                             const from = dragKey;
+                            const after = overAfter;
                             setDragKey(null); setOverKey(null);
                             if (!from || from === toKey) return;
                             const keys = items.map((i) => i.key).filter((k) => k !== from);
-                            keys.splice(keys.indexOf(toKey), 0, from);
+                            const at = keys.indexOf(toKey);
+                            if (at < 0) return;
+                            keys.splice(at + (after ? 1 : 0), 0, from);
                             setChapterOrder(sel.id, keys);
                           };
                           return (
@@ -33086,12 +33122,12 @@ export default function App({ onSignOut }) {
                                     const drag = {
                                       draggable: true,
                                       onDragStart: (e) => { setDragKey(it.key); e.dataTransfer.effectAllowed = "move"; try { e.dataTransfer.setData("text/plain", it.key); } catch (er) {} },
-                                      onDragOver: (e) => { if (dragKey && dragKey !== it.key) { e.preventDefault(); setOverKey(it.key); } },
+                                      onDragOver: (e) => { if (dragKey && dragKey !== it.key) { e.preventDefault(); const b = e.currentTarget.getBoundingClientRect(); setOverKey(it.key); setOverAfter(e.clientY > b.top + b.height / 2); } },
                                       onDragLeave: () => setOverKey((k) => (k === it.key ? null : k)),
                                       onDrop: (e) => { e.preventDefault(); dropItem(it.key); },
                                       onDragEnd: () => { setDragKey(null); setOverKey(null); },
                                     };
-                                    const cls = (dragKey === it.key ? " is-dragging" : "") + (overKey === it.key ? " is-over" : "");
+                                    const cls = (dragKey === it.key ? " is-dragging" : "") + (overKey === it.key ? (overAfter ? " is-over-after" : " is-over") : "");
                                     if (it.kind === "map") {
                                       const m = it.m;
                                       return (
@@ -33634,7 +33670,22 @@ export default function App({ onSignOut }) {
                                   const nm = campaignMaps.filter((m) => m.sceneId === sc.id).length;
                                   const live = sc.id === activeSceneId;
                                   return (
-                                    <article key={sc.id} className={"cgs-box" + (live ? " is-live" : "")}>
+                                    <article
+                                      key={sc.id}
+                                      className={"cgs-box" + (live ? " is-live" : "") + (scDrag === sc.id ? " is-dragging" : "") + (scOver?.id === sc.id ? (scOver.after ? " is-over-after" : " is-over-before") : "")}
+                                      draggable
+                                      onDragStart={(e) => { setScDrag(sc.id); e.dataTransfer.effectAllowed = "move"; try { e.dataTransfer.setData("text/plain", sc.id); } catch (er) {} }}
+                                      onDragOver={(e) => {
+                                        if (!scDrag || scDrag === sc.id) return;
+                                        e.preventDefault();
+                                        const b = e.currentTarget.getBoundingClientRect();
+                                        const after = e.clientX > b.left + b.width / 2;
+                                        setScOver((o) => (o && o.id === sc.id && o.after === after ? o : { id: sc.id, after }));
+                                      }}
+                                      onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setScOver((o) => (o?.id === sc.id ? null : o)); }}
+                                      onDrop={(e) => { e.preventDefault(); const o = scOver; setScDrag(null); setScOver(null); if (o && o.id === sc.id) reorderScene(scDrag, sc.id, o.after); }}
+                                      onDragEnd={() => { setScDrag(null); setScOver(null); }}
+                                    >
                                       <button type="button" className="cgs-box-b" onClick={() => openChapter(sc.id)} aria-label={"Editar el capítulo " + (i + 1) + ": " + (sc.title || "Sin título")}>
                                         <span className={"cgs-box-th" + (sc.image ? "" : " is-blank")} style={bgStyle(sc.image)}>
                                           <i>{i + 1}</i>
