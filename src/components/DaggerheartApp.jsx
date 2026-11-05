@@ -55,7 +55,7 @@ const QUICKSTARTS = [
   { key: "sablewood", name: "Los mensajeros de Sablewood", build: buildSablewood, ai: true, text: "Aventura de inicio ya preparada: escenas, pistas ocultas, reparto con diálogos, notas por acto y mapas con enemigos." },
   { key: "wishthief", name: "La ladrona de deseos", build: buildWishThief, ai: false, text: "Aventura de nivel 1 para 3-5 jugadores: escenas por acto, pistas ocultas, reparto con estadísticas y mapas listos." },
 ];
-import { Download, ShieldX, Hand, Wand, CircleDot, MoveUpRight, Archive, Shell, Compass, Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp, Trophy, Star, Pencil } from "lucide-react";
+import { Bone, Download, ShieldX, Hand, Wand, CircleDot, MoveUpRight, Archive, Shell, Compass, Ghost, ChevronsRight, Footprints, RotateCcw, Dog, Waves, Clover, Swords, Dices, ShieldHalf, Plus, Trash2, User, ChevronLeft, ChevronRight, ChevronDown, Sparkles, Users, MapPinned, Check, Languages, Wind, Dumbbell, Crosshair, Eye, Drama, BookOpen, ShieldCheck, Heart, Zap, Backpack, Sword, X, ArrowLeft, Lock, BedDouble, PawPrint, NotebookPen, Home, MessageCircle, Minus, EyeOff, ShieldOff, Leaf, Flame, Mountain, Droplets, Skull, Shield, ZapOff, AlertCircle, ArrowUp, Trophy, Star, Pencil } from "lucide-react";
 
 // Color de cada campaña (se reparte según su id).
 const CAMP_COLORS = ["#A58BE8", "#6FA3C0", "#E0A04A", "#7FB77A", "#D9644E", "#E07FB0"];
@@ -1208,6 +1208,16 @@ const TRAIT_HINTS = {
 
 // Máximo de personajes por cuenta.
 const MAX_CHARACTERS = 3;
+// Cartas que han cambiado de nombre: las guardadas en la hoja se actualizan al cargar.
+const CARD_RENAMES = [["Voz del Pavor", "Voz del Miedo"], ["Tocado por el Pavor", "Tocado por el Miedo"], ["Tocado por la Gracia", "Tocado por el Encanto"]];
+const migrateCardNames = (c) => {
+  if (!c) return c;
+  const out = { ...c };
+  ["f_domain_cards", "f_domain_vault"].forEach((k) => {
+    if (typeof out[k] === "string") CARD_RENAMES.forEach(([a, b]) => { if (out[k].includes(a)) out[k] = out[k].split(a).join(b); });
+  });
+  return out;
+};
 const MAX_CAMPAIGNS = 3; // campañas por cuenta
 
 const TRAIT_MODIFIER_POOL = [
@@ -2440,17 +2450,17 @@ const STARTER_ITEMS = [
 ];
 
 const CLASS_DOMAINS = {
-  Bardo: ["Gracia", "Códice"],
+  Bardo: ["Encanto", "Códice"],
   Druida: ["Naturaleza", "Arcano"],
   Guardián: ["Valor", "Filo"],
   Explorador: ["Hueso", "Naturaleza"],
-  Pícaro: ["Medianoche", "Gracia"],
+  Pícaro: ["Medianoche", "Encanto"],
   Serafín: ["Esplendor", "Valor"],
   Hechicero: ["Arcano", "Medianoche"],
   Guerrero: ["Filo", "Hueso"],
   Mago: ["Códice", "Esplendor"],
   Bruja: ["Naturaleza", "Miedo"],
-  Brujo: ["Miedo", "Gracia"],
+  Brujo: ["Miedo", "Encanto"],
   Camorrista: ["Valor", "Hueso"],
   Asesino: ["Filo", "Medianoche"],
   Invocador: ["Sangre", "Esplendor"],
@@ -2469,7 +2479,7 @@ const DOMAIN_COLORS = {
   Filo: "#C0504A",
   Hueso: "#9AA3B5",
   Códice: "#5E93C9",
-  Gracia: "#E07FB0",
+  Encanto: "#E07FB0",
   Medianoche: "#6B6F94",
   Esplendor: "#E8C547",
   Valor: "#E0823A",
@@ -2481,9 +2491,9 @@ const DOMAIN_ICONS = {
   Arcano: Sparkles,
   Naturaleza: Leaf,
   Filo: Swords,
-  Hueso: Footprints,
+  Hueso: Bone,
   Códice: BookOpen,
-  Gracia: Feather,
+  Encanto: Feather,
   Medianoche: Moon,
   Esplendor: Sun,
   Valor: Shield,
@@ -2491,7 +2501,7 @@ const DOMAIN_ICONS = {
 };
 
 // Iconos oficiales de los dominios (archivos en public/dominios). Sangre no tiene icono oficial: usa el de siempre.
-const DOMAIN_ICON_FILE = { Arcano: "arcana", Filo: "blade", Hueso: "bone", Códice: "codex", Miedo: "dread", Gracia: "grace", Medianoche: "midnight", Naturaleza: "sage", Esplendor: "splendor", Valor: "valor" };
+const DOMAIN_ICON_FILE = { Arcano: "arcana", Filo: "blade", Hueso: "bone", Códice: "codex", Miedo: "dread", Encanto: "grace", Medianoche: "midnight", Naturaleza: "sage", Esplendor: "splendor", Valor: "valor" };
 function DomainIcon({ name, size = 16 }) {
   const f = DOMAIN_ICON_FILE[name];
   if (!f) {
@@ -3354,7 +3364,7 @@ const DOMAIN_CARDS = {
       text: "Una vez por descanso largo, gasta 5 Esperanza para lanzar este hechizo sobre dos o más criaturas dispuestas. Hasta tu próximo descanso, cuando una criatura conectada por esta unión fuera a marcar Estrés o Puntos de Vida, las criaturas conectadas pueden elegir quién lo marca.",
     },
   ],
-  Gracia: [
+  Encanto: [
     {
       key: "Engañador Hábil",
       level: 1,
@@ -3468,12 +3478,12 @@ const DOMAIN_CARDS = {
       text: "Después de hacer una tirada de acción para persuadir, mentir o ganarte favores, puedes gastar una Esperanza para volver a tirar el Dado de Esperanza o el Dado de Miedo.",
     },
     {
-      key: "Tocado por la Gracia",
+      key: "Tocado por el Encanto",
       image: "/cartas-dominio/tocado-por-la-gracia.webp",
       level: 7,
       type: "Habilidad",
       recall: 2,
-      text: "Cuando 4 o más de las cartas de dominio de tu equipo sean del dominio Gracia, obtienes los siguientes beneficios:\n• Puedes marcar una casilla de Armadura en lugar de marcar un Estrés.\n• Cuando fueras a obligar a un objetivo a marcar un número de Puntos de Vida, puedes elegir en su lugar obligarlo a marcar esa cantidad de Estrés.",
+      text: "Cuando 4 o más de las cartas de dominio de tu equipo sean del dominio Encanto, obtienes los siguientes beneficios:\n• Puedes marcar una casilla de Armadura en lugar de marcar un Estrés.\n• Cuando fueras a obligar a un objetivo a marcar un número de Puntos de Vida, puedes elegir en su lugar obligarlo a marcar esa cantidad de Estrés.",
     },
     {
       key: "Proyección Astral",
@@ -4045,7 +4055,7 @@ const DOMAIN_CARDS = {
       text: "Haz una tirada de conjuro contra un objetivo en alcance Lejano. Si tienes éxito:\n• Con Esperanza en la tirada, inflige d6+1 de daño mágico usando tu Competencia. Con Miedo, inflige d10+1 de daño mágico usando tu Competencia.\n• El próximo ataque exitoso del objetivo inflige la mitad de daño.\nSi fallas, debes gastar una Esperanza o marcar un Estrés.",
     },
     {
-      key: "Voz del Pavor",
+      key: "Voz del Miedo",
       image: "/cartas-dominio/voz-del-pavor.webp",
       level: 1,
       type: "Hechizo",
@@ -4141,7 +4151,7 @@ const DOMAIN_CARDS = {
       text: "Cuando infliges daño mágico a un objetivo, puedes marcar un Estrés para teletransportarte a alcance Cuerpo a cuerpo de él. Al hacerlo, queda Vulnerable hasta que marque 1 o más Puntos de Vida.",
     },
     {
-      key: "Tocado por el Pavor",
+      key: "Tocado por el Miedo",
       image: "/cartas-dominio/tocado-por-el-pavor.webp",
       level: 7,
       type: "Habilidad",
@@ -8686,6 +8696,10 @@ const sharedStyles = `
   .so-lab { font: 700 10.5px 'Inter', system-ui, sans-serif; letter-spacing: .09em; text-transform: uppercase; color: var(--mh-muted); margin: 14px 0 8px; }
   .so-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; } .so-acts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 14px; } .so-acts small { color: var(--mh-muted); display: inline-flex; gap: 5px; align-items: center; }
   .so-chip { --c: #C9A24A; appearance: none; font: 600 11.5px 'Inter', sans-serif; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 99px; border: 1px solid var(--mh-line); background: var(--mh-panel); color: var(--mh-ink3); } span.so-chip { cursor: default; }
+  .so-alert { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 10px 14px; margin-bottom: 12px; border-radius: 14px; border: 1px solid #E3B04B66; background: #E3B04B14; font-size: 13px; color: var(--mh-ink); } .so-alert .mh-btn-ghost { margin-left: auto; }
+  .so-tabs { display: flex; gap: 26px; border-bottom: 1px solid var(--mh-line); margin-bottom: 12px; overflow-x: auto; scrollbar-width: none; } .so-tabs button { all: unset; cursor: pointer; position: relative; display: inline-flex; gap: 8px; align-items: center; padding: 10px 2px 13px; font: 700 14px 'Inter', system-ui, sans-serif; color: var(--mh-muted); white-space: nowrap; } .so-tabs button em { font-style: normal; font-size: 11px; color: var(--mh-muted2); } .so-tabs button.on { color: var(--mh-ink); } .so-tabs button.on::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; border-radius: 3px 3px 0 0; background: #E3B04B; }
+  .so-fp { display: flex; flex-wrap: wrap; gap: 12px 22px; align-items: flex-end; padding: 12px 14px; margin-bottom: 14px; border-radius: 16px; background: var(--mh-panel); border: 1px solid var(--mh-line); } .so-fr { display: flex; flex-direction: column; gap: 6px; } .so-fr > span { font: 700 10.5px 'Inter', system-ui, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--mh-muted2); } .so-fr select { min-width: 140px; } .so-chk { flex-direction: row; align-items: center; gap: 8px; font-size: 12.5px; cursor: pointer; } .so-chk span { text-transform: none; letter-spacing: 0; font-size: 12.5px; font-weight: 600; color: var(--mh-ink3); } .so-chk input { accent-color: #E3B04B; width: 16px; height: 16px; }
+  .so-fa { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; } .so-day { min-width: 30px; justify-content: center; } .so-star.on { color: #E3B04B; border-color: #E3B04B88; } .so-ask { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; } .so-ask textarea { min-height: 64px; }
   .so-chip.on { border-color: var(--c); background: color-mix(in srgb, var(--c) 15%, var(--mh-panel)); color: var(--mh-ink); }
   .so-chars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; } .so-char { appearance: none; font: inherit; color: var(--mh-ink); text-align: left; cursor: pointer; display: flex; flex-direction: column; gap: 2px; padding: 9px 10px; border-radius: 12px; border: 1px solid var(--mh-line); background: var(--mh-panel); } .so-char small { color: var(--mh-muted); font-size: 11px; } .so-char.on { border-color: var(--acc, #C9A24A); background: color-mix(in srgb, var(--acc, #C9A24A) 10%, var(--mh-panel)); }
   .so-set { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-top: 1px solid var(--mh-line); cursor: default; } .so-set:first-of-type { border-top: 0; } .so-set b { display: block; font-size: 13px; } .so-set small { color: var(--mh-muted); font-size: 12px; }
@@ -8714,6 +8728,17 @@ const sharedStyles = `
   .cx-chip.on { border-color: var(--c); background: color-mix(in srgb, var(--c) 14%, var(--mh-panel)); color: var(--mh-ink); }
   .cx-chip.off { opacity: .45; cursor: default; }
   .cx-bars { display: block; }
+  .cx-g { display: flex; gap: 26px; border-bottom: 1px solid var(--mh-line); margin: 0 0 12px; overflow-x: auto; scrollbar-width: none; } .cx-g::-webkit-scrollbar, .cx-t::-webkit-scrollbar { display: none; }
+  .cx-g button { all: unset; cursor: pointer; position: relative; display: inline-flex; align-items: center; gap: 8px; padding: 10px 2px 13px; font: 700 14px 'Inter', system-ui, sans-serif; color: var(--mh-muted); white-space: nowrap; flex: none; } .cx-g button:hover { color: var(--mh-ink); } .cx-g button.on { color: var(--mh-ink); }
+  .cx-g button.on::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; border-radius: 3px 3px 0 0; background: #E3B04B; } .cx-g button:focus-visible, .cx-t button:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; border-radius: 6px; }
+  .cx-g em, .cx-t em { font-style: normal; font-size: 11px; font-weight: 600; color: var(--mh-muted2); }
+  .cx-t { display: flex; gap: 22px; margin: 0 0 14px; overflow-x: auto; scrollbar-width: none; } .cx-t button { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 2px 0 4px; font: 600 13.5px 'Inter', system-ui, sans-serif; color: var(--mh-muted); border-bottom: 2px solid transparent; white-space: nowrap; flex: none; } .cx-t button:hover { color: var(--mh-ink); } .cx-t button.on { color: #E3B04B; border-bottom-color: #E3B04B; }
+  .cx-fp { display: flex; flex-wrap: wrap; gap: 14px 28px; align-items: flex-end; padding: 12px 14px; margin: 0 0 6px; border-radius: 16px; background: var(--mh-panel); border: 1px solid var(--mh-line); }
+  .cx-fg { display: flex; flex-direction: column; gap: 7px; min-width: 0; } .cx-fl { font: 700 10.5px 'Inter', system-ui, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--mh-muted2); }
+  .cx-doms { display: flex; flex-wrap: wrap; gap: 6px; } .cx-dom { --c: #888; all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 36px; min-width: 36px; padding: 0 9px; border-radius: 11px; border: 1.5px solid var(--mh-line); color: var(--c); font: 600 12px 'Inter', system-ui, sans-serif; transition: border-color .15s, background .15s; }
+  .cx-dom .cx-dn { display: none; color: var(--mh-ink); } .cx-dom:hover:not(:disabled) { border-color: color-mix(in srgb, var(--c) 65%, var(--mh-line)); } .cx-dom.on { border-color: var(--c); background: color-mix(in srgb, var(--c) 16%, var(--mh-panel)); } .cx-dom.on .cx-dn { display: inline; } .cx-dom.off { opacity: .35; cursor: default; } .cx-dom:focus-visible { outline: 2px solid var(--c); outline-offset: 2px; }
+  .cx-seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--mh-line); border-radius: 10px; overflow: hidden; } .cx-seg button { all: unset; cursor: pointer; padding: 7px 11px; font: 600 12px 'Inter', system-ui, sans-serif; color: var(--mh-muted); border-right: 1px solid var(--mh-line); } .cx-seg button:last-child { border-right: 0; } .cx-seg button:hover { color: var(--mh-ink); } .cx-seg button.on { background: #E3B04B; color: #1a1408; }
+  .cx-sel { font: 600 12.5px 'Inter', system-ui, sans-serif; color: var(--mh-ink); background: var(--mh-panel2); border: 1px solid var(--mh-line); border-radius: 10px; padding: 7px 10px; min-width: 190px; }
   .cx-top { position: fixed; right: 22px; bottom: 22px; z-index: 40; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; color: var(--mh-ink); background: color-mix(in srgb, var(--mh-nav) 82%, transparent); -webkit-backdrop-filter: blur(16px) saturate(1.2); backdrop-filter: blur(16px) saturate(1.2); border: 1px solid var(--mh-line2); box-shadow: 0 12px 22px -12px #000b, inset 0 1px 0 #ffffff14; animation: mh-fade-in .2s ease both; }
   .cx-top:hover { border-color: var(--acc, #E3B04B); color: var(--acc, #E3B04B); }
   @media (min-width: 820px) { .cx-top { right: 310px; } }
@@ -8722,6 +8747,7 @@ const sharedStyles = `
     .cx-bars { position: sticky; top: -18px; z-index: 12; margin: 0 -12px 6px; padding: 8px 12px 4px; background: color-mix(in srgb, var(--mh-bg) 95%, transparent); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border-bottom: 1px solid var(--mh-line); }
     .cx-bars .cx-bar { flex-wrap: nowrap; overflow-x: auto; margin-bottom: 6px; padding-bottom: 2px; scrollbar-width: none; }
     .cx-bars .cx-bar::-webkit-scrollbar { display: none; }
+    .cx-bars .cx-doms { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; } .cx-bars .cx-fp { padding: 8px 10px; gap: 8px 16px; } .cx-bars .cx-g { margin-bottom: 8px; } .cx-bars .cx-g button { padding: 8px 2px 10px; } .cx-bars .cx-t { margin-bottom: 8px; }
     .cx-bars .cx-chip { flex-shrink: 0; }
   }
   .cx-meta { display: flex; justify-content: space-between; align-items: center; margin: 10px 2px 4px; color: var(--mh-muted); font-size: 12px; gap: 10px; flex-wrap: wrap; }
@@ -12856,7 +12882,7 @@ export default function App({ onSignOut }) {
       const loaded = {};
       for (const id of ids) {
         const c = await safeGet("character:" + id, false);
-        if (c) loaded[id] = JSON.parse(c.value);
+        if (c) loaded[id] = migrateCardNames(JSON.parse(c.value));
       }
       const finalIds = Object.keys(loaded);
       const last = await safeGet("last-char-id", false);
@@ -34832,7 +34858,7 @@ export default function App({ onSignOut }) {
 
           {view === "dadosskin" && <Personalizacion skin={diceSkin} onEquip={equipDiceSkin} back={cardBack} onEquipBack={equipCardBack} cardBorder={cardBorder} onCardBorder={equipCardBorder} items={buildCardCatalog()} icons={DOMAIN_ICONS} FitTitle={FitTitle} FitBox={FitBox} />}
           {view === "taller" && <WorkshopPage FitTitle={FitTitle} FitBox={FitBox} TokDice={TokDice} domainColors={DOMAIN_COLORS} icons={DOMAIN_ICONS} classColors={CLASS_COLORS} classes={CLASSES.map((c) => c.key)} />}
-          {view === "cartas" && <CardsPage items={buildCardCatalog()} domainColors={DOMAIN_COLORS} icons={DOMAIN_ICONS} FitTitle={FitTitle} FitBox={FitBox} />}
+          {view === "cartas" && <CardsPage DomainIcon={DomainIcon} items={buildCardCatalog()} domainColors={DOMAIN_COLORS} icons={DOMAIN_ICONS} FitTitle={FitTitle} FitBox={FitBox} />}
 
           {view === "ajustes" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>

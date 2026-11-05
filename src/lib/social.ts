@@ -623,7 +623,7 @@ export async function inviteToCampaign(to: Person, camp: CampInvite): Promise<st
 }
 
 // ---------- anuncios «Buscar mesa» ----------
-export type Post = { id: string; uid: string; name: string; kind: "players" | "table" | "gm"; title: string; desc: string; tags: string[]; at: number; camp?: CampInvite | null };
+export type Post = { id: string; uid: string; name: string; kind: "players" | "table" | "gm"; title: string; desc: string; tags: string[]; at: number; camp?: CampInvite | null; lang?: string; days?: string[]; slots?: number };
 export async function loadPosts(): Promise<Post[]> {
   const rows = await kvList<Post>("lf:");
   const me = await myself();
@@ -647,12 +647,12 @@ export async function removePost() {
   const me = await myself();
   if (me) await kvPut(`lf:${me.id}`, {});
 }
-export async function requestJoin(post: Post): Promise<string> {
+export async function requestJoin(post: Post, message = ""): Promise<string> {
   const me = await myself();
   if (!me) return "Inicia sesión para pedir unirte.";
   const why = await allowed("msgs", post.uid, me.id);
   if (why) return why;
-  await notify(post.uid, "lf_request", me.id, { title: post.title, camp: post.camp || null });
+  await notify(post.uid, "lf_request", me.id, { title: post.title, camp: post.camp || null, ...(message.trim() ? { message: message.trim().slice(0, 300) } : {}) });
   return "Solicitud enviada. " + post.name + " te contestará.";
 }
 

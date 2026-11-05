@@ -88,7 +88,7 @@ export function JoinCard({ camp, onDone }) {
 }
 
 const NOTICE_KIND = { friend_request: "Solicitud de amistad", friend_accepted: "Amistad", campaign_invite: "Invitación a campaña", lf_request: "Busca mesa" };
-const noticeText = (n) => n.type === "friend_request" ? "quiere ser tu amigo" : n.type === "friend_accepted" ? "ha aceptado tu solicitud de amistad" : n.type === "campaign_invite" ? "te invita a su campaña" : "quiere unirse a «" + (n.data?.title || "tu anuncio") + "»";
+const noticeText = (n) => n.type === "friend_request" ? "quiere ser tu amigo" : n.type === "friend_accepted" ? "ha aceptado tu solicitud de amistad" : n.type === "campaign_invite" ? "te invita a su campaña" : "quiere unirse a «" + (n.data?.title || "tu anuncio") + "»" + (n.data?.message ? ": «" + n.data.message + "»" : "");
 
 const TOAST_MS = 8000;
 function NoticeToast({ n, pending, onClose }) {

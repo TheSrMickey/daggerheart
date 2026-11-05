@@ -7,8 +7,11 @@ export const CHANGELOG = [
     version: "1.53",
     date: "2026-11-05",
     title: "El Taller y la creación de personaje",
-    blurb: "Crea tus propias cartas, armas y plantillas en el Taller (con fichas e imágenes), descarga tu hoja en PDF, estrena una creación de personaje renovada y descubre las nuevas cartas Salvajes, Adversarios y Entornos.",
+    blurb: "Crea tus propias cartas y armas en el Taller (con fichas e imágenes), descarga tu hoja en PDF, estrena la creación de personaje renovada, una pestaña Cartas más clara con Adversarios y Entornos, y un Buscar mesa con filtros, solicitudes con mensaje y avisos.",
     items: [
+      { tag: "mejora", text: "Buscar mesa · los anuncios llevan idioma, días de juego y plazas libres; se filtra por tipo, idioma, días y «solo con plazas libres»; puedes guardar anuncios (★), pedir unirte con un mensaje de presentación (el autor lo ve en su aviso) y activar un aviso que te señala los anuncios nuevos que encajan con tu búsqueda (se guardan en tu navegador)." },
+      { tag: "mejora", text: "Cartas · nueva navegación en tres niveles: grupo (Personaje, Equipo, Mesa del DJ, Especiales), tipo y filtros propios del tipo (dominios con su icono y nivel, rango, clase). Al escribir en el buscador se busca en todas las cartas." },
+      { tag: "mejora", text: "Dominios · «Gracia» pasa a llamarse «Encanto» y las cartas «Voz del Pavor», «Tocado por el Pavor» y «Tocado por la Gracia» pasan a «Voz del Miedo», «Tocado por el Miedo» y «Tocado por el Encanto»; las cartas ya guardadas en tus hojas se actualizan solas. El dominio Hueso usa el icono del hueso en todas partes." },
       { tag: "nuevo", text: "Campañas · cada cuenta puede tener como máximo 3 campañas; el contador «1 de 3 campañas» se ve arriba y, al llegar al límite, el botón de crear se desactiva." },
       { tag: "mejora", text: "Dominios · el dominio «Pavor» pasa a llamarse «Miedo» en toda la app (cartas, colores, clases y multiclase); las multiclases ya guardadas con el nombre antiguo siguen funcionando." },
       { tag: "mejora", text: "Dados · el aspecto de Cristal ya no aparece en Personalización (sigue en el sistema: quien lo tenga elegido lo conserva hasta que cambie de aspecto)." },

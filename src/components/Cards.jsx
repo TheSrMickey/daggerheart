@@ -208,8 +208,22 @@ function Lazy({ children }) {
   return <span ref={ref} className="cx-lz">{on ? children : null}</span>;
 }
 
-export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
-  const [kinds, setKinds] = useState([]);
+// Navegación en tres niveles: grupo → tipo → filtros del tipo.
+const GROUPS = [
+  { key: "personaje", label: "Personaje", kinds: ["dominio", "ascendencia", "comunidad", "subclase", "transformacion", "forma"] },
+  { key: "equipo", label: "Equipo", kinds: ["arma", "armadura"] },
+  { key: "dj", label: "Mesa del DJ", kinds: ["adversario", "entorno"] },
+  { key: "especiales", label: "Especiales", kinds: ["salvaje"] },
+];
+const TYPE_LABEL = { dominio: "Dominio", ascendencia: "Ascendencia", comunidad: "Comunidad", subclase: "Subclase", transformacion: "Transformación", forma: "Forma de Bestia", arma: "Armas", armadura: "Armaduras", adversario: "Adversarios", entorno: "Entornos", salvaje: "Salvajes" };
+
+export function CardsPage({ items, domainColors, icons, FitTitle, FitBox, DomainIcon }) {
+  const [group, setGroup] = useState("personaje");
+  const [kind, setKind] = useState("dominio");
+  const [lvl, setLvl] = useState(null);
+  const [tier, setTier] = useState(0);
+  const [cls, setCls] = useState("");
+  const kinds = [kind];
   const [sel, setSel] = useState([]);
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(null);
@@ -310,16 +324,26 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
   // Subclases: en la cuadrícula solo sale la carta de Fundación; Especialización y Maestría van detrás, al abrirla.
   const subSet = (c) => all.filter((x) => x.kind === "subclase" && x.cls === c.cls && x.key === c.key).sort((a, b) => a.rank - b.rank);
   const count = (k) => all.filter((c) => c.kind === k && (k !== "subclase" || c.rank === 0)).length;
+  // Con texto en el buscador se busca en todas las cartas; sin texto, se aplican el grupo, el tipo y sus filtros.
   const matches = (c) => {
-    if (sel.length) return c.kind === "dominio" && sel.includes(c.domain);
-    if (kinds.length && !kinds.includes(c.kind)) return false;
     if (c.kind === "subclase" && c.rank) return false;
-    const group = c.kind === "subclase" ? subSet(c) : [c];
-    return !q || group.some((g) => norm(g.key + " " + g.text + " " + (g.features || []).map((f) => f.name + " " + f.text).join(" ") + " " + g.sub + " " + (g.gear ? g.gear.feature + " " + g.gear.big + " " + g.gear.foot : "")).includes(q));
+    if (q) {
+      const grp = c.kind === "subclase" ? subSet(c) : [c];
+      return grp.some((g) => norm(g.key + " " + g.text + " " + (g.features || []).map((f) => f.name + " " + f.text).join(" ") + " " + g.sub + " " + (g.gear ? g.gear.feature + " " + g.gear.big + " " + g.gear.foot : "")).includes(q));
+    }
+    if (c.kind !== kind) return false;
+    if (kind === "dominio") return (!sel.length || sel.includes(c.domain)) && (lvl == null || c.level === lvl);
+    if (kind === "subclase") return !cls || c.cls === cls;
+    if (kind === "arma" || kind === "armadura" || kind === "forma") return !tier || c.tier === tier;
+    return true;
   };
-  const shown = all.filter((c) => matches(c) && (!sel.length || !q || norm(c.key + " " + c.text).includes(q)));
+  const shown = all.filter(matches);
+  const classes = useMemo(() => [...new Set(all.filter((c) => c.kind === "subclase").map((c) => c.cls).filter(Boolean))].sort((a, b) => a.localeCompare(b, "es")), [all]);
+  const grpCount = (g) => g.kinds.reduce((n, k) => n + count(k), 0);
+  const pickGroup = (g) => { setGroup(g.key); setKind(g.kinds[0]); setSel([]); setLvl(null); setTier(0); setCls(""); };
+  const pickKind = (k) => { setKind(k); setSel([]); setLvl(null); setTier(0); setCls(""); };
   const openCard = (c) => (setDeckIdx(0), setOpen(c));
-  const showDomains = !kinds.length || kinds.includes("dominio");
+  const showDomains = !q && kind === "dominio";
   const domCount = (d) => all.filter((c) => c.kind === "dominio" && c.domain === d).length;
   // Los tipos se eligen de uno en uno; solo los dominios se pueden combinar.
   const toggleKind = (k) => (setSel([]), setKinds((s) => (s.includes(k) ? [] : [k])));
@@ -368,7 +392,7 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
       <div className="cx-h">
         <div>
           <h1 className="mh-serif">Cartas</h1>
-          <p>Todas las cartas del juego: dominio, ascendencia, comunidad, subclase, transformación, formas de bestia, armas, armaduras, adversarios y entornos. Pulsa una para verla a tamaño completo.</p>
+          <p>Todas las cartas del juego, ordenadas por grupo y tipo. Escribe en el buscador para buscar en todas a la vez. Pulsa una carta para verla a tamaño completo.</p>
         </div>
         <label className="cx-search">
           <Search size={15} />
@@ -376,32 +400,67 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
         </label>
       </div>
       <div className="cx-bars">
-      <div className="cx-bar" role="group" aria-label="Filtrar por tipo de carta">
-        <button type="button" className={"cx-chip" + (kinds.length || sel.length ? "" : " on")} style={{ "--c": "#C9A24A" }} aria-pressed={!kinds.length && !sel.length} onClick={() => (setKinds([]), setSel([]))}>
-          <i><Layers size={15} /></i>Todas<em>{all.length}</em>
-        </button>
-        {KINDS.map((k) => (
-          <button key={k.key} type="button" className={"cx-chip" + (kinds.includes(k.key) && !sel.length ? " on" : "")} style={{ "--c": KIND_COLOR[k.key] }} aria-pressed={kinds.includes(k.key)} onClick={() => toggleKind(k.key)}>
-            {k.label}<em>{count(k.key)}</em>
-          </button>
-        ))}
-      </div>
-      {showDomains && (
-        <div className="cx-bar" role="group" aria-label="Filtrar por dominio">
-          {domains.map((d) => {
-            const n = domCount(d);
-            const I = icons[d] || Layers;
-            return (
-              <button key={d} type="button" className={"cx-chip" + (sel.includes(d) ? " on" : "") + (n ? "" : " off")} style={{ "--c": domainColors[d] }} aria-pressed={sel.includes(d)} disabled={!n} title={n ? undefined : "Todavía no hay cartas de este dominio"} onClick={() => toggle(d)}>
-                <i><I size={15} /></i>{d}<em>{n}</em>
-              </button>
-            );
-          })}
+        <div className="cx-g" role="tablist" aria-label="Grupo de cartas">
+          {GROUPS.map((g) => (
+            <button key={g.key} type="button" role="tab" aria-selected={!q && group === g.key} className={!q && group === g.key ? "on" : ""} onClick={() => (setQuery(""), pickGroup(g))}>
+              {g.label}<em>{grpCount(g)}</em>
+            </button>
+          ))}
         </div>
-      )}
+        {!q && (
+          <div className="cx-t" role="tablist" aria-label="Tipo de carta">
+            {GROUPS.find((g) => g.key === group).kinds.map((k) => (
+              <button key={k} type="button" role="tab" aria-selected={kind === k} className={kind === k ? "on" : ""} onClick={() => pickKind(k)}>{TYPE_LABEL[k]}<em>{count(k)}</em></button>
+            ))}
+          </div>
+        )}
+        {!q && (kind === "dominio" || kind === "subclase" || kind === "arma" || kind === "armadura" || kind === "forma") && (
+          <div className="cx-fp">
+            {kind === "dominio" && (
+              <div className="cx-fg"><span className="cx-fl">Dominio</span>
+                <div className="cx-doms">
+                  {domains.map((d) => {
+                    const n = domCount(d);
+                    const I = icons[d] || Layers;
+                    return (
+                      <button key={d} type="button" className={"cx-dom" + (sel.includes(d) ? " on" : "") + (n ? "" : " off")} style={{ "--c": domainColors[d] }} aria-pressed={sel.includes(d)} aria-label={d} disabled={!n} title={d + (n ? " · " + n : " · sin cartas todavía")} onClick={() => toggle(d)}>
+                        {DomainIcon ? <DomainIcon name={d} size={18} /> : <I size={17} />}
+                        <span className="cx-dn">{d}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            {kind === "dominio" && (
+              <div className="cx-fg"><span className="cx-fl">Nivel</span>
+                <div className="cx-seg">
+                  <button type="button" className={lvl == null ? "on" : ""} onClick={() => setLvl(null)}>Todos</button>
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <button key={n} type="button" className={lvl === n ? "on" : ""} onClick={() => setLvl(lvl === n ? null : n)}>{n}</button>)}
+                </div>
+              </div>
+            )}
+            {(kind === "arma" || kind === "armadura" || kind === "forma") && (
+              <div className="cx-fg"><span className="cx-fl">Rango</span>
+                <div className="cx-seg">
+                  <button type="button" className={!tier ? "on" : ""} onClick={() => setTier(0)}>Todos</button>
+                  {[1, 2, 3, 4].map((n) => <button key={n} type="button" className={tier === n ? "on" : ""} onClick={() => setTier(tier === n ? 0 : n)}>{n}</button>)}
+                </div>
+              </div>
+            )}
+            {kind === "subclase" && (
+              <div className="cx-fg"><span className="cx-fl">Clase</span>
+                <select className="cx-sel" value={cls} onChange={(e) => setCls(e.target.value)} aria-label="Filtrar subclases por clase">
+                  <option value="">Todas las clases</option>
+                  {classes.map((c) => <option key={c}>{c}</option>)}
+                </select>
+              </div>
+            )}
+          </div>
+        )}
       </div>
       <div className="cx-meta">
-        <span>{shown.length} de {all.length} cartas{sel.length ? " · " + sel.join(" + ") : kinds.length ? " · " + kinds.map((k) => KINDS.find((x) => x.key === k).label).join(" + ") : ""}</span>
+        <span>{q ? shown.length + " resultado" + (shown.length === 1 ? "" : "s") + " para «" + query.trim() + "» en todas las cartas" : shown.length + " carta" + (shown.length === 1 ? "" : "s") + " · " + TYPE_LABEL[kind] + (sel.length ? " · " + sel.join(" + ") : "")}</span>
         <span>Orden: nivel ↑ · luego tipo</span>
       </div>
       {shown.length === 0 && <div className="cx-empty">No hay cartas con ese filtro.</div>}
