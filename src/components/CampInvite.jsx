@@ -12,7 +12,7 @@ export default function CampInvite({ camp, players, onClose }) {
   const friends = s.friends || [];
   const send = async (p) => {
     setState((o) => ({ ...o, [p.id]: "…" }));
-    const msg = await inviteToCampaign(p, { campId: camp.id, name: camp.name || "Campaña", desc: camp.description || "", gm: s.me?.username || "", players }).catch(() => "No se pudo enviar.");
+    const msg = await inviteToCampaign(p, { campId: camp.id, name: camp.name || "Campaña", desc: camp.description || "", gm: s.me?.username || "", players, custom: !!camp.customContent }).catch(() => "No se pudo enviar.");
     setState((o) => ({ ...o, [p.id]: /enviada/i.test(msg) ? "ok" : msg }));
   };
   return (

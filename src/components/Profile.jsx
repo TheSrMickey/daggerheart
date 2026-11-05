@@ -200,7 +200,7 @@ export default function ProfilePage({ id, name }) {
           <div className="pf-body" style={{ paddingTop: 0 }}>
             <div className="pf-chips">
               {bridge.camps.length === 0 && <small className="pf-mut">Aún no tienes campañas.</small>}
-              {bridge.camps.map((c) => <button key={c.id} type="button" className="pf-chip" onClick={async () => setMsg(await inviteToCampaign(friend, { campId: c.id, name: c.name, desc: c.desc, gm: s.me?.username || "", players: c.players }))}>{c.name}</button>)}
+              {bridge.camps.map((c) => <button key={c.id} type="button" className="pf-chip" onClick={async () => setMsg(await inviteToCampaign(friend, { campId: c.id, name: c.name, desc: c.desc, gm: s.me?.username || "", players: c.players, custom: !!c.custom }))}>{c.name}</button>)}
             </div>
           </div>
         )}

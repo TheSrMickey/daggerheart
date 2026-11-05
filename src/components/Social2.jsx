@@ -194,7 +194,7 @@ export function LookingFor() {
   const publish = async () => {
     const camp = bridge.camps.find((c) => c.id === form.camp);
     await saveProfile({ searchable: true });
-    await publishPost({ kind: form.kind, title: form.title.trim(), desc: form.desc.trim(), tags: form.tags.split(",").map((t) => t.trim()).filter(Boolean).slice(0, 6), lang: form.lang || "", days: form.days || [], slots: Number(form.slots) || 0, camp: camp ? { campId: camp.id, name: camp.name, desc: camp.desc, gm: s.me?.username || "", players: camp.players } : null });
+    await publishPost({ kind: form.kind, title: form.title.trim(), desc: form.desc.trim(), tags: form.tags.split(",").map((t) => t.trim()).filter(Boolean).slice(0, 6), lang: form.lang || "", days: form.days || [], slots: Number(form.slots) || 0, camp: camp ? { campId: camp.id, name: camp.name, desc: camp.desc, gm: s.me?.username || "", players: camp.players, custom: !!camp.custom } : null });
     setForm(null);
     setMsg("Anuncio publicado. Lo verá cualquiera que busque mesa.");
     load();

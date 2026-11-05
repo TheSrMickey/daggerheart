@@ -437,7 +437,7 @@ export async function namesFor(ids: string[]) {
 }
 
 // ---------- mensajes privados ----------
-export type Dm = { id: string; from: string; at: number; text: string; invite?: { campId: string; name: string; desc?: string } };
+export type Dm = { id: string; from: string; at: number; text: string; invite?: { campId: string; name: string; desc?: string; custom?: boolean } };
 export async function sendDm(to: Person, text: string, invite?: Dm["invite"]): Promise<string | null> {
   const me = await myself();
   if (!me) return "Inicia sesión para escribir.";
@@ -483,7 +483,7 @@ async function unreadDm(meId: string): Promise<Record<string, number>> {
 // Un grupo es `gr:<id>` { name, owner, members[] } y su conversación `gm:<id>` (mensajes). El creador gestiona a las personas;
 // todos los miembros leen y escriben. Borrar un grupo deja una lápida (`deleted`), porque las filas compartidas no se pueden eliminar.
 export type Group = { id: string; name: string; owner: string; members: string[]; at: number; deleted?: boolean };
-export type GInvite = { campId: string; name: string; desc?: string; gm: string; players: number; note?: string };
+export type GInvite = { campId: string; name: string; desc?: string; gm: string; players: number; note?: string; custom?: boolean };
 export type GMsg = { id: string; from: string; at: number; text?: string; sys?: boolean; invite?: GInvite };
 export type GroupInfo = { g: Group; last?: GMsg; unread: number };
 const gReadKey = (id: string) => `mh-gread:${id}`;
@@ -612,7 +612,7 @@ export async function inviteGroupToCampaign(id: string, camp: CampInvite, note: 
 }
 
 // ---------- invitaciones a campaña ----------
-export type CampInvite = { campId: string; name: string; desc?: string; gm: string; players: number };
+export type CampInvite = { campId: string; name: string; desc?: string; gm: string; players: number; custom?: boolean };
 export async function inviteToCampaign(to: Person, camp: CampInvite): Promise<string> {
   const me = await myself();
   if (!me) return "Inicia sesión para invitar.";

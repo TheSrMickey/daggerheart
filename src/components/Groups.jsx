@@ -59,7 +59,7 @@ function InviteCard({ m, me, gid, mine }) {
           <small className="mh-gp-inv-st">No te has unido a esta campaña.</small>
         ) : (
           <>
-            <JoinCard camp={{ campId: c.campId, name: c.name, desc: c.desc }} onDone={() => (set("joined"), postGroupNote(gid, `${me?.username || "Alguien"} se ha unido a «${c.name}»`))} />
+            <JoinCard camp={{ campId: c.campId, name: c.name, desc: c.desc, custom: c.custom }} onDone={() => (set("joined"), postGroupNote(gid, `${me?.username || "Alguien"} se ha unido a «${c.name}»`))} />
             <button type="button" className="mh-gp-no" onClick={() => (set("declined"), postGroupNote(gid, `${me?.username || "Alguien"} no puede unirse a «${c.name}»`))}>Ahora no</button>
           </>
         )}
@@ -211,7 +211,7 @@ export function GroupPanel({ gid, onBack }) {
               const c = camps.find((x) => x.id === camp);
               if (!c) return;
               setBusy(true);
-              const r = await inviteGroupToCampaign(gid, { campId: c.id, name: c.name, desc: c.desc, gm: me.username, players: c.players }, note);
+              const r = await inviteGroupToCampaign(gid, { campId: c.id, name: c.name, desc: c.desc, gm: me.username, players: c.players, custom: !!c.custom }, note);
               setBusy(false);
               await refreshSocial();
               setMsgs(await loadGroupMsgs(gid));
