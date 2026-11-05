@@ -7876,7 +7876,7 @@ const sharedStyles = `
   .mh-hero-tags .is-tf { color: var(--mh-purple-ink); background: #A58BE822; }
   .mh-hero-tags .is-camp { color: var(--mh-gold-ink); background: #E3B04B22; }
   .mh-hero-tags .is-cc, .mh-gc-tags .is-cc { color: #E3B04B; background: #E3B04B22; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
-  .mh-cv-top .mh-hero-flags .is-cc { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 99px; background: rgba(227,176,75,.22); border: 1px solid rgba(227,176,75,.6); color: #F3D587; font: 700 11px 'Inter', system-ui, sans-serif; }
+  .mh-hero-flags .is-cc, .mh-hero-meta .is-cc { color: #5FB0C9; }
   .cc-sw { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--mh-line); background: var(--mh-panel2); cursor: pointer; } .cc-sw input { position: absolute; opacity: 0; pointer-events: none; } .cc-sw i { flex: none; width: 38px; height: 22px; border-radius: 99px; background: var(--mh-line2); position: relative; margin-top: 2px; transition: background .2s; } .cc-sw i::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .2s; } .cc-sw.is-on { border-color: #E3B04B88; } .cc-sw.is-on i { background: #E3B04B; } .cc-sw.is-on i::after { transform: translateX(16px); } .cc-sw input:focus-visible + i { outline: 2px solid #E3B04B; outline-offset: 2px; }
   .cc-sw span { display: flex; flex-direction: column; gap: 3px; } .cc-sw b { font-size: 13.5px; color: var(--mh-ink); } .cc-sw small { font-size: 12px; line-height: 1.45; color: var(--mh-muted); }
   .cc-start { max-width: 1040px; margin: 0 auto; } .cc-start-g { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 16px; padding: 6px 4px 4px; } .cc-opt { border: 1px solid var(--mh-line); border-radius: 20px; background: var(--mh-panel); padding: 18px; display: flex; flex-direction: column; gap: 12px; } .cc-opt h3 { margin: 0; display: flex; align-items: center; gap: 8px; font: 700 12px 'Inter', system-ui, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: var(--mh-ink3); } .cc-opt p { margin: 0; font-size: 13px; line-height: 1.5; color: var(--mh-muted); }
@@ -8678,6 +8678,7 @@ const sharedStyles = `
   .mh-cc-h { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; font: 700 11px 'Inter', system-ui, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--mh-muted); } .mh-cc-h i { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font: 700 11px 'Inter', system-ui, sans-serif; font-style: normal; letter-spacing: 0; background: color-mix(in srgb, var(--hc) 28%, var(--mh-panel2)); color: var(--mh-ink); }
   .mh-cc-p { margin: -4px 0 12px; font-size: 12.5px; color: var(--mh-muted); }
   .mh-cc-stp { display: flex; gap: 4px; margin: 0 0 8px; } .mh-cc-stp button { flex: 1; height: 5px; padding: 0; border: 0; border-radius: 3px; background: var(--mh-line); cursor: default; } .mh-cc-stp button.is-done { background: #6FBF73; cursor: pointer; } .mh-cc-stp button.is-done:hover { background: #4E9E52; } .mh-cc-stp button.is-on { background: #E3B04B; }
+  .mh-cc-up { display: flex; gap: 8px; flex-wrap: wrap; } .mh-cc-up .mh-btn-ghost { display: inline-flex; align-items: center; gap: 6px; }
   .mh-cc-sn { display: block; margin: 0 0 16px; font-size: 11.5px; color: var(--mh-muted); }
   .mh-cc-body { min-height: 260px; } .mh-cc-body.is-in-r { animation: mh-cc-in-r .28s cubic-bezier(.2,.8,.2,1) both; } .mh-cc-body.is-in-l { animation: mh-cc-in-l .28s cubic-bezier(.2,.8,.2,1) both; }
   @keyframes mh-cc-in-r { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } } @keyframes mh-cc-in-l { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
@@ -8690,7 +8691,7 @@ const sharedStyles = `
   .mh-cc-sw { display: flex; gap: 10px; flex-wrap: wrap; } .mh-cc-sw button { all: unset; box-sizing: border-box; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--sw); color: #fff; border: 2px solid transparent; box-shadow: 0 0 0 2px var(--mh-panel); } .mh-cc-sw button.is-on { box-shadow: 0 0 0 2px var(--mh-panel), 0 0 0 4px var(--sw); } .mh-cc-sw button:focus-visible { outline: 2px solid var(--mh-ink); outline-offset: 3px; }
   .mh-cc-switch { display: flex; align-items: flex-start; gap: 12px; cursor: pointer; } .mh-cc-switch input { position: absolute; opacity: 0; pointer-events: none; } .mh-cc-switch > i { flex: none; width: 40px; height: 22px; border-radius: 99px; background: var(--mh-line2); position: relative; transition: background .15s; margin-top: 1px; } .mh-cc-switch > i::after { content: ""; position: absolute; left: 3px; top: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .15s; } .mh-cc-switch input:checked + i { background: var(--hc); } .mh-cc-switch input:checked + i::after { transform: translateX(18px); } .mh-cc-switch input:focus-visible + i { outline: 2px solid var(--hc); outline-offset: 2px; } .mh-cc-switch input:disabled + i { opacity: .7; } .mh-cc-switch b { display: block; font-size: 13.5px; color: var(--mh-ink); } .mh-cc-switch small { display: block; margin-top: 2px; font-size: 12px; line-height: 1.45; color: var(--mh-muted); }
   .mh-cc-side { align-self: start; position: sticky; top: 8px; display: flex; flex-direction: column; gap: 12px; } .mh-cc-lab { font: 700 11px 'Inter', system-ui, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--mh-muted); } .mh-cc-acts { display: flex; gap: 8px; } .mh-cc-acts .mh-btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; } .mh-cc-acts .mh-btn:disabled { opacity: .5; cursor: not-allowed; } .mh-cc-hint { color: var(--mh-muted); font-size: 12px; }
-  .mh-cg-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; } .mh-cg-chips > * { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 99px; font: 600 11.5px 'Inter', system-ui, sans-serif; border: 1px solid var(--mh-line2); background: var(--mh-panel2); color: var(--mh-muted); } .mh-cg-chips .is-ai { color: var(--mh-gold-ink, #E3B04B); border-color: rgba(227,176,75,.4); } .mh-cg-chips .is-lv { color: #7E5BC4; border-color: rgba(126,91,196,.45); cursor: pointer; } .mh-cg-chips button.is-lv:hover, .mh-cg-chips button.is-lv.is-on { background: rgba(126,91,196,.14); } .mh-cg-chips button:focus-visible { outline: 2px solid #7E5BC4; outline-offset: 2px; }
+  .mh-cg-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; } .mh-cg-chips > * { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 99px; font: 600 11.5px 'Inter', system-ui, sans-serif; border: 1px solid var(--mh-line2); background: var(--mh-panel2); color: var(--mh-muted); } .mh-cg-chips .is-ai { color: var(--mh-gold-ink, #E3B04B); border-color: rgba(227,176,75,.4); } .mh-cg-chips .is-cc { color: #5FB0C9; border-color: rgba(95,176,201,.45); } .mh-cg-chips .is-lv { color: #7E5BC4; border-color: rgba(126,91,196,.45); cursor: pointer; } .mh-cg-chips button.is-lv:hover, .mh-cg-chips button.is-lv.is-on { background: rgba(126,91,196,.14); } .mh-cg-chips button:focus-visible { outline: 2px solid #7E5BC4; outline-offset: 2px; }
   .mh-cg-lv { margin: 0 0 14px; padding: 14px 18px; border-radius: 16px; border: 1px solid var(--mh-line); background: var(--mh-panel); animation: mh-fade-in .18s ease both; } .mh-cg-lv > p { margin: 0 0 12px; font-size: 12.5px; color: var(--mh-muted); } .mh-cg-lv-g { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; } .mh-cg-lv-g > div { padding: 10px 12px; border-radius: 12px; background: var(--mh-panel2); border: 1px solid var(--mh-line); } .mh-cg-lv-g b { display: block; margin-bottom: 8px; font-size: 12.5px; } .mh-cg-lv-g .is-line b { color: #C0504A; } .mh-cg-lv-g .is-veil b { color: #7E5BC4; } .mh-cg-lv-g > div > div { display: flex; flex-wrap: wrap; gap: 6px; } .mh-cg-lv-g span { padding: 3px 10px; border-radius: 99px; font: 600 12px 'Inter', system-ui, sans-serif; border: 1px solid; } .mh-cg-lv-g .is-line span { color: #C0504A; border-color: rgba(192,80,74,.5); background: rgba(192,80,74,.1); } .mh-cg-lv-g .is-veil span { color: #7E5BC4; border-color: rgba(126,91,196,.5); background: rgba(126,91,196,.1); } .mh-cg-lv-g small { color: var(--mh-muted); }
   @media (max-width: 900px) { .mh-cc { grid-template-columns: 1fr; padding: 18px 16px; } .mh-cc-side { position: static; order: 2; } .mh-cc-opts, .mh-cg-lv-g { grid-template-columns: 1fr; } .mh-camps-head { flex-wrap: wrap; } }
   html[data-mh-art="off"] img[src*="/ancestrias/"], html[data-mh-art="off"] img[src*="/clases/"], html[data-mh-art="off"] img[src*="/cartas-dominio/"], html[data-mh-art="off"] img[src*="/comunidades/"], html[data-mh-art="off"] img[src*="/subclases/"], html[data-mh-art="off"] img[src*="/transformaciones/"], html[data-mh-art="off"] img[src*="/formas-bestia/"] { opacity: 0 !important; visibility: hidden !important; }
@@ -12695,6 +12696,10 @@ export default function App({ onSignOut }) {
   const [newCampaignDesc, setNewCampaignDesc] = useState("");
   const [showNewCampaignForm, setShowNewCampaignForm] = useState(false);
   const [ccStep, setCcStep] = useState(0); // paso del asistente de nueva campaña
+  const [campCovers, setCampCovers] = useState({}); // portadas propias de las campañas { id: imagen }
+  const [newCampaignCoverImg, setNewCampaignCoverImg] = useState(""); // portada subida y encuadrada al crear
+  const [ccCoverFile, setCcCoverFile] = useState(null); // archivo elegido a la espera de encuadrarlo
+  const ccCoverInput = useRef(null);
   const [ccDir, setCcDir] = useState(1);
   const [newCampaignColor, setNewCampaignColor] = useState(""); // vacío = el siguiente color de la paleta
   const [newCampaignCover, setNewCampaignCover] = useState(""); // escena de la portada; vacío = automática
@@ -12949,6 +12954,11 @@ export default function App({ onSignOut }) {
         if (camp) loaded[id] = JSON.parse(camp.value);
       }
       setCampaigns(loaded);
+      for (const id of Object.keys(loaded)) {
+        if (!loaded[id].coverImg) continue;
+        const c = await safeGet("campaign-cover:" + id, false);
+        if (c?.value) setCampCovers((m) => ({ ...m, [id]: c.value }));
+      }
     })();
   }, []);
 
@@ -15970,11 +15980,15 @@ export default function App({ onSignOut }) {
     if (!name) return;
     if (Object.keys(campaigns).length >= MAX_CAMPAIGNS) return;
     const id = "camp_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
-    const newCampaign = { id, name, description: newCampaignDesc.trim(), characterIds: [], color: newCampaignColor || CAMP_COLORS[Object.keys(campaigns).length % CAMP_COLORS.length], ...(newCampaignCover ? { cover: newCampaignCover } : {}), ...(newCampaignCustom ? { customContent: true } : {}), ...(newCampaignAI ? { aiImages: true } : {}), ...(newCampaignLimits.lines.length ? { lines: newCampaignLimits.lines } : {}), ...(newCampaignLimits.veils.length ? { veils: newCampaignLimits.veils } : {}) };
+    const newCampaign = { id, name, description: newCampaignDesc.trim(), characterIds: [], color: newCampaignColor || CAMP_COLORS[Object.keys(campaigns).length % CAMP_COLORS.length], ...(newCampaignCover ? { cover: newCampaignCover } : {}), ...(newCampaignCoverImg ? { coverImg: true } : {}), ...(newCampaignCustom ? { customContent: true } : {}), ...(newCampaignAI ? { aiImages: true } : {}), ...(newCampaignLimits.lines.length ? { lines: newCampaignLimits.lines } : {}), ...(newCampaignLimits.veils.length ? { veils: newCampaignLimits.veils } : {}) };
     const nextCampaigns = { ...campaigns, [id]: newCampaign };
     setCampaigns(nextCampaigns);
     await safeSet("campaign-index", JSON.stringify(Object.keys(nextCampaigns)), false);
     await safeSet("campaign:" + id, JSON.stringify(newCampaign), false);
+    if (newCampaignCoverImg) {
+      await safeSet("campaign-cover:" + id, newCampaignCoverImg, false);
+      setCampCovers((m) => ({ ...m, [id]: newCampaignCoverImg }));
+    }
     logActivity("camp", "ha empezado una campaña: «" + name + "»");
     trackStat("campsStarted");
     resetNewCampaign();
@@ -15989,6 +16003,7 @@ export default function App({ onSignOut }) {
     setNewCampaignCover("");
     setNewCampaignCustom(false);
     setNewCampaignStart("blank");
+    setNewCampaignCoverImg("");
     setCcStep(0);
     setShowNewCampaignForm(false);
   };
@@ -16006,6 +16021,7 @@ export default function App({ onSignOut }) {
     delete nextCampaigns[id];
     setCampaigns(nextCampaigns);
     await safeSet("campaign-index", JSON.stringify(Object.keys(nextCampaigns)), false);
+    if (campaigns[id]?.coverImg) safeSet("campaign-cover:" + id, "", false);
     if (viewingCampaignId === id) setViewingCampaignId(null);
   };
 
@@ -18119,6 +18135,7 @@ export default function App({ onSignOut }) {
       ...(newCampaignDesc.trim() ? { description: newCampaignDesc.trim() } : {}),
       color: newCampaignColor || CAMP_COLORS[Object.keys(campaigns).length % CAMP_COLORS.length],
       ...(newCampaignCover ? { cover: newCampaignCover } : {}),
+      ...(newCampaignCoverImg ? { coverImg: true } : {}),
       ...(newCampaignCustom ? { customContent: true } : {}),
       ...(newCampaignAI ? { aiImages: true } : {}),
       ...(newCampaignLimits.lines.length ? { lines: newCampaignLimits.lines } : {}),
@@ -18129,6 +18146,10 @@ export default function App({ onSignOut }) {
     setCampaigns(nextCampaigns);
     await safeSet("campaign-index", JSON.stringify(Object.keys(nextCampaigns)), false);
     await safeSet("campaign:" + id, JSON.stringify(q.campaign), false);
+    if (newCampaignCoverImg) {
+      await safeSet("campaign-cover:" + id, newCampaignCoverImg, false);
+      setCampCovers((m) => ({ ...m, [id]: newCampaignCoverImg }));
+    }
     await safeSet("campaign-stage:" + id, JSON.stringify(q.stage), true);
     await safeSet("campaign-cast:" + id, JSON.stringify(q.cast), true);
     await safeSet("campaign-lines:" + id, JSON.stringify({ convs: q.convs }), true);
@@ -31544,6 +31565,23 @@ export default function App({ onSignOut }) {
           document.querySelector(".mh-root") || document.body
         );
       })()}
+      {ccCoverFile && (
+        <PortraitCrop
+          file={ccCoverFile}
+          aspect={4 / 3}
+          outW={1000}
+          quality={0.8}
+          title="Encuadra la portada"
+          name="portada.webp"
+          onCancel={() => setCcCoverFile(null)}
+          onDone={(f) => {
+            setCcCoverFile(null);
+            const fr = new FileReader();
+            fr.onload = () => setNewCampaignCoverImg(String(fr.result));
+            fr.readAsDataURL(f);
+          }}
+        />
+      )}
       {portraitCrop && <PortraitCrop file={portraitCrop.file} onCancel={() => setPortraitCrop(null)} onDone={(f) => { const j = portraitCrop; setPortraitCrop(null); uploadPortrait(j.id, j.state, f); }} />}
       {portraitMsg && <div className="mh-pt-toast" role="status">{portraitMsg}</div>}
 
@@ -31842,6 +31880,7 @@ export default function App({ onSignOut }) {
                             <span> · {memberIds.length} personaje{memberIds.length === 1 ? "" : "s"}</span>
                             {cgScenes.length > 0 && <span> · {cgScenes.length} capítulo{cgScenes.length === 1 ? "" : "s"}</span>}
                             {activeCampaign.aiImages && <span className="mh-cgb-ai" title="Imágenes creadas con IA"><Sparkles size={11} /> IA</span>}
+                            {activeCampaign.customContent && <span className="mh-cgb-ai" title="Esta campaña permite contenido personalizado del Taller"><Hammer size={11} /> Taller</span>}
                             {limitsCount(activeCampaign) > 0 && (
                               <button type="button" className={"mh-cgb-lv" + (cgLimitsOpen ? " is-on" : "")} aria-expanded={cgLimitsOpen} onClick={() => setCgLimitsOpen((v) => !v)} title="Líneas y velos acordados para la mesa">
                                 <ShieldCheck size={11} /> Líneas y velos · {limitsCount(activeCampaign)}
@@ -31913,9 +31952,10 @@ export default function App({ onSignOut }) {
                         <span> · {memberIds.length} personaje{memberIds.length === 1 ? "" : "s"}</span>
                         {cgScenes.length > 0 && <span> · {cgCur ? "Capítulo " + (cgScenes.indexOf(cgCur) + 1) + " de " + cgScenes.length : cgScenes.length + (cgScenes.length === 1 ? " capítulo" : " capítulos")}</span>}
                       </div>
-                      {(activeCampaign.aiImages || limitsCount(activeCampaign) > 0) && (
+                      {(activeCampaign.aiImages || activeCampaign.customContent || limitsCount(activeCampaign) > 0) && (
                         <div className="mh-cg-chips">
                           {activeCampaign.aiImages && <span className="is-ai" title="El DJ ha indicado que las imágenes de esta campaña están creadas con IA"><Sparkles size={11} /> Imágenes creadas con IA</span>}
+                          {activeCampaign.customContent && <span className="is-cc" title="Esta campaña permite personajes con contenido personalizado del Taller"><Hammer size={11} /> Contenido personalizado</span>}
                           {limitsCount(activeCampaign) > 0 && (
                             <button type="button" className={"is-lv" + (cgLimitsOpen ? " is-on" : "")} aria-expanded={cgLimitsOpen} onClick={() => setCgLimitsOpen((v) => !v)}>
                               <ShieldCheck size={11} /> Líneas y velos · {limitsCount(activeCampaign)} <ChevronDown size={11} style={{ transform: cgLimitsOpen ? "rotate(180deg)" : "none" }} />
@@ -34766,12 +34806,12 @@ export default function App({ onSignOut }) {
                 style={{ "--hc": color }}
                 {...(onOpen ? { role: "button", tabIndex: 0, "aria-label": "Dirigir «" + camp.name + "»", onClick: onOpen, onKeyDown: (e) => e.key === "Enter" && e.target === e.currentTarget && onOpen() } : {})}
               >
-                <img className="mh-cv-bg" src={"/escenas/" + campCoverKey(camp, key === "preview" ? camp.name : key) + ".svg"} alt="" loading="lazy" draggable={false} />
+                <img className="mh-cv-bg" src={(key === "preview" ? newCampaignCoverImg : camp.coverImg && campCovers[key]) || "/escenas/" + campCoverKey(camp, key === "preview" ? camp.name : key) + ".svg"} alt="" loading="lazy" draggable={false} />
                 <div className="mh-cv-top">
                   <span className="mh-hero-flags">
                     {camp.aiImages && <span className="is-ai" title="Imágenes creadas con IA"><Sparkles size={13} /></span>}
                     {limitsCount(camp) > 0 && <span className="is-lv" title={limitsText(camp)}><ShieldCheck size={13} /></span>}
-                    {camp.customContent && <span className="is-cc" title="Esta campaña permite contenido personalizado del Taller"><Hammer size={13} /> Contenido personalizado</span>}
+                    {camp.customContent && <span className="is-cc" title="Esta campaña permite contenido personalizado del Taller"><Hammer size={13} /></span>}
                   </span>
                   {onOpen && (
                     <button type="button" className="mh-cv-swap" title={camp.customContent ? "Dejar de permitir contenido personalizado" : "Permitir contenido personalizado del Taller"} aria-label="Permitir contenido personalizado" onClick={(e) => { e.stopPropagation(); updateCampaign(key, { customContent: !camp.customContent }); }}>
@@ -34779,7 +34819,7 @@ export default function App({ onSignOut }) {
                     </button>
                   )}
                   {onOpen && (
-                    <button type="button" className="mh-cv-swap" title="Cambiar la portada" aria-label="Cambiar la portada" onClick={(e) => { e.stopPropagation(); const cur = SCENE_PRESETS.findIndex((x) => x.key === campCoverKey(camp, key)); updateCampaign(key, { cover: SCENE_PRESETS[(cur + 1) % SCENE_PRESETS.length].key }); }}>
+                    <button type="button" className="mh-cv-swap" title="Cambiar la portada" aria-label="Cambiar la portada" onClick={(e) => { e.stopPropagation(); const cur = SCENE_PRESETS.findIndex((x) => x.key === campCoverKey(camp, key)); updateCampaign(key, { cover: SCENE_PRESETS[(cur + 1) % SCENE_PRESETS.length].key, coverImg: false }); }}>
                       <RotateCcw size={13} /> Portada
                     </button>
                   )}
@@ -34885,9 +34925,18 @@ export default function App({ onSignOut }) {
                               <div className="mh-cc-cv" role="radiogroup" aria-label="Escena de la portada">
                                 <button type="button" role="radio" aria-checked={!newCampaignCover} className={!newCampaignCover ? "is-on" : ""} onClick={() => setNewCampaignCover("")}>Al azar</button>
                                 {SCENE_PRESETS.map((sc) => (
-                                  <button key={sc.key} type="button" role="radio" aria-checked={newCampaignCover === sc.key} aria-label={sc.title} title={sc.title} className={newCampaignCover === sc.key ? "is-on" : ""} onClick={() => setNewCampaignCover(sc.key)} style={{ backgroundImage: "url(" + sc.image + ")" }} />
+                                  <button key={sc.key} type="button" role="radio" aria-checked={!newCampaignCoverImg && newCampaignCover === sc.key} aria-label={sc.title} title={sc.title} className={newCampaignCover === sc.key ? "is-on" : ""} onClick={() => setNewCampaignCover(sc.key)} style={{ backgroundImage: "url(" + sc.image + ")" }} />
                                 ))}
                               </div>
+                            </div>
+                            <div className="mh-cc-f">
+                              <span>O sube tu propia imagen</span>
+                              <div className="mh-cc-up">
+                                <input ref={ccCoverInput} type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (!f || !f.type.startsWith("image/")) return; if (f.size > 8 * 1024 * 1024) return window.alert("La imagen pesa más de 8 MB."); setCcCoverFile(f); }} />
+                                <button type="button" className="mh-btn-ghost" onClick={() => ccCoverInput.current?.click()}><Upload size={14} /> {newCampaignCoverImg ? "Cambiar imagen" : "Subir imagen"}</button>
+                                {newCampaignCoverImg && <button type="button" className="mh-btn-ghost" onClick={() => setNewCampaignCoverImg("")}><Trash2 size={13} /> Quitar</button>}
+                              </div>
+                              <small className="mh-cc-hint">Podrás encuadrarla antes de guardarla. Sustituye a la escena de portada.</small>
                             </div>
                           </section>
                         )}
