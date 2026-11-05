@@ -45,6 +45,7 @@ import { APP_VERSION } from "@/lib/changelog";
 import { setPresence, setPresenceMaking, startPresence, stopPresence, publishTable, loadTable, myUid, setPresenceCamp, bridge, logActivity, trackStat, loadReactions, toggleReaction } from "@/lib/social";
 import ProfilePage from "./Profile";
 import { LinesVeilsEditor, limitsCount, limitsText } from "./LinesVeils";
+import { StartStep, CustomStep, CustomViewer, customOf, pickWorkshop, MAX_CUSTOM } from "./CustomContent";
 import { SocialHost, LookingFor, ActivityCard, PrivacyCard, ReactionBar } from "./Social2";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
 import { buildSablewood } from "./quickstartSablewood";
@@ -979,6 +980,7 @@ const WIZARD_STEPS = [
   { key: "armor", title: "Armadura", group: "Equipo" },
   { key: "items", title: "Objetos iniciales", group: "Equipo" },
   { key: "domain", title: "Cartas de dominio", group: "Equipo" },
+  { key: "custom", title: "Contenido del Taller", group: "Taller" }, // solo con el interruptor de contenido personalizado
 ];
 // Ilustración de cada transformación (manual de Hope & Fear) y su color de halo.
 const TRANSFORMATION_ART = {
@@ -7873,6 +7875,19 @@ const sharedStyles = `
   .mh-hero-tags span { font-size: 10px; font-weight: 700; padding: 1px 8px; border-radius: 20px; }
   .mh-hero-tags .is-tf { color: var(--mh-purple-ink); background: #A58BE822; }
   .mh-hero-tags .is-camp { color: var(--mh-gold-ink); background: #E3B04B22; }
+  .mh-hero-tags .is-cc, .mh-gc-tags .is-cc { color: #E3B04B; background: #E3B04B22; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+  .mh-cv-top .mh-hero-flags .is-cc { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 99px; background: rgba(227,176,75,.22); border: 1px solid rgba(227,176,75,.6); color: #F3D587; font: 700 11px 'Inter', system-ui, sans-serif; }
+  .cc-sw { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--mh-line); background: var(--mh-panel2); cursor: pointer; } .cc-sw input { position: absolute; opacity: 0; pointer-events: none; } .cc-sw i { flex: none; width: 38px; height: 22px; border-radius: 99px; background: var(--mh-line2); position: relative; margin-top: 2px; transition: background .2s; } .cc-sw i::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .2s; } .cc-sw.is-on { border-color: #E3B04B88; } .cc-sw.is-on i { background: #E3B04B; } .cc-sw.is-on i::after { transform: translateX(16px); } .cc-sw input:focus-visible + i { outline: 2px solid #E3B04B; outline-offset: 2px; }
+  .cc-sw span { display: flex; flex-direction: column; gap: 3px; } .cc-sw b { font-size: 13.5px; color: var(--mh-ink); } .cc-sw small { font-size: 12px; line-height: 1.45; color: var(--mh-muted); }
+  .cc-start { max-width: 1040px; margin: 0 auto; } .cc-start-g { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 16px; padding: 6px 4px 4px; } .cc-opt { border: 1px solid var(--mh-line); border-radius: 20px; background: var(--mh-panel); padding: 18px; display: flex; flex-direction: column; gap: 12px; } .cc-opt h3 { margin: 0; display: flex; align-items: center; gap: 8px; font: 700 12px 'Inter', system-ui, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: var(--mh-ink3); } .cc-opt p { margin: 0; font-size: 13px; line-height: 1.5; color: var(--mh-muted); }
+  .cc-cls { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; } .cc-cls button { all: unset; cursor: pointer; box-sizing: border-box; display: grid; grid-template-columns: 22px 1fr; column-gap: 8px; align-items: center; padding: 10px 12px; border-radius: 14px; border: 1.5px solid var(--mh-line); background: var(--mh-panel2); color: var(--k); transition: border-color .15s, background .15s; } .cc-cls button:hover { border-color: var(--k); background: color-mix(in srgb, var(--k) 12%, var(--mh-panel2)); } .cc-cls button:focus-visible { outline: 2px solid var(--k); outline-offset: 2px; } .cc-cls b { color: var(--mh-ink); font-size: 13.5px; } .cc-cls small { grid-column: 2; color: var(--mh-muted); font-size: 10.5px; line-height: 1.3; }
+  .cc-go { align-self: flex-start; margin-top: auto; }
+  .cc-step { width: 100%; align-self: stretch; overflow-y: auto; align-content: start; display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 16px; min-height: 0; } .cc-hint { margin: 0 0 10px; font-size: 12.5px; line-height: 1.5; color: var(--mh-muted); } .cc-list { display: flex; flex-direction: column; gap: 6px; } .cc-count { margin-top: 10px; font-size: 12px; color: var(--mh-muted); }
+  .cc-it { all: unset; cursor: pointer; box-sizing: border-box; display: flex; align-items: center; gap: 10px; padding: 9px 11px; border-radius: 13px; border: 1.5px solid var(--mh-line); background: var(--mh-panel2); } .cc-it.is-cur { border-color: color-mix(in srgb, var(--c) 70%, var(--mh-line)); } .cc-it.is-on { background: color-mix(in srgb, var(--c) 12%, var(--mh-panel2)); } .cc-it i { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; color: var(--c); background: color-mix(in srgb, var(--c) 16%, transparent); flex: none; } .cc-it span { flex: 1; min-width: 0; display: flex; flex-direction: column; } .cc-it b { font-size: 13.5px; color: var(--mh-ink); } .cc-it small { font-size: 11px; color: var(--mh-muted); }
+  .cc-it em { width: 22px; height: 22px; border-radius: 7px; border: 1.5px solid var(--mh-line2); display: grid; place-items: center; color: #1a1408; flex: none; } .cc-it.is-on em { background: #E3B04B; border-color: #E3B04B; }
+  .cc-step-r { display: flex; flex-direction: column; align-items: center; gap: 10px; } .cc-bal { align-self: stretch; display: flex; flex-direction: column; gap: 5px; } .cc-bal p { margin: 0; display: flex; gap: 7px; align-items: flex-start; font-size: 12px; line-height: 1.4; } .cc-bal p.ok { color: var(--mh-green-ink, #7FB77A); } .cc-bal p.wr { color: #E3B04B; } .cc-bal svg { flex: none; margin-top: 2px; } .cc-empty { text-align: center; color: var(--mh-muted); padding: 40px 10px; }
+  .cc-view { width: min(900px, 94vw); max-height: 88vh; overflow-y: auto; } .cc-view-g { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; margin-top: 12px; } .cc-view-i { display: flex; flex-direction: column; gap: 6px; align-items: center; max-width: 300px; } .cc-warn { color: #E3B04B; display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; text-align: center; }
+  @media (max-width: 860px) { .cc-start-g, .cc-step { grid-template-columns: minmax(0, 1fr); } }
   .mh-hero-tags .is-dead { color: #fff; background: #6A6177; }
   .mh-hero-bars { margin-top: auto; display: flex; gap: 5px; padding-top: 6px; }
   .mh-hero-bars span { flex: 1; height: 5px; border-radius: 3px; background: var(--mh-line); overflow: hidden; }
@@ -12673,6 +12688,7 @@ export default function App({ onSignOut }) {
   const [showNewCampaignForm, setShowNewCampaignForm] = useState(false);
   const [newCampaignColor, setNewCampaignColor] = useState(""); // vacío = el siguiente color de la paleta
   const [newCampaignCover, setNewCampaignCover] = useState(""); // escena de la portada; vacío = automática
+  const [newCampaignCustom, setNewCampaignCustom] = useState(false); // permite personajes con contenido del Taller
   const [newCampaignStart, setNewCampaignStart] = useState("blank"); // blank o la clave de una aventura de inicio
   const [cgLimitsOpen, setCgLimitsOpen] = useState(false); // detalle de líneas y velos en la cabecera de la campaña
   const [newCampaignAI, setNewCampaignAI] = useState(false); // ¿las imágenes de la campaña están hechas con IA?
@@ -13007,6 +13023,10 @@ export default function App({ onSignOut }) {
   const wzNav = useRef({ idx: 0, dir: 1 }); // paso en el que está el asistente y hacia dónde se ha movido: orienta la animación
   const [wizSlot, setWizSlot] = useState(null); // hueco de la columna central donde va la creación de personaje
   const [wizardStep, setWizardStep] = useState("class");
+  const [wizPre, setWizPre] = useState(true); // pantalla previa: plantilla o personaje propio
+  const [wizCustom, setWizCustom] = useState(false); // interruptor: usar contenido del Taller
+  const [draftCustom, setDraftCustom] = useState([]); // ids elegidos del Taller
+  const [customView, setCustomView] = useState(null); // { name, items }
   const [originTab, setOriginTab] = useState("ancestry");
   const [originFocus, setOriginFocus] = useState(null);
   const [carouselIndex, setCarouselIndex] = useState(0);
@@ -13441,7 +13461,36 @@ export default function App({ onSignOut }) {
     setDraftExp1("");
     setDraftExp2("");
     setWizardStep("class");
+    setWizPre(true);
+    setWizCustom(false);
+    setDraftCustom([]);
     setShowNewCharModal(true);
+  };
+
+  // Plantilla: la clase con sus rasgos y su equipo recomendados; se sigue desde el nombre.
+  const startFromTemplate = (cls) => {
+    const ci = Math.max(0, CLASSES.findIndex((c) => c.key === cls));
+    const sug = CLASS_SUGGESTED[cls];
+    setCarouselIndex(ci);
+    setSubclassIndex(0);
+    setLevelChoice(1);
+    if (sug) {
+      const taken = new Set();
+      const assigned = {};
+      TRAITS.forEach((tr) => {
+        const mod = TRAIT_MODIFIER_POOL.find((m) => m.value === sug.traits[tr.key] && !taken.has(m.id));
+        if (mod) { taken.add(mod.id); assigned[tr.key] = mod.id; }
+      });
+      setTraitAssign(assigned);
+      setTraitPool(TRAIT_MODIFIER_POOL.map((m) => m.id).filter((id) => !taken.has(id)));
+      const base = BASE_WEAPONS.find((w) => w.key === sug.primary);
+      setDraftPrimaryWeapon(base ? buildWeapon(base, 1).key : "");
+      setDraftSecondaryWeapon(sug.secondary || "Ninguna");
+      setDraftArmor(sug.armor || "");
+    }
+    setWizCustom(false);
+    setWizPre(false);
+    setWizardStep("name");
   };
 
   const goToSubclassStep = () => {
@@ -13640,6 +13689,7 @@ export default function App({ onSignOut }) {
       const mod = TRAIT_MODIFIER_POOL.find((m) => m.id === modId);
       traitValues[t.key] = mod ? String(mod.value) : "0";
     });
+    const picked = wizCustom && draftCustom.length ? await pickWorkshop(draftCustom) : [];
     const created = {
       ...FICHA_DEFAULTS,
       f_name: draftName.trim() || "Nuevo personaje",
@@ -13696,6 +13746,7 @@ export default function App({ onSignOut }) {
       f_pack_added: draftCommunity === "Errante" ? "1" : "",
       // Tu equipo admite 5 cartas; el resto va a la bóveda.
       f_domain_cards: JSON.stringify(draftDomainCards.slice(0, 5)),
+      ...(picked.length ? { f_custom_content: JSON.stringify(picked) } : {}),
       f_domain_vault: draftDomainCards.length > 5 ? JSON.stringify(draftDomainCards.slice(5)) : "",
       f_experiences: JSON.stringify(
         [draftExp1, draftExp2]
@@ -15909,7 +15960,7 @@ export default function App({ onSignOut }) {
     if (!name) return;
     if (Object.keys(campaigns).length >= MAX_CAMPAIGNS) return;
     const id = "camp_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
-    const newCampaign = { id, name, description: newCampaignDesc.trim(), characterIds: [], color: newCampaignColor || CAMP_COLORS[Object.keys(campaigns).length % CAMP_COLORS.length], ...(newCampaignCover ? { cover: newCampaignCover } : {}), ...(newCampaignAI ? { aiImages: true } : {}), ...(newCampaignLimits.lines.length ? { lines: newCampaignLimits.lines } : {}), ...(newCampaignLimits.veils.length ? { veils: newCampaignLimits.veils } : {}) };
+    const newCampaign = { id, name, description: newCampaignDesc.trim(), characterIds: [], color: newCampaignColor || CAMP_COLORS[Object.keys(campaigns).length % CAMP_COLORS.length], ...(newCampaignCover ? { cover: newCampaignCover } : {}), ...(newCampaignCustom ? { customContent: true } : {}), ...(newCampaignAI ? { aiImages: true } : {}), ...(newCampaignLimits.lines.length ? { lines: newCampaignLimits.lines } : {}), ...(newCampaignLimits.veils.length ? { veils: newCampaignLimits.veils } : {}) };
     const nextCampaigns = { ...campaigns, [id]: newCampaign };
     setCampaigns(nextCampaigns);
     await safeSet("campaign-index", JSON.stringify(Object.keys(nextCampaigns)), false);
@@ -15926,6 +15977,7 @@ export default function App({ onSignOut }) {
     setNewCampaignAI(false);
     setNewCampaignColor("");
     setNewCampaignCover("");
+    setNewCampaignCustom(false);
     setNewCampaignStart("blank");
     setShowNewCampaignForm(false);
   };
@@ -15949,6 +16001,10 @@ export default function App({ onSignOut }) {
   const addCharacterToCampaign = (campaignId, charId) => {
     const camp = campaigns[campaignId];
     if (!camp || camp.characterIds.includes(charId)) return;
+    if (customOf(characters[charId]).length && !camp.customContent) {
+      window.alert("«" + (characters[charId]?.f_name || "Este personaje") + "» lleva contenido personalizado del Taller y esta campaña no lo permite. El DJ puede permitirlo en la portada de la campaña.");
+      return;
+    }
     // Un personaje solo puede estar en una campaña a la vez
     Object.values(campaigns).forEach((otherCamp) => {
       if (otherCamp.id !== campaignId && (otherCamp.characterIds || []).includes(charId)) {
@@ -18052,6 +18108,7 @@ export default function App({ onSignOut }) {
       ...(newCampaignDesc.trim() ? { description: newCampaignDesc.trim() } : {}),
       color: newCampaignColor || CAMP_COLORS[Object.keys(campaigns).length % CAMP_COLORS.length],
       ...(newCampaignCover ? { cover: newCampaignCover } : {}),
+      ...(newCampaignCustom ? { customContent: true } : {}),
       ...(newCampaignAI ? { aiImages: true } : {}),
       ...(newCampaignLimits.lines.length ? { lines: newCampaignLimits.lines } : {}),
       ...(newCampaignLimits.veils.length ? { veils: newCampaignLimits.veils } : {}),
@@ -19882,12 +19939,16 @@ export default function App({ onSignOut }) {
   const joinInvited = async (camp, charId) => {
     const id = camp.campId;
     const ch = characters[charId];
+    if (customOf(ch).length && !camp.custom) {
+      window.alert("«" + (ch?.f_name || "Este personaje") + "» lleva contenido personalizado del Taller y esta campaña no lo permite. Elige otro personaje o pídele al DJ que lo permita.");
+      return;
+    }
     if (campaigns[id]) addCharacterToCampaign(id, charId);
     else {
       Object.values(campaigns).forEach((o) => {
         if ((o.characterIds || []).includes(charId)) updateCampaign(o.id, { characterIds: o.characterIds.filter((x) => x !== charId) });
       });
-      const nc = { id, name: camp.name || "Campaña", description: camp.desc || "", characterIds: [charId] };
+      const nc = { id, name: camp.name || "Campaña", description: camp.desc || "", characterIds: [charId], ...(camp.custom ? { customContent: true } : {}) };
       const next = { ...campaigns, [id]: nc };
       setCampaigns(next);
       await safeSet("campaign-index", JSON.stringify(Object.keys(next)), false);
@@ -19898,8 +19959,8 @@ export default function App({ onSignOut }) {
     trackStat("campsJoined");
   };
   useEffect(() => {
-    bridge.chars = Object.entries(characters).map(([id, c]) => ({ id, name: c.f_name || "Sin nombre", cls: c.f_class || "", lvl: Number(c.f_level || 1) }));
-    bridge.camps = Object.values(campaigns).map((cp) => ({ id: cp.id, name: cp.name || "Campaña", desc: cp.description || "", players: (cp.characterIds || []).length }));
+    bridge.chars = Object.entries(characters).map(([id, c]) => ({ id, name: c.f_name || "Sin nombre", cls: c.f_class || "", lvl: Number(c.f_level || 1), custom: customOf(c).length }));
+    bridge.camps = Object.values(campaigns).map((cp) => ({ id: cp.id, name: cp.name || "Campaña", desc: cp.description || "", players: (cp.characterIds || []).length, custom: !!cp.customContent }));
     bridge.getChar = (id) => characters[id] || null;
     bridge.join = joinInvited;
   });
@@ -31679,6 +31740,7 @@ export default function App({ onSignOut }) {
                       <div className="mh-gc-tags">
                         {dead && <span className="is-dead">Caído</span>}
                         {ch.f_transformation && <span className="is-tf">{ch.f_transformation}</span>}
+                        {customOf(ch).length > 0 && <span className="is-cc" role="button" tabIndex={0} title="Contenido del Taller" onClick={(e) => (e.stopPropagation(), setCustomView({ name: ch.f_name || "este personaje", items: customOf(ch) }))} onKeyDown={(e) => e.key === "Enter" && (e.stopPropagation(), setCustomView({ name: ch.f_name || "este personaje", items: customOf(ch) }))}><Hammer size={11} />Taller · {customOf(ch).length}</span>}
                         {camp && <span className="is-camp"><BookOpen size={11} />{camp.name}</span>}
                         {isExp && <span className="is-tf">{isExp}</span>}
                       </div>
@@ -34008,6 +34070,7 @@ export default function App({ onSignOut }) {
                                 <div className="mh-gc-tags">
                                   {ch.f_is_dead === "1" && <span className="is-dead">Caído</span>}
                                   {ch.f_transformation && <span className="is-tf">{ch.f_transformation}</span>}
+                                  {customOf(ch).length > 0 && <span className="is-cc" role="button" tabIndex={0} title="Contenido del Taller: pulsa para verlo" onClick={() => setCustomView({ name: ch.f_name || "este personaje", items: customOf(ch) })} onKeyDown={(e) => e.key === "Enter" && setCustomView({ name: ch.f_name || "este personaje", items: customOf(ch) })}><Hammer size={11} />Taller · {customOf(ch).length}</span>}
                                 </div>
                                 <MedalShelf campaignId={viewingCampaignId} charId={id} size={26} />
                               </div>
@@ -34696,7 +34759,13 @@ export default function App({ onSignOut }) {
                   <span className="mh-hero-flags">
                     {camp.aiImages && <span className="is-ai" title="Imágenes creadas con IA"><Sparkles size={13} /></span>}
                     {limitsCount(camp) > 0 && <span className="is-lv" title={limitsText(camp)}><ShieldCheck size={13} /></span>}
+                    {camp.customContent && <span className="is-cc" title="Esta campaña permite contenido personalizado del Taller"><Hammer size={13} /> Contenido personalizado</span>}
                   </span>
+                  {onOpen && (
+                    <button type="button" className="mh-cv-swap" title={camp.customContent ? "Dejar de permitir contenido personalizado" : "Permitir contenido personalizado del Taller"} aria-label="Permitir contenido personalizado" onClick={(e) => { e.stopPropagation(); updateCampaign(key, { customContent: !camp.customContent }); }}>
+                      <Hammer size={13} /> {camp.customContent ? "Quitar Taller" : "Permitir Taller"}
+                    </button>
+                  )}
                   {onOpen && (
                     <button type="button" className="mh-cv-swap" title="Cambiar la portada" aria-label="Cambiar la portada" onClick={(e) => { e.stopPropagation(); const cur = SCENE_PRESETS.findIndex((x) => x.key === campCoverKey(camp, key)); updateCampaign(key, { cover: SCENE_PRESETS[(cur + 1) % SCENE_PRESETS.length].key }); }}>
                       <RotateCcw size={13} /> Portada
@@ -34789,6 +34858,11 @@ export default function App({ onSignOut }) {
                             ))}
                           </div>
                         </div>
+                        <label className={"cc-sw" + (newCampaignCustom ? " is-on" : "")} style={{ marginTop: 4 }}>
+                          <input type="checkbox" checked={newCampaignCustom} onChange={(e) => setNewCampaignCustom(e.target.checked)} />
+                          <i aria-hidden="true" />
+                          <span><b>Permitir contenido personalizado</b><small>Los personajes con creaciones del Taller podrán unirse. Todos verán el aviso en la campaña y podrás ver y revisar ese contenido.</small></span>
+                        </label>
                       </section>
 
                       <section className="mh-cc-sec">
@@ -34814,6 +34888,7 @@ export default function App({ onSignOut }) {
                           name: newCampaignName.trim() || (qs ? qs.name : "Nombre de tu campaña"),
                           description: newCampaignDesc.trim() || (qs ? "Aventura de inicio de Daggerheart." : ""),
                           aiImages: newCampaignAI || !!qs?.ai,
+                          customContent: newCampaignCustom,
                           lines: newCampaignLimits.lines,
                           veils: newCampaignLimits.veils,
                         },
@@ -35136,16 +35211,31 @@ export default function App({ onSignOut }) {
       {renderClassicSheet(viewingCharId, false)}
       </div>
 
-      {showNewCharModal && (() => {
+      {customView && <CustomViewer name={customView.name} items={customView.items} ctx={{ domainColors: DOMAIN_COLORS, icons: DOMAIN_ICONS, classColors: CLASS_COLORS }} FitTitle={FitTitle} FitBox={FitBox} onClose={() => setCustomView(null)} />}
+      {showNewCharModal && wizPre && wizSlot && createPortal(
+        <StartStep
+          classes={CLASSES.map((c) => c.key).filter((k) => CLASS_SUGGESTED[k])}
+          classColors={CLASS_COLORS}
+          emblems={CLASS_EMBLEMS}
+          templates={Object.fromEntries(CLASSES.map((c) => [c.key, CLASS_SUGGESTED[c.key] ? [CLASS_SUGGESTED[c.key].primary, CLASS_SUGGESTED[c.key].armor].filter(Boolean).join(" · ") : "Recomendada por el libro"]))}
+          custom={wizCustom}
+          setCustom={setWizCustom}
+          onClose={() => setShowNewCharModal(false)}
+          onOwn={() => setWizPre(false)}
+          onTemplate={(cls) => startFromTemplate(cls)}
+        />,
+        wizSlot
+      )}
+      {showNewCharModal && !wizPre && (() => {
         // Con un arma principal de dos manos (y una clase que no ignore la carga) no hay arma secundaria: se salta ese paso.
         const twoHandedPrimary = PRIMARY_WEAPONS.find((w) => w.key === draftPrimaryWeapon)?.hands === 2 && !ignoresBurden(CLASSES[carouselIndex]?.key);
-        const steps = WIZARD_STEPS.filter((st) => !(st.key === "secondary" && twoHandedPrimary));
+        const steps = WIZARD_STEPS.filter((st) => !(st.key === "secondary" && twoHandedPrimary) && !(st.key === "custom" && !wizCustom));
         const stepItems = wizardStep === "class" ? CLASSES : SUBCLASSES[CLASSES[carouselIndex].key] || [];
         const stepIndex = wizardStep === "class" ? carouselIndex : subclassIndex;
         const setStepIndex = wizardStep === "class" ? setCarouselIndex : setSubclassIndex;
         const current = stepItems[stepIndex] || { key: "", blurb: "" };
         // Vista previa del personaje a la derecha, salvo en los pasos con ilustración a pantalla ancha.
-        const showPv = !["class", "subclass", "ancestry", "community", "transformation", "domain"].includes(wizardStep);
+        const showPv = !["class", "subclass", "ancestry", "community", "transformation", "domain", "custom"].includes(wizardStep);
         const wzI = Math.max(0, steps.findIndex((st) => st.key === wizardStep));
         if (wzNav.current.idx !== wzI) wzNav.current = { idx: wzI, dir: wzI > wzNav.current.idx ? 1 : -1 };
         const wzDir = wzNav.current.dir > 0 ? "fwd" : "back";
@@ -36184,6 +36274,8 @@ export default function App({ onSignOut }) {
                     );
                   })()}
                 </div>
+              ) : wizardStep === "custom" ? (
+                <CustomStep selected={draftCustom} setSelected={setDraftCustom} level={levelChoice} ctx={{ domainColors: DOMAIN_COLORS, icons: DOMAIN_ICONS, classColors: CLASS_COLORS }} FitTitle={FitTitle} FitBox={FitBox} />
               ) : (
                 <div className="mh-wz-domain">
                   {(() => {

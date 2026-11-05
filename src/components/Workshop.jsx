@@ -10,7 +10,7 @@ import { weaponIcon, armorIcon } from "./gearIcons";
 // Taller: contenido personalizado del jugador (cartas de dominio, ascendencias, comunidades, subclases, armas, armaduras y objetos).
 // Por ahora es privado: se guarda en la cuenta y se puede exportar e importar en JSON.
 const KEY = "workshop-items";
-const TYPES = [
+export const TYPES = [
   { key: "dominio", label: "Carta de dominio", plural: "Cartas de dominio", Icon: Layers, color: "#A58BE8" },
   { key: "ascendencia", label: "Ascendencia", plural: "Ascendencias", Icon: User, color: "#6FA3C0" },
   { key: "comunidad", label: "Comunidad", plural: "Comunidades", Icon: Home, color: "#C08B5C" },
@@ -19,7 +19,7 @@ const TYPES = [
   { key: "armadura", label: "Armadura", plural: "Armaduras", Icon: Shield, color: "#857C96" },
   { key: "objeto", label: "Objeto", plural: "Objetos", Icon: Gem, color: "#E0A04A" },
 ];
-const typeOf = (k) => TYPES.find((t) => t.key === k) || TYPES[0];
+export const typeOf = (k) => TYPES.find((t) => t.key === k) || TYPES[0];
 const TRAIT_NAMES = ["Agilidad", "Fuerza", "Destreza", "Instinto", "Presencia", "Conocimiento"];
 const RANGES = ["Cuerpo a cuerpo", "Muy cercano", "Cercano", "Lejano", "Muy lejano"];
 const CTYPES = ["Hechizo", "Habilidad", "Grimorio"];
@@ -68,7 +68,7 @@ const blank = (type) => {
 };
 
 // Convierte un elemento del taller en una entrada con el mismo formato que el catálogo de la pestaña Cartas.
-function toEntry(it, ctx, rank) {
+export function toEntry(it, ctx, rank) {
   const e = toEntry0(it, ctx, rank);
   if (e && e.image) { e.imgZoom = Number(it.imgZoom) || 1; e.imgX = it.imgX ?? 50; e.imgY = it.imgY ?? 30; e.fullArt = !!it.fullArt; }
   return e;
@@ -135,6 +135,42 @@ function TokSim({ tokens, have, setHave, TokDice, color }) {
       <small>{tokSummary(tokens)}</small>
     </div>
   );
+}
+
+// Referencia de equilibrio de la plataforma (no son reglas oficiales): avisa de lo que se sale de lo habitual para el rango o el nivel.
+const DMG_CAP = { 1: 9, 2: 12, 3: 15.5, 4: 20 }; // daño medio máximo orientativo por rango
+export function balanceOf(it, level = 1) {
+  const notes = [];
+  const warn = (t) => notes.push({ ok: false, t });
+  const ok = (t) => notes.push({ ok: true, t });
+  if (it.type === "arma") {
+    const m = String(it.damage || "").match(/(\d*)d(\d+)\s*([+−-]\s*\d+)?/i);
+    if (m) {
+      const mod = m[3] ? (/[−-]/.test(m[3]) ? -1 : 1) * Number(m[3].replace(/[^0-9]/g, "")) : 0;
+      const avg = (Number(m[1] || 1) * (Number(m[2]) + 1)) / 2 + mod;
+      const cap = DMG_CAP[Number(it.tier) || 1];
+      avg > cap ? warn("Daño medio " + avg.toFixed(1) + ": por encima de lo habitual para el rango " + (it.tier || 1) + " (máx. orientativo " + cap + ").") : ok("Daño medio " + avg.toFixed(1) + ", dentro de lo habitual para el rango " + (it.tier || 1) + ".");
+    } else warn("El daño no tiene formato de dados.");
+  }
+  if (it.type === "armadura") {
+    const cap = (Number(it.tier) || 1) + 3;
+    Number(it.score) > cap ? warn("Puntuación " + it.score + ": por encima de lo habitual para el rango " + (it.tier || 1) + " (máx. orientativo " + cap + ").") : ok("Puntuación dentro de lo habitual.");
+  }
+  if (it.type === "dominio") {
+    Number(it.level) > level ? warn("Es de nivel " + it.level + " y el personaje es de nivel " + level + ": no podría llevarla todavía.") : ok("Nivel de carta compatible con el personaje.");
+    String(it.text || "").length > 600 && warn("Texto muy largo: conviene que sea más sencilla.");
+  }
+  if (it.type === "ascendencia" && (it.features || []).length > 2) warn("Las ascendencias oficiales tienen 2 características.");
+  if (it.type === "comunidad" && (it.features || []).length > 1) warn("Las comunidades oficiales tienen 1 característica.");
+  if (it.type === "subclase") {
+    const per = {};
+    (it.features || []).forEach((f) => { per[f.stage || "Fundación"] = (per[f.stage || "Fundación"] || 0) + 1; });
+    Object.values(per).some((n) => n > 3) && warn("Una etapa de subclase tiene más de 3 características.");
+  }
+  if (it.tokens?.on && Number(it.tokens.max) > 5) warn("Más de 5 fichas es mucho para una sola carta.");
+  if (it.type === "objeto") warn("Los objetos personalizados los valida el DJ de la mesa.");
+  if (!notes.some((n) => !n.ok)) return { level: "ok", notes };
+  return { level: "warn", notes };
 }
 
 function shrinkImage(file, max = 640) {

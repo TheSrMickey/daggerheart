@@ -77,12 +77,15 @@ export function JoinCard({ camp, onDone }) {
   const [msg, setMsg] = useState("");
   const free = bridge.chars;
   if (!free.length) return <small style={{ color: "var(--mh-muted)" }}>Crea un personaje para poder unirte.</small>;
+  const blocked = !camp.custom && free.find((c) => c.id === id)?.custom > 0;
   return (
     <div className="mh-join">
+      {camp.custom && <small style={{ color: "#E3B04B", flexBasis: "100%" }}>Esta campaña permite contenido personalizado del Taller.</small>}
+      {blocked && <small style={{ color: "#D9644E", flexBasis: "100%" }}>Este personaje lleva contenido del Taller y la campaña no lo permite.</small>}
       <select className="mh-input" value={id} onChange={(e) => setId(e.target.value)} aria-label="Personaje con el que te unes">
         {free.map((c) => <option key={c.id} value={c.id}>{c.name} · {c.cls || "Sin clase"} Nv {c.lvl}</option>)}
       </select>
-      <button type="button" className="is-ok" disabled={!id} onClick={() => (bridge.join && bridge.join(camp, id), setMsg("¡Te has unido!"), onDone && onDone())}>{msg || "Unirme"}</button>
+      <button type="button" className="is-ok" disabled={!id || blocked} onClick={() => (bridge.join && bridge.join(camp, id), setMsg("¡Te has unido!"), onDone && onDone())}>{msg || "Unirme"}</button>
     </div>
   );
 }
@@ -223,7 +226,7 @@ export function NotificationBell({ placement }) {
                         {n.type === "campaign_invite" && n.data && (
                           <div className="mh-notice-card">
                             <b className="mh-serif">{n.data.name}</b>
-                            <small>{n.data.gm ? n.data.gm + " es el DJ · " : ""}{n.data.players || 0} jugador{n.data.players === 1 ? "" : "es"}{n.data.desc ? " · " + n.data.desc : ""}</small>
+                            <small>{n.data.gm ? n.data.gm + " es el DJ · " : ""}{n.data.players || 0} jugador{n.data.players === 1 ? "" : "es"}{n.data.desc ? " · " + n.data.desc : ""}{n.data.custom ? " · Contenido personalizado permitido" : ""}</small>
                             <JoinCard camp={n.data} />
                           </div>
                         )}
@@ -482,7 +485,7 @@ export function FriendsPanel({ renderClass }) {
             <button type="button" role="menuitem" disabled={bridge.camps.length === 0} aria-disabled={bridge.camps.length === 0} title={bridge.camps.length === 0 ? "Necesitas una campaña a la que invitar" : undefined} onClick={() => bridge.camps.length > 0 && setInvOpen((v) => !v)}><BookOpen size={14} /> Invitar a una campaña <ChevronRight size={13} style={{ marginLeft: "auto" }} /></button>
             {invOpen && bridge.camps.length > 0 && (
               <div className="mh-ctx-sub">
-                {bridge.camps.map((c) => <button key={c.id} type="button" role="menuitem" onClick={async () => { const p = menu.p; setMenu(null); setInvOpen(false); say(await inviteToCampaign(p, { campId: c.id, name: c.name, desc: c.desc, gm: s.me?.username || "", players: c.players }).catch(() => "No se pudo enviar.")); }}>{c.name}</button>)}
+                {bridge.camps.map((c) => <button key={c.id} type="button" role="menuitem" onClick={async () => { const p = menu.p; setMenu(null); setInvOpen(false); say(await inviteToCampaign(p, { campId: c.id, name: c.name, desc: c.desc, gm: s.me?.username || "", players: c.players, custom: !!c.custom }).catch(() => "No se pudo enviar.")); }}>{c.name}</button>)}
               </div>
             )}
             <button type="button" role="menuitem" onClick={() => (window.dispatchEvent(new CustomEvent("mh-profile", { detail: { id: menu.p.id, name: menu.p.username } })), setMenu(null))}><User size={14} /> Ver perfil</button>
@@ -549,7 +552,7 @@ function DmPanel({ peer, me, onBack }) {
               <div className="mh-notice-card">
                 <b className="mh-serif">{m.invite.name}</b>
                 <small>Invitación a la campaña</small>
-                {m.from !== me?.id && <JoinCard camp={{ campId: m.invite.campId, name: m.invite.name, desc: m.invite.desc }} />}
+                {m.from !== me?.id && <JoinCard camp={{ campId: m.invite.campId, name: m.invite.name, desc: m.invite.desc, custom: m.invite.custom }} />}
               </div>
             )}
             <small>{time(m.at)}</small>
