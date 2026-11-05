@@ -9,6 +9,8 @@ export const CHANGELOG = [
     title: "El Oráculo del DJ",
     blurb: "Un anillo de luz que responde a las preguntas de la mesa: Sí / No, con matices o con una tirada de destino, solo para el DJ y a un toque bajo el chat.",
     items: [
+      { tag: "nuevo", text: "Cartas · dos apartados nuevos, Adversarios y Entornos, con un ejemplo de cada uno (Lobo Ceniciento y Puente de Cuerdas Podrido) con su ficha de estadísticas y características." },
+      { tag: "mejora", text: "Directo del DJ · el foco de la mesa solo aparece cuando el directo es el mapa de combate, no en las escenas. Las chispas del logo de «Sin escena» en modo claro ahora son del mismo tono que el logo (antes tiraban a azul)." },
       { tag: "nuevo", text: "Taller · nueva plantilla de la Guadaña Darkin de Kayn (arma legendaria con fichas de Sed). Al subir una imagen a una carta, arma o armadura puedes elegir el zoom y el encuadre (horizontal y vertical) con una vista del recuadro tal y como saldrá." },
       { tag: "nuevo", text: "Taller · tu biblioteca se muestra ahora como la galería de Cartas, con las cartas completas; al pulsar una se abre en grande (se cierra con la X, fuera o Esc) con Modificar, Duplicar y Eliminar. Las armas y las armaduras también pueden llevar imagen." },
       { tag: "nuevo", text: "Taller · al pulsar una creación de tu biblioteca se abre en grande, con las opciones de modificarla, duplicarla o eliminarla y una vista de cómo se vería en la mano, en la hoja y la mochila, en la baraja y en el mapa. Las fichas se pueden simular con botones para sumar, restar, vaciar y llenar." },

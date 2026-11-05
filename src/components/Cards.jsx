@@ -36,19 +36,21 @@ export const KINDS = [
   { key: "forma", label: "Forma de Bestia", plural: "Formas de Bestia" },
   { key: "arma", label: "Arma", plural: "Armas" },
   { key: "armadura", label: "Armadura", plural: "Armaduras" },
+  { key: "adversario", label: "Adversarios", plural: "Adversarios" },
+  { key: "entorno", label: "Entornos", plural: "Entornos" },
 ];
-const KIND_COLOR = { dominio: "#C9A24A", ascendencia: "#6FA3C0", comunidad: "#C08B5C", subclase: "#7FB77A", transformacion: "#A58BE8", forma: "#E0A04A", arma: "#C9A24A", armadura: "#C9A24A" };
+const KIND_COLOR = { dominio: "#C9A24A", ascendencia: "#6FA3C0", comunidad: "#C08B5C", subclase: "#7FB77A", transformacion: "#A58BE8", forma: "#E0A04A", arma: "#C9A24A", armadura: "#C9A24A", adversario: "#D9644E", entorno: "#5FA39A" };
 
 // La carta, tal cual se ve al abrirla; en la cuadrícula tiene exactamente el mismo tamaño (300 × 420).
 export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
   const col = c.color;
   const legend = c.kind === "arma" && c.tier === 4;
   const feats = c.features || [];
-  const total = (c.text || "").length + feats.reduce((s, f) => s + (f.name || "").length + (f.text || "").length + (f.subs || []).reduce((q, e) => q + e.name.length + e.text.length, 0), 0);
+  const total = (c.text || "").length + (c.stats || []).reduce((s, x) => s + x[0].length + String(x[1]).length, 0) + feats.reduce((s, f) => s + (f.name || "").length + (f.text || "").length + (f.subs || []).reduce((q, e) => q + e.name.length + e.text.length, 0), 0);
   const modal = !!onClose;
   const dom = c.kind === "dominio";
   // Ascendencias y comunidades usan el mismo diseño que las de dominio, sin cinta de nivel ni coste.
-  const gen = c.kind === "ascendencia" || c.kind === "comunidad" || c.kind === "transformacion" || c.kind === "accion";
+  const gen = c.kind === "ascendencia" || c.kind === "comunidad" || c.kind === "transformacion" || c.kind === "accion" || c.kind === "adversario" || c.kind === "entorno";
   const sub = c.kind === "subclase"; // cinta con el rango en numeral romano: I Fundación, II Especialización, III Maestría
   const bst = c.kind === "forma"; // cinta con el rango de la forma
   const wpn = c.kind === "arma" || c.kind === "armadura"; // armas y armaduras: cinta con el rango (I Común … IV Legendario) y el mismo diseño que en la hoja
@@ -91,7 +93,8 @@ export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
         </FitBox>
       ) : (
       <FitBox fitKey={c.key + total} max={13} min={8.5} style={{ flex: 1, minHeight: 0, overflow: "hidden", padding: "10px 18px 12px", display: "flex", flexDirection: "column", justifyContent: "flex-start", textAlign: feats.length ? "left" : "center", gap: "0.7em", lineHeight: 1.45, color: "var(--mh-ink)" }}>
-        {c.text && <div style={{ color: "var(--mh-ink)", textAlign: "center" }}>{c.text}</div>}
+        {c.stats && <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "2px 10px", fontSize: "0.95em", color: "var(--mh-ink)" }}>{c.stats.map((s) => <span key={s[0]}><b style={{ color: "var(--mh-gold-ink)" }}>{s[0]}</b> {s[1]}</span>)}</div>}
+        {c.text && <div style={{ color: "var(--mh-ink)", textAlign: "center", fontStyle: c.stats ? "italic" : undefined }}>{c.text}</div>}
         {feats.map((f) => (
           <div key={f.name} style={{ fontSize: "0.95em", lineHeight: 1.4 }}>
             <b style={{ color: "var(--mh-gold-ink)" }}>{f.name}</b>{f.text ? ": " + f.text : ""}
@@ -302,7 +305,7 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox }) {
       <div className="cx-h">
         <div>
           <h1 className="mh-serif">Cartas</h1>
-          <p>Todas las cartas del juego: dominio, ascendencia, comunidad, subclase, transformación, formas de bestia, armas y armaduras. Pulsa una para verla a tamaño completo.</p>
+          <p>Todas las cartas del juego: dominio, ascendencia, comunidad, subclase, transformación, formas de bestia, armas, armaduras, adversarios y entornos. Pulsa una para verla a tamaño completo.</p>
         </div>
         <label className="cx-search">
           <Search size={15} />
