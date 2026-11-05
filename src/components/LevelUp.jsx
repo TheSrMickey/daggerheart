@@ -45,6 +45,7 @@ export const getMulticlass = (c) => {
     const m = JSON.parse(c?.f_multiclass || "");
     if (m && m.domain === "Sabio") m.domain = "Naturaleza"; // el dominio se llamaba «Sabio»
     if (m && m.domain === "Pavor") m.domain = "Miedo"; // el dominio se llamaba «Pavor»
+    if (m && m.domain === "Gracia") m.domain = "Encanto"; // el dominio se llamaba «Gracia»
     return m && m.cls ? m : null;
   } catch (e) {
     return null;

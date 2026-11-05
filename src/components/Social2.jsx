@@ -155,11 +155,24 @@ export function SocialHost() {
 
 // ---------- Buscar mesa ----------
 const KINDS = [["players", "Busco jugadores", "#4f9a62"], ["table", "Busco mesa", "#E0544A"], ["gm", "Busco DJ", "#8E6FC4"]];
+const LANGS = ["Español", "Inglés", "Otro"];
+const DAYS = [["L", "Lunes"], ["M", "Martes"], ["X", "Miércoles"], ["J", "Jueves"], ["V", "Viernes"], ["S", "Sábado"], ["D", "Domingo"]];
+const lsGet = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || "null") ?? d; } catch { return d; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+
 export function LookingFor() {
   const s = useSocial();
   const [posts, setPosts] = useState(null);
   const [kind, setKind] = useState("");
   const [q, setQ] = useState("");
+  const [lang, setLang] = useState("");
+  const [days, setDays] = useState([]);
+  const [free, setFree] = useState(false);
+  const [onlySaved, setOnlySaved] = useState(false);
+  const [saved, setSaved] = useState(() => lsGet("mh-lf-saved", []));
+  const [alert, setAlert] = useState(() => lsGet("mh-lf-alert", null)); // búsqueda guardada: { kind, lang, days, free, seen }
+  const [ask, setAsk] = useState(null); // anuncio al que se escribe una solicitud
+  const [note, setNote] = useState("");
   const [form, setForm] = useState(null);
   const [msg, setMsg] = useState("");
   const load = async () => setPosts(await loadPosts().catch(() => []));
@@ -169,44 +182,69 @@ export function LookingFor() {
     const t = setInterval(load, 20000);
     return () => clearInterval(t);
   }, []);
-  const shown = (posts || []).filter((p) => (!kind || p.kind === kind) && (!q || (p.title + " " + p.desc + " " + p.tags.join(" ")).toLowerCase().includes(q.toLowerCase())));
+  const fits = (p, f) => (!f.kind || p.kind === f.kind) && (!f.lang || p.lang === f.lang) && (!f.days?.length || (p.days || []).some((d) => f.days.includes(d))) && (!f.free || (p.slots || 0) > 0);
+  const shown = (posts || []).filter((p) => fits(p, { kind, lang, days, free }) && (!onlySaved || saved.includes(p.uid)) && (!q || (p.title + " " + p.desc + " " + p.tags.join(" ")).toLowerCase().includes(q.toLowerCase())));
   const mine = (posts || []).find((p) => p.uid === s.me?.id);
   const kindOf = (k) => KINDS.find((x) => x[0] === k) || KINDS[0];
+  const newForAlert = alert ? (posts || []).filter((p) => p.uid !== s.me?.id && p.at > (alert.seen || 0) && fits(p, alert)) : [];
+  const toggleSaved = (uid) => { const n = saved.includes(uid) ? saved.filter((x) => x !== uid) : [...saved, uid]; setSaved(n); lsSet("mh-lf-saved", n); };
+  const saveAlert = () => { const a = { kind, lang, days, free, seen: Date.now() }; setAlert(a); lsSet("mh-lf-alert", a); setMsg("Te avisaré aquí cuando aparezcan anuncios que encajen con estos filtros."); };
+  const clearAlert = () => { setAlert(null); lsSet("mh-lf-alert", null); };
+  const markSeen = () => { const a = { ...alert, seen: Date.now() }; setAlert(a); lsSet("mh-lf-alert", a); };
   const publish = async () => {
     const camp = bridge.camps.find((c) => c.id === form.camp);
     await saveProfile({ searchable: true });
-    await publishPost({ kind: form.kind, title: form.title.trim(), desc: form.desc.trim(), tags: form.tags.split(",").map((t) => t.trim()).filter(Boolean).slice(0, 6), camp: camp ? { campId: camp.id, name: camp.name, desc: camp.desc, gm: s.me?.username || "", players: camp.players } : null });
+    await publishPost({ kind: form.kind, title: form.title.trim(), desc: form.desc.trim(), tags: form.tags.split(",").map((t) => t.trim()).filter(Boolean).slice(0, 6), lang: form.lang || "", days: form.days || [], slots: Number(form.slots) || 0, camp: camp ? { campId: camp.id, name: camp.name, desc: camp.desc, gm: s.me?.username || "", players: camp.players } : null });
     setForm(null);
     setMsg("Anuncio publicado. Lo verá cualquiera que busque mesa.");
     load();
   };
+  const toggleDay = (d) => setDays((x) => (x.includes(d) ? x.filter((y) => y !== d) : [...x, d]));
+  const anyFilter = kind || lang || days.length || free;
   return (
     <div className="so-page">
       <div className="so-head">
-        <div><h1 className="mh-serif">Buscar mesa</h1><p>Anuncios de jugadores y DJ que buscan gente. Para unirte, pídelo y el autor decide.</p></div>
-        <button type="button" className="mh-btn" onClick={() => setForm(mine ? { kind: mine.kind, title: mine.title, desc: mine.desc, tags: mine.tags.join(", "), camp: mine.camp?.campId || "" } : { kind: "players", title: "", desc: "", tags: "", camp: "" })}><Megaphone size={15} /> {mine ? "Editar mi anuncio" : "Publicar anuncio"}</button>
+        <div><h1 className="mh-serif">Buscar mesa</h1><p>Anuncios de jugadores y DJ que buscan gente. Para unirte, escribe una solicitud y el autor decide.</p></div>
+        <button type="button" className="mh-btn" onClick={() => setForm(mine ? { kind: mine.kind, title: mine.title, desc: mine.desc, tags: mine.tags.join(", "), camp: mine.camp?.campId || "", lang: mine.lang || "", days: mine.days || [], slots: mine.slots || 0 } : { kind: "players", title: "", desc: "", tags: "", camp: "", lang: "Español", days: [], slots: 0 })}><Megaphone size={15} /> {mine ? "Editar mi anuncio" : "Publicar anuncio"}</button>
       </div>
       {msg && <div className="mh-friends-msg">{msg}</div>}
+      {newForAlert.length > 0 && (
+        <div className="so-alert" role="status"><b>{newForAlert.length} anuncio{newForAlert.length === 1 ? " nuevo" : "s nuevos"}</b> encaja{newForAlert.length === 1 ? "" : "n"} con tu aviso: {newForAlert.slice(0, 3).map((p) => "«" + p.title + "»").join(", ")}{newForAlert.length > 3 ? "…" : ""}<button type="button" className="mh-btn-ghost" onClick={markSeen}>Marcar como vistos</button></div>
+      )}
       {form && (
         <div className="so-card so-form">
           <div className="so-chips">{KINDS.map(([k, l, c]) => <button key={k} type="button" className={"so-chip" + (form.kind === k ? " on" : "")} style={{ "--c": c }} onClick={() => setForm({ ...form, kind: k })}>{l}</button>)}</div>
           <input className="mh-input" maxLength={80} placeholder="Título: «La Marca Rota busca apoyo»" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
           <textarea className="mh-input" maxLength={400} style={{ minHeight: 70 }} placeholder="Cuéntanos qué buscas, el tono, el sistema…" value={form.desc} onChange={(e) => setForm({ ...form, desc: e.target.value })} />
-          <input className="mh-input" placeholder="Etiquetas separadas por comas: Viernes 21:00, Español, 2 plazas" value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} />
+          <div className="so-fr"><span>Idioma</span><div className="so-chips">{LANGS.map((l) => <button key={l} type="button" className={"so-chip" + (form.lang === l ? " on" : "")} onClick={() => setForm({ ...form, lang: form.lang === l ? "" : l })}>{l}</button>)}</div></div>
+          <div className="so-fr"><span>Días</span><div className="so-chips">{DAYS.map(([d, n]) => <button key={d} type="button" title={n} className={"so-chip so-day" + ((form.days || []).includes(d) ? " on" : "")} onClick={() => setForm({ ...form, days: (form.days || []).includes(d) ? form.days.filter((x) => x !== d) : [...(form.days || []), d] })}>{d}</button>)}</div></div>
+          <div className="so-fr"><span>Plazas libres</span><input className="mh-input" type="number" min={0} max={9} style={{ width: 90 }} value={form.slots} onChange={(e) => setForm({ ...form, slots: e.target.value })} /></div>
+          <input className="mh-input" placeholder="Otras etiquetas separadas por comas: Viernes 21:00, Rol ligero" value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} />
           {bridge.camps.length > 0 && <select className="mh-input" value={form.camp} onChange={(e) => setForm({ ...form, camp: e.target.value })}><option value="">Sin campaña asociada</option>{bridge.camps.map((c) => <option key={c.id} value={c.id}>Asociar a «{c.name}»</option>)}</select>}
           <div className="so-acts"><button type="button" className="mh-btn" disabled={!form.title.trim()} onClick={publish}>Publicar</button>{mine && <button type="button" className="mh-btn-ghost" onClick={async () => (await removePost(), setForm(null), setMsg("Anuncio retirado."), load())}>Retirar mi anuncio</button>}<button type="button" className="mh-btn-ghost" onClick={() => setForm(null)}>Cancelar</button><small><Lock size={12} /> Al publicar, tu perfil aparece en Buscar mesa.</small></div>
         </div>
       )}
-      <div className="so-chips so-filters">
-        <button type="button" className={"so-chip" + (!kind ? " on" : "")} onClick={() => setKind("")}>Todos</button>
-        {KINDS.map(([k, l, c]) => <button key={k} type="button" className={"so-chip" + (kind === k ? " on" : "")} style={{ "--c": c }} onClick={() => setKind(kind === k ? "" : k)}>{l}</button>)}
+      <div className="so-tabs" role="tablist" aria-label="Tipo de anuncio">
+        <button type="button" role="tab" aria-selected={!kind} className={!kind ? "on" : ""} onClick={() => setKind("")}>Todos<em>{(posts || []).length}</em></button>
+        {KINDS.map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={kind === k} className={kind === k ? "on" : ""} onClick={() => setKind(kind === k ? "" : k)}>{l}<em>{(posts || []).filter((p) => p.kind === k).length}</em></button>)}
+      </div>
+      <div className="so-fp">
+        <div className="so-fr"><span>Idioma</span><select className="mh-input" value={lang} onChange={(e) => setLang(e.target.value)} aria-label="Idioma"><option value="">Cualquiera</option>{LANGS.map((l) => <option key={l}>{l}</option>)}</select></div>
+        <div className="so-fr"><span>Días</span><div className="so-chips">{DAYS.map(([d, n]) => <button key={d} type="button" title={n} className={"so-chip so-day" + (days.includes(d) ? " on" : "")} onClick={() => toggleDay(d)}>{d}</button>)}</div></div>
+        <label className="so-fr so-chk"><input type="checkbox" checked={free} onChange={(e) => setFree(e.target.checked)} /> <span>Solo con plazas libres</span></label>
         <input className="mh-input so-q" placeholder="Buscar…" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Buscar anuncios" />
+        <div className="so-fa">
+          <button type="button" className={"so-chip" + (onlySaved ? " on" : "")} onClick={() => setOnlySaved(!onlySaved)}>★ Guardados{saved.length ? " · " + saved.length : ""}</button>
+          {alert ? <button type="button" className="so-chip on" onClick={clearAlert} title="Quitar el aviso">🔔 Aviso activo · quitar</button> : <button type="button" className="so-chip" disabled={!anyFilter} title={anyFilter ? "" : "Elige algún filtro primero"} onClick={saveAlert}>🔔 Avisarme de nuevos</button>}
+          {(anyFilter || q) && <button type="button" className="so-chip" onClick={() => (setKind(""), setLang(""), setDays([]), setFree(false), setQ(""))}>Limpiar</button>}
+        </div>
       </div>
       {posts === null && <div className="so-empty">Cargando…</div>}
-      {posts && shown.length === 0 && <div className="so-empty">No hay anuncios todavía. Sé el primero en publicar uno.</div>}
+      {posts && shown.length === 0 && <div className="so-empty">{posts.length ? "Ningún anuncio encaja con estos filtros." : "No hay anuncios todavía. Sé el primero en publicar uno."}</div>}
       {shown.map((p) => {
         const [, label, c] = kindOf(p.kind);
         const me = p.uid === s.me?.id;
+        const star = saved.includes(p.uid);
         return (
           <div key={p.id} className="so-card so-post">
             <Avatar name={p.name} size={44} />
@@ -214,11 +252,23 @@ export function LookingFor() {
               <div className="so-prow"><b className="mh-serif so-ptitle">{p.title}</b><span className="so-chip on" style={{ "--c": c }}>{label}</span></div>
               <small>{p.name} · {ago(p.at)}{p.camp ? " · campaña «" + p.camp.name + "»" : ""}</small>
               {p.desc && <p>{p.desc}</p>}
-              <div className="so-chips">{p.tags.map((t) => <span key={t} className="so-chip">{t}</span>)}</div>
+              <div className="so-chips">
+                {p.lang && <span className="so-chip on" style={{ "--c": "#6FA3C0" }}>{p.lang}</span>}
+                {(p.days || []).length > 0 && <span className="so-chip on" style={{ "--c": "#C9A24A" }}>{p.days.map((d) => DAYS.find((x) => x[0] === d)?.[1]?.slice(0, 3) || d).join(" · ")}</span>}
+                {p.slots > 0 && <span className="so-chip on" style={{ "--c": "#4f9a62" }}>{p.slots} plaza{p.slots === 1 ? "" : "s"} libre{p.slots === 1 ? "" : "s"}</span>}
+                {p.tags.map((t) => <span key={t} className="so-chip">{t}</span>)}
+              </div>
+              {ask === p.id && (
+                <div className="so-ask">
+                  <textarea className="mh-input" maxLength={300} placeholder="Preséntate en un par de líneas: qué personaje llevas, qué experiencia tienes, cuándo puedes jugar…" value={note} onChange={(e) => setNote(e.target.value)} />
+                  <div className="so-acts"><button type="button" className="mh-btn" onClick={async () => { setMsg(await requestJoin(p, note).catch(() => "No se pudo enviar.")); setAsk(null); setNote(""); }}>Enviar solicitud</button><button type="button" className="mh-btn-ghost" onClick={() => setAsk(null)}>Cancelar</button></div>
+                </div>
+              )}
             </div>
             <div className="so-side">
-              {me ? <small>Tu anuncio</small> : <button type="button" className="mh-btn" onClick={async () => setMsg(await requestJoin(p).catch(() => "No se pudo enviar."))}>Pedir unirme</button>}
+              {me ? <small>Tu anuncio</small> : <button type="button" className="mh-btn" onClick={() => (setAsk(ask === p.id ? null : p.id), setNote(""))}>Pedir unirme</button>}
               {!me && <button type="button" className="mh-btn-ghost" onClick={() => window.dispatchEvent(new CustomEvent("mh-profile", { detail: { id: p.uid, name: p.name } }))}>Ver perfil</button>}
+              {!me && <button type="button" className={"mh-btn-ghost so-star" + (star ? " on" : "")} aria-pressed={star} onClick={() => toggleSaved(p.uid)}>{star ? "★ Guardado" : "☆ Guardar"}</button>}
             </div>
           </div>
         );
