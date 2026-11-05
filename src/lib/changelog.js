@@ -9,6 +9,8 @@ export const CHANGELOG = [
     title: "El Oráculo del DJ",
     blurb: "Un anillo de luz que responde a las preguntas de la mesa: Sí / No, con matices o con una tirada de destino, solo para el DJ y a un toque bajo el chat.",
     items: [
+      { tag: "nuevo", text: "Cartas · dos apartados nuevos, Adversarios y Entornos, con un ejemplo de cada uno (Lobo Ceniciento y Puente de Cuerdas Podrido) con su ficha de estadísticas y características." },
+      { tag: "mejora", text: "Directo del DJ · el foco de la mesa solo aparece cuando el directo es el mapa de combate, no en las escenas. Las chispas del logo de «Sin escena» en modo claro ahora son del mismo tono que el logo (antes tiraban a azul)." },
       { tag: "nuevo", text: "Cartas Salvajes · cinco cartas más: «Apoyo comunitario», «Te cubro las espaldas», «Tómate tu tiempo», «Juntos en esto» y «Solo estamos empezando»." },
       { tag: "nuevo", text: "Cartas · nueva categoría «Salvajes» con las dos primeras cartas, limitadas y muy especiales: «Puedes con esto» y «Todo es justo». Se colocan en la bóveda de forma permanente al usarlas." },
       { tag: "nuevo", text: "Imagen del personaje: al subir una foto (en la hoja, Cambiar imagen) se abre un recorte con las proporciones de la ilustración de clase; arrastra para mover, acerca con el control o la rueda y guarda el encuadre que quieras." },
