@@ -5,7 +5,7 @@ import { Dices, Check, Sparkles } from "lucide-react";
 
 // Aspectos de dado. «cristal» es el de siempre; «cosmico» pinta de nebulosa los dados de 12 caras (Esperanza y Miedo).
 export const DICE_SKINS = [
-  { key: "cristal", label: "Cristal", desc: "El dado translúcido de siempre, con el tinte de cada tipo de dado.", color: "#6FA3C0" },
+  { key: "cristal", label: "Cristal", desc: "El dado translúcido de siempre, con el tinte de cada tipo de dado.", color: "#6FA3C0", hidden: true },
   { key: "cosmico", label: "D12 Cósmico", desc: "Una nebulosa que gira muy despacio, estrellas que titilan y el logo de la página en la cara del 12. Se aplica a todos tus dados.", color: "#A58BE8", model: "/modelos/d12-cosmico.glb" },
   { key: "oficial", label: "Oficial Set", desc: "Inspirado en el set oficial de Daggerheart: resina morada y azul con remolinos blancos, brillos y números amarillos; el D12 de Esperanza en ámbar y el de Miedo en azul marino, con números blancos y el logo en el 12 (y en el 20). Se aplica a todos tus dados.", color: "#E3B04B", model: "/modelos/oficial-set.glb", set: true },
 ];
@@ -401,7 +401,7 @@ export function DicePage({ skin, onEquip, embedded }) {
         <p>Elige el aspecto de tus dados. El que equipes se usa en las tiradas de tus personajes.</p>
       </div>
       <div className="mh-dice-grid">
-        {DICE_SKINS.map((s) => {
+        {DICE_SKINS.filter((s) => !s.hidden).map((s) => {
           const on = skin === s.key;
           return (
             <div key={s.key} className={"mh-dice-card" + (on ? " is-on" : "") + (s.set ? " is-wide" : "")} style={{ "--dc": s.color }}>

@@ -145,7 +145,7 @@ const CLASSES = [
   { key: "Hechicero", blurb: "Desata una magia caótica que brota de un poder innato." },
   { key: "Guerrero", blurb: "Domina el combate cuerpo a cuerpo con disciplina inquebrantable." },
   { key: "Mago", blurb: "Estudia lo arcano para doblegar la realidad a su voluntad." },
-  { key: "Bruja", blurb: "Invoca magia macabra del dominio Pavor para maldecir y consumir.", expansion: "Hope & Fear" },
+  { key: "Bruja", blurb: "Invoca magia macabra del dominio Miedo para maldecir y consumir.", expansion: "Hope & Fear" },
   { key: "Brujo", blurb: "Sella un pacto oscuro y paga el precio de un poder prestado.", expansion: "Hope & Fear" },
   { key: "Camorrista", blurb: "Golpea con los puños y la fuerza bruta, sin dar un paso atrás.", expansion: "Hope & Fear" },
   { key: "Asesino", blurb: "Convierte la muerte en oficio con golpes precisos y letales.", expansion: "Hope & Fear" },
@@ -1208,6 +1208,7 @@ const TRAIT_HINTS = {
 
 // Máximo de personajes por cuenta.
 const MAX_CHARACTERS = 3;
+const MAX_CAMPAIGNS = 3; // campañas por cuenta
 
 const TRAIT_MODIFIER_POOL = [
   { id: "m_2", value: 2 },
@@ -2448,8 +2449,8 @@ const CLASS_DOMAINS = {
   Hechicero: ["Arcano", "Medianoche"],
   Guerrero: ["Filo", "Hueso"],
   Mago: ["Códice", "Esplendor"],
-  Bruja: ["Naturaleza", "Pavor"],
-  Brujo: ["Pavor", "Gracia"],
+  Bruja: ["Naturaleza", "Miedo"],
+  Brujo: ["Miedo", "Gracia"],
   Camorrista: ["Valor", "Hueso"],
   Asesino: ["Filo", "Medianoche"],
   Invocador: ["Sangre", "Esplendor"],
@@ -2472,7 +2473,7 @@ const DOMAIN_COLORS = {
   Medianoche: "#6B6F94",
   Esplendor: "#E8C547",
   Valor: "#E0823A",
-  Pavor: "#8B6BC4",
+  Miedo: "#8B6BC4",
 };
 
 const DOMAIN_ICONS = {
@@ -2486,11 +2487,11 @@ const DOMAIN_ICONS = {
   Medianoche: Moon,
   Esplendor: Sun,
   Valor: Shield,
-  Pavor: Skull,
+  Miedo: Skull,
 };
 
 // Iconos oficiales de los dominios (archivos en public/dominios). Sangre no tiene icono oficial: usa el de siempre.
-const DOMAIN_ICON_FILE = { Arcano: "arcana", Filo: "blade", Hueso: "bone", Códice: "codex", Pavor: "dread", Gracia: "grace", Medianoche: "midnight", Naturaleza: "sage", Esplendor: "splendor", Valor: "valor" };
+const DOMAIN_ICON_FILE = { Arcano: "arcana", Filo: "blade", Hueso: "bone", Códice: "codex", Miedo: "dread", Gracia: "grace", Medianoche: "midnight", Naturaleza: "sage", Esplendor: "splendor", Valor: "valor" };
 function DomainIcon({ name, size = 16 }) {
   const f = DOMAIN_ICON_FILE[name];
   if (!f) {
@@ -4033,8 +4034,8 @@ const DOMAIN_CARDS = {
       text: "Cuando fueras a marcar una casilla de Armadura, tira tantos d6 como tu Competencia. Si alguno saca un 6, reduce la gravedad en un umbral sin marcar la casilla de Armadura.",
     },
   ],
-  // Pavor (Hope & Fear). Demiplane no publica el coste de Recuperación: queda por confirmar (null). El tipo es el probable según el texto.
-  Pavor: [
+  // Miedo (Hope & Fear). Demiplane no publica el coste de Recuperación: queda por confirmar (null). El tipo es el probable según el texto.
+  Miedo: [
     {
       key: "Golpe Marchitador",
       image: "/cartas-dominio/golpe-marchitador.webp",
@@ -4145,7 +4146,7 @@ const DOMAIN_CARDS = {
       level: 7,
       type: "Habilidad",
       recall: null,
-      text: "Cuando 4 o más de las cartas de dominio de tu equipo sean del dominio Pavor, obtienes los siguientes beneficios:\n• Cuando tengas éxito con Miedo, puedes marcar 2 Estrés para impedir que el DJ gane un Miedo.\n• Una vez por descanso, al hacer una tirada de acción, puedes obtener un bonificador a la tirada igual al número de Miedo en la reserva del DJ.",
+      text: "Cuando 4 o más de las cartas de dominio de tu equipo sean del dominio Miedo, obtienes los siguientes beneficios:\n• Cuando tengas éxito con Miedo, puedes marcar 2 Estrés para impedir que el DJ gane un Miedo.\n• Una vez por descanso, al hacer una tirada de acción, puedes obtener un bonificador a la tirada igual al número de Miedo en la reserva del DJ.",
     },
     {
       key: "Muro del Hambre",
@@ -8384,6 +8385,7 @@ const sharedStyles = `
   .mh-camps .mh-hero-inf { align-items: center; padding: 16px 18px 20px; gap: 6px; min-height: 150px; } .mh-camps .mh-hero-nm { font-size: 20px; } .mh-camps .mh-hero-tags { justify-content: center; }
   .mh-camp-ds { font-size: 12.5px; color: var(--mh-muted); line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .mh-camp-new { margin: 0; min-height: 290px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; cursor: pointer; border-style: dashed; color: var(--mh-ink3); text-align: center; padding: 20px; transition: border-color .15s, background .15s; }
+  .mh-camp-new.is-full { cursor: default; opacity: .7; } .mh-camp-new.is-full:hover { border-color: inherit; background: none; }
   .mh-camp-new:hover, .mh-camp-new:focus-visible { border-color: #E3B04B; background: #E3B04B0F; outline: none; } .mh-camp-new small { font-size: 12px; color: var(--mh-muted); max-width: 200px; }
   .mh-camps > .mh-card:not(.mh-hero):not(.mh-camp-new) { margin: 0; }
   .mh-camp-hero { position: relative; margin-bottom: 18px; padding: 16px 22px 20px; border-radius: 18px; border: 1.5px solid color-mix(in srgb, var(--hc) 40%, var(--mh-line)); background: linear-gradient(135deg, color-mix(in srgb, var(--hc) 34%, #0d1020), #0c0c20 80%); color: #fff; box-shadow: 0 16px 36px -26px var(--hc); }
@@ -15859,6 +15861,7 @@ export default function App({ onSignOut }) {
   const createCampaign = async () => {
     const name = newCampaignName.trim();
     if (!name) return;
+    if (Object.keys(campaigns).length >= MAX_CAMPAIGNS) return;
     const id = "camp_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
     const newCampaign = { id, name, description: newCampaignDesc.trim(), characterIds: [], color: newCampaignColor || CAMP_COLORS[Object.keys(campaigns).length % CAMP_COLORS.length], ...(newCampaignAI ? { aiImages: true } : {}), ...(newCampaignLimits.lines.length ? { lines: newCampaignLimits.lines } : {}), ...(newCampaignLimits.veils.length ? { veils: newCampaignLimits.veils } : {}) };
     const nextCampaigns = { ...campaigns, [id]: newCampaign };
@@ -17993,6 +17996,7 @@ export default function App({ onSignOut }) {
 
   // Aventura de inicio: crea la campaña con escenas, pistas, reparto, notas por acto y mapas con los enemigos.
   const createQuickstart = async (build) => {
+    if (Object.keys(campaigns).length >= MAX_CAMPAIGNS) return;
     const q = build();
     // La aventura se puede personalizar al crearla: nombre, descripción, color, imágenes con IA y líneas y velos de la mesa.
     q.campaign = {
@@ -34672,11 +34676,11 @@ export default function App({ onSignOut }) {
               <div>
                 <div className="mh-camps-head">
                   <div className="mh-camps-ht">
-                    <span>{nCamps} campaña{nCamps === 1 ? "" : "s"}</span>
-                    <small>Cada campaña reúne a tu grupo con su mesa, su mapa y su chat.</small>
+                    <span>{nCamps} de {MAX_CAMPAIGNS} campañas</span>
+                    <small>Cada campaña reúne a tu grupo con su mesa, su mapa y su chat. Una cuenta puede tener hasta {MAX_CAMPAIGNS}.</small>
                   </div>
                   {!showNewCampaignForm && (
-                    <button type="button" className="mh-btn" onClick={() => setShowNewCampaignForm(true)}>
+                    <button type="button" className="mh-btn" disabled={nCamps >= MAX_CAMPAIGNS} title={nCamps >= MAX_CAMPAIGNS ? "Has llegado al límite de " + MAX_CAMPAIGNS + " campañas. Elimina una para crear otra." : undefined} onClick={() => setShowNewCampaignForm(true)}>
                       <Plus size={14} /> Nueva campaña
                     </button>
                   )}
@@ -34779,7 +34783,13 @@ export default function App({ onSignOut }) {
                     return campCard(camp, id, members, () => setViewingCampaignId(id), campColor(id));
                   })}
 
-                  {!showNewCampaignForm && (
+                  {!showNewCampaignForm && nCamps >= MAX_CAMPAIGNS && (
+                    <div className="mh-card mh-camp-new is-full">
+                      <span style={{ fontSize: 14, fontWeight: 600 }}>Límite alcanzado</span>
+                      <small>Tienes {MAX_CAMPAIGNS} de {MAX_CAMPAIGNS} campañas. Elimina una para crear otra.</small>
+                    </div>
+                  )}
+                  {!showNewCampaignForm && nCamps < MAX_CAMPAIGNS && (
                     <div className="mh-card mh-camp-new" role="button" tabIndex={0} onClick={() => setShowNewCampaignForm(true)} onKeyDown={(e) => e.key === "Enter" && setShowNewCampaignForm(true)}>
                       <span className="mh-gal-plus"><Plus size={26} /></span>
                       <span style={{ fontSize: 14, fontWeight: 600 }}>Nueva campaña</span>
