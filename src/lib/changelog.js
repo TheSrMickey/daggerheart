@@ -4,11 +4,14 @@
 // la diapositiva de la última actualización en Inicio y el número de versión de la barra lateral salen solos de la primera entrada.
 export const CHANGELOG = [
   {
-    version: "1.52",
-    date: "2026-10-29",
-    title: "El Oráculo del DJ",
-    blurb: "Un anillo de luz que responde a las preguntas de la mesa: Sí / No, con matices o con una tirada de destino, solo para el DJ y a un toque bajo el chat.",
+    version: "1.53",
+    date: "2026-11-05",
+    title: "El Taller y la creación de personaje",
+    blurb: "Crea tus propias cartas, armas y plantillas en el Taller (con fichas e imágenes), descarga tu hoja en PDF, estrena una creación de personaje renovada y descubre las nuevas cartas Salvajes, Adversarios y Entornos.",
     items: [
+      { tag: "nuevo", text: "Campañas · cada cuenta puede tener como máximo 3 campañas; el contador «1 de 3 campañas» se ve arriba y, al llegar al límite, el botón de crear se desactiva." },
+      { tag: "mejora", text: "Dominios · el dominio «Pavor» pasa a llamarse «Miedo» en toda la app (cartas, colores, clases y multiclase); las multiclases ya guardadas con el nombre antiguo siguen funcionando." },
+      { tag: "mejora", text: "Dados · el aspecto de Cristal ya no aparece en Personalización (sigue en el sistema: quien lo tenga elegido lo conserva hasta que cambie de aspecto)." },
       { tag: "nuevo", text: "Cartas · dos apartados nuevos, Adversarios y Entornos, con un ejemplo de cada uno (Lobo Ceniciento y Puente de Cuerdas Podrido) con su ficha de estadísticas y características." },
       { tag: "mejora", text: "Directo del DJ · el foco de la mesa solo aparece cuando el directo es el mapa de combate, no en las escenas. Las chispas del logo de «Sin escena» en modo claro ahora son del mismo tono que el logo (antes tiraban a azul)." },
       { tag: "nuevo", text: "Cartas Salvajes · cinco cartas más: «Apoyo comunitario», «Te cubro las espaldas», «Tómate tu tiempo», «Juntos en esto» y «Solo estamos empezando»." },
@@ -60,6 +63,14 @@ export const CHANGELOG = [
       { tag: "mejora", text: "Combate · las cartas pasivas (Huesos Desnudos) no se pueden arrastrar al mapa y llevan un cartel «Pasiva» encima de la carta en la mano." },
       { tag: "mejora", text: "Combate · la carta «Huesos Desnudos» en la mano muestra si está activa: un halo dorado que respira alrededor de la carta cuando no llevas armadura, y la carta apagada y en gris cuando llevas una." },
       { tag: "nuevo", text: "Hoja · «Huesos Desnudos» ya funciona: si llevas la carta y no tienes armadura equipada, tu Puntuación de Armadura es 3 + tu Fuerza y los umbrales de daño base son los de tu rango (9/19, 11/24, 13/31 o 15/38, más tu nivel). Al equipar una armadura, vuelve lo normal." },
+    ],
+  },
+  {
+    version: "1.52",
+    date: "2026-10-29",
+    title: "El Oráculo del DJ",
+    blurb: "Un anillo de luz que responde a las preguntas de la mesa: Sí / No, con matices o con una tirada de destino, solo para el DJ y a un toque bajo el chat.",
+    items: [
       { tag: "mejora", text: "Combate · una carta o se puede usar en el mapa o no: las que no tienen función ya no se arrastran (solo se abren al pulsarlas), y al arrastrar las demás ya no sale el cartel «Casilla (alcance)» sino «Usar» con el nombre de la carta." },
       { tag: "nuevo", text: "Combate · «Empujón Contundente» se juega desde el mapa: arrástrala a un adversario Cuerpo a cuerpo y, tras revelarse la carta, atacas con tu arma principal. Si aciertas, hace su daño (+d6 si es con Esperanza) y el adversario sale empujado hasta alcance Cercano; después puedes gastar 1 Esperanza para dejarlo Vulnerable, y el DJ lo quita con «Quitar Vulnerable»." },
       { tag: "arreglo", text: "Combate · «Llama Salvaje» ahora lanza el efecto de fuego a la vez sobre todos los adversarios alcanzados (hasta tres) y todos reaccionan al impacto, no solo uno." },
