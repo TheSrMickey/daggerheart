@@ -22,6 +22,7 @@ export const CARD_STATUS = {
   "Tómate tu tiempo": { sheet: NO, hand: NO, map: NO },
   "Juntos en esto": { sheet: NO, hand: NO, map: NO },
   "Solo estamos empezando": { sheet: NO, hand: NO, map: NO },
+  "Revigorizado": { sheet: NO, hand: NO, map: NO },
   "Huesos Desnudos": { sheet: "Armadura 3 + Fuerza y umbrales por rango sin armadura", hand: "Cartel «Pasiva» y halo activa/inactiva", map: NO },
   "Libro de Ava": { sheet: "Armadura de Tava suma +1 a la Armadura hasta el descanso", hand: "Se arrastra a una ficha y se elige el hechizo", map: "Empujón de Poder, Armadura de Tava y Pico de Hielo" },
   "Libro de Illiat": { sheet: "Descarga Arcana y Telepatía se reinician con el descanso", hand: "Se arrastra a una ficha; carta fugaz «Cortar la telepatía»", map: "Sopor (Dormido), Descarga Arcana y Telepatía (hilo)" },

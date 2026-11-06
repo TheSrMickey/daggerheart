@@ -9,6 +9,7 @@ export const CHANGELOG = [
     title: "El Taller y la creación de personaje",
     blurb: "Crea tus propias cartas y armas en el Taller (con fichas e imágenes), descarga tu hoja en PDF, estrena la creación de personaje renovada, una pestaña Cartas más clara con Adversarios y Entornos, y un Buscar mesa con filtros, solicitudes con mensaje y avisos.",
     items: [
+      { tag: "nuevo", text: "Cartas Salvajes · nueva carta: «Revigorizado»." },
       { tag: "mejora", text: "Campañas · Capítulos: ahora puedes arrastrar los capítulos (en la cuadrícula de Capítulos y en la lista lateral) para reordenarlos: una línea dorada marca dónde caerán, antes o después del capítulo que señales; las flechas siguen ahí. En el contenido de un capítulo se arregló que, al arrastrar hacia abajo, la pieza quedaba un puesto antes de lo esperado y no se podía llevar al final." },
       { tag: "nuevo", text: "Campañas · puedes subir tu propia imagen de portada al crear una campaña y encuadrarla (arrastrar y acercar) antes de guardarla; sustituye a las escenas de serie." },
       { tag: "mejora", text: "Campañas · el aviso de contenido personalizado del Taller es ahora un icono como el de las imágenes con IA, y los dos pueden verse a la vez (en la tarjeta y en la cabecera de la campaña)." },

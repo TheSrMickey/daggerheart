@@ -1044,6 +1044,7 @@ const buildCardCatalog = () => {
     { key: "Tómate tu tiempo", text: "Tú o un aliado podéis realizar una acción de tiempo libre adicional durante un descanso. Después, coloca esta carta en tu bóveda de forma permanente.", image: "/cartas-salvajes/tomate-tu-tiempo.webp" },
     { key: "Juntos en esto", text: "Inicia una Tirada en Equipo sin gastar Esperanza. Después, coloca esta carta en tu bóveda de forma permanente.", image: "/cartas-salvajes/juntos-en-esto.webp" },
     { key: "Solo estamos empezando", text: "Cuando recibas daño, puedes ganar una cantidad de Esperanza igual al número de Puntos de vida que marques. Si lo haces, coloca esta carta en tu bóveda de forma permanente.", image: "/cartas-salvajes/solo-estamos-empezando.webp" },
+    { key: "Revigorizado", text: "Cuando derrotes a un adversario, puedes librarte de un Punto de vida. Si lo haces, coloca esta carta en tu bóveda de forma permanente.", image: "/cartas-salvajes/revigorizado.webp" },
   ].forEach((w) => out.push({ id: "wild-" + w.key, kind: "salvaje", key: w.key, sub: "Salvaje", text: w.text, features: [], image: w.image, color: "#D94F7A", Icon: Sparkles }));
   // Armas (principales y secundarias), ordenadas por rango.
   const wlist = [...PRIMARY_WEAPONS.map((w) => ({ w, prim: true })), ...SECONDARY_WEAPONS.map((w) => ({ w, prim: false }))];
