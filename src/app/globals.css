@@ -43,7 +43,7 @@
   --color-fear: var(--fear);
   --color-danger: var(--danger);
   --font-sans: var(--font-body);
-  --font-display: var(--font-cinzel);
+  --font-display: var(--font-body);
 }
 
 body {
@@ -117,7 +117,7 @@ body {
 
 @utility card-title {
   margin-bottom: 0.75rem;
-  font-family: var(--font-cinzel);
+  font-family: var(--font-body);
   font-size: var(--text-sm);
   font-weight: 700;
   text-transform: uppercase;
@@ -131,7 +131,7 @@ body {
 .auth-left { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 64px; color: #e9e6f2; background: linear-gradient(180deg, #12112a, #0b0a18);
   --bg: #0b0a18; --panel: #1a1930; --panel-2: #1a1930; --ink: #e9e6f2; --muted: #9a98b4; --line: #ffffff1f; --gold: #6f9bff; --gold-ink: #9db8ff; --danger: #ff7a7a; }
 .auth-logo { height: 92px; margin-bottom: 14px; filter: drop-shadow(0 0 14px #9db8ff88); }
-.auth-title { font: 600 28px/1.2 var(--font-cinzel), Georgia, serif; text-align: center; }
+.auth-title { font: 600 28px/1.2 var(--font-body), system-ui, sans-serif; text-align: center; }
 .auth-title { margin-bottom: 24px; }
 .auth-form { width: 100%; max-width: 340px; }
 .auth-form .field { height: 40px; padding: 0 14px; background: #ffffff0a; border: 1px solid #ffffff14; color: #e9e6f2; border-radius: 9px; font-size: 13px; }

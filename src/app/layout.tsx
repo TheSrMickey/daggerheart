@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Cinzel, Inter } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeScript } from "@/components/ThemeScript";
 
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="es" data-mh-theme="dark" suppressHydrationWarning className={`${display.variable} ${body.variable} h-full antialiased`}>
+    <html lang="es" data-mh-theme="dark" suppressHydrationWarning className={`${body.variable} h-full antialiased`}>
       <head>
         <ThemeScript />
       </head>
