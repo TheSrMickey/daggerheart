@@ -221,6 +221,7 @@ export function WorkshopPage({ FitTitle, FitBox, TokDice, domainColors, icons, c
   const [msg, setMsg] = useState("");
   const [dirty, setDirty] = useState(false);
   const [tokHave, setTokHave] = useState(0); // fichas de ejemplo en la vista previa
+  const [wstep, setWstep] = useState(0); // paso del asistente (0 = Identidad)
   const [showCtx, setShowCtx] = useState(false); // panel «cómo se vería» en la ventana grande
   const [mode, setMode] = useState("edit"); // "view": ficha en grande · "edit": editor
   const fileRef = useRef(null);
@@ -248,6 +249,7 @@ export function WorkshopPage({ FitTitle, FitBox, TokDice, domainColors, icons, c
     setSel(it.id);
     setRank(0);
     setTokHave(0);
+    setWstep(0);
     setMode("edit");
     setDirty(true);
   };
@@ -479,7 +481,7 @@ export function WorkshopPage({ FitTitle, FitBox, TokDice, domainColors, icons, c
                 {draft.type === "subclase" && <div className="ws-rank">{STAGES.map((st, i) => <button key={st} type="button" className={rank === i ? "on" : ""} onClick={() => setRank(i)}>{st}</button>)}</div>}
                 <TokSim bare tokens={draft.tokens} have={tokHave} setHave={setTokHave} TokDice={TokDice} color={entry.color} />
                 <div className="ws-acts ws-ovb">
-                  <button type="button" className="mh-btn" onClick={() => setMode("edit")}><Pencil size={15} /> Modificar</button>
+                  <button type="button" className="mh-btn" onClick={() => { setWstep(0); setMode("edit"); }}><Pencil size={15} /> Modificar</button>
                   <button type="button" className="mh-btn-ghost" onClick={duplicate}><Copy size={14} /> Duplicar</button>
                   <button type="button" className={"mh-btn-ghost" + (showCtx ? " is-on" : "")} onClick={() => setShowCtx((v) => !v)}><Layers size={14} /> Cómo se vería</button>
                   <button type="button" className="mh-btn-ghost ws-del" onClick={remove}><Trash2 size={14} /> Eliminar</button>
@@ -512,116 +514,158 @@ export function WorkshopPage({ FitTitle, FitBox, TokDice, domainColors, icons, c
               )}
             </div>
           </div>, document.querySelector(".mh-root") || document.body)}
-        {(mode === "edit" || !draft) && (
-        <div className="ws-work">
-        <section className="ws-ed">
-          {!draft ? (
-            <div className="ws-blank"><Hammer size={34} strokeWidth={1.4} /><h2 className="mh-serif">Tu taller está listo</h2><p>Elige un tipo de contenido para crear algo nuevo o abre un elemento de tu biblioteca para editarlo.</p></div>
-          ) : (
-            <>
-              <div className="ws-ed-h"><span style={{ "--c": tinfo.color }}><tinfo.Icon size={15} /> {tinfo.label}</span>{dirty && <em>Cambios sin guardar</em>}</div>
-              {L("Nombre", <input className="mh-input" autoFocus maxLength={60} value={draft.name} onChange={(e) => set({ name: e.target.value })} placeholder="Por ejemplo: Llama de Cenizas" />)}
-              {draft.type === "dominio" && (
-                <>
-                  {L("Dominio", (
-                    <div className="ws-dom">
-                      <Seg value={domains.includes(draft.domain) ? draft.domain : ""} options={domains} onChange={(v) => set({ domain: v })} />
-                      <input className="mh-input" maxLength={24} value={draft.domain} onChange={(e) => set({ domain: e.target.value })} placeholder="o escribe un dominio propio" />
-                    </div>
-                  ))}
-                  <div className="ws-r3">
-                    {L("Tipo", <Seg value={draft.ctype} options={CTYPES} onChange={(v) => set({ ctype: v })} />)}
-                    {L("Nivel", <Seg value={draft.level} options={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]} onChange={(v) => set({ level: v })} />)}
-                    {L("Coste de recuperación", <Seg value={draft.recall} options={[0, 1, 2, 3, 4, 5]} onChange={(v) => set({ recall: v })} />)}
+        {(mode === "edit" || !draft) && (!draft ? (
+          <div className="ws-blank"><Hammer size={34} strokeWidth={1.4} /><h2 className="mh-serif">¿Qué quieres crear hoy?</h2><p>Elige un tipo arriba y te guiaremos paso a paso, con la carta a la vista mientras la escribes. También puedes empezar desde una plantilla o abrir algo de tu biblioteca para modificarlo.</p></div>
+        ) : (() => {
+          const T = draft.type;
+          const STEPS = {
+            dominio: [["id", "Identidad"], ["rules", "Reglas"], ["text", "Texto"], ["art", "Arte y fichas"], ["review", "Revisar"]],
+            ascendencia: [["id", "Identidad"], ["feats", "Características"], ["art", "Arte"], ["review", "Revisar"]],
+            comunidad: [["id", "Identidad"], ["feats", "Características"], ["art", "Arte"], ["review", "Revisar"]],
+            subclase: [["id", "Identidad"], ["feats", "Características"], ["art", "Arte"], ["review", "Revisar"]],
+            arma: [["id", "Identidad"], ["rules", "Reglas"], ["text", "Texto"], ["art", "Arte y fichas"], ["review", "Revisar"]],
+            armadura: [["id", "Identidad"], ["rules", "Reglas"], ["text", "Texto"], ["art", "Arte"], ["review", "Revisar"]],
+            objeto: [["id", "Identidad"], ["text", "Descripción"], ["art", "Arte"], ["review", "Revisar"]],
+          }[T];
+          const idx = Math.min(wstep, STEPS.length - 1);
+          const cur = STEPS[idx][0];
+          const last = idx === STEPS.length - 1;
+          const saved = (items || []).some((x) => x.id === draft.id);
+          const TITLES = {
+            id: ["Dale identidad", T === "dominio" ? "El nombre y el dominio definen su color y su logo." : "El nombre es lo primero que se lee en la carta."],
+            rules: [T === "arma" ? "Las reglas del arma" : T === "armadura" ? "Las cifras de la armadura" : "Las reglas de la carta", "Nivel, coste y números que usa en la partida."],
+            feats: ["Características", T === "subclase" ? "Fundación, especialización y maestría." : T === "ascendencia" ? "Las ascendencias oficiales tienen dos." : "Las comunidades oficiales tienen una."],
+            text: [T === "objeto" ? "Cuéntanos qué es" : "Escribe el efecto", "Lo que pone la carta: alcance, tirada y resultado."],
+            art: ["Ilustración y fichas", "Opcional. Sin imagen, la carta usa el logo o el icono del tipo."],
+            review: ["Revisa y guarda", "Esto es lo que verán tus jugadores."],
+          }[cur];
+          const body = {
+            id: (
+              <>
+                {L("Nombre", <input className="mh-input" autoFocus maxLength={60} value={draft.name} onChange={(e) => set({ name: e.target.value })} placeholder="Por ejemplo: Llama de Cenizas" />)}
+                {T === "dominio" && L("Dominio", (
+                  <div className="ws-dom">
+                    <Seg value={domains.includes(draft.domain) ? draft.domain : ""} options={domains} onChange={(v) => set({ domain: v })} />
+                    <input className="mh-input" maxLength={24} value={draft.domain} onChange={(e) => set({ domain: e.target.value })} placeholder="o escribe un dominio propio" />
                   </div>
-                  {L("Texto de la carta", <textarea className="mh-input" rows={6} value={draft.text} onChange={(e) => set({ text: e.target.value })} placeholder="Describe qué hace la carta, con el alcance, la tirada y el efecto." />)}
-                  <TokField />
-                  <ImageField />
-                </>
-              )}
-              {(draft.type === "ascendencia" || draft.type === "comunidad") && (
-                <>
-                  {L("Descripción", <textarea className="mh-input" rows={3} value={draft.blurb} onChange={(e) => set({ blurb: e.target.value })} placeholder={"Cómo es esta " + (draft.type === "ascendencia" ? "ascendencia." : "comunidad.")} />)}
-                  {L("Características", <Feats />, draft.type === "ascendencia" ? "Las ascendencias oficiales tienen dos características." : "Las comunidades oficiales tienen una característica.")}
-                  <ImageField />
-                </>
-              )}
-              {draft.type === "subclase" && (
-                <>
-                  {L("Clase", <select className="mh-input" value={draft.cls} onChange={(e) => set({ cls: e.target.value })}><option value="">Sin clase concreta</option>{classes.map((c) => <option key={c}>{c}</option>)}</select>)}
-                  {L("Descripción", <textarea className="mh-input" rows={3} value={draft.blurb} onChange={(e) => set({ blurb: e.target.value })} placeholder="Qué representa esta subclase. Puedes indicar el rasgo de conjuro." />)}
-                  {L("Características por etapa", <Feats stages />, "Cada subclase tiene Fundación, Especialización y Maestría.")}
-                  <ImageField />
-                </>
-              )}
-              {draft.type === "arma" && (
-                <>
+                ))}
+                {(T === "ascendencia" || T === "comunidad" || T === "subclase") && (
+                  <>
+                    {T === "subclase" && L("Clase", <select className="mh-input" value={draft.cls} onChange={(e) => set({ cls: e.target.value })}><option value="">Sin clase concreta</option>{classes.map((c) => <option key={c}>{c}</option>)}</select>)}
+                    {L("Descripción", <textarea className="mh-input" rows={4} value={draft.blurb} onChange={(e) => set({ blurb: e.target.value })} placeholder={T === "subclase" ? "Qué representa esta subclase. Puedes indicar el rasgo de conjuro." : "Cómo es esta " + (T === "ascendencia" ? "ascendencia." : "comunidad.")} />)}
+                  </>
+                )}
+                {T === "arma" && (
                   <div className="ws-r3">
                     {L("Tipo", <Seg value={draft.slot} options={["Principal", "Secundaria"]} onChange={(v) => set({ slot: v })} />)}
                     {L("Manos", <Seg value={draft.hands} options={[1, 2]} onChange={(v) => set({ hands: Number(v) })} />)}
                     {L("Rango", <Seg value={draft.tier} options={[1, 2, 3, 4]} onChange={(v) => set({ tier: Number(v) })} fmt={(v) => TIER_LABEL[v]} />)}
                   </div>
-                  <div className="ws-r3">
-                    {L("Rasgo", <select className="mh-input" value={draft.trait} onChange={(e) => set({ trait: e.target.value })}>{TRAIT_NAMES.map((t) => <option key={t}>{t}</option>)}</select>)}
-                    {L("Alcance", <select className="mh-input" value={draft.range} onChange={(e) => set({ range: e.target.value })}>{RANGES.map((t) => <option key={t}>{t}</option>)}</select>)}
-                    {L("Daño", <input className="mh-input" value={draft.damage} onChange={(e) => set({ damage: e.target.value })} placeholder="d8+2 físico" />)}
-                  </div>
-                  {L("Característica", <textarea className="mh-input" rows={5} value={draft.feature} onChange={(e) => set({ feature: e.target.value })} placeholder="Opcional: efecto especial del arma. Puedes poner varias, una por línea." />)}
-                  <TokField />
-                  <ImageField />
-                </>
-              )}
-              {draft.type === "armadura" && (
-                <>
-                  {L("Rango", <Seg value={draft.tier} options={[1, 2, 3, 4]} onChange={(v) => set({ tier: Number(v) })} fmt={(v) => TIER_LABEL[v]} />)}
-                  <div className="ws-r3">
-                    {L("Puntuación base", <input className="mh-input" type="number" min={0} max={12} value={draft.score} onChange={(e) => set({ score: e.target.value })} />)}
-                    {L("Umbral mayor", <input className="mh-input" type="number" min={1} value={draft.major} onChange={(e) => set({ major: e.target.value })} />)}
-                    {L("Umbral grave", <input className="mh-input" type="number" min={1} value={draft.severe} onChange={(e) => set({ severe: e.target.value })} />)}
-                  </div>
-                  {L("Característica", <textarea className="mh-input" rows={3} value={draft.feature} onChange={(e) => set({ feature: e.target.value })} placeholder="Opcional: efecto especial de la armadura." />)}
-                  <ImageField />
-                </>
-              )}
-              {draft.type === "objeto" && (
-                <>
-                  {L("Descripción", <textarea className="mh-input" rows={5} value={draft.text} onChange={(e) => set({ text: e.target.value })} placeholder="Qué es, qué hace y cómo se usa." />)}
-                  <ImageField />
-                </>
-              )}
-              <div className="ws-acts">
-                <button type="button" className="mh-btn" disabled={!draft.name.trim() || !dirty} onClick={save}><Check size={15} /> Guardar</button>
-                <button type="button" className="mh-btn-ghost" onClick={duplicate} disabled={!(items || []).some((x) => x.id === draft.id)}><Copy size={14} /> Duplicar</button>
-                <button type="button" className="mh-btn-ghost ws-del" onClick={remove} disabled={!(items || []).some((x) => x.id === draft.id)}><Trash2 size={14} /> Eliminar</button>
-                {msg && <span className="ws-msg">{msg}</span>}
+                )}
+                {T === "armadura" && L("Rango", <Seg value={draft.tier} options={[1, 2, 3, 4]} onChange={(v) => set({ tier: Number(v) })} fmt={(v) => TIER_LABEL[v]} />)}
+              </>
+            ),
+            rules: T === "dominio" ? (
+              <div className="ws-r3">
+                {L("Tipo", <Seg value={draft.ctype} options={CTYPES} onChange={(v) => set({ ctype: v })} />)}
+                {L("Nivel", <Seg value={draft.level} options={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]} onChange={(v) => set({ level: v })} />)}
+                {L("Coste de recuperación", <Seg value={draft.recall} options={[0, 1, 2, 3, 4, 5]} onChange={(v) => set({ recall: v })} />)}
               </div>
-            </>
-          )}
-        </section>
-
-        <aside className="ws-pv">
-          {entry ? (
-            <>
-              <h3>Vista previa en vivo</h3>
-              {draft.type === "subclase" && <div className="ws-rank">{STAGES.map((s, i) => <button key={s} type="button" className={rank === i ? "on" : ""} onClick={() => setRank(i)}>{s}</button>)}</div>}
-              <div className="ws-card"><CardFace c={entry} I={entry.Icon} FitTitle={FitTitle} FitBox={FitBox} /></div>
-              <TokSim tokens={draft.tokens} have={tokHave} setHave={setTokHave} TokDice={TokDice} color={entry.color} />
-              <span className="ws-tag"><FileText size={12} /> Contenido personalizado</span>
-              <div className="ws-chk">
-                <h3>Comprobaciones</h3>
-                {checks(draft).map((c, i) => <p key={i} className={c.ok ? "ok" : "wr"}><b>{c.ok ? "✓" : "!"}</b>{c.t}</p>)}
+            ) : T === "arma" ? (
+              <div className="ws-r3">
+                {L("Rasgo", <select className="mh-input" value={draft.trait} onChange={(e) => set({ trait: e.target.value })}>{TRAIT_NAMES.map((t) => <option key={t}>{t}</option>)}</select>)}
+                {L("Alcance", <select className="mh-input" value={draft.range} onChange={(e) => set({ range: e.target.value })}>{RANGES.map((t) => <option key={t}>{t}</option>)}</select>)}
+                {L("Daño", <input className="mh-input" value={draft.damage} onChange={(e) => set({ damage: e.target.value })} placeholder="d8+2 físico" />)}
               </div>
-            </>
-          ) : <div className="ws-pv-e"><Sparkles size={22} /><p>Aquí verás tu carta mientras la escribes.</p></div>}
-        </aside>
-        </div>
-        )}
+            ) : (
+              <div className="ws-r3">
+                {L("Puntuación base", <input className="mh-input" type="number" min={0} max={12} value={draft.score} onChange={(e) => set({ score: e.target.value })} />)}
+                {L("Umbral mayor", <input className="mh-input" type="number" min={1} value={draft.major} onChange={(e) => set({ major: e.target.value })} />)}
+                {L("Umbral grave", <input className="mh-input" type="number" min={1} value={draft.severe} onChange={(e) => set({ severe: e.target.value })} />)}
+              </div>
+            ),
+            text:
+              T === "dominio" ? L("Texto de la carta", <textarea className="mh-input" rows={9} value={draft.text} onChange={(e) => set({ text: e.target.value })} placeholder="Describe qué hace la carta, con el alcance, la tirada y el efecto." />, String(draft.text || "").length + " / 600")
+              : T === "objeto" ? L("Descripción", <textarea className="mh-input" rows={9} value={draft.text} onChange={(e) => set({ text: e.target.value })} placeholder="Qué es, qué hace y cómo se usa." />)
+              : L("Característica", <textarea className="mh-input" rows={9} value={draft.feature} onChange={(e) => set({ feature: e.target.value })} placeholder="Opcional: efecto especial. Puedes poner varias, una por línea." />),
+            feats: L(T === "subclase" ? "Características por etapa" : "Características", T === "subclase" ? <Feats stages /> : <Feats />),
+            art: (
+              <>
+                <ImageField />
+                {(T === "dominio" || T === "arma") && <TokField />}
+              </>
+            ),
+            review: (
+              <>
+                <div className="ws-chk">
+                  <h3>Comprobaciones</h3>
+                  {checks(draft).map((c, i) => <p key={i} className={c.ok ? "ok" : "wr"}><b>{c.ok ? "✓" : "!"}</b>{c.t}</p>)}
+                </div>
+                <div className="ws-chk">
+                  <h3>Equilibrio</h3>
+                  {balanceOf(draft, 10).notes.map((c, i) => <p key={i} className={c.ok ? "ok" : "wr"}><b>{c.ok ? "✓" : "!"}</b>{c.t}</p>)}
+                </div>
+              </>
+            ),
+          }[cur];
+          return (
+            <section className="ws-wiz">
+              <div className="ws-stp" role="tablist" aria-label="Pasos de la creación">
+                <button type="button" className="is-dn" onClick={() => closeView()} title="Cambiar de tipo: elige otro arriba"><b><Check size={13} strokeWidth={3} /></b><span>Tipo</span></button>
+                {STEPS.map(([k, lab], i) => (
+                  <span key={k} className="ws-stp-i">
+                    <i />
+                    <button type="button" role="tab" aria-selected={i === idx} className={i === idx ? "is-on" : i < idx ? "is-dn" : ""} onClick={() => setWstep(i)}><b>{i < idx ? <Check size={13} strokeWidth={3} /> : i + 2}</b><span>{lab}</span></button>
+                  </span>
+                ))}
+              </div>
+              <div className="ws-wz">
+                <div className="ws-wz-l">
+                  <div className="ws-wz-h"><span style={{ "--c": tinfo.color }}><tinfo.Icon size={14} /> {tinfo.label}</span>{dirty && <em>Cambios sin guardar</em>}</div>
+                  <h2 className="ws-wz-t">{TITLES[0]}</h2>
+                  <p className="ws-wz-s">{TITLES[1]}</p>
+                  <div className="ws-wz-b" key={cur}>{body}</div>
+                  <div className="ws-wz-n">
+                    <button type="button" className="mh-btn-ghost" disabled={idx === 0} onClick={() => setWstep(idx - 1)}>‹ Atrás</button>
+                    {msg && <span className="ws-msg">{msg}</span>}
+                    {last ? (
+                      <>
+                        <button type="button" className="mh-btn-ghost" onClick={duplicate} disabled={!saved}><Copy size={14} /> Duplicar</button>
+                        <button type="button" className="mh-btn-ghost ws-del" onClick={remove} disabled={!saved}><Trash2 size={14} /> Eliminar</button>
+                        <button type="button" className="mh-btn" disabled={!draft.name.trim() || !dirty} onClick={save}><Check size={15} /> Guardar</button>
+                      </>
+                    ) : (
+                      <button type="button" className="mh-btn" onClick={() => setWstep(idx + 1)}>Siguiente ›</button>
+                    )}
+                  </div>
+                </div>
+                <aside className="ws-wz-r">
+                  {draft.type === "subclase" && <div className="ws-rank">{STAGES.map((st, i) => <button key={st} type="button" className={rank === i ? "on" : ""} onClick={() => setRank(i)}>{st}</button>)}</div>}
+                  <div className="ws-card"><CardFace c={entry} I={entry.Icon} FitTitle={FitTitle} FitBox={FitBox} /></div>
+                  <TokSim tokens={draft.tokens} have={tokHave} setHave={setTokHave} TokDice={TokDice} color={entry.color} />
+                  <small className="ws-wz-cap">Vista previa en vivo · se actualiza al escribir</small>
+                </aside>
+              </div>
+            </section>
+          );
+        })())}
       </div>
     </div>
   );
 }
 
 const CSS = `
+.ws-wiz { background: var(--mh-panel); border: 1px solid var(--mh-line); border-radius: 20px; padding: 18px 22px 20px; display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.ws-stp { display: flex; align-items: center; flex-wrap: wrap; row-gap: 8px; } .ws-stp button { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font: 600 12.5px var(--font-body), 'Inter', system-ui, sans-serif; color: var(--mh-muted2); } .ws-stp button b { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--mh-line2); display: grid; place-items: center; font-size: 12px; } .ws-stp button.is-on { color: var(--mh-ink); } .ws-stp button.is-on b { background: #E3B04B; border-color: #E3B04B; color: #1a1408; } .ws-stp button.is-dn b { background: #6FBF73; border-color: #6FBF73; color: #0a1a0e; } .ws-stp button:focus-visible { outline: 2px solid #E3B04B; outline-offset: 3px; border-radius: 99px; }
+.ws-stp-i { display: inline-flex; align-items: center; } .ws-stp-i i { width: 30px; height: 2px; background: var(--mh-line); margin: 0 10px; flex: none; }
+.ws-wz { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 26px; align-items: start; }
+.ws-wz-l { display: flex; flex-direction: column; gap: 14px; min-height: 500px; min-width: 0; } .ws-wz-h { display: flex; align-items: center; justify-content: space-between; } .ws-wz-h span { display: inline-flex; align-items: center; gap: 7px; font: 700 11px var(--font-body), 'Inter', system-ui, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: var(--c); } .ws-wz-h em { font-style: normal; font-size: 12px; color: #E3B04B; }
+.ws-wz-t { margin: 0; font-size: 22px; font-weight: 700; color: var(--mh-ink); } .ws-wz-s { margin: -8px 0 0; color: var(--mh-muted); font-size: 13px; }
+.ws-wz-b { display: flex; flex-direction: column; gap: 16px; animation: ws-stp-in .25s ease both; } @keyframes ws-stp-in { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } } @media (prefers-reduced-motion: reduce) { .ws-wz-b { animation: none; } }
+.ws-wz-n { margin-top: auto; padding-top: 14px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; } .ws-wz-n .mh-btn:last-child { margin-left: auto; } .ws-wz-n .ws-del { margin-left: auto; } .ws-wz-n .ws-del + .mh-btn { margin-left: 0; }
+.ws-wz-r { display: flex; flex-direction: column; align-items: center; gap: 10px; position: sticky; top: 8px; } .ws-wz-cap { color: var(--mh-muted2); font-size: 11.5px; }
+@media (max-width: 1100px) { .ws-wz { grid-template-columns: minmax(0, 1fr); } .ws-wz-r { position: static; } }
+.ws-blank { background: var(--mh-panel); border: 1px dashed var(--mh-line2); border-radius: 20px; padding: 44px 24px; text-align: center; color: var(--mh-muted); display: flex; flex-direction: column; align-items: center; gap: 8px; } .ws-blank h2 { margin: 6px 0 0; color: var(--mh-ink); } .ws-blank p { margin: 0; max-width: 520px; line-height: 1.55; }
 .ws { display: flex; flex-direction: column; gap: 14px; }
 .ws-top { display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap; } .ws-top > div:first-child { flex: 1; min-width: 260px; } .ws-top h1 { margin: 0 0 4px; font-size: 28px; } .ws-top p { margin: 0; color: var(--mh-muted); font-size: 13px; max-width: 640px; line-height: 1.5; }
 .ws-top-a { display: flex; gap: 8px; } .ws-top-a button, .ws-acts button, .ws-img button, .ws-feats > button { display: inline-flex; align-items: center; gap: 6px; }
@@ -655,7 +699,6 @@ const CSS = `
 .ws-feats { display: flex; flex-direction: column; gap: 10px; } .ws-feat { border: 1px solid var(--mh-line); border-left: 3px solid #E3B04B; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 8px; background: var(--mh-panel2); } .ws-feat-h { display: flex; gap: 8px; align-items: center; } .ws-feat-h .mh-input { flex: 1; min-width: 0; } .ws-feat-h .ws-stage { flex: none; width: 150px; }
 .ws-img { display: flex; align-items: center; gap: 12px; } .ws-img img, .ws-img-e { width: 84px; height: 84px; border-radius: 12px; object-fit: cover; border: 1px solid var(--mh-line); } .ws-img-e { display: grid; place-items: center; color: var(--mh-muted2); background: var(--mh-panel2); border-style: dashed; } .ws-img > div:last-child { display: flex; flex-wrap: wrap; gap: 8px; }
 .ws-acts { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px; } .ws-del { margin-left: auto; color: #D9644E !important; } .ws-msg { font-size: 12px; color: #7FB77A; }
-.ws-blank { text-align: center; padding: 60px 20px; color: var(--mh-muted); } .ws-blank h2 { margin: 10px 0 6px; color: var(--mh-ink); font-size: 22px; } .ws-blank p { margin: 0 auto; max-width: 380px; font-size: 13px; line-height: 1.5; }
 .ws-pv { position: sticky; top: 8px; display: flex; flex-direction: column; align-items: center; gap: 10px; } .ws-pv h3 { align-self: flex-start; } .ws-card { transform-origin: top center; max-width: 100%; display: flex; justify-content: center; } .ws-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 10.5px; color: #E3B04B; border: 1px solid #E3B04B66; border-radius: 99px; padding: 2px 10px; }
 .ws-rank { display: flex; gap: 5px; align-self: stretch; } .ws-rank button { all: unset; cursor: pointer; flex: 1; text-align: center; font-size: 11px; padding: 4px 0; border-radius: 8px; border: 1px solid var(--mh-line2); color: var(--mh-muted); } .ws-rank button.on { background: #E3B04B; border-color: #E3B04B; color: #1d1606; font-weight: 700; }
 .ws-chk { align-self: stretch; border-top: 1px solid var(--mh-line); padding-top: 10px; } .ws-chk p { display: flex; gap: 8px; align-items: flex-start; margin: 0 0 6px; font-size: 12px; line-height: 1.4; color: var(--mh-ink2); } .ws-chk b { width: 17px; height: 17px; border-radius: 50%; display: grid; place-items: center; flex: none; font-size: 10px; margin-top: 1px; } .ws-chk .ok b { background: color-mix(in srgb, #4f9a62 28%, transparent); color: #4f9a62; } .ws-chk .wr b { background: color-mix(in srgb, #E3B04B 30%, transparent); color: #b88a1c; }
