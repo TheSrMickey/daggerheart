@@ -416,7 +416,8 @@ export function Dice3D({ dice, summary, skin, onReveal, onEnd }) {
           const c = document.createElement("canvas");
           c.width = c.height = 128;
           const g = c.getContext("2d");
-          g.font = "bold 80px var(--font-body), 'Inter', system-ui, sans-serif";
+          // El lienzo no entiende variables CSS: se usa la tipografía real de la página.
+          g.font = "bold 80px " + (getComputedStyle(document.body).fontFamily || "Inter, system-ui, sans-serif");
           g.textAlign = "center";
           g.textBaseline = "middle";
           g.fillStyle = col;
