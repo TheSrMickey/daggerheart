@@ -360,6 +360,7 @@ export type Profile = {
   status: "on" | "dnd" | "inv";
   blocked: string[];
   featured?: string[];
+  banner?: string;
   lines?: string[];
   veils?: string[];
   name?: string;
