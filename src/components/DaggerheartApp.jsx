@@ -4563,6 +4563,7 @@ const sharedStyles = `
     border: 1px solid color-mix(in srgb, var(--cc) 55%, transparent);
   }
   .mh-cardc-art img { width: 100%; height: 100%; object-fit: cover; object-position: center 30%; display: block; }
+  .mh-cardc-dlogo { display: block; width: 130px; height: 130px; -webkit-mask: var(--m) center / contain no-repeat; mask: var(--m) center / contain no-repeat; margin-top: -10px; }
   .mh-cardc-noart {
     width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
     background: linear-gradient(160deg, var(--mh-panel3) 0%, #3A3150 100%); color: rgba(236,230,218,.45);
@@ -30601,7 +30602,7 @@ export default function App({ onSignOut }) {
                     </div>
                     <div className="mh-cardc-badge">
                       {d.domain ? (
-                        <span className="mh-cardc-gem" title={"Nivel " + d.domain.level}>{d.domain.level}<DomainLogo name={d.domain.name || d.domain.domain} I={ArtIcon} /></span>
+                        <span className="mh-cardc-gem" title={"Nivel " + d.domain.level}>{d.domain.level}<DomainLogo name={d.domain.name || d.domain.domain} I={ArtIcon} size={25} /></span>
                       ) : (d.weapon || d.armor) && d.tier ? (
                         <span className="mh-cardc-gem is-rank" title={TIER_COLORS[d.tier].label}>{["I", "II", "III", "IV"][d.tier - 1]}<ArtIcon size={19} strokeWidth={1.8} /></span>
                       ) : isCf || isHopeCf ? (
