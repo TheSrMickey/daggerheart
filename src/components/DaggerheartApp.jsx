@@ -8850,6 +8850,10 @@ const sharedStyles = `
   .mh-gc-top .mh-gc-del { margin-left: auto; }
   .mh-gc > :not(.mh-gc-art) { position: relative; z-index: 1; }
   .mh-gc-art { position: absolute !important; inset: 0 0 auto 0; height: 68%; background-size: cover; -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent 100%); mask-image: linear-gradient(180deg, #000 55%, transparent 100%); transition: filter .3s ease; pointer-events: none; z-index: 0 !important; }
+  .mh-gc-ph { display: none; }
+  html[data-mh-art="off"] .mh-gc-ph { display: block; position: absolute; inset: 0; color: var(--k); }
+  .mh-gc-pt { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(5, 1fr); align-content: space-around; justify-items: center; opacity: .16; padding: 28px 6px 0; }
+  .mh-gc-pb { position: absolute; left: 50%; top: 22%; width: 136px; height: 136px; margin-left: -68px; border-radius: 34px; display: grid; place-items: center; background: #0f0d26; border: 2px solid var(--k); box-shadow: 0 0 50px color-mix(in srgb, var(--k) 38%, transparent); }
   .mh-gc:hover .mh-gc-art, .mh-gc:focus-visible .mh-gc-art { filter: saturate(1.15) brightness(1.08); }
   .mh-gc-badge { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--k); background: color-mix(in srgb, var(--mh-bg) 80%, transparent); border: 1.5px solid var(--k); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
   .mh-gc.has-art .mh-gc-lv { background: color-mix(in srgb, var(--mh-bg) 80%, transparent); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
@@ -9803,6 +9807,17 @@ async function renderCutCards(entries) {
   return { cells, styles };
 }
 // Ficha de Miedo: cristal violeta con forma de cubo truncado y vetas irisadas por dentro, como las fichas oficiales; vacía es solo el contorno.
+// Sin ilustraciones oficiales: el hueco de la ficha muestra el icono de la clase en un recuadro sobre una trama del mismo icono.
+function ClassPh({ cls }) {
+  const E = CLASS_EMBLEMS[cls];
+  if (!E) return null;
+  return (
+    <span className="mh-gc-ph" aria-hidden="true">
+      <span className="mh-gc-pt">{Array.from({ length: 30 }, (_, i) => <E key={i} size={34} strokeWidth={1.6} style={{ opacity: 0.35 + ((i % 3) * 0.3) / 1 }} />)}</span>
+      <span className="mh-gc-pb"><E size={64} strokeWidth={1.7} /></span>
+    </span>
+  );
+}
 function FearGem({ size = 17, on, pulse }) {
   return (
     <svg viewBox="0 0 40 44" width={size} height={Math.round(size * 1.1)} className={"mh-gem" + (on ? " on" : "") + (pulse ? " pulse" : "")} aria-hidden="true">
@@ -31777,7 +31792,7 @@ export default function App({ onSignOut }) {
                       onClick={() => openCharDetail(id)}
                       onKeyDown={(e) => e.key === "Enter" && e.target === e.currentTarget && openCharDetail(id)}
                     >
-                      {(portraitPick(charImgs[id], portraitStateOf(ch)) || CLASS_ART[ch.f_class]) && <div className="mh-gc-art" aria-hidden="true" style={portraitPick(charImgs[id], portraitStateOf(ch)) ? { backgroundImage: "url(" + portraitPick(charImgs[id], portraitStateOf(ch)) + ")", backgroundPosition: "58% 6%" } : { backgroundImage: "url(" + CLASS_ART[ch.f_class] + ")", backgroundPosition: "50% " + (CLASS_ART_Y[ch.f_class] ?? 20) + "%" }} />}
+                      {(portraitPick(charImgs[id], portraitStateOf(ch)) || CLASS_ART[ch.f_class]) && <div className="mh-gc-art" aria-hidden="true" style={portraitPick(charImgs[id], portraitStateOf(ch)) ? { backgroundImage: "url(" + portraitPick(charImgs[id], portraitStateOf(ch)) + ")", backgroundPosition: "58% 6%" } : { backgroundImage: "url(" + CLASS_ART[ch.f_class] + ")", backgroundPosition: "50% " + (CLASS_ART_Y[ch.f_class] ?? 20) + "%" }}><ClassPh cls={ch.f_class} /></div>}
                       <div className="mh-gc-top">
                         {ch.f_class ? <span className="mh-gc-lv" title={"Nivel " + (ch.f_level || "1")}>Nv {ch.f_level || "1"}</span> : <span />}
                         <button
@@ -34159,7 +34174,7 @@ export default function App({ onSignOut }) {
                             const acct = table.find((e) => (e.chars || []).includes(id))?.name || playerName || "Sin cuenta";
                             return (
                               <div key={id} className={"mh-card mh-gc" + (ch.f_is_dead === "1" ? " is-dead" : "") + (hasArt ? " has-art" : "")} style={{ "--k": col }}>
-                                {hasArt && <div className="mh-gc-art" aria-hidden="true" style={art ? { backgroundImage: "url(" + art + ")", backgroundPosition: "58% 6%" } : { backgroundImage: "url(" + CLASS_ART[ch.f_class] + ")", backgroundPosition: "50% " + (CLASS_ART_Y[ch.f_class] ?? 20) + "%" }} />}
+                                {hasArt && <div className="mh-gc-art" aria-hidden="true" style={art ? { backgroundImage: "url(" + art + ")", backgroundPosition: "58% 6%" } : { backgroundImage: "url(" + CLASS_ART[ch.f_class] + ")", backgroundPosition: "50% " + (CLASS_ART_Y[ch.f_class] ?? 20) + "%" }}><ClassPh cls={ch.f_class} /></div>}
                                 <div className="mh-gc-top">
                                   {ch.f_class ? <span className="mh-gc-lv" title={"Nivel " + (ch.f_level || "1")}>Nv {ch.f_level || "1"}</span> : <span />}
                                   <button type="button" className="mh-gc-del" title="Quitar de la campaña" aria-label={"Quitar a " + (ch.f_name || "personaje") + " de la campaña"} onClick={(e) => { e.stopPropagation(); removeCharacterFromCampaign(viewingCampaignId, id); }}><X size={14} /></button>
