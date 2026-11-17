@@ -173,6 +173,22 @@ export function balanceOf(it, level = 1) {
   return { level: "warn", notes };
 }
 
+// Inclinación de la carta al pasar el ratón (igual que en la pestaña Cartas).
+const tiltOn = (e) => {
+  const el = e.currentTarget, r = el.getBoundingClientRect();
+  const px = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)), py = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
+  el.style.setProperty("--ry", `${(px - 0.5) * 20}deg`);
+  el.style.setProperty("--rx", `${(0.5 - py) * 16}deg`);
+  el.style.setProperty("--mx", `${px * 100}%`);
+  el.style.setProperty("--my", `${py * 100}%`);
+  el.dataset.active = "1";
+};
+const tiltOff = (e) => {
+  const el = e.currentTarget;
+  ["--rx", "--ry", "--mx", "--my"].forEach((p) => el.style.removeProperty(p));
+  delete el.dataset.active;
+};
+
 function shrinkImage(file, max = 640) {
   return new Promise((resolve, reject) => {
     const fr = new FileReader();
@@ -205,6 +221,7 @@ export function WorkshopPage({ FitTitle, FitBox, TokDice, domainColors, icons, c
   const [msg, setMsg] = useState("");
   const [dirty, setDirty] = useState(false);
   const [tokHave, setTokHave] = useState(0); // fichas de ejemplo en la vista previa
+  const [showCtx, setShowCtx] = useState(false); // panel «cómo se vería» en la ventana grande
   const [mode, setMode] = useState("edit"); // "view": ficha en grande · "edit": editor
   const fileRef = useRef(null);
   const importRef = useRef(null);
@@ -426,58 +443,69 @@ export function WorkshopPage({ FitTitle, FitBox, TokDice, domainColors, icons, c
           </div>
           {items === null && <p className="ws-empty">Cargando…</p>}
           {items && !shown.length && <p className="ws-empty">{items.length ? "Nada con ese filtro." : "Aún no has creado nada. Elige un tipo arriba para empezar."}</p>}
-          <div className="cx-grid ws-gal">
-            {shown.map((x) => {
-              const e = toEntry(x, ctx, 0);
-              return (
-                <button type="button" key={x.id} className={"cx-card" + (sel === x.id ? " ws-gsel" : "")} onClick={() => open(x)} aria-label={"Ver " + (x.name || "carta")}>
-                  <CardFace c={e} I={e.Icon} FitTitle={FitTitle} FitBox={FitBox} />
-                </button>
-              );
-            })}
-          </div>
+          {TYPES.map((t) => {
+            const list = shown.filter((x) => x.type === t.key);
+            if (!list.length) return null;
+            return (
+              <section key={t.key}>
+                <div className="cx-lv"><b>{t.plural}</b><span /><small>{list.length} carta{list.length === 1 ? "" : "s"}</small></div>
+                <div className="cx-grid ws-gal">
+                  {list.map((x) => {
+                    const e = toEntry(x, ctx, 0);
+                    return (
+                      <button type="button" key={x.id} className="cx-card" onClick={() => open(x)} aria-label={"Ver " + (x.name || "carta")}>
+                        <CardFace c={e} I={e.Icon} FitTitle={FitTitle} FitBox={FitBox} tilt={e.kind === "dominio" || (e.kind === "arma" && e.tier === 4) ? { onPointerMove: (ev) => ev.pointerType === "mouse" && tiltOn(ev), onPointerLeave: tiltOff } : undefined} />
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })}
         </aside>
 
         {draft && mode === "view" && entry && typeof document !== "undefined" && createPortal(
-          <div className="ws-modal" onClick={closeView} role="dialog" aria-modal="true" aria-label={draft.name}>
-          <button type="button" className="ws-x" onClick={closeView} aria-label="Cerrar"><X size={18} /></button>
-          <section className="ws-view" onClick={(e) => e.stopPropagation()}>
-            <div className="ws-vmain">
-              <div className="ws-ed-h"><span style={{ "--c": tinfo.color }}><tinfo.Icon size={15} /> {tinfo.label}</span>{msg && <em className="ws-msg">{msg}</em>}</div>
-              <h2 className="mh-serif ws-vname">{draft.name || "Sin nombre"}</h2>
-              {draft.type === "subclase" && <div className="ws-rank">{STAGES.map((s, i) => <button key={s} type="button" className={rank === i ? "on" : ""} onClick={() => setRank(i)}>{s}</button>)}</div>}
-              <div className="ws-card ws-card-big"><CardFace c={entry} I={entry.Icon} FitTitle={FitTitle} FitBox={FitBox} /></div>
-              <TokSim tokens={draft.tokens} have={tokHave} setHave={setTokHave} TokDice={TokDice} color={entry.color} />
-              <div className="ws-acts">
-                <button type="button" className="mh-btn" onClick={() => setMode("edit")}><Pencil size={15} /> Modificar</button>
-                <button type="button" className="mh-btn-ghost" onClick={duplicate}><Copy size={14} /> Duplicar</button>
-                <button type="button" className="mh-btn-ghost ws-del" onClick={remove}><Trash2 size={14} /> Eliminar</button>
-              </div>
-            </div>
-            <div className="ws-ctx">
-              <h3>Así se vería en el juego</h3>
-              <div className="ws-ctx-g">
-                {["dominio", "arma", "armadura", "objeto"].includes(draft.type) && (
-                  <div className="ws-cx"><b>En la mano</b><div className="ws-hand"><div className="ws-hand-c"><CardFace c={entry} I={entry.Icon} FitTitle={FitTitle} FitBox={FitBox} /></div></div>{draft.tokens?.on && TokDice && <div className="ws-hand-t"><div className="ws-dice"><TokDice have={Math.min(tokHave, draft.tokens.max)} max={draft.tokens.max} color={entry.color} /></div></div>}</div>
-                )}
-                {["arma", "armadura", "objeto"].includes(draft.type) && (
-                  <div className="ws-cx"><b>En la hoja y la mochila</b>
-                    <div className="ws-row" style={{ "--c": entry.color }}><i><entry.Icon size={18} /></i><span><strong>{entry.key}</strong><small>{entry.sub}</small></span>{entry.gear && <em>{entry.gear.big} {entry.gear.small}</em>}</div>
-                  </div>
-                )}
-                {draft.type === "dominio" && (
-                  <div className="ws-cx"><b>En tu baraja</b>
-                    <div className="ws-row" style={{ "--c": entry.color }}><i><entry.Icon size={18} /></i><span><strong>{entry.key}</strong><small>{entry.sub}</small></span><em>Nv {draft.level}</em></div>
-                  </div>
-                )}
-                <div className="ws-cx"><b>En el mapa</b>
-                  <div className="ws-map"><div className="ws-pawn" style={{ "--c": entry.color }}><entry.Icon size={20} />{draft.tokens?.on && <span>{Math.min(tokHave, draft.tokens.max)}</span>}</div><small>{draft.tokens?.on ? "La insignia muestra las fichas que tiene." : "Aparece como icono sobre el mapa."}</small></div>
+          <div className="mh-overlay" style={{ background: "rgba(8,6,12,0.70)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 80, padding: 20, overflowY: "auto", alignItems: "flex-start" }} onClick={closeView} role="dialog" aria-modal="true" aria-label={draft.name}>
+            <div className="ws-ovr" onClick={(e) => e.stopPropagation()}>
+              <div className="ws-ovc">
+                <div className="mh-cardc-wrap">
+                  <CardFace c={entry} I={entry.Icon} FitTitle={FitTitle} FitBox={FitBox} onClose={closeView} tilt={{ onPointerMove: tiltOn, onPointerLeave: tiltOff, onPointerUp: (e) => e.pointerType !== "mouse" && tiltOff(e) }} />
                 </div>
-                <div className="ws-cx"><b>En el PDF de la hoja</b><small>Se imprime para recortar con este mismo diseño.</small></div>
+                {draft.type === "subclase" && <div className="ws-rank">{STAGES.map((st, i) => <button key={st} type="button" className={rank === i ? "on" : ""} onClick={() => setRank(i)}>{st}</button>)}</div>}
+                <TokSim tokens={draft.tokens} have={tokHave} setHave={setTokHave} TokDice={TokDice} color={entry.color} />
+                <div className="ws-acts ws-ovb">
+                  <button type="button" className="mh-btn" onClick={() => setMode("edit")}><Pencil size={15} /> Modificar</button>
+                  <button type="button" className="mh-btn-ghost" onClick={duplicate}><Copy size={14} /> Duplicar</button>
+                  <button type="button" className={"mh-btn-ghost" + (showCtx ? " is-on" : "")} onClick={() => setShowCtx((v) => !v)}><Layers size={14} /> Cómo se vería</button>
+                  <button type="button" className="mh-btn-ghost ws-del" onClick={remove}><Trash2 size={14} /> Eliminar</button>
+                </div>
+                {msg && <em className="ws-msg">{msg}</em>}
               </div>
-              <p className="ws-note">Vista orientativa: por ahora el contenido del Taller no se puede equipar ni jugar en la hoja, la mano o el mapa.</p>
+              {showCtx && (
+                <div className="ws-ctx">
+                  <h3>Así se vería en el juego</h3>
+                  <div className="ws-ctx-g">
+                    {["dominio", "arma", "armadura", "objeto"].includes(draft.type) && (
+                      <div className="ws-cx"><b>En la mano</b><div className="ws-hand"><div className="ws-hand-c"><CardFace c={entry} I={entry.Icon} FitTitle={FitTitle} FitBox={FitBox} /></div></div>{draft.tokens?.on && TokDice && <div className="ws-hand-t"><div className="ws-dice"><TokDice have={Math.min(tokHave, draft.tokens.max)} max={draft.tokens.max} color={entry.color} /></div></div>}</div>
+                    )}
+                    {["arma", "armadura", "objeto"].includes(draft.type) && (
+                      <div className="ws-cx"><b>En la hoja y la mochila</b>
+                        <div className="ws-row" style={{ "--c": entry.color }}><i><entry.Icon size={18} /></i><span><strong>{entry.key}</strong><small>{entry.sub}</small></span>{entry.gear && <em>{entry.gear.big} {entry.gear.small}</em>}</div>
+                      </div>
+                    )}
+                    {draft.type === "dominio" && (
+                      <div className="ws-cx"><b>En tu baraja</b>
+                        <div className="ws-row" style={{ "--c": entry.color }}><i><entry.Icon size={18} /></i><span><strong>{entry.key}</strong><small>{entry.sub}</small></span><em>Nv {draft.level}</em></div>
+                      </div>
+                    )}
+                    <div className="ws-cx"><b>En el mapa</b>
+                      <div className="ws-map"><div className="ws-pawn" style={{ "--c": entry.color }}><entry.Icon size={20} />{draft.tokens?.on && <span>{Math.min(tokHave, draft.tokens.max)}</span>}</div><small>{draft.tokens?.on ? "La insignia muestra las fichas que tiene." : "Aparece como icono sobre el mapa."}</small></div>
+                    </div>
+                  </div>
+                  <p className="ws-note">Vista orientativa: por ahora el contenido del Taller no se puede equipar ni jugar en la hoja, la mano o el mapa.</p>
+                </div>
+              )}
             </div>
-          </section>
           </div>, document.querySelector(".mh-root") || document.body)}
         {(mode === "edit" || !draft) && (
         <div className="ws-work">
@@ -600,7 +628,8 @@ const CSS = `
 .ws-tok { border: 1px dashed var(--mh-line2); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 10px; } .ws-tok-sw { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; cursor: pointer; } .ws-tok-sw input { width: 16px; height: 16px; accent-color: #E3B04B; }
 .ws-toks { align-self: stretch; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px; border-radius: 12px; background: var(--mh-panel2); border: 1px solid var(--mh-line); } .ws-toks small { font-size: 10.5px; color: var(--mh-muted2); text-align: center; }
 .ws-tokbar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center; } .ws-tokbar button { all: unset; cursor: pointer; box-sizing: border-box; min-width: 30px; height: 30px; padding: 0 9px; display: inline-flex; align-items: center; justify-content: center; border-radius: 9px; border: 1px solid var(--mh-line2); background: var(--mh-panel); color: var(--mh-text); font-size: 11.5px; font-weight: 600; } .ws-tokbar button:disabled { opacity: .35; cursor: default; } .ws-tokbar button:hover:not(:disabled) { border-color: #E3B04B; } .ws-tokbar b { font-size: 15px; padding: 0 6px; } .ws-tokbar b small { font-size: 11px; color: var(--mh-muted2); } .ws-tokbar b em { font-style: normal; font-size: 11px; font-weight: 500; color: var(--mh-muted); }
-.ws-gal { margin-top: 12px; } .ws-gsel { outline: 2px solid #E3B04B; outline-offset: 3px; border-radius: 16px; }
+.ws-ovr { display: flex; align-items: flex-start; justify-content: center; gap: 22px; flex-wrap: nowrap; max-width: 100%; margin: auto; } @media (max-width: 900px) { .ws-ovr { flex-wrap: wrap; justify-content: center; } } .ws-ovc { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 340px; max-width: 100%; flex: none; } .ws-ovr .ws-ctx { flex: none; width: 340px; max-width: 100%; background: var(--mh-panel); border: 1px solid var(--mh-line); border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 12px; } .ws-ovb { justify-content: center; flex-wrap: wrap; width: 100%; } .ws-ovb .ws-del { margin-left: 0; } .ws-ovb .is-on { border-color: #E3B04B; color: #E3B04B; } .ws-ovr .ws-toks { align-self: center; width: 300px; max-width: 100%; }
+.ws-gal { margin-top: 0; } .ws-gsel { outline: 2px solid #E3B04B; outline-offset: 3px; border-radius: 16px; }
 .ws-modal { position: fixed; inset: 0; z-index: 80; background: rgba(8,6,12,.78); overflow-y: auto; padding: 28px 20px; display: flex; align-items: flex-start; justify-content: center; } .ws-x { all: unset; cursor: pointer; position: fixed; top: 14px; right: 18px; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: var(--mh-panel); border: 1px solid var(--mh-line2); color: var(--mh-text); z-index: 2; }
 .ws-view { width: min(860px, 100%); display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 14px; align-items: start; } .ws-vmain, .ws-ctx { background: var(--mh-panel); border: 1px solid var(--mh-line); border-radius: 18px; padding: 16px; min-width: 0; display: flex; flex-direction: column; gap: 12px; } .ws-vname { margin: 0; font-size: 26px; } .ws-card-big { margin: 4px 0; } .ws-dice { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; min-height: 54px; } .ws-vmain .ws-rank { justify-content: center; }
 .ws-ctx-g { display: flex; flex-direction: column; gap: 10px; } .ws-cx { border: 1px solid var(--mh-line); background: var(--mh-panel2); border-radius: 14px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; } .ws-cx > b { font: 700 10.5px var(--font-body), 'Inter', system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: var(--mh-muted); } .ws-cx small, .ws-note { font-size: 11.5px; color: var(--mh-muted2); margin: 0; }
