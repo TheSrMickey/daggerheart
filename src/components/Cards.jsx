@@ -138,7 +138,8 @@ export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
       {legend && <div className="mh-holo is-idle" />}
       {legend && <div className="mh-legend-sheen" />}
       <div className="mh-cardc-art" style={{ height: total > 600 ? 84 : total > 320 ? 100 : 124, "--ah": (total > 600 ? 84 : total > 320 ? 100 : 124) + "px", ...(sub && total > 400 ? { "--abg": (total > 520 ? 128 : total > 450 ? 140 : 156) + "px" } : null) }}>
-        {c.image ? <img src={c.image} alt={modal ? c.key : ""} style={c.imgZoom || c.imgX != null ? { objectPosition: (c.imgX ?? 50) + "% " + (c.imgY ?? 30) + "%", transform: "scale(" + (c.imgZoom || 1) + ")", transformOrigin: (c.imgX ?? 50) + "% " + (c.imgY ?? 30) + "%" } : undefined} /> : <div className="mh-cardc-noart" style={{ color: col }}>{dom && DOMAIN_LOGO[c.domain] ? <span className="mh-cardc-dlogo" style={{ "--m": "url(/dominios/" + DOMAIN_LOGO[c.domain] + ".svg)", background: col, filter: "drop-shadow(0 0 18px " + col + ")" }} aria-hidden="true" /> : <I size={50} strokeWidth={1.5} />}</div>}
+        <div className="mh-cardc-noart" style={{ color: col }}>{dom && DOMAIN_LOGO[c.domain] ? <span className="mh-cardc-dlogo" style={{ "--m": "url(/dominios/" + DOMAIN_LOGO[c.domain] + ".svg)", background: col, filter: "drop-shadow(0 0 18px " + col + ")" }} aria-hidden="true" /> : <I size={50} strokeWidth={1.5} />}</div>
+        {c.image && <img src={c.image} alt={modal ? c.key : ""} style={c.imgZoom || c.imgX != null ? { objectPosition: (c.imgX ?? 50) + "% " + (c.imgY ?? 30) + "%", transform: "scale(" + (c.imgZoom || 1) + ")", transformOrigin: (c.imgX ?? 50) + "% " + (c.imgY ?? 30) + "%" } : undefined} />}
       </div>
       <div className="mh-cardc-badge">
         {dom && <span className="mh-cardc-gem" title={"Nivel " + c.level}>{c.level}<DomainLogo name={c.domain} I={I} size={25} /></span>}

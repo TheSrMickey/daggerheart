@@ -9,6 +9,7 @@ export const CHANGELOG = [
     title: "El Taller y la creación de personaje",
     blurb: "Crea tus propias cartas y armas en el Taller (con fichas e imágenes), descarga tu hoja en PDF, estrena la creación de personaje renovada, una pestaña Cartas más clara con Adversarios y Entornos, y un Buscar mesa con filtros, solicitudes con mensaje y avisos.",
     items: [
+      { tag: "arreglo", text: "Ilustraciones oficiales · al desactivarlas ya se ocultan también las de «Lengua de la Naturaleza» y «Enredo Feroz», y las cartas pasan a verse como si no tuvieran ilustración (con el logo del dominio en grande)." },
       { tag: "mejora", text: "Cartas de dominio · sin ilustración, el hueco muestra el logo del dominio en grande con un resplandor del color del dominio; y el logo bajo el nivel es algo más grande." },
       { tag: "mejora", text: "Cartas de dominio · bajo el nivel de la cinta ahora sale el logo oficial del dominio correspondiente (Arcano, Filo, Hueso, Códice, Miedo, Encanto, Medianoche, Naturaleza, Esplendor y Valor) en lugar de un icono genérico." },
       { tag: "mejora", text: "Taller · las cartas con fichas, al abrirlas en grande, muestran las fichas a la derecha de la carta, como Desatar el Caos en el mapa de combate (se pulsan y arrastran igual); debajo quedan los botones de sumar, restar, vaciar y llenar." },
