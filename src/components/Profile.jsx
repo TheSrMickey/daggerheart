@@ -14,6 +14,9 @@ const monthEs = (t) => new Date(t).toLocaleDateString("es-ES", { month: "long", 
 const dayEs = (t) => new Date(t).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" });
 // Líneas (nunca aparecen en la mesa) y velos (pueden pasar, pero fuera de escena). Se sugieren temas habituales y se puede escribir otro.
 const SUGGEST = ["Violencia gráfica", "Maltrato o abuso", "Violencia sexual", "Daño a niños", "Tortura", "Autolesiones", "Enfermedad grave", "Daño a animales", "Discriminación", "Arañas e insectos"];
+// Portadas del perfil: las escenas de la plataforma (public/escenas). Si no se elige, sale una según el nombre.
+const SCENES = ["castillo", "bosque", "posada", "puerto", "montanas", "ruinas", "campamento", "ciudad", "mazmorra", "camino"];
+const sceneOf = (b, name) => (SCENES.includes(b) ? b : SCENES[hueOf(name) % SCENES.length]);
 const TABS = [["resumen", "Resumen"], ["logros", "Logros"], ["personajes", "Personajes"], ["actividad", "Actividad"]];
 
 function AchCard({ a, st, edit, featured, onToggle, onOpen }) {
@@ -87,10 +90,11 @@ export default function ProfilePage({ id, name }) {
   const detailOn = !!(detailA && ach.unlocked[detailA.id]);
   const list = ACHIEVEMENTS.filter((a) => !cat || a.cat === cat);
   const col = `hsl(${hueOf(who)} 45% 45%)`;
+  const scene = sceneOf(edit && draft ? draft.banner : p.banner, who);
 
-  const startEdit = () => (setDraft({ bio: p.bio, looking: p.looking, chars: p.chars, featured: p.featured || [], lines: p.lines || [], veils: p.veils || [] }), setEdit(true), setMsg(""));
+  const startEdit = () => (setDraft({ banner: p.banner || "", bio: p.bio, looking: p.looking, chars: p.chars, featured: p.featured || [], lines: p.lines || [], veils: p.veils || [] }), setEdit(true), setMsg(""));
   const save = async () => {
-    await saveProfile({ bio: draft.bio.slice(0, 280), looking: draft.looking, chars: draft.chars, featured: draft.featured.slice(0, 3), lines: draft.lines, veils: draft.veils });
+    await saveProfile({ banner: draft.banner || "", bio: draft.bio.slice(0, 280), looking: draft.looking, chars: draft.chars, featured: draft.featured.slice(0, 3), lines: draft.lines, veils: draft.veils });
     setP(await getProfile(uid, true));
     setEdit(false);
     setMsg("Perfil guardado.");
@@ -132,6 +136,24 @@ export default function ProfilePage({ id, name }) {
           })
         : d.chars.map((c) => <div key={c.name} className="pf-char"><span className="pf-cav">{c.name.charAt(0)}</span><span><b>{c.name}</b><small>{c.cls || "Sin clase"} · Nv {c.lvl}</small></span></div>)}
       {!charsList && d.chars.length === 0 && <small className="pf-mut">{isMe ? "No enseñas ningún personaje. Edita tu perfil para elegirlos." : "No enseña ningún personaje."}</small>}
+    </>
+  );
+  const bioBlock = (
+    <>
+      <h3 className="pf-h">Sobre mí</h3>
+      <p className="pf-bio">{d.bio || (isMe ? "Añade una descripción desde «Editar perfil»." : "—")}</p>
+    </>
+  );
+  const statsBlock = (
+    <>
+      <h3 className="pf-h">En números</h3>
+      <div className="pf-stats">
+        <div><b>{camps}</b><span>Campañas</span></div>
+        <div><b>{nChars}</b><span>Personajes</span></div>
+        <div><b>{ach.stats.crit || 0}</b><span>Críticos</span></div>
+        <div><b>{ach.stats.medals || 0}</b><span>Medallas</span></div>
+        <div><b>{unlockedIds.length}/{ACHIEVEMENTS.length}</b><span>Logros</span></div>
+      </div>
     </>
   );
   const addTag = (field, t) => {
@@ -181,9 +203,12 @@ export default function ProfilePage({ id, name }) {
   return (
     <div className={"so-page pf" + (edit || inv ? " is-edit" : "")}>
       <div className="pf-card">
-        <div className="pf-ban" style={{ "--c": col }} />
+        <div className="pf-ban" style={{ "--c": col }}>
+          <img className="pf-ban-img" src={"/escenas/" + scene + ".svg"} alt="" draggable={false} />
+          {isMe && edit && <button type="button" className="pf-ban-sw" onClick={() => setDraft({ ...draft, banner: SCENES[(SCENES.indexOf(scene) + 1) % SCENES.length] })}>Cambiar portada</button>}
+        </div>
         <div className="pf-head">
-          <Avatar name={who} size={104} status={friend?.status} />
+          <Avatar name={who} size={124} status={friend?.status} />
           <div className="pf-who">
             <h1 className="mh-serif">{who}{isMe ? " · tú" : ""}</h1>
             <small>{friend ? (friend.camp ? (friend.role || "Juega") + " en «" + friend.camp + "»" : friend.status === "off" ? "Desconectado" : "En línea") : isMe ? "Tu perfil" : "Jugador"}{p.since ? " · miembro desde " + monthEs(p.since) : ""}</small>
@@ -212,25 +237,15 @@ export default function ProfilePage({ id, name }) {
             <h3 className="pf-h">Sobre mí</h3>
             <textarea className="mh-input" maxLength={280} value={d.bio} onChange={(e) => setDraft({ ...draft, bio: e.target.value })} placeholder="Cuenta algo de ti: qué te gusta jugar, tu horario…" />
           </div>
-        ) : (
-          <p className="pf-bio">{p.bio || (isMe ? "Añade una descripción desde «Editar perfil»." : "—")}</p>
-        )}
-        <div className="pf-stats">
-          <div><b>{camps}</b><span>Campañas</span></div>
-          <div><b>{nChars}</b><span>Personajes</span></div>
-          <div><b>{ach.stats.crit || 0}</b><span>Críticos</span></div>
-          <div><b>{ach.stats.medals || 0}</b><span>Medallas</span></div>
-          <div><b>{unlockedIds.length}/{ACHIEVEMENTS.length}</b><span>Logros</span></div>
-        </div>
+        ) : null}
         <div className="pf-tabs" role="tablist">
           {TABS.map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={tab === k} className={"pf-tab" + (tab === k ? " on" : "")} onClick={() => setTab(k)}>{l}</button>)}
         </div>
         <div className="pf-body">
           {tab === "resumen" && (
             <div className="pf-res">
-              <div className="pf-pn">{vitrina}</div>
-              <div className="pf-pn">{limitsBlock}</div>
-              <div className="pf-col"><div className="pf-pn">{charsBlock}</div><div className="pf-pn pf-pn-fill">{actBlock}</div></div>
+              <div className="pf-col"><div className="pf-pn">{bioBlock}</div><div className="pf-pn">{vitrina}</div><div className="pf-pn pf-pn-fill">{actBlock}</div></div>
+              <div className="pf-col"><div className="pf-pn">{statsBlock}</div><div className="pf-pn">{charsBlock}</div><div className="pf-pn">{limitsBlock}</div></div>
             </div>
           )}
           {tab === "logros" && <div className="pf-wide">{edit && <div style={{ marginBottom: 14 }}>{vitrina}</div>}<h3 className="pf-h">Todos los logros</h3>{filters}{grid(list)}</div>}
