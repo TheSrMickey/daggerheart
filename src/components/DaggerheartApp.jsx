@@ -24,7 +24,7 @@ import { DialoguePromptHelper, CombatBgPromptHelper, describeMapForPrompt } from
 import { LevelUpDialog, parseAdvances, ownedCards, getMulticlass, MAX_LEVEL, rankOf } from "./LevelUp";
 import { RulesPanel } from "./MapRules";
 import { Changelog } from "./Changelog";
-import { CardsPage, CardFace } from "./Cards";
+import { CardsPage, CardFace, DomainLogo } from "./Cards";
 import { WorkshopPage } from "./Workshop";
 import PortraitCrop from "./PortraitCrop";
 import { printSheet } from "@/lib/sheetPdf";
@@ -30601,7 +30601,7 @@ export default function App({ onSignOut }) {
                     </div>
                     <div className="mh-cardc-badge">
                       {d.domain ? (
-                        <span className="mh-cardc-gem" title={"Nivel " + d.domain.level}>{d.domain.level}<ArtIcon size={19} strokeWidth={1.8} /></span>
+                        <span className="mh-cardc-gem" title={"Nivel " + d.domain.level}>{d.domain.level}<DomainLogo name={d.domain.name || d.domain.domain} I={ArtIcon} /></span>
                       ) : (d.weapon || d.armor) && d.tier ? (
                         <span className="mh-cardc-gem is-rank" title={TIER_COLORS[d.tier].label}>{["I", "II", "III", "IV"][d.tier - 1]}<ArtIcon size={19} strokeWidth={1.8} /></span>
                       ) : isCf || isHopeCf ? (

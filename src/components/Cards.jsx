@@ -42,6 +42,14 @@ export const KINDS = [
 ];
 const KIND_COLOR = { dominio: "#C9A24A", ascendencia: "#6FA3C0", comunidad: "#C08B5C", subclase: "#7FB77A", transformacion: "#A58BE8", salvaje: "#D94F7A", forma: "#E0A04A", arma: "#C9A24A", armadura: "#C9A24A", adversario: "#D9644E", entorno: "#5FA39A" };
 
+// Logo oficial de cada dominio (public/dominios): sale bajo el nivel en las cartas de dominio; si no hay, el icono de siempre.
+const DOMAIN_LOGO = { Arcano: "arcana", Filo: "blade", Hueso: "bone", Códice: "codex", Miedo: "dread", Encanto: "grace", Medianoche: "midnight", Naturaleza: "sage", Esplendor: "splendor", Valor: "valor" };
+export function DomainLogo({ name, I, size = 19 }) {
+  const f = DOMAIN_LOGO[name];
+  if (!f) return I ? <I size={size} strokeWidth={1.8} /> : null;
+  return <span className="mh-dom-ic" aria-hidden="true" style={{ width: size, height: size, "--m": "url(/dominios/" + f + ".svg)" }} />;
+}
+
 // La carta, tal cual se ve al abrirla; en la cuadrícula tiene exactamente el mismo tamaño (300 × 420).
 export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
   const col = c.color;
@@ -92,7 +100,7 @@ export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
         </div>
         <div className="mh-cf-top" />
         <div className="mh-cardc-badge">
-          {dom && <span className="mh-cardc-gem" title={"Nivel " + c.level}>{c.level}<I size={19} strokeWidth={1.8} /></span>}
+          {dom && <span className="mh-cardc-gem" title={"Nivel " + c.level}>{c.level}<DomainLogo name={c.domain} I={I} /></span>}
           {sub && <span className="mh-cardc-gem is-rank" title={c.rankLabel}>{roman[c.rank || 0]}<I size={19} strokeWidth={1.8} /></span>}
           {wpn && <span className="mh-cardc-gem is-rank" title={"Rango " + c.tier}>{roman[(c.tier || 1) - 1]}<I size={19} strokeWidth={1.8} /></span>}
           {bst && <span className="mh-cardc-gem is-rank" title={"Rango " + c.tier}>{roman[(c.tier || 1) - 1]}<I size={19} strokeWidth={1.8} /></span>}
@@ -133,7 +141,7 @@ export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
         {c.image ? <img src={c.image} alt={modal ? c.key : ""} style={c.imgZoom || c.imgX != null ? { objectPosition: (c.imgX ?? 50) + "% " + (c.imgY ?? 30) + "%", transform: "scale(" + (c.imgZoom || 1) + ")", transformOrigin: (c.imgX ?? 50) + "% " + (c.imgY ?? 30) + "%" } : undefined} /> : <div className="mh-cardc-noart" style={{ color: col }}><I size={50} strokeWidth={1.5} /></div>}
       </div>
       <div className="mh-cardc-badge">
-        {dom && <span className="mh-cardc-gem" title={"Nivel " + c.level}>{c.level}<I size={19} strokeWidth={1.8} /></span>}
+        {dom && <span className="mh-cardc-gem" title={"Nivel " + c.level}>{c.level}<DomainLogo name={c.domain} I={I} /></span>}
         {sub && <span className="mh-cardc-gem is-rank" title={c.rankLabel}>{roman[c.rank || 0]}<I size={19} strokeWidth={1.8} /></span>}
         {wpn && <span className="mh-cardc-gem is-rank" title={"Rango " + c.tier}>{roman[(c.tier || 1) - 1]}<I size={19} strokeWidth={1.8} /></span>}
         {bst && <span className="mh-cardc-gem is-rank" title={"Rango " + c.tier}>{roman[(c.tier || 1) - 1]}<I size={19} strokeWidth={1.8} /></span>}
