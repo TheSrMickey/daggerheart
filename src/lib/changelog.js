@@ -9,6 +9,7 @@ export const CHANGELOG = [
     title: "El Taller y la creación de personaje",
     blurb: "Crea tus propias cartas y armas en el Taller (con fichas e imágenes), descarga tu hoja en PDF, estrena la creación de personaje renovada, una pestaña Cartas más clara con Adversarios y Entornos, y un Buscar mesa con filtros, solicitudes con mensaje y avisos.",
     items: [
+      { tag: "mejora", text: "Taller · las cartas con fichas, al abrirlas en grande, muestran las fichas a la derecha de la carta, como Desatar el Caos en el mapa de combate (se pulsan y arrastran igual); debajo quedan los botones de sumar, restar, vaciar y llenar." },
       { tag: "mejora", text: "Taller · tu biblioteca se ve ahora igual que la galería de Cartas, con las cartas agrupadas por tipo y la misma inclinación al pasar el ratón; al pulsar una se abre en grande como en la pestaña Cartas, con Modificar, Duplicar, Eliminar, el simulador de fichas y un botón «Cómo se vería» para ver cómo quedaría en la mano, la hoja y el mapa." },
       { tag: "arreglo", text: "Dados 3D · los números de las caras volvían a verse bien (el lienzo no entendía la variable de la fuente y los dibujaba diminutos). Además se retiran los últimos restos de fuentes decorativas: toda la página usa Inter." },
       { tag: "mejora", text: "Tipografía · toda la plataforma usa ahora la fuente Inter (se sustituyen Cinzel y las serif de respaldo), en títulos, textos, dados y hoja en PDF." },
