@@ -9177,6 +9177,8 @@ const sharedStyles = `
   }
   .mh-dslot-art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 35%; transition: scale .4s ease; }
   .mh-dslot:hover .mh-dslot-art { scale: 1.05; }
+  .mh-dslot-noart { overflow: hidden; background: linear-gradient(150deg, color-mix(in srgb, var(--dc) 20%, #10112a), #10112a 80%) !important; }
+  .mh-dslot-wm { position: absolute; right: -22px; top: -18px; width: 150px; height: 150px; background: var(--dc); opacity: .22; -webkit-mask: var(--m) center / contain no-repeat; mask: var(--m) center / contain no-repeat; }
   .mh-dslot-noart {
     position: absolute; inset: 0; display: flex; align-items: center; justify-content: flex-end; padding: 22px 18px 0 0;
     color: color-mix(in srgb, var(--dc) 55%, #fff);
@@ -22053,13 +22055,10 @@ export default function App({ onSignOut }) {
                                         }
                                         style={{ "--dc": dColor, animationDelay: i * 70 + "ms", flex: "2 1 0", minHeight: 104 }}
                                       >
-                                        {cardData.image ? (
-                                          <img className="mh-dslot-art" src={cardData.image} alt="" />
-                                        ) : (
-                                          <div className="mh-dslot-noart">
-                                            <DIcon size={58} strokeWidth={1.4} />
-                                          </div>
-                                        )}
+                                        <div className="mh-dslot-noart">
+                                          {DOMAIN_ICON_FILE[cardData.domain] ? <span className="mh-dslot-wm" style={{ "--m": "url(/dominios/" + DOMAIN_ICON_FILE[cardData.domain] + ".svg)" }} aria-hidden="true" /> : <DIcon size={58} strokeWidth={1.4} />}
+                                        </div>
+                                        {cardData.image && <img className="mh-dslot-art" src={cardData.image} alt="" />}
                                         <div className="mh-dslot-shade" />
                                         <span className="mh-dslot-gem" title={"Nivel " + cardData.level}>{cardData.level}</span>
                                         {spellLocked && (
