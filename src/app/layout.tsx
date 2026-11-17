@@ -3,7 +3,6 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeScript } from "@/components/ThemeScript";
 
-const display = Cinzel({ variable: "--font-cinzel", subsets: ["latin"] });
 const body = Inter({ variable: "--font-body", subsets: ["latin"] });
 
 export const metadata: Metadata = {
