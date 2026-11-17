@@ -118,13 +118,13 @@ function checks(it) {
 }
 
 // Simulador de fichas: sumar, restar, vaciar y llenar, para probar la carta como se usaría en la partida.
-function TokSim({ tokens, have, setHave, TokDice, color }) {
+function TokSim({ tokens, have, setHave, TokDice, color, bare }) {
   if (!tokens?.on || !TokDice) return null;
   const max = tokens.max;
   const n = Math.min(have, max);
   return (
     <div className="ws-toks" title={tokSummary(tokens)}>
-      <div className="ws-dice"><TokDice have={n} max={max} color={color} onPick={(k) => setHave(k + 1 === n ? k : k + 1)} /></div>
+      {!bare && <div className="ws-dice"><TokDice have={n} max={max} color={color} onPick={(k) => setHave(k + 1 === n ? k : k + 1)} /></div>}
       <div className="ws-tokbar">
         <button type="button" onClick={() => setHave(Math.max(0, n - 1))} disabled={n <= 0} aria-label="Restar una ficha"><Minus size={14} /></button>
         <b>{n}<small> / {max}</small> <em>{tokens.label || "fichas"}</em></b>
@@ -466,13 +466,18 @@ export function WorkshopPage({ FitTitle, FitBox, TokDice, domainColors, icons, c
 
         {draft && mode === "view" && entry && typeof document !== "undefined" && createPortal(
           <div className="mh-overlay" style={{ background: "rgba(8,6,12,0.70)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 80, padding: 20, overflowY: "auto", alignItems: "flex-start" }} onClick={closeView} role="dialog" aria-modal="true" aria-label={draft.name}>
-            <div className="ws-ovr" onClick={(e) => e.stopPropagation()}>
+            <div className={"ws-ovr" + (draft.tokens?.on ? " has-tok" : "")} onClick={(e) => e.stopPropagation()}>
               <div className="ws-ovc">
-                <div className="mh-cardc-wrap">
+                <div className="mh-cardc-wrap" style={{ position: "relative" }}>
                   <CardFace c={entry} I={entry.Icon} FitTitle={FitTitle} FitBox={FitBox} onClose={closeView} tilt={{ onPointerMove: tiltOn, onPointerLeave: tiltOff, onPointerUp: (e) => e.pointerType !== "mouse" && tiltOff(e) }} />
+                  {draft.tokens?.on && TokDice && (
+                    <div className="mh-fan-tray" role="group" aria-label="Fichas sobre la carta" style={{ "--s": draft.tokens.max > 5 ? Math.max(0.6, (5.2 / draft.tokens.max) * 1.15) : undefined }}>
+                      <TokDice have={Math.min(tokHave, draft.tokens.max)} max={draft.tokens.max} color={entry.color} onPick={(k) => setTokHave(k + 1 === Math.min(tokHave, draft.tokens.max) ? k : k + 1)} />
+                    </div>
+                  )}
                 </div>
                 {draft.type === "subclase" && <div className="ws-rank">{STAGES.map((st, i) => <button key={st} type="button" className={rank === i ? "on" : ""} onClick={() => setRank(i)}>{st}</button>)}</div>}
-                <TokSim tokens={draft.tokens} have={tokHave} setHave={setTokHave} TokDice={TokDice} color={entry.color} />
+                <TokSim bare tokens={draft.tokens} have={tokHave} setHave={setTokHave} TokDice={TokDice} color={entry.color} />
                 <div className="ws-acts ws-ovb">
                   <button type="button" className="mh-btn" onClick={() => setMode("edit")}><Pencil size={15} /> Modificar</button>
                   <button type="button" className="mh-btn-ghost" onClick={duplicate}><Copy size={14} /> Duplicar</button>
@@ -628,7 +633,7 @@ const CSS = `
 .ws-tok { border: 1px dashed var(--mh-line2); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 10px; } .ws-tok-sw { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; cursor: pointer; } .ws-tok-sw input { width: 16px; height: 16px; accent-color: #E3B04B; }
 .ws-toks { align-self: stretch; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px; border-radius: 12px; background: var(--mh-panel2); border: 1px solid var(--mh-line); } .ws-toks small { font-size: 10.5px; color: var(--mh-muted2); text-align: center; }
 .ws-tokbar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center; } .ws-tokbar button { all: unset; cursor: pointer; box-sizing: border-box; min-width: 30px; height: 30px; padding: 0 9px; display: inline-flex; align-items: center; justify-content: center; border-radius: 9px; border: 1px solid var(--mh-line2); background: var(--mh-panel); color: var(--mh-text); font-size: 11.5px; font-weight: 600; } .ws-tokbar button:disabled { opacity: .35; cursor: default; } .ws-tokbar button:hover:not(:disabled) { border-color: #E3B04B; } .ws-tokbar b { font-size: 15px; padding: 0 6px; } .ws-tokbar b small { font-size: 11px; color: var(--mh-muted2); } .ws-tokbar b em { font-style: normal; font-size: 11px; font-weight: 500; color: var(--mh-muted); }
-.ws-ovr { display: flex; align-items: flex-start; justify-content: center; gap: 22px; flex-wrap: nowrap; max-width: 100%; margin: auto; } @media (max-width: 900px) { .ws-ovr { flex-wrap: wrap; justify-content: center; } } .ws-ovc { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 340px; max-width: 100%; flex: none; } .ws-ovr .ws-ctx { flex: none; width: 340px; max-width: 100%; background: var(--mh-panel); border: 1px solid var(--mh-line); border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 12px; } .ws-ovb { justify-content: center; flex-wrap: wrap; width: 100%; } .ws-ovb .ws-del { margin-left: 0; } .ws-ovb .is-on { border-color: #E3B04B; color: #E3B04B; } .ws-ovr .ws-toks { align-self: center; width: 300px; max-width: 100%; }
+.ws-ovr.has-tok { padding-right: 76px; } .ws-ovr { display: flex; align-items: flex-start; justify-content: center; gap: 22px; flex-wrap: nowrap; max-width: 100%; margin: auto; } @media (max-width: 900px) { .ws-ovr { flex-wrap: wrap; justify-content: center; } } .ws-ovc { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 340px; max-width: 100%; flex: none; } .ws-ovr .ws-ctx { flex: none; width: 340px; max-width: 100%; background: var(--mh-panel); border: 1px solid var(--mh-line); border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 12px; } .ws-ovb { justify-content: center; flex-wrap: wrap; width: 100%; } .ws-ovb .ws-del { margin-left: 0; } .ws-ovb .is-on { border-color: #E3B04B; color: #E3B04B; } .ws-ovr .ws-toks { align-self: center; width: 300px; max-width: 100%; }
 .ws-gal { margin-top: 0; } .ws-gsel { outline: 2px solid #E3B04B; outline-offset: 3px; border-radius: 16px; }
 .ws-modal { position: fixed; inset: 0; z-index: 80; background: rgba(8,6,12,.78); overflow-y: auto; padding: 28px 20px; display: flex; align-items: flex-start; justify-content: center; } .ws-x { all: unset; cursor: pointer; position: fixed; top: 14px; right: 18px; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: var(--mh-panel); border: 1px solid var(--mh-line2); color: var(--mh-text); z-index: 2; }
 .ws-view { width: min(860px, 100%); display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 14px; align-items: start; } .ws-vmain, .ws-ctx { background: var(--mh-panel); border: 1px solid var(--mh-line); border-radius: 18px; padding: 16px; min-width: 0; display: flex; flex-direction: column; gap: 12px; } .ws-vname { margin: 0; font-size: 26px; } .ws-card-big { margin: 4px 0; } .ws-dice { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; min-height: 54px; } .ws-vmain .ws-rank { justify-content: center; }
