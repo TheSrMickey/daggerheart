@@ -9,7 +9,7 @@ import { Check, X, ZoomIn, ZoomOut, Move } from "lucide-react";
 export const PORTRAIT_ASPECT = 510 / 600;
 const OUT_W = 680;
 
-export default function PortraitCrop({ file, onCancel, onDone }) {
+export default function PortraitCrop({ file, onCancel, onDone, aspect = PORTRAIT_ASPECT, outW = OUT_W, quality = 0.92, title = "Encuadra tu imagen", name = "retrato.webp" }) {
   const src = useMemo(() => URL.createObjectURL(file), [file]);
   const [nat, setNat] = useState(null); // { w, h }
   const [zoom, setZoom] = useState(1);
@@ -28,8 +28,8 @@ export default function PortraitCrop({ file, onCancel, onDone }) {
 
   // Tamaño de la imagen relativo al encuadre (con zoom 1 la imagen lo cubre justo)
   const ar = nat ? nat.w / nat.h : 1;
-  const wRel = zoom * Math.max(1, ar / PORTRAIT_ASPECT);
-  const hRel = zoom * Math.max(1, PORTRAIT_ASPECT / ar);
+  const wRel = zoom * Math.max(1, ar / aspect);
+  const hRel = zoom * Math.max(1, aspect / ar);
   const clamp = (p, zw = wRel, zh = hRel) => ({
     x: Math.min(1 - 0.5 / zw, Math.max(0.5 / zw, p.x)),
     y: Math.min(1 - 0.5 / zh, Math.max(0.5 / zh, p.y)),
@@ -39,7 +39,7 @@ export default function PortraitCrop({ file, onCancel, onDone }) {
   const setZoomTo = (z) => {
     const nz = Math.min(4, Math.max(1, z));
     setZoom(nz);
-    setPos((p) => clamp(p, nz * Math.max(1, ar / PORTRAIT_ASPECT), nz * Math.max(1, PORTRAIT_ASPECT / ar)));
+    setPos((p) => clamp(p, nz * Math.max(1, ar / aspect), nz * Math.max(1, aspect / ar)));
   };
 
   const down = (e) => {
@@ -73,8 +73,8 @@ export default function PortraitCrop({ file, onCancel, onDone }) {
       const sh = nat.h / hRel;
       const sx = cp.x * nat.w - sw / 2;
       const sy = cp.y * nat.h - sh / 2;
-      const ow = Math.max(1, Math.min(OUT_W, Math.round(sw)));
-      const oh = Math.max(1, Math.round(ow / PORTRAIT_ASPECT));
+      const ow = Math.max(1, Math.min(outW, Math.round(sw)));
+      const oh = Math.max(1, Math.round(ow / aspect));
       const cv = document.createElement("canvas");
       cv.width = ow;
       cv.height = oh;
@@ -83,7 +83,7 @@ export default function PortraitCrop({ file, onCancel, onDone }) {
       cv.toBlob(
         (b) => {
           if (!b) return setBusy(false);
-          onDone(new File([b], "retrato.webp", { type: b.type || "image/webp" }));
+          onDone(new File([b], name, { type: b.type || "image/webp" }));
         },
         "image/webp",
         0.92
@@ -96,7 +96,7 @@ export default function PortraitCrop({ file, onCancel, onDone }) {
     <div className="pcr-back" onClick={onCancel}>
       <style>{`
         .pcr-back { position: fixed; inset: 0; z-index: 400; background: rgba(8,6,16,.72); display: grid; place-items: center; padding: 16px; }
-        .pcr { width: min(400px, 100%); max-height: 96vh; overflow: auto; border-radius: 20px; padding: 18px 18px 16px; background: var(--mh-card, #1c1830); color: var(--mh-ink, #f4efe2); border: 1px solid var(--mh-line2, rgba(255,255,255,.18)); box-shadow: 0 24px 60px rgba(0,0,0,.6); display: flex; flex-direction: column; gap: 12px; }
+        .pcr { width: min(440px, 100%); max-height: 96vh; overflow: auto; border-radius: 20px; padding: 18px 18px 16px; background: var(--mh-card, #1c1830); color: var(--mh-ink, #f4efe2); border: 1px solid var(--mh-line2, rgba(255,255,255,.18)); box-shadow: 0 24px 60px rgba(0,0,0,.6); display: flex; flex-direction: column; gap: 12px; }
         .pcr h3 { margin: 0; font-size: 18px; } .pcr p { margin: 0; font-size: 12.5px; color: var(--mh-ink3, #b9b2cc); line-height: 1.45; }
         .pcr-frame { position: relative; align-self: center; width: min(300px, 100%); aspect-ratio: 510 / 600; border-radius: 16px; overflow: hidden; cursor: grab; touch-action: none; user-select: none; outline: none; border: 2px solid var(--mh-gold, #C9A24A); background: repeating-conic-gradient(#2a2540 0 25%, #221e36 0 50%) 0 0 / 18px 18px; }
         .pcr-frame:active { cursor: grabbing; } .pcr-frame:focus-visible { box-shadow: 0 0 0 3px rgba(201,162,74,.45); }
@@ -107,9 +107,9 @@ export default function PortraitCrop({ file, onCancel, onDone }) {
         .pcr-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; } .pcr-hint { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--mh-ink3, #b9b2cc); }
       `}</style>
       <div className="pcr" role="dialog" aria-modal="true" aria-label="Recortar imagen" onClick={(e) => e.stopPropagation()}>
-        <h3 className="mh-serif">Encuadra tu imagen</h3>
+        <h3 className="mh-serif">{title}</h3>
         <p>Arrastra para mover la imagen y acércala con el control de abajo. Lo que ves dentro del marco es lo que se guarda.</p>
-        <div ref={frame} className="pcr-frame" tabIndex={0} aria-label="Encuadre: arrastra o usa las flechas" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} onKeyDown={key} onWheel={(e) => setZoomTo(zoom - Math.sign(e.deltaY) * 0.12)}>
+        <div ref={frame} className="pcr-frame" style={{ aspectRatio: String(aspect), width: aspect > 1 ? "min(380px, 100%)" : undefined }} tabIndex={0} aria-label="Encuadre: arrastra o usa las flechas" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} onKeyDown={key} onWheel={(e) => setZoomTo(zoom - Math.sign(e.deltaY) * 0.12)}>
           {src && nat && <img src={src} alt="" draggable={false} style={{ width: wRel * 100 + "%", height: hRel * 100 + "%", left: 50 - cp.x * wRel * 100 + "%", top: 50 - cp.y * hRel * 100 + "%" }} />}
           <div className="pcr-grid" />
         </div>

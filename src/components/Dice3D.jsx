@@ -416,7 +416,7 @@ export function Dice3D({ dice, summary, skin, onReveal, onEnd }) {
           const c = document.createElement("canvas");
           c.width = c.height = 128;
           const g = c.getContext("2d");
-          g.font = "bold 80px Georgia, serif";
+          g.font = "bold 80px var(--font-body), 'Inter', system-ui, sans-serif";
           g.textAlign = "center";
           g.textBaseline = "middle";
           g.fillStyle = col;
@@ -701,15 +701,15 @@ const D3_CSS = `
 .d3-sum-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
 .d3-chip { display: inline-flex; flex-direction: column; align-items: center; min-width: 54px; padding: 5px 10px 6px; border-radius: 12px; background: #ffffff0d; border: 1px solid #ffffff1f; animation: d3-pop .35s cubic-bezier(.2,.9,.3,1.3) both; }
 .d3-chip small { font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: #b9b2c8; }
-.d3-chip b { font: 700 19px Georgia, serif; }
+.d3-chip b { font: 700 19px var(--font-body), 'Inter', system-ui, sans-serif; }
 .d3-chip.k-hope { border-color: #E3B04B88; } .d3-chip.k-hope b { color: #F5CF72; }
 .d3-chip.k-fear { border-color: #A58BE888; } .d3-chip.k-fear b { color: #C7B3FA; }
 .d3-chip.k-adv { border-color: #2fae5a88; } .d3-chip.k-adv b { color: #8be0a4; }
 .d3-chip.k-dis { border-color: #d0402e88; } .d3-chip.k-dis b { color: #ff9c8c; }
 .d3-sum-total { display: flex; align-items: baseline; gap: 10px; animation: d3-pop .4s cubic-bezier(.2,.9,.3,1.3) both; }
 .d3-sum-total span { font-size: 22px; color: #b9b2c8; }
-.d3-sum-total b { font: 700 54px/1 Georgia, serif; color: var(--ec); text-shadow: 0 0 24px color-mix(in srgb, var(--ec) 70%, transparent); }
-.d3-sum-t { font: 600 17px Georgia, serif; letter-spacing: .06em; text-transform: uppercase; color: var(--ec); animation: d3-in .4s both; }
+.d3-sum-total b { font: 700 54px/1 var(--font-body), 'Inter', system-ui, sans-serif; color: var(--ec); text-shadow: 0 0 24px color-mix(in srgb, var(--ec) 70%, transparent); }
+.d3-sum-t { font: 600 17px var(--font-body), 'Inter', system-ui, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: var(--ec); animation: d3-in .4s both; }
 .d3-sum-dc { font-size: 13px; font-weight: 600; color: #e9e2d4; animation: d3-in .4s both; }
 .d3-sum-note { font-size: 12px; color: #b9b2c8; animation: d3-in .4s both; }
 .d3-sum-hint { margin-top: 4px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #8c85a0; animation: d3-in .5s both, d3-breathe 2s ease-in-out 1s infinite; }
