@@ -252,6 +252,7 @@ export function HomeHero({ camps, characters, featId, cards, color, icons, FitTi
       onTouchStart={(e) => { touch.current = e.touches[0].clientX; }}
       onTouchEnd={(e) => { const dx = e.changedTouches[0].clientX - (touch.current ?? e.changedTouches[0].clientX); touch.current = null; if (n > 1 && Math.abs(dx) > 50) go(dx < 0 ? 1 : -1); }}
     >
+      <div className="mh-news-aurora" aria-hidden="true"><i /><i /><i /><b /></div>
       <div className="mh-news-slide" key={cur} aria-live="off">{body}</div>
       {n > 1 && (
         <div className="mh-news-ctl">
