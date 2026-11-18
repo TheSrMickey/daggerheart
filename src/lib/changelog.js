@@ -9,6 +9,7 @@ export const CHANGELOG = [
     title: "El Taller y la creación de personaje",
     blurb: "Crea tus propias cartas y armas en el Taller (con fichas e imágenes), descarga tu hoja en PDF, estrena la creación de personaje renovada, una pestaña Cartas más clara con Adversarios y Entornos, y un Buscar mesa con filtros, solicitudes con mensaje y avisos.",
     items: [
+      { tag: "mejora", text: "Inicio · el gráfico de «Tus dados» muestra ahora los últimos 7 días en lugar de 10; se retira la diapositiva del aviso de Darrington Press." },
       { tag: "mejora", text: "Inicio · con las ilustraciones oficiales desactivadas, las diapositivas de novedades, expansión y sesión muestran un fondo de aurora (manchas de luz difuminadas con los colores de cada una) en lugar de un fondo liso." },
       { tag: "mejora", text: "Dados 3D · la caja del resultado es ahora un marcador horizontal compacto: los dados a la izquierda, una raya y el total grande con el resultado a la derecha, con más margen interior." },
       { tag: "arreglo", text: "Cartas · en modo claro, las cartas sin ilustración ya no llevan un degradado gris oscuro: el hueco usa un degradado claro del color de la carta." },

@@ -10,9 +10,6 @@ import { useNextSession, fmtDate, fmtTime, countdown } from "./Calendar";
 // Cada diapositiva dura SLIDE_MS; el punto activo se rellena como cuenta atrás y, al terminar, pasa a la siguiente (se pausa al pasar el ratón).
 const SLIDE_MS = 9000;
 const VER_KEY = "mh-hero-ver";
-// Aviso de Darrington Press (teaser del 29 de octubre de 2026): se retira solo pasada esa fecha.
-const DP_UNTIL = new Date("2026-10-30T00:00:00").getTime();
-const DP_DATE = new Date("2026-10-29T00:00:00").getTime();
 const lsGet = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
 const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
 const short = (t, n) => { const s = (t || "").replace(/\s+/g, " ").trim(); const cut = s.search(/[.;:] /); const e = cut > 40 ? s.slice(0, cut + 1) : s; return e.length > n ? e.slice(0, n - 1).trimEnd() + "…" : e; };
@@ -136,7 +133,7 @@ export function HomeHero({ camps, characters, featId, cards, color, icons, FitTi
   const another = () => { setGone(card); setPick((x) => x + 1); };
   useEffect(() => { if (!gone) return undefined; const t = setTimeout(() => setGone(null), 500); return () => clearTimeout(t); }, [gone]);
 
-  const slides = Date.now() < DP_UNTIL ? [{ id: "dp" }, { id: "exp" }] : [{ id: "exp" }]; // el avance de Darrington Press va primero mientras dure
+  const slides = [{ id: "exp" }];
   slides.push({ id: "ver" }); // la última actualización grande está siempre; se renueva sola con cada versión nueva del historial
   if (sess) slides.push({ id: "ses" });
   if (camps.length === 0) slides.push({ id: "mesa" });
@@ -164,17 +161,6 @@ export function HomeHero({ camps, characters, featId, cards, color, icons, FitTi
           <button type="button" className="mh-home-btn" onClick={() => onView("ficha")}>Crear un personaje</button>
           {fch && <button type="button" className="mh-home-btn is-ghost" onClick={() => onChar(featId)}>Abrir {fch.f_name || "mi ficha"}</button>}
         </div>
-      </>
-    );
-  } else if (cur === "dp") {
-    const left = Math.max(0, Math.ceil((DP_DATE - Date.now()) / 864e5));
-    body = (
-      <>
-        <div className="mh-news-art" aria-hidden="true"><i style={{ backgroundImage: "url(/noticias/darrington-teaser.jpg)", backgroundPosition: "center 80%" }} /></div>
-        <span className="mh-news-tag"><Sparkles size={12} /> Darrington Press · {left > 0 ? "29 oct · en " + left + (left === 1 ? " día" : " días") : "hoy"}</span>
-        <h2 className="mh-serif">Algo se acerca 👀</h2>
-        <p>Descubre qué llega el 29 de octubre.</p>
-        <small className="mh-news-credit" style={{ position: "absolute", bottom: 14 }}>Ilustración de fondo: Mat Wilma · © 2026 Darrington Press, LLC</small>
       </>
     );
   } else if (cur === "ver") {
