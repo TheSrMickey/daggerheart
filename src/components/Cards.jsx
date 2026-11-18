@@ -94,6 +94,7 @@ export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
         {...(tilt || {})}
       >
         <div className="mh-glare" />
+        {c.workshop && <span className="mh-cardc-wkf" aria-hidden="true" />}
         {legend && <div className="mh-holo is-idle" />}
         {legend && <div className="mh-legend-sheen" />}
         <div className="mh-cf-art">
@@ -136,6 +137,7 @@ export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
       {...(tilt || {})}
     >
       <div className="mh-glare" />
+        {c.workshop && <span className="mh-cardc-wkf" aria-hidden="true" />}
       {legend && <div className="mh-holo is-idle" />}
       {legend && <div className="mh-legend-sheen" />}
       <div className="mh-cardc-art" style={{ height: total > 600 ? 84 : total > 320 ? 100 : 124, "--ah": (total > 600 ? 84 : total > 320 ? 100 : 124) + "px", ...(sub && total > 400 ? { "--abg": (total > 520 ? 128 : total > 450 ? 140 : 156) + "px" } : null) }}>
