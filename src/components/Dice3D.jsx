@@ -702,14 +702,9 @@ const D3_CSS = `
 .d3-edge.on { opacity: 1; }
 .d3-edge::before { content: ""; position: absolute; inset: 0; box-shadow: inset 0 0 0 3px var(--ec), inset 0 0 60px 8px var(--ec), inset 0 0 150px 24px color-mix(in srgb, var(--ec) 45%, transparent); }
 .d3-edge::after { content: ""; position: absolute; inset: 0; }
-.d3-edge.is-hope::before { animation: d3-breathe 2.2s ease-in-out infinite; }
-.d3-edge.is-hope::after { background: radial-gradient(ellipse 80% 55% at 50% 118%, color-mix(in srgb, var(--ec) 55%, transparent), transparent 70%); animation: d3-rise 2.2s ease-in-out infinite; }
-.d3-edge.is-fear::before { animation: d3-flicker 1.5s steps(1, end) infinite; }
-.d3-edge.is-fear::after { background: radial-gradient(ellipse 120% 90% at 50% 50%, transparent 55%, color-mix(in srgb, var(--ec) 40%, #000) 130%); animation: d3-creep 3s ease-in-out infinite; }
-.d3-edge.is-dmg::before { animation: d3-flicker 1.9s steps(1, end) infinite; }
-.d3-edge.is-dmg::after { background: radial-gradient(ellipse 110% 85% at 50% 50%, transparent 52%, color-mix(in srgb, var(--ec) 45%, #000) 135%); animation: d3-creep 1.6s ease-in-out infinite; }
-.d3-edge.is-crit::before { animation: d3-breathe 1.1s ease-in-out infinite; }
-.d3-edge.is-crit::after { background: conic-gradient(from 0deg, transparent, color-mix(in srgb, var(--ec) 35%, transparent), transparent 25%, color-mix(in srgb, #E3B04B 35%, transparent), transparent 50%, color-mix(in srgb, var(--ec) 35%, transparent), transparent 75%, color-mix(in srgb, #E3B04B 35%, transparent), transparent); -webkit-mask: radial-gradient(ellipse at center, transparent 62%, #000 100%); mask: radial-gradient(ellipse at center, transparent 62%, #000 100%); animation: d3-spin 6s linear infinite; }
+/* Todos los resultados comparten el mismo borde que «respira» despacio, cada uno con su color (sin parpadeos ni latidos). */
+.d3-edge::before { animation: d3-breathe 2.2s ease-in-out infinite; }
+.d3-edge::after { background: radial-gradient(ellipse 80% 55% at 50% 118%, color-mix(in srgb, var(--ec) 55%, transparent), transparent 70%); animation: d3-rise 2.2s ease-in-out infinite; }
 @keyframes d3-breathe { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
 @keyframes d3-rise { 0%, 100% { opacity: .4; transform: translateY(6%); } 50% { opacity: 1; transform: translateY(0); } }
 @keyframes d3-flicker { 0% { opacity: 1; } 12% { opacity: .35; } 18% { opacity: .9; } 40% { opacity: .6; } 46% { opacity: 1; } 70% { opacity: .45; } 76% { opacity: .95; } 100% { opacity: 1; } }

@@ -9,6 +9,7 @@ export const CHANGELOG = [
     title: "El Taller y la creación de personaje",
     blurb: "Crea tus propias cartas y armas en el Taller (con fichas e imágenes), descarga tu hoja en PDF, estrena la creación de personaje renovada, una pestaña Cartas más clara con Adversarios y Entornos, y un Buscar mesa con filtros, solicitudes con mensaje y avisos.",
     items: [
+      { tag: "mejora", text: "Dados 3D · el borde de luz de todos los resultados (Esperanza, Miedo, crítico y daño) respira despacio como el de Esperanza, cada uno con su color; se quitan los parpadeos y latidos." },
       { tag: "mejora", text: "Taller · las cartas creadas en el Taller se distinguen con un marco interior dorado muy fino." },
       { tag: "mejora", text: "Inicio · el gráfico de «Tus dados» tiene nuevo diseño: total de la semana, barras con degradado, cifra sobre cada barra, hoy resaltado, media semanal y comparación con la semana pasada. La carta del día ahora dice «Ver la carta» y te lleva a Cartas con esa carta ya ampliada." },
       { tag: "arreglo", text: "Personajes · en modo claro, el icono grande de la ficha sin ilustración ya no es un cuadro oscuro: usa un fondo claro del color de la clase." },
