@@ -89,12 +89,11 @@ export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
     };
     return (
       <div
-        className={"mh-card mh-cardc is-bg is-full" + (modal ? " mh-card-anim" : "") + (modal || legend || bg ? " mh-tilt" : "") + (wpn ? " is-wp" : "") + (legend ? " is-legend" : "") + (c.workshop ? " has-wk" : "")}
+        className={"mh-card mh-cardc is-bg is-full" + (modal ? " mh-card-anim" : "") + (modal || legend || bg ? " mh-tilt" : "") + (wpn ? " is-wp" : "") + (legend ? " is-legend" : "")}
         style={{ "--glow": alpha(col, 51), "--cc": col, margin: 0, width: modal ? "min(300px, 100%)" : 300, height: modal ? "min(420px, 80vh)" : 420, maxWidth: "100%", padding: 0, overflow: "hidden", borderRadius: 22, display: "flex", flexDirection: "column", border: "2px solid " + col, position: "relative", textAlign: "left" }}
         {...(tilt || {})}
       >
         <div className="mh-glare" />
-        {c.workshop && <span className="mh-cardc-wk" title="Carta del Taller" aria-label="Carta del Taller"><Hammer size={15} strokeWidth={2.2} /></span>}
         {legend && <div className="mh-holo is-idle" />}
         {legend && <div className="mh-legend-sheen" />}
         <div className="mh-cf-art">
@@ -132,12 +131,11 @@ export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
   }
   return (
     <div
-      className={"mh-card mh-cardc" + (modal ? " mh-card-anim" : "") + (modal || legend || bg ? " mh-tilt" : "") + (bg ? " is-bg" : "") + (wpn ? " is-wp" : "") + (legend ? " is-legend" : "") + (c.workshop ? " has-wk" : "")}
+      className={"mh-card mh-cardc" + (modal ? " mh-card-anim" : "") + (modal || legend || bg ? " mh-tilt" : "") + (bg ? " is-bg" : "") + (wpn ? " is-wp" : "") + (legend ? " is-legend" : "")}
       style={{ "--glow": alpha(col, 51), "--cc": col, margin: 0, width: modal ? "min(300px, 100%)" : 300, height: modal ? "min(420px, 80vh)" : 420, maxWidth: "100%", padding: 0, overflow: "hidden", borderRadius: 22, display: "flex", flexDirection: "column", border: "2px solid " + col, position: "relative", textAlign: "left" }}
       {...(tilt || {})}
     >
       <div className="mh-glare" />
-        {c.workshop && <span className="mh-cardc-wk" title="Carta del Taller" aria-label="Carta del Taller"><Hammer size={15} strokeWidth={2.2} /></span>}
       {legend && <div className="mh-holo is-idle" />}
       {legend && <div className="mh-legend-sheen" />}
       <div className="mh-cardc-art" style={{ height: total > 600 ? 84 : total > 320 ? 100 : 124, "--ah": (total > 600 ? 84 : total > 320 ? 100 : 124) + "px", ...(sub && total > 400 ? { "--abg": (total > 520 ? 128 : total > 450 ? 140 : 156) + "px" } : null) }}>
@@ -150,7 +148,7 @@ export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
         {wpn && <span className="mh-cardc-gem is-rank" title={"Rango " + c.tier}>{roman[(c.tier || 1) - 1]}<I size={19} strokeWidth={1.8} /></span>}
         {bst && <span className="mh-cardc-gem is-rank" title={"Rango " + c.tier}>{roman[(c.tier || 1) - 1]}<I size={19} strokeWidth={1.8} /></span>}
       </div>
-      {bg && <span className="mh-cardc-dom" style={sub && total > 400 ? { top: (total > 520 ? 128 : total > 450 ? 140 : 156) - 12 } : undefined}>{dom ? c.type : sub ? c.rankLabel : wpn ? g?.pill : bst ? "Forma de Bestia" : c.kind === "transformacion" ? "Transformación" : c.sub}</span>}
+      {bg && !(wpn && c.workshop) && <span className="mh-cardc-dom" style={sub && total > 400 ? { top: (total > 520 ? 128 : total > 450 ? 140 : 156) - 12 } : undefined}>{dom ? c.type : sub ? c.rankLabel : wpn ? g?.pill : bst ? "Forma de Bestia" : c.kind === "transformacion" ? "Transformación" : c.sub}</span>}
       {dom && !c.noCost && <span className="mh-cardc-cost" title="Coste de recuperación">{c.recall ?? "—"}<Zap size={12} fill="currentColor" /></span>}
       <div style={{ padding: "0 18px", textAlign: "center", flexShrink: 0, marginTop: bg ? 16 : 8 }}>
         <FitTitle text={c.key} max={19} min={14} className="mh-serif" style={{ fontWeight: 700, color: "var(--mh-ink)", maxHeight: "2.4em", overflow: "hidden" }} />
@@ -229,7 +227,7 @@ const GROUPS = [
 ];
 const TYPE_LABEL = { dominio: "Dominio", ascendencia: "Ascendencia", comunidad: "Comunidad", subclase: "Subclase", transformacion: "Transformación", forma: "Forma de Bestia", arma: "Armas", armadura: "Armaduras", adversario: "Adversarios", entorno: "Entornos", salvaje: "Salvajes" };
 
-export function CardsPage({ items, domainColors, icons, FitTitle, FitBox, DomainIcon }) {
+export function CardsPage({ items, domainColors, icons, FitTitle, FitBox, DomainIcon, openId, onOpened }) {
   const [group, setGroup] = useState("personaje");
   const [kind, setKind] = useState("dominio");
   const [lvl, setLvl] = useState(null);
@@ -241,6 +239,16 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox, Domain
   const [open, setOpen] = useState(null);
   const admin = isAdminName(useSocial().me?.username);
   const [closing, setClosing] = useState(false);
+  // Llegada desde Inicio (carta del día): se abre ya ampliada.
+  useEffect(() => {
+    if (!openId) return;
+    const c = items.find((x) => x.id === openId);
+    if (c) {
+      setDeckIdx(0);
+      setOpen(c);
+    }
+    onOpened && onOpened();
+  }, [openId]); // eslint-disable-line react-hooks/exhaustive-deps
   const [deckIdx, setDeckIdx] = useState(0); // subclase abierta: qué carta del mazo está delante (0 Fundación, 1 Especialización, 2 Maestría)
   const rootRef = useRef(null);
   const scRef = useRef(null);

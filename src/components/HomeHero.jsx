@@ -221,7 +221,7 @@ export function HomeHero({ camps, characters, featId, cards, color, icons, FitTi
         <h2 className="mh-serif" key={"h" + card.id}>{card.key}</h2>
         <p key={"p" + card.id}>{benefit(card.text)}</p>
         <div className="mh-home-cta">
-          <button type="button" className="mh-home-btn" onClick={() => onView("cartas")}>Ver las cartas</button>
+          <button type="button" className="mh-home-btn" onClick={() => onView("cartas", card.id)}>Ver la carta</button>
           <button type="button" className="mh-home-btn is-ghost" onClick={another}>Otra carta</button>
         </div>
       </>
