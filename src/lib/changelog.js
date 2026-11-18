@@ -9,6 +9,8 @@ export const CHANGELOG = [
     title: "El Taller y la creación de personaje",
     blurb: "Crea tus propias cartas y armas en el Taller (con fichas e imágenes), descarga tu hoja en PDF, estrena la creación de personaje renovada, una pestaña Cartas más clara con Adversarios y Entornos, y un Buscar mesa con filtros, solicitudes con mensaje y avisos.",
     items: [
+      { tag: "mejora", text: "Tiradas · «Lengua de la Naturaleza» ya no abre un aviso aparte al tirar un conjuro: ahora es una opción más en la ventana de la tirada, junto a la ventaja y las bonificaciones (+2 por 1 Esperanza)." },
+      { tag: "arreglo", text: "Inventario · en las cartas de objeto la etiqueta del tipo ya no queda pegada al nombre." },
       { tag: "mejora", text: "Dados 3D · al verse en grande para leer el resultado, los dados se mecen y flotan suavemente en lugar de quedarse quietos." },
       { tag: "mejora", text: "Dados 3D · la caja del resultado sigue el modo claro u oscuro de la página." },
       { tag: "arreglo", text: "Dados 3D · la sombra de los dados ya no sale cortada al tirar." },
