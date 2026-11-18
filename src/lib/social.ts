@@ -77,12 +77,21 @@ async function writeShared(key: string, value: unknown, uid: string) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+const FIXED_NOTICE = new Set<string>(["friend_request", "friend_accepted"]);
+// Operaciones de amistad en curso: una pulsación repetida mientras la anterior no ha terminado se ignora.
+const inflight = new Set<string>();
 async function notify(to: string, type: NoticeRow["type"], from: string, data?: any) {
   if (isDev()) {
-    if (to === "dev-me") devNotices.unshift({ key: "nt:dev-me:" + Date.now(), type, from: { id: from, username: from }, at: Date.now(), read: false, data });
+    if (to === "dev-me") {
+      const k = FIXED_NOTICE.has(type) ? `nt:dev-me:${type}:${from}` : "nt:dev-me:" + Date.now();
+      const i = devNotices.findIndex((x) => x.key === k);
+      if (i >= 0) devNotices.splice(i, 1);
+      devNotices.unshift({ key: k, type, from: { id: from, username: from }, at: Date.now(), read: false, data });
+    }
     return;
   }
-  const key = `nt:${to}:${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+  // Las solicitudes y aceptaciones de amistad usan una clave fija por persona: repetirlas sustituye el aviso en lugar de acumular otro.
+  const key = FIXED_NOTICE.has(type) ? `nt:${to}:${type === "friend_request" ? "fr" : "fa"}-${from}` : `nt:${to}:${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
   await writeShared(key, { type, from, at: Date.now(), read: false, ...(data ? { data } : {}) } satisfies NoticeRow, from);
 }
 
@@ -166,6 +175,15 @@ export async function sendRequest(target: Person): Promise<string> {
   if (!me) return "Inicia sesión para añadir amigos.";
   if (target.id === me.id) return "No puedes añadirte a ti mismo.";
   const key = pairKey(me.id, target.id);
+  if (inflight.has(key)) return "Ya le has enviado una solicitud.";
+  inflight.add(key);
+  try {
+    return await sendRequestOnce(me, target, key);
+  } finally {
+    inflight.delete(key);
+  }
+}
+async function sendRequestOnce(me: { id: string }, target: Person, key: string): Promise<string> {
   const existing = isDev() ? devPairs.get(key) : parse<Pair>((await sb().from("kv_shared").select("value").eq("key", key).maybeSingle()).data?.value ?? "");
   if (existing?.status === "friends") return `${target.username} ya es tu amigo.`;
   if (existing?.status === "pending" && existing.from === me.id) return "Ya le has enviado una solicitud.";
@@ -184,6 +202,18 @@ export async function respond(from: Person, accept: boolean) {
   const me = await myself();
   if (!me) return;
   const key = pairKey(me.id, from.id);
+  if (inflight.has(key)) return;
+  inflight.add(key);
+  try {
+    // Solo se responde a una solicitud que sigue pendiente: aceptar o rechazar dos veces no hace nada.
+    const existing = isDev() ? devPairs.get(key) : parse<Pair>((await sb().from("kv_shared").select("value").eq("key", key).maybeSingle()).data?.value ?? "");
+    if (!(existing?.status === "pending" && existing.from === from.id)) return;
+    await respondOnce(me, from, accept, key);
+  } finally {
+    inflight.delete(key);
+  }
+}
+async function respondOnce(me: { id: string }, from: Person, accept: boolean, key: string) {
   const pair: Pair = { from: from.id, to: me.id, status: accept ? "friends" : "none", at: Date.now() };
   if (isDev()) devPairs.set(key, pair);
   await writeShared(key, pair, me.id);

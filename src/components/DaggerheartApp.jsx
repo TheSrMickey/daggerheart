@@ -4889,6 +4889,13 @@ const sharedStyles = `
     border: 1px solid var(--mh-line); border-radius: 12px; background: var(--mh-panel);
   }
   .mh-proj.done { --pc: #6FBF73; border-color: color-mix(in srgb, #6FBF73 45%, transparent); background: color-mix(in srgb, #6FBF73 6%, var(--mh-panel)); }
+  .mh-proj.is-row { padding: 8px 10px; gap: 6px; border-radius: 10px; }
+  .mh-proj-r { display: flex; align-items: center; gap: 10px; }
+  .mh-proj-m { flex: 1; min-width: 0; } .mh-proj-nm { font-size: 13px; font-weight: 700; color: var(--mh-ink); line-height: 1.25; }
+  .mh-proj-bar { height: 5px; border-radius: 9px; background: var(--mh-line); margin-top: 6px; overflow: hidden; } .mh-proj-bar i { display: block; height: 100%; background: var(--pc); border-radius: 9px; transition: width .4s cubic-bezier(.3,.8,.2,1); }
+  .mh-proj-fr { font-size: 11px; color: var(--mh-muted); font-variant-numeric: tabular-nums; }
+  .mh-proj-plus { all: unset; cursor: pointer; display: inline-grid; place-items: center; width: 30px; height: 28px; border-radius: 9px; background: var(--mh-panel3); color: var(--mh-ink); font-size: 11px; font-weight: 800; transition: background .15s, transform .1s; } .mh-proj-plus:hover:not(:disabled) { background: color-mix(in srgb, var(--pc) 35%, var(--mh-panel3)); } .mh-proj-plus:active:not(:disabled) { transform: scale(.94); } .mh-proj-plus:disabled { opacity: .4; cursor: not-allowed; } .mh-proj-plus:focus-visible { outline: 2px solid var(--pc); outline-offset: 1px; }
+  .mh-proj-ok { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: color-mix(in srgb, #6FBF73 22%, transparent); color: var(--mh-green-ink); }
   .mh-proj-seg { flex: 1; height: 9px; border-radius: 3px; border: 1px solid var(--pc); }
   .mh-proj-menu-btn { all: unset; cursor: pointer; color: var(--mh-muted3); padding: 2px; border-radius: 6px; display: flex; flex-shrink: 0; }
   .mh-proj-menu-btn:hover, .mh-proj-menu-btn:focus-visible, .mh-proj-menu-btn[aria-expanded="true"] { color: var(--mh-ink); background: var(--mh-panel3); }
@@ -9912,7 +9919,7 @@ async function renderCutCards(entries) {
   const styles = [...document.querySelectorAll("style, link[rel=stylesheet]")].map((n) => n.outerHTML).join("");
   const doc = fr.contentDocument;
   doc.open();
-  doc.write('<!doctype html><html data-mh-theme="light"><head><meta charset="utf-8"><base href="' + window.location.origin + '/">' + styles + '</head><body style="margin:0;background:#fff"><div id="r" class="mh-root" style="display:block;min-height:0;height:auto;width:auto;background:#fff"></div></body></html>');
+  doc.write('<!doctype html><html data-mh-theme="light" data-mh-art="' + (document.documentElement.dataset.mhArt === "off" ? "off" : "on") + '"><head><meta charset="utf-8"><base href="' + window.location.origin + '/">' + styles + '</head><body style="margin:0;background:#fff"><div id="r" class="mh-root" style="display:block;min-height:0;height:auto;width:auto;background:#fff"></div></body></html>');
   doc.close();
   await new Promise((r) => setTimeout(r, 350));
   const root = createRoot(doc.getElementById("r"));
@@ -9927,6 +9934,10 @@ async function renderCutCards(entries) {
   );
   await new Promise((r) => setTimeout(r, 1000));
   try { await doc.fonts?.ready; } catch (e) {}
+  // Con las ilustraciones oficiales desactivadas, las cartas para recortar no las llevan (en el PDF no existe la regla de CSS que las oculta).
+  if (document.documentElement.dataset.mhArt === "off") {
+    doc.querySelectorAll('img[src*="/cartas-dominio/"], img[src*="/ancestrias/"], img[src*="/clases/"], img[src*="/comunidades/"], img[src*="/formas-bestia/"], img[src*="/subclases/"], img[src*="/transformaciones/"], img[src*="/armas/"], img[src*="/armaduras/"]').forEach((im) => im.remove());
+  }
   const cells = [...doc.querySelectorAll(".cutcell")].map((e) => e.innerHTML);
   root.unmount();
   fr.remove();
@@ -20026,7 +20037,7 @@ export default function App({ onSignOut }) {
       ...tag("Subclase", groupElems((sub?.features || []).filter((f) => !/\((Especialización|Maestría)\)/.test(f.name) || tier >= (/Maestría/.test(f.name) ? 3 : 2))).map((f) => (f.subs ? { name: f.name, text: f.text + " " + f.subs.map((e) => e.name + ": " + e.text).join(" · ") } : f))),
       ...tag("Transformación", tf?.features),
     ];
-    const cardOf = (k, vault) => { const d = findDomainCardAny(k); return d ? { key: d.key, domain: d.domain, level: d.level, recall: d.recall, text: d.text, type: d.type, image: d.image ? window.location.origin + d.image : "", color: DOMAIN_COLORS[d.domain], vault } : null; };
+    const cardOf = (k, vault) => { const d = findDomainCardAny(k); return d ? { key: d.key, domain: d.domain, level: d.level, recall: d.recall, text: d.text, type: d.type, image: d.image && document.documentElement.dataset.mhArt !== "off" ? window.location.origin + d.image : "", color: DOMAIN_COLORS[d.domain], vault } : null; };
     const cards = [...getKeys(c.f_domain_cards).map((k) => cardOf(k, false)), ...getKeys(c.f_domain_vault).map((k) => cardOf(k, true))].filter(Boolean);
     let items = [];
     try { items = [...JSON.parse(c.f_items || "[]"), ...JSON.parse(c.f_backpack_items || "[]")]; } catch (e) { items = []; }
@@ -22598,39 +22609,27 @@ export default function App({ onSignOut }) {
                                     const done = goal > 0 && count >= goal;
                                     const menuOpen = projectMenu === viewingCharId + ":" + i;
                                     return (
-                                      <div key={i} className={"mh-proj" + (done ? " done" : "")}>
-                                        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
-                                          <div style={{ fontSize: 13, fontWeight: 700, color: "var(--mh-ink)", lineHeight: 1.3 }}>{p.name}</div>
-                                          <button
-                                            type="button"
-                                            className="mh-proj-menu-btn"
-                                            aria-label="Opciones del proyecto"
-                                            aria-expanded={menuOpen}
-                                            onClick={() => setProjectMenu(menuOpen ? null : viewingCharId + ":" + i)}
-                                          >
+                                      <div key={i} className={"mh-proj is-row" + (done ? " done" : "")}>
+                                        <div className="mh-proj-r">
+                                          <div className="mh-proj-m">
+                                            <div className="mh-proj-nm">{p.name}</div>
+                                            <div className="mh-proj-bar" role="progressbar" aria-valuemin={0} aria-valuemax={goal || count || 1} aria-valuenow={count}>
+                                              <i style={{ width: (goal ? Math.min(100, (count / goal) * 100) : count ? 100 : 0) + "%" }} />
+                                            </div>
+                                          </div>
+                                          {done ? (
+                                            <span className="mh-proj-ok"><Check size={13} strokeWidth={3} /></span>
+                                          ) : (
+                                            <>
+                                              <span className="mh-proj-fr">{goal ? `${count}/${goal}` : `${count}`}</span>
+                                              <button type="button" className="mh-proj-plus" disabled={!canAdvance} title={canAdvance ? "Trabajar en este proyecto (+1)" : "Solo durante un descanso largo, con pasos de «Trabajar en un proyecto»"} aria-label={"Avanzar " + p.name} onClick={() => workOnProject(viewingCharId, i)}>
+                                                +1
+                                              </button>
+                                            </>
+                                          )}
+                                          <button type="button" className="mh-proj-menu-btn" aria-label="Opciones del proyecto" aria-expanded={menuOpen} onClick={() => setProjectMenu(menuOpen ? null : viewingCharId + ":" + i)}>
                                             <MoreVertical size={14} />
                                           </button>
-                                        </div>
-                                        {goal > 0 && (
-                                          <div style={{ display: "flex", gap: 3 }}>
-                                            {Array.from({ length: goal }, (_, k) => (
-                                              <i key={k} className="mh-proj-seg" style={{ background: k < count ? "var(--pc)" : "transparent" }} />
-                                            ))}
-                                          </div>
-                                        )}
-                                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: 26 }}>
-                                          {done ? (
-                                            <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11.5, fontWeight: 700, color: "var(--mh-green-ink)" }}>
-                                              <Check size={13} strokeWidth={3} /> Terminado
-                                            </span>
-                                          ) : (
-                                            <span style={{ fontSize: 11.5, color: "var(--mh-muted)" }}>{goal ? `${count}/${goal}` : `${count} avances`}</span>
-                                          )}
-                                          {!done && (
-                                            <button type="button" className="mh-btn" style={{ fontSize: 11.5, padding: "5px 10px" }} disabled={!canAdvance} title={canAdvance ? undefined : "Solo durante un descanso largo, con pasos de «Trabajar en un proyecto»"} onClick={() => workOnProject(viewingCharId, i)}>
-                                              <Hammer size={12} /> Trabajar +1
-                                            </button>
-                                          )}
                                         </div>
                                         {menuOpen && (
                                           <div className="mh-proj-menu">

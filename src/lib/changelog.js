@@ -9,6 +9,10 @@ export const CHANGELOG = [
     title: "El Taller y la creación de personaje",
     blurb: "Crea tus propias cartas y armas en el Taller (con fichas e imágenes), descarga tu hoja en PDF, estrena la creación de personaje renovada, una pestaña Cartas más clara con Adversarios y Entornos, y un Buscar mesa con filtros, solicitudes con mensaje y avisos.",
     items: [
+      { tag: "arreglo", text: "Amigos · aceptar o enviar una solicitud de amistad varias veces seguidas ya no genera varios avisos ni solicitudes: solo cuenta la primera pulsación, y los avisos de solicitud y aceptación se sustituyen en lugar de acumularse." },
+      { tag: "mejora", text: "Descansos · los proyectos se ven ahora en filas compactas: nombre, barra de progreso fina, contador y un botón +1 (las opciones siguen en el menú de los tres puntos)." },
+      { tag: "mejora", text: "Hoja en PDF · los campos de nivel, evasión, armadura, rasgos, umbrales y competencia salen vacíos para rellenarlos a lápiz y no tener que reimprimir al subir de nivel." },
+      { tag: "arreglo", text: "Hoja en PDF · con las ilustraciones oficiales desactivadas, las cartas para recortar tampoco llevan imágenes oficiales." },
       { tag: "arreglo", text: "Hoja · los menús laterales se pliegan al abrir una hoja, pero ahora puedes volver a fijarlos si los necesitas." },
       { tag: "mejora", text: "Inventario · las cartas de objeto ya no llevan la tira con el emblema de la esquina." },
       { tag: "arreglo", text: "Inventario · el menú de añadir objeto (y los otros diálogos de la hoja) se oscurece y se centra en toda la pantalla." },
