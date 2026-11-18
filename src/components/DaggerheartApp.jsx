@@ -4657,6 +4657,8 @@ const sharedStyles = `
   .mh-cardc.is-bg .mh-cardc-badge { top: 0; left: 14px; }
   .mh-cardc.is-bg .mh-cardc-gem { width: 44px; height: auto; padding: 10px 0 25px; gap: 9px; flex-direction: column; border: 0; border-radius: 0; background: var(--cc); color: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; font: 700 24px/1 var(--font-body), 'Inter', system-ui, sans-serif; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 13px), 0 100%); text-shadow: 0 2px 4px #0006; }
   .mh-cardc.is-bg .mh-cardc-dom { top: 176px; right: auto; left: 50%; transform: translateX(-50%); padding: 4px 18px; border: 0; border-radius: 99px; font-size: 10px; font-weight: 800; letter-spacing: .2em; color: #fff; background: color-mix(in srgb, var(--cc) 82%, #10112a); box-shadow: 0 4px 12px -4px #000a, inset 0 1px 0 #ffffff40; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  /* Modo claro: el hueco de la ilustración sin imagen usa un degradado claro del color de la carta (antes un gris oscuro). */
+  html[data-mh-theme="light"] .mh-cardc.is-bg .mh-cardc-noart:not(.is-exp) { background: linear-gradient(165deg, color-mix(in srgb, var(--cc) 34%, #fffdf8) 0%, color-mix(in srgb, var(--cc) 14%, #fffdf8) 100%); }
   .mh-cardc-wk { position: absolute; top: 10px; right: 10px; z-index: 6; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: rgba(13,13,34,.78); border: 2px solid #E3B04B; color: #E3B04B; box-shadow: 0 3px 10px -3px #000a; pointer-events: auto; }
   html[data-mh-theme="light"] .mh-cardc-wk { background: #FFFCF6; }
   .mh-cardc.has-wk .mh-cardc-cost { top: 50px !important; }

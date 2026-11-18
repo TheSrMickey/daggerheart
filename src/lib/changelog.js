@@ -9,6 +9,7 @@ export const CHANGELOG = [
     title: "El Taller y la creación de personaje",
     blurb: "Crea tus propias cartas y armas en el Taller (con fichas e imágenes), descarga tu hoja en PDF, estrena la creación de personaje renovada, una pestaña Cartas más clara con Adversarios y Entornos, y un Buscar mesa con filtros, solicitudes con mensaje y avisos.",
     items: [
+      { tag: "arreglo", text: "Cartas · en modo claro, las cartas sin ilustración ya no llevan un degradado gris oscuro: el hueco usa un degradado claro del color de la carta." },
       { tag: "mejora", text: "Taller · al abrir una carta en grande queda centrada, con las fichas llenas, y se quita la caja de fichas con sus botones de sumar, restar y vaciar." },
       { tag: "mejora", text: "Cartas · al ampliar una carta (en cualquier pestaña o sección) se ve un 25 % más grande; en pantallas estrechas se queda como antes." },
       { tag: "mejora", text: "Inventario · «Añadir objeto» es más ancho y tiene buscador y filtros por tipo y por rango (armas y armaduras), con el rango marcado en cada fila." },
