@@ -225,6 +225,8 @@ export function WorkshopPage({ FitTitle, FitBox, TokDice, domainColors, icons, c
   const [wstep, setWstep] = useState(0); // paso del asistente (0 = Identidad)
   const [showCtx, setShowCtx] = useState(false); // panel «cómo se vería» en la ventana grande
   const [mode, setMode] = useState("edit"); // "view": ficha en grande · "edit": editor
+  const [picker, setPicker] = useState(false); // ventana «Crear carta»: elegir tipo o plantilla
+  const [tab, setTab] = useState("mias"); // «mias» · «plantillas»
   const fileRef = useRef(null);
   const importRef = useRef(null);
 
@@ -245,6 +247,7 @@ export function WorkshopPage({ FitTitle, FitBox, TokDice, domainColors, icons, c
   const flash = (t) => { setMsg(t); setTimeout(() => setMsg(""), 2600); };
 
   const create = (type) => {
+    setPicker(false);
     const it = blank(type);
     setDraft(it);
     setSel(it.id);
@@ -255,6 +258,7 @@ export function WorkshopPage({ FitTitle, FitBox, TokDice, domainColors, icons, c
     setDirty(true);
   };
   const addTemplate = async (tpl) => {
+    setPicker(false);
     const it = tpl.make();
     await persist([it, ...(items || [])]);
     setDraft(JSON.parse(JSON.stringify(it)));
@@ -275,6 +279,17 @@ export function WorkshopPage({ FitTitle, FitBox, TokDice, domainColors, icons, c
     setDirty(false);
   };
   const closeView = () => { setDraft(null); setSel(null); setMode("edit"); };
+  const closeEditor = () => {
+    if (dirty && !window.confirm("Tienes cambios sin guardar. ¿Descartarlos?")) return;
+    setDirty(false);
+    closeView();
+  };
+  useEffect(() => {
+    if (!picker) return;
+    const k = (e) => e.key === "Escape" && setPicker(false);
+    window.addEventListener("keydown", k);
+    return () => window.removeEventListener("keydown", k);
+  }, [picker]);
   useEffect(() => {
     if (mode !== "view" || !draft) return;
     const k = (e) => e.key === "Escape" && closeView();
@@ -408,45 +423,49 @@ export function WorkshopPage({ FitTitle, FitBox, TokDice, domainColors, icons, c
   return (
     <div className="ws">
       <style>{CSS}</style>
-      <div className="ws-top">
+      <div className="cx-h">
         <div>
           <h1 className="mh-serif">Taller</h1>
-          <p>Crea tu propio contenido: cartas de dominio, ascendencias, comunidades, subclases, armas, armaduras y objetos. Por ahora es privado y se guarda en tu cuenta.</p>
+          <p>Tu galería de cartas creadas: dominios, ascendencias, comunidades, subclases, armas, armaduras y objetos. Es privada y se guarda en tu cuenta. Pulsa una carta para verla a tamaño completo.</p>
         </div>
         <div className="ws-top-a">
+          <label className="cx-search">
+            <Search size={15} />
+            <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por nombre…" aria-label="Buscar en el Taller" />
+          </label>
           <button type="button" className="mh-btn-ghost" onClick={() => importRef.current?.click()}><Upload size={14} /> Importar</button>
-          <button type="button" className="mh-btn-ghost" disabled={!items?.length} onClick={exportAll}><Download size={14} /> Exportar todo</button>
+          <button type="button" className="mh-btn-ghost" disabled={!items?.length} onClick={exportAll}><Download size={14} /> Exportar</button>
+          <button type="button" className="mh-btn" onClick={() => setPicker(true)}><Plus size={15} /> Crear carta</button>
         </div>
         <input ref={importRef} type="file" accept="application/json,.json" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; f && importFile(f); }} />
         <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; pickImage(f); }} />
       </div>
-      <div className="ws-grid">
-        <aside className="ws-lib">
-          <div className="ws-new">
-            <h3>Crear nuevo</h3>
-            <div className="ws-new-g">
-              {TYPES.map((t) => (
-                <button key={t.key} type="button" onClick={() => create(t.key)} style={{ "--c": t.color }}><t.Icon size={15} /> {t.label}</button>
-              ))}
-            </div>
+      {msg && !draft && <div className="ws-msg" role="status">{msg}</div>}
+      <div className="cx-bars">
+        <div className="cx-g" role="tablist" aria-label="Galería del Taller">
+          <button type="button" role="tab" aria-selected={tab === "mias"} className={tab === "mias" ? "on" : ""} onClick={() => setTab("mias")}>Mis cartas<em>{(items || []).length}</em></button>
+          <button type="button" role="tab" aria-selected={tab === "plantillas"} className={tab === "plantillas" ? "on" : ""} onClick={() => setTab("plantillas")}>Plantillas<em>{TEMPLATES.length}</em></button>
+        </div>
+        {tab === "mias" && (
+          <div className="cx-t" role="tablist" aria-label="Tipo de carta">
+            <button type="button" role="tab" aria-selected={!typeFilter} className={!typeFilter ? "on" : ""} onClick={() => setTypeFilter("")}>Todas<em>{(items || []).length}</em></button>
+            {TYPES.map((t) => <button key={t.key} type="button" role="tab" aria-selected={typeFilter === t.key} className={typeFilter === t.key ? "on" : ""} onClick={() => setTypeFilter(typeFilter === t.key ? "" : t.key)}>{t.plural}<em>{counts(t.key)}</em></button>)}
           </div>
-          <div className="ws-tpl">
-            <h3>Plantillas</h3>
-            <div className="ws-new-g">
+        )}
+      </div>
+      {tab === "mias" && <div className="cx-meta"><span>{shown.length} carta{shown.length === 1 ? "" : "s"}{typeFilter ? " · " + (TYPES.find((t) => t.key === typeFilter)?.plural || "") : ""}{q.trim() ? " · «" + q.trim() + "»" : ""}</span><span>Orden: tipo · más recientes primero</span></div>}
+      <div className="ws-grid">
+        <div className="ws-gallery">
+          {tab === "plantillas" && (
+            <div className="ws-tpl-g">
               {TEMPLATES.map((t) => <button key={t.key} type="button" onClick={() => addTemplate(t)} style={{ "--c": "#E8C547" }}><Plus size={15} /> <span>{t.label}<small>{t.sub}</small></span></button>)}
             </div>
-          </div>
-          <div className="ws-lib-h">
-            <h3>Mi biblioteca <em>{(items || []).length}</em></h3>
-            <label className="ws-search"><Search size={13} /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar…" aria-label="Buscar en el Taller" /></label>
-            <div className="ws-chips">
-              <button type="button" className={!typeFilter ? "on" : ""} onClick={() => setTypeFilter("")}>Todo</button>
-              {TYPES.filter((t) => counts(t.key) > 0).map((t) => <button key={t.key} type="button" className={typeFilter === t.key ? "on" : ""} onClick={() => setTypeFilter(typeFilter === t.key ? "" : t.key)}>{t.plural} · {counts(t.key)}</button>)}
-            </div>
-          </div>
-          {items === null && <p className="ws-empty">Cargando…</p>}
-          {items && !shown.length && <p className="ws-empty">{items.length ? "Nada con ese filtro." : "Aún no has creado nada. Elige un tipo arriba para empezar."}</p>}
-          {TYPES.map((t) => {
+          )}
+          {tab === "mias" && items === null && <p className="ws-empty">Cargando…</p>}
+          {tab === "mias" && items && !shown.length && (
+            <div className="cx-empty">{items.length ? "No hay cartas con ese filtro." : <>Aún no has creado ninguna carta. <button type="button" className="mh-btn" style={{ marginLeft: 8 }} onClick={() => setPicker(true)}><Plus size={14} /> Crear carta</button></>}</div>
+          )}
+          {tab === "mias" && TYPES.map((t) => {
             const list = shown.filter((x) => x.type === t.key);
             if (!list.length) return null;
             return (
@@ -465,7 +484,7 @@ export function WorkshopPage({ FitTitle, FitBox, TokDice, domainColors, icons, c
               </section>
             );
           })}
-        </aside>
+        </div>
 
         {draft && mode === "view" && entry && typeof document !== "undefined" && createPortal(
           <div className="mh-overlay" style={{ background: "rgba(8,6,12,0.70)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 80, padding: 20, overflowY: "auto", alignItems: "flex-start" }} onClick={closeView} role="dialog" aria-modal="true" aria-label={draft.name}>
@@ -514,9 +533,8 @@ export function WorkshopPage({ FitTitle, FitBox, TokDice, domainColors, icons, c
               )}
             </div>
           </div>, document.querySelector(".mh-root") || document.body)}
-        {(mode === "edit" || !draft) && (!draft ? (
-          <div className="ws-blank"><Hammer size={34} strokeWidth={1.4} /><h2 className="mh-serif">¿Qué quieres crear hoy?</h2><p>Elige un tipo arriba y te guiaremos paso a paso, con la carta a la vista mientras la escribes. También puedes empezar desde una plantilla o abrir algo de tu biblioteca para modificarlo.</p></div>
-        ) : (() => {
+        {mode === "edit" && draft && typeof document !== "undefined" && createPortal(<div className="mh-overlay ws-ed-ov" style={{ background: "rgba(8,6,12,0.74)", zIndex: 80, overflowY: "auto", padding: "20px 16px" }}><div className="ws ws-ed-box" onClick={(e) => e.stopPropagation()}><button type="button" className="ws-ed-x" onClick={closeEditor} aria-label="Cerrar el creador"><X size={16} /></button>{(!draft ? (
+          null) : (() => {
           const T = draft.type;
           const STEPS = {
             dominio: [["id", "Identidad"], ["rules", "Reglas"], ["text", "Texto"], ["art", "Arte y fichas"], ["review", "Revisar"]],
@@ -611,7 +629,7 @@ export function WorkshopPage({ FitTitle, FitBox, TokDice, domainColors, icons, c
           return (
             <section className="ws-wiz">
               <div className="ws-stp" role="tablist" aria-label="Pasos de la creación">
-                <button type="button" className="is-dn" onClick={() => closeView()} title="Cambiar de tipo: elige otro arriba"><b><Check size={13} strokeWidth={3} /></b><span>Tipo</span></button>
+                <button type="button" className="is-dn" onClick={() => { closeEditor(); }} title="Salir y elegir otro tipo"><b><Check size={13} strokeWidth={3} /></b><span>Tipo</span></button>
                 {STEPS.map(([k, lab], i) => (
                   <span key={k} className="ws-stp-i">
                     <i />
@@ -648,8 +666,21 @@ export function WorkshopPage({ FitTitle, FitBox, TokDice, domainColors, icons, c
               </div>
             </section>
           );
-        })())}
+        })())}</div></div>, document.querySelector(".mh-root") || document.body)}
       </div>
+      {picker && typeof document !== "undefined" && createPortal(
+        <div className="mh-overlay" style={{ background: "rgba(8,6,12,0.70)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 80, padding: 20 }} onClick={() => setPicker(false)} role="dialog" aria-modal="true" aria-label="Crear carta">
+          <div className="ws ws-pick" onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="ws-ed-x" onClick={() => setPicker(false)} aria-label="Cerrar"><X size={16} /></button>
+            <h2 className="mh-serif">¿Qué carta quieres crear?</h2>
+            <p>Elige un tipo y te guiaremos paso a paso, con la carta a la vista mientras la escribes.</p>
+            <div className="ws-pick-g">
+              {TYPES.map((t) => (
+                <button key={t.key} type="button" onClick={() => create(t.key)} style={{ "--c": t.color }}><t.Icon size={22} /><b>{t.label}</b></button>
+              ))}
+            </div>
+          </div>
+        </div>, document.querySelector(".mh-root") || document.body)}
     </div>
   );
 }
@@ -668,7 +699,11 @@ const CSS = `
 .ws-blank { background: var(--mh-panel); border: 1px dashed var(--mh-line2); border-radius: 20px; padding: 44px 24px; text-align: center; color: var(--mh-muted); display: flex; flex-direction: column; align-items: center; gap: 8px; } .ws-blank h2 { margin: 6px 0 0; color: var(--mh-ink); } .ws-blank p { margin: 0; max-width: 520px; line-height: 1.55; }
 .ws { display: flex; flex-direction: column; gap: 14px; }
 .ws-top { display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap; } .ws-top > div:first-child { flex: 1; min-width: 260px; } .ws-top h1 { margin: 0 0 4px; font-size: 28px; } .ws-top p { margin: 0; color: var(--mh-muted); font-size: 13px; max-width: 640px; line-height: 1.5; }
-.ws-top-a { display: flex; gap: 8px; } .ws-top-a button, .ws-acts button, .ws-img button, .ws-feats > button { display: inline-flex; align-items: center; gap: 6px; }
+.ws-top-a { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.ws-gallery { min-width: 0; } .ws-tpl-g { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; } .ws-tpl-g button { all: unset; cursor: pointer; box-sizing: border-box; display: flex; align-items: center; gap: 10px; padding: 14px; border-radius: 14px; border: 1px solid var(--mh-line2); background: var(--mh-panel); color: var(--c); } .ws-tpl-g button:hover { border-color: var(--c); } .ws-tpl-g span { color: var(--mh-ink); font-weight: 700; font-size: 13px; display: flex; flex-direction: column; } .ws-tpl-g small { color: var(--mh-muted); font-weight: 500; font-size: 11.5px; }
+.ws-ed-box { position: relative; max-width: 1180px; margin: 0 auto; } .ws-ed-box .ws-wiz { padding-top: 26px; } .ws-ed-x, .ws-pick .ws-ed-x { all: unset; cursor: pointer; position: absolute; top: 12px; right: 14px; z-index: 3; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--mh-panel3); color: var(--mh-ink); } .ws-ed-x:hover { background: var(--mh-line2); }
+.ws-pick { position: relative; width: min(620px, 100%); background: var(--mh-panel); border: 1px solid var(--mh-line2); border-radius: 22px; padding: 26px 26px 24px; box-shadow: 0 30px 80px #000a; } .ws-pick h2 { margin: 0 0 4px; font-size: 22px; color: var(--mh-ink); } .ws-pick p { margin: 0 0 18px; color: var(--mh-muted); font-size: 13px; }
+.ws-pick-g { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 10px; } .ws-pick-g button { all: unset; cursor: pointer; box-sizing: border-box; display: flex; align-items: center; gap: 12px; padding: 16px; border-radius: 14px; border: 1.5px solid color-mix(in srgb, var(--c) 45%, var(--mh-line)); background: color-mix(in srgb, var(--c) 9%, var(--mh-panel2)); color: var(--c); transition: transform .15s, border-color .15s; } .ws-pick-g button b { color: var(--mh-ink); font-size: 14px; } .ws-pick-g button:hover { transform: translateY(-2px); border-color: var(--c); } .ws-pick-g button:focus-visible { outline: 2px solid var(--c); outline-offset: 2px; } .ws-top-a button, .ws-acts button, .ws-img button, .ws-feats > button { display: inline-flex; align-items: center; gap: 6px; }
 .ws-grid { display: flex; flex-direction: column; gap: 14px; } .ws-work { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 14px; align-items: start; }
 .ws-lib, .ws-ed, .ws-pv { background: var(--mh-panel); border: 1px solid var(--mh-line); border-radius: 18px; padding: 14px; min-width: 0; }
 .ws h3 { margin: 0 0 8px; font: 700 11px var(--font-body), 'Inter', system-ui, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--mh-muted); display: flex; align-items: center; gap: 8px; } .ws h3 em { font-style: normal; color: var(--mh-muted2); }
