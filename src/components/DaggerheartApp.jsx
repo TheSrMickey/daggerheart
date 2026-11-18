@@ -4898,6 +4898,11 @@ const sharedStyles = `
   .mh-proj-bar { height: 8px; border-radius: 9px; background: var(--mh-line); margin-top: 11px; overflow: hidden; } .mh-proj-bar i { display: block; height: 100%; background: var(--pc); border-radius: 9px; transition: width .4s cubic-bezier(.3,.8,.2,1); }
   .mh-proj-fr { font-size: 12.5px; color: var(--mh-muted); font-variant-numeric: tabular-nums; }
   .mh-proj-plus { all: unset; cursor: pointer; display: inline-grid; place-items: center; width: 38px; height: 34px; border-radius: 10px; background: var(--mh-panel3); color: var(--mh-ink); font-size: 12.5px; font-weight: 800; transition: background .15s, transform .1s; } .mh-proj-plus:hover:not(:disabled) { background: color-mix(in srgb, var(--pc) 35%, var(--mh-panel3)); } .mh-proj-plus:active:not(:disabled) { transform: scale(.94); } .mh-proj-plus:disabled { opacity: .4; cursor: not-allowed; } .mh-proj-plus:focus-visible { outline: 2px solid var(--pc); outline-offset: 1px; }
+  .mh-ai-search { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--mh-line2); background: var(--mh-input); color: var(--mh-muted); margin-bottom: 10px; } .mh-ai-search input { all: unset; flex: 1; min-width: 0; font-size: 13px; color: var(--mh-ink); } .mh-ai-search button { all: unset; cursor: pointer; display: grid; place-items: center; }
+  .mh-ai-filters { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; } .mh-ai-filters.is-tier > span { font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--mh-muted); font-weight: 700; margin-right: 2px; }
+  .mh-ai-chip { all: unset; cursor: pointer; padding: 4px 11px; border-radius: 99px; border: 1px solid var(--mh-line2); font-size: 12px; font-weight: 600; color: var(--mh-ink3); background: var(--mh-panel2); transition: background .15s, border-color .15s; } .mh-ai-chip:hover { border-color: var(--mh-muted); } .mh-ai-chip.is-on { background: color-mix(in srgb, #E3B04B 22%, var(--mh-panel2)); border-color: #E3B04B; color: var(--mh-ink); } .mh-ai-chip:focus-visible { outline: 2px solid #E3B04B; outline-offset: 1px; }
+  .mh-ai-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; border: 1px solid var(--mh-line); border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: border-color .15s, background .15s; } .mh-ai-row:hover { border-color: #E3B04B; background: color-mix(in srgb, #E3B04B 7%, transparent); }
+  .mh-ai-tier { font-style: normal; font-size: 9.5px; font-weight: 800; min-width: 20px; height: 18px; padding: 0 4px; border-radius: 5px; display: inline-grid; place-items: center; color: #10112a; }
   .mh-proj-cnt { margin-left: 6px; font-size: 11px; opacity: .7; font-weight: 700; }
   .mh-proj-fin { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 12px; border: 1px solid color-mix(in srgb, #6FBF73 40%, transparent); background: color-mix(in srgb, #6FBF73 7%, var(--mh-panel)); flex: none; }
   .mh-proj-fin-h { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--mh-green-ink); margin-bottom: 4px; } .mh-proj-fin-h b { margin-left: auto; }
@@ -6903,6 +6908,9 @@ const sharedStyles = `
   @media (max-width: 700px) { .mh-wm-card { top: auto; right: 8px; left: 8px; bottom: 8px; width: auto; max-height: 62%; } .mh-wm-view { max-height: 60vh; } }
   .mh-cardc-wrap { position: relative; display: flex; align-items: center; justify-content: center; width: min(300px, 100%); }
   .mh-cardc-wrap > .mh-cardc { z-index: 2; }
+  /* Cartas ampliadas: un 25 % más grandes en cualquier pestaña o sección (en pantallas estrechas se quedan como estaban). */
+  .mh-cardc-wrap, .mh-fan-big:not(.is-choose), .mh-cardc.mh-card-anim:not(.mh-cardc-wrap .mh-cardc) { zoom: 1.25; }
+  @media (max-width: 560px) { .mh-cardc-wrap, .mh-fan-big:not(.is-choose), .mh-cardc.mh-card-anim:not(.mh-cardc-wrap .mh-cardc) { zoom: 1; } }
   .cx-deckwrap { display: flex; flex-direction: column; align-items: center; gap: 22px; max-width: 100%; }
   .cx-deck { --pk: 78px; position: relative; width: calc(300px + var(--pk) * 2 * (var(--n) - 1)); max-width: 100%; height: 420px; }
   .cx-dk { position: absolute; left: 50%; top: 0; width: 300px; margin-left: -150px; z-index: var(--z); transform: translateX(calc(var(--o) * var(--pk))) scale(calc(1 - var(--o) * var(--o) * .045)); transform-origin: 50% 50%; transition: transform .38s cubic-bezier(.2,.8,.2,1), filter .3s; filter: brightness(calc(1 - (var(--o) * var(--o)) * .22)); }
@@ -15847,6 +15855,16 @@ export default function App({ onSignOut }) {
   const [newItemDescDraft, setNewItemDescDraft] = useState("");
   const [showAddItemModal, setShowAddItemModal] = useState(false);
   const [addItemModalTab, setAddItemModalTab] = useState("catalog");
+  const [addItemCat, setAddItemCat] = useState("all"); // filtro por tipo en «Añadir objeto»
+  const [addItemTier, setAddItemTier] = useState(0); // filtro por rango (armas y armaduras)
+  const [addItemQ, setAddItemQ] = useState(""); // búsqueda por nombre
+  useEffect(() => {
+    if (!showAddItemModal) {
+      setAddItemCat("all");
+      setAddItemTier(0);
+      setAddItemQ("");
+    }
+  }, [showAddItemModal]);
   const ITEM_SLOTS = 5;
 
   const getItems = (c) => {
@@ -26662,6 +26680,7 @@ export default function App({ onSignOut }) {
                               })}
                             </div>
                             {hopeNow === 0 && <div className="mh-pre-note">No te queda Esperanza para usar experiencias.</div>}
+                            {hopeNow > 0 && hopeUsed >= hopeNow && <div className="mh-pre-note">Has asignado toda tu Esperanza ({hopeNow}): cada Experiencia y cada bonificación que cuesta Esperanza (como Lengua de la Naturaleza) gasta 1. Quita una para elegir otra.</div>}
                           </>
                         )}
                         {bonusTiles.length > 0 && (
@@ -29086,7 +29105,7 @@ export default function App({ onSignOut }) {
               >
                 <div
                   className="mh-card"
-                  style={{ margin: 0, width: "min(460px, 100%)", maxHeight: "80%", display: "flex", flexDirection: "column", padding: "20px 22px" }}
+                  style={{ margin: 0, width: "min(660px, 100%)", maxHeight: "86vh", display: "flex", flexDirection: "column", padding: "20px 24px" }}
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
@@ -29119,42 +29138,74 @@ export default function App({ onSignOut }) {
                     ))}
                   </div>
 
-                  {addItemModalTab === "catalog" ? (
-                    <div style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", gap: 16 }}>
-                      {[
-                        { label: "Objetos", data: STARTER_ITEMS.map((it) => ({ name: it.name, description: it.description })) },
-                        { label: "Armas principales", data: PRIMARY_WEAPONS.map((w) => ({ name: w.key, description: `${w.trait} · ${w.range} · ${w.damage}` })) },
-                        { label: "Armas secundarias", data: SECONDARY_WEAPONS.map((w) => ({ name: w.key, description: w.trait !== "—" ? `${w.trait} · ${w.range} · ${w.damage}` : w.damage })) },
-                        { label: "Armaduras", data: ARMORS.map((a) => ({ name: a.key, description: `Puntuación ${a.score} · Umbrales ${a.major}/${a.severe}` })) },
-                      ].map((group) => (
-                        <div key={group.label}>
-                          <div style={{ fontSize: 10.5, fontWeight: 700, color: "var(--mh-gold-ink)", textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 6 }}>
-                            {group.label}
-                          </div>
-                          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                            {group.data.map((entry) => (
-                              <div
-                                key={entry.name}
-                                onClick={() => addCatalogItemToInventory(entry.name, entry.description)}
-                                style={{
-                                  display: "flex",
-                                  justifyContent: "space-between",
-                                  alignItems: "center",
-                                  gap: 8,
-                                  border: "1px solid var(--mh-line)",
-                                  borderRadius: 8,
-                                  padding: "8px 12px",
-                                  cursor: "pointer",
-                                }}
-                              >
-                                <span style={{ fontSize: 13, fontWeight: 600, color: "var(--mh-ink)" }}>{entry.name}</span>
-                                <span style={{ fontSize: 11, color: "var(--mh-muted)", textAlign: "right" }}>{entry.description}</span>
-                              </div>
-                            ))}
-                          </div>
+                  {addItemModalTab === "catalog" ? ((() => {
+                    const groups = [
+                      { id: "obj", label: "Objetos", data: STARTER_ITEMS.map((it) => ({ name: it.name, description: it.description })) },
+                      { id: "pri", label: "Armas principales", data: PRIMARY_WEAPONS.map((w) => ({ name: w.key, tier: w.tier, description: `${w.trait} · ${w.range} · ${w.damage}` })) },
+                      { id: "sec", label: "Armas secundarias", data: SECONDARY_WEAPONS.map((w) => ({ name: w.key, tier: w.tier, description: w.trait !== "—" ? `${w.trait} · ${w.range} · ${w.damage}` : w.damage })) },
+                      { id: "arm", label: "Armaduras", data: ARMORS.map((a) => ({ name: a.key, tier: a.tier, description: `Puntuación ${a.score} · Umbrales ${a.major}/${a.severe}` })) },
+                    ];
+                    const q = addItemQ.trim().toLowerCase();
+                    const shown = groups
+                      .filter((g) => addItemCat === "all" || g.id === addItemCat)
+                      .map((g) => ({ ...g, data: g.data.filter((e) => (!q || (e.name + " " + e.description).toLowerCase().includes(q)) && (!addItemTier || !e.tier || e.tier === addItemTier)) }))
+                      .filter((g) => g.data.length);
+                    const chip = (on, label, onClick, extra) => (
+                      <button key={label} type="button" className={"mh-ai-chip" + (on ? " is-on" : "")} onClick={onClick} style={extra}>
+                        {label}
+                      </button>
+                    );
+                    const tierOn = addItemCat === "all" || addItemCat === "pri" || addItemCat === "sec" || addItemCat === "arm";
+                    return (
+                      <>
+                        <label className="mh-ai-search">
+                          <Search size={14} />
+                          <input value={addItemQ} onChange={(e) => setAddItemQ(e.target.value)} placeholder="Buscar por nombre o descripción…" aria-label="Buscar objeto" />
+                          {addItemQ && (
+                            <button type="button" aria-label="Borrar búsqueda" onClick={() => setAddItemQ("")}>
+                              <X size={13} />
+                            </button>
+                          )}
+                        </label>
+                        <div className="mh-ai-filters">
+                          {chip(addItemCat === "all", "Todo", () => setAddItemCat("all"))}
+                          {groups.map((g) => chip(addItemCat === g.id, g.label, () => setAddItemCat(g.id)))}
                         </div>
-                      ))}
-                    </div>
+                        {tierOn && (
+                          <div className="mh-ai-filters is-tier">
+                            <span>Rango</span>
+                            {chip(!addItemTier, "Todos", () => setAddItemTier(0))}
+                            {[1, 2, 3, 4].map((t) => chip(addItemTier === t, TIER_COLORS[t].label, () => setAddItemTier(addItemTier === t ? 0 : t), addItemTier === t ? { background: TIER_COLORS[t].color, borderColor: TIER_COLORS[t].color, color: "#10112a" } : undefined))}
+                          </div>
+                        )}
+                        <div style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", gap: 16, marginTop: 4 }}>
+                          {shown.length === 0 && <div className="mh-pop-empty">Nada coincide con esos filtros.</div>}
+                          {shown.map((group) => (
+                            <div key={group.label}>
+                              <div style={{ fontSize: 10.5, fontWeight: 700, color: "var(--mh-gold-ink)", textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 6 }}>
+                                {group.label} · {group.data.length}
+                              </div>
+                              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                                {group.data.map((entry) => (
+                                  <div
+                                    key={entry.name}
+                                    className="mh-ai-row"
+                                    onClick={() => addCatalogItemToInventory(entry.name, entry.description)}
+                                  >
+                                    <span style={{ fontSize: 13, fontWeight: 600, color: "var(--mh-ink)", display: "flex", alignItems: "center", gap: 7 }}>
+                                      {entry.tier ? <i className="mh-ai-tier" style={{ background: TIER_COLORS[entry.tier].color }} title={TIER_COLORS[entry.tier].label}>{["I", "II", "III", "IV"][entry.tier - 1]}</i> : null}
+                                      {entry.name}
+                                    </span>
+                                    <span style={{ fontSize: 11, color: "var(--mh-muted)", textAlign: "right" }}>{entry.description}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    );
+                  })()
                   ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                       <input
