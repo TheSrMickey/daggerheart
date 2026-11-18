@@ -4662,6 +4662,14 @@ const sharedStyles = `
   /* Cartas del Taller: marco interior dorado muy fino. */
   .mh-cardc-wkf { position: absolute; inset: 5px; border: 1px solid #E3B04B66; border-radius: 17px; z-index: 7; pointer-events: none; }
   html[data-mh-theme="light"] .mh-cardc-wkf { border-color: #B8862E88; }
+  /* Cartas salvajes (las más raras): velo holográfico y borde foil arcoíris. */
+  .mh-cardc > .mh-wild-a, .mh-cardc > .mh-wild-a2, .mh-cardc > .mh-wild-b { position: absolute !important; inset: 0 !important; z-index: 6; pointer-events: none; border-radius: inherit; }
+  .mh-wild-a { background: conic-gradient(from 200deg at 30% 20%, #ff5fa255, #ffd36655, #6cffb855, #5fc7ff55, #b07bff55, #ff5fa255); mix-blend-mode: color-dodge; opacity: .5; animation: mh-wild-hue 8s linear infinite; }
+  .mh-wild-a2 { background: repeating-linear-gradient(115deg, transparent 0 14px, #ffffff22 14px 16px); mix-blend-mode: overlay; }
+  .mh-wild-b { padding: 3px; background: conic-gradient(from 0deg, #ff5fa2, #ffd366, #6cffb8, #5fc7ff, #b07bff, #ff5fa2); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: mh-wild-hue 6s linear infinite; }
+  @keyframes mh-wild-hue { to { filter: hue-rotate(360deg); } }
+  html[data-mh-theme="light"] .mh-wild-a { mix-blend-mode: soft-light; opacity: .8; }
+  @media (prefers-reduced-motion: reduce) { .mh-wild-a, .mh-wild-b { animation: none; } }
   .mh-cardc-cost { display: none; }
   .mh-cardc.is-bg.is-wp .mh-cardc-sub { display: block; margin-top: 2px; font-size: 9.5px; letter-spacing: .14em; color: var(--mh-muted); }
   .mh-cardc.is-bg.is-wp .mh-cardc-big { font-size: 36px; font-weight: 800; letter-spacing: -.02em; color: #fff; text-shadow: 0 2px 12px color-mix(in srgb, var(--cc) 60%, transparent); }

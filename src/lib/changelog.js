@@ -9,6 +9,7 @@ export const CHANGELOG = [
     title: "El Taller y la creación de personaje",
     blurb: "Crea tus propias cartas y armas en el Taller (con fichas e imágenes), descarga tu hoja en PDF, estrena la creación de personaje renovada, una pestaña Cartas más clara con Adversarios y Entornos, y un Buscar mesa con filtros, solicitudes con mensaje y avisos.",
     items: [
+      { tag: "nuevo", text: "Cartas · las cartas Salvajes, las más raras del juego, tienen un velo holográfico de colores y un borde foil arcoíris que cambia de tono." },
       { tag: "mejora", text: "Inventario · la Antorcha y la Cuerda de 15 metros tienen su propio icono." },
       { tag: "nuevo", text: "Dados 3D · al sacar un crítico cae confeti dorado, verde, morado y blanco por la pantalla." },
       { tag: "mejora", text: "Dados 3D · el borde de luz de todos los resultados (Esperanza, Miedo, crítico y daño) respira despacio como el de Esperanza, cada uno con su color; se quitan los parpadeos y latidos." },
