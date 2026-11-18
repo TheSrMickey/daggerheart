@@ -9,6 +9,9 @@ export const CHANGELOG = [
     title: "El Taller y la creación de personaje",
     blurb: "Crea tus propias cartas y armas en el Taller (con fichas e imágenes), descarga tu hoja en PDF, estrena la creación de personaje renovada, una pestaña Cartas más clara con Adversarios y Entornos, y un Buscar mesa con filtros, solicitudes con mensaje y avisos.",
     items: [
+      { tag: "mejora", text: "Hoja en PDF · el logo de Enaris sale ahora como marca de agua grande y muy tenue en mitad de la hoja (ya no arriba), los dominios se muestran con sus logos, las cartas para recortar siguen tu modo claro u oscuro y las cajas de los rasgos tienen todas el mismo tamaño." },
+      { tag: "mejora", text: "Descansos · los proyectos tienen cajas más grandes, solo puedes tener 5 activos a la vez y los terminados pasan a una caja de «Proyectos finalizados»." },
+      { tag: "nuevo", text: "Taller · todas las cartas creadas en el Taller llevan un icono de martillo en un círculo en la esquina superior derecha." },
       { tag: "arreglo", text: "Amigos · aceptar o enviar una solicitud de amistad varias veces seguidas ya no genera varios avisos ni solicitudes: solo cuenta la primera pulsación, y los avisos de solicitud y aceptación se sustituyen en lugar de acumularse." },
       { tag: "mejora", text: "Descansos · los proyectos se ven ahora en filas compactas: nombre, barra de progreso fina, contador y un botón +1 (las opciones siguen en el menú de los tres puntos)." },
       { tag: "mejora", text: "Hoja en PDF · los campos de nivel, evasión, armadura, rasgos, umbrales y competencia salen vacíos para rellenarlos a lápiz y no tener que reimprimir al subir de nivel." },

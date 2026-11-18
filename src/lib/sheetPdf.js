@@ -3,6 +3,7 @@
 const esc = (t) => String(t ?? "").replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
 const boxes = (total, marked, color) => Array.from({ length: Math.max(0, total) }, (_, i) => `<i style="${i < marked ? `background:${color};border-color:${color}` : ""}"></i>`).join("");
 
+const DOMAIN_FILE = { Arcano: "arcana", Filo: "blade", Hueso: "bone", Códice: "codex", Miedo: "dread", Encanto: "grace", Medianoche: "midnight", Naturaleza: "sage", Esplendor: "splendor", Valor: "valor" };
 const LOGO = (c) => `<svg class="logo" viewBox="0 0 200 340" aria-hidden="true"><path fill="${c}" d="M100 0C101.5 66 106 109 200 115C106 121 102 164 100 340C98 164 94 121 0 115C94 109 98.5 66 100 0Z"/></svg>`;
 const lines = (n, cls = "") => Array.from({ length: n }, () => `<div class="ln ${cls}"></div>`).join("");
 const TRAIT_ACTIONS = { Agilidad: ["Esprintar", "Saltar", "Maniobrar"], Fuerza: ["Levantar", "Golpear", "Agarrar"], Destreza: ["Controlar", "Esconderse", "Manipular"], Instinto: ["Percibir", "Intuir", "Orientarse"], Presencia: ["Encantar", "Actuar", "Engañar"], Conocimiento: ["Recordar", "Analizar", "Comprender"] };
@@ -30,7 +31,7 @@ export function sheetHtml(d) {
   const wp = (w, label) => `<div class="wb"><div class="wl">${label}</div><div class="fl3"><div><b>${w ? esc(w.key) : ""}</b><small>Nombre</small></div><div><b>${w ? esc(w.trait) + (w.trait && w.trait !== "—" ? " " + sign(w.traitValue) : "") + " · " + esc(w.range) : ""}</b><small>Rasgo y alcance</small></div><div><b>${w ? esc(w.damage) : ""}</b><small>Dados y tipo de daño</small></div></div><div class="fe"><b>${w && w.feature ? esc(w.feature) : ""}</b><small>Característica</small></div></div>`;
   const invWeapons = (d.invWeapons || []).concat([null, null]).slice(0, 2).map((w) => `<div class="wb"><div class="wl">Arma de inventario <span class="ck"><i></i>Principal <i></i>Secundaria</span></div><div class="fl3"><div><b>${w ? esc(w.key) : ""}</b><small>Nombre</small></div><div><b>${w ? esc(w.trait) + " · " + esc(w.range) : ""}</b><small>Rasgo y alcance</small></div><div><b>${w ? esc(w.damage) : ""}</b><small>Dados y tipo de daño</small></div></div><div class="fe"><b>${w && w.feature ? esc(w.feature) : ""}</b><small>Característica</small></div></div>`).join("");
   const itemRows = Array.from({ length: Math.max(5, d.items.length) }, (_, i) => d.items[i]).map((i) => `<div class="xr"><span>${i ? `<b>${esc(i.name)}</b>${i.count > 1 ? " ×" + i.count : ""}${i.description ? ` <em>${esc(i.description)}</em>` : ""}` : ""}</span></div>`).join("");
-  const card = (c) => `<div class="cd"><div class="ch"><b>${esc(c.key)}</b><span>${esc(c.domain)} · Nv ${c.level}${c.recall != null ? " · ⚡" + c.recall : ""}${c.vault ? " · bóveda" : ""}</span></div><p>${esc(c.text)}</p></div>`;
+  const card = (c) => `<div class="cd"><div class="ch"><b>${esc(c.key)}</b><span>${DOMAIN_FILE[c.domain] ? `<img class="dli" src="/dominios/${DOMAIN_FILE[c.domain]}.svg" alt="" title="${esc(c.domain)}">` : esc(c.domain) + " "}· Nv ${c.level}${c.recall != null ? " · ⚡" + c.recall : ""}${c.vault ? " · bóveda" : ""}</span></div><p>${esc(c.text)}</p></div>`;
   const qa = (list) => list.map((n) => `<div class="qa"><b>${esc(n.q)}</b>${n.a ? `<p>${esc(n.a)}</p>` : lines(2)}</div>`).join("");
   const cfLen = (d.classFeatures || []).reduce((n, f) => n + f.name.length + f.text.length, 0);
   // Si el texto de clase no cabe en la página 1, allí se resume y la página 2 lo trae completo.
@@ -40,7 +41,7 @@ export function sheetHtml(d) {
   const classFeat = (d.classFeatures || []).map((f) => feat(long ? { name: f.name, text: cut(f.text, per) } : f)).join("") + (long ? '<p class="ft"><em>Texto completo en la página 2.</em></p>' : "");
   const cfSize = long ? "7pt" : "7.8pt";
   const pg2Feats = [...(long ? d.classFeatures.map((f) => ({ name: f.name + " · Clase", text: f.text })) : []), ...d.features];
-  const banner = `<div class="bnr"><div class="cn">${esc(d.cls || "Daggerheart")}</div><div class="dd">${esc((d.domains || []).join(" · "))}</div><div class="bl">${LOGO("#fff")}<span>ENARIS</span></div></div>`;
+  const banner = `<div class="bnr"><div class="cn">${esc(d.cls || "Daggerheart")}</div><div class="dd">${(d.domains || []).map((n) => DOMAIN_FILE[n] ? `<img class="dli" src="/dominios/${DOMAIN_FILE[n]}.svg" alt="${esc(n)}" title="${esc(n)}">` : esc(n)).join("")}</div></div>`;
   const fields = (pg) => `<div class="flds"><div class="f w2"><b>${esc(d.name)}</b><small>Nombre</small></div><div class="f"><b>${esc(d.pronouns)}</b><small>Pronombres</small></div><div class="f w2"><b>${esc([d.ancestry, d.community, d.transformation].filter(Boolean).join(" · "))}</b><small>Herencia</small></div><div class="f"><b>${esc(d.cls)}${d.subclass ? " · " + esc(d.subclass) : ""}${d.multi ? " + " + esc(d.multi) : ""}</b><small>Clase y subclase</small></div></div><div class="lvl"><b></b><small>Nivel</small></div>`;
   const weight = pg2Feats.reduce((n, f) => n + f.name.length + f.text.length, 0) + d.cards.reduce((n, c) => n + c.text.length, 0);
   // Cartas para recortar: 9 por hoja (3 × 3), tamaño de carta de juego (63,5 × 88,9 mm), con líneas de corte.
@@ -50,17 +51,18 @@ export function sheetHtml(d) {
   const cutPages = Array.from({ length: Math.ceil(cutAll.length / 9) }, (_, i) => cutAll.slice(i * 9, i * 9 + 9));
   const cutHtml = cutPages.map((pg, i) => `<div class="pg cut"><div class="cgrid">${pg.join("")}</div><div class="foot">${LOGO("#8d88a3")} Recorta por las líneas discontinuas · cartas de ${esc(d.name)} · hoja ${i + 1}/${cutPages.length}</div></div>`).join("");
   const sh = (t) => `<div class="sh"><span>${t}</span></div>`;
-  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><base href="${esc(d.origin || "")}/"><title>${esc(d.name)} · Hoja de personaje</title>${d.cutPack ? d.cutPack.styles : ""}<style>
+  return `<!doctype html><html lang="es"${d.theme === "light" ? ' data-mh-theme="light"' : ""}${d.artOff ? ' data-mh-art="off"' : ""}><head><meta charset="utf-8"><base href="${esc(d.origin || "")}/"><title>${esc(d.name)} · Hoja de personaje</title>${d.cutPack ? d.cutPack.styles : ""}<style>
 @page { size: A4 portrait; margin: 8mm; }
 * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 html, body { margin: 0; background: #fff; }
 body { font: 7.8pt/1.3 "Inter", "Segoe UI", Arial, sans-serif; color: #1d1a24; width: 194mm; }
 h1, h3 { margin: 0; } p { margin: 0; } em { font-style: normal; color: #6d6478; font-size: 6.6pt; } small { font-size: 5.8pt; text-transform: uppercase; letter-spacing: .1em; color: #6d6478; }
 :root { --dk: #3b3a3f; --ln: #b9b4c4; }
+.pg:not(.cut) { position: relative; } .pg:not(.cut)::before { content: ""; position: absolute; left: 50%; top: 50%; width: 120mm; height: 204mm; transform: translate(-50%, -50%); background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 340'%3E%3Cpath fill='%2523888' d='M100 0C101.5 66 106 109 200 115C106 121 102 164 100 340C98 164 94 121 0 115C94 109 98.5 66 100 0Z'/%3E%3C/svg%3E") center / contain no-repeat; opacity: .07; pointer-events: none; z-index: 5; }
 .pg { width: 194mm; min-height: 0; display: flex; flex-direction: column; gap: 2.6mm; break-after: page; } .pg:last-child { break-after: auto; } .pg.p1 { height: 280mm; overflow: hidden; }
 .top, .def { flex: none; }
 .top { display: grid; grid-template-columns: 56mm 1fr 19mm; gap: 2.4mm; height: 21mm; align-items: stretch; margin-bottom: .6mm; }
-.bnr { position: relative; background: var(--dk); color: #fff; border-radius: 1.6mm 6mm 1.6mm 1.6mm; padding: 2mm 3.4mm; display: flex; flex-direction: column; justify-content: center; border-bottom: 1.4mm solid ${col}; } .bnr .cn { font: 800 16pt/1 "Inter", Arial, sans-serif; letter-spacing: .03em; text-transform: uppercase; } .bnr .dd { margin-top: 1mm; font-size: 7pt; letter-spacing: .14em; text-transform: uppercase; color: #d8d4e0; } .bnr .bl { position: absolute; right: 3mm; top: 2mm; display: flex; flex-direction: column; align-items: center; gap: .6mm; } .bnr .bl .logo { width: 3.6mm; height: 6.1mm; } .bnr .bl span { font: 700 5.2pt/1 'Inter', system-ui, sans-serif; letter-spacing: .24em; padding-left: .24em; color: #e9e5f0; }
+.bnr { position: relative; background: var(--dk); color: #fff; border-radius: 1.6mm 6mm 1.6mm 1.6mm; padding: 2mm 3.4mm; display: flex; flex-direction: column; justify-content: center; border-bottom: 1.4mm solid ${col}; } .bnr .cn { font: 800 16pt/1 "Inter", Arial, sans-serif; letter-spacing: .03em; text-transform: uppercase; } .bnr .dd { margin-top: 1.2mm; display: flex; gap: 2.2mm; align-items: center; font-size: 7pt; letter-spacing: .14em; text-transform: uppercase; color: #d8d4e0; } .dli { height: 5.4mm; width: 5.4mm; object-fit: contain; filter: brightness(0) invert(1); } .cd .dli { height: 3.2mm; width: 3.2mm; filter: none; vertical-align: -.6mm; margin-right: .6mm; } .bnr .bl { position: absolute; right: 3mm; top: 2mm; display: flex; flex-direction: column; align-items: center; gap: .6mm; } .bnr .bl .logo { width: 3.6mm; height: 6.1mm; } .bnr .bl span { font: 700 5.2pt/1 'Inter', system-ui, sans-serif; letter-spacing: .24em; padding-left: .24em; color: #e9e5f0; }
 .flds { display: grid; grid-template-columns: 1.45fr 1fr; grid-template-rows: 1fr 1fr; gap: 1.8mm; min-width: 0; } .f { border: 1.1pt solid var(--ln); border-radius: 1.4mm; padding: .4mm 2mm 0; display: flex; flex-direction: column; justify-content: space-between; min-height: 0; min-width: 0; overflow: hidden; } .f b { font-size: 7.8pt; padding-top: .8mm; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .f small { margin-bottom: .5mm; }
 .lvl { background: var(--dk); color: #fff; border-radius: 1.6mm 1.6mm 6mm 6mm; text-align: center; display: flex; flex-direction: column; justify-content: center; border-bottom: 1.4mm solid ${col}; } .lvl b { font: 800 19pt/1 'Inter', system-ui, sans-serif; } .lvl small { color: #d8d4e0; margin-top: .6mm; }
 .def { display: grid; grid-template-columns: 22mm 34mm 1fr; gap: 3mm; padding-bottom: 2.6mm; border-bottom: 1.1pt solid var(--ln); }
@@ -100,8 +102,8 @@ h1, h3 { margin: 0; } p { margin: 0; } em { font-style: normal; color: #6d6478; 
 .cc.gear .gh { display: flex; justify-content: space-between; align-items: center; background: var(--k); color: #fff; margin: .4mm; padding: 2.6mm 3mm; border-radius: 2.2mm 2.2mm 0 0; font: 800 6.4pt Arial; letter-spacing: .14em; text-transform: uppercase; } .gh i { font-style: normal; opacity: .9; } .gbig { text-align: center; font: 800 20pt/1.1 'Inter', system-ui, sans-serif; margin-top: 1mm; color: var(--k); } .gsub { text-align: center; font-size: 6.6pt; color: #4a4457; margin-bottom: 1.6mm; }
 .foot { text-align: center; font-size: 6pt; color: #8d88a3; display: flex; align-items: center; justify-content: center; gap: 2mm; } .foot .logo { width: 2mm; height: 3.4mm; }
 /* Campos vacíos para rellenar a lápiz: mantienen su altura */
-.tv::before, b:empty::after { content: "\\00a0"; }
-.tv::before { display: block; }
+b:empty::after { content: "\\00a0"; }
+.tcs { align-items: stretch; } .tc { height: 100%; } .tv { height: 13mm; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0; } .ta { min-height: 12mm; }
 </style></head><body>
 <div class="pg p1">
 <div class="top">${banner}${fields(1)}</div>

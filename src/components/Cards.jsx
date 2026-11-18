@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ArrowUp, Check, Layers, Search, X, Zap } from "lucide-react";
+import { ArrowUp, Check, Hammer, Layers, Search, X, Zap } from "lucide-react";
 import { useSocial } from "./Social";
 import { cardStatus, isAdminName } from "@/lib/cardStatus";
 
@@ -89,11 +89,12 @@ export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
     };
     return (
       <div
-        className={"mh-card mh-cardc is-bg is-full" + (modal ? " mh-card-anim" : "") + (modal || legend || bg ? " mh-tilt" : "") + (wpn ? " is-wp" : "") + (legend ? " is-legend" : "")}
+        className={"mh-card mh-cardc is-bg is-full" + (modal ? " mh-card-anim" : "") + (modal || legend || bg ? " mh-tilt" : "") + (wpn ? " is-wp" : "") + (legend ? " is-legend" : "") + (c.workshop ? " has-wk" : "")}
         style={{ "--glow": alpha(col, 51), "--cc": col, margin: 0, width: modal ? "min(300px, 100%)" : 300, height: modal ? "min(420px, 80vh)" : 420, maxWidth: "100%", padding: 0, overflow: "hidden", borderRadius: 22, display: "flex", flexDirection: "column", border: "2px solid " + col, position: "relative", textAlign: "left" }}
         {...(tilt || {})}
       >
         <div className="mh-glare" />
+        {c.workshop && <span className="mh-cardc-wk" title="Carta del Taller" aria-label="Carta del Taller"><Hammer size={15} strokeWidth={2.2} /></span>}
         {legend && <div className="mh-holo is-idle" />}
         {legend && <div className="mh-legend-sheen" />}
         <div className="mh-cf-art">
@@ -131,11 +132,12 @@ export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
   }
   return (
     <div
-      className={"mh-card mh-cardc" + (modal ? " mh-card-anim" : "") + (modal || legend || bg ? " mh-tilt" : "") + (bg ? " is-bg" : "") + (wpn ? " is-wp" : "") + (legend ? " is-legend" : "")}
+      className={"mh-card mh-cardc" + (modal ? " mh-card-anim" : "") + (modal || legend || bg ? " mh-tilt" : "") + (bg ? " is-bg" : "") + (wpn ? " is-wp" : "") + (legend ? " is-legend" : "") + (c.workshop ? " has-wk" : "")}
       style={{ "--glow": alpha(col, 51), "--cc": col, margin: 0, width: modal ? "min(300px, 100%)" : 300, height: modal ? "min(420px, 80vh)" : 420, maxWidth: "100%", padding: 0, overflow: "hidden", borderRadius: 22, display: "flex", flexDirection: "column", border: "2px solid " + col, position: "relative", textAlign: "left" }}
       {...(tilt || {})}
     >
       <div className="mh-glare" />
+        {c.workshop && <span className="mh-cardc-wk" title="Carta del Taller" aria-label="Carta del Taller"><Hammer size={15} strokeWidth={2.2} /></span>}
       {legend && <div className="mh-holo is-idle" />}
       {legend && <div className="mh-legend-sheen" />}
       <div className="mh-cardc-art" style={{ height: total > 600 ? 84 : total > 320 ? 100 : 124, "--ah": (total > 600 ? 84 : total > 320 ? 100 : 124) + "px", ...(sub && total > 400 ? { "--abg": (total > 520 ? 128 : total > 450 ? 140 : 156) + "px" } : null) }}>

@@ -70,6 +70,7 @@ const blank = (type) => {
 // Convierte un elemento del taller en una entrada con el mismo formato que el catálogo de la pestaña Cartas.
 export function toEntry(it, ctx, rank) {
   const e = toEntry0(it, ctx, rank);
+  if (e) e.workshop = true; // marca de «carta del Taller»
   if (e && e.image) { e.imgZoom = Number(it.imgZoom) || 1; e.imgX = it.imgX ?? 50; e.imgY = it.imgY ?? 30; e.fullArt = !!it.fullArt; }
   return e;
 }

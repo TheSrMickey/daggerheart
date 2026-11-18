@@ -4657,6 +4657,9 @@ const sharedStyles = `
   .mh-cardc.is-bg .mh-cardc-badge { top: 0; left: 14px; }
   .mh-cardc.is-bg .mh-cardc-gem { width: 44px; height: auto; padding: 10px 0 25px; gap: 9px; flex-direction: column; border: 0; border-radius: 0; background: var(--cc); color: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; font: 700 24px/1 var(--font-body), 'Inter', system-ui, sans-serif; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 13px), 0 100%); text-shadow: 0 2px 4px #0006; }
   .mh-cardc.is-bg .mh-cardc-dom { top: 176px; right: auto; left: 50%; transform: translateX(-50%); padding: 4px 18px; border: 0; border-radius: 99px; font-size: 10px; font-weight: 800; letter-spacing: .2em; color: #fff; background: color-mix(in srgb, var(--cc) 82%, #10112a); box-shadow: 0 4px 12px -4px #000a, inset 0 1px 0 #ffffff40; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .mh-cardc-wk { position: absolute; top: 10px; right: 10px; z-index: 6; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: rgba(13,13,34,.78); border: 2px solid #E3B04B; color: #E3B04B; box-shadow: 0 3px 10px -3px #000a; pointer-events: auto; }
+  html[data-mh-theme="light"] .mh-cardc-wk { background: #FFFCF6; }
+  .mh-cardc.has-wk .mh-cardc-cost { top: 50px !important; }
   .mh-cardc-cost { display: none; }
   .mh-cardc.is-bg.is-wp .mh-cardc-sub { display: block; margin-top: 2px; font-size: 9.5px; letter-spacing: .14em; color: var(--mh-muted); }
   .mh-cardc.is-bg.is-wp .mh-cardc-big { font-size: 36px; font-weight: 800; letter-spacing: -.02em; color: #fff; text-shadow: 0 2px 12px color-mix(in srgb, var(--cc) 60%, transparent); }
@@ -4889,12 +4892,16 @@ const sharedStyles = `
     border: 1px solid var(--mh-line); border-radius: 12px; background: var(--mh-panel);
   }
   .mh-proj.done { --pc: #6FBF73; border-color: color-mix(in srgb, #6FBF73 45%, transparent); background: color-mix(in srgb, #6FBF73 6%, var(--mh-panel)); }
-  .mh-proj.is-row { padding: 8px 10px; gap: 6px; border-radius: 10px; }
+  .mh-proj.is-row { padding: 16px 16px; gap: 10px; border-radius: 14px; min-height: 84px; justify-content: center; }
   .mh-proj-r { display: flex; align-items: center; gap: 10px; }
-  .mh-proj-m { flex: 1; min-width: 0; } .mh-proj-nm { font-size: 13px; font-weight: 700; color: var(--mh-ink); line-height: 1.25; }
-  .mh-proj-bar { height: 5px; border-radius: 9px; background: var(--mh-line); margin-top: 6px; overflow: hidden; } .mh-proj-bar i { display: block; height: 100%; background: var(--pc); border-radius: 9px; transition: width .4s cubic-bezier(.3,.8,.2,1); }
-  .mh-proj-fr { font-size: 11px; color: var(--mh-muted); font-variant-numeric: tabular-nums; }
-  .mh-proj-plus { all: unset; cursor: pointer; display: inline-grid; place-items: center; width: 30px; height: 28px; border-radius: 9px; background: var(--mh-panel3); color: var(--mh-ink); font-size: 11px; font-weight: 800; transition: background .15s, transform .1s; } .mh-proj-plus:hover:not(:disabled) { background: color-mix(in srgb, var(--pc) 35%, var(--mh-panel3)); } .mh-proj-plus:active:not(:disabled) { transform: scale(.94); } .mh-proj-plus:disabled { opacity: .4; cursor: not-allowed; } .mh-proj-plus:focus-visible { outline: 2px solid var(--pc); outline-offset: 1px; }
+  .mh-proj-m { flex: 1; min-width: 0; } .mh-proj-nm { font-size: 14.5px; font-weight: 700; color: var(--mh-ink); line-height: 1.25; }
+  .mh-proj-bar { height: 8px; border-radius: 9px; background: var(--mh-line); margin-top: 11px; overflow: hidden; } .mh-proj-bar i { display: block; height: 100%; background: var(--pc); border-radius: 9px; transition: width .4s cubic-bezier(.3,.8,.2,1); }
+  .mh-proj-fr { font-size: 12.5px; color: var(--mh-muted); font-variant-numeric: tabular-nums; }
+  .mh-proj-plus { all: unset; cursor: pointer; display: inline-grid; place-items: center; width: 38px; height: 34px; border-radius: 10px; background: var(--mh-panel3); color: var(--mh-ink); font-size: 12.5px; font-weight: 800; transition: background .15s, transform .1s; } .mh-proj-plus:hover:not(:disabled) { background: color-mix(in srgb, var(--pc) 35%, var(--mh-panel3)); } .mh-proj-plus:active:not(:disabled) { transform: scale(.94); } .mh-proj-plus:disabled { opacity: .4; cursor: not-allowed; } .mh-proj-plus:focus-visible { outline: 2px solid var(--pc); outline-offset: 1px; }
+  .mh-proj-cnt { margin-left: 6px; font-size: 11px; opacity: .7; font-weight: 700; }
+  .mh-proj-fin { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 12px; border: 1px solid color-mix(in srgb, #6FBF73 40%, transparent); background: color-mix(in srgb, #6FBF73 7%, var(--mh-panel)); flex: none; }
+  .mh-proj-fin-h { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--mh-green-ink); margin-bottom: 4px; } .mh-proj-fin-h b { margin-left: auto; }
+  .mh-proj-fin-r { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px dashed var(--mh-line); font-size: 12.5px; color: var(--mh-ink3); } .mh-proj-fin-r span { flex: 1; min-width: 0; text-decoration: line-through; text-decoration-color: color-mix(in srgb, #6FBF73 60%, transparent); } .mh-proj-fin-r small { color: var(--mh-muted); }
   .mh-proj-ok { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: color-mix(in srgb, #6FBF73 22%, transparent); color: var(--mh-green-ink); }
   .mh-proj-seg { flex: 1; height: 9px; border-radius: 3px; border: 1px solid var(--pc); }
   .mh-proj-menu-btn { all: unset; cursor: pointer; color: var(--mh-muted3); padding: 2px; border-radius: 6px; display: flex; flex-shrink: 0; }
@@ -9919,7 +9926,7 @@ async function renderCutCards(entries) {
   const styles = [...document.querySelectorAll("style, link[rel=stylesheet]")].map((n) => n.outerHTML).join("");
   const doc = fr.contentDocument;
   doc.open();
-  doc.write('<!doctype html><html data-mh-theme="light" data-mh-art="' + (document.documentElement.dataset.mhArt === "off" ? "off" : "on") + '"><head><meta charset="utf-8"><base href="' + window.location.origin + '/">' + styles + '</head><body style="margin:0;background:#fff"><div id="r" class="mh-root" style="display:block;min-height:0;height:auto;width:auto;background:#fff"></div></body></html>');
+  doc.write('<!doctype html><html data-mh-theme="' + (document.documentElement.dataset.mhTheme === "light" ? "light" : "dark") + '" data-mh-art="' + (document.documentElement.dataset.mhArt === "off" ? "off" : "on") + '"><head><meta charset="utf-8"><base href="' + window.location.origin + '/">' + styles + '</head><body style="margin:0;background:#fff"><div id="r" class="mh-root" style="display:block;min-height:0;height:auto;width:auto;background:#fff"></div></body></html>');
   doc.close();
   await new Promise((r) => setTimeout(r, 350));
   const root = createRoot(doc.getElementById("r"));
@@ -18826,12 +18833,14 @@ export default function App({ onSignOut }) {
       return [];
     }
   };
+  const MAX_PROJECTS = 5;
   const addProject = (id) => {
     const name = projectNameDraft.trim();
     if (!name) return;
     const c = characters[id];
     if (!c) return;
     const list = getProjects(c);
+    if (list.filter((pr) => !(Number(pr.goal) > 0 && Number(pr.count) >= Number(pr.goal))).length >= MAX_PROJECTS) return; // máximo de proyectos activos
     list.push({ name, count: 0, goal: Math.max(1, Number(projectCountDraft) || 4) });
     updateCharacterField(id, "f_projects", JSON.stringify(list));
     setProjectNameDraft("");
@@ -20054,7 +20063,7 @@ export default function App({ onSignOut }) {
     let cutPack = null;
     try { cutPack = cutEntries.length ? await renderCutCards(cutEntries) : null; } catch (e) { cutPack = null; }
     printSheet({
-      cutPack, origin: window.location.origin,
+      cutPack, origin: window.location.origin, theme: document.documentElement.dataset.mhTheme === "light" ? "light" : "dark", artOff: document.documentElement.dataset.mhArt === "off",
       name: c.f_name || "Personaje", cls: c.f_class, subclass: c.f_subclass, multi: m.multi?.cls || "", pronouns: c.f_pronouns || "",
       ancestry: c.f_ancestry, community: c.f_community, transformation: c.f_transformation, level, rank: tier, proficiency: m.proficiency,
       color: m.color, traits: m.traits, evasion: m.evasion, armor: armorE ? { key: armorE.key, score: armorE.score, major: armorE.major, severe: armorE.severe, feature: armorE.feature } : null,
@@ -22550,6 +22559,9 @@ export default function App({ onSignOut }) {
                           >
                             {(() => {
                               const projects = getProjects(c);
+                              const isDoneP = (pr) => Number(pr.goal) > 0 && Number(pr.count) >= Number(pr.goal);
+                              const activeProjects = projects.filter((pr) => !isDoneP(pr)).length;
+                              const finishedProjects = projects.map((pr, i) => ({ p: pr, i })).filter(({ p: pr }) => isDoneP(pr));
                               const projCamp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(viewingCharId));
                               const projOpen = true; // los proyectos se pueden crear y editar siempre; solo avanzan con pasos de «Trabajar en un proyecto»
                               // Los pasos solo existen durante un descanso largo en curso: uno por cada «Trabajar en un proyecto» elegido; los que no se gasten se pierden al terminar.
@@ -22608,6 +22620,7 @@ export default function App({ onSignOut }) {
                                     const count = Number(p.count) || 0;
                                     const done = goal > 0 && count >= goal;
                                     const menuOpen = projectMenu === viewingCharId + ":" + i;
+                                    if (done) return null; // los terminados van a su caja de finalizados
                                     return (
                                       <div key={i} className={"mh-proj is-row" + (done ? " done" : "")}>
                                         <div className="mh-proj-r">
@@ -22701,9 +22714,23 @@ export default function App({ onSignOut }) {
                                       </div>
                                     </div>
                                   ) : (
-                                    <button type="button" className="mh-exp-add" style={{ flex: "0 0 auto", padding: 12 }} onClick={() => setShowProjectForm(true)}>
-                                      <Plus size={14} /> Nuevo proyecto
+                                    <button type="button" className="mh-exp-add" style={{ flex: "0 0 auto", padding: 12, ...(activeProjects >= MAX_PROJECTS ? { opacity: 0.5, cursor: "not-allowed" } : null) }} disabled={activeProjects >= MAX_PROJECTS} title={activeProjects >= MAX_PROJECTS ? "Máximo " + MAX_PROJECTS + " proyectos activos: termina alguno para crear otro" : undefined} onClick={() => setShowProjectForm(true)}>
+                                      <Plus size={14} /> {activeProjects >= MAX_PROJECTS ? "Máximo " + MAX_PROJECTS + " proyectos activos" : "Nuevo proyecto"} <span className="mh-proj-cnt">{activeProjects}/{MAX_PROJECTS}</span>
                                     </button>
+                                  )}
+                                  {finishedProjects.length > 0 && (
+                                    <div className="mh-proj-fin">
+                                      <div className="mh-proj-fin-h"><Check size={13} strokeWidth={3} /> Proyectos finalizados <b>{finishedProjects.length}</b></div>
+                                      {finishedProjects.map(({ p, i }) => (
+                                        <div key={i} className="mh-proj-fin-r">
+                                          <span>{p.name}</span>
+                                          <small>{p.goal}/{p.goal}</small>
+                                          <button type="button" className="mh-proj-menu-btn" title="Eliminar" aria-label={"Eliminar " + p.name} onClick={() => removeProject(viewingCharId, i)}>
+                                            <Trash2 size={13} />
+                                          </button>
+                                        </div>
+                                      ))}
+                                    </div>
                                   )}
                                   {projects.length === 0 && !showProjectForm && (
                                     <div style={{ fontSize: 11.5, color: "var(--mh-muted)", textAlign: "center", lineHeight: 1.5, padding: "0 6px" }}>
