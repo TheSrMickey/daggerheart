@@ -167,7 +167,7 @@ async function getShared() {
       const env = pm.fromScene(new RoomEnvironment(), 0.04).texture;
       const key = new THREE.DirectionalLight(0xffffff, 2.2);
       key.castShadow = true;
-      key.shadow.mapSize.set(1024, 1024);
+      key.shadow.mapSize.set(2048, 2048);
       key.shadow.radius = 4;
       const catcher = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), new THREE.ShadowMaterial({ opacity: 0.42 }));
       catcher.rotation.x = -Math.PI / 2;
@@ -403,6 +403,7 @@ export function Dice3D({ dice, summary, skin, onReveal, onEnd }) {
         key.position.set(-4 * k, 11 * k, 4 * k);
         const sc = 12 * k;
         Object.assign(key.shadow.camera, { left: -sc, right: sc, top: sc, bottom: -sc, far: 60 });
+        key.shadow.camera.updateProjectionMatrix(); // sin esto la sombra se recortaba con el marco por defecto (±5)
         scene.add(key);
         const catcher = sh.catcher;
         catcher.visible = true;
@@ -551,6 +552,8 @@ export function Dice3D({ dice, summary, skin, onReveal, onEnd }) {
         });
         const qY = new THREE.Quaternion();
         const qT = new THREE.Quaternion();
+        const qS = new THREE.Quaternion();
+        const eS = new THREE.Euler();
         const ease = (x) => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
         const tick = () => {
           if (dead) return;
@@ -583,6 +586,18 @@ export function Dice3D({ dice, summary, skin, onReveal, onEnd }) {
               o.group.position.lerp(targets[di].p, z);
               o.group.quaternion.slerp(targets[di].q, z);
               o.group.scale.setScalar(1 + (targets[di].sc - 1) * z);
+            });
+          }
+          // Ya a la vista, los dados flotan y se mecen un poco en vez de quedarse quietos.
+          if (z > 0.6 && !closeAt.current) {
+            const a = Math.min(1, (z - 0.6) / 0.4);
+            objs.forEach((o, di) => {
+              const ts = t + di * 1.7;
+              o.group.position.y += Math.sin(ts * 1.7) * 0.13 * a;
+              o.group.position.x += Math.sin(ts * 1.1 + 1) * 0.06 * a;
+              eS.set(Math.sin(ts * 1.3) * 0.1 * a, Math.sin(ts * 1.0 + 2) * 0.14 * a, Math.sin(ts * 0.8 + 4) * 0.06 * a);
+              qS.setFromEuler(eS);
+              o.group.quaternion.multiply(qS);
             });
           }
           if (t >= zoomStart && !edgeFlag) {
@@ -697,6 +712,10 @@ const D3_CSS = `
 @keyframes d3-creep { 0%, 100% { opacity: .5; transform: scale(1.08); } 50% { opacity: 1; transform: scale(1); } }
 @keyframes d3-spin { to { transform: rotate(360deg); } }
 .d3-sum { position: absolute; left: 0; right: 0; margin: 0 auto; bottom: max(4vh, 22px); width: min(560px, calc(100vw - 28px)); display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 18px 14px; border-radius: 24px; text-align: center; color: #f1ecdf; background: color-mix(in srgb, #14153b 80%, transparent); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); border: 1px solid color-mix(in srgb, var(--ec) 55%, #ffffff22); box-shadow: 0 0 40px -6px color-mix(in srgb, var(--ec) 60%, transparent), 0 18px 34px -18px #000d, inset 0 1px 0 #ffffff1c; animation: d3-in .4s cubic-bezier(.2,.8,.2,1) both; }
+html[data-mh-theme="light"] .d3-sum { color: #2a2218; background: color-mix(in srgb, #FFFCF6 88%, transparent); border-color: color-mix(in srgb, var(--ec) 60%, #DCD2C1); box-shadow: 0 0 36px -10px color-mix(in srgb, var(--ec) 55%, transparent), 0 18px 34px -20px #3a2c1280, inset 0 1px 0 #fff; }
+html[data-mh-theme="light"] .d3-chip { background: #ffffffcc; border-color: #d9cfbd; } html[data-mh-theme="light"] .d3-chip small, html[data-mh-theme="light"] .d3-sum-total span, html[data-mh-theme="light"] .d3-sum-note { color: #6d6253; }
+html[data-mh-theme="light"] .d3-chip.k-hope b { color: #A9751A; } html[data-mh-theme="light"] .d3-chip.k-fear b { color: #6A4FB8; } html[data-mh-theme="light"] .d3-chip.k-adv b { color: #1f7a3f; } html[data-mh-theme="light"] .d3-chip.k-dis b { color: #b53a2a; }
+html[data-mh-theme="light"] .d3-sum-total b { text-shadow: none; } html[data-mh-theme="light"] .d3-sum-dc { color: #3a3024; } html[data-mh-theme="light"] .d3-sum-hint { color: #8a7f6e; }
 .d3-sum.is-out { animation: d3-out .42s cubic-bezier(.4,0,.8,.4) both; }
 @keyframes d3-out { to { opacity: 0; transform: translateY(26px) scale(.97); } }
 .d3-sum-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
