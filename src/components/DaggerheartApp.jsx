@@ -4826,11 +4826,6 @@ const sharedStyles = `
   .mh-rs-ch { display: flex; flex-direction: column; gap: 12px; flex: 1; justify-content: center; } .mh-rs-q { margin: 0; font-size: 14px; font-weight: 700; color: var(--mh-ink); text-align: center; }
   .mh-rs-opt { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 14px; padding: 16px 16px; border-radius: 18px; border: 1.5px solid var(--mh-line2); background: var(--mh-panel2); color: var(--mh-ink); transition: border-color .15s, transform .15s, background .15s; } .mh-rs-opt:hover:not(:disabled) { transform: translateY(-2px); } .mh-rs-opt:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; } .mh-rs-opt:disabled { opacity: .45; cursor: not-allowed; }
   .mh-rs-ch { justify-content: stretch; } .mh-rs-opt { flex: 1 1 0; min-height: 110px; flex-direction: column; justify-content: center; text-align: center; gap: 10px; } .mh-rs-opt .mh-rs-ic { width: 60px; height: 60px; border-radius: 18px; } .mh-rs-opt .mh-rs-tx { flex: 0 1 auto; align-items: center; }
-  /* Modo claro: el degradado inferior de las cartas de dominio con ilustración pasa a ser claro. */
-  html[data-mh-theme="light"] .mh-dslot { background: #fffdf8; }
-  html[data-mh-theme="light"] .mh-dslot:has(.mh-dslot-art) .mh-dslot-shade { background: linear-gradient(0deg, color-mix(in srgb, var(--dc) 14%, #fffdf8) 0%, color-mix(in srgb, var(--dc) 10%, #fffdf8f2) 38%, #fffdf800 78%); }
-  html[data-mh-theme="light"] .mh-dslot:has(.mh-dslot-art) .mh-dslot-title { color: var(--mh-ink); text-shadow: none; }
-  html[data-mh-theme="light"] .mh-dslot:has(.mh-dslot-art) .mh-dslot-kicker { color: color-mix(in srgb, var(--dc) 75%, #1a1208); }
   .mh-rs-opt.is-short:hover:not(:disabled) { border-color: #E3B04B; background: #E3B04B10; } .mh-rs-opt.is-long:hover:not(:disabled) { border-color: #A58BE8; background: #A58BE810; }
   .mh-rs-ic { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; flex: none; } .is-short .mh-rs-ic { background: #E3B04B22; color: #E3B04B; } .is-long .mh-rs-ic { background: #A58BE822; color: #A58BE8; }
   .mh-rs-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; } .mh-rs-tx b { font-size: 16px; } .mh-rs-tx small { font-size: 12px; line-height: 1.4; color: var(--mh-muted); } .mh-rs-tx em { font-style: normal; font-size: 11px; color: var(--mh-muted2); }
@@ -9286,12 +9281,12 @@ const sharedStyles = `
   }
   .mh-dslot-txt { position: absolute; left: 12px; right: 12px; bottom: 9px; z-index: 1; }
   /* Modo claro: las cartas de dominio sin ilustración usan un fondo claro teñido del dominio (antes un bloque oscuro sobre papel crema). */
-  html[data-mh-theme="light"] .mh-dslot:not(:has(.mh-dslot-art)) { background: color-mix(in srgb, var(--dc) 10%, #fffdf8); color: var(--mh-ink); }
-  html[data-mh-theme="light"] .mh-dslot:not(:has(.mh-dslot-art)) .mh-dslot-noart { background: linear-gradient(150deg, color-mix(in srgb, var(--dc) 24%, #fffdf8), color-mix(in srgb, var(--dc) 7%, #fffdf8) 80%) !important; color: var(--dc); }
-  html[data-mh-theme="light"] .mh-dslot:not(:has(.mh-dslot-art)) .mh-dslot-wm { opacity: .3; }
-  html[data-mh-theme="light"] .mh-dslot:not(:has(.mh-dslot-art)) .mh-dslot-shade { display: none; }
-  html[data-mh-theme="light"] .mh-dslot:not(:has(.mh-dslot-art)) .mh-dslot-title { color: var(--mh-ink); text-shadow: none; }
-  html[data-mh-theme="light"] .mh-dslot:not(:has(.mh-dslot-art)) .mh-dslot-kicker { color: color-mix(in srgb, var(--dc) 75%, #1a1208); }
+  html[data-mh-theme="light"] .mh-dslot:not(:has(.mh-dslot-art)), html[data-mh-theme="light"][data-mh-art="off"] .mh-dslot:has(.mh-dslot-art[src*="/cartas-dominio/"]) { background: color-mix(in srgb, var(--dc) 10%, #fffdf8); color: var(--mh-ink); }
+  html[data-mh-theme="light"] .mh-dslot:not(:has(.mh-dslot-art)) .mh-dslot-noart, html[data-mh-theme="light"][data-mh-art="off"] .mh-dslot:has(.mh-dslot-art[src*="/cartas-dominio/"]) .mh-dslot-noart { background: linear-gradient(150deg, color-mix(in srgb, var(--dc) 24%, #fffdf8), color-mix(in srgb, var(--dc) 7%, #fffdf8) 80%) !important; color: var(--dc); }
+  html[data-mh-theme="light"] .mh-dslot:not(:has(.mh-dslot-art)) .mh-dslot-wm, html[data-mh-theme="light"][data-mh-art="off"] .mh-dslot:has(.mh-dslot-art[src*="/cartas-dominio/"]) .mh-dslot-wm { opacity: .3; }
+  html[data-mh-theme="light"] .mh-dslot:not(:has(.mh-dslot-art)) .mh-dslot-shade, html[data-mh-theme="light"][data-mh-art="off"] .mh-dslot:has(.mh-dslot-art[src*="/cartas-dominio/"]) .mh-dslot-shade { display: none; }
+  html[data-mh-theme="light"] .mh-dslot:not(:has(.mh-dslot-art)) .mh-dslot-title, html[data-mh-theme="light"][data-mh-art="off"] .mh-dslot:has(.mh-dslot-art[src*="/cartas-dominio/"]) .mh-dslot-title { color: var(--mh-ink); text-shadow: none; }
+  html[data-mh-theme="light"] .mh-dslot:not(:has(.mh-dslot-art)) .mh-dslot-kicker, html[data-mh-theme="light"][data-mh-art="off"] .mh-dslot:has(.mh-dslot-art[src*="/cartas-dominio/"]) .mh-dslot-kicker { color: color-mix(in srgb, var(--dc) 75%, #1a1208); }
   html[data-mh-theme="light"] .mh-exp-locked { border: 1.5px dashed var(--mh-line); background: transparent; }
   .mh-dslot-kicker { font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: color-mix(in srgb, var(--dc) 55%, #fff); }
   .mh-dslot-title { font-weight: 700; color: #fff; margin-top: 2px; text-shadow: 0 1px 4px rgba(0,0,0,.6); }

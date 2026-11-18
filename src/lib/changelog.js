@@ -10,7 +10,6 @@ export const CHANGELOG = [
     blurb: "Crea tus propias cartas y armas en el Taller (con fichas e imágenes), descarga tu hoja en PDF, estrena la creación de personaje renovada, una pestaña Cartas más clara con Adversarios y Entornos, y un Buscar mesa con filtros, solicitudes con mensaje y avisos.",
     items: [
       { tag: "mejora", text: "Subir de nivel · diseño renovado: cabecera con degradado del color de tu clase, pasos como progreso numerado, opciones como tarjetas con efecto al pasar el ratón y botón dorado con relieve." },
-      { tag: "arreglo", text: "Hoja · en modo claro, el degradado inferior de las cartas de dominio con ilustración ahora es claro, del color del dominio." },
       { tag: "mejora", text: "Descanso · los botones de descanso corto y largo ocupan todo el alto de la caja." },
       { tag: "mejora", text: "Descanso · ahora es un proceso guiado: primero eliges descanso corto o largo, luego marcas las acciones y, al pulsar «Terminar descanso», se aplica todo de una vez (puedes cancelar sin perder nada). Los proyectos solo se desbloquean al empezar un descanso largo." },
       { tag: "mejora", text: "Inventario · las cartas de los objetos usan el mismo diseño nuevo que las armas y armaduras (ilustración, etiqueta de tipo, insignia y cantidad)." },
