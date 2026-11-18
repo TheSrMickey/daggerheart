@@ -9,6 +9,7 @@ export const CHANGELOG = [
     title: "El Taller y la creación de personaje",
     blurb: "Crea tus propias cartas y armas en el Taller (con fichas e imágenes), descarga tu hoja en PDF, estrena la creación de personaje renovada, una pestaña Cartas más clara con Adversarios y Entornos, y un Buscar mesa con filtros, solicitudes con mensaje y avisos.",
     items: [
+      { tag: "mejora", text: "Descansos · los proyectos se pueden crear y editar siempre; solo avanzan con los pasos que ganas al elegir «Trabajar en un proyecto» en un descanso largo (cada vez que lo eliges, un paso, que repartes como quieras entre tus proyectos). Junto al título «Descansos» hay ahora un contador de círculos con los descansos cortos seguidos, y se quita la pregunta «¿Qué descanso quieres hacer?»." },
       { tag: "mejora", text: "Subir de nivel · diseño renovado: cabecera con degradado del color de tu clase, pasos como progreso numerado, opciones como tarjetas con efecto al pasar el ratón y botón dorado con relieve." },
       { tag: "mejora", text: "Descanso · los botones de descanso corto y largo ocupan todo el alto de la caja." },
       { tag: "mejora", text: "Descanso · ahora es un proceso guiado: primero eliges descanso corto o largo, luego marcas las acciones y, al pulsar «Terminar descanso», se aplica todo de una vez (puedes cancelar sin perder nada). Los proyectos solo se desbloquean al empezar un descanso largo." },

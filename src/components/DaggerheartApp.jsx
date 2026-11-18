@@ -4823,9 +4823,10 @@ const sharedStyles = `
   .mh-seg.is-fit button { flex: 1 1 auto; padding: 7px 9px; } .mh-seg.is-fit button:first-child { flex: 0 1 auto; }
   .mh-seg button i { font-style: normal; font-size: 10.5px; font-weight: 700; opacity: .65; padding: 1px 6px; border-radius: 99px; background: color-mix(in srgb, currentColor 12%, transparent); }
 
-  .mh-rs-ch { display: flex; flex-direction: column; gap: 12px; flex: 1; justify-content: center; } .mh-rs-q { margin: 0; font-size: 14px; font-weight: 700; color: var(--mh-ink); text-align: center; }
+  .mh-rs-ch { display: flex; flex-direction: column; gap: 12px; flex: 1; justify-content: center; } .mh-rs-cnt { display: inline-flex; gap: 5px; align-items: center; } .mh-rs-cnt i { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid var(--mh-muted2, #8a8aa0); } .mh-rs-cnt i.is-on { background: #E3B04B; border-color: #E3B04B; box-shadow: 0 0 8px #E3B04B88; } .mh-rs-q { margin: 0; font-size: 14px; font-weight: 700; color: var(--mh-ink); text-align: center; }
   .mh-rs-opt { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 14px; padding: 16px 16px; border-radius: 18px; border: 1.5px solid var(--mh-line2); background: var(--mh-panel2); color: var(--mh-ink); transition: border-color .15s, transform .15s, background .15s; } .mh-rs-opt:hover:not(:disabled) { transform: translateY(-2px); } .mh-rs-opt:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; } .mh-rs-opt:disabled { opacity: .45; cursor: not-allowed; }
   .mh-rs-ch { justify-content: stretch; } .mh-rs-opt { flex: 1 1 0; min-height: 110px; flex-direction: column; justify-content: center; text-align: center; gap: 10px; } .mh-rs-opt .mh-rs-ic { width: 60px; height: 60px; border-radius: 18px; } .mh-rs-opt .mh-rs-tx { flex: 0 1 auto; align-items: center; }
+  .mh-proj-steps { display: flex; align-items: center; gap: 8px; padding: 8px 11px; border-radius: 10px; font-size: 11.5px; color: var(--mh-muted); background: var(--mh-panel2); border: 1px dashed var(--mh-line2); flex: none; } .mh-proj-steps svg { flex: none; } .mh-proj-steps.is-on { color: var(--mh-ink); border-style: solid; border-color: #C08B5C; background: color-mix(in srgb, #C08B5C 14%, var(--mh-panel2)); font-weight: 600; }
   .mh-rs-opt.is-short:hover:not(:disabled) { border-color: #E3B04B; background: #E3B04B10; } .mh-rs-opt.is-long:hover:not(:disabled) { border-color: #A58BE8; background: #A58BE810; }
   .mh-rs-ic { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; flex: none; } .is-short .mh-rs-ic { background: #E3B04B22; color: #E3B04B; } .is-long .mh-rs-ic { background: #A58BE822; color: #A58BE8; }
   .mh-rs-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; } .mh-rs-tx b { font-size: 16px; } .mh-rs-tx small { font-size: 12px; line-height: 1.4; color: var(--mh-muted); } .mh-rs-tx em { font-style: normal; font-size: 11px; color: var(--mh-muted2); }
@@ -18525,7 +18526,7 @@ export default function App({ onSignOut }) {
       if (key === "project") {
         if (!isLong) return;
         projectSteps++;
-        messages.push("Trabajar en un proyecto: puedes avanzar uno (+1)");
+        messages.push("Trabajar en un proyecto: ganas un paso para avanzar tus proyectos");
         return;
       }
       if (key === "prepare") {
@@ -18592,8 +18593,8 @@ export default function App({ onSignOut }) {
     };
     if (favorGain) restPatch.f_favor = String(getFavor(c) + favorGain);
     // Proyectos: se abren con un descanso largo (crear y editar) y solo avanzan si elegiste «Trabajar en un proyecto».
-    restPatch.f_proj_open = isLong && projectSteps ? "1" : ""; // los proyectos solo siguen abiertos si elegiste trabajar en uno
-    restPatch.f_proj_adv = projectSteps ? String(projectSteps) : "";
+    restPatch.f_proj_open = ""; // los proyectos solo siguen abiertos si elegiste trabajar en uno
+    if (projectSteps) restPatch.f_proj_adv = String(Number(c.f_proj_adv || 0) + projectSteps);
     // Trovador: el descanso largo recupera sus canciones.
     if (isLong && c.f_speech_used) restPatch.f_speech_used = "";
     if (c.f_scales_ready) restPatch.f_scales_ready = "";
@@ -22191,6 +22192,13 @@ export default function App({ onSignOut }) {
                           <Panel
                             span={7}
                             title="Descansos"
+                            titleRight={
+                              <span className="mh-rs-cnt" title={Math.min(3, Number(c.f_short_rests || 0)) + " de 3 descansos cortos seguidos"}>
+                                {[0, 1, 2].map((k) => (
+                                  <i key={k} className={k < Number(c.f_short_rests || 0) ? "is-on" : ""} />
+                                ))}
+                              </span>
+                            }
                             hidden={conditions.includes("Escondido") || conditions.includes("Oculto")}
                             restrained={conditions.includes("Inmovilizado")}
                             vulnerable={conditions.includes("Vulnerable")}
@@ -22250,8 +22258,7 @@ export default function App({ onSignOut }) {
                               const renderRest = (lock) => (
                                 !restPhase && !lock?.fixedType ? (
                                   <div className="mh-rs-ch">
-                                    <p className="mh-rs-q">¿Qué descanso quieres hacer?</p>
-                                    {[["short", "Descanso corto", Sun, "Unas horas junto a la hoguera. Eliges " + slots + " acciones para recuperarte un poco.", blocked ? "Llevas 3 descansos cortos seguidos: el próximo tiene que ser largo." : shortRests + "/3 cortos seguidos"], ["long", "Descanso largo", Moon, "Una noche entera. Recuperas todo con " + slots + " acciones y se abren tus proyectos.", "Reinicia el contador de descansos cortos"]].map(([key, label, Ico, desc, note]) => {
+                                    {[["short", "Descanso corto", Sun, "Unas horas junto a la hoguera. Eliges " + slots + " acciones para recuperarte un poco.", blocked ? "Llevas 3 descansos cortos seguidos: el próximo tiene que ser largo." : shortRests + "/3 cortos seguidos"], ["long", "Descanso largo", Moon, "Una noche entera. Recuperas todo con " + slots + " acciones y puedes trabajar en tus proyectos.", "Reinicia el contador de descansos cortos"]].map(([key, label, Ico, desc, note]) => {
                                       const dis = key === "short" && blocked;
                                       return (
                                         <button key={key} type="button" className={"mh-rs-opt is-" + key} disabled={dis} onClick={() => { setRestType(key); setRestPhase(key); setRestPicks(null); setRestEfficient(null); }}>
@@ -22460,11 +22467,13 @@ export default function App({ onSignOut }) {
                             {(() => {
                               const projects = getProjects(c);
                               const projCamp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(viewingCharId));
-                              const projOpen = restPhase === "long" || c.f_proj_open === "1"; // se abren al empezar un descanso largo
+                              const projOpen = true; // los proyectos se pueden crear y editar siempre; solo avanzan con pasos de «Trabajar en un proyecto»
                               const stepsLeft = Number(c.f_proj_adv || 0);
-                              const canAdvance = projCamp ? true : stepsLeft > 0;
+                              const canAdvance = stepsLeft > 0;
                               const wrapLock = (node) =>
-                                !projCamp ? (
+                                true ? (
+                                  node
+                                ) : !projCamp ? (
                                   <div className="rl">
                                     {projOpen && (
                                       <div className="rl-ban">
@@ -22504,6 +22513,10 @@ export default function App({ onSignOut }) {
                                 );
                               return wrapLock(
                                 <div style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1, minHeight: 0, overflowY: "auto" }} className="mh-noscroll">
+                                  <div className={"mh-proj-steps" + (stepsLeft > 0 ? " is-on" : "")}>
+                                    <Hammer size={14} />
+                                    <span>{stepsLeft > 0 ? "Tienes " + stepsLeft + (stepsLeft > 1 ? " pasos" : " paso") + " para repartir entre tus proyectos." : "Sin pasos: elige «Trabajar en un proyecto» en un descanso largo para avanzar."}</span>
+                                  </div>
                                   {projects.map((p, i) => {
                                     const goal = Number(p.goal) || 0;
                                     const count = Number(p.count) || 0;
@@ -22539,7 +22552,7 @@ export default function App({ onSignOut }) {
                                             <span style={{ fontSize: 11.5, color: "var(--mh-muted)" }}>{goal ? `${count}/${goal}` : `${count} avances`}</span>
                                           )}
                                           {!done && (
-                                            <button type="button" className="mh-btn" style={{ fontSize: 11.5, padding: "5px 10px" }} disabled={!canAdvance} title={canAdvance ? undefined : "Elige «Trabajar en un proyecto» en tu descanso largo"} onClick={() => workOnProject(viewingCharId, i)}>
+                                            <button type="button" className="mh-btn" style={{ fontSize: 11.5, padding: "5px 10px" }} disabled={!canAdvance} title={canAdvance ? undefined : "Necesitas un paso: elige «Trabajar en un proyecto» en un descanso largo"} onClick={() => workOnProject(viewingCharId, i)}>
                                               <Hammer size={12} /> Trabajar +1
                                             </button>
                                           )}
