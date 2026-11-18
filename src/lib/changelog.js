@@ -9,6 +9,10 @@ export const CHANGELOG = [
     title: "El Taller y la creación de personaje",
     blurb: "Crea tus propias cartas y armas en el Taller (con fichas e imágenes), descarga tu hoja en PDF, estrena la creación de personaje renovada, una pestaña Cartas más clara con Adversarios y Entornos, y un Buscar mesa con filtros, solicitudes con mensaje y avisos.",
     items: [
+      { tag: "mejora", text: "Descanso · ahora es un proceso guiado: primero eliges descanso corto o largo, luego marcas las acciones y, al pulsar «Terminar descanso», se aplica todo de una vez (puedes cancelar sin perder nada). Los proyectos solo se desbloquean al empezar un descanso largo." },
+      { tag: "mejora", text: "Inventario · las cartas de los objetos usan el mismo diseño nuevo que las armas y armaduras (ilustración, etiqueta de tipo, insignia y cantidad)." },
+      { tag: "mejora", text: "Oro · al sumar o restar monedas el número rebota, se tiñe (dorado al subir, rojo al bajar) y sale un «+10» o «−1» flotante." },
+      { tag: "arreglo", text: "Hoja · en modo claro, las cartas de dominio sin ilustración y los espacios libres ya no se ven como bloques oscuros sobre el papel crema." },
       { tag: "mejora", text: "Cartas · lavado de cara en el móvil: la barra fija pasa de ocupar casi un tercio de la pantalla a una sola fila con el tipo, los filtros activos, buscar y filtros; los filtros (grupo, tipo, dominio con su nombre, nivel, rango y clase) están en una hoja inferior con el botón «Ver N cartas». Se arregla además el solapamiento de los nombres de dominio en el móvil." },
       { tag: "mejora", text: "Hoja · el PDF respeta el ajuste de ilustraciones oficiales: con ellas desactivadas, ni la hoja ni las cartas para recortar llevan imágenes oficiales, y con ellas activadas salen como siempre." },
       { tag: "mejora", text: "Hoja · el rayito del coste de recuperación de las cartas de dominio es amarillo en todas las cartas." },
