@@ -9,6 +9,11 @@ export const CHANGELOG = [
     title: "El Taller y la creación de personaje",
     blurb: "Crea tus propias cartas y armas en el Taller (con fichas e imágenes), descarga tu hoja en PDF, estrena la creación de personaje renovada, una pestaña Cartas más clara con Adversarios y Entornos, y un Buscar mesa con filtros, solicitudes con mensaje y avisos.",
     items: [
+      { tag: "mejora", text: "Hoja · al abrir una hoja de personaje se ocultan la barra lateral y la columna de amigos para usar toda la pantalla; un botón con flecha junto al nivel te devuelve a Personajes." },
+      { tag: "arreglo", text: "Hoja · las cartas de dominio sin ilustración se ven al abrirlas igual que en la pestaña Cartas (logo del dominio grande con resplandor)." },
+      { tag: "mejora", text: "Inventario · los huecos de la mochila no se ven hasta que añades una mochila; al hacerlo aparecen con una animación y los huecos del cinturón se reajustan." },
+      { tag: "mejora", text: "Descansos · los pasos de «Trabajar en un proyecto» solo se pueden gastar durante el descanso largo en curso, y los que no uses se pierden al terminarlo." },
+      { tag: "mejora", text: "Subir de nivel · la etiqueta «Empieza el Rango N» al entrar en un rango nuevo tiene un brillo animado." },
       { tag: "mejora", text: "Descansos · los proyectos se pueden crear y editar siempre; solo avanzan con los pasos que ganas al elegir «Trabajar en un proyecto» en un descanso largo (cada vez que lo eliges, un paso, que repartes como quieras entre tus proyectos). Junto al título «Descansos» hay ahora un contador de círculos con los descansos cortos seguidos, y se quita la pregunta «¿Qué descanso quieres hacer?»." },
       { tag: "mejora", text: "Subir de nivel · diseño renovado: cabecera con degradado del color de tu clase, pasos como progreso numerado, opciones como tarjetas con efecto al pasar el ratón y botón dorado con relieve." },
       { tag: "mejora", text: "Descanso · los botones de descanso corto y largo ocupan todo el alto de la caja." },

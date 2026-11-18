@@ -2104,6 +2104,15 @@ const thresholdsFor = (armorEntry, level) =>
   armorEntry ? { major: armorEntry.major + level, severe: armorEntry.severe + level } : { major: level, severe: level * 2 };
 
 
+// Marca en el estado de la app que hay un descanso en curso (se monta con la vista de acciones y se desmonta al terminar o cancelar).
+function RestFlag({ type, on }) {
+  useEffect(() => {
+    on(type);
+    return () => on(null);
+  }, [type]); // eslint-disable-line react-hooks/exhaustive-deps
+  return null;
+}
+
 // Número que reacciona al cambiar: rebota y se tiñe (verde al subir, rojo al bajar) y, si `float`, lanza un "+N"/"−N" flotante.
 function GoldNum({ value, float, children }) {
   const prev = useRef(value);
@@ -4874,6 +4883,12 @@ const sharedStyles = `
   .mh-proj-menu-btn { all: unset; cursor: pointer; color: var(--mh-muted3); padding: 2px; border-radius: 6px; display: flex; flex-shrink: 0; }
   .mh-proj-menu-btn:hover, .mh-proj-menu-btn:focus-visible, .mh-proj-menu-btn[aria-expanded="true"] { color: var(--mh-ink); background: var(--mh-panel3); }
   .mh-proj-menu { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; border-top: 1px dashed var(--mh-line); font-size: 12px; color: var(--mh-ink3); }
+  .mh-inv-packwrap { display: flex; flex-direction: column; min-height: 0; overflow: hidden; flex: 0 1 0; opacity: 0; pointer-events: none; transition: flex-grow .55s cubic-bezier(.3,.8,.2,1), opacity .35s ease .12s; }
+  .mh-inv-packwrap.is-open { flex: 1 1 0; opacity: 1; pointer-events: auto; }
+  .mh-inv-packwrap.is-open .mh-islot { animation: mhPackIn .45s cubic-bezier(.2,1.3,.4,1) backwards; }
+  .mh-inv-packwrap.is-open .mh-islot:nth-child(3n+2) { animation-delay: .06s; } .mh-inv-packwrap.is-open .mh-islot:nth-child(3n) { animation-delay: .12s; }
+  @keyframes mhPackIn { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .mh-inv-packwrap, .mh-inv-packwrap.is-open .mh-islot { transition: none; animation: none; } }
   .mh-inv-head { display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; color: var(--mh-muted); flex-shrink: 0; }
   .mh-inv-head b { color: var(--mh-gold-ink); font-weight: 700; }
   .mh-inv-grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: minmax(86px, 1fr); gap: 10px; flex: 1 1 0; }
@@ -7970,6 +7985,8 @@ const sharedStyles = `
   .mhm-head::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(0deg, #0c0c2099, transparent 55%); }
   .mhm-head-top, .mhm-traits { z-index: 1; }
   .mhm-head-emb { position: absolute; right: 18px; top: 50%; translate: 0 -50%; color: #ffffff12; }
+  .mhm-exit { all: unset; cursor: pointer; flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: #00000040; border: 1px solid #ffffff22; color: #fff; transition: background .15s, transform .15s; } .mhm-exit:hover { background: #00000070; transform: translateX(-2px); } .mhm-exit:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
+  html[data-mh-theme="light"] .mhm-exit { background: #FFFCF6cc; border-color: var(--mh-line2); color: var(--mh-ink); }
   .mhm-head-top { position: relative; display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
   .mhm { position: relative; }
   .mhm-level { all: unset; cursor: pointer; position: relative; display: flex; flex-shrink: 0; border-radius: 10px; transition: transform .15s; }
@@ -8053,6 +8070,11 @@ const sharedStyles = `
   .lv-err { min-height: 20px; margin-top: 10px; font-size: 13px; color: #E5484D; }
   .lv-foot { display: flex; justify-content: space-between; gap: 10px; padding: 12px 22px 18px; border-top: 1px solid var(--mh-line); }
   .lv-btn { all: unset; cursor: pointer; padding: 9px 20px; border-radius: 9px; border: 1px solid var(--mh-line2); font-size: 13.5px; font-weight: 600; } .lv-btn:hover { background: var(--mh-panel3); }
+  .lv-sub.is-new { position: relative; overflow: hidden; background: linear-gradient(90deg, color-mix(in srgb, var(--lvc) 30%, transparent), color-mix(in srgb, #E3B04B 34%, transparent)) !important; border: 1px solid color-mix(in srgb, #E3B04B 55%, transparent); animation: lvPill 2.4s ease-in-out infinite; }
+  .lv-sub.is-new::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, #ffffffaa 50%, transparent 70%); transform: translateX(-120%); animation: lvShine 2.4s ease-in-out infinite; }
+  @keyframes lvShine { 0% { transform: translateX(-120%); } 55%, 100% { transform: translateX(120%); } }
+  @keyframes lvPill { 0%, 100% { box-shadow: 0 0 0 0 #E3B04B00; } 50% { box-shadow: 0 0 14px 1px #E3B04B77; } }
+  @media (prefers-reduced-motion: reduce) { .lv-sub.is-new, .lv-sub.is-new::after { animation: none; } }
   .lv-btn.is-go { background: #E3B04B; border-color: #E3B04B; color: #241a05; } .lv-btn.is-go:hover { filter: brightness(1.08); }
   /* Subir de nivel: diseño renovado */
   .lv-bg{background:radial-gradient(1200px 600px at 50% 0%, color-mix(in srgb,var(--lvc,#6b9) 22%,transparent), rgba(6,6,16,.86)) !important;backdrop-filter:blur(6px)}
@@ -15700,6 +15722,9 @@ export default function App({ onSignOut }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewingCharId, viewingSubclass, viewingAtEase]);
   const [restType, setRestType] = useState("short");
+  const [restActive, setRestActive] = useState(null); // "short" | "long" mientras hay un descanso en curso (lo marca la vista de acciones)
+  const [restProjUsed, setRestProjUsed] = useState(0); // pasos de proyecto gastados en el descanso en curso
+  useEffect(() => { if (!restActive) setRestProjUsed(0); }, [restActive]);
   const [restPhase, setRestPhase] = useState(null); // null = sin descanso en curso · "short" | "long" = descanso empezado
   useEffect(() => { setRestPhase(null); setRestPicks(null); }, [viewingCharId]);
   const [showChangeDomainModal, setShowChangeDomainModal] = useState(false);
@@ -18526,7 +18551,7 @@ export default function App({ onSignOut }) {
       if (key === "project") {
         if (!isLong) return;
         projectSteps++;
-        messages.push("Trabajar en un proyecto: ganas un paso para avanzar tus proyectos");
+        messages.push("Trabajar en un proyecto: avanzas tus proyectos durante el descanso");
         return;
       }
       if (key === "prepare") {
@@ -18594,7 +18619,7 @@ export default function App({ onSignOut }) {
     if (favorGain) restPatch.f_favor = String(getFavor(c) + favorGain);
     // Proyectos: se abren con un descanso largo (crear y editar) y solo avanzan si elegiste «Trabajar en un proyecto».
     restPatch.f_proj_open = ""; // los proyectos solo siguen abiertos si elegiste trabajar en uno
-    if (projectSteps) restPatch.f_proj_adv = String(Number(c.f_proj_adv || 0) + projectSteps);
+    restPatch.f_proj_adv = ""; // los pasos de proyecto solo valen durante el descanso: los que no se usen se pierden
     // Trovador: el descanso largo recupera sus canciones.
     if (isLong && c.f_speech_used) restPatch.f_speech_used = "";
     if (c.f_scales_ready) restPatch.f_scales_ready = "";
@@ -18810,8 +18835,7 @@ export default function App({ onSignOut }) {
     if (!p) return;
     const next = (p.count || 0) + 1;
     adjustProject(id, index, 1);
-    const stepsLeft = Number(c.f_proj_adv || 0);
-    if (stepsLeft > 0) updateCharacterField(id, "f_proj_adv", stepsLeft > 1 ? String(stepsLeft - 1) : "");
+    setRestProjUsed((u) => u + 1);
     const done = p.goal && next >= p.goal;
     postCampaignEvent(id, done ? `🔨 Termina su proyecto «${p.name}».` : `🔨 Trabaja en «${p.name}» (${next}${p.goal ? "/" + p.goal : ""}).`);
   };
@@ -19843,11 +19867,13 @@ export default function App({ onSignOut }) {
   }, [campFlat, viewingCampaignId, campaignDetailTab === "mesa"]); // eslint-disable-line react-hooks/exhaustive-deps
   const modernCamp = view === "ficha" && modernCharId && detailTab === "campaign" ? Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(modernCharId)) : null;
   // En la campaña de la hoja de personaje no hay barra derecha: el chat va dentro de la página, como en el Directo del DJ.
-  const showRail = showTopbar && !(modernCamp && !isMobile);
+  // Con una hoja de personaje abierta (escritorio) se ocultan la isla lateral y la columna social: la hoja usa toda la pantalla.
+  const sheetOpen = !isMobile && view === "ficha" && !!modernCharId && !!characters[modernCharId];
+  const showRail = showTopbar && !(modernCamp && !isMobile) && !sheetOpen;
   const railFold = showRail && !modernCamp; // plegable salvo con el chat de la campaña, que necesita todo el ancho
   const railW = !showRail ? 0 : railFold && !railPin ? 86 : 290;
   const padX = showRail ? "clamp(28px, 3.4vw, 48px)" : "28px";
-  const contentMax = (campDetail && !campFlat) || (modernCamp && !isMobile) ? 1760 : showRail ? 1320 : view === "ficha" ? 1160 : 960;
+  const contentMax = (campDetail && !campFlat) || (modernCamp && !isMobile) ? 1760 : showRail ? 1320 : sheetOpen ? 1380 : view === "ficha" ? 1160 : 960;
   // Datos de la hoja moderna: valores base con lo que aportan armas y armadura (las reglas especiales de subclase siguen en la clásica).
   const getKeys = (raw) => {
     try {
@@ -22272,9 +22298,10 @@ export default function App({ onSignOut }) {
                                   </div>
                                 ) : (
                                 <div style={{ display: "flex", flexDirection: "column", gap: 11, flex: 1, minHeight: 0 }}>
+                                  <RestFlag type={isLong ? "long" : "short"} on={setRestActive} />
                                   <div className="mh-rs-act">
                                     <span className="mh-rs-t">{isLong ? <Moon size={15} /> : <Sun size={15} />} Descanso {isLong ? "largo" : "corto"} en curso</span>
-                                    <small>Elige hasta {slots} acciones{isLong ? " · proyectos abiertos" : ""}</small>
+                                    <small>Elige hasta {slots} acciones{isLong ? " · puedes trabajar en proyectos" : ""}</small>
                                     {!lock?.fixedType && <button type="button" className="mh-rs-x" onClick={() => { setRestPhase(null); setRestPicks(null); setRestEfficient(null); }}>Cancelar</button>}
                                   </div>
 
@@ -22468,7 +22495,9 @@ export default function App({ onSignOut }) {
                               const projects = getProjects(c);
                               const projCamp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(viewingCharId));
                               const projOpen = true; // los proyectos se pueden crear y editar siempre; solo avanzan con pasos de «Trabajar en un proyecto»
-                              const stepsLeft = Number(c.f_proj_adv || 0);
+                              // Los pasos solo existen durante un descanso largo en curso: uno por cada «Trabajar en un proyecto» elegido; los que no se gasten se pierden al terminar.
+                              const projPicks = restActive === "long" ? (restPicks || []).filter((pk) => pk === "project").length : 0;
+                              const stepsLeft = Math.max(0, projPicks - restProjUsed);
                               const canAdvance = stepsLeft > 0;
                               const wrapLock = (node) =>
                                 true ? (
@@ -22515,7 +22544,7 @@ export default function App({ onSignOut }) {
                                 <div style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1, minHeight: 0, overflowY: "auto" }} className="mh-noscroll">
                                   <div className={"mh-proj-steps" + (stepsLeft > 0 ? " is-on" : "")}>
                                     <Hammer size={14} />
-                                    <span>{stepsLeft > 0 ? "Tienes " + stepsLeft + (stepsLeft > 1 ? " pasos" : " paso") + " para repartir entre tus proyectos." : "Sin pasos: elige «Trabajar en un proyecto» en un descanso largo para avanzar."}</span>
+                                    <span>{stepsLeft > 0 ? "Tienes " + stepsLeft + (stepsLeft > 1 ? " pasos" : " paso") + " para repartir entre tus proyectos. Los que no uses se pierden al terminar el descanso." : restActive === "long" ? "Sin pasos: marca «Trabajar en un proyecto» en las acciones del descanso para avanzar." : "Solo puedes avanzar proyectos durante un descanso largo, con «Trabajar en un proyecto»."}</span>
                                   </div>
                                   {projects.map((p, i) => {
                                     const goal = Number(p.goal) || 0;
@@ -22552,7 +22581,7 @@ export default function App({ onSignOut }) {
                                             <span style={{ fontSize: 11.5, color: "var(--mh-muted)" }}>{goal ? `${count}/${goal}` : `${count} avances`}</span>
                                           )}
                                           {!done && (
-                                            <button type="button" className="mh-btn" style={{ fontSize: 11.5, padding: "5px 10px" }} disabled={!canAdvance} title={canAdvance ? undefined : "Necesitas un paso: elige «Trabajar en un proyecto» en un descanso largo"} onClick={() => workOnProject(viewingCharId, i)}>
+                                            <button type="button" className="mh-btn" style={{ fontSize: 11.5, padding: "5px 10px" }} disabled={!canAdvance} title={canAdvance ? undefined : "Solo durante un descanso largo, con pasos de «Trabajar en un proyecto»"} onClick={() => workOnProject(viewingCharId, i)}>
                                               <Hammer size={12} /> Trabajar +1
                                             </button>
                                           )}
@@ -22776,27 +22805,24 @@ export default function App({ onSignOut }) {
                                       <span>sin mochila</span>
                                     )}
                                   </div>
-                                  <div className="mh-inv-grid" style={{ opacity: backpack ? 1 : 0.45 }}>
-                                    {Array.from({ length: ITEM_SLOTS }, (_, i) =>
-                                      backpack && packCells[i] !== null ? (
-                                        slotCell("pack", backpackItems[packCells[i]], packCells[i], i)
-                                      ) : backpack ? (
-                                        emptyCell("pe" + i, () => {
-                                          setSelectedItemSlot(null);
-                                          setShowAddBackpackItemForm(true);
-                                        }, "Añadir a la mochila", "pack", i)
-                                      ) : (
-                                        <div key={"pd" + i} className="mh-islot empty" style={{ borderStyle: "dotted", cursor: "default" }}>
-                                          <Backpack size={15} />
-                                        </div>
-                                      )
-                                    )}
-                                  </div>
                                   {!backpack && (
                                     <button type="button" className="mh-exp-add" style={{ flex: "0 0 auto", padding: 11 }} onClick={() => addBackpack(viewingCharId)}>
                                       <Plus size={14} /> Añadir mochila (+{ITEM_SLOTS} huecos)
                                     </button>
                                   )}
+                                  <div className={"mh-inv-packwrap" + (backpack ? " is-open" : "")} aria-hidden={!backpack}>
+                                    <div className="mh-inv-grid">
+                                      {backpack &&
+                                        Array.from({ length: ITEM_SLOTS }, (_, i) =>
+                                          packCells[i] !== null
+                                            ? slotCell("pack", backpackItems[packCells[i]], packCells[i], i)
+                                            : emptyCell("pe" + i, () => {
+                                                setSelectedItemSlot(null);
+                                                setShowAddBackpackItemForm(true);
+                                              }, "Añadir a la mochila", "pack", i)
+                                        )}
+                                    </div>
+                                  </div>
 
                                   {showAddBackpackItemForm && backpack && (
                                     <div className="mh-inv-detail">
@@ -30730,8 +30756,12 @@ export default function App({ onSignOut }) {
                           <CfIcon size={210} strokeWidth={1} />
                         </div>
                       ) : (
-                        <div className="mh-cardc-noart">
-                          <ArtIcon size={50} strokeWidth={1.5} />
+                        <div className="mh-cardc-noart" style={d.domain ? { color: cardColor } : undefined}>
+                          {d.domain && DOMAIN_ICON_FILE[d.domain.name || d.domain.domain] ? (
+                            <span className="mh-cardc-dlogo" style={{ "--m": "url(/dominios/" + DOMAIN_ICON_FILE[d.domain.name || d.domain.domain] + ".svg)", background: cardColor, filter: "drop-shadow(0 0 18px " + cardColor + ")" }} aria-hidden="true" />
+                          ) : (
+                            <ArtIcon size={50} strokeWidth={1.5} />
+                          )}
                         </div>
                       )}
 
@@ -31375,7 +31405,7 @@ export default function App({ onSignOut }) {
       })()}
 
       {/* Isla lateral (escritorio). Con una hoja de personaje abierta se oculta. */}
-      {!isMobile && !viewingCharId && (() => {
+      {!isMobile && !viewingCharId && !sheetOpen && (() => {
         const go = (key) => { setViewingCharId(null); setViewingCardDetail(null); setModernCharId(null); setShowNewCharModal(false); setView(key); };
         const camps = Object.values(campaigns).slice(0, 6);
         return (
@@ -31832,7 +31862,7 @@ export default function App({ onSignOut }) {
             };
             return (
               <>
-                <ModernSheet key={modernCharId} d={md} actions={modernActions(modernCharId)} content={renderClassicSheet(modernCharId, true)} tab={tab} fill={tab === "campaign"} onTab={(k) => (setDetailTab(k), setActionPage(0))} />
+                <ModernSheet key={modernCharId} onExit={sheetOpen ? () => { setViewingCharId(null); setViewingCardDetail(null); setModernCharId(null); setView("ficha"); } : null} d={md} actions={modernActions(modernCharId)} content={renderClassicSheet(modernCharId, true)} tab={tab} fill={tab === "campaign"} onTab={(k) => (setDetailTab(k), setActionPage(0))} />
                 {tourOn && <Tour ctx={{ hasPronouns: !!md.pronouns, tabs: md.tabs.map((t) => t.key) }} onTab={(k) => (setDetailTab(k), setActionPage(0))} onClose={closeTour} />}
               </>
             );
