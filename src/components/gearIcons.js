@@ -4,6 +4,19 @@ import { createElement as h } from "react";
 import { Backpack, Axe, BowArrow, Coins, FlaskConical, Flame, Hammer, HandCoins, HandFist, Package, Sword, WandSparkles } from "lucide-react";
 
 const CUSTOM = {
+  antorcha: [
+    ["path", { d: "M10 21 12 12.5" }],
+    ["path", { d: "M14 21 12 12.5" }],
+    ["path", { d: "M9 12.5h6" }],
+    ["path", { d: "M12 11c-2.6-.8-3.6-3-2.6-5.4.6 1 1.4 1.5 2.1 1.5C11.2 5.6 12.4 3.6 13.8 2.5c.6 3.2 2.6 4.1 2.6 6.4 0 1.2-.8 2.2-2.2 2.6" }],
+  ],
+  cuerda: [
+    ["ellipse", { cx: 12, cy: 15, rx: 8, ry: 4.5 }],
+    ["path", { d: "M4 15v2.5c0 2.5 3.6 4.5 8 4.5s8-2 8-4.5V15" }],
+    ["path", { d: "M7.5 12.4c1 1.8 3 2.8 5.4 2.9 2.6.1 4.6-.8 5.6-2.5" }],
+    ["path", { d: "M12 10.5C12 7 14 5 16.5 4.5c1.7-.3 3 .3 3.5 1.5" }],
+    ["path", { d: "M12 10.5C12 7.6 10 5.6 7.8 5" }],
+  ],
   estoque: [
     ["path", { d: "M20.5 3.5 9.5 14.5" }],
     ["path", { d: "M7 12a4 4 0 0 0 5 5" }],
@@ -185,6 +198,8 @@ export function itemVisual(name, { isWeapon, isArmor } = {}) {
   if (/piedras y huesos/i.test(name || "")) return { Icon: ICONS.bolsa, color: "#B9A48A", kind: "Objeto" };
   if (/poci[oó]n menor de vigor/i.test(name || "")) return { Icon: FlaskConical, color: "#A58BE8", kind: "Consumible" };
   if (/poci|elixir|t[oó]nico|frasco|brebaje|ung[uü]ento/i.test(name || "")) return { Icon: FlaskConical, color: "#D9644E", kind: "Consumible" };
-  if (/antorcha|vela|farol|linterna/i.test(name || "")) return { Icon: Flame, color: "#E0823A", kind: "Equipo" };
+  if (/^antorcha/i.test(name || "")) return { Icon: ICONS.antorcha, color: "#E0823A", kind: "Equipo" };
+  if (/^cuerda/i.test(name || "")) return { Icon: ICONS.cuerda, color: "#B08A55", kind: "Equipo" };
+  if (/vela|farol|linterna/i.test(name || "")) return { Icon: Flame, color: "#E0823A", kind: "Equipo" };
   return { Icon: Package, color: "#C08B5C", kind: "Objeto" };
 }
