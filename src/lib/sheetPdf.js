@@ -17,7 +17,7 @@ export function sheetHtml(d) {
   const sign = (n) => (n > 0 ? "+" + n : String(n));
   const marks = d.marks || [];
   const feat = (f) => `<p class="ft"><b>${esc(f.name)}.</b> ${esc(f.text)}</p>`;
-  const traits = d.traits.map((t) => `<div class="tc"><div class="th2"><span>${esc(t.label)}</span><i class="${marks.includes(t.label) ? "on" : ""}"></i></div><div class="tv${t.spell ? " sp" : ""}">${sign(t.value)}${t.spell ? "<em>conjuro</em>" : ""}</div><div class="ta">${(TRAIT_ACTIONS[t.label] || []).map((a) => `<span>${a}</span>`).join("")}</div></div>`).join("");
+  const traits = d.traits.map((t) => `<div class="tc"><div class="th2"><span>${esc(t.label)}</span><i></i></div><div class="tv${t.spell ? " sp" : ""}">${t.spell ? "<em>conjuro</em>" : ""}</div><div class="ta">${(TRAIT_ACTIONS[t.label] || []).map((a) => `<span>${a}</span>`).join("")}</div></div>`).join("");
   const slotRow = (n, marked, color, max = 12) => Array.from({ length: max }, (_, i) => `<i class="${i < n ? "sl" : "sl off"}" style="${i < marked ? `background:${color};border-color:${color}` : ""}"></i>`).join("");
   const armorUsed = Math.max(0, d.armorTotal - d.armorLeft);
   const armorSlots = Array.from({ length: 12 }, (_, i) => `<i class="ar${i < d.armorTotal ? "" : " off"}" style="${i < armorUsed ? `background:${col};border-color:${col}` : ""}"></i>`).join("");
@@ -41,7 +41,7 @@ export function sheetHtml(d) {
   const cfSize = long ? "7pt" : "7.8pt";
   const pg2Feats = [...(long ? d.classFeatures.map((f) => ({ name: f.name + " · Clase", text: f.text })) : []), ...d.features];
   const banner = `<div class="bnr"><div class="cn">${esc(d.cls || "Daggerheart")}</div><div class="dd">${esc((d.domains || []).join(" · "))}</div><div class="bl">${LOGO("#fff")}<span>ENARIS</span></div></div>`;
-  const fields = (pg) => `<div class="flds"><div class="f w2"><b>${esc(d.name)}</b><small>Nombre</small></div><div class="f"><b>${esc(d.pronouns)}</b><small>Pronombres</small></div><div class="f w2"><b>${esc([d.ancestry, d.community, d.transformation].filter(Boolean).join(" · "))}</b><small>Herencia</small></div><div class="f"><b>${esc(d.cls)}${d.subclass ? " · " + esc(d.subclass) : ""}${d.multi ? " + " + esc(d.multi) : ""}</b><small>Clase y subclase</small></div></div><div class="lvl"><b>${d.level}</b><small>Nivel</small></div>`;
+  const fields = (pg) => `<div class="flds"><div class="f w2"><b>${esc(d.name)}</b><small>Nombre</small></div><div class="f"><b>${esc(d.pronouns)}</b><small>Pronombres</small></div><div class="f w2"><b>${esc([d.ancestry, d.community, d.transformation].filter(Boolean).join(" · "))}</b><small>Herencia</small></div><div class="f"><b>${esc(d.cls)}${d.subclass ? " · " + esc(d.subclass) : ""}${d.multi ? " + " + esc(d.multi) : ""}</b><small>Clase y subclase</small></div></div><div class="lvl"><b></b><small>Nivel</small></div>`;
   const weight = pg2Feats.reduce((n, f) => n + f.name.length + f.text.length, 0) + d.cards.reduce((n, c) => n + c.text.length, 0);
   // Cartas para recortar: 9 por hoja (3 × 3), tamaño de carta de juego (63,5 × 88,9 mm), con líneas de corte.
   const cutDom = (c) => `<div class="cc" style="--k:${esc(c.color || col)}"><div class="ca">${c.image ? `<img src="${esc(c.image)}" alt="">` : ""}<b class="cg">${c.level}</b><span class="ctp">${esc(c.type || "")}</span></div><div class="cn2">${esc(c.key)}</div><div class="cb2" style="font-size:${c.text.length > 520 ? "5.1pt" : c.text.length > 380 ? "5.5pt" : c.text.length > 260 ? "5.8pt" : "6.3pt"}">${esc(c.text)}</div><div class="cf2"><span>${esc(c.domain)}</span><span>⚡ ${c.recall ?? "–"}${c.vault ? " · bóveda" : ""}</span></div></div>`;
@@ -99,18 +99,21 @@ h1, h3 { margin: 0; } p { margin: 0; } em { font-style: normal; color: #6d6478; 
 .cn2 { font: 700 9.6pt/1.15 'Inter', system-ui, sans-serif; text-align: center; margin: 2mm 2mm .8mm; } .cb2 { flex: 1; font-size: 6.1pt; line-height: 1.28; color: #2b2a35; text-align: center; padding: 0 2.4mm; overflow: hidden; } .cf2 { display: flex; justify-content: space-between; font-size: 5.8pt; color: #6d6478; padding: 0 3mm 1.6mm; }
 .cc.gear .gh { display: flex; justify-content: space-between; align-items: center; background: var(--k); color: #fff; margin: .4mm; padding: 2.6mm 3mm; border-radius: 2.2mm 2.2mm 0 0; font: 800 6.4pt Arial; letter-spacing: .14em; text-transform: uppercase; } .gh i { font-style: normal; opacity: .9; } .gbig { text-align: center; font: 800 20pt/1.1 'Inter', system-ui, sans-serif; margin-top: 1mm; color: var(--k); } .gsub { text-align: center; font-size: 6.6pt; color: #4a4457; margin-bottom: 1.6mm; }
 .foot { text-align: center; font-size: 6pt; color: #8d88a3; display: flex; align-items: center; justify-content: center; gap: 2mm; } .foot .logo { width: 2mm; height: 3.4mm; }
+/* Campos vacíos para rellenar a lápiz: mantienen su altura */
+.tv::before, b:empty::after { content: "\\00a0"; }
+.tv::before { display: block; }
 </style></head><body>
 <div class="pg p1">
 <div class="top">${banner}${fields(1)}</div>
 <div class="def">
-<div class="shld"><b>${esc(d.evasion)}</b><span>Evasión</span></div>
-<div class="arm"><div class="shld"><b>${d.armorTotal}</b><span>Armadura</span></div><div class="slots">${armorSlots}</div></div>
+<div class="shld"><b></b><span>Evasión</span></div>
+<div class="arm"><div class="shld"><b></b><span>Armadura</span></div><div class="slots">${armorSlots}</div></div>
 <div class="tcs">${traits}</div>
 </div>
 <div class="main">
 <div class="colx">
 <div class="pnl">${sh("Daño y salud")}<div class="cap">Suma tu nivel actual a tus umbrales de daño.</div>
-<div class="thr"><div><span>Daño menor</span><b>${d.minor}</b><small>Marca 1 PV</small></div><div><span>Daño mayor</span><b>${d.major}</b><small>Marca 2 PV</small></div><div><span>Daño grave</span><b>${d.severe}</b><small>Marca 3 PV</small></div></div>
+<div class="thr"><div><span>Daño menor</span><b></b><small>Marca 1 PV</small></div><div><span>Daño mayor</span><b></b><small>Marca 2 PV</small></div><div><span>Daño grave</span><b></b><small>Marca 3 PV</small></div></div>
 <div class="bars"><b>PV</b><div class="rw">${slotRow(d.hpTotal, d.hpMarked, "#D9644E")}</div></div>
 <div class="bars"><b>ESTRÉS</b><div class="rw">${slotRow(d.stressTotal, d.stressMarked, "#8E6FC4")}</div></div></div>
 <div class="pnl">${sh("Esperanza")}<div class="cap">Gasta 1 Esperanza para usar una experiencia o ayudar a un aliado.</div><div class="hope">${diamonds}</div>${d.hopeFeature ? `<p class="ft" style="margin-top:2mm"><b>${esc(d.hopeFeature.name)}:</b> ${esc(d.hopeFeature.text)}</p>` : ""}</div>
@@ -119,8 +122,8 @@ h1, h3 { margin: 0; } p { margin: 0; } em { font-style: normal; color: #6d6478; 
 <div class="pnl grow">${sh("Característica de clase")}<div class="cf" style="font-size:${cfSize}">${classFeat}</div></div>
 </div>
 <div class="colx">
-<div class="pnl">${sh("Armas activas")}<div class="prof">Competencia ${Array.from({ length: 6 }, (_, i) => `<i style="${i < d.proficiency ? `background:${col};border-color:${col}` : ""}"></i>`).join("")}</div>${wp(prim, "Principal")}${wp(sec, "Secundaria")}</div>
-<div class="pnl">${sh("Armadura activa")}<div class="wb"><div class="fl3" style="grid-template-columns:1.6fr 1.2fr 1fr"><div><b>${d.armor ? esc(d.armor.key) : ""}</b><small>Nombre</small></div><div><b>${d.armor ? d.armor.major + " / " + d.armor.severe : ""}</b><small>Umbrales base</small></div><div><b>${d.armor ? d.armor.score : ""}</b><small>Puntuación base</small></div></div><div class="fe"><b>${d.armor && d.armor.feature ? esc(d.armor.feature) : ""}</b><small>Característica</small></div></div></div>
+<div class="pnl">${sh("Armas activas")}<div class="prof">Competencia ${Array.from({ length: 6 }, (_, i) => `<i></i>`).join("")}</div>${wp(prim, "Principal")}${wp(sec, "Secundaria")}</div>
+<div class="pnl">${sh("Armadura activa")}<div class="wb"><div class="fl3" style="grid-template-columns:1.6fr 1.2fr 1fr"><div><b>${d.armor ? esc(d.armor.key) : ""}</b><small>Nombre</small></div><div><b></b><small>Umbrales base</small></div><div><b></b><small>Puntuación base</small></div></div><div class="fe"><b>${d.armor && d.armor.feature ? esc(d.armor.feature) : ""}</b><small>Característica</small></div></div></div>
 <div class="pnl">${sh("Inventario")}${itemRows}</div>
 <div class="pnl grow">${invWeapons}</div>
 </div>
