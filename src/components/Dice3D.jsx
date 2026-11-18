@@ -671,20 +671,24 @@ export function Dice3D({ dice, summary, skin, onReveal, onEnd }) {
       {sm && <div className={"d3-edge is-" + sm.outcome + (edgeOn ? " on" : "")} style={{ "--ec": sm.color }} />}
       {sm && ready && (
         <div className={"d3-sum" + (closing ? " is-out" : "")} style={{ "--ec": sm.color }} role="status">
-          <div className="d3-sum-row">
-            {sm.parts.map((p, i) => (
-              <span key={i} className={"d3-chip k-" + (p.kind || "")} style={{ animationDelay: i * 0.11 + "s" }}>
-                <small>{p.label}</small>
-                <b>{fmt(p, i)}</b>
-              </span>
-            ))}
+          <div className="d3-sum-main">
+            <div className="d3-sum-row">
+              {sm.parts.map((p, i) => (
+                <span key={i} className={"d3-chip k-" + (p.kind || "")} style={{ animationDelay: i * 0.11 + "s" }}>
+                  <small>{p.label}</small>
+                  <b>{fmt(p, i)}</b>
+                </span>
+              ))}
+            </div>
+            <i className="d3-sum-sep" />
+            <div className="d3-sum-total" style={{ animationDelay: sm.parts.length * 0.11 + 0.08 + "s" }}>
+              <b>{sm.total}</b>
+              <div className="d3-sum-tt">
+                <span className="d3-sum-t" style={{ animationDelay: sm.parts.length * 0.11 + 0.3 + "s" }}>{sm.text}</span>
+                {sm.dc && <span className="d3-sum-dc" style={{ animationDelay: sm.parts.length * 0.11 + 0.4 + "s" }}>{sm.dc}</span>}
+              </div>
+            </div>
           </div>
-          <div className="d3-sum-total" style={{ animationDelay: sm.parts.length * 0.11 + 0.08 + "s" }}>
-            <span>=</span>
-            <b>{sm.total}</b>
-          </div>
-          <div className="d3-sum-t" style={{ animationDelay: sm.parts.length * 0.11 + 0.3 + "s" }}>{sm.text}</div>
-          {sm.dc && <div className="d3-sum-dc" style={{ animationDelay: sm.parts.length * 0.11 + 0.4 + "s" }}>{sm.dc}</div>}
           {sm.note && <div className="d3-sum-note" style={{ animationDelay: sm.parts.length * 0.11 + 0.5 + "s" }}>{sm.note}</div>}
           <div className="d3-sum-hint" style={{ animationDelay: sm.parts.length * 0.11 + 0.9 + "s" }}>Toca la pantalla para continuar</div>
         </div>
@@ -711,28 +715,29 @@ const D3_CSS = `
 @keyframes d3-flicker { 0% { opacity: 1; } 12% { opacity: .35; } 18% { opacity: .9; } 40% { opacity: .6; } 46% { opacity: 1; } 70% { opacity: .45; } 76% { opacity: .95; } 100% { opacity: 1; } }
 @keyframes d3-creep { 0%, 100% { opacity: .5; transform: scale(1.08); } 50% { opacity: 1; transform: scale(1); } }
 @keyframes d3-spin { to { transform: rotate(360deg); } }
-.d3-sum { position: absolute; left: 0; right: 0; margin: 0 auto; bottom: max(4vh, 22px); width: min(560px, calc(100vw - 28px)); display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 18px 14px; border-radius: 24px; text-align: center; color: #f1ecdf; background: color-mix(in srgb, #14153b 80%, transparent); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); border: 1px solid color-mix(in srgb, var(--ec) 55%, #ffffff22); box-shadow: 0 0 40px -6px color-mix(in srgb, var(--ec) 60%, transparent), 0 18px 34px -18px #000d, inset 0 1px 0 #ffffff1c; animation: d3-in .4s cubic-bezier(.2,.8,.2,1) both; }
-html[data-mh-theme="light"] .d3-sum { color: #2a2218; background: color-mix(in srgb, #FFFCF6 88%, transparent); border-color: color-mix(in srgb, var(--ec) 60%, #DCD2C1); box-shadow: 0 0 36px -10px color-mix(in srgb, var(--ec) 55%, transparent), 0 18px 34px -20px #3a2c1280, inset 0 1px 0 #fff; }
-html[data-mh-theme="light"] .d3-chip { background: #ffffffcc; border-color: #d9cfbd; } html[data-mh-theme="light"] .d3-chip small, html[data-mh-theme="light"] .d3-sum-total span, html[data-mh-theme="light"] .d3-sum-note { color: #6d6253; }
+.d3-sum { position: absolute; left: 50%; bottom: max(3.5vh, 22px); transform: translateX(-50%); width: max-content; max-width: calc(100vw - 28px); display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 22px 36px 16px; border-radius: 32px; text-align: center; color: #f1ecdf; background: color-mix(in srgb, #10112a 80%, transparent); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); border: 1px solid color-mix(in srgb, var(--ec) 60%, #ffffff22); box-shadow: 0 0 40px -8px var(--ec), 0 18px 34px -18px #000d, inset 0 1px 0 #ffffff1c; animation: d3-rise-in .4s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes d3-rise-in { from { opacity: 0; transform: translate(-50%, 14px); } to { opacity: 1; transform: translate(-50%, 0); } }
+html[data-mh-theme="light"] .d3-sum { color: #2a2218; background: color-mix(in srgb, #FFFCF6 90%, transparent); border-color: color-mix(in srgb, var(--ec) 60%, #DCD2C1); box-shadow: 0 0 36px -10px color-mix(in srgb, var(--ec) 55%, transparent), 0 18px 34px -20px #3a2c1280, inset 0 1px 0 #fff; }
+html[data-mh-theme="light"] .d3-chip small, html[data-mh-theme="light"] .d3-sum-note { color: #6d6253; } html[data-mh-theme="light"] .d3-sum-sep { background: #d9cfbd; }
 html[data-mh-theme="light"] .d3-chip.k-hope b { color: #A9751A; } html[data-mh-theme="light"] .d3-chip.k-fear b { color: #6A4FB8; } html[data-mh-theme="light"] .d3-chip.k-adv b { color: #1f7a3f; } html[data-mh-theme="light"] .d3-chip.k-dis b { color: #b53a2a; }
 html[data-mh-theme="light"] .d3-sum-total b { text-shadow: none; } html[data-mh-theme="light"] .d3-sum-dc { color: #3a3024; } html[data-mh-theme="light"] .d3-sum-hint { color: #8a7f6e; }
 .d3-sum.is-out { animation: d3-out .42s cubic-bezier(.4,0,.8,.4) both; }
-@keyframes d3-out { to { opacity: 0; transform: translateY(26px) scale(.97); } }
-.d3-sum-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
-.d3-chip { display: inline-flex; flex-direction: column; align-items: center; min-width: 54px; padding: 5px 10px 6px; border-radius: 12px; background: #ffffff0d; border: 1px solid #ffffff1f; animation: d3-pop .35s cubic-bezier(.2,.9,.3,1.3) both; }
-.d3-chip small { font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: #b9b2c8; }
-.d3-chip b { font: 700 19px var(--font-body), 'Inter', system-ui, sans-serif; }
-.d3-chip.k-hope { border-color: #E3B04B88; } .d3-chip.k-hope b { color: #F5CF72; }
-.d3-chip.k-fear { border-color: #A58BE888; } .d3-chip.k-fear b { color: #C7B3FA; }
-.d3-chip.k-adv { border-color: #2fae5a88; } .d3-chip.k-adv b { color: #8be0a4; }
-.d3-chip.k-dis { border-color: #d0402e88; } .d3-chip.k-dis b { color: #ff9c8c; }
-.d3-sum-total { display: flex; align-items: baseline; gap: 10px; animation: d3-pop .4s cubic-bezier(.2,.9,.3,1.3) both; }
-.d3-sum-total span { font-size: 22px; color: #b9b2c8; }
-.d3-sum-total b { font: 700 54px/1 var(--font-body), 'Inter', system-ui, sans-serif; color: var(--ec); text-shadow: 0 0 24px color-mix(in srgb, var(--ec) 70%, transparent); }
-.d3-sum-t { font: 600 17px var(--font-body), 'Inter', system-ui, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: var(--ec); animation: d3-in .4s both; }
-.d3-sum-dc { font-size: 13px; font-weight: 600; color: #e9e2d4; animation: d3-in .4s both; }
+@keyframes d3-out { to { opacity: 0; transform: translate(-50%, 26px) scale(.97); } }
+.d3-sum-main { display: flex; align-items: center; gap: 26px; }
+.d3-sum-row { display: flex; align-items: center; justify-content: center; gap: 20px; }
+.d3-sum-sep { width: 1px; align-self: stretch; min-height: 44px; background: #ffffff26; }
+.d3-chip { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; animation: d3-pop .4s cubic-bezier(.2,.9,.3,1.3) both; }
+.d3-chip small { font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #b9b2c8; }
+.d3-chip b { font: 700 22px var(--font-body), 'Inter', system-ui, sans-serif; }
+.d3-chip.k-hope b { color: #F5CF72; } .d3-chip.k-fear b { color: #C7B3FA; } .d3-chip.k-adv b { color: #8be0a4; } .d3-chip.k-dis b { color: #ff9c8c; }
+.d3-sum-total { display: flex; align-items: center; gap: 16px; animation: d3-pop .4s cubic-bezier(.2,.9,.3,1.3) both; }
+.d3-sum-total b { font: 700 56px/1 var(--font-body), 'Inter', system-ui, sans-serif; color: var(--ec); text-shadow: 0 0 24px color-mix(in srgb, var(--ec) 70%, transparent); }
+.d3-sum-tt { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; text-align: left; }
+.d3-sum-t { font: 700 15px var(--font-body), 'Inter', system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: var(--ec); animation: d3-in .4s both; }
+.d3-sum-dc { font-size: 12.5px; font-weight: 600; color: #e9e2d4; animation: d3-in .4s both; }
 .d3-sum-note { font-size: 12px; color: #b9b2c8; animation: d3-in .4s both; }
-.d3-sum-hint { margin-top: 4px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #8c85a0; animation: d3-in .5s both, d3-breathe 2s ease-in-out 1s infinite; }
+@media (max-width: 640px) { .d3-sum { padding: 18px 20px 14px; } .d3-sum-main { flex-direction: column; gap: 12px; } .d3-sum-sep { width: 80%; min-height: 0; height: 1px; align-self: center; } .d3-sum-row { gap: 16px; flex-wrap: wrap; } }
+.d3-sum-hint { margin-top: 2px; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: #8c85a0; animation: d3-in .5s both, d3-breathe 2s ease-in-out 1s infinite; }
 @keyframes d3-in { from { opacity: 0; transform: translate(0, 10px); } to { opacity: 1; transform: none; } }
 @keyframes d3-pop { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
 `;
