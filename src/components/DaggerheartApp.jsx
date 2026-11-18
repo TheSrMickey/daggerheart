@@ -4836,6 +4836,15 @@ const sharedStyles = `
   .mh-rs-opt { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 14px; padding: 16px 16px; border-radius: 18px; border: 1.5px solid var(--mh-line2); background: var(--mh-panel2); color: var(--mh-ink); transition: border-color .15s, transform .15s, background .15s; } .mh-rs-opt:hover:not(:disabled) { transform: translateY(-2px); } .mh-rs-opt:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; } .mh-rs-opt:disabled { opacity: .45; cursor: not-allowed; }
   .mh-rs-ch { justify-content: stretch; } .mh-rs-opt { flex: 1 1 0; min-height: 110px; flex-direction: column; justify-content: center; text-align: center; gap: 10px; } .mh-rs-opt .mh-rs-ic { width: 60px; height: 60px; border-radius: 18px; } .mh-rs-opt .mh-rs-tx { flex: 0 1 auto; align-items: center; }
   .mh-proj-steps { display: flex; align-items: center; gap: 8px; padding: 8px 11px; border-radius: 10px; font-size: 11.5px; color: var(--mh-muted); background: var(--mh-panel2); border: 1px dashed var(--mh-line2); flex: none; } .mh-proj-steps svg { flex: none; } .mh-proj-steps.is-on { color: var(--mh-ink); border-style: solid; border-color: #C08B5C; background: color-mix(in srgb, #C08B5C 14%, var(--mh-panel2)); font-weight: 600; }
+  .mh-rs-sw { display: flex; align-items: center; gap: 12px; padding: 14px 12px 10px; margin-top: 4px; border-radius: 14px; border: 1.5px solid color-mix(in srgb, #A58BE8 55%, transparent); background: linear-gradient(135deg, color-mix(in srgb, #A58BE8 16%, var(--mh-panel2)), var(--mh-panel2)); flex: none; position: relative; }
+  .mh-rs-sw-tag { position: absolute; top: -9px; left: 14px; font-size: 9px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; padding: 2px 8px; border-radius: 99px; background: #A58BE8; color: #1a1033; }
+  .mh-rs-sw-cards { display: flex; gap: 6px; flex: 1; min-width: 0; }
+  .mh-rs-sw-c { flex: 1 1 0; min-width: 0; height: 50px; border-radius: 9px; border: 1.5px solid var(--dc); background: linear-gradient(150deg, color-mix(in srgb, var(--dc) 26%, #10112a), #10112a 85%); display: flex; flex-direction: column; justify-content: flex-end; padding: 5px 8px; font-size: 10.5px; font-weight: 700; color: #fff; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .mh-rs-sw-c small { font-size: 8.5px; opacity: .75; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; }
+  .mh-rs-sw-c.is-empty { border-style: dashed; border-color: var(--mh-line2); background: transparent; color: var(--mh-muted); align-items: center; justify-content: center; font-weight: 600; }
+  .mh-rs-sw-b { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; padding: 9px 13px; border-radius: 11px; background: #A58BE8; color: #1a1033; font-weight: 800; font-size: 12px; white-space: nowrap; box-shadow: 0 8px 18px -8px #A58BE8; transition: transform .15s, filter .15s; } .mh-rs-sw-b:hover { filter: brightness(1.1); transform: translateY(-1px); } .mh-rs-sw-b:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  .mh-rs-steps { display: flex; gap: 8px; align-items: center; justify-content: center; font-size: 11px; color: var(--mh-muted); flex: none; } .mh-rs-steps i { font-style: normal; font-weight: 700; color: var(--mh-ink); display: inline-flex; gap: 6px; align-items: center; } .mh-rs-steps b { width: 18px; height: 18px; border-radius: 50%; display: inline-grid; place-items: center; background: var(--mh-line2); color: var(--mh-ink); font-size: 10px; } .mh-rs-steps b.on { background: #A58BE8; color: #1a1033; }
+  html[data-mh-theme="light"] .mh-rs-sw-c:not(.is-empty) { background: color-mix(in srgb, var(--dc) 14%, #fffdf8); color: var(--mh-ink); }
   .mh-rs-opt.is-short:hover:not(:disabled) { border-color: #E3B04B; background: #E3B04B10; } .mh-rs-opt.is-long:hover:not(:disabled) { border-color: #A58BE8; background: #A58BE810; }
   .mh-rs-ic { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; flex: none; } .is-short .mh-rs-ic { background: #E3B04B22; color: #E3B04B; } .is-long .mh-rs-ic { background: #A58BE822; color: #A58BE8; }
   .mh-rs-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; } .mh-rs-tx b { font-size: 16px; } .mh-rs-tx small { font-size: 12px; line-height: 1.4; color: var(--mh-muted); } .mh-rs-tx em { font-style: normal; font-size: 11px; color: var(--mh-muted2); }
@@ -7985,8 +7994,6 @@ const sharedStyles = `
   .mhm-head::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(0deg, #0c0c2099, transparent 55%); }
   .mhm-head-top, .mhm-traits { z-index: 1; }
   .mhm-head-emb { position: absolute; right: 18px; top: 50%; translate: 0 -50%; color: #ffffff12; }
-  .mhm-exit { all: unset; cursor: pointer; flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: #00000040; border: 1px solid #ffffff22; color: #fff; transition: background .15s, transform .15s; } .mhm-exit:hover { background: #00000070; transform: translateX(-2px); } .mhm-exit:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; }
-  html[data-mh-theme="light"] .mhm-exit { background: #FFFCF6cc; border-color: var(--mh-line2); color: var(--mh-ink); }
   .mhm-head-top { position: relative; display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
   .mhm { position: relative; }
   .mhm-level { all: unset; cursor: pointer; position: relative; display: flex; flex-shrink: 0; border-radius: 10px; transition: transform .15s; }
@@ -19867,13 +19874,15 @@ export default function App({ onSignOut }) {
   }, [campFlat, viewingCampaignId, campaignDetailTab === "mesa"]); // eslint-disable-line react-hooks/exhaustive-deps
   const modernCamp = view === "ficha" && modernCharId && detailTab === "campaign" ? Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(modernCharId)) : null;
   // En la campaña de la hoja de personaje no hay barra derecha: el chat va dentro de la página, como en el Directo del DJ.
-  // Con una hoja de personaje abierta (escritorio) se ocultan la isla lateral y la columna social: la hoja usa toda la pantalla.
-  const sheetOpen = !isMobile && view === "ficha" && !!modernCharId && !!characters[modernCharId];
-  const showRail = showTopbar && !(modernCamp && !isMobile) && !sheetOpen;
+  // Con una hoja de personaje abierta (escritorio) los dos menús laterales se pliegan aunque estén fijados (sin cambiar tu preferencia: al salir vuelven a su estado).
+  const sheetFold = !isMobile && view === "ficha" && !!modernCharId && !!characters[modernCharId];
+  const isleOn = islePin && !sheetFold;
+  const railOn = railPin && !sheetFold;
+  const showRail = showTopbar && !(modernCamp && !isMobile);
   const railFold = showRail && !modernCamp; // plegable salvo con el chat de la campaña, que necesita todo el ancho
-  const railW = !showRail ? 0 : railFold && !railPin ? 86 : 290;
+  const railW = !showRail ? 0 : railFold && !railOn ? 86 : 290;
   const padX = showRail ? "clamp(28px, 3.4vw, 48px)" : "28px";
-  const contentMax = (campDetail && !campFlat) || (modernCamp && !isMobile) ? 1760 : showRail ? 1320 : sheetOpen ? 1380 : view === "ficha" ? 1160 : 960;
+  const contentMax = (campDetail && !campFlat) || (modernCamp && !isMobile) ? 1760 : showRail ? 1320 : view === "ficha" ? 1160 : 960;
   // Datos de la hoja moderna: valores base con lo que aportan armas y armadura (las reglas especiales de subclase siguen en la clásica).
   const getKeys = (raw) => {
     try {
@@ -22427,6 +22436,33 @@ export default function App({ onSignOut }) {
                                     );
                                   })()}
 
+                                  {hasDomainCards(c.f_class) && (() => {
+                                    const lim = maxLoadoutCards(c.f_level);
+                                    return (
+                                      <div className="mh-rs-sw">
+                                        <span className="mh-rs-sw-tag">Puedes cambiarlas ahora</span>
+                                        <div className="mh-rs-sw-cards">
+                                          {Array.from({ length: lim }, (_, i) => {
+                                            const cd = domainCardKeys[i] ? findDomainCard(domainCardKeys[i]) : null;
+                                            return cd ? (
+                                              <div key={i} className="mh-rs-sw-c" style={{ "--dc": DOMAIN_COLORS[cd.domain] || "var(--acc)" }}>
+                                                <small>{cd.domain} · {cd.type}</small>
+                                                {cd.key}
+                                              </div>
+                                            ) : (
+                                              <div key={i} className="mh-rs-sw-c is-empty">+ hueco libre</div>
+                                            );
+                                          })}
+                                        </div>
+                                        <button type="button" className="mh-rs-sw-b" onClick={() => openChangeDomainModal(viewingCharId)}>
+                                          <BookOpen size={14} /> Cambiar cartas
+                                        </button>
+                                      </div>
+                                    );
+                                  })()}
+                                  <div className="mh-rs-steps">
+                                    <i><b className="on">1</b> Acciones</i> <ChevronRight size={11} /> <i><b className="on">2</b> Cartas de dominio</i> <ChevronRight size={11} /> <i><b>3</b> Terminar</i>
+                                  </div>
                                   <button
                                     className="mh-btn"
                                     style={{ width: "100%", justifyContent: "center", padding: "10px 14px", fontSize: 13.5 }}
@@ -22457,10 +22493,6 @@ export default function App({ onSignOut }) {
                                       </>
                                     )}
                                   </div>
-                                  <button type="button" className="mh-rest-dl" disabled={!hasDomainCards(c.f_class)} onClick={() => openChangeDomainModal(viewingCharId)}>
-                                    <BookOpen size={14} /> Cartas de dominio
-                                    <ChevronRight size={13} style={{ opacity: 0.6 }} />
-                                  </button>
                                   </div>
                                 </div>
                                 )
@@ -30750,7 +30782,15 @@ export default function App({ onSignOut }) {
                     {d.tier === 4 && <div className="mh-holo" />}
                     <div className="mh-cardc-art" style={{ height: artHeight, "--ah": artHeight + "px" }}>
                       {artSrc ? (
-                        <img src={artSrc} alt={d.title} />
+                        <>
+                          {/* Con las ilustraciones oficiales desactivadas la imagen se oculta por CSS: debajo queda el logo del dominio, como en Cartas. */}
+                          {d.domain && DOMAIN_ICON_FILE[d.domain.name || d.domain.domain] && (
+                            <div className="mh-cardc-noart" style={{ color: cardColor }}>
+                              <span className="mh-cardc-dlogo" style={{ "--m": "url(/dominios/" + DOMAIN_ICON_FILE[d.domain.name || d.domain.domain] + ".svg)", background: cardColor, filter: "drop-shadow(0 0 18px " + cardColor + ")" }} aria-hidden="true" />
+                            </div>
+                          )}
+                          <img src={artSrc} alt={d.title} />
+                        </>
                       ) : isExp ? (
                         <div className="mh-cardc-noart is-exp">
                           <CfIcon size={210} strokeWidth={1} />
@@ -31405,17 +31445,17 @@ export default function App({ onSignOut }) {
       })()}
 
       {/* Isla lateral (escritorio). Con una hoja de personaje abierta se oculta. */}
-      {!isMobile && !viewingCharId && !sheetOpen && (() => {
+      {!isMobile && !viewingCharId && (() => {
         const go = (key) => { setViewingCharId(null); setViewingCardDetail(null); setModernCharId(null); setShowNewCharModal(false); setView(key); };
         const camps = Object.values(campaigns).slice(0, 6);
         return (
-          <div className={"mh-isle-wrap" + (islePin ? " is-pin" : "")}>
-            <nav className={"mh-isle" + (islePin ? " is-pin" : "") + (acctOpen ? " is-open" : "")} aria-label="Navegación">
+          <div className={"mh-isle-wrap" + (isleOn ? " is-pin" : "")}>
+            <nav className={"mh-isle" + (isleOn ? " is-pin" : "") + (acctOpen ? " is-open" : "")} aria-label="Navegación">
               <div className="mh-isle-logo">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/logo.svg" alt="" className="mh-brand-logo" />
                 <b className="lb">Enaris</b>
-                <button type="button" className={"lb mh-isle-pin" + (islePin ? " is-on" : "")} title={islePin ? "Soltar barra" : "Fijar barra abierta"} aria-pressed={islePin} onClick={toggleIslePin}>
+                <button type="button" className={"lb mh-isle-pin" + (isleOn ? " is-on" : "")} title={isleOn ? "Soltar barra" : "Fijar barra abierta"} aria-pressed={isleOn} onClick={toggleIslePin}>
                   <Pin size={14} />
                 </button>
               </div>
@@ -31820,15 +31860,15 @@ export default function App({ onSignOut }) {
       {/* Body */}
       <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
         {showRail && (
-          <div className={"mh-rail-wrap" + (railFold ? " is-fold" : "") + (railPin ? " is-pin" : "")}>
+          <div className={"mh-rail-wrap" + (railFold ? " is-fold" : "") + (railOn ? " is-pin" : "")}>
             <div
-              className={"mh-rail" + (railFold ? " is-fold" : "") + (railFold && (railPin || railHover) ? " is-open" : "") + (railFold && railHover ? " is-hover" : "") + (railPin ? " is-pin" : "")}
+              className={"mh-rail" + (railFold ? " is-fold" : "") + (railFold && (railOn || railHover) ? " is-open" : "") + (railFold && railHover ? " is-hover" : "") + (railOn ? " is-pin" : "")}
               onMouseEnter={() => railFold && setRailHover(true)}
               onMouseLeave={() => railFold && railLeave()}
               onFocusCapture={() => railFold && setRailHover(true)}
             >
               {railFold && (
-                <button type="button" className={"mh-rail-pin" + (railPin ? " is-on" : "")} title={railPin ? "Soltar barra" : "Fijar barra abierta"} aria-pressed={railPin} onClick={toggleRailPin}>
+                <button type="button" className={"mh-rail-pin" + (railOn ? " is-on" : "")} title={railOn ? "Soltar barra" : "Fijar barra abierta"} aria-pressed={railOn} onClick={toggleRailPin}>
                   <Pin size={14} />
                 </button>
               )}
@@ -31862,7 +31902,7 @@ export default function App({ onSignOut }) {
             };
             return (
               <>
-                <ModernSheet key={modernCharId} onExit={sheetOpen ? () => { setViewingCharId(null); setViewingCardDetail(null); setModernCharId(null); setView("ficha"); } : null} d={md} actions={modernActions(modernCharId)} content={renderClassicSheet(modernCharId, true)} tab={tab} fill={tab === "campaign"} onTab={(k) => (setDetailTab(k), setActionPage(0))} />
+                <ModernSheet key={modernCharId} d={md} actions={modernActions(modernCharId)} content={renderClassicSheet(modernCharId, true)} tab={tab} fill={tab === "campaign"} onTab={(k) => (setDetailTab(k), setActionPage(0))} />
                 {tourOn && <Tour ctx={{ hasPronouns: !!md.pronouns, tabs: md.tabs.map((t) => t.key) }} onTab={(k) => (setDetailTab(k), setActionPage(0))} onClose={closeTour} />}
               </>
             );

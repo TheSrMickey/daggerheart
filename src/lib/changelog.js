@@ -9,7 +9,9 @@ export const CHANGELOG = [
     title: "El Taller y la creación de personaje",
     blurb: "Crea tus propias cartas y armas en el Taller (con fichas e imágenes), descarga tu hoja en PDF, estrena la creación de personaje renovada, una pestaña Cartas más clara con Adversarios y Entornos, y un Buscar mesa con filtros, solicitudes con mensaje y avisos.",
     items: [
-      { tag: "mejora", text: "Hoja · al abrir una hoja de personaje se ocultan la barra lateral y la columna de amigos para usar toda la pantalla; un botón con flecha junto al nivel te devuelve a Personajes." },
+      { tag: "mejora", text: "Descansos · durante el descanso aparece una franja «Puedes cambiarlas ahora» con tus cartas de dominio equipadas y el botón «Cambiar cartas», y una guía de pasos (Acciones › Cartas de dominio › Terminar) sobre el botón de terminar." },
+      { tag: "arreglo", text: "Hoja · con las ilustraciones oficiales desactivadas, las cartas de dominio abiertas en grande vuelven a mostrar el logo del dominio." },
+      { tag: "mejora", text: "Hoja · al abrir una hoja de personaje los dos menús laterales se pliegan (aunque los tengas fijados) para dar más sitio; vuelven a como los dejaste al salir." },
       { tag: "arreglo", text: "Hoja · las cartas de dominio sin ilustración se ven al abrirlas igual que en la pestaña Cartas (logo del dominio grande con resplandor)." },
       { tag: "mejora", text: "Inventario · los huecos de la mochila no se ven hasta que añades una mochila; al hacerlo aparecen con una animación y los huecos del cinturón se reajustan." },
       { tag: "mejora", text: "Descansos · los pasos de «Trabajar en un proyecto» solo se pueden gastar durante el descanso largo en curso, y los que no uses se pierden al terminarlo." },

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { User, Radio, ChevronLeft } from "lucide-react";
+import { User, Radio } from "lucide-react";
 
 // Hoja de personaje "moderna": vive en la columna central. Recibe los datos ya calculados y las acciones de la app.
 const signed = (n) => (n > 0 ? "+" + n : String(n));
@@ -68,7 +68,7 @@ function ZoomFit({ children, isGeneral, natural, onNatural, fill }) {
   );
 }
 
-export function ModernSheet({ d, actions, content, tab, onTab, fill, onExit }) {
+export function ModernSheet({ d, actions, content, tab, onTab, fill }) {
   const navRef = useRef(null);
   const [compact, setCompact] = useState(false);
   const fullW = useRef(0);
@@ -161,11 +161,6 @@ export function ModernSheet({ d, actions, content, tab, onTab, fill, onExit }) {
           <span className="mhm-head-emb" aria-hidden="true"><Emblem size={190} strokeWidth={1} /></span>
         )}
         <div className="mhm-head-top">
-          {onExit && (
-            <button type="button" className="mhm-exit" onClick={onExit} title="Volver a Personajes" aria-label="Volver a Personajes">
-              <ChevronLeft size={20} />
-            </button>
-          )}
           <button type="button" className={"mhm-level" + (lvOpen ? " is-open" : "")} title={"Nivel " + d.level} aria-label={"Nivel " + d.level + ": ver o subir de nivel"} aria-expanded={lvOpen} onClick={() => setLvOpen((v) => !v)}>
             <svg viewBox="0 0 52 58" width="46" height="52" aria-hidden="true">
               <path d="M4 4 H48 V31 C48 43 38 51 26 55 C14 51 4 43 4 31 Z" />
