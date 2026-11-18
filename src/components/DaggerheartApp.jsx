@@ -4659,6 +4659,9 @@ const sharedStyles = `
   .mh-cardc.is-bg .mh-cardc-dom { top: 176px; right: auto; left: 50%; transform: translateX(-50%); padding: 4px 18px; border: 0; border-radius: 99px; font-size: 10px; font-weight: 800; letter-spacing: .2em; color: #fff; background: color-mix(in srgb, var(--cc) 82%, #10112a); box-shadow: 0 4px 12px -4px #000a, inset 0 1px 0 #ffffff40; -webkit-backdrop-filter: none; backdrop-filter: none; }
   /* Modo claro: el hueco de la ilustración sin imagen usa un degradado claro del color de la carta (antes un gris oscuro). */
   html[data-mh-theme="light"] .mh-cardc.is-bg .mh-cardc-noart:not(.is-exp) { background: linear-gradient(165deg, color-mix(in srgb, var(--cc) 34%, #fffdf8) 0%, color-mix(in srgb, var(--cc) 14%, #fffdf8) 100%); }
+  /* Cartas del Taller: marco interior dorado muy fino. */
+  .mh-cardc-wkf { position: absolute; inset: 5px; border: 1px solid #E3B04B66; border-radius: 17px; z-index: 7; pointer-events: none; }
+  html[data-mh-theme="light"] .mh-cardc-wkf { border-color: #B8862E88; }
   .mh-cardc-cost { display: none; }
   .mh-cardc.is-bg.is-wp .mh-cardc-sub { display: block; margin-top: 2px; font-size: 9.5px; letter-spacing: .14em; color: var(--mh-muted); }
   .mh-cardc.is-bg.is-wp .mh-cardc-big { font-size: 36px; font-weight: 800; letter-spacing: -.02em; color: #fff; text-shadow: 0 2px 12px color-mix(in srgb, var(--cc) 60%, transparent); }
