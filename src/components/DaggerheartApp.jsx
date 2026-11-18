@@ -8336,14 +8336,11 @@ const sharedStyles = `
   .mh-home-news.is-ses { --ns: #1a1308; background: radial-gradient(520px 300px at 88% 20%, #E3B04B44, transparent 70%), var(--ns); }
   .mh-home-news.is-mesa { --ns: #08160f; background: radial-gradient(520px 300px at 88% 20%, #3fcf7a44, transparent 70%), var(--ns); } .mh-home-news.is-mesa .mh-news-tag { color: #3fcf7a; background: #3fcf7a1f; border-color: #3fcf7a66; }
   .mh-home-news.is-card { --ns: #150d26; background: radial-gradient(520px 300px at 88% 20%, #A58BE855, transparent 70%), var(--ns); } .mh-home-news.is-card .mh-news-tag { color: #A58BE8; background: #A58BE81f; border-color: #A58BE866; }
-  html[data-mh-theme="light"] .mh-home-news.is-ses, html[data-mh-theme="light"] .mh-home-news.is-mesa, html[data-mh-theme="light"] .mh-home-news.is-card, html[data-mh-theme="light"] .mh-home-news.is-dp { --ns: #FFFCF6; }
-  .mh-home-news.is-dp { --ns: #0b0c1d; } .mh-home-news.is-dp .mh-news-tag { color: #b9c2f0; background: #8a96e01f; border-color: #8a96e066; } html[data-mh-theme="light"] .mh-home-news.is-dp .mh-news-tag { color: #3a4a9a; }
-  html:not([data-mh-theme="light"]) .mh-home-news.is-dp .mh-news-art { filter: brightness(1.55) saturate(1.1); }
+  html[data-mh-theme="light"] .mh-home-news.is-ses, html[data-mh-theme="light"] .mh-home-news.is-mesa, html[data-mh-theme="light"] .mh-home-news.is-card { --ns: #FFFCF6; }
   /* Sin ilustraciones oficiales: fondo de aurora (manchas de luz difuminadas del color de cada diapositiva y una trama de puntos). */
   .mh-news-aurora { display: none; }
-  html[data-mh-art="off"] .mh-home-news:is(.is-ver, .is-exp, .is-dp, .is-ses) .mh-news-aurora { display: block; position: absolute !important; inset: 0; z-index: 0 !important; overflow: hidden; border-radius: inherit; pointer-events: none; --a1: #5b7cff; --a2: #E3B04B; --a3: transparent; }
+  html[data-mh-art="off"] .mh-home-news:is(.is-ver, .is-exp, .is-ses) .mh-news-aurora { display: block; position: absolute !important; inset: 0; z-index: 0 !important; overflow: hidden; border-radius: inherit; pointer-events: none; --a1: #5b7cff; --a2: #E3B04B; --a3: transparent; }
   html[data-mh-art="off"] .mh-home-news.is-exp .mh-news-aurora { --a1: #8C7FD0; --a2: #A8323E; --a3: #C08B5C; }
-  html[data-mh-art="off"] .mh-home-news.is-dp .mh-news-aurora { --a1: #9A7BE8; --a2: #E3B04B; }
   html[data-mh-art="off"] .mh-home-news.is-ses .mh-news-aurora { --a1: #5b7cff; --a2: #6FBF73; }
   .mh-news-aurora i { position: absolute; border-radius: 50%; filter: blur(90px); }
   .mh-news-aurora i:nth-child(1) { width: 520px; height: 520px; right: -60px; top: -160px; background: var(--a1); opacity: .75; animation: mh-aur-a 14s ease-in-out infinite alternate; }
@@ -11299,8 +11296,8 @@ function HomeDice({ stats }) {
   const [now] = useState(() => Date.now());
   const st = stats || {};
   const total = st.total || 0;
-  const days = Array.from({ length: 10 }, (_, i) => {
-    const ms = now - (9 - i) * 86400000;
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const ms = now - (6 - i) * 86400000;
     return { key: dayKeyOf(ms), n: (st.days || {})[dayKeyOf(ms)] || 0, lab: ["D", "L", "M", "X", "J", "V", "S"][new Date(ms).getDay()] };
   });
   const max = Math.max(1, ...days.map((d) => d.n));
@@ -11315,11 +11312,11 @@ function HomeDice({ stats }) {
         <div className="mh-dice-st" style={{ "--c": "#E3B04B" }}><span><Star size={19} /></span><b>{st.crit || 0}</b><small>{st.crit === 1 ? "crítico" : "críticos"}</small></div>
         <div className="mh-dice-st" style={{ "--c": "#6FBF73" }}><span><Trophy size={19} /></span><b>{pct}%</b><small>con Esperanza</small></div>
         <div className="mh-dice-ch">
-          <small>{total ? "Tiradas de los últimos 10 días" : "Tira dados en tu hoja y aquí verás tus estadísticas"}</small>
+          <small>{total ? "Tiradas de los últimos 7 días" : "Tira dados en tu hoja y aquí verás tus estadísticas"}</small>
           <div className="mh-dice-bars">
             {days.map((d, i) => (
               <div key={d.key} title={d.n + (d.n === 1 ? " tirada" : " tiradas")}>
-                <u className={i === 9 ? "is-today" : ""} style={{ height: Math.max(3, (d.n / max) * 64) }} />
+                <u className={i === 6 ? "is-today" : ""} style={{ height: Math.max(3, (d.n / max) * 64) }} />
                 <small>{d.lab}</small>
               </div>
             ))}
