@@ -2104,6 +2104,31 @@ const thresholdsFor = (armorEntry, level) =>
   armorEntry ? { major: armorEntry.major + level, severe: armorEntry.severe + level } : { major: level, severe: level * 2 };
 
 
+// Número que reacciona al cambiar: rebota y se tiñe (verde al subir, rojo al bajar) y, si `float`, lanza un "+N"/"−N" flotante.
+function GoldNum({ value, float, children }) {
+  const prev = useRef(value);
+  const [pulse, setPulse] = useState(null);
+  useEffect(() => {
+    if (prev.current === value) return;
+    const delta = value - prev.current;
+    prev.current = value;
+    setPulse({ delta, id: Date.now() + Math.random() });
+    const t = setTimeout(() => setPulse(null), 900);
+    return () => clearTimeout(t);
+  }, [value]);
+  return (
+    <span className={"mh-gnum" + (pulse ? (pulse.delta > 0 ? " is-up" : " is-down") : "")}>
+      {children}
+      {float && pulse && (
+        <i key={pulse.id} className={"mh-gfloat " + (pulse.delta > 0 ? "is-up" : "is-down")}>
+          {pulse.delta > 0 ? "+" : "−"}
+          {Math.abs(pulse.delta)}
+        </i>
+      )}
+    </span>
+  );
+}
+
 const GOLD_TIERS = [
   { field: "f_gold_units", label: "Monedas", value: 1, shape: "circle" },
   { field: "f_gold_tens", label: "Puñados", value: 10, shape: "square" },
@@ -4797,6 +4822,24 @@ const sharedStyles = `
   .mh-seg button { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .mh-seg.is-fit button { flex: 1 1 auto; padding: 7px 9px; } .mh-seg.is-fit button:first-child { flex: 0 1 auto; }
   .mh-seg button i { font-style: normal; font-size: 10.5px; font-weight: 700; opacity: .65; padding: 1px 6px; border-radius: 99px; background: color-mix(in srgb, currentColor 12%, transparent); }
+
+  .mh-rs-ch { display: flex; flex-direction: column; gap: 12px; flex: 1; justify-content: center; } .mh-rs-q { margin: 0; font-size: 14px; font-weight: 700; color: var(--mh-ink); text-align: center; }
+  .mh-rs-opt { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 14px; padding: 16px 16px; border-radius: 18px; border: 1.5px solid var(--mh-line2); background: var(--mh-panel2); color: var(--mh-ink); transition: border-color .15s, transform .15s, background .15s; } .mh-rs-opt:hover:not(:disabled) { transform: translateY(-2px); } .mh-rs-opt:focus-visible { outline: 2px solid #E3B04B; outline-offset: 2px; } .mh-rs-opt:disabled { opacity: .45; cursor: not-allowed; }
+  .mh-rs-opt.is-short:hover:not(:disabled) { border-color: #E3B04B; background: #E3B04B10; } .mh-rs-opt.is-long:hover:not(:disabled) { border-color: #A58BE8; background: #A58BE810; }
+  .mh-rs-ic { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; flex: none; } .is-short .mh-rs-ic { background: #E3B04B22; color: #E3B04B; } .is-long .mh-rs-ic { background: #A58BE822; color: #A58BE8; }
+  .mh-rs-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; } .mh-rs-tx b { font-size: 16px; } .mh-rs-tx small { font-size: 12px; line-height: 1.4; color: var(--mh-muted); } .mh-rs-tx em { font-style: normal; font-size: 11px; color: var(--mh-muted2); }
+  .mh-rs-done { display: flex; align-items: center; gap: 7px; padding: 10px 12px; border-radius: 12px; background: #6FBF7318; color: var(--mh-green-ink); font-size: 12.5px; font-weight: 600; }
+  .mh-rs-act { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; background: color-mix(in srgb, var(--mh-gold-ink, #E3B04B) 12%, var(--mh-panel2)); border: 1px solid color-mix(in srgb, var(--mh-gold-ink, #E3B04B) 40%, transparent); flex-wrap: wrap; } .mh-rs-t { display: inline-flex; align-items: center; gap: 7px; font-weight: 700; font-size: 13px; color: var(--mh-ink); } .mh-rs-act small { color: var(--mh-muted); font-size: 11.5px; } .mh-rs-x { all: unset; cursor: pointer; margin-left: auto; font-size: 12px; font-weight: 600; color: var(--mh-muted); padding: 4px 8px; border-radius: 8px; } .mh-rs-x:hover { color: var(--mh-ink); background: var(--mh-line); }
+  .mh-gnum { position: relative; display: inline-flex; align-items: center; }
+  .mh-gnum.is-up > b { animation: mhGUp .6s cubic-bezier(.2,1.6,.4,1); }
+  .mh-gnum.is-down > b { animation: mhGDown .6s ease; }
+  .mh-gfloat { position: absolute; left: 100%; top: -4px; margin-left: 6px; font-style: normal; font-weight: 800; font-size: 14px; pointer-events: none; white-space: nowrap; animation: mhGFloat .9s ease-out forwards; }
+  .mh-gfloat.is-up { color: #3fae6a; }
+  .mh-gfloat.is-down { color: #d9534f; }
+  @keyframes mhGUp { 0% { transform: scale(1); } 40% { transform: scale(1.45); color: #f0b43a; text-shadow: 0 0 14px #f0b43a99; } 100% { transform: scale(1); } }
+  @keyframes mhGDown { 0% { transform: scale(1); } 30% { transform: scale(.78) translateY(2px); color: #d9534f; } 100% { transform: scale(1); } }
+  @keyframes mhGFloat { 0% { opacity: 0; transform: translateY(8px); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-16px); } }
+  @media (prefers-reduced-motion: reduce) { .mh-gnum > b, .mh-gfloat { animation: none !important; } }
   .mh-rest-row {
     --rc: var(--acc); flex: 1 1 0; min-height: 0; max-height: 92px; display: flex; align-items: center; gap: 11px; padding: 9px 12px;
     border: 1.5px solid var(--mh-line); border-radius: 12px; background: var(--mh-panel); cursor: pointer; transition: border-color .15s, background .15s;
@@ -9208,6 +9251,14 @@ const sharedStyles = `
     background: rgba(20,16,26,.72); color: #fff; font-size: 11px; font-weight: 600; padding: 2px 7px 2px 5px; border-radius: 20px;
   }
   .mh-dslot-txt { position: absolute; left: 12px; right: 12px; bottom: 9px; z-index: 1; }
+  /* Modo claro: las cartas de dominio sin ilustración usan un fondo claro teñido del dominio (antes un bloque oscuro sobre papel crema). */
+  html[data-mh-theme="light"] .mh-dslot:not(:has(.mh-dslot-art)) { background: color-mix(in srgb, var(--dc) 10%, #fffdf8); color: var(--mh-ink); }
+  html[data-mh-theme="light"] .mh-dslot:not(:has(.mh-dslot-art)) .mh-dslot-noart { background: linear-gradient(150deg, color-mix(in srgb, var(--dc) 24%, #fffdf8), color-mix(in srgb, var(--dc) 7%, #fffdf8) 80%) !important; color: var(--dc); }
+  html[data-mh-theme="light"] .mh-dslot:not(:has(.mh-dslot-art)) .mh-dslot-wm { opacity: .3; }
+  html[data-mh-theme="light"] .mh-dslot:not(:has(.mh-dslot-art)) .mh-dslot-shade { display: none; }
+  html[data-mh-theme="light"] .mh-dslot:not(:has(.mh-dslot-art)) .mh-dslot-title { color: var(--mh-ink); text-shadow: none; }
+  html[data-mh-theme="light"] .mh-dslot:not(:has(.mh-dslot-art)) .mh-dslot-kicker { color: color-mix(in srgb, var(--dc) 75%, #1a1208); }
+  html[data-mh-theme="light"] .mh-exp-locked { border: 1.5px dashed var(--mh-line); background: transparent; }
   .mh-dslot-kicker { font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: color-mix(in srgb, var(--dc) 55%, #fff); }
   .mh-dslot-title { font-weight: 700; color: #fff; margin-top: 2px; text-shadow: 0 1px 4px rgba(0,0,0,.6); }
   @media (prefers-reduced-motion: reduce) { .mh-dslot-art { transition: none; } }
@@ -15619,6 +15670,8 @@ export default function App({ onSignOut }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewingCharId, viewingSubclass, viewingAtEase]);
   const [restType, setRestType] = useState("short");
+  const [restPhase, setRestPhase] = useState(null); // null = sin descanso en curso · "short" | "long" = descanso empezado
+  useEffect(() => { setRestPhase(null); setRestPicks(null); }, [viewingCharId]);
   const [showChangeDomainModal, setShowChangeDomainModal] = useState(false);
   const [viewingCardDetail, setViewingCardDetail] = useState(null);
   const [cardClosing, setCardClosing] = useState(false);
@@ -18510,7 +18563,7 @@ export default function App({ onSignOut }) {
     };
     if (favorGain) restPatch.f_favor = String(getFavor(c) + favorGain);
     // Proyectos: se abren con un descanso largo (crear y editar) y solo avanzan si elegiste «Trabajar en un proyecto».
-    restPatch.f_proj_open = isLong ? "1" : "";
+    restPatch.f_proj_open = isLong && projectSteps ? "1" : ""; // los proyectos solo siguen abiertos si elegiste trabajar en uno
     restPatch.f_proj_adv = projectSteps ? String(projectSteps) : "";
     // Trovador: el descanso largo recupera sus canciones.
     if (isLong && c.f_speech_used) restPatch.f_speech_used = "";
@@ -22166,20 +22219,27 @@ export default function App({ onSignOut }) {
                               const blocked = !isLong && shortRests >= 3;
                               const restCamp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(viewingCharId));
                               const renderRest = (lock) => (
+                                !restPhase && !lock?.fixedType ? (
+                                  <div className="mh-rs-ch">
+                                    <p className="mh-rs-q">¿Qué descanso quieres hacer?</p>
+                                    {[["short", "Descanso corto", Sun, "Unas horas junto a la hoguera. Eliges " + slots + " acciones para recuperarte un poco.", blocked ? "Llevas 3 descansos cortos seguidos: el próximo tiene que ser largo." : shortRests + "/3 cortos seguidos"], ["long", "Descanso largo", Moon, "Una noche entera. Recuperas todo con " + slots + " acciones y se abren tus proyectos.", "Reinicia el contador de descansos cortos"]].map(([key, label, Ico, desc, note]) => {
+                                      const dis = key === "short" && blocked;
+                                      return (
+                                        <button key={key} type="button" className={"mh-rs-opt is-" + key} disabled={dis} onClick={() => { setRestType(key); setRestPhase(key); setRestPicks(null); setRestEfficient(null); }}>
+                                          <span className="mh-rs-ic"><Ico size={22} /></span>
+                                          <span className="mh-rs-tx"><b>{label}</b><small>{desc}</small><em>{note}</em></span>
+                                          <ChevronRight size={18} />
+                                        </button>
+                                      );
+                                    })}
+                                    {restMessage && <div className="mh-rs-done"><Check size={14} /> {restMessage}</div>}
+                                  </div>
+                                ) : (
                                 <div style={{ display: "flex", flexDirection: "column", gap: 11, flex: 1, minHeight: 0 }}>
-                                  <div className="mh-seg" role="tablist" style={lock?.fixedType ? { pointerEvents: "none" } : undefined}>
-                                    {[["short", "Descanso corto", Sun], ["long", "Descanso largo", Moon]].map(([key, label, Ico]) => (
-                                      <button
-                                        key={key}
-                                        type="button"
-                                        role="tab"
-                                        aria-selected={restType === key}
-                                        className={restType === key ? "on" : ""}
-                                        onClick={() => setRestType(key)}
-                                      >
-                                        <Ico size={14} /> {label}
-                                      </button>
-                                    ))}
+                                  <div className="mh-rs-act">
+                                    <span className="mh-rs-t">{isLong ? <Moon size={15} /> : <Sun size={15} />} Descanso {isLong ? "largo" : "corto"} en curso</span>
+                                    <small>Elige hasta {slots} acciones{isLong ? " · proyectos abiertos" : ""}</small>
+                                    {!lock?.fixedType && <button type="button" className="mh-rs-x" onClick={() => { setRestPhase(null); setRestPicks(null); setRestEfficient(null); }}>Cancelar</button>}
                                   </div>
 
                                   <div className="mh-rest-grid">
@@ -22316,9 +22376,10 @@ export default function App({ onSignOut }) {
                                       }
                                       setRestPicks(null);
                                       setRestEfficient(null);
+                                      setRestPhase(null);
                                     }}
                                   >
-                                    <Flame size={15} /> Descansar
+                                    <Flame size={15} /> Terminar descanso
                                   </button>
                                   <div className="mh-rest-foot">
                                   <div style={{ flex: 1, minWidth: 0, fontSize: 11, color: restMessage ? "var(--mh-green-ink)" : blocked ? "#D9644E" : "var(--mh-purple-ink)", fontWeight: restMessage || blocked ? 600 : 400, display: "flex", alignItems: "center", gap: 5, minHeight: 16 }}>
@@ -22339,6 +22400,7 @@ export default function App({ onSignOut }) {
                                   </button>
                                   </div>
                                 </div>
+                                )
                               );
                               if (!restCamp) return renderRest(null);
                               return (
@@ -22369,7 +22431,7 @@ export default function App({ onSignOut }) {
                             {(() => {
                               const projects = getProjects(c);
                               const projCamp = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(viewingCharId));
-                              const projOpen = c.f_proj_open === "1";
+                              const projOpen = restPhase === "long" || c.f_proj_open === "1"; // se abren al empezar un descanso largo
                               const stepsLeft = Number(c.f_proj_adv || 0);
                               const canAdvance = projCamp ? true : stepsLeft > 0;
                               const wrapLock = (node) =>
@@ -22379,7 +22441,7 @@ export default function App({ onSignOut }) {
                                       <div className="rl-ban">
                                         <Moon size={16} />
                                         <span>
-                                          <b>Descanso largo.</b> {stepsLeft > 0 ? "Puedes avanzar " + stepsLeft + (stepsLeft > 1 ? " pasos." : " paso.") : "Crea y edita tus proyectos."}
+                                          <b>Descanso largo.</b> {stepsLeft > 0 ? "Puedes avanzar " + stepsLeft + (stepsLeft > 1 ? " pasos." : " paso.") : restPhase === "long" ? "Crea y edita tus proyectos; el avance se aplica al terminar el descanso." : "Crea y edita tus proyectos."}
                                         </span>
                                         <button type="button" className="mh-btn-ghost" style={{ marginLeft: "auto", padding: "3px 9px", fontSize: 11.5 }} onClick={() => updateCharacterFields(viewingCharId, { f_proj_open: "", f_proj_adv: "" })}>
                                           Terminar
@@ -22393,7 +22455,7 @@ export default function App({ onSignOut }) {
                                       <div className="rl-lock">
                                         <span className="rl-ic"><Lock size={26} /></span>
                                         <h4 className="mh-serif">Proyectos en pausa</h4>
-                                        <p>Se abren cuando haces un descanso largo.</p>
+                                        <p>Se abren cuando empiezas un descanso largo.</p>
                                       </div>
                                     )}
                                   </div>
@@ -22629,6 +22691,7 @@ export default function App({ onSignOut }) {
                                 setViewingCardDetail({
                                   kicker: v.kind + where,
                                   title: it.name,
+                                  accent: v.color,
                                   text: it.description || "Un objeto del inventario de " + (c.f_name || "este personaje") + ".",
                                   ...((it.count || 1) > 1 ? { stat: { label: "Cantidad", value: "×" + it.count } } : {}),
                                   bigStyle: true,
@@ -22730,7 +22793,9 @@ export default function App({ onSignOut }) {
                                 <div className="mh-gold-fill">
                                   <div className="mh-gold-total">
                                     <Coins size={22} />
-                                    <b className="mh-serif">{total}</b>
+                                    <GoldNum value={total} float>
+                                      <b className="mh-serif">{total}</b>
+                                    </GoldNum>
                                     <span>de oro</span>
                                   </div>
                                   {GOLD_TIERS.map((tier) => {
@@ -22748,7 +22813,9 @@ export default function App({ onSignOut }) {
                                         <button className="mh-btn-ghost" style={{ padding: "2px 7px" }} aria-label={"Quitar " + tier.label.toLowerCase()} disabled={total < tier.value} onClick={() => changeGold(-tier.value)}>
                                           <Minus size={11} />
                                         </button>
-                                        <b className="mh-serif mh-gold-n">{counts[idx]}</b>
+                                        <GoldNum value={counts[idx]}>
+                                          <b className="mh-serif mh-gold-n">{counts[idx]}</b>
+                                        </GoldNum>
                                         <button className="mh-btn-ghost" style={{ padding: "2px 7px" }} aria-label={"Añadir " + tier.label.toLowerCase()} disabled={total + tier.value > MAX_GOLD} onClick={() => changeGold(tier.value)}>
                                           <Plus size={11} />
                                         </button>
@@ -29071,7 +29138,7 @@ export default function App({ onSignOut }) {
                   const CfIcon = CLASS_EMBLEMS[c.f_class] || Sparkles;
                   const artSrc = d.image || (isCf || isHopeCf ? CLASS_HEADER_ART[c.f_class] || CLASS_ART[c.f_class] || null : null);
                   const hopeCost = d.stat?.value ?? d.hopeAction?.cost ?? "";
-                  const newBg = !!(d.domain || isAncCom || d.weapon || d.armor || isSub || isTrans || isForm || isExp || isCf || isHopeCf);
+                  const newBg = !!(d.domain || d.itemIcon || isAncCom || d.weapon || d.armor || isSub || isTrans || isForm || isExp || isCf || isHopeCf);
                   const subRank = /Maestr/.test(d.kicker || "") ? 2 : /Especializ/.test(d.kicker || "") ? 1 : 0;
                   const subRankLabel = ["Fundación", "Especialización", "Maestría"][subRank];
                   const formRank = Number((/Rango (\d)/.exec(d.kicker || "") || [])[1] || 1);
@@ -30638,6 +30705,8 @@ export default function App({ onSignOut }) {
                         </span>
                       ) : isSub || isForm ? (
                         <span className="mh-cardc-gem is-rank" title={isSub ? subRankLabel : "Rango " + formRank}>{["I", "II", "III", "IV"][isSub ? subRank : formRank - 1]}<ArtIcon size={19} strokeWidth={1.8} /></span>
+                      ) : d.itemIcon ? (
+                        <span className="mh-cardc-gem is-rank" title={d.kicker || "Objeto"}>{d.invItem?.count > 1 ? "×" + d.invItem.count : null}<ArtIcon size={19} strokeWidth={1.8} /></span>
                       ) : d.brawlerStrike ? (
                         <span className="mh-cardc-tier" style={{ background: "#C08B5C" }}>Sin arma</span>
                       ) : d.tier ? (
@@ -30655,6 +30724,7 @@ export default function App({ onSignOut }) {
                         <Sparkles size={13} /> {isExp ? 1 : hopeCost} Esperanza
                       </span>
                     )}
+                    {d.itemIcon && <span className="mh-cardc-dom">{d.kicker || "Objeto"}</span>}
                     {isTrans && <span className="mh-cardc-dom">Transformación</span>}
                     {isForm && <span className="mh-cardc-dom">Forma de Bestia</span>}
                     {(d.weapon || d.armor) && d.tier && <span className="mh-cardc-dom">{TIER_COLORS[d.tier].label}</span>}
