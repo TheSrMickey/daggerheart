@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ArrowUp, Check, Layers, Search, X, Zap } from "lucide-react";
 import { useSocial } from "./Social";
 import { cardStatus, isAdminName } from "@/lib/cardStatus";
@@ -242,6 +243,16 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox, Domain
   const rootRef = useRef(null);
   const scRef = useRef(null);
   const [showTop, setShowTop] = useState(false);
+  const [mob, setMob] = useState(false); // móvil: barra de una fila + hoja de filtros
+  const [sheet, setSheet] = useState(false);
+  const [sOpen, setSOpen] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 819px)");
+    const f = () => setMob(mq.matches);
+    f();
+    mq.addEventListener("change", f);
+    return () => mq.removeEventListener("change", f);
+  }, []);
   // Contenedor con scroll de la página: sirve para el botón de subir y, en móvil, para centrar la carta.
   useEffect(() => {
     let sc = rootRef.current?.parentElement;
@@ -396,6 +407,65 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox, Domain
     delete el.dataset.active;
   };
 
+  const activeN = sel.length + (lvl != null ? 1 : 0) + (tier ? 1 : 0) + (cls ? 1 : 0);
+  const pickKindMob = (g, k) => { setQuery(""); setGroup(g.key); setKind(k); setSel([]); setLvl(null); setTier(0); setCls(""); };
+  const mobileBar = (
+    <>
+      <div className="cx-mb">
+        <button type="button" className="cx-mp is-on" onClick={() => setSheet(true)}>{TYPE_LABEL[kind]} ▾</button>
+        {sel.map((d) => <span key={d} className="cx-mp">{d}</span>)}
+        {lvl != null && <span className="cx-mp">Nv {lvl}</span>}
+        {tier ? <span className="cx-mp">Rango {tier}</span> : null}
+        {cls && <span className="cx-mp">{cls}</span>}
+        <span style={{ flex: 1 }} />
+        <button type="button" className={"cx-mi" + (sOpen || q ? " is-on" : "")} aria-label="Buscar" onClick={() => setSOpen((v) => !v)}><Search size={16} /></button>
+        <button type="button" className="cx-mi" aria-label="Filtros" onClick={() => setSheet(true)}><Layers size={16} />{activeN > 0 && <b className="cx-bd">{activeN}</b>}</button>
+      </div>
+      {(sOpen || q) && (
+        <label className="cx-ms"><Search size={14} /><input autoFocus type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar por nombre o texto…" aria-label="Buscar cartas" /></label>
+      )}
+      {sheet && typeof document !== "undefined" && createPortal(
+        <div className="cx-sh-ov" onClick={() => setSheet(false)}>
+          <div className="cx-sh" role="dialog" aria-modal="true" aria-label="Filtros" onClick={(e) => e.stopPropagation()}>
+            <div className="cx-sh-gr" />
+            <div className="cx-sh-h"><b>Filtros</b><button type="button" onClick={() => { setSel([]); setLvl(null); setTier(0); setCls(""); setQuery(""); }}>Limpiar</button></div>
+            <div className="cx-sh-b">
+              <h4>Grupo</h4>
+              <div className="cx-sh-seg">{GROUPS.map((g) => <button key={g.key} type="button" className={group === g.key ? "on" : ""} onClick={() => pickKindMob(g, g.kinds[0])}>{g.label}</button>)}</div>
+              <h4>Tipo</h4>
+              <div className="cx-sh-seg">{GROUPS.find((g) => g.key === group).kinds.map((k) => <button key={k} type="button" className={kind === k ? "on" : ""} onClick={() => pickKindMob(GROUPS.find((g) => g.key === group), k)}>{TYPE_LABEL[k]}</button>)}</div>
+              {kind === "dominio" && (
+                <>
+                  <h4>Dominio</h4>
+                  <div className="cx-sh-seg">{domains.map((d) => { const n = domCount(d); return <button key={d} type="button" disabled={!n} className={sel.includes(d) ? "on" : ""} onClick={() => toggle(d)}>{DomainIcon ? <DomainIcon name={d} size={15} /> : null}{d}</button>; })}</div>
+                  <h4>Nivel</h4>
+                  <div className="cx-sh-seg">{[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <button key={n} type="button" className={lvl === n ? "on" : ""} onClick={() => setLvl(lvl === n ? null : n)}>{n}</button>)}</div>
+                </>
+              )}
+              {(kind === "arma" || kind === "armadura" || kind === "forma") && (
+                <>
+                  <h4>Rango</h4>
+                  <div className="cx-sh-seg">{[1, 2, 3, 4].map((n) => <button key={n} type="button" className={tier === n ? "on" : ""} onClick={() => setTier(tier === n ? 0 : n)}>{n}</button>)}</div>
+                </>
+              )}
+              {kind === "subclase" && (
+                <>
+                  <h4>Clase</h4>
+                  <select className="cx-sel" value={cls} onChange={(e) => setCls(e.target.value)} aria-label="Clase">
+                    <option value="">Todas las clases</option>
+                    {classes.map((c) => <option key={c}>{c}</option>)}
+                  </select>
+                </>
+              )}
+            </div>
+            <div className="cx-sh-f"><button type="button" className="cx-sh-ok" onClick={() => setSheet(false)}>Ver {shown.length} carta{shown.length === 1 ? "" : "s"}</button></div>
+          </div>
+        </div>,
+        document.querySelector(".mh-root") || document.body
+      )}
+    </>
+  );
+
   return (
     <div className="cx" ref={rootRef}>
       <div className="cx-h">
@@ -409,6 +479,7 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox, Domain
         </label>
       </div>
       <div className="cx-bars">
+        {mob ? mobileBar : (<>
         <div className="cx-g" role="tablist" aria-label="Grupo de cartas">
           {GROUPS.map((g) => (
             <button key={g.key} type="button" role="tab" aria-selected={!q && group === g.key} className={!q && group === g.key ? "on" : ""} onClick={() => (setQuery(""), pickGroup(g))}>
@@ -467,6 +538,7 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox, Domain
             )}
           </div>
         )}
+        </>)}
       </div>
       <div className="cx-meta">
         <span>{q ? shown.length + " resultado" + (shown.length === 1 ? "" : "s") + " para «" + query.trim() + "» en todas las cartas" : shown.length + " carta" + (shown.length === 1 ? "" : "s") + " · " + TYPE_LABEL[kind] + (sel.length ? " · " + sel.join(" + ") : "")}</span>
