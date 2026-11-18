@@ -19154,7 +19154,7 @@ export default function App({ onSignOut }) {
     }
     // Galapa · Retraerse: desventaja en las tiradas de acción mientras está en el caparazón.
     const shellOn = getConditions(charsRef.current[charId] || {}).includes("Retraído");
-    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage && !shellOn, exps: [], rally: false, privilege: false, disadvantage: shellOn, shellOn, poet: false, dedicated: false, quick: false, reaction: false, tide: 0, dc: weapon && weapon.targetDc ? String(weapon.targetDc) : "", elem: "", slayer: 0, found: "", adept: false, patron: false, surround: 0, honed: false, hallow: false, fury: false });
+    setPreRoll({ charId, traitLabel, traitValue, weapon, cardContext, advantage: !!advantage && !shellOn, exps: [], rally: false, privilege: false, disadvantage: shellOn, shellOn, poet: false, dedicated: false, quick: false, reaction: false, tide: 0, dc: weapon && weapon.targetDc ? String(weapon.targetDc) : "", elem: "", slayer: 0, found: "", adept: false, patron: false, surround: 0, honed: false, hallow: false, fury: false, tongue: false });
   };
   const confirmPreRoll = () => {
     const pr = preRoll;
@@ -19179,7 +19179,8 @@ export default function App({ onSignOut }) {
     const honed = ch && ch.f_subclass === "Escuela del Conocimiento" && tierForLevel(ch.f_level || 1) >= 3 && !adeptOn && exps.length ? exps.map(() => Math.floor(Math.random() * 6) + 1) : [];
     const honedFree = honed.filter((v) => v >= 5).length;
     if (honed.length) postCampaignEvent(pr.charId, `📘 Pericia: tira ${honed.join(", ")}${honedFree ? " y usa " + honedFree + " Experiencia" + (honedFree > 1 ? "s" : "") + " sin gastar Esperanza" : ""}`);
-    const hopeCost = (adeptOn ? 0 : exps.length - honedFree) + (pr.poet ? 1 : 0) + (elemUse ? 1 : 0) + (foundExp ? 1 : 0);
+    const tongueUse = !!pr.tongue && !pr.weapon && !pr.reaction && !!ch && getKeys(ch.f_domain_cards).includes("Lengua de la Naturaleza") && pr.traitLabel === TRAITS.find((t) => t.key === charSpellTrait(ch))?.label;
+    const hopeCost = (adeptOn ? 0 : exps.length - honedFree) + (pr.poet ? 1 : 0) + (elemUse ? 1 : 0) + (foundExp ? 1 : 0) + (tongueUse ? 1 : 0);
     if (hopeCost && ch) patch.hope_marked = String(Math.max(0, Number(ch.hope_marked ?? HOPE_DEFAULT) - hopeCost));
     const rallyDie = pr.rally && ch?.f_rally_die ? ch.f_rally_die : "";
     if (rallyDie) patch.f_rally_die = "";
@@ -19248,7 +19249,7 @@ export default function App({ onSignOut }) {
       updateCharacterField(pr.charId, "f_circle", String(circleN - 1));
       if (circleN - 1 === 0) postCampaignEvent(pr.charId, "⭕ Círculo de Poder: se retira la última ficha y el círculo se desvanece");
     }
-    doTraitRoll(pr.charId, pr.traitLabel, pr.traitValue + noMercy + moonbeam + circleAtk, pr.weapon ? { ...pr.weapon, ...(elemUse === "dmg" ? { elemDmg: 3 } : {}), ...(honedUse ? { honed: true } : {}) } : pr.weapon, pr.cardContext, pr.advantage || pr.privilege || pr.quick, {
+    doTraitRoll(pr.charId, pr.traitLabel, pr.traitValue + (tongueUse ? 2 : 0) + noMercy + moonbeam + circleAtk, pr.weapon ? { ...pr.weapon, ...(elemUse === "dmg" ? { elemDmg: 3 } : {}), ...(honedUse ? { honed: true } : {}) } : pr.weapon, pr.cardContext, pr.advantage || pr.privilege || pr.quick, {
       exps: [...exps.map((e, i) => ({ text: e.text + (adeptOn ? " ×2" : honed.length ? " · Pericia " + honed[i] + (honed[i] >= 5 ? " (gratis)" : "") : ""), bonus: (Number(e.bonus) || 0) * (adeptOn ? 2 : 1) })), ...(foundExp ? [foundExp] : [])],
       slayer: slayerSpent,
       patronSides: patronUse,
@@ -20086,8 +20087,7 @@ export default function App({ onSignOut }) {
   };
   const modernActions = (id) => ({
     rollTrait: (label, value, t) => {
-      if (t?.tongue) setPendingSpellRoll({ charId: id, traitLabel: label, traitValue: value, advantage: !!t.adv });
-      else rollTraitCheck(id, label, value, undefined, undefined, !!t?.adv);
+      rollTraitCheck(id, label, value, undefined, undefined, !!t?.adv);
     },
     attack: (w) => rollTraitCheck(id, w.trait, w.traitValue, { name: w.key, damage: w.damage }),
     damage: (w) => rollWeaponDamage(w.key, w.damage, id, false),
@@ -20646,22 +20646,11 @@ export default function App({ onSignOut }) {
                   const isSpellcast = charSpellTrait(c) === t.key;
                   const formBoosted = formBoost + evoBoost > 0;
                   const hasAdvantage = c.f_elemental_active === "Aire" && t.key === "t_agility";
-                  const hasNaturesTongue = (() => {
-                    try {
-                      return JSON.parse(c.f_domain_cards || "[]").includes("Lengua de la Naturaleza");
-                    } catch (e) {
-                      return false;
-                    }
-                  })();
                   return (
                     <div
                       key={t.key}
                       onClick={() => {
-                        if (isSpellcast && hasNaturesTongue) {
-                          setPendingSpellRoll({ charId: viewingCharId, traitLabel: t.label, traitValue: val, advantage: hasAdvantage });
-                        } else {
-                          rollTraitCheck(viewingCharId, t.label, val, undefined, undefined, hasAdvantage);
-                        }
+                        rollTraitCheck(viewingCharId, t.label, val, undefined, undefined, hasAdvantage);
                       }}
                       title={
                         (formBoosted ? `${t.label} +${formBoost + evoBoost} por ${beastformInfo?.key || "transformación"}${evoBoost ? " (incluye Evolución)" : ""}. ` : "") +
@@ -26296,7 +26285,10 @@ export default function App({ onSignOut }) {
               const circleOn = ch.f_subclass === "Bruja del Seto" && Number(ch.f_circle || 0) > 0 && !!preRoll.weapon;
               // Artista Marcial · Fiable: +1 a las tiradas de ataque.
               const reliableOn = activeStance(ch) === "fiable" && !!preRoll.weapon;
-              const mod = preRoll.traitValue + (noMercyOn ? 1 : 0) + (moonbeamOn ? 1 : 0) + (circleOn ? 2 : 0) + (reliableOn ? 1 : 0) + (hasMutagen(ch, "furia") && preRoll.weapon && preRoll.fury ? getProficiency(ch) : 0) + expSum + tideUse + (foundPick && !ch.f_found_used ? foundPick.bonus : 0) + (ch.f_subclass === "Origen Elemental" && !preRoll.reaction && preRoll.elem === "roll" ? 2 : 0);
+              // Lengua de la Naturaleza: en tiradas de conjuro, 1 Esperanza para +2 (antes era un aviso aparte; ahora es una opción más de esta ventana).
+              const tongueOk = !preRoll.weapon && !preRoll.reaction && getKeys(ch.f_domain_cards).includes("Lengua de la Naturaleza") && preRoll.traitLabel === TRAITS.find((t) => t.key === charSpellTrait(ch))?.label;
+              const tongueOn = tongueOk && !!preRoll.tongue;
+              const mod = preRoll.traitValue + (tongueOn ? 2 : 0) + (noMercyOn ? 1 : 0) + (moonbeamOn ? 1 : 0) + (circleOn ? 2 : 0) + (reliableOn ? 1 : 0) + (hasMutagen(ch, "furia") && preRoll.weapon && preRoll.fury ? getProficiency(ch) : 0) + expSum + tideUse + (foundPick && !ch.f_found_used ? foundPick.bonus : 0) + (ch.f_subclass === "Origen Elemental" && !preRoll.reaction && preRoll.elem === "roll" ? 2 : 0);
               // Galapa retraída: la desventaja en las tiradas de acción no se puede quitar.
               // Goblin · Pie Firme: ignora la desventaja en las tiradas de Agilidad.
               const sureFoot = ancFeat(ch, "Goblin", 0) && preRoll.traitLabel === "Agilidad";
@@ -26355,7 +26347,7 @@ export default function App({ onSignOut }) {
               const elemEl = ORIGIN_ELEMENTS.find((e) => e.key === ch.f_origin_element);
               const adeptOk = ch.f_subclass === "Escuela del Conocimiento";
               const adeptOnUI = adeptOk && preRoll.adept;
-              const hopeUsed = (adeptOnUI ? 0 : preRoll.exps.length) + (preRoll.poet ? 1 : 0) + (elemOk && preRoll.elem ? 1 : 0);
+              const hopeUsed = (adeptOnUI ? 0 : preRoll.exps.length) + (preRoll.poet ? 1 : 0) + (elemOk && preRoll.elem ? 1 : 0) + (tongueOn ? 1 : 0);
               const riseOk = riseToChallenge(ch);
               const formula = (slayerUse ? "" : "") + (preRoll.dedicated || riseOk ? "1d20 + 1d12 " : "2d12 ") + (mod >= 0 ? "+ " : "− ") + Math.abs(mod) + (preRoll.rally && ch.f_rally_die ? " + 1" + ch.f_rally_die : "") + (preRoll.poet ? " + 1d4" : "") + (preRoll.weapon && ch.f_transformation_form_active === "Forma de Lobo" ? " + 1d10" : "") + (edgeNet > 0 ? " + 1d6" : edgeNet < 0 ? " − 1d6" : "") + (slayerUse ? " + " + slayerUse + "d6" : "") + (patronOk && preRoll.patron ? " + 1d" + patronSides(ch) : "") + (hybridSides(ch) && !preRoll.reaction ? " + 1d" + hybridSides(ch) : "");
               const toggleExp = (i) =>
@@ -26513,6 +26505,18 @@ export default function App({ onSignOut }) {
                   </div>
                 ) : null,
                 rallyOn || ch.f_rally_die ? tile("rally", { on: preRoll.rally, title: "Arenga", sub: "Gastas tu dado", cost: "+1" + ch.f_rally_die, color: "#E07FB0", onClick: () => setPreRoll((p) => ({ ...p, rally: !p.rally })) }) : null,
+                tongueOk
+                  ? tile("tongue", {
+                      on: tongueOn,
+                      disabled: !tongueOn && hopeUsed >= hopeNow,
+                      title: "Lengua de la Naturaleza",
+                      sub: "Si estás en un entorno natural · 1 Esperanza",
+                      cost: "+2",
+                      color: "#6FBF73",
+                      hint: !tongueOn && hopeUsed >= hopeNow ? "No te queda Esperanza" : "Gasta 1 Esperanza para ganar +2 a esta tirada de conjuro",
+                      onClick: () => setPreRoll((p) => ({ ...p, tongue: !p.tongue })),
+                    })
+                  : null,
                 poetOk
                   ? tile("poet", {
                       on: preRoll.poet,
@@ -26569,6 +26573,7 @@ export default function App({ onSignOut }) {
                 riseOk && !preRoll.dedicated ? ["Estar a la Altura", "Esperanza d20"] : null,
                 noMercyOn ? ["Sin Piedad", "+1"] : null,
                 moonbeamOn ? ["Rayo de Luna", "+1"] : null,
+                tongueOn ? ["Lengua de la Naturaleza", "+2"] : null,
                 circleOn ? ["Círculo de Poder", "+2"] : null,
                 reliableOn ? ["Postura Fiable", "+1"] : null,
                 hasMutagen(ch, "furia") && preRoll.weapon && preRoll.fury ? ["Furia (1 Estrés)", "+" + getProficiency(ch)] : null,
@@ -26584,8 +26589,8 @@ export default function App({ onSignOut }) {
               const DS = 40;
               // Altura fija: se reserva hueco para todas las líneas que este personaje puede llegar a tener.
               const maxLines = 0 * (1 + exps.length) + (ch.f_rally_die ? 1 : 0) + (poetOk ? 1 : 0) + (dedicatedOk ? 1 : 0) + (riseOk ? 1 : 0) + (noMercyOn ? 1 : 0) + (moonbeamOn ? 1 : 0) + (circleOn ? 1 : 0) + (reliableOn ? 1 : 0) + (patronOk ? 1 : 0) + (hybridSides(ch) ? 1 : 0) + (slayerHave ? 1 : 0) + (foundOk ? 1 : 0) + (tideOk ? 1 : 0) + (elemOk ? 1 : 0) + (wolf ? 1 : 0) + 1;
-              const canSpendHope = exps.length > 0 || poetOk;
-              const anyAdded = preRoll.exps.length > 0 || preRoll.rally || preRoll.poet || preRoll.dedicated || preRoll.privilege || preRoll.quick || tideUse > 0 || !!preRoll.elem || slayerUse > 0 || !!foundPick || !!preRoll.adept || !!preRoll.patron || edgePos !== "none";
+              const canSpendHope = exps.length > 0 || poetOk || tongueOk;
+              const anyAdded = tongueOn || preRoll.exps.length > 0 || preRoll.rally || preRoll.poet || preRoll.dedicated || preRoll.privilege || preRoll.quick || tideUse > 0 || !!preRoll.elem || slayerUse > 0 || !!foundPick || !!preRoll.adept || !!preRoll.patron || edgePos !== "none";
               return (
                 <div className={"mh-overlay" + (rollDock ? " mh-docked" : "")} style={{ position: "absolute", inset: 0, zIndex: 45, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(8,6,12,0.55)", ...(rollDock ? ROLL_DOCK : {}) }} onClick={() => setPreRoll(null)}>
                   <div className="mh-card mh-card-anim mh-pre" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={"Tirada de " + preRoll.traitLabel}>
@@ -26726,7 +26731,7 @@ export default function App({ onSignOut }) {
                           className="mh-pre-plain"
                           style={anyAdded ? undefined : { display: "none" }}
                           tabIndex={anyAdded ? undefined : -1}
-                          onClick={() => setPreRoll((p) => ({ ...p, exps: [], rally: false, poet: false, dedicated: false, privilege: false, quick: false, tide: 0, elem: "", slayer: 0, found: "", adept: false, patron: false, advantage: false, disadvantage: false }))}
+                          onClick={() => setPreRoll((p) => ({ ...p, tongue: false, exps: [], rally: false, poet: false, dedicated: false, privilege: false, quick: false, tide: 0, elem: "", slayer: 0, found: "", adept: false, patron: false, advantage: false, disadvantage: false }))}
                         >
                           Quitar lo añadido
                         </button>
@@ -29175,73 +29180,6 @@ export default function App({ onSignOut }) {
               </div>
             )}
 
-            {pendingSpellRoll && (
-              <div
-                style={{
-                  position: "fixed",
-                  inset: 0,
-                  background: "rgba(8,6,12,0.70)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  zIndex: 90,
-                  padding: 20,
-                }}
-                onClick={() => setPendingSpellRoll(null)}
-              >
-                <div
-                  className="mh-card"
-                  style={{ margin: 0, width: "min(400px, 100%)" }}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="mh-serif" style={{ fontSize: 16, fontWeight: 700, color: "var(--mh-ink)", marginBottom: 10 }}>
-                    Lengua de la Naturaleza
-                  </div>
-                  <div style={{ fontSize: 13.5, color: "var(--mh-ink)", lineHeight: 1.5, marginBottom: 18 }}>
-                    Si estás en un entorno natural, gracias a la carta Lengua de la Naturaleza puedes gastar una Esperanza
-                    para ganar +2 a esta tirada de conjuro.
-                  </div>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <button
-                      className="mh-btn-ghost"
-                      style={{ flex: 1, justifyContent: "center" }}
-                      onClick={() => {
-                        rollTraitCheck(pendingSpellRoll.charId, pendingSpellRoll.traitLabel, pendingSpellRoll.traitValue, undefined, undefined, pendingSpellRoll.advantage);
-                        setPendingSpellRoll(null);
-                      }}
-                    >
-                      Tirada normal
-                    </button>
-                    <button
-                      className="mh-btn"
-                      style={{
-                        flex: 1,
-                        justifyContent: "center",
-                        opacity: Number(characters[pendingSpellRoll.charId]?.hope_marked ?? 0) < 1 ? 0.5 : 1,
-                        cursor: Number(characters[pendingSpellRoll.charId]?.hope_marked ?? 0) < 1 ? "not-allowed" : "pointer",
-                      }}
-                      disabled={Number(characters[pendingSpellRoll.charId]?.hope_marked ?? 0) < 1}
-                      onClick={() => {
-                        const ch = characters[pendingSpellRoll.charId];
-                        const currentHope = Number(ch?.hope_marked ?? 0);
-                        if (currentHope < 1) return;
-                        updateCharacterField(pendingSpellRoll.charId, "hope_marked", currentHope - 1);
-                        rollTraitCheck(pendingSpellRoll.charId, pendingSpellRoll.traitLabel, pendingSpellRoll.traitValue + 2, undefined, undefined, pendingSpellRoll.advantage);
-                        setPendingSpellRoll(null);
-                      }}
-                    >
-                      Gastar Esperanza (+2)
-                    </button>
-                  </div>
-                  {Number(characters[pendingSpellRoll.charId]?.hope_marked ?? 0) < 1 && (
-                    <div style={{ fontSize: 11.5, color: "#D9644E", fontWeight: 600, marginTop: 8 }}>
-                      No tienes Esperanza disponible para usar este efecto.
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
             {viewingCardDetail && (
               <div
                 className={"mh-overlay" + (cardClosing ? " is-closing" : "")}
@@ -30879,7 +30817,7 @@ export default function App({ onSignOut }) {
                     {isForm && <span className="mh-cardc-dom">Forma de Bestia</span>}
                     {(d.weapon || d.armor) && d.tier && <span className="mh-cardc-dom">{TIER_COLORS[d.tier].label}</span>}
                     {d.domain && <span className="mh-cardc-cost" title="Coste de recuperación">{d.domain.recall ?? "—"}<Zap size={12} fill="currentColor" /></span>}
-                    <div style={{ padding: "0 18px", textAlign: "center", flexShrink: 0, marginTop: d.domain || d.tier || isAncCom || isSub || isTrans || isForm || isExp || isCf || isHopeCf ? 16 : 8 }}>
+                    <div style={{ padding: "0 18px", textAlign: "center", flexShrink: 0, marginTop: d.itemIcon && !isForm ? 24 : d.domain || d.tier || isAncCom || isSub || isTrans || isForm || isExp || isCf || isHopeCf ? 16 : 8 }}>
                       <FitTitle text={d.title} max={19} min={14} className="mh-serif" style={{ fontWeight: 700, color: "var(--mh-ink)", maxHeight: "2.4em", overflow: "hidden" }} />
                       {subtitle && <div className="mh-cardc-sub">{subtitle}</div>}
                       <div className="mh-cardc-orn" />
