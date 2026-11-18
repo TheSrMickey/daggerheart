@@ -4659,9 +4659,6 @@ const sharedStyles = `
   .mh-cardc.is-bg .mh-cardc-dom { top: 176px; right: auto; left: 50%; transform: translateX(-50%); padding: 4px 18px; border: 0; border-radius: 99px; font-size: 10px; font-weight: 800; letter-spacing: .2em; color: #fff; background: color-mix(in srgb, var(--cc) 82%, #10112a); box-shadow: 0 4px 12px -4px #000a, inset 0 1px 0 #ffffff40; -webkit-backdrop-filter: none; backdrop-filter: none; }
   /* Modo claro: el hueco de la ilustración sin imagen usa un degradado claro del color de la carta (antes un gris oscuro). */
   html[data-mh-theme="light"] .mh-cardc.is-bg .mh-cardc-noart:not(.is-exp) { background: linear-gradient(165deg, color-mix(in srgb, var(--cc) 34%, #fffdf8) 0%, color-mix(in srgb, var(--cc) 14%, #fffdf8) 100%); }
-  .mh-cardc-wk { position: absolute; top: 10px; right: 10px; z-index: 6; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: rgba(13,13,34,.78); border: 2px solid #E3B04B; color: #E3B04B; box-shadow: 0 3px 10px -3px #000a; pointer-events: auto; }
-  html[data-mh-theme="light"] .mh-cardc-wk { background: #FFFCF6; }
-  .mh-cardc.has-wk .mh-cardc-cost { top: 50px !important; }
   .mh-cardc-cost { display: none; }
   .mh-cardc.is-bg.is-wp .mh-cardc-sub { display: block; margin-top: 2px; font-size: 9.5px; letter-spacing: .14em; color: var(--mh-muted); }
   .mh-cardc.is-bg.is-wp .mh-cardc-big { font-size: 36px; font-weight: 800; letter-spacing: -.02em; color: #fff; text-shadow: 0 2px 12px color-mix(in srgb, var(--cc) 60%, transparent); }
@@ -8423,6 +8420,17 @@ const sharedStyles = `
   .mh-dice-st span { width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; margin-bottom: 6px; color: var(--c); background: color-mix(in srgb, var(--c) 16%, var(--mh-panel)); }
   .mh-dice-st b { font: 600 28px var(--font-body), 'Inter', system-ui, sans-serif; color: var(--mh-ink); } .mh-dice-st small { font-size: 11.5px; color: var(--mh-muted); }
   .mh-dice-ch { flex: 1; min-width: 0; padding: 14px 16px; border: 1px solid var(--mh-line); border-radius: 14px; background: var(--mh-panel); display: flex; flex-direction: column; } .mh-dice-ch > small { font-size: 11.5px; color: var(--mh-muted); }
+  .mh-dx { gap: 10px; }
+  .mh-dx-hd { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; } .mh-dx-hd small { display: block; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--mh-muted); font-weight: 700; } .mh-dx-hd b { display: block; font: 700 30px/1.1 var(--font-body), 'Inter', system-ui, sans-serif; color: var(--mh-ink); } .mh-dx-hd b em { font-style: normal; font-size: 12px; color: var(--mh-muted); font-weight: 600; margin-left: 6px; }
+  .mh-dx-tr { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 99px; background: #6FBF7322; color: var(--mh-green-ink); white-space: nowrap; } .mh-dx-tr.is-down { background: #D9644E22; color: #D9644E; }
+  .mh-dx-plot { display: flex; flex-direction: column; gap: 4px; margin-top: auto; }
+  .mh-dx-bars { position: relative; display: flex; align-items: flex-end; gap: 10px; }
+  .mh-dx-avg { position: absolute; left: 0; right: 0; border-top: 1.5px dashed #E3B04B88; pointer-events: none; z-index: 1; } .mh-dx-avg span { position: absolute; right: 0; top: -15px; font-size: 9.5px; font-weight: 700; color: var(--mh-gold-ink, #E3B04B); background: var(--mh-panel); padding: 0 4px; border-radius: 4px; }
+  .mh-dx-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; height: 100%; } .mh-dx-col .v { font-size: 11px; font-weight: 700; color: var(--mh-ink3); }
+  .mh-dx-col u { display: block; width: 100%; max-width: 42px; border-radius: 9px 9px 4px 4px; background: linear-gradient(180deg, #7f9bff, #4d63d6); box-shadow: 0 8px 16px -10px #5b7cff; transition: height .5s cubic-bezier(.3,.8,.2,1); }
+  .mh-dx-col.is-zero u { background: var(--mh-line2); box-shadow: none; } .mh-dx-col.is-zero .v { opacity: .4; }
+  .mh-dx-col.is-today u { background: linear-gradient(180deg, #F5CF72, #E3B04B); box-shadow: 0 0 18px -2px #E3B04B; } .mh-dx-col.is-today .v { color: var(--mh-gold-ink, #E3B04B); }
+  .mh-dx-labs { display: flex; gap: 10px; } .mh-dx-labs small { flex: 1; text-align: center; font-size: 10px; color: var(--mh-muted); line-height: 1.15; } .mh-dx-labs small i { display: block; font-style: normal; font-size: 9px; opacity: .7; } .mh-dx-labs small.is-today { color: var(--mh-ink); font-weight: 800; }
   .mh-dice-bars { flex: 1; display: flex; gap: 8px; align-items: flex-end; margin-top: 10px; min-height: 84px; }
   .mh-dice-bars > div { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; } .mh-dice-bars u { display: block; width: 100%; border-radius: 4px 4px 0 0; text-decoration: none; background: linear-gradient(#5b7cff, #2b3a7a); opacity: .75; } .mh-dice-bars u.is-today { opacity: 1; }
   .mh-dice-bars small { font-size: 9.5px; color: var(--mh-muted); }
@@ -9005,6 +9013,7 @@ const sharedStyles = `
   html[data-mh-art="off"] .mh-gc-ph { display: block; position: absolute; inset: 0; color: var(--k); }
   .mh-gc-pt { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(5, 1fr); align-content: space-around; justify-items: center; opacity: .16; padding: 28px 6px 0; }
   .mh-gc-pb { position: absolute; left: 50%; top: 22%; width: 136px; height: 136px; margin-left: -68px; border-radius: 34px; display: grid; place-items: center; background: #0f0d26; border: 2px solid var(--k); box-shadow: 0 0 50px color-mix(in srgb, var(--k) 38%, transparent); }
+  html[data-mh-theme="light"] .mh-gc-pb { background: color-mix(in srgb, var(--k) 14%, #fffdf8); box-shadow: 0 10px 30px -12px color-mix(in srgb, var(--k) 55%, transparent); color: color-mix(in srgb, var(--k) 85%, #000); }
   .mh-gc:hover .mh-gc-art, .mh-gc:focus-visible .mh-gc-art { filter: saturate(1.15) brightness(1.08); }
   .mh-gc-badge { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--k); background: color-mix(in srgb, var(--mh-bg) 80%, transparent); border: 1.5px solid var(--k); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
   .mh-gc.has-art .mh-gc-lv { background: color-mix(in srgb, var(--mh-bg) 80%, transparent); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
@@ -11302,6 +11311,11 @@ function HomeDice({ stats }) {
   });
   const max = Math.max(1, ...days.map((d) => d.n));
   const pct = total ? Math.round(((st.hope || 0) / total) * 100) : 0;
+  const week = days.reduce((sum, d) => sum + d.n, 0);
+  const prevWeek = Array.from({ length: 7 }, (_, i) => (st.days || {})[dayKeyOf(now - (13 - i) * 86400000)] || 0).reduce((sum, n) => sum + n, 0);
+  const diff = week - prevWeek;
+  const avg = week / 7;
+  const BAR_H = 84;
   return (
     <>
       <div className="mh-home-sec">
@@ -11311,15 +11325,31 @@ function HomeDice({ stats }) {
         <div className="mh-dice-st" style={{ "--c": "#5b7cff" }}><span><Dices size={19} /></span><b>{total}</b><small>{total === 1 ? "tirada" : "tiradas"}</small></div>
         <div className="mh-dice-st" style={{ "--c": "#E3B04B" }}><span><Star size={19} /></span><b>{st.crit || 0}</b><small>{st.crit === 1 ? "crítico" : "críticos"}</small></div>
         <div className="mh-dice-st" style={{ "--c": "#6FBF73" }}><span><Trophy size={19} /></span><b>{pct}%</b><small>con Esperanza</small></div>
-        <div className="mh-dice-ch">
-          <small>{total ? "Tiradas de los últimos 7 días" : "Tira dados en tu hoja y aquí verás tus estadísticas"}</small>
-          <div className="mh-dice-bars">
-            {days.map((d, i) => (
-              <div key={d.key} title={d.n + (d.n === 1 ? " tirada" : " tiradas")}>
-                <u className={i === 6 ? "is-today" : ""} style={{ height: Math.max(3, (d.n / max) * 64) }} />
-                <small>{d.lab}</small>
-              </div>
-            ))}
+        <div className="mh-dice-ch mh-dx">
+          <div className="mh-dx-hd">
+            <div>
+              <small>{total ? "Últimos 7 días" : "Tira dados en tu hoja y aquí verás tus estadísticas"}</small>
+              {total > 0 && <b>{week}<em>{week === 1 ? "tirada" : "tiradas"}</em></b>}
+            </div>
+            {total > 0 && prevWeek > 0 && diff !== 0 && (
+              <span className={"mh-dx-tr" + (diff < 0 ? " is-down" : "")}>{diff > 0 ? "▲ " + diff + " más" : "▼ " + Math.abs(diff) + " menos"} que la semana pasada</span>
+            )}
+          </div>
+          <div className="mh-dx-plot">
+            <div className="mh-dx-bars" style={{ height: BAR_H + 18 }}>
+              {week > 0 && <div className="mh-dx-avg" style={{ bottom: (avg / max) * BAR_H + 18 }}><span>media {String(Math.round(avg * 10) / 10).replace(".", ",")}</span></div>}
+              {days.map((d, i) => (
+                <div key={d.key} className={"mh-dx-col" + (d.n === 0 ? " is-zero" : "") + (i === 6 ? " is-today" : "")} title={d.n + (d.n === 1 ? " tirada" : " tiradas")}>
+                  <span className="v">{d.n}</span>
+                  <u style={{ height: d.n ? Math.max(6, (d.n / max) * BAR_H) : 4 }} />
+                </div>
+              ))}
+            </div>
+            <div className="mh-dx-labs">
+              {days.map((d, i) => (
+                <small key={d.key} className={i === 6 ? "is-today" : ""}>{d.lab}<i>{i === 6 ? "hoy" : new Date(now - (6 - i) * 86400000).getDate()}</i></small>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -15867,6 +15897,7 @@ export default function App({ onSignOut }) {
   const [newItemDraft, setNewItemDraft] = useState("");
   const [newItemDescDraft, setNewItemDescDraft] = useState("");
   const [showAddItemModal, setShowAddItemModal] = useState(false);
+  const [cardsOpenId, setCardsOpenId] = useState(null); // carta que se abre ampliada al entrar en Cartas (desde la carta del día)
   const [addItemModalTab, setAddItemModalTab] = useState("catalog");
   const [addItemCat, setAddItemCat] = useState("all"); // filtro por tipo en «Añadir objeto»
   const [addItemTier, setAddItemTier] = useState(0); // filtro por rango (armas y armaduras)
@@ -31968,7 +31999,7 @@ export default function App({ onSignOut }) {
                     FitTitle={FitTitle}
                     FitBox={FitBox}
                     color={(c) => (c.f_class ? classColor(c.f_class) : "#7A8CFF")}
-                    onView={(v) => setView(v)}
+                    onView={(v, cid) => (cid && setCardsOpenId(cid), setView(v))}
                     onChar={(id) => openCharDetail(id)}
                     onCamp={(cp) => (campTabNext.current = viewingCampaignId === cp.id ? null : "calendario", setViewingCampaignId(cp.id), setCampaignDetailTab("calendario"), setView("campaigns"))}
                   />
@@ -35364,7 +35395,7 @@ export default function App({ onSignOut }) {
 
           {view === "dadosskin" && <Personalizacion skin={diceSkin} onEquip={equipDiceSkin} back={cardBack} onEquipBack={equipCardBack} cardBorder={cardBorder} onCardBorder={equipCardBorder} items={buildCardCatalog()} icons={DOMAIN_ICONS} FitTitle={FitTitle} FitBox={FitBox} />}
           {view === "taller" && <WorkshopPage FitTitle={FitTitle} FitBox={FitBox} TokDice={TokDice} domainColors={DOMAIN_COLORS} icons={DOMAIN_ICONS} classColors={CLASS_COLORS} classes={CLASSES.map((c) => c.key)} />}
-          {view === "cartas" && <CardsPage DomainIcon={DomainIcon} items={buildCardCatalog()} domainColors={DOMAIN_COLORS} icons={DOMAIN_ICONS} FitTitle={FitTitle} FitBox={FitBox} />}
+          {view === "cartas" && <CardsPage openId={cardsOpenId} onOpened={() => setCardsOpenId(null)} DomainIcon={DomainIcon} items={buildCardCatalog()} domainColors={DOMAIN_COLORS} icons={DOMAIN_ICONS} FitTitle={FitTitle} FitBox={FitBox} />}
 
           {view === "ajustes" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
