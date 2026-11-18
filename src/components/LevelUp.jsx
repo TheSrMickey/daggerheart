@@ -259,7 +259,7 @@ export function LevelUpDialog({ c, color, traitList, classDomains, cardsByDomain
           </svg>
           <div>
             <div className="mh-serif lv-title">{c.f_name || "Tu personaje"} sube al nivel {nl}</div>
-            <div className="lv-sub">{ach ? "Empieza el Rango " + rank : "Rango " + rank}</div>
+            <div className={"lv-sub" + (ach ? " is-new" : "")}>{ach ? "Empieza el Rango " + rank : "Rango " + rank}</div>
           </div>
           <button type="button" className="lv-x" onClick={onClose} aria-label="Cerrar">✕</button>
         </div>
