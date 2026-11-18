@@ -4845,6 +4845,7 @@ const sharedStyles = `
   .mh-rs-sw-b { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; padding: 9px 13px; border-radius: 11px; background: #A58BE8; color: #1a1033; font-weight: 800; font-size: 12px; white-space: nowrap; box-shadow: 0 8px 18px -8px #A58BE8; transition: transform .15s, filter .15s; } .mh-rs-sw-b:hover { filter: brightness(1.1); transform: translateY(-1px); } .mh-rs-sw-b:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
   .mh-rs-steps { display: flex; gap: 8px; align-items: center; justify-content: center; font-size: 11px; color: var(--mh-muted); flex: none; } .mh-rs-steps i { font-style: normal; font-weight: 700; color: var(--mh-ink); display: inline-flex; gap: 6px; align-items: center; } .mh-rs-steps b { width: 18px; height: 18px; border-radius: 50%; display: inline-grid; place-items: center; background: var(--mh-line2); color: var(--mh-ink); font-size: 10px; } .mh-rs-steps b.on { background: #A58BE8; color: #1a1033; }
   html[data-mh-theme="light"] .mh-rs-sw-c:not(.is-empty) { background: color-mix(in srgb, var(--dc) 14%, #fffdf8); color: var(--mh-ink); }
+  .mh-cardc.is-item .mh-cardc-badge { display: none; }
   .mh-rs-opt.is-short:hover:not(:disabled) { border-color: #E3B04B; background: #E3B04B10; } .mh-rs-opt.is-long:hover:not(:disabled) { border-color: #A58BE8; background: #A58BE810; }
   .mh-rs-ic { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; flex: none; } .is-short .mh-rs-ic { background: #E3B04B22; color: #E3B04B; } .is-long .mh-rs-ic { background: #A58BE822; color: #A58BE8; }
   .mh-rs-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; } .mh-rs-tx b { font-size: 16px; } .mh-rs-tx small { font-size: 12px; line-height: 1.4; color: var(--mh-muted); } .mh-rs-tx em { font-style: normal; font-size: 11px; color: var(--mh-muted2); }
@@ -19876,8 +19877,21 @@ export default function App({ onSignOut }) {
   // En la campaña de la hoja de personaje no hay barra derecha: el chat va dentro de la página, como en el Directo del DJ.
   // Con una hoja de personaje abierta (escritorio) los dos menús laterales se pliegan aunque estén fijados (sin cambiar tu preferencia: al salir vuelven a su estado).
   const sheetFold = !isMobile && view === "ficha" && !!modernCharId && !!characters[modernCharId];
-  const isleOn = islePin && !sheetFold;
-  const railOn = railPin && !sheetFold;
+  const isleOn = islePin;
+  const railOn = railPin;
+  // Al abrir una hoja los menús se pliegan (sin guardar la preferencia); se pueden volver a fijar y al salir recuperan su estado anterior.
+  const foldPrev = useRef(null);
+  useEffect(() => {
+    if (sheetFold) {
+      foldPrev.current = { isle: islePin, rail: railPin };
+      setIslePin(false);
+      setRailPin(false);
+    } else if (foldPrev.current) {
+      setIslePin(foldPrev.current.isle);
+      setRailPin(foldPrev.current.rail);
+      foldPrev.current = null;
+    }
+  }, [sheetFold]); // eslint-disable-line react-hooks/exhaustive-deps
   const showRail = showTopbar && !(modernCamp && !isMobile);
   const railFold = showRail && !modernCamp; // plegable salvo con el chat de la campaña, que necesita todo el ancho
   const railW = !showRail ? 0 : railFold && !railOn ? 86 : 290;
@@ -28990,13 +29004,13 @@ export default function App({ onSignOut }) {
             {pendingTwoHandedSwap && (
               <div
                 style={{
-                  position: "absolute",
+                  position: "fixed",
                   inset: 0,
                   background: "rgba(8,6,12,0.70)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  zIndex: 46,
+                  zIndex: 90,
                   padding: 20,
                 }}
                 onClick={() => setPendingTwoHandedSwap(null)}
@@ -29028,13 +29042,13 @@ export default function App({ onSignOut }) {
             {showAddItemModal && (
               <div
                 style={{
-                  position: "absolute",
+                  position: "fixed",
                   inset: 0,
                   background: "rgba(8,6,12,0.70)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  zIndex: 45,
+                  zIndex: 90,
                   padding: 20,
                 }}
                 onClick={() => setShowAddItemModal(false)}
@@ -29138,13 +29152,13 @@ export default function App({ onSignOut }) {
             {pendingSpellRoll && (
               <div
                 style={{
-                  position: "absolute",
+                  position: "fixed",
                   inset: 0,
                   background: "rgba(8,6,12,0.70)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  zIndex: 40,
+                  zIndex: 90,
                   padding: 20,
                 }}
                 onClick={() => setPendingSpellRoll(null)}
@@ -29206,13 +29220,13 @@ export default function App({ onSignOut }) {
               <div
                 className={"mh-overlay" + (cardClosing ? " is-closing" : "")}
                 style={{
-                  position: "absolute",
+                  position: "fixed",
                   inset: 0,
                   background: "rgba(8,6,12,0.70)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  zIndex: 40,
+                  zIndex: 90,
                   padding: 20,
                 }}
                 onClick={closeCardDetail}
@@ -30758,7 +30772,7 @@ export default function App({ onSignOut }) {
                   return (
                   <div className="mh-cardc-wrap" onClick={(e) => e.stopPropagation()}>
                   <div
-                    className={"mh-card mh-card-anim mh-tilt mh-cardc" + (newBg ? " is-bg" : "") + (d.weapon || d.armor ? " is-wp" : "")}
+                    className={"mh-card mh-card-anim mh-tilt mh-cardc" + (newBg ? " is-bg" : "") + (d.weapon || d.armor ? " is-wp" : "") + (d.itemIcon && !isForm ? " is-item" : "")}
                     style={{
                       "--glow": alpha(cardColor, 33),
                       "--cc": cardColor,
@@ -30817,8 +30831,6 @@ export default function App({ onSignOut }) {
                         </span>
                       ) : isSub || isForm ? (
                         <span className="mh-cardc-gem is-rank" title={isSub ? subRankLabel : "Rango " + formRank}>{["I", "II", "III", "IV"][isSub ? subRank : formRank - 1]}<ArtIcon size={19} strokeWidth={1.8} /></span>
-                      ) : d.itemIcon ? (
-                        <span className="mh-cardc-gem is-rank" title={d.kicker || "Objeto"}>{d.invItem?.count > 1 ? "×" + d.invItem.count : null}<ArtIcon size={19} strokeWidth={1.8} /></span>
                       ) : d.brawlerStrike ? (
                         <span className="mh-cardc-tier" style={{ background: "#C08B5C" }}>Sin arma</span>
                       ) : d.tier ? (
@@ -30836,7 +30848,7 @@ export default function App({ onSignOut }) {
                         <Sparkles size={13} /> {isExp ? 1 : hopeCost} Esperanza
                       </span>
                     )}
-                    {d.itemIcon && <span className="mh-cardc-dom">{d.kicker || "Objeto"}</span>}
+                    {d.itemIcon && !isForm && <span className="mh-cardc-dom">{d.kicker || "Objeto"}</span>}
                     {isTrans && <span className="mh-cardc-dom">Transformación</span>}
                     {isForm && <span className="mh-cardc-dom">Forma de Bestia</span>}
                     {(d.weapon || d.armor) && d.tier && <span className="mh-cardc-dom">{TIER_COLORS[d.tier].label}</span>}

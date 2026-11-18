@@ -9,6 +9,10 @@ export const CHANGELOG = [
     title: "El Taller y la creación de personaje",
     blurb: "Crea tus propias cartas y armas en el Taller (con fichas e imágenes), descarga tu hoja en PDF, estrena la creación de personaje renovada, una pestaña Cartas más clara con Adversarios y Entornos, y un Buscar mesa con filtros, solicitudes con mensaje y avisos.",
     items: [
+      { tag: "arreglo", text: "Hoja · los menús laterales se pliegan al abrir una hoja, pero ahora puedes volver a fijarlos si los necesitas." },
+      { tag: "mejora", text: "Inventario · las cartas de objeto ya no llevan la tira con el emblema de la esquina." },
+      { tag: "arreglo", text: "Inventario · el menú de añadir objeto (y los otros diálogos de la hoja) se oscurece y se centra en toda la pantalla." },
+      { tag: "arreglo", text: "Formas de Bestia · al abrir una forma, la etiqueta «Forma de Bestia» ya no sale duplicada y se ve como en la pestaña Cartas." },
       { tag: "mejora", text: "Descansos · durante el descanso aparece una franja «Puedes cambiarlas ahora» con tus cartas de dominio equipadas y el botón «Cambiar cartas», y una guía de pasos (Acciones › Cartas de dominio › Terminar) sobre el botón de terminar." },
       { tag: "arreglo", text: "Hoja · con las ilustraciones oficiales desactivadas, las cartas de dominio abiertas en grande vuelven a mostrar el logo del dominio." },
       { tag: "mejora", text: "Hoja · al abrir una hoja de personaje los dos menús laterales se pliegan (aunque los tengas fijados) para dar más sitio; vuelven a como los dejaste al salir." },
