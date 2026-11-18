@@ -669,6 +669,13 @@ export function Dice3D({ dice, summary, skin, onReveal, onEnd }) {
       <style>{D3_CSS}</style>
       <div className="d3-veil" style={{ position: "absolute", inset: 0, background: "rgb(8,6,12)", opacity: 0.35 }} />
       {sm && <div className={"d3-edge is-" + sm.outcome + (edgeOn ? " on" : "")} style={{ "--ec": sm.color }} />}
+      {sm && sm.outcome === "crit" && edgeOn && (
+        <div className="d3-confetti" aria-hidden="true">
+          {CONFETTI.map((c, i) => (
+            <i key={i} style={{ left: c.x + "%", background: c.col, animationDelay: c.d + "s", animationDuration: c.t + "s", width: c.w, height: c.h }} />
+          ))}
+        </div>
+      )}
       {sm && ready && (
         <div className={"d3-sum" + (closing ? " is-out" : "")} style={{ "--ec": sm.color }} role="status">
           <div className="d3-sum-main">
@@ -697,7 +704,17 @@ export function Dice3D({ dice, summary, skin, onReveal, onEnd }) {
   );
 }
 
+// Confeti del crítico: posiciones y tiempos fijos (se calculan una vez).
+const CONFETTI = Array.from({ length: 60 }, (_, i) => {
+  const r = (n) => { const x = Math.sin(i * 12.9898 + n * 78.233) * 43758.5453; return x - Math.floor(x); };
+  return { x: Math.round(r(1) * 100), d: Math.round(r(2) * 45) / 10, t: Math.round((3 + r(3) * 2.5) * 10) / 10, col: ["#E3B04B", "#7FB77A", "#F5CF72", "#ffffff", "#A58BE8"][i % 5], w: 7 + Math.round(r(4) * 4), h: 11 + Math.round(r(5) * 6) };
+});
+
 const D3_CSS = `
+.d3-confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.d3-confetti i { position: absolute; top: -30px; border-radius: 2px; animation: d3-fall 4.5s linear infinite; }
+@keyframes d3-fall { 0% { transform: translateY(0) rotate(0); } 100% { transform: translateY(105vh) rotate(720deg); } }
+@media (prefers-reduced-motion: reduce) { .d3-confetti { display: none; } }
 .d3-edge { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .35s; }
 .d3-edge.on { opacity: 1; }
 .d3-edge::before { content: ""; position: absolute; inset: 0; box-shadow: inset 0 0 0 3px var(--ec), inset 0 0 60px 8px var(--ec), inset 0 0 150px 24px color-mix(in srgb, var(--ec) 45%, transparent); }
