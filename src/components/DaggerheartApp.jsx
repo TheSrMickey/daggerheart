@@ -8,7 +8,7 @@ import { Globe, Tent, Haze, CloudFog, CloudRain, CloudLightning, Beer } from "lu
 import SceneFx, { SCENE_FX } from "./SceneFx";
 import Ambient from "./Ambient";
 import { Info, Lightbulb, Sprout, Bot, Pickaxe, TreePine, Cog, Ear, Angry, Axe, Banana, Cloud } from "lucide-react";
-import { Squirrel, Layers, CalendarDays, Vote, ScrollText as ChronIcon, Megaphone, Link2, Printer } from "lucide-react";
+import { Squirrel, Layers, CalendarDays, Vote, ScrollText as ChronIcon, Megaphone, Link2, Printer, Package } from "lucide-react";
 import { RefreshCw, Award, History, LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus, Box, LayoutGrid, Bird, Fish, Bug, Rabbit, Cat, Turtle, Clock, CircleDashed, Slash } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { NotificationBell, NoticeToasts, FriendsPanel, AccountButton, avatarColor } from "./Social";
@@ -26,6 +26,7 @@ import { RulesPanel } from "./MapRules";
 import { Changelog } from "./Changelog";
 import { CardsPage, CardFace, DomainLogo } from "./Cards";
 import { WorkshopPage } from "./Workshop";
+import { SobresPage } from "./Sobres";
 import PortraitCrop from "./PortraitCrop";
 import { printSheet } from "@/lib/sheetPdf";
 import { Generators } from "./Generators";
@@ -70,6 +71,7 @@ const NAV_ITEMS = [
   { key: "ficha", label: "Personajes", icon: User },
   { key: "campaigns", label: "Campañas", icon: BookOpen },
   { key: "cartas", label: "Cartas", icon: Layers },
+  { key: "sobres", label: "Sobres", icon: Package },
   { key: "taller", label: "Taller", icon: Hammer },
   { key: "dadosskin", label: "Personalización", icon: Dices },
   { key: "mesas", label: "Buscar mesa", icon: Megaphone },
@@ -35789,6 +35791,7 @@ export default function App({ onSignOut }) {
           {view === "perfil" && profileTarget && <ProfilePage key={profileTarget.id} id={profileTarget.id} name={profileTarget.name} />}
 
           {view === "dadosskin" && <Personalizacion skin={diceSkin} onEquip={equipDiceSkin} back={cardBack} onEquipBack={equipCardBack} cardBorder={cardBorder} onCardBorder={equipCardBorder} items={buildCardCatalog()} icons={DOMAIN_ICONS} FitTitle={FitTitle} FitBox={FitBox} />}
+          {view === "sobres" && <SobresPage items={buildCardCatalog()} icons={DOMAIN_ICONS} FitTitle={FitTitle} FitBox={FitBox} back={cardBack} />}
           {view === "taller" && <WorkshopPage FitTitle={FitTitle} FitBox={FitBox} TokDice={TokDice} domainColors={DOMAIN_COLORS} icons={DOMAIN_ICONS} classColors={CLASS_COLORS} classes={CLASSES.map((c) => c.key)} />}
           {view === "cartas" && <CardsPage openId={cardsOpenId} onOpened={() => setCardsOpenId(null)} DomainIcon={DomainIcon} items={buildCardCatalog()} domainColors={DOMAIN_COLORS} icons={DOMAIN_ICONS} FitTitle={FitTitle} FitBox={FitBox} />}
 
