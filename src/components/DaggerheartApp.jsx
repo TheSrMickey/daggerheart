@@ -8,7 +8,7 @@ import { Globe, Tent, Haze, CloudFog, CloudRain, CloudLightning, Beer } from "lu
 import SceneFx, { SCENE_FX } from "./SceneFx";
 import Ambient from "./Ambient";
 import { Info, Lightbulb, Sprout, Bot, Pickaxe, TreePine, Cog, Ear, Angry, Axe, Banana, Cloud } from "lucide-react";
-import { Squirrel, Layers, CalendarDays, Vote, ScrollText as ChronIcon, Megaphone, Link2 } from "lucide-react";
+import { Squirrel, Layers, CalendarDays, Vote, ScrollText as ChronIcon, Megaphone, Link2, Printer } from "lucide-react";
 import { RefreshCw, Award, History, LogOut, Sun, Moon, Settings, Palette, Hammer, MoreVertical, Coins, ArrowLeftRight, Network, PenLine, Image as ImageIcon, ScrollText, Gem, Maximize2, Clapperboard, Radio, Send, Upload, MessageSquareQuote, ChevronUp, SkipForward, Minimize2, Play, MessagesSquare, Pin, Search, Bold, Italic, Strikethrough, List, ListOrdered, ListChecks, Heading2, Music, BowArrow, VenetianMask, Feather, WandSparkles, HandFist, Snowflake, FlaskConical, HeartPulse, ShieldPlus, Box, LayoutGrid, Bird, Fish, Bug, Rabbit, Cat, Turtle, Clock, CircleDashed, Slash } from "lucide-react";
 import { storageGet, storageSet } from "@/lib/storage";
 import { NotificationBell, NoticeToasts, FriendsPanel, AccountButton, avatarColor } from "./Social";
@@ -20456,6 +20456,37 @@ export default function App({ onSignOut }) {
       date: new Date().toLocaleDateString("es-ES"),
     });
   };
+  // Kit inicial: todas las cartas para jugar en persona (herencia, comunidad, subclase, equipo y los dos dominios de la clase), listas para imprimir y recortar.
+  const exportStarterKit = async (id) => {
+    const c = characters[id];
+    if (!c) return;
+    const cat = buildCardCatalog();
+    const doms = CLASS_DOMAINS[c.f_class] || [];
+    const byKind = (kind, k) => cat.find((x) => x.kind === kind && x.key === k);
+    const m = modernData(id);
+    const armorE = armorOf(c);
+    const level = (x) => Number(x.level || 0);
+    const entries = [
+      ...ancList(c).map((k) => byKind("ascendencia", k)),
+      byKind("comunidad", c.f_community),
+      ...cat.filter((x) => x.kind === "subclase" && x.cls === c.f_class && x.key === c.f_subclass).sort((a, b) => a.rank - b.rank),
+      byKind("transformacion", c.f_transformation),
+      ...m.weapons.map((w) => byKind("arma", w.key)),
+      armorE && !armorE.bones ? cat.find((x) => x.kind === "armadura" && x.key === armorE.key) : null,
+      ...doms.flatMap((d) => cat.filter((x) => x.kind === "dominio" && x.domain === d).sort((a, b) => level(a) - level(b) || a.key.localeCompare(b.key, "es"))),
+    ].filter(Boolean);
+    const seen = new Set();
+    const uniq = entries.filter((e) => (seen.has(e.id) ? false : (seen.add(e.id), true)));
+    if (!uniq.length) return;
+    let cutPack = null;
+    try { cutPack = await renderCutCards(uniq); } catch (e) { cutPack = null; }
+    if (!cutPack) return;
+    printSheet({
+      cutOnly: true, cutPack, origin: window.location.origin, theme: document.documentElement.dataset.mhTheme === "light" ? "light" : "dark", artOff: document.documentElement.dataset.mhArt === "off",
+      name: c.f_name || "Personaje", cls: c.f_class, subclass: c.f_subclass, multi: "", pronouns: "", color: m.color, traits: m.traits, domains: doms, classFeatures: [], features: [], cards: [], background: [], connections: [],
+      weapons: [], experiences: [], conditions: [], items: [], gold: [], invWeapons: [], cut: { domain: [], gear: [] }, date: new Date().toLocaleDateString("es-ES"),
+    });
+  };
   const modernActions = (id) => ({
     rollTrait: (label, value, t) => {
       rollTraitCheck(id, label, value, undefined, undefined, !!t?.adv);
@@ -32164,6 +32195,9 @@ export default function App({ onSignOut }) {
             </button>
             <button type="button" role="menuitem" onClick={() => { setGearMenu(null); exportSheetPdf(gid); }}>
               <Download size={15} /> Descargar hoja en PDF
+            </button>
+            <button type="button" role="menuitem" onClick={() => { setGearMenu(null); exportStarterKit(gid); }}>
+              <Printer size={15} /> Descargar kit inicial
             </button>
             <button type="button" role="menuitem" onClick={() => { setGearMenu(null); setPortraitDlg(gid); }}>
               <Upload size={15} /> Cambiar imagen

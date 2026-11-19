@@ -49,9 +49,9 @@ export function sheetHtml(d) {
   const cutGear = (g) => `<div class="cc gear" style="--k:${esc(g.color || col)}"><div class="gh"><span>${esc(g.kind)}</span><i>${esc(g.tier || "")}</i></div><div class="cn2">${esc(g.key)}</div><div class="gbig">${esc(g.big)}</div><div class="gsub">${esc(g.sub)}</div><div class="cb2">${esc(g.feature || "")}</div><div class="cf2"><span>${esc(g.foot || "")}</span><span>Enaris</span></div></div>`;
   const cutAll = d.cutPack ? d.cutPack.cells.map((h) => `<div class="cell">${h}</div>`) : [...(d.cut?.domain || []).map(cutDom), ...(d.cut?.gear || []).map(cutGear)];
   const cutPages = Array.from({ length: Math.ceil(cutAll.length / 9) }, (_, i) => cutAll.slice(i * 9, i * 9 + 9));
-  const cutHtml = cutPages.map((pg, i) => `<div class="pg cut"><div class="cgrid">${pg.join("")}</div><div class="foot">${LOGO("#8d88a3")} Recorta por las líneas discontinuas · cartas de ${esc(d.name)} · hoja ${i + 1}/${cutPages.length}</div></div>`).join("");
+  const cutHtml = cutPages.map((pg, i) => `<div class="pg cut"><div class="cgrid">${pg.join("")}</div><div class="foot">${LOGO("#8d88a3")} Recorta por las líneas discontinuas · ${d.cutOnly ? "kit inicial" : "cartas"} de ${esc(d.name)} · hoja ${i + 1}/${cutPages.length}</div></div>`).join("");
   const sh = (t) => `<div class="sh"><span>${t}</span></div>`;
-  return `<!doctype html><html lang="es"${d.theme === "light" ? ' data-mh-theme="light"' : ""}${d.artOff ? ' data-mh-art="off"' : ""}><head><meta charset="utf-8"><base href="${esc(d.origin || "")}/"><title>${esc(d.name)} · Hoja de personaje</title>${d.cutPack ? d.cutPack.styles : ""}<style>
+  return `<!doctype html><html lang="es"${d.theme === "light" ? ' data-mh-theme="light"' : ""}${d.artOff ? ' data-mh-art="off"' : ""}><head><meta charset="utf-8"><base href="${esc(d.origin || "")}/"><title>${esc(d.name)} · ${d.cutOnly ? "Kit inicial" : "Hoja de personaje"}</title>${d.cutPack ? d.cutPack.styles : ""}<style>
 @page { size: A4 portrait; margin: 8mm; }
 * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 html, body { margin: 0; background: #fff; }
@@ -105,7 +105,7 @@ h1, h3 { margin: 0; } p { margin: 0; } em { font-style: normal; color: #6d6478; 
 b:empty::after { content: "\\00a0"; }
 .tcs { align-items: stretch; } .tc { height: 100%; } .tv { height: 13mm; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0; } .ta { min-height: 12mm; }
 </style></head><body>
-<div class="pg p1">
+${d.cutOnly ? "<template>" : ""}<div class="pg p1">
 <div class="top">${banner}${fields(1)}</div>
 <div class="def">
 <div class="shld"><b></b><span>Evasión</span></div>
@@ -143,6 +143,7 @@ b:empty::after { content: "\\00a0"; }
 <div class="tre">${TIERS.map((t) => `<div class="tier"><div class="th3">Rango ${t.t} <span>· ${t.lv}</span></div><div class="hd3">${t.head}</div><ul>${t.opts.map((o) => `<li><i></i><span>${o}</span></li>`).join("")}</ul></div>`).join("")}</div>
 <div class="foot">${LOGO("#8d88a3")} Enaris · hoja de ${esc(d.name)} · ${esc(d.date)} · 2/2</div>
 </div>
+${d.cutOnly ? "</template>" : ""}
 ${cutHtml}
 </body></html>`;
 }
