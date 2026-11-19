@@ -8847,6 +8847,11 @@ const sharedStyles = `
   .mh-ntoast { --tc: var(--c, #4f86ff); } .mh-ntoast .mh-notice-k { color: var(--tc) !important; font-style: normal; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; font-size: 10px; } .mh-ntoast .mh-notice-a .is-ok { background: var(--tc) !important; color: #10112a !important; font-weight: 700; } .mh-ntoast-bar { height: 2.5px !important; opacity: .7; background: var(--tc) !important; }
   .ach-toast { --tc: #E3B04B; border-top-color: var(--mh-line2) !important; }
   html[data-mh-theme="light"] .mh-toast, html[data-mh-theme="light"] .mh-toast-warn, html[data-mh-theme="light"] .mh-pt-toast, html[data-mh-theme="light"] .mh-ntoast, html[data-mh-theme="light"] .ach-toast { box-shadow: 0 14px 28px -16px #3a2c1288 !important; }
+  .mh-nat { margin: 0; width: min(460px, 100%); padding: 20px 22px; display: flex; flex-direction: column; gap: 14px; } .mh-nat p { margin: 0; font-size: 13px; color: var(--mh-ink3); }
+  .mh-nat-h { display: flex; align-items: center; gap: 10px; font-size: 18px; } .mh-nat-h b { color: var(--mh-ink); } .mh-nat-h em { font-style: normal; font-size: 12px; color: var(--mh-muted); margin-left: auto; }
+  .mh-nat-opts { display: flex; flex-direction: column; gap: 8px; } .mh-nat-opts button { all: unset; cursor: pointer; box-sizing: border-box; display: flex; flex-direction: column; gap: 2px; padding: 11px 14px; border-radius: 12px; border: 1.5px solid var(--mh-line2); background: var(--mh-panel2); } .mh-nat-opts button b { font-size: 13.5px; color: var(--mh-ink); } .mh-nat-opts button small { font-size: 11.5px; color: var(--mh-muted); } .mh-nat-opts button.is-on { border-color: #6FBF73; background: color-mix(in srgb, #6FBF73 14%, var(--mh-panel2)); } .mh-nat-opts button:disabled { opacity: .4; cursor: not-allowed; }
+  .mh-nat-step { display: flex; align-items: center; gap: 14px; } .mh-nat-step button { all: unset; cursor: pointer; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: var(--mh-panel3); color: var(--mh-ink); } .mh-nat-step button:disabled { opacity: .35; cursor: not-allowed; } .mh-nat-step b { font-size: 26px; min-width: 30px; text-align: center; color: var(--mh-ink); } .mh-nat-step small { color: var(--mh-muted); }
+  .mh-nat-a { display: flex; justify-content: flex-end; gap: 8px; }
   .mh-camps-head { align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; } .mh-camps-ht { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; min-width: 0; } .mh-camps-ht > span { font: 600 17px var(--font-body), 'Inter', system-ui, sans-serif; color: var(--mh-ink); } .mh-camps-head .mh-btn { display: inline-flex; align-items: center; gap: 6px; flex: none; }
   .mh-hero.is-static { cursor: default; } .mh-hero.is-static:hover { transform: none; box-shadow: none; border-color: color-mix(in srgb, var(--hc) 40%, var(--mh-line)); } .mh-hero.is-static:hover .mh-hero-emb { transform: none; }
   .mh-hero-flags { position: absolute; top: 10px; right: 10px; display: flex; gap: 6px; } .mh-hero-flags span { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; background: color-mix(in srgb, var(--mh-panel) 82%, transparent); border: 1px solid var(--mh-line2); } .mh-hero-flags .is-ai, .mh-hero-meta .is-ai { color: var(--mh-gold-ink, #E3B04B); } .mh-hero-flags .is-lv, .mh-hero-meta .is-lv { color: #7E5BC4; }
@@ -11410,22 +11415,22 @@ const AIM_CARD = "Enredo Feroz";
 // foe = hay que apuntar a un adversario (reach = alcance); dc = dificultad de la tirada de conjuro; dmg = daño (con «P» = tu Competencia en dados);
 // hope/stress = coste; once = «rest» (por descanso) o «long» (por descanso largo); heal = PV que recuperan tú y tus aliados en alcance Cercano.
 const NATURE_FX = {
-  "Familiar Natural": { emoji: "🐾", hope: 1, msg: "invoca a su familiar (una Esperanza más, y vuela). Dura hasta el próximo descanso" },
-  "Proyectil Corrosivo": { emoji: "🧪", foe: true, reach: "Lejano", roll: true, dmg: "Pd6+4 mágico", msg: "lanza Proyectil Corrosivo (marca 2 o más Estrés para dejarlo Corroído)" },
-  "Tallo Colosal": { emoji: "🌱", once: "rest", roll: true, foe: true, reach: "Cercano", dmg: "Pd8 físico", stressOpt: 1, msg: "hace brotar un tallo colosal" },
-  "Presa Mortal": { emoji: "🌿", foe: true, reach: "Cercano", roll: true, msg: "lanza Presa Mortal (arrastra, estrangula con 2 Estrés o enreda a los de en medio con 3d6+2 de daño físico)" },
-  "Campo Curativo": { emoji: "💚", once: "long", heal: 1, healHope: 2, msg: "conjura un campo de plantas curativas" },
-  "Piel de Espinas": { emoji: "🌵", once: "rest", hope: 1, msg: "se cubre de espinas (fichas = su rasgo de conjuro; reducen el daño recibido)" },
-  "Fortaleza Salvaje": { emoji: "🛡️", roll: true, dc: 13, hopeOnWin: 2, msg: "hace crecer una barricada natural en forma de cúpula (umbral Mayor 15 y Grave 30)" },
-  "Corceles Conjurados": { emoji: "🐎", hopeAny: true, msg: "conjura corceles mágicos hasta el próximo descanso largo" },
+  "Familiar Natural": { emoji: "🐾", hope: 1, ask: "hope1", pet: { name: "Familiar natural", n: 1 }, msg: "invoca a su familiar" },
+  "Proyectil Corrosivo": { emoji: "🧪", foe: true, reach: "Lejano", roll: true, dmg: "Pd6+4 mágico", ask: "corr", msg: "lanza Proyectil Corrosivo" },
+  "Tallo Colosal": { emoji: "🌱", once: "rest", ask: "tallo", reach: "Cercano", msg: "hace brotar un tallo colosal" },
+  "Presa Mortal": { emoji: "🌿", foe: true, reach: "Cercano", roll: true, ask: "presa", msg: "lanza Presa Mortal" },
+  "Campo Curativo": { emoji: "💚", once: "long", ask: "heal", area: { range: "Cercano", color: "#6FBF73" }, msg: "conjura un campo de plantas curativas" },
+  "Piel de Espinas": { emoji: "🌵", once: "rest", hope: 1, cond: "Espinas", msg: "se cubre de espinas (reduce el daño recibido y devuelve daño cuerpo a cuerpo)" },
+  "Fortaleza Salvaje": { emoji: "🛡️", roll: true, dc: 13, hopeOnWin: 2, area: { range: "Muy cercano", color: "#8FB07A" }, msg: "hace crecer una cúpula de barricada natural (umbral Mayor 15 y Grave 30)" },
+  "Corceles Conjurados": { emoji: "🐎", ask: "hope", hopeAny: true, pet: { name: "Corcel conjurado" }, msg: "conjura corceles mágicos" },
   "Recolector": { emoji: "🧺", forage: true, msg: "recolecta durante el tiempo libre" },
-  "Oleada Salvaje": { emoji: "🌊", once: "long", stress: 1, msg: "canaliza la Oleada Salvaje (d6 en 1 sobre la carta; se suma a cada tirada de acción)" },
-  "Duendes del Bosque": { emoji: "🧚", roll: true, dc: 13, hopeAny: true, msg: "invoca a los duendes del bosque en alcance Lejano" },
-  "Barrera de Rejuvenecimiento": { emoji: "✨", once: "rest", roll: true, dc: 15, msg: "alza una barrera de rejuvenecimiento (1d4 PV a todos dentro, resistencia al daño físico)" },
+  "Oleada Salvaje": { emoji: "🌊", once: "long", stress: 1, cond: "Oleada Salvaje", msg: "canaliza la Oleada Salvaje (d6 en 1; se suma a cada tirada de acción)" },
+  "Duendes del Bosque": { emoji: "🧚", roll: true, dc: 13, ask: "hope", hopeAny: true, pet: { name: "Duende del bosque", onCell: true }, msg: "invoca a los duendes del bosque" },
+  "Barrera de Rejuvenecimiento": { emoji: "✨", once: "rest", roll: true, dc: 15, heal: "1d4", area: { range: "Muy cercano", color: "#B5E0A0" }, msg: "alza una barrera de rejuvenecimiento (resistencia al daño físico)" },
   "Santuario de lo Salvaje": { emoji: "🏞️", msg: "reparte las fichas de Santuario de lo Salvaje (una por carta de Naturaleza en equipo y bóveda)" },
-  "Dominio Vegetal": { emoji: "🌳", once: "long", roll: true, dc: 18, msg: "remodela la vegetación en alcance Lejano" },
-  "Fuerza de la Naturaleza": { emoji: "🌋", stress: 1, msg: "se transforma en un colosal espíritu de la naturaleza (+10 al daño; cada tirada de acción cuesta una Esperanza)" },
-  "Tempestad": { emoji: "🌪️", roll: true, storm: true, msg: "desata una Tempestad sobre todos los objetivos en alcance Lejano" },
+  "Dominio Vegetal": { emoji: "🌳", once: "long", roll: true, dc: 18, reach: "Lejano", areaAtCell: { range: "Cercano", color: "#4E9A55" }, msg: "remodela la vegetación" },
+  "Fuerza de la Naturaleza": { emoji: "🌋", stress: 1, cond: "Fuerza de la Naturaleza", msg: "se transforma en un colosal espíritu de la naturaleza (+10 al daño; cada tirada de acción cuesta una Esperanza)" },
+  "Tempestad": { emoji: "🌪️", roll: true, ask: "storm", area: { range: "Lejano", color: "#7FA6C9" }, msg: "desata una Tempestad sobre todos los objetivos en alcance Lejano" },
 };
 // Las vistas ampliadas de la mano se pintan en la raíz de la app (no dentro del abanico) para que oscurezcan toda la pantalla, menú lateral incluido.
 const ZoomPortal = ({ children }) => (typeof document === "undefined" ? null : createPortal(children, document.querySelector(".mh-root") || document.body));
@@ -15950,6 +15955,7 @@ export default function App({ onSignOut }) {
   const [equipPickerSlot, setEquipPickerSlot] = useState(null);
   const [stashFx, setStashFx] = useState(null); // hueco que se está guardando en la mochila (animación)
   const [pendingSpellRoll, setPendingSpellRoll] = useState(null);
+  const [natAsk, setNatAsk] = useState(null); // opciones de una carta de Naturaleza antes de usarla
   const [deathMoveCharId, setDeathMoveCharId] = useState(null);
   const [avoidDeathRollResult, setAvoidDeathRollResult] = useState(null);
   const [riskItAllResult, setRiskItAllResult] = useState(null);
@@ -17156,79 +17162,178 @@ export default function App({ onSignOut }) {
     afterReveal(charId, card.key, () => rollTraitCheck(charId, label, Number(c[sk] || 0) + (mods[sk] || 0), { name: "Embelesar", damage: "", spell: true, charm: true, targetChosen: true, targetId: target.id, targetName: target.name, targetDc: target.stats?.difficulty || null }));
     return "reveal";
   };
-  // Cartas de Naturaleza (ver NATURE_FX): pagan su coste, se revelan en la mesa y, según la carta, hacen la tirada de conjuro o aplican su efecto.
-  const castNature = (charId, target, card) => {
+  // ---- Cartas de Naturaleza (ver NATURE_FX) ----
+  // Casilla libre más cercana a (x, y) que no esté ocupada.
+  const nearFree = (ts, x, y, skip) => {
+    const occ = new Set(ts.filter((t) => !t.vanished && t.id !== skip).map((t) => t.x + "," + t.y));
+    let best = null;
+    for (let yy = 0; yy < MAP_ROWS; yy++) for (let xx = 0; xx < MAP_COLS; xx++) {
+      if (occ.has(xx + "," + yy)) continue;
+      const d = Math.max(Math.abs(xx - x), Math.abs(yy - y)) * 10 + (Math.abs(xx - x) + Math.abs(yy - y));
+      if (!best || d < best.d) best = { d, x: xx, y: yy };
+    }
+    return best || { x, y };
+  };
+  const dropArea = (charId, key, x, y, range, color) =>
+    mutateMap(sheetCampaignId, (as) => [...(Array.isArray(as) ? as : []).filter((a) => !(a.owner === charId && a.cardKey === key)), { id: "a" + Date.now() + Math.random().toString(36).slice(2, 5), owner: charId, ownerName: charsRef.current[charId]?.f_name || "Alguien", shape: "circle", range, color, x, y, cardKey: key, label: key }], "areas");
+  // Efecto de un acierto sobre fichas del mapa (condiciones, penalizaciones, Estrés, arrastres).
+  const applyNatFx = (fx, ids, charId) => {
+    if (!fx || !ids?.length || !sheetCampaignId) return;
+    const names = [];
+    mutateMap(sheetCampaignId, (ts) => {
+      let cur = ts;
+      const me = cur.find((t) => t.kind === "pc" && t.charId === charId);
+      ids.forEach((id) => {
+        const tk = cur.find((x) => x.id === id);
+        if (!tk) return;
+        let nx = { ...tk };
+        if (fx.cond) nx.conds = [...new Set([...(tk.conds || []), fx.cond])];
+        if (fx.root) { nx.conds = [...new Set([...(nx.conds || []), "Inmovilizado"])]; nx.rootedBy = charId; }
+        if (fx.diff && tk.stats) nx.stats = { ...nx.stats, difficulty: Math.max(1, Number(tk.stats.difficulty || 0) - fx.diff) };
+        if (fx.stress && tk.stats) nx.stats = { ...(nx.stats || tk.stats), stressMarked: Math.min(Number(tk.stats.stress || 0) || 99, Number(tk.stats.stressMarked || 0) + fx.stress) };
+        if (fx.pull === "target" && me) { const p = nearFree(cur, me.x, me.y, tk.id); nx.x = p.x; nx.y = p.y; }
+        cur = cur.map((x) => (x.id === id ? nx : fx.pull === "self" && me && x.id === me.id ? { ...x, ...nearFree(cur, tk.x, tk.y, me.id) } : x));
+        names.push(tk.name || "un adversario");
+      });
+      return cur;
+    });
+    if (names.length) pushMapLog(sheetCampaignId, fx.label + ": " + names.join(", "), "info");
+  };
+  // Ventana de opciones de la carta (en lugar de los avisos del navegador).
+  const castNature = (charId, target, card, cell) => {
     const fx = NATURE_FX[card.key];
     const c = charsRef.current[charId];
     if (!fx || !c || !sheetCampaignId || c.f_beastform) return "cancel";
     const toks = campaignMapRef.current.tokens || [];
     const me = toks.find((t) => t.kind === "pc" && t.charId === charId);
     if (fx.foe && (!target || !(target.kind === "foe" || target.kind === "npc") || deadTok(target) || !me || cellDist(me, target) > RANGE_CELLS[fx.reach])) return "cancel";
-    // Una vez por descanso (o por descanso largo).
+    if (fx.areaAtCell && (!me || !cell || cellDist(me, cell) > RANGE_CELLS[fx.reach])) return "cancel";
     let used = {};
     try { used = JSON.parse(c.f_nat_used || "{}") || {}; } catch (e) {}
     if (fx.once && used[card.key]) { setEvolutionWarning("«" + card.key + "» ya se ha usado " + (fx.once === "long" ? "en este descanso largo" : "en este descanso")); setTimeout(() => setEvolutionWarning(""), 2600); return "cancel"; }
-    // Costes.
-    let hopeCost = fx.hope || 0;
-    if (fx.hopeAny) {
-      const n = Math.max(0, Math.floor(Number(window.prompt("¿Cuánta Esperanza gastas en «" + card.key + "»?", "1") || 0)));
-      if (!n) return "cancel";
-      hopeCost = n;
+    const hopeNow = Number(c.hope_marked ?? HOPE_DEFAULT);
+    if ((fx.hope || 0) > hopeNow || (fx.ask === "hope" && hopeNow < 1)) { setEvolutionWarning("No tienes Esperanza suficiente para «" + card.key + "»"); setTimeout(() => setEvolutionWarning(""), 2600); return "cancel"; }
+    if (fx.stress && Number(c.stress_marked || 0) >= Number(c.r_stress || 0)) { setEvolutionWarning("No tienes Estrés libre para «" + card.key + "»"); setTimeout(() => setEvolutionWarning(""), 2600); return "cancel"; }
+    if (fx.ask && fx.ask !== "hope1" && !(fx.ask === "heal" && hopeNow < 2 && false)) {
+      setNatAsk({ charId, card, targetId: target?.id || null, cell: cell ? { x: cell.x, y: cell.y } : null, opt: fx.ask === "hope" ? 1 : fx.ask === "corr" ? 0 : fx.ask === "tallo" ? "area" : fx.ask === "presa" ? "pullTarget" : fx.ask === "storm" ? "vent" : fx.ask === "heal" ? 1 : 0 });
+      return "cancel";
     }
-    let healN = fx.heal || 0;
-    if (fx.heal && fx.healHope && Number(c.hope_marked ?? HOPE_DEFAULT) >= fx.healHope && window.confirm("¿Gastar " + fx.healHope + " Esperanza para que tú y tus aliados recuperéis " + fx.healHope + " PV en lugar de " + fx.heal + "?")) { hopeCost = fx.healHope; healN = fx.healHope; }
-    if (hopeCost > Number(c.hope_marked ?? HOPE_DEFAULT)) { setEvolutionWarning("No tienes Esperanza suficiente para «" + card.key + "»"); setTimeout(() => setEvolutionWarning(""), 2600); return "cancel"; }
+    runNature(charId, target, card, cell, {});
+    return "reveal";
+  };
+  const runNature = (charId, target, card, cell, opts) => {
+    const fx = NATURE_FX[card.key];
+    const c = charsRef.current[charId];
+    if (!fx || !c) return;
+    const toks = campaignMapRef.current.tokens || [];
+    const me = toks.find((t) => t.kind === "pc" && t.charId === charId);
+    let used = {};
+    try { used = JSON.parse(c.f_nat_used || "{}") || {}; } catch (e) {}
+    let hopeCost = fx.hope || 0;
+    if (fx.hopeAny) hopeCost = Math.max(1, Math.min(Number(opts.n || 1), Number(c.hope_marked ?? HOPE_DEFAULT)));
+    if (card.key === "Campo Curativo" && opts.n === 2) hopeCost = 2;
     const patch = {};
     if (hopeCost) patch.hope_marked = String(Number(c.hope_marked ?? HOPE_DEFAULT) - hopeCost);
     if (fx.once) patch.f_nat_used = JSON.stringify({ ...used, [card.key]: fx.once });
-    const withStress = fx.stress || (fx.stressOpt && window.confirm("¿Marcar " + fx.stressOpt + " Estrés para usar «" + card.key + "» como ataque?") ? fx.stressOpt : 0);
-    const post = (extra) => postCampaignEvent(charId, fx.emoji + " " + fx.msg + (target ? " sobre " + (target.name || "un objetivo") : "") + (hopeCost ? " (gasta " + hopeCost + " Esperanza)" : "") + (extra || ""));
-    const apply = () => {
-      if (Object.keys(patch).length) updateCharacterFields(charId, patch);
-      if (withStress) markStress(charId, withStress);
-    };
+    let stressCost = fx.stress || 0;
+    if (card.key === "Proyectil Corrosivo") stressCost = Number(opts.n || 0);
+    if (card.key === "Tallo Colosal" && opts.n === "attack") stressCost = 1;
     const mods = getEquipmentMods(PRIMARY_WEAPONS.find((w) => w.key === c.f_primary_weapon), SECONDARY_WEAPONS.find((w) => w.key === c.f_secondary_weapon), ARMORS.find((a) => a.key === c.f_armor));
+    const sk = charSpellTrait(c);
+    const label = TRAITS.find((tr) => tr.key === sk)?.label;
+    const val = Number(c[sk] || 0) + (mods[sk] || 0);
+    const prof = Math.max(1, getProficiency(c));
+    const foesNear = (range) => me ? toks.filter((t) => (t.kind === "foe" || t.kind === "npc") && !t.gmHidden && !deadTok(t) && !fogAt(campaignMapRef.current, t.x, t.y) && cellDist(me, t) <= RANGE_CELLS[range]) : [];
+    const note = (extra) => postCampaignEvent(charId, fx.emoji + " " + fx.msg + (target ? " sobre " + (target.name || "un objetivo") : "") + (hopeCost ? " (gasta " + hopeCost + " Esperanza)" : "") + (stressCost ? " (marca " + stressCost + " Estrés)" : "") + (extra || ""));
+    const pay = () => {
+      if (Object.keys(patch).length) updateCharacterFields(charId, patch);
+      if (stressCost) markStress(charId, stressCost);
+    };
+    const rollOn = (weapon) => rollTraitCheck(charId, label, val, weapon);
+    const spawn = (name, n, x, y, extra) => mutateMap(sheetCampaignId, (ts) => {
+      let cur = ts.filter((t) => !(t.kind === "pet" && t.ownerCharId === charId && t.name === name && fx.pet?.n === 1));
+      for (let i = 0; i < n; i++) { const p = nearFree(cur, x, y); cur = [...cur, { id: "t" + Date.now() + i + Math.random().toString(36).slice(2, 5), x: p.x, y: p.y, kind: "pet", ownerCharId: charId, name, ...extra }]; }
+      return cur;
+    });
     playCardOnMap(sheetCampaignId, charId, card, { noChat: true, short: true });
     afterReveal(charId, card.key, () => {
-      apply();
-      if (fx.roll) {
-        const sk = charSpellTrait(c);
-        const label = TRAITS.find((tr) => tr.key === sk)?.label;
-        if (!label) return post();
-        let dmg = fx.dmg || "";
-        let fixed = 0;
-        if (fx.storm) {
-          const hur = window.confirm("Tempestad: Aceptar = Huracán (3d10+10 mágico) · Cancelar = Ventisca (2d20+8 mágico)");
-          dmg = hur ? "d10+10 mágico" : "d20+8 mágico";
-          fixed = hur ? 3 : 2;
-        } else if (dmg.startsWith("P")) { dmg = dmg.slice(1); fixed = Math.max(1, getProficiency(c)); }
-        post();
-        const val = Number(c[sk] || 0) + (mods[sk] || 0);
-        if (dmg) rollTraitCheck(charId, label, val, { name: card.key, damage: dmg, spell: true, ...(fixed ? { fixedDice: fixed } : {}), ...(target ? { targetChosen: true, targetId: target.id, targetName: target.name, targetDc: target.stats?.difficulty || null } : { targetChosen: true }) });
-        else if (target) rollTraitCheck(charId, label, val, { name: card.key, damage: "", spell: true, targetChosen: true, targetId: target.id, targetName: target.name, targetDc: target.stats?.difficulty || null });
-        else rollTraitCheck(charId, label, val, undefined, { name: card.key, dc: fx.dc });
-        return;
+      pay();
+      const at = me ? { x: me.x, y: me.y } : { x: 2, y: 2 };
+      // ---- Con tirada de conjuro contra fichas ----
+      if (card.key === "Proyectil Corrosivo" && target && label) {
+        note(stressCost >= 2 ? " (Corroído: −" + Math.floor(stressCost / 2) + " a su Dificultad)" : "");
+        return rollOn({ name: card.key, damage: "d6+4 mágico", spell: true, fixedDice: prof, targetChosen: true, targetId: target.id, targetName: target.name, targetDc: target.stats?.difficulty || null, natFx: stressCost >= 2 ? { cond: "Corroído", diff: Math.floor(stressCost / 2), label: "🧪 Corroído" } : { label: "🧪 Proyectil Corrosivo" } });
       }
-      if (fx.heal && me) {
+      if (card.key === "Presa Mortal" && target && label) {
+        const o = opts.n || "pullTarget";
+        note(" (" + { pullTarget: "arrastra al objetivo hasta ti", pullSelf: "se arrastra hasta el objetivo", choke: "estrangula: el objetivo marca 2 Estrés", vines: "las enredaderas azotan a los de en medio: 3d6+2" }[o] + ")");
+        return rollOn({ name: card.key, damage: "", spell: true, targetChosen: true, targetId: target.id, targetName: target.name, targetDc: target.stats?.difficulty || null, natFx: { root: true, label: "🌿 Presa Mortal (inmovilizado)", ...(o === "pullTarget" ? { pull: "target" } : o === "pullSelf" ? { pull: "self" } : o === "choke" ? { stress: 2 } : {}) }, natExtra: o === "vines" ? "vines" : "" });
+      }
+      if (card.key === "Tempestad" && label) {
+        const foes = foesNear("Lejano");
+        const hur = opts.n === "hur";
+        if (me) dropArea(charId, card.key, me.x, me.y, "Lejano", fx.area.color);
+        note(" (" + (hur ? "Huracán: 3d10+10 mágico" : "Ventisca: 2d20+8 mágico y Vulnerables") + ")" + (foes.length ? "" : " · no hay adversarios en alcance Lejano"));
+        if (!foes.length) return;
+        return rollOn({ name: card.key, damage: hur ? "d10+10 mágico" : "d20+8 mágico", spell: true, fixedDice: hur ? 3 : 2, targetChosen: true, targets: foes.map((t) => ({ id: t.id, name: t.name, dc: t.stats?.difficulty || null })), natFx: hur ? { label: "🌪️ Huracán" } : { cond: "Vulnerable", label: "❄️ Ventisca" } });
+      }
+      if (card.key === "Tallo Colosal") {
+        if (opts.n === "attack" && label) {
+          const foes = foesNear("Cercano");
+          note(foes.length ? " (ataque: d8 físico con tu Competencia)" : " · no hay adversarios en alcance Cercano");
+          if (foes.length) return rollOn({ name: card.key, damage: "d8 físico", spell: true, fixedDice: prof, targetChosen: true, targets: foes.map((t) => ({ id: t.id, name: t.name, dc: t.stats?.difficulty || null })), natFx: { cond: "Levantado", label: "🌱 Tallo Colosal levanta a" } });
+        }
+        const p = cell || at;
+        dropArea(charId, card.key, p.x, p.y, "Cuerpo a cuerpo", "#5E9A4A");
+        return note(" (se puede trepar hasta alcance Lejano)");
+      }
+      // ---- Con tirada de dificultad (sin ficha objetivo) ----
+      if (fx.roll && label) {
+        const place = () => {
+          const p = fx.areaAtCell ? (cell || at) : at;
+          const a = fx.area || fx.areaAtCell;
+          if (a) dropArea(charId, card.key, p.x, p.y, a.range, a.color);
+          if (card.key === "Duendes del Bosque") spawn("Duende del bosque", hopeCost, (cell || at).x, (cell || at).y, {});
+          if (fx.heal && me) toks.filter((t) => t.kind === "pc" && t.charId && !t.vanished && cellDist(me, t) <= RANGE_CELLS["Muy cercano"]).forEach((t) => { const ch = charsRef.current[t.charId]; if (ch) updateCharacterField(t.charId, "hp_marked", String(Math.max(0, Number(ch.hp_marked || 0) - (1 + Math.floor(Math.random() * 4))))); });
+          if (card.key === "Fortaleza Salvaje") { const cu = charsRef.current[charId]; if (cu) updateCharacterField(charId, "hope_marked", String(Math.max(0, Number(cu.hope_marked ?? HOPE_DEFAULT) - fx.hopeOnWin))); }
+          note(fx.heal ? " · éxito: tú y tus aliados en la barrera recuperan 1d4 PV" : fx.hopeOnWin ? " · éxito: gasta " + fx.hopeOnWin + " Esperanza para la cúpula" : " · éxito");
+        };
+        return rollTraitCheck(charId, label, val, undefined, { name: card.key, dc: fx.dc, onSuccess: place });
+      }
+      // ---- Sin tirada ----
+      if (fx.heal === undefined && card.key === "Campo Curativo" && me) {
+        const n = opts.n === 2 ? 2 : 1;
+        dropArea(charId, card.key, me.x, me.y, "Cercano", fx.area.color);
         const names = [];
-        toks.filter((t) => t.kind === "pc" && t.charId && !t.vanished && cellDist(me, t) <= RANGE_CELLS["Cercano"]).forEach((t) => {
-          const ch = charsRef.current[t.charId];
-          if (!ch) return;
-          updateCharacterField(t.charId, "hp_marked", String(Math.max(0, Number(ch.hp_marked || 0) - healN)));
-          names.push(ch.f_name || "Alguien");
-        });
-        return post(" · recuperan " + healN + " PV: " + (names.join(", ") || "nadie en alcance Cercano"));
+        toks.filter((t) => t.kind === "pc" && t.charId && !t.vanished && cellDist(me, t) <= RANGE_CELLS["Cercano"]).forEach((t) => { const ch = charsRef.current[t.charId]; if (!ch) return; updateCharacterField(t.charId, "hp_marked", String(Math.max(0, Number(ch.hp_marked || 0) - n))); names.push(ch.f_name || "Alguien"); });
+        return note(" · recuperan " + n + " PV: " + (names.join(", ") || "nadie en alcance Cercano"));
+      }
+      if (fx.pet) {
+        const n = fx.hopeAny ? hopeCost : fx.pet.n || 1;
+        spawn(fx.pet.name, n, at.x, at.y, card.key === "Familiar Natural" ? { flying: false } : {});
+        return note(" · " + n + " en el mapa");
+      }
+      if (fx.cond && me) {
+        mutateMap(sheetCampaignId, (ts) => ts.map((t) => (t.id === me.id ? { ...t, conds: [...new Set([...(t.conds || []), fx.cond])] } : t)));
+        return note();
       }
       if (fx.forage) {
         const d6 = Math.floor(Math.random() * 6) + 1;
-        const T = ["", "un alimento singular (quita 2 Estrés)", "una reliquia hermosa (gana 2 Esperanza)", "una runa arcana (+2 a una tirada de conjuro)", "un frasco curativo (recupera 2 Puntos de Vida)", "un amuleto de la suerte (repite cualquier dado)", "a elegir entre las opciones anteriores"];
-        return post(" · d6 = " + d6 + ": " + T[d6]);
+        const cu = charsRef.current[charId];
+        let eff = "";
+        if (d6 === 1) { updateCharacterField(charId, "stress_marked", String(Math.max(0, Number(cu.stress_marked || 0) - 2))); eff = "un alimento singular: se quita 2 Estrés"; }
+        else if (d6 === 2) { updateCharacterField(charId, "hope_marked", String(Math.min(getHopeMax(cu), Number(cu.hope_marked ?? HOPE_DEFAULT) + 2))); eff = "una reliquia hermosa: gana 2 Esperanza"; }
+        else if (d6 === 4) { updateCharacterField(charId, "hp_marked", String(Math.max(0, Number(cu.hp_marked || 0) - 2))); eff = "un frasco curativo: recupera 2 PV"; }
+        else if (d6 === 3) eff = "una runa arcana (+2 a una tirada de conjuro; guárdala en el inventario)";
+        else if (d6 === 5) eff = "un amuleto de la suerte (repite cualquier dado; guárdalo en el inventario)";
+        else eff = "a elegir una de las opciones anteriores (el DJ y tú lo acordáis)";
+        return note(" · d6 = " + d6 + ": " + eff);
       }
-      post();
+      note();
     });
     return "reveal";
   };
-  // Hechizos de los libros de Ava e Illiat arrastrados al mapa.
+  // Hechizos de los libros de Ava e Illiat arrastrados al mapa.  // Hechizos de los libros de Ava e Illiat arrastrados al mapa.
   const spendHope = (charId, n) => {
     const cur = charsRef.current[charId];
     updateCharacterField(charId, "hope_marked", String(Math.max(0, Number(cur?.hope_marked ?? HOPE_DEFAULT) - n)));
@@ -19678,6 +19783,17 @@ export default function App({ onSignOut }) {
       return;
     }
     const fxLater = [];
+    if (r.weapon?.natFx) {
+      const natIds = r.weapon.hitIds?.length ? r.weapon.hitIds : r.weapon.targetId ? [r.weapon.targetId] : [];
+      fxLater.push(() => applyNatFx(r.weapon.natFx, natIds, r.charId));
+      // Presa Mortal · enredaderas: 3d6+2 de daño físico a quienes estén entre tú y el objetivo.
+      if (r.weapon.natExtra === "vines") {
+        const toks = campaignMapRef.current.tokens || [];
+        const a = toks.find((t) => t.kind === "pc" && t.charId === r.charId), b = toks.find((t) => t.id === r.weapon.targetId);
+        const between = a && b ? toks.filter((t) => (t.kind === "foe" || t.kind === "npc") && t.id !== b.id && !deadTok(t) && Math.min(a.x, b.x) <= t.x && t.x <= Math.max(a.x, b.x) && Math.min(a.y, b.y) <= t.y && t.y <= Math.max(a.y, b.y)) : [];
+        if (between.length) fxLater.push(() => rollWeaponDamage("Presa Mortal", "d6+2 físico", r.charId, false, { plain: true, fixedDice: 3, targetId: null, targetIds: between.map((t) => t.id) }));
+      }
+    }
       const { name, damage, focusTarget } = r.weapon;
       const charId = r.charId;
       const isCritical = r.hope === r.fear;
@@ -19947,6 +20063,7 @@ export default function App({ onSignOut }) {
     await pushRollLog(line);
     if (cardContext) {
       const success = dcVal ? hope === fear || total >= dcVal : null;
+      if (success && cardContext.onSuccess) cardContext.onSuccess();
       await postCampaignEvent(
         charId,
         dcVal ? `🃏 ${cardContext.name}: ${success ? "Éxito" : "Fracaso"} (${total} vs Dificultad ${dcVal})` : `🃏 ${cardContext.name}: ${total} (${text})`,
@@ -24676,7 +24793,7 @@ export default function App({ onSignOut }) {
                                                 card.key === "Desatar el Caos" && !card.weapon && !card.rowCard && !card.subclass ? castChaos(viewingCharId, target, card) :
                                                 card.key === "Guarda Rúnica" && !card.weapon && !card.rowCard && !card.subclass ? (setWardAsk({ charId: viewingCharId, card, step: 1, bearerId: "", item: "", custom: "" }), "cancel") :
                                                 card.key === "Conjurar Enjambre" && !card.weapon && !card.rowCard && !card.subclass ? (setSwarmAsk({ charId: viewingCharId, card, mode: "", hope: false }), "cancel") :
-                                                NATURE_FX[card.key] && !card.weapon && !card.rowCard && !card.subclass && !card.ghost ? castNature(viewingCharId, target, card) :
+                                                NATURE_FX[card.key] && !card.weapon && !card.rowCard && !card.subclass && !card.ghost ? castNature(viewingCharId, target, card, cell) :
                                                 card.unCharm ? castUnCharm(viewingCharId, target, card) :
                                                 card.key === "Palabras Inspiradoras" && !card.weapon && !card.rowCard && !card.subclass ? castInspire(viewingCharId, target, card) :
                                                 card.recharge ? castRecharge(viewingCharId, card) :
@@ -29094,6 +29211,55 @@ export default function App({ onSignOut }) {
                 </div>
               );
             })()}
+            {natAsk && natAsk.charId === viewingCharId && (() => {
+              const A = natAsk;
+              const fx = NATURE_FX[A.card.key];
+              const ch = characters[A.charId];
+              const hopeNow = Number(ch?.hope_marked ?? HOPE_DEFAULT);
+              const stressFree = Number(ch?.r_stress || 0) - Number(ch?.stress_marked || 0);
+              const target = (campaignMap.tokens || []).find((t) => t.id === A.targetId) || null;
+              const opts = {
+                hope: null,
+                corr: [[0, "Sin Estrés", "Solo daño"], [2, "Marcar 2 Estrés", "Corroído: −1 a su Dificultad"], [4, "Marcar 4 Estrés", "Corroído: −2 a su Dificultad"]],
+                heal: [[1, "Curar 1 PV", "Gratis"], [2, "Gastar 2 Esperanza", "Curar 2 PV a ti y a tus aliados"]],
+                tallo: [["area", "Solo conjurar el tallo", "Un tallo trepable hasta alcance Lejano"], ["attack", "Usarlo como ataque", "Marca 1 Estrés: d8 de daño a los de alcance Cercano"]],
+                presa: [["pullTarget", "Arrastrarlo hasta ti", "El objetivo acaba cuerpo a cuerpo contigo"], ["pullSelf", "Arrastrarte hasta él", "Tú acabas cuerpo a cuerpo con él"], ["choke", "Estrangularlo", "El objetivo marca 2 Estrés"], ["vines", "Azotar a los de en medio", "3d6+2 de daño físico a quienes estén entre vosotros"]],
+                storm: [["vent", "Ventisca", "2d20+8 mágico y los objetivos quedan Vulnerables"], ["hur", "Huracán", "3d10+10 mágico"]],
+              }[fx.ask];
+              const disabled = (fx.ask === "corr" && A.opt > stressFree) || (fx.ask === "heal" && A.opt === 2 && hopeNow < 2) || (A.card.key === "Tallo Colosal" && A.opt === "attack" && stressFree < 1);
+              const go = () => { setNatAsk(null); runNature(A.charId, target, A.card, A.cell, { n: A.opt }); };
+              return (
+                <div style={{ position: "fixed", inset: 0, background: "rgba(8,6,12,0.70)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 90, padding: 20 }} onClick={() => setNatAsk(null)}>
+                  <div className="mh-card mh-nat" role="dialog" aria-label={A.card.key} onClick={(e) => e.stopPropagation()}>
+                    <div className="mh-nat-h"><span>{fx.emoji}</span><b className="mh-serif">{A.card.key}</b>{target && <em>sobre {target.name || "un objetivo"}</em>}</div>
+                    {fx.ask === "hope" ? (
+                      <>
+                        <p>{A.card.key === "Duendes del Bosque" ? "¿Cuántos duendes quieres crear? Cada uno cuesta 1 Esperanza." : "¿Cuántos corceles conjuras? Cada uno cuesta 1 Esperanza."}</p>
+                        <div className="mh-nat-step">
+                          <button type="button" aria-label="Menos" disabled={A.opt <= 1} onClick={() => setNatAsk({ ...A, opt: A.opt - 1 })}><Minus size={14} /></button>
+                          <b>{A.opt}</b>
+                          <button type="button" aria-label="Más" disabled={A.opt >= hopeNow} onClick={() => setNatAsk({ ...A, opt: A.opt + 1 })}><Plus size={14} /></button>
+                          <small>de {hopeNow} Esperanza</small>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="mh-nat-opts">
+                        {opts.map(([k, t, d]) => (
+                          <button key={String(k)} type="button" className={A.opt === k ? "is-on" : ""} disabled={(fx.ask === "heal" && k === 2 && hopeNow < 2) || (fx.ask === "corr" && k > stressFree) || (A.card.key === "Tallo Colosal" && k === "attack" && stressFree < 1)} onClick={() => setNatAsk({ ...A, opt: k })}>
+                            <b>{t}</b><small>{d}</small>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <div className="mh-nat-a">
+                      <button type="button" className="mh-btn-ghost" onClick={() => setNatAsk(null)}>Cancelar</button>
+                      <button type="button" className="mh-btn" disabled={!!disabled} onClick={go}>Usar la carta</button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             {wardAsk && wardAsk.charId === viewingCharId && (() => {
               const A = wardAsk;
               const ids = (campaigns[sheetCampaignId]?.characterIds || []).filter((id) => characters[id]);
