@@ -4662,14 +4662,6 @@ const sharedStyles = `
   /* Cartas del Taller: marco interior dorado muy fino. */
   .mh-cardc-wkf { position: absolute; inset: 5px; border: 1px solid #E3B04B66; border-radius: 17px; z-index: 7; pointer-events: none; }
   html[data-mh-theme="light"] .mh-cardc-wkf { border-color: #B8862E88; }
-  /* Cartas salvajes (las más raras): velo holográfico y borde foil arcoíris. */
-  .mh-cardc > .mh-wild-a, .mh-cardc > .mh-wild-a2, .mh-cardc > .mh-wild-b { position: absolute !important; inset: 0 !important; z-index: 6; pointer-events: none; border-radius: inherit; }
-  .mh-wild-a { background: conic-gradient(from 200deg at 30% 20%, #ff5fa255, #ffd36655, #6cffb855, #5fc7ff55, #b07bff55, #ff5fa255); mix-blend-mode: color-dodge; opacity: .5; animation: mh-wild-hue 8s linear infinite; }
-  .mh-wild-a2 { background: repeating-linear-gradient(115deg, transparent 0 14px, #ffffff22 14px 16px); mix-blend-mode: overlay; }
-  .mh-wild-b { padding: 3px; background: conic-gradient(from 0deg, #ff5fa2, #ffd366, #6cffb8, #5fc7ff, #b07bff, #ff5fa2); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: mh-wild-hue 6s linear infinite; }
-  @keyframes mh-wild-hue { to { filter: hue-rotate(360deg); } }
-  html[data-mh-theme="light"] .mh-wild-a { mix-blend-mode: soft-light; opacity: .8; }
-  @media (prefers-reduced-motion: reduce) { .mh-wild-a, .mh-wild-b { animation: none; } }
   .mh-cardc-cost { display: none; }
   .mh-cardc.is-bg.is-wp .mh-cardc-sub { display: block; margin-top: 2px; font-size: 9.5px; letter-spacing: .14em; color: var(--mh-muted); }
   .mh-cardc.is-bg.is-wp .mh-cardc-big { font-size: 36px; font-weight: 800; letter-spacing: -.02em; color: #fff; text-shadow: 0 2px 12px color-mix(in srgb, var(--cc) 60%, transparent); }
@@ -8427,11 +8419,11 @@ const sharedStyles = `
   .ses-rsvp { display: flex; gap: 5px; margin-top: 6px; } .ses-rsvp button { all: unset; cursor: pointer; width: 30px; height: 24px; display: grid; place-items: center; border-radius: 8px; border: 1px solid var(--mh-line2); color: var(--mh-muted); box-sizing: border-box; }
   .ses-rsvp button:hover { color: var(--c); border-color: var(--c); } .ses-rsvp button.on { color: var(--c); border-color: var(--c); background: color-mix(in srgb, var(--c) 16%, transparent); }
   /* Tus dados: las tres cifras van apiladas y compactas a la izquierda; el gráfico ocupa el resto con la misma altura. */
-  .mh-dice { display: grid; grid-template-columns: 224px minmax(0, 1fr); grid-template-rows: repeat(3, auto); gap: 8px 12px; align-items: stretch; margin-bottom: 4px; }
+  .mh-dice { display: grid; grid-template-columns: 224px minmax(0, 1fr); grid-template-rows: repeat(3, auto); gap: 6px 12px; align-items: stretch; margin-bottom: 4px; }
   .mh-dice > .mh-dice-ch { grid-column: 2; grid-row: 1 / span 3; }
-  .mh-dice-st { width: auto; flex-direction: row !important; align-items: center; gap: 12px !important; padding: 9px 14px !important; }
-  .mh-dice-st span { margin-bottom: 0 !important; flex: none; width: 34px !important; height: 34px !important; }
-  .mh-dice-st b { font-size: 22px !important; line-height: 1.05; } .mh-dice-st small { margin-top: 1px; white-space: nowrap; }
+  .mh-dice-st { width: auto; flex-direction: row !important; align-items: center; gap: 10px !important; padding: 5px 12px !important; border-radius: 12px !important; }
+  .mh-dice-st span { margin-bottom: 0 !important; flex: none; width: 28px !important; height: 28px !important; border-radius: 9px !important; }
+  .mh-dice-st b { font-size: 19px !important; line-height: 1; } .mh-dice-st small { margin-top: 1px; white-space: nowrap; }
   .mh-dice-st { width: auto !important; }
   .mh-dice-st { width: 150px; flex: none; display: flex; flex-direction: column; gap: 2px; padding: 14px 16px; border: 1px solid var(--mh-line); border-radius: 14px; background: var(--mh-panel); }
   .mh-dice-st span { width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; margin-bottom: 6px; color: var(--c); background: color-mix(in srgb, var(--c) 16%, var(--mh-panel)); }
@@ -8861,8 +8853,8 @@ const sharedStyles = `
   .mh-cg-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; } .mh-cg-chips > * { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 99px; font: 600 11.5px var(--font-body), 'Inter', system-ui, sans-serif; border: 1px solid var(--mh-line2); background: var(--mh-panel2); color: var(--mh-muted); } .mh-cg-chips .is-ai { color: var(--mh-gold-ink, #E3B04B); border-color: rgba(227,176,75,.4); } .mh-cg-chips .is-cc { color: #5FB0C9; border-color: rgba(95,176,201,.45); } .mh-cg-chips .is-lv { color: #7E5BC4; border-color: rgba(126,91,196,.45); cursor: pointer; } .mh-cg-chips button.is-lv:hover, .mh-cg-chips button.is-lv.is-on { background: rgba(126,91,196,.14); } .mh-cg-chips button:focus-visible { outline: 2px solid #7E5BC4; outline-offset: 2px; }
   .mh-cg-lv { margin: 0 0 14px; padding: 14px 18px; border-radius: 16px; border: 1px solid var(--mh-line); background: var(--mh-panel); animation: mh-fade-in .18s ease both; } .mh-cg-lv > p { margin: 0 0 12px; font-size: 12.5px; color: var(--mh-muted); } .mh-cg-lv-g { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; } .mh-cg-lv-g > div { padding: 10px 12px; border-radius: 12px; background: var(--mh-panel2); border: 1px solid var(--mh-line); } .mh-cg-lv-g b { display: block; margin-bottom: 8px; font-size: 12.5px; } .mh-cg-lv-g .is-line b { color: #C0504A; } .mh-cg-lv-g .is-veil b { color: #7E5BC4; } .mh-cg-lv-g > div > div { display: flex; flex-wrap: wrap; gap: 6px; } .mh-cg-lv-g span { padding: 3px 10px; border-radius: 99px; font: 600 12px var(--font-body), 'Inter', system-ui, sans-serif; border: 1px solid; } .mh-cg-lv-g .is-line span { color: #C0504A; border-color: rgba(192,80,74,.5); background: rgba(192,80,74,.1); } .mh-cg-lv-g .is-veil span { color: #7E5BC4; border-color: rgba(126,91,196,.5); background: rgba(126,91,196,.1); } .mh-cg-lv-g small { color: var(--mh-muted); }
   @media (max-width: 900px) { .mh-cc { grid-template-columns: 1fr; padding: 18px 16px; } .mh-cc-side { position: static; order: 2; } .mh-cc-opts, .mh-cg-lv-g { grid-template-columns: 1fr; } .mh-camps-head { flex-wrap: wrap; } }
-  html[data-mh-art="off"] img[src*="/ancestrias/"], html[data-mh-art="off"] img[src*="/clases/"], html[data-mh-art="off"] img[src*="/cartas-dominio/"], html[data-mh-art="off"] img[src*="/comunidades/"], html[data-mh-art="off"] img[src*="/subclases/"], html[data-mh-art="off"] img[src*="/transformaciones/"], html[data-mh-art="off"] img[src*="/formas-bestia/"] { opacity: 0 !important; visibility: hidden !important; }
-  html[data-mh-art="off"] [style*="/ancestrias/"], html[data-mh-art="off"] [style*="/clases/"], html[data-mh-art="off"] [style*="/cartas-dominio/"], html[data-mh-art="off"] [style*="/comunidades/"], html[data-mh-art="off"] [style*="/subclases/"], html[data-mh-art="off"] [style*="/transformaciones/"], html[data-mh-art="off"] [style*="/formas-bestia/"] { background-image: none !important; }
+  html[data-mh-art="off"] img[src*="/ancestrias/"], html[data-mh-art="off"] img[src*="/clases/"], html[data-mh-art="off"] img[src*="/cartas-dominio/"], html[data-mh-art="off"] img[src*="/cartas-salvajes/"], html[data-mh-art="off"] img[src*="/comunidades/"], html[data-mh-art="off"] img[src*="/subclases/"], html[data-mh-art="off"] img[src*="/transformaciones/"], html[data-mh-art="off"] img[src*="/formas-bestia/"] { opacity: 0 !important; visibility: hidden !important; }
+  html[data-mh-art="off"] [style*="/ancestrias/"], html[data-mh-art="off"] [style*="/clases/"], html[data-mh-art="off"] [style*="/cartas-dominio/"], html[data-mh-art="off"] [style*="/cartas-salvajes/"], html[data-mh-art="off"] [style*="/comunidades/"], html[data-mh-art="off"] [style*="/subclases/"], html[data-mh-art="off"] [style*="/transformaciones/"], html[data-mh-art="off"] [style*="/formas-bestia/"] { background-image: none !important; }
   .pf { max-width: none; } .pf-back { margin-bottom: 10px; } .pf-card { background: var(--mh-panel); border: 1px solid var(--mh-line); border-radius: 20px; overflow: hidden; }
   .pf-ban { height: 190px; overflow: hidden; background: linear-gradient(135deg, color-mix(in srgb, var(--c, #4f9a62) 55%, var(--mh-panel)) 0%, color-mix(in srgb, var(--c, #4f9a62) 16%, var(--mh-panel)) 100%); position: relative; } .pf-ban::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 30%, var(--mh-panel) 100%); } .pf-ban-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 78%; } .pf-ban-sw { position: absolute; top: 12px; right: 14px; z-index: 2; padding: 6px 12px; border-radius: 99px; border: 1px solid rgba(255,255,255,.3); background: rgba(10,9,32,.6); color: #fff; font: 600 12px Inter, system-ui, sans-serif; cursor: pointer; backdrop-filter: blur(6px); }
   .pf-head { display: flex; gap: 20px; align-items: flex-start; padding: 0 28px; margin-top: -68px; position: relative; z-index: 2; flex-wrap: wrap; } .pf-head .so-av, .pf-head > :first-child { flex: none; } .pf-head > :first-child { border-radius: 50%; box-shadow: 0 0 0 4px var(--mh-panel), 0 0 0 6px #E3B04B; } .pf-who { flex: 1; min-width: 220px; padding-top: 76px; } .pf-who h1 { margin: 0; font-size: 36px; font-weight: 600; letter-spacing: .02em; color: var(--mh-ink); } .pf-who small { color: var(--mh-muted); }
@@ -9991,7 +9983,7 @@ async function renderCutCards(entries) {
   try { await doc.fonts?.ready; } catch (e) {}
   // Con las ilustraciones oficiales desactivadas, las cartas para recortar no las llevan (en el PDF no existe la regla de CSS que las oculta).
   if (document.documentElement.dataset.mhArt === "off") {
-    doc.querySelectorAll('img[src*="/cartas-dominio/"], img[src*="/ancestrias/"], img[src*="/clases/"], img[src*="/comunidades/"], img[src*="/formas-bestia/"], img[src*="/subclases/"], img[src*="/transformaciones/"], img[src*="/armas/"], img[src*="/armaduras/"]').forEach((im) => im.remove());
+    doc.querySelectorAll('img[src*="/cartas-dominio/"], img[src*="/cartas-salvajes/"], img[src*="/ancestrias/"], img[src*="/clases/"], img[src*="/comunidades/"], img[src*="/formas-bestia/"], img[src*="/subclases/"], img[src*="/transformaciones/"], img[src*="/armas/"], img[src*="/armaduras/"]').forEach((im) => im.remove());
   }
   const cells = [...doc.querySelectorAll(".cutcell")].map((e) => e.innerHTML);
   root.unmount();
@@ -11333,7 +11325,7 @@ function HomeDice({ stats }) {
   const prevWeek = Array.from({ length: 7 }, (_, i) => (st.days || {})[dayKeyOf(now - (13 - i) * 86400000)] || 0).reduce((sum, n) => sum + n, 0);
   const diff = week - prevWeek;
   const avg = week / 7;
-  const BAR_H = 84;
+  const BAR_H = 64;
   return (
     <>
       <div className="mh-home-sec">
