@@ -11406,6 +11406,27 @@ function HomeDice({ stats }) {
 // Criatura o PNJ con todos sus PV marcados: ya no es un objetivo válido de ataques ni hechizos.
 const deadTok = (t) => !!t && !!t.stats && Number(t.stats.hp || 0) > 0 && Number(t.stats.hpMarked || 0) >= Number(t.stats.hp || 0);
 const AIM_CARD = "Enredo Feroz";
+// Cartas de dominio de Naturaleza jugables en el campo de combate (sin acción propia hasta ahora). Se sueltan sobre el mapa:
+// foe = hay que apuntar a un adversario (reach = alcance); dc = dificultad de la tirada de conjuro; dmg = daño (con «P» = tu Competencia en dados);
+// hope/stress = coste; once = «rest» (por descanso) o «long» (por descanso largo); heal = PV que recuperan tú y tus aliados en alcance Cercano.
+const NATURE_FX = {
+  "Familiar Natural": { emoji: "🐾", hope: 1, msg: "invoca a su familiar (una Esperanza más, y vuela). Dura hasta el próximo descanso" },
+  "Proyectil Corrosivo": { emoji: "🧪", foe: true, reach: "Lejano", roll: true, dmg: "Pd6+4 mágico", msg: "lanza Proyectil Corrosivo (marca 2 o más Estrés para dejarlo Corroído)" },
+  "Tallo Colosal": { emoji: "🌱", once: "rest", roll: true, foe: true, reach: "Cercano", dmg: "Pd8 físico", stressOpt: 1, msg: "hace brotar un tallo colosal" },
+  "Presa Mortal": { emoji: "🌿", foe: true, reach: "Cercano", roll: true, msg: "lanza Presa Mortal (arrastra, estrangula con 2 Estrés o enreda a los de en medio con 3d6+2 de daño físico)" },
+  "Campo Curativo": { emoji: "💚", once: "long", heal: 1, healHope: 2, msg: "conjura un campo de plantas curativas" },
+  "Piel de Espinas": { emoji: "🌵", once: "rest", hope: 1, msg: "se cubre de espinas (fichas = su rasgo de conjuro; reducen el daño recibido)" },
+  "Fortaleza Salvaje": { emoji: "🛡️", roll: true, dc: 13, hopeOnWin: 2, msg: "hace crecer una barricada natural en forma de cúpula (umbral Mayor 15 y Grave 30)" },
+  "Corceles Conjurados": { emoji: "🐎", hopeAny: true, msg: "conjura corceles mágicos hasta el próximo descanso largo" },
+  "Recolector": { emoji: "🧺", forage: true, msg: "recolecta durante el tiempo libre" },
+  "Oleada Salvaje": { emoji: "🌊", once: "long", stress: 1, msg: "canaliza la Oleada Salvaje (d6 en 1 sobre la carta; se suma a cada tirada de acción)" },
+  "Duendes del Bosque": { emoji: "🧚", roll: true, dc: 13, hopeAny: true, msg: "invoca a los duendes del bosque en alcance Lejano" },
+  "Barrera de Rejuvenecimiento": { emoji: "✨", once: "rest", roll: true, dc: 15, msg: "alza una barrera de rejuvenecimiento (1d4 PV a todos dentro, resistencia al daño físico)" },
+  "Santuario de lo Salvaje": { emoji: "🏞️", msg: "reparte las fichas de Santuario de lo Salvaje (una por carta de Naturaleza en equipo y bóveda)" },
+  "Dominio Vegetal": { emoji: "🌳", once: "long", roll: true, dc: 18, msg: "remodela la vegetación en alcance Lejano" },
+  "Fuerza de la Naturaleza": { emoji: "🌋", stress: 1, msg: "se transforma en un colosal espíritu de la naturaleza (+10 al daño; cada tirada de acción cuesta una Esperanza)" },
+  "Tempestad": { emoji: "🌪️", roll: true, storm: true, msg: "desata una Tempestad sobre todos los objetivos en alcance Lejano" },
+};
 // Las vistas ampliadas de la mano se pintan en la raíz de la app (no dentro del abanico) para que oscurezcan toda la pantalla, menú lateral incluido.
 const ZoomPortal = ({ children }) => (typeof document === "undefined" ? null : createPortal(children, document.querySelector(".mh-root") || document.body));
 // Ficha de carta con forma de dado d10 (sin número, del color del dominio); apagada es solo la sombra y un contorno tenue.
@@ -11609,9 +11630,9 @@ function CardFan({ cards, me, tokens, onUse, onElement, activeElement, cardBack,
     return !!r && x >= r.left - 30 && x <= r.right + 30 && y >= r.top - 24 && y <= r.bottom + 24;
   };
   // Cartas que se apuntan a un adversario: Enredo Feroz, su carta extra y las armas (con el alcance de cada arma).
-  const isAim = (c) => c.key === AIM_CARD || ((c.key === "Embelesar" || c.key === "Palabras Inspiradoras") && !c.rowCard) || (!!c.ghost && !c.recharge && !c.ward) || !!c.bookCard || (c.key === "Empujón Contundente" && !c.rowCard) || !!c.weapon || (c.key === "Desatar el Caos" && !c.rowCard);
+  const isAim = (c) => c.key === AIM_CARD || ((c.key === "Embelesar" || c.key === "Palabras Inspiradoras") && !c.rowCard) || (!!c.ghost && !c.recharge && !c.ward) || !!c.bookCard || (c.key === "Empujón Contundente" && !c.rowCard) || !!c.weapon || (c.key === "Desatar el Caos" && !c.rowCard) || (!!NATURE_FX[c.key]?.foe && !c.rowCard && !c.weapon && !c.subclass);
   // Una carta o se puede usar (y entonces se arrastra al mapa) o solo se abre al pulsarla: las que no tienen función en el mapa no se arrastran.
-  const PLAYABLE = ["Enredo Feroz", "Embelesar", "Palabras Inspiradoras", "Desatar el Caos", "Guarda Rúnica", "Lengua de la Naturaleza", "Rastreador Dotado", "Caminar por Paredes", "Engañador Hábil", "Empujón Contundente", "Conjurar Enjambre"];
+  const PLAYABLE = ["Enredo Feroz", "Embelesar", "Palabras Inspiradoras", "Desatar el Caos", "Guarda Rúnica", "Lengua de la Naturaleza", "Rastreador Dotado", "Caminar por Paredes", "Engañador Hábil", "Empujón Contundente", "Conjurar Enjambre", ...Object.keys(NATURE_FX)];
   const usable = (c) => !c.passive && (!!c.weapon || !!c.ghost || !!c.bookCard || !!c.subclass || (c.rowCard ? !!(c.evo || c.wolf || c.mapUse || c.key === "Forma de Bestia") : PLAYABLE.includes(c.key)));
   const aimReach = (c) => (reachOf && reachOf(c)) || { label: "Lejano", max: RANGE_CELLS["Lejano"] };
   // Objetivo válido de una carta que se apunta: aliado (otro personaje) para Palabras Inspiradoras; adversario vivo para el resto.
@@ -17135,6 +17156,78 @@ export default function App({ onSignOut }) {
     afterReveal(charId, card.key, () => rollTraitCheck(charId, label, Number(c[sk] || 0) + (mods[sk] || 0), { name: "Embelesar", damage: "", spell: true, charm: true, targetChosen: true, targetId: target.id, targetName: target.name, targetDc: target.stats?.difficulty || null }));
     return "reveal";
   };
+  // Cartas de Naturaleza (ver NATURE_FX): pagan su coste, se revelan en la mesa y, según la carta, hacen la tirada de conjuro o aplican su efecto.
+  const castNature = (charId, target, card) => {
+    const fx = NATURE_FX[card.key];
+    const c = charsRef.current[charId];
+    if (!fx || !c || !sheetCampaignId || c.f_beastform) return "cancel";
+    const toks = campaignMapRef.current.tokens || [];
+    const me = toks.find((t) => t.kind === "pc" && t.charId === charId);
+    if (fx.foe && (!target || !(target.kind === "foe" || target.kind === "npc") || deadTok(target) || !me || cellDist(me, target) > RANGE_CELLS[fx.reach])) return "cancel";
+    // Una vez por descanso (o por descanso largo).
+    let used = {};
+    try { used = JSON.parse(c.f_nat_used || "{}") || {}; } catch (e) {}
+    if (fx.once && used[card.key]) { setEvolutionWarning("«" + card.key + "» ya se ha usado " + (fx.once === "long" ? "en este descanso largo" : "en este descanso")); setTimeout(() => setEvolutionWarning(""), 2600); return "cancel"; }
+    // Costes.
+    let hopeCost = fx.hope || 0;
+    if (fx.hopeAny) {
+      const n = Math.max(0, Math.floor(Number(window.prompt("¿Cuánta Esperanza gastas en «" + card.key + "»?", "1") || 0)));
+      if (!n) return "cancel";
+      hopeCost = n;
+    }
+    let healN = fx.heal || 0;
+    if (fx.heal && fx.healHope && Number(c.hope_marked ?? HOPE_DEFAULT) >= fx.healHope && window.confirm("¿Gastar " + fx.healHope + " Esperanza para que tú y tus aliados recuperéis " + fx.healHope + " PV en lugar de " + fx.heal + "?")) { hopeCost = fx.healHope; healN = fx.healHope; }
+    if (hopeCost > Number(c.hope_marked ?? HOPE_DEFAULT)) { setEvolutionWarning("No tienes Esperanza suficiente para «" + card.key + "»"); setTimeout(() => setEvolutionWarning(""), 2600); return "cancel"; }
+    const patch = {};
+    if (hopeCost) patch.hope_marked = String(Number(c.hope_marked ?? HOPE_DEFAULT) - hopeCost);
+    if (fx.once) patch.f_nat_used = JSON.stringify({ ...used, [card.key]: fx.once });
+    const withStress = fx.stress || (fx.stressOpt && window.confirm("¿Marcar " + fx.stressOpt + " Estrés para usar «" + card.key + "» como ataque?") ? fx.stressOpt : 0);
+    const post = (extra) => postCampaignEvent(charId, fx.emoji + " " + fx.msg + (target ? " sobre " + (target.name || "un objetivo") : "") + (hopeCost ? " (gasta " + hopeCost + " Esperanza)" : "") + (extra || ""));
+    const apply = () => {
+      if (Object.keys(patch).length) updateCharacterFields(charId, patch);
+      if (withStress) markStress(charId, withStress);
+    };
+    const mods = getEquipmentMods(PRIMARY_WEAPONS.find((w) => w.key === c.f_primary_weapon), SECONDARY_WEAPONS.find((w) => w.key === c.f_secondary_weapon), ARMORS.find((a) => a.key === c.f_armor));
+    playCardOnMap(sheetCampaignId, charId, card, { noChat: true, short: true });
+    afterReveal(charId, card.key, () => {
+      apply();
+      if (fx.roll) {
+        const sk = charSpellTrait(c);
+        const label = TRAITS.find((tr) => tr.key === sk)?.label;
+        if (!label) return post();
+        let dmg = fx.dmg || "";
+        let fixed = 0;
+        if (fx.storm) {
+          const hur = window.confirm("Tempestad: Aceptar = Huracán (3d10+10 mágico) · Cancelar = Ventisca (2d20+8 mágico)");
+          dmg = hur ? "d10+10 mágico" : "d20+8 mágico";
+          fixed = hur ? 3 : 2;
+        } else if (dmg.startsWith("P")) { dmg = dmg.slice(1); fixed = Math.max(1, getProficiency(c)); }
+        post();
+        const val = Number(c[sk] || 0) + (mods[sk] || 0);
+        if (dmg) rollTraitCheck(charId, label, val, { name: card.key, damage: dmg, spell: true, ...(fixed ? { fixedDice: fixed } : {}), ...(target ? { targetChosen: true, targetId: target.id, targetName: target.name, targetDc: target.stats?.difficulty || null } : { targetChosen: true }) });
+        else if (target) rollTraitCheck(charId, label, val, { name: card.key, damage: "", spell: true, targetChosen: true, targetId: target.id, targetName: target.name, targetDc: target.stats?.difficulty || null });
+        else rollTraitCheck(charId, label, val, undefined, { name: card.key, dc: fx.dc });
+        return;
+      }
+      if (fx.heal && me) {
+        const names = [];
+        toks.filter((t) => t.kind === "pc" && t.charId && !t.vanished && cellDist(me, t) <= RANGE_CELLS["Cercano"]).forEach((t) => {
+          const ch = charsRef.current[t.charId];
+          if (!ch) return;
+          updateCharacterField(t.charId, "hp_marked", String(Math.max(0, Number(ch.hp_marked || 0) - healN)));
+          names.push(ch.f_name || "Alguien");
+        });
+        return post(" · recuperan " + healN + " PV: " + (names.join(", ") || "nadie en alcance Cercano"));
+      }
+      if (fx.forage) {
+        const d6 = Math.floor(Math.random() * 6) + 1;
+        const T = ["", "un alimento singular (quita 2 Estrés)", "una reliquia hermosa (gana 2 Esperanza)", "una runa arcana (+2 a una tirada de conjuro)", "un frasco curativo (recupera 2 Puntos de Vida)", "un amuleto de la suerte (repite cualquier dado)", "a elegir entre las opciones anteriores"];
+        return post(" · d6 = " + d6 + ": " + T[d6]);
+      }
+      post();
+    });
+    return "reveal";
+  };
   // Hechizos de los libros de Ava e Illiat arrastrados al mapa.
   const spendHope = (charId, n) => {
     const cur = charsRef.current[charId];
@@ -18797,6 +18890,8 @@ export default function App({ onSignOut }) {
       hope_marked: String(hope),
       // Máximo 3 descansos cortos seguidos: el siguiente tiene que ser largo.
       f_short_rests: isLong ? "0" : String(Number(c.f_short_rests || 0) + 1),
+      // Cartas de Naturaleza «una vez por descanso»: se recuperan en cualquier descanso; las «por descanso largo», solo en el largo.
+      f_nat_used: (() => { try { const u = JSON.parse(c.f_nat_used || "{}") || {}; return isLong ? "" : JSON.stringify(Object.fromEntries(Object.entries(u).filter(([, v]) => v === "long"))); } catch (e) { return ""; } })(),
     };
     if (favorGain) restPatch.f_favor = String(getFavor(c) + favorGain);
     // Proyectos: se abren con un descanso largo (crear y editar) y solo avanzan si elegiste «Trabajar en un proyecto».
@@ -20025,7 +20120,7 @@ export default function App({ onSignOut }) {
   const campDetail = view === "campaigns" && !!viewingCampaignId && !!campaigns[viewingCampaignId];
   // Dentro de una campaña, «Directo» (la mesa en vivo) usa toda la pantalla; el resto de pestañas siguen el esquema de la plataforma:
   // márgenes de la columna central, columna social a la derecha y sin desplazamiento vertical de la página.
-  const campFlat = !isMobile && campDetail && !["mesa", "mapa"].includes(campaignDetailTab);
+  const campFlat = !isMobile && campDetail && campaignDetailTab !== "mesa";
   const showTopbar = !isMobile && !viewingCharId && (!campDetail || campFlat);
   // El perfil de jugador es una página de la columna central; los avisos y menús lo abren con el evento `mh-profile`.
   const [profileTarget, setProfileTarget] = useState(null);
@@ -24560,7 +24655,7 @@ export default function App({ onSignOut }) {
                                               cardBack={cardBack}
                                               aimOk={(card, tg) => !card.ghost || !!card.unTele || (card.unCharm ? canUnCharm(viewingCharId, tg) : card.release ? canRelease(viewingCharId, tg) : canExtraRoot(viewingCharId, tg))}
                                               onAim={setAimRange}
-                                              reachOf={(card) => { if (card.key === "Empujón Contundente" && !card.weapon && !card.rowCard) return { label: "Cuerpo a cuerpo", max: RANGE_CELLS["Cuerpo a cuerpo"] }; if (card.spellReach) return { label: card.spellReach, max: RANGE_CELLS[card.spellReach] }; if ((card.key === "Embelesar" || card.key === "Palabras Inspiradoras") && !card.weapon && !card.rowCard) return { label: "Cercano", max: RANGE_CELLS["Cercano"] }; if (!card.weapon) return null; const lab = weaponReach(characters[viewingCharId], card.key); return lab ? { label: lab, max: RANGE_CELLS[lab] || 99 } : null; }}
+                                              reachOf={(card) => { if (card.key === "Empujón Contundente" && !card.weapon && !card.rowCard) return { label: "Cuerpo a cuerpo", max: RANGE_CELLS["Cuerpo a cuerpo"] }; if (card.spellReach) return { label: card.spellReach, max: RANGE_CELLS[card.spellReach] }; if (NATURE_FX[card.key]?.reach && !card.weapon && !card.rowCard) return { label: NATURE_FX[card.key].reach, max: RANGE_CELLS[NATURE_FX[card.key].reach] }; if ((card.key === "Embelesar" || card.key === "Palabras Inspiradoras") && !card.weapon && !card.rowCard) return { label: "Cercano", max: RANGE_CELLS["Cercano"] }; if (!card.weapon) return null; const lab = weaponReach(characters[viewingCharId], card.key); return lab ? { label: lab, max: RANGE_CELLS[lab] || 99 } : null; }}
                                               cardBorder={cardBorder}
                                               beast={{ forms: BEASTFORMS, tier: tierForLevel(me?.f_level || 1), active: me?.f_beastform || "", stressFull: Number(me?.stress_marked || 0) >= Number(me?.r_stress || 0) }}
                                               wardChip={wardChip}
@@ -24581,6 +24676,7 @@ export default function App({ onSignOut }) {
                                                 card.key === "Desatar el Caos" && !card.weapon && !card.rowCard && !card.subclass ? castChaos(viewingCharId, target, card) :
                                                 card.key === "Guarda Rúnica" && !card.weapon && !card.rowCard && !card.subclass ? (setWardAsk({ charId: viewingCharId, card, step: 1, bearerId: "", item: "", custom: "" }), "cancel") :
                                                 card.key === "Conjurar Enjambre" && !card.weapon && !card.rowCard && !card.subclass ? (setSwarmAsk({ charId: viewingCharId, card, mode: "", hope: false }), "cancel") :
+                                                NATURE_FX[card.key] && !card.weapon && !card.rowCard && !card.subclass && !card.ghost ? castNature(viewingCharId, target, card) :
                                                 card.unCharm ? castUnCharm(viewingCharId, target, card) :
                                                 card.key === "Palabras Inspiradoras" && !card.weapon && !card.rowCard && !card.subclass ? castInspire(viewingCharId, target, card) :
                                                 card.recharge ? castRecharge(viewingCharId, card) :
@@ -33049,6 +33145,7 @@ export default function App({ onSignOut }) {
                                 );
                               })()}
                             </div>
+                            {(live === "mundo" || view === "mundo" || !!(worldDoc.image || worldDoc.hex || Object.values(worldDoc.seasons || {}).some(Boolean))) && (
                             <div className="mh-tlr-ch">
                               <span className="mh-tlr-c">MAPA</span>
                               <button type="button" className={"mh-tlr-n " + (view === "mundo" && live === "mundo" ? "both" : view === "mundo" ? "me" : live === "mundo" ? "pl" : "")} onClick={() => setDjView(live === "mundo" ? null : "mundo")} title="Mapa del mundo (solo lo ves tú; Mostrar para publicarlo)">
@@ -33056,6 +33153,7 @@ export default function App({ onSignOut }) {
                                 Mundo
                               </button>
                             </div>
+                            )}
                             {scenes.map((sc, ci) => (
                               <div key={sc.id} className="mh-tlr-ch">
                                 <span className="mh-tlr-c">CAP. {ci + 1} · {sc.title || "Sin título"}</span>
