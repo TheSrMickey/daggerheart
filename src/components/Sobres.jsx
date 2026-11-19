@@ -151,10 +151,8 @@ function PackArt({ t }) {
       <div className="sb-rain" />
       <div className="sb-streak" />
       <svg className="sb-emb" viewBox="0 0 200 320" aria-hidden="true" style={{ "--ink": ink }}>
-        <circle cx="100" cy="160" r="62" fill="none" stroke="var(--ink)" strokeOpacity=".85" strokeWidth="4" />
-        <circle cx="100" cy="160" r="72" fill="none" stroke="var(--ink)" strokeOpacity=".45" strokeWidth="1.4" strokeDasharray="2 6" />
-        <path d="M100 96 C104 134 111 147 148 160 C111 173 104 186 100 224 C96 186 89 173 52 160 C89 147 96 134 100 96 Z" fill="var(--ink)" />
-        <path d="M100 113 C102 138 107 149 130 160 C107 171 102 182 100 207 C98 182 93 171 70 160 C93 149 98 138 100 113 Z" fill="#fff" fillOpacity=".22" />
+        <path d="M100 84 C105 134 114 148 162 160 C114 172 105 186 100 236 C95 186 86 172 38 160 C86 148 95 134 100 84 Z" fill="var(--ink)" />
+        <path d="M100 106 C102 138 108 150 140 160 C108 170 102 182 100 214 C98 182 92 170 60 160 C92 150 98 138 100 106 Z" fill="#fff" fillOpacity=".22" />
       </svg>
     </div>
   );
