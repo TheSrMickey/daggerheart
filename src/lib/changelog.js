@@ -9,6 +9,9 @@ export const CHANGELOG = [
     title: "Descansos guiados y un Taller en galería",
     blurb: "Los descansos se hacen por pasos (corto o largo) con proyectos que avanzan solo en el descanso largo, el Taller es una galería de cartas con creación guiada y vista previa en directo, subir de nivel y los avisos tienen un diseño nuevo, los dados 3D mejoran, y las plantillas de personaje ya vienen creadas.",
     items: [
+      { tag: "nuevo", text: "Personalización · nuevo aspecto de dados «Dados por clase»: los dados toman el color de la clase del personaje que tira. El dado de Esperanza es siempre el tono claro y el de Miedo el oscuro, para distinguirlos de un vistazo." },
+      { tag: "mejora", text: "Inicio · la diapositiva de la carta del día usa la ilustración de la carta como fondo (la carta completa se abre con «Ver la carta»)." },
+      { tag: "mejora", text: "Cartas · las Salvajes llevan el título dorado con destellos." },
       { tag: "mejora", text: "Cartas · se quitan la miga de pan y el texto de cabecera para ganar espacio: la pestaña empieza directamente con el buscador y las pestañas." },
       { tag: "nuevo", text: "Creación de personaje · las plantillas son ahora personajes ya creados al completo (Kaelen Vox, Brunna Hierro e Ilia Tomo) que se añaden a tu cuenta y se abren listos para jugar." },
       { tag: "arreglo", text: "Taller · el marco dorado de las cartas queda por debajo de la insignia de la esquina superior izquierda." },

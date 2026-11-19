@@ -90,7 +90,7 @@ export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
     };
     return (
       <div
-        className={"mh-card mh-cardc is-bg is-full" + (modal ? " mh-card-anim" : "") + (modal || legend || bg ? " mh-tilt" : "") + (wpn ? " is-wp" : "") + (legend ? " is-legend" : "") + (wild && modal ? " is-wild-open" : "")}
+        className={"mh-card mh-cardc is-bg is-full" + (modal ? " mh-card-anim" : "") + (modal || legend || bg ? " mh-tilt" : "") + (wpn ? " is-wp" : "") + (legend ? " is-legend" : "") + (wild ? " is-wild" : "") + (wild && modal ? " is-wild-open" : "")}
         style={{ "--glow": alpha(col, 51), "--cc": col, margin: 0, width: modal ? "min(300px, 100%)" : 300, height: modal ? "min(420px, 80vh)" : 420, maxWidth: "100%", padding: 0, overflow: "hidden", borderRadius: 22, display: "flex", flexDirection: "column", border: "2px solid " + col, position: "relative", textAlign: "left" }}
         {...(tilt || {})}
       >
@@ -98,6 +98,7 @@ export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
         {c.workshop && <span className="mh-cardc-wkf" aria-hidden="true" />}
         {legend && <div className="mh-holo is-idle" />}
         {wild && <div className="mh-holo is-idle is-wild" />}
+        {wild && <><span className="mh-wild-sp" aria-hidden="true" style={{ left: "26%", top: "52%", fontSize: 13 }}>✦</span><span className="mh-wild-sp" aria-hidden="true" style={{ right: "26%", top: "52%", fontSize: 13, animationDelay: ".9s" }}>✦</span></>}
         {wild && modal && <div className="mh-wild-open" />}
         {legend && <div className="mh-legend-sheen" />}
         <div className="mh-cf-art">
@@ -135,7 +136,7 @@ export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
   }
   return (
     <div
-      className={"mh-card mh-cardc" + (modal ? " mh-card-anim" : "") + (modal || legend || bg ? " mh-tilt" : "") + (bg ? " is-bg" : "") + (wpn ? " is-wp" : "") + (legend ? " is-legend" : "") + (wild && modal ? " is-wild-open" : "")}
+      className={"mh-card mh-cardc" + (modal ? " mh-card-anim" : "") + (modal || legend || bg ? " mh-tilt" : "") + (bg ? " is-bg" : "") + (wpn ? " is-wp" : "") + (legend ? " is-legend" : "") + (wild ? " is-wild" : "") + (wild && modal ? " is-wild-open" : "")}
       style={{ "--glow": alpha(col, 51), "--cc": col, margin: 0, width: modal ? "min(300px, 100%)" : 300, height: modal ? "min(420px, 80vh)" : 420, maxWidth: "100%", padding: 0, overflow: "hidden", borderRadius: 22, display: "flex", flexDirection: "column", border: "2px solid " + col, position: "relative", textAlign: "left" }}
       {...(tilt || {})}
     >
@@ -143,6 +144,7 @@ export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
         {c.workshop && <span className="mh-cardc-wkf" aria-hidden="true" />}
       {legend && <div className="mh-holo is-idle" />}
         {wild && <div className="mh-holo is-idle is-wild" />}
+        {wild && <><span className="mh-wild-sp" aria-hidden="true" style={{ left: "26%", top: "52%", fontSize: 13 }}>✦</span><span className="mh-wild-sp" aria-hidden="true" style={{ right: "26%", top: "52%", fontSize: 13, animationDelay: ".9s" }}>✦</span></>}
         {wild && modal && <div className="mh-wild-open" />}
       {legend && <div className="mh-legend-sheen" />}
       <div className="mh-cardc-art" style={{ height: total > 600 ? 84 : total > 320 ? 100 : 124, "--ah": (total > 600 ? 84 : total > 320 ? 100 : 124) + "px", ...(sub && total > 400 ? { "--abg": (total > 520 ? 128 : total > 450 ? 140 : 156) + "px" } : null) }}>
