@@ -215,8 +215,8 @@ export function HomeHero({ camps, characters, featId, cards, color, icons, FitTi
         <CardPile cards={cards} skip={dayCard.id} seed={hashStr("monton:" + dayKey)} icons={icons} FitTitle={FitTitle} FitBox={FitBox} />
         <span className="mh-news-glow" style={{ "--gc": dayCard.color || "#C9A24A" }} aria-hidden="true" />
         <span className="mh-news-glow is-bl" style={{ "--gc": dayCard.color || "#C9A24A" }} aria-hidden="true" />
-        {gone && <NewsCard key={"o" + gone.id} card={gone} icons={icons} FitTitle={FitTitle} FitBox={FitBox} out />}
-        <NewsCard key={card.id} card={card} icons={icons} FitTitle={FitTitle} FitBox={FitBox} onW={setCw} />
+        {gone?.image && <div key={"o" + gone.id} className="mh-news-cart is-out" aria-hidden="true" style={{ backgroundImage: "url(" + gone.image + ")" }} />}
+        {card.image && <div key={card.id} className="mh-news-cart" aria-hidden="true" style={{ backgroundImage: "url(" + card.image + ")" }} />}
         <span className="mh-news-tag" key={"t" + card.id}><Layers size={12} /> Carta del día · {card.domain}</span>
         <h2 className="mh-serif" key={"h" + card.id}>{card.key}</h2>
         <p key={"p" + card.id}>{benefit(card.text)}</p>

@@ -4663,6 +4663,11 @@ const sharedStyles = `
   /* Cartas del Taller: marco interior dorado muy fino. */
   .mh-cardc-wkf { position: absolute; inset: 5px; border: 1px solid #E3B04B66; border-radius: 17px; z-index: 3; pointer-events: none; }
   html[data-mh-theme="light"] .mh-cardc-wkf { border-color: #B8862E88; }
+  /* Cartas Salvajes: título dorado con destellos (las más raras). */
+  .mh-cardc.is-wild .mh-cardc-ttl, .mh-cardc.is-wild .mh-serif { background: linear-gradient(100deg, #fff2b0, #f4b942 30%, #fff7d0 50%, #e0902a 70%, #ffe28a); -webkit-background-clip: text; background-clip: text; color: transparent !important; -webkit-text-fill-color: transparent; }
+  .mh-cardc.is-wild .mh-wild-sp { position: absolute; z-index: 6; pointer-events: none; color: #ffe28a; text-shadow: 0 0 8px #f4b942; line-height: 1; animation: mh-wild-tw 2.6s ease-in-out infinite; }
+  @keyframes mh-wild-tw { 0%, 100% { opacity: .35; transform: scale(.7); } 50% { opacity: 1; transform: scale(1.1); } }
+  @media (prefers-reduced-motion: reduce) { .mh-wild-sp { animation: none !important; } }
   .mh-cardc-cost { display: none; }
   .mh-cardc.is-bg.is-wp .mh-cardc-sub { display: block; margin-top: 2px; font-size: 9.5px; letter-spacing: .14em; color: var(--mh-muted); }
   .mh-cardc.is-bg.is-wp .mh-cardc-big { font-size: 36px; font-weight: 800; letter-spacing: -.02em; color: #fff; text-shadow: 0 2px 12px color-mix(in srgb, var(--cc) 60%, transparent); }
@@ -8341,7 +8346,7 @@ const sharedStyles = `
   html[data-mh-theme="light"] .mh-home-news.is-ses, html[data-mh-theme="light"] .mh-home-news.is-mesa, html[data-mh-theme="light"] .mh-home-news.is-card { --ns: #FFFCF6; }
   /* Sin ilustraciones oficiales: fondo de aurora (manchas de luz difuminadas del color de cada diapositiva y una trama de puntos). */
   .mh-news-aurora { display: none; }
-  html[data-mh-art="off"] .mh-home-news:is(.is-ver, .is-exp, .is-ses) .mh-news-aurora { display: block; position: absolute !important; inset: 0; z-index: 0 !important; overflow: hidden; border-radius: inherit; pointer-events: none; --a1: #5b7cff; --a2: #E3B04B; --a3: transparent; }
+  html[data-mh-art="off"] .mh-home-news:is(.is-ver, .is-exp, .is-ses, .is-card) .mh-news-aurora { display: block; position: absolute !important; inset: 0; z-index: 0 !important; overflow: hidden; border-radius: inherit; pointer-events: none; --a1: #5b7cff; --a2: #E3B04B; --a3: transparent; }
   html[data-mh-art="off"] .mh-home-news.is-exp .mh-news-aurora { --a1: #8C7FD0; --a2: #A8323E; --a3: #C08B5C; }
   html[data-mh-art="off"] .mh-home-news.is-ses .mh-news-aurora { --a1: #5b7cff; --a2: #6FBF73; }
   .mh-news-aurora i { position: absolute; border-radius: 50%; filter: blur(90px); }
@@ -8352,6 +8357,11 @@ const sharedStyles = `
   @keyframes mh-aur-a { from { transform: translate(0, 0) scale(1); } to { transform: translate(-40px, 30px) scale(1.12); } }
   @keyframes mh-aur-b { from { transform: translate(0, 0) scale(1); } to { transform: translate(50px, -24px) scale(1.1); } }
   @media (prefers-reduced-motion: reduce) { .mh-news-aurora i { animation: none !important; } }
+  /* Carta del día: la ilustración de la carta como fondo de la diapositiva (la carta completa se abre con «Ver la carta»). */
+  .mh-news-slide > .mh-news-cart { position: absolute !important; inset: 0 0 0 36%; z-index: 1; background-size: cover; background-position: center 22%; -webkit-mask-image: linear-gradient(90deg, transparent, #000 42%); mask-image: linear-gradient(90deg, transparent, #000 42%); animation: mh-fade-in .5s ease both; }
+  .mh-news-cart.is-out { z-index: 0; animation: mh-fade-out .45s ease both; }
+  html[data-mh-theme="light"] .mh-news-cart { opacity: .8; }
+  @media (max-width: 720px) { .mh-news-cart { inset: 0; opacity: .5; } }
   .mh-news-credit { left: 32px; font-size: 10px; opacity: .55; z-index: 2; line-height: 1.3; max-width: calc(100% - 200px); } html[data-mh-theme="light"] .mh-news-credit { color: #221C2B; }
   html[data-mh-theme="light"] .mh-home-news.is-mesa .mh-news-tag { color: #1F7A45; } html[data-mh-theme="light"] .mh-home-news.is-card .mh-news-tag { color: #6B4FB8; } html[data-mh-theme="light"] .mh-home-news.is-ver .mh-news-tag { color: #2A4FB0; }
   .mh-home-news:is(.is-ver, .is-ses) .mh-news-slide > :is(h2, p, .mh-home-cta) { max-width: calc(100% - 190px); } .mh-home-news.is-card { container-type: inline-size; } .mh-home-news.is-card .mh-news-slide > :is(h2, p, .mh-home-cta) { max-width: max(200px, calc(100cqw - 32px - clamp(120px, 15cqw, 240px) - var(--cw, 200px) - 40px)); } .mh-home-news.is-card .mh-news-slide > :is(h2, p) { text-shadow: 0 1px 10px color-mix(in srgb, var(--ns) 85%, transparent); }
@@ -19206,7 +19216,7 @@ export default function App({ onSignOut }) {
   }, [diceSkin]);
   useEffect(() => {
     safeGet("dice-skin", false).then((r) => {
-      if (["cristal", "cosmico", "oficial"].includes(r?.value)) setDiceSkin(r.value);
+      if (["cristal", "cosmico", "oficial", "clase"].includes(r?.value)) setDiceSkin(r.value);
     });
   }, []);
   const equipDiceSkin = (key) => {
@@ -31562,7 +31572,7 @@ export default function App({ onSignOut }) {
         document.body
       )}
       {stageCampaignId && (gmViewing || sheetCampaignId) && <Ambient campaignId={stageCampaignId} isGm={gmViewing} open={gmViewing && ambOpen} onClose={() => setAmbOpen(false)} anchorRef={ambBtn} />}
-      {dice3d && <Dice3D key={dice3d.key} dice={dice3d.dice} summary={dice3d.summary} skin={diceSkin} onReveal={() => (setDiceHold(false), flushOutcome())} onEnd={() => (setDice3d(null), setDiceHold(false))} />}
+      {dice3d && <Dice3D key={dice3d.key} dice={dice3d.dice} summary={dice3d.summary} skin={diceSkin} classColor={CLASS_COLORS[characters[viewingCharId || modernCharId]?.f_class] || "#E3B04B"} onReveal={() => (setDiceHold(false), flushOutcome())} onEnd={() => (setDice3d(null), setDiceHold(false))} />}
       <style>{sharedStyles}</style>
       <SocialHost />
       {levelUpId && characters[levelUpId] && (() => {

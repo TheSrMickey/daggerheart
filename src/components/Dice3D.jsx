@@ -152,6 +152,21 @@ const buildType = (THREE, sides) => {
   return { geo, uniq, faces, groups };
 };
 
+// Aspecto «clase»: los dados toman el color de tu clase. Esperanza = tono claro y luminoso; Miedo = tono oscuro y profundo, así nunca se confunden.
+export function classTints(THREE, color) {
+  const hsl = {};
+  new THREE.Color(color || "#E3B04B").getHSL(hsl);
+  // Tonos por luminosidad (en HSL, para que «claro» y «oscuro» se noten de verdad con cualquier color de clase).
+  const tone = (l, sat = 1) => new THREE.Color().setHSL(hsl.h, Math.min(1, hsl.s * sat), l);
+  const row = (light, base, numc) => [light.getHex(), base.getHex(), numc];
+  const mid = row(tone(0.72, 0.9), tone(0.5), "#ffffff");
+  return {
+    hope: row(tone(0.93, 0.8), tone(0.78, 0.85), "#10112a"),
+    fear: row(tone(0.07), tone(0.035), "#ffffff"), // (HSL en espacio lineal: valores bajos = oscuro de verdad)
+    bonus: mid, adv: mid, dis: mid, dmg: mid, crit: mid,
+  };
+}
+
 let S3 = null;
 let S3p = null;
 async function getShared() {
@@ -185,9 +200,10 @@ async function getShared() {
         catcher,
         types: {},
         texCache: new Map(),
-        glass: (kind) => {
-          const tint = TINTS[kind] || TINTS.bonus;
-          return (glassC[kind] = glassC[kind] || new THREE.MeshPhysicalMaterial({ color: new THREE.Color(tint[1]).lerp(new THREE.Color(tint[0]), 0.06), roughness: 0.62, metalness: 0, clearcoat: 0.08, clearcoatRoughness: 0.6, envMapIntensity: 0.28, emissive: new THREE.Color(tint[1]), emissiveIntensity: 0.16 }));
+        glass: (kind, ct) => {
+          const tint = ct || TINTS[kind] || TINTS.bonus;
+          const gk = ct ? kind + ct[1] : kind;
+          return (glassC[gk] = glassC[gk] || new THREE.MeshPhysicalMaterial({ color: new THREE.Color(tint[1]).lerp(new THREE.Color(tint[0]), 0.06), roughness: 0.62, metalness: 0, clearcoat: 0.08, clearcoatRoughness: 0.6, envMapIntensity: 0.28, emissive: new THREE.Color(tint[1]), emissiveIntensity: 0.16 }));
         },
         edgeMat: (o) => (edgeC[o] = edgeC[o] || new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: o })),
         skinMat: (k, make) => (skinC[k] = skinC[k] || make()),
@@ -266,7 +282,7 @@ export function warmDice3D(skin) {
   else setTimeout(go, 1500);
 }
 
-export function Dice3D({ dice, summary, skin, onReveal, onEnd }) {
+export function Dice3D({ dice, summary, skin, classColor, onReveal, onEnd }) {
   const host = useRef(null);
   const [edgeOn, setEdgeOn] = useState(false);
   const [ready, setReady] = useState(false);
@@ -456,10 +472,11 @@ export function Dice3D({ dice, summary, skin, onReveal, onEnd }) {
             numCol = duality ? "#ffffff" : "#ffc21a";
             logoOn = duality ? 12 : d.sides === 20 ? 20 : 0;
           }
-          const tint = cm ? [0, 0, numCol] : TINTS[d.kind] || TINTS.bonus;
+          const ct = skin === "clase" ? (classTints(THREE, classColor)[d.kind] || classTints(THREE, classColor).bonus) : null;
+          const tint = cm ? [0, 0, numCol] : ct || TINTS[d.kind] || TINTS.bonus;
           const group = new THREE.Group();
           if (cm) cosmics.push(cm.uniforms);
-          const mat = cm ? cm.mat : sh.glass(d.kind);
+          const mat = cm ? cm.mat : sh.glass(d.kind, ct);
           const body = new THREE.Group();
           body.scale.setScalar(scale);
           const mesh = new THREE.Mesh(T.geo, mat);

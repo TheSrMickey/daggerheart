@@ -7,6 +7,7 @@ import { Dices, Check, Sparkles } from "lucide-react";
 export const DICE_SKINS = [
   { key: "cristal", label: "Cristal", desc: "El dado translúcido de siempre, con el tinte de cada tipo de dado.", color: "#6FA3C0", hidden: true },
   { key: "cosmico", label: "D12 Cósmico", desc: "Una nebulosa que gira muy despacio, estrellas que titilan y el logo de la página en la cara del 12. Se aplica a todos tus dados.", color: "#A58BE8", model: "/modelos/d12-cosmico.glb" },
+  { key: "clase", label: "Dados por clase", desc: "Tus dados toman el color de la clase del personaje que tira. El dado de Esperanza es siempre el tono claro y luminoso y el de Miedo el tono oscuro y profundo, para distinguirlos de un vistazo.", color: "#7FB77A" },
   { key: "oficial", label: "Oficial Set", desc: "Inspirado en el set oficial de Daggerheart: resina morada y azul con remolinos blancos, brillos y números amarillos; el D12 de Esperanza en ámbar y el de Miedo en azul marino, con números blancos y el logo en el 12 (y en el 20). Se aplica a todos tus dados.", color: "#E3B04B", model: "/modelos/oficial-set.glb", set: true },
 ];
 
