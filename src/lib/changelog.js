@@ -4,11 +4,14 @@
 // la diapositiva de la última actualización en Inicio y el número de versión de la barra lateral salen solos de la primera entrada.
 export const CHANGELOG = [
   {
-    version: "1.53",
-    date: "2026-11-05",
-    title: "El Taller y la creación de personaje",
-    blurb: "Crea tus propias cartas y armas en el Taller (con fichas e imágenes), descarga tu hoja en PDF, estrena la creación de personaje renovada, una pestaña Cartas más clara con Adversarios y Entornos, y un Buscar mesa con filtros, solicitudes con mensaje y avisos.",
+    version: "1.54",
+    date: "2026-11-19",
+    title: "Descansos guiados y un Taller en galería",
+    blurb: "Los descansos se hacen por pasos (corto o largo) con proyectos que avanzan solo en el descanso largo, el Taller es una galería de cartas con creación guiada y vista previa en directo, subir de nivel y los avisos tienen un diseño nuevo, los dados 3D mejoran, y las plantillas de personaje ya vienen creadas.",
     items: [
+      { tag: "mejora", text: "Cartas · se quitan la miga de pan y el texto de cabecera para ganar espacio: la pestaña empieza directamente con el buscador y las pestañas." },
+      { tag: "nuevo", text: "Creación de personaje · las plantillas son ahora personajes ya creados al completo (Kaelen Vox, Brunna Hierro e Ilia Tomo) que se añaden a tu cuenta y se abren listos para jugar." },
+      { tag: "arreglo", text: "Taller · el marco dorado de las cartas queda por debajo de la insignia de la esquina superior izquierda." },
       { tag: "mejora", text: "Estadísticas de dados · «Tus dados» cuenta ahora todas las tiradas de la cuenta, tanto de jugador como de DJ (dualidad, daño, ataques de enemigos y dados del DJ). Los críticos incluyen también los de d20 y daño, y el % con Esperanza se calcula solo sobre las tiradas de dualidad." },
       { tag: "arreglo", text: "Inicio · la carta del día nunca se encoge por debajo de un tamaño legible: el banner tiene una altura mínima y, si no cabe todo, la página se desplaza." },
       { tag: "mejora", text: "Avisos · todos los avisos (notificaciones, logros y mensajes) comparten un único estilo: tarjeta con barra de color, icono, texto y barra de tiempo." },
@@ -64,6 +67,14 @@ export const CHANGELOG = [
       { tag: "mejora", text: "Inventario · las cartas de los objetos usan el mismo diseño nuevo que las armas y armaduras (ilustración, etiqueta de tipo, insignia y cantidad)." },
       { tag: "mejora", text: "Oro · al sumar o restar monedas el número rebota, se tiñe (dorado al subir, rojo al bajar) y sale un «+10» o «−1» flotante." },
       { tag: "arreglo", text: "Hoja · en modo claro, las cartas de dominio sin ilustración y los espacios libres ya no se ven como bloques oscuros sobre el papel crema." },
+    ],
+  },
+  {
+    version: "1.53",
+    date: "2026-11-05",
+    title: "El Taller y la creación de personaje",
+    blurb: "Crea tus propias cartas y armas en el Taller (con fichas e imágenes), descarga tu hoja en PDF, estrena la creación de personaje renovada, una pestaña Cartas más clara con Adversarios y Entornos, y un Buscar mesa con filtros, solicitudes con mensaje y avisos.",
+    items: [
       { tag: "mejora", text: "Cartas · lavado de cara en el móvil: la barra fija pasa de ocupar casi un tercio de la pantalla a una sola fila con el tipo, los filtros activos, buscar y filtros; los filtros (grupo, tipo, dominio con su nombre, nivel, rango y clase) están en una hoja inferior con el botón «Ver N cartas». Se arregla además el solapamiento de los nombres de dominio en el móvil." },
       { tag: "mejora", text: "Hoja · el PDF respeta el ajuste de ilustraciones oficiales: con ellas desactivadas, ni la hoja ni las cartas para recortar llevan imágenes oficiales, y con ellas activadas salen como siempre." },
       { tag: "mejora", text: "Hoja · el rayito del coste de recuperación de las cartas de dominio es amarillo en todas las cartas." },
