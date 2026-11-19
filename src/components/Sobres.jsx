@@ -151,13 +151,10 @@ function PackArt({ t }) {
       <div className="sb-rain" />
       <div className="sb-streak" />
       <svg className="sb-emb" viewBox="0 0 200 320" aria-hidden="true" style={{ "--ink": ink }}>
-        <circle cx="100" cy="150" r="68" fill="none" stroke="var(--ink)" strokeOpacity=".85" strokeWidth="4" />
-        <circle cx="100" cy="150" r="78" fill="none" stroke="var(--ink)" strokeOpacity=".45" strokeWidth="1.4" strokeDasharray="2 6" />
-        <path d="M100 80 C104 120 112 134 152 150 C112 166 104 180 100 220 C96 180 88 166 48 150 C88 134 96 120 100 80 Z" fill="var(--ink)" />
-        <path d="M100 98 C102 126 108 138 134 150 C108 162 102 174 100 202 C98 174 92 162 66 150 C92 138 98 126 100 98 Z" fill="#fff" fillOpacity=".22" />
-        <text x="100" y="262" textAnchor="middle" fontFamily="Georgia, serif" fontWeight="700" fontSize="27" letterSpacing="7" fill="var(--ink)">ENARIS</text>
-        <text x="100" y="284" textAnchor="middle" fontFamily="Inter, system-ui, sans-serif" fontWeight="800" fontSize="9.5" letterSpacing="3.2" fill="var(--ink)" fillOpacity=".85">{"SOBRE · " + t.sub}</text>
-        <text x="100" y="62" textAnchor="middle" fontFamily="Inter, system-ui, sans-serif" fontWeight="800" fontSize="9.5" letterSpacing="3" fill="var(--ink)" fillOpacity=".8">{PACK_SIZE} CARTAS</text>
+        <circle cx="100" cy="160" r="62" fill="none" stroke="var(--ink)" strokeOpacity=".85" strokeWidth="4" />
+        <circle cx="100" cy="160" r="72" fill="none" stroke="var(--ink)" strokeOpacity=".45" strokeWidth="1.4" strokeDasharray="2 6" />
+        <path d="M100 96 C104 134 111 147 148 160 C111 173 104 186 100 224 C96 186 89 173 52 160 C89 147 96 134 100 96 Z" fill="var(--ink)" />
+        <path d="M100 113 C102 138 107 149 130 160 C107 171 102 182 100 207 C98 182 93 171 70 160 C93 149 98 138 100 113 Z" fill="#fff" fillOpacity=".22" />
       </svg>
     </div>
   );
