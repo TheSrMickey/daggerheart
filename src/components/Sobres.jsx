@@ -163,6 +163,7 @@ function PackArt({ t }) {
 }
 
 export function SobresPage({ items, icons, FitTitle, FitBox, back }) {
+  const [shelfTab, setShelfTab] = useState("especiales");
   const [stage, setStage] = useState("shelf"); // shelf | pack | opening | cards | sum
   const [pack, setPack] = useState(SPECIAL[0]);
   const [cards, setCards] = useState([]);
@@ -190,7 +191,7 @@ export function SobresPage({ items, icons, FitTitle, FitBox, back }) {
   const domains = useMemo(() => {
     const m = new Map();
     items.forEach((c) => c.kind === "dominio" && !m.has(c.domain) && m.set(c.domain, c.color));
-    return [...m.entries()].map(([d, color]) => ({ id: "dom-" + d, name: d, sub: d.toUpperCase(), color: color || "#C9A24A", desc: "Solo cartas de " + d + " (rareza por nivel)", kinds: ["dominio"], domain: d, levelTier: true }));
+    return [...m.entries()].map(([d, color]) => ({ id: "dom-" + d, name: d, sub: d.toUpperCase(), color: color || "#C9A24A", desc: "Rareza según el nivel", kinds: ["dominio"], domain: d, levelTier: true }));
   }, [items]);
 
   useEffect(() => {
@@ -387,23 +388,32 @@ export function SobresPage({ items, icons, FitTitle, FitBox, back }) {
 
         {stage === "shelf" && (
           <div className="sb-shelf">
-            {[["Sobres especiales", SPECIAL], ["Sobres de dominio", domains]].map(([title, list]) => (
-              <section key={title} className="sb-sec">
-                <p className="sb-shelf-t">{title}</p>
-                <div className="sb-shelf-row">
-                  {list.map((p, i) => {
-                    const th = themeOf(p);
-                    return (
-                      <button key={p.id} type="button" className={"sb-mini" + (list === domains ? " is-sm" : "")} style={{ "--c1": th.c1, "--c2": th.c2, "--c3": th.c3, "--glow": th.glow, animationDelay: i * -0.7 + "s" }} onClick={() => choose(p)} aria-label={"Abrir Sobre " + p.name} title={p.desc}>
-                        <div className="sb-mini-in"><PackArt t={th} /></div>
-                        <span>{p.name}</span>
-                        {list !== domains && <small>{p.desc}</small>}
-                      </button>
-                    );
-                  })}
-                </div>
-              </section>
-            ))}
+            <div className="sb-tabs" role="tablist" aria-label="Tipo de sobre">
+              {[["especiales", "Especiales", SPECIAL.length], ["dominios", "Por dominio", domains.length]].map(([k, l, n]) => (
+                <button key={k} type="button" role="tab" aria-selected={shelfTab === k} className={shelfTab === k ? "is-on" : ""} onClick={() => setShelfTab(k)}>
+                  {l} <small>{n}</small>
+                </button>
+              ))}
+            </div>
+            {(() => {
+              const list = shelfTab === "especiales" ? SPECIAL : domains;
+              return (
+                <section key={shelfTab} className="sb-sec">
+                  <div className="sb-shelf-row">
+                    {list.map((p, i) => {
+                      const th = themeOf(p);
+                      return (
+                        <button key={p.id} type="button" className="sb-mini" style={{ "--c1": th.c1, "--c2": th.c2, "--c3": th.c3, "--glow": th.glow, animationDelay: i * -0.7 + "s" }} onClick={() => choose(p)} aria-label={"Abrir Sobre " + p.name} title={p.desc}>
+                          <div className="sb-mini-in"><PackArt t={th} /></div>
+                          <span>{p.name}</span>
+                          <small>{p.desc}</small>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
+              );
+            })()}
             <p className="sb-odds">Las cartas con rango salen según su rareza (I común, II poco común, III rara, IV legendaria). Las Salvajes son rarísimas.</p>
           </div>
         )}
@@ -569,10 +579,14 @@ html[data-mh-theme="light"] .sb-stats em { color: #8A6612; }
 /* Estantería */
 .sb-shelf { position: absolute; inset: 0; z-index: 2; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 26px; padding: 44px 18px 22px; }
 .sb-sec { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.sb-tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: 99px; border: 1px solid var(--mh-line); background: color-mix(in srgb, var(--mh-ink) 5%, transparent); flex: none; margin-top: 4px; }
+.sb-tabs button { appearance: none; border: 0; font: inherit; font-size: 13px; font-weight: 600; padding: 8px 18px; border-radius: 99px; background: transparent; color: var(--mh-muted); cursor: pointer; transition: background .2s, color .2s; }
+.sb-tabs button small { opacity: .7; margin-left: 3px; font-size: 11px; } .sb-tabs button.is-on { background: var(--mh-ink); color: var(--mh-bg, #fff); }
+.sb-sec { margin-block: auto; animation: sb-pop .45s cubic-bezier(.2,.9,.3,1.1) both; }
 .sb-shelf-t { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--mh-muted); }
 .sb-shelf-row { display: flex; gap: clamp(14px, 3vw, 34px); flex-wrap: wrap; justify-content: center; max-width: 1100px; }
+.sb-shelf { justify-content: flex-start; }
 .sb-mini { appearance: none; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; width: clamp(110px, 14vw, 150px); animation: sb-bob 5s ease-in-out infinite; transition: transform .25s; }
-.sb-mini.is-sm { width: clamp(82px, 10vw, 104px); }
 .sb-mini:hover { transform: translateY(-8px) scale(1.05); } .sb-mini:focus-visible { outline: 2px solid var(--c2); outline-offset: 6px; border-radius: 12px; }
 .sb-mini-in { position: relative; width: 100%; aspect-ratio: 13 / 20; filter: drop-shadow(0 14px 14px rgba(0,0,0,.4)); animation: sb-sweep 4.8s linear infinite; margin-bottom: 4px; }
 html[data-mh-theme="light"] .sb-mini-in { filter: drop-shadow(0 12px 12px rgba(70,45,10,.3)); }
