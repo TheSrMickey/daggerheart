@@ -17233,7 +17233,9 @@ export default function App({ onSignOut }) {
     if (fx.hopeAny) hopeCost = Math.max(1, Math.min(Number(opts.n || 1), Number(c.hope_marked ?? HOPE_DEFAULT)));
     if (card.key === "Campo Curativo" && opts.n === 2) hopeCost = 2;
     const patch = {};
-    if (hopeCost) patch.hope_marked = String(Number(c.hope_marked ?? HOPE_DEFAULT) - hopeCost);
+    // Duendes del Bosque: la Esperanza se gasta solo si la tirada tiene éxito.
+    const hopeOnSuccess = card.key === "Duendes del Bosque";
+    if (hopeCost && !hopeOnSuccess) patch.hope_marked = String(Number(c.hope_marked ?? HOPE_DEFAULT) - hopeCost);
     if (fx.once) patch.f_nat_used = JSON.stringify({ ...used, [card.key]: fx.once });
     let stressCost = fx.stress || 0;
     if (card.key === "Proyectil Corrosivo") stressCost = Number(opts.n || 0);
@@ -17293,7 +17295,7 @@ export default function App({ onSignOut }) {
           const p = fx.areaAtCell ? (cell || at) : at;
           const a = fx.area || fx.areaAtCell;
           if (a) dropArea(charId, card.key, p.x, p.y, a.range, a.color);
-          if (card.key === "Duendes del Bosque") spawn("Duende del bosque", hopeCost, (cell || at).x, (cell || at).y, {});
+          if (card.key === "Duendes del Bosque") { spawn("Duende del bosque", hopeCost, (cell || at).x, (cell || at).y, {}); const cu = charsRef.current[charId]; if (cu) updateCharacterField(charId, "hope_marked", String(Math.max(0, Number(cu.hope_marked ?? HOPE_DEFAULT) - hopeCost))); }
           if (fx.heal && me) toks.filter((t) => t.kind === "pc" && t.charId && !t.vanished && cellDist(me, t) <= RANGE_CELLS["Muy cercano"]).forEach((t) => { const ch = charsRef.current[t.charId]; if (ch) updateCharacterField(t.charId, "hp_marked", String(Math.max(0, Number(ch.hp_marked || 0) - (1 + Math.floor(Math.random() * 4))))); });
           if (card.key === "Fortaleza Salvaje") { const cu = charsRef.current[charId]; if (cu) updateCharacterField(charId, "hope_marked", String(Math.max(0, Number(cu.hope_marked ?? HOPE_DEFAULT) - fx.hopeOnWin))); }
           note(fx.heal ? " · éxito: tú y tus aliados en la barrera recuperan 1d4 PV" : fx.hopeOnWin ? " · éxito: gasta " + fx.hopeOnWin + " Esperanza para la cúpula" : " · éxito");
