@@ -44,7 +44,7 @@ export function useWorkshopItems(enabled) {
 }
 
 // Pantalla previa de la creación: plantilla o personaje propio (con el interruptor de contenido del Taller).
-export function StartStep({ classes, classColors, emblems, templates, custom, setCustom, onTemplate, onOwn, onClose }) {
+export function StartStep({ classes, classColors, classColors2, emblems, templates, charTemplates, custom, setCustom, onTemplate, onCharTemplate, onOwn, onClose }) {
   return (
     <div className="mh-wz-page">
       <div className="mh-card mh-wz cc-start">
@@ -57,16 +57,17 @@ export function StartStep({ classes, classColors, emblems, templates, custom, se
         </div>
         <div className="cc-start-g">
           <section className="cc-opt">
-            <h3><Sparkles size={16} /> Plantilla de personaje</h3>
-            <p>Un personaje de nivel 1 con la clase, los rasgos y el equipo que recomienda el libro. Solo te quedará darle nombre, origen, experiencias y cartas.</p>
-            <div className="cc-cls">
-              {classes.map((c) => {
-                const E = emblems[c] || User;
+            <h3><Sparkles size={16} /> Plantillas de personaje</h3>
+            <p>Personajes ya creados al completo: clase, rasgos, equipo, experiencias y cartas. Se añaden a tu cuenta y puedes empezar a jugar al momento (luego puedes cambiar lo que quieras en su hoja).</p>
+            <div className="cc-cls cc-chars">
+              {(charTemplates || []).map((t) => {
+                const E = emblems[t.cls] || User;
                 return (
-                  <button key={c} type="button" style={{ "--k": classColors[c] || "#E3B04B" }} onClick={() => onTemplate(c)}>
-                    <E size={18} strokeWidth={1.7} />
-                    <b>{c}</b>
-                    <small>{templates[c]}</small>
+                  <button key={t.id} type="button" style={{ "--k": classColors2?.[t.cls] || classColors[t.cls] || "#E3B04B" }} onClick={() => onCharTemplate(t)}>
+                    <E size={20} strokeWidth={1.7} />
+                    <b>{t.name}</b>
+                    <small>{t.cls} · {t.sub} · Nv {t.level}</small>
+                    <em>{t.blurb}</em>
                   </button>
                 );
               })}

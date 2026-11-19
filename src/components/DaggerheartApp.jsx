@@ -45,6 +45,7 @@ import { APP_VERSION } from "@/lib/changelog";
 import { setPresence, setPresenceMaking, startPresence, stopPresence, publishTable, loadTable, myUid, setPresenceCamp, bridge, logActivity, trackStat, loadReactions, toggleReaction } from "@/lib/social";
 import ProfilePage from "./Profile";
 import { LinesVeilsEditor, limitsCount, limitsText } from "./LinesVeils";
+import { CHAR_TEMPLATES } from "@/lib/charTemplates";
 import { StartStep, CustomStep, CustomViewer, customOf, pickWorkshop, MAX_CUSTOM } from "./CustomContent";
 import { SocialHost, LookingFor, ActivityCard, PrivacyCard, ReactionBar } from "./Social2";
 import { weaponIcon, armorIcon, itemVisual, GOLD_ICONS } from "./gearIcons";
@@ -4660,7 +4661,7 @@ const sharedStyles = `
   /* Modo claro: el hueco de la ilustración sin imagen usa un degradado claro del color de la carta (antes un gris oscuro). */
   html[data-mh-theme="light"] .mh-cardc.is-bg .mh-cardc-noart:not(.is-exp) { background: linear-gradient(165deg, color-mix(in srgb, var(--cc) 34%, #fffdf8) 0%, color-mix(in srgb, var(--cc) 14%, #fffdf8) 100%); }
   /* Cartas del Taller: marco interior dorado muy fino. */
-  .mh-cardc-wkf { position: absolute; inset: 5px; border: 1px solid #E3B04B66; border-radius: 17px; z-index: 7; pointer-events: none; }
+  .mh-cardc-wkf { position: absolute; inset: 5px; border: 1px solid #E3B04B66; border-radius: 17px; z-index: 3; pointer-events: none; }
   html[data-mh-theme="light"] .mh-cardc-wkf { border-color: #B8862E88; }
   .mh-cardc-cost { display: none; }
   .mh-cardc.is-bg.is-wp .mh-cardc-sub { display: block; margin-top: 2px; font-size: 9.5px; letter-spacing: .14em; color: var(--mh-muted); }
@@ -7977,6 +7978,7 @@ const sharedStyles = `
   .cc-sw { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--mh-line); background: var(--mh-panel2); cursor: pointer; } .cc-sw input { position: absolute; opacity: 0; pointer-events: none; } .cc-sw i { flex: none; width: 38px; height: 22px; border-radius: 99px; background: var(--mh-line2); position: relative; margin-top: 2px; transition: background .2s; } .cc-sw i::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .2s; } .cc-sw.is-on { border-color: #E3B04B88; } .cc-sw.is-on i { background: #E3B04B; } .cc-sw.is-on i::after { transform: translateX(16px); } .cc-sw input:focus-visible + i { outline: 2px solid #E3B04B; outline-offset: 2px; }
   .cc-sw span { display: flex; flex-direction: column; gap: 3px; } .cc-sw b { font-size: 13.5px; color: var(--mh-ink); } .cc-sw small { font-size: 12px; line-height: 1.45; color: var(--mh-muted); }
   .cc-start { max-width: 1040px; margin: 0 auto; } .cc-start-g { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 16px; padding: 6px 4px 4px; } .cc-opt { border: 1px solid var(--mh-line); border-radius: 20px; background: var(--mh-panel); padding: 18px; display: flex; flex-direction: column; gap: 12px; } .cc-opt h3 { margin: 0; display: flex; align-items: center; gap: 8px; font: 700 12px var(--font-body), 'Inter', system-ui, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: var(--mh-ink3); } .cc-opt p { margin: 0; font-size: 13px; line-height: 1.5; color: var(--mh-muted); }
+  .cc-chars { grid-template-columns: 1fr !important; } .cc-chars button em { grid-column: 1 / -1; font-style: normal; font-size: 11.5px; line-height: 1.4; color: var(--mh-muted); margin-top: 4px; } .cc-chars button small { white-space: normal; }
   .cc-cls { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; } .cc-cls button { all: unset; cursor: pointer; box-sizing: border-box; display: grid; grid-template-columns: 22px 1fr; column-gap: 8px; align-items: center; padding: 10px 12px; border-radius: 14px; border: 1.5px solid var(--mh-line); background: var(--mh-panel2); color: var(--k); transition: border-color .15s, background .15s; } .cc-cls button:hover { border-color: var(--k); background: color-mix(in srgb, var(--k) 12%, var(--mh-panel2)); } .cc-cls button:focus-visible { outline: 2px solid var(--k); outline-offset: 2px; } .cc-cls b { color: var(--mh-ink); font-size: 13.5px; } .cc-cls small { grid-column: 2; color: var(--mh-muted); font-size: 10.5px; line-height: 1.3; }
   .cc-go { align-self: flex-start; margin-top: auto; }
   .cc-step { width: 100%; align-self: stretch; overflow-y: auto; align-content: start; display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 16px; min-height: 0; } .cc-hint { margin: 0 0 10px; font-size: 12.5px; line-height: 1.5; color: var(--mh-muted); } .cc-list { display: flex; flex-direction: column; gap: 6px; } .cc-count { margin-top: 10px; font-size: 12px; color: var(--mh-muted); }
@@ -8399,8 +8401,6 @@ const sharedStyles = `
      campañas y personajes son de una sola línea y se desplazan hacia los lados si no caben. Solo en pantallas muy bajas vuelve el scroll vertical. */
   @media (min-height: 700px) and (min-width: 721px) { .mh-main-fit > .mh-view-in { height: 100%; } .mh-main-fit .mh-home, .mh-main-fit .mh-home-main { height: 100%; } .mh-main-fit .mh-home-main { display: flex; flex-direction: column; min-height: 0; } .mh-main-fit .mh-home-main > * { flex: none; }
     .mh-main-fit .mh-home-news { flex: 1 1 340px; min-height: 240px; max-height: 760px; padding-top: 24px; padding-bottom: 24px; }
-    /* Carta del día: nunca se encoge por debajo de lo que hace falta para leer la carta (si no cabe todo, la página se desplaza). */
-    .mh-main-fit .mh-home-news.is-card { min-height: 410px; flex-shrink: 0; } .mh-main-fit .mh-home-news.is-card .mh-news-slide > .mh-news-card { top: 18px; bottom: 44px; }
     .mh-main-fit .mh-home-sec { margin: 16px 0 10px; }
     .mh-main-fit .mh-hrow { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(300px, 1fr); overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; padding-bottom: 2px; }
   }
@@ -13939,6 +13939,43 @@ export default function App({ onSignOut }) {
     });
     setTraitAssign(nextAssign);
     setTraitPool([]);
+  };
+
+  // Personaje ya creado al completo (plantillas de «¿Cómo quieres empezar?»): se añade a la cuenta y se abre su hoja.
+  const createFromCharTemplate = async (tpl) => {
+    if (Object.keys(characters).length >= MAX_CHARACTERS) {
+      setShowNewCharModal(false);
+      setCharWarning(`Has llegado al límite de ${MAX_CHARACTERS} personajes por cuenta. Elimina uno para crear otro.`);
+      return;
+    }
+    const f = tpl.fields;
+    const id = "c" + Date.now();
+    const wKey = (k) => { const base = BASE_WEAPONS.find((w) => w.key === k); return base ? buildWeapon(base, 1).key : k; };
+    const armor = ARMORS.find((a) => a.key === f.f_armor);
+    const sub = (SUBCLASSES[f.f_class] || []).find((x) => x.key === f.f_subclass);
+    const classItem = tpl.classItem || (CLASS_ITEMS[f.f_class] || [])[0] || "";
+    const created = {
+      ...FICHA_DEFAULTS,
+      ...f,
+      f_primary_weapon: wKey(f.f_primary_weapon),
+      f_secondary_weapon: f.f_secondary_weapon ? f.f_secondary_weapon : "",
+      f_languages: "Común",
+      r_evasion: String(CLASS_EVASION[f.f_class] ?? 10),
+      r_hp: String(CLASS_HP[f.f_class] ?? 6),
+      r_stress: String(STRESS_SLOTS + (sub?.key === "Vengador" ? 1 : 0)),
+      armor_marked: String(armor?.score || 0),
+      f_items: JSON.stringify([...BASIC_ITEMS.filter((n) => n !== GOLD_HANDFUL), tpl.potion, classItem].filter(Boolean).map((name) => ({ name, description: STARTER_ITEMS.find((si) => si.name === name)?.description || "", count: 1 }))),
+      f_gold_tens: "1",
+    };
+    const nextChars = { ...characters, [id]: created };
+    setCharacters(nextChars);
+    await safeSet("character-index", JSON.stringify(Object.keys(nextChars)), false);
+    await safeSet("character:" + id, JSON.stringify(created), false);
+    trackStat("chars");
+    switchChar(id);
+    setShowNewCharModal(false);
+    setView("ficha");
+    openModern(id);
   };
 
   const confirmNewChar = async () => {
@@ -31998,14 +32035,14 @@ export default function App({ onSignOut }) {
             </div>
           </div>
         )}
-        {showTopbar && !campFlat && view !== "perfil" && view !== "inicio" && view !== "ficha" && (
+        {showTopbar && !campFlat && view !== "perfil" && view !== "inicio" && view !== "ficha" && view !== "cartas" && (
           <div className="mh-topbar-wrap" style={{ right: railW, padding: "0 " + padX, transition: "right .22s ease" }}>
             <div className="mh-topbar" style={{ maxWidth: contentMax }}>
               <span>{topLeft}</span>
             </div>
           </div>
         )}
-        <div data-mh-main className={(showTopbar ? "mh-scroll-hidden" : "") + (view === "inicio" ? " mh-main-fit" : "") + (campFlat ? " mh-main-flat" : "") || undefined} style={{ position: "absolute", top: showTopbar && !(modernCamp && !isMobile) ? (view === "perfil" || view === "inicio" || view === "ficha" || campFlat ? EDGE : EDGE + 74) : 0, left: 0, bottom: 0, right: railW, transition: "right .22s ease", overflowY: (view === "ficha" && !viewingCharId && !modernCharId && showRail) || campFlat ? "hidden" : "auto", padding: isMobile ? (campDetail ? "10px 12px 18px" : "18px 14px") : modernCamp ? "18px 24px 12px 14px" : showTopbar ? "0 " + padX + " " + EDGE + "px" : campDetail ? (campaignDetailTab === "mesa" ? "18px 24px 12px 14px" : EDGE + "px " + padX + " " + EDGE + "px") : "24px 28px" }}>
+        <div data-mh-main className={(showTopbar ? "mh-scroll-hidden" : "") + (view === "inicio" ? " mh-main-fit" : "") + (campFlat ? " mh-main-flat" : "") || undefined} style={{ position: "absolute", top: showTopbar && !(modernCamp && !isMobile) ? (view === "perfil" || view === "inicio" || view === "ficha" || view === "cartas" || campFlat ? EDGE : EDGE + 74) : 0, left: 0, bottom: 0, right: railW, transition: "right .22s ease", overflowY: (view === "ficha" && !viewingCharId && !modernCharId && showRail) || campFlat ? "hidden" : "auto", padding: isMobile ? (campDetail ? "10px 12px 18px" : "18px 14px") : modernCamp ? "18px 24px 12px 14px" : showTopbar ? "0 " + padX + " " + EDGE + "px" : campDetail ? (campaignDetailTab === "mesa" ? "18px 24px 12px 14px" : EDGE + "px " + padX + " " + EDGE + "px") : "24px 28px" }}>
           <div ref={setWizSlot} style={{ maxWidth: contentMax, margin: "0 auto" }} />
           <div key={view + (view === "ficha" && modernCharId ? ":hoja" : "")} className={"mh-view-in" + (view === "ficha" && modernCharId ? " mh-sheet-in" : "")} style={{ display: showNewCharModal ? "none" : undefined, maxWidth: contentMax, margin: "0 auto" }}>
             {!showTopbar && view !== "inicio" && view !== "perfil" && !campDetail && <div className="mh-pagetitle">{viewLabel}</div>}
@@ -35701,7 +35738,9 @@ export default function App({ onSignOut }) {
           setCustom={setWizCustom}
           onClose={() => setShowNewCharModal(false)}
           onOwn={() => setWizPre(false)}
-          onTemplate={(cls) => startFromTemplate(cls)}
+          charTemplates={CHAR_TEMPLATES}
+          classColors2={CLASS_COLORS}
+          onCharTemplate={(tpl) => createFromCharTemplate(tpl)}
         />,
         wizSlot
       )}

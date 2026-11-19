@@ -486,10 +486,6 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox, Domain
   return (
     <div className="cx" ref={rootRef}>
       <div className="cx-h">
-        <div>
-          <h1 className="mh-serif">Cartas</h1>
-          <p>Todas las cartas del juego, ordenadas por grupo y tipo. Escribe en el buscador para buscar en todas a la vez. Pulsa una carta para verla a tamaño completo.</p>
-        </div>
         <label className="cx-search">
           <Search size={15} />
           <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar por nombre o texto…" aria-label="Buscar cartas" />
