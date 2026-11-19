@@ -94,7 +94,6 @@ export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
         {...(tilt || {})}
       >
         <div className="mh-glare" />
-        {c.kind === "salvaje" && <><span className="mh-wild-a" aria-hidden="true" /><span className="mh-wild-a2" aria-hidden="true" /><span className="mh-wild-b" aria-hidden="true" /></>}
         {c.workshop && <span className="mh-cardc-wkf" aria-hidden="true" />}
         {legend && <div className="mh-holo is-idle" />}
         {legend && <div className="mh-legend-sheen" />}
@@ -138,7 +137,6 @@ export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
       {...(tilt || {})}
     >
       <div className="mh-glare" />
-        {c.kind === "salvaje" && <><span className="mh-wild-a" aria-hidden="true" /><span className="mh-wild-a2" aria-hidden="true" /><span className="mh-wild-b" aria-hidden="true" /></>}
         {c.workshop && <span className="mh-cardc-wkf" aria-hidden="true" />}
       {legend && <div className="mh-holo is-idle" />}
       {legend && <div className="mh-legend-sheen" />}

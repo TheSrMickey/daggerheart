@@ -9,6 +9,8 @@ export const CHANGELOG = [
     title: "El Taller y la creación de personaje",
     blurb: "Crea tus propias cartas y armas en el Taller (con fichas e imágenes), descarga tu hoja en PDF, estrena la creación de personaje renovada, una pestaña Cartas más clara con Adversarios y Entornos, y un Buscar mesa con filtros, solicitudes con mensaje y avisos.",
     items: [
+      { tag: "mejora", text: "Inicio · las cajas de «Tus dados» son aún más compactas para que el banner de diapositivas recupere altura y la carta del día se vea mejor." },
+      { tag: "arreglo", text: "Ilustraciones oficiales · las ilustraciones de las cartas Salvajes cuentan como oficiales: se ocultan con el ajuste desactivado (también en el PDF). Se retiran los efectos holográficos y el borde foil de las cartas Salvajes." },
       { tag: "mejora", text: "Inicio · en «Tus dados» las cajas de tiradas, críticos y Esperanza son más bajas: van apiladas a la izquierda y el gráfico ocupa el resto con la misma altura." },
       { tag: "mejora", text: "Taller · ahora es una galería de cartas igual que la pestaña Cartas (buscador, pestañas por tipo, secciones y mosaico). Para crear una carta hay un botón «Crear carta» arriba a la derecha: eliges el tipo y un asistente por pasos se abre con la carta a la vista en directo mientras la creas." },
       { tag: "nuevo", text: "Cartas · las cartas Salvajes, las más raras del juego, tienen un velo holográfico de colores y un borde foil arcoíris que cambia de tono." },
