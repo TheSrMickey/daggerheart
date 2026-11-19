@@ -78,6 +78,8 @@ const SPECIAL = [
   { id: "subclases", name: "Subclases", sub: "SUBCLASES", color: "#8E74D8", desc: "Fundación, Especialización y Maestría", kinds: ["subclase"], rankTier: true },
   { id: "linajes", name: "Linajes", sub: "LINAJES", color: "#5C97C9", desc: "Ascendencias, comunidades y transformaciones", kinds: ["ascendencia", "comunidad", "transformacion"] },
 ];
+// Logo oficial de Enaris (el mismo de la hoja y de la reverso de las cartas), sin deformar: viewBox 200 × 340.
+const LOGO = "M100 0C101.5 66 106 109 200 115C106 121 102 164 100 340C98 164 94 121 0 115C94 109 98.5 66 100 0Z";
 const mix = (c, pct, w) => `color-mix(in srgb, ${c} ${pct}%, ${w})`;
 const themeOf = (p) => ({ ...p, c1: mix(p.color, 38, "#fff"), c2: p.color, c3: mix(p.color, 48, "#000"), glow: p.color, ink: mix(p.color, 22, "#000") });
 
@@ -151,8 +153,10 @@ function PackArt({ t }) {
       <div className="sb-rain" />
       <div className="sb-streak" />
       <svg className="sb-emb" viewBox="0 0 200 320" aria-hidden="true" style={{ "--ink": ink }}>
-        <path d="M100 84 C105 134 114 148 162 160 C114 172 105 186 100 236 C95 186 86 172 38 160 C86 148 95 134 100 84 Z" fill="var(--ink)" />
-        <path d="M100 106 C102 138 108 150 140 160 C108 170 102 182 100 214 C98 182 92 170 60 160 C92 150 98 138 100 106 Z" fill="#fff" fillOpacity=".22" />
+        <svg x="44" y="64" width="112" height="190" viewBox="0 0 200 340" overflow="visible">
+          <path d={LOGO} fill="var(--ink)" />
+          <path d={LOGO} fill="#fff" fillOpacity=".22" transform="translate(100 115) scale(.55) translate(-100 -115)" />
+        </svg>
       </svg>
     </div>
   );
