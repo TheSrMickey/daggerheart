@@ -8426,7 +8426,13 @@ const sharedStyles = `
   .mh-home-tile.is-ses .ses-pl { display: flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ses-rsvp { display: flex; gap: 5px; margin-top: 6px; } .ses-rsvp button { all: unset; cursor: pointer; width: 30px; height: 24px; display: grid; place-items: center; border-radius: 8px; border: 1px solid var(--mh-line2); color: var(--mh-muted); box-sizing: border-box; }
   .ses-rsvp button:hover { color: var(--c); border-color: var(--c); } .ses-rsvp button.on { color: var(--c); border-color: var(--c); background: color-mix(in srgb, var(--c) 16%, transparent); }
-  .mh-dice { display: flex; gap: 12px; align-items: stretch; margin-bottom: 4px; }
+  /* Tus dados: las tres cifras van apiladas y compactas a la izquierda; el gráfico ocupa el resto con la misma altura. */
+  .mh-dice { display: grid; grid-template-columns: 224px minmax(0, 1fr); grid-template-rows: repeat(3, auto); gap: 8px 12px; align-items: stretch; margin-bottom: 4px; }
+  .mh-dice > .mh-dice-ch { grid-column: 2; grid-row: 1 / span 3; }
+  .mh-dice-st { width: auto; flex-direction: row !important; align-items: center; gap: 12px !important; padding: 9px 14px !important; }
+  .mh-dice-st span { margin-bottom: 0 !important; flex: none; width: 34px !important; height: 34px !important; }
+  .mh-dice-st b { font-size: 22px !important; line-height: 1.05; } .mh-dice-st small { margin-top: 1px; white-space: nowrap; }
+  .mh-dice-st { width: auto !important; }
   .mh-dice-st { width: 150px; flex: none; display: flex; flex-direction: column; gap: 2px; padding: 14px 16px; border: 1px solid var(--mh-line); border-radius: 14px; background: var(--mh-panel); }
   .mh-dice-st span { width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; margin-bottom: 6px; color: var(--c); background: color-mix(in srgb, var(--c) 16%, var(--mh-panel)); }
   .mh-dice-st b { font: 600 28px var(--font-body), 'Inter', system-ui, sans-serif; color: var(--mh-ink); } .mh-dice-st small { font-size: 11.5px; color: var(--mh-muted); }
@@ -8445,7 +8451,7 @@ const sharedStyles = `
   .mh-dice-bars { flex: 1; display: flex; gap: 8px; align-items: flex-end; margin-top: 10px; min-height: 84px; }
   .mh-dice-bars > div { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; } .mh-dice-bars u { display: block; width: 100%; border-radius: 4px 4px 0 0; text-decoration: none; background: linear-gradient(#5b7cff, #2b3a7a); opacity: .75; } .mh-dice-bars u.is-today { opacity: 1; }
   .mh-dice-bars small { font-size: 9.5px; color: var(--mh-muted); }
-  @media (max-width: 760px) { .mh-dice { flex-wrap: wrap; } .mh-dice-st { width: calc(33% - 8px); min-width: 96px; } .mh-dice-ch { flex-basis: 100%; } }
+  @media (max-width: 760px) { .mh-dice { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: auto; } .mh-dice > .mh-dice-ch { grid-column: 1 / -1; grid-row: auto; } .mh-dice-st { flex-direction: column !important; align-items: flex-start !important; gap: 2px !important; } .mh-dice { flex-wrap: wrap; } .mh-dice-st { width: calc(33% - 8px); min-width: 96px; } .mh-dice-ch { flex-basis: 100%; } }
   .mh-hrow { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
   /* Inicio · Próxima sesión */
   .mh-hns { --hc: #C9A24A; display: grid; grid-template-columns: 150px minmax(0, 1fr); border-radius: 14px; background: var(--mh-panel); border: 1px solid var(--mh-line); overflow: hidden; }
@@ -8470,6 +8476,7 @@ const sharedStyles = `
   /* Inicio en móvil: dados más compactos y filas de campañas, personajes y sesiones en carrusel horizontal (con imán) en vez de apiladas. */
   @media (max-width: 720px) {
     .mh-dice { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .mh-dice > .mh-dice-ch { grid-column: 1 / -1; grid-row: auto; }
     .mh-dice-st { width: auto; padding: 10px 11px; } .mh-dice-st span { width: 30px; height: 30px; margin-bottom: 2px; } .mh-dice-st b { font-size: 22px; }
     .mh-dice-ch { grid-column: 1 / -1; padding: 10px 12px; } .mh-dice-bars { min-height: 56px; margin-top: 6px; gap: 5px; }
     .mh-hrow, .mh-home-row { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: min(84%, 320px); gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 4px; scrollbar-width: none; margin-right: -14px; padding-right: 14px; }
