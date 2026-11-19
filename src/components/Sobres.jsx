@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight, LayoutGrid, Package, RotateCcw, Sparkles } f
 import { CardFace } from "./Cards";
 import { CardBack } from "./CardBacks";
 import { itemVisual } from "./gearIcons";
+import { playTearStep, playTearOpen } from "@/lib/sounds";
 
 const PACK_SIZE = 5;
 
@@ -224,6 +225,7 @@ export function SobresPage({ items, icons, FitTitle, FitBox, back }) {
     setIdx(0);
     setFx(null);
     setStage("opening");
+    playTearOpen();
     later(() => setStage("cards"), 1300);
   };
   // Rasgado: la grieta sigue al puntero píxel a píxel. Se agarra una esquina de la tira (o la parte ya rasgada) y se arrastra hasta el otro lado.
@@ -247,6 +249,8 @@ export function SobresPage({ items, icons, FitTitle, FitBox, back }) {
     const mv = (ev) => {
       const dir = d.side === "L" ? 1 : -1;
       const ext = Math.max(0, Math.min(d.W, d.ext0 + dir * (ev.clientX - d.x0)));
+      if (ext > (d.last ?? d.ext0)) playTearStep((ext - (d.last ?? d.ext0)) / d.W);
+      d.last = ext;
       setTear({ side: d.side, ext, rise: Math.max(0, Math.min(d.W * 0.5, d.y0 - ev.clientY)) });
     };
     const up = (ev) => {
