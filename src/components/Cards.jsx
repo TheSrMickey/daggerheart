@@ -55,6 +55,7 @@ export function DomainLogo({ name, I, size = 19 }) {
 export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
   const col = c.color;
   const legend = c.kind === "arma" && c.tier === 4;
+  const wild = c.kind === "salvaje"; // las más raras: foil holográfico suave y entrada especial al abrirla
   const feats = c.features || [];
   const total = (c.text || "").length + (c.stats || []).reduce((s, x) => s + x[0].length + String(x[1]).length, 0) + feats.reduce((s, f) => s + (f.name || "").length + (f.text || "").length + (f.subs || []).reduce((q, e) => q + e.name.length + e.text.length, 0), 0);
   const modal = !!onClose;
@@ -89,13 +90,15 @@ export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
     };
     return (
       <div
-        className={"mh-card mh-cardc is-bg is-full" + (modal ? " mh-card-anim" : "") + (modal || legend || bg ? " mh-tilt" : "") + (wpn ? " is-wp" : "") + (legend ? " is-legend" : "")}
+        className={"mh-card mh-cardc is-bg is-full" + (modal ? " mh-card-anim" : "") + (modal || legend || bg ? " mh-tilt" : "") + (wpn ? " is-wp" : "") + (legend ? " is-legend" : "") + (wild && modal ? " is-wild-open" : "")}
         style={{ "--glow": alpha(col, 51), "--cc": col, margin: 0, width: modal ? "min(300px, 100%)" : 300, height: modal ? "min(420px, 80vh)" : 420, maxWidth: "100%", padding: 0, overflow: "hidden", borderRadius: 22, display: "flex", flexDirection: "column", border: "2px solid " + col, position: "relative", textAlign: "left" }}
         {...(tilt || {})}
       >
         <div className="mh-glare" />
         {c.workshop && <span className="mh-cardc-wkf" aria-hidden="true" />}
         {legend && <div className="mh-holo is-idle" />}
+        {wild && <div className="mh-holo is-idle is-wild" />}
+        {wild && modal && <div className="mh-wild-open" />}
         {legend && <div className="mh-legend-sheen" />}
         <div className="mh-cf-art">
           <img src={c.image} alt={modal ? c.key : ""} style={{ objectPosition: (c.imgX ?? 50) + "% " + (c.imgY ?? 30) + "%", transform: "scale(" + (c.imgZoom || 1) + ")", transformOrigin: (c.imgX ?? 50) + "% " + (c.imgY ?? 30) + "%" }} />
@@ -132,13 +135,15 @@ export function CardFace({ c, I, FitTitle, FitBox, onClose, tilt }) {
   }
   return (
     <div
-      className={"mh-card mh-cardc" + (modal ? " mh-card-anim" : "") + (modal || legend || bg ? " mh-tilt" : "") + (bg ? " is-bg" : "") + (wpn ? " is-wp" : "") + (legend ? " is-legend" : "")}
+      className={"mh-card mh-cardc" + (modal ? " mh-card-anim" : "") + (modal || legend || bg ? " mh-tilt" : "") + (bg ? " is-bg" : "") + (wpn ? " is-wp" : "") + (legend ? " is-legend" : "") + (wild && modal ? " is-wild-open" : "")}
       style={{ "--glow": alpha(col, 51), "--cc": col, margin: 0, width: modal ? "min(300px, 100%)" : 300, height: modal ? "min(420px, 80vh)" : 420, maxWidth: "100%", padding: 0, overflow: "hidden", borderRadius: 22, display: "flex", flexDirection: "column", border: "2px solid " + col, position: "relative", textAlign: "left" }}
       {...(tilt || {})}
     >
       <div className="mh-glare" />
         {c.workshop && <span className="mh-cardc-wkf" aria-hidden="true" />}
       {legend && <div className="mh-holo is-idle" />}
+        {wild && <div className="mh-holo is-idle is-wild" />}
+        {wild && modal && <div className="mh-wild-open" />}
       {legend && <div className="mh-legend-sheen" />}
       <div className="mh-cardc-art" style={{ height: total > 600 ? 84 : total > 320 ? 100 : 124, "--ah": (total > 600 ? 84 : total > 320 ? 100 : 124) + "px", ...(sub && total > 400 ? { "--abg": (total > 520 ? 128 : total > 450 ? 140 : 156) + "px" } : null) }}>
         <div className="mh-cardc-noart" style={{ color: col }}>{dom && DOMAIN_LOGO[c.domain] ? <span className="mh-cardc-dlogo" style={{ "--m": "url(/dominios/" + DOMAIN_LOGO[c.domain] + ".svg)", background: col, filter: "drop-shadow(0 0 18px " + col + ")" }} aria-hidden="true" /> : <I size={50} strokeWidth={1.5} />}</div>
