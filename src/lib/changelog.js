@@ -9,6 +9,11 @@ export const CHANGELOG = [
     title: "El Taller y la creación de personaje",
     blurb: "Crea tus propias cartas y armas en el Taller (con fichas e imágenes), descarga tu hoja en PDF, estrena la creación de personaje renovada, una pestaña Cartas más clara con Adversarios y Entornos, y un Buscar mesa con filtros, solicitudes con mensaje y avisos.",
     items: [
+      { tag: "mejora", text: "Estadísticas de dados · «Tus dados» cuenta ahora todas las tiradas de la cuenta, tanto de jugador como de DJ (dualidad, daño, ataques de enemigos y dados del DJ). Los críticos incluyen también los de d20 y daño, y el % con Esperanza se calcula solo sobre las tiradas de dualidad." },
+      { tag: "arreglo", text: "Inicio · la carta del día nunca se encoge por debajo de un tamaño legible: el banner tiene una altura mínima y, si no cabe todo, la página se desplaza." },
+      { tag: "mejora", text: "Avisos · todos los avisos (notificaciones, logros y mensajes) comparten un único estilo: tarjeta con barra de color, icono, texto y barra de tiempo." },
+      { tag: "mejora", text: "Personajes · sin ilustraciones oficiales, la ficha muestra el icono de la clase en un escudo heráldico sobre una trama de rayas suave, en lugar del cuadrado." },
+      { tag: "nuevo", text: "Cartas · las Salvajes llevan un foil holográfico suave que sigue al ratón y una entrada especial al abrirlas (giro con destello)." },
       { tag: "mejora", text: "Inicio · las cajas de «Tus dados» son aún más compactas para que el banner de diapositivas recupere altura y la carta del día se vea mejor." },
       { tag: "arreglo", text: "Ilustraciones oficiales · las ilustraciones de las cartas Salvajes cuentan como oficiales: se ocultan con el ajuste desactivado (también en el PDF). Se retiran los efectos holográficos y el borde foil de las cartas Salvajes." },
       { tag: "mejora", text: "Inicio · en «Tus dados» las cajas de tiradas, críticos y Esperanza son más bajas: van apiladas a la izquierda y el gráfico ocupa el resto con la misma altura." },

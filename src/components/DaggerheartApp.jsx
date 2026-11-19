@@ -8399,6 +8399,8 @@ const sharedStyles = `
      campañas y personajes son de una sola línea y se desplazan hacia los lados si no caben. Solo en pantallas muy bajas vuelve el scroll vertical. */
   @media (min-height: 700px) and (min-width: 721px) { .mh-main-fit > .mh-view-in { height: 100%; } .mh-main-fit .mh-home, .mh-main-fit .mh-home-main { height: 100%; } .mh-main-fit .mh-home-main { display: flex; flex-direction: column; min-height: 0; } .mh-main-fit .mh-home-main > * { flex: none; }
     .mh-main-fit .mh-home-news { flex: 1 1 340px; min-height: 240px; max-height: 760px; padding-top: 24px; padding-bottom: 24px; }
+    /* Carta del día: nunca se encoge por debajo de lo que hace falta para leer la carta (si no cabe todo, la página se desplaza). */
+    .mh-main-fit .mh-home-news.is-card { min-height: 410px; flex-shrink: 0; } .mh-main-fit .mh-home-news.is-card .mh-news-slide > .mh-news-card { top: 18px; bottom: 44px; }
     .mh-main-fit .mh-home-sec { margin: 16px 0 10px; }
     .mh-main-fit .mh-hrow { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(300px, 1fr); overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; padding-bottom: 2px; }
   }
@@ -8827,6 +8829,14 @@ const sharedStyles = `
   .ach3d { display: inline-block; position: relative; user-select: none; -webkit-user-select: none; } .ach3d.is-rot { touch-action: pan-y; cursor: grab; } .ach3d.is-rot:active { cursor: grabbing; } .pf-dlg-hint { margin-top: 6px; font-size: 11px; color: var(--mh-muted); } .ach3d-in { display: block; position: absolute; inset: 0; transform-style: preserve-3d; will-change: transform; } .ach3d-wall { position: absolute; display: block; backface-visibility: visible; } .ach3d-f { position: absolute; left: 0; top: 0; display: block; } .ach3d-f { backface-visibility: hidden; -webkit-backface-visibility: hidden; width: 100%; height: 100%; } .ach3d-face { display: block; }
   .ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 14px 8px; } .ach-it { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 1px; } .ach-it b { font-size: 12px; font-weight: 600; color: var(--mh-ink); margin-top: 4px; } .ach-it small { font-size: 11px; color: var(--mh-muted); } .ach-it:not(.is-on) b { color: var(--mh-muted); } .ach-badge.is-lock { opacity: .6; }
   .ach-toasts { position: fixed; right: 20px; bottom: 24px; z-index: 120; display: flex; flex-direction: column; gap: 10px; max-width: min(380px, calc(100vw - 32px)); } .ach-toast { display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 10px; border-radius: 16px; background: var(--mh-panel); border: 1px solid #E3B04B; box-shadow: 0 14px 34px rgba(0,0,0,.45); animation: ach-in .4s cubic-bezier(.2,.8,.2,1) both; } .ach-toast > div { display: flex; flex-direction: column; min-width: 0; } .ach-toast small { font: 700 10px var(--font-body), 'Inter', system-ui, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: #E3B04B; } .ach-toast b { font: 600 15px var(--font-body), 'Inter', system-ui, sans-serif; color: var(--mh-ink); } .ach-toast em { font-style: normal; font-size: 12px; color: var(--mh-muted); } .ach-toast button { margin-left: auto; padding: 6px 12px; border-radius: 99px; border: 1px solid var(--mh-line2); background: transparent; color: var(--mh-ink); font: 600 12px var(--font-body), 'Inter', system-ui, sans-serif; cursor: pointer; } @keyframes ach-in { from { opacity: 0; transform: translateY(14px) scale(.96); } } @media (prefers-reduced-motion: reduce) { .ach-toast { animation: none; } }
+  /* Estilo único de avisos (toasts): tarjeta con barra de color a la izquierda, icono en cuadrito, texto y barra de tiempo fina. */
+  .mh-toast, .mh-toast-warn, .mh-pt-toast, .mh-ntoast, .ach-toast { --tc: #6FBF73; position: relative; border-radius: 16px !important; background: var(--mh-panel) !important; color: var(--mh-ink) !important; border: 1px solid var(--mh-line2) !important; border-left: 3px solid var(--tc) !important; box-shadow: 0 16px 34px -14px #000b !important; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .mh-toast, .mh-toast-warn, .mh-pt-toast { display: flex; align-items: center; gap: 12px; padding: 12px 18px 12px 12px !important; font: 600 13px var(--font-body), 'Inter', system-ui, sans-serif !important; line-height: 1.35; }
+  .mh-toast::before, .mh-toast-warn::before, .mh-pt-toast::before { content: "✓"; flex: none; width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; font-size: 16px; font-weight: 800; color: var(--tc); background: color-mix(in srgb, var(--tc) 18%, transparent); }
+  .mh-toast-warn { --tc: #D9644E; } .mh-toast-warn::before { content: "!"; } .mh-pt-toast { --tc: #E3B04B; }
+  .mh-ntoast { --tc: var(--c, #4f86ff); } .mh-ntoast .mh-notice-k { color: var(--tc) !important; font-style: normal; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; font-size: 10px; } .mh-ntoast .mh-notice-a .is-ok { background: var(--tc) !important; color: #10112a !important; font-weight: 700; } .mh-ntoast-bar { height: 2.5px !important; opacity: .7; background: var(--tc) !important; }
+  .ach-toast { --tc: #E3B04B; border-top-color: var(--mh-line2) !important; }
+  html[data-mh-theme="light"] .mh-toast, html[data-mh-theme="light"] .mh-toast-warn, html[data-mh-theme="light"] .mh-pt-toast, html[data-mh-theme="light"] .mh-ntoast, html[data-mh-theme="light"] .ach-toast { box-shadow: 0 14px 28px -16px #3a2c1288 !important; }
   .mh-camps-head { align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; } .mh-camps-ht { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; min-width: 0; } .mh-camps-ht > span { font: 600 17px var(--font-body), 'Inter', system-ui, sans-serif; color: var(--mh-ink); } .mh-camps-head .mh-btn { display: inline-flex; align-items: center; gap: 6px; flex: none; }
   .mh-hero.is-static { cursor: default; } .mh-hero.is-static:hover { transform: none; box-shadow: none; border-color: color-mix(in srgb, var(--hc) 40%, var(--mh-line)); } .mh-hero.is-static:hover .mh-hero-emb { transform: none; }
   .mh-hero-flags { position: absolute; top: 10px; right: 10px; display: flex; gap: 6px; } .mh-hero-flags span { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; background: color-mix(in srgb, var(--mh-panel) 82%, transparent); border: 1px solid var(--mh-line2); } .mh-hero-flags .is-ai, .mh-hero-meta .is-ai { color: var(--mh-gold-ink, #E3B04B); } .mh-hero-flags .is-lv, .mh-hero-meta .is-lv { color: #7E5BC4; }
@@ -9021,9 +9031,11 @@ const sharedStyles = `
   .mh-gc-art { position: absolute !important; inset: 0 0 auto 0; height: 68%; background-size: cover; -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent 100%); mask-image: linear-gradient(180deg, #000 55%, transparent 100%); transition: filter .3s ease; pointer-events: none; z-index: 0 !important; }
   .mh-gc-ph { display: none; }
   html[data-mh-art="off"] .mh-gc-ph { display: block; position: absolute; inset: 0; color: var(--k); }
-  .mh-gc-pt { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(5, 1fr); align-content: space-around; justify-items: center; opacity: .16; padding: 28px 6px 0; }
-  .mh-gc-pb { position: absolute; left: 50%; top: 22%; width: 136px; height: 136px; margin-left: -68px; border-radius: 34px; display: grid; place-items: center; background: #0f0d26; border: 2px solid var(--k); box-shadow: 0 0 50px color-mix(in srgb, var(--k) 38%, transparent); }
-  html[data-mh-theme="light"] .mh-gc-pb { background: color-mix(in srgb, var(--k) 14%, #fffdf8); box-shadow: 0 10px 30px -12px color-mix(in srgb, var(--k) 55%, transparent); color: color-mix(in srgb, var(--k) 85%, #000); }
+  .mh-gc-pt { position: absolute; inset: 0; background: repeating-linear-gradient(135deg, transparent 0 22px, color-mix(in srgb, var(--k) 8%, transparent) 22px 23px); }
+  .mh-gc-sh { position: absolute; left: 50%; top: 22%; width: 132px; height: 150px; margin-left: -66px; }
+  .mh-gc-shbg { position: absolute; inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 12px 22px color-mix(in srgb, var(--k) 45%, transparent)); } .mh-gc-shbg path { fill: color-mix(in srgb, var(--k) 16%, #10112a); stroke: var(--k); stroke-width: 1.6; stroke-linejoin: round; }
+  .mh-gc-shic { position: absolute; left: 0; right: 0; top: 34px; display: grid; place-items: center; color: var(--k); }
+  html[data-mh-theme="light"] .mh-gc-shbg path { fill: color-mix(in srgb, var(--k) 12%, #fffdf8); } html[data-mh-theme="light"] .mh-gc-shic { color: color-mix(in srgb, var(--k) 85%, #000); } html[data-mh-theme="light"] .mh-gc-shbg { filter: drop-shadow(0 10px 18px color-mix(in srgb, var(--k) 40%, transparent)); }
   .mh-gc:hover .mh-gc-art, .mh-gc:focus-visible .mh-gc-art { filter: saturate(1.15) brightness(1.08); }
   .mh-gc-badge { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--k); background: color-mix(in srgb, var(--mh-bg) 80%, transparent); border: 1.5px solid var(--k); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
   .mh-gc.has-art .mh-gc-lv { background: color-mix(in srgb, var(--mh-bg) 80%, transparent); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
@@ -9323,6 +9335,14 @@ const sharedStyles = `
     opacity: .3; transition: opacity .35s ease;
   }
   .mh-tilt[data-active="1"] .mh-holo { opacity: .7; }
+  /* Cartas Salvajes: foil holográfico suave (sin borde añadido) que sigue al ratón, y una entrada especial al abrirlas. */
+  .mh-holo.is-wild { opacity: .2; animation: none !important; } .mh-tilt[data-active="1"] .mh-holo.is-wild { opacity: .5; }
+  .mh-cardc.is-wild-open { animation: mh-wild-in .85s cubic-bezier(.2,.9,.25,1.1) both !important; }
+  @keyframes mh-wild-in { 0% { opacity: 0; transform: perspective(900px) rotateY(-100deg) scale(.82); filter: brightness(2.2) saturate(1.6); } 55% { opacity: 1; filter: brightness(1.5) saturate(1.3); } 100% { opacity: 1; transform: none; filter: none; } }
+  .mh-wild-open { position: absolute; inset: 0; z-index: 32; pointer-events: none; border-radius: inherit; overflow: hidden; }
+  .mh-wild-open::after { content: ""; position: absolute; top: -20%; bottom: -20%; width: 45%; left: -60%; transform: skewX(-18deg); background: linear-gradient(90deg, transparent, rgba(255,255,255,.75), rgba(255,170,220,.5), transparent); animation: mh-wild-sweep 1.1s ease-out .45s both; }
+  @keyframes mh-wild-sweep { from { left: -60%; opacity: 1; } to { left: 130%; opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .mh-cardc.is-wild-open { animation: none !important; } .mh-wild-open { display: none; } }
   @keyframes mh-fade-in { from { background-color: rgba(8,6,12,0); backdrop-filter: blur(0); } }
   @keyframes mh-fade-out { to { background-color: rgba(8,6,12,0); backdrop-filter: blur(0); } }
   @keyframes mh-card-draw {
@@ -9997,8 +10017,11 @@ function ClassPh({ cls }) {
   if (!E) return null;
   return (
     <span className="mh-gc-ph" aria-hidden="true">
-      <span className="mh-gc-pt">{Array.from({ length: 30 }, (_, i) => <E key={i} size={34} strokeWidth={1.6} style={{ opacity: 0.35 + ((i % 3) * 0.3) / 1 }} />)}</span>
-      <span className="mh-gc-pb"><E size={64} strokeWidth={1.7} /></span>
+      <span className="mh-gc-pt" />
+      <span className="mh-gc-sh">
+        <svg viewBox="0 0 52 58" className="mh-gc-shbg"><path d="M4 4 H48 V31 C48 43 38 51 26 55 C14 51 4 43 4 31 Z" /></svg>
+        <span className="mh-gc-shic"><E size={56} strokeWidth={1.6} /></span>
+      </span>
     </span>
   );
 }
@@ -11320,7 +11343,8 @@ function HomeDice({ stats }) {
     return { key: dayKeyOf(ms), n: (st.days || {})[dayKeyOf(ms)] || 0, lab: ["D", "L", "M", "X", "J", "V", "S"][new Date(ms).getDay()] };
   });
   const max = Math.max(1, ...days.map((d) => d.n));
-  const pct = total ? Math.round(((st.hope || 0) / total) * 100) : 0;
+  const dual = st.dual ?? total;
+  const pct = dual ? Math.round(((st.hope || 0) / dual) * 100) : 0;
   const week = days.reduce((sum, d) => sum + d.n, 0);
   const prevWeek = Array.from({ length: 7 }, (_, i) => (st.days || {})[dayKeyOf(now - (13 - i) * 86400000)] || 0).reduce((sum, n) => sum + n, 0);
   const diff = week - prevWeek;
@@ -14060,7 +14084,14 @@ export default function App({ onSignOut }) {
 
 
   // Guarda tus estadísticas personales (solo tú las ves): total, críticos, Esperanza/Miedo y tiradas por día.
-  const recordDice = async (hope, fear) => {
+  // Cuenta TODAS las tiradas de la cuenta (como jugador o como DJ): dualidad (hope/fear), daño, ataques de enemigos, dados del DJ…
+  // Las que no son de dualidad (hope == null) suman a «tiradas» y, si son críticas, a «críticos»; el % con Esperanza se calcula solo sobre las de dualidad.
+  const diceQ = useRef(Promise.resolve()); // cola: varias tiradas seguidas no se pisan al guardar
+  const recordDice = (hope, fear, critical = false) => {
+    diceQ.current = diceQ.current.then(() => recordDiceNow(hope, fear, critical)).catch(() => {});
+    return diceQ.current;
+  };
+  const recordDiceNow = async (hope, fear, critical = false) => {
     const r = await safeGet("dice-stats", false);
     let st = {};
     try {
@@ -14070,7 +14101,8 @@ export default function App({ onSignOut }) {
     const days = { ...(st.days || {}), [day]: ((st.days || {})[day] || 0) + 1 };
     const keep = {};
     Object.keys(days).sort().slice(-30).forEach((k) => (keep[k] = days[k]));
-    const next = { total: (st.total || 0) + 1, crit: (st.crit || 0) + (hope === fear ? 1 : 0), hope: (st.hope || 0) + (hope > fear ? 1 : 0), fear: (st.fear || 0) + (fear > hope ? 1 : 0), days: keep };
+    const dual = hope != null;
+    const next = { total: (st.total || 0) + 1, dual: (st.dual ?? st.total ?? 0) + (dual ? 1 : 0), crit: (st.crit || 0) + ((dual ? hope === fear : critical) ? 1 : 0), hope: (st.hope || 0) + (dual && hope > fear ? 1 : 0), fear: (st.fear || 0) + (dual && fear > hope ? 1 : 0), days: keep };
     await safeSet("dice-stats", JSON.stringify(next), false);
     setDiceStats(next);
   };
@@ -14344,6 +14376,7 @@ export default function App({ onSignOut }) {
 
   // Aullido Frenético: tira tantos d20 como tu Rango y sales de la Forma de Lobo.
   const triggerRampage = (id, c) => {
+    recordDice(null, null);
     const tier = tierForLevel(c.f_level || 1);
     const rolls = Array.from({ length: tier }, () => Math.floor(Math.random() * 20) + 1);
     const total = rolls.reduce((a, b) => a + b, 0);
@@ -14753,6 +14786,7 @@ export default function App({ onSignOut }) {
   const rollWeaponDamage = async (weaponName, damageStr, charId, isCritical, opts = {}) => {
     const m = damageStr.match(/d(\d+)(?:\+(\d+))?/);
     if (!m) return;
+    recordDice(null, null, !!isCritical);
     const die = parseInt(m[1], 10);
     const flat = m[2] ? parseInt(m[2], 10) : 0;
     const ch = charId ? charsRef.current[charId] : null;
@@ -15132,6 +15166,7 @@ export default function App({ onSignOut }) {
     const hope = Number(c.hope_marked ?? HOPE_DEFAULT);
     if (hope < 1) return;
     const n = Math.floor(Math.random() * 8) + 1;
+    recordDice(null, null);
     const by = characters[wi.ward.by];
     const patch = { hope_marked: String(hope - 1), ...(n === 8 ? { f_runeward: JSON.stringify({ ...wi.ward, spent: true, restN: Number(by?.f_rest_n || 0) }) } : {}) };
     updateCharacterFields(charId, patch);
@@ -15207,6 +15242,7 @@ export default function App({ onSignOut }) {
   const finishFoeAttack = (foe, tg, r, atk, crit, dmgExpr, tag, ev, success, quiet) => {
     const st = foe.stats;
     const d = rollExpr(dmgExpr);
+    recordDice(null, null, !!crit);
     const m = String(dmgExpr).match(/(\d*)d(\d+)/);
     const nDice = m ? Number(m[1] || 1) : 0, sides = m ? Number(m[2]) : 0;
     const critExtra = crit && m ? nDice * sides : 0;
@@ -15237,6 +15273,7 @@ export default function App({ onSignOut }) {
     if (!foe || !foe.stats || !tg || !tg.charId) return;
     const st = foe.stats;
     const r = rollExpr("1d20");
+    recordDice(null, null, r.rolls[0] === 20);
     const atk = r.rolls[0] + Number(st.atk || 0);
     const crit = r.rolls[0] === 20;
     const ch = characters[tg.charId];
@@ -19825,6 +19862,7 @@ export default function App({ onSignOut }) {
     const label = groups.map((g) => g.vals.length + "d" + g.sd).join(" + ");
     const parts = groups.map((g) => ({ label: g.vals.length + "d" + g.sd, v: g.vals.reduce((a, b) => a + b, 0), plain: true }));
     const note = d.priv ? "Tirada privada: solo la ves tú" : "Tirada pública: la ve toda la mesa";
+    recordDice(null, null);
     const key = Date.now();
     const summary = { parts, total, text: "Tirada de dados", color: "#E3B04B", note, dc: "", outcome: "hope" };
     setDiceDlg(null);
