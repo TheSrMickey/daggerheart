@@ -42,6 +42,7 @@ import { Chronicle, Timeline } from "./Chronicle";
 import { appendLog } from "@/lib/chronicle";
 import CampInvite from "./CampInvite";
 import PartyLobby from "./Lobby";
+import { AventuraPage } from "./Aventura";
 import { SpotPlayer, SpotPause, SpotPanel, FocusBar, FocusPill, normSpot, liveHands, kindOf } from "./Spotlight";
 import { APP_VERSION } from "@/lib/changelog";
 import { setPresence, setPresenceMaking, startPresence, stopPresence, publishTable, loadTable, myUid, setPresenceCamp, bridge, logActivity, trackStat, loadReactions, toggleReaction, createLobby, lobbyInvited, setMyLobby } from "@/lib/social";
@@ -72,6 +73,7 @@ const NAV_ITEMS = [
   { key: "ficha", label: "Personajes", icon: User },
   { key: "campaigns", label: "Campañas", icon: BookOpen },
   { key: "cartas", label: "Cartas", icon: Layers },
+  { key: "aventura", label: "Aventura", icon: Compass },
   { key: "sobres", label: "Sobres", icon: Package },
   { key: "taller", label: "Taller", icon: Hammer },
   { key: "dadosskin", label: "Personalización", icon: Dices },
@@ -32639,14 +32641,14 @@ export default function App({ onSignOut }) {
             </div>
           </div>
         )}
-        {showTopbar && !campFlat && view !== "perfil" && view !== "inicio" && view !== "ficha" && view !== "cartas" && view !== "sobres" && (
+        {showTopbar && !campFlat && view !== "perfil" && view !== "inicio" && view !== "ficha" && view !== "cartas" && view !== "sobres" && view !== "aventura" && (
           <div className="mh-topbar-wrap" style={{ right: railW, padding: "0 " + padX, transition: "right .22s ease" }}>
             <div className="mh-topbar" style={{ maxWidth: contentMax }}>
               <span>{topLeft}</span>
             </div>
           </div>
         )}
-        <div data-mh-main className={(showTopbar ? "mh-scroll-hidden" : "") + (view === "inicio" ? " mh-main-fit" : "") + (campFlat ? " mh-main-flat" : "") || undefined} style={{ position: "absolute", top: showTopbar && !(modernCamp && !isMobile) ? (view === "perfil" || view === "inicio" || view === "ficha" || view === "cartas" || view === "sobres" || campFlat ? EDGE : EDGE + 74) : 0, left: 0, bottom: 0, right: railW, transition: "right .22s ease", overflowY: (view === "ficha" && !viewingCharId && !modernCharId && showRail) || campFlat ? "hidden" : "auto", padding: isMobile ? (campDetail ? "10px 12px 18px" : "18px 14px") : modernCamp ? "18px 24px 12px 14px" : showTopbar ? "0 " + padX + " " + EDGE + "px" : campDetail ? (campaignDetailTab === "mesa" ? "18px 24px 12px 14px" : EDGE + "px " + padX + " " + EDGE + "px") : "24px 28px" }}>
+        <div data-mh-main className={(showTopbar ? "mh-scroll-hidden" : "") + (view === "inicio" ? " mh-main-fit" : "") + (campFlat ? " mh-main-flat" : "") || undefined} style={{ position: "absolute", top: showTopbar && !(modernCamp && !isMobile) ? (view === "perfil" || view === "inicio" || view === "ficha" || view === "cartas" || view === "sobres" || view === "aventura" || campFlat ? EDGE : EDGE + 74) : 0, left: 0, bottom: 0, right: railW, transition: "right .22s ease", overflowY: (view === "ficha" && !viewingCharId && !modernCharId && showRail) || campFlat ? "hidden" : "auto", padding: isMobile ? (campDetail ? "10px 12px 18px" : "18px 14px") : modernCamp ? "18px 24px 12px 14px" : showTopbar ? "0 " + padX + " " + EDGE + "px" : campDetail ? (campaignDetailTab === "mesa" ? "18px 24px 12px 14px" : EDGE + "px " + padX + " " + EDGE + "px") : "24px 28px" }}>
           <div ref={setWizSlot} style={{ maxWidth: contentMax, margin: "0 auto" }} />
           <div key={view + (view === "ficha" && modernCharId ? ":hoja" : "")} className={"mh-view-in" + (view === "ficha" && modernCharId ? " mh-sheet-in" : "")} style={{ display: showNewCharModal ? "none" : undefined, maxWidth: contentMax, margin: "0 auto" }}>
             {!showTopbar && view !== "inicio" && view !== "perfil" && !campDetail && <div className="mh-pagetitle">{viewLabel}</div>}
@@ -36112,6 +36114,7 @@ export default function App({ onSignOut }) {
           {view === "perfil" && profileTarget && <ProfilePage key={profileTarget.id} id={profileTarget.id} name={profileTarget.name} />}
 
           {view === "dadosskin" && <Personalizacion skin={diceSkin} onEquip={equipDiceSkin} back={cardBack} onEquipBack={equipCardBack} cardBorder={cardBorder} onCardBorder={equipCardBorder} items={buildCardCatalog()} icons={DOMAIN_ICONS} FitTitle={FitTitle} FitBox={FitBox} />}
+          {view === "aventura" && <AventuraPage chars={Object.entries(characters).map(([id, c]) => ({ id, name: c.f_name || "Sin nombre", cls: c.f_class || "", anc: c.f_ancestry || "", lvl: Number(c.f_level || 1) }))} classColor={classColor} onCreate={openNewCharModal} />}
           {view === "sobres" && <SobresPage items={buildCardCatalog()} icons={DOMAIN_ICONS} FitTitle={FitTitle} FitBox={FitBox} back={cardBack} />}
           {view === "taller" && <WorkshopPage FitTitle={FitTitle} FitBox={FitBox} TokDice={TokDice} domainColors={DOMAIN_COLORS} icons={DOMAIN_ICONS} classColors={CLASS_COLORS} classes={CLASSES.map((c) => c.key)} />}
           {view === "cartas" && <CardsPage classDomains={CLASS_DOMAINS} openId={cardsOpenId} onOpened={() => setCardsOpenId(null)} DomainIcon={DomainIcon} items={buildCardCatalog()} domainColors={DOMAIN_COLORS} icons={DOMAIN_ICONS} FitTitle={FitTitle} FitBox={FitBox} />}

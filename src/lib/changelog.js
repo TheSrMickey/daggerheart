@@ -9,6 +9,7 @@ export const CHANGELOG = [
     title: "Modo party: jugad juntos desde la sala de espera",
     blurb: "Al crear una campaña puedes activar el modo party: una sala de espera para invitar a tus amigos, donde cada uno elige o crea su personaje, se reparte quién dirige y todos ven quién está listo antes de comenzar. Además: filtros y comparador en Cartas, sobres de prueba, kit inicial para imprimir y mejoras para el Druida.",
     items: [
+      { tag: "nuevo", text: "Aventura (fase 1) · nueva pestaña «Aventura» en el menú: Brumaria, una ciudad sobre la niebla compartida por todos los jugadores. Elige uno de tus personajes (o crea uno nuevo) para convertirlo en tu viajero, una copia ligera aparte de la hoja tradicional con monedas y mochila, y entra en la ciudad. Solo se puede tener un viajero por cuenta. Las siguientes fases traerán el mapa, las decisiones y a los demás jugadores." },
       { tag: "nuevo", text: "Campañas · modo party: al crear una campaña, en «La mesa», puedes activar el modo party. Se abre una sala de espera donde invitas a tus amigos; cada uno elige uno de sus personajes o crea uno nuevo desde la sala, se decide quién es el DJ y todos ven en tiempo real quién ha elegido personaje, quién lo está creando y quién está listo. Cuando todos están listos, el anfitrión o el DJ pulsa «Comenzar campaña». Quien crea la campaña no tiene por qué dirigir: puede ocupar un sitio de jugador, pero la campaña no empieza sin DJ. Si sales de la sala y no hay nadie más, la sala y la campaña se borran." },
     ],
   },
