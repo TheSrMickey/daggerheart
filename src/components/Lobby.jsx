@@ -4,7 +4,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Check, Crown, Hammer, Hourglass, Plus, Swords, UserPlus, Users, X } from "lucide-react";
 import { Avatar } from "./Social";
-import { loadLobby, myUid, setMyLobby, lobbyRemove, lobbySetGm, lobbyStart } from "@/lib/social";
+import { loadLobby, myUid, setMyLobby, lobbyRemove, lobbySetGm, lobbyClearGm, lobbyClose, lobbyStart } from "@/lib/social";
 
 const STATE = {
   invited: { label: "Invitado", hint: "Aún no ha entrado", tone: "idle" },
@@ -14,7 +14,7 @@ const STATE = {
   ready: { label: "Listo", hint: "", tone: "ok" },
 };
 
-export default function PartyLobby({ camp, chars, classColor, wizardOpen, newCharId, onCreateChar, onInvite, onBack, onStarted }) {
+export default function PartyLobby({ camp, chars, classColor, wizardOpen, newCharId, onCreateChar, onInvite, onBack, onDiscard, onStarted }) {
   const [uid, setUid] = useState(null);
   const [lobby, setLobby] = useState({ meta: null, members: {} });
   const [err, setErr] = useState("");
@@ -86,6 +86,16 @@ export default function PartyLobby({ camp, chars, classColor, wizardOpen, newCha
     setMyLobby(camp.id, { state: next });
   };
 
+  // Atrás: si no hay nadie más, la sala y la campaña se borran; si hay gente, solo se sale.
+  const goBack = async () => {
+    const fresh = await loadLobby(camp.id).catch(() => lobby); // estado al momento, por si acaban de entrar o invitar a alguien
+    const m = fresh.meta || meta;
+    if (iAmHost && m && m.members.length <= 1 && !m.started) {
+      await lobbyClose(camp.id).catch(() => {});
+      onDiscard && onDiscard();
+    } else onBack();
+  };
+
   const people = meta
     ? meta.members.map((m) => ({ ...m, st: lobby.members[m.id]?.state || "invited", c: lobby.members[m.id] || null }))
     : [];
@@ -93,7 +103,7 @@ export default function PartyLobby({ camp, chars, classColor, wizardOpen, newCha
   const gms = people.filter((p) => role(p.id) === "gm").length;
   const everyoneReady = people.length > 1 && readyN === people.length;
   const canStart = (iAmHost || iAmGm) && everyoneReady && gms === 1;
-  const why = !people.length ? "" : gms !== 1 ? "Tiene que haber un DJ." : people.length < 2 ? "Invita al menos a otra persona." : !everyoneReady ? "Faltan " + (people.length - readyN) + " por estar listos." : "";
+  const why = !people.length ? "" : gms !== 1 ? "Falta el DJ: el anfitrión tiene que asignar uno." : people.length < 2 ? "Invita al menos a otra persona." : !everyoneReady ? "Faltan " + (people.length - readyN) + " por estar listos." : "";
   const canReady = myRole === "gm" ? true : mine?.state === "selected" || mine?.state === "ready";
   const col = camp.color || "#E3B04B";
 
@@ -109,7 +119,7 @@ export default function PartyLobby({ camp, chars, classColor, wizardOpen, newCha
     <div className="lby" style={{ "--lc": col }}>
       <style>{CSS}</style>
       <header className="lby-h">
-        <button type="button" className="lby-back" onClick={onBack} aria-label="Volver a Campañas" title="Campañas"><ArrowLeft size={16} /></button>
+        <button type="button" className="lby-back" onClick={goBack} aria-label="Volver a Campañas" title={meta.members.length <= 1 && iAmHost ? "Salir y borrar la sala (no hay nadie más)" : "Campañas"}><ArrowLeft size={16} /></button>
         <div className="lby-t">
           <span className="lby-k"><Users size={12} /> Modo party · sala de espera</span>
           <h2 className="mh-serif">{meta.name || camp.name}</h2>
@@ -152,10 +162,10 @@ export default function PartyLobby({ camp, chars, classColor, wizardOpen, newCha
               </div>
 
               {iAmHost && !me && p.st !== "invited" && (
-                <button type="button" className={"lby-gm" + (isGm ? " is-on" : "")} onClick={() => lobbySetGm(camp.id, isGm ? meta.hostId : p.id)}>{isGm ? "Quitar como DJ" : "Hacer DJ"}</button>
+                <button type="button" className={"lby-gm" + (isGm ? " is-on" : "")} onClick={() => (isGm ? lobbyClearGm(camp.id) : lobbySetGm(camp.id, p.id))}>{isGm ? "Quitar como DJ" : "Hacer DJ"}</button>
               )}
-              {iAmHost && me && role(uid) === "player" && (
-                <button type="button" className="lby-gm" onClick={() => lobbySetGm(camp.id, uid)}>Dirigir yo</button>
+              {iAmHost && me && (
+                <button type="button" className={"lby-gm" + (isGm ? " is-on" : "")} onClick={() => (isGm ? lobbyClearGm(camp.id) : lobbySetGm(camp.id, uid))}>{isGm ? "Jugar en vez de dirigir" : "Dirigir yo"}</button>
               )}
 
               {me && (

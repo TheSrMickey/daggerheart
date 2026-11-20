@@ -32855,6 +32855,7 @@ export default function App({ onSignOut }) {
                     onCreateChar={() => { lobbyCreatingRef.current = new Set(Object.keys(characters)); setLobbyNewChar(null); openNewCharModal(); }}
                     onInvite={() => setCampInvOpen(true)}
                     onBack={() => setViewingCampaignId(null)}
+                    onDiscard={() => deleteCampaign(activeCampaign.id)}
                     onStarted={(r) => finishPartyLobby(activeCampaign, r)}
                   />
                   {campInvOpen && <CampInvite camp={{ ...activeCampaign, party: true }} players={0} onInvited={(p) => lobbyInvited(activeCampaign.id, p)} onClose={() => setCampInvOpen(false)} />}

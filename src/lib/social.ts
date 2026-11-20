@@ -664,16 +664,17 @@ export type Lobby = { meta: LobbyMeta | null; members: Record<string, LobbyMembe
 export async function createLobby(m: Omit<LobbyMeta, "hostId" | "hostName" | "members" | "roles">): Promise<LobbyMeta | null> {
   const me = await myself();
   if (!me) return null;
-  const meta: LobbyMeta = { ...m, hostId: me.id, hostName: me.username, members: [{ id: me.id, name: me.username, at: Date.now() }], roles: { [me.id]: "gm" } };
+  const meta: LobbyMeta = { ...m, hostId: me.id, hostName: me.username, members: [{ id: me.id, name: me.username, at: Date.now() }], roles: { [me.id]: "player" } };
   await kvPut(`lb:${m.campId}`, meta);
   await kvPut(`lbm:${m.campId}:${me.id}`, { uid: me.id, name: me.username, state: "choosing", at: Date.now() } satisfies LobbyMember);
   return meta;
 }
 export async function loadLobby(campId: string): Promise<Lobby> {
-  const meta = await kvGet<LobbyMeta>(`lb:${campId}`);
+  const raw = await kvGet<LobbyMeta>(`lb:${campId}`);
+  const meta = raw && raw.campId ? raw : null; // una sala cerrada queda como {}
   const rows = await kvList<LobbyMember>(`lbm:${campId}:`);
   const members: Record<string, LobbyMember> = {};
-  for (const r of rows) members[r.value.uid] = r.value;
+  for (const r of rows) if (r.value && r.value.uid) members[r.value.uid] = r.value;
   // Vista previa: las personas de ejemplo invitadas «juegan» solas para poder ver los estados.
   if (isDev() && meta) {
     for (const mm of meta.members) {
@@ -706,6 +707,15 @@ export async function lobbyRemove(campId: string, uid: string) {
 }
 export async function lobbySetGm(campId: string, uid: string) {
   await updateLobbyMeta(campId, (m) => ({ ...m, roles: Object.fromEntries(m.members.map((x) => [x.id, x.id === uid ? "gm" : "player"])) as Record<string, LobbyRole> }));
+}
+// Sin nadie más en la sala, salir la borra.
+export async function lobbyClose(campId: string) {
+  const me = await myself();
+  await kvPut(`lb:${campId}`, {});
+  if (me) await kvPut(`lbm:${campId}:${me.id}`, {});
+}
+export async function lobbyClearGm(campId: string) {
+  await updateLobbyMeta(campId, (m) => ({ ...m, roles: Object.fromEntries(m.members.map((x) => [x.id, "player"])) as Record<string, LobbyRole> }));
 }
 export async function lobbyStart(campId: string) {
   await updateLobbyMeta(campId, (m) => ({ ...m, started: true, startedAt: Date.now() }));

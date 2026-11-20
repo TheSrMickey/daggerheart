@@ -4,12 +4,20 @@
 // la diapositiva de la última actualización en Inicio y el número de versión de la barra lateral salen solos de la primera entrada.
 export const CHANGELOG = [
   {
+    version: "1.55",
+    date: "2026-11-20",
+    title: "Modo party: jugad juntos desde la sala de espera",
+    blurb: "Al crear una campaña puedes activar el modo party: una sala de espera para invitar a tus amigos, donde cada uno elige o crea su personaje, se reparte quién dirige y todos ven quién está listo antes de comenzar. Además: filtros y comparador en Cartas, sobres de prueba, kit inicial para imprimir y mejoras para el Druida.",
+    items: [
+      { tag: "nuevo", text: "Campañas · modo party: al crear una campaña, en «La mesa», puedes activar el modo party. Se abre una sala de espera donde invitas a tus amigos; cada uno elige uno de sus personajes o crea uno nuevo desde la sala, se decide quién es el DJ y todos ven en tiempo real quién ha elegido personaje, quién lo está creando y quién está listo. Cuando todos están listos, el anfitrión o el DJ pulsa «Comenzar campaña». Quien crea la campaña no tiene por qué dirigir: puede ocupar un sitio de jugador, pero la campaña no empieza sin DJ. Si sales de la sala y no hay nadie más, la sala y la campaña se borran." },
+    ],
+  },
+  {
     version: "1.54",
     date: "2026-11-19",
     title: "Descansos guiados y un Taller en galería",
     blurb: "Los descansos se hacen por pasos (corto o largo) con proyectos que avanzan solo en el descanso largo, el Taller es una galería de cartas con creación guiada y vista previa en directo, subir de nivel y los avisos tienen un diseño nuevo, los dados 3D mejoran, y las plantillas de personaje ya vienen creadas.",
     items: [
-      { tag: "nuevo", text: "Campañas · modo party: al crear una campaña, en «La mesa», puedes activar el modo party. Se abre una sala de espera donde invitas a tus amigos; cada uno elige uno de sus personajes o crea uno nuevo desde la sala, se decide quién es el DJ y todos ven en tiempo real quién ha elegido personaje, quién lo está creando y quién está listo. Cuando todos están listos, el anfitrión o el DJ pulsa «Comenzar campaña»." },
       { tag: "arreglo", text: "Hoja de personaje · la ventana «¿Impactó el ataque?» (y el resultado de la tirada) ahora cubre toda la pantalla y no solo la zona de Detalles generales." },
       { tag: "mejora", text: "Druida · el aviso de que en Forma de Bestia no puedes lanzar hechizos pasa a un icono de información junto al título de «Cartas de Dominio» (sale al pasar el ratón) y las cartas bloqueadas también se abren en gris. En «Formas de Bestia» ya no sobra el texto de ayuda, los selectores de rango tienen más aire y las cajas de estadísticas están centradas." },
       { tag: "nuevo", text: "Druida · las formas Bestia Legendaria, Híbrido Legendario, Bestia Mítica e Híbrido Mítico ahora abren un menú para elegir la forma que mejoras (Evolucionada) o las formas, ventajas y características que combinas (Híbrida). Se aplican la mejora de daño, rasgo y Evasión, el Estrés adicional del Híbrido y también al usar Evolución o desde la mano del mapa." },
