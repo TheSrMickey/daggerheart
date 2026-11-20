@@ -15042,6 +15042,7 @@ export default function App({ onSignOut }) {
     }
     markStress(id, 1, { f_beastform: key, f_evolution_trait: "" });
     postCampaignEvent(id, `🐾 Se transforma en ${key}`);
+    setDetailTab("general");
   };
 
   const toggleTransformationForm = (id, formName, isCurrentlyActive) => {
@@ -22063,41 +22064,76 @@ export default function App({ onSignOut }) {
                                 const bfTraitKey = TRAITS.find((t) => t.label === bfTrait)?.key;
                                 return (
                                   <div style={{ display: "flex", flexDirection: "column", gap: 12, flex: 1, minHeight: 0 }}>
-                                    <div style={{ border: "1px solid " + activeBeastform.color, background: alpha(activeBeastform.color, 8), borderRadius: 10, padding: "12px 14px", flexShrink: 0 }}>
-                                      <div style={{ fontSize: 10.5, fontWeight: 700, color: ink(activeBeastform.color), textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 4 }}>
-                                        Ataque · {activeBeastform.key}
-                                      </div>
-                                      <div style={{ fontSize: 12.5, color: "var(--mh-ink)", marginBottom: 10 }}>
-                                        {bfTrait} · {reachFor(c, bfRange)} · {bfDamage}
-                                      </div>
-                                      <div style={{ display: "flex", gap: 8 }}>
-                                        <button
-                                          className="mh-btn"
-                                          style={{ fontSize: 11.5, padding: "6px 12px" }}
-                                          onClick={() =>
-                                            rollTraitCheck(
-                                              viewingCharId,
-                                              bfTrait,
-                                              Number(c[bfTraitKey] || 0) + (equipMods[bfTraitKey] || 0),
-                                              /d\d/.test(bfDamage) ? { name: activeBeastform.key, damage: bfDamage } : null
-                                            )
-                                          }
+                                    {(() => {
+                                      const dmgP = (bfDamage || "").match(/^(\S+)\s*(.*)$/);
+                                      const hasD = /d\d/.test(bfDamage || "");
+                                      const rngB = reachFor(c, bfRange);
+                                      const openAtk = () =>
+                                        setViewingCardDetail({
+                                          kicker: "Ataque de Bestia",
+                                          title: activeBeastform.key,
+                                          text: `${bfTrait} · ${rngB} · ${bfDamage}`,
+                                          weapon: { damage: bfDamage, trait: bfTrait, range: rngB, hands: "Cuerpo a cuerpo" },
+                                          bigStyle: true,
+                                          tier: activeBeastform.tier,
+                                          beastAttack: true,
+                                        });
+                                      return (
+                                        <div
+                                          className="mh-eq"
+                                          style={{ "--cc": TIER_COLORS[activeBeastform.tier]?.color || activeBeastform.color, flex: 1 }}
+                                          role="button"
+                                          tabIndex={0}
+                                          aria-label={`Ver la carta del ataque de ${activeBeastform.key}`}
+                                          onClick={openAtk}
+                                          onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && e.target === e.currentTarget && (e.preventDefault(), openAtk())}
                                         >
-                                          <Dices size={12} /> Tirar ataque
-                                        </button>
-                                        {/d\d/.test(bfDamage) && (
-                                          <button
-                                            className="mh-btn-ghost"
-                                            style={{ fontSize: 11.5, padding: "6px 12px" }}
-                                            onClick={() => rollWeaponDamage(activeBeastform.key, bfDamage, viewingCharId)}
-                                          >
-                                            Tirar daño
-                                          </button>
-                                        )}
-                                      </div>
-                                    </div>
+                                          <div className="mh-eq-art">
+                                            <PawPrint size={40} strokeWidth={1.5} />
+                                            <span className="mh-eq-tier" style={{ background: TIER_COLORS[activeBeastform.tier]?.color }}>{TIER_COLORS[activeBeastform.tier]?.label}</span>
+                                          </div>
+                                          <div className="mh-eq-body">
+                                            <div className="mh-eq-sub">Ataque · Forma de Bestia</div>
+                                            <div className="mh-eq-title mh-serif" title={activeBeastform.key}>{activeBeastform.key}</div>
+                                            <div className="mh-eq-row">
+                                              <div>
+                                                <div className="mh-eq-lbl">Daño</div>
+                                                <div className="mh-eq-big">
+                                                  {dmgP?.[1] || bfDamage}
+                                                  {dmgP?.[2] && <small> {dmgP[2]}</small>}
+                                                </div>
+                                              </div>
+                                              <div className="mh-eq-foot">{bfTrait} · {rngB}</div>
+                                            </div>
+                                            <div className="mh-eq-acts">
+                                              <button
+                                                className="mh-btn"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  rollTraitCheck(viewingCharId, bfTrait, Number(c[bfTraitKey] || 0) + (equipMods[bfTraitKey] || 0), hasD ? { name: activeBeastform.key, damage: bfDamage } : null);
+                                                }}
+                                              >
+                                                <Dices size={13} /> Atacar
+                                              </button>
+                                              {hasD && (
+                                                <button
+                                                  className="mh-btn-ghost"
+                                                  title={`Tirar daño (Competencia ${proficiency})`}
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    rollWeaponDamage(activeBeastform.key, bfDamage, viewingCharId);
+                                                  }}
+                                                >
+                                                  <Flame size={13} /> {proficiency}{(bfDamage || "").replace(/^\d*/, "").split(" ")[0]}
+                                                </button>
+                                              )}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      );
+                                    })()}
 
-                                    <div style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1, minHeight: 0 }}>
+                                    <div style={{ display: "flex", flexDirection: "column", gap: 12, flex: Math.max(1, activeBeastform.features.length), minHeight: 0 }}>
                                       {activeBeastform.features.map((f) => {
                                         const action = parseFeatureAction(f.text);
                                         return (
@@ -22137,10 +22173,10 @@ export default function App({ onSignOut }) {
 
                                     <button
                                       className="mh-btn-ghost"
-                                      style={{ justifyContent: "center", flexShrink: 0 }}
+                                      style={{ justifyContent: "center", flexShrink: 0, color: "#E4806E", borderColor: "color-mix(in srgb, #D9644E 45%, transparent)", background: "color-mix(in srgb, #D9644E 12%, transparent)" }}
                                       onClick={() => toggleBeastform(viewingCharId, c.f_beastform, true)}
                                     >
-                                      <ArrowLeft size={13} /> Salir de la Forma de Bestia
+                                      Salir de la Forma de Bestia
                                     </button>
                                   </div>
                                 );
@@ -29758,7 +29794,9 @@ export default function App({ onSignOut }) {
                   const formRank = Number((/Rango (\d)/.exec(d.kicker || "") || [])[1] || 1);
                   const subCls = (/^Multiclase · ([^·]+)/.exec(d.kicker || "") || [])[1]?.trim() || c.f_class;
                   const subtitle = isExp || isCf || isHopeCf ? null : isSub ? subCls + " · Subclase" : isTrans ? "Transformación" : isForm ? d.kicker : d.weapon ? [d.kicker, d.weapon.hands].join(" · ") : d.domain ? d.domain.name + " · " + d.domain.type : d.kicker?.replace(/ · Nivel .*$/, "");
-                  const ArtIcon = d.armor
+                  const ArtIcon = d.beastAttack
+                    ? PawPrint
+                    : d.armor
                     ? armorIcon(d.title)
                     : d.brawlerStrike
                     ? HandFist
