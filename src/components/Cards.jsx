@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ArrowUp, Check, Hammer, Layers, Search, X, Zap } from "lucide-react";
+import { ArrowUp, Check, Columns2, Hammer, Layers, Search, X, Zap } from "lucide-react";
 import { useSocial } from "./Social";
 import { cardStatus, isAdminName } from "@/lib/cardStatus";
 
@@ -236,7 +236,7 @@ const GROUPS = [
 ];
 const TYPE_LABEL = { dominio: "Dominio", ascendencia: "Ascendencia", comunidad: "Comunidad", subclase: "Subclase", transformacion: "Transformación", forma: "Forma de Bestia", arma: "Armas", armadura: "Armaduras", adversario: "Adversarios", entorno: "Entornos", salvaje: "Salvajes" };
 
-export function CardsPage({ items, domainColors, icons, FitTitle, FitBox, DomainIcon, openId, onOpened }) {
+export function CardsPage({ items, domainColors, icons, FitTitle, FitBox, DomainIcon, openId, onOpened, classDomains }) {
   const [group, setGroup] = useState("personaje");
   const [kind, setKind] = useState("dominio");
   const [lvl, setLvl] = useState(null);
@@ -245,6 +245,14 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox, Domain
   const kinds = [kind];
   const [sel, setSel] = useState([]);
   const [query, setQuery] = useState("");
+  // Filtros extra de las cartas de dominio, orden y comparador.
+  const [types, setTypes] = useState([]); // Hechizo, Habilidad…
+  const [recalls, setRecalls] = useState([]); // coste de recuperación: 0, 1, 2, 3 (3 = 3 o más)
+  const [classSel, setClassSel] = useState(""); // clase: solo sus dos dominios
+  const [order, setOrder] = useState("nivel"); // nivel (por defecto) | nombre | coste
+  const [compare, setCompare] = useState(false);
+  const [picks, setPicks] = useState([]); // ids de cartas elegidas para comparar (máx. 3)
+  const [cmpOpen, setCmpOpen] = useState(false);
   const [open, setOpen] = useState(null);
   const admin = isAdminName(useSocial().me?.username);
   const [closing, setClosing] = useState(false);
@@ -371,7 +379,10 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox, Domain
       return grp.some((g) => norm(g.key + " " + g.text + " " + (g.features || []).map((f) => f.name + " " + f.text).join(" ") + " " + g.sub + " " + (g.gear ? g.gear.feature + " " + g.gear.big + " " + g.gear.foot : "")).includes(q));
     }
     if (c.kind !== kind) return false;
-    if (kind === "dominio") return (!sel.length || sel.includes(c.domain)) && (lvl == null || c.level === lvl);
+    if (kind === "dominio") {
+      const rc = c.noCost || c.recall == null ? null : Math.min(3, Number(c.recall));
+      return (!sel.length || sel.includes(c.domain)) && (lvl == null || c.level === lvl) && (!types.length || types.includes(c.type)) && (!recalls.length || (rc != null && recalls.includes(rc))) && (!classSel || !!classDomains?.[classSel]?.includes(c.domain));
+    }
     if (kind === "subclase") return !cls || c.cls === cls;
     if (kind === "arma" || kind === "armadura" || kind === "forma") return !tier || c.tier === tier;
     return true;
@@ -379,8 +390,13 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox, Domain
   const shown = all.filter(matches);
   const classes = useMemo(() => [...new Set(all.filter((c) => c.kind === "subclase").map((c) => c.cls).filter(Boolean))].sort((a, b) => a.localeCompare(b, "es")), [all]);
   const grpCount = (g) => g.kinds.reduce((n, k) => n + count(k), 0);
-  const pickGroup = (g) => { setGroup(g.key); setKind(g.kinds[0]); setSel([]); setLvl(null); setTier(0); setCls(""); };
-  const pickKind = (k) => { setKind(k); setSel([]); setLvl(null); setTier(0); setCls(""); };
+  const resetF = () => { setSel([]); setLvl(null); setTier(0); setCls(""); setTypes([]); setRecalls([]); setClassSel(""); };
+  const domTypes = useMemo(() => [...new Set(all.filter((c) => c.kind === "dominio" && c.type).map((c) => c.type))].sort((a, b) => a.localeCompare(b, "es")), [all]);
+  const classNames = useMemo(() => Object.keys(classDomains || {}).sort((a, b) => a.localeCompare(b, "es")), [classDomains]);
+  const tog = (set) => (v) => set((s) => (s.includes(v) ? s.filter((x) => x !== v) : [...s, v]));
+  const togPick = (id) => setPicks((p) => (p.includes(id) ? p.filter((x) => x !== id) : p.length >= 3 ? p : [...p, id]));
+  const pickGroup = (g) => { setGroup(g.key); setKind(g.kinds[0]); resetF(); };
+  const pickKind = (k) => { setKind(k); resetF(); };
   const openCard = (c) => (setDeckIdx(0), setOpen(c));
   const showDomains = !q && kind === "dominio";
   const domCount = (d) => all.filter((c) => c.kind === "dominio" && c.domain === d).length;
@@ -395,6 +411,9 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox, Domain
     ...[1, 2, 3, 4].map((t) => ({ id: "arma" + t, title: "Armas · Rango " + t, list: shown.filter((c) => c.kind === "arma" && c.tier === t) })).filter((s) => s.list.length),
     ...[1, 2, 3, 4].map((t) => ({ id: "armadura" + t, title: "Armaduras · Rango " + t, list: shown.filter((c) => c.kind === "armadura" && c.tier === t) })).filter((s) => s.list.length),
   ];
+  const byName = (a, b) => a.key.localeCompare(b.key, "es");
+  const sorted = order === "nombre" ? [...shown].sort(byName) : order === "coste" ? [...shown].sort((a, b) => (a.recall == null || a.noCost ? 99 : a.recall) - (b.recall == null || b.noCost ? 99 : b.recall) || byName(a, b)) : null;
+  const secs = sorted ? [{ id: "orden", title: order === "nombre" ? "Orden alfabético" : "Coste de recuperación, de menor a mayor", list: sorted }] : sections;
   const close = () => {
     if (closing) return;
     setClosing(true);
@@ -409,6 +428,12 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox, Domain
     window.addEventListener("keydown", k);
     return () => window.removeEventListener("keydown", k);
   });
+  useEffect(() => {
+    if (!cmpOpen) return undefined;
+    const k = (e) => e.key === "Escape" && setCmpOpen(false);
+    window.addEventListener("keydown", k);
+    return () => window.removeEventListener("keydown", k);
+  }, [cmpOpen]);
   const Icon = (c) => c.Icon || icons[c.domain] || Layers;
 
   const tilt = (e) => {
@@ -426,8 +451,8 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox, Domain
     delete el.dataset.active;
   };
 
-  const activeN = sel.length + (lvl != null ? 1 : 0) + (tier ? 1 : 0) + (cls ? 1 : 0);
-  const pickKindMob = (g, k) => { setQuery(""); setGroup(g.key); setKind(k); setSel([]); setLvl(null); setTier(0); setCls(""); };
+  const activeN = sel.length + (lvl != null ? 1 : 0) + (tier ? 1 : 0) + (cls ? 1 : 0) + types.length + recalls.length + (classSel ? 1 : 0);
+  const pickKindMob = (g, k) => { setQuery(""); setGroup(g.key); setKind(k); resetF(); };
   const mobileBar = (
     <>
       <div className="cx-mb">
@@ -437,6 +462,7 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox, Domain
         {tier ? <span className="cx-mp">Rango {tier}</span> : null}
         {cls && <span className="cx-mp">{cls}</span>}
         <span style={{ flex: 1 }} />
+        <button type="button" className={"cx-mi" + (compare ? " is-on" : "")} aria-label="Comparar cartas" aria-pressed={compare} onClick={() => setCompare((v) => !v)}><Columns2 size={16} />{picks.length > 0 && <b className="cx-bd">{picks.length}</b>}</button>
         <button type="button" className={"cx-mi" + (sOpen || q ? " is-on" : "")} aria-label="Buscar" onClick={() => setSOpen((v) => !v)}><Search size={16} /></button>
         <button type="button" className="cx-mi" aria-label="Filtros" onClick={() => setSheet(true)}><Layers size={16} />{activeN > 0 && <b className="cx-bd">{activeN}</b>}</button>
       </div>
@@ -447,7 +473,7 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox, Domain
         <div className="cx-sh-ov" onClick={() => setSheet(false)}>
           <div className="cx-sh" role="dialog" aria-modal="true" aria-label="Filtros" onClick={(e) => e.stopPropagation()}>
             <div className="cx-sh-gr" />
-            <div className="cx-sh-h"><b>Filtros</b><button type="button" onClick={() => { setSel([]); setLvl(null); setTier(0); setCls(""); setQuery(""); }}>Limpiar</button></div>
+            <div className="cx-sh-h"><b>Filtros</b><button type="button" onClick={() => { resetF(); setOrder("nivel"); setQuery(""); }}>Limpiar</button></div>
             <div className="cx-sh-b">
               <h4>Grupo</h4>
               <div className="cx-sh-seg">{GROUPS.map((g) => <button key={g.key} type="button" className={group === g.key ? "on" : ""} onClick={() => pickKindMob(g, g.kinds[0])}>{g.label}</button>)}</div>
@@ -459,6 +485,19 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox, Domain
                   <div className="cx-sh-seg">{domains.map((d) => { const n = domCount(d); return <button key={d} type="button" disabled={!n} className={sel.includes(d) ? "on" : ""} onClick={() => toggle(d)}>{DomainIcon ? <DomainIcon name={d} size={15} /> : null}{d}</button>; })}</div>
                   <h4>Nivel</h4>
                   <div className="cx-sh-seg">{[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <button key={n} type="button" className={lvl === n ? "on" : ""} onClick={() => setLvl(lvl === n ? null : n)}>{n}</button>)}</div>
+                  <h4>Tipo</h4>
+                  <div className="cx-sh-seg">{domTypes.map((t) => <button key={t} type="button" className={types.includes(t) ? "on" : ""} onClick={() => tog(setTypes)(t)}>{t}</button>)}</div>
+                  <h4>Recuperación</h4>
+                  <div className="cx-sh-seg">{[0, 1, 2, 3].map((n) => <button key={n} type="button" className={recalls.includes(n) ? "on" : ""} onClick={() => tog(setRecalls)(n)}>{n === 3 ? "3+" : n}</button>)}</div>
+                  {classNames.length > 0 && (
+                    <>
+                      <h4>Clase</h4>
+                      <select className="cx-sel" value={classSel} onChange={(e) => setClassSel(e.target.value)} aria-label="Cartas que puede usar una clase">
+                        <option value="">Cualquier clase</option>
+                        {classNames.map((c) => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </>
+                  )}
                 </>
               )}
               {(kind === "arma" || kind === "armadura" || kind === "forma") && (
@@ -477,6 +516,14 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox, Domain
                 </>
               )}
             </div>
+            <div className="cx-sh-b" style={{ paddingTop: 0 }}>
+              <h4>Orden</h4>
+              <div className="cx-sh-seg">
+                <button type="button" className={order === "nivel" ? "on" : ""} onClick={() => setOrder("nivel")}>Por defecto</button>
+                <button type="button" className={order === "nombre" ? "on" : ""} onClick={() => setOrder("nombre")}>Nombre</button>
+                {kind === "dominio" && <button type="button" className={order === "coste" ? "on" : ""} onClick={() => setOrder("coste")}>Coste</button>}
+              </div>
+            </div>
             <div className="cx-sh-f"><button type="button" className="cx-sh-ok" onClick={() => setSheet(false)}>Ver {shown.length} carta{shown.length === 1 ? "" : "s"}</button></div>
           </div>
         </div>,
@@ -492,6 +539,9 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox, Domain
           <Search size={15} />
           <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar por nombre o texto…" aria-label="Buscar cartas" />
         </label>
+        <button type="button" className={"cx-cmpbtn" + (compare ? " on" : "")} aria-pressed={compare} onClick={() => setCompare((v) => !v)}>
+          <Columns2 size={15} /> {compare ? "Comparando" : "Comparar cartas"}{picks.length > 0 && <b>{picks.length}</b>}
+        </button>
       </div>
       <div className="cx-bars">
         {mob ? mobileBar : (<>
@@ -535,6 +585,30 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox, Domain
                 </div>
               </div>
             )}
+            {kind === "dominio" && (
+              <div className="cx-fg"><span className="cx-fl">Tipo</span>
+                <div className="cx-seg">
+                  <button type="button" className={!types.length ? "on" : ""} onClick={() => setTypes([])}>Todos</button>
+                  {domTypes.map((t) => <button key={t} type="button" className={types.includes(t) ? "on" : ""} onClick={() => tog(setTypes)(t)}>{t}</button>)}
+                </div>
+              </div>
+            )}
+            {kind === "dominio" && (
+              <div className="cx-fg"><span className="cx-fl">Recuperación</span>
+                <div className="cx-seg">
+                  <button type="button" className={!recalls.length ? "on" : ""} onClick={() => setRecalls([])}>Todas</button>
+                  {[0, 1, 2, 3].map((n) => <button key={n} type="button" className={recalls.includes(n) ? "on" : ""} onClick={() => tog(setRecalls)(n)}>{n === 3 ? "3+" : n}</button>)}
+                </div>
+              </div>
+            )}
+            {kind === "dominio" && classNames.length > 0 && (
+              <div className="cx-fg"><span className="cx-fl">Clase</span>
+                <select className="cx-sel" value={classSel} onChange={(e) => setClassSel(e.target.value)} aria-label="Cartas que puede usar una clase">
+                  <option value="">Cualquier clase</option>
+                  {classNames.map((c) => <option key={c} value={c}>{c} · {classDomains[c].join(" y ")}</option>)}
+                </select>
+              </div>
+            )}
             {(kind === "arma" || kind === "armadura" || kind === "forma") && (
               <div className="cx-fg"><span className="cx-fl">Rango</span>
                 <div className="cx-seg">
@@ -557,17 +631,27 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox, Domain
       </div>
       <div className="cx-meta">
         <span>{q ? shown.length + " resultado" + (shown.length === 1 ? "" : "s") + " para «" + query.trim() + "» en todas las cartas" : shown.length + " carta" + (shown.length === 1 ? "" : "s") + " · " + TYPE_LABEL[kind] + (sel.length ? " · " + sel.join(" + ") : "")}</span>
-        <span>Orden: nivel ↑ · luego tipo</span>
+        <span className="cx-ord">
+          {(activeN > 0 || order !== "nivel") && <button type="button" className="cx-clr" onClick={() => { resetF(); setOrder("nivel"); }}>Limpiar filtros{activeN > 0 ? " (" + activeN + ")" : ""}</button>}
+          <label>Orden
+            <select className="cx-sel is-sm" value={order === "coste" && kind !== "dominio" ? "nivel" : order} onChange={(e) => setOrder(e.target.value)} aria-label="Orden de las cartas">
+              <option value="nivel">Nivel · rango · tipo</option>
+              <option value="nombre">Nombre (A–Z)</option>
+              {kind === "dominio" && <option value="coste">Coste de recuperación</option>}
+            </select>
+          </label>
+        </span>
       </div>
       {shown.length === 0 && <div className="cx-empty">No hay cartas con ese filtro.</div>}
-      {sections.map((s) => (
+      {secs.map((s) => (
         <section key={s.id}>
           <div className="cx-lv"><b>{s.title}</b><span /><small>{s.list.length} carta{s.list.length === 1 ? "" : "s"}</small></div>
           <div className="cx-grid">
             {s.list.map((c) => {
               const I = Icon(c);
               return (
-                <button type="button" key={c.id} className="cx-card" onClick={() => openCard(c)} aria-label={"Ver " + c.key}>
+                <button type="button" key={c.id} className={"cx-card" + (compare ? " is-cmp" : "") + (picks.includes(c.id) ? " is-pick" : "")} onClick={() => (compare ? togPick(c.id) : openCard(c))} aria-label={(compare ? (picks.includes(c.id) ? "Quitar de la comparación: " : "Añadir a la comparación: ") : "Ver ") + c.key} aria-pressed={compare ? picks.includes(c.id) : undefined}>
+                  {compare && <span className="cx-pk" aria-hidden="true">{picks.includes(c.id) ? picks.indexOf(c.id) + 1 : ""}</span>}
                   <Lazy><CardFace c={c} I={I} FitTitle={FitTitle} FitBox={FitBox} tilt={c.kind === "dominio" || (c.kind === "arma" && c.tier === 4) ? { onPointerMove: (e) => e.pointerType === "mouse" && tilt(e), onPointerLeave: untilt } : undefined} /></Lazy>
                 </button>
               );
@@ -626,6 +710,63 @@ export function CardsPage({ items, domainColors, icons, FitTitle, FitBox, Domain
           </div>
         );
       })()}
+      {compare && typeof document !== "undefined" && createPortal(
+        <div className="cx-cmpbar" role="region" aria-label="Comparar cartas">
+          <div className="cx-cmp-sl">
+            {[0, 1, 2].map((i) => {
+              const c = all.find((x) => x.id === picks[i]);
+              return c ? <span key={c.id} className="cx-cmp-chip" style={{ "--cc": c.color }}><b>{i + 1}</b>{c.key}<button type="button" aria-label={"Quitar " + c.key} onClick={() => togPick(c.id)}><X size={12} /></button></span> : <span key={i} className="cx-cmp-chip is-empty"><b>{i + 1}</b>{i === 0 ? "Elige una carta" : i === 1 ? "Elige otra para comparar" : "Opcional"}</span>;
+            })}
+          </div>
+          <div className="cx-cmp-ac">
+            {picks.length > 0 && <button type="button" className="cx-cmp-g" onClick={() => setPicks([])}>Vaciar</button>}
+            <button type="button" className="cx-cmp-g" onClick={() => (setCompare(false), setPicks([]))}>Salir</button>
+            <button type="button" className="cx-cmp-ok" disabled={picks.length < 2} onClick={() => setCmpOpen(true)}><Columns2 size={15} /> Comparar{picks.length ? " (" + picks.length + ")" : ""}</button>
+          </div>
+        </div>,
+        document.querySelector(".mh-root") || document.body
+      )}
+      {cmpOpen && picks.length >= 2 && typeof document !== "undefined" && createPortal(
+        (() => {
+          const list = picks.map((id) => all.find((x) => x.id === id)).filter(Boolean);
+          const facts = (c) => [
+            ["Tipo", c.kind === "dominio" ? c.type : TYPE_LABEL[c.kind] || c.kind],
+            ["Dominio", c.domain],
+            ["Nivel", c.kind === "dominio" ? c.level : null],
+            ["Recuperación", c.kind === "dominio" && !c.noCost && c.recall != null ? c.recall : null],
+            ["Rango", c.tier ? "Rango " + c.tier : c.kind === "subclase" ? c.rankLabel : null],
+            [c.gear?.label || "Valor", c.gear ? [c.gear.big, c.gear.small].filter(Boolean).join(" ") : null],
+            ["Alcance / rasgo", c.gear?.foot],
+            ["Origen", c.kind !== "dominio" && c.sub ? c.sub : null],
+            ["Características", c.features?.length ? c.features.length : null],
+          ];
+          const rows = [...new Set(list.flatMap((c) => facts(c).filter(([, v]) => v != null && v !== "").map(([k]) => k)))];
+          const val = (c, k) => { const f = facts(c).filter(([x]) => x === k).map(([, v]) => v).find((v) => v != null && v !== ""); return f == null ? "—" : String(f); };
+          return (
+            <div className="mh-overlay cx-cmp-ov" style={{ background: "rgba(8,6,12,0.78)", zIndex: 70 }} onClick={() => setCmpOpen(false)} role="dialog" aria-modal="true" aria-label="Comparar cartas">
+              <div className="cx-cmp" onClick={(e) => e.stopPropagation()}>
+                <div className="cx-cmp-h"><b>Comparar cartas</b><button type="button" aria-label="Cerrar" onClick={() => setCmpOpen(false)}><X size={18} /></button></div>
+                <div className="cx-cmp-row">
+                  {list.map((c) => (
+                    <div key={c.id} className="cx-cmp-col" style={{ "--cc": c.color }}>
+                      <div className="cx-cmp-card"><CardFace c={c} I={Icon(c)} FitTitle={FitTitle} FitBox={FitBox} /></div>
+                      <dl className="cx-cmp-f">
+                        {rows.map((k) => {
+                          const vs = list.map((x) => val(x, k));
+                          const diff = new Set(vs).size > 1;
+                          return <div key={k} className={diff ? "is-diff" : ""}><dt>{k}</dt><dd>{val(c, k)}</dd></div>;
+                        })}
+                      </dl>
+                    </div>
+                  ))}
+                </div>
+                <p className="cx-cmp-n">Las filas resaltadas son las que cambian entre las cartas.</p>
+              </div>
+            </div>
+          );
+        })(),
+        document.querySelector(".mh-root") || document.body
+      )}
       {showTop && (
         <button type="button" className="cx-top" aria-label="Subir arriba del todo" onClick={() => scRef.current?.scrollTo({ top: 0, behavior: "smooth" })}>
           <ArrowUp size={20} />
