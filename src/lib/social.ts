@@ -723,7 +723,7 @@ export async function lobbyStart(campId: string) {
 
 // ---------- modo aventura (Brumaria) ----------
 // Un viajero por cuenta: copia ligera del personaje elegido, aparte de la hoja tradicional. Fila compartida adv:<usuario>.
-export type Traveller = { uid: string; username: string; name: string; cls: string; anc: string; lvl: number; gold: number; items: string[]; at: number; loc?: string; seen?: number };
+export type Traveller = { uid: string; username: string; name: string; cls: string; anc: string; lvl: number; gold: number; items: string[]; at: number; loc?: string; seen?: number; found?: string[] };
 export async function loadTraveller(): Promise<Traveller | null> {
   const me = await myself();
   if (!me) return null;
@@ -743,6 +743,16 @@ export async function loadTravellers(): Promise<Traveller[]> {
   const rows = await kvList<Traveller>("adv:");
   const now = Date.now();
   return rows.map((r) => r.value).filter((t) => t && t.name && now - (t.seen || t.at) < 864e5).sort((a, b) => b.at - a.at);
+}
+// Rincones ya vistos (distrito:rincón) para el diario del viajero.
+export async function markFound(key: string): Promise<Traveller | null> {
+  const me = await myself();
+  const cur = await loadTraveller();
+  if (!me || !cur) return null;
+  if ((cur.found || []).includes(key)) return cur;
+  const t = { ...cur, found: [...(cur.found || []), key], seen: Date.now() };
+  await kvPut(`adv:${me.id}`, t);
+  return t;
 }
 // Mover al viajero a otro distrito (se ve en el mapa de todos).
 export async function moveTraveller(loc: string): Promise<Traveller | null> {
