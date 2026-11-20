@@ -28,7 +28,7 @@ import { CardsPage, CardFace, DomainLogo } from "./Cards";
 import { WorkshopPage } from "./Workshop";
 import { SobresPage } from "./Sobres";
 import PortraitCrop from "./PortraitCrop";
-import { printSheet } from "@/lib/sheetPdf";
+import { printSheet, printHtml, backTestHtml } from "@/lib/sheetPdf";
 import { Generators } from "./Generators";
 import { CampaignCalendar, HomeNextSession } from "./Calendar";
 import { HomeHero } from "./HomeHero";
@@ -10044,7 +10044,7 @@ async function renderCutCards(entries) {
     <div style={{ display: "flex", flexWrap: "wrap", width: 940 }}>
       {entries.map((c) => (
         <div key={c.id} className="cutcell">
-          <CardFace c={c} I={c.Icon || DOMAIN_ICONS[c.domain] || Sparkles} FitTitle={FitTitle} FitBox={FitBox} />
+          {c.backKind ? <CardBack kind={c.backKind} edge={c.edge} /> : <CardFace c={c} I={c.Icon || DOMAIN_ICONS[c.domain] || Sparkles} FitTitle={FitTitle} FitBox={FitBox} />}
         </div>
       ))}
     </div>
@@ -20521,6 +20521,22 @@ export default function App({ onSignOut }) {
       name: c.f_name || "Personaje", cls: c.f_class, subclass: c.f_subclass, multi: "", pronouns: "", color: m.color, traits: m.traits, domains: doms, classFeatures: [], features: [], cards: [], background: [], connections: [],
       weapons: [], experiences: [], conditions: [], items: [], gold: [], invWeapons: [], cut: { domain: [], gear: [] }, date: new Date().toLocaleDateString("es-ES"),
     });
+  };
+  // Prueba de doble cara: una sola carta por delante y su reverso (el equipado en Personalización) reflejado por detrás.
+  const exportBackTest = async (id) => {
+    const c = characters[id];
+    if (!c) return;
+    const cat = buildCardCatalog();
+    const face =
+      cat.find((x) => x.kind === "dominio" && x.key === getKeys(c.f_domain_cards)[0]) ||
+      cat.find((x) => x.kind === "subclase" && x.cls === c.f_class && x.key === c.f_subclass && x.rank === 0) ||
+      cat.find((x) => x.kind === "dominio");
+    if (!face) return;
+    const edge = cardBorder === "domain" ? DOMAIN_COLORS[face.domain] || "#E3B04B" : undefined;
+    let cutPack = null;
+    try { cutPack = await renderCutCards([face, { id: "back-test", backKind: cardBack || "noche", edge }]); } catch (e) { cutPack = null; }
+    if (!cutPack) return;
+    printHtml(backTestHtml({ cutPack, origin: window.location.origin, theme: document.documentElement.dataset.mhTheme === "light" ? "light" : "dark", artOff: document.documentElement.dataset.mhArt === "off", name: c.f_name || "Personaje" }));
   };
   const modernActions = (id) => ({
     rollTrait: (label, value, t) => {
@@ -32233,6 +32249,9 @@ export default function App({ onSignOut }) {
             </button>
             <button type="button" role="menuitem" onClick={() => { setGearMenu(null); exportStarterKit(gid); }}>
               <Printer size={15} /> Descargar kit inicial
+            </button>
+            <button type="button" role="menuitem" onClick={() => { setGearMenu(null); exportBackTest(gid); }}>
+              <Layers size={15} /> Prueba: carta con reverso
             </button>
             <button type="button" role="menuitem" onClick={() => { setGearMenu(null); setPortraitDlg(gid); }}>
               <Upload size={15} /> Cambiar imagen

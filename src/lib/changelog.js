@@ -9,6 +9,7 @@ export const CHANGELOG = [
     title: "Descansos guiados y un Taller en galería",
     blurb: "Los descansos se hacen por pasos (corto o largo) con proyectos que avanzan solo en el descanso largo, el Taller es una galería de cartas con creación guiada y vista previa en directo, subir de nivel y los avisos tienen un diseño nuevo, los dados 3D mejoran, y las plantillas de personaje ya vienen creadas.",
     items: [
+      { tag: "nuevo", text: "Hoja de personaje · en los ajustes de la hoja, nuevo «Prueba: carta con reverso»: imprime una sola carta por delante y su reverso reflejado por detrás (con cruces de registro) para comprobar cómo sale a doble cara en tu impresora." },
       { tag: "arreglo", text: "Hoja de personaje · al abrir un arma o una armadura, el icono de la imagen ahora lleva el color de su rango, igual que en la pestaña Cartas (antes salía apagado en gris)." },
       { tag: "nuevo", text: "Cartas · filtros de verdad en las cartas de dominio: por tipo (Hechizo, Habilidad, Grimorio), por coste de recuperación y por clase (solo sus dos dominios), que se combinan con dominio y nivel; orden por nombre o por coste, y botón «Limpiar filtros». Nuevo modo «Comparar cartas»: elige hasta 3 cartas, míralas lado a lado y ve resaltado lo que cambia entre ellas." },
       { tag: "arreglo", text: "Cartas · la banderita de la esquina superior izquierda ya no deja un hueco con el color del fondo en su parte de arriba, junto a la curva de la esquina." },
