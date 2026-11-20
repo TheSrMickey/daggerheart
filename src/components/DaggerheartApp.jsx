@@ -41,9 +41,10 @@ import NpcStatsEditor, { npcStatsSummary, npcTokenStats, NpcStatsView } from "./
 import { Chronicle, Timeline } from "./Chronicle";
 import { appendLog } from "@/lib/chronicle";
 import CampInvite from "./CampInvite";
+import PartyLobby from "./Lobby";
 import { SpotPlayer, SpotPause, SpotPanel, FocusBar, FocusPill, normSpot, liveHands, kindOf } from "./Spotlight";
 import { APP_VERSION } from "@/lib/changelog";
-import { setPresence, setPresenceMaking, startPresence, stopPresence, publishTable, loadTable, myUid, setPresenceCamp, bridge, logActivity, trackStat, loadReactions, toggleReaction } from "@/lib/social";
+import { setPresence, setPresenceMaking, startPresence, stopPresence, publishTable, loadTable, myUid, setPresenceCamp, bridge, logActivity, trackStat, loadReactions, toggleReaction, createLobby, lobbyInvited, setMyLobby } from "@/lib/social";
 import ProfilePage from "./Profile";
 import { LinesVeilsEditor, limitsCount, limitsText } from "./LinesVeils";
 import { CHAR_TEMPLATES } from "@/lib/charTemplates";
@@ -13093,6 +13094,7 @@ export default function App({ onSignOut }) {
   const [newCampaignColor, setNewCampaignColor] = useState(""); // vacío = el siguiente color de la paleta
   const [newCampaignCover, setNewCampaignCover] = useState(""); // escena de la portada; vacío = automática
   const [newCampaignCustom, setNewCampaignCustom] = useState(false); // permite personajes con contenido del Taller
+  const [newCampaignParty, setNewCampaignParty] = useState(false); // modo party: sala de espera para invitar y elegir personajes
   const [newCampaignStart, setNewCampaignStart] = useState("blank"); // blank o la clave de una aventura de inicio
   const [cgLimitsOpen, setCgLimitsOpen] = useState(false); // detalle de líneas y velos en la cabecera de la campaña
   const [newCampaignAI, setNewCampaignAI] = useState(false); // ¿las imágenes de la campaña están hechas con IA?
@@ -16451,7 +16453,7 @@ export default function App({ onSignOut }) {
     if (!name) return;
     if (Object.keys(campaigns).length >= MAX_CAMPAIGNS) return;
     const id = "camp_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
-    const newCampaign = { id, name, description: newCampaignDesc.trim(), characterIds: [], color: newCampaignColor || CAMP_COLORS[Object.keys(campaigns).length % CAMP_COLORS.length], ...(newCampaignCover ? { cover: newCampaignCover } : {}), ...(newCampaignCoverImg ? { coverImg: true } : {}), ...(newCampaignCustom ? { customContent: true } : {}), ...(newCampaignAI ? { aiImages: true } : {}), ...(newCampaignLimits.lines.length ? { lines: newCampaignLimits.lines } : {}), ...(newCampaignLimits.veils.length ? { veils: newCampaignLimits.veils } : {}) };
+    const newCampaign = { id, name, description: newCampaignDesc.trim(), characterIds: [], color: newCampaignColor || CAMP_COLORS[Object.keys(campaigns).length % CAMP_COLORS.length], ...(newCampaignCover ? { cover: newCampaignCover } : {}), ...(newCampaignCoverImg ? { coverImg: true } : {}), ...(newCampaignCustom ? { customContent: true } : {}), ...(newCampaignParty ? { party: true } : {}), ...(newCampaignAI ? { aiImages: true } : {}), ...(newCampaignLimits.lines.length ? { lines: newCampaignLimits.lines } : {}), ...(newCampaignLimits.veils.length ? { veils: newCampaignLimits.veils } : {}) };
     const nextCampaigns = { ...campaigns, [id]: newCampaign };
     setCampaigns(nextCampaigns);
     await safeSet("campaign-index", JSON.stringify(Object.keys(nextCampaigns)), false);
@@ -16460,6 +16462,7 @@ export default function App({ onSignOut }) {
       await safeSet("campaign-cover:" + id, newCampaignCoverImg, false);
       setCampCovers((m) => ({ ...m, [id]: newCampaignCoverImg }));
     }
+    if (newCampaignParty) await createLobby({ campId: id, name, desc: newCampaign.description, color: newCampaign.color, custom: !!newCampaignCustom });
     logActivity("camp", "ha empezado una campaña: «" + name + "»");
     trackStat("campsStarted");
     resetNewCampaign();
@@ -16473,6 +16476,7 @@ export default function App({ onSignOut }) {
     setNewCampaignColor("");
     setNewCampaignCover("");
     setNewCampaignCustom(false);
+    setNewCampaignParty(false);
     setNewCampaignStart("blank");
     setNewCampaignCoverImg("");
     setCcStep(0);
@@ -20704,6 +20708,47 @@ export default function App({ onSignOut }) {
     setPresenceCamp(stageCampaignId ? campaigns[stageCampaignId]?.name || "Campaña" : null, gmViewing ? "DJ" : "Juega");
   }, [stageCampaignId, gmViewing, campaigns]);
   // Unirse a la campaña de una invitación: se crea una copia local con el mismo id (lo compartido va por ese id).
+  // ---- Modo party ----
+  const [lobbyNewChar, setLobbyNewChar] = useState(null);
+  const lobbyCreatingRef = useRef(null);
+  useEffect(() => {
+    const before = lobbyCreatingRef.current;
+    if (!before) return;
+    const fresh = Object.keys(characters).find((k) => !before.has(k));
+    if (fresh) {
+      lobbyCreatingRef.current = null;
+      setLobbyNewChar(fresh);
+    }
+  }, [characters]);
+  // Un invitado entra en la sala sin personaje: se crea su copia de la campaña y se abre.
+  const joinLobby = async (camp) => {
+    const id = camp.campId;
+    if (!campaigns[id]) {
+      const nc = { id, name: camp.name || "Campaña", description: camp.desc || "", characterIds: [], color: camp.color, party: true, ...(camp.custom ? { customContent: true } : {}) };
+      setCampaigns((prev) => ({ ...prev, [id]: nc }));
+      const idx = Object.keys({ ...campaigns, [id]: nc });
+      await safeSet("campaign-index", JSON.stringify(idx), false);
+      await safeSet("campaign:" + id, JSON.stringify(nc), false);
+    }
+    await setMyLobby(id, { state: "choosing" });
+    setView("campaigns");
+    setViewingCampaignId(id);
+  };
+  // Al comenzar: los jugadores meten su personaje en la campaña y el DJ pasa a dirigirla; la sala se da por terminada.
+  const finishPartyLobby = async (camp, r) => {
+    const id = camp.id;
+    const charId = r?.me?.charId;
+    const joins = r?.role !== "gm" && charId && characters[charId] && !(customOf(characters[charId]).length && !camp.customContent);
+    // Un personaje solo puede estar en una campaña a la vez.
+    if (joins) Object.values(campaigns).forEach((o) => { if (o.id !== id && (o.characterIds || []).includes(charId)) updateCampaign(o.id, { characterIds: o.characterIds.filter((x) => x !== charId) }); });
+    await updateCampaign(id, { partyDone: true, ...(joins && !(camp.characterIds || []).includes(charId) ? { characterIds: [...(camp.characterIds || []), charId] } : {}) });
+    await postChat(id, { kind: "event", author: r?.me?.name || "Alguien", text: r?.role === "gm" ? "🎲 El DJ comienza la campaña" : "⚔️ " + (characters[charId]?.f_name || "Un jugador") + " entra en la partida" });
+    if (r?.role === "gm") setViewingCampaignId(id);
+    else if (charId && characters[charId]) {
+      setViewingCampaignId(null);
+      openCharDetail(charId);
+    } else setViewingCampaignId(null);
+  };
   const joinInvited = async (camp, charId) => {
     const id = camp.campId;
     const ch = characters[charId];
@@ -20731,6 +20776,7 @@ export default function App({ onSignOut }) {
     bridge.camps = Object.values(campaigns).map((cp) => ({ id: cp.id, name: cp.name || "Campaña", desc: cp.description || "", players: (cp.characterIds || []).length, custom: !!cp.customContent }));
     bridge.getChar = (id) => characters[id] || null;
     bridge.join = joinInvited;
+    bridge.joinLobby = joinLobby;
   });
   // Reacciones del chat de la campaña.
   const [rx, setRx] = useState({});
@@ -32796,6 +32842,26 @@ export default function App({ onSignOut }) {
           {view === "campaigns" && (() => {
             const activeCampaign = viewingCampaignId ? campaigns[viewingCampaignId] : null;
 
+            if (activeCampaign && activeCampaign.party && !activeCampaign.partyDone) {
+              return (
+                <>
+                  <PartyLobby
+                    key={activeCampaign.id}
+                    camp={activeCampaign}
+                    chars={Object.entries(characters).map(([id, c]) => ({ id, name: c.f_name || "Sin nombre", cls: c.f_class || "", lvl: Number(c.f_level || 1), custom: customOf(c).length }))}
+                    classColor={classColor}
+                    wizardOpen={showNewCharModal}
+                    newCharId={lobbyNewChar}
+                    onCreateChar={() => { lobbyCreatingRef.current = new Set(Object.keys(characters)); setLobbyNewChar(null); openNewCharModal(); }}
+                    onInvite={() => setCampInvOpen(true)}
+                    onBack={() => setViewingCampaignId(null)}
+                    onStarted={(r) => finishPartyLobby(activeCampaign, r)}
+                  />
+                  {campInvOpen && <CampInvite camp={{ ...activeCampaign, party: true }} players={0} onInvited={(p) => lobbyInvited(activeCampaign.id, p)} onClose={() => setCampInvOpen(false)} />}
+                </>
+              );
+            }
+
             if (activeCampaign) {
               const memberIds = activeCampaign.characterIds || [];
               const availableIds = Object.keys(characters).filter(
@@ -35812,7 +35878,7 @@ export default function App({ onSignOut }) {
                       {members.length > 4 && <span style={{ background: "#3A3566" }}>+{members.length - 4}</span>}
                     </span>
                     <small>{members.length ? members.length + " personaje" + (members.length === 1 ? "" : "s") : "Sin personajes · invita a tu grupo"}</small>
-                    {onOpen && <span className="mh-cv-go">Dirigir <ChevronRight size={15} /></span>}
+                    {onOpen && <span className="mh-cv-go">{camp.party && !camp.partyDone ? "Sala de espera" : "Dirigir"} <ChevronRight size={15} /></span>}
                   </div>
                 </div>
               </div>
@@ -35926,6 +35992,11 @@ export default function App({ onSignOut }) {
                               <i aria-hidden="true" />
                               <span><b>Permitir contenido personalizado</b><small>Los personajes con creaciones del Taller podrán unirse. Todos verán el aviso en la campaña y podrás ver y revisar ese contenido.</small></span>
                             </label>
+                            <label className={"cc-sw" + (newCampaignParty ? " is-on" : "")} style={{ marginBottom: 18 }}>
+                              <input type="checkbox" checked={newCampaignParty} onChange={(e) => setNewCampaignParty(e.target.checked)} />
+                              <i aria-hidden="true" />
+                              <span><b>Modo party</b><small>Crea una sala de espera para invitar a tus jugadores. Cada uno elige o crea su personaje desde ahí, se decide quién dirige y, cuando todos estén listos, empezáis.</small></span>
+                            </label>
                             <h4 className="mh-cc-h2">Seguridad en la mesa</h4>
                             <p className="mh-cc-p">Acordad antes de jugar qué temas quedan fuera. Los jugadores los verán en la campaña.</p>
                             <LinesVeilsEditor lines={newCampaignLimits.lines} veils={newCampaignLimits.veils} onChange={setNewCampaignLimits} />
@@ -35944,6 +36015,7 @@ export default function App({ onSignOut }) {
                               <span><b>Empiezas con</b>{qs ? qs.name : "Campaña en blanco"}</span>
                               <span><b>Nombre</b>{newCampaignName.trim() || (qs ? qs.name : "—")}</span>
                               <span><b>Contenido del Taller</b>{newCampaignCustom ? "Permitido" : "No permitido"}</span>
+                              <span><b>Modo party</b>{newCampaignParty ? "Sala de espera con invitaciones" : "No"}</span>
                               <span><b>Límites de la mesa</b>{newCampaignLimits.lines.length + newCampaignLimits.veils.length ? newCampaignLimits.lines.length + " línea(s) y " + newCampaignLimits.veils.length + " velo(s)" : "Sin definir"}</span>
                             </div>
                           </section>
