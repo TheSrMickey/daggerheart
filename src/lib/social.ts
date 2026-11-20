@@ -721,6 +721,30 @@ export async function lobbyStart(campId: string) {
   await updateLobbyMeta(campId, (m) => ({ ...m, started: true, startedAt: Date.now() }));
 }
 
+// ---------- modo aventura (Brumaria) ----------
+// Un viajero por cuenta: copia ligera del personaje elegido, aparte de la hoja tradicional. Fila compartida adv:<usuario>.
+export type Traveller = { uid: string; username: string; name: string; cls: string; anc: string; lvl: number; gold: number; items: string[]; at: number };
+export async function loadTraveller(): Promise<Traveller | null> {
+  const me = await myself();
+  if (!me) return null;
+  const v = await kvGet<Traveller>(`adv:${me.id}`);
+  return v && v.name ? v : null;
+}
+export async function enterBrumaria(c: { name: string; cls: string; anc: string; lvl: number }): Promise<Traveller | null> {
+  const me = await myself();
+  if (!me) return null;
+  if (await loadTraveller()) return null; // uno por cuenta
+  const t: Traveller = { uid: me.id, username: me.username, ...c, gold: 25, items: ["Antorcha", "Raciones de viaje", "Cantimplora"], at: Date.now() };
+  await kvPut(`adv:${me.id}`, t);
+  return t;
+}
+// Viajeros que han llegado en el último día (para la bienvenida).
+export async function loadTravellers(): Promise<Traveller[]> {
+  const rows = await kvList<Traveller>("adv:");
+  const now = Date.now();
+  return rows.map((r) => r.value).filter((t) => t && t.name && now - t.at < 864e5).sort((a, b) => b.at - a.at);
+}
+
 // ---------- anuncios «Buscar mesa» ----------
 export type Post = { id: string; uid: string; name: string; kind: "players" | "table" | "gm"; title: string; desc: string; tags: string[]; at: number; camp?: CampInvite | null; lang?: string; days?: string[]; slots?: number };
 export async function loadPosts(): Promise<Post[]> {
