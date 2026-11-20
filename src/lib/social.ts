@@ -736,6 +736,7 @@ export async function enterBrumaria(c: { name: string; cls: string; anc: string;
   if (await loadTraveller()) return null; // uno por cuenta
   const t: Traveller = { uid: me.id, username: me.username, ...c, gold: 25, items: ["Antorcha", "Raciones de viaje", "Cantimplora"], at: Date.now(), loc: "faro", seen: Date.now() };
   await kvPut(`adv:${me.id}`, t);
+  await cityLog("llegó a Brumaria").catch(() => {});
   return t;
 }
 // Viajeros que han llegado en el último día (para la bienvenida).
@@ -793,6 +794,59 @@ export async function moveTraveller(loc: string): Promise<Traveller | null> {
   const t = { ...cur, loc, seen: Date.now() };
   await kvPut(`adv:${me.id}`, t);
   return t;
+}
+
+// Fase 5: mundo compartido. Registro de la ciudad, charla por distrito y notas del tablón.
+async function cityLog(text: string) {
+  const me = await myself();
+  if (!me) return;
+  const city = await loadCity();
+  await kvPut("advc:city", { ...city, log: [{ uid: me.id, username: me.username, text, at: Date.now() }, ...city.log].slice(0, 20) });
+}
+export type ChatMsg = { uid: string; username: string; name: string; text: string; at: number };
+export async function loadChat(loc: string): Promise<ChatMsg[]> {
+  const v = await kvGet<{ msgs: ChatMsg[] }>(`advm:${loc}`);
+  return (v && v.msgs) || [];
+}
+export async function postChat(loc: string, text: string): Promise<ChatMsg[] | null> {
+  const me = await myself();
+  const t = await loadTraveller();
+  const clean = text.trim().slice(0, 140);
+  if (!me || !t || !clean) return null;
+  const msgs = [...(await loadChat(loc)), { uid: me.id, username: me.username, name: t.name, text: clean, at: Date.now() }].slice(-25);
+  await kvPut(`advm:${loc}`, { msgs });
+  return msgs;
+}
+export type Note = { id: string; uid: string; username: string; name: string; text: string; at: number; replies: { uid: string; username: string; text: string; at: number }[] };
+const NOTE_TTL = 7 * 864e5;
+export async function loadNotes(): Promise<Note[]> {
+  const v = await kvGet<{ notes: Note[] }>("advn:board");
+  const now = Date.now();
+  return ((v && v.notes) || []).filter((n) => now - n.at < NOTE_TTL);
+}
+export async function postNote(text: string): Promise<Note[] | null> {
+  const me = await myself();
+  const t = await loadTraveller();
+  const clean = text.trim().slice(0, 140);
+  if (!me || !t || !clean) return null;
+  const notes = [{ id: Date.now().toString(36) + me.id.slice(0, 4), uid: me.id, username: me.username, name: t.name, text: clean, at: Date.now(), replies: [] }, ...(await loadNotes())].slice(0, 30);
+  await kvPut("advn:board", { notes });
+  return notes;
+}
+export async function replyNote(id: string, text: string): Promise<Note[] | null> {
+  const me = await myself();
+  const clean = text.trim().slice(0, 100);
+  if (!me || !clean) return null;
+  const notes = (await loadNotes()).map((n) => (n.id === id ? { ...n, replies: [...n.replies, { uid: me.id, username: me.username, text: clean, at: Date.now() }].slice(-8) } : n));
+  await kvPut("advn:board", { notes });
+  return notes;
+}
+export async function deleteNote(id: string): Promise<Note[] | null> {
+  const me = await myself();
+  if (!me) return null;
+  const notes = (await loadNotes()).filter((n) => !(n.id === id && n.uid === me.id));
+  await kvPut("advn:board", { notes });
+  return notes;
 }
 
 // ---------- anuncios «Buscar mesa» ----------

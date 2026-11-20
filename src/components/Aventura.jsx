@@ -1,9 +1,9 @@
 "use client";
 // Modo aventura · Fase 1: bienvenida a Brumaria y elección o creación del personaje de aventura (ficha ligera, separada de la hoja tradicional).
 import { useEffect, useState } from "react";
-import { ArrowLeft, Backpack, Feather, Flame, HandCoins, Check, Clock, Coins, Eye, Compass, Lock, MapPin, Plus, ScrollText, Sparkles, Sunrise, Users } from "lucide-react";
+import { ArrowLeft, Backpack, BookOpen, MessageCircle, Send, Reply, Trash2, Trophy, Feather, Flame, HandCoins, Check, Clock, Coins, Eye, Compass, Lock, MapPin, Plus, ScrollText, Sparkles, Sunrise, Users } from "lucide-react";
 import { Avatar } from "./Social";
-import { loadTraveller, loadTravellers, enterBrumaria, moveTraveller, markFound, loadCity, decide } from "@/lib/social";
+import { loadTraveller, loadTravellers, enterBrumaria, moveTraveller, markFound, loadCity, decide, loadChat, postChat, loadNotes, postNote, replyNote, deleteNote } from "@/lib/social";
 
 function Skyline() {
   const lights = [[118, 214], [168, 190], [226, 176], [292, 150], [356, 168], [452, 140], [540, 120], [610, 134], [688, 162], [772, 150], [834, 188], [880, 176]];
@@ -59,6 +59,9 @@ const SCENES = {
   catacumbas: "Una reja antigua, sellada con el símbolo del faro. Del otro lado llega un frío que no pertenece a este mundo.",
 };
 // La hora de la ciudad es la misma para todos: cada franja dura dos horas reales.
+// Las Catacumbas se abren cuando el Misterio de la ciudad llega a este nivel.
+const CAT_AT = 60;
+const syncCat = (city) => { const d = DISTRICTS.find((x) => x.id === "catacumbas"); d.locked = !(city.pulse.Misterio >= CAT_AT); d.desc = d.locked ? "Cerradas bajo el faro. Se abrirán cuando el Misterio de la ciudad llegue a " + CAT_AT + " (ahora " + city.pulse.Misterio + ")." : "La reja del faro se ha abierto. Del otro lado sube un frío que no pertenece a este mundo."; };
 const FRANJAS = [["Amanecer", Sunrise], ["Tarde", Sparkles], ["Noche", Clock]];
 const franjaNow = () => Math.floor(Date.now() / 7200000) % 3;
 function CityMap({ at, sel, onSel, crowd, meId }) {
@@ -107,6 +110,7 @@ function CityView({ me, crowd, city, onDecided, onMoved }) {
   const [sel, setSel] = useState(me.loc || "faro");
   const [exp, setExp] = useState(null);
   const [walking, setWalking] = useState(false);
+  const [jr, setJr] = useState(false);
   const [fr, setFr] = useState(franjaNow());
   useEffect(() => {
     const t = setInterval(() => setFr(franjaNow()), 30000);
@@ -133,6 +137,7 @@ function CityView({ me, crowd, city, onDecided, onMoved }) {
         <span><FIcon size={14} /> {FName} en Brumaria</span>
         <span><MapPin size={14} /> Estás en <b>{cur.name}</b></span>
         <span className="is-r"><Coins size={14} /> {me.gold} · <Backpack size={14} /> {me.items.length}</span>
+        <button type="button" className="adv-jb" onClick={() => setJr(true)}><BookOpen size={14} /> Mi diario</button>
       </div>
       {exp ? <Explore id={exp} fr={fr} me={me} city={city} onBack={() => setExp(null)} onFound={onMoved} onDecided={onDecided} /> : (
       <div className="adv-cg">
@@ -147,6 +152,8 @@ function CityView({ me, crowd, city, onDecided, onMoved }) {
         </aside>
       </div>)}
       {!exp && <PulsePanel city={city} />}
+      {!exp && <Travellers crowd={crowd} />}
+      {jr && <Journal me={me} onClose={() => setJr(false)} />}
       <div className="adv-ds">{DISTRICTS.map((x) => <button key={x.id} type="button" className={sel === x.id ? "is-on" : ""} style={{ "--dc": x.c }} onClick={() => setSel(x.id)}><i />{x.name}<small>{x.locked ? "🔒" : crowd.filter((t) => (t.loc || "faro") === x.id).length || ""}</small></button>)}</div>
     </div>
   );
@@ -182,6 +189,11 @@ POIS.gremios = [
   { id: "encargos", n: "Tablón de encargos", x: 520, y: 330, open: [0, 1, 2], text: "Escoltas, rescates, recados. Un cartel sin firma, con letra temblorosa, ofrece una bolsa de oro por recuperar «lo que cayó del faro»." },
   { id: "archivo", n: "Archivo de los magos", x: 720, y: 260, open: [1], text: "Una puerta baja con un candado de sombra. Solo se abre a media tarde, cuando el archivero sale a tomar el té." },
 ];
+POIS.catacumbas = [
+  { id: "reja", n: "La reja abierta", x: 230, y: 310, open: [0, 1, 2], text: "La reja del faro ya no está sellada. Del otro lado baja una escalera de piedra mojada y se oye, muy lejos, algo parecido a un canto." },
+  { id: "osario", n: "El osario", x: 520, y: 340, open: [1, 2], text: "Calaveras alineadas con un cuidado casi cariñoso. Cada una lleva grabado el nombre de un viajero que nunca llegó a la superficie." },
+  { id: "altar", n: "Altar del farero", x: 720, y: 280, open: [2], text: "Un altar de piedra negra con una cuenca vacía, justo del tamaño de la linterna del farero. Alguien ha dejado una moneda dentro." },
+];
 POIS.muelles = [
   { id: "barco", n: "Barco sin nombre", x: 300, y: 320, open: [0, 1, 2], text: "Atracado en el muelle tres, sin tripulación ni bandera. Las velas están húmedas, como si acabara de llegar de muy lejos." },
   { id: "cargamento", n: "Cargamento sin dueño", x: 560, y: 360, open: [0, 1], text: "Cajas selladas con cera verde. Una de ellas se mueve sola de vez en cuando." },
@@ -193,7 +205,7 @@ function Scene({ id, fr }) {
   const tav = id === "linterna";
   const [c1, c2] = SKY[fr] || SKY[2];
   const night = fr === 2;
-  const ground = { faro: "#241e52", jardines: "#1f3a3a", mercado: "#3a2a4a", gremios: "#2a2f4f", muelles: "#1d3440" }[id] || "#241e52";
+  const ground = { catacumbas: "#1b1a2e", faro: "#241e52", jardines: "#1f3a3a", mercado: "#3a2a4a", gremios: "#2a2f4f", muelles: "#1d3440" }[id] || "#241e52";
   return (
     <svg className="adv-scn" viewBox="0 0 900 460" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
       <defs><linearGradient id={"scS" + id} x1="0" y1="0" x2="0" y2="1">{tav ? <><stop offset="0" stopColor="#3a2430" /><stop offset="1" stopColor="#1a1018" /></> : <><stop offset="0" stopColor={c1} /><stop offset="1" stopColor={c2} /></>}</linearGradient><radialGradient id="scG" cx=".5" cy=".5" r=".5"><stop offset="0" stopColor="#ffd36a" stopOpacity=".7" /><stop offset="1" stopColor="#ffd36a" stopOpacity="0" /></radialGradient></defs>
@@ -231,6 +243,12 @@ function Scene({ id, fr }) {
         {[[520, 290], [580, 280], [640, 290]].map(([x, y], i) => <rect key={i} x={x} y={y} width="48" height="30" fill="#6b4a32" stroke="#3a2418" />)}
         <g transform="translate(700 270)"><rect x="-3" y="0" width="6" height="40" fill="#3a3a44" /><rect x="-10" y="-22" width="20" height="22" rx="4" fill={night ? "#ffd36a" : "#6b5a40"} />{night && <circle cy="-10" r="40" fill="url(#scG)" />}</g>
       </>}
+      {id === "catacumbas" && <>
+        <rect y="320" width="900" height="140" fill="#14131f" />{[120, 330, 540, 750].map((x) => <path key={x} d={`M${x - 70} 320 V170 Q${x} 90 ${x + 70} 170 V320`} fill="none" stroke="#4a4468" strokeWidth="10" />)}
+        <g transform="translate(230 300)"><rect x="-60" y="-110" width="120" height="110" fill="#0b0a14" stroke="#6b6490" strokeWidth="4" />{[-40, -20, 0, 20, 40].map((x) => <path key={x} d={`M${x} -110 V0`} stroke="#6b6490" strokeWidth="3" />)}</g>
+        {[[470, 350], [520, 360], [570, 350], [495, 335], [545, 335]].map(([x, y], i) => <circle key={i} cx={x} cy={y} r="14" fill="#cfc8e6" opacity=".85" />)}
+        <g transform="translate(720 300)"><rect x="-50" y="-34" width="100" height="34" fill="#2a2840" stroke="#6b6490" /><circle cy="-34" r="12" fill="#0b0a14" stroke="#c9b3ff" /><circle cy="-46" r="40" fill="url(#scG)" opacity=".5" /></g>
+      </>}
       {tav && <>
         <rect y="320" width="900" height="140" fill="#2a1a14" />{Array.from({ length: 12 }, (_, i) => <rect key={i} x={i * 78} y="320" width="76" height="140" fill="none" stroke="#1a100c" />)}
         {Array.from({ length: 10 }, (_, i) => <rect key={i} x={i * 92 + 8} y="30" width="76" height="260" fill="none" stroke="#4a2c22" strokeWidth="2" />)}
@@ -246,6 +264,7 @@ function Scene({ id, fr }) {
 }
 function Explore({ id, fr, me, city, onBack, onFound, onDecided }) {
   const [dlg, setDlg] = useState(null);
+  const [notes, setNotes] = useState(false);
   const pois = POIS[id] || [];
   const [open, setOpen] = useState(null);
   const d = DISTRICTS.find((x) => x.id === id);
@@ -263,9 +282,11 @@ function Explore({ id, fr, me, city, onBack, onFound, onDecided }) {
             <i>{on ? (seen.includes(x.id) ? <Check size={13} /> : <Eye size={13} />) : <Lock size={12} />}</i><span>{x.n}</span>
           </button>); })}
       </div>
+      <Chat loc={id} place={d.name} me={me} />
+      {notes && <NotesDlg me={me} onClose={() => setNotes(false)} />}
       {dlg && <DecisionDlg key={dlg} dk={dlg} me={me} city={city} onClose={() => setDlg(null)} onDone={onDecided} />}
       <div className="adv-txt">
-        {cur ? (<><b>{cur.n}</b>{!cur.open.includes(fr) && <em><Clock size={12} /> Solo abierto {cur.open.map((k) => FSTATE[k]).join(" y ")}</em>}<p>{cur.text}</p>{DECISIONS[id + ":" + cur.id] && cur.open.includes(fr) && <button type="button" className="adv-act" onClick={() => setDlg(id + ":" + cur.id)}><HandCoins size={14} /> {(me.decided || {})[id + ":" + cur.id] ? "Recordar lo que decidiste" : "Decidir qué hacer"}</button>}</>) : <p className="is-hint">Toca un rincón del lugar para mirarlo. Algunos solo se abren a ciertas horas.</p>}
+        {cur ? (<><b>{cur.n}</b>{!cur.open.includes(fr) && <em><Clock size={12} /> Solo abierto {cur.open.map((k) => FSTATE[k]).join(" y ")}</em>}<p>{cur.text}</p>{id === "faro" && cur.id === "tablon" && <button type="button" className="adv-act is-g" onClick={() => setNotes(true)}><ScrollText size={14} /> Leer y dejar notas</button>}{DECISIONS[id + ":" + cur.id] && cur.open.includes(fr) && <button type="button" className="adv-act" onClick={() => setDlg(id + ":" + cur.id)}><HandCoins size={14} /> {(me.decided || {})[id + ":" + cur.id] ? "Recordar lo que decidiste" : "Decidir qué hacer"}</button>}</>) : <p className="is-hint">Toca un rincón del lugar para mirarlo. Algunos solo se abren a ciertas horas.</p>}
       </div>
     </div>
   );
@@ -274,6 +295,11 @@ function Explore({ id, fr, me, city, onBack, onFound, onDecided }) {
 // Fase 4: decisiones. Cada una se toma una sola vez por viajero y mueve el Pulso de la ciudad.
 const PULSE_COL = { Prosperidad: "#E8C547", Orden: "#5E93C9", Misterio: "#A58BE8" };
 const DECISIONS = {
+  "catacumbas:altar": { title: "La cuenca vacía del altar", text: "La cuenca del altar espera algo. Lo que dejes aquí lo sabrá la ciudad entera.", opts: [
+    { k: "linterna", t: "Dejar la luz de tu antorcha", d: "El altar absorbe la llama y las catacumbas respiran aliviadas.", pulse: { Orden: 2, Misterio: -1 }, rep: ["catacumbas", 1], out: "La llama se apaga, pero las sombras de la escalera retroceden un paso. Arriba, el faro brilla un poco más.", log: "dejó la luz de su antorcha en el altar de las catacumbas" },
+    { k: "moneda", t: "Dejar una moneda de plata", d: "Pagas el peaje de las sombras (5 de plata).", gold: -5, pulse: { Prosperidad: 1, Misterio: 1 }, rep: ["catacumbas", 1], out: "La moneda tintinea hacia abajo, muy lejos. Alguien, allí, ha dado las gracias.", log: "pagó un peaje en el altar de las catacumbas" },
+    { k: "llevar", t: "Llevarte lo que hay dentro", d: "Coges la moneda que alguien dejó.", item: "Moneda del altar", pulse: { Misterio: 2, Orden: -1 }, out: "La moneda está helada. La reja, a tu espalda, se cierra un poco.", log: "se llevó la moneda del altar de las catacumbas" },
+  ] },
   "faro:tablon": { title: "Los tres avisos del faro", text: "Tres papeles ondean en el tablón. Alguien tiene que hacer algo con ellos antes de que la niebla suba y los borre. Los demás viajeros pasarán por aquí después de ti.", opts: [
     { k: "encargo", t: "Aceptar el encargo del farero", d: "Prometes devolver la linterna perdida.", gold: 15, rep: ["faro", 1], pulse: { Misterio: 1 }, out: "El farero te estrecha la mano con dedos fríos como el hierro. «Búscala antes de la noche», susurra, y te da una llave sin dientes.", log: "aceptó el encargo del farero" },
     { k: "arrancar", t: "Arrancar el aviso del barco sin nombre", d: "Preferirías que nadie sepa que ha llegado.", item: "Aviso arrugado", pulse: { Orden: -1, Misterio: 1 }, out: "El papel se deshace en tu mano. Cuando levantas la vista, alguien en la fuente ya te mira.", log: "arrancó el aviso del barco sin nombre" },
@@ -317,6 +343,7 @@ function DecisionDlg({ dk, me, city, onClose, onDone }) {
     if (busy) return;
     setBusy(true);
     const text = o.note ? note.trim().slice(0, 80) : "";
+    if (o.note && text) postNote(text).catch(() => {});
     const r = await decide(dk, o.k, { gold: o.gold, item: o.item, rep: o.rep, pulse: o.pulse, log: o.log + (text ? ": «" + text + "»" : ""), diary: D.title + " · " + o.t }).catch(() => null);
     setBusy(false);
     if (r) {
@@ -362,6 +389,91 @@ function DecisionDlg({ dk, me, city, onClose, onDone }) {
 function PulseBars({ pulse }) {
   return <div className="adv-pm">{Object.entries(PULSE_COL).map(([n, c]) => <div key={n}><span>{n}</span><div><em style={{ width: (pulse[n] ?? 50) + "%", background: c }} /></div><b>{pulse[n] ?? 50}</b></div>)}</div>;
 }
+const levelOf = (n) => (n >= 3 ? "Aliado" : n === 2 ? "Apreciado" : n === 1 ? "Conocido" : "Desconocido");
+const ACH = [
+  ["Primer paso", "Llegar a Brumaria.", () => true],
+  ["Curioso", "Ver 5 rincones.", (m) => (m.found || []).length >= 5],
+  ["Explorador", "Ver 12 rincones.", (m) => (m.found || []).length >= 12],
+  ["Decidido", "Tomar 3 decisiones.", (m) => Object.keys(m.decided || {}).length >= 3],
+  ["Voz de la ciudad", "Dejar una nota en el tablón.", (m) => (m.decided || {})["faro:tablon"] === "nota"],
+  ["Conocido en el barrio", "Tener reputación en un distrito.", (m) => Object.values(m.rep || {}).some((n) => n >= 1)],
+  ["Bajo el faro", "Pisar las Catacumbas.", (m) => (m.found || []).some((k) => k.startsWith("catacumbas:"))],
+  ["Mochilero", "Llevar 6 objetos.", (m) => m.items.length >= 6],
+];
+function Journal({ me, onClose }) {
+  const [tab, setTab] = useState("diario");
+  const ach = ACH.map(([n, d, f]) => [n, d, f(me)]);
+  const seen = (me.found || []).length, total = Object.values(POIS).reduce((a, l) => a + l.length, 0);
+  return (
+    <div className="adv-dov" onClick={onClose}>
+      <div className="adv-dlg" role="dialog" aria-label="Tu diario" onClick={(e) => e.stopPropagation()}>
+        <span className="adv-pk">Tu viajero</span><h3 className="mh-serif">{me.name}</h3>
+        <div className="adv-tabs">{[["diario", "Diario"], ["rep", "Reputación"], ["logros", "Logros (" + ach.filter((a) => a[2]).length + "/" + ach.length + ")"]].map(([k, l]) => <button key={k} type="button" className={tab === k ? "is-on" : ""} onClick={() => setTab(k)}>{l}</button>)}</div>
+        {tab === "diario" && (<div className="adv-jl"><small>{seen} de {total} rincones vistos · {Object.keys(me.decided || {}).length} decisiones</small>{(me.diary || []).length ? me.diary.map((e, i) => <div key={i}><Feather size={13} /><span>{e.text}</span><em>hace {ago(e.at)}</em></div>) : <p className="adv-dt">Aún no hay entradas. Lo que decidas en los distritos quedará escrito aquí.</p>}</div>)}
+        {tab === "rep" && (<div className="adv-jl">{DISTRICTS.map((d) => { const n = (me.rep || {})[d.id] || 0; return <div key={d.id}><i style={{ background: d.c, width: 10, height: 10, borderRadius: 99 }} /><span>{d.name}</span><em style={{ color: n ? d.c : undefined }}>{levelOf(n)}</em></div>; })}</div>)}
+        {tab === "logros" && (<div className="adv-ach">{ach.map(([n, d, ok]) => <div key={n} className={ok ? "is-ok" : ""}><Trophy size={16} /><b>{n}</b><small>{d}</small></div>)}</div>)}
+        <button type="button" className="adv-go mh-btn" onClick={onClose}>Cerrar</button>
+      </div>
+    </div>
+  );
+}
+function Chat({ loc, place, me }) {
+  const [msgs, setMsgs] = useState([]);
+  const [txt, setTxt] = useState("");
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    const pull = () => loadChat(loc).then((m) => alive && setMsgs(m)).catch(() => {});
+    pull();
+    const t = setInterval(pull, 4000);
+    return () => { alive = false; clearInterval(t); };
+  }, [loc]);
+  const send = async () => {
+    if (!txt.trim() || busy) return;
+    setBusy(true);
+    const m = await postChat(loc, txt).catch(() => null);
+    setBusy(false);
+    if (m) { setMsgs(m); setTxt(""); }
+  };
+  return (
+    <div className="adv-chat">
+      <div className="adv-ch-h"><MessageCircle size={15} /> <b>Charla en {place}</b><small>Lo ven quienes estén aquí</small></div>
+      <div className="adv-ch-l">{msgs.length ? msgs.slice(-8).map((m, i) => <div key={i} className="adv-msg"><Avatar name={m.username} size={26} /><div><b>{m.username} <em>{m.name}</em></b><p>{m.text}</p></div><small>{ago(m.at)}</small></div>) : <p className="adv-dt">Nadie ha dicho nada todavía.</p>}</div>
+      <form className="adv-ch-f" onSubmit={(e) => { e.preventDefault(); send(); }}><input className="mh-input" placeholder="Di algo a quienes están aquí…" maxLength={140} value={txt} onChange={(e) => setTxt(e.target.value)} /><button type="submit" className="mh-btn" disabled={busy || !txt.trim()} aria-label="Enviar"><Send size={14} /></button></form>
+    </div>
+  );
+}
+function NotesDlg({ me, onClose }) {
+  const [notes, setNotes] = useState([]);
+  const [txt, setTxt] = useState("");
+  const [rep, setRep] = useState(null);
+  const [rt, setRt] = useState("");
+  useEffect(() => { loadNotes().then(setNotes).catch(() => {}); }, []);
+  const add = async () => { const n = await postNote(txt).catch(() => null); if (n) { setNotes(n); setTxt(""); } };
+  const reply = async (id) => { const n = await replyNote(id, rt).catch(() => null); if (n) { setNotes(n); setRep(null); setRt(""); } };
+  const del = async (id) => { const n = await deleteNote(id).catch(() => null); if (n) setNotes(n); };
+  return (
+    <div className="adv-dov" onClick={onClose}>
+      <div className="adv-dlg" role="dialog" aria-label="Notas del tablón" onClick={(e) => e.stopPropagation()}>
+        <span className="adv-pk">Tablón</span><h3 className="mh-serif">Notas de otros viajeros</h3>
+        <p className="adv-dt">Lo que han ido dejando los viajeros en el tablón de la Plaza del Faro. Las notas desaparecen a los 7 días.</p>
+        <form className="adv-ch-f" onSubmit={(e) => { e.preventDefault(); add(); }}><input className="mh-input" placeholder="Clavar una nota nueva…" maxLength={140} value={txt} onChange={(e) => setTxt(e.target.value)} /><button type="submit" className="mh-btn" disabled={!txt.trim()}>Clavar</button></form>
+        <div className="adv-notes">{notes.length ? notes.map((n) => (
+          <div key={n.id} className="adv-nt"><div className="adv-nh"><Avatar name={n.username} size={24} /><b>{n.username}</b><small>hace {ago(n.at)}</small>{n.uid === me.uid && <button type="button" className="adv-x" aria-label="Borrar nota" onClick={() => del(n.id)}><Trash2 size={13} /></button>}</div><p>«{n.text}»</p>
+            {n.replies.map((r, i) => <div key={i} className="adv-rp"><Reply size={12} /> <b>{r.username}</b> {r.text}</div>)}
+            {rep === n.id ? <form className="adv-ch-f" onSubmit={(e) => { e.preventDefault(); reply(n.id); }}><input className="mh-input" autoFocus maxLength={100} value={rt} onChange={(e) => setRt(e.target.value)} placeholder="Tu respuesta…" /><button type="submit" className="mh-btn" disabled={!rt.trim()}>Enviar</button></form> : <button type="button" className="adv-rb" onClick={() => { setRep(n.id); setRt(""); }}><Reply size={13} /> Contestar</button>}</div>
+        )) : <p className="adv-dt">El tablón está vacío. Clava la primera nota.</p>}</div>
+        <button type="button" className="adv-go mh-btn" onClick={onClose}>Cerrar</button>
+      </div>
+    </div>
+  );
+}
+function Travellers({ crowd }) {
+  return (
+    <div className="adv-pulsep"><div className="adv-pph"><Users size={15} /> <b>Viajeros en Brumaria</b><small>{crowd.length} conectados hoy</small></div>
+      <div className="adv-trv">{crowd.map((t) => { const d = DISTRICTS.find((x) => x.id === (t.loc || "faro")); return <div key={t.uid}><Avatar name={t.username} size={30} /><div><b>{t.name}</b><small>{t.username} · {t.cls || "Viajero"} · Nv {t.lvl}</small></div><em>{d ? d.name : ""}</em></div>; })}</div></div>
+  );
+}
 const ago = (t) => { const m = Math.max(1, Math.round((Date.now() - t) / 60000)); return m < 60 ? m + " min" : m < 1440 ? Math.round(m / 60) + " h" : Math.round(m / 1440) + " d"; };
 function PulsePanel({ city }) {
   return (
@@ -394,6 +506,7 @@ export function AventuraPage({ chars, classColor, onCreate }) {
       clearInterval(t);
     };
   }, []);
+  syncCat(city);
   const picked = chars.find((x) => x.id === sel) || null;
   const c = me || picked;
   const enter = async () => {
@@ -552,6 +665,18 @@ const CSS = `
 .adv-pulsep { padding: 16px 18px; border-radius: 18px; background: var(--mh-panel); border: 1px solid var(--mh-line); display: flex; flex-direction: column; gap: 10px; } .adv-pph { display: flex; align-items: baseline; gap: 8px; } .adv-pph svg { color: #E3B04B; align-self: center; } .adv-pph small { color: var(--mh-muted); font-size: 12px; }
 .adv-pm { display: flex; flex-direction: column; gap: 8px; } .adv-pm > div { display: grid; grid-template-columns: 96px 1fr 30px; align-items: center; gap: 10px; font-size: 12.5px; } .adv-pm > div > div { height: 9px; border-radius: 99px; background: color-mix(in srgb, var(--mh-ink) 10%, transparent); overflow: hidden; } .adv-pm em { display: block; height: 100%; border-radius: 99px; transition: width .6s; } .adv-pm b { text-align: right; }
 .adv-last { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--mh-ink2); } .adv-last svg { color: var(--mh-muted); flex: none; }
+.adv-act.is-g { background: color-mix(in srgb, var(--mh-ink) 10%, transparent); color: var(--mh-ink); margin-right: 8px; }
+.adv-jb { appearance: none; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 99px; border: 1px solid var(--mh-line); background: var(--mh-panel); color: var(--mh-ink); font: 600 12.5px var(--font-body), 'Inter', system-ui, sans-serif; cursor: pointer; }
+.adv-chat { border-radius: 18px; background: var(--mh-panel); border: 1px solid var(--mh-line); overflow: hidden; } .adv-ch-h { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--mh-line); } .adv-ch-h svg { color: #D9644E; } .adv-ch-h small { color: var(--mh-muted); font-size: 12px; }
+.adv-ch-l { display: flex; flex-direction: column; gap: 10px; padding: 12px 16px; } .adv-msg { display: flex; gap: 10px; align-items: flex-start; } .adv-msg > div { flex: 1; } .adv-msg b { font-size: 13px; } .adv-msg em { font-style: normal; font-weight: 500; color: var(--mh-muted); font-size: 11.5px; margin-left: 4px; } .adv-msg p { margin: 2px 0 0; font-size: 13.5px; line-height: 1.45; color: var(--mh-ink2); } .adv-msg small { color: var(--mh-muted); font-size: 11px; }
+.adv-ch-f { display: flex; gap: 8px; padding: 10px 14px 14px; } .adv-ch-f input { flex: 1; }
+.adv-notes { display: flex; flex-direction: column; gap: 10px; margin: 6px 0 14px; } .adv-nt { padding: 12px 14px; border-radius: 14px; background: var(--mh-panel2); border: 1px solid var(--mh-line); } .adv-nh { display: flex; align-items: center; gap: 8px; } .adv-nh small { color: var(--mh-muted); margin-left: auto; font-size: 11.5px; } .adv-nt p { margin: 8px 0; font-size: 14px; font-style: italic; color: var(--mh-ink2); } .adv-x { appearance: none; border: 0; background: none; color: var(--mh-muted); cursor: pointer; padding: 2px; }
+.adv-rp { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--mh-ink2); padding: 5px 10px; margin-top: 4px; border-radius: 9px; background: color-mix(in srgb, var(--mh-ink) 6%, transparent); } .adv-rp svg { color: var(--mh-muted); }
+.adv-rb { appearance: none; margin-top: 8px; display: inline-flex; align-items: center; gap: 6px; font: 600 12px var(--font-body), 'Inter', system-ui, sans-serif; color: #E3B04B; background: none; border: 1px solid #E3B04B66; border-radius: 99px; padding: 4px 12px; cursor: pointer; }
+.adv-trv { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; } .adv-trv > div { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 13px; background: var(--mh-panel2); border: 1px solid var(--mh-line); } .adv-trv > div > div { flex: 1; min-width: 0; display: flex; flex-direction: column; } .adv-trv small { color: var(--mh-muted); font-size: 11.5px; } .adv-trv em { font-style: normal; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 99px; background: color-mix(in srgb, #4FA39A 20%, transparent); color: #4FA39A; }
+.adv-tabs { display: flex; gap: 6px; margin: 10px 0 14px; } .adv-tabs button { appearance: none; padding: 6px 14px; border-radius: 99px; border: 1px solid var(--mh-line); background: none; color: var(--mh-ink2); font: 600 12.5px var(--font-body), 'Inter', system-ui, sans-serif; cursor: pointer; } .adv-tabs button.is-on { background: #E3B04B; color: #1a1408; border-color: transparent; }
+.adv-jl { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; } .adv-jl > div { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 12px; background: var(--mh-panel2); border: 1px solid var(--mh-line); font-size: 13.5px; } .adv-jl > div span { flex: 1; } .adv-jl em { font-style: normal; font-size: 11.5px; color: var(--mh-muted); font-weight: 700; } .adv-jl small { color: var(--mh-muted); }
+.adv-ach { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; margin-bottom: 14px; } .adv-ach > div { display: flex; flex-direction: column; gap: 2px; padding: 12px; border-radius: 14px; border: 1px dashed var(--mh-line); opacity: .55; } .adv-ach > div.is-ok { opacity: 1; border-style: solid; background: color-mix(in srgb, #E8C547 12%, transparent); } .adv-ach svg { color: #E8C547; } .adv-ach small { color: var(--mh-muted); font-size: 12px; }
 @media (max-width: 900px) { .adv-g { grid-template-columns: 1fr; } .adv-sheet { position: static; } .adv-hi { padding: 22px 20px; } .adv-hero { min-height: 300px; } }
 @media (prefers-reduced-motion: reduce) { .adv * { animation: none !important; } }
 `;
