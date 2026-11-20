@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Dices, Image as ImageIcon, Backpack, BookOpen, MessageCircle, Send, Reply, Trash2, Trophy, Feather, Flame, HandCoins, Check, Clock, Coins, Eye, Compass, Lock, MapPin, Plus, ScrollText, Sparkles, Sunrise, Users } from "lucide-react";
 import { Avatar } from "./Social";
 import { rollDuality, effectOf, drawEncargos, ACTIONS, ENCARGOS, DIFF } from "@/lib/aventuraData";
-import { syncTraveller, startAct, abandonAct, takeOffers, resolveAct, loadTraveller, loadTravellers, enterBrumaria, moveTraveller, markFound, loadCity, decide, loadChat, postChat, loadNotes, postNote, replyNote, deleteNote } from "@/lib/social";
+import { loadZoneImg, saveZoneImg, syncTraveller, startAct, abandonAct, takeOffers, resolveAct, loadTraveller, loadTravellers, enterBrumaria, moveTraveller, markFound, loadCity, decide, loadChat, postChat, loadNotes, postNote, replyNote, deleteNote } from "@/lib/social";
 
 function Skyline() {
   const lights = [[118, 214], [168, 190], [226, 176], [292, 150], [356, 168], [452, 140], [540, 120], [610, 134], [688, 162], [772, 150], [834, 188], [880, 176]];
@@ -366,9 +366,27 @@ const FR_KEY = ["amanecer", "tarde", "noche"];
 const EXTS = ["webp", "jpg", "png"];
 const SPEED = typeof window !== "undefined" && window.location.pathname.startsWith("/dev-preview") && new URLSearchParams(window.location.search).get("fast") ? 120 : 1; // solo en la vista previa de desarrollo
 const imgCache = {};
+// Primero la imagen subida desde la página; si no hay, la que esté en public/aventura.
 const probe = (id, fk) => {
   const k = id + "-" + fk;
   if (imgCache[k] !== undefined) return Promise.resolve(imgCache[k]);
+  return loadZoneImg(k).catch(() => null).then((d) => { if (d) { imgCache[k] = d; return d; } return probeStatic(id, fk); });
+};
+async function shrink(file) {
+  const url = URL.createObjectURL(file);
+  const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; });
+  const w = Math.min(1920, img.naturalWidth), h = Math.round((img.naturalHeight * w) / img.naturalWidth);
+  const c = document.createElement("canvas");
+  c.width = w; c.height = h;
+  c.getContext("2d").drawImage(img, 0, 0, w, h);
+  URL.revokeObjectURL(url);
+  let q = 0.85, mime = "image/webp", d = c.toDataURL(mime, q);
+  if (!d.startsWith("data:image/webp")) { mime = "image/jpeg"; d = c.toDataURL(mime, q); }
+  while (d.length > 520000 && q > 0.4) { q -= 0.1; d = c.toDataURL(mime, q); }
+  return d;
+}
+const probeStatic = (id, fk) => {
+  const k = id + "-" + fk;
   return new Promise((res) => {
     let i = 0;
     const next = () => {
@@ -419,22 +437,36 @@ function PromptsDlg({ onClose }) {
   const [z, setZ] = useState("faro");
   const [ok, setOk] = useState({});
   const [copied, setCopied] = useState("");
+  const [prev, setPrev] = useState({});
+  const [busy, setBusy] = useState("");
+  const [err, setErr] = useState("");
   useEffect(() => {
     let a = true;
-    DISTRICTS.forEach((d) => FR_KEY.forEach((f) => probe(d.id, f).then((s) => a && setOk((o) => ({ ...o, [d.id + "-" + f]: !!s })))));
+    DISTRICTS.forEach((d) => FR_KEY.forEach((f) => probe(d.id, f).then((s) => { if (a) { setOk((o) => ({ ...o, [d.id + "-" + f]: !!s })); setPrev((o) => ({ ...o, [d.id + "-" + f]: s })); } })));
     return () => { a = false; };
   }, []);
+  const up = async (k, file) => {
+    setBusy(k); setErr("");
+    try { const d = await shrink(file); await saveZoneImg(k, d); imgCache[k] = d; setOk((o) => ({ ...o, [k]: true })); setPrev((o) => ({ ...o, [k]: d })); } catch { setErr("No se pudo subir " + file.name + ". Prueba con otra imagen (png, jpg o webp)."); }
+    setBusy("");
+  };
+  const valid = DISTRICTS.flatMap((d) => FR_KEY.map((f) => d.id + "-" + f));
+  const many = async (files) => { for (const f of files) { const k = f.name.replace(/\.[^.]+$/, "").toLowerCase(); if (valid.includes(k)) await up(k, f); else setErr("«" + f.name + "» no coincide con ningún nombre (por ejemplo faro-amanecer.jpg)."); } };
+  const del = async (k) => { await saveZoneImg(k, "").catch(() => {}); delete imgCache[k]; const s = await probe(k.split("-")[0], k.split("-")[1]); setOk((o) => ({ ...o, [k]: !!s })); setPrev((o) => ({ ...o, [k]: s })); };
   const have = Object.values(ok).filter(Boolean).length;
   const copy = async (k, txt) => { try { await navigator.clipboard.writeText(txt); } catch { const t = document.createElement("textarea"); t.value = txt; document.body.appendChild(t); t.select(); document.execCommand("copy"); t.remove(); } setCopied(k); setTimeout(() => setCopied(""), 1500); };
   return (
     <div className="adv-dov" onClick={onClose}>
       <div className="adv-dlg is-wide" role="dialog" aria-label="Imágenes de Brumaria" onClick={(e) => e.stopPropagation()}>
         <span className="adv-pk">Imágenes</span><h3 className="mh-serif">Fondos de Brumaria <small className="fs-cnt">{have} de 21 subidas</small></h3>
-        <p className="adv-dt">Genera una imagen por zona y franja (16:9, 2560×1440, el motivo en el tercio central, menos de 600 KB en webp o jpg). Súbela a la carpeta <b>public/aventura</b> del repositorio con el nombre que se indica. Hasta entonces se usa la ilustración de reserva.</p>
+        <p className="adv-dt">Genera una imagen por zona y franja (16:9, 2560×1440, el motivo en el tercio central, menos de 600 KB en webp o jpg). Súbela aquí con «Subir imagen» (se reduce sola) o elige varias a la vez con nombres como <b>faro-amanecer.jpg</b>. Todos los viajeros verán las que subas. Hasta entonces se usa la ilustración de reserva.</p>
+        <label className="fs-many mh-btn">Subir varias a la vez<input type="file" accept="image/*" multiple hidden onChange={(e) => { many([...e.target.files]); e.target.value = ""; }} /></label>
+        {err && <p className="adv-dt" style={{ color: "#D9644E" }}>{err}</p>}
         <div className="adv-tabs">{DISTRICTS.map((d) => <button key={d.id} type="button" className={z === d.id ? "is-on" : ""} onClick={() => setZ(d.id)}>{d.name.split(" ")[0] === "La" ? "Linterna" : d.name.split(" ")[0]}</button>)}</div>
         {FR_KEY.map((f, i) => { const k = z + "-" + f; const t = promptOf(z, f); return (
           <div key={f} className="fs-pr">
-            <div className="fs-prh"><b>{FRANJAS[i][0]}</b><code>{k}.webp</code><i className={ok[k] ? "is-ok" : ""}>{ok[k] ? "Subida" : "Falta"}</i><button type="button" className="mh-btn" onClick={() => copy(k, t)}>{copied === k ? "Copiado" : "Copiar prompt"}</button></div>
+            <div className="fs-prh"><b>{FRANJAS[i][0]}</b><code>{k}</code><i className={ok[k] ? "is-ok" : ""}>{ok[k] ? "Subida" : "Falta"}</i><button type="button" className="mh-btn" onClick={() => copy(k, t)}>{copied === k ? "Copiado" : "Copiar prompt"}</button></div>
+            <div className="fs-up">{prev[k] && <img src={prev[k]} alt="" />}<label className="mh-btn">{busy === k ? "Subiendo…" : prev[k] ? "Cambiar imagen" : "Subir imagen"}<input type="file" accept="image/*" hidden disabled={!!busy} onChange={(e) => { const f = e.target.files[0]; e.target.value = ""; if (f) up(k, f); }} /></label>{ok[k] && <button type="button" className="fs-link" onClick={() => del(k)}>Quitar</button>}</div>
             <textarea className="mh-input" readOnly rows={5} value={t} onFocus={(e) => e.target.select()} />
           </div>); })}
         <button type="button" className="adv-go mh-btn" onClick={onClose}>Cerrar</button>
@@ -807,7 +839,8 @@ const CSS = `
 .fs-toast { position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%); max-width: min(520px, 90%); padding: 10px 16px; border-radius: 14px; background: rgba(14,12,36,.92); border: 1px solid rgba(255,255,255,.2); color: #f1edf8; font-size: 13px; text-align: center; }
 .fs-enc { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 12px 0; } .fs-enc button { appearance: none; text-align: left; display: flex; flex-direction: column; gap: 8px; padding: 14px; border-radius: 16px; border: 1px solid var(--mh-line); background: var(--mh-panel2); color: var(--mh-ink); font-family: inherit; cursor: pointer; } .fs-enc button:hover { border-color: #E3B04B; } .fs-enc p { margin: 0; font-size: 13px; color: var(--mh-ink2); line-height: 1.45; flex: 1; } .fs-enc span { display: flex; flex-wrap: wrap; gap: 5px; } .fs-enc i { font-style: normal; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 99px; background: color-mix(in srgb, var(--fc) 20%, transparent); color: var(--fc); } .fs-enc small { color: var(--mh-muted); font-size: 12px; }
 .fs-dice { display: flex; align-items: center; gap: 12px; margin: 14px 0; flex-wrap: wrap; } .fs-die { width: 84px; padding: 10px 0; border-radius: 16px; text-align: center; border: 2px solid; } .fs-die small { display: block; font-size: 11px; font-weight: 700; } .fs-die b { font-size: 36px; } .fs-die.is-h { color: #E8C547; border-color: #E8C547; background: color-mix(in srgb, #E8C547 14%, transparent); } .fs-die.is-f { color: #A58BE8; border-color: #A58BE8; background: color-mix(in srgb, #A58BE8 14%, transparent); } .fs-dice.is-roll .fs-die { animation: advShake .25s infinite; } @keyframes advShake { 0% { transform: rotate(-6deg) translateY(0); } 50% { transform: rotate(6deg) translateY(-6px); } 100% { transform: rotate(-6deg) translateY(0); } } .fs-sum { display: flex; flex-direction: column; font-size: 15px; } .fs-sum small { color: var(--mh-muted); }
-.fs-pr { margin-bottom: 12px; } .fs-prh { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; } .fs-prh code { font-size: 12px; color: var(--mh-muted); } .fs-prh i { font-style: normal; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 99px; background: color-mix(in srgb, #D9644E 22%, transparent); color: #D9644E; } .fs-prh i.is-ok { background: color-mix(in srgb, #6FBF73 22%, transparent); color: #6FBF73; } .fs-prh .mh-btn { margin-left: auto; } .fs-pr textarea { width: 100%; font-size: 12px; resize: none; } .fs-cnt { font-size: 13px; color: var(--mh-muted); font-family: var(--font-body), 'Inter', system-ui, sans-serif; margin-left: 8px; }
+.fs-pr { margin-bottom: 12px; } .fs-prh { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; } .fs-prh code { font-size: 12px; color: var(--mh-muted); } .fs-prh i { font-style: normal; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 99px; background: color-mix(in srgb, #D9644E 22%, transparent); color: #D9644E; } .fs-prh i.is-ok { background: color-mix(in srgb, #6FBF73 22%, transparent); color: #6FBF73; } .fs-prh .mh-btn { margin-left: auto; } .fs-many { display: inline-block; margin: 0 0 10px; cursor: pointer; } .fs-up { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; } .fs-up img { width: 96px; height: 54px; object-fit: cover; border-radius: 8px; border: 1px solid var(--mh-line); } .fs-up label { cursor: pointer; } .fs-up .fs-link { color: var(--mh-muted); }
+.fs-pr textarea { width: 100%; font-size: 12px; resize: none; } .fs-cnt { font-size: 13px; color: var(--mh-muted); font-family: var(--font-body), 'Inter', system-ui, sans-serif; margin-left: 8px; }
 @media (max-width: 900px) { .adv-g { overflow-y: auto; } }
 @media (max-width: 720px) { .fs-pn { width: auto; right: 14px; top: auto; height: 46%; bottom: 92px; } .fs-enc { grid-template-columns: 1fr; } }
 @media (max-width: 900px) { .adv-g { grid-template-columns: 1fr; } .adv-sheet { position: static; } .adv-hi { padding: 22px 20px; } .adv-hero { min-height: 300px; } }

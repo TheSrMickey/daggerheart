@@ -777,6 +777,14 @@ export async function decide(key: string, opt: string, fx: Effect): Promise<{ t:
   await kvPut("advc:city", next);
   return { t, city: next };
 }
+// Fondos de Brumaria subidos desde la página (data URL ya reducida), por zona y franja: "faro-amanecer".
+export async function loadZoneImg(k: string): Promise<string | null> {
+  const v = await kvGet<{ d: string }>(`advimg:${k}`);
+  return v && v.d ? v.d : null;
+}
+export async function saveZoneImg(k: string, d: string) {
+  await kvPut(`advimg:${k}`, { d });
+}
 // Acciones con tiempo y encargos: una a la vez por viajero, se resuelven con una tirada al terminar.
 async function patchMe(fn: (t: Traveller) => Traveller): Promise<Traveller | null> {
   const me = await myself();
