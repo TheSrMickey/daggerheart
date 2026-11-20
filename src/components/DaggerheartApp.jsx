@@ -623,6 +623,7 @@ const FICHA_DEFAULTS = {
   hope_marked: "2",
   armor_marked: "0",
   f_beastform: "",
+  f_beast_pick: "",
   f_evolution_trait: "",
   f_backstory: "",
   f_connections: "",
@@ -946,6 +947,7 @@ function isMeleeWeapon(name) {
   if (name === BRAWLER_STRIKE) return true;
   const w = [...PRIMARY_WEAPONS, ...SECONDARY_WEAPONS].find((x) => x.key === name);
   if (w) return w.range === "Cuerpo a cuerpo";
+  if (BEAST_EVOLVING[name]) return true;
   const bf = BEASTFORMS.find((b) => b.key === name);
   return bf ? bf.attack.startsWith("Cuerpo a cuerpo") : false;
 }
@@ -2004,6 +2006,57 @@ const BEASTFORMS = [
     ],
   },
 ];
+
+// Formas de Bestia que piden elegir otras formas: «Evolucionada» (una forma mejorada) e «Híbrida» (varias combinadas).
+const BEAST_EVOLVING = {
+  "Bestia Legendaria": { kind: "evo", from: [1], n: 1, dmg: 6, trait: 1, eva: 2, extra: 0 },
+  "Bestia Mítica": { kind: "evo", from: [1, 2], n: 1, dmg: 9, trait: 2, eva: 3, dieUp: true, extra: 0 },
+  "Híbrido Legendario": { kind: "hyb", from: [1, 2], n: 2, adv: 4, feat: 2, extra: 1 },
+  "Híbrido Mítico": { kind: "hyb", from: [1, 2, 3], n: 3, adv: 5, feat: 3, extra: 2 },
+};
+const beastAdvList = (b) => String(b?.advantage || "").split(/,| y /).map((x) => x.trim()).filter(Boolean);
+const beastPickOf = (c) => {
+  try { return JSON.parse(c?.f_beast_pick || "{}") || {}; } catch (e) { return {}; }
+};
+// La forma activa de un personaje con lo elegido aplicado (mejora de la Evolucionada, ventajas y características de la Híbrida).
+function effBeast(c) {
+  const b = BEASTFORMS.find((x) => x.key === c?.f_beastform);
+  const spec = b && BEAST_EVOLVING[b.key];
+  if (!spec) return b;
+  const pick = beastPickOf(c);
+  const bases = (pick.base || []).map((k) => BEASTFORMS.find((x) => x.key === k)).filter(Boolean);
+  if (!bases.length) return b;
+  if (spec.kind === "evo") {
+    const o = bases[0];
+    const [rng, trait, dmgTxt] = String(o.attack || "").split(" · ");
+    const m = /^d(\d+)([+-]\d+)?\s*(.*)$/.exec(dmgTxt || "");
+    const SIDES = [4, 6, 8, 10, 12, 20];
+    const sides = m ? (spec.dieUp ? SIDES[Math.min(SIDES.length - 1, Math.max(0, SIDES.indexOf(Number(m[1]))) + 1)] || Number(m[1]) : Number(m[1])) : 0;
+    const flat = m ? Number(m[2] || 0) + spec.dmg : 0;
+    const tb = o.traitBonus ? { key: o.traitBonus.key, amount: o.traitBonus.amount + spec.trait } : null;
+    const eva = (o.evasionBonus || 0) + spec.eva;
+    const tl = tb ? TRAITS.find((t) => t.key === tb.key)?.label : "";
+    return {
+      ...b,
+      label: b.key + " · " + o.key,
+      animals: o.animals + " · evolucionada",
+      bonus: (tl ? tl + " +" + tb.amount + " · " : "") + "Evasión +" + eva,
+      traitBonus: tb || undefined,
+      evasionBonus: eva,
+      attack: m ? rng + " · " + trait + " · d" + sides + (flat ? (flat > 0 ? "+" : "") + flat : "") + " " + m[3] : o.attack,
+      advantage: o.advantage,
+      features: [...o.features, ...b.features],
+    };
+  }
+  const feats = bases.flatMap((x) => x.features).filter((f, i, arr) => (pick.feat || []).includes(f.name) && arr.findIndex((g) => g.name === f.name) === i);
+  return {
+    ...b,
+    label: b.key + " · " + bases.map((x) => x.key).join(" + "),
+    animals: bases.map((x) => x.key).join(" + "),
+    advantage: (pick.adv || []).join(", ") || b.advantage,
+    features: feats.length ? feats : b.features,
+  };
+}
 
 function tierForLevel(level) {
   const t = TIERS.find((t) => t.levels.includes(Number(level)));
@@ -9403,6 +9456,21 @@ const sharedStyles = `
   @keyframes mh-card-away { to { opacity: 0; translate: 0 24px; scale: .9; } }
 
   /* Cartas de dominio en la hoja */
+  .mh-infotip { position: relative; display: inline-flex; vertical-align: middle; margin-left: 7px; color: var(--acc); cursor: help; outline: none; }
+  .mh-infotip > span { position: absolute; left: -128px; top: calc(100% + 8px); width: 214px; padding: 9px 12px; border-radius: 10px; font: 500 12px/1.4 var(--font-body), 'Inter', system-ui, sans-serif; letter-spacing: 0; white-space: normal; color: var(--mh-ink2); background: var(--mh-panel2); border: 1px solid var(--mh-line2, var(--mh-line)); box-shadow: 0 12px 28px #0008; opacity: 0; transform: translateY(-3px); pointer-events: none; transition: opacity .15s, transform .15s; z-index: 30; }
+  .mh-infotip:hover > span, .mh-infotip:focus > span { opacity: 1; transform: none; }
+  .mh-cardc.is-locked { filter: grayscale(1) brightness(.92); }
+  .mh-bpk-ov { position: fixed; inset: 0; z-index: 90; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(8,6,12,.70); }
+  .mh-bpk { width: min(560px, 100%); max-height: calc(100dvh - 40px); overflow-y: auto; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; }
+  .mh-bpk-d { margin: 0; font-size: 12.5px; line-height: 1.45; color: var(--mh-ink2); }
+  .mh-bpk-h { display: flex; align-items: center; gap: 8px; margin-top: 4px; font: 700 12px var(--font-body), 'Inter', system-ui, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: var(--mh-ink2); }
+  .mh-bpk-h i { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-size: 11px; background: var(--acc); color: #14111f; } .mh-bpk-h small { margin-left: auto; letter-spacing: 0; color: var(--mh-muted); font-weight: 600; }
+  .mh-bpk-g { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 7px; }
+  .mh-bpk-g button { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--mh-line); background: color-mix(in srgb, var(--bc, var(--acc)) 7%, var(--mh-panel)); } .mh-bpk-g button b { font-size: 12.5px; color: var(--mh-ink); } .mh-bpk-g button small { font-size: 10.5px; color: var(--mh-muted); line-height: 1.25; }
+  .mh-bpk-g button.is-on { border-color: var(--bc, var(--acc)); box-shadow: 0 0 0 2px color-mix(in srgb, var(--bc, var(--acc)) 45%, transparent); background: color-mix(in srgb, var(--bc, var(--acc)) 18%, var(--mh-panel)); }
+  .mh-bpk-c { display: flex; flex-wrap: wrap; gap: 6px; } .mh-bpk-c button { all: unset; box-sizing: border-box; cursor: pointer; padding: 6px 11px; border-radius: 99px; font-size: 12px; color: var(--mh-ink2); border: 1px solid var(--mh-line2, var(--mh-line)); } .mh-bpk-c button.is-on { background: var(--acc); color: #14111f; border-color: transparent; font-weight: 700; }
+  .mh-bpk-s { font-size: 12px; color: var(--mh-muted); padding: 8px 10px; border-radius: 9px; background: color-mix(in srgb, var(--mh-ink) 5%, transparent); } .mh-bpk-s.is-bad { color: #E4806E; background: color-mix(in srgb, #D9644E 12%, transparent); }
+  .mh-bf-stats { align-self: center !important; }
   .mh-dlock-note { display: flex; align-items: center; gap: 8px; padding: 8px 11px; border-radius: 10px; font-size: 12px; line-height: 1.35; color: var(--mh-ink2); background: color-mix(in srgb, var(--acc) 12%, var(--mh-panel)); border: 1px solid color-mix(in srgb, var(--acc) 40%, var(--mh-line)); flex-shrink: 0; }
   .mh-dlock-note svg { flex-shrink: 0; color: var(--acc); }
   .mh-dslot.is-locked { filter: grayscale(.85) brightness(.9); opacity: .7; }
@@ -12715,8 +12783,8 @@ function Panel({ span, title, titleRight, children, hidden, restrained, vulnerab
       }}
     >
       {!bare && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 14, height: 20 }}>
-          <div className="mh-serif" title={titleRight && typeof title === "string" ? title : undefined} style={{ fontSize: 15, fontWeight: 700, color: "var(--mh-ink)", letterSpacing: 0.2, minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{title}</div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 14, minHeight: 20, height: typeof title === "string" ? 20 : undefined }}>
+          <div className="mh-serif" title={titleRight && typeof title === "string" ? title : undefined} style={{ fontSize: 15, fontWeight: 700, color: "var(--mh-ink)", letterSpacing: 0.2, minWidth: 0, whiteSpace: "nowrap", overflow: typeof title === "string" ? "hidden" : "visible", textOverflow: "ellipsis" }}>{title}</div>
           {titleRight && <div style={{ flexShrink: 0 }}>{titleRight}</div>}
         </div>
       )}
@@ -14621,7 +14689,7 @@ export default function App({ onSignOut }) {
     if (amount < 2) return patch;
     const ch = characters[id];
     if (!ch || !ch.f_beastform) return patch;
-    const form = BEASTFORMS.find((b) => b.key === ch.f_beastform);
+    const form = effBeast(ch);
     const isFragile = form?.features?.some((f) => f.name === "Frágil");
     if (!isFragile) return patch;
     postCampaignEvent(id, `🐾 Sale automáticamente de su Forma de Bestia (${ch.f_beastform}) al recibir daño Mayor o superior (Frágil).`);
@@ -15033,14 +15101,14 @@ export default function App({ onSignOut }) {
     if (!use3d) finishDmg();
   };
 
-  const toggleBeastform = (id, key, isCurrentlySelected) => {
+  const toggleBeastform = (id, key, isCurrentlySelected, pick) => {
     const c = characters[id];
     if (!c) return;
     if (isCurrentlySelected) {
-      updateCharacterFields(id, { f_beastform: "", f_evolution_trait: "" });
+      updateCharacterFields(id, { f_beastform: "", f_evolution_trait: "", f_beast_pick: "" });
       return;
     }
-    markStress(id, 1, { f_beastform: key, f_evolution_trait: "" });
+    markStress(id, 1 + (pick ? BEAST_EVOLVING[key]?.extra || 0 : 0), { f_beastform: key, f_evolution_trait: "", f_beast_pick: pick ? JSON.stringify(pick) : "" });
     postCampaignEvent(id, `🐾 Se transforma en ${key}`);
     setDetailTab("general");
   };
@@ -15343,7 +15411,7 @@ export default function App({ onSignOut }) {
   const foeEvasionOf = (ch) => {
     if (!ch.r_evasion) return 10;
     const eq = getEquipmentMods(PRIMARY_WEAPONS.find((w) => w.key === ch.f_primary_weapon), SECONDARY_WEAPONS.find((w) => w.key === ch.f_secondary_weapon), ARMORS.find((a) => a.key === ch.f_armor));
-    const bf = BEASTFORMS.find((b) => b.key === ch.f_beastform);
+    const bf = effBeast(ch);
     return Number(ch.r_evasion) + (bf?.evasionBonus || 0) + (eq.evasion || 0) + Number(ch.f_natural_evade || 0) + (ch.f_class === "Pícaro" && ch.f_dodge === "1" ? 2 : 0);
   };
   // El golpe ya tirado (con crítico: máximo de los dados + la tirada) llega al jugador, que lo resuelve con su Evasión.
@@ -15429,11 +15497,17 @@ export default function App({ onSignOut }) {
     afterReveal(charId, card.key, () => toggleTransformationForm(charId, "Forma de Lobo", false));
   };
   // Forma de Bestia desde la carta: primero se revela la carta y después te transformas (salir de la forma es inmediato).
-  const morphToBeast = (charId, key, card) => {
+  const [beastPick, setBeastPick] = useState(null); // diálogo para elegir formas (Evolucionada / Híbrida)
+  const startBeast = (id, key, run, free) => {
+    if (!BEAST_EVOLVING[key]) return run(null);
+    setBeastPick({ id, key, base: [], adv: [], feat: [], free: !!free, run });
+  };
+  const morphToBeast = (charId, key, card) => startBeast(charId, key, (pk) => morphToBeastNow(charId, key, card, pk));
+  const morphToBeastNow = (charId, key, card, pk) => {
     const me = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
-    if (!sheetCampaignId || !me || !card) return toggleBeastform(charId, key, false);
+    if (!sheetCampaignId || !me || !card) return toggleBeastform(charId, key, false, pk);
     playCardOnMap(sheetCampaignId, charId, card, { noChat: true, short: true });
-    afterReveal(charId, card.key, () => toggleBeastform(charId, key, false));
+    afterReveal(charId, card.key, () => toggleBeastform(charId, key, false, pk));
   };
   // Encarnación Elemental desde la carta: primero se revela la carta y después se aplica el elemento.
   const embodyElement = (charId, el, card) => {
@@ -15598,6 +15672,7 @@ export default function App({ onSignOut }) {
   const [evoTrait, setEvoTrait] = useState("");
   const [evolutionWarning, setEvolutionWarning] = useState("");
 
+  const evoPickRef = useRef(null);
   const evoCardRef = useRef(null); // carta de Evolución arrastrada al mapa (para revelarla al confirmar)
   const evoCharRef = useRef(null); // personaje que usa Evolución (el de la hoja abierta)
   const openEvolutionModal = (id, card) => {
@@ -15622,10 +15697,17 @@ export default function App({ onSignOut }) {
     const c = characters[charId];
     if (!c) return;
     const form = evoBeastform, trait = evoTrait;
+    if (BEAST_EVOLVING[form] && !evoPickRef.current) {
+      setShowEvolutionModal(false);
+      return startBeast(charId, form, (pk) => { evoPickRef.current = pk; confirmEvolution(); }, true);
+    }
+    const evoPick = evoPickRef.current;
+    evoPickRef.current = null;
     const apply = () => {
       const cur = charsRef.current[charId] || c;
       updateCharacterFields(charId, {
         f_beastform: form,
+        f_beast_pick: evoPick ? JSON.stringify(evoPick) : "",
         f_evolution_trait: trait,
         hope_marked: String(Math.max(0, Number(cur.hope_marked ?? HOPE_DEFAULT) - 3)),
       });
@@ -17634,7 +17716,7 @@ export default function App({ onSignOut }) {
   // Carta de arma arrastrada a un adversario dentro del alcance del arma: se revela la carta y después se hace la tirada de ataque.
   const castWeapon = (charId, target, card) => {
     const c = charsRef.current[charId];
-    const bf = card.beast ? BEASTFORMS.find((x) => x.key === card.key) : null;
+    const bf = card.beast ? (c?.f_beastform === card.key ? effBeast(c) : BEASTFORMS.find((x) => x.key === card.key)) : null;
     const bfp = bf ? bf.attack.split(" · ") : null;
     const w = bf ? { key: bf.key, trait: bfp[1], damage: bfp[2] } : [...PRIMARY_WEAPONS, ...SECONDARY_WEAPONS].find((x) => x.key === card.key);
     const me = (campaignMapRef.current.tokens || []).find((t) => t.kind === "pc" && t.charId === charId);
@@ -17777,8 +17859,8 @@ export default function App({ onSignOut }) {
   const weaponReach = (c, weaponName) => {
     if (weaponName === "Enredo Feroz") return "Lejano";
     if (weaponName === BRAWLER_STRIKE) return "Cuerpo a cuerpo";
-    const bfm = BEASTFORMS.find((x) => x.key === weaponName);
-    if (bfm) return reachFor(c, bfm.attack.split(" · ")[0]);
+    const bfm = c?.f_beastform === weaponName ? effBeast(c) : BEASTFORMS.find((x) => x.key === weaponName);
+    if (bfm) return reachFor(c, String(bfm.attack || "").split(" · ")[0].replace(/^La misma.*/, "Cuerpo a cuerpo"));
     const w = [...PRIMARY_WEAPONS, ...SECONDARY_WEAPONS].find((x) => x.key === weaponName);
     if (!w || !w.range) return null;
     const r = reachFor(c, w.range);
@@ -20696,7 +20778,7 @@ export default function App({ onSignOut }) {
   };
   // Etiquetas de estado de la cabecera (formas activas, posturas, efectos importantes…): las comparten la hoja clásica y la moderna.
   const renderHeaderTags = (c, viewingCharId, opts = {}) => {
-    const beastformInfo = BEASTFORMS.find((b) => b.key === c.f_beastform);
+    const beastformInfo = effBeast(c);
     const headerCampaign = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(viewingCharId));
     const activeTransformForm = c.f_transformation_form_active || "";
     const isExpansionClass = CLASSES.find((cl) => cl.key === c.f_class)?.expansion;
@@ -20883,7 +20965,7 @@ export default function App({ onSignOut }) {
         const c = characters[viewingCharId];
         const isDead = c.f_is_dead === "1";
         const isExpansionClass = CLASSES.find((cl) => cl.key === c.f_class)?.expansion;
-        const beastformInfo = BEASTFORMS.find((b) => b.key === c.f_beastform);
+        const beastformInfo = effBeast(c);
         const themeColor = beastformInfo?.color || classColor(c.f_class);
         const headerCampaign = Object.values(campaigns).find((cp) => (cp.characterIds || []).includes(viewingCharId));
         const activeTransformForm = c.f_transformation_form_active || "";
@@ -21175,7 +21257,7 @@ export default function App({ onSignOut }) {
                   const mcInfo = getMulticlass(c);
                   const classFeatures = [...(CLASS_FEATURES[c.f_class] || []), ...(mcInfo ? (CLASS_FEATURES[mcInfo.cls] || []).map((f) => ({ ...f, _mc: true })) : [])];
                   const subclassEntry = (SUBCLASSES[c.f_class] || []).find((s) => s.key === c.f_subclass);
-                  const activeBeastform = BEASTFORMS.find((b) => b.key === c.f_beastform);
+                  const activeBeastform = effBeast(c);
                   const items = getItems(c);
                   const domainCardKeys = (() => {
                     try {
@@ -22094,7 +22176,7 @@ export default function App({ onSignOut }) {
                                           </div>
                                           <div className="mh-eq-body">
                                             <div className="mh-eq-sub">Ataque · Forma de Bestia</div>
-                                            <div className="mh-eq-title mh-serif" title={activeBeastform.key}>{activeBeastform.key}</div>
+                                            <div className="mh-eq-title mh-serif" title={activeBeastform.label || activeBeastform.key}>{activeBeastform.label || activeBeastform.key}</div>
                                             <div className="mh-eq-row">
                                               <div>
                                                 <div className="mh-eq-lbl">Daño</div>
@@ -22647,7 +22729,15 @@ export default function App({ onSignOut }) {
 
                             <Panel
                               span={5}
-                              title="Cartas de Dominio"
+                              title={c.f_beastform ? (
+                                <>
+                                  Cartas de Dominio
+                                  <span className="mh-infotip" tabIndex={0} aria-label="Forma de Bestia: no puedes lanzar hechizos">
+                                    <Info size={14} />
+                                    <span role="tooltip">En <b>{c.f_beastform}</b> no puedes lanzar hechizos; las habilidades sí se pueden usar.</span>
+                                  </span>
+                                </>
+                              ) : "Cartas de Dominio"}
                               titleRight={
                                 getVault(c).length ? (
                                   <button type="button" className="mh-vault-chip" onClick={() => setVaultDlg(true)} title="Cartas guardadas en tu bóveda">
@@ -22663,14 +22753,6 @@ export default function App({ onSignOut }) {
                             retracted={conditions.includes("Retraído")}
                             >
                               <div style={{ display: "flex", flexDirection: "column", gap: 12, flex: 1 }}>
-                                {c.f_beastform && (
-                                  <div className="mh-dlock-note">
-                                    <PawPrint size={14} />
-                                    <span>
-                                      En <b>{c.f_beastform}</b> no puedes lanzar hechizos; las habilidades sí se pueden usar.
-                                    </span>
-                                  </div>
-                                )}
                                 {Array.from({ length: 5 }, (_, i) => i).map((i) => {
                                   const cardData = domainCardKeys[i] ? findDomainCard(domainCardKeys[i]) : null;
                                   if (cardData) {
@@ -24501,9 +24583,9 @@ export default function App({ onSignOut }) {
                               span={12}
                               title={
                                 isMobile ? "Formas de Bestia" : (
-                                <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap", padding: "8px 0 10px" }}>
                                   <span>Formas de Bestia</span>
-                                  <div style={{ display: "flex", gap: 6 }}>
+                                  <div style={{ display: "flex", gap: 10 }}>
                                     {[1, 2, 3, 4].map((t) => (
                                       <div
                                         key={t}
@@ -24539,7 +24621,7 @@ export default function App({ onSignOut }) {
                                 </div>
                               )}
 
-                              <div className="mh-bf-grid">
+                              <div className="mh-bf-grid" style={{ marginTop: 6 }}>
                                 {BEASTFORMS.filter((b) => b.tier === beastformTierFilter).length === 0 && (
                                   <div style={{ fontSize: 12.5, color: "var(--mh-muted)", fontStyle: "italic", gridColumn: "1 / -1" }}>
                                     Todavía no hay formas de bestia cargadas para el Rango {beastformTierFilter}.
@@ -24585,9 +24667,9 @@ export default function App({ onSignOut }) {
                                         <span className="mh-bf-adv">Ventaja: {b.advantage}</span>
                                       </span>
                                       <span className="mh-bf-stats">
-                                        <span className="mh-bf-st"><small>{String(tn).slice(0, 3).toUpperCase()}</small><b>{tv}</b></span>
-                                        <span className="mh-bf-st"><small>EVA</small><b>{ev}</b></span>
-                                        <span className="mh-bf-st is-dmg" title={atk[0] + " · " + atk[1] + " · " + (atk[2] || "")}><small>DAÑO</small><b>{dmg}</b></span>
+                                        <span className="mh-bf-st"><small>{String(tn).slice(0, 3).toUpperCase() || "RASGO"}</small><b>{tv || "—"}</b></span>
+                                        <span className="mh-bf-st"><small>EVA</small><b>{ev || "—"}</b></span>
+                                        <span className="mh-bf-st is-dmg" title={atk[0] + " · " + atk[1] + " · " + (atk[2] || "")}><small>DAÑO</small><b>{dmg || "—"}</b></span>
                                       </span>
                                       {locked && <Lock className="mh-bf-lock" size={13} />}
                                       {selected && <Check className="mh-bf-lock" size={14} />}
@@ -24595,7 +24677,6 @@ export default function App({ onSignOut }) {
                                   );
                                 })}
                               </div>
-                              <div style={{ fontSize: 10.5, color: "var(--mh-muted3)", marginTop: 8, textAlign: "center", flexShrink: 0 }}>Pulsa una forma para verla ampliada y transformarte</div>
                             </Panel>
                           </div>
                         );
@@ -27234,15 +27315,16 @@ export default function App({ onSignOut }) {
             })()}
 
             {traitRollResult && !diceHold && (
+              <ZoomPortal>
               <div
                 style={{
-                  position: "absolute",
+                  position: "fixed",
                   inset: 0,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   background: "rgba(8,6,12,0.50)",
-                  zIndex: 30,
+                  zIndex: 80,
                   ...(rollDock ? ROLL_DOCK : {}),
                 }}
                 className={"mh-rollov" + (rollDock ? " mh-docked" : "")}
@@ -28067,6 +28149,7 @@ export default function App({ onSignOut }) {
                   )}
                 </div>
               </div>
+              </ZoomPortal>
             )}
 
             {rampageResult && !diceHold && (
@@ -29380,6 +29463,81 @@ export default function App({ onSignOut }) {
               );
             })()}
 
+            {beastPick && (() => {
+              const B = beastPick;
+              const spec = BEAST_EVOLVING[B.key];
+              const ch = characters[B.id];
+              const form = BEASTFORMS.find((x) => x.key === B.key);
+              if (!spec || !ch || !form) return null;
+              const tierN = tierForLevel(ch.f_level || 1);
+              const opts = BEASTFORMS.filter((x) => spec.from.includes(x.tier) && x.tier <= tierN && !BEAST_EVOLVING[x.key]);
+              const bases = B.base.map((k) => BEASTFORMS.find((x) => x.key === k)).filter(Boolean);
+              const advAll = [...new Set(bases.flatMap(beastAdvList))];
+              const featAll = [...new Set(bases.flatMap((x) => x.features.map((f) => f.name)))];
+              const needAdv = spec.kind === "hyb" ? Math.min(spec.adv, advAll.length) : 0;
+              const needFeat = spec.kind === "hyb" ? Math.min(spec.feat, featAll.length) : 0;
+              const cost = B.free ? 0 : 1 + spec.extra;
+              const stressFree = Number(ch.r_stress || 0) - Number(ch.stress_marked || 0);
+              const noStress = cost > stressFree;
+              const baseOk = bases.length === Math.min(spec.n, opts.length);
+              const ready = baseOk && B.adv.length === needAdv && B.feat.length === needFeat && !noStress;
+              const setB = (patch) => setBeastPick((cur) => (cur ? { ...cur, ...patch } : cur));
+              const pickBase = (k) => {
+                let base = B.base.includes(k) ? B.base.filter((x) => x !== k) : spec.n === 1 ? [k] : B.base.length >= spec.n ? B.base : [...B.base, k];
+                const bs = base.map((x) => BEASTFORMS.find((y) => y.key === x)).filter(Boolean);
+                const adv = new Set(bs.flatMap(beastAdvList));
+                const ft = new Set(bs.flatMap((y) => y.features.map((f) => f.name)));
+                setB({ base, adv: B.adv.filter((a) => adv.has(a)), feat: B.feat.filter((f) => ft.has(f)) });
+              };
+              const tog = (field, v, max) => setB({ [field]: B[field].includes(v) ? B[field].filter((x) => x !== v) : B[field].length >= max ? B[field] : [...B[field], v] });
+              const go = () => {
+                const run = B.run;
+                setBeastPick(null);
+                run({ base: B.base, adv: B.adv, feat: B.feat });
+              };
+              const evoO = spec.kind === "evo" ? bases[0] : null;
+              return (
+                <div className="mh-bpk-ov" onClick={() => setBeastPick(null)}>
+                  <div className="mh-card mh-bpk" role="dialog" aria-label={B.key} onClick={(e) => e.stopPropagation()}>
+                    <div className="mh-nat-h"><PawPrint size={18} /><b className="mh-serif">{B.key}</b><em>{spec.kind === "evo" ? "Elige la forma que mejoras" : "Elige " + spec.n + " formas para combinar"}</em></div>
+                    <p className="mh-bpk-d">
+                      {spec.kind === "evo"
+                        ? "Conservas los rasgos y características de la forma elegida y ganas +" + spec.dmg + " al daño, +" + spec.trait + " a su rasgo y +" + spec.eva + " a la Evasión" + (spec.dieUp ? ", y tu dado de daño sube un tamaño." : ".")
+                        : "Combinas " + spec.adv + " ventajas y " + spec.feat + " características de las formas elegidas (Rango " + spec.from.join(" o ") + ")."}
+                    </p>
+                    <div className="mh-bpk-h"><i>1</i> {spec.kind === "evo" ? "Forma" : "Formas"} <small>{bases.length} / {Math.min(spec.n, opts.length)}</small></div>
+                    <div className="mh-bpk-g">
+                      {opts.map((x) => (
+                        <button key={x.key} type="button" className={B.base.includes(x.key) ? "is-on" : ""} style={{ "--bc": x.color }} onClick={() => pickBase(x.key)}>
+                          <b>{x.key}</b><small>Rango {x.tier} · {x.animals}</small>
+                        </button>
+                      ))}
+                    </div>
+                    {spec.kind === "hyb" && bases.length > 0 && (
+                      <>
+                        <div className="mh-bpk-h"><i>2</i> Ventajas <small>{B.adv.length} / {needAdv}</small></div>
+                        <div className="mh-bpk-c">{advAll.map((a) => <button key={a} type="button" className={B.adv.includes(a) ? "is-on" : ""} onClick={() => tog("adv", a, needAdv)}>{a}</button>)}</div>
+                        <div className="mh-bpk-h"><i>3</i> Características <small>{B.feat.length} / {needFeat}</small></div>
+                        <div className="mh-bpk-c">{featAll.map((f) => <button key={f} type="button" className={B.feat.includes(f) ? "is-on" : ""} onClick={() => tog("feat", f, needFeat)}>{f}</button>)}</div>
+                      </>
+                    )}
+                    <div className={"mh-bpk-s" + (noStress ? " is-bad" : "")}>
+                      {noStress
+                        ? "Necesitas " + cost + " Estrés libre" + (cost > 1 ? "s" : "") + " para transformarte."
+                        : B.free
+                        ? "Sin coste de Estrés (Evolución)."
+                        : "Coste: " + cost + " Estrés" + (spec.extra ? " (1 y " + spec.extra + " adicional" + (spec.extra > 1 ? "es" : "") + ")" : "") + "."}
+                      {evoO && " Te conviertes en " + evoO.key + " evolucionada."}
+                    </div>
+                    <div className="mh-nat-a">
+                      <button type="button" className="mh-btn-ghost" onClick={() => setBeastPick(null)}>Cancelar</button>
+                      <button type="button" className="mh-btn" disabled={!ready} onClick={go}>Transformarme</button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             {wardAsk && wardAsk.charId === viewingCharId && (() => {
               const A = wardAsk;
               const ids = (campaigns[sheetCampaignId]?.characterIds || []).filter((id) => characters[id]);
@@ -29771,7 +29929,7 @@ export default function App({ onSignOut }) {
                   // Carta enmarcada: arte en un marco, título centrado y datos al pie.
                   const d = viewingCardDetail;
                   // Sin color propio, la carta no toma el de la clase: ascendencia azul, comunidad bronce y el resto el acento de la página.
-                  const cardColor = d.brawlerStrike ? "#C08B5C" : d.tier ? TIER_COLORS[d.tier].color : d.accent || (/^(Experiencia|Característica de clase)\b/.test(d.kicker || "") && !d.weapon && CLASS_COLORS[c.f_class]) || (/^Ascendencia\b/.test(d.kicker || "") ? "#6FA3C0" : /^Comunidad\b/.test(d.kicker || "") ? "#C08B5C" : "#8FA8FF");
+                  const cardColor = d.beastLocked ? "#8C879B" : d.brawlerStrike ? "#C08B5C" : d.tier ? TIER_COLORS[d.tier].color : d.accent || (/^(Experiencia|Característica de clase)\b/.test(d.kicker || "") && !d.weapon && CLASS_COLORS[c.f_class]) || (/^Ascendencia\b/.test(d.kicker || "") ? "#6FA3C0" : /^Comunidad\b/.test(d.kicker || "") ? "#C08B5C" : "#8FA8FF");
                   const totalChars = (d.text?.length || 0) + (d.characteristic?.length || 0) + (d.features || []).reduce((sum, f) => sum + (f.name?.length || 0) + (f.text?.length || 0), 0);
                   const long = totalChars > 320;
                   const artHeight = d.weapon || d.armor ? 128 : totalChars > 600 ? 84 : long ? 100 : 124;
@@ -31081,7 +31239,7 @@ export default function App({ onSignOut }) {
                       label: on ? "Salir de la forma" : "Transformarse",
                       sub: on ? "" : tierLk ? "Se desbloquea en Rango " + bf.tier : stressFl ? "Sin Estrés disponible" : "1 Estrés",
                       disabled: !on && (tierLk || stressFl),
-                      run: () => { toggleBeastform(viewingCharId, d.beastKey, on); closeCardDetail(); },
+                      run: () => { if (on) toggleBeastform(viewingCharId, d.beastKey, true); else startBeast(viewingCharId, d.beastKey, (pk) => toggleBeastform(viewingCharId, d.beastKey, false, pk)); closeCardDetail(); },
                     });
                   }
                   // Druida en Forma de Bestia: los hechizos no se pueden lanzar.
@@ -31310,7 +31468,7 @@ export default function App({ onSignOut }) {
                   return (
                   <div className="mh-cardc-wrap" onClick={(e) => e.stopPropagation()}>
                   <div
-                    className={"mh-card mh-card-anim mh-tilt mh-cardc" + (newBg ? " is-bg" : "") + (d.weapon || d.armor ? " is-wp" : "") + (d.itemIcon && !isForm ? " is-item" : "")}
+                    className={"mh-card mh-card-anim mh-tilt mh-cardc" + (newBg ? " is-bg" : "") + (d.weapon || d.armor ? " is-wp" : "") + (d.beastLocked ? " is-locked" : "") + (d.itemIcon && !isForm ? " is-item" : "")}
                     style={{
                       "--glow": alpha(cardColor, 33),
                       "--cc": cardColor,
