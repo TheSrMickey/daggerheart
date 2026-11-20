@@ -4,6 +4,16 @@
 // la diapositiva de la última actualización en Inicio y el número de versión de la barra lateral salen solos de la primera entrada.
 export const CHANGELOG = [
   {
+    version: "1.56",
+    date: "2026-11-20",
+    title: "Brumaria cobra vida: Aventura, el mundo compartido",
+    blurb: "La pestaña Aventura ya tiene ciudad completa: ves a los demás viajeros en el mapa, charlas con quien esté en tu mismo distrito, dejas notas en el tablón de la Plaza del Faro, llevas tu diario, tu reputación y tus logros, y cuando el Misterio de la ciudad sube lo bastante se abren las Catacumbas.",
+    items: [
+      { tag: "nuevo", text: "Aventura (fase 6) · progreso: «Mi diario» reúne las entradas de lo que has decidido, tu reputación en cada distrito (Conocido, Apreciado, Aliado) y 8 logros. Cuando el Misterio de Brumaria llega a 60 se abren las Catacumbas del Faro, con tres rincones nuevos y una decisión en el altar." },
+      { tag: "nuevo", text: "Aventura (fase 5) · mundo compartido: lista de viajeros conectados con el distrito donde está cada uno, charla por distrito (140 letras, la ven quienes estén allí), notas del tablón de la Plaza del Faro con respuestas (desaparecen a los 7 días; puedes borrar las tuyas) y la actividad de la ciudad recoge también las llegadas de nuevos viajeros." },
+    ],
+  },
+  {
     version: "1.55",
     date: "2026-11-20",
     title: "Modo party: jugad juntos desde la sala de espera",
