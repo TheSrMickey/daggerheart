@@ -4,6 +4,18 @@
 // la diapositiva de la última actualización en Inicio y el número de versión de la barra lateral salen solos de la primera entrada.
 export const CHANGELOG = [
   {
+    version: "1.57",
+    date: "2026-11-20",
+    title: "Aventura: acciones con tiempo, encargos y dados",
+    blurb: "Brumaria ya se juega: el mapa pasa a ser un escenario a pantalla completa con un menú de zonas y sin scroll, las acciones tardan de verdad (10 a 60 minutos), puedes pedir encargos al azar de entre 24 que usan los seis rasgos y al terminar tiras los Dados de Dualidad con los valores reales de tu personaje.",
+    items: [
+      { tag: "nuevo", text: "Aventura · acciones con tiempo: cada distrito ofrece sus acciones (vigilar el tablón, regatear, descargar un barco, explorar una galería…). Duran de 10 a 45 minutos en tiempo real, solo puedes tener una a la vez y tras reclamarla tiras los Dados de Dualidad con el rasgo que pida: éxito con Esperanza, éxito con Miedo o fallo, con plata, objetos, reputación y cambios en el Pulso (o pérdidas si falla)." },
+      { tag: "nuevo", text: "Aventura · encargos: en la Plaza del Faro y en el Barrio de los Gremios puedes pedir un encargo. Salen tres al azar de entre 24 (cuatro por rasgo: Agilidad, Fuerza, Destreza, Instinto, Presencia y Conocimiento) y eliges uno. Los rasgos se leen de la hoja de tu personaje y se actualizan solos." },
+      { tag: "mejora", text: "Aventura · el mapa se sustituye por un escenario a pantalla completa de la zona y la franja del día (amanecer, tarde y noche) con un menú inferior para moverte, y todo cabe sin deslizar la página. Pulso, charla, diario y viajeros se abren en ventanas. Los rincones y las decisiones de siempre siguen en la pestaña «Rincones»." },
+      { tag: "nuevo", text: "Aventura · imágenes: el botón con el icono de imagen muestra el prompt de cada una de las 21 imágenes de fondo (7 zonas × 3 franjas) con botón de copiar y el nombre de archivo que espera. Hasta que se suban a public/aventura se usa la ilustración de reserva." },
+    ],
+  },
+  {
     version: "1.56",
     date: "2026-11-20",
     title: "Brumaria cobra vida: Aventura, el mundo compartido",

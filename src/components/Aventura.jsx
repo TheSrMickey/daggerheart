@@ -1,9 +1,10 @@
 "use client";
 // Modo aventura · Fase 1: bienvenida a Brumaria y elección o creación del personaje de aventura (ficha ligera, separada de la hoja tradicional).
 import { useEffect, useState } from "react";
-import { ArrowLeft, Backpack, BookOpen, MessageCircle, Send, Reply, Trash2, Trophy, Feather, Flame, HandCoins, Check, Clock, Coins, Eye, Compass, Lock, MapPin, Plus, ScrollText, Sparkles, Sunrise, Users } from "lucide-react";
+import { Dices, Image as ImageIcon, Backpack, BookOpen, MessageCircle, Send, Reply, Trash2, Trophy, Feather, Flame, HandCoins, Check, Clock, Coins, Eye, Compass, Lock, MapPin, Plus, ScrollText, Sparkles, Sunrise, Users } from "lucide-react";
 import { Avatar } from "./Social";
-import { loadTraveller, loadTravellers, enterBrumaria, moveTraveller, markFound, loadCity, decide, loadChat, postChat, loadNotes, postNote, replyNote, deleteNote } from "@/lib/social";
+import { rollDuality, effectOf, drawEncargos, ACTIONS, ENCARGOS, DIFF } from "@/lib/aventuraData";
+import { syncTraveller, startAct, abandonAct, takeOffers, resolveAct, loadTraveller, loadTravellers, enterBrumaria, moveTraveller, markFound, loadCity, decide, loadChat, postChat, loadNotes, postNote, replyNote, deleteNote } from "@/lib/social";
 
 function Skyline() {
   const lights = [[118, 214], [168, 190], [226, 176], [292, 150], [356, 168], [452, 140], [540, 120], [610, 134], [688, 162], [772, 150], [834, 188], [880, 176]];
@@ -48,7 +49,6 @@ const DISTRICTS = [
   { id: "muelles", name: "Muelles de Niebla", x: 160, y: 445, c: "#4FA39A", desc: "Barcos que llegan de ninguna parte y cargas que nadie reclama." },
   { id: "catacumbas", name: "Catacumbas del Faro", x: 720, y: 440, c: "#8E74D8", desc: "Cerradas bajo el faro. Se abrirán cuando la ciudad esté preparada.", locked: true },
 ];
-const ROADS = ["faro:jardines", "faro:mercado", "faro:gremios", "faro:linterna", "linterna:mercado", "mercado:muelles", "linterna:muelles", "gremios:catacumbas", "linterna:catacumbas"];
 const SCENES = {
   faro: "La niebla se retira con el primer sol. En el tablón del faro hay clavados tres avisos nuevos y alguien ha dejado una linterna encendida junto a la fuente.",
   jardines: "El camino sube entre helechos y flores que brillan débilmente. Desde la terraza más alta se oye el mar de niebla respirar bajo vuestros pies.",
@@ -64,101 +64,6 @@ const CAT_AT = 60;
 const syncCat = (city) => { const d = DISTRICTS.find((x) => x.id === "catacumbas"); d.locked = !(city.pulse.Misterio >= CAT_AT); d.desc = d.locked ? "Cerradas bajo el faro. Se abrirán cuando el Misterio de la ciudad llegue a " + CAT_AT + " (ahora " + city.pulse.Misterio + ")." : "La reja del faro se ha abierto. Del otro lado sube un frío que no pertenece a este mundo."; };
 const FRANJAS = [["Amanecer", Sunrise], ["Tarde", Sparkles], ["Noche", Clock]];
 const franjaNow = () => Math.floor(Date.now() / 7200000) % 3;
-function CityMap({ at, sel, onSel, crowd, meId }) {
-  const pos = (id) => DISTRICTS.find((d) => d.id === id) || DISTRICTS[0];
-  return (
-    <svg className="adv-map" viewBox="0 0 900 560" role="group" aria-label="Mapa de Brumaria">
-      <defs>
-        <linearGradient id="mapSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#1a1642" /><stop offset=".6" stopColor="#3b3178" /><stop offset="1" stopColor="#7a68b6" /></linearGradient>
-        <linearGradient id="mapFog" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#d8d2f5" stopOpacity="0" /><stop offset="1" stopColor="#d8d2f5" stopOpacity=".6" /></linearGradient>
-        <filter id="mapGlow"><feGaussianBlur stdDeviation="6" /></filter>
-      </defs>
-      <rect width="900" height="560" fill="url(#mapSky)" />
-      {Array.from({ length: 30 }, (_, i) => <circle key={i} cx={(i * 173) % 900} cy={(i * 47) % 150} r="1.1" fill="#fff" opacity=".5" />)}
-      <path d="M0 210 C120 170 220 220 330 190 C450 150 560 210 680 180 C780 160 850 190 900 170 L900 560 L0 560Z" fill="#2c2560" opacity=".7" />
-      <path d="M0 300 C140 260 260 320 400 285 C540 250 650 320 780 290 L900 280 L900 560 L0 560Z" fill="#241e52" opacity=".85" />
-      <path d="M0 400 C150 370 300 420 450 395 C600 370 750 420 900 390 L900 560 L0 560Z" fill="#1b1642" />
-      {ROADS.map((r) => { const [a, b] = r.split(":").map(pos); const lock = a.locked || b.locked; return <path key={r} d={`M${a.x} ${a.y} Q${(a.x + b.x) / 2 + 20} ${(a.y + b.y) / 2 - 30} ${b.x} ${b.y}`} fill="none" stroke={lock ? "#6b5fa0" : "#c9b98a"} strokeWidth="3" strokeDasharray="2 7" strokeLinecap="round" opacity={lock ? ".45" : ".75"} />; })}
-      {DISTRICTS.map((d) => {
-        const here = (crowd || []).filter((t) => (t.loc || "faro") === d.id && t.uid !== meId).map((t) => t.username);
-        const on = sel === d.id;
-        return (
-          <g key={d.id} className={"adv-dist" + (on ? " is-on" : "") + (d.locked ? " is-lock" : "")} transform={`translate(${d.x} ${d.y})`} onClick={() => onSel(d.id)} role="button" tabIndex={0} aria-label={d.name} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), onSel(d.id))} style={{ "--dc": d.c }}>
-            <circle r="74" fill={d.c} opacity={on ? ".28" : ".1"} filter="url(#mapGlow)" />
-            <circle r="56" fill="none" stroke={d.c} strokeWidth={on ? 3 : 1.5} strokeDasharray={on ? "0" : "3 5"} opacity={on ? 1 : ".6"} />
-            {d.id === "faro" && <><path d="M-10 26 L-6 -22 L6 -22 L10 26Z" fill="#2a2358" stroke={d.c} strokeWidth="1.5" /><rect x="-8" y="-34" width="16" height="12" fill="#ffe9a8" /><path d="M-11 -34 L0 -46 L11 -34Z" fill="#1c1744" stroke={d.c} /></>}
-            {d.id === "jardines" && [[-30, 8], [-8, -6], [16, 6], [34, -4]].map(([x, y], i) => <g key={i}><circle cx={x} cy={y} r="13" fill="#3f8f55" /><circle cx={x - 4} cy={y - 3} r="6" fill="#6FBF73" /></g>)}
-            {d.id === "mercado" && [[-34, 6, "#E0823A"], [-10, -8, "#D9644E"], [14, 4, "#E8C547"], [36, -6, "#A58BE8"]].map(([x, y, col], i) => <g key={i}><path d={`M${x - 12} ${y} L${x} ${y - 14} L${x + 12} ${y}Z`} fill={col} /><rect x={x - 9} y={y} width="18" height="16" fill="#2a2358" stroke={col} /></g>)}
-            {d.id === "gremios" && [[-30, 6], [-4, -10], [22, 4]].map(([x, y], i) => <g key={i}><rect x={x - 11} y={y - 8} width="22" height="30" fill="#2a3a6a" stroke={d.c} /><rect x={x - 5} y={y + 2} width="4" height="6" fill="#ffd36a" /><rect x={x + 2} y={y + 2} width="4" height="6" fill="#ffd36a" /></g>)}
-            {d.id === "linterna" && <><path d="M-26 6 L0 -24 L26 6Z" fill="#8a4a32" stroke={d.c} /><rect x="-22" y="6" width="44" height="26" fill="#3a2430" stroke={d.c} /><circle cx="0" cy="-4" r="6" fill="#ffd36a" /></>}
-            {d.id === "muelles" && <><rect x="-40" y="22" width="80" height="6" fill="#6b4a32" /><path d="M-26 18 L-6 18 L-12 30 L-30 30Z" fill="#2c5a60" stroke={d.c} /><path d="M-18 18 L-18 -8 L2 14Z" fill="#e6e0f2" opacity=".85" /><path d="M14 20 L34 20 L28 30 L10 30Z" fill="#2c5a60" stroke={d.c} /></>}
-            {d.id === "catacumbas" && <><path d="M-24 28 L-24 -4 C-24 -26 24 -26 24 -4 L24 28Z" fill="#14112e" stroke={d.c} strokeWidth="1.5" /><rect x="-8" y="2" width="16" height="26" fill="#05040f" /></>}
-            <g transform="translate(0 62)"><rect x="-66" y="-12" width="132" height="24" rx="12" fill="rgba(10,8,30,.78)" stroke={d.c} strokeOpacity=".7" /><text y="4" textAnchor="middle" fontSize="12" fontWeight="700" fill="#f4f0fa" fontFamily="Inter, system-ui, sans-serif">{d.name.length > 20 ? d.name.slice(0, 19) + "…" : d.name}</text></g>
-            {d.locked && <g transform="translate(0 -8)"><circle r="16" fill="rgba(10,8,30,.85)" stroke={d.c} /><path d="M-6 -2 v-4 a6 6 0 0 1 12 0 v4 M-8 -2 h16 v12 h-16z" fill="none" stroke="#f4f0fa" strokeWidth="2" transform="translate(0 1)" /></g>}
-            {here.length > 0 && <g transform="translate(-4 -52)">{here.slice(0, 3).map((n, i) => <g key={n} transform={`translate(${i * 16} 0)`}><circle r="9" fill="#4FA39A" stroke="#14112e" strokeWidth="2" /><text y="3.5" textAnchor="middle" fontSize="10" fontWeight="800" fill="#fff" fontFamily="Inter, system-ui, sans-serif">{n.charAt(0)}</text></g>)}</g>}
-          </g>
-        );
-      })}
-      <rect y="380" width="900" height="180" fill="url(#mapFog)" pointerEvents="none" />
-      {(() => { const d = pos(at); return (
-        <g className="adv-you" style={{ transform: `translate(${d.x + 34}px, ${d.y - 44}px)` }} pointerEvents="none"><circle r="14" fill="#E3B04B" opacity=".35" className="adv-pulse" /><circle r="10" fill="#E3B04B" stroke="#14112e" strokeWidth="2.5" /><text y="4" textAnchor="middle" fontSize="11" fontWeight="900" fill="#14112e" fontFamily="Inter, system-ui, sans-serif">TÚ</text></g>
-      ); })()}
-    </svg>
-  );
-}
-function CityView({ me, crowd, city, onDecided, onMoved }) {
-  const [sel, setSel] = useState(me.loc || "faro");
-  const [exp, setExp] = useState(null);
-  const [walking, setWalking] = useState(false);
-  const [jr, setJr] = useState(false);
-  const [fr, setFr] = useState(franjaNow());
-  useEffect(() => {
-    const t = setInterval(() => setFr(franjaNow()), 30000);
-    return () => clearInterval(t);
-  }, []);
-  const at = me.loc || "faro";
-  const d = DISTRICTS.find((x) => x.id === sel);
-  const cur = DISTRICTS.find((x) => x.id === at);
-  const here = crowd.filter((t) => (t.loc || "faro") === sel && t.uid !== me.uid);
-  const [FName, FIcon] = FRANJAS[fr];
-  const go = async () => {
-    if (walking || d.locked || sel === at) return;
-    setWalking(true);
-    const t = await moveTraveller(sel).catch(() => null); // el marcador se desliza por el mapa mientras se guarda
-    setTimeout(() => {
-      if (t) onMoved(t);
-      setWalking(false);
-    }, 1100);
-    if (t) onMoved(t, true);
-  };
-  return (
-    <div className="adv-city">
-      <div className="adv-bar">
-        <span><FIcon size={14} /> {FName} en Brumaria</span>
-        <span><MapPin size={14} /> Estás en <b>{cur.name}</b></span>
-        <span className="is-r"><Coins size={14} /> {me.gold} · <Backpack size={14} /> {me.items.length}</span>
-        <button type="button" className="adv-jb" onClick={() => setJr(true)}><BookOpen size={14} /> Mi diario</button>
-      </div>
-      {exp ? <Explore id={exp} fr={fr} me={me} city={city} onBack={() => setExp(null)} onFound={onMoved} onDecided={onDecided} /> : (
-      <div className="adv-cg">
-        <div className="adv-mapw"><CityMap at={at} sel={sel} onSel={setSel} crowd={crowd} meId={me.uid} /></div>
-        <aside className="adv-pl" style={{ "--dc": d.c }}>
-          <span className="adv-pk">{d.locked ? "Bloqueado" : sel === at ? "Tu ubicación" : "Distrito"}</span>
-          <h3 className="mh-serif">{d.name}</h3>
-          <p>{d.desc}</p>
-          <div className="adv-scene"><ScrollText size={14} /><span>{SCENES[sel]}</span></div>
-          <div className="adv-who"><b>Ahora aquí</b>{here.length ? here.map((t) => <span key={t.uid}><Avatar name={t.username} size={22} />{t.username}</span>) : <em>Nadie por ahora</em>}</div>
-          <button type="button" className="adv-go mh-btn" disabled={d.locked || (sel === at && !POIS[sel]) || walking} onClick={sel === at ? () => setExp(sel) : go}>{d.locked ? <><Lock size={14} /> Cerrado por ahora</> : walking ? "Caminando…" : sel === at ? (POIS[sel] ? "Explorar el distrito" : "Ya estás aquí") : "Ir allí"}</button>
-        </aside>
-      </div>)}
-      {!exp && <PulsePanel city={city} />}
-      {!exp && <Travellers crowd={crowd} />}
-      {jr && <Journal me={me} onClose={() => setJr(false)} />}
-      <div className="adv-ds">{DISTRICTS.map((x) => <button key={x.id} type="button" className={sel === x.id ? "is-on" : ""} style={{ "--dc": x.c }} onClick={() => setSel(x.id)}><i />{x.name}<small>{x.locked ? "🔒" : crowd.filter((t) => (t.loc || "faro") === x.id).length || ""}</small></button>)}</div>
-    </div>
-  );
-}
-
 // Fase 3: explorar un distrito
 const POIS = {
   faro: [
@@ -262,36 +167,6 @@ function Scene({ id, fr }) {
     </svg>
   );
 }
-function Explore({ id, fr, me, city, onBack, onFound, onDecided }) {
-  const [dlg, setDlg] = useState(null);
-  const [notes, setNotes] = useState(false);
-  const pois = POIS[id] || [];
-  const [open, setOpen] = useState(null);
-  const d = DISTRICTS.find((x) => x.id === id);
-  const cur = pois.find((x) => x.id === open);
-  const seen = (me.found || []).filter((k) => k.startsWith(id + ":")).map((k) => k.slice(id.length + 1));
-  const pick = (x) => { setOpen(x.id); if (x.open.includes(fr) && !seen.includes(x.id)) markFound(id + ":" + x.id).then((t) => t && onFound(t)).catch(() => {}); };
-  const done = pois.filter((x) => x.open.includes(fr));
-  return (
-    <div className="adv-ex" style={{ "--dc": d.c }}>
-      <div className="adv-exh"><button type="button" className="adv-back" onClick={onBack}><ArrowLeft size={15} /> Volver al mapa</button><div><span className="adv-pk">Explorando</span><h3 className="mh-serif">{d.name}</h3></div><div className="adv-prog"><Eye size={14} /> <b>{seen.length}</b> / {pois.length} rincones vistos</div></div>
-      <div className="adv-sc">
-        <Scene id={id} fr={fr} />
-        {pois.map((x) => { const on = x.open.includes(fr); return (
-          <button key={x.id} type="button" className={"adv-poi" + (open === x.id ? " is-on" : "") + (on ? "" : " is-off") + (seen.includes(x.id) ? " is-seen" : "")} style={{ left: x.x / 9 + "%", top: x.y / 4.6 + "%" }} onClick={() => pick(x)}>
-            <i>{on ? (seen.includes(x.id) ? <Check size={13} /> : <Eye size={13} />) : <Lock size={12} />}</i><span>{x.n}</span>
-          </button>); })}
-      </div>
-      <Chat loc={id} place={d.name} me={me} />
-      {notes && <NotesDlg me={me} onClose={() => setNotes(false)} />}
-      {dlg && <DecisionDlg key={dlg} dk={dlg} me={me} city={city} onClose={() => setDlg(null)} onDone={onDecided} />}
-      <div className="adv-txt">
-        {cur ? (<><b>{cur.n}</b>{!cur.open.includes(fr) && <em><Clock size={12} /> Solo abierto {cur.open.map((k) => FSTATE[k]).join(" y ")}</em>}<p>{cur.text}</p>{id === "faro" && cur.id === "tablon" && <button type="button" className="adv-act is-g" onClick={() => setNotes(true)}><ScrollText size={14} /> Leer y dejar notas</button>}{DECISIONS[id + ":" + cur.id] && cur.open.includes(fr) && <button type="button" className="adv-act" onClick={() => setDlg(id + ":" + cur.id)}><HandCoins size={14} /> {(me.decided || {})[id + ":" + cur.id] ? "Recordar lo que decidiste" : "Decidir qué hacer"}</button>}</>) : <p className="is-hint">Toca un rincón del lugar para mirarlo. Algunos solo se abren a ciertas horas.</p>}
-      </div>
-    </div>
-  );
-}
-
 // Fase 4: decisiones. Cada una se toma una sola vez por viajero y mueve el Pulso de la ciudad.
 const PULSE_COL = { Prosperidad: "#E8C547", Orden: "#5E93C9", Misterio: "#A58BE8" };
 const DECISIONS = {
@@ -486,6 +361,236 @@ function PulsePanel({ city }) {
   );
 }
 
+// ---- Escenario a pantalla completa ----
+const FR_KEY = ["amanecer", "tarde", "noche"];
+const EXTS = ["webp", "jpg", "png"];
+const SPEED = typeof window !== "undefined" && window.location.pathname.startsWith("/dev-preview") && new URLSearchParams(window.location.search).get("fast") ? 120 : 1; // solo en la vista previa de desarrollo
+const imgCache = {};
+const probe = (id, fk) => {
+  const k = id + "-" + fk;
+  if (imgCache[k] !== undefined) return Promise.resolve(imgCache[k]);
+  return new Promise((res) => {
+    let i = 0;
+    const next = () => {
+      if (i >= EXTS.length) { imgCache[k] = null; return res(null); }
+      const src = "/aventura/" + k + "." + EXTS[i++];
+      const im = new Image();
+      im.onload = () => { imgCache[k] = src; res(src); };
+      im.onerror = next;
+      im.src = src;
+    };
+    next();
+  });
+};
+function ZoneBg({ id, fr }) {
+  const k = id + "-" + FR_KEY[fr];
+  const [, tick] = useState(0);
+  useEffect(() => { let a = true; probe(id, FR_KEY[fr]).then(() => a && tick((n) => n + 1)); return () => { a = false; }; }, [id, fr]);
+  const src = imgCache[k];
+  return <div className="fs-bg" key={k}>{src ? <img src={src} alt="" /> : <Scene id={id} fr={fr} />}</div>;
+}
+const mmss = (ms) => { const s = Math.max(0, Math.ceil(ms / 1000)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+const chipsFx = (o) => [o.gold ? [(o.gold > 0 ? "+" : "") + o.gold + " plata", "#E8C547"] : null, o.item ? ["Objeto: " + o.item, "#6FBF73"] : null, o.rep ? ["Reputación " + (o.rep[1] > 0 ? "+" : "") + o.rep[1], "#E0823A"] : null, ...Object.entries(o.pulse || {}).map(([k, n]) => [k + " " + (n > 0 ? "+" : "−") + Math.abs(n), PULSE_COL[k]])].filter(Boolean);
+const dname = (id) => (DISTRICTS.find((x) => x.id === id) || {}).name || id;
+const KIND = { esp: ["Éxito con Esperanza", "#E8C547"], mie: ["Éxito con Miedo", "#A58BE8"], fal: ["Fallo", "#D9644E"] };
+
+// Prompts para generar las 21 imágenes (7 zonas × 3 franjas del día)
+const STYLE = "Digital fantasy matte painting, painterly concept art, soft volumetric fog, dusk-violet and indigo palette with warm amber lantern accents, whimsical yet melancholic, a city built on terraces above a sea of mist, rich atmospheric depth, cinematic wide shot, no characters, no text, no logos, no watermark, 16:9";
+const PBASE = {
+  faro: "A wide cobblestone plaza with a tall white-and-red striped lighthouse rising on the right, its lamp glowing amber; a stone fountain in the centre-left, a wooden notice board crowded with pinned papers in the foreground, a lit lantern beside the fountain, terraced rooftops and a sea of mist beyond the railing",
+  jardines: "Lush hanging gardens on suspended stone terraces above a sea of fog, a Victorian glass greenhouse glowing softly, ferns and bioluminescent flowers, a high wooden lookout balcony, a small pond with fireflies, vines draping over the edges, teal and emerald tones",
+  mercado: "An empty market street, canopies and awnings in a thousand colours (orange, crimson, purple, mustard), hanging lanterns and strings of bunting, stalls with spices, fabrics and curiosities, a fortune teller's velvet tent at the back, cobblestones, barrels and crates in the foreground",
+  gremios: "A narrow district of tall stone-and-timber guildhalls, a blacksmith forge glowing orange at ground level with an anvil and a half-forged armor, a mage guild tower with a purple shadow-lit door, guild banners and hanging signs, a quest board with pinned notices, blue-grey stone",
+  linterna: "Interior of a cosy fantasy tavern, a huge stone fireplace on the right, a long wooden bar with mugs and bottles, a broken glowing lantern hanging from the beams above the bar, a long traveller's table half-empty, a trapdoor behind the bar leading down to a cellar, wooden beams, wine barrels",
+  muelles: "Misty harbour docks, long wooden piers with ropes and barrels, a mysterious unmarked ship with damp pale sails moored at pier three, stacked crates sealed with green wax, a lone lamp post at the end of the pier, dark teal water, ships of unknown origin faintly visible in the haze",
+  catacumbas: "Ancient catacombs beneath a lighthouse, a rusted iron gate standing open at the top of a wet stone staircase descending into darkness, rows of carved arches, neatly stacked skulls in an ossuary niche, a black stone altar with an empty socket and a single glinting coin, drifting mist along the floor, eerie but beautiful",
+};
+const PMOD = {
+  amanecer: "at dawn, first golden-pink sunrays piercing the mist, cool blue shadows, fresh quiet morning",
+  tarde: "at golden afternoon, warm low sun, long soft shadows, amber haze over the mist",
+  noche: "at night, deep indigo darkness lit by warm lanterns and moonlight, stars above the mist",
+};
+const PMODZ = {
+  linterna: { amanecer: "early morning, pale daylight through the windows, the fire reduced to embers, quiet", tarde: "afternoon, warm shafts of sunlight through the windows, dust in the air", noche: "night, crackling fire, candles and lantern glow, lively atmosphere but empty of people" },
+  catacumbas: { amanecer: "a thin pale-pink shaft of dawn light entering from the gate above", tarde: "a faint amber shaft of afternoon light falling down the stairs", noche: "no daylight at all, only a cold violet glow from the depths" },
+};
+const promptOf = (z, fk) => PBASE[z] + ", " + (PMODZ[z] || PMOD)[fk] + ". " + STYLE;
+function PromptsDlg({ onClose }) {
+  const [z, setZ] = useState("faro");
+  const [ok, setOk] = useState({});
+  const [copied, setCopied] = useState("");
+  useEffect(() => {
+    let a = true;
+    DISTRICTS.forEach((d) => FR_KEY.forEach((f) => probe(d.id, f).then((s) => a && setOk((o) => ({ ...o, [d.id + "-" + f]: !!s })))));
+    return () => { a = false; };
+  }, []);
+  const have = Object.values(ok).filter(Boolean).length;
+  const copy = async (k, txt) => { try { await navigator.clipboard.writeText(txt); } catch { const t = document.createElement("textarea"); t.value = txt; document.body.appendChild(t); t.select(); document.execCommand("copy"); t.remove(); } setCopied(k); setTimeout(() => setCopied(""), 1500); };
+  return (
+    <div className="adv-dov" onClick={onClose}>
+      <div className="adv-dlg is-wide" role="dialog" aria-label="Imágenes de Brumaria" onClick={(e) => e.stopPropagation()}>
+        <span className="adv-pk">Imágenes</span><h3 className="mh-serif">Fondos de Brumaria <small className="fs-cnt">{have} de 21 subidas</small></h3>
+        <p className="adv-dt">Genera una imagen por zona y franja (16:9, 2560×1440, el motivo en el tercio central, menos de 600 KB en webp o jpg). Súbela a la carpeta <b>public/aventura</b> del repositorio con el nombre que se indica. Hasta entonces se usa la ilustración de reserva.</p>
+        <div className="adv-tabs">{DISTRICTS.map((d) => <button key={d.id} type="button" className={z === d.id ? "is-on" : ""} onClick={() => setZ(d.id)}>{d.name.split(" ")[0] === "La" ? "Linterna" : d.name.split(" ")[0]}</button>)}</div>
+        {FR_KEY.map((f, i) => { const k = z + "-" + f; const t = promptOf(z, f); return (
+          <div key={f} className="fs-pr">
+            <div className="fs-prh"><b>{FRANJAS[i][0]}</b><code>{k}.webp</code><i className={ok[k] ? "is-ok" : ""}>{ok[k] ? "Subida" : "Falta"}</i><button type="button" className="mh-btn" onClick={() => copy(k, t)}>{copied === k ? "Copiado" : "Copiar prompt"}</button></div>
+            <textarea className="mh-input" readOnly rows={5} value={t} onFocus={(e) => e.target.select()} />
+          </div>); })}
+        <button type="button" className="adv-go mh-btn" onClick={onClose}>Cerrar</button>
+      </div>
+    </div>
+  );
+}
+function ResultDlg({ res, onClose }) {
+  const [roll, setRoll] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setRoll(false), 1100); return () => clearTimeout(t); }, []);
+  const { r, fx, name } = res;
+  const [kn, kc] = KIND[r.kind];
+  return (
+    <div className="adv-dov" onClick={() => !roll && onClose()}>
+      <div className="adv-dlg" role="dialog" aria-label="Resultado" onClick={(e) => e.stopPropagation()}>
+        <span className="adv-pk">Resultado</span><h3 className="mh-serif">{name}</h3>
+        <div className={"fs-dice" + (roll ? " is-roll" : "")}>
+          <div className="fs-die is-h"><small>Esperanza</small><b>{roll ? "?" : r.h}</b></div>
+          <div className="fs-die is-f"><small>Miedo</small><b>{roll ? "?" : r.f}</b></div>
+          <div className="fs-sum">{roll ? "…" : <><span>{r.h} + {r.f} {r.mod >= 0 ? "+" : "−"} {Math.abs(r.mod)} = <b>{r.total}</b></span><small>contra dificultad {r.df}</small></>}</div>
+        </div>
+        {!roll && (<>
+          <div className="adv-ch" style={{ borderColor: kc, color: kc }}><b>{r.crit ? "¡Crítico! " : ""}{kn}</b></div>
+          <p className="adv-dt is-out">{fx.text}</p>
+          <div className="adv-fx">{chipsFx(fx).map(([f, c]) => <i key={f} style={{ "--fc": c }}>{f}</i>)}{!chipsFx(fx).length && <i style={{ "--fc": "#9a93ad" }}>Sin recompensa</i>}</div>
+          <PulseBars pulse={res.city.pulse} />
+          <button type="button" className="adv-go mh-btn" onClick={onClose}>Continuar</button>
+        </>)}
+      </div>
+    </div>
+  );
+}
+function EncDlg({ me, onPick, onClose, onMe }) {
+  const [ids, setIds] = useState(me.offers && Date.now() - me.offers.at < 7200000 ? me.offers.ids : null);
+  useEffect(() => { if (!ids) { const n = drawEncargos(me.done); setIds(n); takeOffers(n).then((t) => t && onMe(t)).catch(() => {}); } }, []); // eslint-disable-line
+  const list = (ids || []).map((i) => ENCARGOS.find((e) => e.id === i)).filter(Boolean);
+  return (
+    <div className="adv-dov" onClick={onClose}>
+      <div className="adv-dlg is-wide" role="dialog" aria-label="Encargos" onClick={(e) => e.stopPropagation()}>
+        <span className="adv-pk">Tablón de encargos</span><h3 className="mh-serif">Elige un encargo</h3>
+        <p className="adv-dt">Tres encargos al azar. Los que no cojas pueden volver más adelante. Solo puedes tener una cosa en curso a la vez; al terminar el tiempo tiras los dados con tu rasgo.</p>
+        <div className="fs-enc">{list.map((e) => { const [dn, dc] = DIFF[e.df]; const mod = (me.tr || {})[e.tr] || 0; return (
+          <button key={e.id} type="button" onClick={() => onPick(e)}><b>{e.t}</b><p>{e.x}</p>
+            <span><i style={{ "--fc": "#E8C547" }}>{e.tr} {mod >= 0 ? "+" : "−"}{Math.abs(mod)}</i><i style={{ "--fc": dc }}>{dn}</i><i style={{ "--fc": "#5E93C9" }}>{e.m} min</i></span>
+            <small>Recompensa: {chipsFx({ gold: e.g, item: e.it, rep: e.rp, pulse: e.pu }).map((c) => c[0]).join(" · ") || "—"}</small><small>{dname(e.z)}</small></button>); })}</div>
+        <button type="button" className="adv-go mh-btn" onClick={onClose}>Ahora no</button>
+      </div>
+    </div>
+  );
+}
+function Brumaria({ me, crowd, city, onDecided, onMe }) {
+  const [fr, setFr] = useState(franjaNow());
+  const [now, setNow] = useState(Date.now());
+  const [tab, setTab] = useState("acc");
+  const [poi, setPoi] = useState(null);
+  const [dlg, setDlg] = useState(null);
+  const [notes, setNotes] = useState(false);
+  const [modal, setModal] = useState(null);
+  const [res, setRes] = useState(null);
+  const [toast, setToast] = useState("");
+  const [walking, setWalking] = useState(false);
+  useEffect(() => { const t = setInterval(() => { setFr(franjaNow()); setNow(Date.now()); }, 1000); return () => clearInterval(t); }, []);
+  const at = me.loc || "faro";
+  const d = DISTRICTS.find((x) => x.id === at);
+  const pois = POIS[at] || [];
+  const acts = ACTIONS.filter((a) => a.z === at);
+  const [FName, FIcon] = FRANJAS[fr];
+  const act = me.act;
+  const note = (t) => { setToast(t); setTimeout(() => setToast(""), 3200); };
+  const go = async (id) => {
+    if (walking || id === at) return;
+    const dd = DISTRICTS.find((x) => x.id === id);
+    if (dd.locked) return note("Las Catacumbas se abren cuando el Misterio de la ciudad llegue a " + CAT_AT + " (ahora " + city.pulse.Misterio + ").");
+    setWalking(true);
+    const t = await moveTraveller(id).catch(() => null);
+    if (t) onMe(t);
+    setWalking(false); setPoi(null); setTab("acc");
+  };
+  const begin = async (def, kind) => {
+    const t0 = Date.now();
+    const t = await startAct({ id: def.id, kind, name: def.n || def.t, tr: def.tr, df: def.df, start: t0, end: t0 + (def.m * 60000) / SPEED }).catch(() => null);
+    if (t) onMe(t);
+    setModal(null);
+  };
+  const claim = async () => {
+    const a = me.act;
+    if (!a) return;
+    const def = a.kind === "enc" ? ENCARGOS.find((e) => e.id === a.id) : ACTIONS.find((x) => x.id === a.id);
+    const r = rollDuality((me.tr || {})[a.tr] || 0, a.df);
+    const fx = effectOf(def, r.kind);
+    const out = await resolveAct({ gold: fx.gold, item: fx.item, rep: fx.rep, pulse: fx.pulse, log: fx.log, diary: fx.diary, actId: a.id, enc: a.kind === "enc" }).catch(() => null);
+    if (out) { onDecided(out.t, out.city); setRes({ r, fx, name: a.name, city: out.city }); }
+  };
+  const pickPoi = (x) => { setPoi(x.id); if (x.open.includes(fr) && !(me.found || []).includes(at + ":" + x.id)) markFound(at + ":" + x.id).then((t) => t && onMe(t)).catch(() => {}); };
+  const cur = pois.find((x) => x.id === poi);
+  const left = act ? act.end - now : 0;
+  const pct = act ? Math.min(100, Math.max(0, ((now - act.start) / (act.end - act.start)) * 100)) : 0;
+  const mod = (t) => (me.tr || {})[t] || 0;
+  const sgn = (n) => (n >= 0 ? "+" : "−") + Math.abs(n);
+  return (
+    <div className="fs" style={{ "--dc": d.c }}>
+      <ZoneBg id={at} fr={fr} /><div className="fs-sh" />
+      <div className="fs-top">
+        <span className="fs-g"><FIcon size={14} /> {FName}</span>
+        <span className="fs-g"><MapPin size={14} /> <b>{d.name}</b></span>
+        <button type="button" className="fs-g fs-b is-m" onClick={() => setModal("city")} aria-label="Pulso de la ciudad"><Flame size={14} /> {Object.keys(PULSE_COL).map((k) => <i key={k} style={{ "--pc": PULSE_COL[k] }}>{city.pulse[k]}</i>)}</button>
+        <span className="fs-g is-r"><Coins size={14} /> {me.gold} · <Backpack size={14} /> {me.items.length}</span>
+        <button type="button" className="fs-g fs-b" onClick={() => setModal("jr")}><BookOpen size={14} /> Diario</button>
+        <button type="button" className="fs-g fs-b" onClick={() => setModal("chat")}><MessageCircle size={14} /> Charla</button>
+        <button type="button" className="fs-g fs-b" onClick={() => setModal("city")}><Users size={14} /> {crowd.length}</button>
+        <button type="button" className="fs-g fs-b" onClick={() => setModal("imgs")} aria-label="Imágenes y prompts"><ImageIcon size={14} /></button>
+      </div>
+      <aside className="fs-pn">
+        <h3 className="mh-serif">{d.name}</h3>
+        {act && (
+          <div className="fs-run">
+            <div><b>{act.name}</b><small>{act.tr} {sgn(mod(act.tr))} · {left > 0 ? "termina en " + mmss(left) : "¡terminado!"}</small></div>
+            <div className="fs-bar"><em style={{ width: pct + "%" }} /></div>
+            {left <= 0 ? <button type="button" className="fs-claim" onClick={claim}><Dices size={14} /> Reclamar y tirar los dados</button> : <button type="button" className="fs-link" onClick={() => abandonAct().then((t) => t && onMe(t))}>Cancelar</button>}
+          </div>
+        )}
+        <div className="adv-tabs"><button type="button" className={tab === "acc" ? "is-on" : ""} onClick={() => setTab("acc")}>Acciones</button><button type="button" className={tab === "rin" ? "is-on" : ""} onClick={() => setTab("rin")}>Rincones</button></div>
+        <div className="fs-pb">
+          {tab === "acc" && (<>
+            {(at === "faro" || at === "gremios") && <button type="button" className="fs-enc-b" disabled={!!act} onClick={() => setModal("enc")}><b><ScrollText size={14} /> Pedir encargo</b><small>{act ? "Ya tienes algo en curso" : "3 al azar para elegir"}</small></button>}
+            {acts.map((a) => {
+              const cdLeft = ((me.cd || {})[a.id] || 0) + 7200000 / SPEED - now;
+              const closed = !a.open.includes(fr);
+              const why = act ? "Ya tienes algo en curso" : closed ? "Solo " + a.open.map((k) => FSTATE[k]).join(" y ") : cdLeft > 0 ? "Disponible en " + mmss(cdLeft) : "";
+              const [dn] = DIFF[a.df];
+              return <button key={a.id} type="button" className="fs-act" disabled={!!why} onClick={() => begin(a, "acc")}><b>{a.n}</b><small>{why || a.m + " min · " + a.tr + " " + sgn(mod(a.tr)) + " · " + dn}</small></button>;
+            })}
+            {!acts.length && <p className="adv-dt">Aquí no hay acciones por ahora.</p>}
+          </>)}
+          {tab === "rin" && (<>
+            <div className="fs-poi">{pois.map((x) => { const on = x.open.includes(fr); const seen = (me.found || []).includes(at + ":" + x.id); return <button key={x.id} type="button" className={(poi === x.id ? "is-on " : "") + (on ? "" : "is-off")} onClick={() => pickPoi(x)}>{on ? (seen ? <Check size={12} /> : <Eye size={12} />) : <Lock size={12} />}{x.n}</button>; })}{!pois.length && <p className="adv-dt">Sin rincones que mirar.</p>}</div>
+            {cur && <div className="fs-pt"><b>{cur.n}</b>{!cur.open.includes(fr) && <em><Clock size={12} /> Solo abierto {cur.open.map((k) => FSTATE[k]).join(" y ")}</em>}<p>{cur.text}</p>
+              {at === "faro" && cur.id === "tablon" && <button type="button" className="adv-act is-g" onClick={() => setNotes(true)}><ScrollText size={14} /> Leer y dejar notas</button>}
+              {DECISIONS[at + ":" + cur.id] && cur.open.includes(fr) && <button type="button" className="adv-act" onClick={() => setDlg(at + ":" + cur.id)}><HandCoins size={14} /> {(me.decided || {})[at + ":" + cur.id] ? "Recordar lo que decidiste" : "Decidir qué hacer"}</button>}</div>}
+          </>)}
+        </div>
+      </aside>
+      <nav className="fs-menu" aria-label="Zonas">{DISTRICTS.map((x) => <button key={x.id} type="button" className={(at === x.id ? "is-on " : "") + (x.locked ? "is-lock" : "")} style={{ "--dc": x.c }} onClick={() => go(x.id)} disabled={walking}><i>{x.locked ? <Lock size={14} /> : <span>{x.name.charAt(0)}</span>}</i><b>{x.name}</b><small>{x.locked ? "Misterio " + CAT_AT : crowd.filter((t) => (t.loc || "faro") === x.id).length + " aquí"}</small></button>)}</nav>
+      {toast && <div className="fs-toast">{toast}</div>}
+      {modal === "enc" && <EncDlg me={me} onPick={(e) => begin(e, "enc")} onClose={() => setModal(null)} onMe={onMe} />}
+      {modal === "jr" && <Journal me={me} onClose={() => setModal(null)} />}
+      {modal === "imgs" && <PromptsDlg onClose={() => setModal(null)} />}
+      {modal === "chat" && <div className="adv-dov" onClick={() => setModal(null)}><div className="adv-dlg" role="dialog" aria-label="Charla" onClick={(e) => e.stopPropagation()}><Chat loc={at} place={d.name} me={me} /><button type="button" className="adv-go mh-btn" onClick={() => setModal(null)}>Cerrar</button></div></div>}
+      {modal === "city" && <div className="adv-dov" onClick={() => setModal(null)}><div className="adv-dlg is-wide" role="dialog" aria-label="La ciudad" onClick={(e) => e.stopPropagation()}><PulsePanel city={city} /><Travellers crowd={crowd} /><button type="button" className="adv-go mh-btn" onClick={() => setModal(null)}>Cerrar</button></div></div>}
+      {notes && <NotesDlg me={me} onClose={() => setNotes(false)} />}
+      {dlg && <DecisionDlg key={dlg} dk={dlg} me={me} city={city} onClose={() => setDlg(null)} onDone={onDecided} />}
+      {res && <ResultDlg res={res} onClose={() => setRes(null)} />}
+    </div>
+  );
+}
+
 export function AventuraPage({ chars, classColor, onCreate }) {
   const [sel, setSel] = useState(null);
   const [me, setMe] = useState(undefined); // undefined: cargando · null: aún sin viajero
@@ -509,10 +614,16 @@ export function AventuraPage({ chars, classColor, onCreate }) {
   syncCat(city);
   const picked = chars.find((x) => x.id === sel) || null;
   const c = me || picked;
+  // Los rasgos y el nivel del viajero se leen de su hoja (el personaje con el mismo nombre).
+  useEffect(() => {
+    if (!me) return;
+    const c = chars.find((x) => x.name === me.name);
+    if (c && c.tr && (JSON.stringify(c.tr) !== JSON.stringify(me.tr || {}) || c.lvl !== me.lvl)) syncTraveller(c.tr, c.lvl).then((t) => t && setMe(t)).catch(() => {});
+  }, [me && me.name, chars.map((x) => x.name + x.lvl + JSON.stringify(x.tr)).join("|")]); // eslint-disable-line
   const enter = async () => {
     if (!picked || busy) return;
     setBusy(true);
-    const t = await enterBrumaria({ name: picked.name, cls: picked.cls, anc: picked.anc, lvl: picked.lvl }).catch(() => null);
+    const t = await enterBrumaria({ name: picked.name, cls: picked.cls, anc: picked.anc, lvl: picked.lvl, tr: picked.tr }).catch(() => null);
     setBusy(false);
     if (t) {
       setMe(t);
@@ -523,7 +634,7 @@ export function AventuraPage({ chars, classColor, onCreate }) {
   return (
     <div className="adv">
       <style>{CSS}</style>
-      <section className={"adv-hero" + (me ? " is-slim" : "")}>
+      {!me && <section className="adv-hero">
         <Skyline />
         <div className="adv-fog is-a" />
         <div className="adv-fog is-b" />
@@ -536,9 +647,9 @@ export function AventuraPage({ chars, classColor, onCreate }) {
             {crowd.length > 0 ? <><b>{crowd.length}</b> {crowd.length === 1 ? "viajero ha llegado hoy" : "viajeros han llegado hoy"}</> : "Aún no ha llegado nadie hoy: puedes ser el primero"}
           </div>
         </div>
-      </section>
+      </section>}
 
-      {me && <CityView me={me} crowd={crowd} city={city} onDecided={(t, c) => { setMe(t); setCity(c); }} onMoved={(t) => { setMe(t); setCrowd((l) => l.map((x) => (x.uid === t.uid ? t : x))); }} />}
+      {me && <div className="adv-fsw"><Brumaria me={me} crowd={crowd} city={city} onDecided={(t, c) => { setMe(t); setCity(c); }} onMe={(t) => { setMe(t); setCrowd((l) => l.map((x) => (x.uid === t.uid ? t : x))); }} /></div>}
       <div className={"adv-g" + (me ? " is-in" : "")} style={me ? { display: "none" } : undefined}>
         {!me && (
           <section className="adv-p">
@@ -677,6 +788,28 @@ const CSS = `
 .adv-tabs { display: flex; gap: 6px; margin: 10px 0 14px; } .adv-tabs button { appearance: none; padding: 6px 14px; border-radius: 99px; border: 1px solid var(--mh-line); background: none; color: var(--mh-ink2); font: 600 12.5px var(--font-body), 'Inter', system-ui, sans-serif; cursor: pointer; } .adv-tabs button.is-on { background: #E3B04B; color: #1a1408; border-color: transparent; }
 .adv-jl { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; } .adv-jl > div { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 12px; background: var(--mh-panel2); border: 1px solid var(--mh-line); font-size: 13.5px; } .adv-jl > div span { flex: 1; } .adv-jl em { font-style: normal; font-size: 11.5px; color: var(--mh-muted); font-weight: 700; } .adv-jl small { color: var(--mh-muted); }
 .adv-ach { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; margin-bottom: 14px; } .adv-ach > div { display: flex; flex-direction: column; gap: 2px; padding: 12px; border-radius: 14px; border: 1px dashed var(--mh-line); opacity: .55; } .adv-ach > div.is-ok { opacity: 1; border-style: solid; background: color-mix(in srgb, #E8C547 12%, transparent); } .adv-ach svg { color: #E8C547; } .adv-ach small { color: var(--mh-muted); font-size: 12px; }
+.adv { height: 100%; min-height: 0; padding-bottom: 0; gap: 14px; } .adv-fsw { flex: 1; min-height: 0; }
+.adv-hero:not(.is-slim) { min-height: clamp(150px, 26vh, 250px); } .adv-hero:not(.is-slim) .adv-hi { padding: 16px 28px; } .adv-hero:not(.is-slim) .adv-hi h1 { font-size: clamp(34px, 5vw, 52px); } @media (max-height: 820px) { .adv-hero:not(.is-slim) .adv-hi p { display: none; } }
+.adv-g { flex: 1; min-height: 0; align-items: stretch; } .adv-g > .adv-p { min-height: 0; overflow-y: auto; } .adv-sheet { position: static; }
+.adv-dlg.is-wide { width: min(900px, 100%); }
+.fs { position: relative; height: 100%; min-height: 0; border-radius: 22px; overflow: hidden; border: 1px solid var(--mh-line); background: #0b0b24; }
+.fs-bg, .fs-bg svg, .fs-bg img { position: absolute; inset: 0; width: 100%; height: 100%; } .fs-bg img { object-fit: cover; } .fs-bg { animation: advFade .6s ease; } @keyframes advFade { from { opacity: 0; } to { opacity: 1; } }
+.fs-sh { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8,6,24,.55), transparent 22%, transparent 55%, rgba(8,6,24,.8)); }
+.fs-top { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; gap: 8px; align-items: center; overflow-x: auto; scrollbar-width: none; } .fs-g { flex: none; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 99px; background: rgba(14,12,36,.62); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,.14); color: #f1edf8; font: 600 12.5px var(--font-body), 'Inter', system-ui, sans-serif; } .fs-g.is-r { margin-left: auto; } .fs-g.is-m i { font-style: normal; font-weight: 800; padding: 1px 7px; border-radius: 99px; background: color-mix(in srgb, var(--pc) 30%, transparent); color: var(--pc); } .fs-b { cursor: pointer; }
+.fs-pn { position: absolute; left: 14px; top: 62px; bottom: 96px; width: clamp(280px, 34%, 360px); display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border-radius: 18px; background: rgba(14,12,36,.72); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,.14); color: #f1edf8; } .fs-pn h3 { margin: 0; font-size: 21px; } .fs-pn .adv-tabs { margin: 0; } .fs-pn .adv-tabs button { color: #e6e0f2; border-color: rgba(255,255,255,.18); }
+.fs-pb { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; scrollbar-width: thin; }
+.fs-run { padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--dc) 22%, transparent); border: 1px solid color-mix(in srgb, var(--dc) 55%, transparent); display: flex; flex-direction: column; gap: 7px; } .fs-run b { display: block; font-size: 13.5px; } .fs-run small { color: rgba(241,237,248,.78); font-size: 12px; } .fs-bar { height: 6px; border-radius: 99px; background: rgba(255,255,255,.15); overflow: hidden; } .fs-bar em { display: block; height: 100%; background: var(--dc); transition: width 1s linear; }
+.fs-claim { appearance: none; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 8px; border-radius: 10px; border: 0; background: #E3B04B; color: #1a1408; font: 800 13px var(--font-body), 'Inter', system-ui, sans-serif; cursor: pointer; } .fs-link { appearance: none; align-self: flex-start; background: none; border: 0; color: rgba(241,237,248,.65); font-size: 11.5px; text-decoration: underline; cursor: pointer; padding: 0; }
+.fs-act, .fs-enc-b { appearance: none; text-align: left; padding: 9px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.07); color: #f1edf8; font-family: inherit; cursor: pointer; } .fs-act:disabled, .fs-enc-b:disabled { opacity: .55; cursor: default; } .fs-act b, .fs-enc-b b { display: flex; align-items: center; gap: 6px; font-size: 13.5px; } .fs-act small, .fs-enc-b small { display: block; color: rgba(241,237,248,.7); font-size: 11.5px; margin-top: 2px; } .fs-enc-b { background: #E3B04B; color: #1a1408; border: 0; } .fs-enc-b small { color: #4a3a12; }
+.fs-poi { display: flex; flex-wrap: wrap; gap: 6px; } .fs-poi button { appearance: none; display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 99px; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.07); color: #f1edf8; font: 600 12px var(--font-body), 'Inter', system-ui, sans-serif; cursor: pointer; } .fs-poi button.is-on { background: var(--dc); color: #1a1408; border-color: transparent; } .fs-poi button.is-off { opacity: .6; }
+.fs-pt { padding: 10px 12px; border-radius: 12px; background: rgba(255,255,255,.07); } .fs-pt em { display: flex; align-items: center; gap: 5px; font-style: normal; font-size: 11.5px; color: #E3B04B; margin-top: 3px; } .fs-pt p { margin: 6px 0 0; font-size: 13px; line-height: 1.5; color: #e6e0f2; }
+.fs-menu { position: absolute; left: 12px; right: 12px; bottom: 12px; display: flex; gap: 8px; overflow-x: auto; padding: 8px; border-radius: 20px; background: rgba(14,12,36,.74); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,.14); scrollbar-width: none; } .fs-menu button { appearance: none; flex: 1 0 118px; display: grid; grid-template-columns: 34px 1fr; column-gap: 9px; align-items: center; text-align: left; padding: 8px 10px; border-radius: 14px; border: 1px solid transparent; background: rgba(255,255,255,.05); color: #f1edf8; cursor: pointer; font-family: inherit; } .fs-menu button.is-on { border-color: var(--dc); background: color-mix(in srgb, var(--dc) 24%, transparent); } .fs-menu button.is-lock { opacity: .65; } .fs-menu i { grid-row: 1 / 3; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: linear-gradient(135deg, var(--dc), #1a1642); font-style: normal; font-weight: 800; } .fs-menu b { font-size: 12.5px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .fs-menu small { font-size: 11px; color: rgba(241,237,248,.65); }
+.fs-toast { position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%); max-width: min(520px, 90%); padding: 10px 16px; border-radius: 14px; background: rgba(14,12,36,.92); border: 1px solid rgba(255,255,255,.2); color: #f1edf8; font-size: 13px; text-align: center; }
+.fs-enc { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 12px 0; } .fs-enc button { appearance: none; text-align: left; display: flex; flex-direction: column; gap: 8px; padding: 14px; border-radius: 16px; border: 1px solid var(--mh-line); background: var(--mh-panel2); color: var(--mh-ink); font-family: inherit; cursor: pointer; } .fs-enc button:hover { border-color: #E3B04B; } .fs-enc p { margin: 0; font-size: 13px; color: var(--mh-ink2); line-height: 1.45; flex: 1; } .fs-enc span { display: flex; flex-wrap: wrap; gap: 5px; } .fs-enc i { font-style: normal; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 99px; background: color-mix(in srgb, var(--fc) 20%, transparent); color: var(--fc); } .fs-enc small { color: var(--mh-muted); font-size: 12px; }
+.fs-dice { display: flex; align-items: center; gap: 12px; margin: 14px 0; flex-wrap: wrap; } .fs-die { width: 84px; padding: 10px 0; border-radius: 16px; text-align: center; border: 2px solid; } .fs-die small { display: block; font-size: 11px; font-weight: 700; } .fs-die b { font-size: 36px; } .fs-die.is-h { color: #E8C547; border-color: #E8C547; background: color-mix(in srgb, #E8C547 14%, transparent); } .fs-die.is-f { color: #A58BE8; border-color: #A58BE8; background: color-mix(in srgb, #A58BE8 14%, transparent); } .fs-dice.is-roll .fs-die { animation: advShake .25s infinite; } @keyframes advShake { 0% { transform: rotate(-6deg) translateY(0); } 50% { transform: rotate(6deg) translateY(-6px); } 100% { transform: rotate(-6deg) translateY(0); } } .fs-sum { display: flex; flex-direction: column; font-size: 15px; } .fs-sum small { color: var(--mh-muted); }
+.fs-pr { margin-bottom: 12px; } .fs-prh { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; } .fs-prh code { font-size: 12px; color: var(--mh-muted); } .fs-prh i { font-style: normal; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 99px; background: color-mix(in srgb, #D9644E 22%, transparent); color: #D9644E; } .fs-prh i.is-ok { background: color-mix(in srgb, #6FBF73 22%, transparent); color: #6FBF73; } .fs-prh .mh-btn { margin-left: auto; } .fs-pr textarea { width: 100%; font-size: 12px; resize: none; } .fs-cnt { font-size: 13px; color: var(--mh-muted); font-family: var(--font-body), 'Inter', system-ui, sans-serif; margin-left: 8px; }
+@media (max-width: 900px) { .adv-g { overflow-y: auto; } }
+@media (max-width: 720px) { .fs-pn { width: auto; right: 14px; top: auto; height: 46%; bottom: 92px; } .fs-enc { grid-template-columns: 1fr; } }
 @media (max-width: 900px) { .adv-g { grid-template-columns: 1fr; } .adv-sheet { position: static; } .adv-hi { padding: 22px 20px; } .adv-hero { min-height: 300px; } }
 @media (prefers-reduced-motion: reduce) { .adv * { animation: none !important; } }
 `;
