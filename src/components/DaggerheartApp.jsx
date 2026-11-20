@@ -31294,7 +31294,7 @@ export default function App({ onSignOut }) {
                           <CfIcon size={210} strokeWidth={1} />
                         </div>
                       ) : (
-                        <div className="mh-cardc-noart" style={d.domain ? { color: cardColor } : undefined}>
+                        <div className="mh-cardc-noart" style={{ color: cardColor }}>
                           {d.domain && DOMAIN_ICON_FILE[d.domain.name || d.domain.domain] ? (
                             <span className="mh-cardc-dlogo" style={{ "--m": "url(/dominios/" + DOMAIN_ICON_FILE[d.domain.name || d.domain.domain] + ".svg)", background: cardColor, filter: "drop-shadow(0 0 18px " + cardColor + ")" }} aria-hidden="true" />
                           ) : (
