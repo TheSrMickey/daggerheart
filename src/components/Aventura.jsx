@@ -538,6 +538,7 @@ function Brumaria({ me, crowd, city, onDecided, onMe }) {
   const note = (t) => { setToast(t); setTimeout(() => setToast(""), 3200); };
   const go = async (id) => {
     if (walking || id === at) return;
+    if (act && act.end - Date.now() > 0) return note("Estás en mitad de «" + act.name + "». Espera a que termine o cancélalo para cambiar de zona.");
     const dd = DISTRICTS.find((x) => x.id === id);
     if (dd.locked) return note("Las Catacumbas se abren cuando el Misterio de la ciudad llegue a " + CAT_AT + " (ahora " + city.pulse.Misterio + ").");
     setWalking(true);
@@ -609,7 +610,7 @@ function Brumaria({ me, crowd, city, onDecided, onMe }) {
           </>)}
         </div>
       </aside>
-      <nav className="fs-menu" aria-label="Zonas">{DISTRICTS.map((x) => <button key={x.id} type="button" className={(at === x.id ? "is-on " : "") + (x.locked ? "is-lock" : "")} style={{ "--dc": x.c }} onClick={() => go(x.id)} disabled={walking}><i>{x.locked ? <Lock size={14} /> : <span>{x.name.charAt(0)}</span>}</i><b>{x.name}</b><small>{x.locked ? "Misterio " + CAT_AT : crowd.filter((t) => (t.loc || "faro") === x.id).length + " aquí"}</small></button>)}</nav>
+      <nav className="fs-menu" aria-label="Zonas">{DISTRICTS.map((x) => <button key={x.id} type="button" className={(at === x.id ? "is-on " : "") + (x.locked || (act && left > 0 && at !== x.id) ? "is-lock" : "")} style={{ "--dc": x.c }} onClick={() => go(x.id)} disabled={walking}><i>{x.locked ? <Lock size={14} /> : <span>{x.name.charAt(0)}</span>}</i><b>{x.name}</b><small>{x.locked ? "Misterio " + CAT_AT : crowd.filter((t) => (t.loc || "faro") === x.id).length + " aquí"}</small></button>)}</nav>
       {toast && <div className="fs-toast">{toast}</div>}
       {modal === "enc" && <EncDlg me={me} onPick={(e) => begin(e, "enc")} onClose={() => setModal(null)} onMe={onMe} />}
       {modal === "jr" && <Journal me={me} onClose={() => setModal(null)} />}
