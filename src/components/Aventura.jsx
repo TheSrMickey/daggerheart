@@ -1,9 +1,9 @@
 "use client";
 // Modo aventura · Fase 1: bienvenida a Brumaria y elección o creación del personaje de aventura (ficha ligera, separada de la hoja tradicional).
 import { useEffect, useState } from "react";
-import { Backpack, Check, Clock, Coins, Compass, Lock, MapPin, Plus, ScrollText, Sparkles, Sunrise, Users } from "lucide-react";
+import { ArrowLeft, Backpack, Check, Clock, Coins, Eye, Compass, Lock, MapPin, Plus, ScrollText, Sparkles, Sunrise, Users } from "lucide-react";
 import { Avatar } from "./Social";
-import { loadTraveller, loadTravellers, enterBrumaria, moveTraveller } from "@/lib/social";
+import { loadTraveller, loadTravellers, enterBrumaria, moveTraveller, markFound } from "@/lib/social";
 
 function Skyline() {
   const lights = [[118, 214], [168, 190], [226, 176], [292, 150], [356, 168], [452, 140], [540, 120], [610, 134], [688, 162], [772, 150], [834, 188], [880, 176]];
@@ -105,6 +105,7 @@ function CityMap({ at, sel, onSel, crowd, meId }) {
 }
 function CityView({ me, crowd, onMoved }) {
   const [sel, setSel] = useState(me.loc || "faro");
+  const [exp, setExp] = useState(null);
   const [walking, setWalking] = useState(false);
   const [fr, setFr] = useState(franjaNow());
   useEffect(() => {
@@ -133,6 +134,7 @@ function CityView({ me, crowd, onMoved }) {
         <span><MapPin size={14} /> Estás en <b>{cur.name}</b></span>
         <span className="is-r"><Coins size={14} /> {me.gold} · <Backpack size={14} /> {me.items.length}</span>
       </div>
+      {exp ? <Explore id={exp} fr={fr} me={me} onBack={() => setExp(null)} onFound={onMoved} /> : (
       <div className="adv-cg">
         <div className="adv-mapw"><CityMap at={at} sel={sel} onSel={setSel} crowd={crowd} meId={me.uid} /></div>
         <aside className="adv-pl" style={{ "--dc": d.c }}>
@@ -141,10 +143,127 @@ function CityView({ me, crowd, onMoved }) {
           <p>{d.desc}</p>
           <div className="adv-scene"><ScrollText size={14} /><span>{SCENES[sel]}</span></div>
           <div className="adv-who"><b>Ahora aquí</b>{here.length ? here.map((t) => <span key={t.uid}><Avatar name={t.username} size={22} />{t.username}</span>) : <em>Nadie por ahora</em>}</div>
-          <button type="button" className="adv-go mh-btn" disabled={d.locked || sel === at || walking} onClick={go}>{d.locked ? <><Lock size={14} /> Cerrado por ahora</> : walking ? "Caminando…" : sel === at ? "Ya estás aquí" : "Ir allí"}</button>
+          <button type="button" className="adv-go mh-btn" disabled={d.locked || (sel === at && !POIS[sel]) || walking} onClick={sel === at ? () => setExp(sel) : go}>{d.locked ? <><Lock size={14} /> Cerrado por ahora</> : walking ? "Caminando…" : sel === at ? (POIS[sel] ? "Explorar el distrito" : "Ya estás aquí") : "Ir allí"}</button>
         </aside>
-      </div>
+      </div>)}
       <div className="adv-ds">{DISTRICTS.map((x) => <button key={x.id} type="button" className={sel === x.id ? "is-on" : ""} style={{ "--dc": x.c }} onClick={() => setSel(x.id)}><i />{x.name}<small>{x.locked ? "🔒" : crowd.filter((t) => (t.loc || "faro") === x.id).length || ""}</small></button>)}</div>
+    </div>
+  );
+}
+
+// Fase 3: explorar un distrito
+const POIS = {
+  faro: [
+    { id: "tablon", n: "Tablón de noticias", x: 250, y: 300, open: [0, 1, 2], text: "Tres avisos clavados con chinchetas oxidadas: «Se busca a quien devuelva la linterna del farero», «Barco sin nombre atracado en el muelle tres» y «Prohibido bajar a las catacumbas, de nuevo»." },
+    { id: "fuente", n: "Fuente de los deseos", x: 520, y: 330, open: [0, 1, 2], text: "El agua de la fuente huele a sal. Dicen que las monedas que se lanzan a medianoche vuelven distintas a quien las tiró." },
+    { id: "puerta", n: "Puerta del faro", x: 700, y: 230, open: [0], text: "La puerta del faro solo se abre al amanecer, cuando el farero baja a por pan caliente. Ahora el cerrojo sigue echado." },
+    { id: "banco", n: "Banco del mirador", x: 120, y: 360, open: [1, 2], text: "Desde aquí se ve cómo la niebla se mueve como un animal dormido. Alguien ha grabado un nombre en el respaldo." },
+  ],
+  linterna: [
+    { id: "barra", n: "La barra", x: 330, y: 330, open: [0, 1, 2], text: "La tabernera limpia un vaso que ya estaba limpio. «Aquí todo el mundo paga con historias antes que con monedas», dice sin mirarte." },
+    { id: "chimenea", n: "La chimenea", x: 690, y: 290, open: [0, 1, 2], text: "El fuego de la chimenea no consume la leña. Los clientes más veteranos aseguran que arde con los recuerdos de quienes se sientan a su lado." },
+    { id: "mesa", n: "Mesa de los viajeros", x: 520, y: 360, open: [1, 2], text: "Una mesa larga, siempre medio vacía. Aquí se sientan quienes acaban de llegar a Brumaria y todavía no saben qué buscan." },
+    { id: "sotano", n: "Escalera del sótano", x: 130, y: 300, open: [2], text: "Una trampilla tras la barra. Solo se abre de noche, cuando se apaga la última lámpara y el tabernero baja con una vela." },
+  ],
+};
+POIS.jardines = [
+  { id: "invernadero", n: "Invernadero de cristal", x: 300, y: 300, open: [0, 1], text: "Tras el cristal empañado crecen flores que no tienen nombre. La jardinera asegura que florecen cuando alguien les cuenta un secreto." },
+  { id: "mirador", n: "Mirador de la niebla", x: 640, y: 250, open: [0, 1, 2], text: "Desde la barandilla se ve el mar de niebla ondularse bajo vuestros pies. A veces, algo enorme se mueve muy abajo." },
+  { id: "estanque", n: "Estanque de luciérnagas", x: 480, y: 360, open: [2], text: "De noche el estanque se llena de luces que dibujan caminos en el agua. Nadie sabe adónde llevan." },
+];
+POIS.mercado = [
+  { id: "puesto", n: "Puesto de especias", x: 260, y: 300, open: [0, 1], text: "El vendedor ofrece canela de las islas hundidas y pimienta que, según él, solo pica a los mentirosos." },
+  { id: "trueque", n: "Rincón del trueque", x: 520, y: 340, open: [0, 1, 2], text: "Aquí no se aceptan monedas: un abanico por una brújula, una historia por un mapa. Alguien intercambia un reloj que no marca ninguna hora." },
+  { id: "adivina", n: "Carpa de la adivina", x: 700, y: 280, open: [1, 2], text: "Una carpa de terciopelo púrpura. La adivina baraja cartas en blanco y asegura que cada cual lee en ellas lo que necesita." },
+];
+POIS.gremios = [
+  { id: "herreria", n: "Herrería del gremio", x: 250, y: 300, open: [0, 1], text: "El golpe del martillo marca el compás del barrio. Una armadura a medio forjar espera junto al yunque, con un nombre grabado que nadie ha venido a reclamar." },
+  { id: "encargos", n: "Tablón de encargos", x: 520, y: 330, open: [0, 1, 2], text: "Escoltas, rescates, recados. Un cartel sin firma, con letra temblorosa, ofrece una bolsa de oro por recuperar «lo que cayó del faro»." },
+  { id: "archivo", n: "Archivo de los magos", x: 720, y: 260, open: [1], text: "Una puerta baja con un candado de sombra. Solo se abre a media tarde, cuando el archivero sale a tomar el té." },
+];
+POIS.muelles = [
+  { id: "barco", n: "Barco sin nombre", x: 300, y: 320, open: [0, 1, 2], text: "Atracado en el muelle tres, sin tripulación ni bandera. Las velas están húmedas, como si acabara de llegar de muy lejos." },
+  { id: "cargamento", n: "Cargamento sin dueño", x: 560, y: 360, open: [0, 1], text: "Cajas selladas con cera verde. Una de ellas se mueve sola de vez en cuando." },
+  { id: "farol", n: "Farol del embarcadero", x: 700, y: 270, open: [2], text: "Solo se enciende de noche. Su luz atrae a los barcos que no existen en ningún mapa." },
+];
+const FSTATE = { 0: "al amanecer", 1: "por la tarde", 2: "de noche" };
+const SKY = [["#2b2358", "#e9a06a"], ["#3a3a88", "#f0b27a"], ["#0b0b24", "#7a68b6"]]; // amanecer, tarde, noche (arriba, abajo)
+function Scene({ id, fr }) {
+  const tav = id === "linterna";
+  const [c1, c2] = SKY[fr] || SKY[2];
+  const night = fr === 2;
+  const ground = { faro: "#241e52", jardines: "#1f3a3a", mercado: "#3a2a4a", gremios: "#2a2f4f", muelles: "#1d3440" }[id] || "#241e52";
+  return (
+    <svg className="adv-scn" viewBox="0 0 900 460" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs><linearGradient id={"scS" + id} x1="0" y1="0" x2="0" y2="1">{tav ? <><stop offset="0" stopColor="#3a2430" /><stop offset="1" stopColor="#1a1018" /></> : <><stop offset="0" stopColor={c1} /><stop offset="1" stopColor={c2} /></>}</linearGradient><radialGradient id="scG" cx=".5" cy=".5" r=".5"><stop offset="0" stopColor="#ffd36a" stopOpacity=".7" /><stop offset="1" stopColor="#ffd36a" stopOpacity="0" /></radialGradient></defs>
+      <rect width="900" height="460" fill={"url(#scS" + id + ")"} />
+      {!tav && night && Array.from({ length: 30 }, (_, i) => <circle key={i} cx={(i * 173) % 900} cy={(i * 47) % 200} r="1.1" fill="#fff" opacity=".6" />)}
+      {!tav && <><circle cx="170" cy="86" r="40" fill="url(#scG)" opacity=".5" /><circle cx="170" cy="86" r="16" fill={night ? "#fff7d6" : "#ffe3a0"} /><path d="M0 300 L120 250 L260 285 L400 230 L560 280 L720 235 L900 280 L900 460 L0 460Z" fill="#2c2560" opacity={night ? 1 : 0.7} /></>}
+      {id === "faro" && <>
+        <path d="M672 330 L688 90 L732 90 L748 330Z" fill="#efe9fb" stroke="#9a8fe0" /><path d="M678 250 L742 250 M683 190 L737 190" stroke="#c9486a" strokeWidth="10" /><rect x="676" y="56" width="48" height="34" fill="#ffe9a8" /><path d="M668 56 L700 24 L732 56Z" fill="#1c1744" />{night && <path d="M724 72 L900 20 L900 150Z" fill="#ffe9a8" opacity=".25" />}
+        <rect y="330" width="900" height="130" fill={ground} />{Array.from({ length: 6 }, (_, r) => Array.from({ length: 14 }, (_, c) => <rect key={r + "-" + c} x={20 + c * 64 + (r % 2) * 32} y={338 + r * 20} width="52" height="12" rx="4" fill="#31296a" />))}
+        <g transform="translate(520 330)"><ellipse rx="78" ry="20" fill="#3d3480" stroke="#8a7fd0" /><ellipse rx="64" ry="14" fill="#5b8fd0" opacity=".8" /><rect x="-6" y="-42" width="12" height="42" fill="#8a7fd0" /><path d="M-22 -42 Q0 -66 22 -42" fill="none" stroke="#9fd0ff" strokeWidth="3" /></g>
+        <g transform="translate(250 300)"><rect x="-6" y="-60" width="12" height="90" fill="#6b4a32" /><rect x="-52" y="-62" width="104" height="58" fill="#8a6a44" stroke="#4a3320" strokeWidth="2" /><rect x="-40" y="-52" width="26" height="20" fill="#f1e4c0" /><rect x="-8" y="-52" width="22" height="26" fill="#f1e4c0" /><rect x="20" y="-52" width="24" height="18" fill="#f1e4c0" /></g>
+        <rect x="100" y="336" width="60" height="8" fill="#6b4a32" /><rect x="106" y="344" width="6" height="14" fill="#6b4a32" /><rect x="148" y="344" width="6" height="14" fill="#6b4a32" />
+      </>}
+      {id === "jardines" && <>
+        <rect y="330" width="900" height="130" fill={ground} />
+        {[[120, 330], [330, 350], [500, 320], [760, 340], [880, 360]].map(([x, y], i) => <g key={i}><circle cx={x} cy={y - 30} r="56" fill={i % 2 ? "#3f8f55" : "#2f7a47"} /><circle cx={x - 18} cy={y - 44} r="26" fill="#6FBF73" opacity=".7" /><rect x={x - 5} y={y} width="10" height="40" fill="#4a3320" /></g>)}
+        <g transform="translate(300 300)"><path d="M-70 0 L-70 -60 Q0 -110 70 -60 L70 0Z" fill="#9fd0e0" opacity=".35" stroke="#cfeff7" strokeWidth="2" /><path d="M-70 0 H70" stroke="#cfeff7" strokeWidth="3" />{[-40, -10, 24].map((x) => <circle key={x} cx={x} cy="-16" r="9" fill="#e86ab0" />)}</g>
+        <rect x="560" y="268" width="170" height="10" fill="#8a6a44" /><rect x="574" y="278" width="6" height="60" fill="#6b4a32" /><rect x="710" y="278" width="6" height="60" fill="#6b4a32" />
+        <ellipse cx="500" cy="372" rx="110" ry="24" fill="#2a5a7a" opacity=".85" />{night && [[440, 366], [490, 376], [540, 364], [520, 382]].map(([x, y], i) => <circle key={i} cx={x} cy={y} r="3.5" fill="#fff7a0" />)}
+      </>}
+      {id === "mercado" && <>
+        <rect y="340" width="900" height="120" fill={ground} />
+        {[[120, "#E0823A"], [310, "#D9644E"], [500, "#E8C547"], [690, "#A58BE8"]].map(([x, c], i) => <g key={i}><path d={`M${x - 70} 230 L${x} 190 L${x + 70} 230 Z`} fill={c} /><rect x={x - 70} y="230" width="140" height="14" fill={c} opacity=".8" /><rect x={x - 62} y="244" width="6" height="100" fill="#4a3320" /><rect x={x + 56} y="244" width="6" height="100" fill="#4a3320" /><rect x={x - 56} y="300" width="112" height="44" fill="#5a3c28" />{[-34, -8, 18, 40].map((o) => <circle key={o} cx={x + o} cy="296" r="9" fill={["#E8C547", "#D9644E", "#6FBF73", "#A58BE8"][(o + 40) % 4]} />)}</g>)}
+        <g transform="translate(790 300)"><path d="M0 60 V-20" stroke="#4a3320" strokeWidth="4" /><path d="M0 -20 Q50 -10 50 20 Q10 30 0 -20" fill="#8a2f6a" /></g>
+      </>}
+      {id === "gremios" && <>
+        <rect y="340" width="900" height="120" fill={ground} />
+        {[[110, 150, 160], [300, 130, 190], [500, 160, 150], [690, 120, 210]].map(([x, w, h], i) => <g key={i}><rect x={x} y={340 - h} width={w} height={h} fill="#2a3a6a" stroke="#5E93C9" /><rect x={x + 14} y={340 - h + 20} width="14" height="20" fill="#ffd36a" opacity={night ? 1 : 0.4} /><rect x={x + w - 28} y={340 - h + 20} width="14" height="20" fill="#ffd36a" opacity={night ? 1 : 0.4} /><rect x={x + w / 2 - 12} y="300" width="24" height="40" fill="#1a1f40" /></g>)}
+        <g transform="translate(250 330)"><rect x="-30" y="-22" width="60" height="24" fill="#3a3a44" stroke="#8a8aa0" /><path d="M-14 -22 L-14 -42 L14 -42 L14 -22" fill="#5a5a66" /><circle cx="42" cy="-12" r="6" fill="#E0823A" /></g>
+      </>}
+      {id === "muelles" && <>
+        <rect y="320" width="900" height="140" fill="#2a4a5a" opacity=".85" />{Array.from({ length: 6 }, (_, i) => <path key={i} d={`M0 ${340 + i * 20} Q150 ${330 + i * 20} 300 ${340 + i * 20} T600 ${340 + i * 20} T900 ${340 + i * 20}`} fill="none" stroke="#8ab6c4" strokeOpacity=".35" />)}
+        <rect x="40" y="300" width="780" height="14" fill="#7b5a3c" />{Array.from({ length: 14 }, (_, i) => <rect key={i} x={50 + i * 56} y="314" width="8" height="46" fill="#5a3c28" />)}
+        <g transform="translate(300 300)"><path d="M-90 0 L90 0 L60 40 L-60 40Z" fill="#2c5a60" stroke="#8fbfc0" /><rect x="-4" y="-130" width="8" height="130" fill="#6b4a32" /><path d="M4 -126 L84 -10 L4 -10Z" fill="#e6e0f2" opacity=".9" /></g>
+        {[[520, 290], [580, 280], [640, 290]].map(([x, y], i) => <rect key={i} x={x} y={y} width="48" height="30" fill="#6b4a32" stroke="#3a2418" />)}
+        <g transform="translate(700 270)"><rect x="-3" y="0" width="6" height="40" fill="#3a3a44" /><rect x="-10" y="-22" width="20" height="22" rx="4" fill={night ? "#ffd36a" : "#6b5a40"} />{night && <circle cy="-10" r="40" fill="url(#scG)" />}</g>
+      </>}
+      {tav && <>
+        <rect y="320" width="900" height="140" fill="#2a1a14" />{Array.from({ length: 12 }, (_, i) => <rect key={i} x={i * 78} y="320" width="76" height="140" fill="none" stroke="#1a100c" />)}
+        {Array.from({ length: 10 }, (_, i) => <rect key={i} x={i * 92 + 8} y="30" width="76" height="260" fill="none" stroke="#4a2c22" strokeWidth="2" />)}
+        <rect x="610" y="170" width="170" height="170" fill="#4a3a38" stroke="#6b5448" strokeWidth="4" /><rect x="640" y="230" width="110" height="110" fill="#1a0e0a" /><path d="M660 340 Q690 250 720 340Z" fill="#E0823A" /><path d="M675 340 Q695 285 715 340Z" fill="#ffd36a" /><circle cx="695" cy="320" r="110" fill="url(#scG)" />
+        <rect x="260" y="310" width="300" height="60" fill="#6b4a32" stroke="#3a2418" strokeWidth="3" /><rect x="260" y="300" width="300" height="14" fill="#8a6a44" />
+        {[310, 360, 420, 480].map((x) => <rect key={x} x={x} y="276" width="14" height="24" rx="3" fill="#8fbfc0" opacity=".7" />)}
+        <rect x="440" y="350" width="180" height="40" rx="6" fill="#5a3c28" /><rect x="450" y="390" width="10" height="40" fill="#3a2418" /><rect x="600" y="390" width="10" height="40" fill="#3a2418" />
+        <rect x="90" y="285" width="90" height="12" fill="#5a3c28" /><path d="M90 297 L130 340 L180 340 L180 297Z" fill="#1a0e0a" />
+        <g transform="translate(420 60)"><path d="M0 0 V50" stroke="#3a2418" strokeWidth="3" /><rect x="-12" y="50" width="24" height="32" rx="5" fill="#ffd36a" /><circle cy="66" r="52" fill="url(#scG)" /></g>
+      </>}
+    </svg>
+  );
+}
+function Explore({ id, fr, me, onBack, onFound }) {
+  const pois = POIS[id] || [];
+  const [open, setOpen] = useState(null);
+  const d = DISTRICTS.find((x) => x.id === id);
+  const cur = pois.find((x) => x.id === open);
+  const seen = (me.found || []).filter((k) => k.startsWith(id + ":")).map((k) => k.slice(id.length + 1));
+  const pick = (x) => { setOpen(x.id); if (x.open.includes(fr) && !seen.includes(x.id)) markFound(id + ":" + x.id).then((t) => t && onFound(t)).catch(() => {}); };
+  const done = pois.filter((x) => x.open.includes(fr));
+  return (
+    <div className="adv-ex" style={{ "--dc": d.c }}>
+      <div className="adv-exh"><button type="button" className="adv-back" onClick={onBack}><ArrowLeft size={15} /> Volver al mapa</button><div><span className="adv-pk">Explorando</span><h3 className="mh-serif">{d.name}</h3></div><div className="adv-prog"><Eye size={14} /> <b>{seen.length}</b> / {pois.length} rincones vistos</div></div>
+      <div className="adv-sc">
+        <Scene id={id} fr={fr} />
+        {pois.map((x) => { const on = x.open.includes(fr); return (
+          <button key={x.id} type="button" className={"adv-poi" + (open === x.id ? " is-on" : "") + (on ? "" : " is-off") + (seen.includes(x.id) ? " is-seen" : "")} style={{ left: x.x / 9 + "%", top: x.y / 4.6 + "%" }} onClick={() => pick(x)}>
+            <i>{on ? (seen.includes(x.id) ? <Check size={13} /> : <Eye size={13} />) : <Lock size={12} />}</i><span>{x.n}</span>
+          </button>); })}
+      </div>
+      <div className="adv-txt">
+        {cur ? (<><b>{cur.n}</b>{!cur.open.includes(fr) && <em><Clock size={12} /> Solo abierto {cur.open.map((k) => FSTATE[k]).join(" y ")}</em>}<p>{cur.text}</p></>) : <p className="is-hint">Toca un rincón del lugar para mirarlo. Algunos solo se abren a ciertas horas.</p>}
+      </div>
     </div>
   );
 }
@@ -305,6 +424,15 @@ const CSS = `
 .adv-who { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 12.5px; } .adv-who b { width: 100%; font: 700 10.5px var(--font-body), 'Inter', system-ui, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: var(--mh-muted); } .adv-who span { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 4px; border-radius: 99px; background: color-mix(in srgb, var(--mh-ink) 7%, transparent); } .adv-who em { color: var(--mh-muted); }
 .adv-ds { display: flex; flex-wrap: wrap; gap: 8px; } .adv-ds button { appearance: none; display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 99px; border: 1px solid var(--mh-line); background: var(--mh-panel); color: var(--mh-ink); font: 600 12.5px var(--font-body), 'Inter', system-ui, sans-serif; cursor: pointer; } .adv-ds button i { width: 9px; height: 9px; border-radius: 50%; background: var(--dc); } .adv-ds button.is-on { border-color: var(--dc); background: color-mix(in srgb, var(--dc) 18%, var(--mh-panel)); } .adv-ds small { color: var(--mh-muted); font-weight: 700; }
 @media (max-width: 900px) { .adv-pl { display: flex; flex-direction: column; } .adv-pl > .adv-go { width: 100%; } }
+.adv-ex { display: flex; flex-direction: column; gap: 12px; }
+.adv-exh { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; } .adv-exh h3 { margin: 4px 0 0; font-size: 24px; } .adv-exh > div:nth-child(2) { flex: 1; }
+.adv-back { appearance: none; display: inline-flex; align-items: center; gap: 6px; font: 600 12.5px var(--font-body), 'Inter', system-ui, sans-serif; color: var(--mh-ink); background: var(--mh-panel); border: 1px solid var(--mh-line); border-radius: 99px; padding: 8px 14px; cursor: pointer; }
+.adv-prog { display: inline-flex; align-items: center; gap: 6px; padding: 7px 13px; border-radius: 99px; font-size: 12.5px; background: color-mix(in srgb, var(--dc) 16%, var(--mh-panel)); border: 1px solid color-mix(in srgb, var(--dc) 45%, var(--mh-line)); }
+.adv-sc { position: relative; border-radius: 22px; overflow: hidden; aspect-ratio: 900 / 460; border: 1px solid color-mix(in srgb, var(--dc) 50%, var(--mh-line)); background: #1a1642; } .adv-scn { position: absolute; inset: 0; width: 100%; height: 100%; }
+.adv-poi { position: absolute; transform: translate(-50%, -50%); appearance: none; display: inline-flex; align-items: center; gap: 7px; padding: 5px 13px 5px 5px; border-radius: 99px; border: 1.5px solid var(--dc); background: rgba(10,8,30,.82); color: #f4f0fa; font: 700 12px var(--font-body), 'Inter', system-ui, sans-serif; cursor: pointer; backdrop-filter: blur(4px); animation: adv-bob 3s ease-in-out infinite; }
+.adv-poi i { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--dc); color: #14111f; } .adv-poi.is-on { box-shadow: 0 0 0 3px color-mix(in srgb, var(--dc) 50%, transparent); background: rgba(10,8,30,.95); } .adv-poi.is-off { opacity: .65; border-style: dashed; } .adv-poi.is-off i { background: #5b4ea0; color: #fff; } .adv-poi.is-seen i { background: #4CC36B; }
+@keyframes adv-bob { 50% { transform: translate(-50%, calc(-50% - 4px)); } }
+.adv-txt { padding: 16px 20px; border-radius: 18px; background: var(--mh-panel); border: 1px solid var(--mh-line); min-height: 92px; } .adv-txt b { font-size: 16px; } .adv-txt em { display: inline-flex; align-items: center; gap: 5px; margin-left: 10px; font-style: normal; font-size: 11.5px; color: #E3B04B; } .adv-txt p { margin: 6px 0 0; font-size: 14px; line-height: 1.6; color: var(--mh-ink2); font-style: italic; } .adv-txt p.is-hint { color: var(--mh-muted); font-style: normal; margin: 0; }
 @media (max-width: 900px) { .adv-g { grid-template-columns: 1fr; } .adv-sheet { position: static; } .adv-hi { padding: 22px 20px; } .adv-hero { min-height: 300px; } }
 @media (prefers-reduced-motion: reduce) { .adv * { animation: none !important; } }
 `;
