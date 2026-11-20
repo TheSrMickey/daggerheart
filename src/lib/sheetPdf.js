@@ -153,15 +153,16 @@ export function printSheet(d) {
   return printHtml(sheetHtml(d));
 }
 
-// Prueba de doble cara: una sola carta por delante y su reverso reflejado por detrás (A4, mismas medidas que la hoja de cartas para recortar).
-// Con el papel girado por el borde largo, la carta de arriba a la izquierda queda justo delante del reverso de arriba a la derecha.
+// Prueba de doble cara: una sola carta por delante y su reverso por detrás, los dos en el CENTRO exacto de la página.
+// Con el centro como referencia, la carta y el reverso coinciden aunque la impresora imprima el reverso primero o el papel se gire por el borde largo,
+// el corto o 180°: lo único que puede cambiar es si el reverso queda cabeza abajo respecto a la carta (la flecha «ARRIBA» de cada página lo dice).
 export function backTestHtml(d) {
   const [face, back] = d.cutPack.cells;
-  const X0 = 9.75; // margen izquierdo de la cuadrícula de 3 columnas (63,5 mm) centrada en A4
-  const Y0 = 12;
   const W = 63.5, H = 88.9, BL = 1; // BL: sangrado del reverso en mm
-  const BX = X0 + 2 * W; // columna derecha (reflejo de la izquierda)
+  const X0 = (210 - W) / 2;
+  const Y0 = (297 - H) / 2;
   const crosses = [[10, 10], [200, 10], [10, 287], [200, 287]].map(([x, y]) => `<i class="x" style="left:${x - 4}mm;top:${y - 4}mm"></i>`).join("");
+  const up = (n) => `<div class="up"><i>↑</i>ARRIBA DE LA PÁGINA ${n}</div>`;
   return `<!doctype html><html lang="es"${d.theme === "light" ? ' data-mh-theme="light"' : ""}${d.artOff ? ' data-mh-art="off"' : ""}><head><meta charset="utf-8"><base href="${esc(d.origin || "")}/"><title>${esc(d.name)} · Prueba de doble cara</title>${d.cutPack.styles}<style>
 @page { size: A4 portrait; margin: 0; }
 * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -171,22 +172,22 @@ html, body { margin: 0; background: #fff; font-family: 'Inter', system-ui, sans-
 .cell { position: absolute; overflow: hidden; background: #fff; }
 .cell > * { margin: 0 !important; box-shadow: none !important; width: 300px !important; height: 420px !important; max-width: none !important; transform-origin: 0 0; }
 .cell.f { left: ${X0}mm; top: ${Y0}mm; width: ${W}mm; height: ${H}mm; border-radius: 4.65mm; } .cell.f > * { transform: scale(.8); }
-.cell.b { left: ${BX - BL}mm; top: ${Y0 - BL}mm; width: ${W + 2 * BL}mm; height: ${H + 2 * BL}mm; } .cell.b > * { transform: scale(${((W + 2 * BL) * 3.7795 / 300).toFixed(4)}, ${((H + 2 * BL) * 3.7795 / 420).toFixed(4)}); }
-.g { position: absolute; border: .5pt dashed #8a8398; z-index: 9; pointer-events: none; width: ${W}mm; height: ${H}mm; border-radius: 4.65mm; top: ${Y0}mm; }
+.cell.b { left: ${X0 - BL}mm; top: ${Y0 - BL}mm; width: ${W + 2 * BL}mm; height: ${H + 2 * BL}mm; } .cell.b > * { transform: scale(${((W + 2 * BL) * 3.7795 / 300).toFixed(4)}, ${((H + 2 * BL) * 3.7795 / 420).toFixed(4)}); }
+.g { position: absolute; border: .5pt dashed #8a8398; z-index: 9; pointer-events: none; width: ${W}mm; height: ${H}mm; border-radius: 4.65mm; top: ${Y0}mm; left: ${X0}mm; }
 .x { position: absolute; width: 8mm; height: 8mm; } .x::before, .x::after { content: ""; position: absolute; background: #000; } .x::before { left: 0; right: 0; top: 3.85mm; height: .3mm; } .x::after { top: 0; bottom: 0; left: 3.85mm; width: .3mm; }
-.t { position: absolute; left: 12mm; right: 12mm; font-size: 9.5pt; line-height: 1.5; }
+.up { position: absolute; top: 16mm; left: 0; right: 0; text-align: center; font-weight: 800; font-size: 10pt; letter-spacing: .1em; color: #c0392b; } .up i { display: block; font-style: normal; font-size: 26pt; line-height: 1; }
+.t { position: absolute; left: 22mm; right: 22mm; font-size: 9.5pt; line-height: 1.5; }
 .t b { font-size: 11pt; display: block; margin-bottom: 1.5mm; } .t ol { margin: 1mm 0 0; padding-left: 5mm; } .t li { margin-bottom: 1mm; }
-.lb { position: absolute; font-size: 7.5pt; letter-spacing: .12em; text-transform: uppercase; color: #6d6478; }
+.lb { position: absolute; left: 0; right: 0; text-align: center; font-size: 7.5pt; letter-spacing: .12em; text-transform: uppercase; color: #6d6478; }
 </style></head><body>
-<div class="pg">${crosses}
-<div class="cell f">${face}</div><i class="g" style="left:${X0}mm"></i>
-<div class="lb" style="left:${X0}mm;top:${Y0 + H + 3}mm">Cara</div>
-<div class="t" style="top:${Y0 + H + 14}mm"><b>Prueba de doble cara</b>Una sola carta de ${esc(d.name)} para ver cómo sale tu impresora. Esta hoja es la cara; la siguiente, el reverso.<ol><li>Imprime las 2 páginas a doble cara (<b style="display:inline;font-size:inherit">voltear por el borde largo</b>) en papel de 120 g o más, a tamaño real (100 %, sin «ajustar a la página»).</li><li>Mira las dos hojas a contraluz: las cruces de las esquinas deben coincidir. Si no, tu impresora desplaza el reverso esa distancia.</li><li>Recorta la carta por la línea discontinua de la cara y comprueba que el reverso queda centrado y no asoma el blanco ni la cara por los bordes.</li></ol></div>
+<div class="pg">${crosses}${up(1)}
+<div class="cell f">${face}</div><i class="g"></i>
+<div class="lb" style="top:${Y0 + H + 3}mm">Página 1 · Cara de la carta</div>
+<div class="t" style="top:${Y0 + H + 14}mm"><b>Prueba de doble cara</b>Una carta de ${esc(d.name)}. La carta y su reverso están en el <b style="display:inline;font-size:inherit">centro exacto</b> de cada página, así que coinciden aunque imprimas primero el reverso o gires el papel como quieras.<ol><li>Imprime las 2 páginas (en el orden que te salga) a tamaño real (100 %, sin «ajustar a la página»), con papel de 120 g o más.</li><li>Mira las dos caras a contraluz: la carta y el reverso deben quedar uno justo detrás del otro, y las cruces de las esquinas coincidir.</li><li>Fíjate en la flecha «ARRIBA» de cada página: te dice cómo ha salido cada una. Si el reverso queda cabeza abajo respecto a la carta, dímelo y lo ajusto.</li></ol></div>
 </div>
-<div class="pg">${crosses}
-<div class="cell b">${back}</div><i class="g" style="left:${BX}mm"></i>
-<div class="lb" style="left:${BX}mm;top:${Y0 + H + 3}mm">Reverso (reflejado)</div>
-<div class="t" style="top:${Y0 + H + 14}mm">Reverso con 1 mm de sangrado alrededor del corte. Está en la columna derecha porque, al girar el papel por el borde largo, queda justo detrás de la carta de la columna izquierda.</div>
+<div class="pg">${crosses}${up(2)}
+<div class="cell b">${back}</div><i class="g"></i>
+<div class="lb" style="top:${Y0 + H + 3}mm">Página 2 · Reverso (con 1 mm de sangrado)</div>
 </div>
 </body></html>`;
 }
