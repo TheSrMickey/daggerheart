@@ -723,7 +723,7 @@ export async function lobbyStart(campId: string) {
 
 // ---------- modo aventura (Brumaria) ----------
 // Un viajero por cuenta: copia ligera del personaje elegido, aparte de la hoja tradicional. Fila compartida adv:<usuario>.
-export type Traveller = { uid: string; username: string; name: string; cls: string; anc: string; lvl: number; gold: number; items: string[]; at: number; loc?: string; seen?: number; found?: string[] };
+export type Traveller = { uid: string; username: string; name: string; cls: string; anc: string; lvl: number; gold: number; items: string[]; at: number; loc?: string; seen?: number; found?: string[]; decided?: Record<string, string>; rep?: Record<string, number>; diary?: { text: string; at: number }[] };
 export async function loadTraveller(): Promise<Traveller | null> {
   const me = await myself();
   if (!me) return null;
@@ -743,6 +743,37 @@ export async function loadTravellers(): Promise<Traveller[]> {
   const rows = await kvList<Traveller>("adv:");
   const now = Date.now();
   return rows.map((r) => r.value).filter((t) => t && t.name && now - (t.seen || t.at) < 864e5).sort((a, b) => b.at - a.at);
+}
+// Estado compartido de la ciudad: el Pulso (0 a 100) y las últimas decisiones de los viajeros.
+export type CityLog = { uid: string; username: string; text: string; at: number };
+export type City = { pulse: Record<string, number>; log: CityLog[] };
+const CITY0: City = { pulse: { Prosperidad: 50, Orden: 50, Misterio: 50 }, log: [] };
+export async function loadCity(): Promise<City> {
+  const v = await kvGet<City>("advc:city");
+  return v && v.pulse ? { pulse: { ...CITY0.pulse, ...v.pulse }, log: v.log || [] } : CITY0;
+}
+// Aplica una decisión (una sola vez por viajero y decisión): cambia al viajero y al Pulso de la ciudad.
+export type Effect = { gold?: number; item?: string; rep?: [string, number]; pulse?: Record<string, number>; log: string; diary: string };
+export async function decide(key: string, opt: string, fx: Effect): Promise<{ t: Traveller; city: City } | null> {
+  const me = await myself();
+  const cur = await loadTraveller();
+  if (!me || !cur || (cur.decided || {})[key]) return null;
+  const city = await loadCity();
+  const pulse = { ...city.pulse };
+  for (const [k, n] of Object.entries(fx.pulse || {})) pulse[k] = Math.max(0, Math.min(100, (pulse[k] ?? 50) + n));
+  const next: City = { pulse, log: [{ uid: me.id, username: me.username, text: fx.log, at: Date.now() }, ...city.log].slice(0, 20) };
+  const t: Traveller = {
+    ...cur,
+    gold: Math.max(0, cur.gold + (fx.gold || 0)),
+    items: fx.item ? [...cur.items, fx.item] : cur.items,
+    rep: fx.rep ? { ...(cur.rep || {}), [fx.rep[0]]: ((cur.rep || {})[fx.rep[0]] || 0) + fx.rep[1] } : cur.rep,
+    decided: { ...(cur.decided || {}), [key]: opt },
+    diary: [{ text: fx.diary, at: Date.now() }, ...(cur.diary || [])].slice(0, 50),
+    seen: Date.now(),
+  };
+  await kvPut(`adv:${me.id}`, t);
+  await kvPut("advc:city", next);
+  return { t, city: next };
 }
 // Rincones ya vistos (distrito:rincón) para el diario del viajero.
 export async function markFound(key: string): Promise<Traveller | null> {

@@ -1,9 +1,9 @@
 "use client";
 // Modo aventura · Fase 1: bienvenida a Brumaria y elección o creación del personaje de aventura (ficha ligera, separada de la hoja tradicional).
 import { useEffect, useState } from "react";
-import { ArrowLeft, Backpack, Check, Clock, Coins, Eye, Compass, Lock, MapPin, Plus, ScrollText, Sparkles, Sunrise, Users } from "lucide-react";
+import { ArrowLeft, Backpack, Feather, Flame, HandCoins, Check, Clock, Coins, Eye, Compass, Lock, MapPin, Plus, ScrollText, Sparkles, Sunrise, Users } from "lucide-react";
 import { Avatar } from "./Social";
-import { loadTraveller, loadTravellers, enterBrumaria, moveTraveller, markFound } from "@/lib/social";
+import { loadTraveller, loadTravellers, enterBrumaria, moveTraveller, markFound, loadCity, decide } from "@/lib/social";
 
 function Skyline() {
   const lights = [[118, 214], [168, 190], [226, 176], [292, 150], [356, 168], [452, 140], [540, 120], [610, 134], [688, 162], [772, 150], [834, 188], [880, 176]];
@@ -103,7 +103,7 @@ function CityMap({ at, sel, onSel, crowd, meId }) {
     </svg>
   );
 }
-function CityView({ me, crowd, onMoved }) {
+function CityView({ me, crowd, city, onDecided, onMoved }) {
   const [sel, setSel] = useState(me.loc || "faro");
   const [exp, setExp] = useState(null);
   const [walking, setWalking] = useState(false);
@@ -134,7 +134,7 @@ function CityView({ me, crowd, onMoved }) {
         <span><MapPin size={14} /> Estás en <b>{cur.name}</b></span>
         <span className="is-r"><Coins size={14} /> {me.gold} · <Backpack size={14} /> {me.items.length}</span>
       </div>
-      {exp ? <Explore id={exp} fr={fr} me={me} onBack={() => setExp(null)} onFound={onMoved} /> : (
+      {exp ? <Explore id={exp} fr={fr} me={me} city={city} onBack={() => setExp(null)} onFound={onMoved} onDecided={onDecided} /> : (
       <div className="adv-cg">
         <div className="adv-mapw"><CityMap at={at} sel={sel} onSel={setSel} crowd={crowd} meId={me.uid} /></div>
         <aside className="adv-pl" style={{ "--dc": d.c }}>
@@ -146,6 +146,7 @@ function CityView({ me, crowd, onMoved }) {
           <button type="button" className="adv-go mh-btn" disabled={d.locked || (sel === at && !POIS[sel]) || walking} onClick={sel === at ? () => setExp(sel) : go}>{d.locked ? <><Lock size={14} /> Cerrado por ahora</> : walking ? "Caminando…" : sel === at ? (POIS[sel] ? "Explorar el distrito" : "Ya estás aquí") : "Ir allí"}</button>
         </aside>
       </div>)}
+      {!exp && <PulsePanel city={city} />}
       <div className="adv-ds">{DISTRICTS.map((x) => <button key={x.id} type="button" className={sel === x.id ? "is-on" : ""} style={{ "--dc": x.c }} onClick={() => setSel(x.id)}><i />{x.name}<small>{x.locked ? "🔒" : crowd.filter((t) => (t.loc || "faro") === x.id).length || ""}</small></button>)}</div>
     </div>
   );
@@ -243,7 +244,8 @@ function Scene({ id, fr }) {
     </svg>
   );
 }
-function Explore({ id, fr, me, onBack, onFound }) {
+function Explore({ id, fr, me, city, onBack, onFound, onDecided }) {
+  const [dlg, setDlg] = useState(null);
   const pois = POIS[id] || [];
   const [open, setOpen] = useState(null);
   const d = DISTRICTS.find((x) => x.id === id);
@@ -261,9 +263,113 @@ function Explore({ id, fr, me, onBack, onFound }) {
             <i>{on ? (seen.includes(x.id) ? <Check size={13} /> : <Eye size={13} />) : <Lock size={12} />}</i><span>{x.n}</span>
           </button>); })}
       </div>
+      {dlg && <DecisionDlg key={dlg} dk={dlg} me={me} city={city} onClose={() => setDlg(null)} onDone={onDecided} />}
       <div className="adv-txt">
-        {cur ? (<><b>{cur.n}</b>{!cur.open.includes(fr) && <em><Clock size={12} /> Solo abierto {cur.open.map((k) => FSTATE[k]).join(" y ")}</em>}<p>{cur.text}</p></>) : <p className="is-hint">Toca un rincón del lugar para mirarlo. Algunos solo se abren a ciertas horas.</p>}
+        {cur ? (<><b>{cur.n}</b>{!cur.open.includes(fr) && <em><Clock size={12} /> Solo abierto {cur.open.map((k) => FSTATE[k]).join(" y ")}</em>}<p>{cur.text}</p>{DECISIONS[id + ":" + cur.id] && cur.open.includes(fr) && <button type="button" className="adv-act" onClick={() => setDlg(id + ":" + cur.id)}><HandCoins size={14} /> {(me.decided || {})[id + ":" + cur.id] ? "Recordar lo que decidiste" : "Decidir qué hacer"}</button>}</>) : <p className="is-hint">Toca un rincón del lugar para mirarlo. Algunos solo se abren a ciertas horas.</p>}
       </div>
+    </div>
+  );
+}
+
+// Fase 4: decisiones. Cada una se toma una sola vez por viajero y mueve el Pulso de la ciudad.
+const PULSE_COL = { Prosperidad: "#E8C547", Orden: "#5E93C9", Misterio: "#A58BE8" };
+const DECISIONS = {
+  "faro:tablon": { title: "Los tres avisos del faro", text: "Tres papeles ondean en el tablón. Alguien tiene que hacer algo con ellos antes de que la niebla suba y los borre. Los demás viajeros pasarán por aquí después de ti.", opts: [
+    { k: "encargo", t: "Aceptar el encargo del farero", d: "Prometes devolver la linterna perdida.", gold: 15, rep: ["faro", 1], pulse: { Misterio: 1 }, out: "El farero te estrecha la mano con dedos fríos como el hierro. «Búscala antes de la noche», susurra, y te da una llave sin dientes.", log: "aceptó el encargo del farero" },
+    { k: "arrancar", t: "Arrancar el aviso del barco sin nombre", d: "Preferirías que nadie sepa que ha llegado.", item: "Aviso arrugado", pulse: { Orden: -1, Misterio: 1 }, out: "El papel se deshace en tu mano. Cuando levantas la vista, alguien en la fuente ya te mira.", log: "arrancó el aviso del barco sin nombre" },
+    { k: "nota", t: "Dejar una nota para otros viajeros", d: "Escribes algo y lo clavas junto a los demás.", pulse: { Prosperidad: 1 }, note: true, out: "Tu nota queda clavada entre los avisos. Dentro de unas horas otro viajero la leerá y quizá la conteste.", log: "dejó una nota en el tablón" },
+  ] },
+  "jardines:estanque": { title: "Las luciérnagas del estanque", text: "Las luces del estanque se agrupan a tu alrededor, como esperando una respuesta.", opts: [
+    { k: "seguir", t: "Seguir su camino de luz", d: "Las sigues hasta el final del jardín.", pulse: { Misterio: 2 }, rep: ["jardines", 1], out: "Las luciérnagas te llevan a una verja cubierta de hiedra. Detrás, algo respira dormido.", log: "siguió a las luciérnagas hasta el final del jardín" },
+    { k: "frasco", t: "Atrapar unas pocas en un frasco", d: "Quizá sirvan para algo.", item: "Frasco de luciérnagas", pulse: { Orden: -1 }, out: "El frasco brilla en tu mochila. Detrás de ti, las demás luces se apagan una a una.", log: "atrapó luciérnagas en un frasco" },
+    { k: "dejar", t: "Dejarlas en paz", d: "Te sientas un rato junto al agua.", pulse: { Prosperidad: 1 }, out: "El jardín parece agradecértelo: una flor se abre a tu lado.", log: "se sentó a contemplar el estanque" },
+  ] },
+  "mercado:trueque": { title: "El rincón del trueque", text: "Una vendedora te ofrece un cambio extraño: una brújula que no señala el norte.", opts: [
+    { k: "cambiar", t: "Cambiar la brújula por 10 de plata", d: "Pagas 10 monedas por ella.", gold: -10, item: "Brújula del revés", pulse: { Prosperidad: 1, Misterio: 1 }, out: "La aguja gira hasta apuntar a un lugar que no está en ningún mapa.", log: "compró una brújula extraña en el trueque" },
+    { k: "regatear", t: "Regatear una historia a cambio", d: "Ofreces contarle una historia que no conoce.", rep: ["mercado", 1], pulse: { Prosperidad: 1 }, out: "La vendedora sonríe y te da un pellizco de especias. «Una buena historia vale más que el oro».", log: "pagó con una historia en el trueque" },
+    { k: "rechazar", t: "Declinar con educación", d: "No te fías del trato.", out: "Ella se encoge de hombros y cambia la brújula por un abanico al siguiente que pasa.", log: "rechazó un trato en el trueque" },
+  ] },
+  "gremios:encargos": { title: "El encargo sin firma", text: "Un cartel temblón ofrece una bolsa de oro por recuperar «lo que cayó del faro».", opts: [
+    { k: "aceptar", t: "Arrancar el cartel y aceptar", d: "Nadie más parece haberse atrevido.", gold: 20, pulse: { Misterio: 1, Orden: -1 }, rep: ["gremios", 1], out: "Una bolsa pesada aparece en tu mano. El gremio te mira con una mezcla de respeto y lástima.", log: "aceptó el encargo sin firma del gremio" },
+    { k: "avisar", t: "Avisar al gremio", d: "Alguien debería saber quién escribió esto.", pulse: { Orden: 2 }, rep: ["gremios", 1], out: "El maestro del gremio arruga el cartel y lo guarda sin decir palabra. Orden vuelve a la calle.", log: "avisó al gremio del encargo sin firma" },
+    { k: "ignorar", t: "Ignorarlo", d: "No es asunto tuyo.", out: "El cartel sigue ahí cuando te vas, ondeando sin viento.", log: "ignoró el cartel sin firma" },
+  ] },
+  "linterna:mesa": { title: "La mesa de los viajeros", text: "Un viajero recién llegado se sienta frente a ti y no sabe a qué ha venido a Brumaria.", opts: [
+    { k: "invitar", t: "Invitarle a una ronda (5 de plata)", d: "Pagas unas bebidas.", gold: -5, pulse: { Prosperidad: 1 }, rep: ["linterna", 1], out: "Brindáis por la niebla. Antes de que termine la noche, ya te cuenta su historia.", log: "invitó a un recién llegado en La Linterna Rota" },
+    { k: "consejo", t: "Darle un consejo", d: "«No bajes a las catacumbas».", pulse: { Orden: 1, Misterio: -1 }, out: "El viajero asiente con demasiada seriedad. Aun así, se queda mirando hacia el sótano.", log: "aconsejó a un recién llegado" },
+    { k: "secreto", t: "Contarle un secreto de la ciudad", d: "Le susurras lo del faro.", pulse: { Misterio: 2 }, out: "Se le iluminan los ojos. Sabes que ahora otro viajero buscará lo que tú ya has visto.", log: "compartió un secreto del faro" },
+  ] },
+  "muelles:cargamento": { title: "El cargamento sin dueño", text: "Una de las cajas selladas con cera verde se ha movido otra vez.", opts: [
+    { k: "abrir", t: "Abrir la caja", d: "Rompes el sello.", item: "Esquirla verde", pulse: { Misterio: 1, Orden: -1 }, out: "Dentro hay una esquirla de cristal que late como un corazón diminuto. Todos los estibadores han dejado de trabajar.", log: "abrió una caja sellada en los muelles" },
+    { k: "avisar", t: "Dar parte a los estibadores", d: "Que se encargue quien sepa.", pulse: { Orden: 1 }, rep: ["muelles", 1], out: "Los estibadores acordonan la zona y te dan las gracias con un gesto seco.", log: "dio parte de un cargamento sin dueño" },
+    { k: "vigilar", t: "Vigilar desde lejos", d: "Esperas a ver qué sale.", pulse: { Misterio: 1 }, out: "Pasada la medianoche, alguien viene a recoger la caja. No lleva cara.", log: "vigiló un cargamento sin dueño" },
+  ] },
+};
+function DecisionDlg({ dk, me, city, onClose, onDone }) {
+  const D = DECISIONS[dk];
+  const [pick, setPick] = useState(null);
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const done = (me.decided || {})[dk];
+  const chosen = D.opts.find((o) => o.k === (pick || done));
+  const fxChips = (o) => [o.gold ? [(o.gold > 0 ? "+" : "") + o.gold + " plata", "#E8C547"] : null, o.item ? ["Objeto: " + o.item, "#6FBF73"] : null, o.rep ? ["Reputación " + (o.rep[1] > 0 ? "+" : "") + o.rep[1], "#E0823A"] : null, ...Object.entries(o.pulse || {}).map(([k, n]) => [k + " " + (n > 0 ? "+" : "−") + Math.abs(n), PULSE_COL[k]]), o.note ? ["Tu nota la verán todos", "#4FA39A"] : null].filter(Boolean);
+  const confirm = async (o) => {
+    if (busy) return;
+    setBusy(true);
+    const text = o.note ? note.trim().slice(0, 80) : "";
+    const r = await decide(dk, o.k, { gold: o.gold, item: o.item, rep: o.rep, pulse: o.pulse, log: o.log + (text ? ": «" + text + "»" : ""), diary: D.title + " · " + o.t }).catch(() => null);
+    setBusy(false);
+    if (r) {
+      setPick(o.k);
+      onDone(r.t, r.city);
+    }
+  };
+  const afford = (o) => !o.gold || o.gold > 0 || me.gold >= -o.gold;
+  return (
+    <div className="adv-dov" onClick={onClose}>
+      <div className="adv-dlg" role="dialog" aria-label={D.title} onClick={(e) => e.stopPropagation()}>
+        <span className="adv-pk">Decisión</span>
+        <h3 className="mh-serif">{D.title}</h3>
+        {!chosen ? (
+          <>
+            <p className="adv-dt">{D.text}</p>
+            <div className="adv-ops">
+              {D.opts.map((o) => (
+                <button key={o.k} type="button" disabled={!afford(o) || busy} onClick={() => (o.note ? setPick("?" + o.k) : confirm(o))}>
+                  <b>{o.t}</b><small>{o.d}{!afford(o) ? " · No tienes plata suficiente" : ""}</small>
+                  <span>{fxChips(o).map(([f, c]) => <i key={f} style={{ "--fc": c }}>{f}</i>)}</span>
+                </button>
+              ))}
+            </div>
+            {pick && pick.startsWith("?") && (
+              <div className="adv-note"><label>Escribe tu nota (máx. 80 letras)<input className="mh-input" maxLength={80} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Lo que quieras que lean los demás…" /></label><button type="button" className="mh-btn" disabled={!note.trim() || busy} onClick={() => confirm(D.opts.find((o) => "?" + o.k === pick))}>Clavar la nota</button></div>
+            )}
+            <small className="adv-dn">No se puede deshacer: lo que decidas queda en tu diario y en la actividad de la ciudad.</small>
+          </>
+        ) : (
+          <>
+            <div className="adv-ch"><b>{done && !pick ? "Ya decidiste aquí:" : "Has elegido:"}</b> {chosen.t}</div>
+            <p className="adv-dt is-out">{chosen.out}</p>
+            <div className="adv-fx">{fxChips(chosen).map(([f, c]) => <i key={f} style={{ "--fc": c }}>{f}</i>)}</div>
+            <PulseBars pulse={city.pulse} />
+            <button type="button" className="adv-go mh-btn" onClick={onClose}>Continuar</button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+function PulseBars({ pulse }) {
+  return <div className="adv-pm">{Object.entries(PULSE_COL).map(([n, c]) => <div key={n}><span>{n}</span><div><em style={{ width: (pulse[n] ?? 50) + "%", background: c }} /></div><b>{pulse[n] ?? 50}</b></div>)}</div>;
+}
+const ago = (t) => { const m = Math.max(1, Math.round((Date.now() - t) / 60000)); return m < 60 ? m + " min" : m < 1440 ? Math.round(m / 60) + " h" : Math.round(m / 1440) + " d"; };
+function PulsePanel({ city }) {
+  return (
+    <div className="adv-pulsep">
+      <div className="adv-pph"><Flame size={15} /> <b>Pulso de Brumaria</b><small>Lo que decidimos entre todos</small></div>
+      <PulseBars pulse={city.pulse} />
+      {city.log.slice(0, 4).map((l, i) => <div key={i} className="adv-last"><Feather size={13} /> <span><b>{l.username}</b> {l.text} · hace {ago(l.at)}</span></div>)}
+      {city.log.length === 0 && <div className="adv-last"><Feather size={13} /> <span>Aún nadie ha decidido nada. Explora un distrito y sé el primero.</span></div>}
     </div>
   );
 }
@@ -272,12 +378,14 @@ export function AventuraPage({ chars, classColor, onCreate }) {
   const [sel, setSel] = useState(null);
   const [me, setMe] = useState(undefined); // undefined: cargando · null: aún sin viajero
   const [crowd, setCrowd] = useState([]);
+  const [city, setCity] = useState({ pulse: { Prosperidad: 50, Orden: 50, Misterio: 50 }, log: [] });
   const [busy, setBusy] = useState(false);
   useEffect(() => {
     let alive = true;
     const pull = () => {
       loadTraveller().then((t) => alive && setMe(t)).catch(() => alive && setMe((m) => (m === undefined ? null : m)));
       loadTravellers().then((l) => alive && setCrowd(l)).catch(() => {});
+      loadCity().then((c) => alive && setCity(c)).catch(() => {});
     };
     pull();
     const t = setInterval(pull, 6000);
@@ -317,7 +425,7 @@ export function AventuraPage({ chars, classColor, onCreate }) {
         </div>
       </section>
 
-      {me && <CityView me={me} crowd={crowd} onMoved={(t) => { setMe(t); setCrowd((l) => l.map((x) => (x.uid === t.uid ? t : x))); }} />}
+      {me && <CityView me={me} crowd={crowd} city={city} onDecided={(t, c) => { setMe(t); setCity(c); }} onMoved={(t) => { setMe(t); setCrowd((l) => l.map((x) => (x.uid === t.uid ? t : x))); }} />}
       <div className={"adv-g" + (me ? " is-in" : "")} style={me ? { display: "none" } : undefined}>
         {!me && (
           <section className="adv-p">
@@ -433,6 +541,17 @@ const CSS = `
 .adv-poi i { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--dc); color: #14111f; } .adv-poi.is-on { box-shadow: 0 0 0 3px color-mix(in srgb, var(--dc) 50%, transparent); background: rgba(10,8,30,.95); } .adv-poi.is-off { opacity: .65; border-style: dashed; } .adv-poi.is-off i { background: #5b4ea0; color: #fff; } .adv-poi.is-seen i { background: #4CC36B; }
 @keyframes adv-bob { 50% { transform: translate(-50%, calc(-50% - 4px)); } }
 .adv-txt { padding: 16px 20px; border-radius: 18px; background: var(--mh-panel); border: 1px solid var(--mh-line); min-height: 92px; } .adv-txt b { font-size: 16px; } .adv-txt em { display: inline-flex; align-items: center; gap: 5px; margin-left: 10px; font-style: normal; font-size: 11.5px; color: #E3B04B; } .adv-txt p { margin: 6px 0 0; font-size: 14px; line-height: 1.6; color: var(--mh-ink2); font-style: italic; } .adv-txt p.is-hint { color: var(--mh-muted); font-style: normal; margin: 0; }
+.adv-act { appearance: none; margin-top: 10px; display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 12px; border: 0; background: #E3B04B; color: #1a1408; font: 800 13px var(--font-body), 'Inter', system-ui, sans-serif; cursor: pointer; }
+.adv-dov { position: fixed; inset: 0; z-index: 90; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(8,6,12,.72); }
+.adv-dlg { width: min(640px, 100%); max-height: calc(100dvh - 40px); overflow-y: auto; padding: 22px 24px; border-radius: 22px; background: var(--mh-panel); border: 1px solid var(--mh-line); box-shadow: 0 30px 70px -20px #000; display: flex; flex-direction: column; gap: 12px; } .adv-dlg h3 { margin: 0; font-size: 24px; } .adv-dlg .adv-pk { align-self: flex-start; background: #E8C547; }
+.adv-dt { margin: 0; font-size: 14.5px; line-height: 1.6; color: var(--mh-ink2); } .adv-dt.is-out { font-style: italic; padding: 12px 14px; border-left: 3px solid #E3B04B; background: color-mix(in srgb, var(--mh-ink) 6%, transparent); border-radius: 0 12px 12px 0; }
+.adv-ops { display: flex; flex-direction: column; gap: 9px; } .adv-ops button { appearance: none; text-align: left; display: flex; flex-direction: column; gap: 3px; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--mh-line); background: var(--mh-panel2); color: inherit; font: inherit; cursor: pointer; } .adv-ops button:hover:not(:disabled) { border-color: #E3B04B; transform: translateY(-1px); } .adv-ops button:disabled { opacity: .5; cursor: default; } .adv-ops b { font-size: 14.5px; } .adv-ops small { color: var(--mh-muted); font-size: 12.5px; } .adv-ops span, .adv-fx { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.adv-ops i, .adv-fx i { font-style: normal; font: 700 11px var(--font-body), 'Inter', system-ui, sans-serif; padding: 3px 10px; border-radius: 99px; background: color-mix(in srgb, var(--fc) 20%, transparent); color: var(--fc); border: 1px solid color-mix(in srgb, var(--fc) 50%, transparent); }
+.adv-note { display: flex; gap: 10px; align-items: flex-end; } .adv-note label { flex: 1; display: flex; flex-direction: column; gap: 5px; font-size: 12px; color: var(--mh-muted); }
+.adv-dn { color: var(--mh-muted); font-size: 11.5px; } .adv-ch { font-size: 12.5px; color: var(--mh-muted); } .adv-ch b { color: var(--mh-ink); }
+.adv-pulsep { padding: 16px 18px; border-radius: 18px; background: var(--mh-panel); border: 1px solid var(--mh-line); display: flex; flex-direction: column; gap: 10px; } .adv-pph { display: flex; align-items: baseline; gap: 8px; } .adv-pph svg { color: #E3B04B; align-self: center; } .adv-pph small { color: var(--mh-muted); font-size: 12px; }
+.adv-pm { display: flex; flex-direction: column; gap: 8px; } .adv-pm > div { display: grid; grid-template-columns: 96px 1fr 30px; align-items: center; gap: 10px; font-size: 12.5px; } .adv-pm > div > div { height: 9px; border-radius: 99px; background: color-mix(in srgb, var(--mh-ink) 10%, transparent); overflow: hidden; } .adv-pm em { display: block; height: 100%; border-radius: 99px; transition: width .6s; } .adv-pm b { text-align: right; }
+.adv-last { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--mh-ink2); } .adv-last svg { color: var(--mh-muted); flex: none; }
 @media (max-width: 900px) { .adv-g { grid-template-columns: 1fr; } .adv-sheet { position: static; } .adv-hi { padding: 22px 20px; } .adv-hero { min-height: 300px; } }
 @media (prefers-reduced-motion: reduce) { .adv * { animation: none !important; } }
 `;
